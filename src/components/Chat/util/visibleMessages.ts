@@ -154,17 +154,21 @@ export function getVisibleMessages<TMessage extends VisibleMessageShape>(
 ): TMessage[] {
   const searchQuery = normaliseChatText(options.searchQuery);
   const showOnlyMentions = options.showOnlyMentions === true;
+  const hasSearch = searchQuery.length > 0;
+
+  if (
+    !showOnlyMentions &&
+    !hasSearch &&
+    !options.hiddenUsers?.length &&
+    !options.hiddenPhrases?.length
+  ) {
+    return messages;
+  }
+
   const hiddenUsers = new Set(
     normaliseList(options.hiddenUsers, normaliseChatUsername),
   );
   const hiddenPhrases = normaliseList(options.hiddenPhrases, normaliseChatText);
-  const hasSearch = searchQuery.length > 0;
-  const hasHiddenUsers = hiddenUsers.size > 0;
-  const hasHiddenPhrases = hiddenPhrases.length > 0;
-
-  if (!showOnlyMentions && !hasSearch && !hasHiddenUsers && !hasHiddenPhrases) {
-    return messages;
-  }
 
   return messages.filter(message => {
     if (showOnlyMentions) {

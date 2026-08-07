@@ -13,11 +13,57 @@ CHANNEL_NAME="${FOAM_CHAT_CHANNEL_NAME:-xqc}"
 TEMPLATE="${FOAM_INSTRUMENTS_TEMPLATE:-Time Profiler}"
 TRACE_SECONDS="${FOAM_INSTRUMENTS_SECONDS:-12}"
 SETTLE_DELAY_SECONDS="${FOAM_INSTRUMENTS_SETTLE_SECONDS:-1}"
+FORCE_XCTRACE="${FOAM_FORCE_XCTRACE:-0}"
 
-OUTPUT_PATH="$OUTPUT_DIR/foam-chat-${LABEL}-native.trace"
 DEEPLINK="foam://chat?channelId=${CHANNEL_ID}&channelName=${CHANNEL_NAME}"
 
 mkdir -p "$OUTPUT_DIR"
+
+is_simulator() {
+  xcrun simctl list devices | grep -q "$IOS_UDID"
+}
+
+launch_app() {
+  xcrun simctl terminate "$IOS_UDID" "$BUNDLE_ID" >/dev/null 2>&1 || true
+  PID_OUTPUT="$(xcrun simctl launch "$IOS_UDID" "$BUNDLE_ID")"
+  APP_PID="${PID_OUTPUT##*: }"
+}
+
+if is_simulator && [ "$FORCE_XCTRACE" != "1" ]; then
+  OUTPUT_PATH="$OUTPUT_DIR/foam-chat-${LABEL}-native.sample.txt"
+  SUMMARY_PATH="$OUTPUT_DIR/foam-chat-${LABEL}-native.summary.txt"
+  rm -f "$OUTPUT_PATH" "$SUMMARY_PATH"
+
+  echo "Capturing sample profile (simulator; dev build - directional only)"
+  echo "  label: $LABEL"
+  echo "  seconds: $TRACE_SECONDS"
+  echo "  output: $OUTPUT_PATH"
+  echo "  route: $DEEPLINK"
+
+  launch_app
+
+  sample "$APP_PID" "$TRACE_SECONDS" -file "$OUTPUT_PATH" >/dev/null &
+  SAMPLE_PID=$!
+  sleep "$SETTLE_DELAY_SECONDS"
+  xcrun simctl openurl "$IOS_UDID" "$DEEPLINK"
+  wait "$SAMPLE_PID"
+
+  {
+    echo "Top of stack (from $OUTPUT_PATH):"
+    awk '/Sort by top of stack/{found=1; next}
+      found && NF {print; if (++lines >= 20) exit}
+      found && !NF {exit}' "$OUTPUT_PATH"
+  } | tee "$SUMMARY_PATH"
+
+  echo
+  echo "Saved sample profile:"
+  echo "  $OUTPUT_PATH"
+  echo "Saved hotspot summary:"
+  echo "  $SUMMARY_PATH"
+  exit 0
+fi
+
+OUTPUT_PATH="$OUTPUT_DIR/foam-chat-${LABEL}-native.trace"
 rm -rf "$OUTPUT_PATH"
 
 echo "Capturing Instruments trace"
@@ -26,9 +72,7 @@ echo "  template: $TEMPLATE"
 echo "  output: $OUTPUT_PATH"
 echo "  route: $DEEPLINK"
 
-xcrun simctl terminate "$IOS_UDID" "$BUNDLE_ID" >/dev/null 2>&1 || true
-PID_OUTPUT="$(xcrun simctl launch "$IOS_UDID" "$BUNDLE_ID")"
-APP_PID="${PID_OUTPUT##*: }"
+launch_app
 
 xcrun xctrace record \
   --template "$TEMPLATE" \
@@ -43,7 +87,11 @@ sleep "$SETTLE_DELAY_SECONDS"
 xcrun simctl openurl "$IOS_UDID" "$DEEPLINK"
 wait "$TRACE_PID"
 
-"$ROOT_DIR/scripts/perf/export-instruments-trace.sh" "$OUTPUT_PATH" >/dev/null
+if ! "$ROOT_DIR/scripts/perf/export-instruments-trace.sh" "$OUTPUT_PATH" >/dev/null; then
+  echo "error: xctrace produced an empty trace bundle (known simulator bug);" >&2
+  echo "rerun without FOAM_FORCE_XCTRACE to use the sample-based capture." >&2
+  exit 1
+fi
 
 echo
 echo "Saved Instruments trace:"

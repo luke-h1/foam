@@ -1,11 +1,4 @@
-import {
-  memo,
-  RefObject,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-} from 'react';
+import { memo, RefObject, useCallback, useLayoutEffect, useRef } from 'react';
 import {
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -30,7 +23,6 @@ import {
 } from '@app/components/Chat/util/getViewableChatMessages';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
-import { getChatMessageListKey } from '@app/utils/chat/messageIdentity/getChatMessageListKey';
 
 /**
  * Roughly seven rows of lookahead; at 96 fast flings outran the renderer and
@@ -41,8 +33,6 @@ const CHAT_ESTIMATED_ITEM_SIZE = 44;
 const CHAT_END_REACHED_THRESHOLD = 0.02;
 const CHAT_VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 1,
-  // Skip viewability churn for rows that only flash past during a fling.
-  minimumViewTime: 100,
 } satisfies ViewabilityConfig;
 
 /**
@@ -137,11 +127,6 @@ export const ChatList = memo(
     onViewableMessagesChange,
   }: ChatListProps) => {
     const onViewableMessagesChangeRef = useRef(onViewableMessagesChange);
-    const lastViewableMessageKeysRef = useRef('');
-
-    useEffect(() => {
-      lastViewableMessageKeysRef.current = '';
-    }, [onViewableMessagesChange]);
 
     useLayoutEffect(() => {
       onViewableMessagesChangeRef.current = onViewableMessagesChange;
@@ -153,21 +138,9 @@ export const ChatList = memo(
      */
     const onViewableItemsChanged = useCallback(
       ({ viewableItems }: { viewableItems: ViewableMessageToken[] }) => {
-        const callback = onViewableMessagesChangeRef.current;
-        if (!callback) {
-          return;
-        }
-
-        const messages = getViewableChatMessages(viewableItems);
-        const viewableMessageKeys = messages
-          .map((message, index) => `${getChatMessageListKey(message)}:${index}`)
-          .join('\u001f');
-        if (viewableMessageKeys === lastViewableMessageKeysRef.current) {
-          return;
-        }
-        lastViewableMessageKeysRef.current = viewableMessageKeys;
-
-        callback(messages);
+        onViewableMessagesChangeRef.current?.(
+          getViewableChatMessages(viewableItems),
+        );
       },
       [],
     );

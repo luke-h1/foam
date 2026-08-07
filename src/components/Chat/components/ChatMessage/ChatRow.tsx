@@ -25,7 +25,6 @@ export function Body(props: ChatRowBodyState) {
     bodyVariant,
     cachedSenderColor,
     canJumpToReplyTarget,
-    getMappingKey,
     handleBadgePress,
     isAction,
     isChannelPointRedemption,
@@ -63,7 +62,6 @@ export function Body(props: ChatRowBodyState) {
           accentColor={announcementAccentColor}
           badgeList={badges}
           cachedSenderColor={cachedSenderColor}
-          getMappingKey={(id, index) => String(getMappingKey(id, index))}
           onBadgePress={handleBadgePress}
           onUsernamePress={onUsernamePress}
           showTimestamp={showTimestamp}
@@ -83,7 +81,6 @@ export function Body(props: ChatRowBodyState) {
         {sharedChatLabel}
         <UserChatBody
           badgeList={badges}
-          getMappingKey={(id, index) => String(getMappingKey(id, index))}
           onBadgePress={handleBadgePress}
           cachedSenderColor={cachedSenderColor}
           isAction={isAction}

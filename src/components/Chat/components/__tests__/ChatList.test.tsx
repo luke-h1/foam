@@ -79,7 +79,6 @@ describe('ChatList', () => {
       onEndReachedThreshold: 0.02,
       viewabilityConfig: {
         itemVisiblePercentThreshold: 1,
-        minimumViewTime: 100,
       },
     });
   });
@@ -131,7 +130,7 @@ describe('ChatList', () => {
     expect(onViewableMessagesChange).toHaveBeenCalledWith([visibleMessage]);
   });
 
-  test('does not refire visible-message hydration for the same visible rows', () => {
+  test('forwards every viewability callback without app-side diffing', () => {
     const listRef = { current: null };
     const onViewableMessagesChange = jest.fn();
     const visibleMessage = createChatMessageFixture({
@@ -174,7 +173,8 @@ describe('ChatList', () => {
     props.onViewableItemsChanged(viewabilityPayload);
     props.onViewableItemsChanged(viewabilityPayload);
 
-    expect(onViewableMessagesChange).toHaveBeenCalledTimes(1);
+    expect(onViewableMessagesChange).toHaveBeenCalledTimes(2);
+    expect(onViewableMessagesChange).toHaveBeenLastCalledWith([visibleMessage]);
   });
 
   test('renders a skeleton row when LegendList asks for a not-yet-loaded cell', () => {

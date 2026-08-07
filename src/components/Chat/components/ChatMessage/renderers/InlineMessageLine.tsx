@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { getChatColorStyle } from '@app/components/Chat/util/chatColorStyles';
 import { Text } from '@app/components/ui/Text/Text';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import { getMessageStructure } from '@app/utils/chat/deriveChatBody/getMessageStructure';
 import type { InlineFlowPart } from '@app/utils/chat/deriveChatBody/types';
 
 import { getChatTextStyles } from '../chatText.styles';
@@ -15,7 +16,6 @@ import type { ChatMessagePartRendererArgs } from './types/ChatMessagePartRendere
 
 interface InlineMessageLineProps extends ChatMessagePartRendererArgs {
   badgeList: SanitisedBadgeSet[];
-  getMappingKey: (id: string, index: number) => string;
   isAction?: boolean;
   message: InlineFlowPart[];
   onBadgePress?: (badge: BadgePressData) => void;
@@ -28,7 +28,6 @@ interface InlineMessageLineProps extends ChatMessagePartRendererArgs {
 
 export function InlineMessageLine({
   badgeList,
-  getMappingKey,
   isAction,
   message,
   onBadgePress,
@@ -49,7 +48,7 @@ export function InlineMessageLine({
   emoteTargetSize,
   textColor,
 }: InlineMessageLineProps): ReactNode {
-  const containsEmotes = message.some(part => part.type === 'emote');
+  const containsEmotes = getMessageStructure(message).containsEmotes;
   const textStyles = getChatTextStyles(fontScale, compact);
   // TextKit sizes a wrapped line from the paragraph style carried by its
   // character ranges, and every nested span sets its own lineHeight. The
@@ -70,7 +69,6 @@ export function InlineMessageLine({
           badges={badgeList}
           compact={compact}
           fontScale={fontScale}
-          getMappingKey={getMappingKey}
           onBadgePress={onBadgePress}
         />
         {username ? (

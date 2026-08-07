@@ -361,16 +361,40 @@ const appendToMessageWindow = (
   droppedMessages: AnyChatMessageType[];
   nextMessages: AnyChatMessageType[];
 } => {
-  const nextMessages = [...currentMessages, ...storedMessages];
-  const extraMessageCount = nextMessages.length - getEffectiveMaxChatMessages();
+  const extraMessageCount =
+    currentMessages.length +
+    storedMessages.length -
+    getEffectiveMaxChatMessages();
 
   if (extraMessageCount <= 0) {
-    return { droppedMessages: [], nextMessages };
+    return {
+      droppedMessages: [],
+      nextMessages: [...currentMessages, ...storedMessages],
+    };
+  }
+
+  /**
+   * Slice before concatenating. Building the joined window first and then
+   * slicing it twice copied the whole window an extra time on every flush,
+   * which a busy channel pays ~10x a second.
+   */
+  if (extraMessageCount >= currentMessages.length) {
+    const storedDropCount = extraMessageCount - currentMessages.length;
+    return {
+      droppedMessages: [
+        ...currentMessages,
+        ...storedMessages.slice(0, storedDropCount),
+      ],
+      nextMessages: storedMessages.slice(storedDropCount),
+    };
   }
 
   return {
-    droppedMessages: nextMessages.slice(0, extraMessageCount),
-    nextMessages: nextMessages.slice(extraMessageCount),
+    droppedMessages: currentMessages.slice(0, extraMessageCount),
+    nextMessages: [
+      ...currentMessages.slice(extraMessageCount),
+      ...storedMessages,
+    ],
   };
 };
 

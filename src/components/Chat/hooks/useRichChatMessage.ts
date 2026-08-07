@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { GestureResponderEvent } from 'react-native';
 
-import { useMappingHelper } from '@shopify/flash-list';
-
 import type { ChatMessagePartRendererArgs } from '@app/components/Chat/components/ChatMessage/renderers/types/ChatMessagePartRendererArgs';
 import type {
   BadgePressData,
@@ -22,7 +20,6 @@ import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
 import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
 import { findCustomHighlight } from '@app/utils/chat/customHighlights/findCustomHighlight';
-import { ParsedPart } from '@app/utils/chat/parsedPart';
 
 export const MESSAGE_LONG_PRESS_DELAY_MS = 650;
 
@@ -87,7 +84,6 @@ export function useRichChatMessage<
   const sharedChatEnabled = usePreference('sharedChatEnabled');
   const isSharedChatDuplicated =
     displayIsSharedChatDuplicated && sharedChatEnabled;
-  const { getMappingKey } = useMappingHelper();
   const [selectedEmoteAction, setSelectedEmoteAction] =
     useState<EmotePressData | null>(null);
   const rowLongPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
@@ -120,12 +116,6 @@ export function useRichChatMessage<
   const isHighlightedSender =
     messageSenderKey.length > 0 &&
     effectiveHighlightedUserSet?.has(messageSenderKey);
-  const getPartKey = useCallback(
-    (part: ParsedPart, index: number) =>
-      getMappingKey(getPartIdentity(part, index), index),
-    [getMappingKey],
-  );
-
   const handleEmotePress = (part: EmotePressData) => {
     onEmotePress?.(part);
   };
@@ -201,7 +191,7 @@ export function useRichChatMessage<
     effectiveHighlightedUserSet,
     fontScale,
     getMentionColor,
-    getPartKey,
+    getPartKey: getPartIdentity,
     onEmoteTouchStart: handleEmoteTouchStart,
     message,
     moderationNotice,
@@ -333,7 +323,6 @@ export function useRichChatMessage<
     compact,
     customHighlightColor: customHighlight?.color,
     disableEmoteAnimations,
-    getMappingKey,
     handleBadgePress,
     handleEmotePress,
     isAppSystemSender,

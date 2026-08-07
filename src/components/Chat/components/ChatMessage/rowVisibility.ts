@@ -1,4 +1,4 @@
-import { createContext, useCallback, useRef } from 'react';
+import { createContext, useCallback, useState } from 'react';
 
 import { useViewability } from '@legendapp/list/react-native';
 
@@ -39,8 +39,7 @@ export function createRowVisibilityStore(
 }
 
 export function useRowVisibility(): RowVisibility {
-  const storeRef = useRef<RowVisibilityStore | null>(null);
-  const store = (storeRef.current ??= createRowVisibilityStore());
+  const [store] = useState(createRowVisibilityStore);
   useViewability(
     useCallback(token => store.setVisible(token.isViewable), [store]),
   );
