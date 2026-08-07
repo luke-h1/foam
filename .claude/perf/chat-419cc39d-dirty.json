@@ -1,0 +1,39 @@
+{
+  "sha": "419cc39d (uncommitted working tree)",
+  "platform": "jest/jsdom (reassure) — native harnesses not run, no device attached",
+  "budget": "16.67ms @ 60fps (JS-side proxy metrics only)",
+  "baseline": {
+    "harness": "reassure --baseline, testMatch: messages.perf-test, normalizeSevenTvBadge.perf-test, chat.perf-test",
+    "device": "darwin arm64 host, jest",
+    "scenario": "HEAD 419cc39d vs working tree (badge memo, appendToMessageWindow slice-before-concat, useMappingHelper removal)",
+    "metric": "reassure duration + render counts",
+    "value": "see .reassure/output.json"
+  },
+  "frontier": ["F1", "F2"],
+  "findings": [
+    {
+      "severity": "P3-resolved",
+      "location": "src/utils/seventv/cosmetics/normalizeSevenTvBadge.ts",
+      "finding": "Every row render re-normalised each badge (regex compile + URL rebuild); result depends only on badge object identity",
+      "evidence": "reassure: 0.2ms -> 0.0ms (-74.2%) over 960 calls, SIGNIFICANT",
+      "fix": "WeakMap memo keyed on badge object + hoisted regex (in working tree)",
+      "risk": "none observed; unit tests pass, cache drops entries with the badge object"
+    },
+    {
+      "severity": "P4",
+      "location": "src/store/chat/actions/messages.ts appendToMessageWindow",
+      "finding": "Slice-before-concat avoids one full-window copy per flush; claimed win is allocation/GC, not duration",
+      "evidence": "reassure: 2.7ms -> 2.5ms (-8.1%) NOT significant at 24-34% stability; behavior pinned by 2 new unit tests",
+      "fix": "kept — correctness verified; duration harness cannot resolve an allocation win this small, GC benefit only visible in a device flood",
+      "risk": "low; all messages.test.ts cases pass, dropped-message ordering preserved"
+    },
+    {
+      "severity": "P4",
+      "location": "src/components/Chat/hooks/useRichChatMessage.ts + renderers",
+      "finding": "FlashList useMappingHelper was a leftover from before the LegendList migration; per-row inline closure prop (getMappingKey) allocated on every ChatRow.Body render and threaded through 5 components",
+      "evidence": "reassure: no render-count change, render durations within noise (list window 5.9ms -> 5.1ms n.s.); getPartIdentity includes index so React keys stay unique",
+      "fix": "removed (in working tree)",
+      "risk": "React key values change format; reconciliation-only, no interaction change"
+    }
+  ]
+}
