@@ -39,7 +39,7 @@ export function ChatMessageBadges({
 
     renderedBadges.push(
       <ChatMessagePressable
-        key={`${normalizedBadge.set}-${normalizedBadge.id}-${normalizedBadge.type}-${normalizedBadge.url}`}
+        key={`${renderedBadges.length}\u001f${normalizedBadge.set}\u001f${normalizedBadge.id}\u001f${normalizedBadge.type}\u001f${normalizedBadge.url}`}
         onPress={onBadgePress ? () => onBadgePress(normalizedBadge) : undefined}
       >
         <ChatInlineImage
