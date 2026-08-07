@@ -116,8 +116,6 @@ export function useRichChatMessage<
   const isHighlightedSender =
     messageSenderKey.length > 0 &&
     effectiveHighlightedUserSet?.has(messageSenderKey);
-  const getPartKey = getPartIdentity;
-
   const handleEmotePress = (part: EmotePressData) => {
     onEmotePress?.(part);
   };
@@ -193,7 +191,7 @@ export function useRichChatMessage<
     effectiveHighlightedUserSet,
     fontScale,
     getMentionColor,
-    getPartKey,
+    getPartKey: getPartIdentity,
     onEmoteTouchStart: handleEmoteTouchStart,
     message,
     moderationNotice,

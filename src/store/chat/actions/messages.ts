@@ -373,9 +373,11 @@ const appendToMessageWindow = (
     };
   }
 
-  // Slice before concatenating. Building the joined window first and then
-  // slicing it twice copied the whole window an extra time on every flush,
-  // which a busy channel pays ~10x a second.
+  /**
+   * Slice before concatenating. Building the joined window first and then
+   * slicing it twice copied the whole window an extra time on every flush,
+   * which a busy channel pays ~10x a second.
+   */
   if (extraMessageCount >= currentMessages.length) {
     const storedDropCount = extraMessageCount - currentMessages.length;
     return {

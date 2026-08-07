@@ -64,10 +64,6 @@ if is_simulator && [ "$FORCE_XCTRACE" != "1" ]; then
   echo "  $OUTPUT_PATH"
   echo "Saved hotspot summary:"
   echo "  $SUMMARY_PATH"
-  echo
-  echo "Read: Hermes Interpreter::interpretFunction = JS-thread busy share,"
-  echo "HadesGC = GC pressure, vImage/codecs = decode off the JS thread."
-  echo "Dev-build numbers are directional; use a physical device for release."
   exit 0
 fi
 
@@ -95,14 +91,11 @@ sleep "$SETTLE_DELAY_SECONDS"
 xcrun simctl openurl "$IOS_UDID" "$DEEPLINK"
 wait "$TRACE_PID"
 
-if [ ! -e "$OUTPUT_PATH/Trace1.run/run.tracetemplate" ] &&
-  ! xcrun xctrace export --input "$OUTPUT_PATH" --toc >/dev/null 2>&1; then
+if ! "$ROOT_DIR/scripts/perf/export-instruments-trace.sh" "$OUTPUT_PATH" >/dev/null; then
   echo "error: xctrace produced an empty trace bundle (known simulator bug);" >&2
   echo "rerun without FOAM_FORCE_XCTRACE to use the sample-based capture." >&2
   exit 1
 fi
-
-"$ROOT_DIR/scripts/perf/export-instruments-trace.sh" "$OUTPUT_PATH" >/dev/null
 
 echo
 echo "Saved Instruments trace:"

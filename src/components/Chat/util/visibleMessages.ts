@@ -173,12 +173,6 @@ export function getVisibleMessages<TMessage extends VisibleMessageShape>(
     normaliseList(options.hiddenUsers, normaliseChatUsername),
   );
   const hiddenPhrases = normaliseList(options.hiddenPhrases, normaliseChatText);
-  const hasHiddenUsers = hiddenUsers.size > 0;
-  const hasHiddenPhrases = hiddenPhrases.length > 0;
-
-  if (!showOnlyMentions && !hasSearch && !hasHiddenUsers && !hasHiddenPhrases) {
-    return messages;
-  }
 
   return messages.filter(message => {
     if (showOnlyMentions) {
