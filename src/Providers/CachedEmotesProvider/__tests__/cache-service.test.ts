@@ -21,9 +21,10 @@ import {
   warmCachedEmoteRefs,
 } from '@app/Providers/CachedEmotesProvider/cache-service';
 
-const MAX_DECODED_BYTES_HIGH_TIER = 192 * 1024 * 1024;
-// 192MiB / (96*96*4 bytes * 8 animated factor) ≈ 682 refs before the count cap.
-const HIGH_TIER_BYTE_BUDGET_ANIMATED_ENTRIES = 682;
+// 5% of the mocked 8GB device (under the 600MB high-tier ceiling).
+const MAX_DECODED_BYTES_HIGH_TIER = Math.floor(8 * 1024 * 1024 * 1024 * 0.05);
+// ~409.6MiB / (96*96*4 bytes * 8 animated factor) ≈ 1456 refs before the count cap.
+const HIGH_TIER_BYTE_BUDGET_ANIMATED_ENTRIES = 1456;
 
 const makeImageRef = (overrides: Partial<ImageRef> = {}): ImageRef =>
   ({ ...overrides }) as ImageRef;
@@ -222,11 +223,11 @@ describe('cache-service', () => {
 
   test('eviction drops the least-recently-touched unpinned ref', async () => {
     const urls = Array.from(
-      { length: 1200 },
+      { length: 2400 },
       (_, i) => `https://cdn.7tv.app/emote/lru${i}/2x_static.avif`,
     );
     await warmCachedEmoteRefs(urls);
-    expect(getCachedEmoteStats().decoded).toBe(1200);
+    expect(getCachedEmoteStats().decoded).toBe(2400);
 
     // Mark the oldest-decoded entry as most-recently-used.
     touchCachedEmoteRef(urls[0]!);
@@ -235,18 +236,18 @@ describe('cache-service', () => {
       'https://cdn.7tv.app/emote/lruExtra/2x_static.avif',
     ]);
 
-    expect(getCachedEmoteStats().decoded).toBe(1200);
+    expect(getCachedEmoteStats().decoded).toBe(2400);
     expect(getCachedEmoteRef(urls[0]!)).toEqual({});
     expect(getCachedEmoteRef(urls[1]!)).toBeNull();
   });
 
   test('evicts to stay under the decoded-byte budget before the entry-count cap', async () => {
-    // Animated decodes cost 8x a static one, so the 192MiB byte budget caps the
-    // cache far below the 1200-entry count backstop.
+    // Animated decodes cost 8x a static one, so the byte budget caps the cache
+    // far below the 2400-entry count backstop.
     loadAsync.mockResolvedValue(animatedRef());
 
     const urls = Array.from(
-      { length: 900 },
+      { length: 1600 },
       (_, i) => `https://cdn.7tv.app/emote/big${i}/2x.avif`,
     );
     await warmCachedEmoteRefs(urls);
@@ -273,7 +274,7 @@ describe('cache-service', () => {
 
     await warmCachedEmoteRefs(
       Array.from(
-        { length: 900 },
+        { length: 1600 },
         (_, i) => `https://cdn.7tv.app/emote/bigChurn${i}/2x.avif`,
       ),
     );
@@ -303,13 +304,29 @@ describe('cache-service', () => {
     unsubscribe();
   });
 
+  test('an advisory trim keeps refs mounted rows are subscribed to', async () => {
+    const mountedUrl = 'https://cdn.7tv.app/emote/advMounted/2x.avif';
+    const offscreenUrl = 'https://cdn.7tv.app/emote/advOffscreen/2x.avif';
+    await warmCachedEmoteRefs([mountedUrl, offscreenUrl]);
+    const unsubscribe = subscribeCachedEmoteRef(mountedUrl, jest.fn());
+
+    trimCachedEmoteRefsForMemoryPressure({
+      keepSubscribed: true,
+      throttled: true,
+    });
+
+    expect(getCachedEmoteRef(mountedUrl)).toEqual({});
+    expect(getCachedEmoteRef(offscreenUrl)).toBeNull();
+    unsubscribe();
+  });
+
   test('the byte budget never evicts pinned refs', async () => {
     loadAsync.mockResolvedValue(animatedRef());
     const pinnedUrl = 'https://cdn.7tv.app/emote/bigPinned/2x.avif';
     await warmCachedEmoteRefs([pinnedUrl], { pin: true });
 
     const unpinned = Array.from(
-      { length: 900 },
+      { length: 1600 },
       (_, i) => `https://cdn.7tv.app/emote/bigUnpinned${i}/2x.avif`,
     );
     await warmCachedEmoteRefs(unpinned);
