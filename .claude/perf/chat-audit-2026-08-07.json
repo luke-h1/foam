@@ -142,6 +142,48 @@
     },
     "note": "UI thread holds 50-53fps under flood; the JS thread is the bottleneck in dev mode (interpreted bundle, Metro attached). jsFps under flood is not meaningful in dev - release/device measurement required before comparing against the historical raid jsFps 57 note."
   },
+  "mainVsBranch_2026_08_07": {
+    "branch": "perf/chat-audit-quick-wins (fa794b09) vs main (419cc39d)",
+    "protocol": "identical legs: fresh Metro per side (watcher staleness guarded by module-bundle marker check - lastViewableMessageKeysRef present on main, absent on branch), app relaunched straight into dev-tools/chat-perf (no live channel attached), 2 hotspot passes + 2 full-suite passes per side; reassure baseline on main vs measure on branch",
+    "reassure": {
+      "renders the chat list window": "5.3ms -> 4.9ms (-7.1%, n.s. this run; -30.8% in the earlier incremental run - direction consistent)",
+      "renders visible chat message rows": "5.0ms -> 4.9ms (-2.6%, n.s.; -10.7% significant in the earlier incremental run)",
+      "ingest raid burst": "2.4ms -> 2.6ms (+6.6%, n.s.)",
+      "renderCountChanges": "none",
+      "note": "run-to-run machine variance dominates single runs; the two independent comparisons agree on direction for the render scenarios"
+    },
+    "onDeviceHotspotsMeanMs": {
+      "message ingest burst": {
+        "main": [6.8, 6.87],
+        "branch": [5.94, 6.55],
+        "delta": "~-9%"
+      },
+      "findBadges dense maps": {
+        "main": [1.32, 1.39],
+        "branch": [1.17, 1.19],
+        "delta": "~-13% (badge memo)"
+      },
+      "resolveMessageEmoteParts batch": {
+        "main": [2.59],
+        "branch": [2.07, 2.29],
+        "delta": "~-16%, overlapping variance"
+      },
+      "paint batches": "flat - code unchanged on branch"
+    },
+    "onDeviceFullSuite": {
+      "raid": {
+        "main": ["48/6.9/19/65", "47/7.0/19/65"],
+        "branch": ["50/6.0/21/63", "48/7.1/20/65"],
+        "format": "uiFps/uiJank/jsFps/drop%"
+      },
+      "steady60": {
+        "main": ["51/5.8/31/46", "52/4.9/37/37"],
+        "branch": ["51/6.4/26/56", "53/4.6/37/36"]
+      },
+      "verdict": "raid marginally better on branch (jsFps 19,19 -> 21,20), steady60 within noise both sides; expected - the suite pins the list at bottom and never scrolls, so the deleted viewability/scroll work barely runs in it"
+    },
+    "caveat": "dev build on simulator; earlier same-day suite numbers with live xqc attached (jsFps 2/10) are NOT comparable to these no-live-channel legs"
+  },
   "verifiedThisSession": [
     "normalizeSevenTvBadge WeakMap memo: -74.2% (reassure, significant)",
     "appendToMessageWindow slice-before-concat: -8.1% n.s. - allocation win, correct by unit tests",
