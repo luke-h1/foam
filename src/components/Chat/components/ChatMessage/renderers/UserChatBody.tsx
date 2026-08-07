@@ -99,25 +99,27 @@ export function UserChatBody({
     userId ? Boolean(chatStore$.userPaintIds[userId]?.get()) : false,
   );
   const isModerated = Boolean(moderationNotice);
-  const { containsEmotes: bodyContainsEmotes } = getMessageStructure(message);
   /**
    * A paint renders through a mask, so a painted row cannot put the username
    * in the same Text as the body - but the body alone still flows.
    */
-  const rowFlowsInline = canFlowInline(message, { hasPaint, isModerated });
-  const bodyCanFlowInline = canFlowInline(message, {
-    hasPaint: false,
-    isModerated,
-  });
-  const renderInline = rowFlowsInline && !bodyContainsEmotes;
+  const renderInline = canFlowInline(message, { hasPaint, isModerated });
   const bodyFlowsInline =
-    bodyCanFlowInline && !renderInline && !bodyContainsEmotes;
+    !renderInline && canFlowInline(message, { hasPaint: false, isModerated });
   const inlineUsernameColor =
     cachedSenderColor ??
     (userstateColor ? cachedLighten(userstateColor) : undefined) ??
     (username ? cachedLighten(generateRandomTwitchColor(username)) : undefined);
   const actionColor = isAction ? inlineUsernameColor : undefined;
   const textStyles = getChatTextStyles(fontScale, compact);
+  /**
+   * A painted row keeps the username out of the body Text but still flows the
+   * body inline, so the body carries emotes on its own and needs the taller
+   * emote leading on every nested span - see InlineMessageLine.
+   */
+  const bodyEmoteLineStyle = getMessageStructure(message).containsEmotes
+    ? textStyles.bodyEmoteLine
+    : undefined;
 
   return (
     <View style={styles.messageColumn}>
@@ -218,9 +220,10 @@ export function UserChatBody({
             </View>
           ) : null}
           {bodyFlowsInline ? (
-            <Text style={textStyles.body}>
+            <Text style={[textStyles.body, bodyEmoteLineStyle]}>
               <InlineMessageSpans
                 {...rendererArgs}
+                emoteLineStyle={bodyEmoteLineStyle}
                 message={message}
                 replyPlainMentionTarget={replyPlainMentionTarget}
                 textColor={actionColor}

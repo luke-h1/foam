@@ -1,10 +1,13 @@
 /* eslint-disable camelcase */
+import { StyleSheet } from 'react-native';
 import type { ReactTestInstance } from 'react-test-renderer';
 
 import { act, fireEvent, render } from '@testing-library/react-native';
 
+import { getChatTextStyles } from '@app/components/Chat/components/ChatMessage/chatText.styles';
 import { MESSAGE_LONG_PRESS_DELAY_MS } from '@app/components/Chat/hooks/useRichChatMessage';
 import { EmoteSetKind } from '@app/graphql/generated/gql';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { preferences$ } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
@@ -80,6 +83,23 @@ const touchAt = (pageX: number, pageY: number) => ({
   nativeEvent: { pageX, pageY },
 });
 
+function findTextAncestor(
+  element: ReactTestInstance,
+): ReactTestInstance | null {
+  let ancestor: ReactTestInstance | null = element.parent;
+  while (ancestor) {
+    if (String(ancestor.type) === 'Text') {
+      return ancestor;
+    }
+    ancestor = ancestor.parent;
+  }
+  return null;
+}
+
+function hasTextAncestor(element: ReactTestInstance): boolean {
+  return findTextAncestor(element) !== null;
+}
+
 function fireMessageLongPress(
   element: ReactTestInstance,
   options: { driftDp?: number } = {},
@@ -105,6 +125,7 @@ describe('RichChatMessage', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    chatStore$.userPaintIds.set({});
   });
 
   test('coalesces adjacent text parts into one rendered text node', () => {
@@ -615,11 +636,12 @@ describe('RichChatMessage', () => {
       expect(getByTestId('emote-renderer')).toBeOnTheScreen();
     });
 
-    test('renders emotes as flex views, never nested inside a Text', () => {
-      // An emote nested in a <Text> can only be given a fixed line height,
-      // which baseline-aligns and clips the top of the image. Messages with
-      // emotes must take the flex-wrap path so the row grows to the emote's
-      // full intended size. See UserChatBody renderInline gating.
+    test('flows an ordinary emote inline, inside the row Text', () => {
+      // The flex-wrap path makes each text run its own flex item, so an emote
+      // after a run that wraps is pushed onto a fresh flex line and the tail of
+      // the wrapped line is left blank. An ordinary emote therefore belongs in
+      // the row's Text, where `bodyEmoteLine` raises the leading on every
+      // nested span so the attachment is not clipped.
       const emoteData: ParsedPart<'emote'> = {
         type: 'emote',
         content: 'Kappa',
@@ -643,12 +665,71 @@ describe('RichChatMessage', () => {
         />,
       );
 
-      let ancestor: ReactTestInstance | null =
-        getByTestId('emote-renderer').parent;
-      while (ancestor) {
-        expect(ancestor.type).not.toBe('Text');
-        ancestor = ancestor.parent;
-      }
+      expect(hasTextAncestor(getByTestId('emote-renderer'))).toBe(true);
+    });
+
+    test('keeps a zero-width emote out of the row Text', () => {
+      // A zero-width emote composites its overlay with absolute positioning,
+      // which does not survive inside a Text, so it still takes the flex path.
+      const emoteData: ParsedPart<'emote'> = {
+        type: 'emote',
+        content: 'SoSnowy',
+        original_name: 'SoSnowy',
+        name: 'SoSnowy',
+        id: '26',
+        url: 'https://cdn.7tv.app/emote/26/1x.webp',
+        site: '7TV Channel',
+        zero_width: true,
+      };
+
+      const message = createMockMessage([
+        { type: 'text', content: 'look ' },
+        emoteData,
+      ]);
+
+      const { getByTestId } = render(
+        <RichChatMessage
+          {...message}
+          onReply={mockOnReply}
+          onEmotePress={mockOnEmotePress}
+        />,
+      );
+
+      expect(hasTextAncestor(getByTestId('emote-renderer'))).toBe(false);
+    });
+
+    test('keeps the emote leading on a painted row that flows its body inline', () => {
+      // A paint renders through a mask, so a painted row cannot put the
+      // username in the body Text - the body still flows inline and carries the
+      // emotes on its own, so it needs the emote leading or they clip.
+      chatStore$.userPaintIds.set({ '123456': 'paint-1' });
+      const emoteData: ParsedPart<'emote'> = {
+        type: 'emote',
+        content: 'Kappa',
+        original_name: 'Kappa',
+        name: 'Kappa',
+        id: '25',
+        url: 'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/1.0',
+        site: 'Twitch Channel',
+      };
+
+      const message = createMockMessage([
+        { type: 'text', content: 'look ' },
+        emoteData,
+      ]);
+
+      const { getByTestId } = render(
+        <RichChatMessage
+          {...message}
+          onReply={mockOnReply}
+          onEmotePress={mockOnEmotePress}
+        />,
+      );
+
+      const bodyText = findTextAncestor(getByTestId('emote-renderer'));
+      expect(StyleSheet.flatten(bodyText?.props.style).lineHeight).toBe(
+        getChatTextStyles('default', false).bodyEmoteLine.lineHeight,
+      );
     });
   });
 
