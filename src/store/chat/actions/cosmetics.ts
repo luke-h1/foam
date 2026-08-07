@@ -455,10 +455,9 @@ export const getUserPaintId = (ttvUserId: string): string | undefined =>
 let userPaintFlagInvalidatorAttached = false;
 
 /**
- * getChatRowItemType calls `hasUserPaint` once per visible row on every list
- * data change, so the paints/userPaintIds traversal below is cached per user
- * id: a binding change invalidates just that user, a paint definition change
- * clears the cache wholesale.
+ * A binding change invalidates just that user, a paint definition change clears
+ * the cache wholesale. `useEnsureSevenTvCosmetics` is the only reader, once per
+ * user card, so the cache is far larger than that path needs.
  */
 function ensureUserPaintFlagInvalidator(): void {
   if (userPaintFlagInvalidatorAttached) {

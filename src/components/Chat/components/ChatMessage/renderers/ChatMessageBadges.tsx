@@ -55,6 +55,7 @@ export function ChatMessageBadges({
             badgeStyle,
             Boolean(moderationNotice) && styles.moderatedBadge,
           ]}
+          collapseWhenFailed
           maxRetryAttempts={0}
           showLoadingShimmer={false}
         />

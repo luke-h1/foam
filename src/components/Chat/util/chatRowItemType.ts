@@ -1,5 +1,4 @@
 import { getChatBodyInfo } from '@app/components/Chat/util/richChatMessage/getChatBodyInfo';
-import { hasUserPaint } from '@app/store/chat/actions/cosmetics';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import type { ChatBodyVariant } from '@app/utils/chat/deriveChatBody/types';
 import { isRenderableChatMessage } from '@app/utils/chat/messageIdentity/isRenderableChatMessage';
@@ -71,14 +70,14 @@ function getUserChatRowItemType(
     flags.push('shared');
   }
 
-  const userId = item.userstate?.['user-id'];
-  if (hasUserPaint(userId)) {
-    flags.push('paint');
-  }
-
   return flags.length > 0 ? `user_chat-${flags.join('-')}` : 'user_chat';
 }
 
+/**
+ * The row's recycling identity, which the list treats as fixed once the row is
+ * placed. Every flag must come from the message itself, never from
+ * asynchronously resolved state such as a 7TV paint.
+ */
 export function getChatRowItemType(
   item: AnyChatMessageType,
   options?: ChatRowItemTypeOptions,

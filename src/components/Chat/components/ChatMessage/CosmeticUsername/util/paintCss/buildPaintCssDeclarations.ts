@@ -6,6 +6,7 @@ import type {
   PaintLayerData,
   PaintStop,
 } from '@app/types/seventv/cosmetics';
+import { isVisibleSevenTvColor } from '@app/utils/color/isVisibleSevenTvColor';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 import { sevenTvColorToRgba } from '@app/utils/color/sevenTvColorToRgba';
 
@@ -96,7 +97,9 @@ export function buildPaintCssDeclarations(
     : [];
 
   return {
-    color: paint.color === null ? 'inherit' : sevenTvColorToCss(paint.color),
+    color: isVisibleSevenTvColor(paint.color)
+      ? sevenTvColorToCss(paint.color)
+      : 'inherit',
     backgroundImage: layers.map(layer => layer.image).join(', ') || 'none',
     backgroundPosition:
       layers.map(layer => layer.position).join(', ') || '0% 0%',

@@ -24,6 +24,7 @@ import type {
   PaintStop,
   PaintTextStroke,
 } from '@app/types/seventv/cosmetics';
+import { isVisibleSevenTvColor } from '@app/utils/color/isVisibleSevenTvColor';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 import {
   cachePaintBitmaps,
@@ -379,7 +380,9 @@ function drawPaintedUsername(
 
   const basePaint = Skia.Paint();
   basePaint.setColor(
-    paint.color === null ? Skia.Color(fallbackColor) : skColor(paint.color),
+    isVisibleSevenTvColor(paint.color)
+      ? skColor(paint.color)
+      : Skia.Color(fallbackColor),
   );
 
   const gradientsToDraw = (
@@ -711,8 +714,11 @@ function paintRevision(paint: PaintData): number {
 }
 
 function paintBitmapCacheKey(opts: RasterizePaintedUsernameOptions): string {
-  const fallbackPart =
-    opts.paint.color === null ? `|${opts.fallbackColor}` : '';
+  // Must match drawPaintedUsername: whenever the render falls back, the
+  // fallback colour is part of what got rasterised.
+  const fallbackPart = isVisibleSevenTvColor(opts.paint.color)
+    ? ''
+    : `|${opts.fallbackColor}`;
   return `${opts.paint.id}|${paintRevision(opts.paint)}|${opts.displayUsername}|${opts.fontSize}|${opts.pixelRatio}${fallbackPart}`;
 }
 
