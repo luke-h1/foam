@@ -26,6 +26,7 @@ describe('ChatList', () => {
     render(
       <ChatList
         data={[]}
+        dataKey='test-channel'
         extraData={{ showTimestamps: false }}
         listRef={listRef}
         shouldMaintainScrollAtEnd
@@ -96,6 +97,7 @@ describe('ChatList', () => {
     render(
       <ChatList
         data={[visibleMessage]}
+        dataKey='test-channel'
         listRef={listRef}
         shouldMaintainScrollAtEnd
         scrollHandlers={{
@@ -142,6 +144,7 @@ describe('ChatList', () => {
     render(
       <ChatList
         data={[visibleMessage]}
+        dataKey='test-channel'
         listRef={listRef}
         shouldMaintainScrollAtEnd
         scrollHandlers={{
@@ -180,6 +183,7 @@ describe('ChatList', () => {
     render(
       <ChatList
         data={[]}
+        dataKey='test-channel'
         listRef={listRef}
         shouldMaintainScrollAtEnd
         scrollHandlers={{
@@ -218,6 +222,7 @@ describe('ChatList', () => {
     render(
       <ChatList
         data={[]}
+        dataKey='test-channel'
         listRef={listRef}
         shouldMaintainScrollAtEnd={false}
         scrollHandlers={{
@@ -253,6 +258,7 @@ describe('ChatList', () => {
     render(
       <ChatList
         data={[]}
+        dataKey='test-channel'
         listRef={listRef}
         shouldMaintainScrollAtEnd
         scrollHandlers={{

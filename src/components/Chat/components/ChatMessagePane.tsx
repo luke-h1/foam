@@ -207,6 +207,7 @@ export const ChatMessagePane = memo(
           <View style={styles.listGestureWrapper}>
             <ChatList
               data={visibleMessages}
+              dataKey={channelId}
               listRef={listRef}
               shouldMaintainScrollAtEnd={shouldMaintainScrollAtEnd}
               scrollHandlers={scrollHandlers}

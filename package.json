@@ -105,7 +105,7 @@
     "@expo-google-fonts/source-code-pro": "^0.4.0",
     "@expo/metro-runtime": "~57.0.8",
     "@expo/ui": "57.0.8",
-    "@legendapp/list": "3.0.4",
+    "@legendapp/list": "3.3.3",
     "@legendapp/state": "^2.1.15",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/netinfo": "12.0.1",
@@ -312,7 +312,6 @@
   },
   "patchedDependencies": {
     "@legendapp/state@2.1.15": "patches/@legendapp%2Fstate@2.1.15.patch",
-    "@legendapp/list@3.0.4": "patches/@legendapp%2Flist@3.0.4.patch",
     "@sentry/core@10.57.0": "patches/@sentry%2Fcore@10.57.0.patch",
     "@expo/ui@57.0.8": "patches/@expo%2Fui@57.0.8.patch",
     "react-native-screens@4.26.2": "patches/react-native-screens@4.26.2.patch",
