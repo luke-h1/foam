@@ -133,3 +133,6 @@ buildServer.json
 junit-app.xml
 
 playstore-service-account.json
+
+# local perf audit reports
+.claude/perf/
