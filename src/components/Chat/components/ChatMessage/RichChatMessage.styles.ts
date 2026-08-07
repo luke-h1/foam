@@ -217,10 +217,6 @@ export const styles = StyleSheet.create({
   },
   replyContextIcon: {
     marginRight: 4,
-    opacity: 0.8,
-  },
-  replyContextIconReplyToYou: {
-    opacity: 1,
   },
   replyContextTextReplyToYou: {
     color: CHAT_NOTICE_ACCENTS.replyToYou,
