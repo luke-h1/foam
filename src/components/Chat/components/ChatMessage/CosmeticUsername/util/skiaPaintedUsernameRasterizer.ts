@@ -714,8 +714,11 @@ function paintRevision(paint: PaintData): number {
 }
 
 function paintBitmapCacheKey(opts: RasterizePaintedUsernameOptions): string {
-  const fallbackPart =
-    opts.paint.color === null ? `|${opts.fallbackColor}` : '';
+  // Must match drawPaintedUsername: whenever the render falls back, the
+  // fallback colour is part of what got rasterised.
+  const fallbackPart = isVisibleSevenTvColor(opts.paint.color)
+    ? ''
+    : `|${opts.fallbackColor}`;
   return `${opts.paint.id}|${paintRevision(opts.paint)}|${opts.displayUsername}|${opts.fontSize}|${opts.pixelRatio}${fallbackPart}`;
 }
 
