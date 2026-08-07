@@ -39,10 +39,6 @@ export function createRowVisibilityStore(
 }
 
 export function useRowVisibility(): RowVisibility {
-  /**
-   * State initialiser rather than a lazily-filled ref: both `??=` and the
-   * if-null ref pattern make React Compiler bail out of this hook entirely.
-   */
   const [store] = useState(createRowVisibilityStore);
   useViewability(
     useCallback(token => store.setVisible(token.isViewable), [store]),

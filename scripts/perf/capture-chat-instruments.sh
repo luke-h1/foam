@@ -13,10 +13,6 @@ CHANNEL_NAME="${FOAM_CHAT_CHANNEL_NAME:-xqc}"
 TEMPLATE="${FOAM_INSTRUMENTS_TEMPLATE:-Time Profiler}"
 TRACE_SECONDS="${FOAM_INSTRUMENTS_SECONDS:-12}"
 SETTLE_DELAY_SECONDS="${FOAM_INSTRUMENTS_SETTLE_SECONDS:-1}"
-# xctrace against a simulator currently records nothing (the .trace bundle
-# holds only RunIssues.storedata and export fails with "Document Missing
-# Template Error"), so simulators use macOS `sample` on the host process
-# instead. Set FOAM_FORCE_XCTRACE=1 to retry xctrace after an Xcode update.
 FORCE_XCTRACE="${FOAM_FORCE_XCTRACE:-0}"
 
 DEEPLINK="foam://chat?channelId=${CHANNEL_ID}&channelName=${CHANNEL_NAME}"

@@ -156,10 +156,6 @@ export function getVisibleMessages<TMessage extends VisibleMessageShape>(
   const showOnlyMentions = options.showOnlyMentions === true;
   const hasSearch = searchQuery.length > 0;
 
-  /**
-   * Runs per store commit; bail before allocating the normalised sets in the
-   * common no-filter case.
-   */
   if (
     !showOnlyMentions &&
     !hasSearch &&

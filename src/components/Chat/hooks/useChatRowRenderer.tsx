@@ -357,10 +357,6 @@ export function useChatRowRenderer({
         .join('|'),
     [customHighlights],
   );
-  /**
-   * Content key, not array identity: the transient store can replace the array
-   * with equal contents, and extraData identity re-renders every mounted row.
-   */
   const highlightedUsersKey = useMemo(
     () => highlightedUsers.join('|'),
     [highlightedUsers],

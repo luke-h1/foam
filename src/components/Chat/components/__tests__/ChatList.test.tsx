@@ -170,11 +170,6 @@ describe('ChatList', () => {
       viewableItems: [{ item: visibleMessage, isViewable: true }],
     };
 
-    /**
-     * LegendList already diffs viewable membership before firing, and the
-     * hydration consumer dedupes and coalesces. Re-adding a diff here starves
-     * rows that leave and re-enter the viewport of their hydration pass.
-     */
     props.onViewableItemsChanged(viewabilityPayload);
     props.onViewableItemsChanged(viewabilityPayload);
 

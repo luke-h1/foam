@@ -31,11 +31,6 @@ import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 const CHAT_DRAW_DISTANCE = 250;
 const CHAT_ESTIMATED_ITEM_SIZE = 44;
 const CHAT_END_REACHED_THRESHOLD = 0.02;
-/**
- * No minimumViewTime: LegendList implements it as an unconditional deferral
- * timer per scroll tick, not per-row damping, and the visible-asset hydration
- * consumer already coalesces on its own 150ms timer.
- */
 const CHAT_VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 1,
 } satisfies ViewabilityConfig;
@@ -140,8 +135,6 @@ export const ChatList = memo(
     /**
      * Stable identity required: LegendList re-runs setupViewability whenever
      * onViewableItemsChanged identity changes, tearing down viewability state.
-     * No change-diffing here: LegendList only fires this when membership
-     * changed, and the hydration consumer dedupes and coalesces on its own.
      */
     const onViewableItemsChanged = useCallback(
       ({ viewableItems }: { viewableItems: ViewableMessageToken[] }) => {
