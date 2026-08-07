@@ -197,6 +197,7 @@ function ChatListPerfFixture() {
   return (
     <ChatList
       data={visibleRows}
+      dataKey='perf-channel'
       extraData={{
         density: 'compact',
         showTimestamps: true,
