@@ -1,10 +1,13 @@
 /* eslint-disable camelcase */
+import { StyleSheet } from 'react-native';
 import type { ReactTestInstance } from 'react-test-renderer';
 
 import { act, fireEvent, render } from '@testing-library/react-native';
 
+import { getChatTextStyles } from '@app/components/Chat/components/ChatMessage/chatText.styles';
 import { MESSAGE_LONG_PRESS_DELAY_MS } from '@app/components/Chat/hooks/useRichChatMessage';
 import { EmoteSetKind } from '@app/graphql/generated/gql';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { preferences$ } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
@@ -80,15 +83,21 @@ const touchAt = (pageX: number, pageY: number) => ({
   nativeEvent: { pageX, pageY },
 });
 
-function hasTextAncestor(element: ReactTestInstance): boolean {
+function findTextAncestor(
+  element: ReactTestInstance,
+): ReactTestInstance | null {
   let ancestor: ReactTestInstance | null = element.parent;
   while (ancestor) {
     if (String(ancestor.type) === 'Text') {
-      return true;
+      return ancestor;
     }
     ancestor = ancestor.parent;
   }
-  return false;
+  return null;
+}
+
+function hasTextAncestor(element: ReactTestInstance): boolean {
+  return findTextAncestor(element) !== null;
 }
 
 function fireMessageLongPress(
@@ -116,6 +125,7 @@ describe('RichChatMessage', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    chatStore$.userPaintIds.set({});
   });
 
   test('coalesces adjacent text parts into one rendered text node', () => {
@@ -686,6 +696,40 @@ describe('RichChatMessage', () => {
       );
 
       expect(hasTextAncestor(getByTestId('emote-renderer'))).toBe(false);
+    });
+
+    test('keeps the emote leading on a painted row that flows its body inline', () => {
+      // A paint renders through a mask, so a painted row cannot put the
+      // username in the body Text - the body still flows inline and carries the
+      // emotes on its own, so it needs the emote leading or they clip.
+      chatStore$.userPaintIds.set({ '123456': 'paint-1' });
+      const emoteData: ParsedPart<'emote'> = {
+        type: 'emote',
+        content: 'Kappa',
+        original_name: 'Kappa',
+        name: 'Kappa',
+        id: '25',
+        url: 'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/1.0',
+        site: 'Twitch Channel',
+      };
+
+      const message = createMockMessage([
+        { type: 'text', content: 'look ' },
+        emoteData,
+      ]);
+
+      const { getByTestId } = render(
+        <RichChatMessage
+          {...message}
+          onReply={mockOnReply}
+          onEmotePress={mockOnEmotePress}
+        />,
+      );
+
+      const bodyText = findTextAncestor(getByTestId('emote-renderer'));
+      expect(StyleSheet.flatten(bodyText?.props.style).lineHeight).toBe(
+        getChatTextStyles('default', false).bodyEmoteLine.lineHeight,
+      );
     });
   });
 

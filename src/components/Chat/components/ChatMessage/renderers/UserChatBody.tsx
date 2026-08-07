@@ -11,6 +11,7 @@ import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
 import { canFlowInline } from '@app/utils/chat/deriveChatBody/canFlowInline';
+import { getMessageStructure } from '@app/utils/chat/deriveChatBody/getMessageStructure';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { cachedLighten } from '@app/utils/chat/resolveCachedSenderColor/cachedLighten';
 
@@ -111,6 +112,14 @@ export function UserChatBody({
     (username ? cachedLighten(generateRandomTwitchColor(username)) : undefined);
   const actionColor = isAction ? inlineUsernameColor : undefined;
   const textStyles = getChatTextStyles(fontScale, compact);
+  /**
+   * A painted row keeps the username out of the body Text but still flows the
+   * body inline, so the body carries emotes on its own and needs the taller
+   * emote leading on every nested span - see InlineMessageLine.
+   */
+  const bodyEmoteLineStyle = getMessageStructure(message).containsEmotes
+    ? textStyles.bodyEmoteLine
+    : undefined;
 
   return (
     <View style={styles.messageColumn}>
@@ -211,9 +220,10 @@ export function UserChatBody({
             </View>
           ) : null}
           {bodyFlowsInline ? (
-            <Text style={textStyles.body}>
+            <Text style={[textStyles.body, bodyEmoteLineStyle]}>
               <InlineMessageSpans
                 {...rendererArgs}
+                emoteLineStyle={bodyEmoteLineStyle}
                 message={message}
                 replyPlainMentionTarget={replyPlainMentionTarget}
                 textColor={actionColor}
