@@ -100,6 +100,7 @@ export interface Preferences {
   analyticsEnabled: boolean;
   sharedChatEnabled: boolean;
   enhancedVideoStability: boolean;
+  chatDebugTools: boolean;
   sevenTvPaintRenderer: SevenTvPaintRenderer;
 }
 
@@ -149,6 +150,7 @@ export const preferencesSchema = z.object({
   analyticsEnabled: z.boolean(),
   sharedChatEnabled: z.boolean(),
   enhancedVideoStability: z.boolean(),
+  chatDebugTools: z.boolean(),
   sevenTvPaintRenderer: z.enum(['off', 'native', 'skia', 'webview']),
 }) satisfies z.ZodType<Preferences>;
 
@@ -196,6 +198,7 @@ export const initialPreferences: Preferences = {
   analyticsEnabled: true,
   sharedChatEnabled: true,
   enhancedVideoStability: false,
+  chatDebugTools: isDevToolsEnabled,
   sevenTvPaintRenderer: 'native',
 };
 

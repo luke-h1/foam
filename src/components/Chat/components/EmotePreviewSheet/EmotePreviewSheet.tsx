@@ -16,11 +16,16 @@ import {
 } from '@app/components/BottomSheet/BottomSheet';
 /* eslint-disable react-native/sort-styles */
 import { Button } from '@app/components/Button/Button';
+import { ChatDebugSection } from '@app/components/Chat/components/ChatDebugSection';
 import { computeSheetHeight } from '@app/components/Chat/util/computeSheetHeight';
 import { Image } from '@app/components/Image/Image';
 import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { useSaveImageToGallery } from '@app/hooks/useSaveImageToGallery';
+import {
+  getChatDebugEmoteDetails,
+  getChatDebugEmoteSources,
+} from '@app/store/chat/actions/chatDebugLog';
 import { usePreference } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
@@ -292,6 +297,16 @@ function EmotePreviewSheetComponent(props: Props) {
               </Button>
             ))}
           </View>
+
+          <ChatDebugSection
+            build={() => ({
+              payload: {
+                emote: selectedEmote,
+                emoteDetails: getChatDebugEmoteDetails(selectedEmote),
+                emoteSources: getChatDebugEmoteSources(),
+              },
+            })}
+          />
         </ScrollView>
       </View>
     </BottomSheet>

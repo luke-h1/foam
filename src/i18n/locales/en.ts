@@ -192,6 +192,14 @@ const en = {
       imageSaved: 'Badge saved to gallery',
       imageSaveFailed: 'Could not save badge',
     },
+    debug: {
+      title: 'Debug',
+      copy: 'Copy debug info',
+      copied: 'Debug info copied',
+      ircLines: 'Raw IRC lines',
+      ircLinesEmpty: 'No captured IRC lines for this user',
+      dropped: 'DROPPED',
+    },
     emoteSheet: {
       searchEmotes: 'Search emotes',
       noEmotesFound: 'No emotes found',
@@ -668,6 +676,9 @@ const en = {
     enhancedVideoStability: 'Enhanced Video Stability',
     enhancedVideoStabilityDescription:
       'Automatically refresh the player to recover from silent stalls, video errors, and high latency',
+    chatDebugTools: 'Chat Debug Tools',
+    chatDebugToolsDescription:
+      'Capture raw IRC lines and show debug details in the chat user, emote, and badge sheets',
     developerTools: 'Developer Tools',
     debug: 'Debug',
     debugDescription: 'Manual debug helpers and experiments',

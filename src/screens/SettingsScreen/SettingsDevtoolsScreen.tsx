@@ -29,6 +29,7 @@ export function SettingsDevtoolsScreen() {
     disableStream,
     sharedChatEnabled,
     enhancedVideoStability,
+    chatDebugTools,
     update,
   } = usePreferences();
   const scrollRef = useRef<ScrollView>(null);
@@ -83,6 +84,13 @@ export function SettingsDevtoolsScreen() {
             >
               <NativeText>{t('enhancedVideoStability')}</NativeText>
               <NativeText>{t('enhancedVideoStabilityDescription')}</NativeText>
+            </Toggle>
+            <Toggle
+              isOn={chatDebugTools}
+              onIsOnChange={value => update({ chatDebugTools: value })}
+            >
+              <NativeText>{t('chatDebugTools')}</NativeText>
+              <NativeText>{t('chatDebugToolsDescription')}</NativeText>
             </Toggle>
           </Section>
 
@@ -194,6 +202,13 @@ export function SettingsDevtoolsScreen() {
             icon={{ icon: 'wand.and.stars', color: theme.colorBlue }}
             value={enhancedVideoStability}
             onValueChange={value => update({ enhancedVideoStability: value })}
+          />
+          <SettingsToggleRow
+            title={t('chatDebugTools')}
+            subtitle={t('chatDebugToolsDescription')}
+            icon={{ icon: 'ladybug', color: theme.colorTeal }}
+            value={chatDebugTools}
+            onValueChange={value => update({ chatDebugTools: value })}
           />
         </SettingsSection>
 
