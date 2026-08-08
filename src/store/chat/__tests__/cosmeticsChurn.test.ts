@@ -4,8 +4,10 @@ import {
   addPaint,
   type CachedUserCosmetics,
   clearUserCosmeticsCache,
+  fetchAndCacheUserCosmetics,
   removeBadge,
   removeUserBadge,
+  removeUserPaint,
   setUserBadge,
   setUserPaint,
 } from '@app/store/chat/actions/cosmetics';
@@ -131,7 +133,7 @@ describe('cosmetics entitlement-burst churn', () => {
     expect(jest.mocked(storageService.set)).not.toHaveBeenCalled();
   });
 
-  test('clearing a linked wearer rewrites their snapshot without cosmetics', () => {
+  test('clearing a linked wearer rewrites their snapshot without cosmetics before any timer advance', () => {
     rememberSevenTvUserTwitchLink('stv-user-0', 'ttv-user-0');
     addBadge(buildBadge());
     setUserBadge('ttv-user-0', BADGE_ID);
@@ -139,7 +141,6 @@ describe('cosmetics entitlement-burst churn', () => {
     jest.mocked(storageService.set).mockClear();
 
     removeUserBadge('ttv-user-0');
-    jest.advanceTimersByTime(1000);
 
     const expectedCosmetics: CachedUserCosmetics = {
       badge: undefined,
@@ -157,6 +158,82 @@ describe('cosmetics entitlement-burst churn', () => {
         { expiry: new Date(expectedCosmetics.expiresAt) },
       ],
     ]);
+  });
+
+  test('a removal inside the set debounce window flushes the wearer exactly once, with the cosmetic gone', () => {
+    rememberSevenTvUserTwitchLink('stv-user-0', 'ttv-user-0');
+    addBadge(buildBadge());
+    setUserBadge('ttv-user-0', BADGE_ID);
+
+    removeUserBadge('ttv-user-0');
+
+    const expectedCosmetics: CachedUserCosmetics = {
+      badge: undefined,
+      badgeId: null,
+      expiresAt: Date.now() + 30 * 60 * 1000,
+      paint: undefined,
+      paintId: null,
+      ttvUserId: 'ttv-user-0',
+    };
+    expect(jest.mocked(storageService.set).mock.calls).toEqual([
+      [
+        'sevenTvUserCosmetics_user-cosmetics:stv-user-0',
+        expectedCosmetics,
+        'seven_tv_cache',
+        { expiry: new Date(expectedCosmetics.expiresAt) },
+      ],
+    ]);
+
+    jest.advanceTimersByTime(1000);
+
+    expect(jest.mocked(storageService.set).mock.calls).toHaveLength(1);
+  });
+
+  test('a no-op removal for a linked wearer writes nothing', () => {
+    rememberSevenTvUserTwitchLink('stv-user-0', 'ttv-user-0');
+
+    removeUserBadge('ttv-user-0');
+    removeUserPaint('ttv-user-0');
+    jest.advanceTimersByTime(1000);
+
+    expect(jest.mocked(storageService.set)).not.toHaveBeenCalled();
+  });
+
+  test('applying cached cosmetics rewrites no wearer snapshot', async () => {
+    rememberSevenTvUserTwitchLink('stv-user-0', 'ttv-user-0');
+    const cached: CachedUserCosmetics = {
+      badge: buildBadge(),
+      badgeId: BADGE_ID,
+      expiresAt: Date.now() + 60 * 60 * 1000,
+      paint: buildPaint(),
+      paintId: PAINT_ID,
+      ttvUserId: 'ttv-user-0',
+    };
+    jest.mocked(storageService.getString).mockReturnValueOnce(cached);
+
+    await fetchAndCacheUserCosmetics('stv-user-0');
+    jest.advanceTimersByTime(1000);
+
+    expect(jest.mocked(storageService.set)).not.toHaveBeenCalled();
+  });
+
+  test('a genuine entitlement write after a cached apply still schedules the snapshot sync', async () => {
+    rememberSevenTvUserTwitchLink('stv-user-0', 'ttv-user-0');
+    const cached: CachedUserCosmetics = {
+      badge: buildBadge(),
+      badgeId: BADGE_ID,
+      expiresAt: Date.now() + 60 * 60 * 1000,
+      paint: buildPaint(),
+      paintId: PAINT_ID,
+      ttvUserId: 'ttv-user-0',
+    };
+    jest.mocked(storageService.getString).mockReturnValueOnce(cached);
+    await fetchAndCacheUserCosmetics('stv-user-0');
+
+    setUserPaint('ttv-user-0', 'paint-other');
+    jest.advanceTimersByTime(1000);
+
+    expect(jest.mocked(storageService.set).mock.calls).toHaveLength(1);
   });
 
   test('re-adding an equal paint definition keeps the stored object identity', () => {
