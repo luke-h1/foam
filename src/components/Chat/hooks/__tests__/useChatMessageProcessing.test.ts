@@ -447,6 +447,45 @@ describe('useChatMessageProcessing', () => {
     ]);
   });
 
+  test('a channel switch cancels an in-flight reprocess walk', () => {
+    jest.useFakeTimers();
+    const messages = Array.from({ length: 8 }, (_, index) =>
+      createChatMessage({
+        tags: { id: `stored-${index}` },
+        text: `stored message ${index}`,
+      }),
+    );
+    const hook = renderHook(
+      ({ channelId }: { channelId: string }) =>
+        useChatMessageProcessing({
+          channelId,
+          handleNewMessage: jest.fn(),
+          isAtBottomRef: { current: true },
+          maintainBottomAfterContentChange: jest.fn(),
+          messages$: {
+            peek: () => messages,
+          },
+          show7TvEmotes: true,
+          show7tvBadges: true,
+          userLogin: 'viewer',
+        }),
+      { initialProps: { channelId: 'channel-1' } },
+    );
+
+    act(() => {
+      hook.result.current.reprocessAllMessages();
+    });
+
+    expect(mockUpdateMessages).toHaveBeenCalledTimes(1);
+
+    hook.rerender({ channelId: 'channel-2' });
+    act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    expect(mockUpdateMessages).toHaveBeenCalledTimes(1);
+  });
+
   test('passes hydration dependencies used by visible asset loading', async () => {
     jest.useFakeTimers();
     const visibleMessage = createChatMessage({

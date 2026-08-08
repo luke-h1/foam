@@ -168,20 +168,34 @@ const convertV4BadgeToSanitised = (badge: V4Badge): SanitisedBadgeSet => {
   });
 };
 
+/**
+ * Applying a cached snapshot goes through the same binding writers as live
+ * entitlements, and those writers re-sync the snapshot they were just applied
+ * from - stamping a fresh TTL on every cache hit, so stale cosmetics pin
+ * indefinitely while the user is seen. Suppressing the sync for the duration
+ * of the synchronous apply keeps cache reads from counting as writes.
+ */
+let suppressSnapshotSync = false;
+
 function applyCachedUserCosmetics(cosmetics: CachedUserCosmetics) {
   if (!cosmetics.ttvUserId) {
     return;
   }
   const { badgeId, paintId, ttvUserId } = cosmetics;
-  batch(() => {
-    if (paintId) {
-      setUserPaint(ttvUserId, paintId);
-    }
+  suppressSnapshotSync = true;
+  try {
+    batch(() => {
+      if (paintId) {
+        setUserPaint(ttvUserId, paintId);
+      }
 
-    if (badgeId) {
-      setUserBadge(ttvUserId, badgeId);
-    }
-  });
+      if (badgeId) {
+        setUserBadge(ttvUserId, badgeId);
+      }
+    });
+  } finally {
+    suppressSnapshotSync = false;
+  }
 }
 
 /**
@@ -295,6 +309,10 @@ const flushPendingUserCosmeticsSnapshots = (): void => {
 };
 
 const scheduleUserCosmeticsSnapshotSync = (ttvUserId: string): void => {
+  if (suppressSnapshotSync) {
+    return;
+  }
+
   const sevenTvUserId = getSevenTvUserIdForTwitchId(ttvUserId);
   if (!sevenTvUserId) {
     return;
@@ -308,6 +326,23 @@ const scheduleUserCosmeticsSnapshotSync = (ttvUserId: string): void => {
     userCosmeticsSnapshotTimer = null;
     flushPendingUserCosmeticsSnapshots();
   }, USER_COSMETICS_SNAPSHOT_DEBOUNCE_MS);
+};
+
+/**
+ * Removal counterpart to the debounced schedule: an app kill inside the debounce
+ * window must not resurrect a removed cosmetic from the stale snapshot, so
+ * removals flush the wearer synchronously. Called after the store mutation so
+ * the snapshot reflects the post-removal state, and resolved here because the
+ * entitlement bridge unlinks the 7TV user only after clearing the bindings.
+ */
+const syncUserCosmeticsSnapshotNow = (ttvUserId: string): void => {
+  const sevenTvUserId = getSevenTvUserIdForTwitchId(ttvUserId);
+  if (!sevenTvUserId) {
+    return;
+  }
+
+  pendingUserCosmeticsSnapshots.delete(ttvUserId);
+  syncCachedUserCosmeticsFromStore(sevenTvUserId, ttvUserId);
 };
 
 export const fetchAndCacheUserCosmetics = async (
@@ -738,8 +773,6 @@ export const removeBadge = (badgeId: string) => {
 };
 
 export const removeUserBadge = (ttvUserId: string) => {
-  scheduleUserCosmeticsSnapshotSync(ttvUserId);
-
   const current = chatStore$.userBadgeIds.peek();
   if (!(ttvUserId in current)) {
     return;
@@ -747,6 +780,7 @@ export const removeUserBadge = (ttvUserId: string) => {
 
   const { [ttvUserId]: _, ...rest } = current;
   chatStore$.userBadgeIds.set(rest);
+  syncUserCosmeticsSnapshotNow(ttvUserId);
   scheduleCosmeticsPersist('bindings');
   scheduleCosmeticBindingsBump();
 };
@@ -778,8 +812,6 @@ export const removePaint = (paintId: string) => {
  * same rationale as `setUserPaint`.
  */
 export const removeUserPaint = (ttvUserId: string) => {
-  scheduleUserCosmeticsSnapshotSync(ttvUserId);
-
   const current = chatStore$.userPaintIds.peek();
   if (!(ttvUserId in current)) {
     return;
@@ -787,6 +819,7 @@ export const removeUserPaint = (ttvUserId: string) => {
 
   const { [ttvUserId]: _, ...rest } = current;
   chatStore$.userPaintIds.set(rest);
+  syncUserCosmeticsSnapshotNow(ttvUserId);
   scheduleCosmeticsPersist('bindings');
 };
 

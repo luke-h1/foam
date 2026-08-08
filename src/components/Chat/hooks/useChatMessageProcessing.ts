@@ -171,6 +171,7 @@ export function useChatMessageProcessing({
   const hydrationEpochRef = useRef(0);
   const activeHydrationPassRef = useRef<Promise<void> | null>(null);
   const latestVisibleMessagesRef = useRef<AnyChatMessageType[]>([]);
+  const cancelEnrichMessageSetRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     return () => {
@@ -179,6 +180,8 @@ export function useChatMessageProcessing({
       // also reads scratch state that a channel switch resets, so a timer left
       // running would hydrate the new channel against the old one's messages.
       clearVisibleAssetHydrationTimer();
+      cancelEnrichMessageSetRef.current?.();
+      cancelEnrichMessageSetRef.current = null;
     };
   }, [channelId]);
 
@@ -275,7 +278,8 @@ export function useChatMessageProcessing({
       return;
     }
 
-    enrichMessageSet({
+    cancelEnrichMessageSetRef.current?.();
+    cancelEnrichMessageSetRef.current = enrichMessageSet({
       channelId,
       emoteData,
       messages: messages$.peek(),
