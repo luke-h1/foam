@@ -174,8 +174,6 @@ const convertV4BadgeToSanitised = (badge: V4Badge): SanitisedBadgeSet => {
  * from - stamping a fresh TTL on every cache hit, so stale cosmetics pin
  * indefinitely while the user is seen. Suppressing the sync for the duration
  * of the synchronous apply keeps cache reads from counting as writes.
- * `removeUserCosmetics` reuses the flag to coalesce its paired removals into
- * one flush.
  */
 let suppressSnapshotSync = false;
 
@@ -277,9 +275,7 @@ function buildCachedUserCosmeticsFromStore(
 }
 
 /**
- * Mirror live chatStore bindings into the per-user GQL cache. Internal to the
- * store: callers never sync by hand - the binding writers below schedule the
- * debounced snapshot sync themselves.
+ * Exported only for its spec; the binding writers below are the callers.
  */
 export const syncCachedUserCosmeticsFromStore = (
   sevenTvUserId: string,
@@ -292,11 +288,9 @@ export const syncCachedUserCosmeticsFromStore = (
 };
 
 /**
- * Debounced per-user snapshot syncs derived from binding writes, following the
- * scheduleCosmeticsPersist pattern: entitlements arrive in bursts, so dirty
- * wearers coalesce into one flush per quiet window (matching the bindings-bump
- * coalesce). The 7TV user id is resolved at write time because reset events
- * drop the link right after clearing the bindings.
+ * Entitlements arrive in bursts, so dirty wearers coalesce into one flush per
+ * quiet window. The 7TV user id is resolved at write time because reset
+ * events drop the link right after clearing the bindings.
  */
 const USER_COSMETICS_SNAPSHOT_DEBOUNCE_MS = 1000;
 let userCosmeticsSnapshotTimer: ReturnType<typeof setTimeout> | null = null;
@@ -331,11 +325,9 @@ const scheduleUserCosmeticsSnapshotSync = (ttvUserId: string): void => {
 };
 
 /**
- * Removal counterpart to the debounced schedule: an app kill inside the debounce
- * window must not resurrect a removed cosmetic from the stale snapshot, so
- * removals flush the wearer synchronously. Called after the store mutation so
- * the snapshot reflects the post-removal state, and resolved here because the
- * entitlement bridge unlinks the 7TV user only after clearing the bindings.
+ * An app kill inside the debounce window must not resurrect a removed
+ * cosmetic from the stale snapshot, so removals flush the wearer
+ * synchronously, after the store mutation.
  */
 const syncUserCosmeticsSnapshotNow = (ttvUserId: string): void => {
   if (suppressSnapshotSync) {
@@ -352,10 +344,9 @@ const syncUserCosmeticsSnapshotNow = (ttvUserId: string): void => {
 };
 
 /**
- * A bindings wipe (chat unmount, dev-tools clears) does not stop the debounce
- * timer, so a flush landing after the wipe would persist paint-less snapshots
- * with a fresh TTL for wearers who still have cosmetics. Flushing before the
- * wipe writes the snapshots from the still-intact bindings instead.
+ * A flush landing after a bindings wipe (chat unmount, dev-tools clears)
+ * would persist paint-less snapshots for wearers who still have cosmetics;
+ * flushing before the wipe writes them from the intact bindings.
  */
 const flushUserCosmeticsSnapshotsBeforeBindingsClear = (): void => {
   if (userCosmeticsSnapshotTimer) {
@@ -844,9 +835,8 @@ export const removeUserPaint = (ttvUserId: string) => {
 };
 
 /**
- * Entitlement resets drop both bindings at once. Suppressing the per-removal
- * flush and syncing after both keeps the write synchronous inside the reset
- * event but hits MMKV once per wearer, with the final state.
+ * Entitlement resets drop both bindings; one synchronous flush after both
+ * removals keeps the crash-safety write but hits MMKV once per wearer.
  */
 export const removeUserCosmetics = (ttvUserId: string): void => {
   const hadBindings =

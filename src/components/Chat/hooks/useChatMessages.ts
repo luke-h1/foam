@@ -388,10 +388,8 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   }, [bufferRef, clearDelayTick, delayQueueRef]);
 
   /**
-   * Moderation spans both halves of the pipeline: rows still waiting in the
-   * ingest buffer / delay queue and rows already committed to the store. Each
-   * handler below applies the event to both so the IRC layer makes one call
-   * per moderation event and the halves cannot drift.
+   * One call per moderation event: each handler hits the ingest buffer, the
+   * delay queue and the committed store so the halves cannot drift.
    */
   const removeChatMessageById = useCallback(
     (messageId: string) => {

@@ -92,10 +92,6 @@ export function getSevenTvUserIdForTwitchId(
   return sevenTvUserIdByTwitchId.get(twitchUserId);
 }
 
-/**
- * Drops every link a 7TV user holds: the reverse Twitch-id entries, the
- * entitlement ids remembered for those Twitch users, and the forward entry.
- */
 export function unlinkSevenTvUser(sevenTvUserId: string): void {
   const twitchIds = twitchIdsBySevenTvUserId.get(sevenTvUserId);
   if (!twitchIds) {

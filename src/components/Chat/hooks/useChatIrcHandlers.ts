@@ -7,9 +7,8 @@ import { createRoomStateTracker } from '../util/roomState/roomStateTracker';
 type UseChatIrcHandlersOptions = Omit<ChatIrcHandlerDeps, 'roomStateTracker'>;
 
 /**
- * Thin memoizing wrapper over `createChatIrcHandlers`: owns the mount-scoped
- * room-state tracker (PART resets it between channels) and keeps handler
- * identity stable for the IRC transport.
+ * The room-state tracker is deliberately mount-scoped, not per-channel:
+ * `onPart` resets it on channel switches.
  */
 export function useChatIrcHandlers({
   channelId,

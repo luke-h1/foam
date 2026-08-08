@@ -6,9 +6,8 @@ import { hasRenderableCosmetics } from '@app/store/chat/actions/userCosmeticsFet
 import { logger } from '@app/utils/logger';
 
 /**
- * Bootstraps the signed-in user's own 7TV cosmetics once per chat session.
- * Chatter cosmetics fetching lives in
- * `store/chat/actions/userCosmeticsFetch` - import it directly.
+ * Only the signed-in user's own cosmetics; chatter fetching lives in
+ * `store/chat/actions/userCosmeticsFetch`.
  */
 export function useChatCosmetics(options: { userId?: string | null } = {}) {
   const { userId } = options;

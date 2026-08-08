@@ -89,9 +89,8 @@ function buildBadge(): SanitisedBadgeSet {
 }
 
 function resetStore() {
-  // Clears the session cosmetics cache and any pending debounced snapshot
-  // sync so refreshes triggered by re-added definitions cannot leak wearer
-  // writes from a previous test into this one's storage counts.
+  // Also drops pending debounced snapshot syncs, so wearer writes cannot
+  // leak into the next test's storage counts.
   clearUserCosmeticsCache();
   chatStore$.paints.set({});
   chatStore$.badges.set({});

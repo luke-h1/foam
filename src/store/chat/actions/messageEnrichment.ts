@@ -68,12 +68,11 @@ export function hasEnrichmentEmoteSources(
 }
 
 /**
- * Recomputes parts and badges for a set of committed messages, batched so a
- * full window never parses in one tick (6 messages per batch, 32ms between
- * batches, updates flushed per batch). When `processedMessageIds` is given a
- * message already in the set is skipped unless a text part still holds a raw
- * @mention; without it every message in the set is recomputed. Returns a
- * cancel function that stops the walk.
+ * Recomputes parts and badges for committed messages in timed batches so a
+ * full window never parses in one tick. With `processedMessageIds`, already
+ * processed messages are skipped unless a text part still holds a raw
+ * @mention; without it every message is recomputed. Returns a cancel
+ * function.
  */
 export function enrichMessageSet({
   channelId,
