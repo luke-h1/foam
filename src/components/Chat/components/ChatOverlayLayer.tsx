@@ -26,6 +26,7 @@ import { UserActionSheet } from './UserActionSheet';
 export interface ChatOverlayLayerProps {
   canModerateChat: boolean;
   channelId: string;
+  channelName: string;
   currentUserId?: string;
   hiddenUsers: string[];
   highlightedUsers: string[];
@@ -56,6 +57,7 @@ export interface ChatOverlayLayerProps {
 export const ChatOverlayLayer = memo(function ChatOverlayLayer({
   canModerateChat,
   channelId,
+  channelName,
   currentUserId,
   hiddenUsers,
   highlightedUsers,
@@ -146,7 +148,7 @@ export const ChatOverlayLayer = memo(function ChatOverlayLayer({
   return (
     <>
       {isDevToolsEnabled && chatDebugTools ? (
-        <ChatDebugLogRecorder channelId={channelId} />
+        <ChatDebugLogRecorder channelId={channelId} channelName={channelName} />
       ) : null}
 
       {isEmoteSheetMounted ? (

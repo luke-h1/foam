@@ -1,6 +1,7 @@
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
+
 import {
   acquireChatDebugLog,
-  clearChatDebugLog,
   getChatDebugIrcLines,
   getChatDebugIrcLinesForLogin,
   isChatDebugLogEnabled,
@@ -8,26 +9,27 @@ import {
   releaseChatDebugLog,
 } from '../chatDebugLog';
 
+const CHANNEL_ID = 'channel-1';
+
 const privmsg = (login: string, body: string) =>
   `@badge-info=;badges=moderator/1;color=#FF0000;display-name=${login};id=abc;user-id=123 :${login}!${login}@${login}.tmi.twitch.tv PRIVMSG #channel :${body}`;
 
 describe('chatDebugLog', () => {
   beforeEach(() => {
-    acquireChatDebugLog();
-    clearChatDebugLog();
+    chatStore$.currentChannelId.set(CHANNEL_ID);
+    acquireChatDebugLog(CHANNEL_ID, 'channel');
   });
 
   afterEach(() => {
-    while (isChatDebugLogEnabled()) {
-      releaseChatDebugLog();
-    }
+    releaseChatDebugLog(CHANNEL_ID, 'channel');
+    chatStore$.currentChannelId.set(null);
   });
 
   test('records lines newest first', () => {
     recordChatDebugIrcLine('first');
     recordChatDebugIrcLine('second');
 
-    expect(getChatDebugIrcLines().map(entry => entry.line)).toEqual([
+    expect(getChatDebugIrcLines(CHANNEL_ID).map(entry => entry.line)).toEqual([
       'second',
       'first',
     ]);
@@ -36,32 +38,67 @@ describe('chatDebugLog', () => {
   test('marks flood-dropped lines', () => {
     recordChatDebugIrcLine(privmsg('someuser', 'hello'), true);
 
-    const [entry] = getChatDebugIrcLines();
+    const [entry] = getChatDebugIrcLines(CHANNEL_ID);
     expect(entry?.dropped).toBe(true);
   });
 
   test('ignores records once every recorder releases and wipes the buffer', () => {
     recordChatDebugIrcLine('kept');
-    releaseChatDebugLog();
+    releaseChatDebugLog(CHANNEL_ID, 'channel');
 
     expect(isChatDebugLogEnabled()).toBe(false);
-    expect(getChatDebugIrcLines()).toEqual([]);
+    expect(getChatDebugIrcLines(CHANNEL_ID)).toEqual([]);
 
     recordChatDebugIrcLine('ignored');
-    expect(getChatDebugIrcLines()).toEqual([]);
+    expect(getChatDebugIrcLines(CHANNEL_ID)).toEqual([]);
   });
 
   test('keeps recording while another recorder is still acquired', () => {
-    acquireChatDebugLog();
+    acquireChatDebugLog(CHANNEL_ID, 'channel');
     recordChatDebugIrcLine('first');
-    releaseChatDebugLog();
+    releaseChatDebugLog(CHANNEL_ID, 'channel');
 
     expect(isChatDebugLogEnabled()).toBe(true);
     recordChatDebugIrcLine('second');
-    expect(getChatDebugIrcLines().map(entry => entry.line)).toEqual([
+    expect(getChatDebugIrcLines(CHANNEL_ID).map(entry => entry.line)).toEqual([
       'second',
       'first',
     ]);
+  });
+
+  test('scopes captures per channel so stacked screens do not wipe or pollute each other', () => {
+    const otherLine = ':bob!bob@bob.tmi.twitch.tv PRIVMSG #other :two';
+    recordChatDebugIrcLine(privmsg('alice', 'one'));
+
+    acquireChatDebugLog('channel-2', 'other');
+    recordChatDebugIrcLine(otherLine);
+
+    expect(getChatDebugIrcLines(CHANNEL_ID).map(entry => entry.line)).toEqual([
+      privmsg('alice', 'one'),
+    ]);
+    expect(getChatDebugIrcLines('channel-2').map(entry => entry.line)).toEqual([
+      otherLine,
+    ]);
+
+    releaseChatDebugLog('channel-2', 'other');
+    expect(getChatDebugIrcLines('channel-2')).toEqual([]);
+    expect(getChatDebugIrcLines(CHANNEL_ID)).toHaveLength(1);
+  });
+
+  test('drops lines for channels with no active recorder', () => {
+    recordChatDebugIrcLine(':bob!bob@bob.tmi.twitch.tv PRIVMSG #other :hi');
+
+    expect(getChatDebugIrcLines(CHANNEL_ID)).toEqual([]);
+  });
+
+  test('records channel-less socket lines into every active capture', () => {
+    acquireChatDebugLog('channel-2', 'other');
+    recordChatDebugIrcLine(':tmi.twitch.tv GLOBALUSERSTATE');
+
+    expect(getChatDebugIrcLines(CHANNEL_ID)).toHaveLength(1);
+    expect(getChatDebugIrcLines('channel-2')).toHaveLength(1);
+
+    releaseChatDebugLog('channel-2', 'other');
   });
 
   test('bounds the buffer to the most recent lines', () => {
@@ -69,7 +106,7 @@ describe('chatDebugLog', () => {
       recordChatDebugIrcLine(`line-${index}`);
     }
 
-    const lines = getChatDebugIrcLines();
+    const lines = getChatDebugIrcLines(CHANNEL_ID);
     expect(lines).toHaveLength(250);
     expect(lines[0]?.line).toBe('line-299');
     expect(lines[249]?.line).toBe('line-50');

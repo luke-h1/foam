@@ -376,6 +376,7 @@ function UserActionSheetComponent({
               payload: getChatDebugUserSnapshot(login, username, userId),
               ircLines: getChatDebugIrcLinesForLogin(login || username),
             })}
+            style={styles.debugSection}
           />
         </ScrollView>
       </View>
@@ -439,6 +440,9 @@ const styles = StyleSheet.create({
   },
   actionTextDanger: {
     color: theme.colorRed,
+  },
+  debugSection: {
+    marginTop: theme.space8,
   },
   doneButton: {
     alignItems: 'center',

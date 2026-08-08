@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import * as Clipboard from 'expo-clipboard';
@@ -19,9 +19,10 @@ export interface ChatDebugSectionData {
 
 interface ChatDebugSectionProps {
   build: () => ChatDebugSectionData;
+  style?: StyleProp<ViewStyle>;
 }
 
-export function ChatDebugSection({ build }: ChatDebugSectionProps) {
+export function ChatDebugSection({ build, style }: ChatDebugSectionProps) {
   const { t } = useTranslation('chat');
   const chatDebugTools = usePreference('chatDebugTools');
   const data = isDevToolsEnabled && chatDebugTools ? build() : null;
@@ -41,7 +42,7 @@ export function ChatDebugSection({ build }: ChatDebugSectionProps) {
   };
 
   return (
-    <View style={styles.card} testID='chat-debug-section'>
+    <View style={[styles.card, style]} testID='chat-debug-section'>
       <View style={styles.headerRow}>
         <Text style={styles.title} weight='semibold'>
           {t('debug.title')}

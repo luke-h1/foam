@@ -13,49 +13,96 @@ export interface ChatDebugIrcLine {
 
 const MAX_DEBUG_IRC_LINES = 250;
 
-let activeRecorders = 0;
-const ircLines: ChatDebugIrcLine[] = [];
+/**
+ * Captures are scoped per channel so stacked stream screens cannot wipe or
+ * pollute each other's buffer. Buffers key off the app channel id (what
+ * `chatStore$.currentChannelId` holds) but inbound lines only carry the IRC
+ * `#login`, so `channelIdsByLogin` bridges the two at record time.
+ */
+const recorderCounts = new Map<string, number>();
+const channelIdsByLogin = new Map<string, string>();
+const buffers = new Map<string, ChatDebugIrcLine[]>();
 
-export function acquireChatDebugLog(): void {
-  activeRecorders += 1;
+export function acquireChatDebugLog(
+  channelId: string,
+  channelName: string,
+): void {
+  recorderCounts.set(channelId, (recorderCounts.get(channelId) ?? 0) + 1);
+  channelIdsByLogin.set(normaliseChatUsername(channelName), channelId);
 }
 
-export function releaseChatDebugLog(): void {
-  activeRecorders = Math.max(0, activeRecorders - 1);
-  if (activeRecorders === 0) {
-    ircLines.length = 0;
+export function releaseChatDebugLog(
+  channelId: string,
+  channelName: string,
+): void {
+  const next = (recorderCounts.get(channelId) ?? 1) - 1;
+  if (next > 0) {
+    recorderCounts.set(channelId, next);
+    return;
+  }
+  recorderCounts.delete(channelId);
+  buffers.delete(channelId);
+  const login = normaliseChatUsername(channelName);
+  if (channelIdsByLogin.get(login) === channelId) {
+    channelIdsByLogin.delete(login);
   }
 }
 
 export function isChatDebugLogEnabled(): boolean {
-  return activeRecorders > 0;
+  return recorderCounts.size > 0;
+}
+
+function getLineChannelLogin(line: string): string | null {
+  const { rest } = splitIrcLine(line);
+  const hashIndex = rest.indexOf('#');
+  if (hashIndex === -1) {
+    return null;
+  }
+  const end = rest.indexOf(' ', hashIndex);
+  return rest.slice(hashIndex + 1, end === -1 ? undefined : end).toLowerCase();
+}
+
+function appendToBuffer(channelId: string, entry: ChatDebugIrcLine): void {
+  let buffer = buffers.get(channelId);
+  if (!buffer) {
+    buffer = [];
+    buffers.set(channelId, buffer);
+  }
+  buffer.push(entry);
+  if (buffer.length > MAX_DEBUG_IRC_LINES) {
+    buffer.splice(0, buffer.length - MAX_DEBUG_IRC_LINES);
+  }
 }
 
 export function recordChatDebugIrcLine(line: string, dropped = false): void {
-  if (activeRecorders === 0) {
+  if (recorderCounts.size === 0) {
     return;
   }
-  ircLines.push({ line, receivedAt: Date.now(), dropped });
-  if (ircLines.length > MAX_DEBUG_IRC_LINES) {
-    ircLines.splice(0, ircLines.length - MAX_DEBUG_IRC_LINES);
+  const entry: ChatDebugIrcLine = { line, receivedAt: Date.now(), dropped };
+  const login = getLineChannelLogin(line);
+  if (login !== null) {
+    const channelId = channelIdsByLogin.get(login);
+    if (channelId !== undefined) {
+      appendToBuffer(channelId, entry);
+    }
+    return;
+  }
+  // Channel-less lines (auth numerics, GLOBALUSERSTATE) are socket-wide.
+  for (const channelId of recorderCounts.keys()) {
+    appendToBuffer(channelId, entry);
   }
 }
 
-export function clearChatDebugLog(): void {
-  ircLines.length = 0;
-}
-
-export function getChatDebugIrcLines(): ChatDebugIrcLine[] {
-  return ircLines.slice().reverse();
+export function getChatDebugIrcLines(channelId: string): ChatDebugIrcLine[] {
+  return (buffers.get(channelId) ?? []).slice().reverse();
 }
 
 /**
  * User-typed text reaches a line in two places: the trailing parameter (the
  * message body) and tag values like reply-parent-msg-body. Tag values escape
  * raw ';' and space, so the tags token ends at the first space and real tags
- * always split on ';'. That keeps the matchers below anchored to actual tag
- * keys and the sender prefix instead of firing on lookalike text inside a
- * body.
+ * always split on ';', which lets the login matchers anchor to real tag keys
+ * and the sender prefix instead of user-typed lookalikes.
  */
 function splitIrcLine(line: string): {
   tags: string | null;
@@ -109,9 +156,11 @@ export function getChatDebugIrcLinesForLogin(
     `(?:^@|;)(?:login|display-name)=${escaped}(?:;|$)`,
   );
 
+  const channelId = chatStore$.currentChannelId.peek();
+  const lines = channelId ? (buffers.get(channelId) ?? []) : [];
   const matches: ChatDebugIrcLine[] = [];
-  for (let index = ircLines.length - 1; index >= 0; index -= 1) {
-    const entry = ircLines[index];
+  for (let index = lines.length - 1; index >= 0; index -= 1) {
+    const entry = lines[index];
     if (!entry) {
       continue;
     }
