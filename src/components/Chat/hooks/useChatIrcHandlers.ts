@@ -5,12 +5,7 @@ import {
   addMessage,
   clearMessages,
   clearMessagesWithNotice,
-  getMessageById,
   getMessageColor,
-  moderateMessageById,
-  moderateMessagesByLogin,
-  removeMessageById,
-  removeMessagesByLogin,
 } from '@app/store/chat/actions/messages';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { getPreferences } from '@app/store/preferenceStore';
@@ -53,9 +48,9 @@ interface UseChatIrcHandlersOptions {
   listRef: RefObject<ChatListRef | null>;
   isLoadingRecentMessagesRef?: RefObject<boolean>;
   messages$: { peek: () => AnyChatMessageType[] };
-  moderateBufferedMessageById: (messageId: string, notice: string) => void;
-  moderateBufferedMessagesByLogin: (login: string, notice: string) => void;
-  removeBufferedMessagesByLogin: (login: string) => void;
+  moderateChatMessageById: (messageId: string, notice: string) => void;
+  moderateChatMessagesByLogin: (login: string, notice: string) => void;
+  removeChatMessagesByLogin: (login: string) => void;
   enqueueLiveChatMessage: (
     baseMessage: AnyChatMessageType,
     countUnread?: boolean,
@@ -67,7 +62,7 @@ interface UseChatIrcHandlersOptions {
     userId?: string,
     countUnread?: boolean,
   ) => void;
-  removeBufferedMessageById: (messageId: string) => void;
+  removeChatMessageById: (messageId: string) => void;
 }
 
 export function useChatIrcHandlers({
@@ -80,11 +75,11 @@ export function useChatIrcHandlers({
   isLoadingRecentMessagesRef,
   listRef,
   messages$,
-  moderateBufferedMessageById,
-  moderateBufferedMessagesByLogin,
+  moderateChatMessageById,
+  moderateChatMessagesByLogin,
   processMessageEmotes,
-  removeBufferedMessageById,
-  removeBufferedMessagesByLogin,
+  removeChatMessageById,
+  removeChatMessagesByLogin,
 }: UseChatIrcHandlersOptions) {
   const roomStateTracker: RoomStateTracker = useMemo(
     () => createRoomStateTracker(),
@@ -250,8 +245,7 @@ export function useChatIrcHandlers({
         );
 
         if (deletedMessageStyle === 'hidden') {
-          removeBufferedMessagesByLogin(username);
-          removeMessagesByLogin(username);
+          removeChatMessagesByLogin(username);
           return;
         }
 
@@ -260,8 +254,7 @@ export function useChatIrcHandlers({
             ? `Timed out (${banDuration}s)`
             : 'Permanently banned';
 
-        moderateBufferedMessagesByLogin(username, moderationNotice);
-        moderateMessagesByLogin(username, moderationNotice);
+        moderateChatMessagesByLogin(username, moderationNotice);
         return;
       }
 
@@ -293,8 +286,8 @@ export function useChatIrcHandlers({
       isLoadingRecentMessagesRef,
       listRef,
       messages$,
-      moderateBufferedMessagesByLogin,
-      removeBufferedMessagesByLogin,
+      moderateChatMessagesByLogin,
+      removeChatMessagesByLogin,
     ],
   );
 
@@ -309,29 +302,13 @@ export function useChatIrcHandlers({
       });
 
       if (getPreferences().deletedMessageStyle === 'hidden') {
-        removeBufferedMessageById(targetMsgId);
-        removeMessageById(targetMsgId);
+        removeChatMessageById(targetMsgId);
         return;
       }
 
-      const moderationNotice = 'Deleted';
-      moderateBufferedMessageById(targetMsgId, moderationNotice);
-      const existingMessage = getMessageById(targetMsgId);
-
-      if (existingMessage) {
-        moderateMessageById(targetMsgId, moderationNotice);
-        return;
-      }
-
-      removeBufferedMessageById(targetMsgId);
-      removeMessageById(targetMsgId);
+      moderateChatMessageById(targetMsgId, 'Deleted');
     },
-    [
-      channelId,
-      channelName,
-      moderateBufferedMessageById,
-      removeBufferedMessageById,
-    ],
+    [channelId, channelName, moderateChatMessageById, removeChatMessageById],
   );
 
   const onJoin = useCallback(() => {

@@ -4,6 +4,11 @@ import type { BufferedMessage } from '@app/components/Chat/util/messageBuffer';
 import {
   addMessages,
   getMaxChatMessages,
+  getMessageById,
+  moderateMessageById,
+  moderateMessagesByLogin,
+  removeMessageById,
+  removeMessagesByLogin,
 } from '@app/store/chat/actions/messages';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 
@@ -12,9 +17,19 @@ import { useChatMessages } from '../useChatMessages';
 jest.mock('@app/store/chat/actions/messages', () => ({
   addMessages: jest.fn(),
   getMaxChatMessages: jest.fn(() => 600),
+  getMessageById: jest.fn(),
+  moderateMessageById: jest.fn(),
+  moderateMessagesByLogin: jest.fn(),
+  removeMessageById: jest.fn(),
+  removeMessagesByLogin: jest.fn(),
 }));
 
 const mockAddMessages = jest.mocked(addMessages);
+const mockGetMessageById = jest.mocked(getMessageById);
+const mockModerateMessageById = jest.mocked(moderateMessageById);
+const mockModerateMessagesByLogin = jest.mocked(moderateMessagesByLogin);
+const mockRemoveMessageById = jest.mocked(removeMessageById);
+const mockRemoveMessagesByLogin = jest.mocked(removeMessagesByLogin);
 const MAX_BUFFERED = getMaxChatMessages();
 
 function getLastFlushedMessages(): ChatMessageType<never>[] {
@@ -111,21 +126,120 @@ describe('useChatMessages', () => {
       expect(result.current.clearLocalMessages).toBe(
         firstRender.clearLocalMessages,
       );
-      expect(result.current.removeBufferedMessageById).toBe(
-        firstRender.removeBufferedMessageById,
+      expect(result.current.removeChatMessageById).toBe(
+        firstRender.removeChatMessageById,
       );
-      expect(result.current.removeBufferedMessagesByLogin).toBe(
-        firstRender.removeBufferedMessagesByLogin,
+      expect(result.current.removeChatMessagesByLogin).toBe(
+        firstRender.removeChatMessagesByLogin,
       );
-      expect(result.current.moderateBufferedMessageById).toBe(
-        firstRender.moderateBufferedMessageById,
+      expect(result.current.moderateChatMessageById).toBe(
+        firstRender.moderateChatMessageById,
       );
-      expect(result.current.moderateBufferedMessagesByLogin).toBe(
-        firstRender.moderateBufferedMessagesByLogin,
+      expect(result.current.moderateChatMessagesByLogin).toBe(
+        firstRender.moderateChatMessagesByLogin,
       );
       expect(result.current.cleanup).toBe(firstRender.cleanup);
       expect(result.current.forceFlush).toBe(firstRender.forceFlush);
       expect(result.current.getBufferSize).toBe(firstRender.getBufferSize);
+    });
+  });
+
+  describe('Moderation coherence', () => {
+    test('moderateChatMessagesByLogin edits buffered rows and the store in one call', () => {
+      const { result } = renderHook(() => useChatMessages(defaultOptions));
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1'));
+      });
+      act(() => {
+        result.current.moderateChatMessagesByLogin(
+          'testuser',
+          'Timed out (600s)',
+        );
+      });
+
+      expect(mockModerateMessagesByLogin.mock.calls).toEqual([
+        ['testuser', 'Timed out (600s)'],
+      ]);
+
+      act(() => {
+        jest.advanceTimersByTime(250);
+      });
+
+      const [flushedMessage] = getLastFlushedMessages();
+      expect(flushedMessage?.moderationNotice).toBe('Timed out (600s)');
+    });
+
+    test('removeChatMessagesByLogin drops buffered rows and the store rows in one call', () => {
+      const { result } = renderHook(() => useChatMessages(defaultOptions));
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1'));
+      });
+      act(() => {
+        result.current.removeChatMessagesByLogin('testuser');
+      });
+
+      expect(mockRemoveMessagesByLogin.mock.calls).toEqual([['testuser']]);
+      expect(result.current.getBufferSize()).toBe(0);
+
+      act(() => {
+        jest.advanceTimersByTime(250);
+      });
+
+      expect(mockAddMessages).not.toHaveBeenCalled();
+    });
+
+    test('moderateChatMessageById moderates the store copy when it exists', () => {
+      mockGetMessageById.mockReturnValue(createMockMessage('1'));
+      const { result } = renderHook(() => useChatMessages(defaultOptions));
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1'));
+      });
+      act(() => {
+        result.current.moderateChatMessageById('1', 'Deleted');
+      });
+
+      expect(mockModerateMessageById.mock.calls).toEqual([['1', 'Deleted']]);
+      expect(mockRemoveMessageById).not.toHaveBeenCalled();
+
+      act(() => {
+        jest.advanceTimersByTime(250);
+      });
+
+      const [flushedMessage] = getLastFlushedMessages();
+      expect(flushedMessage?.moderationNotice).toBe('Deleted');
+    });
+
+    test('moderateChatMessageById removes everywhere when the store never saw the message', () => {
+      mockGetMessageById.mockReturnValue(undefined);
+      const { result } = renderHook(() => useChatMessages(defaultOptions));
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1'));
+      });
+      act(() => {
+        result.current.moderateChatMessageById('1', 'Deleted');
+      });
+
+      expect(mockModerateMessageById).not.toHaveBeenCalled();
+      expect(mockRemoveMessageById.mock.calls).toEqual([['1']]);
+      expect(result.current.getBufferSize()).toBe(0);
+    });
+
+    test('removeChatMessageById drops the buffered row and the store row in one call', () => {
+      const { result } = renderHook(() => useChatMessages(defaultOptions));
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1'));
+      });
+      act(() => {
+        result.current.removeChatMessageById('1');
+      });
+
+      expect(mockRemoveMessageById.mock.calls).toEqual([['1']]);
+      expect(result.current.getBufferSize()).toBe(0);
     });
   });
 
