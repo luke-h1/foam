@@ -61,16 +61,6 @@ export interface ChatStoreState {
     // observables for every row on every render.
     userPaintFlags: Record<string, boolean>;
   };
-  sharedChatBadgeCaches: {
-    sourceBadges: Record<
-      string,
-      { value: SanitisedBadgeSet | null; expiresAt: number }
-    >;
-    channelBadges: Record<
-      string,
-      { value: SanitisedBadgeSet[]; expiresAt: number }
-    >;
-  };
 }
 
 export const limitChannelCaches = (
@@ -121,10 +111,6 @@ const initialChatStoreState: ChatStoreState = {
   userBadgeIds: {},
   sessionCaches: {
     userPaintFlags: {},
-  },
-  sharedChatBadgeCaches: {
-    sourceBadges: {},
-    channelBadges: {},
   },
 };
 

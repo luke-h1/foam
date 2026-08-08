@@ -1,5 +1,3 @@
-import type { ViewStyle } from 'react-native';
-
 import type { ClearChatTags } from '@app/types/chat/irc-tags/clearchat';
 import type { ClearMsgTags } from '@app/types/chat/irc-tags/clearmsg';
 import type { GlobalUserStateTags } from '@app/types/chat/irc-tags/globaluserstate';
@@ -85,7 +83,6 @@ export interface ChatMessageType<
   message_nonce: string;
   timestamp?: string;
   sender: string;
-  style?: ViewStyle;
   parentDisplayName?: string;
   isSpecialNotice?: boolean;
   moderationNotice?: string;
