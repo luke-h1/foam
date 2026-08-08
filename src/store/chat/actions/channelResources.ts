@@ -80,10 +80,6 @@ export const deduplicateById = <T extends Identifiable>(
   items: readonly T[],
 ): T[] => Array.from(new Map(items.map(item => [item.id, item])).values());
 
-export const combineUniqueById = <T extends Identifiable>(
-  ...itemGroups: readonly T[][]
-): T[] => deduplicateById(itemGroups.flat());
-
 /**
  * Global (channel-independent) provider data is identical for every channel,
  * so re-downloading it on each channel join wastes a round trip per provider.
