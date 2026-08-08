@@ -156,11 +156,9 @@ describe('cache-service', () => {
     resolveDecode(makeImageRef({ release }));
     await flushMicrotasks();
 
-    // The stale result is released on arrival, not cached.
     expect(getCachedEmoteRef(url)).toBeNull();
     expect(release).toHaveBeenCalledTimes(1);
 
-    // The cleared inflight marker lets the next channel decode the same url.
     ensureCachedEmoteRef(url);
     await flushMicrotasks();
 

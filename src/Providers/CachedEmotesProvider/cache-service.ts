@@ -349,8 +349,8 @@ async function runDecode(
       { maxWidth: maxPx, maxHeight: maxPx },
     );
     if (inflight.get(url) !== requestEpoch || requestEpoch !== cacheEpoch) {
-      // The decode outlived a cache clear; release the bitmap now instead of
-      // leaving it to the GC, which lags exactly when memory is tight.
+      // The decode outlived its epoch: release now, the GC lags exactly when
+      // memory is tight.
       try {
         ref.release();
       } catch {
@@ -597,8 +597,7 @@ function pollMemoryHeadroom(): void {
 /**
  * Advisory, but with the expo-image wipe gated on the trim level: only
  * RUNNING_CRITICAL and above clears the memory cache, milder levels shed
- * refs only. That gate stays internal to this module - callers outside it
- * only see the reason-driven {@link trimDecodedEmotes}.
+ * refs only.
  */
 function handleNativeMemoryPressure(event: ImageMemoryPressureEvent): void {
   logMemoryPressureTrim({ trimLevel: event.level });
