@@ -6,8 +6,8 @@ import {
   limitChannelCaches,
   migratePersistedChatStore,
 } from '../observables/chatStore';
-import type { ChannelCacheType } from '../types/constants';
-import { emptyEmoteData } from '../types/constants';
+import type { ChannelCacheType, GlobalCacheType } from '../types/constants';
+import { emptyEmoteData, emptyGlobalCacheData } from '../types/constants';
 
 jest.mock('@legendapp/state/persist', () => ({
   configureObservablePersistence: jest.fn(),
@@ -101,23 +101,28 @@ describe('migratePersistedChatStore', () => {
     url: `https://example.com/${id}.png`,
   });
 
+  type LegacyChannelCache = ChannelCacheType & {
+    badges?: SanitisedBadgeSet[];
+    chatterinoBadges?: SanitisedBadgeSet[];
+    emotes?: SanitisedEmote[];
+    sevenTvPersonalBadges?: Record<string, SanitisedBadgeSet[]>;
+    sevenTvPersonalEmotes?: Record<string, SanitisedEmote[]>;
+  } & Partial<Omit<GlobalCacheType, 'lastUpdated'>>;
+
   beforeEach(() => {
     chatStore$.persisted.channelCaches.set({});
+    chatStore$.persisted.globalCaches.set({ ...emptyGlobalCacheData });
   });
 
-  test('strips legacy aggregate fields from hydrated channel caches', () => {
-    const legacyCache: ChannelCacheType & {
-      badges: SanitisedBadgeSet[];
-      chatterinoBadges: SanitisedBadgeSet[];
-      emotes: SanitisedEmote[];
-      sevenTvPersonalBadges: Record<string, SanitisedBadgeSet[]>;
-      sevenTvPersonalEmotes: Record<string, SanitisedEmote[]>;
-    } = {
+  test('strips legacy aggregate and global fields from hydrated channel caches', () => {
+    const legacyCache: LegacyChannelCache = {
       ...emptyEmoteData,
       badges: [badge('legacy-badge')],
+      bttvGlobalEmotes: [emote('legacy-global-emote')],
       chatterinoBadges: [badge('legacy-chatterino-badge')],
       emotes: [emote('legacy-emote')],
-      ffzGlobalBadges: [badge('kept-badge')],
+      ffzChannelBadges: [badge('kept-badge')],
+      ffzGlobalBadges: [badge('legacy-global-badge')],
       lastUpdated: 5_000,
       sevenTvPersonalBadges: {},
       sevenTvPersonalEmotes: { 'user-1': [emote('legacy-personal-emote')] },
@@ -131,9 +136,58 @@ describe('migratePersistedChatStore', () => {
       chatStore$.persisted.channelCaches.peek()['channel-1'],
     ).toEqual<ChannelCacheType>({
       ...emptyEmoteData,
-      ffzGlobalBadges: [badge('kept-badge')],
+      ffzChannelBadges: [badge('kept-badge')],
       lastUpdated: 5_000,
       twitchChannelEmotes: [emote('kept-emote')],
+    });
+  });
+
+  test('seeds the global slot from the newest channel copy before stripping', () => {
+    const olderCache: LegacyChannelCache = {
+      ...emptyEmoteData,
+      bttvGlobalEmotes: [emote('old-global-emote')],
+      lastUpdated: 2_000,
+    };
+    const newerCache: LegacyChannelCache = {
+      ...emptyEmoteData,
+      bttvGlobalEmotes: [emote('new-global-emote')],
+      ffzGlobalBadges: [badge('new-global-badge')],
+      lastUpdated: 8_000,
+    };
+    chatStore$.persisted.channelCaches.set({
+      'channel-old': olderCache,
+      'channel-new': newerCache,
+    });
+
+    migratePersistedChatStore();
+
+    expect(chatStore$.persisted.globalCaches.peek()).toEqual<GlobalCacheType>({
+      ...emptyGlobalCacheData,
+      bttvGlobalEmotes: [emote('new-global-emote')],
+      ffzGlobalBadges: [badge('new-global-badge')],
+      lastUpdated: 8_000,
+    });
+  });
+
+  test('does not overwrite a populated global slot with channel copies', () => {
+    chatStore$.persisted.globalCaches.set({
+      ...emptyGlobalCacheData,
+      bttvGlobalEmotes: [emote('current-global-emote')],
+      lastUpdated: 9_000,
+    });
+    const legacyCache: LegacyChannelCache = {
+      ...emptyEmoteData,
+      bttvGlobalEmotes: [emote('legacy-global-emote')],
+      lastUpdated: 8_000,
+    };
+    chatStore$.persisted.channelCaches.set({ 'channel-1': legacyCache });
+
+    migratePersistedChatStore();
+
+    expect(chatStore$.persisted.globalCaches.peek()).toEqual<GlobalCacheType>({
+      ...emptyGlobalCacheData,
+      bttvGlobalEmotes: [emote('current-global-emote')],
+      lastUpdated: 9_000,
     });
   });
 

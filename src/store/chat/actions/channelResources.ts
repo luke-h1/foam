@@ -9,7 +9,7 @@ import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { logger } from '@app/utils/logger';
 
-import type { ChannelCacheType } from '../types/constants';
+import type { ChannelCacheType, GlobalCacheType } from '../types/constants';
 
 export type ProviderName = 'bttv' | 'ffz' | 'seven_tv' | 'twitch';
 export type ProviderResourceScope = 'channel' | 'global' | 'local' | 'personal';
@@ -17,14 +17,39 @@ export type ProviderResourceType = 'badges' | 'emotes';
 
 export type Identifiable = { id: string };
 
+export type ChannelEmoteCacheKey =
+  | 'bttvChannelEmotes'
+  | 'ffzChannelEmotes'
+  | 'sevenTvChannelEmotes'
+  | 'twitchChannelEmotes'
+  | 'twitchSubscriberEmotes';
+
+export type GlobalEmoteCacheKey =
+  | 'bttvGlobalEmotes'
+  | 'ffzGlobalEmotes'
+  | 'sevenTvGlobalEmotes'
+  | 'twitchGlobalEmotes';
+
+export type EmoteCacheKey = ChannelEmoteCacheKey | GlobalEmoteCacheKey;
+
+export type ChannelBadgeCacheKey = 'ffzChannelBadges' | 'twitchChannelBadges';
+
+export type GlobalBadgeCacheKey = 'ffzGlobalBadges' | 'twitchGlobalBadges';
+
+export type BadgeCacheKey = ChannelBadgeCacheKey | GlobalBadgeCacheKey;
+
+export type ResourceCacheKey = EmoteCacheKey | BadgeCacheKey;
+
 /**
  * One ordered description of a single (provider, scope) resource: how to fetch
  * it, which cache field it populates, and how to label it in logs. The spec
  * list is the seam — adding a provider is a single entry, and the fan-out,
- * reporting, cache-reconcile, and merge are all driven from it.
+ * reporting, cache-reconcile, and merge are all driven from it. Channel-scope
+ * specs populate the per-channel cache; global-scope specs populate the shared
+ * `persisted.globalCaches` slot.
  */
 export interface ResourceSpec<
-  TKey extends keyof ChannelCacheType,
+  TKey extends ResourceCacheKey,
   TItem extends Identifiable,
 > {
   key: TKey;
@@ -43,38 +68,27 @@ export interface ResourceSpec<
   fetch: () => Promise<TItem[]>;
 }
 
-export type EmoteCacheKey =
-  | 'bttvChannelEmotes'
-  | 'bttvGlobalEmotes'
-  | 'ffzChannelEmotes'
-  | 'ffzGlobalEmotes'
-  | 'sevenTvChannelEmotes'
-  | 'sevenTvGlobalEmotes'
-  | 'twitchChannelEmotes'
-  | 'twitchGlobalEmotes'
-  | 'twitchSubscriberEmotes';
-
-export type BadgeCacheKey =
-  | 'ffzChannelBadges'
-  | 'ffzGlobalBadges'
-  | 'twitchChannelBadges'
-  | 'twitchGlobalBadges';
-
-export type EmoteResourceSets = Pick<ChannelCacheType, EmoteCacheKey>;
-export type BadgeResourceSets = Pick<ChannelCacheType, BadgeCacheKey>;
+export type ChannelEmoteResourceSets = Pick<
+  ChannelCacheType,
+  ChannelEmoteCacheKey
+>;
+export type ChannelBadgeResourceSets = Pick<
+  ChannelCacheType,
+  ChannelBadgeCacheKey
+>;
 
 export type EmoteResourceSpec = ResourceSpec<EmoteCacheKey, SanitisedEmote>;
 export type BadgeResourceSpec = ResourceSpec<BadgeCacheKey, SanitisedBadgeSet>;
 
 export type SettledSpec<
-  TKey extends keyof ChannelCacheType,
+  TKey extends ResourceCacheKey,
   TItem extends Identifiable,
 > = {
   spec: ResourceSpec<TKey, TItem>;
   result: PromiseSettledResult<TItem[]>;
 };
 
-type AnySettledSpec = SettledSpec<keyof ChannelCacheType, Identifiable>;
+type AnySettledSpec = SettledSpec<ResourceCacheKey, Identifiable>;
 
 export const deduplicateById = <T extends Identifiable>(
   items: readonly T[],
@@ -145,6 +159,102 @@ export const buildSubscriberEmoteSpec = ({
  */
 export const SEVEN_TV_SET_ID_LOOKUP_BUDGET_MS = 3000;
 
+const SEVEN_TV_GLOBAL_EMOTE_SPEC: EmoteResourceSpec = {
+  key: 'sevenTvGlobalEmotes',
+  name: 'seven_tv_global_emotes',
+  label: '7TV global emotes',
+  provider: 'seven_tv',
+  resourceType: 'emotes',
+  scope: 'global',
+  warningName: 'seven_tv_emotes_warning',
+  fetch: () =>
+    fetchGlobalResourceOnce('seven_tv_global_emotes', () =>
+      sevenTvService.getSanitisedEmoteSet('global'),
+    ),
+};
+
+const TWITCH_GLOBAL_EMOTE_SPEC: EmoteResourceSpec = {
+  key: 'twitchGlobalEmotes',
+  name: 'twitch_global_emotes',
+  label: 'Twitch global emotes',
+  provider: 'twitch',
+  resourceType: 'emotes',
+  scope: 'global',
+  warningName: 'twitch_emotes_warning',
+  fetch: () =>
+    fetchGlobalResourceOnce('twitch_global_emotes', () =>
+      twitchEmoteService.getGlobalEmotes(),
+    ),
+};
+
+const BTTV_GLOBAL_EMOTE_SPEC: EmoteResourceSpec = {
+  key: 'bttvGlobalEmotes',
+  name: 'bttv_global_emotes',
+  label: 'BTTV global emotes',
+  provider: 'bttv',
+  resourceType: 'emotes',
+  scope: 'global',
+  warningName: 'bttv_emotes_warning',
+  fetch: () =>
+    fetchGlobalResourceOnce('bttv_global_emotes', () =>
+      bttvEmoteService.getSanitisedGlobalEmotes(),
+    ),
+};
+
+const FFZ_GLOBAL_EMOTE_SPEC: EmoteResourceSpec = {
+  key: 'ffzGlobalEmotes',
+  name: 'ffz_global_emotes',
+  label: 'FFZ global emotes',
+  provider: 'ffz',
+  resourceType: 'emotes',
+  scope: 'global',
+  warningName: 'ffz_emotes_warning',
+  fetch: () =>
+    fetchGlobalResourceOnce('ffz_global_emotes', () =>
+      ffzService.getSanitisedGlobalEmotes(),
+    ),
+};
+
+const TWITCH_GLOBAL_BADGE_SPEC: BadgeResourceSpec = {
+  key: 'twitchGlobalBadges',
+  name: 'twitch_global_badges',
+  label: 'Twitch global badges',
+  provider: 'twitch',
+  resourceType: 'badges',
+  scope: 'global',
+  warningName: 'twitch_badges_warning',
+  fetch: () =>
+    fetchGlobalResourceOnce('twitch_global_badges', () =>
+      twitchBadgeService.listSanitisedGlobalBadges(),
+    ),
+};
+
+const FFZ_GLOBAL_BADGE_SPEC: BadgeResourceSpec = {
+  key: 'ffzGlobalBadges',
+  name: 'ffz_global_badges',
+  label: 'FFZ global badges',
+  provider: 'ffz',
+  resourceType: 'badges',
+  scope: 'global',
+  warningName: 'ffz_badges_warning',
+  fetch: () =>
+    fetchGlobalResourceOnce('ffz_global_badges', () =>
+      ffzService.getSanitisedGlobalBadges(),
+    ),
+};
+
+export const buildGlobalEmoteResourceSpecs = (): EmoteResourceSpec[] => [
+  SEVEN_TV_GLOBAL_EMOTE_SPEC,
+  TWITCH_GLOBAL_EMOTE_SPEC,
+  BTTV_GLOBAL_EMOTE_SPEC,
+  FFZ_GLOBAL_EMOTE_SPEC,
+];
+
+export const buildGlobalBadgeResourceSpecs = (): BadgeResourceSpec[] => [
+  TWITCH_GLOBAL_BADGE_SPEC,
+  FFZ_GLOBAL_BADGE_SPEC,
+];
+
 export const buildEmoteResourceSpecs = ({
   channelId,
   sevenTvSetId,
@@ -187,19 +297,7 @@ export const buildEmoteResourceSpecs = ({
       return sevenTvService.getSanitisedEmoteSet(resolvedSetId);
     },
   },
-  {
-    key: 'sevenTvGlobalEmotes',
-    name: 'seven_tv_global_emotes',
-    label: '7TV global emotes',
-    provider: 'seven_tv',
-    resourceType: 'emotes',
-    scope: 'global',
-    warningName: 'seven_tv_emotes_warning',
-    fetch: () =>
-      fetchGlobalResourceOnce('seven_tv_global_emotes', () =>
-        sevenTvService.getSanitisedEmoteSet('global'),
-      ),
-  },
+  SEVEN_TV_GLOBAL_EMOTE_SPEC,
   {
     key: 'twitchChannelEmotes',
     name: 'twitch_channel_emotes',
@@ -210,33 +308,9 @@ export const buildEmoteResourceSpecs = ({
     warningName: 'twitch_emotes_warning',
     fetch: () => twitchEmoteService.getChannelEmotes(channelId),
   },
-  {
-    key: 'twitchGlobalEmotes',
-    name: 'twitch_global_emotes',
-    label: 'Twitch global emotes',
-    provider: 'twitch',
-    resourceType: 'emotes',
-    scope: 'global',
-    warningName: 'twitch_emotes_warning',
-    fetch: () =>
-      fetchGlobalResourceOnce('twitch_global_emotes', () =>
-        twitchEmoteService.getGlobalEmotes(),
-      ),
-  },
+  TWITCH_GLOBAL_EMOTE_SPEC,
   buildSubscriberEmoteSpec({ channelId, twitchUserId }),
-  {
-    key: 'bttvGlobalEmotes',
-    name: 'bttv_global_emotes',
-    label: 'BTTV global emotes',
-    provider: 'bttv',
-    resourceType: 'emotes',
-    scope: 'global',
-    warningName: 'bttv_emotes_warning',
-    fetch: () =>
-      fetchGlobalResourceOnce('bttv_global_emotes', () =>
-        bttvEmoteService.getSanitisedGlobalEmotes(),
-      ),
-  },
+  BTTV_GLOBAL_EMOTE_SPEC,
   {
     key: 'bttvChannelEmotes',
     name: 'bttv_channel_emotes',
@@ -257,19 +331,7 @@ export const buildEmoteResourceSpecs = ({
     warningName: 'ffz_emotes_warning',
     fetch: () => ffzService.getSanitisedChannelEmotes(channelId),
   },
-  {
-    key: 'ffzGlobalEmotes',
-    name: 'ffz_global_emotes',
-    label: 'FFZ global emotes',
-    provider: 'ffz',
-    resourceType: 'emotes',
-    scope: 'global',
-    warningName: 'ffz_emotes_warning',
-    fetch: () =>
-      fetchGlobalResourceOnce('ffz_global_emotes', () =>
-        ffzService.getSanitisedGlobalEmotes(),
-      ),
-  },
+  FFZ_GLOBAL_EMOTE_SPEC,
 ];
 
 export const buildBadgeResourceSpecs = ({
@@ -287,32 +349,8 @@ export const buildBadgeResourceSpecs = ({
     warningName: 'twitch_badges_warning',
     fetch: () => twitchBadgeService.listSanitisedChannelBadges(channelId),
   },
-  {
-    key: 'twitchGlobalBadges',
-    name: 'twitch_global_badges',
-    label: 'Twitch global badges',
-    provider: 'twitch',
-    resourceType: 'badges',
-    scope: 'global',
-    warningName: 'twitch_badges_warning',
-    fetch: () =>
-      fetchGlobalResourceOnce('twitch_global_badges', () =>
-        twitchBadgeService.listSanitisedGlobalBadges(),
-      ),
-  },
-  {
-    key: 'ffzGlobalBadges',
-    name: 'ffz_global_badges',
-    label: 'FFZ global badges',
-    provider: 'ffz',
-    resourceType: 'badges',
-    scope: 'global',
-    warningName: 'ffz_badges_warning',
-    fetch: () =>
-      fetchGlobalResourceOnce('ffz_global_badges', () =>
-        ffzService.getSanitisedGlobalBadges(),
-      ),
-  },
+  TWITCH_GLOBAL_BADGE_SPEC,
+  FFZ_GLOBAL_BADGE_SPEC,
   {
     key: 'ffzChannelBadges',
     name: 'ffz_channel_badges',
@@ -356,7 +394,7 @@ const withTimeout = <T>(
   });
 
 export const settleSpecs = async <
-  TKey extends keyof ChannelCacheType,
+  TKey extends ResourceCacheKey,
   TItem extends Identifiable,
 >(
   specs: readonly ResourceSpec<TKey, TItem>[],
@@ -371,27 +409,43 @@ export const settleSpecs = async <
 export interface ResourceCacheContext {
   channelId: string;
   existingCache: ChannelCacheType | undefined;
+  existingGlobalCache: GlobalCacheType | undefined;
 }
 
+const getCachedSliceForSpec = (
+  spec: ResourceSpec<ResourceCacheKey, Identifiable>,
+  {
+    existingCache,
+    existingGlobalCache,
+  }: Pick<ResourceCacheContext, 'existingCache' | 'existingGlobalCache'>,
+): Identifiable[] =>
+  spec.scope === 'global'
+    ? (existingGlobalCache?.[
+        spec.key as GlobalEmoteCacheKey | GlobalBadgeCacheKey
+      ] ?? [])
+    : (existingCache?.[
+        spec.key as ChannelEmoteCacheKey | ChannelBadgeCacheKey
+      ] ?? []);
+
 const reconcileSettledSpec = <
-  TKey extends keyof ChannelCacheType,
+  TKey extends ResourceCacheKey,
   TItem extends Identifiable,
 >(
   { result, spec }: SettledSpec<TKey, TItem>,
-  { channelId, existingCache }: ResourceCacheContext,
+  context: ResourceCacheContext,
 ): TItem[] => {
   if (result.status === 'fulfilled') {
     return deduplicateById(result.value);
   }
 
-  const cachedItems = (existingCache?.[spec.key] ?? []) as unknown as TItem[];
+  const cachedItems = getCachedSliceForSpec(spec, context) as TItem[];
 
   if (cachedItems.length > 0) {
     logger.chat.info(`Using cached ${spec.label} as fallback`, {
       name: 'chat_resources_info',
       action: 'provider_resource_cache_fallback_used',
       cached_count: cachedItems.length,
-      channel_id: channelId,
+      channel_id: context.channelId,
       provider: spec.provider,
       resource_name: spec.label,
       resource_type: spec.resourceType,
@@ -404,7 +458,7 @@ const reconcileSettledSpec = <
 };
 
 export const reconcileSettledSpecs = <
-  TKey extends keyof ChannelCacheType,
+  TKey extends ResourceCacheKey,
   TItem extends Identifiable,
 >(
   settled: readonly SettledSpec<TKey, TItem>[],
@@ -511,22 +565,17 @@ export const collectFailedProviderReasons = (
 
 /**
  * True when at least one rejected resource spec still has a non-empty slice in
- * the channel cache to fall back to.
+ * its cache (the channel cache for channel-scope specs, the shared global
+ * slot for global-scope specs) to fall back to.
  */
 export const hadCachedResourcesForFailedSpecs = (
-  existingCache: ChannelCacheType | undefined,
+  context: Omit<ResourceCacheContext, 'channelId'>,
   settled: readonly AnySettledSpec[],
-): boolean => {
-  if (!existingCache) {
-    return false;
-  }
-
-  return settled.some(({ result, spec }) => {
+): boolean =>
+  settled.some(({ result, spec }) => {
     if (result.status !== 'rejected') {
       return false;
     }
 
-    const cached = existingCache[spec.key as keyof ChannelCacheType];
-    return Array.isArray(cached) && cached.length > 0;
+    return getCachedSliceForSpec(spec, context).length > 0;
   });
-};

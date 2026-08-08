@@ -1,6 +1,12 @@
 import { ApiError } from '@app/services/api/Client';
-import type { ChannelCacheType } from '@app/store/chat/types/constants';
-import { emptyEmoteData } from '@app/store/chat/types/constants';
+import type {
+  ChannelCacheType,
+  GlobalCacheType,
+} from '@app/store/chat/types/constants';
+import {
+  emptyEmoteData,
+  emptyGlobalCacheData,
+} from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 import { logger } from '@app/utils/logger';
 
@@ -174,6 +180,10 @@ describe('reconcileSettledSpecs', () => {
     ...emptyEmoteData,
     twitchChannelEmotes: [emote('cached')],
   };
+  const existingGlobalCache: GlobalCacheType = {
+    ...emptyGlobalCacheData,
+    bttvGlobalEmotes: [emote('cached-global')],
+  };
 
   test('deduplicates fulfilled results by id', () => {
     const settled: SettledSpec<EmoteCacheKey, SanitisedEmote>[] = [
@@ -189,6 +199,7 @@ describe('reconcileSettledSpecs', () => {
     const reconciled = reconcileSettledSpecs(settled, {
       channelId,
       existingCache: undefined,
+      existingGlobalCache: undefined,
     });
 
     expect(reconciled.get('twitchChannelEmotes')).toEqual<SanitisedEmote[]>([
@@ -208,10 +219,34 @@ describe('reconcileSettledSpecs', () => {
     const reconciled = reconcileSettledSpecs(settled, {
       channelId,
       existingCache,
+      existingGlobalCache,
     });
 
     expect(reconciled.get('twitchChannelEmotes')).toEqual<SanitisedEmote[]>([
       emote('cached'),
+    ]);
+  });
+
+  test('falls back to the global slot for a rejected global-scope spec', () => {
+    const globalSpec: EmoteResourceSpec = {
+      ...spec('bttvGlobalEmotes'),
+      scope: 'global',
+    };
+    const settled: SettledSpec<EmoteCacheKey, SanitisedEmote>[] = [
+      {
+        spec: globalSpec,
+        result: { status: 'rejected', reason: new Error('boom') },
+      },
+    ];
+
+    const reconciled = reconcileSettledSpecs(settled, {
+      channelId,
+      existingCache,
+      existingGlobalCache,
+    });
+
+    expect(reconciled.get('bttvGlobalEmotes')).toEqual<SanitisedEmote[]>([
+      emote('cached-global'),
     ]);
   });
 
@@ -226,6 +261,7 @@ describe('reconcileSettledSpecs', () => {
     const reconciled = reconcileSettledSpecs(settled, {
       channelId,
       existingCache: undefined,
+      existingGlobalCache: undefined,
     });
 
     expect(reconciled.get('twitchChannelEmotes')).toEqual([]);
@@ -274,7 +310,32 @@ describe('hadCachedResourcesForFailedSpecs', () => {
       twitchChannelEmotes: [emote('cached')],
     };
 
-    expect(hadCachedResourcesForFailedSpecs(existingCache, settled)).toBe(true);
+    expect(
+      hadCachedResourcesForFailedSpecs(
+        { existingCache, existingGlobalCache: undefined },
+        settled,
+      ),
+    ).toBe(true);
+  });
+
+  test('returns true when a rejected global spec still has items in the global slot', () => {
+    const settled: SettledSpec<EmoteCacheKey, SanitisedEmote>[] = [
+      {
+        spec: { ...spec('bttvGlobalEmotes'), scope: 'global' },
+        result: { status: 'rejected', reason: new Error('boom') },
+      },
+    ];
+    const existingGlobalCache: GlobalCacheType = {
+      ...emptyGlobalCacheData,
+      bttvGlobalEmotes: [emote('cached-global')],
+    };
+
+    expect(
+      hadCachedResourcesForFailedSpecs(
+        { existingCache: undefined, existingGlobalCache },
+        settled,
+      ),
+    ).toBe(true);
   });
 
   test('returns false when a rejected spec has no cached fallback', () => {
@@ -285,7 +346,12 @@ describe('hadCachedResourcesForFailedSpecs', () => {
       },
     ];
 
-    expect(hadCachedResourcesForFailedSpecs(undefined, settled)).toBe(false);
+    expect(
+      hadCachedResourcesForFailedSpecs(
+        { existingCache: undefined, existingGlobalCache: undefined },
+        settled,
+      ),
+    ).toBe(false);
   });
 });
 

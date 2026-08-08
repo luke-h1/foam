@@ -34,7 +34,7 @@ import { clearGlobalResourceCache } from '../actions/channelResources';
 import { clearMessages } from '../actions/messages';
 import { chatStore$ } from '../observables/chatStore';
 import type { SubscriberChannelProfile } from '../types/constants';
-import { emptyEmoteData } from '../types/constants';
+import { emptyEmoteData, emptyGlobalCacheData } from '../types/constants';
 
 jest.mock('@legendapp/state/persist', () => ({
   configureObservablePersistence: jest.fn(),
@@ -285,6 +285,7 @@ describe('loadChannelResources cache fallback', () => {
     jest.clearAllMocks();
     jest.spyOn(Date, 'now').mockReturnValue(10_000);
     chatStore$.persisted.channelCaches.set({});
+    chatStore$.persisted.globalCaches.set({ ...emptyGlobalCacheData });
     chatStore$.currentChannelId.set(null);
     chatStore$.loadingState.set('IDLE');
     clearPersonalEmotesCache();
@@ -328,15 +329,19 @@ describe('loadChannelResources cache fallback', () => {
         ...emptyEmoteData,
         badgesLastUpdated: 2_000,
         bttvChannelEmotes: [bttvEmote('bttv-channel-cached')],
-        bttvGlobalEmotes: [bttvEmote('bttv-global-cached', 'Global BTTV')],
         ffzChannelBadges: [badge('ffz-channel-badge-cached')],
         ffzChannelEmotes: [ffzEmote('ffz-channel-cached')],
-        ffzGlobalBadges: [badge('ffz-global-badge-cached')],
-        ffzGlobalEmotes: [ffzEmote('ffz-global-cached', 'Global FFZ')],
         lastUpdated: 1_000,
         sevenTvChannelEmotes: [sevenTvEmote('seven-channel-cached')],
         sevenTvEmoteSetId: 'cached-seven-set',
       },
+    });
+    chatStore$.persisted.globalCaches.set({
+      ...emptyGlobalCacheData,
+      bttvGlobalEmotes: [bttvEmote('bttv-global-cached', 'Global BTTV')],
+      ffzGlobalBadges: [badge('ffz-global-badge-cached')],
+      ffzGlobalEmotes: [ffzEmote('ffz-global-cached', 'Global FFZ')],
+      lastUpdated: 1_000,
     });
 
     mockGetEmoteSetId.mockRejectedValue(new Error('TimeoutError'));
@@ -363,37 +368,104 @@ describe('loadChannelResources cache fallback', () => {
       'cached-seven-set',
     );
     expect(ids(cache!.sevenTvChannelEmotes)).toEqual(['seven-channel-cached']);
-    expect(ids(cache!.bttvGlobalEmotes)).toEqual(['bttv-global-cached']);
     expect(cache!.bttvChannelEmotes).toEqual([]);
     expect(ids(cache!.ffzChannelEmotes)).toEqual(['ffz-channel-cached']);
-    expect(ids(cache!.ffzGlobalEmotes)).toEqual(['ffz-global-cached']);
     expect(ids(cache!.ffzChannelBadges)).toEqual(['ffz-channel-badge-cached']);
-    expect(ids(cache!.ffzGlobalBadges)).toEqual(['ffz-global-badge-cached']);
     expect(cache!.lastUpdated).toBe(1_000);
     expect(cache!.badgesLastUpdated).toBe(2_000);
+
+    const globalCache = chatStore$.persisted.globalCaches.peek();
+    expect(ids(globalCache.bttvGlobalEmotes)).toEqual(['bttv-global-cached']);
+    expect(ids(globalCache.ffzGlobalEmotes)).toEqual(['ffz-global-cached']);
+    expect(ids(globalCache.ffzGlobalBadges)).toEqual([
+      'ffz-global-badge-cached',
+    ]);
+    expect(ids(globalCache.twitchGlobalEmotes)).toEqual(['twitch-global-new']);
+    expect(globalCache.lastUpdated).toBe(1_000);
   });
 
   test('keeps cached badge slices when stale badge refresh requests reject', async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(3_700_000);
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
         ...emptyEmoteData,
-        badgesLastUpdated: 0,
-        ffzGlobalBadges: [badge('ffz-global-badge-cached')],
-        lastUpdated: 9_000,
+        badgesLastUpdated: 9_000,
+        ffzChannelBadges: [badge('ffz-channel-badge-cached')],
+        lastUpdated: 3_650_000,
+        sevenTvEmoteSetId: 'cached-seven-set',
         twitchChannelEmotes: [twitchEmote('existing-emote')],
       },
     });
+    chatStore$.persisted.globalCaches.set({
+      ...emptyGlobalCacheData,
+      lastUpdated: 3_650_000,
+      sevenTvGlobalEmotes: [sevenTvEmote('seven-global-cached')],
+    });
 
-    mockGetFfzGlobalBadges.mockRejectedValue(new Error('TimeoutError'));
+    mockGetFfzChannelBadges.mockRejectedValue(new Error('TimeoutError'));
 
     await expect(loadChannelResources({ channelId })).resolves.toBe(true);
 
     const cache = chatStore$.persisted.channelCaches.peek()[channelId];
     expect(cache).toBeDefined();
 
-    expect(ids(cache!.ffzGlobalBadges)).toEqual(['ffz-global-badge-cached']);
-    expect(cache!.badgesLastUpdated).toBe(0);
-    expect(cache!.lastUpdated).toBe(9_000);
+    expect(mockListTwitchChannelBadges).toHaveBeenCalledTimes(1);
+    expect(ids(cache!.ffzChannelBadges)).toEqual(['ffz-channel-badge-cached']);
+    expect(cache!.badgesLastUpdated).toBe(9_000);
+    expect(cache!.lastUpdated).toBe(3_650_000);
+    expect(mockGetFfzGlobalBadges).not.toHaveBeenCalled();
+  });
+
+  test('refreshes a stale global slot from the cached path without refetching channel slices', async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(3_700_000);
+    chatStore$.persisted.channelCaches.set({
+      [channelId]: {
+        ...emptyEmoteData,
+        badgesLastUpdated: 3_650_000,
+        lastUpdated: 3_650_000,
+        sevenTvEmoteSetId: 'cached-seven-set',
+        twitchChannelEmotes: [twitchEmote('existing-emote')],
+      },
+    });
+    chatStore$.persisted.globalCaches.set({
+      ...emptyGlobalCacheData,
+      ffzGlobalBadges: [badge('ffz-global-badge-cached')],
+      lastUpdated: 9_000,
+      sevenTvGlobalEmotes: [sevenTvEmote('seven-global-cached')],
+    });
+
+    mockGetFfzGlobalBadges.mockRejectedValue(new Error('TimeoutError'));
+
+    await expect(loadChannelResources({ channelId })).resolves.toBe(true);
+
+    const globalCache = chatStore$.persisted.globalCaches.peek();
+    expect(ids(globalCache.bttvGlobalEmotes)).toEqual(['bttv-global-new']);
+    expect(ids(globalCache.twitchGlobalEmotes)).toEqual(['twitch-global-new']);
+    expect(ids(globalCache.ffzGlobalBadges)).toEqual([
+      'ffz-global-badge-cached',
+    ]);
+    expect(globalCache.lastUpdated).toBe(9_000);
+    expect(mockGetChannelEmotes).not.toHaveBeenCalled();
+    expect(mockListTwitchChannelBadges).not.toHaveBeenCalled();
+
+    const cache = chatStore$.persisted.channelCaches.peek()[channelId];
+    expect(cache!.lastUpdated).toBe(3_650_000);
+  });
+
+  test('a full load writes the global slices to the shared slot only', async () => {
+    await expect(loadChannelResources({ channelId })).resolves.toBe(true);
+
+    const globalCache = chatStore$.persisted.globalCaches.peek();
+    expect(ids(globalCache.twitchGlobalEmotes)).toEqual(['twitch-global-new']);
+    expect(ids(globalCache.bttvGlobalEmotes)).toEqual(['bttv-global-new']);
+    expect(ids(globalCache.ffzGlobalEmotes)).toEqual(['ffz-global-new']);
+    expect(ids(globalCache.ffzGlobalBadges)).toEqual(['ffz-global-badge-new']);
+    expect(globalCache.lastUpdated).toBe(10_000);
+
+    const cache = chatStore$.persisted.channelCaches.peek()[channelId];
+    expect(cache).toBeDefined();
+    expect('twitchGlobalEmotes' in cache!).toBe(false);
+    expect('ffzGlobalBadges' in cache!).toBe(false);
   });
 
   test('invalidating the resource caches stale-stamps the channel and drops memoised global fetches', async () => {
@@ -454,22 +526,25 @@ describe('loadChannelResources cache fallback', () => {
     const cache = chatStore$.persisted.channelCaches.peek()[channelId];
     expect(cache).toBeDefined();
     expect(cache!.sevenTvChannelEmotes).toEqual([]);
-    expect(cache!.bttvGlobalEmotes).toEqual([]);
     expect(cache!.bttvChannelEmotes).toEqual([]);
     expect(cache!.ffzChannelEmotes).toEqual([]);
-    expect(cache!.ffzGlobalEmotes).toEqual([]);
     expect(cache!.ffzChannelBadges).toEqual([]);
-    expect(cache!.ffzGlobalBadges).toEqual([]);
     expect(cache!.twitchChannelEmotes).toEqual<SanitisedEmote[]>([
       twitchEmote('twitch-channel-new'),
-    ]);
-    expect(cache!.twitchGlobalEmotes).toEqual<SanitisedEmote[]>([
-      twitchEmote('twitch-global-new', 'Twitch Global'),
     ]);
     // A first load with failed slices must stay stale-stamped so the next
     // join retries the holes instead of serving them for the cache duration.
     expect(cache!.lastUpdated).toBe(0);
     expect(cache!.badgesLastUpdated).toBe(0);
+
+    const globalCache = chatStore$.persisted.globalCaches.peek();
+    expect(globalCache.bttvGlobalEmotes).toEqual([]);
+    expect(globalCache.ffzGlobalEmotes).toEqual([]);
+    expect(globalCache.ffzGlobalBadges).toEqual([]);
+    expect(globalCache.twitchGlobalEmotes).toEqual<SanitisedEmote[]>([
+      twitchEmote('twitch-global-new', 'Twitch Global'),
+    ]);
+    expect(globalCache.lastUpdated).toBe(0);
   });
 
   test('posts a system message naming the providers whose fetch failed', async () => {
@@ -503,11 +578,15 @@ describe('loadChannelResources cache fallback', () => {
       [channelId]: {
         ...emptyEmoteData,
         badgesLastUpdated: 2_000,
-        bttvGlobalEmotes: [bttvEmote('bttv-global-cached', 'Global BTTV')],
-        ffzGlobalBadges: [badge('ffz-global-badge-cached')],
         lastUpdated: 9_000,
         twitchChannelEmotes: [twitchEmote('existing-emote')],
       },
+    });
+    chatStore$.persisted.globalCaches.set({
+      ...emptyGlobalCacheData,
+      bttvGlobalEmotes: [bttvEmote('bttv-global-cached', 'Global BTTV')],
+      ffzGlobalBadges: [badge('ffz-global-badge-cached')],
+      lastUpdated: 9_000,
     });
 
     mockGetBttvGlobalEmotes.mockRejectedValue(new Error('TimeoutError'));
@@ -537,10 +616,14 @@ describe('loadChannelResources cache fallback', () => {
       [channelId]: {
         ...emptyEmoteData,
         badgesLastUpdated: 0,
-        ffzGlobalBadges: [badge('ffz-global-badge-cached')],
         lastUpdated: 9_000,
         twitchChannelEmotes: [twitchEmote('existing-emote')],
       },
+    });
+    chatStore$.persisted.globalCaches.set({
+      ...emptyGlobalCacheData,
+      ffzGlobalBadges: [badge('ffz-global-badge-cached')],
+      lastUpdated: 9_000,
     });
 
     mockGetFfzGlobalBadges.mockRejectedValue(new Error('TimeoutError'));
