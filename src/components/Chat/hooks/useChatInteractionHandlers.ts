@@ -11,6 +11,7 @@ import {
   openChatUserActions,
 } from '@app/store/chat/actions/chatOverlays';
 import { getMessageById } from '@app/store/chat/actions/messages';
+import { fetchUserCosmetics } from '@app/store/chat/actions/userCosmeticsFetch';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 
@@ -24,10 +25,8 @@ import type {
 import type { EmotePickerItem } from '../components/EmoteSheet/emoteSheetTypes';
 
 export function useChatComposerActions({
-  fetchUserCosmetics,
   inputShellRef,
 }: {
-  fetchUserCosmetics: (twitchUserId: string) => Promise<void>;
   inputShellRef: RefObject<ChatInputShellHandle | null>;
 }) {
   const handleReply = useCallback(
@@ -53,7 +52,7 @@ export function useChatComposerActions({
         userId: twitchUserId || undefined,
       });
     },
-    [fetchUserCosmetics, inputShellRef],
+    [inputShellRef],
   );
 
   const handleEmoteSelect = useCallback(

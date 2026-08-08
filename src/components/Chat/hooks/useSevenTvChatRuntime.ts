@@ -13,7 +13,7 @@ import {
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { logger } from '@app/utils/logger';
 
-import { useChatSevenTvCallbacks } from './useChatSevenTvCallbacks';
+import { createSevenTvCallbacks } from '../util/createSevenTvCallbacks';
 
 export function useSevenTvChatRuntime({
   channelId,
@@ -33,7 +33,7 @@ export function useSevenTvChatRuntime({
   ) => void;
   sevenTvEmoteSetId?: string;
 }) {
-  const sevenTvCallbacks = useChatSevenTvCallbacks({
+  const sevenTvCallbacks = createSevenTvCallbacks({
     channelId,
     channelName,
     sevenTvEmoteSetId,

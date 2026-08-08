@@ -322,8 +322,8 @@ jest.mock('../hooks/useChatScroll', () => ({
   }),
 }));
 
-jest.mock('../hooks/useChatSevenTvCallbacks', () => ({
-  useChatSevenTvCallbacks: () => ({}),
+jest.mock('../util/createSevenTvCallbacks', () => ({
+  createSevenTvCallbacks: () => ({}),
 }));
 
 jest.mock('../hooks/useEmoteReprocessing', () => ({

@@ -94,7 +94,7 @@ function onEntitlementDelete(data: EntitlementDeleteCallbackData) {
   applyEntitlementDeleteEvent(data);
 }
 
-export function useChatSevenTvCallbacks({
+export function createSevenTvCallbacks({
   channelId,
   channelName,
   sevenTvEmoteSetId,

@@ -13,6 +13,7 @@ import {
   hasEnrichmentEmoteSources,
   refreshSharedChatBadges,
 } from '@app/store/chat/actions/messageEnrichment';
+import { fetchUserCosmetics } from '@app/store/chat/actions/userCosmeticsFetch';
 import {
   clearVisibleAssetHydrationTimer,
   visibleAssetHydration,
@@ -42,19 +43,12 @@ interface UseChatMessageProcessingOptions {
   userLogin?: string | null;
   isAtBottomRef: RefObject<boolean>;
   maintainBottomAfterContentChange: () => void;
-  fetchUserCosmetics: (
-    twitchUserId: string,
-    options?: {
-      retryMissingBadge?: boolean;
-    },
-  ) => Promise<void>;
 }
 
 export function useChatMessageProcessing({
   channelId,
   handleNewMessage,
   messages$,
-  fetchUserCosmetics,
   isAtBottomRef,
   maintainBottomAfterContentChange,
   show7TvEmotes,
@@ -246,7 +240,6 @@ export function useChatMessageProcessing({
     }, VISIBLE_ASSET_HYDRATION_DELAY_MS);
   }, [
     channelId,
-    fetchUserCosmetics,
     isAtBottomRef,
     maintainBottomAfterContentChange,
     reprocessVisibleMessageFromCache,

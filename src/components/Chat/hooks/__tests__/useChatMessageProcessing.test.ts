@@ -11,6 +11,7 @@ import {
 } from '@app/store/chat/actions/channelLoad';
 import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import { updateMessages } from '@app/store/chat/actions/messages';
+import { fetchUserCosmetics } from '@app/store/chat/actions/userCosmeticsFetch';
 import { visibleAssetHydration } from '@app/store/chat/actions/visibleAssetHydration';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { usePersonalEmotesVersion } from '@app/store/chat/react/selectors';
@@ -39,6 +40,10 @@ jest.mock('@app/store/chat/actions/cosmetics', () => ({
 
 jest.mock('@app/store/chat/actions/messages', () => ({
   updateMessages: jest.fn(),
+}));
+
+jest.mock('@app/store/chat/actions/userCosmeticsFetch', () => ({
+  fetchUserCosmetics: jest.fn(() => Promise.resolve()),
 }));
 
 jest.mock('@app/store/chat/observables/chatStore', () => ({
@@ -136,12 +141,10 @@ function renderMessageProcessing() {
     }),
   ];
   const isAtBottomRef = { current: true };
-  const fetchUserCosmetics = jest.fn(() => Promise.resolve());
 
   const hook = renderHook(() =>
     useChatMessageProcessing({
       channelId: 'channel-1',
-      fetchUserCosmetics,
       handleNewMessage,
       isAtBottomRef,
       maintainBottomAfterContentChange,
@@ -155,7 +158,6 @@ function renderMessageProcessing() {
   );
 
   return {
-    fetchUserCosmetics,
     handleNewMessage,
     hook,
     maintainBottomAfterContentChange,
@@ -332,7 +334,7 @@ describe('useChatMessageProcessing', () => {
       },
       text: 'visible OMEGALUL',
     });
-    const { fetchUserCosmetics, hook, maintainBottomAfterContentChange } =
+    const { hook, maintainBottomAfterContentChange } =
       renderMessageProcessing();
 
     act(() => {
