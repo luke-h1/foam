@@ -28,16 +28,16 @@ import {
   getSevenTvUserIdForTwitchId,
 } from './cosmeticsLinks';
 import {
+  invalidateBakedBadges,
+  invalidateCosmeticsCache,
+} from './invalidation';
+import {
   clearAllMissingBadges,
   clearMissingBadge,
   reportMissingBadge,
 } from './missingBadges';
 
 export { getMissingBadgeIds, hasMissingBadges } from './missingBadges';
-
-export const bumpCosmeticBindingsVersion = (): void => {
-  chatStore$.cosmeticBindingsVersion.set(version => version + 1);
-};
 
 const COSMETIC_BINDINGS_BUMP_COALESCE_MS = 1000;
 let cosmeticBindingsBumpTimer: ReturnType<typeof setTimeout> | null = null;
@@ -48,7 +48,7 @@ const scheduleCosmeticBindingsBump = (): void => {
   }
   cosmeticBindingsBumpTimer = setTimeout(() => {
     cosmeticBindingsBumpTimer = null;
-    bumpCosmeticBindingsVersion();
+    invalidateBakedBadges();
   }, COSMETIC_BINDINGS_BUMP_COALESCE_MS);
 };
 
@@ -417,8 +417,8 @@ export const clearUserCosmeticsCache = () => {
     'sevenTvUserCosmetics_',
   );
   clearPaintsAndBadges();
-  chatStore$.cosmeticsCacheVersion.set(version => version + 1);
-  bumpCosmeticBindingsVersion();
+  invalidateCosmeticsCache();
+  invalidateBakedBadges();
 };
 
 /**

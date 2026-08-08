@@ -4,6 +4,7 @@ import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
 import { logger } from '@app/utils/logger';
 
 import { chatStore$ } from '../observables/chatStore';
+import { invalidatePersonalEmotes } from './invalidation';
 
 const personalEmotesGuard = createFetchOnceGuard();
 
@@ -73,7 +74,7 @@ function writePersonalEmotes(
   // by rebuilding the whole record.
   channelCache.sevenTvPersonalEmotes[twitchUserId]?.set(personalEmotes);
   if (emoteIdsChanged) {
-    chatStore$.personalEmotesVersion.set(version => version + 1);
+    invalidatePersonalEmotes();
   }
 }
 

@@ -1,7 +1,7 @@
 import { twitchApi } from '@app/services/api/clients';
+import { invalidateMentionColors } from '@app/store/chat/actions/invalidation';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import { bumpMentionLoginRevision } from '@app/utils/chat/mentionLoginResolver/bumpMentionLoginRevision';
 import { flushTimer } from '@app/utils/chat/mentionLoginResolver/flushTimer';
 import { pendingLogins } from '@app/utils/chat/mentionLoginResolver/pendingLogins';
 import { getMentionLogin } from '@app/utils/chat/resolveMentionLogin/getMentionLogin';
@@ -71,7 +71,7 @@ async function flushPendingMentionLogins(): Promise<void> {
     });
 
     if (didRegister) {
-      bumpMentionLoginRevision();
+      invalidateMentionColors();
     }
   } catch (error) {
     logger.chat.debug('Failed to resolve mention logins from Helix:', error);

@@ -1,6 +1,6 @@
 import { twitchService } from '@app/services/twitch-service';
+import { invalidateMentionColors } from '@app/store/chat/actions/invalidation';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import { bumpMentionLoginRevision } from '@app/utils/chat/mentionLoginResolver/bumpMentionLoginRevision';
 import { lastMentionSearchQuery } from '@app/utils/chat/mentionLoginResolver/lastMentionSearchQuery';
 import { mentionSearchRequestId } from '@app/utils/chat/mentionLoginResolver/mentionSearchRequestId';
 import { mentionSearchTimer } from '@app/utils/chat/mentionLoginResolver/mentionSearchTimer';
@@ -65,7 +65,7 @@ export function queueMentionLoginSearch(query: string): void {
         }
 
         if (didRegister) {
-          bumpMentionLoginRevision();
+          invalidateMentionColors();
         }
       })
       .catch(error => {
