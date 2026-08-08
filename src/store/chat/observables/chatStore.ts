@@ -23,7 +23,10 @@ import type {
   SanitisedBadgeSet,
   SanitisedEmote,
 } from '../types/constants';
-import { emptyGlobalCacheData, MAX_CACHED_CHANNELS } from '../types/constants';
+import {
+  makeEmptyGlobalCacheData,
+  MAX_CACHED_CHANNELS,
+} from '../types/constants';
 import { loadPersistedCosmetics } from './cosmeticsPersistence';
 import {
   loadPersistedRecentMessages,
@@ -84,7 +87,7 @@ export const limitChannelCaches = (
 const initialChatStoreState: ChatStoreState = {
   persisted: {
     channelCaches: {},
-    globalCaches: emptyGlobalCacheData,
+    globalCaches: makeEmptyGlobalCacheData(),
   },
   recentMessagesByChannel: {},
   loadingState: 'IDLE',

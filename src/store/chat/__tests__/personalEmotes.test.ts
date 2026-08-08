@@ -10,7 +10,7 @@ import {
 } from '../actions/personalEmotes';
 import { chatStore$ } from '../observables/chatStore';
 import type { ChannelCacheType } from '../types/constants';
-import { emptyEmoteData } from '../types/constants';
+import { makeEmptyEmoteData } from '../types/constants';
 
 jest.mock('@legendapp/state/persist', () => ({
   configureObservablePersistence: jest.fn(),
@@ -85,7 +85,7 @@ describe('fetchUserPersonalEmotes', () => {
     clearPersonalEmotesCache();
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
-        ...structuredClone(emptyEmoteData),
+        ...makeEmptyEmoteData(),
         lastUpdated: 1_000,
       },
     });
@@ -122,7 +122,7 @@ describe('fetchUserPersonalEmotes', () => {
     expect(
       chatStore$.persisted.channelCaches.peek()[channelId],
     ).toEqual<ChannelCacheType>({
-      ...structuredClone(emptyEmoteData),
+      ...makeEmptyEmoteData(),
       lastUpdated: 1_000,
     });
   });
@@ -145,7 +145,7 @@ describe('personalEmotesVersion', () => {
     clearPersonalEmotesCache();
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
-        ...structuredClone(emptyEmoteData),
+        ...makeEmptyEmoteData(),
         lastUpdated: 1_000,
       },
     });

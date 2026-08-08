@@ -7,10 +7,10 @@ import { getChannelPersonalEmotes } from '../actions/personalEmotes';
 import { chatStore$ } from '../observables/chatStore';
 import {
   type ChannelCacheType,
-  emptyEmoteData,
-  emptyGlobalCacheData,
   emptyResolvedEmoteData,
   type GlobalCacheType,
+  makeEmptyEmoteData,
+  makeEmptyGlobalCacheData,
   type SanitisedBadgeSet,
   type SanitisedEmote,
 } from '../types/constants';
@@ -113,8 +113,8 @@ function resolveEmoteData(
 }
 
 const emptyChannelEmoteCache: ChannelEmoteCache = {
-  ...emptyEmoteData,
-  ...emptyGlobalCacheData,
+  ...makeEmptyEmoteData(),
+  ...makeEmptyGlobalCacheData(),
   sevenTvPersonalEmotes: EMPTY_PERSONAL_EMOTES,
 };
 

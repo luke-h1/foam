@@ -34,7 +34,10 @@ import { clearGlobalResourceCache } from '../actions/channelResources';
 import { clearMessages } from '../actions/messages';
 import { chatStore$ } from '../observables/chatStore';
 import type { SubscriberChannelProfile } from '../types/constants';
-import { emptyEmoteData, emptyGlobalCacheData } from '../types/constants';
+import {
+  makeEmptyEmoteData,
+  makeEmptyGlobalCacheData,
+} from '../types/constants';
 
 jest.mock('@legendapp/state/persist', () => ({
   configureObservablePersistence: jest.fn(),
@@ -285,7 +288,7 @@ describe('loadChannelResources cache fallback', () => {
     jest.clearAllMocks();
     jest.spyOn(Date, 'now').mockReturnValue(10_000);
     chatStore$.persisted.channelCaches.set({});
-    chatStore$.persisted.globalCaches.set({ ...emptyGlobalCacheData });
+    chatStore$.persisted.globalCaches.set(makeEmptyGlobalCacheData());
     chatStore$.currentChannelId.set(null);
     chatStore$.loadingState.set('IDLE');
     clearPersonalEmotesCache();
@@ -326,7 +329,7 @@ describe('loadChannelResources cache fallback', () => {
   test('keeps cached provider slices when full refresh provider requests reject', async () => {
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
-        ...emptyEmoteData,
+        ...makeEmptyEmoteData(),
         badgesLastUpdated: 2_000,
         bttvChannelEmotes: [bttvEmote('bttv-channel-cached')],
         ffzChannelBadges: [badge('ffz-channel-badge-cached')],
@@ -337,7 +340,7 @@ describe('loadChannelResources cache fallback', () => {
       },
     });
     chatStore$.persisted.globalCaches.set({
-      ...emptyGlobalCacheData,
+      ...makeEmptyGlobalCacheData(),
       bttvGlobalEmotes: [bttvEmote('bttv-global-cached', 'Global BTTV')],
       ffzGlobalBadges: [badge('ffz-global-badge-cached')],
       ffzGlobalEmotes: [ffzEmote('ffz-global-cached', 'Global FFZ')],
@@ -388,7 +391,7 @@ describe('loadChannelResources cache fallback', () => {
     jest.spyOn(Date, 'now').mockReturnValue(3_700_000);
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
-        ...emptyEmoteData,
+        ...makeEmptyEmoteData(),
         badgesLastUpdated: 9_000,
         ffzChannelBadges: [badge('ffz-channel-badge-cached')],
         lastUpdated: 3_650_000,
@@ -397,7 +400,7 @@ describe('loadChannelResources cache fallback', () => {
       },
     });
     chatStore$.persisted.globalCaches.set({
-      ...emptyGlobalCacheData,
+      ...makeEmptyGlobalCacheData(),
       lastUpdated: 3_650_000,
       sevenTvGlobalEmotes: [sevenTvEmote('seven-global-cached')],
     });
@@ -420,7 +423,7 @@ describe('loadChannelResources cache fallback', () => {
     jest.spyOn(Date, 'now').mockReturnValue(3_700_000);
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
-        ...emptyEmoteData,
+        ...makeEmptyEmoteData(),
         badgesLastUpdated: 3_650_000,
         lastUpdated: 3_650_000,
         sevenTvEmoteSetId: 'cached-seven-set',
@@ -428,7 +431,7 @@ describe('loadChannelResources cache fallback', () => {
       },
     });
     chatStore$.persisted.globalCaches.set({
-      ...emptyGlobalCacheData,
+      ...makeEmptyGlobalCacheData(),
       ffzGlobalBadges: [badge('ffz-global-badge-cached')],
       lastUpdated: 9_000,
       sevenTvGlobalEmotes: [sevenTvEmote('seven-global-cached')],
@@ -576,14 +579,14 @@ describe('loadChannelResources cache fallback', () => {
     clearMessages();
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
-        ...emptyEmoteData,
+        ...makeEmptyEmoteData(),
         badgesLastUpdated: 2_000,
         lastUpdated: 9_000,
         twitchChannelEmotes: [twitchEmote('existing-emote')],
       },
     });
     chatStore$.persisted.globalCaches.set({
-      ...emptyGlobalCacheData,
+      ...makeEmptyGlobalCacheData(),
       bttvGlobalEmotes: [bttvEmote('bttv-global-cached', 'Global BTTV')],
       ffzGlobalBadges: [badge('ffz-global-badge-cached')],
       lastUpdated: 9_000,
@@ -614,14 +617,14 @@ describe('loadChannelResources cache fallback', () => {
     jest.spyOn(Date, 'now').mockReturnValue(3_700_000);
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
-        ...emptyEmoteData,
+        ...makeEmptyEmoteData(),
         badgesLastUpdated: 0,
         lastUpdated: 9_000,
         twitchChannelEmotes: [twitchEmote('existing-emote')],
       },
     });
     chatStore$.persisted.globalCaches.set({
-      ...emptyGlobalCacheData,
+      ...makeEmptyGlobalCacheData(),
       ffzGlobalBadges: [badge('ffz-global-badge-cached')],
       lastUpdated: 9_000,
     });
@@ -657,7 +660,7 @@ describe('loadChannelResources cache fallback', () => {
     chatStore$.cosmeticsCacheVersion.set(3);
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
-        ...emptyEmoteData,
+        ...makeEmptyEmoteData(),
         lastUpdated: 9_000,
         twitchChannelEmotes: [twitchEmote('existing-emote')],
       },
@@ -695,7 +698,7 @@ describe('resolveSubscriberChannelProfiles', () => {
   test('resolves and stores profiles for owner ids without one', async () => {
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
-        ...emptyEmoteData,
+        ...makeEmptyEmoteData(),
         twitchSubscriberEmotes: [
           { ...twitchEmote('emote1', 'Twitch Subscriber'), owner_id: '100' },
           { ...twitchEmote('emote2', 'Twitch Subscriber'), owner_id: '200' },
@@ -732,7 +735,7 @@ describe('resolveSubscriberChannelProfiles', () => {
   test('skips the lookup when every owner id already has a profile', async () => {
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
-        ...emptyEmoteData,
+        ...makeEmptyEmoteData(),
         twitchSubscriberEmotes: [
           { ...twitchEmote('emote1', 'Twitch Subscriber'), owner_id: '100' },
         ],
@@ -753,7 +756,7 @@ describe('resolveSubscriberChannelProfiles', () => {
   test('keeps existing profiles when the profile lookup fails', async () => {
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
-        ...emptyEmoteData,
+        ...makeEmptyEmoteData(),
         twitchSubscriberEmotes: [
           { ...twitchEmote('emote1', 'Twitch Subscriber'), owner_id: '100' },
         ],
@@ -783,7 +786,7 @@ describe('resolveSubscriberChannelProfiles', () => {
   test('excludes non-numeric owner ids from the profile lookup', async () => {
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
-        ...emptyEmoteData,
+        ...makeEmptyEmoteData(),
         twitchSubscriberEmotes: [
           { ...twitchEmote('emote1', 'Twitch Subscriber'), owner_id: 'twitch' },
           { ...twitchEmote('emote2', 'Twitch Subscriber'), owner_id: '100' },
@@ -800,7 +803,7 @@ describe('resolveSubscriberChannelProfiles', () => {
   test('skips the lookup entirely when only sentinel owner ids exist', async () => {
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
-        ...emptyEmoteData,
+        ...makeEmptyEmoteData(),
         twitchSubscriberEmotes: [
           { ...twitchEmote('emote1', 'Twitch Subscriber'), owner_id: 'twitch' },
         ],
@@ -816,7 +819,7 @@ describe('resolveSubscriberChannelProfiles', () => {
     const seedCache = () => {
       chatStore$.persisted.channelCaches.set({
         [channelId]: {
-          ...emptyEmoteData,
+          ...makeEmptyEmoteData(),
           twitchSubscriberEmotes: [
             { ...twitchEmote('emote1', 'Twitch Subscriber'), owner_id: '100' },
           ],
@@ -836,7 +839,7 @@ describe('resolveSubscriberChannelProfiles', () => {
     const seedCache = () => {
       chatStore$.persisted.channelCaches.set({
         [channelId]: {
-          ...emptyEmoteData,
+          ...makeEmptyEmoteData(),
           twitchSubscriberEmotes: [
             { ...twitchEmote('emote1', 'Twitch Subscriber'), owner_id: '100' },
           ],
@@ -872,7 +875,7 @@ describe('resolveSubscriberChannelProfiles', () => {
     const seedCache = () => {
       chatStore$.persisted.channelCaches.set({
         [channelId]: {
-          ...emptyEmoteData,
+          ...makeEmptyEmoteData(),
           twitchSubscriberEmotes: [
             { ...twitchEmote('emote1', 'Twitch Subscriber'), owner_id: '100' },
           ],
@@ -921,11 +924,11 @@ describe('resolveSubscriberChannelProfiles', () => {
     ];
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
-        ...emptyEmoteData,
+        ...makeEmptyEmoteData(),
         twitchSubscriberEmotes: subscriberEmotes,
       },
       '999': {
-        ...emptyEmoteData,
+        ...makeEmptyEmoteData(),
         twitchSubscriberEmotes: subscriberEmotes,
       },
     });
@@ -954,7 +957,7 @@ describe('switchSevenTvEmoteSet', () => {
     jest.clearAllMocks();
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
-        ...emptyEmoteData,
+        ...makeEmptyEmoteData(),
         badgesLastUpdated: 1_000,
         lastUpdated: 1_000,
         sevenTvChannelEmotes: [sevenTvEmote('emote-a')],
@@ -1010,7 +1013,7 @@ describe('updateSevenTvEmotes', () => {
   const seed = (channelEmotes: SevenTvSanitisedEmote[]) => {
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
-        ...emptyEmoteData,
+        ...makeEmptyEmoteData(),
         badgesLastUpdated: 1_000,
         lastUpdated: 1_000,
         sevenTvChannelEmotes: channelEmotes,

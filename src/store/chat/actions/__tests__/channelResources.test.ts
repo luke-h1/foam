@@ -4,8 +4,8 @@ import type {
   GlobalCacheType,
 } from '@app/store/chat/types/constants';
 import {
-  emptyEmoteData,
-  emptyGlobalCacheData,
+  makeEmptyEmoteData,
+  makeEmptyGlobalCacheData,
 } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 import { logger } from '@app/utils/logger';
@@ -177,11 +177,11 @@ describe('settleSpecs', () => {
 
 describe('reconcileSettledSpecs', () => {
   const existingCache: ChannelCacheType = {
-    ...emptyEmoteData,
+    ...makeEmptyEmoteData(),
     twitchChannelEmotes: [emote('cached')],
   };
   const existingGlobalCache: GlobalCacheType = {
-    ...emptyGlobalCacheData,
+    ...makeEmptyGlobalCacheData(),
     bttvGlobalEmotes: [emote('cached-global')],
   };
 
@@ -306,7 +306,7 @@ describe('hadCachedResourcesForFailedSpecs', () => {
       },
     ];
     const existingCache: ChannelCacheType = {
-      ...emptyEmoteData,
+      ...makeEmptyEmoteData(),
       twitchChannelEmotes: [emote('cached')],
     };
 
@@ -326,7 +326,7 @@ describe('hadCachedResourcesForFailedSpecs', () => {
       },
     ];
     const existingGlobalCache: GlobalCacheType = {
-      ...emptyGlobalCacheData,
+      ...makeEmptyGlobalCacheData(),
       bttvGlobalEmotes: [emote('cached-global')],
     };
 
