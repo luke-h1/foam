@@ -24,6 +24,10 @@ import {
 } from '../observables/cosmeticsPersistence';
 import { MAX_COSMETIC_ENTRIES } from '../types/constants';
 import {
+  clearEntitlementUserLinkState,
+  getSevenTvUserIdForTwitchId,
+} from './cosmeticsLinks';
+import {
   clearAllMissingBadges,
   clearMissingBadge,
   reportMissingBadge,
@@ -257,7 +261,9 @@ function buildCachedUserCosmeticsFromStore(
 }
 
 /**
- * Mirror live chatStore bindings into the per-user GQL cache after a 7TV push.
+ * Mirror live chatStore bindings into the per-user GQL cache. Internal to the
+ * store: callers never sync by hand - the binding writers below schedule the
+ * debounced snapshot sync themselves.
  */
 export const syncCachedUserCosmeticsFromStore = (
   sevenTvUserId: string,
@@ -267,6 +273,41 @@ export const syncCachedUserCosmeticsFromStore = (
     sevenTvUserId,
     buildCachedUserCosmeticsFromStore(ttvUserId),
   );
+};
+
+/**
+ * Debounced per-user snapshot syncs derived from binding writes, following the
+ * scheduleCosmeticsPersist pattern: entitlements arrive in bursts, so dirty
+ * wearers coalesce into one flush per quiet window (matching the bindings-bump
+ * coalesce). The 7TV user id is resolved at write time because reset events
+ * drop the link right after clearing the bindings.
+ */
+const USER_COSMETICS_SNAPSHOT_DEBOUNCE_MS = 1000;
+let userCosmeticsSnapshotTimer: ReturnType<typeof setTimeout> | null = null;
+const pendingUserCosmeticsSnapshots = new Map<string, string>();
+
+const flushPendingUserCosmeticsSnapshots = (): void => {
+  const pending = Array.from(pendingUserCosmeticsSnapshots.entries());
+  pendingUserCosmeticsSnapshots.clear();
+  pending.forEach(([ttvUserId, sevenTvUserId]) => {
+    syncCachedUserCosmeticsFromStore(sevenTvUserId, ttvUserId);
+  });
+};
+
+const scheduleUserCosmeticsSnapshotSync = (ttvUserId: string): void => {
+  const sevenTvUserId = getSevenTvUserIdForTwitchId(ttvUserId);
+  if (!sevenTvUserId) {
+    return;
+  }
+
+  pendingUserCosmeticsSnapshots.set(ttvUserId, sevenTvUserId);
+  if (userCosmeticsSnapshotTimer) {
+    return;
+  }
+  userCosmeticsSnapshotTimer = setTimeout(() => {
+    userCosmeticsSnapshotTimer = null;
+    flushPendingUserCosmeticsSnapshots();
+  }, USER_COSMETICS_SNAPSHOT_DEBOUNCE_MS);
 };
 
 export const fetchAndCacheUserCosmetics = async (
@@ -376,6 +417,12 @@ export const clearUserCosmeticsCache = () => {
     clearTimeout(cosmeticBindingsBumpTimer);
     cosmeticBindingsBumpTimer = null;
   }
+  if (userCosmeticsSnapshotTimer) {
+    clearTimeout(userCosmeticsSnapshotTimer);
+    userCosmeticsSnapshotTimer = null;
+  }
+  pendingUserCosmeticsSnapshots.clear();
+  clearEntitlementUserLinkState();
   userCosmeticsFetchGuard.clear();
   userPresenceRequestGuard.clear();
   sessionCosmeticsCache.clear();
@@ -412,6 +459,7 @@ export const setUserPaint = (ttvUserId: string, paintId: string): void => {
     chatStore$.userPaintIds[ttvUserId]?.set(paintId);
   }
 
+  scheduleUserCosmeticsSnapshotSync(ttvUserId);
   scheduleCosmeticsPersist('bindings');
 };
 
@@ -644,6 +692,7 @@ export const setUserBadge = (ttvUserId: string, badgeId: string): void => {
     scheduleCosmeticBindingsBump();
   }
 
+  scheduleUserCosmeticsSnapshotSync(ttvUserId);
   scheduleCosmeticsPersist('bindings');
 };
 
@@ -689,6 +738,8 @@ export const removeBadge = (badgeId: string) => {
 };
 
 export const removeUserBadge = (ttvUserId: string) => {
+  scheduleUserCosmeticsSnapshotSync(ttvUserId);
+
   const current = chatStore$.userBadgeIds.peek();
   if (!(ttvUserId in current)) {
     return;
@@ -727,6 +778,8 @@ export const removePaint = (paintId: string) => {
  * same rationale as `setUserPaint`.
  */
 export const removeUserPaint = (ttvUserId: string) => {
+  scheduleUserCosmeticsSnapshotSync(ttvUserId);
+
   const current = chatStore$.userPaintIds.peek();
   if (!(ttvUserId in current)) {
     return;
