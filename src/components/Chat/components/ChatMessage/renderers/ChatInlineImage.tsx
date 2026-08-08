@@ -17,7 +17,11 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { Image as ExpoImage, type ImageErrorEventData } from 'expo-image';
+import {
+  Image as ExpoImage,
+  type ImageErrorEventData,
+  type ImageRef,
+} from 'expo-image';
 
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
 import { resolveUseAppleWebpCodec } from '@app/lib/expo-image/resolveUseAppleWebpCodec';
@@ -89,6 +93,7 @@ interface ChatInlineImageProps {
   transitionMs?: number;
 }
 
+// eslint-disable-next-line react-doctor/no-giant-component -- one recycling-aware load state machine; a split adds a mount boundary on the hottest chat path
 function ChatInlineImageComponent({
   collapseWhenFailed = false,
   containerStyle,
@@ -128,6 +133,11 @@ function ChatInlineImageComponent({
   const retryCountRef = useRef(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [failedRefUrl, setFailedRefUrl] = useState<string | null>(null);
+  // The exact ref instance that has drawn, recorded by onDisplay. Held in a
+  // ref so the healthy cached-emote path never re-renders. A re-decode
+  // self-invalidates (new instance never matches); a recycle back to a
+  // still-cached url does not, so the url-change effect below clears it.
+  const displayedSharedRef = useRef<ImageRef | null>(null);
 
   const showRef = sharedRef != null && failedRefUrl !== sourceUrl;
   const isCurrentUrl = load.url === sourceUrl && load.viaRef === showRef;
@@ -137,10 +147,21 @@ function ChatInlineImageComponent({
   const candidateUrl =
     fallbackChain[candidateIndex] ?? fallbackChain[0] ?? sourceUrl;
 
+  // A ban belongs to the mount that issued it. Without this reset, a slot that
+  // once banned a ref would keep the ban when it recycles back to the same url.
+  // eslint-disable-next-line react-doctor/rerender-state-only-in-handlers, react-doctor/no-derived-useState -- React's reset-state-on-prop-change pattern; the render-phase setState on a url change is the point, not a stale copy
+  const [banOwnerUrl, setBanOwnerUrl] = useState(sourceUrl);
+  if (banOwnerUrl !== sourceUrl) {
+    setBanOwnerUrl(sourceUrl);
+    setFailedRefUrl(null);
+  }
+
   // retryCountRef isn't rendered, so reset it for a recycled emote here rather
-  // than during render.
+  // than during render. The displayed marker resets with it: a recycled slot's
+  // ref has not drawn yet even when the instance is still cached.
   useEffect(() => {
     retryCountRef.current = 0;
+    displayedSharedRef.current = null;
   }, [sourceUrl]);
 
   // Drop any retry timer scheduled for the previous url — it would otherwise
@@ -167,12 +188,21 @@ function ChatInlineImageComponent({
 
   const handleError = useCallback(
     (event?: ImageErrorEventData) => {
-      // A decoded ref that failed to draw says nothing about the url, which has
-      // not been tried at all yet - so hand off to the fallback chain from the
-      // top with a full budget rather than spending it here. A badge url derives
-      // no variants, so under `maxRetryAttempts: 0` the shared give-up branch
-      // below would otherwise log a load failure the network never saw.
       if (showRef) {
+        // A ref never fires onError itself, so an error here is the watchdog
+        // or a stale uri operation the native view abandoned when the ref
+        // took over. If this exact instance has drawn (onDisplay fired), the
+        // error says nothing about what is on screen; acting on it would ban
+        // a healthy ref and clear the native image mid-display.
+        if (sharedRef != null && displayedSharedRef.current === sharedRef) {
+          return;
+        }
+        // Otherwise the ref never drew, which says nothing about the url: it
+        // has not been tried at all yet, so hand off to the fallback chain
+        // from the top with a full budget rather than spending it here. A
+        // badge url derives no variants, so under `maxRetryAttempts: 0` the
+        // shared give-up branch below would otherwise log a load failure the
+        // network never saw.
         setFailedRefUrl(sourceUrl);
         retryCountRef.current = 0;
         setLoad({ index: 0, status: 'loading', url: sourceUrl, viaRef: false });
@@ -258,19 +288,26 @@ function ChatInlineImageComponent({
       candidateUrl,
       fallbackChain,
       maxRetryAttempts,
+      sharedRef,
       showRef,
       sourceUrl,
     ],
   );
 
+  // A SharedRef source fires only onDisplay, never onLoad or onError, so this
+  // marker is the ref path's sole liveness signal.
+  const handleDisplay = useCallback(() => {
+    if (showRef) {
+      displayedSharedRef.current = sharedRef;
+    }
+  }, [sharedRef, showRef]);
+
+  // A displayed ref pins status at 'loading' forever (no onLoad), so the timer
+  // always fires on the ref path; handleError's displayed-ref guard turns that
+  // into a no-op for a ref that has drawn.
   const onWatchdogTimeout = useEffectEvent(() => handleError());
-  // The `showRef` guard is load-bearing, not an oversight: expo-image dispatches
-  // `onLoad` only from the uri path (`ImageView.swift` fires `onDisplay` for a
-  // SharedRef), so `status` never leaves 'loading' while a ref is drawn. Watching
-  // that path would arm a timer on every healthy cached emote and fire it,
-  // throwing the decoded ref away for a disk re-read.
   useEffect(() => {
-    if (showRef || status !== 'loading') {
+    if (status !== 'loading') {
       return undefined;
     }
     const timer = setTimeout(onWatchdogTimeout, LOAD_WATCHDOG_MS);
@@ -341,6 +378,7 @@ function ChatInlineImageComponent({
       useAppleWebpCodec={resolveUseAppleWebpCodec(urlKind)}
       priority={priority}
       transition={transitionMs}
+      onDisplay={handleDisplay}
       onLoad={handleLoad}
       onError={handleError}
       style={overlayVisible ? StyleSheet.absoluteFill : style}

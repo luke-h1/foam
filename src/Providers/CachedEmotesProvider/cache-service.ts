@@ -36,7 +36,7 @@ const isLowTier = getDeviceTier() === 'low';
  */
 export const EMOTE_DECODE_MAX_PX = isLowTier ? 64 : 96;
 
-const MAX_ENTRIES = isLowTier ? 600 : 1200;
+const MAX_ENTRIES = isLowTier ? 1200 : 2400;
 
 /**
  * Hard ceiling on resident decoded-bitmap memory. The entry count alone is a
@@ -48,33 +48,35 @@ const MAX_ENTRIES = isLowTier ? 600 : 1200;
  * MAX_ENTRIES is now a backstop. Heuristic — tune against an on-device
  * Instruments Allocations / vmmap capture.
  *
- * Derived from device RAM (~2.5%) rather than a flat per-tier constant so the
- * working set scales down on smaller phones instead of every device sharing one
- * ceiling. Clamped to the previous per-tier bounds as a floor/ceiling so
- * behaviour is unchanged on the devices those constants were tuned for (a 12GB
- * phone still lands at the 192MB high-tier ceiling) while a ~4GB phone gets
- * ~100MB instead of the full 192MB.
+ * Derived from device RAM (~5%) rather than a flat per-tier constant so the
+ * working set scales down on smaller phones, clamped to per-tier bounds. Too
+ * small a budget re-decodes the on-screen working set cold after every trim,
+ * which reads as blank badge/emote slots in busy chats.
  */
 const MAX_DECODED_BYTES = (() => {
-  const ceil = isLowTier ? 64 * 1024 * 1024 : 192 * 1024 * 1024;
-  const floor = isLowTier ? 48 * 1024 * 1024 : 96 * 1024 * 1024;
+  const ceil = isLowTier ? 128 * 1024 * 1024 : 600 * 1024 * 1024;
+  const floor = isLowTier ? 96 * 1024 * 1024 : 192 * 1024 * 1024;
   const totalMemoryBytes = getTotalDeviceMemoryBytes();
   if (totalMemoryBytes <= 0) {
     return ceil;
   }
-  return Math.max(floor, Math.min(ceil, Math.floor(totalMemoryBytes * 0.025)));
+  return Math.max(floor, Math.min(ceil, Math.floor(totalMemoryBytes * 0.05)));
 })();
 const ANIMATED_BYTE_FACTOR = 8;
 
-const refs = new Map<string, ImageRef>();
-const refBytes = new Map<string, number>();
-/**
- * Intrinsic aspect ratio (logical width / height) captured off each decoded ref,
- * so the renderer can size emotes whose provider doesn't advertise dimensions.
- * Warm-decoded channel emotes usually have this before they first render, so the
- * common case corrects with no visible layout shift.
- */
-const refAspect = new Map<string, number>();
+type CacheEntry = {
+  ref: ImageRef;
+  bytes: number;
+  /**
+   * Intrinsic aspect ratio (logical width / height) captured off the decoded
+   * ref, so the renderer can size emotes whose provider doesn't advertise
+   * dimensions. Warm-decoded channel emotes usually have this before they
+   * first render, so the common case corrects with no visible layout shift.
+   */
+  aspect: number | null;
+};
+
+const refs = new Map<string, CacheEntry>();
 let totalBytes = 0;
 const pinned = new Set<string>();
 /**
@@ -100,15 +102,6 @@ function estimateRefBytes(animated: boolean, maxPx: number): number {
   return Math.round(animated ? pixelBytes * ANIMATED_BYTE_FACTOR : pixelBytes);
 }
 
-function dropRefBytes(url: string): void {
-  const cost = refBytes.get(url);
-  if (cost !== undefined) {
-    totalBytes -= cost;
-    refBytes.delete(url);
-  }
-  refAspect.delete(url);
-}
-
 const pendingReleases: { url: string; ref: ImageRef; frames: number }[] = [];
 let releaseFlushScheduled = false;
 
@@ -119,13 +112,34 @@ let releaseFlushScheduled = false;
  */
 const MAX_RELEASE_DEFER_FRAMES = 2;
 
-function markRecentlyReleased(url: string): void {
-  recentlyReleased.add(url);
+/**
+ * One sweep per flush: a channel hop or pressure trim releases hundreds of
+ * refs in one tick, too many for a pair of rAF closures each. A url stays
+ * marked one to two frames, still covering the subscribe-after-release race
+ * the marker exists to detect.
+ */
+let recentlyReleasedSweepScheduled = false;
+
+function scheduleRecentlyReleasedSweep(): void {
+  if (recentlyReleasedSweepScheduled) {
+    return;
+  }
+  recentlyReleasedSweepScheduled = true;
   requestAnimationFrame(() => {
+    const sweep = [...recentlyReleased];
     requestAnimationFrame(() => {
-      recentlyReleased.delete(url);
+      recentlyReleasedSweepScheduled = false;
+      sweep.forEach(url => recentlyReleased.delete(url));
+      if (recentlyReleased.size > 0) {
+        scheduleRecentlyReleasedSweep();
+      }
     });
   });
+}
+
+function markRecentlyReleased(url: string): void {
+  recentlyReleased.add(url);
+  scheduleRecentlyReleasedSweep();
 }
 
 /**
@@ -175,15 +189,16 @@ function flushPendingReleases(): void {
  * under memory pressure). Returns whether the url was cached.
  */
 function releaseRef(url: string): boolean {
-  const ref = refs.get(url);
-  if (ref) {
-    pendingReleases.push({ url, ref, frames: 0 });
-    if (!releaseFlushScheduled) {
-      releaseFlushScheduled = true;
-      requestAnimationFrame(flushPendingReleases);
-    }
+  const entry = refs.get(url);
+  if (!entry) {
+    return false;
   }
-  dropRefBytes(url);
+  pendingReleases.push({ url, ref: entry.ref, frames: 0 });
+  if (!releaseFlushScheduled) {
+    releaseFlushScheduled = true;
+    requestAnimationFrame(flushPendingReleases);
+  }
+  totalBytes -= entry.bytes;
   return refs.delete(url);
 }
 
@@ -199,8 +214,8 @@ function withinBudget(incomingBytes: number): boolean {
  * unpinned entry remains so a fully-pinned cache can still grow rather than spin.
  *
  * A live listener is skipped alongside a pin: `flushPendingReleases` won't free a
- * bitmap anything is subscribed to, so evicting one frees nothing while
- * `dropRefBytes` un-counts its bytes. The budget then under-reports and the cache
+ * bitmap anything is subscribed to, so evicting one frees nothing while the
+ * budget stops counting its bytes. The budget then under-reports and the cache
  * over-commits into real memory pressure.
  */
 function evictUnpinnedToFit(incomingBytes: number): void {
@@ -270,7 +285,7 @@ function notifyAll(): void {
 }
 
 export function getCachedEmoteRef(url: string): ImageRef | null {
-  return refs.get(url) ?? null;
+  return refs.get(url)?.ref ?? null;
 }
 
 /**
@@ -279,7 +294,7 @@ export function getCachedEmoteRef(url: string): ImageRef | null {
  * provider doesn't advertise dimensions (Twitch, BTTV).
  */
 export function getCachedEmoteAspectRatio(url: string): number | null {
-  return refAspect.get(url) ?? null;
+  return refs.get(url)?.aspect ?? null;
 }
 
 /**
@@ -288,10 +303,10 @@ export function getCachedEmoteAspectRatio(url: string): number | null {
  * Kept out of getCachedEmoteRef so the useSyncExternalStore snapshot stays pure.
  */
 export function touchCachedEmoteRef(url: string): void {
-  const ref = refs.get(url);
-  if (ref !== undefined) {
+  const entry = refs.get(url);
+  if (entry !== undefined) {
     refs.delete(url);
-    refs.set(url, ref);
+    refs.set(url, entry);
   }
 }
 
@@ -342,15 +357,15 @@ async function runDecode(
       maxPx,
     );
     evictUnpinnedToFit(cost);
-    refs.set(url, ref);
-    refBytes.set(url, cost);
-    totalBytes += cost;
     // Reading width/height off the ref is a JSI hop, but it's a one-off right
     // after the (far costlier) decode, and lets a dimensionless emote render at
     // its true aspect ratio instead of a 1:1 box.
-    if (ref.width > 0 && ref.height > 0) {
-      refAspect.set(url, ref.width / ref.height);
-    }
+    refs.set(url, {
+      ref,
+      bytes: cost,
+      aspect: ref.width > 0 && ref.height > 0 ? ref.width / ref.height : null,
+    });
+    totalBytes += cost;
     if (pin) {
       pinned.add(url);
     }
@@ -418,17 +433,21 @@ export function evictCachedEmoteRef(url: string): void {
   }
 }
 
-export function releaseChannelEmoteRefs(): void {
-  const dropped: string[] = [];
+export function releaseChannelEmoteRefs({
+  keepSubscribed = false,
+}: { keepSubscribed?: boolean } = {}): void {
+  // Deleting the current key is well-defined during Map iteration, so this
+  // sheds in a single pass; evictUnpinnedToFit relies on the same behaviour.
   for (const url of refs.keys()) {
-    if (!pinned.has(url)) {
-      dropped.push(url);
+    if (pinned.has(url)) {
+      continue;
     }
-  }
-  dropped.forEach(url => {
+    if (keepSubscribed && listeners.has(url)) {
+      continue;
+    }
     releaseRef(url);
     notify(url);
-  });
+  }
 }
 
 export function clearCachedEmoteRefs(): void {
@@ -436,9 +455,6 @@ export function clearCachedEmoteRefs(): void {
   for (const url of refs.keys()) {
     releaseRef(url);
   }
-  refs.clear();
-  refBytes.clear();
-  refAspect.clear();
   totalBytes = 0;
   inflight.clear();
   pinned.clear();
@@ -456,6 +472,15 @@ type MemoryPressureTrimOptions = {
    */
   clearImageCache?: boolean;
   /**
+   * Advisory trims keep refs with live listeners: the on-screen working set
+   * is a bounded screenful, the memory win is the offscreen inventory, and
+   * dropping a subscribed ref sends every mounted row through a cold
+   * disk-read and decode-queue pass (blank-badge churn on constrained
+   * devices). Free-memory-now signals (`memoryWarning`, backgrounding) never
+   * set it.
+   */
+  keepSubscribed?: boolean;
+  /**
    * Recurring triggers (the 5s poll, repeated onTrimMemory) throttle the wipe.
    * `memoryWarning` and backgrounding are free-memory-now signals: never set it.
    */
@@ -464,9 +489,10 @@ type MemoryPressureTrimOptions = {
 
 export function trimCachedEmoteRefsForMemoryPressure({
   clearImageCache = true,
+  keepSubscribed = false,
   throttled = false,
 }: MemoryPressureTrimOptions = {}): void {
-  releaseChannelEmoteRefs();
+  releaseChannelEmoteRefs({ keepSubscribed });
   if (!clearImageCache) {
     return;
   }
@@ -513,6 +539,7 @@ function logMemoryPressureTrim(
     ...cause,
     decodedBytes: totalBytes,
     decodedRefs: refs.size,
+    subscribedRefs: listeners.size,
   });
 }
 
@@ -528,13 +555,17 @@ function pollMemoryHeadroom(): void {
   }
 
   logMemoryPressureTrim({ availableBytes: available });
-  trimCachedEmoteRefsForMemoryPressure({ throttled: true });
+  trimCachedEmoteRefsForMemoryPressure({
+    keepSubscribed: true,
+    throttled: true,
+  });
 }
 
 function handleNativeMemoryPressure(event: ImageMemoryPressureEvent): void {
   logMemoryPressureTrim({ trimLevel: event.level });
   trimCachedEmoteRefsForMemoryPressure({
     clearImageCache: event.level >= ANDROID_TRIM_MEMORY_RUNNING_CRITICAL,
+    keepSubscribed: true,
     throttled: true,
   });
 }

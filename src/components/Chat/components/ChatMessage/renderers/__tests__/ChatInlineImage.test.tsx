@@ -13,6 +13,7 @@ const mockStartAnimating = jest.fn();
 const mockStopAnimating = jest.fn();
 
 let mockImageProps: {
+  onDisplay?: () => void;
   onError?: () => void;
   onLoad?: () => void;
   recyclingKey?: string;
@@ -27,6 +28,7 @@ jest.mock('expo-image', () => {
     Image: ReactModule.forwardRef(
       (
         props: {
+          onDisplay?: () => void;
           onError?: () => void;
           onLoad?: () => void;
           recyclingKey?: string;
@@ -569,16 +571,84 @@ describe('ChatInlineImage shared-ref recovery', () => {
     expect(mockImageProps?.source).toEqual({ uri: sourceUrl });
   });
 
-  test('leaves a drawn ref unwatched, since it never reports onLoad', () => {
+  test('a displayed ref is left alone by the watchdog and by stray errors', () => {
     mockSharedRef = { isAnimated: false };
     const sourceUrl = 'https://static-cdn.jtvnw.net/badges/v1/quiet/3';
     render(
       <ChatInlineImage sourceUrl={sourceUrl} style={{}} maxRetryAttempts={0} />,
     );
 
+    act(() => mockImageProps?.onDisplay?.());
     act(() => jest.advanceTimersByTime(60_000));
+    expect(mockImageProps?.source).toEqual(mockSharedRef);
 
+    // A stale error from the uri operation the native view abandoned when the
+    // ref took over says nothing about the drawn ref.
+    act(() => mockImageProps?.onError?.());
+    expect(mockImageProps?.source).toEqual(mockSharedRef);
     expect(warnMock).not.toHaveBeenCalled();
+  });
+
+  test('a ref that never draws is watchdogged onto the uri fallback', () => {
+    mockSharedRef = { isAnimated: false };
+    const sourceUrl = 'https://static-cdn.jtvnw.net/badges/v1/silent/3';
+    render(
+      <ChatInlineImage sourceUrl={sourceUrl} style={{}} maxRetryAttempts={0} />,
+    );
+
+    expect(mockImageProps?.source).toEqual(mockSharedRef);
+
+    act(() => jest.advanceTimersByTime(12_000));
+
+    expect(mockImageProps?.source).toEqual({ uri: sourceUrl });
+  });
+
+  test('a recycled slot does not inherit the previous mount displayed marker', () => {
+    mockSharedRef = { isAnimated: false };
+    const sourceUrl = 'https://static-cdn.jtvnw.net/badges/v1/comeback/3';
+    const { rerender } = render(
+      <ChatInlineImage sourceUrl={sourceUrl} style={{}} maxRetryAttempts={0} />,
+    );
+    act(() => mockImageProps?.onDisplay?.());
+
+    rerender(
+      <ChatInlineImage
+        sourceUrl='https://static-cdn.jtvnw.net/badges/v1/detour/3'
+        style={{}}
+        maxRetryAttempts={0}
+      />,
+    );
+    rerender(
+      <ChatInlineImage sourceUrl={sourceUrl} style={{}} maxRetryAttempts={0} />,
+    );
+
+    // The still-cached ref instance matches the first mount's marker, but it
+    // has not drawn since the recycle - the watchdog must still cover it.
+    act(() => jest.advanceTimersByTime(12_000));
+
+    expect(mockImageProps?.source).toEqual({ uri: sourceUrl });
+  });
+
+  test('recycling to a new url clears a previous ref ban', () => {
+    mockSharedRef = { isAnimated: false };
+    const bannedUrl = 'https://static-cdn.jtvnw.net/badges/v1/banned/3';
+    const { rerender } = render(
+      <ChatInlineImage sourceUrl={bannedUrl} style={{}} maxRetryAttempts={0} />,
+    );
+    act(() => mockImageProps?.onError?.());
+    expect(mockImageProps?.source).toEqual({ uri: bannedUrl });
+
+    rerender(
+      <ChatInlineImage
+        sourceUrl='https://static-cdn.jtvnw.net/badges/v1/other/3'
+        style={{}}
+        maxRetryAttempts={0}
+      />,
+    );
+    rerender(
+      <ChatInlineImage sourceUrl={bannedUrl} style={{}} maxRetryAttempts={0} />,
+    );
+
     expect(mockImageProps?.source).toEqual(mockSharedRef);
   });
 });

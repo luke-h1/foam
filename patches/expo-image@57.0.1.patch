@@ -1,3 +1,6 @@
+diff --git a/node_modules/expo-image/.bun-tag-34c8cb656dcf677f b/.bun-tag-34c8cb656dcf677f
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
 diff --git a/ios/AnimatedImage.swift b/ios/AnimatedImage.swift
 index 350c9e4d90680baf8370e49b3529f6e45781244e..fd438254be1cfd1b4c057a426fa95c9c20943824 100644
 --- a/ios/AnimatedImage.swift
@@ -78,6 +81,22 @@ index de6e2c368e45bedd01e563cf254c006190aca233..cd29dcd08631da9c703175756882af01
  
      if let maxSize = options.getMaxSize() {
        // Note that setting the thumbnail size rasterizes vector images into a bitmap.
+diff --git a/ios/ImageModule.swift b/ios/ImageModule.swift
+index 974047c904a8776f542266ededdc3db3e7149bf6..f4603610bea5574e5d6a43cd945068d6ce30ad1d 100644
+--- a/ios/ImageModule.swift
++++ b/ios/ImageModule.swift
+@@ -28,6 +28,11 @@ public final class ImageModule: Module {
+       Prop("source") { (view: ImageView, sources: Either<[ImageSource], SharedRef<UIImage>>?) in
+         if let imageRef: SharedRef<UIImage> = sources?.get() {
+           // Unset an array of traditional sources and just render the image ref right away.
++          // Cancel any in-flight uri load first: `reload()` early-returns before its own
++          // cancel on the ref path, so an abandoned SDWebImage operation would otherwise
++          // keep running behind the displayed ref and deliver a stale onError/onLoad for
++          // a source the view no longer shows.
++          view.cancelPendingOperation()
+           view.sources = nil
+           view.renderSourceImage(imageRef.ref)
+         } else {
 diff --git a/ios/ImageView.swift b/ios/ImageView.swift
 index cccedd7adf7328b18bb61333c3fe2473c79e72cd..8917134a516b206eda2bead68bbe151d8d3efc16 100644
 --- a/ios/ImageView.swift
