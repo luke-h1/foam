@@ -352,6 +352,13 @@ async function runDecode(
       { maxWidth: maxPx, maxHeight: maxPx },
     );
     if (inflight.get(url) !== requestEpoch || requestEpoch !== cacheEpoch) {
+      // The decode outlived a cache clear; release the bitmap now instead of
+      // leaving it to the GC, which lags exactly when memory is tight.
+      try {
+        ref.release();
+      } catch {
+        // ignore
+      }
       return;
     }
     const kind = describeEmoteUrl(url).kind;
