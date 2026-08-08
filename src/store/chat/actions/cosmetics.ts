@@ -449,6 +449,17 @@ export const getPaint = (paintId: string): PaintData | undefined =>
 export const getUserPaintId = (ttvUserId: string): string | undefined =>
   chatStore$.userPaintIds[ttvUserId]?.peek();
 
+/**
+ * Per-user has-a-paint memo, read imperatively per chat row - a plain bounded
+ * Map per the chat-state rule, since routing it through an observable cloned
+ * and key-diffed the whole bucket on every write.
+ */
+const userPaintFlags = new Map<string, boolean>();
+
+export const clearUserPaintFlagCache = (): void => {
+  userPaintFlags.clear();
+};
+
 let userPaintFlagInvalidatorAttached = false;
 
 /**
@@ -461,18 +472,17 @@ function ensureUserPaintFlagInvalidator(): void {
     return;
   }
   userPaintFlagInvalidatorAttached = true;
-  const clear = () => chatStore$.sessionCaches.userPaintFlags.set({});
   chatStore$.userPaintIds.onChange(({ changes }) => {
     for (const change of changes) {
       const changedUserId = change.path[0];
       if (typeof changedUserId !== 'string') {
-        clear();
+        clearUserPaintFlagCache();
         return;
       }
-      chatStore$.sessionCaches.userPaintFlags[changedUserId]?.delete();
+      userPaintFlags.delete(changedUserId);
     }
   });
-  chatStore$.paints.onChange(clear);
+  chatStore$.paints.onChange(clearUserPaintFlagCache);
 }
 
 export const hasUserPaint = (ttvUserId?: string): boolean => {
@@ -482,7 +492,7 @@ export const hasUserPaint = (ttvUserId?: string): boolean => {
 
   ensureUserPaintFlagInvalidator();
 
-  const cached = chatStore$.sessionCaches.userPaintFlags[ttvUserId]?.peek();
+  const cached = userPaintFlags.get(ttvUserId);
   if (cached !== undefined) {
     return cached;
   }
@@ -490,13 +500,30 @@ export const hasUserPaint = (ttvUserId?: string): boolean => {
   const paintId = getUserPaintId(ttvUserId);
   const result = Boolean(paintId && getPaint(paintId));
 
-  const flags = chatStore$.sessionCaches.userPaintFlags;
-  if (Object.keys(flags.peek()).length >= MAX_COSMETIC_ENTRIES) {
-    flags.set({});
+  if (userPaintFlags.size >= MAX_COSMETIC_ENTRIES) {
+    userPaintFlags.clear();
   }
-  flags[ttvUserId]?.set(result);
+  userPaintFlags.set(ttvUserId, result);
 
   return result;
+};
+
+const MAX_BADGE_DEFINITIONS = 750;
+
+const sweepUnreferencedBadges = () => {
+  const badges = chatStore$.badges.peek();
+  const badgeIds = Object.keys(badges);
+  if (badgeIds.length < MAX_BADGE_DEFINITIONS) {
+    return;
+  }
+  const referenced = new Set(Object.values(chatStore$.userBadgeIds.peek()));
+  const next: typeof badges = {};
+  badgeIds.forEach(badgeId => {
+    if (referenced.has(badgeId)) {
+      next[badgeId] = badges[badgeId] as SanitisedBadgeSet;
+    }
+  });
+  chatStore$.badges.set(next);
 };
 
 /**
@@ -541,6 +568,7 @@ export const addBadge = (badge: SanitisedBadgeSet) => {
   }
 
   const previousUrl = previous?.url?.trim();
+  sweepUnreferencedBadges();
   cell?.set(normalizedBadge);
   scheduleCosmeticsPersist('definitions');
 

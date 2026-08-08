@@ -4,8 +4,11 @@ import {
   addBadge,
   addPaint,
   type CachedUserCosmetics,
+  clearUserPaintFlagCache,
   fetchAndCacheUserCosmetics,
+  hasUserPaint,
   removeBadge,
+  removeUserPaint,
   setUserBadge,
   setUserPaint,
   syncCachedUserCosmeticsFromStore,
@@ -78,7 +81,7 @@ function resetStore() {
   chatStore$.badges.set({});
   chatStore$.userPaintIds.set({});
   chatStore$.userBadgeIds.set({});
-  chatStore$.sessionCaches.userPaintFlags.set({});
+  clearUserPaintFlagCache();
   chatStore$.cosmeticBindingsVersion.set(0);
   jest.mocked(storageService.set).mockClear();
 }
@@ -200,6 +203,35 @@ describe('cosmetics entitlement-burst churn', () => {
     expect(sevenTvService.getUserCosmeticsGql).not.toHaveBeenCalled();
     expect(chatStore$.userPaintIds.peek()['ttv-hit']).toBe(PAINT_ID);
     expect(chatStore$.userBadgeIds.peek()['ttv-hit']).toBe(BADGE_ID);
+  });
+
+  test('adding a badge past the definition cap sweeps unreferenced definitions', () => {
+    for (let index = 0; index < 750; index += 1) {
+      addBadge({
+        ...buildBadge(),
+        id: `badge-${index}`,
+        set: `badge-${index}`,
+      });
+    }
+    setUserBadge('ttv-user-0', 'badge-0');
+
+    addBadge({ ...buildBadge(), id: 'badge-750', set: 'badge-750' });
+
+    expect(Object.keys(chatStore$.badges.peek())).toEqual([
+      'badge-0',
+      'badge-750',
+    ]);
+  });
+
+  test('hasUserPaint memoises per user and invalidates on a binding change', () => {
+    addPaint(buildPaint());
+    setUserPaint('ttv-user-0', PAINT_ID);
+
+    expect(hasUserPaint('ttv-user-0')).toBe(true);
+
+    removeUserPaint('ttv-user-0');
+
+    expect(hasUserPaint('ttv-user-0')).toBe(false);
   });
 
   test('a snapshot whose bound ids no longer resolve is treated as a miss', async () => {
