@@ -51,6 +51,7 @@ export interface ChatScale {
   emoteLineHeight: number;
   emoteSize: number;
   gap: number;
+  metaIconSize: number;
   replyEmoteLineHeight: number;
   replyEmoteSize: number;
   rowPaddingHorizontal: number;
@@ -94,6 +95,7 @@ function buildChatScale(
     emoteLineHeight: emoteSize + emoteHeadroom,
     emoteSize,
     gap: Math.round(bodyFontSize * GAP_RATIO),
+    metaIconSize: secondaryFontSize,
     replyEmoteLineHeight: replyEmoteSize + emoteHeadroom,
     replyEmoteSize,
     rowPaddingHorizontal: ROW_PADDING_HORIZONTAL[density],

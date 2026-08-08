@@ -20,6 +20,7 @@ describe('getChatScale', () => {
       emoteLineHeight: 34,
       emoteSize: 30,
       gap: 4,
+      metaIconSize: 12,
       replyEmoteLineHeight: 24,
       replyEmoteSize: 20,
       rowPaddingHorizontal: 8,
@@ -46,6 +47,17 @@ describe('getChatScale', () => {
       expect(compact.emoteSize).toBe(comfortable.emoteSize);
       expect(compact.badgeSize).toBe(comfortable.badgeSize);
       expect(compact.secondaryFontSize).toBe(comfortable.secondaryFontSize);
+      expect(compact.metaIconSize).toBe(comfortable.metaIconSize);
+    }
+  });
+
+  test('sizes meta icons to the secondary text beside them', () => {
+    for (const fontScale of FONT_SCALES) {
+      for (const density of DENSITIES) {
+        const scale = getChatScale(fontScale, density);
+
+        expect(scale.metaIconSize).toBe(scale.secondaryFontSize);
+      }
     }
   });
 
