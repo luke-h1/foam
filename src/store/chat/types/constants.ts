@@ -190,30 +190,38 @@ export const MAX_COSMETIC_ENTRIES = 500;
 export const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 export const BADGE_CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 
-export const emptyEmoteData = {
-  twitchChannelEmotes: [],
-  twitchSubscriberEmotes: [],
-  twitchSubscriberEmotesUserId: undefined,
-  twitchSubscriberChannelProfiles: {},
-  sevenTvChannelEmotes: [],
-  ffzChannelEmotes: [],
-  bttvChannelEmotes: [],
-  twitchChannelBadges: [],
-  ffzChannelBadges: [],
-  lastUpdated: 0,
-  badgesLastUpdated: 0,
-  sevenTvEmoteSetId: undefined,
-} satisfies ChannelCacheType;
+/**
+ * Factories rather than shared constants: an empty-cache object embedded into
+ * an observable is written through by legend-state's hydration merge, so a
+ * shared constant would come back from "clear cache" holding the launch-time
+ * hydrated data instead of an empty slot.
+ */
+export const makeEmptyEmoteData = () =>
+  ({
+    twitchChannelEmotes: [],
+    twitchSubscriberEmotes: [],
+    twitchSubscriberEmotesUserId: undefined,
+    twitchSubscriberChannelProfiles: {},
+    sevenTvChannelEmotes: [],
+    ffzChannelEmotes: [],
+    bttvChannelEmotes: [],
+    twitchChannelBadges: [],
+    ffzChannelBadges: [],
+    lastUpdated: 0,
+    badgesLastUpdated: 0,
+    sevenTvEmoteSetId: undefined,
+  }) satisfies ChannelCacheType;
 
-export const emptyGlobalCacheData = {
-  lastUpdated: 0,
-  twitchGlobalEmotes: [],
-  sevenTvGlobalEmotes: [],
-  ffzGlobalEmotes: [],
-  bttvGlobalEmotes: [],
-  twitchGlobalBadges: [],
-  ffzGlobalBadges: [],
-} satisfies GlobalCacheType;
+export const makeEmptyGlobalCacheData = () =>
+  ({
+    lastUpdated: 0,
+    twitchGlobalEmotes: [],
+    sevenTvGlobalEmotes: [],
+    ffzGlobalEmotes: [],
+    bttvGlobalEmotes: [],
+    twitchGlobalBadges: [],
+    ffzGlobalBadges: [],
+  }) satisfies GlobalCacheType;
 
 /**
  * Consumer-facing emote-data shape: channel-cache fields plus the slices that
@@ -222,8 +230,8 @@ export const emptyGlobalCacheData = {
  * from the bundled table at read time.
  */
 export const emptyResolvedEmoteData = {
-  ...emptyEmoteData,
-  ...emptyGlobalCacheData,
+  ...makeEmptyEmoteData(),
+  ...makeEmptyGlobalCacheData(),
   lastUpdated: 0,
   sevenTvPersonalEmotes: {} as Record<string, SanitisedEmote[]>,
   chatterinoBadges: [] as SanitisedBadgeSet[],

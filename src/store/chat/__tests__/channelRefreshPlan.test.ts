@@ -6,8 +6,8 @@ import type {
   GlobalCacheType,
 } from '@app/store/chat/types/constants';
 import {
-  emptyEmoteData,
-  emptyGlobalCacheData,
+  makeEmptyEmoteData,
+  makeEmptyGlobalCacheData,
 } from '@app/store/chat/types/constants';
 import type { SevenTvSanitisedEmote } from '@app/types/emote';
 
@@ -44,7 +44,7 @@ const emote = {
 const freshCache = (
   overrides?: Partial<ChannelCacheType>,
 ): ChannelCacheType => ({
-  ...emptyEmoteData,
+  ...makeEmptyEmoteData(),
   sevenTvChannelEmotes: [emote],
   sevenTvEmoteSetId: 'set-1',
   lastUpdated: NOW - 30 * 60 * 1000,
@@ -55,7 +55,7 @@ const freshCache = (
 const freshGlobalCache = (
   overrides?: Partial<GlobalCacheType>,
 ): GlobalCacheType => ({
-  ...emptyGlobalCacheData,
+  ...makeEmptyGlobalCacheData(),
   sevenTvGlobalEmotes: [emote],
   lastUpdated: NOW - 30 * 60 * 1000,
   ...overrides,
@@ -209,7 +209,7 @@ describe('planChannelRefresh', () => {
     const plan = planChannelRefresh({
       cache: freshCache(),
       forceRefresh: false,
-      globalCache: { ...emptyGlobalCacheData, lastUpdated: NOW },
+      globalCache: { ...makeEmptyGlobalCacheData(), lastUpdated: NOW },
       now: NOW,
     });
 

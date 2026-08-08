@@ -36,8 +36,8 @@ import type {
   SubscriberChannelProfile,
 } from '../types/constants';
 import {
-  emptyGlobalCacheData,
   emptyResolvedEmoteData,
+  makeEmptyGlobalCacheData,
 } from '../types/constants';
 import { planChannelRefresh } from './channelRefreshPlan';
 import {
@@ -879,7 +879,7 @@ export const clearCache = (channelId?: string) => {
   } else {
     batch(() => {
       chatStore$.persisted.channelCaches.set({});
-      chatStore$.persisted.globalCaches.set({ ...emptyGlobalCacheData });
+      chatStore$.persisted.globalCaches.set(makeEmptyGlobalCacheData());
       chatStore$.currentChannelId.set(null);
       chatStore$.loadingState.set('IDLE');
     });
@@ -892,7 +892,7 @@ export const clearChatCosmeticsCache = (): void => {
   batch(() => {
     chatStore$.persisted.channelCaches.set({});
     chatStore$.recentMessagesByChannel.set({});
-    chatStore$.persisted.globalCaches.set({ ...emptyGlobalCacheData });
+    chatStore$.persisted.globalCaches.set(makeEmptyGlobalCacheData());
     chatStore$.currentChannelId.set(null);
     chatStore$.loadingState.set('IDLE');
     chatStore$.emojis.set(getEmojiEmotes(getPreferences().emojiStyle));
