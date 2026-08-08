@@ -54,12 +54,6 @@ export interface ChatStoreState {
   userPaintIds: Record<string, string>;
   badges: Record<string, SanitisedBadgeSet>;
   userBadgeIds: Record<string, string>;
-  sessionCaches: {
-    // getChatRowItemType runs per row on every list data change; caching the
-    // two-peek paints/userPaintIds traversal per user avoids re-walking those
-    // observables for every row on every render.
-    userPaintFlags: Record<string, boolean>;
-  };
   sharedChatBadgeCaches: {
     sourceBadges: Record<
       string,
@@ -118,9 +112,6 @@ const initialChatStoreState: ChatStoreState = {
   userPaintIds: {},
   badges: {},
   userBadgeIds: {},
-  sessionCaches: {
-    userPaintFlags: {},
-  },
   sharedChatBadgeCaches: {
     sourceBadges: {},
     channelBadges: {},

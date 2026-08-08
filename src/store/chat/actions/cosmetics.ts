@@ -24,6 +24,10 @@ import {
 } from '../observables/cosmeticsPersistence';
 import { MAX_COSMETIC_ENTRIES } from '../types/constants';
 import {
+  clearEntitlementUserLinkState,
+  getSevenTvUserIdForTwitchId,
+} from './cosmeticsLinks';
+import {
   clearAllMissingBadges,
   clearMissingBadge,
   reportMissingBadge,
@@ -241,7 +245,9 @@ function buildCachedUserCosmeticsFromStore(
 }
 
 /**
- * Mirror live chatStore bindings into the per-user GQL cache after a 7TV push.
+ * Mirror live chatStore bindings into the per-user GQL cache. Internal to the
+ * store: callers never sync by hand - the binding writers below schedule the
+ * debounced snapshot sync themselves.
  */
 export const syncCachedUserCosmeticsFromStore = (
   sevenTvUserId: string,
@@ -251,6 +257,41 @@ export const syncCachedUserCosmeticsFromStore = (
     sevenTvUserId,
     buildCachedUserCosmeticsFromStore(ttvUserId),
   );
+};
+
+/**
+ * Debounced per-user snapshot syncs derived from binding writes, following the
+ * scheduleCosmeticsPersist pattern: entitlements arrive in bursts, so dirty
+ * wearers coalesce into one flush per quiet window (matching the bindings-bump
+ * coalesce). The 7TV user id is resolved at write time because reset events
+ * drop the link right after clearing the bindings.
+ */
+const USER_COSMETICS_SNAPSHOT_DEBOUNCE_MS = 1000;
+let userCosmeticsSnapshotTimer: ReturnType<typeof setTimeout> | null = null;
+const pendingUserCosmeticsSnapshots = new Map<string, string>();
+
+const flushPendingUserCosmeticsSnapshots = (): void => {
+  const pending = Array.from(pendingUserCosmeticsSnapshots.entries());
+  pendingUserCosmeticsSnapshots.clear();
+  pending.forEach(([ttvUserId, sevenTvUserId]) => {
+    syncCachedUserCosmeticsFromStore(sevenTvUserId, ttvUserId);
+  });
+};
+
+const scheduleUserCosmeticsSnapshotSync = (ttvUserId: string): void => {
+  const sevenTvUserId = getSevenTvUserIdForTwitchId(ttvUserId);
+  if (!sevenTvUserId) {
+    return;
+  }
+
+  pendingUserCosmeticsSnapshots.set(ttvUserId, sevenTvUserId);
+  if (userCosmeticsSnapshotTimer) {
+    return;
+  }
+  userCosmeticsSnapshotTimer = setTimeout(() => {
+    userCosmeticsSnapshotTimer = null;
+    flushPendingUserCosmeticsSnapshots();
+  }, USER_COSMETICS_SNAPSHOT_DEBOUNCE_MS);
 };
 
 function refreshCachedUserCosmeticsForDefinition(cosmeticId: string): void {
@@ -361,6 +402,12 @@ export const clearUserCosmeticsCache = () => {
     clearTimeout(cosmeticBindingsBumpTimer);
     cosmeticBindingsBumpTimer = null;
   }
+  if (userCosmeticsSnapshotTimer) {
+    clearTimeout(userCosmeticsSnapshotTimer);
+    userCosmeticsSnapshotTimer = null;
+  }
+  pendingUserCosmeticsSnapshots.clear();
+  clearEntitlementUserLinkState();
   userCosmeticsFetchGuard.clear();
   userPresenceRequestGuard.clear();
   sessionCosmeticsCache.clear();
@@ -397,6 +444,7 @@ export const setUserPaint = (ttvUserId: string, paintId: string): void => {
     chatStore$.userPaintIds[ttvUserId]?.set(paintId);
   }
 
+  scheduleUserCosmeticsSnapshotSync(ttvUserId);
   scheduleCosmeticsPersist('bindings');
 };
 
@@ -452,6 +500,14 @@ export const getPaint = (paintId: string): PaintData | undefined =>
 export const getUserPaintId = (ttvUserId: string): string | undefined =>
   chatStore$.userPaintIds[ttvUserId]?.peek();
 
+/**
+ * getChatRowItemType runs per row on every list data change; caching the
+ * two-peek paints/userPaintIds traversal per user avoids re-walking those
+ * observables for every row on every render. A plain bounded Map, not an
+ * observable: it is only ever read imperatively during render, and routing it
+ * through the store cloned and key-diffed the whole bucket on every write.
+ */
+const userPaintFlags = new Map<string, boolean>();
 let userPaintFlagInvalidatorAttached = false;
 
 /**
@@ -464,18 +520,17 @@ function ensureUserPaintFlagInvalidator(): void {
     return;
   }
   userPaintFlagInvalidatorAttached = true;
-  const clear = () => chatStore$.sessionCaches.userPaintFlags.set({});
   chatStore$.userPaintIds.onChange(({ changes }) => {
     for (const change of changes) {
       const changedUserId = change.path[0];
       if (typeof changedUserId !== 'string') {
-        clear();
+        userPaintFlags.clear();
         return;
       }
-      chatStore$.sessionCaches.userPaintFlags[changedUserId]?.delete();
+      userPaintFlags.delete(changedUserId);
     }
   });
-  chatStore$.paints.onChange(clear);
+  chatStore$.paints.onChange(() => userPaintFlags.clear());
 }
 
 export const hasUserPaint = (ttvUserId?: string): boolean => {
@@ -485,7 +540,7 @@ export const hasUserPaint = (ttvUserId?: string): boolean => {
 
   ensureUserPaintFlagInvalidator();
 
-  const cached = chatStore$.sessionCaches.userPaintFlags[ttvUserId]?.peek();
+  const cached = userPaintFlags.get(ttvUserId);
   if (cached !== undefined) {
     return cached;
   }
@@ -493,11 +548,10 @@ export const hasUserPaint = (ttvUserId?: string): boolean => {
   const paintId = getUserPaintId(ttvUserId);
   const result = Boolean(paintId && getPaint(paintId));
 
-  const flags = chatStore$.sessionCaches.userPaintFlags;
-  if (Object.keys(flags.peek()).length >= MAX_COSMETIC_ENTRIES) {
-    flags.set({});
+  if (userPaintFlags.size >= MAX_COSMETIC_ENTRIES) {
+    userPaintFlags.clear();
   }
-  flags[ttvUserId]?.set(result);
+  userPaintFlags.set(ttvUserId, result);
 
   return result;
 };
@@ -591,6 +645,7 @@ export const setUserBadge = (ttvUserId: string, badgeId: string): void => {
     scheduleCosmeticBindingsBump();
   }
 
+  scheduleUserCosmeticsSnapshotSync(ttvUserId);
   scheduleCosmeticsPersist('bindings');
 };
 
@@ -636,6 +691,8 @@ export const removeBadge = (badgeId: string) => {
 };
 
 export const removeUserBadge = (ttvUserId: string) => {
+  scheduleUserCosmeticsSnapshotSync(ttvUserId);
+
   const current = chatStore$.userBadgeIds.peek();
   if (!(ttvUserId in current)) {
     return;
@@ -674,6 +731,8 @@ export const removePaint = (paintId: string) => {
  * same rationale as `setUserPaint`.
  */
 export const removeUserPaint = (ttvUserId: string) => {
+  scheduleUserCosmeticsSnapshotSync(ttvUserId);
+
   const current = chatStore$.userPaintIds.peek();
   if (!(ttvUserId in current)) {
     return;
