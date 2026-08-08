@@ -345,6 +345,20 @@ const syncUserCosmeticsSnapshotNow = (ttvUserId: string): void => {
   syncCachedUserCosmeticsFromStore(sevenTvUserId, ttvUserId);
 };
 
+/**
+ * A bindings wipe (chat unmount, dev-tools clears) does not stop the debounce
+ * timer, so a flush landing after the wipe would persist paint-less snapshots
+ * with a fresh TTL for wearers who still have cosmetics. Flushing before the
+ * wipe writes the snapshots from the still-intact bindings instead.
+ */
+const flushUserCosmeticsSnapshotsBeforeBindingsClear = (): void => {
+  if (userCosmeticsSnapshotTimer) {
+    clearTimeout(userCosmeticsSnapshotTimer);
+    userCosmeticsSnapshotTimer = null;
+  }
+  flushPendingUserCosmeticsSnapshots();
+};
+
 export const fetchAndCacheUserCosmetics = async (
   sevenTvUserId: string,
 ): Promise<string | null> => {
@@ -824,6 +838,7 @@ export const removeUserPaint = (ttvUserId: string) => {
 };
 
 export const clearPaints = () => {
+  flushUserCosmeticsSnapshotsBeforeBindingsClear();
   batch(() => {
     chatStore$.paints.set({});
     chatStore$.userPaintIds.set({});
@@ -832,11 +847,13 @@ export const clearPaints = () => {
 };
 
 export const clearPaintBindings = () => {
+  flushUserCosmeticsSnapshotsBeforeBindingsClear();
   chatStore$.userPaintIds.set({});
   scheduleCosmeticsPersist('bindings');
 };
 
 export const clearSevenTvBadges = () => {
+  flushUserCosmeticsSnapshotsBeforeBindingsClear();
   batch(() => {
     chatStore$.badges.set({});
     chatStore$.userBadgeIds.set({});
