@@ -181,10 +181,9 @@ function applyCachedUserCosmetics(cosmetics: CachedUserCosmetics) {
 }
 
 /**
- * A snapshot is only servable when every bound id resolves against the
- * definitions we hold; an id without its definition (old embedded-shape
- * blobs, or a definitions store that was cleared since the snapshot was
- * written) must fall through to a refetch instead of binding to nothing.
+ * An id without its definition (old embedded-shape blobs, or a definitions
+ * store cleared since the snapshot was written) must fall through to a
+ * refetch instead of binding to nothing.
  */
 const hasResolvableCosmeticDefinitions = (
   cosmetics: CachedUserCosmetics,
@@ -324,9 +323,9 @@ export const fetchAndCacheUserCosmetics = async (
         `Error fetching cosmetics for user ${sevenTvUserId}:`,
         error,
       );
-      if (cached && ctx.stillCurrent()) {
-        deleteCachedUserCosmetics(sevenTvUserId);
-      }
+      // A transport error keeps the snapshot: its ids may resolve again once
+      // the deferred cosmetics hydration lands. Only a definitive null
+      // response above deletes it.
       return null;
     }
   });

@@ -231,6 +231,23 @@ describe('migratePersistedChatStore', () => {
     });
   });
 
+  test('seeds from a stale-stamped donor when no fresher channel holds global copies', () => {
+    const staleCache: LegacyChannelCache = {
+      ...makeEmptyEmoteData(),
+      bttvGlobalEmotes: [emote('stale-global-emote')],
+      lastUpdated: 0,
+    };
+    chatStore$.persisted.channelCaches.set({ 'channel-1': staleCache });
+
+    migratePersistedChatStore();
+
+    expect(chatStore$.persisted.globalCaches.peek()).toEqual<GlobalCacheType>({
+      ...makeEmptyGlobalCacheData(),
+      bttvGlobalEmotes: [emote('stale-global-emote')],
+      lastUpdated: 0,
+    });
+  });
+
   test('does not overwrite a populated global slot with channel copies', () => {
     chatStore$.persisted.globalCaches.set({
       ...makeEmptyGlobalCacheData(),

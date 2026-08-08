@@ -30,10 +30,21 @@ export const getChannelPersonalEmotes = (
   (channelId ? personalEmotesByChannel.get(channelId) : undefined) ??
   EMPTY_PERSONAL_EMOTES;
 
+/**
+ * Drops one channel's sets and the fetch-once stamps of the users they
+ * belonged to, so those users refetch instead of short-circuiting into the
+ * emptied cache.
+ */
 export const clearChannelPersonalEmotes = (channelId: string): void => {
-  if (personalEmotesByChannel.delete(channelId)) {
-    chatStore$.personalEmotesVersion.set(version => version + 1);
+  const channelEmotes = personalEmotesByChannel.get(channelId);
+  if (!channelEmotes) {
+    return;
   }
+  for (const twitchUserId of Object.keys(channelEmotes)) {
+    personalEmotesGuard.clearKey(twitchUserId);
+  }
+  personalEmotesByChannel.delete(channelId);
+  chatStore$.personalEmotesVersion.set(version => version + 1);
 };
 
 export const fetchUserPersonalEmotes = async (

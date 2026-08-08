@@ -118,8 +118,7 @@ const countReconciledItems = (
 };
 
 /**
- * Replaces the shared global slot with the reconciled global slices. The
- * freshness stamp only advances when every global fetch succeeded, so a
+ * The freshness stamp only advances when every global fetch succeeded, so a
  * failed slice keeps its retry pressure instead of being served as fresh for
  * the whole TTL.
  */
@@ -284,13 +283,16 @@ export const resolveSubscriberChannelProfiles = async (
 };
 
 export const clearChannelResources = () => {
+  const channelId = chatStore$.currentChannelId.peek();
   batch(() => {
     chatStore$.currentChannelId.set(null);
     chatStore$.loadingState.set('IDLE');
     chatStore$.emojis.set(getEmojiEmotes(getPreferences().emojiStyle));
     chatStore$.bits.set([]);
   });
-  clearPersonalEmotesCache();
+  if (channelId) {
+    clearChannelPersonalEmotes(channelId);
+  }
 };
 
 export const notify7TVPresence = async (

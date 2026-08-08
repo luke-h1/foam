@@ -564,9 +564,8 @@ export const collectFailedProviderReasons = (
 };
 
 /**
- * True when at least one rejected resource spec still has a non-empty slice in
- * its cache (the channel cache for channel-scope specs, the shared global
- * slot for global-scope specs) to fall back to.
+ * True when at least one rejected resource spec still has a non-empty cached
+ * slice to fall back to.
  */
 export const hadCachedResourcesForFailedSpecs = (
   context: Omit<ResourceCacheContext, 'channelId'>,

@@ -3,6 +3,7 @@ import { sevenTvService } from '@app/services/seventv-service';
 import type { SevenTvSanitisedEmote } from '@app/types/emote';
 
 import {
+  clearChannelPersonalEmotes,
   clearPersonalEmotesCache,
   fetchUserPersonalEmotes,
   getUserPersonalEmotes,
@@ -125,6 +126,25 @@ describe('fetchUserPersonalEmotes', () => {
       ...makeEmptyEmoteData(),
       lastUpdated: 1_000,
     });
+  });
+
+  test('clearChannelPersonalEmotes drops only that channel and lets its users refetch', async () => {
+    const otherChannelId = '456';
+    mockGetPersonalEmoteSet.mockResolvedValue([personalEmote]);
+    await fetchUserPersonalEmotes(twitchUserId, channelId);
+    await refreshUserPersonalEmotes('user-2', otherChannelId);
+
+    clearChannelPersonalEmotes(channelId);
+
+    expect(getUserPersonalEmotes(twitchUserId, channelId)).toEqual([]);
+    expect(getUserPersonalEmotes('user-2', otherChannelId)).toEqual<
+      SevenTvSanitisedEmote[]
+    >([personalEmote]);
+
+    const refetched = await fetchUserPersonalEmotes(twitchUserId, channelId);
+
+    expect(refetched).toEqual<SevenTvSanitisedEmote[]>([personalEmote]);
+    expect(mockGetPersonalEmoteSet).toHaveBeenCalledTimes(3);
   });
 
   test('clearPersonalEmotesCache drops cached sets and bumps the version', async () => {

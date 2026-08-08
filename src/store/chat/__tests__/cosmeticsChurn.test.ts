@@ -281,6 +281,25 @@ describe('cosmetics entitlement-burst churn', () => {
     ]);
   });
 
+  test('a network error keeps the stored snapshot for a later retry', async () => {
+    const stored: CachedUserCosmetics = {
+      badgeId: 'badge-offline',
+      expiresAt: Date.now() + 60_000,
+      paintId: null,
+      ttvUserId: 'ttv-offline',
+    };
+    jest.mocked(storageService.getString).mockReturnValueOnce(stored);
+    jest.mocked(storageService.delete).mockClear();
+    jest
+      .mocked(sevenTvService.getUserCosmeticsGql)
+      .mockRejectedValueOnce(new Error('network down'));
+
+    const result = await fetchAndCacheUserCosmetics('stv-offline');
+
+    expect(result).toBeNull();
+    expect(storageService.delete).not.toHaveBeenCalled();
+  });
+
   test('an unresolvable snapshot heals when the refetch succeeds', async () => {
     const stored: CachedUserCosmetics = {
       badgeId: 'badge-heal',

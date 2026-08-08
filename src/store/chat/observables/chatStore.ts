@@ -189,15 +189,14 @@ const GLOBAL_CACHE_SLICE_KEYS = [
   'ffzGlobalBadges',
 ] as const;
 
-// Fields older builds persisted but the current schema no longer holds.
-// Recent messages used to live inside `persisted`; chatterino badges used to
-// be stored per channel (~4,100 entries each) and are now resolved from the
-// bundled table at read time; the `emotes`/`badges` aggregates duplicated the
-// per-provider arrays stored alongside them; 7TV personal emotes are now
-// session state refetched per sighting, and personal badges were only ever
-// written empty; the global provider slices moved to the shared
-// `persisted.globalCaches` slot. Stripping them on hydrate stops every future
-// channelCaches write from re-serializing them.
+// Fields older builds persisted per channel but the current schema no longer
+// holds: chatterino badges (~4,100 entries each, now resolved from the
+// bundled table at read time), the `emotes`/`badges` aggregates (duplicated
+// the per-provider arrays stored alongside them), 7TV personal emotes (now
+// session state refetched per sighting), personal badges (only ever written
+// empty), and the global provider slices (moved to the shared
+// `persisted.globalCaches` slot). Stripping them on hydrate stops every
+// future channelCaches write from re-serializing them.
 const STALE_CHANNEL_CACHE_KEYS = [
   'chatterinoBadges',
   'emotes',
@@ -234,7 +233,7 @@ const seedGlobalCachesFromChannelCopies = (
     );
     if (
       holdsGlobalCopies &&
-      (cache.lastUpdated || 0) > (donor?.lastUpdated || 0)
+      (!donor || (cache.lastUpdated || 0) > (donor.lastUpdated || 0))
     ) {
       donor = cache;
     }
