@@ -7,10 +7,13 @@ import {
 import { openChatUserActions } from '@app/store/chat/actions/chatOverlays';
 import { useChatOverlayState } from '@app/store/chat/react/overlaySelectors';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
+import { usePreference } from '@app/store/preferenceStore';
 import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
+import { isDevToolsEnabled } from '@app/utils/devTools/isDevToolsEnabled';
 
 import { ActionSheet } from './ActionSheet/ActionSheet';
 import { BadgePreviewSheet } from './BadgePreviewSheet/BadgePreviewSheet';
+import { ChatDebugLogRecorder } from './ChatDebugLogRecorder';
 import type { MessageActionData } from './ChatMessage/RichChatMessage.types';
 import { ChattersSheet } from './ChattersSheet/ChattersSheet';
 import { EmotePreviewSheet } from './EmotePreviewSheet/EmotePreviewSheet';
@@ -85,6 +88,8 @@ export const ChatOverlayLayer = memo(function ChatOverlayLayer({
     selectedUser,
   } = useChatOverlayState(channelId);
 
+  const chatDebugTools = usePreference('chatDebugTools');
+
   const {
     handleActionSheetBanUser,
     handleActionSheetCopy,
@@ -140,6 +145,10 @@ export const ChatOverlayLayer = memo(function ChatOverlayLayer({
 
   return (
     <>
+      {isDevToolsEnabled && chatDebugTools ? (
+        <ChatDebugLogRecorder channelId={channelId} />
+      ) : null}
+
       {isEmoteSheetMounted ? (
         <EmoteSheet
           isPresented

@@ -19,6 +19,7 @@ import {
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { usePreferences } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
+import { isDevToolsEnabled } from '@app/utils/devTools/isDevToolsEnabled';
 
 import { FormNavigationRow } from './components/FormNavigationRow';
 
@@ -29,6 +30,7 @@ export function SettingsDevtoolsScreen() {
     disableStream,
     sharedChatEnabled,
     enhancedVideoStability,
+    chatDebugTools,
     update,
   } = usePreferences();
   const scrollRef = useRef<ScrollView>(null);
@@ -84,6 +86,15 @@ export function SettingsDevtoolsScreen() {
               <NativeText>{t('enhancedVideoStability')}</NativeText>
               <NativeText>{t('enhancedVideoStabilityDescription')}</NativeText>
             </Toggle>
+            {isDevToolsEnabled ? (
+              <Toggle
+                isOn={chatDebugTools}
+                onIsOnChange={value => update({ chatDebugTools: value })}
+              >
+                <NativeText>{t('chatDebugTools')}</NativeText>
+                <NativeText>{t('chatDebugToolsDescription')}</NativeText>
+              </Toggle>
+            ) : null}
           </Section>
 
           <Section title={t('developerTools')}>
@@ -195,6 +206,15 @@ export function SettingsDevtoolsScreen() {
             value={enhancedVideoStability}
             onValueChange={value => update({ enhancedVideoStability: value })}
           />
+          {isDevToolsEnabled ? (
+            <SettingsToggleRow
+              title={t('chatDebugTools')}
+              subtitle={t('chatDebugToolsDescription')}
+              icon={{ icon: 'ladybug', color: theme.colorTeal }}
+              value={chatDebugTools}
+              onValueChange={value => update({ chatDebugTools: value })}
+            />
+          ) : null}
         </SettingsSection>
 
         <SettingsSection title={t('developerTools')}>

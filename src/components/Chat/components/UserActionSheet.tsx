@@ -13,12 +13,17 @@ import {
   type SnapPoint,
 } from '@app/components/BottomSheet/BottomSheet';
 import { Button } from '@app/components/Button/Button';
+import { ChatDebugSection } from '@app/components/Chat/components/ChatDebugSection';
 import type {
   ChatModerationAccessFlags,
   UserActionVisibilityFlags,
 } from '@app/components/Chat/types/chatUiFlags';
 import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
+import {
+  getChatDebugIrcLinesForLogin,
+  getChatDebugUserSnapshot,
+} from '@app/store/chat/actions/chatDebugLog';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { theme } from '@app/styles/themes';
 import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
@@ -365,6 +370,13 @@ function UserActionSheetComponent({
               </Button>
             ))}
           </View>
+
+          <ChatDebugSection
+            build={() => ({
+              payload: getChatDebugUserSnapshot(login, username, userId),
+              ircLines: getChatDebugIrcLinesForLogin(login || username),
+            })}
+          />
         </ScrollView>
       </View>
     </BottomSheet>
