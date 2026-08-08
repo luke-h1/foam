@@ -58,6 +58,7 @@ function renderOverlayLayer() {
     <ChatOverlayLayer
       canModerateChat
       channelId={CHANNEL_ID}
+      channelName='channel'
       currentUserId='mod-1'
       hiddenUsers={[]}
       highlightedUsers={[]}

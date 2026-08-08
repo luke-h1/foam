@@ -6,6 +6,7 @@ import { useAuthContext } from '@app/context/AuthContext';
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import { useSyncRef } from '@app/hooks/useSyncRef';
 import { isE2EMode } from '@app/services/api/clients';
+import { recordChatDebugIrcLine } from '@app/store/chat/actions/chatDebugLog';
 import { usePreference } from '@app/store/preferenceStore';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
@@ -605,9 +606,11 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
         // Replay is unaffected - it flows through the recent-messages path,
         // never this socket.
         if (isPrivmsgLine(line) && !shouldProcessLiveMessage()) {
+          recordChatDebugIrcLine(line, true);
           continue;
         }
 
+        recordChatDebugIrcLine(line);
         const ircMessage = parseIrcMessage(line);
         if (ircMessage) {
           handleIrcMessage(ircMessage);

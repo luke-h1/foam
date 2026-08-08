@@ -16,11 +16,16 @@ import {
 } from '@app/components/BottomSheet/BottomSheet';
 /* eslint-disable react-native/sort-styles */
 import { Button } from '@app/components/Button/Button';
+import { ChatDebugSection } from '@app/components/Chat/components/ChatDebugSection';
 import { computeSheetHeight } from '@app/components/Chat/util/computeSheetHeight';
 import { Image } from '@app/components/Image/Image';
 import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { useSaveImageToGallery } from '@app/hooks/useSaveImageToGallery';
+import {
+  getChatDebugBadgeDetails,
+  getChatDebugBadgeSources,
+} from '@app/store/chat/actions/chatDebugLog';
 import { theme } from '@app/styles/themes';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
@@ -224,6 +229,16 @@ function BadgePreviewSheetComponent(props: Props) {
               </Button>
             ))}
           </View>
+
+          <ChatDebugSection
+            build={() => ({
+              payload: {
+                badge: selectedBadge,
+                badgeDetails: getChatDebugBadgeDetails(selectedBadge),
+                badgeSources: getChatDebugBadgeSources(),
+              },
+            })}
+          />
         </ScrollView>
       </View>
     </BottomSheet>

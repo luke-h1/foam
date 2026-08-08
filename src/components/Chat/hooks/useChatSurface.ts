@@ -202,6 +202,7 @@ export function useChatSurface({
   const overlayProps: ChatOverlayLayerProps = {
     canModerateChat,
     channelId,
+    channelName,
     currentUserId: user?.id,
     hiddenUsers,
     highlightedUsers,
