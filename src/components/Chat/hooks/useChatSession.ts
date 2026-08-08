@@ -119,11 +119,11 @@ export function useChatSession({
   const {
     handleNewMessage: enqueueChatMessage,
     clearLocalMessages,
-    moderateBufferedMessageById,
-    moderateBufferedMessagesByLogin,
+    moderateChatMessageById,
+    moderateChatMessagesByLogin,
     reconcileChatDelay,
-    removeBufferedMessageById,
-    removeBufferedMessagesByLogin,
+    removeChatMessageById,
+    removeChatMessagesByLogin,
     cleanup: cleanupMessages,
     forceFlush,
   } = useChatMessages({
@@ -243,11 +243,11 @@ export function useChatSession({
     isLoadingRecentMessagesRef,
     listRef,
     messages$,
-    moderateBufferedMessageById,
-    moderateBufferedMessagesByLogin,
+    moderateChatMessageById,
+    moderateChatMessagesByLogin,
     processMessageEmotes,
-    removeBufferedMessageById,
-    removeBufferedMessagesByLogin,
+    removeChatMessageById,
+    removeChatMessagesByLogin,
   });
 
   const {
