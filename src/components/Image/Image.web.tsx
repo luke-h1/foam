@@ -38,7 +38,6 @@ export const Image = function Image({
   transition = 500,
   source,
   cachePolicy,
-  cachePriority = 'visible',
   cacheToFile = true,
   cacheVariant = 'image',
   recyclingKey,
@@ -88,7 +87,6 @@ export const Image = function Image({
     const cacheableSourceUri = sourceUri;
     const controller = new AbortController();
     cacheImageFromUrl(cacheableSourceUri, {
-      priority: cachePriority,
       signal: controller.signal,
       variant: cacheVariant,
     })
@@ -122,7 +120,6 @@ export const Image = function Image({
     };
   }, [
     cachePolicy,
-    cachePriority,
     cacheVariant,
     diskCachedSource,
     shouldUseFileCache,

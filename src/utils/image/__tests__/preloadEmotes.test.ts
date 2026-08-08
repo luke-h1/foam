@@ -4,7 +4,6 @@ import type { SanitisedEmote } from '@app/types/emote';
 import { logger } from '@app/utils/logger';
 
 import {
-  clearPreloadCache,
   preloadChannelEmotes,
   preloadEmotes,
   preloadGlobalEmotes,
@@ -47,7 +46,6 @@ function emote(name: string, url = `https://example.com/${name}.webp`) {
 
 describe('preloadEmotes', () => {
   beforeEach(() => {
-    clearPreloadCache();
     prefetchMock.mockClear();
     prefetchMock.mockResolvedValue(true);
     warnMock.mockClear();
@@ -77,7 +75,6 @@ describe('preloadEmotes', () => {
       bttvGlobalEmotes: [emote('bttv-global')],
       ffzGlobalEmotes: [emote('ffz-global')],
     });
-    clearPreloadCache();
     prefetchMock.mockClear();
 
     await preloadChannelEmotes({

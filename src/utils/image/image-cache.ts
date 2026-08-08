@@ -11,10 +11,7 @@ const MAX_CACHE_BYTES = 100 * 1024 * 1024;
 const MAX_CACHE_RECORDS = 5000;
 const DOWNLOAD_CONCURRENCY = 4;
 
-export type ImageCachePriority = 'visible' | 'interactive' | 'background';
-
 export type CacheImageOptions = {
-  priority?: ImageCachePriority;
   signal?: AbortSignal;
   variant?: string;
 };
@@ -42,7 +39,6 @@ type DownloadTask = {
   reject: (reason?: unknown) => void;
   resolve: (uri: string) => void;
   run: () => Promise<string>;
-  sequence: number;
   url: string;
 };
 
@@ -54,22 +50,10 @@ const manifestStorage = createMMKV({
 const manifest = new Map<string, CacheRecord>();
 const inFlight = new Map<string, Promise<string>>();
 const taskQueue: DownloadTask[] = [];
-let taskQueueDirty = false;
 
 let activeDownloads = 0;
-let sequence = 0;
 let hydrated = false;
 let validationStarted = false;
-
-function priorityRank(priority: ImageCachePriority | undefined): number {
-  if (priority === 'visible') {
-    return 0;
-  }
-  if (priority === 'interactive') {
-    return 1;
-  }
-  return 2;
-}
 
 function hashString(str: string): string {
   let hash = 2166136261;
@@ -232,23 +216,7 @@ function getValidRecord(key: string): CacheRecord | undefined {
   return record;
 }
 
-function sortTasks(): void {
-  taskQueue.sort((a, b) => {
-    const priorityDelta =
-      priorityRank(a.options.priority) - priorityRank(b.options.priority);
-    return priorityDelta === 0 ? a.sequence - b.sequence : priorityDelta;
-  });
-}
-
 function drainQueue(): void {
-  /**
-   * Sort once per drain, and only when something was enqueued since the last
-   * sort - shift() preserves order across dequeues.
-   */
-  if (taskQueueDirty) {
-    taskQueueDirty = false;
-    sortTasks();
-  }
   while (activeDownloads < DOWNLOAD_CONCURRENCY && taskQueue.length > 0) {
     const task = taskQueue.shift();
     if (!task) {
@@ -291,10 +259,8 @@ function enqueueDownload(
       reject,
       resolve,
       run,
-      sequence: (sequence += 1),
       url,
     });
-    taskQueueDirty = true;
     drainQueue();
   });
   inFlight.set(key, promise);
@@ -446,20 +412,4 @@ export function listCachedImages(): CachedImageInfo[] {
 
 export function getCacheDirectoryPath(): string {
   return new Directory(Paths.cache, CACHE_DIR_NAME).uri;
-}
-
-export function warmImageCache(
-  urls: string[],
-  options: CacheImageOptions = {},
-): void {
-  hydrateManifest();
-  for (const url of urls) {
-    if (!isCacheableUri(url)) {
-      continue;
-    }
-    if (getCachedImageUri(url, { variant: options.variant })) {
-      continue;
-    }
-    void cacheImageFromUrl(url, options);
-  }
 }

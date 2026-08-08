@@ -1,25 +1,7 @@
-import {
-  createContext,
-  PropsWithChildren,
-  use,
-  useEffect,
-  useMemo,
-} from 'react';
+import { PropsWithChildren, useEffect } from 'react';
 
 import { subscribeEmoteCacheMemoryPressure } from './cache-service';
-import {
-  CachedEmotesLoadingState,
-  useCachedEmotes as useCachedEmotesData,
-} from './useCachedEmotes';
-
-type CachedEmotesDataType = {
-  loadingState: CachedEmotesLoadingState;
-  recalculateCachedEmotes: () => Promise<void>;
-};
-
-const CachedEmotesContext = createContext<CachedEmotesDataType | undefined>(
-  undefined,
-);
+import { useCachedEmotes } from './useCachedEmotes';
 
 /**
  * Owns the decode-once {@link import('./cache-service')} lifecycle for a channel:
@@ -35,33 +17,11 @@ export const CachedEmotesProvider = ({
   channelId,
   children,
 }: PropsWithChildren<{ channelId: string }>) => {
-  const { loadingState, recalculateCachedEmotes } =
-    useCachedEmotesData(channelId);
+  useCachedEmotes(channelId);
 
   useEffect(() => {
     subscribeEmoteCacheMemoryPressure();
   }, []);
 
-  return (
-    <CachedEmotesContext.Provider
-      value={useMemo(
-        () => ({ loadingState, recalculateCachedEmotes }),
-        [loadingState, recalculateCachedEmotes],
-      )}
-    >
-      {children}
-    </CachedEmotesContext.Provider>
-  );
-};
-
-export const useCachedEmotes = (): CachedEmotesDataType => {
-  const context = use(CachedEmotesContext);
-
-  if (context === undefined) {
-    throw new Error(
-      'useCachedEmotes must be used within a CachedEmotesProvider',
-    );
-  }
-
-  return context;
+  return <>{children}</>;
 };

@@ -18,12 +18,12 @@ import {
   clearPaints,
   clearSevenTvBadges,
 } from '@app/store/chat/actions/cosmetics';
-import { clearEmoteImageCache } from '@app/store/chat/actions/emoteImages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { usePaints } from '@app/store/chat/react/selectors';
 import { theme } from '@app/styles/themes';
 import {
   CachedImageInfo,
+  clearSessionCache,
   getCacheDirectoryPath,
   listCachedImages,
 } from '@app/utils/image/image-cache';
@@ -97,7 +97,7 @@ export function CachedImagesScreen() {
           text: i18next.t('devTools:clear'),
           style: 'destructive',
           onPress: () => {
-            clearEmoteImageCache();
+            clearSessionCache();
             setRefreshKey(k => k + 1);
           },
         },
