@@ -3,8 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import type { SanitisedEmote } from '@app/types/emote';
 import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
-import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
-import { CHAT_INLINE_EMOTE_SCALE } from '@app/utils/emote/resolveEmoteScale';
+import { resolveEmoteDisplayUrl } from '@app/utils/emote/resolveEmoteDisplayUrl';
 import { logger } from '@app/utils/logger';
 
 import { releaseChannelEmoteRefs, warmCachedEmoteRefs } from './cache-service';
@@ -29,12 +28,7 @@ function collectDisplayUrls(emotes: SanitisedEmote[], limit: number): string[] {
     if (urls.size >= limit) {
       break;
     }
-    const url = getDisplayEmoteUrl({
-      image_variants: emote.image_variants,
-      url: emote.url,
-      static_url: emote.static_url,
-      preferredScale: CHAT_INLINE_EMOTE_SCALE,
-    });
+    const url = resolveEmoteDisplayUrl(emote);
     // Skip animated emotes: multi-frame decode is the entry storm; they warm on first paint.
     if (url && describeEmoteUrl(url).kind !== 'animated') {
       urls.add(url);
