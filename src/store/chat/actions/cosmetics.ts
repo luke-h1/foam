@@ -209,12 +209,22 @@ function getCachedUserCosmetics(
       SEVEN_TV_CACHE_NAMESPACE,
     ) ?? undefined;
 
-  if (stored) {
+  // An unresolvable snapshot is not servable, so promoting it into the
+  // session map would only churn the map on every sighting of the user.
+  if (stored && hasResolvableCosmeticDefinitions(stored)) {
     cacheSessionCosmetics(sevenTvUserId, stored);
   }
 
   return stored;
 }
+
+const deleteCachedUserCosmetics = (sevenTvUserId: string): void => {
+  sessionCosmeticsCache.delete(sevenTvUserId);
+  storageService.delete(
+    getUserCosmeticsStorageKey(sevenTvUserId),
+    SEVEN_TV_CACHE_NAMESPACE,
+  );
+};
 
 function setCachedUserCosmetics(
   sevenTvUserId: string,
@@ -273,6 +283,11 @@ export const fetchAndCacheUserCosmetics = async (
     try {
       const cosmetics = await sevenTvService.getUserCosmeticsGql(sevenTvUserId);
       if (!cosmetics) {
+        // Without this, an unresolvable snapshot stays a guaranteed miss for
+        // its whole TTL and re-fires this fetch on every sighting.
+        if (cached && ctx.stillCurrent()) {
+          deleteCachedUserCosmetics(sevenTvUserId);
+        }
         return null;
       }
 
@@ -309,6 +324,9 @@ export const fetchAndCacheUserCosmetics = async (
         `Error fetching cosmetics for user ${sevenTvUserId}:`,
         error,
       );
+      if (cached && ctx.stillCurrent()) {
+        deleteCachedUserCosmetics(sevenTvUserId);
+      }
       return null;
     }
   });
@@ -418,7 +436,15 @@ const sweepUnreferencedPaints = () => {
   if (paintIds.length < MAX_PAINT_DEFINITIONS) {
     return;
   }
+  // Session snapshots resolve against these definitions too - sweeping a
+  // paint a cached snapshot still points at would turn that snapshot into a
+  // guaranteed refetch on its next sighting.
   const referenced = new Set(Object.values(chatStore$.userPaintIds.peek()));
+  for (const cosmetics of sessionCosmeticsCache.values()) {
+    if (cosmetics.paintId) {
+      referenced.add(cosmetics.paintId);
+    }
+  }
   const next: typeof paints = {};
   paintIds.forEach(paintId => {
     if (referenced.has(paintId)) {
@@ -517,6 +543,11 @@ const sweepUnreferencedBadges = () => {
     return;
   }
   const referenced = new Set(Object.values(chatStore$.userBadgeIds.peek()));
+  for (const cosmetics of sessionCosmeticsCache.values()) {
+    if (cosmetics.badgeId) {
+      referenced.add(cosmetics.badgeId);
+    }
+  }
   const next: typeof badges = {};
   badgeIds.forEach(badgeId => {
     if (referenced.has(badgeId)) {
