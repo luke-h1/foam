@@ -1,5 +1,3 @@
-import { act } from '@testing-library/react-native';
-
 import { createSevenTvEmote } from '@app/components/Chat/hooks/__tests__/__fixtures__/useChat.fixture';
 import { countMetric } from '@app/lib/sentry';
 import {
@@ -128,16 +126,14 @@ describe('createSevenTvCallbacks', () => {
     test('calls updateSevenTvEmotes with channelId, added, removed', () => {
       const result = createSevenTvCallbacks(defaultProps);
 
-      act(() => {
-        result.onEmoteUpdate({
-          channelId: 'c1',
-          added: [
-            createSevenTvEmote({ id: 'e1', name: 'e1', original_name: 'e1' }),
-          ],
-          removed: [
-            createSevenTvEmote({ id: 'e2', name: 'e2', original_name: 'e2' }),
-          ],
-        });
+      result.onEmoteUpdate({
+        channelId: 'c1',
+        added: [
+          createSevenTvEmote({ id: 'e1', name: 'e1', original_name: 'e1' }),
+        ],
+        removed: [
+          createSevenTvEmote({ id: 'e2', name: 'e2', original_name: 'e2' }),
+        ],
       });
 
       expect(mockUpdateSevenTvEmotes).toHaveBeenCalledWith(
@@ -161,12 +157,10 @@ describe('createSevenTvCallbacks', () => {
         }),
       ];
 
-      act(() => {
-        result.onEmoteUpdate({
-          channelId: 'c1',
-          added,
-          removed,
-        });
+      result.onEmoteUpdate({
+        channelId: 'c1',
+        added,
+        removed,
       });
 
       expect(generateStvEmoteNotice).toHaveBeenCalledWith({
@@ -200,12 +194,10 @@ describe('createSevenTvCallbacks', () => {
         }),
       ];
 
-      act(() => {
-        result.onEmoteUpdate({
-          channelId: 'c1',
-          added,
-          removed,
-        });
+      result.onEmoteUpdate({
+        channelId: 'c1',
+        added,
+        removed,
       });
 
       expect(mockUpdateSevenTvEmotes).toHaveBeenCalledWith(
@@ -222,10 +214,8 @@ describe('createSevenTvCallbacks', () => {
     test('no-ops when cosmetic.object is missing', () => {
       const result = createSevenTvCallbacks(defaultProps);
 
-      act(() => {
-        // @ts-expect-error -- exercising runtime guard when cosmetic.object is absent
-        result.onCosmeticCreate({ kind: 'BADGE', cosmetic: {} });
-      });
+      // @ts-expect-error -- exercising runtime guard when cosmetic.object is absent
+      result.onCosmeticCreate({ kind: 'BADGE', cosmetic: {} });
 
       expect(applyCosmeticCreateEvent).not.toHaveBeenCalled();
     });
@@ -240,9 +230,7 @@ describe('createSevenTvCallbacks', () => {
         }),
       );
 
-      act(() => {
-        result.onCosmeticCreate(data);
-      });
+      result.onCosmeticCreate(data);
 
       expect(mockApplyCosmeticCreateEvent.mock.calls).toEqual([
         [data.cosmetic, 'BADGE'],
@@ -259,9 +247,7 @@ describe('createSevenTvCallbacks', () => {
         }),
       );
 
-      act(() => {
-        result.onCosmeticCreate(data);
-      });
+      result.onCosmeticCreate(data);
 
       expect(mockApplyCosmeticCreateEvent.mock.calls).toEqual([
         [data.cosmetic, 'PAINT'],
@@ -297,9 +283,7 @@ describe('createSevenTvCallbacks', () => {
         badgeId: 'badge-1',
       };
 
-      act(() => {
-        result.onEntitlementCreate(data);
-      });
+      result.onEntitlementCreate(data);
 
       expect(mockApplyEntitlementCreateEvent.mock.calls).toEqual([[data]]);
     });
@@ -309,24 +293,22 @@ describe('createSevenTvCallbacks', () => {
     test('records a Sentry count metric for paint updates', () => {
       const result = createSevenTvCallbacks(defaultProps);
 
-      act(() => {
-        result.onCosmeticUpdate(
-          createPaintCosmeticUpdateData({
-            ...createEmptyChangeMap<PaintData>(),
-            updated: [
-              createPaintChangeEntry(
-                createPaintInput({ id: 'paint-1', name: 'Updated Paint' }),
-                createPaintInput({ id: 'paint-1', name: 'Old Paint' }),
-              ),
-            ],
-            pushed: [
-              createPaintPushedEntry(
-                createPaintInput({ id: 'paint-2', name: 'Added Paint' }),
-              ),
-            ],
-          }),
-        );
-      });
+      result.onCosmeticUpdate(
+        createPaintCosmeticUpdateData({
+          ...createEmptyChangeMap<PaintData>(),
+          updated: [
+            createPaintChangeEntry(
+              createPaintInput({ id: 'paint-1', name: 'Updated Paint' }),
+              createPaintInput({ id: 'paint-1', name: 'Old Paint' }),
+            ),
+          ],
+          pushed: [
+            createPaintPushedEntry(
+              createPaintInput({ id: 'paint-2', name: 'Added Paint' }),
+            ),
+          ],
+        }),
+      );
 
       expect(addPaint).toHaveBeenCalledWith(
         normalizeSevenTvPaint(
@@ -356,31 +338,29 @@ describe('createSevenTvCallbacks', () => {
     test('records a Sentry count metric for badge updates', () => {
       const result = createSevenTvCallbacks(defaultProps);
 
-      act(() => {
-        result.onCosmeticUpdate(
-          createBadgeCosmeticUpdateData({
-            ...createEmptyChangeMap<BadgeData>(),
-            updated: [
-              createBadgeChangeEntry(
-                createBadgeData({
-                  id: 'badge-1',
-                  name: 'Updated Badge',
-                  tooltip: 'Updated Badge',
-                }),
-              ),
-            ],
-            pushed: [
-              createBadgePushedEntry(
-                createBadgeData({
-                  id: 'badge-2',
-                  name: 'Added Badge',
-                  tooltip: 'Added Badge',
-                }),
-              ),
-            ],
-          }),
-        );
-      });
+      result.onCosmeticUpdate(
+        createBadgeCosmeticUpdateData({
+          ...createEmptyChangeMap<BadgeData>(),
+          updated: [
+            createBadgeChangeEntry(
+              createBadgeData({
+                id: 'badge-1',
+                name: 'Updated Badge',
+                tooltip: 'Updated Badge',
+              }),
+            ),
+          ],
+          pushed: [
+            createBadgePushedEntry(
+              createBadgeData({
+                id: 'badge-2',
+                name: 'Added Badge',
+                tooltip: 'Added Badge',
+              }),
+            ),
+          ],
+        }),
+      );
 
       expect(mockAddBadge.mock.calls[0]?.[0]).toEqual<SanitisedBadgeSet>({
         id: 'badge-1',
@@ -418,10 +398,8 @@ describe('createSevenTvCallbacks', () => {
     test('calls removeBadge and removePaint with cosmeticId', () => {
       const result = createSevenTvCallbacks(defaultProps);
 
-      act(() => {
-        result.onCosmeticDelete({
-          cosmeticId: 'cosmetic-123',
-        });
+      result.onCosmeticDelete({
+        cosmeticId: 'cosmetic-123',
       });
 
       expect(removeBadge).toHaveBeenCalledWith('cosmetic-123');
@@ -438,9 +416,7 @@ describe('createSevenTvCallbacks', () => {
       });
       const result = createSevenTvCallbacks(defaultProps);
 
-      act(() => {
-        result.onEntitlementUpdate(updateData);
-      });
+      result.onEntitlementUpdate(updateData);
 
       expect(applyEntitlementUpdateEvent).toHaveBeenCalledWith(updateData);
     });
@@ -451,9 +427,7 @@ describe('createSevenTvCallbacks', () => {
       const deleteData = createEntitlementDeleteData({ ttvUserId: 'ttv-1' });
       const result = createSevenTvCallbacks(defaultProps);
 
-      act(() => {
-        result.onEntitlementDelete(deleteData);
-      });
+      result.onEntitlementDelete(deleteData);
 
       expect(applyEntitlementDeleteEvent).toHaveBeenCalledWith(deleteData);
     });
