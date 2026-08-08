@@ -203,9 +203,17 @@ InteractionManager.runAfterInteractions(hydrateDeferredChatState);
 // Recent messages used to live inside `persisted`; chatterino badges used to
 // be stored per channel (~4,100 entries each) and are now resolved from the
 // bundled table at read time; the `emotes`/`badges` aggregates duplicated the
-// per-provider arrays stored alongside them. Stripping them on hydrate stops
-// every future channelCaches write from re-serializing them.
-const STALE_CHANNEL_CACHE_KEYS = ['chatterinoBadges', 'emotes', 'badges'];
+// per-provider arrays stored alongside them; 7TV personal emotes are now
+// session state refetched per sighting, and personal badges were only ever
+// written empty. Stripping them on hydrate stops every future channelCaches
+// write from re-serializing them.
+const STALE_CHANNEL_CACHE_KEYS = [
+  'chatterinoBadges',
+  'emotes',
+  'badges',
+  'sevenTvPersonalEmotes',
+  'sevenTvPersonalBadges',
+];
 
 export const migratePersistedChatStore = () => {
   const persisted = chatStore$.persisted.peek() as {

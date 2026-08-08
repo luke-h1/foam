@@ -167,8 +167,6 @@ export interface ChannelCacheType {
   twitchSubscriberChannelProfiles?: Record<string, SubscriberChannelProfile>;
   sevenTvChannelEmotes: SanitisedEmote[];
   sevenTvGlobalEmotes: SanitisedEmote[];
-  sevenTvPersonalEmotes: Record<string, SanitisedEmote[]>;
-  sevenTvPersonalBadges: Record<string, SanitisedBadgeSet[]>;
   ffzChannelEmotes: SanitisedEmote[];
   ffzGlobalEmotes: SanitisedEmote[];
   bttvGlobalEmotes: SanitisedEmote[];
@@ -194,8 +192,6 @@ export const emptyEmoteData = {
   twitchSubscriberChannelProfiles: {},
   sevenTvChannelEmotes: [],
   sevenTvGlobalEmotes: [],
-  sevenTvPersonalBadges: {},
-  sevenTvPersonalEmotes: {},
   ffzChannelEmotes: [],
   ffzGlobalEmotes: [],
   bttvGlobalEmotes: [],
@@ -210,12 +206,13 @@ export const emptyEmoteData = {
 } satisfies ChannelCacheType;
 
 /**
- * Consumer-facing emote-data shape: channel-cache fields plus the
- * chatterinoBadges set, which is resolved from the bundled table at read time
- * rather than stored per channel.
+ * Consumer-facing emote-data shape: channel-cache fields plus the slices that
+ * are not stored per channel - session-scoped 7TV personal emotes and the
+ * chatterinoBadges set resolved from the bundled table at read time.
  */
 export const emptyResolvedEmoteData = {
   ...emptyEmoteData,
+  sevenTvPersonalEmotes: {} as Record<string, SanitisedEmote[]>,
   chatterinoBadges: [] as SanitisedBadgeSet[],
   bttvBadges: [] as SanitisedBadgeSet[],
 };

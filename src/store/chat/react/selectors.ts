@@ -3,6 +3,7 @@ import { useSelector } from '@legendapp/state/react';
 import { useEmoteRenderPreferences } from '@app/store/preferences/selectors';
 import { getChatterinoBadges } from '@app/utils/chat/chatterinoBadges';
 
+import { getChannelPersonalEmotes } from '../actions/personalEmotes';
 import { chatStore$ } from '../observables/chatStore';
 import {
   type ChannelCacheType,
@@ -21,7 +22,6 @@ type ChannelEmoteCache = Pick<
   | 'twitchGlobalEmotes'
   | 'twitchSubscriberEmotes'
   | 'twitchSubscriberChannelProfiles'
-  | 'sevenTvPersonalEmotes'
   | 'sevenTvChannelEmotes'
   | 'sevenTvGlobalEmotes'
   | 'ffzChannelEmotes'
@@ -32,7 +32,9 @@ type ChannelEmoteCache = Pick<
   | 'twitchGlobalBadges'
   | 'ffzChannelBadges'
   | 'ffzGlobalBadges'
->;
+> & {
+  sevenTvPersonalEmotes: Record<string, SanitisedEmote[]>;
+};
 
 type ChannelEmoteData = ChannelEmoteCache & {
   chatterinoBadges: SanitisedBadgeSet[];
@@ -43,7 +45,7 @@ const EMPTY_BADGES: SanitisedBadgeSet[] = [];
 const EMPTY_SUBSCRIBER_PROFILES: NonNullable<
   ChannelCacheType['twitchSubscriberChannelProfiles']
 > = {};
-const EMPTY_PERSONAL_EMOTES: ChannelCacheType['sevenTvPersonalEmotes'] = {};
+const EMPTY_PERSONAL_EMOTES: Record<string, SanitisedEmote[]> = {};
 
 function resolveEmoteData(
   cache: ChannelEmoteCache | undefined,
@@ -105,12 +107,21 @@ function resolveEmoteData(
   };
 }
 
+const emptyChannelEmoteCache: ChannelEmoteCache = {
+  ...emptyEmoteData,
+  sevenTvPersonalEmotes: EMPTY_PERSONAL_EMOTES,
+};
+
 function getChannelEmoteData(channelId: string | null): ChannelEmoteCache {
   if (!channelId) {
-    return emptyEmoteData;
+    return emptyChannelEmoteCache;
   }
 
   const cache$ = chatStore$.persisted.channelCaches[channelId];
+
+  // Personal emotes live in a plain session Map; `personalEmotesVersion` is
+  // the observable edge that re-runs this selector when they change.
+  chatStore$.personalEmotesVersion.get();
 
   return {
     twitchChannelEmotes: cache$?.twitchChannelEmotes.get() ?? EMPTY_EMOTES,
@@ -120,8 +131,7 @@ function getChannelEmoteData(channelId: string | null): ChannelEmoteCache {
     twitchSubscriberChannelProfiles:
       cache$?.twitchSubscriberChannelProfiles.get() ??
       EMPTY_SUBSCRIBER_PROFILES,
-    sevenTvPersonalEmotes:
-      cache$?.sevenTvPersonalEmotes.get() ?? EMPTY_PERSONAL_EMOTES,
+    sevenTvPersonalEmotes: getChannelPersonalEmotes(channelId),
     sevenTvChannelEmotes: cache$?.sevenTvChannelEmotes.get() ?? EMPTY_EMOTES,
     sevenTvGlobalEmotes: cache$?.sevenTvGlobalEmotes.get() ?? EMPTY_EMOTES,
     ffzChannelEmotes: cache$?.ffzChannelEmotes.get() ?? EMPTY_EMOTES,

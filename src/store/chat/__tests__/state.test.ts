@@ -110,6 +110,8 @@ describe('migratePersistedChatStore', () => {
       badges: SanitisedBadgeSet[];
       chatterinoBadges: SanitisedBadgeSet[];
       emotes: SanitisedEmote[];
+      sevenTvPersonalBadges: Record<string, SanitisedBadgeSet[]>;
+      sevenTvPersonalEmotes: Record<string, SanitisedEmote[]>;
     } = {
       ...emptyEmoteData,
       badges: [badge('legacy-badge')],
@@ -117,6 +119,8 @@ describe('migratePersistedChatStore', () => {
       emotes: [emote('legacy-emote')],
       ffzGlobalBadges: [badge('kept-badge')],
       lastUpdated: 5_000,
+      sevenTvPersonalBadges: {},
+      sevenTvPersonalEmotes: { 'user-1': [emote('legacy-personal-emote')] },
       twitchChannelEmotes: [emote('kept-emote')],
     };
     chatStore$.persisted.channelCaches.set({ 'channel-1': legacyCache });
