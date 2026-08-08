@@ -3,13 +3,10 @@ import { StyleSheet, View } from 'react-native';
 
 import { Image as ExpoImage } from 'expo-image';
 
-import {
-  cacheImageFromUrl,
-  getCachedImageUri,
-} from '@app/utils/image/image-cache';
 import { logger } from '@app/utils/logger';
 
 import type { ImageProps } from './Image.types';
+import { imageFileStore } from './imageFileStore';
 
 const getSourceUri = (source: ImageProps['source']) => {
   if (typeof source === 'string') {
@@ -46,14 +43,14 @@ export const Image = function Image({
   ...props
 }: ImageProps) {
   const sourceUri = getSourceUri(source);
-  const shouldUseFileCache = cacheToFile && process.env.NODE_ENV !== 'test';
+  const shouldUseFileCache = cacheToFile && imageFileStore.enabled;
   const diskCachedSource =
     sourceUri &&
     shouldUseFileCache &&
     isCacheableWebUri(sourceUri) &&
     cachePolicy !== 'none'
       ? (() => {
-          const cachedUri = getCachedImageUri(sourceUri, {
+          const cachedUri = imageFileStore.getCachedImageUri(sourceUri, {
             variant: cacheVariant,
           });
           return cachedUri ? { uri: cachedUri } : undefined;
@@ -86,10 +83,11 @@ export const Image = function Image({
 
     const cacheableSourceUri = sourceUri;
     const controller = new AbortController();
-    cacheImageFromUrl(cacheableSourceUri, {
-      signal: controller.signal,
-      variant: cacheVariant,
-    })
+    imageFileStore
+      .cacheImageFromUrl(cacheableSourceUri, {
+        signal: controller.signal,
+        variant: cacheVariant,
+      })
       .then(objectUrl => {
         if (!objectUrl || objectUrl === cacheableSourceUri) {
           return;
