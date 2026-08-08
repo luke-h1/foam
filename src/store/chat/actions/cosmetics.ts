@@ -24,16 +24,20 @@ import {
 } from '../observables/cosmeticsPersistence';
 import { MAX_COSMETIC_ENTRIES } from '../types/constants';
 import {
+  clearEntitlementUserLinkState,
+  getSevenTvUserIdForTwitchId,
+} from './cosmeticsLinks';
+import {
+  invalidateBakedBadges,
+  invalidateCosmeticsCache,
+} from './invalidation';
+import {
   clearAllMissingBadges,
   clearMissingBadge,
   reportMissingBadge,
 } from './missingBadges';
 
 export { getMissingBadgeIds, hasMissingBadges } from './missingBadges';
-
-export const bumpCosmeticBindingsVersion = (): void => {
-  chatStore$.cosmeticBindingsVersion.set(version => version + 1);
-};
 
 const COSMETIC_BINDINGS_BUMP_COALESCE_MS = 1000;
 let cosmeticBindingsBumpTimer: ReturnType<typeof setTimeout> | null = null;
@@ -44,7 +48,7 @@ const scheduleCosmeticBindingsBump = (): void => {
   }
   cosmeticBindingsBumpTimer = setTimeout(() => {
     cosmeticBindingsBumpTimer = null;
-    bumpCosmeticBindingsVersion();
+    invalidateBakedBadges();
   }, COSMETIC_BINDINGS_BUMP_COALESCE_MS);
 };
 
@@ -160,26 +164,40 @@ const convertV4BadgeToSanitised = (badge: V4Badge): SanitisedBadgeSet => {
   });
 };
 
+/**
+ * Applying a cached snapshot goes through the same binding writers as live
+ * entitlements, and those writers re-sync the snapshot they were just applied
+ * from - stamping a fresh TTL on every cache hit, so stale cosmetics pin
+ * indefinitely while the user is seen. Suppressing the sync for the duration
+ * of the synchronous apply keeps cache reads from counting as writes.
+ */
+let suppressSnapshotSync = false;
+
 function applyCachedUserCosmetics(cosmetics: CachedUserCosmetics) {
-  batch(() => {
-    if (cosmetics.paint) {
-      addPaint(cosmetics.paint);
-    }
-
-    if (cosmetics.badge) {
-      addBadge(cosmetics.badge);
-    }
-
-    if (cosmetics.ttvUserId) {
-      if (cosmetics.paintId) {
-        setUserPaint(cosmetics.ttvUserId, cosmetics.paintId);
+  suppressSnapshotSync = true;
+  try {
+    batch(() => {
+      if (cosmetics.paint) {
+        addPaint(cosmetics.paint);
       }
 
-      if (cosmetics.badgeId) {
-        setUserBadge(cosmetics.ttvUserId, cosmetics.badgeId);
+      if (cosmetics.badge) {
+        addBadge(cosmetics.badge);
       }
-    }
-  });
+
+      if (cosmetics.ttvUserId) {
+        if (cosmetics.paintId) {
+          setUserPaint(cosmetics.ttvUserId, cosmetics.paintId);
+        }
+
+        if (cosmetics.badgeId) {
+          setUserBadge(cosmetics.ttvUserId, cosmetics.badgeId);
+        }
+      }
+    });
+  } finally {
+    suppressSnapshotSync = false;
+  }
 }
 
 function getCachedUserCosmetics(
@@ -241,7 +259,9 @@ function buildCachedUserCosmeticsFromStore(
 }
 
 /**
- * Mirror live chatStore bindings into the per-user GQL cache after a 7TV push.
+ * Mirror live chatStore bindings into the per-user GQL cache. Internal to the
+ * store: callers never sync by hand - the binding writers below schedule the
+ * debounced snapshot sync themselves.
  */
 export const syncCachedUserCosmeticsFromStore = (
   sevenTvUserId: string,
@@ -253,7 +273,67 @@ export const syncCachedUserCosmeticsFromStore = (
   );
 };
 
+/**
+ * Debounced per-user snapshot syncs derived from binding writes, following the
+ * scheduleCosmeticsPersist pattern: entitlements arrive in bursts, so dirty
+ * wearers coalesce into one flush per quiet window (matching the bindings-bump
+ * coalesce). The 7TV user id is resolved at write time because reset events
+ * drop the link right after clearing the bindings.
+ */
+const USER_COSMETICS_SNAPSHOT_DEBOUNCE_MS = 1000;
+let userCosmeticsSnapshotTimer: ReturnType<typeof setTimeout> | null = null;
+const pendingUserCosmeticsSnapshots = new Map<string, string>();
+
+const flushPendingUserCosmeticsSnapshots = (): void => {
+  const pending = Array.from(pendingUserCosmeticsSnapshots.entries());
+  pendingUserCosmeticsSnapshots.clear();
+  pending.forEach(([ttvUserId, sevenTvUserId]) => {
+    syncCachedUserCosmeticsFromStore(sevenTvUserId, ttvUserId);
+  });
+};
+
+const scheduleUserCosmeticsSnapshotSync = (ttvUserId: string): void => {
+  if (suppressSnapshotSync) {
+    return;
+  }
+
+  const sevenTvUserId = getSevenTvUserIdForTwitchId(ttvUserId);
+  if (!sevenTvUserId) {
+    return;
+  }
+
+  pendingUserCosmeticsSnapshots.set(ttvUserId, sevenTvUserId);
+  if (userCosmeticsSnapshotTimer) {
+    return;
+  }
+  userCosmeticsSnapshotTimer = setTimeout(() => {
+    userCosmeticsSnapshotTimer = null;
+    flushPendingUserCosmeticsSnapshots();
+  }, USER_COSMETICS_SNAPSHOT_DEBOUNCE_MS);
+};
+
+/**
+ * Removal counterpart to the debounced schedule: an app kill inside the debounce
+ * window must not resurrect a removed cosmetic from the stale snapshot, so
+ * removals flush the wearer synchronously. Called after the store mutation so
+ * the snapshot reflects the post-removal state, and resolved here because the
+ * entitlement bridge unlinks the 7TV user only after clearing the bindings.
+ */
+const syncUserCosmeticsSnapshotNow = (ttvUserId: string): void => {
+  const sevenTvUserId = getSevenTvUserIdForTwitchId(ttvUserId);
+  if (!sevenTvUserId) {
+    return;
+  }
+
+  pendingUserCosmeticsSnapshots.delete(ttvUserId);
+  syncCachedUserCosmeticsFromStore(sevenTvUserId, ttvUserId);
+};
+
 function refreshCachedUserCosmeticsForDefinition(cosmeticId: string): void {
+  if (suppressSnapshotSync) {
+    return;
+  }
+
   for (const [sevenTvUserId, cached] of Array.from(
     sessionCosmeticsCache.entries(),
   )) {
@@ -361,6 +441,12 @@ export const clearUserCosmeticsCache = () => {
     clearTimeout(cosmeticBindingsBumpTimer);
     cosmeticBindingsBumpTimer = null;
   }
+  if (userCosmeticsSnapshotTimer) {
+    clearTimeout(userCosmeticsSnapshotTimer);
+    userCosmeticsSnapshotTimer = null;
+  }
+  pendingUserCosmeticsSnapshots.clear();
+  clearEntitlementUserLinkState();
   userCosmeticsFetchGuard.clear();
   userPresenceRequestGuard.clear();
   sessionCosmeticsCache.clear();
@@ -370,8 +456,8 @@ export const clearUserCosmeticsCache = () => {
     'sevenTvUserCosmetics_',
   );
   clearPaintsAndBadges();
-  chatStore$.cosmeticsCacheVersion.set(version => version + 1);
-  bumpCosmeticBindingsVersion();
+  invalidateCosmeticsCache();
+  invalidateBakedBadges();
 };
 
 /**
@@ -397,6 +483,7 @@ export const setUserPaint = (ttvUserId: string, paintId: string): void => {
     chatStore$.userPaintIds[ttvUserId]?.set(paintId);
   }
 
+  scheduleUserCosmeticsSnapshotSync(ttvUserId);
   scheduleCosmeticsPersist('bindings');
 };
 
@@ -452,6 +539,14 @@ export const getPaint = (paintId: string): PaintData | undefined =>
 export const getUserPaintId = (ttvUserId: string): string | undefined =>
   chatStore$.userPaintIds[ttvUserId]?.peek();
 
+/**
+ * getChatRowItemType runs per row on every list data change; caching the
+ * two-peek paints/userPaintIds traversal per user avoids re-walking those
+ * observables for every row on every render. A plain bounded Map, not an
+ * observable: it is only ever read imperatively during render, and routing it
+ * through the store cloned and key-diffed the whole bucket on every write.
+ */
+const userPaintFlags = new Map<string, boolean>();
 let userPaintFlagInvalidatorAttached = false;
 
 /**
@@ -464,18 +559,17 @@ function ensureUserPaintFlagInvalidator(): void {
     return;
   }
   userPaintFlagInvalidatorAttached = true;
-  const clear = () => chatStore$.sessionCaches.userPaintFlags.set({});
   chatStore$.userPaintIds.onChange(({ changes }) => {
     for (const change of changes) {
       const changedUserId = change.path[0];
       if (typeof changedUserId !== 'string') {
-        clear();
+        userPaintFlags.clear();
         return;
       }
-      chatStore$.sessionCaches.userPaintFlags[changedUserId]?.delete();
+      userPaintFlags.delete(changedUserId);
     }
   });
-  chatStore$.paints.onChange(clear);
+  chatStore$.paints.onChange(() => userPaintFlags.clear());
 }
 
 export const hasUserPaint = (ttvUserId?: string): boolean => {
@@ -485,7 +579,7 @@ export const hasUserPaint = (ttvUserId?: string): boolean => {
 
   ensureUserPaintFlagInvalidator();
 
-  const cached = chatStore$.sessionCaches.userPaintFlags[ttvUserId]?.peek();
+  const cached = userPaintFlags.get(ttvUserId);
   if (cached !== undefined) {
     return cached;
   }
@@ -493,11 +587,10 @@ export const hasUserPaint = (ttvUserId?: string): boolean => {
   const paintId = getUserPaintId(ttvUserId);
   const result = Boolean(paintId && getPaint(paintId));
 
-  const flags = chatStore$.sessionCaches.userPaintFlags;
-  if (Object.keys(flags.peek()).length >= MAX_COSMETIC_ENTRIES) {
-    flags.set({});
+  if (userPaintFlags.size >= MAX_COSMETIC_ENTRIES) {
+    userPaintFlags.clear();
   }
-  flags[ttvUserId]?.set(result);
+  userPaintFlags.set(ttvUserId, result);
 
   return result;
 };
@@ -591,6 +684,7 @@ export const setUserBadge = (ttvUserId: string, badgeId: string): void => {
     scheduleCosmeticBindingsBump();
   }
 
+  scheduleUserCosmeticsSnapshotSync(ttvUserId);
   scheduleCosmeticsPersist('bindings');
 };
 
@@ -643,6 +737,7 @@ export const removeUserBadge = (ttvUserId: string) => {
 
   const { [ttvUserId]: _, ...rest } = current;
   chatStore$.userBadgeIds.set(rest);
+  syncUserCosmeticsSnapshotNow(ttvUserId);
   scheduleCosmeticsPersist('bindings');
   scheduleCosmeticBindingsBump();
 };
@@ -681,6 +776,7 @@ export const removeUserPaint = (ttvUserId: string) => {
 
   const { [ttvUserId]: _, ...rest } = current;
   chatStore$.userPaintIds.set(rest);
+  syncUserCosmeticsSnapshotNow(ttvUserId);
   scheduleCosmeticsPersist('bindings');
 };
 

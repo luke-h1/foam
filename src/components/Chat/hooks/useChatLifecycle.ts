@@ -10,6 +10,7 @@ import {
 import { clearMentionSessionCaches } from '@app/store/chat/actions/chatColorCaches';
 import { clearPaintBindings } from '@app/store/chat/actions/cosmetics';
 import { clearMessages } from '@app/store/chat/actions/messages';
+import { clearFetchedCosmeticsUsers } from '@app/store/chat/actions/userCosmeticsFetch';
 import { resetMentionLoginResolver } from '@app/utils/chat/mentionLoginResolver/resetMentionLoginResolver';
 
 type PartChannel = (channelName: string) => void;
@@ -27,7 +28,6 @@ export function useChatLifecycle({
   cleanupScroll,
   cleanupMessages,
   cancelEmoteLoad,
-  fetchedCosmeticsUsersRef,
   isMountedRef,
   processedMessageIdsRef,
 }: {
@@ -39,7 +39,6 @@ export function useChatLifecycle({
   cleanupScroll: () => void;
   cleanupMessages: () => void;
   cancelEmoteLoad: () => void;
-  fetchedCosmeticsUsersRef: MutableRefObject<Set<string>>;
   isMountedRef: MutableRefObject<boolean>;
   processedMessageIdsRef: MutableRefObject<Set<string>>;
 }) {
@@ -53,7 +52,6 @@ export function useChatLifecycle({
     cleanupScroll,
     cleanupMessages,
     cancelEmoteLoad,
-    fetchedCosmeticsUsersRef,
     processedMessageIdsRef,
   });
 
@@ -90,7 +88,7 @@ export function useChatLifecycle({
     clearChannelResources();
     clearPaintBindings();
     clearPersonalEmotesCache();
-    lifecycle.fetchedCosmeticsUsersRef.current.clear();
+    clearFetchedCosmeticsUsers();
     lifecycle.processedMessageIdsRef.current.clear();
     clearMentionSessionCaches();
     resetMentionLoginResolver();

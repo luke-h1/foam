@@ -5,8 +5,6 @@ import {
   addMessage,
   clearMessages,
   getMaxChatMessages,
-  moderateMessagesByLogin,
-  removeMessageById,
   restoreRecentMessagesForChannel,
 } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
@@ -324,8 +322,8 @@ jest.mock('../hooks/useChatScroll', () => ({
   }),
 }));
 
-jest.mock('../hooks/useChatSevenTvCallbacks', () => ({
-  useChatSevenTvCallbacks: () => ({}),
+jest.mock('../util/createSevenTvCallbacks', () => ({
+  createSevenTvCallbacks: () => ({}),
 }));
 
 jest.mock('../hooks/useEmoteReprocessing', () => ({
@@ -349,9 +347,9 @@ const mockMessagesPeek = jest.mocked(chatStore$.messages.peek);
 const handleNewMessage = jest.fn();
 const forceFlush = jest.fn();
 const clearLocalMessages = jest.fn();
-const moderateBufferedMessageById = jest.fn();
-const moderateBufferedMessagesByLogin = jest.fn();
-const removeBufferedMessageById = jest.fn();
+const moderateChatMessageById = jest.fn();
+const moderateChatMessagesByLogin = jest.fn();
+const removeChatMessageById = jest.fn();
 
 const setPreferences = (showRecentMessages = true) => {
   const preferences = {
@@ -419,10 +417,10 @@ describe('Chat recent messages', () => {
       handleNewMessage,
       clearLocalMessages,
       reconcileChatDelay: jest.fn(),
-      moderateBufferedMessageById,
-      moderateBufferedMessagesByLogin,
-      removeBufferedMessageById,
-      removeBufferedMessagesByLogin: jest.fn(),
+      moderateChatMessageById,
+      moderateChatMessagesByLogin,
+      removeChatMessageById,
+      removeChatMessagesByLogin: jest.fn(),
       cleanup: jest.fn(),
       forceFlush,
       getBufferSize: jest.fn(() => 0),
@@ -479,24 +477,12 @@ describe('Chat recent messages', () => {
         sender: '',
       },
     ]);
-    expect(moderateBufferedMessagesByLogin).toHaveBeenCalledWith(
+    expect(moderateChatMessagesByLogin).toHaveBeenCalledWith(
       'baduser',
       'Timed out (600s)',
     );
-    expect(moderateMessagesByLogin).toHaveBeenCalledWith(
-      'baduser',
-      'Timed out (600s)',
-    );
-    expect(moderateBufferedMessageById).toHaveBeenCalledWith(
-      'msg-1',
-      'Deleted',
-    );
-    expect(moderateBufferedMessageById).toHaveBeenCalledWith(
-      'msg-2',
-      'Deleted',
-    );
-    expect(removeMessageById).toHaveBeenCalledWith('msg-1');
-    expect(removeMessageById).toHaveBeenCalledWith('msg-2');
+    expect(moderateChatMessageById).toHaveBeenCalledWith('msg-1', 'Deleted');
+    expect(moderateChatMessageById).toHaveBeenCalledWith('msg-2', 'Deleted');
     expect(addMessage).toHaveBeenCalled();
     expect(clearMessages).not.toHaveBeenCalled();
     expect(mockScrollToBottom).toHaveBeenCalledTimes(1);

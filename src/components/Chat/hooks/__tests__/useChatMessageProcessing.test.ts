@@ -1,7 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { hydrateVisibleSevenTvAssets } from '@app/components/Chat/util/hydrateVisibleSevenTvAssets/hydrateVisibleSevenTvAssets';
-import { reprocessMessages } from '@app/components/Chat/util/reprocessMessages';
 import { getCachedSharedChatBadgeContext } from '@app/components/Chat/util/sharedChatBadges/getCachedSharedChatBadgeContext';
 import { getMessageBadges } from '@app/components/Chat/util/sharedChatBadges/getMessageBadges';
 import { getSharedChatBadgeContext } from '@app/components/Chat/util/sharedChatBadges/getSharedChatBadgeContext';
@@ -12,6 +11,7 @@ import {
 } from '@app/store/chat/actions/channelLoad';
 import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import { updateMessages } from '@app/store/chat/actions/messages';
+import { fetchUserCosmetics } from '@app/store/chat/actions/userCosmeticsFetch';
 import { visibleAssetHydration } from '@app/store/chat/actions/visibleAssetHydration';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { usePersonalEmotesVersion } from '@app/store/chat/react/selectors';
@@ -40,6 +40,10 @@ jest.mock('@app/store/chat/actions/cosmetics', () => ({
 
 jest.mock('@app/store/chat/actions/messages', () => ({
   updateMessages: jest.fn(),
+}));
+
+jest.mock('@app/store/chat/actions/userCosmeticsFetch', () => ({
+  fetchUserCosmetics: jest.fn(() => Promise.resolve()),
 }));
 
 jest.mock('@app/store/chat/observables/chatStore', () => ({
@@ -74,10 +78,6 @@ jest.mock(
     hydrateVisibleSevenTvAssets: jest.fn(() => Promise.resolve(false)),
   }),
 );
-
-jest.mock('../../util/reprocessMessages', () => ({
-  reprocessMessages: jest.fn(),
-}));
 
 jest.mock(
   '../../util/sharedChatBadges/getCachedSharedChatBadgeContext',
@@ -123,7 +123,6 @@ const mockHydrateVisibleSevenTvAssets = jest.mocked(
   hydrateVisibleSevenTvAssets,
 );
 const mockProcessEmotesWorklet = jest.mocked(processEmotesWorklet);
-const mockReprocessMessages = jest.mocked(reprocessMessages);
 const mockUpdateMessages = jest.mocked(updateMessages);
 const mockUseChatHydrationPreferences = jest.mocked(
   useChatHydrationPreferences,
@@ -142,12 +141,10 @@ function renderMessageProcessing() {
     }),
   ];
   const isAtBottomRef = { current: true };
-  const fetchUserCosmetics = jest.fn(() => Promise.resolve());
 
   const hook = renderHook(() =>
     useChatMessageProcessing({
       channelId: 'channel-1',
-      fetchUserCosmetics,
       handleNewMessage,
       isAtBottomRef,
       maintainBottomAfterContentChange,
@@ -161,7 +158,6 @@ function renderMessageProcessing() {
   );
 
   return {
-    fetchUserCosmetics,
     handleNewMessage,
     hook,
     maintainBottomAfterContentChange,
@@ -338,7 +334,7 @@ describe('useChatMessageProcessing', () => {
       },
       text: 'visible OMEGALUL',
     });
-    const { fetchUserCosmetics, hook, maintainBottomAfterContentChange } =
+    const { hook, maintainBottomAfterContentChange } =
       renderMessageProcessing();
 
     act(() => {
@@ -431,17 +427,63 @@ describe('useChatMessageProcessing', () => {
     expect(mockHydrateVisibleSevenTvAssets).not.toHaveBeenCalled();
   });
 
-  test('reprocessAllMessages delegates the current buffered store snapshot', () => {
-    const { hook, messages } = renderMessageProcessing();
+  test('reprocessAllMessages rewrites the buffered store snapshot through updateMessages', () => {
+    const { hook } = renderMessageProcessing();
 
     act(() => {
       hook.result.current.reprocessAllMessages();
     });
 
-    expect(mockReprocessMessages.mock.calls[0]?.[0]).toEqual(messages);
-    expect(mockReprocessMessages.mock.calls[0]?.[1]).toBe(
-      hook.result.current.processMessageEmotes,
+    expect(mockUpdateMessages).toHaveBeenCalledTimes(1);
+    expect(mockUpdateMessages).toHaveBeenCalledWith([
+      {
+        messageId: 'stored-1',
+        messageNonce: 'stored-1',
+        updates: {
+          message: [{ type: 'text', content: 'processed:stored message' }],
+          badges: [],
+        },
+      },
+    ]);
+  });
+
+  test('a channel switch cancels an in-flight reprocess walk', () => {
+    jest.useFakeTimers();
+    const messages = Array.from({ length: 8 }, (_, index) =>
+      createChatMessage({
+        tags: { id: `stored-${index}` },
+        text: `stored message ${index}`,
+      }),
     );
+    const hook = renderHook(
+      ({ channelId }: { channelId: string }) =>
+        useChatMessageProcessing({
+          channelId,
+          handleNewMessage: jest.fn(),
+          isAtBottomRef: { current: true },
+          maintainBottomAfterContentChange: jest.fn(),
+          messages$: {
+            peek: () => messages,
+          },
+          show7TvEmotes: true,
+          show7tvBadges: true,
+          userLogin: 'viewer',
+        }),
+      { initialProps: { channelId: 'channel-1' } },
+    );
+
+    act(() => {
+      hook.result.current.reprocessAllMessages();
+    });
+
+    expect(mockUpdateMessages).toHaveBeenCalledTimes(1);
+
+    hook.rerender({ channelId: 'channel-2' });
+    act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    expect(mockUpdateMessages).toHaveBeenCalledTimes(1);
   });
 
   test('passes hydration dependencies used by visible asset loading', async () => {

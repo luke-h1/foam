@@ -7,6 +7,7 @@ import {
 } from '@app/store/chat/actions/channelLoad';
 import { clearPaintBindings } from '@app/store/chat/actions/cosmetics';
 import { clearMessages } from '@app/store/chat/actions/messages';
+import { clearFetchedCosmeticsUsers } from '@app/store/chat/actions/userCosmeticsFetch';
 
 import { useChatLifecycle } from '../useChatLifecycle';
 
@@ -20,6 +21,9 @@ jest.mock('@app/store/chat/actions/messages', () => ({
 }));
 jest.mock('@app/store/chat/actions/cosmetics', () => ({
   clearPaintBindings: jest.fn(),
+}));
+jest.mock('@app/store/chat/actions/userCosmeticsFetch', () => ({
+  clearFetchedCosmeticsUsers: jest.fn(),
 }));
 
 describe('useChatLifecycle', () => {
@@ -64,7 +68,6 @@ describe('useChatLifecycle', () => {
     cleanupScroll,
     cleanupMessages,
     cancelEmoteLoad,
-    fetchedCosmeticsUsersRef: { current: new Set<string>() },
     isMountedRef: { current: true },
     processedMessageIdsRef: { current: new Set<string>() },
   };
@@ -136,16 +139,14 @@ describe('useChatLifecycle', () => {
       expect(cleanupMessages).toHaveBeenCalled();
     });
 
-    test('clears cosmetics set from fetchedCosmeticsUsersRef', () => {
-      const cosmeticsSet = new Set<string>(['user1', 'user2']);
-      const ref = { current: cosmeticsSet };
-      const { unmount } = renderHook(() =>
-        useChatLifecycle({ ...defaultProps, fetchedCosmeticsUsersRef: ref }),
-      );
+    test('clears the fetched-cosmetics session guard on unmount', () => {
+      const { unmount } = renderHook(() => useChatLifecycle(defaultProps));
+
+      expect(clearFetchedCosmeticsUsers).not.toHaveBeenCalled();
 
       unmount();
 
-      expect(cosmeticsSet.size).toBe(0);
+      expect(clearFetchedCosmeticsUsers).toHaveBeenCalledTimes(1);
     });
   });
 

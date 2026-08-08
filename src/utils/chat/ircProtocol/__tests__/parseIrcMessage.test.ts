@@ -41,4 +41,55 @@ describe('parseIrcMessage', () => {
   test('returns null for a tags-only line with no following space', () => {
     expect(parseIrcMessage('@only-tags')).toBeNull();
   });
+
+  test('returns null for a prefix-only line', () => {
+    expect(parseIrcMessage(':testuser')).toBeNull();
+  });
+
+  test('parses replayed PRIVMSG lines without a trailing marker', () => {
+    expect(
+      parseIrcMessage(
+        '@display-name=icelys;id=msg-1;historical=1 :icelys!icelys@icelys.tmi.twitch.tv PRIVMSG #pajlada FeelsBadMan',
+      ),
+    ).toEqual<IrcMessage>({
+      tags: {
+        'display-name': 'icelys',
+        id: 'msg-1',
+        historical: '1',
+      },
+      prefix: 'icelys!icelys@icelys.tmi.twitch.tv',
+      command: 'PRIVMSG',
+      params: ['#pajlada', 'FeelsBadMan'],
+    });
+  });
+
+  test('unescapes IRCv3 tag values in replayed lines', () => {
+    expect(
+      parseIrcMessage(
+        '@msg-id=resub;system-msg=5\\smonths\\:\\sPog\\\\s :tmi.twitch.tv USERNOTICE #foam :resubbed',
+      ),
+    ).toEqual<IrcMessage>({
+      tags: {
+        'msg-id': 'resub',
+        'system-msg': '5 months; Pog\\s',
+      },
+      prefix: 'tmi.twitch.tv',
+      command: 'USERNOTICE',
+      params: ['#foam', 'resubbed'],
+    });
+  });
+
+  test('parses IRC tag flags and ignores empty tag keys', () => {
+    expect(
+      parseIrcMessage('@historical;=ignored;id=msg-3 PING'),
+    ).toEqual<IrcMessage>({
+      tags: {
+        historical: '',
+        id: 'msg-3',
+      },
+      prefix: undefined,
+      command: 'PING',
+      params: [],
+    });
+  });
 });

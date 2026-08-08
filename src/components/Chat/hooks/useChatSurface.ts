@@ -22,12 +22,6 @@ import { usePinnedChatMessage } from './usePinnedChatMessage';
 interface UseChatSurfaceOptions {
   channelId: string;
   channelName: string;
-  fetchUserCosmetics: (
-    twitchUserId: string,
-    options?: {
-      retryMissingBadge?: boolean;
-    },
-  ) => Promise<void>;
   forceFlush: () => void;
   getUserState: () => Record<string, string>;
   hiddenUsers: string[];
@@ -58,7 +52,6 @@ interface UseChatSurfaceOptions {
 export function useChatSurface({
   channelId,
   channelName,
-  fetchUserCosmetics,
   forceFlush,
   getUserState,
   hiddenUsers,
@@ -117,7 +110,6 @@ export function useChatSurface({
     handleReply,
     insertPhraseToComposer,
   } = useChatComposerActions({
-    fetchUserCosmetics,
     inputShellRef,
   });
 

@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 
+import { shouldEnrichMessage } from '@app/store/chat/actions/messageEnrichment';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
@@ -49,23 +50,6 @@ const waitBetweenReprocessBatches = () =>
   new Promise<void>(resolve => {
     setTimeout(resolve, REPROCESS_BATCH_DELAY_MS);
   });
-
-export function canHydrateMessage(message: AnyChatMessageType): boolean {
-  if (message.sender === 'System') {
-    return false;
-  }
-
-  if (
-    'notice_tags' in message &&
-    message.notice_tags &&
-    !message.isAnnouncement &&
-    !message.isHighlightedMessage
-  ) {
-    return false;
-  }
-
-  return true;
-}
 
 function isMissingSharedChatSourceBadge(message: AnyChatMessageType): boolean {
   return Boolean(
@@ -150,7 +134,7 @@ export async function hydrateVisibleSevenTvAssets({
 
   for (const message of messages) {
     const userId = message.userstate['user-id'];
-    if (!userId || !canHydrateMessage(message)) {
+    if (!userId || !shouldEnrichMessage(message)) {
       continue;
     }
 
