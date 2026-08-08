@@ -5,7 +5,11 @@ import type { SanitisedEmote } from '@app/types/emote';
 import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
 import { resolveEmoteDisplayUrl } from '@app/utils/emote/resolveEmoteDisplayUrl';
 
-import { releaseChannelEmoteRefs, warmCachedEmoteRefs } from './cache-service';
+import {
+  abortInflightEmoteDecodes,
+  releaseChannelEmoteRefs,
+  warmCachedEmoteRefs,
+} from './cache-service';
 
 const WARM_BATCH_SIZE = 24;
 /**
@@ -82,10 +86,11 @@ async function warmInBatches(
 
 export function useCachedEmotes(channelId: string) {
   useEffect(() => {
-    // A channel hop releases the old channel's refs in this cleanup; without
-    // the cancel check the still-running warm pass would re-decode them into
-    // a cache nothing reads while holding the decode slots the new channel
-    // needs.
+    // A channel hop releases the old channel's refs in this cleanup. The
+    // cancel flag stops the warm pass scheduling further batches and the
+    // decode fence drops the batch already in flight - either would otherwise
+    // refill a cache nothing reads while holding the decode slots the new
+    // channel needs.
     let cancelled = false;
     const isCancelled = () => cancelled;
     const warm = async () => {
@@ -95,6 +100,7 @@ export function useCachedEmotes(channelId: string) {
     void warm();
     return () => {
       cancelled = true;
+      abortInflightEmoteDecodes();
       releaseChannelEmoteRefs();
     };
   }, [channelId]);

@@ -6,8 +6,10 @@ import { useCachedEmotes } from '../useCachedEmotes';
 
 const mockWarm = jest.fn<Promise<void>, [string[], { pin: boolean }]>();
 const mockRelease = jest.fn();
+const mockAbortInflight = jest.fn();
 
 jest.mock('../cache-service', () => ({
+  abortInflightEmoteDecodes: () => mockAbortInflight(),
   releaseChannelEmoteRefs: (...args: unknown[]) => mockRelease(...args),
   warmCachedEmoteRefs: (urls: string[], opts: { pin: boolean }) =>
     mockWarm(urls, opts),
@@ -74,6 +76,7 @@ describe('useCachedEmotes', () => {
 
     unmount();
     expect(mockRelease).toHaveBeenCalledTimes(1);
+    expect(mockAbortInflight).toHaveBeenCalledTimes(1);
 
     act(() => resolvers[0]?.());
     await act(flushMicrotasks);

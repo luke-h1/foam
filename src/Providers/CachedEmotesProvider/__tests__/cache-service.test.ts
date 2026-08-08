@@ -8,6 +8,7 @@ jest.mock('expo-image', () => ({
 import { Image, type ImageRef } from 'expo-image';
 
 import {
+  abortInflightEmoteDecodes,
   clearCachedEmoteRefs,
   ensureCachedEmoteRef,
   getCachedEmoteAspectRatio,
@@ -56,6 +57,10 @@ describe('cache-service', () => {
   afterEach(() => {
     clearCachedEmoteRefs();
     jest.clearAllMocks();
+    // clearAllMocks leaves queued mockReturnValueOnce values behind; a test
+    // whose decode is fenced before loadAsync runs would leak its pending
+    // promise into the next test's first decode.
+    loadAsync.mockReset();
   });
 
   test('clearing the cache notifies subscribers so mounted rows drop the dangling ref', () => {
@@ -132,6 +137,35 @@ describe('cache-service', () => {
 
     expect(getCachedEmoteRef(url)).toBeNull();
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  test('a channel-hop fence drops an in-flight decode and lets a re-request start fresh', async () => {
+    const url = 'https://cdn.7tv.app/emote/hopstale/2x.avif';
+    const release = jest.fn();
+    let resolveDecode: (ref: ImageRef) => void = () => {};
+    loadAsync.mockReturnValueOnce(
+      new Promise<ImageRef>(resolve => {
+        resolveDecode = resolve;
+      }),
+    );
+    ensureCachedEmoteRef(url);
+    // Let the decode claim a slot and start loading before the fence lands.
+    await flushMicrotasks();
+
+    abortInflightEmoteDecodes();
+    resolveDecode(makeImageRef({ release }));
+    await flushMicrotasks();
+
+    // The stale result is released on arrival, not cached.
+    expect(getCachedEmoteRef(url)).toBeNull();
+    expect(release).toHaveBeenCalledTimes(1);
+
+    // The cleared inflight marker lets the next channel decode the same url.
+    ensureCachedEmoteRef(url);
+    await flushMicrotasks();
+
+    expect(loadAsync).toHaveBeenCalledTimes(2);
+    expect(getCachedEmoteRef(url)).toEqual({});
   });
 
   test('a channel hop keeps the pinned global set decoded but drops channel refs', async () => {

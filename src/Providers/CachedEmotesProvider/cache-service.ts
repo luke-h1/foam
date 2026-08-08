@@ -457,13 +457,26 @@ export function releaseChannelEmoteRefs({
   }
 }
 
-export function clearCachedEmoteRefs(): void {
+/**
+ * Fences every in-flight decode: results release on arrival instead of
+ * caching, and clearing the inflight markers lets the same urls start fresh
+ * decodes immediately. A channel hop calls this from the warm hook's cleanup -
+ * everything in flight belongs to the channel being left, and a stale decode
+ * would otherwise hold a slot the new channel needs and then land a ref
+ * nothing reads. Memory trims must not call it: their in-flight decodes are
+ * for rows still on screen.
+ */
+export function abortInflightEmoteDecodes(): void {
   cacheEpoch += 1;
+  inflight.clear();
+}
+
+export function clearCachedEmoteRefs(): void {
+  abortInflightEmoteDecodes();
   for (const url of refs.keys()) {
     releaseRef(url);
   }
   totalBytes = 0;
-  inflight.clear();
   pinned.clear();
   recentlyReleased.clear();
   releaseRaceCount = 0;
