@@ -37,9 +37,9 @@ export function ChatDebugSection({ build }: ChatDebugSectionProps) {
     const clipboardPayload = data.ircLines
       ? `${payloadJson}\n\n${data.ircLines.map(entry => entry.line).join('\n')}`
       : payloadJson;
-    void Clipboard.setStringAsync(clipboardPayload).then(() =>
-      toast.success(t('debug.copied')),
-    );
+    Clipboard.setStringAsync(clipboardPayload)
+      .then(() => toast.success(t('debug.copied')))
+      .catch(() => toast.error(t('debug.copyFailed')));
   };
 
   return (
@@ -73,9 +73,9 @@ export function ChatDebugSection({ build }: ChatDebugSectionProps) {
           {data.ircLines.length === 0 ? (
             <Text style={styles.empty}>{t('debug.ircLinesEmpty')}</Text>
           ) : (
-            data.ircLines.map(entry => (
+            data.ircLines.map((entry, index) => (
               <Text
-                key={`${entry.receivedAt}_${entry.line}`}
+                key={`${entry.receivedAt}_${index}`}
                 selectable
                 style={styles.mono}
                 variant='mono'

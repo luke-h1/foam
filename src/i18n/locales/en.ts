@@ -196,6 +196,7 @@ const en = {
       title: 'Debug',
       copy: 'Copy debug info',
       copied: 'Debug info copied',
+      copyFailed: 'Could not copy debug info',
       ircLines: 'Raw IRC lines',
       ircLinesEmpty: 'No captured IRC lines for this user',
       dropped: 'DROPPED',

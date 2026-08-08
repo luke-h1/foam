@@ -49,6 +49,36 @@ export function getChatDebugIrcLines(): ChatDebugIrcLine[] {
   return ircLines.slice().reverse();
 }
 
+/**
+ * Head is everything before the trailing parameter (the message body), so the
+ * matchers below can never fire on body text a user typed.
+ */
+function splitIrcLine(line: string): { head: string; trailing: string | null } {
+  let cursor = 0;
+  if (line.startsWith('@')) {
+    const tagEnd = line.indexOf(' ');
+    if (tagEnd === -1) {
+      return { head: line, trailing: null };
+    }
+    cursor = tagEnd + 1;
+  }
+  if (line.startsWith(':', cursor)) {
+    const prefixEnd = line.indexOf(' ', cursor);
+    if (prefixEnd === -1) {
+      return { head: line, trailing: null };
+    }
+    cursor = prefixEnd + 1;
+  }
+  const trailingStart = line.indexOf(' :', cursor);
+  if (trailingStart === -1) {
+    return { head: line, trailing: null };
+  }
+  return {
+    head: line.slice(0, trailingStart),
+    trailing: line.slice(trailingStart + 2),
+  };
+}
+
 export function getChatDebugIrcLinesForLogin(
   login: string | null | undefined,
   limit = 10,
@@ -57,8 +87,12 @@ export function getChatDebugIrcLinesForLogin(
   if (!target) {
     return [];
   }
-  const escaped = target.replace(/[$()*+.?[\\\]^{|}]/g, '\\$&');
-  const tagPattern = new RegExp(`[@;](?:login|display-name)=${escaped}(?:;| )`);
+  const escaped = target
+    .replace(/[$()*+.?[\\\]^{|}]/g, '\\$&')
+    .replace(/ /g, '\\\\s');
+  const tagPattern = new RegExp(
+    `[@;](?:login|display-name)=${escaped}(?:;| |$)`,
+  );
 
   const matches: ChatDebugIrcLine[] = [];
   for (let index = ircLines.length - 1; index >= 0; index -= 1) {
@@ -66,11 +100,11 @@ export function getChatDebugIrcLinesForLogin(
     if (!entry) {
       continue;
     }
-    const line = entry.line.toLowerCase();
+    const { head, trailing } = splitIrcLine(entry.line.toLowerCase());
     if (
-      line.includes(`!${target}@`) ||
-      tagPattern.test(line) ||
-      (line.includes(' clearchat ') && line.endsWith(`:${target}`))
+      head.includes(`!${target}@`) ||
+      tagPattern.test(head) ||
+      (head.includes(' clearchat ') && trailing === target)
     ) {
       matches.push(entry);
       if (matches.length >= limit) {

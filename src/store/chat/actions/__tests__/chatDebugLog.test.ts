@@ -117,6 +117,27 @@ describe('chatDebugLog', () => {
     ).toEqual([usernotice]);
   });
 
+  test('never matches on message-body text that mimics identity markers', () => {
+    recordChatDebugIrcLine(privmsg('bob', 'check !alice@example.com'));
+    recordChatDebugIrcLine(
+      privmsg('bob', '@badges=;display-name=alice;color=#FFF'),
+    );
+    recordChatDebugIrcLine(privmsg('bob', 'lol CLEARCHAT incoming :alice'));
+
+    expect(getChatDebugIrcLinesForLogin('alice')).toEqual([]);
+    expect(getChatDebugIrcLinesForLogin('bob')).toHaveLength(3);
+  });
+
+  test('matches a display name whose spaces are tag-escaped', () => {
+    const usernotice =
+      '@display-name=Alice\\sSmith;msg-id=resub :tmi.twitch.tv USERNOTICE #channel :hi';
+    recordChatDebugIrcLine(usernotice);
+
+    expect(
+      getChatDebugIrcLinesForLogin('Alice Smith').map(entry => entry.line),
+    ).toEqual([usernotice]);
+  });
+
   test('caps per-login results at the requested limit', () => {
     for (let index = 0; index < 15; index += 1) {
       recordChatDebugIrcLine(privmsg('alice', `msg-${index}`));
