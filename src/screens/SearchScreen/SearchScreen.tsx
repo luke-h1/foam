@@ -414,7 +414,11 @@ export function SearchScreen() {
           onPress={() => handleCategoryPress(item.id)}
           style={styles.categoryResultItem}
         >
-          <Image source={imageUrl} style={styles.categoryResultImage} />
+          <Image
+            source={imageUrl}
+            cacheVariant='thumbnail'
+            style={styles.categoryResultImage}
+          />
           <View style={styles.categoryResultInfo}>
             <Text type='sm' weight='semibold' numberOfLines={1}>
               {item.name}

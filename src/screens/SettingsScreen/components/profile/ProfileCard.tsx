@@ -239,6 +239,7 @@ export function ProfileCard() {
             {user.profile_image_url ? (
               <Image
                 source={{ uri: user.profile_image_url }}
+                cacheVariant='avatar'
                 style={styles.avatar}
               />
             ) : (

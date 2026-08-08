@@ -57,6 +57,7 @@ const MyClipRow = memo(function MyClipRow({ clip, record }: MyClipListItem) {
       {thumbnail ? (
         <Image
           source={thumbnail}
+          cacheVariant='thumbnail'
           style={styles.thumbnail}
           containerStyle={styles.thumbnailWrapper}
           transition={150}

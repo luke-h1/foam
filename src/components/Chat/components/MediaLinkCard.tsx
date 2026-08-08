@@ -136,6 +136,7 @@ function MediaLinkCardComponent({
           <Image
             trackLoadContext='chat.media-link-inline'
             source={thumbnail}
+            cacheVariant='thumbnail'
             style={styles.inlineThumbnail}
             contentFit='contain'
           />
@@ -173,6 +174,7 @@ function MediaLinkCardComponent({
             <Image
               trackLoadContext='chat.media-link-card'
               source={thumbnail}
+              cacheVariant='thumbnail'
               style={styles.mediaThumbnail}
               contentFit={mediaImageFit}
             />

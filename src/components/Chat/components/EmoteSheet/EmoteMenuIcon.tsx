@@ -34,6 +34,7 @@ function EmoteMenuIconComponent({
     return (
       <Image
         source={icon.slice(7)}
+        cacheVariant='avatar'
         style={styles.avatarIcon}
         containerStyle={styles.avatarIconContainer}
         transition={100}
