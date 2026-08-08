@@ -7,12 +7,16 @@ import {
   getUserPersonalEmotes,
 } from '@app/store/chat/actions/channelLoad';
 import { getUserBadge } from '@app/store/chat/actions/cosmetics';
-import { updateMessages } from '@app/store/chat/actions/messages';
+import {
+  enrichMessageSet,
+  enrichVisibleMessage,
+  hasEnrichmentEmoteSources,
+  refreshSharedChatBadges,
+} from '@app/store/chat/actions/messageEnrichment';
 import {
   clearVisibleAssetHydrationTimer,
   visibleAssetHydration,
 } from '@app/store/chat/actions/visibleAssetHydration';
-import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { usePersonalEmotesVersion } from '@app/store/chat/react/selectors';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateFromTags } from '@app/utils/chat/messageHandlers/createUserStateFromTags';
@@ -20,11 +24,9 @@ import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { logger } from '@app/utils/logger';
 
 import { hydrateVisibleSevenTvAssets } from '../util/hydrateVisibleSevenTvAssets/hydrateVisibleSevenTvAssets';
-import { reprocessMessages } from '../util/reprocessMessages';
 import { resolveMessageEmoteParts } from '../util/resolveMessageEmoteParts';
 import { getCachedSharedChatBadgeContext } from '../util/sharedChatBadges/getCachedSharedChatBadgeContext';
 import { getMessageBadges } from '../util/sharedChatBadges/getMessageBadges';
-import { getSharedChatBadgeContext } from '../util/sharedChatBadges/getSharedChatBadgeContext';
 
 const VISIBLE_ASSET_HYDRATION_DELAY_MS = 150;
 
@@ -71,19 +73,7 @@ export function useChatMessageProcessing({
         return baseMessage;
       }
 
-      const hasEmotes =
-        chatStore$.emojis.peek().length > 0 ||
-        emoteData.twitchGlobalEmotes.length > 0 ||
-        emoteData.twitchChannelEmotes.length > 0 ||
-        emoteData.twitchSubscriberEmotes.length > 0 ||
-        emoteData.sevenTvGlobalEmotes.length > 0 ||
-        emoteData.sevenTvChannelEmotes.length > 0 ||
-        emoteData.bttvGlobalEmotes.length > 0 ||
-        emoteData.bttvChannelEmotes.length > 0 ||
-        emoteData.ffzGlobalEmotes.length > 0 ||
-        emoteData.ffzChannelEmotes.length > 0;
-
-      if (!hasEmotes) {
+      if (!hasEnrichmentEmoteSources(emoteData)) {
         return baseMessage;
       }
 
@@ -108,26 +98,12 @@ export function useChatMessageProcessing({
         });
 
         if (cachedSharedBadgeContext?.isComplete === false) {
-          void getSharedChatBadgeContext(userstate)
-            .then(({ sourceBadge, sourceChannelBadges }) => {
-              updateMessages([
-                {
-                  messageId: baseMessage.message_id,
-                  messageNonce: baseMessage.message_nonce,
-                  updates: {
-                    badges: getMessageBadges({
-                      userstate,
-                      emoteData,
-                      sourceBadge,
-                      sourceChannelBadges,
-                    }),
-                  },
-                },
-              ]);
-            })
-            .catch(error => {
-              logger.chat.debug('Failed to update shared chat badges:', error);
-            });
+          refreshSharedChatBadges({
+            emoteData,
+            messageId: baseMessage.message_id,
+            messageNonce: baseMessage.message_nonce,
+            userstate,
+          });
         }
 
         return {
@@ -188,63 +164,13 @@ export function useChatMessageProcessing({
   );
 
   const reprocessVisibleMessageFromCache = useCallback(
-    async (message: AnyChatMessageType) => {
-      if (
-        message.sender === 'System' ||
-        ('notice_tags' in message &&
-          message.notice_tags &&
-          !message.isAnnouncement &&
-          !message.isHighlightedMessage)
-      ) {
-        return;
-      }
-
-      const emoteData = getCurrentEmoteData(channelId);
-      if (!emoteData) {
-        return;
-      }
-
-      const text = replaceEmotesWithText(message.message).trimEnd();
-      if (!text.trim()) {
-        return;
-      }
-
-      const userId = message.userstate['user-id'];
-
-      try {
-        const replacedMessage = resolveMessageEmoteParts({
-          channelId,
-          emoteData,
-          show7TvEmotes,
-          text,
-          userId,
-          userLogin,
-          userstate: message.userstate,
-        });
-
-        const { sourceBadge, sourceChannelBadges } =
-          await getSharedChatBadgeContext(message.userstate);
-        const badges = getMessageBadges({
-          userstate: message.userstate,
-          emoteData,
-          sourceBadge,
-          sourceChannelBadges,
-        });
-
-        updateMessages([
-          {
-            messageId: message.message_id,
-            messageNonce: message.message_nonce,
-            updates: {
-              message: replacedMessage,
-              badges,
-            },
-          },
-        ]);
-      } catch (error) {
-        logger.chat.debug('Failed to reprocess visible chat message:', error);
-      }
-    },
+    (message: AnyChatMessageType) =>
+      enrichVisibleMessage({
+        channelId,
+        message,
+        show7TvEmotes,
+        userLogin,
+      }),
     [channelId, show7TvEmotes, userLogin],
   );
 
@@ -351,8 +277,19 @@ export function useChatMessageProcessing({
   }, [personalEmotesVersion, scheduleVisibleAssetHydrationPass]);
 
   const reprocessAllMessages = useCallback(() => {
-    reprocessMessages(messages$.peek(), processMessageEmotes);
-  }, [messages$, processMessageEmotes]);
+    const emoteData = getCurrentEmoteData(channelId);
+    if (!emoteData) {
+      return;
+    }
+
+    enrichMessageSet({
+      channelId,
+      emoteData,
+      messages: messages$.peek(),
+      show7TvEmotes,
+      userLogin,
+    });
+  }, [channelId, messages$, show7TvEmotes, userLogin]);
 
   return {
     enqueueLiveChatMessage,
