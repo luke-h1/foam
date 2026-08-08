@@ -100,11 +100,15 @@ const USER_COSMETICS_CACHE_TTL_MS = 2 * 60 * 60 * 1000;
 const USER_COSMETICS_NEGATIVE_CACHE_TTL_MS = 30 * 60 * 1000;
 const SEVEN_TV_CACHE_NAMESPACE = 'seven_tv_cache';
 
+/**
+ * Per-user cosmetics snapshot: binding ids only. Definitions live once in
+ * `chatStore$.paints` / `chatStore$.badges` (persisted via the cosmetics
+ * snapshot) and are resolved by id at apply time - embedding a copy per
+ * wearer duplicated every popular paint hundreds of times.
+ */
 export type CachedUserCosmetics = {
-  badge?: SanitisedBadgeSet;
   badgeId: string | null;
   expiresAt: number;
-  paint?: PaintData;
   paintId: string | null;
   ttvUserId: string | null;
 };
@@ -161,26 +165,32 @@ const convertV4BadgeToSanitised = (badge: V4Badge): SanitisedBadgeSet => {
 };
 
 function applyCachedUserCosmetics(cosmetics: CachedUserCosmetics) {
+  if (!cosmetics.ttvUserId) {
+    return;
+  }
+  const { badgeId, paintId, ttvUserId } = cosmetics;
   batch(() => {
-    if (cosmetics.paint) {
-      addPaint(cosmetics.paint);
+    if (paintId) {
+      setUserPaint(ttvUserId, paintId);
     }
 
-    if (cosmetics.badge) {
-      addBadge(cosmetics.badge);
-    }
-
-    if (cosmetics.ttvUserId) {
-      if (cosmetics.paintId) {
-        setUserPaint(cosmetics.ttvUserId, cosmetics.paintId);
-      }
-
-      if (cosmetics.badgeId) {
-        setUserBadge(cosmetics.ttvUserId, cosmetics.badgeId);
-      }
+    if (badgeId) {
+      setUserBadge(ttvUserId, badgeId);
     }
   });
 }
+
+/**
+ * A snapshot is only servable when every bound id resolves against the
+ * definitions we hold; an id without its definition (old embedded-shape
+ * blobs, or a definitions store that was cleared since the snapshot was
+ * written) must fall through to a refetch instead of binding to nothing.
+ */
+const hasResolvableCosmeticDefinitions = (
+  cosmetics: CachedUserCosmetics,
+): boolean =>
+  (!cosmetics.paintId || Boolean(getPaint(cosmetics.paintId))) &&
+  (!cosmetics.badgeId || Boolean(getBadge(cosmetics.badgeId)));
 
 function getCachedUserCosmetics(
   sevenTvUserId: string,
@@ -224,17 +234,14 @@ function buildCachedUserCosmeticsFromStore(
 ): CachedUserCosmetics {
   const paintId = chatStore$.userPaintIds[ttvUserId]?.peek() ?? null;
   const badgeId = chatStore$.userBadgeIds[ttvUserId]?.peek() ?? null;
-  const badge = badgeId ? getBadge(badgeId) : undefined;
 
   return {
-    badge: badge?.url?.trim() ? badge : undefined,
     badgeId,
     expiresAt:
       Date.now() +
       (paintId || badgeId
         ? USER_COSMETICS_CACHE_TTL_MS
         : USER_COSMETICS_NEGATIVE_CACHE_TTL_MS),
-    paint: paintId ? getPaint(paintId) : undefined,
     paintId,
     ttvUserId,
   };
@@ -253,24 +260,11 @@ export const syncCachedUserCosmeticsFromStore = (
   );
 };
 
-function refreshCachedUserCosmeticsForDefinition(cosmeticId: string): void {
-  for (const [sevenTvUserId, cached] of Array.from(
-    sessionCosmeticsCache.entries(),
-  )) {
-    if (
-      cached.ttvUserId &&
-      (cached.paintId === cosmeticId || cached.badgeId === cosmeticId)
-    ) {
-      syncCachedUserCosmeticsFromStore(sevenTvUserId, cached.ttvUserId);
-    }
-  }
-}
-
 export const fetchAndCacheUserCosmetics = async (
   sevenTvUserId: string,
 ): Promise<string | null> => {
   const cached = getCachedUserCosmetics(sevenTvUserId);
-  if (cached) {
+  if (cached && hasResolvableCosmeticDefinitions(cached)) {
     applyCachedUserCosmetics(cached);
     return cached.ttvUserId;
   }
@@ -289,19 +283,23 @@ export const fetchAndCacheUserCosmetics = async (
         ? convertV4BadgeToSanitised(cosmetics.badge)
         : undefined;
       const cachedCosmetics: CachedUserCosmetics = {
-        badge,
         badgeId: cosmetics.badgeId,
         expiresAt:
           Date.now() +
           (paint || badge
             ? USER_COSMETICS_CACHE_TTL_MS
             : USER_COSMETICS_NEGATIVE_CACHE_TTL_MS),
-        paint,
         paintId: cosmetics.paintId,
         ttvUserId: cosmetics.ttvUserId,
       };
 
       if (ctx.stillCurrent()) {
+        if (paint) {
+          addPaint(paint);
+        }
+        if (badge) {
+          addBadge(badge);
+        }
         setCachedUserCosmetics(sevenTvUserId, cachedCosmetics);
         applyCachedUserCosmetics(cachedCosmetics);
       }
@@ -442,7 +440,6 @@ export const addPaint = (paint: PaintData) => {
     sweepUnreferencedPaints();
     chatStore$.paints[paint.id]?.set(paint);
     scheduleCosmeticsPersist('definitions');
-    refreshCachedUserCosmeticsForDefinition(paint.id);
   }
 };
 
@@ -550,8 +547,6 @@ export const addBadge = (badge: SanitisedBadgeSet) => {
   if (previousUrl !== normalizedBadge.url.trim()) {
     scheduleCosmeticBindingsBump();
   }
-
-  refreshCachedUserCosmeticsForDefinition(badge.id);
 };
 
 export const getBadge = (badgeId: string): SanitisedBadgeSet | undefined => {

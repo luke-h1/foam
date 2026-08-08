@@ -1,7 +1,10 @@
 import { storageService } from '@app/lib/storage';
+import { sevenTvService } from '@app/services/seventv-service';
 import {
   addBadge,
   addPaint,
+  type CachedUserCosmetics,
+  fetchAndCacheUserCosmetics,
   removeBadge,
   setUserBadge,
   setUserPaint,
@@ -178,5 +181,41 @@ describe('cosmetics entitlement-burst churn', () => {
     expect(chatStore$.cosmeticBindingsVersion.peek()).toEqual(2);
     expect(chatStore$.badges.peek()).toEqual({});
     expect(chatStore$.userBadgeIds.peek()).toEqual({});
+  });
+
+  test('an id-only snapshot with held definitions applies without a refetch', async () => {
+    addPaint(buildPaint());
+    addBadge(buildBadge());
+    const stored: CachedUserCosmetics = {
+      badgeId: BADGE_ID,
+      expiresAt: Date.now() + 60_000,
+      paintId: PAINT_ID,
+      ttvUserId: 'ttv-hit',
+    };
+    jest.mocked(storageService.getString).mockReturnValueOnce(stored);
+
+    const result = await fetchAndCacheUserCosmetics('stv-id-only-hit');
+
+    expect(result).toBe('ttv-hit');
+    expect(sevenTvService.getUserCosmeticsGql).not.toHaveBeenCalled();
+    expect(chatStore$.userPaintIds.peek()['ttv-hit']).toBe(PAINT_ID);
+    expect(chatStore$.userBadgeIds.peek()['ttv-hit']).toBe(BADGE_ID);
+  });
+
+  test('a snapshot whose bound ids no longer resolve is treated as a miss', async () => {
+    const stored: CachedUserCosmetics = {
+      badgeId: null,
+      expiresAt: Date.now() + 60_000,
+      paintId: PAINT_ID,
+      ttvUserId: 'ttv-stale',
+    };
+    jest.mocked(storageService.getString).mockReturnValueOnce(stored);
+    jest.mocked(sevenTvService.getUserCosmeticsGql).mockResolvedValue(null);
+
+    await fetchAndCacheUserCosmetics('stv-unresolvable');
+
+    expect(sevenTvService.getUserCosmeticsGql).toHaveBeenCalledWith(
+      'stv-unresolvable',
+    );
   });
 });
