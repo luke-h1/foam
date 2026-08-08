@@ -603,6 +603,32 @@ describe('ChatInlineImage shared-ref recovery', () => {
     expect(mockImageProps?.source).toEqual({ uri: sourceUrl });
   });
 
+  test('a recycled slot does not inherit the previous mount displayed marker', () => {
+    mockSharedRef = { isAnimated: false };
+    const sourceUrl = 'https://static-cdn.jtvnw.net/badges/v1/comeback/3';
+    const { rerender } = render(
+      <ChatInlineImage sourceUrl={sourceUrl} style={{}} maxRetryAttempts={0} />,
+    );
+    act(() => mockImageProps?.onDisplay?.());
+
+    rerender(
+      <ChatInlineImage
+        sourceUrl='https://static-cdn.jtvnw.net/badges/v1/detour/3'
+        style={{}}
+        maxRetryAttempts={0}
+      />,
+    );
+    rerender(
+      <ChatInlineImage sourceUrl={sourceUrl} style={{}} maxRetryAttempts={0} />,
+    );
+
+    // The still-cached ref instance matches the first mount's marker, but it
+    // has not drawn since the recycle - the watchdog must still cover it.
+    act(() => jest.advanceTimersByTime(12_000));
+
+    expect(mockImageProps?.source).toEqual({ uri: sourceUrl });
+  });
+
   test('recycling to a new url clears a previous ref ban', () => {
     mockSharedRef = { isAnimated: false };
     const bannedUrl = 'https://static-cdn.jtvnw.net/badges/v1/banned/3';

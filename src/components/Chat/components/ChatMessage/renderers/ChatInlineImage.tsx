@@ -17,7 +17,11 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { Image as ExpoImage, type ImageErrorEventData } from 'expo-image';
+import {
+  Image as ExpoImage,
+  type ImageErrorEventData,
+  type ImageRef,
+} from 'expo-image';
 
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
 import { resolveUseAppleWebpCodec } from '@app/lib/expo-image/resolveUseAppleWebpCodec';
@@ -89,6 +93,7 @@ interface ChatInlineImageProps {
   transitionMs?: number;
 }
 
+// eslint-disable-next-line react-doctor/no-giant-component -- one recycling-aware load state machine; a split adds a mount boundary on the hottest chat path
 function ChatInlineImageComponent({
   collapseWhenFailed = false,
   containerStyle,
@@ -130,9 +135,11 @@ function ChatInlineImageComponent({
   const [failedRefUrl, setFailedRefUrl] = useState<string | null>(null);
   // The exact ref instance that has drawn, recorded by onDisplay. It lives on
   // a ref rather than in state so the healthy cached-emote path never
-  // re-renders, and the identity comparison self-invalidates across recycles
-  // and re-decodes, so it never needs a reset.
-  const displayedSharedRef = useRef<unknown>(null);
+  // re-renders. Identity self-invalidates a re-decode (a new instance never
+  // matches), but a recycle back to a url whose instance is still cached would
+  // inherit "drawn" from the previous mount, so the url-change effect below
+  // clears it.
+  const displayedSharedRef = useRef<ImageRef | null>(null);
 
   const showRef = sharedRef != null && failedRefUrl !== sourceUrl;
   const isCurrentUrl = load.url === sourceUrl && load.viaRef === showRef;
@@ -144,6 +151,7 @@ function ChatInlineImageComponent({
 
   // A ban belongs to the mount that issued it. Without this reset, a slot that
   // once banned a ref would keep the ban when it recycles back to the same url.
+  // eslint-disable-next-line react-doctor/rerender-state-only-in-handlers, react-doctor/no-derived-useState -- React's reset-state-on-prop-change pattern; the render-phase setState on a url change is the point, not a stale copy
   const [banOwnerUrl, setBanOwnerUrl] = useState(sourceUrl);
   if (banOwnerUrl !== sourceUrl) {
     setBanOwnerUrl(sourceUrl);
@@ -151,9 +159,11 @@ function ChatInlineImageComponent({
   }
 
   // retryCountRef isn't rendered, so reset it for a recycled emote here rather
-  // than during render.
+  // than during render. The displayed marker resets with it: the recycled
+  // slot's ref has not drawn yet, however familiar the instance.
   useEffect(() => {
     retryCountRef.current = 0;
+    displayedSharedRef.current = null;
   }, [sourceUrl]);
 
   // Drop any retry timer scheduled for the previous url — it would otherwise
@@ -295,19 +305,10 @@ function ChatInlineImageComponent({
     }
   }, [sharedRef, showRef]);
 
-  const onWatchdogTimeout = useEffectEvent(() => {
-    // A displayed ref pins status at 'loading' forever (no onLoad), so the
-    // timer always fires on the ref path; the marker distinguishes "drawn,
-    // nothing to do" from "never painted, fall back to the uri".
-    if (
-      showRef &&
-      sharedRef != null &&
-      displayedSharedRef.current === sharedRef
-    ) {
-      return;
-    }
-    handleError();
-  });
+  // A displayed ref pins status at 'loading' forever (no onLoad), so the timer
+  // always fires on the ref path; handleError's displayed-ref guard turns that
+  // into a no-op for a ref that has drawn.
+  const onWatchdogTimeout = useEffectEvent(() => handleError());
   useEffect(() => {
     if (status !== 'loading') {
       return undefined;

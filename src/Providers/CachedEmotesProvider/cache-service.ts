@@ -116,7 +116,7 @@ let releaseFlushScheduled = false;
 const MAX_RELEASE_DEFER_FRAMES = 2;
 
 /**
- * A single shared sweep per flush replaces a pair of rAF closures per url; a
+ * One shared sweep per flush rather than a pair of rAF closures per url: a
  * channel hop or pressure trim releases hundreds of refs in one tick. Each url
  * stays marked for one to two frames, which still covers the
  * subscribe-after-release race the marker exists to detect.
