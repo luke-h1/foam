@@ -20,6 +20,7 @@ import { cheermoteFetchGuard } from '@app/utils/chat/cheermoteStore/cheermoteFet
 import { fetchChannelCheermotes } from '@app/utils/chat/cheermoteStore/fetchChannelCheermotes';
 import { createSystemMessage } from '@app/utils/chat/messageHandlers/createSystemMessage';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
+import { clearSessionCache } from '@app/utils/image/image-cache';
 import { logger } from '@app/utils/logger';
 import { getSevenTvSessionId } from '@app/utils/seventv/sevenTvSessionId';
 
@@ -51,7 +52,6 @@ import {
   settleSpecs,
 } from './channelResources';
 import { clearUserCosmeticsCache } from './cosmetics';
-import { clearEmoteImageCache } from './emoteImages';
 import { addMessage } from './messages';
 import {
   clearPersonalEmotesCache,
@@ -806,7 +806,7 @@ export const clearChatCosmeticsCache = (): void => {
   clearUserCosmeticsCache();
   clearPersonalEmotesCache();
   clearSubscriberProfilesCache();
-  clearEmoteImageCache();
+  clearSessionCache();
   clearGlobalResourceCache();
   void clearChatStorePersistence();
 };

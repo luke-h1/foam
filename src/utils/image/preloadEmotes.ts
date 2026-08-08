@@ -146,10 +146,3 @@ export async function preloadChannelEmotes(emoteData: {
   // decode storm that starves on-screen animated emotes (see useCachedEmotes).
   await preloadEmotes(allChannel, 32);
 }
-
-/**
- * Clear preload cache (call on memory pressure or channel change)
- */
-export function clearPreloadCache(): void {
-  preloadedUrls.clear();
-}

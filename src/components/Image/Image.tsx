@@ -43,7 +43,6 @@ export const Image = function Image({
   transition = 500,
   source,
   cachePolicy,
-  cachePriority = 'visible',
   cacheToFile = true,
   cacheVariant = 'image',
   recyclingKey,
@@ -91,7 +90,6 @@ export const Image = function Image({
     const controller = new AbortController();
     let cancelled = false;
     void cacheImageFromUrl(url, {
-      priority: cachePriority,
       signal: controller.signal,
       variant: cacheVariant,
     }).then(cachedUrl => {
@@ -108,7 +106,7 @@ export const Image = function Image({
       cancelled = true;
       controller.abort();
     };
-  }, [cachePriority, cacheVariant, diskCachedUrl, shouldUseFileCache, url]);
+  }, [cacheVariant, diskCachedUrl, shouldUseFileCache, url]);
 
   /**
    * When the wrapper's own file cache is handling persistence, keep
