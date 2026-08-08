@@ -13,12 +13,7 @@ jest.mock('@app/store/chat/actions/messages', () => ({
   addMessage: jest.fn(),
   clearMessages: jest.fn(),
   clearMessagesWithNotice: jest.fn(),
-  getMessageById: jest.fn(),
   getMessageColor: jest.fn(),
-  moderateMessageById: jest.fn(),
-  moderateMessagesByLogin: jest.fn(),
-  removeMessageById: jest.fn(),
-  removeMessagesByLogin: jest.fn(),
 }));
 
 jest.mock('@app/utils/logger', () => ({
@@ -49,6 +44,10 @@ function renderIrcHandlers({
   clearLocalMessages = jest.fn(),
   enqueueLiveChatMessage = jest.fn(),
   processMessageEmotes = jest.fn(),
+  moderateChatMessageById = jest.fn(),
+  moderateChatMessagesByLogin = jest.fn(),
+  removeChatMessageById = jest.fn(),
+  removeChatMessagesByLogin = jest.fn(),
 }: {
   isLoadingRecentMessages?: boolean;
   isMounted?: boolean;
@@ -56,6 +55,10 @@ function renderIrcHandlers({
   clearLocalMessages?: jest.Mock;
   enqueueLiveChatMessage?: jest.Mock;
   processMessageEmotes?: jest.Mock;
+  moderateChatMessageById?: jest.Mock;
+  moderateChatMessagesByLogin?: jest.Mock;
+  removeChatMessageById?: jest.Mock;
+  removeChatMessagesByLogin?: jest.Mock;
 } = {}) {
   return renderHook(() =>
     useChatIrcHandlers({
@@ -66,15 +69,15 @@ function renderIrcHandlers({
       handleNewMessage: jest.fn(),
       isMountedRef: { current: isMounted },
       isLoadingRecentMessagesRef: { current: isLoadingRecentMessages },
-      removeBufferedMessagesByLogin: jest.fn(),
+      removeChatMessagesByLogin,
       listRef: { current: null },
       messages$: {
         peek: jest.fn(() => Array.from({ length: messageCount })),
       },
-      moderateBufferedMessageById: jest.fn(),
-      moderateBufferedMessagesByLogin: jest.fn(),
+      moderateChatMessageById,
+      moderateChatMessagesByLogin,
       processMessageEmotes,
-      removeBufferedMessageById: jest.fn(),
+      removeChatMessageById,
     }),
   );
 }
@@ -86,6 +89,7 @@ describe('useChatIrcHandlers', () => {
 
   afterEach(() => {
     preferences$.showJoinPartMessages.set(false);
+    preferences$.deletedMessageStyle.set('notice');
   });
 
   test('skips the connected notice while recent history is loading', () => {
@@ -218,6 +222,87 @@ describe('useChatIrcHandlers', () => {
         ? message.message[0].content
         : undefined;
     expect(content).toEqual('baduser has been permanently banned');
+  });
+
+  test('a targeted CLEARCHAT timeout moderates through the single combined call', () => {
+    const moderateChatMessagesByLogin = jest.fn();
+    const removeChatMessagesByLogin = jest.fn();
+    const { result } = renderIrcHandlers({
+      moderateChatMessagesByLogin,
+      removeChatMessagesByLogin,
+    });
+
+    act(() => {
+      result.current.onClearChat('#foam', {}, 'baduser', 600);
+    });
+
+    expect(moderateChatMessagesByLogin.mock.calls).toEqual([
+      ['baduser', 'Timed out (600s)'],
+    ]);
+    expect(removeChatMessagesByLogin).not.toHaveBeenCalled();
+  });
+
+  test('a targeted CLEARCHAT ban moderates with the permanent notice', () => {
+    const moderateChatMessagesByLogin = jest.fn();
+    const { result } = renderIrcHandlers({ moderateChatMessagesByLogin });
+
+    act(() => {
+      result.current.onClearChat('#foam', {}, 'baduser');
+    });
+
+    expect(moderateChatMessagesByLogin.mock.calls).toEqual([
+      ['baduser', 'Permanently banned'],
+    ]);
+  });
+
+  test('the hidden deleted-message style removes through the single combined call', () => {
+    preferences$.deletedMessageStyle.set('hidden');
+    const moderateChatMessagesByLogin = jest.fn();
+    const removeChatMessagesByLogin = jest.fn();
+    const { result } = renderIrcHandlers({
+      moderateChatMessagesByLogin,
+      removeChatMessagesByLogin,
+    });
+
+    act(() => {
+      result.current.onClearChat('#foam', {}, 'baduser', 600);
+    });
+
+    expect(removeChatMessagesByLogin.mock.calls).toEqual([['baduser']]);
+    expect(moderateChatMessagesByLogin).not.toHaveBeenCalled();
+  });
+
+  test('CLEARMSG moderates the target through the single combined call', () => {
+    const moderateChatMessageById = jest.fn();
+    const removeChatMessageById = jest.fn();
+    const { result } = renderIrcHandlers({
+      moderateChatMessageById,
+      removeChatMessageById,
+    });
+
+    act(() => {
+      result.current.onClearMessage('#foam', { login: 'bob' }, 'msg-1');
+    });
+
+    expect(moderateChatMessageById.mock.calls).toEqual([['msg-1', 'Deleted']]);
+    expect(removeChatMessageById).not.toHaveBeenCalled();
+  });
+
+  test('CLEARMSG removes the target when deleted messages are hidden', () => {
+    preferences$.deletedMessageStyle.set('hidden');
+    const moderateChatMessageById = jest.fn();
+    const removeChatMessageById = jest.fn();
+    const { result } = renderIrcHandlers({
+      moderateChatMessageById,
+      removeChatMessageById,
+    });
+
+    act(() => {
+      result.current.onClearMessage('#foam', { login: 'bob' }, 'msg-1');
+    });
+
+    expect(removeChatMessageById.mock.calls).toEqual([['msg-1']]);
+    expect(moderateChatMessageById).not.toHaveBeenCalled();
   });
 
   test('does not announce a per-user action on a full chat clear', () => {

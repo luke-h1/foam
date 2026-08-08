@@ -9,7 +9,12 @@ import {
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import {
   addMessages,
+  getMessageById,
   getUserMessageColor,
+  moderateMessageById,
+  moderateMessagesByLogin,
+  removeMessageById,
+  removeMessagesByLogin,
 } from '@app/store/chat/actions/messages';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor/resolveCachedSenderColor';
 
@@ -382,34 +387,48 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     raidFlushModeRef.current = false;
   }, [bufferRef, clearDelayTick, delayQueueRef]);
 
-  const removeBufferedMessageById = useCallback(
+  /**
+   * One call per moderation event: each handler hits the ingest buffer, the
+   * delay queue and the committed store so the halves cannot drift.
+   */
+  const removeChatMessageById = useCallback(
     (messageId: string) => {
       bufferRef.current.removeById(messageId);
       delayQueueRef.current.removeById(messageId);
+      removeMessageById(messageId);
     },
     [bufferRef, delayQueueRef],
   );
 
-  const removeBufferedMessagesByLogin = useCallback(
+  const removeChatMessagesByLogin = useCallback(
     (login: string) => {
       bufferRef.current.removeByLogin(login);
       delayQueueRef.current.removeByLogin(login);
+      removeMessagesByLogin(login);
     },
     [bufferRef, delayQueueRef],
   );
 
-  const moderateBufferedMessageById = useCallback(
+  const moderateChatMessageById = useCallback(
     (messageId: string, moderationNotice: string) => {
       bufferRef.current.moderateById(messageId, moderationNotice);
       delayQueueRef.current.moderateById(messageId, moderationNotice);
+
+      if (getMessageById(messageId)) {
+        moderateMessageById(messageId, moderationNotice);
+        return;
+      }
+
+      removeChatMessageById(messageId);
     },
-    [bufferRef, delayQueueRef],
+    [bufferRef, delayQueueRef, removeChatMessageById],
   );
 
-  const moderateBufferedMessagesByLogin = useCallback(
+  const moderateChatMessagesByLogin = useCallback(
     (login: string, moderationNotice: string) => {
       bufferRef.current.moderateByLogin(login, moderationNotice);
       delayQueueRef.current.moderateByLogin(login, moderationNotice);
+      moderateMessagesByLogin(login, moderationNotice);
     },
     [bufferRef, delayQueueRef],
   );
@@ -436,10 +455,10 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     handleNewMessage,
     clearLocalMessages,
     reconcileChatDelay,
-    removeBufferedMessageById,
-    removeBufferedMessagesByLogin,
-    moderateBufferedMessageById,
-    moderateBufferedMessagesByLogin,
+    removeChatMessageById,
+    removeChatMessagesByLogin,
+    moderateChatMessageById,
+    moderateChatMessagesByLogin,
     cleanup,
     forceFlush,
     getBufferSize,

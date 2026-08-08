@@ -91,7 +91,7 @@ export function useChatSession({
     });
   }, [channelName, user?.id, user?.login]);
 
-  const { fetchedCosmeticsUsersRef, fetchUserCosmetics } = useChatCosmetics({
+  useChatCosmetics({
     userId: user?.id,
   });
 
@@ -119,11 +119,11 @@ export function useChatSession({
   const {
     handleNewMessage: enqueueChatMessage,
     clearLocalMessages,
-    moderateBufferedMessageById,
-    moderateBufferedMessagesByLogin,
+    moderateChatMessageById,
+    moderateChatMessagesByLogin,
     reconcileChatDelay,
-    removeBufferedMessageById,
-    removeBufferedMessagesByLogin,
+    removeChatMessageById,
+    removeChatMessagesByLogin,
     cleanup: cleanupMessages,
     forceFlush,
   } = useChatMessages({
@@ -206,7 +206,6 @@ export function useChatSession({
     handleViewableMessagesChange,
   } = useChatMessageProcessing({
     channelId,
-    fetchUserCosmetics,
     handleNewMessage,
     isAtBottomRef,
     maintainBottomAfterContentChange,
@@ -243,11 +242,11 @@ export function useChatSession({
     isLoadingRecentMessagesRef,
     listRef,
     messages$,
-    moderateBufferedMessageById,
-    moderateBufferedMessagesByLogin,
+    moderateChatMessageById,
+    moderateChatMessagesByLogin,
     processMessageEmotes,
-    removeBufferedMessageById,
-    removeBufferedMessagesByLogin,
+    removeChatMessageById,
+    removeChatMessagesByLogin,
   });
 
   const {
@@ -290,7 +289,6 @@ export function useChatSession({
     cleanupScroll,
     cleanupMessages,
     cancelEmoteLoad,
-    fetchedCosmeticsUsersRef,
     isMountedRef: isChatMountedRef,
     processedMessageIdsRef,
   });
@@ -332,7 +330,6 @@ export function useChatSession({
   return {
     connected,
     emoteLoadStatus,
-    fetchUserCosmetics,
     forceFlush,
     getUserState,
     handleViewableMessagesChange,

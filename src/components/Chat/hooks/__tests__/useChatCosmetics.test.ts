@@ -6,7 +6,6 @@ import {
   getUserBadge,
   getUserBadgeId,
   getUserPaintId,
-  requestUserCosmeticsViaPresence,
 } from '@app/store/chat/actions/cosmetics';
 
 import { useChatCosmetics } from '../useChatCosmetics';
@@ -37,9 +36,6 @@ const mockFetchAndCacheUserCosmetics = jest.mocked(fetchAndCacheUserCosmetics);
 const mockGetUserBadge = jest.mocked(getUserBadge);
 const mockGetUserBadgeId = jest.mocked(getUserBadgeId);
 const mockGetUserPaintId = jest.mocked(getUserPaintId);
-const mockRequestUserCosmeticsViaPresence = jest.mocked(
-  requestUserCosmeticsViaPresence,
-);
 
 describe('useChatCosmetics', () => {
   beforeEach(() => {
@@ -124,181 +120,5 @@ describe('useChatCosmetics', () => {
 
     expect(mockGet7tvUserId).not.toHaveBeenCalled();
     expect(mockFetchAndCacheUserCosmetics).not.toHaveBeenCalled();
-  });
-
-  test('requests cosmetics via passive presence for visible chatters', async () => {
-    const { result } = renderHook(() =>
-      useChatCosmetics({
-        userId: null,
-      }),
-    );
-
-    await act(async () => {
-      await result.current.fetchUserCosmetics('chatter-1');
-    });
-
-    expect(mockRequestUserCosmeticsViaPresence.mock.calls).toEqual([
-      ['chatter-1'],
-    ]);
-    expect(
-      result.current.fetchedCosmeticsUsersRef.current.has('chatter-1'),
-    ).toBe(true);
-  });
-
-  test('does not refetch users that already have cached paint and renderable badge cosmetics', async () => {
-    setCachedCosmetics(
-      {
-        getUserBadgeId: mockGetUserBadgeId,
-        getUserPaintId: mockGetUserPaintId,
-      },
-      {
-        badgeId: 'badge-1',
-        paintId: 'paint-1',
-        twitchUserId: 'cached-user',
-      },
-    );
-    mockGetUserBadge.mockReturnValue({
-      id: 'badge-1',
-      url: 'https://cdn.7tv.app/badge/badge-1/4x.webp',
-      type: '7TV Badge',
-      title: 'Supporter',
-      set: 'badge-1',
-      provider: '7tv',
-    });
-
-    const { result } = renderHook(() =>
-      useChatCosmetics({
-        userId: null,
-      }),
-    );
-
-    await act(async () => {
-      await result.current.fetchUserCosmetics('cached-user');
-    });
-
-    expect(mockRequestUserCosmeticsViaPresence).not.toHaveBeenCalled();
-    expect(
-      result.current.fetchedCosmeticsUsersRef.current.has('cached-user'),
-    ).toBe(true);
-  });
-
-  test('does not refetch paint-only users when retryMissingBadge is requested', async () => {
-    setCachedCosmetics(
-      {
-        getUserBadgeId: mockGetUserBadgeId,
-        getUserPaintId: mockGetUserPaintId,
-      },
-      {
-        paintId: 'paint-1',
-        twitchUserId: 'paint-only-user',
-      },
-    );
-    mockGetUserBadge.mockReturnValue(undefined);
-
-    const { result } = renderHook(() =>
-      useChatCosmetics({
-        userId: null,
-      }),
-    );
-
-    await act(async () => {
-      await result.current.fetchUserCosmetics('paint-only-user');
-      await result.current.fetchUserCosmetics('paint-only-user', {
-        retryMissingBadge: true,
-      });
-    });
-
-    expect(mockRequestUserCosmeticsViaPresence.mock.calls).toEqual([]);
-    expect(
-      result.current.fetchedCosmeticsUsersRef.current.has('paint-only-user'),
-    ).toBe(true);
-  });
-
-  test('retries a previously fetched user when retryMissingBadge is requested and a badge binding lacks a renderable definition', async () => {
-    setCachedCosmetics(
-      {
-        getUserBadgeId: mockGetUserBadgeId,
-        getUserPaintId: mockGetUserPaintId,
-      },
-      {
-        badgeId: 'badge-1',
-        twitchUserId: 'retry-user',
-      },
-    );
-    mockGetUserBadge.mockReturnValue(undefined);
-
-    const { result } = renderHook(() =>
-      useChatCosmetics({
-        userId: null,
-      }),
-    );
-
-    await act(async () => {
-      await result.current.fetchUserCosmetics('retry-user');
-      await result.current.fetchUserCosmetics('retry-user');
-      await result.current.fetchUserCosmetics('retry-user', {
-        retryMissingBadge: true,
-      });
-    });
-
-    expect(mockRequestUserCosmeticsViaPresence.mock.calls).toEqual([
-      ['retry-user'],
-      ['retry-user'],
-    ]);
-    expect(
-      result.current.fetchedCosmeticsUsersRef.current.has('retry-user'),
-    ).toBe(true);
-  });
-
-  test('does not refetch users that already have cached paint-only cosmetics', async () => {
-    setCachedCosmetics(
-      {
-        getUserBadgeId: mockGetUserBadgeId,
-        getUserPaintId: mockGetUserPaintId,
-      },
-      {
-        paintId: 'paint-1',
-        twitchUserId: 'paint-only-user',
-      },
-    );
-
-    const { result } = renderHook(() =>
-      useChatCosmetics({
-        userId: null,
-      }),
-    );
-
-    await act(async () => {
-      await result.current.fetchUserCosmetics('paint-only-user');
-    });
-
-    expect(mockRequestUserCosmeticsViaPresence).not.toHaveBeenCalled();
-    expect(
-      result.current.fetchedCosmeticsUsersRef.current.has('paint-only-user'),
-    ).toBe(true);
-  });
-
-  test('does not retry users whose cosmetics fetch failed', async () => {
-    mockRequestUserCosmeticsViaPresence.mockRejectedValue(
-      new Error('presence failed'),
-    );
-
-    const { result } = renderHook(() =>
-      useChatCosmetics({
-        userId: null,
-      }),
-    );
-
-    await act(async () => {
-      await result.current.fetchUserCosmetics('failed-user');
-      await result.current.fetchUserCosmetics('failed-user');
-    });
-
-    expect(mockRequestUserCosmeticsViaPresence.mock.calls).toEqual([
-      ['failed-user'],
-    ]);
-    expect(
-      result.current.fetchedCosmeticsUsersRef.current.has('failed-user'),
-    ).toBe(true);
   });
 });

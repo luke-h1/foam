@@ -1,5 +1,4 @@
-import { act, renderHook } from '@testing-library/react-native';
-
+import { createSevenTvEmote } from '@app/components/Chat/hooks/__tests__/__fixtures__/useChat.fixture';
 import { countMetric } from '@app/lib/sentry';
 import {
   addBadge,
@@ -18,8 +17,7 @@ import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
 import { normalizeSevenTvPaint } from '@app/utils/seventv/cosmetics/normalizeSevenTvPaint';
 
-import { useChatSevenTvCallbacks } from '../useChatSevenTvCallbacks';
-import { createSevenTvEmote } from './__fixtures__/useChat.fixture';
+import { createSevenTvCallbacks } from '../createSevenTvCallbacks';
 import {
   createBadgeChangeEntry,
   createBadgeCosmeticCreateData,
@@ -34,7 +32,7 @@ import {
   createPaintCosmeticUpdateData,
   createPaintInput,
   createPaintPushedEntry,
-} from './__fixtures__/useChatSevenTvCallbacks.fixture';
+} from './__fixtures__/createSevenTvCallbacks.fixture';
 
 jest.mock('@app/store/chat/actions/cosmetics', () => ({
   addBadge: jest.fn(),
@@ -103,45 +101,39 @@ const defaultProps = {
   onEmoteNotice: mockOnEmoteNotice,
 };
 
-describe('useChatSevenTvCallbacks', () => {
+describe('createSevenTvCallbacks', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   describe('return shape', () => {
     test('returns all callbacks and channel/set ids', () => {
-      const { result } = renderHook(() =>
-        useChatSevenTvCallbacks(defaultProps),
-      );
+      const result = createSevenTvCallbacks(defaultProps);
 
-      expect(result.current.onEmoteUpdate).toBeDefined();
-      expect(result.current.onCosmeticCreate).toBeDefined();
-      expect(result.current.onEntitlementCreate).toBeDefined();
-      expect(result.current.onCosmeticUpdate).toBeDefined();
-      expect(result.current.onCosmeticDelete).toBeDefined();
-      expect(result.current.onEntitlementUpdate).toBeDefined();
-      expect(result.current.onEntitlementDelete).toBeDefined();
-      expect(result.current.twitchChannelId).toBe('twitch-123');
-      expect(result.current.sevenTvEmoteSetId).toBe('emote-set-1');
+      expect(result.onEmoteUpdate).toBeDefined();
+      expect(result.onCosmeticCreate).toBeDefined();
+      expect(result.onEntitlementCreate).toBeDefined();
+      expect(result.onCosmeticUpdate).toBeDefined();
+      expect(result.onCosmeticDelete).toBeDefined();
+      expect(result.onEntitlementUpdate).toBeDefined();
+      expect(result.onEntitlementDelete).toBeDefined();
+      expect(result.twitchChannelId).toBe('twitch-123');
+      expect(result.sevenTvEmoteSetId).toBe('emote-set-1');
     });
   });
 
   describe('onEmoteUpdate', () => {
     test('calls updateSevenTvEmotes with channelId, added, removed', () => {
-      const { result } = renderHook(() =>
-        useChatSevenTvCallbacks(defaultProps),
-      );
+      const result = createSevenTvCallbacks(defaultProps);
 
-      act(() => {
-        result.current.onEmoteUpdate({
-          channelId: 'c1',
-          added: [
-            createSevenTvEmote({ id: 'e1', name: 'e1', original_name: 'e1' }),
-          ],
-          removed: [
-            createSevenTvEmote({ id: 'e2', name: 'e2', original_name: 'e2' }),
-          ],
-        });
+      result.onEmoteUpdate({
+        channelId: 'c1',
+        added: [
+          createSevenTvEmote({ id: 'e1', name: 'e1', original_name: 'e1' }),
+        ],
+        removed: [
+          createSevenTvEmote({ id: 'e2', name: 'e2', original_name: 'e2' }),
+        ],
       });
 
       expect(mockUpdateSevenTvEmotes).toHaveBeenCalledWith(
@@ -152,9 +144,7 @@ describe('useChatSevenTvCallbacks', () => {
     });
 
     test('emits notice messages for added and removed emotes', () => {
-      const { result } = renderHook(() =>
-        useChatSevenTvCallbacks(defaultProps),
-      );
+      const result = createSevenTvCallbacks(defaultProps);
 
       const added = [
         createSevenTvEmote({ id: 'e1', name: 'Added', original_name: 'Added' }),
@@ -167,12 +157,10 @@ describe('useChatSevenTvCallbacks', () => {
         }),
       ];
 
-      act(() => {
-        result.current.onEmoteUpdate({
-          channelId: 'c1',
-          added,
-          removed,
-        });
+      result.onEmoteUpdate({
+        channelId: 'c1',
+        added,
+        removed,
       });
 
       expect(generateStvEmoteNotice).toHaveBeenCalledWith({
@@ -189,9 +177,7 @@ describe('useChatSevenTvCallbacks', () => {
     });
 
     test('suppresses visible notices for nnys emote changes', () => {
-      const { result } = renderHook(() =>
-        useChatSevenTvCallbacks(defaultProps),
-      );
+      const result = createSevenTvCallbacks(defaultProps);
 
       const added = [
         createSevenTvEmote({
@@ -208,12 +194,10 @@ describe('useChatSevenTvCallbacks', () => {
         }),
       ];
 
-      act(() => {
-        result.current.onEmoteUpdate({
-          channelId: 'c1',
-          added,
-          removed,
-        });
+      result.onEmoteUpdate({
+        channelId: 'c1',
+        added,
+        removed,
       });
 
       expect(mockUpdateSevenTvEmotes).toHaveBeenCalledWith(
@@ -228,22 +212,16 @@ describe('useChatSevenTvCallbacks', () => {
 
   describe('onCosmeticCreate', () => {
     test('no-ops when cosmetic.object is missing', () => {
-      const { result } = renderHook(() =>
-        useChatSevenTvCallbacks(defaultProps),
-      );
+      const result = createSevenTvCallbacks(defaultProps);
 
-      act(() => {
-        // @ts-expect-error -- exercising runtime guard when cosmetic.object is absent
-        result.current.onCosmeticCreate({ kind: 'BADGE', cosmetic: {} });
-      });
+      // @ts-expect-error -- exercising runtime guard when cosmetic.object is absent
+      result.onCosmeticCreate({ kind: 'BADGE', cosmetic: {} });
 
       expect(applyCosmeticCreateEvent).not.toHaveBeenCalled();
     });
 
     test('delegates badge creates to applyCosmeticCreateEvent', () => {
-      const { result } = renderHook(() =>
-        useChatSevenTvCallbacks(defaultProps),
-      );
+      const result = createSevenTvCallbacks(defaultProps);
       const data = createBadgeCosmeticCreateData(
         createBadgeData({
           id: 'badge-id',
@@ -252,9 +230,7 @@ describe('useChatSevenTvCallbacks', () => {
         }),
       );
 
-      act(() => {
-        result.current.onCosmeticCreate(data);
-      });
+      result.onCosmeticCreate(data);
 
       expect(mockApplyCosmeticCreateEvent.mock.calls).toEqual([
         [data.cosmetic, 'BADGE'],
@@ -262,9 +238,7 @@ describe('useChatSevenTvCallbacks', () => {
     });
 
     test('delegates paint creates to applyCosmeticCreateEvent', () => {
-      const { result } = renderHook(() =>
-        useChatSevenTvCallbacks(defaultProps),
-      );
+      const result = createSevenTvCallbacks(defaultProps);
       const data = createPaintCosmeticCreateData(
         createPaintInput({
           id: 'paint-id',
@@ -273,9 +247,7 @@ describe('useChatSevenTvCallbacks', () => {
         }),
       );
 
-      act(() => {
-        result.current.onCosmeticCreate(data);
-      });
+      result.onCosmeticCreate(data);
 
       expect(mockApplyCosmeticCreateEvent.mock.calls).toEqual([
         [data.cosmetic, 'PAINT'],
@@ -285,9 +257,7 @@ describe('useChatSevenTvCallbacks', () => {
 
   describe('onEntitlementCreate', () => {
     test('delegates to applyEntitlementCreateEvent', () => {
-      const { result } = renderHook(() =>
-        useChatSevenTvCallbacks(defaultProps),
-      );
+      const result = createSevenTvCallbacks(defaultProps);
       const data = {
         entitlement: {
           id: 'entitlement-1',
@@ -313,9 +283,7 @@ describe('useChatSevenTvCallbacks', () => {
         badgeId: 'badge-1',
       };
 
-      act(() => {
-        result.current.onEntitlementCreate(data);
-      });
+      result.onEntitlementCreate(data);
 
       expect(mockApplyEntitlementCreateEvent.mock.calls).toEqual([[data]]);
     });
@@ -323,28 +291,24 @@ describe('useChatSevenTvCallbacks', () => {
 
   describe('onCosmeticUpdate', () => {
     test('records a Sentry count metric for paint updates', () => {
-      const { result } = renderHook(() =>
-        useChatSevenTvCallbacks(defaultProps),
-      );
+      const result = createSevenTvCallbacks(defaultProps);
 
-      act(() => {
-        result.current.onCosmeticUpdate(
-          createPaintCosmeticUpdateData({
-            ...createEmptyChangeMap<PaintData>(),
-            updated: [
-              createPaintChangeEntry(
-                createPaintInput({ id: 'paint-1', name: 'Updated Paint' }),
-                createPaintInput({ id: 'paint-1', name: 'Old Paint' }),
-              ),
-            ],
-            pushed: [
-              createPaintPushedEntry(
-                createPaintInput({ id: 'paint-2', name: 'Added Paint' }),
-              ),
-            ],
-          }),
-        );
-      });
+      result.onCosmeticUpdate(
+        createPaintCosmeticUpdateData({
+          ...createEmptyChangeMap<PaintData>(),
+          updated: [
+            createPaintChangeEntry(
+              createPaintInput({ id: 'paint-1', name: 'Updated Paint' }),
+              createPaintInput({ id: 'paint-1', name: 'Old Paint' }),
+            ),
+          ],
+          pushed: [
+            createPaintPushedEntry(
+              createPaintInput({ id: 'paint-2', name: 'Added Paint' }),
+            ),
+          ],
+        }),
+      );
 
       expect(addPaint).toHaveBeenCalledWith(
         normalizeSevenTvPaint(
@@ -372,35 +336,31 @@ describe('useChatSevenTvCallbacks', () => {
     });
 
     test('records a Sentry count metric for badge updates', () => {
-      const { result } = renderHook(() =>
-        useChatSevenTvCallbacks(defaultProps),
-      );
+      const result = createSevenTvCallbacks(defaultProps);
 
-      act(() => {
-        result.current.onCosmeticUpdate(
-          createBadgeCosmeticUpdateData({
-            ...createEmptyChangeMap<BadgeData>(),
-            updated: [
-              createBadgeChangeEntry(
-                createBadgeData({
-                  id: 'badge-1',
-                  name: 'Updated Badge',
-                  tooltip: 'Updated Badge',
-                }),
-              ),
-            ],
-            pushed: [
-              createBadgePushedEntry(
-                createBadgeData({
-                  id: 'badge-2',
-                  name: 'Added Badge',
-                  tooltip: 'Added Badge',
-                }),
-              ),
-            ],
-          }),
-        );
-      });
+      result.onCosmeticUpdate(
+        createBadgeCosmeticUpdateData({
+          ...createEmptyChangeMap<BadgeData>(),
+          updated: [
+            createBadgeChangeEntry(
+              createBadgeData({
+                id: 'badge-1',
+                name: 'Updated Badge',
+                tooltip: 'Updated Badge',
+              }),
+            ),
+          ],
+          pushed: [
+            createBadgePushedEntry(
+              createBadgeData({
+                id: 'badge-2',
+                name: 'Added Badge',
+                tooltip: 'Added Badge',
+              }),
+            ),
+          ],
+        }),
+      );
 
       expect(mockAddBadge.mock.calls[0]?.[0]).toEqual<SanitisedBadgeSet>({
         id: 'badge-1',
@@ -436,14 +396,10 @@ describe('useChatSevenTvCallbacks', () => {
 
   describe('onCosmeticDelete', () => {
     test('calls removeBadge and removePaint with cosmeticId', () => {
-      const { result } = renderHook(() =>
-        useChatSevenTvCallbacks(defaultProps),
-      );
+      const result = createSevenTvCallbacks(defaultProps);
 
-      act(() => {
-        result.current.onCosmeticDelete({
-          cosmeticId: 'cosmetic-123',
-        });
+      result.onCosmeticDelete({
+        cosmeticId: 'cosmetic-123',
       });
 
       expect(removeBadge).toHaveBeenCalledWith('cosmetic-123');
@@ -458,13 +414,9 @@ describe('useChatSevenTvCallbacks', () => {
         paintId: 'paint-1',
         badgeId: 'badge-1',
       });
-      const { result } = renderHook(() =>
-        useChatSevenTvCallbacks(defaultProps),
-      );
+      const result = createSevenTvCallbacks(defaultProps);
 
-      act(() => {
-        result.current.onEntitlementUpdate(updateData);
-      });
+      result.onEntitlementUpdate(updateData);
 
       expect(applyEntitlementUpdateEvent).toHaveBeenCalledWith(updateData);
     });
@@ -473,13 +425,9 @@ describe('useChatSevenTvCallbacks', () => {
   describe('onEntitlementDelete', () => {
     test('delegates entitlement deletes to the bridge', () => {
       const deleteData = createEntitlementDeleteData({ ttvUserId: 'ttv-1' });
-      const { result } = renderHook(() =>
-        useChatSevenTvCallbacks(defaultProps),
-      );
+      const result = createSevenTvCallbacks(defaultProps);
 
-      act(() => {
-        result.current.onEntitlementDelete(deleteData);
-      });
+      result.onEntitlementDelete(deleteData);
 
       expect(applyEntitlementDeleteEvent).toHaveBeenCalledWith(deleteData);
     });

@@ -3,7 +3,7 @@ import type { SanitisedEmote } from '@app/types/emote';
 import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
 import { logger } from '@app/utils/logger';
 
-import { chatStore$ } from '../observables/chatStore';
+import { invalidatePersonalEmotes } from './invalidation';
 
 const personalEmotesGuard = createFetchOnceGuard();
 
@@ -44,7 +44,7 @@ export const clearChannelPersonalEmotes = (channelId: string): void => {
     personalEmotesGuard.clearKey(twitchUserId);
   }
   personalEmotesByChannel.delete(channelId);
-  chatStore$.personalEmotesVersion.set(version => version + 1);
+  invalidatePersonalEmotes();
 };
 
 export const fetchUserPersonalEmotes = async (
@@ -121,7 +121,7 @@ function writePersonalEmotes(
     [twitchUserId]: personalEmotes,
   });
   if (emoteIdsChanged) {
-    chatStore$.personalEmotesVersion.set(version => version + 1);
+    invalidatePersonalEmotes();
   }
 }
 
@@ -134,7 +134,7 @@ export const clearPersonalEmotesCache = () => {
   personalEmotesGuard.clear();
   if (personalEmotesByChannel.size > 0) {
     personalEmotesByChannel.clear();
-    chatStore$.personalEmotesVersion.set(version => version + 1);
+    invalidatePersonalEmotes();
   }
 };
 
