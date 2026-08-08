@@ -1,6 +1,5 @@
 import type { RefObject } from 'react';
 
-import { parseIrcMessage } from '@app/services/recent-messages-service';
 import {
   addMessage,
   clearMessages,
@@ -15,6 +14,7 @@ import {
   registerDeferredRewardgiftStandalone,
 } from '@app/utils/chat/channelPointRewardTitleStore';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
+import { parseIrcMessage } from '@app/utils/chat/ircProtocol/parseIrcMessage';
 import { coerceUserNoticeTags } from '@app/utils/chat/messageHandlers/coerceUserNoticeTags';
 import { createBaseMessage } from '@app/utils/chat/messageHandlers/createBaseMessage';
 import { createSystemMessage } from '@app/utils/chat/messageHandlers/createSystemMessage';
