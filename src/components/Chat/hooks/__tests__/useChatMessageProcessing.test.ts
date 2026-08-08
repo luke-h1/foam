@@ -1,7 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { hydrateVisibleSevenTvAssets } from '@app/components/Chat/util/hydrateVisibleSevenTvAssets/hydrateVisibleSevenTvAssets';
-import { reprocessMessages } from '@app/components/Chat/util/reprocessMessages';
 import { getCachedSharedChatBadgeContext } from '@app/components/Chat/util/sharedChatBadges/getCachedSharedChatBadgeContext';
 import { getMessageBadges } from '@app/components/Chat/util/sharedChatBadges/getMessageBadges';
 import { getSharedChatBadgeContext } from '@app/components/Chat/util/sharedChatBadges/getSharedChatBadgeContext';
@@ -75,10 +74,6 @@ jest.mock(
   }),
 );
 
-jest.mock('../../util/reprocessMessages', () => ({
-  reprocessMessages: jest.fn(),
-}));
-
 jest.mock(
   '../../util/sharedChatBadges/getCachedSharedChatBadgeContext',
   () => ({
@@ -123,7 +118,6 @@ const mockHydrateVisibleSevenTvAssets = jest.mocked(
   hydrateVisibleSevenTvAssets,
 );
 const mockProcessEmotesWorklet = jest.mocked(processEmotesWorklet);
-const mockReprocessMessages = jest.mocked(reprocessMessages);
 const mockUpdateMessages = jest.mocked(updateMessages);
 const mockUseChatHydrationPreferences = jest.mocked(
   useChatHydrationPreferences,
@@ -431,17 +425,24 @@ describe('useChatMessageProcessing', () => {
     expect(mockHydrateVisibleSevenTvAssets).not.toHaveBeenCalled();
   });
 
-  test('reprocessAllMessages delegates the current buffered store snapshot', () => {
-    const { hook, messages } = renderMessageProcessing();
+  test('reprocessAllMessages rewrites the buffered store snapshot through updateMessages', () => {
+    const { hook } = renderMessageProcessing();
 
     act(() => {
       hook.result.current.reprocessAllMessages();
     });
 
-    expect(mockReprocessMessages.mock.calls[0]?.[0]).toEqual(messages);
-    expect(mockReprocessMessages.mock.calls[0]?.[1]).toBe(
-      hook.result.current.processMessageEmotes,
-    );
+    expect(mockUpdateMessages).toHaveBeenCalledTimes(1);
+    expect(mockUpdateMessages).toHaveBeenCalledWith([
+      {
+        messageId: 'stored-1',
+        messageNonce: 'stored-1',
+        updates: {
+          message: [{ type: 'text', content: 'processed:stored message' }],
+          badges: [],
+        },
+      },
+    ]);
   });
 
   test('passes hydration dependencies used by visible asset loading', async () => {
