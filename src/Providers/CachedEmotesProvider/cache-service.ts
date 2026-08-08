@@ -49,12 +49,9 @@ const MAX_ENTRIES = isLowTier ? 1200 : 2400;
  * Instruments Allocations / vmmap capture.
  *
  * Derived from device RAM (~5%) rather than a flat per-tier constant so the
- * working set scales down on smaller phones instead of every device sharing one
- * ceiling. Clamped to per-tier bounds (a 12GB phone lands at the 600MB
- * high-tier ceiling, a ~4GB phone gets ~200MB). Raised 2026-08-08 alongside
- * the keep-subscribed advisory trims: the smaller budget forced cold re-decodes
- * of the on-screen working set on constrained devices, which read as blank
- * badge/emote slots in busy chats.
+ * working set scales down on smaller phones, clamped to per-tier bounds. Too
+ * small a budget re-decodes the on-screen working set cold after every trim,
+ * which reads as blank badge/emote slots in busy chats.
  */
 const MAX_DECODED_BYTES = (() => {
   const ceil = isLowTier ? 128 * 1024 * 1024 : 600 * 1024 * 1024;
@@ -116,10 +113,10 @@ let releaseFlushScheduled = false;
 const MAX_RELEASE_DEFER_FRAMES = 2;
 
 /**
- * One shared sweep per flush rather than a pair of rAF closures per url: a
- * channel hop or pressure trim releases hundreds of refs in one tick. Each url
- * stays marked for one to two frames, which still covers the
- * subscribe-after-release race the marker exists to detect.
+ * One sweep per flush: a channel hop or pressure trim releases hundreds of
+ * refs in one tick, too many for a pair of rAF closures each. A url stays
+ * marked one to two frames, still covering the subscribe-after-release race
+ * the marker exists to detect.
  */
 let recentlyReleasedSweepScheduled = false;
 
@@ -475,12 +472,12 @@ type MemoryPressureTrimOptions = {
    */
   clearImageCache?: boolean;
   /**
-   * Advisory trims keep refs with live listeners. The on-screen working set is
-   * a bounded screenful and the memory win is the offscreen inventory, while
-   * dropping a subscribed ref forces every mounted row through a cold
-   * disk-read and decode-queue pass - the blank-badge churn seen on
-   * constrained devices. Free-memory-now signals (`memoryWarning`,
-   * backgrounding) never set it.
+   * Advisory trims keep refs with live listeners: the on-screen working set
+   * is a bounded screenful, the memory win is the offscreen inventory, and
+   * dropping a subscribed ref sends every mounted row through a cold
+   * disk-read and decode-queue pass (blank-badge churn on constrained
+   * devices). Free-memory-now signals (`memoryWarning`, backgrounding) never
+   * set it.
    */
   keepSubscribed?: boolean;
   /**

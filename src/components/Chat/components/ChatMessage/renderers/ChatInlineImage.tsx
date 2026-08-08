@@ -133,12 +133,10 @@ function ChatInlineImageComponent({
   const retryCountRef = useRef(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [failedRefUrl, setFailedRefUrl] = useState<string | null>(null);
-  // The exact ref instance that has drawn, recorded by onDisplay. It lives on
-  // a ref rather than in state so the healthy cached-emote path never
-  // re-renders. Identity self-invalidates a re-decode (a new instance never
-  // matches), but a recycle back to a url whose instance is still cached would
-  // inherit "drawn" from the previous mount, so the url-change effect below
-  // clears it.
+  // The exact ref instance that has drawn, recorded by onDisplay. Held in a
+  // ref so the healthy cached-emote path never re-renders. A re-decode
+  // self-invalidates (new instance never matches); a recycle back to a
+  // still-cached url does not, so the url-change effect below clears it.
   const displayedSharedRef = useRef<ImageRef | null>(null);
 
   const showRef = sharedRef != null && failedRefUrl !== sourceUrl;
@@ -159,8 +157,8 @@ function ChatInlineImageComponent({
   }
 
   // retryCountRef isn't rendered, so reset it for a recycled emote here rather
-  // than during render. The displayed marker resets with it: the recycled
-  // slot's ref has not drawn yet, however familiar the instance.
+  // than during render. The displayed marker resets with it: a recycled slot's
+  // ref has not drawn yet even when the instance is still cached.
   useEffect(() => {
     retryCountRef.current = 0;
     displayedSharedRef.current = null;
@@ -191,12 +189,11 @@ function ChatInlineImageComponent({
   const handleError = useCallback(
     (event?: ImageErrorEventData) => {
       if (showRef) {
-        // A ref never fires onError itself, so an error landing here is either
-        // the watchdog or a stale uri operation the native view abandoned when
-        // the ref took over. If this exact ref instance has already drawn
-        // (onDisplay fired for it), the error says nothing about what is on
-        // screen; acting on it would ban a healthy ref and clear the native
-        // image mid-display.
+        // A ref never fires onError itself, so an error here is the watchdog
+        // or a stale uri operation the native view abandoned when the ref
+        // took over. If this exact instance has drawn (onDisplay fired), the
+        // error says nothing about what is on screen; acting on it would ban
+        // a healthy ref and clear the native image mid-display.
         if (sharedRef != null && displayedSharedRef.current === sharedRef) {
           return;
         }
