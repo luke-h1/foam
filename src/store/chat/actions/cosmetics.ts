@@ -236,6 +236,14 @@ function getCachedUserCosmetics(
 }
 
 const deleteCachedUserCosmetics = (sevenTvUserId: string): void => {
+  // A debounced snapshot sync landing after this delete would rewrite the
+  // entry a definitive null fetch just proved dead, so drop any pending
+  // flush for this wearer along with the caches.
+  for (const [ttvUserId, pendingId] of pendingUserCosmeticsSnapshots) {
+    if (pendingId === sevenTvUserId) {
+      pendingUserCosmeticsSnapshots.delete(ttvUserId);
+    }
+  }
   sessionCosmeticsCache.delete(sevenTvUserId);
   storageService.delete(
     getUserCosmeticsStorageKey(sevenTvUserId),
@@ -531,10 +539,14 @@ const sweepUnreferencedPaints = () => {
   }
   // Session snapshots resolve against these definitions too - sweeping a
   // paint a cached snapshot still points at would turn that snapshot into a
-  // guaranteed refetch on its next sighting.
+  // guaranteed refetch on its next sighting. Expired snapshots refetch
+  // regardless, so they root nothing; the binding writers fill this map to
+  // its cap during entitlement bursts and rooting all of it would gut the
+  // sweep exactly under the load it exists for.
+  const now = Date.now();
   const referenced = new Set(Object.values(chatStore$.userPaintIds.peek()));
   for (const cosmetics of sessionCosmeticsCache.values()) {
-    if (cosmetics.paintId) {
+    if (cosmetics.paintId && cosmetics.expiresAt > now) {
       referenced.add(cosmetics.paintId);
     }
   }
@@ -635,9 +647,10 @@ const sweepUnreferencedBadges = () => {
   if (badgeIds.length < MAX_BADGE_DEFINITIONS) {
     return;
   }
+  const now = Date.now();
   const referenced = new Set(Object.values(chatStore$.userBadgeIds.peek()));
   for (const cosmetics of sessionCosmeticsCache.values()) {
-    if (cosmetics.badgeId) {
+    if (cosmetics.badgeId && cosmetics.expiresAt > now) {
       referenced.add(cosmetics.badgeId);
     }
   }
