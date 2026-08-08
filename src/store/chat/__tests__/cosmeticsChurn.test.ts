@@ -8,19 +8,24 @@ import {
   fetchAndCacheUserCosmetics,
   hasUserPaint,
   removeBadge,
+  removeUserBadge,
   removeUserPaint,
   setUserBadge,
   setUserPaint,
   syncCachedUserCosmeticsFromStore,
 } from '@app/store/chat/actions/cosmetics';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import type { PaintData } from '@app/types/seventv/cosmetics';
+import type {
+  PaintData,
+  UserCosmeticsInfo,
+} from '@app/types/seventv/cosmetics';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 jest.mock('@app/lib/storage', () => ({
   storageService: {
     getString: jest.fn(() => null),
     set: jest.fn(),
+    delete: jest.fn(),
     clearNamespace: jest.fn(),
   },
 }));
@@ -249,5 +254,137 @@ describe('cosmetics entitlement-burst churn', () => {
     expect(sevenTvService.getUserCosmeticsGql).toHaveBeenCalledWith(
       'stv-unresolvable',
     );
+  });
+
+  test('an unresolvable snapshot whose refetch returns null is deleted', async () => {
+    const stored: CachedUserCosmetics = {
+      badgeId: 'badge-vanished',
+      expiresAt: Date.now() + 60_000,
+      paintId: null,
+      ttvUserId: 'ttv-dead',
+    };
+    jest.mocked(storageService.getString).mockReturnValueOnce(stored);
+    jest.mocked(sevenTvService.getUserCosmeticsGql).mockResolvedValue(null);
+    jest.mocked(sevenTvService.getUserCosmeticsGql).mockClear();
+    jest.mocked(storageService.delete).mockClear();
+
+    const result = await fetchAndCacheUserCosmetics('stv-dead');
+    await fetchAndCacheUserCosmetics('stv-dead');
+
+    expect(result).toBeNull();
+    expect(jest.mocked(storageService.delete).mock.calls).toEqual([
+      ['sevenTvUserCosmetics_user-cosmetics:stv-dead', 'seven_tv_cache'],
+    ]);
+    expect(jest.mocked(sevenTvService.getUserCosmeticsGql).mock.calls).toEqual([
+      ['stv-dead'],
+      ['stv-dead'],
+    ]);
+  });
+
+  test('an unresolvable snapshot heals when the refetch succeeds', async () => {
+    const stored: CachedUserCosmetics = {
+      badgeId: 'badge-heal',
+      expiresAt: Date.now() + 60_000,
+      paintId: null,
+      ttvUserId: 'ttv-heal',
+    };
+    jest.mocked(storageService.getString).mockReturnValueOnce(stored);
+    jest.mocked(storageService.delete).mockClear();
+    jest.mocked(sevenTvService.getUserCosmeticsGql).mockResolvedValueOnce({
+      userId: 'stv-heal',
+      ttvUserId: 'ttv-heal',
+      paintId: null,
+      badgeId: 'badge-heal',
+      paint: null,
+      badge: {
+        id: 'badge-heal',
+        name: 'Heal Badge',
+        description: null,
+        images: [
+          {
+            url: 'https://cdn.7tv.app/badge/badge-heal/4x.webp',
+            mime: 'image/webp',
+            size: 1,
+            scale: 4,
+            width: 18,
+            height: 18,
+            frameCount: 1,
+          },
+        ],
+      },
+    } satisfies UserCosmeticsInfo);
+
+    const result = await fetchAndCacheUserCosmetics('stv-heal');
+
+    expect(result).toBe('ttv-heal');
+    expect(chatStore$.userBadgeIds.peek()['ttv-heal']).toBe('badge-heal');
+    expect(Object.keys(chatStore$.badges.peek())).toEqual(['badge-heal']);
+    expect(jest.mocked(storageService.delete)).not.toHaveBeenCalled();
+  });
+
+  test('a resolvable old embedded-shape snapshot still serves as a hit', async () => {
+    addPaint(buildPaint());
+    addBadge(buildBadge());
+    const stored: CachedUserCosmetics & {
+      badge: SanitisedBadgeSet;
+      paint: PaintData;
+    } = {
+      badge: buildBadge(),
+      badgeId: BADGE_ID,
+      expiresAt: Date.now() + 60_000,
+      paint: buildPaint(),
+      paintId: PAINT_ID,
+      ttvUserId: 'ttv-embedded',
+    };
+    jest.mocked(storageService.getString).mockReturnValueOnce(stored);
+    jest.mocked(sevenTvService.getUserCosmeticsGql).mockClear();
+
+    const result = await fetchAndCacheUserCosmetics('stv-embedded');
+
+    expect(result).toBe('ttv-embedded');
+    expect(sevenTvService.getUserCosmeticsGql).not.toHaveBeenCalled();
+    expect(chatStore$.userPaintIds.peek()['ttv-embedded']).toBe(PAINT_ID);
+    expect(chatStore$.userBadgeIds.peek()['ttv-embedded']).toBe(BADGE_ID);
+  });
+
+  test('the badge sweep keeps ids referenced only by session cosmetic snapshots', () => {
+    addBadge({ ...buildBadge(), id: 'badge-session', set: 'badge-session' });
+    setUserBadge('ttv-session', 'badge-session');
+    syncCachedUserCosmeticsFromStore('stv-session-ref', 'ttv-session');
+    removeUserBadge('ttv-session');
+
+    for (let index = 0; index < 749; index += 1) {
+      addBadge({
+        ...buildBadge(),
+        id: `badge-${index}`,
+        set: `badge-${index}`,
+      });
+    }
+    addBadge({ ...buildBadge(), id: 'badge-new', set: 'badge-new' });
+
+    expect(Object.keys(chatStore$.badges.peek())).toEqual([
+      'badge-session',
+      'badge-new',
+    ]);
+  });
+
+  test('the paint sweep keeps ids referenced only by session cosmetic snapshots', () => {
+    addPaint({ ...buildPaint(), id: 'paint-session' });
+    setUserPaint('ttv-paint-session', 'paint-session');
+    syncCachedUserCosmeticsFromStore(
+      'stv-paint-session-ref',
+      'ttv-paint-session',
+    );
+    removeUserPaint('ttv-paint-session');
+
+    for (let index = 0; index < 749; index += 1) {
+      addPaint({ ...buildPaint(), id: `paint-${index}` });
+    }
+    addPaint({ ...buildPaint(), id: 'paint-new' });
+
+    expect(Object.keys(chatStore$.paints.peek())).toEqual([
+      'paint-session',
+      'paint-new',
+    ]);
   });
 });
