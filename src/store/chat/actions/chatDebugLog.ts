@@ -1,5 +1,6 @@
 import { getBadge, getPaint } from '@app/store/chat/actions/cosmetics';
 import { getMissingBadgeIds } from '@app/store/chat/actions/missingBadges';
+import { getChannelPersonalEmotes } from '@app/store/chat/actions/personalEmotes';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
@@ -201,20 +202,23 @@ export function getChatDebugEmoteSources(): Record<string, unknown> {
   if (!cache) {
     return { channelId, cacheLoaded: false };
   }
+  const globalCaches = chatStore$.persisted.globalCaches.peek();
   return {
     channelId,
     lastUpdated: formatCacheAge(cache.lastUpdated),
+    globalsLastUpdated: formatCacheAge(globalCaches.lastUpdated),
     sevenTvEmoteSetId: cache.sevenTvEmoteSetId ?? null,
     twitchChannel: cache.twitchChannelEmotes.length,
-    twitchGlobal: cache.twitchGlobalEmotes.length,
+    twitchGlobal: globalCaches.twitchGlobalEmotes.length,
     twitchSubscriber: cache.twitchSubscriberEmotes.length,
     sevenTvChannel: cache.sevenTvChannelEmotes.length,
-    sevenTvGlobal: cache.sevenTvGlobalEmotes.length,
-    sevenTvPersonalUsers: Object.keys(cache.sevenTvPersonalEmotes).length,
+    sevenTvGlobal: globalCaches.sevenTvGlobalEmotes.length,
+    sevenTvPersonalUsers: Object.keys(getChannelPersonalEmotes(channelId))
+      .length,
     bttvChannel: cache.bttvChannelEmotes.length,
-    bttvGlobal: cache.bttvGlobalEmotes.length,
+    bttvGlobal: globalCaches.bttvGlobalEmotes.length,
     ffzChannel: cache.ffzChannelEmotes.length,
-    ffzGlobal: cache.ffzGlobalEmotes.length,
+    ffzGlobal: globalCaches.ffzGlobalEmotes.length,
   };
 }
 
@@ -222,26 +226,27 @@ export function getChatDebugEmoteDetails(emote: {
   id?: string;
   name?: string;
 }): Record<string, unknown> {
-  const { cache } = getCurrentChannelCache();
+  const { channelId, cache } = getCurrentChannelCache();
   if (!cache) {
     return { foundInCache: false, cacheLoaded: false };
   }
 
+  const globalCaches = chatStore$.persisted.globalCaches.peek();
   const lists: [string, SanitisedEmote[]][] = [
     ['sevenTvChannel', cache.sevenTvChannelEmotes],
-    ['sevenTvGlobal', cache.sevenTvGlobalEmotes],
-    ...Object.entries(cache.sevenTvPersonalEmotes).map(
+    ['sevenTvGlobal', globalCaches.sevenTvGlobalEmotes],
+    ...Object.entries(getChannelPersonalEmotes(channelId)).map(
       ([ownerId, emotes]): [string, SanitisedEmote[]] => [
         `sevenTvPersonal:${ownerId}`,
         emotes,
       ],
     ),
     ['bttvChannel', cache.bttvChannelEmotes],
-    ['bttvGlobal', cache.bttvGlobalEmotes],
+    ['bttvGlobal', globalCaches.bttvGlobalEmotes],
     ['ffzChannel', cache.ffzChannelEmotes],
-    ['ffzGlobal', cache.ffzGlobalEmotes],
+    ['ffzGlobal', globalCaches.ffzGlobalEmotes],
     ['twitchChannel', cache.twitchChannelEmotes],
-    ['twitchGlobal', cache.twitchGlobalEmotes],
+    ['twitchGlobal', globalCaches.twitchGlobalEmotes],
     ['twitchSubscriber', cache.twitchSubscriberEmotes],
   ];
 
@@ -284,14 +289,15 @@ export function getChatDebugBadgeSources(): Record<string, unknown> {
   if (!cache) {
     return { channelId, cacheLoaded: false };
   }
+  const globalCaches = chatStore$.persisted.globalCaches.peek();
   return {
     channelId,
     badgesLastUpdated: formatCacheAge(cache.badgesLastUpdated),
+    globalsLastUpdated: formatCacheAge(globalCaches.lastUpdated),
     twitchChannel: cache.twitchChannelBadges.length,
-    twitchGlobal: cache.twitchGlobalBadges.length,
+    twitchGlobal: globalCaches.twitchGlobalBadges.length,
     ffzChannel: cache.ffzChannelBadges.length,
-    ffzGlobal: cache.ffzGlobalBadges.length,
-    sevenTvPersonalUsers: Object.keys(cache.sevenTvPersonalBadges).length,
+    ffzGlobal: globalCaches.ffzGlobalBadges.length,
     sevenTvBadgeDefinitions: Object.keys(chatStore$.badges.peek()).length,
     sevenTvBadgeWearers: Object.keys(chatStore$.userBadgeIds.peek()).length,
     missingSevenTvBadgeIds: getMissingBadgeIds(),
@@ -333,11 +339,10 @@ export function getChatDebugUserSnapshot(
     }
   }
 
-  const { cache } = getCurrentChannelCache();
-  const personalEmotes =
-    userId && cache ? (cache.sevenTvPersonalEmotes[userId] ?? []) : [];
-  const personalBadges =
-    userId && cache ? (cache.sevenTvPersonalBadges[userId] ?? []) : [];
+  const { channelId } = getCurrentChannelCache();
+  const personalEmotes = userId
+    ? (getChannelPersonalEmotes(channelId)[userId] ?? [])
+    : [];
 
   return {
     login: target || null,
@@ -347,7 +352,6 @@ export function getChatDebugUserSnapshot(
     sevenTvBadgeId: badgeId,
     sevenTvBadgeTitle: badgeId ? (getBadge(badgeId)?.title ?? null) : null,
     sevenTvPersonalEmotes: personalEmotes.map(emote => emote.name),
-    sevenTvPersonalBadges: personalBadges.map(badge => badge.title),
     latestMessage: latestMessage
       ? {
           messageId: latestMessage.message_id,
