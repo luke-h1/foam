@@ -109,7 +109,6 @@ export const Chat = memo(
     const {
       connected,
       emoteLoadStatus,
-      fetchUserCosmetics,
       forceFlush,
       getUserState,
       handleViewableMessagesChange,
@@ -157,7 +156,6 @@ export const Chat = memo(
     } = useChatSurface({
       channelId,
       channelName,
-      fetchUserCosmetics,
       forceFlush,
       getUserState,
       hiddenUsers,

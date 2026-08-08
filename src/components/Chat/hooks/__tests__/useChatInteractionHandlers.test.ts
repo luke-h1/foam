@@ -5,6 +5,7 @@ import type { ChatInputShellHandle } from '@app/components/Chat/components/ChatI
 import type { EmotePressData } from '@app/components/Chat/components/ChatMessage/RichChatMessage.types';
 import { resetChatOverlays } from '@app/store/chat/actions/chatOverlays';
 import { getMessageById } from '@app/store/chat/actions/messages';
+import { fetchUserCosmetics } from '@app/store/chat/actions/userCosmeticsFetch';
 import { chatOverlays$ } from '@app/store/chat/observables/chatOverlays';
 import { createRef } from '@app/test/createRef';
 import { createEmotePart } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
@@ -19,10 +20,14 @@ jest.mock('@app/store/chat/actions/messages', () => ({
   getMessageById: jest.fn(),
 }));
 
+jest.mock('@app/store/chat/actions/userCosmeticsFetch', () => ({
+  fetchUserCosmetics: jest.fn(() => Promise.resolve()),
+}));
+
 const mockGetMessageById = jest.mocked(getMessageById);
+const mockFetchUserCosmetics = jest.mocked(fetchUserCosmetics);
 
 function renderComposerActions() {
-  const fetchUserCosmetics = jest.fn(() => Promise.resolve());
   const inputShell = {
     appendEmote: jest.fn(),
     appendMention: jest.fn(),
@@ -33,13 +38,11 @@ function renderComposerActions() {
 
   const hook = renderHook(() =>
     useChatComposerActions({
-      fetchUserCosmetics,
       inputShellRef: createRef<ChatInputShellHandle | null>(inputShell),
     }),
   );
 
   return {
-    fetchUserCosmetics,
     hook,
     inputShell,
   };
@@ -77,13 +80,13 @@ describe('useChatComposerActions', () => {
       },
     });
     mockGetMessageById.mockReturnValue(parentMessage);
-    const { fetchUserCosmetics, hook, inputShell } = renderComposerActions();
+    const { hook, inputShell } = renderComposerActions();
 
     act(() => {
       hook.result.current.handleReply(replyMessage);
     });
 
-    expect(fetchUserCosmetics).toHaveBeenCalledWith('viewer-user');
+    expect(mockFetchUserCosmetics).toHaveBeenCalledWith('viewer-user');
     expect(mockGetMessageById).toHaveBeenCalledWith('reply-1');
     expect(inputShell.setReplyTo.mock.calls[0]?.[0]).toEqual<ReplyToData>({
       color: '#00ff00',
