@@ -4,7 +4,12 @@ import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
 
-import { CHAT_SURFACE_COLORS, type ChatFontScale } from '../chatScale';
+import {
+  CHAT_SURFACE_COLORS,
+  type ChatFontScale,
+  densityFromCompact,
+  getChatScale,
+} from '../chatScale';
 import { getChatTextStyles } from '../chatText.styles';
 import { styles } from '../RichChatMessage.styles';
 
@@ -21,7 +26,7 @@ export function SharedChatSourceLabel({
     <View style={styles.sharedChatLabelRow}>
       <SymbolView
         name='bubble.left.and.bubble.right.fill'
-        size={12}
+        size={getChatScale(fontScale, densityFromCompact(compact)).metaIconSize}
         tintColor={CHAT_SURFACE_COLORS.muted}
       />
       <Text

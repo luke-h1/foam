@@ -24,7 +24,6 @@ const MAP: Record<string, AndroidSymbol> = {
   'book.closed': 'book',
   'bubble.left.and.bubble.right': 'forum',
   'bubble.left.and.bubble.right.fill': 'forum',
-  'bubble.left.fill': 'chat',
   'chart.bar': 'bar_chart',
   'chart.bar.xaxis': 'insert_chart',
   checkmark: 'check',

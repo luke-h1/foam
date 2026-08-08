@@ -72,10 +72,10 @@ export function ReplyingToHeader({
     ? CHAT_NOTICE_ACCENTS.replyToYou
     : CHAT_SURFACE_COLORS.muted;
   const textStyles = getChatTextStyles(fontScale, compact);
-  const replyEmoteSize = getChatScale(
+  const { metaIconSize, replyEmoteSize } = getChatScale(
     fontScale,
     densityFromCompact(compact),
-  ).replyEmoteSize;
+  );
   const replyContextPrefixTextStyle = [
     textStyles.replyContext,
     styles.replyContextPrefixFlex,
@@ -89,13 +89,10 @@ export function ReplyingToHeader({
   const content = (
     <>
       <SymbolView
-        name='bubble.left.fill'
-        size={12}
+        name='text.bubble'
+        size={metaIconSize}
         tintColor={replyContextIconColor}
-        style={[
-          styles.replyContextIcon,
-          isReplyingToCurrentUser && styles.replyContextIconReplyToYou,
-        ]}
+        style={styles.replyContextIcon}
       />
       <View style={styles.replyContextContent}>
         {canRenderInlineQuote ? (
