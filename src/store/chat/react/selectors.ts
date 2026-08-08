@@ -3,11 +3,14 @@ import { useSelector } from '@legendapp/state/react';
 import { useEmoteRenderPreferences } from '@app/store/preferences/selectors';
 import { getChatterinoBadges } from '@app/utils/chat/chatterinoBadges';
 
+import { getChannelPersonalEmotes } from '../actions/personalEmotes';
 import { chatStore$ } from '../observables/chatStore';
 import {
   type ChannelCacheType,
-  emptyEmoteData,
   emptyResolvedEmoteData,
+  type GlobalCacheType,
+  makeEmptyEmoteData,
+  makeEmptyGlobalCacheData,
   type SanitisedBadgeSet,
   type SanitisedEmote,
 } from '../types/constants';
@@ -18,21 +21,25 @@ export const useEmojis = () => useSelector(chatStore$.emojis);
 type ChannelEmoteCache = Pick<
   ChannelCacheType,
   | 'twitchChannelEmotes'
-  | 'twitchGlobalEmotes'
   | 'twitchSubscriberEmotes'
   | 'twitchSubscriberChannelProfiles'
-  | 'sevenTvPersonalEmotes'
   | 'sevenTvChannelEmotes'
-  | 'sevenTvGlobalEmotes'
   | 'ffzChannelEmotes'
-  | 'ffzGlobalEmotes'
-  | 'bttvGlobalEmotes'
   | 'bttvChannelEmotes'
   | 'twitchChannelBadges'
-  | 'twitchGlobalBadges'
   | 'ffzChannelBadges'
-  | 'ffzGlobalBadges'
->;
+> &
+  Pick<
+    GlobalCacheType,
+    | 'twitchGlobalEmotes'
+    | 'sevenTvGlobalEmotes'
+    | 'ffzGlobalEmotes'
+    | 'bttvGlobalEmotes'
+    | 'twitchGlobalBadges'
+    | 'ffzGlobalBadges'
+  > & {
+    sevenTvPersonalEmotes: Record<string, SanitisedEmote[]>;
+  };
 
 type ChannelEmoteData = ChannelEmoteCache & {
   chatterinoBadges: SanitisedBadgeSet[];
@@ -43,7 +50,7 @@ const EMPTY_BADGES: SanitisedBadgeSet[] = [];
 const EMPTY_SUBSCRIBER_PROFILES: NonNullable<
   ChannelCacheType['twitchSubscriberChannelProfiles']
 > = {};
-const EMPTY_PERSONAL_EMOTES: ChannelCacheType['sevenTvPersonalEmotes'] = {};
+const EMPTY_PERSONAL_EMOTES: Record<string, SanitisedEmote[]> = {};
 
 function resolveEmoteData(
   cache: ChannelEmoteCache | undefined,
@@ -105,33 +112,43 @@ function resolveEmoteData(
   };
 }
 
+const emptyChannelEmoteCache: ChannelEmoteCache = {
+  ...makeEmptyEmoteData(),
+  ...makeEmptyGlobalCacheData(),
+  sevenTvPersonalEmotes: EMPTY_PERSONAL_EMOTES,
+};
+
 function getChannelEmoteData(channelId: string | null): ChannelEmoteCache {
   if (!channelId) {
-    return emptyEmoteData;
+    return emptyChannelEmoteCache;
   }
 
   const cache$ = chatStore$.persisted.channelCaches[channelId];
+  const globalCache$ = chatStore$.persisted.globalCaches;
+
+  // Personal emotes live in a plain session Map; `personalEmotesVersion` is
+  // the observable edge that re-runs this selector when they change.
+  chatStore$.personalEmotesVersion.get();
 
   return {
     twitchChannelEmotes: cache$?.twitchChannelEmotes.get() ?? EMPTY_EMOTES,
-    twitchGlobalEmotes: cache$?.twitchGlobalEmotes.get() ?? EMPTY_EMOTES,
+    twitchGlobalEmotes: globalCache$.twitchGlobalEmotes.get() ?? EMPTY_EMOTES,
     twitchSubscriberEmotes:
       cache$?.twitchSubscriberEmotes.get() ?? EMPTY_EMOTES,
     twitchSubscriberChannelProfiles:
       cache$?.twitchSubscriberChannelProfiles.get() ??
       EMPTY_SUBSCRIBER_PROFILES,
-    sevenTvPersonalEmotes:
-      cache$?.sevenTvPersonalEmotes.get() ?? EMPTY_PERSONAL_EMOTES,
+    sevenTvPersonalEmotes: getChannelPersonalEmotes(channelId),
     sevenTvChannelEmotes: cache$?.sevenTvChannelEmotes.get() ?? EMPTY_EMOTES,
-    sevenTvGlobalEmotes: cache$?.sevenTvGlobalEmotes.get() ?? EMPTY_EMOTES,
+    sevenTvGlobalEmotes: globalCache$.sevenTvGlobalEmotes.get() ?? EMPTY_EMOTES,
     ffzChannelEmotes: cache$?.ffzChannelEmotes.get() ?? EMPTY_EMOTES,
-    ffzGlobalEmotes: cache$?.ffzGlobalEmotes.get() ?? EMPTY_EMOTES,
-    bttvGlobalEmotes: cache$?.bttvGlobalEmotes.get() ?? EMPTY_EMOTES,
+    ffzGlobalEmotes: globalCache$.ffzGlobalEmotes.get() ?? EMPTY_EMOTES,
+    bttvGlobalEmotes: globalCache$.bttvGlobalEmotes.get() ?? EMPTY_EMOTES,
     bttvChannelEmotes: cache$?.bttvChannelEmotes.get() ?? EMPTY_EMOTES,
     twitchChannelBadges: cache$?.twitchChannelBadges.get() ?? EMPTY_BADGES,
-    twitchGlobalBadges: cache$?.twitchGlobalBadges.get() ?? EMPTY_BADGES,
+    twitchGlobalBadges: globalCache$.twitchGlobalBadges.get() ?? EMPTY_BADGES,
     ffzChannelBadges: cache$?.ffzChannelBadges.get() ?? EMPTY_BADGES,
-    ffzGlobalBadges: cache$?.ffzGlobalBadges.get() ?? EMPTY_BADGES,
+    ffzGlobalBadges: globalCache$.ffzGlobalBadges.get() ?? EMPTY_BADGES,
   };
 }
 
@@ -159,21 +176,23 @@ export const useChannelEmoteDataForReprocess = (channelId: string | null) => {
       return null;
     }
     const cache$ = chatStore$.persisted.channelCaches[channelId];
+    const globalCache$ = chatStore$.persisted.globalCaches;
     return {
       twitchChannelEmotes: cache$?.twitchChannelEmotes.get() ?? EMPTY_EMOTES,
-      twitchGlobalEmotes: cache$?.twitchGlobalEmotes.get() ?? EMPTY_EMOTES,
+      twitchGlobalEmotes: globalCache$.twitchGlobalEmotes.get() ?? EMPTY_EMOTES,
       twitchSubscriberEmotes:
         cache$?.twitchSubscriberEmotes.get() ?? EMPTY_EMOTES,
       sevenTvChannelEmotes: cache$?.sevenTvChannelEmotes.get() ?? EMPTY_EMOTES,
-      sevenTvGlobalEmotes: cache$?.sevenTvGlobalEmotes.get() ?? EMPTY_EMOTES,
+      sevenTvGlobalEmotes:
+        globalCache$.sevenTvGlobalEmotes.get() ?? EMPTY_EMOTES,
       ffzChannelEmotes: cache$?.ffzChannelEmotes.get() ?? EMPTY_EMOTES,
-      ffzGlobalEmotes: cache$?.ffzGlobalEmotes.get() ?? EMPTY_EMOTES,
-      bttvGlobalEmotes: cache$?.bttvGlobalEmotes.get() ?? EMPTY_EMOTES,
+      ffzGlobalEmotes: globalCache$.ffzGlobalEmotes.get() ?? EMPTY_EMOTES,
+      bttvGlobalEmotes: globalCache$.bttvGlobalEmotes.get() ?? EMPTY_EMOTES,
       bttvChannelEmotes: cache$?.bttvChannelEmotes.get() ?? EMPTY_EMOTES,
       twitchChannelBadges: cache$?.twitchChannelBadges.get() ?? EMPTY_BADGES,
-      twitchGlobalBadges: cache$?.twitchGlobalBadges.get() ?? EMPTY_BADGES,
+      twitchGlobalBadges: globalCache$.twitchGlobalBadges.get() ?? EMPTY_BADGES,
       ffzChannelBadges: cache$?.ffzChannelBadges.get() ?? EMPTY_BADGES,
-      ffzGlobalBadges: cache$?.ffzGlobalBadges.get() ?? EMPTY_BADGES,
+      ffzGlobalBadges: globalCache$.ffzGlobalBadges.get() ?? EMPTY_BADGES,
     };
   });
 };

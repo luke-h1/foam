@@ -1,5 +1,16 @@
-import { limitChannelCaches } from '../observables/chatStore';
-import { emptyEmoteData } from '../types/constants';
+import type { SanitisedEmote } from '@app/types/emote';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+
+import {
+  chatStore$,
+  limitChannelCaches,
+  migratePersistedChatStore,
+} from '../observables/chatStore';
+import type { ChannelCacheType, GlobalCacheType } from '../types/constants';
+import {
+  makeEmptyEmoteData,
+  makeEmptyGlobalCacheData,
+} from '../types/constants';
 
 jest.mock('@legendapp/state/persist', () => ({
   configureObservablePersistence: jest.fn(),
@@ -22,7 +33,7 @@ jest.mock('react-native-mmkv', () => ({
 }));
 
 const makeCache = (lastUpdated: number) => ({
-  ...emptyEmoteData,
+  ...makeEmptyEmoteData(),
   lastUpdated,
 });
 
@@ -70,5 +81,207 @@ describe('limitChannelCaches', () => {
         arrayPrototype.toSorted = nativeToSorted;
       }
     }
+  });
+});
+
+describe('makeEmptyGlobalCacheData', () => {
+  const emote = (id: string): SanitisedEmote => ({
+    creator: null,
+    emote_link: `https://example.com/${id}`,
+    id,
+    name: id,
+    original_name: id,
+    site: 'BTTV',
+    static_url: `https://example.com/${id}.png`,
+    url: `https://example.com/${id}.webp`,
+  });
+
+  test('the store boots with its own instance, unshared with any other call', () => {
+    const fresh = makeEmptyGlobalCacheData();
+    const storeSlot = chatStore$.persisted.globalCaches.peek();
+
+    expect(storeSlot).not.toBe(fresh);
+    expect(storeSlot.twitchGlobalEmotes).not.toBe(fresh.twitchGlobalEmotes);
+    expect(makeEmptyGlobalCacheData()).not.toBe(fresh);
+    expect(makeEmptyGlobalCacheData().twitchGlobalEmotes).not.toBe(
+      fresh.twitchGlobalEmotes,
+    );
+  });
+
+  test('a hydration-style mutation of one instance does not leak into a clear', () => {
+    const hydrated: GlobalCacheType = makeEmptyGlobalCacheData();
+    hydrated.lastUpdated = 1_700_000_000_000;
+    hydrated.twitchGlobalEmotes.push(emote('hydrated-emote'));
+    hydrated.ffzGlobalBadges.push({
+      id: 'hydrated-badge',
+      set: 'hydrated-badge',
+      title: 'hydrated-badge',
+      type: 'FFZ Badge',
+      url: 'https://example.com/hydrated-badge.png',
+    });
+
+    chatStore$.persisted.globalCaches.set(makeEmptyGlobalCacheData());
+
+    expect(chatStore$.persisted.globalCaches.peek()).toEqual<GlobalCacheType>({
+      lastUpdated: 0,
+      twitchGlobalEmotes: [],
+      sevenTvGlobalEmotes: [],
+      ffzGlobalEmotes: [],
+      bttvGlobalEmotes: [],
+      twitchGlobalBadges: [],
+      ffzGlobalBadges: [],
+    });
+    expect(makeEmptyGlobalCacheData()).toEqual<GlobalCacheType>({
+      lastUpdated: 0,
+      twitchGlobalEmotes: [],
+      sevenTvGlobalEmotes: [],
+      ffzGlobalEmotes: [],
+      bttvGlobalEmotes: [],
+      twitchGlobalBadges: [],
+      ffzGlobalBadges: [],
+    });
+  });
+});
+
+describe('migratePersistedChatStore', () => {
+  const emote = (id: string): SanitisedEmote => ({
+    creator: null,
+    emote_link: `https://example.com/${id}`,
+    id,
+    name: id,
+    original_name: id,
+    site: 'BTTV',
+    static_url: `https://example.com/${id}.png`,
+    url: `https://example.com/${id}.webp`,
+  });
+
+  const badge = (id: string): SanitisedBadgeSet => ({
+    id,
+    set: id,
+    title: id,
+    type: 'FFZ Badge',
+    url: `https://example.com/${id}.png`,
+  });
+
+  type LegacyChannelCache = ChannelCacheType & {
+    badges?: SanitisedBadgeSet[];
+    chatterinoBadges?: SanitisedBadgeSet[];
+    emotes?: SanitisedEmote[];
+    sevenTvPersonalBadges?: Record<string, SanitisedBadgeSet[]>;
+    sevenTvPersonalEmotes?: Record<string, SanitisedEmote[]>;
+  } & Partial<Omit<GlobalCacheType, 'lastUpdated'>>;
+
+  beforeEach(() => {
+    chatStore$.persisted.channelCaches.set({});
+    chatStore$.persisted.globalCaches.set(makeEmptyGlobalCacheData());
+  });
+
+  test('strips legacy aggregate and global fields from hydrated channel caches', () => {
+    const legacyCache: LegacyChannelCache = {
+      ...makeEmptyEmoteData(),
+      badges: [badge('legacy-badge')],
+      bttvGlobalEmotes: [emote('legacy-global-emote')],
+      chatterinoBadges: [badge('legacy-chatterino-badge')],
+      emotes: [emote('legacy-emote')],
+      ffzChannelBadges: [badge('kept-badge')],
+      ffzGlobalBadges: [badge('legacy-global-badge')],
+      lastUpdated: 5_000,
+      sevenTvPersonalBadges: {},
+      sevenTvPersonalEmotes: { 'user-1': [emote('legacy-personal-emote')] },
+      twitchChannelEmotes: [emote('kept-emote')],
+    };
+    chatStore$.persisted.channelCaches.set({ 'channel-1': legacyCache });
+
+    migratePersistedChatStore();
+
+    expect(
+      chatStore$.persisted.channelCaches.peek()['channel-1'],
+    ).toEqual<ChannelCacheType>({
+      ...makeEmptyEmoteData(),
+      ffzChannelBadges: [badge('kept-badge')],
+      lastUpdated: 5_000,
+      twitchChannelEmotes: [emote('kept-emote')],
+    });
+  });
+
+  test('seeds the global slot from the newest channel copy before stripping', () => {
+    const olderCache: LegacyChannelCache = {
+      ...makeEmptyEmoteData(),
+      bttvGlobalEmotes: [emote('old-global-emote')],
+      lastUpdated: 2_000,
+    };
+    const newerCache: LegacyChannelCache = {
+      ...makeEmptyEmoteData(),
+      bttvGlobalEmotes: [emote('new-global-emote')],
+      ffzGlobalBadges: [badge('new-global-badge')],
+      lastUpdated: 8_000,
+    };
+    chatStore$.persisted.channelCaches.set({
+      'channel-old': olderCache,
+      'channel-new': newerCache,
+    });
+
+    migratePersistedChatStore();
+
+    expect(chatStore$.persisted.globalCaches.peek()).toEqual<GlobalCacheType>({
+      ...makeEmptyGlobalCacheData(),
+      bttvGlobalEmotes: [emote('new-global-emote')],
+      ffzGlobalBadges: [badge('new-global-badge')],
+      lastUpdated: 8_000,
+    });
+  });
+
+  test('seeds from a stale-stamped donor when no fresher channel holds global copies', () => {
+    const staleCache: LegacyChannelCache = {
+      ...makeEmptyEmoteData(),
+      bttvGlobalEmotes: [emote('stale-global-emote')],
+      lastUpdated: 0,
+    };
+    chatStore$.persisted.channelCaches.set({ 'channel-1': staleCache });
+
+    migratePersistedChatStore();
+
+    expect(chatStore$.persisted.globalCaches.peek()).toEqual<GlobalCacheType>({
+      ...makeEmptyGlobalCacheData(),
+      bttvGlobalEmotes: [emote('stale-global-emote')],
+      lastUpdated: 0,
+    });
+  });
+
+  test('does not overwrite a populated global slot with channel copies', () => {
+    chatStore$.persisted.globalCaches.set({
+      ...makeEmptyGlobalCacheData(),
+      bttvGlobalEmotes: [emote('current-global-emote')],
+      lastUpdated: 9_000,
+    });
+    const legacyCache: LegacyChannelCache = {
+      ...makeEmptyEmoteData(),
+      bttvGlobalEmotes: [emote('legacy-global-emote')],
+      lastUpdated: 8_000,
+    };
+    chatStore$.persisted.channelCaches.set({ 'channel-1': legacyCache });
+
+    migratePersistedChatStore();
+
+    expect(chatStore$.persisted.globalCaches.peek()).toEqual<GlobalCacheType>({
+      ...makeEmptyGlobalCacheData(),
+      bttvGlobalEmotes: [emote('current-global-emote')],
+      lastUpdated: 9_000,
+    });
+  });
+
+  test('leaves a current-shape cache untouched', () => {
+    const currentCache: ChannelCacheType = {
+      ...makeEmptyEmoteData(),
+      lastUpdated: 5_000,
+      twitchChannelEmotes: [emote('kept-emote')],
+    };
+    chatStore$.persisted.channelCaches.set({ 'channel-1': currentCache });
+
+    migratePersistedChatStore();
+
+    expect(
+      chatStore$.persisted.channelCaches.peek()['channel-1'],
+    ).toEqual<ChannelCacheType>(currentCache);
   });
 });
