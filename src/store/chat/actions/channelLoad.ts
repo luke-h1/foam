@@ -58,6 +58,7 @@ import {
   settleSpecs,
 } from './channelResources';
 import { clearUserCosmeticsCache } from './cosmetics';
+import { invalidateCosmeticsCache } from './invalidation';
 import { addMessage } from './messages';
 import {
   clearChannelPersonalEmotes,
@@ -877,7 +878,7 @@ export const clearCache = (channelId?: string) => {
       }
     });
     clearGlobalResourceCache();
-    chatStore$.cosmeticsCacheVersion.set(version => version + 1);
+    invalidateCosmeticsCache();
   } else {
     batch(() => {
       chatStore$.persisted.channelCaches.set({});
@@ -886,7 +887,7 @@ export const clearCache = (channelId?: string) => {
       chatStore$.loadingState.set('IDLE');
     });
     clearGlobalResourceCache();
-    chatStore$.cosmeticsCacheVersion.set(version => version + 1);
+    invalidateCosmeticsCache();
   }
 };
 
