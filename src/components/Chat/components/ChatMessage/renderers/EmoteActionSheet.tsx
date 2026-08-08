@@ -34,7 +34,7 @@ import { theme } from '@app/styles/themes';
 import type { EmoteImageScale } from '@app/types/emote';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
 import { deriveEmoteImageVariantsFromUrl } from '@app/utils/emote/emoteImageVariants/deriveEmoteImageVariantsFromUrl';
-import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
+import { resolveEmoteDisplayUrl } from '@app/utils/emote/resolveEmoteDisplayUrl';
 
 type PartVariant = ParsedPart<'emote'>;
 type ActionId =
@@ -111,12 +111,14 @@ function EmoteActionSheetComponent({
       return result;
     }, {});
   }, [preferredVariantKind, resolvedImageVariants]);
-  const displayUrl = getDisplayEmoteUrl({
-    image_variants: resolvedImageVariants,
-    url: part.url,
-    static_url: part.static_url,
-    disableAnimations,
-  });
+  const displayUrl = resolveEmoteDisplayUrl(
+    {
+      image_variants: resolvedImageVariants,
+      url: part.url,
+      static_url: part.static_url,
+    },
+    { disableAnimations, preferredScale: '4x' },
+  );
   const previewPart = useMemo(
     () =>
       displayUrl === part.url

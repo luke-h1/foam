@@ -11,32 +11,11 @@ import { Image as ExpoImage } from 'expo-image';
 import type { SanitisedEmote } from '@app/types/emote';
 import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
 import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants/withResolvedEmoteImageVariants';
-import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
-import { CHAT_INLINE_EMOTE_SCALE } from '@app/utils/emote/resolveEmoteScale';
+import { resolveEmoteDisplayUrl } from '@app/utils/emote/resolveEmoteDisplayUrl';
 import { logger } from '@app/utils/logger';
 
 const preloadedUrls = new Set<string>();
 const MAX_PRELOADED_CACHE = 500;
-
-function getDisplayEmoteCacheUrls(emote: SanitisedEmote): string[] {
-  const resolved = withResolvedEmoteImageVariants(emote);
-  const urls = new Set<string>();
-
-  for (const disableAnimations of [false, true]) {
-    const url = getDisplayEmoteUrl({
-      image_variants: resolved.image_variants,
-      url: resolved.url,
-      static_url: resolved.static_url,
-      disableAnimations,
-      preferredScale: CHAT_INLINE_EMOTE_SCALE,
-    });
-    if (url) {
-      urls.add(url);
-    }
-  }
-
-  return Array.from(urls);
-}
 
 /**
  * `prefetch` resolves false when it skips any url in the batch and rejects when
@@ -69,26 +48,20 @@ export async function preloadEmotes(
 
   // Keep copy-only variants out of the eager preload path. They remain on the
   // emote metadata for copy actions, but warming every static/animated scale
-  // would multiply channel-entry network work. Warm only the display URLs
+  // would multiply channel-entry network work. Warm only the display URL
   // that chat rows actually render.
   for (const emote of emotes) {
-    const urls = getDisplayEmoteCacheUrls(emote);
-    for (const url of urls) {
-      if (toPreload.length >= limit) {
-        break;
-      }
-
-      if (seen.has(url) || preloadedUrls.has(url)) {
-        continue;
-      }
-
-      seen.add(url);
-      toPreload.push(url);
-    }
-
     if (toPreload.length >= limit) {
       break;
     }
+
+    const url = resolveEmoteDisplayUrl(withResolvedEmoteImageVariants(emote));
+    if (!url || seen.has(url) || preloadedUrls.has(url)) {
+      continue;
+    }
+
+    seen.add(url);
+    toPreload.push(url);
   }
 
   if (toPreload.length === 0) {

@@ -5,8 +5,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import { useCachedEmoteAspectRatio } from '@app/Providers/CachedEmotesProvider/useCachedEmote';
 import { calculateAspectRatio } from '@app/utils/chat/calculateAspectRatio';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
-import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
-import { CHAT_INLINE_EMOTE_SCALE } from '@app/utils/emote/resolveEmoteScale';
+import { resolveEmoteDisplayUrl } from '@app/utils/emote/resolveEmoteDisplayUrl';
 import { logger } from '@app/utils/logger';
 
 import { ChatInlineImage } from './ChatInlineImage';
@@ -31,13 +30,7 @@ export const EmoteRenderer = memo(
     shouldOverlayPrevious = false,
     targetSize = 30,
   }: EmoteRendererProps) => {
-    const displayUrl = getDisplayEmoteUrl({
-      image_variants: part.image_variants,
-      url: part.url,
-      static_url: part.static_url,
-      disableAnimations,
-      preferredScale: CHAT_INLINE_EMOTE_SCALE,
-    });
+    const displayUrl = resolveEmoteDisplayUrl(part, { disableAnimations });
 
     // Twitch and BTTV don't advertise emote dimensions, and some 7TV encodes
     // arrive without size metadata too, so the box would default to 1:1 and a
@@ -144,13 +137,7 @@ function OverlaidEmoteImage({
     overlay.height || 20,
     targetSize,
   );
-  const displayUrl = getDisplayEmoteUrl({
-    image_variants: overlay.image_variants,
-    url: overlay.url,
-    static_url: overlay.static_url,
-    disableAnimations,
-    preferredScale: CHAT_INLINE_EMOTE_SCALE,
-  });
+  const displayUrl = resolveEmoteDisplayUrl(overlay, { disableAnimations });
 
   if (!displayUrl) {
     return null;
