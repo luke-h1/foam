@@ -174,6 +174,8 @@ const convertV4BadgeToSanitised = (badge: V4Badge): SanitisedBadgeSet => {
  * from - stamping a fresh TTL on every cache hit, so stale cosmetics pin
  * indefinitely while the user is seen. Suppressing the sync for the duration
  * of the synchronous apply keeps cache reads from counting as writes.
+ * `removeUserCosmetics` reuses the flag to coalesce its paired removals into
+ * one flush.
  */
 let suppressSnapshotSync = false;
 
@@ -336,6 +338,10 @@ const scheduleUserCosmeticsSnapshotSync = (ttvUserId: string): void => {
  * entitlement bridge unlinks the 7TV user only after clearing the bindings.
  */
 const syncUserCosmeticsSnapshotNow = (ttvUserId: string): void => {
+  if (suppressSnapshotSync) {
+    return;
+  }
+
   const sevenTvUserId = getSevenTvUserIdForTwitchId(ttvUserId);
   if (!sevenTvUserId) {
     return;
@@ -835,6 +841,29 @@ export const removeUserPaint = (ttvUserId: string) => {
   chatStore$.userPaintIds.set(rest);
   syncUserCosmeticsSnapshotNow(ttvUserId);
   scheduleCosmeticsPersist('bindings');
+};
+
+/**
+ * Entitlement resets drop both bindings at once. Suppressing the per-removal
+ * flush and syncing after both keeps the write synchronous inside the reset
+ * event but hits MMKV once per wearer, with the final state.
+ */
+export const removeUserCosmetics = (ttvUserId: string): void => {
+  const hadBindings =
+    ttvUserId in chatStore$.userPaintIds.peek() ||
+    ttvUserId in chatStore$.userBadgeIds.peek();
+
+  suppressSnapshotSync = true;
+  try {
+    removeUserPaint(ttvUserId);
+    removeUserBadge(ttvUserId);
+  } finally {
+    suppressSnapshotSync = false;
+  }
+
+  if (hadBindings) {
+    syncUserCosmeticsSnapshotNow(ttvUserId);
+  }
 };
 
 export const clearPaints = () => {

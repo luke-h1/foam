@@ -14,6 +14,7 @@ import {
   getBadge,
   getPaint,
   removeUserBadge,
+  removeUserCosmetics,
   removeUserPaint,
   setUserBadge,
   setUserPaint,
@@ -113,8 +114,7 @@ export const applyEntitlementResetEvent = (sevenTvUserId: string): void => {
   }
 
   twitchIds.forEach(twitchUserId => {
-    removeUserPaint(twitchUserId);
-    removeUserBadge(twitchUserId);
+    removeUserCosmetics(twitchUserId);
   });
   unlinkSevenTvUser(sevenTvUserId);
   logger.stvWs.info(`Reset entitlements for 7TV user: ${sevenTvUserId}`);

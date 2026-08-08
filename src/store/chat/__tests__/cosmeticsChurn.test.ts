@@ -11,6 +11,7 @@ import {
   hasUserPaint,
   removeBadge,
   removeUserBadge,
+  removeUserCosmetics,
   removeUserPaint,
   setUserBadge,
   setUserPaint,
@@ -240,6 +241,48 @@ describe('cosmetics entitlement-burst churn', () => {
     jest.advanceTimersByTime(1000);
 
     expect(jest.mocked(storageService.set).mock.calls).toHaveLength(1);
+  });
+
+  test('an entitlement reset removal writes the wearer snapshot once, with both cosmetics gone', () => {
+    rememberSevenTvUserTwitchLink('stv-user-0', 'ttv-user-0');
+    addPaint(buildPaint());
+    addBadge(buildBadge());
+    setUserPaint('ttv-user-0', PAINT_ID);
+    setUserBadge('ttv-user-0', BADGE_ID);
+    jest.advanceTimersByTime(1000);
+    jest.mocked(storageService.set).mockClear();
+
+    removeUserCosmetics('ttv-user-0');
+
+    const expectedCosmetics: CachedUserCosmetics = {
+      badge: undefined,
+      badgeId: null,
+      expiresAt: Date.now() + 30 * 60 * 1000,
+      paint: undefined,
+      paintId: null,
+      ttvUserId: 'ttv-user-0',
+    };
+    expect(jest.mocked(storageService.set).mock.calls).toEqual([
+      [
+        'sevenTvUserCosmetics_user-cosmetics:stv-user-0',
+        expectedCosmetics,
+        'seven_tv_cache',
+        { expiry: new Date(expectedCosmetics.expiresAt) },
+      ],
+    ]);
+
+    jest.advanceTimersByTime(1000);
+
+    expect(jest.mocked(storageService.set).mock.calls).toHaveLength(1);
+  });
+
+  test('an entitlement reset removal for a wearer without bindings writes nothing', () => {
+    rememberSevenTvUserTwitchLink('stv-user-0', 'ttv-user-0');
+
+    removeUserCosmetics('ttv-user-0');
+    jest.advanceTimersByTime(1000);
+
+    expect(jest.mocked(storageService.set)).not.toHaveBeenCalled();
   });
 
   test('a bindings clear inside the debounce window flushes the wearer from the pre-clear bindings', () => {

@@ -4,6 +4,7 @@ import {
   getUserBadgeId,
   getUserPaintId,
   removeUserBadge,
+  removeUserCosmetics,
   removeUserPaint,
 } from '@app/store/chat/actions/cosmetics';
 import {
@@ -39,6 +40,10 @@ jest.mock('@app/store/chat/actions/cosmetics', () => ({
   removeUserBadge: jest.fn((ttvUserId: string) => {
     mockUserBadgeBindings.delete(ttvUserId);
   }),
+  removeUserCosmetics: jest.fn((ttvUserId: string) => {
+    mockUserPaintBindings.delete(ttvUserId);
+    mockUserBadgeBindings.delete(ttvUserId);
+  }),
   removeUserPaint: jest.fn((ttvUserId: string) => {
     mockUserPaintBindings.delete(ttvUserId);
   }),
@@ -70,6 +75,7 @@ jest.mock('@app/utils/logger', () => ({
 const mockGetBadge = jest.mocked(getBadge);
 const mockGetPaint = jest.mocked(getPaint);
 const mockRemoveUserBadge = jest.mocked(removeUserBadge);
+const mockRemoveUserCosmetics = jest.mocked(removeUserCosmetics);
 const mockRemoveUserPaint = jest.mocked(removeUserPaint);
 const mockHandlePersonalEmoteSetEntitlement = jest.mocked(
   handlePersonalEmoteSetEntitlement,
@@ -179,8 +185,9 @@ describe('applyEntitlementResetEvent', () => {
 
     expect(getUserPaintId('ttv-1')).toBeUndefined();
     expect(getUserBadgeId('ttv-1')).toBeUndefined();
-    expect(mockRemoveUserPaint.mock.calls).toEqual([['ttv-1']]);
-    expect(mockRemoveUserBadge.mock.calls).toEqual([['ttv-1']]);
+    expect(mockRemoveUserCosmetics.mock.calls).toEqual([['ttv-1']]);
+    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
+    expect(mockRemoveUserBadge).not.toHaveBeenCalled();
   });
 
   test('clears reverse 7TV user links when entitlements reset', () => {
