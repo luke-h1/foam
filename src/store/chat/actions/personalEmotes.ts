@@ -7,6 +7,8 @@ import { chatStore$ } from '../observables/chatStore';
 
 const personalEmotesGuard = createFetchOnceGuard();
 
+const MAX_PERSONAL_EMOTE_CHANNELS = 20;
+
 /**
  * Session cache of each sighted chatter's 7TV personal emote set, keyed by
  * channel then Twitch user id. Kept as a plain bounded Map rather than on the
@@ -15,8 +17,6 @@ const personalEmotesGuard = createFetchOnceGuard();
  * multi-MB channel-cache table per write. Reads are imperative (ingest and
  * render); React consumers subscribe via `personalEmotesVersion`.
  */
-const MAX_PERSONAL_EMOTE_CHANNELS = 20;
-
 const personalEmotesByChannel = new Map<
   string,
   Record<string, SanitisedEmote[]>

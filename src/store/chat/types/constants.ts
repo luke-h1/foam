@@ -232,7 +232,6 @@ export const makeEmptyGlobalCacheData = () =>
 export const emptyResolvedEmoteData = {
   ...makeEmptyEmoteData(),
   ...makeEmptyGlobalCacheData(),
-  lastUpdated: 0,
   sevenTvPersonalEmotes: {} as Record<string, SanitisedEmote[]>,
   chatterinoBadges: [] as SanitisedBadgeSet[],
   bttvBadges: [] as SanitisedBadgeSet[],

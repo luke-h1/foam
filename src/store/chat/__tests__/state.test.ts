@@ -131,7 +131,7 @@ describe('makeEmptyGlobalCacheData', () => {
       twitchGlobalBadges: [],
       ffzGlobalBadges: [],
     });
-    expect({ ...makeEmptyGlobalCacheData() }).toEqual<GlobalCacheType>({
+    expect(makeEmptyGlobalCacheData()).toEqual<GlobalCacheType>({
       lastUpdated: 0,
       twitchGlobalEmotes: [],
       sevenTvGlobalEmotes: [],
