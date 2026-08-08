@@ -156,7 +156,6 @@ export interface SubscriberChannelProfile {
 export interface ChannelCacheType {
   lastUpdated: number;
   twitchChannelEmotes: SanitisedEmote[];
-  twitchGlobalEmotes: SanitisedEmote[];
   twitchSubscriberEmotes: SanitisedEmote[];
   twitchSubscriberEmotesUserId?: string;
   /**
@@ -166,17 +165,27 @@ export interface ChannelCacheType {
    */
   twitchSubscriberChannelProfiles?: Record<string, SubscriberChannelProfile>;
   sevenTvChannelEmotes: SanitisedEmote[];
-  sevenTvGlobalEmotes: SanitisedEmote[];
   ffzChannelEmotes: SanitisedEmote[];
-  ffzGlobalEmotes: SanitisedEmote[];
-  bttvGlobalEmotes: SanitisedEmote[];
   bttvChannelEmotes: SanitisedEmote[];
   twitchChannelBadges: SanitisedBadgeSet[];
-  twitchGlobalBadges: SanitisedBadgeSet[];
-  ffzGlobalBadges: SanitisedBadgeSet[];
   ffzChannelBadges: SanitisedBadgeSet[];
   sevenTvEmoteSetId?: string;
   badgesLastUpdated?: number;
+}
+
+/**
+ * Channel-invariant provider data, stored once instead of duplicated into
+ * every channel cache. `lastUpdated` is its own freshness stamp - global
+ * slices refresh on their own TTL, independent of any channel's.
+ */
+export interface GlobalCacheType {
+  lastUpdated: number;
+  twitchGlobalEmotes: SanitisedEmote[];
+  sevenTvGlobalEmotes: SanitisedEmote[];
+  ffzGlobalEmotes: SanitisedEmote[];
+  bttvGlobalEmotes: SanitisedEmote[];
+  twitchGlobalBadges: SanitisedBadgeSet[];
+  ffzGlobalBadges: SanitisedBadgeSet[];
 }
 
 export const MAX_CACHED_CHANNELS = 20;
@@ -186,32 +195,39 @@ export const BADGE_CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 
 export const emptyEmoteData = {
   twitchChannelEmotes: [],
-  twitchGlobalEmotes: [],
   twitchSubscriberEmotes: [],
   twitchSubscriberEmotesUserId: undefined,
   twitchSubscriberChannelProfiles: {},
   sevenTvChannelEmotes: [],
-  sevenTvGlobalEmotes: [],
   ffzChannelEmotes: [],
-  ffzGlobalEmotes: [],
-  bttvGlobalEmotes: [],
   bttvChannelEmotes: [],
   twitchChannelBadges: [],
-  twitchGlobalBadges: [],
   ffzChannelBadges: [],
-  ffzGlobalBadges: [],
   lastUpdated: 0,
   badgesLastUpdated: 0,
   sevenTvEmoteSetId: undefined,
 } satisfies ChannelCacheType;
 
+export const emptyGlobalCacheData = {
+  lastUpdated: 0,
+  twitchGlobalEmotes: [],
+  sevenTvGlobalEmotes: [],
+  ffzGlobalEmotes: [],
+  bttvGlobalEmotes: [],
+  twitchGlobalBadges: [],
+  ffzGlobalBadges: [],
+} satisfies GlobalCacheType;
+
 /**
  * Consumer-facing emote-data shape: channel-cache fields plus the slices that
- * are not stored per channel - session-scoped 7TV personal emotes and the
- * chatterinoBadges set resolved from the bundled table at read time.
+ * are not stored per channel - the shared global provider slices,
+ * session-scoped 7TV personal emotes, and the chatterinoBadges set resolved
+ * from the bundled table at read time.
  */
 export const emptyResolvedEmoteData = {
   ...emptyEmoteData,
+  ...emptyGlobalCacheData,
+  lastUpdated: 0,
   sevenTvPersonalEmotes: {} as Record<string, SanitisedEmote[]>,
   chatterinoBadges: [] as SanitisedBadgeSet[],
   bttvBadges: [] as SanitisedBadgeSet[],

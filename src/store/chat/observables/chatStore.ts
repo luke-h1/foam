@@ -18,11 +18,12 @@ import type {
   Bit,
   ChannelCacheType,
   ChatLoadingState,
+  GlobalCacheType,
   PaintData,
   SanitisedBadgeSet,
   SanitisedEmote,
 } from '../types/constants';
-import { MAX_CACHED_CHANNELS } from '../types/constants';
+import { emptyGlobalCacheData, MAX_CACHED_CHANNELS } from '../types/constants';
 import { loadPersistedCosmetics } from './cosmeticsPersistence';
 import {
   loadPersistedRecentMessages,
@@ -32,7 +33,7 @@ import {
 export interface ChatStoreState {
   persisted: {
     channelCaches: Record<string, ChannelCacheType>;
-    lastGlobalUpdate: number;
+    globalCaches: GlobalCacheType;
   };
   // Persisted separately from `persisted` so frequent message syncs do not
   // re-serialize the channel emote caches (issue #594).
@@ -99,7 +100,7 @@ export const limitChannelCaches = (
 const initialChatStoreState: ChatStoreState = {
   persisted: {
     channelCaches: {},
-    lastGlobalUpdate: 0,
+    globalCaches: emptyGlobalCacheData,
   },
   recentMessagesByChannel: {},
   loadingState: 'IDLE',
@@ -199,24 +200,83 @@ const hydrateDeferredChatState = () => {
 
 InteractionManager.runAfterInteractions(hydrateDeferredChatState);
 
+const GLOBAL_CACHE_SLICE_KEYS = [
+  'twitchGlobalEmotes',
+  'sevenTvGlobalEmotes',
+  'ffzGlobalEmotes',
+  'bttvGlobalEmotes',
+  'twitchGlobalBadges',
+  'ffzGlobalBadges',
+] as const;
+
 // Fields older builds persisted but the current schema no longer holds.
 // Recent messages used to live inside `persisted`; chatterino badges used to
 // be stored per channel (~4,100 entries each) and are now resolved from the
 // bundled table at read time; the `emotes`/`badges` aggregates duplicated the
 // per-provider arrays stored alongside them; 7TV personal emotes are now
 // session state refetched per sighting, and personal badges were only ever
-// written empty. Stripping them on hydrate stops every future channelCaches
-// write from re-serializing them.
+// written empty; the global provider slices moved to the shared
+// `persisted.globalCaches` slot. Stripping them on hydrate stops every future
+// channelCaches write from re-serializing them.
 const STALE_CHANNEL_CACHE_KEYS = [
   'chatterinoBadges',
   'emotes',
   'badges',
   'sevenTvPersonalEmotes',
   'sevenTvPersonalBadges',
+  ...GLOBAL_CACHE_SLICE_KEYS,
 ];
+
+type LegacyChannelCache = ChannelCacheType &
+  Partial<Pick<GlobalCacheType, (typeof GLOBAL_CACHE_SLICE_KEYS)[number]>>;
+
+/**
+ * Old installs duplicated the global provider slices into every channel
+ * cache; the newest copy is as fresh as any global data the app has ever
+ * held, so it becomes the shared slot's first value instead of forcing an
+ * empty slot on the first launch after the upgrade.
+ */
+const seedGlobalCachesFromChannelCopies = (
+  caches: Record<string, LegacyChannelCache>,
+): void => {
+  const globalCache = chatStore$.persisted.globalCaches.peek();
+  const hasGlobalData =
+    (globalCache?.lastUpdated ?? 0) > 0 ||
+    GLOBAL_CACHE_SLICE_KEYS.some(key => (globalCache?.[key]?.length ?? 0) > 0);
+  if (hasGlobalData) {
+    return;
+  }
+
+  let donor: LegacyChannelCache | undefined;
+  for (const cache of Object.values(caches)) {
+    const holdsGlobalCopies = GLOBAL_CACHE_SLICE_KEYS.some(
+      key => (cache[key]?.length ?? 0) > 0,
+    );
+    if (
+      holdsGlobalCopies &&
+      (cache.lastUpdated || 0) > (donor?.lastUpdated || 0)
+    ) {
+      donor = cache;
+    }
+  }
+  if (!donor) {
+    return;
+  }
+
+  chatStore$.persisted.globalCaches.set({
+    lastUpdated: donor.lastUpdated || 0,
+    twitchGlobalEmotes: donor.twitchGlobalEmotes ?? [],
+    sevenTvGlobalEmotes: donor.sevenTvGlobalEmotes ?? [],
+    ffzGlobalEmotes: donor.ffzGlobalEmotes ?? [],
+    bttvGlobalEmotes: donor.bttvGlobalEmotes ?? [],
+    twitchGlobalBadges: donor.twitchGlobalBadges ?? [],
+    ffzGlobalBadges: donor.ffzGlobalBadges ?? [],
+  });
+};
 
 export const migratePersistedChatStore = () => {
   const persisted = chatStore$.persisted.peek() as {
+    lastGlobalUpdate?: unknown;
     recentMessagesByChannel?: unknown;
   };
   if (persisted.recentMessagesByChannel !== undefined) {
@@ -226,9 +286,20 @@ export const migratePersistedChatStore = () => {
       }
     ).recentMessagesByChannel.delete();
   }
+  if (persisted.lastGlobalUpdate !== undefined) {
+    (
+      chatStore$.persisted as unknown as {
+        lastGlobalUpdate: { delete: () => void };
+      }
+    ).lastGlobalUpdate.delete();
+  }
 
-  const caches = chatStore$.persisted.channelCaches.peek() ?? {};
+  const caches = (chatStore$.persisted.channelCaches.peek() ?? {}) as Record<
+    string,
+    LegacyChannelCache
+  >;
   batch(() => {
+    seedGlobalCachesFromChannelCopies(caches);
     for (const [id, cache] of Object.entries(caches)) {
       const cache$ = chatStore$.persisted.channelCaches[id] as unknown as
         Record<string, { delete: () => void }> | undefined;

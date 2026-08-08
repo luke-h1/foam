@@ -31,19 +31,27 @@ import {
 } from '../observables/recentMessagesPersistence';
 import type {
   ChannelCacheType,
+  GlobalCacheType,
   SanitisedBadgeSet,
   SubscriberChannelProfile,
 } from '../types/constants';
-import { emptyResolvedEmoteData } from '../types/constants';
+import {
+  emptyGlobalCacheData,
+  emptyResolvedEmoteData,
+} from '../types/constants';
 import { planChannelRefresh } from './channelRefreshPlan';
 import {
-  type BadgeResourceSets,
+  type BadgeCacheKey,
   buildBadgeResourceSpecs,
   buildEmoteResourceSpecs,
+  buildGlobalBadgeResourceSpecs,
+  buildGlobalEmoteResourceSpecs,
   buildSubscriberEmoteSpec,
+  type ChannelBadgeResourceSets,
+  type ChannelEmoteResourceSets,
   clearGlobalResourceCache,
   collectFailedProviderReasons,
-  type EmoteResourceSets,
+  type EmoteCacheKey,
   hadCachedResourcesForFailedSpecs,
   reconcileSettledSpecs,
   reportResourceResults,
@@ -109,17 +117,57 @@ const countReconciledItems = (
   return total;
 };
 
+/**
+ * Replaces the shared global slot with the reconciled global slices. The
+ * freshness stamp only advances when every global fetch succeeded, so a
+ * failed slice keeps its retry pressure instead of being served as fresh for
+ * the whole TTL.
+ */
+function writeGlobalCaches({
+  badgeByKey,
+  emoteByKey,
+  existingGlobalCache,
+  now,
+  settled,
+}: {
+  badgeByKey: ReadonlyMap<BadgeCacheKey, SanitisedBadgeSet[]>;
+  emoteByKey: ReadonlyMap<EmoteCacheKey, SanitisedEmote[]>;
+  existingGlobalCache: GlobalCacheType | undefined;
+  now: number;
+  settled: readonly ProviderFailureSettled[];
+}): void {
+  const hasGlobalResourceFailure = settled.some(
+    entry =>
+      entry.spec.scope === 'global' && entry.result.status === 'rejected',
+  );
+  chatStore$.persisted.globalCaches.set({
+    lastUpdated: hasGlobalResourceFailure
+      ? (existingGlobalCache?.lastUpdated ?? 0)
+      : now,
+    twitchGlobalEmotes: emoteByKey.get('twitchGlobalEmotes') ?? [],
+    sevenTvGlobalEmotes: emoteByKey.get('sevenTvGlobalEmotes') ?? [],
+    ffzGlobalEmotes: emoteByKey.get('ffzGlobalEmotes') ?? [],
+    bttvGlobalEmotes: emoteByKey.get('bttvGlobalEmotes') ?? [],
+    twitchGlobalBadges: badgeByKey.get('twitchGlobalBadges') ?? [],
+    ffzGlobalBadges: badgeByKey.get('ffzGlobalBadges') ?? [],
+  });
+}
+
 function notifyProviderLoadFailures(
   channelId: string,
   settled: readonly ProviderFailureSettled[],
   existingCache: ChannelCacheType | undefined,
+  existingGlobalCache: GlobalCacheType | undefined,
 ): void {
   const failedProviders = collectFailedProviderReasons(settled);
   if (failedProviders.length === 0) {
     return;
   }
 
-  const hadCache = hadCachedResourcesForFailedSpecs(existingCache, settled);
+  const hadCache = hadCachedResourcesForFailedSpecs(
+    { existingCache, existingGlobalCache },
+    settled,
+  );
   addMessage(
     createSystemMessage(
       channelId,
@@ -359,10 +407,12 @@ const loadChannelResourcesInternal = async (
   try {
     const caches = chatStore$.persisted.channelCaches.peek();
     const existingCache = caches?.[channelId];
+    const existingGlobalCache = chatStore$.persisted.globalCaches.peek();
 
     const plan = planChannelRefresh({
       cache: existingCache,
       forceRefresh: shouldForceRefresh,
+      globalCache: existingGlobalCache,
       now: Date.now(),
       twitchUserId,
     });
@@ -447,7 +497,9 @@ const loadChannelResourcesInternal = async (
           return false;
         }
 
-        const badgeSpecs = buildBadgeResourceSpecs({ channelId });
+        const badgeSpecs = buildBadgeResourceSpecs({ channelId }).filter(
+          spec => spec.scope !== 'global',
+        );
         const badgeSettled = await settleSpecs(badgeSpecs);
 
         if (exitIfAborted(signal, true)) {
@@ -465,12 +517,11 @@ const loadChannelResourcesInternal = async (
         const badgeByKey = reconcileSettledSpecs(badgeSettled, {
           channelId,
           existingCache,
+          existingGlobalCache,
         });
 
-        const badgeResourceSets: BadgeResourceSets = {
+        const badgeResourceSets: ChannelBadgeResourceSets = {
           twitchChannelBadges: badgeByKey.get('twitchChannelBadges') ?? [],
-          twitchGlobalBadges: badgeByKey.get('twitchGlobalBadges') ?? [],
-          ffzGlobalBadges: badgeByKey.get('ffzGlobalBadges') ?? [],
           ffzChannelBadges: badgeByKey.get('ffzChannelBadges') ?? [],
         };
 
@@ -507,10 +558,63 @@ const loadChannelResourcesInternal = async (
         });
       }
 
+      if (plan.refreshGlobalResources) {
+        if (exitIfAborted(signal, true)) {
+          return false;
+        }
+
+        const [globalEmoteSettled, globalBadgeSettled] = await Promise.all([
+          settleSpecs(buildGlobalEmoteResourceSpecs()),
+          settleSpecs(buildGlobalBadgeResourceSpecs()),
+        ]);
+
+        if (exitIfAborted(signal, true)) {
+          return false;
+        }
+
+        const globalSettled = [...globalEmoteSettled, ...globalBadgeSettled];
+
+        reportResourceResults({
+          channelId,
+          settled: globalSettled,
+          trigger: 'cached_global_resources_refresh',
+        });
+
+        cachedRefreshSettled.push(...globalSettled);
+
+        const globalCacheContext = {
+          channelId,
+          existingCache,
+          existingGlobalCache,
+        };
+        writeGlobalCaches({
+          badgeByKey: reconcileSettledSpecs(
+            globalBadgeSettled,
+            globalCacheContext,
+          ),
+          emoteByKey: reconcileSettledSpecs(
+            globalEmoteSettled,
+            globalCacheContext,
+          ),
+          existingGlobalCache,
+          now: Date.now(),
+          settled: globalSettled,
+        });
+
+        logger.chat.info('Refetched stale global provider slices', {
+          name: 'chat_resources_info',
+          action: 'global_resources_refetched',
+          category: 'data_loading',
+          channel_id: channelId,
+          screen: 'chat',
+        });
+      }
+
       notifyProviderLoadFailures(
         channelId,
         cachedRefreshSettled,
         existingCache,
+        existingGlobalCache,
       );
 
       batch(() => {
@@ -583,26 +687,20 @@ const loadChannelResourcesInternal = async (
       trigger: 'full_channel_resource_load',
     });
 
-    const cacheContext = { channelId, existingCache };
+    const cacheContext = { channelId, existingCache, existingGlobalCache };
     const emoteByKey = reconcileSettledSpecs(emoteSettled, cacheContext);
     const badgeByKey = reconcileSettledSpecs(badgeSettled, cacheContext);
 
-    const emoteResourceSets: EmoteResourceSets = {
+    const emoteResourceSets: ChannelEmoteResourceSets = {
       sevenTvChannelEmotes: emoteByKey.get('sevenTvChannelEmotes') ?? [],
-      sevenTvGlobalEmotes: emoteByKey.get('sevenTvGlobalEmotes') ?? [],
       twitchChannelEmotes: emoteByKey.get('twitchChannelEmotes') ?? [],
-      twitchGlobalEmotes: emoteByKey.get('twitchGlobalEmotes') ?? [],
       twitchSubscriberEmotes: emoteByKey.get('twitchSubscriberEmotes') ?? [],
-      bttvGlobalEmotes: emoteByKey.get('bttvGlobalEmotes') ?? [],
       bttvChannelEmotes: emoteByKey.get('bttvChannelEmotes') ?? [],
       ffzChannelEmotes: emoteByKey.get('ffzChannelEmotes') ?? [],
-      ffzGlobalEmotes: emoteByKey.get('ffzGlobalEmotes') ?? [],
     };
 
-    const badgeResourceSets: BadgeResourceSets = {
+    const badgeResourceSets: ChannelBadgeResourceSets = {
       twitchChannelBadges: badgeByKey.get('twitchChannelBadges') ?? [],
-      twitchGlobalBadges: badgeByKey.get('twitchGlobalBadges') ?? [],
-      ffzGlobalBadges: badgeByKey.get('ffzGlobalBadges') ?? [],
       ffzChannelBadges: badgeByKey.get('ffzChannelBadges') ?? [],
     };
 
@@ -610,19 +708,21 @@ const loadChannelResourcesInternal = async (
       return false;
     }
 
-    const hasEmoteResourceFailure = emoteSettled.some(
-      entry => entry.result.status === 'rejected',
+    const hasChannelEmoteFailure = emoteSettled.some(
+      entry =>
+        entry.spec.scope !== 'global' && entry.result.status === 'rejected',
     );
-    const hasBadgeResourceFailure = badgeSettled.some(
-      entry => entry.result.status === 'rejected',
+    const hasChannelBadgeFailure = badgeSettled.some(
+      entry =>
+        entry.spec.scope !== 'global' && entry.result.status === 'rejected',
     );
     const now = Date.now();
 
     const channelData: ChannelCacheType = {
-      lastUpdated: hasEmoteResourceFailure
+      lastUpdated: hasChannelEmoteFailure
         ? (existingCache?.lastUpdated ?? 0)
         : now,
-      badgesLastUpdated: hasBadgeResourceFailure
+      badgesLastUpdated: hasChannelBadgeFailure
         ? (existingCache?.badgesLastUpdated ?? 0)
         : now,
       ...emoteResourceSets,
@@ -636,6 +736,13 @@ const loadChannelResourcesInternal = async (
     clearChannelPersonalEmotes(channelId);
 
     batch(() => {
+      writeGlobalCaches({
+        badgeByKey,
+        emoteByKey,
+        existingGlobalCache,
+        now,
+        settled: [...emoteSettled, ...badgeSettled],
+      });
       const currentCaches = chatStore$.persisted.channelCaches.peek() ?? {};
       chatStore$.persisted.channelCaches.set(
         limitChannelCaches(
@@ -650,6 +757,7 @@ const loadChannelResourcesInternal = async (
       channelId,
       [...emoteSettled, ...badgeSettled],
       existingCache,
+      existingGlobalCache,
     );
 
     if (twitchUserId) {
@@ -771,7 +879,7 @@ export const clearCache = (channelId?: string) => {
   } else {
     batch(() => {
       chatStore$.persisted.channelCaches.set({});
-      chatStore$.persisted.lastGlobalUpdate.set(0);
+      chatStore$.persisted.globalCaches.set({ ...emptyGlobalCacheData });
       chatStore$.currentChannelId.set(null);
       chatStore$.loadingState.set('IDLE');
     });
@@ -784,7 +892,7 @@ export const clearChatCosmeticsCache = (): void => {
   batch(() => {
     chatStore$.persisted.channelCaches.set({});
     chatStore$.recentMessagesByChannel.set({});
-    chatStore$.persisted.lastGlobalUpdate.set(0);
+    chatStore$.persisted.globalCaches.set({ ...emptyGlobalCacheData });
     chatStore$.currentChannelId.set(null);
     chatStore$.loadingState.set('IDLE');
     chatStore$.emojis.set(getEmojiEmotes(getPreferences().emojiStyle));
@@ -816,6 +924,7 @@ export const getCurrentEmoteData = (channelId?: string) => {
     return emptyResolvedEmoteData;
   }
 
+  const globalCache = chatStore$.persisted.globalCaches.peek();
   const preferences = getPreferences();
 
   return {
@@ -823,7 +932,7 @@ export const getCurrentEmoteData = (channelId?: string) => {
       ? (cache.twitchChannelEmotes ?? NO_EMOTES)
       : NO_EMOTES,
     twitchGlobalEmotes: preferences.showTwitchEmotes
-      ? (cache.twitchGlobalEmotes ?? NO_EMOTES)
+      ? (globalCache?.twitchGlobalEmotes ?? NO_EMOTES)
       : NO_EMOTES,
     twitchSubscriberEmotes: preferences.showTwitchEmotes
       ? (cache.twitchSubscriberEmotes ?? NO_EMOTES)
@@ -832,16 +941,16 @@ export const getCurrentEmoteData = (channelId?: string) => {
       ? (cache.sevenTvChannelEmotes ?? NO_EMOTES)
       : NO_EMOTES,
     sevenTvGlobalEmotes: preferences.show7TvEmotes
-      ? (cache.sevenTvGlobalEmotes ?? NO_EMOTES)
+      ? (globalCache?.sevenTvGlobalEmotes ?? NO_EMOTES)
       : NO_EMOTES,
     ffzChannelEmotes: preferences.showFFzEmotes
       ? (cache.ffzChannelEmotes ?? NO_EMOTES)
       : NO_EMOTES,
     ffzGlobalEmotes: preferences.showFFzEmotes
-      ? (cache.ffzGlobalEmotes ?? NO_EMOTES)
+      ? (globalCache?.ffzGlobalEmotes ?? NO_EMOTES)
       : NO_EMOTES,
     bttvGlobalEmotes: preferences.showBttvEmotes
-      ? (cache.bttvGlobalEmotes ?? NO_EMOTES)
+      ? (globalCache?.bttvGlobalEmotes ?? NO_EMOTES)
       : NO_EMOTES,
     bttvChannelEmotes: preferences.showBttvEmotes
       ? (cache.bttvChannelEmotes ?? NO_EMOTES)
@@ -850,13 +959,13 @@ export const getCurrentEmoteData = (channelId?: string) => {
       ? (cache.twitchChannelBadges ?? NO_BADGES)
       : NO_BADGES,
     twitchGlobalBadges: preferences.showTwitchBadges
-      ? (cache.twitchGlobalBadges ?? NO_BADGES)
+      ? (globalCache?.twitchGlobalBadges ?? NO_BADGES)
       : NO_BADGES,
     ffzChannelBadges: preferences.showFFzBadges
       ? (cache.ffzChannelBadges ?? NO_BADGES)
       : NO_BADGES,
     ffzGlobalBadges: preferences.showFFzBadges
-      ? (cache.ffzGlobalBadges ?? NO_BADGES)
+      ? (globalCache?.ffzGlobalBadges ?? NO_BADGES)
       : NO_BADGES,
     chatterinoBadges: preferences.showChatterinoEmotes
       ? getChatterinoBadges()
