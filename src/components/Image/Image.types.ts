@@ -2,13 +2,17 @@ import { StyleProp, ViewStyle } from 'react-native';
 
 import { ImageProps as ExpoImageProps } from 'expo-image';
 
-import type { ImageCachePriority } from '@app/utils/image/image-cache';
+/**
+ * Closed on purpose: the variant is part of the file-cache key, so a freeform
+ * string silently forks the cache for the same url.
+ */
+export type ImageCacheVariant =
+  'emote' | 'badge' | 'avatar' | 'thumbnail' | 'image';
 
 export interface ImageProps extends Omit<ExpoImageProps, 'source'> {
   containerStyle?: StyleProp<ViewStyle>;
   trackLoadContext?: string;
-  cachePriority?: ImageCachePriority;
   cacheToFile?: boolean;
-  cacheVariant?: string;
+  cacheVariant?: ImageCacheVariant;
   source?: string | { uri: string } | number;
 }

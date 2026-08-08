@@ -27,6 +27,7 @@ function SetRailButtonComponent({
       ) : set.icon.startsWith('avatar:') ? (
         <Image
           source={set.icon.slice(7)}
+          cacheVariant='avatar'
           style={styles.setRailAvatar}
           containerStyle={styles.setRailAvatarContainer}
           transition={100}

@@ -1,5 +1,7 @@
 import { Image as ExpoImage } from 'expo-image';
 
+import { prefetchToDisk } from '@app/utils/image/prefetchToDisk';
+
 import type { PassResult } from './benchResults';
 
 // Decoded references are retained in this bag during a run so host-side memory
@@ -13,7 +15,7 @@ export function clearRetained(): void {
 // Downloads every image to expo-image's disk cache so the timed passes measure
 // decode (not network), making cold fair and order-independent.
 export async function prewarm(urls: string[]): Promise<void> {
-  await ExpoImage.prefetch(urls, 'disk').catch(() => undefined);
+  await prefetchToDisk(urls).catch(() => undefined);
   clearRetained();
 }
 

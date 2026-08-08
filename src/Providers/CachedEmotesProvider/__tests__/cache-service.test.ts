@@ -17,7 +17,7 @@ import {
   releaseChannelEmoteRefs,
   subscribeCachedEmoteRef,
   touchCachedEmoteRef,
-  trimCachedEmoteRefsForMemoryPressure,
+  trimDecodedEmotes,
   warmCachedEmoteRefs,
 } from '@app/Providers/CachedEmotesProvider/cache-service';
 
@@ -187,34 +187,34 @@ describe('cache-service', () => {
     });
   });
 
-  test('memory-pressure trim drops unpinned refs, keeps pinned, clears memory cache', async () => {
+  test('a reclaim trim drops unpinned refs, keeps pinned, clears memory cache', async () => {
     const pinnedUrl = 'https://cdn.7tv.app/emote/mpPinned/2x.avif';
     const unpinnedUrl = 'https://cdn.7tv.app/emote/mpUnpinned/2x.avif';
     await warmCachedEmoteRefs([pinnedUrl], { pin: true });
     await warmCachedEmoteRefs([unpinnedUrl]);
 
-    trimCachedEmoteRefsForMemoryPressure();
+    trimDecodedEmotes('reclaim');
 
     expect(getCachedEmoteRef(pinnedUrl)).toEqual({});
     expect(getCachedEmoteRef(unpinnedUrl)).toBeNull();
     expect(Image.clearMemoryCache).toHaveBeenCalledTimes(1);
   });
 
-  test('recurring triggers throttle the image-cache wipe; OS signals bypass it', () => {
+  test('advisory trims throttle the image-cache wipe; reclaim trims bypass it', () => {
     let now = Date.now() + 60_000;
     const nowSpy = jest.spyOn(Date, 'now').mockImplementation(() => now);
 
     try {
-      trimCachedEmoteRefsForMemoryPressure({ throttled: true });
-      trimCachedEmoteRefsForMemoryPressure({ throttled: true });
+      trimDecodedEmotes('advisory');
+      trimDecodedEmotes('advisory');
       expect(Image.clearMemoryCache).toHaveBeenCalledTimes(1);
 
       // memoryWarning/backgrounding path: unthrottled even inside the window.
-      trimCachedEmoteRefsForMemoryPressure();
+      trimDecodedEmotes('reclaim');
       expect(Image.clearMemoryCache).toHaveBeenCalledTimes(2);
 
       now += 31_000;
-      trimCachedEmoteRefsForMemoryPressure({ throttled: true });
+      trimDecodedEmotes('advisory');
       expect(Image.clearMemoryCache).toHaveBeenCalledTimes(3);
     } finally {
       nowSpy.mockRestore();
@@ -310,10 +310,7 @@ describe('cache-service', () => {
     await warmCachedEmoteRefs([mountedUrl, offscreenUrl]);
     const unsubscribe = subscribeCachedEmoteRef(mountedUrl, jest.fn());
 
-    trimCachedEmoteRefsForMemoryPressure({
-      keepSubscribed: true,
-      throttled: true,
-    });
+    trimDecodedEmotes('advisory');
 
     expect(getCachedEmoteRef(mountedUrl)).toEqual({});
     expect(getCachedEmoteRef(offscreenUrl)).toBeNull();
