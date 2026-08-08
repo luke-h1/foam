@@ -52,6 +52,7 @@ import { clearUserCosmeticsCache } from './cosmetics';
 import { clearEmoteImageCache } from './emoteImages';
 import { addMessage } from './messages';
 import {
+  clearChannelPersonalEmotes,
   clearPersonalEmotesCache,
   fetchUserPersonalEmotes,
 } from './personalEmotes';
@@ -343,9 +344,10 @@ const loadChannelResourcesInternal = async (
   }
   chatStore$.loadingState.set('LOADING');
   if (shouldForceRefresh) {
-    // The full load below resets sevenTvPersonalEmotes to {}, so the checked
-    // set must forget those users or fetchUserPersonalEmotes short-circuits
-    // into the emptied cache until the channel is left and re-entered.
+    // The full load below resets the channel's personal-emote cache, so the
+    // checked set must forget those users or fetchUserPersonalEmotes
+    // short-circuits into the emptied cache until the channel is left and
+    // re-entered.
     clearPersonalEmotesCache();
     // An explicit refresh should re-download global provider data too, not
     // serve it from the session cache.
@@ -628,10 +630,10 @@ const loadChannelResourcesInternal = async (
       twitchSubscriberChannelProfiles:
         existingCache?.twitchSubscriberChannelProfiles ?? {},
       ...badgeResourceSets,
-      sevenTvPersonalBadges: {},
-      sevenTvPersonalEmotes: {},
       sevenTvEmoteSetId: sevenTvSetId === 'global' ? undefined : sevenTvSetId,
     };
+
+    clearChannelPersonalEmotes(channelId);
 
     batch(() => {
       const currentCaches = chatStore$.persisted.channelCaches.peek() ?? {};

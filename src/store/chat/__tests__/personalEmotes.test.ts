@@ -5,9 +5,11 @@ import type { SevenTvSanitisedEmote } from '@app/types/emote';
 import {
   clearPersonalEmotesCache,
   fetchUserPersonalEmotes,
+  getUserPersonalEmotes,
   refreshUserPersonalEmotes,
 } from '../actions/personalEmotes';
 import { chatStore$ } from '../observables/chatStore';
+import type { ChannelCacheType } from '../types/constants';
 import { emptyEmoteData } from '../types/constants';
 
 jest.mock('@legendapp/state/persist', () => ({
@@ -107,6 +109,33 @@ describe('fetchUserPersonalEmotes', () => {
     expect(first).toBeNull();
     expect(second).toEqual<SevenTvSanitisedEmote[]>([]);
     expect(mockGetPersonalEmoteSet).toHaveBeenCalledTimes(1);
+  });
+
+  test('caches per session without touching the persisted channel cache', async () => {
+    mockGetPersonalEmoteSet.mockResolvedValueOnce([personalEmote]);
+
+    await fetchUserPersonalEmotes(twitchUserId, channelId);
+
+    expect(getUserPersonalEmotes(twitchUserId, channelId)).toEqual<
+      SevenTvSanitisedEmote[]
+    >([personalEmote]);
+    expect(
+      chatStore$.persisted.channelCaches.peek()[channelId],
+    ).toEqual<ChannelCacheType>({
+      ...structuredClone(emptyEmoteData),
+      lastUpdated: 1_000,
+    });
+  });
+
+  test('clearPersonalEmotesCache drops cached sets and bumps the version', async () => {
+    mockGetPersonalEmoteSet.mockResolvedValueOnce([personalEmote]);
+    await fetchUserPersonalEmotes(twitchUserId, channelId);
+    const versionBefore = chatStore$.personalEmotesVersion.peek();
+
+    clearPersonalEmotesCache();
+
+    expect(getUserPersonalEmotes(twitchUserId, channelId)).toEqual([]);
+    expect(chatStore$.personalEmotesVersion.peek()).toBe(versionBefore + 1);
   });
 });
 

@@ -23,6 +23,7 @@ import {
   clearCache,
   clearPersonalEmotesCache,
   clearSubscriberProfilesCache,
+  getUserPersonalEmotes,
   invalidateChatResourceCaches,
   loadChannelResources,
   resolveSubscriberChannelProfiles,
@@ -433,8 +434,7 @@ describe('loadChannelResources cache fallback', () => {
     });
 
     expect(mockGetPersonalEmoteSet).toHaveBeenCalledWith(twitchUserId);
-    const cache = chatStore$.persisted.channelCaches.peek()[channelId];
-    expect(ids(cache!.sevenTvPersonalEmotes[twitchUserId] ?? [])).toEqual([
+    expect(ids(getUserPersonalEmotes(twitchUserId, channelId))).toEqual([
       'personal-emote',
     ]);
   });

@@ -7,19 +7,47 @@ import { chatStore$ } from '../observables/chatStore';
 
 const personalEmotesGuard = createFetchOnceGuard();
 
+/**
+ * Session cache of each sighted chatter's 7TV personal emote set, keyed by
+ * channel then Twitch user id. Kept as a plain bounded Map rather than on the
+ * persisted store: sets are refetched per session anyway, and routing every
+ * chatter sighting through the persisted observable re-stringified the whole
+ * multi-MB channel-cache table per write. Reads are imperative (ingest and
+ * render); React consumers subscribe via `personalEmotesVersion`.
+ */
+const MAX_PERSONAL_EMOTE_CHANNELS = 20;
+
+const personalEmotesByChannel = new Map<
+  string,
+  Record<string, SanitisedEmote[]>
+>();
+
+const EMPTY_PERSONAL_EMOTES: Record<string, SanitisedEmote[]> = {};
+
+export const getChannelPersonalEmotes = (
+  channelId: string | null | undefined,
+): Record<string, SanitisedEmote[]> =>
+  (channelId ? personalEmotesByChannel.get(channelId) : undefined) ??
+  EMPTY_PERSONAL_EMOTES;
+
+export const clearChannelPersonalEmotes = (channelId: string): void => {
+  if (personalEmotesByChannel.delete(channelId)) {
+    chatStore$.personalEmotesVersion.set(version => version + 1);
+  }
+};
+
 export const fetchUserPersonalEmotes = async (
   twitchUserId: string,
   channelId: string,
 ): Promise<SanitisedEmote[] | null> => {
   if (personalEmotesGuard.hasFetched(twitchUserId)) {
-    const cache = chatStore$.persisted.channelCaches[channelId]?.peek();
-    return cache?.sevenTvPersonalEmotes?.[twitchUserId] || [];
+    return getChannelPersonalEmotes(channelId)[twitchUserId] || [];
   }
-  const cache = chatStore$.persisted.channelCaches[channelId]?.peek();
 
-  if (cache?.sevenTvPersonalEmotes?.[twitchUserId]?.length) {
+  const cached = getChannelPersonalEmotes(channelId)[twitchUserId];
+  if (cached?.length) {
     personalEmotesGuard.markFetched(twitchUserId);
-    return cache.sevenTvPersonalEmotes[twitchUserId];
+    return cached;
   }
 
   return personalEmotesGuard.run(twitchUserId, async ctx => {
@@ -58,20 +86,29 @@ function writePersonalEmotes(
   twitchUserId: string,
   personalEmotes: SanitisedEmote[],
 ): void {
-  const channelCache = chatStore$.persisted.channelCaches[channelId];
-  if (!channelCache?.peek()) {
-    return;
-  }
-  const previousEmotes =
-    channelCache.sevenTvPersonalEmotes[twitchUserId]?.peek() ?? [];
+  const channelEmotes = personalEmotesByChannel.get(channelId);
+  const previousEmotes = channelEmotes?.[twitchUserId] ?? [];
   const emoteIdsChanged =
     previousEmotes.length !== personalEmotes.length ||
     personalEmotes.some(
       (emote, index) => emote.id !== previousEmotes[index]?.id,
     );
-  // Keyed child set so concurrent writes for other users are not clobbered
-  // by rebuilding the whole record.
-  channelCache.sevenTvPersonalEmotes[twitchUserId]?.set(personalEmotes);
+  if (!emoteIdsChanged && channelEmotes) {
+    return;
+  }
+  if (
+    !channelEmotes &&
+    personalEmotesByChannel.size >= MAX_PERSONAL_EMOTE_CHANNELS
+  ) {
+    const oldest = personalEmotesByChannel.keys().next().value;
+    if (oldest !== undefined) {
+      personalEmotesByChannel.delete(oldest);
+    }
+  }
+  personalEmotesByChannel.set(channelId, {
+    ...channelEmotes,
+    [twitchUserId]: personalEmotes,
+  });
   if (emoteIdsChanged) {
     chatStore$.personalEmotesVersion.set(version => version + 1);
   }
@@ -80,13 +117,14 @@ function writePersonalEmotes(
 export const getUserPersonalEmotes = (
   twitchUserId: string,
   channelId: string,
-): SanitisedEmote[] => {
-  const cache = chatStore$.persisted.channelCaches[channelId]?.peek();
-  return cache?.sevenTvPersonalEmotes?.[twitchUserId] || [];
-};
+): SanitisedEmote[] => getChannelPersonalEmotes(channelId)[twitchUserId] || [];
 
 export const clearPersonalEmotesCache = () => {
   personalEmotesGuard.clear();
+  if (personalEmotesByChannel.size > 0) {
+    personalEmotesByChannel.clear();
+    chatStore$.personalEmotesVersion.set(version => version + 1);
+  }
 };
 
 /**
@@ -143,8 +181,7 @@ export const findPersonalEmoteSetOwner = (
   if (!channelId) {
     return null;
   }
-  const cache = chatStore$.persisted.channelCaches[channelId]?.peek();
-  const personalEmotes = cache?.sevenTvPersonalEmotes ?? {};
+  const personalEmotes = getChannelPersonalEmotes(channelId);
   for (const [twitchUserId, emotes] of Object.entries(personalEmotes)) {
     if (emotes.some(emote => getEmoteSetId(emote) === emoteSetId)) {
       return twitchUserId;
