@@ -9,11 +9,8 @@ import {
 export function ChatDebugLogRecorder({ channelId }: { channelId: string }) {
   useEffect(() => {
     acquireChatDebugLog();
-    return () => releaseChatDebugLog();
-  }, []);
-
-  useEffect(() => {
     clearChatDebugLog();
+    return () => releaseChatDebugLog();
   }, [channelId]);
 
   return null;

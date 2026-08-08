@@ -50,31 +50,46 @@ export function getChatDebugIrcLines(): ChatDebugIrcLine[] {
 }
 
 /**
- * Head is everything before the trailing parameter (the message body), so the
- * matchers below can never fire on body text a user typed.
+ * User-typed text reaches a line in two places: the trailing parameter (the
+ * message body) and tag values like reply-parent-msg-body. Tag values escape
+ * raw ';' and space, so the tags token ends at the first space and real tags
+ * always split on ';'. That keeps the matchers below anchored to actual tag
+ * keys and the sender prefix instead of firing on lookalike text inside a
+ * body.
  */
-function splitIrcLine(line: string): { head: string; trailing: string | null } {
+function splitIrcLine(line: string): {
+  tags: string | null;
+  prefix: string | null;
+  rest: string;
+  trailing: string | null;
+} {
   let cursor = 0;
+  let tags: string | null = null;
   if (line.startsWith('@')) {
     const tagEnd = line.indexOf(' ');
     if (tagEnd === -1) {
-      return { head: line, trailing: null };
+      return { tags: line, prefix: null, rest: '', trailing: null };
     }
+    tags = line.slice(0, tagEnd);
     cursor = tagEnd + 1;
   }
+  let prefix: string | null = null;
   if (line.startsWith(':', cursor)) {
     const prefixEnd = line.indexOf(' ', cursor);
     if (prefixEnd === -1) {
-      return { head: line, trailing: null };
+      return { tags, prefix: line.slice(cursor), rest: '', trailing: null };
     }
+    prefix = line.slice(cursor, prefixEnd);
     cursor = prefixEnd + 1;
   }
   const trailingStart = line.indexOf(' :', cursor);
   if (trailingStart === -1) {
-    return { head: line, trailing: null };
+    return { tags, prefix, rest: line.slice(cursor), trailing: null };
   }
   return {
-    head: line.slice(0, trailingStart),
+    tags,
+    prefix,
+    rest: line.slice(cursor, trailingStart),
     trailing: line.slice(trailingStart + 2),
   };
 }
@@ -91,7 +106,7 @@ export function getChatDebugIrcLinesForLogin(
     .replace(/[$()*+.?[\\\]^{|}]/g, '\\$&')
     .replace(/ /g, '\\\\s');
   const tagPattern = new RegExp(
-    `[@;](?:login|display-name)=${escaped}(?:;| |$)`,
+    `(?:^@|;)(?:login|display-name)=${escaped}(?:;|$)`,
   );
 
   const matches: ChatDebugIrcLine[] = [];
@@ -100,11 +115,13 @@ export function getChatDebugIrcLinesForLogin(
     if (!entry) {
       continue;
     }
-    const { head, trailing } = splitIrcLine(entry.line.toLowerCase());
+    const { tags, prefix, rest, trailing } = splitIrcLine(
+      entry.line.toLowerCase(),
+    );
     if (
-      head.includes(`!${target}@`) ||
-      tagPattern.test(head) ||
-      (head.includes(' clearchat ') && trailing === target)
+      prefix?.startsWith(`:${target}!`) ||
+      (tags !== null && tagPattern.test(tags)) ||
+      (rest.startsWith('clearchat ') && trailing === target)
     ) {
       matches.push(entry);
       if (matches.length >= limit) {
@@ -179,32 +196,19 @@ export function getChatDebugEmoteDetails(emote: {
     ['twitchSubscriber', cache.twitchSubscriberEmotes],
   ];
 
-  type Found = {
-    foundInCache: true;
-    sourceList: string;
-    cachedEmote: SanitisedEmote;
-  };
-  const byId = new Map<string, Found>();
-  const byName = new Map<string, Found>();
+  let nameMatch: Record<string, unknown> | undefined;
   for (const [sourceList, emotes] of lists) {
     for (const cachedEmote of emotes) {
-      const found: Found = { foundInCache: true, sourceList, cachedEmote };
-      if (!byId.has(cachedEmote.id)) {
-        byId.set(cachedEmote.id, found);
+      if (emote.id && cachedEmote.id === emote.id) {
+        return { foundInCache: true, sourceList, cachedEmote };
       }
-      if (!byName.has(cachedEmote.name)) {
-        byName.set(cachedEmote.name, found);
+      if (!nameMatch && emote.name && cachedEmote.name === emote.name) {
+        nameMatch = { foundInCache: true, sourceList, cachedEmote };
       }
     }
   }
 
-  return (
-    (emote.id ? byId.get(emote.id) : undefined) ??
-    (emote.name ? byName.get(emote.name) : undefined) ?? {
-      foundInCache: false,
-      cacheLoaded: true,
-    }
-  );
+  return nameMatch ?? { foundInCache: false, cacheLoaded: true };
 }
 
 export function getChatDebugBadgeDetails(

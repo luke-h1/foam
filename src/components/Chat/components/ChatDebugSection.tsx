@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -25,8 +24,7 @@ interface ChatDebugSectionProps {
 export function ChatDebugSection({ build }: ChatDebugSectionProps) {
   const { t } = useTranslation('chat');
   const chatDebugTools = usePreference('chatDebugTools');
-  const enabled = isDevToolsEnabled && chatDebugTools;
-  const data = useMemo(() => (enabled ? build() : null), [enabled, build]);
+  const data = isDevToolsEnabled && chatDebugTools ? build() : null;
 
   if (!data) {
     return null;
