@@ -421,11 +421,9 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
         return;
       }
 
-      bufferRef.current.removeById(messageId);
-      delayQueueRef.current.removeById(messageId);
-      removeMessageById(messageId);
+      removeChatMessageById(messageId);
     },
-    [bufferRef, delayQueueRef],
+    [bufferRef, delayQueueRef, removeChatMessageById],
   );
 
   const moderateChatMessagesByLogin = useCallback(
