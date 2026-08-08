@@ -66,8 +66,15 @@ function getChannelDisplayUrls(channelId: string): string[] {
   );
 }
 
-async function warmInBatches(urls: string[], pin: boolean): Promise<void> {
+async function warmInBatches(
+  urls: string[],
+  pin: boolean,
+  isCancelled: () => boolean,
+): Promise<void> {
   for (let i = 0; i < urls.length; i += WARM_BATCH_SIZE) {
+    if (isCancelled()) {
+      return;
+    }
     // eslint-disable-next-line react-doctor/async-await-in-loop, react-doctor/async-defer-await -- batches are intentionally sequential so the warm storm stays bounded
     await warmCachedEmoteRefs(urls.slice(i, i + WARM_BATCH_SIZE), { pin });
   }
@@ -75,12 +82,19 @@ async function warmInBatches(urls: string[], pin: boolean): Promise<void> {
 
 export function useCachedEmotes(channelId: string) {
   useEffect(() => {
+    // A channel hop releases the old channel's refs in this cleanup; without
+    // the cancel check the still-running warm pass would re-decode them into
+    // a cache nothing reads while holding the decode slots the new channel
+    // needs.
+    let cancelled = false;
+    const isCancelled = () => cancelled;
     const warm = async () => {
-      await warmInBatches(getGlobalDisplayUrls(channelId), true);
-      await warmInBatches(getChannelDisplayUrls(channelId), false);
+      await warmInBatches(getGlobalDisplayUrls(channelId), true, isCancelled);
+      await warmInBatches(getChannelDisplayUrls(channelId), false, isCancelled);
     };
     void warm();
     return () => {
+      cancelled = true;
       releaseChannelEmoteRefs();
     };
   }, [channelId]);
