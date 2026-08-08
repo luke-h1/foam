@@ -325,17 +325,9 @@ describe('loadChannelResources cache fallback', () => {
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
         ...emptyEmoteData,
-        badges: [badge('ffz-global-badge-cached')],
         badgesLastUpdated: 2_000,
         bttvChannelEmotes: [bttvEmote('bttv-channel-cached')],
         bttvGlobalEmotes: [bttvEmote('bttv-global-cached', 'Global BTTV')],
-        emotes: [
-          sevenTvEmote('seven-channel-cached'),
-          bttvEmote('bttv-global-cached', 'Global BTTV'),
-          bttvEmote('bttv-channel-cached'),
-          ffzEmote('ffz-channel-cached'),
-          ffzEmote('ffz-global-cached', 'Global FFZ'),
-        ],
         ffzChannelBadges: [badge('ffz-channel-badge-cached')],
         ffzChannelEmotes: [ffzEmote('ffz-channel-cached')],
         ffzGlobalBadges: [badge('ffz-global-badge-cached')],
@@ -376,8 +368,6 @@ describe('loadChannelResources cache fallback', () => {
     expect(ids(cache!.ffzGlobalEmotes)).toEqual(['ffz-global-cached']);
     expect(ids(cache!.ffzChannelBadges)).toEqual(['ffz-channel-badge-cached']);
     expect(ids(cache!.ffzGlobalBadges)).toEqual(['ffz-global-badge-cached']);
-    expect(ids(cache!.emotes)).toContain('bttv-global-cached');
-    expect(ids(cache!.emotes)).not.toContain('bttv-channel-cached');
     expect(cache!.lastUpdated).toBe(1_000);
     expect(cache!.badgesLastUpdated).toBe(2_000);
   });
@@ -386,9 +376,7 @@ describe('loadChannelResources cache fallback', () => {
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
         ...emptyEmoteData,
-        badges: [badge('ffz-global-badge-cached')],
         badgesLastUpdated: 0,
-        emotes: [twitchEmote('existing-emote')],
         ffzGlobalBadges: [badge('ffz-global-badge-cached')],
         lastUpdated: 9_000,
         twitchChannelEmotes: [twitchEmote('existing-emote')],
@@ -403,7 +391,6 @@ describe('loadChannelResources cache fallback', () => {
     expect(cache).toBeDefined();
 
     expect(ids(cache!.ffzGlobalBadges)).toEqual(['ffz-global-badge-cached']);
-    expect(ids(cache!.badges)).toEqual(['ffz-global-badge-cached']);
     expect(cache!.badgesLastUpdated).toBe(0);
     expect(cache!.lastUpdated).toBe(9_000);
   });
@@ -473,8 +460,10 @@ describe('loadChannelResources cache fallback', () => {
     expect(cache!.ffzGlobalEmotes).toEqual([]);
     expect(cache!.ffzChannelBadges).toEqual([]);
     expect(cache!.ffzGlobalBadges).toEqual([]);
-    expect(cache!.emotes).toEqual<SanitisedEmote[]>([
+    expect(cache!.twitchChannelEmotes).toEqual<SanitisedEmote[]>([
       twitchEmote('twitch-channel-new'),
+    ]);
+    expect(cache!.twitchGlobalEmotes).toEqual<SanitisedEmote[]>([
       twitchEmote('twitch-global-new', 'Twitch Global'),
     ]);
     // A first load with failed slices must stay stale-stamped so the next
@@ -513,13 +502,8 @@ describe('loadChannelResources cache fallback', () => {
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
         ...emptyEmoteData,
-        badges: [badge('ffz-global-badge-cached')],
         badgesLastUpdated: 2_000,
         bttvGlobalEmotes: [bttvEmote('bttv-global-cached', 'Global BTTV')],
-        emotes: [
-          bttvEmote('bttv-global-cached', 'Global BTTV'),
-          twitchEmote('existing-emote'),
-        ],
         ffzGlobalBadges: [badge('ffz-global-badge-cached')],
         lastUpdated: 9_000,
         twitchChannelEmotes: [twitchEmote('existing-emote')],
@@ -552,9 +536,7 @@ describe('loadChannelResources cache fallback', () => {
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
         ...emptyEmoteData,
-        badges: [badge('ffz-global-badge-cached')],
         badgesLastUpdated: 0,
-        emotes: [twitchEmote('existing-emote')],
         ffzGlobalBadges: [badge('ffz-global-badge-cached')],
         lastUpdated: 9_000,
         twitchChannelEmotes: [twitchEmote('existing-emote')],
@@ -593,7 +575,6 @@ describe('loadChannelResources cache fallback', () => {
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
         ...emptyEmoteData,
-        emotes: [twitchEmote('existing-emote')],
         lastUpdated: 9_000,
         twitchChannelEmotes: [twitchEmote('existing-emote')],
       },
@@ -891,9 +872,7 @@ describe('switchSevenTvEmoteSet', () => {
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
         ...emptyEmoteData,
-        badges: [],
         badgesLastUpdated: 1_000,
-        emotes: [sevenTvEmote('emote-a')],
         lastUpdated: 1_000,
         sevenTvChannelEmotes: [sevenTvEmote('emote-a')],
         sevenTvEmoteSetId: 'set-a',
@@ -909,7 +888,6 @@ describe('switchSevenTvEmoteSet', () => {
     const cache = chatStore$.persisted.channelCaches.peek()[channelId];
     expect(cache!.sevenTvEmoteSetId).toBe('set-b');
     expect(ids(cache!.sevenTvChannelEmotes)).toEqual(['emote-b']);
-    expect(ids(cache!.emotes)).toEqual(['emote-b']);
   });
 
   test('no-ops when the cache already points at the requested set', async () => {
@@ -950,9 +928,7 @@ describe('updateSevenTvEmotes', () => {
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
         ...emptyEmoteData,
-        badges: [],
         badgesLastUpdated: 1_000,
-        emotes: channelEmotes,
         lastUpdated: 1_000,
         sevenTvChannelEmotes: channelEmotes,
         sevenTvEmoteSetId: 'set-a',

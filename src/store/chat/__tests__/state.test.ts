@@ -1,4 +1,12 @@
-import { limitChannelCaches } from '../observables/chatStore';
+import type { SanitisedEmote } from '@app/types/emote';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+
+import {
+  chatStore$,
+  limitChannelCaches,
+  migratePersistedChatStore,
+} from '../observables/chatStore';
+import type { ChannelCacheType } from '../types/constants';
 import { emptyEmoteData } from '../types/constants';
 
 jest.mock('@legendapp/state/persist', () => ({
@@ -70,5 +78,73 @@ describe('limitChannelCaches', () => {
         arrayPrototype.toSorted = nativeToSorted;
       }
     }
+  });
+});
+
+describe('migratePersistedChatStore', () => {
+  const emote = (id: string): SanitisedEmote => ({
+    creator: null,
+    emote_link: `https://example.com/${id}`,
+    id,
+    name: id,
+    original_name: id,
+    site: 'BTTV',
+    static_url: `https://example.com/${id}.png`,
+    url: `https://example.com/${id}.webp`,
+  });
+
+  const badge = (id: string): SanitisedBadgeSet => ({
+    id,
+    set: id,
+    title: id,
+    type: 'FFZ Badge',
+    url: `https://example.com/${id}.png`,
+  });
+
+  beforeEach(() => {
+    chatStore$.persisted.channelCaches.set({});
+  });
+
+  test('strips legacy aggregate fields from hydrated channel caches', () => {
+    const legacyCache: ChannelCacheType & {
+      badges: SanitisedBadgeSet[];
+      chatterinoBadges: SanitisedBadgeSet[];
+      emotes: SanitisedEmote[];
+    } = {
+      ...emptyEmoteData,
+      badges: [badge('legacy-badge')],
+      chatterinoBadges: [badge('legacy-chatterino-badge')],
+      emotes: [emote('legacy-emote')],
+      ffzGlobalBadges: [badge('kept-badge')],
+      lastUpdated: 5_000,
+      twitchChannelEmotes: [emote('kept-emote')],
+    };
+    chatStore$.persisted.channelCaches.set({ 'channel-1': legacyCache });
+
+    migratePersistedChatStore();
+
+    expect(
+      chatStore$.persisted.channelCaches.peek()['channel-1'],
+    ).toEqual<ChannelCacheType>({
+      ...emptyEmoteData,
+      ffzGlobalBadges: [badge('kept-badge')],
+      lastUpdated: 5_000,
+      twitchChannelEmotes: [emote('kept-emote')],
+    });
+  });
+
+  test('leaves a current-shape cache untouched', () => {
+    const currentCache: ChannelCacheType = {
+      ...emptyEmoteData,
+      lastUpdated: 5_000,
+      twitchChannelEmotes: [emote('kept-emote')],
+    };
+    chatStore$.persisted.channelCaches.set({ 'channel-1': currentCache });
+
+    migratePersistedChatStore();
+
+    expect(
+      chatStore$.persisted.channelCaches.peek()['channel-1'],
+    ).toEqual<ChannelCacheType>(currentCache);
   });
 });

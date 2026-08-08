@@ -154,8 +154,6 @@ export interface SubscriberChannelProfile {
 }
 
 export interface ChannelCacheType {
-  emotes: SanitisedEmote[];
-  badges: SanitisedBadgeSet[];
   lastUpdated: number;
   twitchChannelEmotes: SanitisedEmote[];
   twitchGlobalEmotes: SanitisedEmote[];
@@ -206,8 +204,6 @@ export const emptyEmoteData = {
   twitchGlobalBadges: [],
   ffzChannelBadges: [],
   ffzGlobalBadges: [],
-  badges: [],
-  emotes: [],
   lastUpdated: 0,
   badgesLastUpdated: 0,
   sevenTvEmoteSetId: undefined,

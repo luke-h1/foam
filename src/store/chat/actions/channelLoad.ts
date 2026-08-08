@@ -43,8 +43,6 @@ import {
   buildSubscriberEmoteSpec,
   clearGlobalResourceCache,
   collectFailedProviderReasons,
-  combineUniqueById,
-  deduplicateById,
   type EmoteResourceSets,
   hadCachedResourcesForFailedSpecs,
   reconcileSettledSpecs,
@@ -99,6 +97,16 @@ const exitIfAborted = (
 type ProviderFailureSettled = Parameters<
   typeof collectFailedProviderReasons
 >[0][number];
+
+const countReconciledItems = (
+  reconciled: ReadonlyMap<string, readonly unknown[]>,
+): number => {
+  let total = 0;
+  reconciled.forEach(items => {
+    total += items.length;
+  });
+  return total;
+};
 
 function notifyProviderLoadFailures(
   channelId: string,
@@ -428,10 +436,6 @@ const loadChannelResourcesInternal = async (
           channelCache.assign({
             twitchSubscriberEmotes: subscriberEmotes,
             twitchSubscriberEmotesUserId: twitchUserId,
-            emotes: deduplicateById([
-              ...subscriberEmotes,
-              ...(existingCache.emotes ?? []),
-            ]),
           });
         }
       }
@@ -468,10 +472,6 @@ const loadChannelResourcesInternal = async (
           ffzChannelBadges: badgeByKey.get('ffzChannelBadges') ?? [],
         };
 
-        const allBadges = combineUniqueById(
-          ...badgeSettled.map(entry => badgeByKey.get(entry.spec.key) ?? []),
-        );
-
         const channelCache = chatStore$.persisted.channelCaches[channelId];
 
         if (channelCache) {
@@ -480,7 +480,6 @@ const loadChannelResourcesInternal = async (
           );
 
           channelCache.assign({
-            badges: allBadges,
             ...badgeResourceSets,
             badgesLastUpdated: hasBadgeResourceFailure
               ? existingCache.badgesLastUpdated
@@ -605,14 +604,6 @@ const loadChannelResourcesInternal = async (
       ffzChannelBadges: badgeByKey.get('ffzChannelBadges') ?? [],
     };
 
-    const allEmotes = combineUniqueById(
-      ...emoteSettled.map(entry => emoteByKey.get(entry.spec.key) ?? []),
-    );
-
-    const allBadges = combineUniqueById(
-      ...badgeSettled.map(entry => badgeByKey.get(entry.spec.key) ?? []),
-    );
-
     if (exitIfAborted(signal, true)) {
       return false;
     }
@@ -626,8 +617,6 @@ const loadChannelResourcesInternal = async (
     const now = Date.now();
 
     const channelData: ChannelCacheType = {
-      emotes: allEmotes,
-      badges: allBadges,
       lastUpdated: hasEmoteResourceFailure
         ? (existingCache?.lastUpdated ?? 0)
         : now,
@@ -670,10 +659,10 @@ const loadChannelResourcesInternal = async (
     logger.chat.info('Loaded channel resources', {
       name: 'chat_resources_info',
       action: 'channel_resources_loaded',
-      badge_count: allBadges.length,
+      badge_count: countReconciledItems(badgeByKey),
       category: 'data_loading',
       channel_id: channelId,
-      emote_count: allEmotes.length,
+      emote_count: countReconciledItems(emoteByKey),
       screen: 'chat',
     });
 
@@ -923,17 +912,9 @@ export const switchSevenTvEmoteSet = async (
       return false;
     }
 
-    const oldSetEmoteIds = new Set(
-      (latest.sevenTvChannelEmotes ?? []).map(emote => emote.id),
-    );
-    const emotesWithoutOldSet = (latest.emotes ?? []).filter(
-      emote => !oldSetEmoteIds.has(emote.id),
-    );
-
     channelCache.assign({
       sevenTvEmoteSetId: newSetId,
       sevenTvChannelEmotes: newEmotes,
-      emotes: deduplicateById([...newEmotes, ...emotesWithoutOldSet]),
       lastUpdated: Date.now(),
     });
 

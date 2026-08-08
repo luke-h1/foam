@@ -199,12 +199,15 @@ const hydrateDeferredChatState = () => {
 
 InteractionManager.runAfterInteractions(hydrateDeferredChatState);
 
-// Recent messages used to live inside `persisted`; drop the stale field from
-// old installs so channelCaches writes stop re-serializing it. Chatterino
-// badges likewise used to be stored per channel (~4,100 entries each) but are
-// now resolved from the bundled table at read time; strip them from old
-// caches so every future channelCaches write stops re-serializing them.
-when(persistedState$?._state?.isLoadedLocal, () => {
+// Fields older builds persisted but the current schema no longer holds.
+// Recent messages used to live inside `persisted`; chatterino badges used to
+// be stored per channel (~4,100 entries each) and are now resolved from the
+// bundled table at read time; the `emotes`/`badges` aggregates duplicated the
+// per-provider arrays stored alongside them. Stripping them on hydrate stops
+// every future channelCaches write from re-serializing them.
+const STALE_CHANNEL_CACHE_KEYS = ['chatterinoBadges', 'emotes', 'badges'];
+
+export const migratePersistedChatStore = () => {
   const persisted = chatStore$.persisted.peek() as {
     recentMessagesByChannel?: unknown;
   };
@@ -217,23 +220,22 @@ when(persistedState$?._state?.isLoadedLocal, () => {
   }
 
   const caches = chatStore$.persisted.channelCaches.peek() ?? {};
-  const staleChannelIds: string[] = [];
-  for (const [id, cache] of Object.entries(caches)) {
-    if ('chatterinoBadges' in cache) {
-      staleChannelIds.push(id);
-    }
-  }
-  if (staleChannelIds.length > 0) {
-    batch(() => {
-      for (const id of staleChannelIds) {
-        (
-          chatStore$.persisted.channelCaches[id] as unknown as {
-            chatterinoBadges: { delete: () => void };
-          }
-        ).chatterinoBadges.delete();
+  batch(() => {
+    for (const [id, cache] of Object.entries(caches)) {
+      const cache$ = chatStore$.persisted.channelCaches[id] as unknown as
+        Record<string, { delete: () => void }> | undefined;
+      if (!cache$) {
+        continue;
       }
-    });
-  }
-});
+      for (const key of STALE_CHANNEL_CACHE_KEYS) {
+        if (key in cache) {
+          cache$[key]?.delete();
+        }
+      }
+    }
+  });
+};
+
+when(persistedState$?._state?.isLoadedLocal, migratePersistedChatStore);
 
 export type ChatMessagesObservable = typeof chatStore$.messages;
