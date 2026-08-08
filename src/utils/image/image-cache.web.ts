@@ -6,10 +6,7 @@ export interface CachedImageInfo {
   size: number;
 }
 
-export type ImageCachePriority = 'visible' | 'interactive' | 'background';
-
 export type CacheImageOptions = {
-  priority?: ImageCachePriority;
   signal?: AbortSignal;
   variant?: string;
 };
@@ -140,19 +137,4 @@ export function listCachedImages(): CachedImageInfo[] {
 
 export function getCacheDirectoryPath(): string {
   return WEB_IMAGE_CACHE_NAME;
-}
-
-export function warmImageCache(
-  urls: string[],
-  options: CacheImageOptions = {},
-): void {
-  for (const url of urls) {
-    if (!isCacheableWebUri(url)) {
-      continue;
-    }
-    if (getCachedImageUri(url)) {
-      continue;
-    }
-    void cacheImageFromUrl(url, options);
-  }
 }

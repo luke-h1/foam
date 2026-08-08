@@ -7,13 +7,10 @@ import {
   type ImageLoadEventData,
 } from 'expo-image';
 
-import {
-  cacheImageFromUrl,
-  getCachedImageUri,
-} from '@app/utils/image/image-cache';
 import { logger } from '@app/utils/logger';
 
 import type { ImageProps } from './Image.types';
+import { imageFileStore } from './imageFileStore';
 
 function getSourceUrl(source: ImageProps['source']): string | null {
   if (typeof source === 'string') {
@@ -43,7 +40,6 @@ export const Image = function Image({
   transition = 500,
   source,
   cachePolicy,
-  cachePriority = 'visible',
   cacheToFile = true,
   cacheVariant = 'image',
   recyclingKey,
@@ -63,10 +59,10 @@ export const Image = function Image({
    * NEXT mount instead (getCachedImageUri resolves it synchronously then).
    */
   const loadedRemoteUrlRef = useRef<string | null>(null);
-  const shouldUseFileCache = cacheToFile && process.env.NODE_ENV !== 'test';
+  const shouldUseFileCache = cacheToFile && imageFileStore.enabled;
   const diskCachedUrl =
     url && shouldUseFileCache
-      ? getCachedImageUri(url, { variant: cacheVariant })
+      ? imageFileStore.getCachedImageUri(url, { variant: cacheVariant })
       : null;
   const [downloadedCache, setDownloadedCache] = useState<{
     sourceUrl: string | null;
@@ -90,25 +86,26 @@ export const Image = function Image({
 
     const controller = new AbortController();
     let cancelled = false;
-    void cacheImageFromUrl(url, {
-      priority: cachePriority,
-      signal: controller.signal,
-      variant: cacheVariant,
-    }).then(cachedUrl => {
-      if (
-        !cancelled &&
-        cachedUrl !== url &&
-        loadedRemoteUrlRef.current !== url
-      ) {
-        setDownloadedCache({ sourceUrl: url, cachedUrl });
-      }
-    });
+    void imageFileStore
+      .cacheImageFromUrl(url, {
+        signal: controller.signal,
+        variant: cacheVariant,
+      })
+      .then(cachedUrl => {
+        if (
+          !cancelled &&
+          cachedUrl !== url &&
+          loadedRemoteUrlRef.current !== url
+        ) {
+          setDownloadedCache({ sourceUrl: url, cachedUrl });
+        }
+      });
 
     return () => {
       cancelled = true;
       controller.abort();
     };
-  }, [cachePriority, cacheVariant, diskCachedUrl, shouldUseFileCache, url]);
+  }, [cacheVariant, diskCachedUrl, shouldUseFileCache, url]);
 
   /**
    * When the wrapper's own file cache is handling persistence, keep

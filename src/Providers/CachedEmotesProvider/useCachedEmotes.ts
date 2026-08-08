@@ -1,15 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import type { SanitisedEmote } from '@app/types/emote';
 import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
-import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
-import { CHAT_INLINE_EMOTE_SCALE } from '@app/utils/emote/resolveEmoteScale';
-import { logger } from '@app/utils/logger';
+import { resolveEmoteDisplayUrl } from '@app/utils/emote/resolveEmoteDisplayUrl';
 
-import { releaseChannelEmoteRefs, warmCachedEmoteRefs } from './cache-service';
-
-export type CachedEmotesLoadingState = 'IDLE' | 'WARMING' | 'WARMED';
+import {
+  abortInflightEmoteDecodes,
+  releaseChannelEmoteRefs,
+  warmCachedEmoteRefs,
+} from './cache-service';
 
 const WARM_BATCH_SIZE = 24;
 /**
@@ -29,12 +29,7 @@ function collectDisplayUrls(emotes: SanitisedEmote[], limit: number): string[] {
     if (urls.size >= limit) {
       break;
     }
-    const url = getDisplayEmoteUrl({
-      image_variants: emote.image_variants,
-      url: emote.url,
-      static_url: emote.static_url,
-      preferredScale: CHAT_INLINE_EMOTE_SCALE,
-    });
+    const url = resolveEmoteDisplayUrl(emote);
     // Skip animated emotes: multi-frame decode is the entry storm; they warm on first paint.
     if (url && describeEmoteUrl(url).kind !== 'animated') {
       urls.add(url);
@@ -75,67 +70,38 @@ function getChannelDisplayUrls(channelId: string): string[] {
   );
 }
 
+async function warmInBatches(
+  urls: string[],
+  pin: boolean,
+  isCancelled: () => boolean,
+): Promise<void> {
+  for (let i = 0; i < urls.length; i += WARM_BATCH_SIZE) {
+    if (isCancelled()) {
+      return;
+    }
+    // eslint-disable-next-line react-doctor/async-await-in-loop, react-doctor/async-defer-await -- batches are intentionally sequential so the warm storm stays bounded
+    await warmCachedEmoteRefs(urls.slice(i, i + WARM_BATCH_SIZE), { pin });
+  }
+}
+
 export function useCachedEmotes(channelId: string) {
-  const [loadingState, setLoadingState] =
-    useState<CachedEmotesLoadingState>('IDLE');
-  /**
-   * Bumped whenever a new warm pass starts (channel change or recalc) so a
-   * previous pass still resolving its awaits can detect it's stale and bail
-   * instead of warming old URLs or overwriting the new channel's loading state.
-   */
-  const runIdRef = useRef(0);
-
-  const warmInBatches = useCallback(
-    async (urls: string[], pin: boolean, runId: number): Promise<boolean> => {
-      for (let i = 0; i < urls.length; i += WARM_BATCH_SIZE) {
-        // eslint-disable-next-line react-doctor/async-await-in-loop, react-doctor/async-defer-await -- batches are sequential and each must finish warming before we can tell whether this run was superseded
-        await warmCachedEmoteRefs(urls.slice(i, i + WARM_BATCH_SIZE), { pin });
-        if (runId !== runIdRef.current) {
-          return false;
-        }
-      }
-      return true;
-    },
-    [],
-  );
-
-  const calculate = useCallback(
-    async (runId: number) => {
-      const globalUrls = getGlobalDisplayUrls(channelId);
-      const channelUrls = getChannelDisplayUrls(channelId);
-      if (globalUrls.length === 0 && channelUrls.length === 0) {
-        setLoadingState('WARMED');
-        return;
-      }
-      setLoadingState('WARMING');
-      if (!(await warmInBatches(globalUrls, true, runId))) {
-        return;
-      }
-      if (!(await warmInBatches(channelUrls, false, runId))) {
-        return;
-      }
-      setLoadingState('WARMED');
-    },
-    [channelId, warmInBatches],
-  );
-
-  const recalculateCachedEmotes = useCallback(async () => {
-    logger.chat.debug('🔄 Recalculating cached emotes', { channelId });
-    runIdRef.current += 1;
-    const runId = runIdRef.current;
-    releaseChannelEmoteRefs();
-    await calculate(runId);
-  }, [calculate, channelId]);
-
   useEffect(() => {
-    runIdRef.current += 1;
-    void calculate(runIdRef.current);
-    return () => {
-      runIdRef.current += 1;
-      releaseChannelEmoteRefs();
-      setLoadingState('IDLE');
+    // A channel hop releases the old channel's refs in this cleanup. The
+    // cancel flag stops the warm pass scheduling further batches and the
+    // decode fence drops the batch already in flight - either would otherwise
+    // refill a cache nothing reads while holding the decode slots the new
+    // channel needs.
+    let cancelled = false;
+    const isCancelled = () => cancelled;
+    const warm = async () => {
+      await warmInBatches(getGlobalDisplayUrls(channelId), true, isCancelled);
+      await warmInBatches(getChannelDisplayUrls(channelId), false, isCancelled);
     };
-  }, [calculate]);
-
-  return { loadingState, recalculateCachedEmotes };
+    void warm();
+    return () => {
+      cancelled = true;
+      abortInflightEmoteDecodes();
+      releaseChannelEmoteRefs();
+    };
+  }, [channelId]);
 }

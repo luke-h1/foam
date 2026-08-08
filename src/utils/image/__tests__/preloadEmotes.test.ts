@@ -4,7 +4,6 @@ import type { SanitisedEmote } from '@app/types/emote';
 import { logger } from '@app/utils/logger';
 
 import {
-  clearPreloadCache,
   preloadChannelEmotes,
   preloadEmotes,
   preloadGlobalEmotes,
@@ -47,24 +46,20 @@ function emote(name: string, url = `https://example.com/${name}.webp`) {
 
 describe('preloadEmotes', () => {
   beforeEach(() => {
-    clearPreloadCache();
     prefetchMock.mockClear();
     prefetchMock.mockResolvedValue(true);
     warnMock.mockClear();
     errorMock.mockClear();
   });
 
-  test('preloads each emote cache URL once across calls', async () => {
+  test('preloads each emote display URL once across calls', async () => {
     const first = emote('first', 'https://example.com/shared.webp');
     const duplicate = emote('duplicate', 'https://example.com/shared.webp');
 
     await preloadEmotes([first, duplicate]);
     await preloadEmotes([first]);
 
-    expect(warmedUrls()).toEqual([
-      'https://example.com/shared.webp',
-      'https://example.com/shared.webp.png',
-    ]);
+    expect(warmedUrls()).toEqual(['https://example.com/shared.webp']);
   });
 
   test('respects the requested preload limit', async () => {
@@ -80,7 +75,6 @@ describe('preloadEmotes', () => {
       bttvGlobalEmotes: [emote('bttv-global')],
       ffzGlobalEmotes: [emote('ffz-global')],
     });
-    clearPreloadCache();
     prefetchMock.mockClear();
 
     await preloadChannelEmotes({
@@ -103,7 +97,7 @@ describe('preloadEmotes', () => {
     expect(errorMock).toHaveBeenCalledWith('chat.emote.preload_failed', {
       name: 'chat_resources_error',
       error: failure,
-      batchSize: 2,
+      batchSize: 1,
       tags: {
         emoteProvider: 'unknown',
         emoteScale: null,
@@ -116,9 +110,7 @@ describe('preloadEmotes', () => {
 
     expect(warmedUrls()).toEqual([
       'https://example.com/boom.webp',
-      'https://example.com/boom.webp.png',
       'https://example.com/boom.webp',
-      'https://example.com/boom.webp.png',
     ]);
   });
 

@@ -349,6 +349,13 @@ async function runDecode(
       { maxWidth: maxPx, maxHeight: maxPx },
     );
     if (inflight.get(url) !== requestEpoch || requestEpoch !== cacheEpoch) {
+      // The decode outlived its epoch: release now, the GC lags exactly when
+      // memory is tight.
+      try {
+        ref.release();
+      } catch {
+        // ignore
+      }
       return;
     }
     const kind = describeEmoteUrl(url).kind;
@@ -450,13 +457,26 @@ export function releaseChannelEmoteRefs({
   }
 }
 
-export function clearCachedEmoteRefs(): void {
+/**
+ * Fences every in-flight decode: results release on arrival instead of
+ * caching, and clearing the inflight markers lets the same urls start fresh
+ * decodes immediately. A channel hop calls this from the warm hook's cleanup -
+ * everything in flight belongs to the channel being left, and a stale decode
+ * would otherwise hold a slot the new channel needs and then land a ref
+ * nothing reads. Memory trims must not call it: their in-flight decodes are
+ * for rows still on screen.
+ */
+export function abortInflightEmoteDecodes(): void {
   cacheEpoch += 1;
+  inflight.clear();
+}
+
+export function clearCachedEmoteRefs(): void {
+  abortInflightEmoteDecodes();
   for (const url of refs.keys()) {
     releaseRef(url);
   }
   totalBytes = 0;
-  inflight.clear();
   pinned.clear();
   recentlyReleased.clear();
   releaseRaceCount = 0;
@@ -487,7 +507,7 @@ type MemoryPressureTrimOptions = {
   throttled?: boolean;
 };
 
-export function trimCachedEmoteRefsForMemoryPressure({
+function trimForMemoryPressure({
   clearImageCache = true,
   keepSubscribed = false,
   throttled = false,
@@ -505,6 +525,22 @@ export function trimCachedEmoteRefsForMemoryPressure({
   }
   lastImageCacheClearAt = now;
   void Image.clearMemoryCache();
+}
+
+export type TrimDecodedEmotesReason = 'advisory' | 'reclaim';
+
+/**
+ * 'advisory' trims come from recurring signals (the 5s headroom poll, Android
+ * onTrimMemory): they keep refs mounted rows are subscribed to and throttle
+ * the expo-image memory-cache wipe. 'reclaim' trims come from free-memory-now
+ * signals (iOS memoryWarning, backgrounding): full shed, unthrottled wipe.
+ */
+export function trimDecodedEmotes(reason: TrimDecodedEmotesReason): void {
+  if (reason === 'advisory') {
+    trimForMemoryPressure({ keepSubscribed: true, throttled: true });
+    return;
+  }
+  trimForMemoryPressure();
 }
 
 let memoryPressureSubscribed = false;
@@ -555,15 +591,17 @@ function pollMemoryHeadroom(): void {
   }
 
   logMemoryPressureTrim({ availableBytes: available });
-  trimCachedEmoteRefsForMemoryPressure({
-    keepSubscribed: true,
-    throttled: true,
-  });
+  trimDecodedEmotes('advisory');
 }
 
+/**
+ * Advisory, but with the expo-image wipe gated on the trim level: only
+ * RUNNING_CRITICAL and above clears the memory cache, milder levels shed
+ * refs only.
+ */
 function handleNativeMemoryPressure(event: ImageMemoryPressureEvent): void {
   logMemoryPressureTrim({ trimLevel: event.level });
-  trimCachedEmoteRefsForMemoryPressure({
+  trimForMemoryPressure({
     clearImageCache: event.level >= ANDROID_TRIM_MEMORY_RUNNING_CRITICAL,
     keepSubscribed: true,
     throttled: true,
@@ -593,7 +631,7 @@ function handleAppStateForMemory(nextAppState: AppStateStatus): void {
   // off-screen and stop polling so we don't run a timer in the background.
   stopMemoryMonitor();
   if (nextAppState === 'background') {
-    trimCachedEmoteRefsForMemoryPressure();
+    trimDecodedEmotes('reclaim');
   }
 }
 
@@ -619,7 +657,7 @@ export function subscribeEmoteCacheMemoryPressure(): void {
   }
   memoryPressureSubscribed = true;
   AppState.addEventListener('memoryWarning', () =>
-    trimCachedEmoteRefsForMemoryPressure(),
+    trimDecodedEmotes('reclaim'),
   );
   ImageMemoryPressure.addListener?.(
     'onMemoryPressure',

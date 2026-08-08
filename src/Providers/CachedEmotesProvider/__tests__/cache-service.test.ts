@@ -8,6 +8,7 @@ jest.mock('expo-image', () => ({
 import { Image, type ImageRef } from 'expo-image';
 
 import {
+  abortInflightEmoteDecodes,
   clearCachedEmoteRefs,
   ensureCachedEmoteRef,
   getCachedEmoteAspectRatio,
@@ -17,7 +18,7 @@ import {
   releaseChannelEmoteRefs,
   subscribeCachedEmoteRef,
   touchCachedEmoteRef,
-  trimCachedEmoteRefsForMemoryPressure,
+  trimDecodedEmotes,
   warmCachedEmoteRefs,
 } from '@app/Providers/CachedEmotesProvider/cache-service';
 
@@ -56,6 +57,10 @@ describe('cache-service', () => {
   afterEach(() => {
     clearCachedEmoteRefs();
     jest.clearAllMocks();
+    // clearAllMocks leaves queued mockReturnValueOnce values behind; a test
+    // whose decode is fenced before loadAsync runs would leak its pending
+    // promise into the next test's first decode.
+    loadAsync.mockReset();
   });
 
   test('clearing the cache notifies subscribers so mounted rows drop the dangling ref', () => {
@@ -134,6 +139,33 @@ describe('cache-service', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  test('a channel-hop fence drops an in-flight decode and lets a re-request start fresh', async () => {
+    const url = 'https://cdn.7tv.app/emote/hopstale/2x.avif';
+    const release = jest.fn();
+    let resolveDecode: (ref: ImageRef) => void = () => {};
+    loadAsync.mockReturnValueOnce(
+      new Promise<ImageRef>(resolve => {
+        resolveDecode = resolve;
+      }),
+    );
+    ensureCachedEmoteRef(url);
+    // Let the decode claim a slot and start loading before the fence lands.
+    await flushMicrotasks();
+
+    abortInflightEmoteDecodes();
+    resolveDecode(makeImageRef({ release }));
+    await flushMicrotasks();
+
+    expect(getCachedEmoteRef(url)).toBeNull();
+    expect(release).toHaveBeenCalledTimes(1);
+
+    ensureCachedEmoteRef(url);
+    await flushMicrotasks();
+
+    expect(loadAsync).toHaveBeenCalledTimes(2);
+    expect(getCachedEmoteRef(url)).toEqual({});
+  });
+
   test('a channel hop keeps the pinned global set decoded but drops channel refs', async () => {
     const globalUrl = 'https://cdn.7tv.app/emote/global/2x.avif';
     const channelUrl = 'https://cdn.7tv.app/emote/channel/2x.avif';
@@ -187,34 +219,34 @@ describe('cache-service', () => {
     });
   });
 
-  test('memory-pressure trim drops unpinned refs, keeps pinned, clears memory cache', async () => {
+  test('a reclaim trim drops unpinned refs, keeps pinned, clears memory cache', async () => {
     const pinnedUrl = 'https://cdn.7tv.app/emote/mpPinned/2x.avif';
     const unpinnedUrl = 'https://cdn.7tv.app/emote/mpUnpinned/2x.avif';
     await warmCachedEmoteRefs([pinnedUrl], { pin: true });
     await warmCachedEmoteRefs([unpinnedUrl]);
 
-    trimCachedEmoteRefsForMemoryPressure();
+    trimDecodedEmotes('reclaim');
 
     expect(getCachedEmoteRef(pinnedUrl)).toEqual({});
     expect(getCachedEmoteRef(unpinnedUrl)).toBeNull();
     expect(Image.clearMemoryCache).toHaveBeenCalledTimes(1);
   });
 
-  test('recurring triggers throttle the image-cache wipe; OS signals bypass it', () => {
+  test('advisory trims throttle the image-cache wipe; reclaim trims bypass it', () => {
     let now = Date.now() + 60_000;
     const nowSpy = jest.spyOn(Date, 'now').mockImplementation(() => now);
 
     try {
-      trimCachedEmoteRefsForMemoryPressure({ throttled: true });
-      trimCachedEmoteRefsForMemoryPressure({ throttled: true });
+      trimDecodedEmotes('advisory');
+      trimDecodedEmotes('advisory');
       expect(Image.clearMemoryCache).toHaveBeenCalledTimes(1);
 
       // memoryWarning/backgrounding path: unthrottled even inside the window.
-      trimCachedEmoteRefsForMemoryPressure();
+      trimDecodedEmotes('reclaim');
       expect(Image.clearMemoryCache).toHaveBeenCalledTimes(2);
 
       now += 31_000;
-      trimCachedEmoteRefsForMemoryPressure({ throttled: true });
+      trimDecodedEmotes('advisory');
       expect(Image.clearMemoryCache).toHaveBeenCalledTimes(3);
     } finally {
       nowSpy.mockRestore();
@@ -310,10 +342,7 @@ describe('cache-service', () => {
     await warmCachedEmoteRefs([mountedUrl, offscreenUrl]);
     const unsubscribe = subscribeCachedEmoteRef(mountedUrl, jest.fn());
 
-    trimCachedEmoteRefsForMemoryPressure({
-      keepSubscribed: true,
-      throttled: true,
-    });
+    trimDecodedEmotes('advisory');
 
     expect(getCachedEmoteRef(mountedUrl)).toEqual({});
     expect(getCachedEmoteRef(offscreenUrl)).toBeNull();
