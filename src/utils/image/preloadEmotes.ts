@@ -4,14 +4,13 @@
  * Warms emote images into expo-image's disk cache so they resolve without a
  * network hop the first time they appear in chat. This must target the same
  * cache the chat renderer reads — ChatInlineImage renders via expo-image, so
- * preloading goes through ExpoImage.prefetch.
+ * preloading goes through prefetchToDisk.
  */
-import { Image as ExpoImage } from 'expo-image';
-
 import type { SanitisedEmote } from '@app/types/emote';
 import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
 import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants/withResolvedEmoteImageVariants';
 import { resolveEmoteDisplayUrl } from '@app/utils/emote/resolveEmoteDisplayUrl';
+import { prefetchToDisk } from '@app/utils/image/prefetchToDisk';
 import { logger } from '@app/utils/logger';
 
 const preloadedUrls = new Set<string>();
@@ -78,7 +77,7 @@ export async function preloadEmotes(
     // out of preloadedUrls so a later attempt can retry them.
     try {
       // eslint-disable-next-line react-doctor/async-await-in-loop -- batch preload is intentionally throttled
-      const warmed = await ExpoImage.prefetch(batch, 'disk');
+      const warmed = await prefetchToDisk(batch);
       if (warmed) {
         batch.forEach(url => preloadedUrls.add(url));
       } else {

@@ -192,6 +192,7 @@ function StreamerProfileHeader({
       <View style={styles.profileRow}>
         <Image
           source={user.profile_image_url}
+          cacheVariant='avatar'
           style={styles.avatar}
           contentFit='cover'
         />
@@ -263,6 +264,7 @@ const VodCard = memo(function VodCard({
       <Button onPress={handleView} style={styles.thumbnailButton}>
         <Image
           source={getVodThumbnailUrl(vod, fallbackImage)}
+          cacheVariant='thumbnail'
           style={styles.thumbnail}
           contentFit='cover'
           transition={150}
@@ -306,6 +308,7 @@ const ClipCard = memo(function ClipCard({
       <Button onPress={handleView} style={styles.thumbnailButton}>
         <Image
           source={getClipThumbnailUrl(clip)}
+          cacheVariant='thumbnail'
           style={styles.thumbnail}
           contentFit='cover'
           transition={150}

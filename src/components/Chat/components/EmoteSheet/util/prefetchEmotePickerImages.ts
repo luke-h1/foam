@@ -1,6 +1,5 @@
-import { Image as ExpoImage } from 'expo-image';
-
 import type { SanitisedEmote } from '@app/types/emote';
+import { prefetchToDisk } from '@app/utils/image/prefetchToDisk';
 
 import { getEmotePickerDisplayUrl } from './emotePickerDisplayUrl';
 
@@ -40,7 +39,7 @@ export async function prefetchEmotePickerImages(
     const batch = urls.slice(i, i + BATCH_SIZE);
     try {
       // eslint-disable-next-line react-doctor/async-await-in-loop -- batches are intentionally sequential to avoid a network flood
-      const warmed = await ExpoImage.prefetch(batch, 'disk');
+      const warmed = await prefetchToDisk(batch);
       if (warmed) {
         batch.forEach(url => prefetched.add(url));
       }
