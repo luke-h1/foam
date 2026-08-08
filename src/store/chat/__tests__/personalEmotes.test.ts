@@ -5,10 +5,12 @@ import type { SevenTvSanitisedEmote } from '@app/types/emote';
 import {
   clearPersonalEmotesCache,
   fetchUserPersonalEmotes,
+  getUserPersonalEmotes,
   refreshUserPersonalEmotes,
 } from '../actions/personalEmotes';
 import { chatStore$ } from '../observables/chatStore';
-import { emptyEmoteData } from '../types/constants';
+import type { ChannelCacheType } from '../types/constants';
+import { makeEmptyEmoteData } from '../types/constants';
 
 jest.mock('@legendapp/state/persist', () => ({
   configureObservablePersistence: jest.fn(),
@@ -83,7 +85,7 @@ describe('fetchUserPersonalEmotes', () => {
     clearPersonalEmotesCache();
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
-        ...structuredClone(emptyEmoteData),
+        ...makeEmptyEmoteData(),
         lastUpdated: 1_000,
       },
     });
@@ -108,6 +110,33 @@ describe('fetchUserPersonalEmotes', () => {
     expect(second).toEqual<SevenTvSanitisedEmote[]>([]);
     expect(mockGetPersonalEmoteSet).toHaveBeenCalledTimes(1);
   });
+
+  test('caches per session without touching the persisted channel cache', async () => {
+    mockGetPersonalEmoteSet.mockResolvedValueOnce([personalEmote]);
+
+    await fetchUserPersonalEmotes(twitchUserId, channelId);
+
+    expect(getUserPersonalEmotes(twitchUserId, channelId)).toEqual<
+      SevenTvSanitisedEmote[]
+    >([personalEmote]);
+    expect(
+      chatStore$.persisted.channelCaches.peek()[channelId],
+    ).toEqual<ChannelCacheType>({
+      ...makeEmptyEmoteData(),
+      lastUpdated: 1_000,
+    });
+  });
+
+  test('clearPersonalEmotesCache drops cached sets and bumps the version', async () => {
+    mockGetPersonalEmoteSet.mockResolvedValueOnce([personalEmote]);
+    await fetchUserPersonalEmotes(twitchUserId, channelId);
+    const versionBefore = chatStore$.personalEmotesVersion.peek();
+
+    clearPersonalEmotesCache();
+
+    expect(getUserPersonalEmotes(twitchUserId, channelId)).toEqual([]);
+    expect(chatStore$.personalEmotesVersion.peek()).toBe(versionBefore + 1);
+  });
 });
 
 describe('personalEmotesVersion', () => {
@@ -116,7 +145,7 @@ describe('personalEmotesVersion', () => {
     clearPersonalEmotesCache();
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
-        ...structuredClone(emptyEmoteData),
+        ...makeEmptyEmoteData(),
         lastUpdated: 1_000,
       },
     });

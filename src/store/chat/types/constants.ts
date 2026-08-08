@@ -1,5 +1,3 @@
-import type { ViewStyle } from 'react-native';
-
 import type { ClearChatTags } from '@app/types/chat/irc-tags/clearchat';
 import type { ClearMsgTags } from '@app/types/chat/irc-tags/clearmsg';
 import type { GlobalUserStateTags } from '@app/types/chat/irc-tags/globaluserstate';
@@ -85,7 +83,6 @@ export interface ChatMessageType<
   message_nonce: string;
   timestamp?: string;
   sender: string;
-  style?: ViewStyle;
   parentDisplayName?: string;
   isSpecialNotice?: boolean;
   moderationNotice?: string;
@@ -154,11 +151,8 @@ export interface SubscriberChannelProfile {
 }
 
 export interface ChannelCacheType {
-  emotes: SanitisedEmote[];
-  badges: SanitisedBadgeSet[];
   lastUpdated: number;
   twitchChannelEmotes: SanitisedEmote[];
-  twitchGlobalEmotes: SanitisedEmote[];
   twitchSubscriberEmotes: SanitisedEmote[];
   twitchSubscriberEmotesUserId?: string;
   /**
@@ -168,19 +162,27 @@ export interface ChannelCacheType {
    */
   twitchSubscriberChannelProfiles?: Record<string, SubscriberChannelProfile>;
   sevenTvChannelEmotes: SanitisedEmote[];
-  sevenTvGlobalEmotes: SanitisedEmote[];
-  sevenTvPersonalEmotes: Record<string, SanitisedEmote[]>;
-  sevenTvPersonalBadges: Record<string, SanitisedBadgeSet[]>;
   ffzChannelEmotes: SanitisedEmote[];
-  ffzGlobalEmotes: SanitisedEmote[];
-  bttvGlobalEmotes: SanitisedEmote[];
   bttvChannelEmotes: SanitisedEmote[];
   twitchChannelBadges: SanitisedBadgeSet[];
-  twitchGlobalBadges: SanitisedBadgeSet[];
-  ffzGlobalBadges: SanitisedBadgeSet[];
   ffzChannelBadges: SanitisedBadgeSet[];
   sevenTvEmoteSetId?: string;
   badgesLastUpdated?: number;
+}
+
+/**
+ * Channel-invariant provider data, stored once instead of duplicated into
+ * every channel cache. `lastUpdated` is its own freshness stamp - global
+ * slices refresh on their own TTL, independent of any channel's.
+ */
+export interface GlobalCacheType {
+  lastUpdated: number;
+  twitchGlobalEmotes: SanitisedEmote[];
+  sevenTvGlobalEmotes: SanitisedEmote[];
+  ffzGlobalEmotes: SanitisedEmote[];
+  bttvGlobalEmotes: SanitisedEmote[];
+  twitchGlobalBadges: SanitisedBadgeSet[];
+  ffzGlobalBadges: SanitisedBadgeSet[];
 }
 
 export const MAX_CACHED_CHANNELS = 20;
@@ -188,38 +190,50 @@ export const MAX_COSMETIC_ENTRIES = 500;
 export const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 export const BADGE_CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 
-export const emptyEmoteData = {
-  twitchChannelEmotes: [],
-  twitchGlobalEmotes: [],
-  twitchSubscriberEmotes: [],
-  twitchSubscriberEmotesUserId: undefined,
-  twitchSubscriberChannelProfiles: {},
-  sevenTvChannelEmotes: [],
-  sevenTvGlobalEmotes: [],
-  sevenTvPersonalBadges: {},
-  sevenTvPersonalEmotes: {},
-  ffzChannelEmotes: [],
-  ffzGlobalEmotes: [],
-  bttvGlobalEmotes: [],
-  bttvChannelEmotes: [],
-  twitchChannelBadges: [],
-  twitchGlobalBadges: [],
-  ffzChannelBadges: [],
-  ffzGlobalBadges: [],
-  badges: [],
-  emotes: [],
-  lastUpdated: 0,
-  badgesLastUpdated: 0,
-  sevenTvEmoteSetId: undefined,
-} satisfies ChannelCacheType;
+/**
+ * Factories rather than shared constants: an empty-cache object embedded into
+ * an observable is written through by legend-state's hydration merge, so a
+ * shared constant would come back from "clear cache" holding the launch-time
+ * hydrated data instead of an empty slot.
+ */
+export const makeEmptyEmoteData = () =>
+  ({
+    twitchChannelEmotes: [],
+    twitchSubscriberEmotes: [],
+    twitchSubscriberEmotesUserId: undefined,
+    twitchSubscriberChannelProfiles: {},
+    sevenTvChannelEmotes: [],
+    ffzChannelEmotes: [],
+    bttvChannelEmotes: [],
+    twitchChannelBadges: [],
+    ffzChannelBadges: [],
+    lastUpdated: 0,
+    badgesLastUpdated: 0,
+    sevenTvEmoteSetId: undefined,
+  }) satisfies ChannelCacheType;
+
+export const makeEmptyGlobalCacheData = () =>
+  ({
+    lastUpdated: 0,
+    twitchGlobalEmotes: [],
+    sevenTvGlobalEmotes: [],
+    ffzGlobalEmotes: [],
+    bttvGlobalEmotes: [],
+    twitchGlobalBadges: [],
+    ffzGlobalBadges: [],
+  }) satisfies GlobalCacheType;
 
 /**
- * Consumer-facing emote-data shape: channel-cache fields plus the
- * chatterinoBadges set, which is resolved from the bundled table at read time
- * rather than stored per channel.
+ * Consumer-facing emote-data shape: channel-cache fields plus the slices that
+ * are not stored per channel - the shared global provider slices,
+ * session-scoped 7TV personal emotes, and the chatterinoBadges set resolved
+ * from the bundled table at read time.
  */
 export const emptyResolvedEmoteData = {
-  ...emptyEmoteData,
+  ...makeEmptyEmoteData(),
+  ...makeEmptyGlobalCacheData(),
+  lastUpdated: 0,
+  sevenTvPersonalEmotes: {} as Record<string, SanitisedEmote[]>,
   chatterinoBadges: [] as SanitisedBadgeSet[],
   bttvBadges: [] as SanitisedBadgeSet[],
 };

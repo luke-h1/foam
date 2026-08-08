@@ -1,8 +1,14 @@
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { ChannelRefreshPlan } from '@app/store/chat/actions/channelRefreshPlan';
 import { planChannelRefresh } from '@app/store/chat/actions/channelRefreshPlan';
-import type { ChannelCacheType } from '@app/store/chat/types/constants';
-import { emptyEmoteData } from '@app/store/chat/types/constants';
+import type {
+  ChannelCacheType,
+  GlobalCacheType,
+} from '@app/store/chat/types/constants';
+import {
+  makeEmptyEmoteData,
+  makeEmptyGlobalCacheData,
+} from '@app/store/chat/types/constants';
 import type { SevenTvSanitisedEmote } from '@app/types/emote';
 
 const NOW = Date.parse('2026-01-01T12:00:00.000Z');
@@ -38,7 +44,7 @@ const emote = {
 const freshCache = (
   overrides?: Partial<ChannelCacheType>,
 ): ChannelCacheType => ({
-  ...emptyEmoteData,
+  ...makeEmptyEmoteData(),
   sevenTvChannelEmotes: [emote],
   sevenTvEmoteSetId: 'set-1',
   lastUpdated: NOW - 30 * 60 * 1000,
@@ -46,27 +52,58 @@ const freshCache = (
   ...overrides,
 });
 
+const freshGlobalCache = (
+  overrides?: Partial<GlobalCacheType>,
+): GlobalCacheType => ({
+  ...makeEmptyGlobalCacheData(),
+  sevenTvGlobalEmotes: [emote],
+  lastUpdated: NOW - 30 * 60 * 1000,
+  ...overrides,
+});
+
 describe('planChannelRefresh', () => {
   test('plans a full load when there is no cache', () => {
     expect(
-      planChannelRefresh({ cache: undefined, forceRefresh: false, now: NOW }),
+      planChannelRefresh({
+        cache: undefined,
+        forceRefresh: false,
+        globalCache: freshGlobalCache(),
+        now: NOW,
+      }),
     ).toEqual<ChannelRefreshPlan>({ kind: 'full' });
   });
 
   test('plans a full load on forceRefresh even with a fresh cache', () => {
     expect(
-      planChannelRefresh({ cache: freshCache(), forceRefresh: true, now: NOW }),
+      planChannelRefresh({
+        cache: freshCache(),
+        forceRefresh: true,
+        globalCache: freshGlobalCache(),
+        now: NOW,
+      }),
     ).toEqual<ChannelRefreshPlan>({ kind: 'full' });
   });
 
-  test('plans a full load when every emote slice is empty', () => {
+  test('plans a full load when every channel and global emote slice is empty', () => {
     expect(
       planChannelRefresh({
         cache: freshCache({ sevenTvChannelEmotes: [] }),
         forceRefresh: false,
+        globalCache: undefined,
         now: NOW,
       }),
     ).toEqual<ChannelRefreshPlan>({ kind: 'full' });
+  });
+
+  test('serves the cache when the channel slices are empty but globals are held', () => {
+    const plan = planChannelRefresh({
+      cache: freshCache({ sevenTvChannelEmotes: [] }),
+      forceRefresh: false,
+      globalCache: freshGlobalCache(),
+      now: NOW,
+    });
+
+    expect(plan.kind).toBe('cached');
   });
 
   test('plans a full load once the cache outlives the cache duration', () => {
@@ -74,6 +111,7 @@ describe('planChannelRefresh', () => {
       planChannelRefresh({
         cache: freshCache({ lastUpdated: NOW - HOUR_MS }),
         forceRefresh: false,
+        globalCache: freshGlobalCache(),
         now: NOW,
       }),
     ).toEqual<ChannelRefreshPlan>({ kind: 'full' });
@@ -84,6 +122,7 @@ describe('planChannelRefresh', () => {
       planChannelRefresh({
         cache: freshCache(),
         forceRefresh: false,
+        globalCache: freshGlobalCache(),
         now: NOW,
       }),
     ).toEqual<ChannelRefreshPlan>({
@@ -93,6 +132,7 @@ describe('planChannelRefresh', () => {
       fetchEmoteSetId: false,
       fetchSubscriberEmotes: false,
       refreshBadges: false,
+      refreshGlobalResources: false,
     });
   });
 
@@ -100,6 +140,7 @@ describe('planChannelRefresh', () => {
     const plan = planChannelRefresh({
       cache: freshCache({ sevenTvEmoteSetId: undefined }),
       forceRefresh: false,
+      globalCache: freshGlobalCache(),
       now: NOW,
     });
 
@@ -108,22 +149,26 @@ describe('planChannelRefresh', () => {
 
   test('requests subscriber emotes only for a different logged-in user', () => {
     const cache = freshCache({ twitchSubscriberEmotesUserId: 'user-1' });
+    const globalCache = freshGlobalCache();
 
     const samePlan = planChannelRefresh({
       cache,
       forceRefresh: false,
+      globalCache,
       now: NOW,
       twitchUserId: 'user-1',
     });
     const otherPlan = planChannelRefresh({
       cache,
       forceRefresh: false,
+      globalCache,
       now: NOW,
       twitchUserId: 'user-2',
     });
     const anonPlan = planChannelRefresh({
       cache,
       forceRefresh: false,
+      globalCache,
       now: NOW,
     });
 
@@ -142,10 +187,46 @@ describe('planChannelRefresh', () => {
     const plan = planChannelRefresh({
       cache: freshCache({ badgesLastUpdated: NOW - HOUR_MS }),
       forceRefresh: false,
+      globalCache: freshGlobalCache(),
       now: NOW,
     });
 
     expect(plan.kind === 'cached' && plan.refreshBadges).toEqual(true);
+  });
+
+  test('refreshes globals once the shared slot outlives the cache duration', () => {
+    const plan = planChannelRefresh({
+      cache: freshCache(),
+      forceRefresh: false,
+      globalCache: freshGlobalCache({ lastUpdated: NOW - HOUR_MS }),
+      now: NOW,
+    });
+
+    expect(plan.kind === 'cached' && plan.refreshGlobalResources).toEqual(true);
+  });
+
+  test('refreshes globals when the shared slot is empty regardless of its stamp', () => {
+    const plan = planChannelRefresh({
+      cache: freshCache(),
+      forceRefresh: false,
+      globalCache: { ...makeEmptyGlobalCacheData(), lastUpdated: NOW },
+      now: NOW,
+    });
+
+    expect(plan.kind === 'cached' && plan.refreshGlobalResources).toEqual(true);
+  });
+
+  test('does not refresh a fresh global slot on a stale channel badge pass', () => {
+    const plan = planChannelRefresh({
+      cache: freshCache({ badgesLastUpdated: NOW - HOUR_MS }),
+      forceRefresh: false,
+      globalCache: freshGlobalCache(),
+      now: NOW,
+    });
+
+    expect(plan.kind === 'cached' && plan.refreshGlobalResources).toEqual(
+      false,
+    );
   });
 
   test('falls back to lastUpdated for badge age when badgesLastUpdated is missing', () => {
@@ -155,6 +236,7 @@ describe('planChannelRefresh', () => {
         lastUpdated: NOW - 45 * 60 * 1000,
       }),
       forceRefresh: false,
+      globalCache: freshGlobalCache(),
       now: NOW,
     });
 
@@ -165,6 +247,7 @@ describe('planChannelRefresh', () => {
       fetchEmoteSetId: false,
       fetchSubscriberEmotes: false,
       refreshBadges: false,
+      refreshGlobalResources: false,
     });
   });
 });

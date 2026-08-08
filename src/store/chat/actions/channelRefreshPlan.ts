@@ -1,8 +1,9 @@
-import type { ChannelCacheType } from '../types/constants';
+import type { ChannelCacheType, GlobalCacheType } from '../types/constants';
 import { BADGE_CACHE_DURATION, CACHE_DURATION } from '../types/constants';
 
 export interface ChannelRefreshPlanInput {
   cache: ChannelCacheType | undefined;
+  globalCache: GlobalCacheType | undefined;
   forceRefresh: boolean;
   now: number;
   twitchUserId?: string;
@@ -15,29 +16,38 @@ export interface CachedChannelRefreshPlan {
   fetchEmoteSetId: boolean;
   fetchSubscriberEmotes: boolean;
   refreshBadges: boolean;
+  refreshGlobalResources: boolean;
 }
 
 export type ChannelRefreshPlan = { kind: 'full' } | CachedChannelRefreshPlan;
 
-const EMOTE_SLICES = [
+const CHANNEL_EMOTE_SLICES = [
   'twitchChannelEmotes',
-  'twitchGlobalEmotes',
   'sevenTvChannelEmotes',
-  'sevenTvGlobalEmotes',
   'ffzChannelEmotes',
-  'ffzGlobalEmotes',
   'bttvChannelEmotes',
+] as const;
+
+const GLOBAL_EMOTE_SLICES = [
+  'twitchGlobalEmotes',
+  'sevenTvGlobalEmotes',
+  'ffzGlobalEmotes',
   'bttvGlobalEmotes',
 ] as const;
+
+const GLOBAL_BADGE_SLICES = ['twitchGlobalBadges', 'ffzGlobalBadges'] as const;
 
 /**
  * Pure freshness policy for a channel's cached resources: decides between a
  * full reload and serving the cache, and which slices of a served cache still
- * need fetching. Effects live in loadChannelResourcesInternal.
+ * need fetching. Global provider slices live in the shared global slot with
+ * their own freshness stamp, so they are judged separately from the channel's
+ * TTL. Effects live in loadChannelResourcesInternal.
  */
 export const planChannelRefresh = ({
   cache,
   forceRefresh,
+  globalCache,
   now,
   twitchUserId,
 }: ChannelRefreshPlanInput): ChannelRefreshPlan => {
@@ -46,9 +56,12 @@ export const planChannelRefresh = ({
   }
 
   const cacheAgeMs = now - cache.lastUpdated;
-  const hasEmptyEmotes = EMOTE_SLICES.every(
-    slice => (cache[slice]?.length || 0) === 0,
+  const hasEmptyGlobalEmotes = GLOBAL_EMOTE_SLICES.every(
+    slice => (globalCache?.[slice]?.length || 0) === 0,
   );
+  const hasEmptyEmotes =
+    CHANNEL_EMOTE_SLICES.every(slice => (cache[slice]?.length || 0) === 0) &&
+    hasEmptyGlobalEmotes;
 
   if (hasEmptyEmotes || cacheAgeMs >= CACHE_DURATION) {
     return { kind: 'full' };
@@ -56,6 +69,12 @@ export const planChannelRefresh = ({
 
   const badgeCacheAgeMs =
     now - (cache.badgesLastUpdated ?? cache.lastUpdated ?? 0);
+  const globalCacheAgeMs = now - (globalCache?.lastUpdated ?? 0);
+  const hasEmptyGlobalSlices =
+    hasEmptyGlobalEmotes &&
+    GLOBAL_BADGE_SLICES.every(
+      slice => (globalCache?.[slice]?.length || 0) === 0,
+    );
 
   return {
     kind: 'cached',
@@ -66,5 +85,7 @@ export const planChannelRefresh = ({
       twitchUserId && cache.twitchSubscriberEmotesUserId !== twitchUserId,
     ),
     refreshBadges: badgeCacheAgeMs >= BADGE_CACHE_DURATION,
+    refreshGlobalResources:
+      hasEmptyGlobalSlices || globalCacheAgeMs >= CACHE_DURATION,
   };
 };
