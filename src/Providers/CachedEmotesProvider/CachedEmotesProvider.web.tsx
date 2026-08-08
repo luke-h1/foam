@@ -4,4 +4,4 @@ import { PropsWithChildren } from 'react';
 // render the url directly), so the provider is a no-op passthrough.
 export const CachedEmotesProvider = ({
   children,
-}: PropsWithChildren<{ channelId: string }>) => <>{children}</>;
+}: PropsWithChildren<{ channelId: string }>) => children;

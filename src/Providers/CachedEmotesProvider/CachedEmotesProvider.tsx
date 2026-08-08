@@ -23,5 +23,5 @@ export const CachedEmotesProvider = ({
     subscribeEmoteCacheMemoryPressure();
   }, []);
 
-  return <>{children}</>;
+  return children;
 };
