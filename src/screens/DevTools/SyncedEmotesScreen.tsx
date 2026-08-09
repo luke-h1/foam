@@ -41,11 +41,13 @@ export function SyncedEmotesScreen() {
     setRemount(prev => ({ generation: prev.generation + 1, staggered }));
   };
 
-  const toggleSharedClock = () => {
+  const toggleSharedClock = async () => {
     const next = !sharedClock;
     sharedClockEnabled = next;
     setSharedClock(next);
-    setSharedAnimationEnabled(next);
+    // Remounting before the driver has the new value races it: the fresh views
+    // read the old one and the label ends up disagreeing with what is on screen.
+    await setSharedAnimationEnabled(next);
     remountCells(false);
   };
 

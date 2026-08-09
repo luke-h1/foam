@@ -98,7 +98,7 @@ index de6e2c368e45bedd01e563cf254c006190aca233..cd29dcd08631da9c703175756882af01
      if let maxSize = options.getMaxSize() {
        // Note that setting the thumbnail size rasterizes vector images into a bitmap.
 diff --git a/ios/ImageModule.swift b/ios/ImageModule.swift
-index 974047c904a8776f542266ededdc3db3e7149bf6..7bc7a91a8c3b57361800a7eda046114f0612a0b5 100644
+index 974047c904a8776f542266ededdc3db3e7149bf6..d824e71e8b3db9b9f49075f6c4b4e6c78d879310 100644
 --- a/ios/ImageModule.swift
 +++ b/ios/ImageModule.swift
 @@ -28,6 +28,11 @@ public final class ImageModule: Module {
@@ -131,7 +131,7 @@ index 974047c904a8776f542266ededdc3db3e7149bf6..7bc7a91a8c3b57361800a7eda046114f
          } else {
            view.sdImageView.stopAnimating()
          }
-@@ -170,6 +179,21 @@ public final class ImageModule: Module {
+@@ -170,6 +179,22 @@ public final class ImageModule: Module {
        ImageModule.configureCache(config: config)
      }
  
@@ -140,15 +140,16 @@ index 974047c904a8776f542266ededdc3db3e7149bf6..7bc7a91a8c3b57361800a7eda046114f
 +     start and end on the same frame no matter when each view mounted. Exposed
 +     as a runtime switch so the two modes can be compared on the same session.
 +     */
-+    Function("setSharedAnimationEnabled") { (enabled: Bool) in
-+      // Module-level functions aren't main-isolated, and the driver owns a
-+      // display link and a view table.
-+      DispatchQueue.main.async {
-+        MainActor.assumeIsolated {
-+          SharedAnimationDriver.shared.isEnabled = enabled
-+        }
++    // Async and main-queue bound so the caller can await it. Applying the flag
++    // on a later main-queue block than the one that mounts the next views is a
++    // race: they would read the old value and stay on their own players while
++    // the switch reads as flipped.
++    AsyncFunction("setSharedAnimationEnabled") { (enabled: Bool) in
++      MainActor.assumeIsolated {
++        SharedAnimationDriver.shared.isEnabled = enabled
 +      }
 +    }
++    .runOnQueue(.main)
 +
      AsyncFunction("prefetch") { (urls: [URL], cachePolicy: ImageCachePolicy, headersMap: [String: String]?, promise: Promise) in
        var context = SDWebImageContext()
