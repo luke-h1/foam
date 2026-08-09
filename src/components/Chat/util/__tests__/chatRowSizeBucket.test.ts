@@ -77,6 +77,19 @@ describe('getChatRowSizeBucket', () => {
     expect(getChatRowSizeBucket(wall)).toBe('w1e');
   });
 
+  test('weighs the media cards a link renders instead of its url', () => {
+    const url = 'https://7tv.app/emotes/01F6MZGCNG000255K4X1V15WQE';
+    const stvEmote = createMessage({
+      message: [{ type: 'stvEmote', content: url, url }],
+    });
+    const clip = createMessage({
+      message: [{ type: 'twitchClip', content: url, url }],
+    });
+
+    expect(getChatRowSizeBucket(stvEmote)).toBe('w1');
+    expect(getChatRowSizeBucket(clip)).toBe('w2');
+  });
+
   test('reads the username but never the badges', () => {
     const withBadges = createMessage({
       badges: [

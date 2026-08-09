@@ -13,6 +13,11 @@ const EMOTE_WEIGHT = 4;
  * A clip renders a MediaLinkCard on its own line, roughly two lines of body.
  */
 const TWITCH_CLIP_WEIGHT = 70;
+/**
+ * A 7TV emote link renders the inline MediaLinkCard chip, a 28pt thumbnail and
+ * a one-line title that can stretch to the full row.
+ */
+const STV_EMOTE_LINK_WEIGHT = 35;
 
 /**
  * About a wrapped line apart at the low end where nearly every row sits,
@@ -33,6 +38,8 @@ function getPartWeight(part: ParsedPart): number {
       return EMOTE_WEIGHT;
     case 'twitchClip':
       return TWITCH_CLIP_WEIGHT;
+    case 'stvEmote':
+      return STV_EMOTE_LINK_WEIGHT;
     default:
       return 0;
   }
