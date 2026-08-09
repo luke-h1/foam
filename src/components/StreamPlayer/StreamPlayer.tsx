@@ -3,9 +3,11 @@ import { InteractionManager, Platform, StyleSheet, View } from 'react-native';
 import type { WebViewMessageEvent } from 'react-native-webview';
 import { WebView } from 'react-native-webview';
 
+import { useOnAppStateChange } from '@app/hooks/useOnAppStateChange';
 import { useWatchTimeTracking } from '@app/hooks/useWatchTimeTracking';
 import { usePreference } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
+import { isForegroundTransition } from '@app/utils/appState/appStateTransitions';
 import { logger } from '@app/utils/logger';
 
 import { Image } from '../Image/Image';
@@ -183,6 +185,18 @@ export const StreamPlayer = memo(function StreamPlayer({
   const [layoutNudge, setLayoutNudge] = useState(0);
   const nudgeTimeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const nudgePlayedRef = useRef(false);
+  const nudgeLayerTree = useCallback(() => {
+    nudgeTimeoutsRef.current.forEach(clearTimeout);
+    nudgeTimeoutsRef.current = [];
+    const pulse = (delay: number) => {
+      nudgeTimeoutsRef.current.push(
+        setTimeout(() => setLayoutNudge(1), delay),
+        setTimeout(() => setLayoutNudge(0), delay + 120),
+      );
+    };
+    pulse(0);
+    pulse(2500);
+  }, []);
   /**
    * Loading frame shown over the WebView (stream thumbnail + spinner) until the
    * player has actually started, replacing the black box during page load.
@@ -203,15 +217,22 @@ export const StreamPlayer = memo(function StreamPlayer({
         setLoadedGeneration(generationRef.current);
       }, POSTER_HIDE_DELAY_MS);
     }
-    const pulse = (delay: number) => {
-      nudgeTimeoutsRef.current.push(
-        setTimeout(() => setLayoutNudge(1), delay),
-        setTimeout(() => setLayoutNudge(0), delay + 120),
-      );
-    };
-    pulse(0);
-    pulse(2500);
-  }, []);
+    nudgeLayerTree();
+  }, [nudgeLayerTree]);
+
+  /**
+   * iOS suspends the WKWebView while the app is backgrounded and does not
+   * reliably re-attach the inline video's AVPlayer layer to the compositor on
+   * the way back, so the player returns as a blank rectangle. The mount-time
+   * nudge above is once-per-generation and has long since fired by then, so
+   * pulse the frame again on every foreground.
+   */
+  useOnAppStateChange(transition => {
+    if (isForegroundTransition(transition)) {
+      nudgeLayerTree();
+    }
+  });
+
   useEffect(() => {
     const timeoutsRef = nudgeTimeoutsRef;
     const posterTimeoutRef = posterHideTimeoutRef;
