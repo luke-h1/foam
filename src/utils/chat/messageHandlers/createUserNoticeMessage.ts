@@ -3,6 +3,7 @@ import type {
   ChatMessageType,
 } from '@app/store/chat/types/constants';
 import {
+  ModiversaryTags,
   UserNoticeTags,
   UserNoticeTagsByVariant,
   ViewerMilestoneTags,
@@ -10,6 +11,7 @@ import {
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { ingestChannelPointRewardTags } from '@app/utils/chat/channelPointRewardTitleStore';
 import { createCharityDonationPart } from '@app/utils/chat/formatSubscriptionNotice/createCharityDonationPart';
+import { createModiversaryPart } from '@app/utils/chat/formatSubscriptionNotice/createModiversaryPart';
 import { createRitualPart } from '@app/utils/chat/formatSubscriptionNotice/createRitualPart';
 import { createSubscriptionPart } from '@app/utils/chat/formatSubscriptionNotice/createSubscriptionPart';
 import { createViewerMilestonePart } from '@app/utils/chat/formatSubscriptionNotice/createViewerMilestonePart';
@@ -40,25 +42,6 @@ const createSystemNoticeText = (tags: UserNoticeTags, text: string): string => {
   return [systemLine, userLine]
     .filter(Boolean)
     .join(systemLine && userLine ? ' ' : '');
-};
-
-const createModiversaryText = (tags: UserNoticeTags, text: string): string => {
-  const systemText = createSystemNoticeText(tags, text);
-  if (systemText) {
-    return systemText;
-  }
-
-  const displayName = tags['display-name'] || tags.login || '';
-  const months =
-    typeof tags['msg-param-months'] === 'string'
-      ? tags['msg-param-months']
-      : '';
-
-  if (!displayName || !months) {
-    return '';
-  }
-
-  return `${displayName}, thank you for protecting our community for ${months} months!`;
 };
 
 interface CreateUserNoticeParams {
@@ -300,19 +283,16 @@ export const createUserNoticeMessage = ({
     }
 
     case 'modiversary': {
-      const combined = createModiversaryText(tags, text);
-
       return {
         ...baseMessage,
         userstate,
         badges: [],
-        message: combined ? [{ type: 'text' as const, content: combined }] : [],
+        message: [createModiversaryPart(tags as ModiversaryTags, text)],
         notice_tags: {
           ...tags,
           ...emptyFields,
         } as UserNoticeTagsByVariant<'modiversary'>,
         isSpecialNotice: true,
-        isTwitchSystemNotice: true,
         ...sharedChatFields,
         ...emptyFields,
       } as AnyChatMessageType;

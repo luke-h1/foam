@@ -248,6 +248,7 @@ export function useRichChatMessage<
     !hasSubscriptionNotice &&
     bodyVariant !== 'stv_emote_event' &&
     bodyVariant !== 'viewer_milestone' &&
+    bodyVariant !== 'mod_anniversary' &&
     userstate.username &&
     sender?.toLowerCase() !== 'system';
 

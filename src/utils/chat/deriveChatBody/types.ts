@@ -9,6 +9,7 @@ export type ChatBodyVariant =
   | 'ritual'
   | 'stv_emote_event'
   | 'viewer_milestone'
+  | 'mod_anniversary'
   | 'app_system_sender'
   | 'user_chat';
 
@@ -34,6 +35,7 @@ export interface ChatBodyScan extends MessageStructure {
   hasRitualNotice: boolean;
   hasStvEmoteEvent: boolean;
   hasViewerMilestone: boolean;
+  hasModAnniversary: boolean;
   /**
    * Normalised logins this message @-mentions; render compares against the
    * current user instead of re-scanning parts.

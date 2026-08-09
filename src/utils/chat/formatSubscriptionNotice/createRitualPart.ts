@@ -1,4 +1,5 @@
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import { withNoticeSubject } from '@app/utils/chat/chatHealth/withNoticeSubject';
 import { getTagValue } from '@app/utils/chat/formatSubscriptionNotice/getTagValue';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
 
@@ -6,15 +7,14 @@ export function createRitualPart(
   tags: UserNoticeTags,
   messageText?: string,
 ): ParsedPart<'ritual'> {
-  const systemMsg =
-    typeof tags['system-msg'] === 'string' ? tags['system-msg'] : '';
+  const displayName =
+    getTagValue(tags, 'display-name') || getTagValue(tags, 'login') || '';
 
   return {
     type: 'ritual',
-    displayName:
-      getTagValue(tags, 'display-name') || getTagValue(tags, 'login') || '',
+    displayName,
     ritualName: getTagValue(tags, 'msg-param-ritual-name'),
-    systemMsg,
+    systemMsg: withNoticeSubject(getTagValue(tags, 'system-msg'), displayName),
     message: messageText || undefined,
   };
 }

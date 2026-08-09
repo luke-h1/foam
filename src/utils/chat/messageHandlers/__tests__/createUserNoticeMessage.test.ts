@@ -290,7 +290,7 @@ describe('createUserNoticeMessage', () => {
     ]);
   });
 
-  test('should create modiversary as a twitch system notice', () => {
+  test('should create modiversary as a mod anniversary notice part', () => {
     const tags = createModiversaryTags({
       'display-name': 'ModUser',
       login: 'moduser',
@@ -306,16 +306,45 @@ describe('createUserNoticeMessage', () => {
     });
 
     expect(result.notice_tags?.['msg-id']).toBe('modiversary');
-    expect(result.isTwitchSystemNotice).toBe(true);
     expect(result.message).toEqual<ParsedPart[]>([
       {
-        type: 'text',
-        content: 'ModUser is celebrating 24 months as a moderator!',
+        type: 'modiversary',
+        displayName: 'ModUser',
+        login: 'moduser',
+        months: '24',
+        systemMsg: 'ModUser is celebrating 24 months as a moderator!',
+        content: '',
       },
     ]);
   });
 
-  test('should create modiversary text from tags when system message is missing', () => {
+  test('should name the moderator when Twitch omits it from system-msg', () => {
+    const tags = createModiversaryTags({
+      'display-name': 'Jimmotep',
+      login: 'jimmotep',
+      'msg-param-months': '18',
+      'system-msg': 'has been a moderator for 18 months!',
+    });
+
+    const result = createUserNoticeMessage({
+      tags,
+      channelName: 'testchannel',
+      text: "I'm celebrating my 1 year, 6 month Mod Anniversary!",
+    });
+
+    expect(result.message).toEqual<ParsedPart[]>([
+      {
+        type: 'modiversary',
+        displayName: 'Jimmotep',
+        login: 'jimmotep',
+        months: '18',
+        systemMsg: 'Jimmotep has been a moderator for 18 months!',
+        content: "I'm celebrating my 1 year, 6 month Mod Anniversary!",
+      },
+    ]);
+  });
+
+  test('should build modiversary copy from tags when system message is missing', () => {
     const tags = createModiversaryTags({
       'display-name': 'ModUser',
       login: 'moduser',
@@ -330,12 +359,14 @@ describe('createUserNoticeMessage', () => {
     });
 
     expect(result.notice_tags?.['msg-id']).toBe('modiversary');
-    expect(result.isTwitchSystemNotice).toBe(true);
     expect(result.message).toEqual<ParsedPart[]>([
       {
-        type: 'text',
-        content:
-          'ModUser, thank you for protecting our community for 24 months!',
+        type: 'modiversary',
+        displayName: 'ModUser',
+        login: 'moduser',
+        months: '24',
+        systemMsg: 'ModUser has been a moderator for 24 months!',
+        content: '',
       },
     ]);
   });

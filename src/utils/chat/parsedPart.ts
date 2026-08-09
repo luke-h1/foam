@@ -16,6 +16,7 @@ export type TwitchNotices =
   | 'primepaidupgrade'
   | 'charitydonation'
   | 'ritual'
+  | 'modiversary'
   | 'raid'
   | 'unraid'
   | 'sharedchatnotice';
@@ -196,54 +197,63 @@ export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
                           login: string;
                           displayName: string;
                         }
-                      : TType extends 'cheermote'
+                      : TType extends 'modiversary'
                         ? {
                             type: TType;
-                            /**
-                             * The original cheer token, e.g. "Cheer100".
-                             */
+                            months: string;
+                            systemMsg: string;
                             content: string;
-                            cheermote: {
-                              bits: number;
-                              color: string;
-                              prefix: string;
-                              static_url: string;
-                              url: string;
-                            };
+                            login: string;
+                            displayName: string;
                           }
-                        : /**
-                           * Normal message
-                           */
-                          Pick<
-                            Partial<SanitisedEmote>,
-                            | 'creator'
-                            | 'emote_link'
-                            | 'image_variants'
-                            | 'original_name'
-                            | 'site'
-                            | 'static_url'
-                            | 'url'
-                          > & {
-                            id?: string;
-                            name?: string;
-                            flags?: number;
-                            type: TType;
-                            content: string;
-                            color?: string;
-                            width?: number;
-                            height?: number;
-                            aspect_ratio?: number;
-                            zero_width?: boolean;
-
-                            /**
-                             * Zero-width emotes stacked over this emote;
-                             * rendered centered on top of it instead of as
-                             * standalone parts.
+                        : TType extends 'cheermote'
+                          ? {
+                              type: TType;
+                              /**
+                               * The original cheer token, e.g. "Cheer100".
+                               */
+                              content: string;
+                              cheermote: {
+                                bits: number;
+                                color: string;
+                                prefix: string;
+                                static_url: string;
+                                url: string;
+                              };
+                            }
+                          : /**
+                             * Normal message
                              */
-                            overlaid?: ParsedPart<'emote'>[];
+                            Pick<
+                              Partial<SanitisedEmote>,
+                              | 'creator'
+                              | 'emote_link'
+                              | 'image_variants'
+                              | 'original_name'
+                              | 'site'
+                              | 'static_url'
+                              | 'url'
+                            > & {
+                              id?: string;
+                              name?: string;
+                              flags?: number;
+                              type: TType;
+                              content: string;
+                              color?: string;
+                              width?: number;
+                              height?: number;
+                              aspect_ratio?: number;
+                              zero_width?: boolean;
 
-                            /**
-                             * Used for emote and twitch clip previews
-                             */
-                            thumbnail?: string;
-                          };
+                              /**
+                               * Zero-width emotes stacked over this emote;
+                               * rendered centered on top of it instead of as
+                               * standalone parts.
+                               */
+                              overlaid?: ParsedPart<'emote'>[];
+
+                              /**
+                               * Used for emote and twitch clip previews
+                               */
+                              thumbnail?: string;
+                            };

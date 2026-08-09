@@ -698,12 +698,10 @@ describe('useChatMessages', () => {
       expect(result.current.getBufferSize()).toBe(0);
     });
 
-    test('caps pending messages when flushing is delayed', () => {
+    test('commits every message when arrivals outrun the flush cadence', () => {
       const { result } = renderHook(() => useChatMessages(scrolledUpOptions));
 
-      // Push one buffer's worth past the cap so the oldest overflow is trimmed.
-      const overflow = 100;
-      const pushCount = MAX_BUFFERED + overflow;
+      const pushCount = MAX_BUFFERED + 100;
 
       act(() => {
         for (let i = 0; i < pushCount; i += 1) {
@@ -711,21 +709,22 @@ describe('useChatMessages', () => {
         }
       });
 
-      expect(result.current.getBufferSize()).toBe(MAX_BUFFERED);
+      // The buffer relieves itself before it can reach the cap, where the
+      // oldest entries would have been dropped without ever being rendered.
+      expect(result.current.getBufferSize()).toBeLessThan(MAX_BUFFERED);
 
       act(() => {
-        // Scrolled up uses the backlog flush interval (250ms).
         jest.advanceTimersByTime(250);
       });
 
-      const firstCall = mockAddMessages.mock.calls[0];
-      const flushedMessages = firstCall?.[0] ?? [];
-
-      expect(flushedMessages).toHaveLength(MAX_BUFFERED);
-      expect(flushedMessages[0]?.message_id).toBe(
-        `${pushCount - MAX_BUFFERED}`,
+      const committed = mockAddMessages.mock.calls.flatMap(
+        call => call[0] ?? [],
       );
-      expect(flushedMessages.at(-1)?.message_id).toBe(`${pushCount - 1}`);
+
+      expect(committed.map(message => message?.message_id)).toEqual(
+        Array.from({ length: pushCount }, (_, index) => `${index}`),
+      );
+      expect(result.current.getBufferSize()).toBe(0);
     });
 
     test('caps a live raid flush at the bottom to a bounded batch of rows', () => {
@@ -836,7 +835,7 @@ describe('useChatMessages', () => {
       expect(result.current.getBufferSize()).toBe(0);
     });
 
-    test('caps pending unread count with the retained high-volume buffer', () => {
+    test('counts every message toward unread when the user is scrolled up', () => {
       const onUnreadIncrement = jest.fn();
       const { result } = renderHook(() =>
         useChatMessages({
@@ -855,9 +854,12 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(250);
       });
 
-      // Unread tracks the retained buffer, which is capped at MAX_BUFFERED.
-      expect(onUnreadIncrement).toHaveBeenCalledTimes(1);
-      expect(onUnreadIncrement).toHaveBeenCalledWith(MAX_BUFFERED);
+      const counted = onUnreadIncrement.mock.calls.reduce(
+        (total, [count]) => total + count,
+        0,
+      );
+
+      expect(counted).toBe(pushCount);
     });
   });
 
