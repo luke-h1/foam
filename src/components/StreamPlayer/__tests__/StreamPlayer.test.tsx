@@ -1,4 +1,6 @@
 import { createRef } from 'react';
+import { AppState, StyleSheet } from 'react-native';
+import type { AppStateStatus, ViewStyle } from 'react-native';
 import type { WebViewProps } from 'react-native-webview';
 
 import { act, render } from '@testing-library/react-native';
@@ -82,10 +84,36 @@ function sendPlayerMessage(type: string, payload: unknown = {}) {
   });
 }
 
+type RenderedTree = ReturnType<ReturnType<typeof render>['toJSON']>;
+
+/**
+ * The layout nudge that forces WKWebView to rebuild its layer tree shows up as
+ * a 1px `paddingBottom` on the player container (the render root).
+ */
+function containerPaddingBottom(tree: RenderedTree) {
+  if (!tree || Array.isArray(tree)) {
+    throw new Error('expected a single player container element');
+  }
+  const style: ViewStyle = StyleSheet.flatten(tree.props.style);
+  return style.paddingBottom;
+}
+
 describe('StreamPlayer component messaging', () => {
+  let emitAppState: (nextState: AppStateStatus) => void;
+
   beforeEach(() => {
     mockInjectJavaScript.mockClear();
     mockWebViewProps.length = 0;
+    emitAppState = () => {
+      throw new Error('no AppState change handler registered');
+    };
+    AppState.currentState = 'active';
+    jest
+      .spyOn(AppState, 'addEventListener')
+      .mockImplementation((_type, handler) => {
+        emitAppState = handler;
+        return { remove: jest.fn() };
+      });
   });
 
   afterEach(() => {
@@ -93,7 +121,10 @@ describe('StreamPlayer component messaging', () => {
     jest.restoreAllMocks();
   });
 
+  // Playback start pulses the layout nudge on a timer; without fake timers the
+  // pulse lands after the test ends and warns about an unwrapped state update.
   test('maps player bridge messages to callbacks and state updates', () => {
+    jest.useFakeTimers();
     const onContentGateChange = jest.fn();
     const onEnded = jest.fn();
     const onError = jest.fn();
@@ -289,6 +320,7 @@ describe('StreamPlayer component messaging', () => {
   });
 
   test('loads the stock raw Twitch player URL without the control bootstrap', () => {
+    jest.useFakeTimers();
     const onWebViewLoaded = jest.fn();
 
     render(
@@ -343,6 +375,7 @@ describe('StreamPlayer component messaging', () => {
   });
 
   test('uses the Twitch clip embed URL for clips', () => {
+    jest.useFakeTimers();
     const onWebViewLoaded = jest.fn();
 
     render(
@@ -375,6 +408,48 @@ describe('StreamPlayer component messaging', () => {
 
     expect(onWebViewLoaded).toHaveBeenCalledTimes(1);
     expect(mockInjectJavaScript).not.toHaveBeenCalled();
+  });
+
+  test('pulses the player frame again when the app returns to the foreground', () => {
+    jest.useFakeTimers();
+
+    const { toJSON } = render(
+      <StreamPlayer
+        channel='cohhcarnage'
+        height={200}
+        muted
+        showOverlayControls={false}
+        width={300}
+      />,
+    );
+
+    // The mount-time nudge fires off WebView load-end and is once-per-generation.
+    const { onLoadEnd } = latestWebViewProps();
+    act(() => {
+      (onLoadEnd as (event: { nativeEvent: { url: string } }) => void)({
+        nativeEvent: { url: 'https://player.twitch.tv/?channel=cohhcarnage' },
+      });
+    });
+    act(() => {
+      jest.advanceTimersByTime(3000);
+    });
+
+    expect(containerPaddingBottom(toJSON())).toEqual(undefined);
+
+    act(() => {
+      emitAppState('background');
+      emitAppState('active');
+      jest.advanceTimersByTime(0);
+    });
+
+    expect(containerPaddingBottom(toJSON())).toEqual(1);
+
+    // Drains both foreground pulses back to a resting frame.
+    act(() => {
+      jest.advanceTimersByTime(3000);
+    });
+
+    expect(containerPaddingBottom(toJSON())).toEqual(undefined);
   });
 
   test('keeps external auth windows inside the current WebView', () => {

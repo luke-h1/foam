@@ -75,6 +75,7 @@ import {
   initialLiveStreamScreenState,
   liveStreamScreenReducer,
 } from './liveStreamScreenReducer';
+import { resolvePlayerAppStateAction } from './resolvePlayerAppStateAction';
 import { showSleepTimerMenu } from './showSleepTimerMenu';
 import { useSleepTimer } from './useSleepTimer';
 
@@ -265,18 +266,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     }, [dispatchUi, isStreamEnabledRef]),
   );
 
-  /**
-   * Pauses the player when the app is backgrounded and resumes it on return,
-   * but only for a *full* background.
-   *
-   * `inactive` fires for transient interruptions (Control Center / notification
-   * pulldown, call banner, Face ID, app-switcher peek) that don't background the
-   * app - pausing on those left the player stopped with nothing to resume it,
-   * which read as the intermittent pausing this effect fixes. The pre-background
-   * play state is captured so a player the user had already paused stays paused
-   * on resume.
-   */
-  useOnAppStateChange(({ current }) => {
+  useOnAppStateChange(transition => {
     const player = streamPlayerRef.current;
     if (!player) {
       return;
@@ -287,10 +277,15 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       wasPlayingBeforeBackgroundRef.current = false;
       return;
     }
-    if (current === 'background') {
+    const { capturePlayState, pausePlayer, resumePlayer } =
+      resolvePlayerAppStateAction(transition);
+    if (capturePlayState) {
       wasPlayingBeforeBackgroundRef.current = !player.getPaused();
+    }
+    if (pausePlayer) {
       player.pause();
-    } else if (current === 'active') {
+    }
+    if (resumePlayer) {
       if (wasPlayingBeforeBackgroundRef.current) {
         player.play();
       }
