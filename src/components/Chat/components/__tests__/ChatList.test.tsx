@@ -70,7 +70,7 @@ describe('ChatList', () => {
       viewabilityConfig: props.viewabilityConfig,
     }).toEqual({
       drawDistance: 250,
-      estimatedItemSize: 44,
+      estimatedItemSize: 26,
       extraData: { showTimestamps: false },
       maintainScrollAtEnd: { on: { dataChange: true, itemLayout: true } },
       maintainScrollAtEndThreshold: 0.1,
@@ -282,5 +282,39 @@ describe('ChatList', () => {
     };
 
     expect(props.onContentSizeChange).toBe(onContentSizeChange);
+  });
+
+  test('forwards the dataset identity to LegendList', () => {
+    const listRef = { current: null };
+    const renderList = (dataKey: string) => (
+      <ChatList
+        data={[]}
+        dataKey={dataKey}
+        listRef={listRef}
+        shouldMaintainScrollAtEnd
+        scrollHandlers={{
+          onContentSizeChange: jest.fn(),
+          onEndReached: jest.fn(),
+          onMomentumScrollBegin: jest.fn(),
+          onMomentumScrollEnd: jest.fn(),
+          onScroll: jest.fn(),
+          onScrollBeginDrag: jest.fn(),
+          onScrollEndDrag: jest.fn(),
+        }}
+        renderItem={jest.fn()}
+        keyExtractor={jest.fn()}
+        getItemType={jest.fn()}
+        contentContainerStyle={undefined}
+      />
+    );
+
+    const { rerender } = render(renderList('channel-a'));
+    rerender(renderList('channel-b'));
+
+    const dataKeys = mockLegendList.mock.calls.map(
+      call => (call[0] as { dataKey?: string }).dataKey,
+    );
+
+    expect(dataKeys).toEqual(['channel-a', 'channel-b']);
   });
 });

@@ -179,6 +179,7 @@
     "@sentry/cli",
   ],
   "patchedDependencies": {
+    "@legendapp/list@3.3.3": "patches/@legendapp%2Flist@3.3.3.patch",
     "@expo/ui@57.0.8": "patches/@expo%2Fui@57.0.8.patch",
     "@legendapp/state@2.1.15": "patches/@legendapp%2Fstate@2.1.15.patch",
     "expo-image@57.0.1": "patches/expo-image@57.0.1.patch",

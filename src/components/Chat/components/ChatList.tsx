@@ -29,7 +29,12 @@ import type { AnyChatMessageType } from '@app/store/chat/types/constants';
  * showed skeleton rows.
  */
 const CHAT_DRAW_DISTANCE = 250;
-const CHAT_ESTIMATED_ITEM_SIZE = 44;
+/**
+ * One line of body text: 31 comfortable, 22 compact. Deliberately under the
+ * average - an over-estimate leaves bare list background under any row whose
+ * position recompute gets skipped.
+ */
+const CHAT_ESTIMATED_ITEM_SIZE = 26;
 const CHAT_END_REACHED_THRESHOLD = 0.02;
 const CHAT_VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 1,
