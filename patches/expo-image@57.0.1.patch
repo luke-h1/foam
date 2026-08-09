@@ -346,10 +346,10 @@ index cccedd7adf7328b18bb61333c3fe2473c79e72cd..e89b0d6dde599b22f1ef7fee7e319e50
    @available(iOS 17.0, tvOS 17.0, *)
 diff --git a/ios/SharedAnimationDriver.swift b/ios/SharedAnimationDriver.swift
 new file mode 100644
-index 0000000000000000000000000000000000000000..9fadb99e0d6da1dee8e633bae95de412a0141466
+index 0000000000000000000000000000000000000000..463cc35c6127163dfcc24446ff817239c04a6eba
 --- /dev/null
 +++ b/ios/SharedAnimationDriver.swift
-@@ -0,0 +1,471 @@
+@@ -0,0 +1,495 @@
 +// Copyright 2022-present 650 Industries. All rights reserved.
 +
 +internal import SDWebImage
@@ -504,12 +504,21 @@ index 0000000000000000000000000000000000000000..9fadb99e0d6da1dee8e633bae95de412
 +     a stale decode from the current one.
 +     */
 +    let token: UInt64
++    /**
++     The decode filling this entry. Evicting cancels it: the budget stops
++     counting these bytes at that moment, so letting the decode run on would
++     leave the frames resident and uncounted until the completion handler could
++     unload them - and under a memory warning, decoding them at all is the
++     opposite of what was asked.
++     */
++    let decode: BlockOperation
 +    var lastUsed: CFTimeInterval
 +
-+    init(image: SDAnimatedImage, bytes: Int, token: UInt64, lastUsed: CFTimeInterval) {
++    init(image: SDAnimatedImage, bytes: Int, token: UInt64, decode: BlockOperation, lastUsed: CFTimeInterval) {
 +      self.image = image
 +      self.bytes = bytes
 +      self.token = token
++      self.decode = decode
 +      self.lastUsed = lastUsed
 +    }
 +  }
@@ -574,6 +583,7 @@ index 0000000000000000000000000000000000000000..9fadb99e0d6da1dee8e633bae95de412
 +  private func releaseUnusedPreloads() {
 +    let inUse = Set(views.allObjects.compactMap { $0.sharedAnimationImage.map(ObjectIdentifier.init) })
 +    for (key, preload) in preloads where !inUse.contains(key) {
++      preload.decode.cancel()
 +      preload.image?.unloadAllFrames()
 +      preloads.removeValue(forKey: key)
 +      preloadedBytes -= preload.bytes
@@ -697,6 +707,7 @@ index 0000000000000000000000000000000000000000..9fadb99e0d6da1dee8e633bae95de412
 +        existing.lastUsed = now
 +        return true
 +      }
++      existing.decode.cancel()
 +      preloads.removeValue(forKey: key)
 +      preloadedBytes -= existing.bytes
 +    }
@@ -708,7 +719,8 @@ index 0000000000000000000000000000000000000000..9fadb99e0d6da1dee8e633bae95de412
 +
 +    nextPreloadToken += 1
 +    let token = nextPreloadToken
-+    preloads[key] = Preload(image: image, bytes: bytes, token: token, lastUsed: now)
++    let decode = BlockOperation()
++    preloads[key] = Preload(image: image, bytes: bytes, token: token, decode: decode, lastUsed: now)
 +    preloadedBytes += bytes
 +
 +    // Decoding every frame is the expensive part, and it is the same work the
@@ -716,7 +728,7 @@ index 0000000000000000000000000000000000000000..9fadb99e0d6da1dee8e633bae95de412
 +    // registered views hold off seeking until `isAllFramesLoaded` flips.
 +    let box = ImageBox(image)
 +    Task { @MainActor in
-+      await Self.decodeAllFrames(box)
++      await Self.decodeAllFrames(box, as: decode)
 +      // Only speak for the entry this decode was started for. If the image was
 +      // evicted and taken again while this ran, a newer decode owns it, and the
 +      // `isAllFramesLoaded` read below would be reporting on the eviction rather
@@ -740,16 +752,25 @@ index 0000000000000000000000000000000000000000..9fadb99e0d6da1dee8e633bae95de412
 +    return true
 +  }
 +
-+  private nonisolated static func decodeAllFrames(_ box: ImageBox) async {
++  private nonisolated static func decodeAllFrames(_ box: ImageBox, as operation: BlockOperation) async {
 +    await withCheckedContinuation { continuation in
-+      sharedAnimationDecodeQueue.addOperation {
++      operation.addExecutionBlock { [weak operation] in
++        // Cancelled means the entry was evicted before the queue reached this,
++        // so nothing is waiting on the frames and the budget has already
++        // stopped counting them.
++        guard operation?.isCancelled == false else {
++          return
++        }
 +        if let animatedImage = box.image as? AnimatedImage {
 +          animatedImage.preloadFramesForSharedPlayback()
 +        } else {
 +          box.image.preloadAllFrames()
 +        }
-+        continuation.resume()
 +      }
++      // Runs whether the operation executed or was cancelled, so the caller
++      // always gets to run its own cleanup.
++      operation.completionBlock = { continuation.resume() }
++      sharedAnimationDecodeQueue.addOperation(operation)
 +    }
 +  }
 +
@@ -759,6 +780,7 @@ index 0000000000000000000000000000000000000000..9fadb99e0d6da1dee8e633bae95de412
 +   */
 +  private func releaseViews(showing image: SDAnimatedImage) {
 +    if let preload = preloads.removeValue(forKey: ObjectIdentifier(image)) {
++      preload.decode.cancel()
 +      preloadedBytes -= preload.bytes
 +    }
 +    for view in views.allObjects where view.sharedAnimationImage === image {
@@ -789,6 +811,7 @@ index 0000000000000000000000000000000000000000..9fadb99e0d6da1dee8e633bae95de412
 +      if preloadedBytes + bytes <= Self.maxPreloadBytesTotal {
 +        break
 +      }
++      preload.decode.cancel()
 +      preload.image?.unloadAllFrames()
 +      preloads.removeValue(forKey: key)
 +      preloadedBytes -= preload.bytes
@@ -803,6 +826,7 @@ index 0000000000000000000000000000000000000000..9fadb99e0d6da1dee8e633bae95de412
 +    }
 +    views.removeAllObjects()
 +    for preload in preloads.values {
++      preload.decode.cancel()
 +      preload.image?.unloadAllFrames()
 +    }
 +    preloads.removeAll()
