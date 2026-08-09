@@ -267,12 +267,6 @@ rm -rf ~/Library/Developer/Xcode/DerivedData/Foamdev-*
 > [!NOTE]
 > Just setting `DISABLE_RNREPO=true` at `xcodebuild` time is **not** enough on its own — the flag is only read by RNRepo's pre/post-install hooks, so you must re-run `pod install` (or any `prebuild`/`run:ios` script, which run it for you) to regenerate the Pods project without the prebuilt setup. Re-enable RNRepo on iOS once rnrepo.org publishes matching iOS XCFrameworks.
 
-## Remote build cache
-
-This project enables Expo's [remote build cache](https://docs.expo.dev/guides/cache-builds-remotely/) via the EAS provider. When running `bun run ios` / `bun run android` (or `expo run:*`), Expo will look up a matching fingerprint on EAS and download a previously built binary if the native code hasn't changed — skipping a full local native build.
-
-Config lives in [`app.config.ts`](app.config.ts) under `expo.experiments.buildCacheProvider`, with `eas-build-cache-provider` declared as a devDependency. Make sure you're logged in with `eas login` and have an EAS project linked (already configured in `app.config.ts` via `extra.eas.projectId`).
-
 ## PR previews & channel surfing
 
 Comment `!surf-deploy` on a pull request to publish an EAS Update to a `pr-<N>` branch on the `development` channel (see [`.github/workflows/ota-surf.yml`](.github/workflows/ota-surf.yml)). The workflow posts a QR code as a comment on the PR.
@@ -672,18 +666,6 @@ eas update --channel e2e --message "Fix E2E test"
 ```
 
 Only rebuild (`bun run e2e:build:ios`) when native code changes. Use fingerprinting to detect this automatically in CI.
-
-### Build caching (EAS)
-
-Local builds use EAS build caching to speed up `npx expo run:ios/android`. Builds are cached by fingerprint and reused when native code hasn't changed.
-
-**How it works:**
-
-- On `npx expo run:ios`, Expo checks EAS for a cached build matching the project fingerprint
-- If found, downloads and uses it (skips compilation)
-- If not found, compiles normally and uploads to EAS for future runs
-
-No setup required - just ensure you're logged in with `eas login`.
 
 ## Local EAS build
 

@@ -1,17 +1,21 @@
-diff --git a/node_modules/expo-image/.bun-tag-34c8cb656dcf677f b/.bun-tag-34c8cb656dcf677f
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
 diff --git a/ios/AnimatedImage.swift b/ios/AnimatedImage.swift
-index 350c9e4d90680baf8370e49b3529f6e45781244e..fd438254be1cfd1b4c057a426fa95c9c20943824 100644
+index 350c9e4d90680baf8370e49b3529f6e45781244e..a05135020be44a3ccbae94e88bfab5f21c827c40 100644
 --- a/ios/AnimatedImage.swift
 +++ b/ios/AnimatedImage.swift
-@@ -8,16 +8,20 @@ internal import SDWebImage
+@@ -8,16 +8,39 @@ internal import SDWebImage
  final class AnimatedImage: SDAnimatedImage {
    var frames: [SDImageFrame]?
  
 +  var hasMultipleFrames: Bool {
 +    return animatedImageFrameCount > 1
 +  }
++
++  /**
++   Frame schedule for `SharedAnimationDriver`, built once per image on first
++   use. Held here so it dies with the image rather than in a table the driver
++   would have to bound and sweep.
++   */
++  var sharedAnimationTimeline: AnimationTimeline?
 +
    // MARK: - UIImage
  
@@ -27,6 +31,18 @@ index 350c9e4d90680baf8370e49b3529f6e45781244e..fd438254be1cfd1b4c057a426fa95c9c
 +    return (0..<animatedImageFrameCount).reduce(0.0) { total, index in
 +      return total + animatedImageDuration(at: index)
 +    }
++  }
++
++  // MARK: - Shared animation
++
++  /**
++   `preloadAllFrames()` is overridden below to fill `frames`, which deliberately
++   skips SDWebImage's own frame store. `SharedAnimationDriver` needs that store:
++   it is what turns `seekToFrameAtIndex:` into an array lookup instead of a fresh
++   WebP/AVIF decode on whatever thread asked for the frame.
++   */
++  func preloadFramesForSharedPlayback() {
++    super.preloadAllFrames()
    }
  
    // MARK: - SDAnimatedImage
@@ -82,7 +98,7 @@ index de6e2c368e45bedd01e563cf254c006190aca233..cd29dcd08631da9c703175756882af01
      if let maxSize = options.getMaxSize() {
        // Note that setting the thumbnail size rasterizes vector images into a bitmap.
 diff --git a/ios/ImageModule.swift b/ios/ImageModule.swift
-index 974047c904a8776f542266ededdc3db3e7149bf6..f4603610bea5574e5d6a43cd945068d6ce30ad1d 100644
+index 974047c904a8776f542266ededdc3db3e7149bf6..d824e71e8b3db9b9f49075f6c4b4e6c78d879310 100644
 --- a/ios/ImageModule.swift
 +++ b/ios/ImageModule.swift
 @@ -28,6 +28,11 @@ public final class ImageModule: Module {
@@ -97,11 +113,76 @@ index 974047c904a8776f542266ededdc3db3e7149bf6..f4603610bea5574e5d6a43cd945068d6
            view.sources = nil
            view.renderSourceImage(imageRef.ref)
          } else {
+@@ -136,6 +141,8 @@ public final class ImageModule: Module {
+       AsyncFunction("startAnimating") { (view: ImageView) in
+         if view.isSFSymbolSource {
+           view.startSymbolAnimation()
++        } else if view.hasSharedAnimation {
++          view.startSharedAnimation()
+         } else {
+           view.sdImageView.startAnimating()
+         }
+@@ -144,6 +151,8 @@ public final class ImageModule: Module {
+       AsyncFunction("stopAnimating") { (view: ImageView) in
+         if view.isSFSymbolSource {
+           view.stopSymbolAnimation()
++        } else if view.hasSharedAnimation {
++          view.stopSharedAnimation()
+         } else {
+           view.sdImageView.stopAnimating()
+         }
+@@ -170,6 +179,22 @@ public final class ImageModule: Module {
+       ImageModule.configureCache(config: config)
+     }
+ 
++    /**
++     Phase-locks every animated image to one shared clock, so identical images
++     start and end on the same frame no matter when each view mounted. Exposed
++     as a runtime switch so the two modes can be compared on the same session.
++     */
++    // Async and main-queue bound so the caller can await it. Applying the flag
++    // on a later main-queue block than the one that mounts the next views is a
++    // race: they would read the old value and stay on their own players while
++    // the switch reads as flipped.
++    AsyncFunction("setSharedAnimationEnabled") { (enabled: Bool) in
++      MainActor.assumeIsolated {
++        SharedAnimationDriver.shared.isEnabled = enabled
++      }
++    }
++    .runOnQueue(.main)
++
+     AsyncFunction("prefetch") { (urls: [URL], cachePolicy: ImageCachePolicy, headersMap: [String: String]?, promise: Promise) in
+       var context = SDWebImageContext()
+       let sdCacheType = cachePolicy.toSdCacheType().rawValue
 diff --git a/ios/ImageView.swift b/ios/ImageView.swift
-index cccedd7adf7328b18bb61333c3fe2473c79e72cd..8917134a516b206eda2bead68bbe151d8d3efc16 100644
+index cccedd7adf7328b18bb61333c3fe2473c79e72cd..e89b0d6dde599b22f1ef7fee7e319e509f1e1f4e 100644
 --- a/ios/ImageView.swift
 +++ b/ios/ImageView.swift
-@@ -150,6 +150,15 @@ public final class ImageView: ExpoView {
+@@ -66,12 +66,23 @@ public final class ImageView: ExpoView {
+   var recyclingKey: String? {
+     didSet {
+       if oldValue != nil && recyclingKey != oldValue {
++        leaveSharedAnimation()
+         sdImageView.image = nil
+         placeholderImage = nil
+       }
+     }
+   }
+ 
++  /**
++   The animated image `SharedAnimationDriver` is stepping this view through, and
++   its frame schedule. Both nil whenever the view is on SDWebImage's own
++   per-view player, which is every non-animated image and any animation the
++   driver declined to take.
++   */
++  var sharedAnimationImage: SDAnimatedImage?
++
++  private var sharedAnimationTimeline: AnimationTimeline?
++
+   var autoplay: Bool = true
+ 
+   var sfEffect: [SFSymbolEffect]?
+@@ -150,6 +161,22 @@ public final class ImageView: ExpoView {
      if lockResource && !force {
        return
      }
@@ -110,10 +191,658 @@ index cccedd7adf7328b18bb61333c3fe2473c79e72cd..8917134a516b206eda2bead68bbe151d
 +    // change whose `sdImageView.image = nil` ran after the source prop in the same prop batch —
 +    // reload would fall through to the placeholder and the image would stay permanently blank.
 +    // Re-assert the retained ref here so the ref path self-heals like `sources`-based loads do.
-+    if sources == nil, let sourceImage, isViewEmpty {
-+      renderSourceImage(sourceImage)
++    if sources == nil, let sourceImage {
++      // The source prop handler renders the ref mid-batch, so `setImage` may have
++      // read prop defaults (`contentFit` is `.cover`) before the same batch's real
++      // values were applied. This hook runs after the whole batch - re-assert the
++      // final fit so the first render can't lock in a default.
++      sdImageView.contentMode = contentFit.toContentMode()
++      if isViewEmpty {
++        renderSourceImage(sourceImage)
++      }
 +      return
 +    }
      if isViewEmpty {
        if placeholderImage != nil {
          displayPlaceholderIfNecessary()
+@@ -526,10 +553,15 @@ public final class ImageView: ExpoView {
+   private func setImage(_ image: UIImage?, contentFit: ContentFit, isPlaceholder: Bool) {
+     sdImageView.contentMode = contentFit.toContentMode()
+ 
++    // Resolved before the image is assigned, because assigning it is what makes
++    // `SDAnimatedImageView` consult `autoPlayAnimatedImage` and start its own
++    // player - which a driver-stepped image must never do.
++    let sharedAnimation = drivableAnimatedImage(image, isPlaceholder: isPlaceholder)
++
+     if isPlaceholder {
+       sdImageView.autoPlayAnimatedImage = true
+     } else {
+-      sdImageView.autoPlayAnimatedImage = autoplay
++      sdImageView.autoPlayAnimatedImage = sharedAnimation == nil && autoplay
+     }
+ 
+     // Remove any existing symbol effects before setting new image
+@@ -565,6 +597,8 @@ public final class ImageView: ExpoView {
+       }
+     }
+ 
++    updateSharedAnimation(with: sharedAnimation)
++
+     if !isPlaceholder {
+       onDisplay()
+     }
+@@ -576,6 +610,113 @@ public final class ImageView: ExpoView {
+ #endif
+   }
+ 
++  // MARK: - Shared animation
++
++  /**
++   Whether this view currently has an image on the shared clock. `startAnimating`
++   and `stopAnimating` route around `SDAnimatedImageView` when it does.
++   */
++  var hasSharedAnimation: Bool {
++    return sharedAnimationTimeline != nil
++  }
++
++  private func drivableAnimatedImage(_ image: UIImage?, isPlaceholder: Bool) -> SDAnimatedImage? {
++    // Placeholders are short-lived and tint/SF-symbol rendering replaces the
++    // displayed image outright, so neither is worth phase-locking.
++    // A view with an `animationTransformer` resizes every frame it is handed,
++    // uncached, inside `animatedImageFrameAtIndex:`. Stock playback pays that on
++    // its background prefetch; a seek would pay it on the main thread on every
++    // tick, which is the one thing preloading frames exists to avoid.
++    //
++    // A finite loop count is enforced by the player's own `displayDidRefresh`,
++    // which a driven view never runs, so such an image would loop forever here.
++    guard !isPlaceholder,
++      !isSFSymbolSource,
++      imageTintColor == nil,
++      sdImageView.animationTransformer == nil,
++      let animatedImage = image as? SDAnimatedImage,
++      animatedImage.animatedImageLoopCount == 0,
++      SharedAnimationDriver.shared.canDrive(animatedImage) else {
++      return nil
++    }
++    return animatedImage
++  }
++
++  private func updateSharedAnimation(with image: SDAnimatedImage?) {
++    guard let image, let timeline = SharedAnimationDriver.shared.timeline(for: image) else {
++      leaveSharedAnimation()
++      return
++    }
++
++    sharedAnimationImage = image
++    sharedAnimationTimeline = timeline
++
++    if autoplay {
++      startSharedAnimation()
++    } else {
++      SharedAnimationDriver.shared.unregister(self)
++    }
++  }
++
++  func startSharedAnimation() {
++    guard let sharedAnimationImage else {
++      return
++    }
++    if !SharedAnimationDriver.shared.register(self, image: sharedAnimationImage) {
++      // The driver has no room to hold this image's frames, so it stays on its
++      // own player rather than paying a decode per seek.
++      leaveSharedAnimation()
++    }
++  }
++
++  func stopSharedAnimation() {
++    // Leaves the current frame on screen, matching `SDAnimatedImageView`'s
++    // pause-on-stop behaviour for a view that keeps its image.
++    SharedAnimationDriver.shared.unregister(self)
++  }
++
++  /**
++   Hands the view back to SDWebImage's own player. Called when the image is
++   replaced or recycled, and when the driver is turned off wholesale.
++   */
++  func leaveSharedAnimation() {
++    guard sharedAnimationTimeline != nil else {
++      return
++    }
++    SharedAnimationDriver.shared.unregister(self)
++    sharedAnimationImage = nil
++    sharedAnimationTimeline = nil
++    sdImageView.autoPlayAnimatedImage = autoplay
++    if autoplay {
++      sdImageView.startAnimating()
++    }
++  }
++
++  /**
++   Steps the view to the frame the shared clock says every view of this image
++   should be showing. Seeking renders through the player's frame handler without
++   the player ever playing, so no per-view display link is involved.
++   */
++  func renderSharedAnimationFrame(elapsed: TimeInterval) {
++    // Stock playback stops an off-screen view through `updateShouldAnimate`,
++    // but that runs behind `autoPlayAnimatedImage`, which is false for every
++    // driven view - so the same check has to happen here or a hidden view keeps
++    // seeking and redrawing at the clock's full rate.
++    guard window != nil, !isHidden, alpha > 0 else {
++      return
++    }
++    guard let sharedAnimationTimeline,
++      let sharedAnimationImage,
++      SharedAnimationDriver.shared.isReady(sharedAnimationImage),
++      let player = sdImageView.player else {
++      return
++    }
++    let frameIndex = sharedAnimationTimeline.frameIndex(atElapsed: elapsed)
++    if player.currentFrameIndex != frameIndex {
++      player.seekToFrame(at: frameIndex, loopCount: 0)
++    }
++  }
++
+   // MARK: - Symbol Effects
+ 
+   @available(iOS 17.0, tvOS 17.0, *)
+diff --git a/ios/SharedAnimationDriver.swift b/ios/SharedAnimationDriver.swift
+new file mode 100644
+index 0000000000000000000000000000000000000000..463cc35c6127163dfcc24446ff817239c04a6eba
+--- /dev/null
++++ b/ios/SharedAnimationDriver.swift
+@@ -0,0 +1,495 @@
++// Copyright 2022-present 650 Industries. All rights reserved.
++
++internal import SDWebImage
++import QuartzCore
++import UIKit
++
++/**
++ The wall-clock offset at which each frame of an animated image ends, plus the
++ total loop length. Built once per image so mapping an elapsed time onto a frame
++ index is a binary search rather than a walk over the frame list every tick.
++ */
++internal struct AnimationTimeline {
++  private let frameEnds: [TimeInterval]
++  let duration: TimeInterval
++
++  init?(image: SDAnimatedImage) {
++    let frameCount = image.animatedImageFrameCount
++    guard frameCount > 1 else {
++      return nil
++    }
++
++    var ends = [TimeInterval]()
++    ends.reserveCapacity(Int(frameCount))
++    var total: TimeInterval = 0
++
++    for index in 0..<frameCount {
++      let frameDuration = image.animatedImageDuration(at: index)
++      // Mirrors SDWebImage's own guard: encoders routinely emit 0 or 10ms frame
++      // delays that browsers historically rewrote to 100ms.
++      total += frameDuration < 0.011 ? 0.1 : frameDuration
++      ends.append(total)
++    }
++
++    guard total > 0 else {
++      return nil
++    }
++    frameEnds = ends
++    duration = total
++  }
++
++  /**
++   The frame showing at `elapsed` seconds after the driver's epoch. Loop position
++   is a pure function of the clock, so two views of the same image agree no matter
++   when either of them mounted, and images of different lengths never drift.
++   */
++  func frameIndex(atElapsed elapsed: TimeInterval) -> UInt {
++    var offset = elapsed.truncatingRemainder(dividingBy: duration)
++    if offset < 0 {
++      offset += duration
++    }
++
++    var low = 0
++    var high = frameEnds.count - 1
++    while low < high {
++      let mid = (low + high) / 2
++      if offset < frameEnds[mid] {
++        high = mid
++      } else {
++        low = mid + 1
++      }
++    }
++    return UInt(low)
++  }
++}
++
++/**
++ `UIImage` isn't `Sendable`. The frame store `preloadAllFrames()` fills is an
++ `atomic` property, so the array itself can't be torn between the background
++ fill and a reader, and this box only ever crosses a queue boundary to run that
++ one fill.
++ */
++private final class ImageBox: @unchecked Sendable {
++  let image: SDAnimatedImage
++
++  init(_ image: SDAnimatedImage) {
++    self.image = image
++  }
++}
++
++/**
++ Bounds how many frame preloads run at once.
++
++ A channel hop hands views a screenful of already-decoded `ImageRef`s in one
++ commit. Those skip the JS decode limiter entirely - it gates ref creation, not
++ this - so an unbounded dispatch would put dozens of multi-frame decodes on the
++ global pool at the moment chat is mounting. `.utility` so they yield to the
++ main thread rather than race it.
++ */
++private let sharedAnimationDecodeQueue: OperationQueue = {
++  let queue = OperationQueue()
++  queue.maxConcurrentOperationCount =
++    ProcessInfo.processInfo.activeProcessorCount <= 4 ? 2 : 4
++  queue.qualityOfService = .utility
++  return queue
++}()
++
++/**
++ Drives every animated image view from one `CADisplayLink` and one global epoch.
++
++ SDWebImage gives each `SDAnimatedImageView` its own display link, started when
++ that view first shows its image. Two views of the same emote therefore animate
++ out of phase by however long apart they mounted - in chat, where the same emote
++ lands on rows seconds apart, that reads as noise. Here the per-view players are
++ parked (`autoPlayAnimatedImage = false`) and the driver seeks each registered
++ view to `f(now - epoch)` instead, so identical images are always on the same
++ frame and the process holds one display link rather than N.
++
++ Seeking bypasses the player's frame buffer and asks the coder for the frame
++ directly, so a synced image has all of its frames preloaded into SDWebImage's
++ frame store first. That store lives on the image, and foam's emote cache hands
++ the same `ImageRef` to every row showing a given emote, so the decoded frames
++ are shared by every view of that emote instead of buffered once per player.
++ */
++@MainActor
++internal final class SharedAnimationDriver: NSObject {
++  static let shared = SharedAnimationDriver()
++
++  override init() {
++    super.init()
++    observeMemoryPressure()
++  }
++
++  /**
++   Frames are pushed at most this often. Emotes top out around 25fps and the
++   point of the shared clock is to cut per-view work, so sampling at the
++   display's full rate would only burn power to render repeat frames.
++   */
++  private static let framesPerSecond: Float = 30
++
++  /**
++   Preload budgets, in bytes of decoded frames. Emote-sized animations are the
++   target; a large animation would blow through memory frame-first, so anything
++   over the per-image cap keeps its own player and stays unsynced. The per-image
++   cap must cover a long emote (a 200+ frame 4x is ~20MB decoded) - a stock
++   playing `SDAnimatedImagePlayer` with the default dynamic buffer holds the
++   same order of decoded frames per *view*, so the shared per-image store stays
++   the cheaper option even at this size.
++   */
++  private static let maxPreloadBytesPerImage = 24 * 1024 * 1024
++  private static let maxPreloadBytesTotal = 96 * 1024 * 1024
++
++  /**
++   Bookkeeping for one animated image whose frames are held decoded.
++   */
++  private final class Preload {
++    weak var image: SDAnimatedImage?
++    let bytes: Int
++    /**
++     Identifies this entry across evict/re-register cycles. An image can be
++     evicted and taken again while its first decode is still in flight, and both
++     entries live under the same `ObjectIdentifier`, so the key alone cannot tell
++     a stale decode from the current one.
++     */
++    let token: UInt64
++    /**
++     The decode filling this entry. Evicting cancels it: the budget stops
++     counting these bytes at that moment, so letting the decode run on would
++     leave the frames resident and uncounted until the completion handler could
++     unload them - and under a memory warning, decoding them at all is the
++     opposite of what was asked.
++     */
++    let decode: BlockOperation
++    var lastUsed: CFTimeInterval
++
++    init(image: SDAnimatedImage, bytes: Int, token: UInt64, decode: BlockOperation, lastUsed: CFTimeInterval) {
++      self.image = image
++      self.bytes = bytes
++      self.token = token
++      self.decode = decode
++      self.lastUsed = lastUsed
++    }
++  }
++
++  /**
++   Turns the shared clock off for images displayed from here on. Existing synced
++   views are handed back to their own players immediately.
++   */
++  var isEnabled = true {
++    didSet {
++      if !isEnabled {
++        releaseAll()
++      }
++    }
++  }
++
++  private let epoch = CACurrentMediaTime()
++  private var displayLink: CADisplayLink?
++  private let views = NSHashTable<ImageView>.weakObjects()
++  private var preloads = [ObjectIdentifier: Preload]()
++  private var nextPreloadToken: UInt64 = 0
++  private var preloadedBytes = 0
++
++  /**
++   Stock playback frees decoded frames on a memory warning (`SDImageFramePool`
++   observes it) and again whenever the last player for an image goes away. The
++   frames this driver preloads live on the image itself, which observes nothing,
++   and foam's emote cache keeps those images alive for the session - so without
++   this the process would sit on the full budget through a jetsam warning and
++   for as long as it stays backgrounded.
++   */
++  private func observeMemoryPressure() {
++    let center = NotificationCenter.default
++    center.addObserver(
++      forName: UIApplication.didReceiveMemoryWarningNotification,
++      object: nil,
++      queue: .main
++    ) { [weak self] _ in
++      MainActor.assumeIsolated {
++        self?.releaseUnusedPreloads()
++      }
++    }
++    center.addObserver(
++      forName: UIApplication.didEnterBackgroundNotification,
++      object: nil,
++      queue: .main
++    ) { [weak self] _ in
++      MainActor.assumeIsolated {
++        // The display link is suspended in the background, so nothing needs
++        // these frames until the app returns - and re-decoding then is
++        // invisible next to the cost of holding them the whole time.
++        self?.releaseUnusedPreloads()
++      }
++    }
++  }
++
++  /**
++   Unloads every preload no registered view is currently showing. Views that
++   are still on screen keep their frames so returning to the foreground doesn't
++   flash them back to frame 0.
++   */
++  private func releaseUnusedPreloads() {
++    let inUse = Set(views.allObjects.compactMap { $0.sharedAnimationImage.map(ObjectIdentifier.init) })
++    for (key, preload) in preloads where !inUse.contains(key) {
++      preload.decode.cancel()
++      preload.image?.unloadAllFrames()
++      preloads.removeValue(forKey: key)
++      preloadedBytes -= preload.bytes
++    }
++  }
++
++  // MARK: - Registration
++
++  /**
++   Whether `image` is the right shape for the shared clock. Answered before the
++   image is handed to the view, because assigning it is what makes the view
++   decide whether to start its own player.
++   */
++  func canDrive(_ image: SDAnimatedImage) -> Bool {
++    guard isEnabled, image.animatedImageFrameCount > 1 else {
++      return false
++    }
++    let bytes = decodedByteEstimate(of: image)
++    return bytes > 0 && bytes <= Self.maxPreloadBytesPerImage
++  }
++
++  /**
++   The frame schedule for `image`, or nil if it has no usable one.
++
++   Building one walks every frame - for AVIF that is a locked libavif timing
++   call each - and foam's emote cache hands the same image to every row showing
++   that emote, so the result is cached on the image itself. Keeping it there
++   rather than in a dictionary here means it dies with the image and costs no
++   lookup, eviction or identity check.
++   */
++  func timeline(for image: SDAnimatedImage) -> AnimationTimeline? {
++    if let animatedImage = image as? AnimatedImage {
++      if let cached = animatedImage.sharedAnimationTimeline {
++        return cached
++      }
++      let timeline = AnimationTimeline(image: image)
++      animatedImage.sharedAnimationTimeline = timeline
++      return timeline
++    }
++    return AnimationTimeline(image: image)
++  }
++
++  /**
++   Takes over stepping `view`. Returns false when the frame budget can't cover
++   this image, in which case the caller must leave the view on its own player -
++   driving it without preloaded frames would decode on the main thread every tick.
++   */
++  func register(_ view: ImageView, image: SDAnimatedImage) -> Bool {
++    guard isEnabled, retainPreload(of: image) else {
++      return false
++    }
++    views.add(view)
++    startDisplayLinkIfNeeded()
++    return true
++  }
++
++  func unregister(_ view: ImageView) {
++    views.remove(view)
++    stopDisplayLinkIfIdle()
++  }
++
++  /**
++   Whether `image`'s frames are decoded and resident. Views hold off seeking
++   until they are: a seek asks the coder for the frame directly, which on the
++   main thread would both decode and block on the lock the preload is holding.
++   */
++  func isReady(_ image: SDAnimatedImage) -> Bool {
++    return image.isAllFramesLoaded
++  }
++
++  // MARK: - Clock
++
++  private func startDisplayLinkIfNeeded() {
++    guard displayLink == nil else {
++      return
++    }
++    let link = CADisplayLink(target: self, selector: #selector(step))
++    link.preferredFrameRateRange = CAFrameRateRange(
++      minimum: Self.framesPerSecond / 2,
++      maximum: Self.framesPerSecond,
++      preferred: Self.framesPerSecond
++    )
++    link.add(to: .main, forMode: .common)
++    displayLink = link
++  }
++
++  private func stopDisplayLinkIfIdle() {
++    guard views.allObjects.isEmpty else {
++      return
++    }
++    displayLink?.invalidate()
++    displayLink = nil
++  }
++
++  @objc
++  private func step() {
++    let elapsed = CACurrentMediaTime() - epoch
++    let registered = views.allObjects
++
++    if registered.isEmpty {
++      displayLink?.invalidate()
++      displayLink = nil
++      return
++    }
++
++    for view in registered {
++      view.renderSharedAnimationFrame(elapsed: elapsed)
++    }
++  }
++
++  // MARK: - Preloading
++
++  private func retainPreload(of image: SDAnimatedImage) -> Bool {
++    let key = ObjectIdentifier(image)
++    let now = CACurrentMediaTime()
++
++    if let existing = preloads[key] {
++      // A dealloc'd image can leave its address to a new one, so identity has to
++      // be confirmed - otherwise this would report frames resident that aren't.
++      if existing.image === image {
++        existing.lastUsed = now
++        return true
++      }
++      existing.decode.cancel()
++      preloads.removeValue(forKey: key)
++      preloadedBytes -= existing.bytes
++    }
++
++    let bytes = decodedByteEstimate(of: image)
++    guard bytes > 0, bytes <= Self.maxPreloadBytesPerImage, makeRoom(for: bytes) else {
++      return false
++    }
++
++    nextPreloadToken += 1
++    let token = nextPreloadToken
++    let decode = BlockOperation()
++    preloads[key] = Preload(image: image, bytes: bytes, token: token, decode: decode, lastUsed: now)
++    preloadedBytes += bytes
++
++    // Decoding every frame is the expensive part, and it is the same work the
++    // per-view players would each do lazily. Do it once, off the main thread;
++    // registered views hold off seeking until `isAllFramesLoaded` flips.
++    let box = ImageBox(image)
++    Task { @MainActor in
++      await Self.decodeAllFrames(box, as: decode)
++      // Only speak for the entry this decode was started for. If the image was
++      // evicted and taken again while this ran, a newer decode owns it, and the
++      // `isAllFramesLoaded` read below would be reporting on the eviction rather
++      // than on this decode - releasing then would drop the new entry and hand
++      // every view of the image back to its own player for good.
++      //
++      // The eviction's own `unloadAllFrames()` ran while this decode was still
++      // in flight, so it freed nothing and these frames landed after the budget
++      // stopped counting them. Drop them here or they stay resident with no
++      // entry left to reclaim them.
++      guard self.preloads[key]?.token == token else {
++        box.image.unloadAllFrames()
++        return
++      }
++      // A coder that won't hand back frames would otherwise leave every view of
++      // this image parked on frame 0 for good, with nothing to retry it.
++      if !box.image.isAllFramesLoaded {
++        self.releaseViews(showing: box.image)
++      }
++    }
++    return true
++  }
++
++  private nonisolated static func decodeAllFrames(_ box: ImageBox, as operation: BlockOperation) async {
++    await withCheckedContinuation { continuation in
++      operation.addExecutionBlock { [weak operation] in
++        // Cancelled means the entry was evicted before the queue reached this,
++        // so nothing is waiting on the frames and the budget has already
++        // stopped counting them.
++        guard operation?.isCancelled == false else {
++          return
++        }
++        if let animatedImage = box.image as? AnimatedImage {
++          animatedImage.preloadFramesForSharedPlayback()
++        } else {
++          box.image.preloadAllFrames()
++        }
++      }
++      // Runs whether the operation executed or was cancelled, so the caller
++      // always gets to run its own cleanup.
++      operation.completionBlock = { continuation.resume() }
++      sharedAnimationDecodeQueue.addOperation(operation)
++    }
++  }
++
++  /**
++   Hands every view showing `image` back to its own player and drops the frame
++   budget the image was holding.
++   */
++  private func releaseViews(showing image: SDAnimatedImage) {
++    if let preload = preloads.removeValue(forKey: ObjectIdentifier(image)) {
++      preload.decode.cancel()
++      preloadedBytes -= preload.bytes
++    }
++    for view in views.allObjects where view.sharedAnimationImage === image {
++      view.leaveSharedAnimation()
++    }
++  }
++
++  /**
++   Evicts frames for images no registered view is showing, oldest first, until
++   `bytes` fits under the total budget.
++   */
++  private func makeRoom(for bytes: Int) -> Bool {
++    if preloadedBytes + bytes <= Self.maxPreloadBytesTotal {
++      return true
++    }
++
++    for (key, preload) in preloads where preload.image == nil {
++      preloads.removeValue(forKey: key)
++      preloadedBytes -= preload.bytes
++    }
++
++    let inUse = Set(views.allObjects.compactMap { $0.sharedAnimationImage.map(ObjectIdentifier.init) })
++    let evictable = preloads
++      .filter { !inUse.contains($0.key) }
++      .sorted { $0.value.lastUsed < $1.value.lastUsed }
++
++    for (key, preload) in evictable {
++      if preloadedBytes + bytes <= Self.maxPreloadBytesTotal {
++        break
++      }
++      preload.decode.cancel()
++      preload.image?.unloadAllFrames()
++      preloads.removeValue(forKey: key)
++      preloadedBytes -= preload.bytes
++    }
++
++    return preloadedBytes + bytes <= Self.maxPreloadBytesTotal
++  }
++
++  private func releaseAll() {
++    for view in views.allObjects {
++      view.leaveSharedAnimation()
++    }
++    views.removeAllObjects()
++    for preload in preloads.values {
++      preload.decode.cancel()
++      preload.image?.unloadAllFrames()
++    }
++    preloads.removeAll()
++    preloadedBytes = 0
++    displayLink?.invalidate()
++    displayLink = nil
++  }
++
++  private func decodedByteEstimate(of image: SDAnimatedImage) -> Int {
++    let scale = max(image.scale, 1)
++    let width = Int((image.size.width * scale).rounded(.up))
++    let height = Int((image.size.height * scale).rounded(.up))
++    guard width > 0, height > 0 else {
++      return 0
++    }
++    return width * height * 4 * Int(image.animatedImageFrameCount)
++  }
++}

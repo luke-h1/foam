@@ -357,6 +357,7 @@ const en = {
     settings: 'Settings',
     storybook: 'Storybook',
     streams: 'Streams',
+    syncedEmotes: 'Synced Emotes',
     theme: 'Theme',
     top: 'Top',
     video: 'Video',
@@ -697,6 +698,9 @@ const en = {
       'real cinna chat + synthetic burst flood + live FPS readout',
     envVars: 'Environment Variables',
     envVarsDescription: 'Inspect the EXPO_PUBLIC_ vars baked into this build',
+    syncedEmotes: 'Synced Emotes',
+    syncedEmotesDescription:
+      'staggered mounts of the same emote, frame-locked or not',
     channelSurfing: 'Channel Surfing',
     channelSurfingDescription:
       'Load an EAS Update from a different channel or PR branch',

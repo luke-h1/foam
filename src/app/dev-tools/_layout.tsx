@@ -45,6 +45,10 @@ export default function DevToolsLayout() {
         name='env-vars'
         options={{ title: t('envVars'), headerBackTitle: t('devTools') }}
       />
+      <Stack.Screen
+        name='synced-emotes'
+        options={{ title: t('syncedEmotes'), headerBackTitle: t('devTools') }}
+      />
     </Stack>
   );
 }

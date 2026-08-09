@@ -33,9 +33,6 @@ runs:
         SENTRY_RELEASE: ${{ inputs.sentry_release }}
         SENTRY_DIST: ${{ inputs.sentry_dist }}
         SENTRY_LOAD_DOTENV: 0
-        # A build-cache hit re-serves a whole earlier artifact, embedded JS
-        # bundle included; release builds must never ship stale JS.
-        DISABLE_EAS_BUILD_CACHE: 1
       run: |
         set -euo pipefail
 
