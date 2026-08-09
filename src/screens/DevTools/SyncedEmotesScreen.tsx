@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@app/components/Button/Button';
+import {
+  densityFromCompact,
+  getChatScale,
+} from '@app/components/Chat/components/ChatMessage/chatScale';
 import { ChatInlineImage } from '@app/components/Chat/components/ChatMessage/renderers/ChatInlineImage';
 import {
   createRowVisibilityStore,
@@ -9,6 +13,7 @@ import {
 } from '@app/components/Chat/components/ChatMessage/rowVisibility';
 import { Text } from '@app/components/ui/Text/Text';
 import { setSharedAnimationEnabled } from '@app/lib/expo-image/setSharedAnimationEnabled';
+import { usePreferences } from '@app/store/preferences/selectors';
 import { theme } from '@app/styles/themes';
 
 const emoteUrls = [
@@ -20,15 +25,28 @@ const emoteUrls = [
 
 const copiesPerRow = 5;
 const staggerMs = 400;
-export const SyncedEmotesScreen = () => {
+
+let sharedClockEnabled = true;
+
+export function SyncedEmotesScreen() {
   const [remount, setRemount] = useState({ generation: 0, staggered: false });
-  const [sharedClock, setSharedClock] = useState(true);
+  const [sharedClock, setSharedClock] = useState(sharedClockEnabled);
+  const { chatDensity, chatFontScale } = usePreferences();
+  const { emoteSize } = getChatScale(
+    chatFontScale,
+    densityFromCompact(chatDensity === 'compact'),
+  );
+
+  const remountCells = (staggered: boolean) => {
+    setRemount(prev => ({ generation: prev.generation + 1, staggered }));
+  };
 
   const toggleSharedClock = () => {
     const next = !sharedClock;
+    sharedClockEnabled = next;
     setSharedClock(next);
     setSharedAnimationEnabled(next);
-    setRemount(prev => ({ generation: prev.generation + 1, staggered: false }));
+    remountCells(false);
   };
 
   return (
@@ -38,30 +56,14 @@ export const SyncedEmotesScreen = () => {
       contentInsetAdjustmentBehavior='automatic'
     >
       <Text style={styles.hint}>
-        Deterministic test to test whether the expo image patch actually keeps
-        gifs/avif image formats synced frame by frame
+        Mounts the same emote several times over to check the expo-image patch
+        really does hold every copy of a gif or avif on the same frame.
       </Text>
       <View style={styles.actions}>
-        <Button
-          onPress={() =>
-            setRemount(prev => ({
-              generation: prev.generation + 1,
-              staggered: false,
-            }))
-          }
-          style={styles.button}
-        >
+        <Button onPress={() => remountCells(false)} style={styles.button}>
           <Text style={styles.buttonText}>Remount</Text>
         </Button>
-        <Button
-          style={styles.button}
-          onPress={() =>
-            setRemount(prev => ({
-              generation: prev.generation + 1,
-              staggered: true,
-            }))
-          }
-        >
+        <Button onPress={() => remountCells(true)} style={styles.button}>
           <Text style={styles.buttonText}>Staggered Remount</Text>
         </Button>
       </View>
@@ -77,6 +79,7 @@ export const SyncedEmotesScreen = () => {
           {Array.from({ length: copiesPerRow }, (_, column) => (
             <SyncedEmoteCell
               key={`${remount.generation}:${column}`}
+              emoteSize={emoteSize}
               mountDelayMs={remount.staggered ? column * staggerMs : 0}
               sourceUrl={url}
             />
@@ -85,12 +88,14 @@ export const SyncedEmotesScreen = () => {
       ))}
     </ScrollView>
   );
-};
+}
 
 function SyncedEmoteCell({
+  emoteSize,
   mountDelayMs,
   sourceUrl,
 }: {
+  emoteSize: number;
   mountDelayMs: number;
   sourceUrl: string;
 }) {
@@ -120,7 +125,10 @@ function SyncedEmoteCell({
     >
       {mounted ? (
         <RowVisibilityContext.Provider value={visibility}>
-          <ChatInlineImage sourceUrl={sourceUrl} style={styles.emote} />
+          <ChatInlineImage
+            sourceUrl={sourceUrl}
+            style={{ height: emoteSize, width: emoteSize }}
+          />
         </RowVisibilityContext.Provider>
       ) : null}
     </Pressable>
@@ -165,10 +173,6 @@ const styles = StyleSheet.create({
   content: {
     gap: 12,
     padding: 16,
-  },
-  emote: {
-    height: 40,
-    width: 40,
   },
   hint: {
     color: theme.color.textSecondary.dark,

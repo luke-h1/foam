@@ -7,11 +7,8 @@ import { Text } from '@app/components/ui/Text/Text';
 import { getSentryStatus, verifySentryDelivery } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 
-function SentryTestError() {
+function SentryTestError(): never {
   throw new Error('Sentry test error from Foam dev tools');
-
-  // oxlint-disable-next-line no-unreachable
-  return null;
 }
 
 type DeliveryState =
