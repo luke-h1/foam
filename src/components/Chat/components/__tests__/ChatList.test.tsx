@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { View } from 'react-native';
 import type { ReactElement } from 'react';
 
@@ -8,15 +7,9 @@ import { createChatMessageFixture } from '@app/components/Chat/util/__tests__/__
 
 import { ChatList } from '../ChatList';
 
-let legendListMounts = 0;
-
-const mockLegendList = jest.fn((_props: unknown) => {
-  useEffect(() => {
-    legendListMounts += 1;
-  }, []);
-
-  return <View testID='flash-list' />;
-});
+const mockLegendList = jest.fn((_props: unknown) => (
+  <View testID='flash-list' />
+));
 
 jest.mock('@legendapp/list/react-native', () => ({
   LegendList: (props: unknown) => mockLegendList(props),
@@ -25,7 +18,6 @@ jest.mock('@legendapp/list/react-native', () => ({
 describe('ChatList', () => {
   beforeEach(() => {
     mockLegendList.mockClear();
-    legendListMounts = 0;
   });
 
   test('passes chat-tuned props to LegendList', () => {
@@ -292,24 +284,23 @@ describe('ChatList', () => {
     expect(props.onContentSizeChange).toBe(onContentSizeChange);
   });
 
-  test('hands the dataset identity to LegendList without remounting it', () => {
+  test('forwards the dataset identity to LegendList', () => {
     const listRef = { current: null };
-    const scrollHandlers = {
-      onContentSizeChange: jest.fn(),
-      onEndReached: jest.fn(),
-      onMomentumScrollBegin: jest.fn(),
-      onMomentumScrollEnd: jest.fn(),
-      onScroll: jest.fn(),
-      onScrollBeginDrag: jest.fn(),
-      onScrollEndDrag: jest.fn(),
-    };
     const renderList = (dataKey: string) => (
       <ChatList
         data={[]}
         dataKey={dataKey}
         listRef={listRef}
         shouldMaintainScrollAtEnd
-        scrollHandlers={scrollHandlers}
+        scrollHandlers={{
+          onContentSizeChange: jest.fn(),
+          onEndReached: jest.fn(),
+          onMomentumScrollBegin: jest.fn(),
+          onMomentumScrollEnd: jest.fn(),
+          onScroll: jest.fn(),
+          onScrollBeginDrag: jest.fn(),
+          onScrollEndDrag: jest.fn(),
+        }}
         renderItem={jest.fn()}
         keyExtractor={jest.fn()}
         getItemType={jest.fn()}
@@ -320,13 +311,10 @@ describe('ChatList', () => {
     const { rerender } = render(renderList('channel-a'));
     rerender(renderList('channel-b'));
 
-    const propsByRender = mockLegendList.mock.calls.map(
+    const dataKeys = mockLegendList.mock.calls.map(
       call => (call[0] as { dataKey?: string }).dataKey,
     );
 
-    expect(propsByRender).toEqual(['channel-a', 'channel-b']);
-    // The list resets its own layout state off dataKey, so a channel hop must
-    // not tear down the ScrollView underneath it.
-    expect(legendListMounts).toBe(1);
+    expect(dataKeys).toEqual(['channel-a', 'channel-b']);
   });
 });

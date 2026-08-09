@@ -30,11 +30,9 @@ import type { AnyChatMessageType } from '@app/store/chat/types/constants';
  */
 const CHAT_DRAW_DISTANCE = 250;
 /**
- * The modal row is a single line of body text, which the chat scale puts at 31
- * (comfortable: lineHeight 21 + 10 padding) and 22 (compact: 18 + 4). An emote
- * row is 44 / 38. Estimate the common case and bias low: an under-estimated
- * slot corrects by expanding, while an over-estimate leaves a hole of unpainted
- * list background under any row whose position recompute is skipped.
+ * One line of body text: 31 comfortable, 22 compact. Deliberately under the
+ * average - an over-estimate leaves bare list background under any row whose
+ * position recompute gets skipped.
  */
 const CHAT_ESTIMATED_ITEM_SIZE = 26;
 const CHAT_END_REACHED_THRESHOLD = 0.02;
