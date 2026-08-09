@@ -38,20 +38,31 @@ describe('getChatRowSizeBucket', () => {
     ).toBe('w0');
   });
 
-  test('climbs a bucket as the body grows', () => {
-    const buckets = [40, 90, 140, 210, 300, 450, 630, 900].map(length =>
-      getChatRowSizeBucket(
-        createMessage({ message: [createTextPart('a'.repeat(length))] }),
+  test('climbs a bucket on the character that passes each bound', () => {
+    const usernameWeight = 'viewer'.length;
+    const buckets = [30, 60, 100, 150, 220, 320, 460, 640].flatMap(bound =>
+      [bound - usernameWeight, bound - usernameWeight + 1].map(length =>
+        getChatRowSizeBucket(
+          createMessage({ message: [createTextPart('a'.repeat(length))] }),
+        ),
       ),
     );
 
     expect(buckets).toEqual<string[]>([
+      'w0',
+      'w1',
       'w1',
       'w2',
+      'w2',
+      'w3',
       'w3',
       'w4',
+      'w4',
+      'w5',
       'w5',
       'w6',
+      'w6',
+      'w7',
       'w7',
       'w8',
     ]);
