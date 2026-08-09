@@ -78,7 +78,7 @@ describe('ChatList', () => {
       viewabilityConfig: props.viewabilityConfig,
     }).toEqual({
       drawDistance: 250,
-      estimatedItemSize: 44,
+      estimatedItemSize: 26,
       extraData: { showTimestamps: false },
       maintainScrollAtEnd: { on: { dataChange: true, itemLayout: true } },
       maintainScrollAtEndThreshold: 0.1,
@@ -292,7 +292,7 @@ describe('ChatList', () => {
     expect(props.onContentSizeChange).toBe(onContentSizeChange);
   });
 
-  test('remounts the list only when the dataset identity changes', () => {
+  test('hands the dataset identity to LegendList without remounting it', () => {
     const listRef = { current: null };
     const scrollHandlers = {
       onContentSizeChange: jest.fn(),
@@ -303,11 +303,10 @@ describe('ChatList', () => {
       onScrollBeginDrag: jest.fn(),
       onScrollEndDrag: jest.fn(),
     };
-    const renderList = (dataKey: string, extraData: unknown) => (
+    const renderList = (dataKey: string) => (
       <ChatList
         data={[]}
         dataKey={dataKey}
-        extraData={extraData}
         listRef={listRef}
         shouldMaintainScrollAtEnd
         scrollHandlers={scrollHandlers}
@@ -318,13 +317,16 @@ describe('ChatList', () => {
       />
     );
 
-    const { rerender } = render(renderList('channel-a', { revision: 1 }));
-    expect(legendListMounts).toBe(1);
+    const { rerender } = render(renderList('channel-a'));
+    rerender(renderList('channel-b'));
 
-    rerender(renderList('channel-a', { revision: 2 }));
-    expect(legendListMounts).toBe(1);
+    const propsByRender = mockLegendList.mock.calls.map(
+      call => (call[0] as { dataKey?: string }).dataKey,
+    );
 
-    rerender(renderList('channel-b', { revision: 2 }));
-    expect(legendListMounts).toBe(2);
+    expect(propsByRender).toEqual(['channel-a', 'channel-b']);
+    // The list resets its own layout state off dataKey, so a channel hop must
+    // not tear down the ScrollView underneath it.
+    expect(legendListMounts).toBe(1);
   });
 });

@@ -12,7 +12,7 @@
         "@expo-google-fonts/source-code-pro": "^0.4.0",
         "@expo/metro-runtime": "~57.0.8",
         "@expo/ui": "57.0.8",
-        "@legendapp/list": "3.0.4",
+        "@legendapp/list": "3.3.3",
         "@legendapp/state": "^2.1.15",
         "@react-native-async-storage/async-storage": "2.2.0",
         "@react-native-community/netinfo": "12.0.1",
@@ -179,8 +179,8 @@
     "@sentry/cli",
   ],
   "patchedDependencies": {
+    "@legendapp/list@3.3.3": "patches/@legendapp%2Flist@3.3.3.patch",
     "@expo/ui@57.0.8": "patches/@expo%2Fui@57.0.8.patch",
-    "@legendapp/list@3.0.4": "patches/@legendapp%2Flist@3.0.4.patch",
     "@legendapp/state@2.1.15": "patches/@legendapp%2Fstate@2.1.15.patch",
     "expo-image@57.0.1": "patches/expo-image@57.0.1.patch",
     "react-native-screens@4.26.2": "patches/react-native-screens@4.26.2.patch",
@@ -947,7 +947,7 @@
 
     "@kwsites/promise-deferred": ["@kwsites/promise-deferred@1.1.1", "", {}, "sha512-GaHYm+c0O9MjZRu0ongGBRbinu8gVAMd2UZjji6jVmqKtZluZnptXGWhz1E8j8D2HJ3f/yMxKAUC0b+57wncIw=="],
 
-    "@legendapp/list": ["@legendapp/list@3.0.4", "", { "dependencies": { "use-sync-external-store": "^1.5.0" }, "peerDependencies": { "react": "*", "react-dom": "*", "react-native": "*" }, "optionalPeers": ["react-dom", "react-native"] }, "sha512-Qev7LQ1yXihIRBiOH8d0t3EE1U2GpPYKPj/Odx8R+Zoc4gx5xI+kA/78gAnR9j5jqAUaaKXX46o+2felkjeP7Q=="],
+    "@legendapp/list": ["@legendapp/list@3.3.3", "", { "dependencies": { "use-sync-external-store": "^1.5.0" }, "peerDependencies": { "react": "*", "react-dom": "*", "react-native": "*" }, "optionalPeers": ["react-dom", "react-native"] }, "sha512-p3g4xG6f//s4XQKhuus2189GCQgOHEIbJXHePqeDxj+6UQQQyij4YBjyArNSCgqoP0c03sxDPSOuCFB128Ql6g=="],
 
     "@legendapp/state": ["@legendapp/state@2.1.15", "", { "dependencies": { "use-sync-external-store": "^1.2.0" }, "peerDependencies": { "react": ">=16.8.0" }, "optionalPeers": ["react"] }, "sha512-7/8Rgg7m38eznupr36QJeSkrtbhVxaRtQvRMjdBigSm+HW3ZIFgMtUX1DqZ2hJxbPqqAJamw5s+TLs8dRstUNw=="],
 

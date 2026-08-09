@@ -29,7 +29,14 @@ import type { AnyChatMessageType } from '@app/store/chat/types/constants';
  * showed skeleton rows.
  */
 const CHAT_DRAW_DISTANCE = 250;
-const CHAT_ESTIMATED_ITEM_SIZE = 44;
+/**
+ * The modal row is a single line of body text, which the chat scale puts at 31
+ * (comfortable: lineHeight 21 + 10 padding) and 22 (compact: 18 + 4). An emote
+ * row is 44 / 38. Estimate the common case and bias low: an under-estimated
+ * slot corrects by expanding, while an over-estimate leaves a hole of unpainted
+ * list background under any row whose position recompute is skipped.
+ */
+const CHAT_ESTIMATED_ITEM_SIZE = 26;
 const CHAT_END_REACHED_THRESHOLD = 0.02;
 const CHAT_VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 1,
@@ -95,10 +102,10 @@ export interface ChatListScrollHandlers {
 interface ChatListProps {
   data: AnyChatMessageType[];
   /**
-   * Identity of the logical dataset, used as the list's remount key. Switching
-   * channel swaps the store's messages while the pane stays mounted, so without
-   * this the list carries the previous channel's measured sizes, size averages
-   * and anchoring into the new one.
+   * Identity of the logical dataset. Switching channel swaps the store's
+   * messages while the list stays mounted, so without this the list carries the
+   * previous channel's layout readiness, size averages and anchoring into the
+   * new one.
    */
   dataKey: string;
   listRef: RefObject<ChatListRef | null>;
@@ -165,8 +172,8 @@ export const ChatList = memo(
 
     return (
       <LegendList
-        key={dataKey}
         data={data}
+        dataKey={dataKey}
         ref={listRef}
         drawDistance={CHAT_DRAW_DISTANCE}
         /**

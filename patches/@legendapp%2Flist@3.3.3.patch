@@ -1,0 +1,240 @@
+diff --git a/react-native.js b/react-native.js
+index 229f09a8230ab24079d471f65d28d36908f0f2ea..b62909044bd11bf0a2d040956a87bd1659446ea0 100644
+--- a/react-native.js
++++ b/react-native.js
+@@ -3932,12 +3932,19 @@ function setDidLayout(ctx) {
+ // src/core/calculateItemsInView.ts
+ var RENDER_RANGE_PROJECTION_FULL_VELOCITY = 4;
+ var RENDER_RANGE_PROJECTION_SETTLE_DELAY = 100;
++// PATCH(foam): fraction of the trailing buffer the projection may consume.
++var RENDER_RANGE_PROJECTION_MAX_TRAILING_SHIFT = 0.5;
+ function getProjectedBufferAdjustment(scrollVelocity, trailingBuffer) {
+   if (trailingBuffer <= 0) {
+     return 0;
+   }
+   const velocityProgress = Math.min(1, Math.abs(scrollVelocity) / RENDER_RANGE_PROJECTION_FULL_VELOCITY);
+-  return Math.sign(scrollVelocity) * trailingBuffer * velocityProgress;
++  // PATCH(foam): the caller adds this to BOTH buffered edges, so at full velocity the
++  // trailing edge lands exactly on the viewport and every row behind the scroll
++  // direction is dropped from the render range until the 100ms settle. Capping the
++  // shift at half the trailing buffer keeps the leading-side prefetch while always
++  // leaving rows rendered behind the scroll. See foam #858.
++  return Math.sign(scrollVelocity) * trailingBuffer * velocityProgress * RENDER_RANGE_PROJECTION_MAX_TRAILING_SHIFT;
+ }
+ function scheduleRenderRangeProjectionSettle(ctx) {
+   const state = ctx.state;
+@@ -3951,7 +3958,13 @@ function scheduleRenderRangeProjectionSettle(ctx) {
+     state.timeoutRenderRangeProjectionSettle = void 0;
+     state.timeouts.delete(timeout);
+     state.scrollHistory.length = 0;
+-    (_a3 = state.triggerCalculateItemsInView) == null ? void 0 : _a3.call(state);
++    // PATCH(foam): the settle pass ran without forceFullItemPositions, so
++    // updateItemPositions still started at state.startBuffered and never revisited
++    // rows above it. A row whose recorded size was the estimate therefore kept a
++    // stale position after it measured smaller, leaving a hole of unpainted list
++    // background that survives until some later pass happens to start high enough.
++    // Recompute from index 0 once per settle. See foam #858.
++    (_a3 = state.triggerCalculateItemsInView) == null ? void 0 : _a3.call(state, { forceFullItemPositions: true });
+   }, RENDER_RANGE_PROJECTION_SETTLE_DELAY);
+   state.timeoutRenderRangeProjectionSettle = timeout;
+   state.timeouts.add(timeout);
+diff --git a/react-native.mjs b/react-native.mjs
+index c2e0f3823f524e31e2105a5fbda76be78c926226..3019dc3d0b160605d68476ac85131fa1ffbf41da 100644
+--- a/react-native.mjs
++++ b/react-native.mjs
+@@ -3911,12 +3911,19 @@ function setDidLayout(ctx) {
+ // src/core/calculateItemsInView.ts
+ var RENDER_RANGE_PROJECTION_FULL_VELOCITY = 4;
+ var RENDER_RANGE_PROJECTION_SETTLE_DELAY = 100;
++// PATCH(foam): fraction of the trailing buffer the projection may consume.
++var RENDER_RANGE_PROJECTION_MAX_TRAILING_SHIFT = 0.5;
+ function getProjectedBufferAdjustment(scrollVelocity, trailingBuffer) {
+   if (trailingBuffer <= 0) {
+     return 0;
+   }
+   const velocityProgress = Math.min(1, Math.abs(scrollVelocity) / RENDER_RANGE_PROJECTION_FULL_VELOCITY);
+-  return Math.sign(scrollVelocity) * trailingBuffer * velocityProgress;
++  // PATCH(foam): the caller adds this to BOTH buffered edges, so at full velocity the
++  // trailing edge lands exactly on the viewport and every row behind the scroll
++  // direction is dropped from the render range until the 100ms settle. Capping the
++  // shift at half the trailing buffer keeps the leading-side prefetch while always
++  // leaving rows rendered behind the scroll. See foam #858.
++  return Math.sign(scrollVelocity) * trailingBuffer * velocityProgress * RENDER_RANGE_PROJECTION_MAX_TRAILING_SHIFT;
+ }
+ function scheduleRenderRangeProjectionSettle(ctx) {
+   const state = ctx.state;
+@@ -3930,7 +3937,13 @@ function scheduleRenderRangeProjectionSettle(ctx) {
+     state.timeoutRenderRangeProjectionSettle = void 0;
+     state.timeouts.delete(timeout);
+     state.scrollHistory.length = 0;
+-    (_a3 = state.triggerCalculateItemsInView) == null ? void 0 : _a3.call(state);
++    // PATCH(foam): the settle pass ran without forceFullItemPositions, so
++    // updateItemPositions still started at state.startBuffered and never revisited
++    // rows above it. A row whose recorded size was the estimate therefore kept a
++    // stale position after it measured smaller, leaving a hole of unpainted list
++    // background that survives until some later pass happens to start high enough.
++    // Recompute from index 0 once per settle. See foam #858.
++    (_a3 = state.triggerCalculateItemsInView) == null ? void 0 : _a3.call(state, { forceFullItemPositions: true });
+   }, RENDER_RANGE_PROJECTION_SETTLE_DELAY);
+   state.timeoutRenderRangeProjectionSettle = timeout;
+   state.timeouts.add(timeout);
+diff --git a/react-native.web.js b/react-native.web.js
+index 544cca82136ab14cbeec0a01499f554bd4eca75f..c323b64eab4d958496bff85f07be9ccf97fc24db 100644
+--- a/react-native.web.js
++++ b/react-native.web.js
+@@ -3954,12 +3954,19 @@ function setDidLayout(ctx) {
+ // src/core/calculateItemsInView.ts
+ var RENDER_RANGE_PROJECTION_FULL_VELOCITY = 4;
+ var RENDER_RANGE_PROJECTION_SETTLE_DELAY = 100;
++// PATCH(foam): fraction of the trailing buffer the projection may consume.
++var RENDER_RANGE_PROJECTION_MAX_TRAILING_SHIFT = 0.5;
+ function getProjectedBufferAdjustment(scrollVelocity, trailingBuffer) {
+   if (trailingBuffer <= 0) {
+     return 0;
+   }
+   const velocityProgress = Math.min(1, Math.abs(scrollVelocity) / RENDER_RANGE_PROJECTION_FULL_VELOCITY);
+-  return Math.sign(scrollVelocity) * trailingBuffer * velocityProgress;
++  // PATCH(foam): the caller adds this to BOTH buffered edges, so at full velocity the
++  // trailing edge lands exactly on the viewport and every row behind the scroll
++  // direction is dropped from the render range until the 100ms settle. Capping the
++  // shift at half the trailing buffer keeps the leading-side prefetch while always
++  // leaving rows rendered behind the scroll. See foam #858.
++  return Math.sign(scrollVelocity) * trailingBuffer * velocityProgress * RENDER_RANGE_PROJECTION_MAX_TRAILING_SHIFT;
+ }
+ function scheduleRenderRangeProjectionSettle(ctx) {
+   const state = ctx.state;
+@@ -3973,7 +3980,13 @@ function scheduleRenderRangeProjectionSettle(ctx) {
+     state.timeoutRenderRangeProjectionSettle = void 0;
+     state.timeouts.delete(timeout);
+     state.scrollHistory.length = 0;
+-    (_a3 = state.triggerCalculateItemsInView) == null ? void 0 : _a3.call(state);
++    // PATCH(foam): the settle pass ran without forceFullItemPositions, so
++    // updateItemPositions still started at state.startBuffered and never revisited
++    // rows above it. A row whose recorded size was the estimate therefore kept a
++    // stale position after it measured smaller, leaving a hole of unpainted list
++    // background that survives until some later pass happens to start high enough.
++    // Recompute from index 0 once per settle. See foam #858.
++    (_a3 = state.triggerCalculateItemsInView) == null ? void 0 : _a3.call(state, { forceFullItemPositions: true });
+   }, RENDER_RANGE_PROJECTION_SETTLE_DELAY);
+   state.timeoutRenderRangeProjectionSettle = timeout;
+   state.timeouts.add(timeout);
+diff --git a/react-native.web.mjs b/react-native.web.mjs
+index 6b2d9011f6c5e85664eca195de538617fe7d9dee..d299d3d48ab8cd964ae8b651bfa6c6009d2ca588 100644
+--- a/react-native.web.mjs
++++ b/react-native.web.mjs
+@@ -3933,12 +3933,19 @@ function setDidLayout(ctx) {
+ // src/core/calculateItemsInView.ts
+ var RENDER_RANGE_PROJECTION_FULL_VELOCITY = 4;
+ var RENDER_RANGE_PROJECTION_SETTLE_DELAY = 100;
++// PATCH(foam): fraction of the trailing buffer the projection may consume.
++var RENDER_RANGE_PROJECTION_MAX_TRAILING_SHIFT = 0.5;
+ function getProjectedBufferAdjustment(scrollVelocity, trailingBuffer) {
+   if (trailingBuffer <= 0) {
+     return 0;
+   }
+   const velocityProgress = Math.min(1, Math.abs(scrollVelocity) / RENDER_RANGE_PROJECTION_FULL_VELOCITY);
+-  return Math.sign(scrollVelocity) * trailingBuffer * velocityProgress;
++  // PATCH(foam): the caller adds this to BOTH buffered edges, so at full velocity the
++  // trailing edge lands exactly on the viewport and every row behind the scroll
++  // direction is dropped from the render range until the 100ms settle. Capping the
++  // shift at half the trailing buffer keeps the leading-side prefetch while always
++  // leaving rows rendered behind the scroll. See foam #858.
++  return Math.sign(scrollVelocity) * trailingBuffer * velocityProgress * RENDER_RANGE_PROJECTION_MAX_TRAILING_SHIFT;
+ }
+ function scheduleRenderRangeProjectionSettle(ctx) {
+   const state = ctx.state;
+@@ -3952,7 +3959,13 @@ function scheduleRenderRangeProjectionSettle(ctx) {
+     state.timeoutRenderRangeProjectionSettle = void 0;
+     state.timeouts.delete(timeout);
+     state.scrollHistory.length = 0;
+-    (_a3 = state.triggerCalculateItemsInView) == null ? void 0 : _a3.call(state);
++    // PATCH(foam): the settle pass ran without forceFullItemPositions, so
++    // updateItemPositions still started at state.startBuffered and never revisited
++    // rows above it. A row whose recorded size was the estimate therefore kept a
++    // stale position after it measured smaller, leaving a hole of unpainted list
++    // background that survives until some later pass happens to start high enough.
++    // Recompute from index 0 once per settle. See foam #858.
++    (_a3 = state.triggerCalculateItemsInView) == null ? void 0 : _a3.call(state, { forceFullItemPositions: true });
+   }, RENDER_RANGE_PROJECTION_SETTLE_DELAY);
+   state.timeoutRenderRangeProjectionSettle = timeout;
+   state.timeouts.add(timeout);
+diff --git a/react.js b/react.js
+index 544cca82136ab14cbeec0a01499f554bd4eca75f..c323b64eab4d958496bff85f07be9ccf97fc24db 100644
+--- a/react.js
++++ b/react.js
+@@ -3954,12 +3954,19 @@ function setDidLayout(ctx) {
+ // src/core/calculateItemsInView.ts
+ var RENDER_RANGE_PROJECTION_FULL_VELOCITY = 4;
+ var RENDER_RANGE_PROJECTION_SETTLE_DELAY = 100;
++// PATCH(foam): fraction of the trailing buffer the projection may consume.
++var RENDER_RANGE_PROJECTION_MAX_TRAILING_SHIFT = 0.5;
+ function getProjectedBufferAdjustment(scrollVelocity, trailingBuffer) {
+   if (trailingBuffer <= 0) {
+     return 0;
+   }
+   const velocityProgress = Math.min(1, Math.abs(scrollVelocity) / RENDER_RANGE_PROJECTION_FULL_VELOCITY);
+-  return Math.sign(scrollVelocity) * trailingBuffer * velocityProgress;
++  // PATCH(foam): the caller adds this to BOTH buffered edges, so at full velocity the
++  // trailing edge lands exactly on the viewport and every row behind the scroll
++  // direction is dropped from the render range until the 100ms settle. Capping the
++  // shift at half the trailing buffer keeps the leading-side prefetch while always
++  // leaving rows rendered behind the scroll. See foam #858.
++  return Math.sign(scrollVelocity) * trailingBuffer * velocityProgress * RENDER_RANGE_PROJECTION_MAX_TRAILING_SHIFT;
+ }
+ function scheduleRenderRangeProjectionSettle(ctx) {
+   const state = ctx.state;
+@@ -3973,7 +3980,13 @@ function scheduleRenderRangeProjectionSettle(ctx) {
+     state.timeoutRenderRangeProjectionSettle = void 0;
+     state.timeouts.delete(timeout);
+     state.scrollHistory.length = 0;
+-    (_a3 = state.triggerCalculateItemsInView) == null ? void 0 : _a3.call(state);
++    // PATCH(foam): the settle pass ran without forceFullItemPositions, so
++    // updateItemPositions still started at state.startBuffered and never revisited
++    // rows above it. A row whose recorded size was the estimate therefore kept a
++    // stale position after it measured smaller, leaving a hole of unpainted list
++    // background that survives until some later pass happens to start high enough.
++    // Recompute from index 0 once per settle. See foam #858.
++    (_a3 = state.triggerCalculateItemsInView) == null ? void 0 : _a3.call(state, { forceFullItemPositions: true });
+   }, RENDER_RANGE_PROJECTION_SETTLE_DELAY);
+   state.timeoutRenderRangeProjectionSettle = timeout;
+   state.timeouts.add(timeout);
+diff --git a/react.mjs b/react.mjs
+index 6b2d9011f6c5e85664eca195de538617fe7d9dee..d299d3d48ab8cd964ae8b651bfa6c6009d2ca588 100644
+--- a/react.mjs
++++ b/react.mjs
+@@ -3933,12 +3933,19 @@ function setDidLayout(ctx) {
+ // src/core/calculateItemsInView.ts
+ var RENDER_RANGE_PROJECTION_FULL_VELOCITY = 4;
+ var RENDER_RANGE_PROJECTION_SETTLE_DELAY = 100;
++// PATCH(foam): fraction of the trailing buffer the projection may consume.
++var RENDER_RANGE_PROJECTION_MAX_TRAILING_SHIFT = 0.5;
+ function getProjectedBufferAdjustment(scrollVelocity, trailingBuffer) {
+   if (trailingBuffer <= 0) {
+     return 0;
+   }
+   const velocityProgress = Math.min(1, Math.abs(scrollVelocity) / RENDER_RANGE_PROJECTION_FULL_VELOCITY);
+-  return Math.sign(scrollVelocity) * trailingBuffer * velocityProgress;
++  // PATCH(foam): the caller adds this to BOTH buffered edges, so at full velocity the
++  // trailing edge lands exactly on the viewport and every row behind the scroll
++  // direction is dropped from the render range until the 100ms settle. Capping the
++  // shift at half the trailing buffer keeps the leading-side prefetch while always
++  // leaving rows rendered behind the scroll. See foam #858.
++  return Math.sign(scrollVelocity) * trailingBuffer * velocityProgress * RENDER_RANGE_PROJECTION_MAX_TRAILING_SHIFT;
+ }
+ function scheduleRenderRangeProjectionSettle(ctx) {
+   const state = ctx.state;
+@@ -3952,7 +3959,13 @@ function scheduleRenderRangeProjectionSettle(ctx) {
+     state.timeoutRenderRangeProjectionSettle = void 0;
+     state.timeouts.delete(timeout);
+     state.scrollHistory.length = 0;
+-    (_a3 = state.triggerCalculateItemsInView) == null ? void 0 : _a3.call(state);
++    // PATCH(foam): the settle pass ran without forceFullItemPositions, so
++    // updateItemPositions still started at state.startBuffered and never revisited
++    // rows above it. A row whose recorded size was the estimate therefore kept a
++    // stale position after it measured smaller, leaving a hole of unpainted list
++    // background that survives until some later pass happens to start high enough.
++    // Recompute from index 0 once per settle. See foam #858.
++    (_a3 = state.triggerCalculateItemsInView) == null ? void 0 : _a3.call(state, { forceFullItemPositions: true });
+   }, RENDER_RANGE_PROJECTION_SETTLE_DELAY);
+   state.timeoutRenderRangeProjectionSettle = timeout;
+   state.timeouts.add(timeout);
