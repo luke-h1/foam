@@ -4,6 +4,7 @@ import type { ChatBodyVariant } from '@app/utils/chat/deriveChatBody/types';
 import { isRenderableChatMessage } from '@app/utils/chat/messageIdentity/isRenderableChatMessage';
 
 import { hasSharedChannelPointsMessage } from './channelPointsSharedMessage';
+import { getChatRowSizeBucket } from './chatRowSizeBucket';
 
 export interface ChatRowItemTypeOptions {
   showInlineReplyContext?: boolean;
@@ -70,7 +71,14 @@ function getUserChatRowItemType(
     flags.push('shared');
   }
 
-  return flags.length > 0 ? `user_chat-${flags.join('-')}` : 'user_chat';
+  /**
+   * The list lays an unmeasured row out at the running average of its item
+   * type, so one `user_chat` type averages a one-line "gg" with an eight-line
+   * copypasta and the over-estimated rows leave unpainted background behind.
+   */
+  flags.push(getChatRowSizeBucket(item));
+
+  return `user_chat-${flags.join('-')}`;
 }
 
 /**

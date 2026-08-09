@@ -74,9 +74,9 @@ describe('getChatRowItemType', () => {
       replyBody: 'hi',
     });
 
-    expect(getChatRowItemType(plain)).toBe('user_chat');
-    expect(getChatRowItemType(moderated)).toBe('user_chat-mod');
-    expect(getChatRowItemType(reply)).toBe('user_chat-reply');
+    expect(getChatRowItemType(plain)).toBe('user_chat-w0');
+    expect(getChatRowItemType(moderated)).toBe('user_chat-mod-w0');
+    expect(getChatRowItemType(reply)).toBe('user_chat-reply-w0');
     expect(getChatRowItemType(moderated)).not.toBe(getChatRowItemType(reply));
   });
 
@@ -87,7 +87,19 @@ describe('getChatRowItemType', () => {
     });
 
     expect(getChatRowItemType(reply, { showInlineReplyContext: false })).toBe(
-      'user_chat',
+      'user_chat-w0',
     );
+  });
+
+  test('splits user chat rows by how much room their content needs', () => {
+    const short = createUserChatMessage({ message: [createTextPart('gg')] });
+    const copypasta = createUserChatMessage({
+      message: [
+        createTextPart('OHNE YOU JUST DECLINED A 0.000005 FLOAT '.repeat(8)),
+      ],
+    });
+
+    expect(getChatRowItemType(short)).toBe('user_chat-w0');
+    expect(getChatRowItemType(copypasta)).toBe('user_chat-w6');
   });
 });
