@@ -10,6 +10,7 @@ import { theme } from '@app/styles/themes';
 function SentryTestError() {
   throw new Error('Sentry test error from Foam dev tools');
 
+  // oxlint-disable-next-line no-unreachable
   return null;
 }
 

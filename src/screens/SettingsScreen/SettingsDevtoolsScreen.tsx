@@ -134,6 +134,11 @@ export function SettingsDevtoolsScreen() {
               onPress={() => router.push('/dev-tools/env-vars')}
             />
             <FormNavigationRow
+              label={t('syncedEmotes')}
+              systemImage='metronome'
+              onPress={() => router.push('/dev-tools/synced-emotes')}
+            />
+            <FormNavigationRow
               label={t('channelSurfing')}
               systemImage='antenna.radiowaves.left.and.right'
               onPress={() => router.push('/tabs/settings/channel-surfing')}
@@ -262,6 +267,12 @@ export function SettingsDevtoolsScreen() {
             subtitle={t('envVarsDescription')}
             icon={{ icon: 'doc.text', color: theme.colorTeal }}
             onPress={() => router.push('/dev-tools/env-vars')}
+          />
+          <SettingsLinkRow
+            title={t('syncedEmotes')}
+            subtitle={t('syncedEmotesDescription')}
+            icon={{ icon: 'metronome', color: theme.colorOrange }}
+            onPress={() => router.push('/dev-tools/synced-emotes')}
           />
           <SettingsLinkRow
             title={t('channelSurfing')}

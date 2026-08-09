@@ -75,6 +75,7 @@ const MAP: Record<string, AndroidSymbol> = {
   mappin: 'place',
   'megaphone.fill': 'campaign',
   message: 'chat',
+  metronome: 'av_timer',
   'minus.circle.fill': 'remove_circle',
   moon: 'dark_mode',
   'moon.zzz': 'bedtime',

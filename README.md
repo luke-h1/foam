@@ -269,9 +269,9 @@ rm -rf ~/Library/Developer/Xcode/DerivedData/Foamdev-*
 
 ## Remote build cache
 
-This project enables Expo's [remote build cache](https://docs.expo.dev/guides/cache-builds-remotely/) via the EAS provider. When running `bun run ios` / `bun run android` (or `expo run:*`), Expo will look up a matching fingerprint on EAS and download a previously built binary if the native code hasn't changed — skipping a full local native build.
+Not used. `bun run ios` / `bun run android` always compile locally.
 
-Config lives in [`app.config.ts`](app.config.ts) under `expo.experiments.buildCacheProvider`, with `eas-build-cache-provider` declared as a devDependency. Make sure you're logged in with `eas login` and have an EAS project linked (already configured in `app.config.ts` via `extra.eas.projectId`).
+Expo's [remote build cache](https://docs.expo.dev/guides/cache-builds-remotely/) keys artifacts on a native fingerprint that does not cover `patches/`, so an edit to a bun patch re-serves the pre-patch binary and the change appears to have no effect — with nothing in the build output saying a cached artifact was used. That cost more debugging time than the cache ever saved.
 
 ## PR previews & channel surfing
 

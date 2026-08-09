@@ -153,11 +153,6 @@ const config: ExpoConfig = {
   owner: 'lukehowsam123',
   platforms: ['android', 'ios', 'web'],
   icon: './assets/app-icon/app-icon-production.png',
-  splash: {
-    image: appConfig.splashImage,
-    resizeMode: 'contain',
-    backgroundColor: appConfig.splashBackgroundColor,
-  },
   userInterfaceStyle: 'dark',
   updates: {
     url: 'https://u.expo.dev/950a1e2f-6b25-4be7-adb2-3c16287a2b5e',
@@ -356,9 +351,6 @@ const config: ExpoConfig = {
   experiments: {
     reactCompiler: true,
     tsconfigPaths: true,
-    ...(process.env.DISABLE_EAS_BUILD_CACHE
-      ? {}
-      : { buildCacheProvider: 'eas' as const }),
   },
   web: {},
   ios: {
