@@ -95,10 +95,10 @@ export interface ChatListScrollHandlers {
 interface ChatListProps {
   data: AnyChatMessageType[];
   /**
-   * Identity of the logical dataset. Switching channel swaps the store's
-   * messages while the list stays mounted, so without this the list carries the
-   * previous channel's layout readiness, size averages and anchoring into the
-   * new one.
+   * Identity of the logical dataset, used as the list's remount key. Switching
+   * channel swaps the store's messages while the pane stays mounted, so without
+   * this the list carries the previous channel's measured sizes, size averages
+   * and anchoring into the new one.
    */
   dataKey: string;
   listRef: RefObject<ChatListRef | null>;
@@ -165,8 +165,8 @@ export const ChatList = memo(
 
     return (
       <LegendList
+        key={dataKey}
         data={data}
-        dataKey={dataKey}
         ref={listRef}
         drawDistance={CHAT_DRAW_DISTANCE}
         /**

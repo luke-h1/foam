@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { View } from 'react-native';
 import type { ReactElement } from 'react';
 
@@ -7,9 +8,15 @@ import { createChatMessageFixture } from '@app/components/Chat/util/__tests__/__
 
 import { ChatList } from '../ChatList';
 
-const mockLegendList = jest.fn((_props: unknown) => (
-  <View testID='flash-list' />
-));
+let legendListMounts = 0;
+
+const mockLegendList = jest.fn((_props: unknown) => {
+  useEffect(() => {
+    legendListMounts += 1;
+  }, []);
+
+  return <View testID='flash-list' />;
+});
 
 jest.mock('@legendapp/list/react-native', () => ({
   LegendList: (props: unknown) => mockLegendList(props),
@@ -18,6 +25,7 @@ jest.mock('@legendapp/list/react-native', () => ({
 describe('ChatList', () => {
   beforeEach(() => {
     mockLegendList.mockClear();
+    legendListMounts = 0;
   });
 
   test('passes chat-tuned props to LegendList', () => {
@@ -282,5 +290,41 @@ describe('ChatList', () => {
     };
 
     expect(props.onContentSizeChange).toBe(onContentSizeChange);
+  });
+
+  test('remounts the list only when the dataset identity changes', () => {
+    const listRef = { current: null };
+    const scrollHandlers = {
+      onContentSizeChange: jest.fn(),
+      onEndReached: jest.fn(),
+      onMomentumScrollBegin: jest.fn(),
+      onMomentumScrollEnd: jest.fn(),
+      onScroll: jest.fn(),
+      onScrollBeginDrag: jest.fn(),
+      onScrollEndDrag: jest.fn(),
+    };
+    const renderList = (dataKey: string, extraData: unknown) => (
+      <ChatList
+        data={[]}
+        dataKey={dataKey}
+        extraData={extraData}
+        listRef={listRef}
+        shouldMaintainScrollAtEnd
+        scrollHandlers={scrollHandlers}
+        renderItem={jest.fn()}
+        keyExtractor={jest.fn()}
+        getItemType={jest.fn()}
+        contentContainerStyle={undefined}
+      />
+    );
+
+    const { rerender } = render(renderList('channel-a', { revision: 1 }));
+    expect(legendListMounts).toBe(1);
+
+    rerender(renderList('channel-a', { revision: 2 }));
+    expect(legendListMounts).toBe(1);
+
+    rerender(renderList('channel-b', { revision: 2 }));
+    expect(legendListMounts).toBe(2);
   });
 });
