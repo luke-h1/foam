@@ -1,3 +1,12 @@
+function mentionsSubject(sentence: string, subject: string): boolean {
+  const pattern = new RegExp(
+    `(^|[^\\p{L}\\p{N}_])${subject.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^\\p{L}\\p{N}_]|$)`,
+    'iu',
+  );
+
+  return pattern.test(sentence);
+}
+
 export function withNoticeSubject(
   systemMsg: string | undefined,
   displayName: string | undefined,
@@ -9,7 +18,7 @@ export function withNoticeSubject(
     return sentence;
   }
 
-  if (sentence.toLowerCase().includes(subject.toLowerCase())) {
+  if (mentionsSubject(sentence, subject)) {
     return sentence;
   }
 

@@ -27,6 +27,27 @@ describe('withNoticeSubject', () => {
     expect(withNoticeSubject('   ', 'Jimmotep')).toBe('');
   });
 
+  test('names the subject when the sentence only contains it inside a word', () => {
+    expect(withNoticeSubject('has been a moderator for 6 months!', 'Mod')).toBe(
+      'Mod has been a moderator for 6 months!',
+    );
+  });
+
+  test('treats punctuation as a word boundary', () => {
+    expect(withNoticeSubject('Krankel, welcome back!', 'Krankel')).toBe(
+      'Krankel, welcome back!',
+    );
+  });
+
+  test('matches a display name containing regex characters literally', () => {
+    expect(withNoticeSubject('a.c is on a streak!', 'a.c')).toBe(
+      'a.c is on a streak!',
+    );
+    expect(withNoticeSubject('abc is on a streak!', 'a.c')).toBe(
+      'a.c abc is on a streak!',
+    );
+  });
+
   test('returns the sentence untouched when there is no subject', () => {
     expect(withNoticeSubject('has been a moderator!', undefined)).toBe(
       'has been a moderator!',

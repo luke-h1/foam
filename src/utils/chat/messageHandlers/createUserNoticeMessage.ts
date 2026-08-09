@@ -15,6 +15,7 @@ import { createModiversaryPart } from '@app/utils/chat/formatSubscriptionNotice/
 import { createRitualPart } from '@app/utils/chat/formatSubscriptionNotice/createRitualPart';
 import { createSubscriptionPart } from '@app/utils/chat/formatSubscriptionNotice/createSubscriptionPart';
 import { createViewerMilestonePart } from '@app/utils/chat/formatSubscriptionNotice/createViewerMilestonePart';
+import { hasRenderableNoticeBody } from '@app/utils/chat/formatSubscriptionNotice/hasRenderableNoticeBody';
 import { isSharedChatDuplicatedNotice } from '@app/utils/chat/userNoticeMsgIds/isSharedChatDuplicatedNotice';
 import { isSubscriptionUserNotice } from '@app/utils/chat/userNoticeMsgIds/isSubscriptionUserNotice';
 import { generateNonce } from '@app/utils/string/generateNonce';
@@ -185,6 +186,10 @@ export const createUserNoticeMessage = ({
         flags: tags.flags ?? '',
         mod: tags.mod ?? '',
       } satisfies ViewerMilestoneTags;
+      const milestonePart = createViewerMilestonePart(
+        viewerMilestoneTags,
+        text,
+      );
 
       return {
         ...baseMessage,
@@ -195,7 +200,7 @@ export const createUserNoticeMessage = ({
         replyBody: '',
         badges: [],
         userstate,
-        message: [createViewerMilestonePart(viewerMilestoneTags, text)],
+        message: [milestonePart].filter(hasRenderableNoticeBody),
         notice_tags: {
           'msg-id': tags['msg-id'],
           'msg-param-category': tags['msg-param-category'],
@@ -283,11 +288,16 @@ export const createUserNoticeMessage = ({
     }
 
     case 'modiversary': {
+      const modiversaryPart = createModiversaryPart(
+        tags as ModiversaryTags,
+        text,
+      );
+
       return {
         ...baseMessage,
         userstate,
         badges: [],
-        message: [createModiversaryPart(tags as ModiversaryTags, text)],
+        message: [modiversaryPart].filter(hasRenderableNoticeBody),
         notice_tags: {
           ...tags,
           ...emptyFields,

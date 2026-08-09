@@ -709,8 +709,6 @@ describe('useChatMessages', () => {
         }
       });
 
-      // The buffer relieves itself before it can reach the cap, where the
-      // oldest entries would have been dropped without ever being rendered.
       expect(result.current.getBufferSize()).toBeLessThan(MAX_BUFFERED);
 
       act(() => {
@@ -725,6 +723,34 @@ describe('useChatMessages', () => {
         Array.from({ length: pushCount }, (_, index) => `${index}`),
       );
       expect(result.current.getBufferSize()).toBe(0);
+    });
+
+    test('keeps every message while the user is dragging the list', () => {
+      const { result } = renderHook(() =>
+        useChatMessages({
+          ...defaultOptions,
+          isAtBottomRef: { current: false },
+          isUserActivelyScrolling: () => true,
+        }),
+      );
+
+      const pushCount = 1500;
+
+      act(() => {
+        for (let i = 0; i < pushCount; i += 1) {
+          result.current.handleNewMessage(createMockMessage(`${i}`));
+        }
+        jest.advanceTimersByTime(1000);
+      });
+
+      const committed = mockAddMessages.mock.calls.flatMap(
+        call => call[0] ?? [],
+      );
+
+      expect(committed.length + result.current.getBufferSize()).toBe(pushCount);
+      expect(committed.map(message => message?.message_id)).toEqual(
+        Array.from({ length: committed.length }, (_, index) => `${index}`),
+      );
     });
 
     test('caps a live raid flush at the bottom to a bounded batch of rows', () => {

@@ -11,6 +11,21 @@ import { createUserNoticeMessage } from '@app/utils/chat/messageHandlers/createU
 
 import { RichChatMessage } from '../components/ChatMessage/RichChatMessage';
 import { getChatRowItemType } from '../util/chatRowItemType';
+import {
+  ALL_NOTICES,
+  ANNOUNCEMENT,
+  BITS_BADGE,
+  CHARITY,
+  MOD_ANNIVERSARY,
+  RAID,
+  RESUB,
+  RITUAL,
+  SUB,
+  SUBGIFT,
+  SUBMYSTERYGIFT,
+  UNRAID,
+  WATCH_STREAK,
+} from './__fixtures__/chatNoticePipeline.fixture';
 
 jest.mock('@app/utils/date-time/date', () => ({
   formatDate: jest.fn(() => '12:00'),
@@ -40,48 +55,6 @@ function renderNoticeFromIrc(line: string) {
 
   return { message, ...rendered };
 }
-
-const RESUB = String.raw`@badge-info=subscriber/27;badges=subscriber/24;color=#8A2BE2;display-name=Rexdain;id=resub-1;login=rexdain;mod=0;msg-id=resub;msg-param-cumulative-months=27;msg-param-months=0;msg-param-should-share-streak=0;msg-param-streak-months=0;msg-param-sub-plan-name=Channel\sSubscription;msg-param-sub-plan=2000;room-id=1;subscriber=1;system-msg=Rexdain\ssubscribed\sat\sTier\s1.\sThey've\ssubscribed\sfor\s27\smonths!;tmi-sent-ts=1700000000000;user-id=2;user-type= :tmi.twitch.tv USERNOTICE #foam :still here`;
-
-const SUB = String.raw`@badges=;color=;display-name=NewSubscriber;id=sub-1;login=newsubscriber;msg-id=sub;msg-param-cumulative-months=1;msg-param-sub-plan=1000;room-id=1;system-msg=NewSubscriber\ssubscribed\swith\sPrime.;tmi-sent-ts=1700000000000;user-id=3 :tmi.twitch.tv USERNOTICE #foam :`;
-
-const SUBGIFT = String.raw`@display-name=GiftGiver;id=subgift-1;login=giftgiver;msg-id=subgift;msg-param-gift-months=1;msg-param-months=3;msg-param-recipient-display-name=Lucky;msg-param-recipient-id=9;msg-param-recipient-user-name=lucky;msg-param-sub-plan=1000;room-id=1;system-msg=GiftGiver\sgifted\sa\sTier\s1\ssub\sto\sLucky!;tmi-sent-ts=1700000000000;user-id=4 :tmi.twitch.tv USERNOTICE #foam :`;
-
-const SUBMYSTERYGIFT = String.raw`@display-name=MysteryGifter;id=mystery-1;login=mysterygifter;msg-id=submysterygift;msg-param-mass-gift-count=5;msg-param-sender-count=42;msg-param-sub-plan=1000;room-id=1;system-msg=MysteryGifter\sis\sgifting\s5\sTier\s1\sSubs!;tmi-sent-ts=1700000000000;user-id=5 :tmi.twitch.tv USERNOTICE #foam :`;
-
-const WATCH_STREAK = String.raw`@badges=;color=#9146FF;display-name=Krankel;id=streak-1;login=krankel;msg-id=viewermilestone;msg-param-category=watch-streak;msg-param-copoReward=450;msg-param-id=abc;msg-param-value=25;room-id=1;system-msg=Krankel\sis\scurrently\son\sa\s25-stream\sstreak!;tmi-sent-ts=1700000000000;user-id=6 :tmi.twitch.tv USERNOTICE #foam :25 streams`;
-
-const MOD_ANNIVERSARY = String.raw`@badges=moderator/1;color=#DAA520;display-name=Jimmotep;id=modiversary-1;login=jimmotep;mod=1;msg-id=modiversary;msg-param-months=18;room-id=1;system-msg=has\sbeen\sa\smoderator\sfor\s18\smonths!;tmi-sent-ts=1700000000000;user-id=7 :tmi.twitch.tv USERNOTICE #foam :I'm celebrating my 1 year, 6 month Mod Anniversary!`;
-
-const RAID = String.raw`@display-name=RaidLeader;id=raid-1;login=raidleader;msg-id=raid;msg-param-displayName=RaidLeader;msg-param-login=raidleader;msg-param-viewerCount=500;room-id=1;system-msg=500\sraiders\sfrom\sRaidLeader\shave\sjoined!;tmi-sent-ts=1700000000000;user-id=8 :tmi.twitch.tv USERNOTICE #foam :`;
-
-const UNRAID = String.raw`@display-name=RaidLeader;id=unraid-1;login=raidleader;msg-id=unraid;room-id=1;system-msg=The\sraid\shas\sbeen\scancelled.;tmi-sent-ts=1700000000000;user-id=8 :tmi.twitch.tv USERNOTICE #foam :`;
-
-const ANNOUNCEMENT = String.raw`@display-name=Gekon;id=announcement-1;login=gekon;msg-id=announcement;msg-param-color=PRIMARY;room-id=1;system-msg=;tmi-sent-ts=1700000000000;user-id=10 :tmi.twitch.tv USERNOTICE #foam :read the rules`;
-
-const CHARITY = String.raw`@display-name=Donor;id=charity-1;login=donor;msg-id=charitydonation;msg-param-charity-name=Cancer\sResearch;msg-param-donation-amount=1000;msg-param-donation-currency=USD;msg-param-exponent=2;room-id=1;system-msg=Donor\sdonated\s$10.00\sto\sCancer\sResearch;tmi-sent-ts=1700000000000;user-id=11 :tmi.twitch.tv USERNOTICE #foam :for a good cause`;
-
-const RITUAL = String.raw`@display-name=Newbie;id=ritual-1;login=newbie;msg-id=ritual;msg-param-ritual-name=new_chatter;room-id=1;system-msg=Newbie\sis\snew\shere.\sSay\shello!;tmi-sent-ts=1700000000000;user-id=12 :tmi.twitch.tv USERNOTICE #foam :hi everyone`;
-
-const BITS_BADGE = String.raw`@display-name=Cheerer;id=bits-1;login=cheerer;msg-id=bitsbadgetier;msg-param-threshold=1000;room-id=1;system-msg=Cheerer\sjust\searned\sa\snew\s1000\sBits\sbadge!;tmi-sent-ts=1700000000000;user-id=13 :tmi.twitch.tv USERNOTICE #foam :`;
-
-const PRIME_UPGRADE = String.raw`@display-name=PrimeUser;id=prime-1;login=primeuser;msg-id=primepaidupgrade;msg-param-sub-plan=1000;room-id=1;system-msg=PrimeUser\sconverted\sfrom\sa\sPrime\ssub\sto\sa\sTier\s1\ssub!;tmi-sent-ts=1700000000000;user-id=14 :tmi.twitch.tv USERNOTICE #foam :`;
-
-const ALL_NOTICES = [
-  ['resub', RESUB],
-  ['sub', SUB],
-  ['subgift', SUBGIFT],
-  ['submysterygift', SUBMYSTERYGIFT],
-  ['viewermilestone', WATCH_STREAK],
-  ['modiversary', MOD_ANNIVERSARY],
-  ['raid', RAID],
-  ['unraid', UNRAID],
-  ['announcement', ANNOUNCEMENT],
-  ['charitydonation', CHARITY],
-  ['ritual', RITUAL],
-  ['bitsbadgetier', BITS_BADGE],
-  ['primepaidupgrade', PRIME_UPGRADE],
-] as const;
 
 function getRowText(instance: {
   props: { children?: unknown };

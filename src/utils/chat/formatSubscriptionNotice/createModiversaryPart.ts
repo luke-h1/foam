@@ -1,6 +1,6 @@
 import { ModiversaryTags } from '@app/types/chat/irc-tags/usernotice';
-import { withNoticeSubject } from '@app/utils/chat/chatHealth/withNoticeSubject';
 import { getTagValue } from '@app/utils/chat/formatSubscriptionNotice/getTagValue';
+import { withNoticeSubject } from '@app/utils/chat/formatSubscriptionNotice/withNoticeSubject';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
 
 export function createModiversaryPart(

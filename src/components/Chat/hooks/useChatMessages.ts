@@ -9,7 +9,6 @@ import {
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import {
   addMessages,
-  getMaxChatMessages,
   getMessageById,
   getUserMessageColor,
   moderateMessageById,
@@ -37,7 +36,8 @@ type HandleNewMessageOptions = {
 // Floor on delay-queue checks so a burst of releases coalesces into one drain.
 const DELAY_RELEASE_MIN_INTERVAL_MS = 80;
 
-const BUFFER_BACKPRESSURE_RATIO = 0.5;
+const INGEST_BUFFER_CAPACITY = 1000;
+const BUFFER_BACKPRESSURE_SIZE = 400;
 
 function publishBufferedMessages(messages: BufferedMessage[]) {
   if (messages.length === 0) {
@@ -101,11 +101,11 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     onUnreadIncrement,
   } = options;
 
-  const bufferRef = useLazyRef(() => createMessageBuffer());
+  const bufferRef = useLazyRef(() =>
+    createMessageBuffer(() => INGEST_BUFFER_CAPACITY),
+  );
   const isBufferUnderBackpressure = useCallback(
-    () =>
-      bufferRef.current.size() >=
-      Math.max(1, Math.floor(getMaxChatMessages() * BUFFER_BACKPRESSURE_RATIO)),
+    () => bufferRef.current.size() >= BUFFER_BACKPRESSURE_SIZE,
     [bufferRef],
   );
   const delayQueueRef = useLazyRef(() => createChatDelayQueue());
@@ -261,7 +261,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
         );
         reportDroppedChatMessages(dropped, {
           bufferSize: bufferRef.current.size(),
-          maxBufferedMessages: getMaxChatMessages(),
+          maxBufferedMessages: INGEST_BUFFER_CAPACITY,
         });
       }
 
@@ -276,7 +276,6 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
 
       if (isBufferUnderBackpressure()) {
         flushBufferRef.current();
-        return;
       }
 
       const flushDelay = pickFlushDelay({

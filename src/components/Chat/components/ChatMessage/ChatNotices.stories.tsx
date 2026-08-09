@@ -303,10 +303,8 @@ export const ViewerMilestone: Story = {
         category: 'watch-streak',
         reward: '450',
         value: '20',
-        content:
-          'LimeTitanTV watched 20 consecutive streams and sparked a watch streak!',
-        systemMsg:
-          'LimeTitanTV\\swatched\\s20\\sconsecutive\\sstreams\\sand\\ssparked\\sa\\swatch\\sstreak!',
+        content: '20 streams strong',
+        systemMsg: 'LimeTitanTV is currently on a 20-stream streak!',
         login: 'limetitantv',
         displayName: 'LimeTitanTV',
       },
@@ -318,6 +316,28 @@ export const ViewerMilestone: Story = {
       'msg-param-id': '123',
       'msg-param-value': '20',
       'display-name': 'LimeTitanTV',
+    },
+    onReply: () => {},
+  },
+};
+
+export const ModAnniversary: Story = {
+  args: {
+    ...createBaseMessage([
+      {
+        type: 'modiversary',
+        months: '18',
+        systemMsg: 'Jimmotep has been a moderator for 18 months!',
+        content: "I'm celebrating my 1 year, 6 month Mod Anniversary!",
+        login: 'jimmotep',
+        displayName: 'Jimmotep',
+      },
+    ]),
+    notice_tags: {
+      'msg-id': 'modiversary',
+      'msg-param-months': '18',
+      'display-name': 'Jimmotep',
+      login: 'jimmotep',
     },
     onReply: () => {},
   },
