@@ -267,12 +267,6 @@ rm -rf ~/Library/Developer/Xcode/DerivedData/Foamdev-*
 > [!NOTE]
 > Just setting `DISABLE_RNREPO=true` at `xcodebuild` time is **not** enough on its own — the flag is only read by RNRepo's pre/post-install hooks, so you must re-run `pod install` (or any `prebuild`/`run:ios` script, which run it for you) to regenerate the Pods project without the prebuilt setup. Re-enable RNRepo on iOS once rnrepo.org publishes matching iOS XCFrameworks.
 
-## Remote build cache
-
-Not used. `bun run ios` / `bun run android` always compile locally.
-
-Expo's [remote build cache](https://docs.expo.dev/guides/cache-builds-remotely/) keys artifacts on a native fingerprint that does not cover `patches/`, so an edit to a bun patch re-serves the pre-patch binary and the change appears to have no effect — with nothing in the build output saying a cached artifact was used. That cost more debugging time than the cache ever saved.
-
 ## PR previews & channel surfing
 
 Comment `!surf-deploy` on a pull request to publish an EAS Update to a `pr-<N>` branch on the `development` channel (see [`.github/workflows/ota-surf.yml`](.github/workflows/ota-surf.yml)). The workflow posts a QR code as a comment on the PR.
@@ -672,18 +666,6 @@ eas update --channel e2e --message "Fix E2E test"
 ```
 
 Only rebuild (`bun run e2e:build:ios`) when native code changes. Use fingerprinting to detect this automatically in CI.
-
-### Build caching (EAS)
-
-Local builds use EAS build caching to speed up `npx expo run:ios/android`. Builds are cached by fingerprint and reused when native code hasn't changed.
-
-**How it works:**
-
-- On `npx expo run:ios`, Expo checks EAS for a cached build matching the project fingerprint
-- If found, downloads and uses it (skips compilation)
-- If not found, compiles normally and uploads to EAS for future runs
-
-No setup required - just ensure you're logged in with `eas login`.
 
 ## Local EAS build
 
