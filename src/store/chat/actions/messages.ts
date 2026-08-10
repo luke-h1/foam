@@ -32,6 +32,12 @@ import {
 } from './messageColorIndex';
 
 const messageKeySet = new Set<string>();
+/**
+ * Front-trims shift every surviving row's index. Instead of rewriting both
+ * index Maps per flush (2 x window Map.sets at ~10 flushes/s), stored
+ * positions are absolute and reads subtract this running offset.
+ */
+let windowBaseOffset = 0;
 const messageKeyOrder: string[] = [];
 const messageIdToIndex = new Map<string, number>();
 const messageKeyToIndex = new Map<string, number>();
@@ -171,11 +177,11 @@ const indexMessage = (message: AnyChatMessageType, index: number) => {
   // this is a field read, not a recompute; the fallback covers direct calls
   // with unprepared messages.
   const key = getChatMessageStoreId(message);
-  messageKeyToIndex.set(key, index);
+  messageKeyToIndex.set(key, index + windowBaseOffset);
 
   const normalisedMessageId = normaliseMessageField(message.message_id);
   if (normalisedMessageId) {
-    messageIdToIndex.set(normalisedMessageId, index);
+    messageIdToIndex.set(normalisedMessageId, index + windowBaseOffset);
   }
 
   indexMessageColor(message);
@@ -197,6 +203,7 @@ const indexMessage = (message: AnyChatMessageType, index: number) => {
 const rebuildMessageIndexes = (
   messages: AnyChatMessageType[] = chatStore$.messages.peek(),
 ) => {
+  windowBaseOffset = 0;
   messageIdToIndex.clear();
   messageKeyToIndex.clear();
   clearMessageColorIndexes();
@@ -405,12 +412,7 @@ const shiftMessageIndexes = (offset: number) => {
     return;
   }
 
-  messageKeyToIndex.forEach((index, key) => {
-    messageKeyToIndex.set(key, index - offset);
-  });
-  messageIdToIndex.forEach((index, key) => {
-    messageIdToIndex.set(key, index - offset);
-  });
+  windowBaseOffset += offset;
 };
 
 // Once the window is full, every flush trims from the front. A full
@@ -431,7 +433,8 @@ const indexAppendedMessages = (
     // nonce; only drop the id entry when it still points at the evicted row.
     if (
       normalisedMessageId &&
-      messageIdToIndex.get(normalisedMessageId) === droppedIndex
+      messageIdToIndex.get(normalisedMessageId) ===
+        droppedIndex + windowBaseOffset
     ) {
       messageIdToIndex.delete(normalisedMessageId);
     }
@@ -482,11 +485,12 @@ const getMessageUpdatesFromInputs = (
 
   for (const { messageId, messageNonce, updates: messageUpdates } of updates) {
     const key = getChatMessageKey(messageId, messageNonce);
-    const index = messageKeyToIndex.get(key);
+    const storedIndex = messageKeyToIndex.get(key);
 
-    if (typeof index !== 'number') {
+    if (typeof storedIndex !== 'number') {
       continue;
     }
+    const index = storedIndex - windowBaseOffset;
 
     const currentMessage = nextMessages[index];
     if (!currentMessage) {
@@ -620,11 +624,12 @@ export const moderateMessageById = (
   }
 
   const key = getChatMessageKey(message.message_id, message.message_nonce);
-  const index = messageKeyToIndex.get(key);
+  const storedIndex = messageKeyToIndex.get(key);
 
-  if (typeof index !== 'number') {
+  if (typeof storedIndex !== 'number') {
     return;
   }
+  const index = storedIndex - windowBaseOffset;
 
   const currentMessages = chatStore$.messages.peek();
   const currentMessage = currentMessages[index];
@@ -750,12 +755,12 @@ export const removeMessagesByLogin = (login: string) => {
 export const getMessageById = (
   messageId: string,
 ): AnyChatMessageType | undefined => {
-  const index = messageIdToIndex.get(normaliseMessageField(messageId));
-  if (typeof index !== 'number') {
+  const storedIndex = messageIdToIndex.get(normaliseMessageField(messageId));
+  if (typeof storedIndex !== 'number') {
     return undefined;
   }
 
-  return chatStore$.messages.peek()[index];
+  return chatStore$.messages.peek()[storedIndex - windowBaseOffset];
 };
 
 export const removeMessageById = (messageId: string) => {
@@ -800,6 +805,7 @@ export const clearMessages = () => {
   chatPerfMarks.channelReset();
   flushPendingRecentMessagesSync();
   frontTrimSuspended = false;
+  windowBaseOffset = 0;
   messageKeySet.clear();
   messageKeyOrder.length = 0;
   messageIdToIndex.clear();
