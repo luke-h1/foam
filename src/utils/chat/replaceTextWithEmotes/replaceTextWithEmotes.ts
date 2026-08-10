@@ -1,5 +1,6 @@
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
+import { getEmoteArrayContentKey } from '@app/utils/chat/emoteArrayContentKey';
 import { findEmotesInText } from '@app/utils/chat/findEmotesInText/findEmotesInText';
 import { getEmoteMatchIndex } from '@app/utils/chat/findEmotesInText/getEmoteMatchIndex';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
@@ -61,34 +62,24 @@ type EmoteProviderLists = {
 };
 
 const EMPTY_EMOTES: SanitisedEmote[] = [];
-const emoteArrayIds = new WeakMap<SanitisedEmote[], number>();
 const lookupCollectionCache = new Map<string, EmoteLookupCollection>();
 const MAX_LOOKUP_COLLECTION_CACHE_SIZE = 4;
-let nextEmoteArrayId = 0;
 
-function getEmoteArrayId(emotes: SanitisedEmote[]): number {
-  let id = emoteArrayIds.get(emotes);
-  if (id === undefined) {
-    nextEmoteArrayId += 1;
-    id = nextEmoteArrayId;
-    emoteArrayIds.set(emotes, id);
-  }
-  return id;
-}
-
+// Content-derived (not array identity) so identity churn from 7TV events and
+// channel-load settles doesn't rebuild the multi-thousand-entry lookup maps.
 function getLookupCollectionKey(lists: EmoteProviderLists): string {
   return [
-    getEmoteArrayId(lists.emojiEmotes),
-    getEmoteArrayId(lists.sevenTvGlobalEmotes),
-    getEmoteArrayId(lists.sevenTvChannelEmotes),
-    getEmoteArrayId(lists.sevenTvPersonalEmotes),
-    getEmoteArrayId(lists.twitchGlobalEmotes),
-    getEmoteArrayId(lists.twitchChannelEmotes),
-    getEmoteArrayId(lists.twitchSubscriberEmotes),
-    getEmoteArrayId(lists.ffzChannelEmotes),
-    getEmoteArrayId(lists.ffzGlobalEmotes),
-    getEmoteArrayId(lists.bttvChannelEmotes),
-    getEmoteArrayId(lists.bttvGlobalEmotes),
+    getEmoteArrayContentKey(lists.emojiEmotes),
+    getEmoteArrayContentKey(lists.sevenTvGlobalEmotes),
+    getEmoteArrayContentKey(lists.sevenTvChannelEmotes),
+    getEmoteArrayContentKey(lists.sevenTvPersonalEmotes),
+    getEmoteArrayContentKey(lists.twitchGlobalEmotes),
+    getEmoteArrayContentKey(lists.twitchChannelEmotes),
+    getEmoteArrayContentKey(lists.twitchSubscriberEmotes),
+    getEmoteArrayContentKey(lists.ffzChannelEmotes),
+    getEmoteArrayContentKey(lists.ffzGlobalEmotes),
+    getEmoteArrayContentKey(lists.bttvChannelEmotes),
+    getEmoteArrayContentKey(lists.bttvGlobalEmotes),
   ].join('|');
 }
 

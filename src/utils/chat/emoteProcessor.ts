@@ -1,5 +1,6 @@
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
+import { getEmoteArrayContentKey } from '@app/utils/chat/emoteArrayContentKey';
 import { parseWordLinkParts } from '@app/utils/chat/replaceTextWithEmotes/parseWordLinkParts';
 
 import { queueMentionLoginsFromParts } from './mentionLoginResolver/queueMentionLoginsFromParts';
@@ -25,7 +26,6 @@ interface EmoteProcessorParams {
 
 const cache = new Map<string, ParsedPart[]>();
 const MAX_CACHE_SIZE = 1000;
-const emoteArrayIds = new WeakMap<SanitisedEmote[], number>();
 const baseCollectionCache = new Map<string, EmoteCollection>();
 
 const MAX_BASE_COLLECTION_CACHE_SIZE = 4;
@@ -40,18 +40,6 @@ type EmoteCollection = {
   emojiMap: ReadonlyMap<string, SanitisedEmote>;
   emoteMap: ReadonlyMap<string, SanitisedEmote>;
 };
-
-let nextEmoteArrayId = 0;
-
-function getEmoteArrayId(emotes: SanitisedEmote[]): number {
-  let id = emoteArrayIds.get(emotes);
-  if (id === undefined) {
-    nextEmoteArrayId += 1;
-    id = nextEmoteArrayId;
-    emoteArrayIds.set(emotes, id);
-  }
-  return id;
-}
 
 const createCacheKey = (
   inputString: string,
@@ -72,16 +60,20 @@ function getBaseCollectionKey(
   bttvChannelEmotes: SanitisedEmote[],
   bttvGlobalEmotes: SanitisedEmote[],
 ): string {
+  // Content-derived so a rebuilt array with unchanged emotes keys the same -
+  // 7TV events and channel-load settles replace these arrays wholesale, and
+  // identity keying invalidated every cached parse each time (issue: the
+  // whole window re-parsed for ~800ms sustained after an emote_set.update).
   return [
-    getEmoteArrayId(emojiEmotes),
-    getEmoteArrayId(sevenTvGlobalEmotes),
-    getEmoteArrayId(sevenTvChannelEmotes),
-    getEmoteArrayId(twitchGlobalEmotes),
-    getEmoteArrayId(twitchChannelEmotes),
-    getEmoteArrayId(ffzChannelEmotes),
-    getEmoteArrayId(ffzGlobalEmotes),
-    getEmoteArrayId(bttvChannelEmotes),
-    getEmoteArrayId(bttvGlobalEmotes),
+    getEmoteArrayContentKey(emojiEmotes),
+    getEmoteArrayContentKey(sevenTvGlobalEmotes),
+    getEmoteArrayContentKey(sevenTvChannelEmotes),
+    getEmoteArrayContentKey(twitchGlobalEmotes),
+    getEmoteArrayContentKey(twitchChannelEmotes),
+    getEmoteArrayContentKey(ffzChannelEmotes),
+    getEmoteArrayContentKey(ffzGlobalEmotes),
+    getEmoteArrayContentKey(bttvChannelEmotes),
+    getEmoteArrayContentKey(bttvGlobalEmotes),
   ].join('|');
 }
 
