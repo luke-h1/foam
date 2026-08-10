@@ -1,3 +1,302 @@
+diff --git a/node_modules/@legendapp/state/.bun-tag-f7d61dfdcedafc84 b/.bun-tag-f7d61dfdcedafc84
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/index.js b/index.js
+index 8fd37524f3cf8f846a1e75315c8a05b9f6b86087..5e53d91daa2b90f6a1394516a6a9cd2b945762ff 100644
+--- a/index.js
++++ b/index.js
+@@ -577,6 +577,11 @@ function runBatch() {
+     // Save batch locally and reset _batchMap first because a new batch could begin while looping over callbacks.
+     // This can happen with observableComputed for example.
+     const map = _batchMap;
++    // PATCH(foam): an empty batch has nothing to notify - skip the two Map
++    // allocations and the dispatch walk.
++    if (map.size === 0) {
++        return;
++    }
+     _batchMap = new Map();
+     const changesInBatch = new Map();
+     // First compute all of the changes at each node. It's important to do this first before
+@@ -610,7 +615,10 @@ function batch(fn, onComplete) {
+ }
+ function beginBatch() {
+     numInBatch++;
+-    if (!timeout) {
++    // PATCH(foam): the timeout only recovers from an unbalanced manual
++    // beginBatch, which is a programming error - don't schedule + clear a host
++    // timer on every set in production for it.
++    if (!timeout && process.env.NODE_ENV !== 'production') {
+         timeout = setTimeout(onActionTimeout, 0);
+     }
+ }
+@@ -863,25 +871,26 @@ function updateNodes(parent, obj, prevValue) {
+                     const keysSeen = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test'
+                         ? new Set()
+                         : undefined;
+-                    if (parent.children) {
+-                        for (let i = 0; i < prevValue.length; i++) {
+-                            const p = prevValue[i];
++                    // PATCH(foam): iterate the existing child nodes instead of every
++                    // array element - only elements with a child node were ever added
++                    // to prevChildrenById, so this is equivalent and drops the per-set
++                    // cost from O(array length) to O(child nodes).
++                    if (parent.children && parent.children.size) {
++                        parent.children.forEach((child, childKey) => {
++                            const p = prevValue[+childKey];
+                             if (p) {
+-                                const child = parent.children.get(i + '');
+-                                if (child) {
+-                                    const key = isIdFieldFunction
+-                                        ? idField(p)
+-                                        : p[idField];
+-                                    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+-                                        if (keysSeen.has(key)) {
+-                                            console.warn(`[legend-state] Warning: Multiple elements in array have the same ID. Key field: ${idField}, Array:`, prevValue);
+-                                        }
+-                                        keysSeen.add(key);
++                                const key = isIdFieldFunction
++                                    ? idField(p)
++                                    : p[idField];
++                                if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
++                                    if (keysSeen.has(key)) {
++                                        console.warn(`[legend-state] Warning: Multiple elements in array have the same ID. Key field: ${idField}, Array:`, prevValue);
+                                     }
+-                                    prevChildrenById.set(key, child);
++                                    keysSeen.add(key);
+                                 }
++                                prevChildrenById.set(key, child);
+                             }
+-                        }
++                        });
+                     }
+                 }
+             }
+@@ -890,13 +899,19 @@ function updateNodes(parent, obj, prevValue) {
+     else if (prevValue && (!obj || isObject(obj))) {
+         // For keys that have been removed from object, notify and update children recursively
+         const lengthPrev = keysPrev.length;
++        // PATCH(foam): Set membership instead of Array.includes turns the removed-key
++        // scan from O(prev x next) into O(prev + next) on large records.
++        const keysSet = lengthPrev > 8 && keys && keys.length > 8 ? new Set(keys) : undefined;
+         for (let i = 0; i < lengthPrev; i++) {
+             const key = keysPrev[i];
+-            if (!keys.includes(key)) {
++            if (keysSet ? !keysSet.has(key) : !keys.includes(key)) {
+                 hasADiff = true;
+-                const child = getChildNode(parent, key);
++                // PATCH(foam): a node that was never created has no listeners and no
++                // descendants, so there is nothing to notify - don't create one just
++                // to tear down the removed subtree.
++                const child = parent.children ? parent.children.get(key) : undefined;
+                 const prev = isMap ? prevValue.get(key) : prevValue[key];
+-                if (prev !== undefined) {
++                if (prev !== undefined && child) {
+                     if (!isPrimitive(prev)) {
+                         updateNodes(child, undefined, prev);
+                     }
+@@ -922,7 +937,13 @@ function updateNodes(parent, obj, prevValue) {
+                         ? idField(value)
+                         : value[idField]
+                     : undefined;
+-                let child = getChildNode(parent, key);
++                // PATCH(foam): don't materialize a child node for every diffing
++                // element - a node that doesn't exist has no listeners and no
++                // descendants, so it's only needed when recursing a real diff.
++                // Eagerly creating one per element made parent.children non-empty
++                // on the first large set, which forced the prevChildrenById build
++                // on every set afterwards.
++                let child = parent.children ? parent.children.get(key) : undefined;
+                 // Detect moves within an array. Need to move the original proxy to the new position to keep
+                 // the proxy stable, so that listeners to this node will be unaffected by the array shift.
+                 if (isArr && id !== undefined) {
+@@ -948,6 +969,10 @@ function updateNodes(parent, obj, prevValue) {
+                         // And check for diff against the previous value in the previous position
+                         isDiff = valuePrevChild !== value;
+                     }
++                    else {
++                        // PATCH(foam): same id at the same index - reuse its node.
++                        child = prevChild;
++                    }
+                 }
+                 if (isDiff) {
+                     // Array has a new / modified element
+@@ -955,8 +980,19 @@ function updateNodes(parent, obj, prevValue) {
+                     if (isPrimitive(value)) {
+                         hasADiff = true;
+                     }
++                    else if (!child && prev === undefined) {
++                        // PATCH(foam): a brand-new subtree with no node is trivially
++                        // a diff, and with no node there are no listeners at any
++                        // depth - recursing would only materialize nodes nobody
++                        // subscribes to. This is what keeps a freshly seeded array
++                        // from creating a node per element.
++                        hasADiff = true;
++                    }
+                     else {
+                         // Always need to updateNodes so we notify through all children
++                        if (!child) {
++                            child = getChildNode(parent, key);
++                        }
+                         const updatedNodes = updateNodes(child, value, prev);
+                         hasADiff = hasADiff || updatedNodes;
+                     }
+@@ -966,7 +1002,7 @@ function updateNodes(parent, obj, prevValue) {
+                     // Or if the position changed in an array whose length did not change
+                     // But do not notify child if the parent is an array with changing length -
+                     // the array's listener will cover it
+-                    if (child.listeners || child.listenersImmediate) {
++                    if (child && (child.listeners || child.listenersImmediate)) {
+                         notify(child, value, prev, 0, !isArrDiff);
+                     }
+                 }
+diff --git a/index.mjs b/index.mjs
+index e85796e43d159788ee568fedab63952b643f7a37..f1e5dced2caa7aedfc0091b625e88123e886f9a9 100644
+--- a/index.mjs
++++ b/index.mjs
+@@ -575,6 +575,11 @@ function runBatch() {
+     // Save batch locally and reset _batchMap first because a new batch could begin while looping over callbacks.
+     // This can happen with observableComputed for example.
+     const map = _batchMap;
++    // PATCH(foam): an empty batch has nothing to notify - skip the two Map
++    // allocations and the dispatch walk.
++    if (map.size === 0) {
++        return;
++    }
+     _batchMap = new Map();
+     const changesInBatch = new Map();
+     // First compute all of the changes at each node. It's important to do this first before
+@@ -608,7 +613,10 @@ function batch(fn, onComplete) {
+ }
+ function beginBatch() {
+     numInBatch++;
+-    if (!timeout) {
++    // PATCH(foam): the timeout only recovers from an unbalanced manual
++    // beginBatch, which is a programming error - don't schedule + clear a host
++    // timer on every set in production for it.
++    if (!timeout && process.env.NODE_ENV !== 'production') {
+         timeout = setTimeout(onActionTimeout, 0);
+     }
+ }
+@@ -861,25 +869,26 @@ function updateNodes(parent, obj, prevValue) {
+                     const keysSeen = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test'
+                         ? new Set()
+                         : undefined;
+-                    if (parent.children) {
+-                        for (let i = 0; i < prevValue.length; i++) {
+-                            const p = prevValue[i];
++                    // PATCH(foam): iterate the existing child nodes instead of every
++                    // array element - only elements with a child node were ever added
++                    // to prevChildrenById, so this is equivalent and drops the per-set
++                    // cost from O(array length) to O(child nodes).
++                    if (parent.children && parent.children.size) {
++                        parent.children.forEach((child, childKey) => {
++                            const p = prevValue[+childKey];
+                             if (p) {
+-                                const child = parent.children.get(i + '');
+-                                if (child) {
+-                                    const key = isIdFieldFunction
+-                                        ? idField(p)
+-                                        : p[idField];
+-                                    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+-                                        if (keysSeen.has(key)) {
+-                                            console.warn(`[legend-state] Warning: Multiple elements in array have the same ID. Key field: ${idField}, Array:`, prevValue);
+-                                        }
+-                                        keysSeen.add(key);
++                                const key = isIdFieldFunction
++                                    ? idField(p)
++                                    : p[idField];
++                                if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
++                                    if (keysSeen.has(key)) {
++                                        console.warn(`[legend-state] Warning: Multiple elements in array have the same ID. Key field: ${idField}, Array:`, prevValue);
+                                     }
+-                                    prevChildrenById.set(key, child);
++                                    keysSeen.add(key);
+                                 }
++                                prevChildrenById.set(key, child);
+                             }
+-                        }
++                        });
+                     }
+                 }
+             }
+@@ -888,13 +897,19 @@ function updateNodes(parent, obj, prevValue) {
+     else if (prevValue && (!obj || isObject(obj))) {
+         // For keys that have been removed from object, notify and update children recursively
+         const lengthPrev = keysPrev.length;
++        // PATCH(foam): Set membership instead of Array.includes turns the removed-key
++        // scan from O(prev x next) into O(prev + next) on large records.
++        const keysSet = lengthPrev > 8 && keys && keys.length > 8 ? new Set(keys) : undefined;
+         for (let i = 0; i < lengthPrev; i++) {
+             const key = keysPrev[i];
+-            if (!keys.includes(key)) {
++            if (keysSet ? !keysSet.has(key) : !keys.includes(key)) {
+                 hasADiff = true;
+-                const child = getChildNode(parent, key);
++                // PATCH(foam): a node that was never created has no listeners and no
++                // descendants, so there is nothing to notify - don't create one just
++                // to tear down the removed subtree.
++                const child = parent.children ? parent.children.get(key) : undefined;
+                 const prev = isMap ? prevValue.get(key) : prevValue[key];
+-                if (prev !== undefined) {
++                if (prev !== undefined && child) {
+                     if (!isPrimitive(prev)) {
+                         updateNodes(child, undefined, prev);
+                     }
+@@ -920,7 +935,13 @@ function updateNodes(parent, obj, prevValue) {
+                         ? idField(value)
+                         : value[idField]
+                     : undefined;
+-                let child = getChildNode(parent, key);
++                // PATCH(foam): don't materialize a child node for every diffing
++                // element - a node that doesn't exist has no listeners and no
++                // descendants, so it's only needed when recursing a real diff.
++                // Eagerly creating one per element made parent.children non-empty
++                // on the first large set, which forced the prevChildrenById build
++                // on every set afterwards.
++                let child = parent.children ? parent.children.get(key) : undefined;
+                 // Detect moves within an array. Need to move the original proxy to the new position to keep
+                 // the proxy stable, so that listeners to this node will be unaffected by the array shift.
+                 if (isArr && id !== undefined) {
+@@ -946,6 +967,10 @@ function updateNodes(parent, obj, prevValue) {
+                         // And check for diff against the previous value in the previous position
+                         isDiff = valuePrevChild !== value;
+                     }
++                    else {
++                        // PATCH(foam): same id at the same index - reuse its node.
++                        child = prevChild;
++                    }
+                 }
+                 if (isDiff) {
+                     // Array has a new / modified element
+@@ -953,8 +978,19 @@ function updateNodes(parent, obj, prevValue) {
+                     if (isPrimitive(value)) {
+                         hasADiff = true;
+                     }
++                    else if (!child && prev === undefined) {
++                        // PATCH(foam): a brand-new subtree with no node is trivially
++                        // a diff, and with no node there are no listeners at any
++                        // depth - recursing would only materialize nodes nobody
++                        // subscribes to. This is what keeps a freshly seeded array
++                        // from creating a node per element.
++                        hasADiff = true;
++                    }
+                     else {
+                         // Always need to updateNodes so we notify through all children
++                        if (!child) {
++                            child = getChildNode(parent, key);
++                        }
+                         const updatedNodes = updateNodes(child, value, prev);
+                         hasADiff = hasADiff || updatedNodes;
+                     }
+@@ -964,7 +1000,7 @@ function updateNodes(parent, obj, prevValue) {
+                     // Or if the position changed in an array whose length did not change
+                     // But do not notify child if the parent is an array with changing length -
+                     // the array's listener will cover it
+-                    if (child.listeners || child.listenersImmediate) {
++                    if (child && (child.listeners || child.listenersImmediate)) {
+                         notify(child, value, prev, 0, !isArrDiff);
+                     }
+                 }
 diff --git a/persist-plugins/mmkv.js b/persist-plugins/mmkv.js
 index 8380fd33f9471919851b54cdabcefe7c6867c11f..ad93b34b8f1e3addcd095ca7da18d40813d692f1 100644
 --- a/persist-plugins/mmkv.js
