@@ -56,9 +56,15 @@ export function resolveMessageEmoteParts({
     senderLogin && senderLogin === currentUserLogin
       ? emoteData.twitchSubscriberEmotes
       : [];
+  // Keep the cached tagged-emotes array's identity when there's nothing to
+  // merge (subscriber emotes are only present for the current user's own
+  // messages) - a fresh array here missed the WeakMap content-id interning
+  // downstream on every tagged message.
   const scopedTwitchSubscriberEmotes =
     twitchTaggedSubscriberEmotes.length > 0
-      ? [...twitchTaggedSubscriberEmotes, ...twitchSubscriberEmotes]
+      ? twitchSubscriberEmotes.length > 0
+        ? [...twitchTaggedSubscriberEmotes, ...twitchSubscriberEmotes]
+        : twitchTaggedSubscriberEmotes
       : twitchSubscriberEmotes;
 
   const parts = processEmotesWorklet({

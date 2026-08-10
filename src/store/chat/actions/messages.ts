@@ -336,11 +336,17 @@ const syncRecentMessagesForCurrentChannel = (
 };
 
 const trimMessageIndexes = (): number => {
-  let trimmedCount = 0;
   const maxChatMessages = getEffectiveMaxChatMessages();
+  const trimCount = messageKeyOrder.length - maxChatMessages;
+  if (trimCount <= 0) {
+    return 0;
+  }
 
-  while (messageKeyOrder.length > maxChatMessages) {
-    const removedKey = messageKeyOrder.shift();
+  // One splice instead of shift-per-key - shift moves the whole remaining
+  // window each call, which a full window pays per flush.
+  const removedKeys = messageKeyOrder.splice(0, trimCount);
+  let trimmedCount = 0;
+  for (const removedKey of removedKeys) {
     if (removedKey) {
       messageKeySet.delete(removedKey);
       trimmedCount += 1;

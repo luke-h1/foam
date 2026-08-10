@@ -33,8 +33,11 @@ import type {
 } from './roomState/roomStateTracker';
 import { SUPPRESSED_NOTICE_IDS } from './roomState/SUPPRESSED_NOTICE_IDS';
 
+const LIVE_FLAG = {};
+const HISTORICAL_FLAG = { isHistorical: true as const };
+
 const historicalFlag = (countUnread: boolean) =>
-  countUnread ? {} : { isHistorical: true as const };
+  countUnread ? LIVE_FLAG : HISTORICAL_FLAG;
 
 export interface ChatIrcHandlerDeps {
   channelId: string;
