@@ -170,6 +170,7 @@ export function Surface({
         isUserChat && isHighlightedSender && styles.highlightedSenderContainer,
         isUserChat && mentionsCurrentUser && styles.ownMentionContainer,
         bodyVariant === 'viewer_milestone' && styles.viewerMilestoneContainer,
+        bodyVariant === 'mod_anniversary' && styles.modAnniversarySurface,
         bodyVariant === 'subscription' && styles.subscriptionNoticeSurface,
         bodyVariant === 'charity_donation' && styles.charityDonationSurface,
         bodyVariant === 'ritual' && styles.ritualNoticeSurface,

@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { CHAT_NOTICE_ACCENTS } from '@app/components/Chat/components/util/chatNoticeAccents';
 import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
+import { reportUnrenderableNotice } from '@app/utils/chat/chatHealth/reportUnrenderableNotice';
 import type { ChatBodyVariant } from '@app/utils/chat/deriveChatBody/types';
 
 import { getChatTextStyles } from '../chatText.styles';
@@ -20,6 +21,7 @@ type ChatNoticeVariant = Exclude<ChatBodyVariant, 'announcement' | 'user_chat'>;
 const NOTICE_BODY_MODES = {
   app_system_sender: 'system',
   charity_donation: 'message',
+  mod_anniversary: 'message',
   raid: 'system',
   ritual: 'message',
   stv_emote_event: 'message',
@@ -41,6 +43,14 @@ export function ChatNoticeBody({
   timestamp,
   ...rendererArgs
 }: ChatNoticeBodyProps) {
+  if (message.length === 0) {
+    reportUnrenderableNotice({
+      msgId: rendererArgs.noticeTags?.['msg-id'],
+      reason: `no-parts:${bodyVariant}`,
+      stage: 'render',
+    });
+  }
+
   const body = (
     <ChatMessageBody
       mode={NOTICE_BODY_MODES[bodyVariant]}

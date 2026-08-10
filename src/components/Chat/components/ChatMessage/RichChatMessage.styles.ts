@@ -271,6 +271,10 @@ export const styles = StyleSheet.create({
     color: theme.color.textSecondary.dark,
     textAlign: 'left',
   },
+  modAnniversarySurface: noticeSurface(CHAT_NOTICE_ACCENTS.modAnniversary),
+  modAnniversaryMetaText: {
+    color: CHAT_NOTICE_ACCENTS.modAnniversary,
+  },
   viewerMilestoneContainer: noticeSurface(CHAT_NOTICE_ACCENTS.viewerMilestone),
   viewerMilestoneMetaText: {
     color: CHAT_NOTICE_ACCENTS.viewerMilestone,

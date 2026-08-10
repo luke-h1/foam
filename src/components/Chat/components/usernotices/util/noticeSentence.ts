@@ -1,20 +1,4 @@
-export function resolveViewerMilestoneBody({
-  content,
-  systemMsg,
-}: {
-  content?: string;
-  displayName: string;
-  systemMsg: string;
-}): string {
-  const trimmedContent = content?.trim();
-  if (trimmedContent) {
-    return trimmedContent;
-  }
-
-  return systemMsg.trim();
-}
-
-export function splitViewerMilestoneLead(
+export function splitNoticeSubject(
   body: string,
   displayName: string,
 ): { lead: string | undefined; rest: string } {

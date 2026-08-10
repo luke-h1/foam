@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { MediaLinkCard } from '@app/components/Chat/components/MediaLinkCard';
 import { StvEmoteEvent } from '@app/components/Chat/components/StvEmoteEvent';
 import { CharityDonationNotice } from '@app/components/Chat/components/usernotices/CharityDonationNotice';
+import { ModAnniversaryNotice } from '@app/components/Chat/components/usernotices/ModAnniversaryNotice';
 import { RitualNotice } from '@app/components/Chat/components/usernotices/RitualNotice';
 import { SubscriptionNotice } from '@app/components/Chat/components/usernotices/SubscriptionNotice';
 import { ViewerMileStoneNoticeComponent } from '@app/components/Chat/components/usernotices/ViewerMilestoneNotice';
@@ -26,6 +27,27 @@ type ChatMessagePartProps = Omit<ChatMessagePartRendererArgs, 'message'> & {
   part: ParsedPart;
 };
 
+function getNoticeUserMessage(part: ParsedPart): string | undefined {
+  switch (part.type) {
+    case 'sub':
+    case 'resub':
+    case 'anongift':
+    case 'anongiftpaidupgrade':
+    case 'submysterygift':
+    case 'giftpaidupgrade':
+    case 'primepaidupgrade':
+      return part.subscriptionEvent.message;
+    case 'charitydonation':
+    case 'ritual':
+      return part.message;
+    case 'viewermilestone':
+    case 'modiversary':
+      return part.content;
+    default:
+      return undefined;
+  }
+}
+
 export function ChatMessagePart({
   compact,
   disableEmoteAnimations,
@@ -46,14 +68,13 @@ export function ChatMessagePart({
   textColor,
   part,
 }: ChatMessagePartProps) {
-  const subMessage =
-    'subscriptionEvent' in part ? part.subscriptionEvent?.message : undefined;
-  const parsedSubMessage = useMemo(
+  const noticeMessage = getNoticeUserMessage(part);
+  const parsedNoticeMessage = useMemo(
     () =>
-      subMessage && parseTextForEmotes
-        ? parseTextForEmotes(subMessage)
+      noticeMessage && parseTextForEmotes
+        ? parseTextForEmotes(noticeMessage)
         : undefined,
-    [subMessage, parseTextForEmotes],
+    [noticeMessage, parseTextForEmotes],
   );
 
   const textStyles = getChatTextStyles(fontScale, compact);
@@ -234,7 +255,7 @@ export function ChatMessagePart({
             key={getPartKey(part, index)}
             part={part}
             notice_tags={noticeTags}
-            parsedMessage={parsedSubMessage}
+            parsedMessage={parsedNoticeMessage}
           />
         );
       }
@@ -243,7 +264,7 @@ export function ChatMessagePart({
         <SubscriptionNotice
           key={getPartKey(part, index)}
           part={part}
-          parsedMessage={parsedSubMessage}
+          parsedMessage={parsedNoticeMessage}
         />
       );
     }
@@ -253,7 +274,21 @@ export function ChatMessagePart({
         <ViewerMileStoneNoticeComponent
           key={getPartKey(part, index)}
           compact={compact}
+          disableAnimations={disableEmoteAnimations}
           fontScale={fontScale}
+          parsedMessage={parsedNoticeMessage}
+          part={part}
+        />
+      );
+
+    case 'modiversary':
+      return (
+        <ModAnniversaryNotice
+          key={getPartKey(part, index)}
+          compact={compact}
+          disableAnimations={disableEmoteAnimations}
+          fontScale={fontScale}
+          parsedMessage={parsedNoticeMessage}
           part={part}
         />
       );
@@ -263,7 +298,9 @@ export function ChatMessagePart({
         <CharityDonationNotice
           key={getPartKey(part, index)}
           compact={compact}
+          disableAnimations={disableEmoteAnimations}
           fontScale={fontScale}
+          parsedMessage={parsedNoticeMessage}
           part={part}
         />
       );
@@ -273,7 +310,9 @@ export function ChatMessagePart({
         <RitualNotice
           key={getPartKey(part, index)}
           compact={compact}
+          disableAnimations={disableEmoteAnimations}
           fontScale={fontScale}
+          parsedMessage={parsedNoticeMessage}
           part={part}
         />
       );

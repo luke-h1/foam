@@ -14,32 +14,21 @@ import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';
 import { NoticeUserMessage } from './NoticeUserMessage';
 import { splitNoticeSubject } from './util/noticeSentence';
 
-interface ViewerMilestoneNoticeProps {
+interface ModAnniversaryNoticeProps {
   compact?: boolean;
   disableAnimations?: boolean;
   fontScale?: ChatFontScale;
   parsedMessage?: ParsedPart[];
-  part: ParsedPart<'viewermilestone'>;
+  part: ParsedPart<'modiversary'>;
 }
 
-function getMilestoneMetaLabel(category: string): string {
-  switch (category) {
-    case 'watch-streak':
-      return i18next.t('chat:notices.watchStreak');
-    case 'follow':
-      return i18next.t('chat:notices.followMilestone');
-    default:
-      return i18next.t('chat:notices.milestone');
-  }
-}
-
-function ViewerMileStoneNotice({
+function ModAnniversaryNoticeComponent({
   compact,
   disableAnimations,
   fontScale,
   parsedMessage,
   part,
-}: ViewerMilestoneNoticeProps) {
+}: ModAnniversaryNoticeProps) {
   const textStyles = getChatTextStyles(fontScale, compact);
   const displayName = part.displayName?.trim() || '';
   const systemMsg = part.systemMsg?.trim() || '';
@@ -47,7 +36,7 @@ function ViewerMileStoneNotice({
 
   if (!systemMsg && !content) {
     reportUnrenderableNotice({
-      msgId: 'viewermilestone',
+      msgId: 'modiversary',
       reason: 'empty-body',
       stage: 'render',
     });
@@ -55,35 +44,17 @@ function ViewerMileStoneNotice({
   }
 
   const { lead, rest } = splitNoticeSubject(systemMsg, displayName);
-  const reward = Number.parseInt(part.reward, 10);
 
   return (
     <View style={styles.messageColumn}>
       <ChatNoticeMetaRow
         compact={compact}
         fontScale={fontScale}
-        icon='flame.fill'
-        labelColor={CHAT_NOTICE_ACCENTS.viewerMilestone}
-      >
-        <Text style={[textStyles.meta, styles.messageMetaTextFlex]}>
-          <Text
-            style={[
-              textStyles.meta,
-              textStyles.metaStrong,
-              styles.viewerMilestoneMetaText,
-            ]}
-          >
-            {getMilestoneMetaLabel(part.category)}
-          </Text>
-          {Number.isFinite(reward) && reward > 0 ? (
-            <Text style={[textStyles.meta, styles.channelPointsMetaReward]}>
-              {i18next.t('chat:notices.channelPointsEarned', {
-                count: reward,
-              })}
-            </Text>
-          ) : null}
-        </Text>
-      </ChatNoticeMetaRow>
+        icon='shield.fill'
+        label={i18next.t('chat:notices.modAnniversary')}
+        labelColor={CHAT_NOTICE_ACCENTS.modAnniversary}
+        labelStyle={styles.modAnniversaryMetaText}
+      />
       {systemMsg ? (
         <Text style={textStyles.meta}>
           {lead ? (
@@ -109,4 +80,4 @@ function ViewerMileStoneNotice({
   );
 }
 
-export const ViewerMileStoneNoticeComponent = memo(ViewerMileStoneNotice);
+export const ModAnniversaryNotice = memo(ModAnniversaryNoticeComponent);

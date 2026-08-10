@@ -47,6 +47,9 @@ function resolveChatBodyVariant(
   if (notices.hasViewerMilestone) {
     return 'viewer_milestone';
   }
+  if (notices.hasModAnniversary) {
+    return 'mod_anniversary';
+  }
   if (flags.sender?.toLowerCase() === 'system') {
     return 'app_system_sender';
   }

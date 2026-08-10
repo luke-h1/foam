@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
+import { reportUnrenderableNotice } from '@app/utils/chat/chatHealth/reportUnrenderableNotice';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import type { ChatFontScale } from '../ChatMessage/chatScale';
@@ -11,10 +12,13 @@ import { getChatTextStyles } from '../ChatMessage/chatText.styles';
 import { ChatNoticeMetaRow } from '../ChatMessage/renderers/ChatNoticeMetaRow';
 import { styles } from '../ChatMessage/RichChatMessage.styles';
 import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';
+import { NoticeUserMessage } from './NoticeUserMessage';
 
 interface RitualNoticeProps {
   compact?: boolean;
+  disableAnimations?: boolean;
   fontScale?: ChatFontScale;
+  parsedMessage?: ParsedPart[];
   part: ParsedPart<'ritual'>;
 }
 
@@ -48,18 +52,25 @@ function getRitualDescription(ritualName: string, displayName: string): string {
 
 function RitualNoticeComponent({
   compact,
+  disableAnimations,
   fontScale,
+  parsedMessage,
   part,
 }: RitualNoticeProps) {
   const textStyles = getChatTextStyles(fontScale, compact);
   const displayName = part.displayName?.trim();
   const systemMsg = part.systemMsg;
-  const message = part.message?.trim();
+  const message = part.message?.trim() ?? '';
   const description =
     systemMsg ||
     (displayName ? getRitualDescription(part.ritualName, displayName) : '');
 
   if (!description && !message) {
+    reportUnrenderableNotice({
+      msgId: 'ritual',
+      reason: 'empty-body',
+      stage: 'render',
+    });
     return null;
   }
 
@@ -78,11 +89,13 @@ function RitualNoticeComponent({
           {description}
         </Text>
       ) : null}
-      {message ? (
-        <Text color='gray.text' style={textStyles.body}>
-          {message}
-        </Text>
-      ) : null}
+      <NoticeUserMessage
+        compact={compact}
+        disableAnimations={disableAnimations}
+        fontScale={fontScale}
+        message={message}
+        parsedMessage={parsedMessage}
+      />
     </View>
   );
 }

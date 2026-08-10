@@ -1,6 +1,7 @@
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { formatCharityAmount } from '@app/utils/chat/formatCharityAmount';
 import { getTagValue } from '@app/utils/chat/formatSubscriptionNotice/getTagValue';
+import { withNoticeSubject } from '@app/utils/chat/formatSubscriptionNotice/withNoticeSubject';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
 
 export function createCharityDonationPart(
@@ -8,13 +9,16 @@ export function createCharityDonationPart(
   messageText?: string,
 ): ParsedPart<'charitydonation'> {
   const currency = getTagValue(tags, 'msg-param-donation-currency') || 'USD';
-  const systemMsg =
-    typeof tags['system-msg'] === 'string' ? tags['system-msg'] : '';
+  const displayName =
+    getTagValue(tags, 'display-name') || getTagValue(tags, 'login') || '';
+  const systemMsg = withNoticeSubject(
+    getTagValue(tags, 'system-msg'),
+    displayName,
+  );
 
   return {
     type: 'charitydonation',
-    displayName:
-      getTagValue(tags, 'display-name') || getTagValue(tags, 'login') || '',
+    displayName,
     charityName: getTagValue(tags, 'msg-param-charity-name') || 'charity',
     amount: formatCharityAmount(
       getTagValue(tags, 'msg-param-donation-amount'),

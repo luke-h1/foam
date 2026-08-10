@@ -63,7 +63,44 @@ describe('getChatRowItemType', () => {
       ],
     });
 
-    expect(getChatRowItemType(message)).toBe('subscription');
+    expect(getChatRowItemType(message)).toBe('subscription-w3');
+  });
+
+  test('splits notice rows of the same variant by how tall they render', () => {
+    const bareSub = createUserChatMessage({
+      isSpecialNotice: true,
+      message: [
+        {
+          type: 'sub',
+          subscriptionEvent: {
+            msgId: 'sub',
+            displayName: 'NewSubscriber',
+            plan: '1000',
+            months: 1,
+          },
+        },
+      ],
+    });
+    const resubWithMessage = createUserChatMessage({
+      isSpecialNotice: true,
+      message: [
+        {
+          type: 'resub',
+          subscriptionEvent: {
+            msgId: 'resub',
+            displayName: 'NewSubscriber',
+            plan: '1000',
+            months: 27,
+            message:
+              'been here since the beginning and I am not going anywhere, thank you for all the streams this year',
+          },
+        },
+      ],
+    });
+
+    expect(getChatRowItemType(bareSub)).not.toBe(
+      getChatRowItemType(resubWithMessage),
+    );
   });
 
   test('splits user chat rows with incompatible native trees', () => {

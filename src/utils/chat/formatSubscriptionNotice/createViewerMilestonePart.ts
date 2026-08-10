@@ -1,5 +1,6 @@
 import { ViewerMilestoneTags } from '@app/types/chat/irc-tags/usernotice';
 import { getTagValue } from '@app/utils/chat/formatSubscriptionNotice/getTagValue';
+import { withNoticeSubject } from '@app/utils/chat/formatSubscriptionNotice/withNoticeSubject';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
 
 export function createViewerMilestonePart(
@@ -7,31 +8,28 @@ export function createViewerMilestonePart(
   messageText?: string,
 ): ParsedPart<'viewermilestone'> {
   const category = getTagValue(tags, 'msg-param-category');
-  const reward = getTagValue(tags, 'msg-param-copoReward');
   const value = getTagValue(tags, 'msg-param-value');
-  const content = messageText || '';
-
-  const systemMsg = tags['system-msg'] ?? '';
-  const login = tags.login ?? '';
-  const displayName = tags['display-name'] ?? '';
-
-  let constructedMessage = '';
-  if (category === 'watch-streak' && displayName && value) {
-    const streamCount = parseInt(value, 10);
-    const streamText = streamCount === 1 ? 'stream' : 'streams';
-    constructedMessage = `${displayName} watched ${value} consecutive ${streamText} and sparked a watch streak!`;
-  } else if (systemMsg) {
-    constructedMessage = systemMsg;
-  }
+  const displayName = getTagValue(tags, 'display-name');
+  const systemMsg = withNoticeSubject(
+    getTagValue(tags, 'system-msg'),
+    displayName,
+  );
+  const streamCount = Number.parseInt(value, 10);
+  const fallback =
+    category === 'watch-streak' && displayName && value
+      ? `${displayName} watched ${value} consecutive ${
+          streamCount === 1 ? 'stream' : 'streams'
+        } and sparked a watch streak!`
+      : '';
 
   return {
     type: 'viewermilestone',
     category,
-    reward,
+    reward: getTagValue(tags, 'msg-param-copoReward'),
     value,
-    content,
-    systemMsg: constructedMessage || systemMsg,
-    login,
+    content: messageText?.trim() ?? '',
+    systemMsg: systemMsg || fallback,
+    login: getTagValue(tags, 'login'),
     displayName,
   };
 }

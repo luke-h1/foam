@@ -3,6 +3,7 @@ import type {
   ChatMessageType,
 } from '@app/store/chat/types/constants';
 import {
+  ModiversaryTags,
   UserNoticeTags,
   UserNoticeTagsByVariant,
   ViewerMilestoneTags,
@@ -10,9 +11,11 @@ import {
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { ingestChannelPointRewardTags } from '@app/utils/chat/channelPointRewardTitleStore';
 import { createCharityDonationPart } from '@app/utils/chat/formatSubscriptionNotice/createCharityDonationPart';
+import { createModiversaryPart } from '@app/utils/chat/formatSubscriptionNotice/createModiversaryPart';
 import { createRitualPart } from '@app/utils/chat/formatSubscriptionNotice/createRitualPart';
 import { createSubscriptionPart } from '@app/utils/chat/formatSubscriptionNotice/createSubscriptionPart';
 import { createViewerMilestonePart } from '@app/utils/chat/formatSubscriptionNotice/createViewerMilestonePart';
+import { hasRenderableNoticeBody } from '@app/utils/chat/formatSubscriptionNotice/hasRenderableNoticeBody';
 import { isSharedChatDuplicatedNotice } from '@app/utils/chat/userNoticeMsgIds/isSharedChatDuplicatedNotice';
 import { isSubscriptionUserNotice } from '@app/utils/chat/userNoticeMsgIds/isSubscriptionUserNotice';
 import { generateNonce } from '@app/utils/string/generateNonce';
@@ -40,25 +43,6 @@ const createSystemNoticeText = (tags: UserNoticeTags, text: string): string => {
   return [systemLine, userLine]
     .filter(Boolean)
     .join(systemLine && userLine ? ' ' : '');
-};
-
-const createModiversaryText = (tags: UserNoticeTags, text: string): string => {
-  const systemText = createSystemNoticeText(tags, text);
-  if (systemText) {
-    return systemText;
-  }
-
-  const displayName = tags['display-name'] || tags.login || '';
-  const months =
-    typeof tags['msg-param-months'] === 'string'
-      ? tags['msg-param-months']
-      : '';
-
-  if (!displayName || !months) {
-    return '';
-  }
-
-  return `${displayName}, thank you for protecting our community for ${months} months!`;
 };
 
 interface CreateUserNoticeParams {
@@ -202,6 +186,10 @@ export const createUserNoticeMessage = ({
         flags: tags.flags ?? '',
         mod: tags.mod ?? '',
       } satisfies ViewerMilestoneTags;
+      const milestonePart = createViewerMilestonePart(
+        viewerMilestoneTags,
+        text,
+      );
 
       return {
         ...baseMessage,
@@ -212,7 +200,7 @@ export const createUserNoticeMessage = ({
         replyBody: '',
         badges: [],
         userstate,
-        message: [createViewerMilestonePart(viewerMilestoneTags, text)],
+        message: [milestonePart].filter(hasRenderableNoticeBody),
         notice_tags: {
           'msg-id': tags['msg-id'],
           'msg-param-category': tags['msg-param-category'],
@@ -300,19 +288,21 @@ export const createUserNoticeMessage = ({
     }
 
     case 'modiversary': {
-      const combined = createModiversaryText(tags, text);
+      const modiversaryPart = createModiversaryPart(
+        tags as ModiversaryTags,
+        text,
+      );
 
       return {
         ...baseMessage,
         userstate,
         badges: [],
-        message: combined ? [{ type: 'text' as const, content: combined }] : [],
+        message: [modiversaryPart].filter(hasRenderableNoticeBody),
         notice_tags: {
           ...tags,
           ...emptyFields,
         } as UserNoticeTagsByVariant<'modiversary'>,
         isSpecialNotice: true,
-        isTwitchSystemNotice: true,
         ...sharedChatFields,
         ...emptyFields,
       } as AnyChatMessageType;

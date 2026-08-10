@@ -100,7 +100,7 @@ export function getChatRowItemType(
 
   const bodyVariant = resolveBodyVariant(item);
   if (bodyVariant !== 'user_chat') {
-    return bodyVariant;
+    return `${bodyVariant}-${getChatRowSizeBucket(item)}`;
   }
 
   return getUserChatRowItemType(item, options);

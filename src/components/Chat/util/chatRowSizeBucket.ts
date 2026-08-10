@@ -18,6 +18,8 @@ const TWITCH_CLIP_WEIGHT = 70;
  * a one-line title that can stretch to the full row.
  */
 const STV_EMOTE_LINK_WEIGHT = 35;
+const NOTICE_META_ROW_WEIGHT = 34;
+const SUBSCRIPTION_DESCRIPTION_WEIGHT = 48;
 
 /**
  * About a wrapped line apart at the low end where nearly every row sits,
@@ -26,6 +28,10 @@ const STV_EMOTE_LINK_WEIGHT = 35;
 const BUCKET_UPPER_BOUNDS = [30, 60, 100, 150, 220, 320, 460, 640];
 
 const bucketCache = new WeakMap<AnyChatMessageType, string>();
+
+function textLength(value: string | undefined): number {
+  return value?.length ?? 0;
+}
 
 function getPartWeight(part: ParsedPart): number {
   switch (part.type) {
@@ -40,6 +46,44 @@ function getPartWeight(part: ParsedPart): number {
       return TWITCH_CLIP_WEIGHT;
     case 'stvEmote':
       return STV_EMOTE_LINK_WEIGHT;
+    case 'sub':
+    case 'resub':
+    case 'anongift':
+    case 'anongiftpaidupgrade':
+    case 'submysterygift':
+    case 'giftpaidupgrade':
+    case 'primepaidupgrade':
+      return (
+        NOTICE_META_ROW_WEIGHT +
+        SUBSCRIPTION_DESCRIPTION_WEIGHT +
+        textLength(part.subscriptionEvent.displayName) +
+        textLength(part.subscriptionEvent.message)
+      );
+    case 'viewermilestone':
+    case 'modiversary':
+      return (
+        NOTICE_META_ROW_WEIGHT +
+        textLength(part.systemMsg) +
+        textLength(part.content)
+      );
+    case 'charitydonation':
+      return (
+        NOTICE_META_ROW_WEIGHT +
+        textLength(part.displayName) +
+        textLength(part.charityName) +
+        textLength(part.systemMsg) +
+        textLength(part.message)
+      );
+    case 'ritual':
+      return (
+        NOTICE_META_ROW_WEIGHT +
+        textLength(part.displayName) +
+        textLength(part.systemMsg) +
+        textLength(part.message)
+      );
+    case 'stv_emote_added':
+    case 'stv_emote_removed':
+      return NOTICE_META_ROW_WEIGHT + textLength(part.stvEvents.data.name);
     default:
       return 0;
   }

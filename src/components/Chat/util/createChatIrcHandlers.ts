@@ -13,6 +13,7 @@ import {
   ingestChannelPointRewardTags,
   registerDeferredRewardgiftStandalone,
 } from '@app/utils/chat/channelPointRewardTitleStore';
+import { reportUnrenderableNotice } from '@app/utils/chat/chatHealth/reportUnrenderableNotice';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { parseIrcMessage } from '@app/utils/chat/ircProtocol/parseIrcMessage';
 import { coerceUserNoticeTags } from '@app/utils/chat/messageHandlers/coerceUserNoticeTags';
@@ -187,6 +188,16 @@ export function createChatIrcHandlers({
       }),
       ...historicalFlag(countUnread),
     };
+
+    if (message.message.length === 0) {
+      reportUnrenderableNotice({
+        msgId: tags['msg-id'],
+        reason: 'no-body',
+        stage: 'ingest',
+        systemMsg: tags['system-msg'],
+      });
+      return;
+    }
 
     if (message.isAnnouncement || message.isHighlightedMessage) {
       const trimmedText = text.trimEnd();

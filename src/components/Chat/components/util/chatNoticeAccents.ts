@@ -10,6 +10,7 @@ export const CHAT_NOTICE_ACCENTS = {
   firstMessage: theme.colorViolet,
   returningChatter: theme.colorBlue,
   viewerMilestone: theme.colorViolet,
+  modAnniversary: theme.colorTeal,
   raid: theme.colorOrange,
   replyToYou: theme.color.notice.announcement,
   stvAdded: theme.colorPrimary,

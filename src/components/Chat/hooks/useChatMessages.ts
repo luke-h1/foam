@@ -16,6 +16,10 @@ import {
   removeMessageById,
   removeMessagesByLogin,
 } from '@app/store/chat/actions/messages';
+import {
+  reportDroppedChatMessages,
+  resetDroppedChatMessageReports,
+} from '@app/utils/chat/chatHealth/reportDroppedChatMessages';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor/resolveCachedSenderColor';
 
 import { createChatDelayQueue } from '../util/chatDelay/chatDelayQueue';
@@ -34,6 +38,9 @@ type HandleNewMessageOptions = {
 
 // Floor on delay-queue checks so a burst of releases coalesces into one drain.
 const DELAY_RELEASE_MIN_INTERVAL_MS = 80;
+
+const INGEST_BUFFER_CAPACITY = 1000;
+const BUFFER_BACKPRESSURE_SIZE = 400;
 
 function publishBufferedMessages(messages: BufferedMessage[]) {
   if (messages.length === 0) {
@@ -97,7 +104,13 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     onUnreadIncrement,
   } = options;
 
-  const bufferRef = useLazyRef(() => createMessageBuffer());
+  const bufferRef = useLazyRef(() =>
+    createMessageBuffer(() => INGEST_BUFFER_CAPACITY),
+  );
+  const isBufferUnderBackpressure = useCallback(
+    () => bufferRef.current.size() >= BUFFER_BACKPRESSURE_SIZE,
+    [bufferRef],
+  );
   const delayQueueRef = useLazyRef(() => createChatDelayQueue());
   const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const delayTickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -154,7 +167,13 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
       }
       return;
     }
-    if (!isAtBottomRef.current && isUserActivelyScrolling?.()) {
+    const underBackpressure = isBufferUnderBackpressure();
+
+    if (
+      !underBackpressure &&
+      !isAtBottomRef.current &&
+      isUserActivelyScrolling?.()
+    ) {
       flushTimerRef.current = setTimeout(() => {
         flushBufferRef.current();
       }, SCROLL_DEFERRED_FLUSH_RETRY_MS);
@@ -169,7 +188,9 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
       );
       arrivalsSinceFlushRef.current = 0;
       const messagesToFlush = buffer.drain(
-        maxLiveCommitPerFlush(isAtBottom, raidFlushModeRef.current),
+        underBackpressure
+          ? undefined
+          : maxLiveCommitPerFlush(isAtBottom, raidFlushModeRef.current),
       );
       const shouldMaintainBottom = shouldArmBottomContentAnchor(
         isScrollingToBottomRef,
@@ -206,6 +227,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   }, [
     bufferRef,
     isAtBottomRef,
+    isBufferUnderBackpressure,
     isScrollingToBottomRef,
     isUserActivelyScrolling,
     onBottomContentChange,
@@ -240,6 +262,10 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
           0,
           pendingUnreadCountRef.current - dropped,
         );
+        reportDroppedChatMessages(dropped, {
+          bufferSize: bufferRef.current.size(),
+          maxBufferedMessages: INGEST_BUFFER_CAPACITY,
+        });
       }
 
       const scrollingToBottom = isScrollingToBottomRef?.current ?? false;
@@ -251,6 +277,10 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
         pendingUnreadCountRef.current += 1;
       }
 
+      if (isBufferUnderBackpressure()) {
+        flushBufferRef.current();
+      }
+
       const flushDelay = pickFlushDelay({
         isAtBottom: isAtBottomRef.current,
         raidMode: raidFlushModeRef.current,
@@ -258,7 +288,13 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
       });
       startFlushTimer(flushDelay);
     },
-    [bufferRef, isAtBottomRef, isScrollingToBottomRef, startFlushTimer],
+    [
+      bufferRef,
+      isAtBottomRef,
+      isBufferUnderBackpressure,
+      isScrollingToBottomRef,
+      startFlushTimer,
+    ],
   );
 
   const runDelayTick = useCallback(() => {
@@ -444,6 +480,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     pendingUnreadCountRef.current = 0;
     arrivalsSinceFlushRef.current = 0;
     raidFlushModeRef.current = false;
+    resetDroppedChatMessageReports();
   }, [bufferRef, clearDelayTick, delayQueueRef]);
 
   const getBufferSize = useCallback(

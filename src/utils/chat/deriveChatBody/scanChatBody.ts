@@ -19,6 +19,7 @@ const STV_EMOTE_EVENT_TYPES = new Set<ParsedPart['type']>([
   'stv_emote_removed',
 ]);
 const VIEWER_MILESTONE_TYPES = new Set<ParsedPart['type']>(['viewermilestone']);
+const MOD_ANNIVERSARY_TYPES = new Set<ParsedPart['type']>(['modiversary']);
 
 const scanCache = new WeakMap<ParsedPart[], ChatBodyScan>();
 
@@ -39,6 +40,7 @@ export function scanChatBody(message: ParsedPart[]): ChatBodyScan {
   let hasSubscriptionNotice = false;
   let hasStvEmoteEvent = false;
   let hasViewerMilestone = false;
+  let hasModAnniversary = false;
   let hasCharityDonation = false;
   let hasRitualNotice = false;
   const mentionLogins: string[] = [];
@@ -69,6 +71,8 @@ export function scanChatBody(message: ParsedPart[]): ChatBodyScan {
           hasStvEmoteEvent = true;
         } else if (VIEWER_MILESTONE_TYPES.has(part.type)) {
           hasViewerMilestone = true;
+        } else if (MOD_ANNIVERSARY_TYPES.has(part.type)) {
+          hasModAnniversary = true;
         } else if (CHARITY_DONATION_TYPES.has(part.type)) {
           hasCharityDonation = true;
         } else if (RITUAL_NOTICE_TYPES.has(part.type)) {
@@ -85,6 +89,7 @@ export function scanChatBody(message: ParsedPart[]): ChatBodyScan {
     hasRitualNotice,
     hasStvEmoteEvent,
     hasViewerMilestone,
+    hasModAnniversary,
     mentionLogins,
   };
   scanCache.set(message, scan);

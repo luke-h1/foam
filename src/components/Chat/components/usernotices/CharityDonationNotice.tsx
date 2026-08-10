@@ -10,21 +10,26 @@ import { getChatTextStyles } from '../ChatMessage/chatText.styles';
 import { ChatNoticeMetaRow } from '../ChatMessage/renderers/ChatNoticeMetaRow';
 import { styles } from '../ChatMessage/RichChatMessage.styles';
 import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';
+import { NoticeUserMessage } from './NoticeUserMessage';
 
 interface CharityDonationNoticeProps {
   compact?: boolean;
+  disableAnimations?: boolean;
   fontScale?: ChatFontScale;
+  parsedMessage?: ParsedPart[];
   part: ParsedPart<'charitydonation'>;
 }
 
 function CharityDonationNoticeComponent({
   compact,
+  disableAnimations,
   fontScale,
+  parsedMessage,
   part,
 }: CharityDonationNoticeProps) {
   const displayName = part.displayName?.trim();
   const systemMsg = part.systemMsg;
-  const message = part.message?.trim();
+  const message = part.message?.trim() ?? '';
   const donationSummary = `donated ${part.amount} to ${part.charityName}`;
   const textStyles = getChatTextStyles(fontScale, compact);
   const mutedStyle = [textStyles.meta, styles.channelPointsMetaMuted];
@@ -52,7 +57,13 @@ function CharityDonationNoticeComponent({
           <Text style={mutedStyle}>.</Text>
         )}
       </Text>
-      {message ? <Text style={mutedStyle}>{message}</Text> : null}
+      <NoticeUserMessage
+        compact={compact}
+        disableAnimations={disableAnimations}
+        fontScale={fontScale}
+        message={message}
+        parsedMessage={parsedMessage}
+      />
     </View>
   );
 }
