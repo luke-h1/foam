@@ -11,8 +11,43 @@ type ChatMessageBodyProps = ChatMessagePartRendererArgs & {
 export function ChatMessageBody({
   mode,
   message,
-  ...rendererArgs
+  compact,
+  disableEmoteAnimations,
+  fontScale,
+  effectiveHighlightedUserSet,
+  getMentionColor,
+  getPartKey,
+  onEmoteTouchStart,
+  moderationNotice,
+  normalisedCurrentUsername,
+  noticeTags,
+  parseTextForEmotes,
+  replyPlainMentionTarget,
+  emoteTargetSize,
+  textColor,
 }: ChatMessageBodyProps) {
+  /**
+   * Rebuilt as a literal instead of an object-rest collect: rest
+   * materialization is an unconditionally-fresh object the React Compiler
+   * cannot cache, which invalidated every memo scope keyed on it per render.
+   * A literal over stable fields compiles to a cached object.
+   */
+  const rendererArgs = {
+    compact,
+    disableEmoteAnimations,
+    fontScale,
+    effectiveHighlightedUserSet,
+    getMentionColor,
+    getPartKey,
+    onEmoteTouchStart,
+    moderationNotice,
+    normalisedCurrentUsername,
+    noticeTags,
+    parseTextForEmotes,
+    replyPlainMentionTarget,
+    emoteTargetSize,
+    textColor,
+  };
   const renderedParts = [];
   let currentTextPart: ParsedPart<'text'> | null = null;
   let currentTextIndex = 0;
