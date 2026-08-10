@@ -88,6 +88,8 @@ jest.mock('@app/services/twitch-badge-service', () => ({
 }));
 
 jest.mock('@app/services/twitch-chat-service', () => ({
+  subscribeUserState: jest.fn(() => () => {}),
+  getUserStateRevision: jest.fn(() => 0),
   useTwitchChat: () => ({
     connectionState: 1,
     isConnected: () => true,

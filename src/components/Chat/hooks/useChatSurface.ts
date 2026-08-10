@@ -1,7 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useSyncExternalStore } from 'react';
 import type { RefObject } from 'react';
 
 import { ReadyState } from '@app/hooks/ws/constants';
+import {
+  getUserStateRevision,
+  subscribeUserState,
+} from '@app/services/twitch-chat-service';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import type { ChatRenderPreferences } from '@app/store/preferenceStore';
 import type { UserInfoResponse } from '@app/types/twitch/user';
@@ -113,12 +117,28 @@ export function useChatSurface({
     inputShellRef,
   });
 
-  const currentUserState = getUserState();
-  const parsedBadges = parseBadges(currentUserState['badges-raw']).badges;
-  const canModerateChat =
-    currentUserState.mod === '1' ||
-    parsedBadges.broadcaster === '1' ||
-    normaliseChatUsername(user?.login) === normaliseChatUsername(channelName);
+  /**
+   * getUserState's identity is deliberately stable, so without the revision
+   * subscription the compiler caches this read at its mount-time value -
+   * before USERSTATE has even arrived - and canModerateChat never updates.
+   * The revision is a dependency on purpose.
+   */
+  const userStateRevision = useSyncExternalStore(
+    subscribeUserState,
+    getUserStateRevision,
+  );
+  const canModerateChat = useMemo(() => {
+    // Referenced so the memo recomputes when a new USERSTATE lands; the
+    // value itself carries no meaning beyond "the ref changed".
+    void userStateRevision;
+    const currentUserState = getUserState();
+    const parsedBadges = parseBadges(currentUserState['badges-raw']).badges;
+    return (
+      currentUserState.mod === '1' ||
+      parsedBadges.broadcaster === '1' ||
+      normaliseChatUsername(user?.login) === normaliseChatUsername(channelName)
+    );
+  }, [getUserState, userStateRevision, user?.login, channelName]);
 
   const {
     handlePinMessage,

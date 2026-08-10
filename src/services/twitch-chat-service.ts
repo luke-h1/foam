@@ -28,6 +28,32 @@ import { ReadyState } from '../hooks/ws/constants';
 import { useWebsocket } from '../hooks/ws/useWebsocket';
 
 /**
+ * External-store revision for the IRC userstate. The userstate itself lives
+ * in a per-session ref read imperatively via getUserState; render-time
+ * derivations (canModerateChat) need a change signal or the React Compiler
+ * caches them at their mount value forever, since getUserState's identity is
+ * deliberately stable.
+ */
+let userStateRevision = 0;
+const userStateListeners = new Set<() => void>();
+
+function bumpUserStateRevision(): void {
+  userStateRevision += 1;
+  userStateListeners.forEach(listener => listener());
+}
+
+export function subscribeUserState(listener: () => void): () => void {
+  userStateListeners.add(listener);
+  return () => {
+    userStateListeners.delete(listener);
+  };
+}
+
+export function getUserStateRevision(): number {
+  return userStateRevision;
+}
+
+/**
  * Twitch IRC PINGs roughly every 5 min and we PONG, but a half-open socket
  * (Wi-Fi↔cellular handoff, NAT/idle timeout, background→foreground) frequently
  * fires no close event: the WebSocket sits in OPEN forever, no messages arrive,
@@ -500,6 +526,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
             markChannelJoined(channelName);
             logger.chat.debug(`USERSTATE in ${channelName}`);
             userStateRef.current = tagsRecord;
+            bumpUserStateRevision();
 
             if (pendingMessageRef.current && tagsRecord['msg-id']) {
               logger.chat.debug(
@@ -518,6 +545,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       case 'GLOBALUSERSTATE': {
         logger.chat.debug('GLOBALUSERSTATE received');
         userStateRef.current = tagsRecord;
+        bumpUserStateRevision();
         optionsRef.current.onGlobalUserState?.(tagsRecord);
         break;
       }
@@ -928,6 +956,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       messageBuffer.current = '';
       isAuthenticatedRef.current = false;
       userStateRef.current = {};
+      bumpUserStateRevision();
       pendingMessageRef.current = null;
     };
   }, [joinedChannelsRef, lastSentMessagesRef, pendingJoinChannelsRef]);
