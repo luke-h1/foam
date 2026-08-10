@@ -93,22 +93,36 @@ const dedupeMessagesForStore = (
   return uniqueMessages;
 };
 
-const prepareMessagePartsForStore = (
-  messageId: string,
-  messageNonce: string,
+/**
+ * Legend State diffs a nested array keyed on the first element's `id` field,
+ * so a parts array whose first part carries an emote id must have distinct,
+ * defined ids on every element or child nodes get mis-keyed (and dev warns
+ * "Multiple elements in array have the same ID"). Ids only need to be unique
+ * within one array, so index ids are assigned in place, once per array -
+ * parse-cached arrays shared across identical messages keep their identity
+ * and pay this exactly once. Non-enumerable so persistence never sees them.
+ */
+const partIdsAssigned = new WeakSet<AnyChatMessageType['message']>();
+
+const ensurePartIdsForStore = (
   messageParts: AnyChatMessageType['message'],
 ): AnyChatMessageType['message'] => {
-  const messageKey = getChatMessageKey(messageId, messageNonce);
-  return messageParts.map((part, index) => {
-    const storedPart = { ...part };
-    Object.defineProperty(storedPart, 'id', {
-      configurable: true,
-      enumerable: false,
-      value: `${messageKey}:${index}`,
-      writable: true,
-    });
-    return storedPart;
-  });
+  if (messageParts.length < 2 || partIdsAssigned.has(messageParts)) {
+    return messageParts;
+  }
+  for (let index = 0; index < messageParts.length; index += 1) {
+    const part = messageParts[index];
+    if (part) {
+      Object.defineProperty(part, 'id', {
+        configurable: true,
+        enumerable: false,
+        value: String(index),
+        writable: true,
+      });
+    }
+  }
+  partIdsAssigned.add(messageParts);
+  return messageParts;
 };
 
 let nextMessageSeq = 0;
@@ -131,31 +145,9 @@ const prepareMessageForStore = (
     seq: nextMessageSeq,
     committedAt: message.committedAt ?? Date.now(),
     ...(cachedSenderColor ? { cachedSenderColor } : {}),
-    message: prepareMessagePartsForStore(
-      message.message_id,
-      message.message_nonce,
-      message.message,
-    ),
+    message: ensurePartIdsForStore(message.message),
   };
 };
-
-const prepareMessageUpdates = (
-  messageId: string,
-  messageNonce: string,
-  updates: Partial<
-    Pick<AnyChatMessageType, 'message' | 'badges' | 'moderationNotice'>
-  >,
-) =>
-  updates.message
-    ? {
-        ...updates,
-        message: prepareMessagePartsForStore(
-          messageId,
-          messageNonce,
-          updates.message,
-        ),
-      }
-    : updates;
 
 const getSenderChatterRole = (
   message: AnyChatMessageType,
@@ -491,11 +483,9 @@ const getMessageUpdatesFromInputs = (
       continue;
     }
 
-    const preparedUpdates = prepareMessageUpdates(
-      messageId,
-      messageNonce,
-      messageUpdates,
-    );
+    if (messageUpdates.message) {
+      ensurePartIdsForStore(messageUpdates.message);
+    }
 
     if (nextMessages === currentMessages) {
       nextMessages = currentMessages.slice();
@@ -503,7 +493,7 @@ const getMessageUpdatesFromInputs = (
 
     nextMessages[index] = {
       ...currentMessage,
-      ...preparedUpdates,
+      ...messageUpdates,
     };
     didUpdate = true;
   }
@@ -636,21 +626,15 @@ export const moderateMessageById = (
     index,
     {
       ...currentMessage,
-      ...prepareMessageUpdates(
-        currentMessage.message_id,
-        currentMessage.message_nonce,
+      message: [
         {
-          message: [
-            {
-              type: 'text',
-              content: createModeratedMessageText(
-                currentMessage.message,
-                moderationNotice,
-              ),
-            },
-          ],
+          type: 'text',
+          content: createModeratedMessageText(
+            currentMessage.message,
+            moderationNotice,
+          ),
         },
-      ),
+      ],
       moderationNotice,
     },
     'immediate',
@@ -688,17 +672,15 @@ export const moderateMessagesByLogin = (
 
     nextMessages[index] = {
       ...message,
-      ...prepareMessageUpdates(message.message_id, message.message_nonce, {
-        message: [
-          {
-            type: 'text',
-            content: createModeratedMessageText(
-              message.message,
-              moderationNotice,
-            ),
-          },
-        ],
-      }),
+      message: [
+        {
+          type: 'text',
+          content: createModeratedMessageText(
+            message.message,
+            moderationNotice,
+          ),
+        },
+      ],
       moderationNotice,
     };
   }

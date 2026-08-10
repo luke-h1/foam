@@ -144,8 +144,7 @@ export function useChatMessageProcessing({
       if (!message.pendingEmoteParse) {
         return message;
       }
-      const base = { ...message };
-      delete base.pendingEmoteParse;
+      const { pendingEmoteParse: _pending, ...base } = message;
       const text = replaceEmotesWithText(base.message).trimEnd();
       return composeMessageWithEmotes(
         text,
