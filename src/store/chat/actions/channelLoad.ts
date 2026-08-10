@@ -916,6 +916,23 @@ export const clearChatCosmeticsCache = (): void => {
 const NO_EMOTES: SanitisedEmote[] = [];
 const NO_BADGES: SanitisedBadgeSet[] = [];
 
+/**
+ * Reference-keyed memo for getCurrentEmoteData: it runs once per ingested
+ * message but its inputs (channel cache node, global cache node, preferences
+ * snapshot, third-party badge arrays) only change a handful of times per
+ * session, so the 16-field result is rebuilt when any input's identity
+ * changes and reused otherwise.
+ */
+let resolvedEmoteDataCache: {
+  channelId: string;
+  cache: unknown;
+  globalCache: unknown;
+  preferences: unknown;
+  chatterinoBadges: unknown;
+  bttvBadges: unknown;
+  value: ReturnType<typeof buildResolvedEmoteData>;
+} | null = null;
+
 export const getCurrentEmoteData = (channelId?: string) => {
   const targetChannelId = channelId ?? chatStore$.currentChannelId.peek();
   if (!targetChannelId) {
@@ -929,7 +946,52 @@ export const getCurrentEmoteData = (channelId?: string) => {
 
   const globalCache = chatStore$.persisted.globalCaches.peek();
   const preferences = getPreferences();
+  const chatterinoBadges = getChatterinoBadges();
+  const bttvBadges = getBttvBadges();
 
+  const memo = resolvedEmoteDataCache;
+  if (
+    memo &&
+    memo.channelId === targetChannelId &&
+    memo.cache === cache &&
+    memo.globalCache === globalCache &&
+    memo.preferences === preferences &&
+    memo.chatterinoBadges === chatterinoBadges &&
+    memo.bttvBadges === bttvBadges
+  ) {
+    return memo.value;
+  }
+
+  const value = buildResolvedEmoteData(
+    cache,
+    globalCache,
+    preferences,
+    chatterinoBadges,
+    bttvBadges,
+  );
+  resolvedEmoteDataCache = {
+    channelId: targetChannelId,
+    cache,
+    globalCache,
+    preferences,
+    chatterinoBadges,
+    bttvBadges,
+    value,
+  };
+  return value;
+};
+
+const buildResolvedEmoteData = (
+  cache: NonNullable<
+    NonNullable<
+      ReturnType<typeof chatStore$.persisted.channelCaches.peek>
+    >[string]
+  >,
+  globalCache: ReturnType<typeof chatStore$.persisted.globalCaches.peek>,
+  preferences: ReturnType<typeof getPreferences>,
+  chatterinoBadges: SanitisedBadgeSet[],
+  bttvBadges: SanitisedBadgeSet[],
+) => {
   return {
     twitchChannelEmotes: preferences.showTwitchEmotes
       ? (cache.twitchChannelEmotes ?? NO_EMOTES)
@@ -971,9 +1033,9 @@ export const getCurrentEmoteData = (channelId?: string) => {
       ? (globalCache?.ffzGlobalBadges ?? NO_BADGES)
       : NO_BADGES,
     chatterinoBadges: preferences.showChatterinoEmotes
-      ? getChatterinoBadges()
+      ? chatterinoBadges
       : NO_BADGES,
-    bttvBadges: preferences.showBttvBadges ? getBttvBadges() : NO_BADGES,
+    bttvBadges: preferences.showBttvBadges ? bttvBadges : NO_BADGES,
   };
 };
 

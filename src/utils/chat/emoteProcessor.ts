@@ -41,6 +41,9 @@ type EmoteCollection = {
   emoteMap: ReadonlyMap<string, SanitisedEmote>;
 };
 
+let lastBaseKeyInputs: SanitisedEmote[][] | null = null;
+let lastBaseKey = '';
+
 const createCacheKey = (
   inputString: string,
   baseCollectionKey: string,
@@ -60,11 +63,30 @@ function getBaseCollectionKey(
   bttvChannelEmotes: SanitisedEmote[],
   bttvGlobalEmotes: SanitisedEmote[],
 ): string {
+  // One-entry identity memo: the nine arrays are stable between emote-set
+  // changes, so per message this is nine pointer compares instead of nine
+  // WeakMap reads plus an array and a join.
+  const last = lastBaseKeyInputs;
+  if (
+    last &&
+    last[0] === emojiEmotes &&
+    last[1] === sevenTvGlobalEmotes &&
+    last[2] === sevenTvChannelEmotes &&
+    last[3] === twitchGlobalEmotes &&
+    last[4] === twitchChannelEmotes &&
+    last[5] === ffzChannelEmotes &&
+    last[6] === ffzGlobalEmotes &&
+    last[7] === bttvChannelEmotes &&
+    last[8] === bttvGlobalEmotes
+  ) {
+    return lastBaseKey;
+  }
+
   // Content-derived so a rebuilt array with unchanged emotes keys the same -
   // 7TV events and channel-load settles replace these arrays wholesale, and
   // identity keying invalidated every cached parse each time (issue: the
   // whole window re-parsed for ~800ms sustained after an emote_set.update).
-  return [
+  const key = [
     getEmoteArrayContentKey(emojiEmotes),
     getEmoteArrayContentKey(sevenTvGlobalEmotes),
     getEmoteArrayContentKey(sevenTvChannelEmotes),
@@ -75,6 +97,19 @@ function getBaseCollectionKey(
     getEmoteArrayContentKey(bttvChannelEmotes),
     getEmoteArrayContentKey(bttvGlobalEmotes),
   ].join('|');
+  lastBaseKeyInputs = [
+    emojiEmotes,
+    sevenTvGlobalEmotes,
+    sevenTvChannelEmotes,
+    twitchGlobalEmotes,
+    twitchChannelEmotes,
+    ffzChannelEmotes,
+    ffzGlobalEmotes,
+    bttvChannelEmotes,
+    bttvGlobalEmotes,
+  ];
+  lastBaseKey = key;
+  return key;
 }
 
 function setIfMissing(
