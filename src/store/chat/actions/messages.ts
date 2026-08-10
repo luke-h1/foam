@@ -1,5 +1,6 @@
 import { batch } from '@legendapp/state';
 
+import { chatPerfMarks } from '@app/lib/chatPerfMarks';
 import { getPreferences } from '@app/store/preferenceStore';
 import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
 import { createModeratedMessageText } from '@app/utils/chat/createModeratedMessageText';
@@ -599,6 +600,7 @@ export const addMessages = (messages: (AnyChatMessageType | undefined)[]) => {
   }
 
   chatStore$.messages.set(nextMessages);
+  chatPerfMarks.committed(storedMessages.length);
   syncRecentMessagesForCurrentChannel(nextMessages, 'defer');
 };
 
@@ -789,6 +791,7 @@ export const removeMessageById = (messageId: string) => {
 };
 
 export const clearMessages = () => {
+  chatPerfMarks.channelReset();
   flushPendingRecentMessagesSync();
   frontTrimSuspended = false;
   messageKeySet.clear();

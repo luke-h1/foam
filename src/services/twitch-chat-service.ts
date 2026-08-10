@@ -5,6 +5,7 @@ import * as Network from 'expo-network';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import { useSyncRef } from '@app/hooks/useSyncRef';
+import { chatPerfMarks } from '@app/lib/chatPerfMarks';
 import { isE2EMode } from '@app/services/api/clients';
 import { recordChatDebugIrcLine } from '@app/store/chat/actions/chatDebugLog';
 import { usePreference } from '@app/store/preferenceStore';
@@ -611,6 +612,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
         }
 
         recordChatDebugIrcLine(line);
+        chatPerfMarks.lineReceived();
         const ircMessage = parseIrcMessage(line);
         if (ircMessage) {
           handleIrcMessage(ircMessage);
