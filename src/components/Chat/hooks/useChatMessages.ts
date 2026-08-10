@@ -16,7 +16,10 @@ import {
   removeMessageById,
   removeMessagesByLogin,
 } from '@app/store/chat/actions/messages';
-import { reportDroppedChatMessages } from '@app/utils/chat/chatHealth/reportDroppedChatMessages';
+import {
+  reportDroppedChatMessages,
+  resetDroppedChatMessageReports,
+} from '@app/utils/chat/chatHealth/reportDroppedChatMessages';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor/resolveCachedSenderColor';
 
 import { createChatDelayQueue } from '../util/chatDelay/chatDelayQueue';
@@ -477,6 +480,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     pendingUnreadCountRef.current = 0;
     arrivalsSinceFlushRef.current = 0;
     raidFlushModeRef.current = false;
+    resetDroppedChatMessageReports();
   }, [bufferRef, clearDelayTick, delayQueueRef]);
 
   const getBufferSize = useCallback(
