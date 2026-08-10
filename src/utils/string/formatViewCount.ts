@@ -1,4 +1,13 @@
-const viewCountFormatter = new Intl.NumberFormat('en-US');
+let viewCountFormatter: Intl.NumberFormat | null = null;
+
+/**
+ * Built on first format - ICU formatter construction at module scope sat on
+ * the boot path via LiveStreamCard.
+ */
+function getViewCountFormatter() {
+  viewCountFormatter ??= new Intl.NumberFormat('en-US');
+  return viewCountFormatter;
+}
 
 /**
  * Format viewer count for display.
@@ -11,7 +20,7 @@ export function formatViewCount(
   if (!Number.isFinite(n) || n < 0) {
     return '0';
   }
-  return viewCountFormatter.format(Math.floor(n));
+  return getViewCountFormatter().format(Math.floor(n));
 }
 
 /**
