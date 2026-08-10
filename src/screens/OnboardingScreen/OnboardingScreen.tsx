@@ -12,7 +12,9 @@ import { storageMMKV } from '@app/lib/mmkv';
 import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
 
-export const ONBOARDING_SEEN_KEY = 'V1_hasSeenOnboarding';
+import { ONBOARDING_SEEN_KEY } from './constants';
+
+export { ONBOARDING_SEEN_KEY } from './constants';
 
 function handleGetStarted() {
   storageMMKV.set(ONBOARDING_SEEN_KEY, true);

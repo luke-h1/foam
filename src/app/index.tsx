@@ -7,7 +7,7 @@ import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStrea
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { storageMMKV } from '@app/lib/mmkv';
-import { ONBOARDING_SEEN_KEY } from '@app/screens/OnboardingScreen/OnboardingScreen';
+import { ONBOARDING_SEEN_KEY } from '@app/screens/OnboardingScreen/constants';
 import { isE2EMode } from '@app/services/api/clients';
 import { theme } from '@app/styles/themes';
 
