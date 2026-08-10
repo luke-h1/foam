@@ -1,6 +1,9 @@
 import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
 
-import { followedChannelsQueryOptions } from '@app/lib/react-query/queries/twitch';
+import {
+  followedChannelProfileImagesQueryOptions,
+  followedChannelsQueryOptions,
+} from '@app/lib/react-query/queries/twitch';
 import type { FollowedChannelWithProfile } from '@app/types/twitch/channel';
 
 type FollowedChannelsQueryOptions = Omit<
@@ -8,12 +11,35 @@ type FollowedChannelsQueryOptions = Omit<
   'queryKey' | 'queryFn' | 'staleTime'
 >;
 
+/**
+ * Channels resolve in one round trip and render immediately; profile images
+ * arrive via a dependent query and merge in when they land (text-avatar
+ * fallback until then). Previously both hops were serialized inside one
+ * queryFn, so the list waited on the second request.
+ */
 export function useFollowedChannelsQuery(
   userId: string,
   options?: FollowedChannelsQueryOptions,
 ) {
-  return useQuery({
+  const channelsQuery = useQuery({
     ...followedChannelsQueryOptions(userId),
     ...options,
   });
+
+  const broadcasterIds =
+    channelsQuery.data?.map(channel => channel.broadcaster_id) ?? [];
+  const profileImagesQuery = useQuery(
+    followedChannelProfileImagesQueryOptions(broadcasterIds),
+  );
+
+  const profileImages = profileImagesQuery.data;
+  const data =
+    channelsQuery.data && profileImages
+      ? channelsQuery.data.map(channel => ({
+          ...channel,
+          profile_image_url: profileImages.get(channel.broadcaster_id),
+        }))
+      : channelsQuery.data;
+
+  return { ...channelsQuery, data };
 }
