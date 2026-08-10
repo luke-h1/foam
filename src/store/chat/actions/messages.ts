@@ -129,11 +129,11 @@ let nextMessageSeq = 0;
 
 const prepareMessageForStore = (
   message: AnyChatMessageType,
+  precomputedKey?: string,
 ): AnyChatMessageType => {
-  const messageKey = getChatMessageKey(
-    message.message_id,
-    message.message_nonce,
-  );
+  const messageKey =
+    precomputedKey ??
+    getChatMessageKey(message.message_id, message.message_nonce);
   const cachedSenderColor = resolveCachedSenderColor(
     message,
     getUserMessageColor,
@@ -166,7 +166,10 @@ const getSenderChatterRole = (
 };
 
 const indexMessage = (message: AnyChatMessageType, index: number) => {
-  const key = getChatMessageKey(message.message_id, message.message_nonce);
+  // Stored messages carry the key as their id (prepareMessageForStore), so
+  // this is a field read, not a recompute; the fallback covers direct calls
+  // with unprepared messages.
+  const key = getChatMessageStoreId(message);
   messageKeyToIndex.set(key, index);
 
   const normalisedMessageId = normaliseMessageField(message.message_id);
@@ -529,7 +532,7 @@ export const addMessage = (message?: AnyChatMessageType) => {
     return;
   }
 
-  const storedMessage = prepareMessageForStore(message);
+  const storedMessage = prepareMessageForStore(message, key);
   messageKeySet.add(key);
   messageKeyOrder.push(key);
   const currentMessages = chatStore$.messages.peek();
@@ -558,25 +561,24 @@ export const addMessages = (messages: (AnyChatMessageType | undefined)[]) => {
   if (messages.length === 0) {
     return;
   }
-  const newMessages = messages.filter((msg): msg is AnyChatMessageType => {
+  const storedMessages: AnyChatMessageType[] = [];
+  for (const msg of messages) {
     if (!isRenderableChatMessage(msg)) {
-      return false;
+      continue;
     }
 
     const key = getChatMessageKey(msg.message_id, msg.message_nonce);
     if (messageKeySet.has(key)) {
-      return false;
+      continue;
     }
     messageKeySet.add(key);
     messageKeyOrder.push(key);
-    return true;
-  });
-
-  if (newMessages.length === 0) {
-    return;
+    storedMessages.push(prepareMessageForStore(msg, key));
   }
 
-  const storedMessages = newMessages.map(prepareMessageForStore);
+  if (storedMessages.length === 0) {
+    return;
+  }
   const currentMessages = chatStore$.messages.peek();
   const nextMessageStartIndex = currentMessages.length;
   const { droppedMessages, nextMessages } = appendToMessageWindow(
