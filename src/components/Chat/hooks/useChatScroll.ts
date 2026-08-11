@@ -1,5 +1,14 @@
-import { RefObject, useCallback, useMemo, useRef, useState } from 'react';
+import {
+  MutableRefObject,
+  RefObject,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+
+import { resetChatUnread } from '@app/store/chat/actions/chatUnread';
 
 import { chatScrollActivity } from '../util/chatScrollActivity';
 
@@ -25,6 +34,20 @@ interface UseChatScrollOptions {
   getMessagesLength: () => number;
 }
 
+/**
+ * The stable scroll-position readers the ingest and message-processing paths
+ * need: where the list is anchored, whether a jump-to-bottom is settling,
+ * whether the user's finger or a fling is on the list, and the one hook for
+ * re-pinning the bottom after content grows. Threaded through the chat hook
+ * bags as a single value instead of four.
+ */
+export interface ChatScrollAnchor {
+  isAtBottomRef: MutableRefObject<boolean>;
+  isScrollingToBottomRef: MutableRefObject<boolean>;
+  isUserActivelyScrolling: () => boolean;
+  maintainBottomAfterContentChange: () => void;
+}
+
 export const useChatScroll = ({
   listRef,
   getMessagesLength,
@@ -35,7 +58,6 @@ export const useChatScroll = ({
   const [isScrollingToBottom, setIsScrollingToBottom] = useState(false);
   const [shouldMaintainScrollAtEnd, setShouldMaintainScrollAtEnd] =
     useState(true);
-  const [unreadCount, setUnreadCount] = useState(0);
   const scrollThrottleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollToBottomRequestRef = useRef(0);
   const bottomContentAnchorTimeoutRef = useRef<ReturnType<
@@ -159,7 +181,7 @@ export const useChatScroll = ({
     }
 
     setIsAtBottom(true);
-    setUnreadCount(0);
+    resetChatUnread();
   }, []);
 
   const handleScroll = useCallback(
@@ -259,7 +281,7 @@ export const useChatScroll = ({
         if (current) {
           hasUserScrollIntentRef.current = false;
           setShouldMaintainScrollAtEnd(true);
-          setUnreadCount(0);
+          resetChatUnread();
         }
       }, SCROLL_THROTTLE_MS);
     },
@@ -343,12 +365,9 @@ export const useChatScroll = ({
     scrollToLatestOnce();
   }, [getMessagesLength, scrollToLatestOnce]);
 
-  const incrementUnread = useCallback((count: number) => {
-    setUnreadCount(prev => prev + count);
-  }, []);
-
   const cleanup = useCallback(() => {
     chatScrollActivity.reset();
+    resetChatUnread();
     cancelScrollToBottom();
     clearBottomContentAnchor();
     if (scrollThrottleRef.current) {
@@ -382,19 +401,23 @@ export const useChatScroll = ({
     ],
   );
 
+  const scrollAnchor = useMemo<ChatScrollAnchor>(
+    () => ({
+      isAtBottomRef,
+      isScrollingToBottomRef,
+      isUserActivelyScrolling,
+      maintainBottomAfterContentChange,
+    }),
+    [isUserActivelyScrolling, maintainBottomAfterContentChange],
+  );
+
   return {
     isAtBottom,
-    isAtBottomRef,
     isScrollingToBottom,
-    isScrollingToBottomRef,
-    isUserActivelyScrolling,
     shouldMaintainScrollAtEnd,
-    unreadCount,
-    setUnreadCount,
+    scrollAnchor,
     scrollHandlers,
     scrollToBottom,
-    maintainBottomAfterContentChange,
-    incrementUnread,
     cleanup,
   };
 };

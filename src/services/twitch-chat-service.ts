@@ -40,24 +40,18 @@ import { useWebsocket } from '../hooks/ws/useWebsocket';
  * changes when the tags do.
  */
 let currentUserState: Record<string, string> = {};
-let userStateRevision = 0;
 const userStateListeners = new Set<() => void>();
 
 function setCurrentUserState(next: Record<string, string>): void {
   currentUserState = next;
-  userStateRevision += 1;
   userStateListeners.forEach(listener => listener());
 }
 
-export function subscribeUserState(listener: () => void): () => void {
+function subscribeUserState(listener: () => void): () => void {
   userStateListeners.add(listener);
   return () => {
     userStateListeners.delete(listener);
   };
-}
-
-export function getUserStateRevision(): number {
-  return userStateRevision;
 }
 
 export function getChatUserState(): Record<string, string> {

@@ -31,6 +31,7 @@ export const denseBadgeSources = {
   ffzGlobalBadges: [] as SanitisedBadgeSet[],
   bttvBadges: [] as SanitisedBadgeSet[],
   chatterinoBadges: denseChatterinoBadges,
+  getEntitledBadge: () => null,
 };
 
 export const badgeLookupUserstates = Array.from({ length: 120 }, (_, index) => {

@@ -88,8 +88,18 @@ jest.mock('@app/services/twitch-badge-service', () => ({
 }));
 
 jest.mock('@app/services/twitch-chat-service', () => ({
-  subscribeUserState: jest.fn(() => () => {}),
-  getUserStateRevision: jest.fn(() => 0),
+  getChatUserState: () => ({
+    mod: '0',
+    'badges-raw': '',
+    badges: '',
+    color: '#ffffff',
+  }),
+  useChatUserState: () => ({
+    mod: '0',
+    'badges-raw': '',
+    badges: '',
+    color: '#ffffff',
+  }),
   useTwitchChat: () => ({
     connectionState: 1,
     isConnected: () => true,
@@ -97,12 +107,6 @@ jest.mock('@app/services/twitch-chat-service', () => ({
     joinChannel: jest.fn(),
     sendMessage: jest.fn(),
     sendChatCommand: jest.fn(),
-    getUserState: () => ({
-      mod: '0',
-      'badges-raw': '',
-      badges: '',
-      color: '#ffffff',
-    }),
   }),
 }));
 
@@ -308,19 +312,24 @@ jest.mock('../hooks/useChatMessages', () => ({
 jest.mock('../hooks/useChatScroll', () => ({
   useChatScroll: () => ({
     isAtBottom: true,
-    isAtBottomRef: { current: true },
     isScrollingToBottom: false,
-    isScrollingToBottomRef: { current: false },
-    unreadCount: 0,
-    setUnreadCount: jest.fn(),
-    handleScroll: jest.fn(),
-    handleScrollBeginDrag: jest.fn(),
-    handleScrollEndDrag: jest.fn(),
-    handleMomentumScrollEnd: jest.fn(),
-    handleEndReached: jest.fn(),
-    handleContentSizeChange: jest.fn(),
+    shouldMaintainScrollAtEnd: true,
+    scrollAnchor: {
+      isAtBottomRef: { current: true },
+      isScrollingToBottomRef: { current: false },
+      isUserActivelyScrolling: () => false,
+      maintainBottomAfterContentChange: jest.fn(),
+    },
+    scrollHandlers: {
+      onContentSizeChange: jest.fn(),
+      onEndReached: jest.fn(),
+      onMomentumScrollBegin: jest.fn(),
+      onMomentumScrollEnd: jest.fn(),
+      onScroll: jest.fn(),
+      onScrollBeginDrag: jest.fn(),
+      onScrollEndDrag: jest.fn(),
+    },
     scrollToBottom: mockScrollToBottom,
-    maintainBottomAfterContentChange: jest.fn(),
     cleanup: jest.fn(),
   }),
 }));

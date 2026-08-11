@@ -10,6 +10,7 @@ const emptyBadgeSources = {
   chatterinoBadges: [] as SanitisedBadgeSet[],
   ffzChannelBadges: [] as SanitisedBadgeSet[],
   ffzGlobalBadges: [] as SanitisedBadgeSet[],
+  getEntitledBadge: () => null,
 };
 
 describe('findBadges', () => {

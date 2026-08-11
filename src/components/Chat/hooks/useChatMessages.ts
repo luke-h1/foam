@@ -1,5 +1,3 @@
-import { MutableRefObject } from 'react';
-
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import { useSyncRef } from '@app/hooks/useSyncRef';
 
@@ -8,6 +6,7 @@ import {
   createChatIngestController,
 } from '../util/chatIngestController';
 import { type BufferedMessage } from '../util/messageBuffer';
+import type { ChatScrollAnchor } from './useChatScroll';
 
 interface UseChatMessagesOptions {
   /**
@@ -20,11 +19,7 @@ interface UseChatMessagesOptions {
    * delay).
    */
   getChatDelayMs?: () => number;
-  isAtBottomRef: MutableRefObject<boolean>;
-  isScrollingToBottomRef?: MutableRefObject<boolean>;
-  isUserActivelyScrolling?: () => boolean;
-  onBottomContentChange?: () => void;
-  onUnreadIncrement: (count: number) => void;
+  scrollAnchor: ChatScrollAnchor;
 }
 
 /**
@@ -43,16 +38,13 @@ export const useChatMessages = (
       getFinalizeMessageForCommit: () =>
         optionsRef.current.finalizeMessageForCommit,
       getChatDelayMs: () => optionsRef.current.getChatDelayMs?.() ?? 0,
-      isAtBottom: () => optionsRef.current.isAtBottomRef.current,
+      isAtBottom: () => optionsRef.current.scrollAnchor.isAtBottomRef.current,
       isScrollingToBottom: () =>
-        optionsRef.current.isScrollingToBottomRef?.current ?? false,
+        optionsRef.current.scrollAnchor.isScrollingToBottomRef.current,
       isUserActivelyScrolling: () =>
-        optionsRef.current.isUserActivelyScrolling?.() ?? false,
+        optionsRef.current.scrollAnchor.isUserActivelyScrolling(),
       onBottomContentChange: () => {
-        optionsRef.current.onBottomContentChange?.();
-      },
-      onUnreadIncrement: count => {
-        optionsRef.current.onUnreadIncrement(count);
+        optionsRef.current.scrollAnchor.maintainBottomAfterContentChange();
       },
     }),
   );

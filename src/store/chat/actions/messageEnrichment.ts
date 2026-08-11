@@ -1,6 +1,7 @@
 import { resolveMessageEmoteParts } from '@app/components/Chat/util/resolveMessageEmoteParts';
 import { getMessageBadges } from '@app/components/Chat/util/sharedChatBadges/getMessageBadges';
 import { getSharedChatBadgeContext } from '@app/components/Chat/util/sharedChatBadges/getSharedChatBadgeContext';
+import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { findBadges } from '@app/utils/chat/findBadges';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
@@ -144,6 +145,7 @@ export function enrichMessageSet({
       ffzGlobalBadges: emoteData.ffzGlobalBadges,
       twitchChannelBadges: emoteData.twitchChannelBadges,
       twitchGlobalBadges: emoteData.twitchGlobalBadges,
+      getEntitledBadge: getUserBadge,
     });
 
     if (

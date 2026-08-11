@@ -146,10 +146,14 @@ function renderMessageProcessing() {
     useChatMessageProcessing({
       channelId: 'channel-1',
       handleNewMessage,
-      isAtBottomRef,
-      maintainBottomAfterContentChange,
       messages$: {
         peek: jest.fn(() => messages),
+      },
+      scrollAnchor: {
+        isAtBottomRef,
+        isScrollingToBottomRef: { current: false },
+        isUserActivelyScrolling: () => false,
+        maintainBottomAfterContentChange,
       },
       show7TvEmotes: true,
       show7tvBadges: true,
@@ -460,10 +464,14 @@ describe('useChatMessageProcessing', () => {
         useChatMessageProcessing({
           channelId,
           handleNewMessage: jest.fn(),
-          isAtBottomRef: { current: true },
-          maintainBottomAfterContentChange: jest.fn(),
           messages$: {
             peek: () => messages,
+          },
+          scrollAnchor: {
+            isAtBottomRef: { current: true },
+            isScrollingToBottomRef: { current: false },
+            isUserActivelyScrolling: () => false,
+            maintainBottomAfterContentChange: jest.fn(),
           },
           show7TvEmotes: true,
           show7tvBadges: true,

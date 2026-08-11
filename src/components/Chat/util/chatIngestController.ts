@@ -1,5 +1,6 @@
 import { startTransition } from 'react';
 
+import { incrementChatUnread } from '@app/store/chat/actions/chatUnread';
 import {
   addMessages,
   getMessageById,
@@ -53,7 +54,6 @@ export interface ChatIngestControllerDeps {
   isScrollingToBottom: () => boolean;
   isUserActivelyScrolling: () => boolean;
   onBottomContentChange: () => void;
-  onUnreadIncrement: (count: number) => void;
 }
 
 function publishBufferedMessages(messages: BufferedMessage[]) {
@@ -106,7 +106,7 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
 
   const drainPendingUnread = () => {
     if (pendingUnreadCount > 0) {
-      deps.onUnreadIncrement(pendingUnreadCount);
+      incrementChatUnread(pendingUnreadCount);
       pendingUnreadCount = 0;
     }
   };

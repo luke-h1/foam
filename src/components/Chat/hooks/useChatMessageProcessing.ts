@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef } from 'react';
-import type { RefObject } from 'react';
 
 import {
   fetchUserPersonalEmotes,
@@ -29,6 +28,7 @@ import { hydrateVisibleSevenTvAssets } from '../util/hydrateVisibleSevenTvAssets
 import { resolveMessageEmoteParts } from '../util/resolveMessageEmoteParts';
 import { getCachedSharedChatBadgeContext } from '../util/sharedChatBadges/getCachedSharedChatBadgeContext';
 import { getMessageBadges } from '../util/sharedChatBadges/getMessageBadges';
+import type { ChatScrollAnchor } from './useChatScroll';
 
 interface UseChatMessageProcessingOptions {
   channelId: string;
@@ -37,19 +37,17 @@ interface UseChatMessageProcessingOptions {
     options?: { countUnread?: boolean },
   ) => void;
   messages$: { peek: () => AnyChatMessageType[] };
+  scrollAnchor: ChatScrollAnchor;
   show7TvEmotes: boolean;
   show7tvBadges: boolean;
   userLogin?: string | null;
-  isAtBottomRef: RefObject<boolean>;
-  maintainBottomAfterContentChange: () => void;
 }
 
 export function useChatMessageProcessing({
   channelId,
   handleNewMessage,
   messages$,
-  isAtBottomRef,
-  maintainBottomAfterContentChange,
+  scrollAnchor,
   show7TvEmotes,
   show7tvBadges,
   userLogin,
@@ -181,7 +179,7 @@ export function useChatMessageProcessing({
     (epoch: number) => {
       const messages = visibleAssetHydration.pendingMessages;
       visibleAssetHydration.pendingMessages = [];
-      const shouldMaintainBottom = isAtBottomRef.current;
+      const shouldMaintainBottom = scrollAnchor.isAtBottomRef.current;
 
       return hydrateVisibleSevenTvAssets({
         channelId,
@@ -201,16 +199,15 @@ export function useChatMessageProcessing({
         if (
           didReprocessMessages &&
           shouldMaintainBottom &&
-          isAtBottomRef.current
+          scrollAnchor.isAtBottomRef.current
         ) {
-          maintainBottomAfterContentChange();
+          scrollAnchor.maintainBottomAfterContentChange();
         }
       });
     },
     [
       channelId,
-      isAtBottomRef,
-      maintainBottomAfterContentChange,
+      scrollAnchor,
       reprocessVisibleMessageFromCache,
       show7TvEmotes,
       show7tvBadges,

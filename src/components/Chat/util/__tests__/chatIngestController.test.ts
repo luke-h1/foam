@@ -1,3 +1,7 @@
+import {
+  getChatUnreadCount,
+  resetChatUnread,
+} from '@app/store/chat/actions/chatUnread';
 import { clearMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
@@ -48,7 +52,6 @@ function stripPendingParse(message: BufferedMessage): BufferedMessage {
 function createHeadlessIngest(options?: {
   isAtBottom?: () => boolean;
   getChatDelayMs?: () => number;
-  onUnreadIncrement?: (count: number) => void;
 }) {
   const controller: ChatIngestController = createChatIngestController({
     getFinalizeMessageForCommit: () => stripPendingParse,
@@ -57,7 +60,6 @@ function createHeadlessIngest(options?: {
     isScrollingToBottom: () => false,
     isUserActivelyScrolling: () => false,
     onBottomContentChange: () => {},
-    onUnreadIncrement: options?.onUnreadIncrement ?? (() => {}),
   });
 
   const handlers = createChatIrcHandlers({
@@ -112,6 +114,7 @@ describe('chatIngestController (headless line → commit)', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     clearMessages();
+    resetChatUnread();
   });
 
   afterEach(() => {
@@ -142,17 +145,15 @@ describe('chatIngestController (headless line → commit)', () => {
   });
 
   test('counts unread instead of committing silently while scrolled up', () => {
-    const onUnreadIncrement = jest.fn();
     const { routeLine } = createHeadlessIngest({
       isAtBottom: () => false,
-      onUnreadIncrement,
     });
 
     routeLine(PRIVMSG_LINE);
     jest.advanceTimersByTime(5_000);
 
     expect(committedMessages()).toHaveLength(1);
-    expect(onUnreadIncrement).toHaveBeenCalledWith(1);
+    expect(getChatUnreadCount()).toBe(1);
   });
 
   test('holds a live line in the delay queue for the configured delay', () => {
