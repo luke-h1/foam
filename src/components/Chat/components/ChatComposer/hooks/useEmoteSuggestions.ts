@@ -45,7 +45,7 @@ function buildSearchableEmotes(
       }
 
       const dedupeKey =
-        emote.site === 'Emoji'
+        emote.provider === 'emoji'
           ? `emoji:${emote.emoji_hexcode ?? emote.id}`
           : emote.name.toLowerCase();
 

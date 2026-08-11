@@ -8,6 +8,7 @@ import {
 import { clearPaintBindings } from '@app/store/chat/actions/cosmetics';
 import { clearMessages } from '@app/store/chat/actions/messages';
 import { clearFetchedCosmeticsUsers } from '@app/store/chat/actions/userCosmeticsFetch';
+import { visibleAssetHydration } from '@app/store/chat/actions/visibleAssetHydration';
 
 import { useChatLifecycle } from '../useChatLifecycle';
 
@@ -151,6 +152,27 @@ describe('useChatLifecycle', () => {
   });
 
   describe('channel init effect', () => {
+    test('clears visible-asset dedup guards when the channel changes in place', () => {
+      const { rerender } = renderHook(
+        ({ channelId }: { channelId: string }) =>
+          useChatLifecycle({ ...defaultProps, channelId }),
+        { initialProps: { channelId: 'channel-a' } },
+      );
+
+      visibleAssetHydration.personalEmoteUsers.add('user-1');
+      visibleAssetHydration.cosmeticUsers.add('user-2');
+      visibleAssetHydration.hydratedMessageKeys.add('key-1');
+
+      rerender({ channelId: 'channel-a' });
+      expect(visibleAssetHydration.personalEmoteUsers.size).toBe(1);
+
+      rerender({ channelId: 'channel-b' });
+
+      expect(visibleAssetHydration.personalEmoteUsers.size).toBe(0);
+      expect(visibleAssetHydration.cosmeticUsers.size).toBe(0);
+      expect(visibleAssetHydration.hydratedMessageKeys.size).toBe(0);
+    });
+
     test('clears processedMessageIdsRef on mount and sets initializedChannelRef', () => {
       const processedRef = { current: new Set<string>(['id1']) };
       renderHook(() =>

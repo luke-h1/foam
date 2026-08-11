@@ -1,4 +1,4 @@
-import DeviceInfo from 'react-native-device-info';
+import DeviceInfo from 'react-native-device-info/src/internal/nativeInterface';
 
 export type DeviceTier = 'low' | 'high';
 
@@ -31,7 +31,7 @@ export function getDeviceTier(): DeviceTier {
   }
   let tier: DeviceTier = 'high';
   try {
-    const isLowRam = DeviceInfo.isLowRamDevice?.() === true;
+    const isLowRam = DeviceInfo.isLowRamDevice === true;
     const totalMemory = getTotalDeviceMemoryBytes();
     if (
       isLowRam ||

@@ -53,7 +53,7 @@ function sanitiseFfzEmote(
   emote: FfzEmoticon,
   site: FfzSanitisedEmote['site'],
   creator: string | null,
-): FfzSanitisedEmote {
+): FfzSanitisedEmote | null {
   const staticVariants = {
     '1x': emote.urls['1'] || toFfzStaticUrl(emote.id, '1x'),
     '2x': emote.urls['2'] || toFfzStaticUrl(emote.id, '2x'),
@@ -67,20 +67,32 @@ function sanitiseFfzEmote(
       }
     : staticVariants;
 
-  return {
-    ...buildSanitisedEmote({
-      id: emote.id.toString(),
-      name: emote.name,
-      site,
-      creator,
-      emoteLink: `https://www.frankerfacez.com/emoticon/${emote.id}`,
-      animated: animatedVariants,
-      static: staticVariants,
-    }),
+  return buildSanitisedEmote({
+    id: emote.id.toString(),
+    name: emote.name,
+    site,
+    creator,
+    emoteLink: `https://www.frankerfacez.com/emoticon/${emote.id}`,
+    animated: animatedVariants,
+    static: staticVariants,
     width: emote.width,
     height: emote.height,
-    aspect_ratio: emote.height > 0 ? emote.width / emote.height : 1,
-  };
+  });
+}
+
+function sanitiseFfzEmotes(
+  emotes: FfzEmoticon[],
+  site: FfzSanitisedEmote['site'],
+  creatorOf: (emote: FfzEmoticon) => string | null,
+): FfzSanitisedEmote[] {
+  const sanitised: FfzSanitisedEmote[] = [];
+  for (const emote of emotes) {
+    const result = sanitiseFfzEmote(emote, site, creatorOf(emote));
+    if (result) {
+      sanitised.push(result);
+    }
+  }
+  return sanitised;
 }
 
 export const ffzService = {
@@ -94,12 +106,11 @@ export const ffzService = {
         return [];
       }
 
-      const sanitisedSet = defaultSet.emoticons.map<FfzSanitisedEmote>(
-        (emote: FfzEmoticon) =>
-          sanitiseFfzEmote(emote, 'Global FFZ', 'UNKNOWN'),
+      return sanitiseFfzEmotes(
+        defaultSet.emoticons,
+        'Global FFZ',
+        () => 'UNKNOWN',
       );
-
-      return sanitisedSet as FfzSanitisedEmote[];
     } catch (error) {
       logger.ffz.warn('Failed to fetch global FFZ emotes', {
         name: 'ffz_emotes_warning',
@@ -142,6 +153,7 @@ export const ffzService = {
             owner_username: channelId,
             set: 'vip',
             type: 'FFZ channel badge',
+            provider: 'ffz',
           });
         }
 
@@ -157,6 +169,7 @@ export const ffzService = {
             owner_username: channelId,
             set: 'mod',
             type: 'FFZ channel badge',
+            provider: 'ffz',
           });
         }
 
@@ -171,6 +184,7 @@ export const ffzService = {
                 owner_username: user,
                 set: badge,
                 type: 'FFZ user badge',
+                provider: 'ffz',
               });
             });
           });
@@ -209,12 +223,13 @@ export const ffzService = {
 
       if ('sets' in result) {
         const emoteSet = result.sets[result.room.set];
-        const sanitistedSet =
-          emoteSet?.emoticons &&
-          emoteSet?.emoticons.map<FfzSanitisedEmote>(emote =>
-            sanitiseFfzEmote(emote, 'FFZ', emote.owner.name ?? 'unknown'),
-          );
-        return sanitistedSet ?? [];
+        return emoteSet?.emoticons
+          ? sanitiseFfzEmotes(
+              emoteSet.emoticons,
+              'FFZ',
+              emote => emote.owner.name ?? 'unknown',
+            )
+          : [];
       }
       return [];
     } catch (error) {
@@ -254,6 +269,7 @@ export const ffzService = {
               owner_username: username,
               set: badge.id.toString(),
               type: 'FFZ global badge',
+              provider: 'ffz',
             });
           }
         });

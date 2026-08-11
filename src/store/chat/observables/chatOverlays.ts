@@ -5,7 +5,7 @@ import type {
   EmotePressData,
   MessageActionData,
   UsernamePressData,
-} from '@app/components/Chat/components/ChatMessage/RichChatMessage.types';
+} from '@app/store/chat/types/chatPressData';
 
 export interface ChatOverlayState {
   /**

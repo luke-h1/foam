@@ -7,47 +7,69 @@ export interface IrcMessage {
   params: string[];
 }
 
+const SPACE = 32;
+const AT_SIGN = 64;
+const COLON = 58;
+
 /**
  * Parse a raw Twitch IRC line (`[@tags] [:prefix] COMMAND params [:trailing]`)
  * into its parts. Returns null for blank or structurally invalid lines.
+ *
+ * Cursor-based on purpose: the previous shape re-copied the remaining tail of
+ * the line (trim + substring) once per stage, which a busy channel pays per
+ * message; this slices only the segments that end up in the result.
  */
 export function parseIrcMessage(line: string): IrcMessage | null {
-  let remaining = line.trim();
-  if (!remaining) {
+  let cursor = 0;
+  let end = line.length;
+  while (cursor < end && line.charCodeAt(cursor) <= SPACE) {
+    cursor += 1;
+  }
+  while (end > cursor && line.charCodeAt(end - 1) <= SPACE) {
+    end -= 1;
+  }
+  if (cursor >= end) {
     return null;
   }
 
   let tags: Record<string, string> | undefined;
   let prefix: string | undefined;
 
-  if (remaining.startsWith('@')) {
-    const tagEnd = remaining.indexOf(' ');
-    if (tagEnd === -1) {
+  if (line.charCodeAt(cursor) === AT_SIGN) {
+    const tagEnd = line.indexOf(' ', cursor);
+    if (tagEnd === -1 || tagEnd >= end) {
       return null;
     }
-    const tagString = remaining.substring(1, tagEnd);
-    tags = parseIrcTags(tagString);
-    remaining = remaining.substring(tagEnd + 1).trim();
+    tags = parseIrcTags(line.slice(cursor + 1, tagEnd));
+    cursor = tagEnd + 1;
+    while (cursor < end && line.charCodeAt(cursor) === SPACE) {
+      cursor += 1;
+    }
   }
 
-  if (remaining.startsWith(':')) {
-    const prefixEnd = remaining.indexOf(' ');
-    if (prefixEnd === -1) {
+  if (line.charCodeAt(cursor) === COLON) {
+    const prefixEnd = line.indexOf(' ', cursor);
+    if (prefixEnd === -1 || prefixEnd >= end) {
       return null;
     }
-    prefix = remaining.substring(1, prefixEnd);
-    remaining = remaining.substring(prefixEnd + 1).trim();
+    prefix = line.slice(cursor + 1, prefixEnd);
+    cursor = prefixEnd + 1;
+    while (cursor < end && line.charCodeAt(cursor) === SPACE) {
+      cursor += 1;
+    }
   }
 
-  const commandEnd = remaining.indexOf(' ');
-  const command =
-    commandEnd === -1 ? remaining : remaining.slice(0, commandEnd);
+  const commandEnd = line.indexOf(' ', cursor);
+  const hasParams = commandEnd !== -1 && commandEnd < end;
+  const command = hasParams
+    ? line.slice(cursor, commandEnd)
+    : line.slice(cursor, end);
   if (!command) {
     return null;
   }
 
   const params: string[] = [];
-  const paramString = commandEnd === -1 ? '' : remaining.slice(commandEnd + 1);
+  const paramString = hasParams ? line.slice(commandEnd + 1, end) : '';
   const trailingIndex = paramString.indexOf(' :');
 
   if (trailingIndex >= 0) {

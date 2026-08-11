@@ -1,3 +1,263 @@
+diff --git a/android/src/main/java/expo/modules/image/ExpoImageModule.kt b/android/src/main/java/expo/modules/image/ExpoImageModule.kt
+index 8584f13f25324f0027d2d3e098983e8b475c5c7f..76ad86dcd4283d46f14ae1d8c157bc205fce1cc2 100644
+--- a/android/src/main/java/expo/modules/image/ExpoImageModule.kt
++++ b/android/src/main/java/expo/modules/image/ExpoImageModule.kt
+@@ -247,6 +247,10 @@ class ExpoImageModule : Module() {
+       return@AsyncFunction true
+     }.runOnQueue(Queues.MAIN)
+ 
++    AsyncFunction("setSharedAnimationEnabled") { enabled: Boolean ->
++      SharedAnimationDriver.setEnabled(enabled)
++    }.runOnQueue(Queues.MAIN)
++
+     AsyncFunction<Boolean>("clearDiskCache") {
+       val activity = appContext.currentActivity ?: return@AsyncFunction false
+       activity.let {
+diff --git a/android/src/main/java/expo/modules/image/ExpoImageViewWrapper.kt b/android/src/main/java/expo/modules/image/ExpoImageViewWrapper.kt
+index 7abe582b602c194ee58c6e39e4812e6b21f3a4b8..f5845e3b36113c5df812a95e0653e4edf3459fd8 100644
+--- a/android/src/main/java/expo/modules/image/ExpoImageViewWrapper.kt
++++ b/android/src/main/java/expo/modules/image/ExpoImageViewWrapper.kt
+@@ -7,6 +7,9 @@ import android.graphics.drawable.Animatable
+ import android.graphics.drawable.Drawable
+ import android.os.Build
+ import android.os.Handler
++import android.os.Looper
++import android.os.SystemClock
++import android.view.Choreographer
+ import android.view.View
+ import android.widget.FrameLayout
+ import androidx.core.view.AccessibilityDelegateCompat
+@@ -18,7 +21,8 @@ import com.bumptech.glide.RequestManager
+ import com.bumptech.glide.load.engine.DiskCacheStrategy
+ import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
+ import com.bumptech.glide.request.RequestOptions
+-import com.github.penfeizhou.animation.gif.GifDrawable
++import com.github.penfeizhou.animation.FrameAnimationDrawable
++import com.github.penfeizhou.animation.decode.FrameSeqDecoder
+ import expo.modules.image.enums.ContentFit
+ import expo.modules.image.enums.Priority
+ import expo.modules.image.events.GlideRequestListener
+@@ -40,6 +44,7 @@ import expo.modules.kotlin.viewevent.EventDispatcher
+ import expo.modules.kotlin.views.ExpoView
+ import jp.wasabeef.glide.transformations.BlurTransformation
+ import java.lang.ref.WeakReference
++import java.util.WeakHashMap
+ import kotlin.math.abs
+ import kotlin.math.min
+ 
+@@ -174,17 +179,19 @@ class ExpoImageViewWrapper(context: Context, appContext: AppContext) : ExpoView(
+     // So we check first if the resource is a GifDrawable, because it can continue
+     // from where it was paused.
+     when (val resource = activeView.drawable) {
+-      is GifDrawable -> setIsAnimating(resource, setAnimating)
++      is FrameAnimationDrawable<*> -> setIsAnimating(resource, setAnimating)
+       is Animatable -> setIsAnimating(resource, setAnimating)
+     }
+   }
+ 
+-  private fun setIsAnimating(resource: GifDrawable, setAnimating: Boolean) {
++  private fun setIsAnimating(resource: FrameAnimationDrawable<*>, setAnimating: Boolean) {
+     if (setAnimating) {
+       if (resource.isPaused) {
+         resource.resume()
++        SharedAnimationDriver.onAnimatableResumed(resource)
+       } else {
+         resource.start()
++        SharedAnimationDriver.onAnimatableDisplayed(resource)
+       }
+     } else {
+       resource.pause()
+@@ -394,6 +401,9 @@ class ExpoImageViewWrapper(context: Context, appContext: AppContext) : ExpoView(
+ 
+     if (resource is Animatable) {
+       resource.start()
++      if (resource is FrameAnimationDrawable<*>) {
++        SharedAnimationDriver.onAnimatableDisplayed(resource)
++      }
+     }
+   }
+ 
+@@ -658,3 +668,180 @@ class ExpoImageViewWrapper(context: Context, appContext: AppContext) : ExpoView(
+     private fun createNewRequestManager(activity: Activity): RequestManager = Glide.with(activity)
+   }
+ }
++
++
++internal object SharedAnimationDriver {
++  private const val CHECK_INTERVAL_MS = 250L
++  private const val DRIFT_TOLERANCE_MS = 120L
++  private const val MIN_REALIGN_GAP_MS = 5_000L
++  private const val MIN_DURATION_MS = 200L
++  private const val MAX_ENTRIES = 128
++
++  private val epochMs = SystemClock.uptimeMillis()
++  private val mainHandler = Handler(Looper.getMainLooper())
++
++  private class Entry {
++    var frameMidpointsMs: LongArray? = null
++    var durationMs = 0L
++    var lastAlignedAtMs = 0L
++    var alignScheduled = false
++  }
++
++  private val entries = WeakHashMap<FrameAnimationDrawable<*>, Entry>()
++  private var checkScheduled = false
++  private var enabled = true
++
++  private val checkCallback = Choreographer.FrameCallback {
++    checkScheduled = false
++    check()
++  }
++
++  fun onAnimatableDisplayed(drawable: FrameAnimationDrawable<*>) = onMain {
++    if (!enabled) {
++      return@onMain
++    }
++    if (entries.containsKey(drawable)) {
++      scheduleCheck()
++      return@onMain
++    }
++    if (entries.size >= MAX_ENTRIES) {
++      val oldest = entries.keys.firstOrNull()
++      if (oldest != null) {
++        entries.remove(oldest)
++      }
++    }
++    entries[drawable] = Entry()
++    scheduleCheck()
++  }
++
++  fun onAnimatableResumed(drawable: FrameAnimationDrawable<*>) = onMain {
++    if (!enabled) {
++      return@onMain
++    }
++    val entry = entries[drawable]
++    if (entry != null) {
++      entry.lastAlignedAtMs = 0L
++      scheduleCheck()
++    } else {
++      onAnimatableDisplayed(drawable)
++    }
++  }
++
++  fun setEnabled(value: Boolean, onApplied: (() -> Unit)? = null) = onMain {
++    enabled = value
++    if (!value) {
++      entries.clear()
++    }
++    onApplied?.invoke()
++  }
++
++  private fun scheduleCheck() {
++    if (checkScheduled || entries.isEmpty()) {
++      return
++    }
++    checkScheduled = true
++    Choreographer.getInstance().postFrameCallbackDelayed(checkCallback, CHECK_INTERVAL_MS)
++  }
++
++  private fun check() {
++    if (!enabled || entries.isEmpty()) {
++      return
++    }
++    val now = SystemClock.uptimeMillis()
++    val iterator = entries.entries.iterator()
++    while (iterator.hasNext()) {
++      val mapEntry = iterator.next()
++      val drawable = mapEntry.key ?: continue
++      val entry = mapEntry.value
++      val decoder = drawable.frameSeqDecoder
++      if (!decoder.isRunning || decoder.isPaused) {
++        continue
++      }
++      if (entry.frameMidpointsMs == null && !buildTimeline(decoder, entry)) {
++        if (entry.durationMs == -1L) {
++          iterator.remove()
++        }
++        continue
++      }
++      val midpoints = entry.frameMidpointsMs ?: continue
++      if (entry.alignScheduled) {
++        continue
++      }
++      if (entry.lastAlignedAtMs != 0L && now - entry.lastAlignedAtMs < MIN_REALIGN_GAP_MS) {
++        continue
++      }
++      val frameIndex = decoder.frameIndex
++      if (frameIndex < 0 || frameIndex >= midpoints.size) {
++        continue
++      }
++      val ideal = (now - epochMs) % entry.durationMs
++      val actual = midpoints[frameIndex]
++      val diff = abs(actual - ideal)
++      val drift = min(diff, entry.durationMs - diff)
++      if (drift <= DRIFT_TOLERANCE_MS) {
++        if (entry.lastAlignedAtMs == 0L) {
++          entry.lastAlignedAtMs = now
++        }
++        continue
++      }
++      scheduleAlignment(drawable, entry, entry.durationMs - ideal)
++    }
++    scheduleCheck()
++  }
++
++  private fun scheduleAlignment(
++    drawable: FrameAnimationDrawable<*>,
++    entry: Entry,
++    delayMs: Long
++  ) {
++    entry.alignScheduled = true
++    val reference = WeakReference(drawable)
++    mainHandler.postDelayed({
++      entry.alignScheduled = false
++      entry.lastAlignedAtMs = SystemClock.uptimeMillis()
++      val target = reference.get() ?: return@postDelayed
++      val decoder = target.frameSeqDecoder
++      if (decoder.isRunning && !decoder.isPaused) {
++        decoder.reset()
++      }
++    }, delayMs)
++  }
++
++  private fun buildTimeline(decoder: FrameSeqDecoder<*, *>, entry: Entry): Boolean {
++    val count = decoder.frameCount
++    if (count == 0) {
++      return false
++    }
++    if (count == 1) {
++      entry.durationMs = -1L
++      return false
++    }
++    val midpoints = LongArray(count)
++    var total = 0L
++    try {
++      for (index in 0 until count) {
++        val frame = decoder.getFrame(index) ?: return false
++        val frameDuration = frame.frameDuration.toLong().coerceAtLeast(1L)
++        midpoints[index] = total + frameDuration / 2
++        total += frameDuration
++      }
++    } catch (e: IndexOutOfBoundsException) {
++      return false
++    }
++    if (total < MIN_DURATION_MS) {
++      entry.durationMs = -1L
++      return false
++    }
++    entry.frameMidpointsMs = midpoints
++    entry.durationMs = total
++    return true
++  }
++
++  private inline fun onMain(crossinline block: () -> Unit) {
++    if (Looper.myLooper() == Looper.getMainLooper()) {
++      block()
++    } else {
++      mainHandler.post { block() }
++    }
++  }
++}
 diff --git a/ios/AnimatedImage.swift b/ios/AnimatedImage.swift
 index 350c9e4d90680baf8370e49b3529f6e45781244e..a05135020be44a3ccbae94e88bfab5f21c827c40 100644
 --- a/ios/AnimatedImage.swift

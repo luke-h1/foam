@@ -80,16 +80,11 @@ export const Chat = memo(
 
     const {
       isAtBottom,
-      isAtBottomRef,
       isScrollingToBottom,
-      isScrollingToBottomRef,
-      isUserActivelyScrolling,
       shouldMaintainScrollAtEnd,
-      unreadCount,
-      setUnreadCount,
+      scrollAnchor,
       scrollHandlers,
       scrollToBottom,
-      maintainBottomAfterContentChange,
       cleanup: cleanupScroll,
     } = useChatScroll({
       listRef,
@@ -110,7 +105,6 @@ export const Chat = memo(
       connected,
       emoteLoadStatus,
       forceFlush,
-      getUserState,
       handleViewableMessagesChange,
       isChatConnected,
       joinChannel,
@@ -125,14 +119,10 @@ export const Chat = memo(
       channelId,
       channelName,
       cleanupScroll,
-      isAtBottomRef,
-      isScrollingToBottomRef,
-      isUserActivelyScrolling,
       listRef,
-      maintainBottomAfterContentChange,
       preferences,
+      scrollAnchor,
       scrollToBottom,
-      setUnreadCount,
       syntheticTransport,
       user,
     });
@@ -157,7 +147,6 @@ export const Chat = memo(
       channelId,
       channelName,
       forceFlush,
-      getUserState,
       hiddenUsers,
       hidePhraseFromView,
       hideUserFromView,
@@ -233,10 +222,7 @@ export const Chat = memo(
               {preferences.showUnreadJumpPill &&
               !isAtBottom &&
               !isScrollingToBottom ? (
-                <ResumeScroll
-                  unreadCount={unreadCount}
-                  onScrollToBottom={handleResumeScrollToBottom}
-                />
+                <ResumeScroll onScrollToBottom={handleResumeScrollToBottom} />
               ) : null}
             </View>
 
@@ -250,7 +236,6 @@ export const Chat = memo(
                 channelId={channelId}
                 channelName={channelName}
                 connected={connected}
-                getUserState={getUserState}
                 isChatConnected={isChatConnected}
                 onOpenEmoteSheet={handleOpenEmoteSheet}
                 onOpenSettingsSheet={handleOpenSettingsSheet}

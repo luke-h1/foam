@@ -109,6 +109,7 @@ describe('getChatRowSizeBucket', () => {
           set: 'moderator',
           title: 'Moderator',
           type: 'Twitch Global Badge',
+          provider: 'twitch',
           url: 'https://example.test/mod.png',
         },
       ],

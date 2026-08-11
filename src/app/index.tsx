@@ -6,14 +6,14 @@ import { Button } from '@app/components/Button/Button';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
-import { storageMMKV } from '@app/lib/mmkv';
-import { ONBOARDING_SEEN_KEY } from '@app/screens/OnboardingScreen/OnboardingScreen';
+import { storage } from '@app/lib/storage';
+import { ONBOARDING_SEEN_KEY } from '@app/screens/OnboardingScreen/constants';
 import { isE2EMode } from '@app/services/api/clients';
 import { theme } from '@app/styles/themes';
 
 export default function IndexRoute() {
   const { authState, ready } = useAuthContext();
-  const hasSeenOnboarding = storageMMKV.getBoolean(ONBOARDING_SEEN_KEY);
+  const hasSeenOnboarding = storage.getBoolean(ONBOARDING_SEEN_KEY);
 
   // E2E builds wipe app data on every launch, so onboarding would otherwise
   // gate every test behind its intro screen.

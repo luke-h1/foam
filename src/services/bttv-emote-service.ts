@@ -50,15 +50,11 @@ function toBttvStaticEmoteUrl(
   return `https://cdn.betterttv.net/emote/${emoteId}/${scale}.png`;
 }
 
-function getBttvImageVariants(emote: BttvEmote): BttvSanitisedEmote {
-  return sanitiseBttvEmote(emote, 'BTTV', emote.user?.name || null);
-}
-
 function sanitiseBttvEmote(
   emote: BttvEmote,
   site: BttvSanitisedEmote['site'],
   creator: string | null,
-): BttvSanitisedEmote {
+): BttvSanitisedEmote | null {
   const animatedVariants = {
     '1x': toBttvEmoteUrl(emote.id, '1x'),
     '2x': toBttvEmoteUrl(emote.id, '2x'),
@@ -72,33 +68,39 @@ function sanitiseBttvEmote(
       }
     : animatedVariants;
 
-  const zeroWidth = bttvZeroWidthEmotes.includes(emote.code);
+  return buildSanitisedEmote({
+    id: emote.id,
+    name: emote.code,
+    site,
+    creator,
+    emoteLink: `https://betterttv.com/emotes/${emote.id}`,
+    originalName: emote.codeOriginal,
+    animated: animatedVariants,
+    static: staticVariants,
+    zeroWidth: bttvZeroWidthEmotes.includes(emote.code),
+  });
+}
 
-  return {
-    ...buildSanitisedEmote({
-      id: emote.id,
-      name: emote.code,
-      site,
-      creator,
-      emoteLink: `https://betterttv.com/emotes/${emote.id}`,
-      originalName: emote.codeOriginal,
-      animated: animatedVariants,
-      static: staticVariants,
-    }),
-    flags: zeroWidth ? 256 : undefined,
-    zero_width: zeroWidth || undefined,
-  };
+function sanitiseBttvEmotes(
+  emotes: BttvEmote[],
+  site: BttvSanitisedEmote['site'],
+  creatorOf: (emote: BttvEmote) => string | null,
+): BttvSanitisedEmote[] {
+  const sanitised: BttvSanitisedEmote[] = [];
+  for (const emote of emotes) {
+    const result = sanitiseBttvEmote(emote, site, creatorOf(emote));
+    if (result) {
+      sanitised.push(result);
+    }
+  }
+  return sanitised;
 }
 
 export const bttvEmoteService = {
   getSanitisedGlobalEmotes: async (): Promise<BttvSanitisedEmote[]> => {
     const result = await bttvCachedApi.get<BttvEmote[]>('/emotes/global');
 
-    const sanitisedSet = result.map<BttvSanitisedEmote>(emote =>
-      sanitiseBttvEmote(emote, 'Global BTTV', null),
-    );
-
-    return sanitisedSet;
+    return sanitiseBttvEmotes(result, 'Global BTTV', () => null);
   },
 
   getSanitisedChannelEmotes: async (
@@ -108,13 +110,12 @@ export const bttvEmoteService = {
       `/users/twitch/${twitchChannelId}`,
     );
 
-    const sharedEmotes =
-      result.sharedEmotes.map<BttvSanitisedEmote>(getBttvImageVariants);
+    const creatorOf = (emote: BttvEmote) => emote.user?.name || null;
 
-    const channelEmotes =
-      result.channelEmotes.map<BttvSanitisedEmote>(getBttvImageVariants);
-
-    return [...sharedEmotes, ...channelEmotes];
+    return [
+      ...sanitiseBttvEmotes(result.sharedEmotes, 'BTTV', creatorOf),
+      ...sanitiseBttvEmotes(result.channelEmotes, 'BTTV', creatorOf),
+    ];
   },
 
   /**

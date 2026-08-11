@@ -1,8 +1,10 @@
-import { memo, RefObject } from 'react';
+import { memo, RefObject, useEffect } from 'react';
 
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { useChannelEmoteDataForReprocess } from '@app/store/chat/react/selectors';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { usePreference } from '@app/store/preferenceStore';
+import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
 
 import { useEmoteReprocessing } from '../hooks/useEmoteReprocessing';
 
@@ -23,7 +25,12 @@ export const ChatEmoteReprocessor = memo(
     userLogin?: string | null;
   }) => {
     const channelEmoteData = useChannelEmoteDataForReprocess(channelId);
+    const emojiStyle = usePreference('emojiStyle');
     const show7TvEmotes = usePreference('show7TvEmotes');
+
+    useEffect(() => {
+      chatStore$.emojis.set(getEmojiEmotes(emojiStyle));
+    }, [emojiStyle]);
 
     useEmoteReprocessing({
       channelId,

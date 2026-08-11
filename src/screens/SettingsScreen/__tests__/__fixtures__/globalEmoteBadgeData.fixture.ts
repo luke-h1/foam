@@ -14,6 +14,7 @@ export const twitchGlobalEmotesFixture: TwitchSanitisedEmote[] = [
     creator: null,
     emote_link: 'https://www.twitch.tv/emotes/25',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
 ];
 
@@ -28,6 +29,7 @@ export const bttvGlobalEmotesFixture: BttvSanitisedEmote[] = [
     creator: null,
     emote_link: 'https://betterttv.com/emotes/566ca38765dbbdab32ec0560',
     site: 'Global BTTV',
+    provider: 'bttv',
   },
 ];
 
@@ -37,6 +39,7 @@ export const twitchGlobalBadgesFixture: SanitisedBadgeSet[] = [
     url: 'https://static-cdn.jtvnw.net/badges/v1/moderator/3',
     title: 'Moderator',
     type: 'Twitch Global Badge',
+    provider: 'twitch',
     set: 'moderator',
   },
 ];

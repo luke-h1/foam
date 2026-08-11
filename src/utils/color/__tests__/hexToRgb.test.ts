@@ -1,7 +1,7 @@
 import { hexToRgb } from '../hexToRgb';
 
 describe('hexToRgb', () => {
-  test('should convert valid 6-digit hex code to RGB', () => {
+  test('converts valid 6-digit hex code to RGB', () => {
     expect(hexToRgb('#FF0000')).toEqual({ r: 255, g: 0, b: 0 });
     expect(hexToRgb('#1AC9A2')).toEqual({ r: 26, g: 201, b: 162 });
     expect(hexToRgb('#0000FF')).toEqual({ r: 0, g: 0, b: 255 });
@@ -9,7 +9,7 @@ describe('hexToRgb', () => {
     expect(hexToRgb('#000000')).toEqual({ r: 0, g: 0, b: 0 });
   });
 
-  test('should convert valid 3-digit hex code to RGB', () => {
+  test('converts valid 3-digit hex code to RGB', () => {
     expect(hexToRgb('#F00')).toEqual({ r: 255, g: 0, b: 0 });
     expect(hexToRgb('#0AF')).toEqual({ r: 0, g: 170, b: 255 });
     expect(hexToRgb('#00F')).toEqual({ r: 0, g: 0, b: 255 });
@@ -17,12 +17,12 @@ describe('hexToRgb', () => {
     expect(hexToRgb('#000')).toEqual({ r: 0, g: 0, b: 0 });
   });
 
-  test('should handle hex codes without # prefix', () => {
+  test('handles hex codes without # prefix', () => {
     expect(hexToRgb('FF0000')).toEqual({ r: 255, g: 0, b: 0 });
     expect(hexToRgb('F00')).toEqual({ r: 255, g: 0, b: 0 });
   });
 
-  test('should return null for invalid hex codes', () => {
+  test('returns null for invalid hex codes', () => {
     expect(hexToRgb('')).toBeNull();
     expect(hexToRgb('#')).toBeNull();
     expect(hexToRgb('#G')).toBeNull();
@@ -32,7 +32,7 @@ describe('hexToRgb', () => {
     expect(hexToRgb('#1234567')).toBeNull(); // Too long
   });
 
-  test('should handle mixed case hex codes', () => {
+  test('handles mixed case hex codes', () => {
     expect(hexToRgb('#ff0000')).toEqual({ r: 255, g: 0, b: 0 });
     expect(hexToRgb('#FF0000')).toEqual({ r: 255, g: 0, b: 0 });
     expect(hexToRgb('#Ff0000')).toEqual({ r: 255, g: 0, b: 0 });

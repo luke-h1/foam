@@ -82,6 +82,7 @@ function PaintedUsernameWithPaint({
       fontSize={fontSize}
       lineHeight={lineHeight}
       paint={paint}
+      plainColor={plainColor}
       sevenTvPaintDropShadows={sevenTvPaintDropShadows}
       usernameTextStyle={usernameTextStyle}
       useWebView={paintRenderer === 'webview' && !isModerated}

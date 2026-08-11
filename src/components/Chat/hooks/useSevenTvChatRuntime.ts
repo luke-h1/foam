@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { MutableRefObject } from 'react';
 
-import { useSeventvWs } from '@app/hooks/useSeventvWs';
+import { useSeventvWs } from '@app/components/Chat/hooks/useSeventvWs';
 import { useSyncRef } from '@app/hooks/useSyncRef';
 import { ReadyState } from '@app/hooks/ws/constants';
 import { sevenTvService } from '@app/services/seventv-service';
@@ -9,7 +9,7 @@ import {
   getSevenTvEmoteSetId,
   switchSevenTvEmoteSet,
   updateSevenTvEmotes,
-} from '@app/store/chat/actions/channelLoad';
+} from '@app/store/chat/actions/sevenTvChannelLifecycle';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { logger } from '@app/utils/logger';
 

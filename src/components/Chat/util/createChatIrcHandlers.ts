@@ -1,8 +1,8 @@
 import type { RefObject } from 'react';
 
+import { resetChannelSession } from '@app/store/chat/actions/channelSession';
 import {
   addMessage,
-  clearMessages,
   clearMessagesWithNotice,
   getMessageColor,
 } from '@app/store/chat/actions/messages';
@@ -16,6 +16,10 @@ import {
 import { reportUnrenderableNotice } from '@app/utils/chat/chatHealth/reportUnrenderableNotice';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { parseIrcMessage } from '@app/utils/chat/ircProtocol/parseIrcMessage';
+import {
+  type IrcRouteHandlers,
+  routeIrcMessage,
+} from '@app/utils/chat/ircProtocol/routeIrcMessage';
 import { coerceUserNoticeTags } from '@app/utils/chat/messageHandlers/coerceUserNoticeTags';
 import { createBaseMessage } from '@app/utils/chat/messageHandlers/createBaseMessage';
 import { createSystemMessage } from '@app/utils/chat/messageHandlers/createSystemMessage';
@@ -33,8 +37,11 @@ import type {
 } from './roomState/roomStateTracker';
 import { SUPPRESSED_NOTICE_IDS } from './roomState/SUPPRESSED_NOTICE_IDS';
 
+const LIVE_FLAG = {};
+const HISTORICAL_FLAG = { isHistorical: true as const };
+
 const historicalFlag = (countUnread: boolean) =>
-  countUnread ? {} : { isHistorical: true as const };
+  countUnread ? LIVE_FLAG : HISTORICAL_FLAG;
 
 export interface ChatIrcHandlerDeps {
   channelId: string;
@@ -332,7 +339,7 @@ export function createChatIrcHandlers({
       return;
     }
 
-    clearMessages();
+    resetChannelSession('part');
     clearLocalMessages();
   };
 
@@ -378,59 +385,26 @@ export function createChatIrcHandlers({
     applyRoomStateUpdate(roomStateTracker.reset());
   };
 
+  const replayRouteHandlers: IrcRouteHandlers = {
+    privmsg: (_channel, tags, text) => {
+      handlePrivmsgMessage(tags, text, false);
+    },
+    usernotice: (_channel, tags, text) => {
+      handleUserNoticeMessage(coerceUserNoticeTags(tags), text, false);
+    },
+    clearchat: onClearChat,
+    clearmsg: onClearMessage,
+    notice: onNotice,
+    roomstate: onRoomState,
+  };
+
   const handleRecentIrcMessage = async (line: string) => {
     const ircMessage = parseIrcMessage(line);
     if (!ircMessage?.tags) {
       return;
     }
 
-    const { command, params, tags } = ircMessage;
-    const channel = params[0];
-    if (!channel) {
-      return;
-    }
-
-    switch (command) {
-      case 'PRIVMSG': {
-        const text = params[1];
-        if (text) {
-          handlePrivmsgMessage(tags, text, false);
-        }
-        break;
-      }
-      case 'USERNOTICE': {
-        const text = params[1] ?? '';
-        handleUserNoticeMessage(coerceUserNoticeTags(tags), text, false);
-        break;
-      }
-      case 'CLEARCHAT': {
-        const username = params[1];
-        const banDuration = tags['ban-duration']
-          ? Number.parseInt(tags['ban-duration'], 10)
-          : undefined;
-        onClearChat(channel, tags, username, banDuration);
-        break;
-      }
-      case 'CLEARMSG':
-      case 'CLEARMESSAGE': {
-        const targetMsgId = tags['target-msg-id'];
-        if (targetMsgId) {
-          onClearMessage(channel, tags, targetMsgId);
-        }
-        break;
-      }
-      case 'NOTICE': {
-        const text = params[1];
-        if (text) {
-          onNotice(channel, tags, text);
-        }
-        break;
-      }
-      case 'ROOMSTATE': {
-        onRoomState(channel, tags);
-        break;
-      }
-    }
+    routeIrcMessage(ircMessage, replayRouteHandlers);
   };
 
   return {

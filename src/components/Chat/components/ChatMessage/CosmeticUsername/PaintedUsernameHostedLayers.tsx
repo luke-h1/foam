@@ -13,11 +13,16 @@ import {
   type PaintDropShadowMode,
 } from './util/paintLayer/getPaintDropShadows';
 import { getPaintSolidColor } from './util/paintLayer/getPaintSolidColor';
+import {
+  getPaintTextureUrl,
+  paintDependsOnTexture,
+} from './util/paintLayer/paintDependsOnTexture';
 import { paintShadowKey } from './util/paintLayer/paintShadowKey';
 import { buildPaintUsernameTextStyle } from './util/paintTextStyle/buildPaintUsernameTextStyle';
 import { getPaintTextShadows } from './util/paintTextStyle/getPaintTextShadows';
 import { getPaintTextStroke } from './util/paintTextStyle/getPaintTextStroke';
 import { paintStrokeToShadow } from './util/paintTextStyle/paintStrokeToShadow';
+import { useSharedPaintAnimationReady } from './util/sharedPaintAnimationFrames';
 
 interface PaintedUsernameHostedLayersProps {
   displayUsername: string;
@@ -25,6 +30,7 @@ interface PaintedUsernameHostedLayersProps {
   fontSize?: number;
   lineHeight?: number;
   paint: PaintData;
+  plainColor: string;
   sevenTvPaintDropShadows: PaintDropShadowMode;
   usernameTextStyle?: StyleProp<TextStyle>;
   useWebView: boolean;
@@ -42,22 +48,28 @@ export function PaintedUsernameHostedLayers({
   fontSize,
   lineHeight,
   paint,
+  plainColor,
   sevenTvPaintDropShadows,
   usernameTextStyle,
   useWebView,
 }: PaintedUsernameHostedLayersProps) {
   const isScrolling = useChatScrollActive();
   const paintTextStyle = buildPaintUsernameTextStyle(paint);
+  const textureUrl = getPaintTextureUrl(paint);
+  const textureReady = useSharedPaintAnimationReady(textureUrl ?? '');
+  const showPlainColor =
+    isScrolling ||
+    (paintDependsOnTexture(paint) && (!textureUrl || !textureReady));
+  const plainFillColor = getPaintSolidColor(paint) ?? plainColor;
 
-  // Weight and transform carry over with the colour, so only the fill changes.
-  if (isScrolling) {
+  if (showPlainColor) {
     return (
       <Text
         style={[
           styles.scrollUsername,
           usernameTextStyle,
           paintTextStyle,
-          { color: getPaintSolidColor(paint) ?? fallbackColor },
+          { color: plainFillColor },
         ]}
       >
         {displayUsername}
@@ -87,7 +99,6 @@ export function PaintedUsernameHostedLayers({
     paintTextStyle,
   ] as StyleProp<TextStyle>;
 
-  // Back to front: drop-shadows, text-shadows, stroke, then painted fill.
   const underlayShadows = [
     ...dropShadows.map(shadow => ({ shadow, source: 'drop' })),
     ...textShadows.map(shadow => ({ shadow, source: 'text' })),

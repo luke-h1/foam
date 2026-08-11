@@ -600,3 +600,18 @@ jest.mock('react-native-ease', () => {
     }) => React.createElement(View, { ...rest, style }, children),
   };
 });
+
+/**
+ * The Skia jest mock delegates Data.fromURI to the web CanvasKit API, which
+ * performs a real fetch - in tests that means a live network socket per
+ * texture URL, and a single-file jest run (which executes in-band) never
+ * exits while one is pending. Resolve to null instead: consumers already
+ * treat a null image as "texture unavailable".
+ */
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const skiaMock = require('@shopify/react-native-skia') as {
+  Skia?: { Data?: { fromURI?: (uri: string) => Promise<unknown> } };
+};
+if (skiaMock.Skia?.Data) {
+  skiaMock.Skia.Data.fromURI = jest.fn(() => Promise.resolve(null));
+}

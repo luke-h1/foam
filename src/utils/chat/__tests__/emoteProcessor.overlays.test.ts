@@ -1,5 +1,6 @@
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { SanitisedEmote } from '@app/types/emote';
+import { EMOTE_PROVIDER_BY_SITE } from '@app/utils/emote/emoteProviderBySite';
 
 import { processEmotesWorklet } from '../emoteProcessor';
 import type { ParsedPart } from '../parsedPart';
@@ -11,6 +12,7 @@ const baseEmote: SanitisedEmote = {
   creator: null,
   emote_link: 'https://example.com/base',
   site: '7TV Channel',
+  provider: '7tv',
   url: 'https://example.com/base.avif',
   frame_count: 1,
   format: 'avif',
@@ -32,13 +34,15 @@ const baseEmote: SanitisedEmote = {
 
 const createEmote = (
   overrides: Partial<SanitisedEmote> & Pick<SanitisedEmote, 'id' | 'name'>,
-): SanitisedEmote => ({
-  ...baseEmote,
-  emote_link: `https://example.com/${overrides.id}`,
-  original_name: overrides.name,
-  url: `https://example.com/${overrides.id}.avif`,
-  ...overrides,
-});
+): SanitisedEmote =>
+  ({
+    ...baseEmote,
+    emote_link: `https://example.com/${overrides.id}`,
+    original_name: overrides.name,
+    url: `https://example.com/${overrides.id}.avif`,
+    provider: EMOTE_PROVIDER_BY_SITE[overrides.site ?? baseEmote.site],
+    ...overrides,
+  }) as SanitisedEmote;
 
 const emptyParams = {
   userstate: null,

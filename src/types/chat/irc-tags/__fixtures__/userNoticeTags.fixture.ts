@@ -73,7 +73,7 @@ export function createSubscriptionTags(
     'msg-param-cumulative-months': '1',
     'msg-param-should-share-streak': '0',
     'msg-param-streak-months': '0',
-    'msg-param-sub-plan': '2000',
+    'msg-param-sub-plan': '1000',
     'msg-param-sub-plan-name': 'Tier 1',
     ...overrides,
   };
@@ -109,7 +109,7 @@ export function createSubGiftTags(
     'msg-param-recipient-display-name': 'GiftRecipient',
     'msg-param-recipient-id': '67890',
     'msg-param-months': '1',
-    'msg-param-sub-plan': '2000',
+    'msg-param-sub-plan': '1000',
     ...overrides,
   };
 }

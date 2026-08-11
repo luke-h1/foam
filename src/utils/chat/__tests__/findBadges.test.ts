@@ -10,6 +10,7 @@ const emptyBadgeSources = {
   chatterinoBadges: [] as SanitisedBadgeSet[],
   ffzChannelBadges: [] as SanitisedBadgeSet[],
   ffzGlobalBadges: [] as SanitisedBadgeSet[],
+  getEntitledBadge: () => null,
 };
 
 describe('findBadges', () => {
@@ -18,6 +19,7 @@ describe('findBadges', () => {
       id: '3',
       url: 'https://example.com/source-sub.png',
       type: 'Twitch Subscriber Badge',
+      provider: 'twitch',
       title: 'Source 3-Month Subscriber',
       set: 'subscriber',
     };
@@ -26,6 +28,7 @@ describe('findBadges', () => {
       id: '1',
       url: 'https://example.com/target-sub.png',
       type: 'Twitch Subscriber Badge',
+      provider: 'twitch',
       title: 'Target Subscriber',
       set: 'subscriber',
     };
@@ -123,6 +126,7 @@ describe('findBadges', () => {
         id: '1000',
         url: 'https://example.com/channel-bits.png',
         type: 'Twitch Bit Badge',
+        provider: 'twitch',
         title: 'Channel Cheer 1000',
         set: 'bits',
       };
@@ -131,6 +135,7 @@ describe('findBadges', () => {
         id: 'bits_1000',
         url: 'https://example.com/global-bits.png',
         type: 'Twitch Global Badge',
+        provider: 'twitch',
         title: 'Global Cheer 1000',
         set: 'bits',
       };
@@ -158,6 +163,7 @@ describe('findBadges', () => {
         id: '12',
         url: '',
         type: 'Twitch Subscriber Badge',
+        provider: 'twitch',
         title: 'Broken Channel Sub',
         set: 'subscriber',
       };
@@ -166,6 +172,7 @@ describe('findBadges', () => {
         id: 'subscriber_12',
         url: 'https://example.com/global-sub.png',
         type: 'Twitch Global Badge',
+        provider: 'twitch',
         title: '12-Month Subscriber',
         set: 'subscriber',
       };
@@ -217,6 +224,7 @@ describe('findBadges', () => {
       owner_username: 'channel-id',
       set: 'mod',
       type: 'FFZ channel badge',
+      provider: 'ffz',
     };
 
     const ffzVipBadge: SanitisedBadgeSet = {
@@ -227,6 +235,7 @@ describe('findBadges', () => {
       owner_username: 'channel-id',
       set: 'vip',
       type: 'FFZ channel badge',
+      provider: 'ffz',
     };
 
     test('replaces the Twitch moderator badge with the FFZ channel mod badge', () => {
@@ -244,6 +253,7 @@ describe('findBadges', () => {
             id: 'moderator_1',
             url: 'https://example.com/twitch-mod.png',
             type: 'Twitch Global Badge',
+            provider: 'twitch',
             title: 'Moderator',
             set: 'moderator',
           },
@@ -260,6 +270,7 @@ describe('findBadges', () => {
         id: 'moderator_1',
         url: 'https://example.com/twitch-mod.png',
         type: 'Twitch Global Badge',
+        provider: 'twitch',
         title: 'Moderator',
         set: 'moderator',
       };

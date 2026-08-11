@@ -1,4 +1,4 @@
-interface IEnergyOrb {
+interface EnergyOrbProps {
   readonly width?: number;
   readonly height?: number;
   readonly speed?: number;
@@ -9,4 +9,4 @@ interface IEnergyOrb {
 
 type RGB = [number, number, number];
 
-export type { IEnergyOrb, RGB };
+export type { EnergyOrbProps, RGB };

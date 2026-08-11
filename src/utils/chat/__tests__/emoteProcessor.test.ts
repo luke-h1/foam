@@ -1,5 +1,6 @@
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { SanitisedEmote } from '@app/types/emote';
+import { EMOTE_PROVIDER_BY_SITE } from '@app/utils/emote/emoteProviderBySite';
 
 import { processEmotesWorklet } from '../emoteProcessor';
 import type { ParsedPart } from '../parsedPart';
@@ -18,6 +19,7 @@ const curtisEmote: SanitisedEmote = {
   creator: null,
   emote_link: 'https://example.com/Curtis',
   site: '7TV Channel',
+  provider: '7tv',
   url: 'https://example.com/Curtis.avif',
   frame_count: 1,
   format: 'avif',
@@ -39,13 +41,15 @@ const curtisEmote: SanitisedEmote = {
 
 const createEmote = (
   overrides: Partial<SanitisedEmote> & Pick<SanitisedEmote, 'id' | 'name'>,
-): SanitisedEmote => ({
-  ...curtisEmote,
-  emote_link: `https://example.com/${overrides.id}`,
-  original_name: overrides.name,
-  url: `https://example.com/${overrides.id}.avif`,
-  ...overrides,
-});
+): SanitisedEmote =>
+  ({
+    ...curtisEmote,
+    emote_link: `https://example.com/${overrides.id}`,
+    original_name: overrides.name,
+    url: `https://example.com/${overrides.id}.avif`,
+    provider: EMOTE_PROVIDER_BY_SITE[overrides.site ?? curtisEmote.site],
+    ...overrides,
+  }) as SanitisedEmote;
 
 const emptyParams = {
   userstate: null,
@@ -224,11 +228,13 @@ describe('processEmotesWorklet', () => {
       id: 'subscriber-wave',
       name: 'Wave',
       site: 'Twitch Subscriber',
+      provider: 'twitch',
     });
     const personalEmote = createEmote({
       id: 'personal-wave',
       name: 'Wave',
       site: '7TV Personal',
+      provider: '7tv',
     });
 
     const result = processEmotesWorklet({
@@ -257,6 +263,7 @@ describe('processEmotesWorklet', () => {
       id: '1F44B',
       name: ':wave:',
       site: 'Emoji',
+      provider: 'emoji',
       emoji_hexcode: '1F44B',
     });
 
@@ -278,6 +285,79 @@ describe('processEmotesWorklet', () => {
       { content: ' ', original_name: undefined, type: 'text' },
       { content: '👋', original_name: '👋', type: 'emote' },
     ]);
+  });
+
+  test('falls back to the FE0F-stripped hexcode for standalone emoji', () => {
+    const heart = createEmote({
+      id: '2764',
+      name: ':heart:',
+      site: 'Emoji',
+      provider: 'emoji',
+      emoji_hexcode: '2764',
+    });
+
+    const result = processEmotesWorklet({
+      ...emptyParams,
+      emojiEmotes: [heart],
+      inputString: '❤️',
+      sevenTvChannelEmotes: [],
+    });
+
+    expect(
+      result.map(part => ({
+        content: 'content' in part ? part.content : undefined,
+        id: part.type === 'emote' ? part.id : undefined,
+        type: part.type,
+      })),
+    ).toEqual([{ content: '❤️', id: '2764', type: 'emote' }]);
+  });
+
+  test('matches :emoji: shortcode aliases as emotes', () => {
+    const joy = createEmote({
+      id: '1F602',
+      name: ':joy:',
+      site: 'Emoji',
+      provider: 'emoji',
+    });
+    const haha = createEmote({
+      id: '1F602-haha',
+      name: ':haha:',
+      site: 'Emoji',
+      provider: 'emoji',
+    });
+
+    const result = processEmotesWorklet({
+      ...emptyParams,
+      emojiEmotes: [joy, haha],
+      inputString: 'hello :joy: :haha:',
+      sevenTvChannelEmotes: [],
+    });
+
+    expect(
+      result.map(part => ({
+        content: 'content' in part ? part.content : undefined,
+        name: part.type === 'emote' ? part.name : undefined,
+        type: part.type,
+      })),
+    ).toEqual([
+      { content: 'hello', name: undefined, type: 'text' },
+      { content: ' ', name: undefined, type: 'text' },
+      { content: ':joy:', name: ':joy:', type: 'emote' },
+      { content: ' ', name: undefined, type: 'text' },
+      { content: ':haha:', name: ':haha:', type: 'emote' },
+    ]);
+  });
+
+  test('trailing punctuation defeats an emote match', () => {
+    const kappa = createEmote({ id: 'kappa-id', name: 'Kappa' });
+
+    const result = processEmotesWorklet({
+      ...emptyParams,
+      inputString: 'Kappa!',
+      sevenTvChannelEmotes: [kappa],
+    });
+
+    expect(result).toEqual<ParsedPart[]>([{ type: 'text', content: 'Kappa!' }]);
   });
 
   test('strips the duplicate-message bypass char fused to an emote name', () => {
@@ -335,6 +415,7 @@ describe('processEmotesWorklet', () => {
       id: 'personal-rebuilt',
       name: 'Rebuilt',
       site: '7TV Personal',
+      provider: '7tv',
     });
 
     const firstResult = processEmotesWorklet({
@@ -356,21 +437,25 @@ describe('processEmotesWorklet', () => {
       id: 'personal-first',
       name: 'First',
       site: '7TV Personal',
+      provider: '7tv',
     });
     const firstMiddleEmote = createEmote({
       id: 'personal-middle-a',
       name: 'MiddleA',
       site: '7TV Personal',
+      provider: '7tv',
     });
     const secondMiddleEmote = createEmote({
       id: 'personal-middle-b',
       name: 'MiddleB',
       site: '7TV Personal',
+      provider: '7tv',
     });
     const lastPersonalEmote = createEmote({
       id: 'personal-last',
       name: 'Last',
       site: '7TV Personal',
+      provider: '7tv',
     });
 
     const firstResult = processEmotesWorklet({

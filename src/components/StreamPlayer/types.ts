@@ -6,28 +6,19 @@ export interface StreamPlayerRef {
    * Force refresh the player (hard reload)
    */
   forceRefresh: () => void;
-  /**
-   * Get the current channel name
-   */
   getChannel: () => string | undefined;
   /**
-   * Get the current playback time in seconds
+   * Playback position in seconds.
    */
   getCurrentTime: () => Promise<number>;
   /**
-   * Get the total duration in seconds (VODs only)
+   * Total duration in seconds; VODs only.
    */
   getDuration: () => Promise<number>;
-  /**
-   * Get the current muted state
-   */
   getMuted: () => boolean;
-  /**
-   * Get the current paused state
-   */
   getPaused: () => boolean;
   /**
-   * Get the current volume (0-1)
+   * Volume is 0-1.
    */
   getVolume: () => number;
   /**
@@ -50,23 +41,14 @@ export interface StreamPlayerRef {
    * Switch to a different channel
    */
   setChannel: (channel: string) => void;
-  /**
-   * Set the muted state
-   */
   setMuted: (muted: boolean) => void;
-  /**
-   * Set the video quality
-   */
   setQuality: (quality: string) => void;
   /**
-   * Play a specific VOD
-   * @param videoId - The VOD ID
-   * @param timestamp - Optional start time in seconds
+   * Play a VOD, optionally from an offset in seconds.
    */
   setVideo: (videoId: string, timestamp?: number) => void;
   /**
-   * Set the volume level
-   * @param volume - Volume level between 0 and 1
+   * Volume is 0-1.
    */
   setVolume: (volume: number) => void;
   /**

@@ -1,3 +1,5 @@
+import { AppState } from 'react-native';
+
 import { twitchService } from '@app/services/twitch-service';
 import TwitchWsService from '@app/services/twitch-ws-service';
 import { logger } from '@app/utils/logger';
@@ -55,12 +57,7 @@ describe('TwitchWsService EventSub response handling', () => {
       callback,
     );
 
-    expect(
-      twitchWsState.activeSubscriptions.has('channel.prediction.begin'),
-    ).toBe(false);
-    expect(
-      twitchWsState.eventCallbacks.get('channel.prediction.begin'),
-    ).toEqual([]);
+    expect(twitchWsState.entries.size).toBe(0);
     expect(mockCreateEventSubscription).toHaveBeenCalledTimes(1);
     const warningPayload = mockWarn.mock.calls[0]?.[1] as
       Record<string, unknown> | undefined;
@@ -178,6 +175,113 @@ describe('TwitchWsService shared socket teardown', () => {
       'channel.poll.begin-sub-id',
       'channel.poll.end-sub-id',
     ]);
+  });
+
+  test('holds one subscription per condition and tears them down independently', async () => {
+    const socket = createFakeSocket();
+    const onChannelOne = jest.fn();
+    const onChannelTwo = jest.fn();
+
+    mockCreateEventSubscription.mockResolvedValueOnce({
+      data: [{ id: 'sub-channel-1' }],
+    } as unknown as Awaited<ReturnType<typeof mockCreateEventSubscription>>);
+    await TwitchWsService.subscribeToEvent(
+      'channel.poll.begin',
+      '1',
+      { broadcaster_user_id: '1' },
+      onChannelOne,
+    );
+
+    mockCreateEventSubscription.mockResolvedValueOnce({
+      data: [{ id: 'sub-channel-2' }],
+    } as unknown as Awaited<ReturnType<typeof mockCreateEventSubscription>>);
+    await TwitchWsService.subscribeToEvent(
+      'channel.poll.begin',
+      '1',
+      { broadcaster_user_id: '2' },
+      onChannelTwo,
+    );
+    twitchWsState.instance = socket;
+
+    expect(mockCreateEventSubscription).toHaveBeenCalledTimes(2);
+
+    await TwitchWsService.unsubscribeFromEvent(
+      'channel.poll.begin',
+      onChannelOne,
+    );
+
+    expect(mockDeleteEventSubscription.mock.calls.map(([id]) => id)).toEqual([
+      'sub-channel-1',
+    ]);
+    const remaining = Array.from(twitchWsState.entries.values());
+    expect(
+      remaining.map(entry => ({
+        condition: entry.condition,
+        subscriptionId: entry.subscriptionId,
+      })),
+    ).toEqual([
+      {
+        condition: { broadcaster_user_id: '2' },
+        subscriptionId: 'sub-channel-2',
+      },
+    ]);
+    expect(socket.close).not.toHaveBeenCalled();
+  });
+
+  test('routes a notification to the entry whose condition it carries', async () => {
+    const onChannelOne = jest.fn();
+    const onChannelTwo = jest.fn();
+
+    await subscribe('channel.poll.begin', onChannelOne);
+    mockCreateEventSubscription.mockResolvedValueOnce({
+      data: [{ id: 'sub-other' }],
+    } as unknown as Awaited<ReturnType<typeof mockCreateEventSubscription>>);
+    await TwitchWsService.subscribeToEvent(
+      'channel.poll.begin',
+      '1',
+      { broadcaster_user_id: 'other-channel' },
+      onChannelTwo,
+    );
+
+    twitchWsState.handleNotification({
+      metadata: {
+        message_type: 'notification',
+        subscription_type: 'channel.poll.begin',
+      },
+      payload: {
+        subscription: {
+          type: 'channel.poll.begin',
+          condition: { broadcaster_user_id: 'other-channel' },
+        },
+      },
+    });
+
+    expect(onChannelOne).not.toHaveBeenCalled();
+    expect(onChannelTwo).toHaveBeenCalledTimes(1);
+  });
+
+  test('revives the socket on foreground when consumers are still subscribed', async () => {
+    const listeners: ((state: string) => void)[] = [];
+    const appStateSpy = jest
+      .spyOn(AppState, 'addEventListener')
+      .mockImplementation((_type, handler) => {
+        listeners.push(handler as (state: string) => void);
+        return { remove: jest.fn() } as unknown as ReturnType<
+          typeof AppState.addEventListener
+        >;
+      });
+
+    const onPoll = jest.fn();
+    await subscribe('channel.poll.begin', onPoll);
+
+    twitchWsState.instance = null;
+    twitchWsState.sessionId = '';
+
+    listeners.forEach(listener => listener('active'));
+
+    expect(twitchWsState.reconnectTimer).not.toBeNull();
+
+    appStateSpy.mockRestore();
   });
 
   test('cancels a pending reconnect when the last consumer leaves', async () => {

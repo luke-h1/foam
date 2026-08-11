@@ -11,22 +11,31 @@ type TestSocket = {
   readyState: number;
 };
 
+type TestEventSubEntry = {
+  eventType: string;
+  version: string;
+  condition: Record<string, string>;
+  callbacks: EventCallback[];
+  subscriptionId: string | null;
+};
+
 export type TwitchWsTestState = {
   /**
    * Private on the service; reached for so a test can arm the backoff reconnect
    * without faking a keepalive lapse over the wire.
    */
   attemptReconnect: () => void;
-  activeSubscriptions: Map<string, string>;
-  eventCallbacks: Map<string, EventCallback[]>;
+  /**
+   * Private on the service; reached for so routing tests can deliver a
+   * notification without a socket.
+   */
+  handleNotification: (message: unknown) => void;
+  entries: Map<string, TestEventSubEntry>;
+  appStateSubscription: { remove: () => void } | null;
   instance: TestSocket | null;
   isReconnecting: boolean;
   reconnectTimer: ReturnType<typeof setTimeout> | null;
   sessionId: string;
-  subscriptionConfigs: Map<
-    string,
-    { condition: Record<string, string>; version: string }
-  >;
 };
 
 export function getTwitchWsTestState(): TwitchWsTestState {
@@ -35,13 +44,13 @@ export function getTwitchWsTestState(): TwitchWsTestState {
 }
 
 export function resetTwitchWsTestState(state: TwitchWsTestState) {
-  state.activeSubscriptions = new Map();
-  state.eventCallbacks = new Map();
+  state.appStateSubscription?.remove();
+  state.appStateSubscription = null;
+  state.entries = new Map();
   state.instance = null;
   state.isReconnecting = false;
   state.reconnectTimer = null;
   state.sessionId = 'session-id';
-  state.subscriptionConfigs = new Map();
 }
 
 /**

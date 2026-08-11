@@ -23,8 +23,30 @@
         "rules": ["react-hooks-js/immutability"]
       },
       {
-        "files": ["src/components/Chat/hooks/useChatMessageProcessing.ts"],
-        "rules": ["react-doctor/effect-needs-cleanup"]
+        "files": ["src/components/Chat/hooks/useSeventvWs.ts"],
+        "rules": ["react-hooks-js/purity", "react-doctor/effect-needs-cleanup"]
+      },
+      {
+        "files": [
+          "src/components/Chat/hooks/useChatMessages.ts",
+          "src/components/StreamPlayer/usePlayerBridge.ts"
+        ],
+        "rules": ["react-hooks-js/refs"]
+      },
+      {
+        "files": ["src/services/twitch-ws-service.ts"],
+        "rules": [
+          "react-doctor/async-await-in-loop",
+          "react-doctor/js-set-map-lookups"
+        ]
+      },
+      {
+        "files": ["src/utils/string/formatViewCount.ts"],
+        "rules": ["react-doctor/js-hoist-intl"]
+      },
+      {
+        "files": ["src/screens/DevTools/SyncedEmotesScreen.tsx"],
+        "rules": ["react-doctor/rn-no-scrollview-mapped-list"]
       }
     ]
   },

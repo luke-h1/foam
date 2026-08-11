@@ -19,6 +19,7 @@ export const ffzSanitisedChannelEmoteSet: FfzSanitisedEmote[] = [
     emote_link: 'https://www.frankerfacez.com/emoticon/128054',
     creator: 'dourgent',
     site: 'FFZ',
+    provider: 'ffz',
     original_name: 'UNKNOWN',
     width: 31,
     height: 32,

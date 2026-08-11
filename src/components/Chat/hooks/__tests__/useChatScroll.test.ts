@@ -3,9 +3,13 @@ import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
 import { act, renderHook } from '@testing-library/react-native';
 
+import type { ChatListRef } from '@app/components/Chat/components/ChatList';
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
-import { FlashListRef } from '@app/components/FlashList/FlashList';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import {
+  getChatUnreadCount,
+  incrementChatUnread,
+  resetChatUnread,
+} from '@app/store/chat/actions/chatUnread';
 import { createRef } from '@app/test/createRef';
 
 import { useChatScroll } from '../useChatScroll';
@@ -17,7 +21,7 @@ interface MockListMethods {
 }
 
 interface MockListRef {
-  ref: RefObject<FlashListRef<AnyChatMessageType> | null>;
+  ref: RefObject<ChatListRef | null>;
   mocks: MockListMethods;
 }
 
@@ -25,13 +29,11 @@ describe('useChatScroll', () => {
   const createMockListRef = (): MockListRef => {
     const mocks: MockListMethods = {
       scrollToIndex: jest.fn(),
-      scrollToEnd: jest.fn(),
+      scrollToEnd: jest.fn(() => new Promise<void>(() => {})),
       scrollToOffset: jest.fn(),
     };
 
-    const ref = createRef<FlashListRef<AnyChatMessageType> | null>(
-      mocks as unknown as FlashListRef<AnyChatMessageType>,
-    );
+    const ref = createRef<ChatListRef | null>(mocks as unknown as ChatListRef);
 
     return { ref, mocks };
   };
@@ -69,6 +71,7 @@ describe('useChatScroll', () => {
 
   beforeEach(() => {
     jest.useFakeTimers();
+    resetChatUnread();
   });
 
   afterEach(() => {
@@ -111,7 +114,7 @@ describe('useChatScroll', () => {
   });
 
   describe('Initial State', () => {
-    test('should start at bottom', () => {
+    test('starts at bottom', () => {
       const { ref: listRef } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -122,13 +125,13 @@ describe('useChatScroll', () => {
       );
 
       expect(result.current.isAtBottom).toBe(true);
-      expect(result.current.isAtBottomRef.current).toBe(true);
+      expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(true);
       expect(result.current.isScrollingToBottom).toBe(false);
       expect(result.current.shouldMaintainScrollAtEnd).toBe(true);
-      expect(result.current.unreadCount).toBe(0);
+      expect(getChatUnreadCount()).toBe(0);
     });
 
-    test('should return all required functions', () => {
+    test('returns all required functions', () => {
       const { ref: listRef } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -140,19 +143,21 @@ describe('useChatScroll', () => {
 
       expect(typeof result.current.scrollHandlers.onScroll).toBe('function');
       expect(typeof result.current.scrollToBottom).toBe('function');
-      expect(typeof result.current.maintainBottomAfterContentChange).toBe(
-        'function',
-      );
+      expect(
+        typeof result.current.scrollAnchor.maintainBottomAfterContentChange,
+      ).toBe('function');
       expect(typeof result.current.scrollHandlers.onContentSizeChange).toBe(
         'function',
       );
       expect(typeof result.current.cleanup).toBe('function');
-      expect(typeof result.current.incrementUnread).toBe('function');
+      expect(typeof result.current.scrollAnchor.isUserActivelyScrolling).toBe(
+        'function',
+      );
     });
   });
 
   describe('Scroll Detection (normal list: bottom = end of content)', () => {
-    test('should detect when user scrolls away from bottom', () => {
+    test('detects when user scrolls away from bottom', () => {
       const { ref: listRef } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -177,11 +182,11 @@ describe('useChatScroll', () => {
       });
 
       expect(result.current.isAtBottom).toBe(false);
-      expect(result.current.isAtBottomRef.current).toBe(false);
+      expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(false);
       expect(result.current.shouldMaintainScrollAtEnd).toBe(false);
     });
 
-    test('should disable bottom anchoring as soon as the user starts dragging', () => {
+    test('disables bottom anchoring as soon as the user starts dragging', () => {
       const { ref: listRef } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -199,7 +204,7 @@ describe('useChatScroll', () => {
         );
       });
 
-      expect(result.current.isAtBottomRef.current).toBe(true);
+      expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(true);
       expect(result.current.shouldMaintainScrollAtEnd).toBe(false);
 
       act(() => {
@@ -215,7 +220,7 @@ describe('useChatScroll', () => {
       expect(result.current.shouldMaintainScrollAtEnd).toBe(true);
     });
 
-    test('should detect when user scrolls back to bottom', () => {
+    test('detects when user scrolls back to bottom', () => {
       const { ref: listRef } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -250,7 +255,7 @@ describe('useChatScroll', () => {
       expect(result.current.isAtBottom).toBe(true);
     });
 
-    test('should consider within return threshold as at bottom', () => {
+    test('considers within return threshold as at bottom', () => {
       const { ref: listRef } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -272,7 +277,7 @@ describe('useChatScroll', () => {
       expect(result.current.isAtBottom).toBe(true);
     });
 
-    test('should show jump affordance after a small upward drag', () => {
+    test('shows jump affordance after a small upward drag', () => {
       const { ref: listRef } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -299,10 +304,10 @@ describe('useChatScroll', () => {
       });
 
       expect(result.current.isAtBottom).toBe(false);
-      expect(result.current.isAtBottomRef.current).toBe(false);
+      expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(false);
     });
 
-    test('should stay at bottom when fast message growth arrives before autoscroll', () => {
+    test('stays at bottom when fast message growth arrives before autoscroll', () => {
       const { ref: listRef } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -326,10 +331,10 @@ describe('useChatScroll', () => {
       });
 
       expect(result.current.isAtBottom).toBe(true);
-      expect(result.current.isAtBottomRef.current).toBe(true);
+      expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(true);
     });
 
-    test('should stay at bottom when layout height changes during rotation', () => {
+    test('stays at bottom when layout height changes during rotation', () => {
       const { ref: listRef } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -353,10 +358,10 @@ describe('useChatScroll', () => {
       });
 
       expect(result.current.isAtBottom).toBe(true);
-      expect(result.current.isAtBottomRef.current).toBe(true);
+      expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(true);
     });
 
-    test('should dismiss jump affordance when user reaches the previous bottom while new messages arrive', () => {
+    test('dismisses jump affordance when user reaches the previous bottom while new messages arrive', () => {
       const { ref: listRef } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -388,7 +393,7 @@ describe('useChatScroll', () => {
         );
       });
 
-      expect(result.current.isAtBottomRef.current).toBe(true);
+      expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(true);
 
       act(() => {
         jest.advanceTimersByTime(200);
@@ -399,7 +404,7 @@ describe('useChatScroll', () => {
   });
 
   describe('Unread Count', () => {
-    test('unread is only updated via incrementUnread (parent responsibility)', () => {
+    test('unread is only updated via the chatUnread action (ingest responsibility)', () => {
       const { ref: listRef } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -422,25 +427,25 @@ describe('useChatScroll', () => {
       });
 
       act(() => {
-        result.current.incrementUnread(5);
+        incrementChatUnread(5);
       });
-      expect(result.current.unreadCount).toBe(5);
+      expect(getChatUnreadCount()).toBe(5);
     });
 
-    test('should not increment unread when at bottom', () => {
+    test('does not increment unread when at bottom', () => {
       const { ref: listRef } = createMockListRef();
 
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useChatScroll({
           listRef,
           getMessagesLength: getMessagesLength(15),
         }),
       );
 
-      expect(result.current.unreadCount).toBe(0);
+      expect(getChatUnreadCount()).toBe(0);
     });
 
-    test('should clear unread count when scrolling to bottom', () => {
+    test('clears unread count when scrolling to bottom', () => {
       const { ref: listRef } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -462,9 +467,9 @@ describe('useChatScroll', () => {
         jest.advanceTimersByTime(200);
       });
       act(() => {
-        result.current.incrementUnread(5);
+        incrementChatUnread(5);
       });
-      expect(result.current.unreadCount).toBe(5);
+      expect(getChatUnreadCount()).toBe(5);
 
       act(() => {
         result.current.scrollHandlers.onScroll(
@@ -475,10 +480,10 @@ describe('useChatScroll', () => {
         jest.advanceTimersByTime(200);
       });
 
-      expect(result.current.unreadCount).toBe(0);
+      expect(getChatUnreadCount()).toBe(0);
     });
 
-    test('should clear jump affordance when FlashList reports end reached', () => {
+    test('clears jump affordance when FlashList reports end reached', () => {
       const { ref: listRef } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -500,25 +505,25 @@ describe('useChatScroll', () => {
         jest.advanceTimersByTime(200);
       });
       act(() => {
-        result.current.incrementUnread(260);
+        incrementChatUnread(260);
       });
 
       expect(result.current.isAtBottom).toBe(false);
-      expect(result.current.unreadCount).toBe(260);
+      expect(getChatUnreadCount()).toBe(260);
 
       act(() => {
         result.current.scrollHandlers.onEndReached();
       });
 
       expect(result.current.isAtBottom).toBe(true);
-      expect(result.current.isAtBottomRef.current).toBe(true);
-      expect(result.current.unreadCount).toBe(0);
+      expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(true);
+      expect(getChatUnreadCount()).toBe(0);
     });
 
-    test('should increment unread manually', () => {
+    test('increments unread manually', () => {
       const { ref: listRef } = createMockListRef();
 
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useChatScroll({
           listRef,
           getMessagesLength: getMessagesLength(10),
@@ -526,21 +531,21 @@ describe('useChatScroll', () => {
       );
 
       act(() => {
-        result.current.incrementUnread(3);
+        incrementChatUnread(3);
       });
 
-      expect(result.current.unreadCount).toBe(3);
+      expect(getChatUnreadCount()).toBe(3);
 
       act(() => {
-        result.current.incrementUnread(2);
+        incrementChatUnread(2);
       });
 
-      expect(result.current.unreadCount).toBe(5);
+      expect(getChatUnreadCount()).toBe(5);
     });
   });
 
   describe('Scroll to Bottom', () => {
-    test('should call scrollToEnd for normal list', () => {
+    test('calls scrollToEnd for normal list', () => {
       const { ref: listRef, mocks } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -559,7 +564,7 @@ describe('useChatScroll', () => {
       });
     });
 
-    test('should mark bottom intent immediately when jumping to latest', () => {
+    test('marks bottom intent immediately when jumping to latest', () => {
       const { ref: listRef } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -581,23 +586,30 @@ describe('useChatScroll', () => {
         jest.advanceTimersByTime(200);
       });
       act(() => {
-        result.current.incrementUnread(5);
+        incrementChatUnread(5);
       });
       expect(result.current.isAtBottom).toBe(false);
-      expect(result.current.unreadCount).toBe(5);
+      expect(getChatUnreadCount()).toBe(5);
 
       act(() => {
         result.current.scrollToBottom();
       });
 
       expect(result.current.isAtBottom).toBe(true);
-      expect(result.current.isAtBottomRef.current).toBe(true);
-      expect(result.current.unreadCount).toBe(0);
+      expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(true);
+      expect(getChatUnreadCount()).toBe(0);
       expect(result.current.isScrollingToBottom).toBe(true);
     });
 
-    test('should keep retrying scrollToEnd while jump-to-latest settles', () => {
+    test('issues one end request and settle when LegendList finishes', async () => {
       const { ref: listRef, mocks } = createMockListRef();
+      let finishScroll: (() => void) | undefined;
+      mocks.scrollToEnd.mockImplementationOnce(
+        () =>
+          new Promise<void>(resolve => {
+            finishScroll = resolve;
+          }),
+      );
 
       const { result } = renderHook(() =>
         useChatScroll({
@@ -610,43 +622,18 @@ describe('useChatScroll', () => {
         result.current.scrollToBottom();
       });
       expect(mocks.scrollToEnd).toHaveBeenCalledTimes(1);
-
-      act(() => {
-        jest.advanceTimersByTime(50);
-      });
-      expect(mocks.scrollToEnd).toHaveBeenCalledTimes(2);
       expect(result.current.isScrollingToBottom).toBe(true);
 
-      act(() => {
-        jest.advanceTimersByTime(300);
+      await act(async () => {
+        finishScroll?.();
+        await Promise.resolve();
       });
+
+      expect(mocks.scrollToEnd).toHaveBeenCalledTimes(1);
       expect(result.current.isScrollingToBottom).toBe(false);
     });
 
-    test('should set isScrollingToBottom during scroll', () => {
-      const { ref: listRef } = createMockListRef();
-
-      const { result } = renderHook(() =>
-        useChatScroll({
-          listRef,
-          getMessagesLength: getMessagesLength(10),
-        }),
-      );
-
-      act(() => {
-        result.current.scrollToBottom();
-      });
-
-      expect(result.current.isScrollingToBottom).toBe(true);
-
-      act(() => {
-        jest.advanceTimersByTime(350);
-      });
-
-      expect(result.current.isScrollingToBottom).toBe(false);
-    });
-
-    test('should clear unread after scroll completes', () => {
+    test('clears unread when jumping to the bottom', () => {
       const { ref: listRef } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -665,19 +652,18 @@ describe('useChatScroll', () => {
         jest.advanceTimersByTime(200);
       });
       act(() => {
-        result.current.incrementUnread(5);
+        incrementChatUnread(5);
       });
-      expect(result.current.unreadCount).toBe(5);
+      expect(getChatUnreadCount()).toBe(5);
 
       act(() => {
         result.current.scrollToBottom();
-        jest.advanceTimersByTime(350);
       });
 
-      expect(result.current.unreadCount).toBe(0);
+      expect(getChatUnreadCount()).toBe(0);
     });
 
-    test('should not scroll when messages length is 0', () => {
+    test('does not scroll when messages length is 0', () => {
       const { ref: listRef, mocks } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -693,10 +679,40 @@ describe('useChatScroll', () => {
 
       expect(mocks.scrollToEnd).not.toHaveBeenCalled();
     });
+
+    test('keeps treating a momentum fling as active between scroll events', () => {
+      const { ref: listRef } = createMockListRef();
+      const { result } = renderHook(() =>
+        useChatScroll({
+          listRef,
+          getMessagesLength: getMessagesLength(10),
+        }),
+      );
+
+      act(() => {
+        result.current.scrollHandlers.onScrollBeginDrag(
+          createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
+        );
+        result.current.scrollHandlers.onScroll(
+          createScrollEvent({ y: 1000 }, { height: 500 }, { height: 2000 }),
+        );
+        result.current.scrollHandlers.onScrollEndDrag();
+        result.current.scrollHandlers.onMomentumScrollBegin();
+        jest.advanceTimersByTime(200);
+      });
+
+      expect(result.current.scrollAnchor.isUserActivelyScrolling()).toBe(true);
+
+      act(() => {
+        result.current.scrollHandlers.onMomentumScrollEnd();
+      });
+
+      expect(result.current.scrollAnchor.isUserActivelyScrolling()).toBe(false);
+    });
   });
 
   describe('Bottom anchoring after content height changes', () => {
-    test('should keep bottom pinned during bounded hydrated content changes', () => {
+    test('keeps bottom pinned during bounded hydrated content changes', () => {
       const { ref: listRef, mocks } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -710,7 +726,7 @@ describe('useChatScroll', () => {
         result.current.scrollToBottom();
         result.current.cleanup();
         mocks.scrollToEnd.mockClear();
-        result.current.maintainBottomAfterContentChange();
+        result.current.scrollAnchor.maintainBottomAfterContentChange();
       });
 
       expect(result.current.isScrollingToBottom).toBe(true);
@@ -739,7 +755,7 @@ describe('useChatScroll', () => {
       expect(mocks.scrollToEnd).toHaveBeenCalledTimes(3);
     });
 
-    test('should coalesce repeated bottom anchoring calls while active', () => {
+    test('coalesces repeated bottom anchoring calls while active', () => {
       const { ref: listRef, mocks } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -753,8 +769,8 @@ describe('useChatScroll', () => {
         result.current.scrollToBottom();
         result.current.cleanup();
         mocks.scrollToEnd.mockClear();
-        result.current.maintainBottomAfterContentChange();
-        result.current.maintainBottomAfterContentChange();
+        result.current.scrollAnchor.maintainBottomAfterContentChange();
+        result.current.scrollAnchor.maintainBottomAfterContentChange();
         jest.advanceTimersByTime(0);
       });
 
@@ -762,14 +778,14 @@ describe('useChatScroll', () => {
 
       act(() => {
         jest.advanceTimersByTime(600);
-        result.current.maintainBottomAfterContentChange();
+        result.current.scrollAnchor.maintainBottomAfterContentChange();
         jest.advanceTimersByTime(0);
       });
 
       expect(mocks.scrollToEnd).toHaveBeenCalledTimes(2);
     });
 
-    test('should keep bottom pinned when hydrated content changes while already at bottom', () => {
+    test('keeps bottom pinned when hydrated content changes while already at bottom', () => {
       const { ref: listRef, mocks } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -780,7 +796,7 @@ describe('useChatScroll', () => {
       );
 
       act(() => {
-        result.current.maintainBottomAfterContentChange();
+        result.current.scrollAnchor.maintainBottomAfterContentChange();
         result.current.scrollHandlers.onContentSizeChange();
         jest.advanceTimersByTime(0);
       });
@@ -809,7 +825,7 @@ describe('useChatScroll', () => {
       expect(mocks.scrollToEnd).toHaveBeenCalledTimes(1);
     });
 
-    test('should cancel hydrated content anchoring when the user drags away', () => {
+    test('cancels hydrated content anchoring when the user drags away', () => {
       const { ref: listRef, mocks } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -823,7 +839,7 @@ describe('useChatScroll', () => {
         result.current.scrollHandlers.onScrollBeginDrag(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
         );
-        result.current.maintainBottomAfterContentChange();
+        result.current.scrollAnchor.maintainBottomAfterContentChange();
         result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
         );
@@ -834,7 +850,26 @@ describe('useChatScroll', () => {
       expect(mocks.scrollToEnd).not.toHaveBeenCalled();
     });
 
-    test('should not arm hydrated content anchoring when already away from bottom', () => {
+    test('does not re-pin while an upward momentum fling is active', () => {
+      const { ref: listRef, mocks } = createMockListRef();
+      const { result } = renderHook(() =>
+        useChatScroll({
+          listRef,
+          getMessagesLength: getMessagesLength(10),
+        }),
+      );
+
+      act(() => {
+        result.current.scrollHandlers.onMomentumScrollBegin();
+        result.current.scrollAnchor.maintainBottomAfterContentChange();
+        result.current.scrollHandlers.onContentSizeChange();
+        jest.advanceTimersByTime(0);
+      });
+
+      expect(mocks.scrollToEnd).not.toHaveBeenCalled();
+    });
+
+    test('does not arm hydrated content anchoring when already away from bottom', () => {
       const { ref: listRef, mocks } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -856,10 +891,10 @@ describe('useChatScroll', () => {
         jest.advanceTimersByTime(200);
       });
 
-      expect(result.current.isAtBottomRef.current).toBe(false);
+      expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(false);
 
       act(() => {
-        result.current.maintainBottomAfterContentChange();
+        result.current.scrollAnchor.maintainBottomAfterContentChange();
         result.current.scrollHandlers.onContentSizeChange();
         jest.advanceTimersByTime(0);
       });
@@ -869,8 +904,23 @@ describe('useChatScroll', () => {
   });
 
   describe('Cleanup', () => {
-    test('should stop the scroll-to-bottom retry interval on cleanup', () => {
+    test('ignores an obsolete scroll completion after a newer jump', async () => {
       const { ref: listRef, mocks } = createMockListRef();
+      let finishFirstScroll: (() => void) | undefined;
+      let finishSecondScroll: (() => void) | undefined;
+      mocks.scrollToEnd
+        .mockImplementationOnce(
+          () =>
+            new Promise<void>(resolve => {
+              finishFirstScroll = resolve;
+            }),
+        )
+        .mockImplementationOnce(
+          () =>
+            new Promise<void>(resolve => {
+              finishSecondScroll = resolve;
+            }),
+        );
 
       const { result } = renderHook(() =>
         useChatScroll({
@@ -881,24 +931,23 @@ describe('useChatScroll', () => {
 
       act(() => {
         result.current.scrollToBottom();
+        result.current.scrollToBottom();
       });
 
       expect(result.current.isScrollingToBottom).toBe(true);
-      // scrollToBottom fires one immediate scroll, then arms a 50ms retry
-      // interval and a 300ms settle timeout.
-      expect(mocks.scrollToEnd).toHaveBeenCalledTimes(1);
+      expect(mocks.scrollToEnd).toHaveBeenCalledTimes(2);
 
-      act(() => {
-        result.current.cleanup();
+      await act(async () => {
+        finishFirstScroll?.();
+        await Promise.resolve();
       });
+      expect(result.current.isScrollingToBottom).toBe(true);
 
-      act(() => {
-        // Advance well past several retry ticks and the settle window; with the
-        // interval cleared no further scrollToEnd should fire.
-        jest.advanceTimersByTime(500);
+      await act(async () => {
+        finishSecondScroll?.();
+        await Promise.resolve();
       });
-
-      expect(mocks.scrollToEnd).toHaveBeenCalledTimes(1);
+      expect(result.current.isScrollingToBottom).toBe(false);
     });
   });
 });

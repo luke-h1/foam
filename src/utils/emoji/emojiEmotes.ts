@@ -49,6 +49,7 @@ function createEmojiEmote(
     static_url: url,
     image_variants: imageVariants,
     site: 'Emoji',
+    provider: 'emoji',
     width: 72,
     height: 72,
     aspect_ratio: 1,

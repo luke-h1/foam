@@ -22,6 +22,7 @@ const emote: SanitisedEmote = {
     },
   },
   site: 'BTTV',
+  provider: 'bttv',
 };
 
 describe('resolveEmoteDisplayUrl', () => {

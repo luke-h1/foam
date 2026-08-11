@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { RefObject } from 'react';
 
 import { ReadyState } from '@app/hooks/ws/constants';
+import { useChatUserState } from '@app/services/twitch-chat-service';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import type { ChatRenderPreferences } from '@app/store/preferenceStore';
 import type { UserInfoResponse } from '@app/types/twitch/user';
@@ -23,7 +24,6 @@ interface UseChatSurfaceOptions {
   channelId: string;
   channelName: string;
   forceFlush: () => void;
-  getUserState: () => Record<string, string>;
   hiddenUsers: string[];
   hidePhraseFromView: (phrase?: string) => void;
   hideUserFromView: (username?: string) => void;
@@ -53,7 +53,6 @@ export function useChatSurface({
   channelId,
   channelName,
   forceFlush,
-  getUserState,
   hiddenUsers,
   hidePhraseFromView,
   hideUserFromView,
@@ -113,12 +112,15 @@ export function useChatSurface({
     inputShellRef,
   });
 
-  const currentUserState = getUserState();
-  const parsedBadges = parseBadges(currentUserState['badges-raw']).badges;
-  const canModerateChat =
-    currentUserState.mod === '1' ||
-    parsedBadges.broadcaster === '1' ||
-    normaliseChatUsername(user?.login) === normaliseChatUsername(channelName);
+  const userState = useChatUserState();
+  const canModerateChat = useMemo(() => {
+    const parsedBadges = parseBadges(userState['badges-raw']).badges;
+    return (
+      userState.mod === '1' ||
+      parsedBadges.broadcaster === '1' ||
+      normaliseChatUsername(user?.login) === normaliseChatUsername(channelName)
+    );
+  }, [userState, user?.login, channelName]);
 
   const {
     handlePinMessage,

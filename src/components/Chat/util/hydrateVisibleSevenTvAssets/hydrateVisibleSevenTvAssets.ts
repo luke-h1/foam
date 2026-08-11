@@ -4,8 +4,7 @@ import { shouldEnrichMessage } from '@app/store/chat/actions/messageEnrichment';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-
-import { boundedSetAdd } from './boundedSetAdd';
+import { boundedSetAdd } from '@app/utils/object/boundedSetAdd';
 
 type FetchUserCosmeticsOptions = {
   retryMissingBadge?: boolean;

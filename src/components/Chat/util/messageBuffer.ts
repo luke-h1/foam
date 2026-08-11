@@ -1,3 +1,4 @@
+import { chatPerfMarks } from '@app/lib/chatPerfMarks';
 import { getMaxChatMessages } from '@app/store/chat/actions/messages';
 import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
 import { getChatMessageStoreId } from '@app/utils/chat/messageIdentity/getChatMessageStoreId';
@@ -74,6 +75,7 @@ export const createMessageBuffer = (
 
       index.set(key, messages.length);
       messages.push(message);
+      chatPerfMarks.buffered();
 
       const max = getMaxBufferedMessages();
       if (messages.length > max) {
@@ -91,12 +93,14 @@ export const createMessageBuffer = (
         const drained = messages;
         messages = [];
         index.clear();
+        chatPerfMarks.drained(drained.length);
         return drained;
       }
 
       const drained = messages.slice(0, Math.max(0, limit));
       messages = messages.slice(drained.length);
       rebuildIndex();
+      chatPerfMarks.drained(drained.length);
       return drained;
     },
 

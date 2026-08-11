@@ -1,6 +1,7 @@
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
-import { parseWordLinkParts } from '@app/utils/chat/replaceTextWithEmotes/parseWordLinkParts';
+import { getEmoteArrayContentKey } from '@app/utils/chat/emoteArrayContentKey';
+import { parseWordLinkParts } from '@app/utils/chat/parseWordLinkParts/parseWordLinkParts';
 
 import { queueMentionLoginsFromParts } from './mentionLoginResolver/queueMentionLoginsFromParts';
 import type { ParsedPart } from './parsedPart';
@@ -25,7 +26,6 @@ interface EmoteProcessorParams {
 
 const cache = new Map<string, ParsedPart[]>();
 const MAX_CACHE_SIZE = 1000;
-const emoteArrayIds = new WeakMap<SanitisedEmote[], number>();
 const baseCollectionCache = new Map<string, EmoteCollection>();
 
 const MAX_BASE_COLLECTION_CACHE_SIZE = 4;
@@ -41,17 +41,8 @@ type EmoteCollection = {
   emoteMap: ReadonlyMap<string, SanitisedEmote>;
 };
 
-let nextEmoteArrayId = 0;
-
-function getEmoteArrayId(emotes: SanitisedEmote[]): number {
-  let id = emoteArrayIds.get(emotes);
-  if (id === undefined) {
-    nextEmoteArrayId += 1;
-    id = nextEmoteArrayId;
-    emoteArrayIds.set(emotes, id);
-  }
-  return id;
-}
+let lastBaseKeyInputs: SanitisedEmote[][] | null = null;
+let lastBaseKey = '';
 
 const createCacheKey = (
   inputString: string,
@@ -72,17 +63,53 @@ function getBaseCollectionKey(
   bttvChannelEmotes: SanitisedEmote[],
   bttvGlobalEmotes: SanitisedEmote[],
 ): string {
-  return [
-    getEmoteArrayId(emojiEmotes),
-    getEmoteArrayId(sevenTvGlobalEmotes),
-    getEmoteArrayId(sevenTvChannelEmotes),
-    getEmoteArrayId(twitchGlobalEmotes),
-    getEmoteArrayId(twitchChannelEmotes),
-    getEmoteArrayId(ffzChannelEmotes),
-    getEmoteArrayId(ffzGlobalEmotes),
-    getEmoteArrayId(bttvChannelEmotes),
-    getEmoteArrayId(bttvGlobalEmotes),
+  // One-entry identity memo: the nine arrays are stable between emote-set
+  // changes, so per message this is nine pointer compares instead of nine
+  // WeakMap reads plus an array and a join.
+  const last = lastBaseKeyInputs;
+  if (
+    last &&
+    last[0] === emojiEmotes &&
+    last[1] === sevenTvGlobalEmotes &&
+    last[2] === sevenTvChannelEmotes &&
+    last[3] === twitchGlobalEmotes &&
+    last[4] === twitchChannelEmotes &&
+    last[5] === ffzChannelEmotes &&
+    last[6] === ffzGlobalEmotes &&
+    last[7] === bttvChannelEmotes &&
+    last[8] === bttvGlobalEmotes
+  ) {
+    return lastBaseKey;
+  }
+
+  // Content-derived so a rebuilt array with unchanged emotes keys the same -
+  // 7TV events and channel-load settles replace these arrays wholesale, and
+  // identity keying invalidated every cached parse each time (issue: the
+  // whole window re-parsed for ~800ms sustained after an emote_set.update).
+  const key = [
+    getEmoteArrayContentKey(emojiEmotes),
+    getEmoteArrayContentKey(sevenTvGlobalEmotes),
+    getEmoteArrayContentKey(sevenTvChannelEmotes),
+    getEmoteArrayContentKey(twitchGlobalEmotes),
+    getEmoteArrayContentKey(twitchChannelEmotes),
+    getEmoteArrayContentKey(ffzChannelEmotes),
+    getEmoteArrayContentKey(ffzGlobalEmotes),
+    getEmoteArrayContentKey(bttvChannelEmotes),
+    getEmoteArrayContentKey(bttvGlobalEmotes),
   ].join('|');
+  lastBaseKeyInputs = [
+    emojiEmotes,
+    sevenTvGlobalEmotes,
+    sevenTvChannelEmotes,
+    twitchGlobalEmotes,
+    twitchChannelEmotes,
+    ffzChannelEmotes,
+    ffzGlobalEmotes,
+    bttvChannelEmotes,
+    bttvGlobalEmotes,
+  ];
+  lastBaseKey = key;
+  return key;
 }
 
 function setIfMissing(
@@ -148,7 +175,7 @@ function getBaseCollection({
   setIfMissing(emoteMap, bttvGlobalEmotes);
 
   emojiEmotes.forEach(emote => {
-    if (emote.site !== 'Emoji') {
+    if (emote.provider !== 'emoji') {
       return;
     }
 
@@ -456,6 +483,14 @@ export const processEmotesWorklet = (
         .map(char => char.codePointAt(0)?.toString(16).toUpperCase() || '')
         .join('-');
       emote = emojiMap.get(upperWord);
+      if (!emote && upperWord.includes('FE0F')) {
+        emote = emojiMap.get(
+          upperWord
+            .split('-')
+            .filter(hex => hex !== 'FE0F')
+            .join('-'),
+        );
+      }
     }
 
     if (emote) {
@@ -467,7 +502,7 @@ export const processEmotesWorklet = (
         creator: emote.creator || '',
         emote_link: emote.emote_link || '',
         original_name:
-          emote.site === 'Emoji' && !word.startsWith(':')
+          emote.provider === 'emoji' && !word.startsWith(':')
             ? word
             : emote.original_name || '',
         site: emote.site || '',

@@ -9,10 +9,10 @@ import type { LoadChannelResourcesOptions } from '@app/store/chat/actions/channe
 import {
   abortCurrentLoad,
   getCurrentEmoteData,
-  getSevenTvEmoteSetId,
   loadChannelResources,
   startChannelLoadAbort,
 } from '@app/store/chat/actions/channelLoad';
+import { getSevenTvEmoteSetId } from '@app/store/chat/actions/sevenTvChannelLifecycle';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import {
   preloadChannelEmotes,
@@ -32,9 +32,12 @@ jest.mock('@app/context/AuthContext', () => ({
 jest.mock('@app/store/chat/actions/channelLoad', () => ({
   abortCurrentLoad: jest.fn(),
   getCurrentEmoteData: jest.fn(),
-  getSevenTvEmoteSetId: jest.fn(),
   loadChannelResources: jest.fn(),
   startChannelLoadAbort: jest.fn(),
+}));
+
+jest.mock('@app/store/chat/actions/sevenTvChannelLifecycle', () => ({
+  getSevenTvEmoteSetId: jest.fn(),
 }));
 
 jest.mock('@app/utils/image/preloadEmotes', () => ({

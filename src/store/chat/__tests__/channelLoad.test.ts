@@ -27,11 +27,13 @@ import {
   invalidateChatResourceCaches,
   loadChannelResources,
   resolveSubscriberChannelProfiles,
-  switchSevenTvEmoteSet,
-  updateSevenTvEmotes,
 } from '../actions/channelLoad';
 import { clearGlobalResourceCache } from '../actions/channelResources';
 import { clearMessages } from '../actions/messages';
+import {
+  switchSevenTvEmoteSet,
+  updateSevenTvEmotes,
+} from '../actions/sevenTvChannelLifecycle';
 import { chatStore$ } from '../observables/chatStore';
 import type { SubscriberChannelProfile } from '../types/constants';
 import {
@@ -213,6 +215,7 @@ function sevenTvEmote(id: string): SevenTvSanitisedEmote {
     original_name: id,
     set_metadata: sevenTvSetMetadata,
     site: '7TV Channel',
+    provider: '7tv',
     static_url: `https://example.com/${id}.png`,
     url: `https://example.com/${id}.webp`,
     width: 32,
@@ -230,6 +233,7 @@ function bttvEmote(
     id,
     name: id,
     original_name: id,
+    provider: 'bttv',
     site,
     static_url: `https://example.com/${id}.png`,
     url: `https://example.com/${id}.webp`,
@@ -246,6 +250,7 @@ function ffzEmote(
     id,
     name: id,
     original_name: id,
+    provider: 'ffz',
     site,
     static_url: `https://example.com/${id}.png`,
     url: `https://example.com/${id}.webp`,
@@ -263,6 +268,7 @@ function twitchEmote(
     id,
     name: id,
     original_name: id,
+    provider: 'twitch',
     site,
     static_url: `https://example.com/${id}.png`,
     url: `https://example.com/${id}.webp`,
@@ -275,6 +281,7 @@ function badge(id: string): SanitisedBadgeSet {
     set: id,
     title: id,
     type: 'FFZ Badge',
+    provider: 'ffz',
     url: `https://example.com/${id}.png`,
   };
 }

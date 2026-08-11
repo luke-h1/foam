@@ -1,0 +1,244 @@
+import { act, renderHook, waitFor } from '@testing-library/react-native';
+
+import {
+  createLoggedInAuthContextValue,
+  createTestUser,
+} from '@app/context/__tests__/__fixtures__/authContext.fixture';
+import { useAuthContext } from '@app/context/AuthContext';
+import type { TestActivityState } from '@app/hooks/__tests__/__fixtures__/useChannelActivity.fixture';
+import {
+  createEventSubMessage,
+  createTestActivity,
+} from '@app/hooks/__tests__/__fixtures__/useChannelActivity.fixture';
+import { useChannelActivity } from '@app/hooks/useChannelActivity';
+import TwitchWsService from '@app/services/twitch-ws-service';
+import { logger } from '@app/utils/logger';
+
+jest.mock('@app/context/AuthContext', () => ({
+  useAuthContext: jest.fn(),
+}));
+
+jest.mock('@app/services/twitch-ws-service', () => ({
+  __esModule: true,
+  default: {
+    disconnect: jest.fn(),
+    getInstance: jest.fn(),
+    subscribeToEvent: jest.fn(),
+    unsubscribeFromEvent: jest.fn(),
+  },
+}));
+
+jest.mock('@app/utils/logger', () => ({
+  logger: {
+    twitchWs: {
+      warn: jest.fn(),
+    },
+  },
+}));
+
+const mockUseAuthContext = jest.mocked(useAuthContext);
+const mockTwitchWsService = jest.mocked(TwitchWsService);
+const mockWarn = jest.mocked(logger.twitchWs.warn);
+
+function mockLoggedInViewer(userId: string) {
+  mockUseAuthContext.mockReturnValue(
+    createLoggedInAuthContextValue({
+      user: createTestUser({ id: userId }),
+    }),
+  );
+}
+
+function getSubscribedHandler(type: string) {
+  const call = mockTwitchWsService.subscribeToEvent.mock.calls.find(
+    subscribeCall => subscribeCall[0] === type,
+  );
+  const handler = call?.[3];
+  if (!handler) {
+    throw new Error(`no subscription registered for ${type}`);
+  }
+  return handler;
+}
+
+describe('useChannelActivity', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockTwitchWsService.subscribeToEvent.mockResolvedValue(undefined);
+    mockTwitchWsService.unsubscribeFromEvent.mockResolvedValue(undefined);
+  });
+
+  test('skips fetch and subscriptions for channels the viewer does not own', () => {
+    mockLoggedInViewer('viewer-id');
+    const fetch = jest.fn((broadcasterId: string) =>
+      Promise.resolve({
+        data: [{ id: broadcasterId, status: 'ACTIVE' as const }],
+      }),
+    );
+    const descriptor = createTestActivity({ fetch });
+
+    const { result } = renderHook(() =>
+      useChannelActivity(descriptor, 'channel-id'),
+    );
+
+    expect(result.current.value).toBeNull();
+    expect(result.current.isAvailable).toBe(false);
+    expect(fetch).not.toHaveBeenCalled();
+    expect(mockTwitchWsService.getInstance).not.toHaveBeenCalled();
+    expect(mockTwitchWsService.subscribeToEvent).not.toHaveBeenCalled();
+  });
+
+  test('fetches the active value and subscribes for the signed-in broadcaster', async () => {
+    mockLoggedInViewer('channel-id');
+    const fetch = jest.fn((_broadcasterId: string) =>
+      Promise.resolve({
+        data: [
+          { id: 'helix-completed', status: 'COMPLETED' as const },
+          { id: 'helix-active', status: 'ACTIVE' as const },
+        ],
+      }),
+    );
+    const descriptor = createTestActivity({ fetch });
+
+    const { result } = renderHook(() =>
+      useChannelActivity(descriptor, 'channel-id'),
+    );
+
+    expect(result.current.isAvailable).toBe(true);
+    await waitFor(() => {
+      expect(result.current.value).toEqual<TestActivityState>({
+        id: 'helix-active',
+        status: 'active',
+        source: 'helix',
+      });
+    });
+
+    expect(fetch).toHaveBeenCalledWith('channel-id');
+    expect(
+      mockTwitchWsService.subscribeToEvent.mock.calls.map(call => [
+        call[0],
+        call[1],
+        call[2],
+      ]),
+    ).toEqual([
+      ['channel.test.begin', '1', { broadcaster_user_id: 'channel-id' }],
+      ['channel.test.end', '1', { broadcaster_user_id: 'channel-id' }],
+    ]);
+  });
+
+  test('updates the value from descriptor-normalised EventSub events', async () => {
+    mockLoggedInViewer('channel-id');
+    const descriptor = createTestActivity({
+      fetch: () =>
+        Promise.resolve({ data: [{ id: 'helix-active', status: 'ACTIVE' }] }),
+    });
+
+    const { result } = renderHook(() =>
+      useChannelActivity(descriptor, 'channel-id'),
+    );
+
+    await waitFor(() => {
+      expect(result.current.value).toEqual<TestActivityState>({
+        id: 'helix-active',
+        status: 'active',
+        source: 'helix',
+      });
+    });
+
+    const onEnd = getSubscribedHandler('channel.test.end');
+
+    act(() => {
+      onEnd(createEventSubMessage({ id: 'event-1' }));
+    });
+
+    expect(result.current.value).toEqual<TestActivityState>({
+      id: 'event-1',
+      status: 'completed',
+      source: 'event',
+    });
+
+    act(() => {
+      onEnd(createEventSubMessage(undefined));
+    });
+
+    expect(result.current.value).toEqual<TestActivityState>({
+      id: 'event-1',
+      status: 'completed',
+      source: 'event',
+    });
+  });
+
+  test('resets the value when the channel scope changes', async () => {
+    mockLoggedInViewer('channel-a');
+    const descriptor = createTestActivity({
+      fetch: broadcasterId =>
+        Promise.resolve({
+          data: [{ id: `${broadcasterId}-item`, status: 'ACTIVE' }],
+        }),
+    });
+
+    const { result, rerender } = renderHook(
+      ({ channelId }: { channelId: string }) =>
+        useChannelActivity(descriptor, channelId),
+      { initialProps: { channelId: 'channel-a' } },
+    );
+
+    await waitFor(() => {
+      expect(result.current.value).toEqual<TestActivityState>({
+        id: 'channel-a-item',
+        status: 'active',
+        source: 'helix',
+      });
+    });
+
+    rerender({ channelId: 'channel-b' });
+
+    expect(result.current.value).toBeNull();
+    expect(result.current.isAvailable).toBe(false);
+  });
+
+  test('unsubscribes the descriptor events on unmount', () => {
+    mockLoggedInViewer('channel-id');
+    const descriptor = createTestActivity();
+
+    const { unmount } = renderHook(() =>
+      useChannelActivity(descriptor, 'channel-id'),
+    );
+
+    const subscribed = mockTwitchWsService.subscribeToEvent.mock.calls.map(
+      call => [call[0], call[3]],
+    );
+    expect(subscribed.map(entry => entry[0])).toEqual([
+      'channel.test.begin',
+      'channel.test.end',
+    ]);
+
+    unmount();
+
+    expect(mockTwitchWsService.unsubscribeFromEvent.mock.calls).toEqual(
+      subscribed,
+    );
+  });
+
+  test('logs fetch failures with the descriptor log fields', async () => {
+    mockLoggedInViewer('channel-id');
+    const error = new Error('helix down');
+    const descriptor = createTestActivity({
+      fetch: () => Promise.reject(error),
+    });
+
+    renderHook(() => useChannelActivity(descriptor, 'channel-id'));
+
+    await waitFor(() => {
+      expect(mockWarn).toHaveBeenCalledWith(
+        'Failed to fetch test activity state',
+        {
+          name: 'test_activity_warning',
+          error,
+          action: 'initial_test_activity_fetch_failed',
+          channel_id: 'channel-id',
+          provider: 'twitch',
+          screen: 'chat',
+        },
+      );
+    });
+  });
+});

@@ -26,7 +26,7 @@ Name fixture files after the thing under test, using the pattern `{thing}.fixtur
 
 That naming keeps the fixture tied to the surface it supports. A file called `chatHookFixtures.ts` sounds like a generic bucket. A file called `useChat.fixture.ts` says what it exists for and makes it harder to keep adding unrelated test data over time.
 
-The one exception is a fixture the app itself imports. `src/dev/chatHotspotBench` runs the perf fixtures on-device from the `dev-tools/chat-perf` route, so those files are part of the app's module graph. EAS strips `__tests__` directories from the build context, so a fixture under `__tests__` resolves locally and then fails the eager bundle in CI with `Unable to resolve module`. Fixtures shared with the bench live in a sibling `__fixtures__` directory _outside_ `__tests__` (for example `src/components/Chat/util/__fixtures__/resolveMessageEmoteParts.perf.fixture.ts`), and the perf-test imports them with `../__fixtures__/...`. The `no-tests-dir-import` ast-grep rules enforce this.
+The one exception is a fixture the app itself imports. `src/dev/chatHotspotBench` runs the perf fixtures on-device from the `dev-tools/chat-perf` route, so those files are part of the app's module graph. EAS strips `__tests__` directories from the build context, so a fixture under `__tests__` resolves locally and then fails the eager bundle in CI with `Unable to resolve module`. Fixtures shared with the bench live in a sibling `__fixtures__` directory _outside_ `__tests__` (for example `src/utils/chat/__fixtures__/resolveMessageEmoteParts.perf.fixture.ts`), and the perf-test imports them with `../__fixtures__/...`. The `no-tests-dir-import` ast-grep rules enforce this.
 
 ## Legend State Store Layout
 
@@ -98,19 +98,15 @@ Because the rule is off for `package.json`, a genuinely unused dependency won't 
 
 `react-hooks-js/immutability` is turned off for `BlockedTermsScreen.tsx` and `SavedPhrasesScreen.tsx` in `doctor.config.json`. Their iOS branches bind `@expo/ui/swift-ui` `useNativeState` values to SwiftUI text fields, and writing back through `state.value = ...` is that API's intended write path - the rule misreads those writes as mutation of an immutable hook value. Scope any future exemption to the specific files the same way rather than turning the rule off globally.
 
-## React Doctor: visible-asset hydration timer override
+## React Doctor: the remaining file-scoped overrides
 
-`react-doctor/effect-needs-cleanup` is turned off for
-`useChatMessageProcessing.ts` in `doctor.config.json`. The debounce handle is
-stored on the `visibleAssetHydration` module object rather than in a ref (see
-"Chat overlays" for why that state is module-level), and the rule only
-recognises a handle held in a local or a ref, so it reads the store as absent.
+Each of these was checked against the code before being suppressed; none is a blanket rule-off. Re-verify before extending one to another file.
 
-The timer is released on both paths that can strand it: the hook's own
-channel/unmount effect calls `clearVisibleAssetHydrationTimer`, and
-`clearVisibleAssetHydration` clears it along with the dedup keys when the
-channel changes. Move the handle into a ref only if the module state goes too -
-splitting them puts the release on a different owner from the arm.
+- **`useSeventvWs.ts` - `react-hooks-js/purity` and `react-doctor/effect-needs-cleanup`.** The purity hits are `Date.now()` inside WebSocket callbacks (`onOpen`, `handleMessage`, the resume-ack branch); a socket message has to be stamped with the wall clock, and the calls run at event time, not during render. The cleanup hit is the heartbeat watchdog `setInterval`, whose handle is stored on the session object and cleared by `session.reset()` from all three teardown paths - `onClose`, leaving the chat screen, and the unmount callback - which the rule cannot follow off the effect.
+- **`usePlayerBridge.ts` and `useChatMessages.ts` - `react-hooks-js/refs`.** In `usePlayerBridge`, `playerMountedAtRef` is re-stamped on every player generation change, so it is a genuinely mutable ref and cannot become `useState`. In `useChatMessages`, the controller itself is held in a `useState` initializer, but the callbacks handed to it read `optionsRef.current` so each one resolves against the latest render's options - that indirection is the adapter's whole job, and the reads run at ingest time rather than during render.
+- **`twitch-ws-service.ts` - `async-await-in-loop` and `js-set-map-lookups`.** The sequential `await` in `cleanupSubscriptions` is deliberate: a `Promise.all` version let a sibling reach `teardownIfIdle` while a delete was in flight and double-deleted the same id (the comment above the loop records this). The lookup hits are `includes`/`indexOf` over `entry.callbacks`, which holds one entry per subscribed component (typically one to three) and is iterated in order to dispatch - a Set would be slower and would drop the ordering.
+- **`formatViewCount.ts` - `js-hoist-intl`.** The formatter is already built once and cached in a module-level binding; it is lazy specifically because constructing ICU formatters at module scope sat on the boot path via `LiveStreamCard`. Hoisting it as the rule suggests would undo that.
+- **`SyncedEmotesScreen.tsx` - `rn-no-scrollview-mapped-list`.** A dev-tools screen that mounts a fixed handful of copies of the same emote to check the shared animation clock. Virtualising it would unmount the very copies the screen exists to compare.
 
 ## Bottom sheets: `@expo/ui` plus a not-yet-released iOS touch fix
 

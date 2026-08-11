@@ -25,6 +25,10 @@ jest.mock('react-native-keyboard-controller', () => ({
   },
 }));
 
+jest.mock('@app/services/twitch-chat-service', () => ({
+  getChatUserState: () => ({}),
+}));
+
 jest.mock('../../hooks/useChatImageUpload', () => ({
   useChatImageUpload: () => ({
     isUploading: false,
@@ -56,7 +60,6 @@ function renderShell(props: {
         channelId='123'
         channelName='testchannel'
         connected
-        getUserState={() => ({})}
         isChatConnected={() => true}
         onOpenEmoteSheet={jest.fn()}
         onOpenSettingsSheet={jest.fn()}

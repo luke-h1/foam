@@ -38,7 +38,7 @@ describe('createUserNoticeMessage', () => {
     jest.clearAllMocks();
   });
 
-  test('should create viewermilestone notice', () => {
+  test('creates viewermilestone notice', () => {
     const tags = createViewerMilestoneTags({
       'display-name': 'MilestoneUser',
       login: 'milestoneuser',
@@ -57,8 +57,9 @@ describe('createUserNoticeMessage', () => {
     expect(result.message[0]?.type).toBe('viewermilestone');
   });
 
-  test('should create sub notice', () => {
+  test('creates sub notice', () => {
     const tags = createSubscriptionTags({
+      id: 'sub-id',
       'display-name': 'SubUser',
       login: 'subuser',
       'system-msg': 'SubUser subscribed with Tier 1',
@@ -73,9 +74,22 @@ describe('createUserNoticeMessage', () => {
 
     expect(result.notice_tags?.['msg-id']).toBe('sub');
     expect(result.message[0]?.type).toBe('sub');
+    expect({
+      channel: result.channel,
+      id: result.id,
+      messageId: result.message_id,
+      messageNonce: result.message_nonce,
+      sender: result.sender,
+    }).toEqual({
+      channel: 'testchannel',
+      id: 'sub-id_test-nonce-123',
+      messageId: 'sub-id',
+      messageNonce: 'test-nonce-123',
+      sender: 'SubUser',
+    });
   });
 
-  test('should create resub notice', () => {
+  test('creates resub notice', () => {
     const tags = createResubTags({
       'msg-param-cumulative-months': '12',
       'display-name': 'ResubUser',
@@ -94,7 +108,7 @@ describe('createUserNoticeMessage', () => {
     expect(result.message[0]?.type).toBe('resub');
   });
 
-  test('should create subgift notice', () => {
+  test('creates subgift notice', () => {
     const tags = createSubGiftTags({
       'msg-param-recipient-display-name': 'GiftRecipient',
       'msg-param-recipient-id': '67890',
@@ -113,7 +127,7 @@ describe('createUserNoticeMessage', () => {
     expect(result.notice_tags?.['msg-id']).toBe('subgift');
   });
 
-  test('should create raid notice', () => {
+  test('creates raid notice', () => {
     const tags = createRaidTags({
       'msg-param-displayName': 'RaidLeader',
       'msg-param-viewerCount': '500',
@@ -136,7 +150,7 @@ describe('createUserNoticeMessage', () => {
     ]);
   });
 
-  test('should create anongiftpaidupgrade notice', () => {
+  test('creates anongiftpaidupgrade notice', () => {
     const tags = createAnonGiftPaidUpgradeTags({
       'msg-param-promo-name': 'SummerPromo',
       'msg-param-promo-gift-total': '10',
@@ -155,7 +169,7 @@ describe('createUserNoticeMessage', () => {
     expect(result.notice_tags?.['msg-id']).toBe('anongiftpaidupgrade');
   });
 
-  test('should create submysterygift notice', () => {
+  test('creates submysterygift notice', () => {
     const tags = createSubMysteryGiftTags({
       'msg-param-mass-gift-count': '5',
       'msg-param-sender-count': '42',
@@ -175,7 +189,7 @@ describe('createUserNoticeMessage', () => {
     expect(result.message[0]?.type).toBe('submysterygift');
   });
 
-  test('should create giftpaidupgrade notice', () => {
+  test('creates giftpaidupgrade notice', () => {
     const tags = createGiftPaidUpgradeTags({
       'msg-param-sender-login': 'gifterlogin',
       'msg-param-sender-name': 'GiftSender',
@@ -198,7 +212,7 @@ describe('createUserNoticeMessage', () => {
     expect(result.message[0]?.type).toBe('giftpaidupgrade');
   });
 
-  test('should create a channel point redemption notice without chat text', () => {
+  test('creates a channel point redemption notice without chat text', () => {
     const tags = createRewardGiftTags({
       'display-name': 'RewardUser',
       login: 'rewarduser',
@@ -226,7 +240,7 @@ describe('createUserNoticeMessage', () => {
     );
   });
 
-  test('should create bitsbadgetier as a twitch system notice', () => {
+  test('creates bitsbadgetier as a twitch system notice', () => {
     const tags = createBitsBadgeTierTags({
       'msg-param-threshold': '1000',
       'display-name': 'Cheerer',
@@ -247,7 +261,7 @@ describe('createUserNoticeMessage', () => {
     ]);
   });
 
-  test('should create unraid as a twitch system notice', () => {
+  test('creates unraid as a twitch system notice', () => {
     const tags = createUnraidTags({
       'display-name': 'Streamer',
       login: 'streamer',
@@ -267,7 +281,7 @@ describe('createUserNoticeMessage', () => {
     ]);
   });
 
-  test('should create sharedchatnotice as a twitch system notice', () => {
+  test('creates sharedchatnotice as a twitch system notice', () => {
     const tags = createSharedChatNoticeTags({
       'display-name': 'Streamer',
       login: 'streamer',
@@ -290,7 +304,7 @@ describe('createUserNoticeMessage', () => {
     ]);
   });
 
-  test('should create modiversary as a mod anniversary notice part', () => {
+  test('creates modiversary as a mod anniversary notice part', () => {
     const tags = createModiversaryTags({
       'display-name': 'ModUser',
       login: 'moduser',
@@ -318,7 +332,7 @@ describe('createUserNoticeMessage', () => {
     ]);
   });
 
-  test('should name the moderator when Twitch omits it from system-msg', () => {
+  test('names the moderator when Twitch omits it from system-msg', () => {
     const tags = createModiversaryTags({
       'display-name': 'Jimmotep',
       login: 'jimmotep',
@@ -344,7 +358,7 @@ describe('createUserNoticeMessage', () => {
     ]);
   });
 
-  test('should build modiversary copy from tags when system message is missing', () => {
+  test('builds modiversary copy from tags when system message is missing', () => {
     const tags = createModiversaryTags({
       'display-name': 'ModUser',
       login: 'moduser',
@@ -371,7 +385,7 @@ describe('createUserNoticeMessage', () => {
     ]);
   });
 
-  test('should handle announcement notices with user metadata', () => {
+  test('handles announcement notices with user metadata', () => {
     const tags = createAnnouncementTags();
 
     const result = createUserNoticeMessage({
@@ -394,7 +408,7 @@ describe('createUserNoticeMessage', () => {
     ]);
   });
 
-  test('should handle highlighted-message notices with user metadata', () => {
+  test('handles highlighted-message notices with user metadata', () => {
     const tags = createHighlightedMessageTags();
 
     const result = createUserNoticeMessage({
@@ -412,7 +426,7 @@ describe('createUserNoticeMessage', () => {
     ]);
   });
 
-  test('should handle charitydonation notices', () => {
+  test('handles charitydonation notices', () => {
     const tags = createCharityDonationTags({
       'display-name': 'Donor',
       login: 'donor',
@@ -436,7 +450,7 @@ describe('createUserNoticeMessage', () => {
     }
   });
 
-  test('should handle ritual notices for new chatters', () => {
+  test('handles ritual notices for new chatters', () => {
     const tags = createRitualTags({
       'display-name': 'NewChatter',
       login: 'newchatter',
@@ -456,7 +470,7 @@ describe('createUserNoticeMessage', () => {
     }
   });
 
-  test('should handle primepaidupgrade as subscription notice', () => {
+  test('handles primepaidupgrade as subscription notice', () => {
     const tags = createPrimePaidUpgradeTags({
       'display-name': 'PrimeUser',
       login: 'primeuser',
@@ -473,7 +487,7 @@ describe('createUserNoticeMessage', () => {
     expect(result.message[0]?.type).toBe('primepaidupgrade');
   });
 
-  test('should flag shared chat duplicated notices', () => {
+  test('flags shared chat duplicated notices', () => {
     const tags = createRaidTags({
       'room-id': '123',
       'source-room-id': '456',
@@ -492,7 +506,7 @@ describe('createUserNoticeMessage', () => {
     expect(result.isSharedChatDuplicated).toBe(true);
   });
 
-  test('should handle unknown msg-id with default case', () => {
+  test('handles unknown msg-id with default case', () => {
     const tags: BaseUserNoticeTags = {
       'msg-id': 'unknown_type',
       'display-name': 'UnknownUser',

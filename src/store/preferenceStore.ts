@@ -104,55 +104,70 @@ export interface Preferences {
   sevenTvPaintRenderer: SevenTvPaintRenderer;
 }
 
-export const preferencesSchema = z.object({
-  updatedAt: z.number(),
-  theme: z.literal('foam-dark'),
-  hapticFeedback: z.boolean(),
-  streamListLayout: z.enum(['compact', 'media']),
-  chatDensity: z.enum(['comfortable', 'compact']),
-  showAlternatingChatRows: z.boolean(),
-  animate: z.boolean(),
-  chatTimestamps: z.boolean(),
-  highlightOwnMentions: z.boolean(),
-  showInlineReplyContext: z.boolean(),
-  showRecentMessages: z.boolean(),
-  showUnreadJumpPill: z.boolean(),
-  showJoinPartMessages: z.boolean(),
-  disableChat: z.boolean(),
-  disableStream: z.boolean(),
-  useUIKitForWebView: z.boolean(),
-  emojiStyle: z.enum(['twitter', 'google']),
-  show7TvEmotes: z.boolean(),
-  showBttvEmotes: z.boolean(),
-  showFFzEmotes: z.boolean(),
-  showChatterinoEmotes: z.boolean(),
-  showTwitchEmotes: z.boolean(),
-  disableEmoteAnimations: z.boolean(),
-  showTwitchBadges: z.boolean(),
-  show7tvBadges: z.boolean(),
-  showFFzBadges: z.boolean(),
-  showBttvBadges: z.boolean(),
-  blockedTerms: z.array(z.string()),
-  chatTimestampFormat: z.enum(['24h', '12h']),
-  chatFontScale: z.enum(['small', 'default', 'large']),
-  chatScrollback: z.union([z.literal(150), z.literal(200), z.literal(250)]),
-  chatDelay: z.union([z.literal('auto'), z.literal('off'), z.number()]),
-  deletedMessageStyle: z.enum(['notice', 'hidden']),
-  ignoreClearChat: z.boolean(),
-  chatMentionHaptics: z.boolean(),
-  customHighlights: z.array(
-    z.object({ id: z.string(), phrase: z.string(), color: z.string() }),
-  ),
-  savedPhrases: z.array(z.object({ id: z.string(), text: z.string() })),
-  shakeToReport: z.boolean(),
-  landscapeChatWidth: z.number().nullable(),
-  customPlayerEnabled: z.boolean(),
-  analyticsEnabled: z.boolean(),
-  sharedChatEnabled: z.boolean(),
-  enhancedVideoStability: z.boolean(),
-  chatDebugTools: z.boolean(),
-  sevenTvPaintRenderer: z.enum(['off', 'native', 'skia', 'webview']),
-}) satisfies z.ZodType<Preferences>;
+let cachedPreferencesSchema: ReturnType<typeof buildPreferencesSchema> | null =
+  null;
+
+/**
+ * Built on first use (the iCloud import path) instead of at module scope -
+ * constructing ~50 zod validators was part of every boot for a schema only
+ * validation ever reads.
+ */
+export function getPreferencesSchema() {
+  cachedPreferencesSchema ??= buildPreferencesSchema();
+  return cachedPreferencesSchema;
+}
+
+function buildPreferencesSchema() {
+  return z.object({
+    updatedAt: z.number(),
+    theme: z.literal('foam-dark'),
+    hapticFeedback: z.boolean(),
+    streamListLayout: z.enum(['compact', 'media']),
+    chatDensity: z.enum(['comfortable', 'compact']),
+    showAlternatingChatRows: z.boolean(),
+    animate: z.boolean(),
+    chatTimestamps: z.boolean(),
+    highlightOwnMentions: z.boolean(),
+    showInlineReplyContext: z.boolean(),
+    showRecentMessages: z.boolean(),
+    showUnreadJumpPill: z.boolean(),
+    showJoinPartMessages: z.boolean(),
+    disableChat: z.boolean(),
+    disableStream: z.boolean(),
+    useUIKitForWebView: z.boolean(),
+    emojiStyle: z.enum(['twitter', 'google']),
+    show7TvEmotes: z.boolean(),
+    showBttvEmotes: z.boolean(),
+    showFFzEmotes: z.boolean(),
+    showChatterinoEmotes: z.boolean(),
+    showTwitchEmotes: z.boolean(),
+    disableEmoteAnimations: z.boolean(),
+    showTwitchBadges: z.boolean(),
+    show7tvBadges: z.boolean(),
+    showFFzBadges: z.boolean(),
+    showBttvBadges: z.boolean(),
+    blockedTerms: z.array(z.string()),
+    chatTimestampFormat: z.enum(['24h', '12h']),
+    chatFontScale: z.enum(['small', 'default', 'large']),
+    chatScrollback: z.union([z.literal(150), z.literal(200), z.literal(250)]),
+    chatDelay: z.union([z.literal('auto'), z.literal('off'), z.number()]),
+    deletedMessageStyle: z.enum(['notice', 'hidden']),
+    ignoreClearChat: z.boolean(),
+    chatMentionHaptics: z.boolean(),
+    customHighlights: z.array(
+      z.object({ id: z.string(), phrase: z.string(), color: z.string() }),
+    ),
+    savedPhrases: z.array(z.object({ id: z.string(), text: z.string() })),
+    shakeToReport: z.boolean(),
+    landscapeChatWidth: z.number().nullable(),
+    customPlayerEnabled: z.boolean(),
+    analyticsEnabled: z.boolean(),
+    sharedChatEnabled: z.boolean(),
+    enhancedVideoStability: z.boolean(),
+    chatDebugTools: z.boolean(),
+    sevenTvPaintRenderer: z.enum(['off', 'native', 'skia', 'webview']),
+  }) satisfies z.ZodType<Preferences>;
+}
 
 export const initialPreferences: Preferences = {
   updatedAt: Date.now(),

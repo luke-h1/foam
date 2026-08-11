@@ -80,7 +80,7 @@ jest.mock('expo-file-system', () => {
   };
 });
 
-import { sweepOversizedSentryEnvelopes } from '@app/lib/sentryCacheSweep';
+import { sweepOversizedSentryEnvelopesNow } from '@app/lib/sentryCacheSweep';
 
 const fileSystemMock = jest.requireMock('expo-file-system')
   .__mockFileSystem as {
@@ -120,7 +120,7 @@ describe('sweepOversizedSentryEnvelopes', () => {
       [`${ENVELOPES_DIR}exactly-limit`]: 8 * 1024 * 1024,
     });
 
-    sweepOversizedSentryEnvelopes();
+    sweepOversizedSentryEnvelopesNow();
 
     expect(fileSystemMock.deletedUris()).toEqual([`${ENVELOPES_DIR}wedged`]);
     expect(fileSystemMock.exists(`${ENVELOPES_DIR}crash-report`)).toBe(true);
@@ -132,13 +132,13 @@ describe('sweepOversizedSentryEnvelopes', () => {
       [`${ENVELOPES_DIR}unknown-size`]: null,
     });
 
-    sweepOversizedSentryEnvelopes();
+    sweepOversizedSentryEnvelopesNow();
 
     expect(fileSystemMock.deletedUris()).toEqual([]);
   });
 
   test('does nothing when no sentry cache directory exists', () => {
-    sweepOversizedSentryEnvelopes();
+    sweepOversizedSentryEnvelopesNow();
 
     expect(fileSystemMock.deletedUris()).toEqual([]);
   });
@@ -155,7 +155,7 @@ describe('sweepOversizedSentryEnvelopes', () => {
       50_000_000,
     );
 
-    sweepOversizedSentryEnvelopes();
+    sweepOversizedSentryEnvelopesNow();
 
     expect(fileSystemMock.deletedUris()).toEqual([
       'file:///cache/sentry/outbox/huge.envelope',
@@ -169,7 +169,7 @@ describe('sweepOversizedSentryEnvelopes', () => {
     });
     fileSystemMock.failDeleteOf(`${ENVELOPES_DIR}undeletable`);
 
-    sweepOversizedSentryEnvelopes();
+    sweepOversizedSentryEnvelopesNow();
 
     expect(fileSystemMock.deletedUris()).toEqual([`${ENVELOPES_DIR}wedged`]);
   });

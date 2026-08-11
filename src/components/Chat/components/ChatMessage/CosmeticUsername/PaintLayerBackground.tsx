@@ -41,6 +41,7 @@ export function PaintLayerBackground({
     width: number;
     height: number;
   } | null>(null);
+  const [urlTextureReady, setUrlTextureReady] = useState(false);
   const layoutStyle = getLayerLayoutStyle(layer);
   const layerOpacity = layer.opacity;
   const gradientConfig = buildLayerGradientConfig(layer);
@@ -75,7 +76,9 @@ export function PaintLayerBackground({
         )}
         source={{ uri: layer.image_url }}
         useAppleWebpCodec={false}
-        style={styles.fill}
+        style={urlTextureReady ? styles.fill : styles.unloadedTexture}
+        onLoad={() => setUrlTextureReady(true)}
+        onError={() => setUrlTextureReady(false)}
       />
     );
   } else if (!gradientConfig) {
@@ -197,5 +200,10 @@ const styles = StyleSheet.create({
   },
   span: {
     ...StyleSheet.absoluteFill,
+  },
+  unloadedTexture: {
+    height: 0,
+    opacity: 0,
+    width: 0,
   },
 });

@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useRef,
   useState,
 } from 'react';
@@ -21,10 +22,7 @@ import {
   createPlayerTelemetry,
   type PlayerContentKind,
 } from './playerTelemetry';
-import {
-  createStabilityRecovery,
-  type StabilityRecovery,
-} from './stabilityRecovery';
+import { createStabilityRecovery } from './stabilityRecovery';
 import type {
   PlayerMessage,
   PlayerState,
@@ -121,9 +119,8 @@ export function usePlayerBridge({
   const reportedPlaybackBlockedRef = useRef(false);
   const channelRef = useSyncRef(channel);
   const forceRefreshRef = useSyncRef(forceRefresh);
-  const stabilityRef = useRef<StabilityRecovery | null>(null);
-  if (stabilityRef.current === null) {
-    stabilityRef.current = createStabilityRecovery({
+  const [stability] = useState(() =>
+    createStabilityRecovery({
       onRefresh: (reason, attempt) => {
         countMetric('stream.stability_refresh', {
           channel: channelRef.current ?? 'unknown',
@@ -147,15 +144,13 @@ export function usePlayerBridge({
           },
         );
       },
-    });
-  }
-  const stability = stabilityRef.current;
-  const telemetry = useLazyRef(createPlayerTelemetry).current;
-  const activeLoadKeyRef = useRef<string | null>(null);
+    }),
+  );
+  const [telemetry] = useState(createPlayerTelemetry);
   const loadKey = `${sourceKey}:${webViewKey}`;
+  const previousPlayerSourceRef = useRef({ autoplay, sourceKey, webViewKey });
 
-  if (activeLoadKeyRef.current !== loadKey) {
-    activeLoadKeyRef.current = loadKey;
+  useLayoutEffect(() => {
     telemetry.beginLoad({
       autoplay,
       channel,
@@ -163,20 +158,19 @@ export function usePlayerBridge({
       contentKind,
       video,
     });
-  }
+  }, [autoplay, channel, clip, contentKind, loadKey, telemetry, video]);
 
-  const [prevPlayerSource, setPrevPlayerSource] = useState({
-    autoplay,
-    sourceKey,
-    webViewKey,
-  });
+  useLayoutEffect(() => {
+    const previousPlayerSource = previousPlayerSourceRef.current;
+    if (
+      previousPlayerSource.autoplay === autoplay &&
+      previousPlayerSource.sourceKey === sourceKey &&
+      previousPlayerSource.webViewKey === webViewKey
+    ) {
+      return;
+    }
 
-  if (
-    prevPlayerSource.autoplay !== autoplay ||
-    prevPlayerSource.sourceKey !== sourceKey ||
-    prevPlayerSource.webViewKey !== webViewKey
-  ) {
-    setPrevPlayerSource({ autoplay, sourceKey, webViewKey });
+    previousPlayerSourceRef.current = { autoplay, sourceKey, webViewKey };
     lastPlaybackLatencySecondsRef.current = null;
     pipActiveRef.current = false;
     setPipActive(false);
@@ -190,7 +184,7 @@ export function usePlayerBridge({
       isReady: false,
       isBuffering: true,
     });
-  }
+  }, [autoplay, playerMountedAtRef, sourceKey, stability, webViewKey]);
 
   const clearTransientPauseResume = useCallback(() => {
     if (transientPauseResumeTimeoutRef.current) {
@@ -202,8 +196,8 @@ export function usePlayerBridge({
   useUnmountCallback(clearTransientPauseResume);
 
   const disposeStability = useCallback(() => {
-    stabilityRef.current?.dispose();
-  }, []);
+    stability.dispose();
+  }, [stability]);
 
   useUnmountCallback(disposeStability);
 
@@ -346,7 +340,7 @@ export function usePlayerBridge({
     });
   }, [injectJS, playerState.duration]);
 
-  const playerBridgeRef = useRef({
+  const playerBridgeRef = useSyncRef({
     forceRefresh,
     getCurrentTime,
     getDuration,
@@ -361,21 +355,6 @@ export function usePlayerBridge({
     setVolume,
     unmute,
   });
-  playerBridgeRef.current = {
-    forceRefresh,
-    getCurrentTime,
-    getDuration,
-    mute,
-    pause,
-    play,
-    seek,
-    setChannel,
-    setMuted,
-    setQuality,
-    setVideo,
-    setVolume,
-    unmute,
-  };
   const playerStateRef = useSyncRef(playerState);
 
   useImperativeHandle(
@@ -416,6 +395,7 @@ export function usePlayerBridge({
     [
       clearTransientPauseResume,
       injectJS,
+      playerBridgeRef,
       playerStateRef,
       togglePictureInPicture,
     ],

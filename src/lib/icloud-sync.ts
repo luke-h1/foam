@@ -1,7 +1,7 @@
 import {
+  getPreferencesSchema,
   initialPreferences,
   type Preferences,
-  preferencesSchema,
 } from '@app/store/preferenceStore';
 import { logger } from '@app/utils/logger';
 import type { ICloudSyncNativeModule } from '@modules/icloud-sync/src/ICloudSync.types';
@@ -53,7 +53,7 @@ export function parsePreferencesPayload(
       ? { ...initialPreferences, ...parsed }
       : parsed;
 
-  const result = preferencesSchema.safeParse(merged);
+  const result = getPreferencesSchema().safeParse(merged);
   if (!result.success) {
     logger.main.warn('Discarded malformed iCloud preferences', result.error);
     return null;

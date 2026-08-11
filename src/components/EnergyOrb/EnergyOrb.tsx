@@ -25,9 +25,19 @@ import {
   SHADER_SOURCE,
 } from './conf';
 import { parseColor } from './helper';
-import type { IEnergyOrb, RGB } from './types';
+import type { EnergyOrbProps, RGB } from './types';
 
-const source = Skia.RuntimeEffect.Make(SHADER_SOURCE);
+let cachedShaderSource: ReturnType<typeof Skia.RuntimeEffect.Make> | null =
+  null;
+
+/**
+ * Compiled on first orb mount instead of at module scope - the SkSL compile
+ * plus Skia host-object init otherwise runs at import time on every launch.
+ */
+function getShaderSource() {
+  cachedShaderSource ??= Skia.RuntimeEffect.Make(SHADER_SOURCE);
+  return cachedShaderSource;
+}
 
 function EnergyOrbComponent({
   width = DEFAULT_SIZE,
@@ -36,7 +46,7 @@ function EnergyOrbComponent({
   intensity = DEFAULT_INTENSITY,
   colors = DEFAULT_COLORS,
   glowRadius = DEFAULT_GLOW_RADIUS,
-}: IEnergyOrb) {
+}: EnergyOrbProps) {
   const focused = useScreenFocused();
   const time = useSharedValue<number>(0);
 
@@ -81,6 +91,7 @@ function EnergyOrbComponent({
     uGlowRadius: glowRadius,
   }));
 
+  const source = getShaderSource();
   if (!source) return null;
 
   return (

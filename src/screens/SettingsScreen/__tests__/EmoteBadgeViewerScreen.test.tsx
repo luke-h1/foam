@@ -6,6 +6,9 @@ import { ffzService as _ffzService } from '@app/services/ffz-service';
 import { sevenTvService as _sevenTvService } from '@app/services/seventv-service';
 import { twitchBadgeService as _twitchBadgeService } from '@app/services/twitch-badge-service';
 import { twitchEmoteService as _twitchEmoteService } from '@app/services/twitch-emote-service';
+import { clearGlobalResourceCache } from '@app/store/chat/actions/channelResources';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { makeEmptyGlobalCacheData } from '@app/store/chat/types/constants';
 import render from '@app/test/render';
 
 import {
@@ -139,6 +142,8 @@ const twitchEmoteService = jest.mocked(_twitchEmoteService);
 
 describe('EmoteBadgeViewerScreen', () => {
   beforeEach(() => {
+    clearGlobalResourceCache();
+    chatStore$.persisted.globalCaches.set(makeEmptyGlobalCacheData());
     twitchEmoteService.getGlobalEmotes.mockResolvedValue(
       twitchGlobalEmotesFixture,
     );

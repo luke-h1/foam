@@ -10,7 +10,10 @@ import {
   ensureObservablePersistenceConfig,
 } from '@app/lib/observablePersistence';
 import { getPreferences } from '@app/store/preferences/state';
+import type { EmoteProvider, EmoteSite } from '@app/types/emote';
+import type { BadgeProvider } from '@app/types/twitch/badge';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
+import { EMOTE_PROVIDER_BY_SITE } from '@app/utils/emote/emoteProviderBySite';
 import { logger } from '@app/utils/logger';
 
 import type {
@@ -124,6 +127,87 @@ if (!RECENT_MESSAGES_PERSISTENCE_ENABLED) {
   });
 }
 
+interface PersistedEmoteCarrier {
+  site: EmoteSite;
+  provider?: EmoteProvider;
+}
+
+interface PersistedBadgeCarrier {
+  type: string;
+  provider?: BadgeProvider;
+}
+
+const badgeProviderFromType = (type: string): BadgeProvider => {
+  if (type.startsWith('7TV')) {
+    return '7tv';
+  }
+  if (type.startsWith('BTTV')) {
+    return 'bttv';
+  }
+  if (type.startsWith('FFZ')) {
+    return 'ffz';
+  }
+  if (type.startsWith('Chatterino')) {
+    return 'chatterino';
+  }
+  return 'twitch';
+};
+
+const backfillEmoteProviders = (
+  emotes: PersistedEmoteCarrier[] | undefined,
+): void => {
+  if (!emotes) {
+    return;
+  }
+  for (const emote of emotes) {
+    if (!emote.provider) {
+      emote.provider = EMOTE_PROVIDER_BY_SITE[emote.site];
+    }
+  }
+};
+
+const backfillBadgeProviders = (
+  badges: PersistedBadgeCarrier[] | undefined,
+): void => {
+  if (!badges) {
+    return;
+  }
+  for (const badge of badges) {
+    if (!badge.provider) {
+      badge.provider = badgeProviderFromType(badge.type);
+    }
+  }
+};
+
+/**
+ * Caches persisted by builds that predate the `provider` discriminant hydrate
+ * without it, and every dispatch site now reads it. Stamped in place on the
+ * peeked arrays (idempotent, re-runs each launch until the cache is
+ * rewritten) so hydration cost stays one pass instead of a store rewrite.
+ */
+const backfillPersistedProviders = () => {
+  const globalCaches = chatStore$.persisted.globalCaches.peek();
+  if (globalCaches) {
+    backfillEmoteProviders(globalCaches.twitchGlobalEmotes);
+    backfillEmoteProviders(globalCaches.sevenTvGlobalEmotes);
+    backfillEmoteProviders(globalCaches.ffzGlobalEmotes);
+    backfillEmoteProviders(globalCaches.bttvGlobalEmotes);
+    backfillBadgeProviders(globalCaches.twitchGlobalBadges);
+    backfillBadgeProviders(globalCaches.ffzGlobalBadges);
+  }
+
+  const channelCaches = chatStore$.persisted.channelCaches.peek() ?? {};
+  for (const cache of Object.values(channelCaches)) {
+    backfillEmoteProviders(cache.twitchChannelEmotes);
+    backfillEmoteProviders(cache.twitchSubscriberEmotes);
+    backfillEmoteProviders(cache.sevenTvChannelEmotes);
+    backfillEmoteProviders(cache.ffzChannelEmotes);
+    backfillEmoteProviders(cache.bttvChannelEmotes);
+    backfillBadgeProviders(cache.twitchChannelBadges);
+    backfillBadgeProviders(cache.ffzChannelBadges);
+  }
+};
+
 /**
  * Chat-only hydration deferred off the startup critical path: the emoji emote
  * set, the 7TV cosmetics snapshot, and the per-channel recent-message caches
@@ -145,6 +229,7 @@ const hydrateDeferredChatState = () => {
   // recent-messages hydration below.
   const persistedCosmetics = loadPersistedCosmetics();
   if (persistedCosmetics) {
+    backfillBadgeProviders(Object.values(persistedCosmetics.badges));
     batch(() => {
       chatStore$.paints.set({
         ...persistedCosmetics.paints,
@@ -277,6 +362,8 @@ export const migratePersistedChatStore = () => {
     string,
     LegacyChannelCache
   >;
+  backfillPersistedProviders();
+
   batch(() => {
     seedGlobalCachesFromChannelCopies(caches);
     for (const [id, cache] of Object.entries(caches)) {

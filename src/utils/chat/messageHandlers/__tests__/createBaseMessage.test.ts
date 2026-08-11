@@ -15,7 +15,7 @@ describe('createBaseMessage', () => {
     jest.clearAllMocks();
   });
 
-  test('should create a base message with required fields', () => {
+  test('creates a base message with required fields', () => {
     const params = {
       tags: {
         'display-name': 'TestUser',
@@ -37,7 +37,7 @@ describe('createBaseMessage', () => {
     ]);
   });
 
-  test('should trim trailing whitespace from text', () => {
+  test('trims trailing whitespace from text', () => {
     const params = {
       tags: {
         'display-name': 'TestUser',
@@ -56,7 +56,7 @@ describe('createBaseMessage', () => {
     });
   });
 
-  test('should mark Highlight My Message PRIVMSG tags as highlighted', () => {
+  test('marks Highlight My Message PRIVMSG tags as highlighted', () => {
     const params = {
       tags: {
         'display-name': 'Rexdain',
@@ -76,7 +76,7 @@ describe('createBaseMessage', () => {
     expect(result.userstate['msg-id']).toBe('highlighted-message');
   });
 
-  test('should use the Twitch message id for message_nonce when present', () => {
+  test('uses the Twitch message id for message_nonce when present', () => {
     const params = {
       tags: {
         'display-name': 'TestUser',
@@ -92,7 +92,7 @@ describe('createBaseMessage', () => {
     expect(result.message_nonce).toBe('msg-123');
   });
 
-  test('should default message_id to "0" when id not in tags', () => {
+  test('defaults message_id to "0" when id not in tags', () => {
     const params = {
       tags: {
         'display-name': 'TestUser',

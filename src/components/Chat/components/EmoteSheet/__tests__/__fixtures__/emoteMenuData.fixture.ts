@@ -40,6 +40,7 @@ export function createSevenTvMenuEmote(
     height: 32,
     set_metadata: defaultSevenTvMetadata,
     ...overrides,
+    provider: '7tv',
   };
 }
 
@@ -58,6 +59,7 @@ export function createTwitchMenuEmote(
     emote_link: '',
     site,
     ...overrides,
+    provider: 'twitch',
   };
 }
 
@@ -104,6 +106,7 @@ export function createMenuEmote(
       emote_link: '',
       site,
       ...bttvOverrides,
+      provider: 'bttv',
     } satisfies BttvSanitisedEmote;
   }
 
@@ -118,6 +121,7 @@ export function createMenuEmote(
       emote_link: '',
       site,
       ...ffzOverrides,
+      provider: 'ffz',
     } satisfies FfzSanitisedEmote;
   }
 

@@ -9,6 +9,7 @@ export function createChatterinoBadge(index: number): SanitisedBadgeSet {
     id: `chatterino-user-${index}`,
     url: `https://cdn.example.com/chatterino/${index}.png`,
     type: 'Chatterino Badge',
+    provider: 'chatterino',
     title: `Chatterino ${index}`,
     set: 'chatterino',
     owner_username: `chatter${index}`,
@@ -30,6 +31,7 @@ export const denseBadgeSources = {
   ffzGlobalBadges: [] as SanitisedBadgeSet[],
   bttvBadges: [] as SanitisedBadgeSet[],
   chatterinoBadges: denseChatterinoBadges,
+  getEntitledBadge: () => null,
 };
 
 export const badgeLookupUserstates = Array.from({ length: 120 }, (_, index) => {

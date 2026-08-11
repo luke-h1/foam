@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import {
   makeMutable,
   type SharedValue,
@@ -17,6 +17,8 @@ interface SharedPaintAnimationEntry {
   lastTimestamp: SharedValue<number>;
   refCount: number;
   disposeTimer: ReturnType<typeof setTimeout> | null;
+  ready: boolean;
+  readyListeners: Set<() => void>;
 }
 
 const entries = new Map<string, SharedPaintAnimationEntry>();
@@ -26,6 +28,10 @@ const RELEASED_ENTRY_LINGER_MS = 5_000;
 
 const DEFAULT_FRAME_DURATION_MS = 60;
 
+function notifyReady(entry: SharedPaintAnimationEntry): void {
+  entry.readyListeners.forEach(listener => listener());
+}
+
 function disposeEntry(url: string, entry: SharedPaintAnimationEntry): void {
   if (entries.get(url) === entry) {
     entries.delete(url);
@@ -34,6 +40,8 @@ function disposeEntry(url: string, entry: SharedPaintAnimationEntry): void {
   entry.frame.value = null;
   entry.animatedImage.value?.dispose();
   entry.animatedImage.value = null;
+  entry.ready = false;
+  notifyReady(entry);
 }
 
 function getOrCreateEntry(url: string): SharedPaintAnimationEntry {
@@ -52,6 +60,8 @@ function getOrCreateEntry(url: string): SharedPaintAnimationEntry {
     lastTimestamp: makeMutable(-1),
     refCount: 0,
     disposeTimer: null,
+    ready: false,
+    readyListeners: new Set(),
   };
   entries.set(url, entry);
 
@@ -62,7 +72,14 @@ function getOrCreateEntry(url: string): SharedPaintAnimationEntry {
         image?.dispose();
         return;
       }
+      if (!image) {
+        return;
+      }
       entry.animatedImage.value = image;
+      image.decodeNextFrame();
+      entry.frame.value = image.getCurrentFrame();
+      entry.ready = true;
+      notifyReady(entry);
     })
     .catch((error: unknown) => {
       logger.chat.warn('Failed to load animated paint texture:', {
@@ -135,4 +152,30 @@ export function useSharedPaintAnimationFrame(
   });
 
   return frame;
+}
+
+export function useSharedPaintAnimationReady(url: string): boolean {
+  const entry = useMemo(() => (url ? getOrCreateEntry(url) : null), [url]);
+
+  useEffect(() => {
+    if (!url) {
+      return;
+    }
+    retainEntry(url);
+    return () => releaseEntry(url);
+  }, [url]);
+
+  return useSyncExternalStore(
+    listener => {
+      if (!entry) {
+        return () => {};
+      }
+      entry.readyListeners.add(listener);
+      return () => {
+        entry.readyListeners.delete(listener);
+      };
+    },
+    () => (entry ? entry.ready : true),
+    () => (entry ? false : true),
+  );
 }

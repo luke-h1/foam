@@ -14,6 +14,12 @@ export const twitchKeys = {
     [...twitchKeys.all, 'followedStreams', userId] as const,
   followedChannels: (userId: string) =>
     [...twitchKeys.all, 'followedChannels', userId] as const,
+  followedChannelProfileImages: (broadcasterIds: string[]) =>
+    [
+      ...twitchKeys.all,
+      'followedChannelProfileImages',
+      broadcasterIds.join(','),
+    ] as const,
   topStreams: () => [...twitchKeys.all, 'topStreams'] as const,
   topCategories: () => [...twitchKeys.all, 'topCategories'] as const,
   streamsByCategory: (categoryId: string) =>

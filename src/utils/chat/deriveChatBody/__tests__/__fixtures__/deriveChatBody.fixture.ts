@@ -57,6 +57,7 @@ export const stvEmoteEvent = (): ParsedPart<'stv_emote_added'> => ({
       url: 'https://example.com/dank.png',
       original_name: 'FeelsDankMan',
       site: 'BTTV',
+      provider: 'bttv',
       creator: null,
       emote_link: '',
       width: 32,

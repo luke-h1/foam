@@ -21,6 +21,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'zoilFurry',
@@ -41,6 +42,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'zoilDitch',
@@ -62,6 +64,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'zoil5W',
@@ -82,6 +85,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'zoilStalling',
@@ -102,6 +106,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'djShaq',
@@ -123,6 +128,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'foilL',
@@ -144,6 +150,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'pigPls',
@@ -165,6 +172,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'AYAYA',
@@ -185,6 +193,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'zoilWolf',
@@ -205,6 +214,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'PORTUGAL',
@@ -225,6 +235,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'iLOVEapple',
@@ -246,6 +257,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'iLOVEyou',
@@ -267,6 +279,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'donkJam',
@@ -288,6 +301,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'donkPls',
@@ -309,6 +323,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'BOGGED',
@@ -329,6 +344,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'OMGScoots',
@@ -349,6 +365,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'catKiss',
@@ -370,6 +387,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'catJAM',
@@ -391,6 +409,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'AlienVibe',
@@ -412,6 +431,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'zoilGrind',
@@ -433,6 +453,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'PETTHEPIGGY',
@@ -454,6 +475,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'zoilCoomer',
@@ -475,6 +497,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'SoyChamp',
@@ -495,6 +518,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'TROLLING',
@@ -516,6 +540,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'WaitWTF',
@@ -536,6 +561,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'TRIcycle',
@@ -557,6 +583,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'Oinking',
@@ -578,6 +605,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'zoilJAMMER',
@@ -599,6 +627,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'zoilHead',
@@ -619,6 +648,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'hackerCD',
@@ -640,6 +670,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'LETSFUCKINGGO',
@@ -660,6 +691,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'zoilKool',
@@ -681,6 +713,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'ppCircle',
@@ -702,6 +735,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'Holdup',
@@ -723,6 +757,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'zoilHotdog',
@@ -744,6 +779,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'Capp',
@@ -765,6 +801,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'sumSmash',
@@ -786,6 +823,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'peepoCocoa',
@@ -807,6 +845,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'Gorgeous',
@@ -827,6 +866,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'RedShell',
@@ -848,6 +888,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'zoilNo',
@@ -869,6 +910,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'zoilSaltshaker',
@@ -890,6 +932,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'PogTasty',
@@ -911,6 +954,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'Jammies',
@@ -932,6 +976,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'DietCheck',
@@ -953,6 +998,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'Waiting',
@@ -973,6 +1019,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'BabyPls',
@@ -994,6 +1041,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'Soying',
@@ -1015,6 +1063,7 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
   {
     name: 'zoilCope',
@@ -1035,5 +1084,6 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     original_name: 'UNKNOWN',
     creator: null,
     site: 'BTTV',
+    provider: 'bttv',
   },
 ];

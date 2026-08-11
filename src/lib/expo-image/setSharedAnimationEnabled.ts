@@ -14,7 +14,7 @@ import { requireOptionalNativeModule } from 'expo';
 export async function setSharedAnimationEnabled(
   enabled: boolean,
 ): Promise<void> {
-  if (Platform.OS !== 'ios') {
+  if (Platform.OS !== 'ios' && Platform.OS !== 'android') {
     return;
   }
   const imageModule = requireOptionalNativeModule<{

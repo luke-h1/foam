@@ -1,5 +1,9 @@
 import { EmoteSetKind } from '@app/graphql/generated/gql';
-import type { SanitisedEmote } from '@app/types/emote';
+import {
+  buildSanitisedEmote,
+  type SevenTvEmoteSource,
+} from '@app/services/emote-provider';
+import type { SanitisedEmote, SevenTvSanitisedEmote } from '@app/types/emote';
 import type {
   ChangeMap,
   CosmeticCreate,
@@ -173,43 +177,75 @@ function pickBestSevenTvFile(
   return widest;
 }
 
+/**
+ * Reused for every emote in an `emote_set.update` burst so routing through
+ * `buildSanitisedEmote` costs no source-bag allocation per emote; every field
+ * is overwritten before each call and the builder copies rather than retains
+ * the source.
+ */
+const wireEmoteSource: SevenTvEmoteSource = {
+  site: '7TV Channel',
+  id: '',
+  name: '',
+  originalName: '',
+  creator: null,
+  url: '',
+  staticUrl: undefined,
+  imageVariants: undefined,
+  flags: 0,
+  frameCount: 1,
+  format: 'avif',
+  aspectRatio: 1,
+  zeroWidth: false,
+  width: 0,
+  height: 0,
+  setMetadata: {
+    setId: '',
+    setName: '',
+    capacity: null,
+    ownerId: null,
+    kind: EmoteSetKind.Normal,
+    updatedAt: '',
+    totalCount: 0,
+  },
+  actor: undefined,
+};
+
 function toSanitisedSevenTvEmote(
   emote: SevenTvEmote,
   actor: StvUser | undefined,
   now: number,
-): SanitisedEmote {
+): SevenTvSanitisedEmote | null {
   const bestFile = pickBestSevenTvFile(emote.data.host.files);
 
-  return {
-    name: emote.name,
-    id: emote.id,
-    url: `https://cdn.7tv.app/emote/${emote.id}/${bestFile?.name ?? '1x.avif'}`,
-    original_name: emote.data.name,
-    creator:
-      (emote.data.owner?.display_name || emote.data.owner?.username) ??
-      'UNKNOWN',
-    emote_link: `https://7tv.app/emotes/${emote.id}`,
-    site: '7TV Channel' as const,
-    frame_count: bestFile?.frame_count ?? 1,
-    format: bestFile?.format ?? 'avif',
-    flags: emote.data.flags,
-    aspect_ratio:
-      bestFile && bestFile.height > 0 ? bestFile.width / bestFile.height : 1,
-    // eslint-disable-next-line no-bitwise
-    zero_width: Boolean(emote.data.flags & 256),
-    width: bestFile?.width ?? 0,
-    height: bestFile?.height ?? 0,
-    set_metadata: {
-      setId: '',
-      setName: '',
-      capacity: null,
-      ownerId: null,
-      kind: EmoteSetKind.Normal,
-      updatedAt: new Date(now).toISOString(),
-      totalCount: 0,
-    },
-    actor,
+  const source = wireEmoteSource;
+  source.id = emote.id;
+  source.name = emote.name;
+  source.originalName = emote.data.name;
+  source.creator =
+    (emote.data.owner?.display_name || emote.data.owner?.username) ?? 'UNKNOWN';
+  source.url = `https://cdn.7tv.app/emote/${emote.id}/${bestFile?.name ?? '1x.avif'}`;
+  source.flags = emote.data.flags;
+  source.frameCount = bestFile?.frame_count ?? 1;
+  source.format = bestFile?.format ?? 'avif';
+  source.aspectRatio =
+    bestFile && bestFile.height > 0 ? bestFile.width / bestFile.height : 1;
+  // eslint-disable-next-line no-bitwise
+  source.zeroWidth = Boolean(emote.data.flags & 256);
+  source.width = bestFile?.width ?? 0;
+  source.height = bestFile?.height ?? 0;
+  source.setMetadata = {
+    setId: '',
+    setName: '',
+    capacity: null,
+    ownerId: null,
+    kind: EmoteSetKind.Normal,
+    updatedAt: new Date(now).toISOString(),
+    totalCount: 0,
   };
+  source.actor = actor;
+
+  return buildSanitisedEmote(source);
 }
 
 function findTwitchUserId(
@@ -263,20 +299,23 @@ function interpretEmoteSetUpdate(
     const removed: SanitisedEmote[] = [];
     const { body } = data;
 
+    const pushInto = (target: SanitisedEmote[], emote: SevenTvEmote) => {
+      const sanitised = toSanitisedSevenTvEmote(emote, body.actor, context.now);
+      if (sanitised) {
+        target.push(sanitised);
+      }
+    };
+
     if (body.pushed) {
       body.pushed.forEach(emote => {
-        added.push(
-          toSanitisedSevenTvEmote(emote.value, body.actor, context.now),
-        );
+        pushInto(added, emote.value);
       });
     }
 
     if (body.pulled) {
       body.pulled.forEach(emote => {
         if (emote && emote.old_value) {
-          removed.push(
-            toSanitisedSevenTvEmote(emote.old_value, body.actor, context.now),
-          );
+          pushInto(removed, emote.old_value);
         }
       });
     }
@@ -284,13 +323,9 @@ function interpretEmoteSetUpdate(
     if (body.updated) {
       body.updated.forEach(emote => {
         if (emote.old_value) {
-          removed.push(
-            toSanitisedSevenTvEmote(emote.old_value, body.actor, context.now),
-          );
+          pushInto(removed, emote.old_value);
         }
-        added.push(
-          toSanitisedSevenTvEmote(emote.value, body.actor, context.now),
-        );
+        pushInto(added, emote.value);
       });
     }
 

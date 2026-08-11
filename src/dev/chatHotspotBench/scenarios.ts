@@ -9,11 +9,6 @@ import { paintCssDeclarationsToBlock } from '@app/components/Chat/components/Cha
 import { buildPaintedUsernameHtml } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/paintHtml';
 import { buildPaintImageLayers } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/skiaPaintedUsernameRasterizer';
 import {
-  denseEmoteData,
-  reprocessChatLines,
-} from '@app/components/Chat/util/__fixtures__/resolveMessageEmoteParts.perf.fixture';
-import { resolveMessageEmoteParts } from '@app/components/Chat/util/resolveMessageEmoteParts';
-import {
   ingestBurstMessages,
   ingestSeedMessages,
 } from '@app/store/chat/__fixtures__/messages.perf.fixture';
@@ -24,7 +19,12 @@ import {
   badgeLookupUserstates,
   denseBadgeSources,
 } from '@app/utils/chat/__fixtures__/findBadges.perf.fixture';
+import {
+  denseEmoteData,
+  reprocessChatLines,
+} from '@app/utils/chat/__fixtures__/resolveMessageEmoteParts.perf.fixture';
 import { findBadges } from '@app/utils/chat/findBadges';
+import { resolveMessageEmoteParts } from '@app/utils/chat/resolveMessageEmoteParts';
 
 import { measureSync, type SyncMeasureResult } from './measureSync';
 

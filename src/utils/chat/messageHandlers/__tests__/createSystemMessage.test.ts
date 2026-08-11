@@ -12,7 +12,7 @@ describe('createSystemMessage', () => {
     jest.clearAllMocks();
   });
 
-  test('should create a system message', () => {
+  test('creates a system message', () => {
     const result = createSystemMessage('testchannel', 'Connection established');
 
     expect(result.channel).toBe('testchannel');
@@ -22,7 +22,7 @@ describe('createSystemMessage', () => {
     ]);
   });
 
-  test('should have system userstate', () => {
+  test('has system userstate', () => {
     const result = createSystemMessage('testchannel', 'Test message');
 
     expect(result.userstate['display-name']).toBe('System');
@@ -30,7 +30,7 @@ describe('createSystemMessage', () => {
     expect(result.userstate.color).toBe('#808080');
   });
 
-  test('should generate unique message IDs', () => {
+  test('generates unique message IDs', () => {
     const result1 = createSystemMessage('channel', 'Message 1');
     const result2 = createSystemMessage('channel', 'Message 2');
 
@@ -38,7 +38,7 @@ describe('createSystemMessage', () => {
     expect(result2.message_id).toMatch(/^system-/);
   });
 
-  test('should have empty badges', () => {
+  test('has empty badges', () => {
     const result = createSystemMessage('testchannel', 'Test');
 
     expect(result.badges).toEqual<SanitisedBadgeSet[]>([]);

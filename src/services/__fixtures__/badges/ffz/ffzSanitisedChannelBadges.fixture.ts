@@ -9,6 +9,7 @@ export const ffzSanitiisedChannelBadges: SanitisedBadgeSet[] = [
     owner_username: '12943173',
     set: 'vip',
     type: 'FFZ channel badge',
+    provider: 'ffz',
   },
   {
     id: 'mod_badge',
@@ -18,5 +19,6 @@ export const ffzSanitiisedChannelBadges: SanitisedBadgeSet[] = [
     owner_username: '12943173',
     set: 'mod',
     type: 'FFZ channel badge',
+    provider: 'ffz',
   },
 ];

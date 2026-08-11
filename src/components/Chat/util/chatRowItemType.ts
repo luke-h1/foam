@@ -82,6 +82,15 @@ function getUserChatRowItemType(
 }
 
 /**
+ * The list asks for a row's type several times per row (container render,
+ * size estimation, container allocation) and the collaborators are all
+ * WeakMap-cached already - this memoises the composed string per message and
+ * inline-reply setting so repeat calls are a Map hit.
+ */
+const itemTypeWithReplyContext = new WeakMap<AnyChatMessageType, string>();
+const itemTypeWithoutReplyContext = new WeakMap<AnyChatMessageType, string>();
+
+/**
  * The row's recycling identity, which the list treats as fixed once the row is
  * placed. Every flag must come from the message itself, never from
  * asynchronously resolved state such as a 7TV paint.
@@ -94,14 +103,26 @@ export function getChatRowItemType(
     return 'invalid';
   }
 
+  const cache =
+    options?.showInlineReplyContext !== false
+      ? itemTypeWithReplyContext
+      : itemTypeWithoutReplyContext;
+  const cached = cache.get(item);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  let itemType: string;
   if (item.sender?.toLowerCase() === 'system') {
-    return 'system-notice';
+    itemType = 'system-notice';
+  } else {
+    const bodyVariant = resolveBodyVariant(item);
+    itemType =
+      bodyVariant !== 'user_chat'
+        ? `${bodyVariant}-${getChatRowSizeBucket(item)}`
+        : getUserChatRowItemType(item, options);
   }
 
-  const bodyVariant = resolveBodyVariant(item);
-  if (bodyVariant !== 'user_chat') {
-    return `${bodyVariant}-${getChatRowSizeBucket(item)}`;
-  }
-
-  return getUserChatRowItemType(item, options);
+  cache.set(item, itemType);
+  return itemType;
 }

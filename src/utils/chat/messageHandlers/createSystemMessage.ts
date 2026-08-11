@@ -1,5 +1,5 @@
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
-import { Color } from '@app/styles/pallete';
+import { Color } from '@app/styles/palette';
 import { generateNonce } from '@app/utils/string/generateNonce';
 
 import { createChatTimestamp } from './createChatTimestamp';

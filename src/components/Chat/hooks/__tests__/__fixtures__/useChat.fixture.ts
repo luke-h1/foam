@@ -23,6 +23,7 @@ export function createTwitchEmote(
     creator: null,
     emote_link: 'https://twitch.tv/emotes/twitch-emote-1',
     site: 'Twitch Channel',
+    provider: 'twitch',
     ...overrides,
   };
 }
@@ -34,6 +35,7 @@ export function createBadge(
     id: 'badge-1',
     set: 'subscriber',
     type: 'Twitch Subscriber Badge',
+    provider: 'twitch',
     title: 'Subscriber',
     url: 'https://cdn.example.test/badge.png',
     ...overrides,
@@ -56,6 +58,7 @@ export function createSevenTvEmote(
     creator: null,
     emote_link: 'https://7tv.app/emotes/emote-1',
     site: '7TV Channel',
+    provider: '7tv',
     frame_count: 12,
     format: 'WEBP',
     flags: 0,

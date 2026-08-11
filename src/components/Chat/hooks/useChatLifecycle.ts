@@ -2,16 +2,8 @@ import { MutableRefObject, useEffect, useRef } from 'react';
 
 import { useSyncRef } from '@app/hooks/useSyncRef';
 import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
-import {
-  abortCurrentLoad,
-  clearChannelResources,
-  clearPersonalEmotesCache,
-} from '@app/store/chat/actions/channelLoad';
+import { resetChannelSession } from '@app/store/chat/actions/channelSession';
 import { clearMentionSessionCaches } from '@app/store/chat/actions/chatColorCaches';
-import { clearPaintBindings } from '@app/store/chat/actions/cosmetics';
-import { clearMessages } from '@app/store/chat/actions/messages';
-import { clearFetchedCosmeticsUsers } from '@app/store/chat/actions/userCosmeticsFetch';
-import { resetMentionLoginResolver } from '@app/utils/chat/mentionLoginResolver/resetMentionLoginResolver';
 
 type PartChannel = (channelName: string) => void;
 
@@ -58,17 +50,15 @@ export function useChatLifecycle({
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', () => {
       const lifecycle = lifecycleRef.current;
-      abortCurrentLoad();
       lifecycle.cancelEmoteLoad();
       isMountedRef.current = false;
-      clearChannelResources();
+      resetChannelSession('leave');
 
       if (!hasPartedRef.current) {
         hasPartedRef.current = true;
         lifecycle.partChannel(lifecycle.channelName);
       }
 
-      clearMentionSessionCaches();
       lifecycle.clearLocalMessages();
       initializedChannelRef.current = null;
       currentEmoteSetIdRef.current = null;
@@ -83,15 +73,9 @@ export function useChatLifecycle({
     const lifecycle = lifecycleRef.current;
     isMountedRef.current = false;
     hasPartedRef.current = false;
-    abortCurrentLoad();
     lifecycle.cancelEmoteLoad();
-    clearChannelResources();
-    clearPaintBindings();
-    clearPersonalEmotesCache();
-    clearFetchedCosmeticsUsers();
+    resetChannelSession('unmount');
     lifecycle.processedMessageIdsRef.current.clear();
-    clearMentionSessionCaches();
-    resetMentionLoginResolver();
     lifecycle.clearLocalMessages();
     lifecycle.cleanupScroll();
     lifecycle.cleanupMessages();
@@ -113,8 +97,7 @@ export function useChatLifecycle({
       initializedChannelRef.current &&
       initializedChannelRef.current !== channelId
     ) {
-      clearMessages();
-      clearMentionSessionCaches();
+      resetChannelSession('switch');
       clearLocalMessages();
     }
     initializedChannelRef.current = channelId;

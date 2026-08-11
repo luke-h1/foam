@@ -1,5 +1,5 @@
-import { boundedSetAdd } from '@app/components/Chat/util/hydrateVisibleSevenTvAssets/boundedSetAdd';
 import { logger } from '@app/utils/logger';
+import { boundedSetAdd } from '@app/utils/object/boundedSetAdd';
 
 import {
   getUserBadge,

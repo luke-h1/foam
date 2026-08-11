@@ -14,6 +14,7 @@ const sevenTvPersonalEmote: SanitisedEmote = {
   creator: null,
   emote_link: 'https://7tv.app/emotes/personal-emote',
   site: '7TV Personal',
+  provider: '7tv',
   url: 'https://cdn.7tv.app/emote/personal-emote/4x.webp',
   frame_count: 1,
   format: 'webp',

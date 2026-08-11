@@ -1,12 +1,12 @@
 import { act, renderHook } from '@testing-library/react-native';
 
-import { resolveMessageEmoteParts } from '@app/components/Chat/util/resolveMessageEmoteParts';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import { updateMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import { createEmotePart } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
+import { resolveMessageEmoteParts } from '@app/utils/chat/resolveMessageEmoteParts';
 
 import { useEmoteReprocessing } from '../useEmoteReprocessing';
 import {
@@ -29,7 +29,7 @@ jest.mock('@app/store/chat/observables/chatStore', () => ({
   },
 }));
 
-jest.mock('@app/components/Chat/util/resolveMessageEmoteParts', () => {
+jest.mock('@app/utils/chat/resolveMessageEmoteParts', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports -- Jest mock factory runs before module imports
   const {
     createEmotePart,

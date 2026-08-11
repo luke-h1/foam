@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react-native';
 
 import type { BufferedMessage } from '@app/components/Chat/util/messageBuffer';
+import { incrementChatUnread } from '@app/store/chat/actions/chatUnread';
 import {
   addMessages,
   getMaxChatMessages,
@@ -13,6 +14,11 @@ import {
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 
 import { useChatMessages } from '../useChatMessages';
+import type { ChatScrollAnchor } from '../useChatScroll';
+
+jest.mock('@app/store/chat/actions/chatUnread', () => ({
+  incrementChatUnread: jest.fn(),
+}));
 
 jest.mock('@app/store/chat/actions/messages', () => ({
   addMessages: jest.fn(),
@@ -25,6 +31,7 @@ jest.mock('@app/store/chat/actions/messages', () => ({
 }));
 
 const mockAddMessages = jest.mocked(addMessages);
+const mockIncrementChatUnread = jest.mocked(incrementChatUnread);
 const mockGetMessageById = jest.mocked(getMessageById);
 const mockModerateMessageById = jest.mocked(moderateMessageById);
 const mockModerateMessagesByLogin = jest.mocked(moderateMessagesByLogin);
@@ -80,9 +87,18 @@ describe('useChatMessages', () => {
     replyBody: '',
   });
 
-  const defaultOptions = {
+  const createScrollAnchor = (
+    overrides: Partial<ChatScrollAnchor> = {},
+  ): ChatScrollAnchor => ({
     isAtBottomRef: { current: true },
-    onUnreadIncrement: jest.fn(),
+    isScrollingToBottomRef: { current: false },
+    isUserActivelyScrolling: () => false,
+    maintainBottomAfterContentChange: () => {},
+    ...overrides,
+  });
+
+  const defaultOptions = {
+    scrollAnchor: createScrollAnchor(),
   };
 
   beforeEach(() => {
@@ -95,7 +111,7 @@ describe('useChatMessages', () => {
   });
 
   describe('Initial State', () => {
-    test('should return required functions', () => {
+    test('returns required functions', () => {
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
       expect(typeof result.current.handleNewMessage).toBe('function');
@@ -105,13 +121,13 @@ describe('useChatMessages', () => {
       expect(typeof result.current.getBufferSize).toBe('function');
     });
 
-    test('should start with empty buffer', () => {
+    test('starts with empty buffer', () => {
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
       expect(result.current.getBufferSize()).toBe(0);
     });
 
-    test('should return referentially stable handlers across re-renders', () => {
+    test('returns referentially stable handlers across re-renders', () => {
       const { result, rerender } = renderHook(() =>
         useChatMessages(defaultOptions),
       );
@@ -245,15 +261,15 @@ describe('useChatMessages', () => {
 
   describe('Message Buffering', () => {
     test('keeps flushing after a flush throws, so the chat cannot freeze', () => {
-      const onUnreadIncrement = jest.fn();
       const { result } = renderHook(() =>
         useChatMessages({
-          isAtBottomRef: { current: false },
-          onUnreadIncrement,
+          scrollAnchor: createScrollAnchor({
+            isAtBottomRef: { current: false },
+          }),
         }),
       );
 
-      onUnreadIncrement.mockImplementationOnce(() => {
+      mockIncrementChatUnread.mockImplementationOnce(() => {
         throw new Error('flush boom');
       });
 
@@ -279,7 +295,7 @@ describe('useChatMessages', () => {
       expect(mockAddMessages).toHaveBeenCalledTimes(2);
     });
 
-    test('should buffer messages and flush periodically', () => {
+    test('buffers messages and flush periodically', () => {
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
       const message = createMockMessage('1');
@@ -310,8 +326,9 @@ describe('useChatMessages', () => {
     test('uses the wider batch window when the user is reading backlog', () => {
       const { result } = renderHook(() =>
         useChatMessages({
-          ...defaultOptions,
-          isAtBottomRef: { current: false },
+          scrollAnchor: createScrollAnchor({
+            isAtBottomRef: { current: false },
+          }),
         }),
       );
 
@@ -332,11 +349,12 @@ describe('useChatMessages', () => {
       expect(result.current.getBufferSize()).toBe(0);
     });
 
-    test('should flush when not at bottom so messages always appear', () => {
+    test('flushes when not at bottom so messages always appear', () => {
       const { result } = renderHook(() =>
         useChatMessages({
-          ...defaultOptions,
-          isAtBottomRef: { current: false },
+          scrollAnchor: createScrollAnchor({
+            isAtBottomRef: { current: false },
+          }),
         }),
       );
 
@@ -354,9 +372,10 @@ describe('useChatMessages', () => {
       const onBottomContentChange = jest.fn();
       const { result } = renderHook(() =>
         useChatMessages({
-          ...defaultOptions,
-          isAtBottomRef: { current: true },
-          onBottomContentChange,
+          scrollAnchor: createScrollAnchor({
+            isAtBottomRef: { current: true },
+            maintainBottomAfterContentChange: onBottomContentChange,
+          }),
         }),
       );
 
@@ -375,10 +394,11 @@ describe('useChatMessages', () => {
       const onBottomContentChange = jest.fn();
       const { result } = renderHook(() =>
         useChatMessages({
-          ...defaultOptions,
-          isAtBottomRef: { current: false },
-          isScrollingToBottomRef: { current: true },
-          onBottomContentChange,
+          scrollAnchor: createScrollAnchor({
+            isAtBottomRef: { current: false },
+            isScrollingToBottomRef: { current: true },
+            maintainBottomAfterContentChange: onBottomContentChange,
+          }),
         }),
       );
 
@@ -397,9 +417,10 @@ describe('useChatMessages', () => {
       const onBottomContentChange = jest.fn();
       const { result } = renderHook(() =>
         useChatMessages({
-          ...defaultOptions,
-          isAtBottomRef: { current: false },
-          onBottomContentChange,
+          scrollAnchor: createScrollAnchor({
+            isAtBottomRef: { current: false },
+            maintainBottomAfterContentChange: onBottomContentChange,
+          }),
         }),
       );
 
@@ -412,7 +433,7 @@ describe('useChatMessages', () => {
       expect(onBottomContentChange).not.toHaveBeenCalled();
     });
 
-    test('should deduplicate messages in buffer', () => {
+    test('deduplicates messages in buffer', () => {
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
       const message1 = createMockMessage('1', 'shared-nonce');
@@ -426,7 +447,7 @@ describe('useChatMessages', () => {
       expect(result.current.getBufferSize()).toBe(1);
     });
 
-    test('should keep messages with different nonces', () => {
+    test('keeps messages with different nonces', () => {
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
       act(() => {
@@ -439,11 +460,12 @@ describe('useChatMessages', () => {
   });
 
   describe('Force Flush (Resume Scroll)', () => {
-    test('should flush all buffered messages on forceFlush', () => {
+    test('flushes all buffered messages on forceFlush', () => {
       const { result } = renderHook(() =>
         useChatMessages({
-          ...defaultOptions,
-          isAtBottomRef: { current: false },
+          scrollAnchor: createScrollAnchor({
+            isAtBottomRef: { current: false },
+          }),
         }),
       );
 
@@ -468,13 +490,12 @@ describe('useChatMessages', () => {
   });
 
   describe('Unread Count', () => {
-    test('should batch unread increments while not at bottom', () => {
-      const onUnreadIncrement = jest.fn();
+    test('batches unread increments while not at bottom', () => {
       const { result } = renderHook(() =>
         useChatMessages({
-          ...defaultOptions,
-          isAtBottomRef: { current: false },
-          onUnreadIncrement,
+          scrollAnchor: createScrollAnchor({
+            isAtBottomRef: { current: false },
+          }),
         }),
       );
 
@@ -483,23 +504,22 @@ describe('useChatMessages', () => {
         result.current.handleNewMessage(createMockMessage('2'));
       });
 
-      expect(onUnreadIncrement).not.toHaveBeenCalled();
+      expect(mockIncrementChatUnread).not.toHaveBeenCalled();
 
       act(() => {
         jest.advanceTimersByTime(250);
       });
 
-      expect(onUnreadIncrement).toHaveBeenCalledTimes(1);
-      expect(onUnreadIncrement).toHaveBeenCalledWith(2);
+      expect(mockIncrementChatUnread).toHaveBeenCalledTimes(1);
+      expect(mockIncrementChatUnread).toHaveBeenCalledWith(2);
     });
 
-    test('should not increment unread when at bottom', () => {
-      const onUnreadIncrement = jest.fn();
+    test('does not increment unread when at bottom', () => {
       const { result } = renderHook(() =>
         useChatMessages({
-          ...defaultOptions,
-          isAtBottomRef: { current: true },
-          onUnreadIncrement,
+          scrollAnchor: createScrollAnchor({
+            isAtBottomRef: { current: true },
+          }),
         }),
       );
 
@@ -507,16 +527,15 @@ describe('useChatMessages', () => {
         result.current.handleNewMessage(createMockMessage('1'));
       });
 
-      expect(onUnreadIncrement).not.toHaveBeenCalled();
+      expect(mockIncrementChatUnread).not.toHaveBeenCalled();
     });
 
     test('flushes pending unread count on forceFlush', () => {
-      const onUnreadIncrement = jest.fn();
       const { result } = renderHook(() =>
         useChatMessages({
-          ...defaultOptions,
-          isAtBottomRef: { current: false },
-          onUnreadIncrement,
+          scrollAnchor: createScrollAnchor({
+            isAtBottomRef: { current: false },
+          }),
         }),
       );
 
@@ -526,18 +545,17 @@ describe('useChatMessages', () => {
         result.current.forceFlush();
       });
 
-      expect(onUnreadIncrement).toHaveBeenCalledTimes(1);
-      expect(onUnreadIncrement).toHaveBeenCalledWith(2);
+      expect(mockIncrementChatUnread).toHaveBeenCalledTimes(1);
+      expect(mockIncrementChatUnread).toHaveBeenCalledWith(2);
     });
 
-    test('should not increment unread while jumping to bottom', () => {
-      const onUnreadIncrement = jest.fn();
+    test('does not increment unread while jumping to bottom', () => {
       const { result } = renderHook(() =>
         useChatMessages({
-          ...defaultOptions,
-          isAtBottomRef: { current: false },
-          isScrollingToBottomRef: { current: true },
-          onUnreadIncrement,
+          scrollAnchor: createScrollAnchor({
+            isAtBottomRef: { current: false },
+            isScrollingToBottomRef: { current: true },
+          }),
         }),
       );
 
@@ -545,7 +563,7 @@ describe('useChatMessages', () => {
         result.current.handleNewMessage(createMockMessage('1'));
       });
 
-      expect(onUnreadIncrement).not.toHaveBeenCalled();
+      expect(mockIncrementChatUnread).not.toHaveBeenCalled();
     });
   });
 
@@ -633,7 +651,7 @@ describe('useChatMessages', () => {
   });
 
   describe('Cleanup', () => {
-    test('should clear flush timer on cleanup', () => {
+    test('clears flush timer on cleanup', () => {
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
       act(() => {
@@ -651,7 +669,7 @@ describe('useChatMessages', () => {
       expect(mockAddMessages).not.toHaveBeenCalled();
     });
 
-    test('should clear buffer on clearLocalMessages', () => {
+    test('clears buffer on clearLocalMessages', () => {
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
       act(() => {
@@ -671,11 +689,12 @@ describe('useChatMessages', () => {
 
   describe('High volume', () => {
     const scrolledUpOptions = {
-      ...defaultOptions,
-      isAtBottomRef: { current: false },
+      scrollAnchor: createScrollAnchor({
+        isAtBottomRef: { current: false },
+      }),
     };
 
-    test('should flush entire buffer so all messages appear', () => {
+    test('flushes entire buffer so all messages appear', () => {
       const { result } = renderHook(() => useChatMessages(scrolledUpOptions));
 
       act(() => {
@@ -728,9 +747,10 @@ describe('useChatMessages', () => {
     test('keeps every message while the user is dragging the list', () => {
       const { result } = renderHook(() =>
         useChatMessages({
-          ...defaultOptions,
-          isAtBottomRef: { current: false },
-          isUserActivelyScrolling: () => true,
+          scrollAnchor: createScrollAnchor({
+            isAtBottomRef: { current: false },
+            isUserActivelyScrolling: () => true,
+          }),
         }),
       );
 
@@ -753,11 +773,42 @@ describe('useChatMessages', () => {
       );
     });
 
+    test('defers publishing while an at-bottom drag or fling is active', () => {
+      let activelyScrolling = true;
+      const { result } = renderHook(() =>
+        useChatMessages({
+          scrollAnchor: createScrollAnchor({
+            isAtBottomRef: { current: true },
+            isUserActivelyScrolling: () => activelyScrolling,
+          }),
+        }),
+      );
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('during-fling'));
+        jest.advanceTimersByTime(500);
+      });
+
+      expect(mockAddMessages).not.toHaveBeenCalled();
+      expect(result.current.getBufferSize()).toBe(1);
+
+      activelyScrolling = false;
+      act(() => {
+        jest.advanceTimersByTime(250);
+      });
+
+      expect(
+        getLastFlushedMessages().map(message => message.message_id),
+      ).toEqual(['during-fling']);
+      expect(result.current.getBufferSize()).toBe(0);
+    });
+
     test('caps a live raid flush at the bottom to a bounded batch of rows', () => {
       const { result } = renderHook(() =>
         useChatMessages({
-          ...defaultOptions,
-          isAtBottomRef: { current: true },
+          scrollAnchor: createScrollAnchor({
+            isAtBottomRef: { current: true },
+          }),
         }),
       );
 
@@ -787,8 +838,9 @@ describe('useChatMessages', () => {
     test('raid mode does not drain slower than the normal live cadence', () => {
       const { result } = renderHook(() =>
         useChatMessages({
-          ...defaultOptions,
-          isAtBottomRef: { current: true },
+          scrollAnchor: createScrollAnchor({
+            isAtBottomRef: { current: true },
+          }),
         }),
       );
 
@@ -808,8 +860,9 @@ describe('useChatMessages', () => {
     test('a quiet flush clears raid mode instead of latching it on the backlog', () => {
       const { result } = renderHook(() =>
         useChatMessages({
-          ...defaultOptions,
-          isAtBottomRef: { current: true },
+          scrollAnchor: createScrollAnchor({
+            isAtBottomRef: { current: true },
+          }),
         }),
       );
 
@@ -836,8 +889,9 @@ describe('useChatMessages', () => {
     test('a raid drains in order across flushes instead of dropping the overflow', () => {
       const { result } = renderHook(() =>
         useChatMessages({
-          ...defaultOptions,
-          isAtBottomRef: { current: true },
+          scrollAnchor: createScrollAnchor({
+            isAtBottomRef: { current: true },
+          }),
         }),
       );
 
@@ -862,12 +916,11 @@ describe('useChatMessages', () => {
     });
 
     test('counts every message toward unread when the user is scrolled up', () => {
-      const onUnreadIncrement = jest.fn();
       const { result } = renderHook(() =>
         useChatMessages({
-          ...defaultOptions,
-          isAtBottomRef: { current: false },
-          onUnreadIncrement,
+          scrollAnchor: createScrollAnchor({
+            isAtBottomRef: { current: false },
+          }),
         }),
       );
 
@@ -880,7 +933,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(250);
       });
 
-      const counted = onUnreadIncrement.mock.calls.reduce(
+      const counted = mockIncrementChatUnread.mock.calls.reduce(
         (total, [count]) => total + count,
         0,
       );
@@ -958,8 +1011,9 @@ describe('useChatMessages', () => {
       }));
       const { result } = renderHook(() =>
         useChatMessages({
-          ...defaultOptions,
-          isAtBottomRef: { current: false },
+          scrollAnchor: createScrollAnchor({
+            isAtBottomRef: { current: false },
+          }),
           finalizeMessageForCommit,
         }),
       );

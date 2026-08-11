@@ -19,6 +19,10 @@ export interface IrcFixtureMessage {
    * When set, emitted as a reply to this (display name + body).
    */
   replyTo?: { name: string; text: string };
+  /**
+   * When set, emitted as a cheer with this bits amount.
+   */
+  bits?: number;
 }
 
 export interface BuiltFixtureMessage {
@@ -81,6 +85,10 @@ export function buildIrcFixtureMessage(
     'user-type': entry.role === 'mod' ? 'mod' : '',
   };
 
+  if (entry.bits) {
+    tags.bits = String(entry.bits);
+  }
+
   if (entry.replyTo) {
     tags['reply-parent-display-name'] = entry.replyTo.name;
     tags['reply-parent-user-login'] = entry.replyTo.name.toLowerCase();
@@ -98,6 +106,65 @@ export function buildIrcFixtureMessage(
  * sentences, mentions and replies
  */
 export const IRC_FIXTURE_MESSAGES: IrcFixtureMessage[] = [
+  // Coverage the original corpus lacked: long copypasta, unicode +
+  // zero-width emote stacks, cheers, mention storms, and reply chains.
+  {
+    user: 'copypasta_enjoyer',
+    text: 'I am not saying chat is washed but I have seen glaciers move faster than this gameplay and honestly at this point I am just here for the soundtrack, the vibes, and the occasional jumpscare, so keep it together everyone we are almost at the boss, trust the process, believe in the heart of the cards, and most importantly protect the streamer at all costs no matter what happens next',
+    role: 'sub',
+  },
+  {
+    user: 'zerowidth_wizard',
+    text: 'catJAM SteerR RainTime cvHazmat cvJam catJAM',
+    role: 'sub',
+  },
+  { user: 'unicode_uwu', text: 'いいね w この配信最高 catJAM 草草草' },
+  { user: 'emoji_flood', text: '🔥🔥🔥 W stream 🐐🐐🐐 no cap 💯💯💯' },
+  { user: 'rtl_router', text: 'حرفيا افضل بث شفته اليوم PogU' },
+  {
+    user: 'cheer_lord',
+    text: 'Cheer100 take my money PogU',
+    bits: 100,
+    role: 'sub',
+  },
+  {
+    user: 'bit_dropper',
+    text: 'Cheer1000 CLIP IT AND SHIP IT',
+    bits: 1000,
+    role: 'vip',
+  },
+  {
+    user: 'mention_stormer',
+    text: '@cinna @sodapoppin @hvdras501 @wholesome_andy803 did you all see that',
+  },
+  {
+    user: 'reply_chainer',
+    text: 'no shot that was scripted Clueless',
+    replyTo: { name: 'mention_stormer', text: 'did you all see that' },
+  },
+  {
+    user: 'reply_chainer2',
+    text: 'it was 100% scripted LULW',
+    replyTo: {
+      name: 'reply_chainer',
+      text: 'no shot that was scripted Clueless',
+    },
+    role: 'sub',
+  },
+  {
+    user: 'wall_of_emotes',
+    text: 'OMEGADANCEBUTFAST catJAM ratJAM PogU LULW Clueless GIGACHAD peepoClap RaveTime cinnaGroove OMEGADANCEBUTFAST catJAM ratJAM PogU LULW Clueless GIGACHAD peepoClap RaveTime cinnaGroove',
+    role: 'sub',
+  },
+  {
+    user: 'linkposter',
+    text: 'https://clips.twitch.tv/AmazonianEncouragingLyrebird check this',
+  },
+  {
+    user: 'mixed_bag',
+    text: 'W plays 🔥 catJAM @cinna https://7tv.app/emotes/foo Cheer1 gg',
+    bits: 1,
+  },
   { user: 'cinna', text: 'hi chat cinnaW peepoHey', role: 'broadcaster' },
   {
     user: 'sodapoppin',

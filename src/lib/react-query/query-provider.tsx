@@ -1,5 +1,5 @@
 import { PropsWithChildren } from 'react';
-import { AppState, Platform } from 'react-native';
+import { AppState, InteractionManager, Platform } from 'react-native';
 
 import {
   focusManager,
@@ -99,9 +99,15 @@ function stopConnectivityPolling() {
   }
 }
 
-if (AppState.currentState === 'active') {
-  startConnectivityPolling();
-}
+// Armed after boot interactions settle - a module-scope start wakes the JS
+// thread at 2 Hz through the busiest part of startup; the AppState
+// subscription and the reconcile fallback below cover any transition that
+// happens before this runs.
+InteractionManager.runAfterInteractions(() => {
+  if (AppState.currentState === 'active') {
+    startConnectivityPolling();
+  }
+});
 
 subscribeToAppStateTransitions(({ current }) => {
   if (current === 'active') {

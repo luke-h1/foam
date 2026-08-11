@@ -12,7 +12,9 @@ import { KeyboardController } from 'react-native-keyboard-controller';
 import i18next from 'i18next';
 import { toast } from 'sonner-native';
 
+import { getChatUserState } from '@app/services/twitch-chat-service';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
+import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 import { findBadges } from '@app/utils/chat/findBadges';
@@ -42,7 +44,6 @@ interface ChatInputShellProps {
   channelId: string;
   channelName: string;
   connected: boolean;
-  getUserState: () => Record<string, string>;
   isChatConnected: () => boolean;
   onOpenEmoteSheet: () => void;
   onOpenSettingsSheet: () => void;
@@ -79,7 +80,6 @@ export const ChatInputShell = memo(function ChatInputShell({
   channelId,
   channelName,
   connected,
-  getUserState,
   isChatConnected,
   onOpenEmoteSheet,
   onOpenSettingsSheet,
@@ -202,7 +202,7 @@ export const ChatInputShell = memo(function ChatInputShell({
       : actionBody;
 
     const optimisticUserstate = createOptimisticUserState({
-      currentUserState: getUserState(),
+      currentUserState: getChatUserState(),
       replyTo,
       user,
     });
@@ -217,6 +217,7 @@ export const ChatInputShell = memo(function ChatInputShell({
           ffzGlobalBadges: emoteData.ffzGlobalBadges,
           twitchChannelBadges: emoteData.twitchChannelBadges,
           twitchGlobalBadges: emoteData.twitchGlobalBadges,
+          getEntitledBadge: getUserBadge,
         })
       : [];
 
@@ -261,7 +262,6 @@ export const ChatInputShell = memo(function ChatInputShell({
     channelId,
     channelName,
     clearDraft,
-    getUserState,
     isChatConnected,
     isAuthenticated,
     onRefreshCommand,

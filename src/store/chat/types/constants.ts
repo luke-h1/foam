@@ -121,21 +121,10 @@ export interface ChatMessageType<
                 : never;
 }
 
-export type AnyChatMessageType =
-  | ChatMessageType<'usernotice', 'viewermilestone'>
-  | ChatMessageType<'usernotice', 'sub'>
-  | ChatMessageType<'usernotice', 'resub'>
-  | ChatMessageType<'usernotice', 'subgift'>
-  | ChatMessageType<'usernotice', 'submysterygift'>
-  | ChatMessageType<'usernotice', 'giftpaidupgrade'>
-  | ChatMessageType<'usernotice', 'anongiftpaidupgrade'>
-  | ChatMessageType<'usernotice', 'rewardgift'>
-  | ChatMessageType<'usernotice', 'raid'>
-  | ChatMessageType<'usernotice', 'unraid'>
-  | ChatMessageType<'usernotice', 'bitsbadgetier'>
-  | ChatMessageType<'usernotice', 'sharedchatnotice'>
-  | ChatMessageType<'usernotice', 'modiversary'>
-  | ChatMessageType<'usernotice'>;
+export type AnyChatMessageType = ChatMessageType<
+  'usernotice',
+  keyof UserNoticeVariantMap
+>;
 
 export type ChatLoadingState =
   | 'IDLE'

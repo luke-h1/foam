@@ -114,9 +114,9 @@ const mockUseIsHighlightedReplyTargetMessage = jest.mocked(
 
 function renderRowRenderer() {
   const highlightedReplyTargetTimeoutRef = { current: null };
-  const scrollToIndex = jest.fn();
+  const scrollToItem = jest.fn().mockResolvedValue(undefined);
   const listRef = createRef<ChatListRef | null>({
-    scrollToIndex,
+    scrollToItem,
   } as unknown as ChatListRef);
   const messages = [
     createChatMessage({
@@ -178,7 +178,7 @@ function renderRowRenderer() {
     highlightedReplyTargetTimeoutRef,
     hook,
     listRef,
-    scrollToIndex,
+    scrollToItem,
     messages,
     onEmotePress,
     onMessageLongPress,
@@ -319,7 +319,7 @@ describe('useChatRowRenderer', () => {
       const {
         hook,
         messages,
-        scrollToIndex,
+        scrollToItem,
         setHighlightedReplyTargetMessageId,
       } = renderRowRenderer();
       const replyMessage = messages[1];
@@ -347,9 +347,9 @@ describe('useChatRowRenderer', () => {
         onReplyContextPress('msg-1');
       });
 
-      expect(scrollToIndex.mock.calls[0]?.[0]).toEqual({
+      expect(scrollToItem.mock.calls[0]?.[0]).toEqual({
         animated: true,
-        index: 0,
+        item: messages[0],
         viewPosition: 0.35,
       });
       expect(setHighlightedReplyTargetMessageId.mock.calls[0]).toEqual([

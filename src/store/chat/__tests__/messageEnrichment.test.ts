@@ -1,6 +1,3 @@
-import { resolveMessageEmoteParts } from '@app/components/Chat/util/resolveMessageEmoteParts';
-import { getMessageBadges } from '@app/components/Chat/util/sharedChatBadges/getMessageBadges';
-import { getSharedChatBadgeContext } from '@app/components/Chat/util/sharedChatBadges/getSharedChatBadgeContext';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import {
   enrichMessageSet,
@@ -15,6 +12,9 @@ import {
   createEmotePart,
   createTextPart,
 } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
+import { resolveMessageEmoteParts } from '@app/utils/chat/resolveMessageEmoteParts';
+import { getMessageBadges } from '@app/utils/chat/sharedChatBadges/getMessageBadges';
+import { getSharedChatBadgeContext } from '@app/utils/chat/sharedChatBadges/getSharedChatBadgeContext';
 
 import {
   createMockMessage,
@@ -22,7 +22,7 @@ import {
   createSystemMessage,
 } from './__fixtures__/messageEnrichment.fixture';
 
-jest.mock('@app/components/Chat/util/resolveMessageEmoteParts', () => {
+jest.mock('@app/utils/chat/resolveMessageEmoteParts', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports -- Jest mock factory runs before module imports
   const {
     createEmotePart: createEmotePartFixture,
@@ -34,24 +34,18 @@ jest.mock('@app/components/Chat/util/resolveMessageEmoteParts', () => {
   };
 });
 
-jest.mock(
-  '@app/components/Chat/util/sharedChatBadges/getMessageBadges',
-  () => ({
-    getMessageBadges: jest.fn(() => []),
-  }),
-);
+jest.mock('@app/utils/chat/sharedChatBadges/getMessageBadges', () => ({
+  getMessageBadges: jest.fn(() => []),
+}));
 
-jest.mock(
-  '@app/components/Chat/util/sharedChatBadges/getSharedChatBadgeContext',
-  () => ({
-    getSharedChatBadgeContext: jest.fn(() =>
-      Promise.resolve({
-        sourceBadge: null,
-        sourceChannelBadges: null,
-      }),
-    ),
-  }),
-);
+jest.mock('@app/utils/chat/sharedChatBadges/getSharedChatBadgeContext', () => ({
+  getSharedChatBadgeContext: jest.fn(() =>
+    Promise.resolve({
+      sourceBadge: null,
+      sourceChannelBadges: null,
+    }),
+  ),
+}));
 
 jest.mock('@app/store/chat/actions/channelLoad', () => ({
   getCurrentEmoteData: jest.fn(),
@@ -185,6 +179,7 @@ describe('hasEnrichmentEmoteSources', () => {
               creator: null,
               emote_link: '',
               site: 'Twitch Subscriber',
+              provider: 'twitch',
             } satisfies SanitisedEmote,
           ],
         }),
@@ -202,6 +197,7 @@ describe('hasEnrichmentEmoteSources', () => {
         creator: null,
         emote_link: '',
         site: 'Emoji',
+        provider: 'emoji',
       } satisfies SanitisedEmote,
     ]);
     expect(hasEnrichmentEmoteSources(createEmoteData())).toBe(true);

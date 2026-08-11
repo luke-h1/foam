@@ -12,9 +12,9 @@ import { theme } from '@app/styles/themes';
 import { type UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { type SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { type ParsedPart } from '@app/utils/chat/parsedPart';
 import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
-import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes/replaceTextWithEmotes';
 
 import { chatPreferencePreviewFixtures } from './chatPreferencePreviewFixtures';
 
@@ -585,41 +585,21 @@ function buildProviderEmoteParts(
     return [textPart(' hello world')];
   }
 
-  return replaceTextWithEmotes({
+  const forProvider = (target: SanitisedEmote['provider']) =>
+    emotes.filter(emote => emote.provider === target);
+
+  return processEmotesWorklet({
     inputString: buildProviderEmoteFallbackText(emotes),
     userstate: null,
-    sevenTvChannelEmotes:
-      provider === '7tv'
-        ? emotes.filter(emote => emote.site === '7TV Channel')
-        : [],
-    sevenTvGlobalEmotes:
-      provider === '7tv'
-        ? emotes.filter(emote => emote.site === '7TV Global')
-        : [],
-    sevenTvPersonalEmotes:
-      provider === '7tv'
-        ? emotes.filter(emote => emote.site === '7TV Personal')
-        : [],
-    twitchChannelEmotes:
-      provider === 'twitch'
-        ? emotes.filter(emote => emote.site === 'Twitch Channel')
-        : [],
-    twitchGlobalEmotes:
-      provider === 'twitch'
-        ? emotes.filter(emote => emote.site === 'Twitch Global')
-        : [],
-    ffzChannelEmotes:
-      provider === 'ffz' ? emotes.filter(emote => emote.site === 'FFZ') : [],
-    ffzGlobalEmotes:
-      provider === 'ffz'
-        ? emotes.filter(emote => emote.site === 'Global FFZ')
-        : [],
-    bttvChannelEmotes:
-      provider === 'bttv' ? emotes.filter(emote => emote.site === 'BTTV') : [],
-    bttvGlobalEmotes:
-      provider === 'bttv'
-        ? emotes.filter(emote => emote.site === 'Global BTTV')
-        : [],
+    sevenTvChannelEmotes: provider === '7tv' ? forProvider('7tv') : [],
+    sevenTvGlobalEmotes: [],
+    sevenTvPersonalEmotes: [],
+    twitchChannelEmotes: provider === 'twitch' ? forProvider('twitch') : [],
+    twitchGlobalEmotes: [],
+    ffzChannelEmotes: provider === 'ffz' ? forProvider('ffz') : [],
+    ffzGlobalEmotes: [],
+    bttvChannelEmotes: provider === 'bttv' ? forProvider('bttv') : [],
+    bttvGlobalEmotes: [],
   });
 }
 

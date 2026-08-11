@@ -1,5 +1,11 @@
 const jestConfig = {
   preset: 'jest-expo',
+  /**
+   * Keep the haste crawl out of the native platform dirs - ios/Pods alone is
+   * >1GB, and a native build churns enough files there that the crawl (or a
+   * watchman recrawl) stalls every jest invocation for minutes afterwards.
+   */
+  modulePathIgnorePatterns: ['<rootDir>/ios/', '<rootDir>/android/'],
   setupFilesAfterEnv: [
     '@shopify/react-native-skia/jestSetup.js',
     './test/setupTests.ts',

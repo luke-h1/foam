@@ -1,4 +1,3 @@
-import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { normalizeSevenTvBadge } from '@app/utils/seventv/cosmetics/normalizeSevenTvBadge';
@@ -11,6 +10,14 @@ interface FindBadgesParams {
   ffzChannelBadges: SanitisedBadgeSet[];
   bttvBadges: SanitisedBadgeSet[];
   chatterinoBadges: SanitisedBadgeSet[];
+  /**
+   * The 7TV entitlement lookup (`getUserBadge` in production). An explicit
+   * input because it reads live store state that entitlement events
+   * invalidate - the reason a result-level cache of this function was
+   * rejected (see PERF_REPORT.md) - so the signature must not present the
+   * resolution as a pure function of the roster arrays.
+   */
+  getEntitledBadge: (userId: string) => SanitisedBadgeSet | null | undefined;
 }
 
 const hasBadge = (
@@ -57,7 +64,7 @@ const addBadge = (
     id: normalizedBadge.id,
     color: normalizedBadge.color,
     owner_username: normalizedBadge.owner_username,
-    ...(normalizedBadge.provider ? { provider: normalizedBadge.provider } : {}),
+    provider: normalizedBadge.provider,
   });
 };
 
@@ -174,6 +181,7 @@ export function findBadges({
   ffzGlobalBadges,
   bttvBadges,
   chatterinoBadges,
+  getEntitledBadge,
 }: FindBadgesParams): SanitisedBadgeSet[] {
   const badges: SanitisedBadgeSet[] = [];
 
@@ -237,13 +245,14 @@ export function findBadges({
       url: b.url,
       color: b.color,
       owner_username: b.owner_username,
+      provider: b.provider,
     });
   });
 
   if (userstate['user-id']) {
-    const storeBadge = getUserBadge(userstate['user-id']);
-    if (storeBadge) {
-      addBadgeIfMissing(badges, storeBadge);
+    const entitledBadge = getEntitledBadge(userstate['user-id']);
+    if (entitledBadge) {
+      addBadgeIfMissing(badges, entitledBadge);
     }
   }
 

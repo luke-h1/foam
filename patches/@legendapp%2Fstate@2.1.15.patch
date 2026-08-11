@@ -1,8 +1,408 @@
+diff --git a/node_modules/@legendapp/state/.bun-tag-ef24a35ca4ad9223 b/.bun-tag-ef24a35ca4ad9223
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/node_modules/@legendapp/state/.bun-tag-f7d61dfdcedafc84 b/.bun-tag-f7d61dfdcedafc84
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/index.js b/index.js
+index 8fd37524f3cf8f846a1e75315c8a05b9f6b86087..146daae4f515fa95ee6ac1ba9390bc927ed1c4c0 100644
+--- a/index.js
++++ b/index.js
+@@ -577,6 +577,11 @@ function runBatch() {
+     // Save batch locally and reset _batchMap first because a new batch could begin while looping over callbacks.
+     // This can happen with observableComputed for example.
+     const map = _batchMap;
++    // PATCH(foam): an empty batch has nothing to notify - skip the two Map
++    // allocations and the dispatch walk.
++    if (map.size === 0) {
++        return;
++    }
+     _batchMap = new Map();
+     const changesInBatch = new Map();
+     // First compute all of the changes at each node. It's important to do this first before
+@@ -610,7 +615,10 @@ function batch(fn, onComplete) {
+ }
+ function beginBatch() {
+     numInBatch++;
+-    if (!timeout) {
++    // PATCH(foam): the timeout only recovers from an unbalanced manual
++    // beginBatch, which is a programming error - don't schedule + clear a host
++    // timer on every set in production for it.
++    if (!timeout && process.env.NODE_ENV !== 'production') {
+         timeout = setTimeout(onActionTimeout, 0);
+     }
+ }
+@@ -863,25 +871,26 @@ function updateNodes(parent, obj, prevValue) {
+                     const keysSeen = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test'
+                         ? new Set()
+                         : undefined;
+-                    if (parent.children) {
+-                        for (let i = 0; i < prevValue.length; i++) {
+-                            const p = prevValue[i];
++                    // PATCH(foam): iterate the existing child nodes instead of every
++                    // array element - only elements with a child node were ever added
++                    // to prevChildrenById, so this is equivalent and drops the per-set
++                    // cost from O(array length) to O(child nodes).
++                    if (parent.children && parent.children.size) {
++                        parent.children.forEach((child, childKey) => {
++                            const p = prevValue[+childKey];
+                             if (p) {
+-                                const child = parent.children.get(i + '');
+-                                if (child) {
+-                                    const key = isIdFieldFunction
+-                                        ? idField(p)
+-                                        : p[idField];
+-                                    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+-                                        if (keysSeen.has(key)) {
+-                                            console.warn(`[legend-state] Warning: Multiple elements in array have the same ID. Key field: ${idField}, Array:`, prevValue);
+-                                        }
+-                                        keysSeen.add(key);
++                                const key = isIdFieldFunction
++                                    ? idField(p)
++                                    : p[idField];
++                                if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
++                                    if (keysSeen.has(key)) {
++                                        console.warn(`[legend-state] Warning: Multiple elements in array have the same ID. Key field: ${idField}, Array:`, prevValue);
+                                     }
+-                                    prevChildrenById.set(key, child);
++                                    keysSeen.add(key);
+                                 }
++                                prevChildrenById.set(key, child);
+                             }
+-                        }
++                        });
+                     }
+                 }
+             }
+@@ -890,13 +899,19 @@ function updateNodes(parent, obj, prevValue) {
+     else if (prevValue && (!obj || isObject(obj))) {
+         // For keys that have been removed from object, notify and update children recursively
+         const lengthPrev = keysPrev.length;
++        // PATCH(foam): Set membership instead of Array.includes turns the removed-key
++        // scan from O(prev x next) into O(prev + next) on large records.
++        const keysSet = lengthPrev > 8 && keys && keys.length > 8 ? new Set(keys) : undefined;
+         for (let i = 0; i < lengthPrev; i++) {
+             const key = keysPrev[i];
+-            if (!keys.includes(key)) {
++            if (keysSet ? !keysSet.has(key) : !keys.includes(key)) {
+                 hasADiff = true;
+-                const child = getChildNode(parent, key);
++                // PATCH(foam): a node that was never created has no listeners and no
++                // descendants, so there is nothing to notify - don't create one just
++                // to tear down the removed subtree.
++                const child = parent.children ? parent.children.get(key) : undefined;
+                 const prev = isMap ? prevValue.get(key) : prevValue[key];
+-                if (prev !== undefined) {
++                if (prev !== undefined && child) {
+                     if (!isPrimitive(prev)) {
+                         updateNodes(child, undefined, prev);
+                     }
+@@ -922,7 +937,13 @@ function updateNodes(parent, obj, prevValue) {
+                         ? idField(value)
+                         : value[idField]
+                     : undefined;
+-                let child = getChildNode(parent, key);
++                // PATCH(foam): don't materialize a child node for every diffing
++                // element - a node that doesn't exist has no listeners and no
++                // descendants, so it's only needed when recursing a real diff.
++                // Eagerly creating one per element made parent.children non-empty
++                // on the first large set, which forced the prevChildrenById build
++                // on every set afterwards.
++                let child = parent.children ? parent.children.get(key) : undefined;
+                 // Detect moves within an array. Need to move the original proxy to the new position to keep
+                 // the proxy stable, so that listeners to this node will be unaffected by the array shift.
+                 if (isArr && id !== undefined) {
+@@ -948,6 +969,10 @@ function updateNodes(parent, obj, prevValue) {
+                         // And check for diff against the previous value in the previous position
+                         isDiff = valuePrevChild !== value;
+                     }
++                    else {
++                        // PATCH(foam): same id at the same index - reuse its node.
++                        child = prevChild;
++                    }
+                 }
+                 if (isDiff) {
+                     // Array has a new / modified element
+@@ -955,8 +980,19 @@ function updateNodes(parent, obj, prevValue) {
+                     if (isPrimitive(value)) {
+                         hasADiff = true;
+                     }
++                    else if (!child && prev === undefined) {
++                        // PATCH(foam): a brand-new subtree with no node is trivially
++                        // a diff, and with no node there are no listeners at any
++                        // depth - recursing would only materialize nodes nobody
++                        // subscribes to. This is what keeps a freshly seeded array
++                        // from creating a node per element.
++                        hasADiff = true;
++                    }
+                     else {
+                         // Always need to updateNodes so we notify through all children
++                        if (!child) {
++                            child = getChildNode(parent, key);
++                        }
+                         const updatedNodes = updateNodes(child, value, prev);
+                         hasADiff = hasADiff || updatedNodes;
+                     }
+@@ -966,7 +1002,7 @@ function updateNodes(parent, obj, prevValue) {
+                     // Or if the position changed in an array whose length did not change
+                     // But do not notify child if the parent is an array with changing length -
+                     // the array's listener will cover it
+-                    if (child.listeners || child.listenersImmediate) {
++                    if (child && (child.listeners || child.listenersImmediate)) {
+                         notify(child, value, prev, 0, !isArrDiff);
+                     }
+                 }
+@@ -1027,22 +1063,32 @@ const proxyHandler = {
+         const fn = observableFns.get(p);
+         // If this is an observable function, call it
+         if (fn) {
+-            return function (a, b, c) {
+-                const l = arguments.length;
+-                // Array call and apply are slow so micro-optimize this hot path.
+-                // The observable functions depends on the number of arguments so we have to
+-                // call it with the correct arguments, not just undefined
+-                switch (l) {
+-                    case 0:
+-                        return fn(node);
+-                    case 1:
+-                        return fn(node, a);
+-                    case 2:
+-                        return fn(node, a, b);
+-                    default:
+-                        return fn(node, a, b, c);
+-                }
+-            };
++            // PATCH(foam): cache the wrapper per node + method - every .peek()/
++            // .get()/.set() access allocated a fresh closure, at per-row-render
++            // and per-ingest rates in this app. Stable identity is safe: a node
++            // that becomes linked forwards before reaching this branch.
++            const fns = node.fns || (node.fns = new Map());
++            let wrapped = fns.get(p);
++            if (!wrapped) {
++                wrapped = function (a, b, c) {
++                    const l = arguments.length;
++                    // Array call and apply are slow so micro-optimize this hot path.
++                    // The observable functions depends on the number of arguments so we have to
++                    // call it with the correct arguments, not just undefined
++                    switch (l) {
++                        case 0:
++                            return fn(node);
++                        case 1:
++                            return fn(node, a);
++                        case 2:
++                            return fn(node, a, b);
++                        default:
++                            return fn(node, a, b, c);
++                    }
++                };
++                fns.set(p, wrapped);
++            }
++            return wrapped;
+         }
+         if (node.isComputed) {
+             if (node.proxyFn && !fn) {
+diff --git a/index.mjs b/index.mjs
+index e85796e43d159788ee568fedab63952b643f7a37..a734eae395b0b8d918a81f196319c62d065ed888 100644
+--- a/index.mjs
++++ b/index.mjs
+@@ -575,6 +575,11 @@ function runBatch() {
+     // Save batch locally and reset _batchMap first because a new batch could begin while looping over callbacks.
+     // This can happen with observableComputed for example.
+     const map = _batchMap;
++    // PATCH(foam): an empty batch has nothing to notify - skip the two Map
++    // allocations and the dispatch walk.
++    if (map.size === 0) {
++        return;
++    }
+     _batchMap = new Map();
+     const changesInBatch = new Map();
+     // First compute all of the changes at each node. It's important to do this first before
+@@ -608,7 +613,10 @@ function batch(fn, onComplete) {
+ }
+ function beginBatch() {
+     numInBatch++;
+-    if (!timeout) {
++    // PATCH(foam): the timeout only recovers from an unbalanced manual
++    // beginBatch, which is a programming error - don't schedule + clear a host
++    // timer on every set in production for it.
++    if (!timeout && process.env.NODE_ENV !== 'production') {
+         timeout = setTimeout(onActionTimeout, 0);
+     }
+ }
+@@ -861,25 +869,26 @@ function updateNodes(parent, obj, prevValue) {
+                     const keysSeen = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test'
+                         ? new Set()
+                         : undefined;
+-                    if (parent.children) {
+-                        for (let i = 0; i < prevValue.length; i++) {
+-                            const p = prevValue[i];
++                    // PATCH(foam): iterate the existing child nodes instead of every
++                    // array element - only elements with a child node were ever added
++                    // to prevChildrenById, so this is equivalent and drops the per-set
++                    // cost from O(array length) to O(child nodes).
++                    if (parent.children && parent.children.size) {
++                        parent.children.forEach((child, childKey) => {
++                            const p = prevValue[+childKey];
+                             if (p) {
+-                                const child = parent.children.get(i + '');
+-                                if (child) {
+-                                    const key = isIdFieldFunction
+-                                        ? idField(p)
+-                                        : p[idField];
+-                                    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+-                                        if (keysSeen.has(key)) {
+-                                            console.warn(`[legend-state] Warning: Multiple elements in array have the same ID. Key field: ${idField}, Array:`, prevValue);
+-                                        }
+-                                        keysSeen.add(key);
++                                const key = isIdFieldFunction
++                                    ? idField(p)
++                                    : p[idField];
++                                if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
++                                    if (keysSeen.has(key)) {
++                                        console.warn(`[legend-state] Warning: Multiple elements in array have the same ID. Key field: ${idField}, Array:`, prevValue);
+                                     }
+-                                    prevChildrenById.set(key, child);
++                                    keysSeen.add(key);
+                                 }
++                                prevChildrenById.set(key, child);
+                             }
+-                        }
++                        });
+                     }
+                 }
+             }
+@@ -888,13 +897,19 @@ function updateNodes(parent, obj, prevValue) {
+     else if (prevValue && (!obj || isObject(obj))) {
+         // For keys that have been removed from object, notify and update children recursively
+         const lengthPrev = keysPrev.length;
++        // PATCH(foam): Set membership instead of Array.includes turns the removed-key
++        // scan from O(prev x next) into O(prev + next) on large records.
++        const keysSet = lengthPrev > 8 && keys && keys.length > 8 ? new Set(keys) : undefined;
+         for (let i = 0; i < lengthPrev; i++) {
+             const key = keysPrev[i];
+-            if (!keys.includes(key)) {
++            if (keysSet ? !keysSet.has(key) : !keys.includes(key)) {
+                 hasADiff = true;
+-                const child = getChildNode(parent, key);
++                // PATCH(foam): a node that was never created has no listeners and no
++                // descendants, so there is nothing to notify - don't create one just
++                // to tear down the removed subtree.
++                const child = parent.children ? parent.children.get(key) : undefined;
+                 const prev = isMap ? prevValue.get(key) : prevValue[key];
+-                if (prev !== undefined) {
++                if (prev !== undefined && child) {
+                     if (!isPrimitive(prev)) {
+                         updateNodes(child, undefined, prev);
+                     }
+@@ -920,7 +935,13 @@ function updateNodes(parent, obj, prevValue) {
+                         ? idField(value)
+                         : value[idField]
+                     : undefined;
+-                let child = getChildNode(parent, key);
++                // PATCH(foam): don't materialize a child node for every diffing
++                // element - a node that doesn't exist has no listeners and no
++                // descendants, so it's only needed when recursing a real diff.
++                // Eagerly creating one per element made parent.children non-empty
++                // on the first large set, which forced the prevChildrenById build
++                // on every set afterwards.
++                let child = parent.children ? parent.children.get(key) : undefined;
+                 // Detect moves within an array. Need to move the original proxy to the new position to keep
+                 // the proxy stable, so that listeners to this node will be unaffected by the array shift.
+                 if (isArr && id !== undefined) {
+@@ -946,6 +967,10 @@ function updateNodes(parent, obj, prevValue) {
+                         // And check for diff against the previous value in the previous position
+                         isDiff = valuePrevChild !== value;
+                     }
++                    else {
++                        // PATCH(foam): same id at the same index - reuse its node.
++                        child = prevChild;
++                    }
+                 }
+                 if (isDiff) {
+                     // Array has a new / modified element
+@@ -953,8 +978,19 @@ function updateNodes(parent, obj, prevValue) {
+                     if (isPrimitive(value)) {
+                         hasADiff = true;
+                     }
++                    else if (!child && prev === undefined) {
++                        // PATCH(foam): a brand-new subtree with no node is trivially
++                        // a diff, and with no node there are no listeners at any
++                        // depth - recursing would only materialize nodes nobody
++                        // subscribes to. This is what keeps a freshly seeded array
++                        // from creating a node per element.
++                        hasADiff = true;
++                    }
+                     else {
+                         // Always need to updateNodes so we notify through all children
++                        if (!child) {
++                            child = getChildNode(parent, key);
++                        }
+                         const updatedNodes = updateNodes(child, value, prev);
+                         hasADiff = hasADiff || updatedNodes;
+                     }
+@@ -964,7 +1000,7 @@ function updateNodes(parent, obj, prevValue) {
+                     // Or if the position changed in an array whose length did not change
+                     // But do not notify child if the parent is an array with changing length -
+                     // the array's listener will cover it
+-                    if (child.listeners || child.listenersImmediate) {
++                    if (child && (child.listeners || child.listenersImmediate)) {
+                         notify(child, value, prev, 0, !isArrDiff);
+                     }
+                 }
+@@ -1025,22 +1061,32 @@ const proxyHandler = {
+         const fn = observableFns.get(p);
+         // If this is an observable function, call it
+         if (fn) {
+-            return function (a, b, c) {
+-                const l = arguments.length;
+-                // Array call and apply are slow so micro-optimize this hot path.
+-                // The observable functions depends on the number of arguments so we have to
+-                // call it with the correct arguments, not just undefined
+-                switch (l) {
+-                    case 0:
+-                        return fn(node);
+-                    case 1:
+-                        return fn(node, a);
+-                    case 2:
+-                        return fn(node, a, b);
+-                    default:
+-                        return fn(node, a, b, c);
+-                }
+-            };
++            // PATCH(foam): cache the wrapper per node + method - every .peek()/
++            // .get()/.set() access allocated a fresh closure, at per-row-render
++            // and per-ingest rates in this app. Stable identity is safe: a node
++            // that becomes linked forwards before reaching this branch.
++            const fns = node.fns || (node.fns = new Map());
++            let wrapped = fns.get(p);
++            if (!wrapped) {
++                wrapped = function (a, b, c) {
++                    const l = arguments.length;
++                    // Array call and apply are slow so micro-optimize this hot path.
++                    // The observable functions depends on the number of arguments so we have to
++                    // call it with the correct arguments, not just undefined
++                    switch (l) {
++                        case 0:
++                            return fn(node);
++                        case 1:
++                            return fn(node, a);
++                        case 2:
++                            return fn(node, a, b);
++                        default:
++                            return fn(node, a, b, c);
++                    }
++                };
++                fns.set(p, wrapped);
++            }
++            return wrapped;
+         }
+         if (node.isComputed) {
+             if (node.proxyFn && !fn) {
 diff --git a/persist-plugins/mmkv.js b/persist-plugins/mmkv.js
-index 8380fd33f9471919851b54cdabcefe7c6867c11f..ad93b34b8f1e3addcd095ca7da18d40813d692f1 100644
+index 8380fd33f9471919851b54cdabcefe7c6867c11f..20af64ca802aff42014f55fdc82e84bdd92e2625 100644
 --- a/persist-plugins/mmkv.js
 +++ b/persist-plugins/mmkv.js
-@@ -6,13 +6,18 @@ var reactNativeMmkv = require('react-native-mmkv');
+@@ -6,17 +6,40 @@ var reactNativeMmkv = require('react-native-mmkv');
  const symbolDefault = Symbol();
  const MetadataSuffix = '__m';
  const { safeParse, safeStringify } = state.internal;
@@ -14,6 +414,13 @@ index 8380fd33f9471919851b54cdabcefe7c6867c11f..ad93b34b8f1e3addcd095ca7da18d408
  class ObservablePersistMMKV {
      constructor() {
          this.data = {};
++        // PATCH(foam): per-table write coalescing - every change re-serializes
++        // the whole table, so burst writes (channel load fills the emote
++        // cache with several sets in a row) paid a full stringify + disk write
++        // each. Writes coalesce for 250ms and always flush when the app
++        // leaves the foreground.
++        this.pendingSaves = new Map();
++        this.saveTimer = null;
          this.storages = new Map([
              [
                  symbolDefault,
@@ -22,16 +429,33 @@ index 8380fd33f9471919851b54cdabcefe7c6867c11f..ad93b34b8f1e3addcd095ca7da18d408
                      id: `obsPersist`,
                  }),
              ],
-@@ -52,7 +57,7 @@ class ObservablePersistMMKV {
+         ]);
++        try {
++            const { AppState } = require('react-native');
++            AppState.addEventListener('change', (status) => {
++                if (status !== 'active') {
++                    this.flushPendingSaves();
++                }
++            });
++        }
++        catch (_a) {
++            // react-native unavailable (tests) - writes still flush on the timer
++        }
+     }
+     // Gets
+     getTable(table, config, init) {
+@@ -51,8 +74,9 @@ class ObservablePersistMMKV {
+     }
      deleteTable(table, config) {
          const storage = this.getStorage(config);
++        this.pendingSaves.delete(table);
          delete this.data[table];
 -        storage.delete(table);
 +        storage.remove(table);
      }
      deleteMetadata(table, config) {
          this.deleteTable(table + MetadataSuffix, config);
-@@ -64,7 +69,7 @@ class ObservablePersistMMKV {
+@@ -64,7 +88,7 @@ class ObservablePersistMMKV {
              const key = JSON.stringify(mmkv);
              let storage = this.storages.get(key);
              if (!storage) {
@@ -40,7 +464,36 @@ index 8380fd33f9471919851b54cdabcefe7c6867c11f..ad93b34b8f1e3addcd095ca7da18d408
                  this.storages.set(key, storage);
              }
              return storage;
-@@ -89,7 +94,7 @@ class ObservablePersistMMKV {
+@@ -78,18 +102,35 @@ class ObservablePersistMMKV {
+         this.save(table, config);
+     }
+     save(table, config) {
++        this.pendingSaves.set(table, config);
++        if (!this.saveTimer) {
++            this.saveTimer = setTimeout(() => this.flushPendingSaves(), 250);
++        }
++    }
++    flushPendingSaves() {
++        if (this.saveTimer) {
++            clearTimeout(this.saveTimer);
++            this.saveTimer = null;
++        }
++        this.pendingSaves.forEach((config, table) => this.writeTable(table, config));
++        this.pendingSaves.clear();
++    }
++    writeTable(table, config) {
+         const storage = this.getStorage(config);
+         const v = this.data[table];
+         if (v !== undefined) {
+             try {
+-                storage.set(table, safeStringify(v));
++                // PATCH(foam): plain stringify - safeStringify routes every key
++                // through a JS replacer to catch Map/Set, which this app never
++                // persists, and the replacer defeats the native fast path.
++                storage.set(table, JSON.stringify(v));
+             }
+             catch (err) {
+                 console.error(err);
              }
          }
          else {
@@ -50,12 +503,13 @@ index 8380fd33f9471919851b54cdabcefe7c6867c11f..ad93b34b8f1e3addcd095ca7da18d408
      }
  }
 diff --git a/persist-plugins/mmkv.mjs b/persist-plugins/mmkv.mjs
-index b9558f860b7ed371413b909a433356a587fe9e63..c8bfaf4e1b2d2073195ff52cc2f5cc00246759db 100644
+index b9558f860b7ed371413b909a433356a587fe9e63..b91cdef22d29218a7fdcd5ad0a85b47680f9fc00 100644
 --- a/persist-plugins/mmkv.mjs
 +++ b/persist-plugins/mmkv.mjs
-@@ -1,16 +1,21 @@
- import { setAtPath, internal } from '@legendapp/state';
+@@ -1,20 +1,43 @@
+-import { setAtPath, internal } from '@legendapp/state';
 -import { MMKV } from 'react-native-mmkv';
++import { internal, setAtPath } from '@legendapp/state';
 +import { createMMKV } from 'react-native-mmkv';
  
  const symbolDefault = Symbol();
@@ -69,6 +523,13 @@ index b9558f860b7ed371413b909a433356a587fe9e63..c8bfaf4e1b2d2073195ff52cc2f5cc00
  class ObservablePersistMMKV {
      constructor() {
          this.data = {};
++        // PATCH(foam): per-table write coalescing - every change re-serializes
++        // the whole table, so burst writes (channel load fills the emote
++        // cache with several sets in a row) paid a full stringify + disk write
++        // each. Writes coalesce for 250ms and always flush when the app
++        // leaves the foreground.
++        this.pendingSaves = new Map();
++        this.saveTimer = null;
          this.storages = new Map([
              [
                  symbolDefault,
@@ -77,16 +538,33 @@ index b9558f860b7ed371413b909a433356a587fe9e63..c8bfaf4e1b2d2073195ff52cc2f5cc00
                      id: `obsPersist`,
                  }),
              ],
-@@ -50,7 +55,7 @@ class ObservablePersistMMKV {
+         ]);
++        try {
++            const { AppState } = require('react-native');
++            AppState.addEventListener('change', (status) => {
++                if (status !== 'active') {
++                    this.flushPendingSaves();
++                }
++            });
++        }
++        catch (_a) {
++            // react-native unavailable (tests) - writes still flush on the timer
++        }
+     }
+     // Gets
+     getTable(table, config, init) {
+@@ -49,8 +72,9 @@ class ObservablePersistMMKV {
+     }
      deleteTable(table, config) {
          const storage = this.getStorage(config);
++        this.pendingSaves.delete(table);
          delete this.data[table];
 -        storage.delete(table);
 +        storage.remove(table);
      }
      deleteMetadata(table, config) {
          this.deleteTable(table + MetadataSuffix, config);
-@@ -62,7 +67,7 @@ class ObservablePersistMMKV {
+@@ -62,7 +86,7 @@ class ObservablePersistMMKV {
              const key = JSON.stringify(mmkv);
              let storage = this.storages.get(key);
              if (!storage) {
@@ -95,7 +573,36 @@ index b9558f860b7ed371413b909a433356a587fe9e63..c8bfaf4e1b2d2073195ff52cc2f5cc00
                  this.storages.set(key, storage);
              }
              return storage;
-@@ -87,7 +92,7 @@ class ObservablePersistMMKV {
+@@ -76,18 +100,35 @@ class ObservablePersistMMKV {
+         this.save(table, config);
+     }
+     save(table, config) {
++        this.pendingSaves.set(table, config);
++        if (!this.saveTimer) {
++            this.saveTimer = setTimeout(() => this.flushPendingSaves(), 250);
++        }
++    }
++    flushPendingSaves() {
++        if (this.saveTimer) {
++            clearTimeout(this.saveTimer);
++            this.saveTimer = null;
++        }
++        this.pendingSaves.forEach((config, table) => this.writeTable(table, config));
++        this.pendingSaves.clear();
++    }
++    writeTable(table, config) {
+         const storage = this.getStorage(config);
+         const v = this.data[table];
+         if (v !== undefined) {
+             try {
+-                storage.set(table, safeStringify(v));
++                // PATCH(foam): plain stringify - safeStringify routes every key
++                // through a JS replacer to catch Map/Set, which this app never
++                // persists, and the replacer defeats the native fast path.
++                storage.set(table, JSON.stringify(v));
+             }
+             catch (err) {
+                 console.error(err);
              }
          }
          else {

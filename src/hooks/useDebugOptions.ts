@@ -1,40 +1,42 @@
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 
 import { AllowedKey, storageService } from '@app/lib/storage';
 
-type DebugOptions = {
+export type DebugOptions = {
   [key in AllowedKey]?: { enabled: boolean };
 };
 
-function fetchDebugOptions(): DebugOptions {
-  const keys: AllowedKey[] = ['ReactQueryDebug'];
-  const options: DebugOptions = {};
+const enabledDebugOptions: DebugOptions = {
+  ReactQueryDebug: { enabled: true },
+};
+const disabledDebugOptions: DebugOptions = {
+  ReactQueryDebug: { enabled: false },
+};
 
-  keys.forEach(key => {
-    const value = storageService.getString<boolean>(key);
-    options[key] = { enabled: value === true };
-  });
-  return options;
+function getDebugOptionsSnapshot(): DebugOptions {
+  return storageService.getString<boolean>('ReactQueryDebug') === true
+    ? enabledDebugOptions
+    : disabledDebugOptions;
 }
 
-export function useDebugOptions() {
-  const [debugOptions, setDebugOptions] = useState<DebugOptions>(() =>
-    fetchDebugOptions(),
+function subscribeToDebugOptions(onStoreChange: () => void): () => void {
+  const handleStorageChange = (key: string) => {
+    if (key === 'ReactQueryDebug' || key === 'all') {
+      onStoreChange();
+    }
+  };
+
+  storageService.events.on('storageChange', handleStorageChange);
+
+  return () => {
+    storageService.events.off('storageChange', handleStorageChange);
+  };
+}
+
+export function useDebugOptions(): DebugOptions {
+  return useSyncExternalStore(
+    subscribeToDebugOptions,
+    getDebugOptionsSnapshot,
+    getDebugOptionsSnapshot,
   );
-
-  useEffect(() => {
-    storageService.clearExpired();
-
-    const handleStorageChange = () => {
-      setDebugOptions(fetchDebugOptions());
-    };
-
-    storageService.events.on('storageChange', handleStorageChange);
-
-    return () => {
-      storageService.events.off('storageChange', handleStorageChange);
-    };
-  }, []);
-
-  return debugOptions;
 }

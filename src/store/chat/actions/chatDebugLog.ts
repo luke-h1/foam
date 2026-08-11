@@ -269,7 +269,7 @@ export function getChatDebugBadgeDetails(
   badge: SanitisedBadgeSet,
 ): Record<string, unknown> {
   if (badge.provider !== '7tv') {
-    return { provider: badge.provider ?? 'twitch' };
+    return { provider: badge.provider };
   }
   const definition = chatStore$.badges[badge.id]?.peek();
   const wearerCount = Object.values(chatStore$.userBadgeIds.peek()).filter(

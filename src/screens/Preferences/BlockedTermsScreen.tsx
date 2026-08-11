@@ -33,7 +33,7 @@ import {
   usePreference,
   useUpdatePreferences,
 } from '@app/store/preferenceStore';
-import { Color } from '@app/styles/pallete';
+import { Color } from '@app/styles/palette';
 import { theme } from '@app/styles/themes';
 
 function TermRow({

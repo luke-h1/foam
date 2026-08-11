@@ -1,6 +1,6 @@
 import * as Device from 'expo-device';
 
-import { Color } from './pallete';
+import { Color } from './palette';
 
 const SPACE_SCALE = 1.33;
 const FONT_SCALE = 1.2;

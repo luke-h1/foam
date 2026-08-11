@@ -8,34 +8,19 @@ export interface BadgeProviderSection {
   data: BadgeRow[];
 }
 
-type BadgeProviderKey = 'twitch' | 'seventv' | 'bttv' | 'ffz';
+type BadgeProviderKey = 'twitch' | '7tv' | 'bttv' | 'ffz';
 
-const PROVIDER_ORDER: BadgeProviderKey[] = ['twitch', 'seventv', 'bttv', 'ffz'];
+const PROVIDER_ORDER: BadgeProviderKey[] = ['twitch', '7tv', 'bttv', 'ffz'];
 
 const PROVIDER_TITLES: Record<BadgeProviderKey, string> = {
   twitch: 'Twitch',
-  seventv: '7TV',
+  '7tv': '7TV',
   bttv: 'BetterTTV',
   ffz: 'FrankerFaceZ',
 };
 
 function providerOf(badge: SanitisedBadgeSet): BadgeProviderKey {
-  switch (badge.provider) {
-    case '7tv':
-      return 'seventv';
-    case 'bttv':
-      return 'bttv';
-    case 'ffz':
-      return 'ffz';
-    default:
-      if (badge.type.startsWith('FFZ')) {
-        return 'ffz';
-      }
-      if (badge.type.startsWith('7TV')) {
-        return 'seventv';
-      }
-      return 'twitch';
-  }
+  return badge.provider === 'chatterino' ? 'twitch' : badge.provider;
 }
 
 export function groupBadgesByProvider(

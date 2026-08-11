@@ -3,7 +3,7 @@ import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { createUserStateFromTags } from '../createUserStateFromTags';
 
 describe('createUserStateFromTags', () => {
-  test('should create userstate from basic tags', () => {
+  test('creates userstate from basic tags', () => {
     const tags = {
       'display-name': 'TestUser',
       login: 'testuser',
@@ -32,7 +32,7 @@ describe('createUserStateFromTags', () => {
     });
   });
 
-  test('should handle missing display-name by using login', () => {
+  test('handles missing display-name by using login', () => {
     const tags = {
       login: 'testuser',
     };
@@ -53,7 +53,7 @@ describe('createUserStateFromTags', () => {
     });
   });
 
-  test('should handle missing login by using lowercase display-name', () => {
+  test('handles missing login by using lowercase display-name', () => {
     const tags = {
       'display-name': 'TestUser',
     };
@@ -74,7 +74,7 @@ describe('createUserStateFromTags', () => {
     });
   });
 
-  test('should include reply parent information', () => {
+  test('includes reply parent information', () => {
     const tags = {
       'display-name': 'TestUser',
       login: 'testuser',
@@ -101,7 +101,7 @@ describe('createUserStateFromTags', () => {
     });
   });
 
-  test('should default reply fields to empty strings', () => {
+  test('defaults reply fields to empty strings', () => {
     const tags = {
       'display-name': 'TestUser',
       login: 'testuser',

@@ -36,12 +36,29 @@ export type {
 } from './remoteConfigModel';
 export { defaultRemoteConfig } from './remoteConfigModel';
 
-const remoteConfig = getRemoteConfig(getApp());
+let cachedRemoteConfig: ReturnType<typeof getRemoteConfig> | null = null;
 let remoteConfigFetchPromise: Promise<boolean> | null = null;
 
-void setConfigSettings(remoteConfig, {
-  minimumFetchIntervalMillis: __DEV__ ? 60 * 1000 : 5 * 60 * 1000,
-});
+/**
+ * Created on first use instead of at module scope - the handle plus
+ * setConfigSettings/setDefaults were three Firebase bridge calls at import
+ * time, and this module sits in the boot graph via the force-update modal
+ * and the settings tab.
+ */
+function getRemoteConfigHandle() {
+  if (cachedRemoteConfig) {
+    return cachedRemoteConfig;
+  }
+  const remoteConfig = getRemoteConfig(getApp());
+  cachedRemoteConfig = remoteConfig;
+  void setConfigSettings(remoteConfig, {
+    minimumFetchIntervalMillis: __DEV__ ? 60 * 1000 : 5 * 60 * 1000,
+  });
+  setDefaults(remoteConfig, defaultRemoteConfig).catch(e => {
+    logger.remoteConfig.error('Failed to set default remote config values', e);
+  });
+  return remoteConfig;
+}
 
 function getErrorMessage(error: unknown): string | null {
   if (error instanceof Error) {
@@ -66,16 +83,12 @@ function isRemoteConfigCancellation(error: unknown): boolean {
   return message?.includes('cancelled') ?? false;
 }
 
-setDefaults(remoteConfig, defaultRemoteConfig).catch(e => {
-  logger.remoteConfig.error('Failed to set default remote config values', e);
-});
-
 async function fetchRemoteConfig(): Promise<boolean> {
   if (remoteConfigFetchPromise) {
     return remoteConfigFetchPromise;
   }
 
-  remoteConfigFetchPromise = fetchAndActivate(remoteConfig)
+  remoteConfigFetchPromise = fetchAndActivate(getRemoteConfigHandle())
     .then(activated => {
       logger.remoteConfig.info('fetchAndActivate', {
         activated,
@@ -105,7 +118,7 @@ async function fetchRemoteConfig(): Promise<boolean> {
 }
 
 function readRemoteConfig(): RemoteConfigType {
-  const allConfig = getAll(remoteConfig);
+  const allConfig = getAll(getRemoteConfigHandle());
   return Object.fromEntries(
     (Object.keys(defaultRemoteConfig) as RemoteConfigKey[]).map(key => {
       const entry = allConfig[key];

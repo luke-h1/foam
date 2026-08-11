@@ -59,20 +59,27 @@ export function followedChannelsQueryOptions(userId: string) {
   return queryOptions<FollowedChannelWithProfile[]>({
     queryKey: twitchKeys.followedChannels(userId),
     staleTime: 300_000,
+    queryFn: () => twitchService.getFollowedChannels(userId),
+  });
+}
+
+/**
+ * Profile images are an enrichment resolved as a dependent query so the
+ * channel list renders one round trip sooner; rows fall back to text avatars
+ * until (or if never) the lookup lands.
+ */
+export function followedChannelProfileImagesQueryOptions(
+  broadcasterIds: string[],
+) {
+  return queryOptions<ReadonlyMap<string, string>>({
+    queryKey: twitchKeys.followedChannelProfileImages(broadcasterIds),
+    staleTime: 300_000,
+    enabled: broadcasterIds.length > 0,
     queryFn: async () => {
-      const channels = await twitchService.getFollowedChannels(userId);
-      // Profile images are an enrichment; if the lookup fails the rows fall
-      // back to text avatars rather than sinking the whole channel list.
       const users = await twitchService
-        .getUsersById(channels.map(channel => channel.broadcaster_id))
+        .getUsersById(broadcasterIds)
         .catch(() => []);
-      const profileImageById = new Map(
-        users.map(user => [user.id, user.profile_image_url]),
-      );
-      return channels.map(channel => ({
-        ...channel,
-        profile_image_url: profileImageById.get(channel.broadcaster_id),
-      }));
+      return new Map(users.map(user => [user.id, user.profile_image_url]));
     },
   });
 }

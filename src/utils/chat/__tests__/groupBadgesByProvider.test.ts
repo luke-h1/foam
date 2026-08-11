@@ -9,6 +9,7 @@ function badge(overrides: Partial<SanitisedBadgeSet>): SanitisedBadgeSet {
     url: 'https://example.com/badge',
     title: 'Badge',
     type: 'Twitch Global Badge',
+    provider: 'twitch',
     set: 'set',
     ...overrides,
   };
@@ -27,7 +28,7 @@ describe('groupBadgesByProvider', () => {
 
     expect(sections).toEqual<BadgeProviderSection[]>([
       { key: 'twitch', title: 'Twitch', data: [[twitchBadge]] },
-      { key: 'seventv', title: '7TV', data: [[stvBadge]] },
+      { key: '7tv', title: '7TV', data: [[stvBadge]] },
       { key: 'ffz', title: 'FrankerFaceZ', data: [[ffzBadge]] },
     ]);
   });

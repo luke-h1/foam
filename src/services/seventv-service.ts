@@ -49,6 +49,7 @@ import {
 } from '@app/utils/seventv/sevenTvUserCache';
 
 import { sevenTvApi } from './api/clients';
+import { buildSanitisedEmote } from './emote-provider';
 import { sevenTvV4Client } from './gql/client';
 import { runCosmeticsQuery } from './gql/sevenTvWorkletClient';
 
@@ -173,39 +174,33 @@ function sanitiseV4EmoteSet(
     const { emote } = item;
     const bestImage = pickBestImage(emote.images);
     const bestStaticImage = pickBestStaticImage(emote.images);
-    const imageVariants = buildV4ImageVariants(emote.images);
     const width = bestImage?.width ?? 0;
     const height = bestImage?.height ?? 0;
     const zeroWidth = item.flags.zeroWidth || emote.flags.defaultZeroWidth;
 
-    const sanitised: SevenTvSanitisedEmote = {
-      name: item.alias,
-      id: emote.id,
-      url: bestImage?.url ?? '',
-      static_url: bestStaticImage?.url,
-      image_variants: imageVariants,
-      flags: zeroWidth ? 256 : 0,
-      original_name: emote.defaultName,
-      creator: emote.owner?.mainConnection?.platformDisplayName ?? null,
-      emote_link: `https://7tv.app/emotes/${emote.id}`,
+    const sanitised = buildSanitisedEmote({
       site,
-      frame_count: bestImage?.frameCount ?? 1,
+      id: emote.id,
+      name: item.alias,
+      originalName: emote.defaultName,
+      creator: emote.owner?.mainConnection?.platformDisplayName ?? null,
+      url: bestImage?.url ?? '',
+      staticUrl: bestStaticImage?.url,
+      imageVariants: buildV4ImageVariants(emote.images),
+      flags: zeroWidth ? 256 : 0,
+      frameCount: bestImage?.frameCount ?? 1,
       format: bestImage?.mime?.replace('image/', '') ?? 'webp',
-      aspect_ratio: height > 0 ? width / height : 1,
-      zero_width: zeroWidth,
+      aspectRatio: height > 0 ? width / height : 1,
+      zeroWidth,
       width,
       height,
-      set_metadata: setMetadata,
-    };
-    if (hasRenderableUrl(sanitised)) {
+      setMetadata,
+    });
+    if (sanitised) {
       sanitisedEmotes.push(sanitised);
     }
   }
   return sanitisedEmotes;
-}
-
-function hasRenderableUrl(emote: { url: string }): boolean {
-  return emote.url !== '';
 }
 
 export const sevenTvService = {
@@ -370,10 +365,8 @@ export const sevenTvService = {
   },
 
   /**
-   * Fetch a user's personal emote set via v4 GQL
-   * Personal emotes are unique emotes that a user can use in any channel
-   * @param twitchUserId - The Twitch user ID
-   * @returns Array of sanitized emotes or empty array if no personal emotes
+   * A user's personal emote set via v4 GQL - emotes the user can use in any
+   * channel.
    */
   getPersonalEmoteSet: async (
     twitchUserId: string,
@@ -421,36 +414,33 @@ export const sevenTvService = {
     const sanitisedEmotes: SevenTvSanitisedEmote[] = [];
     for (const item of personalEmoteSet.emotes.items) {
       const { emote } = item;
-      const emoteName = item.alias || emote.defaultName;
 
       const bestImage = pickBestImage(emote.images);
       const bestStaticImage = pickBestStaticImage(emote.images);
-      const imageVariants = buildV4ImageVariants(emote.images);
 
       const imgScale = bestImage?.scale ?? 1;
       const imgWidth = bestImage ? Math.round(bestImage.width / imgScale) : 0;
       const imgHeight = bestImage ? Math.round(bestImage.height / imgScale) : 0;
 
-      const sanitised: SevenTvSanitisedEmote = {
-        name: emoteName,
-        id: emote.id,
-        url: bestImage?.url ?? '',
-        static_url: bestStaticImage?.url,
-        image_variants: imageVariants,
-        flags: emote.flags.animated ? 1 : 0,
-        original_name: emote.defaultName,
-        creator: emote.owner?.mainConnection?.platformDisplayName ?? null,
-        emote_link: `https://7tv.app/emotes/${emote.id}`,
+      const sanitised = buildSanitisedEmote({
         site: '7TV Personal',
-        frame_count: bestImage?.frameCount ?? 1,
+        id: emote.id,
+        name: item.alias || emote.defaultName,
+        originalName: emote.defaultName,
+        creator: emote.owner?.mainConnection?.platformDisplayName ?? null,
+        url: bestImage?.url ?? '',
+        staticUrl: bestStaticImage?.url,
+        imageVariants: buildV4ImageVariants(emote.images),
+        flags: emote.flags.animated ? 1 : 0,
+        frameCount: bestImage?.frameCount ?? 1,
         format: bestImage?.mime?.replace('image/', '') ?? 'webp',
-        aspect_ratio: imgHeight > 0 ? imgWidth / imgHeight : 1,
-        zero_width: emote.flags.defaultZeroWidth,
+        aspectRatio: imgHeight > 0 ? imgWidth / imgHeight : 1,
+        zeroWidth: emote.flags.defaultZeroWidth,
         width: imgWidth,
         height: imgHeight,
-        set_metadata: setMetadata,
-      };
-      if (hasRenderableUrl(sanitised)) {
+        setMetadata,
+      });
+      if (sanitised) {
         sanitisedEmotes.push(sanitised);
       }
     }
@@ -458,9 +448,8 @@ export const sevenTvService = {
   },
 
   /**
-   * Fetch a user's full cosmetics (paint + badge data) via v4 GQL
-   * Use this when you need the actual paint/badge styling data
-   * @param sevenTvUserId - The 7TV user ID (not Twitch ID)
+   * A user's full cosmetics (paint + badge styling data) via v4 GQL. Takes
+   * the 7TV user id, not the Twitch id.
    */
   getUserCosmeticsGql: async (
     sevenTvUserId: string,

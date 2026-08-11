@@ -111,11 +111,8 @@ const RefreshContextProvider: FC<{
 };
 
 /**
- * Register a callback to be called when the user pulls down to refresh in the nearest list.
- *
- * @param callback Register a function to be called when the user pulls down to refresh.
- * The function should return a promise that resolves when the refresh is complete.
- * @returns A function that can be called to trigger a list-wide refresh.
+ * Register a callback for pull-to-refresh in the nearest list. Returns a
+ * function that triggers a list-wide refresh.
  */
 export function useListRefresh(callback?: () => Promise<void>) {
   const { subscribe, refresh } = useContext(RefreshContext);

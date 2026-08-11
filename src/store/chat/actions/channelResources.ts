@@ -7,6 +7,7 @@ import { twitchBadgeService } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
 import { logger } from '@app/utils/logger';
 
 import type { ChannelCacheType, GlobalCacheType } from '../types/constants';
@@ -107,8 +108,16 @@ const globalResourceCache = new Map<
   { fetchedAt: number; promise: Promise<Identifiable[]> }
 >();
 
+/**
+ * Fences the channel-independent fetches that write straight into
+ * `globalCaches` (see `globalResourceEnsure`). Held here so every existing
+ * `clearGlobalResourceCache` caller fences without a second call.
+ */
+export const globalChatResourceGuard = createFetchOnceGuard();
+
 export const clearGlobalResourceCache = (): void => {
   globalResourceCache.clear();
+  globalChatResourceGuard.clear();
 };
 
 const fetchGlobalResourceOnce = <T extends Identifiable>(

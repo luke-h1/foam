@@ -16,7 +16,7 @@ const MAX_CACHED_ENVELOPE_BYTES = 8 * 1024 * 1024;
  * copy on every retry - an oversized envelope therefore wedges the install in
  * an OOM crash loop that only ends when the file disappears.
  */
-export function sweepOversizedSentryEnvelopes(): void {
+export function sweepOversizedSentryEnvelopesNow(): void {
   for (const dirName of ['io.sentry', 'sentry']) {
     try {
       sweepDirectory(new Directory(Paths.cache, dirName));
@@ -24,6 +24,14 @@ export function sweepOversizedSentryEnvelopes(): void {
       // best-effort: cache hygiene must never break app boot
     }
   }
+}
+
+export function sweepOversizedSentryEnvelopes(): void {
+  // Deferred off the boot critical path: the walk is a synchronous
+  // stat-per-file over the envelope cache, and the OOM it defends against
+  // only needs the file gone before the transport retries, not before the
+  // first frame.
+  setTimeout(sweepOversizedSentryEnvelopesNow, 0);
 }
 
 function sweepDirectory(dir: Directory): void {
