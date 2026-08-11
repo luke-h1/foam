@@ -6,7 +6,6 @@ import {
   getTransientState,
   resetTransientSearch,
 } from '@app/store/chat/actions/transientState';
-import { clearVisibleAssetHydration } from '@app/store/chat/actions/visibleAssetHydration';
 import { defaultTransientState } from '@app/store/chat/observables/chatTransientState';
 import { useTransientChannelFilters } from '@app/store/chat/react/transientSelectors';
 import { usePreference } from '@app/store/preferenceStore';
@@ -38,16 +37,6 @@ export function useChatTransientState(channelId: string) {
   const hiddenPhrases = useMemo(
     () => [...transientHiddenPhrases, ...blockedTerms],
     [transientHiddenPhrases, blockedTerms],
-  );
-
-  // The hydration guards are module state, so a new channel would otherwise
-  // inherit the previous channel's hydration keys and skip re-fetching its
-  // cosmetics.
-  useEffect(
-    () => () => {
-      clearVisibleAssetHydration();
-    },
-    [channelId],
   );
 
   useEffect(

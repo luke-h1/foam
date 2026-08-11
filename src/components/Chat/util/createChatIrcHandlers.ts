@@ -1,8 +1,8 @@
 import type { RefObject } from 'react';
 
+import { resetChannelSession } from '@app/store/chat/actions/channelSession';
 import {
   addMessage,
-  clearMessages,
   clearMessagesWithNotice,
   getMessageColor,
 } from '@app/store/chat/actions/messages';
@@ -335,7 +335,7 @@ export function createChatIrcHandlers({
       return;
     }
 
-    clearMessages();
+    resetChannelSession('part');
     clearLocalMessages();
   };
 

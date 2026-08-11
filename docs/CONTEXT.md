@@ -112,6 +112,15 @@ dedup index, injectable bound), and the committed window
 `chatStore$.messages` (150 via `getMaxChatMessages`, trimmed by
 **front-trim**).
 
+**Channel session** - the span between joining and leaving a channel's chat.
+It ends through exactly four triggers - `leave` (navigation beforeRemove),
+`unmount`, `switch` (in-place channel change), `part` (IRC PART echo for the
+current room) - and `resetChannelSession(trigger)`
+(`store/chat/actions/channelSession.ts`) is the one owner of the
+module-level resets each trigger requires. Hook-armed resources (scroll
+timers, buffers, socket refs) are released by their arming hooks, never
+here.
+
 **Ingest** - raw line to committed message. The stage names are the perf
 marks: `line_received` → `buffered` → `drained` → `committed`
 (`lib/chatPerfMarks.ts`). Verbs: the buffer **drains**, the cadence

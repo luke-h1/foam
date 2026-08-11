@@ -6,10 +6,6 @@ import { createRoomStateTracker } from '../util/roomState/roomStateTracker';
 
 type UseChatIrcHandlersOptions = Omit<ChatIrcHandlerDeps, 'roomStateTracker'>;
 
-/**
- * The room-state tracker is deliberately mount-scoped, not per-channel:
- * `onPart` resets it on channel switches.
- */
 export function useChatIrcHandlers({
   channelId,
   channelName,
@@ -26,7 +22,16 @@ export function useChatIrcHandlers({
   removeChatMessageById,
   removeChatMessagesByLogin,
 }: UseChatIrcHandlersOptions) {
-  const roomStateTracker = useMemo(() => createRoomStateTracker(), []);
+  /**
+   * Keyed to the channel: `onPart` also resets the tracker, but the PART echo
+   * for the old room is not guaranteed to arrive on a channel switch (the
+   * socket can be dead mid-switch), so a switch must not depend on it.
+   */
+  const roomStateTracker = useMemo(
+    () => createRoomStateTracker(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [channelId],
+  );
 
   return useMemo(
     () =>
