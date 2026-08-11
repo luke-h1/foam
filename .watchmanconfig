@@ -1,0 +1,15 @@
+{
+  "ignore_dirs": [
+    ".git",
+    "ios/build",
+    "ios/Pods",
+    "ios/DerivedData",
+    "android/build",
+    "android/app/build",
+    "android/.gradle",
+    ".reassure",
+    "docs/profiles",
+    "traces",
+    "coverage"
+  ]
+}
