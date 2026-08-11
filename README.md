@@ -436,32 +436,35 @@ Pull requests run checks in [`.github/workflows/`](.github/workflows/):
 
 | Workflow                                                             | Trigger                                                                               | Purpose                                                                                                                   |
 | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| [`typescript.yml`](.github/workflows/typescript.yml)                 | Pull requests                                                                         | Runs `bun run ts:check`.                                                                                                  |
-| [`lint.yml`](.github/workflows/lint.yml)                             | Pull requests                                                                         | Runs ESLint with `bun run lint`.                                                                                          |
-| [`prettier.yml`](.github/workflows/prettier.yml)                     | Pull requests                                                                         | Runs Prettier with `bun run format:check`.                                                                                |
-| [`cz.yml`](.github/workflows/cz.yml)                                 | Pull requests                                                                         | Runs commitlint from `HEAD^1`.                                                                                            |
-| [`jest.yml`](.github/workflows/jest.yml)                             | Pull requests                                                                         | Placeholder Jest workflow; currently echoes `bun run test` instead of executing it.                                       |
-| [`detect-fp-changes.yml`](.github/workflows/detect-fp-changes.yml)   | Pull requests                                                                         | Compares Expo native fingerprints for `production`, `testflight`, and `internal` against the PR base and comments on PRs. |
+| [`lint-format.yml`](.github/workflows/lint-format.yml)               | Pull requests                                                                         | One job for Prettier, `ts:check`, ast-grep, ESLint, and commitlint over the PR range.                                     |
+| [`jest.yml`](.github/workflows/jest.yml)                             | Pull requests                                                                         | Runs the Jest suite with `--maxWorkers=100%`.                                                                             |
+| [`native-lint.yml`](.github/workflows/native-lint.yml)               | Pull requests touching `modules/**` or the native lint config                         | SwiftLint/SwiftFormat on macOS and ktlint on Linux.                                                                       |
+| [`chat-performance.yml`](.github/workflows/chat-performance.yml)     | Pull requests touching chat sources or the dependency graph                           | Measures the reassure chat perf suite against the PR base on the same runner and comments the diff.                       |
+| [`react-doctor.yml`](.github/workflows/react-doctor.yml)             | Pull requests                                                                         | Runs React Doctor against the PR baseline.                                                                                |
+| [`detect-fp-changes.yml`](.github/workflows/detect-fp-changes.yml)   | Pull requests whose diff is not entirely JS/docs                                      | Compares Expo native fingerprints for `production`, `testflight`, and `internal` against the PR base and comments on PRs. |
+| [`enforce-rebase.yml`](.github/workflows/enforce-rebase.yml)         | Pull requests                                                                         | Rejects merge commits so branch history stays linear.                                                                     |
 | [`label.yml`](.github/workflows/label.yml)                           | Pull requests                                                                         | Applies labels via [labeler](https://github.com/actions/labeler).                                                         |
-| [`anti-slop.yml`](.github/workflows/anti-slop.yml)                   | Pull requests via `pull_request_target`                                               | Runs `peakoss/anti-slop`, exempts draft PRs, and adds the `slop` label on failure.                                        |
+| [`anti-slop.yml`](.github/workflows/anti-slop.yml)                   | Pull requests                                                                         | Runs `peakoss/anti-slop`, exempting draft PRs.                                                                            |
 | [`self-hosted-runner.yml`](.github/workflows/self-hosted-runner.yml) | Pull requests with the `self-hosted-test` label, or manual dispatch in `luke-h1/foam` | Runs `bun run lint` on the self-hosted `foam` runner.                                                                     |
-| [`zizmor.yml`](.github/workflows/zizmor.yml)                         | Pull requests targeting `main`, and pushes to `main`                                  | Audits GitHub Actions workflows for security issues with [zizmor](https://github.com/zizmorcore/zizmor).                  |
+| [`zizmor.yml`](.github/workflows/zizmor.yml)                         | Pull requests targeting `main` that touch `.github/**`                                | Audits GitHub Actions workflows for security issues with [zizmor](https://github.com/zizmorcore/zizmor).                  |
+| [`warm-cache.yml`](.github/workflows/warm-cache.yml)                 | Pushes to `main` that change the dependency graph                                     | Writes the shared bun install cache that PR jobs restore from.                                                            |
 
 Scheduled [CodeQL](.github/workflows/codeql.yml) runs weekly on the default branch.
 
 ```mermaid
 flowchart LR
-  PR[Pull request] --> TS[typescript.yml]
-  PR --> Lint[lint.yml]
-  PR --> Prettier[prettier.yml]
-  PR --> CZ[cz.yml]
+  PR[Pull request] --> Checks[lint-format.yml]
   PR --> Jest[jest.yml]
-  PR --> FP[detect-fp-changes.yml]
+  PR --> Doctor[react-doctor.yml]
+  PR --> Rebase[enforce-rebase.yml]
   PR --> Label[label.yml]
   PR --> Slop[anti-slop.yml]
-  PR --> Zizmor[zizmor.yml]
+  PR -->|modules/**| Native[native-lint.yml]
+  PR -->|chat sources| Perf[chat-performance.yml]
+  PR -->|non-JS diff| FP[detect-fp-changes.yml]
+  PR -->|.github/**| Zizmor[zizmor.yml]
   PR -->|label self-hosted-test| SH[self-hosted-runner.yml]
-  Main[main] --> Zizmor
+  Main[main] -->|bun.lock| Warm[warm-cache.yml]
   Schedule[Weekly schedule] --> CodeQL[codeql.yml]
 ```
 
@@ -469,10 +472,10 @@ flowchart LR
 
 Static analysis and GitHub Actions security are checked in two places:
 
-| Workflow                                     | Trigger                                           | Purpose                                                                                               |
-| -------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| [`zizmor.yml`](.github/workflows/zizmor.yml) | Pull requests targeting `main`, and `main` pushes | Scans workflow YAML for unsafe permissions, injection risks, unpinned actions, and related CI issues. |
-| [`codeql.yml`](.github/workflows/codeql.yml) | Weekly schedule on the default branch             | Runs GitHub's static analysis and uploads results to code scanning.                                   |
+| Workflow                                     | Trigger                                                | Purpose                                                                                               |
+| -------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| [`zizmor.yml`](.github/workflows/zizmor.yml) | Pull requests targeting `main` that touch `.github/**` | Scans workflow YAML for unsafe permissions, injection risks, unpinned actions, and related CI issues. |
+| [`codeql.yml`](.github/workflows/codeql.yml) | Weekly schedule on the default branch                  | Runs GitHub's static analysis and uploads results to code scanning.                                   |
 
 Keep workflow permissions scoped to the smallest set each job needs, keep `persist-credentials: false` on checkout unless a job must push, and pin third-party actions to full 40-character commit SHAs instead of floating tags like `@v4`.
 

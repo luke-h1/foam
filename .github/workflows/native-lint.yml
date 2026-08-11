@@ -1,12 +1,26 @@
 name: Check Native Lint
 on:
   pull_request:
+    paths:
+      - 'modules/**'
+      - '.swiftlint.yml'
+      - '.swiftformat'
+      - '.editorconfig'
+      - 'scripts/lint-swift.sh'
+      - 'scripts/lint-kotlin.sh'
+      - '.github/workflows/native-lint.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 jobs:
   swiftlint:
     name: SwiftLint
     runs-on: macos-latest
+    timeout-minutes: 20
     steps:
       - name: 🏗 Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -22,6 +36,7 @@ jobs:
   ktlint:
     name: ktlint
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: 🏗 Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7

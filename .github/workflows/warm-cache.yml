@@ -1,17 +1,28 @@
-name: Check ESLint
+name: Warm bun install cache
+
 on:
-  pull_request:
+  push:
+    branches: [main]
+    paths:
+      - 'bun.lock'
+      - 'package.json'
+      - 'patches/**'
+      - '.bun-version'
+      - '.github/actions/setup-bun-install/action.yml'
+  workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}
   cancel-in-progress: true
 
 permissions:
   contents: read
+
 jobs:
-  eslint:
-    name: ESLint
+  warm:
+    name: Warm cache
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: 🏗 Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -20,8 +31,3 @@ jobs:
 
       - name: 🥟 Setup Bun and install dependencies
         uses: ./.github/actions/setup-bun-install
-        with:
-          node: 'true'
-
-      - name: 🤓 Run ESLint
-        run: bun run lint

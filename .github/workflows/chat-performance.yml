@@ -4,8 +4,11 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
-      - 'src/**'
-      - 'modules/**'
+      - 'src/components/Chat/**'
+      - 'src/store/chat/**'
+      - 'src/utils/chat/**'
+      - 'src/utils/seventv/**'
+      - 'src/**/*.perf-test.*'
       - 'patches/**'
       - 'package.json'
       - 'bun.lock'
