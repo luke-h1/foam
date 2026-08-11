@@ -370,10 +370,8 @@ export const sevenTvService = {
   },
 
   /**
-   * Fetch a user's personal emote set via v4 GQL
-   * Personal emotes are unique emotes that a user can use in any channel
-   * @param twitchUserId - The Twitch user ID
-   * @returns Array of sanitized emotes or empty array if no personal emotes
+   * A user's personal emote set via v4 GQL - emotes the user can use in any
+   * channel.
    */
   getPersonalEmoteSet: async (
     twitchUserId: string,
@@ -458,9 +456,8 @@ export const sevenTvService = {
   },
 
   /**
-   * Fetch a user's full cosmetics (paint + badge data) via v4 GQL
-   * Use this when you need the actual paint/badge styling data
-   * @param sevenTvUserId - The 7TV user ID (not Twitch ID)
+   * A user's full cosmetics (paint + badge styling data) via v4 GQL. Takes
+   * the 7TV user id, not the Twitch id.
    */
   getUserCosmeticsGql: async (
     sevenTvUserId: string,

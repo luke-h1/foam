@@ -20,7 +20,14 @@ import {
   retainPaintBitmaps,
 } from '@app/utils/image/paintBitmapCacheLifecycle';
 
-import { useSharedPaintAnimationFrame } from './util/sharedPaintAnimationFrames';
+import {
+  getPaintTextureUrl,
+  paintDependsOnTexture,
+} from './util/paintLayer/paintDependsOnTexture';
+import {
+  useSharedPaintAnimationFrame,
+  useSharedPaintAnimationReady,
+} from './util/sharedPaintAnimationFrames';
 import {
   getPaintBitmaps,
   type PaintBitmaps,
@@ -71,7 +78,12 @@ function TiledPaintLayerOverlay({
   tile: NonNullable<PaintImageLayer['tile']>;
   maskNode: ReactNode;
 }) {
+  const textureReady = useSharedPaintAnimationReady(url);
   const animatedFrame = useSharedPaintAnimationFrame(url);
+
+  if (!textureReady) {
+    return null;
+  }
 
   return (
     <Mask mode='alpha' mask={maskNode}>
@@ -91,7 +103,12 @@ function StretchPaintLayerOverlay({
   rect: NonNullable<PaintImageLayer['rect']>;
   maskNode: ReactNode;
 }) {
+  const textureReady = useSharedPaintAnimationReady(url);
   const animatedFrame = useSharedPaintAnimationFrame(url);
+
+  if (!textureReady) {
+    return null;
+  }
 
   return (
     <Mask mode='alpha' mask={maskNode}>
@@ -303,32 +320,34 @@ export function PaintedUsernameSkia({
   const fontProvider = useSkiaPaintFontProvider();
   const pixelRatio = PixelRatio.get();
   const [rebuildToken, setRebuildToken] = useState(0);
+  const textureUrl = getPaintTextureUrl(paint);
+  const textureReady = useSharedPaintAnimationReady(textureUrl ?? '');
 
-  const bitmaps = useMemo(
-    () =>
-      fontProvider
-        ? getPaintBitmaps({
-            displayUsername: username,
-            paint,
-            fallbackColor,
-            fontSize,
-            pixelRatio,
-            fontProvider,
-            fontFamily: 'Montserrat',
-          })
-        : null,
-    // rebuildToken re-reads the cache after a lost retain; see below.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      fontProvider,
-      username,
-      paint,
-      fallbackColor,
-      fontSize,
-      pixelRatio,
-      rebuildToken,
-    ],
-  );
+  const bitmaps = useMemo(() => {
+    // rebuildToken re-reads the cache after a lost retain (see below);
+    // referenced here so the dep is legitimate - a lint disable would make
+    // the React Compiler skip this whole component.
+    void rebuildToken;
+    return fontProvider
+      ? getPaintBitmaps({
+          displayUsername: username,
+          paint,
+          fallbackColor,
+          fontSize,
+          pixelRatio,
+          fontProvider,
+          fontFamily: 'Montserrat',
+        })
+      : null;
+  }, [
+    fontProvider,
+    username,
+    paint,
+    fallbackColor,
+    fontSize,
+    pixelRatio,
+    rebuildToken,
+  ]);
 
   /**
    * Pins the textures while this canvas draws them, so an eviction or a
@@ -348,7 +367,10 @@ export function PaintedUsernameSkia({
     return () => releasePaintBitmaps(bitmaps);
   }, [bitmaps]);
 
-  if (!bitmaps) {
+  if (
+    !bitmaps ||
+    (paintDependsOnTexture(paint) && (!textureUrl || !textureReady))
+  ) {
     return (
       <Text
         style={{

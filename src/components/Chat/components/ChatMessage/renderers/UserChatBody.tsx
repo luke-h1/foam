@@ -93,9 +93,13 @@ export function UserChatBody({
   const replyPlainMentionTarget = shouldRenderInlineReply
     ? normaliseChatUsername(parentDisplayName)
     : undefined;
-  const hasPaint = useSelector(() =>
-    userId ? Boolean(chatStore$.userPaintIds[userId]?.get()) : false,
-  );
+  const hasPaint = useSelector(() => {
+    if (!userId) {
+      return false;
+    }
+    const paintId = chatStore$.userPaintIds[userId]?.get();
+    return Boolean(paintId && chatStore$.paints[paintId]?.get());
+  });
   const isModerated = Boolean(moderationNotice);
   /**
    * A paint renders through a mask, so a painted row cannot put the username

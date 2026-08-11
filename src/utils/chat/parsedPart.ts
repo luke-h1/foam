@@ -79,7 +79,7 @@ export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
           msgId: 'sub';
           displayName: string;
           message?: string;
-          plan: string; // 1000, 2000, 3000 for Prime, Tier 1, Tier 2, Tier 3
+          plan: string;
           planName?: string; // Prime, Tier 1, Tier 2, Tier 3
           months?: number; // cumulative-months
           streakMonths?: number; // streak-months

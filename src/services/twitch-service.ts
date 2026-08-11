@@ -465,9 +465,7 @@ export const twitchService = {
   },
 
   /**
-   * @param cursor
-   * @returns an object that contains the top 20 streams and a cursor for further requests
-   * @requires a non-anon token
+   * The top 20 streams per page. Needs a non-anonymous token.
    */
   getTopStreams: async (
     cursor?: string,
@@ -925,7 +923,7 @@ export const twitchService = {
   },
 
   /**
-   * Retrieves a list of event-sub subscriptions that the client in the access token has created
+   * Only returns subscriptions created by the client in the access token.
    * @see https://dev.twitch.tv/docs/api/reference#get-eventsub-subscriptions
    */
   listEventSubscriptions: async ({
@@ -958,7 +956,6 @@ export const twitchService = {
   },
 
   /**
-   * Creates an EventSub subscription
    * @see https://dev.twitch.tv/docs/api/reference#create-eventsub-subscription
    */
   createEventSubscription: async ({
@@ -989,7 +986,6 @@ export const twitchService = {
   },
 
   /**
-   * Deletes an EventSub subscription
    * @see https://dev.twitch.tv/docs/api/reference#delete-eventsub-subscription
    */
   deleteEventSubscription: async (subscriptionId: string) => {

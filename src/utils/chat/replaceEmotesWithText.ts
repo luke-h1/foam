@@ -2,12 +2,10 @@ import { ParsedPart } from './parsedPart';
 import { getParsedPartStringContent } from './parsedPartContent';
 
 /**
- * Converts a parsed chat message (with emotes) back to plain text (used for copying messages)
- * @param parts Array of parsed parts (text, emotes, mentions)
- * @returns Plain text string with emotes converted to their text node
+ * Rebuilds the plain text of a parsed message, for copying it back out.
  */
 export function replaceEmotesWithText(parts: ParsedPart[]): string {
-  if (!parts || parts.length === 0) {
+  if (parts.length === 0) {
     return '';
   }
 
@@ -34,27 +32,7 @@ export function replaceEmotesWithText(parts: ParsedPart[]): string {
         }
 
         case 'mention':
-          /**
-           * For mentions, preserve @ symbol, username &
-           * add a space at the end
-           */
           return part.content ? `${part.content} ` : '';
-
-        case 'text':
-          return getParsedPartStringContent(part);
-
-        case 'notice':
-        case 'stvEmote':
-        case 'stv_emote_added':
-        case 'stv_emote_removed':
-        case 'twitchClip':
-        case 'sub':
-        case 'resub':
-        case 'submysterygift':
-        case 'giftpaidupgrade':
-        case 'anongiftpaidupgrade':
-        case 'anongift':
-          return getParsedPartStringContent(part);
 
         default:
           return getParsedPartStringContent(part);

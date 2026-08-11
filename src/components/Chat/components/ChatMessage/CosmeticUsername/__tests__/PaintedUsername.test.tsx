@@ -5,6 +5,17 @@ import type { PaintData } from '@app/types/seventv/cosmetics';
 
 import { PaintedUsername } from '../PaintedUsername';
 
+/**
+ * The jest Skia mock resolves Data.fromURI, so a real texture entry reports
+ * ready one microtask after mount. Pin the not-ready state instead - this
+ * suite asserts the plain-colour fallback that shows before a texture
+ * decodes.
+ */
+jest.mock('../util/sharedPaintAnimationFrames', () => ({
+  useSharedPaintAnimationFrame: () => null,
+  useSharedPaintAnimationReady: () => false,
+}));
+
 const TWITCH_COLOR = 'rgb(0, 0, 255)';
 
 const GRADIENT_PAINT: PaintData = {
@@ -111,6 +122,39 @@ describe('PaintedUsername', () => {
       chatScrollActivity.poke();
     });
 
+    expect(screen.getByText('luke')).toHaveStyle({ color: TWITCH_COLOR });
+  });
+
+  test('keeps a Twitch-coloured base under a URL paint', () => {
+    render(
+      <PaintedUsername
+        username='luke'
+        paint={{
+          ...GRADIENT_PAINT,
+          function: 'URL',
+          image_url: 'https://cdn.7tv.app/paint/abc/1x.webp',
+          layers: {
+            0: {
+              function: 'URL',
+              stops: { length: 0 },
+              angle: 0,
+              shape: 'circle',
+              repeat: false,
+              image_url: 'https://cdn.7tv.app/paint/abc/1x.webp',
+              canvas_repeat: '',
+              at: null,
+              size: null,
+              opacity: 1,
+            },
+            length: 1,
+          },
+        }}
+        fallbackColor={TWITCH_COLOR}
+        showColon={false}
+      />,
+    );
+
+    expect(screen.queryByTestId('masked-view')).toBeNull();
     expect(screen.getByText('luke')).toHaveStyle({ color: TWITCH_COLOR });
   });
 });

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import DeviceInfo from 'react-native-device-info';
+import DeviceInfo from 'react-native-device-info/src/internal/nativeInterface';
 
 export function useUsedMemoryMb(): number {
   const [mb, setMb] = useState(0);

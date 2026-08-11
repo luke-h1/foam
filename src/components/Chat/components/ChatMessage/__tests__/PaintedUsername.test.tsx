@@ -29,6 +29,16 @@ jest.mock('@app/store/chat/observables/chatStore', () => ({
 }));
 
 /**
+ * This suite asserts what a URL paint renders once its texture is available,
+ * so pin the ready state - the async Data.fromURI resolution in the jest
+ * Skia mock would otherwise land after the assertions run.
+ */
+jest.mock('../CosmeticUsername/util/sharedPaintAnimationFrames', () => ({
+  useSharedPaintAnimationFrame: () => null,
+  useSharedPaintAnimationReady: () => true,
+}));
+
+/**
  * Helper to convert RGBA values to 7TV packed color format
  */
 function rgbaToSevenTvColor(
@@ -231,7 +241,7 @@ describe('PaintedUsername', () => {
       ).toBe(true);
     });
 
-    test('should render URL paint as a tiled Skia layer when repeating', () => {
+    test('renders URL paint as a tiled Skia layer when repeating', () => {
       const urlPaint = createPaintData({
         function: 'URL',
         image_url: 'https://cdn.7tv.app/paint/test/2x.webp',
@@ -248,7 +258,7 @@ describe('PaintedUsername', () => {
       );
     });
 
-    test('should stretch a non-repeating URL paint to fill the glyph box', () => {
+    test('stretches a non-repeating URL paint to fill the glyph box', () => {
       const urlPaint = createPaintData({
         function: 'URL',
         image_url: 'https://cdn.7tv.app/paint/test/4x.webp',
@@ -300,7 +310,7 @@ describe('PaintedUsername', () => {
   });
 
   describe('Shadow Effects', () => {
-    test('should handle paint with shadows', () => {
+    test('handles paint with shadows', () => {
       const paintWithShadow = createPaintData({
         stops: {
           0: { at: 0, color: rgbaToSevenTvColor(254, 118, 148, 255) },
@@ -325,7 +335,7 @@ describe('PaintedUsername', () => {
       expect(getByTestId('masked-view')).toBeOnTheScreen();
     });
 
-    test('should handle paint with multiple shadows (uses first)', () => {
+    test('handles paint with multiple shadows (uses first)', () => {
       const paintWithMultipleShadows = createPaintData({
         stops: {
           0: { at: 0, color: rgbaToSevenTvColor(200, 100, 50, 255) },
@@ -359,7 +369,7 @@ describe('PaintedUsername', () => {
       expect(getByTestId('masked-view')).toBeOnTheScreen();
     });
 
-    test('should handle paint with no shadows', () => {
+    test('handles paint with no shadows', () => {
       const paintWithoutShadow = createPaintData({
         stops: {
           0: { at: 0, color: rgbaToSevenTvColor(150, 100, 200, 255) },

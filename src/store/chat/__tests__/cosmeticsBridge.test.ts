@@ -1,4 +1,5 @@
 import {
+  fetchUserCosmeticsByTwitchId,
   getBadge,
   getPaint,
   getUserBadgeId,
@@ -29,6 +30,7 @@ const mockUserBadgeBindings = new Map<string, string>();
 jest.mock('@app/store/chat/actions/cosmetics', () => ({
   addBadge: jest.fn(),
   addPaint: jest.fn(),
+  fetchUserCosmeticsByTwitchId: jest.fn(() => Promise.resolve()),
   getBadge: jest.fn(),
   getPaint: jest.fn(),
   getUserBadgeId: jest.fn((ttvUserId: string) =>
@@ -74,6 +76,9 @@ jest.mock('@app/utils/logger', () => ({
 
 const mockGetBadge = jest.mocked(getBadge);
 const mockGetPaint = jest.mocked(getPaint);
+const mockFetchUserCosmeticsByTwitchId = jest.mocked(
+  fetchUserCosmeticsByTwitchId,
+);
 const mockRemoveUserBadge = jest.mocked(removeUserBadge);
 const mockRemoveUserCosmetics = jest.mocked(removeUserCosmetics);
 const mockRemoveUserPaint = jest.mocked(removeUserPaint);
@@ -95,7 +100,7 @@ describe('applyEntitlementCreateEvent', () => {
     mockGetPaint.mockReturnValue(undefined);
   });
 
-  test('binds paints without fetching missing definitions', () => {
+  test('binds paints and hydrates the definition when it is missing', () => {
     const entitlement: EntitlementCreate = {
       id: 'entitlement-paint-1',
       kind: 0,
@@ -117,9 +122,34 @@ describe('applyEntitlementCreateEvent', () => {
 
     expect(getUserPaintId('ttv-1')).toBe('paint-1');
     expect(getUserBadgeId('ttv-1')).toBeUndefined();
+    expect(mockFetchUserCosmeticsByTwitchId.mock.calls).toEqual([['ttv-1']]);
   });
 
-  test('binds the badge without issuing an HTTP cosmetics fetch', () => {
+  test('does not refetch when the paint definition is already cached', () => {
+    mockGetPaint.mockReturnValue({ id: 'paint-1' } as never);
+
+    applyEntitlementCreateEvent({
+      entitlement: {
+        id: 'entitlement-paint-1',
+        kind: 0,
+        object: {
+          id: 'entitlement-paint-1',
+          kind: 'PAINT',
+          ref_id: 'paint-1',
+          user: createBadgeEntitlement('badge-1', 'ttv-1').object.user,
+        },
+      },
+      kind: 'PAINT',
+      ttvUserId: 'ttv-1',
+      paintId: 'paint-1',
+      badgeId: null,
+    });
+
+    expect(getUserPaintId('ttv-1')).toBe('paint-1');
+    expect(mockFetchUserCosmeticsByTwitchId).not.toHaveBeenCalled();
+  });
+
+  test('binds badges and hydrates the definition when it is missing', () => {
     applyEntitlementCreateEvent({
       entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
       kind: 'BADGE',
@@ -131,6 +161,22 @@ describe('applyEntitlementCreateEvent', () => {
     expect(getUserBadgeId('ttv-1')).toBe('badge-1');
     expect(getUserPaintId('ttv-1')).toBeUndefined();
     expect(getSevenTvUserIdForTwitchId('ttv-1')).toBe('stv-user-1');
+    expect(mockFetchUserCosmeticsByTwitchId.mock.calls).toEqual([['ttv-1']]);
+  });
+
+  test('does not refetch when the badge definition is already cached', () => {
+    mockGetBadge.mockReturnValue({ id: 'badge-1' } as never);
+
+    applyEntitlementCreateEvent({
+      entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
+      kind: 'BADGE',
+      ttvUserId: 'ttv-1',
+      paintId: null,
+      badgeId: 'badge-1',
+    });
+
+    expect(getUserBadgeId('ttv-1')).toBe('badge-1');
+    expect(mockFetchUserCosmeticsByTwitchId).not.toHaveBeenCalled();
   });
 
   test('binds style paint and badge on EMOTE_SET entitlements', () => {
@@ -155,6 +201,9 @@ describe('applyEntitlementCreateEvent', () => {
 
     expect(getUserPaintId('ttv-scummy')).toBe('paint-1');
     expect(getUserBadgeId('ttv-scummy')).toBe('badge-scummy');
+    expect(mockFetchUserCosmeticsByTwitchId.mock.calls).toEqual([
+      ['ttv-scummy'],
+    ]);
     // Resolving the personal emote set from an EMOTE_SET entitlement is a
     // fire-and-forget side effect, so assert the dispatch itself here.
     expect(mockHandlePersonalEmoteSetEntitlement.mock.calls).toEqual([

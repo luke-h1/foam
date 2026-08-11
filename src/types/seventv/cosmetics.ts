@@ -159,25 +159,8 @@ export interface BadgeData extends EventObject {
 }
 
 /**
- * Represents a 7TV paint cosmetic that can be applied to usernames.
- *
- * Paints are visual effects that modify how a user's name appears in chat.
- * They can include gradients (linear or radial), solid colors, images,
- * and shadow effects for enhanced visual impact.
- *
- * @example
- * ```typescript
- * // A linear gradient paint (Northern Light)
- * const paint: PaintData = {
- *   id: "01KDREVNA4XVTD3G04PWWDQMGF",
- *   name: "Northern Light",
- *   function: "LINEAR_GRADIENT",
- *   angle: 45,
- *   stops: { "0": { at: 0, color: -1675056641 }, "length": 1 },
- *   shadows: { "0": { x_offset: 0, y_offset: 0, radius: 0.1, color: 2096885247 }, "length": 1 },
- *   // ...other fields
- * };
- * ```
+ * A 7TV paint cosmetic applied to a username: a linear/radial gradient,
+ * solid colour or image fill, plus optional drop shadows.
  */
 export interface PaintData {
   /**

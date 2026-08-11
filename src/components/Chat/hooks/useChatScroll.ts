@@ -9,12 +9,10 @@ const SCROLL_DELTA_EPSILON = 1;
 // A scroll event this recent means a drag or momentum fling is still running.
 const SCROLL_ACTIVITY_WINDOW_MS = 120;
 const SCROLL_THROTTLE_MS = 150;
-const SCROLL_TO_BOTTOM_RETRY_MS = 50;
-const SCROLL_TO_BOTTOM_SETTLE_MS = 300;
 const BOTTOM_CONTENT_CHANGE_ANCHOR_MS = 600;
 
 interface ChatScrollableListRef {
-  scrollToEnd?: (options?: { animated?: boolean }) => void;
+  scrollToEnd?: (options?: { animated?: boolean }) => Promise<void>;
   scrollToIndex?: (params: {
     animated?: boolean;
     index: number;
@@ -38,11 +36,8 @@ export const useChatScroll = ({
   const [shouldMaintainScrollAtEnd, setShouldMaintainScrollAtEnd] =
     useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
-  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollThrottleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const scrollRetryIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
-    null,
-  );
+  const scrollToBottomRequestRef = useRef(0);
   const bottomContentAnchorTimeoutRef = useRef<ReturnType<
     typeof setTimeout
   > | null>(null);
@@ -65,19 +60,13 @@ export const useChatScroll = ({
   const isUserActivelyScrolling = useCallback(
     () =>
       isDraggingRef.current ||
+      isMomentumScrollingRef.current ||
       Date.now() - lastScrollEventAtRef.current < SCROLL_ACTIVITY_WINDOW_MS,
     [],
   );
 
-  const clearScrollToBottomTimers = useCallback(() => {
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-      scrollTimeoutRef.current = null;
-    }
-    if (scrollRetryIntervalRef.current) {
-      clearInterval(scrollRetryIntervalRef.current);
-      scrollRetryIntervalRef.current = null;
-    }
+  const cancelScrollToBottom = useCallback(() => {
+    scrollToBottomRequestRef.current += 1;
   }, []);
 
   const clearBottomContentAnchor = useCallback(() => {
@@ -94,17 +83,21 @@ export const useChatScroll = ({
   }, []);
 
   const scrollToLatestOnce = useCallback(() => {
-    if (!isAtBottomRef.current || isDraggingRef.current) {
+    if (
+      !isAtBottomRef.current ||
+      isDraggingRef.current ||
+      isMomentumScrollingRef.current
+    ) {
       return;
     }
 
-    listRef.current?.scrollToEnd?.({ animated: false });
+    void listRef.current?.scrollToEnd?.({ animated: false });
   }, [listRef]);
 
   const handleScrollBeginDrag = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       chatScrollActivity.poke();
-      clearScrollToBottomTimers();
+      cancelScrollToBottom();
       clearBottomContentAnchor();
       isDraggingRef.current = true;
       isMomentumScrollingRef.current = false;
@@ -117,7 +110,7 @@ export const useChatScroll = ({
         scrollEndDragSettleRef.current = null;
       }
     },
-    [clearBottomContentAnchor, clearScrollToBottomTimers],
+    [cancelScrollToBottom, clearBottomContentAnchor],
   );
 
   /**
@@ -283,25 +276,25 @@ export const useChatScroll = ({
 
     markAtBottom();
 
-    const scrollToEnd = () => {
-      listRef.current?.scrollToEnd?.({ animated: false });
-    };
-
-    scrollToEnd();
-
-    clearScrollToBottomTimers();
-    scrollRetryIntervalRef.current = setInterval(
-      scrollToEnd,
-      SCROLL_TO_BOTTOM_RETRY_MS,
-    );
-    scrollTimeoutRef.current = setTimeout(() => {
-      clearScrollToBottomTimers();
-
+    const requestId = scrollToBottomRequestRef.current + 1;
+    scrollToBottomRequestRef.current = requestId;
+    const finishScroll = () => {
+      if (scrollToBottomRequestRef.current !== requestId) {
+        return;
+      }
       markAtBottom();
       isScrollingToBottomRef.current = false;
       setIsScrollingToBottom(false);
-    }, SCROLL_TO_BOTTOM_SETTLE_MS);
-  }, [clearScrollToBottomTimers, listRef, getMessagesLength, markAtBottom]);
+    };
+
+    const scrollRequest = listRef.current?.scrollToEnd?.({ animated: false });
+    if (!scrollRequest) {
+      finishScroll();
+      return;
+    }
+
+    void scrollRequest.then(finishScroll);
+  }, [listRef, getMessagesLength, markAtBottom]);
 
   const maintainBottomAfterContentChange = useCallback(() => {
     if (getMessagesLength() === 0 || !isAtBottomRef.current) {
@@ -332,21 +325,14 @@ export const useChatScroll = ({
   }, [getMessagesLength, markAtBottom, scrollToLatestOnce]);
 
   const handleContentSizeChange = useCallback(() => {
-    if (getMessagesLength() === 0 || isDraggingRef.current) {
+    if (
+      getMessagesLength() === 0 ||
+      isDraggingRef.current ||
+      isMomentumScrollingRef.current
+    ) {
       return;
     }
 
-    /**
-     * Re-snap to the newest row whenever we're pinned to the bottom — not just
-     * in the short window after an explicit scroll-to-bottom. Native
-     * maintainScrollAtEnd only re-pins within maintainScrollAtEndThreshold
-     * (10% of the viewport), so a tall under-estimated emote/username row lands
-     * short and stays clipped at the bottom. The manual scrollToEnd has no
-     * threshold and follows it all the way down. With maintainVisibleContentPosition
-     * disabled at the bottom there's no data-anchoring left to fight, so this no
-     * longer jitters. The scrollToLatestOnce guard (isAtBottomRef + not dragging)
-     * keeps it from disturbing a user who has scrolled up to read history.
-     */
     if (
       !shouldAnchorBottomOnContentChangeRef.current &&
       !isAtBottomRef.current
@@ -363,7 +349,7 @@ export const useChatScroll = ({
 
   const cleanup = useCallback(() => {
     chatScrollActivity.reset();
-    clearScrollToBottomTimers();
+    cancelScrollToBottom();
     clearBottomContentAnchor();
     if (scrollThrottleRef.current) {
       clearTimeout(scrollThrottleRef.current);
@@ -373,7 +359,7 @@ export const useChatScroll = ({
       clearTimeout(scrollEndDragSettleRef.current);
       scrollEndDragSettleRef.current = null;
     }
-  }, [clearBottomContentAnchor, clearScrollToBottomTimers]);
+  }, [cancelScrollToBottom, clearBottomContentAnchor]);
 
   const scrollHandlers = useMemo(
     () => ({

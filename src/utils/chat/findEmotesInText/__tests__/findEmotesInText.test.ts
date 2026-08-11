@@ -36,7 +36,7 @@ describe('FindEmotesInText', () => {
     return map;
   };
 
-  test('should find a single emote at the start of the text node', () => {
+  test('finds a single emote at the start of the text node', () => {
     const emoteMap = createEmoteMap(['Kappa']);
     const result = findEmotesInText('Kappa hello', emoteMap);
 
@@ -49,7 +49,7 @@ describe('FindEmotesInText', () => {
     ]);
   });
 
-  test('should find a single emote at the end of the text node', () => {
+  test('finds a single emote at the end of the text node', () => {
     const emoteMap = createEmoteMap(['Kappa']);
     const result = findEmotesInText('hello Kappa', emoteMap);
 
@@ -62,7 +62,7 @@ describe('FindEmotesInText', () => {
     ]);
   });
 
-  test('should find a single emote in the middle of the text node', () => {
+  test('finds a single emote in the middle of the text node', () => {
     const emoteMap = createEmoteMap(['Kappa']);
     const result = findEmotesInText('hello Kappa world', emoteMap);
 
@@ -75,7 +75,7 @@ describe('FindEmotesInText', () => {
     ]);
   });
 
-  test('should handle overlapping emote names correctly', () => {
+  test('handles overlapping emote names correctly', () => {
     const emoteMap = createEmoteMap(['Kappa', 'KappaHD']);
     const result = findEmotesInText('KappaHD hello Kappa', emoteMap);
 
@@ -94,7 +94,7 @@ describe('FindEmotesInText', () => {
     ]);
   });
 
-  test('should not match emotes that are part of other words', () => {
+  test('does not match emotes that are part of other words', () => {
     const emoteMap = createEmoteMap(['Kappa'], createNonTwitchMockEmote);
     const result = findEmotesInText(
       'PreKappa KappaPost NotKappaHere',
@@ -104,21 +104,21 @@ describe('FindEmotesInText', () => {
     expect(result).toEqual<FindEmotesInTextReturn[]>([]);
   });
 
-  test('should handle empty text', () => {
+  test('handles empty text', () => {
     const emoteMap = createEmoteMap(['Kappa']);
     const result = findEmotesInText('', emoteMap);
 
     expect(result).toEqual([]);
   });
 
-  test('should handle text with no emotes', () => {
+  test('handles text with no emotes', () => {
     const emoteMap = createEmoteMap(['Kappa']);
     const result = findEmotesInText('Hello world', emoteMap);
 
     expect(result).toEqual([]);
   });
 
-  test('should handle repeated emotes', () => {
+  test('handles repeated emotes', () => {
     const emoteMap = createEmoteMap(['Kappa']);
     const result = findEmotesInText('Kappa hello Kappa', emoteMap);
 
@@ -136,7 +136,7 @@ describe('FindEmotesInText', () => {
     ]);
   });
 
-  test('should respect word boundaries', () => {
+  test('respects word boundaries', () => {
     const emoteMap = createEmoteMap(['Pog'], createNonTwitchMockEmote);
     const result = findEmotesInText('Pog PogChamp Pog NotPog PogNot', emoteMap);
 

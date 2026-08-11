@@ -10,7 +10,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import { impact } from '@app/lib/haptics';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
 import { showActionMenu } from '@app/store/overlays/showActionMenu';
-import { Color } from '@app/styles/pallete';
+import { Color } from '@app/styles/palette';
 import { theme } from '@app/styles/themes';
 import type { TwitchStream } from '@app/types/twitch/stream';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';

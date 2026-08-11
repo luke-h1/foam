@@ -25,7 +25,7 @@ import {
   SHADER_SOURCE,
 } from './conf';
 import { parseColor } from './helper';
-import type { IEnergyOrb, RGB } from './types';
+import type { EnergyOrbProps, RGB } from './types';
 
 let cachedShaderSource: ReturnType<typeof Skia.RuntimeEffect.Make> | null =
   null;
@@ -46,7 +46,7 @@ function EnergyOrbComponent({
   intensity = DEFAULT_INTENSITY,
   colors = DEFAULT_COLORS,
   glowRadius = DEFAULT_GLOW_RADIUS,
-}: IEnergyOrb) {
+}: EnergyOrbProps) {
   const focused = useScreenFocused();
   const time = useSharedValue<number>(0);
 

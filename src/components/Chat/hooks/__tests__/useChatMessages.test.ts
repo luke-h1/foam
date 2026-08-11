@@ -95,7 +95,7 @@ describe('useChatMessages', () => {
   });
 
   describe('Initial State', () => {
-    test('should return required functions', () => {
+    test('returns required functions', () => {
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
       expect(typeof result.current.handleNewMessage).toBe('function');
@@ -105,13 +105,13 @@ describe('useChatMessages', () => {
       expect(typeof result.current.getBufferSize).toBe('function');
     });
 
-    test('should start with empty buffer', () => {
+    test('starts with empty buffer', () => {
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
       expect(result.current.getBufferSize()).toBe(0);
     });
 
-    test('should return referentially stable handlers across re-renders', () => {
+    test('returns referentially stable handlers across re-renders', () => {
       const { result, rerender } = renderHook(() =>
         useChatMessages(defaultOptions),
       );
@@ -279,7 +279,7 @@ describe('useChatMessages', () => {
       expect(mockAddMessages).toHaveBeenCalledTimes(2);
     });
 
-    test('should buffer messages and flush periodically', () => {
+    test('buffers messages and flush periodically', () => {
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
       const message = createMockMessage('1');
@@ -332,7 +332,7 @@ describe('useChatMessages', () => {
       expect(result.current.getBufferSize()).toBe(0);
     });
 
-    test('should flush when not at bottom so messages always appear', () => {
+    test('flushes when not at bottom so messages always appear', () => {
       const { result } = renderHook(() =>
         useChatMessages({
           ...defaultOptions,
@@ -412,7 +412,7 @@ describe('useChatMessages', () => {
       expect(onBottomContentChange).not.toHaveBeenCalled();
     });
 
-    test('should deduplicate messages in buffer', () => {
+    test('deduplicates messages in buffer', () => {
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
       const message1 = createMockMessage('1', 'shared-nonce');
@@ -426,7 +426,7 @@ describe('useChatMessages', () => {
       expect(result.current.getBufferSize()).toBe(1);
     });
 
-    test('should keep messages with different nonces', () => {
+    test('keeps messages with different nonces', () => {
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
       act(() => {
@@ -439,7 +439,7 @@ describe('useChatMessages', () => {
   });
 
   describe('Force Flush (Resume Scroll)', () => {
-    test('should flush all buffered messages on forceFlush', () => {
+    test('flushes all buffered messages on forceFlush', () => {
       const { result } = renderHook(() =>
         useChatMessages({
           ...defaultOptions,
@@ -468,7 +468,7 @@ describe('useChatMessages', () => {
   });
 
   describe('Unread Count', () => {
-    test('should batch unread increments while not at bottom', () => {
+    test('batches unread increments while not at bottom', () => {
       const onUnreadIncrement = jest.fn();
       const { result } = renderHook(() =>
         useChatMessages({
@@ -493,7 +493,7 @@ describe('useChatMessages', () => {
       expect(onUnreadIncrement).toHaveBeenCalledWith(2);
     });
 
-    test('should not increment unread when at bottom', () => {
+    test('does not increment unread when at bottom', () => {
       const onUnreadIncrement = jest.fn();
       const { result } = renderHook(() =>
         useChatMessages({
@@ -530,7 +530,7 @@ describe('useChatMessages', () => {
       expect(onUnreadIncrement).toHaveBeenCalledWith(2);
     });
 
-    test('should not increment unread while jumping to bottom', () => {
+    test('does not increment unread while jumping to bottom', () => {
       const onUnreadIncrement = jest.fn();
       const { result } = renderHook(() =>
         useChatMessages({
@@ -633,7 +633,7 @@ describe('useChatMessages', () => {
   });
 
   describe('Cleanup', () => {
-    test('should clear flush timer on cleanup', () => {
+    test('clears flush timer on cleanup', () => {
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
       act(() => {
@@ -651,7 +651,7 @@ describe('useChatMessages', () => {
       expect(mockAddMessages).not.toHaveBeenCalled();
     });
 
-    test('should clear buffer on clearLocalMessages', () => {
+    test('clears buffer on clearLocalMessages', () => {
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
       act(() => {
@@ -675,7 +675,7 @@ describe('useChatMessages', () => {
       isAtBottomRef: { current: false },
     };
 
-    test('should flush entire buffer so all messages appear', () => {
+    test('flushes entire buffer so all messages appear', () => {
       const { result } = renderHook(() => useChatMessages(scrolledUpOptions));
 
       act(() => {
@@ -751,6 +751,35 @@ describe('useChatMessages', () => {
       expect(committed.map(message => message?.message_id)).toEqual(
         Array.from({ length: committed.length }, (_, index) => `${index}`),
       );
+    });
+
+    test('defers publishing while an at-bottom drag or fling is active', () => {
+      let activelyScrolling = true;
+      const { result } = renderHook(() =>
+        useChatMessages({
+          ...defaultOptions,
+          isAtBottomRef: { current: true },
+          isUserActivelyScrolling: () => activelyScrolling,
+        }),
+      );
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('during-fling'));
+        jest.advanceTimersByTime(500);
+      });
+
+      expect(mockAddMessages).not.toHaveBeenCalled();
+      expect(result.current.getBufferSize()).toBe(1);
+
+      activelyScrolling = false;
+      act(() => {
+        jest.advanceTimersByTime(250);
+      });
+
+      expect(
+        getLastFlushedMessages().map(message => message.message_id),
+      ).toEqual(['during-fling']);
+      expect(result.current.getBufferSize()).toBe(0);
     });
 
     test('caps a live raid flush at the bottom to a bounded batch of rows', () => {

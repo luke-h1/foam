@@ -1,7 +1,7 @@
 import { calculateAspectRatio } from '../calculateAspectRatio';
 
 describe('calculateAspectRatio', () => {
-  test('should maintain aspect ratio for landscape image', () => {
+  test('maintains aspect ratio for landscape image', () => {
     const result = calculateAspectRatio(1920, 1080, 100);
     expect(result).toEqual({
       width: 177.77777777777777,
@@ -9,7 +9,7 @@ describe('calculateAspectRatio', () => {
     });
   });
 
-  test('should maintain aspect ratio for portrait image', () => {
+  test('maintains aspect ratio for portrait image', () => {
     const result = calculateAspectRatio(1080, 1920, 100);
     expect(result).toEqual({
       width: 56.25,
@@ -17,7 +17,7 @@ describe('calculateAspectRatio', () => {
     });
   });
 
-  test('should maintain aspect ratio for square image', () => {
+  test('maintains aspect ratio for square image', () => {
     const result = calculateAspectRatio(100, 100, 100);
     expect(result).toEqual({
       width: 100,

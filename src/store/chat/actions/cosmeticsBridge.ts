@@ -11,6 +11,7 @@ import { chatStore$ } from '../observables/chatStore';
 import {
   addBadge,
   addPaint,
+  fetchUserCosmeticsByTwitchId,
   getBadge,
   getPaint,
   removeUserBadge,
@@ -28,6 +29,16 @@ import {
   unlinkSevenTvUser,
 } from './cosmeticsLinks';
 import { handlePersonalEmoteSetEntitlement } from './personalEmotes';
+
+function bindUserPaint(ttvUserId: string, paintId: string): boolean {
+  setUserPaint(ttvUserId, paintId);
+  return !getPaint(paintId);
+}
+
+function bindUserBadge(ttvUserId: string, badgeId: string): boolean {
+  setUserBadge(ttvUserId, badgeId);
+  return !getBadge(badgeId);
+}
 
 export const applyCosmeticCreateEvent = (
   cosmetic: CosmeticCreate,
@@ -76,34 +87,37 @@ export const applyEntitlementCreateEvent = (data: {
   }
 
   if (kind === 'EMOTE_SET' && ttvUserId) {
+    let needsHydrate = false;
     if (data.paintId) {
-      setUserPaint(ttvUserId, data.paintId);
+      needsHydrate = bindUserPaint(ttvUserId, data.paintId) || needsHydrate;
     }
     if (data.badgeId) {
-      setUserBadge(ttvUserId, data.badgeId);
+      needsHydrate = bindUserBadge(ttvUserId, data.badgeId) || needsHydrate;
+    }
+    if (needsHydrate) {
+      void fetchUserCosmeticsByTwitchId(ttvUserId);
+    }
+    if (cosmeticId) {
+      handlePersonalEmoteSetEntitlement(
+        ttvUserId,
+        cosmeticId,
+        chatStore$.currentChannelId.peek(),
+      );
     }
   }
 
   if (kind === 'PAINT') {
     const paintId = cosmeticId || data.paintId;
-    if (paintId && ttvUserId) {
-      setUserPaint(ttvUserId, paintId);
+    if (paintId && ttvUserId && bindUserPaint(ttvUserId, paintId)) {
+      void fetchUserCosmeticsByTwitchId(ttvUserId);
     }
   }
 
   if (kind === 'BADGE') {
     const badgeId = cosmeticId || data.badgeId;
-    if (badgeId && ttvUserId) {
-      setUserBadge(ttvUserId, badgeId);
+    if (badgeId && ttvUserId && bindUserBadge(ttvUserId, badgeId)) {
+      void fetchUserCosmeticsByTwitchId(ttvUserId);
     }
-  }
-
-  if (kind === 'EMOTE_SET' && ttvUserId && cosmeticId) {
-    handlePersonalEmoteSetEntitlement(
-      ttvUserId,
-      cosmeticId,
-      chatStore$.currentChannelId.peek(),
-    );
   }
 };
 

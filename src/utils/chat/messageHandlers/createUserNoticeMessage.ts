@@ -71,9 +71,6 @@ export const createUserNoticeMessage = ({
     'user-type': tags['user-type'],
   } as UserStateTags;
 
-  const { message: _droppedMessage, ...userstateTags } =
-    userstate as UserStateTags & { message?: unknown };
-
   const tagId = 'id' in tags ? (tags as { id?: string }).id : undefined;
   const messageId = tagId || generateNonce();
 
@@ -90,20 +87,14 @@ export const createUserNoticeMessage = ({
       typeof tags['reply-parent-display-name'] === 'string'
         ? tags['reply-parent-display-name']
         : '',
-    replyDisplayName: tags['reply-parent-user-login'] || '',
+    replyDisplayName:
+      typeof tags['reply-parent-user-login'] === 'string'
+        ? tags['reply-parent-user-login']
+        : '',
     replyBody:
       typeof tags['reply-parent-msg-body'] === 'string'
         ? tags['reply-parent-msg-body']
         : '',
-    ...userstateTags,
-  };
-
-  const emptyFields = {
-    sender: '',
-    replyDisplayName: '',
-    replyBody: '',
-    channel: '',
-    parentDisplayName: '',
   };
 
   const sharedChatDuplicated = isSharedChatDuplicatedNotice(tags);
@@ -117,10 +108,9 @@ export const createUserNoticeMessage = ({
       badges: [],
       message: [createSubscriptionPart(tags, text)],
       userstate,
-      notice_tags: { ...tags, ...emptyFields } as UserNoticeTags,
+      notice_tags: tags,
       isSpecialNotice: true,
       ...sharedChatFields,
-      ...emptyFields,
     }) as AnyChatMessageType;
 
   const createMetadataUserNoticeMessage = (options: {
@@ -139,7 +129,7 @@ export const createUserNoticeMessage = ({
       message: trimmedText
         ? [{ type: 'text' as const, content: trimmedText }]
         : [],
-      notice_tags: { ...tags, ...emptyFields } as UserNoticeTags,
+      notice_tags: tags,
       isSpecialNotice: true,
       ...options,
       ...sharedChatFields,
@@ -157,11 +147,10 @@ export const createUserNoticeMessage = ({
       userstate,
       badges: [],
       message: combined ? [{ type: 'text' as const, content: combined }] : [],
-      notice_tags: { ...tags, ...emptyFields } as UserNoticeTags,
+      notice_tags: tags,
       isSpecialNotice: true,
       isTwitchSystemNotice: true,
       ...sharedChatFields,
-      ...emptyFields,
     } as AnyChatMessageType;
   };
 
@@ -210,7 +199,6 @@ export const createUserNoticeMessage = ({
           'badge-info': tags['badge-info'] ?? '',
           'display-name': tags['display-name'] ?? '',
           'system-msg': tags['system-msg'] ?? '',
-          ...emptyFields,
         } satisfies UserNoticeTagsByVariant<'viewermilestone'>,
         isSpecialNotice: true,
       };
@@ -238,10 +226,9 @@ export const createUserNoticeMessage = ({
         badges: [],
         message: [createCharityDonationPart(tags, text)],
         userstate,
-        notice_tags: { ...tags, ...emptyFields } as UserNoticeTags,
+        notice_tags: tags,
         isSpecialNotice: true,
         ...sharedChatFields,
-        ...emptyFields,
       } as AnyChatMessageType;
     }
 
@@ -251,10 +238,9 @@ export const createUserNoticeMessage = ({
         badges: [],
         message: [createRitualPart(tags, text)],
         userstate,
-        notice_tags: { ...tags, ...emptyFields } as UserNoticeTags,
+        notice_tags: tags,
         isSpecialNotice: true,
         ...sharedChatFields,
-        ...emptyFields,
       } as AnyChatMessageType;
     }
 
@@ -278,7 +264,7 @@ export const createUserNoticeMessage = ({
         badges: [],
         message: [{ type: 'text' as const, content: trimmedText }],
         userstate,
-        notice_tags: { ...tags, ...emptyFields } as UserNoticeTags,
+        notice_tags: tags,
         isChannelPointRedemption: true,
       } as ChatMessageType<'usernotice', 'rewardgift'>;
     }
@@ -298,13 +284,9 @@ export const createUserNoticeMessage = ({
         userstate,
         badges: [],
         message: [modiversaryPart].filter(hasRenderableNoticeBody),
-        notice_tags: {
-          ...tags,
-          ...emptyFields,
-        } as UserNoticeTagsByVariant<'modiversary'>,
+        notice_tags: tags as UserNoticeTagsByVariant<'modiversary'>,
         isSpecialNotice: true,
         ...sharedChatFields,
-        ...emptyFields,
       } as AnyChatMessageType;
     }
 
@@ -334,7 +316,6 @@ export const createUserNoticeMessage = ({
           badges: [],
           message: [],
           isSpecialNotice: true,
-          ...emptyFields,
         };
       }
 
@@ -346,7 +327,6 @@ export const createUserNoticeMessage = ({
         isSpecialNotice: true,
         isTwitchSystemNotice: true,
         ...sharedChatFields,
-        ...emptyFields,
       };
     }
   }

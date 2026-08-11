@@ -11,7 +11,7 @@ import type { SanitisedEmote } from '@app/types/emote';
 import { replaceEmotesWithText } from '../replaceEmotesWithText';
 
 describe('replaceEmotesWithText', () => {
-  test('should handle empty input', () => {
+  test('handles empty input', () => {
     expect(replaceEmotesWithText([])).toEqual('');
   });
 
@@ -76,7 +76,7 @@ describe('replaceEmotesWithText', () => {
     });
   });
 
-  test('should handle mixed emote types', () => {
+  test('handles mixed emote types', () => {
     const ffzEmote = ffzSanitisedChannelEmoteSet[0];
     const sevenTvEmote = sevenTvSanitisedChannelEmoteSetFixture[0];
 
@@ -105,7 +105,7 @@ describe('replaceEmotesWithText', () => {
     );
   });
 
-  test('should handle mentions', () => {
+  test('handles mentions', () => {
     const result = replaceEmotesWithText([
       { type: 'text', content: 'Hello ' },
       {

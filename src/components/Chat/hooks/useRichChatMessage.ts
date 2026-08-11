@@ -95,11 +95,6 @@ export function useRichChatMessage<
   const pressedEmotePartRef = useRef<EmotePressData | null>(null);
   const rowTouchOriginRef = useRef<{ x: number; y: number } | null>(null);
 
-  useEffect(() => {
-    return () => {
-      setSelectedEmoteAction(null);
-    };
-  }, []);
   const compact = density === 'compact';
   const normalisedCurrentUsername =
     currentUsernameNormalized ?? normaliseChatUsername(currentUsername);

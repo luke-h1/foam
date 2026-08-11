@@ -33,16 +33,12 @@ export function PaintedUsernameFill({
     ? sevenTvColorToCss(paint.color)
     : fallbackColor;
 
-  /**
-   * Each layer span carries its own base-colour backing, so the plain base
-   * fill only renders when no layer produces a span (the reference's
-   * layer-less fallback).
-   */
   return (
     <View style={styles.stack}>
-      {keyedLayers.length === 0 ? (
-        <View style={[styles.baseColor, { backgroundColor: baseColor }]} />
-      ) : null}
+      <View
+        testID='painted-username-base-fill'
+        style={[styles.baseColor, { backgroundColor: baseColor }]}
+      />
       {keyedLayers.map(({ layer, key, layerIndex }) => (
         <PaintLayerBackground
           key={key}

@@ -389,17 +389,17 @@ export function useChatRowRenderer({
   const handleReplyContextPress = useCallback(
     (replyParentMessageId: string) => {
       const messages = messages$.peek();
-      const targetIndex = messages.findIndex(
+      const targetMessage = messages.find(
         message => message.message_id === replyParentMessageId,
       );
 
-      if (targetIndex < 0) {
+      if (!targetMessage) {
         return;
       }
 
-      listRef.current?.scrollToIndex({
+      void listRef.current?.scrollToItem({
         animated: true,
-        index: targetIndex,
+        item: targetMessage,
         viewPosition: 0.35,
       });
 

@@ -35,7 +35,7 @@ if (process.env.EXPO_OS === 'ios') {
     const MAX_MEMORY_CACHE_BYTES = 384 * 1024 * 1024;
     let totalMemoryBytes = 0;
     try {
-      const deviceInfo = require('react-native-device-info');
+      const deviceInfo = require('react-native-device-info/src/internal/nativeInterface');
       const DeviceInfo = deviceInfo.default ?? deviceInfo;
       totalMemoryBytes = DeviceInfo.getTotalMemorySync?.() ?? 0;
     } catch {

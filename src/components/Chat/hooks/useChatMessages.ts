@@ -169,11 +169,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     }
     const underBackpressure = isBufferUnderBackpressure();
 
-    if (
-      !underBackpressure &&
-      !isAtBottomRef.current &&
-      isUserActivelyScrolling?.()
-    ) {
+    if (!underBackpressure && isUserActivelyScrolling?.()) {
       flushTimerRef.current = setTimeout(() => {
         flushBufferRef.current();
       }, SCROLL_DEFERRED_FLUSH_RETRY_MS);

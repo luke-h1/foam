@@ -1,4 +1,4 @@
-import { Color, type ColorShade } from './pallete';
+import { Color, type ColorShade } from './palette';
 
 export type UISize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 

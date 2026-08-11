@@ -27,7 +27,7 @@ describe('createSubscriptionPart', () => {
         displayName: 'Viewer',
         message: undefined,
         plan: '1000',
-        planName: 'Prime',
+        planName: 'Tier 1',
         months: 3,
         streakMonths: 1,
         shouldShareStreak: false,
@@ -55,7 +55,7 @@ describe('createSubscriptionPart', () => {
         displayName: 'ResubUser',
         message: 'Still here!',
         plan: '3000',
-        planName: 'Tier 2',
+        planName: 'Tier 3',
         months: 12,
         streakMonths: 4,
         shouldShareStreak: true,
@@ -81,7 +81,7 @@ describe('createSubscriptionPart', () => {
         msgId: 'subgift',
         displayName: 'Gifter',
         message: undefined,
-        plan: '2000',
+        plan: '1000',
         planName: 'Tier 1',
         recipientDisplayName: 'Recipient',
         recipientId: '123',
@@ -95,7 +95,7 @@ describe('createSubscriptionPart', () => {
     const part = createSubscriptionPart({
       'msg-id': 'primepaidupgrade',
       'display-name': 'Viewer',
-      'msg-param-sub-plan': '1000',
+      'msg-param-sub-plan': 'Prime',
       'msg-param-cumulative-months': '6',
     });
 
@@ -105,9 +105,32 @@ describe('createSubscriptionPart', () => {
         msgId: 'primepaidupgrade',
         displayName: 'Viewer',
         message: undefined,
-        plan: '1000',
+        plan: 'Prime',
         planName: 'Prime',
         months: 6,
+      },
+    });
+  });
+
+  test('falls back instead of rendering malformed numeric tags as NaN', () => {
+    const part = createSubscriptionPart(
+      createResubTags({
+        'msg-param-cumulative-months': 'not-a-number',
+        'msg-param-streak-months': 'also-not-a-number',
+      }),
+    );
+
+    expect(part).toEqual<ParsedPart<'resub'>>({
+      type: 'resub',
+      subscriptionEvent: {
+        msgId: 'resub',
+        displayName: 'ResubUser',
+        message: undefined,
+        plan: '1000',
+        planName: 'Tier 1',
+        months: 0,
+        streakMonths: undefined,
+        shouldShareStreak: false,
       },
     });
   });

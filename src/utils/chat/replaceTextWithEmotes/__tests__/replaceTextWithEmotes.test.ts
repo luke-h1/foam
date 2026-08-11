@@ -73,7 +73,7 @@ describe('replaceTextWithEmotesV2', () => {
     return result;
   }
 
-  test('should handle empty input', () => {
+  test('handles empty input', () => {
     const result = replaceTextWithEmotes({
       inputString: '',
       ...defaultEmoteSets,
@@ -83,7 +83,7 @@ describe('replaceTextWithEmotesV2', () => {
     expect(result).toEqual<ParsedPart[]>([{ type: 'text', content: '' }]);
   });
 
-  test('should replace single emote in text', () => {
+  test('replaces single emote in text', () => {
     const kappaEmote = twitchTvSanitisedEmoteSetGlobalFixture.find(
       e => e.name === 'Kappa',
     )!;
@@ -103,7 +103,7 @@ describe('replaceTextWithEmotesV2', () => {
     ]);
   });
 
-  test('should handle mentions without emote matches', () => {
+  test('handles mentions without emote matches', () => {
     const result = replaceTextWithEmotes({
       inputString: '@someUser hello',
       ...defaultEmoteSets,
@@ -136,7 +136,7 @@ describe('replaceTextWithEmotesV2', () => {
     ]);
   });
 
-  test('should split trailing punctuation off a mention', () => {
+  test('splits trailing punctuation off a mention', () => {
     const result = replaceTextWithEmotes({
       inputString: '@someUser, hello',
       ...defaultEmoteSets,
@@ -151,7 +151,7 @@ describe('replaceTextWithEmotesV2', () => {
     ]);
   });
 
-  test('should split each mention in a comma-separated list', () => {
+  test('splits each mention in a comma-separated list', () => {
     const result = replaceTextWithEmotes({
       inputString: '@userOne, @userTwo',
       ...defaultEmoteSets,
@@ -166,7 +166,7 @@ describe('replaceTextWithEmotesV2', () => {
     ]);
   });
 
-  test('should match emotes case-sensitively', () => {
+  test('matches emotes case-sensitively', () => {
     const kappaEmote = twitchTvSanitisedEmoteSetGlobalFixture.find(
       e => e.name === 'Kappa',
     )!;
@@ -186,7 +186,7 @@ describe('replaceTextWithEmotesV2', () => {
     ]);
   });
 
-  test('should handle emojis', () => {
+  test('handles emojis', () => {
     const result = replaceTextWithEmotes({
       inputString: 'Hello 😊 World',
       ...defaultEmoteSets,
@@ -200,7 +200,7 @@ describe('replaceTextWithEmotesV2', () => {
     ]);
   });
 
-  test('should filter out replacement character (encoding issues)', () => {
+  test('filters out replacement character (encoding issues)', () => {
     // U+FFFD is the unicode replacement character (?) for invalid/malformed text
     const result = replaceTextWithEmotes({
       inputString: 'Hello � World',

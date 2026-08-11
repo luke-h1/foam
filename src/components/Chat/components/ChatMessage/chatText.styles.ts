@@ -17,6 +17,8 @@ import {
 
 export interface ChatTextStyles {
   badge: ImageStyle;
+  badgeTintArtwork: ImageStyle;
+  badgeTintSlot: ViewStyle;
   body: TextStyle;
   /**
    * Lines carrying an inline emote need the taller emote line height on every
@@ -56,6 +58,17 @@ function buildChatTextStyles(
     badge: {
       height: scale.badgeSize,
       marginRight: scale.badgeGap,
+      width: scale.badgeSize,
+    },
+    badgeTintArtwork: {
+      height: scale.badgeSize,
+      width: scale.badgeSize,
+    },
+    badgeTintSlot: {
+      borderRadius: CHAT_SURFACE_COLORS.radius,
+      height: scale.badgeSize,
+      marginRight: scale.badgeGap,
+      overflow: 'hidden',
       width: scale.badgeSize,
     },
     body,

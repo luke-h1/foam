@@ -146,6 +146,7 @@ jest.mock('@app/store/chat/observables/chatStore', () => ({
     },
     emojis: {
       peek: jest.fn(() => []),
+      set: jest.fn(),
     },
     messages: {
       get: jest.fn(() => []),
@@ -404,7 +405,9 @@ const setPreferences = (showRecentMessages = true) => {
   } satisfies ReturnType<typeof usePreferences>;
 
   mockedUsePreferences.mockReturnValue(preferences);
-  mockedUsePreference.mockReturnValue([]);
+  mockedUsePreference.mockImplementation(
+    key => preferences[key as keyof typeof preferences] as never,
+  );
   mockedUseChatRenderPreferences.mockReturnValue(preferences);
   mockedUseUpdatePreferences.mockReturnValue(preferences.update);
 };
@@ -456,14 +459,25 @@ describe('Chat recent messages', () => {
       expect.any(AbortSignal),
       getMaxChatMessages(),
     );
-    expect(
-      handleNewMessage.mock.calls.map(([message, options]) => ({
+    const projectedCalls = handleNewMessage.mock.calls.map(
+      ([message, options]) => ({
         channel: message.channel,
         id: 'id' in message ? message.id : undefined,
         message_id: message.message_id,
         options,
         sender: message.sender,
-      })),
+      }),
+    );
+
+    // The usernotice carries no IRC nonce, so its store id embeds the arrival
+    // timestamp - pin the shape here, then compare everything else exactly.
+    const noticeId = projectedCalls[1]?.id ?? '';
+    expect(/^notice-1_\d+-\d+$/.test(noticeId)).toBe(true);
+
+    expect(
+      projectedCalls.map(entry =>
+        entry.id === noticeId ? { ...entry, id: 'notice-1_nonce' } : entry,
+      ),
     ).toEqual([
       {
         channel: 'foam',
@@ -473,11 +487,11 @@ describe('Chat recent messages', () => {
         sender: 'RecentUser',
       },
       {
-        channel: '',
-        id: 'notice-1',
+        channel: 'foam',
+        id: 'notice-1_nonce',
         message_id: 'notice-1',
         options: { countUnread: false },
-        sender: '',
+        sender: 'SubUser',
       },
     ]);
     expect(moderateChatMessagesByLogin).toHaveBeenCalledWith(

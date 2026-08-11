@@ -3,18 +3,8 @@ import { SevenTvColor } from '@app/types/seventv/cosmetics';
 import { sevenTvColorToRgba } from './sevenTvColorToRgba';
 
 /**
- * Converts a 7TV packed RGBA color integer to a CSS-compatible rgba() string.
- *
- * The alpha channel is normalized from 0-255 to 0-1 for CSS compatibility.
- *
- * @param color - The packed RGBA color as a 32-bit signed integer.
- * @returns A CSS rgba() color string.
- *
- * @example
- * ```typescript
- * const cssColor = sevenTvColorToCss(-1675056641);
- * // Result: "rgba(156, 40, 169, 1.000)"
- * ```
+ * A 7TV packed 32-bit RGBA integer as a CSS rgba() string; alpha is
+ * normalised from 0-255 to 0-1.
  */
 export function sevenTvColorToCss(color: SevenTvColor): string {
   const { r, g, b, a } = sevenTvColorToRgba(color);

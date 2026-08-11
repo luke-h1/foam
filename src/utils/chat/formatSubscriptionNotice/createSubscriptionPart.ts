@@ -8,7 +8,12 @@ function getTagNumber(
   fallback?: number,
 ): number | undefined {
   const value = getTagValue(tags, key);
-  return value ? parseInt(value, 10) : fallback;
+  if (!value) {
+    return fallback;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 function getSharedStreakValue(
@@ -20,13 +25,13 @@ function getSharedStreakValue(
 
 function getPlanName(planCode: string): string | undefined {
   switch (planCode) {
-    case '1000':
+    case 'Prime':
       return 'Prime';
-    case '2000':
+    case '1000':
       return 'Tier 1';
-    case '3000':
+    case '2000':
       return 'Tier 2';
-    case '3001':
+    case '3000':
       return 'Tier 3';
     default:
       return undefined;

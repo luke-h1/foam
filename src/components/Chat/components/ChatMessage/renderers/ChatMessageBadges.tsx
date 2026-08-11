@@ -28,7 +28,7 @@ export function ChatMessageBadges({
     return null;
   }
 
-  const badgeStyle = getChatTextStyles(fontScale, compact).badge;
+  const textStyles = getChatTextStyles(fontScale, compact);
 
   const renderedBadges: ReactNode[] = [];
   for (const badge of badges) {
@@ -37,17 +37,25 @@ export function ChatMessageBadges({
       continue;
     }
 
+    const tint = normalizedBadge.color;
+    const moderated = Boolean(moderationNotice) && styles.moderatedBadge;
+
     renderedBadges.push(
       <ChatMessagePressable
         key={`${renderedBadges.length}\u001f${normalizedBadge.set}\u001f${normalizedBadge.id}\u001f${normalizedBadge.type}\u001f${normalizedBadge.url}`}
         onPress={onBadgePress ? () => onBadgePress(normalizedBadge) : undefined}
+        style={
+          tint
+            ? [textStyles.badgeTintSlot, { backgroundColor: tint }, moderated]
+            : undefined
+        }
+        testID='chat-badge'
       >
         <ChatInlineImage
           sourceUrl={normalizedBadge.url}
-          style={[
-            badgeStyle,
-            Boolean(moderationNotice) && styles.moderatedBadge,
-          ]}
+          style={
+            tint ? textStyles.badgeTintArtwork : [textStyles.badge, moderated]
+          }
           collapseWhenFailed
           maxRetryAttempts={0}
           showLoadingShimmer={false}
