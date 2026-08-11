@@ -102,8 +102,12 @@ post-coercion as the `*Tags` interfaces (`UserStateTags`, `RoomStateTags`,
 **Part** - the parsed span within a message body:
 `ParsedPart<PartVariant>` (`utils/chat/parsedPart.ts`) - `text`, `emote`,
 `mention`, `stvEmote`, `twitchClip`, `link`, `cheermote`, and notice parts.
-_Avoid_: "token" (unused in code). ⚠ variant `'emote'` means a unicode
-emoji; a provider emote is `'stvEmote'` regardless of provider.
+_Avoid_: "token" (unused in code). ⚠ two variants name provider emotes: the
+main resolution paths (`processEmotesWorklet`, `replaceTextWithEmotes`) emit
+`'emote'` for every provider, while the word/link parse path
+(`parseWordLinkParts`) emits `'stvEmote'` - pinned by
+`emoteResolutionDivergence.test.ts`; the `parsedPart.ts` doc comment saying
+`'emote'` means a unicode emoji has drifted from reality.
 
 **Buffer** - three holding areas, in order: the **delay queue**
 (`components/Chat/util/chatDelay/chatDelayQueue.ts`, max 1000), the
