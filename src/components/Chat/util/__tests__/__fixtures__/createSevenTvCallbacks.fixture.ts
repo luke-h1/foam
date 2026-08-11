@@ -3,7 +3,7 @@ import type {
   CosmeticUpdateCallbackData,
   EntitlementDeleteCallbackData,
   EntitlementUpdateCallbackData,
-} from '@app/hooks/useSeventvWs';
+} from '@app/components/Chat/hooks/useSeventvWs';
 import type {
   BadgeCosmetic,
   BadgeData,

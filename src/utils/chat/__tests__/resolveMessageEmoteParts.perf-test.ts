@@ -1,7 +1,7 @@
 import { measureFunction } from 'reassure';
 
-import { resolveMessageEmoteParts } from '@app/components/Chat/util/resolveMessageEmoteParts';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
+import { resolveMessageEmoteParts } from '@app/utils/chat/resolveMessageEmoteParts';
 
 import {
   denseEmoteData,

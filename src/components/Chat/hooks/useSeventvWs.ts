@@ -6,6 +6,8 @@ import { usePathname } from 'expo-router';
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import { useSyncRef } from '@app/hooks/useSyncRef';
 import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
+import { ReadyState } from '@app/hooks/ws/constants';
+import { useWebsocket } from '@app/hooks/ws/useWebsocket';
 import {
   CosmeticCreate,
   type CosmeticCreateCallbackData,
@@ -40,9 +42,6 @@ import {
   interpretSeventvWsMessage,
   type SeventvWsDecision,
 } from '@app/utils/seventv/seventvWsInterpreter';
-
-import { ReadyState } from './ws/constants';
-import { useWebsocket } from './ws/useWebsocket';
 
 const SEVENTV_CHAT_SCREENS = ['Chat', 'LiveStream'];
 

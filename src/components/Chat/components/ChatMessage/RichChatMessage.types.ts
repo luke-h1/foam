@@ -2,6 +2,12 @@ import type { GestureResponderEvent, StyleProp, ViewStyle } from 'react-native';
 
 import type { ChatMessagePartRendererArgs } from '@app/components/Chat/components/ChatMessage/renderers/types/ChatMessagePartRendererArgs';
 import type { ChatMessageDisplayFlags } from '@app/components/Chat/types/chatUiFlags';
+import type {
+  BadgePressData,
+  EmotePressData,
+  MessageActionData,
+  UsernamePressData,
+} from '@app/store/chat/types/chatPressData';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import type {
   ChatFontScale,
@@ -14,27 +20,12 @@ import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import type { ChatBodyVariant } from '@app/utils/chat/deriveChatBody/types';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
-export type EmotePressData = ParsedPart<'emote'>;
-export type BadgePressData = SanitisedBadgeSet;
-export type MessageActionData<
-  TNoticeType extends NoticeVariants,
-  TVariant extends (TNoticeType extends 'usernotice'
-    ? keyof UserNoticeVariantMap
-    : never) = never,
-> = {
-  message: ParsedPart[];
-  username?: string;
-  login?: string;
-  userId?: string;
-  messageData: ChatMessageType<TNoticeType, TVariant>;
+export type {
+  BadgePressData,
+  EmotePressData,
+  MessageActionData,
+  UsernamePressData,
 };
-
-export interface UsernamePressData {
-  color?: string;
-  login?: string;
-  userId?: string;
-  username: string;
-}
 
 /**
  * What the row container needs to decide its surface: which tint, border and

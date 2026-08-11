@@ -22,12 +22,12 @@ import { usePersonalEmotesVersion } from '@app/store/chat/react/selectors';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateFromTags } from '@app/utils/chat/messageHandlers/createUserStateFromTags';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
+import { resolveMessageEmoteParts } from '@app/utils/chat/resolveMessageEmoteParts';
+import { getCachedSharedChatBadgeContext } from '@app/utils/chat/sharedChatBadges/getCachedSharedChatBadgeContext';
+import { getMessageBadges } from '@app/utils/chat/sharedChatBadges/getMessageBadges';
 import { logger } from '@app/utils/logger';
 
 import { hydrateVisibleSevenTvAssets } from '../util/hydrateVisibleSevenTvAssets/hydrateVisibleSevenTvAssets';
-import { resolveMessageEmoteParts } from '../util/resolveMessageEmoteParts';
-import { getCachedSharedChatBadgeContext } from '../util/sharedChatBadges/getCachedSharedChatBadgeContext';
-import { getMessageBadges } from '../util/sharedChatBadges/getMessageBadges';
 import type { ChatScrollAnchor } from './useChatScroll';
 
 interface UseChatMessageProcessingOptions {

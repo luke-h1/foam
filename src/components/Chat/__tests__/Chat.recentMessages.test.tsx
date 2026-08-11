@@ -49,7 +49,7 @@ jest.mock('@app/hooks/firebase/useSyncPaintRendererFlag', () => ({
   useSyncPaintRendererFlag: jest.fn(),
 }));
 
-jest.mock('@app/hooks/useSeventvWs', () => ({
+jest.mock('@app/components/Chat/hooks/useSeventvWs', () => ({
   useSeventvWs: () => ({
     subscribeToChannel: jest.fn(),
     unsubscribeFromChannel: jest.fn(),

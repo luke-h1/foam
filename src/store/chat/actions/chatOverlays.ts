@@ -1,15 +1,15 @@
-import type {
-  BadgePressData,
-  EmotePressData,
-  MessageActionData,
-  UsernamePressData,
-} from '@app/components/Chat/components/ChatMessage/RichChatMessage.types';
 import { assignTransientState } from '@app/store/chat/actions/transientState';
 import {
   chatOverlays$,
   type ChatOverlayState,
   createEmptyChatOverlayState,
 } from '@app/store/chat/observables/chatOverlays';
+import type {
+  BadgePressData,
+  EmotePressData,
+  MessageActionData,
+  UsernamePressData,
+} from '@app/store/chat/types/chatPressData';
 
 /**
  * Opening an overlay closes whatever else was open: only one chat sheet is

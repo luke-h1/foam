@@ -1,6 +1,5 @@
 import { renderHook } from '@testing-library/react-native';
 
-import { resolveMessageEmoteParts } from '@app/components/Chat/util/resolveMessageEmoteParts';
 import {
   getCurrentEmoteData,
   getUserPersonalEmotes,
@@ -9,6 +8,7 @@ import { updateMessages } from '@app/store/chat/actions/messages';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
+import { resolveMessageEmoteParts } from '@app/utils/chat/resolveMessageEmoteParts';
 
 import { useEmoteReprocessing } from '../useEmoteReprocessing';
 import {

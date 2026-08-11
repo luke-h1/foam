@@ -6,7 +6,7 @@ import type {
   EntitlementDeleteCallbackData,
   EntitlementResetCallbackData,
   EntitlementUpdateCallbackData,
-} from '@app/hooks/useSeventvWs';
+} from '@app/components/Chat/hooks/useSeventvWs';
 import { countMetric } from '@app/lib/sentry';
 import {
   addBadge,

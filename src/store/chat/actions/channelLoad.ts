@@ -187,13 +187,6 @@ export {
   handlePersonalEmoteSetEntitlement,
   refreshUserPersonalEmotes,
 } from './personalEmotes';
-export {
-  getSevenTvEmoteSetId,
-  notify7TVActivePresence,
-  notify7TVPresence,
-  switchSevenTvEmoteSet,
-  updateSevenTvEmotes,
-} from './sevenTvChannelLifecycle';
 
 // Runs are keyed by channel id; stamps are keyed by owner id, and only owner
 // ids Twitch never returns (deleted/suspended accounts) get stamped. Those

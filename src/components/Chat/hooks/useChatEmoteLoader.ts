@@ -14,10 +14,10 @@ import { useSyncRef } from '@app/hooks/useSyncRef';
 import {
   abortCurrentLoad,
   getCurrentEmoteData,
-  getSevenTvEmoteSetId,
   loadChannelResources,
   startChannelLoadAbort,
 } from '@app/store/chat/actions/channelLoad';
+import { getSevenTvEmoteSetId } from '@app/store/chat/actions/sevenTvChannelLifecycle';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import {
   preloadChannelEmotes,

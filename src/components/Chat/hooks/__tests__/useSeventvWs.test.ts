@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react-native';
 import { usePathname } from 'expo-router';
 
-import { useSeventvWs } from '@app/hooks/useSeventvWs';
+import { useSeventvWs } from '@app/components/Chat/hooks/useSeventvWs';
 import { ReadyState } from '@app/hooks/ws/constants';
 import type { Options, WebSocketHookReturn } from '@app/hooks/ws/types';
 import { useWebsocket } from '@app/hooks/ws/useWebsocket';

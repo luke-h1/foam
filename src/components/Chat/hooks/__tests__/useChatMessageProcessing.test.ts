@@ -1,9 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { hydrateVisibleSevenTvAssets } from '@app/components/Chat/util/hydrateVisibleSevenTvAssets/hydrateVisibleSevenTvAssets';
-import { getCachedSharedChatBadgeContext } from '@app/components/Chat/util/sharedChatBadges/getCachedSharedChatBadgeContext';
-import { getMessageBadges } from '@app/components/Chat/util/sharedChatBadges/getMessageBadges';
-import { getSharedChatBadgeContext } from '@app/components/Chat/util/sharedChatBadges/getSharedChatBadgeContext';
 import {
   fetchUserPersonalEmotes,
   getCurrentEmoteData,
@@ -18,6 +15,9 @@ import { usePersonalEmotesVersion } from '@app/store/chat/react/selectors';
 import { useChatHydrationPreferences } from '@app/store/preferences/selectors';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { extractEmotesFromTag } from '@app/utils/chat/extractEmotes/extractEmotesFromTag';
+import { getCachedSharedChatBadgeContext } from '@app/utils/chat/sharedChatBadges/getCachedSharedChatBadgeContext';
+import { getMessageBadges } from '@app/utils/chat/sharedChatBadges/getMessageBadges';
+import { getSharedChatBadgeContext } from '@app/utils/chat/sharedChatBadges/getSharedChatBadgeContext';
 
 import { useChatMessageProcessing } from '../useChatMessageProcessing';
 import {
@@ -80,13 +80,13 @@ jest.mock(
 );
 
 jest.mock(
-  '../../util/sharedChatBadges/getCachedSharedChatBadgeContext',
+  '@app/utils/chat/sharedChatBadges/getCachedSharedChatBadgeContext',
   () => ({
     getCachedSharedChatBadgeContext: jest.fn(),
   }),
 );
 
-jest.mock('../../util/sharedChatBadges/getMessageBadges', () => ({
+jest.mock('@app/utils/chat/sharedChatBadges/getMessageBadges', () => ({
   getMessageBadges: jest.fn(() => []),
 }));
 

@@ -1,11 +1,11 @@
-import { resolveMessageEmoteParts } from '@app/components/Chat/util/resolveMessageEmoteParts';
-import { getMessageBadges } from '@app/components/Chat/util/sharedChatBadges/getMessageBadges';
-import { getSharedChatBadgeContext } from '@app/components/Chat/util/sharedChatBadges/getSharedChatBadgeContext';
 import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { findBadges } from '@app/utils/chat/findBadges';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
+import { resolveMessageEmoteParts } from '@app/utils/chat/resolveMessageEmoteParts';
+import { getMessageBadges } from '@app/utils/chat/sharedChatBadges/getMessageBadges';
+import { getSharedChatBadgeContext } from '@app/utils/chat/sharedChatBadges/getSharedChatBadgeContext';
 import { logger } from '@app/utils/logger';
 
 import { chatStore$ } from '../observables/chatStore';

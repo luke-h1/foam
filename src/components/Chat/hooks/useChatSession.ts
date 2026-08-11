@@ -8,12 +8,12 @@ import {
 
 import { useNavigation } from 'expo-router';
 
+import { useTwitchChannelPointsEventSub } from '@app/components/Chat/hooks/useTwitchChannelPointsEventSub';
 import { useSyntheticChatFlood } from '@app/dev/imageBenchmark/useSyntheticChatFlood.gate';
 import { useLazyRef } from '@app/hooks/useLazyRef';
-import { useTwitchChannelPointsEventSub } from '@app/hooks/useTwitchChannelPointsEventSub';
 import { ReadyState } from '@app/hooks/ws/constants';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
-import { notify7TVActivePresence } from '@app/store/chat/actions/channelLoad';
+import { notify7TVActivePresence } from '@app/store/chat/actions/sevenTvChannelLifecycle';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import {
