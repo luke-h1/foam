@@ -1,3 +1,5 @@
+import { AppState } from 'react-native';
+
 import type {
   EventSubMessage,
   TwitchEventSubCallback,
@@ -8,13 +10,43 @@ import { twitchService } from './twitch-service';
 
 type EventCallback = TwitchEventSubCallback;
 
+/**
+ * One server-side EventSub subscription and its consumers. Identity is
+ * eventType + condition, never eventType alone: two screens overlapping
+ * during a transition hold subscriptions for two broadcasters of the same
+ * event type, and keying by type made the second silently reuse (and the
+ * first orphan) the other's server-side subscription.
+ */
+type EventSubEntry = {
+  eventType: string;
+  version: string;
+  condition: Record<string, string>;
+  callbacks: EventCallback[];
+  subscriptionId: string | null;
+};
+
 type EventSubscriptionSummary = {
   id: string;
   type: string;
+  condition?: Record<string, string>;
   transport: {
     session_id?: string;
   };
 };
+
+function conditionKey(condition: Record<string, string>): string {
+  return Object.keys(condition)
+    .sort()
+    .map(key => `${key}=${condition[key]}`)
+    .join(';');
+}
+
+function entryKey(
+  eventType: string,
+  condition: Record<string, string>,
+): string {
+  return `${eventType}|${conditionKey(condition)}`;
+}
 
 function hasEventSubscriptionData(
   response: unknown,
@@ -50,17 +82,13 @@ class TwitchWsService {
 
   private static reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
-  private static eventCallbacks: Map<string, EventCallback[]> = new Map();
+  private static entries: Map<string, EventSubEntry> = new Map();
 
   private static reconnectUrl: string = '';
 
   private static isReconnecting: boolean = false;
 
-  private static activeSubscriptions: Map<string, string> = new Map(); // eventType -> subscriptionId
-  private static subscriptionConfigs: Map<
-    string,
-    { version: string; condition: Record<string, string> }
-  > = new Map();
+  private static appStateSubscription: { remove: () => void } | null = null;
 
   // eslint-disable-next-line no-empty-function
   private constructor() {}
@@ -234,10 +262,18 @@ class TwitchWsService {
       `🟣 EventSub notification: ${JSON.stringify(subscriptionType, null, 2)}`,
     );
 
-    const callbacks = TwitchWsService.eventCallbacks.get(subscriptionType);
+    const notifiedCondition = message.payload.subscription?.condition;
+    const exactEntry = notifiedCondition
+      ? TwitchWsService.entries.get(
+          entryKey(subscriptionType, notifiedCondition),
+        )
+      : undefined;
+    const targets = exactEntry
+      ? [exactEntry]
+      : TwitchWsService.entriesOfType(subscriptionType);
 
-    if (callbacks) {
-      callbacks.forEach(cb => {
+    for (const entry of targets) {
+      for (const cb of entry.callbacks) {
         try {
           cb(message);
         } catch (e) {
@@ -245,7 +281,7 @@ class TwitchWsService {
             `💜 error in event CB: ${JSON.stringify(e, null, 2)}`,
           );
         }
-      });
+      }
     }
 
     TwitchWsService.resetKeepaliveTimer();
@@ -350,8 +386,20 @@ class TwitchWsService {
     TwitchWsService.scheduleReconnect(2000);
   }
 
+  private static entriesOfType(eventType: string): EventSubEntry[] {
+    const matching: EventSubEntry[] = [];
+    for (const entry of TwitchWsService.entries.values()) {
+      if (entry.eventType === eventType) {
+        matching.push(entry);
+      }
+    }
+    return matching;
+  }
+
   /**
-   * Subscribe to an EventSub event type
+   * Subscribe to an EventSub event type for one condition. Subscriptions are
+   * identified by eventType + condition; the same type may be held for
+   * several broadcasters at once during screen overlaps.
    */
   public static async subscribeToEvent(
     eventType: string,
@@ -359,8 +407,22 @@ class TwitchWsService {
     condition: Record<string, string>,
     callback: EventCallback,
   ): Promise<void> {
-    TwitchWsService.addEventListener(eventType, callback);
-    TwitchWsService.subscriptionConfigs.set(eventType, { version, condition });
+    const key = entryKey(eventType, condition);
+    let entry = TwitchWsService.entries.get(key);
+    if (!entry) {
+      entry = {
+        eventType,
+        version,
+        condition,
+        callbacks: [],
+        subscriptionId: null,
+      };
+      TwitchWsService.entries.set(key, entry);
+    }
+    if (!entry.callbacks.includes(callback)) {
+      entry.callbacks.push(callback);
+    }
+    TwitchWsService.armForegroundRevive();
 
     if (!TwitchWsService.sessionId) {
       TwitchWsService.getInstance();
@@ -370,7 +432,7 @@ class TwitchWsService {
       return;
     }
 
-    if (TwitchWsService.activeSubscriptions.has(eventType)) {
+    if (entry.subscriptionId) {
       return;
     }
 
@@ -398,7 +460,7 @@ class TwitchWsService {
         );
       }
 
-      TwitchWsService.activeSubscriptions.set(eventType, subscription.id);
+      entry.subscriptionId = subscription.id;
       logger.twitchWs.info(
         `💜 Successfully subscribed to ${eventType} with ID: ${subscription.id}`,
       );
@@ -414,64 +476,90 @@ class TwitchWsService {
           source: 'twitch_ws_service',
         },
       );
-      TwitchWsService.removeEventListener(eventType, callback);
+      const idx = entry.callbacks.indexOf(callback);
+      if (idx > -1) {
+        entry.callbacks.splice(idx, 1);
+      }
+      if (entry.callbacks.length === 0 && !entry.subscriptionId) {
+        TwitchWsService.entries.delete(key);
+      }
       TwitchWsService.teardownIfIdle();
     }
   }
 
   /**
-   * Unsubscribe from an EventSub event type
+   * Unsubscribe a callback from an event type. Without a callback, every
+   * entry of the type is torn down; with one, only the entries holding that
+   * callback are affected, so a sibling screen's subscription for another
+   * broadcaster survives.
    */
   public static async unsubscribeFromEvent(
     eventType: string,
     callback?: EventCallback,
   ): Promise<void> {
-    if (callback) {
-      TwitchWsService.removeEventListener(eventType, callback);
-      const remainingCallbacks = TwitchWsService.eventCallbacks.get(eventType);
-      if (remainingCallbacks && remainingCallbacks.length > 0) {
-        return;
+    const matching: [string, EventSubEntry][] = [];
+    for (const [key, entry] of TwitchWsService.entries) {
+      if (entry.eventType !== eventType) {
+        continue;
       }
-    } else {
-      TwitchWsService.eventCallbacks.delete(eventType);
+      if (callback && !entry.callbacks.includes(callback)) {
+        continue;
+      }
+      matching.push([key, entry]);
     }
 
-    TwitchWsService.subscriptionConfigs.delete(eventType);
-
-    const subscriptionId = TwitchWsService.activeSubscriptions.get(eventType);
-    if (!subscriptionId) {
+    if (matching.length === 0) {
       TwitchWsService.teardownIfIdle();
       return;
     }
 
-    // Claim the id before awaiting. The hooks unsubscribe several event types
-    // through one Promise.all, so a sibling that settles first can reach
-    // teardownIfIdle -> cleanupSubscriptions while this delete is still in
-    // flight, and would otherwise delete the same id a second time.
-    TwitchWsService.activeSubscriptions.delete(eventType);
+    for (const [key, entry] of matching) {
+      if (callback) {
+        const idx = entry.callbacks.indexOf(callback);
+        if (idx > -1) {
+          entry.callbacks.splice(idx, 1);
+        }
+        if (entry.callbacks.length > 0) {
+          continue;
+        }
+      } else {
+        entry.callbacks = [];
+      }
 
-    try {
-      await twitchService.deleteEventSubscription(subscriptionId);
-      TwitchWsService.eventCallbacks.delete(eventType);
+      // Claim the entry before awaiting. The hooks unsubscribe several event
+      // types through one Promise.all, so a sibling that settles first can
+      // reach teardownIfIdle -> cleanupSubscriptions while this delete is
+      // still in flight, and would otherwise delete the same id a second time.
+      TwitchWsService.entries.delete(key);
+      const subscriptionId = entry.subscriptionId;
 
-      logger.twitchWs.info(
-        `💜 Successfully unsubscribed from ${eventType} (ID: ${subscriptionId})`,
-      );
-    } catch (error) {
-      logger.twitchWs.warn(
-        `Failed to unsubscribe from Twitch EventSub event ${eventType}`,
-        {
-          name: 'twitch_ws_warning',
-          error,
-          action: 'subscription_delete_failed',
-          event_type: eventType,
-          provider: 'twitch',
-          source: 'twitch_ws_service',
-          subscription_id: subscriptionId,
-        },
-      );
-    } finally {
-      TwitchWsService.teardownIfIdle();
+      if (!subscriptionId) {
+        TwitchWsService.teardownIfIdle();
+        continue;
+      }
+
+      try {
+        await twitchService.deleteEventSubscription(subscriptionId);
+
+        logger.twitchWs.info(
+          `💜 Successfully unsubscribed from ${eventType} (ID: ${subscriptionId})`,
+        );
+      } catch (error) {
+        logger.twitchWs.warn(
+          `Failed to unsubscribe from Twitch EventSub event ${eventType}`,
+          {
+            name: 'twitch_ws_warning',
+            error,
+            action: 'subscription_delete_failed',
+            event_type: eventType,
+            provider: 'twitch',
+            source: 'twitch_ws_service',
+            subscription_id: subscriptionId,
+          },
+        );
+      } finally {
+        TwitchWsService.teardownIfIdle();
+      }
     }
   }
 
@@ -479,28 +567,29 @@ class TwitchWsService {
    * Re-subscribe to events after reconnection
    */
   private static resubscribeToEvents(): void {
-    const eventTypes = Array.from(TwitchWsService.subscriptionConfigs.keys());
+    const entries = Array.from(TwitchWsService.entries.values());
 
-    if (eventTypes.length === 0) {
+    if (entries.length === 0) {
       return;
     }
 
     logger.twitchWs.info(
-      `💜 Re-subscribing to ${eventTypes.length} event types`,
+      `💜 Re-subscribing to ${entries.length} subscriptions`,
     );
 
     // Clear old subscription IDs since we have a new session
-    TwitchWsService.activeSubscriptions.clear();
+    for (const entry of entries) {
+      entry.subscriptionId = null;
+    }
 
-    eventTypes.forEach(eventType => {
-      const callbacks = TwitchWsService.eventCallbacks.get(eventType);
-      const config = TwitchWsService.subscriptionConfigs.get(eventType);
-      if (callbacks && callbacks.length > 0 && config) {
+    entries.forEach(entry => {
+      const firstCallback = entry.callbacks[0];
+      if (firstCallback) {
         void TwitchWsService.subscribeToEvent(
-          eventType,
-          config.version,
-          config.condition,
-          callbacks[0] as EventCallback,
+          entry.eventType,
+          entry.version,
+          entry.condition,
+          firstCallback,
         );
       }
     });
@@ -526,14 +615,18 @@ class TwitchWsService {
         response.data.map(sub => ({ type: sub.type, id: sub.id })),
       );
 
-      response.data.forEach(subscription => {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        if (subscription.transport.session_id === TwitchWsService.sessionId) {
-          TwitchWsService.activeSubscriptions.set(
-            subscription.type,
-            subscription.id,
-          );
+      const subscriptions = response.data as EventSubscriptionSummary[];
+      subscriptions.forEach(subscription => {
+        if (subscription.transport.session_id !== TwitchWsService.sessionId) {
+          return;
+        }
+        const entry = subscription.condition
+          ? TwitchWsService.entries.get(
+              entryKey(subscription.type, subscription.condition),
+            )
+          : TwitchWsService.entriesOfType(subscription.type)[0];
+        if (entry) {
+          entry.subscriptionId = subscription.id;
         }
       });
     } catch (error) {
@@ -554,9 +647,16 @@ class TwitchWsService {
    * Clean up all subscriptions when disconnecting
    */
   public static async cleanupSubscriptions(): Promise<void> {
-    const subscriptionIds = Array.from(
-      TwitchWsService.activeSubscriptions.values(),
-    );
+    const subscriptionIds: string[] = [];
+    for (const [key, entry] of TwitchWsService.entries) {
+      if (entry.subscriptionId) {
+        subscriptionIds.push(entry.subscriptionId);
+        entry.subscriptionId = null;
+      }
+      if (entry.callbacks.length === 0) {
+        TwitchWsService.entries.delete(key);
+      }
+    }
 
     if (subscriptionIds.length === 0) {
       return;
@@ -565,8 +665,6 @@ class TwitchWsService {
     logger.twitchWs.info(
       `💜 Cleaning up ${subscriptionIds.length} subscriptions in background`,
     );
-
-    TwitchWsService.activeSubscriptions.clear();
 
     const cleanupTimeout = new Promise<void>(resolve => {
       setTimeout(() => {
@@ -607,48 +705,53 @@ class TwitchWsService {
     await Promise.race([Promise.allSettled(cleanupPromises), cleanupTimeout]);
   }
 
-  /**
-   * Todo: tighten types
-   */
-  public static addEventListener(
-    eventType: string,
-    callback: EventCallback,
-  ): void {
-    if (!TwitchWsService.eventCallbacks.has(eventType)) {
-      TwitchWsService.eventCallbacks.set(eventType, []);
-    }
-
-    const callbacks = TwitchWsService.eventCallbacks.get(eventType);
-    if (callbacks?.includes(callback)) {
-      return;
-    }
-
-    callbacks?.push(callback);
-    logger.twitchWs.info(`💜 Added event listener for ${eventType}`);
-  }
-
-  public static removeEventListener(
-    eventType: string,
-    callback: EventCallback,
-  ): void {
-    const callbacks = TwitchWsService.eventCallbacks.get(eventType);
-
-    if (callbacks) {
-      const idx = callbacks.indexOf(callback);
-
-      if (idx > -1) {
-        callbacks.splice(idx, 1);
-      }
-    }
-  }
-
   private static hasActiveListeners(): boolean {
-    for (const callbacks of TwitchWsService.eventCallbacks.values()) {
-      if (callbacks.length > 0) {
+    for (const entry of TwitchWsService.entries.values()) {
+      if (entry.callbacks.length > 0) {
         return true;
       }
     }
     return false;
+  }
+
+  /**
+   * iOS suspends the socket and every timer in the background, so the
+   * keepalive watchdog cannot be the only recovery path: after a long
+   * suspension the app can foreground with dead feeds and no timer left to
+   * notice. Reviving on foreground mirrors the IRC and 7TV sockets.
+   */
+  private static armForegroundRevive(): void {
+    if (TwitchWsService.appStateSubscription) {
+      return;
+    }
+
+    TwitchWsService.appStateSubscription = AppState.addEventListener(
+      'change',
+      state => {
+        if (state !== 'active') {
+          return;
+        }
+        if (
+          !TwitchWsService.hasActiveListeners() ||
+          TwitchWsService.isConnected()
+        ) {
+          return;
+        }
+
+        logger.twitchWs.info(
+          '💜 Reviving EventSub socket after returning to foreground',
+        );
+        TwitchWsService.reconnectUrl = '';
+        TwitchWsService.isReconnecting = false;
+        TwitchWsService.sessionId = '';
+        TwitchWsService.scheduleReconnect(0);
+      },
+    );
+  }
+
+  private static disarmForegroundRevive(): void {
+    TwitchWsService.appStateSubscription?.remove();
+    TwitchWsService.appStateSubscription = null;
   }
 
   /**
@@ -664,6 +767,7 @@ class TwitchWsService {
 
     TwitchWsService.clearKeepaliveTimer();
     TwitchWsService.clearReconnectTimer();
+    TwitchWsService.disarmForegroundRevive();
     TwitchWsService.isReconnecting = false;
 
     // Close WebSocket immediately for fast disconnection
