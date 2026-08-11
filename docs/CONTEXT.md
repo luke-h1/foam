@@ -103,11 +103,10 @@ post-coercion as the `*Tags` interfaces (`UserStateTags`, `RoomStateTags`,
 `ParsedPart<PartVariant>` (`utils/chat/parsedPart.ts`) - `text`, `emote`,
 `mention`, `stvEmote`, `twitchClip`, `link`, `cheermote`, and notice parts.
 _Avoid_: "token" (unused in code). ⚠ two variants name provider emotes: the
-main resolution paths (`processEmotesWorklet`, `replaceTextWithEmotes`) emit
-`'emote'` for every provider, while the word/link parse path
-(`parseWordLinkParts`) emits `'stvEmote'` - pinned by
-`emoteResolutionDivergence.test.ts`; the `parsedPart.ts` doc comment saying
-`'emote'` means a unicode emoji has drifted from reality.
+one resolution path (`processEmotesWorklet`, the only resolver since
+ADR-0011) emits `'emote'` for every provider, while the word/link parse path
+(`parseWordLinkParts`) emits `'stvEmote'`; the `parsedPart.ts` doc comment
+saying `'emote'` means a unicode emoji has drifted from reality.
 
 **Buffer** - three holding areas, in order: the **delay queue**
 (`components/Chat/util/chatDelay/chatDelayQueue.ts`, max 1000), the
@@ -173,11 +172,13 @@ intermediate - two shapes for one glyph.
 7TV wire say **emote set** (`getSanitisedEmoteSet`, `emote_set.update`) for
 the fetched unit.
 
-**Emote provider** - ⚠ absent as a seam. Per-provider service modules
-(`seventv-service.ts`, `bttv-emote-service.ts`, `ffz-service.ts`,
-`twitch-emote-service.ts`) share only the sanitiser (`buildSanitisedEmote`
-behind `EmoteProviderSource`); dispatch is scattered `site ===` string
-checks on `EmoteSite` display strings across ~8 files. ⚠ 7TV is spelled four
+**Emote provider** - `SanitisedEmote.provider` / `SanitisedBadgeSet.provider`
+is the discriminant (`'7tv' | 'bttv' | 'ffz' | 'twitch' | 'emoji'`, plus
+`'chatterino'` for badges); `site` is display-only and must not be
+pattern-matched. Per-provider service modules (`seventv-service.ts`,
+`bttv-emote-service.ts`, `ffz-service.ts`, `twitch-emote-service.ts`) share
+the sanitiser (`buildSanitisedEmote` behind `EmoteProviderSource`), which
+emits the discriminant. ⚠ 7TV is spelled four
 ways: `seventv` (paths), `sevenTv` (values), `SevenTv` (types), `stv`
 (part variants, `StvUser`).
 
@@ -196,9 +197,9 @@ badges bypass `findBadges` and arrive via cosmetics (`chatStore$.badges`).
 emotes on iOS ride `SharedAnimationDriver` (one `CADisplayLink` + global
 epoch, added by the expo-image patch); Skia paint animation rides
 `sharedPaintAnimationFrames.ts` (one Reanimated `useFrameCallback`, paused
-by `chatScrollActiveShared`). ⚠ No `SyncedAnimationCoordinator` exists, and
-Android has no shared tick - Glide restarts each emote from frame 0
-(ADR-0009).
+by `chatScrollActiveShared`). Android has its own phase lock in the same
+patch, supervised by a Choreographer callback rather than seeking per tick
+(ADR-0009). ⚠ No `SyncedAnimationCoordinator` exists.
 
 **Session** - the chat connection lifecycle (`useChatSession`;
 `useChatSurface` is the render-surface half, `useTwitchChat` the IRC

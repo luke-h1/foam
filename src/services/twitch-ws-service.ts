@@ -110,8 +110,31 @@ class TwitchWsService {
         ? TwitchWsService.reconnectUrl
         : TwitchWsService.url;
 
+    TwitchWsService.discardInstance();
     TwitchWsService.instance = new WebSocket(wsUrl);
     TwitchWsService.setupEventListeners();
+  }
+
+  /**
+   * Detaches and closes whatever socket is currently held, so replacing it
+   * cannot leave a live one behind. `isConnected()` is false for a socket that
+   * is still connecting or has not had its `session_welcome` yet, so the
+   * foreground revive can reach `connect()` mid-handshake; without this the
+   * abandoned socket would still receive its welcome and register a second set
+   * of server-side subscriptions for the same listeners. Closing with 1000
+   * keeps `onclose` from treating it as an unexpected drop and reconnecting.
+   */
+  private static discardInstance(): void {
+    const existing = TwitchWsService.instance;
+    if (!existing) {
+      return;
+    }
+    TwitchWsService.instance = null;
+    existing.onopen = null;
+    existing.onmessage = null;
+    existing.onerror = null;
+    existing.onclose = null;
+    existing.close(1000, 'Replaced by a new EventSub connection');
   }
 
   private static setupEventListeners() {

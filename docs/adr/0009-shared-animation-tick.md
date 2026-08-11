@@ -9,8 +9,11 @@ platform where the domain is native, and never by per-view timers:
   derives its frame index from the shared epoch, so newly mounted and recycled
   rows join mid-phase instead of restarting at frame 0; frame rate is capped
   at 30fps with decode budgets. Views deregister on unmount/recycle.
-- **Native animated emotes (Android)** - `SharedAnimationDriver.kt`, a
-  Choreographer-supervised phase lock in the same patch. It holds the same
+- **Native animated emotes (Android)** - `SharedAnimationDriver`, a
+  Choreographer-supervised phase lock in the same patch. It is an
+  `internal object` at the foot of `ExpoImageViewWrapper.kt` rather than its
+  own file, because bun's patch applier cannot create a new file more than
+  two directories deep. It holds the same
   kind of global epoch, but cannot seek per tick the way iOS does:
   penfeizhou's `FrameSeqDecoder` composes delta-encoded frames sequentially
   into one buffer on its own worker thread, so external seeking corrupts

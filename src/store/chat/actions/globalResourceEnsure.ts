@@ -6,9 +6,10 @@ import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import {
   buildGlobalBadgeResourceSpecs,
   buildGlobalEmoteResourceSpecs,
+  globalChatResourceGuard,
 } from './channelResources';
 
-let inFlight: Promise<void> | null = null;
+const GUARD_KEY = 'globalChatResources';
 
 /**
  * Fills `chatStore$.persisted.globalCaches` without joining a channel, for
@@ -26,22 +27,36 @@ export function ensureGlobalChatResources(): Promise<void> {
       cache.sevenTvGlobalEmotes.length > 0 ||
       cache.bttvGlobalEmotes.length > 0 ||
       cache.ffzGlobalEmotes.length > 0);
-  if (cache && hasEmotes && Date.now() - cache.lastUpdated < CACHE_DURATION) {
+  // Badges are checked separately because a seed from channel copies can fill
+  // the emote slices and stamp `lastUpdated` while leaving badges empty. An
+  // emote-only gate would then serve the viewer an empty Badges tab until the
+  // TTL expired.
+  const hasBadges =
+    cache &&
+    (cache.twitchGlobalBadges.length > 0 || cache.ffzGlobalBadges.length > 0);
+  if (
+    cache &&
+    hasEmotes &&
+    hasBadges &&
+    Date.now() - cache.lastUpdated < CACHE_DURATION
+  ) {
     return Promise.resolve();
   }
 
-  if (inFlight) {
-    return inFlight;
-  }
+  return globalChatResourceGuard.run(GUARD_KEY, ctx => {
+    const emoteSpecs = buildGlobalEmoteResourceSpecs();
+    const badgeSpecs = buildGlobalBadgeResourceSpecs();
 
-  const emoteSpecs = buildGlobalEmoteResourceSpecs();
-  const badgeSpecs = buildGlobalBadgeResourceSpecs();
+    return Promise.all([
+      Promise.allSettled(emoteSpecs.map(spec => spec.fetch())),
+      Promise.allSettled(badgeSpecs.map(spec => spec.fetch())),
+    ]).then(([emoteResults, badgeResults]) => {
+      // A cache clear that lands mid-fetch fences this run, so the pre-clear
+      // payload is dropped instead of being written back stamped fresh.
+      if (!ctx.stillCurrent()) {
+        return;
+      }
 
-  inFlight = Promise.all([
-    Promise.allSettled(emoteSpecs.map(spec => spec.fetch())),
-    Promise.allSettled(badgeSpecs.map(spec => spec.fetch())),
-  ])
-    .then(([emoteResults, badgeResults]) => {
       const existing = chatStore$.persisted.globalCaches.peek();
       const emoteByKey = new Map<string, SanitisedEmote[]>();
       let anyFailure = false;
@@ -88,10 +103,7 @@ export function ensureGlobalChatResources(): Promise<void> {
         ffzGlobalBadges:
           badgeByKey.get('ffzGlobalBadges') ?? existing?.ffzGlobalBadges ?? [],
       });
-    })
-    .finally(() => {
-      inFlight = null;
+      ctx.markFetched();
     });
-
-  return inFlight;
+  });
 }

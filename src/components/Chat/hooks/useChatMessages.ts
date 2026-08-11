@@ -1,4 +1,5 @@
-import { useLazyRef } from '@app/hooks/useLazyRef';
+import { useState } from 'react';
+
 import { useSyncRef } from '@app/hooks/useSyncRef';
 
 import {
@@ -33,7 +34,7 @@ export const useChatMessages = (
 ): ChatIngestController => {
   const optionsRef = useSyncRef(options);
 
-  const controllerRef = useLazyRef(() =>
+  const [controller] = useState(() =>
     createChatIngestController({
       getFinalizeMessageForCommit: () =>
         optionsRef.current.finalizeMessageForCommit,
@@ -49,5 +50,5 @@ export const useChatMessages = (
     }),
   );
 
-  return controllerRef.current;
+  return controller;
 };

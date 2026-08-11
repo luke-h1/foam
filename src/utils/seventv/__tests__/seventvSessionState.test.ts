@@ -105,7 +105,7 @@ describe('reset', () => {
 
     expect(snapshotFields(state)).toEqual<SessionFieldSnapshot>({
       hasInitialized: false,
-      hasInitialSubscriptions: true,
+      hasInitialSubscriptions: false,
       connectionTimestamp: null,
       currentEmoteSetId: undefined,
       activeSubscriptions: new Set(),
@@ -131,7 +131,7 @@ describe('reset', () => {
 
     expect(snapshotFields(state)).toEqual<SessionFieldSnapshot>({
       hasInitialized: true,
-      hasInitialSubscriptions: true,
+      hasInitialSubscriptions: false,
       connectionTimestamp: null,
       currentEmoteSetId: undefined,
       activeSubscriptions: new Set(),
@@ -173,6 +173,21 @@ describe('reset', () => {
     });
     expect(mockSetSevenTvSessionId).not.toHaveBeenCalled();
   });
+
+  test.each(['leave', 'unmount', 'close'] as const)(
+    "reset('%s') re-arms the connect-time subscribe",
+    reason => {
+      const state = createState();
+      populate(state);
+
+      state.reset(reason);
+
+      // useSeventvWs gates runInitialSubscriptions on this being false, so a
+      // reason that left it set would reconnect into a session that never
+      // subscribes and silently stops receiving 7TV emote updates.
+      expect(state.hasInitialSubscriptions).toBe(false);
+    },
+  );
 
   test('reset cancels the pending resume fallback and heartbeat watchdog', () => {
     const state = createState();

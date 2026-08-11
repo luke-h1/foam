@@ -98,6 +98,16 @@ Because the rule is off for `package.json`, a genuinely unused dependency won't 
 
 `react-hooks-js/immutability` is turned off for `BlockedTermsScreen.tsx` and `SavedPhrasesScreen.tsx` in `doctor.config.json`. Their iOS branches bind `@expo/ui/swift-ui` `useNativeState` values to SwiftUI text fields, and writing back through `state.value = ...` is that API's intended write path - the rule misreads those writes as mutation of an immutable hook value. Scope any future exemption to the specific files the same way rather than turning the rule off globally.
 
+## React Doctor: the remaining file-scoped overrides
+
+Each of these was checked against the code before being suppressed; none is a blanket rule-off. Re-verify before extending one to another file.
+
+- **`useSeventvWs.ts` - `react-hooks-js/purity` and `react-doctor/effect-needs-cleanup`.** The purity hits are `Date.now()` inside WebSocket callbacks (`onOpen`, `handleMessage`, the resume-ack branch); a socket message has to be stamped with the wall clock, and the calls run at event time, not during render. The cleanup hit is the heartbeat watchdog `setInterval`, whose handle is stored on the session object and cleared by `session.reset()` from all three teardown paths - `onClose`, leaving the chat screen, and the unmount callback - which the rule cannot follow off the effect.
+- **`usePlayerBridge.ts` - `react-hooks-js/refs`.** `playerMountedAtRef` is re-stamped on every player generation change, so it is a genuinely mutable ref and cannot become `useState`. Contrast `useChatMessages.ts`, where the ingest controller is created once and never reassigned - that one was converted to a `useState` initializer rather than suppressed.
+- **`twitch-ws-service.ts` - `async-await-in-loop` and `js-set-map-lookups`.** The sequential `await` in `cleanupSubscriptions` is deliberate: a `Promise.all` version let a sibling reach `teardownIfIdle` while a delete was in flight and double-deleted the same id (the comment above the loop records this). The lookup hits are `includes`/`indexOf` over `entry.callbacks`, which holds one entry per subscribed component (typically one to three) and is iterated in order to dispatch - a Set would be slower and would drop the ordering.
+- **`formatViewCount.ts` - `js-hoist-intl`.** The formatter is already built once and cached in a module-level binding; it is lazy specifically because constructing ICU formatters at module scope sat on the boot path via `LiveStreamCard`. Hoisting it as the rule suggests would undo that.
+- **`SyncedEmotesScreen.tsx` - `rn-no-scrollview-mapped-list`.** A dev-tools screen that mounts a fixed handful of copies of the same emote to check the shared animation clock. Virtualising it would unmount the very copies the screen exists to compare.
+
 ## Bottom sheets: `@expo/ui` plus a not-yet-released iOS touch fix
 
 Every sheet goes through `src/components/BottomSheet/BottomSheet.native.tsx`, which wraps `@expo/ui/community/bottom-sheet`: a SwiftUI `.sheet` on iOS, a Material 3 `ModalBottomSheet` on Android.

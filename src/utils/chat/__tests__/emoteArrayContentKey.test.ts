@@ -25,6 +25,20 @@ describe('getEmoteArrayContentKey', () => {
     expect(getEmoteArrayContentKey(a)).toBe(getEmoteArrayContentKey(b));
   });
 
+  test('a field boundary shifted between id and name changes the key', () => {
+    const a = [makeEmote({ id: '25', name: 'Kappa' })];
+    const b = [makeEmote({ id: '2', name: '5Kappa' })];
+
+    expect(getEmoteArrayContentKey(a)).not.toBe(getEmoteArrayContentKey(b));
+  });
+
+  test('a field boundary shifted between name and url changes the key', () => {
+    const a = [makeEmote({ name: 'ab', url: 'cd' })];
+    const b = [makeEmote({ name: 'abc', url: 'd' })];
+
+    expect(getEmoteArrayContentKey(a)).not.toBe(getEmoteArrayContentKey(b));
+  });
+
   test('a renamed emote changes the key', () => {
     const a = [makeEmote()];
     const b = [makeEmote({ name: 'KEKWait' })];

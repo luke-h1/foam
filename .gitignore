@@ -136,3 +136,6 @@ playstore-service-account.json
 
 # local perf audit reports
 .claude/perf/
+
+# watchman drops these transient cookies in the repo root during a crawl
+.watchman-cookie-*

@@ -300,6 +300,57 @@ export default tseslint.config(
     },
   },
   {
+    /**
+     * The source-change reset resets three independent pieces of player state
+     * in one layout effect. Suppressed rather than rewritten: the better fix
+     * is React's adjust-state-during-render pattern (what `main` used before
+     * this path was moved into an effect), which would also drop a render per
+     * source change, but the player has no coverage for source switching and
+     * it is not worth a blind rewrite. Tracked in the tech-debt register.
+     */
+    files: ['src/components/StreamPlayer/usePlayerBridge.ts'],
+    rules: {
+      'react-doctor/no-cascading-set-state': 'off',
+    },
+  },
+  {
+    /**
+     * `cleanupSubscriptions` awaits its deletes in sequence on purpose: a
+     * `Promise.all` version let a sibling reach `teardownIfIdle` while a
+     * delete was still in flight and deleted the same id twice. The lookup
+     * rules fire on `entry.callbacks`, which holds one entry per subscribed
+     * component and is iterated in order to dispatch, so a Set would be
+     * slower and would drop the ordering. Reasons in AGENTS.md.
+     */
+    files: ['src/services/twitch-ws-service.ts'],
+    rules: {
+      'react-doctor/async-await-in-loop': 'off',
+      'react-doctor/js-set-map-lookups': 'off',
+    },
+  },
+  {
+    /**
+     * The formatter is already built once and cached in a module-level
+     * binding; it is lazy because constructing ICU formatters at module scope
+     * sat on the boot path via LiveStreamCard. Hoisting undoes that.
+     */
+    files: ['src/utils/string/formatViewCount.ts'],
+    rules: {
+      'react-doctor/js-hoist-intl': 'off',
+    },
+  },
+  {
+    /**
+     * Dev-tools screen that mounts a fixed handful of copies of one emote to
+     * check the shared animation clock. Virtualising it would unmount the
+     * copies the screen exists to compare.
+     */
+    files: ['src/screens/DevTools/SyncedEmotesScreen.tsx'],
+    rules: {
+      'react-doctor/rn-no-scrollview-mapped-list': 'off',
+    },
+  },
+  {
     files: ['src/**/*.{ts,tsx}'],
     ignores: [
       'src/**/__tests__/**',

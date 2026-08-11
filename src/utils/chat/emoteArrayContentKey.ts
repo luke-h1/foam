@@ -12,13 +12,26 @@ import type { SanitisedEmote } from '@app/types/emote';
  */
 const contentKeyCache = new WeakMap<SanitisedEmote[], string>();
 
+/**
+ * Field and record delimiters. Without them the fields concatenate into one
+ * byte stream, so `{id:'25',name:'Kappa'}` and `{id:'2',name:'5Kappa'}` key
+ * identically and one set's parse cache resolves the other set's emotes.
+ * Both are C0 controls, which cannot occur in an emote id, name or url.
+ */
+const FIELD_SEPARATOR = 0x1f;
+const RECORD_SEPARATOR = 0x1e;
+
+function mixByte(h1: number, h2: number, byte: number): [number, number] {
+  return [((h1 ^ byte) * 16777619) >>> 0, ((h2 * 33) ^ byte) >>> 0];
+}
+
 function mixString(h1: number, h2: number, value: string): [number, number] {
   for (let i = 0; i < value.length; i += 1) {
     const c = value.charCodeAt(i);
     h1 = ((h1 ^ c) * 16777619) >>> 0;
     h2 = ((h2 * 33) ^ c) >>> 0;
   }
-  return [h1, h2];
+  return mixByte(h1, h2, FIELD_SEPARATOR);
 }
 
 export function getEmoteArrayContentKey(emotes: SanitisedEmote[]): string {
@@ -38,8 +51,8 @@ export function getEmoteArrayContentKey(emotes: SanitisedEmote[]): string {
     if (emote.url) {
       [h1, h2] = mixString(h1, h2, emote.url);
     }
-    h1 = ((h1 ^ (emote.zero_width ? 31 : 7)) * 16777619) >>> 0;
-    h2 = ((h2 * 33) ^ (emote.zero_width ? 31 : 7)) >>> 0;
+    [h1, h2] = mixByte(h1, h2, emote.zero_width ? 31 : 7);
+    [h1, h2] = mixByte(h1, h2, RECORD_SEPARATOR);
   }
 
   const key = `${emotes.length}.${h1.toString(36)}.${h2.toString(36)}`;

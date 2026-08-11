@@ -48,10 +48,12 @@ export interface SeventvSessionState {
   noteChannelId(channelId: string | undefined): void;
   /**
    * One owner for the three teardown paths. All reasons bump the subscription
-   * generation, clear both timers, drop `resumePending` and the
-   * channel-scoped subscription ids. `'close'` additionally drops only
-   * `hasInitialSubscriptions` - the session id and resume intent survive so
-   * the next connect can RESUME. `'leave'` and `'unmount'` drop the whole
+   * generation, clear both timers, drop `resumePending`, the channel-scoped
+   * subscription ids and `hasInitialSubscriptions` - the last of these gates
+   * the connect-time subscribe, so a reason that left it set would reconnect
+   * into a session that never subscribes. After `'close'` the session id and
+   * resume intent survive so the next connect can RESUME instead, which
+   * restores the subscriptions server-side. `'leave'` and `'unmount'` drop the whole
    * session (connection timestamp, emote-set bookkeeping, session id, resume
    * flags) and clear the shared session id; `'leave'` also re-arms
    * `hasInitialized` for the next screen entry, which `'unmount'` leaves
@@ -112,8 +114,8 @@ export const createSeventvSessionState = (
       state.resumePending = false;
       state.subscribedChannelId = null;
       state.subscribedOwnerId = null;
+      state.hasInitialSubscriptions = false;
       if (reason === 'close') {
-        state.hasInitialSubscriptions = false;
         return;
       }
       if (reason === 'leave') {
