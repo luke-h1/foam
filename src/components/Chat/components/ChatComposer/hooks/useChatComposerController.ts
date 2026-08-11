@@ -1,4 +1,10 @@
-import { type Ref, useCallback, useImperativeHandle, useState } from 'react';
+import {
+  type Ref,
+  useCallback,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 
 import type { SlashCommandDefinition } from '@app/components/Chat/util/slashCommandDefinitions/types';
 import { impact } from '@app/lib/haptics';
@@ -9,6 +15,7 @@ import {
   messageLength,
 } from '@app/utils/chat/maxMessageLength';
 
+import { getEditCursorPosition } from '../util/getEditCursorPosition';
 import { useWordInfo } from './useWordInfo';
 
 export { MAX_MESSAGE_LENGTH };
@@ -49,6 +56,7 @@ export function useChatComposerController({
   applyCursor,
 }: UseChatComposerControllerOptions) {
   const [text, setText] = useState('');
+  const textRef = useRef('');
   const [cursorPosition, setCursorPosition] = useState(0);
   const [selection, setSelection] = useState<
     { start: number; end: number } | undefined
@@ -77,6 +85,7 @@ export function useChatComposerController({
 
   const writeText = useCallback(
     (next: string, nextCursor?: number) => {
+      textRef.current = next;
       setText(next);
       const cursor = nextCursor ?? next.length;
       setCursorPosition(cursor);
@@ -100,7 +109,13 @@ export function useChatComposerController({
 
   const handleChangeText = useCallback(
     (next: string) => {
+      const previous = textRef.current;
+      if (previous === next) {
+        return;
+      }
+      textRef.current = next;
       setText(next);
+      setCursorPosition(getEditCursorPosition(previous, next));
       setSelection(undefined);
       onChangeText?.(next);
     },

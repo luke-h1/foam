@@ -1,6 +1,5 @@
 import { useCallback, useEffect } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -27,7 +26,6 @@ interface VodPlayerScreenProps {
 const KEEP_AWAKE_TAG = 'vod-player';
 
 export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
-  const { t } = useTranslation(['stream', 'common']);
   const insets = useSafeAreaInsets();
   const sleepTimer = useSleepTimer({
     onExpire: () => {
@@ -78,9 +76,9 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
   if (!id) {
     return (
       <EmptyState
-        heading={t('vodNotFound')}
-        content={t('vodNotFoundDescription')}
-        button={t('common:close')}
+        heading='VOD not found'
+        content='Could not open this VOD.'
+        button='Close'
         buttonOnPress={() => router.back()}
       />
     );
@@ -139,7 +137,7 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
             size: 18,
             color: sleepTimer.isActive ? theme.colorPrimary : undefined,
           }}
-          label={t('sleepTimer')}
+          label='Sleep timer'
           onPress={() => showSleepTimerMenu(sleepTimer)}
           size='2xl'
           style={styles.closeButton}

@@ -148,6 +148,66 @@ describe('useChatComposerController', () => {
     expect(result.current.canRecallLastMessage).toBe(false);
   });
 
+  test('opens the emote rail on a word typed after the first one, with no selection event', () => {
+    const { result } = renderController();
+
+    act(() => {
+      result.current.setIsFocused(true);
+    });
+    act(() => {
+      result.current.handleChangeText('hey ');
+    });
+    act(() => {
+      result.current.handleChangeText('hey Kap');
+    });
+
+    expect(result.current.showEmoteRail).toBe(true);
+    expect(result.current.wordInfo.searchTerm).toBe('Kap');
+  });
+
+  test('opens the mention rail on an @ typed after the first word, with no selection event', () => {
+    const { result } = renderController();
+
+    act(() => {
+      result.current.setIsFocused(true);
+    });
+    act(() => {
+      result.current.handleChangeText('gg @lu');
+    });
+
+    expect(result.current.showUserRail).toBe(true);
+    expect(result.current.wordInfo.word).toBe('@lu');
+  });
+
+  test('follows the caret back to an earlier word when the selection moves', () => {
+    const { result } = renderController();
+
+    act(() => {
+      result.current.setIsFocused(true);
+    });
+    act(() => {
+      result.current.handleChangeText('@lu Kap');
+    });
+    expect(result.current.showEmoteRail).toBe(true);
+
+    act(() => {
+      result.current.handleSelectionChange(3);
+    });
+
+    expect(result.current.showUserRail).toBe(true);
+    expect(result.current.wordInfo.word).toBe('@lu');
+  });
+
+  test('keeps the rails closed while the input is not focused', () => {
+    const { result } = renderController();
+
+    act(() => {
+      result.current.handleChangeText('hey Kap');
+    });
+
+    expect(result.current.showEmoteRail).toBe(false);
+  });
+
   test('records nothing when the parent has disabled sending', () => {
     const { result } = renderController({ canSend: false });
 

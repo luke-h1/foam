@@ -1,6 +1,5 @@
 import { View } from 'react-native';
 
-import i18next from '@app/i18n/i18next';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 import { styles } from '../RichChatMessage.styles';
@@ -43,7 +42,7 @@ export function AnnouncementChatBody({
         compact={rendererArgs.compact}
         fontScale={rendererArgs.fontScale}
         icon='megaphone.fill'
-        label={i18next.t('chat:notices.announcement')}
+        label='Announcement'
         labelColor={resolvedAccentColor}
         labelStyle={styles.announcementMetaText}
       />

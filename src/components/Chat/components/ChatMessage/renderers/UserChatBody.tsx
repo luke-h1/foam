@@ -5,7 +5,6 @@ import { useSelector } from '@legendapp/state/react';
 
 import { CHAT_NOTICE_ACCENTS } from '@app/components/Chat/components/util/chatNoticeAccents';
 import { Text } from '@app/components/ui/Text/Text';
-import i18next from '@app/i18n/i18next';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
@@ -139,7 +138,7 @@ export function UserChatBody({
         <ChatNoticeMetaRow
           compact={compact}
           icon='sparkles'
-          label={i18next.t('chat:notices.firstMessage')}
+          label='First message'
           labelColor={CHAT_NOTICE_ACCENTS.firstMessage}
           labelStyle={styles.firstMessageMetaText}
         />
@@ -147,7 +146,7 @@ export function UserChatBody({
         <ChatNoticeMetaRow
           compact={compact}
           icon='arrow.uturn.left'
-          label={i18next.t('chat:notices.returningChatter')}
+          label='Returning chatter'
           labelColor={CHAT_NOTICE_ACCENTS.returningChatter}
           labelStyle={styles.returningChatterMetaText}
         />

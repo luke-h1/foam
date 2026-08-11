@@ -1,6 +1,5 @@
 import { memo, useCallback, useRef } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -48,7 +47,6 @@ const SettingsSheetComponent = ({
   onClearSevenTvCosmeticsCache,
   onReconnect,
 }: SettingsSheetProps) => {
-  const { t } = useTranslation(['chat', 'common']);
   const chatDensity = usePreference('chatDensity');
   const highlightOwnMentions = usePreference('highlightOwnMentions');
   const showInlineReplyContext = usePreference('showInlineReplyContext');
@@ -125,7 +123,7 @@ const SettingsSheetComponent = ({
       <View style={styles.container} testID='chat-settings-sheet'>
         <View style={styles.header}>
           <Text style={styles.headerTitle} weight='semibold'>
-            {t('settingsSheet.title')}
+            Settings
           </Text>
         </View>
 
@@ -139,25 +137,21 @@ const SettingsSheetComponent = ({
           showsVerticalScrollIndicator={false}
         >
           <SettingsSection
-            title={t('settingsSheet.sectionAppearance')}
+            title='Appearance'
             cardColor={theme.color.surfaceNeutral.dark}
           >
             <SettingsLinkRow
-              title={t('settingsSheet.density')}
+              title='Density'
               icon={{
                 icon: 'text.alignleft',
                 androidIcon: 'format_align_left',
                 color: ICON_TINT,
               }}
-              value={
-                chatDensity === 'compact'
-                  ? t('settingsSheet.compact')
-                  : t('settingsSheet.comfortable')
-              }
+              value={chatDensity === 'compact' ? 'Compact' : 'Comfortable'}
               onPress={handleToggleDensity}
             />
             <SettingsToggleRow
-              title={t('settingsSheet.showTimestamps')}
+              title='Show Timestamps'
               icon={{
                 icon: 'clock',
                 androidIcon: 'schedule',
@@ -169,7 +163,7 @@ const SettingsSheetComponent = ({
               }
             />
             <SettingsToggleRow
-              title={t('settingsSheet.highlightOwnMentions')}
+              title='Highlight Own Mentions'
               icon={{
                 icon: 'at',
                 androidIcon: 'alternate_email',
@@ -181,7 +175,7 @@ const SettingsSheetComponent = ({
               }
             />
             <SettingsToggleRow
-              title={t('settingsSheet.inlineReplyContext')}
+              title='Inline Reply Context'
               icon={{
                 icon: 'arrowshape.turn.up.left',
                 androidIcon: 'reply',
@@ -193,7 +187,7 @@ const SettingsSheetComponent = ({
               }
             />
             <SettingsToggleRow
-              title={t('settingsSheet.showJumpPill')}
+              title='Show Jump Pill'
               icon={{
                 icon: 'arrow.down.circle',
                 androidIcon: 'arrow_circle_down',
@@ -205,7 +199,7 @@ const SettingsSheetComponent = ({
               }
             />
             <SettingsToggleRow
-              title={t('settingsSheet.showJoinPartMessages')}
+              title='Show Join/Part Messages'
               icon={{
                 icon: 'person.badge.plus',
                 androidIcon: 'group_add',
@@ -220,12 +214,12 @@ const SettingsSheetComponent = ({
 
           {hasActions ? (
             <SettingsSection
-              title={t('settingsSheet.sectionActions')}
+              title='Actions'
               cardColor={theme.color.surfaceNeutral.dark}
             >
               {onOpenMessageSearch ? (
                 <SettingsLinkRow
-                  title={t('settingsSheet.searchMessages')}
+                  title='Search messages'
                   icon={{
                     icon: 'magnifyingglass',
                     androidIcon: 'search',
@@ -236,7 +230,7 @@ const SettingsSheetComponent = ({
               ) : null}
               {onOpenChatters ? (
                 <SettingsLinkRow
-                  title={t('settingsSheet.viewChatters')}
+                  title='View Chatters'
                   icon={{
                     icon: 'person.2',
                     androidIcon: 'group',
@@ -247,7 +241,7 @@ const SettingsSheetComponent = ({
               ) : null}
               {onOpenSavedPhrases ? (
                 <SettingsLinkRow
-                  title={t('settingsSheet.savedPhrases')}
+                  title='Saved Phrases'
                   icon={{
                     icon: 'text.bubble',
                     androidIcon: 'chat_bubble',
@@ -258,7 +252,7 @@ const SettingsSheetComponent = ({
               ) : null}
               {onRefetchEmotes ? (
                 <SettingsLinkRow
-                  title={t('settingsSheet.refetchEmotes')}
+                  title='Refetch Emotes & Badges'
                   icon={{
                     icon: 'arrow.clockwise',
                     androidIcon: 'refresh',
@@ -271,12 +265,12 @@ const SettingsSheetComponent = ({
           ) : null}
 
           <SettingsSection
-            title={t('settingsSheet.sectionConnection')}
+            title='Connection'
             cardColor={theme.color.surfaceNeutral.dark}
           >
             <SettingsLinkRow
-              title={t('settingsSheet.syncToLive')}
-              subtitle={t('settingsSheet.syncToLiveSubtitle')}
+              title='Sync to Live'
+              subtitle='Jump back to the live edge'
               icon={{
                 icon: 'forward.end.fill',
                 androidIcon: 'skip_next',
@@ -286,7 +280,7 @@ const SettingsSheetComponent = ({
             />
             {onReconnect ? (
               <SettingsLinkRow
-                title={t('settingsSheet.reconnect')}
+                title='Reconnect'
                 icon={{
                   icon: 'wifi',
                   androidIcon: 'wifi',
@@ -299,11 +293,11 @@ const SettingsSheetComponent = ({
 
           {hasStorage ? (
             <SettingsSection
-              title={t('settingsSheet.sectionStorage')}
+              title='Storage'
               cardColor={theme.color.surfaceNeutral.dark}
             >
               <SettingsLinkRow
-                title={t('settingsSheet.clearCache')}
+                title='Clear Cache'
                 icon={{
                   icon: 'trash',
                   androidIcon: 'delete',

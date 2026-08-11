@@ -1,6 +1,5 @@
 import { memo, useCallback, useMemo, useRef } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { ListRenderItem } from '@shopify/flash-list';
@@ -51,7 +50,6 @@ const SavedPhrasesSheetComponent = ({
   onDismiss,
   onSelectPhrase,
 }: SavedPhrasesSheetProps) => {
-  const { t } = useTranslation(['preferences', 'navigation']);
   const { bottom: bottomInset } = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const sheetHeight = Math.round(windowHeight * CHAT_SETTINGS_SHEET_DETENT);
@@ -111,7 +109,7 @@ const SavedPhrasesSheetComponent = ({
       <View style={[styles.container, { height: sheetHeight }]}>
         <View style={styles.header}>
           <Text style={styles.headerTitle} weight='semibold'>
-            {t('savedPhrasesSheetTitle')}
+            Saved Phrases
           </Text>
           <Button onPress={handleManage} hitSlop={8}>
             <SymbolView
@@ -130,14 +128,14 @@ const SavedPhrasesSheetComponent = ({
               tintColor={theme.colorGreyHoverAlpha}
             />
             <Text style={styles.emptyTitle} weight='medium'>
-              {t('savedPhrasesSheetEmpty')}
+              No saved phrases yet
             </Text>
             <Text style={styles.emptyHint}>
-              {t('savedPhrasesSheetEmptyHint')}
+              Add phrases in Settings to insert them here with a tap.
             </Text>
             <Button style={styles.manageButton} onPress={handleManage}>
               <Text style={styles.manageButtonLabel} weight='medium'>
-                {t('manageSavedPhrases')}
+                Manage saved phrases
               </Text>
             </Button>
           </View>

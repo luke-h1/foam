@@ -14,7 +14,6 @@ import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
 import { toast } from 'sonner-native';
 
 import { useSyncRef } from '@app/hooks/useSyncRef';
-import i18next from '@app/i18n/i18next';
 import {
   followedStreamsQueryOptions,
   topCategoriesInfiniteQueryOptions,
@@ -380,7 +379,7 @@ function useAuthContextValue({
 
   const loginWithTwitch = async (response: AuthSessionResult | null) => {
     if (!response || response?.type !== 'success') {
-      toast.error(i18next.t('auth:couldNotAuthenticate'));
+      toast.error("Couldn't authenticate with twitch");
       await doAnonAuth();
       return null;
     }
@@ -393,7 +392,7 @@ function useAuthContextValue({
         hasAuthentication: !!response.authentication,
         responseUrl: response.url,
       });
-      toast.error(i18next.t('auth:couldNotAuthenticate'));
+      toast.error("Couldn't authenticate with twitch");
       await doAnonAuth();
       return null;
     }

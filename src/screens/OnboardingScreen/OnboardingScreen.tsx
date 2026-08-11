@@ -1,5 +1,4 @@
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -29,7 +28,6 @@ const gentleSpring = (entering: typeof FadeInUp) =>
     .mass(motion.spring.gentle.mass);
 
 export function OnboardingScreen() {
-  const { t } = useTranslation('onboarding');
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const orbSize = Math.min(width * 0.72, 300);
@@ -61,10 +59,11 @@ export function OnboardingScreen() {
         style={styles.content}
       >
         <Text type='3xl' weight='bold' align='center'>
-          {t('title')}
+          Welcome to foam
         </Text>
         <Text type='md' align='center' color='gray' style={styles.description}>
-          {t('description')}
+          The fastest way to watch Twitch - browse live streams, explore
+          categories, and follow your favourite creators.
         </Text>
       </Animated.View>
 
@@ -75,7 +74,7 @@ export function OnboardingScreen() {
         <Button
           onPress={handleGetStarted}
           haptic='medium'
-          label={t('getStarted')}
+          label='Get started'
           style={styles.ctaButton}
         >
           <Text
@@ -85,16 +84,16 @@ export function OnboardingScreen() {
             align='center'
             weight='semibold'
           >
-            {t('getStarted')}
+            Get started
           </Text>
         </Button>
         <Button
           onPress={handleGetStarted}
-          label={t('skip')}
+          label='Skip'
           style={styles.skipButton}
         >
           <Text type='sm' align='center' color='gray'>
-            {t('skip')}
+            Skip
           </Text>
         </Button>
       </Animated.View>

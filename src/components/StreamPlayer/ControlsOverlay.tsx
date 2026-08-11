@@ -12,7 +12,6 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import Animated, {
   type SharedValue,
   useAnimatedStyle,
@@ -121,7 +120,6 @@ export function ControlsOverlay({
   sleepTimerActive,
   streamInfo,
 }: ControlsOverlayProps) {
-  const { t } = useTranslation(['stream', 'common', 'settings']);
   const insets = useSafeAreaInsets();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isPortrait = windowHeight >= windowWidth;
@@ -140,14 +138,14 @@ export function ControlsOverlay({
     if (onRefresh) {
       actions.push({
         id: 'refresh',
-        title: t('refresh'),
+        title: 'Refresh',
         image: 'arrow.clockwise',
       });
     }
     if (onPipPress) {
       actions.push({
         id: 'pip',
-        title: t('pictureInPicture'),
+        title: 'Picture in Picture',
         image: 'pip',
         state: pipActive ? 'on' : undefined,
       });
@@ -155,14 +153,14 @@ export function ControlsOverlay({
     if (onCreateClipPress) {
       actions.push({
         id: 'create-clip',
-        title: t('createClip'),
+        title: 'Create clip',
         image: 'scissors',
       });
     }
     if (onSleepTimerPress) {
       actions.push({
         id: 'sleep-timer',
-        title: t('sleepTimer'),
+        title: 'Sleep timer',
         image: 'moon.zzz',
         state: sleepTimerActive ? 'on' : undefined,
       });
@@ -170,7 +168,7 @@ export function ControlsOverlay({
     if (onSharePress) {
       actions.push({
         id: 'share',
-        title: t('common:share'),
+        title: 'Share',
         image: 'square.and.arrow.up',
       });
     }
@@ -183,7 +181,6 @@ export function ControlsOverlay({
     onSharePress,
     pipActive,
     sleepTimerActive,
-    t,
   ]);
 
   const handleSecondaryAction = useCallback(
@@ -228,7 +225,7 @@ export function ControlsOverlay({
         {onBackPress && (
           <GlassButtonSurface>
             <Button
-              label={t('common:back')}
+              label='Back'
               style={styles.headerButton}
               onPress={onBackPress}
             >
@@ -261,7 +258,7 @@ export function ControlsOverlay({
 
       <View pointerEvents='box-none' style={styles.centerControls}>
         <Button
-          label={paused ? t('play') : t('pause')}
+          label={paused ? 'Play' : 'Pause'}
           style={[
             styles.playPauseButton,
             isPortrait && styles.playPauseButtonPortrait,
@@ -294,7 +291,7 @@ export function ControlsOverlay({
           <View
             style={[styles.liveRail, isPortrait && styles.liveRailPortrait]}
           >
-            <LiveBadge label={t('live')} />
+            <LiveBadge label='LIVE' />
             <StreamDurationLabel
               isVisible={isVisible}
               startedAt={streamInfo?.startedAt}
@@ -331,7 +328,7 @@ export function ControlsOverlay({
         {onMutePress && (
           <GlassButtonSurface>
             <Button
-              label={muted ? t('unmute') : t('mute')}
+              label={muted ? 'Unmute' : 'Mute'}
               style={styles.controlButton}
               onPress={onMutePress}
             >
@@ -351,7 +348,7 @@ export function ControlsOverlay({
           >
             <GlassButtonSurface>
               <View
-                accessibilityLabel={t('settings:more')}
+                accessibilityLabel='More'
                 accessibilityRole='button'
                 style={styles.controlButton}
               >

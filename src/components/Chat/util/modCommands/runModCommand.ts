@@ -1,4 +1,3 @@
-import i18next from 'i18next';
 import { toast } from 'sonner-native';
 
 import { logger } from '@app/utils/logger';
@@ -18,7 +17,7 @@ export function runModCommand(
 ): void {
   const moderatorId = currentUserId?.trim();
   if (!moderatorId) {
-    toast.error(i18next.t('chat:modCommands.failed'));
+    toast.error('Moderation action failed');
     return;
   }
   executeModCommand(command, { broadcasterId: channelId, moderatorId })
@@ -29,6 +28,6 @@ export function runModCommand(
         command: command.type,
         channel_id: channelId,
       });
-      toast.error(i18next.t('chat:modCommands.failed'));
+      toast.error('Moderation action failed');
     });
 }

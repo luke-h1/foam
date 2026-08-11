@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
@@ -17,7 +16,6 @@ type DeliveryState =
   | { status: 'done'; eventId: string | undefined; flushed: boolean };
 
 export function SentryTestScreen() {
-  const { t } = useTranslation('devTools');
   const [shouldThrow, setShouldThrow] = useState(false);
   const [delivery, setDelivery] = useState<DeliveryState>({ status: 'idle' });
 
@@ -46,51 +44,44 @@ export function SentryTestScreen() {
       >
         {Platform.OS === 'ios' ? null : (
           <Text type='xl' weight='bold' style={styles.title}>
-            {t('sentryTest')}
+            Sentry Test
           </Text>
         )}
 
         <View style={styles.panel}>
-          <Text weight='semibold'>{t('sentryStatus')}</Text>
+          <Text weight='semibold'>Sentry status</Text>
           <StatusRow
-            label={t('enabled')}
-            value={status.enabled ? t('yes') : t('no')}
+            label='Enabled'
+            value={status.enabled ? 'Yes' : 'No'}
             warn={!status.enabled}
           />
           <StatusRow
-            label={t('dsn')}
-            value={status.hasDsn ? t('present') : t('missing')}
+            label='DSN'
+            value={status.hasDsn ? 'present' : 'missing'}
             warn={!status.hasDsn}
           />
-          <StatusRow label={t('environment')} value={status.environment} />
-          <StatusRow
-            label={t('release')}
-            value={status.release ?? t('unknown')}
-          />
-          <StatusRow label={t('dist')} value={status.dist ?? t('unknown')} />
-          <StatusRow
-            label={t('debug')}
-            value={status.debug ? t('yes') : t('no')}
-          />
+          <StatusRow label='Environment' value={status.environment} />
+          <StatusRow label='Release' value={status.release ?? 'Unknown'} />
+          <StatusRow label='Dist' value={status.dist ?? 'Unknown'} />
+          <StatusRow label='Debug' value={status.debug ? 'Yes' : 'No'} />
         </View>
 
         <View style={styles.panel}>
-          <Text weight='semibold'>{t('verifyDelivery')}</Text>
+          <Text weight='semibold'>Verify delivery</Text>
           <Text type='xs' color='gray.textLow'>
-            {t('verifyDeliveryDescription')}
+            Sends a message event and waits for the network flush, confirming
+            Sentry capture works end-to-end from this build.
           </Text>
 
           <Button
             accessibilityRole='button'
-            label={t('verifyDelivery')}
+            label='Verify delivery'
             onPress={handleVerifyDelivery}
             disabled={delivery.status === 'sending'}
             style={styles.verifyButton}
           >
             <Text type='sm' weight='semibold' style={styles.verifyButtonText}>
-              {delivery.status === 'sending'
-                ? t('sending')
-                : t('verifyDelivery')}
+              {delivery.status === 'sending' ? 'Sending…' : 'Verify delivery'}
             </Text>
           </Button>
 
@@ -101,26 +92,27 @@ export function SentryTestScreen() {
               style={styles.result}
             >
               {delivery.flushed
-                ? t('deliveryConfirmed', { id: delivery.eventId ?? '—' })
-                : t('deliveryFailed')}
+                ? `Delivered ✓ (event ${delivery.eventId ?? '—'})`
+                : 'Flush failed - event was not confirmed sent.'}
             </Text>
           ) : null}
         </View>
 
         <View style={styles.panel}>
-          <Text weight='semibold'>{t('throwTestError')}</Text>
+          <Text weight='semibold'>Throw test error</Text>
           <Text type='xs' color='gray.textLow'>
-            {t('throwTestErrorDescription')}
+            Sends an unhandled JavaScript error through the app error boundary
+            and Sentry wrapper.
           </Text>
 
           <Button
             accessibilityRole='button'
-            label={t('throwSentryTestError')}
+            label='Throw Sentry test error'
             onPress={() => setShouldThrow(true)}
             style={styles.errorButton}
           >
             <Text type='sm' weight='semibold' style={styles.errorButtonText}>
-              {t('throwError')}
+              Throw Error
             </Text>
           </Button>
         </View>

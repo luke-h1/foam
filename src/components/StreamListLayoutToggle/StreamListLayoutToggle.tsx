@@ -1,5 +1,4 @@
 import { StyleSheet } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import { Button } from '@app/components/Button/Button';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
@@ -16,14 +15,13 @@ export function StreamListLayoutToggle({
   value: StreamListLayout;
   onChange: (value: StreamListLayout) => void;
 }) {
-  const { t } = useTranslation('stream');
   const isCompact = value === 'compact';
 
   return (
     <Button
       accessibilityRole='button'
       accessibilityLabel={
-        isCompact ? t('switchToMediaLayout') : t('switchToCompactLayout')
+        isCompact ? 'Switch to media layout' : 'Switch to compact layout'
       }
       hitSlop={10}
       onPress={() => {

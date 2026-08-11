@@ -5,7 +5,6 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import * as Clipboard from 'expo-clipboard';
 import { toast } from 'sonner-native';
@@ -53,7 +52,6 @@ function getEmoteName(emote: ParsedPart<'emote'>): string {
 }
 
 function EmotePreviewSheetComponent(props: Props) {
-  const { t } = useTranslation(['chat', 'common']);
   const { saveImage, isSaving } = useSaveImageToGallery();
   const { visible, onClose, selectedEmote } = props;
   const sheetRef = useRef<BottomSheetHandle>(null);
@@ -119,9 +117,7 @@ function EmotePreviewSheetComponent(props: Props) {
       field === 'name' ? emoteName : displayUrl,
     ).then(() =>
       toast.success(
-        field === 'name'
-          ? t('emotePreview.nameCopied')
-          : t('emotePreview.urlCopied'),
+        field === 'name' ? 'Emote name copied' : 'Emote URL copied',
       ),
     );
   };
@@ -130,17 +126,17 @@ function EmotePreviewSheetComponent(props: Props) {
     saveImage(
       { url: saveUrl },
       {
-        onError: () => toast.error(t('emotePreview.imageSaveFailed')),
-        onSuccess: () => toast.success(t('emotePreview.imageSaved')),
+        onError: () => toast.error('Could not save emote'),
+        onSuccess: () => toast.success('Emote saved to gallery'),
       },
     );
   };
 
   const metadataRows = [
-    { label: t('emotePreview.provider'), value: selectedEmote.site },
-    { label: t('emotePreview.creator'), value: selectedEmote.creator },
+    { label: 'Provider', value: selectedEmote.site },
+    { label: 'Creator', value: selectedEmote.creator },
     {
-      label: t('emotePreview.original'),
+      label: 'Original',
       value:
         selectedEmote.original_name && selectedEmote.original_name !== emoteName
           ? selectedEmote.original_name
@@ -152,24 +148,24 @@ function EmotePreviewSheetComponent(props: Props) {
     const items: PreviewAction[] = [
       {
         icon: 'doc.on.doc',
-        label: t('emotePreview.copyEmoteName'),
+        label: 'Copy emote name',
         onPress: () => handleCopy('name'),
         subtitle: emoteName,
       },
       {
         icon: 'link',
-        label: t('emotePreview.copyEmoteUrl'),
+        label: 'Copy emote URL',
         onPress: () => handleCopy('url'),
-        subtitle: t('emotePreview.copyEmoteUrlSubtitle'),
+        subtitle: 'Rendered image source',
       },
     ];
 
     if (saveUrl) {
       items.push({
         icon: 'square.and.arrow.down',
-        label: t('emotePreview.saveImage'),
+        label: 'Save image',
         onPress: handleSaveImage,
-        subtitle: t('emotePreview.saveImageSubtitle'),
+        subtitle: 'Save to your photo gallery',
         disabled: isSaving,
       });
     }
@@ -177,9 +173,9 @@ function EmotePreviewSheetComponent(props: Props) {
     if (emoteLink) {
       items.push({
         icon: 'arrow.up.right.square',
-        label: t('emotePreview.openInBrowser'),
+        label: 'Open in Browser',
         onPress: () => openLinkInBrowser(emoteLink),
-        subtitle: t('emotePreview.openInBrowserSubtitle'),
+        subtitle: 'Source page',
       });
     }
 
@@ -207,17 +203,13 @@ function EmotePreviewSheetComponent(props: Props) {
         <View style={styles.topBar}>
           <View style={styles.heading}>
             <Text style={styles.eyebrow} weight='semibold'>
-              {t('emotePreview.eyebrow')}
+              Emote preview
             </Text>
             <Text style={styles.title} weight='semibold' numberOfLines={2}>
               {emoteName}
             </Text>
           </View>
-          <Button
-            label={t('common:done')}
-            style={styles.doneButton}
-            onPress={requestClose}
-          >
+          <Button label='Done' style={styles.doneButton} onPress={requestClose}>
             <SymbolView
               name='xmark'
               size={15}

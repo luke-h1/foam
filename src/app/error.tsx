@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import { type ErrorBoundaryProps, router, Stack } from 'expo-router';
 
@@ -17,8 +16,7 @@ function handleReportBug() {
 }
 
 export default function AppError({ error, retry }: ErrorBoundaryProps) {
-  const { t } = useTranslation(['errors', 'common']);
-  const errorMessage = t('unexpectedIssue');
+  const errorMessage = 'An unexpected issue interrupted the app.';
 
   useEffect(() => {
     logger.main.error(errorMessage, {
@@ -32,11 +30,11 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
 
   return (
     <>
-      <Stack.Screen options={{ title: t('somethingWentWrong') }} />
+      <Stack.Screen options={{ title: 'Something went wrong' }} />
       <View style={styles.container}>
         <ScreenHeader
-          title={t('somethingWentWrong')}
-          subtitle={t('recovery')}
+          title='Something went wrong'
+          subtitle='Recovery'
           size='medium'
           back={false}
         />
@@ -56,10 +54,10 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
 
             <View style={styles.copy}>
               <Text type='lg' weight='semibold' color='gray'>
-                {t('screenCrashed')}
+                This screen crashed
               </Text>
               <Text type='sm' color='gray.textLow' style={styles.body}>
-                {t('tryLoadingAgain')}
+                Try loading it again. If it keeps failing, report a bug
               </Text>
             </View>
           </View>
@@ -71,7 +69,7 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
               color='gray.textLow'
               style={styles.sectionLabel}
             >
-              {t('messageLabel')}
+              MESSAGE
             </Text>
             <Text type='sm' color='gray' selectable style={styles.errorText}>
               {errorMessage}
@@ -87,13 +85,13 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
                 weight='semibold'
                 align='center'
               >
-                {t('common:tryAgain')}
+                Try again
               </Text>
             </Button>
 
             <Button style={styles.reportButton} onPress={handleReportBug}>
               <Text type='sm' color='gray' weight='semibold' align='center'>
-                {t('reportBug')}
+                Report bug
               </Text>
             </Button>
 
@@ -104,7 +102,7 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
               }}
             >
               <Text type='sm' color='gray' weight='semibold' align='center'>
-                {t('goHome')}
+                Go home
               </Text>
             </Button>
           </View>

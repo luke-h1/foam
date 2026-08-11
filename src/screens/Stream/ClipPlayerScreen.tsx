@@ -1,5 +1,4 @@
 import { StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { router } from 'expo-router';
@@ -15,15 +14,14 @@ interface ClipPlayerScreenProps {
 }
 
 export function ClipPlayerScreen({ id }: ClipPlayerScreenProps) {
-  const { t } = useTranslation(['stream', 'common']);
   const insets = useSafeAreaInsets();
 
   if (!id) {
     return (
       <EmptyState
-        heading={t('clipNotFound')}
-        content={t('clipNotFoundDescription')}
-        button={t('common:close')}
+        heading='Clip not found'
+        content='Could not open this clip.'
+        button='Close'
         buttonOnPress={() => router.back()}
       />
     );
@@ -44,7 +42,7 @@ export function ClipPlayerScreen({ id }: ClipPlayerScreenProps) {
       >
         <IconButton
           icon={{ type: 'symbol', name: 'square.and.arrow.up', size: 18 }}
-          label={t('shareClip')}
+          label='Share clip'
           onPress={() => {
             void shareDeepLink({ kind: 'clip', id });
           }}
@@ -53,7 +51,7 @@ export function ClipPlayerScreen({ id }: ClipPlayerScreenProps) {
         />
         <IconButton
           icon={{ type: 'symbol', name: 'xmark', size: 18 }}
-          label={t('common:close')}
+          label='Close'
           onPress={() => router.back()}
           size='2xl'
           style={styles.closeButton}

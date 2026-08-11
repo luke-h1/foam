@@ -16,7 +16,6 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import * as Clipboard from 'expo-clipboard';
 import { toast } from 'sonner-native';
@@ -29,7 +28,6 @@ import { Button } from '@app/components/Button/Button';
 import { Image } from '@app/components/Image/Image';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
-import i18next from '@app/i18n/i18next';
 import { theme } from '@app/styles/themes';
 import type { EmoteImageScale } from '@app/types/emote';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
@@ -78,7 +76,6 @@ function EmoteActionSheetComponent({
   part,
   onPress,
 }: EmoteActionSheetProps) {
-  const { t } = useTranslation(['chat', 'common']);
   const [uncontrolledVisible, setUncontrolledVisible] = useState(false);
   const sheetRef = useRef<BottomSheetHandle>(null);
   const isControlled = typeof isPresented === 'boolean';
@@ -173,7 +170,7 @@ function EmoteActionSheetComponent({
       return;
     }
     void Clipboard.setStringAsync(text).then(() => {
-      toast.success(i18next.t('chat:emoteActions.nameCopied'));
+      toast.success('Emote name copied to clipboard');
     });
   }, [part.name, part.original_name, requestClose]);
 
@@ -183,7 +180,7 @@ function EmoteActionSheetComponent({
       return;
     }
     void Clipboard.setStringAsync(displayUrl).then(() => {
-      toast.success(i18next.t('chat:emoteActions.urlCopied'));
+      toast.success('Emote URL copied to clipboard');
     });
   }, [displayUrl, requestClose]);
 
@@ -195,9 +192,7 @@ function EmoteActionSheetComponent({
         return;
       }
       void Clipboard.setStringAsync(url).then(() => {
-        toast.success(
-          i18next.t('chat:emoteActions.scaledUrlCopied', { scale }),
-        );
+        toast.success(`${scale} emote URL copied to clipboard`);
       });
     },
     [requestClose, scaledImageUrls],
@@ -211,31 +206,31 @@ function EmoteActionSheetComponent({
   const actions = [
     {
       id: 'copy-name' as const,
-      label: t('emoteActions.copyName'),
+      label: 'Copy name',
       onPress: copyName,
       visible: true,
     },
     {
       id: 'copy-url' as const,
-      label: t('emoteActions.copyImageUrl'),
+      label: 'Copy image URL',
       onPress: copyImageUrl,
       visible: Boolean(displayUrl),
     },
     ...COPY_IMAGE_VARIANT_ACTIONS.map(action => ({
       id: action.id,
-      label: t('emoteActions.copyScaledImageUrl', { scale: action.scale }),
+      label: `Copy ${action.scale} image URL`,
       onPress: () => copyScaledImageUrl(action.scale),
       visible: Boolean(scaledImageUrls[action.scale]),
     })),
     {
       id: 'preview' as const,
-      label: t('emoteActions.preview'),
+      label: 'Preview',
       onPress: handlePreview,
       visible: Boolean(onPress),
     },
   ].filter(action => action.visible);
 
-  const previewSubtitle = t('emoteActions.title');
+  const previewSubtitle = 'Emote actions';
 
   const triggerChild =
     children && isValidElement(children)
@@ -263,11 +258,11 @@ function EmoteActionSheetComponent({
           <View style={styles.topBar}>
             <View style={styles.heading}>
               <Text style={styles.eyebrow} weight='semibold'>
-                {t('emoteActions.title')}
+                Emote actions
               </Text>
             </View>
             <Button
-              label={t('common:done')}
+              label='Done'
               style={styles.doneButton}
               onPress={requestClose}
             >

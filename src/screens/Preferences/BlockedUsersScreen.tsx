@@ -1,6 +1,5 @@
 import { type RefObject, useCallback, useRef } from 'react';
 import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -28,7 +27,6 @@ import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useUserBlockListQuery } from '@app/hooks/queries/useUserBlockListQuery';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import i18next from '@app/i18n/i18next';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
 import { twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
@@ -55,7 +53,6 @@ const BlockedUserItem = function BlockedUserItem({
   count,
   onUnblock,
 }: BlockedUserItemProps) {
-  const { t } = useTranslation('preferences');
   const handlePress = useCallback(() => {
     onUnblock(user.user_id, user.display_name);
   }, [onUnblock, user.display_name, user.user_id]);
@@ -77,7 +74,7 @@ const BlockedUserItem = function BlockedUserItem({
         </Text>
       </View>
       <BlockedUsersActionButton
-        label={t('unblock')}
+        label='Unblock'
         onPress={handlePress}
         style={styles.unblockButton}
         variant='destructive'
@@ -129,8 +126,6 @@ function ListStatePanel({
   onAction,
   onRefresh: _onRefresh,
 }: ListStatePanelProps) {
-  const { t } = useTranslation('preferences');
-
   return (
     <ScrollView
       style={styles.stateScroll}
@@ -140,7 +135,7 @@ function ListStatePanel({
     >
       <View style={styles.stateSection}>
         <Text type='xxs' weight='semibold' style={styles.sectionTitle}>
-          {t('blockedAccounts')}
+          Blocked Accounts
         </Text>
         <View style={styles.statePanel}>
           <View style={styles.stateIcon}>
@@ -179,12 +174,10 @@ interface BlockedUsersSectionHeaderProps {
 }
 
 function BlockedUsersSectionHeader({ count }: BlockedUsersSectionHeaderProps) {
-  const { t } = useTranslation('preferences');
-
   return (
     <View style={styles.sectionHeader}>
       <Text type='xxs' weight='semibold' style={styles.sectionTitle}>
-        {t('blockedAccounts')}
+        Blocked Accounts
       </Text>
       {typeof count === 'number' ? (
         <Text type='xxs' color='gray.textLow' style={styles.sectionCountText}>
@@ -212,7 +205,6 @@ function BlockedUsersList({
   onUnblock,
   onUnblockDirect,
 }: BlockedUsersListProps) {
-  const { t } = useTranslation('preferences');
   const listRef = useRef(null);
 
   useScrollToTop(listRef);
@@ -248,9 +240,9 @@ function BlockedUsersList({
     return (
       <ListStatePanel
         icon='exclamationmark.circle'
-        title={t('couldNotLoadBlockedUsers')}
-        description={t('couldNotLoadBlockedUsersDescription')}
-        actionLabel={t('retry')}
+        title='Could not load blocked users'
+        description='Twitch did not return your blocked users list. Refresh and try again.'
+        actionLabel='Retry'
         onAction={() => void onRefresh()}
         onRefresh={onRefresh}
       />
@@ -261,8 +253,8 @@ function BlockedUsersList({
     return (
       <ListStatePanel
         icon='shield'
-        title={t('noBlockedUsers')}
-        description={t('noBlockedUsersDescription')}
+        title='No blocked users'
+        description='Accounts you block on Twitch will appear here for quick review.'
         onRefresh={onRefresh}
       />
     );
@@ -297,7 +289,6 @@ function NativeBlockedUsersList({
   onRefresh: () => Promise<unknown>;
   onUnblockDirect: (userId: string) => void;
 }) {
-  const { t } = useTranslation('preferences');
   const insets = useSafeAreaInsets();
 
   const handleDelete = (indices: number[]) => {
@@ -323,8 +314,12 @@ function NativeBlockedUsersList({
         ]}
       >
         <Section
-          title={t('blockedAccounts')}
-          footer={<NativeText>{t('blockedUsersFooter')}</NativeText>}
+          title='Blocked Accounts'
+          footer={
+            <NativeText>
+              Unblocking restores normal Twitch interactions for that account.
+            </NativeText>
+          }
         >
           <List.ForEach onDelete={handleDelete}>
             {data.map(user => (
@@ -365,8 +360,6 @@ function BlockedUsersDataList({
   onRefresh: () => Promise<unknown>;
   renderItem: ListRenderItem<UserBlockList>;
 }) {
-  const { t } = useTranslation('preferences');
-
   return (
     <View style={styles.content}>
       <FlashList
@@ -382,7 +375,7 @@ function BlockedUsersDataList({
         maintainVisibleContentPosition={{ disabled: true }}
         ListFooterComponent={
           <Text type='xxs' color='gray.textLow' style={styles.sectionFooter}>
-            {t('blockedUsersFooter')}
+            Unblocking restores normal Twitch interactions for that account.
           </Text>
         }
       />
@@ -429,13 +422,13 @@ export function BlockedUsersScreen() {
       return { previousData };
     },
     onSuccess: () => {
-      toast.success(i18next.t('preferences:userUnblocked'));
+      toast.success('User unblocked successfully');
     },
     onError: (_error, _targetUserId, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(userBlockListQueryKey, context.previousData);
       }
-      toast.error(i18next.t('preferences:failedToUnblock'));
+      toast.error('Failed to unblock user');
     },
     onSettled: () => {
       void queryClient.invalidateQueries({
@@ -452,12 +445,12 @@ export function BlockedUsersScreen() {
 
   const handleUnblockRequest = (userId: string, userName: string) => {
     Alert.alert(
-      i18next.t('preferences:unblockUser'),
-      i18next.t('preferences:unblockUserConfirm', { name: userName }),
+      'Unblock User',
+      `Are you sure you want to unblock ${userName}?`,
       [
-        { text: i18next.t('common:cancel'), style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: i18next.t('preferences:unblock'),
+          text: 'Unblock',
           onPress: () => unblockUser(userId),
           style: 'destructive',
         },

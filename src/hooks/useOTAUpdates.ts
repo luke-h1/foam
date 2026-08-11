@@ -15,7 +15,6 @@ import {
 } from 'expo-updates';
 
 import { useSyncRef } from '@app/hooks/useSyncRef';
-import i18next from '@app/i18n/i18next';
 import { countOtaMetric } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 import {
@@ -166,11 +165,11 @@ export function useOTAUpdates() {
     });
 
     Alert.alert(
-      i18next.t('updates:updateAvailable'),
-      i18next.t('updates:updateAvailableMessage'),
+      'Update Available',
+      'A new version has been downloaded and is ready to install. Relaunch now?',
       [
         {
-          text: i18next.t('updates:relaunch'),
+          text: 'Relaunch',
           style: 'default',
           onPress: () => {
             countOtaMetric('ota.update.applied', {

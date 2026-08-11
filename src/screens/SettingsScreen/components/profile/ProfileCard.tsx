@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import type { ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { router } from 'expo-router';
 
@@ -11,7 +10,6 @@ import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import i18next from '@app/i18n/i18next';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 
@@ -114,12 +112,12 @@ function ActionRow({
 
 function formatMemberSince(createdAt?: string) {
   if (!createdAt) {
-    return i18next.t('settings:unknown');
+    return 'Unknown';
   }
 
   const date = new Date(createdAt);
   if (Number.isNaN(date.getTime())) {
-    return i18next.t('settings:unknown');
+    return 'Unknown';
   }
 
   return date.toLocaleDateString(undefined, {
@@ -128,8 +126,22 @@ function formatMemberSince(createdAt?: string) {
   });
 }
 
+function confirmDeleteAccount() {
+  Alert.alert(
+    'Delete Account',
+    "Foam doesn't have its own accounts - you sign in with your Twitch account, which is managed by Twitch. To permanently delete your account, continue to Twitch's account settings. To just remove your saved login from this device, use Log out above.",
+    [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Continue to Twitch',
+        style: 'destructive',
+        onPress: () => openLinkInBrowser(TWITCH_ACCOUNT_SETTINGS_URL),
+      },
+    ],
+  );
+}
+
 export function ProfileCard() {
-  const { t } = useTranslation(['settings', 'common']);
   const { user, logout } = useAuthContext();
   const scrollRef = useRef<ScrollView>(null);
 
@@ -138,32 +150,25 @@ export function ProfileCard() {
   const memberSince = formatMemberSince(user?.created_at);
 
   const confirmLogout = () => {
-    Alert.alert(t('signOut'), t('signOutConfirm'), [
-      { text: t('common:cancel'), style: 'cancel' },
-      {
-        text: t('signOut'),
-        style: 'destructive',
-        onPress: () => {
-          void (async () => {
-            await logout();
-            setTimeout(() => {
-              router.replace('/tabs/top');
-            }, 300);
-          })();
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out of your account?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              await logout();
+              setTimeout(() => {
+                router.replace('/tabs/top');
+              }, 300);
+            })();
+          },
         },
-      },
-    ]);
-  };
-
-  const confirmDeleteAccount = () => {
-    Alert.alert(t('deleteAccount'), t('deleteAccountMessage'), [
-      { text: t('common:cancel'), style: 'cancel' },
-      {
-        text: t('deleteAccountContinue'),
-        style: 'destructive',
-        onPress: () => openLinkInBrowser(TWITCH_ACCOUNT_SETTINGS_URL),
-      },
-    ]);
+      ],
+    );
   };
 
   if (!user) {
@@ -184,7 +189,7 @@ export function ProfileCard() {
               />
             </View>
             <Text type='lg' weight='bold' align='center'>
-              {t('notSignedIn')}
+              Not signed in
             </Text>
             <Text
               type='xs'
@@ -192,7 +197,8 @@ export function ProfileCard() {
               align='center'
               style={styles.signInDescription}
             >
-              {t('signInPromptDescription')}
+              Sign in with Twitch to use chat, follows, channel shortcuts, and
+              account controls.
             </Text>
             <PressableArea
               style={styles.pressableFill}
@@ -205,7 +211,7 @@ export function ProfileCard() {
                   tintColor={theme.colorBlack}
                 />
                 <Text type='xs' weight='bold' color='accent' contrast>
-                  {t('signInShort')}
+                  Sign in
                 </Text>
               </View>
             </PressableArea>
@@ -224,10 +230,10 @@ export function ProfileCard() {
       showsVerticalScrollIndicator={false}
     >
       <ProfileSection
-        title={t('account')}
+        title='Account'
         footer={
           <Text type='xxs' color='gray.textLow' style={styles.footerText}>
-            {t('userId', { id: user.id })}
+            {`User ID: ${user.id}`}
           </Text>
         }
       >
@@ -267,22 +273,19 @@ export function ProfileCard() {
           </View>
         </PressableArea>
 
-        <InfoRow
-          label={t('channel')}
-          value={user.broadcaster_type || t('viewer')}
-        />
-        <InfoRow label={t('memberSince')} value={memberSince} />
+        <InfoRow label='Channel' value={user.broadcaster_type || 'Viewer'} />
+        <InfoRow label='Member Since' value={memberSince} />
       </ProfileSection>
 
-      <ProfileSection title={t('twitch')}>
+      <ProfileSection title='Twitch'>
         <ActionRow
-          title={t('myChannel')}
+          title='My Channel'
           icon='tv'
           color={theme.colorWhite}
           onPress={() => router.push(`/streams/streamer-profile/${user.login}`)}
         />
         <ActionRow
-          title={t('blockedUsers')}
+          title='Blocked Users'
           icon='person.crop.circle.badge.xmark'
           color={theme.colorWhite}
           onPress={() => router.push('/preferences/blocked-users')}
@@ -290,15 +293,15 @@ export function ProfileCard() {
       </ProfileSection>
 
       <ProfileSection
-        title={t('session')}
+        title='Session'
         footer={
           <Text type='xxs' color='gray.textLow' style={styles.footerText}>
-            {t('sessionFooter')}
+            Signing out removes your saved Twitch token from this device.
           </Text>
         }
       >
         <ActionRow
-          title={t('logOut')}
+          title='Log out'
           icon='arrow.left.square'
           destructive
           showChevron={false}
@@ -309,12 +312,14 @@ export function ProfileCard() {
       <ProfileSection
         footer={
           <Text type='xxs' color='gray.textLow' style={styles.footerText}>
-            {t('deleteAccountFooter')}
+            {
+              "Account deletion is handled by Twitch. This opens Twitch's Security and Privacy settings, where you can disable or delete your account."
+            }
           </Text>
         }
       >
         <ActionRow
-          title={t('deleteAccount')}
+          title='Delete Account'
           icon='trash.fill'
           destructive
           showChevron={false}

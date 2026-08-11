@@ -1,5 +1,4 @@
 import { Platform, StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import {
   Host,
@@ -23,16 +22,21 @@ import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 
 export function ThemePreferenceScreen() {
-  const { t } = useTranslation('preferences');
-
   if (Platform.OS === 'ios') {
     return (
       <Host style={styles.container} colorScheme='dark'>
         <List modifiers={[listStyle('insetGrouped')]}>
-          <Section footer={<NativeText>{t('foamDarkFootnote')}</NativeText>}>
+          <Section
+            footer={
+              <NativeText>
+                Additional themes can be added later on top of the new token
+                system.
+              </NativeText>
+            }
+          >
             <HStack>
               <NativeText modifiers={[foregroundStyle(theme.color.text.dark)]}>
-                {t('foamDarkTitle')}
+                Foam Dark
               </NativeText>
               <Spacer />
               <NativeImage
@@ -51,14 +55,15 @@ export function ThemePreferenceScreen() {
     <View style={styles.container}>
       <EmptyLayout variant='outline' style={styles.empty}>
         <EmptyLayoutHeader>
-          <EmptyLayoutTitle>{t('foamDarkTitle')}</EmptyLayoutTitle>
+          <EmptyLayoutTitle>Foam Dark</EmptyLayoutTitle>
           <EmptyLayoutDescription>
-            {t('foamDarkDescription')}
+            The redesign now runs on a single cinematic theme instead of
+            splitting effort across legacy variants.
           </EmptyLayoutDescription>
         </EmptyLayoutHeader>
         <EmptyLayoutContent>
           <Text type='sm' color='gray.textLow'>
-            {t('foamDarkFootnote')}
+            Additional themes can be added later on top of the new token system.
           </Text>
         </EmptyLayoutContent>
       </EmptyLayout>

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 import {
@@ -31,7 +30,6 @@ import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useDebugOptions } from '@app/hooks/useDebugOptions';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import i18next from '@app/i18n/i18next';
 import { NAMESPACE, storageService } from '@app/lib/storage';
 import { twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
@@ -39,18 +37,14 @@ import { theme } from '@app/styles/themes';
 import { PaintRendererSection } from './components/PaintRendererSection';
 
 function handleClearDebugStorage() {
-  Alert.alert(
-    i18next.t('devTools:clearStorageConfirm'),
-    i18next.t('devTools:clearStorageMessage', { namespace: NAMESPACE }),
-    [
-      { text: i18next.t('common:cancel'), style: 'cancel' },
-      {
-        text: i18next.t('devTools:clear'),
-        style: 'destructive',
-        onPress: () => storageService.clear(),
-      },
-    ],
-  );
+  Alert.alert('Clear storage?', `This will wipe ${NAMESPACE}`, [
+    { text: 'Cancel', style: 'cancel' },
+    {
+      text: 'Clear',
+      style: 'destructive',
+      onPress: () => storageService.clear(),
+    },
+  ]);
 }
 
 function handleToggleReactQueryDebug(val: boolean) {
@@ -58,7 +52,6 @@ function handleToggleReactQueryDebug(val: boolean) {
 }
 
 export function DebugScreen() {
-  const { t } = useTranslation('devTools');
   const debugOptions = useDebugOptions();
   const { user, authState } = useAuthContext();
 
@@ -68,7 +61,7 @@ export function DebugScreen() {
   const reactQueryEnabled = debugOptions.ReactQueryDebug?.enabled ?? false;
   const scrollRef = useRef<ScrollView>(null);
   const accessToken = authState?.token?.accessToken ?? '';
-  const tokenKind = authState?.isAnonAuth ? t('anon') : t('user');
+  const tokenKind = authState?.isAnonAuth ? 'anon' : 'user';
 
   useScrollToTop(scrollRef);
 
@@ -106,9 +99,9 @@ export function DebugScreen() {
     try {
       const res = await twitchService.getUser(username);
       await Clipboard.setStringAsync(res.id);
-      Alert.alert(i18next.t('devTools:copied'), res.id);
+      Alert.alert('Copied', res.id);
     } catch {
-      Alert.alert(i18next.t('devTools:notFound'));
+      Alert.alert('Not found');
     }
   }, [username]);
 
@@ -117,12 +110,12 @@ export function DebugScreen() {
       return;
     }
     await Clipboard.setStringAsync(accessToken);
-    toast.success(i18next.t('devTools:copied'));
+    toast.success('Copied');
   }, [accessToken]);
 
   const handleCopyStorageState = useCallback(async () => {
     await Clipboard.setStringAsync(JSON.stringify(debugOptions, null, 2));
-    toast.success(i18next.t('devTools:storageStateCopied'));
+    toast.success('Storage state copied');
   }, [debugOptions]);
 
   const handleJoinChannel = useCallback(() => {
@@ -140,27 +133,23 @@ export function DebugScreen() {
       <Host style={styles.iosHost}>
         <Form>
           <Section
-            title={t('storage')}
-            footer={
-              <NativeText>
-                {t('wipeNamespace', { namespace: NAMESPACE })}
-              </NativeText>
-            }
+            title='Storage'
+            footer={<NativeText>{`Wipe ${NAMESPACE}`}</NativeText>}
           >
             <Toggle
               isOn={reactQueryEnabled}
               onIsOnChange={handleToggleReactQueryDebug}
             >
-              <NativeText>{t('rqDevTools')}</NativeText>
-              <NativeText>{t('rqDevToolsDescription')}</NativeText>
+              <NativeText>RQ DevTools</NativeText>
+              <NativeText>Shows React Query debugger</NativeText>
             </Toggle>
             <NativeButton
-              label={t('copyStorageState')}
+              label='Copy storage state'
               systemImage='doc.on.doc'
               onPress={() => void handleCopyStorageState()}
             />
             <NativeButton
-              label={t('clearStorage')}
+              label='Clear storage'
               systemImage='trash'
               // eslint-disable-next-line jsx-a11y/aria-role, react-doctor/aria-role -- SwiftUI Button role, not ARIA
               role='destructive'
@@ -170,9 +159,9 @@ export function DebugScreen() {
 
           <PaintRendererSection />
 
-          <Section title={t('usernameToId')}>
+          <Section title='Username → ID'>
             <TextField
-              placeholder={t('usernamePlaceholder')}
+              placeholder='username'
               onTextChange={setUsername}
               modifiers={[
                 autocorrectionDisabled(true),
@@ -180,41 +169,39 @@ export function DebugScreen() {
               ]}
             />
             <NativeButton
-              label={t('copyUserId')}
+              label='Copy user ID'
               systemImage='number'
               onPress={() => void handleConvertUsername()}
             />
           </Section>
 
           <Section
-            title={t('token')}
+            title='Token'
             footer={
               <NativeText>
                 {accessToken
                   ? `${tokenKind} · …${accessToken.slice(-16)}`
-                  : t('noToken')}
+                  : 'No token available'}
               </NativeText>
             }
           >
             <NativeButton
-              label={t('copyToken')}
+              label='Copy access token'
               systemImage='key'
               onPress={() => void handleCopyToken()}
             />
           </Section>
 
           <Section
-            title={t('joinChannel')}
+            title='Join channel'
             footer={
               user ? (
-                <NativeText>
-                  {t('loggedInAs', { name: user.display_name })}
-                </NativeText>
+                <NativeText>{`logged in as ${user.display_name}`}</NativeText>
               ) : undefined
             }
           >
             <TextField
-              placeholder={t('channelPlaceholderShort')}
+              placeholder='channel'
               onTextChange={setChannelName}
               modifiers={[
                 autocorrectionDisabled(true),
@@ -222,7 +209,7 @@ export function DebugScreen() {
               ]}
             />
             <NativeButton
-              label={t('joinChannel')}
+              label='Join channel'
               systemImage='arrow.right.circle'
               onPress={handleJoinChannel}
             />
@@ -242,22 +229,22 @@ export function DebugScreen() {
           keyboardDismissMode='on-drag'
           keyboardShouldPersistTaps='handled'
         >
-          <SettingsSection title={t('storage')}>
+          <SettingsSection title='Storage'>
             <SettingsToggleRow
-              title={t('rqDevTools')}
-              subtitle={t('rqDevToolsDescription')}
+              title='RQ DevTools'
+              subtitle='Shows React Query debugger'
               icon={{ icon: 'ladybug', color: theme.colorOrange }}
               value={reactQueryEnabled}
               onValueChange={handleToggleReactQueryDebug}
             />
             <SettingsLinkRow
-              title={t('copyStorageState')}
+              title='Copy storage state'
               icon={{ icon: 'doc.on.doc', color: theme.colorBlue }}
               onPress={() => void handleCopyStorageState()}
             />
             <SettingsLinkRow
-              title={t('clearStorage')}
-              subtitle={t('wipeNamespace', { namespace: NAMESPACE })}
+              title='Clear storage'
+              subtitle={`Wipe ${NAMESPACE}`}
               icon={{ icon: 'trash', color: theme.colorRed }}
               onPress={handleClearDebugStorage}
               danger
@@ -266,11 +253,11 @@ export function DebugScreen() {
 
           <PaintRendererSection />
 
-          <SettingsSection title={t('usernameToId')}>
+          <SettingsSection title='Username → ID'>
             <View style={styles.inputRow}>
               <Input
                 style={styles.input}
-                placeholder={t('usernamePlaceholder')}
+                placeholder='username'
                 value={username}
                 onChangeText={setUsername}
                 autoCapitalize='none'
@@ -283,35 +270,35 @@ export function DebugScreen() {
                 style={styles.goBtn}
               >
                 <Text type='sm' weight='semibold'>
-                  {t('copy')}
+                  copy
                 </Text>
               </Button>
             </View>
           </SettingsSection>
 
           <SettingsSection
-            title={t('token')}
+            title='Token'
             footer={
               <Text type='xs' color='gray.textLow'>
                 {accessToken
                   ? `${tokenKind} · …${accessToken.slice(-16)}`
-                  : t('noToken')}
+                  : 'No token available'}
               </Text>
             }
           >
             <SettingsLinkRow
-              title={t('copyToken')}
+              title='Copy access token'
               icon={{ icon: 'key', color: theme.colorTeal }}
               onPress={() => void handleCopyToken()}
             />
           </SettingsSection>
 
           <SettingsSection
-            title={t('joinChannel')}
+            title='Join channel'
             footer={
               user ? (
                 <Text type='xs' color='gray.textLow'>
-                  {t('loggedInAs', { name: user.display_name })}
+                  {`logged in as ${user.display_name}`}
                 </Text>
               ) : undefined
             }
@@ -319,7 +306,7 @@ export function DebugScreen() {
             <View style={styles.inputRow}>
               <Input
                 style={styles.input}
-                placeholder={t('channelPlaceholderShort')}
+                placeholder='channel'
                 value={channelName}
                 onChangeText={setChannelName}
                 autoCapitalize='none'
@@ -329,7 +316,7 @@ export function DebugScreen() {
               />
               <Button onPress={handleJoinChannel} style={styles.joinBtn}>
                 <Text type='sm' weight='semibold' style={styles.joinBtnText}>
-                  {t('go')}
+                  Go
                 </Text>
               </Button>
             </View>

@@ -1,6 +1,5 @@
 import { memo, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import {
   LegendList,
@@ -65,7 +64,6 @@ export const CommandSuggestions = memo(function CommandSuggestions({
   commands,
   handleCommandSelect,
 }: CommandSuggestionsProps) {
-  const { t } = useTranslation('chat');
   const extraData = useMemo<CommandSuggestionListExtra>(
     () => ({ onPress: handleCommandSelect }),
     [handleCommandSelect],
@@ -74,9 +72,7 @@ export const CommandSuggestions = memo(function CommandSuggestions({
   return (
     <View style={suggestionRailStyles.richWrapper}>
       <View style={suggestionRailStyles.richContainer}>
-        <Text style={suggestionRailStyles.headerLabel}>
-          {t('composer.commands')}
-        </Text>
+        <Text style={suggestionRailStyles.headerLabel}>Commands</Text>
         <LegendList
           data={commands}
           horizontal

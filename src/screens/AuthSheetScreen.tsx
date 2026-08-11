@@ -1,5 +1,4 @@
 import { StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LinearGradient } from 'expo-linear-gradient';
@@ -33,7 +32,6 @@ function handleDismiss() {
 }
 
 export function AuthSheetScreen() {
-  const { t } = useTranslation(['auth', 'common']);
   const { isPromptingAuth, isSignInReady, startSignIn } = useTwitchSignIn({
     onSuccess: handleAuthSuccess,
   });
@@ -48,7 +46,7 @@ export function AuthSheetScreen() {
           hitSlop={8}
         >
           <Text type='md' style={{ color: theme.colorPrimary }}>
-            {t('common:cancel')}
+            Cancel
           </Text>
         </PressableScale>
       </View>
@@ -64,7 +62,7 @@ export function AuthSheetScreen() {
           </View>
           <View style={styles.headerCopy}>
             <Text type='xxs' weight='bold' style={styles.eyebrow}>
-              {t('eyebrow')}
+              FOAM
             </Text>
             <Text
               type='3xl'
@@ -72,17 +70,18 @@ export function AuthSheetScreen() {
               color='gray.text'
               style={styles.title}
             >
-              {t('title')}
+              Sign in with Twitch
             </Text>
             <Text type='sm' color='gray.textLow' style={styles.subtitle}>
-              {t('subtitle')}
+              Open your followed channels, chat access, and third-party emotes
+              in one place.
             </Text>
           </View>
         </View>
 
         <Button
           accessibilityRole='button'
-          label={t('continueWithTwitch')}
+          label='Continue with Twitch'
           onPress={() => {
             impact('light');
             void startSignIn();
@@ -111,15 +110,15 @@ export function AuthSheetScreen() {
               />
             </View>
             <Text type='sm' color='gray.text' weight='bold'>
-              {isPromptingAuth ? t('openingTwitch') : t('continueWithTwitch')}
+              {isPromptingAuth ? 'Opening Twitch...' : 'Continue with Twitch'}
             </Text>
           </LinearGradient>
         </Button>
 
         <View style={styles.featureList}>
-          <FeatureItem icon='message' label={t('featureChat')} />
-          <FeatureItem icon='star' label={t('featureEmotes')} />
-          <FeatureItem icon='person.2' label={t('featureUi')} />
+          <FeatureItem icon='message' label='Twitch chat' />
+          <FeatureItem icon='star' label='BTTV, FFZ, and 7TV emotes' />
+          <FeatureItem icon='person.2' label='Minimal UI' />
         </View>
       </View>
     </SafeAreaView>

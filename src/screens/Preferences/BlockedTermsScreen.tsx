@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
 import { Alert, Platform, StyleSheet, TextInput, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 import {
@@ -43,15 +42,14 @@ function TermRow({
   term: string;
   onRemove: (term: string) => void;
 }) {
-  const { t } = useTranslation(['preferences', 'common']);
   const handleRemove = useCallback(() => {
     Alert.alert(
-      t('removeBlockedTerm'),
-      t('removeBlockedTermConfirm', { term }),
+      'Remove blocked term',
+      `Remove "${term}" from your blocked terms?`,
       [
-        { text: t('common:cancel'), style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: t('remove'),
+          text: 'Remove',
           style: 'destructive',
           onPress: () => {
             impact('medium');
@@ -60,7 +58,7 @@ function TermRow({
         },
       ],
     );
-  }, [term, onRemove, t]);
+  }, [term, onRemove]);
 
   return (
     <View style={styles.row}>
@@ -79,8 +77,6 @@ function TermRow({
 }
 
 function EmptyState() {
-  const { t } = useTranslation('preferences');
-
   return (
     <View style={styles.emptyState}>
       <SymbolView
@@ -89,10 +85,10 @@ function EmptyState() {
         tintColor={Color.zinc[600]}
       />
       <Text type='lg' weight='medium' style={styles.emptyTitle}>
-        {t('noBlockedTerms')}
+        No blocked terms
       </Text>
       <Text type='sm' style={styles.emptySubtitle}>
-        {t('noBlockedTermsDescription')}
+        Messages containing a blocked term will be hidden from chat.
       </Text>
     </View>
   );
@@ -127,7 +123,6 @@ interface InputSectionProps {
 }
 
 function InputSection({ value, onChangeText, onAdd }: InputSectionProps) {
-  const { t } = useTranslation('preferences');
   const canAdd = value.trim().length > 0;
 
   return (
@@ -135,7 +130,7 @@ function InputSection({ value, onChangeText, onAdd }: InputSectionProps) {
       <TextInput
         autoCapitalize='none'
         autoCorrect={false}
-        placeholder={t('addTermPlaceholder')}
+        placeholder='Add a term to block…'
         placeholderTextColor={Color.zinc[500]}
         value={value}
         onChangeText={onChangeText}
@@ -158,7 +153,6 @@ function InputSection({ value, onChangeText, onAdd }: InputSectionProps) {
 }
 
 function NativeBlockedTermsList() {
-  const { t } = useTranslation('preferences');
   const { addTerm, blockedTerms, updatePreferences } = useBlockedTerms();
   const termText = useNativeState('');
 
@@ -183,7 +177,7 @@ function NativeBlockedTermsList() {
         <Section>
           <TextField
             text={termText}
-            placeholder={t('addTermPlaceholder')}
+            placeholder='Add a term to block…'
             modifiers={[
               autocorrectionDisabled(true),
               textInputAutocapitalization('never'),
@@ -196,7 +190,7 @@ function NativeBlockedTermsList() {
           <Section
             footer={
               <NativeText>
-                {t('termsFooter', { count: blockedTerms.length })}
+                {`${blockedTerms.length} ${blockedTerms.length === 1 ? 'term' : 'terms'} · Messages containing these will be hidden from chat.`}
               </NativeText>
             }
           >
@@ -213,7 +207,6 @@ function NativeBlockedTermsList() {
 }
 
 export function BlockedTermsScreen() {
-  const { t } = useTranslation('preferences');
   const { addTerm, blockedTerms, updatePreferences } = useBlockedTerms();
   const [inputValue, setInputValue] = useState('');
   const listRef = useRef<FlashListRef<string>>(null);
@@ -273,7 +266,7 @@ export function BlockedTermsScreen() {
         ListFooterComponent={
           hasTerms ? (
             <Text type='xs' style={styles.footer}>
-              {t('termsFooter', { count: blockedTerms.length })}
+              {`${blockedTerms.length} ${blockedTerms.length === 1 ? 'term' : 'terms'} · Messages containing these will be hidden from chat.`}
             </Text>
           ) : null
         }

@@ -1,12 +1,9 @@
-import { useTranslation } from 'react-i18next';
-
 import { Redirect, Stack } from 'expo-router';
 
 import { useDevToolsAccess } from '@app/utils/devTools/devToolsGate';
 import { nativeStackScreenOptions } from '@app/utils/navigation/nativeStackOptions';
 
 export default function DevToolsLayout() {
-  const { t } = useTranslation('navigation');
   const access = useDevToolsAccess();
   if (access === 'pending') {
     return null;
@@ -19,35 +16,38 @@ export default function DevToolsLayout() {
     <Stack screenOptions={nativeStackScreenOptions}>
       <Stack.Screen
         name='changelog'
-        options={{ title: t('changelogDemo'), headerBackTitle: t('devTools') }}
+        options={{ title: 'Changelog Demo', headerBackTitle: 'Dev Tools' }}
       />
       <Stack.Screen
         name='debug'
-        options={{ title: t('debug'), headerBackTitle: t('devTools') }}
+        options={{ title: 'Debug', headerBackTitle: 'Dev Tools' }}
       />
       <Stack.Screen
         name='diagnostics'
-        options={{ title: t('diagnostics'), headerBackTitle: t('devTools') }}
+        options={{ title: 'Diagnostics', headerBackTitle: 'Dev Tools' }}
       />
       <Stack.Screen
         name='sentry-demo'
-        options={{ title: t('sentryTest'), headerBackTitle: t('devTools') }}
+        options={{ title: 'Sentry Test', headerBackTitle: 'Dev Tools' }}
       />
       <Stack.Screen
         name='image-benchmark'
-        options={{ title: t('imageBenchmark'), headerBackTitle: t('devTools') }}
+        options={{ title: 'Image Benchmark', headerBackTitle: 'Dev Tools' }}
       />
       <Stack.Screen
         name='chat-perf'
-        options={{ title: t('chatPerf'), headerBackTitle: t('devTools') }}
+        options={{ title: 'Chat Perf', headerBackTitle: 'Dev Tools' }}
       />
       <Stack.Screen
         name='env-vars'
-        options={{ title: t('envVars'), headerBackTitle: t('devTools') }}
+        options={{
+          title: 'Environment Variables',
+          headerBackTitle: 'Dev Tools',
+        }}
       />
       <Stack.Screen
         name='synced-emotes'
-        options={{ title: t('syncedEmotes'), headerBackTitle: t('devTools') }}
+        options={{ title: 'Synced Emotes', headerBackTitle: 'Dev Tools' }}
       />
     </Stack>
   );

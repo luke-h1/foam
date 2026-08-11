@@ -1,6 +1,5 @@
 import { useRef } from 'react';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Form, Host, Section, Text as UIText } from '@expo/ui/swift-ui';
@@ -42,7 +41,6 @@ export function SettingsIndexScreen() {
   const { openStore, updateBundle } = useAppUpdate();
   const shouldShowDevTools =
     isDevToolsEnabled || isAdminLogin(user?.login, config.admins.value);
-  const { t } = useTranslation('settings');
 
   useScrollToTop(scrollRef);
 
@@ -62,47 +60,47 @@ export function SettingsIndexScreen() {
     return (
       <Host style={styles.iosHost}>
         <Form>
-          <Section title={t('streamExperience')}>
+          <Section title='Stream Experience'>
             <FormNavigationRow
-              label={t('chat')}
+              label='Chat'
               systemImage='bubble.left.and.bubble.right'
               onPress={() => router.push('/tabs/settings/chat-preferences')}
             />
             <FormNavigationRow
-              label={t('blockedTerms')}
+              label='Blocked Terms'
               systemImage='text.badge.xmark'
               onPress={() => router.push('/tabs/settings/blocked-terms')}
             />
             <FormNavigationRow
-              label={t('emotesAndBadges')}
+              label='Emotes & Badges'
               systemImage='face.smiling'
               onPress={() => router.push('/tabs/settings/emotes-and-badges')}
             />
             <FormNavigationRow
-              label={t('savedPhrases')}
+              label='Saved Phrases'
               systemImage='text.bubble'
               onPress={() => router.push('/tabs/settings/saved-phrases')}
             />
             <FormNavigationRow
-              label={t('myClips')}
+              label='My Clips'
               systemImage='scissors'
               onPress={() => router.push('/tabs/settings/my-clips')}
             />
             <FormNavigationRow
-              label={t('cache')}
+              label='Cache'
               systemImage='externaldrive'
               onPress={() => router.push('/tabs/settings/cache')}
             />
             <FormNavigationRow
-              label={t('appearance')}
+              label='Appearance'
               systemImage='paintpalette'
               onPress={() => router.push('/tabs/settings/appearance')}
             />
           </Section>
 
-          <Section title={t('account')}>
+          <Section title='Account'>
             <FormNavigationRow
-              label={user ? t('profile') : t('signIn')}
+              label={user ? 'Profile' : 'Sign In'}
               systemImage='person.circle'
               onPress={() => {
                 if (user) {
@@ -115,51 +113,51 @@ export function SettingsIndexScreen() {
             />
           </Section>
 
-          <Section title={t('supportAndFeedback')}>
+          <Section title='Support & Feedback'>
             <FormNavigationRow
-              label={t('aboutFoam')}
+              label='About Foam'
               systemImage='info.circle'
               onPress={() => router.push('/tabs/settings/about')}
             />
             <Button
-              label={t('faq')}
+              label='FAQ'
               systemImage='questionmark.circle'
               onPress={() => openLinkInBrowser('https://foam-app.com/faq')}
             />
             <Button
-              label={t('sendFeedback')}
+              label='Send Feedback'
               systemImage='paperplane'
               onPress={handleSendFeedback}
             />
             <Button
-              label={t('status')}
+              label='Status'
               systemImage='checkmark.shield'
               onPress={() => openLinkInBrowser(statusPageUrl.value)}
             />
             <Button
-              label={t('website')}
+              label='Website'
               systemImage='globe'
               onPress={() => openLinkInBrowser(websiteUrl.value)}
             />
             <Button
-              label={t('ossLicenses')}
+              label='OSS Licenses'
               systemImage='doc.text'
-              onPress={() => openLicenseList(t('ossLicenses'))}
+              onPress={() => openLicenseList('OSS Licenses')}
             />
           </Section>
 
           {canSeeUpdateAppButton || bundleButtonEnabled ? (
-            <Section title={t('appUpdates')}>
+            <Section title='App Updates'>
               {canSeeUpdateAppButton ? (
                 <Button
-                  label={t('updateApp')}
+                  label='Update App'
                   systemImage='arrow.down.app'
                   onPress={openStore}
                 />
               ) : null}
               {bundleButtonEnabled ? (
                 <Button
-                  label={t('updateBundle')}
+                  label='Update Bundle'
                   systemImage='arrow.triangle.2.circlepath'
                   onPress={updateBundle}
                 />
@@ -168,18 +166,18 @@ export function SettingsIndexScreen() {
           ) : null}
 
           <Section
-            title={shouldShowDevTools ? t('developer') : t('more')}
+            title={shouldShowDevTools ? 'Developer' : 'More'}
             footer={<UIText>{getBuildInfoLabel()}</UIText>}
           >
             {shouldShowDevTools ? (
               <FormNavigationRow
-                label={t('devTools')}
+                label='Dev Tools'
                 systemImage='hammer'
                 onPress={() => router.push('/tabs/settings/dev-tools')}
               />
             ) : null}
             <FormNavigationRow
-              label={t('other')}
+              label='Other'
               systemImage='ellipsis.circle'
               onPress={() => router.push('/tabs/settings/other')}
             />
@@ -199,10 +197,10 @@ export function SettingsIndexScreen() {
           { paddingBottom: insets.bottom + theme.space56 },
         ]}
       >
-        <SettingsSection title={t('streamExperience')}>
+        <SettingsSection title='Stream Experience'>
           <SettingsLinkRow
-            title={t('chat')}
-            subtitle={t('chatDescription')}
+            title='Chat'
+            subtitle='Density, timestamps, mentions, emotes, and badges'
             icon={{
               icon: 'bubble.left.and.bubble.right',
               color: theme.colorPlum,
@@ -210,47 +208,51 @@ export function SettingsIndexScreen() {
             onPress={() => router.push('/tabs/settings/chat-preferences')}
           />
           <SettingsLinkRow
-            title={t('blockedTerms')}
-            subtitle={t('blockedTermsDescription')}
+            title='Blocked Terms'
+            subtitle='Hide chat messages containing specific words or phrases'
             icon={{ icon: 'text.badge.xmark', color: theme.colorRed }}
             onPress={() => router.push('/tabs/settings/blocked-terms')}
           />
           <SettingsLinkRow
-            title={t('emotesAndBadges')}
-            subtitle={t('emotesAndBadgesDescription')}
+            title='Emotes & Badges'
+            subtitle='Browse global Twitch, BTTV, FFZ, and 7TV emotes and badges'
             icon={{ icon: 'face.smiling', color: theme.colorAmber }}
             onPress={() => router.push('/tabs/settings/emotes-and-badges')}
           />
           <SettingsLinkRow
-            title={t('savedPhrases')}
-            subtitle={t('savedPhrasesDescription')}
+            title='Saved Phrases'
+            subtitle='Save phrases to quickly insert while chatting'
             icon={{ icon: 'text.bubble', color: theme.colorBlue }}
             onPress={() => router.push('/tabs/settings/saved-phrases')}
           />
           <SettingsLinkRow
-            title={t('myClips')}
-            subtitle={t('myClipsDescription')}
+            title='My Clips'
+            subtitle='Clips you have created in foam'
             icon={{ icon: 'scissors', color: theme.colorViolet }}
             onPress={() => router.push('/tabs/settings/my-clips')}
           />
           <SettingsLinkRow
-            title={t('cache')}
-            subtitle={t('cacheDescription')}
+            title='Cache'
+            subtitle='Clear local app data, emotes, badges, and media'
             icon={{ icon: 'externaldrive', color: theme.colorPrimary }}
             onPress={() => router.push('/tabs/settings/cache')}
           />
           <SettingsLinkRow
-            title={t('appearance')}
-            subtitle={t('appearanceDescription')}
+            title='Appearance'
+            subtitle='Theme and visual mode'
             icon={{ icon: 'paintpalette', color: theme.colorAmber }}
             onPress={() => router.push('/tabs/settings/appearance')}
           />
         </SettingsSection>
 
-        <SettingsSection title={t('account')}>
+        <SettingsSection title='Account'>
           <SettingsLinkRow
-            title={user ? t('profile') : t('signIn')}
-            subtitle={user ? t('profileDescription') : t('signInDescription')}
+            title={user ? 'Profile' : 'Sign In'}
+            subtitle={
+              user
+                ? 'Channel identity, blocked users, and sign-out controls'
+                : 'Connect your Twitch account to unlock following and chat'
+            }
             icon={{ icon: 'person.circle', color: theme.colorTeal }}
             onPress={() => {
               if (user) {
@@ -263,57 +265,57 @@ export function SettingsIndexScreen() {
           />
         </SettingsSection>
 
-        <SettingsSection title={t('supportAndFeedback')}>
+        <SettingsSection title='Support & Feedback'>
           <SettingsLinkRow
-            title={t('aboutFoam')}
-            subtitle={t('aboutFoamDescription')}
+            title='About Foam'
+            subtitle='What the app is built for and where to reach us'
             icon={{ icon: 'info.circle', color: theme.colorBlue }}
             onPress={() => router.push('/tabs/settings/about')}
           />
           <SettingsLinkRow
-            title={t('faq')}
-            subtitle={t('faqDescription')}
+            title='FAQ'
+            subtitle='Common questions and help information'
             icon={{ icon: 'questionmark.circle', color: theme.colorPrimary }}
             onPress={() => openLinkInBrowser('https://foam-app.com/faq')}
           />
           <SettingsLinkRow
-            title={t('sendFeedback')}
-            subtitle={t('sendFeedbackDescription')}
+            title='Send Feedback'
+            subtitle='Share feedback, ideas, or what could be better'
             icon={{ icon: 'paperplane', color: theme.colorTeal }}
             onPress={handleSendFeedback}
           />
           <SettingsLinkRow
-            title={t('status')}
-            subtitle={t('statusDescription')}
+            title='Status'
+            subtitle='Check service availability and operational updates'
             icon={{ icon: 'checkmark.shield', color: theme.colorOrange }}
             onPress={() => openLinkInBrowser(statusPageUrl.value)}
           />
           <SettingsLinkRow
-            title={t('website')}
-            subtitle={t('websiteDescription')}
+            title='Website'
+            subtitle='Product site and public links'
             icon={{ icon: 'globe', color: theme.colorViolet }}
             onPress={() => openLinkInBrowser(websiteUrl.value)}
           />
           <SettingsLinkRow
-            title={t('ossLicenses')}
-            subtitle={t('ossLicensesDescription')}
+            title='OSS Licenses'
+            subtitle='Open-source software used by the app'
             icon={{ icon: 'doc.text', color: theme.colorViolet }}
-            onPress={() => openLicenseList(t('ossLicenses'))}
+            onPress={() => openLicenseList('OSS Licenses')}
           />
         </SettingsSection>
 
-        <SettingsSection title={t('appUpdates')}>
+        <SettingsSection title='App Updates'>
           {canSeeUpdateAppButton ? (
             <SettingsLinkRow
-              title={t('updateApp')}
-              subtitle={t('updateAppDescription')}
+              title='Update App'
+              subtitle='Get the latest version from the store'
               icon={{ icon: 'arrow.down.app', color: theme.colorTeal }}
               onPress={openStore}
             />
           ) : null}
           <SettingsLinkRow
-            title={t('updateBundle')}
-            subtitle={t('updateBundleDescription')}
+            title='Update Bundle'
+            subtitle='Download the latest over-the-air update'
             icon={{
               icon: 'arrow.triangle.2.circlepath',
               color: theme.colorBlue,
@@ -322,20 +324,18 @@ export function SettingsIndexScreen() {
           />
         </SettingsSection>
 
-        <SettingsSection
-          title={shouldShowDevTools ? t('developer') : t('more')}
-        >
+        <SettingsSection title={shouldShowDevTools ? 'Developer' : 'More'}>
           {shouldShowDevTools ? (
             <SettingsLinkRow
-              title={t('devTools')}
-              subtitle={t('devToolsDescription')}
+              title='Dev Tools'
+              subtitle='Diagnostics, cache tools, remote config, and Storybook'
               icon={{ icon: 'hammer', color: theme.colorOrange }}
               onPress={() => router.push('/tabs/settings/dev-tools')}
             />
           ) : null}
           <SettingsLinkRow
-            title={t('other')}
-            subtitle={t('otherDescription')}
+            title='Other'
+            subtitle='Licenses, changelog, and supporting reference screens'
             icon={{ icon: 'ellipsis.circle', color: theme.colorGrey }}
             onPress={() => router.push('/tabs/settings/other')}
           />
@@ -344,7 +344,7 @@ export function SettingsIndexScreen() {
         <View style={styles.buildWrap}>
           <BuildStatus />
           <Text type='xs' color='gray.textLow' style={styles.buildNote}>
-            {t('buildNote')}
+            Build details and release state for this install of Foam.
           </Text>
         </View>
       </ScrollView>

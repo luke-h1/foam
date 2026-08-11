@@ -1,6 +1,5 @@
 import { memo, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import { router } from 'expo-router';
 
@@ -31,7 +30,6 @@ export const CATEGORY_CARD_HEIGHT =
   IMAGE_HEIGHT + theme.space12 + TITLE_HEIGHT + theme.space16;
 
 export function CategoryCard({ category }: Props) {
-  const { t } = useTranslation('common');
   const handlePress = useCallback(() => {
     router.push(`/category/${category.id}`);
   }, [category.id]);
@@ -42,7 +40,7 @@ export function CategoryCard({ category }: Props) {
       title: category.name,
       actions: [
         {
-          label: t('shareCategory'),
+          label: 'Share category',
           onPress: () => {
             void shareDeepLink({
               kind: 'category',
@@ -52,9 +50,9 @@ export function CategoryCard({ category }: Props) {
           },
         },
       ],
-      cancelLabel: t('cancel'),
+      cancelLabel: 'Cancel',
     });
-  }, [category.id, category.name, t]);
+  }, [category.id, category.name]);
 
   if (!category?.id) {
     return null;

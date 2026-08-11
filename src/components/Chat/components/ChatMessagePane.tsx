@@ -6,7 +6,6 @@ import { KeyboardController } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text } from '@app/components/ui/Text/Text';
-import i18next from '@app/i18n/i18next';
 import { useMessages } from '@app/store/chat/react/selectors';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { theme } from '@app/styles/themes';
@@ -169,7 +168,7 @@ export const ChatMessagePane = memo(
             testID='chat-sync-placeholder'
           >
             <Text style={styles.connectingText}>
-              {i18next.t('chat:pane.connecting', { channelName })}
+              {`Connecting to ${channelName}'s chat...`}
             </Text>
           </View>
         )}
@@ -195,10 +194,10 @@ export const ChatMessagePane = memo(
         {visibleMessages.length === 0 && rawMessages.length > 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyStateTitle}>
-              {i18next.t('chat:pane.noMatchesTitle')}
+              No chat messages match the current view
             </Text>
             <Text style={styles.emptyStateBody}>
-              {i18next.t('chat:pane.noMatchesBody')}
+              Clear filters or jump back to the latest messages.
             </Text>
           </View>
         ) : null}

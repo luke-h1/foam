@@ -1,17 +1,14 @@
 /* eslint-disable no-undef */
 import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import Constants from 'expo-constants';
 
 import * as Form from '@app/components/Form/Form';
-import i18next from '@app/i18n/i18next';
 
 import { getHermesVersion } from '../util/getHermesVersion';
 import { getReleaseTypeAsync } from '../util/getReleaseTypeAsync';
 
 export function ExpoSection() {
-  const { t } = useTranslation('devTools');
   const [envName, setEnvName] = useState<string | null>(null);
 
   const sdkVersion = (() => {
@@ -19,7 +16,7 @@ export function ExpoSection() {
     if (current && current.includes('.')) {
       return current.split('.').shift();
     }
-    return current ?? i18next.t('devTools:unknown');
+    return current ?? 'Unknown';
   })();
 
   useEffect(() => {
@@ -32,16 +29,14 @@ export function ExpoSection() {
   return (
     <>
       <Form.Section title='Expo' titleHint={`SDK ${sdkVersion}`}>
-        <Form.Text hint={envName || t('unknown')}>{t('environment')}</Form.Text>
+        <Form.Text hint={envName || 'Unknown'}>Environment</Form.Text>
         {hermes && <Form.Text hint={hermes}>Hermes</Form.Text>}
         <Form.Text hint={__DEV__ ? 'development' : 'production'}>
-          {t('mode')}
+          Mode
         </Form.Text>
       </Form.Section>
-      <Form.Section footer={t('hostFooter')}>
-        <Form.Text hint={window.location?.href || t('unknownValue')}>
-          {t('host')}
-        </Form.Text>
+      <Form.Section footer='Embedded origin URL that Expo Router uses to invoke React Server Functions. This should be hosted and available to the client.'>
+        <Form.Text hint={window.location?.href || 'unknown'}>Host</Form.Text>
       </Form.Section>
     </>
   );

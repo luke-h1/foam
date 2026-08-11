@@ -9,7 +9,6 @@ import {
 import { useWindowDimensions } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 
-import i18next from 'i18next';
 import { toast } from 'sonner-native';
 
 import { getChatUserState } from '@app/services/twitch-chat-service';
@@ -171,12 +170,7 @@ export const ChatInputShell = memo(function ChatInputShell({
       const definition = findSlashCommandDefinition(commandName);
       if (definition) {
         toast.error(
-          i18next
-            .t('chat:modCommands.usage', {
-              name: definition.name,
-              argHint: definition.argHint ?? '',
-            })
-            .trimEnd(),
+          `Usage: /${definition.name} ${definition.argHint ?? ''}`.trimEnd(),
         );
         return;
       }

@@ -30,24 +30,24 @@ export type PreviewProvider = '7tv' | 'bttv' | 'ffz' | 'twitch';
 export type ProviderPreviewVariant = 'badges' | 'emotes';
 
 export const DENSITY_OPTIONS = [
-  { labelKey: 'densityComfortable', value: 'comfortable' },
-  { labelKey: 'densityCompact', value: 'compact' },
+  { label: 'Comfortable', value: 'comfortable' },
+  { label: 'Compact', value: 'compact' },
 ] as const;
 
 export const FONT_SCALE_OPTIONS = [
-  { labelKey: 'fontSmall', value: 'small' },
-  { labelKey: 'fontDefault', value: 'default' },
-  { labelKey: 'fontLarge', value: 'large' },
+  { label: 'Small', value: 'small' },
+  { label: 'Default', value: 'default' },
+  { label: 'Large', value: 'large' },
 ] as const;
 
 export const TIMESTAMP_FORMAT_OPTIONS = [
-  { labelKey: 'timestamp24h', value: '24h' },
-  { labelKey: 'timestamp12h', value: '12h' },
+  { label: '24-hour', value: '24h' },
+  { label: '12-hour', value: '12h' },
 ] as const;
 
 export const DELETED_STYLE_OPTIONS = [
-  { labelKey: 'deletedShowNotice', value: 'notice' },
-  { labelKey: 'deletedHide', value: 'hidden' },
+  { label: 'Show notice', value: 'notice' },
+  { label: 'Hide', value: 'hidden' },
 ] as const;
 
 export const SCROLLBACK_OPTIONS = [
@@ -60,13 +60,13 @@ export const SCROLLBACK_LABELS = SCROLLBACK_OPTIONS.map(option => option.label);
 
 // Chat-delay presets (auto-sync, off, manual seconds), shared by the iOS Picker and Android segmented control.
 export const CHAT_DELAY_OPTIONS = [
-  { labelKey: 'chatDelayAuto', value: 'auto' as const },
-  { labelKey: 'chatDelayOff', value: 'off' as const },
-  { labelKey: 'chatDelay2s', value: 2 as const },
-  { labelKey: 'chatDelay5s', value: 5 as const },
-  { labelKey: 'chatDelay8s', value: 8 as const },
-  { labelKey: 'chatDelay12s', value: 12 as const },
-  { labelKey: 'chatDelay15s', value: 15 as const },
+  { label: 'Auto', value: 'auto' as const },
+  { label: 'Off', value: 'off' as const },
+  { label: '2s', value: 2 as const },
+  { label: '5s', value: 5 as const },
+  { label: '8s', value: 8 as const },
+  { label: '12s', value: 12 as const },
+  { label: '15s', value: 15 as const },
 ] as const;
 
 export const EMOJI_PREVIEW_SHORTCODES = [':joy:', ':heart:', ':fire:'];
@@ -92,8 +92,8 @@ export const PROVIDER_PREVIEW_KEYS = [
 export const CONTEXT_TOGGLE_ROWS = [
   {
     key: 'chatTimestamps',
-    labelKey: 'showTimestamps',
-    subtitleKey: 'showTimestampsDescription',
+    label: 'Show Timestamps',
+    subtitle: 'Display message timestamps inline',
     icon: {
       icon: 'clock',
       androidIcon: 'schedule',
@@ -102,8 +102,8 @@ export const CONTEXT_TOGGLE_ROWS = [
   },
   {
     key: 'highlightOwnMentions',
-    labelKey: 'highlightOwnMentions',
-    subtitleKey: 'highlightOwnMentionsDescription',
+    label: 'Highlight Own Mentions',
+    subtitle: 'Accent messages that mention your username',
     icon: {
       icon: 'at',
       androidIcon: 'alternate_email',
@@ -112,8 +112,8 @@ export const CONTEXT_TOGGLE_ROWS = [
   },
   {
     key: 'showInlineReplyContext',
-    labelKey: 'inlineReplyContext',
-    subtitleKey: 'inlineReplyContextDescription',
+    label: 'Inline Reply Context',
+    subtitle: 'Show the replied-to message above responses',
     icon: {
       icon: 'arrowshape.turn.up.left',
       androidIcon: 'reply',
@@ -122,8 +122,8 @@ export const CONTEXT_TOGGLE_ROWS = [
   },
   {
     key: 'showUnreadJumpPill',
-    labelKey: 'showJumpPill',
-    subtitleKey: 'showJumpPillDescription',
+    label: 'Show Jump Pill',
+    subtitle: 'Display the unread jump-to-latest affordance',
     icon: {
       icon: 'arrow.down.circle',
       androidIcon: 'arrow_circle_down',
@@ -133,6 +133,6 @@ export const CONTEXT_TOGGLE_ROWS = [
 ] as const satisfies readonly {
   icon: { color: string; icon: SFSymbol; androidIcon: AndroidSymbol };
   key: ContextPreviewKey;
-  labelKey: string;
-  subtitleKey: string;
+  label: string;
+  subtitle: string;
 }[];

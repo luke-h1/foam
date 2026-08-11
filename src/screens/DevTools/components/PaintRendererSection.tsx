@@ -1,5 +1,4 @@
 import { Platform } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import { Picker, Section, Text as NativeText } from '@expo/ui/swift-ui';
 import { tag } from '@expo/ui/swift-ui/modifiers';
@@ -15,12 +14,12 @@ import { theme } from '@app/styles/themes';
 import { isDevToolsEnabled } from '@app/utils/devTools/isDevToolsEnabled';
 
 const PAINT_RENDERER_OPTIONS = [
-  { labelKey: 'paintRendererOff', value: 'off' },
-  { labelKey: 'paintRendererNative', value: 'native' },
-  { labelKey: 'paintRendererSkia', value: 'skia' },
-  { labelKey: 'paintRendererWebview', value: 'webview' },
+  { label: 'Off', value: 'off' },
+  { label: 'Native', value: 'native' },
+  { label: 'Skia', value: 'skia' },
+  { label: 'WebView', value: 'webview' },
 ] as const satisfies readonly {
-  labelKey: string;
+  label: string;
   value: SevenTvPaintRenderer;
 }[];
 
@@ -29,7 +28,6 @@ function isPaintRenderer(value: string): value is SevenTvPaintRenderer {
 }
 
 export function PaintRendererSection() {
-  const { t } = useTranslation('devTools');
   const sevenTvPaintRenderer = usePreference('sevenTvPaintRenderer');
   const update = useUpdatePreferences();
 
@@ -40,11 +38,16 @@ export function PaintRendererSection() {
   if (Platform.OS === 'ios') {
     return (
       <Section
-        title={t('paintRenderer')}
-        footer={<NativeText>{t('paintRendererDescription')}</NativeText>}
+        title='7TV Paint Renderer'
+        footer={
+          <NativeText>
+            Choose the username paint renderer. Off renders default name
+            colours; WebView is a dev-only reference.
+          </NativeText>
+        }
       >
         <Picker
-          label={t('paintRenderer')}
+          label='7TV Paint Renderer'
           systemImage='paintbrush.fill'
           selection={sevenTvPaintRenderer}
           onSelectionChange={value => {
@@ -55,7 +58,7 @@ export function PaintRendererSection() {
         >
           {PAINT_RENDERER_OPTIONS.map(option => (
             <NativeText key={option.value} modifiers={[tag(option.value)]}>
-              {t(option.labelKey)}
+              {option.label}
             </NativeText>
           ))}
         </Picker>
@@ -68,10 +71,10 @@ export function PaintRendererSection() {
   );
 
   return (
-    <SettingsSection title={t('paintRenderer')}>
+    <SettingsSection title='7TV Paint Renderer'>
       <ChatPreferenceSegmentedSettingsRow
-        title={t('paintRenderer')}
-        subtitle={t('paintRendererDescription')}
+        title='7TV Paint Renderer'
+        subtitle='Choose the username paint renderer. Off renders default name colours; WebView is a dev-only reference.'
         icon={{ icon: 'paintbrush.fill', color: theme.colorPlum }}
         onSelectIndex={index => {
           const next = PAINT_RENDERER_OPTIONS[index]?.value;
@@ -80,7 +83,7 @@ export function PaintRendererSection() {
           }
         }}
         selectedIndex={selectedIndex}
-        values={PAINT_RENDERER_OPTIONS.map(option => t(option.labelKey))}
+        values={PAINT_RENDERER_OPTIONS.map(option => option.label)}
       />
     </SettingsSection>
   );

@@ -1,6 +1,5 @@
 import { memo, type Ref, useCallback, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import { COMPOSER_INPUT_MIN_HEIGHT } from '@app/components/Chat/util/composerSizing';
 import { Input, type InputRef } from '@app/components/ui/Input/Input.ios';
@@ -42,7 +41,6 @@ function ChatComposerComponent({
   canSend,
   ref,
 }: ChatComposerProps) {
-  const { t } = useTranslation('chat');
   const inputRef = useRef<InputRef>(null);
   const { accentHex } = useAccentColor();
 
@@ -110,7 +108,7 @@ function ChatComposerComponent({
           <ComposerIconButton
             icon='face.smiling'
             iconSize={20}
-            label={t('composer.openEmotePicker')}
+            label='Open emote picker'
             onPress={onPressAdd}
           />
         ) : null}
@@ -133,8 +131,8 @@ function ChatComposerComponent({
               handleSelectionChange(selection.start)
             }
             onSubmitEditing={handleSubmit}
-            placeholder={placeholder ?? t('composer.sendAMessage')}
-            placeholderTextColor='rgba(255,255,255,0.46)'
+            placeholder={placeholder ?? 'Send a message...'}
+            placeholderTextColor={theme.color.textSecondary.dark}
             radius='xl'
             returnKeyType='send'
             /**
@@ -155,7 +153,7 @@ function ChatComposerComponent({
             disabled={!submitEnabled}
             icon='arrow.up'
             iconSize={16}
-            label={t('composer.sendMessage')}
+            label='Send message'
             onPress={handleSubmit}
             prominent
             prominentColor={accentHex ?? theme.colorViolet}
@@ -178,6 +176,12 @@ const styles = StyleSheet.create({
     backgroundColor: theme.darkActiveContent,
     borderRadius: 20,
     borderWidth: 0,
+    /**
+     * `Input`'s variants derive every colour - text included - from the accent,
+     * so without this the typed message renders in the accent instead of the
+     * body colour the Android composer uses.
+     */
+    color: theme.color.text.dark,
     maxHeight: 120,
     minHeight: COMPOSER_INPUT_MIN_HEIGHT,
     paddingBottom: 12,

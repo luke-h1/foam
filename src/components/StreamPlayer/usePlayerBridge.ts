@@ -9,7 +9,6 @@ import {
 import type { Ref } from 'react';
 import type { WebViewMessageEvent } from 'react-native-webview';
 
-import i18next from 'i18next';
 import { toast } from 'sonner-native';
 
 import { useLazyRef } from '@app/hooks/useLazyRef';
@@ -541,7 +540,7 @@ export function usePlayerBridge({
         );
         break;
       case 'showPipUnavailableToast':
-        toast.error(i18next.t('stream:pictureInPictureUnavailable'));
+        toast.error('Picture in Picture is not available for this stream');
         break;
       case 'unlockOverlay':
         setOverlayUnlocked(true);

@@ -1,6 +1,5 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
@@ -10,7 +9,6 @@ import { FlashList } from '@app/components/FlashList/FlashList';
 import { Image } from '@app/components/Image/Image';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { Text } from '@app/components/ui/Text/Text';
-import i18next from '@app/i18n/i18next';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
 import { twitchService } from '@app/services/twitch-service';
 import { removeCreatedClip } from '@app/store/createdClips/actions/createdClips';
@@ -26,8 +24,6 @@ interface MyClipListItem {
 }
 
 const MyClipRow = memo(function MyClipRow({ clip, record }: MyClipListItem) {
-  const { t } = useTranslation('stream');
-
   const handlePress = useCallback(() => {
     router.push(`/streams/clip/${encodeURIComponent(record.id)}`);
   }, [record.id]);
@@ -37,11 +33,11 @@ const MyClipRow = memo(function MyClipRow({ clip, record }: MyClipListItem) {
       title: clip?.title || record.broadcasterName,
       actions: [
         {
-          label: i18next.t('stream:removeFromMyClips'),
+          label: 'Remove from My Clips',
           onPress: () => removeCreatedClip(record.id),
         },
       ],
-      cancelLabel: i18next.t('common:cancel'),
+      cancelLabel: 'Cancel',
     });
   }, [clip?.title, record.broadcasterName, record.id]);
 
@@ -49,7 +45,7 @@ const MyClipRow = memo(function MyClipRow({ clip, record }: MyClipListItem) {
 
   return (
     <Button
-      label={clip?.title || t('untitledClip')}
+      label={clip?.title || 'Untitled clip'}
       onPress={handlePress}
       onLongPress={handleLongPress}
       style={styles.row}
@@ -67,14 +63,14 @@ const MyClipRow = memo(function MyClipRow({ clip, record }: MyClipListItem) {
       )}
       <View style={styles.rowText}>
         <Text numberOfLines={2} type='sm' weight='semibold'>
-          {clip ? clip.title || t('untitledClip') : t('clipProcessing')}
+          {clip ? clip.title || 'Untitled clip' : 'Processing…'}
         </Text>
         <Text numberOfLines={1} type='xs' color='gray'>
           {record.broadcasterName}
         </Text>
         {clip ? (
           <Text numberOfLines={1} type='xs' color='gray'>
-            {t('clipViews', { count: clip.view_count })}
+            {`${clip.view_count} views`}
           </Text>
         ) : null}
       </View>
@@ -91,7 +87,6 @@ function myClipKeyExtractor(item: MyClipListItem): string {
 }
 
 export function MyClipsScreen() {
-  const { t } = useTranslation('stream');
   const records = useCreatedClips();
   const clipIds = useMemo(() => records.map(record => record.id), [records]);
 
@@ -123,8 +118,8 @@ export function MyClipsScreen() {
     return (
       <EmptyState
         button={null}
-        content={t('myClipsEmptyDescription')}
-        heading={t('myClipsEmpty')}
+        content='Clips you create from the live player will show up here.'
+        heading='No clips yet'
         iconName='scissors'
         style={styles.emptyState}
       />

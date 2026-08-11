@@ -1,6 +1,5 @@
 import { memo, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
@@ -60,7 +59,6 @@ function pushRouteOnce(path: string) {
 }
 
 function LiveStreamCard({ stream, layout = 'compact' }: Props) {
-  const { t } = useTranslation('common');
   const queryClient = useQueryClient();
   const thumbnailSize =
     layout === 'media' ? MEDIA_THUMBNAIL_SIZE : COMPACT_THUMBNAIL_SIZE;
@@ -102,12 +100,12 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
       title: stream.user_name,
       actions: [
         {
-          label: t('viewProfile'),
+          label: 'View profile',
           onPress: () =>
             pushRouteOnce(`/streams/streamer-profile/${stream.user_login}`),
         },
         {
-          label: t('shareChannel'),
+          label: 'Share channel',
           onPress: () => {
             void shareDeepLink({
               kind: 'liveStream',
@@ -117,9 +115,9 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
           },
         },
       ],
-      cancelLabel: t('cancel'),
+      cancelLabel: 'Cancel',
     });
-  }, [stream.user_login, stream.user_name, t]);
+  }, [stream.user_login, stream.user_name]);
 
   const cardAccessibilityLabel = `${stream.user_name}, live, ${
     stream.game_name

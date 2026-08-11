@@ -1,6 +1,5 @@
 import { memo } from 'react';
 import { StyleSheet } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 
 import { Button } from '@app/components/Button/Button';
@@ -19,7 +18,6 @@ export interface ResumeScrollProps {
 }
 
 function ResumeScrollComponent({ onScrollToBottom }: ResumeScrollProps) {
-  const { t } = useTranslation('chat');
   const unreadCount = useChatUnreadCount();
 
   return (
@@ -38,7 +36,7 @@ function ResumeScrollComponent({ onScrollToBottom }: ResumeScrollProps) {
           size={16}
           tintColor={theme.colorAmberAlpha}
         />
-        <Text style={styles.resumeText}>{t('controls.jumpToLatest')}</Text>
+        <Text style={styles.resumeText}>Jump to latest</Text>
         {unreadCount > 0 && (
           <Text style={styles.resumeCount}> {unreadCount}</Text>
         )}

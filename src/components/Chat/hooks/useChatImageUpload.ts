@@ -3,7 +3,6 @@ import { useCallback, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { toast } from 'sonner-native';
 
-import i18next from '@app/i18n/i18next';
 import { kappaService } from '@app/services/kappa-service';
 import { logger } from '@app/utils/logger';
 
@@ -28,7 +27,7 @@ export function useChatImageUpload(onUploaded: (url: string) => void) {
       });
     } catch (error) {
       logger.chat.error('[kappa] image picker failed', { error });
-      toast.error(i18next.t('chat:imageUpload.failed'));
+      toast.error("Couldn't upload that image. Please try again.");
       return;
     }
 
@@ -45,10 +44,10 @@ export function useChatImageUpload(onUploaded: (url: string) => void) {
         mimeType: asset.mimeType ?? undefined,
       });
       onUploaded(link);
-      toast.success(i18next.t('chat:imageUpload.uploaded'));
+      toast.success('Image uploaded');
     } catch (error) {
       logger.chat.error('[kappa] chat image upload failed', { error });
-      toast.error(i18next.t('chat:imageUpload.failed'));
+      toast.error("Couldn't upload that image. Please try again.");
     } finally {
       setIsUploading(false);
     }

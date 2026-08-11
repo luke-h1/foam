@@ -4,7 +4,6 @@ import { View } from 'react-native';
 import { CHAT_NOTICE_ACCENTS } from '@app/components/Chat/components/util/chatNoticeAccents';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
-import i18next from '@app/i18n/i18next';
 import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
 import { canFlowInline } from '@app/utils/chat/deriveChatBody/canFlowInline';
 import { getMessageStructure } from '@app/utils/chat/deriveChatBody/getMessageStructure';
@@ -58,10 +57,8 @@ export function ReplyingToHeader({
   }, [parseTextForEmotes, replyBody]);
 
   const prefix = isReplyingToCurrentUser
-    ? i18next.t('chat:replyContext.replyingToYou')
-    : i18next.t('chat:replyContext.replyingToUser', {
-        username: parentDisplayName,
-      });
+    ? 'Replying to you'
+    : `Replying to @${parentDisplayName}`;
   const canRenderInlineQuote = canFlowInline(parsedReplyBody, {
     hasPaint: false,
     isModerated: false,

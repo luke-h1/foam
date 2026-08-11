@@ -2,7 +2,6 @@ import { View } from 'react-native';
 
 import { CHAT_NOTICE_ACCENTS } from '@app/components/Chat/components/util/chatNoticeAccents';
 import { Text } from '@app/components/ui/Text/Text';
-import i18next from '@app/i18n/i18next';
 import { reportUnrenderableNotice } from '@app/utils/chat/chatHealth/reportUnrenderableNotice';
 import type { ChatBodyVariant } from '@app/utils/chat/deriveChatBody/types';
 
@@ -96,11 +95,7 @@ export function ChatNoticeBody({
         compact={rendererArgs.compact}
         fontScale={rendererArgs.fontScale}
         icon={isUnraid ? 'xmark.circle.fill' : 'person.3.fill'}
-        label={
-          isUnraid
-            ? i18next.t('chat:notices.raidCancelled')
-            : i18next.t('chat:notices.raid')
-        }
+        label={isUnraid ? 'Raid cancelled' : 'Raid'}
         labelColor={CHAT_NOTICE_ACCENTS.raid}
         labelStyle={styles.raidNoticeMetaText}
       />

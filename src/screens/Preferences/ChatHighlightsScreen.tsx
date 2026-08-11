@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
 import { Alert, Platform, StyleSheet, TextInput, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 import {
@@ -33,7 +32,6 @@ import { FlashList } from '@app/components/FlashList/FlashList';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import i18next from '@app/i18n/i18next';
 import { impact } from '@app/lib/haptics';
 import {
   type CustomHighlight,
@@ -91,15 +89,14 @@ function HighlightRow({
   highlight: CustomHighlight;
   onRemove: (id: string) => void;
 }) {
-  const { t } = useTranslation(['preferences', 'common']);
   const handleRemove = useCallback(() => {
     Alert.alert(
-      t('removeHighlight'),
-      t('removeHighlightConfirm', { phrase: highlight.phrase }),
+      'Remove highlight',
+      `Stop highlighting messages containing "${highlight.phrase}"?`,
       [
-        { text: t('common:cancel'), style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: t('remove'),
+          text: 'Remove',
           style: 'destructive',
           onPress: () => {
             impact('medium');
@@ -108,7 +105,7 @@ function HighlightRow({
         },
       ],
     );
-  }, [highlight, onRemove, t]);
+  }, [highlight, onRemove]);
 
   return (
     <View style={styles.row}>
@@ -128,16 +125,15 @@ function HighlightRow({
 }
 
 function EmptyState() {
-  const { t } = useTranslation('preferences');
-
   return (
     <View style={styles.emptyState}>
       <SymbolView name='highlighter' size={48} tintColor={Color.zinc[600]} />
       <Text type='lg' weight='medium' style={styles.emptyTitle}>
-        {t('noHighlights')}
+        No highlights
       </Text>
       <Text type='sm' style={styles.emptySubtitle}>
-        {t('noHighlightsDescription')}
+        Messages containing a highlighted phrase get a colored tint in chat,
+        plus a haptic buzz when mention feedback is on.
       </Text>
     </View>
   );
@@ -158,7 +154,6 @@ function InputSection({
   onSelectColor,
   onAdd,
 }: InputSectionProps) {
-  const { t } = useTranslation('preferences');
   const canAdd = value.trim().length > 0;
 
   return (
@@ -167,7 +162,7 @@ function InputSection({
         <TextInput
           autoCapitalize='none'
           autoCorrect={false}
-          placeholder={t('addPhrasePlaceholder')}
+          placeholder='Add a phrase to highlight…'
           placeholderTextColor={Color.zinc[500]}
           value={value}
           onChangeText={onChangeText}
@@ -205,7 +200,6 @@ function InputSection({
 }
 
 function NativeChatHighlightsList() {
-  const { t } = useTranslation(['preferences', 'common']);
   const { addHighlight, highlights, updatePreferences } = useCustomHighlights();
   const [selectedColor, setSelectedColor] = useState<string>(
     HIGHLIGHT_COLORS[0],
@@ -215,7 +209,7 @@ function NativeChatHighlightsList() {
   const handleNativeAdd = () => {
     const result = addHighlight(phraseText.value, selectedColor);
     if (result === 'duplicate') {
-      toast.error(i18next.t('preferences:highlightAlreadyAdded'));
+      toast.error('That phrase is already highlighted');
     }
     if (result !== 'empty') {
       phraseText.value = '';
@@ -232,12 +226,12 @@ function NativeChatHighlightsList() {
     }
 
     Alert.alert(
-      t('removeHighlight'),
-      t('removeHighlightConfirm', { phrase: first.phrase }),
+      'Remove highlight',
+      `Stop highlighting messages containing "${first.phrase}"?`,
       [
-        { text: t('common:cancel'), style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: t('remove'),
+          text: 'Remove',
           style: 'destructive',
           onPress: () => {
             impact('medium');
@@ -261,7 +255,7 @@ function NativeChatHighlightsList() {
         <Section>
           <TextField
             text={phraseText}
-            placeholder={t('addPhrasePlaceholder')}
+            placeholder='Add a phrase to highlight…'
             modifiers={[
               autocorrectionDisabled(true),
               textInputAutocapitalization('never'),
@@ -290,7 +284,7 @@ function NativeChatHighlightsList() {
           <Section
             footer={
               <NativeText>
-                {t('phrasesFooter', { count: highlights.length })}
+                {`${highlights.length} ${highlights.length === 1 ? 'phrase' : 'phrases'} · Matching messages are tinted in chat.`}
               </NativeText>
             }
           >
@@ -319,7 +313,6 @@ function NativeChatHighlightsList() {
 }
 
 export function ChatHighlightsScreen() {
-  const { t } = useTranslation('preferences');
   const { addHighlight, highlights, updatePreferences } = useCustomHighlights();
   const [inputValue, setInputValue] = useState('');
   const [selectedColor, setSelectedColor] = useState<string>(
@@ -332,7 +325,7 @@ export function ChatHighlightsScreen() {
   const handleAdd = () => {
     const result = addHighlight(inputValue, selectedColor);
     if (result === 'duplicate') {
-      toast.error(i18next.t('preferences:highlightAlreadyAdded'));
+      toast.error('That phrase is already highlighted');
     }
     if (result !== 'empty') {
       setInputValue('');
@@ -388,7 +381,7 @@ export function ChatHighlightsScreen() {
         ListFooterComponent={
           hasHighlights ? (
             <Text type='xs' style={styles.footer}>
-              {t('phrasesFooter', { count: highlights.length })}
+              {`${highlights.length} ${highlights.length === 1 ? 'phrase' : 'phrases'} · Matching messages are tinted in chat.`}
             </Text>
           ) : null
         }

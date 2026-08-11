@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -19,10 +18,10 @@ import { theme } from '@app/styles/themes';
 
 const FEEDBACK_TYPES: {
   value: FeedbackType;
-  labelKey: 'typeBug' | 'typeIdea';
+  label: string;
 }[] = [
-  { value: 'bug', labelKey: 'typeBug' },
-  { value: 'idea', labelKey: 'typeIdea' },
+  { value: 'bug', label: 'Bug' },
+  { value: 'idea', label: 'Idea' },
 ];
 
 function handleDismiss() {
@@ -35,7 +34,6 @@ function handleDismiss() {
 }
 
 export function FeedbackScreen() {
-  const { t } = useTranslation(['feedback', 'common']);
   const { user } = useAuthContext();
 
   const [type, setType] = useState<FeedbackType>('bug');
@@ -53,7 +51,7 @@ export function FeedbackScreen() {
     if (!canSubmit) {
       if (trimmedMessage.length === 0) {
         notification('error');
-        toast.error(t('emptyMessage'));
+        toast.error('Please enter a message first.');
       }
       return;
     }
@@ -67,13 +65,13 @@ export function FeedbackScreen() {
         name: user?.display_name,
       });
       notification('success');
-      toast.success(t('success'));
+      toast.success('Your feedback was sent - we appreciate it.');
 
       handleDismiss();
     } catch {
       setSubmitting(false);
       notification('error');
-      toast.error(t('error'));
+      toast.error("Couldn't send your feedback. Please try again.");
     }
   };
 
@@ -87,7 +85,7 @@ export function FeedbackScreen() {
           style={styles.headerSide}
         >
           <Text type='md' style={{ color: theme.colorPrimary }}>
-            {t('common:cancel')}
+            Cancel
           </Text>
         </PressableScale>
         <Text
@@ -98,7 +96,7 @@ export function FeedbackScreen() {
           numberOfLines={1}
           style={styles.headerTitle}
         >
-          {t('title')}
+          Send feedback
         </Text>
         <View style={styles.headerSide} />
       </View>
@@ -110,13 +108,14 @@ export function FeedbackScreen() {
           indicatorStyle='white'
         >
           <Text type='sm' color='gray.textLow' style={styles.subtitle}>
-            {t('subtitle')}
+            Found a bug or have an idea? Tell us and it goes straight to the
+            team.
           </Text>
 
           <SegmentedControl
             currentIndex={selectedTypeIndex < 0 ? 0 : selectedTypeIndex}
             items={FEEDBACK_TYPES.map(option => ({
-              label: t(option.labelKey),
+              label: option.label,
             }))}
             onChange={index => {
               const next = FEEDBACK_TYPES[index];
@@ -133,7 +132,7 @@ export function FeedbackScreen() {
               color='gray.textLow'
               style={styles.fieldLabel}
             >
-              {t('messageLabel')}
+              MESSAGE
             </Text>
             <Input
               autoCapitalize='sentences'
@@ -142,8 +141,8 @@ export function FeedbackScreen() {
               onChangeText={setMessage}
               placeholder={
                 type === 'bug'
-                  ? t('messagePlaceholderBug')
-                  : t('messagePlaceholderIdea')
+                  ? 'What went wrong, and what were you doing when it happened?'
+                  : 'What would make Foam better?'
               }
               placeholderTextColor={theme.colorGreyHoverAlpha}
               style={[styles.input, styles.messageInput]}
@@ -158,7 +157,7 @@ export function FeedbackScreen() {
               color='gray.textLow'
               style={styles.fieldLabel}
             >
-              {t('emailLabel')}
+              Email (optional)
             </Text>
             <Input
               autoCapitalize='none'
@@ -167,7 +166,7 @@ export function FeedbackScreen() {
               inputMode='email'
               keyboardType='email-address'
               onChangeText={setEmail}
-              placeholder={t('emailPlaceholder')}
+              placeholder='you@example.com, so we can follow up'
               placeholderTextColor={theme.colorGreyHoverAlpha}
               style={styles.input}
               value={email}
@@ -177,7 +176,7 @@ export function FeedbackScreen() {
           <Button
             disabled={!canSubmit}
             haptic='light'
-            label={t('submit')}
+            label='Send'
             onPress={handleSubmit}
             style={[styles.submit, !canSubmit && styles.submitDisabled]}
           >
@@ -188,7 +187,7 @@ export function FeedbackScreen() {
               contrast
               align='center'
             >
-              {submitting ? t('submitting') : t('submit')}
+              {submitting ? 'Sending…' : 'Send'}
             </Text>
           </Button>
         </ScrollView>

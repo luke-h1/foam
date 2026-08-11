@@ -9,7 +9,6 @@ import {
   useState,
 } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -123,7 +122,6 @@ function handlePlaybackLatencyChange(latencySeconds: number) {
 export const LiveStreamScreen = memo(function LiveStreamScreen({
   id,
 }: LiveStreamScreenProps) {
-  const { t } = useTranslation(['stream', 'common']);
   const isFocused = useIsFocused();
   const { authState } = useAuthContext();
   const customPlayerEnabled = usePreference('customPlayerEnabled');
@@ -807,7 +805,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       .then(clip => {
         if (!clip) {
           notification('error');
-          toast.error(t('clipUnavailable'));
+          toast.error('Clipping is not available for this stream right now');
           return;
         }
         addCreatedClip({
@@ -821,9 +819,9 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           createdAt: Date.now(),
         });
         notification('success');
-        toast.success(t('clipCreated'), {
+        toast.success('Clip created', {
           action: {
-            label: t('editClip'),
+            label: 'Edit',
             onClick: () => openLinkInBrowser(clip.edit_url),
           },
         });
@@ -834,7 +832,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           channel_id: resolvedChannelId,
         });
         notification('error');
-        toast.error(t('clipCreateFailed'));
+        toast.error("Couldn't create clip");
       })
       .finally(() => {
         isCreatingClipRef.current = false;
@@ -844,7 +842,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     resolvedChannelLogin,
     stream?.user_name,
     user?.display_name,
-    t,
   ]);
 
   return (
@@ -889,7 +886,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
         {isAndroid ? (
           <Button
-            label={t('common:goBack')}
+            label='Go back'
             onPress={handleBack}
             style={[
               styles.androidBackButton,
@@ -1000,7 +997,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           (shouldMountChat || shouldShowChatConnectionNotice) ? (
             <GestureDetector gesture={resizeChatGesture}>
               <Animated.View
-                accessibilityLabel={t('resizeChat')}
+                accessibilityLabel='Resize chat'
                 accessibilityRole='adjustable'
                 style={[styles.chatResizeHandle, animatedResizeHandleStyle]}
               >
@@ -1024,7 +1021,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           ]}
         >
           <Button
-            label={isChatVisible ? t('hideChat') : t('showChat')}
+            label={isChatVisible ? 'Hide chat' : 'Show chat'}
             onPress={toggleChat}
             style={styles.fullscreenChatControlButton}
           >

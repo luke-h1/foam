@@ -1,6 +1,5 @@
 import { useRef } from 'react';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import {
   Form,
@@ -24,7 +23,6 @@ import { isDevToolsEnabled } from '@app/utils/devTools/isDevToolsEnabled';
 import { FormNavigationRow } from './components/FormNavigationRow';
 
 export function SettingsDevtoolsScreen() {
-  const { t } = useTranslation('settings');
   const {
     disableChat,
     disableStream,
@@ -41,110 +39,123 @@ export function SettingsDevtoolsScreen() {
     return (
       <Host style={styles.iosHost}>
         <Form>
-          <Section title={t('diagnostics')}>
+          <Section title='Diagnostics'>
             <FormNavigationRow
-              label={t('appDiagnostics')}
+              label='App Diagnostics'
               systemImage='stethoscope'
               onPress={() => router.push('/tabs/settings/diagnostics')}
             />
             <FormNavigationRow
-              label={t('remoteConfig')}
+              label='Remote Config'
               systemImage='cloud'
               onPress={() => router.push('/tabs/settings/remote-config')}
             />
           </Section>
 
-          <Section title={t('streamDiagnostics')}>
+          <Section title='Stream Diagnostics'>
             <Toggle
               isOn={disableStream}
               onIsOnChange={value => update({ disableStream: value })}
             >
-              <NativeText>{t('disableStream')}</NativeText>
-              <NativeText>{t('disableStreamDescription')}</NativeText>
+              <NativeText>Disable Stream</NativeText>
+              <NativeText>
+                Remove the Twitch WebView to isolate chat performance
+              </NativeText>
             </Toggle>
             <Toggle
               isOn={disableChat}
               onIsOnChange={value => update({ disableChat: value })}
             >
-              <NativeText>{t('disableChat')}</NativeText>
-              <NativeText>{t('disableChatDescription')}</NativeText>
+              <NativeText>Disable Chat</NativeText>
+              <NativeText>
+                Remove chat rendering to isolate the player
+              </NativeText>
             </Toggle>
           </Section>
 
-          <Section title={t('featureFlags')}>
+          <Section title='Feature Flags'>
             <Toggle
               isOn={sharedChatEnabled}
               onIsOnChange={value => update({ sharedChatEnabled: value })}
             >
-              <NativeText>{t('sharedChat')}</NativeText>
-              <NativeText>{t('sharedChatDescription')}</NativeText>
+              <NativeText>Shared Chat</NativeText>
+              <NativeText>
+                Show the source label and badge on messages relayed from another
+                channel in a shared chat session
+              </NativeText>
             </Toggle>
             <Toggle
               isOn={enhancedVideoStability}
               onIsOnChange={value => update({ enhancedVideoStability: value })}
             >
-              <NativeText>{t('enhancedVideoStability')}</NativeText>
-              <NativeText>{t('enhancedVideoStabilityDescription')}</NativeText>
+              <NativeText>Enhanced Video Stability</NativeText>
+              <NativeText>
+                Automatically refresh the player to recover from silent stalls,
+                video errors, and high latency
+              </NativeText>
             </Toggle>
             {isDevToolsEnabled ? (
               <Toggle
                 isOn={chatDebugTools}
                 onIsOnChange={value => update({ chatDebugTools: value })}
               >
-                <NativeText>{t('chatDebugTools')}</NativeText>
-                <NativeText>{t('chatDebugToolsDescription')}</NativeText>
+                <NativeText>Chat Debug Tools</NativeText>
+                <NativeText>
+                  Capture raw IRC lines and show debug details in the chat user,
+                  emote, and badge sheets
+                </NativeText>
               </Toggle>
             ) : null}
           </Section>
 
-          <Section title={t('developerTools')}>
+          <Section title='Developer Tools'>
             <FormNavigationRow
-              label={t('debug')}
+              label='Debug'
               systemImage='ladybug'
               onPress={() => router.push('/tabs/settings/debug')}
             />
             <FormNavigationRow
-              label={t('cachedImages')}
+              label='Cached Images'
               systemImage='photo.stack'
               onPress={() => router.push('/tabs/settings/cached-images')}
             />
             <FormNavigationRow
-              label={t('changelogDemo')}
+              label='Changelog Demo'
               systemImage='list.bullet.rectangle'
               onPress={() => router.push('/dev-tools/changelog')}
             />
             <FormNavigationRow
-              label={t('sentryTest')}
+              label='Sentry Test'
               systemImage='exclamationmark.triangle'
               onPress={() => router.push('/dev-tools/sentry-demo')}
             />
             <FormNavigationRow
-              label={t('imageBenchmark')}
+              label='Image Benchmark'
               systemImage='speedometer'
               onPress={() => router.push('/dev-tools/image-benchmark')}
             />
             <FormNavigationRow
-              label={t('chatPerfBurstTest')}
+              label='Chat Perf (burst test)'
               systemImage='bolt.horizontal'
               onPress={() => router.push('/dev-tools/chat-perf')}
             />
             <FormNavigationRow
-              label={t('envVars')}
+              label='Environment Variables'
               systemImage='doc.text'
               onPress={() => router.push('/dev-tools/env-vars')}
             />
             <FormNavigationRow
-              label={t('syncedEmotes')}
+              label='Synced Emotes'
               systemImage='metronome'
               onPress={() => router.push('/dev-tools/synced-emotes')}
             />
             <FormNavigationRow
-              label={t('channelSurfing')}
+              label='Channel Surfing'
               systemImage='antenna.radiowaves.left.and.right'
               onPress={() => router.push('/tabs/settings/channel-surfing')}
             />
             <FormNavigationRow
-              label={t('storybook')}
+              label='Storybook'
               systemImage='book.closed'
               onPress={() => router.push('/tabs/settings/storybook')}
             />
@@ -161,42 +172,42 @@ export function SettingsDevtoolsScreen() {
         contentInsetAdjustmentBehavior='automatic'
         contentContainerStyle={styles.content}
       >
-        <SettingsSection title={t('diagnostics')}>
+        <SettingsSection title='Diagnostics'>
           <SettingsLinkRow
-            title={t('appDiagnostics')}
-            subtitle={t('appDiagnosticsDescription')}
+            title='App Diagnostics'
+            subtitle='Version, environment, and runtime details'
             icon={{ icon: 'stethoscope', color: theme.colorBlue }}
             onPress={() => router.push('/tabs/settings/diagnostics')}
           />
           <SettingsLinkRow
-            title={t('remoteConfig')}
-            subtitle={t('remoteConfigDescription')}
+            title='Remote Config'
+            subtitle='Inspect fetched config and local overrides'
             icon={{ icon: 'cloud', color: theme.colorPlum }}
             onPress={() => router.push('/tabs/settings/remote-config')}
           />
         </SettingsSection>
 
-        <SettingsSection title={t('streamDiagnostics')}>
+        <SettingsSection title='Stream Diagnostics'>
           <SettingsToggleRow
-            title={t('disableStream')}
-            subtitle={t('disableStreamDescription')}
+            title='Disable Stream'
+            subtitle='Remove the Twitch WebView to isolate chat performance'
             icon={{ icon: 'video.slash', color: theme.colorOrange }}
             value={disableStream}
             onValueChange={value => update({ disableStream: value })}
           />
           <SettingsToggleRow
-            title={t('disableChat')}
-            subtitle={t('disableChatDescription')}
+            title='Disable Chat'
+            subtitle='Remove chat rendering to isolate the player'
             icon={{ icon: 'message', color: theme.colorPlum }}
             value={disableChat}
             onValueChange={value => update({ disableChat: value })}
           />
         </SettingsSection>
 
-        <SettingsSection title={t('featureFlags')}>
+        <SettingsSection title='Feature Flags'>
           <SettingsToggleRow
-            title={t('sharedChat')}
-            subtitle={t('sharedChatDescription')}
+            title='Shared Chat'
+            subtitle='Show the source label and badge on messages relayed from another channel in a shared chat session'
             icon={{
               icon: 'bubble.left.and.bubble.right',
               color: theme.colorTeal,
@@ -205,16 +216,16 @@ export function SettingsDevtoolsScreen() {
             onValueChange={value => update({ sharedChatEnabled: value })}
           />
           <SettingsToggleRow
-            title={t('enhancedVideoStability')}
-            subtitle={t('enhancedVideoStabilityDescription')}
+            title='Enhanced Video Stability'
+            subtitle='Automatically refresh the player to recover from silent stalls, video errors, and high latency'
             icon={{ icon: 'wand.and.stars', color: theme.colorBlue }}
             value={enhancedVideoStability}
             onValueChange={value => update({ enhancedVideoStability: value })}
           />
           {isDevToolsEnabled ? (
             <SettingsToggleRow
-              title={t('chatDebugTools')}
-              subtitle={t('chatDebugToolsDescription')}
+              title='Chat Debug Tools'
+              subtitle='Capture raw IRC lines and show debug details in the chat user, emote, and badge sheets'
               icon={{ icon: 'ladybug', color: theme.colorTeal }}
               value={chatDebugTools}
               onValueChange={value => update({ chatDebugTools: value })}
@@ -222,28 +233,28 @@ export function SettingsDevtoolsScreen() {
           ) : null}
         </SettingsSection>
 
-        <SettingsSection title={t('developerTools')}>
+        <SettingsSection title='Developer Tools'>
           <SettingsLinkRow
-            title={t('debug')}
-            subtitle={t('debugDescription')}
+            title='Debug'
+            subtitle='Manual debug helpers and experiments'
             icon={{ icon: 'ladybug', color: theme.colorOrange }}
             onPress={() => router.push('/tabs/settings/debug')}
           />
           <SettingsLinkRow
-            title={t('cachedImages')}
-            subtitle={t('cachedImagesDescription')}
+            title='Cached Images'
+            subtitle='Inspect and manage emote and badge media cache'
             icon={{ icon: 'photo.stack', color: theme.colorPrimary }}
             onPress={() => router.push('/tabs/settings/cached-images')}
           />
           <SettingsLinkRow
-            title={t('changelogDemo')}
-            subtitle={t('changelogDemoDescription')}
+            title='Changelog Demo'
+            subtitle='Present sample native changelog payloads'
             icon={{ icon: 'list.bullet.rectangle', color: theme.colorBlue }}
             onPress={() => router.push('/dev-tools/changelog')}
           />
           <SettingsLinkRow
-            title={t('sentryTest')}
-            subtitle={t('sentryTestDescription')}
+            title='Sentry Test'
+            subtitle='Throw an error to verify Sentry capture'
             icon={{
               icon: 'exclamationmark.triangle',
               color: theme.colorRed,
@@ -251,32 +262,32 @@ export function SettingsDevtoolsScreen() {
             onPress={() => router.push('/dev-tools/sentry-demo')}
           />
           <SettingsLinkRow
-            title={t('imageBenchmark')}
-            subtitle={t('imageBenchmarkDescription')}
+            title='Image Benchmark'
+            subtitle='expo-image vs nitro decode + synthetic chat stress test'
             icon={{ icon: 'speedometer', color: theme.colorTeal }}
             onPress={() => router.push('/dev-tools/image-benchmark')}
           />
           <SettingsLinkRow
-            title={t('chatPerfBurstTest')}
-            subtitle={t('chatPerfBurstTestDescription')}
+            title='Chat Perf (burst test)'
+            subtitle='real cinna chat + synthetic burst flood + live FPS readout'
             icon={{ icon: 'bolt.horizontal', color: theme.colorOrange }}
             onPress={() => router.push('/dev-tools/chat-perf')}
           />
           <SettingsLinkRow
-            title={t('envVars')}
-            subtitle={t('envVarsDescription')}
+            title='Environment Variables'
+            subtitle='Inspect the EXPO_PUBLIC_ vars baked into this build'
             icon={{ icon: 'doc.text', color: theme.colorTeal }}
             onPress={() => router.push('/dev-tools/env-vars')}
           />
           <SettingsLinkRow
-            title={t('syncedEmotes')}
-            subtitle={t('syncedEmotesDescription')}
+            title='Synced Emotes'
+            subtitle='staggered mounts of the same emote, frame-locked or not'
             icon={{ icon: 'metronome', color: theme.colorOrange }}
             onPress={() => router.push('/dev-tools/synced-emotes')}
           />
           <SettingsLinkRow
-            title={t('channelSurfing')}
-            subtitle={t('channelSurfingDescription')}
+            title='Channel Surfing'
+            subtitle='Load an EAS Update from a different channel or PR branch'
             icon={{
               icon: 'antenna.radiowaves.left.and.right',
               color: theme.colorPlum,
@@ -284,8 +295,8 @@ export function SettingsDevtoolsScreen() {
             onPress={() => router.push('/tabs/settings/channel-surfing')}
           />
           <SettingsLinkRow
-            title={t('storybook')}
-            subtitle={t('storybookDescription')}
+            title='Storybook'
+            subtitle='Component previews and design-system inspection'
             icon={{ icon: 'book.closed', color: theme.colorTeal }}
             onPress={() => router.push('/tabs/settings/storybook')}
           />

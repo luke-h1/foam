@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
 import { Alert, Platform, StyleSheet, TextInput, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 import {
@@ -99,15 +98,14 @@ function PhraseRow({
   onEdit: (phrase: SavedPhrase) => void;
   onRemove: (id: string) => void;
 }) {
-  const { t } = useTranslation(['preferences', 'common']);
   const handleRemove = useCallback(() => {
     Alert.alert(
-      t('removePhrase'),
-      t('removePhraseConfirm', { phrase: phrase.text }),
+      'Remove phrase',
+      `Remove "${phrase.text}" from your saved phrases?`,
       [
-        { text: t('common:cancel'), style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: t('remove'),
+          text: 'Remove',
           style: 'destructive',
           onPress: () => {
             impact('medium');
@@ -116,7 +114,7 @@ function PhraseRow({
         },
       ],
     );
-  }, [phrase, onRemove, t]);
+  }, [phrase, onRemove]);
 
   return (
     <PressableScale
@@ -127,7 +125,7 @@ function PhraseRow({
         {phrase.text}
       </Text>
       <PressableScale
-        accessibilityLabel={t('removePhrase')}
+        accessibilityLabel='Remove phrase'
         accessibilityRole='button'
         onPress={handleRemove}
         hitSlop={11}
@@ -143,16 +141,15 @@ function PhraseRow({
 }
 
 function EmptyState() {
-  const { t } = useTranslation('preferences');
-
   return (
     <View style={styles.emptyState}>
       <SymbolView name='text.bubble' size={48} tintColor={Color.zinc[600]} />
       <Text type='lg' weight='medium' style={styles.emptyTitle}>
-        {t('noSavedPhrases')}
+        No saved phrases
       </Text>
       <Text type='sm' style={styles.emptySubtitle}>
-        {t('noSavedPhrasesDescription')}
+        Save phrases you send often, then insert them into the composer with a
+        tap.
       </Text>
     </View>
   );
@@ -171,7 +168,6 @@ function InputSection({
   onChangeText,
   onSave,
 }: InputSectionProps) {
-  const { t } = useTranslation('preferences');
   const canSave = value.trim().length > 0;
 
   return (
@@ -179,7 +175,7 @@ function InputSection({
       <View style={styles.inputRow}>
         <TextInput
           autoCorrect
-          placeholder={t('addSavedPhrasePlaceholder')}
+          placeholder='Add a phrase to save…'
           placeholderTextColor={Color.zinc[500]}
           value={value}
           onChangeText={onChangeText}
@@ -203,7 +199,6 @@ function InputSection({
 }
 
 function NativeSavedPhrasesList() {
-  const { t } = useTranslation('preferences');
   const { phrases, savePhrase, updatePreferences } = useSavedPhrases();
   const [editingId, setEditingId] = useState<string | null>(null);
   const phraseText = useNativeState('');
@@ -245,7 +240,7 @@ function NativeSavedPhrasesList() {
         <Section>
           <TextField
             text={phraseText}
-            placeholder={t('addSavedPhrasePlaceholder')}
+            placeholder='Add a phrase to save…'
             modifiers={[
               textInputAutocapitalization('sentences'),
               submitLabel('done'),
@@ -257,7 +252,7 @@ function NativeSavedPhrasesList() {
           <Section
             footer={
               <NativeText>
-                {t('savedPhrasesFooter', { count: phrases.length })}
+                {`${phrases.length} ${phrases.length === 1 ? 'phrase' : 'phrases'} · Tap a phrase in chat to insert it.`}
               </NativeText>
             }
           >
@@ -287,7 +282,6 @@ function NativeSavedPhrasesList() {
 }
 
 export function SavedPhrasesScreen() {
-  const { t } = useTranslation('preferences');
   const { phrases, savePhrase, updatePreferences } = useSavedPhrases();
   const [inputValue, setInputValue] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -369,7 +363,7 @@ export function SavedPhrasesScreen() {
         ListFooterComponent={
           hasPhrases ? (
             <Text type='xs' style={styles.footer}>
-              {t('savedPhrasesFooter', { count: phrases.length })}
+              {`${phrases.length} ${phrases.length === 1 ? 'phrase' : 'phrases'} · Tap a phrase in chat to insert it.`}
             </Text>
           ) : null
         }

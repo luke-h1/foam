@@ -1,6 +1,5 @@
 import { batch } from '@legendapp/state';
 
-import i18next from '@app/i18n/i18next';
 import { clearChatStorePersistence } from '@app/lib/observablePersistence';
 import { startSpanAsync } from '@app/lib/sentry';
 import {
@@ -171,10 +170,11 @@ function notifyProviderLoadFailures(
   addMessage(
     createSystemMessage(
       channelId,
-      i18next.t(
-        hadCache ? 'chat:providerLoadFailed' : 'chat:providerLoadFailedNoCache',
-        { providers: failedProviders.join(', ') },
-      ),
+      hadCache
+        ? `Couldn't load emotes and badges from ${failedProviders.join(
+            ', ',
+          )}, falling back to cached emotes/badges`
+        : `Couldn't load emotes and badges from ${failedProviders.join(', ')}`,
     ),
   );
 }
@@ -711,7 +711,10 @@ const loadChannelResourcesInternal = async (
       screen: 'chat',
     });
     addMessage(
-      createSystemMessage(channelId, i18next.t('chat:channelResourcesFailed')),
+      createSystemMessage(
+        channelId,
+        "Couldn't load channel emotes and badges. Try refreshing.",
+      ),
     );
     chatStore$.loadingState.set('ERROR');
     return false;

@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import type { LayoutChangeEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -42,7 +41,6 @@ export function EmoteSheet({
   onDismiss,
   onEmoteSelect,
 }: EmoteSheetProps) {
-  const { t } = useTranslation('chat');
   const { bottom: bottomInset } = useSafeAreaInsets();
   const emoteListRef = useRef<LegendListRef>(null);
   const sheetRef = useRef<BottomSheetHandle>(null);
@@ -122,7 +120,7 @@ export function EmoteSheet({
           <View style={styles.searchContainer}>
             <View style={styles.searchRow}>
               <EmoteSearchFilter
-                placeholder={t('emoteSheet.searchEmotes')}
+                placeholder='Search emotes'
                 onChange={sheet.handleSearchChange}
                 onSubmitEditing={() =>
                   sheet.handleSearchChange(sheet.searchQuery)
@@ -143,11 +141,9 @@ export function EmoteSheet({
             <View style={styles.body}>
               {sheet.showEmpty ? (
                 <View style={styles.emptyState}>
-                  <Text style={styles.emptyStateTitle}>
-                    {t('emoteSheet.noEmotesFound')}
-                  </Text>
+                  <Text style={styles.emptyStateTitle}>No emotes found</Text>
                   <Text style={styles.emptyStateBody}>
-                    {t('emoteSheet.noEmotesFoundHint')}
+                    Try a shorter filter or switch providers.
                   </Text>
                 </View>
               ) : (

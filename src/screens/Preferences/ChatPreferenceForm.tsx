@@ -1,6 +1,5 @@
 import { type ReactElement, useMemo } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import {
   Button,
@@ -49,7 +48,6 @@ function hostPreview(node: ReactElement, width: number, padded = true) {
 }
 
 export function ChatPreferenceForm() {
-  const { t } = useTranslation('preferences');
   const preferences = usePreferences();
   const { update } = preferences;
   const { width: windowWidth } = useWindowDimensions();
@@ -109,16 +107,16 @@ export function ChatPreferenceForm() {
   return (
     <Host style={styles.host}>
       <Form>
-        <Section title={t('layout')}>
+        <Section title='Layout'>
           <Picker
-            label={t('messageDensity')}
+            label='Message Density'
             systemImage='list.bullet'
             selection={preferences.chatDensity}
             onSelectionChange={value => update({ chatDensity: value })}
           >
             {DENSITY_OPTIONS.map(option => (
               <NativeText key={option.value} modifiers={[tag(option.value)]}>
-                {t(option.labelKey)}
+                {option.label}
               </NativeText>
             ))}
           </Picker>
@@ -127,14 +125,14 @@ export function ChatPreferenceForm() {
             previewWidth,
           )}
           <Picker
-            label={t('fontSize')}
+            label='Font Size'
             systemImage='textformat.size'
             selection={preferences.chatFontScale}
             onSelectionChange={value => update({ chatFontScale: value })}
           >
             {FONT_SCALE_OPTIONS.map(option => (
               <NativeText key={option.value} modifiers={[tag(option.value)]}>
-                {t(option.labelKey)}
+                {option.label}
               </NativeText>
             ))}
           </Picker>
@@ -146,7 +144,7 @@ export function ChatPreferenceForm() {
             previewWidth,
           )}
           <Toggle
-            label={t('alternatingRows')}
+            label='Alternating Rows'
             systemImage='line.3.horizontal'
             isOn={preferences.showAlternatingChatRows}
             onIsOnChange={value => update({ showAlternatingChatRows: value })}
@@ -159,16 +157,16 @@ export function ChatPreferenceForm() {
             previewWidth,
           )}
           <Toggle
-            label={t('newMessageAnimation')}
+            label='New Message Animation'
             systemImage='arrow.up.message'
             isOn={preferences.animate}
             onIsOnChange={value => update({ animate: value })}
           />
         </Section>
 
-        <Section title={t('emojiStyle')}>
+        <Section title='Emoji Style'>
           <Picker
-            label={t('emojiSet')}
+            label='Emoji Set'
             systemImage='face.smiling'
             selection={preferences.emojiStyle}
             onSelectionChange={value => update({ emojiStyle: value })}
@@ -185,46 +183,46 @@ export function ChatPreferenceForm() {
           )}
         </Section>
 
-        <Section title={t('context')}>
+        <Section title='Context'>
           <Toggle
-            label={t('historicalRecentMessages')}
+            label='Historical Recent Messages'
             systemImage='clock.arrow.circlepath'
             isOn={preferences.showRecentMessages !== false}
             onIsOnChange={value => update({ showRecentMessages: value })}
           />
           <Toggle
-            label={t('showTimestamps')}
+            label='Show Timestamps'
             systemImage='clock'
             isOn={preferences.chatTimestamps}
             onIsOnChange={value => update({ chatTimestamps: value })}
           />
           <Toggle
-            label={t('highlightOwnMentions')}
+            label='Highlight Own Mentions'
             systemImage='at'
             isOn={preferences.highlightOwnMentions}
             onIsOnChange={value => update({ highlightOwnMentions: value })}
           />
           <Toggle
-            label={t('inlineReplyContext')}
+            label='Inline Reply Context'
             systemImage='arrowshape.turn.up.left'
             isOn={preferences.showInlineReplyContext}
             onIsOnChange={value => update({ showInlineReplyContext: value })}
           />
           <Toggle
-            label={t('showJumpPill')}
+            label='Show Jump Pill'
             systemImage='arrow.down.circle'
             isOn={preferences.showUnreadJumpPill}
             onIsOnChange={value => update({ showUnreadJumpPill: value })}
           />
           <Picker
-            label={t('timestampFormat')}
+            label='Timestamp Format'
             systemImage='clock.badge'
             selection={preferences.chatTimestampFormat}
             onSelectionChange={value => update({ chatTimestampFormat: value })}
           >
             {TIMESTAMP_FORMAT_OPTIONS.map(option => (
               <NativeText key={option.value} modifiers={[tag(option.value)]}>
-                {t(option.labelKey)}
+                {option.label}
               </NativeText>
             ))}
           </Picker>
@@ -243,11 +241,16 @@ export function ChatPreferenceForm() {
         </Section>
 
         <Section
-          title={t('sync')}
-          footer={<NativeText>{t('syncFooter')}</NativeText>}
+          title='Sync'
+          footer={
+            <NativeText>
+              Delay chat so it lines up with the video. Auto matches the
+              measured stream latency.
+            </NativeText>
+          }
         >
           <Picker
-            label={t('chatDelay')}
+            label='Chat Delay'
             systemImage='timer'
             selection={String(preferences.chatDelay)}
             onSelectionChange={value => {
@@ -265,44 +268,49 @@ export function ChatPreferenceForm() {
                 key={option.value}
                 modifiers={[tag(String(option.value))]}
               >
-                {t(option.labelKey)}
+                {option.label}
               </NativeText>
             ))}
           </Picker>
         </Section>
 
         <Section
-          title={t('highlights')}
-          footer={<NativeText>{t('highlightsFooter')}</NativeText>}
+          title='Highlights'
+          footer={
+            <NativeText>
+              Highlighted phrases tint matching messages. Mention feedback also
+              buzzes when a highlight matches.
+            </NativeText>
+          }
         >
           <Button
-            label={t('highlightedPhrases')}
+            label='Highlighted Phrases'
             systemImage='highlighter'
             onPress={() => router.push('/tabs/settings/chat-highlights')}
           />
           <Toggle
-            label={t('mentionFeedback')}
+            label='Mention Feedback'
             systemImage='hand.tap'
             isOn={preferences.chatMentionHaptics !== false}
             onIsOnChange={value => update({ chatMentionHaptics: value })}
           />
         </Section>
 
-        <Section title={t('moderation')}>
+        <Section title='Moderation'>
           <Picker
-            label={t('deletedMessages')}
+            label='Deleted Messages'
             systemImage='trash.slash'
             selection={preferences.deletedMessageStyle}
             onSelectionChange={value => update({ deletedMessageStyle: value })}
           >
             {DELETED_STYLE_OPTIONS.map(option => (
               <NativeText key={option.value} modifiers={[tag(option.value)]}>
-                {t(option.labelKey)}
+                {option.label}
               </NativeText>
             ))}
           </Picker>
           <Toggle
-            label={t('keepHistoryOnClear')}
+            label='Keep History on Clear'
             systemImage='clock.arrow.circlepath'
             isOn={preferences.ignoreClearChat === true}
             onIsOnChange={value => update({ ignoreClearChat: value })}
@@ -310,11 +318,16 @@ export function ChatPreferenceForm() {
         </Section>
 
         <Section
-          title={t('performance')}
-          footer={<NativeText>{t('performanceFooter')}</NativeText>}
+          title='Performance'
+          footer={
+            <NativeText>
+              Longer scrollback keeps more messages in memory; 200 is easier on
+              older devices.
+            </NativeText>
+          }
         >
           <Picker
-            label={t('scrollback')}
+            label='Scrollback'
             systemImage='text.line.last.and.arrowtriangle.forward'
             selection={preferences.chatScrollback}
             onSelectionChange={value => update({ chatScrollback: value })}
@@ -330,7 +343,7 @@ export function ChatPreferenceForm() {
         {providerSections.map(section => (
           <Section key={section.title} title={section.title}>
             <Toggle
-              label={t('emotes')}
+              label='Emotes'
               systemImage='face.smiling'
               isOn={section.emotes}
               onIsOnChange={section.onEmotes}
@@ -345,7 +358,7 @@ export function ChatPreferenceForm() {
               false,
             )}
             <Toggle
-              label={t('badges')}
+              label='Badges'
               systemImage='rosette'
               isOn={section.badges}
               onIsOnChange={section.onBadges}
@@ -363,11 +376,16 @@ export function ChatPreferenceForm() {
         ))}
 
         <Section
-          title={t('media')}
-          footer={<NativeText>{t('mediaFooter')}</NativeText>}
+          title='Media'
+          footer={
+            <NativeText>
+              Animated Twitch, BTTV, FFZ, and 7TV emotes will render as still
+              images when this is enabled.
+            </NativeText>
+          }
         >
           <Toggle
-            label={t('disableEmoteAnimations')}
+            label='Disable Emote Animations'
             systemImage='slash.circle'
             isOn={preferences.disableEmoteAnimations}
             onIsOnChange={value => update({ disableEmoteAnimations: value })}
