@@ -9,6 +9,7 @@ import {
   cancelAnimation,
   Easing,
   useDerivedValue,
+  useReducedMotion,
   useSharedValue,
   withRepeat,
   withTiming,
@@ -30,6 +31,7 @@ const SPINNER_SIZES: Record<'small' | 'large', number> = {
 };
 const STROKE_WIDTH = 3;
 const ROTATION_DURATION_MS = 900;
+const PULSE_DURATION_MS = 750;
 const ARC_SWEEP_DEGREES = 270;
 
 export function LoadingState({
@@ -50,13 +52,37 @@ export function LoadingState({
 
 function Spinner({ size }: { size: number }) {
   const focused = useScreenFocused();
+  const reduceMotion = useReducedMotion();
   const rotation = useSharedValue(0);
+  const opacity = useSharedValue(1);
 
   useEffect(() => {
     if (!focused) {
       cancelAnimation(rotation);
+      cancelAnimation(opacity);
       return;
     }
+
+    /**
+     * A continuous rotation is exactly the vestibular trigger the preference
+     * exists to suppress, so under reduced motion the arc holds still and
+     * pulses instead - the sanctioned opacity substitute keeps the "still
+     * working" signal a frozen spinner would lose.
+     */
+    if (reduceMotion) {
+      opacity.set(
+        withRepeat(
+          withTiming(0.3, {
+            duration: PULSE_DURATION_MS,
+            easing: Easing.inOut(Easing.ease),
+          }),
+          -1,
+          true,
+        ),
+      );
+      return () => cancelAnimation(opacity);
+    }
+
     rotation.set(
       withRepeat(
         withTiming(2 * Math.PI, {
@@ -67,9 +93,10 @@ function Spinner({ size }: { size: number }) {
       ),
     );
     return () => cancelAnimation(rotation);
-  }, [focused, rotation]);
+  }, [focused, opacity, reduceMotion, rotation]);
 
   const transform = useDerivedValue(() => [{ rotate: rotation.get() }]);
+  const arcOpacity = useDerivedValue(() => opacity.get());
 
   const arc = useMemo(() => {
     const inset = STROKE_WIDTH / 2;
@@ -90,6 +117,7 @@ function Spinner({ size }: { size: number }) {
         strokeWidth={STROKE_WIDTH}
         strokeCap='round'
         color={theme.color.text.dark}
+        opacity={arcOpacity}
         transform={transform}
         origin={{ x: size / 2, y: size / 2 }}
       />

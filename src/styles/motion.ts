@@ -21,5 +21,5 @@ export const motion = {
     gentle: { damping: 22, stiffness: 240, mass: 0.55 },
   },
 
-  pressMinScale: 0.97,
+  pressMinScale: 0.96,
 } as const;

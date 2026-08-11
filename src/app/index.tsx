@@ -23,7 +23,11 @@ export default function IndexRoute() {
 
   if (!ready) {
     return (
-      <View style={styles.skeletonContainer}>
+      <View
+        accessibilityLabel='Loading streams'
+        accessibilityRole='progressbar'
+        style={styles.skeletonContainer}
+      >
         {Array.from({ length: 6 }).map((_, index) => (
           // eslint-disable-next-line react/no-array-index-key
           <LiveStreamCardSkeleton key={index} />
@@ -36,7 +40,7 @@ export default function IndexRoute() {
     return (
       <View style={styles.container}>
         <Text type='lg' align='center' style={styles.message}>
-          Authentication state is not ready.
+          Unable to load your account.
         </Text>
         <Button
           onPress={() => {
@@ -44,7 +48,7 @@ export default function IndexRoute() {
           }}
         >
           <Text type='md' color='accent' contrast align='center'>
-            Continue
+            Continue without signing in
           </Text>
         </Button>
       </View>

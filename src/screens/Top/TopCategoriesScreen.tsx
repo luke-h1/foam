@@ -90,8 +90,8 @@ export function TopCategoriesScreen() {
     return (
       <View style={styles.wrapper}>
         <EmptyState
-          heading='Failed to fetch categories'
-          content='Failed to fetch top categories'
+          heading='Unable to load categories'
+          content='Check your connection and try again.'
         />
       </View>
     );
@@ -101,7 +101,8 @@ export function TopCategoriesScreen() {
     return (
       <View style={styles.wrapper}>
         <EmptyState
-          content='No categories found'
+          heading='No categories'
+          content='Nothing to browse right now. Refresh to check again.'
           buttonOnPress={() => void onRefresh()}
         />
       </View>

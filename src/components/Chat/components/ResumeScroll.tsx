@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius28,
     borderWidth: 1,
-    boxShadow: '0 2px 3.84px rgba(0, 0, 0, 0.25)',
+    boxShadow: theme.shadow.sm.dark,
     flexDirection: 'row',
     gap: theme.space8,
     paddingHorizontal: theme.space20,

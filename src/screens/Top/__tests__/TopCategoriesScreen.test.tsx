@@ -45,7 +45,7 @@ describe('TopCategoriesScreen', () => {
     render(<TopCategoriesScreen />);
 
     expect(
-      await screen.findByText('Failed to fetch top categories'),
+      await screen.findByText('Check your connection and try again.'),
     ).toBeOnTheScreen();
   });
 
@@ -54,7 +54,11 @@ describe('TopCategoriesScreen', () => {
 
     render(<TopCategoriesScreen />);
 
-    expect(await screen.findByText('No categories found')).toBeOnTheScreen();
+    expect(
+      await screen.findByText(
+        'Nothing to browse right now. Refresh to check again.',
+      ),
+    ).toBeOnTheScreen();
   });
 
   test('renders multiple categories', async () => {

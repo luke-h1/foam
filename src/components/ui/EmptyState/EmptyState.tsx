@@ -250,6 +250,7 @@ const styles = {
     flex: 1,
   },
   image: {
+    borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     height: 112,
     width: 112,

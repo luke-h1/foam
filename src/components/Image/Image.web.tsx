@@ -32,7 +32,7 @@ export const Image = function Image({
   contentFit = 'cover',
   containerStyle,
   placeholderContentFit,
-  transition = 500,
+  transition = 150,
   source,
   cachePolicy,
   cacheToFile = true,

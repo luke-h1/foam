@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     height: 44,
     justifyContent: 'center',
-    boxShadow: '0 8px 18px rgba(0, 0, 0, 0.28)',
+    boxShadow: theme.shadow.md.dark,
     width: 44,
   },
   liquidGlassButton: {
@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     height: 96,
     justifyContent: 'center',
-    boxShadow: '0 18px 30px rgba(0, 0, 0, 0.42)',
+    boxShadow: theme.shadow.lg.dark,
     width: 96,
   },
   playPauseButtonPortrait: {

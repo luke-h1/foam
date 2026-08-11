@@ -57,7 +57,7 @@ describe('CategoryScreen', () => {
     render(<CategoryScreen id='cat1' />);
 
     expect(
-      await screen.findByText('Failed to fetch categories'),
+      await screen.findByText('Check your connection and try again.'),
     ).toBeOnTheScreen();
   });
 
@@ -70,7 +70,7 @@ describe('CategoryScreen', () => {
     render(<CategoryScreen id='cat1' />);
 
     expect(
-      await screen.findByText('Failed to fetch categories'),
+      await screen.findByText('Check your connection and try again.'),
     ).toBeOnTheScreen();
   });
 
@@ -93,6 +93,8 @@ describe('CategoryScreen', () => {
 
     render(<CategoryScreen id='cat1' />);
 
-    expect(await screen.findByText('No Top Streams found')).toBeOnTheScreen();
+    expect(
+      await screen.findByText('Nothing is live in this category right now.'),
+    ).toBeOnTheScreen();
   });
 });

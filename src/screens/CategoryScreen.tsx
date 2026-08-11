@@ -128,8 +128,8 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
   if (isCategoryError || isErrorStreams) {
     return (
       <EmptyState
-        content='Failed to fetch categories'
-        heading='No Categories'
+        content='Check your connection and try again.'
+        heading='Unable to load this category'
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         buttonOnPress={() => refetch()}
       />
@@ -141,7 +141,13 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
   }
 
   if (allStreams.length === 0 || !category) {
-    return <EmptyState content='No Top Streams found' />;
+    return (
+      <EmptyState
+        heading='No live streams'
+        content='Nothing is live in this category right now.'
+        button={null}
+      />
+    );
   }
 
   return (

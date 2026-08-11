@@ -22,16 +22,24 @@ export function IconButtonIcon({
   loading?: boolean;
   size?: Spacing;
 }) {
+  const dimension = resolveSpacingValue(theme, size);
+
   if (loading) {
-    return <ActivityIndicator color={theme.color.text.dark} />;
+    return (
+      <ActivityIndicator
+        color={theme.colorGrey}
+        style={{ height: dimension, width: dimension }}
+      />
+    );
   }
 
   if (typeof icon === 'string' || !('type' in icon)) {
     return (
       <SymbolView
         name={icon}
-        size={resolveSpacingValue(theme, size)}
+        size={dimension}
         tintColor={theme.colorGrey}
+        weight='semibold'
       />
     );
   }
@@ -40,8 +48,9 @@ export function IconButtonIcon({
     return (
       <SymbolView
         name={icon.name}
-        size={icon.size ?? resolveSpacingValue(theme, size)}
+        size={icon.size ?? dimension}
         tintColor={icon.color ?? theme.colorGrey}
+        weight='semibold'
       />
     );
   }

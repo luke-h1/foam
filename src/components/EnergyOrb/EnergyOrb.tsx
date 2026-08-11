@@ -3,6 +3,7 @@ import { StyleSheet } from 'react-native';
 import {
   useDerivedValue,
   useFrameCallback,
+  useReducedMotion,
   useSharedValue,
 } from 'react-native-reanimated';
 
@@ -48,6 +49,7 @@ function EnergyOrbComponent({
   glowRadius = DEFAULT_GLOW_RADIUS,
 }: EnergyOrbProps) {
   const focused = useScreenFocused();
+  const reduceMotion = useReducedMotion();
   const time = useSharedValue<number>(0);
 
   const frameCallback = useFrameCallback(frameInfo => {
@@ -55,9 +57,13 @@ function EnergyOrbComponent({
     time.set(time.get() + deltaSeconds * speed);
   });
 
+  /**
+   * Under reduced motion the shader holds at a fixed time rather than being
+   * removed: the orb still renders, it just stops moving.
+   */
   useEffect(() => {
-    frameCallback.setActive(focused);
-  }, [focused, frameCallback]);
+    frameCallback.setActive(focused && !reduceMotion);
+  }, [focused, frameCallback, reduceMotion]);
 
   const [c0r, c0g, c0b] = useMemo<RGB>(
     () => parseColor(colors[0] || DEFAULT_COLORS[0]),

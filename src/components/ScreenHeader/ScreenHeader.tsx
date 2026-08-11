@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius20,
     borderWidth: 1,
     height: 134,
-    boxShadow: '0 4px 18px rgba(0, 0, 0, 0.4)',
+    boxShadow: theme.shadow.md.dark,
     width: 100,
   },
   heroBackground: {

@@ -12,7 +12,7 @@ export const suggestionRailColors = {
   containerBorder: theme.color.border.dark,
   richContainerBackground: theme.color.surfaceElevated.dark,
   secondaryText: theme.color.textSecondary.dark,
-  shadow: '0 8px 18px rgba(0, 0, 0, 0.28)',
+  shadow: theme.shadow.md.dark,
   text: theme.color.text.dark,
 } as const;
 

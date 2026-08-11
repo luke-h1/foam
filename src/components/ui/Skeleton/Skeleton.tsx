@@ -10,6 +10,7 @@ import Animated, {
   cancelAnimation,
   Easing,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withRepeat,
   withTiming,
@@ -33,6 +34,7 @@ const SHIMMER_DURATION_MS = 1450;
 
 export function Skeleton({ shimmer = true, style, testID }: SkeletonProps) {
   const [width, setWidth] = useState(0);
+  const reduceMotion = useReducedMotion();
 
   return (
     <View
@@ -40,7 +42,9 @@ export function Skeleton({ shimmer = true, style, testID }: SkeletonProps) {
       testID={testID}
       onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}
     >
-      {shimmer ? <SkeletonShimmer containerWidth={width} /> : null}
+      {shimmer && !reduceMotion ? (
+        <SkeletonShimmer containerWidth={width} />
+      ) : null}
     </View>
   );
 }

@@ -41,7 +41,11 @@ describe('TopStreamsScreen', () => {
 
     render(<TopStreamsScreen />);
 
-    expect(screen.getAllByTestId('stream-skeleton').length).toBeGreaterThan(0);
+    expect(screen.getByLabelText('Loading streams')).toBeOnTheScreen();
+    expect(
+      screen.getAllByTestId('stream-skeleton', { includeHiddenElements: true })
+        .length,
+    ).toBeGreaterThan(0);
   });
 
   test('renders stream list when data is available', async () => {
@@ -57,7 +61,11 @@ describe('TopStreamsScreen', () => {
 
     render(<TopStreamsScreen />);
 
-    expect(await screen.findByText('No Top Streams found')).toBeOnTheScreen();
+    expect(
+      await screen.findByText(
+        'Nothing is live right now. Refresh to check again.',
+      ),
+    ).toBeOnTheScreen();
   });
 
   test('shows empty state when the fetch fails', async () => {
@@ -65,7 +73,11 @@ describe('TopStreamsScreen', () => {
 
     render(<TopStreamsScreen />);
 
-    expect(await screen.findByText('No Top Streams found')).toBeOnTheScreen();
+    expect(
+      await screen.findByText(
+        'Nothing is live right now. Refresh to check again.',
+      ),
+    ).toBeOnTheScreen();
   });
 
   test('renders multiple streams', async () => {

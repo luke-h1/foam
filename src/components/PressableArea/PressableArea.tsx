@@ -1,4 +1,11 @@
-import { PropsWithChildren, type Ref, useState } from 'react';
+import {
+  createContext,
+  PropsWithChildren,
+  type Ref,
+  use,
+  useCallback,
+  useState,
+} from 'react';
 import { StyleSheet, View } from 'react-native';
 import { EaseView } from 'react-native-ease';
 import type { PressableProps } from 'react-native-gesture-handler';
@@ -7,6 +14,15 @@ import { Pressable } from 'react-native-gesture-handler';
 import { motion } from '@app/styles/motion';
 
 const isAndroid = process.env.EXPO_OS === 'android';
+
+/**
+ * Nested pressables both begin on the same touch-down, so without this an
+ * inner target dims itself while the row it sits in dims too. A descendant
+ * claims the touch and every ancestor stands down.
+ */
+const NestedPressContext = createContext<
+  ((pressed: boolean) => void) | undefined
+>(undefined);
 
 /**
  * `feedback='highlight'` fills the row background while pressed instead of
@@ -25,8 +41,19 @@ export function PressableArea({
   ref?: Ref<View>;
   feedback?: 'dim' | 'highlight';
 }) {
+  const notifyAncestor = use(NestedPressContext);
   const [pressed, setPressed] = useState(false);
-  const iosPressed = pressed && !isAndroid;
+  const [descendantPressed, setDescendantPressed] = useState(false);
+
+  const handleDescendantPress = useCallback(
+    (isPressed: boolean) => {
+      setDescendantPressed(isPressed);
+      notifyAncestor?.(isPressed);
+    },
+    [notifyAncestor],
+  );
+
+  const iosPressed = pressed && !descendantPressed && !isAndroid;
 
   return (
     <Pressable
@@ -40,10 +67,12 @@ export function PressableArea({
       style={style}
       onPressIn={e => {
         setPressed(true);
+        notifyAncestor?.(true);
         onPressIn?.(e);
       }}
       onPressOut={e => {
         setPressed(false);
+        notifyAncestor?.(false);
         onPressOut?.(e);
       }}
     >
@@ -60,7 +89,9 @@ export function PressableArea({
         transition={{ type: 'timing', duration: motion.instant }}
         style={styles.pressable}
       >
-        {children}
+        <NestedPressContext.Provider value={handleDescendantPress}>
+          {children}
+        </NestedPressContext.Provider>
       </EaseView>
     </Pressable>
   );

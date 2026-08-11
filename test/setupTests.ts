@@ -281,6 +281,7 @@ jest.mock('react-native-reanimated', () => {
     runOnUI: (fn: (...args: unknown[]) => unknown) => fn,
     useAnimatedReaction: jest.fn(),
     useAnimatedRef: () => ({ current: null }),
+    useReducedMotion: () => false,
     useFrameCallback: jest.fn(() => ({ setActive: jest.fn() })),
     useAnimatedStyle: (updater: () => unknown) => updater(),
     useDerivedValue: (updater: () => unknown) => {

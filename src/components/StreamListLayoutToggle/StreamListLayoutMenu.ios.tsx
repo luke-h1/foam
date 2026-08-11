@@ -1,5 +1,5 @@
 import { Host, Image, Menu, Picker, Text } from '@expo/ui/swift-ui';
-import { tag, tint } from '@expo/ui/swift-ui/modifiers';
+import { accessibilityLabel, tag, tint } from '@expo/ui/swift-ui/modifiers';
 
 import { selection } from '@app/lib/haptics';
 import {
@@ -20,7 +20,10 @@ export function StreamListLayoutMenu() {
             systemName={
               streamListLayout === 'compact' ? 'list.bullet' : 'square.grid.2x2'
             }
-            modifiers={[tint(theme.color.text.dark)]}
+            modifiers={[
+              tint(theme.color.text.dark),
+              accessibilityLabel('Change stream layout'),
+            ]}
           />
         }
       >

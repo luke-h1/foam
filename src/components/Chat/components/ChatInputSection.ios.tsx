@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     paddingHorizontal: theme.space16,
     paddingVertical: theme.space12,
-    boxShadow: '0 10px 20px rgba(0, 0, 0, 0.18)',
+    boxShadow: theme.shadow.md.dark,
   },
   wrapper: {
     gap: theme.space8,

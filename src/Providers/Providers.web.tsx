@@ -53,6 +53,10 @@ export function Providers({ children }: PropsWithChildren) {
                   <QueryProvider>
                     <QueryDevTools>
                       <PressablesConfig
+                        animationConfig={{
+                          duration: motion.instant,
+                          easing: motion.easing.out,
+                        }}
                         config={{ minScale: motion.pressMinScale }}
                       >
                         {children}

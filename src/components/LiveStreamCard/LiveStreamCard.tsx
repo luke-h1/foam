@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { useQueryClient } from '@tanstack/react-query';
@@ -19,7 +19,6 @@ import {
   formatViewCountCompact,
 } from '@app/utils/string/formatViewCount';
 
-import { Button } from '../Button/Button';
 import { Image } from '../Image/Image';
 import { PressableArea } from '../PressableArea/PressableArea';
 import { COMPACT_THUMBNAIL_SIZE, MEDIA_THUMBNAIL_SIZE } from './thumbnailSizes';
@@ -123,6 +122,32 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
     stream.game_name
   }, ${formatViewCount(stream.viewer_count)} watching, ${stream.title}`;
 
+  /**
+   * The card is one accessibility element, so the nested profile and category
+   * pressables are merged into it and unreachable on their own. These expose
+   * the same two destinations through the rotor.
+   */
+  const cardAccessibilityActions = useMemo(
+    () => [
+      { name: 'viewProfile', label: `View ${stream.user_name}'s profile` },
+      { name: 'openCategory', label: `Open ${stream.game_name}` },
+    ],
+    [stream.game_name, stream.user_name],
+  );
+
+  const handleAccessibilityAction = useCallback(
+    (event: { nativeEvent: { actionName: string } }) => {
+      if (event.nativeEvent.actionName === 'viewProfile') {
+        handleStreamerPress();
+        return;
+      }
+      if (event.nativeEvent.actionName === 'openCategory') {
+        handleCategoryPress();
+      }
+    },
+    [handleCategoryPress, handleStreamerPress],
+  );
+
   if (layout === 'media') {
     // Only the media layout renders the language, so keep the tag scan out of
     // the (default) compact path.
@@ -131,11 +156,13 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
       LANGUAGE_NAMES[stream.language];
 
     return (
-      <Button
+      <PressableArea
+        accessibilityActions={cardAccessibilityActions}
+        accessibilityLabel={cardAccessibilityLabel}
+        onAccessibilityAction={handleAccessibilityAction}
         onPress={handleStreamPress}
         onPressIn={handleStreamPressIn}
         onLongPress={handleLongPress}
-        label={cardAccessibilityLabel}
         style={styles.mediaCardWrapper}
       >
         <View style={styles.mediaContainer}>
@@ -150,7 +177,12 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
               style={[styles.compactLiveBadge, styles.mediaLiveBadge]}
             />
             <View style={styles.viewerBadge}>
-              <Text type='sm' weight='bold' style={styles.viewerBadgeText}>
+              <Text
+                type='sm'
+                weight='bold'
+                tabular
+                style={styles.viewerBadgeText}
+              >
                 {formatViewCountCompact(stream.viewer_count)} watching
               </Text>
             </View>
@@ -185,7 +217,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
                 accessibilityLabel={`${stream.user_name}'s profile`}
                 onPress={handleStreamerPress}
                 onPressIn={handleStreamerPressIn}
-                hitSlop={6}
+                hitSlop={{ top: 6, bottom: 2, left: 8, right: 8 }}
               >
                 <Text
                   type='md'
@@ -207,7 +239,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
               <PressableArea
                 accessibilityLabel={`${stream.game_name} category`}
                 onPress={handleCategoryPress}
-                hitSlop={6}
+                hitSlop={{ top: 6, bottom: 6, left: 8, right: 8 }}
               >
                 <Text
                   type='sm'
@@ -222,16 +254,18 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
             </View>
           </View>
         </View>
-      </Button>
+      </PressableArea>
     );
   }
 
   return (
-    <Button
+    <PressableArea
+      accessibilityActions={cardAccessibilityActions}
+      accessibilityLabel={cardAccessibilityLabel}
+      onAccessibilityAction={handleAccessibilityAction}
       onPress={handleStreamPress}
       onPressIn={handleStreamPressIn}
       onLongPress={handleLongPress}
-      label={cardAccessibilityLabel}
       style={styles.cardWrapper}
     >
       <View style={styles.container}>
@@ -251,7 +285,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
             onPress={handleStreamerPress}
             onPressIn={handleStreamerPressIn}
             style={styles.usernameButton}
-            hitSlop={8}
+            hitSlop={{ top: 6, bottom: 2, left: 8, right: 8 }}
           >
             <Text
               type='sm'
@@ -274,14 +308,19 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
 
           <View style={styles.metadataRow}>
             <View style={styles.liveMeta}>
-              <Text type='xs' style={styles.liveText}>
+              <Text type='xs' tabular style={styles.liveText}>
                 {elapsedStreamTime(stream.started_at)}
               </Text>
             </View>
             <Text type='xs' style={styles.metaDivider}>
               •
             </Text>
-            <Text type='xs' numberOfLines={1} style={styles.viewersText}>
+            <Text
+              type='xs'
+              tabular
+              numberOfLines={1}
+              style={styles.viewersText}
+            >
               {formatViewCountCompact(stream.viewer_count)} watching
             </Text>
           </View>
@@ -289,7 +328,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
           <PressableArea
             onPress={handleCategoryPress}
             style={styles.categoryButton}
-            hitSlop={6}
+            hitSlop={{ top: 6, bottom: 6, left: 8, right: 8 }}
           >
             <Text type='xs' numberOfLines={1} style={styles.categoryText}>
               {stream.game_name}
@@ -297,7 +336,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
           </PressableArea>
         </View>
       </View>
-    </Button>
+    </PressableArea>
   );
 }
 
@@ -338,6 +377,7 @@ const styles = StyleSheet.create({
   },
   categoryButton: {
     alignSelf: 'flex-start',
+    marginTop: theme.space4,
     minWidth: 0,
   },
   categoryText: {
@@ -349,7 +389,7 @@ const styles = StyleSheet.create({
     backgroundColor: Color.zinc[900],
     borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius10,
+    borderRadius: theme.borderRadius14,
     borderWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     flexWrap: 'nowrap',
@@ -413,6 +453,7 @@ const styles = StyleSheet.create({
   mediaCategory: {
     color: Color.zinc[300],
     lineHeight: 20,
+    marginTop: theme.space4,
   },
   mediaContainer: {
     marginHorizontal: theme.space16,
@@ -450,7 +491,7 @@ const styles = StyleSheet.create({
   },
   mediaTitle: {
     color: Color.zinc[100],
-    lineHeight: 19,
+    lineHeight: 23,
   },
   mediaUsername: {
     color: Color.zinc[50],
@@ -458,18 +499,17 @@ const styles = StyleSheet.create({
   },
   metaDivider: {
     color: Color.zinc[400],
-    opacity: 0.5,
   },
   metadataRow: {
     alignItems: 'center',
     flexDirection: 'row',
     flexWrap: 'nowrap',
     gap: 6,
-    marginTop: theme.space4,
+    marginTop: theme.space8,
   },
   title: {
     color: Color.zinc[100],
-    lineHeight: 19,
+    lineHeight: 23,
   },
   username: {
     color: Color.zinc[50],

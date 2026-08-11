@@ -1,9 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -17,24 +19,38 @@ const HIDDEN_OFFSET = 80;
 
 export function OfflineBanner() {
   const insets = useSafeAreaInsets();
-  const online = onlineManager.isOnline();
+  const reduceMotion = useReducedMotion();
+  const [online, setOnline] = useState(() => onlineManager.isOnline());
   const progress = useSharedValue(online ? 0 : 1);
 
   useEffect(() => {
     return onlineManager.subscribe(isOnline => {
-      progress.set(withSpring(isOnline ? 0 : 1, motion.spring.gentle));
+      setOnline(isOnline);
+      progress.set(
+        reduceMotion
+          ? withTiming(isOnline ? 0 : 1, { duration: motion.fast })
+          : withSpring(isOnline ? 0 : 1, motion.spring.gentle),
+      );
     });
-  }, [progress]);
+  }, [progress, reduceMotion]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: progress.get(),
-    transform: [
-      { translateY: (progress.get() - 1) * (insets.top + HIDDEN_OFFSET) },
-    ],
+    transform: reduceMotion
+      ? []
+      : [{ translateY: (progress.get() - 1) * (insets.top + HIDDEN_OFFSET) }],
   }));
 
+  /**
+   * `opacity: 0` does not take a node out of the native accessibility tree the
+   * way `display: none` does on the web, so without these flags VoiceOver reads
+   * "No internet connection" on every screen while the device is online.
+   */
   return (
     <Animated.View
+      accessibilityElementsHidden={online}
+      accessibilityLiveRegion='polite'
+      importantForAccessibility={online ? 'no-hide-descendants' : 'yes'}
       pointerEvents='none'
       style={[
         styles.wrapper,
@@ -67,7 +83,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: theme.space16,
     paddingVertical: theme.space8,
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
+    boxShadow: theme.shadow.md.dark,
   },
   text: {
     color: theme.colorBlack,

@@ -143,6 +143,10 @@ export function Providers({ children }: PropsWithChildren) {
                             keep their weight. Haptics are opt-in per
                             control via lib/haptics. */}
                         <PressablesConfig
+                          animationConfig={{
+                            duration: motion.instant,
+                            easing: motion.easing.out,
+                          }}
                           config={{ minScale: motion.pressMinScale }}
                         >
                           {children}

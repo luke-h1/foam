@@ -38,7 +38,11 @@ function FollowingSkeleton({
   streamListLayout: 'compact' | 'media';
 }) {
   return (
-    <View style={styles.container}>
+    <View
+      accessibilityLabel='Loading streams'
+      accessibilityRole='progressbar'
+      style={styles.container}
+    >
       {showHeader && (
         <View style={styles.header}>
           <View style={styles.headerEyebrow} />

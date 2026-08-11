@@ -640,7 +640,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colorBlackOverlay,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius28,
-    boxShadow: '0 2px 3.84px rgba(0, 0, 0, 0.25)',
+    boxShadow: theme.shadow.sm.dark,
     flexDirection: 'row',
     paddingHorizontal: theme.space20,
     paddingVertical: theme.space12,

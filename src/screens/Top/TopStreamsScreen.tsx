@@ -71,6 +71,8 @@ export function TopStreamsScreen() {
   if (showSkeleton) {
     return (
       <ScrollView
+        accessibilityLabel='Loading streams'
+        accessibilityRole='progressbar'
         contentInsetAdjustmentBehavior='automatic'
         scrollEnabled={false}
         style={styles.container}
@@ -88,7 +90,11 @@ export function TopStreamsScreen() {
     return (
       <View style={styles.container}>
         {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
-        <EmptyState content='No Top Streams found' buttonOnPress={onRefresh} />
+        <EmptyState
+          heading='No live streams'
+          content='Nothing is live right now. Refresh to check again.'
+          buttonOnPress={onRefresh}
+        />
       </View>
     );
   }
