@@ -131,6 +131,7 @@ describe('replaceEmotesWithText', () => {
             url: 'https://example.com/dance.png',
             original_name: 'Dance',
             site: 'BTTV',
+            provider: 'bttv',
             creator: null,
             emote_link: '',
             height: 32,

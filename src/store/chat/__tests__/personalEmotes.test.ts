@@ -62,6 +62,7 @@ const personalEmote: SevenTvSanitisedEmote = {
   creator: null,
   emote_link: 'https://7tv.app/emotes/emote-1',
   site: '7TV Personal',
+  provider: '7tv',
   frame_count: 1,
   format: 'avif',
   flags: 0,

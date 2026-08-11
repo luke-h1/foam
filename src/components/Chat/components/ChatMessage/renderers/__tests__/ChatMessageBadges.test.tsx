@@ -23,6 +23,7 @@ const ffzModBadge: SanitisedBadgeSet = {
   owner_username: '96858382',
   set: 'mod',
   type: 'FFZ channel badge',
+  provider: 'ffz',
 };
 
 const twitchBadge: SanitisedBadgeSet = {
@@ -31,6 +32,7 @@ const twitchBadge: SanitisedBadgeSet = {
   title: '1-Year Subscriber',
   set: 'subscriber',
   type: 'Twitch Subscriber Badge',
+  provider: 'twitch',
 };
 
 describe('ChatMessageBadges', () => {

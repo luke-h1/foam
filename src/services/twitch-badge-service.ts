@@ -59,6 +59,7 @@ export const twitchBadgeService = {
           type: channelBadgeType(badgeSet.set_id),
           title: badgeSet.set_id === 'bits' ? `Cheer ${badge.id}` : badge.title,
           set: badgeSet.set_id,
+          provider: 'twitch',
         });
       });
     });
@@ -80,6 +81,7 @@ export const twitchBadgeService = {
             title: version.title,
             type: 'Twitch Global Badge',
             set: badgeSet.set_id,
+            provider: 'twitch',
           });
         });
       }

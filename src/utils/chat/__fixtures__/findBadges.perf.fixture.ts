@@ -9,6 +9,7 @@ export function createChatterinoBadge(index: number): SanitisedBadgeSet {
     id: `chatterino-user-${index}`,
     url: `https://cdn.example.com/chatterino/${index}.png`,
     type: 'Chatterino Badge',
+    provider: 'chatterino',
     title: `Chatterino ${index}`,
     set: 'chatterino',
     owner_username: `chatter${index}`,

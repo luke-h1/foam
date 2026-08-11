@@ -175,7 +175,7 @@ function getBaseCollection({
   setIfMissing(emoteMap, bttvGlobalEmotes);
 
   emojiEmotes.forEach(emote => {
-    if (emote.site !== 'Emoji') {
+    if (emote.provider !== 'emoji') {
       return;
     }
 
@@ -494,7 +494,7 @@ export const processEmotesWorklet = (
         creator: emote.creator || '',
         emote_link: emote.emote_link || '',
         original_name:
-          emote.site === 'Emoji' && !word.startsWith(':')
+          emote.provider === 'emoji' && !word.startsWith(':')
             ? word
             : emote.original_name || '',
         site: emote.site || '',

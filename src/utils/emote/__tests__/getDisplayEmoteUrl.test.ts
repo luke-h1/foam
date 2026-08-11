@@ -80,6 +80,7 @@ describe('getDisplayEmoteUrl', () => {
       emote_link: 'https://betterttv.com/emotes/5eJAM',
       url: 'https://cdn.betterttv.net/emote/5eJAM/3x',
       site: 'BTTV',
+      provider: 'bttv',
     };
     const emote = withResolvedEmoteImageVariants(cachedEmote);
 

@@ -112,7 +112,7 @@ function groupSevenTvSets(
     const setId =
       'set_metadata' in emote && emote.set_metadata?.setId
         ? emote.set_metadata.setId
-        : `${providerLabel.toLowerCase()}-${emote.site}`;
+        : `${providerLabel.toLowerCase()}-${emote.provider}`;
     const setName =
       'set_metadata' in emote && emote.set_metadata?.setName
         ? emote.set_metadata.setName

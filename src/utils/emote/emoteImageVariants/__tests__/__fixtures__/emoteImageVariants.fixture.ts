@@ -20,6 +20,7 @@ export function createBttvEmote(url: string): BttvSanitisedEmote {
   return {
     ...createBaseFields(url),
     site: 'BTTV',
+    provider: 'bttv',
   };
 }
 
@@ -27,6 +28,7 @@ export function createFfzEmote(url: string): FfzSanitisedEmote {
   return {
     ...createBaseFields(url),
     site: 'FFZ',
+    provider: 'ffz',
   };
 }
 
@@ -48,6 +50,7 @@ export function createSevenTvEmote(url: string): SevenTvSanitisedEmote {
       updatedAt: '2026-05-19T00:00:00Z',
     },
     site: '7TV Global',
+    provider: '7tv',
     width: 32,
     zero_width: false,
   };

@@ -16,14 +16,6 @@ const matchIndexCache = new WeakMap<
   EmoteMatchIndex
 >();
 
-function isTwitchEmoteSite(site: SanitisedEmote['site']): boolean {
-  return (
-    site === 'Twitch Global' ||
-    site === 'Twitch Channel' ||
-    site === 'Twitch Subscriber'
-  );
-}
-
 function buildEmoteMatchIndex(
   emoteMap: Map<string, SanitisedEmote>,
 ): EmoteMatchIndex {
@@ -32,7 +24,7 @@ function buildEmoteMatchIndex(
     entries.push({
       name,
       emote,
-      isTwitch: isTwitchEmoteSite(emote.site),
+      isTwitch: emote.provider === 'twitch',
     });
   });
   // eslint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks Array.prototype.toSorted

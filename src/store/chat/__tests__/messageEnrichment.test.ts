@@ -185,6 +185,7 @@ describe('hasEnrichmentEmoteSources', () => {
               creator: null,
               emote_link: '',
               site: 'Twitch Subscriber',
+              provider: 'twitch',
             } satisfies SanitisedEmote,
           ],
         }),
@@ -202,6 +203,7 @@ describe('hasEnrichmentEmoteSources', () => {
         creator: null,
         emote_link: '',
         site: 'Emoji',
+        provider: 'emoji',
       } satisfies SanitisedEmote,
     ]);
     expect(hasEnrichmentEmoteSources(createEmoteData())).toBe(true);

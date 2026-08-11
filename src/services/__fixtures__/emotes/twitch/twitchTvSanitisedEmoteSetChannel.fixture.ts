@@ -22,6 +22,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykWiggle',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykYAY',
@@ -44,6 +45,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykYAY',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykSpin',
@@ -66,6 +68,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykSpin',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykDance',
@@ -88,6 +91,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykDance',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykRave',
@@ -110,6 +114,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykRave',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykBUH',
@@ -132,6 +137,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykBUH',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykHop',
@@ -154,6 +160,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykHop',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykJam',
@@ -176,6 +183,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykJam',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykSeal',
@@ -198,6 +206,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykSeal',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykShake',
@@ -220,6 +229,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykShake',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykErm',
@@ -242,6 +252,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykErm',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykPANIC',
@@ -264,6 +275,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykPANIC',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykNYA',
@@ -286,6 +298,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykNYA',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykPlink',
@@ -308,6 +321,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykPlink',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykCheer',
@@ -330,6 +344,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykCheer',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykRock',
@@ -352,6 +367,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykRock',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykPls',
@@ -374,6 +390,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykPls',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykPickle',
@@ -396,6 +413,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykPickle',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykAlien',
@@ -418,6 +436,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykAlien',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykHAHA',
@@ -440,6 +459,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykHAHA',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykEDGE',
@@ -462,6 +482,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykEDGE',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykLAL',
@@ -484,6 +505,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykLAL',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykMOJI',
@@ -506,6 +528,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykMOJI',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykAGONY',
@@ -528,6 +551,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykAGONY',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykPoint',
@@ -550,6 +574,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykPoint',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykHAHH',
@@ -572,6 +597,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykHAHH',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykSwing',
@@ -594,6 +620,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykSwing',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykAlright',
@@ -616,6 +643,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykAlright',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykJohn',
@@ -638,6 +666,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykJohn',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykDog',
@@ -660,6 +689,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykDog',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykFOUR',
@@ -682,6 +712,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykFOUR',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykL',
@@ -704,6 +735,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykL',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykCup',
@@ -726,6 +758,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykCup',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykLOL',
@@ -748,6 +781,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykLOL',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykSmile',
@@ -770,6 +804,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykSmile',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykSilly',
@@ -792,6 +827,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykSilly',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennyk2',
@@ -814,6 +850,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennyk2',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykSob',
@@ -836,6 +873,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykSob',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykGoat',
@@ -858,6 +896,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykGoat',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykSime',
@@ -880,6 +919,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykSime',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykSus',
@@ -902,6 +942,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykSus',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykSeni',
@@ -924,6 +965,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykSeni',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykChance',
@@ -946,6 +988,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykChance',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykB',
@@ -968,6 +1011,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykB',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykLemon',
@@ -990,6 +1034,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykLemon',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykOME',
@@ -1012,6 +1057,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykOME',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykTwice',
@@ -1034,6 +1080,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykTwice',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykDonki',
@@ -1056,6 +1103,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykDonki',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykPain',
@@ -1078,6 +1126,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykPain',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykTest',
@@ -1100,6 +1149,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykTest',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykGrape',
@@ -1122,6 +1172,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykGrape',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykDab',
@@ -1144,6 +1195,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykDab',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykShower',
@@ -1166,6 +1218,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykShower',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykAndrew',
@@ -1188,6 +1241,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykAndrew',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykSad',
@@ -1210,6 +1264,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykSad',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykHUH',
@@ -1232,6 +1287,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykHUH',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykG',
@@ -1254,6 +1310,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykG',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykCar',
@@ -1276,6 +1333,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykCar',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykRofl',
@@ -1298,6 +1356,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykRofl',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykBLEH',
@@ -1320,6 +1379,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykBLEH',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennyk9',
@@ -1342,6 +1402,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennyk9',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykToilet',
@@ -1364,6 +1425,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykToilet',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykCOLD',
@@ -1386,6 +1448,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykCOLD',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykCLARITY',
@@ -1408,6 +1471,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykCLARITY',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykMeat',
@@ -1430,6 +1494,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykMeat',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykSimers',
@@ -1452,6 +1517,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykSimers',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykAURA',
@@ -1474,6 +1540,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykAURA',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykWeird',
@@ -1496,6 +1563,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykWeird',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykLamp',
@@ -1518,6 +1586,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykLamp',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykTWK',
@@ -1540,6 +1609,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykTWK',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykDUH',
@@ -1562,6 +1632,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykDUH',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykNFA',
@@ -1584,6 +1655,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykNFA',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykPEACE',
@@ -1606,6 +1678,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykPEACE',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykC',
@@ -1628,6 +1701,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykC',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykEGG',
@@ -1650,6 +1724,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykEGG',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykGooglecom',
@@ -1672,6 +1747,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykGooglecom',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykOM',
@@ -1694,6 +1770,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykOM',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykCRAO',
@@ -1716,6 +1793,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykCRAO',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykMerp',
@@ -1738,6 +1816,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykMerp',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykBLUESQUARECHALLENGE',
@@ -1760,6 +1839,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykBLUESQUARECHALLENGE',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykTime',
@@ -1782,6 +1862,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykTime',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykPeon',
@@ -1804,6 +1885,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykPeon',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykSK4',
@@ -1826,6 +1908,7 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykSK4',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
   {
     name: 'sennykCHOPPED',
@@ -1848,5 +1931,6 @@ export const twitchTvSanitisedEmoteSetChannelFixture: TwitchSanitisedEmote[] = [
     creator: 'sennyk4',
     original_name: 'sennykCHOPPED',
     site: 'Twitch Channel',
+    provider: 'twitch',
   },
 ];

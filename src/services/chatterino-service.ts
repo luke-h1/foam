@@ -4140,6 +4140,7 @@ export const chatterinoService = {
           set: 'chatterino',
           owner_username: userId,
           color: '#ffffff',
+          provider: 'chatterino',
         });
       });
     });

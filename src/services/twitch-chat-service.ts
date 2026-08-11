@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react';
 
 import * as Network from 'expo-network';
 
@@ -32,16 +32,19 @@ import { ReadyState } from '../hooks/ws/constants';
 import { useWebsocket } from '../hooks/ws/useWebsocket';
 
 /**
- * External-store revision for the IRC userstate. The userstate itself lives
- * in a per-session ref read imperatively via getUserState; render-time
- * derivations (canModerateChat) need a change signal or the React Compiler
- * caches them at their mount value forever, since getUserState's identity is
- * deliberately stable.
+ * The authenticated user's IRC userstate, held module-level behind an
+ * external-store subscription. Ingest-path readers call getChatUserState
+ * imperatively; render-time derivations (canModerateChat) go through
+ * useChatUserState so they recompute when a new USERSTATE lands. Each
+ * USERSTATE replaces the record wholesale, so the snapshot identity only
+ * changes when the tags do.
  */
+let currentUserState: Record<string, string> = {};
 let userStateRevision = 0;
 const userStateListeners = new Set<() => void>();
 
-function bumpUserStateRevision(): void {
+function setCurrentUserState(next: Record<string, string>): void {
+  currentUserState = next;
   userStateRevision += 1;
   userStateListeners.forEach(listener => listener());
 }
@@ -55,6 +58,19 @@ export function subscribeUserState(listener: () => void): () => void {
 
 export function getUserStateRevision(): number {
   return userStateRevision;
+}
+
+export function getChatUserState(): Record<string, string> {
+  return currentUserState;
+}
+
+/**
+ * Reactive view over the userstate: re-renders the caller when a USERSTATE
+ * or GLOBALUSERSTATE arrives, without the userstate being drilled through
+ * hook option bags.
+ */
+export function useChatUserState(): Record<string, string> {
+  return useSyncExternalStore(subscribeUserState, getChatUserState);
 }
 
 /**
@@ -172,7 +188,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   const probeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sendIrcMessageRef = useRef<((message: string) => void) | null>(null);
   const messageBufferRef = useRef<string>('');
-  const userStateRef = useRef<Record<string, string>>({});
   const pendingMessageRef = useRef<{
     channel: string;
     message: string;
@@ -446,8 +461,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     userstate: (channelName, tagsRecord) => {
       markChannelJoined(channelName);
       logger.chat.debug(`USERSTATE in ${channelName}`);
-      userStateRef.current = tagsRecord;
-      bumpUserStateRevision();
+      setCurrentUserState(tagsRecord);
 
       if (pendingMessageRef.current && tagsRecord['msg-id']) {
         logger.chat.debug(
@@ -462,8 +476,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
 
     globaluserstate: tagsRecord => {
       logger.chat.debug('GLOBALUSERSTATE received');
-      userStateRef.current = tagsRecord;
-      bumpUserStateRevision();
+      setCurrentUserState(tagsRecord);
       optionsRef.current.onGlobalUserState?.(tagsRecord);
     },
 
@@ -856,8 +869,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       lastSentMessages.clear();
       messageBuffer.current = '';
       isAuthenticatedRef.current = false;
-      userStateRef.current = {};
-      bumpUserStateRevision();
+      setCurrentUserState({});
       pendingMessageRef.current = null;
     };
   }, [joinedChannelsRef, lastSentMessagesRef, pendingJoinChannelsRef]);
@@ -925,10 +937,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     sendMessage(channelFormatted, actionMessage);
   };
 
-  const getUserState = useCallback((): Record<string, string> => {
-    return { ...userStateRef.current };
-  }, []);
-
   const isConnected = (): boolean => {
     const ws = getWebSocket();
     if (ws.readyState !== WebSocket.OPEN || !isAuthenticatedRef.current) {
@@ -953,6 +961,5 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     sendMessage,
     sendChatCommand,
     sendAction,
-    getUserState,
   };
 }

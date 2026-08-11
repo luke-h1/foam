@@ -42,6 +42,7 @@ export const chatPreferencePreviewFixtures = {
           totalCount: 997,
           updatedAt: '2026-06-11T01:54:11.599+00:00',
         },
+        provider: '7tv',
         site: '7TV Channel',
         static_url:
           'https://cdn.7tv.app/emote/01F5PA9D3000034VRANA2SYVDP/4x_static.avif',
@@ -69,6 +70,7 @@ export const chatPreferencePreviewFixtures = {
           totalCount: 44,
           updatedAt: '2025-12-14T20:18:38.018+00:00',
         },
+        provider: '7tv',
         site: '7TV Global',
         static_url:
           'https://cdn.7tv.app/emote/01GB4EV0Q800090V9B3D8CGEHV/4x.avif',
@@ -96,6 +98,7 @@ export const chatPreferencePreviewFixtures = {
         id: '5f1c24b91ab9be446c4d78dc',
         name: 'catJAM',
         original_name: 'UNKNOWN',
+        provider: 'bttv',
         site: 'BTTV',
         static_url:
           'https://cdn.betterttv.net/emote/5f1c24b91ab9be446c4d78dc/3x.png',
@@ -107,6 +110,7 @@ export const chatPreferencePreviewFixtures = {
         id: '5ee22dfb924aa35e32a7a112',
         name: 'AYAYA',
         original_name: 'UNKNOWN',
+        provider: 'bttv',
         site: 'BTTV',
         static_url:
           'https://cdn.betterttv.net/emote/5ee22dfb924aa35e32a7a112/3x',
@@ -121,6 +125,7 @@ export const chatPreferencePreviewFixtures = {
         set: 'vip',
         title: 'VIP',
         type: 'FFZ channel badge',
+        provider: 'ffz',
         url: 'https://cdn.frankerfacez.com/room-badge/vip/id/12943173/v/384f5396/4',
       },
     ],
@@ -133,6 +138,7 @@ export const chatPreferencePreviewFixtures = {
         id: '128054',
         name: 'OMEGALUL',
         original_name: 'UNKNOWN',
+        provider: 'ffz',
         site: 'FFZ',
         static_url: 'https://cdn.frankerfacez.com/emote/128054/4',
         url: 'https://cdn.frankerfacez.com/emote/128054/4',
@@ -146,6 +152,7 @@ export const chatPreferencePreviewFixtures = {
         id: '6',
         name: 'YooHoo',
         original_name: 'UNKNOWN',
+        provider: 'ffz',
         site: 'Global FFZ',
         static_url: 'https://cdn.frankerfacez.com/emote/6/4',
         url: 'https://cdn.frankerfacez.com/emote/6/4',
@@ -158,6 +165,7 @@ export const chatPreferencePreviewFixtures = {
       {
         id: 'subscriber_0',
         set: 'subscriber',
+        provider: 'twitch',
         title: 'Subscriber',
         type: 'Twitch Global Badge',
         url: 'https://static-cdn.jtvnw.net/badges/v1/5d9f2208-5dd8-11e7-8513-2ff4adfae661/3',
@@ -165,6 +173,7 @@ export const chatPreferencePreviewFixtures = {
       {
         id: 'premium_1',
         set: 'premium',
+        provider: 'twitch',
         title: 'Prime Gaming',
         type: 'Twitch Global Badge',
         url: 'https://static-cdn.jtvnw.net/badges/v1/bbbe0db0-a598-423e-86d0-f9fb98ca1933/3',
@@ -178,6 +187,7 @@ export const chatPreferencePreviewFixtures = {
         id: '25',
         name: 'Kappa',
         original_name: 'Kappa',
+        provider: 'twitch',
         site: 'Twitch Global',
         static_url:
           'https://static-cdn.jtvnw.net/emoticons/v2/25/static/dark/3.0',
@@ -190,6 +200,7 @@ export const chatPreferencePreviewFixtures = {
         id: '305954156',
         name: 'PogChamp',
         original_name: 'PogChamp',
+        provider: 'twitch',
         site: 'Twitch Global',
         static_url:
           'https://static-cdn.jtvnw.net/emoticons/v2/305954156/static/dark/3.0',

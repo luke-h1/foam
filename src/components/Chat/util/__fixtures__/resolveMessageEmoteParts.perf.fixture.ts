@@ -20,6 +20,7 @@ function createBttvEmote(index: number): SanitisedEmote {
       static: { '2x': `u/${id}/2x.png`, '3x': `u/${id}/3x.png` },
     },
     site: index % 2 === 0 ? 'BTTV' : 'Global BTTV',
+    provider: 'bttv',
   };
 }
 
@@ -45,6 +46,7 @@ function createTwitchEmote(index: number): SanitisedEmote {
       },
     },
     site: index % 2 === 0 ? 'Twitch Channel' : 'Twitch Global',
+    provider: 'twitch',
   };
 }
 

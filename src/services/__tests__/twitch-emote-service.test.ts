@@ -94,6 +94,7 @@ describe('twitchEmoteService', () => {
         original_name: 'Kappa',
         creator: null,
         site: 'Twitch Global',
+        provider: 'twitch',
       },
     ]);
   });

@@ -54,6 +54,7 @@ function emote(id: string): SanitisedEmote {
     name: id,
     original_name: id,
     site: 'BTTV',
+    provider: 'bttv',
     static_url: `https://example.com/${id}.png`,
     url: `https://example.com/${id}.webp`,
   };

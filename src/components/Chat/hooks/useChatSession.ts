@@ -1,8 +1,5 @@
 import {
-  Dispatch,
-  MutableRefObject,
   RefObject,
-  SetStateAction,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -40,6 +37,7 @@ import { useChatIrcHandlers } from './useChatIrcHandlers';
 import { useChatLifecycle } from './useChatLifecycle';
 import { useChatMessageProcessing } from './useChatMessageProcessing';
 import { useChatMessages } from './useChatMessages';
+import type { ChatScrollAnchor } from './useChatScroll';
 import { useRecentChatMessages } from './useRecentChatMessages';
 import { useSevenTvChatRuntime } from './useSevenTvChatRuntime';
 
@@ -47,14 +45,10 @@ interface UseChatSessionOptions {
   channelId: string;
   channelName: string;
   cleanupScroll: () => void;
-  isAtBottomRef: MutableRefObject<boolean>;
-  isScrollingToBottomRef: MutableRefObject<boolean>;
-  isUserActivelyScrolling: () => boolean;
   listRef: RefObject<ChatListRef | null>;
-  maintainBottomAfterContentChange: () => void;
   preferences: ChatRenderPreferences;
+  scrollAnchor: ChatScrollAnchor;
   scrollToBottom: () => void;
-  setUnreadCount: Dispatch<SetStateAction<number>>;
   syntheticTransport: boolean;
   user?: UserInfoResponse;
 }
@@ -63,14 +57,10 @@ export function useChatSession({
   channelId,
   channelName,
   cleanupScroll,
-  isAtBottomRef,
-  isScrollingToBottomRef,
-  isUserActivelyScrolling,
   listRef,
-  maintainBottomAfterContentChange,
   preferences,
+  scrollAnchor,
   scrollToBottom,
-  setUnreadCount,
   syntheticTransport,
   user,
 }: UseChatSessionOptions) {
@@ -133,14 +123,7 @@ export function useChatSession({
       [],
     ),
     getChatDelayMs,
-    isAtBottomRef,
-    isScrollingToBottomRef,
-    isUserActivelyScrolling,
-    onBottomContentChange: maintainBottomAfterContentChange,
-    onUnreadIncrement: useCallback(
-      (count: number) => setUnreadCount(prev => prev + count),
-      [setUnreadCount],
-    ),
+    scrollAnchor,
   });
 
   useEffect(() => {
@@ -207,9 +190,8 @@ export function useChatSession({
   } = useChatMessageProcessing({
     channelId,
     handleNewMessage,
-    isAtBottomRef,
-    maintainBottomAfterContentChange,
     messages$,
+    scrollAnchor,
     show7TvEmotes: preferences.show7TvEmotes,
     show7tvBadges: preferences.show7tvBadges,
     userLogin: user?.login,
@@ -255,7 +237,6 @@ export function useChatSession({
     partChannel,
     joinChannel,
     sendMessage,
-    getUserState,
   } = useTwitchChat({
     // Perf mode: no channel means the socket never connects and the synthetic
     // flood is the only thing feeding onMessage.
@@ -331,7 +312,6 @@ export function useChatSession({
     connected,
     emoteLoadStatus,
     forceFlush,
-    getUserState,
     handleViewableMessagesChange,
     isChatConnected,
     joinChannel,

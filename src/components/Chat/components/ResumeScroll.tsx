@@ -6,6 +6,7 @@ import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { Button } from '@app/components/Button/Button';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
+import { useChatUnreadCount } from '@app/store/chat/react/useChatUnreadCount';
 import { theme } from '@app/styles/themes';
 
 import { chatEntranceSpring } from '../util/chatEntranceSpring';
@@ -14,15 +15,12 @@ const resumeEntering = chatEntranceSpring(FadeInDown);
 const resumeExiting = FadeOutDown.duration(150);
 
 export interface ResumeScrollProps {
-  unreadCount: number;
   onScrollToBottom: () => void;
 }
 
-function ResumeScrollComponent({
-  onScrollToBottom,
-  unreadCount,
-}: ResumeScrollProps) {
+function ResumeScrollComponent({ onScrollToBottom }: ResumeScrollProps) {
   const { t } = useTranslation('chat');
+  const unreadCount = useChatUnreadCount();
 
   return (
     <Animated.View

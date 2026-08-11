@@ -58,6 +58,7 @@ function createBttvEmote(index: number): BttvSanitisedEmote {
       },
     },
     site: index % 2 === 0 ? 'BTTV' : 'Global BTTV',
+    provider: 'bttv',
   };
 }
 
@@ -84,6 +85,7 @@ function createFfzEmote(index: number): FfzSanitisedEmote {
       },
     },
     site: index % 2 === 0 ? 'FFZ' : 'Global FFZ',
+    provider: 'ffz',
     width: 32,
     height: 32,
     aspect_ratio: 1,
@@ -113,6 +115,7 @@ function createTwitchEmote(index: number): TwitchSanitisedEmote {
       },
     },
     site: index % 2 === 0 ? 'Twitch Channel' : 'Twitch Global',
+    provider: 'twitch',
   };
 }
 
@@ -126,6 +129,7 @@ const emojiEmotes: EmojiSanitisedEmote[] = [
     url: 'https://emoji.example/1F602.png',
     static_url: 'https://emoji.example/1F602.png',
     site: 'Emoji',
+    provider: 'emoji',
     emoji_hexcode: '1F602',
   },
   {
@@ -137,6 +141,7 @@ const emojiEmotes: EmojiSanitisedEmote[] = [
     url: 'https://emoji.example/2764-FE0F.png',
     static_url: 'https://emoji.example/2764-FE0F.png',
     site: 'Emoji',
+    provider: 'emoji',
     emoji_hexcode: '2764-FE0F',
   },
 ];

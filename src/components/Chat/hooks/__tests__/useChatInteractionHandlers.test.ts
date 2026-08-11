@@ -113,6 +113,7 @@ describe('useChatComposerActions', () => {
         creator: null,
         emote_link: 'https://7tv.app/emotes/emote-1',
         site: 'BTTV',
+        provider: 'bttv',
       });
       hook.result.current.appendMentionToComposer('targetUser');
       hook.result.current.insertPhraseToComposer('be right back');

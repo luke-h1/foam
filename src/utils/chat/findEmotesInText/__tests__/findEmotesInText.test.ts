@@ -13,6 +13,7 @@ describe('FindEmotesInText', () => {
     creator: 'UNKNOWN',
     original_name: name,
     site: 'Twitch Channel',
+    provider: 'twitch',
   });
 
   const createNonTwitchMockEmote = (name: string): SanitisedEmote => ({
@@ -23,6 +24,7 @@ describe('FindEmotesInText', () => {
     creator: 'UNKNOWN',
     original_name: name,
     site: 'FFZ',
+    provider: 'ffz',
   });
 
   const createEmoteMap = (

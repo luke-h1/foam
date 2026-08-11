@@ -65,6 +65,7 @@ describe('bttvEmoteService', () => {
         original_name: 'catJAMOriginal',
         creator: null,
         site: 'Global BTTV',
+        provider: 'bttv',
         flags: undefined,
       },
     ]);
@@ -97,6 +98,7 @@ describe('bttvEmoteService', () => {
         original_name: 'UNKNOWN',
         creator: null,
         site: 'Global BTTV',
+        provider: 'bttv',
         flags: 256,
         zero_width: true,
       },

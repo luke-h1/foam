@@ -110,7 +110,7 @@ function buildLookupCollection(
       emoteMap.set(emote.name, resolved);
     }
 
-    if (resolved.site === 'Emoji') {
+    if (resolved.provider === 'emoji') {
       const emojiHexcode = resolved.emoji_hexcode ?? resolved.id;
       if (!emojiMap.has(emojiHexcode)) {
         emojiMap.set(emojiHexcode, resolved);
@@ -225,12 +225,14 @@ export function replaceTextWithEmotes({
             id: foundEmote.id,
             name: foundEmote.name,
             type: 'emote',
-            content: foundEmote.site === 'Emoji' ? emoji : foundEmote.name,
+            content: foundEmote.provider === 'emoji' ? emoji : foundEmote.name,
             creator: foundEmote.creator,
             emote_link: foundEmote.emote_link,
             image_variants: foundEmote.image_variants,
             original_name:
-              foundEmote.site === 'Emoji' ? emoji : foundEmote.original_name,
+              foundEmote.provider === 'emoji'
+                ? emoji
+                : foundEmote.original_name,
             site: foundEmote.site,
             static_url: foundEmote.static_url,
             thumbnail: foundEmote.url,

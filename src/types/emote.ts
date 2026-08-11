@@ -11,6 +11,13 @@ export interface SevenTvEmoteSetMetadata {
   totalCount: number;
 }
 
+/**
+ * The canonical provider discriminant for emotes and badges. The spelling
+ * matches the values `SanitisedBadgeSet.provider` already persists ('7tv',
+ * 'bttv', 'ffz'); dispatch on this field, never on the `site` display string.
+ */
+export type EmoteProvider = 'twitch' | '7tv' | 'bttv' | 'ffz' | 'emoji';
+
 export type EmoteImageScale = '1x' | '2x' | '3x' | '4x';
 export type EmoteImageVariantKind = 'animated' | 'static';
 export type EmoteImageVariantSet = Partial<Record<EmoteImageScale, string>>;
@@ -32,6 +39,7 @@ interface SanitisedEmoteBase {
 export type SevenTvSite = '7TV Channel' | '7TV Global' | '7TV Personal';
 
 export interface SevenTvSanitisedEmote extends SanitisedEmoteBase {
+  provider: '7tv';
   site: SevenTvSite;
   frame_count: number;
   format: string;
@@ -45,6 +53,7 @@ export interface SevenTvSanitisedEmote extends SanitisedEmoteBase {
 }
 
 export interface BttvSanitisedEmote extends SanitisedEmoteBase {
+  provider: 'bttv';
   site: 'BTTV' | 'Global BTTV';
   flags?: number;
   aspect_ratio?: number;
@@ -55,6 +64,7 @@ export interface BttvSanitisedEmote extends SanitisedEmoteBase {
 }
 
 export interface FfzSanitisedEmote extends SanitisedEmoteBase {
+  provider: 'ffz';
   site: 'FFZ' | 'Global FFZ';
   flags?: number;
   aspect_ratio?: number;
@@ -65,6 +75,7 @@ export interface FfzSanitisedEmote extends SanitisedEmoteBase {
 }
 
 export interface TwitchSanitisedEmote extends SanitisedEmoteBase {
+  provider: 'twitch';
   site: 'Twitch Channel' | 'Twitch Global' | 'Twitch Subscriber';
   flags?: number;
   aspect_ratio?: number;
@@ -76,6 +87,7 @@ export interface TwitchSanitisedEmote extends SanitisedEmoteBase {
 }
 
 export interface EmojiSanitisedEmote extends SanitisedEmoteBase {
+  provider: 'emoji';
   site: 'Emoji';
   emoji_hexcode?: string;
   flags?: number;

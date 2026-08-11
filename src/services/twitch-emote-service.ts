@@ -38,26 +38,39 @@ function sanitiseTwitchEmote(
   emote: Pick<TwitchEmote, 'id' | 'name'> & { owner_id?: string },
   site: TwitchSanitisedEmote['site'],
   creator: string | null,
-): TwitchSanitisedEmote {
-  return {
-    ...buildSanitisedEmote({
-      id: emote.id,
-      name: emote.name,
-      site,
-      creator,
-      emoteLink: toTwitchImageUrl(emote.id),
-      originalName: emote.name,
-      animated: {
-        '2x': toTwitchImageUrl(emote.id, 'default', '2.0'),
-        '4x': toTwitchImageUrl(emote.id, 'default', '3.0'),
-      },
-      static: {
-        '2x': toTwitchImageUrl(emote.id, 'static', '2.0'),
-        '4x': toTwitchImageUrl(emote.id, 'static', '3.0'),
-      },
-    }),
-    owner_id: emote.owner_id,
-  };
+): TwitchSanitisedEmote | null {
+  return buildSanitisedEmote({
+    id: emote.id,
+    name: emote.name,
+    site,
+    creator,
+    emoteLink: toTwitchImageUrl(emote.id),
+    originalName: emote.name,
+    animated: {
+      '2x': toTwitchImageUrl(emote.id, 'default', '2.0'),
+      '4x': toTwitchImageUrl(emote.id, 'default', '3.0'),
+    },
+    static: {
+      '2x': toTwitchImageUrl(emote.id, 'static', '2.0'),
+      '4x': toTwitchImageUrl(emote.id, 'static', '3.0'),
+    },
+    ownerId: emote.owner_id,
+  });
+}
+
+function sanitiseTwitchEmotes(
+  emotes: (Pick<TwitchEmote, 'id' | 'name'> & { owner_id?: string })[],
+  site: TwitchSanitisedEmote['site'],
+  creator: string | null,
+): TwitchSanitisedEmote[] {
+  const sanitised: TwitchSanitisedEmote[] = [];
+  for (const emote of emotes) {
+    const result = sanitiseTwitchEmote(emote, site, creator);
+    if (result) {
+      sanitised.push(result);
+    }
+  }
+  return sanitised;
 }
 
 export const twitchEmoteService = {
@@ -76,11 +89,11 @@ export const twitchEmoteService = {
       twitchService.getUser(undefined, channelId),
     ]);
 
-    const sanitisedSet = result.data.map<TwitchSanitisedEmote>(emote =>
-      sanitiseTwitchEmote(emote, 'Twitch Channel', broadcaster.display_name),
+    return sanitiseTwitchEmotes(
+      result.data,
+      'Twitch Channel',
+      broadcaster.display_name,
     );
-
-    return sanitisedSet;
   },
 
   getGlobalEmotes: async (): Promise<TwitchSanitisedEmote[]> => {
@@ -88,11 +101,7 @@ export const twitchEmoteService = {
       '/chat/emotes/global',
     );
 
-    const sanitisedSet = result.data.map<TwitchSanitisedEmote>(emote =>
-      sanitiseTwitchEmote(emote, 'Twitch Global', null),
-    );
-
-    return sanitisedSet;
+    return sanitiseTwitchEmotes(result.data, 'Twitch Global', null);
   },
 
   getSubscriberEmotes: async (
@@ -116,8 +125,6 @@ export const twitchEmoteService = {
       cursor = result.pagination?.cursor;
     } while (cursor);
 
-    return emotes.map<TwitchSanitisedEmote>(emote =>
-      sanitiseTwitchEmote(emote, 'Twitch Subscriber', null),
-    );
+    return sanitiseTwitchEmotes(emotes, 'Twitch Subscriber', null);
   },
 } as const;

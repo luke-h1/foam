@@ -31,6 +31,7 @@ describe('extractEmotes', () => {
           },
         },
         site: 'Twitch Subscriber',
+        provider: 'twitch',
       },
     ]);
   });
@@ -60,6 +61,7 @@ describe('extractEmotes', () => {
           },
         },
         site: 'Twitch Subscriber',
+        provider: 'twitch',
       },
     ]);
   });

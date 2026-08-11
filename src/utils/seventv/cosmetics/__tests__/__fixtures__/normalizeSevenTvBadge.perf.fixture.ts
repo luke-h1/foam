@@ -11,6 +11,7 @@ export const badgeRows: SanitisedBadgeSet[][] = Array.from(
       id: 'moderator',
       set: 'moderator',
       type: 'Twitch Badge',
+      provider: 'twitch',
       title: 'Moderator',
       url: 'https://static-cdn.jtvnw.net/badges/v1/moderator/3',
     },

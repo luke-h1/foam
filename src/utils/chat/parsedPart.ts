@@ -230,6 +230,7 @@ export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
                               | 'emote_link'
                               | 'image_variants'
                               | 'original_name'
+                              | 'provider'
                               | 'site'
                               | 'static_url'
                               | 'url'

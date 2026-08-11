@@ -18,6 +18,7 @@ export function createEmojiEmote({
     url,
     static_url: url,
     site: 'Emoji',
+    provider: 'emoji',
     width: 72,
     height: 72,
     aspect_ratio: 1,

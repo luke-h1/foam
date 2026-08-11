@@ -92,6 +92,7 @@ describe('makeEmptyGlobalCacheData', () => {
     name: id,
     original_name: id,
     site: 'BTTV',
+    provider: 'bttv',
     static_url: `https://example.com/${id}.png`,
     url: `https://example.com/${id}.webp`,
   });
@@ -117,6 +118,7 @@ describe('makeEmptyGlobalCacheData', () => {
       set: 'hydrated-badge',
       title: 'hydrated-badge',
       type: 'FFZ Badge',
+      provider: 'ffz',
       url: 'https://example.com/hydrated-badge.png',
     });
 
@@ -151,6 +153,7 @@ describe('migratePersistedChatStore', () => {
     name: id,
     original_name: id,
     site: 'BTTV',
+    provider: 'bttv',
     static_url: `https://example.com/${id}.png`,
     url: `https://example.com/${id}.webp`,
   });
@@ -160,6 +163,7 @@ describe('migratePersistedChatStore', () => {
     set: id,
     title: id,
     type: 'FFZ Badge',
+    provider: 'ffz',
     url: `https://example.com/${id}.png`,
   });
 

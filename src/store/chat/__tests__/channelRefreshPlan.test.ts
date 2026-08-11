@@ -35,6 +35,7 @@ const emote = {
     totalCount: 1,
   },
   site: '7TV Channel',
+  provider: '7tv',
   static_url: 'https://example.com/e1.png',
   url: 'https://example.com/e1.webp',
   width: 32,

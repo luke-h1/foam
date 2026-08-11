@@ -56,6 +56,7 @@ async function getSharedChatSourceBadge(
         title: `Shared chat: ${user.display_name || user.login}`,
         url: user.profile_image_url,
         owner_username: user.login,
+        provider: 'twitch',
       } satisfies SanitisedBadgeSet;
     })
     .catch(error => {

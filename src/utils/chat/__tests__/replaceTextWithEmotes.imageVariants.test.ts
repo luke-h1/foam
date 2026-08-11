@@ -39,6 +39,7 @@ describe('replaceTextWithEmotes image variants', () => {
         },
       },
       site: 'BTTV',
+      provider: 'bttv',
     };
 
     const result = replaceTextWithEmotes({
@@ -59,6 +60,7 @@ describe('replaceTextWithEmotes image variants', () => {
         url: 'https://example.com/animated-4x.webp',
         static_url: 'https://example.com/static-4x.webp',
         image_variants: emote.image_variants,
+        provider: 'bttv',
         site: 'BTTV',
       },
     ]);
@@ -77,6 +79,7 @@ describe('replaceTextWithEmotes image variants', () => {
           emote_link: 'https://betterttv.com/emotes/5f1b0186cf6d2144653d2970',
           url: 'https://cdn.betterttv.net/emote/5f1b0186cf6d2144653d2970/3x',
           site: 'BTTV',
+          provider: 'bttv',
         },
       ],
     });
@@ -105,6 +108,7 @@ describe('replaceTextWithEmotes image variants', () => {
             '3x': 'https://cdn.betterttv.net/emote/5f1b0186cf6d2144653d2970/3x.png',
           },
         },
+        provider: 'bttv',
         site: 'BTTV',
       },
     ]);

@@ -49,6 +49,7 @@ describe('emoji shortcode parsing', () => {
         creator: null,
         emote_link: '',
         original_name: ':joy:',
+        provider: 'emoji',
         site: 'Emoji',
         static_url: 'https://example.com/joy.png',
         url: 'https://example.com/joy.png',
@@ -66,6 +67,7 @@ describe('emoji shortcode parsing', () => {
         creator: null,
         emote_link: '',
         original_name: ':haha:',
+        provider: 'emoji',
         site: 'Emoji',
         static_url: 'https://example.com/joy.png',
         url: 'https://example.com/joy.png',
@@ -121,6 +123,7 @@ describe('emoji shortcode parsing', () => {
           static_url:
             'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_sub/static/dark/3.0',
           site: 'Twitch Subscriber',
+          provider: 'twitch',
         },
       ],
     });
@@ -148,6 +151,7 @@ describe('emoji shortcode parsing', () => {
             '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_sub/static/dark/3.0',
           },
         },
+        provider: 'twitch',
         site: 'Twitch Subscriber',
       },
     ]);

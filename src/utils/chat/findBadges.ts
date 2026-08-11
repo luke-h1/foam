@@ -57,7 +57,7 @@ const addBadge = (
     id: normalizedBadge.id,
     color: normalizedBadge.color,
     owner_username: normalizedBadge.owner_username,
-    ...(normalizedBadge.provider ? { provider: normalizedBadge.provider } : {}),
+    provider: normalizedBadge.provider,
   });
 };
 
@@ -237,6 +237,7 @@ export function findBadges({
       url: b.url,
       color: b.color,
       owner_username: b.owner_username,
+      provider: b.provider,
     });
   });
 

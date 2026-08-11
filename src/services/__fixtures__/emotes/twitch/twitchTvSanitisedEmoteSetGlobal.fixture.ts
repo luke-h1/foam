@@ -22,6 +22,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'VhagarChamp',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'Yagoo',
@@ -44,6 +45,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'Yagoo',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'SipTime',
@@ -66,6 +68,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'SipTime',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'EleGiggle',
@@ -88,6 +91,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'EleGiggle',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'FeverFighter',
@@ -110,6 +114,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'FeverFighter',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'WeDidThat',
@@ -132,6 +137,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'WeDidThat',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PewPewPew',
@@ -154,6 +160,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PewPewPew',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'JinxLUL',
@@ -176,6 +183,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'JinxLUL',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'FeelsVi',
@@ -198,6 +206,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'FeelsVi',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'AmbessaLove',
@@ -220,6 +229,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'AmbessaLove',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'EkkoChest',
@@ -242,6 +252,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'EkkoChest',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'CaitThinking',
@@ -264,6 +275,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'CaitThinking',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'Cinheimer',
@@ -286,6 +298,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'Cinheimer',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'BratChat',
@@ -308,6 +321,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'BratChat',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'BigSad',
@@ -330,6 +344,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'BigSad',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'GRASSLORD',
@@ -352,6 +367,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'GRASSLORD',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TWITH',
@@ -374,6 +390,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TWITH',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'SUBtember',
@@ -396,6 +413,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'SUBtember',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'AnotherRecord',
@@ -418,6 +436,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'AnotherRecord',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'GoatEmotey',
@@ -440,6 +459,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'GoatEmotey',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'GoldPLZ',
@@ -462,6 +482,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'GoldPLZ',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TwitchConHYPE',
@@ -484,6 +505,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TwitchConHYPE',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PopNemo',
@@ -506,6 +528,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PopNemo',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'DinoDance',
@@ -528,6 +551,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'DinoDance',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'NewRecord',
@@ -550,6 +574,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'NewRecord',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'SUBprise',
@@ -572,6 +597,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'SUBprise',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'ImTyping',
@@ -594,6 +620,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'ImTyping',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'Shush',
@@ -616,6 +643,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'Shush',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'MyAvatar',
@@ -638,6 +666,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'MyAvatar',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PizzaTime',
@@ -660,6 +689,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PizzaTime',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'LaundryBasket',
@@ -682,6 +712,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'LaundryBasket',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'ModLove',
@@ -704,6 +735,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'ModLove',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'Jebasted',
@@ -726,6 +758,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'Jebasted',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TransgenderPride',
@@ -748,6 +781,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TransgenderPride',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PansexualPride',
@@ -770,6 +804,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PansexualPride',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'NonbinaryPride',
@@ -792,6 +827,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'NonbinaryPride',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'LesbianPride',
@@ -814,6 +850,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'LesbianPride',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'IntersexPride',
@@ -836,6 +873,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'IntersexPride',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'GenderFluidPride',
@@ -858,6 +896,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'GenderFluidPride',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'GayPride',
@@ -880,6 +919,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'GayPride',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'BisexualPride',
@@ -902,6 +942,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'BisexualPride',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'AsexualPride',
@@ -924,6 +965,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'AsexualPride',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PogChamp',
@@ -946,6 +988,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PogChamp',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'GlitchNRG',
@@ -968,6 +1011,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'GlitchNRG',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'GlitchLit',
@@ -990,6 +1034,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'GlitchLit',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'StinkyGlitch',
@@ -1012,6 +1057,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'StinkyGlitch',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'GlitchCat',
@@ -1034,6 +1080,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'GlitchCat',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'FootGoal',
@@ -1056,6 +1103,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'FootGoal',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'FootYellow',
@@ -1078,6 +1126,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'FootYellow',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'FootBall',
@@ -1100,6 +1149,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'FootBall',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'BlackLivesMatter',
@@ -1122,6 +1172,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'BlackLivesMatter',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'ExtraLife',
@@ -1144,6 +1195,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'ExtraLife',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'VirtualHug',
@@ -1166,6 +1218,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'VirtualHug',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'R-)',
@@ -1188,6 +1241,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'R-)',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'R)',
@@ -1210,6 +1264,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'R)',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ';-p',
@@ -1232,6 +1287,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ';-p',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ';p',
@@ -1254,6 +1310,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ';p',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ';-P',
@@ -1276,6 +1333,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ';-P',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ';P',
@@ -1298,6 +1356,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ';P',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':-p',
@@ -1320,6 +1379,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':-p',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':p',
@@ -1342,6 +1402,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':p',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':-P',
@@ -1364,6 +1425,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':-P',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':P',
@@ -1386,6 +1448,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':P',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ';-)',
@@ -1408,6 +1471,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ';-)',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ';)',
@@ -1430,6 +1494,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ';)',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':-\\',
@@ -1452,6 +1517,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':-\\',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':\\',
@@ -1474,6 +1540,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':\\',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':-/',
@@ -1496,6 +1563,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':-/',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':/',
@@ -1518,6 +1586,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':/',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: '<3',
@@ -1540,6 +1609,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: '<3',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':-o',
@@ -1562,6 +1632,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':-o',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':o',
@@ -1584,6 +1655,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':o',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':-O',
@@ -1606,6 +1678,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':-O',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':O',
@@ -1628,6 +1701,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':O',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: '8-)',
@@ -1650,6 +1724,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: '8-)',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'B-)',
@@ -1672,6 +1747,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'B-)',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'B)',
@@ -1694,6 +1770,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'B)',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'o.o',
@@ -1716,6 +1793,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'o.o',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'o_o',
@@ -1738,6 +1816,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'o_o',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'o.O',
@@ -1760,6 +1839,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'o.O',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'o_O',
@@ -1782,6 +1862,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'o_O',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'O.O',
@@ -1804,6 +1885,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'O.O',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'O_O',
@@ -1826,6 +1908,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'O_O',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'O.o',
@@ -1848,6 +1931,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'O.o',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'O_o',
@@ -1870,6 +1954,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'O_o',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':-Z',
@@ -1892,6 +1977,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':-Z',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':Z',
@@ -1914,6 +2000,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':Z',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':-z',
@@ -1936,6 +2023,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':-z',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':z',
@@ -1958,6 +2046,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':z',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':-|',
@@ -1980,6 +2069,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':-|',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':|',
@@ -2002,6 +2092,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':|',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: '>(',
@@ -2024,6 +2115,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: '>(',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':-D',
@@ -2046,6 +2138,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':-D',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':D',
@@ -2068,6 +2161,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':D',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':-(',
@@ -2090,6 +2184,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':-(',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':(',
@@ -2112,6 +2207,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':(',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':-)',
@@ -2134,6 +2230,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':-)',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'BOP',
@@ -2156,6 +2253,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'BOP',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'SingsNote',
@@ -2178,6 +2276,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'SingsNote',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'SingsMic',
@@ -2200,6 +2299,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'SingsMic',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TwitchSings',
@@ -2222,6 +2322,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TwitchSings',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'SoonerLater',
@@ -2244,6 +2345,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'SoonerLater',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'HolidayTree',
@@ -2266,6 +2368,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'HolidayTree',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'HolidaySanta',
@@ -2288,6 +2391,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'HolidaySanta',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'HolidayPresent',
@@ -2310,6 +2414,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'HolidayPresent',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'HolidayLog',
@@ -2332,6 +2437,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'HolidayLog',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'HolidayCookie',
@@ -2354,6 +2460,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'HolidayCookie',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PixelBob',
@@ -2376,6 +2483,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PixelBob',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'FBPenalty',
@@ -2398,6 +2506,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'FBPenalty',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'FBChallenge',
@@ -2420,6 +2529,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'FBChallenge',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'FBCatch',
@@ -2442,6 +2552,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'FBCatch',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'FBBlock',
@@ -2464,6 +2575,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'FBBlock',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'FBSpiral',
@@ -2486,6 +2598,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'FBSpiral',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'FBPass',
@@ -2508,6 +2621,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'FBPass',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'FBRun',
@@ -2530,6 +2644,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'FBRun',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'MaxLOL',
@@ -2552,6 +2667,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'MaxLOL',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TwitchRPG',
@@ -2574,6 +2690,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TwitchRPG',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PinkMercy',
@@ -2596,6 +2713,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PinkMercy',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'MercyWing2',
@@ -2618,6 +2736,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'MercyWing2',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'MercyWing1',
@@ -2640,6 +2759,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'MercyWing1',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PartyHat',
@@ -2662,6 +2782,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PartyHat',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'EarthDay',
@@ -2684,6 +2805,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'EarthDay',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TombRaid',
@@ -2706,6 +2828,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TombRaid',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PopCorn',
@@ -2728,6 +2851,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PopCorn',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'FBtouchdown',
@@ -2750,6 +2874,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'FBtouchdown',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TPFufun',
@@ -2772,6 +2897,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TPFufun',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TwitchVotes',
@@ -2794,6 +2920,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TwitchVotes',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'DarkMode',
@@ -2816,6 +2943,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'DarkMode',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'HSWP',
@@ -2838,6 +2966,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'HSWP',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'HSCheers',
@@ -2860,6 +2989,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'HSCheers',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PowerUpL',
@@ -2882,6 +3012,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PowerUpL',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PowerUpR',
@@ -2904,6 +3035,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PowerUpR',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'LUL',
@@ -2926,6 +3058,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'LUL',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'EntropyWins',
@@ -2948,6 +3081,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'EntropyWins',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TPcrunchyroll',
@@ -2970,6 +3104,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TPcrunchyroll',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TwitchUnity',
@@ -2992,6 +3127,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TwitchUnity',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'Squid4',
@@ -3014,6 +3150,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'Squid4',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'Squid3',
@@ -3036,6 +3173,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'Squid3',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'Squid2',
@@ -3058,6 +3196,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'Squid2',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'Squid1',
@@ -3080,6 +3219,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'Squid1',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'CrreamAwk',
@@ -3102,6 +3242,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'CrreamAwk',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'CarlSmile',
@@ -3124,6 +3265,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'CarlSmile',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TwitchLit',
@@ -3146,6 +3288,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TwitchLit',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TehePelo',
@@ -3168,6 +3311,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TehePelo',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TearGlove',
@@ -3190,6 +3334,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TearGlove',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'SabaPing',
@@ -3212,6 +3357,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'SabaPing',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PunOko',
@@ -3234,6 +3380,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PunOko',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'KonCha',
@@ -3256,6 +3403,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'KonCha',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'Kappu',
@@ -3278,6 +3426,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'Kappu',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'InuyoFace',
@@ -3300,6 +3449,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'InuyoFace',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'BigPhish',
@@ -3322,6 +3472,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'BigPhish',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'BegWan',
@@ -3344,6 +3495,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'BegWan',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'ThankEgg',
@@ -3366,6 +3518,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'ThankEgg',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'MorphinTime',
@@ -3388,6 +3541,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'MorphinTime',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TheIlluminati',
@@ -3410,6 +3564,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TheIlluminati',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TBAngel',
@@ -3432,6 +3587,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TBAngel',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'MVGame',
@@ -3454,6 +3610,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'MVGame',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'NinjaGrumpy',
@@ -3476,6 +3633,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'NinjaGrumpy',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PartyTime',
@@ -3498,6 +3656,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PartyTime',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'RlyTho',
@@ -3520,6 +3679,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'RlyTho',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'UWot',
@@ -3542,6 +3702,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'UWot',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'YouDontSay',
@@ -3564,6 +3725,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'YouDontSay',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'KAPOW',
@@ -3586,6 +3748,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'KAPOW',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'ItsBoshyTime',
@@ -3608,6 +3771,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'ItsBoshyTime',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'CoolStoryBob',
@@ -3630,6 +3794,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'CoolStoryBob',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TriHard',
@@ -3652,6 +3817,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TriHard',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'SuperVinlin',
@@ -3674,6 +3840,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'SuperVinlin',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'FreakinStinkin',
@@ -3696,6 +3863,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'FreakinStinkin',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'Poooound',
@@ -3718,6 +3886,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'Poooound',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'CurseLit',
@@ -3740,6 +3909,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'CurseLit',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'BatChest',
@@ -3762,6 +3932,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'BatChest',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'BrainSlug',
@@ -3784,6 +3955,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'BrainSlug',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PrimeMe',
@@ -3806,6 +3978,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PrimeMe',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'StrawBeary',
@@ -3828,6 +4001,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'StrawBeary',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'RaccAttack',
@@ -3850,6 +4024,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'RaccAttack',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'UncleNox',
@@ -3872,6 +4047,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'UncleNox',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'WTRuck',
@@ -3894,6 +4070,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'WTRuck',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TooSpicy',
@@ -3916,6 +4093,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TooSpicy',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'Jebaited',
@@ -3938,6 +4116,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'Jebaited',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'DogFace',
@@ -3960,6 +4139,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'DogFace',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'BlargNaut',
@@ -3982,6 +4162,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'BlargNaut',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TakeNRG',
@@ -4004,6 +4185,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TakeNRG',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'GivePLZ',
@@ -4026,6 +4208,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'GivePLZ',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'imGlitch',
@@ -4048,6 +4231,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'imGlitch',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'pastaThat',
@@ -4070,6 +4254,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'pastaThat',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'copyThis',
@@ -4092,6 +4277,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'copyThis',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'UnSane',
@@ -4114,6 +4300,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'UnSane',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'DatSheffy',
@@ -4136,6 +4323,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'DatSheffy',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TheTarFu',
@@ -4158,6 +4346,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TheTarFu',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PicoMause',
@@ -4180,6 +4369,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PicoMause',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TinyFace',
@@ -4202,6 +4392,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TinyFace',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'DxCat',
@@ -4224,6 +4415,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'DxCat',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'RuleFive',
@@ -4246,6 +4438,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'RuleFive',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'VoteNay',
@@ -4268,6 +4461,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'VoteNay',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'VoteYea',
@@ -4290,6 +4484,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'VoteYea',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PJSugar',
@@ -4312,6 +4507,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PJSugar',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'DoritosChip',
@@ -4334,6 +4530,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'DoritosChip',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'OpieOP',
@@ -4356,6 +4553,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'OpieOP',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'FutureMan',
@@ -4378,6 +4576,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'FutureMan',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'ChefFrank',
@@ -4400,6 +4599,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'ChefFrank',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'StinkyCheese',
@@ -4422,6 +4622,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'StinkyCheese',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'NomNom',
@@ -4444,6 +4645,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'NomNom',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'SmoocherZ',
@@ -4466,6 +4668,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'SmoocherZ',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'cmonBruh',
@@ -4488,6 +4691,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'cmonBruh',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'KappaWealth',
@@ -4510,6 +4714,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'KappaWealth',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'MikeHogu',
@@ -4532,6 +4737,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'MikeHogu',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'VoHiYo',
@@ -4554,6 +4760,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'VoHiYo',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'KomodoHype',
@@ -4576,6 +4783,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'KomodoHype',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'SeriousSloth',
@@ -4598,6 +4806,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'SeriousSloth',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'OSFrog',
@@ -4620,6 +4829,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'OSFrog',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'OhMyDog',
@@ -4642,6 +4852,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'OhMyDog',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'KappaClaus',
@@ -4664,6 +4875,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'KappaClaus',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'KappaRoss',
@@ -4686,6 +4898,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'KappaRoss',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'MingLee',
@@ -4708,6 +4921,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'MingLee',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'SeemsGood',
@@ -4730,6 +4944,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'SeemsGood',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'twitchRaid',
@@ -4752,6 +4967,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'twitchRaid',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'bleedPurple',
@@ -4774,6 +4990,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'bleedPurple',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'duDudu',
@@ -4796,6 +5013,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'duDudu',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'riPepperonis',
@@ -4818,6 +5036,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'riPepperonis',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'NotLikeThis',
@@ -4840,6 +5059,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'NotLikeThis',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'DendiFace',
@@ -4862,6 +5082,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'DendiFace',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'CoolCat',
@@ -4884,6 +5105,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'CoolCat',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'KappaPride',
@@ -4906,6 +5128,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'KappaPride',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'ShadyLulu',
@@ -4928,6 +5151,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'ShadyLulu',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'ArgieB8',
@@ -4950,6 +5174,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'ArgieB8',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'CorgiDerp',
@@ -4972,6 +5197,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'CorgiDerp',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PraiseIt',
@@ -4994,6 +5220,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PraiseIt',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TTours',
@@ -5016,6 +5243,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TTours',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'mcaT',
@@ -5038,6 +5266,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'mcaT',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'NotATK',
@@ -5060,6 +5289,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'NotATK',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'HeyGuys',
@@ -5082,6 +5312,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'HeyGuys',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'Mau5',
@@ -5104,6 +5335,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'Mau5',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PRChase',
@@ -5126,6 +5358,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PRChase',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'WutFace',
@@ -5148,6 +5381,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'WutFace',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'BuddhaBar',
@@ -5170,6 +5404,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'BuddhaBar',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PermaSmug',
@@ -5192,6 +5427,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PermaSmug',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'panicBasket',
@@ -5214,6 +5450,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'panicBasket',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'BabyRage',
@@ -5236,6 +5473,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'BabyRage',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'HassaanChop',
@@ -5258,6 +5496,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'HassaanChop',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TheThing',
@@ -5280,6 +5519,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TheThing',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'RitzMitz',
@@ -5302,6 +5542,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'RitzMitz',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'YouWHY',
@@ -5324,6 +5565,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'YouWHY',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PipeHype',
@@ -5346,6 +5588,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PipeHype',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'BrokeBack',
@@ -5368,6 +5611,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'BrokeBack',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'ANELE',
@@ -5390,6 +5634,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'ANELE',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PanicVis',
@@ -5412,6 +5657,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PanicVis',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'GrammarKing',
@@ -5434,6 +5680,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'GrammarKing',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PeoplesChamp',
@@ -5456,6 +5703,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PeoplesChamp',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'SoBayed',
@@ -5478,6 +5726,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'SoBayed',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'BigBrother',
@@ -5500,6 +5749,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'BigBrother',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'Keepo',
@@ -5522,6 +5772,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'Keepo',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'Kippa',
@@ -5544,6 +5795,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'Kippa',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'RalpherZ',
@@ -5566,6 +5818,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'RalpherZ',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TF2John',
@@ -5588,6 +5841,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TF2John',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'ThunBeast',
@@ -5610,6 +5864,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'ThunBeast',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'WholeWheat',
@@ -5632,6 +5887,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'WholeWheat',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'DAESuppy',
@@ -5653,6 +5909,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'DAESuppy',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'FailFish',
@@ -5674,6 +5931,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'FailFish',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'HotPokket',
@@ -5695,6 +5953,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'HotPokket',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: '4Head',
@@ -5716,6 +5975,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: '4Head',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'ResidentSleeper',
@@ -5737,6 +5997,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'ResidentSleeper',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'FUNgineer',
@@ -5758,6 +6019,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'FUNgineer',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PMSTwin',
@@ -5778,6 +6040,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PMSTwin',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'ShazBotstix',
@@ -5798,6 +6061,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'ShazBotstix',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'AsianGlow',
@@ -5818,6 +6082,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'AsianGlow',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'DBstyle',
@@ -5838,6 +6103,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'DBstyle',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'BloodTrail',
@@ -5858,6 +6124,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'BloodTrail',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'OneHand',
@@ -5878,6 +6145,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'OneHand',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'FrankerZ',
@@ -5898,6 +6166,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'FrankerZ',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'SMOrc',
@@ -5918,6 +6187,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'SMOrc',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'ArsonNoSexy',
@@ -5938,6 +6208,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'ArsonNoSexy',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PunchTrees',
@@ -5958,6 +6229,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PunchTrees',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'SSSsss',
@@ -5978,6 +6250,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'SSSsss',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'Kreygasm',
@@ -5998,6 +6271,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'Kreygasm',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'KevinTurtle',
@@ -6018,6 +6292,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'KevinTurtle',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'PJSalt',
@@ -6038,6 +6313,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'PJSalt',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'SwiftRage',
@@ -6058,6 +6334,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'SwiftRage',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'DansGame',
@@ -6078,6 +6355,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'DansGame',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'GingerPower',
@@ -6098,6 +6376,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'GingerPower',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'BCWarrior',
@@ -6118,6 +6397,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'BCWarrior',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'MrDestructoid',
@@ -6138,6 +6418,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'MrDestructoid',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'JonCarnage',
@@ -6158,6 +6439,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'JonCarnage',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'Kappa',
@@ -6178,6 +6460,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'Kappa',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'RedCoat',
@@ -6198,6 +6481,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'RedCoat',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'TheRinger',
@@ -6218,6 +6502,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'TheRinger',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'StoneLightning',
@@ -6238,6 +6523,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'StoneLightning',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'OptimizePrime',
@@ -6258,6 +6544,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'OptimizePrime',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'JKanStyle',
@@ -6278,6 +6565,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'JKanStyle',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'R)',
@@ -6298,6 +6586,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'R)',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ';P',
@@ -6318,6 +6607,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ';P',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':P',
@@ -6338,6 +6628,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':P',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ';)',
@@ -6358,6 +6649,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ';)',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':/',
@@ -6378,6 +6670,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':/',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: '<3',
@@ -6398,6 +6691,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: '<3',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':O',
@@ -6418,6 +6712,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':O',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'B)',
@@ -6438,6 +6733,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'B)',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: 'O_o',
@@ -6458,6 +6754,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: 'O_o',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':|',
@@ -6478,6 +6775,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':|',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: '>(',
@@ -6498,6 +6796,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: '>(',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':D',
@@ -6518,6 +6817,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':D',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':(',
@@ -6538,6 +6838,7 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':(',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
   {
     name: ':)',
@@ -6558,5 +6859,6 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
     creator: null,
     original_name: ':)',
     site: 'Twitch Global',
+    provider: 'twitch',
   },
 ];

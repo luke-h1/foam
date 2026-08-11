@@ -17,7 +17,7 @@ const BADGE_IMAGE_EXTENSION = /\.(webp|png|avif|gif|jpe?g)(?:$|\?)/i;
 const normalizedBadges = new WeakMap<SanitisedBadgeSet, SanitisedBadgeSet>();
 
 function isSevenTvBadge(badge: SanitisedBadgeSet): boolean {
-  return badge.provider === '7tv' || badge.type === '7TV Badge';
+  return badge.provider === '7tv';
 }
 
 /**

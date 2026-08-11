@@ -41,6 +41,7 @@ function emote(name: string, url = `https://example.com/${name}.webp`) {
     url,
     static_url: `${url}.png`,
     site: 'BTTV',
+    provider: 'bttv',
   } satisfies SanitisedEmote;
 }
 
