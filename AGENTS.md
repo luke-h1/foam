@@ -98,20 +98,6 @@ Because the rule is off for `package.json`, a genuinely unused dependency won't 
 
 `react-hooks-js/immutability` is turned off for `BlockedTermsScreen.tsx` and `SavedPhrasesScreen.tsx` in `doctor.config.json`. Their iOS branches bind `@expo/ui/swift-ui` `useNativeState` values to SwiftUI text fields, and writing back through `state.value = ...` is that API's intended write path - the rule misreads those writes as mutation of an immutable hook value. Scope any future exemption to the specific files the same way rather than turning the rule off globally.
 
-## React Doctor: visible-asset hydration timer override
-
-`react-doctor/effect-needs-cleanup` is turned off for
-`useChatMessageProcessing.ts` in `doctor.config.json`. The debounce handle is
-stored on the `visibleAssetHydration` module object rather than in a ref (see
-"Chat overlays" for why that state is module-level), and the rule only
-recognises a handle held in a local or a ref, so it reads the store as absent.
-
-The timer is released on both paths that can strand it: the hook's own
-channel/unmount effect calls `clearVisibleAssetHydrationTimer`, and
-`clearVisibleAssetHydration` clears it along with the dedup keys when the
-channel changes. Move the handle into a ref only if the module state goes too -
-splitting them puts the release on a different owner from the arm.
-
 ## Bottom sheets: `@expo/ui` plus a not-yet-released iOS touch fix
 
 Every sheet goes through `src/components/BottomSheet/BottomSheet.native.tsx`, which wraps `@expo/ui/community/bottom-sheet`: a SwiftUI `.sheet` on iOS, a Material 3 `ModalBottomSheet` on Android.

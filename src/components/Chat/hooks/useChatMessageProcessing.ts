@@ -15,7 +15,8 @@ import {
 } from '@app/store/chat/actions/messageEnrichment';
 import { fetchUserCosmetics } from '@app/store/chat/actions/userCosmeticsFetch';
 import {
-  clearVisibleAssetHydrationTimer,
+  invalidateVisibleAssetHydrationPass,
+  scheduleVisibleAssetHydrationPass,
   visibleAssetHydration,
 } from '@app/store/chat/actions/visibleAssetHydration';
 import { usePersonalEmotesVersion } from '@app/store/chat/react/selectors';
@@ -28,8 +29,6 @@ import { hydrateVisibleSevenTvAssets } from '../util/hydrateVisibleSevenTvAssets
 import { resolveMessageEmoteParts } from '../util/resolveMessageEmoteParts';
 import { getCachedSharedChatBadgeContext } from '../util/sharedChatBadges/getCachedSharedChatBadgeContext';
 import { getMessageBadges } from '../util/sharedChatBadges/getMessageBadges';
-
-const VISIBLE_ASSET_HYDRATION_DELAY_MS = 150;
 
 interface UseChatMessageProcessingOptions {
   channelId: string;
@@ -167,95 +166,64 @@ export function useChatMessageProcessing({
     [channelId, show7TvEmotes, userLogin],
   );
 
-  const hydrationEpochRef = useRef(0);
-  const activeHydrationPassRef = useRef<Promise<void> | null>(null);
   const latestVisibleMessagesRef = useRef<AnyChatMessageType[]>([]);
   const cancelEnrichMessageSetRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     return () => {
-      hydrationEpochRef.current += 1;
-      // This hook arms the debounce below, so it owns stopping it. The pass
-      // also reads scratch state that a channel switch resets, so a timer left
-      // running would hydrate the new channel against the old one's messages.
-      clearVisibleAssetHydrationTimer();
+      invalidateVisibleAssetHydrationPass();
       cancelEnrichMessageSetRef.current?.();
       cancelEnrichMessageSetRef.current = null;
     };
   }, [channelId]);
 
-  const scheduleVisibleAssetHydrationPass = useCallback(() => {
-    if (visibleAssetHydration.timer) {
-      return;
-    }
+  const runVisibleAssetHydrationPass = useCallback(
+    (epoch: number) => {
+      const messages = visibleAssetHydration.pendingMessages;
+      visibleAssetHydration.pendingMessages = [];
+      const shouldMaintainBottom = isAtBottomRef.current;
 
-    const epoch = hydrationEpochRef.current;
-
-    visibleAssetHydration.timer = setTimeout(() => {
-      visibleAssetHydration.timer = null;
-
-      const previousPass = activeHydrationPassRef.current ?? Promise.resolve();
-      const pass = previousPass
-        .then(() => {
-          if (hydrationEpochRef.current !== epoch) {
-            return undefined;
-          }
-
-          const messages = visibleAssetHydration.pendingMessages;
-          visibleAssetHydration.pendingMessages = [];
-          const shouldMaintainBottom = isAtBottomRef.current;
-
-          return hydrateVisibleSevenTvAssets({
-            channelId,
-            messages,
-            hydratedMessageKeys: visibleAssetHydration.hydratedMessageKeys,
-            personalEmoteUsers: visibleAssetHydration.personalEmoteUsers,
-            cosmeticUsers: visibleAssetHydration.cosmeticUsers,
-            getUserPersonalEmotes,
-            fetchUserPersonalEmotes,
-            getUserBadge: twitchUserId => getUserBadge(twitchUserId) ?? null,
-            fetchUserCosmetics,
-            hydratePersonalEmotes: show7TvEmotes,
-            hydrateCosmetics: show7tvBadges,
-            reprocessMessage: reprocessVisibleMessageFromCache,
-            shouldContinue: () => hydrationEpochRef.current === epoch,
-          }).then(didReprocessMessages => {
-            if (
-              didReprocessMessages &&
-              shouldMaintainBottom &&
-              isAtBottomRef.current
-            ) {
-              maintainBottomAfterContentChange();
-            }
-          });
-        })
-        .catch(error => {
-          logger.chat.debug('Visible-asset hydration pass failed:', error);
-        });
-
-      activeHydrationPassRef.current = pass;
-      void pass.then(() => {
-        if (activeHydrationPassRef.current === pass) {
-          activeHydrationPassRef.current = null;
+      return hydrateVisibleSevenTvAssets({
+        channelId,
+        messages,
+        hydratedMessageKeys: visibleAssetHydration.hydratedMessageKeys,
+        personalEmoteUsers: visibleAssetHydration.personalEmoteUsers,
+        cosmeticUsers: visibleAssetHydration.cosmeticUsers,
+        getUserPersonalEmotes,
+        fetchUserPersonalEmotes,
+        getUserBadge: twitchUserId => getUserBadge(twitchUserId) ?? null,
+        fetchUserCosmetics,
+        hydratePersonalEmotes: show7TvEmotes,
+        hydrateCosmetics: show7tvBadges,
+        reprocessMessage: reprocessVisibleMessageFromCache,
+        shouldContinue: () => visibleAssetHydration.epoch === epoch,
+      }).then(didReprocessMessages => {
+        if (
+          didReprocessMessages &&
+          shouldMaintainBottom &&
+          isAtBottomRef.current
+        ) {
+          maintainBottomAfterContentChange();
         }
       });
-    }, VISIBLE_ASSET_HYDRATION_DELAY_MS);
-  }, [
-    channelId,
-    isAtBottomRef,
-    maintainBottomAfterContentChange,
-    reprocessVisibleMessageFromCache,
-    show7TvEmotes,
-    show7tvBadges,
-  ]);
+    },
+    [
+      channelId,
+      isAtBottomRef,
+      maintainBottomAfterContentChange,
+      reprocessVisibleMessageFromCache,
+      show7TvEmotes,
+      show7tvBadges,
+    ],
+  );
 
   const handleViewableMessagesChange = useCallback(
     (visibleMessages: AnyChatMessageType[]) => {
       latestVisibleMessagesRef.current = visibleMessages;
       visibleAssetHydration.pendingMessages = visibleMessages;
-      scheduleVisibleAssetHydrationPass();
+      scheduleVisibleAssetHydrationPass(runVisibleAssetHydrationPass);
     },
-    [scheduleVisibleAssetHydrationPass],
+    [runVisibleAssetHydrationPass],
   );
 
   const personalEmotesVersion = usePersonalEmotesVersion();
@@ -268,8 +236,8 @@ export function useChatMessageProcessing({
     lastPersonalEmotesVersionRef.current = personalEmotesVersion;
     visibleAssetHydration.hydratedMessageKeys.clear();
     visibleAssetHydration.pendingMessages = latestVisibleMessagesRef.current;
-    void scheduleVisibleAssetHydrationPass();
-  }, [personalEmotesVersion, scheduleVisibleAssetHydrationPass]);
+    scheduleVisibleAssetHydrationPass(runVisibleAssetHydrationPass);
+  }, [personalEmotesVersion, runVisibleAssetHydrationPass]);
 
   const reprocessAllMessages = useCallback(() => {
     const emoteData = getCurrentEmoteData(channelId);
