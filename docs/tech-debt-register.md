@@ -1,0 +1,69 @@
+# Tech Debt Register — 2026-08-01
+
+Scored per item: **Impact** (slows the team, 1-5), **Risk** (cost of not fixing, 1-5), **Effort** (1-5, lower = cheaper).
+**Priority = (Impact + Risk) × (6 − Effort)** — higher is more urgent.
+
+> NOTE: this file lives in `docs/`, which is currently **gitignored** (item T1). Fix T1 first or this register (and all four ADRs) stays local-only.
+
+Sources: code/architecture scan, test/docs scan, dependency/infrastructure scan (2026-08-01), plus the project's known-issue backlog.
+
+## P0 — live bug, outside the debt framework
+
+- **Emote-sheet WebP hang (FOAM-TV-MOBILE-W / -25)**: reproduced on the first post-#802 build; expo-image native patches reverted 2026-08-01, so the earlier root-cause chain is suspect. Re-investigate from the newest build-40 stack when it reaches Sentry. Until resolved, every release carries a fatal-hang risk on the emote picker.
+
+## Priority table
+
+| # | Item | Cat | I | R | E | Pri |
+|---|------|-----|---|---|---|-----|
+| 1 | No workflow failure notifications — a failed production deploy is silent (`if: failure()` appears nowhere; Slack fires on success only) | Infra | 5 | 5 | 1 | 50 |
+| 2 | `docs/` is gitignored (`.gitignore:112`) — all 4 ADRs + CONTEXT.md unversioned; tooling writes ADRs into a black hole | Docs | 5 | 5 | 1 | 50 |
+| 3 | Coverage threshold is dead config — `jest.config.js` sets 60% but `collectCoverage:false` and CI never passes `--coverage` | Test | 5 | 5 | 1 | 50 |
+| 4 | `normaliseLogin` reimplemented ×7 with 3 different semantics (`@`-strip and order differ) — decides mentions, blocks, admin gates | Code | 4 | 5 | 1 | 45 |
+| 5 | Zero Sentry alerting as code (`sentry.options.json` = a DSN); crash spikes discovered by opening the dashboard | Infra | 5 | 5 | 2 | 40 |
+| 6 | No rollback *decision* runbook; native-regression rollback (OTA can't fix a bad binary) unaddressed entirely | Docs | 5 | 5 | 2 | 40 |
+| 7 | Release version scraped from `app.config.ts` with grep+sed (`deploy-ota-or-native.yml:80`) — feeds tag, Sentry release, runtimeVersion | Infra | 4 | 4 | 1 | 40 |
+| 8 | `LUKE_H1_GITHUB_TOKEN \|\| GITHUB_TOKEN` silent fallback — PAT expiry makes chained automation stop while looking successful | Infra | 4 | 4 | 1 | 40 |
+| 9 | `eas-deploy.yml` is a strictly-weaker duplicate release front door (no fingerprint/Sentry/changelog/Slack) — delete or rename | Infra | 4 | 4 | 1 | 40 |
+| 10 | Docs contradict reality: README documents 6 nonexistent build scripts; AGENTS.md documents a preferences-store layout that is a 10-line shim (real impl `preferenceStore.ts`, 56 importers); `android-native-parity-plan.md` says zero Android natives, three exist | Docs | 4 | 4 | 1 | 40 |
+| 11 | `bundleButtonEnabled` remote config has no `android` key; `SettingsIndexScreen` hardcodes `.ios[variant]` — Android reads iOS's flag | Code | 3 | 5 | 1 | 40 |
+| 12 | No Sentry release/commit association (`sentry-upload.sh` only uploads dSYMs) — rollback tooling has no signal; no suspect commits | Infra | 5 | 4 | 2 | 36 |
+| 13 | Native build job hard-pinned `runs-on: foam`, ignoring its own `runner` input — single Mac is a release SPOF | Infra | 5 | 4 | 2 | 36 |
+| 14 | No npm/bun dependency automation (dependabot covers github-actions only; no Renovate) — root cause of ~60-package drift | Dep | 5 | 4 | 2 | 36 |
+| 15 | 123-line hand-rolled reanimated mock shadowing the library's own `mock.js`; hardcoded 7-name entry-animation allowlist | Test | 4 | 5 | 2 | 36 |
+| 16 | `eas.json` pins bun 1.2.5 while `.bun-version`/engines say 1.3.14 — EAS builds run a formally unsupported bun | Infra | 4 | 3 | 1 | 35 |
+| 17 | Convention enforcement holes: no `-tsx` twin for the ast-grep partial-matcher rule; no `eslint-plugin-jest` (`test()` rule unenforced at 100% compliance) | Test | 3 | 4 | 1 | 35 |
+| 18 | `deleteTokens.ts` is dead code — the only sign-out SecureStore cleanup has zero callers; confirm whether sign-out leaks tokens | Code | 3 | 4 | 1 | 35 |
+| 19 | dSYM discovery/upload fails open (`exit 0` on none found) — can ship a release with unsymbolicated crashes, nothing goes red | Infra | 4 | 4 | 2 | 32 |
+| 20 | `@sentry/react-native` frozen at 8.14.1 (7 minors behind) via exact pin + `install.exclude` + transitive `@sentry/core` patch | Dep | 4 | 4 | 2 | 32 |
+| 21 | 62-file native-feel batch uncommitted; needs splitting into reviewable commits + on-device QA (Menu-in-RNHostView, Top large-title, recycleItems fling) | Process | 4 | 4 | 2 | 32 |
+| 22 | Production release = 6 manual dropdowns (72 combinations, several invalid); no tag/push-triggered path | Infra | 5 | 5 | 3 | 30 |
+| 23 | WebSocket reconnect/RESUME logic untested: `hooks/ws/attachedSharedListeners.ts` (whole backoff state machine), `twitch-ws-service.ts:254-303`, `useSeventvWs.ts` (1044 LoC) | Test | 5 | 5 | 3 | 30 |
+| 24 | `sevenTvPaintRenderer: 'webview'` unreachable from remote config (schema drift) — ~350 lines of a third renderer kept alive for a value only DevTools can set | Code | 4 | 3 | 2 | 28 |
+| 25 | `twitch-chat-service.ts` imports `useAuthContext` — a service that is secretly a React hook | Arch | 4 | 3 | 2 | 28 |
+| 26 | Chat `SettingsSheet` rows now declared twice (JS + `SettingsSheetIosForm`) — highest-probability future drift site in the batch | Code | 4 | 3 | 2 | 28 |
+| 27 | EventSub/WS payloads untyped — 5 stale TODOs + suppressions all in one call graph; one discriminated-union pass closes them | Code | 3 | 4 | 2 | 28 |
+| 28 | Patches pin exact versions; 5 of 6 have newer releases — each patch is a wall in front of `bun update` (also `^2.1.15` range vs exact patch mismatch on @legendapp/state) | Dep | 5 | 4 | 3 | 27 |
+| 29 | Release build path implemented twice (`scripts/build.sh` vs `native-build-submit/action.yml`) and already diverged (IPA name, env plumbing) | Infra | 5 | 4 | 3 | 27 |
+| 30 | `twemoji` unmaintained ~4 years (archived upstream), on the chat render path | Dep | 4 | 5 | 3 | 27 |
+| 31 | Android structurally untestable: jest `defaultPlatform: 'ios'`, no multi-project; 7 `.android.tsx` files unreachable; 12 unpinned platform suites assert iOS only | Test | 5 | 4 | 3 | 27 |
+| 32 | `deploy-ota-or-native.ts` orchestrator (436+ LoC) untested and excluded from coverage; no partial-failure runbook | Test | 4 | 5 | 3 | 27 |
+| 33 | `Form.tsx`: blanket `/* eslint-disable */` over 936 lines + 5 `@ts-expect-error` | Code | 5 | 4 | 3 | 27 |
+| 34 | `ChatOverlayLayer` 60-prop pass-through + `useChatOverlays` 662-line hook with 45 `useCallback`s manufacturing them | Arch | 5 | 3 | 3 | 24 |
+| 35 | Triplicated editable-list preference screens (~1,300 lines; BlockedTerms/ChatHighlights/SavedPhrases) — direct cause of the growing doctor.config exemption | Code | 5 | 3 | 3 | 24 |
+| 36 | `src/store` + `src/utils` import domain logic from `src/components/Chat/util/**` (layering inversion, near-circular) | Arch | 4 | 4 | 3 | 24 |
+| 37 | `chatStore$` imported raw in 19 component/hook files despite a selector layer | Arch | 4 | 3 | 3 | 21 |
+| 38 | `expo-modules-jsi` patch: 14KB private JSI fork, no upstream PR, no exit criteria (fixes reload-time promise crashes) | Dep | 5 | 5 | 4 | 20 |
+| 39 | PiP permanently `false` (`pipFeature.ts`) pending unresolved internal-108 crash — dead branches across ~6 player files | Code | 3 | 3 | 3 | 18 |
+| 40 | Flaky-risk tests: real-timer microtask flushes in `channelLoad`/`cache-service`, 15s `findByText` timeouts, `Math.random`/`Date.now` never mocked, `restoreMocks:false` | Test | 4 | 4 | 3 | 24 |
+
+Lower-priority backlog (not scored individually): worklets bundleMode re-enable (needs on-device smoke), duplicate FlashList+LegendList (consolidation is a wrapper swap), `date-fns` test-only in dependencies, `jest-junit`/devtools libs in dependencies, `uuid@3` override unexplained, SWM pin rationale undocumented, e2e runner home-dir mutation race, `pull-env.sh` bootstrap fragility, git-cliff Rust assumption, bare-SHA action pins without version comments, `no-misused-promises` ×13 (one wrapper), aria-role ×6 (one eslint override), `foam-app.com/faq` hardcoded ×6, chatterino-service 4,149-line embedded JSON blob, dead exports list (see code scan §5.4), `jsdom` test environment override, 196 suites without `beforeEach`, fixture-location convention violations.
+
+## Phased remediation
+
+**Phase 0 — this week (each < 1 day, most < 1 hour):** items 1, 2, 3, 4, 7, 8, 9, 10, 11, 16, 17, 18 + commit the native-feel batch (21). Pure wins, no design decisions.
+
+**Phase 1 — next 2 sprints (observability + release safety):** items 5, 6, 12, 13, 14, 19, 20, 22, 29. Theme: a deploy should announce its own failure, Sentry should know what a release is, and shipping should not require one Mac and six correct dropdowns.
+
+**Phase 2 — this quarter (testing structure):** items 15, 23, 31, 32, 40, plus 30 (twemoji replacement) and 28/38 (patch retirement: upstream the jsi + legend-state patches or record exit criteria; re-check expo/expo#48259).
+
+**Phase 3 — alongside feature work (architecture):** items 24, 25, 26, 27, 33, 34, 35, 36, 37, 39. Each is refactor-sized; pick them up when touching the surface anyway. 34+35 are the two biggest single wins for day-to-day velocity.

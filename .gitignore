@@ -109,7 +109,7 @@ profile-*.json
 docs/plans
 .agent-device
 
-docs/
+docs/profiles/
 build-artifacts/
 
 .fingerprint-cache/
