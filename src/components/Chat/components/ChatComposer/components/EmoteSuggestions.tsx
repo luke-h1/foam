@@ -1,6 +1,5 @@
 import { memo, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import {
   LegendList,
@@ -60,8 +59,6 @@ export const EmoteSuggestions = memo(function EmoteSuggestions({
   emotes,
   handleEmotePress,
 }: EmoteSuggestionsProps) {
-  const { t } = useTranslation('chat');
-
   const renderItem = useCallback(
     ({ item }: LegendListRenderItemProps<SanitisedEmote>) => (
       <EmoteSuggestionItem item={item} onPress={handleEmotePress} />
@@ -72,9 +69,7 @@ export const EmoteSuggestions = memo(function EmoteSuggestions({
   return (
     <View style={suggestionRailStyles.richWrapper}>
       <View style={suggestionRailStyles.richContainer}>
-        <Text style={suggestionRailStyles.headerLabel}>
-          {t('composer.emotes')}
-        </Text>
+        <Text style={suggestionRailStyles.headerLabel}>Emotes</Text>
         <LegendList
           data={emotes}
           horizontal

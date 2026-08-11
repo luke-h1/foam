@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -17,7 +16,6 @@ import { theme } from '@app/styles/themes';
 const HIDDEN_OFFSET = 80;
 
 export function OfflineBanner() {
-  const { t } = useTranslation('common');
   const insets = useSafeAreaInsets();
   const online = onlineManager.isOnline();
   const progress = useSharedValue(online ? 0 : 1);
@@ -46,7 +44,7 @@ export function OfflineBanner() {
     >
       <View style={styles.pill}>
         <Text type='xxs' weight='semibold' family='system' style={styles.text}>
-          {t('noInternetConnection')}
+          No internet connection
         </Text>
       </View>
     </Animated.View>

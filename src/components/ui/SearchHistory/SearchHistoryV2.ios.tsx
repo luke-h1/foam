@@ -1,6 +1,5 @@
 import { useCallback } from 'react';
 import { Alert, StyleSheet } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import {
   Button,
@@ -43,14 +42,16 @@ export function SearchHistoryV2({
   onClearItem,
   onSelectItem,
 }: SearchHistoryV2Props) {
-  const { t } = useTranslation(['search', 'common']);
-
   const handleClearAll = useCallback(() => {
-    Alert.alert(t('clearSearchHistory'), t('clearSearchHistoryConfirm'), [
-      { text: t('common:cancel'), style: 'cancel' },
-      { text: t('common:clearAll'), style: 'destructive', onPress: onClearAll },
-    ]);
-  }, [onClearAll, t]);
+    Alert.alert(
+      'Clear Search History',
+      'Are you sure you want to clear all your recent searches?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Clear All', style: 'destructive', onPress: onClearAll },
+      ],
+    );
+  }, [onClearAll]);
 
   const handleDelete = useCallback(
     (indices: number[]) => {
@@ -86,7 +87,7 @@ export function SearchHistoryV2({
                   foregroundStyle(SECONDARY),
                 ]}
               >
-                {t('recentSearches')}
+                RECENT SEARCHES
               </Text>
               <Spacer />
               <Button onPress={handleClearAll}>
@@ -96,7 +97,7 @@ export function SearchHistoryV2({
                     foregroundStyle(theme.colorRed),
                   ]}
                 >
-                  {t('common:clearAll')}
+                  Clear All
                 </Text>
               </Button>
             </HStack>

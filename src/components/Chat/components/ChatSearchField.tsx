@@ -1,6 +1,5 @@
 import { memo, useState } from 'react';
 import { Platform, StyleSheet, TextInput, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import { Button } from '@app/components/Button/Button';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
@@ -26,7 +25,6 @@ interface ChatSearchFieldProps {
  */
 export const ChatSearchField = memo(
   ({ onClose, onQueryChange }: ChatSearchFieldProps) => {
-    const { t } = useTranslation('chat');
     const [draftQuery, setDraftQuery] = useState('');
     const [pushQuery] = useDebouncedCallback((value: string) => {
       onQueryChange(value);
@@ -46,13 +44,13 @@ export const ChatSearchField = memo(
         />
         {Platform.OS === 'ios' ? (
           <Input
-            accessibilityLabel={t('controls.searchMessages')}
+            accessibilityLabel='Search messages'
             autoCapitalize='none'
             autoComplete='off'
             autoCorrect={false}
             color='white'
             onChangeText={handleQueryChange}
-            placeholder={t('controls.searchMessages')}
+            placeholder='Search messages'
             placeholderTextColor={theme.color.textSecondary.dark}
             radius='none'
             returnKeyType='search'
@@ -67,12 +65,12 @@ export const ChatSearchField = memo(
           />
         ) : (
           <TextInput
-            accessibilityLabel={t('controls.searchMessages')}
+            accessibilityLabel='Search messages'
             autoCapitalize='none'
             autoCorrect={false}
             cursorColor={theme.color.text.dark}
             onChangeText={handleQueryChange}
-            placeholder={t('controls.searchMessages')}
+            placeholder='Search messages'
             placeholderTextColor={theme.color.textSecondary.dark}
             returnKeyType='search'
             selectionColor={theme.colorTextSelection}
@@ -83,7 +81,7 @@ export const ChatSearchField = memo(
           />
         )}
         <Button
-          accessibilityLabel={t('controls.closeSearch')}
+          accessibilityLabel='Close search'
           accessibilityRole='button'
           onPress={onClose}
         >

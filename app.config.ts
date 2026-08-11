@@ -198,7 +198,6 @@ const config: ExpoConfig = {
   plugins: [
     ['expo-router', { disableSynchronousScreensUpdates: true }],
     'expo-image',
-    'expo-localization',
     [
       'expo-splash-screen',
       {

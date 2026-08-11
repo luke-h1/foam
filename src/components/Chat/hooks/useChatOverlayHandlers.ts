@@ -8,7 +8,6 @@ import type {
   MessageActionData,
   UsernamePressData,
 } from '@app/components/Chat/components/ChatMessage/RichChatMessage.types';
-import i18next from '@app/i18n/i18next';
 import { queryClient } from '@app/lib/react-query/query-client';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
 import { twitchService } from '@app/services/twitch-service';
@@ -28,13 +27,13 @@ import type { ModCommand } from '../util/modCommands/parseModCommand';
 import { runModCommand } from '../util/modCommands/runModCommand';
 
 const TIMEOUT_DURATION_OPTIONS = [
-  { labelKey: 'chat:userActions.timeoutDuration10Seconds', seconds: 10 },
-  { labelKey: 'chat:userActions.timeoutDuration1Minute', seconds: 60 },
-  { labelKey: 'chat:userActions.timeoutDuration10Minutes', seconds: 600 },
-  { labelKey: 'chat:userActions.timeoutDuration30Minutes', seconds: 1800 },
-  { labelKey: 'chat:userActions.timeoutDuration1Hour', seconds: 3600 },
-  { labelKey: 'chat:userActions.timeoutDuration1Day', seconds: 86400 },
-] as const satisfies readonly { labelKey: string; seconds: number }[];
+  { label: '10 seconds', seconds: 10 },
+  { label: '1 minute', seconds: 60 },
+  { label: '10 minutes', seconds: 600 },
+  { label: '30 minutes', seconds: 1800 },
+  { label: '1 hour', seconds: 3600 },
+  { label: '24 hours', seconds: 86400 },
+] as const satisfies readonly { label: string; seconds: number }[];
 
 export function resolveModTarget(
   selection: { login?: string; username?: string } | null | undefined,
@@ -104,11 +103,9 @@ export function useChatOverlayHandlers({
       }
 
       showActionMenu({
-        title: i18next.t('chat:userActions.timeoutDurationTitle', {
-          name: target,
-        }),
+        title: `Timeout ${target}`,
         actions: TIMEOUT_DURATION_OPTIONS.map(option => ({
-          label: i18next.t(option.labelKey),
+          label: option.label,
           onPress: () => {
             runModAction({
               type: 'timeout',
@@ -117,7 +114,7 @@ export function useChatOverlayHandlers({
             });
           },
         })),
-        cancelLabel: i18next.t('common:cancel'),
+        cancelLabel: 'Cancel',
       });
     },
     [runModAction],
@@ -136,9 +133,7 @@ export function useChatOverlayHandlers({
 
     void Clipboard.setStringAsync(
       replaceEmotesWithText(selectedMessage.message),
-    ).then(() =>
-      toast.success(i18next.t('chat:userActions.copiedToClipboard')),
-    );
+    ).then(() => toast.success('Copied to clipboard'));
   }, [selectedMessage]);
 
   const handleActionSheetHideUser = useCallback(() => {
@@ -164,15 +159,13 @@ export function useChatOverlayHandlers({
 
     twitchService
       .deleteChatMessage(channelId, moderatorId, messageId)
-      .then(() =>
-        toast.success(i18next.t('chat:userActions.deleteCommandSent')),
-      )
+      .then(() => toast.success('Message deleted'))
       .catch((error: unknown) => {
         logger.chat.warn('Failed to delete chat message', {
           error,
           channel_id: channelId,
         });
-        toast.error(i18next.t('chat:modCommands.failed'));
+        toast.error('Moderation action failed');
       });
   }, [channelId, currentUserId, selectedMessage?.messageData.message_id]);
 
@@ -209,7 +202,7 @@ export function useChatOverlayHandlers({
     }
 
     void Clipboard.setStringAsync(selectedUser.username).then(() =>
-      toast.success(i18next.t('chat:userActions.copiedUsername')),
+      toast.success('Copied username'),
     );
   }, [selectedUser]);
 
@@ -240,25 +233,22 @@ export function useChatOverlayHandlers({
     };
 
     showActionMenu({
-      title: i18next.t('chat:userActions.warnReasonTitle', { name: target }),
+      title: `Warn ${target}`,
       actions: [
         {
-          label: i18next.t('chat:userActions.warnReasonSpam'),
-          onPress: () =>
-            warnWithReason(i18next.t('chat:userActions.warnReasonSpam')),
+          label: 'Spam',
+          onPress: () => warnWithReason('Spam'),
         },
         {
-          label: i18next.t('chat:userActions.warnReasonHarassment'),
-          onPress: () =>
-            warnWithReason(i18next.t('chat:userActions.warnReasonHarassment')),
+          label: 'Harassment',
+          onPress: () => warnWithReason('Harassment'),
         },
         {
-          label: i18next.t('chat:userActions.warnReasonRules'),
-          onPress: () =>
-            warnWithReason(i18next.t('chat:userActions.warnReasonRules')),
+          label: 'Breaking channel rules',
+          onPress: () => warnWithReason('Breaking channel rules'),
         },
       ],
-      cancelLabel: i18next.t('common:cancel'),
+      cancelLabel: 'Cancel',
     });
   }, [runModAction, selectedUser]);
 
@@ -279,12 +269,12 @@ export function useChatOverlayHandlers({
     }
 
     Alert.alert(
-      i18next.t('chat:userActions.blockUser'),
-      i18next.t('chat:userActions.blockUserConfirm', { name: displayName }),
+      'Block User',
+      `Are you sure you want to block ${displayName}?`,
       [
-        { text: i18next.t('common:cancel'), style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: i18next.t('chat:userActions.block'),
+          text: 'Block',
           style: 'destructive',
           onPress: () => {
             twitchService
@@ -298,7 +288,7 @@ export function useChatOverlayHandlers({
                 }
               })
               .catch(() => {
-                toast.error(i18next.t('chat:userActions.failedToBlockUser'));
+                toast.error('Failed to block user');
               });
           },
         },

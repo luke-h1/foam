@@ -7,7 +7,6 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ContentUnavailableView, Host } from '@expo/ui/swift-ui';
@@ -35,17 +34,17 @@ const supportsContentUnavailableView =
 
 interface EmptyStatePresetItem {
   iconName: SymbolViewProps['name'];
-  headingKey: 'nothingHereYet';
-  contentKey: 'nothingHereYetDescription';
-  buttonKey: 'refresh';
+  heading: string;
+  content: string;
+  button: string;
 }
 
 const EMPTY_STATE_PRESETS = {
   generic: {
     iconName: 'tv',
-    headingKey: 'nothingHereYet',
-    contentKey: 'nothingHereYetDescription',
-    buttonKey: 'refresh',
+    heading: 'Nothing here yet',
+    content: 'Refresh to try again, or come back in a moment.',
+    button: 'Refresh',
   },
 } satisfies Record<string, EmptyStatePresetItem>;
 
@@ -88,16 +87,14 @@ export function EmptyState({
   iconSize = 56,
   iconTintColor = theme.color.textSecondary.dark,
 }: EmptyStateProps) {
-  const { t } = useTranslation('common');
   const presetConfig = EMPTY_STATE_PRESETS[preset];
   const resolvedImageSource = imageSource;
   const resolvedIconName = resolvedImageSource
     ? undefined
     : (iconName ?? presetConfig.iconName);
-  const resolvedHeading = heading ?? t(presetConfig.headingKey);
-  const resolvedContent = content ?? t(presetConfig.contentKey);
-  const resolvedButton =
-    button === undefined ? t(presetConfig.buttonKey) : button;
+  const resolvedHeading = heading ?? presetConfig.heading;
+  const resolvedContent = content ?? presetConfig.content;
+  const resolvedButton = button === undefined ? presetConfig.button : button;
 
   const iosSymbol =
     typeof resolvedIconName === 'string'

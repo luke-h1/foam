@@ -2,7 +2,6 @@ import { memo } from 'react';
 import { View } from 'react-native';
 
 import { Text } from '@app/components/ui/Text/Text';
-import i18next from '@app/i18n/i18next';
 import { reportUnrenderableNotice } from '@app/utils/chat/chatHealth/reportUnrenderableNotice';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
 
@@ -51,7 +50,7 @@ function ModAnniversaryNoticeComponent({
         compact={compact}
         fontScale={fontScale}
         icon='shield.fill'
-        label={i18next.t('chat:notices.modAnniversary')}
+        label='Mod anniversary'
         labelColor={CHAT_NOTICE_ACCENTS.modAnniversary}
         labelStyle={styles.modAnniversaryMetaText}
       />

@@ -1,28 +1,25 @@
-import { useTranslation } from 'react-i18next';
-
 import { Stack } from 'expo-router';
 
 import { nativeStackScreenOptions } from '@app/utils/navigation/nativeStackOptions';
 
 export default function PreferencesLayout() {
-  const { t } = useTranslation('navigation');
   return (
     <Stack screenOptions={nativeStackScreenOptions}>
       <Stack.Screen
         name='blocked-users'
-        options={{ title: t('blockedUsers'), headerBackTitle: t('profile') }}
+        options={{ title: 'Blocked Users', headerBackTitle: 'Profile' }}
       />
       <Stack.Screen
         name='chat'
-        options={{ title: t('chat'), headerBackTitle: t('settings') }}
+        options={{ title: 'Chat', headerBackTitle: 'Settings' }}
       />
       <Stack.Screen
         name='theming'
-        options={{ title: t('theme'), headerBackTitle: t('settings') }}
+        options={{ title: 'Theme', headerBackTitle: 'Settings' }}
       />
       <Stack.Screen
         name='video'
-        options={{ title: t('video'), headerBackTitle: t('settings') }}
+        options={{ title: 'Video', headerBackTitle: 'Settings' }}
       />
     </Stack>
   );

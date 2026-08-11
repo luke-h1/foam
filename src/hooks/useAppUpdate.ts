@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Platform } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import type { ReloadScreenOptions } from 'expo-updates';
 import * as Updates from 'expo-updates';
@@ -25,48 +24,49 @@ function toError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error));
 }
 
-export function useAppUpdate() {
-  const { t } = useTranslation('settings');
-  const [isCheckingBundle, setIsCheckingBundle] = useState(false);
+function openStore() {
+  void (async () => {
+    const storeUrl = await getStoreUrlAsync();
+    if (storeUrl) {
+      openLinkInBrowser(storeUrl);
+      return;
+    }
+    toast.error('Could not open the store');
+  })();
+}
 
-  const openStore = () => {
-    void (async () => {
-      const storeUrl = await getStoreUrlAsync();
-      if (storeUrl) {
-        openLinkInBrowser(storeUrl);
-        return;
-      }
-      toast.error(t('updateStoreUnavailable'));
-    })();
-  };
+export function useAppUpdate() {
+  const [isCheckingBundle, setIsCheckingBundle] = useState(false);
 
   const updateBundle = () => {
     if (isCheckingBundle) {
       return;
     }
     if (!ENV_SUPPORTS_OTA) {
-      toast.error(t('otaUnavailable'));
+      toast.error('Over-the-air updates are not available for this build');
       return;
     }
 
     setIsCheckingBundle(true);
-    const pendingToastId = toast.loading(t('bundleChecking'));
+    const pendingToastId = toast.loading('Checking for updates…');
 
     void (async () => {
       try {
         const result = await Updates.checkForUpdateAsync();
         if (!result.isAvailable) {
-          toast.success(t('bundleUpToDate'), { id: pendingToastId });
+          toast.success('You are on the latest version', {
+            id: pendingToastId,
+          });
           return;
         }
 
         await Updates.fetchUpdateAsync();
-        toast.success(t('bundleDownloaded'), {
+        toast.success('Update downloaded', {
           id: pendingToastId,
-          description: t('bundleDownloadedDescription'),
+          description: 'Restart the app to apply the update',
           duration: 10000,
           action: {
-            label: t('bundleRestart'),
+            label: 'Restart',
             onClick: () => {
               void Updates.reloadAsync({
                 reloadScreenOptions: OTA_RELOAD_SCREEN_OPTIONS,
@@ -83,7 +83,7 @@ export function useAppUpdate() {
           channel: Updates.channel || 'unknown',
           platform: Platform.OS,
         });
-        toast.error(t('bundleUpdateFailed'), { id: pendingToastId });
+        toast.error('Could not download update', { id: pendingToastId });
       } finally {
         setIsCheckingBundle(false);
       }

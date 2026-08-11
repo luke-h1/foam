@@ -1,6 +1,5 @@
 import { type RefObject, useCallback, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import { useObservable, useSelector } from '@legendapp/state/react';
 import type { ListRenderItem } from '@shopify/flash-list';
@@ -35,7 +34,6 @@ function CategoryCardSkeleton() {
 }
 
 export function TopCategoriesScreen() {
-  const { t } = useTranslation('stream');
   const refreshing$ = useObservable(false);
   const refreshing = useSelector(refreshing$);
   const listRef = useRef<FlashListRef<Category>>(null);
@@ -92,8 +90,8 @@ export function TopCategoriesScreen() {
     return (
       <View style={styles.wrapper}>
         <EmptyState
-          heading={t('failedToFetchCategories')}
-          content={t('failedToFetchTopCategories')}
+          heading='Failed to fetch categories'
+          content='Failed to fetch top categories'
         />
       </View>
     );
@@ -103,7 +101,7 @@ export function TopCategoriesScreen() {
     return (
       <View style={styles.wrapper}>
         <EmptyState
-          content={t('noCategoriesFound')}
+          content='No categories found'
           buttonOnPress={() => void onRefresh()}
         />
       </View>

@@ -2,7 +2,6 @@ import { memo } from 'react';
 import { View } from 'react-native';
 
 import { Text } from '@app/components/ui/Text/Text';
-import i18next from '@app/i18n/i18next';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import type { ChatFontScale } from '../ChatMessage/chatScale';
@@ -40,7 +39,7 @@ function CharityDonationNoticeComponent({
         compact={compact}
         fontScale={fontScale}
         icon='heart.fill'
-        label={i18next.t('chat:notices.charityDonation')}
+        label='Charity donation'
         labelColor={CHAT_NOTICE_ACCENTS.charity}
       />
       <Text style={textStyles.meta}>

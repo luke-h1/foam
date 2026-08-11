@@ -1,6 +1,5 @@
 import { StyleSheet, View } from 'react-native';
 import type { ComponentProps } from 'react';
-import { useTranslation } from 'react-i18next';
 import { GestureDetector } from 'react-native-gesture-handler';
 
 // Full-screen tap target above the WebView, below the controls overlay: the single handler
@@ -10,13 +9,11 @@ export function TouchBlockOverlay({
 }: {
   gesture: ComponentProps<typeof GestureDetector>['gesture'];
 }) {
-  const { t } = useTranslation('common');
-
   return (
     <GestureDetector gesture={gesture}>
       <View
         style={styles.touchBlockOverlay}
-        accessibilityLabel={t('showPlayerControls')}
+        accessibilityLabel='Show player controls'
         accessibilityRole='button'
       />
     </GestureDetector>

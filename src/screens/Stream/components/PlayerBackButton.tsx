@@ -1,5 +1,3 @@
-import { useTranslation } from 'react-i18next';
-
 import { router } from 'expo-router';
 
 import { IconButton } from '@app/components/IconButton/IconButton';
@@ -7,12 +5,10 @@ import { BACK_SYMBOL_NAME } from '@app/components/ui/Icon/Icon';
 import { theme } from '@app/styles/themes';
 
 export function PlayerBackButton() {
-  const { t } = useTranslation();
-
   return (
     <IconButton
       icon={{ type: 'symbol', name: BACK_SYMBOL_NAME, size: 20 }}
-      label={t('goBack')}
+      label='Go back'
       onPress={() => router.back()}
       size='2xl'
       style={{

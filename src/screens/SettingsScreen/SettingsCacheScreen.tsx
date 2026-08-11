@@ -1,6 +1,5 @@
 import { useRef } from 'react';
 import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import {
   Button,
@@ -18,7 +17,6 @@ import {
 } from '@app/components/SettingsSection/SettingsSection';
 import { Text } from '@app/components/ui/Text/Text';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import i18next from '@app/i18n/i18next';
 import { queryClient } from '@app/lib/react-query/query-client';
 import { storageService } from '@app/lib/storage';
 import { clearChatCosmeticsCache } from '@app/store/chat/actions/channelLoad';
@@ -27,17 +25,17 @@ import { clearImageCache } from '@app/utils/image/clearImageCache';
 
 function handleClearData() {
   Alert.alert(
-    i18next.t('settings:clearLocalData'),
-    i18next.t('settings:clearLocalDataConfirm'),
+    'Clear Local Data',
+    'This clears cached app data and forces fresh fetches the next time screens load.',
     [
-      { text: i18next.t('common:cancel'), style: 'cancel' },
+      { text: 'Cancel', style: 'cancel' },
       {
-        text: i18next.t('settings:clear'),
+        text: 'Clear',
         style: 'destructive',
         onPress: () => {
           storageService.clear();
           queryClient.clear();
-          toast.success(i18next.t('settings:localDataCleared'));
+          toast.success('Local data cleared');
         },
       },
     ],
@@ -46,18 +44,18 @@ function handleClearData() {
 
 function handleClearCache() {
   Alert.alert(
-    i18next.t('settings:clearCacheTitle'),
-    i18next.t('settings:clearCacheConfirm'),
+    'Clear Cache',
+    'This removes all cached emotes, badges, 7TV cosmetics, and downloaded media from this device. They will be fetched again as needed.',
     [
-      { text: i18next.t('common:cancel'), style: 'cancel' },
+      { text: 'Cancel', style: 'cancel' },
       {
-        text: i18next.t('settings:clear'),
+        text: 'Clear',
         style: 'destructive',
         onPress: () => {
           clearChatCosmeticsCache();
           storageService.clearImageCache();
           void clearImageCache().then(() => {
-            toast.success(i18next.t('settings:cacheCleared'));
+            toast.success('Cache cleared');
           });
         },
       },
@@ -66,7 +64,6 @@ function handleClearCache() {
 }
 
 export function SettingsCacheScreen() {
-  const { t } = useTranslation('settings');
   const scrollRef = useRef<ScrollView>(null);
 
   useScrollToTop(scrollRef);
@@ -76,19 +73,24 @@ export function SettingsCacheScreen() {
       <Host style={styles.iosHost}>
         <Form>
           <Section
-            title={t('dangerZone')}
-            footer={<NativeText>{t('cacheFooterIos')}</NativeText>}
+            title='Danger Zone'
+            footer={
+              <NativeText>
+                Use these when stream metadata, badges, emotes, or downloaded
+                chat media need a hard refresh.
+              </NativeText>
+            }
             modifiers={[tint('red')]}
           >
             <Button
-              label={t('clearLocalData')}
+              label='Clear Local Data'
               systemImage='externaldrive'
               // eslint-disable-next-line jsx-a11y/aria-role, react-doctor/aria-role -- SwiftUI Button role, not ARIA
               role='destructive'
               onPress={handleClearData}
             />
             <Button
-              label={t('clearCache')}
+              label='Clear Cache'
               systemImage='trash'
               // eslint-disable-next-line jsx-a11y/aria-role, react-doctor/aria-role -- SwiftUI Button role, not ARIA
               role='destructive'
@@ -108,23 +110,24 @@ export function SettingsCacheScreen() {
         contentContainerStyle={styles.content}
       >
         <SettingsSection
-          title={t('dangerZone')}
+          title='Danger Zone'
           footer={
             <Text type='xs' color='gray.textLow'>
-              {t('cacheFooter')}
+              These actions should be used for troubleshooting and hard
+              refreshes, not routine cleanup.
             </Text>
           }
         >
           <SettingsLinkRow
-            title={t('clearData')}
-            subtitle={t('clearDataDescription')}
+            title='Clear Data'
+            subtitle='Sign out and refetch stream, category, emote, and badge state'
             icon={{ icon: 'externaldrive', color: theme.colorRed }}
             onPress={handleClearData}
             danger
           />
           <SettingsLinkRow
-            title={t('clearCache')}
-            subtitle={t('clearCacheDescription')}
+            title='Clear Cache'
+            subtitle='Remove cached emotes, badges, 7TV cosmetics, and downloaded images'
             icon={{ icon: 'trash', color: theme.colorRed }}
             onPress={handleClearCache}
             danger

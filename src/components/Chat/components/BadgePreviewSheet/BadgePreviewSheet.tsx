@@ -5,7 +5,6 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import * as Clipboard from 'expo-clipboard';
 import { toast } from 'sonner-native';
@@ -45,7 +44,6 @@ type PreviewAction = {
 };
 
 function BadgePreviewSheetComponent(props: Props) {
-  const { t } = useTranslation(['chat', 'common']);
   const { saveImage, isSaving } = useSaveImageToGallery();
   const { visible, onClose, selectedBadge } = props;
   const sheetRef = useRef<BottomSheetHandle>(null);
@@ -59,9 +57,7 @@ function BadgePreviewSheetComponent(props: Props) {
       field === 'name' ? selectedBadge.title : selectedBadge.url,
     ).then(() =>
       toast.success(
-        field === 'name'
-          ? t('badgePreview.nameCopied')
-          : t('badgePreview.urlCopied'),
+        field === 'name' ? 'Badge name copied' : 'Badge URL copied',
       ),
     );
   };
@@ -70,52 +66,52 @@ function BadgePreviewSheetComponent(props: Props) {
     saveImage(
       { url: selectedBadge.url },
       {
-        onError: () => toast.error(t('badgePreview.imageSaveFailed')),
-        onSuccess: () => toast.success(t('badgePreview.imageSaved')),
+        onError: () => toast.error('Could not save badge'),
+        onSuccess: () => toast.success('Badge saved to gallery'),
       },
     );
   };
 
   const metadataRows = [
-    { label: t('badgePreview.type'), value: selectedBadge.type },
+    { label: 'Type', value: selectedBadge.type },
     {
-      label: t('badgePreview.provider'),
+      label: 'Provider',
       value: selectedBadge.provider?.toUpperCase(),
     },
-    { label: t('badgePreview.owner'), value: selectedBadge.owner_username },
-    { label: t('badgePreview.set'), value: selectedBadge.set },
-    { label: t('badgePreview.id'), value: selectedBadge.id },
+    { label: 'Owner', value: selectedBadge.owner_username },
+    { label: 'Set', value: selectedBadge.set },
+    { label: 'ID', value: selectedBadge.id },
   ].filter(row => Boolean(row.value));
 
   const actions: PreviewAction[] = (() => {
     const items: PreviewAction[] = [
       {
         icon: 'doc.on.doc',
-        label: t('badgePreview.copyBadgeName'),
+        label: 'Copy Badge name',
         onPress: () => handleCopy('name'),
         subtitle: selectedBadge.title,
       },
       {
         icon: 'link',
-        label: t('badgePreview.copyBadgeUrl'),
+        label: 'Copy Badge URL',
         onPress: () => handleCopy('url'),
-        subtitle: t('badgePreview.copyBadgeUrlSubtitle'),
+        subtitle: 'Rendered badge source',
       },
     ];
 
     if (selectedBadge.url) {
       items.push({
         icon: 'square.and.arrow.down',
-        label: t('badgePreview.saveImage'),
+        label: 'Save image',
         onPress: handleSaveImage,
-        subtitle: t('badgePreview.saveImageSubtitle'),
+        subtitle: 'Save to your photo gallery',
         disabled: isSaving,
       });
       items.push({
         icon: 'arrow.up.right.square',
-        label: t('badgePreview.openInBrowser'),
+        label: 'Open in Browser',
         onPress: () => openLinkInBrowser(selectedBadge.url),
-        subtitle: t('badgePreview.openInBrowserSubtitle'),
+        subtitle: 'Image source',
       });
     }
 
@@ -143,17 +139,13 @@ function BadgePreviewSheetComponent(props: Props) {
         <View style={styles.topBar}>
           <View style={styles.heading}>
             <Text style={styles.eyebrow} weight='semibold'>
-              {t('badgePreview.eyebrow')}
+              Badge preview
             </Text>
             <Text style={styles.title} weight='semibold' numberOfLines={2}>
               {selectedBadge.title}
             </Text>
           </View>
-          <Button
-            label={t('common:done')}
-            style={styles.doneButton}
-            onPress={requestClose}
-          >
+          <Button label='Done' style={styles.doneButton} onPress={requestClose}>
             <SymbolView
               name='xmark'
               size={15}

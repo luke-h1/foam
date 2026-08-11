@@ -1,6 +1,5 @@
 import { ScrollView, StyleSheet, View } from 'react-native';
 import type { ErrorInfo } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { useObservable, useSelector } from '@legendapp/state/react';
 import { router } from 'expo-router';
@@ -27,7 +26,6 @@ function handleShowFeedback() {
 }
 
 export function ErrorDetails(props: ErrorDetailsProps) {
-  const { t } = useTranslation('errors');
   const { error, errorInfo, onReset } = props;
   const showStackTrace$ = useObservable(false);
   const showStackTrace = useSelector(showStackTrace$);
@@ -60,8 +58,8 @@ export function ErrorDetails(props: ErrorDetailsProps) {
 
         <Text type='lg' weight='semibold' align='center'>
           {errorCategory === 'network'
-            ? t('connectionTrouble')
-            : t('somethingWentWrong')}
+            ? 'Connection trouble'
+            : 'Something went wrong'}
         </Text>
 
         <Text
@@ -91,7 +89,7 @@ export function ErrorDetails(props: ErrorDetailsProps) {
 
           <Button style={styles.secondaryButton} onPress={handleShowFeedback}>
             <Text type='sm' weight='semibold' color='gray' align='center'>
-              {t('sendFeedback')}
+              Send Feedback
             </Text>
           </Button>
         </View>
@@ -106,7 +104,7 @@ export function ErrorDetails(props: ErrorDetailsProps) {
             align='center'
             style={styles.linkText}
           >
-            {showStackTrace ? t('hideStackTrace') : t('showStackTrace')}
+            {showStackTrace ? 'Hide Stack Trace' : 'Show Stack Trace'}
           </Text>
         </Button>
       </View>

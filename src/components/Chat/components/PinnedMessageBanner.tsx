@@ -1,6 +1,5 @@
 import { memo } from 'react';
 import { View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import Animated, { FadeInUp, FadeOutUp } from 'react-native-reanimated';
 
 import { Button } from '@app/components/Button/Button';
@@ -29,15 +28,13 @@ export const PinnedMessageBanner = memo(
     pinnedMessage: PinnedChatMessageViewModel | null;
     pinnedMessageBusy: boolean;
   }) => {
-    const { t } = useTranslation('chat');
-
     if (!pinnedMessage?.text.trim()) {
       return null;
     }
 
     const title = pinnedMessage.senderName
-      ? t('pinned.userPinned', { name: pinnedMessage.senderName })
-      : t('pinned.pinnedMessage');
+      ? `${pinnedMessage.senderName} pinned`
+      : 'Pinned message';
 
     return (
       <Animated.View
@@ -64,7 +61,7 @@ export const PinnedMessageBanner = memo(
           <View style={styles.pinnedMessageActions}>
             <Button
               disabled={pinnedMessageBusy}
-              label={t('pinned.refreshPin')}
+              label='Refresh pin'
               onPress={onRefresh}
               style={styles.pinnedMessageActionButton}
             >
@@ -76,7 +73,7 @@ export const PinnedMessageBanner = memo(
             </Button>
             <Button
               disabled={pinnedMessageBusy}
-              label={t('pinned.unpinMessage')}
+              label='Unpin message'
               onPress={onUnpin}
               style={styles.pinnedMessageActionButton}
             >

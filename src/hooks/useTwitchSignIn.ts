@@ -13,7 +13,6 @@ import * as WebBrowser from 'expo-web-browser';
 import { toast } from 'sonner-native';
 
 import { useAuthContext } from '@app/context/AuthContext';
-import i18next from '@app/i18n/i18next';
 import { logger } from '@app/utils/logger';
 
 const USER_SCOPES = [
@@ -156,7 +155,7 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
       responseType: nextResponse.type,
       hasAuthentication,
     });
-    toast.success(i18next.t('auth:loggedIn'));
+    toast.success('Logged in');
 
     if (onSuccess) {
       await onSuccess();
@@ -169,7 +168,7 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
   const startSignIn = async () => {
     if (!request || authSessionActiveRef.current) {
       if (!request) {
-        toast.error(i18next.t('auth:signInNotReady'));
+        toast.error('Twitch sign-in is not ready yet');
       }
       return;
     }
@@ -237,7 +236,7 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
         error,
         action: 'prompt_failed',
       });
-      toast.error(i18next.t('auth:signInFailed'));
+      toast.error('Twitch sign-in failed. Please try again.');
     }
 
     endPrompt();

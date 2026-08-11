@@ -1,5 +1,3 @@
-import { useTranslation } from 'react-i18next';
-
 import type { SFSymbol } from 'sf-symbols-typescript';
 
 import {
@@ -27,11 +25,11 @@ const PROVIDER_PREFERENCE_SECTIONS = [
     provider: '7tv',
     emotes: {
       key: 'show7TvEmotes',
-      subtitleKey: 'sevenTvEmotesDescription',
+      subtitle: 'Render 7TV emotes in chat',
     },
     badges: {
       key: 'show7tvBadges',
-      subtitleKey: 'sevenTvBadgesDescription',
+      subtitle: 'Render 7TV badges next to usernames',
     },
   },
   {
@@ -39,11 +37,11 @@ const PROVIDER_PREFERENCE_SECTIONS = [
     provider: 'bttv',
     emotes: {
       key: 'showBttvEmotes',
-      subtitleKey: 'bttvEmotesDescription',
+      subtitle: 'Render BetterTTV emotes in chat',
     },
     badges: {
       key: 'showBttvBadges',
-      subtitleKey: 'bttvBadgesDescription',
+      subtitle: 'Render BetterTTV badges next to usernames',
     },
   },
   {
@@ -51,11 +49,11 @@ const PROVIDER_PREFERENCE_SECTIONS = [
     provider: 'ffz',
     emotes: {
       key: 'showFFzEmotes',
-      subtitleKey: 'ffzEmotesDescription',
+      subtitle: 'Render FrankerFaceZ emotes in chat',
     },
     badges: {
       key: 'showFFzBadges',
-      subtitleKey: 'ffzBadgesDescription',
+      subtitle: 'Render FrankerFaceZ badges next to usernames',
     },
   },
   {
@@ -63,16 +61,16 @@ const PROVIDER_PREFERENCE_SECTIONS = [
     provider: 'twitch',
     emotes: {
       key: 'showTwitchEmotes',
-      subtitleKey: 'twitchEmotesDescription',
+      subtitle: 'Render native Twitch emotes in chat',
     },
     badges: {
       key: 'showTwitchBadges',
-      subtitleKey: 'twitchBadgesDescription',
+      subtitle: 'Render native Twitch badges next to usernames',
     },
   },
 ] as const satisfies readonly {
-  badges: { key: ProviderPreviewKey; subtitleKey: string };
-  emotes: { key: ProviderPreviewKey; subtitleKey: string };
+  badges: { key: ProviderPreviewKey; subtitle: string };
+  emotes: { key: ProviderPreviewKey; subtitle: string };
   provider: PreviewProvider;
   title: string;
 }[];
@@ -84,8 +82,6 @@ export function ChatProviderPreferenceSections({
   previewProviders: ProviderPreviewValue;
   onProviderToggle: (key: ProviderPreviewKey, value: boolean) => void;
 }) {
-  const { t } = useTranslation('preferences');
-
   return (
     <>
       {PROVIDER_PREFERENCE_SECTIONS.map(section => {
@@ -93,8 +89,8 @@ export function ChatProviderPreferenceSections({
         return (
           <SettingsSection key={section.title} title={section.title}>
             <SettingsToggleRow
-              title={t('emotes')}
-              subtitle={t(section.emotes.subtitleKey)}
+              title='Emotes'
+              subtitle={section.emotes.subtitle}
               icon={{
                 icon: EMOTES_ICON,
                 androidIcon: EMOTES_ANDROID_ICON,
@@ -111,8 +107,8 @@ export function ChatProviderPreferenceSections({
               variant='emotes'
             />
             <SettingsToggleRow
-              title={t('badges')}
-              subtitle={t(section.badges.subtitleKey)}
+              title='Badges'
+              subtitle={section.badges.subtitle}
               icon={{
                 icon: BADGES_ICON,
                 androidIcon: BADGES_ANDROID_ICON,

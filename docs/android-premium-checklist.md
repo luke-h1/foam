@@ -195,9 +195,12 @@ match iOS in terms of colors.** Dynamic/Material You color is OUT for foam. Fina
 
 ### Per-app language (iter 12): N/A
 
-- [-] expo-localization supportedLocales / Android 13 App-languages: foam ships only
-  src/i18n/locales/en.ts. A single-language localeConfig adds a pointless system
-  menu entry. Revisit only when a second locale lands.
+- [-] expo-localization supportedLocales / Android 13 App-languages: foam ships
+  English only, and its UI strings are now hardcoded at the use site - the i18n
+  layer (i18next, react-i18next, expo-localization, src/i18n/locales/en.ts) was
+  removed. A single-language localeConfig adds a pointless system menu entry.
+  Revisit only when a second locale lands, which would mean reintroducing i18n
+  first.
 
 ### Release-manifest verification (iter 11) - CRITICAL CATCH
 

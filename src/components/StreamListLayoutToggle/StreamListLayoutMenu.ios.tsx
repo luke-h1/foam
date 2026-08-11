@@ -1,5 +1,3 @@
-import { useTranslation } from 'react-i18next';
-
 import { Host, Image, Menu, Picker, Text } from '@expo/ui/swift-ui';
 import { tag, tint } from '@expo/ui/swift-ui/modifiers';
 
@@ -11,7 +9,6 @@ import {
 import { theme } from '@app/styles/themes';
 
 export function StreamListLayoutMenu() {
-  const { t } = useTranslation('stream');
   const streamListLayout = usePreference('streamListLayout');
   const updatePreferences = useUpdatePreferences();
 
@@ -34,8 +31,8 @@ export function StreamListLayoutMenu() {
             updatePreferences({ streamListLayout: layout });
           }}
         >
-          <Text modifiers={[tag('compact')]}>{t('compactLayout')}</Text>
-          <Text modifiers={[tag('media')]}>{t('mediaLayout')}</Text>
+          <Text modifiers={[tag('compact')]}>Compact</Text>
+          <Text modifiers={[tag('media')]}>Media</Text>
         </Picker>
       </Menu>
     </Host>

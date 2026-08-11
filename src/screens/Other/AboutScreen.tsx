@@ -1,6 +1,5 @@
 import { useRef } from 'react';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import {
   Button,
@@ -27,9 +26,8 @@ import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 const appIconProduction = require('../../../assets/app-icon/app-icon-production.png');
 
 export function AboutScreen() {
-  const { t } = useTranslation('about');
   const scrollRef = useRef<ScrollView>(null);
-  const otaLabel = Updates.updateId ?? t('embedded');
+  const otaLabel = Updates.updateId ?? 'Embedded';
 
   useScrollToTop(scrollRef);
 
@@ -43,53 +41,59 @@ export function AboutScreen() {
                 <Image source={appIconProduction} style={styles.appIcon} />
                 <View style={styles.identityText}>
                   <Text type='lg' weight='bold' numberOfLines={1}>
-                    {t('appName')}
+                    Foam
                   </Text>
                   <Text type='xs' color='gray.textLow' numberOfLines={2}>
-                    {t('tagline')}
+                    Streams, discovery, and chat controls in one mobile-first
+                    shell.
                   </Text>
                 </View>
               </View>
             </RNHostView>
           </Section>
 
-          <Section title={t('builtFor')}>
-            <LabeledContent label={t('chat')}>
-              <NativeText>{t('chatDescription')}</NativeText>
+          <Section title='Built For'>
+            <LabeledContent label='Chat'>
+              <NativeText>
+                Native feeling chat with 7TV, BTTV and FFZ support. Inspired by
+                projects such as Chatterino and the 7TV Chrome extension
+              </NativeText>
             </LabeledContent>
-            <LabeledContent label={t('discovery')}>
-              <NativeText>{t('discoveryDescription')}</NativeText>
+            <LabeledContent label='Discovery'>
+              <NativeText>
+                Find and discover new streamers without the clutter
+              </NativeText>
             </LabeledContent>
-            <LabeledContent label={t('viewing')}>
-              <NativeText>{t('viewingDescription')}</NativeText>
+            <LabeledContent label='Viewing'>
+              <NativeText>A viewing experience to rival desktop</NativeText>
             </LabeledContent>
           </Section>
 
-          <Section title={t('resources')}>
+          <Section title='Resources'>
             <Button
-              label={t('website')}
+              label='Website'
               systemImage='globe'
               onPress={() => openLinkInBrowser('https://foam-app.com')}
             />
             <Button
-              label={t('status')}
+              label='Status'
               systemImage='checkmark.shield'
               onPress={() => openLinkInBrowser('https://status.foam-app.com')}
             />
           </Section>
 
-          <Section title={t('build')}>
-            <LabeledContent label={t('version')}>
+          <Section title='Build'>
+            <LabeledContent label='Version'>
               <NativeText>
-                {Application.nativeApplicationVersion ?? t('unknown')}
+                {Application.nativeApplicationVersion ?? 'Unknown'}
               </NativeText>
             </LabeledContent>
-            <LabeledContent label={t('build')}>
+            <LabeledContent label='Build'>
               <NativeText>
-                {Application.nativeBuildVersion ?? t('unknown')}
+                {Application.nativeBuildVersion ?? 'Unknown'}
               </NativeText>
             </LabeledContent>
-            <LabeledContent label={t('ota')}>
+            <LabeledContent label='OTA'>
               <NativeText>{otaLabel}</NativeText>
             </LabeledContent>
           </Section>
@@ -112,50 +116,53 @@ export function AboutScreen() {
             <Image source={appIconProduction} style={styles.appIcon} />
             <View style={styles.identityText}>
               <Text type='lg' weight='bold' numberOfLines={1}>
-                {t('appName')}
+                Foam
               </Text>
               <Text type='xs' color='gray.textLow' numberOfLines={2}>
-                {t('tagline')}
+                Streams, discovery, and chat controls in one mobile-first shell.
               </Text>
             </View>
           </View>
         </SettingsSection>
 
-        <SettingsSection title={t('builtFor')}>
-          <SettingsLinkRow title={t('chat')} subtitle={t('chatDescription')} />
+        <SettingsSection title='Built For'>
           <SettingsLinkRow
-            title={t('discovery')}
-            subtitle={t('discoveryDescription')}
+            title='Chat'
+            subtitle='Native feeling chat with 7TV, BTTV and FFZ support. Inspired by projects such as Chatterino and the 7TV Chrome extension'
           />
           <SettingsLinkRow
-            title={t('viewing')}
-            subtitle={t('viewingDescription')}
+            title='Discovery'
+            subtitle='Find and discover new streamers without the clutter'
+          />
+          <SettingsLinkRow
+            title='Viewing'
+            subtitle='A viewing experience to rival desktop'
           />
         </SettingsSection>
 
-        <SettingsSection title={t('resources')}>
+        <SettingsSection title='Resources'>
           <SettingsLinkRow
-            title={t('website')}
+            title='Website'
             icon={{ icon: 'globe', color: theme.colorViolet }}
             onPress={() => openLinkInBrowser('https://foam-app.com')}
           />
           <SettingsLinkRow
-            title={t('status')}
+            title='Status'
             icon={{ icon: 'checkmark.shield', color: theme.colorOrange }}
             onPress={() => openLinkInBrowser('https://status.foam-app.com')}
           />
         </SettingsSection>
 
-        <SettingsSection title={t('build')}>
+        <SettingsSection title='Build'>
           <SettingsLinkRow
-            title={t('version')}
-            value={Application.nativeApplicationVersion ?? t('unknown')}
+            title='Version'
+            value={Application.nativeApplicationVersion ?? 'Unknown'}
           />
           <SettingsLinkRow
-            title={t('build')}
-            value={Application.nativeBuildVersion ?? t('unknown')}
+            title='Build'
+            value={Application.nativeBuildVersion ?? 'Unknown'}
           />
-          <SettingsLinkRow title={t('ota')} value={otaLabel} />
+          <SettingsLinkRow title='OTA' value={otaLabel} />
         </SettingsSection>
       </ScrollView>
     </View>

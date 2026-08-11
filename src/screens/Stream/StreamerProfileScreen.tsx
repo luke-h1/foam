@@ -1,6 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import { router, Stack } from 'expo-router';
 
@@ -23,7 +22,6 @@ import { useVideosQuery } from '@app/hooks/queries/useVideosQuery';
 import { useFlattenedInfiniteQuery } from '@app/hooks/useFlattenedInfiniteQuery';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import i18next from '@app/i18n/i18next';
 import { theme } from '@app/styles/themes';
 import type { StreamElementsChatStats } from '@app/types/streamelements/stats';
 import type { TwitchClip } from '@app/types/twitch/clip';
@@ -123,16 +121,13 @@ function formatRelativeAge(value: string) {
   const unit = units.find(item => diffSeconds >= item.seconds);
 
   if (!unit) {
-    return i18next.t('stream:relativeAgeNow');
+    return 'now';
   }
 
-  return i18next.t('stream:relativeAge', {
-    age: `${Math.floor(diffSeconds / unit.seconds)}${unit.label}`,
-  });
+  return `${Math.floor(diffSeconds / unit.seconds)}${unit.label} ago`;
 }
 
 function StreamElementsStats({ stats }: { stats: StreamElementsChatStats }) {
-  const { t } = useTranslation('stream');
   const topEmote = getTopChatEmote(stats);
 
   return (
@@ -143,7 +138,7 @@ function StreamElementsStats({ stats }: { stats: StreamElementsChatStats }) {
             {formatViewCountCompact(stats.totalMessages)}
           </Text>
           <Text type='xxs' color='gray.textLow'>
-            {t('messagesLabel')}
+            messages
           </Text>
         </View>
         <View style={styles.statChip}>
@@ -151,7 +146,7 @@ function StreamElementsStats({ stats }: { stats: StreamElementsChatStats }) {
             {formatViewCountCompact(stats.uniqueChatters)}
           </Text>
           <Text type='xxs' color='gray.textLow'>
-            {t('chattersLabel')}
+            chatters
           </Text>
         </View>
         {topEmote ? (
@@ -160,13 +155,13 @@ function StreamElementsStats({ stats }: { stats: StreamElementsChatStats }) {
               {topEmote.emote}
             </Text>
             <Text type='xxs' color='gray.textLow'>
-              {t('topEmoteStat')}
+              Top emote
             </Text>
           </View>
         ) : null}
       </View>
       <Text type='xxs' color='gray.textLow' style={styles.statsAttribution}>
-        {t('viaStreamElements')}
+        via StreamElements
       </Text>
     </View>
   );
@@ -185,8 +180,6 @@ function StreamerProfileHeader({
   streamElementsStats?: StreamElementsChatStats;
   user: UserInfoResponse;
 }) {
-  const { t } = useTranslation('stream');
-
   return (
     <View style={styles.header}>
       <View style={styles.profileRow}>
@@ -223,7 +216,7 @@ function StreamerProfileHeader({
 
       <View style={styles.sectionRow}>
         <SegmentedControl
-          items={[{ label: t('vods') }, { label: t('clips') }]}
+          items={[{ label: 'VODs' }, { label: 'Clips' }]}
           currentIndex={activeTab === 'vods' ? 0 : 1}
           onChange={index => onTabChange(index === 0 ? 'vods' : 'clips')}
         />
@@ -231,12 +224,10 @@ function StreamerProfileHeader({
 
       <Text type='xs' color='gray.textLow' style={styles.sectionCaption}>
         {loadedCount > 0
-          ? activeTab === 'vods'
-            ? t('vodsLoaded', { count: loadedCount })
-            : t('clipsLoaded', { count: loadedCount })
+          ? `${loadedCount} loaded`
           : activeTab === 'vods'
-            ? t('recentVods')
-            : t('topClips')}
+            ? 'Recent broadcasts'
+            : 'Top clips'}
       </Text>
     </View>
   );
@@ -254,7 +245,6 @@ const VodCard = memo(function VodCard({
   width: number;
   fallbackImage: string;
 }) {
-  const { t } = useTranslation('stream');
   const handleView = useCallback(() => {
     router.push(`/streams/vod/${encodeURIComponent(vod.id)}`);
   }, [vod.id]);
@@ -278,13 +268,10 @@ const VodCard = memo(function VodCard({
 
       <Button onPress={handleView} style={styles.vodTextButton}>
         <Text type='sm' weight='bold' numberOfLines={2} style={styles.title}>
-          {vod.title || t('untitledVod')}
+          {vod.title || 'Untitled broadcast'}
         </Text>
         <Text type='xs' color='gray.textLow' numberOfLines={1}>
-          {t('vodMeta', {
-            views: formatViewCount(vod.view_count),
-            age: formatRelativeAge(vod.published_at || vod.created_at),
-          })}
+          {`${formatViewCount(vod.view_count)} views - ${formatRelativeAge(vod.published_at || vod.created_at)}`}
         </Text>
       </Button>
     </View>
@@ -298,7 +285,6 @@ const ClipCard = memo(function ClipCard({
   clip: TwitchClip;
   width: number;
 }) {
-  const { t } = useTranslation('stream');
   const handleView = useCallback(() => {
     router.push(`/streams/clip/${encodeURIComponent(clip.id)}`);
   }, [clip.id]);
@@ -323,16 +309,13 @@ const ClipCard = memo(function ClipCard({
       <View style={styles.clipBody}>
         <Button onPress={handleView} style={styles.clipTextButton}>
           <Text type='sm' weight='bold' numberOfLines={2} style={styles.title}>
-            {clip.title || t('untitledClip')}
+            {clip.title || 'Untitled clip'}
           </Text>
           <Text type='xs' color='gray.textLow' numberOfLines={1}>
-            {t('clipMeta', {
-              views: formatViewCount(clip.view_count),
-              age: formatRelativeAge(clip.created_at),
-            })}
+            {`${formatViewCount(clip.view_count)} views - ${formatRelativeAge(clip.created_at)}`}
           </Text>
           <Text type='xs' color='gray.textLow' numberOfLines={1}>
-            {t('clippedBy', { name: clip.creator_name })}
+            {`Clipped by ${clip.creator_name}`}
           </Text>
         </Button>
       </View>
@@ -351,8 +334,6 @@ function ProfileTabEmptyState({
   isLoading: boolean;
   onRetry: () => void;
 }) {
-  const { t } = useTranslation('stream');
-
   if (isLoading) {
     return (
       <View style={styles.centeredBody}>
@@ -365,16 +346,16 @@ function ProfileTabEmptyState({
     return (
       <View style={styles.centeredBody}>
         <Text type='sm' weight='bold'>
-          {activeTab === 'vods' ? t('vodsUnavailable') : t('clipsUnavailable')}
+          {activeTab === 'vods' ? 'VODs unavailable' : 'Clips unavailable'}
         </Text>
         <Text type='xs' color='gray.textLow' style={styles.emptyDescription}>
           {activeTab === 'vods'
-            ? t('vodsUnavailableDescription')
-            : t('clipsUnavailableDescription')}
+            ? 'Could not load VODs for this channel.'
+            : 'Could not load clips for this channel.'}
         </Text>
         <Button onPress={onRetry} style={styles.retryButton}>
           <Text type='sm' weight='semibold'>
-            {t('refresh')}
+            Refresh
           </Text>
         </Button>
       </View>
@@ -384,14 +365,13 @@ function ProfileTabEmptyState({
   return (
     <View style={styles.centeredBody}>
       <Text type='sm' color='gray.textLow'>
-        {activeTab === 'vods' ? t('noVods') : t('noClips')}
+        {activeTab === 'vods' ? 'No VODs found' : 'No clips found'}
       </Text>
     </View>
   );
 }
 
 export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
-  const { t } = useTranslation('stream');
   const listRef = useRef<FlashListRef<ProfileListItem>>(null);
   const { width: windowWidth } = useWindowDimensions();
   const [activeTab, setActiveTab] = useState<ProfileTab>('vods');
@@ -509,8 +489,8 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
   if (isUserError || !user) {
     return (
       <EmptyState
-        heading={t('streamerNotFound')}
-        content={t('streamerNotFoundDescription')}
+        heading='Streamer not found'
+        content='Could not load this channel.'
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         buttonOnPress={() => refetchUser()}
       />
@@ -535,7 +515,7 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
           headerRight: () => (
             <IconButton
               icon={{ type: 'symbol', name: 'square.and.arrow.up', size: 18 }}
-              label={t('shareUser', { name: user.display_name })}
+              label={`Share ${user.display_name}`}
               onPress={handleShare}
               size='2xl'
             />

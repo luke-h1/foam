@@ -55,7 +55,6 @@ const jestConfig = {
     '!src/test/**',
   ],
   cache: true,
-  cacheDirectory: '<rootDir>/.jest-cache',
   maxWorkers: Math.max(1, Math.floor(require('os').cpus().length * 0.5)),
   clearMocks: true,
   resetMocks: false,

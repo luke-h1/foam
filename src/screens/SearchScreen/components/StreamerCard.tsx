@@ -4,7 +4,6 @@ import { StyleSheet, View } from 'react-native';
 import { LiveBadge } from '@app/components/LiveBadge/LiveBadge';
 import { LiveStreamImage } from '@app/components/LiveStreamImage/LiveStreamImage';
 import { Text } from '@app/components/ui/Text/Text';
-import i18next from '@app/i18n/i18next';
 import { theme } from '@app/styles/themes';
 import type { SearchChannelResponse } from '@app/types/twitch/channel';
 
@@ -31,9 +30,7 @@ export const StreamerCard = memo(function StreamerCard({ stream }: Props) {
           </Text>
         ) : (
           <Text type='xs' color='gray.textLow' numberOfLines={1}>
-            {isLive
-              ? i18next.t('search:streaming')
-              : i18next.t('search:offline')}
+            {isLive ? 'Streaming' : 'Offline'}
           </Text>
         )}
       </View>

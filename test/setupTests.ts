@@ -10,7 +10,6 @@
 import '@testing-library/jest-native/extend-expect';
 import 'react-native-url-polyfill/auto';
 import 'cross-fetch/polyfill';
-import '@app/i18n/i18next';
 
 import * as ReactNative from 'react-native';
 import type { ReactNode } from 'react';

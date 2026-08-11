@@ -1,6 +1,5 @@
 import { memo, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import {
   LegendList,
@@ -72,7 +71,6 @@ export const UserSuggestions = memo(function UserSuggestions({
   showUserSuggestions,
   handleUserSelect,
 }: UserSuggestionsProps) {
-  const { t } = useTranslation('chat');
   const extraData = useMemo(
     () => ({ onPress: handleUserSelect }),
     [handleUserSelect],
@@ -85,9 +83,7 @@ export const UserSuggestions = memo(function UserSuggestions({
   return (
     <View style={suggestionRailStyles.richWrapper}>
       <View style={suggestionRailStyles.richContainer}>
-        <Text style={suggestionRailStyles.headerLabel}>
-          {t('composer.mention')}
-        </Text>
+        <Text style={suggestionRailStyles.headerLabel}>Mention</Text>
         <LegendList
           data={users}
           horizontal

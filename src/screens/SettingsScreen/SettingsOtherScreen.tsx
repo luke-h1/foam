@@ -1,6 +1,5 @@
 import { useRef } from 'react';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import {
   Button,
@@ -26,7 +25,6 @@ import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 
 export function SettingsOtherScreen() {
-  const { t } = useTranslation('settings');
   const scrollRef = useRef<ScrollView>(null);
   const analyticsEnabled = usePreference('analyticsEnabled');
   const update = useUpdatePreferences();
@@ -38,19 +36,26 @@ export function SettingsOtherScreen() {
       <Host style={styles.iosHost}>
         <Form>
           <Section
-            title={t('privacy')}
-            footer={<NativeText>{t('shareAnalyticsFooter')}</NativeText>}
+            title='Privacy'
+            footer={
+              <NativeText>
+                When on, Foam sends anonymous usage data (such as which screens
+                are opened, which can include channel names) to help improve the
+                app. It is never linked to your Twitch account, and no chat
+                messages are collected. Turn this off to opt out.
+              </NativeText>
+            }
           >
             <Toggle
-              label={t('shareAnalytics')}
+              label='Share analytics'
               systemImage='chart.bar'
               isOn={analyticsEnabled}
               onIsOnChange={value => update({ analyticsEnabled: value })}
             />
           </Section>
-          <Section title={t('supportAndFeedback')}>
+          <Section title='Support & Feedback'>
             <Button
-              label={t('faq')}
+              label='FAQ'
               systemImage='questionmark.circle'
               onPress={() => openLinkInBrowser('https://foam-app.com/faq')}
             />
@@ -73,26 +78,29 @@ export function SettingsOtherScreen() {
         contentContainerStyle={styles.content}
       >
         <SettingsSection
-          title={t('privacy')}
+          title='Privacy'
           footer={
             <Text type='xs' color='gray.textLow'>
-              {t('shareAnalyticsFooter')}
+              When on, Foam sends anonymous usage data (such as which screens
+              are opened, which can include channel names) to help improve the
+              app. It is never linked to your Twitch account, and no chat
+              messages are collected. Turn this off to opt out.
             </Text>
           }
         >
           <SettingsToggleRow
-            title={t('shareAnalytics')}
-            subtitle={t('shareAnalyticsDescription')}
+            title='Share analytics'
+            subtitle='Help improve Foam with anonymous usage data'
             icon={{ icon: 'chart.bar', color: theme.colorTeal }}
             value={analyticsEnabled}
             onValueChange={value => update({ analyticsEnabled: value })}
           />
         </SettingsSection>
 
-        <SettingsSection title={t('supportAndFeedback')}>
+        <SettingsSection title='Support & Feedback'>
           <SettingsLinkRow
-            title={t('faq')}
-            subtitle={t('faqShortDescription')}
+            title='FAQ'
+            subtitle='Common questions and product guidance'
             icon={{ icon: 'questionmark.circle', color: theme.colorPrimary }}
             onPress={() => openLinkInBrowser('https://foam-app.com/faq')}
           />

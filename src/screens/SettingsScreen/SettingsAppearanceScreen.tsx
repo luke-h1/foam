@@ -1,6 +1,5 @@
 import { useRef } from 'react';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import {
   Form as NativeForm,
@@ -27,11 +26,11 @@ import { theme } from '@app/styles/themes';
 
 const THEME_OPTIONS = ['foam-dark'] as const;
 
+const themeLabels: Record<(typeof THEME_OPTIONS)[number], string> = {
+  'foam-dark': 'Foam Dark',
+};
+
 export function SettingsAppearanceScreen() {
-  const { t } = useTranslation('settings');
-  const themeLabels: Record<(typeof THEME_OPTIONS)[number], string> = {
-    'foam-dark': t('foamDark'),
-  };
   const selectedTheme = usePreference('theme');
   const hapticFeedback = usePreference('hapticFeedback');
   const shakeToReport = usePreference('shakeToReport');
@@ -45,11 +44,16 @@ export function SettingsAppearanceScreen() {
       <Host style={styles.iosHost}>
         <NativeForm>
           <Section
-            title={t('theme')}
-            footer={<NativeText>{t('themeFooterIos')}</NativeText>}
+            title='Theme'
+            footer={
+              <NativeText>
+                Foam currently ships with one canonical visual mode. Additional
+                themes will appear here as they become available.
+              </NativeText>
+            }
           >
             <Picker
-              label={t('theme')}
+              label='Theme'
               selection={selectedTheme}
               onSelectionChange={value => update({ theme: value as Theme })}
             >
@@ -59,22 +63,27 @@ export function SettingsAppearanceScreen() {
                 </NativeText>
               ))}
             </Picker>
-            <LabeledContent label={t('mode')}>
-              <NativeText>{t('dark')}</NativeText>
+            <LabeledContent label='Mode'>
+              <NativeText>Dark</NativeText>
             </LabeledContent>
           </Section>
           <Section
-            title={t('feedback')}
-            footer={<NativeText>{t('hapticsDescription')}</NativeText>}
+            title='Feedback'
+            footer={
+              <NativeText>
+                Subtle vibrations for actions like sending messages and
+                refreshing
+              </NativeText>
+            }
           >
             <Toggle
-              label={t('haptics')}
+              label='Haptics'
               systemImage='hand.tap'
               isOn={hapticFeedback}
               onIsOnChange={value => update({ hapticFeedback: value })}
             />
             <Toggle
-              label={t('shakeToReportIos')}
+              label='Shake to report a problem'
               systemImage='iphone.gen3.radiowaves.left.and.right'
               isOn={shakeToReport}
               onIsOnChange={value => update({ shakeToReport: value })}
@@ -93,30 +102,28 @@ export function SettingsAppearanceScreen() {
         indicatorStyle='white'
         contentContainerStyle={styles.content}
       >
-        <SettingsSection title={t('theme')}>
+        <SettingsSection title='Theme'>
           <SettingsLinkRow
-            title={t('theme')}
-            subtitle={t('themeDescription')}
+            title='Theme'
+            subtitle='The redesigned app currently ships with one canonical visual mode'
             icon={{ icon: 'moon', color: theme.colorAmber }}
-            value={
-              selectedTheme === 'foam-dark' ? t('foamDark') : selectedTheme
-            }
+            value={selectedTheme === 'foam-dark' ? 'Foam Dark' : selectedTheme}
             onPress={() => {
               update({ theme: 'foam-dark' });
             }}
           />
         </SettingsSection>
-        <SettingsSection title={t('feedback')}>
+        <SettingsSection title='Feedback'>
           <SettingsToggleRow
-            title={t('haptics')}
-            subtitle={t('hapticsDescription')}
+            title='Haptics'
+            subtitle='Subtle vibrations for actions like sending messages and refreshing'
             icon={{ icon: 'hand.tap', color: theme.colorTeal }}
             value={hapticFeedback}
             onValueChange={value => update({ hapticFeedback: value })}
           />
           <SettingsToggleRow
-            title={t('shakeToReport')}
-            subtitle={t('shakeToReportDescription')}
+            title='Shake to report'
+            subtitle='Shake your device to report a problem'
             icon={{ icon: 'waveform.path', color: theme.colorAmber }}
             value={shakeToReport}
             onValueChange={value => update({ shakeToReport: value })}

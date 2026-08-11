@@ -2,7 +2,6 @@ import { Alert, Linking, Platform } from 'react-native';
 
 import * as MediaLibrary from 'expo-media-library';
 
-import i18next from '@app/i18n/i18next';
 import { presentMediaPermissionPrompt } from '@app/store/overlays/mediaPermissionStore';
 
 export async function ensureMediaLibraryPermission(): Promise<boolean> {
@@ -15,10 +14,11 @@ export async function ensureMediaLibraryPermission(): Promise<boolean> {
     return true;
   }
 
-  const title = i18next.t('common:permissionRequired');
-  const message = i18next.t('common:mediaLibraryPermissionMessage');
-  const cancelLabel = i18next.t('common:cancel');
-  const settingsLabel = i18next.t('common:openSettings');
+  const title = 'Permission required';
+  const message =
+    'Allow Foam to save images and clips to your photo gallery in Settings.';
+  const cancelLabel = 'Cancel';
+  const settingsLabel = 'Open Settings';
 
   if (Platform.OS === 'android') {
     await presentMediaPermissionPrompt({

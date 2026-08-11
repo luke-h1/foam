@@ -6,7 +6,6 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { LegendListRenderItemProps } from '@legendapp/list/react-native';
@@ -58,7 +57,6 @@ function EmotesTab({
 }: {
   onSelectEmote: (emote: SanitisedEmote) => void;
 }) {
-  const { t } = useTranslation(['settings', 'chat']);
   const { bottom: bottomInset } = useSafeAreaInsets();
   const caches = useGlobalEmoteBadgeCaches();
   const [ensureSettled, setEnsureSettled] = useState(false);
@@ -150,7 +148,7 @@ function EmotesTab({
   if (providers.length === 0) {
     return (
       <View style={styles.centered}>
-        <Text weight='semibold'>{t('chat:emoteSheet.noEmotesFound')}</Text>
+        <Text weight='semibold'>No emotes found</Text>
       </View>
     );
   }
@@ -251,7 +249,6 @@ function BadgesTab({
 }: {
   onSelectBadge: (badge: SanitisedBadgeSet) => void;
 }) {
-  const { t } = useTranslation('settings');
   const { bottom: bottomInset } = useSafeAreaInsets();
   const { twitchGlobalBadges } = useGlobalEmoteBadgeCaches();
   const [ensureSettled, setEnsureSettled] = useState(false);
@@ -298,7 +295,7 @@ function BadgesTab({
   if (badges.length === 0) {
     return (
       <View style={styles.centered}>
-        <Text weight='semibold'>{t('emoteBadgeViewerNoBadges')}</Text>
+        <Text weight='semibold'>No badges available</Text>
       </View>
     );
   }
@@ -323,7 +320,6 @@ function BadgesTab({
 }
 
 export function EmoteBadgeViewerScreen() {
-  const { t } = useTranslation('settings');
   const { top: topInset } = useSafeAreaInsets();
   const [tabIndex, setTabIndex] = useState(0);
   const [selectedEmote, setSelectedEmote] =
@@ -345,10 +341,7 @@ export function EmoteBadgeViewerScreen() {
     >
       <View style={styles.segmentWrap}>
         <SegmentedControl
-          items={[
-            { label: t('emoteBadgeViewerEmotes') },
-            { label: t('emoteBadgeViewerBadges') },
-          ]}
+          items={[{ label: 'Emotes' }, { label: 'Badges' }]}
           currentIndex={tabIndex}
           onChange={setTabIndex}
         />

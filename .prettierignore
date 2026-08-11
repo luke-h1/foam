@@ -6,6 +6,12 @@ public
 build
 build-artifacts
 coverage
+traces
+.jest-cache
+.reassure
+.fingerprint-cache
+.zed-jar-cache
+workspace.json
 .expo
 android
 ios

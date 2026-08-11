@@ -1,5 +1,4 @@
 import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import * as Clipboard from 'expo-clipboard';
 import { toast } from 'sonner-native';
@@ -23,7 +22,6 @@ interface ChatDebugSectionProps {
 }
 
 export function ChatDebugSection({ build, style }: ChatDebugSectionProps) {
-  const { t } = useTranslation('chat');
   const chatDebugTools = usePreference('chatDebugTools');
   const data = isDevToolsEnabled && chatDebugTools ? build() : null;
 
@@ -37,18 +35,18 @@ export function ChatDebugSection({ build, style }: ChatDebugSectionProps) {
       ? `${payloadJson}\n\n${data.ircLines.map(entry => entry.line).join('\n')}`
       : payloadJson;
     Clipboard.setStringAsync(clipboardPayload)
-      .then(() => toast.success(t('debug.copied')))
-      .catch(() => toast.error(t('debug.copyFailed')));
+      .then(() => toast.success('Debug info copied'))
+      .catch(() => toast.error('Could not copy debug info'));
   };
 
   return (
     <View style={[styles.card, style]} testID='chat-debug-section'>
       <View style={styles.headerRow}>
         <Text style={styles.title} weight='semibold'>
-          {t('debug.title')}
+          Debug
         </Text>
         <Button
-          label={t('debug.copy')}
+          label='Copy debug info'
           style={styles.copyButton}
           onPress={handleCopy}
         >
@@ -67,10 +65,12 @@ export function ChatDebugSection({ build, style }: ChatDebugSectionProps) {
       {data.ircLines ? (
         <>
           <Text style={styles.subheading} weight='semibold'>
-            {t('debug.ircLines')}
+            Raw IRC lines
           </Text>
           {data.ircLines.length === 0 ? (
-            <Text style={styles.empty}>{t('debug.ircLinesEmpty')}</Text>
+            <Text style={styles.empty}>
+              No captured IRC lines for this user
+            </Text>
           ) : (
             data.ircLines.map((entry, index) => (
               <Text
@@ -79,7 +79,7 @@ export function ChatDebugSection({ build, style }: ChatDebugSectionProps) {
                 style={styles.mono}
                 variant='mono'
               >
-                {entry.dropped ? `[${t('debug.dropped')}] ` : ''}
+                {entry.dropped ? `[${'DROPPED'}] ` : ''}
                 {entry.line}
               </Text>
             ))

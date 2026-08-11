@@ -1,6 +1,5 @@
 import { memo, type Ref, useCallback, useRef } from 'react';
 import { TextInput, type TextInput as TextInputType, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import { PressableScale } from 'pressto';
 
@@ -53,7 +52,6 @@ function ChatComposerComponent({
   reservedCharacters,
   ref,
 }: ChatComposerProps) {
-  const { t } = useTranslation('chat');
   const inputRef = useRef<TextInputType>(null);
   const { accentHex } = useAccentColor();
 
@@ -147,7 +145,7 @@ function ChatComposerComponent({
           <View style={styles.recallSlot}>
             {canRecallLastMessage ? (
               <PressableScale
-                accessibilityLabel={t('composer.recallLastMessage')}
+                accessibilityLabel='Recall last message'
                 accessibilityRole='button'
                 style={styles.addButton}
                 onPress={recallLastMessage}
@@ -164,7 +162,7 @@ function ChatComposerComponent({
 
         {onPressAdd ? (
           <PressableScale
-            accessibilityLabel={t('composer.openEmotePicker')}
+            accessibilityLabel='Open emote picker'
             accessibilityRole='button'
             style={styles.addButton}
             onPress={onPressAdd}
@@ -194,7 +192,7 @@ function ChatComposerComponent({
           onSubmitEditing={handleSubmit}
           selection={selection}
           value={text}
-          placeholder={placeholder ?? t('composer.sendAMessage')}
+          placeholder={placeholder ?? 'Send a message...'}
           placeholderTextColor={theme.color.textSecondary.dark}
           returnKeyType='send'
           cursorColor={accentHex}
@@ -220,7 +218,7 @@ function ChatComposerComponent({
                   : theme.darkActiveContent,
               },
             ]}
-            accessibilityLabel={t('composer.sendMessage')}
+            accessibilityLabel='Send message'
             accessibilityRole='button'
             accessibilityState={{ disabled: !submitEnabled }}
             onPress={handleSubmit}

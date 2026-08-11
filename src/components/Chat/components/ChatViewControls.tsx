@@ -1,6 +1,5 @@
 import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import { Button } from '@app/components/Button/Button';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
@@ -29,8 +28,6 @@ export const ChatViewControls = memo(
     onToggleShowOnlyMentions,
     showOnlyMentions,
   }: ChatViewControlsProps) => {
-    const { t } = useTranslation('chat');
-
     if (!hasActiveFilters) {
       return null;
     }
@@ -47,7 +44,7 @@ export const ChatViewControls = memo(
 
           <View style={styles.filterRow}>
             <Button
-              accessibilityLabel={t('controls.mentions')}
+              accessibilityLabel='Mentions'
               accessibilityRole='button'
               accessibilityState={{ selected: showOnlyMentions }}
               style={[
@@ -61,13 +58,11 @@ export const ChatViewControls = memo(
                 size={14}
                 tintColor={theme.colorGreyHoverAlpha}
               />
-              <Text style={styles.filterChipText}>
-                {t('controls.mentions')}
-              </Text>
+              <Text style={styles.filterChipText}>Mentions</Text>
             </Button>
 
             <Button
-              accessibilityLabel={t('controls.clear')}
+              accessibilityLabel='Clear'
               accessibilityRole='button'
               style={styles.clearChip}
               onPress={onClearFilters}
@@ -77,7 +72,7 @@ export const ChatViewControls = memo(
                 size={14}
                 tintColor={theme.colorGreyHoverAlpha}
               />
-              <Text style={styles.filterChipText}>{t('controls.clear')}</Text>
+              <Text style={styles.filterChipText}>Clear</Text>
             </Button>
           </View>
         </View>

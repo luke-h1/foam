@@ -1,5 +1,3 @@
-import i18next from 'i18next';
-
 import { twitchService } from '@app/services/twitch-service';
 
 import type { ModCommand } from './parseModCommand';
@@ -36,22 +34,19 @@ export async function executeModCommand(
         durationSeconds: command.durationSeconds,
         reason: command.reason,
       });
-      return i18next.t('chat:modCommands.timedOut', {
-        login: command.login,
-        seconds: command.durationSeconds,
-      });
+      return `Timed out ${command.login} for ${command.durationSeconds}s`;
     }
     case 'ban': {
       const userId = await resolveUserId(command.login);
       await twitchService.banChatUser(broadcasterId, moderatorId, userId, {
         reason: command.reason,
       });
-      return i18next.t('chat:modCommands.banned', { login: command.login });
+      return `Banned ${command.login}`;
     }
     case 'unban': {
       const userId = await resolveUserId(command.login);
       await twitchService.unbanChatUser(broadcasterId, moderatorId, userId);
-      return i18next.t('chat:modCommands.unbanned', { login: command.login });
+      return `Unbanned ${command.login}`;
     }
     case 'warn': {
       const userId = await resolveUserId(command.login);
@@ -61,7 +56,7 @@ export async function executeModCommand(
         userId,
         command.reason,
       );
-      return i18next.t('chat:modCommands.warned', { login: command.login });
+      return `Warned ${command.login}`;
     }
     case 'announce': {
       await twitchService.sendChatAnnouncement(
@@ -69,14 +64,12 @@ export async function executeModCommand(
         moderatorId,
         command.message,
       );
-      return i18next.t('chat:modCommands.announced');
+      return 'Announcement sent';
     }
     case 'shoutout': {
       const userId = await resolveUserId(command.login);
       await twitchService.sendShoutout(broadcasterId, userId, moderatorId);
-      return i18next.t('chat:modCommands.shoutedOut', {
-        login: command.login,
-      });
+      return `Shoutout sent for ${command.login}`;
     }
     case 'chatMode': {
       await twitchService.updateChatSettings(
@@ -84,9 +77,7 @@ export async function executeModCommand(
         moderatorId,
         command.patch,
       );
-      return i18next.t('chat:modCommands.chatModeUpdated', {
-        mode: command.label,
-      });
+      return `${command.label} applied`;
     }
     case 'shield': {
       await twitchService.updateShieldMode(
@@ -94,9 +85,7 @@ export async function executeModCommand(
         moderatorId,
         command.active,
       );
-      return command.active
-        ? i18next.t('chat:modCommands.shieldOn')
-        : i18next.t('chat:modCommands.shieldOff');
+      return command.active ? 'Shield mode enabled' : 'Shield mode disabled';
     }
   }
 }

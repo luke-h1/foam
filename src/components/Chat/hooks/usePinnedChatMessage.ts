@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner-native';
 
 import { useSyncRef } from '@app/hooks/useSyncRef';
-import i18next from '@app/i18n/i18next';
 import {
   getPinnedChatMessageText,
   twitchService,
@@ -121,12 +120,12 @@ export function usePinnedChatMessage({
         })
         .then(() => {
           setPinnedMessage(createPinnedMessageViewModelFromAction(message));
-          toast.success(i18next.t('chat:pinned.messagePinned'));
+          toast.success('Message pinned');
           void loadPinnedMessage();
         })
         .catch(error => {
           logger.chat.error('Failed to pin chat message', error);
-          toast.error(i18next.t('chat:pinned.couldNotPin'));
+          toast.error('Could not pin message');
         })
         .finally(() => {
           setPinnedMessageBusy(false);
@@ -166,13 +165,13 @@ export function usePinnedChatMessage({
         });
 
         if (!silent) {
-          toast.success(i18next.t('chat:pinned.pinRefreshed'));
+          toast.success('Pin refreshed');
         }
         await loadPinnedMessage();
       } catch (error) {
         logger.chat.error('Failed to update pinned chat message', error);
         if (!silent) {
-          toast.error(i18next.t('chat:pinned.couldNotRefreshPin'));
+          toast.error('Could not refresh pin');
         }
       } finally {
         if (silent) {
@@ -228,11 +227,11 @@ export function usePinnedChatMessage({
       })
       .then(() => {
         setPinnedMessage(null);
-        toast.success(i18next.t('chat:pinned.messageUnpinned'));
+        toast.success('Message unpinned');
       })
       .catch(error => {
         logger.chat.error('Failed to unpin chat message', error);
-        toast.error(i18next.t('chat:pinned.couldNotUnpin'));
+        toast.error('Could not unpin message');
       })
       .finally(() => {
         setPinnedMessageBusy(false);

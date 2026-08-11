@@ -1,5 +1,4 @@
 import { Linking, StyleSheet } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import * as AC from '@bacons/apple-colors';
 
@@ -17,8 +16,6 @@ const settingsHintIcon = (
 );
 
 export function Diagnostics() {
-  const { t } = useTranslation('devTools');
-
   return (
     <BodyScrollView
       contentInsetAdjustmentBehavior='automatic'
@@ -26,14 +23,14 @@ export function Diagnostics() {
     >
       <AppStoreSection />
       <ExpoSection />
-      <Form.Section title={t('views')}>
+      <Form.Section title='Views'>
         {process.env.EXPO_OS !== 'web' && (
           <Form.Text
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             onPress={() => Linking.openSettings()}
             hint={settingsHintIcon}
           >
-            {t('openSystemSettings')}
+            Open System Settings
           </Form.Text>
         )}
       </Form.Section>

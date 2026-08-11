@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import type { ListRenderItem } from '@shopify/flash-list';
 
@@ -20,7 +19,6 @@ import { theme } from '@app/styles/themes';
 import type { TwitchStream } from '@app/types/twitch/stream';
 
 export function TopStreamsScreen() {
-  const { t } = useTranslation('stream');
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const streamListLayout = usePreference('streamListLayout');
   const listRef = useRef<FlashListRef<TwitchStream>>(null);
@@ -90,10 +88,7 @@ export function TopStreamsScreen() {
     return (
       <View style={styles.container}>
         {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
-        <EmptyState
-          content={t('noTopStreamsFound')}
-          buttonOnPress={onRefresh}
-        />
+        <EmptyState content='No Top Streams found' buttonOnPress={onRefresh} />
       </View>
     );
   }

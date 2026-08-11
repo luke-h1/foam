@@ -1,6 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
@@ -20,7 +19,6 @@ import { useFollowedStreamsQuery } from '@app/hooks/queries/useFollowedStreamsQu
 import { useStreamProfilePictures } from '@app/hooks/queries/useStreamProfilePictures';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import i18next from '@app/i18n/i18next';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
 import { usePreference } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
@@ -75,7 +73,6 @@ const getFollowingItemKey = (item: FollowingListItem) =>
 const getFollowingItemType = (item: FollowingListItem) => item.type;
 
 export default function FollowingScreen() {
-  const { t } = useTranslation(['stream', 'common']);
   const { authState, user } = useAuthContext();
   const queryClient = useQueryClient();
   const tabBarOverflow = useBottomTabOverflow();
@@ -173,7 +170,7 @@ export default function FollowingScreen() {
 
     if (isFetched && !hasShownErrorToast.current) {
       hasShownErrorToast.current = true;
-      toast.error(i18next.t('stream:failedToFetchFollowed'));
+      toast.error('Failed to fetch followed streams');
     }
   }, [isError, isFetched]);
 
@@ -196,7 +193,7 @@ export default function FollowingScreen() {
                 color='gray.textLow'
                 style={styles.offlineHeaderTitle}
               >
-                {t('offlineChannels')}
+                Offline channels
               </Text>
             </View>
           );
@@ -204,7 +201,7 @@ export default function FollowingScreen() {
           return <MemoizedOfflineChannelRow channel={item.channel} />;
       }
     },
-    [streamListLayout, t],
+    [streamListLayout],
   );
 
   const stickyHeaderIndices = useMemo(
@@ -223,10 +220,10 @@ export default function FollowingScreen() {
   if (!authState?.isLoggedIn) {
     return (
       <EmptyState
-        button={t('common:signIn')}
+        button='Sign In'
         buttonOnPress={() => router.push('/auth-sheet')}
-        content={t('followingSignInPrompt')}
-        heading={t('followingHeading')}
+        content='Connect your Twitch account to see streams from channels you follow.'
+        heading='Your followed streams'
         iconName='person.2'
         style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}
       />
@@ -244,8 +241,8 @@ export default function FollowingScreen() {
     return (
       <EmptyState
         button={null}
-        content={t('followingLogInPrompt')}
-        heading={t('followingHeading')}
+        content='Log in to see streams from channels you follow.'
+        heading='Your followed streams'
         iconName='person.2'
         style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}
       />
@@ -255,10 +252,10 @@ export default function FollowingScreen() {
   if (isFetched && isError) {
     return (
       <EmptyState
-        button={t('common:refresh')}
+        button='Refresh'
         buttonOnPress={() => void handleRefreshFollowing()}
-        content={t('followingLoadFailedDescription')}
-        heading={t('followingLoadFailed')}
+        content='Twitch did not return your followed streams.'
+        heading="Couldn't load following"
         iconName='exclamationmark.triangle'
         style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}
       />
@@ -279,10 +276,10 @@ export default function FollowingScreen() {
   if (streamsArray.length === 0 && offlineChannels.length === 0) {
     return (
       <EmptyState
-        button={t('common:refresh')}
+        button='Refresh'
         buttonOnPress={() => void handleRefreshFollowing()}
-        content={t('noOneIsLiveDescription')}
-        heading={t('noOneIsLive')}
+        content='None of your followed streamers are live right now.'
+        heading='No one is live'
         iconName='antenna.radiowaves.left.and.right'
         style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}
       />

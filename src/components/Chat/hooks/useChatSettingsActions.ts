@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 
 import { useSyncRef } from '@app/hooks/useSyncRef';
-import i18next from '@app/i18n/i18next';
 import {
   clearCache,
   invalidateChatResourceCaches,
@@ -69,7 +68,7 @@ export function useChatSettingsActions({
     addMessage(
       createSystemMessage(
         channelNameRef.current,
-        i18next.t('chat:emotesRefreshed'),
+        'Refreshed emotes and badges',
       ),
     );
   }, [channelNameRef]);

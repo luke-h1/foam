@@ -10,7 +10,6 @@ import {
   useSyncExternalStore,
 } from 'react';
 import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import { Pressable } from 'react-native-gesture-handler';
 
 import { ListRenderItem } from '@shopify/flash-list';
@@ -205,7 +204,6 @@ function ResultSeparator() {
 }
 
 export function SearchScreen() {
-  const { t } = useTranslation('search');
   const [{ query, selectedFilter, searchResults, categoryResults }, setState] =
     useState<SearchState>(SEARCH_INITIAL_STATE);
   const listRef = useRef<FlashListRef<SearchItem>>(null);
@@ -281,10 +279,10 @@ export function SearchScreen() {
       setIsRefreshing,
       error => {
         logger.twitch.error('Search refresh failed', error);
-        toast.error(t('refreshFailed'));
+        toast.error("Couldn't refresh search results. Try again.");
       },
     );
-  }, [performSearch, query, t]);
+  }, [performSearch, query]);
 
   const handleClearSearch = useCallback(() => {
     searchBarRef.current?.clearText();
@@ -482,7 +480,7 @@ export function SearchScreen() {
         onCancel={handleClearSearch}
         onChangeText={handleTextChange}
         onSubmit={handleSearchSubmit}
-        placeholder={t('searchPlaceholder')}
+        placeholder='Search channels, games'
         value={query}
       />
       <SearchResultsList
@@ -516,14 +514,13 @@ function SearchHeader({
   searchResultsLength,
   selectedFilter,
 }: SearchHeaderProps) {
-  const { t } = useTranslation('search');
   return (
     <View style={styles.header}>
       <View style={styles.filterBar}>
         <SegmentedControl
           currentIndex={selectedFilter === 'channels' ? 0 : 1}
           onChange={handleFilterChange}
-          items={[{ label: t('channels') }, { label: t('categories') }]}
+          items={[{ label: 'Channels' }, { label: 'Categories' }]}
         />
       </View>
 
@@ -536,7 +533,7 @@ function SearchHeader({
               color='gray.textLow'
               style={styles.sectionTitle}
             >
-              {t('suggested')}
+              SUGGESTED
             </Text>
           </View>
           <View style={styles.quickActionsRow}>
@@ -553,9 +550,7 @@ function SearchHeader({
             color='gray.textLow'
             style={styles.sectionTitle}
           >
-            {selectedFilter === 'channels'
-              ? t('channelsHeader')
-              : t('categoriesHeader')}
+            {selectedFilter === 'channels' ? 'CHANNELS' : 'CATEGORIES'}
           </Text>
         </View>
       )}

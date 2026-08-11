@@ -5,7 +5,6 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import {
   BottomSheet,
@@ -121,7 +120,6 @@ function UserActionSheetComponent({
   onBanUser,
   username,
 }: UserActionSheetProps) {
-  const { t } = useTranslation(['chat', 'common']);
   const { canModerateChat, canModerateUser } = moderation;
   const { isHidden, isHighlighted, visible } = visibility;
   const sheetRef = useRef<BottomSheetHandle>(null);
@@ -141,43 +139,37 @@ function UserActionSheetComponent({
   const actionRows: UserActionItem[] = [
     {
       icon: 'at',
-      label: t('userActions.mention'),
+      label: 'Mention',
       onPress: () => onMentionUser(),
-      subtitle: t('userActions.mentionSubtitle'),
+      subtitle: 'Add to composer',
       tone: 'accent',
     },
     {
       icon: 'doc.on.doc',
-      label: t('userActions.copyUsername'),
+      label: 'Copy Username',
       onPress: () => onCopyUsername(),
-      subtitle: t('userActions.copyUsernameSubtitle'),
+      subtitle: 'Display name',
     },
     {
       icon: 'person.crop.circle.badge.xmark',
-      label: isHidden ? t('userActions.unhideUser') : t('userActions.hideUser'),
+      label: isHidden ? 'Unhide User' : 'Hide User',
       onPress: () => onHideUser(),
-      subtitle: isHidden
-        ? t('userActions.unhideUserSubtitle')
-        : t('userActions.hideUserSubtitle'),
+      subtitle: isHidden ? 'Show messages again' : 'Mute locally',
     },
     {
       icon: 'star',
-      label: isHighlighted
-        ? t('userActions.unhighlightUser')
-        : t('userActions.highlightUser'),
+      label: isHighlighted ? 'Unhighlight User' : 'Highlight User',
       onPress: () => onHighlightUser(),
-      subtitle: isHighlighted
-        ? t('userActions.unhighlightUserSubtitle')
-        : t('userActions.highlightUserSubtitle'),
+      subtitle: isHighlighted ? 'Remove marker' : 'Mark future messages',
       tone: 'accent',
     },
     ...(onReportUser
       ? [
           {
             icon: 'flag' as const,
-            label: t('userActions.reportUser'),
+            label: 'Report User',
             onPress: () => onReportUser(),
-            subtitle: t('userActions.reportUserSubtitle'),
+            subtitle: 'Open the Twitch report form',
             tone: 'warning' as const,
           },
         ]
@@ -186,9 +178,9 @@ function UserActionSheetComponent({
       ? [
           {
             icon: 'nosign' as const,
-            label: t('userActions.blockUser'),
+            label: 'Block User',
             onPress: () => onBlockUser(),
-            subtitle: t('userActions.blockUserSubtitle'),
+            subtitle: 'Block on Twitch',
             tone: 'danger' as const,
           },
         ]
@@ -197,23 +189,23 @@ function UserActionSheetComponent({
       ? [
           {
             icon: 'exclamationmark.triangle' as const,
-            label: t('userActions.warnUser'),
+            label: 'Warn User',
             onPress: () => onWarnUser?.(),
-            subtitle: t('userActions.warnUserSubtitle'),
+            subtitle: 'Send an official chat warning',
             tone: 'warning' as const,
           },
           {
             icon: 'clock' as const,
-            label: t('userActions.timeoutUser'),
+            label: 'Timeout…',
             onPress: () => onTimeoutUser?.(),
-            subtitle: t('userActions.timeoutUserSubtitle'),
+            subtitle: 'Temporary moderation',
             tone: 'warning' as const,
           },
           {
             icon: 'slash.circle' as const,
-            label: t('userActions.banUser'),
+            label: 'Ban User',
             onPress: () => onBanUser?.(),
-            subtitle: t('userActions.banUserSubtitle'),
+            subtitle: 'Permanent moderation',
             tone: 'danger' as const,
           },
         ]
@@ -264,11 +256,7 @@ function UserActionSheetComponent({
               username={username}
             />
           </View>
-          <Button
-            label={t('common:done')}
-            style={styles.doneButton}
-            onPress={requestClose}
-          >
+          <Button label='Done' style={styles.doneButton} onPress={requestClose}>
             <SymbolView
               name='xmark'
               size={15}
@@ -305,7 +293,7 @@ function UserActionSheetComponent({
           {recentMessages.length > 0 ? (
             <View style={styles.recentMessages}>
               <Text style={styles.recentMessagesTitle} weight='semibold'>
-                {t('userActions.recentMessages')}
+                Recent messages
               </Text>
               {recentMessages.map(message => (
                 <Text

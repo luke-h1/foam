@@ -1,6 +1,5 @@
 import { memo } from 'react';
 import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -64,12 +63,11 @@ export const ChatInputSection = memo(
       trimmedInput && (isAuthenticated || isRefresh) && !isSending,
     );
 
-    const { t } = useTranslation('chat');
     const inputPlaceholder = !isAuthenticated
-      ? t('composer.signInToSend')
+      ? 'Sign in to send messages'
       : replyTo !== null
-        ? t('composer.replyToUser', { username: replyTo.username })
-        : t('composer.sendAMessage');
+        ? `Reply to ${replyTo.username}...`
+        : 'Send a message...';
 
     return (
       <View style={styles.wrapper} testID='chat-input-bar'>
@@ -82,9 +80,7 @@ export const ChatInputSection = memo(
             <View style={styles.replyIndicator} />
             <View style={styles.replyContent}>
               <View style={styles.replyLabelRow}>
-                <Text style={styles.replyLabel}>
-                  {t('composer.replyingTo')}{' '}
-                </Text>
+                <Text style={styles.replyLabel}>Replying to </Text>
                 <PaintedUsername
                   username={replyTo.username}
                   userId={replyTo.userId}
@@ -150,7 +146,7 @@ export const ChatInputSection = memo(
 
               {onAttachImage ? (
                 <Button
-                  label={t('composer.attachImage')}
+                  label='Attach image'
                   style={styles.actionButton}
                   onPress={onAttachImage}
                   disabled={isUploadingImage || !isAuthenticated}

@@ -2,7 +2,6 @@ import { memo } from 'react';
 import { View } from 'react-native';
 
 import { Text } from '@app/components/ui/Text/Text';
-import i18next from '@app/i18n/i18next';
 import { reportUnrenderableNotice } from '@app/utils/chat/chatHealth/reportUnrenderableNotice';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
 
@@ -25,11 +24,11 @@ interface ViewerMilestoneNoticeProps {
 function getMilestoneMetaLabel(category: string): string {
   switch (category) {
     case 'watch-streak':
-      return i18next.t('chat:notices.watchStreak');
+      return 'Watch streak';
     case 'follow':
-      return i18next.t('chat:notices.followMilestone');
+      return 'Follow milestone';
     default:
-      return i18next.t('chat:notices.milestone');
+      return 'Milestone';
   }
 }
 
@@ -77,9 +76,7 @@ function ViewerMileStoneNotice({
           </Text>
           {Number.isFinite(reward) && reward > 0 ? (
             <Text style={[textStyles.meta, styles.channelPointsMetaReward]}>
-              {i18next.t('chat:notices.channelPointsEarned', {
-                count: reward,
-              })}
+              {`+${reward} ${reward === 1 ? 'point' : 'points'}`}
             </Text>
           ) : null}
         </Text>

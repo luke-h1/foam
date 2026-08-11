@@ -1,5 +1,3 @@
-import i18next from '@app/i18n/i18next';
-
 export type ErrorCategory = 'network' | 'crash';
 
 const NETWORK_PATTERNS = [
@@ -20,8 +18,8 @@ export function categorizeError(error: Error | null): ErrorCategory {
 export function getFriendlyErrorMessage(category: ErrorCategory): string {
   switch (category) {
     case 'network':
-      return i18next.t('errors:networkErrorMessage');
+      return 'Foam could not reach Twitch. Check your connection, then try again.';
     case 'crash':
-      return i18next.t('errors:crashErrorMessage');
+      return 'Try resetting or restarting the app. If the issue persists, send feedback so we can look into it.';
   }
 }

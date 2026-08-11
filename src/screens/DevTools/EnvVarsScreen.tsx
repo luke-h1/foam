@@ -8,7 +8,6 @@ import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
 import { Button } from '@app/components/Button/Button';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
-import i18next from '@app/i18n/i18next';
 import { impact, selection } from '@app/lib/haptics';
 import { theme } from '@app/styles/themes';
 
@@ -130,13 +129,13 @@ export function EnvVarsScreen() {
             tintColor='#fff'
           />
           <Text type='sm' weight='semibold' style={styles.buttonText}>
-            {revealed
-              ? i18next.t('devTools:hideSecrets')
-              : i18next.t('devTools:revealSecrets')}
+            {revealed ? 'Hide secrets' : 'Reveal secrets'}
           </Text>
         </Button>
         <Text type='xs' color='gray.textLow' style={styles.note}>
-          {i18next.t('devTools:envVarsNote')}
+          Only variables referenced as EXPO_PUBLIC_* are inlined into the app
+          bundle. Other .env entries (AWS keys, GitHub tokens) never reach the
+          app. Tap a row to copy its value.
         </Text>
       </View>
 
@@ -147,12 +146,7 @@ export function EnvVarsScreen() {
           color='gray.textLow'
           style={styles.sectionTitle}
         >
-          {i18next
-            .t('devTools:envVarsCount', {
-              set: setCount,
-              total: envVars.length,
-            })
-            .toUpperCase()}
+          {`${setCount} of ${envVars.length} set`.toUpperCase()}
         </Text>
         <View style={styles.card}>
           {envVars.map((entry, index) => {
@@ -160,7 +154,7 @@ export function EnvVarsScreen() {
             const isSet = entry.value != null && entry.value !== '';
             const raw = entry.value == null ? '' : String(entry.value);
             const display = !isSet
-              ? i18next.t('devTools:envVarUndefined')
+              ? 'undefined'
               : entry.secret && !revealed
                 ? maskValue(raw)
                 : raw;

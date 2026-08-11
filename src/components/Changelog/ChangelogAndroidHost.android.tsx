@@ -1,6 +1,5 @@
 import { useSyncExternalStore } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import { WebView } from 'react-native-webview';
 
 import {
@@ -155,7 +154,6 @@ function VersionNotes({ notes }: { notes: ChangelogVersionNotes }) {
 }
 
 export function ChangelogAndroidHost() {
-  const { t } = useTranslation('common');
   const options = useSyncExternalStore(
     subscribeChangelogAndroid,
     getChangelogAndroidState,
@@ -166,7 +164,7 @@ export function ChangelogAndroidHost() {
     return null;
   }
 
-  const doneLabel = options.configuration?.doneButtonLabel ?? t('done');
+  const doneLabel = options.configuration?.doneButtonLabel ?? 'Done';
 
   return (
     <View style={styles.host} pointerEvents='box-none'>

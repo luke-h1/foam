@@ -1,6 +1,5 @@
 import { memo, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import { router } from 'expo-router';
 
@@ -16,7 +15,6 @@ interface Props {
 }
 
 function OfflineChannelRow({ channel }: Props) {
-  const { t } = useTranslation('stream');
   const avatarInitial = channel.broadcaster_name.trim().charAt(0).toUpperCase();
 
   const handlePressIn = useCallback(() => {
@@ -29,7 +27,7 @@ function OfflineChannelRow({ channel }: Props) {
 
   return (
     <Button
-      label={t('viewOfflineChannel', { name: channel.broadcaster_name })}
+      label={`View ${channel.broadcaster_name}`}
       onPress={handlePress}
       onPressIn={handlePressIn}
       style={styles.row}

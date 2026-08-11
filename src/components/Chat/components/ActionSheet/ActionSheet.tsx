@@ -5,7 +5,6 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import {
   BottomSheet,
@@ -106,7 +105,6 @@ type ActionItem = {
 };
 
 function ActionSheetComponent(props: Props) {
-  const { t } = useTranslation(['chat', 'common']);
   const {
     visible,
     onClose,
@@ -140,21 +138,21 @@ function ActionSheetComponent(props: Props) {
     const items: ActionItem[] = [
       {
         id: 'copy',
-        label: t('messageActions.copyMessage'),
-        subtitle: t('messageActions.copyMessageSubtitle'),
+        label: 'Copy Message',
+        subtitle: 'Text and emotes',
         onPress: () => onCopy(),
       },
       {
         id: 'reply',
-        label: t('messageActions.reply'),
-        subtitle: t('messageActions.replySubtitle'),
+        label: 'Reply',
+        subtitle: 'Quote in composer',
         tone: 'accent',
         onPress: () => onReply(),
       },
       {
         id: 'hide-phrase',
-        label: t('messageActions.hidePhrase'),
-        subtitle: t('messageActions.hidePhraseSubtitle'),
+        label: 'Hide Phrase',
+        subtitle: 'Filter this wording',
         onPress: () => onHidePhrase?.(),
       },
     ];
@@ -162,19 +160,15 @@ function ActionSheetComponent(props: Props) {
     if (username) {
       items.splice(2, 0, {
         id: 'hide-user',
-        label: t('userActions.hideUser'),
-        subtitle: t('userActions.hideUserSubtitle'),
+        label: 'Hide User',
+        subtitle: 'Mute locally',
         onPress: () => onHideUser?.(),
       });
 
       items.splice(3, 0, {
         id: 'highlight-user',
-        label: isUserHighlighted
-          ? t('userActions.unhighlightUser')
-          : t('userActions.highlightUser'),
-        subtitle: isUserHighlighted
-          ? t('userActions.unhighlightUserSubtitle')
-          : t('userActions.highlightUserSubtitle'),
+        label: isUserHighlighted ? 'Unhighlight User' : 'Highlight User',
+        subtitle: isUserHighlighted ? 'Remove marker' : 'Mark future messages',
         tone: 'accent',
         onPress: () => onHighlightUser?.(),
       });
@@ -185,23 +179,23 @@ function ActionSheetComponent(props: Props) {
         items.push(
           {
             id: 'update-pin',
-            label: t('messageActions.refreshPin'),
-            subtitle: t('messageActions.refreshPinSubtitle'),
+            label: 'Refresh Pin',
+            subtitle: 'Extend pinned message',
             tone: 'accent',
             onPress: () => onUpdatePinnedMessage?.(),
           },
           {
             id: 'unpin-message',
-            label: t('messageActions.unpinMessage'),
-            subtitle: t('messageActions.unpinMessageSubtitle'),
+            label: 'Unpin Message',
+            subtitle: 'Remove from header',
             onPress: () => onUnpinMessage?.(),
           },
         );
       } else {
         items.push({
           id: 'pin-message',
-          label: t('messageActions.pinMessage'),
-          subtitle: t('messageActions.pinMessageSubtitle'),
+          label: 'Pin Message',
+          subtitle: 'Keep at top',
           tone: 'accent',
           onPress: () => onPinMessage?.(),
         });
@@ -212,8 +206,8 @@ function ActionSheetComponent(props: Props) {
       if (canDeleteMessage) {
         items.push({
           id: 'delete-message',
-          label: t('messageActions.deleteMessage'),
-          subtitle: t('messageActions.deleteMessageSubtitle'),
+          label: 'Delete Message',
+          subtitle: 'Remove from chat',
           tone: 'danger',
           onPress: () => onDeleteMessage?.(),
         });
@@ -223,15 +217,15 @@ function ActionSheetComponent(props: Props) {
         items.push(
           {
             id: 'timeout-user',
-            label: t('userActions.timeoutUser'),
-            subtitle: t('userActions.timeoutUserSubtitle'),
+            label: 'Timeout…',
+            subtitle: 'Temporary moderation',
             tone: 'warning',
             onPress: () => onTimeoutUser?.(),
           },
           {
             id: 'ban-user',
-            label: t('userActions.banUser'),
-            subtitle: t('userActions.banUserSubtitle'),
+            label: 'Ban User',
+            subtitle: 'Permanent moderation',
             tone: 'danger',
             onPress: () => onBanUser?.(),
           },
@@ -275,14 +269,14 @@ function ActionSheetComponent(props: Props) {
         <View style={styles.header}>
           <View>
             <Text style={styles.eyebrow} weight='semibold'>
-              {t('messageActions.eyebrow')}
+              Selected message
             </Text>
             <Text style={styles.title} weight='semibold'>
-              {t('messageActions.title')}
+              Message Actions
             </Text>
           </View>
           <Button
-            label={t('common:done')}
+            label='Done'
             onPress={requestClose}
             style={styles.closeButton}
           >

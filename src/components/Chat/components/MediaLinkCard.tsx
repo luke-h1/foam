@@ -1,6 +1,5 @@
 import { memo, useCallback } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 import { useQueries } from '@tanstack/react-query';
 import { router } from 'expo-router';
@@ -36,7 +35,6 @@ function MediaLinkCardComponent({
   type,
   url,
 }: MediaLinkCardProps) {
-  const { t } = useTranslation('chat');
   const twitchClipId = getTwitchClipIdFromUrl(url);
   const [sevenTvEmote, twitchClip] = useQueries({
     queries: [
@@ -85,8 +83,8 @@ function MediaLinkCardComponent({
 
   const title =
     type === 'stvEmote'
-      ? (sevenTvEmote.data?.name ?? t('media.stvEmote'))
-      : (twitchClip.data?.title ?? t('media.twitchClip'));
+      ? (sevenTvEmote.data?.name ?? '7TV emote')
+      : (twitchClip.data?.title ?? 'Twitch clip');
 
   const createdBy =
     type === 'stvEmote'
@@ -98,19 +96,17 @@ function MediaLinkCardComponent({
   const isTwitchClip = type === 'twitchClip';
   const mediaMeta = isTwitchClip
     ? [
-        createdBy ? t('media.clippedBy', { name: createdBy }) : null,
+        createdBy ? `Clipped by ${createdBy}` : null,
         typeof viewCount === 'number' && viewCount > 0
-          ? t('media.views', {
-              count: formatCompactNumber(viewCount),
-            })
+          ? `${formatCompactNumber(viewCount)} views`
           : null,
       ]
         .filter(Boolean)
-        .join(' - ') || t('media.openTwitchClip')
+        .join(' - ') || 'Open Twitch clip'
     : createdBy
-      ? t('media.by', { name: createdBy })
-      : t('media.stvEmote');
-  const mediaLabel = isTwitchClip ? t('media.twitchClip') : t('media.stvEmote');
+      ? `By ${createdBy}`
+      : '7TV emote';
+  const mediaLabel = isTwitchClip ? 'Twitch clip' : '7TV emote';
   const mediaImageFit = isTwitchClip ? 'cover' : 'contain';
 
   if (layout === 'inline' && type === 'stvEmote') {
