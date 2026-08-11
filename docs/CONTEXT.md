@@ -128,6 +128,13 @@ marks: `line_received` → `buffered` → `drained` → `committed`
 (`addMessages`, `store/chat/actions/messages.ts`) **commits**. Front-door
 rate limiting is `chatIngestRateLimiter`.
 
+**Ingest controller** - the headless ingest state machine
+(`components/Chat/util/chatIngestController.ts`): buffer, delay queue, flush
+cadence, raid latch, backpressure, unread accounting and moderation
+coherence behind one factory. `useChatMessages` is its React lifecycle
+adapter; jest drives a raw line into the real store through it with fake
+timers.
+
 **Enrichment** - post-commit emote/badge re-resolution over already-parsed
 messages (`store/chat/actions/messageEnrichment.ts`: `enrichMessageSet`,
 `enrichVisibleMessage`). Parse-time resolution is **processing**
