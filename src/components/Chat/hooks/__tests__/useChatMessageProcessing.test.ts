@@ -90,7 +90,7 @@ jest.mock('@app/utils/chat/sharedChatBadges/getMessageBadges', () => ({
   getMessageBadges: jest.fn(() => []),
 }));
 
-jest.mock('../../util/sharedChatBadges/getSharedChatBadgeContext', () => ({
+jest.mock('@app/utils/chat/sharedChatBadges/getSharedChatBadgeContext', () => ({
   getSharedChatBadgeContext: jest.fn(() =>
     Promise.resolve({
       sourceBadge: undefined,
