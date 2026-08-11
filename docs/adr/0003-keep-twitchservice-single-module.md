@@ -9,12 +9,12 @@ reading-navigability — each domain's endpoints would live together.
 We deliberately keep it as one module.
 
 - It is **already deep**: every method sits behind the shared `createApiClient`
-  seam. A split is pure reorg (locality of *reading*), not a deepening — it adds
+  seam. A split is pure reorg (locality of _reading_), not a deepening — it adds
   no leverage and removes no duplication.
 - The cost is **disproportionate**: `twitchService` is imported by ~30 files with
   ~106 call sites, 18 of them test files that `jest.mock('@app/services/twitch-service')`
-  and key assertions on `twitchService.<method>`. The module also *exports the
-  shared response types* (`UserInfoResponse`, `TwitchStream`, `PaginatedList`,
+  and key assertions on `twitchService.<method>`. The module also _exports the
+  shared response types_ (`UserInfoResponse`, `TwitchStream`, `PaginatedList`,
   `Channel`, `Category`, …) that consumers import directly, so a split entangles
   type imports as well as method calls.
 - The low-churn alternative — keep a composed `twitchService` facade over domain
@@ -24,7 +24,7 @@ We deliberately keep it as one module.
 
 Net: high churn + real regression risk (test mocks, type imports, cycles) for a
 navigability-only gain on already-deep code. Fails the deletion test as a
-*deepening* — deleting the split would not concentrate any complexity.
+_deepening_ — deleting the split would not concentrate any complexity.
 
 ## Consequences
 

@@ -18,13 +18,13 @@ That already returns the native module when present and the stub when not. But e
 
 ## Decision matrix
 
-| Module | iOS does | Recommended Android action | Effort |
-|---|---|---|---|
-| `changelog` | SwiftUI "what's new" sheet | **Nothing** - already has full Android path (`ChangelogAndroidHost.android.tsx` + presenter) | done |
-| `image-cache-limits` | Bounds SDWebImage decoded-mem cache | **Shipped**: Glide (expo-image's Android backend) is bounded by default; `ImageCacheLimitsApplicationLifecycle.kt` tiers that bound by device (`setMemoryCategory` LOW/NORMAL/HIGH) - see §5 | shipped |
-| `image-memory-pressure` | `os_proc_available_memory()` pre-jetsam probe | **Keep stub** (return 0). Android's model is `onTrimMemory`, not a headroom poll. Optional native below if you want the JS monitor live | optional |
-| `cpu-usage` | Per-process CPU% (dev perf overlay) | **Optional native** - easy `/proc` read; nice for the Android perf overlay. Dev-only, non-blocking | low |
-| `icloud-sync` | `NSUbiquitousKeyValueStore` preference sync | **Keep stub** - no Android equivalent to iCloud; app layer also hard-gates on iOS | none |
+| Module                  | iOS does                                      | Recommended Android action                                                                                                                                                                   | Effort   |
+| ----------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `changelog`             | SwiftUI "what's new" sheet                    | **Nothing** - already has full Android path (`ChangelogAndroidHost.android.tsx` + presenter)                                                                                                 | done     |
+| `image-cache-limits`    | Bounds SDWebImage decoded-mem cache           | **Shipped**: Glide (expo-image's Android backend) is bounded by default; `ImageCacheLimitsApplicationLifecycle.kt` tiers that bound by device (`setMemoryCategory` LOW/NORMAL/HIGH) - see §5 | shipped  |
+| `image-memory-pressure` | `os_proc_available_memory()` pre-jetsam probe | **Keep stub** (return 0). Android's model is `onTrimMemory`, not a headroom poll. Optional native below if you want the JS monitor live                                                      | optional |
+| `cpu-usage`             | Per-process CPU% (dev perf overlay)           | **Optional native** - easy `/proc` read; nice for the Android perf overlay. Dev-only, non-blocking                                                                                           | low      |
+| `icloud-sync`           | `NSUbiquitousKeyValueStore` preference sync   | **Keep stub** - no Android equivalent to iCloud; app layer also hard-gates on iOS                                                                                                            | none     |
 
 Bottom line for the release: **only `cpu-usage` is worth a real native, and only because it's cheap.** The rest are correctly iOS-only. The two must-do release items are the verification checklist (§6) and the patch review (§5).
 
@@ -167,6 +167,7 @@ class CpuUsageModule : Module() {
 ```
 
 ### Wire-up
+
 1. Add the three scaffold files from §1 with `namespace 'expo.modules.cpuusage'` and module `expo.modules.cpuusage.CpuUsageModule`.
 2. Update `modules/cpu-usage/expo-module.config.json` per §1.
 3. **Delete `modules/cpu-usage/src/CpuUsageModule.android.ts`** so Android uses the `requireOptionalNativeModule` path.
@@ -227,6 +228,7 @@ class ImageMemoryPressureModule : Module() {
 Wire-up mirrors §2 (config `android` block, delete `ImageMemoryPressureModule.android.ts`, rebuild). **Do not ship without adjusting the JS thresholds in `src/Providers/CachedEmotesProvider/cache-service.ts`.**
 
 ### Better Android-native alternative (no JS poll)
+
 Instead of exposing a poll, register a `ComponentCallbacks2` and clear the image cache directly on `onTrimMemory`. This matches Android's push model and needs no JS changes:
 
 ```kotlin
@@ -278,6 +280,7 @@ This adds an `onMemoryPressure` event you'd subscribe to in JS to call `Image.cl
 ## 4. `icloud-sync` - keep the stub (documented, no code)
 
 Two reasons this stays iOS-only:
+
 1. There is no Android equivalent to `NSUbiquitousKeyValueStore` / iCloud KVS. A Google Drive AppData-folder backing is a full feature (auth, conflict resolution), out of scope for parity.
 2. The app-layer wrapper already hard-gates on iOS, so even a native Android module would be ignored:
 
@@ -298,11 +301,13 @@ The existing `ICloudSyncModule.android.ts` (`isAvailable() -> false`, no-op writ
 ## 5. `image-cache-limits` and the iOS-only patches
 
 ### `image-cache-limits` - Android ships a Glide memory-category tier
+
 iOS bounds `SDImageCache.shared` (unbounded by default, evicts only on memory warning). Glide - expo-image's actual Android backend (this section previously said Coil, which was wrong) - already bounds its memory cache via its default `MemorySizeCalculator`, so the unbounded-growth problem the iOS module solves does not exist on Android. The module still has **no JS surface** on Android.
 
 What shipped instead: `ImageCacheLimitsApplicationLifecycle.kt` scales Glide's existing bound to the device via `setMemoryCategory` - LOW (0.5x) on `isLowRamDevice`, HIGH (1.5x) on >= 256MB large-heap flagships, NORMAL otherwise - posted to the main looper off the `Application.onCreate` critical path. Pressure release still works because Glide registers its own `ComponentCallbacks2` trim hooks, and the `AppGlideModule` is untouched so expo-image's AVIF/animated/okhttp integrations are unaffected. `build.gradle` pins Glide 5.0.5 to match expo-image's version.
 
 ### Patch review (release check)
+
 Two patches touch only Apple/Swift source, so Android runs upstream:
 
 - **`patches/expo-image@57.0.0.patch`** - patches `ios/ImageView.swift` only (the ~15fps animated-emote cap + shared CADisplayLink frame sync). These are CADisplayLink/iOS-rendering concerns; Android uses Glide's own frame scheduling. **iOS-specific by nature - no Android exposure.**
@@ -330,6 +335,6 @@ Do this regardless of whether you add any native - it's how you prove Android pa
 
 ## Summary of changes if you take the recommended path
 
-- **`cpu-usage`**: add `android/` (§1 scaffold + §2 Kotlin), add `android` block to config, delete `CpuUsageModule.android.ts`, rebuild. *(optional, low effort)*
+- **`cpu-usage`**: add `android/` (§1 scaffold + §2 Kotlin), add `android` block to config, delete `CpuUsageModule.android.ts`, rebuild. _(optional, low effort)_
 - **Everything else**: no code. Confirm stubs via §6, note the patch review from §5.
 - **Do not** OTA any of this - native modules require a fresh Android build.

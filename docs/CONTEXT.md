@@ -71,7 +71,7 @@ the deploy-decision/dispatcher split in the release pipeline.
 ## Chat domain terms
 
 **Channel (chat-side)** - the Helix entity is `Channel`
-(`types/twitch/channel.ts`); the *joined* channel's chat state has no single
+(`types/twitch/channel.ts`); the _joined_ channel's chat state has no single
 type - it is `chatStore$.currentChannelId` plus a per-channel
 `ChannelCacheType` in `channelCaches` (bounded by `MAX_CACHED_CHANNELS`) plus
 `ChatTransientChannelState`. Join/part are `joinChannel` / `partChannel` on
@@ -155,7 +155,7 @@ list keyExtractor agree (see AGENTS.md).
 external-store revision (`subscribeUserState`); the channel's mode state is
 **room state** (`RoomStateTags` → `ParsedRoomState`, tracked by
 `createRoomStateTracker` in `components/Chat/util/roomState/`). ⚠
-`ChatMessageType.userstate` is the *sender's* per-message tags - same word,
+`ChatMessageType.userstate` is the _sender's_ per-message tags - same word,
 different concept from the user's own USERSTATE.
 
 ## Emote & cosmetics terms
@@ -210,7 +210,7 @@ type exists.
 
 **Fetch-once guard** — the single-flight + negative-cache + TTL + generation-fence
 mechanism behind session-scoped resource fetches
-(`src/utils/async/fetchOnceGuard.ts`). The guard owns *mechanism* only; stamping
+(`src/utils/async/fetchOnceGuard.ts`). The guard owns _mechanism_ only; stamping
 policy and value storage stay in each adapter. Adapters: channel cheermotes
 (`utils/chat/cheermoteStore`), 7TV personal emotes and Twitch subscriber channel
 profiles (`store/chat/actions/channelLoad`), 7TV user cosmetics

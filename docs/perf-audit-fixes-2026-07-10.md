@@ -85,13 +85,13 @@ Wall-clock claims are avoided where they could not be honestly measured.
    batch; touching it would have mixed unrelated work into a perf commit.
    Fix after that batch lands: keyed child writes + plain FIFO.
 2. **Working-tree bugs from the audit** (probe race on `awaitingPongRef`,
-   unescaped `reply-parent-msg-body`) - these live in the *uncommitted*
+   unescaped `reply-parent-msg-body`) - these live in the _uncommitted_
    working-tree changes owned by another session, not in committed code.
 3. **Mediums:** alternating-row stripe keyed to list index (`useChatRowRenderer`
    - staged file, same conflict), reply-quote/sub-notice render-time full
-   parse, `parseIrcTags` allocations, `Image.tsx` double-decode on disk-cache
-   swap, `emoteProcessor` baseCollectionCache cap 64 (pins tens of MB - drop
-   to 2-4), cosmetics persist sync stringify → `offThreadJson`.
+     parse, `parseIrcTags` allocations, `Image.tsx` double-decode on disk-cache
+     swap, `emoteProcessor` baseCollectionCache cap 64 (pins tens of MB - drop
+     to 2-4), cosmetics persist sync stringify → `offThreadJson`.
 4. **Sentry follow-ups:** re-check `estimateRefBytes` p75 after build 297
    traffic; `TwitchWsService.getActiveSubscriptions` p75 250ms;
    `getSanitisedChannelBadges` p75 92ms.

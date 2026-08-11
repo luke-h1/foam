@@ -78,20 +78,20 @@ host.
 
 ## 2. SwiftUI → Compose mapping
 
-| swift-ui | jetpack-compose |
-|---|---|
-| `Form` | `Column` + `verticalScroll()` |
-| `Section` | title `Text` + `Card` wrapping `Column` of rows |
-| `List` | `LazyColumn` of `ListItem`s (or `Column` for short lists) |
-| `LabeledContent` | `ListItem` w/ `HeadlineContent`(label) + `TrailingContent`(value) |
-| `Button` row | `ListItem` + `clickable(fn, { indication: true })` |
-| `Toggle` | `Switch` (controlled) or `SyncSwitch` (observable) |
-| `Picker` | `SingleChoiceSegmentedButtonRow` or `DropdownMenu` |
-| `TextField` / `SecureField` | `TextField` (`useNativeState` value) |
-| `ProgressView` | `LinearProgressIndicator` / `CircularProgressIndicator` |
-| `HStack` / `VStack` / `Spacer` | `Row` / `Column` / `Spacer` |
-| `Image` / SF Symbol | `SymbolView` inside `RNHostView matchContents` |
-| `GlassEffectContainer` | no analog - `Surface` / `Card` tonal elevation |
+| swift-ui                       | jetpack-compose                                                   |
+| ------------------------------ | ----------------------------------------------------------------- |
+| `Form`                         | `Column` + `verticalScroll()`                                     |
+| `Section`                      | title `Text` + `Card` wrapping `Column` of rows                   |
+| `List`                         | `LazyColumn` of `ListItem`s (or `Column` for short lists)         |
+| `LabeledContent`               | `ListItem` w/ `HeadlineContent`(label) + `TrailingContent`(value) |
+| `Button` row                   | `ListItem` + `clickable(fn, { indication: true })`                |
+| `Toggle`                       | `Switch` (controlled) or `SyncSwitch` (observable)                |
+| `Picker`                       | `SingleChoiceSegmentedButtonRow` or `DropdownMenu`                |
+| `TextField` / `SecureField`    | `TextField` (`useNativeState` value)                              |
+| `ProgressView`                 | `LinearProgressIndicator` / `CircularProgressIndicator`           |
+| `HStack` / `VStack` / `Spacer` | `Row` / `Column` / `Spacer`                                       |
+| `Image` / SF Symbol            | `SymbolView` inside `RNHostView matchContents`                    |
+| `GlassEffectContainer`         | no analog - `Surface` / `Card` tonal elevation                    |
 
 ---
 
@@ -245,7 +245,11 @@ export function NativeInfoRow({ label, value }: NativeInfoRowProps) {
   );
 }
 
-export function NativeActionRow({ title, icon, onPress }: NativeActionRowProps) {
+export function NativeActionRow({
+  title,
+  icon,
+  onPress,
+}: NativeActionRowProps) {
   return (
     <ListItem
       colors={listItemColors}
@@ -285,7 +289,10 @@ export function NativeActionRow({ title, icon, onPress }: NativeActionRowProps) 
 
 export function NativeRawRow({ children }: { children: ReactNode }) {
   return (
-    <Card colors={cardColors} modifiers={[fillMaxWidth(), padding(16, 0, 16, 0)]}>
+    <Card
+      colors={cardColors}
+      modifiers={[fillMaxWidth(), padding(16, 0, 16, 0)]}
+    >
       <RNHostView matchContents>{children as ReactElement}</RNHostView>
     </Card>
   );
@@ -363,7 +370,11 @@ export function NativeInfoRow({ label, value }: NativeInfoRowProps) {
   );
 }
 
-export function NativeActionRow({ title, icon, onPress }: NativeActionRowProps) {
+export function NativeActionRow({
+  title,
+  icon,
+  onPress,
+}: NativeActionRowProps) {
   return (
     <PressableArea style={styles.pressableFill} onPress={onPress}>
       <View style={styles.actionRow}>
@@ -532,10 +543,7 @@ export function NativeToggleRow({
   return (
     <ListItem colors={listItemColors}>
       <ListItem.HeadlineContent>
-        <Text
-          color={theme.color.text.dark}
-          style={{ typography: 'bodyLarge' }}
-        >
+        <Text color={theme.color.text.dark} style={{ typography: 'bodyLarge' }}>
           {label}
         </Text>
       </ListItem.HeadlineContent>
@@ -579,7 +587,7 @@ function ThemePicker({
 }) {
   return (
     <SingleChoiceSegmentedButtonRow>
-      {options.map((option) => (
+      {options.map(option => (
         <SegmentedButton
           key={option.value}
           selected={option.value === selected}
@@ -601,7 +609,12 @@ Compose `TextField` binds to a `useNativeState` observable - the same pattern
 the SwiftUI branch already uses, so the binding concept carries over.
 
 ```tsx
-import { Column, ListItem, TextField, useNativeState } from '@expo/ui/jetpack-compose';
+import {
+  Column,
+  ListItem,
+  TextField,
+  useNativeState,
+} from '@expo/ui/jetpack-compose';
 import { fillMaxWidth, padding } from '@expo/ui/jetpack-compose/modifiers';
 
 function AddTermField({ onSubmit }: { onSubmit: (term: string) => void }) {
@@ -613,7 +626,7 @@ function AddTermField({ onSubmit }: { onSubmit: (term: string) => void }) {
       singleLine
       autoFocus={false}
       modifiers={[fillMaxWidth(), padding(16, 8, 16, 8)]}
-      onDone={(value) => {
+      onDone={value => {
         const trimmed = value.trim();
         if (trimmed) {
           onSubmit(trimmed);
@@ -655,6 +668,7 @@ Legend: `[F]` uses the `NativeForm` foundation, `[I]` needs interactive
 controls, `[G]` has an iOS-26 glass surface with no Compose analog.
 
 **Settings cluster** (`Form`/`Section`, mostly `[F]`, some `[I]`):
+
 - `src/screens/SettingsScreen/SettingsIndexScreen.tsx` `[F]`
 - `src/screens/SettingsScreen/SettingsAppearanceScreen.tsx` `[F][I]` (Toggle + Picker)
 - `src/screens/SettingsScreen/SettingsOtherScreen.tsx` `[F][I]` (Toggle)
@@ -665,12 +679,14 @@ controls, `[G]` has an iOS-26 glass surface with no Compose analog.
 - `src/screens/SettingsScreen/EmoteBadgeViewerScreen.tsx` `[I]` (Progress)
 
 **Preferences cluster** (`List` + `TextField` + `useNativeState`, `[I]`):
+
 - `src/screens/Preferences/BlockedTermsScreen.tsx`
 - `src/screens/Preferences/SavedPhrasesScreen.tsx`
 - `src/screens/Preferences/BlockedUsersScreen.tsx`
 - `src/screens/Preferences/ChatPreferenceNativeForm.tsx` (Toggle + Picker)
 
 **Devtools + shared components:**
+
 - `src/screens/DevTools/DebugScreen.tsx` `[F][I]` (Toggle + TextField)
 - `src/screens/DevTools/components/PaintRendererSection.tsx` `[I]` (Picker)
 - `src/components/ui/Input/Input.ios.tsx` `[I][G]` (add `.android.tsx`)
@@ -703,4 +719,7 @@ use a Material `Surface`/`Card` with tonal elevation.
 4. Preferences cluster (the `useNativeState`/`TextField` rework).
 5. Devtools + shared components.
 6. Glass-surface fallbacks last.
+
+```
+
 ```

@@ -6,56 +6,67 @@ Items marked **[DONE]** are implemented and staged (not committed) as of this se
 ## Implemented (staged)
 
 ### FlashList — element-type switching on prop presence [DONE]
+
 - **Location:** src/components/FlashList/FlashList.tsx
 - **Problem:** Wrapper returned three different element types depending on whether `refreshControl`/`onRefresh` were set; an `onRefresh` appearing after data load remounted the whole list (scroll position, recycled cells lost). 15 importers.
 - **Change:** Single `ShopifyFlashList` render path; `onRefresh` gated inline (Android exclusion kept). `FlashListWithRefresh` deleted.
 
 ### Text — per-render allocations in the hottest primitive [DONE]
+
 - **Location:** src/components/ui/Text/Text.tsx
 - **Problem:** `getFontFamily` allocated a 9-entry font map per render; `getMargin(theme)` built a closure per render. 118 importers, every chat row.
 - **Change:** Hoisted italic/upright font maps and the margin resolver to module scope.
 
 ### ControlsOverlay — 1 Hz interval re-rendered the whole overlay [DONE]
+
 - **Location:** src/components/StreamPlayer/ControlsOverlay.tsx
 - **Problem:** Stream-duration `setInterval` set state on the overlay root; every second the gradients, animated container, and 7+ buttons re-rendered for one label.
 - **Change:** File-local `StreamDurationLabel` owns the interval; the tick re-renders one `Text`. Mid-file imports moved to top; `OverlayMetricsState` wrapper deleted.
 
 ### useChatRowRenderer — onUsernamePress bypassed the ref mirror [DONE]
+
 - **Location:** src/components/Chat/hooks/useChatRowRenderer.tsx
 - **Problem:** Four handlers go through refs so `renderItem` identity survives handler churn; `onUsernamePress` alone was passed directly and sat in the dep array — a latent every-visible-row re-render guarded only by convention three files away.
 - **Change:** Routed through the same ref + layout-effect block; dropped from deps.
 
 ### LiveStreamScreen — duplicated chat-width clamp [DONE]
+
 - **Location:** src/screens/Stream/LiveStreamScreen.tsx + liveStreamLayout.ts
 - **Problem:** Pan gesture reimplemented the min/max clamp inline (max fractions duplicated as screen constants, 0.42 min factor in three places); drag and commit clamps could drift.
 - **Change:** Shared `getLandscapeChatWidthBounds` worklet in liveStreamLayout.ts; both `clampLandscapeChatWidth` and the gesture derive from it. Drag keeps its deliberate 0 floor.
 
 ### StreamerProfileScreen — cast-based list union [DONE]
+
 - **Location:** src/screens/Stream/StreamerProfileScreen.tsx
 - **Problem:** One FlashList served both tabs with `item as TwitchClip` / `as TwitchVideo` based on `activeTab` closure state — a type-safety hole (wrong-renderer bug would typecheck).
 - **Change:** `ProfileListItem` is now a discriminated union (`{kind:'clip'}|{kind:'vod'}`) built in a memo; renderItem branches on `item.kind`; `activeTab` dropped from renderItem deps; casts deleted.
 
 ### FollowingScreen — copy-pasted skeleton branches + dead interface [DONE]
+
 - **Location:** src/screens/FollowingScreen.tsx
 - **Problem:** Three near-identical skeleton blocks (two byte-identical); dead exported `Section` interface (zero importers).
 - **Change:** `FollowingSkeleton({showHeader})` extracted; the two identical branches merged (order preserved); `Section` deleted.
 
 ### SavedPhrases/BlockedTerms — platform-branch business-logic duplication [DONE]
+
 - **Location:** src/screens/Preferences/SavedPhrasesScreen.tsx, BlockedTermsScreen.tsx
 - **Problem:** Save/dedupe/edit rules (and lowercase-normalise rule for terms) copy-pasted verbatim between the iOS SwiftUI branch and the Android branch; a rule change had to be made twice.
 - **Change:** `useSavedPhrases().savePhrase(raw, editingId) -> 'added'|'duplicate'|'edited'|'empty'` and `useBlockedTerms().addTerm(raw)`; each branch keeps its own input clearing/editing wiring. Render trees untouched.
 
 ### ChatPreferenceDefaultContent — 37-field prop-bag pipe [DONE]
+
 - **Location:** src/screens/Preferences/ChatPreferenceScreen.tsx + ChatPreferenceDefaultContent.tsx
 - **Problem:** `ChatPreferenceScreen` spread the entire `useChatPreferenceScreenState()` return into a single-caller child whose props type was `ReturnType<typeof hook>` — plumbing, not a contract; tests already render the wrapper with the hook included.
 - **Change:** Component calls the hook itself; props deleted.
 
 ### ChatProviderPreferenceSections — component-as-prop with one implementation [DONE]
+
 - **Location:** src/screens/Preferences/ChatProviderPreferenceSections.tsx
 - **Problem:** `ProviderPreviewItem` injected as a prop but only one implementation exists and no cycle forces the inversion; local re-declarations of `PreviewProvider`/`ProviderPreviewKey`/`ProviderPreviewValue` triplicated types that exist in chatPreferenceTypes.ts.
 - **Change:** Direct import; shared types imported.
 
 ### useChatOverlays — duplicated mod handlers + hardcoded timeout [DONE, includes feature]
+
 - **Location:** src/components/Chat/components/useChatOverlays.tsx
 - **Problem:** Timeout/ban handler pairs duplicated between message-sheet and user-sheet paths (with optional-chaining drift in target resolution); timeout duration hardcoded to 600s.
 - **Change:** `resolveModTarget()` single target rule (also used by canModerate* flags, warn, report); `banSelection()` shared ban path; **feature (user-requested):** timeout now opens a native duration menu (10s/1m/10m/30m/1h/24h) via the existing `showActionMenu` pattern, per-duration i18n keys added, `timeoutUser` label changed 'Timeout for 10m' → 'Timeout…'. New test: useChatOverlays.timeout.test.tsx (menu contents, chosen duration reaches runModCommand, cancel keeps selection, ban stays direct).
@@ -75,6 +86,7 @@ Items marked **[DONE]** are implemented and staged (not committed) as of this se
 11. **Smaller items:** ChatInputShell — extract pure `buildOptimisticChatMessage` to Chat/util (untestable in component closure today); MediaLinkCard — split TwitchClipCard/SevenTvEmoteCard (keep query keys identical); LiveStreamCard — split media/compact trees sharing `useStreamCardHandlers`; ScreenHeader — split HeroHeader, collapse identical 'medium'/'large' (3 call sites); confirmDestructive Alert util (6 copy-pasted call sites, haptic drift); PreferenceListEmptyState (3 identical copies — but leave the InputSections duplicated: three different shapes); ChatOverlayLayer inline object props + dual visible/mount gating; StreamPlayer inline `onWebViewLoaded` + usePlayerBridge fresh callback defeat StreamPlayerWebView's memo (stabilize identity only, keep bodies byte-identical); usePlayerBridge 13-property object built twice; BlockedUsersScreen ListStatePanel `onRefresh` accepted-but-discarded (wire RefreshControl or delete the prop); Text dead TextType members ('5xl'–'12xl', 'subtitle', 'body', 'caption' — zero call sites; own change, typecheck-verified); AuthContext test scaffolding in prod contract (`fetchAnonToken`, NODE_ENV branch, AuthContextTestProvider).
 
 ## Deliberately left alone (audited, fine)
+
 - Form.tsx cloneElement/type-sniffing — vendored Expo demo code, dev-tools-only reach (5 importers all under DevTools). Quarantine-comment at most; don't rebuild.
 - ChatPreferencesPreview 9-way discriminated union — honest, exhaustively `never`-guarded.
 - UserActionSheet's `chatStore$.messages.peek()` scan, useChatRowRenderer extraData composition, RowVisibilityContext per-row provider — documented 60fps discipline.

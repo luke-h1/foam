@@ -50,8 +50,8 @@ native default stack animations.
       splashscreen_background). Plugin configured: image, imageWidth 200, bg #000000 +
       identical dark block. NATIVE change - needs prebuild/rebuild, no OTA.
 - [-] **3 [MED/med]** Material You extension REVERSED per user directive (iter 9):
-      Android must match iOS colors. All dynamic tint removed; fixed brand palette
-      everywhere. See "Color direction: SUPERSEDED" section.
+  Android must match iOS colors. All dynamic tint removed; fixed brand palette
+  everywhere. See "Color direction: SUPERSEDED" section.
 - [x] **4 [MED/low-med]** Sheet surfaces DONE: BottomSheetSurface Android/web branch
       surfaceSunken(#070A0E, darker than canvas - read as sunken) -> surfaceElevated
       (#1B232E) per Material dark tonal elevation; white-alpha row overlays compose fine.
@@ -127,6 +127,7 @@ Top patterns worth stealing, ranked:
 ### From official Expo + Play Store guidance (2026)
 
 Hard requirements:
+
 - [ ] targetSdk 36 by Aug 31 2026 - Expo SDK 56 targets it already; verify no
       expo-build-properties override lowers it.
 - [ ] 16 KB page sizes (in force since Nov 2025) - SDK 52+/NDK r27 aligned by default;
@@ -139,6 +140,7 @@ Hard requirements:
 - [ ] Vitals: crash < 1.09% DAU, ANR < 0.47%, cold start < 5s (best <= 500ms TTID).
 
 Premium-feel (Expo-supported):
+
 - [ ] `android.adaptiveIcon.monochromeImage` - themed icon (config-only win).
 - [ ] expo-splash-screen `dark` block - dark splash variant (config-only win).
 - [ ] `android.predictiveBackGestureEnabled: true` - default false in SDK 56; classic
@@ -160,6 +162,7 @@ Premium-feel (Expo-supported):
 
 User saw the Material You blue switches on-device and ruled: **Android components must
 match iOS in terms of colors.** Dynamic/Material You color is OUT for foam. Final state:
+
 - [x] DELETED src/styles/androidDynamicColors.ts + its test; zero references remain.
 - [x] All former dynamic sinks use the fixed brand palette (identical to iOS):
       tab bar tintColor=colorWhite, nav theme primary=colorPrimary, spinners +
@@ -193,8 +196,8 @@ match iOS in terms of colors.** Dynamic/Material You color is OUT for foam. Fina
 ### Per-app language (iter 12): N/A
 
 - [-] expo-localization supportedLocales / Android 13 App-languages: foam ships only
-      src/i18n/locales/en.ts. A single-language localeConfig adds a pointless system
-      menu entry. Revisit only when a second locale lands.
+  src/i18n/locales/en.ts. A single-language localeConfig adds a pointless system
+  menu entry. Revisit only when a second locale lands.
 
 ### Release-manifest verification (iter 11) - CRITICAL CATCH
 

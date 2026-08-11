@@ -17,7 +17,7 @@ We deliberately keep them separate.
   job loading only the Google-services file are scoped so a job never gets secrets
   it has no business holding. A single shared loader would hand every caller the
   union — the native job's Twitch/Google/Slack secrets would leak into the
-  fingerprint and slack jobs. Least-privilege is a real constraint that *varies*
+  fingerprint and slack jobs. Least-privilege is a real constraint that _varies_
   across these seams.
 - Composite-action YAML **cannot parametrize the `op://` env-block**. The
   `1password/load-secrets-action` reads refs from a step's `env:` map; a wrapper
