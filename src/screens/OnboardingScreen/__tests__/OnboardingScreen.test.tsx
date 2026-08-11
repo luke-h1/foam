@@ -8,15 +8,15 @@ import {
 } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
-import { storageMMKV as _storageMMKV } from '@app/lib/mmkv';
+import { storage as _storage } from '@app/lib/storage';
 
 import { OnboardingScreen } from '../OnboardingScreen';
 
-jest.mock('@app/lib/mmkv', () => ({
-  storageMMKV: { set: jest.fn() },
+jest.mock('@app/lib/storage', () => ({
+  storage: { set: jest.fn() },
 }));
 
-const storageMMKV = jest.mocked(_storageMMKV);
+const storage = jest.mocked(_storage);
 const mockReplace = jest.mocked(router.replace);
 
 const wrapper = ({ children }: { children: ReactNode }) => (
@@ -49,7 +49,7 @@ describe('OnboardingScreen', () => {
 
     fireEvent.press(screen.getByText('Get started'));
 
-    expect(storageMMKV.set).toHaveBeenCalledWith('V1_hasSeenOnboarding', true);
+    expect(storage.set).toHaveBeenCalledWith('V1_hasSeenOnboarding', true);
     expect(mockReplace).toHaveBeenCalledWith('/');
   });
 

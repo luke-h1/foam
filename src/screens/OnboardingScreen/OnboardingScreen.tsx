@@ -8,7 +8,7 @@ import { router } from 'expo-router';
 import { Button } from '@app/components/Button/Button';
 import { EnergyOrb } from '@app/components/EnergyOrb/EnergyOrb';
 import { Text } from '@app/components/ui/Text/Text';
-import { storageMMKV } from '@app/lib/mmkv';
+import { storage } from '@app/lib/storage';
 import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
 
@@ -17,7 +17,7 @@ import { ONBOARDING_SEEN_KEY } from './constants';
 export { ONBOARDING_SEEN_KEY } from './constants';
 
 function handleGetStarted() {
-  storageMMKV.set(ONBOARDING_SEEN_KEY, true);
+  storage.set(ONBOARDING_SEEN_KEY, true);
   router.replace('/');
 }
 
