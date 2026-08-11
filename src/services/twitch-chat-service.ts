@@ -44,15 +44,28 @@ const userStateListeners = new Set<() => void>();
 
 /**
  * Which hook instance owns the shared userstate. A channel switch mounts the
- * next instance before the previous one's cleanup runs, so an unconditional
- * reset there would wipe the userstate the new channel has already received
- * and leave moderation powers off until the next USERSTATE arrives.
+ * next instance before the previous one's cleanup runs, and the outgoing
+ * instance keeps a live IRC socket that still emits USERSTATE for the old
+ * channel (a token refresh or a join/part bounce is enough). Both the writes
+ * and the reset are gated on ownership, so the departing channel can neither
+ * overwrite the new channel's userstate - which would render mod tools for a
+ * channel the user has no powers in - nor blank it on the way out.
  */
 let currentUserStateOwner: symbol | null = null;
 
 function setCurrentUserState(next: Record<string, string>): void {
   currentUserState = next;
   userStateListeners.forEach(listener => listener());
+}
+
+function setCurrentUserStateIfOwner(
+  token: symbol,
+  next: Record<string, string>,
+): void {
+  if (currentUserStateOwner !== token) {
+    return;
+  }
+  setCurrentUserState(next);
 }
 
 function subscribeUserState(listener: () => void): () => void {
@@ -164,6 +177,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   } = options;
 
   const isAuthenticatedRef = useRef(false);
+  const userStateTokenRef = useLazyRef(() => Symbol('twitchChatUserState'));
   const joinedChannelsRef = useLazyRef(() => new Set<string>());
   const pendingJoinChannelsRef = useLazyRef(() => new Set<string>());
   const anonymousNickRef = useLazyRef(
@@ -463,7 +477,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     userstate: (channelName, tagsRecord) => {
       markChannelJoined(channelName);
       logger.chat.debug(`USERSTATE in ${channelName}`);
-      setCurrentUserState(tagsRecord);
+      setCurrentUserStateIfOwner(userStateTokenRef.current, tagsRecord);
 
       if (pendingMessageRef.current && tagsRecord['msg-id']) {
         logger.chat.debug(
@@ -478,7 +492,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
 
     globaluserstate: tagsRecord => {
       logger.chat.debug('GLOBALUSERSTATE received');
-      setCurrentUserState(tagsRecord);
+      setCurrentUserStateIfOwner(userStateTokenRef.current, tagsRecord);
       optionsRef.current.onGlobalUserState?.(tagsRecord);
     },
 
@@ -863,7 +877,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     const pendingJoinChannels = pendingJoinChannelsRef.current;
     const lastSentMessages = lastSentMessagesRef.current;
     const messageBuffer = messageBufferRef;
-    const userStateToken = Symbol('twitchChatUserState');
+    const userStateToken = userStateTokenRef.current;
     currentUserStateOwner = userStateToken;
 
     return () => {
@@ -879,7 +893,12 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       }
       pendingMessageRef.current = null;
     };
-  }, [joinedChannelsRef, lastSentMessagesRef, pendingJoinChannelsRef]);
+  }, [
+    joinedChannelsRef,
+    lastSentMessagesRef,
+    pendingJoinChannelsRef,
+    userStateTokenRef,
+  ]);
 
   const sendMessage = (
     channelName: string,

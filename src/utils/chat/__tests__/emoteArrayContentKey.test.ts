@@ -39,6 +39,20 @@ describe('getEmoteArrayContentKey', () => {
     expect(getEmoteArrayContentKey(a)).not.toBe(getEmoteArrayContentKey(b));
   });
 
+  test('an alias sitting where a url would sit changes the key', () => {
+    const shared = 'https://cdn.7tv.app/emote/1/2x.webp';
+    const aliasOnly = [
+      makeEmote({ id: 'x', name: 'n', original_name: shared, url: '' }),
+    ];
+    const urlOnly = [
+      makeEmote({ id: 'x', name: 'n', original_name: 'n', url: shared }),
+    ];
+
+    expect(getEmoteArrayContentKey(aliasOnly)).not.toBe(
+      getEmoteArrayContentKey(urlOnly),
+    );
+  });
+
   test('a renamed emote changes the key', () => {
     const a = [makeEmote()];
     const b = [makeEmote({ name: 'KEKWait' })];

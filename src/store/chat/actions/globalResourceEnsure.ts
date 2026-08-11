@@ -14,10 +14,14 @@ const GUARD_KEY = 'globalChatResources';
 /**
  * Fills `chatStore$.persisted.globalCaches` without joining a channel, for
  * surfaces (the emote/badge viewer) that read global provider data before
- * any chat has loaded. Rides the same resource specs and session fetch-once
- * dedup as the channel-load path, so a chat opened later serves from this
- * fetch rather than repeating it; a failed slice keeps its previous value
- * and the stale `lastUpdated`, exactly like the channel-load settle.
+ * any chat has loaded. Rides the same resource specs as the channel-load
+ * path, so a chat opened later serves from this fetch rather than repeating
+ * it; a failed slice keeps its previous value and the stale `lastUpdated`,
+ * exactly like the channel-load settle.
+ *
+ * Freshness is the store's own `lastUpdated` window, not a guard stamp - the
+ * guard is here for single-flight and for the fence that stops a fetch
+ * completing after a cache purge from writing its pre-purge payload back.
  */
 export function ensureGlobalChatResources(): Promise<void> {
   const cache = chatStore$.persisted.globalCaches.peek();
@@ -103,7 +107,6 @@ export function ensureGlobalChatResources(): Promise<void> {
         ffzGlobalBadges:
           badgeByKey.get('ffzGlobalBadges') ?? existing?.ffzGlobalBadges ?? [],
       });
-      ctx.markFetched();
     });
   });
 }
