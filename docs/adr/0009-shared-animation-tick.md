@@ -1,7 +1,7 @@
 # One shared tick per animation domain
 
-Animated chat content is driven by exactly two tick sources, one per domain,
-and never by per-view timers:
+Animated chat content is driven by one shared tick per domain, one domain per
+platform where the domain is native, and never by per-view timers:
 
 - **Native animated emotes (iOS)** - `SharedAnimationDriver`, a Swift
   singleton holding one `CADisplayLink` and a global epoch, introduced by
@@ -9,6 +9,21 @@ and never by per-view timers:
   derives its frame index from the shared epoch, so newly mounted and recycled
   rows join mid-phase instead of restarting at frame 0; frame rate is capped
   at 30fps with decode budgets. Views deregister on unmount/recycle.
+- **Native animated emotes (Android)** - `SharedAnimationDriver.kt`, a
+  Choreographer-supervised phase lock in the same patch. It holds the same
+  kind of global epoch, but cannot seek per tick the way iOS does:
+  penfeizhou's `FrameSeqDecoder` composes delta-encoded frames sequentially
+  into one buffer on its own worker thread, so external seeking corrupts
+  pixels. It phase-locks through the public API instead, scheduling each
+  drawable's `reset()` (a live restart from frame 0 that keeps decode state)
+  onto its next epoch loop boundary; a coarse Choreographer callback measures
+  drift afterwards and re-aligns only past a tolerance, so an in-phase
+  animation is never visibly restarted. The patch also routes every
+  `FrameAnimationDrawable` through pause/resume rather than only `GifDrawable`,
+  which is what restarted WebP emotes from frame 0 on each scroll-fling pause.
+  This half of the patch compiles only because `^expo-image$` is in
+  `expo.autolinking.android.buildFromSource`; without that entry the RNRepo
+  prebuilt AAR ships and the patch silently does nothing.
 - **Skia paint animation (JS)** - `sharedPaintAnimationFrames.ts`
   (`components/ChatMessage/CosmeticUsername/util/`): one clock and one decode
   per paint URL, held in a module-level map of SharedValues. Subscribing rows
@@ -18,10 +33,10 @@ and never by per-view timers:
   `chatScrollActiveShared` and resumes after settle.
 
 The invariant: **one tick source, N subscribers, deregistration on recycle,
-pause when the surface is scrolling or unfocused**. On Android the "one tick"
-is the supervising Choreographer clock - per-frame stepping stays on the
-decoder library's worker threads by necessity, but phase is still a pure
-function of the one epoch. Alternatives already tried and rejected: per-view
+pause when the surface is scrolling or unfocused**. Android meets it through
+supervision rather than stepping, since the decoder library owns the frame
+loop, but phase there is still a pure function of the one epoch.
+Alternatives already tried and rejected: per-view
 animation (phase drift and frame-0 restarts) and a 15fps frame-coalescing
 variant of the driver (reverted - capping the provider's frame count broke
 animations; the 30fps display-link cap is the correct knob).
@@ -30,26 +45,6 @@ Note for reviewers: no module named `SyncedAnimationCoordinator` exists
 anywhere in the tree - the names above are the real ones, and both native
 drivers are invisible to a grep of `src/` because they live in the patch
 file.
-
-**Native animated emotes (Android)** - `SharedAnimationDriver.kt`, a
-Choreographer-supervised phase lock in the same expo-image patch (compiled
-only because `^expo-image$` is in `expo.autolinking.android.buildFromSource`;
-without that entry the RNRepo prebuilt AAR ships and the patch silently does
-nothing). The iOS per-tick frame seek does not port: penfeizhou's
-`FrameSeqDecoder` composes delta-encoded frames sequentially into one buffer
-on its own worker thread, so external seeking corrupts pixels and a faithful
-port would mean reimplementing the decode loop. Instead the driver keeps the
-same global epoch and phase-locks with the public API: each animated
-drawable's `reset()` (a live restart-from-frame-0 that keeps decode state) is
-scheduled to land on its next epoch loop boundary, after which loop position
-is a function of the shared clock; a coarse Choreographer callback measures
-drift and re-aligns only past a tolerance, so an in-phase animation is never
-visibly restarted. The same patch also routes every `FrameAnimationDrawable`
-(WebP/APNG, not just GIF) through pause/resume, which is what used to restart
-WebP emotes from frame 0 on every scroll-fling pause and focus change.
-Glide already hands one drawable instance to every view with the same cache
-key, so most same-emote rows share a decoder; the epoch brings
-differently-sized instances and restarted decoders into the same phase.
 
 ## Consequences
 

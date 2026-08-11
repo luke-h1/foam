@@ -1,17 +1,11 @@
 diff --git a/android/src/main/java/expo/modules/image/ExpoImageModule.kt b/android/src/main/java/expo/modules/image/ExpoImageModule.kt
-index 8584f13f25324f0027d2d3e098983e8b475c5c7f..c85480a643562c45298451ef51b64417b4bbfa3e 100644
+index 8584f13f25324f0027d2d3e098983e8b475c5c7f..76ad86dcd4283d46f14ae1d8c157bc205fce1cc2 100644
 --- a/android/src/main/java/expo/modules/image/ExpoImageModule.kt
 +++ b/android/src/main/java/expo/modules/image/ExpoImageModule.kt
-@@ -247,6 +247,16 @@ class ExpoImageModule : Module() {
+@@ -247,6 +247,10 @@ class ExpoImageModule : Module() {
        return@AsyncFunction true
      }.runOnQueue(Queues.MAIN)
  
-+    /**
-+     * Phase-locks animated images to one shared clock, mirroring the iOS
-+     * `setSharedAnimationEnabled`. Main-queue bound and resolved only after
-+     * the driver holds the new value, so a caller that remounts views to pick
-+     * the mode up cannot race the apply.
-+     */
 +    AsyncFunction("setSharedAnimationEnabled") { enabled: Boolean ->
 +      SharedAnimationDriver.setEnabled(enabled)
 +    }.runOnQueue(Queues.MAIN)
@@ -20,7 +14,7 @@ index 8584f13f25324f0027d2d3e098983e8b475c5c7f..c85480a643562c45298451ef51b64417
        val activity = appContext.currentActivity ?: return@AsyncFunction false
        activity.let {
 diff --git a/android/src/main/java/expo/modules/image/ExpoImageViewWrapper.kt b/android/src/main/java/expo/modules/image/ExpoImageViewWrapper.kt
-index 7abe582b602c194ee58c6e39e4812e6b21f3a4b8..10aaf0dd92867c18ea8b534d4f8efee2c3a05e64 100644
+index 7abe582b602c194ee58c6e39e4812e6b21f3a4b8..f5845e3b36113c5df812a95e0653e4edf3459fd8 100644
 --- a/android/src/main/java/expo/modules/image/ExpoImageViewWrapper.kt
 +++ b/android/src/main/java/expo/modules/image/ExpoImageViewWrapper.kt
 @@ -7,6 +7,9 @@ import android.graphics.drawable.Animatable
@@ -51,16 +45,9 @@ index 7abe582b602c194ee58c6e39e4812e6b21f3a4b8..10aaf0dd92867c18ea8b534d4f8efee2
  import kotlin.math.abs
  import kotlin.math.min
  
-@@ -171,20 +176,24 @@ class ExpoImageViewWrapper(context: Context, appContext: AppContext) : ExpoView(
- 
-   fun setIsAnimating(setAnimating: Boolean) {
-     // Animatable animations always start from the beginning when resumed.
--    // So we check first if the resource is a GifDrawable, because it can continue
--    // from where it was paused.
-+    // Every penfeizhou drawable (GIF, animated WebP, APNG) extends
-+    // FrameAnimationDrawable and can pause/resume in place, so route the whole
-+    // family through that path - upstream only special-cased GifDrawable,
-+    // which restarted WebP emotes from frame 0 on every scroll-fling pause.
+@@ -174,17 +179,19 @@ class ExpoImageViewWrapper(context: Context, appContext: AppContext) : ExpoView(
+     // So we check first if the resource is a GifDrawable, because it can continue
+     // from where it was paused.
      when (val resource = activeView.drawable) {
 -      is GifDrawable -> setIsAnimating(resource, setAnimating)
 +      is FrameAnimationDrawable<*> -> setIsAnimating(resource, setAnimating)
@@ -80,7 +67,7 @@ index 7abe582b602c194ee58c6e39e4812e6b21f3a4b8..10aaf0dd92867c18ea8b534d4f8efee2
        }
      } else {
        resource.pause()
-@@ -394,6 +403,9 @@ class ExpoImageViewWrapper(context: Context, appContext: AppContext) : ExpoView(
+@@ -394,6 +401,9 @@ class ExpoImageViewWrapper(context: Context, appContext: AppContext) : ExpoView(
  
      if (resource is Animatable) {
        resource.start()
@@ -90,81 +77,23 @@ index 7abe582b602c194ee58c6e39e4812e6b21f3a4b8..10aaf0dd92867c18ea8b534d4f8efee2
      }
    }
  
-@@ -658,3 +670,271 @@ class ExpoImageViewWrapper(context: Context, appContext: AppContext) : ExpoView(
+@@ -658,3 +668,180 @@ class ExpoImageViewWrapper(context: Context, appContext: AppContext) : ExpoView(
      private fun createNewRequestManager(activity: Activity): RequestManager = Glide.with(activity)
    }
  }
 +
-+/**
-+ * Phase-locks every penfeizhou-decoded animated image (the WebP/GIF/APNG
-+ * emotes) to one shared clock, the Android counterpart of the iOS
-+ * `SharedAnimationDriver`.
-+ *
-+ * The iOS driver seeks each view to `f(now - epoch)` every tick, which needs
-+ * random access to decoded frames. penfeizhou's `FrameSeqDecoder` cannot give
-+ * that: frames are delta-encoded and composed sequentially into one buffer on
-+ * the decoder's own worker thread, so jumping `frameIndex` externally would
-+ * composite onto the wrong previous frame and corrupt pixels, and a faithful
-+ * per-tick seek would mean reimplementing the decode loop. What the public
-+ * API does give is `reset()` - a live restart-from-frame-0 that keeps all
-+ * decode state - so this driver phase-locks by scheduling each drawable's
-+ * reset to land on its next epoch loop boundary. After one aligned restart,
-+ * loop position is a function of the shared clock: every instance of an emote
-+ * (chat rows, the emote sheet, recycled views) sits on the same frame, and the
-+ * decoders' own cost-compensated scheduling keeps them there. A Choreographer
-+ * callback at a coarse cadence supervises drift and re-aligns only when a
-+ * drawable has slipped past tolerance, so a lone in-phase animation is never
-+ * visibly restarted.
-+ *
-+ * Glide hands the same drawable instance to every view whose cache key
-+ * matches, so most same-emote rows already share one decoder; the epoch is
-+ * what brings differently-sized instances and freshly (re)started decoders
-+ * into the same phase.
-+ */
++
 +internal object SharedAnimationDriver {
-+  /**
-+   * Supervision cadence. The driver renders nothing on this tick - it only
-+   * measures drift - so it runs far below the display rate; the per-frame
-+   * work stays on the decoders' worker threads.
-+   */
 +  private const val CHECK_INTERVAL_MS = 250L
-+
-+  /**
-+   * How far a drawable may drift from the shared clock before it is
-+   * re-aligned. Two copies of an emote inside this window read as in sync;
-+   * re-aligning is a visible jump to frame 0, so the tolerance errs high.
-+   */
 +  private const val DRIFT_TOLERANCE_MS = 120L
-+
-+  /**
-+   * Floor between re-alignments of one drawable, so scheduling jitter under
-+   * load cannot turn into a restart loop.
-+   */
 +  private const val MIN_REALIGN_GAP_MS = 5_000L
-+
-+  /**
-+   * Loops shorter than this stay unsynced: at that speed phase differences
-+   * are imperceptible and boundary resets would fire constantly.
-+   */
 +  private const val MIN_DURATION_MS = 200L
-+
-+  /**
-+   * Registry bound. Entries are weakly keyed so recycled drawables fall out on
-+   * their own; the cap only guards a pathological screen, and which entry it
-+   * evicts is arbitrary - an evicted drawable keeps playing, just unsynced,
-+   * and re-registers the next time a view displays it.
-+   */
 +  private const val MAX_ENTRIES = 128
 +
 +  private val epochMs = SystemClock.uptimeMillis()
 +  private val mainHandler = Handler(Looper.getMainLooper())
 +
 +  private class Entry {
-+    /**
-+     * Wall-clock midpoint of each frame within one loop, plus the loop
-+     * length. Built lazily: the decoder only knows its frames after its own
-+     * worker has read the header, which happens after `start()`.
-+     */
 +    var frameMidpointsMs: LongArray? = null
 +    var durationMs = 0L
 +    var lastAlignedAtMs = 0L
@@ -180,10 +109,6 @@ index 7abe582b602c194ee58c6e39e4812e6b21f3a4b8..10aaf0dd92867c18ea8b534d4f8efee2
 +    check()
 +  }
 +
-+  /**
-+   * Called whenever a view starts displaying an animated drawable. Idempotent
-+   * for a drawable already under supervision.
-+   */
 +  fun onAnimatableDisplayed(drawable: FrameAnimationDrawable<*>) = onMain {
 +    if (!enabled) {
 +      return@onMain
@@ -202,12 +127,6 @@ index 7abe582b602c194ee58c6e39e4812e6b21f3a4b8..10aaf0dd92867c18ea8b534d4f8efee2
 +    scheduleCheck()
 +  }
 +
-+  /**
-+   * Called when a paused drawable resumes (scroll settle, screen focus).
-+   * Resuming continues from the pre-pause frame, so the drawable is far off
-+   * the shared clock - clear its re-align floor so the next check can bring
-+   * it back without waiting out the gap.
-+   */
 +  fun onAnimatableResumed(drawable: FrameAnimationDrawable<*>) = onMain {
 +    if (!enabled) {
 +      return@onMain
@@ -221,11 +140,6 @@ index 7abe582b602c194ee58c6e39e4812e6b21f3a4b8..10aaf0dd92867c18ea8b534d4f8efee2
 +    }
 +  }
 +
-+  /**
-+   * Runtime switch mirroring the iOS driver, for comparing the two modes on
-+   * one session. Disabling only stops supervision - playback stays wherever
-+   * it is, which is stock behaviour.
-+   */
 +  fun setEnabled(value: Boolean, onApplied: (() -> Unit)? = null) = onMain {
 +    enabled = value
 +    if (!value) {
@@ -253,15 +167,11 @@ index 7abe582b602c194ee58c6e39e4812e6b21f3a4b8..10aaf0dd92867c18ea8b534d4f8efee2
 +      val drawable = mapEntry.key ?: continue
 +      val entry = mapEntry.value
 +      val decoder = drawable.frameSeqDecoder
-+      // A paused decoder holds its frame on purpose (scroll fling, screen
-+      // blur); alignment happens on resume. A stopped one restarts through
-+      // `onAnimatableDisplayed` when a view shows it again.
 +      if (!decoder.isRunning || decoder.isPaused) {
 +        continue
 +      }
 +      if (entry.frameMidpointsMs == null && !buildTimeline(decoder, entry)) {
 +        if (entry.durationMs == -1L) {
-+          // Decoded and not actually animated (or too fast to sync).
 +          iterator.remove()
 +        }
 +        continue
@@ -292,12 +202,6 @@ index 7abe582b602c194ee58c6e39e4812e6b21f3a4b8..10aaf0dd92867c18ea8b534d4f8efee2
 +    scheduleCheck()
 +  }
 +
-+  /**
-+   * Restarts the drawable so frame 0 lands on its next epoch loop boundary.
-+   * `reset()` posts to the decoder's worker and the already-scheduled render
-+   * pass picks it up, so frame 0 appears within one frame of the boundary -
-+   * inside the drift tolerance.
-+   */
 +  private fun scheduleAlignment(
 +    drawable: FrameAnimationDrawable<*>,
 +    entry: Entry,
@@ -316,14 +220,6 @@ index 7abe582b602c194ee58c6e39e4812e6b21f3a4b8..10aaf0dd92867c18ea8b534d4f8efee2
 +    }, delayMs)
 +  }
 +
-+  /**
-+   * Reads the frame schedule off the decoder. Returns false while the decoder
-+   * has not decoded its header yet (retry next check); marks the entry for
-+   * removal via `durationMs = -1` when the image turns out not to be worth
-+   * syncing. The decoder's worker owns the frame list and clears it on stop,
-+   * so the walk guards against the list changing underneath it and simply
-+   * retries on the next supervision pass.
-+   */
 +  private fun buildTimeline(decoder: FrameSeqDecoder<*, *>, entry: Entry): Boolean {
 +    val count = decoder.frameCount
 +    if (count == 0) {

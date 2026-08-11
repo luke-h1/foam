@@ -14,14 +14,13 @@ the channel's emotes" and their matching semantics had drifted:
 - `original_name` aliases resolved in the preview only;
 - the preview also matched emotes as substrings inside words.
 
-The decision on which semantics win: **live is canonical**. A preferences
-preview exists to show what chat will render, so any preview-only match is a
-lie about the product. Exact whitespace-delimited token matching also mirrors
-how Twitch and 7TV render chat, so the preview-only behaviours were bugs of
-generosity, not features. The one preview behaviour folded into the worklet is
-the FE0F-stripped emoji fallback - standalone emoji are keyed without the
-variant selector in the dataset (`2764` for ❤️), which is a data-format quirk,
-not a semantics fork.
+Live semantics win. A preferences preview exists to show what chat will
+render, so any preview-only match is a lie about the product, and exact
+whitespace-delimited token matching mirrors how Twitch and 7TV render chat.
+The one preview behaviour folded into the worklet is the FE0F-stripped emoji
+fallback: standalone emoji are keyed without the variant selector in the
+dataset (`2764` for ❤️), so the retry fixes a data-format mismatch rather
+than loosening the matching rules.
 
 `utils/chat/__tests__/emoteProcessor.test.ts` pins the unified semantics
 (alias non-resolution, trailing punctuation, shortcode and FE0F emoji paths);

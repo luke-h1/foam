@@ -484,8 +484,6 @@ export const processEmotesWorklet = (
         .join('-');
       emote = emojiMap.get(upperWord);
       if (!emote && upperWord.includes('FE0F')) {
-        // Standalone emoji are keyed without FE0F in the dataset (e.g. "2764"
-        // for ❤️), while ZWJ sequences keep it — retry without the selector.
         emote = emojiMap.get(
           upperWord
             .split('-')
