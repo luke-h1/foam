@@ -42,6 +42,14 @@ import { useWebsocket } from '../hooks/ws/useWebsocket';
 let currentUserState: Record<string, string> = {};
 const userStateListeners = new Set<() => void>();
 
+/**
+ * Which hook instance owns the shared userstate. A channel switch mounts the
+ * next instance before the previous one's cleanup runs, so an unconditional
+ * reset there would wipe the userstate the new channel has already received
+ * and leave moderation powers off until the next USERSTATE arrives.
+ */
+let currentUserStateOwner: symbol | null = null;
+
 function setCurrentUserState(next: Record<string, string>): void {
   currentUserState = next;
   userStateListeners.forEach(listener => listener());
@@ -855,6 +863,8 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     const pendingJoinChannels = pendingJoinChannelsRef.current;
     const lastSentMessages = lastSentMessagesRef.current;
     const messageBuffer = messageBufferRef;
+    const userStateToken = Symbol('twitchChatUserState');
+    currentUserStateOwner = userStateToken;
 
     return () => {
       logger.chat.info('[useTwitchChat] Cleaning up Twitch IRC client');
@@ -863,7 +873,10 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       lastSentMessages.clear();
       messageBuffer.current = '';
       isAuthenticatedRef.current = false;
-      setCurrentUserState({});
+      if (currentUserStateOwner === userStateToken) {
+        currentUserStateOwner = null;
+        setCurrentUserState({});
+      }
       pendingMessageRef.current = null;
     };
   }, [joinedChannelsRef, lastSentMessagesRef, pendingJoinChannelsRef]);
