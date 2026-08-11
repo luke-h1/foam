@@ -197,6 +197,24 @@ export const useChannelEmoteDataForReprocess = (channelId: string | null) => {
   });
 };
 
+/**
+ * Global provider caches for surfaces outside a joined channel (the
+ * emote/badge viewer). Pair with `ensureGlobalChatResources()` so the caches
+ * fill on cold entry.
+ */
+export const useGlobalEmoteBadgeCaches = () =>
+  useSelector(() => {
+    const globalCache$ = chatStore$.persisted.globalCaches;
+    return {
+      twitchGlobalEmotes: globalCache$.twitchGlobalEmotes.get() ?? EMPTY_EMOTES,
+      sevenTvGlobalEmotes:
+        globalCache$.sevenTvGlobalEmotes.get() ?? EMPTY_EMOTES,
+      ffzGlobalEmotes: globalCache$.ffzGlobalEmotes.get() ?? EMPTY_EMOTES,
+      bttvGlobalEmotes: globalCache$.bttvGlobalEmotes.get() ?? EMPTY_EMOTES,
+      twitchGlobalBadges: globalCache$.twitchGlobalBadges.get() ?? EMPTY_BADGES,
+    };
+  });
+
 export const usePaints = () => useSelector(chatStore$.paints);
 export const useCosmeticBindingsVersion = () =>
   useSelector(chatStore$.cosmeticBindingsVersion);

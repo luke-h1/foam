@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Platform,
   type SectionListData,
@@ -29,10 +29,10 @@ import {
 import { Image } from '@app/components/Image/Image';
 import { SegmentedControl } from '@app/components/SegmentedControl/SegmentedControl';
 import { Text } from '@app/components/ui/Text/Text';
-import { useGlobalBadgesQuery } from '@app/hooks/queries/useGlobalBadgesQuery';
-import { useGlobalEmotesQuery } from '@app/hooks/queries/useGlobalEmotesQuery';
 import { useSevenTvBadgesQuery } from '@app/hooks/queries/useSevenTvBadgesQuery';
 import { EmoteBadgeViewerLoader } from '@app/screens/SettingsScreen/components/EmoteBadgeViewerLoader';
+import { ensureGlobalChatResources } from '@app/store/chat/actions/globalResourceEnsure';
+import { useGlobalEmoteBadgeCaches } from '@app/store/chat/react/selectors';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
@@ -60,21 +60,36 @@ function EmotesTab({
 }) {
   const { t } = useTranslation(['settings', 'chat']);
   const { bottom: bottomInset } = useSafeAreaInsets();
-  const { data, isLoading } = useGlobalEmotesQuery();
+  const caches = useGlobalEmoteBadgeCaches();
+  const [ensureSettled, setEnsureSettled] = useState(false);
+
+  useEffect(() => {
+    ensureGlobalChatResources().finally(() => setEnsureSettled(true));
+  }, []);
+
+  const isLoading =
+    !ensureSettled &&
+    caches.twitchGlobalEmotes.length === 0 &&
+    caches.sevenTvGlobalEmotes.length === 0 &&
+    caches.bttvGlobalEmotes.length === 0 &&
+    caches.ffzGlobalEmotes.length === 0;
   const [activeProviderId, setActiveProviderId] =
     useState<EmoteMenuProviderId | null>(null);
 
   const providers = useMemo(
     () =>
-      data
-        ? buildEmoteMenuProviders({
-            bttvGlobalEmotes: data.bttvGlobalEmotes,
-            ffzGlobalEmotes: data.ffzGlobalEmotes,
-            sevenTvGlobalEmotes: data.sevenTvGlobalEmotes,
-            twitchGlobalEmotes: data.twitchGlobalEmotes,
-          })
-        : [],
-    [data],
+      buildEmoteMenuProviders({
+        bttvGlobalEmotes: caches.bttvGlobalEmotes,
+        ffzGlobalEmotes: caches.ffzGlobalEmotes,
+        sevenTvGlobalEmotes: caches.sevenTvGlobalEmotes,
+        twitchGlobalEmotes: caches.twitchGlobalEmotes,
+      }),
+    [
+      caches.bttvGlobalEmotes,
+      caches.ffzGlobalEmotes,
+      caches.sevenTvGlobalEmotes,
+      caches.twitchGlobalEmotes,
+    ],
   );
 
   const effectiveActiveProviderId =
@@ -238,14 +253,20 @@ function BadgesTab({
 }) {
   const { t } = useTranslation('settings');
   const { bottom: bottomInset } = useSafeAreaInsets();
-  const { data: twitchBadges, isLoading: twitchLoading } =
-    useGlobalBadgesQuery();
+  const { twitchGlobalBadges } = useGlobalEmoteBadgeCaches();
+  const [ensureSettled, setEnsureSettled] = useState(false);
+
+  useEffect(() => {
+    ensureGlobalChatResources().finally(() => setEnsureSettled(true));
+  }, []);
+
+  const twitchLoading = !ensureSettled && twitchGlobalBadges.length === 0;
   const { data: sevenTvBadges, isLoading: sevenTvLoading } =
     useSevenTvBadgesQuery();
 
   const badges = useMemo(
-    () => [...(twitchBadges ?? []), ...(sevenTvBadges ?? [])],
-    [twitchBadges, sevenTvBadges],
+    () => [...twitchGlobalBadges, ...(sevenTvBadges ?? [])],
+    [twitchGlobalBadges, sevenTvBadges],
   );
 
   const sections = useMemo(() => groupBadgesByProvider(badges, 5), [badges]);
