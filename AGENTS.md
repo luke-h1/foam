@@ -2,13 +2,13 @@
 
 ## Local CI and signoff
 
-CI runs on this machine, not on a rented runner. `main` requires a `signoff` commit status, which `gh signoff` ([basecamp/gh-signoff](https://github.com/basecamp/gh-signoff)) posts once the checks have actually passed locally. Without it a PR cannot merge.
+The PR workflows can be run here rather than waiting on a runner.
 
-- `bun run signoff` - runs the full suite and, if it is green, signs off on HEAD. This is the one to reach for. Push first: `gh signoff` refuses unless HEAD is contained in `@{push}`.
-- `bun run ci:local` - the same suite without the signoff. Does not fail fast: every job runs and the summary at the end lists what broke.
+- `bun run ci:local` - runs everything the PR workflows run. Does not fail fast: every job runs and the summary at the end lists what broke. Run this before handing a branch back.
 - `bun run ci:local <job>...` - only the named jobs, for iterating on one failure. Jobs are `prettier`, `ast-grep`, `ts`, `lint`, `test`, `native`, `commitlint`, `doctor`, `zizmor`.
+- `bun run signoff` - runs the full suite and, if it is green, posts a `signoff` commit status via [gh-signoff](https://github.com/basecamp/gh-signoff). Push first: `gh signoff` refuses unless HEAD is contained in `@{push}`.
 
-Run `bun run signoff` before handing a branch back. `signoff` deliberately takes no job filter - the status asserts that every check passed, so it should mean that. If a job fails for a reason the change did not cause, fix it or say so explicitly; do not sign off around it.
+`signoff` is **not** a required check - merges still gate on the GitHub workflows - so it records that the suite passed locally rather than unlocking anything. `gh signoff install` would make it required. It deliberately takes no job filter, because the status asserts that every check passed. If a job fails for a reason the change did not cause, fix it or say so explicitly; do not sign off around it.
 
 The `native` job hands ktlint the git-tracked Kotlin files rather than letting `lint-kotlin.sh` pick its own roots, because that script also walks `android/` - gitignored prebuild output that exists locally but never on CI's checkout. Keep that explicit file list if you touch the job, or the suite starts failing on generated code CI never sees.
 

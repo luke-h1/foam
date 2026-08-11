@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 #
-# Runs the full local CI suite and, if it comes back green, signs off on HEAD so
-# the `signoff` status GitHub requires on main goes green too.
+# Runs the full local CI suite and, if it comes back green, posts a `signoff`
+# commit status on HEAD (basecamp/gh-signoff).
 #
 #   bun run signoff
 #
-# This is local CI (basecamp/gh-signoff): the checks run on this machine and
-# `gh signoff` posts the commit status, so a PR cannot merge until someone has
-# actually run them.
+# The status is not a required check: merges still gate on the GitHub workflows,
+# so this records that the suite passed on this machine rather than unlocking
+# anything. `gh signoff install` would make it required.
 #
 # Deliberately takes no job filter. Signing off asserts that every check passed,
 # so it always runs the whole suite; use `bun run ci:local <job>` while
