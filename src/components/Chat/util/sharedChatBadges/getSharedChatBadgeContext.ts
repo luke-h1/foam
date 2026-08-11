@@ -6,12 +6,12 @@ import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { logger } from '@app/utils/logger';
 
 import { getSharedChatSourceRoomId } from './getSharedChatSourceRoomId';
-import { getTimedCacheValue } from './getTimedCacheValue';
+import { getTimedCacheValue, setTimedCacheValue } from './getTimedCacheValue';
 import { sharedChatChannelBadgesCache } from './sharedChatChannelBadgesCache';
 import { sharedChatSourceBadgeCache } from './sharedChatSourceBadgeCache';
-import type { TimedCacheEntry } from './types';
 
 const SHARED_CHAT_BADGE_CACHE_TTL = 60 * 60 * 1000;
+const MAX_SHARED_CHAT_BADGE_CACHE_ENTRIES = 100;
 
 const sharedChatSourceBadgePromises = new Map<
   string,
@@ -22,21 +22,11 @@ const sharedChatChannelBadgePromises = new Map<
   Promise<SanitisedBadgeSet[]>
 >();
 
-function setTimedCacheValue<T>(
-  cache: Map<string, TimedCacheEntry<T>>,
-  key: string,
-  value: T,
-): void {
-  const now = Date.now();
-  cache.forEach((entry, entryKey) => {
-    if (entry.expiresAt <= now) {
-      cache.delete(entryKey);
-    }
-  });
-  cache.set(key, {
-    value,
-    expiresAt: now + SHARED_CHAT_BADGE_CACHE_TTL,
-  });
+export function clearSharedChatBadgeCaches(): void {
+  sharedChatSourceBadgeCache.clear();
+  sharedChatChannelBadgesCache.clear();
+  sharedChatSourceBadgePromises.clear();
+  sharedChatChannelBadgePromises.clear();
 }
 
 async function getSharedChatSourceBadge(
@@ -73,7 +63,13 @@ async function getSharedChatSourceBadge(
       return null;
     })
     .then(sourceBadge => {
-      setTimedCacheValue(sharedChatSourceBadgeCache, sourceRoomId, sourceBadge);
+      setTimedCacheValue(
+        sharedChatSourceBadgeCache,
+        sourceRoomId,
+        sourceBadge,
+        SHARED_CHAT_BADGE_CACHE_TTL,
+        MAX_SHARED_CHAT_BADGE_CACHE_ENTRIES,
+      );
       sharedChatSourceBadgePromises.delete(sourceRoomId);
       return sourceBadge;
     });
@@ -106,6 +102,8 @@ async function getSharedChatChannelBadges(
         sharedChatChannelBadgesCache,
         sourceRoomId,
         sourceBadges,
+        SHARED_CHAT_BADGE_CACHE_TTL,
+        MAX_SHARED_CHAT_BADGE_CACHE_ENTRIES,
       );
       sharedChatChannelBadgePromises.delete(sourceRoomId);
       return sourceBadges;
