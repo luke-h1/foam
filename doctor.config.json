@@ -27,7 +27,10 @@
         "rules": ["react-hooks-js/purity", "react-doctor/effect-needs-cleanup"]
       },
       {
-        "files": ["src/components/StreamPlayer/usePlayerBridge.ts"],
+        "files": [
+          "src/components/Chat/hooks/useChatMessages.ts",
+          "src/components/StreamPlayer/usePlayerBridge.ts"
+        ],
         "rules": ["react-hooks-js/refs"]
       },
       {
