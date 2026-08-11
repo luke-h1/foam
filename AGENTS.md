@@ -1,5 +1,17 @@
 # Agent Notes
 
+## Local CI and signoff
+
+CI runs on this machine, not on a rented runner. `main` requires a `signoff` commit status, which `gh signoff` ([basecamp/gh-signoff](https://github.com/basecamp/gh-signoff)) posts once the checks have actually passed locally. Without it a PR cannot merge.
+
+- `bun run signoff` - runs the full suite and, if it is green, signs off on HEAD. This is the one to reach for. Push first: `gh signoff` refuses unless HEAD is contained in `@{push}`.
+- `bun run ci:local` - the same suite without the signoff. Does not fail fast: every job runs and the summary at the end lists what broke.
+- `bun run ci:local <job>...` - only the named jobs, for iterating on one failure. Jobs are `prettier`, `ast-grep`, `ts`, `lint`, `test`, `native`, `commitlint`, `doctor`, `zizmor`.
+
+Run `bun run signoff` before handing a branch back. `signoff` deliberately takes no job filter - the status asserts that every check passed, so it should mean that. If a job fails for a reason the change did not cause, fix it or say so explicitly; do not sign off around it.
+
+The `native` job hands ktlint the git-tracked Kotlin files rather than letting `lint-kotlin.sh` pick its own roots, because that script also walks `android/` - gitignored prebuild output that exists locally but never on CI's checkout. Keep that explicit file list if you touch the job, or the suite starts failing on generated code CI never sees.
+
 ## Test Assertions
 
 Use `toEqual` for object assertions. Do not use `expect.objectContaining`, and do not use `toMatchObject`.

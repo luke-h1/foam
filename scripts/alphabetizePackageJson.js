@@ -30,7 +30,7 @@ packageJsonPaths.forEach(packageJsonPath => {
 
       fs.writeFile(
         fullPath,
-        JSON.stringify(packageJson, null, 2),
+        `${JSON.stringify(packageJson, null, 2)}\n`,
         'utf8',
         e => {
           if (e) {
