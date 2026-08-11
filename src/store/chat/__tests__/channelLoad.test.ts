@@ -27,11 +27,13 @@ import {
   invalidateChatResourceCaches,
   loadChannelResources,
   resolveSubscriberChannelProfiles,
-  switchSevenTvEmoteSet,
-  updateSevenTvEmotes,
 } from '../actions/channelLoad';
 import { clearGlobalResourceCache } from '../actions/channelResources';
 import { clearMessages } from '../actions/messages';
+import {
+  switchSevenTvEmoteSet,
+  updateSevenTvEmotes,
+} from '../actions/sevenTvChannelLifecycle';
 import { chatStore$ } from '../observables/chatStore';
 import type { SubscriberChannelProfile } from '../types/constants';
 import {
