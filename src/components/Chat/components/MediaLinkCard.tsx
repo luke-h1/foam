@@ -15,8 +15,8 @@ import { sevenTvService } from '@app/services/seventv-service';
 import { twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import { type TwitchAnd7TVVariant } from '@app/utils/chat/parsedPart';
-import { getTwitchClipIdFromUrl } from '@app/utils/chat/replaceTextWithEmotes/getTwitchClipIdFromUrl';
-import { SEVENTV_EMOTE_LINK_REGEX } from '@app/utils/chat/replaceTextWithEmotes/SEVENTV_EMOTE_LINK_REGEX';
+import { getTwitchClipIdFromUrl } from '@app/utils/chat/parseWordLinkParts/getTwitchClipIdFromUrl';
+import { SEVENTV_EMOTE_LINK_REGEX } from '@app/utils/chat/parseWordLinkParts/SEVENTV_EMOTE_LINK_REGEX';
 
 type MediaLinkCardProps = {
   layout?: 'card' | 'inline';

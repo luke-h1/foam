@@ -1,6 +1,6 @@
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
-import { getTwitchClipIdFromUrl } from '@app/utils/chat/replaceTextWithEmotes/getTwitchClipIdFromUrl';
-import { SEVENTV_EMOTE_LINK_REGEX } from '@app/utils/chat/replaceTextWithEmotes/SEVENTV_EMOTE_LINK_REGEX';
+import { getTwitchClipIdFromUrl } from '@app/utils/chat/parseWordLinkParts/getTwitchClipIdFromUrl';
+import { SEVENTV_EMOTE_LINK_REGEX } from '@app/utils/chat/parseWordLinkParts/SEVENTV_EMOTE_LINK_REGEX';
 
 const GENERIC_HTTP_URL_REGEX = /^https?:\/\//i;
 const TRAILING_URL_PUNCTUATION = new Set('.,!?;:\'"\\)]}>'.split(''));

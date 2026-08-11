@@ -287,6 +287,79 @@ describe('processEmotesWorklet', () => {
     ]);
   });
 
+  test('falls back to the FE0F-stripped hexcode for standalone emoji', () => {
+    const heart = createEmote({
+      id: '2764',
+      name: ':heart:',
+      site: 'Emoji',
+      provider: 'emoji',
+      emoji_hexcode: '2764',
+    });
+
+    const result = processEmotesWorklet({
+      ...emptyParams,
+      emojiEmotes: [heart],
+      inputString: '❤️',
+      sevenTvChannelEmotes: [],
+    });
+
+    expect(
+      result.map(part => ({
+        content: 'content' in part ? part.content : undefined,
+        id: part.type === 'emote' ? part.id : undefined,
+        type: part.type,
+      })),
+    ).toEqual([{ content: '❤️', id: '2764', type: 'emote' }]);
+  });
+
+  test('matches :emoji: shortcode aliases as emotes', () => {
+    const joy = createEmote({
+      id: '1F602',
+      name: ':joy:',
+      site: 'Emoji',
+      provider: 'emoji',
+    });
+    const haha = createEmote({
+      id: '1F602-haha',
+      name: ':haha:',
+      site: 'Emoji',
+      provider: 'emoji',
+    });
+
+    const result = processEmotesWorklet({
+      ...emptyParams,
+      emojiEmotes: [joy, haha],
+      inputString: 'hello :joy: :haha:',
+      sevenTvChannelEmotes: [],
+    });
+
+    expect(
+      result.map(part => ({
+        content: 'content' in part ? part.content : undefined,
+        name: part.type === 'emote' ? part.name : undefined,
+        type: part.type,
+      })),
+    ).toEqual([
+      { content: 'hello', name: undefined, type: 'text' },
+      { content: ' ', name: undefined, type: 'text' },
+      { content: ':joy:', name: ':joy:', type: 'emote' },
+      { content: ' ', name: undefined, type: 'text' },
+      { content: ':haha:', name: ':haha:', type: 'emote' },
+    ]);
+  });
+
+  test('trailing punctuation defeats an emote match', () => {
+    const kappa = createEmote({ id: 'kappa-id', name: 'Kappa' });
+
+    const result = processEmotesWorklet({
+      ...emptyParams,
+      inputString: 'Kappa!',
+      sevenTvChannelEmotes: [kappa],
+    });
+
+    expect(result).toEqual<ParsedPart[]>([{ type: 'text', content: 'Kappa!' }]);
+  });
+
   test('strips the duplicate-message bypass char fused to an emote name', () => {
     const dogEmote = createEmote({ id: 'dog-emote', name: 'dogE' });
     const result = processEmotesWorklet({

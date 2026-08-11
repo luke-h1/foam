@@ -1,7 +1,7 @@
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
 import { getEmoteArrayContentKey } from '@app/utils/chat/emoteArrayContentKey';
-import { parseWordLinkParts } from '@app/utils/chat/replaceTextWithEmotes/parseWordLinkParts';
+import { parseWordLinkParts } from '@app/utils/chat/parseWordLinkParts/parseWordLinkParts';
 
 import { queueMentionLoginsFromParts } from './mentionLoginResolver/queueMentionLoginsFromParts';
 import type { ParsedPart } from './parsedPart';
@@ -483,6 +483,16 @@ export const processEmotesWorklet = (
         .map(char => char.codePointAt(0)?.toString(16).toUpperCase() || '')
         .join('-');
       emote = emojiMap.get(upperWord);
+      if (!emote && upperWord.includes('FE0F')) {
+        // Standalone emoji are keyed without FE0F in the dataset (e.g. "2764"
+        // for ❤️), while ZWJ sequences keep it — retry without the selector.
+        emote = emojiMap.get(
+          upperWord
+            .split('-')
+            .filter(hex => hex !== 'FE0F')
+            .join('-'),
+        );
+      }
     }
 
     if (emote) {
