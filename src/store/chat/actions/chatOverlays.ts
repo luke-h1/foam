@@ -89,6 +89,10 @@ export function closeChatOverlay(
   patchOverlay(channelId, patch);
 }
 
+/**
+ * Test-only reset: production code relies on the read-time `channelId` guard
+ * in the overlay state shape instead of imperative resets.
+ */
 export function resetChatOverlays(channelId: string) {
   chatOverlays$.set(createEmptyChatOverlayState(channelId));
 }

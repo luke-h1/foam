@@ -1,11 +1,9 @@
 import { CHAT_NOTICE_ACCENTS } from '@app/components/Chat/components/util/chatNoticeAccents';
 import { Text } from '@app/components/ui/Text/Text';
+import { useChannelPointRewardTitleRevision } from '@app/store/chat/react/useChannelPointRewardTitleRevision';
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
-import {
-  resolveChannelPointRewardTitle,
-  useChannelPointRewardTitleRevision,
-} from '@app/utils/chat/channelPointRewardTitleStore';
+import { resolveChannelPointRewardTitle } from '@app/utils/chat/channelPointRewardTitleStore';
 import { channelPointsRewardTitleFieldsFromUserstate } from '@app/utils/chat/channelPointsRewardTitle/channelPointsRewardTitleFieldsFromUserstate';
 import { channelPointsRewardTitleFromTags } from '@app/utils/chat/channelPointsRewardTitle/channelPointsRewardTitleFromTags';
 import { channelPointsRewardTitleFromUserstate } from '@app/utils/chat/channelPointsRewardTitle/channelPointsRewardTitleFromUserstate';
