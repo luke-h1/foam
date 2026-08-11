@@ -3,6 +3,13 @@ name: Detect fingerprint changes
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+      - 'src/**'
+      - 'e2e/**'
+      - 'docs/**'
+      - '**/*.md'
+      - '.claude/**'
+      - '.rnstorybook/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

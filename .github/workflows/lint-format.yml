@@ -1,0 +1,55 @@
+name: Lint and format
+
+on:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint-format:
+    name: Lint and format
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: 🏗 Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: 🥟 Setup Bun and install dependencies
+        uses: ./.github/actions/setup-bun-install
+        with:
+          node: 'true'
+
+      - name: ✨ Prettier
+        if: ${{ !cancelled() }}
+        run: bun run format:check
+
+      - name: 🔍 TypeScript
+        if: ${{ !cancelled() }}
+        run: bun run ts:check
+
+      - name: 🧪 ast-grep rule tests
+        if: ${{ !cancelled() }}
+        run: bun run test:ast-grep
+
+      - name: 🔍 ast-grep scan
+        if: ${{ !cancelled() }}
+        run: bun run lint:ast-grep
+
+      - name: 🤓 ESLint
+        if: ${{ !cancelled() }}
+        run: bun run lint
+
+      - name: 🧑‍🔬 Commit messages
+        if: ${{ !cancelled() }}
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bun run commitlint --from "$BASE_SHA" --to "$HEAD_SHA"

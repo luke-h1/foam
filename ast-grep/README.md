@@ -2,7 +2,7 @@
 
 Structural lint rules that encode codebase conventions ESLint cannot easily
 express. They run locally via `bun run lint:ast-grep` and in CI on every
-pull request (`.github/workflows/ast-grep.yml`).
+pull request (`.github/workflows/lint-format.yml`).
 
 ast-grep parses `.ts` and `.tsx` as different languages, so rules that apply
 to both exist in a `-ts` and a `-tsx` variant.
