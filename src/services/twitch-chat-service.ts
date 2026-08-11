@@ -22,6 +22,10 @@ import {
   type IrcMessage,
   parseIrcMessage,
 } from '@app/utils/chat/ircProtocol/parseIrcMessage';
+import {
+  type IrcRouteHandlers,
+  routeIrcMessage,
+} from '@app/utils/chat/ircProtocol/routeIrcMessage';
 import { logger } from '@app/utils/logger';
 
 import { ReadyState } from '../hooks/ws/constants';
@@ -331,275 +335,172 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     optionsRef.current.onPart?.(channelFormatted);
   };
 
-  const handleIrcMessage = (message: IrcMessage) => {
-    const { command, tags, params, prefix } = message;
-    const tagsRecord = tags ?? {};
+  const ircRouteHandlers: IrcRouteHandlers = {
+    motd: (command, params) => {
+      logger.chat.debug(`IRC ${command}: ${params.join(' ')}`);
+    },
 
-    switch (command) {
-      case '001': // RPL_WELCOME - server welcome message
-      case '002': // RPL_YOURHOST
-      case '003': // RPL_CREATED
-      case '004': // RPL_MYINFO
-      case '375': // RPL_MOTDSTART
-      case '372': // RPL_MOTD
-      case '376': // RPL_ENDOFMOTD
-        logger.chat.debug(`IRC ${command}: ${params.join(' ')}`);
-        if (command === '001') {
-          isAuthenticatedRef.current = true;
-          logger.chat.info('✅ Authenticated with Twitch IRC');
+    welcome: () => {
+      isAuthenticatedRef.current = true;
+      logger.chat.info('✅ Authenticated with Twitch IRC');
 
-          if (channel) {
-            joinChannel(channel);
-          }
+      if (channel) {
+        joinChannel(channel);
+      }
+    },
+
+    ping: server => {
+      logger.chat.debug(`Received PING, sending PONG to ${server}`);
+      sendIrcCommand('PONG', server);
+    },
+
+    privmsg: (channelName, tagsRecord, messageText) => {
+      const username = tagsRecord['display-name'] || tagsRecord.login;
+
+      // The mod/owner exemption strings are only needed when a blocklist
+      // exists - skip the per-message lowercasing otherwise.
+      if (blockedUsers.length > 0) {
+        const isMod = tagsRecord.mod === '1';
+        const isChannelOwner =
+          channelName.slice(1).toLowerCase() === user?.login?.toLowerCase();
+
+        if (
+          !isMod &&
+          !isChannelOwner &&
+          isUserBlocked(username, blockedUsers)
+        ) {
+          logger.chat.debug(`Filtered message from blocked user: ${username}`);
+          return;
         }
-        break;
-
-      case 'PING': {
-        const server = params[0] || 'tmi.twitch.tv';
-        logger.chat.debug(`Received PING, sending PONG to ${server}`);
-        sendIrcCommand('PONG', server);
-        break;
       }
 
-      case 'PRIVMSG': {
-        if (params.length >= 2 && tags) {
-          const channelName = params[0];
-          const messageText = params[1];
-          // PRIVMSG tags carry no `login`; the canonical Twitch login is the
-          // nick in the IRC prefix (`nick!user@host`). Localised display names
-          // are not the login, so derive it from the prefix instead.
-          if (!tagsRecord.login && prefix) {
-            tagsRecord.login = prefix.split('!')[0] ?? '';
-          }
-          const username = tagsRecord['display-name'] || tagsRecord.login;
-
-          if (channelName && messageText) {
-            // The mod/owner exemption strings are only needed when a blocklist
-            // exists - skip the per-message lowercasing otherwise.
-            if (blockedUsers.length > 0) {
-              const isMod = tagsRecord.mod === '1';
-              const isChannelOwner =
-                channelName.slice(1).toLowerCase() ===
-                user?.login?.toLowerCase();
-
-              if (
-                !isMod &&
-                !isChannelOwner &&
-                isUserBlocked(username, blockedUsers)
-              ) {
-                logger.chat.debug(
-                  `Filtered message from blocked user: ${username}`,
-                );
-                return;
-              }
-            }
-
-            if (containsMutedWords(messageText, mutedWords, matchWholeWord)) {
-              logger.chat.debug(`Filtered message containing muted words`);
-              return;
-            }
-
-            optionsRef.current.onMessage?.(
-              channelName,
-              tagsRecord,
-              messageText,
-            );
-          }
-        }
-        break;
+      if (containsMutedWords(messageText, mutedWords, matchWholeWord)) {
+        logger.chat.debug(`Filtered message containing muted words`);
+        return;
       }
 
-      case 'RECONNECT': {
-        logger.chat.warn('Received Twitch IRC RECONNECT request');
-        optionsRef.current.onReconnect?.();
-        lastActivityAtRef.current = Date.now();
-        getWebSocketRef.current().close(4003, 'twitch reconnect');
-        break;
+      optionsRef.current.onMessage?.(channelName, tagsRecord, messageText);
+    },
+
+    reconnect: () => {
+      logger.chat.warn('Received Twitch IRC RECONNECT request');
+      optionsRef.current.onReconnect?.();
+      lastActivityAtRef.current = Date.now();
+      getWebSocketRef.current().close(4003, 'twitch reconnect');
+    },
+
+    notice: (channelName, tagsRecord, messageText) => {
+      if (messageText.includes('Welcome, GLHF!')) {
+        logger.chat.info('✅ Welcome message received');
+        optionsRef.current.onWelcome?.();
       }
 
-      case 'NOTICE': {
-        if (params.length >= 2 && tags) {
-          const channelName = params[0];
-          const messageText = params[1];
+      logger.chat.info(`NOTICE in ${channelName}: ${messageText}`);
+      optionsRef.current.onNotice?.(channelName, tagsRecord, messageText);
+    },
 
-          if (messageText && messageText.includes('Welcome, GLHF!')) {
-            logger.chat.info('✅ Welcome message received');
-            optionsRef.current.onWelcome?.();
-          }
-
-          if (channelName && messageText) {
-            logger.chat.info(`NOTICE in ${channelName}: ${messageText}`);
-            optionsRef.current.onNotice?.(channelName, tagsRecord, messageText);
-          }
-        } else if (params.length > 0) {
-          // Some notices don't have channel name
-          const messageText = params.join(' ');
-          if (messageText.includes('Welcome, GLHF!')) {
-            logger.chat.info('✅ Welcome message received');
-            optionsRef.current.onWelcome?.();
-          }
-          logger.chat.info(`NOTICE: ${messageText}`);
-        }
-        break;
+    channellessNotice: messageText => {
+      if (messageText.includes('Welcome, GLHF!')) {
+        logger.chat.info('✅ Welcome message received');
+        optionsRef.current.onWelcome?.();
       }
+      logger.chat.info(`NOTICE: ${messageText}`);
+    },
 
-      case 'USERNOTICE': {
-        if (params.length >= 1 && tags) {
-          const channelName = params[0];
-          const messageText = params[1] ?? '';
+    usernotice: (channelName, tagsRecord, messageText) => {
+      logger.chat.debug(
+        `USERNOTICE in ${channelName}: ${tagsRecord['msg-id'] || 'unknown event'}`,
+      );
+      optionsRef.current.onUserNotice?.(
+        channelName,
+        tagsRecord as UserNoticeTags,
+        messageText,
+      );
+    },
 
-          if (channelName) {
-            logger.chat.debug(
-              `USERNOTICE in ${channelName}: ${tagsRecord['msg-id'] || 'unknown event'}`,
-            );
-            optionsRef.current.onUserNotice?.(
-              channelName,
-              tagsRecord as UserNoticeTags,
-              messageText,
-            );
-          }
-        }
-        break;
-      }
+    clearchat: (channelName, tagsRecord, username, banDuration) => {
+      logger.chat.info(
+        `CLEARCHAT in ${channelName}: ${username || 'all messages cleared'}`,
+      );
+      optionsRef.current.onClearChat?.(
+        channelName,
+        tagsRecord,
+        username,
+        banDuration,
+      );
+    },
 
-      case 'CLEARCHAT': {
-        if (params.length >= 1 && tags) {
-          const channelName = params[0];
-          const username = params[1]; // May be empty for full chat clear
-          const banDuration = tagsRecord['ban-duration']
-            ? parseInt(tagsRecord['ban-duration'], 10)
-            : undefined;
+    clearmsg: (channelName, tagsRecord, targetMsgId) => {
+      logger.chat.info(
+        `CLEARMESSAGE in ${channelName}: message ${targetMsgId} deleted`,
+      );
+      optionsRef.current.onClearMessage?.(channelName, tagsRecord, targetMsgId);
+    },
 
-          if (channelName) {
-            logger.chat.info(
-              `CLEARCHAT in ${channelName}: ${username || 'all messages cleared'}`,
-            );
-            optionsRef.current.onClearChat?.(
-              channelName,
-              tagsRecord,
-              username,
-              banDuration,
-            );
-          }
-        }
-        break;
-      }
+    roomstate: (channelName, tagsRecord) => {
+      markChannelJoined(channelName);
+      logger.chat.debug(`ROOMSTATE in ${channelName}`);
+      optionsRef.current.onRoomState?.(channelName, tagsRecord);
+    },
 
-      case 'CLEARMSG':
-      case 'CLEARMESSAGE': {
-        if (params.length >= 2 && tags) {
-          const channelName = params[0];
-          const targetMsgId = tagsRecord['target-msg-id'];
+    userstate: (channelName, tagsRecord) => {
+      markChannelJoined(channelName);
+      logger.chat.debug(`USERSTATE in ${channelName}`);
+      userStateRef.current = tagsRecord;
+      bumpUserStateRevision();
 
-          if (channelName && targetMsgId) {
-            logger.chat.info(
-              `CLEARMESSAGE in ${channelName}: message ${targetMsgId} deleted`,
-            );
-            optionsRef.current.onClearMessage?.(
-              channelName,
-              tagsRecord,
-              targetMsgId,
-            );
-          }
-        }
-        break;
-      }
-
-      case 'ROOMSTATE': {
-        if (params.length >= 1 && tags) {
-          const channelName = params[0];
-
-          if (channelName) {
-            markChannelJoined(channelName);
-            logger.chat.debug(`ROOMSTATE in ${channelName}`);
-            optionsRef.current.onRoomState?.(channelName, tagsRecord);
-          }
-        }
-        break;
-      }
-
-      case 'USERSTATE': {
-        if (params.length >= 1 && tags) {
-          const channelName = params[0];
-
-          if (channelName) {
-            markChannelJoined(channelName);
-            logger.chat.debug(`USERSTATE in ${channelName}`);
-            userStateRef.current = tagsRecord;
-            bumpUserStateRevision();
-
-            if (pendingMessageRef.current && tagsRecord['msg-id']) {
-              logger.chat.debug(
-                `Received USERSTATE after sending message: ${tagsRecord['msg-id']}`,
-              );
-              optionsRef.current.onUserStateAfterSend?.(tagsRecord);
-              pendingMessageRef.current = null;
-            }
-
-            optionsRef.current.onUserState?.(channelName, tagsRecord);
-          }
-        }
-        break;
-      }
-
-      case 'GLOBALUSERSTATE': {
-        logger.chat.debug('GLOBALUSERSTATE received');
-        userStateRef.current = tagsRecord;
-        bumpUserStateRevision();
-        optionsRef.current.onGlobalUserState?.(tagsRecord);
-        break;
-      }
-
-      case 'JOIN': {
-        if (params.length > 0) {
-          const channelName = params[0];
-          if (channelName) {
-            const nick = prefix?.split('!')[0];
-            if (isSelfNick(nick)) {
-              markChannelJoined(channelName);
-              logger.chat.info(`✅ Joined channel: ${channelName}`);
-              optionsRef.current.onJoin?.(channelName);
-            } else if (nick) {
-              optionsRef.current.onUserJoin?.(channelName, nick);
-            }
-          }
-        }
-        break;
-      }
-
-      case 'PART': {
-        if (params.length > 0) {
-          const channelName = params[0];
-          if (channelName) {
-            const nick = prefix?.split('!')[0];
-            if (isSelfNick(nick)) {
-              logger.chat.info(`Left channel: ${channelName}`);
-              pendingJoinChannelsRef.current.delete(channelName);
-              joinedChannelsRef.current.delete(channelName);
-              optionsRef.current.onPart?.(channelName);
-            } else if (nick) {
-              optionsRef.current.onUserPart?.(channelName, nick);
-            }
-          }
-        }
-        break;
-      }
-
-      case '353': // RPL_NAMREPLY - user list
-      case '366': {
-        // RPL_ENDOFNAMES - end of user list
-        const roomName = params.find(param => param.startsWith('#'));
-        if (roomName) {
-          markChannelJoined(roomName);
-        }
-        break;
-      }
-
-      default:
+      if (pendingMessageRef.current && tagsRecord['msg-id']) {
         logger.chat.debug(
-          `Unhandled IRC command: ${command} ${params.join(' ')}`,
+          `Received USERSTATE after sending message: ${tagsRecord['msg-id']}`,
         );
-    }
+        optionsRef.current.onUserStateAfterSend?.(tagsRecord);
+        pendingMessageRef.current = null;
+      }
+
+      optionsRef.current.onUserState?.(channelName, tagsRecord);
+    },
+
+    globaluserstate: tagsRecord => {
+      logger.chat.debug('GLOBALUSERSTATE received');
+      userStateRef.current = tagsRecord;
+      bumpUserStateRevision();
+      optionsRef.current.onGlobalUserState?.(tagsRecord);
+    },
+
+    join: (channelName, nick) => {
+      if (isSelfNick(nick)) {
+        markChannelJoined(channelName);
+        logger.chat.info(`✅ Joined channel: ${channelName}`);
+        optionsRef.current.onJoin?.(channelName);
+      } else if (nick) {
+        optionsRef.current.onUserJoin?.(channelName, nick);
+      }
+    },
+
+    part: (channelName, nick) => {
+      if (isSelfNick(nick)) {
+        logger.chat.info(`Left channel: ${channelName}`);
+        pendingJoinChannelsRef.current.delete(channelName);
+        joinedChannelsRef.current.delete(channelName);
+        optionsRef.current.onPart?.(channelName);
+      } else if (nick) {
+        optionsRef.current.onUserPart?.(channelName, nick);
+      }
+    },
+
+    namesReply: roomName => {
+      markChannelJoined(roomName);
+    },
+
+    unhandled: (command, params) => {
+      logger.chat.debug(
+        `Unhandled IRC command: ${command} ${params.join(' ')}`,
+      );
+    },
+  };
+
+  const handleIrcMessage = (message: IrcMessage) => {
+    routeIrcMessage(message, ircRouteHandlers);
   };
 
   const handleMessage = (event: MessageEvent) => {
