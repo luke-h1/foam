@@ -1,0 +1,84 @@
+# Perf campaign - session ledger (2026-08-10)
+
+Branch: `perf/chat-commit-path` (3 commits on top of main). Full jest suite: **340/340 suites, 10,140/10,140 tests green** (4 suites that were failing from in-flight work now fixed, see "Test repairs"). All numbers from the repo's own harnesses; device-level (release build) verification still pending for everything below - jest numbers are directional per the audit skill's provenance rules.
+
+## Landed changes
+
+| Commit | Change | Evidence | Measured delta |
+|---|---|---|---|
+| `cbbf9173` | F4: deleted the per-message parts clone + `Object.defineProperty` pass; part ids now index-based, assigned in place once per shared array (Legend State's nested-array diff still gets unique ids); `finalizeBufferedMessage` rest-destructures instead of spread+`delete` (no Hermes dictionary mode) | the store-assigned per-part id has no JS consumer - its only consumer is Legend State array diffing, which needs within-array uniqueness only | Reassure: raid-burst flush 2.4ms → 2.2ms (-10.3%, stdev 3.4%) |
+| `76f1e0d8` | Legend State core patch (`patches/@legendapp%2Fstate@2.1.15.patch`, both `index.js` and `index.mjs` - metro loads the mjs build): (1) new-subtree short-circuit - seeding/appending never materializes a node per element; (2) child nodes looked up, not created, on the diff path; (3) `prevChildrenById` built from existing child nodes instead of the whole prev array; (4) removed-key scan uses a Set (was O(prev x next) - this is the 7TV cosmetics-sweep cost); (5) empty batches skip 2 Map allocs; (6) unbalanced-batch recovery timer dev-only | node A/B vs pristine package, NODE_ENV=production, foam-shaped load (150-window, root subscriber, 12-msg flushes) | **60.1µs → 8.7µs per `messages.set` (-86%, 6.9x)**, identical notification counts; patch survives `rm -rf` + `bun install` |
+| `eacbe6e4` | F8: `extractEmotesFromTag` result cache (tag+text key, 256 FIFO; shared empty array for tag-less messages keeps downstream identity caches stable); message key computed once and threaded through the store prepare path | key was recomputed 4x per message across filter/prepare/parts/index | Reassure cumulative vs session baseline: raid-burst flush 2.4ms → 0.6ms (-74%); dense tag extraction 3.9ms → 0.2ms (-96%, cache-friendly fixture - live hit rate is lower) |
+
+| `8798195c` | F5: emote collections keyed by content hash (id/name/original_name/url/zero_width) instead of array identity - 7TV events and channel-load settles no longer invalidate every cached parse and lookup map | the ~800ms sustained reparse after `emote_set.update` from the 2026-07 audit; mechanism pinned by test (rebuilt identical array returns the cached parse by reference) | device number pending - jest can't observe the sustained-window cost |
+| `b91e9cc3` | Legend State round 2: MMKV persist writes coalesce per table for 250ms + always flush on background + plain `JSON.stringify` (replacer was defeating the native fast path); `.peek()`/`.get()`/`.set()` wrappers cached per node+method instead of a fresh closure per access | library audit findings 3 and 8 | set-path bench holds 8.0-8.2µs/flush; full suite green |
+| `318a518e` | Harness: `EXPO_PUBLIC_PERF_MARKS=1` enables user-timing marks (line_received/buffered/drained/committed) + a `chat.ingest_to_commit` measure per commit batch; replay corpus gains copypasta, unicode + zero-width stacks, RTL, cheers (bits now supported), mention storms, reply chains | campaign Phase 1 gaps; `react-native-performance` was installed and unused | n/a (tooling). Remaining gap: the feeder only emits privmsg-shaped lines, so usernotices are still uncovered |
+
+| `931dc3ee` | **Fix**: `canModerateChat` was frozen at its pre-USERSTATE mount value - the compiler caches the stable-identity `getUserState()` read. The service now publishes a userstate revision (external store) and the derivation subscribes | compiler-scan correctness find #7 | n/a (correctness) |
+| `1879cf6a` | `getCurrentEmoteData` reference-keyed memo (was: 16-field object + 3 peeks per ingested message) + `getBaseCollectionKey` one-entry identity memo (9 pointer compares per message instead of 9 WeakMap reads + array + join) | JS-scan findings 6 and 8 | inspection-sized; full suite green |
+
+Also this session (separate from the campaign): reverted codex's `TurboModuleRegistry.getEnforcing('RNPulsar')` in `src/lib/haptics.ts` back to the `Presets` wrapper.
+
+## Attempted and reverted
+
+- **F6 (ChatRow Surface style array, 17 slots → push-active-only)**: render scenarios moved -0.9%/±0.0% - under the noise floor, and structurally so: the jest render harness stops at react-test-renderer and never runs Fabric's host-side style flatten where the claimed cost lives. Reverted per the "if the number did not move, revert" rule. Re-attempt only with a device frame-time harness watching row-mount cost.
+
+## Skipped with justification
+
+- **F8's findBadges per-chatter cache**: findBadges is already fully indexed (WeakMap indexes per badge array, #689/#849); a result-level cache would memoize a store-dependent value (`getUserBadge`) that goes stale on 7TV entitlement events, to save a string split and a few Map hits. Bad risk/benefit.
+- **baseCollectionCache cap 64 → 2-4**: already 4 in the tree; the July audit doc is stale on this point.
+- **doAuth startup blocking**: off limits per the no-touching-auth-code rule.
+
+## Test repairs (uncommitted, belong with the in-flight working-tree batch)
+
+The tree carried 37 files of uncommitted in-flight work with 4 broken suites; all fixed and left uncommitted alongside that work:
+- `deviceTier.test.ts`: mocks the internal `nativeInterface` path with `isLowRamDevice` as the boolean constant it actually is there (plus the one-line source fix `isLowRamDevice === true`).
+- `Chat.recentMessages.test.tsx`: `usePreference` stub made key-aware (was returning `[]` for `emojiStyle`), `chatStore$.emojis.set` added to the store mock, and the usernotice expectation updated to the new non-blanked channel/sender contract with the timestamp nonce pinned by shape.
+- Both `PaintedUsername` suites: the jest Skia mock resolves `Data.fromURI`, so texture readiness flips true after a microtask - each suite now mocks `sharedPaintAnimationFrames` to pin the state it asserts (not-ready fallback vs ready layers).
+
+## Next up (ranked, from the F1-F8 frontier + this session's findings)
+
+1. **F5 - 7TV `emote_set.update` invalidating the whole parse cache** (~800ms sustained, the biggest remaining measurable item). The parse cacheKey embeds `baseCollection.cacheKey`, which is identity-derived from the emote arrays - one added emote mints a new array, new collection key, and every cached parse misses. Design sketch: derive the collection key from stable per-provider set version/content ids (the 7TV set id + version is known at update time) so an unchanged-content array re-keys to the same collection, or re-intern the new array to the old content id when the update is a no-op for parsing (id/name-set unchanged).
+2. **Legend State round 2** (from the library audit, findings 3/4/5/8): MMKV plugin re-serializes the whole table per change through a JS replacer with no debounce (channel-join jank); notify allocates 3 Maps + 2 arrays per ancestor level even with zero listeners (v3 `numListenersRecursive` backport); `useSelector` disposes/rebuilds all listeners every render and runs selectors twice per update; closure allocated per `.peek()` access. Each is a contained patch hunk; measure with the same A/B bench (`scratchpad/ls-bench.cjs` pattern).
+3. **F1 - recycling** (the largest structural gap): fix row state outliving recycle (`ChatInlineImage` recyclingKey races), then flip `CHAT_RECYCLE_ITEMS` behind on-device fling QA + `bun run e2e:test:smoke`. Device-gated.
+4. **Harness gaps (campaign Phase 1)**: `performance.mark` stage timing (IRC received → parse → commit → paint) behind a perf flag - `react-native-performance` is already installed and unused; richer replay corpus (sub notices, cheers, replies, unicode + zero-width); an e2e flow driving `/dev-tools/chat-perf?flood=raid&suite=1`; any Android capture path (Flashlight/Perfetto).
+5. **F2/F7** per the audit skill ranking - both need device measurement.
+6. **Android synced-animation driver** - no Choreographer port exists; Glide restarts every emote from frame 0 on resume. Biggest untouched platform gap.
+
+## Deep scan + native profile (evening session)
+
+**Native profile, on-simulator dev build** (iPhone 17 Pro sim, dev client on today's JS, `/dev-tools/chat-perf?flood=raid&suite=1`, `sample` during the raid measure window - directional per the audit skill's provenance rules):
+- Suite results on-screen: raid 27 js-fps / 46 ui-fps / 3.8 ui-jank/s / 53% dropped; steady60 43 js-fps / 53 ui-fps / 26% dropped.
+- Top-of-stack: after idle syscalls, JS interpretation (1,474 samples - dev-mode Hermes, heavily inflated) and **animated WebP decode + CoreGraphics resampling at ~1,900 samples combined** (`GetCoeffsFast`, `VP8ParseIntraModeRow`, `BuildHuffmanTable`, `resample_horizontal/vertical`, vImage). Emote decode remains the dominant native cost under raid load, plus visible Hades GC weak-slot sweeps from the WeakMap-heavy caches. Release-device capture is the required follow-up before optimizing further here.
+- The new corpus entries (copypasta, unicode + zero-width, RTL, cheers, mention storms) were visually confirmed flowing through the pipeline.
+
+**React render-path scan** (verified by compiling all 477 files through babel-plugin-react-compiler and reading emitted `_c()` blocks) - the landable worklist, ranked:
+1. `UserChatBody.tsx:81` (+3 siblings): the `...rendererArgs` rest-destructure defeats all 70 compiler cache slots - object-rest is an unconditionally-fresh dependency, so every row re-render rebuilds the full element tree. Fix: pass `partRendererArgs` as one named prop. (File is in the in-flight batch - coordinate.)
+2. `useChatScroll` unread counter: `setUnreadCount` per flush re-renders the whole `Chat` hook stack while scrolled up (exactly when the user is also scrolling). Fix: move to an observable read by `ResumeScroll` only. (Dirty file - coordinate.)
+3. `PaintedUsernameSkia.tsx` is **entirely uncompiled** - a vestigial `react-hooks/exhaustive-deps` disable makes the compiler skip the live paint renderer. Deleting the disable likely restores compilation.
+4. Double paint subscription per painted row (`UserChatBody` + `PaintedUsername` subscribe the same two nodes); `UserChatBody` only needs a boolean that `hasUserPaint()` already provides imperatively.
+5. Per-row `usePreference('sharedChatEnabled')` - one global boolean subscribed per mounted row; belongs in `displayFlags`.
+6. `MentionSpan` subscribes to a global revision counter - every visible mention span re-renders per resolution batch; per-login observables would scope it.
+7. **Correctness find**: the compiler freezes `canModerateChat` at mount value (`useChatSurface.ts:116`) because `getUserState` is a stable `useCallback([])` read during render - pre-compiler this self-healed per render. Needs a reactive userstate read.
+8. Legend State round 3 candidate confirmed by the scan: `useSelector` disposes + re-subscribes every listener on every render (22 nodes per `Chat` render via `useChatRenderPreferences`) - the library-audit finding 5 patch is the systemic fix.
+
+**JS hot-path scan** (remaining verified worklist beyond the landed micro-batch): `parseIrcTags` builds a dictionary-mode object + ~40 transient strings per line (whitelist parse fix); `parseIrcMessage` makes 5-6 whole-line tail copies and re-scans offsets `isPrivmsgLine` found; six whole-message clones remain between line and store (single-owner mutation would collapse them); `createUserStateFromTags` copies all tags again and writes empty `reply-parent-*` on 99% of messages; `findBadges` result uncached per repeat poster (memoize on `(badges-raw, user-id)` + badge-array identities with entitlement invalidation - the earlier skip was about a naive cache; the scan sketched a sound one); `getCurrentEmoteData` allocates a 16-field object + 3 peeks per message (cache per channel/prefs revision); `shiftMessageIndexes` rewrites both index Maps per flush at full window (`windowBaseOffset` fix); the parse cache key concatenates a ~200-char string per message (two-level map fix); mention haptics fallback reconstructs and regex-splits full text per live message.
+
+## Assessment: native view owning chat + livestream (state + data fetching)
+
+Requested this session. Short answer: **not as a first move; the JS pipeline is not the proven bottleneck yet, and the escalation path is incremental, not a rewrite.**
+
+- The measured hot costs this session were all JS-side and fixable in place (ingest object churn, library diffing, cache misses) - a native rewrite would have bought none of these wins any cheaper.
+- The genuinely native-bound ceiling is per-row cost: F3 (design-system `Text` at `_c(79)` with recursive style-array walks), F6's host-side flatten, and the never-counted shadow-node census. The campaign's own escalation ladder for that is: flatten wrappers → collapse text runs → inline images in one `Text` → **a native Fabric chat-row component taking a flat serialized message descriptor**. That last step captures most of the render-side win while React still owns the list, state, and data - it is measurable, revertible, and doesn't fork the app.
+- A native view that also owns **state + data fetching** means reimplementing, natively and twice (Swift + Kotlin): IRC + EventSub + 7TV EventAPI clients, emote/badge/cosmetics resolution (the entire `emoteProcessor`/`scanChatBody`/identity layer), moderation, filters, preferences plumbing, and the overlay/sheet integration - all of which currently share one tested TS implementation (10k tests) and carry hard-won invariants (identity single-source, cache seams, memory-pressure behavior). The repo's history is explicit about how this class of bet ends here: the Nitro renderer was removed (its removal was the perf win), the threaded-chat runtime POC is blocked on Firebase linking, worklets bundleMode black-screened a release, and Android is structurally untestable in jest today - a native chat brings a second untested platform surface to the exact code that changes most often.
+- The livestream player is already native-hosted (WKWebView/WebView with a bridge); its costs are compositing and process behavior, not JS view hierarchy.
+
+Recommendation: spend the native budget on (a) the shadow-node census + native Fabric **row** (not surface) if the census confirms Fabric dominance, and (b) the Android animation driver - both attack native-side costs without giving up the shared TS brain. Revisit a fuller native chat surface only if a release-build device profile shows Fabric commit/layout still dominating after F1/F3/F5 land.
+
+## Whole-app leg (late evening): build, profiles, startup fixes
+
+- **Native build**: `expo run:ios` (DISABLE_RNREPO, DISABLE_EAS_BUILD_CACHE) built and installed a fresh dev client on the iOS 26.1 sim; Metro serving today's JS (4,789 modules, 1.4s cached bundle).
+- **Cold-start native profile** (`sample` over a 10.8s launch window, dev build): largest non-idle costs are Swift protocol-conformance scanning (~1,900 samples - the Expo Modules registry walking every dylib) and dyld linking (~1,100). Hermes lexer/compile samples are dev-only (release ships bytecode). Real startup work is therefore native-init-bound, not JS-bound, once bytecode ships.
+- **Chat harness on the fresh build**: raid js-fps 27 -> 31, dropped 53% -> 45% vs the earlier same-day run (single dev-mode runs, directional); steady60 within noise; HUD memory 2.6G -> 2.0G. Sample profile shape unchanged: JS interpretation + animated WebP decode dominate.
+- **Startup fixes landed** (`c2f6b211`, from the 10-item startup audit): entry route no longer imports Skia + a module-scope SkSL compile just to read the onboarding flag; Sentry envelope cache sweep (sync stat-per-file walk) deferred off the pre-render path; connectivity polling arms after boot interactions instead of at module eval; shake detector subscribes after interactions at 150ms instead of 80ms.
+- **Startup worklist remaining** (ranked in the audit, all with fix sketches): Sentry init/replay deferral (#3), Firebase remote-config module-scope native calls (#4), preferences zod schema laziness (#6), i18n partial bundles (#7), iOS native font embed (#8 - config + dirty RootLayoutShell + rebuild), first-screen query waterfall (#10 - the prefetch half lives in the off-limits auth file), chatStore hydration timing + emoji build on chat-open path, offThreadJson worklet-runtime spawn on first API response, DeferUntilFocused evaluating 68 modules for unfocused tabs, module-scope Intl constructors.
