@@ -30,6 +30,21 @@ export function buildTwitchLiveSyncScript(options: {
     );
   }
 
+  // Android plays the embed through MSE, where a live seekable range ends at a
+  // 2^30 sentinel rather than the live edge. Only the buffered range names a
+  // position the element can actually play, so it caps the seek.
+  function getLiveEdge(video) {
+    var buffered = video.buffered;
+    if (!buffered || buffered.length === 0) {
+      return NaN;
+    }
+    var seekable = video.seekable;
+    var seekableEnd = seekable && seekable.length > 0
+      ? seekable.end(seekable.length - 1)
+      : Infinity;
+    return Math.min(seekableEnd, buffered.end(buffered.length - 1));
+  }
+
   // Seek to the live edge once; no-op if within target or during an ad.
   window.__foamSyncToLive = function() {
     if (isAdActive()) {
@@ -41,14 +56,13 @@ export function buildTwitchLiveSyncScript(options: {
       post('trace', { step: 'livesync', detail: 'no video element' });
       return false;
     }
-    var seekable = video.seekable;
-    if (!seekable || seekable.length === 0) {
-      // Low-latency live can expose no seekable range — can't seek.
-      post('trace', { step: 'livesync', detail: 'no seekable range' });
+
+    var liveEdge = getLiveEdge(video);
+    if (!isFinite(liveEdge)) {
+      post('trace', { step: 'livesync', detail: 'no live edge' });
       return false;
     }
 
-    var liveEdge = seekable.end(seekable.length - 1);
     var drift = liveEdge - video.currentTime;
     // Report drift: a small one means server-side latency no seek can cut.
     post('trace', {
@@ -73,7 +87,7 @@ export function buildTwitchLiveSyncScript(options: {
     attempts += 1;
     if (!isAdActive()) {
       var video = document.querySelector('video');
-      if (video && !video.paused && video.seekable && video.seekable.length > 0) {
+      if (video && !video.paused && isFinite(getLiveEdge(video))) {
         window.__foamSyncToLive();
         return;
       }
