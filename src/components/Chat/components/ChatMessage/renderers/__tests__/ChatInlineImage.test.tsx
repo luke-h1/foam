@@ -380,110 +380,6 @@ describe('ChatInlineImage loading shimmer', () => {
 
     expect(screen.queryByTestId('chat-image-shimmer')).not.toBeOnTheScreen();
   });
-
-  test('showLoadingShimmer=false suppresses the overlay on an uncached load', () => {
-    mockSharedRef = null;
-    render(
-      <ChatInlineImage
-        sourceUrl='https://static-cdn.jtvnw.net/badges/v1/foo/1'
-        style={{}}
-        showLoadingShimmer={false}
-      />,
-    );
-
-    expect(screen.queryByTestId('chat-image-shimmer')).not.toBeOnTheScreen();
-  });
-});
-
-describe('ChatInlineImage maxRetryAttempts', () => {
-  beforeEach(() => {
-    mockSharedRef = null;
-    mockImageProps = null;
-    jest.useFakeTimers();
-  });
-  afterEach(() => {
-    jest.useRealTimers();
-    jest.clearAllMocks();
-  });
-
-  test('maxRetryAttempts=0 fails immediately on a single-url source without any backoff retry', () => {
-    const sourceUrl = 'https://static-cdn.jtvnw.net/badges/v1/foo/1';
-    render(
-      <ChatInlineImage sourceUrl={sourceUrl} style={{}} maxRetryAttempts={0} />,
-    );
-
-    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
-
-    act(() => mockImageProps?.onError?.());
-
-    // No timer was scheduled - advancing time doesn't bump the reload nonce.
-    act(() => jest.advanceTimersByTime(60_000));
-    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
-
-    // The warning fires immediately because retries are disabled.
-    expect(warnMock).toHaveBeenCalledTimes(1);
-    expect(warnMock.mock.calls[0]?.[0]).toEqual('chat.emote.load_failed');
-  });
-});
-
-describe('ChatInlineImage collapseWhenFailed', () => {
-  beforeEach(() => {
-    mockSharedRef = null;
-    mockImageProps = null;
-  });
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  test('renders nothing once a dead url is given up on, so the slot reserves no width', () => {
-    render(
-      <ChatInlineImage
-        collapseWhenFailed
-        maxRetryAttempts={0}
-        showLoadingShimmer={false}
-        sourceUrl='https://static-cdn.jtvnw.net/badges/v1/dead/1'
-        style={{ height: 18, marginRight: 4, width: 18 }}
-        testID='chat-badge'
-      />,
-    );
-
-    expect(screen.getByTestId('chat-badge')).toBeOnTheScreen();
-
-    act(() => mockImageProps?.onError?.());
-
-    expect(screen.queryByTestId('chat-badge')).not.toBeOnTheScreen();
-  });
-
-  test('keeps the box while the url is still loading', () => {
-    render(
-      <ChatInlineImage
-        collapseWhenFailed
-        maxRetryAttempts={0}
-        showLoadingShimmer={false}
-        sourceUrl='https://static-cdn.jtvnw.net/badges/v1/slow/1'
-        style={{ height: 18, width: 18 }}
-        testID='chat-badge'
-      />,
-    );
-
-    expect(screen.getByTestId('chat-badge')).toBeOnTheScreen();
-  });
-
-  test('keeps the sized box when the flag is absent', () => {
-    render(
-      <ChatInlineImage
-        maxRetryAttempts={0}
-        showLoadingShimmer={false}
-        sourceUrl='https://static-cdn.jtvnw.net/badges/v1/dead/1'
-        style={{ height: 18, width: 18 }}
-        testID='chat-badge'
-      />,
-    );
-
-    act(() => mockImageProps?.onError?.());
-
-    expect(screen.getByTestId('chat-badge')).toBeOnTheScreen();
-  });
 });
 
 describe('ChatInlineImage load watchdog', () => {
@@ -558,12 +454,10 @@ describe('ChatInlineImage shared-ref recovery', () => {
     expect(evictMock).not.toHaveBeenCalled();
   });
 
-  test('a ref failure hands off to the uri rather than exhausting a badge budget', () => {
+  test('a ref failure hands off to the uri without spending the retry budget', () => {
     mockSharedRef = { isAnimated: false };
     const sourceUrl = 'https://static-cdn.jtvnw.net/badges/v1/foo/3';
-    render(
-      <ChatInlineImage sourceUrl={sourceUrl} style={{}} maxRetryAttempts={0} />,
-    );
+    render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
     act(() => mockImageProps?.onError?.());
 
@@ -574,9 +468,7 @@ describe('ChatInlineImage shared-ref recovery', () => {
   test('a displayed ref is left alone by the watchdog and by stray errors', () => {
     mockSharedRef = { isAnimated: false };
     const sourceUrl = 'https://static-cdn.jtvnw.net/badges/v1/quiet/3';
-    render(
-      <ChatInlineImage sourceUrl={sourceUrl} style={{}} maxRetryAttempts={0} />,
-    );
+    render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
     act(() => mockImageProps?.onDisplay?.());
     act(() => jest.advanceTimersByTime(60_000));
@@ -592,9 +484,7 @@ describe('ChatInlineImage shared-ref recovery', () => {
   test('a ref that never draws is watchdogged onto the uri fallback', () => {
     mockSharedRef = { isAnimated: false };
     const sourceUrl = 'https://static-cdn.jtvnw.net/badges/v1/silent/3';
-    render(
-      <ChatInlineImage sourceUrl={sourceUrl} style={{}} maxRetryAttempts={0} />,
-    );
+    render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
     expect(mockImageProps?.source).toEqual(mockSharedRef);
 
@@ -607,7 +497,7 @@ describe('ChatInlineImage shared-ref recovery', () => {
     mockSharedRef = { isAnimated: false };
     const sourceUrl = 'https://static-cdn.jtvnw.net/badges/v1/comeback/3';
     const { rerender } = render(
-      <ChatInlineImage sourceUrl={sourceUrl} style={{}} maxRetryAttempts={0} />,
+      <ChatInlineImage sourceUrl={sourceUrl} style={{}} />,
     );
     act(() => mockImageProps?.onDisplay?.());
 
@@ -615,12 +505,9 @@ describe('ChatInlineImage shared-ref recovery', () => {
       <ChatInlineImage
         sourceUrl='https://static-cdn.jtvnw.net/badges/v1/detour/3'
         style={{}}
-        maxRetryAttempts={0}
       />,
     );
-    rerender(
-      <ChatInlineImage sourceUrl={sourceUrl} style={{}} maxRetryAttempts={0} />,
-    );
+    rerender(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
     // The still-cached ref instance matches the first mount's marker, but it
     // has not drawn since the recycle - the watchdog must still cover it.
@@ -633,7 +520,7 @@ describe('ChatInlineImage shared-ref recovery', () => {
     mockSharedRef = { isAnimated: false };
     const bannedUrl = 'https://static-cdn.jtvnw.net/badges/v1/banned/3';
     const { rerender } = render(
-      <ChatInlineImage sourceUrl={bannedUrl} style={{}} maxRetryAttempts={0} />,
+      <ChatInlineImage sourceUrl={bannedUrl} style={{}} />,
     );
     act(() => mockImageProps?.onError?.());
     expect(mockImageProps?.source).toEqual({ uri: bannedUrl });
@@ -642,12 +529,9 @@ describe('ChatInlineImage shared-ref recovery', () => {
       <ChatInlineImage
         sourceUrl='https://static-cdn.jtvnw.net/badges/v1/other/3'
         style={{}}
-        maxRetryAttempts={0}
       />,
     );
-    rerender(
-      <ChatInlineImage sourceUrl={bannedUrl} style={{}} maxRetryAttempts={0} />,
-    );
+    rerender(<ChatInlineImage sourceUrl={bannedUrl} style={{}} />);
 
     expect(mockImageProps?.source).toEqual(mockSharedRef);
   });

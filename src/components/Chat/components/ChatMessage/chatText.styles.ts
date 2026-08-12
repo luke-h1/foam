@@ -16,8 +16,8 @@ import {
 } from './chatScale';
 
 export interface ChatTextStyles {
-  badge: ImageStyle;
-  badgeTintArtwork: ImageStyle;
+  badgeArtwork: ImageStyle;
+  badgeSlot: ViewStyle;
   badgeTintSlot: ViewStyle;
   body: TextStyle;
   /**
@@ -55,13 +55,13 @@ function buildChatTextStyles(
   };
 
   return StyleSheet.create<ChatTextStyles>({
-    badge: {
+    badgeArtwork: {
       height: scale.badgeSize,
-      marginRight: scale.badgeGap,
       width: scale.badgeSize,
     },
-    badgeTintArtwork: {
+    badgeSlot: {
       height: scale.badgeSize,
+      marginRight: scale.badgeGap,
       width: scale.badgeSize,
     },
     badgeTintSlot: {

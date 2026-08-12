@@ -60,33 +60,8 @@ const LOAD_WATCHDOG_MS = 12000;
 
 interface ChatInlineImageProps {
   containerStyle?: StyleProp<ViewStyle>;
-  /**
-   * Max backoff-retry attempts after the whole fallback chain is exhausted.
-   * Defaults to {@link MAX_RELOAD_ATTEMPTS} for emote URLs whose CDN variants
-   * routinely have transient flakiness worth riding out. Callers rendering
-   * assets with stable, single-URL sources (e.g. badges) can pass `0` to fail
-   * immediately and stop the ~36s of on-screen "loading" state that a dead URL
-   * would otherwise produce.
-   */
-  maxRetryAttempts?: number;
   priority?: 'low' | 'normal' | 'high';
   resizeMode?: 'contain' | 'cover' | 'stretch';
-  /**
-   * When `true`, a dead url renders nothing rather than an empty box of
-   * `style`'s size. Use for assets laid out inline beside text (badges), where
-   * a slot that draws nothing reads as a hole in the row.
-   *
-   * @default false
-   */
-  collapseWhenFailed?: boolean;
-  /**
-   * When `false`, no shimmer is rendered while the image is loading — the slot
-   * just stays empty until the image resolves or is given up on. Use for tiny
-   * assets (badges) where a pulsing box is more distracting than helpful.
-   *
-   * @default true
-   */
-  showLoadingShimmer?: boolean;
   sourceUrl: string;
   style: StyleProp<ImageStyle>;
   testID?: string;
@@ -95,12 +70,9 @@ interface ChatInlineImageProps {
 
 // eslint-disable-next-line react-doctor/no-giant-component -- one recycling-aware load state machine; a split adds a mount boundary on the hottest chat path
 function ChatInlineImageComponent({
-  collapseWhenFailed = false,
   containerStyle,
-  maxRetryAttempts = MAX_RELOAD_ATTEMPTS,
   priority = 'high',
   resizeMode = 'contain',
-  showLoadingShimmer = true,
   sourceUrl,
   style,
   testID,
@@ -199,10 +171,7 @@ function ChatInlineImageComponent({
         }
         // Otherwise the ref never drew, which says nothing about the url: it
         // has not been tried at all yet, so hand off to the fallback chain
-        // from the top with a full budget rather than spending it here. A
-        // badge url derives no variants, so under `maxRetryAttempts: 0` the
-        // shared give-up branch below would otherwise log a load failure the
-        // network never saw.
+        // from the top with a full budget rather than spending it here.
         setFailedRefUrl(sourceUrl);
         retryCountRef.current = 0;
         setLoad({ index: 0, status: 'loading', url: sourceUrl, viaRef: false });
@@ -235,7 +204,7 @@ function ChatInlineImageComponent({
 
       // Every format/size has 404'd. Patiently backoff-retry the smallest
       // candidate — the one most likely to exist — to ride out a transient blip.
-      if (retryCountRef.current >= maxRetryAttempts) {
+      if (retryCountRef.current >= MAX_RELOAD_ATTEMPTS) {
         const descriptor = describeEmoteUrl(candidateUrl);
         const cache = getCachedEmoteStats();
         logger.chat.warn('chat.emote.load_failed', {
@@ -287,7 +256,6 @@ function ChatInlineImageComponent({
       candidateIndex,
       candidateUrl,
       fallbackChain,
-      maxRetryAttempts,
       sharedRef,
       showRef,
       sourceUrl,
@@ -344,16 +312,12 @@ function ChatInlineImageComponent({
     };
   }, [rowVisibility, animated]);
 
-  if (collapseWhenFailed && status === 'failed') {
-    return null;
-  }
-
   // Show the shimmer only while there's nothing real to display yet. Keyed off
   // showRef so a ref we hold but can't draw (it failed, or the cache released it
   // under us) still gets a loading box; a ref we are drawing is instant, so
   // cached emotes (the busy-chat common case) never shimmer and stay on the
   // bare-image fast path with no extra Fabric node.
-  const overlayVisible = showLoadingShimmer && !showRef && status !== 'loaded';
+  const overlayVisible = !showRef && status !== 'loaded';
 
   // Render the decoded sharedRef whenever it's available and hasn't failed to
   // display; otherwise render the current fallback variant's uri.

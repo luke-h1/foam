@@ -755,6 +755,21 @@ export const setUserBadge = (ttvUserId: string, badgeId: string): void => {
   scheduleCosmeticsPersist('bindings');
 };
 
+/**
+ * A 7TV badge's artwork url is derivable from its id alone, so an entitlement
+ * whose `cosmetic.create` has not arrived (or never will) still renders. Only
+ * the title comes from the definition, which is why this stays a fallback
+ * rather than the primary path - and why the id is still reported as missing.
+ */
+const synthesiseSevenTvBadge = (badgeId: string): SanitisedBadgeSet => ({
+  id: badgeId,
+  url: buildSevenTvBadgeImageUrl(badgeId),
+  type: '7TV Badge',
+  title: '7TV Badge',
+  set: badgeId,
+  provider: '7tv',
+});
+
 export const getUserBadge = (
   ttvUserId: string,
 ): SanitisedBadgeSet | undefined => {
@@ -768,7 +783,7 @@ export const getUserBadge = (
   }
 
   reportMissingBadge(badgeId, ttvUserId);
-  return undefined;
+  return synthesiseSevenTvBadge(badgeId);
 };
 
 export const getUserBadgeId = (ttvUserId: string): string | undefined =>

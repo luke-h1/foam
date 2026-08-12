@@ -137,19 +137,26 @@ describe('getUserBadge', () => {
     expect(mockReportMissingBadge).not.toHaveBeenCalled();
   });
 
-  test('returns undefined and tracks the missing definition when bound but not loaded', () => {
+  test('derives the badge from its id when bound but not loaded, and tracks it', () => {
     mockChatStore.userBadgeIds['ttv-scummy'] = {
       peek: jest.fn(() => '01GAF994D8000E8VNG1S1RMTBC'),
       set: jest.fn(),
     };
 
-    expect(getUserBadge('ttv-scummy')).toBeUndefined();
+    expect(getUserBadge('ttv-scummy')).toEqual<SanitisedBadgeSet>({
+      id: '01GAF994D8000E8VNG1S1RMTBC',
+      url: 'https://cdn.7tv.app/badge/01GAF994D8000E8VNG1S1RMTBC/4x.webp',
+      type: '7TV Badge',
+      title: '7TV Badge',
+      set: '01GAF994D8000E8VNG1S1RMTBC',
+      provider: '7tv',
+    });
     expect(mockReportMissingBadge.mock.calls).toEqual([
       ['01GAF994D8000E8VNG1S1RMTBC', 'ttv-scummy'],
     ]);
   });
 
-  test('returns undefined when the stored definition has an empty url', () => {
+  test('derives the badge from its id when the stored definition has an empty url', () => {
     mockChatStore.userBadgeIds['ttv-1'] = {
       peek: jest.fn(() => 'badge-1'),
       set: jest.fn(),
@@ -166,7 +173,14 @@ describe('getUserBadge', () => {
       set: jest.fn(),
     };
 
-    expect(getUserBadge('ttv-1')).toBeUndefined();
+    expect(getUserBadge('ttv-1')).toEqual<SanitisedBadgeSet>({
+      id: 'badge-1',
+      url: 'https://cdn.7tv.app/badge/badge-1/4x.webp',
+      type: '7TV Badge',
+      title: '7TV Badge',
+      set: 'badge-1',
+      provider: '7tv',
+    });
     expect(mockReportMissingBadge.mock.calls).toEqual([['badge-1', 'ttv-1']]);
   });
 });

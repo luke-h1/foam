@@ -3,11 +3,8 @@ import type { ReactNode } from 'react';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { normalizeSevenTvBadge } from '@app/utils/seventv/cosmetics/normalizeSevenTvBadge';
 
-import { ChatMessagePressable } from '../ChatMessagePressable';
 import type { ChatFontScale } from '../chatScale';
-import { getChatTextStyles } from '../chatText.styles';
-import { styles } from '../RichChatMessage.styles';
-import { ChatInlineImage } from './ChatInlineImage';
+import { ChatBadge } from './ChatBadge';
 
 interface ChatMessageBadgesProps {
   badges?: SanitisedBadgeSet[];
@@ -28,39 +25,24 @@ export function ChatMessageBadges({
     return null;
   }
 
-  const textStyles = getChatTextStyles(fontScale, compact);
-
+  const isModerated = Boolean(moderationNotice);
   const renderedBadges: ReactNode[] = [];
+
   for (const badge of badges) {
     const normalizedBadge = normalizeSevenTvBadge(badge);
     if (!normalizedBadge.url?.trim()) {
       continue;
     }
 
-    const tint = normalizedBadge.color;
-    const moderated = Boolean(moderationNotice) && styles.moderatedBadge;
-
     renderedBadges.push(
-      <ChatMessagePressable
-        key={`${renderedBadges.length}\u001f${normalizedBadge.set}\u001f${normalizedBadge.id}\u001f${normalizedBadge.type}\u001f${normalizedBadge.url}`}
-        onPress={onBadgePress ? () => onBadgePress(normalizedBadge) : undefined}
-        style={
-          tint
-            ? [textStyles.badgeTintSlot, { backgroundColor: tint }, moderated]
-            : undefined
-        }
-        testID='chat-badge'
-      >
-        <ChatInlineImage
-          sourceUrl={normalizedBadge.url}
-          style={
-            tint ? textStyles.badgeTintArtwork : [textStyles.badge, moderated]
-          }
-          collapseWhenFailed
-          maxRetryAttempts={0}
-          showLoadingShimmer={false}
-        />
-      </ChatMessagePressable>,
+      <ChatBadge
+        key={`${renderedBadges.length}\u001f${normalizedBadge.provider}\u001f${normalizedBadge.set}\u001f${normalizedBadge.id}\u001f${normalizedBadge.url}`}
+        badge={normalizedBadge}
+        compact={compact}
+        fontScale={fontScale}
+        isModerated={isModerated}
+        onPress={onBadgePress}
+      />,
     );
   }
 
