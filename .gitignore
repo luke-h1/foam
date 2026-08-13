@@ -74,6 +74,7 @@ xcuserdata
 # test
 coverage
 .jest-cache
+.cache
 .reassure
 
 # ESLint

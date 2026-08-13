@@ -22,3 +22,4 @@ player-website/.astro
 player-website/dist
 src/graphql/generated
 docs/profiles
+.cache
