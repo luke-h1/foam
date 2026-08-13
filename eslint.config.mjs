@@ -69,6 +69,7 @@ export default tseslint.config(
       '**/scripts/**',
       '**/coverage/**',
       '.jest-cache/**',
+      '.cache/**',
       '.expo/**',
       '.storybook/storybook.requires.ts',
       'android/**',

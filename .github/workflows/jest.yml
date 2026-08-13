@@ -8,11 +8,15 @@ concurrency:
 
 jobs:
   jest:
-    name: Jest
+    name: Jest ${{ matrix.shard }}/3
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     steps:
       - name: 🏗 Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -25,4 +29,4 @@ jobs:
           node: 'true'
 
       - name: 🎭 Run Jest
-        run: bun run test -- --maxWorkers=100%
+        run: bun run test -- --maxWorkers=100% --shard=${{ matrix.shard }}/3
