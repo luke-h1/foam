@@ -1,5 +1,83 @@
 # Changelog
 
+## 1.0.8 (Production)
+
+### 🐛 Bug Fixes
+
+- **player:** Stop the live-sync seek freezing video on android ([#868](https://github.com/lhowsam/foam/issues/868))
+- **app:** Empty badge patching
+- **app:** Size the auth sheet to its content and align hosted form rows ([#874](https://github.com/lhowsam/foam/issues/874))
+
+### 👷 CI/CD
+
+- Drop the OTA compat check and cut redundant workflow runs ([#867](https://github.com/lhowsam/foam/issues/867))
+- Speed up checks and cache the native build's downloads ([#869](https://github.com/lhowsam/foam/issues/869))
+
+### 🔧 Miscellaneous Tasks
+
+- **infrastructure:** Reduce ci mins
+- **infrastructure:** Bump actions/cache from 4.3.0 to 6.1.0 ([#871](https://github.com/lhowsam/foam/issues/871))
+
+## 1.0.7 (Production)
+
+### ⏪ Reverted
+
+- **app:** Back out ios native-feel overhaul ([#819](https://github.com/lhowsam/foam/issues/819)) ([#822](https://github.com/lhowsam/foam/issues/822))
+
+### ♻️ Refactor
+
+- **images:** One url decision, dead machinery removed, sealed cache seams ([#854](https://github.com/lhowsam/foam/issues/854))
+- **store:** Halve the persisted chat blob, hoist globals, session-scope hot writes ([#855](https://github.com/lhowsam/foam/issues/855))
+- **chat:** One enrichment owner, single-writer cosmetics, modules out of hooks ([#856](https://github.com/lhowsam/foam/issues/856))
+- **chat:** Commit-path perf campaign, architecture deepening, one emote pipeline ([#864](https://github.com/lhowsam/foam/issues/864))
+
+### ⚡ Performance
+
+- **chat:** Delete dead list-path work, cache badge normalisation, fix sim perf harness ([#849](https://github.com/lhowsam/foam/issues/849))
+
+### ✨ Features
+
+- **app:** Ios native-feel overhaul ([#819](https://github.com/lhowsam/foam/issues/819))
+- **chat:** Dev-gated debug details in user, emote and badge sheets ([#851](https://github.com/lhowsam/foam/issues/851))
+- **app:** Syncronize emote frames ([#857](https://github.com/lhowsam/foam/issues/857))
+
+### 🐛 Bug Fixes
+
+- **emotes:** Restore expo-image webp codec patch ([#820](https://github.com/lhowsam/foam/issues/820))
+- **app:** Dedupe react-native-screens and restore ios native-feel overhaul ([#823](https://github.com/lhowsam/foam/issues/823))
+- **app:** Disable synchronous screens updates and freeze, stop shipping cached js in release builds ([#824](https://github.com/lhowsam/foam/issues/824))
+- **settings:** Make full row tappable in ios form navigation rows ([#827](https://github.com/lhowsam/foam/issues/827))
+- **chat:** 1.0.7 prep - restore the 2x emote floor, delete the dead height estimator, unify the chat scale ([#832](https://github.com/lhowsam/foam/issues/832))
+- **app:** Move bench perf fixture back out of **tests** ([#833](https://github.com/lhowsam/foam/issues/833))
+- **chat:** Black emote sheet, stop the load freeze, unfreeze the emotes ([#834](https://github.com/lhowsam/foam/issues/834))
+- **chat:** Stop animated emotes decoding through dav1d and animating unpaused ([#836](https://github.com/lhowsam/foam/issues/836))
+- **chat:** Make refresh drop every cache and put the chat sheets back to custom + black ([#837](https://github.com/lhowsam/foam/issues/837))
+- **chat:** Stop blank chat rows when the emote cache drops a ref under a mounted row ([#838](https://github.com/lhowsam/foam/issues/838))
+- **chat:** Stop badges rendering as blank slots, keep campaign badge sets, paint ffz badges ([#839](https://github.com/lhowsam/foam/issues/839))
+- **sentry:** Keep warns as structured logs, revert badge tint and ref watchdog ([#840](https://github.com/lhowsam/foam/issues/840))
+- **chat:** Stop emote messages leaving blank gaps on the flex-wrap path ([#841](https://github.com/lhowsam/foam/issues/841))
+- **cosmetics:** Keep 7tv paints on usernames while chat scrolls ([#847](https://github.com/lhowsam/foam/issues/847))
+- **chat:** Stop dead badges and transparent paints leaving blank slots ([#848](https://github.com/lhowsam/foam/issues/848))
+- **chat:** Make badge render keys collision-proof ([#850](https://github.com/lhowsam/foam/issues/850))
+- **chat:** Match the reply header icon to the reference rendering ([#852](https://github.com/lhowsam/foam/issues/852))
+- **chat:** Stop blank emote and badge slots under memory pressure ([#853](https://github.com/lhowsam/foam/issues/853))
+- **chat:** Patch legend list 3.3.3 render range to stop the blank spacing holes ([#860](https://github.com/lhowsam/foam/issues/860))
+- **player:** Resume and re-attach the player when the app comes back ([#861](https://github.com/lhowsam/foam/issues/861))
+- **chat:** Bucket chat row item types by content width so the size average stops opening holes ([#862](https://github.com/lhowsam/foam/issues/862))
+- **chat:** Render every usernotice and stop the pipeline dropping messages ([#863](https://github.com/lhowsam/foam/issues/863))
+
+### 👷 CI/CD
+
+- Run the PR checks locally and gate merges on gh signoff ([#865](https://github.com/lhowsam/foam/issues/865))
+
+### 🔧 Miscellaneous Tasks
+
+- **infrastructure:** Make self-hosted runner opt-in for deploys ([#821](https://github.com/lhowsam/foam/issues/821))
+- **infrastructure:** Bump expo/expo-github-action/preview from 8.2.1 to 9.0.0 ([#845](https://github.com/lhowsam/foam/issues/845))
+- **infrastructure:** Bump actions/setup-java from 5.6.0 to 5.7.0 ([#843](https://github.com/lhowsam/foam/issues/843))
+- **infrastructure:** Bump 1password/load-secrets-action from 4.0.0 to 5.0.0 ([#842](https://github.com/lhowsam/foam/issues/842))
+- **app:** Update legend list ([#846](https://github.com/lhowsam/foam/issues/846))
+
 ## 1.0.6 (Production)
 
 ### ✨ Features
