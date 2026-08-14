@@ -10,6 +10,7 @@ import {
 import { type AuthSessionResult, TokenResponse } from 'expo-auth-session';
 
 import { Text } from '@app/components/ui/Text/Text';
+import { queryClient } from '@app/lib/react-query/query-client';
 import { twitchApi as _twitchApi } from '@app/services/api/clients';
 import { twitchService as _twitchService } from '@app/services/twitch-service';
 import type { DefaultTokenResponse } from '@app/types/twitch/auth';
@@ -842,6 +843,38 @@ describe('AuthContext', () => {
         );
         expect(screen.getByText('Anon')).toBeOnTheScreen();
       });
+    });
+  });
+
+  describe('logout', () => {
+    test('drops the query cache instead of refetching it token-less', async () => {
+      const cancelQueries = jest.spyOn(queryClient, 'cancelQueries');
+      const removeQueries = jest.spyOn(queryClient, 'removeQueries');
+      const invalidateQueries = jest.spyOn(queryClient, 'invalidateQueries');
+      const resetQueries = jest.spyOn(queryClient, 'resetQueries');
+
+      SecureStore.getItemAsync.mockResolvedValue(null);
+      twitchService.getDefaultToken.mockResolvedValue({
+        access_token: 'anon',
+        expires_in: 3600,
+        token_type: 'bearer',
+      });
+
+      const { result } = renderHook(() => useAuthContext(), {
+        wrapper,
+        initialProps,
+      });
+
+      await waitFor(() => expect(result.current.ready).toBe(true));
+
+      await act(async () => {
+        await result.current.logout();
+      });
+
+      expect(cancelQueries).toHaveBeenCalledTimes(1);
+      expect(removeQueries).toHaveBeenCalledTimes(1);
+      expect(invalidateQueries).not.toHaveBeenCalled();
+      expect(resetQueries).not.toHaveBeenCalled();
     });
   });
 });

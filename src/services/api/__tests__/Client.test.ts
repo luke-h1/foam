@@ -173,6 +173,29 @@ describe('createApiClient', () => {
     expect(requestInit.headers.Authorization).toBe('Bearer anon-token');
   });
 
+  test('requiresAuth re-arms the gate after removeAuthToken', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ data: [] }));
+    const client = createApiClient({
+      baseURL: 'https://api.test/helix',
+      requiresAuth: true,
+    });
+    client.setAuthToken('user-token');
+    client.removeAuthToken();
+
+    const pending = client.get('/channels/followed');
+    await Promise.resolve();
+    expect(mockFetch).not.toHaveBeenCalled();
+
+    client.setAuthToken('anon-token');
+    await expect(pending).resolves.toEqual({ data: [] });
+
+    const [, requestInit] = mockFetch.mock.calls[0] as [
+      string,
+      { headers: Record<string, string> },
+    ];
+    expect(requestInit.headers.Authorization).toBe('Bearer anon-token');
+  });
+
   test('requiresAuth does not defer when an explicit Authorization header is set', async () => {
     jest.useFakeTimers();
     mockFetch.mockResolvedValueOnce(jsonResponse({ data: [] }));

@@ -1,6 +1,5 @@
 import { SystemBars } from 'react-native-edge-to-edge';
 
-import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
 
 import { ForceUpdateModal } from '@app/components/ForceUpdateModal/ForceUpdateModal';
@@ -66,12 +65,10 @@ export function RootLayoutNav() {
             options={{
               presentation: 'formSheet',
               sheetGrabberVisible: true,
-              sheetAllowedDetents: [0.85],
+              sheetAllowedDetents: 'fitToContents',
               sheetCornerRadius: theme.borderRadius28,
               contentStyle: {
-                backgroundColor: isLiquidGlassAvailable()
-                  ? theme.color.transparent.dark
-                  : theme.color.background.dark,
+                backgroundColor: theme.color.background.dark,
               },
             }}
           />

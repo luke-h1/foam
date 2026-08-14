@@ -638,11 +638,9 @@ function useAuthContextValue({
     setState({ ready: true });
     setUser(undefined);
     twitchApi.removeAuthToken();
-    await Promise.all([
-      queryClient.invalidateQueries(),
-      queryClient.resetQueries(),
-      doAnonAuthRef.current(),
-    ]);
+    await queryClient.cancelQueries();
+    queryClient.removeQueries();
+    await doAnonAuthRef.current();
   }, [doAnonAuthRef]);
 
   const contextState: AuthContextState = useMemo(

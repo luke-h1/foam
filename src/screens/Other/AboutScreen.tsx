@@ -20,6 +20,7 @@ import {
 } from '@app/components/SettingsSection/SettingsSection';
 import { Text } from '@app/components/ui/Text/Text';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
+import { SWIFTUI_ROW_CONTENT_INSET } from '@app/styles/nativeForm';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 
@@ -37,7 +38,7 @@ export function AboutScreen() {
         <Form>
           <Section>
             <RNHostView matchContents>
-              <View style={styles.identityRow}>
+              <View style={[styles.identityRow, styles.hostedRowInset]}>
                 <Image source={appIconProduction} style={styles.appIcon} />
                 <View style={styles.identityText}>
                   <Text type='lg' weight='bold' numberOfLines={1}>
@@ -179,6 +180,9 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.color.background.dark,
     flex: 1,
+  },
+  hostedRowInset: {
+    paddingHorizontal: SWIFTUI_ROW_CONTENT_INSET,
   },
   identityRow: {
     alignItems: 'center',
