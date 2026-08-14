@@ -1,15 +1,15 @@
 name: Detect fingerprint changes
 on:
-# on:
-#   pull_request:
-#     types: [opened, synchronize, reopened, ready_for_review]
-#     paths-ignore:
-#       - 'src/**'
-#       - 'e2e/**'
-#       - 'docs/**'
-#       - '**/*.md'
-#       - '.claude/**'
-#       - '.rnstorybook/**'
+  # on:
+  #   pull_request:
+  #     types: [opened, synchronize, reopened, ready_for_review]
+  #     paths-ignore:
+  #       - 'src/**'
+  #       - 'e2e/**'
+  #       - 'docs/**'
+  #       - '**/*.md'
+  #       - '.claude/**'
+  #       - '.rnstorybook/**'
   workflow_dispatch:
 
 concurrency:

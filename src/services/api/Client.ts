@@ -78,11 +78,17 @@ export function createApiClient({
 }: ClientOptions) {
   let authToken: string | undefined;
   let resolveTokenReady: (() => void) | undefined;
-  let tokenReady: Promise<void> | undefined = requiresAuth
-    ? new Promise<void>(resolve => {
-        resolveTokenReady = resolve;
-      })
-    : undefined;
+
+  function armTokenReady() {
+    if (!requiresAuth) {
+      return undefined;
+    }
+    return new Promise<void>(resolve => {
+      resolveTokenReady = resolve;
+    });
+  }
+
+  let tokenReady = armTokenReady();
 
   function settleTokenReady() {
     resolveTokenReady?.();
@@ -323,6 +329,7 @@ export function createApiClient({
     },
     removeAuthToken: () => {
       authToken = undefined;
+      tokenReady ??= armTokenReady();
     },
     getAuthToken: () => authToken,
   };

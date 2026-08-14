@@ -15,6 +15,7 @@ import { Image } from '@app/components/Image/Image';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
+import { SWIFTUI_ROW_CONTENT_INSET } from '@app/styles/nativeForm';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 
@@ -227,9 +228,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: theme.space12,
-    // RNHostView content doesn't inherit the SwiftUI row's insets; match them.
     minHeight: 52,
-    paddingHorizontal: theme.space16,
+    paddingHorizontal: SWIFTUI_ROW_CONTENT_INSET,
     paddingVertical: theme.space8,
   },
   identityText: {
