@@ -238,6 +238,10 @@ function useAuthContextValue({
           };
       }
 
+      if (!result) {
+        throw new Error('getDefaultToken returned no token');
+      }
+
       if (!options?.force && authStateRef.current?.isLoggedIn) {
         return;
       }

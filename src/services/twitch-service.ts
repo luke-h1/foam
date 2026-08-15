@@ -407,7 +407,7 @@ export const twitchService = {
   /**
    * @returns a token for an anonymous user
    */
-  getDefaultToken: async (): Promise<DefaultTokenResponse> => {
+  getDefaultToken: async (): Promise<DefaultTokenResponse | undefined> => {
     const tokenUrl = isE2EMode
       ? `${mockServerUrl}/token`
       : `${authProxyBaseUrl}/token`;
@@ -415,17 +415,26 @@ export const twitchService = {
     const res = await fetch(tokenUrl, {
       headers: isE2EMode ? {} : { 'x-api-key': authProxyApiKey ?? '' },
     });
+
+    if (!res.ok) {
+      logger.auth.error('auth proxy returned non-OK response', {
+        status: res.status,
+      });
+      return undefined;
+    }
+
     const body = await parseJsonOnWorklet<{ data: DefaultTokenResponse }>(
       await res.text(),
     );
 
-    if (!body.data.access_token) {
+    if (!body?.data?.access_token) {
       logger.auth.error('no token received from auth lambda');
-    } else {
-      // Fresh proxy tokens may be issued under a different client ID than
-      // EXPO_PUBLIC_TWITCH_CLIENT_ID; sync the Helix Client-Id header to it.
-      await twitchService.validateToken(body.data.access_token);
+      return undefined;
     }
+
+    // Fresh proxy tokens may be issued under a different client ID than
+    // EXPO_PUBLIC_TWITCH_CLIENT_ID; sync the Helix Client-Id header to it.
+    await twitchService.validateToken(body.data.access_token);
 
     return body.data;
   },
