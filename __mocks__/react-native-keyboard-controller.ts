@@ -1,13 +1,12 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, type ViewProps } from 'react-native';
 
-export const KeyboardAvoidingView = ({
-  children,
-  ...props
-}: {
-  children: React.ReactNode;
-  [key: string]: unknown;
-}) => React.createElement(View, props, children);
+export const KeyboardAvoidingView = ({ children, ...props }: ViewProps) =>
+  React.createElement(View, props, children);
+
+export const KeyboardController = {
+  dismiss: jest.fn(),
+};
 
 export const useReanimatedKeyboardAnimation = jest.fn(() => ({
   height: { value: 0 },

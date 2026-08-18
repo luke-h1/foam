@@ -1,20 +1,39 @@
-import type { SanitisedEmote } from '@app/types/emote';
+import { EmoteSetKind } from '@app/graphql/generated/gql';
+import type { SevenTvSanitisedEmote } from '@app/types/emote';
 import { getEmoteArrayContentKey } from '@app/utils/chat/emoteArrayContentKey';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 
-function makeEmote(overrides: Partial<SanitisedEmote> = {}): SanitisedEmote {
+function makeEmote(
+  overrides: Partial<SevenTvSanitisedEmote> = {},
+): SevenTvSanitisedEmote {
   return {
     id: 'emote-1',
     name: 'KEKW',
     original_name: 'KEKW',
     creator: 'creator',
     emote_link: 'https://7tv.app/emotes/emote-1',
-    site: '7TV',
+    provider: '7tv',
+    site: '7TV Channel',
     url: 'https://cdn.7tv.app/emote/emote-1/4x.avif',
     static_url: 'https://cdn.7tv.app/emote/emote-1/4x_static.avif',
     zero_width: false,
+    frame_count: 1,
+    format: 'AVIF',
+    flags: 0,
+    aspect_ratio: 1,
+    width: 32,
+    height: 32,
+    set_metadata: {
+      capacity: null,
+      kind: EmoteSetKind.Normal,
+      ownerId: null,
+      setId: 'set-id',
+      setName: 'channel',
+      totalCount: 1,
+      updatedAt: '2026-05-19T00:00:00Z',
+    },
     ...overrides,
-  } as SanitisedEmote;
+  };
 }
 
 describe('getEmoteArrayContentKey', () => {

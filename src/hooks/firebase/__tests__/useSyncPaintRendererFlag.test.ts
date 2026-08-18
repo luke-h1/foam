@@ -6,16 +6,15 @@ import {
   buildRemoteConfigFromDefaults,
   parseRemoteConfigValue,
 } from '@app/hooks/firebase/remoteConfigModel';
-import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
+import * as UseRemoteConfigModule from '@app/hooks/firebase/useRemoteConfig';
 import { paintRendererFlag$ } from '@app/store/preferenceStore';
 
 import { useSyncPaintRendererFlag } from '../useSyncPaintRendererFlag';
 
-jest.mock('@app/hooks/firebase/useRemoteConfig', () => ({
-  useRemoteConfig: jest.fn(),
-}));
-
-const useRemoteConfigMock = jest.mocked(useRemoteConfig);
+const useRemoteConfigMock = jest.spyOn(
+  UseRemoteConfigModule,
+  'useRemoteConfig',
+);
 
 function mockFlag(raw: string): void {
   const config = buildRemoteConfigFromDefaults('default');

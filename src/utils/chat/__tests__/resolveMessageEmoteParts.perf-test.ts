@@ -1,6 +1,8 @@
 import { measureFunction } from 'reassure';
 
+import * as personalEmotes from '@app/store/chat/actions/personalEmotes';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
+import * as getChannelCheermotesModule from '@app/utils/chat/cheermoteStore/getChannelCheermotes';
 import { resolveMessageEmoteParts } from '@app/utils/chat/resolveMessageEmoteParts';
 
 import {
@@ -8,14 +10,10 @@ import {
   reprocessChatLines,
 } from '../__fixtures__/resolveMessageEmoteParts.perf.fixture';
 
-jest.mock('@app/store/chat/actions/channelLoad', () => ({
-  getCurrentEmoteData: jest.fn(),
-  getUserPersonalEmotes: jest.fn(() => []),
-}));
-
-jest.mock('@app/utils/chat/cheermoteStore/getChannelCheermotes', () => ({
-  getChannelCheermotes: jest.fn(() => null),
-}));
+jest.spyOn(personalEmotes, 'getUserPersonalEmotes').mockReturnValue([]);
+jest
+  .spyOn(getChannelCheermotesModule, 'getChannelCheermotes')
+  .mockReturnValue(undefined);
 
 const MEASURE_OPTIONS = {
   runs: 5,

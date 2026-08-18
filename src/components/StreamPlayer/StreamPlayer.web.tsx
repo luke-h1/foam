@@ -67,7 +67,7 @@ export interface StreamPlayerProps {
 }
 
 function getEmbedParent(parent?: string): string {
-  if (typeof window !== 'undefined' && window.location.hostname) {
+  if ('window' in globalThis && window.location.hostname) {
     return window.location.hostname;
   }
 

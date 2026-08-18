@@ -1,24 +1,20 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 
-import { twitchService as _twitchService } from '@app/services/twitch-service';
+import * as SegmentedControlModule from '@app/components/SegmentedControl/SegmentedControl';
+import { twitchService } from '@app/services/twitch-service';
 import render from '@app/test/render';
 import type { Category } from '@app/types/twitch/category';
 import type { TwitchStream } from '@app/types/twitch/stream';
 
 import { TopScreen } from '../TopScreen';
 
-jest.mock('@app/services/twitch-service');
-jest.mock('expo-symbols', () => ({ SymbolView: () => null }));
+// expo-symbols is faked by the root __mocks__/expo-symbols.ts manual mock.
+
 // SegmentedControl wraps the native @expo/ui control, which cannot receive
 // segment-change events in tests; expose each segment as a pressable instead.
-jest.mock('@app/components/SegmentedControl/SegmentedControl', () => ({
-  SegmentedControl: ({
-    items,
-    onChange,
-  }: {
-    items: { label: string }[];
-    onChange: (index: number) => void;
-  }) => {
+jest
+  .spyOn(SegmentedControlModule, 'SegmentedControl')
+  .mockImplementation(({ items, onChange }) => {
     const React = require('react');
     const { View, TouchableOpacity, Text } = require('react-native');
     return React.createElement(
@@ -36,10 +32,11 @@ jest.mock('@app/components/SegmentedControl/SegmentedControl', () => ({
         ),
       ),
     );
-  },
-}));
+  });
 
-const twitchService = jest.mocked(_twitchService);
+const getTopStreamsSpy = jest.spyOn(twitchService, 'getTopStreams');
+const getTopCategoriesSpy = jest.spyOn(twitchService, 'getTopCategories');
+const getUserImageSpy = jest.spyOn(twitchService, 'getUserImage');
 
 const mockStream = {
   id: '1',
@@ -67,11 +64,9 @@ const mockCategory = {
 
 describe('TopScreen', () => {
   beforeEach(() => {
-    twitchService.getTopStreams.mockResolvedValue({ data: [mockStream] });
-    twitchService.getTopCategories.mockResolvedValue({ data: [mockCategory] });
-    twitchService.getUserImage.mockResolvedValue(
-      'https://example.com/avatar.jpg',
-    );
+    getTopStreamsSpy.mockResolvedValue({ data: [mockStream] });
+    getTopCategoriesSpy.mockResolvedValue({ data: [mockCategory] });
+    getUserImageSpy.mockResolvedValue('https://example.com/avatar.jpg');
   });
 
   test('shows streams by default without fetching the hidden categories scene', async () => {
@@ -79,7 +74,7 @@ describe('TopScreen', () => {
 
     expect(await screen.findByText('Streamer1')).toBeOnTheScreen();
     expect(screen.queryByText('Fortnite')).not.toBeOnTheScreen();
-    expect(twitchService.getTopCategories).not.toHaveBeenCalled();
+    expect(getTopCategoriesSpy).not.toHaveBeenCalled();
   });
 
   test('switches to categories and back without refetching streams', async () => {
@@ -94,7 +89,7 @@ describe('TopScreen', () => {
     fireEvent.press(screen.getByTestId('segment-streams'));
 
     expect(await screen.findByText('Streamer1')).toBeOnTheScreen();
-    expect(twitchService.getTopStreams).toHaveBeenCalledTimes(1);
-    expect(twitchService.getTopCategories).toHaveBeenCalledTimes(1);
+    expect(getTopStreamsSpy).toHaveBeenCalledTimes(1);
+    expect(getTopCategoriesSpy).toHaveBeenCalledTimes(1);
   });
 });

@@ -11,10 +11,9 @@ import '@testing-library/jest-native/extend-expect';
 import 'react-native-url-polyfill/auto';
 import 'cross-fetch/polyfill';
 
-import * as ReactNative from 'react-native';
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 
-import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock';
+import type { SkData } from '@shopify/react-native-skia';
 import { configure as configureReassure } from 'reassure';
 import { TextDecoder, TextEncoder } from 'util';
 
@@ -24,6 +23,7 @@ import mockFile from '../__mocks__/mockFile';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 global.TextEncoder = TextEncoder;
+// SAFETY: Node's util.TextDecoder implements the DOM TextDecoder surface the app code decodes with.
 global.TextDecoder = TextDecoder as typeof global.TextDecoder;
 
 configureReassure({ testingLibrary: 'react-native' });
@@ -41,6 +41,7 @@ function canvasKitStub(): any {
     apply: () => canvasKitStub(),
   });
 }
+// SAFETY: the Skia jest mock reads global.CanvasKit, which no global type declares.
 (global as any).CanvasKit = canvasKitStub();
 
 /**
@@ -48,52 +49,15 @@ function canvasKitStub(): any {
  * overlays need it so animated URL layers don't throw in unit tests.
  */
 {
+  // SAFETY: the assertion types only the mock export this patch reads and adds.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const skia = require('@shopify/react-native-skia') as Record<string, unknown>;
-  if (typeof skia.useAnimatedImageValue !== 'function') {
+  const skia = require('@shopify/react-native-skia') as {
+    useAnimatedImageValue?: () => { value?: unknown };
+  };
+  if (skia.useAnimatedImageValue === undefined) {
     skia.useAnimatedImageValue = () => ({});
   }
 }
-
-jest.mock('expo-font');
-jest.mock('expo-asset');
-jest.mock('react-native-vector-icons');
-
-jest.mock('@expo/ui/community/masked-view', () => {
-  const React = require('react');
-  const { View } = require('react-native');
-  return {
-    MaskedView: ({ maskElement, children, ...props }: any) =>
-      React.createElement(
-        View,
-        { testID: 'masked-view', ...props },
-        maskElement,
-        children,
-      ),
-  };
-});
-
-jest.mock('@expo/ui/swift-ui', () => {
-  const { useRef, createElement } = jest.requireActual('react');
-  const { Text, View } = jest.requireActual('react-native');
-  return {
-    ...jest.requireActual('@expo/ui/swift-ui'),
-    useNativeState: (initial: unknown) => useRef({ value: initial }).current,
-    ContentUnavailableView: ({
-      title,
-      description,
-    }: {
-      title?: string;
-      description?: string;
-    }) =>
-      createElement(
-        View,
-        null,
-        title == null ? null : createElement(Text, null, title),
-        description == null ? null : createElement(Text, null, description),
-      ),
-  };
-});
 
 /**
  * Polyfill for setImmediate which Sentry uses under the hood
@@ -104,501 +68,60 @@ global.setImmediate =
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     setTimeout(callback, 0, ...args));
 
-jest.mock('react-native/Libraries/EventEmitter/NativeEventEmitter', () => {
-  const { EventEmitter } = require('events');
-  return {
-    __esModule: true,
-    default: EventEmitter,
-  };
-});
-
-jest.mock('react-native-worklets');
-
-const createReactNativeHostMock = (hostName: string) => {
-  const React = require('react');
-
-  return React.forwardRef(
-    (
-      {
-        children,
-        ...props
-      }: {
-        children?: React.ReactNode;
-      },
-      ref: React.Ref<unknown>,
-    ) =>
-      React.createElement(
+const createReactNativeHostMock = (hostName: string) =>
+  // SAFETY: require('react') has no static type here; forwardRef is a real function on the real module.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (require('react').forwardRef as any)(
+    ({ children, ...props }: { children?: ReactNode }, ref: Ref<unknown>) =>
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      require('react').createElement(
         hostName,
         ref == null ? props : { ...props, ref },
         children,
       ),
   );
-};
 
-jest.mock('react-native/Libraries/Text/Text', () => ({
-  __esModule: true,
-  default: createReactNativeHostMock('Text'),
-}));
-
-jest.mock('react-native/Libraries/Components/Button', () => ({
-  __esModule: true,
-  default: createReactNativeHostMock('Button'),
-}));
-
-jest.mock('react-native/Libraries/Components/TextInput/TextInput', () => ({
-  __esModule: true,
-  default: createReactNativeHostMock('TextInput'),
-}));
-
-jest.mock('react-native-gesture-handler', () => {
-  const React = require('react');
-  const { View } = require('react-native');
-
-  const passthroughComponent = ({
-    children,
-    ...props
-  }: {
-    children?: React.ReactNode;
-  }) => React.createElement(View, props, children);
-  const createGesture = () => {
-    const gesture: Record<string, unknown> = {};
-    const chainable = () => gesture;
-    [
-      'activeOffsetX',
-      'activeOffsetY',
-      'direction',
-      'enabled',
-      'failOffsetX',
-      'failOffsetY',
-      'maxDuration',
-      'maxPointers',
-      'minPointers',
-      'numberOfTaps',
-      'onBegin',
-      'onEnd',
-      'onFinalize',
-      'onStart',
-      'onTouchesDown',
-      'onTouchesUp',
-      'onUpdate',
-      'requireExternalGestureToFail',
-      'runOnJS',
-      'simultaneousWithExternalGesture',
-    ].forEach(method => {
-      gesture[method] = chainable;
-    });
-    return gesture;
-  };
-
-  return {
-    __esModule: true,
-    Directions: {
-      DOWN: 4,
-      LEFT: 2,
-      RIGHT: 1,
-      UP: 8,
-    },
-    Gesture: {
-      Exclusive: (...gestures: unknown[]) => gestures,
-      Fling: createGesture,
-      Pan: createGesture,
-      Pinch: createGesture,
-      Race: (...gestures: unknown[]) => gestures,
-      Simultaneous: (...gestures: unknown[]) => gestures,
-      Tap: createGesture,
-    },
-    GestureDetector: passthroughComponent,
-    GestureHandlerRootView: passthroughComponent,
-    Pressable: passthroughComponent,
-    RectButton: passthroughComponent,
-    ScrollView: passthroughComponent,
-  };
-});
-
-jest.mock('react-native-reanimated', () => {
-  const React = require('react');
-  const { View } = require('react-native');
-
-  const animatedComponent = React.forwardRef(
-    (
-      {
-        children,
-        ...props
-      }: {
-        children?: React.ReactNode;
-      },
-      ref: React.Ref<unknown>,
-    ) => React.createElement(View, { ...props, ref }, children),
-  );
-  const identityAnimation = (
-    value: unknown,
-    _config?: unknown,
-    callback?: (finished?: boolean) => void,
-  ) => {
-    callback?.(true);
-    return value;
-  };
-
-  return {
-    __esModule: true,
-    default: {
-      call: () => {},
-      createAnimatedComponent: (component: unknown) => component,
-      FlatList: animatedComponent,
-      Image: animatedComponent,
-      ScrollView: animatedComponent,
-      Text: animatedComponent,
-      View: animatedComponent,
-    },
-    cancelAnimation: jest.fn(),
-    createAnimatedComponent: (component: unknown) => component,
-    Easing: {
-      bezier: jest.fn(() => jest.fn()),
-      cubic: jest.fn(),
-      in: jest.fn(easing => easing),
-      inOut: jest.fn(easing => easing),
-      linear: jest.fn(),
-      out: jest.fn(easing => easing),
-    },
-    Extrapolation: {
-      CLAMP: 'clamp',
-      EXTEND: 'extend',
-      IDENTITY: 'identity',
-    },
-    interpolate: jest.fn((value: unknown) => value),
-    interpolateColor: jest.fn((value: unknown) => value),
-    makeMutable: (value: unknown) => {
-      const sv = {
-        value,
-        get: () => sv.value,
-        set: (v: unknown) => {
-          sv.value = v;
-        },
-      };
-      return sv;
-    },
-    runOnJS: (fn: (...args: unknown[]) => unknown) => fn,
-    runOnUI: (fn: (...args: unknown[]) => unknown) => fn,
-    useAnimatedReaction: jest.fn(),
-    useAnimatedRef: () => ({ current: null }),
-    useFrameCallback: jest.fn(() => ({ setActive: jest.fn() })),
-    useAnimatedStyle: (updater: () => unknown) => updater(),
-    useDerivedValue: (updater: () => unknown) => {
-      const sv = {
-        value: updater(),
-        get: () => sv.value,
-        set: (v: unknown) => {
-          sv.value = v;
-        },
-      };
-      return sv;
-    },
-    useSharedValue: (value: unknown) => {
-      const sv = {
-        value,
-        get: () => sv.value,
-        set: (v: unknown) => {
-          sv.value = v;
-        },
-      };
-      return sv;
-    },
-    withDelay: (_delay: number, value: unknown) => value,
-    withRepeat: (value: unknown) => value,
-    withSequence: (...values: unknown[]) => values.at(-1),
-    withSpring: identityAnimation,
-    withTiming: identityAnimation,
-    ...Object.fromEntries(
-      [
-        'FadeIn',
-        'FadeInUp',
-        'FadeInDown',
-        'FadeOut',
-        'FadeOutUp',
-        'FadeOutDown',
-        'SlideInDown',
-      ].map(name => {
-        const builder: Record<string, unknown> = {};
-        for (const method of [
-          'duration',
-          'delay',
-          'easing',
-          'springify',
-          'damping',
-          'stiffness',
-          'mass',
-          'build',
-        ]) {
-          builder[method] = () => builder;
-        }
-        return [name, builder];
-      }),
-    ),
-  };
-});
-
-jest.mock('react-native-webview', () => {
-  const MockWebView = jest.requireActual('react-native').View;
-
-  return {
-    __esModule: true,
-    WebView: MockWebView,
-    default: MockWebView,
-  };
-});
-
-jest.doMock('react-native', () => {
-  const React = require('react');
-  const createHostComponent = (hostName: string) =>
-    React.forwardRef(
-      (
-        {
-          children,
-          ...props
-        }: {
-          children?: React.ReactNode;
-        },
-        ref: React.Ref<unknown>,
-      ) =>
-        React.createElement(
-          hostName,
-          ref == null ? props : { ...props, ref },
-          children,
-        ),
-    );
-  const MockNativeView = createHostComponent('View');
-  const MockNativeText = createHostComponent('Text');
-  const MockNativeTextInput = createHostComponent('TextInput');
-
-  return Object.setPrototypeOf(
-    {
-      FlatList: MockNativeView,
-      Share: {
-        share: jest.fn(),
-      },
-      ScrollView: MockNativeView,
-      Text: MockNativeText,
-      TextInput: MockNativeTextInput,
-      Image: {
-        resolveAssetSource: jest.fn(_source => mockFile),
-        getSize: jest.fn(
-          (
-            _uri: string,
-            success: (width: number, height: number) => void,
-            _failure?: (_error: any) => void,
-          ) => success(100, 100),
-        ),
-      },
-    },
-    ReactNative,
-  );
-});
-
-jest.mock('@shopify/flash-list', () => {
-  const React = require('react');
-
-  const FlashList = React.forwardRef(
-    (
-      {
-        data = [],
-        renderItem,
-        ListHeaderComponent,
-        ListEmptyComponent,
-        ...props
-      }: {
-        data?: unknown[];
-        renderItem?: (args: {
-          item: unknown;
-          index: number;
-        }) => React.ReactNode;
-        ListHeaderComponent?: React.ComponentType | React.ReactNode;
-        ListEmptyComponent?: React.ComponentType | React.ReactNode;
-      },
-      ref: React.Ref<unknown>,
-    ) =>
-      React.createElement(
-        'View',
-        { ...props, ref },
-        typeof ListHeaderComponent === 'function'
-          ? React.createElement(ListHeaderComponent)
-          : ListHeaderComponent,
-        data.length > 0
-          ? data.map((item, index) =>
-              React.createElement(
-                React.Fragment,
-                { key: String(index) },
-                renderItem?.({ item, index }),
-              ),
-            )
-          : typeof ListEmptyComponent === 'function'
-            ? React.createElement(ListEmptyComponent)
-            : ListEmptyComponent,
+/**
+ * A handful of react-native exports are swapped for lightweight host mocks
+ * (FlatList/ScrollView/Text/TextInput render their intrinsic tag directly,
+ * Image and Share drop native calls) - everything else on the module keeps
+ * its real implementation. This has to patch the real module object in
+ * place (rather than a root __mocks__/react-native.js) so every other
+ * module's require('react-native') - including
+ * @testing-library/react-native's own host-component-name checks - resolves
+ * the same patched object. Plain require, not `import * as`, matters here
+ * too: a namespace import gets Babel's interop copy, and mutating that copy
+ * is invisible to every other module's own require of 'react-native'.
+ */
+{
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const ReactNative = require('react-native');
+  const mockNativeView = createReactNativeHostMock('View');
+  const overrides = {
+    FlatList: mockNativeView,
+    Share: { share: jest.fn() },
+    ScrollView: mockNativeView,
+    Text: createReactNativeHostMock('Text'),
+    TextInput: createReactNativeHostMock('TextInput'),
+    Image: {
+      resolveAssetSource: jest.fn(_source => mockFile),
+      getSize: jest.fn(
+        (
+          _uri: string,
+          success: (width: number, height: number) => void,
+          _failure?: (_error: any) => void,
+        ) => success(100, 100),
       ),
-  );
-
-  return {
-    __esModule: true,
-    FlashList,
-    MasonryFlashList: FlashList,
-    useMappingHelper: () => ({
-      getMappingKey: (key: string, index: number) => `${key}-${index}`,
-    }),
+    },
   };
-});
-
-jest.mock('react-native-screens', () => {
-  const React = require('react');
-
-  const ScreenComponent = ({
-    children,
-    ...props
-  }: {
-    children?: React.ReactNode;
-  }) => React.createElement('View', props, children);
-
-  return {
-    __esModule: true,
-    enableFreeze: jest.fn(),
-    enableScreens: jest.fn(),
-    Screen: ScreenComponent,
-    ScreenContainer: ScreenComponent,
-    ScreenStack: ScreenComponent,
-    ScreenStackItem: ScreenComponent,
-  };
-});
-
-jest.mock('expo-router', () => ({
-  __esModule: true,
-  router: {
-    back: jest.fn(),
-    navigate: jest.fn(),
-    push: jest.fn(),
-    replace: jest.fn(),
-    setParams: jest.fn(),
-  },
-  Stack: {
-    Screen: () => null,
-    // Stack.SearchBar renders into the native navigation header; surface it
-    // as a plain TextInput so tests can type into it.
-    SearchBar: require('react').forwardRef(
-      (
-        props: {
-          placeholder?: string;
-          onChangeText?: (e: unknown) => void;
-        },
-        ref: unknown,
-      ) =>
-        require('react').createElement(require('react-native').TextInput, {
-          ref,
-          testID: 'search-input',
-          placeholder: props.placeholder,
-          onChangeText: (text: string) =>
-            props.onChangeText?.({ nativeEvent: { text } }),
-        }),
-    ),
-  },
-  useFocusEffect: jest.fn((effect: () => void | (() => void)) => {
-    const React = require('react');
-    React.useEffect(effect, [effect]);
-  }),
-  useLocalSearchParams: jest.fn(() => ({})),
-  useNavigation: jest.fn(() => ({
-    addListener: jest.fn(() => jest.fn()),
-    goBack: jest.fn(),
-    setOptions: jest.fn(),
-  })),
-  useScrollToTop: jest.fn(),
-  usePathname: jest.fn(() => '/'),
-  useRouter: jest.fn(() => ({
-    back: jest.fn(),
-    navigate: jest.fn(),
-    push: jest.fn(),
-    replace: jest.fn(),
-    setParams: jest.fn(),
-  })),
-}));
-
-jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
-
-jest.mock('expo-secure-store', () => ({
-  getItemAsync: jest.fn(),
-  setItemAsync: jest.fn(),
-  deleteItemAsync: jest.fn(),
-}));
-
-// Mocks are in __mocks__ directory - Jest will auto-discover them
-jest.mock('react-native-nitro-modules');
-jest.mock('react-native-keyboard-controller');
-jest.mock('expo-updates');
-
-// expo/fetch needs manual mock due to path structure
-jest.mock('expo/fetch');
-
-jest.mock('pressto');
-
-jest.mock('@app/components/BottomSheet/BottomSheet', () => {
-  const React = require('react');
-  const { View } = require('react-native');
-
-  return {
-    BottomSheet: ({
-      children,
-      isPresented,
-      testID,
-    }: {
-      children?: ReactNode;
-      isPresented: boolean;
-      testID?: string;
-    }) =>
-      isPresented ? React.createElement(View, { testID }, children) : null,
-  };
-});
-
-jest.mock('@expo/ui/community/bottom-sheet', () => {
-  const React = require('react');
-  const { View } = require('react-native');
-
-  return {
-    BottomSheet: ({
-      children,
-      index,
-    }: {
-      children?: ReactNode;
-      index?: number;
-    }) => (index === -1 ? null : React.createElement(View, null, children)),
-  };
-});
-
-jest.mock('@app/utils/device/deviceTier', () => ({
-  getDeviceTier: () => 'high',
-  isLowEndDevice: () => false,
-  getTotalDeviceMemoryBytes: () => 8 * 1024 * 1024 * 1024,
-}));
-
-jest.mock('sonner-native', () => ({
-  Toaster: () => null,
-  toast: {
-    error: jest.fn(),
-    info: jest.fn(),
-    success: jest.fn(),
-    warning: jest.fn(),
-  },
-}));
-
-jest.mock('react-native-ease', () => {
-  const React = require('react');
-  const { View } = require('react-native');
-  return {
-    EaseView: ({
-      children,
-      style,
-      ...rest
-    }: {
-      children?: React.ReactNode;
-      style?: unknown;
-    }) => React.createElement(View, { ...rest, style }, children),
-  };
-});
+  Object.entries(overrides).forEach(([key, value]) => {
+    Object.defineProperty(ReactNative, key, {
+      configurable: true,
+      enumerable: true,
+      value,
+    });
+  });
+}
 
 /**
  * The Skia jest mock delegates Data.fromURI to the web CanvasKit API, which
@@ -607,9 +130,10 @@ jest.mock('react-native-ease', () => {
  * exits while one is pending. Resolve to null instead: consumers already
  * treat a null image as "texture unavailable".
  */
+// SAFETY: the assertion types only the mock's Skia.Data.fromURI slot this patch replaces.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const skiaMock = require('@shopify/react-native-skia') as {
-  Skia?: { Data?: { fromURI?: (uri: string) => Promise<unknown> } };
+  Skia?: { Data?: { fromURI?: (uri: string) => Promise<SkData | null> } };
 };
 if (skiaMock.Skia?.Data) {
   skiaMock.Skia.Data.fromURI = jest.fn(() => Promise.resolve(null));

@@ -1,20 +1,11 @@
 import { createSevenTvEmote } from '@app/components/Chat/hooks/__tests__/__fixtures__/useChat.fixture';
-import { countMetric } from '@app/lib/sentry';
-import {
-  addBadge,
-  addPaint,
-  removeBadge,
-  removePaint,
-} from '@app/store/chat/actions/cosmetics';
-import {
-  applyCosmeticCreateEvent,
-  applyEntitlementCreateEvent,
-  applyEntitlementDeleteEvent,
-  applyEntitlementUpdateEvent,
-} from '@app/store/chat/actions/cosmeticsBridge';
+import * as sentryModule from '@app/lib/sentry';
+import * as cosmeticsActions from '@app/store/chat/actions/cosmetics';
+import * as cosmeticsBridgeActions from '@app/store/chat/actions/cosmeticsBridge';
 import type { BadgeData, PaintData } from '@app/types/seventv/cosmetics';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
+import * as generateSevenTvEmoteNoticeModule from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
+import { logger } from '@app/utils/logger';
 import { normalizeSevenTvPaint } from '@app/utils/seventv/cosmetics/normalizeSevenTvPaint';
 
 import { createSevenTvCallbacks } from '../createSevenTvCallbacks';
@@ -34,61 +25,42 @@ import {
   createPaintPushedEntry,
 } from './__fixtures__/createSevenTvCallbacks.fixture';
 
-jest.mock('@app/store/chat/actions/cosmetics', () => ({
-  addBadge: jest.fn(),
-  addPaint: jest.fn(),
-  removeBadge: jest.fn(),
-  removePaint: jest.fn(),
-  removeUserBadge: jest.fn(),
-  removeUserPaint: jest.fn(),
-  setUserBadge: jest.fn(),
-  setUserPaint: jest.fn(),
-}));
+jest.spyOn(logger.stvWs, 'info').mockImplementation(() => {});
+jest.spyOn(logger.stvWs, 'debug').mockImplementation(() => {});
 
-jest.mock('@app/store/chat/actions/cosmeticsBridge', () => ({
-  applyCosmeticCreateEvent: jest.fn(),
-  applyEntitlementCreateEvent: jest.fn(),
-  applyEntitlementDeleteEvent: jest.fn(),
-  applyEntitlementResetEvent: jest.fn(),
-  applyEntitlementUpdateEvent: jest.fn(),
-}));
+const addBadge = jest.spyOn(cosmeticsActions, 'addBadge');
+const addPaint = jest.spyOn(cosmeticsActions, 'addPaint');
+const removeBadge = jest.spyOn(cosmeticsActions, 'removeBadge');
+const removePaint = jest.spyOn(cosmeticsActions, 'removePaint');
 
-jest.mock('@app/utils/logger', () => ({
-  logger: { stvWs: { info: jest.fn(), debug: jest.fn() } },
-}));
-
-jest.mock('@app/lib/sentry', () => ({
-  countMetric: jest.fn(),
-}));
-
-jest.mock('@app/utils/emote/stv/generateSevenTvEmoteNotice', () => ({
-  generateStvEmoteNotice: jest.fn(args => ({
-    id: `${args.type}-${args.emote.id}`,
-    channel: args.channelName,
-    message: [],
-    message_id: `${args.type}-${args.emote.id}`,
-    message_nonce: 'nonce',
-    badges: [],
-    sender: '',
-    replyDisplayName: '',
-    replyBody: '',
-    parentDisplayName: '',
-    userstate: {
-      'reply-parent-msg-id': '',
-      'reply-parent-msg-body': '',
-      'reply-parent-display-name': '',
-      'reply-parent-user-login': '',
-    },
-    isSpecialNotice: true,
-  })),
-}));
-
-const mockAddBadge = jest.mocked(addBadge);
-const mockCountMetric = jest.mocked(countMetric);
-const mockApplyCosmeticCreateEvent = jest.mocked(applyCosmeticCreateEvent);
-const mockApplyEntitlementCreateEvent = jest.mocked(
-  applyEntitlementCreateEvent,
+const applyCosmeticCreateEvent = jest.spyOn(
+  cosmeticsBridgeActions,
+  'applyCosmeticCreateEvent',
 );
+const applyEntitlementCreateEvent = jest.spyOn(
+  cosmeticsBridgeActions,
+  'applyEntitlementCreateEvent',
+);
+const applyEntitlementUpdateEvent = jest.spyOn(
+  cosmeticsBridgeActions,
+  'applyEntitlementUpdateEvent',
+);
+const applyEntitlementDeleteEvent = jest.spyOn(
+  cosmeticsBridgeActions,
+  'applyEntitlementDeleteEvent',
+);
+
+const generateStvEmoteNotice = jest.spyOn(
+  generateSevenTvEmoteNoticeModule,
+  'generateStvEmoteNotice',
+);
+
+const mockAddBadge = addBadge;
+const mockCountMetric = jest
+  .spyOn(sentryModule, 'countMetric')
+  .mockImplementation(() => {});
+const mockApplyCosmeticCreateEvent = applyCosmeticCreateEvent;
+const mockApplyEntitlementCreateEvent = applyEntitlementCreateEvent;
 
 const mockUpdateSevenTvEmotes = jest.fn();
 const mockOnEmoteNotice = jest.fn();

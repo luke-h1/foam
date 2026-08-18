@@ -41,7 +41,7 @@ export async function getStoreUrlAsync() {
       return 'https://testflight.apple.com';
     }
 
-    return getAppStoreLink(Application.applicationId as string);
+    return getAppStoreLink(PRODUCTION_BUNDLE_ID);
   }
 
   if (process.env.EXPO_OS === 'android') {

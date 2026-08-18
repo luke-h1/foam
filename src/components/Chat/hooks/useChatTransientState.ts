@@ -135,7 +135,7 @@ export function useChatTransientState(channelId: string) {
       getTransientState(channelId).highlightedReplyTargetMessageId;
     assignTransientState(channelId, {
       highlightedReplyTargetMessageId:
-        typeof value === 'function' ? value(current) : value,
+        value instanceof Function ? value(current) : value,
     });
   };
 

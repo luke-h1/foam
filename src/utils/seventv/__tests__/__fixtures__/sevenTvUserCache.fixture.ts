@@ -27,6 +27,7 @@ export function createFakeStorage(): FakeSevenTvCacheStorage {
         backing.delete(namespacedKey);
         return null;
       }
+      // SAFETY: the fake hands back exactly what set() stored; tests read a key with the same T they wrote
       return entry.value as T;
     },
     set(key, value, namespacePrefix, options = {}) {
@@ -34,10 +35,11 @@ export function createFakeStorage(): FakeSevenTvCacheStorage {
       if (expiry && expiry <= new Date()) {
         return;
       }
-      backing.set(namespaceKey(key, namespacePrefix), {
-        value,
-        ...(expiry ? { expiry: expiry.toISOString() } : {}),
-      });
+      const entry: StoredEntry = { value };
+      if (expiry) {
+        entry.expiry = expiry.toISOString();
+      }
+      backing.set(namespaceKey(key, namespacePrefix), entry);
     },
     delete(key, namespacePrefix) {
       backing.delete(namespaceKey(key, namespacePrefix));

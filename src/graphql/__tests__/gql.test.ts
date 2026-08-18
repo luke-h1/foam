@@ -70,7 +70,7 @@ describe('gql', () => {
  */
 describe('generated documents', () => {
   test('are plain strings', () => {
-    expect(typeof UserByConnectionDocument).toEqual('string');
+    expect(UserByConnectionDocument.constructor).toBe(String);
   });
 
   test('carry the operation they were generated from', () => {

@@ -45,6 +45,6 @@ function ChatMessageComponent<
 /**
  * memo() erases generics; one cast restores the component's type signature.
  */
-export const RichChatMessage = memo(
-  ChatMessageComponent,
-) as unknown as typeof ChatMessageComponent;
+export const RichChatMessage =
+  // SAFETY: memo forwards the same props to ChatMessageComponent, so the wrapper keeps its call signature.
+  memo(ChatMessageComponent) as typeof ChatMessageComponent;

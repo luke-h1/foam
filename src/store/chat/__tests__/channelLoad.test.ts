@@ -16,8 +16,9 @@ import type {
 } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import type { UserInfoResponse } from '@app/types/twitch/user';
-import { clearBttvBadgesCache } from '@app/utils/chat/bttvBadges/getBttvBadges';
+import * as GetBttvBadgesModule from '@app/utils/chat/bttvBadges/getBttvBadges';
 import { cheermoteFetchGuard } from '@app/utils/chat/cheermoteStore/cheermoteFetchGuard';
+import { logger } from '@app/utils/logger';
 
 import {
   clearCache,
@@ -41,152 +42,80 @@ import {
   makeEmptyGlobalCacheData,
 } from '../types/constants';
 
-jest.mock('@legendapp/state/persist', () => ({
-  configureObservablePersistence: jest.fn(),
-  persistObservable: jest.fn(),
-}));
+jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
+jest.spyOn(logger.chat, 'info').mockImplementation(() => {});
+jest.spyOn(logger.chat, 'warn').mockImplementation(() => {});
+jest.spyOn(logger.main, 'info').mockImplementation(() => {});
+jest.spyOn(logger.stv, 'error').mockImplementation(() => {});
+jest.spyOn(logger.stv, 'info').mockImplementation(() => {});
+jest.spyOn(logger.stv, 'warn').mockImplementation(() => {});
+jest.spyOn(logger.stvWs, 'debug').mockImplementation(() => {});
+jest.spyOn(logger.stvWs, 'error').mockImplementation(() => {});
+jest.spyOn(logger.stvWs, 'info').mockImplementation(() => {});
+jest.spyOn(logger.stvWs, 'warn').mockImplementation(() => {});
 
-jest.mock('react-native-mmkv', () => ({
-  MMKV: class MockMMKV {
-    set = jest.fn();
-    getString = jest.fn();
-    getAllKeys = jest.fn(() => []);
-    delete = jest.fn();
-  },
-  createMMKV: () => ({
-    set: jest.fn(),
-    getString: jest.fn(),
-    getAllKeys: jest.fn(() => []),
-    remove: jest.fn(),
-  }),
-}));
+// Isolates the resource loader from the BTTV global-badge micro-cache's own
+// fetch/retry cascade, which is exercised by getBttvBadges' own spec.
+const mockClearBttvBadgesCache = jest
+  .spyOn(GetBttvBadgesModule, 'clearBttvBadgesCache')
+  .mockImplementation(() => {});
+jest.spyOn(GetBttvBadgesModule, 'getBttvBadges').mockReturnValue([]);
 
-jest.mock('@app/lib/sentry', () => ({
-  startSpanAsync: jest.fn(
-    async (_name: string, _op: string, fn: () => Promise<unknown>) => fn(),
-  ),
-}));
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    chat: {
-      error: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-    },
-    main: {
-      info: jest.fn(),
-    },
-    stv: {
-      error: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-    },
-    stvWs: {
-      debug: jest.fn(),
-      error: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-    },
-  },
-}));
-
-jest.mock('@app/utils/chat/bttvBadges/getBttvBadges', () => ({
-  clearBttvBadgesCache: jest.fn(),
-  getBttvBadges: jest.fn(() => []),
-}));
-
-jest.mock('@app/services/bttv-emote-service', () => ({
-  bttvEmoteService: {
-    getSanitisedChannelEmotes: jest.fn(),
-    getSanitisedGlobalEmotes: jest.fn(),
-  },
-}));
-
-jest.mock('@app/services/chatterino-service', () => ({
-  chatterinoService: {
-    listSanitisedBadges: jest.fn(),
-  },
-}));
-
-jest.mock('@app/services/ffz-service', () => ({
-  ffzService: {
-    getSanitisedChannelBadges: jest.fn(),
-    getSanitisedChannelEmotes: jest.fn(),
-    getSanitisedGlobalBadges: jest.fn(),
-    getSanitisedGlobalEmotes: jest.fn(),
-  },
-}));
-
-jest.mock('@app/services/seventv-service', () => ({
-  invalidateSevenTvUser: jest.fn(),
-  sevenTvService: {
-    get7tvUserId: jest.fn(),
-    getEmoteSetId: jest.fn(),
-    getPersonalEmoteSet: jest.fn(),
-    getSanitisedEmoteSet: jest.fn(),
-    sendPresence: jest.fn(),
-  },
-}));
-
-jest.mock('@app/services/twitch-service', () => ({
-  twitchService: {
-    getCheermotes: jest.fn().mockResolvedValue([]),
-    getUsersById: jest.fn(),
-  },
-}));
-
-jest.mock('@app/services/twitch-badge-service', () => ({
-  twitchBadgeService: {
-    listSanitisedChannelBadges: jest.fn(),
-    listSanitisedGlobalBadges: jest.fn(),
-  },
-}));
-
-jest.mock('@app/services/twitch-emote-service', () => ({
-  twitchEmoteService: {
-    getChannelEmotes: jest.fn(),
-    getGlobalEmotes: jest.fn(),
-    getSubscriberEmotes: jest.fn(),
-  },
-}));
-
-const mockGetEmoteSetId = jest.mocked(sevenTvService.getEmoteSetId);
-const mockGetSanitisedEmoteSet = jest.mocked(
-  sevenTvService.getSanitisedEmoteSet,
+const mockGetEmoteSetId = jest.spyOn(sevenTvService, 'getEmoteSetId');
+const mockGetSanitisedEmoteSet = jest.spyOn(
+  sevenTvService,
+  'getSanitisedEmoteSet',
 );
-const mockGet7tvUserId = jest.mocked(sevenTvService.get7tvUserId);
-const mockSendPresence = jest.mocked(sevenTvService.sendPresence);
-const mockGetChannelEmotes = jest.mocked(twitchEmoteService.getChannelEmotes);
-const mockGetGlobalEmotes = jest.mocked(twitchEmoteService.getGlobalEmotes);
-const mockGetSubscriberEmotes = jest.mocked(
-  twitchEmoteService.getSubscriberEmotes,
+const mockGet7tvUserId = jest.spyOn(sevenTvService, 'get7tvUserId');
+const mockSendPresence = jest.spyOn(sevenTvService, 'sendPresence');
+const mockGetChannelEmotes = jest.spyOn(twitchEmoteService, 'getChannelEmotes');
+const mockGetGlobalEmotes = jest.spyOn(twitchEmoteService, 'getGlobalEmotes');
+const mockGetSubscriberEmotes = jest.spyOn(
+  twitchEmoteService,
+  'getSubscriberEmotes',
 );
-const mockGetBttvGlobalEmotes = jest.mocked(
-  bttvEmoteService.getSanitisedGlobalEmotes,
+const mockGetBttvGlobalEmotes = jest.spyOn(
+  bttvEmoteService,
+  'getSanitisedGlobalEmotes',
 );
-const mockGetBttvChannelEmotes = jest.mocked(
-  bttvEmoteService.getSanitisedChannelEmotes,
+const mockGetBttvChannelEmotes = jest.spyOn(
+  bttvEmoteService,
+  'getSanitisedChannelEmotes',
 );
-const mockGetFfzChannelEmotes = jest.mocked(
-  ffzService.getSanitisedChannelEmotes,
+const mockGetFfzChannelEmotes = jest.spyOn(
+  ffzService,
+  'getSanitisedChannelEmotes',
 );
-const mockGetFfzGlobalEmotes = jest.mocked(ffzService.getSanitisedGlobalEmotes);
-const mockListTwitchChannelBadges = jest.mocked(
-  twitchBadgeService.listSanitisedChannelBadges,
+const mockGetFfzGlobalEmotes = jest.spyOn(
+  ffzService,
+  'getSanitisedGlobalEmotes',
 );
-const mockListTwitchGlobalBadges = jest.mocked(
-  twitchBadgeService.listSanitisedGlobalBadges,
+const mockListTwitchChannelBadges = jest.spyOn(
+  twitchBadgeService,
+  'listSanitisedChannelBadges',
 );
-const mockGetFfzChannelBadges = jest.mocked(
-  ffzService.getSanitisedChannelBadges,
+const mockListTwitchGlobalBadges = jest.spyOn(
+  twitchBadgeService,
+  'listSanitisedGlobalBadges',
 );
-const mockGetFfzGlobalBadges = jest.mocked(ffzService.getSanitisedGlobalBadges);
-const mockListChatterinoBadges = jest.mocked(
-  chatterinoService.listSanitisedBadges,
+const mockGetFfzChannelBadges = jest.spyOn(
+  ffzService,
+  'getSanitisedChannelBadges',
 );
-const mockGetPersonalEmoteSet = jest.mocked(sevenTvService.getPersonalEmoteSet);
-const mockGetUsersById = jest.mocked(twitchService.getUsersById);
+const mockGetFfzGlobalBadges = jest.spyOn(
+  ffzService,
+  'getSanitisedGlobalBadges',
+);
+const mockListChatterinoBadges = jest.spyOn(
+  chatterinoService,
+  'listSanitisedBadges',
+);
+const mockGetPersonalEmoteSet = jest.spyOn(
+  sevenTvService,
+  'getPersonalEmoteSet',
+);
+const mockGetUsersById = jest.spyOn(twitchService, 'getUsersById');
+jest.spyOn(twitchService, 'getCheermotes').mockResolvedValue([]);
 
 const channelId = 'channel-1';
 const twitchUserId = 'user-1';
@@ -330,7 +259,11 @@ describe('loadChannelResources cache fallback', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    // Scoped restore, not jest.restoreAllMocks(): the service methods above
+    // are spied at module scope for the whole file, and restoreAllMocks()
+    // would revert them to their real (network-calling) implementations for
+    // every later describe in this file too.
+    jest.spyOn(Date, 'now').mockRestore();
   });
 
   test('keeps cached provider slices when full refresh provider requests reject', async () => {
@@ -496,7 +429,7 @@ describe('loadChannelResources cache fallback', () => {
       badgesLastUpdated: cache!.badgesLastUpdated,
       lastUpdated: cache!.lastUpdated,
     }).toEqual({ badgesLastUpdated: 0, lastUpdated: 0 });
-    expect(jest.mocked(clearBttvBadgesCache)).toHaveBeenCalledTimes(1);
+    expect(mockClearBttvBadgesCache).toHaveBeenCalledTimes(1);
     expect(cheermoteFetchGuard.hasFetched(channelId)).toBe(false);
 
     chatStore$.persisted.channelCaches.set({});

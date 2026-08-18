@@ -9,13 +9,7 @@ import type { UserInfoResponse } from '@app/types/twitch/user';
 
 import { useStreamProfilePictures } from '../useStreamProfilePictures';
 
-jest.mock('@app/services/twitch-service', () => ({
-  twitchService: {
-    getUsersById: jest.fn(),
-  },
-}));
-
-const mockGetUsersById = jest.mocked(twitchService.getUsersById);
+const mockGetUsersById = jest.spyOn(twitchService, 'getUsersById');
 
 function stream(userId: string): TwitchStream {
   return {

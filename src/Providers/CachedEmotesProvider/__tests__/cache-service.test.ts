@@ -1,11 +1,4 @@
-jest.mock('expo-image', () => ({
-  Image: {
-    loadAsync: jest.fn(() => Promise.resolve({})),
-    clearMemoryCache: jest.fn(),
-  },
-}));
-
-import { Image, type ImageRef } from 'expo-image';
+import { Image, type ImageRef, type ImageSource } from 'expo-image';
 
 import {
   abortInflightEmoteDecodes,
@@ -27,12 +20,19 @@ const MAX_DECODED_BYTES_HIGH_TIER = Math.floor(8 * 1024 * 1024 * 1024 * 0.05);
 // ~409.6MiB / (96*96*4 bytes * 8 animated factor) ≈ 1456 refs before the count cap.
 const HIGH_TIER_BYTE_BUDGET_ANIMATED_ENTRIES = 1456;
 
+// SAFETY: ImageRef is a native SharedRef subclass with no JS constructor; the cache only reads width/height/isAnimated off it
 const makeImageRef = (overrides: Partial<ImageRef> = {}): ImageRef =>
   ({ ...overrides }) as ImageRef;
 
 const animatedRef = () => makeImageRef({ isAnimated: true });
 
 const loadAsync = jest.mocked(Image.loadAsync);
+
+const decodedUri = (source: ImageSource | string | number): string => {
+  // SAFETY: cache-service only ever calls loadAsync with `{ uri: url }`
+  const { uri } = source as ImageSource;
+  return uri ?? '';
+};
 
 const flushMicrotasks = () =>
   new Promise<void>(resolve => {
@@ -52,7 +52,7 @@ const flushAnimationFrames = async (turns = 6) => {
 
 describe('cache-service', () => {
   beforeEach(() => {
-    loadAsync.mockImplementation(() => Promise.resolve({} as ImageRef));
+    loadAsync.mockImplementation(() => Promise.resolve(makeImageRef()));
   });
   afterEach(() => {
     clearCachedEmoteRefs();
@@ -87,7 +87,7 @@ describe('cache-service', () => {
 
   test('does not record an aspect ratio when the decoded ref has no dimensions', async () => {
     const url = 'https://cdn.7tv.app/emote/nodims/1x.avif';
-    loadAsync.mockResolvedValueOnce({} as ImageRef);
+    loadAsync.mockResolvedValueOnce(makeImageRef());
 
     await warmCachedEmoteRefs([url]);
 
@@ -132,7 +132,7 @@ describe('cache-service', () => {
     clearCachedEmoteRefs();
     onChange.mockClear();
 
-    resolveDecode({} as ImageRef);
+    resolveDecode(makeImageRef());
     await flushMicrotasks();
 
     expect(getCachedEmoteRef(url)).toBeNull();
@@ -380,7 +380,7 @@ describe('cache-service', () => {
     loadAsync.mockImplementation(
       () =>
         new Promise<ImageRef>(resolve => {
-          releases.push(() => resolve({} as ImageRef));
+          releases.push(() => resolve(makeImageRef()));
         }),
     );
 
@@ -405,9 +405,9 @@ describe('cache-service', () => {
     const decodedUrls: string[] = [];
     const releases: (() => void)[] = [];
     loadAsync.mockImplementation(source => {
-      decodedUrls.push((source as { uri: string }).uri);
+      decodedUrls.push(decodedUri(source));
       return new Promise<ImageRef>(resolve => {
-        releases.push(() => resolve({} as ImageRef));
+        releases.push(() => resolve(makeImageRef()));
       });
     });
 
@@ -448,9 +448,9 @@ describe('cache-service', () => {
     const decodedUrls: string[] = [];
     const releases: (() => void)[] = [];
     loadAsync.mockImplementation(source => {
-      decodedUrls.push((source as { uri: string }).uri);
+      decodedUrls.push(decodedUri(source));
       return new Promise<ImageRef>(resolve => {
-        releases.push(() => resolve({} as ImageRef));
+        releases.push(() => resolve(makeImageRef()));
       });
     });
 

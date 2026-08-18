@@ -1,19 +1,38 @@
+import { z } from 'zod';
+
 export type ParsedChannelPointsRedemption = {
   rewardId: string;
   channelId: string;
   title: string;
 };
 
-const AUTOMATIC_REWARD_TITLES: Record<string, string> = {
-  SEND_ANIMATED_MESSAGE: 'Message Effects',
-  SEND_GIGANTIFIED_EMOTE: 'Gigantify an Emote',
-  CELEBRATION: 'On-Screen Celebration',
-};
+export interface ChannelPointsEventSubEvent {
+  broadcaster_user_id?: unknown;
+  reward?: unknown;
+}
 
-const AUTOMATIC_REWARD_IDS: Record<string, string> = {
-  SEND_ANIMATED_MESSAGE: 'animated-message',
-  SEND_GIGANTIFIED_EMOTE: 'gigantified-emote-message',
-};
+const AUTOMATIC_REWARD_TITLES = new Map([
+  ['SEND_ANIMATED_MESSAGE', 'Message Effects'],
+  ['SEND_GIGANTIFIED_EMOTE', 'Gigantify an Emote'],
+  ['CELEBRATION', 'On-Screen Celebration'],
+]);
+
+const AUTOMATIC_REWARD_IDS = new Map([
+  ['SEND_ANIMATED_MESSAGE', 'animated-message'],
+  ['SEND_GIGANTIFIED_EMOTE', 'gigantified-emote-message'],
+]);
+
+const channelPointsEventSchema = z.object({
+  broadcaster_user_id: z.string().optional().catch(undefined),
+  reward: z
+    .object({
+      id: z.string().optional().catch(undefined),
+      title: z.string().optional().catch(undefined),
+      type: z.string().optional().catch(undefined),
+    })
+    .optional()
+    .catch(undefined),
+});
 
 function titleFromAutomaticRewardType(
   rewardType: string | undefined,
@@ -22,7 +41,7 @@ function titleFromAutomaticRewardType(
     return undefined;
   }
 
-  return AUTOMATIC_REWARD_TITLES[rewardType];
+  return AUTOMATIC_REWARD_TITLES.get(rewardType);
 }
 
 function rewardIdFromAutomaticRewardType(
@@ -32,36 +51,31 @@ function rewardIdFromAutomaticRewardType(
     return undefined;
   }
 
-  return AUTOMATIC_REWARD_IDS[rewardType];
+  return AUTOMATIC_REWARD_IDS.get(rewardType);
 }
 
 export function parseChannelPointsEventSubEvent(
-  event: Record<string, unknown>,
+  event: ChannelPointsEventSubEvent,
 ): ParsedChannelPointsRedemption | undefined {
-  const channelId =
-    typeof event.broadcaster_user_id === 'string'
-      ? event.broadcaster_user_id
-      : undefined;
-
-  const reward = event.reward;
-  if (!reward || typeof reward !== 'object') {
+  const parsed = channelPointsEventSchema.safeParse(event);
+  if (!parsed.success) {
     return undefined;
   }
 
-  const rewardRecord = reward as Record<string, unknown>;
-  const rewardType =
-    typeof rewardRecord.type === 'string' ? rewardRecord.type : undefined;
+  const channelId = parsed.data.broadcaster_user_id;
+  const reward = parsed.data.reward;
+  if (!reward) {
+    return undefined;
+  }
 
-  let rewardId =
-    typeof rewardRecord.id === 'string' ? rewardRecord.id : undefined;
+  const rewardType = reward.type;
 
+  let rewardId = reward.id;
   if (!rewardId && rewardType) {
     rewardId = rewardIdFromAutomaticRewardType(rewardType);
   }
 
-  let title =
-    typeof rewardRecord.title === 'string' ? rewardRecord.title.trim() : '';
-
+  let title = reward.title?.trim() ?? '';
   if (!title) {
     title = titleFromAutomaticRewardType(rewardType) ?? '';
   }

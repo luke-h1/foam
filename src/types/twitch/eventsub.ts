@@ -1,3 +1,13 @@
+import type { JsonValue } from '@app/utils/object/deepEqualJson';
+
+/**
+ * The raw `event` object Twitch attaches to a notification, before a consumer
+ * narrows it to the payload its subscription type declares.
+ */
+export type EventSubEvent = {
+  [field: string]: JsonValue;
+};
+
 export interface EventSubMetadata {
   message_id: string;
   message_type:
@@ -39,7 +49,7 @@ export interface EventSubPayload {
 export interface EventSubMessage {
   metadata: EventSubMetadata;
   payload: EventSubPayload;
-  event?: Record<string, unknown>;
+  event?: EventSubEvent;
 }
 
 export type TwitchEventSubCallback = (data: EventSubMessage) => void;

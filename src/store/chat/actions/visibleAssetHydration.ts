@@ -3,6 +3,16 @@ import { logger } from '@app/utils/logger';
 
 const VISIBLE_ASSET_HYDRATION_DELAY_MS = 150;
 
+type VisibleAssetHydrationState = {
+  hydratedMessageKeys: Set<string>;
+  personalEmoteUsers: Set<string>;
+  cosmeticUsers: Set<string>;
+  pendingMessages: AnyChatMessageType[];
+  epoch: number;
+  timer: ReturnType<typeof setTimeout> | null;
+  activePass: Promise<void> | null;
+};
+
 /**
  * Scratch state for the visible-asset hydration pass: which rows have already
  * been hydrated, which users have had personal emotes / cosmetics fetched, and
@@ -18,14 +28,14 @@ const VISIBLE_ASSET_HYDRATION_DELAY_MS = 150;
  * they guard, so arming and releasing the pass are owned by one module: any
  * clear below invalidates a scheduled or running pass with it.
  */
-export const visibleAssetHydration = {
-  hydratedMessageKeys: new Set<string>(),
-  personalEmoteUsers: new Set<string>(),
-  cosmeticUsers: new Set<string>(),
-  pendingMessages: [] as AnyChatMessageType[],
+export const visibleAssetHydration: VisibleAssetHydrationState = {
+  hydratedMessageKeys: new Set(),
+  personalEmoteUsers: new Set(),
+  cosmeticUsers: new Set(),
+  pendingMessages: [],
   epoch: 0,
-  timer: null as ReturnType<typeof setTimeout> | null,
-  activePass: null as Promise<void> | null,
+  timer: null,
+  activePass: null,
 };
 
 function clearVisibleAssetHydrationTimer(): void {

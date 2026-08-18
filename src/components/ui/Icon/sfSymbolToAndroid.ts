@@ -1,6 +1,10 @@
 import type { AndroidSymbol } from 'expo-symbols';
 
-const MAP: Record<string, AndroidSymbol> = {
+interface AndroidSymbolBySfSymbol {
+  [sfSymbolName: string]: AndroidSymbol;
+}
+
+const MAP: AndroidSymbolBySfSymbol = {
   'antenna.radiowaves.left.and.right': 'sensors',
   'arrow.clockwise': 'refresh',
   'arrow.down': 'arrow_downward',
@@ -51,6 +55,7 @@ const MAP: Record<string, AndroidSymbol> = {
   flag: 'flag',
   'forward.end.fill': 'fast_forward',
   gear: 'settings',
+  // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- "gearshape" is Apple's fixed SF Symbol name, not a naming choice
   gearshape: 'settings',
   'gift.fill': 'redeem',
   globe: 'public',

@@ -4,12 +4,18 @@ const TWITCH_VIDEO_PATTERN = /^\d+$/;
 const PORT = Number(process.env.PORT ?? 4000);
 const HOST = process.env.HOST;
 
+type BunServeOptions = {
+  port: number;
+  hostname?: string;
+  fetch(request: Request): Response | Promise<Response>;
+};
+
+type BunServer = {
+  stop(closeActiveConnections?: boolean): void;
+};
+
 declare const Bun: {
-  serve(options: {
-    port: number;
-    hostname?: string;
-    fetch(request: Request): Response | Promise<Response>;
-  }): unknown;
+  serve(options: BunServeOptions): BunServer;
 };
 
 const html = (body: string, init?: ResponseInit) =>
@@ -21,7 +27,20 @@ const html = (body: string, init?: ResponseInit) =>
     },
   });
 
-const json = (body: unknown, init?: ResponseInit) =>
+type TwitchTokenSuccess = {
+  access_token: string;
+  expires_in: number;
+  token_type: string;
+};
+
+type TwitchTokenError = {
+  status: number;
+  message: string;
+};
+
+type TwitchTokenResponse = TwitchTokenSuccess | TwitchTokenError;
+
+const json = (body: TwitchTokenResponse, init?: ResponseInit) =>
   new Response(JSON.stringify(body), {
     ...init,
     headers: {
@@ -170,11 +189,11 @@ const getDefaultToken = async () => {
   });
 
   if (!response.ok) {
-    const data = await response.json();
-    return json(data, { status: response.status });
+    const errorData: TwitchTokenError = await response.json();
+    return json(errorData, { status: response.status });
   }
 
-  const data = await response.json();
+  const data: TwitchTokenSuccess = await response.json();
   console.info('serving Twitch default token');
   return json(data);
 };
@@ -218,7 +237,7 @@ const getMagicLinkBlob = (): MagicLinkBlob | null => {
   }
 
   try {
-    const parsed = JSON.parse(raw) as MagicLinkBlob;
+    const parsed: MagicLinkBlob = JSON.parse(raw);
     if (!parsed.key || !parsed.access_token) {
       return null;
     }
@@ -338,9 +357,8 @@ const handleRequest = async (request: Request) => {
   }
 };
 
-Bun.serve({
+const serveOptions: BunServeOptions = {
   port: PORT,
-  ...(HOST ? { hostname: HOST } : {}),
   fetch: async request => {
     try {
       return await handleRequest(request);
@@ -349,7 +367,13 @@ Bun.serve({
       return new Response('Internal server error', { status: 500 });
     }
   },
-});
+};
+
+if (HOST) {
+  serveOptions.hostname = HOST;
+}
+
+Bun.serve(serveOptions);
 
 console.info(
   HOST

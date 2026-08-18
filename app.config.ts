@@ -19,7 +19,7 @@ export type Variant =
   'development' | 'internal' | 'testflight' | 'e2e' | 'production';
 
 // https://docs.expo.dev/tutorial/eas/multiple-app-variants
-export const VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
+export const VARIANT_CONFIG = {
   development: {
     name: 'Foam (dev)',
     icon: './assets/splash/splash-image-production.png',
@@ -69,18 +69,18 @@ export const VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
     splashImage: './assets/splash/splash-image-production.png',
     splashBackgroundColor: '#000000',
     iosGoogleServicesFile:
-      (process.env.IOS_GOOGLE_SERVICES_JSON as string) ||
-      './GoogleService-Info-prod.plist',
+      process.env.IOS_GOOGLE_SERVICES_JSON || './GoogleService-Info-prod.plist',
     androidGoogleServicesFile: './google-services-prod.json',
   },
-} as const;
+} as const satisfies Record<Variant, AppVariantConfig>;
 
+// SAFETY: EXPO_PUBLIC_APP_VARIANT is set by eas.json and the local scripts to one of the `Variant` names.
 const variant =
   (process.env.EXPO_PUBLIC_APP_VARIANT as Variant) || 'development';
 
 const VERSION = '1.0.8';
 
-const appConfig = VARIANT_CONFIG[variant];
+const appConfig: AppVariantConfig = VARIANT_CONFIG[variant];
 const twitchClientId = process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID;
 const sentryRelease = process.env.EXPO_PUBLIC_SENTRY_RELEASE ?? VERSION;
 const sentryDist =
@@ -144,6 +144,51 @@ const quickActions = [
     },
   },
 ] as const;
+
+type AndroidConfig = NonNullable<ExpoConfig['android']> & {
+  predictiveBackGestureEnabled?: boolean;
+};
+
+const androidConfig: AndroidConfig = {
+  package: appConfig.androidPackageName,
+  predictiveBackGestureEnabled: true,
+  allowBackup: false,
+  blockedPermissions: [
+    'com.google.android.gms.permission.AD_ID',
+    'android.permission.RECORD_AUDIO',
+    'android.permission.SYSTEM_ALERT_WINDOW',
+    'android.permission.ACCESS_MEDIA_LOCATION',
+  ],
+  googleServicesFile: googleServicesExist
+    ? appConfig.androidGoogleServicesFile
+    : undefined,
+  intentFilters: [
+    {
+      action: 'VIEW',
+      autoVerify: false,
+      category: ['BROWSABLE', 'DEFAULT'],
+      data: [
+        { scheme: 'https', host: 'www.twitch.tv' },
+        { scheme: 'https', host: 'twitch.tv' },
+        { scheme: 'https', host: 'm.twitch.tv' },
+      ],
+    },
+    {
+      action: 'VIEW',
+      autoVerify: true,
+      category: ['BROWSABLE', 'DEFAULT'],
+      data: [
+        { scheme: 'https', host: 'foam-app.com', pathPrefix: '/' },
+        { scheme: 'https', host: 'www.foam-app.com', pathPrefix: '/' },
+      ],
+    },
+  ],
+  adaptiveIcon: {
+    foregroundImage: './assets/android-icon.png',
+    backgroundColor: '#000000',
+    monochromeImage: './assets/android-icon-monochrome.png',
+  },
+};
 
 const config: ExpoConfig = {
   name: appConfig.name,
@@ -385,48 +430,7 @@ const config: ExpoConfig = {
         }
       : undefined,
   },
-  android: {
-    package: appConfig.androidPackageName,
-    predictiveBackGestureEnabled: true,
-    allowBackup: false,
-    blockedPermissions: [
-      'com.google.android.gms.permission.AD_ID',
-      'android.permission.RECORD_AUDIO',
-      'android.permission.SYSTEM_ALERT_WINDOW',
-      'android.permission.ACCESS_MEDIA_LOCATION',
-    ],
-    googleServicesFile: googleServicesExist
-      ? appConfig.androidGoogleServicesFile
-      : undefined,
-    intentFilters: [
-      {
-        action: 'VIEW',
-        autoVerify: false,
-        category: ['BROWSABLE', 'DEFAULT'],
-        data: [
-          { scheme: 'https', host: 'www.twitch.tv' },
-          { scheme: 'https', host: 'twitch.tv' },
-          { scheme: 'https', host: 'm.twitch.tv' },
-        ],
-      },
-      {
-        action: 'VIEW',
-        autoVerify: true,
-        category: ['BROWSABLE', 'DEFAULT'],
-        data: [
-          { scheme: 'https', host: 'foam-app.com', pathPrefix: '/' },
-          { scheme: 'https', host: 'www.foam-app.com', pathPrefix: '/' },
-        ],
-      },
-    ],
-    adaptiveIcon: {
-      foregroundImage: './assets/android-icon.png',
-      backgroundColor: '#000000',
-      monochromeImage: './assets/android-icon-monochrome.png',
-    },
-  } as NonNullable<ExpoConfig['android']> & {
-    predictiveBackGestureEnabled?: boolean;
-  },
+  android: androidConfig,
 };
 
 export default config;

@@ -1,23 +1,43 @@
+import { useImperativeHandle } from 'react';
+import { TextInput as MockTextInput } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { render } from '@testing-library/react-native';
 
 import type { ChatComposerProps } from '../ChatComposer/ChatComposer';
+import * as chatComposerModule from '../ChatComposer/ChatComposer';
 import { ChatInputSection } from '../ChatInputSection';
 
-const mockChatComposer = jest.fn();
+const mockChatComposer = jest.fn((_props: ChatComposerProps) => {});
 
-jest.mock('../ChatComposer/ChatComposer', () => {
-  const React = require('react');
-  const { TextInput: MockTextInput } = require('react-native');
+/**
+ * `ChatComposer` is `memo()`-wrapped, so it's an object rather than a plain
+ * function and `jest.spyOn` refuses to patch it ("not a function"). Redefine
+ * the export directly instead - this suite only cares that `ChatInputSection`
+ * wires the right props through, not the real composer's rich-text behavior.
+ */
+function MockChatComposer(props: ChatComposerProps) {
+  mockChatComposer(props);
+  useImperativeHandle(props.ref, () => ({
+    focus: jest.fn(),
+    blur: jest.fn(),
+    setText: jest.fn(),
+  }));
+  return <MockTextInput testID='chat-composer' />;
+}
 
-  return {
-    ChatComposer: React.forwardRef((props: ChatComposerProps, ref: unknown) => {
-      mockChatComposer(props);
-      return <MockTextInput ref={ref} testID='chat-composer' />;
-    }),
-  };
+Object.defineProperty(chatComposerModule, 'ChatComposer', {
+  configurable: true,
+  value: MockChatComposer,
 });
+
+function firstComposerProps(): ChatComposerProps {
+  const props = mockChatComposer.mock.calls[0]?.[0];
+  if (props === undefined) {
+    throw new Error('ChatComposer was never rendered');
+  }
+  return props;
+}
 
 describe('ChatInputSection', () => {
   beforeEach(() => {
@@ -53,13 +73,7 @@ describe('ChatInputSection', () => {
       </SafeAreaProvider>,
     );
 
-    const props = mockChatComposer.mock.calls[0]?.[0] as {
-      onSubmit?: () => void;
-      onPressAdd?: () => void;
-      onChangeText?: (text: string) => void;
-      canSend?: boolean;
-      editable?: boolean;
-    };
+    const props = firstComposerProps();
     expect({
       onSubmit: props.onSubmit,
       onPressAdd: props.onPressAdd,
@@ -102,10 +116,7 @@ describe('ChatInputSection', () => {
         />
       </SafeAreaProvider>,
     );
-    return mockChatComposer.mock.calls[0]?.[0] as {
-      canSend?: boolean;
-      editable?: boolean;
-    };
+    return firstComposerProps();
   }
 
   test('keeps the composer editable and allows /refresh when signed out', () => {

@@ -36,7 +36,7 @@ type CacheRecord = Required<
 type DownloadTask = {
   key: string;
   options: CacheImageOptions;
-  reject: (reason?: unknown) => void;
+  reject: (cause?: unknown) => void;
   resolve: (uri: string) => void;
   run: () => Promise<string>;
   url: string;
@@ -80,8 +80,8 @@ function getFileExtensionFromUrl(url: string): string {
   }
 }
 
-function isCacheableUri(uri: string | undefined): uri is string {
-  return typeof uri === 'string' && /^https?:\/\//i.test(uri);
+function isCacheableUri(uri: string): boolean {
+  return /^https?:\/\//i.test(uri);
 }
 
 function getCacheKey(url: string, variant = 'original'): string {
@@ -110,6 +110,7 @@ function hydrateManifest(): void {
     }
 
     try {
+      // SAFETY: persistRecord is the only writer of these keys and stringifies a CacheRecord.
       const record = JSON.parse(raw) as CacheRecord;
       const previous = manifest.get(record.key);
       manifestTotalBytes += record.size - (previous?.size ?? 0);

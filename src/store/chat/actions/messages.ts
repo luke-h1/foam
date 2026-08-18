@@ -146,14 +146,17 @@ const prepareMessageForStore = (
     getUserMessageColor,
   );
   nextMessageSeq += 1;
-  return {
+  const storedMessage: AnyChatMessageType = {
     ...message,
     id: messageKey,
     seq: nextMessageSeq,
     committedAt: message.committedAt ?? Date.now(),
-    ...(cachedSenderColor ? { cachedSenderColor } : {}),
     message: ensurePartIdsForStore(message.message),
   };
+  if (cachedSenderColor) {
+    storedMessage.cachedSenderColor = cachedSenderColor;
+  }
+  return storedMessage;
 };
 
 const getSenderChatterRole = (
@@ -363,13 +366,15 @@ const trimMessageIndexes = (): number => {
   return trimmedCount;
 };
 
+type MessageWindowAppendResult = {
+  droppedMessages: AnyChatMessageType[];
+  nextMessages: AnyChatMessageType[];
+};
+
 const appendToMessageWindow = (
   currentMessages: AnyChatMessageType[],
   storedMessages: AnyChatMessageType[],
-): {
-  droppedMessages: AnyChatMessageType[];
-  nextMessages: AnyChatMessageType[];
-} => {
+): MessageWindowAppendResult => {
   const extraMessageCount =
     currentMessages.length +
     storedMessages.length -
@@ -487,7 +492,7 @@ const getMessageUpdatesFromInputs = (
     const key = getChatMessageKey(messageId, messageNonce);
     const storedIndex = messageKeyToIndex.get(key);
 
-    if (typeof storedIndex !== 'number') {
+    if (storedIndex === undefined) {
       continue;
     }
     const index = storedIndex - windowBaseOffset;
@@ -626,7 +631,7 @@ export const moderateMessageById = (
   const key = getChatMessageKey(message.message_id, message.message_nonce);
   const storedIndex = messageKeyToIndex.get(key);
 
-  if (typeof storedIndex !== 'number') {
+  if (storedIndex === undefined) {
     return;
   }
   const index = storedIndex - windowBaseOffset;
@@ -756,7 +761,7 @@ export const getMessageById = (
   messageId: string,
 ): AnyChatMessageType | undefined => {
   const storedIndex = messageIdToIndex.get(normaliseMessageField(messageId));
-  if (typeof storedIndex !== 'number') {
+  if (storedIndex === undefined) {
     return undefined;
   }
 

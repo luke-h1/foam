@@ -8,6 +8,15 @@ import {
 
 const HIGHLIGHT_MY_MESSAGE_REWARD_TITLE = 'Highlight My Message';
 
+function readStringTag(
+  value: string | boolean | undefined,
+): string | undefined {
+  if (value === undefined || value === true || value === false) {
+    return undefined;
+  }
+  return value;
+}
+
 export function channelPointsRewardTitleFromTags(
   tags: RewardTitleTagSource | ChannelPointsRewardTags | UserNoticeTags,
 ): string | undefined {
@@ -15,17 +24,16 @@ export function channelPointsRewardTitleFromTags(
     return HIGHLIGHT_MY_MESSAGE_REWARD_TITLE;
   }
 
-  const raw =
-    tags['msg-param-custom-reward-title'] ?? tags['msg-param-reward-title'];
-  if (typeof raw === 'string') {
-    const title = raw.trim();
-    if (title) {
-      return title;
-    }
+  const raw = readStringTag(
+    tags['msg-param-custom-reward-title'] ?? tags['msg-param-reward-title'],
+  );
+  const title = raw?.trim();
+  if (title) {
+    return title;
   }
 
-  const systemMsg = tags['system-msg'];
-  if (typeof systemMsg === 'string') {
+  const systemMsg = readStringTag(tags['system-msg']);
+  if (systemMsg !== undefined) {
     return channelPointsRewardTitleFromSystemMsg(systemMsg);
   }
 

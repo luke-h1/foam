@@ -7,20 +7,14 @@ import {
   createMessageBuffer,
 } from '../messageBuffer';
 
-jest.mock('@app/store/chat/actions/messages', () => ({
-  getMaxChatMessages: jest.fn(() => 1000),
-}));
-
-jest.mock('@app/utils/chat/replaceEmotesWithText', () => ({
-  replaceEmotesWithText: (parts: { content?: string }[]) =>
-    parts.map(part => part.content ?? '').join(''),
-}));
-
-function message(id: string, overrides: Partial<BufferedMessage> = {}) {
+function message(
+  id: string,
+  overrides: Partial<BufferedMessage> = {},
+): BufferedMessage {
   return {
     ...createChatMessage({ tags: { id, login: id }, text: id }),
     ...overrides,
-  } as BufferedMessage;
+  };
 }
 
 describe('createMessageBuffer add/drain', () => {

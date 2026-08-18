@@ -53,10 +53,12 @@ const styles = StyleSheet.create({
  * high-density screens) instead of a full 2560x1080 frame for a small
  * thumbnail.
  */
-function getThumbnailRequestSize(size?: Props['size']): {
+type ThumbnailRequestSize = {
   width: string;
   height: string;
-} {
+};
+
+function getThumbnailRequestSize(size?: Props['size']): ThumbnailRequestSize {
   switch (size) {
     case 'sm':
       return { width: '160', height: '90' };

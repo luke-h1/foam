@@ -1,3 +1,6 @@
+// This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
+// field (see types/seventv/cosmetics.ts), not a naming choice.
+// oxlint-disable anti-slop/no-shape-in-symbol-names
 import { storageService } from '@app/lib/storage';
 import { sevenTvService } from '@app/services/seventv-service';
 import {
@@ -27,28 +30,6 @@ import type {
   UserCosmeticsInfo,
 } from '@app/types/seventv/cosmetics';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-
-jest.mock('@app/lib/storage', () => ({
-  storageService: {
-    getString: jest.fn(() => null),
-    set: jest.fn(),
-    delete: jest.fn(),
-    clearNamespace: jest.fn(),
-  },
-}));
-
-jest.mock('@app/services/seventv-service', () => ({
-  sevenTvService: {
-    get7tvUserId: jest.fn(),
-    getUserCosmeticsGql: jest.fn(),
-    sendPresence: jest.fn(() => Promise.resolve()),
-  },
-  clearSevenTvUserCache: jest.fn(),
-}));
-
-jest.mock('@app/utils/seventv/sevenTvSessionId', () => ({
-  getSevenTvSessionId: jest.fn(() => null),
-}));
 
 const PAINT_ID = 'paint-popular';
 const BADGE_ID = 'badge-popular';
@@ -89,6 +70,12 @@ function buildBadge(): SanitisedBadgeSet {
 }
 
 function resetStore() {
+  jest.spyOn(storageService, 'getString').mockReturnValue(null);
+  jest.spyOn(storageService, 'set').mockImplementation(() => {});
+  jest.spyOn(storageService, 'delete').mockImplementation(() => {});
+  jest.spyOn(storageService, 'clearNamespace').mockImplementation(() => {});
+  jest.spyOn(sevenTvService, 'getUserCosmeticsGql').mockResolvedValue(null);
+
   // Also drops pending debounced snapshot syncs, so wearer writes cannot
   // leak into the next test's storage counts.
   clearUserCosmeticsCache();

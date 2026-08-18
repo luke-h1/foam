@@ -1,11 +1,12 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 
+import * as SegmentedControlModule from '@app/components/SegmentedControl/SegmentedControl';
 import { EmoteBadgeViewerScreen } from '@app/screens/SettingsScreen/EmoteBadgeViewerScreen';
-import { bttvEmoteService as _bttvEmoteService } from '@app/services/bttv-emote-service';
-import { ffzService as _ffzService } from '@app/services/ffz-service';
-import { sevenTvService as _sevenTvService } from '@app/services/seventv-service';
-import { twitchBadgeService as _twitchBadgeService } from '@app/services/twitch-badge-service';
-import { twitchEmoteService as _twitchEmoteService } from '@app/services/twitch-emote-service';
+import { bttvEmoteService } from '@app/services/bttv-emote-service';
+import { ffzService } from '@app/services/ffz-service';
+import { sevenTvService } from '@app/services/seventv-service';
+import { twitchBadgeService } from '@app/services/twitch-badge-service';
+import { twitchEmoteService } from '@app/services/twitch-emote-service';
 import { clearGlobalResourceCache } from '@app/store/chat/actions/channelResources';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { makeEmptyGlobalCacheData } from '@app/store/chat/types/constants';
@@ -18,102 +19,16 @@ import {
   twitchGlobalEmotesFixture,
 } from './__fixtures__/globalEmoteBadgeData.fixture';
 
-jest.mock('@app/services/bttv-emote-service');
-jest.mock('@app/services/ffz-service');
-jest.mock('@app/services/seventv-service');
-jest.mock('@app/services/twitch-badge-service');
-jest.mock('@app/services/twitch-emote-service');
-
-// LegendList virtualizes natively and renders nothing under jest; render every
-// item through renderItem so the grid content is assertable.
-jest.mock('@legendapp/list/react-native', () => ({
-  useViewability: () => {},
-  LegendList: ({
-    data,
-    renderItem,
-    keyExtractor,
-  }: {
-    data: unknown[];
-    renderItem: (info: { item: unknown; index: number }) => unknown;
-    keyExtractor: (item: unknown, index: number) => string;
-  }) => {
-    const React = require('react');
-    const { View } = require('react-native');
-    return React.createElement(
-      View,
-      null,
-      data.map((item, index) =>
-        React.createElement(
-          View,
-          { key: keyExtractor(item, index) },
-          renderItem({ item, index }),
-        ),
-      ),
-    );
-  },
-}));
-
-// LegendSectionList virtualizes natively; render every section header and item
-// so the grouped badge grid is assertable under jest.
-jest.mock('@legendapp/list/section-list', () => ({
-  SectionList: ({
-    sections,
-    renderItem,
-    renderSectionHeader,
-    keyExtractor,
-  }: {
-    sections: { key: string; data: unknown[] }[];
-    renderItem: (info: { item: unknown; index: number }) => unknown;
-    renderSectionHeader: (info: { section: unknown }) => unknown;
-    keyExtractor: (item: unknown, index: number) => string;
-  }) => {
-    const React = require('react');
-    const { View } = require('react-native');
-    return React.createElement(
-      View,
-      null,
-      sections.map(section =>
-        React.createElement(View, { key: section.key }, [
-          React.createElement(
-            View,
-            { key: `${section.key}-header` },
-            renderSectionHeader({ section }),
-          ),
-          ...section.data.map((item, index) =>
-            React.createElement(
-              View,
-              { key: keyExtractor(item, index) },
-              renderItem({ item, index }),
-            ),
-          ),
-        ]),
-      ),
-    );
-  },
-}));
-
-// The preview sheets pull in expo-media-library (via useSaveImageToGallery)
-// and are exercised by their own tests; stub them here to keep this screen test
-// focused on the viewer's data wiring.
-jest.mock(
-  '@app/components/Chat/components/EmotePreviewSheet/EmotePreviewSheet',
-  () => ({ EmotePreviewSheet: () => null }),
-);
-jest.mock(
-  '@app/components/Chat/components/BadgePreviewSheet/BadgePreviewSheet',
-  () => ({ BadgePreviewSheet: () => null }),
-);
+// @legendapp/list's LegendList and SectionList are faked by the root
+// __mocks__/@legendapp/list/* manual mocks (render every item/section
+// through renderItem so grid content is assertable under jest). The preview
+// sheets render for real - expo-media-library is faked at the root too.
 
 // SegmentedControl wraps the native @expo/ui control, which cannot receive
 // segment-change events in tests; expose each segment as a pressable instead.
-jest.mock('@app/components/SegmentedControl/SegmentedControl', () => ({
-  SegmentedControl: ({
-    items,
-    onChange,
-  }: {
-    items: { label: string }[];
-    onChange: (index: number) => void;
-  }) => {
+jest
+  .spyOn(SegmentedControlModule, 'SegmentedControl')
+  .mockImplementation(({ items, onChange }) => {
     const React = require('react');
     const { View, TouchableOpacity, Text } = require('react-native');
     return React.createElement(
@@ -131,32 +46,33 @@ jest.mock('@app/components/SegmentedControl/SegmentedControl', () => ({
         ),
       ),
     );
-  },
-}));
+  });
 
-const bttvEmoteService = jest.mocked(_bttvEmoteService);
-const ffzService = jest.mocked(_ffzService);
-const sevenTvService = jest.mocked(_sevenTvService);
-const twitchBadgeService = jest.mocked(_twitchBadgeService);
-const twitchEmoteService = jest.mocked(_twitchEmoteService);
+const getGlobalEmotesSpy = jest.spyOn(twitchEmoteService, 'getGlobalEmotes');
+const bttvGlobalEmotesSpy = jest.spyOn(
+  bttvEmoteService,
+  'getSanitisedGlobalEmotes',
+);
+const ffzGlobalEmotesSpy = jest.spyOn(ffzService, 'getSanitisedGlobalEmotes');
+const sevenTvEmoteSetSpy = jest.spyOn(sevenTvService, 'getSanitisedEmoteSet');
+const listGlobalBadgesSpy = jest.spyOn(
+  twitchBadgeService,
+  'listSanitisedGlobalBadges',
+);
+const ffzGlobalBadgesSpy = jest.spyOn(ffzService, 'getSanitisedGlobalBadges');
+const sevenTvBadgesSpy = jest.spyOn(sevenTvService, 'fetchAllBadges');
 
 describe('EmoteBadgeViewerScreen', () => {
   beforeEach(() => {
     clearGlobalResourceCache();
     chatStore$.persisted.globalCaches.set(makeEmptyGlobalCacheData());
-    twitchEmoteService.getGlobalEmotes.mockResolvedValue(
-      twitchGlobalEmotesFixture,
-    );
-    bttvEmoteService.getSanitisedGlobalEmotes.mockResolvedValue(
-      bttvGlobalEmotesFixture,
-    );
-    ffzService.getSanitisedGlobalEmotes.mockResolvedValue([]);
-    sevenTvService.getSanitisedEmoteSet.mockResolvedValue([]);
-    twitchBadgeService.listSanitisedGlobalBadges.mockResolvedValue(
-      twitchGlobalBadgesFixture,
-    );
-    ffzService.getSanitisedGlobalBadges.mockResolvedValue([]);
-    sevenTvService.fetchAllBadges.mockResolvedValue(sevenTvGlobalBadgesFixture);
+    getGlobalEmotesSpy.mockResolvedValue(twitchGlobalEmotesFixture);
+    bttvGlobalEmotesSpy.mockResolvedValue(bttvGlobalEmotesFixture);
+    ffzGlobalEmotesSpy.mockResolvedValue([]);
+    sevenTvEmoteSetSpy.mockResolvedValue([]);
+    listGlobalBadgesSpy.mockResolvedValue(twitchGlobalBadgesFixture);
+    ffzGlobalBadgesSpy.mockResolvedValue([]);
+    sevenTvBadgesSpy.mockResolvedValue(sevenTvGlobalBadgesFixture);
   });
 
   test('renders global emote provider sets by default', async () => {
@@ -176,7 +92,7 @@ describe('EmoteBadgeViewerScreen', () => {
       await screen.findByTestId('badge-cell-moderator_1_1'),
     ).toBeOnTheScreen();
     expect(screen.getByText('Twitch')).toBeOnTheScreen();
-    expect(twitchBadgeService.listSanitisedGlobalBadges).toHaveBeenCalled();
+    expect(listGlobalBadgesSpy).toHaveBeenCalled();
   });
 
   test('renders 7TV badges in the badges tab', async () => {
@@ -190,12 +106,12 @@ describe('EmoteBadgeViewerScreen', () => {
       await screen.findByTestId('badge-cell-7tv_badge_1'),
     ).toBeOnTheScreen();
     expect(screen.getByText('7TV')).toBeOnTheScreen();
-    expect(sevenTvService.fetchAllBadges).toHaveBeenCalled();
+    expect(sevenTvBadgesSpy).toHaveBeenCalled();
   });
 
   test('shows the empty state when no badges are available', async () => {
-    twitchBadgeService.listSanitisedGlobalBadges.mockResolvedValue([]);
-    sevenTvService.fetchAllBadges.mockResolvedValue([]);
+    listGlobalBadgesSpy.mockResolvedValue([]);
+    sevenTvBadgesSpy.mockResolvedValue([]);
 
     render(<EmoteBadgeViewerScreen />);
 

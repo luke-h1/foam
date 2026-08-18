@@ -1,12 +1,12 @@
+// This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
+// field (see types/seventv/cosmetics.ts), not a naming choice.
+// oxlint-disable anti-slop/no-shape-in-symbol-names
+import * as cosmetics from '@app/store/chat/actions/cosmetics';
 import {
-  fetchUserCosmeticsByTwitchId,
-  getBadge,
-  getPaint,
+  addBadge,
+  addPaint,
   getUserBadgeId,
   getUserPaintId,
-  removeUserBadge,
-  removeUserCosmetics,
-  removeUserPaint,
 } from '@app/store/chat/actions/cosmetics';
 import {
   applyEntitlementCreateEvent,
@@ -19,87 +19,80 @@ import {
   getSevenTvUserIdForTwitchId,
   MAX_SEVEN_TV_USER_LINK_ENTRIES,
 } from '@app/store/chat/actions/cosmeticsLinks';
-import { handlePersonalEmoteSetEntitlement } from '@app/store/chat/actions/personalEmotes';
-import type { EntitlementCreate } from '@app/types/seventv/cosmetics';
+import * as personalEmotes from '@app/store/chat/actions/personalEmotes';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import type {
+  EntitlementCreate,
+  PaintData,
+} from '@app/types/seventv/cosmetics';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import { logger } from '@app/utils/logger';
 
 import { createBadgeEntitlement } from './__fixtures__/cosmeticsBridge.fixture';
 
-const mockUserPaintBindings = new Map<string, string>();
-const mockUserBadgeBindings = new Map<string, string>();
+const cachedPaint = {
+  id: 'paint-1',
+  name: 'Cached Paint',
+  color: null,
+  layers: { length: 0 },
+  shadows: { length: 0 },
+  textStyle: null,
+  function: 'LINEAR_GRADIENT',
+  repeat: false,
+  angle: 90,
+  shape: 'circle',
+  image_url: '',
+  stops: { length: 0 },
+} satisfies PaintData;
 
-jest.mock('@app/store/chat/actions/cosmetics', () => ({
-  addBadge: jest.fn(),
-  addPaint: jest.fn(),
-  fetchUserCosmeticsByTwitchId: jest.fn(() => Promise.resolve()),
-  getBadge: jest.fn(),
-  getPaint: jest.fn(),
-  getUserBadgeId: jest.fn((ttvUserId: string) =>
-    mockUserBadgeBindings.get(ttvUserId),
-  ),
-  getUserPaintId: jest.fn((ttvUserId: string) =>
-    mockUserPaintBindings.get(ttvUserId),
-  ),
-  removeUserBadge: jest.fn((ttvUserId: string) => {
-    mockUserBadgeBindings.delete(ttvUserId);
-  }),
-  removeUserCosmetics: jest.fn((ttvUserId: string) => {
-    mockUserPaintBindings.delete(ttvUserId);
-    mockUserBadgeBindings.delete(ttvUserId);
-  }),
-  removeUserPaint: jest.fn((ttvUserId: string) => {
-    mockUserPaintBindings.delete(ttvUserId);
-  }),
-  setUserBadge: jest.fn((ttvUserId: string, badgeId: string) => {
-    mockUserBadgeBindings.set(ttvUserId, badgeId);
-  }),
-  setUserPaint: jest.fn((ttvUserId: string, paintId: string) => {
-    mockUserPaintBindings.set(ttvUserId, paintId);
-  }),
-}));
+const cachedBadge = {
+  id: 'badge-1',
+  url: 'https://cdn.7tv.app/badge/badge-1/3x',
+  type: '7TV Badge',
+  title: 'Cached Badge',
+  set: 'seventv-badges',
+  provider: '7tv',
+} satisfies SanitisedBadgeSet;
 
-jest.mock('@app/store/chat/actions/personalEmotes', () => ({
-  handlePersonalEmoteSetEntitlement: jest.fn(),
-}));
+function resetChatStore(): void {
+  chatStore$.currentChannelId.set('channel-1');
+  chatStore$.paints.set({});
+  chatStore$.badges.set({});
+  chatStore$.userPaintIds.set({});
+  chatStore$.userBadgeIds.set({});
+}
 
-jest.mock('@app/store/chat/observables/chatStore', () => ({
-  chatStore$: {
-    currentChannelId: { peek: jest.fn(() => 'channel-1') },
-  },
-}));
+let mockFetchUserCosmeticsByTwitchId: jest.SpiedFunction<
+  typeof cosmetics.fetchUserCosmeticsByTwitchId
+>;
+let mockRemoveUserBadge: jest.SpiedFunction<typeof cosmetics.removeUserBadge>;
+let mockRemoveUserCosmetics: jest.SpiedFunction<
+  typeof cosmetics.removeUserCosmetics
+>;
+let mockRemoveUserPaint: jest.SpiedFunction<typeof cosmetics.removeUserPaint>;
+let mockHandlePersonalEmoteSetEntitlement: jest.SpiedFunction<
+  typeof personalEmotes.handlePersonalEmoteSetEntitlement
+>;
 
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    stv: { warn: jest.fn() },
-    stvWs: { info: jest.fn(), debug: jest.fn(), warn: jest.fn() },
-  },
-}));
+beforeEach(() => {
+  jest.clearAllMocks();
+  resetChatStore();
+  clearEntitlementUserLinkState();
 
-const mockGetBadge = jest.mocked(getBadge);
-const mockGetPaint = jest.mocked(getPaint);
-const mockFetchUserCosmeticsByTwitchId = jest.mocked(
-  fetchUserCosmeticsByTwitchId,
-);
-const mockRemoveUserBadge = jest.mocked(removeUserBadge);
-const mockRemoveUserCosmetics = jest.mocked(removeUserCosmetics);
-const mockRemoveUserPaint = jest.mocked(removeUserPaint);
-const mockHandlePersonalEmoteSetEntitlement = jest.mocked(
-  handlePersonalEmoteSetEntitlement,
-);
-
-const resetUserBindings = () => {
-  mockUserPaintBindings.clear();
-  mockUserBadgeBindings.clear();
-};
+  mockFetchUserCosmeticsByTwitchId = jest
+    .spyOn(cosmetics, 'fetchUserCosmeticsByTwitchId')
+    .mockResolvedValue(undefined);
+  mockRemoveUserBadge = jest.spyOn(cosmetics, 'removeUserBadge');
+  mockRemoveUserCosmetics = jest.spyOn(cosmetics, 'removeUserCosmetics');
+  mockRemoveUserPaint = jest.spyOn(cosmetics, 'removeUserPaint');
+  mockHandlePersonalEmoteSetEntitlement = jest
+    .spyOn(personalEmotes, 'handlePersonalEmoteSetEntitlement')
+    .mockImplementation(() => {});
+  jest.spyOn(logger.stv, 'warn').mockImplementation(() => {});
+  jest.spyOn(logger.stvWs, 'info').mockImplementation(() => {});
+});
 
 describe('applyEntitlementCreateEvent', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    clearEntitlementUserLinkState();
-    resetUserBindings();
-    mockGetBadge.mockReturnValue(undefined);
-    mockGetPaint.mockReturnValue(undefined);
-  });
-
   test('binds paints and hydrates the definition when it is missing', () => {
     const entitlement: EntitlementCreate = {
       id: 'entitlement-paint-1',
@@ -126,7 +119,7 @@ describe('applyEntitlementCreateEvent', () => {
   });
 
   test('does not refetch when the paint definition is already cached', () => {
-    mockGetPaint.mockReturnValue({ id: 'paint-1' } as never);
+    addPaint(cachedPaint);
 
     applyEntitlementCreateEvent({
       entitlement: {
@@ -165,7 +158,7 @@ describe('applyEntitlementCreateEvent', () => {
   });
 
   test('does not refetch when the badge definition is already cached', () => {
-    mockGetBadge.mockReturnValue({ id: 'badge-1' } as never);
+    addBadge(cachedBadge);
 
     applyEntitlementCreateEvent({
       entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
@@ -213,12 +206,6 @@ describe('applyEntitlementCreateEvent', () => {
 });
 
 describe('applyEntitlementResetEvent', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    clearEntitlementUserLinkState();
-    resetUserBindings();
-  });
-
   test('clears paint and badge bindings for linked Twitch users', () => {
     applyEntitlementCreateEvent({
       entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
@@ -312,12 +299,6 @@ describe('applyEntitlementResetEvent', () => {
 });
 
 describe('applyEntitlementUpdateEvent', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    clearEntitlementUserLinkState();
-    resetUserBindings();
-  });
-
   test('updates bindings for linked users', () => {
     applyEntitlementCreateEvent({
       entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
@@ -386,12 +367,6 @@ describe('applyEntitlementUpdateEvent', () => {
 });
 
 describe('applyEntitlementDeleteEvent', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    clearEntitlementUserLinkState();
-    resetUserBindings();
-  });
-
   test('clears only the badge binding for a remembered badge entitlement delete', () => {
     applyEntitlementCreateEvent({
       entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),

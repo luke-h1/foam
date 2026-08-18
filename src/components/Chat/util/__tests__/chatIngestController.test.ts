@@ -16,26 +16,6 @@ import { createChatIrcHandlers } from '../createChatIrcHandlers';
 import type { BufferedMessage } from '../messageBuffer';
 import { createRoomStateTracker } from '../roomState/roomStateTracker';
 
-jest.mock('@legendapp/state/persist', () => ({
-  configureObservablePersistence: jest.fn(),
-  persistObservable: jest.fn(),
-}));
-
-jest.mock('react-native-mmkv', () => ({
-  MMKV: class MockMMKV {
-    set = jest.fn();
-    getString = jest.fn();
-    getAllKeys = jest.fn(() => []);
-    delete = jest.fn();
-  },
-  createMMKV: () => ({
-    set: jest.fn(),
-    getString: jest.fn(),
-    getAllKeys: jest.fn(() => []),
-    remove: jest.fn(),
-  }),
-}));
-
 function stripPendingParse(message: BufferedMessage): BufferedMessage {
   if (!message.pendingEmoteParse) {
     return message;

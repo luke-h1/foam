@@ -533,8 +533,8 @@ const MAX_PAINT_DEFINITIONS = 750;
 
 const sweepUnreferencedPaints = () => {
   const paints = chatStore$.paints.peek();
-  const paintIds = Object.keys(paints);
-  if (paintIds.length < MAX_PAINT_DEFINITIONS) {
+  const paintEntries = Object.entries(paints);
+  if (paintEntries.length < MAX_PAINT_DEFINITIONS) {
     return;
   }
   // Session snapshots resolve against these definitions too - sweeping a
@@ -551,9 +551,9 @@ const sweepUnreferencedPaints = () => {
     }
   }
   const next: typeof paints = {};
-  paintIds.forEach(paintId => {
+  paintEntries.forEach(([paintId, paint]) => {
     if (referenced.has(paintId)) {
-      next[paintId] = paints[paintId] as PaintData;
+      next[paintId] = paint;
     }
   });
   chatStore$.paints.set(next);
@@ -606,7 +606,7 @@ function ensureUserPaintFlagInvalidator(): void {
   chatStore$.userPaintIds.onChange(({ changes }) => {
     for (const change of changes) {
       const changedUserId = change.path[0];
-      if (typeof changedUserId !== 'string') {
+      if (changedUserId === undefined) {
         clearUserPaintFlagCache();
         return;
       }
@@ -643,8 +643,8 @@ const MAX_BADGE_DEFINITIONS = 750;
 
 const sweepUnreferencedBadges = () => {
   const badges = chatStore$.badges.peek();
-  const badgeIds = Object.keys(badges);
-  if (badgeIds.length < MAX_BADGE_DEFINITIONS) {
+  const badgeEntries = Object.entries(badges);
+  if (badgeEntries.length < MAX_BADGE_DEFINITIONS) {
     return;
   }
   const now = Date.now();
@@ -655,9 +655,9 @@ const sweepUnreferencedBadges = () => {
     }
   }
   const next: typeof badges = {};
-  badgeIds.forEach(badgeId => {
+  badgeEntries.forEach(([badgeId, badge]) => {
     if (referenced.has(badgeId)) {
-      next[badgeId] = badges[badgeId] as SanitisedBadgeSet;
+      next[badgeId] = badge;
     }
   });
   chatStore$.badges.set(next);

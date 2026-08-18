@@ -2,31 +2,25 @@ import type { WebViewMessageEvent } from 'react-native-webview';
 
 import { act, renderHook } from '@testing-library/react-native';
 
-import { countMetric } from '@app/lib/sentry';
+import * as sentry from '@app/lib/sentry';
+import { logger } from '@app/utils/logger';
 
 import type { PlayerMessage } from '../types';
 import { usePlayerBridge } from '../usePlayerBridge';
 
-jest.mock('@app/lib/sentry', () => ({
-  countMetric: jest.fn(),
-  endSpan: jest.fn(),
-  startInactiveSpan: jest.fn(),
-}));
+const mockCountMetric = jest
+  .spyOn(sentry, 'countMetric')
+  .mockImplementation(() => {});
+jest.spyOn(sentry, 'endSpan').mockImplementation(() => {});
+jest.spyOn(sentry, 'startInactiveSpan').mockImplementation(() => undefined);
 
-const mockCountMetric = jest.mocked(countMetric);
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    main: {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    },
-  },
-}));
+jest.spyOn(logger.main, 'debug').mockImplementation(() => {});
+jest.spyOn(logger.main, 'info').mockImplementation(() => {});
+jest.spyOn(logger.main, 'warn').mockImplementation(() => {});
+jest.spyOn(logger.main, 'error').mockImplementation(() => {});
 
 function messageEvent(message: PlayerMessage): WebViewMessageEvent {
+  // SAFETY: the bridge reads only nativeEvent.data off the message event.
   return {
     nativeEvent: { data: JSON.stringify(message) },
   } as WebViewMessageEvent;

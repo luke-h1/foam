@@ -3,7 +3,7 @@ import { act, renderHook } from '@testing-library/react-native';
 import { usePreferences } from '../selectors';
 import { type Preferences, replacePreferences } from '../state';
 
-const basePreferences = {
+const basePreferences: Preferences = {
   updatedAt: 1,
   theme: 'foam-dark',
   hapticFeedback: true,
@@ -31,7 +31,7 @@ const basePreferences = {
   show7tvBadges: true,
   showFFzBadges: true,
   showBttvBadges: true,
-  blockedTerms: [] as string[],
+  blockedTerms: [],
   chatTimestampFormat: '24h',
   chatFontScale: 'default',
   chatScrollback: 150,
@@ -39,8 +39,8 @@ const basePreferences = {
   deletedMessageStyle: 'notice',
   ignoreClearChat: false,
   chatMentionHaptics: true,
-  customHighlights: [] as { id: string; phrase: string; color: string }[],
-  savedPhrases: [] as { id: string; text: string }[],
+  customHighlights: [],
+  savedPhrases: [],
   shakeToReport: true,
   landscapeChatWidth: null,
   customPlayerEnabled: true,
@@ -49,7 +49,7 @@ const basePreferences = {
   enhancedVideoStability: false,
   chatDebugTools: false,
   sevenTvPaintRenderer: 'native',
-} as const satisfies Preferences;
+};
 
 describe('usePreferences', () => {
   beforeEach(() => {

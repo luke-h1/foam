@@ -4,9 +4,7 @@ import CpuUsage from '@modules/cpu-usage/src/CpuUsageModule';
 
 function readUsage(): number | null {
   const value = CpuUsage.getUsage();
-  return typeof value === 'number' && Number.isFinite(value)
-    ? Math.round(value)
-    : null;
+  return Number.isFinite(value) ? Math.round(value) : null;
 }
 
 export function useCpuUsage(): number {

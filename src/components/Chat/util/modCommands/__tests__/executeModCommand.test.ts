@@ -6,20 +6,16 @@ import {
   type ModCommandContext,
 } from '../executeModCommand';
 
-jest.mock('@app/services/twitch-service', () => ({
-  twitchService: {
-    banChatUser: jest.fn(),
-    getUser: jest.fn(),
-    sendChatAnnouncement: jest.fn(),
-    sendShoutout: jest.fn(),
-    unbanChatUser: jest.fn(),
-    updateChatSettings: jest.fn(),
-    updateShieldMode: jest.fn(),
-    warnChatUser: jest.fn(),
-  },
-}));
-
-const service = jest.mocked(twitchService);
+const service = {
+  banChatUser: jest.spyOn(twitchService, 'banChatUser'),
+  getUser: jest.spyOn(twitchService, 'getUser'),
+  sendChatAnnouncement: jest.spyOn(twitchService, 'sendChatAnnouncement'),
+  sendShoutout: jest.spyOn(twitchService, 'sendShoutout'),
+  unbanChatUser: jest.spyOn(twitchService, 'unbanChatUser'),
+  updateChatSettings: jest.spyOn(twitchService, 'updateChatSettings'),
+  updateShieldMode: jest.spyOn(twitchService, 'updateShieldMode'),
+  warnChatUser: jest.spyOn(twitchService, 'warnChatUser'),
+};
 
 const context = {
   broadcasterId: 'channel-1',
@@ -45,6 +41,13 @@ describe('executeModCommand', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     service.getUser.mockResolvedValue(makeUser('user-9'));
+    service.banChatUser.mockResolvedValue(undefined);
+    service.sendChatAnnouncement.mockResolvedValue(undefined);
+    service.sendShoutout.mockResolvedValue(undefined);
+    service.unbanChatUser.mockResolvedValue(undefined);
+    service.updateChatSettings.mockResolvedValue(undefined);
+    service.updateShieldMode.mockResolvedValue(undefined);
+    service.warnChatUser.mockResolvedValue(undefined);
   });
 
   test('timeout resolves the login and bans with a duration', async () => {

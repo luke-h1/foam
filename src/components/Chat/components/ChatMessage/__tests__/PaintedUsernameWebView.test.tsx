@@ -1,4 +1,8 @@
+// This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
+// field (see types/seventv/cosmetics.ts), not a naming choice.
+// oxlint-disable anti-slop/no-shape-in-symbol-names
 import { StyleSheet } from 'react-native';
+import * as RNWebView from 'react-native-webview';
 
 import { act, render, screen } from '@testing-library/react-native';
 
@@ -7,14 +11,17 @@ import type { PaintData } from '@app/types/seventv/cosmetics';
 import { chatLineMetrics } from '../chatScale';
 import { PaintedUsernameWebView } from '../CosmeticUsername/PaintedUsernameWebView';
 
-jest.mock('react-native-webview', () => {
+/**
+ * The real WebView needs a native browser engine unavailable under
+ * react-test-renderer, so swap in a View that forwards the props under test.
+ */
+jest.spyOn(RNWebView, 'WebView').mockImplementation(props => {
   const React = jest.requireActual('react');
   const { View } = jest.requireActual('react-native');
-
-  return {
-    WebView: (props: object) =>
-      React.createElement(View, { testID: 'painted-webview', ...props }),
-  };
+  return React.createElement(View, {
+    testID: 'painted-webview',
+    ...props,
+  });
 });
 
 const paint: PaintData = {

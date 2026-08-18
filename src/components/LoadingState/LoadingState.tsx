@@ -24,10 +24,10 @@ interface LoadingStateProps {
   style?: StyleProp<ViewStyle>;
 }
 
-const SPINNER_SIZES: Record<'small' | 'large', number> = {
+const SPINNER_SIZES = {
   small: 20,
   large: 36,
-};
+} satisfies Record<'small' | 'large', number>;
 const STROKE_WIDTH = 3;
 const ROTATION_DURATION_MS = 900;
 const ARC_SWEEP_DEGREES = 270;
@@ -37,9 +37,9 @@ export function LoadingState({
   style,
 }: LoadingStateProps) {
   const size =
-    typeof indicatorSize === 'number'
-      ? indicatorSize
-      : SPINNER_SIZES[indicatorSize];
+    indicatorSize === 'small' || indicatorSize === 'large'
+      ? SPINNER_SIZES[indicatorSize]
+      : indicatorSize;
 
   return (
     <View style={[styles.container, style]} testID='loading-state'>

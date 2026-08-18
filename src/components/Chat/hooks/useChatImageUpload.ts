@@ -26,7 +26,9 @@ export function useChatImageUpload(onUploaded: (url: string) => void) {
         quality: 0.8,
       });
     } catch (error) {
-      logger.chat.error('[kappa] image picker failed', { error });
+      logger.chat.error('[kappa] image picker failed', {
+        error: error instanceof Error ? error : String(error),
+      });
       toast.error("Couldn't upload that image. Please try again.");
       return;
     }
@@ -46,7 +48,9 @@ export function useChatImageUpload(onUploaded: (url: string) => void) {
       onUploaded(link);
       toast.success('Image uploaded');
     } catch (error) {
-      logger.chat.error('[kappa] chat image upload failed', { error });
+      logger.chat.error('[kappa] chat image upload failed', {
+        error: error instanceof Error ? error : String(error),
+      });
       toast.error("Couldn't upload that image. Please try again.");
     } finally {
       setIsUploading(false);

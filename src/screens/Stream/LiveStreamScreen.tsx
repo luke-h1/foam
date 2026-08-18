@@ -45,6 +45,7 @@ import { useChannelPrediction } from '@app/hooks/useChannelPrediction';
 import { useOnAppStateChange } from '@app/hooks/useOnAppStateChange';
 import { useSyncRef } from '@app/hooks/useSyncRef';
 import { notification } from '@app/lib/haptics';
+import type { LogMetadataValue } from '@app/lib/sentry';
 import { markSignpost } from '@app/lib/signpost';
 import { twitchService } from '@app/services/twitch-service';
 import { addCreatedClip } from '@app/store/createdClips/actions/createdClips';
@@ -826,7 +827,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           },
         });
       })
-      .catch((error: unknown) => {
+      .catch((error: LogMetadataValue) => {
         logger.twitch.warn('Failed to create clip', {
           error,
           channel_id: resolvedChannelId,

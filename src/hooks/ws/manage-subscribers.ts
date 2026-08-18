@@ -7,6 +7,7 @@ export type Subscribers = {
 const subscribers: Subscribers = {};
 
 export const getSubscribers = (url: string): Subscriber[] => {
+  // SAFETY: addSubscriber creates the set before any socket is opened for the url, and the key is never removed.
   return Array.from(subscribers[url] as Set<Subscriber>);
 };
 

@@ -7,16 +7,12 @@
  * exceeded aborts the app. The patch makes instrumentConsole idempotent per
  * level. If a dependency bump drops the patch, this test fails.
  */
-const consoleInstrumentation =
-  require('../node_modules/@sentry/core/build/cjs/instrument/console.js') as {
-    instrumentConsole: (() => void) | undefined;
-  };
-const debugLogger =
-  require('../node_modules/@sentry/core/build/cjs/utils/debug-logger.js') as {
-    originalConsoleMethods: Partial<
-      Record<string, (...args: unknown[]) => void>
-    >;
-  };
+const consoleInstrumentation: {
+  instrumentConsole: (() => void) | undefined;
+} = require('../node_modules/@sentry/core/build/cjs/instrument/console.js');
+const debugLogger: {
+  originalConsoleMethods: Partial<Record<string, (...args: unknown[]) => void>>;
+} = require('../node_modules/@sentry/core/build/cjs/utils/debug-logger.js');
 
 const nativeConsole = {
   debug: console.debug,
@@ -34,7 +30,7 @@ afterAll(() => {
 
 describe('@sentry/core console instrumentation patch', () => {
   test('exposes instrumentConsole so the patch can be exercised', () => {
-    expect(typeof consoleInstrumentation.instrumentConsole).toBe('function');
+    expect(consoleInstrumentation.instrumentConsole).toBeInstanceOf(Function);
   });
 
   test('instrumenting twice keeps the native method as the original and does not recurse', () => {

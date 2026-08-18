@@ -102,9 +102,7 @@ export function createEmoteData(
   };
 }
 
-export function createChatTags(
-  overrides: Record<string, string> = {},
-): Record<string, string> {
+export function createChatTags(overrides: Record<string, string> = {}) {
   const id = overrides.id ?? 'msg-1';
   const login = overrides.login ?? 'viewer';
   const displayName = overrides['display-name'] ?? 'Viewer';
@@ -125,7 +123,7 @@ export function createChatTags(
     'emote-sets': overrides['emote-sets'] ?? '',
     'user-type': overrides['user-type'] ?? '',
     ...overrides,
-  };
+  } satisfies Record<string, string>;
 }
 
 export function createChatMessage({

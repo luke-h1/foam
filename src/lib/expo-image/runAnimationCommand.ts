@@ -9,10 +9,7 @@ export function runAnimationCommand(
   command: 'startAnimating' | 'stopAnimating',
 ): void {
   try {
-    const result = image?.[command]?.() as Promise<unknown> | undefined;
-    if (result && typeof result.catch === 'function') {
-      result.catch(() => {});
-    }
+    image?.[command]?.().catch(() => {});
   } catch {
     // Recycled expo-image view may already be detached.
   }

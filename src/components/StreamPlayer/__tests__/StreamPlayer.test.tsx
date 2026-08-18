@@ -1,69 +1,87 @@
-import { createRef } from 'react';
-import { AppState, StyleSheet } from 'react-native';
+import { createRef, useImperativeHandle } from 'react';
+import { AppState, InteractionManager, StyleSheet } from 'react-native';
+import type { Ref } from 'react';
 import type { AppStateStatus, ViewStyle } from 'react-native';
-import type { WebViewProps } from 'react-native-webview';
+// Spy on the submodule directly: the package barrel re-exports it via
+// `export *`, and Babel's wildcard re-export getter is non-configurable, so
+// jest.spyOn on the barrel's binding throws "Cannot redefine property".
+import * as SafeAreaContext from 'react-native-safe-area-context/src/SafeAreaContext';
+import type { WebViewNavigation, WebViewProps } from 'react-native-webview';
+import * as RNWebView from 'react-native-webview';
 
 import { act, render } from '@testing-library/react-native';
 
 import type { LogMetadata } from '@app/lib/sentry';
+import * as sentry from '@app/lib/sentry';
 import { logger } from '@app/utils/logger';
 
 const mockInjectJavaScript = jest.fn();
 const mockWebViewProps: WebViewProps[] = [];
 
-jest.mock('react-native-webview', () => {
-  const React = require('react');
-  const { View } = require('react-native');
+interface MockWebViewHandle {
+  injectJavaScript: (script: string) => void;
+}
 
-  return {
-    WebView: React.forwardRef((props: WebViewProps, ref: unknown) => {
-      mockWebViewProps.push(props);
-      React.useImperativeHandle(ref, () => ({
-        injectJavaScript: mockInjectJavaScript,
-      }));
-      return React.createElement(View, { testID: 'stream-webview' });
-    }),
-  };
-});
+/**
+ * Installs every module-level spy this file relies on. `afterEach` calls
+ * `jest.restoreAllMocks()` (needed to reset the per-test `AppState`
+ * listener spy below), which also reverts spies installed once at module
+ * scope back to their real implementations - so these are (re)installed
+ * fresh before every test instead.
+ */
+function installModuleSpies() {
+  // The real WebView needs a native browser engine unavailable under
+  // react-test-renderer, so swap in a View that forwards the props under
+  // test and captures the props/ref used to assert on the player bridge.
+  // WebView's real type declares its render as returning a WebView class
+  // instance rather than a ReactElement, so build the element through
+  // requireActual (typed `any`) the same way PaintedUsernameWebView.test.tsx
+  // does, rather than fighting that declaration with a cast.
+  jest.spyOn(RNWebView, 'WebView').mockImplementation(rawProps => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- untyped requireActual keeps this element's type from fighting WebView's class-instance render signature, matching PaintedUsernameWebView.test.tsx.
+    const ReactActual = jest.requireActual('react');
+    const { View: RNView } = jest.requireActual('react-native');
+    // SAFETY: the mocked component only ever receives WebViewProps plus a ref.
+    const { ref, ...props } = rawProps as WebViewProps & {
+      ref?: Ref<MockWebViewHandle>;
+    };
+    mockWebViewProps.push(props);
+    useImperativeHandle(ref, () => ({
+      injectJavaScript: mockInjectJavaScript,
+    }));
+    return ReactActual.createElement(RNView, { testID: 'stream-webview' });
+  });
 
-jest.mock('@app/lib/haptics', () => ({
-  impact: jest.fn(),
-}));
+  // StreamPlayer defers mounting the WebView until interactions settle (see
+  // canMountWebView); run the callback synchronously so tests can read the
+  // WebView props right after render.
+  jest
+    .spyOn(InteractionManager, 'runAfterInteractions')
+    .mockImplementation(task => {
+      // SAFETY: this codebase only ever passes a plain callback to runAfterInteractions, never a SimpleTask/PromiseTask.
+      (task as (() => void) | undefined)?.();
+      return {
+        then: () => Promise.resolve(),
+        done: () => undefined,
+        cancel: jest.fn(),
+      };
+    });
 
-// StreamPlayer defers mounting the WebView until interactions settle (see
-// canMountWebView); run the callback synchronously so tests can read the
-// WebView props right after render.
-jest.mock('react-native/Libraries/Interaction/InteractionManager', () => ({
-  __esModule: true,
-  default: {
-    runAfterInteractions: (callback: () => void) => {
-      callback();
-      return { cancel: jest.fn() };
-    },
-    createInteractionHandle: jest.fn(),
-    clearInteractionHandle: jest.fn(),
-    setDeadline: jest.fn(),
-  },
-}));
+  jest.spyOn(sentry, 'countMetric').mockImplementation(() => {});
+  jest.spyOn(sentry, 'endSpan').mockImplementation(() => {});
+  jest.spyOn(sentry, 'forwardLogToSentry').mockImplementation(() => {});
+  jest.spyOn(sentry, 'startInactiveSpan').mockImplementation(() => undefined);
 
-jest.mock('@app/lib/sentry', () => ({
-  countMetric: jest.fn(),
-  endSpan: jest.fn(),
-  forwardLogToSentry: jest.fn(),
-  startInactiveSpan: jest.fn(),
-}));
-
-jest.mock('react-native-safe-area-context', () => ({
-  useSafeAreaInsets: () => ({
+  jest.spyOn(SafeAreaContext, 'useSafeAreaInsets').mockReturnValue({
     bottom: 0,
     left: 0,
     right: 0,
     top: 0,
-  }),
-}));
+  });
+}
 
 import { StreamPlayer } from '../StreamPlayer';
-import type { StreamPlayerRef } from '../types';
+import type { PlayerMessage, StreamPlayerRef } from '../types';
 
 function latestWebViewProps() {
   const props = mockWebViewProps.at(-1);
@@ -73,14 +91,47 @@ function latestWebViewProps() {
   return props;
 }
 
-function sendPlayerMessage(type: string, payload: unknown = {}) {
+function sendPlayerMessage(message: PlayerMessage) {
   const props = latestWebViewProps();
   act(() => {
+    // SAFETY: the player bridge's onMessage only reads event.nativeEvent.data.
     (props.onMessage as (event: { nativeEvent: { data: string } }) => void)({
       nativeEvent: {
-        data: JSON.stringify({ type, payload }),
+        data: JSON.stringify(message),
       },
     });
+  });
+}
+
+function webViewNavigation(url: string): WebViewNavigation {
+  return {
+    canGoBack: false,
+    canGoForward: false,
+    loading: false,
+    lockIdentifier: 0,
+    navigationType: 'other',
+    title: '',
+    url,
+  };
+}
+
+function emitWebViewLoadEnd(url: string) {
+  const { onLoadEnd } = latestWebViewProps();
+  act(() => {
+    // SAFETY: StreamPlayerWebView's onLoadEnd only reads event.nativeEvent.url.
+    (onLoadEnd as (event: { nativeEvent: { url: string } }) => void)({
+      nativeEvent: { url },
+    });
+  });
+}
+
+function emitWebViewNavigationStateChange(url: string) {
+  const { onNavigationStateChange } = latestWebViewProps();
+  if (!onNavigationStateChange) {
+    throw new Error('WebView was rendered without onNavigationStateChange');
+  }
+  act(() => {
+    onNavigationStateChange(webViewNavigation(url));
   });
 }
 
@@ -102,6 +153,7 @@ describe('StreamPlayer component messaging', () => {
   let emitAppState: (nextState: AppStateStatus) => void;
 
   beforeEach(() => {
+    installModuleSpies();
     mockInjectJavaScript.mockClear();
     mockWebViewProps.length = 0;
     emitAppState = () => {
@@ -156,17 +208,26 @@ describe('StreamPlayer component messaging', () => {
       />,
     );
 
-    sendPlayerMessage('ready');
-    sendPlayerMessage('error', { message: 'embed failed' });
-    sendPlayerMessage('play');
-    sendPlayerMessage('playing');
-    sendPlayerMessage('pause');
-    sendPlayerMessage('ended');
-    sendPlayerMessage('online');
-    sendPlayerMessage('offline');
-    sendPlayerMessage('contentGateDetected', { hasContentGate: true });
-    sendPlayerMessage('playbackStats', { hlsLatencyBroadcaster: 3.4 });
-    sendPlayerMessage('muteState', { muted: false, volume: 1 });
+    sendPlayerMessage({ type: 'ready' });
+    sendPlayerMessage({ type: 'error', payload: { message: 'embed failed' } });
+    sendPlayerMessage({ type: 'play' });
+    sendPlayerMessage({ type: 'playing' });
+    sendPlayerMessage({ type: 'pause' });
+    sendPlayerMessage({ type: 'ended' });
+    sendPlayerMessage({ type: 'online' });
+    sendPlayerMessage({ type: 'offline' });
+    sendPlayerMessage({
+      type: 'contentGateDetected',
+      payload: { hasContentGate: true },
+    });
+    sendPlayerMessage({
+      type: 'playbackStats',
+      payload: { hlsLatencyBroadcaster: 3.4 },
+    });
+    sendPlayerMessage({
+      type: 'muteState',
+      payload: { muted: false, volume: 1 },
+    });
 
     expect(onReady).toHaveBeenCalledTimes(1);
     expect(onPlay).toHaveBeenCalledTimes(1);
@@ -178,6 +239,7 @@ describe('StreamPlayer component messaging', () => {
     expect(onPlaybackLatencyChange).toHaveBeenCalledWith(3.4);
     expect(onError).toHaveBeenCalledWith('embed failed');
     expect(warnSpy).toHaveBeenCalledTimes(1);
+    // SAFETY: StreamPlayer logs embed errors through the LogMetadata overload of logger.main.error; jest.spyOn erases that overload to unknown[].
     const embedErrorMetadata = warnSpy.mock.calls[0]?.[1] as
       LogMetadata | undefined;
     expect(warnSpy.mock.calls[0]?.[0]).toBe(
@@ -196,7 +258,7 @@ describe('StreamPlayer component messaging', () => {
       outcome: 'failed',
       reason: 'embed_error',
     });
-    expect(typeof embedErrorMetadata?.elapsedMs).toBe('number');
+    expect(embedErrorMetadata?.elapsedMs).toEqual(expect.any(Number));
   });
 
   test('resumes autoplay after a transient player pause', () => {
@@ -214,7 +276,7 @@ describe('StreamPlayer component messaging', () => {
       />,
     );
 
-    sendPlayerMessage('pause');
+    sendPlayerMessage({ type: 'pause' });
 
     expect(onPause).not.toHaveBeenCalled();
     expect(mockInjectJavaScript).not.toHaveBeenCalled();
@@ -250,7 +312,7 @@ describe('StreamPlayer component messaging', () => {
     });
     mockInjectJavaScript.mockClear();
 
-    sendPlayerMessage('pause');
+    sendPlayerMessage({ type: 'pause' });
     act(() => {
       jest.advanceTimersByTime(250);
     });
@@ -276,8 +338,8 @@ describe('StreamPlayer component messaging', () => {
 
     const initialSource = latestWebViewProps().source;
 
-    sendPlayerMessage('twitchAuthComplete');
-    sendPlayerMessage('twitchAuthComplete');
+    sendPlayerMessage({ type: 'twitchAuthComplete' });
+    sendPlayerMessage({ type: 'twitchAuthComplete' });
     act(() => {
       jest.advanceTimersByTime(750);
     });
@@ -285,32 +347,16 @@ describe('StreamPlayer component messaging', () => {
     expect(latestWebViewProps().source).toStrictEqual(initialSource);
     expect(mockWebViewProps.length).toBeGreaterThan(1);
 
-    const propsAfterBridgeAuth = latestWebViewProps();
-    act(() => {
-      (
-        propsAfterBridgeAuth.onNavigationStateChange as (event: {
-          url: string;
-        }) => void
-      )({
-        url: 'https://www.twitch.tv/passport-callback#access_token=abc',
-      });
-    });
+    emitWebViewNavigationStateChange(
+      'https://www.twitch.tv/passport-callback#access_token=abc',
+    );
     act(() => {
       jest.advanceTimersByTime(750);
     });
 
-    const propsAfterNavigationAuth = latestWebViewProps();
-    act(() => {
-      (
-        propsAfterNavigationAuth.onLoadEnd as (event: {
-          nativeEvent: { url: string };
-        }) => void
-      )({
-        nativeEvent: {
-          url: 'https://www.twitch.tv/passport-callback#access_token=abc',
-        },
-      });
-    });
+    emitWebViewLoadEnd(
+      'https://www.twitch.tv/passport-callback#access_token=abc',
+    );
     act(() => {
       jest.advanceTimersByTime(750);
     });
@@ -336,8 +382,8 @@ describe('StreamPlayer component messaging', () => {
     expect(latestWebViewProps().source).toEqual({
       uri: 'https://player.twitch.tv/?channel=cohhcarnage&muted=false&parent=www.twitch.tv',
     });
-    const injectedJavaScript = latestWebViewProps().injectedJavaScript;
-    if (typeof injectedJavaScript !== 'string') {
+    const { injectedJavaScript } = latestWebViewProps();
+    if (injectedJavaScript === undefined) {
       throw new Error('Expected injectedJavaScript to be a string');
     }
     expect(injectedJavaScript.includes('twitchAuthComplete')).toEqual(true);
@@ -350,14 +396,9 @@ describe('StreamPlayer component messaging', () => {
       injectedJavaScript.includes('__foamAutoplayEnsureInstalled'),
     ).toEqual(true);
 
-    const { onLoadEnd } = latestWebViewProps();
-    act(() => {
-      (onLoadEnd as (event: { nativeEvent: { url: string } }) => void)({
-        nativeEvent: {
-          url: 'https://player.twitch.tv/?channel=cohhcarnage&muted=false&parent=www.twitch.tv',
-        },
-      });
-    });
+    emitWebViewLoadEnd(
+      'https://player.twitch.tv/?channel=cohhcarnage&muted=false&parent=www.twitch.tv',
+    );
 
     expect(onWebViewLoaded).toHaveBeenCalledTimes(1);
     const beforeContentScript =
@@ -391,20 +432,15 @@ describe('StreamPlayer component messaging', () => {
     expect(latestWebViewProps().source).toEqual({
       uri: 'https://clips.twitch.tv/embed?clip=AnimatedOptimisticWasabiVoteNay&parent=www.twitch.tv&autoplay=true&muted=false&preload=metadata',
     });
-    const clipInjectedJavaScript = latestWebViewProps().injectedJavaScript;
+    const clipInjectedJavaScript =
+      latestWebViewProps().injectedJavaScript ?? '';
     expect(
-      typeof clipInjectedJavaScript === 'string' &&
-        clipInjectedJavaScript.includes('__foamAutoplayEnsureInstalled'),
+      clipInjectedJavaScript.includes('__foamAutoplayEnsureInstalled'),
     ).toEqual(false);
 
-    const { onLoadEnd } = latestWebViewProps();
-    act(() => {
-      (onLoadEnd as (event: { nativeEvent: { url: string } }) => void)({
-        nativeEvent: {
-          url: 'https://clips.twitch.tv/embed?clip=AnimatedOptimisticWasabiVoteNay&parent=www.twitch.tv&autoplay=true&muted=false&preload=metadata',
-        },
-      });
-    });
+    emitWebViewLoadEnd(
+      'https://clips.twitch.tv/embed?clip=AnimatedOptimisticWasabiVoteNay&parent=www.twitch.tv&autoplay=true&muted=false&preload=metadata',
+    );
 
     expect(onWebViewLoaded).toHaveBeenCalledTimes(1);
     expect(mockInjectJavaScript).not.toHaveBeenCalled();
@@ -424,12 +460,7 @@ describe('StreamPlayer component messaging', () => {
     );
 
     // The mount-time nudge fires off WebView load-end and is once-per-generation.
-    const { onLoadEnd } = latestWebViewProps();
-    act(() => {
-      (onLoadEnd as (event: { nativeEvent: { url: string } }) => void)({
-        nativeEvent: { url: 'https://player.twitch.tv/?channel=cohhcarnage' },
-      });
-    });
+    emitWebViewLoadEnd('https://player.twitch.tv/?channel=cohhcarnage');
     act(() => {
       jest.advanceTimersByTime(3000);
     });
@@ -478,25 +509,19 @@ describe('StreamPlayer component messaging', () => {
       />,
     );
 
-    const shouldStart = latestWebViewProps()
-      .onShouldStartLoadWithRequest as (request: {
-      isTopFrame?: boolean;
-      url: string;
-    }) => boolean;
+    const { onShouldStartLoadWithRequest } = latestWebViewProps();
+    if (!onShouldStartLoadWithRequest) {
+      throw new Error(
+        'WebView was rendered without onShouldStartLoadWithRequest',
+      );
+    }
+    const shouldStart = (url: string, isTopFrame = false) =>
+      onShouldStartLoadWithRequest({ ...webViewNavigation(url), isTopFrame });
 
-    expect(shouldStart({ url: 'foam://stream/cohhcarnage' })).toBe(false);
-    expect(shouldStart({ url: 'exp+foam://stream/cohhcarnage' })).toBe(false);
-    expect(
-      shouldStart({
-        isTopFrame: true,
-        url: 'https://www.twitch.tv/cohhcarnage',
-      }),
-    ).toBe(true);
-    expect(
-      shouldStart({ isTopFrame: true, url: 'https://id.twitch.tv/oauth2' }),
-    ).toBe(true);
-    expect(
-      shouldStart({ isTopFrame: false, url: 'https://evil.example/frame' }),
-    ).toBe(true);
+    expect(shouldStart('foam://stream/cohhcarnage')).toBe(false);
+    expect(shouldStart('exp+foam://stream/cohhcarnage')).toBe(false);
+    expect(shouldStart('https://www.twitch.tv/cohhcarnage', true)).toBe(true);
+    expect(shouldStart('https://id.twitch.tv/oauth2', true)).toBe(true);
+    expect(shouldStart('https://evil.example/frame', false)).toBe(true);
   });
 });

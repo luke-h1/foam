@@ -99,33 +99,45 @@ export function parseRemoteConfigValue<K extends RemoteConfigKey>(
 ): RemoteConfigSchema[K] {
   if (jsonKeys.includes(key)) {
     try {
+      // SAFETY: `key` is a JSON key, so its remote string encodes the schema shape for `key`.
       return JSON.parse(raw) as RemoteConfigSchema[K];
     } catch {
       logger.remoteConfig.error(`Failed to parse JSON for key: ${key}`, {
         raw,
       });
+      // SAFETY: `defaultRemoteConfig[key]` is a literal in this file that encodes the schema shape for `key`.
       return JSON.parse(defaultRemoteConfig[key]) as RemoteConfigSchema[K];
     }
   }
+  // SAFETY: keys outside `jsonKeys` are string-typed in `RemoteConfigSchema`; the remote string is used verbatim.
   return raw as RemoteConfigSchema[K];
+}
+
+function buildDefaultEntry<K extends RemoteConfigKey>(
+  key: K,
+  source: ConfigSource,
+): RemoteConfigEntry<RemoteConfigSchema[K]> {
+  const raw = defaultRemoteConfig[key];
+  return { raw, value: parseRemoteConfigValue(key, raw), source };
 }
 
 export function buildRemoteConfigFromDefaults(
   source: ConfigSource,
 ): RemoteConfigType {
-  return Object.fromEntries(
-    (Object.keys(defaultRemoteConfig) as RemoteConfigKey[]).map(key => {
-      const raw = defaultRemoteConfig[key];
-      return [
-        key,
-        {
-          raw,
-          value: parseRemoteConfigValue(key, raw),
-          source,
-        } satisfies RemoteConfigEntry<RemoteConfigSchema[RemoteConfigKey]>,
-      ];
-    }),
-  ) as RemoteConfigType;
+  return {
+    splash: buildDefaultEntry('splash', source),
+    minimumVersion: buildDefaultEntry('minimumVersion', source),
+    statusPageUrl: buildDefaultEntry('statusPageUrl', source),
+    websiteUrl: buildDefaultEntry('websiteUrl', source),
+    admins: buildDefaultEntry('admins', source),
+    updateAppButtonAllowedUsers: buildDefaultEntry(
+      'updateAppButtonAllowedUsers',
+      source,
+    ),
+    experiments: buildDefaultEntry('experiments', source),
+    sevenTvPaintRenderer: buildDefaultEntry('sevenTvPaintRenderer', source),
+    bundleButtonEnabled: buildDefaultEntry('bundleButtonEnabled', source),
+  };
 }
 
 export type UseRemoteConfigResult = {

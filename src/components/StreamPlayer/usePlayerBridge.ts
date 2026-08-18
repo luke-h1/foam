@@ -552,7 +552,7 @@ export function usePlayerBridge({
 
   const handleMessage = (event: WebViewMessageEvent) => {
     try {
-      const message = JSON.parse(event.nativeEvent.data) as PlayerMessage;
+      const message: PlayerMessage = JSON.parse(event.nativeEvent.data);
       const actions = interpretPlayerMessage(message, {
         autoplay,
         channel,

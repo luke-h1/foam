@@ -1,11 +1,9 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { toast } from 'sonner-native';
 
-import {
-  getPinnedChatMessageText,
-  twitchService,
-} from '@app/services/twitch-service';
+import { twitchService } from '@app/services/twitch-service';
 import type { TwitchPinnedChatMessage } from '@app/types/twitch/chat';
+import { logger } from '@app/utils/logger';
 
 import type { PinnedChatMessageViewModel } from '../usePinnedChatMessage';
 import { usePinnedChatMessage } from '../usePinnedChatMessage';
@@ -14,36 +12,24 @@ import {
   createMessageActionData,
 } from './__fixtures__/useChat.fixture';
 
-jest.mock('@app/services/twitch-service', () => ({
-  getPinnedChatMessageText: jest.fn(() => 'api pinned text'),
-  twitchService: {
-    getPinnedChatMessage: jest.fn(),
-    pinChatMessage: jest.fn(() => Promise.resolve()),
-    unpinChatMessage: jest.fn(() => Promise.resolve()),
-    updatePinnedChatMessage: jest.fn(() => Promise.resolve()),
-  },
-}));
+jest.spyOn(logger.chat, 'debug').mockImplementation(() => {});
+jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
 
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    chat: {
-      debug: jest.fn(),
-      error: jest.fn(),
-    },
-  },
-}));
-
-const mockGetPinnedChatMessage = jest.mocked(
-  twitchService.getPinnedChatMessage,
+const mockGetPinnedChatMessage = jest.spyOn(
+  twitchService,
+  'getPinnedChatMessage',
 );
-const mockGetPinnedChatMessageText = jest.mocked(getPinnedChatMessageText);
-const mockPinChatMessage = jest.mocked(twitchService.pinChatMessage);
+const mockPinChatMessage = jest
+  .spyOn(twitchService, 'pinChatMessage')
+  .mockResolvedValue(undefined);
 const mockToastError = jest.mocked(toast.error);
 const mockToastSuccess = jest.mocked(toast.success);
-const mockUnpinChatMessage = jest.mocked(twitchService.unpinChatMessage);
-const mockUpdatePinnedChatMessage = jest.mocked(
-  twitchService.updatePinnedChatMessage,
-);
+const mockUnpinChatMessage = jest
+  .spyOn(twitchService, 'unpinChatMessage')
+  .mockResolvedValue(undefined);
+const mockUpdatePinnedChatMessage = jest
+  .spyOn(twitchService, 'updatePinnedChatMessage')
+  .mockResolvedValue(undefined);
 
 const apiPinnedMessage: TwitchPinnedChatMessage = {
   broadcaster_name: 'Foam',
@@ -77,7 +63,6 @@ describe('usePinnedChatMessage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetPinnedChatMessage.mockResolvedValue(apiPinnedMessage);
-    mockGetPinnedChatMessageText.mockReturnValue('api pinned text');
   });
 
   afterEach(() => {

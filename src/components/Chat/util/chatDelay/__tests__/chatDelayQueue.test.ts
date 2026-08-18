@@ -3,20 +3,15 @@ import type { BufferedMessage } from '@app/components/Chat/util/bufferedMessageO
 
 import { createChatDelayQueue } from '../chatDelayQueue';
 
-jest.mock('@app/utils/chat/replaceEmotesWithText', () => ({
-  replaceEmotesWithText: (parts: { content?: string }[]) =>
-    parts.map(part => part.content ?? '').join(''),
-}));
-
 function message(
   id: string,
   login = id,
   overrides: Partial<BufferedMessage> = {},
-) {
+): BufferedMessage {
   return {
     ...createChatMessage({ tags: { id, login }, text: id }),
     ...overrides,
-  } as BufferedMessage;
+  };
 }
 
 describe('createChatDelayQueue release timing', () => {

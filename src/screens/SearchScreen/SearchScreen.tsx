@@ -152,13 +152,13 @@ async function refreshSearchResults(
   query: string,
   search: (value: string) => Promise<void>,
   setRefreshing: (refreshing: boolean) => void,
-  onError: (error: unknown) => void,
 ) {
   setRefreshing(true);
   try {
     await search(query);
   } catch (error) {
-    onError(error);
+    logger.twitch.error('Search refresh failed', error);
+    toast.error("Couldn't refresh search results. Try again.");
   } finally {
     setRefreshing(false);
   }
@@ -216,13 +216,12 @@ export function SearchScreen() {
     getSearchHistorySnapshot,
     getSearchHistorySnapshot,
   );
-  const searchHistory = useMemo(
-    () =>
-      sortSearchHistory(
-        JSON.parse(searchHistorySnapshot) as SearchHistoryItem[],
-      ),
-    [searchHistorySnapshot],
-  );
+  const searchHistory = useMemo(() => {
+    const storedHistory: SearchHistoryItem[] = JSON.parse(
+      searchHistorySnapshot,
+    );
+    return sortSearchHistory(storedHistory);
+  }, [searchHistorySnapshot]);
   const searchHistoryQueries = useMemo(
     () => searchHistory.map(item => item.query),
     [searchHistory],
@@ -277,10 +276,6 @@ export function SearchScreen() {
       normalizedQuery,
       performSearch,
       setIsRefreshing,
-      error => {
-        logger.twitch.error('Search refresh failed', error);
-        toast.error("Couldn't refresh search results. Try again.");
-      },
     );
   }, [performSearch, query]);
 
@@ -579,6 +574,11 @@ function SearchResultsList({
   renderItem,
   selectedFilter,
 }: SearchResultsListProps) {
+  // SAFETY: activeResults is searchResults, which only holds SearchChannelResponse rows, whenever the channels filter is selected.
+  const renderChannelRow = renderItem as ListRenderItem<SearchItem>;
+  // SAFETY: activeResults is categoryResults, which only holds Category rows, for every other filter.
+  const renderCategoryRow = renderCategoryItem as ListRenderItem<SearchItem>;
+
   return (
     <FlashList
       ref={listRef}
@@ -595,11 +595,7 @@ function SearchResultsList({
       refreshing={refreshing}
       onRefresh={onRefresh}
       renderItem={
-        selectedFilter === 'channels'
-          ? (renderItem as ListRenderItem<SearchChannelResponse | Category>)
-          : (renderCategoryItem as ListRenderItem<
-              SearchChannelResponse | Category
-            >)
+        selectedFilter === 'channels' ? renderChannelRow : renderCategoryRow
       }
       keyExtractor={getSearchResultKey}
       style={styles.resultsList}

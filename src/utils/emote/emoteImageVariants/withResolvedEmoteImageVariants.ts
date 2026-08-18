@@ -13,6 +13,7 @@ export function withResolvedEmoteImageVariants<T extends SanitisedEmote>(
 
   const cached = resolvedVariantCache.get(emote);
   if (cached) {
+    // SAFETY: the cache entry is the spread copy of this same emote, so it carries T's shape.
     return cached as T;
   }
 

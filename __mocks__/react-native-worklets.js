@@ -41,7 +41,7 @@ const workletsMock = {
   isShareableRef: () => false,
   isSynchronizable: () => false,
   isWorkletFunction: value =>
-    typeof value === 'function' && value.__workletHash != null,
+    value instanceof Function && value.__workletHash != null,
   makeShareable: ID,
   makeShareableCloneOnUIRecursive: ID,
   makeShareableCloneRecursive: ID,

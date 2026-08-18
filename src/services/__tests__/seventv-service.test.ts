@@ -9,11 +9,7 @@ import {
   personalEmoteSetResponse,
 } from './__fixtures__/seventv-service.fixture';
 
-jest.mock('@app/services/gql/client', () => ({
-  sevenTvV4Client: { query: jest.fn() },
-}));
-
-const client = jest.mocked(sevenTvV4Client);
+const clientQuerySpy = jest.spyOn(sevenTvV4Client, 'query');
 
 describe('sevenTvService emote set sanitisation', () => {
   beforeEach(() => {
@@ -21,7 +17,7 @@ describe('sevenTvService emote set sanitisation', () => {
   });
 
   test('getSanitisedEmoteSet pins the v4 mapper output and drops imageless emotes', async () => {
-    client.query.mockResolvedValue({ data: customEmoteSetResponse });
+    clientQuerySpy.mockResolvedValue({ data: customEmoteSetResponse });
 
     const result = await sevenTvService.getSanitisedEmoteSet('set-1');
 
@@ -99,7 +95,7 @@ describe('sevenTvService emote set sanitisation', () => {
   });
 
   test('getSanitisedEmoteSet maps the global set with the 7TV Global site', async () => {
-    client.query.mockResolvedValue({ data: globalEmoteSetResponse });
+    clientQuerySpy.mockResolvedValue({ data: globalEmoteSetResponse });
 
     const result = await sevenTvService.getSanitisedEmoteSet('global');
 
@@ -120,7 +116,7 @@ describe('sevenTvService emote set sanitisation', () => {
   });
 
   test('getPersonalEmoteSet pins the personal mapper output', async () => {
-    client.query.mockResolvedValue({ data: personalEmoteSetResponse });
+    clientQuerySpy.mockResolvedValue({ data: personalEmoteSetResponse });
 
     const result = await sevenTvService.getPersonalEmoteSet('123');
 

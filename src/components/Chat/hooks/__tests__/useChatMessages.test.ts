@@ -1,43 +1,32 @@
 import { act, renderHook } from '@testing-library/react-native';
 
 import type { BufferedMessage } from '@app/components/Chat/util/messageBuffer';
-import { incrementChatUnread } from '@app/store/chat/actions/chatUnread';
-import {
-  addMessages,
-  getMaxChatMessages,
-  getMessageById,
-  moderateMessageById,
-  moderateMessagesByLogin,
-  removeMessageById,
-  removeMessagesByLogin,
-} from '@app/store/chat/actions/messages';
+import * as chatUnreadActions from '@app/store/chat/actions/chatUnread';
+import * as messagesActions from '@app/store/chat/actions/messages';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 
 import { useChatMessages } from '../useChatMessages';
 import type { ChatScrollAnchor } from '../useChatScroll';
 
-jest.mock('@app/store/chat/actions/chatUnread', () => ({
-  incrementChatUnread: jest.fn(),
-}));
-
-jest.mock('@app/store/chat/actions/messages', () => ({
-  addMessages: jest.fn(),
-  getMaxChatMessages: jest.fn(() => 600),
-  getMessageById: jest.fn(),
-  moderateMessageById: jest.fn(),
-  moderateMessagesByLogin: jest.fn(),
-  removeMessageById: jest.fn(),
-  removeMessagesByLogin: jest.fn(),
-}));
-
-const mockAddMessages = jest.mocked(addMessages);
-const mockIncrementChatUnread = jest.mocked(incrementChatUnread);
-const mockGetMessageById = jest.mocked(getMessageById);
-const mockModerateMessageById = jest.mocked(moderateMessageById);
-const mockModerateMessagesByLogin = jest.mocked(moderateMessagesByLogin);
-const mockRemoveMessageById = jest.mocked(removeMessageById);
-const mockRemoveMessagesByLogin = jest.mocked(removeMessagesByLogin);
-const MAX_BUFFERED = getMaxChatMessages();
+const mockAddMessages = jest.spyOn(messagesActions, 'addMessages');
+const mockIncrementChatUnread = jest.spyOn(
+  chatUnreadActions,
+  'incrementChatUnread',
+);
+const mockModerateMessageById = jest.spyOn(
+  messagesActions,
+  'moderateMessageById',
+);
+const mockModerateMessagesByLogin = jest.spyOn(
+  messagesActions,
+  'moderateMessagesByLogin',
+);
+const mockRemoveMessageById = jest.spyOn(messagesActions, 'removeMessageById');
+const mockRemoveMessagesByLogin = jest.spyOn(
+  messagesActions,
+  'removeMessagesByLogin',
+);
+const MAX_BUFFERED = messagesActions.getMaxChatMessages();
 
 function getLastFlushedMessages(): ChatMessageType<never>[] {
   const lastCall = mockAddMessages.mock.calls.at(-1);
@@ -104,6 +93,7 @@ describe('useChatMessages', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers();
+    messagesActions.clearMessages();
   });
 
   afterEach(() => {
@@ -114,11 +104,11 @@ describe('useChatMessages', () => {
     test('returns required functions', () => {
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
-      expect(typeof result.current.handleNewMessage).toBe('function');
-      expect(typeof result.current.clearLocalMessages).toBe('function');
-      expect(typeof result.current.cleanup).toBe('function');
-      expect(typeof result.current.forceFlush).toBe('function');
-      expect(typeof result.current.getBufferSize).toBe('function');
+      expect(result.current.handleNewMessage).toBeInstanceOf(Function);
+      expect(result.current.clearLocalMessages).toBeInstanceOf(Function);
+      expect(result.current.cleanup).toBeInstanceOf(Function);
+      expect(result.current.forceFlush).toBeInstanceOf(Function);
+      expect(result.current.getBufferSize).toBeInstanceOf(Function);
     });
 
     test('starts with empty buffer', () => {
@@ -207,7 +197,7 @@ describe('useChatMessages', () => {
     });
 
     test('moderateChatMessageById moderates the store copy when it exists', () => {
-      mockGetMessageById.mockReturnValue(createMockMessage('1'));
+      messagesActions.addMessage(createMockMessage('1'));
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
       act(() => {
@@ -229,7 +219,6 @@ describe('useChatMessages', () => {
     });
 
     test('moderateChatMessageById removes everywhere when the store never saw the message', () => {
-      mockGetMessageById.mockReturnValue(undefined);
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
       act(() => {
@@ -720,7 +709,10 @@ describe('useChatMessages', () => {
     test('commits every message when arrivals outrun the flush cadence', () => {
       const { result } = renderHook(() => useChatMessages(scrolledUpOptions));
 
-      const pushCount = MAX_BUFFERED + 100;
+      // Exceeds the ingest controller's fixed backpressure threshold (400,
+      // independent of the chat scrollback preference) so the burst forces a
+      // synchronous drain before the flush timer ever fires.
+      const pushCount = 500;
 
       act(() => {
         for (let i = 0; i < pushCount; i += 1) {
@@ -728,7 +720,7 @@ describe('useChatMessages', () => {
         }
       });
 
-      expect(result.current.getBufferSize()).toBeLessThan(MAX_BUFFERED);
+      expect(result.current.getBufferSize()).toBeLessThan(pushCount);
 
       act(() => {
         jest.advanceTimersByTime(250);

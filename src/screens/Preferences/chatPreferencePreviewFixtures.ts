@@ -1,4 +1,4 @@
-import type { EmoteSetKind } from '@app/graphql/generated/gql';
+import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
@@ -35,7 +35,7 @@ export const chatPreferencePreviewFixtures = {
         original_name: 'kanyePls',
         set_metadata: {
           capacity: 1000,
-          kind: 'NORMAL' as EmoteSetKind,
+          kind: EmoteSetKind.Normal,
           ownerId: '01F6Z6B6A0000E13Z2T8PKGDWP',
           setId: '01K6JX5NYKV4R3XJ8HZY9EGEFF',
           setName: 'willy_2',
@@ -63,7 +63,7 @@ export const chatPreferencePreviewFixtures = {
         original_name: 'FeelsStrongMan',
         set_metadata: {
           capacity: 1000,
-          kind: 'NORMAL' as EmoteSetKind,
+          kind: EmoteSetKind.Normal,
           ownerId: '01FRG0ZGSR00084PQ73P1BYDX8',
           setId: '01HKQT8EWR000ESSWF3625XCS4',
           setName: 'Global Emotes',

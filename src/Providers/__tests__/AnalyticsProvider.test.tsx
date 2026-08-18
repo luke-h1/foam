@@ -1,38 +1,28 @@
 import { Text } from 'react-native';
 
 import { act, render, screen } from '@testing-library/react-native';
+import { usePathname } from 'expo-router';
 
-import {
-  logAnalyticsScreenView,
-  setAnalyticsEnabled,
-} from '@app/hooks/firebase/analytics';
+import * as analyticsModule from '@app/hooks/firebase/analytics';
+import { getPreferences, replacePreferences } from '@app/store/preferenceStore';
 
 import { AnalyticsProvider } from '../AnalyticsProvider';
 
-let mockPathname = '/streams/live-stream/foam';
-let mockAnalyticsEnabled = true;
-
-jest.mock('expo-router', () => ({
-  usePathname: () => mockPathname,
-}));
-
-jest.mock('@app/hooks/firebase/analytics', () => ({
-  logAnalyticsScreenView: jest.fn(() => Promise.resolve()),
-  setAnalyticsEnabled: jest.fn(() => Promise.resolve()),
-}));
-
-jest.mock('@app/store/preferenceStore', () => ({
-  usePreference: () => mockAnalyticsEnabled,
-}));
-
-const mockedSetAnalyticsEnabled = jest.mocked(setAnalyticsEnabled);
-const mockedLogScreenView = jest.mocked(logAnalyticsScreenView);
+const mockedUsePathname = jest.mocked(usePathname);
+const mockedSetAnalyticsEnabled = jest
+  .spyOn(analyticsModule, 'setAnalyticsEnabled')
+  .mockResolvedValue(undefined);
+const mockedLogScreenView = jest
+  .spyOn(analyticsModule, 'logAnalyticsScreenView')
+  .mockResolvedValue(undefined);
 
 describe('AnalyticsProvider', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockPathname = '/streams/live-stream/foam';
-    mockAnalyticsEnabled = true;
+    mockedUsePathname.mockReturnValue('/streams/live-stream/foam');
+    mockedSetAnalyticsEnabled.mockResolvedValue(undefined);
+    mockedLogScreenView.mockResolvedValue(undefined);
+    replacePreferences({ ...getPreferences(), analyticsEnabled: true });
   });
 
   test('renders children', async () => {
@@ -74,7 +64,7 @@ describe('AnalyticsProvider', () => {
   });
 
   test('disables collection and never logs when the preference is off', async () => {
-    mockAnalyticsEnabled = false;
+    replacePreferences({ ...getPreferences(), analyticsEnabled: false });
 
     render(
       <AnalyticsProvider>

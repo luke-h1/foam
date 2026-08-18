@@ -1,5 +1,5 @@
 import { startInactiveSpan } from '@sentry/react-native';
-import type { Image as ExpoImage } from 'expo-image';
+import type { Image as ExpoImage, ImageRef, ImageSource } from 'expo-image';
 
 /**
  * Hard cap on how long a resource.image.* span may stay open; stuck CDN loads
@@ -16,8 +16,10 @@ export interface ExpoImageLoaders {
   ) => Promise<boolean>;
   loadAsync: (
     ...args: Parameters<(typeof ExpoImage)['loadAsync']>
-  ) => Promise<unknown>;
+  ) => Promise<ImageRef>;
 }
+
+type ImageLoadSource = Parameters<ExpoImageLoaders['loadAsync']>[0];
 
 const instrumentedClasses = new WeakSet<ExpoImageLoaders>();
 
@@ -97,9 +99,9 @@ function trackImageSpan<T>(
       finish(resultIsOk(value));
       return value;
     },
-    (error: unknown) => {
+    (cause: unknown) => {
       finish(false);
-      throw error;
+      throw cause;
     },
   );
 }
@@ -135,7 +137,7 @@ function wrapLoadAsync(imageClass: ExpoImageLoaders): void {
   const originalLoadAsync = imageClass.loadAsync.bind(imageClass);
   imageClass.loadAsync = (
     ...args: Parameters<ExpoImageLoaders['loadAsync']>
-  ): Promise<unknown> => {
+  ): Promise<ImageRef> => {
     const [source] = args;
     const imageUrl = sourceUrl(source);
     return trackImageSpan(
@@ -150,26 +152,27 @@ function wrapLoadAsync(imageClass: ExpoImageLoaders): void {
   };
 }
 
-function describeSource(
-  source: Parameters<ExpoImageLoaders['loadAsync']>[0],
-): string {
-  if (typeof source === 'number') {
+function isImageSourceObject(source: ImageLoadSource): source is ImageSource {
+  return source instanceof Object;
+}
+
+function isAssetModuleId(source: ImageLoadSource): source is number {
+  return Number(source) === source;
+}
+
+function describeSource(source: ImageLoadSource): string {
+  if (isAssetModuleId(source)) {
     return `asset #${source}`;
   }
   const url = sourceUrl(source);
   return url ? describeUrl(url) : 'unknown source';
 }
 
-function sourceUrl(
-  source: Parameters<ExpoImageLoaders['loadAsync']>[0],
-): string | undefined {
-  if (typeof source === 'string') {
-    return source;
-  }
-  if (typeof source === 'object' && source?.uri) {
+function sourceUrl(source: ImageLoadSource): string | undefined {
+  if (isImageSourceObject(source)) {
     return source.uri;
   }
-  return undefined;
+  return isAssetModuleId(source) ? undefined : source;
 }
 
 function sanitizeUrl(url: string): string {

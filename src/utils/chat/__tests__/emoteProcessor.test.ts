@@ -7,9 +7,43 @@ import type { ParsedPart } from '../parsedPart';
 import { clearMentionLoginIndex } from '../resolveMentionLogin/clearMentionLoginIndex';
 import { registerMentionLogin } from '../resolveMentionLogin/registerMentionLogin';
 
-const pickFields = (value: unknown, keys: readonly string[]) =>
+type PickableField = 'content' | 'id' | 'name' | 'type' | 'zero_width';
+
+type ParsedPartFieldValue = string | boolean | undefined;
+
+type PickedPartFields = Partial<Record<PickableField, ParsedPartFieldValue>>;
+
+const readField = (
+  part: ParsedPart | undefined,
+  field: PickableField,
+): ParsedPartFieldValue => {
+  if (part === undefined) {
+    return undefined;
+  }
+
+  switch (field) {
+    case 'content':
+      return 'content' in part ? part.content : undefined;
+    case 'id':
+      return 'id' in part ? part.id : undefined;
+    case 'name':
+      return 'name' in part ? part.name : undefined;
+    case 'type':
+      return part.type;
+    case 'zero_width':
+      return 'zero_width' in part ? part.zero_width : undefined;
+  }
+};
+
+const pickFields = (
+  part: ParsedPart | undefined,
+  keys: readonly PickableField[],
+): PickedPartFields =>
   Object.fromEntries(
-    keys.map(key => [key, (value as Record<string, unknown>)[key]]),
+    keys.map((key): [PickableField, ParsedPartFieldValue] => [
+      key,
+      readField(part, key),
+    ]),
   );
 
 const curtisEmote: SanitisedEmote = {
@@ -42,6 +76,7 @@ const curtisEmote: SanitisedEmote = {
 const createEmote = (
   overrides: Partial<SanitisedEmote> & Pick<SanitisedEmote, 'id' | 'name'>,
 ): SanitisedEmote =>
+  // SAFETY: `provider` is read from EMOTE_PROVIDER_BY_SITE for the same `site`, so the literal always matches one SanitisedEmote variant.
   ({
     ...curtisEmote,
     emote_link: `https://example.com/${overrides.id}`,

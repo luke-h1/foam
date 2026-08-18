@@ -15,15 +15,15 @@ type TimedStringEntry = {
   expiresAt: number;
 };
 
-const MAX_SESSION_CACHE_SIZES: Record<SessionCacheBucket, number> = {
+const MAX_SESSION_CACHE_SIZES = {
   mentionColors: 500,
   lightenedColors: 200,
-};
+} satisfies Record<SessionCacheBucket, number>;
 
-const buckets: Record<SessionCacheBucket, Map<string, TimedStringEntry>> = {
-  mentionColors: new Map(),
-  lightenedColors: new Map(),
-};
+const buckets = {
+  mentionColors: new Map<string, TimedStringEntry>(),
+  lightenedColors: new Map<string, TimedStringEntry>(),
+} satisfies Record<SessionCacheBucket, Map<string, TimedStringEntry>>;
 
 const NEVER_EXPIRES = Number.POSITIVE_INFINITY;
 

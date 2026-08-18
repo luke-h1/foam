@@ -1,7 +1,13 @@
+// This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
+// field (see types/seventv/cosmetics.ts), not a naming choice.
+// oxlint-disable anti-slop/no-shape-in-symbol-names
 import { StyleSheet } from 'react-native';
+import { makeMutable } from 'react-native-reanimated';
 
+import type { SkImage } from '@shopify/react-native-skia';
 import { act, render } from '@testing-library/react-native';
-import { Image } from 'expo-image';
+import * as ExpoImage from 'expo-image';
+import { Image, type ImageProps } from 'expo-image';
 
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
 import { paintRendererFlag$ } from '@app/store/preferenceStore';
@@ -10,33 +16,32 @@ import type { PaintData } from '@app/types/seventv/cosmetics';
 
 import { PaintedUsername } from '../CosmeticUsername/PaintedUsername';
 import { PaintLayerTiledImage } from '../CosmeticUsername/PaintLayerTiledImage';
+import * as sharedPaintAnimationFrames from '../CosmeticUsername/util/sharedPaintAnimationFrames';
 
-jest.mock('expo-image', () => {
-  const React = jest.requireActual('react');
-  const { View } = jest.requireActual('react-native');
-
-  return {
-    Image: (props: object) =>
-      React.createElement(View, { testID: 'expo-image', ...props }),
-  };
-});
-
-jest.mock('@app/store/chat/observables/chatStore', () => ({
-  chatStore$: {
-    userPaintIds: {},
-    paints: {},
+/**
+ * expo-image's `Image` is a forwardRef object, not a plain function, so
+ * jest.spyOn cannot wrap it - swap the export directly instead.
+ */
+Object.defineProperty(ExpoImage, 'Image', {
+  configurable: true,
+  value: (props: ImageProps) => {
+    const React = jest.requireActual('react');
+    const { View } = jest.requireActual('react-native');
+    return React.createElement(View, { testID: 'expo-image', ...props });
   },
-}));
+});
 
 /**
  * This suite asserts what a URL paint renders once its texture is available,
  * so pin the ready state - the async Data.fromURI resolution in the jest
  * Skia mock would otherwise land after the assertions run.
  */
-jest.mock('../CosmeticUsername/util/sharedPaintAnimationFrames', () => ({
-  useSharedPaintAnimationFrame: () => null,
-  useSharedPaintAnimationReady: () => true,
-}));
+jest
+  .spyOn(sharedPaintAnimationFrames, 'useSharedPaintAnimationFrame')
+  .mockReturnValue(makeMutable<SkImage | null>(null));
+jest
+  .spyOn(sharedPaintAnimationFrames, 'useSharedPaintAnimationReady')
+  .mockReturnValue(true);
 
 /**
  * Helper to convert RGBA values to 7TV packed color format

@@ -4,14 +4,18 @@ import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { resolveSpacingValue, Spacing } from '@app/styles/spacing';
 import { theme } from '@app/styles/themes';
 
-type IconType =
-  | {
-      color?: string;
-      name: SymbolViewProps['name'];
-      size?: number;
-      type: 'symbol';
-    }
-  | SymbolViewProps['name'];
+type IconSymbolDescriptor = {
+  color?: string;
+  name: SymbolViewProps['name'];
+  size?: number;
+  type: 'symbol';
+};
+
+type IconType = IconSymbolDescriptor | SymbolViewProps['name'];
+
+function isIconSymbolDescriptor(icon: IconType): icon is IconSymbolDescriptor {
+  return icon instanceof Object && 'type' in icon;
+}
 
 export function IconButtonIcon({
   icon,
@@ -26,17 +30,7 @@ export function IconButtonIcon({
     return <ActivityIndicator color={theme.color.text.dark} />;
   }
 
-  if (typeof icon === 'string' || !('type' in icon)) {
-    return (
-      <SymbolView
-        name={icon}
-        size={resolveSpacingValue(theme, size)}
-        tintColor={theme.colorGrey}
-      />
-    );
-  }
-
-  if (icon.type === 'symbol') {
+  if (isIconSymbolDescriptor(icon)) {
     return (
       <SymbolView
         name={icon.name}
@@ -46,5 +40,11 @@ export function IconButtonIcon({
     );
   }
 
-  return null;
+  return (
+    <SymbolView
+      name={icon}
+      size={resolveSpacingValue(theme, size)}
+      tintColor={theme.colorGrey}
+    />
+  );
 }

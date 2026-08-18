@@ -93,13 +93,12 @@ export const storageService = {
 
     let parsed: StorageItem<T>;
     try {
-      parsed = JSON.parse(item) as StorageItem<T>;
+      parsed = JSON.parse(item);
     } catch {
       return null;
     }
 
     if (
-      typeof parsed !== 'object' ||
       parsed === null ||
       Array.isArray(parsed) ||
       !Object.prototype.hasOwnProperty.call(parsed, 'value')
@@ -117,15 +116,15 @@ export const storageService = {
     return value;
   },
 
-  set(
+  set<T>(
     key: AllowedKey,
-    value: unknown,
+    value: T,
     namespacePrefix?: NamespacePrefixes,
     options: StorageSetterOptions = {},
   ): void {
     const { expiry } = options;
 
-    let item: StorageItem = { value };
+    let item: StorageItem<T> = { value };
 
     if (expiry) {
       if (expiry <= new Date()) {
@@ -173,12 +172,12 @@ export const storageService = {
 
       let parsed: StorageItem;
       try {
-        parsed = JSON.parse(item) as StorageItem;
+        parsed = JSON.parse(item);
       } catch {
         return;
       }
 
-      if (typeof parsed !== 'object' || parsed === null) {
+      if (parsed === null) {
         return;
       }
 

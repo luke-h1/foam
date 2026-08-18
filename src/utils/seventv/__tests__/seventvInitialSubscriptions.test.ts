@@ -10,21 +10,6 @@ import {
   buildUserUpdateSubscribeMessage,
 } from '@app/utils/seventv/seventvWsInterpreter';
 
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    stvWs: {
-      debug: jest.fn(),
-      error: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-    },
-  },
-}));
-
-jest.mock('@app/utils/seventv/sevenTvSessionId', () => ({
-  setSevenTvSessionId: jest.fn(),
-}));
-
 interface SetupHarness {
   session: SeventvSessionState;
   sendJsonMessage: jest.Mock;

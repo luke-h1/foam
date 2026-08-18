@@ -99,6 +99,7 @@ export function useChatHydrationPreferences(): ChatHydrationPreferences {
 export function usePreference<K extends keyof Preferences>(
   key: K,
 ): Preferences[K] {
+  // SAFETY: indexing the observable with a generic key widens to the union of all preference values; the child read is still the K-keyed one.
   return useSelector(() => preferences$[key].get()) as Preferences[K];
 }
 

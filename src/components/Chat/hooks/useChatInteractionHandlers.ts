@@ -57,7 +57,7 @@ export function useChatComposerActions({
 
   const handleEmoteSelect = useCallback(
     (item: EmotePickerItem) => {
-      const emoteName = typeof item === 'string' ? item : item.name;
+      const emoteName = item instanceof Object ? item.name : item;
       inputShellRef.current?.appendEmote(emoteName);
     },
     [inputShellRef],

@@ -1,15 +1,15 @@
 import { screen } from '@testing-library/react-native';
 
-import { twitchService as _twitchService } from '@app/services/twitch-service';
+import { twitchService } from '@app/services/twitch-service';
 import render from '@app/test/render';
 import type { TwitchStream } from '@app/types/twitch/stream';
 
 import { TopStreamsScreen } from '../TopStreamsScreen';
 
-jest.mock('@app/services/twitch-service');
-jest.mock('expo-symbols', () => ({ SymbolView: () => null }));
+// expo-symbols is faked by the root __mocks__/expo-symbols.ts manual mock.
 
-const twitchService = jest.mocked(_twitchService);
+const getTopStreamsSpy = jest.spyOn(twitchService, 'getTopStreams');
+const getUserImageSpy = jest.spyOn(twitchService, 'getUserImage');
 
 const mockStream: TwitchStream = {
   id: '1',
@@ -31,13 +31,11 @@ const mockStream: TwitchStream = {
 
 describe('TopStreamsScreen', () => {
   beforeEach(() => {
-    twitchService.getUserImage.mockResolvedValue(
-      'https://example.com/avatar.jpg',
-    );
+    getUserImageSpy.mockResolvedValue('https://example.com/avatar.jpg');
   });
 
   test('shows loading skeletons while fetching', () => {
-    twitchService.getTopStreams.mockReturnValue(new Promise(() => {}));
+    getTopStreamsSpy.mockReturnValue(new Promise(() => {}));
 
     render(<TopStreamsScreen />);
 
@@ -45,7 +43,7 @@ describe('TopStreamsScreen', () => {
   });
 
   test('renders stream list when data is available', async () => {
-    twitchService.getTopStreams.mockResolvedValue({ data: [mockStream] });
+    getTopStreamsSpy.mockResolvedValue({ data: [mockStream] });
 
     render(<TopStreamsScreen />);
 
@@ -53,7 +51,7 @@ describe('TopStreamsScreen', () => {
   });
 
   test('shows empty state when no streams returned', async () => {
-    twitchService.getTopStreams.mockResolvedValue({ data: [] });
+    getTopStreamsSpy.mockResolvedValue({ data: [] });
 
     render(<TopStreamsScreen />);
 
@@ -61,7 +59,7 @@ describe('TopStreamsScreen', () => {
   });
 
   test('shows empty state when the fetch fails', async () => {
-    twitchService.getTopStreams.mockRejectedValue(new Error('network error'));
+    getTopStreamsSpy.mockRejectedValue(new Error('network error'));
 
     render(<TopStreamsScreen />);
 
@@ -69,7 +67,7 @@ describe('TopStreamsScreen', () => {
   });
 
   test('renders multiple streams', async () => {
-    twitchService.getTopStreams.mockResolvedValue({
+    getTopStreamsSpy.mockResolvedValue({
       data: [mockStream, { ...mockStream, id: '2', user_name: 'Streamer2' }],
     });
 

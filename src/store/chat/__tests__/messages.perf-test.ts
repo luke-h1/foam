@@ -12,26 +12,6 @@ import {
   ingestSeedMessages,
 } from '../__fixtures__/messages.perf.fixture';
 
-jest.mock('@legendapp/state/persist', () => ({
-  configureObservablePersistence: jest.fn(),
-  persistObservable: jest.fn(),
-}));
-
-jest.mock('react-native-mmkv', () => ({
-  MMKV: class MockMMKV {
-    set = jest.fn();
-    getString = jest.fn();
-    getAllKeys = jest.fn(() => []);
-    delete = jest.fn();
-  },
-  createMMKV: () => ({
-    set: jest.fn(),
-    getString: jest.fn(),
-    getAllKeys: jest.fn(() => []),
-    remove: jest.fn(),
-  }),
-}));
-
 const MEASURE_OPTIONS = {
   runs: 5,
   warmupRuns: 1,

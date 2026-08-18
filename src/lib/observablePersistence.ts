@@ -77,6 +77,7 @@ export async function clearChatStorePersistence(): Promise<void> {
     return;
   }
 
+  // SAFETY: pluginClass is one of the two local persistence plugins, so its registered instance is local.
   const persist = entry.persist as ObservablePersistLocal;
   await Promise.all([
     persist.deleteTable(CHAT_STORE_PERSISTENCE_KEY, config),

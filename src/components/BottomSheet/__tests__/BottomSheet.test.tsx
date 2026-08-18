@@ -1,6 +1,11 @@
-import { Dimensions, Platform, StyleSheet, Text } from 'react-native';
+import { createRef, useImperativeHandle } from 'react';
+import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import type { ReactTestInstance } from 'react-test-renderer';
 
+import type {
+  BottomSheetMethods,
+  BottomSheetProps,
+} from '@expo/ui/community/bottom-sheet';
 import { act } from '@testing-library/react-native';
 
 import render from '@app/test/render';
@@ -15,38 +20,61 @@ type SheetProps = {
   snapPoints?: (string | number)[];
 };
 
-const mockSheet = {
+type MockSheet = {
+  close: jest.Mock;
+  props: SheetProps;
+  emitDismiss: () => void;
+};
+
+const mockSheet: MockSheet = {
   close: jest.fn(),
-  props: {} as SheetProps,
+  props: {},
   emitDismiss: (): void => undefined,
 };
 
-jest.mock('@expo/ui/community/bottom-sheet', () => {
-  const React = require('react');
-  const { View } = require('react-native');
+/**
+ * `setupTests.ts` already stubs `@expo/ui/community/bottom-sheet` with a bare
+ * passthrough; this test needs the fuller fake below (captured props, close
+ * handle, dismiss capture), so it overrides that export directly.
+ *
+ * Pulled in via `require`, not `import * as`: a namespace import goes through
+ * babel's ES-interop wrapper, which copies the mocked module onto a new
+ * object - `jest.spyOn` would then patch that copy instead of the module
+ * object `BottomSheet.native.tsx` actually reads `BottomSheet` off.
+ */
+// SAFETY: `require` erases module typing; this reattaches the real
+// `@expo/ui/community/bottom-sheet` module type so `jest.spyOn` below type-checks.
+const expoUiBottomSheet =
+  require('@expo/ui/community/bottom-sheet') as typeof import('@expo/ui/community/bottom-sheet');
 
-  return {
-    BottomSheet: ({
+jest
+  .spyOn(expoUiBottomSheet, 'BottomSheet')
+  .mockImplementation(
+    ({
       children,
+      handleComponent,
+      index,
       onDismiss,
       ref,
-      ...props
-    }: SheetProps & {
-      children?: React.ReactNode;
-      onDismiss?: () => void;
-      ref?: React.Ref<{ close: () => void }>;
-    }) => {
-      mockSheet.props = props;
+      snapPoints,
+    }: BottomSheetProps) => {
+      mockSheet.props = { handleComponent, index, snapPoints };
       mockSheet.emitDismiss = () => onDismiss?.();
 
-      React.useImperativeHandle(ref, () => ({ close: mockSheet.close }));
+      useImperativeHandle(ref, (): BottomSheetMethods => ({
+        snapToIndex: jest.fn(),
+        snapToPosition: jest.fn(),
+        expand: jest.fn(),
+        collapse: jest.fn(),
+        close: mockSheet.close,
+        forceClose: jest.fn(),
+        present: jest.fn(),
+        dismiss: jest.fn(),
+      }));
 
-      return props.index === -1
-        ? null
-        : React.createElement(View, null, children);
+      return <View>{children}</View>;
     },
-  };
-});
+  );
 
 const windowHeight = Dimensions.get('window').height;
 
@@ -206,7 +234,7 @@ describe('BottomSheet', () => {
   });
 
   test('requestClose closes the native sheet', () => {
-    const ref = { current: null as BottomSheetHandle | null };
+    const ref = createRef<BottomSheetHandle>();
 
     renderSheet({ ref });
     ref.current?.requestClose();

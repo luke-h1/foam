@@ -452,13 +452,14 @@ export const StreamPlayer = memo(function StreamPlayer({
   const handleWebViewMessage = useCallback(
     (event: WebViewMessageEvent) => {
       try {
+        // SAFETY: the tracker script is the only sender of `vodProgress`; every field below is optional and re-checked before use.
         const message = JSON.parse(event.nativeEvent.data) as {
           type?: string;
           payload?: { currentTime?: number };
         };
         if (message.type === 'vodProgress') {
           const time = message.payload?.currentTime;
-          if (typeof time === 'number' && Number.isFinite(time)) {
+          if (time !== undefined && Number.isFinite(time)) {
             resumeTimeRef.current = time;
           }
           return;

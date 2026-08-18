@@ -1,4 +1,4 @@
-import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useSyncRef } from '@app/hooks/useSyncRef';
 
@@ -15,11 +15,14 @@ import {
   WebSocketHookReturn,
 } from './types';
 
-export const useWebsocket = (
+export const useWebsocket = <TJsonMessage = never>(
   url: string | (() => string | Promise<string>) | null,
   options: Options = {},
   connect = true,
-): WebSocketHookReturn => {
+): WebSocketHookReturn<
+  WebSocketEventMap['message'] | undefined,
+  TJsonMessage
+> => {
   const [lastMessage, setLastMessage] =
     useState<WebSocketEventMap['message']>();
   const [readyState, setReadyState] = useState<ReadyStateState>({});
@@ -43,11 +46,10 @@ export const useWebsocket = (
   // react-doctor-disable-next-line react-hooks-js/refs -- see above
   const activeUrl = convertedUrl.current;
   const readyStateFromUrl: ReadyState =
-    activeUrl && readyState[activeUrl] !== undefined
-      ? (readyState[activeUrl] as ReadyState)
-      : url !== null && connect
-        ? ReadyState.CONNECTING
-        : ReadyState.UNINSTANTIATED;
+    (activeUrl ? readyState[activeUrl] : undefined) ??
+    (url !== null && connect
+      ? ReadyState.CONNECTING
+      : ReadyState.UNINSTANTIATED);
 
   const stringifiedQueryParams = options.queryParams
     ? JSON.stringify(options.queryParams)
@@ -64,7 +66,7 @@ export const useWebsocket = (
     }
   }, []);
 
-  const sendJsonMessage: SendJsonMessage = message => {
+  const sendJsonMessage: SendJsonMessage<TJsonMessage> = message => {
     sendMessage(JSON.stringify(message));
   };
 
@@ -112,6 +114,7 @@ export const useWebsocket = (
     /**
      * This is a dummy WebSocket object that is used to prevent null errors when the WebSocket is not initialized yet.
      */
+    // SAFETY: created from WebSocket.prototype, and the two properties read off it below are defined here.
     const dummySocket = Object.create(WebSocket.prototype) as WebSocket;
     Object.defineProperty(dummySocket, 'readyState', {
       value: WebSocket.CLOSED,
@@ -154,7 +157,7 @@ export const useWebsocket = (
         };
 
         removeListeners = createOrJoinSocket(
-          websocketRef as RefObject<WebSocket>,
+          websocketRef,
           convertedUrl.current,
           protectedSetReadyState,
           optionsCache,
@@ -198,7 +201,7 @@ export const useWebsocket = (
   return {
     sendMessage,
     sendJsonMessage,
-    lastMessage: lastMessage as WebSocketEventMap['message'],
+    lastMessage,
     lastJsonMessage,
     readyState: readyStateFromUrl,
     getWebSocket,

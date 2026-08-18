@@ -8,15 +8,11 @@ import {
 } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
-import { storage as _storage } from '@app/lib/storage';
+import { storage } from '@app/lib/storage';
 
 import { OnboardingScreen } from '../OnboardingScreen';
 
-jest.mock('@app/lib/storage', () => ({
-  storage: { set: jest.fn() },
-}));
-
-const storage = jest.mocked(_storage);
+jest.spyOn(storage, 'set').mockImplementation(() => {});
 const mockReplace = jest.mocked(router.replace);
 
 const wrapper = ({ children }: { children: ReactNode }) => (

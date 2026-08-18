@@ -6,6 +6,7 @@ import { Image as ExpoImage } from 'expo-image';
 import { Text } from '@app/components/ui/Text/Text';
 import { resolveUseAppleWebpCodec } from '@app/lib/expo-image/resolveUseAppleWebpCodec';
 import { runAnimationCommand } from '@app/lib/expo-image/runAnimationCommand';
+import type { SanitisedEmote } from '@app/types/emote';
 import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
 
 import { RowVisibilityContext } from '../ChatMessage/rowVisibility';
@@ -14,6 +15,10 @@ import type { EmotePickerItem } from './emoteSheetTypes';
 import { getEmotePickerDisplayUrl } from './util/emotePickerDisplayUrl';
 import { emoteSheetAnimationBudget } from './util/emoteSheetAnimationBudget';
 import { emoteSheetScrollActivity } from './util/emoteSheetScrollActivity';
+
+function isEmoteEntry(item: EmotePickerItem): item is SanitisedEmote {
+  return Object.prototype.hasOwnProperty.call(item, 'id');
+}
 
 function EmoteCellComponent({
   cellSize,
@@ -25,8 +30,7 @@ function EmoteCellComponent({
   const innerSize = Math.round(cellSize * 0.78);
   const dimensions = { height: innerSize, width: innerSize };
   const imageRef = useRef<ExpoImage>(null);
-  const displayUrl =
-    typeof item === 'string' ? null : getEmotePickerDisplayUrl(item);
+  const displayUrl = isEmoteEntry(item) ? getEmotePickerDisplayUrl(item) : null;
   const urlKind = useMemo(
     () => (displayUrl ? describeEmoteUrl(displayUrl).kind : null),
     [displayUrl],
@@ -44,7 +48,7 @@ function EmoteCellComponent({
     );
   }, []);
 
-  const isImageItem = typeof item !== 'string';
+  const isImageItem = isEmoteEntry(item);
   useEffect(() => {
     if (!isImageItem) {
       return undefined;
@@ -83,7 +87,7 @@ function EmoteCellComponent({
     };
   }, [isImageItem, rowVisibility, syncAnimation]);
 
-  if (typeof item === 'string') {
+  if (!isEmoteEntry(item)) {
     return (
       <View
         accessible
@@ -129,7 +133,7 @@ export const EmoteCell = memo(EmoteCellComponent, (prev, next) => {
   if (prev.cellSize !== next.cellSize) {
     return false;
   }
-  if (typeof prev.item === 'string' || typeof next.item === 'string') {
+  if (!isEmoteEntry(prev.item) || !isEmoteEntry(next.item)) {
     return prev.item === next.item;
   }
   return prev.item.id === next.item.id;

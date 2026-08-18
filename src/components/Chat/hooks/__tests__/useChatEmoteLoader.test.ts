@@ -4,20 +4,13 @@ import {
   createAuthContextValue,
   createTestUser,
 } from '@app/context/__tests__/__fixtures__/authContext.fixture';
-import { useAuthContext } from '@app/context/AuthContext';
+import * as AuthContextModule from '@app/context/AuthContext';
 import type { LoadChannelResourcesOptions } from '@app/store/chat/actions/channelLoad';
-import {
-  abortCurrentLoad,
-  getCurrentEmoteData,
-  loadChannelResources,
-  startChannelLoadAbort,
-} from '@app/store/chat/actions/channelLoad';
-import { getSevenTvEmoteSetId } from '@app/store/chat/actions/sevenTvChannelLifecycle';
+import * as channelLoadActions from '@app/store/chat/actions/channelLoad';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import {
-  preloadChannelEmotes,
-  preloadGlobalEmotes,
-} from '@app/utils/image/preloadEmotes';
+import { makeEmptyEmoteData } from '@app/store/chat/types/constants';
+import * as preloadEmotesModule from '@app/utils/image/preloadEmotes';
+import { logger } from '@app/utils/logger';
 
 import { useChatEmoteLoader } from '../useChatEmoteLoader';
 import {
@@ -25,45 +18,31 @@ import {
   createSevenTvEmote,
 } from './__fixtures__/useChat.fixture';
 
-jest.mock('@app/context/AuthContext', () => ({
-  useAuthContext: jest.fn(),
-}));
+const mockAbortCurrentLoad = jest.spyOn(channelLoadActions, 'abortCurrentLoad');
+const mockGetCurrentEmoteData = jest.spyOn(
+  channelLoadActions,
+  'getCurrentEmoteData',
+);
+const mockLoadChannelResources = jest.spyOn(
+  channelLoadActions,
+  'loadChannelResources',
+);
+const mockPreloadChannelEmotes = jest
+  .spyOn(preloadEmotesModule, 'preloadChannelEmotes')
+  .mockResolvedValue(undefined);
+const mockPreloadGlobalEmotes = jest
+  .spyOn(preloadEmotesModule, 'preloadGlobalEmotes')
+  .mockResolvedValue(undefined);
+const mockStartChannelLoadAbort = jest.spyOn(
+  channelLoadActions,
+  'startChannelLoadAbort',
+);
+const mockUseAuthContext = jest.spyOn(AuthContextModule, 'useAuthContext');
 
-jest.mock('@app/store/chat/actions/channelLoad', () => ({
-  abortCurrentLoad: jest.fn(),
-  getCurrentEmoteData: jest.fn(),
-  loadChannelResources: jest.fn(),
-  startChannelLoadAbort: jest.fn(),
-}));
-
-jest.mock('@app/store/chat/actions/sevenTvChannelLifecycle', () => ({
-  getSevenTvEmoteSetId: jest.fn(),
-}));
-
-jest.mock('@app/utils/image/preloadEmotes', () => ({
-  preloadChannelEmotes: jest.fn(() => Promise.resolve()),
-  preloadGlobalEmotes: jest.fn(() => Promise.resolve()),
-}));
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    chat: {
-      debug: jest.fn(),
-      error: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-    },
-  },
-}));
-
-const mockAbortCurrentLoad = jest.mocked(abortCurrentLoad);
-const mockGetCurrentEmoteData = jest.mocked(getCurrentEmoteData);
-const mockGetSevenTvEmoteSetId = jest.mocked(getSevenTvEmoteSetId);
-const mockLoadChannelResources = jest.mocked(loadChannelResources);
-const mockPreloadChannelEmotes = jest.mocked(preloadChannelEmotes);
-const mockPreloadGlobalEmotes = jest.mocked(preloadGlobalEmotes);
-const mockStartChannelLoadAbort = jest.mocked(startChannelLoadAbort);
-const mockUseAuthContext = jest.mocked(useAuthContext);
+jest.spyOn(logger.chat, 'debug').mockImplementation(() => {});
+jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
+jest.spyOn(logger.chat, 'info').mockImplementation(() => {});
+jest.spyOn(logger.chat, 'warn').mockImplementation(() => {});
 
 function arrangeAbortController(controller = new AbortController()) {
   mockStartChannelLoadAbort.mockReturnValue(controller);
@@ -79,7 +58,9 @@ describe('useChatEmoteLoader', () => {
         user: createTestUser({ id: 'viewer-id' }),
       }),
     );
-    mockGetSevenTvEmoteSetId.mockReturnValue('set-1');
+    chatStore$.persisted.channelCaches.set({
+      'channel-1': { ...makeEmptyEmoteData(), sevenTvEmoteSetId: 'set-1' },
+    });
     mockGetCurrentEmoteData.mockReturnValue(
       createEmoteData({
         sevenTvChannelEmotes: [createSevenTvEmote()],

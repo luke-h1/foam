@@ -2,6 +2,11 @@ import { clampLandscapeChatWidth } from './clampLandscapeChatWidth';
 import { getDefaultLandscapeChatWidth } from './getDefaultLandscapeChatWidth';
 import type { FullscreenChatMode } from './types';
 
+export type LiveStreamChatDimensions = {
+  width: number;
+  height: number;
+};
+
 export function getLiveStreamChatDimensions({
   fullscreenChatMode,
   isChatEnabled,
@@ -18,7 +23,7 @@ export function getLiveStreamChatDimensions({
   layoutHeight: number;
   isStreamEnabled: boolean;
   screenWidth: number;
-}): { width: number; height: number } {
+}): LiveStreamChatDimensions {
   if (!isChatEnabled) {
     return { width: 0, height: 0 };
   }

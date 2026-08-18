@@ -1,7 +1,9 @@
+import { type ReactNode, type Ref, useImperativeHandle } from 'react';
 import { Platform } from 'react-native';
 
 import { fireEvent } from '@testing-library/react-native';
 
+import * as BottomSheetModule from '@app/components/BottomSheet/BottomSheet';
 import { getPreferences, replacePreferences } from '@app/store/preferenceStore';
 import render from '@app/test/render';
 
@@ -15,39 +17,38 @@ afterAll(() => {
   Platform.OS = originalOS;
 });
 
-jest.mock('expo-symbols', () => ({
-  SymbolView: () => null,
-}));
-
 const mockRequestClose = jest.fn();
 
-jest.mock('@app/components/BottomSheet/BottomSheet', () => {
-  const React = require('react');
+/**
+ * The real BottomSheet is `memo(...)`-wrapped, which types as an exotic
+ * component object rather than a plain function, so the bridge below narrows
+ * through `never` to reach a spyable function property.
+ */
+type MockableBottomSheet = {
+  BottomSheet: (props: {
+    children?: ReactNode;
+    isPresented: boolean;
+    onDismiss?: () => void;
+    ref?: Ref<{ requestClose: () => void }>;
+  }) => ReactNode;
+};
+// SAFETY: the real BottomSheet is the memo-wrapped exotic component
+// described above; `never` is the only type TS accepts as a bridge to the
+// plain function shape MockableBottomSheet.
+const mockableBottomSheet: MockableBottomSheet = BottomSheetModule as never;
 
-  return {
-    BottomSheet: React.forwardRef(function MockBottomSheet(
-      {
-        children,
-        isPresented,
-        onDismiss,
-      }: {
-        children?: React.ReactNode;
-        isPresented: boolean;
-        onDismiss?: () => void;
+jest
+  .spyOn(mockableBottomSheet, 'BottomSheet')
+  .mockImplementation(({ children, isPresented, onDismiss, ref }) => {
+    useImperativeHandle(ref, () => ({
+      requestClose: () => {
+        mockRequestClose();
+        onDismiss?.();
       },
-      ref: React.Ref<{ requestClose: () => void }>,
-    ) {
-      React.useImperativeHandle(ref, () => ({
-        requestClose: () => {
-          mockRequestClose();
-          onDismiss?.();
-        },
-      }));
+    }));
 
-      return isPresented ? children : null;
-    }),
-  };
-});
+    return isPresented ? children : null;
+  });
 
 describe('SettingsSheet', () => {
   beforeEach(() => {

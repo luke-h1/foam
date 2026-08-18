@@ -4,17 +4,7 @@ import { logger } from '@app/utils/logger';
 
 import { handleMutationError, handleQueryError } from '../query-client';
 
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    api: { error: jest.fn() },
-  },
-}));
-
-jest.mock('sonner-native', () => ({
-  toast: { error: jest.fn() },
-}));
-
-const errorMock = jest.mocked(logger.api.error);
+const errorMock = jest.spyOn(logger.api, 'error').mockImplementation(() => {});
 const toastErrorMock = jest.mocked(toast.error);
 
 describe('handleQueryError', () => {

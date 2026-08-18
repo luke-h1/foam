@@ -78,7 +78,7 @@ function EmoteActionSheetComponent({
 }: EmoteActionSheetProps) {
   const [uncontrolledVisible, setUncontrolledVisible] = useState(false);
   const sheetRef = useRef<BottomSheetHandle>(null);
-  const isControlled = typeof isPresented === 'boolean';
+  const isControlled = isPresented !== undefined;
   const visible = isControlled ? isPresented : uncontrolledVisible;
   const { height: windowHeight } = useWindowDimensions();
   const wrapperStyle = [
@@ -232,6 +232,7 @@ function EmoteActionSheetComponent({
 
   const previewSubtitle = 'Emote actions';
 
+  // SAFETY: the trigger child is the pressable this sheet wraps, and onLongPress is the only prop cloned onto it.
   const triggerChild =
     children && isValidElement(children)
       ? cloneElement(

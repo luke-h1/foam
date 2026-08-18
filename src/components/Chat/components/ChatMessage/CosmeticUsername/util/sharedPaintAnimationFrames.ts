@@ -9,6 +9,7 @@ import type { SkAnimatedImage, SkImage } from '@shopify/react-native-skia';
 import { Skia } from '@shopify/react-native-skia';
 
 import { chatScrollActiveShared } from '@app/components/Chat/util/chatScrollActiveShared';
+import type { LogMetadataValue } from '@app/lib/sentry';
 import { logger } from '@app/utils/logger';
 
 interface SharedPaintAnimationEntry {
@@ -81,7 +82,7 @@ function getOrCreateEntry(url: string): SharedPaintAnimationEntry {
       entry.ready = true;
       notifyReady(entry);
     })
-    .catch((error: unknown) => {
+    .catch((error: LogMetadataValue) => {
       logger.chat.warn('Failed to load animated paint texture:', {
         error,
         url,

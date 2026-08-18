@@ -1,46 +1,31 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
-import {
-  clearCache,
-  invalidateChatResourceCaches,
-} from '@app/store/chat/actions/channelLoad';
-import { clearUserCosmeticsCache } from '@app/store/chat/actions/cosmetics';
+import * as channelLoadActions from '@app/store/chat/actions/channelLoad';
+import * as cosmeticsActions from '@app/store/chat/actions/cosmetics';
 import {
   getPreferences,
   replacePreferences,
 } from '@app/store/preferences/state';
-import { clearImageCache } from '@app/utils/image/clearImageCache';
+import * as clearImageCacheModule from '@app/utils/image/clearImageCache';
+import { logger } from '@app/utils/logger';
 
 import { useChatSettingsActions } from '../useChatSettingsActions';
 
-jest.mock('@app/store/chat/actions/channelLoad', () => ({
-  clearCache: jest.fn(),
-  invalidateChatResourceCaches: jest.fn(),
-}));
-
-jest.mock('@app/store/chat/actions/cosmetics', () => ({
-  clearUserCosmeticsCache: jest.fn(),
-}));
-
-jest.mock('@app/utils/image/clearImageCache', () => ({
-  clearImageCache: jest.fn(() => Promise.resolve()),
-}));
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    chat: {
-      error: jest.fn(),
-      info: jest.fn(),
-    },
-  },
-}));
-
-const mockClearCache = jest.mocked(clearCache);
-const mockInvalidateChatResourceCaches = jest.mocked(
-  invalidateChatResourceCaches,
+const mockClearCache = jest.spyOn(channelLoadActions, 'clearCache');
+const mockInvalidateChatResourceCaches = jest.spyOn(
+  channelLoadActions,
+  'invalidateChatResourceCaches',
 );
-const mockClearImageCache = jest.mocked(clearImageCache);
-const mockClearUserCosmeticsCache = jest.mocked(clearUserCosmeticsCache);
+const mockClearImageCache = jest
+  .spyOn(clearImageCacheModule, 'clearImageCache')
+  .mockResolvedValue(undefined);
+const mockClearUserCosmeticsCache = jest.spyOn(
+  cosmeticsActions,
+  'clearUserCosmeticsCache',
+);
+
+jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
+jest.spyOn(logger.chat, 'info').mockImplementation(() => {});
 
 function renderSettingsActions() {
   const forceFlush = jest.fn();

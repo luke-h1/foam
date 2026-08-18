@@ -1,33 +1,24 @@
 import { act, renderHook } from '@testing-library/react-native';
 
-import {
-  addMessage,
-  clearMessages,
-  clearMessagesWithNotice,
-} from '@app/store/chat/actions/messages';
+import * as messagesActions from '@app/store/chat/actions/messages';
 import { preferences$ } from '@app/store/preferenceStore';
+import { logger } from '@app/utils/logger';
 
 import { useChatIrcHandlers } from '../useChatIrcHandlers';
 
-jest.mock('@app/store/chat/actions/messages', () => ({
-  addMessage: jest.fn(),
-  clearMessages: jest.fn(),
-  clearMessagesWithNotice: jest.fn(),
-  getMessageColor: jest.fn(),
-}));
+// Captured before spying so per-test store resets do not themselves count
+// as calls against the `clearMessages` assertions below.
+const resetMessagesStore = messagesActions.clearMessages;
 
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    chat: {
-      info: jest.fn(),
-      warn: jest.fn(),
-    },
-  },
-}));
+const mockAddMessage = jest.spyOn(messagesActions, 'addMessage');
+const mockClearMessages = jest.spyOn(messagesActions, 'clearMessages');
+const mockClearMessagesWithNotice = jest.spyOn(
+  messagesActions,
+  'clearMessagesWithNotice',
+);
 
-const mockAddMessage = jest.mocked(addMessage);
-const mockClearMessages = jest.mocked(clearMessages);
-const mockClearMessagesWithNotice = jest.mocked(clearMessagesWithNotice);
+jest.spyOn(logger.chat, 'info').mockImplementation(() => {});
+jest.spyOn(logger.chat, 'warn').mockImplementation(() => {});
 
 function addedSystemMessageContents(): (string | undefined)[] {
   return mockAddMessage.mock.calls.map(([message]) =>
@@ -85,6 +76,7 @@ function renderIrcHandlers({
 describe('useChatIrcHandlers', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    resetMessagesStore();
   });
 
   afterEach(() => {

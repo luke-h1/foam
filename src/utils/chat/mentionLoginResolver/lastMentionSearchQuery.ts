@@ -1,3 +1,3 @@
-export const lastMentionSearchQuery: { current: string } = {
+export const lastMentionSearchQuery = {
   current: '',
 };

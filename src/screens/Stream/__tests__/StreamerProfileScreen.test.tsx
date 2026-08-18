@@ -1,28 +1,23 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 
+import * as SegmentedControlModule from '@app/components/SegmentedControl/SegmentedControl';
+import * as useScrollToTopModule from '@app/hooks/useScrollToTop';
 import { StreamerProfileScreen } from '@app/screens/Stream/StreamerProfileScreen';
-import { streamElementsService as _streamElementsService } from '@app/services/streamelements-service';
-import { twitchService as _twitchService } from '@app/services/twitch-service';
+import { streamElementsService } from '@app/services/streamelements-service';
+import { twitchService } from '@app/services/twitch-service';
 import render from '@app/test/render';
 import type { StreamElementsChatStats } from '@app/types/streamelements/stats';
 import type { TwitchClip } from '@app/types/twitch/clip';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 import type { TwitchVideo } from '@app/types/twitch/video';
 
-jest.mock('@app/services/twitch-service');
-jest.mock('@app/services/streamelements-service');
-jest.mock('@app/hooks/useScrollToTop', () => ({ useScrollToTop: jest.fn() }));
+jest.spyOn(useScrollToTopModule, 'useScrollToTop').mockImplementation(() => {});
 
 // SegmentedControl wraps the native @expo/ui control, which cannot receive
 // segment-change events in tests; expose each segment as a pressable instead.
-jest.mock('@app/components/SegmentedControl/SegmentedControl', () => ({
-  SegmentedControl: ({
-    items,
-    onChange,
-  }: {
-    items: { label: string }[];
-    onChange: (index: number) => void;
-  }) => {
+jest
+  .spyOn(SegmentedControlModule, 'SegmentedControl')
+  .mockImplementation(({ items, onChange }) => {
     const React = require('react');
     const { View, TouchableOpacity, Text } = require('react-native');
     return React.createElement(
@@ -40,11 +35,12 @@ jest.mock('@app/components/SegmentedControl/SegmentedControl', () => ({
         ),
       ),
     );
-  },
-}));
+  });
 
-const twitchService = jest.mocked(_twitchService);
-const streamElementsService = jest.mocked(_streamElementsService);
+const getUserSpy = jest.spyOn(twitchService, 'getUser');
+const getClipsSpy = jest.spyOn(twitchService, 'getClips');
+const getVideosSpy = jest.spyOn(twitchService, 'getVideos');
+const getChatStatsSpy = jest.spyOn(streamElementsService, 'getChatStats');
 
 const mockUser: UserInfoResponse = {
   id: '123',
@@ -112,11 +108,11 @@ const mockChatStats: StreamElementsChatStats = {
 
 describe('StreamerProfileScreen', () => {
   beforeEach(() => {
-    twitchService.getUser.mockResolvedValue(mockUser);
-    twitchService.getClips.mockResolvedValue({ data: [mockClip] });
-    twitchService.getVideos.mockResolvedValue({ data: [mockVideo] });
+    getUserSpy.mockResolvedValue(mockUser);
+    getClipsSpy.mockResolvedValue({ data: [mockClip] });
+    getVideosSpy.mockResolvedValue({ data: [mockVideo] });
     // Most channels have no StreamElements account; default to "no data".
-    streamElementsService.getChatStats.mockRejectedValue(new Error('404'));
+    getChatStatsSpy.mockRejectedValue(new Error('404'));
   });
 
   test('renders the profile and VODs by default', async () => {
@@ -143,7 +139,7 @@ describe('StreamerProfileScreen', () => {
   });
 
   test('shows StreamElements stats when available', async () => {
-    streamElementsService.getChatStats.mockResolvedValue(mockChatStats);
+    getChatStatsSpy.mockResolvedValue(mockChatStats);
 
     render(<StreamerProfileScreen id='shroud' />);
 
@@ -161,7 +157,7 @@ describe('StreamerProfileScreen', () => {
   });
 
   test('shows an empty state when the channel has no VODs', async () => {
-    twitchService.getVideos.mockResolvedValue({ data: [] });
+    getVideosSpy.mockResolvedValue({ data: [] });
 
     render(<StreamerProfileScreen id='shroud' />);
 
@@ -169,7 +165,7 @@ describe('StreamerProfileScreen', () => {
   });
 
   test('shows a not-found state when the user fails to load', async () => {
-    twitchService.getUser.mockRejectedValue(new Error('network error'));
+    getUserSpy.mockRejectedValue(new Error('network error'));
 
     render(<StreamerProfileScreen id='shroud' />);
 

@@ -3,11 +3,7 @@ import type { StreamElementsChatStats } from '@app/types/streamelements/stats';
 import { streamElementsApi } from '../api/clients';
 import { streamElementsService } from '../streamelements-service';
 
-jest.mock('../api/clients', () => ({
-  streamElementsApi: { get: jest.fn() },
-}));
-
-const api = jest.mocked(streamElementsApi);
+const api = { get: jest.spyOn(streamElementsApi, 'get') };
 
 const mockStats: StreamElementsChatStats = {
   channel: 'shroud',

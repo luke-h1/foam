@@ -1,21 +1,18 @@
+import { Text } from 'react-native';
+
 import { render, screen } from '@testing-library/react-native';
+
+import * as ImageModule from '@app/components/Image/Image';
+import type { ImageProps } from '@app/components/Image/Image.types';
 
 import { SetHeader } from '../SetHeader';
 import { createEmoteMenuSet } from './__fixtures__/emoteMenuSet.fixture';
 
-jest.mock('expo-symbols', () => ({
-  SymbolView: () => null,
-}));
-
-jest.mock('@app/components/Image/Image', () => {
-  const { Text } = jest.requireActual('react-native');
-
-  return {
-    Image: ({ source }: { source: string }) => (
-      <Text testID='emote-set-avatar'>{source}</Text>
-    ),
-  };
-});
+jest
+  .spyOn(ImageModule, 'Image')
+  .mockImplementation(({ source }: ImageProps) => (
+    <Text testID='emote-set-avatar'>{String(source)}</Text>
+  ));
 
 describe('SetHeader', () => {
   test('renders the streamer avatar for avatar set icons', () => {

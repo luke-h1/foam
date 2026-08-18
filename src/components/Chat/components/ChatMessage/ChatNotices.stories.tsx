@@ -52,7 +52,7 @@ export const SubscriptionNotice: Story = {
       'msg-param-sub-plan-name': 'Tier 1',
       'msg-param-should-share-streak': '0',
       'msg-param-streak-months': '0',
-    } as SubscriptionTags,
+    } satisfies SubscriptionTags,
     onReply: () => {},
   },
 };
@@ -82,7 +82,7 @@ export const ResubscriptionNotice: Story = {
       'msg-param-sub-plan-name': 'Tier 2',
       'msg-param-should-share-streak': '1',
       'msg-param-streak-months': '6',
-    } as SubscriptionTags,
+    } satisfies SubscriptionTags,
     onReply: () => {},
   },
 };
@@ -249,7 +249,7 @@ export const Announcement: Story = {
       color: '#FF5500',
       mod: '1',
       'user-id': '123456',
-    } as AnnouncementTags,
+    } satisfies AnnouncementTags,
     messageDisplay: {
       isAnnouncement: true,
       showTimestamp: true,
@@ -286,7 +286,7 @@ export const AnnouncementPurple: Story = {
       'display-name': 'ModUser',
       login: 'moduser',
       mod: '1',
-    } as AnnouncementTags,
+    } satisfies AnnouncementTags,
     messageDisplay: {
       isAnnouncement: true,
       showTimestamp: true,

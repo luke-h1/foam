@@ -29,13 +29,13 @@ async function checkIsOnline(): Promise<boolean> {
       signal: controller.signal,
     });
 
-    const json = (await res.json()) as { version: string };
+    const healthcheck: unknown = await res.json();
 
-    if (json.version) {
-      return true;
-    }
-
-    return false;
+    return (
+      healthcheck instanceof Object &&
+      'version' in healthcheck &&
+      Boolean(healthcheck.version)
+    );
   } catch {
     return false;
   }
@@ -127,13 +127,15 @@ const APP_STATE_RECONCILE_INTERVAL_MS = 15_000;
 // Stored on globalThis and cleared before re-arming so a module re-evaluation
 // (Fast Refresh in dev) can't leak a second interval. In production the module
 // is evaluated once.
-const globalWithReconcile = globalThis as typeof globalThis & {
-  __foamAppStateReconcileInterval?: ReturnType<typeof setInterval>;
-};
-if (globalWithReconcile.__foamAppStateReconcileInterval) {
-  clearInterval(globalWithReconcile.__foamAppStateReconcileInterval);
+declare global {
+  var __foamAppStateReconcileInterval:
+    ReturnType<typeof setInterval> | undefined;
 }
-globalWithReconcile.__foamAppStateReconcileInterval = setInterval(() => {
+
+if (globalThis.__foamAppStateReconcileInterval) {
+  clearInterval(globalThis.__foamAppStateReconcileInterval);
+}
+globalThis.__foamAppStateReconcileInterval = setInterval(() => {
   if (AppState.currentState === 'active') {
     startConnectivityPolling();
   } else {
@@ -148,8 +150,7 @@ focusManager.setEventListener(onFocus => {
       focusManager.setFocused(current === 'active');
     });
   }
-  // eslint-disable-next-line no-undef
-  if (typeof window !== 'undefined' && window.addEventListener) {
+  if (globalThis.window) {
     // these handlers are a bit redundant but focus catches when the browser window
     // is blurred/focused while visibilitychange seems to only handle when the
     // window minimizes (both of them catch tab changes)

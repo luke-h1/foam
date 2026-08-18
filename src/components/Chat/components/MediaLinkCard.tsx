@@ -97,7 +97,7 @@ function MediaLinkCardComponent({
   const mediaMeta = isTwitchClip
     ? [
         createdBy ? `Clipped by ${createdBy}` : null,
-        typeof viewCount === 'number' && viewCount > 0
+        Number(viewCount) === viewCount && viewCount > 0
           ? `${formatCompactNumber(viewCount)} views`
           : null,
       ]

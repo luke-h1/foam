@@ -15,7 +15,9 @@ export function getParseRuntime(): WorkletRuntime | null {
     parseRuntime = createWorkletRuntime('foam-json-parse');
   } catch (error) {
     parseRuntime = null;
-    logger.main.debug('off-thread parse runtime unavailable', { error });
+    logger.main.debug('off-thread parse runtime unavailable', {
+      error: error instanceof Error ? error : String(error),
+    });
   }
   return parseRuntime;
 }

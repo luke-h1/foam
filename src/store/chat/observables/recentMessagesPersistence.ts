@@ -31,10 +31,7 @@ const migrateLegacyBlob = () => {
   }
 };
 
-export const loadPersistedRecentMessages = (): Record<
-  string,
-  AnyChatMessageType[]
-> => {
+export const loadPersistedRecentMessages = () => {
   migrateLegacyBlob();
 
   const result: Record<string, AnyChatMessageType[]> = {};
@@ -44,6 +41,7 @@ export const loadPersistedRecentMessages = (): Record<
       continue;
     }
     try {
+      // SAFETY: every key in this MMKV instance is written by `writePersistedRecentMessagesForChannel` as a JSON array of store messages; a malformed blob is dropped by the `Array.isArray` guard below or the catch.
       const parsed = JSON.parse(raw) as AnyChatMessageType[];
       if (Array.isArray(parsed) && parsed.length > 0) {
         result[channelId] = parsed;

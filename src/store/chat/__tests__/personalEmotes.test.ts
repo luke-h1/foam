@@ -1,6 +1,7 @@
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import { sevenTvService } from '@app/services/seventv-service';
 import type { SevenTvSanitisedEmote } from '@app/types/emote';
+import { logger } from '@app/utils/logger';
 
 import {
   clearChannelPersonalEmotes,
@@ -13,43 +14,12 @@ import { chatStore$ } from '../observables/chatStore';
 import type { ChannelCacheType } from '../types/constants';
 import { makeEmptyEmoteData } from '../types/constants';
 
-jest.mock('@legendapp/state/persist', () => ({
-  configureObservablePersistence: jest.fn(),
-  persistObservable: jest.fn(),
-}));
+jest.spyOn(logger.stv, 'warn').mockImplementation(() => {});
 
-jest.mock('react-native-mmkv', () => ({
-  MMKV: class MockMMKV {
-    set = jest.fn();
-    getString = jest.fn();
-    getAllKeys = jest.fn(() => []);
-    delete = jest.fn();
-  },
-  createMMKV: () => ({
-    set: jest.fn(),
-    getString: jest.fn(),
-    getAllKeys: jest.fn(() => []),
-    remove: jest.fn(),
-  }),
-}));
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    stv: {
-      error: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-    },
-  },
-}));
-
-jest.mock('@app/services/seventv-service', () => ({
-  sevenTvService: {
-    getPersonalEmoteSet: jest.fn(),
-  },
-}));
-
-const mockGetPersonalEmoteSet = jest.mocked(sevenTvService.getPersonalEmoteSet);
+const mockGetPersonalEmoteSet = jest.spyOn(
+  sevenTvService,
+  'getPersonalEmoteSet',
+);
 
 const channelId = '123';
 const twitchUserId = 'user-1';

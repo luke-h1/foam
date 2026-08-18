@@ -11,16 +11,13 @@ function getViewCountFormatter() {
 
 /**
  * Format viewer count for display.
- * Safely handles string/number from API and invalid values.
+ * Missing and invalid counts render as '0'.
  */
-export function formatViewCount(
-  count: number | string | undefined | null,
-): string {
-  const n = typeof count === 'string' ? parseInt(count, 10) : Number(count);
-  if (!Number.isFinite(n) || n < 0) {
+export function formatViewCount(count: number | undefined | null): string {
+  if (count == null || !Number.isFinite(count) || count < 0) {
     return '0';
   }
-  return getViewCountFormatter().format(Math.floor(n));
+  return getViewCountFormatter().format(Math.floor(count));
 }
 
 /**
@@ -28,19 +25,18 @@ export function formatViewCount(
  * Hand-rolled because Hermes does not support Intl compact notation.
  */
 export function formatViewCountCompact(
-  count: number | string | undefined | null,
+  count: number | undefined | null,
 ): string {
-  const n = typeof count === 'string' ? parseInt(count, 10) : Number(count);
-  if (!Number.isFinite(n) || n < 0) {
+  if (count == null || !Number.isFinite(count) || count < 0) {
     return '0';
   }
-  if (n >= 1_000_000) {
-    const millions = Math.floor((n / 1_000_000) * 10) / 10;
+  if (count >= 1_000_000) {
+    const millions = Math.floor((count / 1_000_000) * 10) / 10;
     return `${millions % 1 === 0 || millions >= 10 ? Math.floor(millions) : millions}M`;
   }
-  if (n >= 1_000) {
-    const thousands = Math.floor((n / 1_000) * 10) / 10;
+  if (count >= 1_000) {
+    const thousands = Math.floor((count / 1_000) * 10) / 10;
     return `${thousands % 1 === 0 || thousands >= 10 ? Math.floor(thousands) : thousands}K`;
   }
-  return String(Math.floor(n));
+  return String(Math.floor(count));
 }

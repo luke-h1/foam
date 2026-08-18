@@ -6,7 +6,7 @@ import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 
 const messageTextCache = new WeakMap<ParsedPart[], string>();
 const normalisedMessageFieldsCache = new WeakMap<
-  VisibleMessageShape,
+  FilterableMessage,
   {
     body: string;
     login: string;
@@ -15,7 +15,7 @@ const normalisedMessageFieldsCache = new WeakMap<
   }
 >();
 
-interface VisibleMessageShape {
+interface FilterableMessage {
   message: ParsedPart[];
   message_id: string;
   sender: string;
@@ -30,7 +30,7 @@ export interface VisibleMessagesOptions {
   showOnlyMentions?: boolean;
 }
 
-function getMessageText(message: VisibleMessageShape): string {
+function getMessageText(message: FilterableMessage): string {
   const cached = messageTextCache.get(message.message);
   if (cached) {
     return cached;
@@ -41,7 +41,7 @@ function getMessageText(message: VisibleMessageShape): string {
   return text;
 }
 
-function getNormalisedMessageFields(message: VisibleMessageShape) {
+function getNormalisedMessageFields(message: FilterableMessage) {
   const cached = normalisedMessageFieldsCache.get(message);
   if (cached) {
     return cached;
@@ -59,7 +59,7 @@ function getNormalisedMessageFields(message: VisibleMessageShape) {
 }
 
 function messageMentionsUsername(
-  message: VisibleMessageShape,
+  message: FilterableMessage,
   username: string | undefined,
 ): boolean {
   const target = normaliseChatUsername(username);
@@ -81,7 +81,7 @@ function messageMentionsUsername(
 }
 
 function messageMatchesSearch(
-  message: VisibleMessageShape,
+  message: FilterableMessage,
   searchQuery: string,
 ): boolean {
   if (!searchQuery) {
@@ -99,7 +99,7 @@ function messageMatchesSearch(
 }
 
 function messageHiddenByPhrase(
-  message: VisibleMessageShape,
+  message: FilterableMessage,
   hiddenPhrases: readonly string[],
 ): boolean {
   if (hiddenPhrases.length === 0) {
@@ -112,7 +112,7 @@ function messageHiddenByPhrase(
 }
 
 function messageHiddenByUser(
-  message: VisibleMessageShape,
+  message: FilterableMessage,
   hiddenUsers: ReadonlySet<string>,
 ): boolean {
   if (hiddenUsers.size === 0) {
@@ -148,7 +148,7 @@ function normaliseList(
   return normalisedValues;
 }
 
-export function getVisibleMessages<TMessage extends VisibleMessageShape>(
+export function getVisibleMessages<TMessage extends FilterableMessage>(
   messages: TMessage[],
   options: VisibleMessagesOptions = {},
 ): TMessage[] {

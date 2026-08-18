@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { StyleSheet } from 'react-native';
 
 import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
+import type { BrandIconName } from '@app/components/BrandIcon/brandIconRegistry';
 import { isBrandIcon } from '@app/components/BrandIcon/isBrandIcon';
 import type { EmoteMenuIcon as EmoteMenuIconType } from '@app/components/Chat/components/EmoteSheet/util/emoteMenuData';
 import { Image } from '@app/components/Image/Image';
@@ -9,15 +10,17 @@ import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 
-const PROVIDER_ACCENT_COLORS: Partial<Record<EmoteMenuIconType, string>> = {
+type ProviderAccentIcon = BrandIconName | 'ffz' | 'twitch';
+
+const PROVIDER_ACCENT_COLORS = {
   twitch: theme.colorPlum,
   stv: theme.colorWhite,
   ffz: theme.colorPrimary,
   bttv: theme.colorOrange,
-};
+} satisfies Record<ProviderAccentIcon, string>;
 
-const getProviderAccentColor = (icon: EmoteMenuIconType) =>
-  PROVIDER_ACCENT_COLORS[icon] ?? theme.color.text.dark;
+const getProviderAccentColor = (icon: ProviderAccentIcon) =>
+  PROVIDER_ACCENT_COLORS[icon];
 
 interface EmoteMenuIconProps {
   fallbackLabel?: string;

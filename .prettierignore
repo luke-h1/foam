@@ -23,3 +23,4 @@ player-website/dist
 src/graphql/generated
 docs/profiles
 .cache
+tools/oxlint/anti-slop

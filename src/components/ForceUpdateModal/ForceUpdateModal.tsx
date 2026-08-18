@@ -21,7 +21,6 @@ import { logger } from '@app/utils/logger';
 import { isUpdateRequired } from '@app/utils/version/compareVersions';
 import { getMinimumVersion } from '@app/utils/version/getMinimumVersion';
 
-import { Variant } from '../../../app.config';
 import { Button } from '../Button/Button';
 
 async function handleUpdatePress() {
@@ -45,8 +44,7 @@ export function ForceUpdateModal() {
   const insets = useSafeAreaInsets();
   const alertVisibleRef = useRef(false);
 
-  const variant = (process.env.EXPO_PUBLIC_APP_VARIANT ??
-    'development') as Variant;
+  const variant = process.env.EXPO_PUBLIC_APP_VARIANT ?? 'development';
   const minimumVersion = getMinimumVersion(variant, remoteConfig);
   const currentVersion = Application.nativeApplicationVersion ?? 'Unknown';
 

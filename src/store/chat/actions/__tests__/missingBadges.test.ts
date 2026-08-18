@@ -8,20 +8,12 @@ import {
   reportMissingBadge,
 } from '../missingBadges';
 
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    stv: {
-      warn: jest.fn(),
-    },
-  },
-}));
-
-const warn = jest.mocked(logger.stv.warn);
+const warn = jest.spyOn(logger.stv, 'warn').mockImplementation(() => {});
 
 describe('missingBadges', () => {
   beforeEach(() => {
     clearAllMissingBadges();
-    jest.clearAllMocks();
+    warn.mockClear();
   });
 
   test('tracks a referenced-but-undefined badge and logs it once', () => {

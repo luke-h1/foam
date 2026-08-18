@@ -1,5 +1,4 @@
 import { Platform } from 'react-native';
-import type { ReactNode } from 'react';
 
 import { fireEvent } from '@testing-library/react-native';
 
@@ -14,27 +13,6 @@ beforeAll(() => {
 });
 afterAll(() => {
   Platform.OS = originalOS;
-});
-
-jest.mock('expo-symbols', () => ({
-  SymbolView: () => null,
-}));
-
-jest.mock('@app/components/Image/Image', () => ({
-  Image: () => null,
-}));
-
-jest.mock('react-native-teleport', () => {
-  const React = require('react');
-  const { View } = require('react-native');
-  type mockPortalProps = { children?: ReactNode };
-
-  return {
-    Portal: ({ children }: mockPortalProps) => children,
-    PortalHost: ({ children }: mockPortalProps) =>
-      React.createElement(View, null, children),
-    PortalProvider: ({ children }: mockPortalProps) => children,
-  };
 });
 
 describe('Moderator action sheets', () => {

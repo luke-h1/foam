@@ -1,16 +1,18 @@
 import { act } from '@testing-library/react-native';
 
 import { createMessageActionData } from '@app/components/Chat/hooks/__tests__/__fixtures__/useChat.fixture';
-import { runModCommand } from '@app/components/Chat/util/modCommands/runModCommand';
+import * as runModCommandModule from '@app/components/Chat/util/modCommands/runModCommand';
 import {
   openChatMessageActions,
   openChatUserActions,
   resetChatOverlays,
 } from '@app/store/chat/actions/chatOverlays';
-import { showActionMenu } from '@app/store/overlays/showActionMenu';
+import * as showActionMenuModule from '@app/store/overlays/showActionMenu';
 import render from '@app/test/render';
 
+import * as actionSheetModule from '../ActionSheet/ActionSheet';
 import { ChatOverlayLayer } from '../ChatOverlayLayer';
+import * as userActionSheetModule from '../UserActionSheet';
 
 interface CapturedUserSheetProps {
   onBanUser: () => void;
@@ -24,32 +26,35 @@ interface CapturedMessageSheetProps {
 let userSheetProps: CapturedUserSheetProps | undefined;
 let messageSheetProps: CapturedMessageSheetProps | undefined;
 
-// The sheets present natively; this test is about which login each moderation
-// action targets, so capture their callbacks rather than driving the UI.
-jest.mock('../UserActionSheet', () => ({
-  UserActionSheet: (props: CapturedUserSheetProps) => {
+/**
+ * `UserActionSheet` and `ActionSheet` are `memo()`-wrapped, so they're
+ * objects rather than plain functions and `jest.spyOn` refuses to patch them
+ * ("not a function"). Redefine the exports directly instead. The sheets
+ * present natively; this test is about which login each moderation action
+ * targets, so capture their callbacks rather than driving the UI.
+ */
+Object.defineProperty(userActionSheetModule, 'UserActionSheet', {
+  configurable: true,
+  value: (props: CapturedUserSheetProps) => {
     userSheetProps = props;
     return null;
   },
-}));
+});
 
-jest.mock('../ActionSheet/ActionSheet', () => ({
-  ActionSheet: (props: CapturedMessageSheetProps) => {
+Object.defineProperty(actionSheetModule, 'ActionSheet', {
+  configurable: true,
+  value: (props: CapturedMessageSheetProps) => {
     messageSheetProps = props;
     return null;
   },
-}));
+});
 
-jest.mock('@app/store/overlays/showActionMenu', () => ({
-  showActionMenu: jest.fn(),
-}));
-
-jest.mock('@app/components/Chat/util/modCommands/runModCommand', () => ({
-  runModCommand: jest.fn(),
-}));
-
-const showActionMenuMock = jest.mocked(showActionMenu);
-const runModCommandMock = jest.mocked(runModCommand);
+const showActionMenuMock = jest
+  .spyOn(showActionMenuModule, 'showActionMenu')
+  .mockImplementation(() => {});
+const runModCommandMock = jest
+  .spyOn(runModCommandModule, 'runModCommand')
+  .mockImplementation(() => {});
 
 const CHANNEL_ID = 'channel-1';
 

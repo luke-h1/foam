@@ -16,14 +16,14 @@ const MAX_MEMORY_CACHE_ENTRIES = 750;
 const objectUrlCache = new Map<string, CachedImageInfo>();
 
 function isCacheableWebUri(uri: string | undefined): uri is string {
-  return typeof uri === 'string' && /^https?:\/\//i.test(uri);
+  return uri !== undefined && /^https?:\/\//i.test(uri);
 }
 
 function canUseWebImageCache() {
   return (
-    typeof globalThis.caches !== 'undefined' &&
-    typeof globalThis.fetch !== 'undefined' &&
-    typeof globalThis.URL !== 'undefined'
+    globalThis.caches !== undefined &&
+    globalThis.fetch !== undefined &&
+    globalThis.URL !== undefined
   );
 }
 
@@ -126,7 +126,7 @@ export function clearSessionCache(): void {
   });
   objectUrlCache.clear();
 
-  if (typeof globalThis.caches !== 'undefined') {
+  if (globalThis.caches !== undefined) {
     void globalThis.caches.delete(WEB_IMAGE_CACHE_NAME).catch(() => undefined);
   }
 }

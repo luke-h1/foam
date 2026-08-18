@@ -80,7 +80,7 @@ export interface TextProps extends RNTextProps, MarginProps {
 
 const margin = getMargin(theme);
 
-const italicFontMap: Record<TextWeight, string> = {
+const italicFontMap = {
   ultralight: theme.fontFamilyLightItalic,
   thin: theme.fontFamilyLightItalic,
   light: theme.fontFamilyLightItalic,
@@ -90,9 +90,9 @@ const italicFontMap: Record<TextWeight, string> = {
   bold: theme.fontFamilyBoldItalic,
   heavy: theme.fontFamilyHeavyItalic,
   black: theme.fontFamilyBlackItalic,
-};
+} satisfies Record<TextWeight, string>;
 
-const uprightFontMap: Record<TextWeight, string> = {
+const uprightFontMap = {
   ultralight: theme.fontFamilyLight,
   thin: theme.fontFamilyLight,
   light: theme.fontFamilyLight,
@@ -102,55 +102,59 @@ const uprightFontMap: Record<TextWeight, string> = {
   bold: theme.fontFamilyBold,
   heavy: theme.fontFamilyHeavy,
   black: theme.fontFamilyBlack,
-};
+} satisfies Record<TextWeight, string>;
 
-const fontWeightToTextWeight: Record<string, TextWeight> = {
-  '100': 'ultralight',
-  '200': 'thin',
-  '300': 'light',
-  '400': 'normal',
-  '500': 'medium',
-  '600': 'semibold',
-  '700': 'bold',
-  '800': 'heavy',
-  '900': 'black',
-  bold: 'bold',
-  normal: 'normal',
-};
+const fontWeightToTextWeight = new Map<string, TextWeight>([
+  ['100', 'ultralight'],
+  ['200', 'thin'],
+  ['300', 'light'],
+  ['400', 'normal'],
+  ['500', 'medium'],
+  ['600', 'semibold'],
+  ['700', 'bold'],
+  ['800', 'heavy'],
+  ['900', 'black'],
+  ['bold', 'bold'],
+  ['normal', 'normal'],
+]);
+
+type StyleEntry = TextProps['style'] | readonly TextProps['style'][];
 
 function getStyleFontWeight(
-  style: TextProps['style'],
+  style: StyleEntry,
 ): TextStyle['fontWeight'] | undefined {
   if (!style) {
     return undefined;
   }
   if (Array.isArray(style)) {
     for (let index = style.length - 1; index >= 0; index -= 1) {
-      const weight = getStyleFontWeight(style[index] as TextProps['style']);
+      const weight = getStyleFontWeight(style[index]);
       if (weight != null) {
         return weight;
       }
     }
     return undefined;
   }
+  // SAFETY: the non-array branch is TextStyle or a RegisteredStyle number, and reading fontWeight off a number yields undefined, same as the miss path
   return (style as TextStyle).fontWeight;
 }
 
 function getStyleFontFamily(
-  style: TextProps['style'],
+  style: StyleEntry,
 ): TextStyle['fontFamily'] | undefined {
   if (!style) {
     return undefined;
   }
   if (Array.isArray(style)) {
     for (let index = style.length - 1; index >= 0; index -= 1) {
-      const fontFamily = getStyleFontFamily(style[index] as TextProps['style']);
+      const fontFamily = getStyleFontFamily(style[index]);
       if (fontFamily != null) {
         return fontFamily;
       }
     }
     return undefined;
   }
+  // SAFETY: the non-array branch is TextStyle or a RegisteredStyle number, and reading fontFamily off a number yields undefined, same as the miss path
   return (style as TextStyle).fontFamily;
 }
 
@@ -166,7 +170,7 @@ export function resolveWeightFromFontWeight(
     return undefined;
   }
 
-  const direct = fontWeightToTextWeight[String(fontWeight)];
+  const direct = fontWeightToTextWeight.get(String(fontWeight));
   if (direct) {
     return direct;
   }
@@ -177,10 +181,10 @@ export function resolveWeightFromFontWeight(
   }
 
   const clamped = Math.min(900, Math.max(100, Math.round(numeric / 100) * 100));
-  return fontWeightToTextWeight[String(clamped)];
+  return fontWeightToTextWeight.get(String(clamped));
 }
 
-const weightMap: Record<TextWeight, TextStyle['fontWeight']> = {
+const weightMap = {
   black: '900',
   bold: '700',
   heavy: '800',
@@ -190,7 +194,7 @@ const weightMap: Record<TextWeight, TextStyle['fontWeight']> = {
   semibold: '600',
   thin: '200',
   ultralight: '100',
-};
+} satisfies Record<TextWeight, TextStyle['fontWeight']>;
 
 const sizeStyles = StyleSheet.create({
   '10xl': { fontSize: 128, lineHeight: 154 },

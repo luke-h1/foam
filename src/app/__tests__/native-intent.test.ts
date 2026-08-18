@@ -1,16 +1,18 @@
-import { isAuthCallbackUrl } from '@app/navigators/authLinking';
+import * as authLinking from '@app/navigators/authLinking';
 
 import { redirectSystemPath } from '../+native-intent';
 
-jest.mock('@app/navigators/authLinking', () => ({
-  isAuthCallbackUrl: jest.fn(() => false),
-}));
-
-const mockIsAuthCallbackUrl = jest.mocked(isAuthCallbackUrl);
-
 describe('redirectSystemPath', () => {
+  let mockIsAuthCallbackUrl: jest.SpyInstance<boolean, [string | null]>;
+
   beforeEach(() => {
-    mockIsAuthCallbackUrl.mockReturnValue(false);
+    mockIsAuthCallbackUrl = jest
+      .spyOn(authLinking, 'isAuthCallbackUrl')
+      .mockReturnValue(false);
+  });
+
+  afterEach(() => {
+    mockIsAuthCallbackUrl.mockRestore();
   });
 
   test('passes auth callback URLs through untouched', () => {

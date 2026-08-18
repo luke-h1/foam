@@ -8,25 +8,19 @@ import { logger } from '@app/utils/logger';
 import type { ImageProps } from './Image.types';
 import { imageFileStore } from './imageFileStore';
 
-const getSourceUri = (source: ImageProps['source']) => {
-  if (typeof source === 'string') {
-    return source;
-  }
+const isUriString = (source: ImageProps['source']): source is string =>
+  String(source) === source;
 
-  if (
-    typeof source === 'object' &&
-    source !== null &&
-    'uri' in source &&
-    typeof source.uri === 'string'
-  ) {
+const getSourceUri = (source: ImageProps['source']) => {
+  if (source instanceof Object) {
     return source.uri;
   }
 
-  return undefined;
+  return isUriString(source) ? source : undefined;
 };
 
 const isCacheableWebUri = (uri: string | undefined): uri is string =>
-  typeof uri === 'string' && /^https?:\/\//i.test(uri);
+  uri !== undefined && /^https?:\/\//i.test(uri);
 
 export const Image = function Image({
   contentFit = 'cover',

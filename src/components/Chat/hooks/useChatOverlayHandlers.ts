@@ -10,6 +10,7 @@ import type {
 } from '@app/components/Chat/components/ChatMessage/RichChatMessage.types';
 import { queryClient } from '@app/lib/react-query/query-client';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
+import type { LogMetadataValue } from '@app/lib/sentry';
 import { twitchService } from '@app/services/twitch-service';
 import {
   closeChatOverlay,
@@ -160,7 +161,7 @@ export function useChatOverlayHandlers({
     twitchService
       .deleteChatMessage(channelId, moderatorId, messageId)
       .then(() => toast.success('Message deleted'))
-      .catch((error: unknown) => {
+      .catch((error: LogMetadataValue) => {
         logger.chat.warn('Failed to delete chat message', {
           error,
           channel_id: channelId,

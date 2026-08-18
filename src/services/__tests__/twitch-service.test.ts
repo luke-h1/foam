@@ -6,21 +6,13 @@ import type { UserInfoResponse } from '@app/types/twitch/user';
 import { twitchApi } from '../api/clients';
 import { MAX_FOLLOWED_CHANNELS, twitchService } from '../twitch-service';
 
-jest.mock('../api/clients', () => ({
-  getTwitchClientId: jest.fn(() => 'client-id'),
-  isE2EMode: false,
-  mockServerUrl: undefined,
-  setTwitchClientId: jest.fn(),
-  twitchApi: {
-    get: jest.fn(),
-    post: jest.fn(),
-    put: jest.fn(),
-    patch: jest.fn(),
-    delete: jest.fn(),
-  },
-}));
-
-const api = jest.mocked(twitchApi);
+const api = {
+  get: jest.spyOn(twitchApi, 'get'),
+  post: jest.spyOn(twitchApi, 'post'),
+  put: jest.spyOn(twitchApi, 'put'),
+  patch: jest.spyOn(twitchApi, 'patch'),
+  delete: jest.spyOn(twitchApi, 'delete'),
+};
 
 function makeUser(id: string, displayName: string): UserInfoResponse {
   return {

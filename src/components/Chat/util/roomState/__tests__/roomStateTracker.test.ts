@@ -5,13 +5,13 @@ import {
   type RoomStateUpdate,
 } from '../roomStateTracker';
 
-const inactiveTags: Record<string, string> = {
+const inactiveTags = {
   emote_only: '0',
   'followers-only': '-1',
   r9k: '0',
   slow: '0',
   'subs-only': '0',
-};
+} satisfies Record<string, string>;
 
 const emptyRoomState: ParsedRoomState = {
   emoteOnly: false,

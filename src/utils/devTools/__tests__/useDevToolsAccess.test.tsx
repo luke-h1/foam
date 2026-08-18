@@ -4,25 +4,25 @@ import {
   createAuthContextValue,
   createTestUser,
 } from '@app/context/__tests__/__fixtures__/authContext.fixture';
-import { useAuthContext } from '@app/context/AuthContext';
+import * as AuthContextModule from '@app/context/AuthContext';
 import type {
   RemoteConfigEntry,
   RemoteConfigType,
   UseRemoteConfigResult,
 } from '@app/hooks/firebase/useRemoteConfig';
-import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
+import * as useRemoteConfigModule from '@app/hooks/firebase/useRemoteConfig';
 import { useDevToolsAccess } from '@app/utils/devTools/devToolsGate';
 
-jest.mock('@app/context/AuthContext', () => ({
-  useAuthContext: jest.fn(),
-}));
+const mockUseAuthContext = jest.spyOn(AuthContextModule, 'useAuthContext');
+const mockUseRemoteConfig = jest.spyOn(
+  useRemoteConfigModule,
+  'useRemoteConfig',
+);
 
-jest.mock('@app/hooks/firebase/useRemoteConfig', () => ({
-  useRemoteConfig: jest.fn(),
-}));
-
-const mockUseAuthContext = jest.mocked(useAuthContext);
-const mockUseRemoteConfig = jest.mocked(useRemoteConfig);
+afterEach(() => {
+  mockUseAuthContext.mockReset();
+  mockUseRemoteConfig.mockReset();
+});
 
 function entry<T>(value: T): RemoteConfigEntry<T> {
   return { raw: JSON.stringify(value), value, source: 'remote' };

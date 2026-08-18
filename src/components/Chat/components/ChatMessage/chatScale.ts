@@ -8,31 +8,31 @@ export type ChatFontScale = 'small' | 'default' | 'large';
  * deliberately does not touch it, so a compact row is the same typeface at the
  * same size as a comfortable one - only tighter.
  */
-const BASE_FONT_SIZE: Record<ChatFontScale, number> = {
+const BASE_FONT_SIZE = {
   small: theme.fontSize12,
   default: theme.fontSize14,
   large: theme.fontSize16,
-};
+} satisfies Record<ChatFontScale, number>;
 
 /**
  * Density moves leading and row padding. Comfortable matches the 1.5 ratio the
  * 7TV extension locks its chat list to; compact tightens it without changing
  * any other part of the ramp.
  */
-const LINE_HEIGHT_RATIO: Record<ChatDensity, number> = {
+const LINE_HEIGHT_RATIO = {
   comfortable: 1.5,
   compact: 1.3,
-};
+} satisfies Record<ChatDensity, number>;
 
-const ROW_PADDING_VERTICAL: Record<ChatDensity, number> = {
+const ROW_PADDING_VERTICAL = {
   comfortable: 5,
   compact: 2,
-};
+} satisfies Record<ChatDensity, number>;
 
-const ROW_PADDING_HORIZONTAL: Record<ChatDensity, number> = {
+const ROW_PADDING_HORIZONTAL = {
   comfortable: 8,
   compact: 6,
-};
+} satisfies Record<ChatDensity, number>;
 
 const SECONDARY_FONT_RATIO = 0.86;
 const EMOTE_RATIO = 2.15;
@@ -111,7 +111,7 @@ function buildChatScale(
   };
 }
 
-const CHAT_SCALES: Record<ChatFontScale, Record<ChatDensity, ChatScale>> = {
+const CHAT_SCALES = {
   small: {
     comfortable: buildChatScale('small', 'comfortable'),
     compact: buildChatScale('small', 'compact'),
@@ -124,7 +124,7 @@ const CHAT_SCALES: Record<ChatFontScale, Record<ChatDensity, ChatScale>> = {
     comfortable: buildChatScale('large', 'comfortable'),
     compact: buildChatScale('large', 'compact'),
   },
-};
+} satisfies Record<ChatFontScale, Record<ChatDensity, ChatScale>>;
 
 /**
  * The resolved chat metrics for a preference pair. Every value the renderer

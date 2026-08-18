@@ -1,3 +1,6 @@
+import { createElement } from 'react';
+import { Text, TouchableOpacity, View } from 'react-native';
+
 import {
   fireEvent,
   render,
@@ -5,67 +8,59 @@ import {
   waitFor,
 } from '@testing-library/react-native';
 
-import { storageService as _storageService } from '@app/lib/storage';
-import { twitchService as _twitchService } from '@app/services/twitch-service';
+import * as SegmentedControlModule from '@app/components/SegmentedControl/SegmentedControl';
+import * as useDebouncedCallbackModule from '@app/hooks/useDebouncedCallback';
+import { storageService as realStorageService } from '@app/lib/storage';
+import { twitchService as realTwitchService } from '@app/services/twitch-service';
 import type { Category } from '@app/types/twitch/category';
 import type { SearchChannelResponse } from '@app/types/twitch/channel';
 
 import { SearchScreen } from '../SearchScreen';
 
-jest.mock('@app/services/twitch-service');
+const twitchService = {
+  searchChannels: jest.spyOn(realTwitchService, 'searchChannels'),
+  searchCategories: jest.spyOn(realTwitchService, 'searchCategories'),
+};
 
-jest.mock('@app/lib/storage', () => ({
-  storageService: {
-    getString: jest.fn(() => null),
-    set: jest.fn(),
-    remove: jest.fn(),
-    events: { on: jest.fn(), off: jest.fn() },
-  },
-}));
+const storageService = {
+  getString: jest.spyOn(realStorageService, 'getString').mockReturnValue(null),
+  set: jest.spyOn(realStorageService, 'set').mockImplementation(() => {}),
+  remove: jest.spyOn(realStorageService, 'remove').mockImplementation(() => {}),
+};
+jest.spyOn(realStorageService.events, 'on').mockReturnThis();
+jest.spyOn(realStorageService.events, 'off').mockReturnThis();
 
-jest.mock('@app/hooks/useScrollToTop', () => ({ useScrollToTop: jest.fn() }));
-jest.mock('@app/hooks/useDebouncedCallback', () => ({
-  useDebouncedCallback: (fn: unknown) => [fn],
-}));
-jest.mock('expo-screen-orientation', () => ({
-  lockAsync: jest.fn(),
-  OrientationLock: { PORTRAIT_UP: 'PORTRAIT_UP' },
-}));
-jest.mock('@app/components/FlashList/FlashList', () => ({
-  FlashList: jest.requireMock('@shopify/flash-list').FlashList,
-}));
+jest
+  .spyOn(useDebouncedCallbackModule, 'useDebouncedCallback')
+  .mockImplementation((callback: (...args: unknown[]) => void) => [
+    (...args: unknown[]) => {
+      callback(...args);
+      return Promise.resolve();
+    },
+    () => {},
+  ]);
+
 // SegmentedControl wraps the native @expo/ui control, which cannot receive
 // segment-change events in tests; expose each segment as a pressable instead.
-jest.mock('@app/components/SegmentedControl/SegmentedControl', () => ({
-  SegmentedControl: ({
-    items,
-    onChange,
-  }: {
-    items: { label: string }[];
-    onChange: (index: number) => void;
-  }) => {
-    const React = require('react');
-    const { View, TouchableOpacity, Text } = require('react-native');
-    return React.createElement(
+jest
+  .spyOn(SegmentedControlModule, 'SegmentedControl')
+  .mockImplementation(({ items, onChange }) =>
+    createElement(
       View,
       null,
-      items.map(({ label }: { label: string }, i: number) =>
-        React.createElement(
+      items.map(({ label }, i) =>
+        createElement(
           TouchableOpacity,
           {
             key: label,
             testID: `filter-${label.toLowerCase()}`,
             onPress: () => onChange(i),
           },
-          React.createElement(Text, null, label),
+          createElement(Text, null, label),
         ),
       ),
-    );
-  },
-}));
-
-const twitchService = jest.mocked(_twitchService);
-const storageService = jest.mocked(_storageService);
+    ),
+  );
 
 const mockChannel: SearchChannelResponse = {
   id: 'ch1',

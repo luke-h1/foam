@@ -28,7 +28,7 @@ interface ProfileSectionProps {
 
 interface InfoRowProps {
   label: string;
-  value: ReactNode;
+  value: string;
   valueColor?: string;
 }
 
@@ -61,18 +61,14 @@ function InfoRow({ label, value, valueColor }: InfoRowProps) {
       <Text type='sm' weight='medium' style={styles.rowLabel}>
         {label}
       </Text>
-      {typeof value === 'string' || typeof value === 'number' ? (
-        <Text
-          type='xs'
-          color='gray.textLow'
-          numberOfLines={1}
-          style={[styles.rowValue, valueColor ? { color: valueColor } : null]}
-        >
-          {value}
-        </Text>
-      ) : (
-        <View style={styles.rowValueWrapper}>{value}</View>
-      )}
+      <Text
+        type='xs'
+        color='gray.textLow'
+        numberOfLines={1}
+        style={[styles.rowValue, valueColor ? { color: valueColor } : null]}
+      >
+        {value}
+      </Text>
     </View>
   );
 }
@@ -408,10 +404,6 @@ const styles = StyleSheet.create({
   rowValue: {
     maxWidth: '58%',
     textAlign: 'right',
-  },
-  rowValueWrapper: {
-    alignItems: 'flex-end',
-    flexShrink: 1,
   },
   scrollContent: {
     gap: theme.space24,

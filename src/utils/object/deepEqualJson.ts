@@ -1,22 +1,44 @@
 /**
- * Key-order-insensitive structural equality for JSON-shaped values.
+ * A JSON-shaped value: primitives, arrays, and plain key-value objects.
  */
-export function deepEqualJson(a: unknown, b: unknown): boolean {
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | JsonValue[]
+  | { [key: string]: JsonValue };
+
+function isJsonArray<T>(value: T): value is T & JsonValue[] {
+  return Array.isArray(value);
+}
+
+function isJsonObject<T>(value: T): value is T & { [key: string]: JsonValue } {
+  return (
+    Object(value) === value &&
+    !Array.isArray(value) &&
+    !(value instanceof Function)
+  );
+}
+
+/**
+ * Key-order-insensitive structural equality for JSON-shaped values. The
+ * object overload covers named JSON-serialisable domain types, which lack the
+ * implicit index signature `JsonValue` requires.
+ */
+export function deepEqualJson(a: JsonValue, b: JsonValue): boolean;
+export function deepEqualJson<T extends object>(
+  a: T | null | undefined,
+  b: T | null | undefined,
+): boolean;
+export function deepEqualJson<T>(a: T, b: T): boolean {
   if (a === b) {
     return true;
   }
 
-  if (
-    typeof a !== 'object' ||
-    typeof b !== 'object' ||
-    a === null ||
-    b === null
-  ) {
-    return false;
-  }
-
-  if (Array.isArray(a) || Array.isArray(b)) {
-    if (!Array.isArray(a) || !Array.isArray(b)) {
+  if (isJsonArray(a) || isJsonArray(b)) {
+    if (!isJsonArray(a) || !isJsonArray(b)) {
       return false;
     }
     return (
@@ -25,16 +47,18 @@ export function deepEqualJson(a: unknown, b: unknown): boolean {
     );
   }
 
-  const aRecord = a as Record<string, unknown>;
-  const bRecord = b as Record<string, unknown>;
-  const aKeys = Object.keys(aRecord);
-  if (aKeys.length !== Object.keys(bRecord).length) {
+  if (!isJsonObject(a) || !isJsonObject(b)) {
+    return false;
+  }
+
+  const aKeys = Object.keys(a);
+  if (aKeys.length !== Object.keys(b).length) {
     return false;
   }
 
   return aKeys.every(
     key =>
-      Object.prototype.hasOwnProperty.call(bRecord, key) &&
-      deepEqualJson(aRecord[key], bRecord[key]),
+      Object.prototype.hasOwnProperty.call(b, key) &&
+      deepEqualJson(a[key], b[key]),
   );
 }

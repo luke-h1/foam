@@ -19,6 +19,7 @@ function createRemoteConfig(minimumVersion: {
   return {
     updateAppButtonAllowedUsers: entry([]),
     splash: entry({ '7tvUnavailable': false, app: false }),
+    // SAFETY: the fixture deliberately omits tracks so the missing-track fallback can be exercised.
     minimumVersion: entry(
       minimumVersion as RemoteConfigType['minimumVersion']['value'],
     ),

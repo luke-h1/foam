@@ -1,3 +1,6 @@
+// This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
+// field (see types/seventv/cosmetics.ts), not a naming choice.
+// oxlint-disable anti-slop/no-shape-in-symbol-names
 import type {
   CosmeticCreateCallbackData,
   CosmeticUpdateCallbackData,
@@ -9,6 +12,7 @@ import type {
   BadgeData,
   ChangeMap,
   CosmeticCreate,
+  PaintCosmetic,
   PaintData,
 } from '@app/types/seventv/cosmetics';
 import type { SevenTvHost } from '@app/types/seventv/emotes';
@@ -106,90 +110,117 @@ export function createEmptyChangeMap<T>(): ChangeMap<T> {
   };
 }
 
-type CosmeticChangeEntry<TData> = {
-  key: string;
-  index: number;
-  old_value: TData | null;
-  value: { object: { data: TData } };
-};
+function toPaintCosmetic(data: PaintData): PaintCosmetic {
+  return {
+    id: data.id,
+    kind: 1,
+    object: { id: data.id, kind: 'PAINT', data },
+  };
+}
+
+function toBadgeCosmetic(data: BadgeData): BadgeCosmetic {
+  return {
+    id: data.id,
+    kind: 1,
+    object: { id: data.id, kind: 'BADGE', data },
+  };
+}
 
 export function createPaintChangeEntry(
   paintData: PaintData,
-  oldValue: PaintData | null = paintData,
+  oldValue: PaintData = paintData,
 ): NonNullable<ChangeMap<PaintData>['updated']>[number] {
-  const entry: CosmeticChangeEntry<PaintData> = {
+  return {
     key: 'data',
     index: 0,
     old_value: oldValue,
-    value: { object: { data: paintData } },
+    value: paintData,
   };
-
-  return entry as unknown as NonNullable<
-    ChangeMap<PaintData>['updated']
-  >[number];
 }
 
 export function createPaintPushedEntry(
   paintData: PaintData,
 ): NonNullable<ChangeMap<PaintData>['pushed']>[number] {
-  const entry: CosmeticChangeEntry<PaintData> = {
+  return {
     key: 'data',
     index: 0,
     old_value: null,
-    value: { object: { data: paintData } },
+    value: paintData,
   };
-
-  return entry as unknown as NonNullable<
-    ChangeMap<PaintData>['pushed']
-  >[number];
 }
 
 export function createBadgeChangeEntry(
   badgeData: BadgeData,
-  oldValue: BadgeData | null = badgeData,
+  oldValue: BadgeData = badgeData,
 ): NonNullable<ChangeMap<BadgeData>['updated']>[number] {
-  const entry: CosmeticChangeEntry<BadgeData> = {
+  return {
     key: 'data',
     index: 0,
     old_value: oldValue,
-    value: { object: { data: badgeData } },
+    value: badgeData,
   };
-
-  return entry as unknown as NonNullable<
-    ChangeMap<BadgeData>['updated']
-  >[number];
 }
 
 export function createBadgePushedEntry(
   badgeData: BadgeData,
 ): NonNullable<ChangeMap<BadgeData>['pushed']>[number] {
-  const entry: CosmeticChangeEntry<BadgeData> = {
+  return {
     key: 'data',
     index: 0,
     old_value: null,
-    value: { object: { data: badgeData } },
+    value: badgeData,
   };
-
-  return entry as unknown as NonNullable<
-    ChangeMap<BadgeData>['pushed']
-  >[number];
 }
 
 export function createPaintCosmeticUpdateData(
   changes: ChangeMap<PaintData>,
 ): CosmeticUpdateCallbackData {
+  const cosmeticChanges: ChangeMap<CosmeticCreate> = {
+    id: changes.id,
+    kind: changes.kind,
+    updated: changes.updated?.map(entry => ({
+      key: entry.key,
+      index: entry.index,
+      old_value: toPaintCosmetic(entry.old_value),
+      value: toPaintCosmetic(entry.value),
+    })),
+    pushed: changes.pushed?.map(entry => ({
+      key: entry.key,
+      index: entry.index,
+      old_value: null,
+      value: toPaintCosmetic(entry.value),
+    })),
+  };
+
   return {
     kind: 'PAINT',
-    changes: changes as unknown as ChangeMap<CosmeticCreate>,
+    changes: cosmeticChanges,
   };
 }
 
 export function createBadgeCosmeticUpdateData(
   changes: ChangeMap<BadgeData>,
 ): CosmeticUpdateCallbackData {
+  const cosmeticChanges: ChangeMap<CosmeticCreate> = {
+    id: changes.id,
+    kind: changes.kind,
+    updated: changes.updated?.map(entry => ({
+      key: entry.key,
+      index: entry.index,
+      old_value: toBadgeCosmetic(entry.old_value),
+      value: toBadgeCosmetic(entry.value),
+    })),
+    pushed: changes.pushed?.map(entry => ({
+      key: entry.key,
+      index: entry.index,
+      old_value: null,
+      value: toBadgeCosmetic(entry.value),
+    })),
+  };
+
   return {
     kind: 'BADGE',
-    changes: changes as unknown as ChangeMap<CosmeticCreate>,
+    changes: cosmeticChanges,
   };
 }
 

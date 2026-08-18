@@ -24,12 +24,14 @@ export const denseChatterinoBadges = Array.from({ length: 2500 }, (_, index) =>
   createChatterinoBadge(index),
 );
 
+const noBadges: SanitisedBadgeSet[] = [];
+
 export const denseBadgeSources = {
   twitchGlobalBadges: twitchSanitisedGlobalBadges,
   twitchChannelBadges: twitchSanitisedChannelBadges,
-  ffzChannelBadges: [] as SanitisedBadgeSet[],
-  ffzGlobalBadges: [] as SanitisedBadgeSet[],
-  bttvBadges: [] as SanitisedBadgeSet[],
+  ffzChannelBadges: noBadges,
+  ffzGlobalBadges: noBadges,
+  bttvBadges: noBadges,
   chatterinoBadges: denseChatterinoBadges,
   getEntitledBadge: () => null,
 };
@@ -40,16 +42,15 @@ export const badgeLookupUserstates = Array.from({ length: 120 }, (_, index) => {
   const channel =
     twitchSanitisedChannelBadges[index % twitchSanitisedChannelBadges.length];
   const chatterino = denseChatterinoBadges[index * 17];
-  const rawParts = [
-    global ? `${global.set}/${global.id.split('_').pop()}` : null,
-    channel ? `${channel.set}/${channel.id.split('_').pop()}` : null,
-  ].filter(Boolean);
+  const rawParts = [global, channel].flatMap(badge =>
+    badge ? [`${badge.set}/${badge.id.split('_').pop()}`] : [],
+  );
 
   return createUserStateTags({
     'badges-raw': rawParts.join(','),
     badges: Object.fromEntries(
       rawParts.map(part => {
-        const [set, version] = (part as string).split('/');
+        const [set, version] = part.split('/');
         return [set, version];
       }),
     ),

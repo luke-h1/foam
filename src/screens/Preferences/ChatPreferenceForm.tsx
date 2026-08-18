@@ -39,6 +39,15 @@ import {
   TIMESTAMP_FORMAT_OPTIONS,
 } from './chatPreferenceTypes';
 
+type ProviderSection = {
+  title: string;
+  provider: PreviewProvider;
+  emotes: boolean;
+  badges: boolean;
+  onEmotes: (value: boolean) => void;
+  onBadges: (value: boolean) => void;
+};
+
 function hostPreview(node: ReactElement, width: number, padded = true) {
   return (
     <RNHostView matchContents>
@@ -69,10 +78,10 @@ export function ChatPreferenceForm() {
     showUnreadJumpPill: preferences.showUnreadJumpPill,
   };
 
-  const providerSections = [
+  const providerSections: ProviderSection[] = [
     {
       title: '7TV',
-      provider: '7tv' as PreviewProvider,
+      provider: '7tv',
       emotes: preferences.show7TvEmotes,
       badges: preferences.show7tvBadges,
       onEmotes: (value: boolean) => update({ show7TvEmotes: value }),
@@ -80,7 +89,7 @@ export function ChatPreferenceForm() {
     },
     {
       title: 'BTTV',
-      provider: 'bttv' as PreviewProvider,
+      provider: 'bttv',
       emotes: preferences.showBttvEmotes,
       badges: preferences.showBttvBadges,
       onEmotes: (value: boolean) => update({ showBttvEmotes: value }),
@@ -88,7 +97,7 @@ export function ChatPreferenceForm() {
     },
     {
       title: 'FFZ',
-      provider: 'ffz' as PreviewProvider,
+      provider: 'ffz',
       emotes: preferences.showFFzEmotes,
       badges: preferences.showFFzBadges,
       onEmotes: (value: boolean) => update({ showFFzEmotes: value }),
@@ -96,7 +105,7 @@ export function ChatPreferenceForm() {
     },
     {
       title: 'Twitch',
-      provider: 'twitch' as PreviewProvider,
+      provider: 'twitch',
       emotes: preferences.showTwitchEmotes,
       badges: preferences.showTwitchBadges,
       onEmotes: (value: boolean) => update({ showTwitchEmotes: value }),

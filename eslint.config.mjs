@@ -84,6 +84,7 @@ export default tseslint.config(
       'src/foam/**',
       'src/player-website/**',
       'src/graphql/generated/**',
+      'tools/oxlint/anti-slop/**',
     ],
   },
   {
@@ -253,10 +254,15 @@ export default tseslint.config(
       'src/lib/sentryImageSpans.ts',
       'src/lib/__tests__/sentryImageSpans.test.ts',
       'src/lib/__tests__/sentry.test.ts',
+      'src/lib/__tests__/forwardLogToSentry.test.ts',
       'src/lib/haptics.ts',
       'src/hooks/firebase/analytics.ts',
       'src/hooks/firebase/analytics.test.ts',
       '__mocks__/@react-native-firebase/analytics.ts',
+      'src/components/Chat/util/__tests__/createSevenTvCallbacks.test.ts',
+      'src/components/StreamPlayer/__tests__/StreamPlayer.test.tsx',
+      'src/components/StreamPlayer/__tests__/playerTelemetry.test.ts',
+      'src/components/StreamPlayer/__tests__/usePlayerBridge.stability.test.tsx',
     ],
     rules: {
       'no-restricted-imports': 'off',

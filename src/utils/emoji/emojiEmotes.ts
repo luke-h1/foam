@@ -7,12 +7,12 @@ import emojiDataset from '@app/utils/emoji/emojiDataset.json';
 
 export type EmojiStyle = 'twitter' | 'google';
 
-const EMOJI_CDN_BY_STYLE: Record<EmojiStyle, (hexcode: string) => string> = {
-  twitter: hexcode =>
+const EMOJI_CDN_BY_STYLE = {
+  twitter: (hexcode: string) =>
     `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/${hexcode.toLowerCase()}.png`,
-  google: hexcode =>
+  google: (hexcode: string) =>
     `https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/72/emoji_u${hexcode.toLowerCase()}.png`,
-};
+} satisfies Record<EmojiStyle, (hexcode: string) => string>;
 
 export const EMOJI_STYLE_OPTIONS: {
   label: string;
@@ -65,6 +65,7 @@ export function getEmojiEmotes(style: EmojiStyle): EmojiSanitisedEmote[] {
     return cached;
   }
 
+  // SAFETY: emojiDataset.json is emitted by scripts/generateEmojiDataset.mjs as `[hexcode, aliases]` pairs; the JSON import widens each pair to `(string | string[])[]`.
   const emotes = (emojiDataset as [string, string[]][]).flatMap(
     ([hexcode, aliases]) =>
       aliases.map(alias => createEmojiEmote(hexcode, alias, style)),

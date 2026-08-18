@@ -3,11 +3,7 @@ import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { twitchApi } from '../api/clients';
 import { twitchBadgeService } from '../twitch-badge-service';
 
-jest.mock('../api/clients', () => ({
-  twitchApi: { get: jest.fn() },
-}));
-
-const api = jest.mocked(twitchApi);
+const api = { get: jest.spyOn(twitchApi, 'get') };
 
 function makeVersion(id: string, title: string) {
   return {

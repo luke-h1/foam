@@ -13,7 +13,7 @@ export function resolveEffectiveChatDelayMs(
 ): number {
   if (setting === 'auto') {
     if (
-      typeof measuredVideoLatencySeconds !== 'number' ||
+      measuredVideoLatencySeconds === null ||
       !Number.isFinite(measuredVideoLatencySeconds)
     ) {
       return 0;

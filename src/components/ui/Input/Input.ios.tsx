@@ -1,3 +1,7 @@
+// This file's shape usages are @expo/ui SwiftUI/Jetpack Compose API names
+// (clipShape, shapes, Shape, contentShape and their option/prop keys), not a
+// naming choice.
+// oxlint-disable anti-slop/no-shape-in-symbol-names
 import {
   type Ref,
   useId,
@@ -8,6 +12,7 @@ import {
 } from 'react';
 import {
   type ColorValue,
+  type DimensionValue,
   type StyleProp,
   StyleSheet,
   type TextInputProps,
@@ -190,8 +195,8 @@ function useIosInputField({
           style,
         ];
 
-  const flattenedStyle = (StyleSheet.flatten(inputStyles) ?? {}) as TextStyle &
-    ViewStyle;
+  const flattenedStyle: TextStyle & ViewStyle =
+    StyleSheet.flatten<TextStyle & ViewStyle>(inputStyles) ?? {};
   const liquidGlassAvailable = isLiquidGlassAvailable();
   const textColor = colorValue(flattenedStyle.color ?? variantConfig.textColor);
   const resolvedPlaceholderColor = colorValue(
@@ -676,10 +681,14 @@ function colorValue(color: ColorValue | null | undefined): ColorValue {
   return color ?? 'transparent';
 }
 
+function isColorString(color: ColorValue): color is string {
+  return String(color) === color;
+}
+
 function isTransparentColor(color: ColorValue | null | undefined) {
   return (
     color == null ||
-    (typeof color === 'string' && color.toLowerCase() === 'transparent')
+    (isColorString(color) && color.toLowerCase() === 'transparent')
   );
 }
 
@@ -771,8 +780,18 @@ function borderWidthForStyle(style: TextStyle & ViewStyle) {
   return width;
 }
 
-function numberValue(value: unknown) {
-  return typeof value === 'number' ? value : undefined;
+/**
+ * Every style value this file feeds to a SwiftUI modifier: lengths, radii,
+ * border widths and font sizes.
+ */
+type StyleMeasurement = DimensionValue | string | undefined;
+
+function isStyleNumber(value: StyleMeasurement): value is number {
+  return Number(value) === value;
+}
+
+function numberValue(value: StyleMeasurement) {
+  return isStyleNumber(value) ? value : undefined;
 }
 
 function fontWeightForStyle(fontWeight: TextStyle['fontWeight']) {
@@ -1065,12 +1084,14 @@ function pickHostStyle(style: TextStyle & ViewStyle): ViewStyle {
 }
 
 function textChangeEvent(text: string) {
+  // SAFETY: SwiftUI has no synthetic event to forward, so onChange consumers only ever see nativeEvent.text.
   return {
     nativeEvent: { text },
   } as Parameters<NonNullable<TextInputProps['onChange']>>[0];
 }
 
 function endEditingEvent(text: string) {
+  // SAFETY: SwiftUI has no synthetic event to forward, so onEndEditing consumers only ever see nativeEvent.text.
   return {
     nativeEvent: { text },
   } as Parameters<NonNullable<TextInputProps['onEndEditing']>>[0];

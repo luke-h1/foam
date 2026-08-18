@@ -2,7 +2,11 @@ import { Alert, Platform } from 'react-native';
 
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
-import type { SavedPhrase } from '@app/store/preferenceStore';
+import {
+  getPreferences,
+  replacePreferences,
+  type SavedPhrase,
+} from '@app/store/preferenceStore';
 
 import { SavedPhrasesScreen } from '../SavedPhrasesScreen';
 
@@ -14,26 +18,13 @@ afterAll(() => {
   Platform.OS = originalOS;
 });
 
-let mockSavedPhrases: SavedPhrase[] = [];
-const mockUpdate = jest.fn((payload: { savedPhrases?: SavedPhrase[] }) => {
-  if (payload.savedPhrases) {
-    mockSavedPhrases = payload.savedPhrases;
-  }
-});
-
-jest.mock('@app/store/preferenceStore', () => ({
-  usePreference: () => mockSavedPhrases,
-  useUpdatePreferences: () => mockUpdate,
-}));
-
-jest.mock('@app/lib/haptics', () => ({
-  impact: jest.fn(),
-}));
+function seedSavedPhrases(savedPhrases: SavedPhrase[]) {
+  replacePreferences({ ...getPreferences(), savedPhrases });
+}
 
 describe('SavedPhrasesScreen', () => {
   beforeEach(() => {
-    mockSavedPhrases = [];
-    mockUpdate.mockClear();
+    seedSavedPhrases([]);
   });
 
   test('shows the empty state when there are no saved phrases', () => {
@@ -54,13 +45,12 @@ describe('SavedPhrasesScreen', () => {
       'submitEditing',
     );
 
-    expect(mockUpdate).toHaveBeenCalledTimes(1);
-    const added = mockUpdate.mock.calls[0]![0].savedPhrases!;
+    const added = getPreferences().savedPhrases;
     expect(added.map(phrase => phrase.text)).toEqual(['gg wp']);
   });
 
   test('renders existing phrases and removes one after confirming', () => {
-    mockSavedPhrases = [{ id: 'a', text: 'be right back' }];
+    seedSavedPhrases([{ id: 'a', text: 'be right back' }]);
     const alertSpy = jest
       .spyOn(Alert, 'alert')
       .mockImplementation((_title, _message, buttons) => {
@@ -75,13 +65,13 @@ describe('SavedPhrasesScreen', () => {
     fireEvent.press(screen.getByLabelText('Remove phrase'));
 
     expect(alertSpy).toHaveBeenCalled();
-    expect(mockUpdate).toHaveBeenCalledWith({ savedPhrases: [] });
+    expect(getPreferences().savedPhrases).toEqual([]);
 
     alertSpy.mockRestore();
   });
 
   test('edits an existing phrase in place', () => {
-    mockSavedPhrases = [{ id: 'a', text: 'old phrase' }];
+    seedSavedPhrases([{ id: 'a', text: 'old phrase' }]);
 
     render(<SavedPhrasesScreen />);
 
@@ -92,16 +82,16 @@ describe('SavedPhrasesScreen', () => {
     );
     fireEvent(screen.getByDisplayValue('updated phrase'), 'submitEditing');
 
-    expect(mockUpdate).toHaveBeenCalledWith({
-      savedPhrases: [{ id: 'a', text: 'updated phrase' }],
-    });
+    expect(getPreferences().savedPhrases).toEqual<SavedPhrase[]>([
+      { id: 'a', text: 'updated phrase' },
+    ]);
   });
 
   test('rejects an edit that duplicates another phrase', () => {
-    mockSavedPhrases = [
+    seedSavedPhrases([
       { id: 'a', text: 'first phrase' },
       { id: 'b', text: 'second phrase' },
-    ];
+    ]);
 
     render(<SavedPhrasesScreen />);
 
@@ -112,20 +102,23 @@ describe('SavedPhrasesScreen', () => {
     );
     fireEvent(screen.getByDisplayValue('second phrase'), 'submitEditing');
 
-    expect(mockUpdate).not.toHaveBeenCalled();
+    expect(getPreferences().savedPhrases).toEqual<SavedPhrase[]>([
+      { id: 'a', text: 'first phrase' },
+      { id: 'b', text: 'second phrase' },
+    ]);
   });
 
   test('saves an edit that keeps the phrase text unchanged', () => {
-    mockSavedPhrases = [{ id: 'a', text: 'same phrase' }];
+    seedSavedPhrases([{ id: 'a', text: 'same phrase' }]);
 
     render(<SavedPhrasesScreen />);
 
     fireEvent.press(screen.getByText('same phrase'));
     fireEvent(screen.getByDisplayValue('same phrase'), 'submitEditing');
 
-    expect(mockUpdate).toHaveBeenCalledWith({
-      savedPhrases: [{ id: 'a', text: 'same phrase' }],
-    });
+    expect(getPreferences().savedPhrases).toEqual<SavedPhrase[]>([
+      { id: 'a', text: 'same phrase' },
+    ]);
   });
 
   describe('iOS native branch', () => {
@@ -139,7 +132,7 @@ describe('SavedPhrasesScreen', () => {
     // The @expo/ui/swift-ui primitives render as opaque native host views, so
     // their text is not queryable in tests.
     test('mounts the native list branch without crashing', () => {
-      mockSavedPhrases = [{ id: 'a', text: 'be right back' }];
+      seedSavedPhrases([{ id: 'a', text: 'be right back' }]);
 
       render(<SavedPhrasesScreen />);
 

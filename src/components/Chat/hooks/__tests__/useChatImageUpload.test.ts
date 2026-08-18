@@ -4,43 +4,31 @@ import { toast } from 'sonner-native';
 
 import { kappaService } from '@app/services/kappa-service';
 import type { KappaUploadAsset } from '@app/types/kappa/upload';
+import { logger } from '@app/utils/logger';
 
 import { useChatImageUpload } from '../useChatImageUpload';
 
-jest.mock('expo-image-picker', () => ({
-  launchImageLibraryAsync: jest.fn(),
-  requestMediaLibraryPermissionsAsync: jest.fn(),
-}));
-
-jest.mock('@app/services/kappa-service', () => ({
-  kappaService: {
-    upload: jest.fn(),
-  },
-}));
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    chat: {
-      error: jest.fn(),
-    },
-  },
-}));
-
-const mockLaunchImageLibrary = jest.mocked(ImagePicker.launchImageLibraryAsync);
-const mockRequestPermissions = jest.mocked(
-  ImagePicker.requestMediaLibraryPermissionsAsync,
+const mockLaunchImageLibrary = jest.spyOn(
+  ImagePicker,
+  'launchImageLibraryAsync',
 );
-const mockUpload = jest.mocked(kappaService.upload);
-const mockToastError = jest.mocked(toast.error);
-const mockToastSuccess = jest.mocked(toast.success);
+const mockRequestPermissions = jest.spyOn(
+  ImagePicker,
+  'requestMediaLibraryPermissionsAsync',
+);
+const mockUpload = jest.spyOn(kappaService, 'upload');
+const mockToastError = jest.spyOn(toast, 'error');
+const mockToastSuccess = jest.spyOn(toast, 'success');
 
-const pickedAsset = {
+jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
+
+const pickedAsset: ImagePicker.ImagePickerAsset = {
   uri: 'file:///tmp/photo.jpg',
   fileName: 'photo.jpg',
   mimeType: 'image/jpeg',
   width: 100,
   height: 100,
-} as ImagePicker.ImagePickerAsset;
+};
 
 beforeEach(() => {
   jest.clearAllMocks();

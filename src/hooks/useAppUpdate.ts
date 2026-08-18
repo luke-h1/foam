@@ -20,10 +20,6 @@ const OTA_RELOAD_SCREEN_OPTIONS = {
   },
 } satisfies ReloadScreenOptions;
 
-function toError(error: unknown): Error {
-  return error instanceof Error ? error : new Error(String(error));
-}
-
 function openStore() {
   void (async () => {
     const storeUrl = await getStoreUrlAsync();
@@ -74,10 +70,12 @@ export function useAppUpdate() {
             },
           },
         });
-      } catch (error) {
+      } catch (caught) {
+        const error =
+          caught instanceof Error ? caught : new Error(String(caught));
         logger.main.error('Manual OTA bundle update failed', {
           name: 'ota_updates_service_error',
-          error: toError(error),
+          error,
           category: 'OTAUpdatesService',
           action: 'manual_bundle_update_failed',
           channel: Updates.channel || 'unknown',

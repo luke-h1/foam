@@ -1,77 +1,24 @@
 import { twitchApi } from '@app/services/api/clients';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
-import { getMentionLogin } from '@app/utils/chat/resolveMentionLogin/getMentionLogin';
 
 import { queueMentionLoginsFromParts } from '../queueMentionLoginsFromParts';
 import { resetMentionLoginResolver } from '../resetMentionLoginResolver';
-
-jest.mock('@app/services/api/clients', () => ({
-  twitchApi: {
-    get: jest.fn(),
-  },
-}));
-
-jest.mock('@app/services/twitch-service', () => ({
-  twitchService: {
-    searchChannels: jest.fn(),
-  },
-}));
-
-jest.mock('@app/store/chat/observables/chatStore', () => ({
-  chatStore$: {
-    mentionLoginRevision: {
-      set: jest.fn(),
-    },
-  },
-}));
-
-jest.mock('@app/store/chat/actions/chatColorCaches', () => ({
-  clearSessionCache: jest.fn(),
-}));
-
-jest.mock('@app/utils/chat/generateRandomTwitchColor', () => ({
-  generateRandomTwitchColor: jest.fn(() => '#ffffff'),
-}));
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    chat: {
-      debug: jest.fn(),
-    },
-  },
-}));
-
-jest.mock('@app/utils/chat/resolveMentionLogin/getMentionLogin', () => ({
-  getMentionLogin: jest.fn((login: string) => login.toLowerCase()),
-}));
-
-jest.mock('@app/utils/chat/resolveMentionLogin/registerMentionChatter', () => ({
-  registerMentionChatter: jest.fn(),
-}));
-
-jest.mock('@app/utils/chat/resolveMentionLogin/registerMentionLogin', () => ({
-  registerMentionLogin: jest.fn(),
-}));
-
-const mockGet = jest.mocked(twitchApi.get);
-const mockGetMentionLogin = jest.mocked(getMentionLogin);
 
 function mentionPart(content: string): ParsedPart<'mention'> {
   return { type: 'mention', content };
 }
 
 describe('queueMentionLoginsFromParts', () => {
+  let mockGet: jest.SpiedFunction<typeof twitchApi.get>;
+
   beforeEach(() => {
-    jest.clearAllMocks();
     jest.useFakeTimers();
     resetMentionLoginResolver();
-    mockGet.mockResolvedValue({ data: [] });
-    mockGetMentionLogin.mockImplementation((login: string) =>
-      login.toLowerCase(),
-    );
+    mockGet = jest.spyOn(twitchApi, 'get').mockResolvedValue({ data: [] });
   });
 
   afterEach(() => {
+    mockGet.mockRestore();
     jest.useRealTimers();
   });
 

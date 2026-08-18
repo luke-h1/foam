@@ -74,7 +74,7 @@ function EmotePreviewSheetComponent(props: Props) {
   });
   const emoteName = getEmoteName(selectedEmote);
   const emoteLink =
-    typeof selectedEmote.emote_link === 'string'
+    String(selectedEmote.emote_link) === selectedEmote.emote_link
       ? selectedEmote.emote_link
       : undefined;
   const maxEmoteSize = Math.min(Math.max(screenWidth * 0.36, 96), 156);

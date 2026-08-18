@@ -6,11 +6,7 @@ import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { bttvCachedApi } from '../api/clients';
 import { bttvEmoteService } from '../bttv-emote-service';
 
-jest.mock('../api/clients', () => ({
-  bttvCachedApi: { get: jest.fn() },
-}));
-
-const api = jest.mocked(bttvCachedApi);
+const apiGetSpy = jest.spyOn(bttvCachedApi, 'get');
 
 const animatedEmote: BttvEmote = {
   id: 'emote1',
@@ -38,11 +34,11 @@ describe('bttvEmoteService', () => {
   });
 
   test('getSanitisedGlobalEmotes sanitises animated emotes with static png variants', async () => {
-    api.get.mockResolvedValue([animatedEmote]);
+    apiGetSpy.mockResolvedValue([animatedEmote]);
 
     const result = await bttvEmoteService.getSanitisedGlobalEmotes();
 
-    expect(api.get).toHaveBeenCalledWith('/emotes/global');
+    expect(apiGetSpy).toHaveBeenCalledWith('/emotes/global');
     expect(result).toEqual<BttvSanitisedEmote[]>([
       {
         name: 'catJAM',
@@ -72,7 +68,7 @@ describe('bttvEmoteService', () => {
   });
 
   test('getSanitisedGlobalEmotes reuses the default urls for static emotes and flags zero-width codes', async () => {
-    api.get.mockResolvedValue([staticZeroWidthEmote]);
+    apiGetSpy.mockResolvedValue([staticZeroWidthEmote]);
 
     const result = await bttvEmoteService.getSanitisedGlobalEmotes();
 
@@ -106,7 +102,7 @@ describe('bttvEmoteService', () => {
   });
 
   test('getSanitisedChannelEmotes concatenates shared and channel emotes with per-emote creators', async () => {
-    api.get.mockResolvedValue({
+    apiGetSpy.mockResolvedValue({
       id: 'channel1',
       bots: [],
       avatar: 'https://example.com/avatar.png',
@@ -116,7 +112,7 @@ describe('bttvEmoteService', () => {
 
     const result = await bttvEmoteService.getSanitisedChannelEmotes('123');
 
-    expect(api.get).toHaveBeenCalledWith('/users/twitch/123');
+    expect(apiGetSpy).toHaveBeenCalledWith('/users/twitch/123');
     expect(
       result.map(emote => ({ id: emote.id, creator: emote.creator })),
     ).toEqual([
@@ -144,11 +140,11 @@ describe('bttvEmoteService', () => {
       displayName: 'Bare',
       providerId: 'twitch-user-2',
     };
-    api.get.mockResolvedValue([fullBadge, badgeWithoutArtwork]);
+    apiGetSpy.mockResolvedValue([fullBadge, badgeWithoutArtwork]);
 
     const result = await bttvEmoteService.getSanitisedGlobalBadges();
 
-    expect(api.get).toHaveBeenCalledWith('/badges');
+    expect(apiGetSpy).toHaveBeenCalledWith('/badges');
     expect(result).toEqual<SanitisedBadgeSet[]>([
       {
         id: 'twitch-user-1',

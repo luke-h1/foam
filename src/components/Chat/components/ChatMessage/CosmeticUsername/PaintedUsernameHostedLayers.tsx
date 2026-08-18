@@ -93,11 +93,11 @@ export function PaintedUsernameHostedLayers({
   const textShadows = getPaintTextShadows(paint);
   const stroke = getPaintTextStroke(paint);
 
-  const maskTextStyle = [
+  const maskTextStyle: StyleProp<TextStyle> = [
     styles.maskText,
     usernameTextStyle,
     paintTextStyle,
-  ] as StyleProp<TextStyle>;
+  ];
 
   const underlayShadows = [
     ...dropShadows.map(shadow => ({ shadow, source: 'drop' })),

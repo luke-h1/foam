@@ -51,6 +51,7 @@ function QueryProviderWithDevTools({ children }: PropsWithChildren) {
 
 // Required lazily behind __DEV__ so Metro drops the devtools bundle (~94KB)
 // from release builds; the static import defeated the runtime gate below.
+// SAFETY: the require resolves the same module the type import names.
 const DevToolsBubble = __DEV__
   ? // eslint-disable-next-line @typescript-eslint/no-require-imports
     (

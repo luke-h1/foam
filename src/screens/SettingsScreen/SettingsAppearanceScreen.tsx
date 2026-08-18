@@ -26,9 +26,9 @@ import { theme } from '@app/styles/themes';
 
 const THEME_OPTIONS = ['foam-dark'] as const;
 
-const themeLabels: Record<(typeof THEME_OPTIONS)[number], string> = {
+const themeLabels = {
   'foam-dark': 'Foam Dark',
-};
+} satisfies Record<(typeof THEME_OPTIONS)[number], string>;
 
 export function SettingsAppearanceScreen() {
   const selectedTheme = usePreference('theme');
@@ -55,7 +55,7 @@ export function SettingsAppearanceScreen() {
             <Picker
               label='Theme'
               selection={selectedTheme}
-              onSelectionChange={value => update({ theme: value as Theme })}
+              onSelectionChange={value => update({ theme: value })}
             >
               {THEME_OPTIONS.map(opt => (
                 <NativeText key={opt} modifiers={[tag(opt)]}>
@@ -133,8 +133,6 @@ export function SettingsAppearanceScreen() {
     </View>
   );
 }
-
-type Theme = (typeof THEME_OPTIONS)[number];
 
 const styles = StyleSheet.create({
   container: {

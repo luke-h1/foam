@@ -1,49 +1,59 @@
-import { forwardLogToSentry } from '../sentry';
+import * as SentryReactNative from '@sentry/react-native';
 
-const scope = {
-  setTag: jest.fn(),
-  setFingerprint: jest.fn(),
-  setContext: jest.fn(),
-};
+import * as SentryImageSpans from '@app/lib/sentryImageSpans';
 
-jest.mock('@sentry/react-native', () => ({
-  addBreadcrumb: jest.fn(),
-  captureException: jest.fn(),
-  captureMessage: jest.fn(),
-  expoRouterIntegration: jest.fn(() => ({})),
-  logger: { info: jest.fn(), warn: jest.fn() },
-  withScope: jest.fn(),
-}));
-
-jest.mock('@app/lib/sentryImageSpans', () => ({
-  instrumentExpoImageLoads: jest.fn(),
-}));
+import { forwardLogToSentry, type LogTagValue } from '../sentry';
 
 /**
- * Reached through the mock registry rather than an import: `no-restricted-imports`
- * bans `@sentry/react-native` outside `src/lib/sentry`, and the transport under
+ * `@sentry/react-native` is auto-mocked from the root `__mocks__/` file,
+ * whose Scope-free surface only covers the functions this codebase actually
+ * imports - so a fake Scope object would need to invent all ~46 of its real
+ * fields. `requireActual` reaches past the mock for the real, pure-JS Scope
+ * class instead, giving `applyLogScope` (src/lib/sentry.ts) a genuine
+ * instance to call setTag/setFingerprint/setContext on.
+ */
+const { Scope } = jest.requireActual<typeof SentryReactNative>(
+  '@sentry/react-native',
+);
+const scope = new Scope();
+const setTagSpy = jest.spyOn(scope, 'setTag');
+jest.spyOn(scope, 'setFingerprint');
+jest.spyOn(scope, 'setContext');
+
+jest
+  .spyOn(SentryImageSpans, 'instrumentExpoImageLoads')
+  .mockImplementation(() => undefined);
+
+/**
+ * Reached through the root `__mocks__/@sentry/react-native.ts` manual mock
+ * rather than an import alias: `no-restricted-imports` bans
+ * `@sentry/react-native` outside `src/lib/sentry`, and the transport under
  * test is the very thing that boundary exists to funnel through.
  */
-const sentry = jest.requireMock('@sentry/react-native') as {
-  captureException: jest.Mock;
-  captureMessage: jest.Mock;
-  logger: { warn: jest.Mock };
-  withScope: jest.Mock;
-};
+const mockCaptureException = jest.mocked(SentryReactNative.captureException);
+const mockCaptureMessage = jest.mocked(SentryReactNative.captureMessage);
+const mockLoggerWarn = jest.mocked(SentryReactNative.logger.warn);
+const mockWithScope = jest.mocked(SentryReactNative.withScope);
 
 /**
  * The tags a scope ended up with, in the order they were written - `setTag`
  * is last-write-wins, so order is the contract under test.
  */
-function appliedTags(): Record<string, unknown> {
+function appliedTags(): Record<string, NonNullable<LogTagValue>> {
   return Object.fromEntries(
-    scope.setTag.mock.calls.map(([key, value]) => [key, value]),
+    setTagSpy.mock.calls.map(([key, value]) => {
+      // SAFETY: applyLogScope (src/lib/sentry.ts) skips null/undefined tag
+      // values before calling setTag and never passes a bigint or symbol, so
+      // every recorded value is a LogTagValue even though Scope's own
+      // setTag signature accepts the wider Sentry `Primitive` type.
+      return [key, value as NonNullable<LogTagValue>] as const;
+    }),
   );
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
-  sentry.withScope.mockImplementation(callback => callback(scope));
+  mockWithScope.mockImplementation(callback => callback(scope));
 });
 
 describe('forwardLogToSentry warn', () => {
@@ -55,12 +65,12 @@ describe('forwardLogToSentry warn', () => {
       metadata: { name: 'chat_resources_warning', url: 'https://cdn/1.webp' },
     });
 
-    expect(sentry.logger.warn).toHaveBeenCalledWith(
+    expect(mockLoggerWarn).toHaveBeenCalledWith(
       'chat_resources_warning: chat.emote.load_failed',
       { url: 'https://cdn/1.webp' },
     );
-    expect(sentry.captureMessage).not.toHaveBeenCalled();
-    expect(sentry.withScope).not.toHaveBeenCalled();
+    expect(mockCaptureMessage).not.toHaveBeenCalled();
+    expect(mockWithScope).not.toHaveBeenCalled();
   });
 });
 
@@ -73,7 +83,7 @@ describe('forwardLogToSentry error', () => {
       metadata: { name: 'chat_resources_error' },
     });
 
-    expect(sentry.captureException).toHaveBeenCalledTimes(1);
+    expect(mockCaptureException).toHaveBeenCalledTimes(1);
   });
 
   test('caller tags cannot clobber the canonical grouping tags', () => {

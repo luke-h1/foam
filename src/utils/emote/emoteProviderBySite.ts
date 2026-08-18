@@ -6,7 +6,7 @@ import type { EmoteProvider, EmoteSite } from '@app/types/emote';
  * for the persisted-cache backfill, which hydrates emotes written by builds
  * that predate the field.
  */
-export const EMOTE_PROVIDER_BY_SITE: Record<EmoteSite, EmoteProvider> = {
+export const EMOTE_PROVIDER_BY_SITE = {
   '7TV Channel': '7tv',
   '7TV Global': '7tv',
   '7TV Personal': '7tv',
@@ -18,4 +18,4 @@ export const EMOTE_PROVIDER_BY_SITE: Record<EmoteSite, EmoteProvider> = {
   'Twitch Global': 'twitch',
   'Twitch Subscriber': 'twitch',
   Emoji: 'emoji',
-};
+} satisfies Record<EmoteSite, EmoteProvider>;

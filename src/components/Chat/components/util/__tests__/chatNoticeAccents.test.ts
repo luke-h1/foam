@@ -1,37 +1,25 @@
-jest.mock('@app/styles/themes', () => ({
-  theme: {
-    colorViolet: '#9147FF',
-    colorOrange: '#FF6905',
-    colorPrimary: '#00F593',
-    color: {
-      notice: {
-        announcement: '#EB0400',
-        muted: '#ADADB8',
-        subscription: '#FFD700',
-        charity: '#00AD03',
-      },
-    },
-  },
-}));
+import { theme } from '@app/styles/themes';
 
 import { CHAT_NOTICE_ACCENTS, noticeSurfaceTint } from '../chatNoticeAccents';
 
 describe('chatNoticeAccents', () => {
   describe('CHAT_NOTICE_ACCENTS', () => {
-    test('exposes the expected notice accent palette', () => {
+    test('wires each notice accent to its theme color', () => {
       expect(CHAT_NOTICE_ACCENTS).toEqual({
-        announcement: '#EB0400',
-        channelPoints: '#9147FF',
-        highlight: '#ADADB8',
-        subscription: '#FFD700',
-        charity: '#00AD03',
-        ritual: '#9147FF',
-        firstMessage: '#9147FF',
-        viewerMilestone: '#9147FF',
-        raid: '#FF6905',
-        replyToYou: '#EB0400',
-        stvAdded: '#00F593',
-        stvRemoved: '#EB0400',
+        announcement: theme.color.notice.announcement,
+        channelPoints: theme.colorViolet,
+        highlight: theme.color.notice.muted,
+        subscription: theme.color.notice.subscription,
+        charity: theme.color.notice.charity,
+        ritual: theme.colorViolet,
+        firstMessage: theme.colorViolet,
+        returningChatter: theme.colorBlue,
+        viewerMilestone: theme.colorViolet,
+        modAnniversary: theme.colorTeal,
+        raid: theme.colorOrange,
+        replyToYou: theme.color.notice.announcement,
+        stvAdded: theme.colorPrimary,
+        stvRemoved: theme.color.notice.announcement,
       });
     });
   });

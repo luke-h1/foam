@@ -1,53 +1,40 @@
 import { act, renderHook } from '@testing-library/react-native';
 import * as Network from 'expo-network';
 
+import * as AuthContext from '@app/context/AuthContext';
 import { ReadyState } from '@app/hooks/ws/constants';
 import type { Options } from '@app/hooks/ws/types';
-import { useWebsocket } from '@app/hooks/ws/useWebsocket';
+import * as UseWebsocketModule from '@app/hooks/ws/useWebsocket';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
 import { preferences$ } from '@app/store/preferenceStore';
-import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
+import * as AppStateTransitionsModule from '@app/utils/appState/appStateTransitions';
+import { logger } from '@app/utils/logger';
 
-jest.mock('@app/context/AuthContext', () => ({
-  useAuthContext: () => ({ authState: undefined, user: undefined }),
-}));
+jest.spyOn(AuthContext, 'useAuthContext').mockReturnValue({
+  authState: undefined,
+  user: undefined,
+  ready: true,
+  loginWithTwitch: jest.fn(),
+  populateAuthState: jest.fn(),
+  logout: jest.fn(),
+  fetchAnonToken: jest.fn(),
+});
 
-jest.mock('@app/services/api/clients', () => ({
-  isE2EMode: false,
-}));
+const mockedUseWebsocket = jest.spyOn(UseWebsocketModule, 'useWebsocket');
+const mockedAddNetworkStateListener = jest
+  .spyOn(Network, 'addNetworkStateListener')
+  .mockReturnValue({ remove: jest.fn() });
+const mockedGetNetworkStateAsync = jest
+  .spyOn(Network, 'getNetworkStateAsync')
+  .mockResolvedValue({ isConnected: true });
+const mockedSubscribeToAppStateTransitions = jest
+  .spyOn(AppStateTransitionsModule, 'subscribeToAppStateTransitions')
+  .mockReturnValue(jest.fn());
 
-jest.mock('@app/hooks/ws/useWebsocket', () => ({
-  useWebsocket: jest.fn(),
-}));
-
-jest.mock('@app/utils/appState/appStateTransitions', () => ({
-  subscribeToAppStateTransitions: jest.fn(() => jest.fn()),
-}));
-
-jest.mock('expo-network', () => ({
-  addNetworkStateListener: jest.fn(() => ({ remove: jest.fn() })),
-  getNetworkStateAsync: jest.fn(() => Promise.resolve({ isConnected: true })),
-}));
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    chat: {
-      debug: jest.fn(),
-      error: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-    },
-  },
-}));
-
-const mockedUseWebsocket = jest.mocked(useWebsocket);
-const mockedAddNetworkStateListener = jest.mocked(
-  Network.addNetworkStateListener,
-);
-const mockedGetNetworkStateAsync = jest.mocked(Network.getNetworkStateAsync);
-const mockedSubscribeToAppStateTransitions = jest.mocked(
-  subscribeToAppStateTransitions,
-);
+jest.spyOn(logger.chat, 'debug').mockImplementation(() => {});
+jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
+jest.spyOn(logger.chat, 'info').mockImplementation(() => {});
+jest.spyOn(logger.chat, 'warn').mockImplementation(() => {});
 
 const sendMessage = jest.fn();
 const reconnect = jest.fn();
@@ -270,10 +257,7 @@ describe('useTwitchChat join/part routing', () => {
       wsOptions.onOpen?.();
     });
 
-    const capReq = sendMessage.mock.calls
-      .map(([payload]) => payload as string)
-      .find(payload => payload.startsWith('CAP REQ'));
-    expect(capReq).toBe(
+    expect(sendMessage).toHaveBeenCalledWith(
       'CAP REQ :twitch.tv/tags twitch.tv/commands twitch.tv/membership\r\n',
     );
   });
@@ -284,9 +268,8 @@ describe('useTwitchChat join/part routing', () => {
       wsOptions.onOpen?.();
     });
 
-    const capReq = sendMessage.mock.calls
-      .map(([payload]) => payload as string)
-      .find(payload => payload.startsWith('CAP REQ'));
-    expect(capReq).toBe('CAP REQ :twitch.tv/tags twitch.tv/commands\r\n');
+    expect(sendMessage).toHaveBeenCalledWith(
+      'CAP REQ :twitch.tv/tags twitch.tv/commands\r\n',
+    );
   });
 });

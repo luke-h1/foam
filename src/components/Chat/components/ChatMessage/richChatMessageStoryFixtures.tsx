@@ -44,6 +44,7 @@ export const createBaseMessage = (
 ): ChatMessageType<'userstate'> => {
   const message_id = 'msg-123';
   const message_nonce = 'nonce-123';
+  // SAFETY: a non-reply story message carries no reply-parent tags, which UserStateTags declares as required.
   return {
     id: `${message_id}_${message_nonce}`,
     userstate: {

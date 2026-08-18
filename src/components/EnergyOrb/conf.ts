@@ -32,7 +32,11 @@ const SHADER_SOURCE = `
   }
 `;
 
-const NAMED_COLORS: Record<string, RGB> = {
+interface NamedColorTable {
+  [colorName: string]: RGB;
+}
+
+const NAMED_COLORS: NamedColorTable = {
   red: [1, 0, 0],
   green: [0, 1, 0],
   blue: [0, 0, 1],

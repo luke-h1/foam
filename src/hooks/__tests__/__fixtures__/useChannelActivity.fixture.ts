@@ -12,6 +12,10 @@ export interface TestActivityState {
   source: 'helix' | 'event';
 }
 
+export type TestActivityEventPayload = {
+  id: string;
+};
+
 export function createTestActivity(
   overrides: Partial<
     ChannelActivity<TestActivityHelixItem, TestActivityState>
@@ -30,11 +34,12 @@ export function createTestActivity(
       name: 'test_activity_warning',
       action: 'initial_test_activity_fetch_failed',
     },
+    // SAFETY: these handlers only see events built by `createEventSubMessage`, which always sets `id`.
     events: [
       {
         type: 'channel.test.begin',
         normalise: event => ({
-          id: String((event as { id: string }).id),
+          id: String((event as TestActivityEventPayload).id),
           status: 'active',
           source: 'event',
         }),
@@ -42,7 +47,7 @@ export function createTestActivity(
       {
         type: 'channel.test.end',
         normalise: event => ({
-          id: String((event as { id: string }).id),
+          id: String((event as TestActivityEventPayload).id),
           status: 'completed',
           source: 'event',
         }),
@@ -53,7 +58,7 @@ export function createTestActivity(
 }
 
 export function createEventSubMessage(
-  event?: Record<string, unknown>,
+  event?: TestActivityEventPayload,
 ): EventSubMessage {
   return {
     metadata: {

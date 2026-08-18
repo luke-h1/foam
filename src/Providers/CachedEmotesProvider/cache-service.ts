@@ -671,11 +671,13 @@ export function subscribeEmoteCacheMemoryPressure(): void {
   }
 }
 
-export function getCachedEmoteStats(): {
+type CachedEmoteStats = {
   decoded: number;
   inflight: number;
   pinned: number;
-} {
+};
+
+export function getCachedEmoteStats(): CachedEmoteStats {
   return { decoded: refs.size, inflight: inflight.size, pinned: pinned.size };
 }
 

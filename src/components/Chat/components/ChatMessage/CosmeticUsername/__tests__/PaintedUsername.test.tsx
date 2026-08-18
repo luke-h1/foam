@@ -1,9 +1,16 @@
+// This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
+// field (see types/seventv/cosmetics.ts), not a naming choice.
+// oxlint-disable anti-slop/no-shape-in-symbol-names
+import { makeMutable } from 'react-native-reanimated';
+
+import type { SkImage } from '@shopify/react-native-skia';
 import { act, render, screen } from '@testing-library/react-native';
 
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
 import type { PaintData } from '@app/types/seventv/cosmetics';
 
 import { PaintedUsername } from '../PaintedUsername';
+import * as sharedPaintAnimationFrames from '../util/sharedPaintAnimationFrames';
 
 /**
  * The jest Skia mock resolves Data.fromURI, so a real texture entry reports
@@ -11,10 +18,12 @@ import { PaintedUsername } from '../PaintedUsername';
  * suite asserts the plain-colour fallback that shows before a texture
  * decodes.
  */
-jest.mock('../util/sharedPaintAnimationFrames', () => ({
-  useSharedPaintAnimationFrame: () => null,
-  useSharedPaintAnimationReady: () => false,
-}));
+jest
+  .spyOn(sharedPaintAnimationFrames, 'useSharedPaintAnimationFrame')
+  .mockReturnValue(makeMutable<SkImage | null>(null));
+jest
+  .spyOn(sharedPaintAnimationFrames, 'useSharedPaintAnimationReady')
+  .mockReturnValue(false);
 
 const TWITCH_COLOR = 'rgb(0, 0, 255)';
 

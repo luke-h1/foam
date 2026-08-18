@@ -23,12 +23,21 @@ export interface PhaseMarker {
   t: number;
 }
 
+export interface FrameSample {
+  t: number;
+  fps: number;
+}
+
+export interface FrameBatch {
+  samples: FrameSample[];
+}
+
 export interface BenchFile {
   workload: string;
   startedAt: number;
   runs: PassResult[];
   phases: PhaseMarker[];
-  frames: unknown[];
+  frames: FrameBatch[];
 }
 
 function resultsFile(): File {
@@ -47,6 +56,7 @@ export function readResults(): BenchFile {
     };
   }
   try {
+    // SAFETY: img-bench.json is only ever written by `writeResults` from a `BenchFile`; anything else fails to parse and falls to the catch below.
     return JSON.parse(file.textSync()) as BenchFile;
   } catch {
     return {
@@ -79,7 +89,7 @@ export function markPhase(phase: string): void {
   writeResults(data);
 }
 
-export function appendFrames(entry: unknown): void {
+export function appendFrames(entry: FrameBatch): void {
   const data = readResults();
   data.frames.push(entry);
   writeResults(data);

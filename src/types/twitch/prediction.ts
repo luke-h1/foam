@@ -1,24 +1,24 @@
 export type ChannelPredictionStatus =
   'active' | 'locked' | 'resolved' | 'canceled';
 
-export interface TwitchPredictionTopPredictor {
+export type TwitchPredictionTopPredictor = {
   user_id: string;
   user_login: string;
   user_name: string;
   channel_points_used: number;
   channel_points_won: number | null;
-}
+};
 
 type TwitchPredictionColor = 'BLUE' | 'PINK' | (string & {});
 
-export interface TwitchPredictionOutcome {
+export type TwitchPredictionOutcome = {
   id: string;
   title: string;
   color: TwitchPredictionColor;
   users: number;
   channel_points: number;
   top_predictors: TwitchPredictionTopPredictor[] | null;
-}
+};
 
 export interface TwitchHelixPrediction {
   id: string;
@@ -35,7 +35,7 @@ export interface TwitchHelixPrediction {
   locked_at: string | null;
 }
 
-export interface TwitchEventSubPrediction {
+export type TwitchEventSubPrediction = {
   id: string;
   broadcaster_user_id: string;
   broadcaster_user_login: string;
@@ -48,7 +48,7 @@ export interface TwitchEventSubPrediction {
   ended_at?: string;
   status?: 'resolved' | 'canceled' | 'locked';
   winning_outcome_id?: string;
-}
+};
 
 export interface ChannelPredictionOutcomeState {
   id: string;

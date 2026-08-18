@@ -1,95 +1,21 @@
-jest.mock('expo-file-system', () => {
-  type MockNode =
-    | { kind: 'directory'; children: string[] }
-    | { kind: 'file'; size: number | null };
-
-  const nodes = new Map<string, MockNode>();
-  const deletedUris: string[] = [];
-  const failingDeletes = new Set<string>();
-
-  class Directory {
-    uri: string;
-
-    constructor(base: string | { uri: string }, name?: string) {
-      const baseUri = typeof base === 'string' ? base : base.uri;
-      this.uri = name ? `${baseUri.replace(/\/?$/, '/')}${name}/` : baseUri;
-    }
-
-    get exists() {
-      return nodes.get(this.uri)?.kind === 'directory';
-    }
-
-    list() {
-      const node = nodes.get(this.uri);
-      if (node?.kind !== 'directory') {
-        throw new Error(`Directory does not exist: ${this.uri}`);
-      }
-      return node.children.map(childUri =>
-        nodes.get(childUri)?.kind === 'directory'
-          ? new Directory(childUri)
-          : new File(childUri),
-      );
-    }
-  }
-
-  class File {
-    uri: string;
-
-    constructor(uri: string) {
-      this.uri = uri;
-    }
-
-    get size() {
-      const node = nodes.get(this.uri);
-      return node?.kind === 'file' ? node.size : null;
-    }
-
-    delete() {
-      if (failingDeletes.has(this.uri)) {
-        throw new Error(`Cannot delete: ${this.uri}`);
-      }
-      nodes.delete(this.uri);
-      deletedUris.push(this.uri);
-    }
-  }
-
-  return {
-    Directory,
-    File,
-    Paths: {
-      cache: 'file:///cache/',
-    },
-    __mockFileSystem: {
-      addDirectory: (uri: string, children: string[]) => {
-        nodes.set(uri, { kind: 'directory', children });
-      },
-      addFile: (uri: string, size: number | null) => {
-        nodes.set(uri, { kind: 'file', size });
-      },
-      failDeleteOf: (uri: string) => {
-        failingDeletes.add(uri);
-      },
-      deletedUris: () => [...deletedUris],
-      exists: (uri: string) => nodes.has(uri),
-      reset: () => {
-        nodes.clear();
-        deletedUris.length = 0;
-        failingDeletes.clear();
-      },
-    },
-  };
-});
-
 import { sweepOversizedSentryEnvelopesNow } from '@app/lib/sentryCacheSweep';
 
-const fileSystemMock = jest.requireMock('expo-file-system')
-  .__mockFileSystem as {
-  addDirectory: (uri: string, children: string[]) => void;
-  addFile: (uri: string, size: number | null) => void;
-  failDeleteOf: (uri: string) => void;
-  deletedUris: () => string[];
-  exists: (uri: string) => boolean;
-  reset: () => void;
+/**
+ * `require`, not a static import: `__mockFileSystem` only exists on the
+ * `__mocks__/expo-file-system.ts` manual mock, not the real module's types,
+ * and `jest.requireMock` resolves a separate module instance from the one
+ * Jest auto-substitutes for `sentryCacheSweep.ts`'s own import.
+ */
+// SAFETY: __mocks__/expo-file-system.ts defines __mockFileSystem with exactly this shape.
+const { __mockFileSystem: fileSystemMock } = require('expo-file-system') as {
+  __mockFileSystem: {
+    addDirectory: (uri: string, children: string[]) => void;
+    addFile: (uri: string, size: number | null) => void;
+    failDeleteOf: (uri: string) => void;
+    deletedUris: () => string[];
+    exists: (uri: string) => boolean;
+    reset: () => void;
+  };
 };
 
 const ENVELOPES_DIR = 'file:///cache/io.sentry/abc123/envelopes/';

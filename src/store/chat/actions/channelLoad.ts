@@ -563,10 +563,10 @@ const loadChannelResourcesInternal = async (
     const fallbackSevenTvSetId = existingCache?.sevenTvEmoteSetId ?? 'global';
     const sevenTvSetIdPromise = sevenTvService
       .getEmoteSetId(channelId)
-      .catch((error: unknown) => {
+      .catch((cause: unknown) => {
         logger.chat.warn('Failed to resolve 7TV emote set ID', {
           name: 'seven_tv_emotes_warning',
-          error,
+          error: cause,
           action: 'emote_set_id_failed',
           channel_id: channelId,
           provider: 'seven_tv',
@@ -728,10 +728,10 @@ const loadChannelResourcesInternal = async (
 export const loadChannelCheermotes = (channelId: string): void => {
   fetchChannelCheermotes(channelId, () =>
     twitchService.getCheermotes(channelId),
-  ).catch((error: unknown) => {
+  ).catch((cause: unknown) => {
     logger.chat.warn('Failed to load channel cheermotes', {
       name: 'chat_resources_warning',
-      error,
+      error: cause,
       action: 'cheermotes_failed',
       channel_id: channelId,
       screen: 'chat',
@@ -739,22 +739,12 @@ export const loadChannelCheermotes = (channelId: string): void => {
   });
 };
 
-export const loadChannelResources = async (
-  options: LoadChannelResourcesOptions | string,
-  forceRefresh = false,
-): Promise<boolean> => {
-  const opts: LoadChannelResourcesOptions =
-    typeof options === 'string'
-      ? { channelId: options, forceRefresh }
-      : options;
-
-  const {
-    channelId,
-    forceRefresh: shouldForceRefresh = false,
-    signal,
-    twitchUserId,
-  } = opts;
-
+export const loadChannelResources = async ({
+  channelId,
+  forceRefresh: shouldForceRefresh = false,
+  signal,
+  twitchUserId,
+}: LoadChannelResourcesOptions): Promise<boolean> => {
   loadChannelCheermotes(channelId);
 
   return startSpanAsync(

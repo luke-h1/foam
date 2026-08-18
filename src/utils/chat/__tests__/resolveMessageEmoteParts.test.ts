@@ -3,32 +3,18 @@ import {
   createEmoteData,
   createTwitchEmote,
 } from '@app/components/Chat/hooks/__tests__/__fixtures__/useChat.fixture';
-import { getUserPersonalEmotes } from '@app/store/chat/actions/channelLoad';
+import * as personalEmotes from '@app/store/chat/actions/personalEmotes';
 import type { SanitisedEmote } from '@app/types/emote';
-import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
+import * as emoteProcessor from '@app/utils/chat/emoteProcessor';
 import { createUserStateFromTags } from '@app/utils/chat/messageHandlers/createUserStateFromTags';
 
 import { resolveMessageEmoteParts } from '../resolveMessageEmoteParts';
 
-jest.mock('@app/store/chat/actions/channelLoad', () => ({
-  getCurrentEmoteData: jest.fn(),
-  getUserPersonalEmotes: jest.fn(() => []),
-}));
-
-jest.mock('@app/store/chat/observables/chatStore', () => ({
-  chatStore$: {
-    emojis: {
-      peek: jest.fn(() => []),
-    },
-  },
-}));
-
-jest.mock('@app/utils/chat/emoteProcessor', () => ({
-  processEmotesWorklet: jest.fn(() => []),
-}));
-
-const worklet = jest.mocked(processEmotesWorklet);
-const mockGetUserPersonalEmotes = jest.mocked(getUserPersonalEmotes);
+const worklet = jest.spyOn(emoteProcessor, 'processEmotesWorklet');
+const mockGetUserPersonalEmotes = jest.spyOn(
+  personalEmotes,
+  'getUserPersonalEmotes',
+);
 
 const channelId = 'channel-1';
 const subscriberEmote = createTwitchEmote({
@@ -42,7 +28,8 @@ function lastWorkletArgs() {
 }
 
 beforeEach(() => {
-  worklet.mockClear();
+  worklet.mockReset();
+  worklet.mockReturnValue([]);
   mockGetUserPersonalEmotes.mockReset();
   mockGetUserPersonalEmotes.mockReturnValue([]);
 });

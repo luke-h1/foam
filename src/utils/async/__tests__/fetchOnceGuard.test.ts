@@ -3,12 +3,12 @@ import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
 type Deferred<V> = {
   promise: Promise<V>;
   resolve: (value: V) => void;
-  reject: (error: unknown) => void;
+  reject: (error: Error) => void;
 };
 
 const deferred = <V>(): Deferred<V> => {
   let resolve!: (value: V) => void;
-  let reject!: (error: unknown) => void;
+  let reject!: (error: Error) => void;
   const promise = new Promise<V>((res, rej) => {
     resolve = res;
     reject = rej;

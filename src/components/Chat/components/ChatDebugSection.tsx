@@ -11,17 +11,20 @@ import { usePreference } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import { isDevToolsEnabled } from '@app/utils/devTools/isDevToolsEnabled';
 
-export interface ChatDebugSectionData {
-  payload: Record<string, unknown>;
+export interface ChatDebugSectionData<TPayload> {
+  payload: TPayload;
   ircLines?: ChatDebugIrcLine[];
 }
 
-interface ChatDebugSectionProps {
-  build: () => ChatDebugSectionData;
+interface ChatDebugSectionProps<TPayload> {
+  build: () => ChatDebugSectionData<TPayload>;
   style?: StyleProp<ViewStyle>;
 }
 
-export function ChatDebugSection({ build, style }: ChatDebugSectionProps) {
+export function ChatDebugSection<TPayload>({
+  build,
+  style,
+}: ChatDebugSectionProps<TPayload>) {
   const chatDebugTools = usePreference('chatDebugTools');
   const data = isDevToolsEnabled && chatDebugTools ? build() : null;
 

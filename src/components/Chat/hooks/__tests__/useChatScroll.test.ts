@@ -33,41 +33,57 @@ describe('useChatScroll', () => {
       scrollToOffset: jest.fn(),
     };
 
-    const ref = createRef<ChatListRef | null>(mocks as unknown as ChatListRef);
+    const list: ChatListRef = {
+      ...mocks,
+      clearCaches: jest.fn(),
+      flashScrollIndicators: jest.fn(),
+      getAnimatableRef: jest.fn(),
+      getNativeScrollRef: jest.fn(),
+      getScrollableNode: jest.fn(),
+      getScrollResponder: jest.fn(),
+      getState: jest.fn(),
+      reportContentInset: jest.fn(),
+      scrollIndexIntoView: jest.fn(),
+      scrollItemIntoView: jest.fn(),
+      scrollToItem: jest.fn(),
+      setItemSize: jest.fn(),
+      setScrollProcessingEnabled: jest.fn(),
+      setVisibleContentAnchorOffset: jest.fn(),
+    };
 
-    return { ref, mocks };
+    return { ref: createRef<ChatListRef | null>(list), mocks };
   };
 
+  // SAFETY: the hook reads nativeEvent only, so the host-instance targets stay empty stubs.
   const createScrollEvent = (
     contentOffset: { y: number },
     layoutMeasurement: { height: number },
     contentSize: { height: number },
-  ): NativeSyntheticEvent<NativeScrollEvent> =>
-    ({
-      nativeEvent: {
-        contentOffset: { x: 0, ...contentOffset },
-        layoutMeasurement: { width: 0, ...layoutMeasurement },
-        contentSize: { width: 0, ...contentSize },
-        contentInset: { top: 0, left: 0, bottom: 0, right: 0 },
-        contentOffsetAnimatedValue: undefined,
-        zoomScale: 1,
-        velocity: { x: 0, y: 0 },
-      },
-      currentTarget:
-        {} as NativeSyntheticEvent<NativeScrollEvent>['currentTarget'],
-      target: {} as NativeSyntheticEvent<NativeScrollEvent>['target'],
-      bubbles: false,
-      cancelable: false,
-      defaultPrevented: false,
-      eventPhase: 0,
-      isDefaultPrevented: () => false,
-      isPropagationStopped: () => false,
-      persist: () => {},
-      preventDefault: () => {},
-      stopPropagation: () => {},
-      timeStamp: 0,
-      type: 'scroll',
-    }) as unknown as NativeSyntheticEvent<NativeScrollEvent>;
+  ): NativeSyntheticEvent<NativeScrollEvent> => ({
+    nativeEvent: {
+      contentOffset: { x: 0, ...contentOffset },
+      layoutMeasurement: { width: 0, ...layoutMeasurement },
+      contentSize: { width: 0, ...contentSize },
+      contentInset: { top: 0, left: 0, bottom: 0, right: 0 },
+      zoomScale: 1,
+      velocity: { x: 0, y: 0 },
+    },
+    currentTarget:
+      {} as NativeSyntheticEvent<NativeScrollEvent>['currentTarget'],
+    target: {} as NativeSyntheticEvent<NativeScrollEvent>['target'],
+    bubbles: false,
+    cancelable: false,
+    defaultPrevented: false,
+    eventPhase: 0,
+    isTrusted: false,
+    isDefaultPrevented: () => false,
+    isPropagationStopped: () => false,
+    persist: () => {},
+    preventDefault: () => {},
+    stopPropagation: () => {},
+    timeStamp: 0,
+    type: 'scroll',
+  });
 
   beforeEach(() => {
     jest.useFakeTimers();
@@ -141,18 +157,18 @@ describe('useChatScroll', () => {
         }),
       );
 
-      expect(typeof result.current.scrollHandlers.onScroll).toBe('function');
-      expect(typeof result.current.scrollToBottom).toBe('function');
+      expect(result.current.scrollHandlers.onScroll).toBeInstanceOf(Function);
+      expect(result.current.scrollToBottom).toBeInstanceOf(Function);
       expect(
-        typeof result.current.scrollAnchor.maintainBottomAfterContentChange,
-      ).toBe('function');
-      expect(typeof result.current.scrollHandlers.onContentSizeChange).toBe(
-        'function',
+        result.current.scrollAnchor.maintainBottomAfterContentChange,
+      ).toBeInstanceOf(Function);
+      expect(result.current.scrollHandlers.onContentSizeChange).toBeInstanceOf(
+        Function,
       );
-      expect(typeof result.current.cleanup).toBe('function');
-      expect(typeof result.current.scrollAnchor.isUserActivelyScrolling).toBe(
-        'function',
-      );
+      expect(result.current.cleanup).toBeInstanceOf(Function);
+      expect(
+        result.current.scrollAnchor.isUserActivelyScrolling,
+      ).toBeInstanceOf(Function);
     });
   });
 

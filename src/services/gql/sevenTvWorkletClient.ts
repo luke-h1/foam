@@ -1,4 +1,5 @@
 import { deriveFromResponseOnWorklet } from '@app/lib/offThreadJson/deriveFromResponseOnWorklet';
+import type { JsonValue } from '@app/utils/object/deepEqualJson';
 
 /**
  * Runs a 7TV GraphQL query and derives the result from the response on the UI
@@ -7,7 +8,7 @@ import { deriveFromResponseOnWorklet } from '@app/lib/offThreadJson/deriveFromRe
  */
 export async function runCosmeticsQuery<TResult>(
   query: string,
-  variables: Record<string, unknown>,
+  variables: Record<string, JsonValue>,
   parse: (responseText: string) => TResult,
 ): Promise<{ result?: TResult; error?: Error }> {
   try {

@@ -45,6 +45,13 @@ export interface SuiteState {
   results: PhaseResult[];
 }
 
+interface FrameAccumulator {
+  on: boolean;
+  fps: number[];
+  jank: number;
+  frames: number;
+}
+
 const IDLE: SuiteState = {
   running: false,
   phaseIndex: -1,
@@ -62,7 +69,12 @@ export function useChatPerfSuite() {
     total: 0,
   });
   const [suite, setSuite] = useState<SuiteState>(IDLE);
-  const accum = useRef({ on: false, fps: [] as number[], jank: 0, frames: 0 });
+  const accum = useRef<FrameAccumulator>({
+    on: false,
+    fps: [],
+    jank: 0,
+    frames: 0,
+  });
   const cancelRef = useRef(false);
   const runningRef = useRef(false);
 

@@ -26,8 +26,7 @@ export function LoadingState({
 }: LoadingStateProps) {
   const isLarge =
     indicatorSize === 'large' ||
-    (typeof indicatorSize === 'number' &&
-      indicatorSize >= LARGE_SPINNER_MIN_SIZE);
+    (indicatorSize !== 'small' && indicatorSize >= LARGE_SPINNER_MIN_SIZE);
 
   return (
     <View style={[styles.container, style]} testID='loading-state'>

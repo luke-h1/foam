@@ -9,11 +9,7 @@ import { ApiError } from '../api/Client';
 import { ffzApi } from '../api/clients';
 import { ffzService } from '../ffz-service';
 
-jest.mock('../api/clients', () => ({
-  ffzApi: { get: jest.fn() },
-}));
-
-const api = jest.mocked(ffzApi);
+const apiGetSpy = jest.spyOn(ffzApi, 'get');
 
 const staticEmote: FfzEmoticon = {
   id: 128054,
@@ -57,7 +53,7 @@ describe('ffzService', () => {
   });
 
   test('getSanitisedGlobalEmotes sanitises the default global set', async () => {
-    api.get.mockResolvedValue({
+    apiGetSpy.mockResolvedValue({
       default_sets: [3],
       sets: {
         '3': { id: 3, _type: 0, title: 'Global', emoticons: [staticEmote] },
@@ -67,7 +63,7 @@ describe('ffzService', () => {
 
     const result = await ffzService.getSanitisedGlobalEmotes();
 
-    expect(api.get).toHaveBeenCalledWith('/set/global');
+    expect(apiGetSpy).toHaveBeenCalledWith('/set/global');
     expect(result).toEqual<FfzSanitisedEmote[]>([
       {
         name: 'OMEGALUL',
@@ -99,7 +95,7 @@ describe('ffzService', () => {
   });
 
   test('getSanitisedChannelEmotes builds animated variants and per-emote creators', async () => {
-    api.get.mockResolvedValue({
+    apiGetSpy.mockResolvedValue({
       room: { set: 10 },
       sets: {
         '10': {
@@ -113,7 +109,7 @@ describe('ffzService', () => {
 
     const result = await ffzService.getSanitisedChannelEmotes('123');
 
-    expect(api.get).toHaveBeenCalledWith('/room/id/123');
+    expect(apiGetSpy).toHaveBeenCalledWith('/room/id/123');
     expect(result).toEqual<FfzSanitisedEmote[]>([
       {
         name: 'peepoDance',
@@ -145,7 +141,7 @@ describe('ffzService', () => {
   });
 
   test('getSanitisedChannelEmotes returns an empty list when the room does not exist', async () => {
-    api.get.mockResolvedValue({
+    apiGetSpy.mockResolvedValue({
       status: 404,
       error: 'Not Found',
       message: 'No such room',
@@ -157,7 +153,9 @@ describe('ffzService', () => {
   });
 
   test('getSanitisedChannelEmotes returns an empty list when the API throws a 404', async () => {
-    api.get.mockRejectedValue(new ApiError('No such room', 404, 'FFZApiError'));
+    apiGetSpy.mockRejectedValue(
+      new ApiError('No such room', 404, 'FFZApiError'),
+    );
 
     const result = await ffzService.getSanitisedChannelEmotes('999');
 
@@ -165,7 +163,9 @@ describe('ffzService', () => {
   });
 
   test('getSanitisedChannelBadges returns an empty list when the API throws a 404', async () => {
-    api.get.mockRejectedValue(new ApiError('No such room', 404, 'FFZApiError'));
+    apiGetSpy.mockRejectedValue(
+      new ApiError('No such room', 404, 'FFZApiError'),
+    );
 
     const result = await ffzService.getSanitisedChannelBadges('999');
 
@@ -173,7 +173,7 @@ describe('ffzService', () => {
   });
 
   test('getSanitisedChannelEmotes rethrows a 404 that is not a "No such room" error', async () => {
-    api.get.mockRejectedValue(new ApiError('Not Found', 404, 'FFZApiError'));
+    apiGetSpy.mockRejectedValue(new ApiError('Not Found', 404, 'FFZApiError'));
 
     await expect(ffzService.getSanitisedChannelEmotes('999')).rejects.toThrow(
       'Not Found',
@@ -181,7 +181,7 @@ describe('ffzService', () => {
   });
 
   test('getSanitisedChannelBadges rethrows a 404 that is not a "No such room" error', async () => {
-    api.get.mockRejectedValue(new ApiError('Not Found', 404, 'FFZApiError'));
+    apiGetSpy.mockRejectedValue(new ApiError('Not Found', 404, 'FFZApiError'));
 
     await expect(ffzService.getSanitisedChannelBadges('999')).rejects.toThrow(
       'Not Found',

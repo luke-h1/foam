@@ -22,20 +22,19 @@ import type { BaseUserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { getCachedChannelPointRewardTitle } from '@app/utils/chat/channelPointRewardTitleStore';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
+import * as generateNonceModule from '@app/utils/string/generateNonce';
 
 import { createUserNoticeMessage } from '../createUserNoticeMessage';
 
-jest.mock('@app/store/chat/actions/channelLoad', () => ({
-  getCurrentEmoteData: jest.fn(),
-}));
-
-jest.mock('@app/utils/string/generateNonce', () => ({
-  generateNonce: jest.fn().mockReturnValue('test-nonce-123'),
-}));
-
 describe('createUserNoticeMessage', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest
+      .spyOn(generateNonceModule, 'generateNonce')
+      .mockReturnValue('test-nonce-123');
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   test('creates viewermilestone notice', () => {

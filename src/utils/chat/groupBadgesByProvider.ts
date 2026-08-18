@@ -12,12 +12,12 @@ type BadgeProviderKey = 'twitch' | '7tv' | 'bttv' | 'ffz';
 
 const PROVIDER_ORDER: BadgeProviderKey[] = ['twitch', '7tv', 'bttv', 'ffz'];
 
-const PROVIDER_TITLES: Record<BadgeProviderKey, string> = {
+const PROVIDER_TITLES = {
   twitch: 'Twitch',
   '7tv': '7TV',
   bttv: 'BetterTTV',
   ffz: 'FrankerFaceZ',
-};
+} satisfies Record<BadgeProviderKey, string>;
 
 function providerOf(badge: SanitisedBadgeSet): BadgeProviderKey {
   return badge.provider === 'chatterino' ? 'twitch' : badge.provider;

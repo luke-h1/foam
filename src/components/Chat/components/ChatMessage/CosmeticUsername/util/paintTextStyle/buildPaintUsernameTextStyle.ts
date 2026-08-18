@@ -34,6 +34,7 @@ function computePaintUsernameTextStyle(paint: PaintData): TextStyle {
   const style: TextStyle = {};
 
   if (textStyle.weight) {
+    // SAFETY: 7TV paint weights are CSS weights divided by 100, so weight * 100 is one of '100'-'900'.
     style.fontWeight = String(
       textStyle.weight * 100,
     ) as TextStyle['fontWeight'];

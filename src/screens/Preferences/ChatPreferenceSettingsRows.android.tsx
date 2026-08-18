@@ -1,3 +1,7 @@
+// This file's shape usages are @expo/ui SwiftUI/Jetpack Compose API names
+// (clipShape, shapes, Shape, contentShape and their option/prop keys), not a
+// naming choice.
+// oxlint-disable anti-slop/no-shape-in-symbol-names
 import type { ComponentProps } from 'react';
 
 import { Column, Row, Text } from '@expo/ui/jetpack-compose';
@@ -13,7 +17,6 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 
 import { SettingsRow } from '@app/components/SettingsSection/SettingsSection';
-import { type ComposeRowComponent } from '@app/components/SettingsSection/SettingsSection.types';
 import { theme } from '@app/styles/themes';
 
 type SettingsRowIcon = ComponentProps<typeof SettingsRow>['icon'];
@@ -85,4 +88,4 @@ export function ChatPreferenceSegmentedSettingsRow({
   );
 }
 
-(ChatPreferenceSegmentedSettingsRow as ComposeRowComponent).isComposeRow = true;
+ChatPreferenceSegmentedSettingsRow.isComposeRow = true;

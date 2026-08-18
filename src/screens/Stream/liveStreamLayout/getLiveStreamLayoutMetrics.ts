@@ -1,3 +1,11 @@
+type LiveStreamLayoutMetrics = {
+  isLandscape: boolean;
+  layoutHeight: number;
+  portraitTopInset: number;
+  screenHeight: number;
+  screenWidth: number;
+};
+
 export function getLiveStreamLayoutMetrics({
   insetTop,
   windowHeight,
@@ -6,13 +14,7 @@ export function getLiveStreamLayoutMetrics({
   insetTop: number;
   windowHeight: number;
   windowWidth: number;
-}): {
-  isLandscape: boolean;
-  layoutHeight: number;
-  portraitTopInset: number;
-  screenHeight: number;
-  screenWidth: number;
-} {
+}): LiveStreamLayoutMetrics {
   const resolvedWidth = Math.max(1, windowWidth);
   const resolvedHeight = Math.max(1, windowHeight);
   const isLandscape = resolvedWidth > resolvedHeight;

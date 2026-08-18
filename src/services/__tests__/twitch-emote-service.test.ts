@@ -6,16 +6,8 @@ import { twitchApi } from '../api/clients';
 import { twitchEmoteService } from '../twitch-emote-service';
 import { twitchService } from '../twitch-service';
 
-jest.mock('../api/clients', () => ({
-  twitchApi: { get: jest.fn() },
-}));
-
-jest.mock('../twitch-service', () => ({
-  twitchService: { getUser: jest.fn() },
-}));
-
-const api = jest.mocked(twitchApi);
-const mockTwitchService = jest.mocked(twitchService);
+const api = { get: jest.spyOn(twitchApi, 'get') };
+const mockTwitchService = { getUser: jest.spyOn(twitchService, 'getUser') };
 
 const broadcaster: UserInfoResponse = {
   broadcaster_type: 'partner',

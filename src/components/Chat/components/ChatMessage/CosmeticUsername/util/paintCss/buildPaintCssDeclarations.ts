@@ -1,3 +1,6 @@
+// This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
+// field (see types/seventv/cosmetics.ts), not a naming choice.
+// oxlint-disable anti-slop/no-shape-in-symbol-names
 import { getPaintLayers } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/paintLayer/getPaintLayers';
 import { isRenderablePaintLayer } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/paintLayer/isRenderablePaintLayer';
 import { indexedCollectionToArray } from '@app/services/ws/util/indexedCollection';

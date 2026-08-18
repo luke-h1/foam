@@ -21,12 +21,12 @@ export const BrandIcons = {
 export type BrandIconName = keyof typeof BrandIcons;
 
 export function resolveBrandIconSize(size: IconSize) {
-  if (typeof size === 'string') {
-    return ICON_SIZES[size];
+  if (size instanceof Object) {
+    return {
+      height: size.height,
+      width: size.width,
+    };
   }
 
-  return {
-    height: size.height,
-    width: size.width,
-  };
+  return ICON_SIZES[size];
 }

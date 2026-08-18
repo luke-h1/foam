@@ -1,3 +1,7 @@
-export const onBadgesLoaded: { current: (() => void) | null } = {
+export type BadgesLoadedListener = {
+  current: (() => void) | null;
+};
+
+export const onBadgesLoaded: BadgesLoadedListener = {
   current: null,
 };

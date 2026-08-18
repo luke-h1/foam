@@ -1,19 +1,74 @@
 import { View } from 'react-native';
 import type { ReactElement } from 'react';
 
+import type {
+  LegendListComponent,
+  MaintainScrollAtEndOptions,
+  ViewabilityConfig,
+} from '@legendapp/list/react-native';
 import { render } from '@testing-library/react-native';
 
 import { createChatMessageFixture } from '@app/components/Chat/util/__tests__/__fixtures__/chatMessage.fixture';
+import type { ViewableMessageToken } from '@app/components/Chat/util/getViewableChatMessages';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 
 import { ChatList } from '../ChatList';
 
-const mockLegendList = jest.fn((_props: unknown) => (
+type LegendListMockProps = {
+  dataKey: string;
+  drawDistance: number;
+  estimatedItemSize: number;
+  extraData: unknown;
+  maintainScrollAtEnd: boolean | MaintainScrollAtEndOptions;
+  maintainScrollAtEndThreshold: number;
+  maintainVisibleContentPosition: boolean | undefined;
+  onContentSizeChange: () => void;
+  onEndReachedThreshold: number;
+  onViewableItemsChanged: (info: {
+    viewableItems: ViewableMessageToken[];
+  }) => void;
+  recycleItems: boolean;
+  renderItem: (info: {
+    item: AnyChatMessageType | undefined;
+    index: number;
+    extraData: unknown;
+  }) => ReactElement;
+  viewabilityConfig: ViewabilityConfig;
+};
+
+const mockLegendList = jest.fn((_props: LegendListMockProps) => (
   <View testID='flash-list' />
 ));
 
-jest.mock('@legendapp/list/react-native', () => ({
-  LegendList: (props: unknown) => mockLegendList(props),
-}));
+/**
+ * `__mocks__/@legendapp/list/react-native.tsx` already stubs `LegendList` for
+ * every test, but this suite asserts on the exact props `ChatList` passes
+ * through, so it overrides that export with a fake that just records them.
+ *
+ * Pulled in via `require`, not `import`: a named import only gives a local
+ * binding, not the module object `jest.spyOn` needs to patch, and a namespace
+ * import goes through babel's ES-interop copy instead of the object
+ * `ChatList` actually reads `LegendList` off.
+ */
+// SAFETY: `require` erases module typing; this reattaches the real
+// `@legendapp/list/react-native` module type so `jest.spyOn` below type-checks.
+const legendListReactNative =
+  require('@legendapp/list/react-native') as typeof import('@legendapp/list/react-native');
+
+jest.spyOn(legendListReactNative, 'LegendList').mockImplementation(
+  // SAFETY: the mock only exercises the props this suite reads; it doesn't
+  // implement every prop `LegendListComponent` accepts.
+  ((props: LegendListMockProps) =>
+    mockLegendList(props)) as LegendListComponent,
+);
+
+function getRenderedProps(): LegendListMockProps {
+  const call = mockLegendList.mock.calls[0];
+  if (!call) {
+    throw new Error('LegendList did not render');
+  }
+  return call[0];
+}
 
 describe('ChatList', () => {
   beforeEach(() => {
@@ -46,18 +101,7 @@ describe('ChatList', () => {
       />,
     );
 
-    const props = mockLegendList.mock.calls[0]?.[0] as {
-      drawDistance?: number;
-      estimatedItemSize?: number;
-      extraData?: unknown;
-      maintainScrollAtEnd?:
-        boolean | { on: { dataChange?: boolean; itemLayout?: boolean } };
-      maintainScrollAtEndThreshold?: number;
-      onEndReachedThreshold?: number;
-      recycleItems?: boolean;
-      maintainVisibleContentPosition?: boolean;
-      viewabilityConfig?: unknown;
-    };
+    const props = getRenderedProps();
     expect({
       drawDistance: props.drawDistance,
       estimatedItemSize: props.estimatedItemSize,
@@ -116,14 +160,20 @@ describe('ChatList', () => {
       />,
     );
 
-    const props = mockLegendList.mock.calls[0]?.[0] as {
-      onViewableItemsChanged: (info: { viewableItems: unknown[] }) => void;
-    };
+    const props = getRenderedProps();
 
     props.onViewableItemsChanged({
       viewableItems: [
         { item: visibleMessage, isViewable: true },
-        { item: { id: '2' }, isViewable: false },
+        {
+          item: createChatMessageFixture({
+            id: '2_nonce',
+            message_id: '2',
+            message_nonce: 'nonce',
+            timestamp: '00:00',
+          }),
+          isViewable: false,
+        },
       ],
     });
 
@@ -163,9 +213,7 @@ describe('ChatList', () => {
       />,
     );
 
-    const props = mockLegendList.mock.calls[0]?.[0] as {
-      onViewableItemsChanged: (info: { viewableItems: unknown[] }) => void;
-    };
+    const props = getRenderedProps();
     const viewabilityPayload = {
       viewableItems: [{ item: visibleMessage, isViewable: true }],
     };
@@ -202,13 +250,7 @@ describe('ChatList', () => {
       />,
     );
 
-    const props = mockLegendList.mock.calls[0]?.[0] as {
-      renderItem: (info: {
-        item: undefined;
-        index: number;
-        extraData: unknown;
-      }) => ReactElement;
-    };
+    const props = getRenderedProps();
 
     const { getByTestId } = render(
       props.renderItem({ item: undefined, index: 2, extraData: undefined }),
@@ -241,11 +283,7 @@ describe('ChatList', () => {
       />,
     );
 
-    const props = mockLegendList.mock.calls[0]?.[0] as {
-      maintainScrollAtEnd?: boolean;
-      maintainScrollAtEndThreshold?: number;
-      maintainVisibleContentPosition?: boolean;
-    };
+    const props = getRenderedProps();
     expect(props.maintainScrollAtEnd).toBe(false);
     expect(props.maintainScrollAtEndThreshold).toBe(0.1);
     expect(props.maintainVisibleContentPosition).toBe(true);
@@ -277,9 +315,7 @@ describe('ChatList', () => {
       />,
     );
 
-    const props = mockLegendList.mock.calls[0]?.[0] as {
-      onContentSizeChange?: () => void;
-    };
+    const props = getRenderedProps();
 
     expect(props.onContentSizeChange).toBe(onContentSizeChange);
   });
@@ -311,9 +347,7 @@ describe('ChatList', () => {
     const { rerender } = render(renderList('channel-a'));
     rerender(renderList('channel-b'));
 
-    const dataKeys = mockLegendList.mock.calls.map(
-      call => (call[0] as { dataKey?: string }).dataKey,
-    );
+    const dataKeys = mockLegendList.mock.calls.map(call => call[0].dataKey);
 
     expect(dataKeys).toEqual(['channel-a', 'channel-b']);
   });

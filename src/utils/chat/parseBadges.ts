@@ -1,11 +1,13 @@
+type ParsedBadges = {
+  'badges-raw': string;
+  badges: Record<string, string>;
+};
+
 /**
  * The IRC `badges` tag is a comma-separated string:
  * "moderator/1,subscriber/12,bits/1000".
  */
-export function parseBadges(badgesString?: string): {
-  'badges-raw': string;
-  badges: Record<string, string>;
-} {
+export function parseBadges(badgesString?: string): ParsedBadges {
   const badges: Record<string, string> = {};
   const badgesRaw = badgesString || '';
 

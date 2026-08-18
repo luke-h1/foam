@@ -23,11 +23,11 @@ interface FFzErrorResponse {
  * FFZ returns a 404 "No such room" for channels that have never configured FFZ;
  * that is a benign empty result, not a failure worth logging.
  */
-function isNoSuchRoomError(error: unknown): boolean {
+function isNoSuchRoomError(cause: unknown): boolean {
   return (
-    error instanceof ApiError &&
-    error.status === 404 &&
-    error.message.includes('No such room')
+    cause instanceof ApiError &&
+    cause.status === 404 &&
+    cause.message.includes('No such room')
   );
 }
 
@@ -143,6 +143,7 @@ export const ffzService = {
 
         if (room.vip_badge && Object.keys(room.vip_badge).length > 0) {
           const maxKey = Math.max(...Object.keys(room.vip_badge).map(Number));
+          // SAFETY: maxKey is the largest of this record's own keys, so the lookup always hits.
           const maxUrl = room.vip_badge[maxKey.toString()] as string;
 
           sanitisedBadges.push({
@@ -159,6 +160,7 @@ export const ffzService = {
 
         if (room.mod_urls && Object.keys(room.mod_urls).length > 0) {
           const maxKey = Math.max(...Object.keys(room.mod_urls).map(Number));
+          // SAFETY: maxKey is the largest of this record's own keys, so the lookup always hits.
           const maxUrl = room.mod_urls[maxKey.toString()] as string;
 
           sanitisedBadges.push({

@@ -1,39 +1,43 @@
-import { getUserMessageColor } from '@app/store/chat/actions/messages';
+import * as messageColorIndex from '@app/store/chat/actions/messageColorIndex';
 
 import { resolveMentionColor } from '../resolveMentionColor';
 
-jest.mock('@app/store/chat/actions/messages', () => ({
-  getUserMessageColor: jest.fn(),
-}));
-
-const mockGetUserMessageColor = jest.mocked(getUserMessageColor);
-
 describe('resolveMentionColor', () => {
+  let mockGetUserMessageColor: jest.SpiedFunction<
+    typeof messageColorIndex.getUserMessageColor
+  >;
+
   beforeEach(() => {
-    mockGetUserMessageColor.mockReturnValue(undefined);
+    mockGetUserMessageColor = jest
+      .spyOn(messageColorIndex, 'getUserMessageColor')
+      .mockReturnValue(undefined);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   test('uses chat history color for the mentioned user', () => {
     mockGetUserMessageColor.mockReturnValue('#9147FF');
 
     expect(resolveMentionColor('VelvetFathom93')).toBe('rgb(158, 93, 255)');
-    expect(getUserMessageColor).toHaveBeenCalledWith('VelvetFathom93');
+    expect(mockGetUserMessageColor).toHaveBeenCalledWith('VelvetFathom93');
   });
 
   test('falls back to deterministic palette when user has not chatted', () => {
     const color = resolveMentionColor('@SomeUser');
 
     expect(color).toBe('rgb(255, 105, 180)');
-    expect(getUserMessageColor).toHaveBeenCalledWith('SomeUser');
+    expect(mockGetUserMessageColor).toHaveBeenCalledWith('SomeUser');
   });
 
   test('returns a colour without consulting chat history for empty input', () => {
     expect(resolveMentionColor('')).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
-    expect(getUserMessageColor).not.toHaveBeenCalled();
+    expect(mockGetUserMessageColor).not.toHaveBeenCalled();
   });
 
   test('returns a colour without consulting chat history for @-only input', () => {
     expect(resolveMentionColor('@')).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
-    expect(getUserMessageColor).not.toHaveBeenCalled();
+    expect(mockGetUserMessageColor).not.toHaveBeenCalled();
   });
 });

@@ -3,67 +3,53 @@ import { Linking } from 'react-native';
 import { act, render, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
-import {
-  type AuthContextState,
-  useAuthContext,
-} from '@app/context/AuthContext';
+import type { AuthContextState } from '@app/context/AuthContext';
+import * as AuthContextModule from '@app/context/AuthContext';
+import * as useClearExpiredStorageItemsModule from '@app/hooks/useClearExpiredStorageItems';
+import * as useIcloudPreferenceSyncModule from '@app/hooks/useIcloudPreferenceSync';
+import * as useOnAppStateChangeModule from '@app/hooks/useOnAppStateChange';
+import * as usePopulateAuthModule from '@app/hooks/usePopulateAuth';
+import * as useRecoveredFromErrorModule from '@app/hooks/useRecoveredFromError';
 import {
   endDeepLinkAuth,
   isDeepLinkAuthInProgress,
 } from '@app/navigators/deepLinkAuthState';
+import * as navigationUtilities from '@app/navigators/navigationUtilities';
+import { logger } from '@app/utils/logger';
 
 import { RouterEffects } from '../RouterEffects';
 
-jest.mock('expo-router', () => ({
-  router: { replace: jest.fn() },
-  usePathname: () => '/',
-}));
+const mockedRouter = jest.mocked(router);
+const mockedUseAuthContext = jest.spyOn(AuthContextModule, 'useAuthContext');
 
-jest.mock('expo-quick-actions', () => ({
-  initial: null,
-  addListener: jest.fn(() => ({ remove: jest.fn() })),
-  isSupported: jest.fn(() => Promise.resolve(false)),
-  setItems: jest.fn(() => Promise.resolve()),
-}));
-
-jest.mock('@app/context/AuthContext', () => ({
-  useAuthContext: jest.fn(),
-}));
-
-jest.mock('@app/hooks/useClearExpiredStorageItems', () => ({
-  useClearExpiredStorageItems: jest.fn(),
-}));
-jest.mock('@app/hooks/useIcloudPreferenceSync', () => ({
-  useIcloudPreferenceSync: jest.fn(),
-}));
-jest.mock('@app/hooks/useOnAppStateChange', () => ({
-  useOnAppStateChange: jest.fn(),
-}));
-jest.mock('@app/hooks/useOnReconnect', () => ({}));
-jest.mock('@app/hooks/usePopulateAuth', () => ({
-  usePopulateAuth: jest.fn(),
-}));
-jest.mock('@app/hooks/useRecoveredFromError', () => ({
-  useRecoveredFromError: () => ({
+jest
+  .spyOn(useClearExpiredStorageItemsModule, 'useClearExpiredStorageItems')
+  .mockImplementation(() => {});
+jest
+  .spyOn(useIcloudPreferenceSyncModule, 'useIcloudPreferenceSync')
+  .mockImplementation(() => {});
+jest
+  .spyOn(useOnAppStateChangeModule, 'useOnAppStateChange')
+  .mockImplementation(() => {});
+jest
+  .spyOn(usePopulateAuthModule, 'usePopulateAuth')
+  .mockImplementation(() => {});
+jest
+  .spyOn(useRecoveredFromErrorModule, 'useRecoveredFromError')
+  .mockReturnValue({
     recoveredFromError: false,
     setRecoveredFromError: jest.fn(),
-  }),
-}));
+  });
 
-jest.mock('@app/navigators/navigationUtilities', () => ({
-  setNavigationReady: jest.fn(),
-  syncNavigationState: jest.fn(),
-}));
+jest
+  .spyOn(navigationUtilities, 'setNavigationReady')
+  .mockImplementation(() => {});
+jest
+  .spyOn(navigationUtilities, 'syncNavigationState')
+  .mockImplementation(() => {});
 
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    main: { warn: jest.fn() },
-    auth: { info: jest.fn() },
-  },
-}));
-
-const mockedRouter = jest.mocked(router);
-const mockedUseAuthContext = jest.mocked(useAuthContext);
+jest.spyOn(logger.main, 'warn').mockImplementation(() => {});
+jest.spyOn(logger.auth, 'info').mockImplementation(() => {});
 
 const linkingMock: { addEventListener: jest.Mock; getInitialURL: jest.Mock } =
   Object.assign(Linking, {

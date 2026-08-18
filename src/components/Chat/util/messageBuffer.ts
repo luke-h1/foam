@@ -63,7 +63,7 @@ export const createMessageBuffer = (
       const key = getChatMessageStoreId(message);
       const existingIndex = index.get(key);
 
-      if (typeof existingIndex === 'number') {
+      if (existingIndex !== undefined) {
         const existing = messages[existingIndex];
         messages[existingIndex] = {
           ...message,

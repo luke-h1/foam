@@ -309,8 +309,8 @@ function hasNonAsciiChar(word: string): boolean {
 
 const BACKWARD_EMOTE_MODIFIERS = new Set(['w!', 'h!', 'v!']);
 
-function isWhitespacePart(part: ParsedPart): boolean {
-  return part.type === 'text' && /^\s+$/.test(part.content);
+function isWhitespacePart(part: ParsedPart | undefined): boolean {
+  return part?.type === 'text' && /^\s+$/.test(part.content);
 }
 
 function applyEmoteCompositionPass(parts: ParsedPart[]): ParsedPart[] {
@@ -325,7 +325,7 @@ function applyEmoteCompositionPass(parts: ParsedPart[]): ParsedPart[] {
 
     if (part.type === 'emote' && part.zero_width) {
       let anchor = out.length - 1;
-      while (anchor >= 0 && isWhitespacePart(out[anchor] as ParsedPart)) {
+      while (anchor >= 0 && isWhitespacePart(out[anchor])) {
         anchor -= 1;
       }
       const base = anchor >= 0 ? out[anchor] : undefined;
@@ -349,10 +349,7 @@ function applyEmoteCompositionPass(parts: ParsedPart[]): ParsedPart[] {
 
     if (content && BACKWARD_EMOTE_MODIFIERS.has(content)) {
       let next = index + 1;
-      while (
-        next < parts.length &&
-        isWhitespacePart(parts[next] as ParsedPart)
-      ) {
+      while (next < parts.length && isWhitespacePart(parts[next])) {
         next += 1;
       }
       if (parts[next]?.type === 'emote') {
@@ -364,7 +361,7 @@ function applyEmoteCompositionPass(parts: ParsedPart[]): ParsedPart[] {
 
     if (content.startsWith('ffz') && content.length > 3) {
       let anchor = out.length - 1;
-      while (anchor >= 0 && isWhitespacePart(out[anchor] as ParsedPart)) {
+      while (anchor >= 0 && isWhitespacePart(out[anchor])) {
         anchor -= 1;
       }
       if (anchor >= 0 && out[anchor]?.type === 'emote') {

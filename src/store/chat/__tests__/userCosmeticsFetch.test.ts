@@ -1,44 +1,28 @@
+import * as cosmetics from '@app/store/chat/actions/cosmetics';
 import {
-  getUserBadge,
-  getUserBadgeId,
-  getUserPaintId,
-  requestUserCosmeticsViaPresence,
+  clearUserCosmeticsCache,
+  setUserBadge,
+  setUserPaint,
 } from '@app/store/chat/actions/cosmetics';
 import {
   clearFetchedCosmeticsUsers,
   fetchUserCosmetics,
 } from '@app/store/chat/actions/userCosmeticsFetch';
+import { logger } from '@app/utils/logger';
 
-import { setCachedCosmetics } from './__fixtures__/userCosmeticsFetch.fixture';
-
-jest.mock('@app/store/chat/actions/cosmetics', () => ({
-  getUserBadge: jest.fn(),
-  getUserBadgeId: jest.fn(),
-  getUserPaintId: jest.fn(),
-  requestUserCosmeticsViaPresence: jest.fn(() => Promise.resolve()),
-}));
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    stv: { debug: jest.fn() },
-  },
-}));
-
-const mockGetUserBadge = jest.mocked(getUserBadge);
-const mockGetUserBadgeId = jest.mocked(getUserBadgeId);
-const mockGetUserPaintId = jest.mocked(getUserPaintId);
-const mockRequestUserCosmeticsViaPresence = jest.mocked(
-  requestUserCosmeticsViaPresence,
-);
+let mockRequestUserCosmeticsViaPresence: jest.SpiedFunction<
+  typeof cosmetics.requestUserCosmeticsViaPresence
+>;
 
 describe('fetchUserCosmetics', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     clearFetchedCosmeticsUsers();
-    mockGetUserBadge.mockReturnValue(undefined);
-    mockGetUserBadgeId.mockReturnValue(undefined);
-    mockGetUserPaintId.mockReturnValue(undefined);
-    mockRequestUserCosmeticsViaPresence.mockResolvedValue(undefined);
+    clearUserCosmeticsCache();
+    mockRequestUserCosmeticsViaPresence = jest
+      .spyOn(cosmetics, 'requestUserCosmeticsViaPresence')
+      .mockResolvedValue(undefined);
+    jest.spyOn(logger.stv, 'debug').mockImplementation(() => {});
   });
 
   test('requests cosmetics via passive presence for visible chatters once', async () => {
@@ -51,25 +35,8 @@ describe('fetchUserCosmetics', () => {
   });
 
   test('does not refetch users that already have cached paint and renderable badge cosmetics', async () => {
-    setCachedCosmetics(
-      {
-        getUserBadgeId: mockGetUserBadgeId,
-        getUserPaintId: mockGetUserPaintId,
-      },
-      {
-        badgeId: 'badge-1',
-        paintId: 'paint-1',
-        twitchUserId: 'cached-user',
-      },
-    );
-    mockGetUserBadge.mockReturnValue({
-      id: 'badge-1',
-      url: 'https://cdn.7tv.app/badge/badge-1/4x.webp',
-      type: '7TV Badge',
-      title: 'Supporter',
-      set: 'badge-1',
-      provider: '7tv',
-    });
+    setUserPaint('cached-user', 'paint-1');
+    setUserBadge('cached-user', 'badge-1');
 
     await fetchUserCosmetics('cached-user');
 
@@ -77,17 +44,7 @@ describe('fetchUserCosmetics', () => {
   });
 
   test('does not refetch paint-only users when retryMissingBadge is requested', async () => {
-    setCachedCosmetics(
-      {
-        getUserBadgeId: mockGetUserBadgeId,
-        getUserPaintId: mockGetUserPaintId,
-      },
-      {
-        paintId: 'paint-1',
-        twitchUserId: 'paint-only-user',
-      },
-    );
-    mockGetUserBadge.mockReturnValue(undefined);
+    setUserPaint('paint-only-user', 'paint-1');
 
     await fetchUserCosmetics('paint-only-user');
     await fetchUserCosmetics('paint-only-user', { retryMissingBadge: true });
@@ -96,17 +53,10 @@ describe('fetchUserCosmetics', () => {
   });
 
   test('retries a previously fetched user when retryMissingBadge is requested and a badge binding lacks a renderable definition', async () => {
-    setCachedCosmetics(
-      {
-        getUserBadgeId: mockGetUserBadgeId,
-        getUserPaintId: mockGetUserPaintId,
-      },
-      {
-        badgeId: 'badge-1',
-        twitchUserId: 'retry-user',
-      },
-    );
-    mockGetUserBadge.mockReturnValue(undefined);
+    setUserBadge('retry-user', 'badge-1');
+    // getUserBadge always synthesises a renderable url once a badge id is
+    // bound, so this forces the one state that path can't produce on its own.
+    jest.spyOn(cosmetics, 'getUserBadge').mockReturnValue(undefined);
 
     await fetchUserCosmetics('retry-user');
     await fetchUserCosmetics('retry-user');

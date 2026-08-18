@@ -1,23 +1,23 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
-import { hydrateVisibleSevenTvAssets } from '@app/components/Chat/util/hydrateVisibleSevenTvAssets/hydrateVisibleSevenTvAssets';
-import {
-  fetchUserPersonalEmotes,
-  getCurrentEmoteData,
-  getUserPersonalEmotes,
-} from '@app/store/chat/actions/channelLoad';
-import { getUserBadge } from '@app/store/chat/actions/cosmetics';
-import { updateMessages } from '@app/store/chat/actions/messages';
-import { fetchUserCosmetics } from '@app/store/chat/actions/userCosmeticsFetch';
+import * as hydrateVisibleSevenTvAssetsModule from '@app/components/Chat/util/hydrateVisibleSevenTvAssets/hydrateVisibleSevenTvAssets';
+import * as channelLoadActions from '@app/store/chat/actions/channelLoad';
+import * as cosmeticsActions from '@app/store/chat/actions/cosmetics';
+import * as messagesActions from '@app/store/chat/actions/messages';
+import * as personalEmotesActions from '@app/store/chat/actions/personalEmotes';
+import * as userCosmeticsFetchActions from '@app/store/chat/actions/userCosmeticsFetch';
 import { visibleAssetHydration } from '@app/store/chat/actions/visibleAssetHydration';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import { usePersonalEmotesVersion } from '@app/store/chat/react/selectors';
-import { useChatHydrationPreferences } from '@app/store/preferences/selectors';
-import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
-import { extractEmotesFromTag } from '@app/utils/chat/extractEmotes/extractEmotesFromTag';
-import { getCachedSharedChatBadgeContext } from '@app/utils/chat/sharedChatBadges/getCachedSharedChatBadgeContext';
-import { getMessageBadges } from '@app/utils/chat/sharedChatBadges/getMessageBadges';
-import { getSharedChatBadgeContext } from '@app/utils/chat/sharedChatBadges/getSharedChatBadgeContext';
+import {
+  getPreferences,
+  replacePreferences,
+} from '@app/store/preferences/state';
+import * as emoteProcessorModule from '@app/utils/chat/emoteProcessor';
+import * as extractEmotesFromTagModule from '@app/utils/chat/extractEmotes/extractEmotesFromTag';
+import * as getCachedSharedChatBadgeContextModule from '@app/utils/chat/sharedChatBadges/getCachedSharedChatBadgeContext';
+import * as getMessageBadgesModule from '@app/utils/chat/sharedChatBadges/getMessageBadges';
+import * as getSharedChatBadgeContextModule from '@app/utils/chat/sharedChatBadges/getSharedChatBadgeContext';
+import { logger } from '@app/utils/logger';
 
 import { useChatMessageProcessing } from '../useChatMessageProcessing';
 import {
@@ -28,106 +28,51 @@ import {
   createTwitchEmote,
 } from './__fixtures__/useChat.fixture';
 
-jest.mock('@app/store/chat/actions/channelLoad', () => ({
-  fetchUserPersonalEmotes: jest.fn(() => Promise.resolve([])),
-  getCurrentEmoteData: jest.fn(),
-  getUserPersonalEmotes: jest.fn(() => []),
-}));
-
-jest.mock('@app/store/chat/actions/cosmetics', () => ({
-  getUserBadge: jest.fn(),
-}));
-
-jest.mock('@app/store/chat/actions/messages', () => ({
-  updateMessages: jest.fn(),
-}));
-
-jest.mock('@app/store/chat/actions/userCosmeticsFetch', () => ({
-  fetchUserCosmetics: jest.fn(() => Promise.resolve()),
-}));
-
-jest.mock('@app/store/chat/observables/chatStore', () => ({
-  chatStore$: {
-    emojis: {
-      peek: jest.fn(() => []),
-    },
-  },
-}));
-
-jest.mock('@app/store/chat/react/selectors', () => ({
-  usePersonalEmotesVersion: jest.fn(() => 0),
-}));
-
-jest.mock('@app/store/preferences/selectors', () => ({
-  useChatHydrationPreferences: jest.fn(),
-}));
-
-jest.mock('@app/utils/chat/emoteProcessor', () => ({
-  processEmotesWorklet: jest.fn((params: { inputString: string }) => [
+// fetchUserPersonalEmotes/getUserPersonalEmotes are re-exported by
+// channelLoad.ts from personalEmotes.ts; babel compiles re-exports as
+// non-configurable getters, so the spy must target the source module.
+const mockFetchUserPersonalEmotes = jest
+  .spyOn(personalEmotesActions, 'fetchUserPersonalEmotes')
+  .mockResolvedValue([]);
+const mockGetUserPersonalEmotes = jest
+  .spyOn(personalEmotesActions, 'getUserPersonalEmotes')
+  .mockReturnValue([]);
+const mockGetCurrentEmoteData = jest.spyOn(
+  channelLoadActions,
+  'getCurrentEmoteData',
+);
+const mockGetUserBadge = jest.spyOn(cosmeticsActions, 'getUserBadge');
+const mockUpdateMessages = jest.spyOn(messagesActions, 'updateMessages');
+const mockFetchUserCosmetics = jest
+  .spyOn(userCosmeticsFetchActions, 'fetchUserCosmetics')
+  .mockResolvedValue(undefined);
+const mockProcessEmotesWorklet = jest
+  .spyOn(emoteProcessorModule, 'processEmotesWorklet')
+  .mockImplementation((params: { inputString: string }) => [
     { type: 'text', content: `processed:${params.inputString}` },
-  ]),
-}));
-
-jest.mock('@app/utils/chat/extractEmotes/extractEmotesFromTag', () => ({
-  extractEmotesFromTag: jest.fn(() => []),
-}));
-
-jest.mock(
-  '../../util/hydrateVisibleSevenTvAssets/hydrateVisibleSevenTvAssets',
-  () => ({
-    hydrateVisibleSevenTvAssets: jest.fn(() => Promise.resolve(false)),
-  }),
+  ]);
+const mockExtractEmotesFromTag = jest
+  .spyOn(extractEmotesFromTagModule, 'extractEmotesFromTag')
+  .mockReturnValue([]);
+const mockHydrateVisibleSevenTvAssets = jest
+  .spyOn(hydrateVisibleSevenTvAssetsModule, 'hydrateVisibleSevenTvAssets')
+  .mockResolvedValue(false);
+const mockGetCachedSharedChatBadgeContext = jest.spyOn(
+  getCachedSharedChatBadgeContextModule,
+  'getCachedSharedChatBadgeContext',
 );
+const mockGetMessageBadges = jest
+  .spyOn(getMessageBadgesModule, 'getMessageBadges')
+  .mockReturnValue([]);
+const mockGetSharedChatBadgeContext = jest
+  .spyOn(getSharedChatBadgeContextModule, 'getSharedChatBadgeContext')
+  .mockResolvedValue({
+    sourceBadge: null,
+    sourceChannelBadges: [],
+  });
 
-jest.mock(
-  '@app/utils/chat/sharedChatBadges/getCachedSharedChatBadgeContext',
-  () => ({
-    getCachedSharedChatBadgeContext: jest.fn(),
-  }),
-);
-
-jest.mock('@app/utils/chat/sharedChatBadges/getMessageBadges', () => ({
-  getMessageBadges: jest.fn(() => []),
-}));
-
-jest.mock('@app/utils/chat/sharedChatBadges/getSharedChatBadgeContext', () => ({
-  getSharedChatBadgeContext: jest.fn(() =>
-    Promise.resolve({
-      sourceBadge: undefined,
-      sourceChannelBadges: [],
-    }),
-  ),
-}));
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    chat: {
-      debug: jest.fn(),
-      error: jest.fn(),
-    },
-  },
-}));
-
-const mockEmojisPeek = jest.mocked(chatStore$.emojis.peek);
-const mockExtractEmotesFromTag = jest.mocked(extractEmotesFromTag);
-const mockFetchUserPersonalEmotes = jest.mocked(fetchUserPersonalEmotes);
-const mockGetCachedSharedChatBadgeContext = jest.mocked(
-  getCachedSharedChatBadgeContext,
-);
-const mockGetCurrentEmoteData = jest.mocked(getCurrentEmoteData);
-const mockGetMessageBadges = jest.mocked(getMessageBadges);
-const mockGetSharedChatBadgeContext = jest.mocked(getSharedChatBadgeContext);
-const mockGetUserBadge = jest.mocked(getUserBadge);
-const mockGetUserPersonalEmotes = jest.mocked(getUserPersonalEmotes);
-const mockHydrateVisibleSevenTvAssets = jest.mocked(
-  hydrateVisibleSevenTvAssets,
-);
-const mockProcessEmotesWorklet = jest.mocked(processEmotesWorklet);
-const mockUpdateMessages = jest.mocked(updateMessages);
-const mockUseChatHydrationPreferences = jest.mocked(
-  useChatHydrationPreferences,
-);
-const mockUsePersonalEmotesVersion = jest.mocked(usePersonalEmotesVersion);
+jest.spyOn(logger.chat, 'debug').mockImplementation(() => {});
+jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
 
 function renderMessageProcessing() {
   const handleNewMessage = jest.fn();
@@ -186,8 +131,9 @@ describe('useChatMessageProcessing', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useRealTimers();
-    mockUsePersonalEmotesVersion.mockReturnValue(0);
-    mockUseChatHydrationPreferences.mockReturnValue({
+    chatStore$.personalEmotesVersion.set(0);
+    replacePreferences({
+      ...getPreferences(),
       disableEmoteAnimations: true,
       show7TvEmotes: true,
       show7tvBadges: true,
@@ -206,7 +152,7 @@ describe('useChatMessageProcessing', () => {
     );
     mockGetUserPersonalEmotes.mockReturnValue([personalEmote]);
     mockExtractEmotesFromTag.mockReturnValue([taggedSubscriberEmote]);
-    mockEmojisPeek.mockReturnValue([
+    chatStore$.emojis.set([
       createSevenTvEmote({
         id: 'emoji-1',
         name: '😀',
@@ -309,7 +255,7 @@ describe('useChatMessageProcessing', () => {
 
   test('falls back to the base message when no channel emote data is available', () => {
     mockGetCurrentEmoteData.mockReturnValue(createEmoteData());
-    mockEmojisPeek.mockReturnValue([]);
+    chatStore$.emojis.set([]);
     const baseMessage = createChatMessage();
     const { handleNewMessage, hook } = renderMessageProcessing();
 
@@ -369,7 +315,7 @@ describe('useChatMessageProcessing', () => {
       messages: hydrateParams?.messages.map(message => message.message_id),
     }).toEqual({
       channelId: 'channel-1',
-      fetchUserCosmetics,
+      fetchUserCosmetics: mockFetchUserCosmetics,
       hydrateCosmetics: true,
       hydratePersonalEmotes: true,
       messages: ['visible-1', 'visible-2'],
@@ -400,8 +346,8 @@ describe('useChatMessageProcessing', () => {
     expect(mockHydrateVisibleSevenTvAssets).toHaveBeenCalledTimes(1);
     visibleAssetHydration.hydratedMessageKeys.add('stale-hydration-key');
 
-    mockUsePersonalEmotesVersion.mockReturnValue(1);
     act(() => {
+      chatStore$.personalEmotesVersion.set(1);
       hook.rerender(undefined);
     });
 

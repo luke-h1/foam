@@ -26,7 +26,7 @@ type ScrollableRef =
 function isRefObject(
   ref: ScrollableRef,
 ): ref is RefObject<ScrollableWrapper | WebScrollable> {
-  return typeof ref === 'object' && ref !== null && 'current' in ref;
+  return ref !== null && 'current' in ref;
 }
 
 function getScrollableNode(

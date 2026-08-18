@@ -338,37 +338,59 @@ const seedGlobalCachesFromChannelCopies = (
   });
 };
 
+/**
+ * Values older installs persisted alongside `persisted`, which the current
+ * state type no longer declares.
+ */
+interface LegacyPersistedChatStore {
+  lastGlobalUpdate?: number;
+  recentMessagesByChannel?: Record<string, AnyChatMessageType[]>;
+}
+
+/**
+ * The observable children behind `LegacyPersistedChatStore`; the migration
+ * only needs each node's `delete`.
+ */
+interface LegacyPersistedNodes {
+  lastGlobalUpdate: { delete: () => void };
+  recentMessagesByChannel: { delete: () => void };
+}
+
+/**
+ * The observable children behind `STALE_CHANNEL_CACHE_KEYS`, most of which
+ * predate the current channel cache type.
+ */
+interface StaleChannelCacheNodes {
+  [key: string]: { delete: () => void } | undefined;
+}
+
 export const migratePersistedChatStore = () => {
-  const persisted = chatStore$.persisted.peek() as {
-    lastGlobalUpdate?: unknown;
-    recentMessagesByChannel?: unknown;
-  };
-  if (persisted.recentMessagesByChannel !== undefined) {
-    (
-      chatStore$.persisted as unknown as {
-        recentMessagesByChannel: { delete: () => void };
-      }
-    ).recentMessagesByChannel.delete();
+  // SAFETY: legend-state keeps persisted keys the state type dropped, so the migration widens by intersection to reach them.
+  const legacyPersisted =
+    chatStore$.persisted.peek() as ChatStoreState['persisted'] &
+      LegacyPersistedChatStore;
+  // SAFETY: same legacy keys, reached as observable nodes so they can be deleted.
+  const legacyPersisted$ = chatStore$.persisted as typeof chatStore$.persisted &
+    LegacyPersistedNodes;
+  if (legacyPersisted.recentMessagesByChannel !== undefined) {
+    legacyPersisted$.recentMessagesByChannel.delete();
   }
-  if (persisted.lastGlobalUpdate !== undefined) {
-    (
-      chatStore$.persisted as unknown as {
-        lastGlobalUpdate: { delete: () => void };
-      }
-    ).lastGlobalUpdate.delete();
+  if (legacyPersisted.lastGlobalUpdate !== undefined) {
+    legacyPersisted$.lastGlobalUpdate.delete();
   }
 
-  const caches = (chatStore$.persisted.channelCaches.peek() ?? {}) as Record<
-    string,
-    LegacyChannelCache
-  >;
+  const caches: Record<string, LegacyChannelCache> =
+    chatStore$.persisted.channelCaches.peek() ?? {};
   backfillPersistedProviders();
 
   batch(() => {
     seedGlobalCachesFromChannelCopies(caches);
     for (const [id, cache] of Object.entries(caches)) {
-      const cache$ = chatStore$.persisted.channelCaches[id] as unknown as
-        Record<string, { delete: () => void }> | undefined;
+      // SAFETY: same legacy keys, reached as observable nodes so they can be deleted.
+      const cache$ = chatStore$.persisted.channelCaches[id] as
+        | ((typeof chatStore$.persisted.channelCaches)[string] &
+            StaleChannelCacheNodes)
+        | undefined;
       if (!cache$) {
         continue;
       }

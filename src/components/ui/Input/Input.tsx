@@ -21,13 +21,15 @@ import {
 } from '@app/styles/ui';
 
 type InputVariant = 'outline' | 'soft' | 'subtle' | 'underline';
+
+type InputVariantConfig = { [TVariant in InputVariant]: InputColorConfig };
 export type InputRef = TextInput;
 export type InputSelection = { start: number; end: number };
 
 const generateVariantConfig = (
   color: UIColor,
   colorScheme: 'light' | 'dark',
-): Record<InputVariant, InputColorConfig> => {
+): InputVariantConfig => {
   const isDark = colorScheme === 'dark';
 
   if (color === 'black') {
@@ -143,7 +145,7 @@ const generateVariantConfig = (
 const generateVariantConfigFromBase = (
   baseHex: string,
   colorScheme: 'light' | 'dark',
-): Record<InputVariant, InputColorConfig> => {
+): InputVariantConfig => {
   const isDark = colorScheme === 'dark';
   const placeholderColor = `${baseHex}${isDark ? '99' : '66'}`;
 

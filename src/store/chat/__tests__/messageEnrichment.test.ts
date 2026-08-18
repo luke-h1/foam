@@ -1,20 +1,20 @@
-import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
+import * as channelLoadModule from '@app/store/chat/actions/channelLoad';
 import {
   enrichMessageSet,
   enrichVisibleMessage,
   hasEnrichmentEmoteSources,
   shouldEnrichMessage,
 } from '@app/store/chat/actions/messageEnrichment';
-import { updateMessages } from '@app/store/chat/actions/messages';
+import * as messagesModule from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import type { SanitisedEmote } from '@app/types/emote';
 import {
   createEmotePart,
   createTextPart,
 } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
-import { resolveMessageEmoteParts } from '@app/utils/chat/resolveMessageEmoteParts';
-import { getMessageBadges } from '@app/utils/chat/sharedChatBadges/getMessageBadges';
-import { getSharedChatBadgeContext } from '@app/utils/chat/sharedChatBadges/getSharedChatBadgeContext';
+import * as resolveMessageEmotePartsModule from '@app/utils/chat/resolveMessageEmoteParts';
+import * as getMessageBadgesModule from '@app/utils/chat/sharedChatBadges/getMessageBadges';
+import * as getSharedChatBadgeContextModule from '@app/utils/chat/sharedChatBadges/getSharedChatBadgeContext';
 
 import {
   createMockMessage,
@@ -22,67 +22,30 @@ import {
   createSystemMessage,
 } from './__fixtures__/messageEnrichment.fixture';
 
-jest.mock('@app/utils/chat/resolveMessageEmoteParts', () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports -- Jest mock factory runs before module imports
-  const {
-    createEmotePart: createEmotePartFixture,
-  } = require('@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture');
-  return {
-    resolveMessageEmoteParts: jest.fn((params: { text: string }) => [
-      createEmotePartFixture(params.text, { id: 'e1', url: '' }),
-    ]),
-  };
-});
+const mockGetCurrentEmoteData = jest.spyOn(
+  channelLoadModule,
+  'getCurrentEmoteData',
+);
+const mockGetMessageBadges = jest.spyOn(
+  getMessageBadgesModule,
+  'getMessageBadges',
+);
+const mockGetSharedChatBadgeContext = jest.spyOn(
+  getSharedChatBadgeContextModule,
+  'getSharedChatBadgeContext',
+);
+const mockResolveMessageEmoteParts = jest.spyOn(
+  resolveMessageEmotePartsModule,
+  'resolveMessageEmoteParts',
+);
+const mockUpdateMessages = jest.spyOn(messagesModule, 'updateMessages');
 
-jest.mock('@app/utils/chat/sharedChatBadges/getMessageBadges', () => ({
-  getMessageBadges: jest.fn(() => []),
-}));
-
-jest.mock('@app/utils/chat/sharedChatBadges/getSharedChatBadgeContext', () => ({
-  getSharedChatBadgeContext: jest.fn(() =>
-    Promise.resolve({
-      sourceBadge: null,
-      sourceChannelBadges: null,
-    }),
-  ),
-}));
-
-jest.mock('@app/store/chat/actions/channelLoad', () => ({
-  getCurrentEmoteData: jest.fn(),
-}));
-
-jest.mock('@app/store/chat/actions/messages', () => ({
-  updateMessages: jest.fn(),
-}));
-
-jest.mock('@app/store/chat/observables/chatStore', () => ({
-  chatStore$: {
-    emojis: {
-      peek: jest.fn(() => []),
-    },
-  },
-}));
-
-jest.mock('@app/utils/chat/findBadges', () => ({
-  findBadges: jest.fn(() => []),
-}));
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    chat: {
-      debug: jest.fn(),
-    },
-  },
-}));
-
-const mockEmojisPeek = jest.mocked(chatStore$.emojis.peek);
-const mockGetCurrentEmoteData = jest.mocked(getCurrentEmoteData);
-const mockGetMessageBadges = jest.mocked(getMessageBadges);
-const mockGetSharedChatBadgeContext = jest.mocked(getSharedChatBadgeContext);
-const mockResolveMessageEmoteParts = jest.mocked(resolveMessageEmoteParts);
-const mockUpdateMessages = jest.mocked(updateMessages);
-
-type ChatEmoteData = NonNullable<ReturnType<typeof getCurrentEmoteData>>;
+type ChatEmoteData = NonNullable<
+  ReturnType<typeof channelLoadModule.getCurrentEmoteData>
+>;
+type ResolveMessageEmotePartsParams = Parameters<
+  typeof resolveMessageEmotePartsModule.resolveMessageEmoteParts
+>[0];
 
 function createEmoteData(
   overrides: Partial<ChatEmoteData> = {},
@@ -151,7 +114,7 @@ describe('shouldEnrichMessage', () => {
 describe('hasEnrichmentEmoteSources', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockEmojisPeek.mockReturnValue([]);
+    chatStore$.emojis.set([]);
   });
 
   test('returns false when every emote source is empty', () => {
@@ -188,7 +151,7 @@ describe('hasEnrichmentEmoteSources', () => {
   });
 
   test('returns true when emoji emotes are loaded', () => {
-    mockEmojisPeek.mockReturnValue([
+    chatStore$.emojis.set([
       {
         id: 'emoji-1',
         name: '😀',
@@ -207,10 +170,10 @@ describe('hasEnrichmentEmoteSources', () => {
 describe('enrichMessageSet', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockEmojisPeek.mockReturnValue([]);
+    chatStore$.emojis.set([]);
     mockResolveMessageEmoteParts.mockImplementation(
-      (params: { text: string }) => [
-        createEmotePart(params.text, { id: 'e1', url: '' }),
+      ({ text }: ResolveMessageEmotePartsParams) => [
+        createEmotePart(text, { id: 'e1', url: '' }),
       ],
     );
   });
@@ -309,10 +272,10 @@ describe('enrichMessageSet', () => {
 describe('enrichVisibleMessage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockEmojisPeek.mockReturnValue([]);
+    chatStore$.emojis.set([]);
     mockResolveMessageEmoteParts.mockImplementation(
-      (params: { text: string }) => [
-        createEmotePart(params.text, { id: 'e1', url: '' }),
+      ({ text }: ResolveMessageEmotePartsParams) => [
+        createEmotePart(text, { id: 'e1', url: '' }),
       ],
     );
     mockGetCurrentEmoteData.mockReturnValue(createEmoteData());

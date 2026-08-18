@@ -1,8 +1,8 @@
 // eslint-disable-next-line no-restricted-imports
-import { Text, View } from 'react-native';
+import { Text, View, type ViewProps } from 'react-native';
 
 const createMockIconSet = (name: string) => {
-  const IconComponent = ({ ...props }: { [key: string]: unknown }) => (
+  const IconComponent = ({ ...props }: ViewProps) => (
     <View testID={`icon-${name}`} {...props}>
       <Text>{name}</Text>
     </View>

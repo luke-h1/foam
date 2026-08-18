@@ -6,21 +6,29 @@ import { type AllowedPrefix, logger } from '@app/utils/logger';
 
 import { getApiMonitoringContext } from './monitoring';
 
-const SERVICE_ERROR_MAP: Record<
-  string,
-  { exceptionName: string; errorName: MonitoringErrorName }
-> = {
-  twitch: { exceptionName: 'TwitchApiError', errorName: 'twitch_api_error' },
-  bttv: { exceptionName: 'BTTVApiError', errorName: 'bttv_api_error' },
-  stv: { exceptionName: 'SevenTVApiError', errorName: 'seven_tv_api_error' },
-  ffz: { exceptionName: 'FFZApiError', errorName: 'ffz_api_error' },
+type ServiceErrorInfo = {
+  exceptionName: string;
+  errorName: MonitoringErrorName;
 };
 
-function getServiceErrorInfo(logPrefix?: AllowedPrefix) {
+const SERVICE_ERROR_MAP = new Map<AllowedPrefix, ServiceErrorInfo>([
+  [
+    'twitch',
+    { exceptionName: 'TwitchApiError', errorName: 'twitch_api_error' },
+  ],
+  ['bttv', { exceptionName: 'BTTVApiError', errorName: 'bttv_api_error' }],
+  [
+    'stv',
+    { exceptionName: 'SevenTVApiError', errorName: 'seven_tv_api_error' },
+  ],
+  ['ffz', { exceptionName: 'FFZApiError', errorName: 'ffz_api_error' }],
+]);
+
+function getServiceErrorInfo(logPrefix?: AllowedPrefix): ServiceErrorInfo {
   return (
-    (logPrefix && SERVICE_ERROR_MAP[logPrefix]) ?? {
+    (logPrefix && SERVICE_ERROR_MAP.get(logPrefix)) ?? {
       exceptionName: 'ApiError',
-      errorName: 'api_error' as MonitoringErrorName,
+      errorName: 'api_error',
     }
   );
 }
@@ -36,8 +44,16 @@ export class ApiError extends Error {
   }
 }
 
+type QueryParamValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | readonly (string | number | boolean)[];
+
 interface RequestOptions {
-  params?: Record<string, unknown>;
+  params?: Record<string, QueryParamValue>;
   headers?: Record<string, string>;
 }
 
@@ -152,10 +168,9 @@ export function createApiClient({
     // per-request 'Client-Id' must replace a default 'Client-ID' rather than
     // coexist with it (fetch would combine them into "X, X" and Twitch
     // rejects the request).
-    const headers: Record<string, string> = {
-      Accept: 'application/json',
-      ...defaultHeaders,
-    };
+    const headers: Record<string, string> = {};
+    headers.Accept = 'application/json';
+    Object.assign(headers, defaultHeaders);
     const headerKeyMap = new Map(
       Object.keys(headers).map(k => [k.toLowerCase(), k]),
     );
@@ -303,6 +318,7 @@ export function createApiClient({
     });
 
     if (response.status === 204) {
+      // SAFETY: a 204 response has no body; callers hitting no-content endpoints type T accordingly
       return undefined as T;
     }
 
@@ -312,12 +328,21 @@ export function createApiClient({
   return {
     get: <T>(path: string, options?: RequestOptions) =>
       request<T>('GET', path, options),
-    post: <T>(path: string, data?: unknown, options?: RequestOptions) =>
-      request<T>('POST', path, { ...options, data }),
-    put: <T>(path: string, data?: unknown, options?: RequestOptions) =>
-      request<T>('PUT', path, { ...options, data }),
-    patch: <T>(path: string, data?: unknown, options?: RequestOptions) =>
-      request<T>('PATCH', path, { ...options, data }),
+    post: <T, Body = unknown>(
+      path: string,
+      data?: Body,
+      options?: RequestOptions,
+    ) => request<T>('POST', path, { ...options, data }),
+    put: <T, Body = unknown>(
+      path: string,
+      data?: Body,
+      options?: RequestOptions,
+    ) => request<T>('PUT', path, { ...options, data }),
+    patch: <T, Body = unknown>(
+      path: string,
+      data?: Body,
+      options?: RequestOptions,
+    ) => request<T>('PATCH', path, { ...options, data }),
     delete: <T>(path: string, options?: RequestOptions) =>
       request<T>('DELETE', path, options),
     setAuthToken: (token: string) => {

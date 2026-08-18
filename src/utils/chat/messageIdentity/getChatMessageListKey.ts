@@ -6,6 +6,12 @@ import { normaliseMessageField } from '@app/utils/chat/messageIdentity/normalise
 const fallbackMessageKeys = new WeakMap<object, string>();
 let fallbackMessageKeyId = 0;
 
+function isMessageObject(
+  message: AnyChatMessageType | undefined,
+): message is AnyChatMessageType {
+  return Object(message) === message;
+}
+
 /**
  * List key for a message. Unlike `getChatMessageStoreId` this never returns a
  * shared key for an unrenderable message - two malformed rows must not
@@ -24,7 +30,7 @@ export function getChatMessageListKey(
     return getChatMessageKey(message.message_id, message.message_nonce);
   }
 
-  if (message && typeof message === 'object') {
+  if (isMessageObject(message)) {
     const existingKey = fallbackMessageKeys.get(message);
     if (existingKey) {
       return existingKey;

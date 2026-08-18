@@ -1,5 +1,10 @@
-import type { transportFunctionType } from 'react-native-logs';
+import type {
+  ConsoleTransportOptions,
+  transportFunctionType,
+} from 'react-native-logs';
 import { consoleTransport, logger as rnlogger } from 'react-native-logs';
+
+import { z } from 'zod';
 
 import type { LogMetadata } from '@app/lib/sentry';
 import { forwardLogToSentry } from '@app/lib/sentry';
@@ -8,15 +13,29 @@ import { isRecord, sanitiseLogValue } from '@app/utils/log/sanitiseLogValue';
 export type { LogMetadata } from '@app/lib/sentry';
 
 type TransportProps = Parameters<
-  transportFunctionType<Record<string, unknown>>
+  transportFunctionType<ConsoleTransportOptions>
 >[0];
 
-function stringifyLogMessage(value: unknown): string {
-  if (typeof value === 'string') {
-    return `${sanitiseLogValue(value)} `;
+type LogArgument =
+  | string
+  | number
+  | boolean
+  | Error
+  | VoidFunction
+  | LogMetadata
+  | readonly LogArgument[]
+  | null
+  | undefined;
+
+const logStringSchema = z.string();
+
+function stringifyLogMessage(value: LogArgument): string {
+  const stringValue = logStringSchema.safeParse(value);
+  if (stringValue.success) {
+    return `${sanitiseLogValue(stringValue.data)} `;
   }
 
-  if (typeof value === 'function') {
+  if (value instanceof Function) {
     return `[function ${value.name || 'anonymous'}()] `;
   }
 
@@ -32,7 +51,7 @@ function stringifyLogMessage(value: unknown): string {
 }
 
 const createGenericTransport =
-  (): transportFunctionType<Record<string, unknown>> =>
+  (): transportFunctionType<ConsoleTransportOptions> =>
   (props: TransportProps) => {
     if (!props?.level) {
       return;
@@ -58,7 +77,7 @@ const createGenericTransport =
 const genericTransport = createGenericTransport();
 
 const createMonitoringTransport =
-  (): transportFunctionType<Record<string, unknown>> =>
+  (): transportFunctionType<ConsoleTransportOptions> =>
   (props: TransportProps) => {
     if (!props?.level) {
       return;
@@ -78,23 +97,26 @@ const createMonitoringTransport =
     if (secondArg instanceof Error) {
       error = secondArg;
     } else if (isRecord(secondArg)) {
+      // SAFETY: isRecord guarantees a plain object; LogMetadata's typed keys are re-validated before use (name via string parse, error as unknown)
       metadata = secondArg as LogMetadata;
       error = metadata.error;
     }
 
-    if (levelText === 'info' && typeof metadata?.name !== 'string') {
+    if (
+      levelText === 'info' &&
+      !logStringSchema.safeParse(metadata?.name).success
+    ) {
       return;
     }
 
+    let message: string;
     if (firstArg instanceof Error) {
       error ??= firstArg;
+      message = firstArg.message;
+    } else {
+      const parsedMessage = logStringSchema.safeParse(firstArg);
+      message = parsedMessage.success ? parsedMessage.data : String(firstArg);
     }
-    const message =
-      firstArg instanceof Error
-        ? firstArg.message
-        : typeof firstArg === 'string'
-          ? firstArg
-          : String(firstArg);
 
     const entry = {
       level:
@@ -263,7 +285,7 @@ const createExtendedLogger = (prefix: AllowedPrefix): LoggingMethods => {
   };
 };
 
-export const logger: Record<AllowedPrefix, LoggingMethods> = {
+export const logger = {
   main: createExtendedLogger('main'),
   api: createExtendedLogger('api'),
   stv: createExtendedLogger('stv'),
@@ -280,4 +302,4 @@ export const logger: Record<AllowedPrefix, LoggingMethods> = {
   twitchWs: createExtendedLogger('twitchWs'),
   stvWs: createExtendedLogger('stvWs'),
   remoteConfig: createExtendedLogger('remoteConfig'),
-};
+} satisfies Record<AllowedPrefix, LoggingMethods>;

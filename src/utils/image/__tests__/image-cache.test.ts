@@ -1,120 +1,3 @@
-jest.mock('expo-file-system', () => {
-  const existingUris = new Set<string>();
-  let downloadCount = 0;
-  let fileSize = 128;
-  let deferDownloads = false;
-  const pendingDownloads: (() => void)[] = [];
-
-  class Directory {
-    uri: string;
-
-    constructor(base: string | { uri: string }, name?: string) {
-      const baseUri = typeof base === 'string' ? base : base.uri;
-      this.uri = name ? `${baseUri.replace(/\/?$/, '/')}${name}/` : baseUri;
-    }
-
-    get exists() {
-      return true;
-    }
-
-    delete() {
-      Array.from(existingUris).forEach(uri => {
-        if (uri.startsWith(this.uri)) {
-          existingUris.delete(uri);
-        }
-      });
-    }
-  }
-
-  class File {
-    uri: string;
-
-    constructor(base: string | { uri: string }, name?: string) {
-      this.uri =
-        typeof base === 'string'
-          ? base
-          : `${base.uri.replace(/\/?$/, '/')}${name ?? ''}`;
-    }
-
-    static async downloadFileAsync(_url: string, cacheDir: Directory) {
-      if (deferDownloads) {
-        await new Promise<void>(resolve => {
-          pendingDownloads.push(resolve);
-        });
-      }
-      downloadCount += 1;
-      const file = new File(cacheDir, `download-${downloadCount}.png`);
-      existingUris.add(file.uri);
-      return file;
-    }
-
-    get exists() {
-      return existingUris.has(this.uri);
-    }
-
-    get size() {
-      return fileSize;
-    }
-
-    delete() {
-      existingUris.delete(this.uri);
-    }
-
-    move(destination: File) {
-      existingUris.delete(this.uri);
-      this.uri = destination.uri;
-      existingUris.add(destination.uri);
-    }
-
-    write() {
-      existingUris.add(this.uri);
-    }
-
-    async base64() {
-      return 'base64';
-    }
-  }
-
-  return {
-    Directory,
-    File,
-    Paths: {
-      cache: 'file:///cache/',
-    },
-    __mockFileSystem: {
-      downloadCount: () => downloadCount,
-      evict: (uri: string) => existingUris.delete(uri),
-      exists: (uri: string) => existingUris.has(uri),
-      pendingDownloadCount: () => pendingDownloads.length,
-      releaseDownload: () => {
-        pendingDownloads.shift()?.();
-      },
-      releaseAllDownloads: () => {
-        while (pendingDownloads.length > 0) {
-          pendingDownloads.shift()?.();
-        }
-      },
-      setDeferDownloads: (defer: boolean) => {
-        deferDownloads = defer;
-      },
-      setFileSize: (size: number) => {
-        fileSize = size;
-      },
-      reset: () => {
-        downloadCount = 0;
-        existingUris.clear();
-        fileSize = 128;
-        deferDownloads = false;
-        pendingDownloads.length = 0;
-      },
-    },
-  };
-});
-
-jest.mock('expo-file-system/legacy', () => ({
-  makeDirectoryAsync: jest.fn(),
-}));
-
 import {
   cacheImageFromUrl,
   clearSessionCache,
@@ -122,19 +5,26 @@ import {
   listCachedImages,
 } from '@app/utils/image/image-cache';
 
-const fileSystemMock = jest.requireMock('expo-file-system')
-  .__mockFileSystem as {
-  downloadCount: () => number;
-  evict: (uri: string) => void;
-  exists: (uri: string) => boolean;
-  pendingDownloadCount: () => number;
-  releaseDownload: () => void;
-  releaseAllDownloads: () => void;
-  setDeferDownloads: (defer: boolean) => void;
-  setFileSize: (size: number) => void;
-  reset: () => void;
+/**
+ * `require`, not a static import: `__mockFileSystem` only exists on the
+ * `__mocks__/expo-file-system.ts` manual mock, not the real module's types.
+ */
+// SAFETY: __mocks__/expo-file-system.ts defines __mockFileSystem with exactly this shape.
+const { __mockFileSystem: fileSystemMock } = require('expo-file-system') as {
+  __mockFileSystem: {
+    downloadCount: () => number;
+    evict: (uri: string) => boolean;
+    exists: (uri: string) => boolean;
+    pendingDownloadCount: () => number;
+    releaseDownload: () => void;
+    releaseAllDownloads: () => void;
+    setDeferDownloads: (defer: boolean) => void;
+    setFileSize: (size: number) => void;
+    reset: () => void;
+  };
 };
-const mmkvMock = jest.requireMock('react-native-mmkv');
+
+const { __resetMMKV } = require('react-native-mmkv');
 
 const flushMicrotasks = () =>
   new Promise<void>(resolve => {
@@ -144,7 +34,7 @@ const flushMicrotasks = () =>
 describe('image-cache', () => {
   beforeEach(() => {
     clearSessionCache();
-    mmkvMock.__resetMMKV();
+    __resetMMKV();
     fileSystemMock.reset();
   });
 

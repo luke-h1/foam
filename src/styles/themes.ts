@@ -401,7 +401,8 @@ function getThemeColorGroup(color: ThemeColor): ThemeColorGroup {
 }
 
 function getThemeColorGroupValue(group: ThemeColorGroup, token: string) {
-  return group[token as keyof typeof group];
+  const values: Partial<Record<string, string>> = group;
+  return values[token];
 }
 
 export function resolveThemeColor(
@@ -412,6 +413,7 @@ export function resolveThemeColor(
   },
 ): string {
   if (isThemeColorToken(color)) {
+    // SAFETY: ThemeColorToken is built as `${ThemeColor}.${key}`, and no key contains a dot.
     const [groupName, tokenName] = color.split('.') as [ThemeColor, string];
     const group = getThemeColorGroup(groupName);
 

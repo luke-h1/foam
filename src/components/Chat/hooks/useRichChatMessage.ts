@@ -232,10 +232,9 @@ export function useRichChatMessage<
       (isChannelPointRedemption && hasSharedChannelPointsMessage(message))),
   );
 
+  const messageRoomId = userstate['room-id'];
   const roomId =
-    (typeof userstate['room-id'] === 'string'
-      ? userstate['room-id']
-      : undefined) ?? broadcasterId;
+    String(messageRoomId) === messageRoomId ? messageRoomId : broadcasterId;
 
   const canReply =
     onReply &&

@@ -10,6 +10,12 @@ import { logger } from '@app/utils/logger';
 const missingBadgeIds = new Set<string>();
 const loggedMissingBadgeIds = new Set<string>();
 
+interface MissingBadgeLogContext {
+  name: string;
+  badgeId: string;
+  ttvUserId?: string;
+}
+
 export const reportMissingBadge = (
   badgeId: string,
   ttvUserId?: string,
@@ -19,11 +25,14 @@ export const reportMissingBadge = (
     return;
   }
   loggedMissingBadgeIds.add(badgeId);
-  logger.stv.warn('7TV badge entitlement has no loaded definition', {
+  const context: MissingBadgeLogContext = {
     name: 'seventv.badge.missing',
     badgeId,
-    ...(ttvUserId ? { ttvUserId } : {}),
-  });
+  };
+  if (ttvUserId) {
+    context.ttvUserId = ttvUserId;
+  }
+  logger.stv.warn('7TV badge entitlement has no loaded definition', context);
 };
 
 export const clearMissingBadge = (badgeId: string): void => {

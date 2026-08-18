@@ -18,6 +18,13 @@ export type ProviderResourceType = 'badges' | 'emotes';
 
 export type Identifiable = { id: string };
 
+/**
+ * What a provider resource fetch rejects with by the time it reaches this
+ * module: an error raised by the service layer, or a bare string from a
+ * rejection that never carried one.
+ */
+export type ProviderFailureReason = Error | string;
+
 export type ChannelEmoteCacheKey =
   | 'bttvChannelEmotes'
   | 'ffzChannelEmotes'
@@ -127,16 +134,17 @@ const fetchGlobalResourceOnce = <T extends Identifiable>(
   const now = Date.now();
   const cached = globalResourceCache.get(key);
   if (cached && now - cached.fetchedAt < GLOBAL_RESOURCE_TTL_MS) {
+    // SAFETY: a cache key is only ever populated by one fetcher, so its stored promise resolves that key's item type
     return cached.promise as Promise<T[]>;
   }
-  const promise = fetcher().catch((error: unknown) => {
+  const promise = fetcher().catch((error: ProviderFailureReason) => {
     if (globalResourceCache.get(key)?.promise === promise) {
       globalResourceCache.delete(key);
     }
     throw error;
   });
   globalResourceCache.set(key, { fetchedAt: now, promise });
-  return promise as Promise<T[]>;
+  return promise;
 };
 
 export const buildSubscriberEmoteSpec = ({
@@ -395,9 +403,9 @@ const withTimeout = <T>(
         clearTimeout(timer);
         resolve(value);
       },
-      error => {
+      (error: ProviderFailureReason) => {
         clearTimeout(timer);
-        reject(error as Error);
+        reject(error);
       },
     );
   });
@@ -427,14 +435,14 @@ const getCachedSliceForSpec = (
     existingCache,
     existingGlobalCache,
   }: Pick<ResourceCacheContext, 'existingCache' | 'existingGlobalCache'>,
-): Identifiable[] =>
-  spec.scope === 'global'
-    ? (existingGlobalCache?.[
-        spec.key as GlobalEmoteCacheKey | GlobalBadgeCacheKey
-      ] ?? [])
-    : (existingCache?.[
-        spec.key as ChannelEmoteCacheKey | ChannelBadgeCacheKey
-      ] ?? []);
+): Identifiable[] => {
+  const slices: Partial<Record<ResourceCacheKey, Identifiable[]>> =
+    spec.scope === 'global'
+      ? (existingGlobalCache ?? {})
+      : (existingCache ?? {});
+
+  return slices[spec.key] ?? [];
+};
 
 const reconcileSettledSpec = <
   TKey extends ResourceCacheKey,
@@ -447,6 +455,7 @@ const reconcileSettledSpec = <
     return deduplicateById(result.value);
   }
 
+  // SAFETY: the cache slice a spec's key names holds the same item type that spec fetches
   const cachedItems = getCachedSliceForSpec(spec, context) as TItem[];
 
   if (cachedItems.length > 0) {
@@ -527,14 +536,16 @@ export const reportResourceResults = ({
   });
 };
 
-export const PROVIDER_DISPLAY_NAMES: Record<ProviderName, string> = {
-  bttv: 'BTTV',
-  ffz: 'FFZ',
-  seven_tv: '7TV',
-  twitch: 'Twitch',
-};
+export const PROVIDER_DISPLAY_NAMES = new Map<ProviderName, string>([
+  ['bttv', 'BTTV'],
+  ['ffz', 'FFZ'],
+  ['seven_tv', '7TV'],
+  ['twitch', 'Twitch'],
+]);
 
-export const describeProviderFailureReason = (reason: unknown): string => {
+export const describeProviderFailureReason = (
+  reason: ProviderFailureReason,
+): string => {
   if (reason instanceof ResourceFetchTimeoutError) {
     return 'timed out';
   }
@@ -561,12 +572,10 @@ export const collectFailedProviderReasons = (
   });
 
   const labels: string[] = [];
-  for (const provider of Object.keys(
-    PROVIDER_DISPLAY_NAMES,
-  ) as ProviderName[]) {
+  for (const [provider, displayName] of PROVIDER_DISPLAY_NAMES) {
     const reason = reasonByProvider.get(provider);
     if (reason) {
-      labels.push(`${PROVIDER_DISPLAY_NAMES[provider]} (${reason})`);
+      labels.push(`${displayName} (${reason})`);
     }
   }
   return labels;

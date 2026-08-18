@@ -8,12 +8,12 @@ import type {
 // size first so inline renders never pay for a 4x animated decode just
 // because their exact scale is missing. 2x is the floor - only an explicit 1x
 // request resolves to a 1x variant.
-const scaleScanOrders: Record<EmoteImageScale, EmoteImageScale[]> = {
+const scaleScanOrders = {
   '1x': ['1x', '2x', '3x', '4x'],
   '2x': ['2x', '3x', '4x'],
   '3x': ['3x', '2x', '4x'],
   '4x': ['4x', '3x', '2x'],
-};
+} satisfies Record<EmoteImageScale, EmoteImageScale[]>;
 
 export function pickEmoteVariantUrl({
   fallbackUrl,

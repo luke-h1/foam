@@ -2,13 +2,7 @@ import { sevenTvGqlApi } from '@app/services/api/clients';
 
 import { sevenTvV4Client } from '../client';
 
-jest.mock('@app/services/api/clients', () => ({
-  sevenTvGqlApi: {
-    post: jest.fn(),
-  },
-}));
-
-const post = jest.mocked(sevenTvGqlApi.post);
+const post = jest.spyOn(sevenTvGqlApi, 'post');
 
 describe('sevenTvV4Client.query', () => {
   beforeEach(() => {

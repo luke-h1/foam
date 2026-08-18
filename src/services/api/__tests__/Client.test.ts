@@ -1,40 +1,68 @@
+import type { FetchResponse } from 'expo/build/winter/fetch/FetchResponse';
+import { fetch } from 'expo/fetch';
+
 import { ApiError, createApiClient } from '@app/services/api/Client';
 import { logger } from '@app/utils/logger';
 
-const mockFetch = jest.fn();
+type MockRequestInit = {
+  method: string;
+  headers: Record<string, string>;
+  body: string | undefined;
+  signal: AbortSignal;
+};
 
-jest.mock('expo/fetch', () => ({
-  fetch: (...args: unknown[]) => mockFetch(...args) as Promise<unknown>,
-}));
+type MockResponseBody = {
+  data?: string[];
+  error?: string;
+  message?: string;
+  ok?: boolean;
+  status?: number;
+};
 
-jest.mock('@app/utils/logger', () => {
-  const categories: Record<string, unknown> = {};
-  return {
-    logger: new Proxy(
-      {},
-      {
-        get: (_target, prop: string) => {
-          categories[prop] ??= {
-            debug: jest.fn(),
-            info: jest.fn(),
-            warn: jest.fn(),
-            error: jest.fn(),
-          };
-          return categories[prop];
-        },
-      },
-    ),
-  };
-});
+/**
+ * `expo/fetch` already carries a faithful jest.fn() mock at
+ * __mocks__/expo/fetch.ts (auto-applied to every test), so this file only
+ * needs a typed handle onto it.
+ */
+const mockFetch = jest.mocked(fetch);
 
-function jsonResponse(body: unknown, status = 200) {
-  return {
+const apiWarnSpy = jest.spyOn(logger.api, 'warn').mockImplementation(() => {});
+const apiErrorSpy = jest
+  .spyOn(logger.api, 'error')
+  .mockImplementation(() => {});
+const ffzWarnSpy = jest.spyOn(logger.ffz, 'warn').mockImplementation(() => {});
+const ffzErrorSpy = jest
+  .spyOn(logger.ffz, 'error')
+  .mockImplementation(() => {});
+
+function jsonResponse(body: MockResponseBody, status = 200): FetchResponse {
+  const response = {
     ok: status < 400,
     status,
     statusText: status < 400 ? 'OK' : 'Error',
     json: () => Promise.resolve(body),
     text: () => Promise.resolve(JSON.stringify(body)),
   };
+  // SAFETY: Client.ts only ever reads `.ok`, `.status` and `.text()` off the
+  // response it awaits from fetch(); the real FetchResponse class carries
+  // private fields and native-bridge methods this plain object never needs.
+  return response as FetchResponse;
+}
+
+function firstRequestInit(): MockRequestInit {
+  const call = mockFetch.mock.calls[0];
+  if (call === undefined) {
+    throw new Error('fetch was not called');
+  }
+  const [, init] = call;
+  if (init === undefined) {
+    throw new Error('fetch was called without an init');
+  }
+  // SAFETY: createApiClient always calls fetch with a headers/body/signal
+  // request init shaped exactly like MockRequestInit; FetchRequestInit's
+  // broader HeadersInit/BodyInit/AbortSignal-or-null types only cover fetch
+  // callers this client never exercises.
+  return init as MockRequestInit;
 }
 
 describe('createApiClient', () => {
@@ -115,11 +143,9 @@ describe('createApiClient', () => {
 
     await client.get('/streams');
 
-    const [, requestInit] = mockFetch.mock.calls[0] as [
-      string,
-      { headers: Record<string, string> },
-    ];
-    expect(requestInit.headers).toEqual({ Accept: 'application/json' });
+    expect(firstRequestInit().headers).toEqual({
+      Accept: 'application/json',
+    });
   });
 
   test('throws ApiError with the response body for HTTP failures', async () => {
@@ -138,13 +164,16 @@ describe('createApiClient', () => {
   });
 
   test('resolves undefined for 204 responses', async () => {
+    // SAFETY: Client.ts never calls `.json()` on a 204 response, only `.ok`,
+    // `.status` and `.text()`, so this plain object stands in for the real
+    // FetchResponse class without its private fields.
     mockFetch.mockResolvedValueOnce({
       ok: true,
       status: 204,
       statusText: 'No Content',
       json: () => Promise.reject(new Error('no body')),
       text: () => Promise.resolve(''),
-    });
+    } as FetchResponse);
     const client = createApiClient({ baseURL: 'https://api.test/helix' });
 
     await expect(
@@ -166,11 +195,7 @@ describe('createApiClient', () => {
     client.setAuthToken('anon-token');
     await expect(pending).resolves.toEqual({ data: [] });
 
-    const [, requestInit] = mockFetch.mock.calls[0] as [
-      string,
-      { headers: Record<string, string> },
-    ];
-    expect(requestInit.headers.Authorization).toBe('Bearer anon-token');
+    expect(firstRequestInit().headers.Authorization).toBe('Bearer anon-token');
   });
 
   test('requiresAuth re-arms the gate after removeAuthToken', async () => {
@@ -189,11 +214,7 @@ describe('createApiClient', () => {
     client.setAuthToken('anon-token');
     await expect(pending).resolves.toEqual({ data: [] });
 
-    const [, requestInit] = mockFetch.mock.calls[0] as [
-      string,
-      { headers: Record<string, string> },
-    ];
-    expect(requestInit.headers.Authorization).toBe('Bearer anon-token');
+    expect(firstRequestInit().headers.Authorization).toBe('Bearer anon-token');
   });
 
   test('requiresAuth does not defer when an explicit Authorization header is set', async () => {
@@ -208,11 +229,7 @@ describe('createApiClient', () => {
       client.get('/users', { headers: { Authorization: 'Bearer explicit' } }),
     ).resolves.toEqual({ data: [] });
 
-    const [, requestInit] = mockFetch.mock.calls[0] as [
-      string,
-      { headers: Record<string, string> },
-    ];
-    expect(requestInit.headers.Authorization).toBe('Bearer explicit');
+    expect(firstRequestInit().headers.Authorization).toBe('Bearer explicit');
   });
 
   test('logs 4xx failures at warn level, not error', async () => {
@@ -221,8 +238,8 @@ describe('createApiClient', () => {
 
     await expect(client.get('/users')).rejects.toBeInstanceOf(ApiError);
 
-    expect(jest.mocked(logger.api.warn)).toHaveBeenCalledTimes(1);
-    expect(jest.mocked(logger.api.error)).not.toHaveBeenCalled();
+    expect(apiWarnSpy).toHaveBeenCalledTimes(1);
+    expect(apiErrorSpy).not.toHaveBeenCalled();
   });
 
   test('does not log the benign FFZ "No such room" 404', async () => {
@@ -239,8 +256,8 @@ describe('createApiClient', () => {
 
     await expect(client.get('/room/id/999')).rejects.toBeInstanceOf(ApiError);
 
-    expect(jest.mocked(logger.ffz.warn)).not.toHaveBeenCalled();
-    expect(jest.mocked(logger.ffz.error)).not.toHaveBeenCalled();
+    expect(ffzWarnSpy).not.toHaveBeenCalled();
+    expect(ffzErrorSpy).not.toHaveBeenCalled();
   });
 
   test('still logs other FFZ 404s that are not "No such room"', async () => {
@@ -254,7 +271,7 @@ describe('createApiClient', () => {
 
     await expect(client.get('/set/global')).rejects.toBeInstanceOf(ApiError);
 
-    expect(jest.mocked(logger.ffz.warn)).toHaveBeenCalledTimes(1);
+    expect(ffzWarnSpy).toHaveBeenCalledTimes(1);
   });
 
   test('logs 5xx failures at error level', async () => {
@@ -263,8 +280,8 @@ describe('createApiClient', () => {
 
     await expect(client.get('/users')).rejects.toBeInstanceOf(ApiError);
 
-    expect(jest.mocked(logger.api.error)).toHaveBeenCalledTimes(1);
-    expect(jest.mocked(logger.api.warn)).not.toHaveBeenCalled();
+    expect(apiErrorSpy).toHaveBeenCalledTimes(1);
+    expect(apiWarnSpy).not.toHaveBeenCalled();
   });
 
   test('replays the request once when onUnauthorized recovers a 401', async () => {
@@ -285,7 +302,7 @@ describe('createApiClient', () => {
     expect(onUnauthorized).toHaveBeenCalledWith(
       JSON.stringify({ message: 'mismatch' }),
     );
-    expect(jest.mocked(logger.api.warn)).not.toHaveBeenCalled();
+    expect(apiWarnSpy).not.toHaveBeenCalled();
   });
 
   test('surfaces the 401 when onUnauthorized declines to recover', async () => {

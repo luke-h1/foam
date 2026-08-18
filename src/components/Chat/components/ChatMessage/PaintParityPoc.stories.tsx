@@ -36,6 +36,14 @@ const animatedPaints = sevenTvPaintsFixture
   .filter(isAnimatedPaint)
   .map(convertV4PaintToPaintData);
 
+function firstPaint(paints: PaintData[]): PaintData {
+  const [paint] = paints;
+  if (!paint) {
+    throw new Error('sevenTvPaintsFixture yielded no paints for this gallery');
+  }
+  return paint;
+}
+
 function ComparisonRow({ paint }: { paint: PaintData }) {
   return (
     <View style={{ gap: 4, paddingBottom: 16 }}>
@@ -115,14 +123,14 @@ function Gallery({ data }: { data: PaintData[] }) {
 
 export const ShadowPaints: Story = {
   args: {
-    paint: shadowPaints[0] as PaintData,
+    paint: firstPaint(shadowPaints),
   },
   render: () => <Gallery data={shadowPaints} />,
 };
 
 export const AnimatedPaints: Story = {
   args: {
-    paint: animatedPaints[0] as PaintData,
+    paint: firstPaint(animatedPaints),
   },
   render: () => <Gallery data={animatedPaints} />,
 };

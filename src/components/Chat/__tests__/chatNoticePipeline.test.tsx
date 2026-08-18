@@ -1,13 +1,14 @@
 /* eslint-disable camelcase */
 import { render } from '@testing-library/react-native';
 
-import type {
-  AnyChatMessageType,
-  ChatMessageType,
-} from '@app/store/chat/types/constants';
+import { twitchService } from '@app/services/twitch-service';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import type { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
+import type { TwitchClip } from '@app/types/twitch/clip';
 import { parseIrcMessage } from '@app/utils/chat/ircProtocol/parseIrcMessage';
 import { coerceUserNoticeTags } from '@app/utils/chat/messageHandlers/coerceUserNoticeTags';
 import { createUserNoticeMessage } from '@app/utils/chat/messageHandlers/createUserNoticeMessage';
+import * as dateModule from '@app/utils/date-time/date';
 
 import { RichChatMessage } from '../components/ChatMessage/RichChatMessage';
 import { getChatRowItemType } from '../util/chatRowItemType';
@@ -27,11 +28,17 @@ import {
   WATCH_STREAK,
 } from './__fixtures__/chatNoticePipeline.fixture';
 
-jest.mock('@app/utils/date-time/date', () => ({
-  formatDate: jest.fn(() => '12:00'),
-}));
+jest.spyOn(dateModule, 'formatDate').mockReturnValue('12:00');
 
-jest.mock('@app/services/twitch-service');
+/**
+ * MediaLinkCard (reached via ChatRow -> ChatNoticeBody -> ChatMessageBody ->
+ * ChatMessagePart) calls this for a twitchClip part; none of the fixtures
+ * below include one, but stub it so a real fetch never fires if that changes.
+ *
+ * SAFETY: no fixture below renders a twitchClip part, so this resolved value
+ * is never read - the empty object only needs to satisfy the return type.
+ */
+jest.spyOn(twitchService, 'getClip').mockResolvedValue({} as TwitchClip);
 
 function buildNoticeFromIrc(line: string): AnyChatMessageType {
   const parsed = parseIrcMessage(line);
@@ -50,22 +57,20 @@ function buildNoticeFromIrc(line: string): AnyChatMessageType {
 function renderNoticeFromIrc(line: string) {
   const message = buildNoticeFromIrc(line);
   const rendered = render(
-    <RichChatMessage {...(message as ChatMessageType<'usernotice'>)} />,
+    <RichChatMessage<'usernotice', keyof UserNoticeVariantMap> {...message} />,
   );
 
   return { message, ...rendered };
 }
 
-function getRowText(instance: {
+interface RenderedRowNode {
   props: { children?: unknown };
-  children: (string | { props: { children?: unknown } })[];
-}): string {
+  children: (string | RenderedRowNode)[];
+}
+
+function getRowText(instance: RenderedRowNode): string {
   return instance.children
-    .map(child =>
-      typeof child === 'string'
-        ? child
-        : getRowText(child as Parameters<typeof getRowText>[0]),
-    )
+    .map(child => (child instanceof Object ? getRowText(child) : child))
     .join(' ');
 }
 

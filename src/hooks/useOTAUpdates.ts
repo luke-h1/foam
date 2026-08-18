@@ -37,10 +37,6 @@ const OTA_RELOAD_SCREEN_OPTIONS = {
 
 const getIsUpdatePending = () => latestContext.isUpdatePending;
 
-function toError(error: unknown): Error {
-  return error instanceof Error ? error : new Error(String(error));
-}
-
 export type OTAUpdateUrgency = 'normal' | 'critical';
 
 export type OTAUpdateState = {
@@ -125,10 +121,12 @@ export function useOTAUpdates() {
           platform: Platform.OS,
         });
       }
-    } catch (error) {
+    } catch (caught) {
+      const error =
+        caught instanceof Error ? caught : new Error(String(caught));
       logger.main.error('OTA update check failed', {
         name: 'ota_updates_service_error',
-        error: toError(error),
+        error,
         category: 'OTAUpdatesService',
         action: 'check_failed',
         isProduction,
@@ -143,10 +141,12 @@ export function useOTAUpdates() {
       await reloadAsync({
         reloadScreenOptions: OTA_RELOAD_SCREEN_OPTIONS,
       });
-    } catch (error) {
+    } catch (caught) {
+      const error =
+        caught instanceof Error ? caught : new Error(String(caught));
       logger.main.error('OTA update reload failed', {
         name: 'ota_updates_service_error',
-        error: toError(error),
+        error,
         category: 'OTAUpdatesService',
         action: 'reload_failed',
         isProduction,

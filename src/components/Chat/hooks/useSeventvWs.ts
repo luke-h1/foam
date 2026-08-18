@@ -45,6 +45,10 @@ import {
 
 const SEVENTV_CHAT_SCREENS = ['Chat', 'LiveStream'];
 
+type SendSevenTvWsMessage = (
+  message: SevenTvWsMessage<never, SevenTvEventType>,
+) => void;
+
 export type {
   CosmeticCreate,
   CosmeticCreateCallbackData,
@@ -122,12 +126,12 @@ const RECONNECT_ATTEMPTS = 60;
 
 function logEventHandlerError(
   eventType: HandledSevenTvEventType,
-  error: unknown,
+  cause: unknown,
 ) {
   if (eventType === 'emote_set.update') {
-    logger.stvWs.error('Error handling emote set update:', error);
+    logger.stvWs.error('Error handling emote set update:', cause);
   } else {
-    logger.chat.error(`Error handling ${eventType}:`, error);
+    logger.chat.error(`Error handling ${eventType}:`, cause);
   }
 }
 
@@ -175,7 +179,7 @@ export function useSeventvWs(
   );
 
   const unsubscribeChannelScopedSubscriptions = (
-    sendJson: (msg: unknown) => void,
+    sendJson: SendSevenTvWsMessage,
   ) => {
     const session = sessionRef.current;
     const ws = getWebSocket();
@@ -213,7 +217,7 @@ export function useSeventvWs(
 
   const sendSubscription = (
     emoteSetId: string,
-    sendJson: (msg: unknown) => void,
+    sendJson: SendSevenTvWsMessage,
   ) => {
     logger.stvWs.info(`💚 Attempting to subscribe to emote set: ${emoteSetId}`);
 
@@ -558,10 +562,11 @@ export function useSeventvWs(
     }
   };
 
-  const handleMessage = (event: MessageEvent) => {
+  const handleMessage = (event: MessageEvent<string>) => {
     sessionRef.current.lastMessageAt = Date.now();
     try {
-      const message = JSON.parse(event.data as string) as SevenTvWsMessage<
+      // SAFETY: the 7TV event API only frames envelopes of this shape; a body that is not one fails on `message.op` inside this try and is handled by the catch below.
+      const message = JSON.parse(event.data) as SevenTvWsMessage<
         SevenTvEventData<SevenTvEventType>
       >;
 
@@ -581,7 +586,7 @@ export function useSeventvWs(
         `Failed to parse STV message ${JSON.stringify(e, null, 2)}`,
         {
           name: 'seven_tv_ws_warning',
-          error: e,
+          error: e instanceof Error ? e : String(e),
           action: 'message_parse_failed',
           channel_id: twitchChannelIdRef.current,
           provider: 'seven_tv',
@@ -592,7 +597,9 @@ export function useSeventvWs(
     }
   };
 
-  const { getWebSocket, sendJsonMessage, readyState, reconnect } = useWebsocket(
+  const { getWebSocket, sendJsonMessage, readyState, reconnect } = useWebsocket<
+    SevenTvWsMessage<never, SevenTvEventType>
+  >(
     shouldConnect ? DEFAULT_URL : null,
     {
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -671,7 +678,7 @@ export function useSeventvWs(
           `💚 SevenTv WS error: ${JSON.stringify(error, null, 2)}`,
           {
             name: 'seven_tv_ws_warning',
-            error,
+            error: error instanceof Error ? error : String(error),
             action: 'error',
             channel_id: twitchChannelIdRef.current,
             provider: 'seven_tv',

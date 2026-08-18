@@ -19,7 +19,7 @@ export const attachSharedListeners = (instance: WebSocket, url: string) => {
         return;
       }
       if (
-        typeof subscriber.optionsRef.current.filter === 'function' &&
+        subscriber.optionsRef.current.filter &&
         subscriber.optionsRef.current.filter(message) !== true
       ) {
         return;
@@ -70,13 +70,7 @@ export const attachSharedListeners = (instance: WebSocket, url: string) => {
             }, delay);
           }
         } else {
-          if (
-            typeof subscriber.optionsRef.current.onReconnectStop === 'function'
-          ) {
-            subscriber.optionsRef.current.onReconnectStop(
-              subscriber.optionsRef.current.reconnectAttempts as number,
-            );
-          }
+          subscriber.optionsRef.current.onReconnectStop?.(reconnectAttempts);
           logger.main.error(
             `Max reconnect attempts of ${reconnectAttempts} exceeded`,
           );

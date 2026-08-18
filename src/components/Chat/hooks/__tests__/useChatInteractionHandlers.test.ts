@@ -4,8 +4,8 @@ import type { ReplyToData } from '@app/components/Chat/components/ChatInputSecti
 import type { ChatInputShellHandle } from '@app/components/Chat/components/ChatInputShell';
 import type { EmotePressData } from '@app/components/Chat/components/ChatMessage/RichChatMessage.types';
 import { resetChatOverlays } from '@app/store/chat/actions/chatOverlays';
-import { getMessageById } from '@app/store/chat/actions/messages';
-import { fetchUserCosmetics } from '@app/store/chat/actions/userCosmeticsFetch';
+import * as messagesActions from '@app/store/chat/actions/messages';
+import * as userCosmeticsFetchActions from '@app/store/chat/actions/userCosmeticsFetch';
 import { chatOverlays$ } from '@app/store/chat/observables/chatOverlays';
 import { createRef } from '@app/test/createRef';
 import { createEmotePart } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
@@ -16,16 +16,10 @@ import {
 } from '../useChatInteractionHandlers';
 import { createChatMessage } from './__fixtures__/useChat.fixture';
 
-jest.mock('@app/store/chat/actions/messages', () => ({
-  getMessageById: jest.fn(),
-}));
-
-jest.mock('@app/store/chat/actions/userCosmeticsFetch', () => ({
-  fetchUserCosmetics: jest.fn(() => Promise.resolve()),
-}));
-
-const mockGetMessageById = jest.mocked(getMessageById);
-const mockFetchUserCosmetics = jest.mocked(fetchUserCosmetics);
+const mockGetMessageById = jest.spyOn(messagesActions, 'getMessageById');
+const mockFetchUserCosmetics = jest
+  .spyOn(userCosmeticsFetchActions, 'fetchUserCosmetics')
+  .mockResolvedValue(undefined);
 
 function renderComposerActions() {
   const inputShell = {
@@ -57,18 +51,20 @@ function renderOverlayActions() {
 describe('useChatComposerActions', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    messagesActions.clearMessages();
   });
 
   test('sets composer reply context from the selected chat message and parent message', () => {
-    const parentMessage = createChatMessage({
+    const storedReplyMessage = createChatMessage({
       text: 'parent text OMEGALUL',
       tags: {
-        id: 'parent-1',
+        id: 'reply-1',
         login: 'parent',
         'display-name': 'Parent',
         'user-id': 'parent-user',
       },
     });
+    messagesActions.addMessage(storedReplyMessage);
     const replyMessage = createChatMessage({
       text: 'replying with Kappa',
       tags: {
@@ -79,7 +75,6 @@ describe('useChatComposerActions', () => {
         color: '#00ff00',
       },
     });
-    mockGetMessageById.mockReturnValue(parentMessage);
     const { hook, inputShell } = renderComposerActions();
 
     act(() => {

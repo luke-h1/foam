@@ -1,11 +1,10 @@
 import { EmoteSetKind } from '@app/graphql/generated/gql';
-import type { SanitisedEmote } from '@app/types/emote';
-import { EMOTE_PROVIDER_BY_SITE } from '@app/utils/emote/emoteProviderBySite';
+import type { SevenTvSanitisedEmote } from '@app/types/emote';
 
 import { processEmotesWorklet } from '../emoteProcessor';
 import type { ParsedPart } from '../parsedPart';
 
-const baseEmote: SanitisedEmote = {
+const baseEmote: SevenTvSanitisedEmote = {
   id: 'base-id',
   name: 'base',
   original_name: 'base',
@@ -33,16 +32,22 @@ const baseEmote: SanitisedEmote = {
 };
 
 const createEmote = (
-  overrides: Partial<SanitisedEmote> & Pick<SanitisedEmote, 'id' | 'name'>,
-): SanitisedEmote =>
-  ({
-    ...baseEmote,
-    emote_link: `https://example.com/${overrides.id}`,
-    original_name: overrides.name,
-    url: `https://example.com/${overrides.id}.avif`,
-    provider: EMOTE_PROVIDER_BY_SITE[overrides.site ?? baseEmote.site],
-    ...overrides,
-  }) as SanitisedEmote;
+  overrides: Partial<SevenTvSanitisedEmote> &
+    Pick<SevenTvSanitisedEmote, 'id' | 'name'>,
+): SevenTvSanitisedEmote => ({
+  ...baseEmote,
+  emote_link: `https://example.com/${overrides.id}`,
+  original_name: overrides.name,
+  url: `https://example.com/${overrides.id}.avif`,
+  ...overrides,
+});
+
+const emotePart = (part: ParsedPart | undefined): ParsedPart<'emote'> => {
+  if (part?.type !== 'emote') {
+    throw new Error(`expected an emote part, received ${part?.type ?? 'none'}`);
+  }
+  return part;
+};
 
 const emptyParams = {
   userstate: null,
@@ -75,7 +80,7 @@ describe('processEmotesWorklet zero-width overlays', () => {
     });
 
     expect(result).toHaveLength(1);
-    const base = result[0] as ParsedPart<'emote'>;
+    const base = emotePart(result[0]);
     expect(base.id).toBe('base-emote');
     // The duplicate SoSnowy is consumed, not stacked a second time.
     expect((base.overlaid ?? []).map(overlay => overlay.id)).toEqual([
@@ -98,7 +103,7 @@ describe('processEmotesWorklet zero-width overlays', () => {
     });
 
     expect(result).toHaveLength(1);
-    const base = result[0] as ParsedPart<'emote'>;
+    const base = emotePart(result[0]);
     expect((base.overlaid ?? []).map(overlay => overlay.id)).toEqual([
       'zw-snow',
     ]);
@@ -124,7 +129,7 @@ describe('processEmotesWorklet zero-width overlays', () => {
     });
 
     expect(result).toHaveLength(1);
-    const base = result[0] as ParsedPart<'emote'>;
+    const base = emotePart(result[0]);
     expect((base.overlaid ?? []).map(overlay => overlay.id)).toEqual([
       'zw-snow',
       'zw-cold',
@@ -151,7 +156,7 @@ describe('processEmotesWorklet zero-width overlays', () => {
     });
 
     expect(result).toHaveLength(1);
-    const base = result[0] as ParsedPart<'emote'>;
+    const base = emotePart(result[0]);
     expect((base.overlaid ?? []).map(overlay => overlay.id)).toEqual([
       'zw-snow',
       'zw-cold',
