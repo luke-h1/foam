@@ -34,8 +34,18 @@ jobs:
       - name: Keep react-doctor's base fetch from shallowing the repo
         run: git remote set-url origin https://invalid.invalid/unreachable.git
 
+      # The origin-breaking step above always makes react-doctor's own
+      # best-effort base fetch fail, so it can no longer tell "the base was
+      # already present" from "the fetch genuinely failed" and posts a
+      # false-alarm "shallow checkout, no merge base" warning on every PR -
+      # even though the diff itself is computed correctly from the
+      # fetch-depth: 0 history already on disk (verified against #877: the
+      # sticky comment reported a correctly base-scoped single finding, not a
+      # dump of every pre-existing issue). Silence the warning rather than the
+      # tool guessing wrong; revisit alongside the origin workaround above.
       - name: Run React Doctor
         uses: millionco/react-doctor@01820bb4fd4d0a4aebcd8df2b2a143a098649cb2 # v2.2.8
         with:
           blocking: error
           commit-status: false
+          silence-missing-baseline-warning: true
