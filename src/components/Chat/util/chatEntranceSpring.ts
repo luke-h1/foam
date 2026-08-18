@@ -13,12 +13,3 @@ export function chatEntranceSpring<
 >(animation: { springify(): T }): T {
   return animation.springify().damping(22).stiffness(240).mass(0.55);
 }
-
-/**
- * Gentle overshoot (damping ratio ~0.78) for a tappable affordance.
- */
-export function chatAffordanceSpring<
-  T extends SpringTunableAnimation,
->(animation: { springify(): T }): T {
-  return animation.springify().damping(17).stiffness(200).mass(0.6);
-}

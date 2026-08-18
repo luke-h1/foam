@@ -75,9 +75,9 @@ export function ChatDebugSection<TPayload>({
               No captured IRC lines for this user
             </Text>
           ) : (
-            data.ircLines.map((entry, index) => (
+            data.ircLines.map(entry => (
               <Text
-                key={`${entry.receivedAt}_${index}`}
+                key={`${entry.receivedAt}_${entry.line}`}
                 selectable
                 style={styles.mono}
                 variant='mono'

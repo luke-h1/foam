@@ -18,12 +18,12 @@ const ENVIRONMENT_LADDER: ChangelogEnvironment[] = [
   'preview',
 ];
 
-const ENVIRONMENT_LABEL: Record<ChangelogEnvironment, string> = {
+const ENVIRONMENT_LABEL = {
   production: 'Production',
   testflight: 'TestFlight',
   internal: 'Internal',
   preview: 'Preview',
-};
+} satisfies Record<ChangelogEnvironment, string>;
 
 const RELEASE_TAG_REGEXP =
   /^v?(\d+\.\d+\.\d+)(?:-(internal|testflight|preview))?$/;
@@ -77,7 +77,12 @@ export function parseReleaseTag(
   if (!match) {
     return null;
   }
+  // SAFETY: group 1 is a mandatory capture in RELEASE_TAG_REGEXP, so it is
+  // always defined whenever exec() matches.
   const version = match[1] as string;
+  // SAFETY: group 2 is either undefined or one of the environment suffix
+  // literals the regex enumerates, so the fallback-applied value is always a
+  // valid ChangelogEnvironment.
   const environment = (match[2] ?? 'production') as ChangelogEnvironment;
   return { tag, version, environment };
 }
@@ -97,6 +102,27 @@ export function compareVersions(a: string, b: string): number {
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Map/array lookups below are only ever called with keys or indexes the
+ * caller has already proven present. These throw instead of silently
+ * returning `undefined as T`, so a broken invariant fails loudly.
+ */
+function mustGet<K, V>(map: Map<K, V>, key: K): V {
+  const value = map.get(key);
+  if (value === undefined) {
+    throw new Error(`expected map to contain key ${String(key)}`);
+  }
+  return value;
+}
+
+function mustAt<T>(items: T[], index: number): T {
+  const value = items[index];
+  if (value === undefined) {
+    throw new Error(`expected index ${index} to be present`);
+  }
+  return value;
 }
 
 /**
@@ -160,7 +186,7 @@ export function planPerEnvironmentSections(
 
     const sections = presentEnvironments.map<PlannedSection>(
       (environment, index) => {
-        const head = byEnvironment.get(environment) as ReleaseTag;
+        const head = mustGet(byEnvironment, environment);
         if (index === 0) {
           return {
             tag: head.tag,
@@ -172,10 +198,8 @@ export function planPerEnvironmentSections(
               : null,
           };
         }
-        const baselineEnvironment = presentEnvironments[
-          index - 1
-        ] as ChangelogEnvironment;
-        const baseline = byEnvironment.get(baselineEnvironment) as ReleaseTag;
+        const baselineEnvironment = mustAt(presentEnvironments, index - 1);
+        const baseline = mustGet(byEnvironment, baselineEnvironment);
         return {
           tag: head.tag,
           environment,
@@ -267,6 +291,8 @@ function headingVersion(line: string): string | null {
   if (!match) {
     return null;
   }
+  // SAFETY: group 1 is a mandatory capture in this regex, so it is always
+  // defined whenever exec() matches.
   const parsed = parseReleaseTag(match[1] as string);
   return parsed ? parsed.version : null;
 }
@@ -286,7 +312,7 @@ function spliceVersionBlocks(
       const version = headingVersion(line);
       if (version != null && blockByVersion.has(version)) {
         if (!emitted.has(version)) {
-          output.push(...(blockByVersion.get(version) as string).split('\n'));
+          output.push(...mustGet(blockByVersion, version).split('\n'));
           output.push('');
           emitted.add(version);
         }

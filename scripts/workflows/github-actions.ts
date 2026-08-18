@@ -36,20 +36,30 @@ export function writeGithubOutput(name: string, value: string): void {
   appendFileSync(outputPath, `${name}=${value}\n`, 'utf8');
 }
 
-export function getCommandErrorMessage(error: unknown): string {
-  if (!(error instanceof Error)) {
-    return 'Unknown command failure';
+function hasStderrProperty(
+  error: Error,
+): error is Error & { stderr?: string | Buffer | null } {
+  return 'stderr' in error;
+}
+
+function extractErrorMessage(error: Error): string {
+  if (!hasStderrProperty(error)) {
+    return error.message;
   }
 
-  const commandError = error as Error & {
-    stderr?: string | Buffer | null;
-  };
-  const stderr =
-    typeof commandError.stderr === 'string'
-      ? commandError.stderr.trim()
-      : commandError.stderr?.toString().trim();
+  const stderr = Buffer.isBuffer(error.stderr)
+    ? error.stderr.toString().trim()
+    : error.stderr?.trim();
 
   return stderr === '' || stderr == null ? error.message : stderr;
+}
+
+// `cause` is the exempted parameter name for a value whose type is only
+// known at this I/O boundary (a caught exception of unknowable shape).
+export function getCommandErrorMessage(cause: unknown): string {
+  return cause instanceof Error
+    ? extractErrorMessage(cause)
+    : 'Unknown command failure';
 }
 
 export type RunToolOptions = {

@@ -27,7 +27,9 @@ export function useWatchTimeTracking(): void {
 
     const unsubscribe = subscribeToAppStateTransitions(({ current }) => {
       if (current === 'active') {
-        segmentStartRef.current ??= Date.now();
+        if (segmentStartRef.current === null) {
+          segmentStartRef.current = Date.now();
+        }
       } else {
         flushSegment();
       }

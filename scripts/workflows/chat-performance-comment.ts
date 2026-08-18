@@ -25,7 +25,12 @@ export function readCurrentEntries(path: string): ReassureEntry[] {
   return readFileSync(path, 'utf8')
     .split(/\r?\n/)
     .filter(line => line.trim().length > 0)
-    .map(line => JSON.parse(line) as { metadata?: unknown } | ReassureEntry)
+    .map(line => {
+      // SAFETY: each line is a Reassure .perf JSONL record, which is either
+      // a `{ metadata }` header or a ReassureEntry measurement - JSON.parse
+      // can't express that shape on its own.
+      return JSON.parse(line) as { metadata?: unknown } | ReassureEntry;
+    })
     .filter((entry): entry is ReassureEntry => !('metadata' in entry));
 }
 
@@ -109,12 +114,12 @@ export function buildCurrentTable(
 type HighlightKind = 'danger' | 'success' | 'warning' | 'neutral';
 
 function buildDiffLine(kind: HighlightKind, text: string): string {
-  const prefixByKind: Record<HighlightKind, string> = {
+  const prefixByKind = {
     danger: '-',
     neutral: ' ',
     success: '+',
     warning: '!',
-  };
+  } satisfies Record<HighlightKind, string>;
 
   return `${prefixByKind[kind]} ${text}`;
 }
@@ -150,12 +155,12 @@ function chooseStrongerHighlight(
   current: HighlightKind | undefined,
   next: HighlightKind,
 ): HighlightKind {
-  const priority: Record<HighlightKind, number> = {
+  const priority = {
     danger: 3,
     success: 2,
     warning: 1,
     neutral: 0,
-  };
+  } satisfies Record<HighlightKind, number>;
 
   if (current == null || priority[next] > priority[current]) {
     return next;
