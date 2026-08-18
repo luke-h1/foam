@@ -1,5 +1,20 @@
 # Agent Notes
 
+## Writing style: plain English (ASD-STE100)
+
+Write everything you author in this repo - code comments, commit messages, PR descriptions, this file, any doc - in plain English, following the spirit of [ASD-STE100 Simplified Technical English](https://www.asd-ste100.org/). The goal is a comment or message that the next reader (human or agent) understands on the first pass, with nothing to decode.
+
+- One idea per sentence. Keep sentences short.
+- Use active voice: "the hook resets the flag," not "the flag is reset by the hook."
+- Use the plainest word available. Say "use," not "utilize"; say "before," not "prior to"; say "show," not "surface" or "expose" as a verb.
+- Use one word for one meaning, consistently, rather than varying the word for style.
+- Write instructions as direct commands: "run X," "add Y," not "one might consider running X."
+- Avoid stacked nouns used as adjectives ("chat message row render path" - split it up).
+- Avoid idioms, hedging filler, and jargon that only makes sense with outside context.
+- Prefer plain dashes and short words. No em dashes - see the global style rule already in force for this account.
+
+This applies to prose you write, not to code identifiers or established technical terms this file already uses (React, hook, ref, etc.) - keep those as they are.
+
 ## Local CI and signoff
 
 The PR workflows can be run here rather than waiting on a runner.
