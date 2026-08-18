@@ -82,10 +82,10 @@ export function useAppUpdate() {
           platform: Platform.OS,
         });
         toast.error('Could not download update', { id: pendingToastId });
-      } finally {
-        setIsCheckingBundle(false);
       }
-    })();
+    })().finally(() => {
+      setIsCheckingBundle(false);
+    });
   };
 
   return { openStore, updateBundle, isCheckingBundle };

@@ -76,10 +76,10 @@ export function useRecentChatMessages({
             scrollChatToEndRef.current();
           }
         }
-      } finally {
-        if (!abortController.signal.aborted) {
-          isLoadingRecentMessagesRef.current = false;
-        }
+      }
+
+      if (!abortController.signal.aborted) {
+        isLoadingRecentMessagesRef.current = false;
       }
     };
 

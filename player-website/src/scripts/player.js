@@ -28,9 +28,22 @@ try {
   );
 } catch {}
 
+/**
+ * Decodes an arbitrary `window.open` first argument into a navigable URL.
+ * @param {unknown} value
+ * @returns {string | null}
+ */
+function toOpenTarget(value) {
+  return Object.prototype.toString.call(value) === '[object String]' &&
+    value.length > 0
+    ? value
+    : null;
+}
+
 window.open = url => {
-  if (typeof url === 'string' && url.length > 0) {
-    window.location.assign(url);
+  const target = toOpenTarget(url);
+  if (target !== null) {
+    window.location.assign(target);
   }
   return window;
 };
@@ -57,14 +70,11 @@ function recordEvent(event) {
 }
 
 function formatSeconds(value) {
-  return typeof value === 'number' && Number.isFinite(value)
-    ? `${value.toFixed(1)}s`
-    : 'n/a';
+  return Number.isFinite(value) ? `${value.toFixed(1)}s` : 'n/a';
 }
 
 function normalizeLiveLatency(value) {
-  return typeof value === 'number' &&
-    Number.isFinite(value) &&
+  return Number.isFinite(value) &&
     value >= 0 &&
     value < MAX_REASONABLE_LIVE_LATENCY_SECONDS
     ? value
@@ -208,17 +218,12 @@ function createPlayer() {
 
   function disableCaptions() {
     try {
-      if (typeof player.disableCaptions === 'function') {
-        player.disableCaptions();
-      }
+      player.disableCaptions?.();
     } catch {}
   }
 
   function emitPlaybackStats() {
-    const stats =
-      typeof player.getPlaybackStats === 'function'
-        ? player.getPlaybackStats()
-        : null;
+    const stats = player.getPlaybackStats?.() ?? null;
     if (!stats) {
       return;
     }
@@ -239,7 +244,7 @@ function createPlayer() {
     }
 
     if (
-      typeof stats.hlsLatencyBroadcaster === 'number' &&
+      stats.hlsLatencyBroadcaster !== undefined &&
       hlsLatencyBroadcaster === null &&
       !hasUsablePlayback
     ) {
@@ -287,7 +292,7 @@ function createPlayer() {
   function postPauseIfStillPaused() {
     pendingPauseTimer = null;
     try {
-      if (typeof player.isPaused === 'function' && !player.isPaused()) {
+      if (player.isPaused?.() === false) {
         return;
       }
     } catch {}

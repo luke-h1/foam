@@ -52,6 +52,7 @@ export function useStreamProfilePictures(
       return;
     }
     // eslint-disable-next-line react-doctor/no-derived-state -- accumulates across pages/query resolutions, not derivable from a single input
+    // react-doctor-disable-next-line react-hooks-js/set-state-in-effect -- merges resolved user ids across query pages; can't be derived synchronously from a single render's inputs
     setProfileImageById(current => {
       const next = new Map(current);
       for (const user of users) {

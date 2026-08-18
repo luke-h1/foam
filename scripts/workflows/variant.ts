@@ -7,7 +7,7 @@ export type VariantMeta = {
   tagSuffix: string;
 };
 
-const VARIANTS: Record<Variant, VariantMeta> = {
+const VARIANTS = {
   production: {
     channel: 'production',
     sentryDist: 'foam-tv',
@@ -32,7 +32,7 @@ const VARIANTS: Record<Variant, VariantMeta> = {
     label: 'Preview',
     tagSuffix: 'preview',
   },
-};
+} satisfies Record<Variant, VariantMeta>;
 
 export function isVariant(value: string): value is Variant {
   return Object.prototype.hasOwnProperty.call(VARIANTS, value);
@@ -75,6 +75,8 @@ export function ignoreTagsPattern(version: string, variant: string): string {
   getVariantMeta(variant);
 
   const escapedVersion = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // SAFETY: Object.keys widens to string[]; VARIANTS is a literal Record
+  // with exactly the Variant keys, so every key is a Variant.
   const siblings = (Object.keys(VARIANTS) as Variant[])
     .filter(name => VARIANTS[name].tagSuffix !== '' && name !== variant)
     .map(name => VARIANTS[name].tagSuffix);

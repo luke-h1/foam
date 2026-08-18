@@ -42,12 +42,14 @@ export function useSaveImageToGallery() {
         overwrite: true,
       });
 
-      try {
+      const downloadAndSave = async () => {
         const file = await File.downloadFileAsync(url, directory);
         await saveFilesToAppAlbum(file.uri);
-      } finally {
+      };
+
+      await downloadAndSave().finally(() => {
         directory.delete();
-      }
+      });
     },
   });
 

@@ -31,6 +31,9 @@ export function getBuildVariant(value: string): Variant {
 }
 
 export function androidPackageNames(contents: string): string[] {
+  // SAFETY: every field read below is optional, so an unexpected
+  // google-services.json shape degrades to an empty package list instead of
+  // throwing - the caller already reports invalid JSON separately.
   const parsed = JSON.parse(contents) as AndroidGoogleServices;
 
   return (parsed.client ?? []).flatMap(

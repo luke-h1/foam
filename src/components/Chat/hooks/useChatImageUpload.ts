@@ -52,9 +52,8 @@ export function useChatImageUpload(onUploaded: (url: string) => void) {
         error: error instanceof Error ? error : String(error),
       });
       toast.error("Couldn't upload that image. Please try again.");
-    } finally {
-      setIsUploading(false);
     }
+    setIsUploading(false);
   }, [isUploading, onUploaded]);
 
   return { isUploading, pickAndUpload };

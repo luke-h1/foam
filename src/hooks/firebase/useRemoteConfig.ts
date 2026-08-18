@@ -164,12 +164,11 @@ export function useRemoteConfig(): UseRemoteConfigResult {
 
   const refetch = async (): Promise<boolean> => {
     setIsManualRefetching(true);
-    try {
-      const result = await refetchQuery();
-      return result.data !== undefined;
-    } finally {
-      setIsManualRefetching(false);
-    }
+    return refetchQuery()
+      .then(result => result.data !== undefined)
+      .finally(() => {
+        setIsManualRefetching(false);
+      });
   };
 
   return {

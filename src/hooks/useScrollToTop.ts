@@ -98,19 +98,26 @@ function scrollToOffset(
 }
 
 export function useScrollToTop(ref: ScrollableRef, offset: number = 0) {
-  const scrollToTopRef = {
-    get current() {
+  // React Compiler can't lower an object-literal `get current()` accessor, so
+  // this reaches for the same lazy-evaluation semantics via
+  // Object.defineProperty instead: `.current` must recompute at whatever
+  // moment it's read (a tab re-press can land long after this render, once
+  // the underlying scroll view has mounted), not snapshot the scrollable
+  // node at render time.
+  const scrollToTopRef: { current: { scrollToTop: () => void } | null } =
+    Object.create(null);
+  Object.defineProperty(scrollToTopRef, 'current', {
+    enumerable: true,
+    get: () => {
       const scrollable = getScrollableNode(ref);
-
       if (!scrollable) {
         return null;
       }
-
       return {
         scrollToTop: () => scrollToOffset(scrollable, offset),
       };
     },
-  };
+  });
 
   useNavigationScrollToTop(scrollToTopRef);
 }

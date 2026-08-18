@@ -282,9 +282,26 @@ const ChatPreviewSurface = function ChatPreviewSurface({
   settings?: Partial<PreviewState>;
   testID: string;
 }) {
-  const previewState = {
-    ...PREVIEW_DEFAULTS,
-    ...settings,
+  // Per-key ?? instead of spreading settings over PREVIEW_DEFAULTS: a caller
+  // passing e.g. `{ chatTimestamps: undefined }` would otherwise clobber the
+  // default with an explicit undefined rather than falling back to it.
+  const previewState: PreviewState = {
+    chatDensity: settings?.chatDensity ?? PREVIEW_DEFAULTS.chatDensity,
+    chatFontScale: settings?.chatFontScale ?? PREVIEW_DEFAULTS.chatFontScale,
+    chatTimestamps: settings?.chatTimestamps ?? PREVIEW_DEFAULTS.chatTimestamps,
+    disableEmoteAnimations:
+      settings?.disableEmoteAnimations ??
+      PREVIEW_DEFAULTS.disableEmoteAnimations,
+    highlightOwnMentions:
+      settings?.highlightOwnMentions ?? PREVIEW_DEFAULTS.highlightOwnMentions,
+    showAlternatingChatRows:
+      settings?.showAlternatingChatRows ??
+      PREVIEW_DEFAULTS.showAlternatingChatRows,
+    showInlineReplyContext:
+      settings?.showInlineReplyContext ??
+      PREVIEW_DEFAULTS.showInlineReplyContext,
+    showUnreadJumpPill:
+      settings?.showUnreadJumpPill ?? PREVIEW_DEFAULTS.showUnreadJumpPill,
   };
 
   return (

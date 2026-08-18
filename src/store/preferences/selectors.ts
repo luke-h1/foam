@@ -26,21 +26,6 @@ export type ChatViewPreferences = Pick<
   | 'showUnreadJumpPill'
 >;
 
-export type ChatRowPreferences = Pick<
-  Preferences,
-  | 'chatDensity'
-  | 'chatTimestamps'
-  | 'disableEmoteAnimations'
-  | 'highlightOwnMentions'
-  | 'showAlternatingChatRows'
-  | 'showInlineReplyContext'
->;
-
-export type ChatHydrationPreferences = Pick<
-  Preferences,
-  'disableEmoteAnimations' | 'show7TvEmotes' | 'show7tvBadges'
->;
-
 export function usePreferences(): Preferences & {
   update: (payload: Partial<Preferences>) => void;
 } {
@@ -68,31 +53,6 @@ export function useEmoteRenderPreferences(): EmoteRenderPreferences {
         showFFzBadges: preferences$.showFFzBadges.get(),
         showBttvBadges: preferences$.showBttvBadges.get(),
       }) satisfies EmoteRenderPreferences,
-  );
-}
-
-export function useChatRowPreferences(): ChatRowPreferences {
-  return useSelector(
-    () =>
-      ({
-        chatDensity: preferences$.chatDensity.get(),
-        chatTimestamps: preferences$.chatTimestamps.get(),
-        disableEmoteAnimations: preferences$.disableEmoteAnimations.get(),
-        highlightOwnMentions: preferences$.highlightOwnMentions.get(),
-        showAlternatingChatRows: preferences$.showAlternatingChatRows.get(),
-        showInlineReplyContext: preferences$.showInlineReplyContext.get(),
-      }) satisfies ChatRowPreferences,
-  );
-}
-
-export function useChatHydrationPreferences(): ChatHydrationPreferences {
-  return useSelector(
-    () =>
-      ({
-        disableEmoteAnimations: preferences$.disableEmoteAnimations.get(),
-        show7TvEmotes: preferences$.show7TvEmotes.get(),
-        show7tvBadges: preferences$.show7tvBadges.get(),
-      }) satisfies ChatHydrationPreferences,
   );
 }
 
