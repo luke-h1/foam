@@ -174,8 +174,11 @@ export function usePinnedChatMessage({
           toast.error('Could not refresh pin');
         }
       }
-      pinnedMessageRefreshInFlightRef.current = false;
-      setPinnedMessageBusy(false);
+      if (silent) {
+        pinnedMessageRefreshInFlightRef.current = false;
+      } else {
+        setPinnedMessageBusy(false);
+      }
     },
     [
       canModerateChat,
