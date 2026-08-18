@@ -84,7 +84,7 @@ export const ChatMessagePane = memo(
       shouldMaintainScrollAtEnd,
       showOnlyMentions,
     } = paneFlags;
-    // Legend's selector types sparse arrays; the store always holds dense messages.
+    // SAFETY: Legend's selector types sparse arrays; the store always holds dense messages.
     const rawMessages = useMessages() as AnyChatMessageType[];
     const hasMessages = rawMessages.length > 0;
     const hasEverHadMessagesRef = useRef(false);

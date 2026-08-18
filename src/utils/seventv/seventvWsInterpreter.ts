@@ -18,6 +18,12 @@ import type { StvUser } from '@app/types/seventv/users';
 
 export const HISTORICAL_EVENT_BUFFER = 10000; // 10 seconds
 
+interface ResumeAckPayload {
+  success?: boolean;
+  dispatches_replayed?: number;
+  subscriptions_restored?: number;
+}
+
 export interface EmoteUpdateCallbackData {
   added: SanitisedEmote[];
   removed: SanitisedEmote[];
@@ -382,11 +388,10 @@ function interpretCosmeticUpdate(
     if (changes.updated) {
       // eslint-disable-next-line no-restricted-syntax
       for (const update of changes.updated) {
-        if (update.value && typeof update.value === 'object') {
-          if ('object' in update.value && update.value.object) {
-            kind = update.value.object.kind === 'BADGE' ? 'BADGE' : 'PAINT';
-            break;
-          }
+        const cosmetic = update.value?.object;
+        if (cosmetic) {
+          kind = cosmetic.kind === 'BADGE' ? 'BADGE' : 'PAINT';
+          break;
         }
       }
     }
@@ -394,11 +399,10 @@ function interpretCosmeticUpdate(
     if (!kind && changes.pushed) {
       // eslint-disable-next-line no-restricted-syntax
       for (const push of changes.pushed) {
-        if (push.value && typeof push.value === 'object') {
-          if ('object' in push.value && push.value.object) {
-            kind = push.value.object.kind === 'BADGE' ? 'BADGE' : 'PAINT';
-            break;
-          }
+        const cosmetic = push.value?.object;
+        if (cosmetic) {
+          kind = cosmetic.kind === 'BADGE' ? 'BADGE' : 'PAINT';
+          break;
         }
       }
     }
@@ -469,21 +473,17 @@ function interpretEntitlementUpdate(
     if (changes.updated) {
       // eslint-disable-next-line no-restricted-syntax
       for (const update of changes.updated) {
-        if (update.value && typeof update.value === 'object') {
-          if ('object' in update.value && update.value.object) {
-            const { user } = update.value.object;
-            if (user) {
-              const foundTtvUserId = findTwitchUserId(user.connections);
-              if (foundTtvUserId) {
-                ttvUserId = foundTtvUserId;
-              }
-              if (user.style?.paint_id) {
-                paintId = user.style.paint_id;
-              }
-              if (user.style?.badge_id) {
-                badgeId = user.style.badge_id;
-              }
-            }
+        const user = update.value?.object?.user;
+        if (user) {
+          const foundTtvUserId = findTwitchUserId(user.connections);
+          if (foundTtvUserId) {
+            ttvUserId = foundTtvUserId;
+          }
+          if (user.style?.paint_id) {
+            paintId = user.style.paint_id;
+          }
+          if (user.style?.badge_id) {
+            badgeId = user.style.badge_id;
           }
         }
       }
@@ -569,8 +569,8 @@ function interpretUserUpdate(
         if (nested.key !== 'emote_set') {
           continue;
         }
-        const newSet = nested.value as { id?: string; name?: string } | null;
-        const oldSet = nested.old_value as { id?: string } | null;
+        const newSet = nested.value;
+        const oldSet = nested.old_value;
         if (newSet?.id && newSet.id !== oldSet?.id) {
           return {
             type: 'applyEmoteSetSwitch',
@@ -591,61 +591,54 @@ function interpretUserUpdate(
   }
 }
 
+function isEventOfType<T extends SevenTvEventType>(
+  data: SevenTvEventData<SevenTvEventType>,
+  eventType: T,
+): data is SevenTvEventData<T> {
+  return data.type === eventType;
+}
+
 function interpretDispatchEvent(
   data: SevenTvEventData<SevenTvEventType>,
   context: SeventvWsInterpreterContext,
 ): SeventvWsDecision {
-  switch (data.type) {
-    case 'emote_set.update':
-      return interpretEmoteSetUpdate(
-        data as SevenTvEventData<'emote_set.update'>,
-        context,
-      );
-
-    case 'cosmetic.create':
-      return interpretCosmeticCreate(
-        data as SevenTvEventData<'cosmetic.create'>,
-      );
-
-    case 'entitlement.create':
-      return interpretEntitlementCreate(
-        data as SevenTvEventData<'entitlement.create'>,
-      );
-
-    case 'cosmetic.update':
-      return interpretCosmeticUpdate(
-        data as SevenTvEventData<'cosmetic.update'>,
-      );
-
-    case 'cosmetic.delete':
-      return interpretCosmeticDelete(
-        data as SevenTvEventData<'cosmetic.delete'>,
-      );
-
-    case 'entitlement.update':
-      return interpretEntitlementUpdate(
-        data as SevenTvEventData<'entitlement.update'>,
-      );
-
-    case 'entitlement.delete':
-      return interpretEntitlementDelete(
-        data as SevenTvEventData<'entitlement.delete'>,
-      );
-
-    case 'entitlement.reset':
-      return interpretEntitlementReset(
-        data as SevenTvEventData<'entitlement.reset'>,
-      );
-
-    case 'user.update':
-      return interpretUserUpdate(
-        data as SevenTvEventData<'user.update'>,
-        context,
-      );
-
-    default:
-      return { type: 'unhandledEventType', eventType: data.type };
+  if (isEventOfType(data, 'emote_set.update')) {
+    return interpretEmoteSetUpdate(data, context);
   }
+
+  if (isEventOfType(data, 'cosmetic.create')) {
+    return interpretCosmeticCreate(data);
+  }
+
+  if (isEventOfType(data, 'entitlement.create')) {
+    return interpretEntitlementCreate(data);
+  }
+
+  if (isEventOfType(data, 'cosmetic.update')) {
+    return interpretCosmeticUpdate(data);
+  }
+
+  if (isEventOfType(data, 'cosmetic.delete')) {
+    return interpretCosmeticDelete(data);
+  }
+
+  if (isEventOfType(data, 'entitlement.update')) {
+    return interpretEntitlementUpdate(data);
+  }
+
+  if (isEventOfType(data, 'entitlement.delete')) {
+    return interpretEntitlementDelete(data);
+  }
+
+  if (isEventOfType(data, 'entitlement.reset')) {
+    return interpretEntitlementReset(data);
+  }
+
+  if (isEventOfType(data, 'user.update')) {
+    return interpretUserUpdate(data, context);
+  }
+
+  return { type: 'unhandledEventType', eventType: data.type };
 }
 
 function interpretDispatch(
@@ -656,7 +649,7 @@ function interpretDispatch(
     return [{ type: 'ignoreDispatch', reason: 'missingEventData' }];
   }
 
-  if (typeof data !== 'object' || !('type' in data)) {
+  if (!Object.prototype.hasOwnProperty.call(data, 'type')) {
     return [{ type: 'ignoreDispatch', reason: 'malformedEventData' }];
   }
 
@@ -679,11 +672,8 @@ export function interpretSeventvWsMessage(
 
     case 5: {
       if (message.d.command === 'RESUME') {
-        const resumeData = message.d.data as {
-          success?: boolean;
-          dispatches_replayed?: number;
-          subscriptions_restored?: number;
-        } | null;
+        // SAFETY: op 5 with command RESUME carries the EventAPI's resume result; every field is read through optional chaining with a default.
+        const resumeData = message.d.data as ResumeAckPayload | null;
         return [
           {
             type: 'resumeAck',

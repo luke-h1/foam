@@ -1,8 +1,9 @@
 import type { PaginatedList } from '@app/types/twitch/api';
+import type { EventSubEvent } from '@app/types/twitch/eventsub';
 
 export interface ChannelActivityEvent<TState> {
   type: string;
-  normalise: (event: unknown) => TState;
+  normalise: (event: EventSubEvent) => TState;
 }
 
 /**

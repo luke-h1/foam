@@ -1,4 +1,6 @@
 import {
+  type AndroidSymbol,
+  type SFSymbol,
   SymbolView as ExpoSymbolView,
   type SymbolViewProps,
 } from 'expo-symbols';
@@ -19,15 +21,26 @@ export const BACK_SYMBOL_NAME = {
   web: 'arrow_back',
 } as const;
 
+type PlatformSymbolName = {
+  ios?: SFSymbol;
+  android?: AndroidSymbol;
+  web?: AndroidSymbol;
+};
+
+function isPlatformSymbolName(
+  name: SymbolViewProps['name'],
+): name is PlatformSymbolName {
+  return name instanceof Object;
+}
+
 export function SymbolView({ name, ...rest }: SymbolViewProps) {
-  const resolvedName =
-    typeof name === 'string'
-      ? {
-          ios: name,
-          android: sfSymbolToAndroid(name),
-          web: sfSymbolToAndroid(name),
-        }
-      : name;
+  const resolvedName = isPlatformSymbolName(name)
+    ? name
+    : {
+        ios: name,
+        android: sfSymbolToAndroid(name),
+        web: sfSymbolToAndroid(name),
+      };
 
   return <ExpoSymbolView name={resolvedName} {...rest} />;
 }

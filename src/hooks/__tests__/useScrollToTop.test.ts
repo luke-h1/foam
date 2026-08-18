@@ -1,19 +1,28 @@
 import type { RefObject } from 'react';
 
 import { act, renderHook } from '@testing-library/react-native';
+import * as ExpoRouter from 'expo-router';
 
 import { useScrollRef, useScrollToTop } from '../useScrollToTop';
 
-const mockUseNavigationScrollToTop = jest.fn();
-
-jest.mock('expo-router', () => ({
-  useScrollToTop: (ref: RefObject<{ scrollToTop: () => void } | null>) =>
-    mockUseNavigationScrollToTop(ref),
-}));
+const mockUseNavigationScrollToTop = jest
+  .spyOn(ExpoRouter, 'useScrollToTop')
+  .mockImplementation(() => undefined);
 
 describe('useScrollToTop', () => {
-  const getRegisteredRef = (): RefObject<{ scrollToTop: () => void } | null> =>
-    mockUseNavigationScrollToTop.mock.calls.at(-1)?.[0];
+  const getRegisteredRef = (): RefObject<{
+    scrollToTop: () => void;
+  } | null> => {
+    const call = mockUseNavigationScrollToTop.mock.calls.at(-1);
+    if (!call) {
+      throw new Error('useScrollToTop was not registered');
+    }
+    // SAFETY: useScrollToTop (src/hooks/useScrollToTop.ts) always passes a
+    // ref whose `.current` getter returns either null or
+    // `{ scrollToTop }`; expo-router's exported ScrollableWrapper type is
+    // wider only to cover its other callers' scroll/getNode variants.
+    return call[0] as RefObject<{ scrollToTop: () => void } | null>;
+  };
 
   beforeEach(() => {
     mockUseNavigationScrollToTop.mockClear();

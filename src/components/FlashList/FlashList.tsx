@@ -14,7 +14,7 @@ export type { FlashListRef, ListRenderItem };
 
 export type FlashListProps<TItem = unknown> = ShopifyFlashListProps<TItem> & {
   inverted?: boolean;
-  onRefresh?: () => void | Promise<unknown>;
+  onRefresh?: () => void;
 };
 
 export function FlashList<TItem>({

@@ -7,6 +7,18 @@ import { rgbToHex } from './rgbToHex';
  * so colours are corrected against the real background. Tinted highlight rows
  * sit a little lighter, so they land just under the target.
  */
+type RgbChannels = {
+  r: number;
+  g: number;
+  b: number;
+};
+
+type HslChannels = {
+  h: number;
+  s: number;
+  l: number;
+};
+
 const CHAT_SURFACE_RGB = { r: 20, g: 27, b: 35 };
 
 // WCAG AA for normal-size text; higher washes the hues together.
@@ -53,15 +65,7 @@ export function lightenColor(hex: string): string {
   return `rgb(${best.r}, ${best.g}, ${best.b})`;
 }
 
-function relativeLuminance({
-  r,
-  g,
-  b,
-}: {
-  r: number;
-  g: number;
-  b: number;
-}): number {
+function relativeLuminance({ r, g, b }: RgbChannels): number {
   const channel = (value: number) => {
     const scaled = value / 255;
     return scaled <= 0.03928
@@ -72,10 +76,7 @@ function relativeLuminance({
   return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
 }
 
-function contrastRatio(
-  a: { r: number; g: number; b: number },
-  b: { r: number; g: number; b: number },
-): number {
+function contrastRatio(a: RgbChannels, b: RgbChannels): number {
   const luminanceA = relativeLuminance(a);
   const luminanceB = relativeLuminance(b);
   const lighter = Math.max(luminanceA, luminanceB);
@@ -84,11 +85,7 @@ function contrastRatio(
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-function rgbToHsl(
-  r: number,
-  g: number,
-  b: number,
-): { h: number; s: number; l: number } {
+function rgbToHsl(r: number, g: number, b: number): HslChannels {
   const rn = r / 255;
   const gn = g / 255;
   const bn = b / 255;
@@ -115,11 +112,7 @@ function rgbToHsl(
   return { h: h / 6, s, l };
 }
 
-function hslToRgb(
-  h: number,
-  s: number,
-  l: number,
-): { r: number; g: number; b: number } {
+function hslToRgb(h: number, s: number, l: number): RgbChannels {
   if (s === 0) {
     const value = Math.round(l * 255);
     return { r: value, g: value, b: value };

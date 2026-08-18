@@ -33,7 +33,9 @@ export function useIcloudPreferenceSync() {
     const queueRemoteSync = () => {
       pendingSync?.cancel();
       pendingSync = InteractionManager.runAfterInteractions(() => {
-        void applyRemotePreferences();
+        void applyRemotePreferences().finally(() => {
+          hasAttemptedInitialLoadRef.current = true;
+        });
       });
     };
 
@@ -56,8 +58,6 @@ export function useIcloudPreferenceSync() {
         }
       } catch (error) {
         logger.main.warn('Failed to load iCloud preferences', error);
-      } finally {
-        hasAttemptedInitialLoadRef.current = true;
       }
     };
 

@@ -26,21 +26,6 @@ export type ChatViewPreferences = Pick<
   | 'showUnreadJumpPill'
 >;
 
-export type ChatRowPreferences = Pick<
-  Preferences,
-  | 'chatDensity'
-  | 'chatTimestamps'
-  | 'disableEmoteAnimations'
-  | 'highlightOwnMentions'
-  | 'showAlternatingChatRows'
-  | 'showInlineReplyContext'
->;
-
-export type ChatHydrationPreferences = Pick<
-  Preferences,
-  'disableEmoteAnimations' | 'show7TvEmotes' | 'show7tvBadges'
->;
-
 export function usePreferences(): Preferences & {
   update: (payload: Partial<Preferences>) => void;
 } {
@@ -71,34 +56,10 @@ export function useEmoteRenderPreferences(): EmoteRenderPreferences {
   );
 }
 
-export function useChatRowPreferences(): ChatRowPreferences {
-  return useSelector(
-    () =>
-      ({
-        chatDensity: preferences$.chatDensity.get(),
-        chatTimestamps: preferences$.chatTimestamps.get(),
-        disableEmoteAnimations: preferences$.disableEmoteAnimations.get(),
-        highlightOwnMentions: preferences$.highlightOwnMentions.get(),
-        showAlternatingChatRows: preferences$.showAlternatingChatRows.get(),
-        showInlineReplyContext: preferences$.showInlineReplyContext.get(),
-      }) satisfies ChatRowPreferences,
-  );
-}
-
-export function useChatHydrationPreferences(): ChatHydrationPreferences {
-  return useSelector(
-    () =>
-      ({
-        disableEmoteAnimations: preferences$.disableEmoteAnimations.get(),
-        show7TvEmotes: preferences$.show7TvEmotes.get(),
-        show7tvBadges: preferences$.show7tvBadges.get(),
-      }) satisfies ChatHydrationPreferences,
-  );
-}
-
 export function usePreference<K extends keyof Preferences>(
   key: K,
 ): Preferences[K] {
+  // SAFETY: indexing the observable with a generic key widens to the union of all preference values; the child read is still the K-keyed one.
   return useSelector(() => preferences$[key].get()) as Preferences[K];
 }
 

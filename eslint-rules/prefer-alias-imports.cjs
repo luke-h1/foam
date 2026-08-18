@@ -17,17 +17,12 @@ module.exports = {
     },
   },
   create(context) {
-    const cwd =
-      typeof context.getCwd === 'function' ? context.getCwd() : context.cwd;
+    const { cwd, filename } = context;
     const srcRoot = path.join(cwd, 'src');
-    const filename =
-      typeof context.getFilename === 'function'
-        ? context.getFilename()
-        : context.filename;
 
     function check(node) {
       const sourceNode = node.source;
-      if (!sourceNode || typeof sourceNode.value !== 'string') {
+      if (!sourceNode) {
         return;
       }
 

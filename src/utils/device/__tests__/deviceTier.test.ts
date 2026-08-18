@@ -1,24 +1,20 @@
-jest.unmock('@app/utils/device/deviceTier');
+import {
+  __resetMockDeviceInfo,
+  __setMockDeviceInfo,
+  type MockDeviceInfo,
+} from 'react-native-device-info/src/internal/nativeInterface';
 
-interface MockDeviceInfo {
-  isLowRamDevice?: boolean;
-  getTotalMemorySync?: () => number;
-}
+jest.unmock('@app/utils/device/deviceTier');
 
 const GB = 1024 * 1024 * 1024;
 
 function tierFor(info: MockDeviceInfo): string {
+  __setMockDeviceInfo(info);
   let result = '';
   jest.isolateModules(() => {
-    jest.doMock(
-      'react-native-device-info/src/internal/nativeInterface',
-      () => ({
-        __esModule: true,
-        default: info,
-      }),
-    );
-    result = require('@app/utils/device/deviceTier').getDeviceTier() as string;
+    result = require('@app/utils/device/deviceTier').getDeviceTier();
   });
+  __resetMockDeviceInfo();
   return result;
 }
 

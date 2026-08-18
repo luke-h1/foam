@@ -143,7 +143,7 @@ export const useChatEmoteLoader = ({
         }
       }
     },
-    [channelId, user?.id],
+    [channelId, user],
   );
 
   const refetch = useCallback(async () => {

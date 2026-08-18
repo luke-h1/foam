@@ -6,13 +6,7 @@ import {
 } from '@app/utils/twitch/channelActivity/__tests__/__fixtures__/channelPollActivity.fixture';
 import { channelPollActivity } from '@app/utils/twitch/channelActivity/channelPollActivity';
 
-jest.mock('@app/services/twitch-service', () => ({
-  twitchService: {
-    getPolls: jest.fn(),
-  },
-}));
-
-const mockGetPolls = jest.mocked(twitchService.getPolls);
+const mockGetPolls = jest.spyOn(twitchService, 'getPolls');
 
 function getNormaliser(type: string) {
   const entry = channelPollActivity.events.find(event => event.type === type);

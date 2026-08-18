@@ -1,36 +1,22 @@
 import { renderHook } from '@testing-library/react-native';
 
-import { useSeventvWs } from '@app/components/Chat/hooks/useSeventvWs';
+import * as useSeventvWsModule from '@app/components/Chat/hooks/useSeventvWs';
 import { ReadyState } from '@app/hooks/ws/constants';
-import { getSevenTvEmoteSetId } from '@app/store/chat/actions/sevenTvChannelLifecycle';
+import * as sevenTvChannelLifecycleActions from '@app/store/chat/actions/sevenTvChannelLifecycle';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { makeEmptyEmoteData } from '@app/store/chat/types/constants';
+import { logger } from '@app/utils/logger';
 
 import { useSevenTvChatRuntime } from '../useSevenTvChatRuntime';
 
-jest.mock('@app/components/Chat/hooks/useSeventvWs', () => ({
-  useSeventvWs: jest.fn(),
-}));
+jest.spyOn(logger.stvWs, 'debug').mockImplementation(() => {});
+jest.spyOn(logger.stvWs, 'info').mockImplementation(() => {});
 
-jest.mock('@app/store/chat/actions/sevenTvChannelLifecycle', () => ({
-  getSevenTvEmoteSetId: jest.fn(),
-  switchSevenTvEmoteSet: jest.fn(),
-  updateSevenTvEmotes: jest.fn(),
-}));
-
-jest.mock('@app/store/chat/actions/cosmetics', () => ({
-  fetchAndCacheUserCosmetics: jest.fn(),
-}));
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    stvWs: {
-      debug: jest.fn(),
-      info: jest.fn(),
-    },
-  },
-}));
-
-const mockGetSevenTvEmoteSetId = jest.mocked(getSevenTvEmoteSetId);
-const mockUseSeventvWs = jest.mocked(useSeventvWs);
+const mockGetSevenTvEmoteSetId = jest.spyOn(
+  sevenTvChannelLifecycleActions,
+  'getSevenTvEmoteSetId',
+);
+const mockUseSeventvWs = jest.spyOn(useSeventvWsModule, 'useSeventvWs');
 
 const createWebSocketStub = (): WebSocket => Object.create(WebSocket.prototype);
 
@@ -44,7 +30,7 @@ function makeWsReturn({
   wsConnected: boolean;
   subscribeToChannel: jest.Mock;
   unsubscribeFromChannel: jest.Mock;
-}): ReturnType<typeof useSeventvWs> {
+}): ReturnType<typeof useSeventvWsModule.useSeventvWs> {
   return {
     getConnectionState: jest.fn(() => 'CONNECTED'),
     isConnected: jest.fn(() => wsConnected),
@@ -103,7 +89,10 @@ function renderRuntime({
 describe('useSevenTvChatRuntime', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetSevenTvEmoteSetId.mockReturnValue('set-1');
+    chatStore$.persisted.channelCaches.set({
+      'channel-1': { ...makeEmptyEmoteData(), sevenTvEmoteSetId: 'set-1' },
+      'channel-2': { ...makeEmptyEmoteData(), sevenTvEmoteSetId: 'set-2' },
+    });
   });
 
   test('subscribes to the loaded 7TV emote set when the websocket and emotes are ready', () => {
@@ -172,7 +161,6 @@ describe('useSevenTvChatRuntime', () => {
     const { hook, subscribeToChannel, unsubscribeFromChannel } = renderRuntime({
       currentEmoteSetIdRef,
     });
-    mockGetSevenTvEmoteSetId.mockReturnValue('set-2');
 
     hook.rerender({
       channelId: 'channel-2',
@@ -203,13 +191,13 @@ describe('useSevenTvChatRuntime', () => {
     const wsOptions = mockUseSeventvWs.mock.calls[0]?.[0];
 
     expect({
-      hasCosmeticCreateHandler: typeof wsOptions?.onCosmeticCreate,
-      hasEmoteUpdateHandler: typeof wsOptions?.onEmoteUpdate,
-      hasEventLogger: typeof wsOptions?.onEvent,
+      hasCosmeticCreateHandler: wsOptions?.onCosmeticCreate instanceof Function,
+      hasEmoteUpdateHandler: wsOptions?.onEmoteUpdate instanceof Function,
+      hasEventLogger: wsOptions?.onEvent instanceof Function,
     }).toEqual({
-      hasCosmeticCreateHandler: 'function',
-      hasEmoteUpdateHandler: 'function',
-      hasEventLogger: 'function',
+      hasCosmeticCreateHandler: true,
+      hasEmoteUpdateHandler: true,
+      hasEventLogger: true,
     });
   });
 });

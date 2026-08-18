@@ -13,6 +13,11 @@ interface FakeVideo {
   seekable: FakeTimeRanges;
 }
 
+interface FakeWindow {
+  ReactNativeWebView: { postMessage: () => void };
+  __foamSyncToLive?: () => boolean;
+}
+
 function timeRanges(...ends: number[]): FakeTimeRanges {
   return { length: ends.length, end: index => ends[index] ?? NaN };
 }
@@ -31,10 +36,7 @@ function makeVideo(video: Partial<FakeVideo>): FakeVideo {
  * behaviour rather than as source text.
  */
 function installLiveSync(video: FakeVideo): () => boolean {
-  const window: {
-    ReactNativeWebView: { postMessage: () => void };
-    __foamSyncToLive?: () => boolean;
-  } = {
+  const window: FakeWindow = {
     ReactNativeWebView: { postMessage: () => undefined },
   };
   const document = {

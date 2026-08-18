@@ -1,14 +1,16 @@
 import { screen } from '@testing-library/react-native';
 
 import { CategoryScreen } from '@app/screens/CategoryScreen';
-import { twitchService as _twitchService } from '@app/services/twitch-service';
+import { twitchService as realTwitchService } from '@app/services/twitch-service';
 import render from '@app/test/render';
 import type { Category } from '@app/types/twitch/category';
 import type { TwitchStream } from '@app/types/twitch/stream';
 
-jest.mock('@app/services/twitch-service');
-
-const twitchService = jest.mocked(_twitchService);
+const twitchService = {
+  getUserImage: jest.spyOn(realTwitchService, 'getUserImage'),
+  getCategory: jest.spyOn(realTwitchService, 'getCategory'),
+  getStreamsByCategory: jest.spyOn(realTwitchService, 'getStreamsByCategory'),
+};
 
 const mockCategory: Category = {
   id: 'cat1',

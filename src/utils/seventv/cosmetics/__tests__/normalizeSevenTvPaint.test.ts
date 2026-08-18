@@ -1,12 +1,10 @@
+// This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
+// field (see types/seventv/cosmetics.ts), not a naming choice.
+// oxlint-disable anti-slop/no-shape-in-symbol-names
 import type { IndexedCollection } from '@app/services/ws/util/indexedCollection';
-import type { PaintStop } from '@app/types/seventv/cosmetics';
+import type { PaintData, PaintStop } from '@app/types/seventv/cosmetics';
 
 import { normalizeSevenTvPaint } from '../normalizeSevenTvPaint';
-
-const pickFields = (value: unknown, keys: readonly string[]) =>
-  Object.fromEntries(
-    keys.map(key => [key, (value as Record<string, unknown>)[key]]),
-  );
 
 describe('normalizeSevenTvPaint', () => {
   test('normalizes legacy flat paint fields', () => {
@@ -26,9 +24,11 @@ describe('normalizeSevenTvPaint', () => {
       },
     });
 
-    expect(
-      pickFields(paint, ['id', 'function', 'angle', 'repeat', 'stops']),
-    ).toEqual({
+    const { id, function: paintFunction, angle, repeat, stops } = paint;
+
+    expect({ id, function: paintFunction, angle, repeat, stops }).toEqual<
+      Pick<PaintData, 'angle' | 'function' | 'id' | 'repeat' | 'stops'>
+    >({
       id: 'paint-v2',
       function: 'LINEAR_GRADIENT',
       angle: 45,
@@ -116,7 +116,11 @@ describe('normalizeSevenTvPaint', () => {
       ],
     });
 
-    expect(pickFields(paint, ['function', 'image_url', 'repeat'])).toEqual({
+    const { function: paintFunction, image_url: imageUrl, repeat } = paint;
+
+    expect({ function: paintFunction, image_url: imageUrl, repeat }).toEqual<
+      Pick<PaintData, 'function' | 'image_url' | 'repeat'>
+    >({
       function: 'URL',
       image_url: 'https://cdn.7tv.app/paint/test.webp',
       repeat: true,

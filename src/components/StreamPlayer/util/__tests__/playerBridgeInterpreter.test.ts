@@ -284,6 +284,7 @@ describe('interpretPlayerMessage', () => {
     test('ignores a stateUpdate message without a payload', () => {
       expect(
         interpretPlayerMessage(
+          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
           JSON.parse('{"type":"stateUpdate"}') as PlayerMessage,
           createBridgeContext(),
         ),
@@ -317,6 +318,7 @@ describe('interpretPlayerMessage', () => {
     test('ignores currentTime when payload is missing', () => {
       expect(
         interpretPlayerMessage(
+          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
           JSON.parse('{"type":"currentTime"}') as PlayerMessage,
           createBridgeContext(),
         ),
@@ -326,6 +328,7 @@ describe('interpretPlayerMessage', () => {
     test('ignores currentTime when time is missing from the payload', () => {
       expect(
         interpretPlayerMessage(
+          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
           JSON.parse('{"type":"currentTime","payload":{}}') as PlayerMessage,
           createBridgeContext(),
         ),
@@ -335,6 +338,7 @@ describe('interpretPlayerMessage', () => {
     test('ignores duration when payload is missing', () => {
       expect(
         interpretPlayerMessage(
+          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
           JSON.parse('{"type":"duration"}') as PlayerMessage,
           createBridgeContext(),
         ),
@@ -344,6 +348,7 @@ describe('interpretPlayerMessage', () => {
     test('ignores duration when duration is missing from the payload', () => {
       expect(
         interpretPlayerMessage(
+          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
           JSON.parse('{"type":"duration","payload":{}}') as PlayerMessage,
           createBridgeContext(),
         ),
@@ -371,6 +376,7 @@ describe('interpretPlayerMessage', () => {
     test('falls back to placeholders when the payload is missing fields', () => {
       expect(
         interpretPlayerMessage(
+          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
           JSON.parse('{"type":"trace"}') as PlayerMessage,
           createBridgeContext(),
         ),
@@ -427,6 +433,7 @@ describe('interpretPlayerMessage', () => {
       };
       expect(
         interpretPlayerMessage(
+          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
           JSON.parse('{"type":"error"}') as PlayerMessage,
           createBridgeContext(),
         ),
@@ -509,6 +516,7 @@ describe('interpretPlayerMessage', () => {
       };
       expect(
         interpretPlayerMessage(
+          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
           JSON.parse('{"type":"embedMisconfigured"}') as PlayerMessage,
           createBridgeContext(),
         ),
@@ -556,6 +564,7 @@ describe('interpretPlayerMessage', () => {
     test('defaults to no gate when the payload is missing', () => {
       expect(
         interpretPlayerMessage(
+          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
           JSON.parse('{"type":"contentGateDetected"}') as PlayerMessage,
           createBridgeContext(),
         ),
@@ -729,6 +738,7 @@ describe('interpretPlayerMessage', () => {
     test('ignores playbackStalled when payload is missing', () => {
       expect(
         interpretPlayerMessage(
+          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
           JSON.parse('{"type":"playbackStalled"}') as PlayerMessage,
           createBridgeContext(),
         ),
@@ -770,6 +780,7 @@ describe('interpretPlayerMessage', () => {
     test('ignores playbackRecovered when payload is missing', () => {
       expect(
         interpretPlayerMessage(
+          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
           JSON.parse('{"type":"playbackRecovered"}') as PlayerMessage,
           createBridgeContext(),
         ),
@@ -857,6 +868,7 @@ describe('interpretPlayerMessage', () => {
     test('ignores videoElementError when payload is missing', () => {
       expect(
         interpretPlayerMessage(
+          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
           JSON.parse('{"type":"videoElementError"}') as PlayerMessage,
           createBridgeContext(),
         ),
@@ -890,6 +902,7 @@ describe('interpretPlayerMessage', () => {
     test('ignores pipChanged when payload is missing', () => {
       expect(
         interpretPlayerMessage(
+          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
           JSON.parse('{"type":"pipChanged"}') as PlayerMessage,
           createBridgeContext(),
         ),
@@ -1005,6 +1018,7 @@ describe('interpretPlayerMessage', () => {
     test('ignores playbackStats when payload is missing', () => {
       expect(
         interpretPlayerMessage(
+          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
           JSON.parse('{"type":"playbackStats"}') as PlayerMessage,
           createBridgeContext(),
         ),
@@ -1061,6 +1075,7 @@ describe('interpretPlayerMessage', () => {
     test('ignores muteState when payload is missing', () => {
       expect(
         interpretPlayerMessage(
+          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
           JSON.parse('{"type":"muteState"}') as PlayerMessage,
           createBridgeContext(),
         ),
@@ -1072,6 +1087,7 @@ describe('interpretPlayerMessage', () => {
     test('ignores a null message', () => {
       expect(
         interpretPlayerMessage(
+          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
           JSON.parse('null') as PlayerMessage,
           createBridgeContext(),
         ),
@@ -1081,6 +1097,7 @@ describe('interpretPlayerMessage', () => {
     test('ignores a non-object message', () => {
       expect(
         interpretPlayerMessage(
+          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
           JSON.parse('5') as PlayerMessage,
           createBridgeContext(),
         ),
@@ -1090,6 +1107,7 @@ describe('interpretPlayerMessage', () => {
     test('ignores an object without a known type', () => {
       expect(
         interpretPlayerMessage(
+          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
           JSON.parse('{"type":"somethingNew"}') as PlayerMessage,
           createBridgeContext(),
         ),

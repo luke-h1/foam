@@ -1,14 +1,12 @@
 import { screen } from '@testing-library/react-native';
 
-import { twitchService as _twitchService } from '@app/services/twitch-service';
+import { twitchService } from '@app/services/twitch-service';
 import render from '@app/test/render';
 import type { Category } from '@app/types/twitch/category';
 
 import { TopCategoriesScreen } from '../TopCategoriesScreen';
 
-jest.mock('@app/services/twitch-service');
-
-const twitchService = jest.mocked(_twitchService);
+const getTopCategoriesSpy = jest.spyOn(twitchService, 'getTopCategories');
 
 const mockCategory: Category = {
   id: 'cat1',
@@ -18,7 +16,7 @@ const mockCategory: Category = {
 
 describe('TopCategoriesScreen', () => {
   test('shows skeleton while loading', () => {
-    twitchService.getTopCategories.mockReturnValue(new Promise(() => {}));
+    getTopCategoriesSpy.mockReturnValue(new Promise(() => {}));
 
     render(<TopCategoriesScreen />);
 
@@ -28,7 +26,7 @@ describe('TopCategoriesScreen', () => {
   });
 
   test('renders category list when data is available', async () => {
-    twitchService.getTopCategories.mockResolvedValue({
+    getTopCategoriesSpy.mockResolvedValue({
       data: [mockCategory],
     });
 
@@ -38,9 +36,7 @@ describe('TopCategoriesScreen', () => {
   });
 
   test('shows error empty state when fetch fails', async () => {
-    twitchService.getTopCategories.mockRejectedValue(
-      new Error('network error'),
-    );
+    getTopCategoriesSpy.mockRejectedValue(new Error('network error'));
 
     render(<TopCategoriesScreen />);
 
@@ -50,7 +46,7 @@ describe('TopCategoriesScreen', () => {
   });
 
   test('shows empty state when no categories returned', async () => {
-    twitchService.getTopCategories.mockResolvedValue({ data: [] });
+    getTopCategoriesSpy.mockResolvedValue({ data: [] });
 
     render(<TopCategoriesScreen />);
 
@@ -58,7 +54,7 @@ describe('TopCategoriesScreen', () => {
   });
 
   test('renders multiple categories', async () => {
-    twitchService.getTopCategories.mockResolvedValue({
+    getTopCategoriesSpy.mockResolvedValue({
       data: [mockCategory, { id: 'cat2', name: 'Fortnite', box_art_url: '' }],
     });
 

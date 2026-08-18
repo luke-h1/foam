@@ -1,7 +1,12 @@
+export type NoticeSubject = {
+  lead: string | undefined;
+  rest: string;
+};
+
 export function splitNoticeSubject(
   body: string,
   displayName: string,
-): { lead: string | undefined; rest: string } {
+): NoticeSubject {
   if (!displayName) {
     return { lead: undefined, rest: body };
   }

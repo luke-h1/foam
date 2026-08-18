@@ -18,10 +18,6 @@ export function resolveSpacingValue(theme: AppTheme, value?: Spacing | number) {
     return undefined;
   }
 
-  if (typeof value === 'number') {
-    return value;
-  }
-
   switch (value) {
     case 'xs':
       return theme.space8;
@@ -42,7 +38,7 @@ export function resolveSpacingValue(theme: AppTheme, value?: Spacing | number) {
     case '6xl':
       return theme.space72;
     default:
-      return undefined;
+      return value;
   }
 }
 

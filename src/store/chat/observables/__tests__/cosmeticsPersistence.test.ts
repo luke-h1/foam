@@ -1,3 +1,7 @@
+// This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
+// field (see types/seventv/cosmetics.ts), not a naming choice.
+// oxlint-disable anti-slop/no-shape-in-symbol-names
+import { storageService } from '@app/lib/storage';
 import type { PaintData } from '@app/store/chat/types/constants';
 
 import {
@@ -7,16 +11,16 @@ import {
   writePersistedCosmeticDefinitions,
 } from '../cosmeticsPersistence';
 
-const mockBackingStore = new Map<string, unknown>();
+const LEGACY_COSMETICS_SNAPSHOT_KEY = 'sevenTvCosmeticsSnapshot_v1';
+const COSMETICS_NAMESPACE = 'seven_tv_cache';
 
-jest.mock('@app/lib/storage', () => ({
-  storageService: {
-    getString: jest.fn((key: string) => mockBackingStore.get(key) ?? null),
-    set: jest.fn((key: string, value: unknown) => {
-      mockBackingStore.set(key, value);
-    }),
-  },
-}));
+const setLegacySnapshot = (snapshot: CosmeticsSnapshot): void => {
+  storageService.set(
+    LEGACY_COSMETICS_SNAPSHOT_KEY,
+    snapshot,
+    COSMETICS_NAMESPACE,
+  );
+};
 
 const makePaint = (id: string): PaintData => ({
   id,
@@ -35,8 +39,7 @@ const makePaint = (id: string): PaintData => ({
 
 describe('cosmeticsPersistence', () => {
   beforeEach(() => {
-    mockBackingStore.clear();
-    jest.clearAllMocks();
+    storageService.clear();
   });
 
   test('returns null when nothing is cached', () => {
@@ -75,7 +78,7 @@ describe('cosmeticsPersistence', () => {
   });
 
   test('falls back to the legacy combined snapshot key', () => {
-    mockBackingStore.set('sevenTvCosmeticsSnapshot_v1', {
+    setLegacySnapshot({
       paints: { 'paint-1': makePaint('paint-1') },
       badges: {},
       userPaintIds: { 'user-1': 'paint-1' },
@@ -91,7 +94,7 @@ describe('cosmeticsPersistence', () => {
   });
 
   test('fills missing bindings from the legacy snapshot when only definitions were split-written', () => {
-    mockBackingStore.set('sevenTvCosmeticsSnapshot_v1', {
+    setLegacySnapshot({
       paints: { 'paint-legacy': makePaint('paint-legacy') },
       badges: {},
       userPaintIds: { 'user-1': 'paint-legacy' },
@@ -111,7 +114,7 @@ describe('cosmeticsPersistence', () => {
   });
 
   test('fills missing definitions from the legacy snapshot when only bindings were split-written', () => {
-    mockBackingStore.set('sevenTvCosmeticsSnapshot_v1', {
+    setLegacySnapshot({
       paints: { 'paint-legacy': makePaint('paint-legacy') },
       badges: {},
       userPaintIds: { 'user-1': 'paint-legacy' },

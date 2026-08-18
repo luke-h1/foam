@@ -442,6 +442,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       logger.chat.debug(
         `USERNOTICE in ${channelName}: ${tagsRecord['msg-id'] || 'unknown event'}`,
       );
+      // SAFETY: routeIrcMessage only dispatches usernotice for a tagged USERNOTICE line, so tagsRecord carries the msg-id UserNoticeTags discriminates on.
       optionsRef.current.onUserNotice?.(
         channelName,
         tagsRecord as UserNoticeTags,
@@ -532,13 +533,13 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     routeIrcMessage(message, ircRouteHandlers);
   };
 
-  const handleMessage = (event: MessageEvent) => {
+  const handleMessage = (event: MessageEvent<string>) => {
     try {
       lastActivityAtRef.current = Date.now();
       // Any inbound line proves the socket is alive, so a pending probe is
       // satisfied (Twitch's PONG arrives as a normal inbound line).
       awaitingPongRef.current = false;
-      const text = `${messageBufferRef.current}${event.data as string}`;
+      const text = `${messageBufferRef.current}${event.data}`;
       let cursor = 0;
 
       while (cursor < text.length) {

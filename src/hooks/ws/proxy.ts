@@ -13,17 +13,25 @@ type WritableKeys<T> = {
   >;
 }[keyof T];
 
+/**
+ * The proxy answers `reconnect` itself, so its trap sees one key the socket
+ * type does not declare.
+ */
+type WebSocketProxyKey = keyof WebSocket | 'reconnect';
+
+type WritableWebSocketValue = WebSocket[WritableKeys<WebSocket>];
+
 export const websocketWrapper = (
   webSocket: WebSocket,
   start: RefObject<() => void>,
 ): WebSocket => {
   return new Proxy<WebSocket>(webSocket, {
-    get: (obj, key: keyof WebSocket) => {
-      const val = obj[key];
-      if ((key as string) === 'reconnect') {
+    get: (obj, key: WebSocketProxyKey) => {
+      if (key === 'reconnect') {
         return start;
       }
-      if (typeof val === 'function') {
+      const val = obj[key];
+      if (val instanceof Function) {
         logger.main.error(
           'Calling methods directly on the websocket is not supported at this moment. You must use the methods returned by useWebSocket.',
         );
@@ -33,7 +41,11 @@ export const websocketWrapper = (
       }
       return val;
     },
-    set: (obj: WebSocket, key: WritableKeys<WebSocket>, val: unknown) => {
+    set: (
+      obj: WebSocket,
+      key: WritableKeys<WebSocket>,
+      val: WritableWebSocketValue,
+    ) => {
       if (/^on/.test(key)) {
         logger.main.warn(
           "The websocket's event handlers should be defined through the options object passed into useWebSocket.",

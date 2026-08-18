@@ -1,10 +1,16 @@
+import { Text } from 'react-native';
+
 import { fireEvent, render } from '@testing-library/react-native';
 
-import type { Preferences } from '@app/store/preferenceStore';
+import {
+  getPreferences,
+  type Preferences,
+  replacePreferences,
+} from '@app/store/preferenceStore';
 
 import { ChatPreferenceScrollContent } from '../ChatPreferenceScreen';
+import * as ChatPreferencesPreviewModule from '../ChatPreferencesPreview';
 
-const mockUpdate = jest.fn();
 const mockPreferences: Preferences = {
   updatedAt: 1,
   theme: 'foam-dark',
@@ -53,79 +59,31 @@ const mockPreferences: Preferences = {
   sevenTvPaintRenderer: 'native',
 };
 
-jest.mock('@app/store/preferenceStore', () => ({
-  usePreferences: () => ({
-    ...mockPreferences,
-    update: mockUpdate,
-  }),
-}));
+// ChatPreferencePreview is wrapped in React.memo, so the module export is a
+// memo descriptor object rather than a callable - spy on its inner `.type`
+// render function instead.
+jest
+  .spyOn(ChatPreferencesPreviewModule.ChatPreferencePreview, 'type')
+  .mockImplementation(props => {
+    const provider = 'provider' in props ? props.provider : undefined;
+    const testID = provider
+      ? `chat-preference-preview-${provider}-${props.variant}`
+      : `chat-preference-preview-${props.variant}`;
 
-jest.mock('@app/hooks/useScrollToTop', () => ({
-  useScrollToTop: jest.fn(),
-}));
-
-jest.mock('@app/components/BodyScrollView/BodyScrollView', () => {
-  const React = require('react');
-  const { ScrollView } = require('react-native');
-
-  return {
-    BodyScrollView: (props: Record<string, unknown>) =>
-      React.createElement(ScrollView, props),
-  };
-});
-
-jest.mock('@app/components/ScreenHeader/ScreenHeader', () => {
-  const React = require('react');
-  const { Text } = require('react-native');
-
-  return {
-    ScreenHeader: ({ title }: { title: string }) =>
-      React.createElement(Text, null, title),
-  };
-});
-
-jest.mock('@expo/ui/community/segmented-control', () => {
-  const React = require('react');
-  const { View } = require('react-native');
-
-  return {
-    SegmentedControl: (props: Record<string, unknown>) =>
-      React.createElement(View, {
-        ...props,
-        testID: 'segmented-control',
-      }),
-  };
-});
-
-jest.mock('../ChatPreferencesPreview', () => {
-  const React = require('react');
-  const { Text } = require('react-native');
-
-  return {
-    ChatPreferencePreview: ({
-      provider,
-      value,
-      variant,
-    }: {
-      provider?: string;
-      value: unknown;
-      variant: string;
-    }) =>
-      React.createElement(
-        Text,
-        {
-          testID: provider
-            ? `chat-preference-preview-${provider}-${variant}`
-            : `chat-preference-preview-${variant}`,
-        },
-        JSON.stringify({ provider, value, variant }),
-      ),
-  };
-});
+    return (
+      <Text testID={testID}>
+        {JSON.stringify({
+          provider,
+          value: props.value,
+          variant: props.variant,
+        })}
+      </Text>
+    );
+  });
 
 describe('ChatPreferenceScreen', () => {
   beforeEach(() => {
-    mockUpdate.mockClear();
+    replacePreferences(mockPreferences);
   });
 
   test('updates the context preview immediately when toggling a setting', () => {
@@ -142,7 +100,7 @@ describe('ChatPreferenceScreen', () => {
     expect(
       getByTestId('chat-preference-preview-context').props.children,
     ).toContain('"showUnreadJumpPill":false');
-    expect(mockUpdate).toHaveBeenCalledWith({ showUnreadJumpPill: false });
+    expect(getPreferences().showUnreadJumpPill).toBe(false);
   });
 
   test('updates alternating rows immediately when toggled', () => {
@@ -159,7 +117,7 @@ describe('ChatPreferenceScreen', () => {
     expect(
       getByTestId('chat-preference-preview-alternatingRows').props.children,
     ).toContain('"value":true');
-    expect(mockUpdate).toHaveBeenCalledWith({ showAlternatingChatRows: true });
+    expect(getPreferences().showAlternatingChatRows).toBe(true);
   });
 
   test('updates provider previews immediately when toggling provider media', () => {
@@ -176,7 +134,7 @@ describe('ChatPreferenceScreen', () => {
     expect(
       getByTestId('chat-preference-preview-7tv-providerEmotes').props.children,
     ).toContain('"value":false');
-    expect(mockUpdate).toHaveBeenCalledWith({ show7TvEmotes: false });
+    expect(getPreferences().show7TvEmotes).toBe(false);
   });
 
   test('updates the emote animation preview immediately when toggling media', () => {
@@ -193,8 +151,6 @@ describe('ChatPreferenceScreen', () => {
     expect(
       getByTestId('chat-preference-preview-emoteAnimations').props.children,
     ).toContain('"value":true');
-    expect(mockUpdate).toHaveBeenCalledWith({
-      disableEmoteAnimations: true,
-    });
+    expect(getPreferences().disableEmoteAnimations).toBe(true);
   });
 });

@@ -5,10 +5,12 @@ import { SEVENTV_EMOTE_LINK_REGEX } from '@app/utils/chat/parseWordLinkParts/SEV
 const GENERIC_HTTP_URL_REGEX = /^https?:\/\//i;
 const TRAILING_URL_PUNCTUATION = new Set('.,!?;:\'"\\)]}>'.split(''));
 
-function splitTrailingUrlPunctuation(word: string): {
+type SplitUrlWord = {
   urlCandidate: string;
   trailing: string;
-} {
+};
+
+function splitTrailingUrlPunctuation(word: string): SplitUrlWord {
   let end = word.length;
 
   while (end > 0 && TRAILING_URL_PUNCTUATION.has(word[end - 1] ?? '')) {

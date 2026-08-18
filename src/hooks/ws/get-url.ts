@@ -7,13 +7,7 @@ export async function getUrl(
   url: string | (() => string | Promise<string>),
   optionsRef: RefObject<Options>,
 ) {
-  let convertedUrl: string;
-
-  if (typeof url === 'function') {
-    convertedUrl = await url();
-  } else {
-    convertedUrl = url;
-  }
+  const convertedUrl = url instanceof Function ? await url() : url;
 
   const parsedUrl = optionsRef.current.fromSocketIO
     ? parseSocketIOUrl(convertedUrl)

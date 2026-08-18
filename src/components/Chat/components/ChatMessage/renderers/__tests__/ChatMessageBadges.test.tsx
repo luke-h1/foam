@@ -2,20 +2,27 @@ import { StyleSheet, View } from 'react-native';
 import type { ViewStyle } from 'react-native';
 
 import { act, render } from '@testing-library/react-native';
+import type { ImageProps } from 'expo-image';
+import * as ExpoImage from 'expo-image';
 
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 import { ChatMessageBadges } from '../ChatMessageBadges';
 
-let mockImageProps: Record<string, unknown> | null = null;
+let mockImageProps: ImageProps | null = null;
 
-jest.mock('expo-image', () => ({
-  Image: (props: Record<string, unknown>) => {
+/**
+ * expo-image's `Image` is a forwardRef object, not a plain function, so
+ * jest.spyOn cannot wrap it - swap the export directly instead.
+ */
+Object.defineProperty(ExpoImage, 'Image', {
+  configurable: true,
+  value: (props: ImageProps) => {
     mockImageProps = props;
     const { View: RNView } = jest.requireActual('react-native');
     return <RNView testID='chat-badge-image' />;
   },
-}));
+});
 
 function renderBadges(badges: SanitisedBadgeSet[]) {
   return render(
@@ -95,7 +102,9 @@ describe('ChatMessageBadges', () => {
 
     expect(getByTestId('chat-badge')).toBeOnTheScreen();
 
-    act(() => (mockImageProps?.onError as () => void)());
+    act(() => {
+      mockImageProps?.onError?.({ error: 'dead url' });
+    });
 
     expect(queryByTestId('chat-badge')).toBeNull();
   });

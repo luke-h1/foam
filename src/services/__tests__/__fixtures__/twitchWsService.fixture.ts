@@ -1,6 +1,10 @@
 import TwitchWsService from '@app/services/twitch-ws-service';
+import type {
+  EventSubMessage,
+  TwitchEventSubCallback,
+} from '@app/types/twitch/eventsub';
 
-type EventCallback = (data: unknown) => void;
+type EventCallback = TwitchEventSubCallback;
 
 /**
  * Only the surface the service touches on its socket, so tests can install a
@@ -29,7 +33,7 @@ export type TwitchWsTestState = {
    * Private on the service; reached for so routing tests can deliver a
    * notification without a socket.
    */
-  handleNotification: (message: unknown) => void;
+  handleNotification: (message: EventSubMessage) => void;
   entries: Map<string, TestEventSubEntry>;
   appStateSubscription: { remove: () => void } | null;
   instance: TestSocket | null;

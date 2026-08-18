@@ -39,7 +39,7 @@ export type UIColor =
   | 'transparent';
 
 // Biased to the small end for a tighter, more native feel.
-export const RADIUS_VALUES: Record<UIRadius, number> = {
+export const RADIUS_VALUES = {
   none: 0,
   xxs: 4,
   xs: 6,
@@ -50,7 +50,7 @@ export const RADIUS_VALUES: Record<UIRadius, number> = {
   card: 14,
   xl: 20,
   full: 999,
-};
+} satisfies Record<UIRadius, number>;
 
 export interface ColorConfig {
   backgroundColor: string;

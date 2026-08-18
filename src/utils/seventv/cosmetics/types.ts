@@ -12,6 +12,7 @@ export type PaintGradientLayer = {
   at?: [number, number];
   stops?: IndexedCollection<PaintStop> | PaintStop[];
   image_url?: string;
+  // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- mirrors the 7TV paint API field name; see normalizeSevenTvPaint.ts
   shape?: string;
   angle?: number;
   repeat?: boolean;

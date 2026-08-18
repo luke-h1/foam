@@ -31,14 +31,14 @@ export function setFatalErrorListener(
 export function installGlobalErrorHandlers(): void {
   // ErrorUtils only exists in the React Native runtime; on web Sentry's
   // browser global handlers cover this.
-  if (didInstall || typeof ErrorUtils === 'undefined') {
+  if (didInstall || !('ErrorUtils' in globalThis)) {
     return;
   }
   didInstall = true;
 
   const previousHandler = ErrorUtils.getGlobalHandler();
 
-  ErrorUtils.setGlobalHandler((error: unknown, isFatal?: boolean) => {
+  ErrorUtils.setGlobalHandler((error, isFatal) => {
     markSessionError();
 
     // In production a fatal would otherwise crash the app after Sentry

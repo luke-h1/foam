@@ -11,13 +11,13 @@ import { createSystemMessage } from '@app/utils/chat/messageHandlers/createSyste
 import { clearImageCache } from '@app/utils/image/clearImageCache';
 import { logger } from '@app/utils/logger';
 
-interface UseChatSettingsActionsOptions {
+interface UseChatSettingsActionsOptions<TRefetchedEmotes> {
   channelId: string;
   channelName: string;
   forceFlush: () => void;
   joinChannel: (channel: string) => void;
   partChannel: (channel: string) => void;
-  refetchEmotes: () => Promise<unknown>;
+  refetchEmotes: () => Promise<TRefetchedEmotes>;
   reprocessAllMessages: () => void;
   scrollToBottom: () => void;
 }
@@ -27,7 +27,7 @@ function handleClearSevenTvCosmeticsCache() {
   logger.chat.info('7TV cosmetic cache cleared successfully');
 }
 
-export function useChatSettingsActions({
+export function useChatSettingsActions<TRefetchedEmotes>({
   channelId,
   channelName,
   forceFlush,
@@ -36,7 +36,7 @@ export function useChatSettingsActions({
   refetchEmotes,
   reprocessAllMessages,
   scrollToBottom,
-}: UseChatSettingsActionsOptions) {
+}: UseChatSettingsActionsOptions<TRefetchedEmotes>) {
   const channelNameRef = useSyncRef(channelName);
   const refetchEmotesRef = useSyncRef(refetchEmotes);
   const reprocessAllMessagesRef = useSyncRef(reprocessAllMessages);

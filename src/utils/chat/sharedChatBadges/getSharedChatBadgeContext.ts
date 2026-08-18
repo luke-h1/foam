@@ -45,7 +45,7 @@ async function getSharedChatSourceBadge(
   const promise = twitchService
     .getUser(undefined, sourceRoomId)
     .then(user => {
-      if (!user || typeof user !== 'object' || !user.profile_image_url) {
+      if (!user || !user.profile_image_url) {
         return null;
       }
 

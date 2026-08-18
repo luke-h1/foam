@@ -1,31 +1,32 @@
 import { renderHook } from '@testing-library/react-native';
 
-import {
-  abortCurrentLoad,
-  clearChannelResources,
-  clearPersonalEmotesCache,
-} from '@app/store/chat/actions/channelLoad';
-import { clearPaintBindings } from '@app/store/chat/actions/cosmetics';
-import { clearMessages } from '@app/store/chat/actions/messages';
-import { clearFetchedCosmeticsUsers } from '@app/store/chat/actions/userCosmeticsFetch';
+import * as channelLoadActions from '@app/store/chat/actions/channelLoad';
+import * as cosmeticsActions from '@app/store/chat/actions/cosmetics';
+import * as messagesActions from '@app/store/chat/actions/messages';
+import * as personalEmotesActions from '@app/store/chat/actions/personalEmotes';
+import * as userCosmeticsFetchActions from '@app/store/chat/actions/userCosmeticsFetch';
 import { visibleAssetHydration } from '@app/store/chat/actions/visibleAssetHydration';
 
 import { useChatLifecycle } from '../useChatLifecycle';
 
-jest.mock('@app/store/chat/actions/channelLoad', () => ({
-  abortCurrentLoad: jest.fn(),
-  clearChannelResources: jest.fn(),
-  clearPersonalEmotesCache: jest.fn(),
-}));
-jest.mock('@app/store/chat/actions/messages', () => ({
-  clearMessages: jest.fn(),
-}));
-jest.mock('@app/store/chat/actions/cosmetics', () => ({
-  clearPaintBindings: jest.fn(),
-}));
-jest.mock('@app/store/chat/actions/userCosmeticsFetch', () => ({
-  clearFetchedCosmeticsUsers: jest.fn(),
-}));
+const abortCurrentLoad = jest.spyOn(channelLoadActions, 'abortCurrentLoad');
+const clearChannelResources = jest.spyOn(
+  channelLoadActions,
+  'clearChannelResources',
+);
+// channelLoad re-exports this from personalEmotes.ts; babel compiles
+// re-exports as non-configurable getters, so the spy must target the
+// source module directly.
+const clearPersonalEmotesCache = jest.spyOn(
+  personalEmotesActions,
+  'clearPersonalEmotesCache',
+);
+const clearMessages = jest.spyOn(messagesActions, 'clearMessages');
+const clearPaintBindings = jest.spyOn(cosmeticsActions, 'clearPaintBindings');
+const clearFetchedCosmeticsUsers = jest.spyOn(
+  userCosmeticsFetchActions,
+  'clearFetchedCosmeticsUsers',
+);
 
 describe('useChatLifecycle', () => {
   const partChannel = jest.fn();
@@ -35,26 +36,24 @@ describe('useChatLifecycle', () => {
   const cancelEmoteLoad = jest.fn();
   const unsubscribe = jest.fn();
 
+  let beforeRemoveCb: (() => void) | undefined;
+
   const defaultNavigation = {
     addListener: jest.fn((_event: string, cb: () => void) => {
-      (defaultNavigation as { beforeRemoveCb?: () => void }).beforeRemoveCb =
-        cb;
+      beforeRemoveCb = cb;
       return unsubscribe;
     }),
   };
 
-  const getBeforeRemoveCb = () =>
-    (defaultNavigation as { beforeRemoveCb?: () => void }).beforeRemoveCb;
+  const getBeforeRemoveCb = () => beforeRemoveCb;
 
   beforeEach(() => {
     jest.clearAllMocks();
     defaultProps.isMountedRef.current = true;
-    delete (defaultNavigation as { beforeRemoveCb?: () => void })
-      .beforeRemoveCb;
+    beforeRemoveCb = undefined;
     defaultNavigation.addListener.mockImplementation(
       (_event: string, cb: () => void) => {
-        (defaultNavigation as { beforeRemoveCb?: () => void }).beforeRemoveCb =
-          cb;
+        beforeRemoveCb = cb;
         return unsubscribe;
       },
     );

@@ -1,11 +1,13 @@
 import { act, renderHook } from '@testing-library/react-native';
 
+import * as haptics from '@app/lib/haptics';
+
 import {
   MAX_MESSAGE_LENGTH,
   useChatComposerController,
 } from '../hooks/useChatComposerController';
 
-jest.mock('@app/lib/haptics', () => ({ impact: jest.fn() }));
+jest.spyOn(haptics, 'impact').mockImplementation(() => {});
 
 function renderController(
   options: Partial<Parameters<typeof useChatComposerController>[0]> = {},

@@ -22,7 +22,7 @@ export type SevenTvUser = {
   emoteSetId: string;
 };
 
-type CachedSevenTvUser = SevenTvUser & {
+export type CachedSevenTvUser = SevenTvUser & {
   fetchedAt: number;
   expiresAt: number;
 };
@@ -31,7 +31,7 @@ export type SevenTvUserCacheStorage = {
   getString: <T>(key: string, namespacePrefix?: 'seven_tv_cache') => T | null;
   set: (
     key: string,
-    value: unknown,
+    value: CachedSevenTvUser,
     namespacePrefix?: 'seven_tv_cache',
     options?: { expiry?: Date },
   ) => void;

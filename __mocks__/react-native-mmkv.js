@@ -21,6 +21,22 @@ function notifyListeners(id, key) {
   getListeners(id).forEach(listener => listener(key));
 }
 
+function toEntry(value) {
+  if (value === true || value === false) {
+    return { kind: 'boolean', value };
+  }
+  if (value instanceof ArrayBuffer) {
+    return { kind: 'buffer', value };
+  }
+  if (Number.isNaN(value) || value === Number(value)) {
+    return { kind: 'number', value };
+  }
+  if (value === String(value)) {
+    return { kind: 'string', value };
+  }
+  return { kind: 'other', value };
+}
+
 function createMMKVInstance(options = {}) {
   const id = options.id ?? 'default';
   const storage = getStore(id);
@@ -68,23 +84,23 @@ function createMMKVInstance(options = {}) {
     },
 
     getBoolean(key) {
-      const value = storage.get(key);
-      return typeof value === 'boolean' ? value : undefined;
+      const entry = storage.get(key);
+      return entry?.kind === 'boolean' ? entry.value : undefined;
     },
 
     getBuffer(key) {
-      const value = storage.get(key);
-      return value instanceof ArrayBuffer ? value : undefined;
+      const entry = storage.get(key);
+      return entry?.kind === 'buffer' ? entry.value : undefined;
     },
 
     getNumber(key) {
-      const value = storage.get(key);
-      return typeof value === 'number' ? value : undefined;
+      const entry = storage.get(key);
+      return entry?.kind === 'number' ? entry.value : undefined;
     },
 
     getString(key) {
-      const value = storage.get(key);
-      return typeof value === 'string' ? value : undefined;
+      const entry = storage.get(key);
+      return entry?.kind === 'string' ? entry.value : undefined;
     },
 
     importAllFrom(other) {
@@ -94,7 +110,7 @@ function createMMKVInstance(options = {}) {
         const value = other.getBuffer(key);
 
         if (value != null) {
-          storage.set(key, value);
+          storage.set(key, toEntry(value));
           imported += 1;
         }
       });
@@ -119,7 +135,7 @@ function createMMKVInstance(options = {}) {
         throw new Error('Cannot set a value for an empty key!');
       }
 
-      storage.set(key, value);
+      storage.set(key, toEntry(value));
       notifyListeners(id, key);
     },
 

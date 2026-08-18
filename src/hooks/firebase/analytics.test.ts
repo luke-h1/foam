@@ -12,22 +12,10 @@ import {
   setAnalyticsEnabled,
 } from './analytics';
 
-jest.mock('@react-native-firebase/installations');
-jest.mock('@react-native-firebase/app');
-jest.mock('@react-native-firebase/analytics');
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    main: {
-      warn: jest.fn(),
-    },
-  },
-}));
-
 const mockedSetCollectionEnabled = jest.mocked(setAnalyticsCollectionEnabled);
 const mockedLogEvent = jest.mocked(logEvent);
 const mockedLogScreenView = jest.mocked(logScreenView);
-const mockedWarn = jest.mocked(logger.main.warn);
+const mockedWarn = jest.spyOn(logger.main, 'warn').mockImplementation();
 
 describe('analytics', () => {
   beforeEach(() => {

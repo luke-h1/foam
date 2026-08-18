@@ -1,45 +1,70 @@
 import { act, renderHook } from '@testing-library/react-native';
 
-import type { SanitisedEmote } from '@app/types/emote';
+import { EmoteSetKind } from '@app/graphql/generated/gql';
+import * as channelLoadActions from '@app/store/chat/actions/channelLoad';
+import type { SevenTvSanitisedEmote } from '@app/types/emote';
+import type { ResolvableDisplayEmote } from '@app/utils/emote/resolveEmoteDisplayUrl';
+import * as resolveEmoteDisplayUrlModule from '@app/utils/emote/resolveEmoteDisplayUrl';
 
+import * as cacheService from '../cache-service';
 import { useCachedEmotes } from '../useCachedEmotes';
 
-const mockWarm = jest.fn<Promise<void>, [string[], { pin: boolean }]>();
-const mockRelease = jest.fn();
-const mockAbortInflight = jest.fn();
+const mockWarm = jest.spyOn(cacheService, 'warmCachedEmoteRefs');
+const mockRelease = jest.spyOn(cacheService, 'releaseChannelEmoteRefs');
+const mockAbortInflight = jest.spyOn(cacheService, 'abortInflightEmoteDecodes');
+mockRelease.mockImplementation(() => {});
+mockAbortInflight.mockImplementation(() => {});
 
-jest.mock('../cache-service', () => ({
-  abortInflightEmoteDecodes: () => mockAbortInflight(),
-  releaseChannelEmoteRefs: (...args: unknown[]) => mockRelease(...args),
-  warmCachedEmoteRefs: (urls: string[], opts: { pin: boolean }) =>
-    mockWarm(urls, opts),
-}));
+jest
+  .spyOn(resolveEmoteDisplayUrlModule, 'resolveEmoteDisplayUrl')
+  .mockImplementation((emote: ResolvableDisplayEmote) => emote.url ?? '');
 
-jest.mock('@app/utils/emote/resolveEmoteDisplayUrl', () => ({
-  resolveEmoteDisplayUrl: (emote: { url: string }) => emote.url,
-}));
+const staticEmote = (index: number): SevenTvSanitisedEmote => ({
+  id: `emote-${index}`,
+  name: `emote${index}`,
+  original_name: `emote${index}`,
+  creator: null,
+  emote_link: `https://7tv.app/emotes/emote-${index}`,
+  provider: '7tv',
+  site: '7TV Global',
+  url: `https://cdn.7tv.app/emote/warm${index}/2x_static.avif`,
+  frame_count: 1,
+  format: 'AVIF',
+  flags: 0,
+  aspect_ratio: 1,
+  zero_width: false,
+  width: 32,
+  height: 32,
+  set_metadata: {
+    capacity: null,
+    kind: EmoteSetKind.Global,
+    ownerId: null,
+    setId: 'set-id',
+    setName: 'global',
+    totalCount: 1,
+    updatedAt: '2026-05-19T00:00:00Z',
+  },
+});
 
-const staticEmote = (index: number): SanitisedEmote =>
-  ({
-    id: `emote-${index}`,
-    name: `emote${index}`,
-    url: `https://cdn.7tv.app/emote/warm${index}/2x_static.avif`,
-  }) as SanitisedEmote;
-
-jest.mock('@app/store/chat/actions/channelLoad', () => ({
-  getCurrentEmoteData: () => ({
-    sevenTvGlobalEmotes: Array.from({ length: 48 }, (_, index) =>
-      staticEmote(index),
-    ),
-    bttvGlobalEmotes: [],
-    ffzGlobalEmotes: [],
-    twitchGlobalEmotes: [],
-    sevenTvChannelEmotes: [],
-    bttvChannelEmotes: [],
-    ffzChannelEmotes: [],
-    twitchChannelEmotes: [],
-  }),
-}));
+jest.spyOn(channelLoadActions, 'getCurrentEmoteData').mockReturnValue({
+  sevenTvGlobalEmotes: Array.from({ length: 48 }, (_, index) =>
+    staticEmote(index),
+  ),
+  bttvGlobalEmotes: [],
+  ffzGlobalEmotes: [],
+  twitchGlobalEmotes: [],
+  twitchSubscriberEmotes: [],
+  sevenTvChannelEmotes: [],
+  bttvChannelEmotes: [],
+  ffzChannelEmotes: [],
+  twitchChannelEmotes: [],
+  twitchChannelBadges: [],
+  twitchGlobalBadges: [],
+  ffzChannelBadges: [],
+  ffzGlobalBadges: [],
+  chatterinoBadges: [],
+  bttvBadges: [],
+});
 
 const flushMicrotasks = () =>
   new Promise<void>(resolve => {

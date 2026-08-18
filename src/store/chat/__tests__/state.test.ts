@@ -12,26 +12,6 @@ import {
   makeEmptyGlobalCacheData,
 } from '../types/constants';
 
-jest.mock('@legendapp/state/persist', () => ({
-  configureObservablePersistence: jest.fn(),
-  persistObservable: jest.fn(),
-}));
-
-jest.mock('react-native-mmkv', () => ({
-  MMKV: class MockMMKV {
-    set = jest.fn();
-    getString = jest.fn();
-    getAllKeys = jest.fn(() => []);
-    delete = jest.fn();
-  },
-  createMMKV: () => ({
-    set: jest.fn(),
-    getString: jest.fn(),
-    getAllKeys: jest.fn(() => []),
-    remove: jest.fn(),
-  }),
-}));
-
 const makeCache = (lastUpdated: number) => ({
   ...makeEmptyEmoteData(),
   lastUpdated,
@@ -39,7 +19,7 @@ const makeCache = (lastUpdated: number) => ({
 
 describe('limitChannelCaches', () => {
   test('prunes stale channels without requiring Array.prototype.toSorted', () => {
-    const arrayPrototype = Array.prototype as { toSorted?: unknown };
+    const arrayPrototype: { toSorted?: unknown } = Array.prototype;
     const nativeToSorted = arrayPrototype.toSorted;
     delete arrayPrototype.toSorted;
 

@@ -8,6 +8,19 @@ export type ApiProvider =
   | 'twitch'
   | 'unknown';
 
+/**
+ * Span and log attributes for one API call. `host` is only known when the
+ * request URL parses.
+ */
+export interface ApiMonitoringContext {
+  endpoint: string;
+  host?: string;
+  method?: string;
+  provider: ApiProvider;
+  status?: number;
+  url: string;
+}
+
 interface ApiMonitoringInput {
   baseURL?: string;
   method?: string;
@@ -70,7 +83,7 @@ export function getApiMonitoringContext({
   method,
   status,
   url = '',
-}: ApiMonitoringInput): Record<string, string | number | undefined> {
+}: ApiMonitoringInput): ApiMonitoringContext {
   const raw_url = trimUrlParts(baseURL, url);
 
   try {

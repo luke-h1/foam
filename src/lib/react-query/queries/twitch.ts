@@ -14,12 +14,13 @@ import { getPreviousPageParam } from '@app/utils/pagination/getPreviousPageParam
 import { twitchKeys } from '../query-keys';
 
 const MAX_INFINITE_PAGES = 15;
+const INITIAL_PAGE_CURSOR: string | undefined = undefined;
 
 export function streamQueryOptions(userLogin: string) {
   return queryOptions({
     queryKey: twitchKeys.stream(userLogin),
     staleTime: 30_000,
-    queryFn: () => twitchService.getStream(userLogin) as Promise<TwitchStream>,
+    queryFn: () => twitchService.getStream(userLogin),
   });
 }
 
@@ -89,7 +90,7 @@ export function topStreamsInfiniteQueryOptions() {
     queryKey: twitchKeys.topStreams(),
     staleTime: 60_000,
     queryFn: ({ pageParam }) => twitchService.getTopStreams(pageParam),
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: INITIAL_PAGE_CURSOR,
     maxPages: MAX_INFINITE_PAGES,
     getNextPageParam,
     getPreviousPageParam,
@@ -101,7 +102,7 @@ export function topCategoriesInfiniteQueryOptions() {
     queryKey: twitchKeys.topCategories(),
     staleTime: 60_000,
     queryFn: ({ pageParam }) => twitchService.getTopCategories(pageParam),
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: INITIAL_PAGE_CURSOR,
     maxPages: MAX_INFINITE_PAGES,
     getNextPageParam: (lastPage: PaginatedList<Category>) =>
       lastPage?.pagination?.cursor,
@@ -115,7 +116,7 @@ export function streamsByCategoryInfiniteQueryOptions(categoryId: string) {
     staleTime: 60_000,
     queryFn: ({ pageParam }) =>
       twitchService.getStreamsByCategory(categoryId, pageParam),
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: INITIAL_PAGE_CURSOR,
     maxPages: MAX_INFINITE_PAGES,
     getNextPageParam,
     getPreviousPageParam,
@@ -130,7 +131,7 @@ export function clipsInfiniteQueryOptions(
     staleTime: 60_000,
     queryFn: ({ pageParam }) =>
       twitchService.getClips({ ...params, after: pageParam }),
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: INITIAL_PAGE_CURSOR,
     maxPages: MAX_INFINITE_PAGES,
     getNextPageParam: lastPage => lastPage?.pagination?.cursor || undefined,
   });
@@ -144,7 +145,7 @@ export function videosInfiniteQueryOptions(
     staleTime: 60_000,
     queryFn: ({ pageParam }) =>
       twitchService.getVideos({ ...params, after: pageParam }),
-    initialPageParam: undefined as string | undefined,
+    initialPageParam: INITIAL_PAGE_CURSOR,
     maxPages: MAX_INFINITE_PAGES,
     getNextPageParam: lastPage => lastPage?.pagination?.cursor || undefined,
   });

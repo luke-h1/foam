@@ -4,7 +4,7 @@ import {
   createLoggedInAuthContextValue,
   createTestUser,
 } from '@app/context/__tests__/__fixtures__/authContext.fixture';
-import { useAuthContext } from '@app/context/AuthContext';
+import * as AuthContextModule from '@app/context/AuthContext';
 import type { TestActivityState } from '@app/hooks/__tests__/__fixtures__/useChannelActivity.fixture';
 import {
   createEventSubMessage,
@@ -14,31 +14,19 @@ import { useChannelActivity } from '@app/hooks/useChannelActivity';
 import TwitchWsService from '@app/services/twitch-ws-service';
 import { logger } from '@app/utils/logger';
 
-jest.mock('@app/context/AuthContext', () => ({
-  useAuthContext: jest.fn(),
-}));
-
-jest.mock('@app/services/twitch-ws-service', () => ({
-  __esModule: true,
-  default: {
-    disconnect: jest.fn(),
-    getInstance: jest.fn(),
-    subscribeToEvent: jest.fn(),
-    unsubscribeFromEvent: jest.fn(),
-  },
-}));
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    twitchWs: {
-      warn: jest.fn(),
-    },
-  },
-}));
-
-const mockUseAuthContext = jest.mocked(useAuthContext);
-const mockTwitchWsService = jest.mocked(TwitchWsService);
-const mockWarn = jest.mocked(logger.twitchWs.warn);
+const mockUseAuthContext = jest.spyOn(AuthContextModule, 'useAuthContext');
+// SAFETY: getInstance's return value is never read by this hook, only passed through.
+const mockGetInstance = jest
+  .spyOn(TwitchWsService, 'getInstance')
+  .mockReturnValue({} as WebSocket);
+const mockSubscribeToEvent = jest.spyOn(TwitchWsService, 'subscribeToEvent');
+const mockUnsubscribeFromEvent = jest.spyOn(
+  TwitchWsService,
+  'unsubscribeFromEvent',
+);
+const mockWarn = jest
+  .spyOn(logger.twitchWs, 'warn')
+  .mockImplementation(() => undefined);
 
 function mockLoggedInViewer(userId: string) {
   mockUseAuthContext.mockReturnValue(
@@ -49,7 +37,7 @@ function mockLoggedInViewer(userId: string) {
 }
 
 function getSubscribedHandler(type: string) {
-  const call = mockTwitchWsService.subscribeToEvent.mock.calls.find(
+  const call = mockSubscribeToEvent.mock.calls.find(
     subscribeCall => subscribeCall[0] === type,
   );
   const handler = call?.[3];
@@ -62,8 +50,10 @@ function getSubscribedHandler(type: string) {
 describe('useChannelActivity', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockTwitchWsService.subscribeToEvent.mockResolvedValue(undefined);
-    mockTwitchWsService.unsubscribeFromEvent.mockResolvedValue(undefined);
+    // SAFETY: getInstance's return value is never read by this hook, only passed through.
+    mockGetInstance.mockReturnValue({} as WebSocket);
+    mockSubscribeToEvent.mockResolvedValue(undefined);
+    mockUnsubscribeFromEvent.mockResolvedValue(undefined);
   });
 
   test('skips fetch and subscriptions for channels the viewer does not own', () => {
@@ -82,8 +72,8 @@ describe('useChannelActivity', () => {
     expect(result.current.value).toBeNull();
     expect(result.current.isAvailable).toBe(false);
     expect(fetch).not.toHaveBeenCalled();
-    expect(mockTwitchWsService.getInstance).not.toHaveBeenCalled();
-    expect(mockTwitchWsService.subscribeToEvent).not.toHaveBeenCalled();
+    expect(mockGetInstance).not.toHaveBeenCalled();
+    expect(mockSubscribeToEvent).not.toHaveBeenCalled();
   });
 
   test('fetches the active value and subscribes for the signed-in broadcaster', async () => {
@@ -113,11 +103,7 @@ describe('useChannelActivity', () => {
 
     expect(fetch).toHaveBeenCalledWith('channel-id');
     expect(
-      mockTwitchWsService.subscribeToEvent.mock.calls.map(call => [
-        call[0],
-        call[1],
-        call[2],
-      ]),
+      mockSubscribeToEvent.mock.calls.map(call => [call[0], call[1], call[2]]),
     ).toEqual([
       ['channel.test.begin', '1', { broadcaster_user_id: 'channel-id' }],
       ['channel.test.end', '1', { broadcaster_user_id: 'channel-id' }],
@@ -203,9 +189,10 @@ describe('useChannelActivity', () => {
       useChannelActivity(descriptor, 'channel-id'),
     );
 
-    const subscribed = mockTwitchWsService.subscribeToEvent.mock.calls.map(
-      call => [call[0], call[3]],
-    );
+    const subscribed = mockSubscribeToEvent.mock.calls.map(call => [
+      call[0],
+      call[3],
+    ]);
     expect(subscribed.map(entry => entry[0])).toEqual([
       'channel.test.begin',
       'channel.test.end',
@@ -213,9 +200,7 @@ describe('useChannelActivity', () => {
 
     unmount();
 
-    expect(mockTwitchWsService.unsubscribeFromEvent.mock.calls).toEqual(
-      subscribed,
-    );
+    expect(mockUnsubscribeFromEvent.mock.calls).toEqual(subscribed);
   });
 
   test('logs fetch failures with the descriptor log fields', async () => {

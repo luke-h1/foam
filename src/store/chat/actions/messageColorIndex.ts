@@ -39,11 +39,7 @@ export const indexMessageColor = (message: AnyChatMessageType): void => {
     normaliseIndexKey(message.sender),
     normaliseIndexKey(message.userstate?.username),
     normaliseIndexKey(message.userstate?.login),
-    normaliseIndexKey(
-      typeof message.userstate?.['display-name'] === 'string'
-        ? message.userstate['display-name']
-        : undefined,
-    ),
+    normaliseIndexKey(message.userstate?.['display-name']),
   ];
 
   senderKeys.forEach(senderKey => {

@@ -1,5 +1,3 @@
-import type { ComponentType } from 'react';
-
 import * as Sentry from '@sentry/react-native';
 import {
   appStartIntegration,
@@ -194,9 +192,9 @@ export async function verifySentryDelivery(): Promise<{
   return { eventId, flushed };
 }
 
-export function wrapWithSentry<P extends Record<string, unknown>>(
-  RootComponent: ComponentType<P>,
-) {
+type SentryRootComponent = Parameters<typeof Sentry.wrap>[0];
+
+export function wrapWithSentry(RootComponent: SentryRootComponent) {
   return Sentry.wrap(RootComponent);
 }
 
@@ -332,13 +330,29 @@ export type MonitoringInfoName = `${MonitoringEventPrefix}_info`;
 export type MonitoringEventName =
   MonitoringErrorName | MonitoringWarningName | MonitoringInfoName;
 
+/**
+ * Everything a caller may attach to a log entry. `sanitiseLogValue` bounds each
+ * one before it reaches Sentry, so this is the widest shape that survives.
+ */
+export type LogMetadataValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | Error
+  | readonly LogMetadataValue[]
+  | { readonly [key: string]: LogMetadataValue };
+
+export type LogTagValue = string | number | boolean | null | undefined;
+
 export type LogMetadata = {
   name?: OpenStringUnion<MonitoringEventName>;
-  tags?: Record<string, string | number | boolean | null | undefined>;
+  tags?: Record<string, LogTagValue>;
   fingerprint?: string[];
-  error?: unknown;
+  error?: LogMetadataValue;
   exceptionName?: string;
-  [key: string]: unknown;
+  [key: string]: LogMetadataValue;
 };
 
 export type OtaMetrics =
@@ -358,11 +372,11 @@ const RESERVED_LOG_META_KEYS = new Set([
   'exceptionName',
 ]);
 
-function extractLogExtra(metadata?: LogMetadata): Record<string, unknown> {
+function extractLogExtra(metadata?: LogMetadata) {
+  const extra: Record<string, LogMetadataValue> = {};
   if (!metadata) {
-    return {};
+    return extra;
   }
-  const extra: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(metadata)) {
     if (!RESERVED_LOG_META_KEYS.has(key)) {
       extra[key] = value;
@@ -394,7 +408,7 @@ function applyLogScope(
     category: string;
     name?: string;
     metadata?: LogMetadata;
-    safeExtra: Record<string, unknown>;
+    safeExtra: Record<string, LogMetadataValue>;
   },
 ): void {
   // Caller tags go on first so the canonical pair below always wins: a later
@@ -410,10 +424,11 @@ function applyLogScope(
         continue;
       }
       applied += 1;
+      const text = String(value);
       scope.setTag(
         key,
-        typeof value === 'string' && value.length > MAX_TAG_VALUE_LENGTH
-          ? value.slice(0, MAX_TAG_VALUE_LENGTH)
+        text.length > MAX_TAG_VALUE_LENGTH
+          ? text.slice(0, MAX_TAG_VALUE_LENGTH)
           : value,
       );
     }
@@ -451,18 +466,25 @@ export function forwardLogToSentry(entry: {
   const { level, category, message, error, metadata } = entry;
 
   try {
-    const name = typeof metadata?.name === 'string' ? metadata.name : undefined;
+    const name = metadata?.name;
     const cause = error ?? metadata?.error;
     const headline = name ? `${name}: ${message}` : message;
-    const extra: Record<string, unknown> = extractLogExtra(metadata);
+    const extra = extractLogExtra(metadata);
     if (cause !== undefined) {
-      extra.cause = cause instanceof Error ? cause.toString() : cause;
+      // SAFETY: an arbitrary thrown value is held as metadata here and bounded by sanitiseLogValue with the rest of the extra below.
+      extra.cause = (
+        cause instanceof Error ? cause.toString() : cause
+      ) as LogMetadataValue;
     }
     // Bound the metadata before it reaches Sentry. Callers can pass arbitrarily
     // large objects (emote lists, WebSocket payloads, API responses); left raw
     // they bloat the event and have OOM-aborted envelope serialization on the
     // JS thread on low-memory devices (FOAM-TV-MOBILE-9V).
-    const safeExtra = sanitiseLogValue(extra) as Record<string, unknown>;
+    // SAFETY: sanitiseLogValue maps a record to a record of the bounded values it produces.
+    const safeExtra = sanitiseLogValue(extra) as Record<
+      string,
+      LogMetadataValue
+    >;
 
     if (level === 'error') {
       Sentry.addBreadcrumb({ category, message: headline, level: 'error' });

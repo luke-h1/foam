@@ -1,26 +1,13 @@
-import {
-  AppState,
-  type AppStateStatus,
-  Linking,
-  type NativeEventSubscription,
-} from 'react-native';
+import { AppState, type AppStateStatus, Linking } from 'react-native';
 
 import * as WebBrowser from 'expo-web-browser';
 
 import { openLinkInBrowserAsync } from '../openLinkInBrowser';
 
-jest.mock('expo-web-browser', () => ({
-  openBrowserAsync: jest.fn(),
-  WebBrowserResultType: {
-    DISMISS: 'dismiss',
-  },
-}));
-
-const openBrowserAsync = jest.mocked(WebBrowser.openBrowserAsync);
-
 describe('openLinkInBrowserAsync', () => {
   let handleAppStateChange: ((state: AppStateStatus) => void) | undefined;
   const removeAppStateListener = jest.fn();
+  let openBrowserAsync: jest.SpiedFunction<typeof WebBrowser.openBrowserAsync>;
 
   beforeEach(() => {
     Object.defineProperty(AppState, 'currentState', {
@@ -31,11 +18,14 @@ describe('openLinkInBrowserAsync', () => {
       .spyOn(AppState, 'addEventListener')
       .mockImplementation((_type, listener) => {
         handleAppStateChange = listener;
-        return {
-          remove: removeAppStateListener,
-        } as NativeEventSubscription;
+        return { remove: removeAppStateListener };
       });
     jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+    openBrowserAsync = jest.spyOn(WebBrowser, 'openBrowserAsync');
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   test('resolves when the in-app browser closes', async () => {

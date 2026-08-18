@@ -1,45 +1,33 @@
 import { renderHook, waitFor } from '@testing-library/react-native';
 
+import { createChatMessage } from '@app/components/Chat/hooks/__tests__/__fixtures__/useChat.fixture';
 import { recentMessagesService } from '@app/services/recent-messages-service';
-import { restoreRecentMessagesForChannel } from '@app/store/chat/actions/messages';
+import { clearMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { logger } from '@app/utils/logger';
 
 import { useRecentChatMessages } from '../useRecentChatMessages';
 
-jest.mock('@app/services/recent-messages-service', () => ({
-  recentMessagesService: {
-    getRecentMessages: jest.fn(),
-  },
-}));
+jest.spyOn(logger.chat, 'debug').mockImplementation(() => {});
 
-jest.mock('@app/store/chat/actions/messages', () => ({
-  getMaxChatMessages: jest.fn(() => 150),
-  restoreRecentMessagesForChannel: jest.fn(),
-}));
+const mockGetRecentMessages = jest
+  .spyOn(recentMessagesService, 'getRecentMessages')
+  .mockResolvedValue([]);
 
-jest.mock('@app/store/chat/observables/chatStore', () => ({
-  chatStore$: {
-    currentChannelId: {
-      set: jest.fn(),
-    },
-  },
-}));
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    chat: {
-      debug: jest.fn(),
-    },
-  },
-}));
-
-const mockGetRecentMessages = jest.mocked(
-  recentMessagesService.getRecentMessages,
-);
-const mockRestoreRecentMessagesForChannel = jest.mocked(
-  restoreRecentMessagesForChannel,
-);
-const mockSetCurrentChannelId = jest.mocked(chatStore$.currentChannelId.set);
+/**
+ * Seeds the real recent-messages cache the hook reads through
+ * `restoreRecentMessagesForChannel`, rather than mocking the store action.
+ */
+function seedRecentMessages(channelId: string, count: number): void {
+  chatStore$.recentMessagesByChannel[channelId]?.set(
+    Array.from({ length: count }, (_unused, index) =>
+      createChatMessage({
+        tags: { id: `recent-${index}`, login: 'chatter' },
+        text: `recent ${index}`,
+      }),
+    ),
+  );
+}
 
 function renderRecentMessages({
   channelId = 'channel-1',
@@ -79,23 +67,23 @@ function renderRecentMessages({
 describe('useRecentChatMessages', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockRestoreRecentMessagesForChannel.mockReturnValue(0);
     mockGetRecentMessages.mockResolvedValue([]);
+    clearMessages();
+    chatStore$.currentChannelId.set('');
+    chatStore$.recentMessagesByChannel['channel-1']?.set([]);
   });
 
   test('sets the current channel and restores cached messages on channel changes', () => {
-    mockRestoreRecentMessagesForChannel.mockReturnValue(4);
+    seedRecentMessages('channel-1', 4);
 
     renderRecentMessages({ showRecentMessages: false });
 
-    expect(mockSetCurrentChannelId).toHaveBeenCalledWith('channel-1');
-    expect(mockRestoreRecentMessagesForChannel).toHaveBeenCalledWith(
-      'channel-1',
-    );
+    expect(chatStore$.currentChannelId.peek()).toBe('channel-1');
+    expect(chatStore$.messages.peek()).toHaveLength(4);
   });
 
   test('when recent fetch is disabled, restored messages scroll to the latest cached row', () => {
-    mockRestoreRecentMessagesForChannel.mockReturnValue(3);
+    seedRecentMessages('channel-1', 3);
 
     const { isLoadingRecentMessagesRef, scrollChatToEnd } =
       renderRecentMessages({ showRecentMessages: false });

@@ -1,3 +1,3 @@
-export const mentionSearchRequestId: { current: number } = {
+export const mentionSearchRequestId = {
   current: 0,
 };

@@ -5,5 +5,6 @@ export function useLazyRef<T>(initializer: () => T): MutableRefObject<T> {
   if (ref.current === null) {
     ref.current = initializer();
   }
+  // SAFETY: the branch above guarantees ref.current is no longer null.
   return ref as MutableRefObject<T>;
 }

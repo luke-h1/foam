@@ -57,7 +57,15 @@ function markChannelReset(): void {
 
 const noop = (): void => {};
 
-export const chatPerfMarks = ENABLED
+type ChatPerfMarks = {
+  lineReceived: () => void;
+  buffered: () => void;
+  drained: (count: number) => void;
+  committed: (count: number) => void;
+  channelReset: () => void;
+};
+
+export const chatPerfMarks: ChatPerfMarks = ENABLED
   ? {
       lineReceived: markLineReceived,
       buffered: markBuffered,
@@ -68,7 +76,7 @@ export const chatPerfMarks = ENABLED
   : {
       lineReceived: noop,
       buffered: noop,
-      drained: noop as (count: number) => void,
-      committed: noop as (count: number) => void,
+      drained: noop,
+      committed: noop,
       channelReset: noop,
     };

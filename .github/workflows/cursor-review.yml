@@ -74,9 +74,20 @@ jobs:
           CURSOR_API_KEY: op://ci-cd/foam-mobile-production/CURSOR_API_KEY
 
       - name: Install Cursor CLI
+        env:
+          CURSOR_VERSION: '2026.08.11-e8db854'
+          EXPECTED_SHA256: 'bfff4bf6f4e9dd30c1d0ef0a70b6077b074015dd2948e4c50685d53afdcfce5a'
         run: |
           set -euo pipefail
-          curl https://cursor.com/install -fsS | bash
+          tmp="$(mktemp -d)"
+          curl --fail --location --silent --show-error \
+            "https://downloads.cursor.com/lab/${CURSOR_VERSION}/linux/x64/agent-cli-package.tar.gz" \
+            -o "$tmp/cursor-agent.tar.gz"
+          echo "${EXPECTED_SHA256}  $tmp/cursor-agent.tar.gz" | shasum -a 256 -c -
+          mkdir -p "$HOME/.local/share/cursor-agent" "$HOME/.local/bin"
+          tar --strip-components=1 -xzf "$tmp/cursor-agent.tar.gz" -C "$HOME/.local/share/cursor-agent"
+          rm -rf "$tmp"
+          ln -sf "$HOME/.local/share/cursor-agent/cursor-agent" "$HOME/.local/bin/cursor-agent"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Run Cursor

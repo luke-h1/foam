@@ -1,4 +1,4 @@
-import { runCosmeticsQuery } from '@app/services/gql/sevenTvWorkletClient';
+import * as sevenTvWorkletClient from '@app/services/gql/sevenTvWorkletClient';
 import {
   clearSevenTvUserCache,
   sevenTvService,
@@ -10,11 +10,10 @@ import {
   sevenTvUserResponse,
 } from './__fixtures__/sevenTvUserLookup.fixture';
 
-jest.mock('@app/services/gql/sevenTvWorkletClient', () => ({
-  runCosmeticsQuery: jest.fn(),
-}));
-
-const mockRunCosmeticsQuery = jest.mocked(runCosmeticsQuery);
+const mockRunCosmeticsQuery = jest.spyOn(
+  sevenTvWorkletClient,
+  'runCosmeticsQuery',
+);
 
 /**
  * Runs the query's real `parse` worklet so the tests cover parsing, not a

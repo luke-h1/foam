@@ -1,3 +1,4 @@
+import type { SevenTvWsMessage } from '@app/types/seventv/cosmetics';
 import { logger } from '@app/utils/logger';
 import type { SeventvSessionState } from '@app/utils/seventv/seventvSessionState';
 import {
@@ -9,9 +10,14 @@ import {
 
 export const ID_WAIT_TIMEOUT = 30000; // 30 seconds
 
+type SeventvSubscribeMessage = SevenTvWsMessage<
+  never,
+  'cosmetic.create' | 'emote_set.update' | 'entitlement.create' | 'user.update'
+>;
+
 export interface SetupInitialSubscriptionsOptions {
   session: SeventvSessionState;
-  sendJsonMessage: (message: unknown) => void;
+  sendJsonMessage: (message: SeventvSubscribeMessage) => void;
   getTwitchChannelId: () => string | undefined;
   getSevenTvChannelUserId: () => string | undefined;
   getSevenTvEmoteSetId: () => string | undefined;

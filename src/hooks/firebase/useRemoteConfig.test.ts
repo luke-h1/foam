@@ -11,22 +11,13 @@ import { useRemoteConfig } from './useRemoteConfig';
 const wrapper = ({ children }: PropsWithChildren) =>
   createElement(DefaultWrapper, null, children);
 
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    remoteConfig: {
-      error: jest.fn(),
-      info: jest.fn(),
-    },
-  },
-}));
-
-jest.mock('@react-native-firebase/installations');
-jest.mock('@react-native-firebase/app');
-jest.mock('@react-native-firebase/remote-config');
-
 const mockedFetchAndActivate = jest.mocked(fetchAndActivate);
-const mockRemoteConfigError = jest.mocked(logger.remoteConfig.error);
-const mockRemoteConfigInfo = jest.mocked(logger.remoteConfig.info);
+const mockRemoteConfigError = jest
+  .spyOn(logger.remoteConfig, 'error')
+  .mockImplementation();
+const mockRemoteConfigInfo = jest
+  .spyOn(logger.remoteConfig, 'info')
+  .mockImplementation();
 
 describe('useRemoteConfig', () => {
   beforeEach(() => {

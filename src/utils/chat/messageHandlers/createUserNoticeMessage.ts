@@ -1,9 +1,5 @@
-import type {
-  AnyChatMessageType,
-  ChatMessageType,
-} from '@app/store/chat/types/constants';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import {
-  ModiversaryTags,
   UserNoticeTags,
   UserNoticeTagsByVariant,
   ViewerMilestoneTags,
@@ -23,21 +19,28 @@ import { generateNonce } from '@app/utils/string/generateNonce';
 import { createChatTimestampFromTags } from './createChatTimestampFromTags';
 import { createUserStateFromTags } from './createUserStateFromTags';
 
-function toStringTagRecord(tags: UserNoticeTags): Record<string, string> {
+function tagText(value: string | boolean | undefined): string {
+  if (value === true || value === false || value === undefined) {
+    return '';
+  }
+  return value;
+}
+
+function toStringTagRecord(tags: UserNoticeTags) {
   const result: Record<string, string> = {};
 
   for (const [key, value] of Object.entries(tags)) {
-    if (typeof value === 'string') {
-      result[key] = value;
+    if (value === true || value === false || value === undefined) {
+      continue;
     }
+    result[key] = value;
   }
 
   return result;
 }
 
 const createSystemNoticeText = (tags: UserNoticeTags, text: string): string => {
-  const systemLine =
-    typeof tags['system-msg'] === 'string' ? tags['system-msg'] : '';
+  const systemLine = tags['system-msg'] ?? '';
   const userLine = text.trimEnd();
 
   return [systemLine, userLine]
@@ -60,6 +63,7 @@ export const createUserNoticeMessage = ({
 }: CreateUserNoticeParams): AnyChatMessageType => {
   const messageNonce = generateNonce();
 
+  // SAFETY: raw usernotice tag strings stand in for UserStateTags' parsed badges object and narrowed user-type union.
   const userstate: UserStateTags = {
     ...tags,
     username: tags['display-name'] || tags.login || '',
@@ -71,8 +75,7 @@ export const createUserNoticeMessage = ({
     'user-type': tags['user-type'],
   } as UserStateTags;
 
-  const tagId = 'id' in tags ? (tags as { id?: string }).id : undefined;
-  const messageId = tagId || generateNonce();
+  const messageId = tags.id || generateNonce();
 
   const baseMessage = {
     id: `${messageId}_${messageNonce}`,
@@ -83,18 +86,9 @@ export const createUserNoticeMessage = ({
     message_nonce: messageNonce,
     timestamp: createChatTimestampFromTags(tags),
     sender: userstate.username || '',
-    parentDisplayName:
-      typeof tags['reply-parent-display-name'] === 'string'
-        ? tags['reply-parent-display-name']
-        : '',
-    replyDisplayName:
-      typeof tags['reply-parent-user-login'] === 'string'
-        ? tags['reply-parent-user-login']
-        : '',
-    replyBody:
-      typeof tags['reply-parent-msg-body'] === 'string'
-        ? tags['reply-parent-msg-body']
-        : '',
+    parentDisplayName: tagText(tags['reply-parent-display-name']),
+    replyDisplayName: tagText(tags['reply-parent-user-login']),
+    replyBody: tagText(tags['reply-parent-msg-body']),
   };
 
   const sharedChatDuplicated = isSharedChatDuplicatedNotice(tags);
@@ -102,16 +96,15 @@ export const createUserNoticeMessage = ({
     ? { isSharedChatDuplicated: true as const }
     : {};
 
-  const createSubscriptionNoticeMessage = (): AnyChatMessageType =>
-    ({
-      ...baseMessage,
-      badges: [],
-      message: [createSubscriptionPart(tags, text)],
-      userstate,
-      notice_tags: tags,
-      isSpecialNotice: true,
-      ...sharedChatFields,
-    }) as AnyChatMessageType;
+  const createSubscriptionNoticeMessage = (): AnyChatMessageType => ({
+    ...baseMessage,
+    badges: [],
+    message: [createSubscriptionPart(tags, text)],
+    userstate,
+    notice_tags: tags,
+    isSpecialNotice: true,
+    ...sharedChatFields,
+  });
 
   const createMetadataUserNoticeMessage = (options: {
     isAnnouncement?: boolean;
@@ -136,7 +129,7 @@ export const createUserNoticeMessage = ({
       replyDisplayName: '',
       replyBody: '',
       parentDisplayName: '',
-    } as AnyChatMessageType;
+    };
   };
 
   const createSystemUserNoticeMessage = (): AnyChatMessageType => {
@@ -151,15 +144,14 @@ export const createUserNoticeMessage = ({
       isSpecialNotice: true,
       isTwitchSystemNotice: true,
       ...sharedChatFields,
-    } as AnyChatMessageType;
+    };
   };
 
   switch (tags['msg-id']) {
     case 'viewermilestone': {
       const viewerMilestoneTags: ViewerMilestoneTags = {
         'msg-id': 'viewermilestone' as const,
-        'msg-param-category': (tags['msg-param-category'] ??
-          'watch-streak') as 'watch-streak',
+        'msg-param-category': tags['msg-param-category'] ?? 'watch-streak',
         'msg-param-copoReward': tags['msg-param-copoReward'] ?? '',
         'msg-param-id': tags['msg-param-id'] ?? '',
         'msg-param-value': tags['msg-param-value'] ?? '',
@@ -182,10 +174,7 @@ export const createUserNoticeMessage = ({
 
       return {
         ...baseMessage,
-        replyDisplayName:
-          typeof tags['reply-parent-display-name'] === 'string'
-            ? tags['reply-parent-display-name']
-            : '',
+        replyDisplayName: tagText(tags['reply-parent-display-name']),
         replyBody: '',
         badges: [],
         userstate,
@@ -229,7 +218,7 @@ export const createUserNoticeMessage = ({
         notice_tags: tags,
         isSpecialNotice: true,
         ...sharedChatFields,
-      } as AnyChatMessageType;
+      };
     }
 
     case 'ritual': {
@@ -241,7 +230,7 @@ export const createUserNoticeMessage = ({
         notice_tags: tags,
         isSpecialNotice: true,
         ...sharedChatFields,
-      } as AnyChatMessageType;
+      };
     }
 
     case 'highlighted-message': {
@@ -266,7 +255,7 @@ export const createUserNoticeMessage = ({
         userstate,
         notice_tags: tags,
         isChannelPointRedemption: true,
-      } as ChatMessageType<'usernotice', 'rewardgift'>;
+      };
     }
 
     case 'raid': {
@@ -274,20 +263,17 @@ export const createUserNoticeMessage = ({
     }
 
     case 'modiversary': {
-      const modiversaryPart = createModiversaryPart(
-        tags as ModiversaryTags,
-        text,
-      );
+      const modiversaryPart = createModiversaryPart(tags, text);
 
       return {
         ...baseMessage,
         userstate,
         badges: [],
         message: [modiversaryPart].filter(hasRenderableNoticeBody),
-        notice_tags: tags as UserNoticeTagsByVariant<'modiversary'>,
+        notice_tags: tags,
         isSpecialNotice: true,
         ...sharedChatFields,
-      } as AnyChatMessageType;
+      };
     }
 
     case 'announcement': {

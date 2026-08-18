@@ -254,7 +254,7 @@ export function useEmoteSheet({
           const emotes: SanitisedEmote[] = [];
           for (const set of provider.sets) {
             for (const item of set.emotes) {
-              if (typeof item === 'object') {
+              if (item instanceof Object) {
                 emotes.push(item);
                 if (emotes.length >= limit) {
                   break;

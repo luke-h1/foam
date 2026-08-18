@@ -1,15 +1,18 @@
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
+import * as generateNonceModule from '@app/utils/string/generateNonce';
 
 import { createSystemMessage } from '../createSystemMessage';
 
-jest.mock('@app/utils/string/generateNonce', () => ({
-  generateNonce: jest.fn().mockReturnValue('test-nonce-123'),
-}));
-
 describe('createSystemMessage', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest
+      .spyOn(generateNonceModule, 'generateNonce')
+      .mockReturnValue('test-nonce-123');
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   test('creates a system message', () => {

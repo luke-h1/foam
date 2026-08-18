@@ -1,98 +1,122 @@
+import {
+  createElement,
+  type ForwardedRef,
+  Fragment,
+  type ReactNode,
+  useImperativeHandle,
+} from 'react';
+import { TextInput, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import * as LegendListReactNative from '@legendapp/list/react-native';
 import { fireEvent } from '@testing-library/react-native';
 import { measureFunction, measureRenders } from 'reassure';
 
+import type { ThemedInputProps } from '@app/components/ui/Input/Input';
+import * as InputModule from '@app/components/ui/Input/Input';
 import { AuthContextTestProvider } from '@app/context/AuthContext';
 import { EmoteSetKind } from '@app/graphql/generated/gql';
+import * as selectorsModule from '@app/store/chat/react/selectors';
 import type { SubscriberChannelProfile } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 
 import { EmoteSheet } from '../EmoteSheet';
+import type { SetRailListExtra } from '../EmoteSheetSetRailItem';
 import {
   buildEmoteMenuProviders,
   type EmoteMenuDataInput,
+  type EmoteMenuListItem,
+  type EmoteMenuSet,
   filterProviderSets,
   flattenProviderSets,
 } from '../util/emoteMenuData';
 import { createMenuEmote } from './__fixtures__/emoteMenuData.fixture';
 
-jest.mock('@legendapp/list/react-native', () => {
-  const React = require('react');
-  const { View: MockView } = require('react-native');
+type MockLegendListItem = EmoteMenuListItem | EmoteMenuSet;
 
-  type MockLegendListProps = {
-    data?: unknown;
-    drawDistance?: unknown;
-    estimatedItemSize?: unknown;
-    extraData?: unknown;
-    keyExtractor?: unknown;
-    renderItem?: unknown;
-  };
+type MockLegendListProps = {
+  data: MockLegendListItem[];
+  drawDistance?: number;
+  estimatedItemSize: number;
+  extraData?: SetRailListExtra;
+  keyExtractor: (item: MockLegendListItem, index: number) => string;
+  ref?: ForwardedRef<{
+    scrollToEnd: () => void;
+    scrollToIndex: () => void;
+    scrollToOffset: () => void;
+  }>;
+  renderItem: (info: {
+    extraData: SetRailListExtra | undefined;
+    index: number;
+    item: MockLegendListItem;
+    target: 'Cell';
+  }) => ReactNode;
+};
 
-  const MOCK_VIEWPORT_HEIGHT = 680;
-  const MOCK_FALLBACK_ROW_HEIGHT = 46;
+const MOCK_VIEWPORT_HEIGHT = 680;
 
-  return {
-    useViewability: () => {},
-    LegendList: React.forwardRef((props: MockLegendListProps, ref: unknown) => {
-      const { data, extraData, keyExtractor, renderItem } = props;
-      const items = Array.isArray(data) ? data : [];
-      const renderRow = typeof renderItem === 'function' ? renderItem : null;
-      const getKey = typeof keyExtractor === 'function' ? keyExtractor : null;
-      const estimatedItemSize =
-        typeof props.estimatedItemSize === 'number'
-          ? props.estimatedItemSize
-          : MOCK_FALLBACK_ROW_HEIGHT;
-      const drawDistance =
-        typeof props.drawDistance === 'number' ? props.drawDistance : 0;
-      const rowCount = Math.ceil(
-        (MOCK_VIEWPORT_HEIGHT + drawDistance * 2) / estimatedItemSize,
-      );
-      const visibleItems = items.slice(0, Math.max(1, rowCount));
+/**
+ * The real LegendList is a forwardRef object, which the module's type
+ * declarations expose as an exotic component rather than a plain function,
+ * so the bridge below narrows through `never` to reach a spyable function.
+ */
+type MockableLegendListModule = {
+  LegendList: (props: MockLegendListProps) => ReactNode;
+};
+// SAFETY: the real LegendList is the forwardRef exotic component described
+// above; `never` is the only type TS accepts as a bridge to the plain
+// function shape MockableLegendListModule.
+const mockableLegendList: MockableLegendListModule =
+  LegendListReactNative as never;
 
-      React.useImperativeHandle(ref, () => ({
-        scrollToEnd: () => {},
-        scrollToIndex: () => {},
-        scrollToOffset: () => {},
-      }));
+jest.spyOn(mockableLegendList, 'LegendList').mockImplementation(props => {
+  const {
+    data,
+    drawDistance = 0,
+    estimatedItemSize,
+    extraData,
+    keyExtractor,
+    ref,
+    renderItem,
+  } = props;
+  const rowCount = Math.ceil(
+    (MOCK_VIEWPORT_HEIGHT + drawDistance * 2) / estimatedItemSize,
+  );
+  const visibleItems = data.slice(0, Math.max(1, rowCount));
 
-      return React.createElement(
-        MockView,
-        null,
-        visibleItems.map((item, index) =>
-          React.createElement(
-            React.Fragment,
-            { key: getKey ? getKey(item, index) : String(index) },
-            renderRow
-              ? renderRow({ extraData, index, item, target: 'Cell' })
-              : null,
-          ),
-        ),
-      );
-    }),
-  };
+  useImperativeHandle(ref, () => ({
+    scrollToEnd: () => {},
+    scrollToIndex: () => {},
+    scrollToOffset: () => {},
+  }));
+
+  return createElement(
+    View,
+    null,
+    visibleItems.map((item, index) =>
+      createElement(
+        Fragment,
+        { key: keyExtractor(item, index) },
+        renderItem({ extraData, index, item, target: 'Cell' }),
+      ),
+    ),
+  );
 });
-
-jest.mock('@app/store/chat/react/selectors', () => ({
-  ...jest.requireActual('@app/store/chat/react/selectors'),
-  useCurrentEmoteData: () => mockEmoteData,
-}));
 
 // The iOS Input binds a SwiftUI TextField through native shared objects that
 // don't exist under jest; the search box isn't part of what this file
 // measures, so swap it for a plain TextInput.
-jest.mock('@app/components/ui/Input/Input', () => {
-  const React = require('react');
-  const { TextInput } = require('react-native');
-
-  return {
-    Input: React.forwardRef((props: Record<string, unknown>, ref: unknown) =>
-      React.createElement(TextInput, { ...props, ref }),
-    ),
-  };
-});
+jest
+  .spyOn(InputModule, 'Input')
+  .mockImplementation(
+    ({
+      onContentSizeChange: _onContentSizeChange,
+      onSelectionChange: _onSelectionChange,
+      onSubmitEditing: _onSubmitEditing,
+      ...props
+    }: ThemedInputProps) => createElement(TextInput, props),
+  );
 
 const MEASURE_OPTIONS = {
   runs: 5,
@@ -147,7 +171,7 @@ const menuInput: EmoteMenuDataInput = {
         updatedAt: '',
         totalCount: 400,
       },
-    } as Partial<SanitisedEmote>;
+    };
   }),
   sevenTvGlobalEmotes: createEmotes(300, '7TV Global', 'stvg'),
   sevenTvPersonalEmotes: createEmotes(25, '7TV Personal', 'stvp'),
@@ -157,10 +181,7 @@ const menuInput: EmoteMenuDataInput = {
     280,
     'Twitch Subscriber',
     'ttvs',
-    index =>
-      index < 240
-        ? ({ owner_id: `owner-${index % 6}` } as Partial<SanitisedEmote>)
-        : {},
+    index => (index < 240 ? { owner_id: `owner-${index % 6}` } : {}),
   ),
   twitchSubscriberChannelProfiles: subscriberProfiles,
   bttvChannelEmotes: createEmotes(100, 'BTTV', 'bttvc'),
@@ -171,20 +192,30 @@ const menuInput: EmoteMenuDataInput = {
 };
 
 const mockEmoteData = {
-  bttvChannelEmotes: menuInput.bttvChannelEmotes,
-  bttvGlobalEmotes: menuInput.bttvGlobalEmotes,
-  ffzChannelEmotes: menuInput.ffzChannelEmotes,
-  ffzGlobalEmotes: menuInput.ffzGlobalEmotes,
-  sevenTvChannelEmotes: menuInput.sevenTvChannelEmotes,
-  sevenTvGlobalEmotes: menuInput.sevenTvGlobalEmotes,
+  bttvChannelEmotes: menuInput.bttvChannelEmotes ?? [],
+  bttvGlobalEmotes: menuInput.bttvGlobalEmotes ?? [],
+  ffzChannelEmotes: menuInput.ffzChannelEmotes ?? [],
+  ffzGlobalEmotes: menuInput.ffzGlobalEmotes ?? [],
+  sevenTvChannelEmotes: menuInput.sevenTvChannelEmotes ?? [],
+  sevenTvGlobalEmotes: menuInput.sevenTvGlobalEmotes ?? [],
   sevenTvPersonalEmotes: {
-    [CURRENT_USER_ID]: menuInput.sevenTvPersonalEmotes,
+    [CURRENT_USER_ID]: menuInput.sevenTvPersonalEmotes ?? [],
   },
-  twitchChannelEmotes: menuInput.twitchChannelEmotes,
-  twitchGlobalEmotes: menuInput.twitchGlobalEmotes,
-  twitchSubscriberEmotes: menuInput.twitchSubscriberEmotes,
-  twitchSubscriberChannelProfiles: menuInput.twitchSubscriberChannelProfiles,
+  twitchChannelEmotes: menuInput.twitchChannelEmotes ?? [],
+  twitchGlobalEmotes: menuInput.twitchGlobalEmotes ?? [],
+  twitchSubscriberEmotes: menuInput.twitchSubscriberEmotes ?? [],
+  twitchSubscriberChannelProfiles:
+    menuInput.twitchSubscriberChannelProfiles ?? {},
+  twitchChannelBadges: [],
+  twitchGlobalBadges: [],
+  ffzChannelBadges: [],
+  ffzGlobalBadges: [],
+  chatterinoBadges: [],
 };
+
+jest
+  .spyOn(selectorsModule, 'useCurrentEmoteData')
+  .mockReturnValue(mockEmoteData);
 
 const mockUser: UserInfoResponse = {
   id: CURRENT_USER_ID,

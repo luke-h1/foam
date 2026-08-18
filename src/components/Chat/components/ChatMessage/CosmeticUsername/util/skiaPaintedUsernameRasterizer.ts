@@ -1,3 +1,6 @@
+// This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
+// field (see types/seventv/cosmetics.ts), not a naming choice.
+// oxlint-disable anti-slop/no-shape-in-symbol-names
 import { AppState, Platform } from 'react-native';
 
 import type {
@@ -258,6 +261,7 @@ function buildPaintLayout(
   const { paint, displayUsername, fontSize, pixelRatio } = opts;
   const scale = pixelRatio;
 
+  // SAFETY: 7TV encodes textStyle.weight as CSS hundreds (1-9), so x100 lands on a FontWeight member.
   const fontWeight: FontWeight = paint.textStyle?.weight
     ? ((paint.textStyle.weight * 100) as FontWeight)
     : Platform.OS === 'android'
@@ -644,7 +648,7 @@ export function planPaintLayerSlotKinds(
 function buildPaintLayerSlots(
   opts: RasterizePaintedUsernameOptions,
   layout: PaintUsernameLayout,
-): { layerSlots: PaintLayerSlot[]; imageLayers: PaintImageLayer[] } {
+): Pick<PaintBitmaps, 'imageLayers' | 'layerSlots'> {
   const layerSlots: PaintLayerSlot[] = [];
   const imageLayers: PaintImageLayer[] = [];
   let gradientBatch: PaintLayerData[] = [];
@@ -733,6 +737,7 @@ export function getPaintBitmaps(
 ): PaintBitmaps | null {
   subscribeToMemoryWarnings();
   const key = paintBitmapCacheKey(opts);
+  // SAFETY: this module is the cache's only writer, and every entry it stores is a PaintBitmaps.
   const cached = getCachedPaintBitmaps(key) as PaintBitmaps | undefined;
   if (cached) {
     return cached;

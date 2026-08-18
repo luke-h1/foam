@@ -53,6 +53,11 @@ import { buildSanitisedEmote } from './emote-provider';
 import { sevenTvV4Client } from './gql/client';
 import { runCosmeticsQuery } from './gql/sevenTvWorkletClient';
 
+type SevenTvGqlResponse<TData> = {
+  data?: TData;
+  errors?: { message?: string }[];
+};
+
 export const clearSevenTvUserCache = () => {
   sevenTvUserCache.clear();
 };
@@ -73,10 +78,8 @@ async function fetchSevenTvUser(
     { platformId: twitchUserId },
     responseText => {
       'worklet';
-      const parsed = JSON.parse(responseText) as {
-        data?: UserByConnectionQuery;
-        errors?: { message?: string }[];
-      };
+      const parsed: SevenTvGqlResponse<UserByConnectionQuery> =
+        JSON.parse(responseText);
       if (parsed.errors?.length) {
         throw new Error(
           parsed.errors.flatMap(e => e.message ?? []).join('; ') ||
@@ -461,10 +464,8 @@ export const sevenTvService = {
         { id: sevenTvUserId },
         responseText => {
           'worklet';
-          const parsed = JSON.parse(responseText) as {
-            data?: UserCosmeticsQuery;
-            errors?: { message?: string }[];
-          };
+          const parsed: SevenTvGqlResponse<UserCosmeticsQuery> =
+            JSON.parse(responseText);
           if (parsed.errors?.length) {
             throw new Error(
               parsed.errors.flatMap(e => e.message ?? []).join('; ') ||

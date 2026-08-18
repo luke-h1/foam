@@ -17,6 +17,7 @@ describe('routeIrcMessage', () => {
     );
 
     expect(privmsg).toHaveBeenCalledTimes(1);
+    // SAFETY: the assertion above pins one recorded call, whose arguments are the privmsg handler's parameters.
     const [channel, tags, text] = privmsg.mock.calls[0] as [
       string,
       Record<string, string>,
@@ -35,6 +36,7 @@ describe('routeIrcMessage', () => {
       { privmsg },
     );
 
+    // SAFETY: the route above dispatched one privmsg, whose arguments are the handler's parameters.
     const [, tags] = privmsg.mock.calls[0] as [string, Record<string, string>];
     expect(tags.login).toBe('canonical');
   });

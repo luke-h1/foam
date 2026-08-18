@@ -1,78 +1,93 @@
+import { createElement, forwardRef, useImperativeHandle } from 'react';
+import { View } from 'react-native';
+
 import { act, render, screen } from '@testing-library/react-native';
+import type {
+  ImageErrorEventData,
+  ImageLoadEventData,
+  ImageProps,
+  ImageRef,
+} from 'expo-image';
+import * as ExpoImage from 'expo-image';
 
 import {
   createRowVisibilityStore,
   RowVisibilityContext,
 } from '@app/components/Chat/components/ChatMessage/rowVisibility';
-import { evictCachedEmoteRef } from '@app/Providers/CachedEmotesProvider/cache-service';
+import * as cacheService from '@app/Providers/CachedEmotesProvider/cache-service';
+import * as useCachedEmoteModule from '@app/Providers/CachedEmotesProvider/useCachedEmote';
 import { logger } from '@app/utils/logger';
 
 import { ChatInlineImage } from '../ChatInlineImage';
 
+type MockImageHandle = {
+  startAnimating: () => void;
+  stopAnimating: () => void;
+};
+
 const mockStartAnimating = jest.fn();
 const mockStopAnimating = jest.fn();
 
-let mockImageProps: {
-  onDisplay?: () => void;
-  onError?: () => void;
-  onLoad?: () => void;
-  recyclingKey?: string;
-  source?: unknown;
-  testID?: string;
-} | null = null;
+/**
+ * ChatInlineImage's own onError/onLoad handlers take an optional event
+ * (they also fire from an internal watchdog timer with no event at all), so
+ * these tests calling them with no arguments matches a real call path -
+ * ImageProps itself declares the callbacks as always receiving an event.
+ */
+type CapturedImageProps = Omit<ImageProps, 'onError' | 'onLoad'> & {
+  onError?: (event?: ImageErrorEventData) => void;
+  onLoad?: (event?: ImageLoadEventData) => void;
+};
 
-jest.mock('expo-image', () => {
-  const ReactModule = require('react');
-  const { View } = require('react-native');
-  return {
-    Image: ReactModule.forwardRef(
-      (
-        props: {
-          onDisplay?: () => void;
-          onError?: () => void;
-          onLoad?: () => void;
-          recyclingKey?: string;
-          source?: unknown;
-          testID?: string;
-        },
-        ref: unknown,
-      ) => {
-        mockImageProps = props;
-        ReactModule.useImperativeHandle(ref, () => ({
-          startAnimating: mockStartAnimating,
-          stopAnimating: mockStopAnimating,
-        }));
-        return ReactModule.createElement(View, { testID: props.testID });
-      },
-    ),
-  };
+let mockImageProps: CapturedImageProps | null = null;
+
+/**
+ * expo-image's `Image` is a forwardRef object, not a plain function, so
+ * jest.spyOn cannot wrap it - swap the export directly instead.
+ */
+Object.defineProperty(ExpoImage, 'Image', {
+  configurable: true,
+  value: forwardRef<MockImageHandle, ImageProps>((props, ref) => {
+    // SAFETY: CapturedImageProps is ImageProps with onError/onLoad widened to
+    // accept the no-argument calls this file's tests make on them below;
+    // every other field is untouched, so the real props always satisfy it.
+    mockImageProps = props as CapturedImageProps;
+    useImperativeHandle(ref, () => ({
+      startAnimating: mockStartAnimating,
+      stopAnimating: mockStopAnimating,
+    }));
+    return createElement(View, { testID: props.testID });
+  }),
 });
 
-let mockSharedRef: { isAnimated?: boolean } | null = null;
+let mockSharedRef: ImageRef | null = null;
 
-jest.mock('@app/Providers/CachedEmotesProvider/useCachedEmote', () => ({
-  useCachedEmote: () => mockSharedRef,
-}));
+/**
+ * ImageRef is a native SharedRef class with no JS constructor under jest -
+ * `Object.create` returns `any`, so this needs no cast to stand in for one.
+ */
+function fakeImageRef(isAnimated: boolean): ImageRef {
+  return Object.assign(Object.create(null), { isAnimated });
+}
 
-jest.mock('@app/Providers/CachedEmotesProvider/cache-service', () => ({
-  evictCachedEmoteRef: jest.fn(),
-  getCachedEmoteStats: jest.fn(() => ({ decoded: 0, inflight: 0, pinned: 0 })),
-  getCachedEmoteByteEstimate: jest.fn(() => 0),
-  getEmoteRefReleaseRaceCount: jest.fn(() => 0),
-}));
+jest
+  .spyOn(useCachedEmoteModule, 'useCachedEmote')
+  .mockImplementation(() => mockSharedRef);
 
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    chat: { warn: jest.fn(), debug: jest.fn() },
-  },
-}));
+const evictMock = jest
+  .spyOn(cacheService, 'evictCachedEmoteRef')
+  .mockImplementation(() => {});
+jest
+  .spyOn(cacheService, 'getCachedEmoteStats')
+  .mockReturnValue({ decoded: 0, inflight: 0, pinned: 0 });
+jest.spyOn(cacheService, 'getCachedEmoteByteEstimate').mockReturnValue(0);
+jest.spyOn(cacheService, 'getEmoteRefReleaseRaceCount').mockReturnValue(0);
 
-const evictMock = jest.mocked(evictCachedEmoteRef);
-const warnMock = jest.mocked(logger.chat.warn);
+const warnMock = jest.spyOn(logger.chat, 'warn').mockImplementation(() => {});
 
 describe('ChatInlineImage off-screen pause', () => {
   beforeEach(() => {
-    mockSharedRef = { isAnimated: true };
+    mockSharedRef = fakeImageRef(true);
     mockImageProps = null;
   });
   afterEach(() => {
@@ -195,7 +210,7 @@ describe('ChatInlineImage off-screen pause', () => {
   });
 
   test('static images skip the pause path entirely, even off-screen', () => {
-    mockSharedRef = { isAnimated: false };
+    mockSharedRef = fakeImageRef(false);
     const store = createRowVisibilityStore(false);
 
     render(
@@ -351,7 +366,7 @@ describe('ChatInlineImage loading shimmer', () => {
   });
 
   test('a decoded shared ref renders immediately without a shimmer', () => {
-    mockSharedRef = { isAnimated: false };
+    mockSharedRef = fakeImageRef(false);
     render(
       <ChatInlineImage
         sourceUrl='https://cdn.7tv.app/emote/cached/2x.avif'
@@ -363,7 +378,7 @@ describe('ChatInlineImage loading shimmer', () => {
   });
 
   test('a ref released under a mounted row falls back to the uri with a loading box, not a blank one', () => {
-    mockSharedRef = { isAnimated: false };
+    mockSharedRef = fakeImageRef(false);
     const sourceUrl = 'https://cdn.7tv.app/emote/released/2x.avif';
     render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
@@ -438,14 +453,14 @@ describe('ChatInlineImage shared-ref recovery', () => {
 
     // The shared ref finishes decoding - proof the original url is good - so the
     // row must abandon the walk and render the ref at index 0 again.
-    mockSharedRef = { isAnimated: true };
+    mockSharedRef = fakeImageRef(true);
     rerender(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
     expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
   });
 
   test('one row erroring does not evict a healthy shared ref shown by other rows', () => {
-    mockSharedRef = { isAnimated: true };
+    mockSharedRef = fakeImageRef(true);
     const sourceUrl = 'https://cdn.7tv.app/emote/01H85/2x.webp';
     render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
@@ -455,7 +470,7 @@ describe('ChatInlineImage shared-ref recovery', () => {
   });
 
   test('a ref failure hands off to the uri without spending the retry budget', () => {
-    mockSharedRef = { isAnimated: false };
+    mockSharedRef = fakeImageRef(false);
     const sourceUrl = 'https://static-cdn.jtvnw.net/badges/v1/foo/3';
     render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
@@ -466,7 +481,7 @@ describe('ChatInlineImage shared-ref recovery', () => {
   });
 
   test('a displayed ref is left alone by the watchdog and by stray errors', () => {
-    mockSharedRef = { isAnimated: false };
+    mockSharedRef = fakeImageRef(false);
     const sourceUrl = 'https://static-cdn.jtvnw.net/badges/v1/quiet/3';
     render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
@@ -482,7 +497,7 @@ describe('ChatInlineImage shared-ref recovery', () => {
   });
 
   test('a ref that never draws is watchdogged onto the uri fallback', () => {
-    mockSharedRef = { isAnimated: false };
+    mockSharedRef = fakeImageRef(false);
     const sourceUrl = 'https://static-cdn.jtvnw.net/badges/v1/silent/3';
     render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
@@ -494,7 +509,7 @@ describe('ChatInlineImage shared-ref recovery', () => {
   });
 
   test('a recycled slot does not inherit the previous mount displayed marker', () => {
-    mockSharedRef = { isAnimated: false };
+    mockSharedRef = fakeImageRef(false);
     const sourceUrl = 'https://static-cdn.jtvnw.net/badges/v1/comeback/3';
     const { rerender } = render(
       <ChatInlineImage sourceUrl={sourceUrl} style={{}} />,
@@ -517,7 +532,7 @@ describe('ChatInlineImage shared-ref recovery', () => {
   });
 
   test('recycling to a new url clears a previous ref ban', () => {
-    mockSharedRef = { isAnimated: false };
+    mockSharedRef = fakeImageRef(false);
     const bannedUrl = 'https://static-cdn.jtvnw.net/badges/v1/banned/3';
     const { rerender } = render(
       <ChatInlineImage sourceUrl={bannedUrl} style={{}} />,

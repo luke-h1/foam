@@ -1,3 +1,8 @@
+export type EllipseRadii = {
+  rx: number;
+  ry: number;
+};
+
 /**
  * Radii of a CSS `radial-gradient(ellipse, ...)` with default sizing. For a
  * centred gradient the farthest-corner ellipse is the farthest-side ellipse
@@ -6,7 +11,7 @@
 export function farthestCornerEllipseRadii(
   width: number,
   height: number,
-): { rx: number; ry: number } {
+): EllipseRadii {
   return {
     rx: (width / 2) * Math.SQRT2,
     ry: (height / 2) * Math.SQRT2,

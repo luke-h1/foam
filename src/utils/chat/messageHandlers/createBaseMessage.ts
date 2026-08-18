@@ -27,7 +27,7 @@ export const createBaseMessage = ({
   const messageNonce = messageId !== '0' ? messageId : generateNonce();
   const isHighlightedMessage = isHighlightMyMessageTags(enrichedTags);
 
-  return {
+  const message: ChatMessageType<'usernotice'> = {
     id: `${messageId}_${messageNonce}`,
     userstate,
     message: [{ type: 'text', content: text.trimEnd() }],
@@ -43,7 +43,15 @@ export const createBaseMessage = ({
     parentColor: undefined,
     isChannelPointRedemption:
       Boolean(enrichedTags['custom-reward-id']) || isHighlightedMessage,
-    ...(isHighlightedMessage ? { isHighlightedMessage: true } : {}),
-    ...(isAction ? { isAction: true } : {}),
   };
+
+  if (isHighlightedMessage) {
+    message.isHighlightedMessage = true;
+  }
+
+  if (isAction) {
+    message.isAction = true;
+  }
+
+  return message;
 };

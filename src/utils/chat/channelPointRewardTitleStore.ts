@@ -24,6 +24,10 @@ function boundedMapSet(
   map.set(key, value);
 }
 
+function tagText(value: string | boolean | undefined): string | undefined {
+  return value === true || value === false ? undefined : value;
+}
+
 function channelPointRewardCacheKey(
   broadcasterId: string,
   rewardId: string,
@@ -78,13 +82,15 @@ export function resolveChannelPointRewardTitle(options: {
     return fromTags;
   }
 
-  const rewardId = options.tags['custom-reward-id'];
-  if (typeof rewardId !== 'string') {
+  const rewardId = tagText(options.tags['custom-reward-id']);
+  if (rewardId === undefined) {
     return undefined;
   }
 
-  const broadcasterId = options.tags['room-id'] ?? options.broadcasterId;
-  if (typeof broadcasterId === 'string') {
+  const broadcasterId = tagText(
+    options.tags['room-id'] ?? options.broadcasterId,
+  );
+  if (broadcasterId !== undefined) {
     const cached = getCachedChannelPointRewardTitle(broadcasterId, rewardId);
     if (cached) {
       return cached;
@@ -98,11 +104,11 @@ export function ingestChannelPointRewardTags(
   tags: ChannelPointsRewardTags,
   broadcasterId?: string,
 ): void {
-  const rewardId = tags['custom-reward-id'];
-  const roomId = tags['room-id'] ?? broadcasterId;
+  const rewardId = tagText(tags['custom-reward-id']);
+  const roomId = tagText(tags['room-id'] ?? broadcasterId);
   const title = channelPointsRewardTitleFromTags(tags);
 
-  if (typeof rewardId === 'string' && typeof roomId === 'string' && title) {
+  if (rewardId !== undefined && roomId !== undefined && title) {
     cacheChannelPointRewardTitle(roomId, rewardId, title);
   }
 }
@@ -143,7 +149,7 @@ function cancelDeferredRewardgiftStandalone(
 export function enrichChannelPointPrivmsgTags(
   tags: Record<string, string>,
   broadcasterId?: string,
-): Record<string, string> {
+) {
   if (!tags['custom-reward-id']) {
     return tags;
   }

@@ -1,18 +1,45 @@
+// This file's `shape` usages mirror the 7TV paint API's field name (see
+// PaintShape / PaintLayerData.shape in types/seventv/cosmetics.ts), not a
+// naming choice.
+// oxlint-disable anti-slop/no-shape-in-symbol-names
 import type { IndexedCollection } from '@app/services/ws/util/indexedCollection';
 import type {
   PaintCanvasRepeat,
   PaintData,
-  PaintFunction,
   PaintLayerData,
   PaintShadow,
   PaintShape,
   PaintStop,
   PaintTextStyle,
+  SevenTvColor,
 } from '@app/types/seventv/cosmetics';
 
 import { absoluteSevenTvUrl } from './absoluteSevenTvUrl';
 import { get7TvCosmeticId } from './get7TvCosmeticId';
 import type { PaintGradientLayer, RawSevenTvPaintInput } from './types';
+
+interface RawPaintTextStrokeInput {
+  color?: SevenTvColor;
+  width?: number;
+}
+
+interface RawPaintShadowInput {
+  color: SevenTvColor;
+  radius?: number;
+  x_offset?: number;
+  y_offset?: number;
+}
+
+interface RawPaintTextStyleInput {
+  weight?: number;
+  transform?: string;
+  stroke?: RawPaintTextStrokeInput | null;
+  shadows?: RawPaintShadowInput[] | IndexedCollection<PaintShadow> | null;
+}
+
+type NormalizeSevenTvPaintInput = RawSevenTvPaintInput & {
+  text?: RawPaintTextStyleInput | null;
+};
 
 function isPaintGradientArray(
   gradients: RawSevenTvPaintInput['gradients'],
@@ -50,20 +77,21 @@ function canvasRepeatToRepeat(canvasRepeat?: string): boolean {
   return true;
 }
 
-const PAINT_CANVAS_REPEAT_VALUES = new Set<PaintCanvasRepeat>([
-  '',
-  'no-repeat',
-  'repeat',
-  'repeat-x',
-  'repeat-y',
-  'round',
-  'space',
-  'revert',
-  'unset',
-]);
+const PAINT_CANVAS_REPEAT_VALUES: ReadonlySet<string> =
+  new Set<PaintCanvasRepeat>([
+    '',
+    'no-repeat',
+    'repeat',
+    'repeat-x',
+    'repeat-y',
+    'round',
+    'space',
+    'revert',
+    'unset',
+  ]);
 
 function isPaintCanvasRepeat(value: string): value is PaintCanvasRepeat {
-  return PAINT_CANVAS_REPEAT_VALUES.has(value as PaintCanvasRepeat);
+  return PAINT_CANVAS_REPEAT_VALUES.has(value);
 }
 
 function normalizeCanvasRepeat(canvasRepeat?: string): PaintCanvasRepeat {
@@ -128,48 +156,49 @@ function layersToIndexed(
   return indexed;
 }
 
-function parsePaintTextStyle(text: unknown): PaintTextStyle | null {
-  if (!text || typeof text !== 'object') {
+function parsePaintTextStyle(
+  text: RawPaintTextStyleInput | null | undefined,
+): PaintTextStyle | null {
+  if (!text) {
     return null;
   }
 
-  const value = text as Record<string, unknown>;
   const style: PaintTextStyle = {};
 
-  if (typeof value.weight === 'number') {
-    style.weight = value.weight;
+  if (text.weight !== undefined) {
+    style.weight = text.weight;
   }
 
-  if (value.transform === 'uppercase' || value.transform === 'lowercase') {
-    style.transform = value.transform;
+  if (text.transform === 'uppercase' || text.transform === 'lowercase') {
+    style.transform = text.transform;
   }
 
-  if (value.stroke && typeof value.stroke === 'object') {
-    const stroke = value.stroke as Record<string, unknown>;
-    if (typeof stroke.color === 'number' && typeof stroke.width === 'number') {
-      style.stroke = { color: stroke.color, width: stroke.width };
-    }
+  if (
+    text.stroke &&
+    text.stroke.color !== undefined &&
+    text.stroke.width !== undefined
+  ) {
+    style.stroke = { color: text.stroke.color, width: text.stroke.width };
   }
 
-  if (value.shadows) {
-    if (Array.isArray(value.shadows)) {
+  if (text.shadows) {
+    if (Array.isArray(text.shadows)) {
       const shadows: IndexedCollection<PaintShadow> = {
-        length: value.shadows.length,
+        length: text.shadows.length,
       };
-      value.shadows.forEach((shadow, index) => {
-        if (shadow && typeof shadow === 'object') {
-          const entry = shadow as Record<string, unknown>;
+      text.shadows.forEach((shadow, index) => {
+        if (shadow) {
           shadows[index] = {
-            color: entry.color as number,
-            radius: (entry.radius as number) ?? 0,
-            x_offset: (entry.x_offset as number) ?? 0,
-            y_offset: (entry.y_offset as number) ?? 0,
+            color: shadow.color,
+            radius: shadow.radius ?? 0,
+            x_offset: shadow.x_offset ?? 0,
+            y_offset: shadow.y_offset ?? 0,
           };
         }
       });
       style.shadows = shadows;
-    } else if (typeof value.shadows === 'object') {
-      style.shadows = value.shadows as IndexedCollection<PaintShadow>;
+    } else {
+      style.shadows = text.shadows;
     }
   }
 
@@ -192,11 +221,11 @@ function syncFlatFieldsFromLayer(
   };
 }
 
-export function normalizeSevenTvPaint(raw: RawSevenTvPaintInput): PaintData {
+export function normalizeSevenTvPaint(
+  raw: NormalizeSevenTvPaintInput,
+): PaintData {
   const id = get7TvCosmeticId(raw);
-  const textStyle =
-    parsePaintTextStyle(raw.textStyle ?? (raw as { text?: unknown }).text) ??
-    null;
+  const textStyle = parsePaintTextStyle(raw.textStyle ?? raw.text);
 
   let sourceLayers: PaintGradientLayer[] = [];
 
@@ -251,15 +280,18 @@ export function normalizeSevenTvPaint(raw: RawSevenTvPaintInput): PaintData {
 
   const layers = layersToIndexed(sourceLayers);
   const primary = layers[0];
-  const flat = primary
+  const flat: Pick<
+    PaintData,
+    'function' | 'repeat' | 'angle' | 'shape' | 'image_url' | 'stops'
+  > = primary
     ? syncFlatFieldsFromLayer(primary)
     : {
-        function: 'LINEAR_GRADIENT' as PaintFunction,
+        function: 'LINEAR_GRADIENT',
         repeat: false,
         angle: 0,
-        shape: 'circle' as PaintShape,
+        shape: 'circle',
         image_url: '',
-        stops: { length: 0 } as IndexedCollection<PaintStop>,
+        stops: { length: 0 },
       };
 
   return {

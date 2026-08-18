@@ -6,14 +6,16 @@ import { render as baseRender, screen } from '@testing-library/react-native';
 
 import { AuthContextTestProvider } from '@app/context/AuthContext';
 import FollowingScreen from '@app/screens/FollowingScreen';
-import { twitchService as _twitchService } from '@app/services/twitch-service';
+import { twitchService as realTwitchService } from '@app/services/twitch-service';
 import type { TwitchStream } from '@app/types/twitch/stream';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 
-jest.mock('@app/services/twitch-service');
-jest.mock('expo-symbols', () => ({ SymbolView: () => null }));
-
-const twitchService = jest.mocked(_twitchService);
+const twitchService = {
+  getFollowedStreams: jest.spyOn(realTwitchService, 'getFollowedStreams'),
+  getUserImage: jest.spyOn(realTwitchService, 'getUserImage'),
+  getFollowedChannels: jest.spyOn(realTwitchService, 'getFollowedChannels'),
+  getUsersById: jest.spyOn(realTwitchService, 'getUsersById'),
+};
 
 const TEST_TOKEN_EXPIRES_AT = 4_102_444_800_000;
 

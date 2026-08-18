@@ -16,10 +16,20 @@ import {
 
 type BadgeVariant = 'solid' | 'outline' | 'soft' | 'subtle';
 
+/**
+ * One resolved ColorConfig per badge variant, for a single colour and scheme.
+ */
+interface BadgeVariantColors {
+  solid: ColorConfig;
+  outline: ColorConfig;
+  soft: ColorConfig;
+  subtle: ColorConfig;
+}
+
 const generateVariantConfig = (
   color: UIColor,
   colorScheme: 'light' | 'dark',
-): Record<BadgeVariant, ColorConfig> => {
+): BadgeVariantColors => {
   const isDark = colorScheme === 'dark';
 
   if (color === 'black') {
@@ -159,7 +169,7 @@ const generateVariantConfig = (
 const generateVariantConfigFromBase = (
   baseHex: string,
   colorScheme: 'light' | 'dark',
-): Record<BadgeVariant, ColorConfig> => {
+): BadgeVariantColors => {
   const isDark = colorScheme === 'dark';
   const highContrastText = isDark
     ? getColorValue('zinc', 950)
@@ -200,7 +210,7 @@ interface BadgeProps {
   size?: UISize;
   radius?: UIRadius;
   style?: ViewStyle;
-  symbol?: string;
+  symbol?: SFSymbol;
 }
 
 export function Badge({
@@ -247,7 +257,7 @@ export function Badge({
     <View style={[...badgeStyles, shouldCenterIcon && styles.iconOnly]}>
       {symbol && (
         <SymbolView
-          name={symbol as SFSymbol}
+          name={symbol}
           size={SYMBOL_SIZE[size]}
           tintColor={iconColor}
         />

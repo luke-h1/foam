@@ -5,9 +5,9 @@ import { useFocusEffect } from 'expo-router';
 import { useSyncRef } from '@app/hooks/useSyncRef';
 import { subscribeToAppForeground } from '@app/utils/appState/appStateTransitions';
 
-interface UseRefetchOnForegroundOptions {
+interface UseRefetchOnForegroundOptions<TRefetched> {
   enabled?: boolean;
-  refetch: () => Promise<unknown>;
+  refetch: () => Promise<TRefetched>;
   /**
    * Minimum time between triggered refetches. The refetch callbacks passed in
    * bypass query staleTime (`refetchQueries` refetches unconditionally), so
@@ -17,11 +17,11 @@ interface UseRefetchOnForegroundOptions {
   minIntervalMs?: number;
 }
 
-export function useRefetchOnForeground({
+export function useRefetchOnForeground<TRefetched>({
   enabled = true,
   refetch,
   minIntervalMs = 30_000,
-}: UseRefetchOnForegroundOptions) {
+}: UseRefetchOnForegroundOptions<TRefetched>) {
   const refetchRef = useSyncRef(refetch);
 
   const lastRefetchAtRef = useRef(0);

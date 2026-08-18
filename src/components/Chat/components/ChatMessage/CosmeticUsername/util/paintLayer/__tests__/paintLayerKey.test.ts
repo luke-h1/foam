@@ -1,3 +1,6 @@
+// This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
+// field (see types/seventv/cosmetics.ts), not a naming choice.
+// oxlint-disable anti-slop/no-shape-in-symbol-names
 import type { PaintLayerData } from '@app/types/seventv/cosmetics';
 
 import { withPaintLayerKeys } from '../paintLayerKey';
@@ -30,7 +33,9 @@ describe('withPaintLayerKeys', () => {
     const keys = keyed.map(entry => entry.key);
 
     expect(keys).toHaveLength(3);
-    const [first, second, third] = keys as [string, string, string];
+    const first = keys[0]!;
+    const second = keys[1]!;
+    const third = keys[2]!;
 
     expect(keys).toEqual([first, second, `${first}#1`]);
     expect(first).not.toEqual(second);

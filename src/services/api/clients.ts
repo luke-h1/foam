@@ -3,8 +3,10 @@ import Constants from 'expo-constants';
 import { createApiClient } from './Client';
 import { fetchTwitchTokenClientId } from './twitchTokenClientId';
 
-export const mockServerUrl = Constants.expoConfig?.extra?.MOCK_SERVER_URL as
-  string | undefined;
+const expoExtra: Record<string, string | undefined> | undefined =
+  Constants.expoConfig?.extra;
+
+export const mockServerUrl = expoExtra?.MOCK_SERVER_URL;
 
 export const isE2EMode = !!mockServerUrl;
 
@@ -13,8 +15,8 @@ const twitchApiBaseUrl = mockServerUrl
   : 'https://api.twitch.tv/helix';
 
 const envTwitchClientId =
-  (Constants.expoConfig?.extra?.EXPO_PUBLIC_TWITCH_CLIENT_ID as
-    string | undefined) ?? process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID;
+  expoExtra?.EXPO_PUBLIC_TWITCH_CLIENT_ID ??
+  process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID;
 
 let currentTwitchClientId = envTwitchClientId;
 

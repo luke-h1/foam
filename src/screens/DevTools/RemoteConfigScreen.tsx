@@ -1,6 +1,4 @@
 /* eslint-disable no-nested-ternary */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-base-to-string */
 import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 
 import * as AC from '@bacons/apple-colors';
@@ -9,9 +7,11 @@ import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
 import { Button } from '@app/components/Button/Button';
 import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
+import { parseRemoteConfigValue } from '@app/hooks/firebase/remoteConfigModel';
 import {
   defaultRemoteConfig,
   RemoteConfigKey,
+  RemoteConfigSchema,
   useRemoteConfig,
 } from '@app/hooks/firebase/useRemoteConfig';
 import { theme } from '@app/styles/themes';
@@ -29,28 +29,17 @@ function getSourceIcon(source: string): SymbolViewProps['name'] {
   }
 }
 
-function formatValue(value: unknown): string {
-  if (typeof value === 'object') {
-    return JSON.stringify(value, null, 2);
-  }
-  return String(value);
-}
-
-function formatDefaultValue(rawValue: string): string {
-  try {
-    const parsed = JSON.parse(rawValue);
-    if (typeof parsed === 'object') {
-      return JSON.stringify(parsed, null, 2);
-    }
-  } catch {
-    // Not JSON
-  }
-  return rawValue;
+function formatConfigValue(
+  raw: string,
+  value: RemoteConfigSchema[RemoteConfigKey],
+): string {
+  return value === raw ? raw : JSON.stringify(value, null, 2);
 }
 
 export function RemoteConfigScreen() {
   const { config, refetch, isRefetching } = useRemoteConfig();
 
+  // SAFETY: defaultRemoteConfig is satisfies-checked against Record<RemoteConfigKey, string>
   const configKeys = Object.keys(defaultRemoteConfig) as RemoteConfigKey[];
 
   const handleRefetch = () => {
@@ -94,8 +83,12 @@ export function RemoteConfigScreen() {
         <View style={styles.card}>
           {configKeys.map((key, index) => {
             const entry = config[key];
-            const serverValue = formatValue(entry.value);
-            const defaultValue = formatDefaultValue(defaultRemoteConfig[key]);
+            const defaultRaw = defaultRemoteConfig[key];
+            const serverValue = formatConfigValue(entry.raw, entry.value);
+            const defaultValue = formatConfigValue(
+              defaultRaw,
+              parseRemoteConfigValue(key, defaultRaw),
+            );
             const isLast = index === configKeys.length - 1;
 
             return (

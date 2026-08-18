@@ -1,3 +1,6 @@
+// This file's `shape` usages are GraphQL-codegen names from the 7TV schema
+// (PaintRadialGradientShape, V4Paint's ty.shape), not a naming choice.
+// oxlint-disable anti-slop/no-shape-in-symbol-names
 import { PaintRadialGradientShape } from '@app/graphql/generated/gql';
 import { IndexedCollection } from '@app/services/ws/util/indexedCollection';
 import type { PaintData, PaintShadow } from '@app/types/seventv/cosmetics';

@@ -49,11 +49,12 @@ declare const Bun: {
       message(ws: BunWebSocket, message: string | Uint8Array): void;
       close(ws: BunWebSocket): void;
     };
-  }): unknown;
+  }): BunServer;
 };
 
 interface BunServer {
   upgrade(request: Request): boolean;
+  stop(closeActiveConnections?: boolean): void;
 }
 
 interface BunWebSocket {
@@ -64,6 +65,14 @@ interface BunWebSocket {
 
 type Handler = (request: Request, url: URL) => Response;
 
+interface RouteTable {
+  [method: string]: Partial<Record<string, Handler>>;
+}
+
+interface ParamRouteTable {
+  [method: string]: [RegExp, Handler][];
+}
+
 const PORT = Number(process.env.MOCK_SERVER_PORT ?? 3001);
 
 const responseHeaders = {
@@ -72,7 +81,7 @@ const responseHeaders = {
   'Access-Control-Allow-Origin': '*',
 };
 
-const json = (body: unknown, init?: ResponseInit) =>
+const json = <TBody>(body: TBody, init?: ResponseInit) =>
   new Response(JSON.stringify(body), {
     ...init,
     headers: {
@@ -330,7 +339,7 @@ const sevenTvCosmeticsHandler: Handler = () => json(sevenTvCosmetics);
 
 const reset = () => json({ status: 'reset complete' });
 
-const routes: Record<string, Partial<Record<string, Handler>>> = {
+const routes: RouteTable = {
   GET: {
     '/3/cached/emotes/global': globalBttvEmotesHandler,
     '/health': health,
@@ -387,7 +396,7 @@ const routes: Record<string, Partial<Record<string, Handler>>> = {
   },
 };
 
-const paramRoutes: Record<string, [RegExp, Handler][]> = {
+const paramRoutes: ParamRouteTable = {
   GET: [
     [/^\/3\/cached\/users\/twitch\/[^/]+$/, channelBttvEmotesHandler],
     [/^\/v1\/room\/id\/[^/]+$/, ffzRoomHandler],
@@ -451,7 +460,7 @@ Bun.serve({
       ws.send(':tmi.twitch.tv 376 justinfan12345 :>');
     },
     message(ws, message) {
-      const msg = typeof message === 'string' ? message : message.toString();
+      const msg = message instanceof Uint8Array ? message.toString() : message;
 
       if (msg.startsWith('CAP REQ')) {
         ws.send(

@@ -1,26 +1,9 @@
-import { AppState } from 'react-native';
+import { AppState, type AppStateStatus } from 'react-native';
 
 import { twitchService } from '@app/services/twitch-service';
 import TwitchWsService from '@app/services/twitch-ws-service';
+import type { EventSubMessage } from '@app/types/twitch/eventsub';
 import { logger } from '@app/utils/logger';
-
-jest.mock('@app/services/twitch-service', () => ({
-  twitchService: {
-    createEventSubscription: jest.fn(),
-    deleteEventSubscription: jest.fn(),
-    listEventSubscriptions: jest.fn(),
-  },
-}));
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    twitchWs: {
-      error: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-    },
-  },
-}));
 
 import {
   createFakeSocket,
@@ -29,13 +12,89 @@ import {
 } from './__fixtures__/twitchWsService.fixture';
 
 const twitchWsState = getTwitchWsTestState();
-const mockCreateEventSubscription = jest.mocked(
-  twitchService.createEventSubscription,
+const mockCreateEventSubscription = jest.spyOn(
+  twitchService,
+  'createEventSubscription',
 );
-const mockDeleteEventSubscription = jest.mocked(
-  twitchService.deleteEventSubscription,
+const mockDeleteEventSubscription = jest.spyOn(
+  twitchService,
+  'deleteEventSubscription',
 );
-const mockWarn = jest.mocked(logger.twitchWs.warn);
+jest.spyOn(logger.twitchWs, 'error').mockImplementation(() => {});
+jest.spyOn(logger.twitchWs, 'info').mockImplementation(() => {});
+const mockWarn = jest
+  .spyOn(logger.twitchWs, 'warn')
+  .mockImplementation(() => {});
+
+type CreateEventSubscriptionResponse = Awaited<
+  ReturnType<typeof twitchService.createEventSubscription>
+>;
+
+interface TwitchApiErrorBody {
+  message: string;
+  status: number;
+}
+
+function unvalidatedCreateResponse(
+  body: CreateEventSubscriptionResponse | TwitchApiErrorBody,
+): CreateEventSubscriptionResponse {
+  // SAFETY: the HTTP client returns parsed JSON unvalidated, so a Twitch error body reaches callers typed as the subscription response
+  return body as CreateEventSubscriptionResponse;
+}
+
+function createSubscriptionResponse(
+  subscriptionId: string,
+  eventType: string,
+): CreateEventSubscriptionResponse {
+  return {
+    data: [
+      {
+        id: subscriptionId,
+        status: 'enabled',
+        type: eventType,
+        version: '1',
+        condition: {},
+        created_at: '2026-01-01T00:00:00.000Z',
+        transport: {},
+        method: 'websocket',
+        callback: '',
+        session_id: 'session-id',
+        cost: 1,
+      },
+    ],
+    total: 1,
+    total_cost: 1,
+    max_total_cost: 10,
+  };
+}
+
+function createNotification(
+  subscriptionType: string,
+  condition: Record<string, string>,
+): EventSubMessage {
+  return {
+    metadata: {
+      message_id: 'message-id',
+      message_type: 'notification',
+      message_timestamp: '2026-01-01T00:00:00.000Z',
+      subscription_type: subscriptionType,
+    },
+    payload: {
+      subscription: {
+        id: 'sub-other',
+        status: 'enabled',
+        type: subscriptionType,
+        version: '1',
+        condition,
+        transport: {
+          method: 'websocket',
+          session_id: 'session-id',
+        },
+        created_at: '2026-01-01T00:00:00.000Z',
+      },
+    },
+  };
+}
 
 describe('TwitchWsService EventSub response handling', () => {
   beforeEach(() => {
@@ -44,11 +103,10 @@ describe('TwitchWsService EventSub response handling', () => {
   });
 
   test('does not treat Twitch API error bodies as subscription responses', async () => {
-    const callback = jest.fn((_: unknown) => undefined);
-    mockCreateEventSubscription.mockResolvedValue({
-      message: 'Forbidden',
-      status: 403,
-    } as unknown as Awaited<ReturnType<typeof mockCreateEventSubscription>>);
+    const callback = jest.fn();
+    mockCreateEventSubscription.mockResolvedValue(
+      unvalidatedCreateResponse({ message: 'Forbidden', status: 403 }),
+    );
 
     await TwitchWsService.subscribeToEvent(
       'channel.prediction.begin',
@@ -59,15 +117,21 @@ describe('TwitchWsService EventSub response handling', () => {
 
     expect(twitchWsState.entries.size).toBe(0);
     expect(mockCreateEventSubscription).toHaveBeenCalledTimes(1);
-    const warningPayload = mockWarn.mock.calls[0]?.[1] as
-      Record<string, unknown> | undefined;
-    expect({
-      action: warningPayload?.action,
-      event_type: warningPayload?.event_type,
-    }).toEqual({
-      action: 'subscription_create_failed',
-      event_type: 'channel.prediction.begin',
-    });
+    expect(mockWarn.mock.calls).toEqual([
+      [
+        'Failed to subscribe to Twitch EventSub event channel.prediction.begin',
+        {
+          name: 'twitch_ws_warning',
+          error: new Error(
+            'Twitch EventSub channel.prediction.begin subscription returned no subscription data',
+          ),
+          action: 'subscription_create_failed',
+          event_type: 'channel.prediction.begin',
+          provider: 'twitch',
+          source: 'twitch_ws_service',
+        },
+      ],
+    ]);
   });
 });
 
@@ -76,11 +140,7 @@ describe('TwitchWsService shared socket teardown', () => {
     jest.clearAllMocks();
     jest.useFakeTimers();
     resetTwitchWsTestState(twitchWsState);
-    mockDeleteEventSubscription.mockResolvedValue(
-      undefined as unknown as Awaited<
-        ReturnType<typeof mockDeleteEventSubscription>
-      >,
-    );
+    mockDeleteEventSubscription.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -88,9 +148,9 @@ describe('TwitchWsService shared socket teardown', () => {
   });
 
   async function subscribe(eventType: string, callback: jest.Mock) {
-    mockCreateEventSubscription.mockResolvedValue({
-      data: [{ id: `${eventType}-sub-id` }],
-    } as unknown as Awaited<ReturnType<typeof mockCreateEventSubscription>>);
+    mockCreateEventSubscription.mockResolvedValue(
+      createSubscriptionResponse(`${eventType}-sub-id`, eventType),
+    );
 
     await TwitchWsService.subscribeToEvent(
       eventType,
@@ -182,9 +242,9 @@ describe('TwitchWsService shared socket teardown', () => {
     const onChannelOne = jest.fn();
     const onChannelTwo = jest.fn();
 
-    mockCreateEventSubscription.mockResolvedValueOnce({
-      data: [{ id: 'sub-channel-1' }],
-    } as unknown as Awaited<ReturnType<typeof mockCreateEventSubscription>>);
+    mockCreateEventSubscription.mockResolvedValueOnce(
+      createSubscriptionResponse('sub-channel-1', 'channel.poll.begin'),
+    );
     await TwitchWsService.subscribeToEvent(
       'channel.poll.begin',
       '1',
@@ -192,9 +252,9 @@ describe('TwitchWsService shared socket teardown', () => {
       onChannelOne,
     );
 
-    mockCreateEventSubscription.mockResolvedValueOnce({
-      data: [{ id: 'sub-channel-2' }],
-    } as unknown as Awaited<ReturnType<typeof mockCreateEventSubscription>>);
+    mockCreateEventSubscription.mockResolvedValueOnce(
+      createSubscriptionResponse('sub-channel-2', 'channel.poll.begin'),
+    );
     await TwitchWsService.subscribeToEvent(
       'channel.poll.begin',
       '1',
@@ -233,9 +293,9 @@ describe('TwitchWsService shared socket teardown', () => {
     const onChannelTwo = jest.fn();
 
     await subscribe('channel.poll.begin', onChannelOne);
-    mockCreateEventSubscription.mockResolvedValueOnce({
-      data: [{ id: 'sub-other' }],
-    } as unknown as Awaited<ReturnType<typeof mockCreateEventSubscription>>);
+    mockCreateEventSubscription.mockResolvedValueOnce(
+      createSubscriptionResponse('sub-other', 'channel.poll.begin'),
+    );
     await TwitchWsService.subscribeToEvent(
       'channel.poll.begin',
       '1',
@@ -243,32 +303,23 @@ describe('TwitchWsService shared socket teardown', () => {
       onChannelTwo,
     );
 
-    twitchWsState.handleNotification({
-      metadata: {
-        message_type: 'notification',
-        subscription_type: 'channel.poll.begin',
-      },
-      payload: {
-        subscription: {
-          type: 'channel.poll.begin',
-          condition: { broadcaster_user_id: 'other-channel' },
-        },
-      },
-    });
+    twitchWsState.handleNotification(
+      createNotification('channel.poll.begin', {
+        broadcaster_user_id: 'other-channel',
+      }),
+    );
 
     expect(onChannelOne).not.toHaveBeenCalled();
     expect(onChannelTwo).toHaveBeenCalledTimes(1);
   });
 
   test('revives the socket on foreground when consumers are still subscribed', async () => {
-    const listeners: ((state: string) => void)[] = [];
+    const listeners: ((state: AppStateStatus) => void)[] = [];
     const appStateSpy = jest
       .spyOn(AppState, 'addEventListener')
       .mockImplementation((_type, handler) => {
-        listeners.push(handler as (state: string) => void);
-        return { remove: jest.fn() } as unknown as ReturnType<
-          typeof AppState.addEventListener
-        >;
+        listeners.push(handler);
+        return { remove: jest.fn() };
       });
 
     const onPoll = jest.fn();

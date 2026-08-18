@@ -1,21 +1,5 @@
 import { storageService } from '@app/lib/storage';
 
-jest.mock('react-native-mmkv', () => {
-  const store = new Map<string, string>();
-  return {
-    createMMKV: () => ({
-      set: (key: string, value: string) => {
-        store.set(key, value);
-      },
-      getString: (key: string) => store.get(key),
-      remove: (key: string) => {
-        store.delete(key);
-      },
-      getAllKeys: () => [...store.keys()],
-    }),
-  };
-});
-
 beforeEach(() => {
   storageService.clear();
 });

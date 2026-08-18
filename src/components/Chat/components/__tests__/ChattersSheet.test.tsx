@@ -1,7 +1,9 @@
+import { createElement } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { fireEvent } from '@testing-library/react-native';
 
+import * as InputModule from '@app/components/ui/Input/Input';
 import render from '@app/test/render';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { clearMentionLoginIndex } from '@app/utils/chat/resolveMentionLogin/clearMentionLoginIndex';
@@ -12,19 +14,15 @@ import {
   type ChattersSheetProps,
 } from '../ChattersSheet/ChattersSheet';
 
-jest.mock('expo-symbols', () => ({
-  SymbolView: () => null,
-}));
-
-jest.mock('@app/components/ui/Input/Input', () => {
-  const React = require('react');
-  const { TextInput: MockTextInput } = require('react-native');
-
-  return {
-    Input: (props: Record<string, unknown>) =>
-      React.createElement(MockTextInput, props),
-  };
-});
+/**
+ * The real Input renders @expo/ui's SwiftUI TextField on iOS, which needs a
+ * native worklet runtime that isn't available under react-test-renderer.
+ * Render the host 'TextInput' element directly - testing-library's
+ * getByPlaceholderText only recognises that literal host type name.
+ */
+jest
+  .spyOn(InputModule, 'Input')
+  .mockImplementation(props => createElement('TextInput', props));
 
 function renderChattersSheet(props: ChattersSheetProps) {
   return render(

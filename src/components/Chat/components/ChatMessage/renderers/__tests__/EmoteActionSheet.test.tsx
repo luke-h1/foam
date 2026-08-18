@@ -4,29 +4,16 @@ import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import * as Clipboard from 'expo-clipboard';
 import { toast } from 'sonner-native';
 
+import * as ImageModule from '@app/components/Image/Image';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import { EmoteActionSheet } from '../EmoteActionSheet';
 
-jest.mock('expo-clipboard', () => ({
-  setStringAsync: jest.fn().mockResolvedValue(undefined),
-}));
+jest.spyOn(ImageModule, 'Image').mockImplementation(() => <></>);
 
-jest.mock('sonner-native', () => ({
-  toast: {
-    success: jest.fn(),
-  },
-}));
-
-jest.mock('expo-symbols', () => ({
-  SymbolView: () => null,
-}));
-
-jest.mock('@app/components/Image/Image', () => ({
-  Image: () => null,
-}));
-
-const clipboardSetStringAsyncMock = jest.mocked(Clipboard.setStringAsync);
+const clipboardSetStringAsyncMock = jest
+  .spyOn(Clipboard, 'setStringAsync')
+  .mockResolvedValue(true);
 const toastSuccessMock = jest.mocked(toast.success);
 
 const part = {

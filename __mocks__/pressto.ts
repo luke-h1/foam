@@ -2,7 +2,7 @@ import { ComponentType, createElement, type Ref } from 'react';
 // eslint-disable-next-line no-restricted-imports
 import { Pressable as RNPressable, PressableProps } from 'react-native';
 
-export const BasePressable = RNPressable as ComponentType<PressableProps>;
+export const BasePressable: ComponentType<PressableProps> = RNPressable;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const PressableScale = (props: any & { ref?: Ref<never> }) => {

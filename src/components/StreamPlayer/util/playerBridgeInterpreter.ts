@@ -79,7 +79,7 @@ export function interpretPlayerMessage(
   message: PlayerMessage,
   context: PlayerBridgeContext,
 ): PlayerBridgeAction[] {
-  if (typeof message !== 'object' || message === null) {
+  if (!(message instanceof Object)) {
     return [];
   }
 
@@ -437,7 +437,7 @@ export function interpretPlayerMessage(
 
       const latency = message.payload.hlsLatencyBroadcaster;
       const hasUsableLiveLatency =
-        typeof latency === 'number' &&
+        latency != null &&
         Number.isFinite(latency) &&
         latency > 0.25 &&
         latency < 600;

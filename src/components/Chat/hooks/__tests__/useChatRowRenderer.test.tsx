@@ -1,20 +1,19 @@
-import type { ObservableReadable } from '@legendapp/state';
 import { renderHook } from '@testing-library/react-native';
 import { act, render } from '@testing-library/react-native';
 
 import type { ChatListRef } from '@app/components/Chat/components/ChatList';
-import { RichChatMessage } from '@app/components/Chat/components/ChatMessage/RichChatMessage';
-import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
-import {
-  getSessionCacheString,
-  setSessionCacheString,
-} from '@app/store/chat/actions/chatColorCaches';
-import { useIsHighlightedReplyTargetMessage } from '@app/store/chat/react/transientSelectors';
-import { useChatRowPreferences } from '@app/store/preferences/selectors';
+import * as RichChatMessageModule from '@app/components/Chat/components/ChatMessage/RichChatMessage';
+import type { RichChatMessageProps } from '@app/components/Chat/components/ChatMessage/RichChatMessage.types';
+import * as channelLoadActions from '@app/store/chat/actions/channelLoad';
+import * as chatColorCachesActions from '@app/store/chat/actions/chatColorCaches';
+import { chatTransientState$ } from '@app/store/chat/observables/chatTransientState';
+import * as transientSelectorsModule from '@app/store/chat/react/transientSelectors';
 import { createRef } from '@app/test/createRef';
-import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
+import type { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
+import * as emoteProcessorModule from '@app/utils/chat/emoteProcessor';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
-import { resolveMentionColor } from '@app/utils/chat/resolveMentionColor';
+import * as resolveCachedSenderColorModule from '@app/utils/chat/resolveCachedSenderColor/resolveCachedSenderColor';
+import * as resolveMentionColorModule from '@app/utils/chat/resolveMentionColor';
 
 import { useChatRowRenderer } from '../useChatRowRenderer';
 import {
@@ -23,101 +22,89 @@ import {
   createSevenTvEmote,
 } from './__fixtures__/useChat.fixture';
 
-function mockIsObservableReadable(
-  value: unknown,
-): value is ObservableReadable<unknown> {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'peek' in value &&
-    typeof value.peek === 'function'
-  );
+const mockGetCurrentEmoteData = jest.spyOn(
+  channelLoadActions,
+  'getCurrentEmoteData',
+);
+const mockGetSessionCacheString = jest.spyOn(
+  chatColorCachesActions,
+  'getSessionCacheString',
+);
+const mockSetSessionCacheString = jest.spyOn(
+  chatColorCachesActions,
+  'setSessionCacheString',
+);
+const mockProcessEmotesWorklet = jest
+  .spyOn(emoteProcessorModule, 'processEmotesWorklet')
+  .mockImplementation((params: { inputString: string }) => [
+    { type: 'text', content: `parsed:${params.inputString}` },
+  ]);
+const mockResolveMentionColor = jest
+  .spyOn(resolveMentionColorModule, 'resolveMentionColor')
+  .mockReturnValue('#mention-color');
+jest
+  .spyOn(resolveCachedSenderColorModule, 'resolveCachedSenderColor')
+  .mockReturnValue('#resolved-sender');
+/**
+ * RichChatMessage is memo() wrapped (an object, not a function), so
+ * jest.spyOn cannot wrap it - swap the export directly instead.
+ */
+const mockRichChatMessage = jest.fn<
+  null,
+  [RichChatMessageProps<NoticeVariants>]
+>(() => null);
+Object.defineProperty(RichChatMessageModule, 'RichChatMessage', {
+  configurable: true,
+  value: (props: RichChatMessageProps<NoticeVariants>) =>
+    mockRichChatMessage(props),
+});
+const mockUseIsHighlightedReplyTargetMessage = jest.spyOn(
+  transientSelectorsModule,
+  'useIsHighlightedReplyTargetMessage',
+);
+
+type HighlightedReplyTargetUpdate =
+  string | null | ((current: string | null) => string | null);
+
+function replyTargetUpdater(
+  update: HighlightedReplyTargetUpdate | undefined,
+): (current: string | null) => string | null {
+  if (update instanceof Function) {
+    return update;
+  }
+  throw new Error('Expected a reply-target updater function');
 }
 
-jest.mock('@legendapp/state/react', () => ({
-  useSelector: jest.fn((selector: unknown) => {
-    if (typeof selector === 'function') {
-      return selector();
-    }
-    if (mockIsObservableReadable(selector)) {
-      return selector.peek();
-    }
-    return selector;
-  }),
-}));
-
-jest.mock('@app/store/chat/observables/chatStore', () => ({
-  chatStore$: {
-    emojis: {
-      peek: jest.fn(() => []),
-    },
-    mentionLoginRevision: {
-      peek: jest.fn(() => 7),
-    },
-    paints: { onChange: jest.fn() },
-    userPaintIds: { onChange: jest.fn() },
-  },
-}));
-
-jest.mock('@app/store/chat/actions/messages', () => ({
-  getUserMessageColor: jest.fn(() => '#cached-sender'),
-}));
-
-jest.mock('@app/store/chat/actions/chatColorCaches', () => ({
-  getSessionCacheString: jest.fn(),
-  setSessionCacheString: jest.fn(),
-}));
-
-jest.mock('@app/store/chat/actions/channelLoad', () => ({
-  getCurrentEmoteData: jest.fn(),
-}));
-
-jest.mock('@app/store/preferences/selectors', () => ({
-  useChatRowPreferences: jest.fn(),
-}));
-
-jest.mock('@app/utils/chat/emoteProcessor', () => ({
-  processEmotesWorklet: jest.fn((params: { inputString: string }) => [
-    { type: 'text', content: `parsed:${params.inputString}` },
-  ]),
-}));
-
-jest.mock(
-  '@app/utils/chat/resolveCachedSenderColor/resolveCachedSenderColor',
-  () => ({
-    resolveCachedSenderColor: jest.fn(() => '#resolved-sender'),
-  }),
-);
-
-jest.mock('@app/utils/chat/resolveMentionColor', () => ({
-  resolveMentionColor: jest.fn(() => '#mention-color'),
-}));
-
-jest.mock('@app/store/chat/react/transientSelectors', () => ({
-  useIsHighlightedReplyTargetMessage: jest.fn(() => true),
-}));
-
-jest.mock('../../components/ChatMessage/RichChatMessage', () => ({
-  RichChatMessage: jest.fn(() => null),
-}));
-
-const mockGetCurrentEmoteData = jest.mocked(getCurrentEmoteData);
-const mockGetSessionCacheString = jest.mocked(getSessionCacheString);
-const mockProcessEmotesWorklet = jest.mocked(processEmotesWorklet);
-const mockResolveMentionColor = jest.mocked(resolveMentionColor);
-const mockRichChatMessage = jest.mocked(RichChatMessage);
-const mockSetSessionCacheString = jest.mocked(setSessionCacheString);
-const mockUseChatRowPreferences = jest.mocked(useChatRowPreferences);
-const mockUseIsHighlightedReplyTargetMessage = jest.mocked(
-  useIsHighlightedReplyTargetMessage,
-);
+function createChatListRef(
+  scrollToItem: ChatListRef['scrollToItem'],
+): ChatListRef {
+  return {
+    clearCaches: jest.fn(),
+    flashScrollIndicators: jest.fn(),
+    getAnimatableRef: jest.fn(),
+    getNativeScrollRef: jest.fn(),
+    getScrollableNode: jest.fn(),
+    getScrollResponder: jest.fn(),
+    getState: jest.fn(),
+    reportContentInset: jest.fn(),
+    scrollIndexIntoView: jest.fn(),
+    scrollItemIntoView: jest.fn(),
+    scrollToEnd: jest.fn(),
+    scrollToIndex: jest.fn(),
+    scrollToItem,
+    scrollToOffset: jest.fn(),
+    setItemSize: jest.fn(),
+    setScrollProcessingEnabled: jest.fn(),
+    setVisibleContentAnchorOffset: jest.fn(),
+  };
+}
 
 function renderRowRenderer() {
   const highlightedReplyTargetTimeoutRef = { current: null };
   const scrollToItem = jest.fn().mockResolvedValue(undefined);
-  const listRef = createRef<ChatListRef | null>({
-    scrollToItem,
-  } as unknown as ChatListRef);
+  const listRef = createRef<ChatListRef | null>(
+    createChatListRef(scrollToItem),
+  );
   const messages = [
     createChatMessage({
       tags: {
@@ -138,7 +125,10 @@ function renderRowRenderer() {
       text: 'hello OMEGALUL',
     }),
   ];
-  const setHighlightedReplyTargetMessageId = jest.fn();
+  const setHighlightedReplyTargetMessageId = jest.fn<
+    void,
+    [HighlightedReplyTargetUpdate]
+  >();
   const onBadgePress = jest.fn();
   const onEmotePress = jest.fn();
   const onMessageLongPress = jest.fn();
@@ -191,20 +181,15 @@ describe('useChatRowRenderer', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useRealTimers();
-    mockUseChatRowPreferences.mockReturnValue({
-      chatDensity: 'compact',
-      chatTimestamps: true,
-      disableEmoteAnimations: true,
-      highlightOwnMentions: true,
-      showAlternatingChatRows: true,
-      showInlineReplyContext: true,
-    });
     mockGetCurrentEmoteData.mockReturnValue(
       createEmoteData({
         sevenTvChannelEmotes: [createSevenTvEmote()],
       }),
     );
     mockGetSessionCacheString.mockReturnValue(undefined);
+    chatTransientState$['channel-1']!.highlightedReplyTargetMessageId.set(
+      'msg-2',
+    );
   });
 
   test('builds list metadata from row preferences and highlighted users', () => {
@@ -360,13 +345,11 @@ describe('useChatRowRenderer', () => {
         jest.advanceTimersByTime(2200);
       });
 
-      const clearHighlight =
-        setHighlightedReplyTargetMessageId.mock.calls[1]?.[0];
-      expect(typeof clearHighlight).toBe('function');
-      if (typeof clearHighlight === 'function') {
-        expect(clearHighlight('msg-1')).toBe(null);
-        expect(clearHighlight('different-message')).toBe('different-message');
-      }
+      const clearHighlight = replyTargetUpdater(
+        setHighlightedReplyTargetMessageId.mock.calls[1]?.[0],
+      );
+      expect(clearHighlight('msg-1')).toBe(null);
+      expect(clearHighlight('different-message')).toBe('different-message');
     } finally {
       jest.useRealTimers();
     }

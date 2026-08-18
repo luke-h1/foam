@@ -264,6 +264,14 @@ function sortSets(sets: EmoteMenuSet[]): EmoteMenuSet[] {
 }
 
 /**
+ * Emoji sets carry their entries as bare strings, which have no searchable
+ * name; provider emotes always carry an `id`.
+ */
+function isNamedEmote(item: EmotePickerItem): item is SanitisedEmote {
+  return Object.prototype.hasOwnProperty.call(item, 'id');
+}
+
+/**
  * `normalizedQuery` is trimmed and lower-cased once by `filterProviderSets`.
  */
 function filterSet(
@@ -274,13 +282,10 @@ function filterSet(
     return set;
   }
 
-  const filteredEmotes = set.emotes.filter(emote => {
-    if (typeof emote === 'string') {
-      return false;
-    }
-
-    return emote.name.toLowerCase().includes(normalizedQuery);
-  });
+  const filteredEmotes = set.emotes.filter(
+    emote =>
+      isNamedEmote(emote) && emote.name.toLowerCase().includes(normalizedQuery),
+  );
 
   if (filteredEmotes.length === 0) {
     return null;
@@ -439,14 +444,16 @@ export interface EmoteMenuListItem {
   items?: EmotePickerItem[];
 }
 
-export function flattenProviderSets(
-  sets: EmoteMenuSet[],
-  columns: number,
-): {
+export interface FlattenedProviderSets {
   items: EmoteMenuListItem[];
   setById: Map<string, EmoteMenuSet>;
   setStartIndexById: Map<string, number>;
-} {
+}
+
+export function flattenProviderSets(
+  sets: EmoteMenuSet[],
+  columns: number,
+): FlattenedProviderSets {
   const items: EmoteMenuListItem[] = [];
   const setById = new Map<string, EmoteMenuSet>();
   const setStartIndexById = new Map<string, number>();

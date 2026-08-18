@@ -27,7 +27,7 @@ export async function getAppStoreLink(bundleId: string) {
     );
   }
 
-  const data = (await response.json()) as AppStoreLookupResponse;
+  const data: AppStoreLookupResponse = await response.json();
 
   if (data.resultCount === 0 || !data.results[0]?.trackId) {
     throw new Error(`No app found for bundle ID on App Store: ${bundleId}`);

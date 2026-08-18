@@ -2,6 +2,7 @@ import { getBadge, getPaint } from '@app/store/chat/actions/cosmetics';
 import { getMissingBadgeIds } from '@app/store/chat/actions/missingBadges';
 import { getChannelPersonalEmotes } from '@app/store/chat/actions/personalEmotes';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
@@ -105,12 +106,14 @@ export function getChatDebugIrcLines(channelId: string): ChatDebugIrcLine[] {
  * always split on ';', which lets the login matchers anchor to real tag keys
  * and the sender prefix instead of user-typed lookalikes.
  */
-function splitIrcLine(line: string): {
+interface IrcLineParts {
   tags: string | null;
   prefix: string | null;
   rest: string;
   trailing: string | null;
-} {
+}
+
+function splitIrcLine(line: string): IrcLineParts {
   let cursor = 0;
   let tags: string | null = null;
   if (line.startsWith('@')) {
@@ -197,7 +200,30 @@ function formatCacheAge(lastUpdated: number | undefined): string {
   return lastUpdated ? new Date(lastUpdated).toISOString() : 'never';
 }
 
-export function getChatDebugEmoteSources(): Record<string, unknown> {
+interface ChatDebugCacheMiss {
+  channelId: string | null;
+  cacheLoaded: false;
+}
+
+interface ChatDebugEmoteSources {
+  channelId: string | null;
+  lastUpdated: string;
+  globalsLastUpdated: string;
+  sevenTvEmoteSetId: string | null;
+  twitchChannel: number;
+  twitchGlobal: number;
+  twitchSubscriber: number;
+  sevenTvChannel: number;
+  sevenTvGlobal: number;
+  sevenTvPersonalUsers: number;
+  bttvChannel: number;
+  bttvGlobal: number;
+  ffzChannel: number;
+  ffzGlobal: number;
+}
+
+export function getChatDebugEmoteSources():
+  ChatDebugEmoteSources | ChatDebugCacheMiss {
   const { channelId, cache } = getCurrentChannelCache();
   if (!cache) {
     return { channelId, cacheLoaded: false };
@@ -222,10 +248,21 @@ export function getChatDebugEmoteSources(): Record<string, unknown> {
   };
 }
 
+interface ChatDebugEmoteMatch {
+  foundInCache: true;
+  sourceList: string;
+  cachedEmote: SanitisedEmote;
+}
+
+interface ChatDebugEmoteLookupMiss {
+  foundInCache: false;
+  cacheLoaded: boolean;
+}
+
 export function getChatDebugEmoteDetails(emote: {
   id?: string;
   name?: string;
-}): Record<string, unknown> {
+}): ChatDebugEmoteMatch | ChatDebugEmoteLookupMiss {
   const { channelId, cache } = getCurrentChannelCache();
   if (!cache) {
     return { foundInCache: false, cacheLoaded: false };
@@ -250,7 +287,7 @@ export function getChatDebugEmoteDetails(emote: {
     ['twitchSubscriber', cache.twitchSubscriberEmotes],
   ];
 
-  let nameMatch: Record<string, unknown> | undefined;
+  let nameMatch: ChatDebugEmoteMatch | undefined;
   for (const [sourceList, emotes] of lists) {
     for (const cachedEmote of emotes) {
       if (emote.id && cachedEmote.id === emote.id) {
@@ -265,9 +302,21 @@ export function getChatDebugEmoteDetails(emote: {
   return nameMatch ?? { foundInCache: false, cacheLoaded: true };
 }
 
+interface ChatDebugSevenTvBadgeDetails {
+  provider: '7tv';
+  definitionLoaded: boolean;
+  definition: SanitisedBadgeSet | null;
+  wearerCount: number;
+  isMissingDefinition: boolean;
+}
+
+interface ChatDebugBadgeProviderDetails {
+  provider: SanitisedBadgeSet['provider'];
+}
+
 export function getChatDebugBadgeDetails(
   badge: SanitisedBadgeSet,
-): Record<string, unknown> {
+): ChatDebugSevenTvBadgeDetails | ChatDebugBadgeProviderDetails {
   if (badge.provider !== '7tv') {
     return { provider: badge.provider };
   }
@@ -284,7 +333,21 @@ export function getChatDebugBadgeDetails(
   };
 }
 
-export function getChatDebugBadgeSources(): Record<string, unknown> {
+interface ChatDebugBadgeSources {
+  channelId: string | null;
+  badgesLastUpdated: string;
+  globalsLastUpdated: string;
+  twitchChannel: number;
+  twitchGlobal: number;
+  ffzChannel: number;
+  ffzGlobal: number;
+  sevenTvBadgeDefinitions: number;
+  sevenTvBadgeWearers: number;
+  missingSevenTvBadgeIds: string[];
+}
+
+export function getChatDebugBadgeSources():
+  ChatDebugBadgeSources | ChatDebugCacheMiss {
   const { channelId, cache } = getCurrentChannelCache();
   if (!cache) {
     return { channelId, cacheLoaded: false };
@@ -304,11 +367,37 @@ export function getChatDebugBadgeSources(): Record<string, unknown> {
   };
 }
 
+interface ChatDebugResolvedBadge {
+  id: string;
+  set: string;
+  title: string;
+  type: SanitisedBadgeSet['type'];
+  provider: SanitisedBadgeSet['provider'];
+  url: string;
+}
+
+interface ChatDebugLatestMessage {
+  messageId: string;
+  resolvedBadges: ChatDebugResolvedBadge[];
+  userstate: AnyChatMessageType['userstate'];
+}
+
+type ChatDebugUserSnapshot = {
+  login: string | null;
+  userId: string | null;
+  sevenTvPaintId: string | null;
+  sevenTvPaintName: string | null;
+  sevenTvBadgeId: string | null;
+  sevenTvBadgeTitle: string | null;
+  sevenTvPersonalEmotes: string[];
+  latestMessage: ChatDebugLatestMessage | null;
+};
+
 export function getChatDebugUserSnapshot(
   login: string | null | undefined,
   username: string | null | undefined,
   userId: string | null | undefined,
-): Record<string, unknown> {
+): ChatDebugUserSnapshot {
   const target =
     normaliseChatUsername(login) || normaliseChatUsername(username);
 

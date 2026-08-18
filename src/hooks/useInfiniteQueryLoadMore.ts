@@ -1,14 +1,14 @@
-interface InfiniteQueryLoadMoreOptions {
-  fetchNextPage: () => Promise<unknown>;
+interface InfiniteQueryLoadMoreOptions<TPage> {
+  fetchNextPage: () => Promise<TPage>;
   hasNextPage: boolean;
   isFetchingNextPage?: boolean;
 }
 
-export function useInfiniteQueryLoadMore({
+export function useInfiniteQueryLoadMore<TPage>({
   fetchNextPage,
   hasNextPage,
   isFetchingNextPage = false,
-}: InfiniteQueryLoadMoreOptions) {
+}: InfiniteQueryLoadMoreOptions<TPage>) {
   return async () => {
     if (!hasNextPage || isFetchingNextPage) {
       return;

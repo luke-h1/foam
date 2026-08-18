@@ -1,10 +1,9 @@
 import { renderHook } from '@testing-library/react-native';
 
-import {
-  getCurrentEmoteData,
-  getUserPersonalEmotes,
-} from '@app/store/chat/actions/channelLoad';
-import { updateMessages } from '@app/store/chat/actions/messages';
+import * as channelLoadActions from '@app/store/chat/actions/channelLoad';
+import * as messagesActions from '@app/store/chat/actions/messages';
+import * as personalEmotesActions from '@app/store/chat/actions/personalEmotes';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
@@ -17,28 +16,17 @@ import {
 } from './__fixtures__/useChat.fixture';
 
 // The whole point of this suite is to exercise the real resolver + emote
-// worklet, so neither is mocked - only the store-backed emote sources are.
-jest.mock('@app/store/chat/actions/channelLoad', () => ({
-  getCurrentEmoteData: jest.fn(),
-  getUserPersonalEmotes: jest.fn(() => []),
-}));
-jest.mock('@app/store/chat/actions/messages', () => ({
-  updateMessages: jest.fn(),
-}));
-jest.mock('@app/store/chat/observables/chatStore', () => ({
-  chatStore$: {
-    emojis: {
-      peek: jest.fn(() => []),
-    },
-  },
-}));
-jest.mock('@app/utils/chat/findBadges', () => ({
-  findBadges: jest.fn(() => []),
-}));
-
-const mockGetCurrentEmoteData = jest.mocked(getCurrentEmoteData);
-const mockGetUserPersonalEmotes = jest.mocked(getUserPersonalEmotes);
-const mockUpdateMessages = jest.mocked(updateMessages);
+// worklet, badge lookup and message store, so only the channel-emote-cache
+// lookup and the personal-emote source are stubbed.
+const mockGetCurrentEmoteData = jest.spyOn(
+  channelLoadActions,
+  'getCurrentEmoteData',
+);
+const mockGetUserPersonalEmotes = jest.spyOn(
+  personalEmotesActions,
+  'getUserPersonalEmotes',
+);
+const mockUpdateMessages = jest.spyOn(messagesActions, 'updateMessages');
 
 const channelId = 'channel-1';
 
@@ -101,6 +89,7 @@ function renderReprocess(
 
 beforeEach(() => {
   jest.clearAllMocks();
+  chatStore$.emojis.set([]);
   // Empty channel emote data: `plaska` is reachable only via the personal set,
   // so these tests also prove a personal-emote-only channel still reprocesses.
   mockGetCurrentEmoteData.mockReturnValue(createEmoteData());
@@ -127,7 +116,7 @@ function ingestParts(text: string): ParsedPart[] {
  * Reduces parts to the fields these tests assert on so the shape can be
  * compared with `toEqual` instead of a partial matcher.
  */
-function partShapes(parts: ParsedPart[]): { type: string; id?: string }[] {
+function partIdentities(parts: ParsedPart[]): { type: string; id?: string }[] {
   return parts.map(part => ({
     type: part.type,
     id: 'id' in part ? part.id : undefined,
@@ -135,13 +124,16 @@ function partShapes(parts: ParsedPart[]): { type: string; id?: string }[] {
 }
 
 function updatedMessage(): ParsedPart[] {
-  return mockUpdateMessages.mock.calls[0]?.[0]?.[0]?.updates
-    ?.message as ParsedPart[];
+  const message = mockUpdateMessages.mock.calls[0]?.[0]?.[0]?.updates?.message;
+  if (!message) {
+    throw new Error('updateMessages was not called with a message update');
+  }
+  return message;
 }
 
 describe('useEmoteReprocessing personal 7TV emotes', () => {
   test('seeds a message where `plaska` resolves to the personal emote', () => {
-    expect(partShapes(ingestParts('plaska'))).toEqual([
+    expect(partIdentities(ingestParts('plaska'))).toEqual([
       { type: 'emote', id: 'plaska-id' },
     ]);
   });
@@ -164,7 +156,7 @@ describe('useEmoteReprocessing personal 7TV emotes', () => {
     renderReprocess(createMessage([{ type: 'text', content: 'plaska' }]));
 
     expect(mockUpdateMessages).toHaveBeenCalledTimes(1);
-    expect(partShapes(updatedMessage())).toEqual([
+    expect(partIdentities(updatedMessage())).toEqual([
       { type: 'emote', id: 'plaska-id' },
     ]);
   });

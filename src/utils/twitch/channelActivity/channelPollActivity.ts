@@ -20,6 +20,7 @@ export const channelPollActivity = {
     name: 'twitch_polls_warning',
     action: 'initial_poll_fetch_failed',
   },
+  // SAFETY: each handler only receives its own channel.poll.* subscription payload, which Twitch types as TwitchEventSubPoll.
   events: [
     {
       type: 'channel.poll.begin',

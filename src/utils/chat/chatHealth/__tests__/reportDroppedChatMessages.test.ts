@@ -5,23 +5,13 @@ import {
   resetDroppedChatMessageReports,
 } from '../reportDroppedChatMessages';
 
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    chat: {
-      debug: jest.fn(),
-      error: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-    },
-  },
-}));
-
-const mockError = jest.mocked(logger.chat.error);
 const context = { bufferSize: 600, maxBufferedMessages: 600 };
 
 describe('reportDroppedChatMessages', () => {
+  let mockError: jest.SpiedFunction<typeof logger.chat.error>;
+
   beforeEach(() => {
-    jest.clearAllMocks();
+    mockError = jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2026-08-09T20:00:00Z'));
     resetDroppedChatMessageReports();
@@ -29,6 +19,7 @@ describe('reportDroppedChatMessages', () => {
 
   afterEach(() => {
     jest.useRealTimers();
+    jest.restoreAllMocks();
   });
 
   test('reports how many messages the pipeline lost', () => {

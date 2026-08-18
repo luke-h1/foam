@@ -1,12 +1,12 @@
 import { act, renderHook } from '@testing-library/react-native';
 
-import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
-import { updateMessages } from '@app/store/chat/actions/messages';
+import * as channelLoadActions from '@app/store/chat/actions/channelLoad';
+import * as messagesActions from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import { createEmotePart } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
-import { resolveMessageEmoteParts } from '@app/utils/chat/resolveMessageEmoteParts';
+import * as resolveMessageEmotePartsModule from '@app/utils/chat/resolveMessageEmoteParts';
 
 import { useEmoteReprocessing } from '../useEmoteReprocessing';
 import {
@@ -14,41 +14,23 @@ import {
   createSevenTvEmote,
 } from './__fixtures__/useChat.fixture';
 
-jest.mock('@app/store/chat/actions/channelLoad', () => ({
-  getCurrentEmoteData: jest.fn(),
-}));
-jest.mock('@app/store/chat/actions/messages', () => ({
-  updateMessages: jest.fn(),
-}));
+const mockGetCurrentEmoteData = jest.spyOn(
+  channelLoadActions,
+  'getCurrentEmoteData',
+);
+const mockUpdateMessages = jest.spyOn(messagesActions, 'updateMessages');
+const mockResolveMessageEmoteParts = jest.spyOn(
+  resolveMessageEmotePartsModule,
+  'resolveMessageEmoteParts',
+);
 
-jest.mock('@app/store/chat/observables/chatStore', () => ({
-  chatStore$: {
-    emojis: {
-      peek: jest.fn(() => []),
-    },
-  },
-}));
-
-jest.mock('@app/utils/chat/resolveMessageEmoteParts', () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports -- Jest mock factory runs before module imports
-  const {
-    createEmotePart,
-  } = require('@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture');
-  return {
-    resolveMessageEmoteParts: jest.fn((x: { text: string }) => [
-      createEmotePart(x.text, { id: 'e1', url: '' }),
-    ]),
-  };
-});
-
-jest.mock('@app/utils/chat/findBadges', () => ({
-  findBadges: jest.fn(() => []),
-}));
-
-const mockGetCurrentEmoteData = jest.mocked(getCurrentEmoteData);
-const mockUpdateMessages = jest.mocked(updateMessages);
-const mockResolveMessageEmoteParts = jest.mocked(resolveMessageEmoteParts);
-const mockEmojisPeek = jest.mocked(chatStore$.emojis.peek);
+/**
+ * A message that reached the store without a userstate, which the enrichment
+ * pass has to skip rather than reprocess.
+ */
+type MessageWithoutUserstate = Omit<AnyChatMessageType, 'userstate'> & {
+  userstate: undefined;
+};
 
 function createTextOnlyMessage(
   messageId: string,
@@ -102,7 +84,7 @@ describe('useEmoteReprocessing', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockEmojisPeek.mockReturnValue([]);
+    chatStore$.emojis.set([]);
     mockResolveMessageEmoteParts.mockImplementation((x: { text: string }) => [
       createEmotePart(x.text, { id: 'e1', url: '' }),
     ]);
@@ -130,9 +112,10 @@ describe('useEmoteReprocessing', () => {
   });
 
   test('does nothing when getCurrentEmoteData returns null', () => {
-    mockGetCurrentEmoteData.mockReturnValue(
-      null as unknown as ReturnType<typeof getCurrentEmoteData>,
-    );
+    // SAFETY: the hook defensively checks for a null result even though the
+    // real function never returns one; `never` bridges through in one
+    // assertion to exercise that branch.
+    mockGetCurrentEmoteData.mockReturnValue(null as never);
     const peek = jest
       .fn()
       .mockReturnValue([createTextOnlyMessage('1', 'n1', 'hello')]);
@@ -348,10 +331,10 @@ describe('useEmoteReprocessing', () => {
 
   test('skips messages without a userstate', () => {
     mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
-    const noUserstate = {
+    const noUserstate: MessageWithoutUserstate = {
       ...createTextOnlyMessage('msg-1', 'nonce-1', 'hello'),
       userstate: undefined,
-    } as unknown as AnyChatMessageType;
+    };
     const peek = jest.fn().mockReturnValue([noUserstate]);
 
     renderHook(() =>

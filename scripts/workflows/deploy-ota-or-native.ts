@@ -8,6 +8,8 @@ import {
   getFinalReleaseTag,
   getOtaUpdateIdsCachePrefix,
   getPreliminaryReleaseTag,
+  parseDeployType,
+  parseManualDeployType,
   parsePublishedUpdateJson,
 } from './otaOrNativeDeployDecision';
 import {
@@ -39,6 +41,23 @@ function readFingerprint(
   return readFileSync(path, 'utf8').trim();
 }
 
+function stringifyEnv(
+  env: Record<string, string | number | boolean | undefined>,
+): NodeJS.ProcessEnv {
+  // SAFETY: every value is coerced to a string (or '' for null/undefined)
+  // below, so the result already satisfies ProcessEnv's `string | undefined`
+  // values - Object.fromEntries just can't express that from a mapped array.
+  // The subprocess env is intentionally looser than the app's own
+  // NodeJS.ProcessEnv augmentation (e.g. EXPO_PUBLIC_APP_VARIANT here is a
+  // deploy channel from ./variant, not the app.config build variant).
+  return Object.fromEntries(
+    Object.entries(env).map(([key, value]) => [
+      key,
+      value == null ? '' : String(value),
+    ]),
+  ) as NodeJS.ProcessEnv;
+}
+
 function getAwsEnv(): NodeJS.ProcessEnv {
   const accessKeyId = process.env.FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID;
   const secretAccessKey = process.env.FOAM_AWS_FINGERPRINT_SECRET_KEY;
@@ -51,12 +70,7 @@ function getAwsEnv(): NodeJS.ProcessEnv {
     throw new Error('FOAM_AWS_FINGERPRINT_SECRET_KEY is not set');
   }
 
-  const env = Object.fromEntries(
-    Object.entries(process.env).map(([key, value]) => [
-      key,
-      value == null ? '' : String(value),
-    ]),
-  ) as NodeJS.ProcessEnv;
+  const env = stringifyEnv(process.env);
 
   env.AWS_ACCESS_KEY_ID = accessKeyId;
   env.AWS_SECRET_ACCESS_KEY = secretAccessKey;
@@ -282,8 +296,9 @@ function compareFingerprintsCommand(args: string[]): void {
 }
 
 function decideDeployTypeCommand(args: string[]): void {
-  const manualType = getRequiredArg(args, 'manual-type', 'auto') as
-    'auto' | 'ota' | 'build';
+  const manualType = parseManualDeployType(
+    getRequiredArg(args, 'manual-type', 'auto'),
+  );
 
   const fingerprintChanged =
     getRequiredArg(args, 'fingerprint-changed', 'false') === 'true';
@@ -304,7 +319,7 @@ function decideDeployTypeCommand(args: string[]): void {
 
 function preliminaryTagCommand(args: string[]): void {
   const version = getRequiredArg(args, 'version');
-  const deployType = getRequiredArg(args, 'deploy-type') as 'ota' | 'build';
+  const deployType = parseDeployType(getRequiredArg(args, 'deploy-type'));
   const variant = getRequiredArg(args, 'variant', 'production');
   const tag = getPreliminaryReleaseTag(version, deployType, variant);
 
@@ -348,12 +363,10 @@ function publishOtaCommand(args: string[], run: ToolRunner = runTool): void {
         '--json',
       ],
       {
-        env: Object.fromEntries(
-          Object.entries({
-            ...process.env,
-            EXPO_PUBLIC_APP_VARIANT: variant,
-          }).map(([key, value]) => [key, value == null ? '' : String(value)]),
-        ) as NodeJS.ProcessEnv,
+        env: stringifyEnv({
+          ...process.env,
+          EXPO_PUBLIC_APP_VARIANT: variant,
+        }),
       },
     );
   } catch (error) {
@@ -376,7 +389,7 @@ function publishOtaCommand(args: string[], run: ToolRunner = runTool): void {
 
 function finalTagCommand(args: string[]): void {
   const tag = getFinalReleaseTag({
-    deployType: getRequiredArg(args, 'deploy-type') as 'ota' | 'build',
+    deployType: parseDeployType(getRequiredArg(args, 'deploy-type')),
     variant: getRequiredArg(args, 'variant', 'production'),
     version: getRequiredArg(args, 'version'),
     runNumber: Number.parseInt(getRequiredArg(args, 'run-number'), 10),

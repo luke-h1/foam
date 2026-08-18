@@ -1,13 +1,8 @@
+import type { bttvEmoteService as BttvEmoteService } from '@app/services/bttv-emote-service';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 import type * as GetBttvBadges from '../getBttvBadges';
 import type * as SetOnBttvBadgesLoaded from '../setOnBttvBadgesLoaded';
-
-jest.mock('@app/services/bttv-emote-service', () => ({
-  bttvEmoteService: {
-    getSanitisedGlobalBadges: jest.fn(),
-  },
-}));
 
 const badge: SanitisedBadgeSet = {
   id: 'bttv-developer',
@@ -21,7 +16,9 @@ const badge: SanitisedBadgeSet = {
 let clearBttvBadgesCache: typeof GetBttvBadges.clearBttvBadgesCache;
 let getBttvBadges: typeof GetBttvBadges.getBttvBadges;
 let setOnBttvBadgesLoaded: typeof SetOnBttvBadgesLoaded.setOnBttvBadgesLoaded;
-let getSanitisedGlobalBadges: jest.Mock;
+let getSanitisedGlobalBadges: jest.SpiedFunction<
+  typeof BttvEmoteService.getSanitisedGlobalBadges
+>;
 
 function flush(): Promise<void> {
   return new Promise(resolve => {
@@ -32,13 +29,19 @@ function flush(): Promise<void> {
 describe('getBttvBadges', () => {
   beforeEach(() => {
     jest.resetModules();
-    ({ clearBttvBadgesCache, getBttvBadges } =
-      require('../getBttvBadges') as typeof GetBttvBadges);
-    ({ setOnBttvBadgesLoaded } =
-      require('../setOnBttvBadgesLoaded') as typeof SetOnBttvBadgesLoaded);
-    const { bttvEmoteService } = require('@app/services/bttv-emote-service');
-    getSanitisedGlobalBadges = jest.mocked(
-      bttvEmoteService.getSanitisedGlobalBadges,
+    const badgesModule: typeof GetBttvBadges = require('../getBttvBadges');
+    clearBttvBadgesCache = badgesModule.clearBttvBadgesCache;
+    getBttvBadges = badgesModule.getBttvBadges;
+    const loadedModule: typeof SetOnBttvBadgesLoaded = require('../setOnBttvBadgesLoaded');
+    setOnBttvBadgesLoaded = loadedModule.setOnBttvBadgesLoaded;
+    const {
+      bttvEmoteService,
+    }: {
+      bttvEmoteService: typeof BttvEmoteService;
+    } = require('@app/services/bttv-emote-service');
+    getSanitisedGlobalBadges = jest.spyOn(
+      bttvEmoteService,
+      'getSanitisedGlobalBadges',
     );
   });
 

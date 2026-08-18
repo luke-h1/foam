@@ -1,13 +1,7 @@
 import { sevenTvApi } from '@app/services/api/clients';
 import { sevenTvService } from '@app/services/seventv-service';
 
-jest.mock('@app/services/api/clients', () => ({
-  sevenTvApi: {
-    post: jest.fn(),
-  },
-}));
-
-const mockSevenTvApiPost = jest.mocked(sevenTvApi.post);
+const mockSevenTvApiPost = jest.spyOn(sevenTvApi, 'post');
 
 describe('sevenTvService.fetchBridgedCosmetics', () => {
   beforeEach(() => {

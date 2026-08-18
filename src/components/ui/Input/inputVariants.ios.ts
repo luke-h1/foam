@@ -6,7 +6,7 @@ const buildVariants = (
   mainColor: string,
   placeholderColor: string,
   softAlpha: string,
-): Record<InputVariant, InputColorConfig> => {
+) => {
   const softBackground =
     mainColor === 'transparent' ? 'transparent' : `${mainColor}${softAlpha}`;
 
@@ -39,7 +39,7 @@ const buildVariants = (
       placeholderColor,
       borderWidth: 1,
     },
-  };
+  } satisfies Record<InputVariant, InputColorConfig>;
 };
 
 export const generateVariantConfig = (

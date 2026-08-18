@@ -102,6 +102,7 @@ export const createFetchOnceGuard = (
   ): Promise<V> => {
     const pending = inFlight.get(key);
     if (pending) {
+      // SAFETY: a key's in-flight entry is the promise its own `run<V>` created, so it resolves V.
       return pending as Promise<V>;
     }
 

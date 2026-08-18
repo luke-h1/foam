@@ -5,11 +5,13 @@ import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 import { findBadges } from '../findBadges';
 
+const noBadges: SanitisedBadgeSet[] = [];
+
 const emptyBadgeSources = {
-  bttvBadges: [] as SanitisedBadgeSet[],
-  chatterinoBadges: [] as SanitisedBadgeSet[],
-  ffzChannelBadges: [] as SanitisedBadgeSet[],
-  ffzGlobalBadges: [] as SanitisedBadgeSet[],
+  bttvBadges: noBadges,
+  chatterinoBadges: noBadges,
+  ffzChannelBadges: noBadges,
+  ffzGlobalBadges: noBadges,
   getEntitledBadge: () => null,
 };
 

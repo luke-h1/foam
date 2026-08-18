@@ -4,9 +4,9 @@ const RECENT_MESSAGES_URL =
   'https://recent-messages.robotty.de/api/v2/recent-messages';
 
 type RecentMessagesResponse = {
-  messages?: unknown;
-  error?: unknown;
-  error_code?: unknown;
+  messages?: string[];
+  error?: string;
+  error_code?: string;
 };
 
 export const recentMessagesService = {
@@ -32,8 +32,6 @@ export const recentMessagesService = {
       return [];
     }
 
-    return payload.messages.filter(
-      (message): message is string => typeof message === 'string',
-    );
+    return payload.messages.filter(message => String(message) === message);
   },
 } as const;

@@ -44,7 +44,9 @@ function loadBttvBadges(): void {
         return;
       }
       scheduleRetry();
-      logger.chat.warn('Failed to fetch BTTV badges', { error });
+      logger.chat.warn('Failed to fetch BTTV badges', {
+        error: error instanceof Error ? error : String(error),
+      });
     });
 }
 

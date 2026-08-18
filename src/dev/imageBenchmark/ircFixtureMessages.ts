@@ -67,7 +67,7 @@ export function buildIrcFixtureMessage(
 ): BuiltFixtureMessage {
   const badges = badgesForRole(entry.role);
   const isSubscriber = badges.includes('subscriber');
-  const tags: Record<string, string> = {
+  const baseTags = {
     'display-name': entry.user,
     login: entry.user.toLowerCase(),
     color: colorForName(entry.user),
@@ -83,22 +83,25 @@ export function buildIrcFixtureMessage(
     subscriber: isSubscriber ? '1' : '0',
     turbo: '0',
     'user-type': entry.role === 'mod' ? 'mod' : '',
-  };
+  } satisfies Record<string, string>;
+
+  const conditionalTags: Record<string, string> = {};
 
   if (entry.bits) {
-    tags.bits = String(entry.bits);
+    conditionalTags.bits = String(entry.bits);
   }
 
   if (entry.replyTo) {
-    tags['reply-parent-display-name'] = entry.replyTo.name;
-    tags['reply-parent-user-login'] = entry.replyTo.name.toLowerCase();
-    tags['reply-parent-msg-body'] = entry.replyTo.text;
-    tags['reply-parent-msg-id'] = `fixture-parent-${hashString(
+    conditionalTags['reply-parent-display-name'] = entry.replyTo.name;
+    conditionalTags['reply-parent-user-login'] =
+      entry.replyTo.name.toLowerCase();
+    conditionalTags['reply-parent-msg-body'] = entry.replyTo.text;
+    conditionalTags['reply-parent-msg-id'] = `fixture-parent-${hashString(
       `${entry.replyTo.name}:${entry.replyTo.text}`,
     )}`;
   }
 
-  return { tags, text: entry.text };
+  return { tags: { ...baseTags, ...conditionalTags }, text: entry.text };
 }
 
 /**

@@ -1,28 +1,54 @@
+import * as sentry from '@app/lib/sentry';
+import { logger } from '@app/utils/logger';
+
 import {
   createPlayerTelemetry,
   PLAYER_LOAD_TIMEOUT_MS,
 } from '../playerTelemetry';
 import { basePlayerTelemetryContext } from './__fixtures__/playerTelemetry.fixture';
 
-jest.mock('@app/lib/sentry', () => ({
-  countMetric: jest.fn(),
-  endSpan: jest.fn(),
-  startInactiveSpan: jest.fn(() => ({ id: 'span-1' })),
-}));
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    main: {
-      info: jest.fn(),
-      error: jest.fn(),
+function createFakeSpan(id: string): sentry.Span & { id: string } {
+  return {
+    id,
+    spanContext: () => ({ traceId: id, spanId: id, traceFlags: 1 }),
+    end: () => undefined,
+    setAttribute() {
+      return this;
     },
-  },
-}));
+    setAttributes() {
+      return this;
+    },
+    setStatus() {
+      return this;
+    },
+    updateName() {
+      return this;
+    },
+    isRecording: () => true,
+    addEvent() {
+      return this;
+    },
+    addLink() {
+      return this;
+    },
+    addLinks() {
+      return this;
+    },
+    recordException: () => undefined,
+  };
+}
 
-const { countMetric, endSpan, startInactiveSpan } =
-  jest.requireMock<typeof import('@app/lib/sentry')>('@app/lib/sentry');
-const { logger } =
-  jest.requireMock<typeof import('@app/utils/logger')>('@app/utils/logger');
+const countMetric = jest
+  .spyOn(sentry, 'countMetric')
+  .mockImplementation(() => {});
+const endSpan = jest.spyOn(sentry, 'endSpan').mockImplementation(() => {});
+const fakeSpan = createFakeSpan('span-1');
+const startInactiveSpan = jest
+  .spyOn(sentry, 'startInactiveSpan')
+  .mockImplementation(() => fakeSpan);
+
+jest.spyOn(logger.main, 'info').mockImplementation(() => {});
+jest.spyOn(logger.main, 'error').mockImplementation(() => {});
 
 describe('createPlayerTelemetry', () => {
   beforeEach(() => {
@@ -66,7 +92,7 @@ describe('createPlayerTelemetry', () => {
       outcome: 'started',
       start_source: 'bridge_playing',
     });
-    expect(endSpan).toHaveBeenCalledWith({ id: 'span-1' }, 'ok');
+    expect(endSpan).toHaveBeenCalledWith(fakeSpan, 'ok');
     expect(logger.main.info).not.toHaveBeenCalled();
   });
 
@@ -86,7 +112,7 @@ describe('createPlayerTelemetry', () => {
       outcome: 'failed',
       reason: 'webview_error',
     });
-    expect(endSpan).toHaveBeenCalledWith({ id: 'span-1' }, 'error');
+    expect(endSpan).toHaveBeenCalledWith(fakeSpan, 'error');
     expect(logger.main.error).toHaveBeenCalledWith(
       'player failed to load: webview_error',
       {

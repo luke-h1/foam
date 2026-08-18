@@ -2,10 +2,14 @@ import type { PaintCanvasRepeat } from '@app/types/seventv/cosmetics';
 
 export type PaintLayerTileMode = 'clamp' | 'decal' | 'mirror' | 'repeat';
 
-export function paintLayerTileModes(canvasRepeat: PaintCanvasRepeat): {
+export type PaintLayerTiling = {
   tx: PaintLayerTileMode;
   ty: PaintLayerTileMode;
-} {
+};
+
+export function paintLayerTileModes(
+  canvasRepeat: PaintCanvasRepeat,
+): PaintLayerTiling {
   switch (canvasRepeat) {
     case 'repeat-x':
       return { tx: 'repeat', ty: 'decal' };

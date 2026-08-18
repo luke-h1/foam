@@ -9,33 +9,46 @@ import type { Options } from '../types';
 const originalWebSocket = global.WebSocket;
 const mockWebSocketInstances: MockWebSocket[] = [];
 
-class MockWebSocket {
-  static CONNECTING = ReadyState.CONNECTING;
-  static OPEN = ReadyState.OPEN;
-  static CLOSING = ReadyState.CLOSING;
-  static CLOSED = ReadyState.CLOSED;
+type MockCloseEvent = Pick<CloseEvent, 'code' | 'reason' | 'wasClean'>;
 
+class MockWebSocket extends EventTarget implements WebSocket {
+  static readonly CONNECTING = ReadyState.CONNECTING;
+  static readonly OPEN = ReadyState.OPEN;
+  static readonly CLOSING = ReadyState.CLOSING;
+  static readonly CLOSED = ReadyState.CLOSED;
+
+  readonly CONNECTING = ReadyState.CONNECTING;
+  readonly OPEN = ReadyState.OPEN;
+  readonly CLOSING = ReadyState.CLOSING;
+  readonly CLOSED = ReadyState.CLOSED;
+
+  binaryType: BinaryType = 'blob';
   bufferedAmount = 0;
   extensions = '';
-  onclose: ((event: CloseEvent) => void) | null = null;
+  onclose: ((event: MockCloseEvent) => void) | null = null;
   onerror: ((event: Event) => void) | null = null;
   onmessage: ((event: MessageEvent) => void) | null = null;
   onopen: (() => void) | null = null;
   protocol = '';
-  readyState = ReadyState.CONNECTING;
+  readyState: WebSocket['readyState'] = ReadyState.CONNECTING;
   sent: string[] = [];
+  readonly url: string;
 
   constructor(
-    public url: string,
+    url: string | URL,
     public protocols?: string | string[],
   ) {
+    super();
+    this.url = url.toString();
     mockWebSocketInstances.push(this);
   }
 
   close(code = 1000, reason = '') {
     this.readyState = ReadyState.CLOSED;
-    this.onclose?.({ code, reason, wasClean: code === 1000 } as CloseEvent);
+    this.onclose?.({ code, reason, wasClean: code === 1000 });
   }
+
+  ping() {}
 
   send(data: string) {
     this.sent.push(data);
@@ -46,7 +59,7 @@ describe('createOrJoinSocket', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockWebSocketInstances.length = 0;
-    global.WebSocket = MockWebSocket as unknown as typeof WebSocket;
+    global.WebSocket = MockWebSocket;
   });
 
   afterAll(() => {

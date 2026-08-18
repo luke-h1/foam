@@ -228,11 +228,15 @@ const persistedPreferences$ = persistObservable(preferences$, {
 
 when(persistedPreferences$?._state?.isLoadedLocal, () => {
   // The 'text' stream list layout was removed; migrate old persisted values.
-  if ((preferences$.streamListLayout.peek() as string) === 'text') {
+  const persistedStreamListLayout: string =
+    preferences$.streamListLayout.peek();
+  if (persistedStreamListLayout === 'text') {
     preferences$.streamListLayout.set('compact');
   }
 
-  if ((preferences$.sevenTvPaintRenderer.peek() as string) === 'auto') {
+  const persistedPaintRenderer: string =
+    preferences$.sevenTvPaintRenderer.peek();
+  if (persistedPaintRenderer === 'auto') {
     preferences$.sevenTvPaintRenderer.set('native');
   }
 
@@ -348,6 +352,7 @@ export function useChatRenderPreferences(): ChatRenderPreferences {
 export function usePreference<K extends keyof Preferences>(
   key: K,
 ): Preferences[K] {
+  // SAFETY: the selector reads the same `key` the caller asked for, so its widened union value is that key's `Preferences[K]`.
   return useSelector(() => preferences$[key].get()) as Preferences[K];
 }
 

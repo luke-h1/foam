@@ -11,17 +11,20 @@ import { usePreference } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import { isDevToolsEnabled } from '@app/utils/devTools/isDevToolsEnabled';
 
-export interface ChatDebugSectionData {
-  payload: Record<string, unknown>;
+export interface ChatDebugSectionData<TPayload> {
+  payload: TPayload;
   ircLines?: ChatDebugIrcLine[];
 }
 
-interface ChatDebugSectionProps {
-  build: () => ChatDebugSectionData;
+interface ChatDebugSectionProps<TPayload> {
+  build: () => ChatDebugSectionData<TPayload>;
   style?: StyleProp<ViewStyle>;
 }
 
-export function ChatDebugSection({ build, style }: ChatDebugSectionProps) {
+export function ChatDebugSection<TPayload>({
+  build,
+  style,
+}: ChatDebugSectionProps<TPayload>) {
   const chatDebugTools = usePreference('chatDebugTools');
   const data = isDevToolsEnabled && chatDebugTools ? build() : null;
 
@@ -72,9 +75,9 @@ export function ChatDebugSection({ build, style }: ChatDebugSectionProps) {
               No captured IRC lines for this user
             </Text>
           ) : (
-            data.ircLines.map((entry, index) => (
+            data.ircLines.map(entry => (
               <Text
-                key={`${entry.receivedAt}_${index}`}
+                key={`${entry.receivedAt}_${entry.line}`}
                 selectable
                 style={styles.mono}
                 variant='mono'

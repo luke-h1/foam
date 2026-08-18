@@ -26,42 +26,42 @@ import {
   refreshUserPersonalEmotes,
 } from '@app/store/chat/actions/personalEmotes';
 import type { SanitisedEmote } from '@app/types/emote';
-import type { BadgeData, PaintData } from '@app/types/seventv/cosmetics';
+import type {
+  BadgeData,
+  ChangeMap,
+  CosmeticCreate,
+  PaintData,
+} from '@app/types/seventv/cosmetics';
 import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
 import { logger } from '@app/utils/logger';
 import { normalizeSevenTvPaint } from '@app/utils/seventv/cosmetics/normalizeSevenTvPaint';
 import { sanitise7TvBadge } from '@app/utils/seventv/cosmetics/sanitise7TvBadge';
 
-function getDataFromChangeValue(entry: unknown): unknown {
-  if (typeof entry !== 'object' || entry === null || !('value' in entry)) {
-    return undefined;
-  }
+type CosmeticChangeValue = NonNullable<
+  ChangeMap<CosmeticCreate>['updated' | 'pushed']
+>[number];
 
-  const value = (entry as { value?: { object?: { data?: unknown } } }).value;
-  return value?.object?.data;
+function getDataFromChangeValue(
+  entry: CosmeticChangeValue,
+): PaintData | BadgeData | undefined {
+  return entry.value?.object?.data;
 }
 
 function shouldSuppressEmoteNotice(emote: SanitisedEmote): boolean {
   return emote.name?.toLowerCase().includes('nnys') ?? false;
 }
 
-function isBadgeData(data: unknown): data is BadgeData & { ref_id?: string } {
-  return (
-    typeof data === 'object' &&
-    data !== null &&
-    'id' in data &&
-    'name' in data &&
-    'host' in data
-  );
+function isBadgeData(
+  data: PaintData | BadgeData | undefined,
+): data is BadgeData & { ref_id?: string } {
+  return data !== undefined && 'id' in data && 'name' in data && 'host' in data;
 }
 
-function isPaintData(data: unknown): data is PaintData & { ref_id?: string } {
+function isPaintData(
+  data: PaintData | BadgeData | undefined,
+): data is PaintData & { ref_id?: string } {
   return (
-    typeof data === 'object' &&
-    data !== null &&
-    'id' in data &&
-    'name' in data &&
-    'function' in data
+    data !== undefined && 'id' in data && 'name' in data && 'function' in data
   );
 }
 
@@ -215,7 +215,7 @@ export function createSevenTvCallbacks({
       const { changes } = data;
       let added_badges = 0;
       let updated_badges = 0;
-      const toSanitised = (entry: unknown) => {
+      const toSanitised = (entry: CosmeticChangeValue) => {
         const badgeData = getDataFromChangeValue(entry);
         if (isBadgeData(badgeData)) {
           return sanitise7TvBadge(badgeData);

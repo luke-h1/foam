@@ -29,6 +29,26 @@ export type PlayerTelemetryMetricAttributes = Record<
   string | number | boolean
 >;
 
+type PlayerMetricAttributes = {
+  autoplay: boolean;
+  channel: string;
+  content_kind: PlayerContentKind;
+  clip?: string;
+  video?: string;
+};
+
+type PlayerLoadTelemetryAttributes = PlayerMetricAttributes & {
+  elapsed_ms: number;
+  outcome: 'failed' | 'started' | 'timeout';
+  reason?: string;
+  start_source?: PlayerPlaybackStartSource;
+};
+
+type PlayerErrorMetadata = {
+  name: 'twitch_player_error';
+  message?: unknown;
+};
+
 interface ActiveLoadSession {
   attributes: PlayerTelemetryContext;
   loadFinished: boolean;
@@ -40,33 +60,35 @@ interface ActiveLoadSession {
 
 function metricAttributes(
   context: PlayerTelemetryContext,
-): Record<string, string | boolean> {
-  return {
+): PlayerMetricAttributes {
+  const attributes: PlayerMetricAttributes = {
     autoplay: context.autoplay,
     channel: context.channel ?? 'unknown',
     content_kind: context.contentKind,
-    ...(context.clip ? { clip: context.clip } : {}),
-    ...(context.video ? { video: context.video } : {}),
   };
+  if (context.clip) {
+    attributes.clip = context.clip;
+  }
+  if (context.video) {
+    attributes.video = context.video;
+  }
+  return attributes;
 }
 
-function isPlayerErrorMetadata(
-  error: unknown,
-): error is Record<string, unknown> & { name: 'twitch_player_error' } {
+function isPlayerErrorMetadata(cause: unknown): cause is PlayerErrorMetadata {
   return (
-    typeof error === 'object' &&
-    error !== null &&
-    'name' in error &&
-    error.name === 'twitch_player_error'
+    cause instanceof Object &&
+    'name' in cause &&
+    cause.name === 'twitch_player_error'
   );
 }
 
-function loadFailureLogMessage(reason: string | undefined, error: unknown) {
-  if (reason === 'embed_error' && isPlayerErrorMetadata(error)) {
-    return `[StreamPlayer:embed ERROR] ${String(error.message ?? 'Unknown embed error')}`;
+function loadFailureLogMessage(reason: string | undefined, cause: unknown) {
+  if (reason === 'embed_error' && isPlayerErrorMetadata(cause)) {
+    return `[StreamPlayer:embed ERROR] ${String(cause.message ?? 'Unknown embed error')}`;
   }
-  if (reason === 'embed_misconfigured' && isPlayerErrorMetadata(error)) {
-    return `[StreamPlayer:embed MISCONFIGURED] ${String(error.message ?? 'Whoops, this embed is misconfigured')}`;
+  if (reason === 'embed_misconfigured' && isPlayerErrorMetadata(cause)) {
+    return `[StreamPlayer:embed MISCONFIGURED] ${String(cause.message ?? 'Whoops, this embed is misconfigured')}`;
   }
   if (reason === 'load_timeout') {
     return `player failed to load within ${PLAYER_LOAD_TIMEOUT_MS}ms`;
@@ -101,12 +123,12 @@ function reasonFailureMetadata(reason: string | undefined) {
 
 function loadFailureLogMetadata(
   reason: string | undefined,
-  error: unknown,
+  cause: unknown,
   telemetryAttrs: PlayerTelemetryMetricAttributes,
 ) {
-  if (isPlayerErrorMetadata(error)) {
+  if (isPlayerErrorMetadata(cause)) {
     return {
-      ...error,
+      ...cause,
       ...telemetryAttrs,
     };
   }
@@ -114,7 +136,7 @@ function loadFailureLogMetadata(
   return {
     name: 'twitch_player_error',
     ...reasonFailureMetadata(reason),
-    error,
+    error: cause,
     ...telemetryAttrs,
   };
 }
@@ -156,14 +178,17 @@ export function createPlayerTelemetry() {
     session.loadFinished = true;
     clearLoadTimeout();
 
-    const attrs = metricAttributes(session.attributes);
-    const telemetryAttrs: PlayerTelemetryMetricAttributes = {
-      ...attrs,
+    const telemetryAttrs: PlayerLoadTelemetryAttributes = {
+      ...metricAttributes(session.attributes),
       elapsed_ms: details.elapsedMs,
       outcome,
-      ...(details.startSource ? { start_source: details.startSource } : {}),
-      ...(details.reason ? { reason: details.reason } : {}),
     };
+    if (details.startSource) {
+      telemetryAttrs.start_source = details.startSource;
+    }
+    if (details.reason) {
+      telemetryAttrs.reason = details.reason;
+    }
 
     if (outcome === 'started') {
       countMetric('stream.player.start', telemetryAttrs);
@@ -218,12 +243,12 @@ export function createPlayerTelemetry() {
       });
     },
 
-    noteLoadFailed(reason: string, error?: unknown) {
+    noteLoadFailed(reason: string, cause?: unknown) {
       if (session && !session.loadFinished && !session.playbackStarted) {
         finishLoad('failed', {
           elapsedMs: Date.now() - session.startedAtMs,
           reason,
-          error,
+          error: cause,
         });
         return;
       }
@@ -233,15 +258,13 @@ export function createPlayerTelemetry() {
       // still surface the error so late WebView/HTTP failures are not silently
       // dropped from telemetry.
       const context = session?.attributes ?? lastAttributes;
-      const telemetryAttrs: PlayerTelemetryMetricAttributes = {
-        ...(context ? metricAttributes(context) : {}),
-        outcome: 'failed',
-        reason,
-      };
+      const telemetryAttrs = context
+        ? { ...metricAttributes(context), outcome: 'failed', reason }
+        : { outcome: 'failed', reason };
       countMetric('stream.player.late_error', telemetryAttrs);
       logger.main.error(
-        loadFailureLogMessage(reason, error),
-        loadFailureLogMetadata(reason, error, telemetryAttrs),
+        loadFailureLogMessage(reason, cause),
+        loadFailureLogMetadata(reason, cause, telemetryAttrs),
       );
     },
 

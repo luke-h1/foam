@@ -34,7 +34,10 @@ interface StreamPlayerWebViewProps {
   onError?: (error: string) => void;
   onHttpError: (error: { statusCode: number; url: string }) => void;
   onLoadEnd?: (url: string) => void;
-  onLoadFailed?: (reason: string, error: unknown) => void;
+  onLoadFailed?: (
+    reason: string,
+    error: WebViewError | WebViewHttpError,
+  ) => void;
   onMessage: ComponentProps<typeof WebView>['onMessage'];
   onOpenWindow?: ComponentProps<typeof WebView>['onOpenWindow'];
   onWebViewLoaded?: () => void;

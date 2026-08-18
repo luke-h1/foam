@@ -1,5 +1,6 @@
 /* eslint-disable camelcase */
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import type { ComponentProps } from 'react';
 import type { ReactTestInstance } from 'react-test-renderer';
 
 import { act, fireEvent, render } from '@testing-library/react-native';
@@ -17,37 +18,35 @@ import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchC
 import { ParsedPart } from '@app/utils/chat/parsedPart';
 import { lightenColor } from '@app/utils/color/lightenColor';
 
+import * as EmoteRendererModule from '../renderers/EmoteRenderer';
 import { RichChatMessage } from '../RichChatMessage';
 
-jest.mock('@app/utils/date-time/date', () => ({
-  formatDate: jest.fn(() => '12:00'),
-}));
+type EmoteRendererProps = ComponentProps<
+  typeof EmoteRendererModule.EmoteRenderer
+>;
 
-jest.mock('@app/services/twitch-service');
-
-jest.mock('../renderers/EmoteRenderer', () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports -- Jest mock factory must not reference outer scope
-  const { Text, View } = require('react-native');
-  return {
-    EmoteRenderer: ({
-      part,
-      disableAnimations,
-      shouldOverlayPrevious,
-    }: {
-      part: { name?: string };
-      disableAnimations?: boolean;
-      shouldOverlayPrevious?: boolean;
-    }) => (
-      <View
-        testID={disableAnimations ? 'emote-renderer-static' : 'emote-renderer'}
-      >
-        <Text>
-          {part?.name ?? 'emote'}
-          {shouldOverlayPrevious ? ':overlay' : ''}
-        </Text>
-      </View>
-    ),
-  };
+/**
+ * EmoteRenderer is memo() wrapped (an object, not a function), so
+ * jest.spyOn cannot wrap it - swap the export directly instead. This suite
+ * asserts how RichChatMessage orchestrates emote rendering (which parts get
+ * disableAnimations/shouldOverlayPrevious), not EmoteRenderer's own output.
+ */
+Object.defineProperty(EmoteRendererModule, 'EmoteRenderer', {
+  configurable: true,
+  value: ({
+    part,
+    disableAnimations,
+    shouldOverlayPrevious,
+  }: EmoteRendererProps) => (
+    <View
+      testID={disableAnimations ? 'emote-renderer-static' : 'emote-renderer'}
+    >
+      <Text>
+        {part?.name ?? 'emote'}
+        {shouldOverlayPrevious ? ':overlay' : ''}
+      </Text>
+    </View>
+  ),
 });
 
 const createMockMessage = (
@@ -814,7 +813,7 @@ describe('RichChatMessage', () => {
       expect({
         channel: replyMessage?.channel,
         color: replyMessage?.userstate.color,
-        id: typeof replyMessage?.id,
+        id: replyMessage?.id,
         message: replyMessage?.message,
         message_id: replyMessage?.message_id,
         sender: replyMessage?.sender,
@@ -822,7 +821,7 @@ describe('RichChatMessage', () => {
       }).toEqual({
         channel: 'test-channel',
         color: '#1AC9A2',
-        id: 'string',
+        id: expect.any(String),
         message: [{ type: 'text', content: 'Test message' }],
         message_id: 'unique-msg-id',
         sender: 'TestUser',

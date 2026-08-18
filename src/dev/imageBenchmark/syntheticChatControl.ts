@@ -21,7 +21,16 @@ const OFF: SyntheticChatConfig = {
   emotesPerMessage: 0,
 };
 
-export const SYNTHETIC_PRESETS: Record<string, SyntheticChatConfig> = {
+/**
+ * Preset lookup keyed by the name a dev-tools screen or deep-link param
+ * carries, so an unrecognised key resolves to `undefined` rather than failing
+ * to compile.
+ */
+export interface SyntheticPresets {
+  [presetKey: string]: SyntheticChatConfig;
+}
+
+export const SYNTHETIC_PRESETS: SyntheticPresets = {
   off: OFF,
   steady60: {
     active: true,
@@ -49,7 +58,11 @@ export const SYNTHETIC_PRESETS: Record<string, SyntheticChatConfig> = {
   },
 };
 
-export const syntheticChatControl: { current: SyntheticChatConfig } = {
+type SyntheticChatControl = {
+  current: SyntheticChatConfig;
+};
+
+export const syntheticChatControl: SyntheticChatControl = {
   current: OFF,
 };
 

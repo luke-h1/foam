@@ -19,7 +19,7 @@ const twitchColors = [
 export function generateRandomTwitchColor(username?: string): string {
   if (!username) {
     const randomIndex = Math.floor(Math.random() * twitchColors.length);
-    return twitchColors[randomIndex] as string;
+    return twitchColors[randomIndex] ?? twitchColors[0];
   }
 
   let hash = 0;
@@ -31,5 +31,5 @@ export function generateRandomTwitchColor(username?: string): string {
 
   const colorIndex = hash % twitchColors.length;
 
-  return twitchColors[colorIndex] as string;
+  return twitchColors[colorIndex] ?? twitchColors[0];
 }

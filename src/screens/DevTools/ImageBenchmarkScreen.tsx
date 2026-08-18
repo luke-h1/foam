@@ -74,31 +74,54 @@ export function ImageBenchmarkScreen() {
   const [busy, setBusy] = useState(false);
   const [flood, setFlood] = useState('off');
   const autoStarted = useRef(false);
+  // Runs (auto-started or button-triggered) take 90s+; guards every post-await
+  // setState so a run that outlives the screen doesn't write to unmounted state.
+  const unmountedRef = useRef(false);
+  useEffect(() => {
+    return () => {
+      unmountedRef.current = true;
+    };
+  }, []);
   const insets = useSafeAreaInsets();
 
   const runPasses = async () => {
     await resetMemoryCache();
+    if (unmountedRef.current) {
+      return;
+    }
     clearRetained();
     markPhase('cold-start');
     setStatus(`cold decode (${CINNA_EMOTE_URLS.length})`);
     const cold = await runSequential('cold', CINNA_EMOTE_URLS, done =>
       setStatus(`cold ${done}/${CINNA_EMOTE_URLS.length}`),
     );
+    if (unmountedRef.current) {
+      return;
+    }
     appendRun(cold);
     markPhase('cold-end');
     setRuns(readResults().runs);
     await sleep(2000);
+    if (unmountedRef.current) {
+      return;
+    }
 
     clearRetained();
     markPhase('warm-start');
     setStatus('warm decode');
     const warm = await runSequential('warm', CINNA_EMOTE_URLS);
+    if (unmountedRef.current) {
+      return;
+    }
     appendRun(warm);
     setRuns(readResults().runs);
 
     clearRetained();
     setStatus('concurrent burst');
     const conc = await runConcurrent(CINNA_EMOTE_URLS, 16);
+    if (unmountedRef.current) {
+      return;
+    }
     appendRun(conc);
     markPhase('done');
     setRuns(readResults().runs);
@@ -117,10 +140,21 @@ export function ImageBenchmarkScreen() {
     try {
       setStatus('prewarming: downloading all emotes to disk…');
       await prewarm(CINNA_EMOTE_URLS);
+      if (unmountedRef.current) {
+        return;
+      }
       await runPasses();
+      if (unmountedRef.current) {
+        return;
+      }
       setStatus('ALL DONE');
     } catch (error) {
-      setStatus(`error: ${String(error)}`);
+      if (!unmountedRef.current) {
+        setStatus(`error: ${String(error)}`);
+      }
+    }
+    if (unmountedRef.current) {
+      return;
     }
     setBusy(false);
     setRuns(readResults().runs);
@@ -129,19 +163,20 @@ export function ImageBenchmarkScreen() {
   useEffect(() => {
     // Auto-start runs once on mount (guarded by autoStarted); runAll closes over
     // benchmark state we deliberately don't want to re-trigger the suite.
-    let cancelled = false;
-    if (auto && !autoStarted.current) {
-      autoStarted.current = true;
-      void (async () => {
-        await runAll();
-        if (!cancelled) {
-          setRuns(readResults().runs);
-        }
-      })();
+    if (!auto || autoStarted.current) {
+      return undefined;
     }
-    return () => {
-      cancelled = true;
+    autoStarted.current = true;
+
+    const runAutoStart = async () => {
+      await runAll();
+      if (!unmountedRef.current) {
+        setRuns(readResults().runs);
+      }
     };
+    void runAutoStart();
+
+    return undefined;
     // eslint-disable-next-line react-hooks/exhaustive-deps, react-doctor/exhaustive-deps
   }, [auto]);
 

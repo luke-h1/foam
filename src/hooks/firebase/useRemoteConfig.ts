@@ -60,26 +60,29 @@ function getRemoteConfigHandle() {
   return remoteConfig;
 }
 
-function getErrorMessage(error: unknown): string | null {
-  if (error instanceof Error) {
-    return error.message;
+function isStringValue(cause: unknown): cause is string {
+  return String(cause) === cause;
+}
+
+function getErrorMessage(cause: unknown): string | null {
+  if (cause instanceof Error) {
+    return cause.message;
   }
-  if (typeof error === 'string') {
-    return error;
+  if (isStringValue(cause)) {
+    return cause;
   }
   if (
-    typeof error === 'object' &&
-    error !== null &&
-    'message' in error &&
-    typeof error.message === 'string'
+    cause instanceof Object &&
+    'message' in cause &&
+    isStringValue(cause.message)
   ) {
-    return error.message;
+    return cause.message;
   }
   return null;
 }
 
-function isRemoteConfigCancellation(error: unknown): boolean {
-  const message = getErrorMessage(error)?.toLowerCase();
+function isRemoteConfigCancellation(cause: unknown): boolean {
+  const message = getErrorMessage(cause)?.toLowerCase();
   return message?.includes('cancelled') ?? false;
 }
 
@@ -119,20 +122,22 @@ async function fetchRemoteConfig(): Promise<boolean> {
 
 function readRemoteConfig(): RemoteConfigType {
   const allConfig = getAll(getRemoteConfigHandle());
-  return Object.fromEntries(
-    (Object.keys(defaultRemoteConfig) as RemoteConfigKey[]).map(key => {
-      const entry = allConfig[key];
-      const raw = entry?.asString() ?? defaultRemoteConfig[key];
-      return [
-        key,
-        {
-          raw,
-          value: parseRemoteConfigValue(key, raw),
-          source: entry?.getSource() ?? 'default',
-        } satisfies RemoteConfigEntry<RemoteConfigSchema[RemoteConfigKey]>,
-      ];
-    }),
-  ) as RemoteConfigType;
+  // SAFETY: defaultRemoteConfig is satisfies-checked against Record<RemoteConfigKey, string>
+  const keys = Object.keys(defaultRemoteConfig) as RemoteConfigKey[];
+  const entries = keys.map(key => {
+    const entry = allConfig[key];
+    const raw = entry?.asString() ?? defaultRemoteConfig[key];
+    return [
+      key,
+      {
+        raw,
+        value: parseRemoteConfigValue(key, raw),
+        source: entry?.getSource() ?? 'default',
+      } satisfies RemoteConfigEntry<RemoteConfigSchema[RemoteConfigKey]>,
+    ];
+  });
+  // SAFETY: entries holds one RemoteConfigEntry per RemoteConfigKey
+  return Object.fromEntries(entries) as RemoteConfigType;
 }
 
 export function useRemoteConfig(): UseRemoteConfigResult {
@@ -159,12 +164,11 @@ export function useRemoteConfig(): UseRemoteConfigResult {
 
   const refetch = async (): Promise<boolean> => {
     setIsManualRefetching(true);
-    try {
-      const result = await refetchQuery();
-      return result.data !== undefined;
-    } finally {
-      setIsManualRefetching(false);
-    }
+    return refetchQuery()
+      .then(result => result.data !== undefined)
+      .finally(() => {
+        setIsManualRefetching(false);
+      });
   };
 
   return {

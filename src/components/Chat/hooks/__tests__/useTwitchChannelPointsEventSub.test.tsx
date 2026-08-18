@@ -6,41 +6,28 @@ import {
   createLoggedOutAuthContextValue,
   createTestUser,
 } from '@app/context/__tests__/__fixtures__/authContext.fixture';
-import { useAuthContext } from '@app/context/AuthContext';
+import * as AuthContextModule from '@app/context/AuthContext';
 import TwitchWsService from '@app/services/twitch-ws-service';
+import { logger } from '@app/utils/logger';
 
-jest.mock('@app/context/AuthContext', () => ({
-  useAuthContext: jest.fn(),
-}));
+jest.spyOn(logger.chat, 'debug').mockImplementation(() => {});
 
-jest.mock('@app/services/twitch-ws-service', () => ({
-  __esModule: true,
-  default: {
-    getInstance: jest.fn(),
-    subscribeToEvent: jest.fn(),
-    unsubscribeFromEvent: jest.fn(),
-  },
-}));
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    chat: {
-      debug: jest.fn(),
-    },
-  },
-}));
-
-const mockUseAuthContext = jest.mocked(useAuthContext);
-const mockTwitchWsService = jest.mocked(TwitchWsService);
+const mockUseAuthContext = jest.spyOn(AuthContextModule, 'useAuthContext');
+const mockGetInstance = jest
+  .spyOn(TwitchWsService, 'getInstance')
+  .mockReturnValue(Object.create(WebSocket.prototype));
+const mockSubscribeToEvent = jest.spyOn(TwitchWsService, 'subscribeToEvent');
+const mockUnsubscribeFromEvent = jest.spyOn(
+  TwitchWsService,
+  'unsubscribeFromEvent',
+);
 
 describe('useTwitchChannelPointsEventSub', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockTwitchWsService.getInstance.mockReturnValue(
-      null as unknown as WebSocket,
-    );
-    mockTwitchWsService.subscribeToEvent.mockResolvedValue(undefined);
-    mockTwitchWsService.unsubscribeFromEvent.mockResolvedValue(undefined);
+    mockGetInstance.mockReturnValue(Object.create(WebSocket.prototype));
+    mockSubscribeToEvent.mockResolvedValue(undefined);
+    mockUnsubscribeFromEvent.mockResolvedValue(undefined);
   });
 
   test('skips EventSub subscriptions when logged out', () => {
@@ -48,8 +35,8 @@ describe('useTwitchChannelPointsEventSub', () => {
 
     renderHook(() => useTwitchChannelPointsEventSub('channel-id'));
 
-    expect(mockTwitchWsService.getInstance).not.toHaveBeenCalled();
-    expect(mockTwitchWsService.subscribeToEvent).not.toHaveBeenCalled();
+    expect(mockGetInstance).not.toHaveBeenCalled();
+    expect(mockSubscribeToEvent).not.toHaveBeenCalled();
   });
 
   test('skips EventSub subscriptions when viewing another channel', () => {
@@ -61,8 +48,8 @@ describe('useTwitchChannelPointsEventSub', () => {
 
     renderHook(() => useTwitchChannelPointsEventSub('channel-id'));
 
-    expect(mockTwitchWsService.getInstance).not.toHaveBeenCalled();
-    expect(mockTwitchWsService.subscribeToEvent).not.toHaveBeenCalled();
+    expect(mockGetInstance).not.toHaveBeenCalled();
+    expect(mockSubscribeToEvent).not.toHaveBeenCalled();
   });
 
   test('subscribes to channel point redemption events on your own channel', async () => {
@@ -75,16 +62,14 @@ describe('useTwitchChannelPointsEventSub', () => {
     renderHook(() => useTwitchChannelPointsEventSub('channel-id'));
 
     await waitFor(() => {
-      expect(mockTwitchWsService.subscribeToEvent.mock.calls).toHaveLength(2);
+      expect(mockSubscribeToEvent.mock.calls).toHaveLength(2);
     });
 
-    expect(
-      mockTwitchWsService.subscribeToEvent.mock.calls.map(call => call[0]),
-    ).toEqual([
+    expect(mockSubscribeToEvent.mock.calls.map(call => call[0])).toEqual([
       'channel.channel_points_custom_reward_redemption.add',
       'channel.channel_points_automatic_reward_redemption.add',
     ]);
-    expect(mockTwitchWsService.subscribeToEvent.mock.calls[0]?.[2]).toEqual({
+    expect(mockSubscribeToEvent.mock.calls[0]?.[2]).toEqual({
       broadcaster_user_id: 'channel-id',
     });
   });

@@ -6,13 +6,7 @@ import {
 } from '@app/utils/twitch/channelActivity/__tests__/__fixtures__/channelPredictionActivity.fixture';
 import { channelPredictionActivity } from '@app/utils/twitch/channelActivity/channelPredictionActivity';
 
-jest.mock('@app/services/twitch-service', () => ({
-  twitchService: {
-    getPredictions: jest.fn(),
-  },
-}));
-
-const mockGetPredictions = jest.mocked(twitchService.getPredictions);
+const mockGetPredictions = jest.spyOn(twitchService, 'getPredictions');
 
 function getNormaliser(type: string) {
   const entry = channelPredictionActivity.events.find(

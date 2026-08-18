@@ -49,7 +49,7 @@ export function parsePreferencesPayload(
   }
 
   const merged =
-    typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)
+    parsed instanceof Object && !Array.isArray(parsed)
       ? { ...initialPreferences, ...parsed }
       : parsed;
 

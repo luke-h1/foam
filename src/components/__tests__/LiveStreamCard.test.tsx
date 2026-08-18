@@ -27,15 +27,15 @@ const mockStream: TwitchStream = {
   is_mature: false,
 };
 
-jest.mock('@app/services/twitch-service');
-
-const twitchService = jest.mocked(_twitchService);
-
 describe('LiveStreamCard', () => {
   beforeEach(() => {
-    twitchService.getUserImage.mockResolvedValue(
-      'https://example.com/avatar.jpg',
-    );
+    jest
+      .spyOn(_twitchService, 'getUserImage')
+      .mockResolvedValue('https://example.com/avatar.jpg');
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   test('renders correctly', () => {

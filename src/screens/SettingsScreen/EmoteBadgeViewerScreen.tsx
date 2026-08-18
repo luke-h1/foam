@@ -112,7 +112,7 @@ function EmotesTab({
 
   const handleEmotePress = useCallback(
     (item: EmotePickerItem) => {
-      if (typeof item !== 'string') {
+      if (item instanceof Object) {
         onSelectEmote(item);
       }
     },

@@ -1,18 +1,17 @@
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
+import * as generateNonceModule from '@app/utils/string/generateNonce';
 
 import { createBaseMessage } from '../createBaseMessage';
 
-jest.mock('@app/store/chat/actions/channelLoad', () => ({
-  getCurrentEmoteData: jest.fn(),
-}));
-
-jest.mock('@app/utils/string/generateNonce', () => ({
-  generateNonce: jest.fn().mockReturnValue('test-nonce-123'),
-}));
-
 describe('createBaseMessage', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest
+      .spyOn(generateNonceModule, 'generateNonce')
+      .mockReturnValue('test-nonce-123');
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   test('creates a base message with required fields', () => {

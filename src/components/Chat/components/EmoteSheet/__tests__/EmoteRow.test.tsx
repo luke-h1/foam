@@ -1,16 +1,14 @@
+import { View } from 'react-native';
+
 import { fireEvent, render, screen } from '@testing-library/react-native';
+
+import * as ImageModule from '@app/components/Image/Image';
 
 import { EmoteRow } from '../EmoteRow';
 import type { EmotePickerItem } from '../emoteSheetTypes';
 import { createMenuEmote } from './__fixtures__/emoteMenuData.fixture';
 
-jest.mock('@app/components/Image/Image', () => {
-  const { View } = jest.requireActual('react-native');
-
-  return {
-    Image: () => <View />,
-  };
-});
+jest.spyOn(ImageModule, 'Image').mockImplementation(() => <View />);
 
 // cellSize + EMOTE_CELL_GAP(4) = 44pt stride, so cell N spans [N*44, N*44 + 40].
 const CELL_SIZE = 40;

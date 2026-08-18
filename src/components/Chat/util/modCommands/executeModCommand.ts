@@ -9,7 +9,7 @@ export interface ModCommandContext {
 
 async function resolveUserId(login: string): Promise<string> {
   const user = await twitchService.getUser(login);
-  const userId = typeof user === 'object' ? user.id?.trim() : '';
+  const userId = user.id?.trim();
   if (!userId) {
     throw new Error(`No Twitch user found for login "${login}"`);
   }

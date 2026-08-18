@@ -213,15 +213,21 @@ export const makeEmptyGlobalCacheData = () =>
   }) satisfies GlobalCacheType;
 
 /**
- * Consumer-facing emote-data shape: channel-cache fields plus the slices that
- * are not stored per channel - the shared global provider slices,
- * session-scoped 7TV personal emotes, and the chatterinoBadges set resolved
- * from the bundled table at read time.
+ * Consumer-facing emote data: channel-cache fields plus the slices that are
+ * not stored per channel - the shared global provider slices, session-scoped
+ * 7TV personal emotes, and the chatterinoBadges set resolved from the bundled
+ * table at read time.
  */
-export const emptyResolvedEmoteData = {
+export interface ResolvedEmoteData extends ChannelCacheType, GlobalCacheType {
+  sevenTvPersonalEmotes: Record<string, SanitisedEmote[]>;
+  chatterinoBadges: SanitisedBadgeSet[];
+  bttvBadges: SanitisedBadgeSet[];
+}
+
+export const emptyResolvedEmoteData: ResolvedEmoteData = {
   ...makeEmptyEmoteData(),
   ...makeEmptyGlobalCacheData(),
-  sevenTvPersonalEmotes: {} as Record<string, SanitisedEmote[]>,
-  chatterinoBadges: [] as SanitisedBadgeSet[],
-  bttvBadges: [] as SanitisedBadgeSet[],
+  sevenTvPersonalEmotes: {},
+  chatterinoBadges: [],
+  bttvBadges: [],
 };

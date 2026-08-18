@@ -1,13 +1,13 @@
 export type ChannelPollStatus =
   'active' | 'completed' | 'archived' | 'terminated' | 'moderated' | 'invalid';
 
-export interface TwitchPollChoice {
+export type TwitchPollChoice = {
   id: string;
   title: string;
   votes: number;
   channel_points_votes: number;
   bits_votes: number;
-}
+};
 
 export interface TwitchHelixPoll {
   id: string;
@@ -32,12 +32,12 @@ export interface TwitchHelixPoll {
   ended_at: string | null;
 }
 
-export interface TwitchEventSubPollVotingSettings {
+export type TwitchEventSubPollVotingSettings = {
   is_enabled: boolean;
   amount_per_vote: number;
-}
+};
 
-export interface TwitchEventSubPoll {
+export type TwitchEventSubPoll = {
   id: string;
   broadcaster_user_id: string;
   broadcaster_user_login: string;
@@ -49,7 +49,7 @@ export interface TwitchEventSubPoll {
   ends_at?: string;
   ended_at?: string;
   status?: 'completed' | 'archived' | 'terminated';
-}
+};
 
 export interface ChannelPollChoiceState {
   id: string;

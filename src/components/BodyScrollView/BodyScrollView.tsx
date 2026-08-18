@@ -31,6 +31,7 @@ export function BodyScrollView({
 
   const scrollRef = usesNativeScrollView ? nativeScrollRef : animatedScrollRef;
 
+  // SAFETY: the handle is built during commit, after the active scroll ref is attached.
   useImperativeHandle(ref, () => scrollRef.current as BodyScrollViewRef);
   useScrollToTop(scrollRef, -largeHeaderInset);
 

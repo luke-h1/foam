@@ -107,6 +107,7 @@ export type PaintFunction = 'LINEAR_GRADIENT' | 'RADIAL_GRADIENT' | 'URL';
  * - `circle`: A perfectly round gradient that extends equally in all directions.
  * - `ellipse`: An oval gradient that can stretch differently along the horizontal and vertical axes.
  */
+// oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- mirrors the 7TV paint API field name; see normalizeSevenTvPaint.ts
 export type PaintShape = 'circle' | 'ellipse';
 
 export type PaintCanvasRepeat =
@@ -124,6 +125,7 @@ export interface PaintLayerData {
   function: PaintFunction;
   stops: IndexedCollection<PaintStop>;
   angle: number;
+  // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- mirrors the 7TV paint API field name; see normalizeSevenTvPaint.ts
   shape: PaintShape;
   repeat: boolean;
   image_url: string;
@@ -215,6 +217,7 @@ export interface PaintData {
    * The shape of radial gradients.
    * Only applicable when `function` is `RADIAL_GRADIENT`.
    */
+  // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- mirrors the 7TV paint API field name; see normalizeSevenTvPaint.ts
   shape: PaintShape;
 
   /**

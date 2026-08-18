@@ -19,6 +19,21 @@ type JsonRecord = {
   value: string;
 };
 
+type PersistedJsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | PersistedJsonValue[]
+  | { [key: string]: PersistedJsonValue };
+
+/**
+ * A persisted table body: either an observable's serialised state tree or the
+ * sync metadata legend-state keeps in the sibling `__m` table.
+ */
+type PersistedTableState =
+  { [key: string]: PersistedJsonValue } | PersistMetadata;
+
 function requestToPromise<T>(request: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {
     request.onsuccess = () => resolve(request.result);
@@ -41,7 +56,7 @@ function getTableParts(table: string) {
 }
 
 export class ObservablePersistIndexedDbJson implements ObservablePersistLocal {
-  private data: Record<string, unknown> = {};
+  private data: Record<string, PersistedTableState | undefined> = {};
   private dbPromise: Promise<IDBDatabase | null> | undefined;
   private tableNames: string[] = [];
 
@@ -49,7 +64,7 @@ export class ObservablePersistIndexedDbJson implements ObservablePersistLocal {
     config: ObservablePersistenceConfigLocalGlobalOptions,
   ): Promise<void> | void {
     const indexedDbConfig = config.indexedDB;
-    if (typeof indexedDB === 'undefined' || !indexedDbConfig) {
+    if (!('indexedDB' in globalThis) || !indexedDbConfig) {
       return;
     }
 
@@ -103,8 +118,9 @@ export class ObservablePersistIndexedDbJson implements ObservablePersistLocal {
   getTable<T = unknown>(
     table: string,
     _config: PersistOptionsLocal,
-    init: object,
+    init: PersistedTableState,
   ): T {
+    // SAFETY: legend-state owns T and passes the matching `init` for the table it is loading.
     return (this.data[table] ?? init ?? {}) as T;
   }
 
@@ -123,7 +139,7 @@ export class ObservablePersistIndexedDbJson implements ObservablePersistLocal {
 
     changes.forEach(({ path, valueAtPath, pathTypes }) => {
       this.data[table] = setAtPath(
-        this.data[table] as object,
+        this.data[table] ?? {},
         path,
         pathTypes,
         valueAtPath,
@@ -133,8 +149,10 @@ export class ObservablePersistIndexedDbJson implements ObservablePersistLocal {
     return this.save(table);
   }
 
-  setMetadata(table: string, metadata: PersistMetadata): Promise<void> {
-    return this.setValue(`${table}${METADATA_SUFFIX}`, metadata);
+  async setMetadata(table: string, metadata: PersistMetadata): Promise<void> {
+    const metadataTable = `${table}${METADATA_SUFFIX}`;
+    this.data[metadataTable] = metadata;
+    await this.save(metadataTable);
   }
 
   deleteTable(table: string): Promise<void> {
@@ -161,11 +179,6 @@ export class ObservablePersistIndexedDbJson implements ObservablePersistLocal {
     }
 
     return db.transaction(storeName, mode).objectStore(storeName);
-  }
-
-  private async setValue(table: string, value: unknown): Promise<void> {
-    this.data[table] = value;
-    await this.save(table);
   }
 
   private async save(table: string): Promise<void> {

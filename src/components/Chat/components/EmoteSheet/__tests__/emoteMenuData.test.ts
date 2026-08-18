@@ -78,14 +78,13 @@ describe('emoteMenuData', () => {
     })[0];
 
     const filteredSets = filterProviderSets(provider, 'smi');
+    const matchedEmote = filteredSets[0]?.emotes[0];
 
     expect(filteredSets).toHaveLength(1);
     expect(filteredSets[0]?.emotes).toHaveLength(1);
-    expect(
-      typeof filteredSets[0]?.emotes[0] === 'object'
-        ? filteredSets[0]?.emotes[0].name
-        : null,
-    ).toBe('Smile');
+    expect(matchedEmote instanceof Object ? matchedEmote.name : null).toBe(
+      'Smile',
+    );
   });
 
   test('splits subscriber emotes into per-channel sets with streamer avatars', () => {

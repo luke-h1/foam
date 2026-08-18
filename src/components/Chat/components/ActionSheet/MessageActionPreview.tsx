@@ -15,6 +15,10 @@ interface MessageActionPreviewProps {
   username?: string;
 }
 
+function partTextContent(part: ParsedPart): string | undefined {
+  return 'content' in part ? part.content : undefined;
+}
+
 function getMessagePartKey(part: ParsedPart, occurrence: number): string {
   switch (part.type) {
     case 'emote':
@@ -23,7 +27,7 @@ function getMessagePartKey(part: ParsedPart, occurrence: number): string {
     case 'text':
       return `${part.type}:${part.content}:${occurrence}`;
     default:
-      return `${part.type}:${'content' in part && typeof part.content === 'string' ? part.content : ''}:${occurrence}`;
+      return `${part.type}:${partTextContent(part) ?? ''}:${occurrence}`;
   }
 }
 
@@ -53,15 +57,17 @@ function renderMessagePart(part: ParsedPart, occurrence: number) {
           {part.content}
         </Text>
       );
-    default:
-      if ('content' in part && typeof part.content === 'string') {
+    default: {
+      const content = partTextContent(part);
+      if (content !== undefined) {
         return (
           <Text key={key} style={styles.messageText}>
-            {part.content}
+            {content}
           </Text>
         );
       }
       return null;
+    }
   }
 }
 

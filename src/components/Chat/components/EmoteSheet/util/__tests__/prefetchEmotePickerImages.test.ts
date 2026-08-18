@@ -5,13 +5,7 @@ import { createMenuEmote } from '@app/components/Chat/components/EmoteSheet/__te
 import { getEmotePickerDisplayUrl } from '../emotePickerDisplayUrl';
 import { prefetchEmotePickerImages } from '../prefetchEmotePickerImages';
 
-jest.mock('expo-image', () => ({
-  Image: {
-    prefetch: jest.fn().mockResolvedValue(true),
-  },
-}));
-
-const prefetchMock = jest.mocked(ExpoImage.prefetch);
+const prefetchMock = jest.spyOn(ExpoImage, 'prefetch').mockResolvedValue(true);
 
 const warmedUrls = () =>
   prefetchMock.mock.calls.flatMap(([urls]) =>

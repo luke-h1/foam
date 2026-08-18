@@ -26,6 +26,7 @@ export const channelPredictionActivity = {
       type: 'channel.prediction.begin',
       normalise: event =>
         normaliseEventSubPrediction(
+          // SAFETY: EventSub delivers this callback only the channel.prediction.begin payload.
           event as TwitchEventSubPrediction,
           'active',
         ),
@@ -34,6 +35,7 @@ export const channelPredictionActivity = {
       type: 'channel.prediction.progress',
       normalise: event =>
         normaliseEventSubPrediction(
+          // SAFETY: EventSub delivers this callback only the channel.prediction.progress payload.
           event as TwitchEventSubPrediction,
           'active',
         ),
@@ -42,6 +44,7 @@ export const channelPredictionActivity = {
       type: 'channel.prediction.lock',
       normalise: event =>
         normaliseEventSubPrediction(
+          // SAFETY: EventSub delivers this callback only the channel.prediction.lock payload.
           event as TwitchEventSubPrediction,
           'locked',
         ),
@@ -50,6 +53,7 @@ export const channelPredictionActivity = {
       type: 'channel.prediction.end',
       normalise: event =>
         normaliseEventSubPrediction(
+          // SAFETY: EventSub delivers this callback only the channel.prediction.end payload.
           event as TwitchEventSubPrediction,
           'resolved',
         ),

@@ -32,6 +32,12 @@ import { theme } from '@app/styles/themes';
 const supportsContentUnavailableView =
   Platform.OS === 'ios' && parseInt(String(Platform.Version), 10) >= 17;
 
+function isStringValue(
+  value: TextProps['children'] | SymbolViewProps['name'],
+): value is string {
+  return Object.prototype.toString.call(value) === '[object String]';
+}
+
 interface EmptyStatePresetItem {
   iconName: SymbolViewProps['name'];
   heading: string;
@@ -96,28 +102,29 @@ export function EmptyState({
   const resolvedContent = content ?? presetConfig.content;
   const resolvedButton = button === undefined ? presetConfig.button : button;
 
-  const iosSymbol =
-    typeof resolvedIconName === 'string'
-      ? resolvedIconName
-      : resolvedIconName?.ios;
+  const iosSymbol = isStringValue(resolvedIconName)
+    ? resolvedIconName
+    : resolvedIconName?.ios;
+  const headingText = isStringValue(resolvedHeading)
+    ? resolvedHeading
+    : undefined;
+  const contentText = isStringValue(resolvedContent)
+    ? resolvedContent
+    : undefined;
 
   if (
     supportsContentUnavailableView &&
     !resolvedImageSource &&
-    (resolvedHeading == null || typeof resolvedHeading === 'string') &&
-    (resolvedContent == null || typeof resolvedContent === 'string')
+    (resolvedHeading == null || headingText !== undefined) &&
+    (resolvedContent == null || contentText !== undefined)
   ) {
     return (
       <SafeAreaView style={[styles.container, style]}>
         <Host style={styles.iosHost}>
           <ContentUnavailableView
-            title={
-              typeof resolvedHeading === 'string' ? resolvedHeading : undefined
-            }
+            title={headingText}
             systemImage={iosSymbol}
-            description={
-              typeof resolvedContent === 'string' ? resolvedContent : undefined
-            }
+            description={contentText}
           />
         </Host>
         {resolvedButton ? (

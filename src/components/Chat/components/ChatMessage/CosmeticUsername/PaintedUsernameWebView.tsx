@@ -9,6 +9,11 @@ import type { PaintData } from '@app/types/seventv/cosmetics';
 
 import { buildPaintedUsernameHtml } from './util/paintHtml';
 
+interface MeasuredUsernameSize {
+  width: number;
+  height: number;
+}
+
 interface PaintedUsernameWebViewProps {
   username: string;
   paint: PaintData;
@@ -98,10 +103,9 @@ function MeasuredPaintedUsernameWebView({
         ]}
         onMessage={event => {
           try {
-            const measured = JSON.parse(event.nativeEvent.data) as {
-              width: number;
-              height: number;
-            };
+            const measured: MeasuredUsernameSize = JSON.parse(
+              event.nativeEvent.data,
+            );
             const width = Math.ceil(measured.width);
             const height = Math.ceil(measured.height);
             if (width <= 0 || height <= 0) {

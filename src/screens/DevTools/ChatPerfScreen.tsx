@@ -37,6 +37,14 @@ const CINNA = { channelId: '204730616', channelName: 'cinna' };
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
+/**
+ * `text` is the native-only TextInput prop Reanimated writes directly on the
+ * UI thread; it is absent from the public TextInputProps surface.
+ */
+interface AnimatedTextInputProps extends TextInputProps {
+  text: string;
+}
+
 function CountdownSeconds({
   ms,
   suffix,
@@ -46,9 +54,9 @@ function CountdownSeconds({
   suffix: string;
   style: StyleProp<TextStyle>;
 }) {
-  const animatedProps = useAnimatedProps(() => {
+  const animatedProps = useAnimatedProps<AnimatedTextInputProps>(() => {
     const secs = Math.max(0, Math.ceil(ms.value / 1000));
-    return { text: `${secs}${suffix}` } as unknown as TextInputProps;
+    return { text: `${secs}${suffix}` };
   });
   return (
     <AnimatedTextInput

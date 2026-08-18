@@ -3,5 +3,5 @@ export function getTagValue(
   key: string,
 ): string {
   const value = tags[key];
-  return typeof value === 'string' ? value : '';
+  return value === undefined || value === true || value === false ? '' : value;
 }

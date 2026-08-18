@@ -121,10 +121,7 @@ function buildChatTextStyles(
   });
 }
 
-const CHAT_TEXT_STYLES: Record<
-  ChatFontScale,
-  Record<ChatDensity, ChatTextStyles>
-> = {
+const CHAT_TEXT_STYLES = {
   small: {
     comfortable: buildChatTextStyles('small', 'comfortable'),
     compact: buildChatTextStyles('small', 'compact'),
@@ -137,7 +134,7 @@ const CHAT_TEXT_STYLES: Record<
     comfortable: buildChatTextStyles('large', 'comfortable'),
     compact: buildChatTextStyles('large', 'compact'),
   },
-};
+} satisfies Record<ChatFontScale, Record<ChatDensity, ChatTextStyles>>;
 
 /**
  * Resolved text styles for a preference pair. Every scale-dependent style in

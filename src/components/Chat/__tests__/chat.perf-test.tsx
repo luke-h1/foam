@@ -1,10 +1,15 @@
-import { Profiler, useEffect } from 'react';
+import { Fragment, Profiler, useEffect } from 'react';
 import { View } from 'react-native';
-import type { ProfilerOnRenderCallback } from 'react';
+import type { ProfilerOnRenderCallback, ReactElement, Ref } from 'react';
 
+import type {
+  LegendListComponent,
+  MaintainScrollAtEndOptions,
+} from '@legendapp/list/react-native';
 import { render } from '@testing-library/react-native';
 import { measureFunction, measureRenders } from 'reassure';
 
+import type { ChatDensity } from '@app/components/Chat/components/ChatMessage/chatScale';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
@@ -14,75 +19,106 @@ import { ChatList } from '../components/ChatList';
 import { RichChatMessage } from '../components/ChatMessage/RichChatMessage';
 import { getVisibleMessages } from '../util/visibleMessages';
 
-jest.mock('@legendapp/list/react-native', () => {
-  const React = require('react');
-  const { View: MockView } = require('react-native');
+type MockExtraData = {
+  density: ChatDensity;
+  showTimestamps: boolean;
+};
 
-  type MockLegendListProps = {
-    data?: unknown;
-    drawDistance?: unknown;
-    estimatedItemSize?: unknown;
-    extraData?: unknown;
-    initialContainerPoolRatio?: unknown;
-    keyExtractor?: unknown;
-    maintainScrollAtEnd?: unknown;
-    renderItem?: unknown;
-  };
+type MockRenderItemInfo = {
+  extraData: MockExtraData | undefined;
+  index: number;
+  item: AnyChatMessageType;
+  target: 'Cell';
+};
 
-  const MOCK_VIEWPORT_HEIGHT = 680;
-  const MOCK_FALLBACK_ROW_HEIGHT = 34;
+type MockLegendListProps = {
+  data?: readonly AnyChatMessageType[];
+  drawDistance?: number;
+  estimatedItemSize?: number;
+  extraData?: MockExtraData;
+  initialContainerPoolRatio?: number;
+  keyExtractor?: (item: AnyChatMessageType, index: number) => string;
+  maintainScrollAtEnd?: MaintainScrollAtEndOptions | false;
+  renderItem?: (info: MockRenderItemInfo) => ReactElement | null;
+};
 
-  function getVirtualizedWindow(items: unknown[], props: MockLegendListProps) {
-    const estimatedItemSize =
-      typeof props.estimatedItemSize === 'number'
-        ? props.estimatedItemSize
-        : MOCK_FALLBACK_ROW_HEIGHT;
-    const drawDistance =
-      typeof props.drawDistance === 'number' ? props.drawDistance : 0;
-    const initialContainerPoolRatio =
-      typeof props.initialContainerPoolRatio === 'number'
-        ? Math.max(1, props.initialContainerPoolRatio)
-        : 1;
-    const windowHeight = MOCK_VIEWPORT_HEIGHT * initialContainerPoolRatio;
-    const rowCount = Math.ceil(
-      (windowHeight + drawDistance * 2) / estimatedItemSize,
-    );
-    const count = Math.min(items.length, Math.max(1, rowCount));
-    const startIndex = props.maintainScrollAtEnd
-      ? Math.max(0, items.length - count)
-      : 0;
+const MOCK_VIEWPORT_HEIGHT = 680;
+const MOCK_FALLBACK_ROW_HEIGHT = 34;
 
-    return {
-      items: items.slice(startIndex, startIndex + count),
-      startIndex,
-    };
-  }
+function getVirtualizedWindow(
+  items: readonly AnyChatMessageType[],
+  props: MockLegendListProps,
+) {
+  const estimatedItemSize = props.estimatedItemSize ?? MOCK_FALLBACK_ROW_HEIGHT;
+  const drawDistance = props.drawDistance ?? 0;
+  const initialContainerPoolRatio = Math.max(
+    1,
+    props.initialContainerPoolRatio ?? 1,
+  );
+  const windowHeight = MOCK_VIEWPORT_HEIGHT * initialContainerPoolRatio;
+  const rowCount = Math.ceil(
+    (windowHeight + drawDistance * 2) / estimatedItemSize,
+  );
+  const count = Math.min(items.length, Math.max(1, rowCount));
+  const startIndex = props.maintainScrollAtEnd
+    ? Math.max(0, items.length - count)
+    : 0;
 
   return {
-    LegendList: React.forwardRef((props: MockLegendListProps, ref: unknown) => {
-      const { data, extraData, keyExtractor, renderItem } = props;
-      const items = Array.isArray(data) ? data : [];
-      const renderRow = typeof renderItem === 'function' ? renderItem : null;
-      const getKey = typeof keyExtractor === 'function' ? keyExtractor : null;
-      const virtualizedWindow = getVirtualizedWindow(items, props);
-
-      return React.createElement(
-        MockView,
-        { ref },
-        virtualizedWindow.items.map((item, index) => {
-          const dataIndex = virtualizedWindow.startIndex + index;
-          return React.createElement(
-            React.Fragment,
-            { key: getKey ? getKey(item, dataIndex) : String(dataIndex) },
-            renderRow
-              ? renderRow({ extraData, index: dataIndex, item, target: 'Cell' })
-              : null,
-          );
-        }),
-      );
-    }),
+    items: items.slice(startIndex, startIndex + count),
+    startIndex,
   };
-});
+}
+
+/**
+ * `__mocks__/@legendapp/list/react-native.tsx` already stubs `LegendList` for
+ * every test, but its default renders every row - this suite measures the
+ * virtualized window itself, so it overrides that export with a fake that
+ * windows rows the way the real list does.
+ *
+ * Pulled in via `require`, not `import`: a named import only gives a local
+ * binding, not the module object `jest.spyOn` needs to patch, and a namespace
+ * import goes through babel's ES-interop copy instead of the object
+ * `ChatList` actually reads `LegendList` off.
+ */
+// SAFETY: `require` erases module typing; this reattaches the real
+// `@legendapp/list/react-native` module type so `jest.spyOn` below type-checks.
+const legendListReactNative =
+  require('@legendapp/list/react-native') as typeof import('@legendapp/list/react-native');
+
+jest.spyOn(legendListReactNative, 'LegendList').mockImplementation(
+  // SAFETY: the mock only exercises the props this suite reads; it doesn't
+  // implement every prop `LegendListComponent` accepts.
+  ((props: MockLegendListProps & { ref?: Ref<View> }) => {
+    const { extraData, keyExtractor, ref, renderItem } = props;
+    const items = props.data ?? [];
+    const virtualizedWindow = getVirtualizedWindow(items, props);
+
+    return (
+      <View ref={ref}>
+        {virtualizedWindow.items.map((item, index) => {
+          const dataIndex = virtualizedWindow.startIndex + index;
+          return (
+            <Fragment
+              key={
+                keyExtractor ? keyExtractor(item, dataIndex) : String(dataIndex)
+              }
+            >
+              {renderItem
+                ? renderItem({
+                    extraData,
+                    index: dataIndex,
+                    item,
+                    target: 'Cell',
+                  })
+                : null}
+            </Fragment>
+          );
+        })}
+      </View>
+    );
+  }) as LegendListComponent,
+);
 
 type PerfChatMessage = ChatMessageType<'usernotice'>;
 

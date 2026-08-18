@@ -66,11 +66,15 @@ export interface SevenTvEmoteSource {
 export type EmoteProviderSource =
   BttvEmoteSource | FfzEmoteSource | TwitchEmoteSource | SevenTvEmoteSource;
 
-function buildHostedVariants(source: HostedEmoteSourceBase): {
+type HostedEmoteVariants = {
   imageVariants: EmoteImageVariants;
   url: string;
   staticUrl: string;
-} {
+};
+
+function buildHostedVariants(
+  source: HostedEmoteSourceBase,
+): HostedEmoteVariants {
   const imageVariants = createEmoteImageVariants({
     animated: source.animated,
     static: source.static,

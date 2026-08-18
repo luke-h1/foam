@@ -1,4 +1,7 @@
+import { type Ref, useImperativeHandle } from 'react';
+
 import { act, render } from '@testing-library/react-native';
+import { Image as ExpoImage } from 'expo-image';
 
 import {
   createRowVisibilityStore,
@@ -13,24 +16,39 @@ import {
 import { emoteSheetScrollActivity } from '../util/emoteSheetScrollActivity';
 import { createMenuEmote } from './__fixtures__/emoteMenuData.fixture';
 
+type MockImageHandle = {
+  startAnimating: () => void;
+  stopAnimating: () => void;
+};
+
 const mockStartAnimating = jest.fn();
 const mockStopAnimating = jest.fn();
 let lastOnDisplay: (() => void) | undefined;
 
-jest.mock('expo-image', () => {
-  const ReactModule = require('react');
-  return {
-    Image: ReactModule.forwardRef(
-      (props: { onDisplay?: () => void }, ref: unknown) => {
-        lastOnDisplay = props.onDisplay;
-        ReactModule.useImperativeHandle(ref, () => ({
-          startAnimating: mockStartAnimating,
-          stopAnimating: mockStopAnimating,
-        }));
-        return null;
-      },
-    ),
-  };
+/**
+ * The mocked Image is a forwardRef object, so its `render` function (what
+ * React actually invokes) is the spyable seam - the exotic component itself
+ * isn't a function. The real `Image` types as a class component, which has no
+ * static `render`, so the bridge below narrows through `never` rather than
+ * the class type.
+ */
+type MockableExpoImage = {
+  render: (
+    props: { onDisplay?: () => void },
+    ref: Ref<MockImageHandle>,
+  ) => null;
+};
+// SAFETY: ExpoImage is the class component described above; `never` is the
+// only type TS accepts as a bridge to the plain object shape MockableExpoImage.
+const mockableExpoImage: MockableExpoImage = ExpoImage as never;
+
+jest.spyOn(mockableExpoImage, 'render').mockImplementation((props, ref) => {
+  lastOnDisplay = props.onDisplay;
+  useImperativeHandle(ref, () => ({
+    startAnimating: mockStartAnimating,
+    stopAnimating: mockStopAnimating,
+  }));
+  return null;
 });
 
 describe('EmoteCell animation pause', () => {

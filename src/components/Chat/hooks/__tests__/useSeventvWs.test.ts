@@ -1,11 +1,12 @@
 import { act, renderHook } from '@testing-library/react-native';
-import { usePathname } from 'expo-router';
+import * as ExpoRouter from 'expo-router';
 
 import { useSeventvWs } from '@app/components/Chat/hooks/useSeventvWs';
 import { ReadyState } from '@app/hooks/ws/constants';
-import type { Options, WebSocketHookReturn } from '@app/hooks/ws/types';
-import { useWebsocket } from '@app/hooks/ws/useWebsocket';
-import { setSevenTvSessionId } from '@app/utils/seventv/sevenTvSessionId';
+import type { Options } from '@app/hooks/ws/types';
+import * as useWebsocketModule from '@app/hooks/ws/useWebsocket';
+import { logger } from '@app/utils/logger';
+import * as sevenTvSessionIdModule from '@app/utils/seventv/sevenTvSessionId';
 import {
   buildCosmeticCreateSubscribeMessage,
   buildCosmeticCreateUnsubscribeMessage,
@@ -17,35 +18,18 @@ import {
   buildUserUpdateUnsubscribeMessage,
 } from '@app/utils/seventv/seventvWsInterpreter';
 
-jest.mock('expo-router', () => ({
-  usePathname: jest.fn(),
-}));
+jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
+jest.spyOn(logger.stvWs, 'debug').mockImplementation(() => {});
+jest.spyOn(logger.stvWs, 'error').mockImplementation(() => {});
+jest.spyOn(logger.stvWs, 'info').mockImplementation(() => {});
+jest.spyOn(logger.stvWs, 'warn').mockImplementation(() => {});
 
-jest.mock('@app/hooks/ws/useWebsocket', () => ({
-  useWebsocket: jest.fn(),
-}));
-
-jest.mock('@app/utils/seventv/sevenTvSessionId', () => ({
-  setSevenTvSessionId: jest.fn(),
-}));
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    chat: {
-      error: jest.fn(),
-    },
-    stvWs: {
-      debug: jest.fn(),
-      error: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-    },
-  },
-}));
-
-const mockUsePathname = jest.mocked(usePathname);
-const mockUseWebsocket = jest.mocked(useWebsocket);
-const mockSetSevenTvSessionId = jest.mocked(setSevenTvSessionId);
+const mockUsePathname = jest.spyOn(ExpoRouter, 'usePathname');
+const mockUseWebsocket = jest.spyOn(useWebsocketModule, 'useWebsocket');
+const mockSetSevenTvSessionId = jest.spyOn(
+  sevenTvSessionIdModule,
+  'setSevenTvSessionId',
+);
 
 const createFakeWebSocket = (readyState: number): WebSocket => {
   const ws: WebSocket = Object.create(WebSocket.prototype);
@@ -81,7 +65,7 @@ describe('useSeventvWs', () => {
     mockUseWebsocket.mockImplementation((url, options) => {
       capturedUrl = url;
       capturedOptions = options;
-      const hookReturn: WebSocketHookReturn = {
+      return {
         sendMessage: jest.fn(),
         sendJsonMessage,
         lastMessage: new MessageEvent('message'),
@@ -90,7 +74,6 @@ describe('useSeventvWs', () => {
         getWebSocket: () => fakeWs,
         reconnect: jest.fn(),
       };
-      return hookReturn;
     });
   });
 

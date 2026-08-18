@@ -62,6 +62,7 @@ export const storageService = {
       return null;
     }
 
+    // SAFETY: storageService.set wrote this key as a JSON StorageItem; T is the caller's declared value contract.
     const parsed = JSON.parse(item) as StorageItem<T>;
 
     if (isStorageItemExpired(parsed)) {
@@ -72,15 +73,15 @@ export const storageService = {
     return parsed.value;
   },
 
-  set(
+  set<T>(
     key: AllowedKey,
-    value: unknown,
+    value: T,
     namespacePrefix?: NamespacePrefixes,
     options: StorageSetterOptions = {},
   ): void {
     const { expiry } = options;
 
-    let item: StorageItem = { value };
+    let item: StorageItem<T> = { value };
 
     if (expiry) {
       if (expiry <= new Date()) {
@@ -119,6 +120,7 @@ export const storageService = {
   clearExpired(): void {
     storageService.getAllKeys().forEach(key => {
       const item = storage.getString(key);
+      // SAFETY: every namespaced key is written by storageService.set as a JSON StorageItem.
       if (item && isStorageItemExpired(JSON.parse(item) as StorageItem)) {
         storage.remove(key);
       }

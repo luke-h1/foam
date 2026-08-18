@@ -6,6 +6,7 @@ export const createUserStateFromTags = (
 ): UserStateTags => {
   const badgeData = parseBadges(tags.badges);
 
+  // SAFETY: the required reply-parent fields are all set below, and Twitch only sends 'user-type' as '', 'admin', 'global_mod' or 'staff'.
   return {
     ...tags,
     username: tags['display-name'] || tags.login || '',

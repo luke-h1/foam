@@ -5,23 +5,16 @@ import {
   resetUnrenderableNoticeReports,
 } from '../reportUnrenderableNotice';
 
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    chat: {
-      debug: jest.fn(),
-      error: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-    },
-  },
-}));
-
-const mockError = jest.mocked(logger.chat.error);
-
 describe('reportUnrenderableNotice', () => {
+  let mockError: jest.SpiedFunction<typeof logger.chat.error>;
+
   beforeEach(() => {
-    jest.clearAllMocks();
+    mockError = jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
     resetUnrenderableNoticeReports();
+  });
+
+  afterEach(() => {
+    mockError.mockRestore();
   });
 
   test('reports the notice shape it could not draw', () => {

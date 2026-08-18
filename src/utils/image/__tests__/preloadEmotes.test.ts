@@ -1,6 +1,5 @@
-import { Image as ExpoImage } from 'expo-image';
-
 import type { SanitisedEmote } from '@app/types/emote';
+import * as prefetchToDiskModule from '@app/utils/image/prefetchToDisk';
 import { logger } from '@app/utils/logger';
 
 import {
@@ -9,27 +8,14 @@ import {
   preloadGlobalEmotes,
 } from '../preloadEmotes';
 
-jest.mock('expo-image', () => ({
-  Image: {
-    prefetch: jest.fn().mockResolvedValue(true),
-  },
-}));
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    chat: { warn: jest.fn(), error: jest.fn() },
-  },
-}));
-
-const prefetchMock = jest.mocked(ExpoImage.prefetch);
-const warnMock = jest.mocked(logger.chat.warn);
-const errorMock = jest.mocked(logger.chat.error);
+const prefetchMock = jest
+  .spyOn(prefetchToDiskModule, 'prefetchToDisk')
+  .mockResolvedValue(true);
+const warnMock = jest.spyOn(logger.chat, 'warn').mockImplementation(() => {});
+const errorMock = jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
 
 // prefetch warms a batch of urls per call; flatten to the warmed url sequence.
-const warmedUrls = () =>
-  prefetchMock.mock.calls.flatMap(([urls]) =>
-    Array.isArray(urls) ? urls : [urls],
-  );
+const warmedUrls = () => prefetchMock.mock.calls.flatMap(([urls]) => urls);
 
 function emote(name: string, url = `https://example.com/${name}.webp`) {
   return {

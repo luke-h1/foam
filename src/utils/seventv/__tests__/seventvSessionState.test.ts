@@ -1,14 +1,13 @@
-import { setSevenTvSessionId } from '@app/utils/seventv/sevenTvSessionId';
+import * as sevenTvSessionIdModule from '@app/utils/seventv/sevenTvSessionId';
 import {
   createSeventvSessionState,
   type SeventvSessionState,
 } from '@app/utils/seventv/seventvSessionState';
 
-jest.mock('@app/utils/seventv/sevenTvSessionId', () => ({
-  setSevenTvSessionId: jest.fn(),
-}));
-
-const mockSetSevenTvSessionId = jest.mocked(setSevenTvSessionId);
+const mockSetSevenTvSessionId = jest.spyOn(
+  sevenTvSessionIdModule,
+  'setSevenTvSessionId',
+);
 
 interface SessionFieldSnapshot {
   hasInitialized: boolean;

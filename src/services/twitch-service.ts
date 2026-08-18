@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 import { fetch } from 'expo/fetch';
 import Constants from 'expo-constants';
+import { z } from 'zod';
 
 import { parseJsonOnWorklet } from '@app/lib/offThreadJson/parseJsonOnWorklet';
 import type { PaginatedList } from '@app/types/twitch/api';
@@ -51,17 +52,19 @@ import {
   twitchApi,
 } from './api/clients';
 
-const authProxyBaseUrl =
-  (Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL as
-    string | undefined) ?? process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
+const authProxyBaseUrl: string | undefined =
+  Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL ??
+  process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
 
-const authProxyApiKey =
-  (Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_KEY as
-    string | undefined) ?? process.env.EXPO_PUBLIC_AUTH_PROXY_API_KEY;
+const authProxyApiKey: string | undefined =
+  Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_KEY ??
+  process.env.EXPO_PUBLIC_AUTH_PROXY_API_KEY;
 
 // Cap follow-list pagination so a pathological follow count (Helix allows
 // thousands) can't fan out into dozens of sequential requests on tab load.
 export const MAX_FOLLOWED_CHANNELS = 400;
+
+const tokenExpirySecondsSchema = z.number();
 
 interface Emote {
   format: string[];
@@ -239,18 +242,29 @@ async function fetchBatchedByIds<T>(
   return results.flatMap(result => result.data ?? []);
 }
 
+type PinnedChatMessageParts = Exclude<
+  NonNullable<TwitchPinnedChatMessage['message']>,
+  string
+>;
+
+const isPinnedChatMessageParts = (
+  message: TwitchPinnedChatMessage['message'],
+): message is PinnedChatMessageParts => message instanceof Object;
+
 export function getPinnedChatMessageText(
   pinnedMessage: TwitchPinnedChatMessage,
 ): string {
-  if (typeof pinnedMessage.message === 'string') {
-    return pinnedMessage.message;
+  const { message } = pinnedMessage;
+
+  if (isPinnedChatMessageParts(message)) {
+    return (
+      message.text ??
+      message.fragments?.map(fragment => fragment.text).join('') ??
+      ''
+    );
   }
 
-  return (
-    pinnedMessage.message?.text ??
-    pinnedMessage.message?.fragments?.map(fragment => fragment.text).join('') ??
-    ''
-  );
+  return message ?? '';
 }
 
 export const twitchService = {
@@ -454,11 +468,12 @@ export const twitchService = {
     if (body?.client_id && body.client_id !== getTwitchClientId()) {
       setTwitchClientId(body.client_id);
     }
-    if (typeof body?.expires_in === 'number') {
+    const expiresIn = tokenExpirySecondsSchema.safeParse(body?.expires_in);
+    if (expiresIn.success) {
       logger.auth.info('twitch token validated', {
         name: 'auth_info',
-        expiresInSeconds: body.expires_in,
-        expiresAt: new Date(Date.now() + body.expires_in * 1000).toISOString(),
+        expiresInSeconds: expiresIn.data,
+        expiresAt: new Date(Date.now() + expiresIn.data * 1000).toISOString(),
       });
     }
     return true;
@@ -525,6 +540,7 @@ export const twitchService = {
       },
     });
 
+    // SAFETY: Helix /channels returns one entry for a single broadcaster_id
     return result[0] as Channel;
   },
 
@@ -549,6 +565,7 @@ export const twitchService = {
       },
     });
 
+    // SAFETY: Helix /users returns one entry for a single login, and every user has a profile image
     return result.data[0]?.profile_image_url as string;
   },
   getFollowedStreams: async (userId: string): Promise<TwitchStream[]> => {
@@ -603,6 +620,7 @@ export const twitchService = {
         Authorization: `Bearer ${token}`,
       },
     });
+    // SAFETY: Helix /users returns one entry for the token's own user
     return result.data[0] as UserInfoResponse;
   },
   getUser: async (userId?: string, id?: string): Promise<UserInfoResponse> => {
@@ -619,6 +637,7 @@ export const twitchService = {
       params,
     });
 
+    // SAFETY: Helix /users returns one entry for a single login or id
     return (result.data[0] as UserInfoResponse) ?? '';
   },
 
@@ -652,6 +671,7 @@ export const twitchService = {
         id,
       },
     });
+    // SAFETY: Helix /games returns one entry for a single id
     return result.data[0] as Category;
   },
 
@@ -691,6 +711,7 @@ export const twitchService = {
         id,
       },
     });
+    // SAFETY: Helix /clips returns one entry for a single id
     return result.data[0] as TwitchClip;
   },
 

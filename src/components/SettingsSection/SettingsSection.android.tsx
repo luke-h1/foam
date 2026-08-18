@@ -17,7 +17,6 @@ import {
 import { clickable, fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 
 import {
-  type ComposeRowComponent,
   resolveIconName,
   type RowIcon,
 } from '@app/components/SettingsSection/SettingsSection.types';
@@ -34,8 +33,9 @@ function isComposeRow(element: ReactNode): boolean {
     type === SettingsRow ||
     type === SettingsLinkRow ||
     type === SettingsToggleRow ||
-    (typeof type !== 'string' &&
-      (type as ComposeRowComponent).isComposeRow === true)
+    (type instanceof Object &&
+      'isComposeRow' in type &&
+      type.isComposeRow === true)
   );
 }
 

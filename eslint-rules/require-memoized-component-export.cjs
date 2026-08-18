@@ -1,7 +1,11 @@
 const COMPONENT_NAME_PATTERN = /^[A-Z][A-Za-z0-9]*$/;
 
+function isObjectLike(value) {
+  return value !== null && value !== undefined && Object(value) === value;
+}
+
 function hasJsx(node) {
-  if (!node || typeof node !== 'object') {
+  if (!isObjectLike(node)) {
     return false;
   }
 
@@ -19,7 +23,7 @@ function hasJsx(node) {
       return true;
     }
 
-    if (!Array.isArray(value) && typeof value === 'object' && hasJsx(value)) {
+    if (!Array.isArray(value) && hasJsx(value)) {
       return true;
     }
   }

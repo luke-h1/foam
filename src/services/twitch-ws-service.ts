@@ -48,15 +48,14 @@ function entryKey(
   return `${eventType}|${conditionKey(condition)}`;
 }
 
+type EventSubscriptionPayload =
+  | Awaited<ReturnType<typeof twitchService.createEventSubscription>>
+  | Awaited<ReturnType<typeof twitchService.listEventSubscriptions>>;
+
 function hasEventSubscriptionData(
-  response: unknown,
-): response is { data: EventSubscriptionSummary[] } {
-  return (
-    typeof response === 'object' &&
-    response !== null &&
-    'data' in response &&
-    Array.isArray(response.data)
-  );
+  response: EventSubscriptionPayload | undefined,
+): boolean {
+  return Array.isArray(response?.data);
 }
 
 /**
@@ -94,25 +93,26 @@ class TwitchWsService {
   private constructor() {}
 
   public static getInstance(): WebSocket {
-    if (
-      !TwitchWsService.instance ||
-      TwitchWsService.instance.readyState === WebSocket.CLOSED
-    ) {
-      TwitchWsService.connect();
+    const existing = TwitchWsService.instance;
+    if (existing && existing.readyState !== WebSocket.CLOSED) {
+      return existing;
     }
 
-    return this.instance as WebSocket;
+    return TwitchWsService.connect();
   }
 
-  private static connect() {
+  private static connect(): WebSocket {
     const wsUrl =
       TwitchWsService.isReconnecting && TwitchWsService.reconnectUrl
         ? TwitchWsService.reconnectUrl
         : TwitchWsService.url;
 
     TwitchWsService.discardInstance();
-    TwitchWsService.instance = new WebSocket(wsUrl);
+    const socket = new WebSocket(wsUrl);
+    TwitchWsService.instance = socket;
     TwitchWsService.setupEventListeners();
+
+    return socket;
   }
 
   /**
@@ -163,7 +163,7 @@ class TwitchWsService {
     TwitchWsService.instance.onerror = error => {
       logger.twitchWs.warn('🟣 Twitch EventSub WebSocket error', {
         name: 'twitch_ws_warning',
-        error,
+        error: error instanceof Error ? error : String(error),
         action: 'error',
         provider: 'twitch',
         source: 'twitch_ws_service',
@@ -197,6 +197,7 @@ class TwitchWsService {
    */
   private static onMessage(event: MessageEvent) {
     try {
+      // SAFETY: every frame on this socket is a Helix EventSub envelope; a body that is not one fails on `message.metadata` inside this try and is handled by the catch below.
       const message = JSON.parse(
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         event.data,
@@ -242,7 +243,7 @@ class TwitchWsService {
     } catch (e) {
       logger.twitchWs.warn('Failed to parse Twitch EventSub message', {
         name: 'twitch_ws_warning',
-        error: e,
+        error: e instanceof Error ? e : String(e),
         action: 'message_parse_failed',
         provider: 'twitch',
         source: 'twitch_ws_service',
@@ -492,7 +493,7 @@ class TwitchWsService {
         `Failed to subscribe to Twitch EventSub event ${eventType}`,
         {
           name: 'twitch_ws_warning',
-          error,
+          error: error instanceof Error ? error : String(error),
           action: 'subscription_create_failed',
           event_type: eventType,
           provider: 'twitch',
@@ -572,7 +573,7 @@ class TwitchWsService {
           `Failed to unsubscribe from Twitch EventSub event ${eventType}`,
           {
             name: 'twitch_ws_warning',
-            error,
+            error: error instanceof Error ? error : String(error),
             action: 'subscription_delete_failed',
             event_type: eventType,
             provider: 'twitch',
@@ -638,6 +639,7 @@ class TwitchWsService {
         response.data.map(sub => ({ type: sub.type, id: sub.id })),
       );
 
+      // SAFETY: `twitchService` types `condition` and `transport` as bare `object`; Helix sends the websocket transport and condition maps this summary describes.
       const subscriptions = response.data as EventSubscriptionSummary[];
       subscriptions.forEach(subscription => {
         if (subscription.transport.session_id !== TwitchWsService.sessionId) {
@@ -657,7 +659,7 @@ class TwitchWsService {
         'Failed to fetch active Twitch EventSub subscriptions',
         {
           name: 'twitch_ws_warning',
-          error,
+          error: error instanceof Error ? error : String(error),
           action: 'active_subscriptions_fetch_failed',
           provider: 'twitch',
           source: 'twitch_ws_service',
@@ -714,7 +716,7 @@ class TwitchWsService {
             `Failed to clean up Twitch EventSub subscription ${subscriptionId}`,
             {
               name: 'twitch_ws_warning',
-              error,
+              error: error instanceof Error ? error : String(error),
               action: 'subscription_cleanup_failed',
               provider: 'twitch',
               source: 'twitch_ws_service',

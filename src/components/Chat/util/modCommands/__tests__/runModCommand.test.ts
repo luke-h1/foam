@@ -2,25 +2,16 @@ import { toast } from 'sonner-native';
 
 import { logger } from '@app/utils/logger';
 
-import { executeModCommand } from '../executeModCommand';
+import * as executeModCommandModule from '../executeModCommand';
 import type { ModCommand } from '../parseModCommand';
 import { runModCommand } from '../runModCommand';
 
-jest.mock('../executeModCommand', () => ({
-  executeModCommand: jest.fn(),
-}));
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    chat: {
-      warn: jest.fn(),
-    },
-  },
-}));
-
-const mockExecuteModCommand = jest.mocked(executeModCommand);
+const mockExecuteModCommand = jest.spyOn(
+  executeModCommandModule,
+  'executeModCommand',
+);
 const mockToast = jest.mocked(toast);
-const mockWarn = jest.mocked(logger.chat.warn);
+const mockWarn = jest.spyOn(logger.chat, 'warn').mockImplementation(() => {});
 
 const command: ModCommand = { type: 'ban', login: 'zoil', reason: 'spam' };
 

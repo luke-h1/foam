@@ -18,26 +18,6 @@ import { chatStore$ } from '../observables/chatStore';
 import type { AnyChatMessageType } from '../types/constants';
 import type { ChatMessageType } from '../types/constants';
 
-jest.mock('@legendapp/state/persist', () => ({
-  configureObservablePersistence: jest.fn(),
-  persistObservable: jest.fn(),
-}));
-
-jest.mock('react-native-mmkv', () => ({
-  MMKV: class MockMMKV {
-    set = jest.fn();
-    getString = jest.fn();
-    getAllKeys = jest.fn(() => []);
-    delete = jest.fn();
-  },
-  createMMKV: () => ({
-    set: jest.fn(),
-    getString: jest.fn(),
-    getAllKeys: jest.fn(() => []),
-    remove: jest.fn(),
-  }),
-}));
-
 function createInvalidStoredMessage(): AnyChatMessageType {
   return {
     ...createMessage('placeholder', 'placeholder', ''),

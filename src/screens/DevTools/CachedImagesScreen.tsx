@@ -686,6 +686,7 @@ function CachedImagesTabContent({
   }
 
   if (activeTab === 'badges') {
+    // SAFETY: one tab's list is mounted at a time, so the shared scroll-to-top ref only ever holds the list rendered here.
     return (
       <FlashList
         ref={listRef as RefObject<FlashListRef<BadgeInfo> | null>}
@@ -705,6 +706,7 @@ function CachedImagesTabContent({
   }
 
   if (activeTab === 'paints') {
+    // SAFETY: one tab's list is mounted at a time, so the shared scroll-to-top ref only ever holds the list rendered here.
     return (
       <FlashList
         ref={listRef as RefObject<FlashListRef<PaintInfo> | null>}

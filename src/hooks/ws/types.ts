@@ -11,7 +11,6 @@ export interface Options {
   queryParams?: QueryParams;
   protocols?: string | string[];
   options?: {
-    [optionName: string]: unknown;
     headers: {
       [headerName: string]: string;
     };
@@ -43,7 +42,15 @@ export type ReadyStateState = {
 export type WebSocketMessage = string | ArrayBuffer | Blob | ArrayBufferView;
 
 export type SendMessage = (message: WebSocketMessage) => void;
-export type SendJsonMessage = (jsonMessage: unknown) => void;
+/**
+ * `TJsonMessage` defaults to `never` so a caller that never sends a JSON
+ * message (e.g. the Twitch IRC socket, which only uses `sendMessage`) is not
+ * forced to name one; a caller that does send JSON instantiates
+ * `useWebsocket` with its own outbound message type.
+ */
+export type SendJsonMessage<TJsonMessage = never> = (
+  jsonMessage: TJsonMessage,
+) => void;
 
 export type Subscriber<T = WebSocketEventMap['message']> = {
   setLastMessage: (message: T) => void;
@@ -53,9 +60,12 @@ export type Subscriber<T = WebSocketEventMap['message']> = {
   reconnect: RefObject<() => void>;
 };
 
-export type WebSocketHookReturn<T = WebSocketEventMap['message']> = {
+export type WebSocketHookReturn<
+  T = WebSocketEventMap['message'],
+  TJsonMessage = never,
+> = {
   sendMessage: SendMessage;
-  sendJsonMessage: SendJsonMessage;
+  sendJsonMessage: SendJsonMessage<TJsonMessage>;
   lastMessage: T;
   lastJsonMessage: unknown;
   readyState: ReadyState;

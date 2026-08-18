@@ -78,6 +78,7 @@ export default function FollowingScreen() {
   const tabBarOverflow = useBottomTabOverflow();
   const streamListLayout = usePreference('streamListLayout');
 
+  // SAFETY: both callers are gated on `user?.id` - the refresh handler renders past the logged-in guard, the foreground refetch runs under `enabled: Boolean(user?.id)`.
   const refetchFollowingStreams = useCallback(
     () =>
       queryClient.refetchQueries({
@@ -93,6 +94,7 @@ export default function FollowingScreen() {
     await refetchFollowingStreams().finally(() => setIsRefreshing(false));
   }, [refetchFollowingStreams]);
 
+  // SAFETY: the query only runs under `enabled: !!user?.id`, so the id is set whenever it is read.
   const {
     data: streams,
     isLoading,
@@ -123,6 +125,7 @@ export default function FollowingScreen() {
     streamListLayout === 'media',
   );
 
+  // SAFETY: the query only runs under `enabled: !!user?.id`, so the id is set whenever it is read.
   const { data: followedChannels, isLoading: isLoadingFollowedChannels } =
     useFollowedChannelsQuery(user?.id as string, {
       enabled: !!user?.id,

@@ -12,14 +12,35 @@ import { logger } from '@app/utils/logger';
 import type { ImageProps } from './Image.types';
 import { imageFileStore } from './imageFileStore';
 
-function getSourceUrl(source: ImageProps['source']): string | null {
-  if (typeof source === 'string') {
-    return source;
+type ImageSourceDescriptor =
+  | { kind: 'none' }
+  | { kind: 'module' }
+  | { kind: 'remote'; url: string }
+  | { kind: 'uriObject'; url: string; source: { uri: string } };
+
+function isUriObjectSource(
+  source: NonNullable<ImageProps['source']>,
+): source is { uri: string } {
+  return Object.prototype.hasOwnProperty.call(source, 'uri');
+}
+
+function isModuleSource(
+  source: NonNullable<ImageProps['source']>,
+): source is number {
+  return Number.isInteger(source);
+}
+
+function describeSource(source: ImageProps['source']): ImageSourceDescriptor {
+  if (source === undefined) {
+    return { kind: 'none' };
   }
-  if (typeof source === 'object' && 'uri' in source) {
-    return source.uri;
+  if (isUriObjectSource(source)) {
+    return { kind: 'uriObject', url: source.uri, source };
   }
-  return null;
+  if (isModuleSource(source)) {
+    return { kind: 'module' };
+  }
+  return { kind: 'remote', url: source };
 }
 
 function getHostname(url: string | null | undefined): string | undefined {
@@ -51,7 +72,11 @@ export const Image = function Image({
   useAppleWebpCodec = false,
   ...props
 }: ImageProps) {
-  const url = getSourceUrl(source);
+  const descriptor = describeSource(source);
+  const url =
+    descriptor.kind === 'remote' || descriptor.kind === 'uriObject'
+      ? descriptor.url
+      : null;
   /**
    * Once the remote source has rendered, swapping to the freshly downloaded
    * file:// URI would make the native view fetch/decode the same bytes a
@@ -74,9 +99,9 @@ export const Image = function Image({
   const fileCachedUrl = diskCachedUrl ?? downloadedCachedUrl;
   const resolvedUrl = fileCachedUrl ?? url;
   const resolvedSource =
-    fileCachedUrl && typeof source === 'object' && 'uri' in source
-      ? { ...source, uri: fileCachedUrl }
-      : fileCachedUrl && typeof source === 'string'
+    fileCachedUrl && descriptor.kind === 'uriObject'
+      ? { ...descriptor.source, uri: fileCachedUrl }
+      : fileCachedUrl && descriptor.kind === 'remote'
         ? fileCachedUrl
         : source;
   useEffect(() => {
@@ -128,7 +153,7 @@ export const Image = function Image({
     logger.main.warn('image.load_failed', {
       name: 'data_loading_warning',
       error: event?.error,
-      url: typeof source === 'string' ? source : 'uri-object',
+      url: descriptor.kind === 'remote' ? descriptor.url : 'uri-object',
       urlHost: host ?? 'unknown',
       host,
       fromFileCache: Boolean(fileCachedUrl),

@@ -2,13 +2,19 @@ import { render, screen } from '@testing-library/react-native';
 
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
+import * as ChatInlineImageModule from '../ChatInlineImage';
 import { CheermoteRenderer } from '../CheermoteRenderer';
 
 const mockChatInlineImage = jest.fn<null, [{ sourceUrl: string }]>();
 
-jest.mock('../ChatInlineImage', () => ({
-  ChatInlineImage: (props: { sourceUrl: string }) => mockChatInlineImage(props),
-}));
+/**
+ * ChatInlineImage is memo() wrapped (an object, not a function), so
+ * jest.spyOn cannot wrap it - swap the export directly instead.
+ */
+Object.defineProperty(ChatInlineImageModule, 'ChatInlineImage', {
+  configurable: true,
+  value: (props: { sourceUrl: string }) => mockChatInlineImage(props),
+});
 
 function lastRenderedSourceUrl(): string | undefined {
   return mockChatInlineImage.mock.calls.at(-1)?.[0].sourceUrl;

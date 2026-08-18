@@ -45,6 +45,13 @@ export interface SuiteState {
   results: PhaseResult[];
 }
 
+interface FrameAccumulator {
+  on: boolean;
+  fps: number[];
+  jank: number;
+  frames: number;
+}
+
 const IDLE: SuiteState = {
   running: false,
   phaseIndex: -1,
@@ -62,7 +69,12 @@ export function useChatPerfSuite() {
     total: 0,
   });
   const [suite, setSuite] = useState<SuiteState>(IDLE);
-  const accum = useRef({ on: false, fps: [] as number[], jank: 0, frames: 0 });
+  const accum = useRef<FrameAccumulator>({
+    on: false,
+    fps: [],
+    jank: 0,
+    frames: 0,
+  });
   const cancelRef = useRef(false);
   const runningRef = useRef(false);
 
@@ -152,16 +164,17 @@ export function useChatPerfSuite() {
     ) => {
       const signpostName = `chat-perf.${label}.${sub}`;
       beginSignpost(signpostName);
-      try {
+
+      const runPhaseWindow = async () => {
         const start = performance.now();
         if (measuring) {
           accum.current = { on: true, fps: [], jank: 0, frames: 0 };
-          uiFrames.value = 0;
-          uiJank.value = 0;
-          uiActive.value = true;
+          uiFrames.set(0);
+          uiJank.set(0);
+          uiActive.set(true);
         }
-        phaseCountdownMs.value = ms;
-        totalCountdownMs.value = Math.max(0, suiteEnd - start);
+        phaseCountdownMs.set(ms);
+        totalCountdownMs.set(Math.max(0, suiteEnd - start));
         setSuite(s => ({
           ...s,
           phaseIndex,
@@ -176,10 +189,12 @@ export function useChatPerfSuite() {
           await sleep(120);
         }
         accum.current.on = false;
-        uiActive.value = false;
-      } finally {
+        uiActive.set(false);
+      };
+
+      await runPhaseWindow().finally(() => {
         endSignpost(signpostName);
-      }
+      });
     },
     [phaseCountdownMs, totalCountdownMs, uiActive, uiFrames, uiJank],
   );
@@ -190,14 +205,14 @@ export function useChatPerfSuite() {
     }
     runningRef.current = true;
     cancelRef.current = false;
-    countdownTicking.value = true;
+    countdownTicking.set(true);
     const results: PhaseResult[] = [];
 
     setSuite({ ...IDLE, running: true });
     markSignpost('chat-perf.suite-start');
     const suiteEnd = performance.now() + SUITE_TOTAL_MS;
 
-    try {
+    const runPhases = async () => {
       for (let i = 0; i < SUITE_PHASES.length; i += 1) {
         if (cancelRef.current) {
           break;
@@ -236,8 +251,8 @@ export function useChatPerfSuite() {
             Math.round(100 * (1 - accum.current.frames / (secs * 60))),
           ),
           messages: chatStore$.messages.peek().length,
-          uiFpsAvg: Math.round(uiFrames.value / uiSecs),
-          uiJankPerSec: Math.round((uiJank.value / uiSecs) * 10) / 10,
+          uiFpsAvg: Math.round(uiFrames.get() / uiSecs),
+          uiJankPerSec: Math.round((uiJank.get() / uiSecs) * 10) / 10,
         });
         setSuite(s => ({ ...s, results: [...results] }));
 
@@ -251,13 +266,15 @@ export function useChatPerfSuite() {
           }
         }
       }
-    } finally {
+    };
+
+    await runPhases().finally(() => {
       syntheticChatControl.current = SYNTHETIC_PRESETS.off!;
       resetFloodReplay();
-      countdownTicking.value = false;
+      countdownTicking.set(false);
       setSuite(s => ({ ...IDLE, results: s.results }));
       runningRef.current = false;
-    }
+    });
   }, [runWindow, uiFrames, uiJank, countdownTicking]);
 
   // Signal cancel + stop the flood immediately, but let runSuite's finally own

@@ -61,6 +61,20 @@ export function compareFingerprints(
   return previous.ios !== current.ios || previous.android !== current.android;
 }
 
+export function parseManualDeployType(value: string): ManualDeployType {
+  if (value === 'auto' || value === 'ota' || value === 'build') {
+    return value;
+  }
+  throw new Error(`Unsupported manual deploy type: ${value}`);
+}
+
+export function parseDeployType(value: string): DeployType {
+  if (value === 'ota' || value === 'build') {
+    return value;
+  }
+  throw new Error(`Unsupported deploy type: ${value}`);
+}
+
 export function decideDeployType(
   manualType: ManualDeployType,
   fingerprintChanged: boolean,
@@ -97,17 +111,19 @@ export function getFinalReleaseTag(input: {
   return appendVariant(input.version, input.variant);
 }
 
-export function parsePublishedUpdateJson(updateJson: string): {
-  iosUpdateId: string;
-  androidUpdateId: string;
-  updateGroupId: string;
-} {
+export function parsePublishedUpdateJson(updateJson: string) {
   let updates: PublishedUpdate[] = [];
 
   try {
+    // SAFETY: JSON.parse returns `any`; narrowing to `unknown` first forces
+    // the Array.isArray check below before the value is used for anything.
     const parsed = JSON.parse(updateJson) as unknown;
 
     if (Array.isArray(parsed)) {
+      // SAFETY: `eas update --json` emits an array of update records shaped
+      // like PublishedUpdate; every field this module reads off an entry is
+      // optional, so an unexpected element shape degrades to `undefined`
+      // rather than throwing.
       updates = parsed as PublishedUpdate[];
     }
   } catch {

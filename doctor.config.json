@@ -7,7 +7,9 @@
       "**/*.test.ts",
       "**/*.test.tsx",
       "**/*.spec.ts",
-      "**/*.spec.tsx"
+      "**/*.spec.tsx",
+      "tools/oxlint/anti-slop/**",
+      "src/components/Chat/components/ChatMessage/__fixtures__/sevenTvPaints.fixture.ts"
     ],
     "overrides": [
       {
@@ -27,11 +29,20 @@
         "rules": ["react-hooks-js/purity", "react-doctor/effect-needs-cleanup"]
       },
       {
+        "files": ["src/services/twitch-chat-service.ts"],
+        "rules": ["react-hooks-js/purity"]
+      },
+      {
         "files": [
           "src/components/Chat/hooks/useChatMessages.ts",
-          "src/components/StreamPlayer/usePlayerBridge.ts"
+          "src/components/StreamPlayer/usePlayerBridge.ts",
+          "src/components/Chat/components/ChatMessage/renderers/EmoteActionSheet.tsx"
         ],
         "rules": ["react-hooks-js/refs"]
+      },
+      {
+        "files": ["src/hooks/useLazyRef.ts"],
+        "rules": ["react-doctor/no-ref-current-in-render"]
       },
       {
         "files": ["src/services/twitch-ws-service.ts"],
@@ -47,11 +58,17 @@
       {
         "files": ["src/screens/DevTools/SyncedEmotesScreen.tsx"],
         "rules": ["react-doctor/rn-no-scrollview-mapped-list"]
+      },
+      {
+        "files": ["src/screens/DevTools/ImageBenchmarkScreen.tsx"],
+        "rules": ["react-doctor/no-set-state-after-await-in-effect"]
       }
     ]
   },
   "rules": {
     "react-doctor/react-compiler-no-manual-memoization": "off",
-    "react-doctor/rn-no-raw-text": "warn"
+    "react-doctor/rn-no-raw-text": "warn",
+    "deslop/unused-export": "off",
+    "deslop/unused-file": "off"
   }
 }

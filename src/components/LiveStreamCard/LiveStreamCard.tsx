@@ -29,18 +29,18 @@ interface Props {
   layout?: 'compact' | 'media';
 }
 
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: 'English',
-  es: 'Spanish',
-  ja: 'Japanese',
-  ko: 'Korean',
-  fr: 'French',
-  de: 'German',
-  pt: 'Portuguese',
-};
+const LANGUAGE_NAMES = new Map([
+  ['en', 'English'],
+  ['es', 'Spanish'],
+  ['ja', 'Japanese'],
+  ['ko', 'Korean'],
+  ['fr', 'French'],
+  ['de', 'German'],
+  ['pt', 'Portuguese'],
+]);
 
 const LANGUAGE_VALUE_SET = new Set(
-  Object.values(LANGUAGE_NAMES).map(language => language.toLowerCase()),
+  Array.from(LANGUAGE_NAMES.values(), language => language.toLowerCase()),
 );
 
 // Dedupe rapid double-taps that would push the same route twice (two stacked screens).
@@ -128,7 +128,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
     // the (default) compact path.
     const languageLabel =
       stream.tags?.find(tag => LANGUAGE_VALUE_SET.has(tag.toLowerCase())) ??
-      LANGUAGE_NAMES[stream.language];
+      LANGUAGE_NAMES.get(stream.language);
 
     return (
       <Button

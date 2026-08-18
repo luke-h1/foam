@@ -1,5 +1,6 @@
 import { toast } from 'sonner-native';
 
+import type { LogMetadataValue } from '@app/lib/sentry';
 import { logger } from '@app/utils/logger';
 
 import { executeModCommand } from './executeModCommand';
@@ -22,7 +23,7 @@ export function runModCommand(
   }
   executeModCommand(command, { broadcasterId: channelId, moderatorId })
     .then(successMessage => toast.success(successMessage))
-    .catch((error: unknown) => {
+    .catch((error: LogMetadataValue) => {
       logger.chat.warn('Mod command failed', {
         error,
         command: command.type,

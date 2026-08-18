@@ -8,6 +8,11 @@ import { logger } from '@app/utils/logger';
 
 const KAPPA_UPLOAD_URL = 'https://kappa.lol/api/upload';
 
+type KappaUploadResponseBody = {
+  link?: string;
+  url?: string;
+};
+
 export const kappaService = {
   upload: async (asset: KappaUploadAsset): Promise<KappaUploadResult> => {
     const mimeType = asset.mimeType ?? 'image/jpeg';
@@ -24,9 +29,9 @@ export const kappaService = {
       throw new Error(`kappa upload failed with status ${response.status}`);
     }
 
-    let data: { link?: string; url?: string };
+    let data: KappaUploadResponseBody;
     try {
-      data = JSON.parse(response.body) as { link?: string; url?: string };
+      data = JSON.parse(response.body);
     } catch {
       logger.chat.error('[kappa] upload response was not valid json', {
         body: response.body?.slice(0, 200),

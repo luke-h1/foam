@@ -1,25 +1,27 @@
 import { ActionSheetIOS, Platform } from 'react-native';
 
-import {
-  presentActionMenu,
-  type ShowActionMenuOptions,
-} from '../actionMenuStore';
+import type { ShowActionMenuOptions } from '../actionMenuStore';
+import * as actionMenuStore from '../actionMenuStore';
 import { showActionMenu } from '../showActionMenu';
 
 const originalOS = Platform.OS;
+
+let presentActionMenuMock: jest.SpiedFunction<
+  typeof actionMenuStore.presentActionMenu
+>;
 
 afterEach(() => {
   Platform.OS = originalOS;
   jest.restoreAllMocks();
 });
 
-jest.mock('../actionMenuStore', () => ({
-  presentActionMenu: jest.fn(),
-}));
-
-const presentActionMenuMock = jest.mocked(presentActionMenu);
-
 describe('showActionMenu', () => {
+  beforeEach(() => {
+    presentActionMenuMock = jest
+      .spyOn(actionMenuStore, 'presentActionMenu')
+      .mockImplementation(() => {});
+  });
+
   test('presents an ActionSheetIOS sheet on iOS and forwards the pressed action', () => {
     Platform.OS = 'ios';
     const onPress = jest.fn();

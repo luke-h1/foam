@@ -25,25 +25,6 @@ import {
   settleSpecs,
 } from '../channelResources';
 
-jest.mock('@app/services/bttv-emote-service', () => ({ bttvEmoteService: {} }));
-jest.mock('@app/services/ffz-service', () => ({ ffzService: {} }));
-jest.mock('@app/services/seventv-service', () => ({ sevenTvService: {} }));
-jest.mock('@app/services/twitch-badge-service', () => ({
-  twitchBadgeService: {},
-}));
-jest.mock('@app/services/twitch-emote-service', () => ({
-  twitchEmoteService: {},
-}));
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    chat: {
-      info: jest.fn(),
-      warn: jest.fn(),
-    },
-  },
-}));
-
 const channelId = 'channel-1';
 
 function emote(id: string): SanitisedEmote {
@@ -151,10 +132,10 @@ describe('settleSpecs', () => {
         status: 'fulfilled',
         value: [emote('a')],
       });
-      expect(settled[1]!.result.status).toBe('rejected');
-      expect(
-        (settled[1]!.result as PromiseRejectedResult).reason,
-      ).toBeInstanceOf(ResourceFetchTimeoutError);
+      expect(settled[1]!.result).toEqual({
+        status: 'rejected',
+        reason: expect.any(ResourceFetchTimeoutError),
+      });
     });
 
     test('does not time out a fetch that resolves before the deadline', async () => {
@@ -270,9 +251,12 @@ describe('reconcileSettledSpecs', () => {
 });
 
 describe('reportResourceResults', () => {
+  const warn = jest.spyOn(logger.chat, 'warn').mockImplementation(() => {});
+  const info = jest.spyOn(logger.chat, 'info').mockImplementation(() => {});
+
   beforeEach(() => {
-    jest.mocked(logger.chat.warn).mockClear();
-    jest.mocked(logger.chat.info).mockClear();
+    warn.mockClear();
+    info.mockClear();
   });
 
   test('warns once per rejected resource and counts every resource', () => {

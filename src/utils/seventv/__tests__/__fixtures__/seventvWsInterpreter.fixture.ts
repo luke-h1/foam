@@ -1,9 +1,13 @@
+// This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
+// field (see types/seventv/cosmetics.ts), not a naming choice.
+// oxlint-disable anti-slop/no-shape-in-symbol-names
 import type {
   BadgeCosmetic,
   ChangeMap,
   CosmeticCreate,
   EntitlementCreate,
   EntitlementUser,
+  EntitlementUserStyle,
   PaintCosmetic,
   SevenTvEventData,
   SevenTvEventType,
@@ -16,6 +20,22 @@ import type { SeventvWsInterpreterContext } from '@app/utils/seventv/seventvWsIn
 type EmoteChange = SevenTvEmote & { origin_id: string | null };
 
 type EmoteSetUpdateBody = SevenTvEventData<'emote_set.update'>['body'];
+
+type RawJsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | RawJsonValue[]
+  | { [key: string]: RawJsonValue };
+
+/**
+ * A 7TV websocket payload exactly as it arrives on the wire, before the
+ * interpreter has decided whether it is well formed.
+ */
+interface RawSeventvPayload {
+  [key: string]: RawJsonValue;
+}
 
 export const FIXTURE_NOW = Date.parse('2025-06-01T12:00:00.000Z');
 
@@ -175,15 +195,20 @@ export function createEntitlementUser(
       }
     : { length: 0 };
 
+  const style: EntitlementUserStyle = {};
+  if (overrides.paintId) {
+    style.paint_id = overrides.paintId;
+  }
+  if (overrides.badgeId) {
+    style.badge_id = overrides.badgeId;
+  }
+
   return {
     id: 'stv-user-1',
     username: 'chatter',
     display_name: 'Chatter',
     avatar_url: 'https://cdn.7tv.app/avatar.png',
-    style: {
-      ...(overrides.paintId ? { paint_id: overrides.paintId } : {}),
-      ...(overrides.badgeId ? { badge_id: overrides.badgeId } : {}),
-    },
+    style,
     role_ids: { length: 0 },
     connections,
   };
@@ -349,8 +374,9 @@ export function createDispatchMessage(
  * would otherwise reject.
  */
 export function coerceEvent<T extends SevenTvEventType>(
-  raw: object,
+  raw: RawSeventvPayload,
 ): SevenTvEventData<T> {
+  // SAFETY: the caller writes the wire payload the interpreter must tolerate, including shapes SevenTvEventData rejects.
   return JSON.parse(JSON.stringify(raw)) as SevenTvEventData<T>;
 }
 
@@ -359,8 +385,9 @@ export function coerceEvent<T extends SevenTvEventType>(
  * malformed message cases the type system would otherwise reject.
  */
 export function coerceMessage(
-  raw: object,
+  raw: RawSeventvPayload,
 ): SevenTvWsMessage<SevenTvEventData<SevenTvEventType>> {
+  // SAFETY: the caller writes the wire payload the interpreter must tolerate, including shapes SevenTvWsMessage rejects.
   return JSON.parse(JSON.stringify(raw)) as SevenTvWsMessage<
     SevenTvEventData<SevenTvEventType>
   >;

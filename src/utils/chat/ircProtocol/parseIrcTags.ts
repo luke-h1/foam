@@ -4,7 +4,7 @@ import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
  * Parse the `key=value;key2=value2` IRCv3 tag string into a map, unescaping
  * each value. Values may be empty and may themselves contain `=`.
  */
-export function parseIrcTags(tagString: string): Record<string, string> {
+export function parseIrcTags(tagString: string) {
   const tags: Record<string, string> = {};
   if (!tagString) {
     return tags;

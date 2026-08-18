@@ -1,41 +1,24 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { sevenTvService } from '@app/services/seventv-service';
-import {
-  fetchAndCacheUserCosmetics,
-  getUserBadge,
-  getUserBadgeId,
-  getUserPaintId,
-} from '@app/store/chat/actions/cosmetics';
+import * as cosmeticsActions from '@app/store/chat/actions/cosmetics';
+import { logger } from '@app/utils/logger';
 
 import { useChatCosmetics } from '../useChatCosmetics';
 import { setCachedCosmetics } from './__fixtures__/useChatCosmetics.fixture';
 
-jest.mock('@app/services/seventv-service', () => ({
-  sevenTvService: {
-    get7tvUserId: jest.fn(),
-  },
-}));
+jest.spyOn(logger.stv, 'debug').mockImplementation(() => undefined);
 
-jest.mock('@app/store/chat/actions/cosmetics', () => ({
-  fetchAndCacheUserCosmetics: jest.fn(),
-  getUserBadge: jest.fn(),
-  getUserBadgeId: jest.fn(),
-  getUserPaintId: jest.fn(),
-  requestUserCosmeticsViaPresence: jest.fn(() => Promise.resolve()),
-}));
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    stv: { debug: jest.fn() },
-  },
-}));
-
-const mockGet7tvUserId = jest.mocked(sevenTvService.get7tvUserId);
-const mockFetchAndCacheUserCosmetics = jest.mocked(fetchAndCacheUserCosmetics);
-const mockGetUserBadge = jest.mocked(getUserBadge);
-const mockGetUserBadgeId = jest.mocked(getUserBadgeId);
-const mockGetUserPaintId = jest.mocked(getUserPaintId);
+const mockGet7tvUserId = jest.spyOn(sevenTvService, 'get7tvUserId');
+const mockFetchAndCacheUserCosmetics = jest.spyOn(
+  cosmeticsActions,
+  'fetchAndCacheUserCosmetics',
+);
+const mockGetUserBadge = jest.spyOn(cosmeticsActions, 'getUserBadge');
+jest.spyOn(cosmeticsActions, 'getUserBadgeId');
+jest.spyOn(cosmeticsActions, 'getUserPaintId');
+const mockGetUserBadgeId = jest.mocked(cosmeticsActions.getUserBadgeId);
+const mockGetUserPaintId = jest.mocked(cosmeticsActions.getUserPaintId);
 
 describe('useChatCosmetics', () => {
   beforeEach(() => {

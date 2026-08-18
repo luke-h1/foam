@@ -115,7 +115,7 @@ interface ListStatePanelProps {
   description: string;
   actionLabel?: string;
   onAction?: () => void;
-  onRefresh?: () => Promise<unknown>;
+  onRefresh?: () => Promise<void>;
 }
 
 function ListStatePanel({
@@ -179,7 +179,7 @@ function BlockedUsersSectionHeader({ count }: BlockedUsersSectionHeaderProps) {
       <Text type='xxs' weight='semibold' style={styles.sectionTitle}>
         Blocked Accounts
       </Text>
-      {typeof count === 'number' ? (
+      {count !== undefined ? (
         <Text type='xxs' color='gray.textLow' style={styles.sectionCountText}>
           {count}
         </Text>
@@ -192,7 +192,7 @@ interface BlockedUsersListProps {
   data?: UserBlockList[];
   isLoading: boolean;
   isError: boolean;
-  onRefresh: () => Promise<unknown>;
+  onRefresh: () => Promise<void>;
   onUnblock: (userId: string, userName: string) => void;
   onUnblockDirect: (userId: string) => void;
 }
@@ -286,7 +286,7 @@ function NativeBlockedUsersList({
   onUnblockDirect,
 }: {
   data: UserBlockList[];
-  onRefresh: () => Promise<unknown>;
+  onRefresh: () => Promise<void>;
   onUnblockDirect: (userId: string) => void;
 }) {
   const insets = useSafeAreaInsets();
@@ -357,7 +357,7 @@ function BlockedUsersDataList({
 }: {
   data: UserBlockList[];
   listRef: RefObject<FlashListRef<UserBlockList> | null>;
-  onRefresh: () => Promise<unknown>;
+  onRefresh: () => Promise<void>;
   renderItem: ListRenderItem<UserBlockList>;
 }) {
   return (
@@ -387,8 +387,10 @@ export function BlockedUsersScreen() {
   const { user } = useAuthContext();
   const queryClient = useQueryClient();
 
+  // SAFETY: the key is only fetched or written once user?.id is set
   const userBlockListQueryKey = twitchKeys.blockList(user?.id as string);
 
+  // SAFETY: enabled gates the query on user?.id being set
   const { data, isLoading, isError } = useUserBlockListQuery(
     user?.id as string,
     { enabled: !!user?.id },

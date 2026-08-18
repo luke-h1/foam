@@ -77,10 +77,8 @@ export function attachListeners(
     if (!optionsRef.current.trackLastMessage) {
       return;
     }
-    if (
-      typeof optionsRef.current.filter === 'function' &&
-      optionsRef.current.filter(message) !== true
-    ) {
+    const messageFilter = optionsRef.current.filter;
+    if (messageFilter !== undefined && messageFilter(message) !== true) {
       return;
     }
     setLastMessage(message);

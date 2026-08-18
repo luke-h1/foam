@@ -7,8 +7,8 @@ export function useUsedMemoryMb(): number {
     let active = true;
     const sample = async () => {
       try {
-        const bytes = await DeviceInfo.getUsedMemory();
-        if (active && typeof bytes === 'number') {
+        const bytes = (await DeviceInfo.getUsedMemory?.()) ?? 0;
+        if (active) {
           setMb(Math.round(bytes / (1024 * 1024)));
         }
       } catch {

@@ -1,21 +1,8 @@
-export function eventSubEventFromMessage(message: {
-  event?: Record<string, unknown>;
-  payload?: unknown;
-}): Record<string, unknown> | undefined {
-  if (message.event) {
-    return message.event;
-  }
+import type { EventSubPayload } from '@app/types/twitch/eventsub';
 
-  if (
-    message.payload &&
-    typeof message.payload === 'object' &&
-    'event' in message.payload
-  ) {
-    const payloadEvent = (
-      message.payload as { event?: Record<string, unknown> }
-    ).event;
-    return payloadEvent;
-  }
-
-  return undefined;
+export function eventSubEventFromMessage<TEvent>(message: {
+  event?: TEvent;
+  payload?: EventSubPayload & { event?: TEvent };
+}): TEvent | undefined {
+  return message.event ?? message.payload?.event;
 }

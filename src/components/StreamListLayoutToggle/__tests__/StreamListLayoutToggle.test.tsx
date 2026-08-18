@@ -1,19 +1,14 @@
+import { Text } from 'react-native';
+
 import { fireEvent, render, screen } from '@testing-library/react-native';
+
+import * as IconModule from '@app/components/ui/Icon/Icon';
 
 import { StreamListLayoutToggle } from '../StreamListLayoutToggle';
 
-jest.mock('@app/lib/haptics', () => ({
-  selection: jest.fn(),
-}));
-
-jest.mock('@app/components/ui/Icon/Icon', () => {
-  const React = require('react');
-  const { Text } = require('react-native');
-  return {
-    SymbolView: ({ name }: { name: string }) =>
-      React.createElement(Text, null, name),
-  };
-});
+jest
+  .spyOn(IconModule, 'SymbolView')
+  .mockImplementation(({ name }) => <Text>{String(name)}</Text>);
 
 describe('StreamListLayoutToggle', () => {
   test('renders the media affordance and switches to media when compact', () => {

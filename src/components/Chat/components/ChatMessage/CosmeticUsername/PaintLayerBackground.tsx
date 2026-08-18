@@ -1,3 +1,6 @@
+// This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
+// field (see types/seventv/cosmetics.ts), not a naming choice.
+// oxlint-disable anti-slop/no-shape-in-symbol-names
 import { type ReactNode, useState } from 'react';
 import { type LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import Svg, {
@@ -158,6 +161,7 @@ export function PaintLayerBackground({
       </Svg>
     );
   } else {
+    // SAFETY: buildLayerGradientConfig returns null below two stops, so colors and locations both hold at least two entries here.
     content = (
       <LinearGradient
         colors={gradientConfig.colors as [string, string, ...string[]]}
