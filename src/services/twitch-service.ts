@@ -287,6 +287,11 @@ export const twitchService = {
       method: 'POST',
       headers: { 'x-api-key': authProxyApiKey ?? '' },
     });
+    if (!res.ok) {
+      throw new Error(
+        `Auth proxy returned ${res.status} for refresh-token`,
+      );
+    }
     const body = await parseJsonOnWorklet<
       AuthProxyResponse<RefreshTokenResponse>
     >(await res.text());
@@ -429,6 +434,11 @@ export const twitchService = {
     const res = await fetch(tokenUrl, {
       headers: isE2EMode ? {} : { 'x-api-key': authProxyApiKey ?? '' },
     });
+    if (!res.ok) {
+      throw new Error(
+        `Auth proxy returned ${res.status} for token`,
+      );
+    }
     const body = await parseJsonOnWorklet<{ data: DefaultTokenResponse }>(
       await res.text(),
     );
