@@ -18,8 +18,8 @@
 # installed, and the Kotlin one has nothing to scan until `bun run prebuild` has
 # generated android/.
 #
-# Not covered, having no local equivalent: CodeQL, the codex and cursor review
-# bots, fingerprint detection, e2e, chat performance, OTA compatibility,
+# Not covered, having no local equivalent: CodeQL, the codex review bot,
+# fingerprint detection, e2e, chat performance, OTA compatibility,
 # enforce-rebase, and label.
 
 set -uo pipefail
