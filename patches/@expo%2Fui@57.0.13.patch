@@ -147,7 +147,7 @@ index eb3442740e2c92364acef9a6fb4880b8a9c38fa4..8741fa0bdb4323cbcc340ca60255f3b3
    return touchHandler;
  }
 diff --git a/ios/RNHostView.swift b/ios/RNHostView.swift
-index 4cf38939895933c713e1f2c609dd7d1e135f0f99..1302fad0f262e0261b8bacad48553386572d9634 100644
+index c33be7e98b625731bb4d0461e4b2daaab7f7e684..ef69d00b6187680d525eac8c77b1674a84d8d5e6 100644
 --- a/ios/RNHostView.swift
 +++ b/ios/RNHostView.swift
 @@ -5,6 +5,10 @@ import ExpoModulesCore

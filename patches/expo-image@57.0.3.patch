@@ -1,8 +1,8 @@
 diff --git a/android/src/main/java/expo/modules/image/ExpoImageModule.kt b/android/src/main/java/expo/modules/image/ExpoImageModule.kt
-index 8584f13f25324f0027d2d3e098983e8b475c5c7f..76ad86dcd4283d46f14ae1d8c157bc205fce1cc2 100644
+index 2adb8be76b93496b638e4b3fb4b716ce13987a35..dd36fdfab37d7e102a39f50098043aa66ac6925e 100644
 --- a/android/src/main/java/expo/modules/image/ExpoImageModule.kt
 +++ b/android/src/main/java/expo/modules/image/ExpoImageModule.kt
-@@ -247,6 +247,10 @@ class ExpoImageModule : Module() {
+@@ -259,6 +259,10 @@ class ExpoImageModule : Module() {
        return@AsyncFunction true
      }.runOnQueue(Queues.MAIN)
  
@@ -358,10 +358,10 @@ index de6e2c368e45bedd01e563cf254c006190aca233..cd29dcd08631da9c703175756882af01
      if let maxSize = options.getMaxSize() {
        // Note that setting the thumbnail size rasterizes vector images into a bitmap.
 diff --git a/ios/ImageModule.swift b/ios/ImageModule.swift
-index 974047c904a8776f542266ededdc3db3e7149bf6..d824e71e8b3db9b9f49075f6c4b4e6c78d879310 100644
+index 033da4024ce4413c99df65d204717b2503d60511..e8c43c6e0d762d3b5709424feca51c7dfd15a647 100644
 --- a/ios/ImageModule.swift
 +++ b/ios/ImageModule.swift
-@@ -28,6 +28,11 @@ public final class ImageModule: Module {
+@@ -37,6 +37,11 @@ public final class ImageModule: Module {
        Prop("source") { (view: ImageView, sources: Either<[ImageSource], SharedRef<UIImage>>?) in
          if let imageRef: SharedRef<UIImage> = sources?.get() {
            // Unset an array of traditional sources and just render the image ref right away.
@@ -373,7 +373,7 @@ index 974047c904a8776f542266ededdc3db3e7149bf6..d824e71e8b3db9b9f49075f6c4b4e6c7
            view.sources = nil
            view.renderSourceImage(imageRef.ref)
          } else {
-@@ -136,6 +141,8 @@ public final class ImageModule: Module {
+@@ -145,6 +150,8 @@ public final class ImageModule: Module {
        AsyncFunction("startAnimating") { (view: ImageView) in
          if view.isSFSymbolSource {
            view.startSymbolAnimation()
@@ -382,7 +382,7 @@ index 974047c904a8776f542266ededdc3db3e7149bf6..d824e71e8b3db9b9f49075f6c4b4e6c7
          } else {
            view.sdImageView.startAnimating()
          }
-@@ -144,6 +151,8 @@ public final class ImageModule: Module {
+@@ -153,6 +160,8 @@ public final class ImageModule: Module {
        AsyncFunction("stopAnimating") { (view: ImageView) in
          if view.isSFSymbolSource {
            view.stopSymbolAnimation()
@@ -391,7 +391,7 @@ index 974047c904a8776f542266ededdc3db3e7149bf6..d824e71e8b3db9b9f49075f6c4b4e6c7
          } else {
            view.sdImageView.stopAnimating()
          }
-@@ -170,6 +179,22 @@ public final class ImageModule: Module {
+@@ -179,6 +188,22 @@ public final class ImageModule: Module {
        ImageModule.configureCache(config: config)
      }
  
@@ -415,7 +415,7 @@ index 974047c904a8776f542266ededdc3db3e7149bf6..d824e71e8b3db9b9f49075f6c4b4e6c7
        var context = SDWebImageContext()
        let sdCacheType = cachePolicy.toSdCacheType().rawValue
 diff --git a/ios/ImageView.swift b/ios/ImageView.swift
-index cccedd7adf7328b18bb61333c3fe2473c79e72cd..e89b0d6dde599b22f1ef7fee7e319e509f1e1f4e 100644
+index 45c13d37da204fe5e5b67dac8ffa7e0d2a1e3aea..66308325fd618741e5c17f4c156448e3d32aa320 100644
 --- a/ios/ImageView.swift
 +++ b/ios/ImageView.swift
 @@ -66,12 +66,23 @@ public final class ImageView: ExpoView {
@@ -465,7 +465,7 @@ index cccedd7adf7328b18bb61333c3fe2473c79e72cd..e89b0d6dde599b22f1ef7fee7e319e50
      if isViewEmpty {
        if placeholderImage != nil {
          displayPlaceholderIfNecessary()
-@@ -526,10 +553,15 @@ public final class ImageView: ExpoView {
+@@ -532,10 +559,15 @@ public final class ImageView: ExpoView {
    private func setImage(_ image: UIImage?, contentFit: ContentFit, isPlaceholder: Bool) {
      sdImageView.contentMode = contentFit.toContentMode()
  
@@ -482,7 +482,7 @@ index cccedd7adf7328b18bb61333c3fe2473c79e72cd..e89b0d6dde599b22f1ef7fee7e319e50
      }
  
      // Remove any existing symbol effects before setting new image
-@@ -565,6 +597,8 @@ public final class ImageView: ExpoView {
+@@ -571,6 +603,8 @@ public final class ImageView: ExpoView {
        }
      }
  
@@ -491,7 +491,7 @@ index cccedd7adf7328b18bb61333c3fe2473c79e72cd..e89b0d6dde599b22f1ef7fee7e319e50
      if !isPlaceholder {
        onDisplay()
      }
-@@ -576,6 +610,113 @@ public final class ImageView: ExpoView {
+@@ -582,6 +616,113 @@ public final class ImageView: ExpoView {
  #endif
    }
  
