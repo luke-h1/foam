@@ -77,7 +77,7 @@ index 7abe582b602c194ee58c6e39e4812e6b21f3a4b8..f5845e3b36113c5df812a95e0653e4ed
      }
    }
  
-@@ -658,3 +668,180 @@ class ExpoImageViewWrapper(context: Context, appContext: AppContext) : ExpoView(
+@@ -658,3 +668,185 @@ class ExpoImageViewWrapper(context: Context, appContext: AppContext) : ExpoView(
      private fun createNewRequestManager(activity: Activity): RequestManager = Glide.with(activity)
    }
  }
@@ -213,6 +213,11 @@ index 7abe582b602c194ee58c6e39e4812e6b21f3a4b8..f5845e3b36113c5df812a95e0653e4ed
 +      entry.alignScheduled = false
 +      entry.lastAlignedAtMs = SystemClock.uptimeMillis()
 +      val target = reference.get() ?: return@postDelayed
++      // `setEnabled(false)` clears `entries` without cancelling this callback,
++      // so re-check membership before resetting a decoder the driver no longer owns.
++      if (!enabled || entries[target] !== entry) {
++        return@postDelayed
++      }
 +      val decoder = target.frameSeqDecoder
 +      if (decoder.isRunning && !decoder.isPaused) {
 +        decoder.reset()
@@ -491,7 +496,7 @@ index 45c13d37da204fe5e5b67dac8ffa7e0d2a1e3aea..66308325fd618741e5c17f4c156448e3
      if !isPlaceholder {
        onDisplay()
      }
-@@ -582,6 +616,113 @@ public final class ImageView: ExpoView {
+@@ -582,6 +616,118 @@ public final class ImageView: ExpoView {
  #endif
    }
  
@@ -549,8 +554,13 @@ index 45c13d37da204fe5e5b67dac8ffa7e0d2a1e3aea..66308325fd618741e5c17f4c156448e3
 +    }
 +    if !SharedAnimationDriver.shared.register(self, image: sharedAnimationImage) {
 +      // The driver has no room to hold this image's frames, so it stays on its
-+      // own player rather than paying a decode per seek.
++      // own player rather than paying a decode per seek. `leaveSharedAnimation`
++      // only restarts that player when `autoplay` is on, but this can also run
++      // for an explicit JS `startAnimating()` call - honour the start either way.
 +      leaveSharedAnimation()
++      if !autoplay {
++        sdImageView.startAnimating()
++      }
 +    }
 +  }
 +
