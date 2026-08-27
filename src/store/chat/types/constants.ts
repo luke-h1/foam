@@ -58,10 +58,8 @@ export interface ChatMessageType<
 > {
   id: string;
   /**
-   * Monotonic per-session arrival number, assigned when the message enters the
-   * store. Unlike a list index it never shifts when the window front-trims, so
-   * derivations like alternating-row parity stay stable for a message's whole
-   * lifetime.
+   * Monotonic per-session arrival number. Unlike a list index it never shifts
+   * on front-trims, so derivations like alternating-row parity stay stable.
    */
   seq?: number;
   /**
@@ -70,9 +68,8 @@ export interface ChatMessageType<
    */
   committedAt?: number;
   /**
-   * Set on messages replayed from the recent-messages history API or restored
-   * from the persisted cache so they skip live-arrival treatment such as the
-   * slide-in entrance.
+   * Set on replayed or cache-restored messages so they skip live-arrival
+   * treatment such as the slide-in entrance.
    */
   isHistorical?: boolean;
   userstate: UserStateTags;
@@ -88,9 +85,8 @@ export interface ChatMessageType<
   moderationNotice?: string;
   cachedSenderColor?: string;
   /**
-   * Set on live PRIVMSGs at ingest while the emote/badge parse is deferred to
-   * commit time. Stripped when the message is finalized; the store never sees
-   * it.
+   * Set at ingest while the emote/badge parse is deferred to commit time;
+   * stripped when the message is finalized, so the store never sees it.
    */
   pendingEmoteParse?: boolean;
   replyDisplayName: string;
@@ -145,9 +141,8 @@ export interface ChannelCacheType {
   twitchSubscriberEmotes: SanitisedEmote[];
   twitchSubscriberEmotesUserId?: string;
   /**
-   * Streamer display name + pfp for each unique owner_id found in
-   * twitchSubscriberEmotes; optional because persisted caches written
-   * before this field existed won't have it.
+   * Streamer name + pfp per owner_id in twitchSubscriberEmotes; optional
+   * because older persisted caches lack it.
    */
   twitchSubscriberChannelProfiles?: Record<string, SubscriberChannelProfile>;
   sevenTvChannelEmotes: SanitisedEmote[];
@@ -160,9 +155,8 @@ export interface ChannelCacheType {
 }
 
 /**
- * Channel-invariant provider data, stored once instead of duplicated into
- * every channel cache. `lastUpdated` is its own freshness stamp - global
- * slices refresh on their own TTL, independent of any channel's.
+ * Channel-invariant provider data stored once; `lastUpdated` gives global
+ * slices their own TTL, independent of any channel's.
  */
 export interface GlobalCacheType {
   lastUpdated: number;
@@ -176,14 +170,12 @@ export interface GlobalCacheType {
 
 export const MAX_CACHED_CHANNELS = 20;
 export const MAX_COSMETIC_ENTRIES = 500;
-export const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
-export const BADGE_CACHE_DURATION = 60 * 60 * 1000; // 1 hour
+export const CACHE_DURATION = 60 * 60 * 1000;
+export const BADGE_CACHE_DURATION = 60 * 60 * 1000;
 
 /**
- * Factories rather than shared constants: an empty-cache object embedded into
- * an observable is written through by legend-state's hydration merge, so a
- * shared constant would come back from "clear cache" holding the launch-time
- * hydrated data instead of an empty slot.
+ * Factories, not shared constants: legend-state's hydration merge writes
+ * through a shared object, so "clear cache" would return hydrated data.
  */
 export const makeEmptyEmoteData = () =>
   ({
@@ -213,10 +205,8 @@ export const makeEmptyGlobalCacheData = () =>
   }) satisfies GlobalCacheType;
 
 /**
- * Consumer-facing emote data: channel-cache fields plus the slices that are
- * not stored per channel - the shared global provider slices, session-scoped
- * 7TV personal emotes, and the chatterinoBadges set resolved from the bundled
- * table at read time.
+ * Channel-cache fields plus the slices not stored per channel: global slices,
+ * session 7TV personal emotes, and chatterinoBadges resolved at read time.
  */
 export interface ResolvedEmoteData extends ChannelCacheType, GlobalCacheType {
   sevenTvPersonalEmotes: Record<string, SanitisedEmote[]>;

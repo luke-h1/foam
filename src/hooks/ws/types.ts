@@ -27,10 +27,7 @@ export interface Options {
   filter?: (message: WebSocketEventMap['message']) => boolean;
   retryOnError?: boolean;
   /**
-   * Mirror every incoming message into React state (`lastMessage`). Off by
-   * default: at chat message rates the per-message setState re-rendered the
-   * host component dozens of times a second even when only `onMessage` was
-   * used.
+   * Mirror incoming messages into `lastMessage` state. Off by default: at chat rates the per-message setState re-rendered the host dozens of times a second.
    */
   trackLastMessage?: boolean;
 }
@@ -43,10 +40,7 @@ export type WebSocketMessage = string | ArrayBuffer | Blob | ArrayBufferView;
 
 export type SendMessage = (message: WebSocketMessage) => void;
 /**
- * `TJsonMessage` defaults to `never` so a caller that never sends a JSON
- * message (e.g. the Twitch IRC socket, which only uses `sendMessage`) is not
- * forced to name one; a caller that does send JSON instantiates
- * `useWebsocket` with its own outbound message type.
+ * `TJsonMessage` defaults to `never` so callers that only use `sendMessage` (Twitch IRC) need not name an outbound type.
  */
 export type SendJsonMessage<TJsonMessage = never> = (
   jsonMessage: TJsonMessage,

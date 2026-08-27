@@ -11,10 +11,8 @@ import { ChatInputSection } from '../ChatInputSection';
 const mockChatComposer = jest.fn((_props: ChatComposerProps) => {});
 
 /**
- * `ChatComposer` is `memo()`-wrapped, so it's an object rather than a plain
- * function and `jest.spyOn` refuses to patch it ("not a function"). Redefine
- * the export directly instead - this suite only cares that `ChatInputSection`
- * wires the right props through, not the real composer's rich-text behavior.
+ * `ChatComposer` is memo()-wrapped, so spyOn refuses to patch it; redefine
+ * the export. The suite only checks prop wiring, not composer behavior.
  */
 function MockChatComposer(props: ChatComposerProps) {
   mockChatComposer(props);

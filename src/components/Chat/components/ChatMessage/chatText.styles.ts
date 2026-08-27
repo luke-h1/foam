@@ -21,9 +21,8 @@ export interface ChatTextStyles {
   badgeTintSlot: ViewStyle;
   body: TextStyle;
   /**
-   * Lines carrying an inline emote need the taller emote line height on every
-   * nested span: TextKit sizes a wrapped line from the paragraph style of the
-   * spans on it, so applying it only to the outer Text clips the attachment.
+   * Every nested span needs the taller emote line height: applying it only to
+   * the outer Text clips the attachment.
    */
   bodyEmoteLine: TextStyle;
   link: TextStyle;
@@ -137,9 +136,8 @@ const CHAT_TEXT_STYLES = {
 } satisfies Record<ChatFontScale, Record<ChatDensity, ChatTextStyles>>;
 
 /**
- * Resolved text styles for a preference pair. Every scale-dependent style in
- * the chat render path comes from here, so a row cannot pick up the body size
- * without also picking up the matching leading, emote size and padding.
+ * Every scale-dependent chat render style comes from here, so a row cannot
+ * pick up the body size without the matching leading, emote size and padding.
  */
 export function getChatTextStyles(
   fontScale: ChatFontScale | undefined,

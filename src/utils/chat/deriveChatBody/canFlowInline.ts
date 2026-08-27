@@ -3,10 +3,8 @@ import type { InlineFlowPart } from '@app/utils/chat/deriveChatBody/types';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 /**
- * The one answer to "can this body live inside a single Text element". A
- * painted username is rendered through a mask and a moderated body carries a
- * strike overlay, so neither can share a Text with the message - they belong
- * in the policy here rather than being re-ANDed at each call site.
+ * The one answer to "can this body live inside a single Text element";
+ * inline-breaking cases live here, never re-ANDed at call sites.
  */
 export function canFlowInline(
   message: ParsedPart[],

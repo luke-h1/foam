@@ -12,10 +12,8 @@ interface PaintedUsernameDropShadowLayerProps {
 }
 
 /**
- * CSS `drop-shadow()` (and `text-shadow`) draws the glyph silhouette in the
- * shadow's own color, offset and blurred, underneath the painted text. A solid
- * glyph copy in the shadow color plus a same-color text shadow for the blur
- * halo reproduces that without a MaskedView per shadow.
+ * A solid glyph copy in the shadow color plus a same-color text shadow for
+ * the blur halo reproduces CSS `drop-shadow()` without a MaskedView per shadow.
  */
 export function PaintedUsernameDropShadowLayer({
   displayUsername,

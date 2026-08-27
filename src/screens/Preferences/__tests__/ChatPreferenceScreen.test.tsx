@@ -59,9 +59,7 @@ const mockPreferences: Preferences = {
   sevenTvPaintRenderer: 'native',
 };
 
-// ChatPreferencePreview is wrapped in React.memo, so the module export is a
-// memo descriptor object rather than a callable - spy on its inner `.type`
-// render function instead.
+// ChatPreferencePreview is React.memo-wrapped, so the export is a memo descriptor, not a callable - spy on its inner `.type` render function.
 jest
   .spyOn(ChatPreferencesPreviewModule.ChatPreferencePreview, 'type')
   .mockImplementation(props => {

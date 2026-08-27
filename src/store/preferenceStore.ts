@@ -47,9 +47,8 @@ export interface Preferences {
   showRecentMessages: boolean;
   showUnreadJumpPill: boolean;
   /**
-   * Show a system message when a user joins or leaves the channel's chat, like
-   * Chatterino. Requires the IRC membership capability, so toggling it
-   * reconnects chat.
+   * Show join/part system messages. Requires the IRC membership capability,
+   * so toggling it reconnects chat.
    */
   showJoinPartMessages: boolean;
   disableChat: boolean;
@@ -71,9 +70,8 @@ export interface Preferences {
   chatFontScale: ChatFontScale;
   chatScrollback: ChatScrollbackLength;
   /**
-   * Hold on new chat messages so chat lines up with the latency-delayed
-   * video. 'auto' follows the measured stream latency, 'off' shows messages
-   * immediately, a number holds them for that many seconds.
+   * Holds new chat messages to match video latency: 'auto' follows measured
+   * stream latency, 'off' shows immediately, a number holds for that many seconds.
    */
   chatDelay: ChatDelaySetting;
   deletedMessageStyle: DeletedMessageStyle;
@@ -83,9 +81,8 @@ export interface Preferences {
   savedPhrases: SavedPhrase[];
   shakeToReport: boolean;
   /**
-   * User-chosen landscape chat panel width in px, set by dragging the
-   * video/chat divider. Null until the user resizes, then re-clamped to the
-   * current screen at layout time so it stays valid across devices.
+   * Landscape chat panel width in px; null until the user resizes, then
+   * re-clamped to the current screen at layout time.
    */
   landscapeChatWidth: number | null;
   /**
@@ -94,8 +91,7 @@ export interface Preferences {
    */
   customPlayerEnabled: boolean;
   /**
-   * Opt in to anonymous Firebase usage analytics. Off = analytics collection is
-   * disabled and no events are sent.
+   * Opt in to anonymous Firebase usage analytics.
    */
   analyticsEnabled: boolean;
   sharedChatEnabled: boolean;
@@ -108,9 +104,8 @@ let cachedPreferencesSchema: ReturnType<typeof buildPreferencesSchema> | null =
   null;
 
 /**
- * Built on first use (the iCloud import path) instead of at module scope -
- * constructing ~50 zod validators was part of every boot for a schema only
- * validation ever reads.
+ * Built on first use instead of at module scope - constructing ~50 zod
+ * validators was part of every boot for a schema only validation reads.
  */
 export function getPreferencesSchema() {
   cachedPreferencesSchema ??= buildPreferencesSchema();

@@ -16,9 +16,7 @@ export interface ChatDebugIrcLine {
 const MAX_DEBUG_IRC_LINES = 250;
 
 /**
- * Captures are scoped per channel so stacked stream screens cannot wipe or
- * pollute each other's buffer. Buffers key off the app channel id (what
- * `chatStore$.currentChannelId` holds) but inbound lines only carry the IRC
+ * Buffers key off the app channel id but inbound lines only carry the IRC
  * `#login`, so `channelIdsByLogin` bridges the two at record time.
  */
 const recorderCounts = new Map<string, number>();
@@ -100,11 +98,8 @@ export function getChatDebugIrcLines(channelId: string): ChatDebugIrcLine[] {
 }
 
 /**
- * User-typed text reaches a line in two places: the trailing parameter (the
- * message body) and tag values like reply-parent-msg-body. Tag values escape
- * raw ';' and space, so the tags token ends at the first space and real tags
- * always split on ';', which lets the login matchers anchor to real tag keys
- * and the sender prefix instead of user-typed lookalikes.
+ * Splitting lets the login matchers anchor to real tag keys and the sender
+ * prefix instead of user-typed lookalikes in the trailing text.
  */
 interface IrcLineParts {
   tags: string | null;

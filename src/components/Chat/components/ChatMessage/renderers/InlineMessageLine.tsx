@@ -50,11 +50,8 @@ export function InlineMessageLine({
 }: InlineMessageLineProps): ReactNode {
   const containsEmotes = getMessageStructure(message).containsEmotes;
   const textStyles = getChatTextStyles(fontScale, compact);
-  // TextKit sizes a wrapped line from the paragraph style carried by its
-  // character ranges, and every nested span sets its own lineHeight. The
-  // taller emote line height must therefore be applied to each nested span,
-  // not just the outer Text — otherwise rows whose first span is plain text
-  // (no badges) keep the body line and clip the emote attachment.
+  // TextKit sizes a wrapped line from its character ranges, so the taller
+  // emote line height must apply to each nested span or emotes clip.
   const emoteLineStyle = containsEmotes ? textStyles.bodyEmoteLine : undefined;
 
   return (

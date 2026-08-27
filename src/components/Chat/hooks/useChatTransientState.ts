@@ -140,9 +140,8 @@ export function useChatTransientState(channelId: string) {
   };
 
   /**
-   * Deliberately excludes `blockedTerms`: those are a persisted preference, so
-   * counting them would pin the tray open for good and Clear - which only
-   * resets transient state - could never dismiss it.
+   * Excludes `blockedTerms`: counting that persisted preference would pin the
+   * tray open for good, and Clear only resets transient state.
    */
   const hasActiveFilters = Boolean(
     transientHiddenPhrases.length ||

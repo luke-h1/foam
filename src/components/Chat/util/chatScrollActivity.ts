@@ -1,9 +1,7 @@
 import { createScrollActivity } from './createScrollActivity';
 
 /**
- * A single global signal the chat list pokes on every scroll tick. It marks the
- * list as actively scrolling and auto-settles after a short quiet window, so
- * animated emotes can stop decoding during a fling (the most CPU-contended
- * moment) and resume once it stops.
+ * A single global signal the chat list pokes on every scroll tick, so animated
+ * emotes can stop decoding during a fling and resume after a quiet window.
  */
 export const chatScrollActivity = createScrollActivity();

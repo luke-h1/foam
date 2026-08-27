@@ -1,7 +1,6 @@
 /**
- * Escape a value for an outbound IRCv3 tag (the inverse of `unescapeIrcTag`):
- * `\`→`\\`, `;`→`\:`, space→`\s`, CR→`\r`, LF→`\n`. Backslashes are escaped
- * first so the later passes never double-escape their own output.
+ * Escapes a value for an outbound IRCv3 tag (inverse of `unescapeIrcTag`);
+ * backslashes go first so later passes never double-escape their own output.
  */
 function escapeIrcTagValue(value: string): string {
   return value

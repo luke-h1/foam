@@ -24,10 +24,8 @@ interface UseChatMessagesOptions {
 }
 
 /**
- * React adapter over the ingest controller: the controller owns the state
- * machine (see `util/chatIngestController.ts`); this hook only pins its
- * lifetime to the component and keeps its dependency reads pointed at the
- * latest render's options.
+ * React adapter over the ingest controller: pins its lifetime to the
+ * component and keeps dependency reads pointed at the latest render's options.
  */
 export const useChatMessages = (
   options: UseChatMessagesOptions,

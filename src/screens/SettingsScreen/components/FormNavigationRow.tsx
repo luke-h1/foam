@@ -1,6 +1,4 @@
-// This file's shape usages are @expo/ui SwiftUI/Jetpack Compose API names
-// (clipShape, shapes, Shape, contentShape and their option/prop keys), not a
-// naming choice.
+// "shape" here is @expo/ui API naming (clipShape, contentShape), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import {
   Button,

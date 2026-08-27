@@ -4,14 +4,8 @@ import { subscribeEmoteCacheMemoryPressure } from './cache-service';
 import { useCachedEmotes } from './useCachedEmotes';
 
 /**
- * Owns the decode-once {@link import('./cache-service')} lifecycle for a channel:
- * warms the channel's common emotes into shared, size-capped ImageRefs and
- * releases them when the channel changes. Consumers render individual emotes
- * via {@link import('./useCachedEmote').useCachedEmote}.
- *
- * Unlike swm-photos (which eagerly optimises every gallery photo), chat warms a
- * bounded common set up front and lets the long tail decode lazily on first use,
- * because chat only ever shows the emotes that appear in messages.
+ * Owns the decode-once cache lifecycle for a channel: warms common emotes into
+ * shared ImageRefs, releases on channel change; the long tail decodes lazily.
  */
 export const CachedEmotesProvider = ({
   channelId,

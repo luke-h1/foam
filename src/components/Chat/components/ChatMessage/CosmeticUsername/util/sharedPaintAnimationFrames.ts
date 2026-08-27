@@ -114,10 +114,7 @@ function releaseEntry(url: string): void {
 
 /**
  * Frame stream for an animated paint texture, shared per URL so every row
- * using the same paint shows the same frame at the same time (one decode per
- * display frame instead of one per row). All subscribers run the frame
- * callback; the first to observe an elapsed frame advances the clock and the
- * rest see no elapsed time and skip.
+ * shows the same frame - one decode per display frame, not per row.
  */
 export function useSharedPaintAnimationFrame(
   url: string,

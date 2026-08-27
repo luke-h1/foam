@@ -1,5 +1,4 @@
-// This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
-// field (see types/seventv/cosmetics.ts), not a naming choice.
+// "shape" is the 7TV paint API field (types/seventv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import { makeMutable } from 'react-native-reanimated';
 
@@ -13,10 +12,8 @@ import { PaintedUsername } from '../PaintedUsername';
 import * as sharedPaintAnimationFrames from '../util/sharedPaintAnimationFrames';
 
 /**
- * The jest Skia mock resolves Data.fromURI, so a real texture entry reports
- * ready one microtask after mount. Pin the not-ready state instead - this
- * suite asserts the plain-colour fallback that shows before a texture
- * decodes.
+ * Pin not-ready: the jest Skia mock resolves Data.fromURI a microtask after
+ * mount, and this suite asserts the fallback shown before a texture decodes.
  */
 jest
   .spyOn(sharedPaintAnimationFrames, 'useSharedPaintAnimationFrame')

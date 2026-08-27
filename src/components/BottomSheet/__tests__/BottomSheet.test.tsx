@@ -33,14 +33,8 @@ const mockSheet: MockSheet = {
 };
 
 /**
- * `setupTests.ts` already stubs `@expo/ui/community/bottom-sheet` with a bare
- * passthrough; this test needs the fuller fake below (captured props, close
- * handle, dismiss capture), so it overrides that export directly.
- *
- * Pulled in via `require`, not `import * as`: a namespace import goes through
- * babel's ES-interop wrapper, which copies the mocked module onto a new
- * object - `jest.spyOn` would then patch that copy instead of the module
- * object `BottomSheet.native.tsx` actually reads `BottomSheet` off.
+ * `require`, not `import * as`: babel's ES-interop wrapper copies the mocked
+ * module, and jest.spyOn would patch the copy instead of what the component reads.
  */
 // SAFETY: `require` erases module typing; this reattaches the real
 // `@expo/ui/community/bottom-sheet` module type so `jest.spyOn` below type-checks.

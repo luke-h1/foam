@@ -1,13 +1,6 @@
 /**
- * Reports whether a login-required content-classification gate is blocking the
- * player. The anonymous mature gate is auto-dismissed by
- * `buildTwitchContentGateAcceptScript` (it clicks the continue button), but some
- * restricted content forces a "you must log in or create an account to continue"
- * gate that has no continue button - only login/create-account links. On the
- * custom player the WebView is normally non-interactive (foam draws its own
- * controls over it), so those links can't be tapped. Posting
- * `contentGateDetected { hasContentGate: true }` flips the WebView back to
- * interactive so the user can reach them, and `false` once the gate clears.
+ * Reports the login-required content gate: `contentGateDetected` flips the
+ * non-interactive WebView interactive so the gate's login links can be tapped.
  */
 export function buildTwitchContentGateWatcherScript(): string {
   return `

@@ -1,8 +1,6 @@
 /**
- * iOS-only picture-in-picture bridge for the embed's <video>. Exposes a
- * toggle (called from the native overlay button) that drives WKWebView's
- * webkitSetPresentationMode, and reports presentation-mode changes so the
- * native side can skip its background-pause while PiP is showing.
+ * iOS-only PiP bridge: drives webkitSetPresentationMode and reports mode
+ * changes so native can skip its background-pause while PiP is showing.
  */
 export function buildTwitchPipBridgeScript(): string {
   return `

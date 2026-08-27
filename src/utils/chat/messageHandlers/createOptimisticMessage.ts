@@ -8,10 +8,8 @@ import type {
 import { formatDate } from '@app/utils/date-time/date';
 
 /**
- * The local echo of a message the user just sent, rendered before IRC echoes
- * it back. `sentAt` doubles as the message id and nonce - the store keys off
- * that pair, and the real message arriving later carries Twitch's own id, so
- * the two never collide.
+ * Local echo of a just-sent message; `sentAt` doubles as id and nonce, and
+ * the real message carries Twitch's own id so the two never collide.
  */
 export function createOptimisticMessage({
   badges,

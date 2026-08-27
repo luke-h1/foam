@@ -39,9 +39,8 @@ export interface TwitchEmoteSource extends HostedEmoteSourceBase {
 }
 
 /**
- * 7TV encodes diverge from the hosted providers: the caller has already picked
- * the best file per kind (AVIF/webp preference, frame counts, dimensions), so
- * the urls and variants arrive resolved instead of as raw variant sets.
+ * 7TV urls and variants arrive resolved (best file per kind already picked)
+ * instead of as raw variant sets like the hosted providers.
  */
 export interface SevenTvEmoteSource {
   site: SevenTvSanitisedEmote['site'];
@@ -87,9 +86,8 @@ function buildHostedVariants(
 }
 
 /**
- * The single constructor for a domain `SanitisedEmote`. Returns `null` when
- * the source resolves no renderable url, so no provider can hand the render
- * path an emote it cannot load.
+ * The single constructor for a domain `SanitisedEmote`; returns `null` when
+ * the source resolves no renderable url.
  */
 export function buildSanitisedEmote(
   source: SevenTvEmoteSource,

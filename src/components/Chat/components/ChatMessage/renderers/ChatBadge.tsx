@@ -18,15 +18,8 @@ interface ChatBadgeProps {
 }
 
 /**
- * A badge is a handful of small, stable urls per channel, so it renders
- * straight off its url through expo-image's own memory+disk cache. It
- * deliberately does not go through the shared decoded-ImageRef cache the
- * emote path uses: that cache evicts under memory pressure and can drop a ref
- * out from under a mounted row, which for a badge reads as a permanent
- * transparent gap beside the username.
- *
- * A dead url collapses the whole slot - margin included - rather than the
- * artwork alone, so a badge we cannot draw leaves no hole in the row.
+ * Renders straight off the url, not the shared decoded-ImageRef cache: that
+ * cache evicts under pressure and a dropped ref reads as a permanent gap.
  */
 function ChatBadgeComponent({
   badge,

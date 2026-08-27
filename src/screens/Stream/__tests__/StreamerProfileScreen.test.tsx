@@ -13,8 +13,7 @@ import type { TwitchVideo } from '@app/types/twitch/video';
 
 jest.spyOn(useScrollToTopModule, 'useScrollToTop').mockImplementation(() => {});
 
-// SegmentedControl wraps the native @expo/ui control, which cannot receive
-// segment-change events in tests; expose each segment as a pressable instead.
+// The native @expo/ui SegmentedControl cannot receive segment-change events in tests; expose each segment as a pressable.
 jest
   .spyOn(SegmentedControlModule, 'SegmentedControl')
   .mockImplementation(({ items, onChange }) => {

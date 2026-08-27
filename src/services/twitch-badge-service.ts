@@ -20,9 +20,8 @@ interface TwitchBadge {
 }
 
 /**
- * A channel's badge sets are not limited to `bits` and `subscriber`: Twitch
- * also serves per-channel campaign sets (`campaign-<channelId>-<uuid>-mw`,
- * `-sub`) that a large share of a busy channel's chatters wear.
+ * Channel badge sets are not limited to `bits` and `subscriber`; Twitch also
+ * serves per-channel campaign sets that many chatters wear.
  */
 function channelBadgeType(
   setId: TwitchBadge['set_id'],

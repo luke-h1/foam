@@ -14,10 +14,7 @@ const fontScale = (value: number) =>
   isIpad ? Math.round(value * FONT_SCALE) : value;
 
 const alpha = (hex: string, opacityHex: string) => `${hex}${opacityHex}`;
-// Sky-blue accents as { light, dark }. The flat legacy `colorX` tokens below
-// read the dark value (they are consumed as plain strings); the full pair is
-// exposed via theme.color.accent / accentPress for call sites that resolve with
-// useColorScheme().
+// Flat legacy `colorX` tokens read the dark value; theme.color.accent / accentPress carries the { light, dark } pair.
 const primaryAccent = { light: '#1083FE', dark: '#2E86FF' } as const;
 const primaryAccentPress = { light: '#0A6CE0', dark: '#5AA1FF' } as const;
 
@@ -106,9 +103,7 @@ export const theme = {
   colorPrimary: semanticColorGroups.accent.accent,
   colorPrimaryAlpha: semanticColorGroups.accent.accentAlpha,
   /**
-   * Text-selection highlight. On Android `selectionColor` paints the highlight
-   * band behind the glyphs, so it has to stay translucent (0x66 = 40%) or the
-   * selected text is unreadable.
+   * Android paints `selectionColor` behind the glyphs, so keep it translucent (0x66 = 40%) or selected text is unreadable.
    */
   colorTextSelection: alpha(primaryAccent.dark, '66'),
   colorPrimaryHover: semanticColorGroups.accent.accentHover,
@@ -144,10 +139,7 @@ export const theme = {
   colorBorderTertiary: semanticColorGroups.gray.borderUi,
   colorSurfaceAlpha: semanticColorGroups.gray.uiAlpha,
 
-  // Sky-blue on slate. Every token is a { light, dark } pair, resolved at the
-  // call site with theme.color.X[useColorScheme() ?? 'dark'] — except the
-  // brand/notice/chatSample groups below, which are scheme-independent brand
-  // colours used as raw strings (e.g. theme.color.brand.twitch).
+  // Each token is a { light, dark } pair resolved with theme.color.X[useColorScheme() ?? 'dark'], except brand/notice/chatSample - scheme-independent raw strings.
   color: {
     reactBlue: {
       light: '#087EA4',
@@ -252,8 +244,7 @@ export const theme = {
       light: '#FFFFFF',
       dark: '#1C1C1E',
     },
-    // Neutral near-black menu surfaces (emote sheet) — off the blue-slate
-    // palette to read as a system menu. Dark-only raw strings.
+    // Near-black menu surfaces (emote sheet), off the blue-slate palette to read as a system menu; dark-only raw strings.
     menu: {
       background: '#0A0A0B',
       header: '#0E0E10',
@@ -363,8 +354,7 @@ export const theme = {
   dropShadow: {
     boxShadow: '0 24px 64px 0 rgba(0, 0, 0, 0.45)',
   },
-  // Elevation scale, each a { light, dark } boxShadow pair resolved at the call
-  // site with useColorScheme().
+  // Elevation scale; each a { light, dark } boxShadow pair resolved with useColorScheme().
   shadow: {
     sm: {
       light: '0 1px 2px rgba(16,30,50,0.06)',

@@ -11,8 +11,7 @@ export function getTransientState(
 }
 
 /**
- * Search is a momentary view, unlike hidden/highlighted users which are meant
- * to persist for the session. Without this, returning to a channel restores a
+ * Search is a momentary view; without this, returning to a channel restores a
  * filtered list with no visible cause.
  */
 export function resetTransientSearch(channelId: string): void {

@@ -6,15 +6,12 @@ import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 import { getPaintLayers } from './getPaintLayers';
 import { isRenderablePaintLayer } from './isRenderablePaintLayer';
 
-// Paint-pure derivation, memoised on the paint object like the other paint
-// caches. WeakMap-keyed so entries drop with the paint; no eviction needed.
+// Memoised on the paint object; WeakMap-keyed so entries drop with the paint.
 const solidColorCache = new WeakMap<PaintData, string | null>();
 
 /**
- * The one colour that stands in for a paint when its layer stack cannot be
- * drawn: the paint's own colour, else the mid-most opaque gradient stop of its
- * topmost renderable layer. Null when the paint has no colour of its own (a
- * bare texture), leaving the caller's fallback in place.
+ * The one colour that stands in when a paint's layer stack cannot be drawn;
+ * null for a bare texture, leaving the caller's fallback in place.
  */
 export function getPaintSolidColor(paint: PaintData): string | null {
   const cached = solidColorCache.get(paint);

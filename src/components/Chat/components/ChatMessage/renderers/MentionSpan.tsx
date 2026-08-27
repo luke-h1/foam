@@ -28,11 +28,8 @@ interface MentionSpanProps {
 }
 
 /**
- * A single @mention span. It subscribes to `mentionLoginRevision` itself so that
- * when a mention's canonical login/colour resolves from Helix, ONLY the visible
- * mention spans re-render - not every chat row. Keeping the revision out of the
- * list's `extraData` (which would re-render the whole window on every resolve)
- * is the difference between ~57fps and a flat 60fps in mention-heavy chat.
+ * A single @mention span; self-subscribes to `mentionLoginRevision` so a
+ * Helix resolve re-renders only visible mention spans, not every chat row.
  */
 function MentionSpanComponent({
   content,

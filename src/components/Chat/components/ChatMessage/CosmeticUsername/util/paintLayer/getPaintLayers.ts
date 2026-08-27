@@ -1,15 +1,11 @@
-// This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
-// field (see types/seventv/cosmetics.ts), not a naming choice.
+// "shape" is the 7TV paint API field (types/seventv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import { indexedCollectionToArray } from '@app/services/ws/util/indexedCollection';
 import type { PaintData, PaintLayerData } from '@app/types/seventv/cosmetics';
 
-// A paint is shared by paint_id across every user wearing it (mirroring the
-// 7TV extension, which builds one CSS rule per paint and reuses it for all
-// users). These derivations are pure functions of the paint, so memoise them
-// on the paint object - every painted row that shares a paint then reuses the
-// same computed layers/gradient configs instead of rebuilding them per render.
-// WeakMap-keyed so entries drop with the paint object; no eviction needed.
+// A paint is shared across every user wearing it (the extension builds one
+// CSS rule per paint), so memoise pure derivations on the paint object;
+// WeakMap-keyed so entries drop with the paint.
 const paintLayersCache = new WeakMap<PaintData, PaintLayerData[]>();
 
 export function getPaintLayers(paint: PaintData): PaintLayerData[] {

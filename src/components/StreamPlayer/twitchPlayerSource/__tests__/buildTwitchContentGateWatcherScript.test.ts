@@ -7,9 +7,8 @@ describe('buildTwitchContentGateWatcherScript', () => {
     expect(script).toContain(
       'var GATE_SELECTOR = \'[data-a-target*="content-classification-gate"]\'',
     );
-    // A gate blocks only when it has no auto-clickable continue button - i.e. it
-    // requires login - so the anonymous mature gate (auto-accepted elsewhere) is
-    // never reported as blocking.
+    // A gate blocks only when it has no auto-clickable continue button, so the
+    // anonymous mature gate is never reported as blocking.
     expect(script).toContain(
       '!gate.querySelector(\'button[data-a-target*="content-classification-gate"]\')',
     );
@@ -21,19 +20,16 @@ describe('buildTwitchContentGateWatcherScript', () => {
     expect(script).toContain('if (lastReported === hasGate) { return; }');
 
     /**
-     * Stays interactive across the whole login flow: tapping the gate's login
-     * link navigates off player.twitch.tv, and the WebView must stay tappable so
-     * the user can type/paste credentials.
+     * The login link navigates off player.twitch.tv, and the WebView must stay
+     * tappable so the user can type/paste credentials.
      */
     expect(script).toContain(
       "window.location.hostname.indexOf('player.twitch.tv') === -1",
     );
     expect(script).toContain('return isInAuthFlow() || isBlockingGate();');
     /**
-     * Tapping the login link removes the gate before window.location updates to
-     * the auth host, so a synchronous clear would disable the WebView just as the
-     * login form appears. Once interactive, the clear is deferred and re-checked
-     * so a pending navigation can settle before interaction is handed back.
+     * The gate disappears before window.location updates to the auth host, so
+     * the clear is deferred and re-checked instead of firing synchronously.
      */
     expect(script).toContain('if (lastReported === true) {');
     expect(script).toContain('clearTimer = setTimeout(function() {');

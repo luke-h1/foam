@@ -9,10 +9,8 @@ import {
 import { logger } from '@app/utils/logger';
 
 /**
- * Resolves and caches a user's 7TV cosmetics (paint + badge) into the chat
- * store when they are not already known — e.g. when opening a user card for
- * someone whose cosmetics never arrived over the 7TV websocket. The store is
- * observable, so consumers re-render once the data lands.
+ * Resolves and caches a user's 7TV cosmetics when unknown; the observable
+ * store re-renders consumers once data lands.
  */
 export function useEnsureSevenTvCosmetics(twitchUserId?: string) {
   useEffect(() => {

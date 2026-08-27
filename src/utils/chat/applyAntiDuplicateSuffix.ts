@@ -4,9 +4,8 @@ import { MAX_MESSAGE_LENGTH, messageLength } from './maxMessageLength';
 const INVISIBLE_SUFFIX = ' \u{E0000}';
 
 /**
- * Twitch silently drops a message identical to the sender's previous one within
- * ~30s, with no error back. `lastSent` is what actually went on the wire, so
- * repeats alternate between the plain and suffixed form and never collide.
+ * Twitch silently drops a message identical to the sender's previous one
+ * within ~30s; repeats alternate plain and suffixed form so they never collide.
  */
 export function applyAntiDuplicateSuffix(
   message: string,

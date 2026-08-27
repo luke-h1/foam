@@ -259,10 +259,8 @@ describe('loadChannelResources cache fallback', () => {
   });
 
   afterEach(() => {
-    // Scoped restore, not jest.restoreAllMocks(): the service methods above
-    // are spied at module scope for the whole file, and restoreAllMocks()
-    // would revert them to their real (network-calling) implementations for
-    // every later describe in this file too.
+    // Scoped restore: restoreAllMocks() would revert the module-scope spies
+    // to their real network-calling implementations for later describes.
     jest.spyOn(Date, 'now').mockRestore();
   });
 

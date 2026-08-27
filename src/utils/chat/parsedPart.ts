@@ -1,9 +1,6 @@
 import type { SanitisedEmote } from '@app/types/emote';
 
 export type TwitchNotices =
-  /**
-   * Twitch notices
-   */
   | 'viewermilestone'
   | 'sub'
   | 'resub'
@@ -22,33 +19,15 @@ export type TwitchNotices =
   | 'sharedchatnotice';
 
 export type PartVariant =
-  /**
-   * Plain text
-   */
   | 'text'
   /**
    * Emoji i.e. a normal unicode emoji 🚀
    */
   | 'emote'
-  /**
-   * Mention i.e. @username
-   */
   | 'mention'
-  /**
-   * stv emote
-   */
   | 'stvEmote'
-  /**
-   * Twitch clip
-   */
   | 'twitchClip'
-  /**
-   * Generic http(s) URL
-   */
   | 'link'
-  /**
-   * Notice event
-   */
   | 'notice'
   /**
    * Bits cheer token, e.g. Cheer100
@@ -247,9 +226,8 @@ export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
                               zero_width?: boolean;
 
                               /**
-                               * Zero-width emotes stacked over this emote;
-                               * rendered centered on top of it instead of as
-                               * standalone parts.
+                               * Zero-width emotes rendered centered on top of
+                               * this emote instead of as standalone parts.
                                */
                               overlaid?: ParsedPart<'emote'>[];
 

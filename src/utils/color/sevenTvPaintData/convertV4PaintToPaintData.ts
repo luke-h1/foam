@@ -1,5 +1,4 @@
-// This file's `shape` usages are GraphQL-codegen names from the 7TV schema
-// (PaintRadialGradientShape, V4Paint's ty.shape), not a naming choice.
+// `shape` is a GraphQL-codegen name from the 7TV schema, not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import { PaintRadialGradientShape } from '@app/graphql/generated/gql';
 import { IndexedCollection } from '@app/services/ws/util/indexedCollection';
@@ -85,9 +84,8 @@ export const convertV4PaintToPaintData = (
   paint: SevenTvPaintSource,
 ): PaintData => {
   /**
-   * v4 lists layers bottom-to-top (the website stacks them as sibling spans,
-   * later siblings painting on top); `PaintData.layers` keeps the CSS
-   * `background-image` convention of first-is-topmost, so reverse here.
+   * v4 lists layers bottom-to-top; `PaintData.layers` keeps the CSS
+   * first-is-topmost convention, so reverse here.
    */
   const gradients = paint.data.layers
     .map(convertV4Layer)

@@ -13,9 +13,8 @@ import { buildTwitchPipBridgeScript } from './buildTwitchPipBridgeScript';
 import { buildTwitchPlayerStateScript } from './buildTwitchPlayerStateScript';
 
 /**
- * Rewrites `window.open` to an in-page navigation so the Twitch login popup
- * that the embed's own auth flow opens lands in the same WebView, then
- * detects the page Twitch redirects to on successful auth.
+ * Rewrites `window.open` so the Twitch login popup lands in the same WebView,
+ * then detects the page Twitch redirects to on successful auth.
  */
 export function buildTwitchAuthHelperScript(): string {
   return TWITCH_AUTH_HELPER_SCRIPT;
@@ -61,9 +60,8 @@ true;
 `;
 
 /**
- * Polls the VOD <video> element's position and reports it to native so the
- * last-known offset survives a WebView reload. The stock player owns the
- * scrubber; we only observe, so this never fights the user's own seeks.
+ * Polls the VOD <video> position and reports it to native so the last-known
+ * offset survives a WebView reload; observe-only, never fights user seeks.
  */
 const VOD_PROGRESS_TRACKER_SCRIPT = `
 (() => {
@@ -88,16 +86,8 @@ true;
 `;
 
 /**
- * Assembles the scripts injected into the Twitch embed WebView after content
- * loads. The stock player.twitch.tv page runs unscripted: Twitch's own UI
- * handles playback, so the playerControls bootstrap is not injected and the
- * bridge (ready/playing/pause messages, native controls overlay) stays
- * dormant. We auto-accept the mature-content gate, hide the text track
- * ('hidden', not 'disabled', which would stall WKWebView's native HLS
- * AVPlayer), and - when autoplaying - nudge the video into unmuted playback
- * since Twitch's embed otherwise tends to land paused/muted. The player's own
- * chrome is hidden only when foam is drawing its own overlay controls over
- * the video.
+ * Scripts injected after content loads. Text tracks are set 'hidden', not
+ * 'disabled', which stalls WKWebView's native HLS AVPlayer.
  */
 export function buildStreamPlayerInjectedJavaScript({
   autoplay,
@@ -115,9 +105,8 @@ export function buildStreamPlayerInjectedJavaScript({
   return (
     TWITCH_AUTH_HELPER_SCRIPT +
     '\n' +
-    // Detect Twitch's "this embed is misconfigured" error page (bad parent) on
-    // every player kind so a broken embed reports to Sentry instead of only
-    // timing out.
+    // Bad-parent "embed is misconfigured" pages report to Sentry instead of
+    // only timing out.
     buildTwitchEmbedErrorWatcherScript() +
     '\n' +
     buildTwitchContentGateAcceptScript() +

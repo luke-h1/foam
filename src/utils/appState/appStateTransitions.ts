@@ -42,10 +42,8 @@ function handleAppStateChange(nextState: AppStateStatus): void {
 }
 
 /**
- * True when the app returns to `active` from `background` or `inactive`.
- * On iOS, `inactive` also fires for transient interruptions (app switcher,
- * notification shade, Face ID) that never reach `background`, so an
- * `inactive` to `active` transition still counts as coming to the foreground.
+ * True when the app returns to `active`; iOS fires `inactive` for transient
+ * interruptions that never reach `background`, so that path counts too.
  */
 export function isForegroundTransition(
   transition: AppStateTransition,
@@ -57,10 +55,8 @@ export function isForegroundTransition(
 }
 
 /**
- * Subscribes to app-state changes, delivering both the previous and the
- * current state. All subscribers share a single `AppState` listener; it is
- * attached on the first subscribe and removed when the last subscriber
- * unsubscribes.
+ * All subscribers share one `AppState` listener, attached on the first
+ * subscribe and removed with the last unsubscribe.
  */
 export function subscribeToAppStateTransitions(
   listener: AppStateTransitionListener,

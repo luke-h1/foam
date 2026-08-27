@@ -34,10 +34,8 @@ export type HandleNewMessageOptions = {
 };
 
 /**
- * Everything the ingest controller must know about the world outside it.
- * All readers are getters so the controller always sees current values;
- * the React adapter points them at refs it refreshes per render, and a
- * headless test points them at plain variables.
+ * All readers are getters so the controller always sees current values; the
+ * React adapter points them at refs, tests at plain variables.
  */
 export interface ChatIngestControllerDeps {
   /**
@@ -67,11 +65,8 @@ function publishBufferedMessages(messages: BufferedMessage[]) {
 }
 
 /**
- * The chat ingest state machine: buffer, delay queue, flush cadence, raid
- * latch, backpressure and unread accounting, moderation coherence across the
- * three holding areas. Plain factory with no React - the `useChatMessages`
- * adapter owns its lifecycle in the component tree, and jest can drive a raw
- * line all the way into the real store with fake timers.
+ * Chat ingest state machine; plain factory with no React so the adapter owns
+ * its lifecycle and jest can drive it with fake timers.
  */
 export function createChatIngestController(deps: ChatIngestControllerDeps) {
   const buffer = createMessageBuffer(() => INGEST_BUFFER_CAPACITY);
@@ -84,8 +79,8 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
   // Set when a flush sees a raid-sized batch; slows the next live flush cadence.
   let raidFlushMode = false;
   /**
-   * Arrivals since the last flush. Must be the arrival count, not the buffer
-   * size - the cap leaves a backlog behind, which would latch raid mode on.
+   * Arrival count, not buffer size - the cap leaves a backlog, which would
+   * latch raid mode on.
    */
   let arrivalsSinceFlush = 0;
 
@@ -113,14 +108,11 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
 
   const flushBuffer = () => {
     if (isFlushing) {
-      // Re-entered from inside a flush, because publishing fed a message
-      // straight back in. The drain already under way covers it, so leave any
-      // armed timer alone rather than dropping its handle.
+      // Re-entered from inside a flush (publishing fed a message back in); the drain under way covers it.
       return;
     }
 
-    // Clearing (not just forgetting) matters on the direct-call path: a timer
-    // armed for this same flush would otherwise stay pending and re-run it.
+    // Clear, not just forget - a timer armed for this same flush would stay pending and re-run it.
     if (flushTimer) {
       clearTimeout(flushTimer);
       flushTimer = null;
@@ -166,8 +158,8 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
     }
 
     /**
-     * Rows the per-flush cap held back; without re-arming they would wait on
-     * the next incoming message, which stalls the tail end of a burst.
+     * Re-arm for rows the cap held back, or they wait on the next incoming
+     * message and stall the tail of a burst.
      */
     if (buffer.size() > 0) {
       startFlushTimer(
@@ -187,8 +179,7 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
     }
   };
 
-  // Commit one message into the render buffer + run unread/flush bookkeeping
-  // (shared by the direct and delayed-release paths).
+  // Shared by the direct and delayed-release paths.
   const ingestMessage = (message: BufferedMessage, countUnread?: boolean) => {
     const { added, dropped } = buffer.add(message);
     if (!added) {
@@ -283,8 +274,7 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
     scheduleDelayTick();
   };
 
-  // On delay-setting change: drain everything held if delay is off, else
-  // ensure a tick is pending.
+  // On delay-setting change: drain held messages if delay is off, else ensure a tick is pending.
   const reconcileChatDelay = () => {
     const effectiveDelayMs = deps.getChatDelayMs();
     if (!Number.isFinite(effectiveDelayMs) || effectiveDelayMs <= 0) {

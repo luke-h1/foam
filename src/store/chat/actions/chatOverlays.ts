@@ -12,9 +12,8 @@ import type {
 } from '@app/store/chat/types/chatPressData';
 
 /**
- * Opening an overlay closes whatever else was open: only one chat sheet is
- * ever on screen, and a stale selection behind a new one leaks back when the
- * new one dismisses.
+ * Opening an overlay closes whatever else was open - a stale selection behind
+ * a new sheet leaks back when the new one dismisses.
  */
 function replaceOverlay(channelId: string, patch: Partial<ChatOverlayState>) {
   chatOverlays$.set({

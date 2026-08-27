@@ -1,7 +1,6 @@
 /**
- * Seeks a live stream's playhead to the live edge to trim client-side latency.
- * Runs once at start and exposes `window.__foamSyncToLive()` for on-demand
- * re-triggers.
+ * Seeks a live stream's playhead to the live edge; runs once at start and
+ * exposes `window.__foamSyncToLive()` for on-demand re-triggers.
  */
 export function buildTwitchLiveSyncScript(options: {
   targetSeconds?: number;

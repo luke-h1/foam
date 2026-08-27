@@ -6,10 +6,8 @@ let cached: DeviceTier | null = null;
 let cachedTotalMemoryBytes: number | null = null;
 
 /**
- * Total physical RAM of the device in bytes (0 when unavailable, e.g. web or a
- * failed native call). Cached after the first read since it never changes for
- * the process. Used to scale image-memory budgets to the device instead of
- * hard-coding a single ceiling for every phone.
+ * Total physical RAM in bytes (0 when unavailable); used to scale
+ * image-memory budgets to the device.
  */
 export function getTotalDeviceMemoryBytes(): number {
   if (cachedTotalMemoryBytes !== null) {

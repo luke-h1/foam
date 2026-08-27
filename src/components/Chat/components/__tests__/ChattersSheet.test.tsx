@@ -15,10 +15,8 @@ import {
 } from '../ChattersSheet/ChattersSheet';
 
 /**
- * The real Input renders @expo/ui's SwiftUI TextField on iOS, which needs a
- * native worklet runtime that isn't available under react-test-renderer.
- * Render the host 'TextInput' element directly - testing-library's
- * getByPlaceholderText only recognises that literal host type name.
+ * The real Input needs a native worklet runtime; render the host 'TextInput'
+ * directly - getByPlaceholderText only recognises that literal host type name.
  */
 jest
   .spyOn(InputModule, 'Input')

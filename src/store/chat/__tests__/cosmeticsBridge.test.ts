@@ -1,6 +1,4 @@
-// This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
-// field (see types/seventv/cosmetics.ts), not a naming choice.
-// oxlint-disable anti-slop/no-shape-in-symbol-names
+// oxlint-disable anti-slop/no-shape-in-symbol-names -- mirrors the 7TV paint API shape field (types/seventv/cosmetics.ts)
 import * as cosmetics from '@app/store/chat/actions/cosmetics';
 import {
   addBadge,
@@ -432,10 +430,8 @@ describe('applyEntitlementDeleteEvent', () => {
     expect(mockRemoveUserBadge).not.toHaveBeenCalled();
   });
 
-  // Insert one entitlement past the cap so exactly the first-inserted link
-  // (entitlement-0) is evicted while entitlement-1 becomes the boundary
-  // survivor. Deriving the loop bound from the cap keeps the boundary indices
-  // in step with the source constant.
+  // One entitlement past the cap evicts exactly entitlement-0; deriving the
+  // bound from the cap keeps the boundary indices in step with the constant.
   const OVER_CAP_INDEX = MAX_SEVEN_TV_USER_LINK_ENTRIES;
   const EVICTED_ENTITLEMENT_INDEX = 0;
   const BOUNDARY_SURVIVOR_INDEX = 1;

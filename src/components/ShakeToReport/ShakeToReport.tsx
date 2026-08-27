@@ -11,9 +11,8 @@ const SHAKE_COOLDOWN_MS = 30_000;
 const isE2E = process.env.EXPO_PUBLIC_APP_VARIANT === 'e2e';
 
 /**
- * Opens the custom feedback screen when the user shakes their device,
- * so bugs can be reported from anywhere without hunting through
- * settings. Toggled via the shakeToReport preference.
+ * Opens the feedback screen on device shake; toggled via the shakeToReport
+ * preference.
  */
 export function ShakeToReport() {
   const shakeToReport = usePreference('shakeToReport');

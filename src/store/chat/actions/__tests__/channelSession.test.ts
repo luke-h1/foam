@@ -17,9 +17,8 @@ const allResets = {
     .spyOn(channelLoad, 'clearChannelResources')
     .mockImplementation(() => {}),
   /**
-   * channelLoad re-exports this from personalEmotes, and babel's CJS
-   * re-export getter is non-configurable, so the spy has to sit on the
-   * originating module for channelLoad's getter to pick it up.
+   * babel's CJS re-export getter is non-configurable, so the spy has to sit
+   * on the originating module for channelLoad's getter to pick it up.
    */
   clearPersonalEmotesCache: jest
     .spyOn(personalEmotes, 'clearPersonalEmotesCache')

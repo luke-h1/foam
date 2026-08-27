@@ -1,10 +1,6 @@
 /**
- * Hides Twitch's auto-enabled closed captions on the stock (unscripted) player
- * page. Sets the first text track to 'hidden' rather than 'disabled':
- * 'disabled' makes WKWebView's native HLS AVPlayer drop and renegotiate the
- * rendition, which stalls/starves playback. 'hidden' keeps the track loaded but
- * unrendered, and deliberately touches no ::-webkit-media-text-track CSS. The
- * playing/pause listeners re-apply it because Twitch re-enables CC across ads.
+ * Hides Twitch's auto-enabled captions with 'hidden', never 'disabled':
+ * 'disabled' makes WKWebView's native HLS AVPlayer renegotiate and stall.
  */
 export function buildTwitchCaptionHiderScript(): string {
   return `

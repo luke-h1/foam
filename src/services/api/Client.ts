@@ -62,10 +62,8 @@ interface ClientOptions {
   headers?: Record<string, string>;
   logPrefix?: AllowedPrefix;
   /**
-   * Per-request timeout in milliseconds. Foam depends on third-party emote and
-   * cosmetic services (7TV, BTTV, FFZ, StreamElements) that can stall without
-   * closing the connection; without a bound a hung request never rejects, so
-   * react-query's `retry` never fires and the query stays pending forever.
+   * Per-request timeout in ms; unbounded, a hung request never rejects and
+   * the query stays pending forever.
    */
   timeout?: number;
   /**
@@ -74,9 +72,8 @@ interface ClientOptions {
    */
   requiresAuth?: boolean;
   /**
-   * Called once with the error body when a request returns 401. Return true to
-   * indicate the auth state was repaired (e.g. a stale header re-synced) so the
-   * request is replayed once; false surfaces the original error.
+   * Called once with the error body on a 401; return true if the auth state
+   * was repaired so the request replays once.
    */
   onUnauthorized?: (body: string) => Promise<boolean>;
 }
@@ -164,10 +161,7 @@ export function createApiClient({
       await waitForAuthToken();
     }
 
-    // Merge case-insensitively: HTTP header names are case-insensitive, so a
-    // per-request 'Client-Id' must replace a default 'Client-ID' rather than
-    // coexist with it (fetch would combine them into "X, X" and Twitch
-    // rejects the request).
+    // Merge case-insensitively: a per-request 'Client-Id' must replace a default 'Client-ID', or fetch combines them into "X, X" and Twitch rejects.
     const headers: Record<string, string> = {};
     headers.Accept = 'application/json';
     Object.assign(headers, defaultHeaders);
@@ -276,9 +270,7 @@ export function createApiClient({
         }
       }
 
-      // FFZ returns 404 "No such room" for channels that have never configured
-      // FFZ; it's a benign empty result the caller handles, so don't log it (and
-      // don't forward it to Sentry).
+      // FFZ 404s "No such room" for channels that never configured FFZ - benign, don't log.
       const isExpectedFfzNoRoom =
         service === 'ffz' &&
         response.status === 404 &&

@@ -2,12 +2,7 @@ import { onlineManager } from '@tanstack/react-query';
 import * as Network from 'expo-network';
 
 /**
- * Registers react-query's online status listener with expo-network so queries
- * auto-refetch when connectivity returns.
- *
- * `onlineManager.setEventListener` returns void and stores the setup cleanup
- * internally, so this runs once at module load (same pattern as
- * `focusManager.setEventListener` in query-provider).
+ * Wires react-query's online status to expo-network so queries auto-refetch when connectivity returns. Runs once at module load - `onlineManager.setEventListener` stores its cleanup internally (same pattern as focusManager in query-provider).
  *
  * @see https://tanstack.com/query/latest/docs/framework/react/react-native#online-status-management
  */

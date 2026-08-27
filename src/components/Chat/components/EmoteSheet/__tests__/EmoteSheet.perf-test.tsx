@@ -57,16 +57,13 @@ type MockLegendListProps = {
 const MOCK_VIEWPORT_HEIGHT = 680;
 
 /**
- * The real LegendList is a forwardRef object, which the module's type
- * declarations expose as an exotic component rather than a plain function,
- * so the bridge below narrows through `never` to reach a spyable function.
+ * LegendList is a forwardRef exotic component; the bridge narrows through
+ * `never` to reach a spyable plain-function shape.
  */
 type MockableLegendListModule = {
   LegendList: (props: MockLegendListProps) => ReactNode;
 };
-// SAFETY: the real LegendList is the forwardRef exotic component described
-// above; `never` is the only type TS accepts as a bridge to the plain
-// function shape MockableLegendListModule.
+// SAFETY: `never` is the only bridge TS accepts from the exotic component to the plain function shape.
 const mockableLegendList: MockableLegendListModule =
   LegendListReactNative as never;
 
@@ -104,9 +101,8 @@ jest.spyOn(mockableLegendList, 'LegendList').mockImplementation(props => {
   );
 });
 
-// The iOS Input binds a SwiftUI TextField through native shared objects that
-// don't exist under jest; the search box isn't part of what this file
-// measures, so swap it for a plain TextInput.
+// The iOS Input binds a SwiftUI TextField via native objects absent under
+// jest; the search box isn't measured here, so use a plain TextInput.
 jest
   .spyOn(InputModule, 'Input')
   .mockImplementation(
@@ -155,9 +151,8 @@ for (let owner = 0; owner < 6; owner += 1) {
   };
 }
 
-// A busy channel: ~2,600 emotes across every provider, 7TV split over three
-// sets and subscriber emotes over six channels — the population the sheet's
-// open-path build has to chew through on a real popular stream.
+// A busy channel: ~2,600 emotes across every provider, 7TV over three sets,
+// subscriber emotes over six channels - a real popular stream's population.
 const menuInput: EmoteMenuDataInput = {
   sevenTvChannelEmotes: createEmotes(1200, '7TV Channel', 'stvc', index => {
     const set = SEVENTV_CHANNEL_SETS[index % SEVENTV_CHANNEL_SETS.length]!;
@@ -268,10 +263,8 @@ describe('emote menu performance', () => {
   test('mounts the emote sheet and builds its content', async () => {
     await measureRenders(<EmoteSheetPerfFixture />, {
       ...MEASURE_OPTIONS,
-      // The provider build is rAF-deferred behind the contentReady flag, so
-      // mount alone only renders the spinner; waiting for the provider chips
-      // pulls the deferred O(all emotes) build + first list render into the
-      // measurement.
+      // The build is rAF-deferred behind contentReady, so mount alone renders
+      // the spinner; waiting for the chips pulls the deferred build + first list render into the measurement.
       scenario: async screen => {
         await screen.findByText('7TV');
       },

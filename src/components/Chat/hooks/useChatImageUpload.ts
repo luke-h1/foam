@@ -7,9 +7,8 @@ import { kappaService } from '@app/services/kappa-service';
 import { logger } from '@app/utils/logger';
 
 /**
- * Lets the user pick an image from their library, uploads it to kappa.lol,
- * and hands the resulting public URL back so it can be inserted into the
- * chat composer.
+ * Picks a library image, uploads it to kappa.lol, and hands the public URL
+ * back for the chat composer.
  */
 export function useChatImageUpload(onUploaded: (url: string) => void) {
   const [isUploading, setIsUploading] = useState(false);

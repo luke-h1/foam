@@ -212,12 +212,8 @@ export const sevenTvService = {
     '',
 
   /**
-   * Shares the cached `userByConnection` lookup with `get7tvUserId`, so the
-   * WebSocket's owner lookup and this cost one request per channel.
-   *
-   * Throws when the lookup fails or the channel has no 7TV account, matching
-   * what the v3 endpoint did by 404ing - `channelLoad` catches it and falls
-   * back to the cached set id or the global one.
+   * Shares the cached userByConnection lookup with get7tvUserId. Throws when
+   * the channel has no 7TV account; channelLoad catches it and falls back.
    */
   getEmoteSetId: async (twitchUserId: string): Promise<string> => {
     const user = await sevenTvUserCache.resolve(
@@ -320,12 +316,8 @@ export const sevenTvService = {
   },
 
   /**
-   * Bulk EventAPI bridge lookup. Identifiers must be Twitch logins as
-   * `username:<login>`; numeric `id:` identifiers are rejected by the API.
-   *
-   * The live endpoint only synthesises `cosmetic.create` AVATAR dispatches for
-   * users with an active profile picture. It does not replay paint, badge, or
-   * entitlement events, so this cannot backfill chat cosmetics.
+   * Bulk EventAPI bridge lookup; identifiers must be `username:<login>` (the
+   * API rejects `id:`). Only synthesises AVATAR dispatches.
    */
   fetchBridgedCosmetics: async (
     twitchLogins: string[],
@@ -341,12 +333,8 @@ export const sevenTvService = {
   },
 
   /**
-   * Write a presence for the user in a channel.
-   *
-   * Passive presence (with the EventAPI session id) makes 7TV push the user's
-   * own entitlements to just that session. Active presence (passive: false)
-   * makes 7TV broadcast the user's entitlements to every client subscribed to
-   * the channel, which is how other viewers see this user's cosmetics.
+   * Passive presence pushes entitlements to just this session; active
+   * (passive: false) broadcasts them so other viewers see the cosmetics.
    */
   sendPresence: async (
     channelId: string,
@@ -356,9 +344,7 @@ export const sevenTvService = {
     return sevenTvApi.post(`/users/${userId}/presences`, {
       kind: 1,
       passive: options.passive,
-      // Coalesce so a missing EventAPI session still serialises the field;
-      // JSON.stringify drops undefined and 7TV expects session_id on
-      // passive presence.
+      // JSON.stringify drops undefined and 7TV expects session_id on passive presence.
       session_id: options.passive ? (options.sessionId ?? '') : undefined,
       data: {
         platform: 'TWITCH',

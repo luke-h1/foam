@@ -27,11 +27,8 @@ let userSheetProps: CapturedUserSheetProps | undefined;
 let messageSheetProps: CapturedMessageSheetProps | undefined;
 
 /**
- * `UserActionSheet` and `ActionSheet` are `memo()`-wrapped, so they're
- * objects rather than plain functions and `jest.spyOn` refuses to patch them
- * ("not a function"). Redefine the exports directly instead. The sheets
- * present natively; this test is about which login each moderation action
- * targets, so capture their callbacks rather than driving the UI.
+ * Both sheets are memo()-wrapped, so spyOn refuses to patch them; redefine
+ * the exports and capture callbacks rather than driving the UI.
  */
 Object.defineProperty(userActionSheetModule, 'UserActionSheet', {
   configurable: true,

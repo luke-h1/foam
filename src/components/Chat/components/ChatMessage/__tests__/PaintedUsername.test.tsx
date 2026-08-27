@@ -1,5 +1,4 @@
-// This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
-// field (see types/seventv/cosmetics.ts), not a naming choice.
+// "shape" is the 7TV paint API field (types/seventv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import { StyleSheet } from 'react-native';
 import { makeMutable } from 'react-native-reanimated';
@@ -19,8 +18,8 @@ import { PaintLayerTiledImage } from '../CosmeticUsername/PaintLayerTiledImage';
 import * as sharedPaintAnimationFrames from '../CosmeticUsername/util/sharedPaintAnimationFrames';
 
 /**
- * expo-image's `Image` is a forwardRef object, not a plain function, so
- * jest.spyOn cannot wrap it - swap the export directly instead.
+ * expo-image's `Image` is a forwardRef object, so jest.spyOn cannot wrap it -
+ * swap the export directly.
  */
 Object.defineProperty(ExpoImage, 'Image', {
   configurable: true,
@@ -32,9 +31,8 @@ Object.defineProperty(ExpoImage, 'Image', {
 });
 
 /**
- * This suite asserts what a URL paint renders once its texture is available,
- * so pin the ready state - the async Data.fromURI resolution in the jest
- * Skia mock would otherwise land after the assertions run.
+ * Pin the texture-ready state - the jest Skia mock's async Data.fromURI would
+ * otherwise resolve after the assertions run.
  */
 jest
   .spyOn(sharedPaintAnimationFrames, 'useSharedPaintAnimationFrame')
@@ -43,9 +41,6 @@ jest
   .spyOn(sharedPaintAnimationFrames, 'useSharedPaintAnimationReady')
   .mockReturnValue(true);
 
-/**
- * Helper to convert RGBA values to 7TV packed color format
- */
 function rgbaToSevenTvColor(
   r: number,
   g: number,
@@ -73,12 +68,8 @@ const createPaintData = (overrides: Partial<PaintData> = {}): PaintData => ({
 });
 
 /**
- * The username is rendered several times in the painted tree (the in-flow
- * solid base, the mask glyph, the hidden fill sizer, and any shadow layers).
- * The one the viewer actually sees as the base colour is the in-flow solid
- * Text: it carries `expectedColor` and is not the opacity:0 sizer. Asserting
- * on it verifies the paint's base colour resolved correctly, not merely that
- * the username string rendered somewhere.
+ * The username renders several times in the painted tree; the one the viewer
+ * sees is the in-flow solid Text with `expectedColor` and opacity !== 0.
  */
 const hasVisibleUsernameInColor = (
   nodes: ReturnType<ReturnType<typeof render>['getAllByText']>,
@@ -393,10 +384,8 @@ describe('PaintedUsername', () => {
   });
 
   describe('Angle Handling', () => {
-    // NOTE: exact gradient angle->coordinate math is asserted at the unit level
-    // in the paintLayer helper tests. Here we only guard that every angle keeps
-    // the paint on the masked-gradient render path (a NaN/throw in the angle
-    // math would collapse it to the plain-text fallback, dropping masked-view).
+    // Exact angle math is unit-tested in the paintLayer helpers; here only
+    // guard that every angle stays on the masked render path.
     test.each([0, 45, 90, 135, 180, 225, 270, 315])(
       'keeps the masked gradient render path at %d degrees',
       angle => {
@@ -471,7 +460,6 @@ describe('PaintedUsername', () => {
         />,
       );
 
-      // The explicit paint prop wins, so the masked painted fill renders.
       expect(getByTestId('masked-view')).toBeOnTheScreen();
     });
   });
@@ -564,10 +552,8 @@ describe('PaintedUsername', () => {
     });
 
     test('keeps a visible solid-colour username behind the mask when idle', () => {
-      // The MaskedView paints the gradient over an in-flow solid username. If
-      // that offscreen pass drops out on a settling row, the solid username must
-      // still be visible - otherwise the row reserves its space but renders a
-      // blank gap where the name should be. Guard the fallback stays opaque.
+      // If the MaskedView offscreen pass drops out, the in-flow solid
+      // username must stay visible or the row renders a blank gap.
       const fallbackColor = '#1AC9A2';
 
       const { getAllByText } = render(

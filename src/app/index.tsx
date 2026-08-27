@@ -15,8 +15,7 @@ export default function IndexRoute() {
   const { authState, ready } = useAuthContext();
   const hasSeenOnboarding = storage.getBoolean(ONBOARDING_SEEN_KEY);
 
-  // E2E builds wipe app data on every launch, so onboarding would otherwise
-  // gate every test behind its intro screen.
+  // E2E builds wipe app data every launch; onboarding would gate every test behind the intro screen.
   if (!hasSeenOnboarding && !isE2EMode) {
     return <Redirect href='/onboarding' />;
   }

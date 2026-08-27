@@ -1,5 +1,4 @@
-// This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
-// field (see types/seventv/cosmetics.ts), not a naming choice.
+// "shape" is the 7TV paint API field (types/seventv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import { AppState, Platform } from 'react-native';
 
@@ -179,10 +178,8 @@ function layerShader(layer: PaintLayerData, rect: LayerRect): SkShader | null {
 }
 
 /**
- * Skia decodes WebP (still and animated) reliably but not AVIF, and
- * `pickBestImage` prefers AVIF for static image layers, so swap 7TV CDN AVIF
- * layer urls to their WebP sibling (same path, always served). Animated layers
- * already resolve to WebP, so this only rescues static ones.
+ * Skia decodes WebP but not AVIF, so swap 7TV CDN AVIF layer urls to their
+ * WebP sibling (same path, always served).
  */
 function skiaDecodableLayerUrl(url: string): string {
   return url.replace(
@@ -210,9 +207,8 @@ interface PaintUsernameLayout {
 }
 
 /**
- * SkParagraph excludes trailing breakable spaces from getLongestLine(), which
- * would glue the painted name to the message text; NBSP keeps the trailing
- * gap a plain <Text> username renders.
+ * SkParagraph's getLongestLine() drops trailing breakable spaces, gluing the
+ * name to the message text; NBSP keeps the gap.
  */
 function keepTrailingSpaces(text: string): string {
   return text.replace(/ +$/, match => '\u00A0'.repeat(match.length));
@@ -443,10 +439,8 @@ function drawPaintedUsername(
   }
 
   /**
-   * -webkit-text-stroke paints over the fill (WebKit's default paint order),
-   * centred on the glyph outline, so a centred Skia stroke of the same width
-   * drawn last reproduces it, and staying inside the drop-shadow layer keeps
-   * the stroke part of the shadow silhouette.
+   * WebKit paints -webkit-text-stroke centred over the fill; drawing inside
+   * the drop-shadow layer keeps the stroke in the shadow silhouette.
    */
   if (options.includeStroke && layout.stroke) {
     const strokePaint = Skia.Paint();
@@ -495,18 +489,15 @@ export interface PaintImageLayer {
 }
 
 /**
- * One step of the live composite after the foundation bitmap. Gradients that
- * sit above a URL layer must bake into their own slot so they paint after the
- * live texture; stroke is a separate top slot so URL overlays cannot hide it.
+ * One live-composite step after the foundation bitmap. Gradients above a URL
+ * layer bake into their own slot so they paint after the live texture.
  */
 export type PaintLayerSlot =
   { kind: 'url'; layer: PaintImageLayer } | { kind: 'baked'; image: SkImage };
 
 /**
- * The bottom-most opaque URL span already sits on the foundation's base
- * fill; only spans above other slots, or faded ones, need the shared
- * base-colour backing. Shared by the bitmap builder and the live compositor
- * so they cannot disagree about when a backing exists.
+ * Only spans above other slots, or faded ones, need the base-colour backing;
+ * shared with the live compositor so the two cannot disagree.
  */
 export function urlSlotNeedsBacking(
   index: number,
@@ -516,30 +507,21 @@ export function urlSlotNeedsBacking(
 }
 
 /**
- * Cache-friendly render inputs for a painted username. `staticImage` is the
- * foundation (drop shadows, text-shadows, base fill). When the paint has URL
- * layers, `layerSlots` holds back-to-front URL overlays and baked gradient
- * runs so CSS stacking order is preserved, and `strokeImage` paints the
- * -webkit-text-stroke above every layer. Without URL layers, gradients and
- * stroke stay inside `staticImage` and the slot/stroke fields are empty.
- *
- * All sizes are logical points. Bitmaps are baked at device pixels and drawn
- * into the logical box, so they stay crisp on retina.
+ * Render inputs for a painted username; `layerSlots` keeps CSS stacking for
+ * URL layers. Sizes are logical points; bitmaps bake at device pixels.
  */
 export interface PaintBitmaps {
   staticImage: SkImage;
   maskImage: SkImage | null;
   /**
-   * Base-colour glyphs drawn beneath each URL texture, mirroring the
-   * reference's per-span `background-color: currentColor` backing. Null when
-   * the foundation's own fill already provides it (single opaque URL layer).
+   * Base-colour glyphs under each URL texture (the reference's per-span
+   * `background-color: currentColor`). Null when the foundation fill covers it.
    */
   backingImage: SkImage | null;
   layerSlots: PaintLayerSlot[];
   strokeImage: SkImage | null;
   /**
-   * URL layers in back-to-front order (same as `layerSlots` url entries).
-   * Kept for callers that only need the live texture list.
+   * URL layers back-to-front, for callers that only need the texture list.
    */
   imageLayers: PaintImageLayer[];
   width: number;
@@ -612,9 +594,8 @@ export function buildPaintImageLayers(
 }
 
 /**
- * Walk paint layers back-to-front. Contiguous gradient runs bake into one
- * slot; each URL becomes a live overlay slot so a gradient listed above a URL
- * still composites on top of that texture.
+ * Contiguous gradient runs bake into one slot; each URL gets a live overlay
+ * slot so a gradient above a URL still composites on top of it.
  */
 export function planPaintLayerSlotKinds(
   layers: PaintLayerData[],
@@ -718,8 +699,7 @@ function paintRevision(paint: PaintData): number {
 }
 
 function paintBitmapCacheKey(opts: RasterizePaintedUsernameOptions): string {
-  // Must match drawPaintedUsername: whenever the render falls back, the
-  // fallback colour is part of what got rasterised.
+  // When the render falls back, the fallback colour is part of the raster - key it.
   const fallbackPart = isVisibleSevenTvColor(opts.paint.color)
     ? ''
     : `|${opts.fallbackColor}`;
@@ -727,10 +707,8 @@ function paintBitmapCacheKey(opts: RasterizePaintedUsernameOptions): string {
 }
 
 /**
- * Build (or return the cached) render inputs for a painted username. Pure and
- * synchronous - no image decode - because URL layers load live via
- * `useAnimatedImageValue`. When URLs are present, gradients that stack above
- * them bake into separate slots and stroke is a top bitmap so CSS order holds.
+ * Build or return cached render inputs. Pure and synchronous - URL layers
+ * load live via `useAnimatedImageValue`.
  */
 export function getPaintBitmaps(
   opts: RasterizePaintedUsernameOptions,

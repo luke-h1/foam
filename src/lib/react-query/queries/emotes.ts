@@ -20,9 +20,8 @@ async function fetchOrNull<TItem>(
 }
 
 /**
- * The 7TV badge roster exists only here: the chat store holds per-user
- * entitled badges, never the full roster, so this stays Query-owned per
- * ADR-0005 (screen-only, refetchable, not read by ingest).
+ * The 7TV badge roster exists only here; the chat store holds per-user
+ * entitled badges, so this stays Query-owned per ADR-0005.
  */
 export function sevenTvBadgesQueryOptions() {
   return queryOptions<SanitisedBadgeSet[]>({

@@ -48,10 +48,8 @@ const styles = StyleSheet.create({
 });
 
 /**
- * Twitch preview URLs are `{width}x{height}` templates, so request a 16:9
- * variant close to the rendered size (~3x the largest display width for
- * high-density screens) instead of a full 2560x1080 frame for a small
- * thumbnail.
+ * Request a 16:9 variant close to the rendered size instead of a full
+ * 2560x1080 frame for a small thumbnail.
  */
 type ThumbnailRequestSize = {
   width: string;

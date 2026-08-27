@@ -24,10 +24,8 @@ const MOD_ANNIVERSARY_TYPES = new Set<ParsedPart['type']>(['modiversary']);
 const scanCache = new WeakMap<ParsedPart[], ChatBodyScan>();
 
 /**
- * The single pass over a message's parts. Everything the render path needs to
- * know about a body - whether it can flow inline, whether it holds emotes,
- * which notice it is, who it mentions - is decided here once per message and
- * cached, so no renderer re-walks the parts.
+ * The single pass over a message's parts; everything the render path needs is
+ * decided here once per message and cached, so no renderer re-walks the parts.
  */
 export function scanChatBody(message: ParsedPart[]): ChatBodyScan {
   const cached = scanCache.get(message);

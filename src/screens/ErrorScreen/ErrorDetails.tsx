@@ -143,8 +143,7 @@ export function ErrorDetails(props: ErrorDetailsProps) {
       <Button
         style={styles.resetButton}
         onPress={() => {
-          // Failed queries would re-render straight back into the error
-          // state; clear them so the reset gets a clean fetch.
+          // Failed queries would re-render straight back into the error state; clear them so the reset gets a clean fetch.
           void queryClient.resetQueries({
             predicate: query => query.state.status === 'error',
           });

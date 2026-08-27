@@ -89,8 +89,7 @@ const LANDSCAPE_CHAT_RESIZE_ACTIVATION_DISTANCE = 6;
 const LANDSCAPE_CHAT_RESIZE_FAIL_DISTANCE = 12;
 const LANDSCAPE_CHAT_DIVIDER_RESTING_OPACITY = 0.55;
 
-// Hold the screen awake while watching so playback isn't interrupted by the
-// idle-timer auto-lock - which kicks in aggressively under Low Power Mode.
+// Keep the screen awake while watching; auto-lock is aggressive under Low Power Mode.
 const KEEP_AWAKE_TAG = 'live-stream';
 
 const LANDSCAPE_CHAT_CONTROLS_TOP_OFFSET = 60;
@@ -101,8 +100,7 @@ const LANDSCAPE_CHAT_CLOSE_WIDTH_FRACTION = 0.55;
 const LANDSCAPE_CHAT_CLOSE_VELOCITY = 900;
 
 /**
- * Sizing values drive WKWebView and chat-list layout every frame, so the
- * resize spring is clamped and rests early instead of settling for ~600ms.
+ * Sizing drives WKWebView and chat layout every frame, so the spring clamps and rests early instead of settling for ~600ms.
  */
 const RESIZE_ANIMATION_CONFIG: WithSpringConfig = {
   damping: 38,
@@ -150,8 +148,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const disableStream = usePreference('disableStream');
   const persistedLandscapeChatWidth = usePreference('landscapeChatWidth');
   const updatePreferences = useUpdatePreferences();
-  // Window dims/insets can stick in the old orientation after a rotation; fall back to the
-  // native ScreenOrientation event when they do, and map the notch inset to the top.
+  // Window dims/insets can stick after rotation; fall back to the native ScreenOrientation event and map the notch inset to the top.
   const { width: winW, height: winH } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [deviceLandscape, setDeviceLandscape] = useState<boolean | null>(null);
@@ -182,8 +179,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       ScreenOrientation.removeOrientationChangeListener(subscription);
     };
   }, []);
-  // Follow the fast window dims, but fall back to the native event once they've
-  // disagreed long enough to be clearly stuck (not just mid-rotation lag).
+  // Follow the fast window dims; fall back to the native event once they disagree long enough to be stuck, not mid-rotation lag.
   const winLandscape = winW > winH;
   const [winStuck, setWinStuck] = useState(false);
   useEffect(() => {
@@ -207,10 +203,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     });
 
   /**
-   * In landscape the notch / Dynamic Island sits on one horizontal edge and
-   * the home indicator on the other, so the safe-area insets land on left and
-   * right rather than top. Reserve that space so video and chat controls never
-   * slide under the Dynamic Island.
+   * In landscape the safe-area insets land on left and right; reserve them so controls never slide under the Dynamic Island.
    */
   const landscapeInsetLeft = isLandscape ? insets.left : 0;
   const landscapeInsetRight = isLandscape ? insets.right : 0;
@@ -270,8 +263,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     if (!player) {
       return;
     }
-    // An active picture-in-picture window is exactly the case where playback
-    // should continue in the background, so leave the player alone.
+    // Picture-in-picture playback must continue in the background; leave the player alone.
     if (player.isPictureInPicture()) {
       wasPlayingBeforeBackgroundRef.current = false;
       return;
@@ -303,7 +295,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
         type: 'setLandscapeChatWidth',
         landscapeChatWidth: clampedWidth,
       });
-      // Persist so the chosen width survives leaving the screen / relaunch.
       updatePreferences({ landscapeChatWidth: clampedWidth });
     },
     [contentWidth, fullscreenChatMode, dispatchUi, updatePreferences],
@@ -434,8 +425,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       (!isStreamEnabled || !stream?.user_id),
   });
 
-  // Memoised so the resize effect below only re-runs when a dimension actually changes,
-  // not on every unrelated re-render.
+  // Memoised so the resize effect re-runs only when a dimension changes.
   const videoDimensions = useMemo(
     () =>
       getLiveStreamVideoDimensions({
@@ -541,8 +531,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       chatWidth.set(effectiveChatWidth);
       chatHeight.set(effectiveChatHeight);
 
-      // Chat is only hidden in landscape; in portrait always show it. Snap straight to place
-      // on rotation (no reveal) - the old rAF fade made rapid rotation crawl over several frames.
+      // Snap chat into place on rotation, no reveal - the old rAF fade made rapid rotation crawl.
       if (!isLandscapeChatHidden) {
         chatOpacity.set(1);
         chatTranslateX.set(0);
@@ -746,8 +735,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       ? styles.overlayChatContainer
       : undefined;
 
-  // Matches the media-layout live-stream card's request size so the loading
-  // poster is an instant cache hit when arriving from the stream list.
+  // Matches the live-stream card's request size so the poster is a cache hit from the stream list.
   const posterUrl = useMemo(
     () =>
       stream?.thumbnail_url

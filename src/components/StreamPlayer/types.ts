@@ -2,9 +2,6 @@ import type { Ref } from 'react';
 import type { DimensionValue } from 'react-native';
 
 export interface StreamPlayerRef {
-  /**
-   * Force refresh the player (hard reload)
-   */
   forceRefresh: () => void;
   getChannel: () => string | undefined;
   /**
@@ -21,25 +18,13 @@ export interface StreamPlayerRef {
    * Volume is 0-1.
    */
   getVolume: () => number;
-  /**
-   * Mute the player
-   */
   mute: () => void;
-  /**
-   * Pause playback
-   */
   pause: () => void;
-  /**
-   * Start or resume playback
-   */
   play: () => void;
   /**
-   * Seek to a specific timestamp in seconds (VODs only)
+   * Timestamp in seconds; VODs only.
    */
   seek: (timestamp: number) => void;
-  /**
-   * Switch to a different channel
-   */
   setChannel: (channel: string) => void;
   setMuted: (muted: boolean) => void;
   setQuality: (quality: string) => void;
@@ -51,156 +36,84 @@ export interface StreamPlayerRef {
    * Volume is 0-1.
    */
   setVolume: (volume: number) => void;
-  /**
-   * Whether the embedded video is currently in system picture-in-picture.
-   */
   isPictureInPicture: () => boolean;
   /**
    * Toggle iOS system picture-in-picture on the embedded video.
    */
   togglePictureInPicture: () => void;
   /**
-   * Release the underlying media (pause + drop the <video> source) so the
-   * WebView can be torn down without an active AVPlayer wedging the transition.
+   * Pause and drop the <video> source so the WebView can be torn down without
+   * an active AVPlayer wedging the transition.
    */
   releaseMedia: () => void;
   /**
    * Seek a live stream back to the live edge to trim accumulated client latency
    */
   syncToLive: () => void;
-  /**
-   * Unmute the player
-   */
   unmute: () => void;
 }
 
 export interface StreamInfo {
-  /**
-   * Game/category name being played
-   */
   gameName?: string;
-  /**
-   * URL to the streamer's avatar image
-   */
   profileImageUrl?: string;
   /**
-   * Stream start time (ISO string) for calculating duration
+   * ISO string; used to calculate stream duration.
    */
   startedAt?: string;
-  /**
-   * Stream title
-   */
   title?: string;
-  /**
-   * Streamer's display name
-   */
   userName?: string;
-  /**
-   * Streamer's login/username
-   */
   userLogin?: string;
-  /**
-   * Current viewer count
-   */
   viewerCount?: number;
 }
 
 export interface StreamPlayerProps {
   /**
-   * Enable autoplay
    * @default true
    */
   autoplay?: boolean;
-  /**
-   * Twitch channel name
-   */
   channel?: string;
   /**
    * Twitch clip slug
    */
   clip?: string;
 
-  /**
-   * Height of the player
-   */
   height?: DimensionValue;
 
   deferOverlayUntilUserUnmute?: boolean;
   /**
-   * Initial muted state
+   * Initial muted state.
    * @default false
    */
   muted?: boolean;
-  /**
-   * Callback when back button is pressed
-   */
   onBackPress?: () => void;
   /**
-   * Callback when content gate (e.g. login required) is detected or dismissed
+   * Fires when a content gate (e.g. login required) appears or clears.
    */
   onContentGateChange?: (hasGate: boolean) => void;
-  /**
-   * Callback when the stream ends
-   */
   onEnded?: () => void;
-  /**
-   * Callback when an error occurs
-   */
   onError?: (error: string) => void;
-  /**
-   * Callback when the stream goes offline
-   */
   onOffline?: () => void;
-  /**
-   * Callback when the stream goes online
-   */
   onOnline?: () => void;
-  /**
-   * Callback when the stream pauses
-   */
   onPause?: () => void;
   /**
    * Callback with Twitch's reported latency from broadcaster to viewer.
    */
   onPlaybackLatencyChange?: (latencySeconds: number) => void;
-  /**
-   * Callback when the stream plays
-   */
   onPlay?: () => void;
-  /**
-   * Callback when the player is ready
-   */
   onReady?: () => void;
-  /**
-   * Callback when refresh is pressed
-   */
   onRefresh?: () => void;
-  /**
-   * Callback when the share button is pressed in the overlay controls.
-   */
   onSharePress?: () => void;
-  /**
-   * Callback when the create clip button is pressed in the overlay controls.
-   */
   onCreateClipPress?: () => void;
-  /**
-   * Callback when the sleep timer button is pressed in the overlay controls.
-   */
   onSleepTimerPress?: () => void;
   /**
    * Whether a sleep timer is currently counting down; tints the overlay button.
    */
   sleepTimerActive?: boolean;
-  /**
-   * Optional callback when the user taps the video area (e.g. to toggle chat in landscape).
-   */
   onVideoAreaPress?: () => void;
-  /**
-   * Optional callback when the user swipes down on the video area.
-   */
   onVideoAreaSwipeDown?: () => void;
   /**
-   * Callback when the embed WebView has finished loading. Use to sync IRC connections (only after player is ready).
+   * Fires when the embed WebView finishes loading; used to defer IRC connect
+   * until the player is ready.
    */
   onWebViewLoaded?: () => void;
   /**
@@ -209,31 +122,25 @@ export interface StreamPlayerProps {
    */
   parent?: string;
   /**
-   * Thumbnail shown (behind a loading spinner) while the WebView player boots,
-   * so the user sees the stream's preview frame instead of a black box.
+   * Thumbnail shown behind the loading spinner while the WebView boots, so the
+   * user sees the preview frame instead of a black box.
    */
   posterUrl?: string;
   /**
-   * Base URL for stream proxy (e.g. http://localhost:4000).
-   * When set, WebView loads Twitch embed via proxy instead of direct player URL.
+   * When set, the WebView loads the Twitch embed via this proxy instead of the
+   * direct player URL.
    */
   streamProxyBaseUrl?: string;
   /**
-   * Show custom overlay controls
+   * Show custom overlay controls.
    * @default false
    */
   showOverlayControls?: boolean;
-  /**
-   * Stream information for the overlay
-   */
   streamInfo?: StreamInfo;
   /**
    * VOD ID to play
    */
   video?: string;
-  /**
-   * Width of the player
-   */
   width?: DimensionValue;
   ref?: Ref<StreamPlayerRef>;
 }

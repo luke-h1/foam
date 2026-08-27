@@ -6,24 +6,13 @@ import { usersByIdsQueryOptions } from '@app/lib/react-query/queries/twitch';
 import type { TwitchStream } from '@app/types/twitch/stream';
 
 /**
- * Batch-resolves profile pictures for a list of streams and returns the
- * streams enriched with `profilePicture`. The streams endpoints don't include
- * avatars, and fetching one `/users` request per visible card is an N+1
- * against the Helix rate limit — `getUsersById` batches 100 ids per request.
- *
- * `streams` typically grows as an infinite query appends pages, so ids
- * already resolved are cached here and excluded from the next lookup —
- * otherwise each appended page would key a brand new query off the whole
- * accumulated list and re-fetch every previously seen `user_id`.
- *
- * Pass `enabled: false` (e.g. for the compact layout, which shows no avatar)
- * to skip the lookup entirely; the input array is returned untouched.
+ * Enriches streams with `profilePicture` via one batched `/users` lookup - the streams endpoints have no avatars and a per-card request is an N+1 against the Helix rate limit. Resolved ids are cached and excluded from the next lookup so appended infinite-query pages do not re-fetch every seen `user_id`; `enabled: false` returns the input untouched.
  */
 export function useStreamProfilePictures(
   streams: TwitchStream[],
   enabled: boolean,
 ): TwitchStream[] {
-  // eslint-disable-next-line react-doctor/no-derived-state -- accumulates across pages/query resolutions, not derivable from a single input
+  // eslint-disable-next-line react-doctor/no-derived-state -- accumulates across pages
   const [profileImageById, setProfileImageById] = useState<Map<string, string>>(
     () => new Map(),
   );
@@ -38,7 +27,7 @@ export function useStreamProfilePictures(
         missing.add(stream.user_id);
       }
     }
-    // eslint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks Array.prototype.toSorted (throws "undefined is not a function"); copy-then-sort is the safe equivalent
+    // eslint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks toSorted
     return [...missing].sort();
   }, [streams, enabled, profileImageById]);
 
@@ -51,8 +40,8 @@ export function useStreamProfilePictures(
     if (!users || users.length === 0) {
       return;
     }
-    // eslint-disable-next-line react-doctor/no-derived-state -- accumulates across pages/query resolutions, not derivable from a single input
-    // react-doctor-disable-next-line react-hooks-js/set-state-in-effect -- merges resolved user ids across query pages; can't be derived synchronously from a single render's inputs
+    // eslint-disable-next-line react-doctor/no-derived-state -- accumulates across pages
+    // react-doctor-disable-next-line react-hooks-js/set-state-in-effect -- merges resolved ids across query pages
     setProfileImageById(current => {
       const next = new Map(current);
       for (const user of users) {

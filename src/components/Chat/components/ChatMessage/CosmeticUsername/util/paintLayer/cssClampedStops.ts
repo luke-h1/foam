@@ -1,10 +1,8 @@
 import type { PaintStop } from '@app/types/seventv/cosmetics';
 
 /**
- * CSS keeps colour stops in written order and clamps each position to the
- * running maximum so far (css-images-3 §3.4.2) - it never reorders them - so
- * an out-of-order stop becomes a hard transition exactly as the browser
- * renders the reference CSS.
+ * CSS clamps each stop to the running maximum, never reordering (css-images-3
+ * §3.4.2), so an out-of-order stop becomes a hard transition as in the browser.
  */
 export function cssClampedStops(stops: PaintStop[]): PaintStop[] {
   let runningMax = Number.NEGATIVE_INFINITY;

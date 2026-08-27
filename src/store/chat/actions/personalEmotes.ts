@@ -10,12 +10,8 @@ const personalEmotesGuard = createFetchOnceGuard();
 const MAX_PERSONAL_EMOTE_CHANNELS = 20;
 
 /**
- * Session cache of each sighted chatter's 7TV personal emote set, keyed by
- * channel then Twitch user id. Kept as a plain bounded Map rather than on the
- * persisted store: sets are refetched per session anyway, and routing every
- * chatter sighting through the persisted observable re-stringified the whole
- * multi-MB channel-cache table per write. Reads are imperative (ingest and
- * render); React consumers subscribe via `personalEmotesVersion`.
+ * Plain bounded Map (channel -> Twitch user id) - a persisted observable
+ * re-stringified the whole table per write; React subscribes via `personalEmotesVersion`.
  */
 const personalEmotesByChannel = new Map<
   string,
@@ -31,9 +27,8 @@ export const getChannelPersonalEmotes = (
   EMPTY_PERSONAL_EMOTES;
 
 /**
- * Drops one channel's sets and the fetch-once stamps of the users they
- * belonged to, so those users refetch instead of short-circuiting into the
- * emptied cache.
+ * Also clears the owners' fetch-once stamps so they refetch instead of
+ * short-circuiting into the emptied cache.
  */
 export const clearChannelPersonalEmotes = (channelId: string): void => {
   const channelEmotes = personalEmotesByChannel.get(channelId);
@@ -139,10 +134,8 @@ export const clearPersonalEmotesCache = () => {
 };
 
 /**
- * Refetch a user's personal emote set, replacing whatever is cached — used
- * when a live event (EMOTE_SET entitlement or an emote_set.update for their
- * personal set) says the cached copy is stale. Unlike the fetch-once path
- * this also writes an empty result, so removals propagate.
+ * Refetch a user's personal set; unlike the fetch-once path this also writes
+ * an empty result, so removals propagate.
  */
 export const refreshUserPersonalEmotes = async (
   twitchUserId: string,
@@ -181,9 +174,8 @@ export const refreshUserPersonalEmotes = async (
 };
 
 /**
- * Find which cached chatter owns a personal emote set, by the set id stamped
- * on their cached emotes. Only users whose personal emotes we already hold
- * can match, which also bounds how much work a stray set update can cause.
+ * Only users whose personal emotes we already hold can match, which bounds
+ * the work a stray set update can cause.
  */
 export const findPersonalEmoteSetOwner = (
   channelId: string | null | undefined,
@@ -206,11 +198,8 @@ function getEmoteSetId(emote: SanitisedEmote): string | undefined {
 }
 
 /**
- * An EMOTE_SET entitlement announces which personal set a chatter is
- * entitled to. Only refresh users we have already hydrated whose cached set
- * differs — entering a busy channel fires one of these per active 7TV
- * chatter, and unhydrated users are picked up lazily by the visible-message
- * hydrate path instead.
+ * Only refresh hydrated users whose cached set differs - a busy channel fires
+ * one entitlement per active 7TV chatter.
  */
 export const handlePersonalEmoteSetEntitlement = (
   twitchUserId: string,

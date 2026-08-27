@@ -33,9 +33,8 @@ import {
 
 const messageKeySet = new Set<string>();
 /**
- * Front-trims shift every surviving row's index. Instead of rewriting both
- * index Maps per flush (2 x window Map.sets at ~10 flushes/s), stored
- * positions are absolute and reads subtract this running offset.
+ * Stored positions are absolute and reads subtract this running offset, so a
+ * front-trim never rewrites both index Maps per flush.
  */
 let windowBaseOffset = 0;
 const messageKeyOrder: string[] = [];
@@ -47,12 +46,8 @@ const MAX_RECENT_MESSAGES = 80;
 export const getMaxChatMessages = (): number =>
   getPreferences().chatScrollback ?? DEFAULT_MAX_CHAT_MESSAGES;
 
-// Trimming the front of the window shifts every row index. While the user is
-// scrolled up, LegendList runs native maintainVisibleContentPosition
-// (index-anchored at minIndexForVisible: 0); a front-trim re-anchors it to a
-// now-different index 0 and yanks the list to the top. So while paused we stop
-// front-trimming and let the window grow to a bounded ceiling, then resume (and
-// catch up) once the user returns to the bottom where trimming is safe.
+// While scrolled up a front-trim re-anchors index 0 and yanks the list to the
+// top, so pause trimming and let the window grow to a bounded ceiling.
 const SUSPENDED_FRONT_TRIM_HEADROOM = 350;
 let frontTrimSuspended = false;
 
@@ -64,10 +59,8 @@ const getEffectiveMaxChatMessages = (): number =>
   getMaxChatMessages() +
   (frontTrimSuspended ? SUSPENDED_FRONT_TRIM_HEADROOM : 0);
 const MAX_RECENT_MESSAGE_CHANNELS = 10;
-// Each sync re-serializes recentMessagesByChannel to MMKV, which showed up
-// as a top JS hotspot in busy chats (issue #594). Recent messages are a
-// re-entry nicety, so a long defer is fine; moderation/clear paths still
-// flush immediately.
+// Each sync re-serializes recentMessagesByChannel to MMKV - a top JS hotspot
+// in busy chats (issue #594); moderation/clear paths still flush immediately.
 export const RECENT_MESSAGES_SYNC_DELAY_MS = 15_000;
 
 let recentMessagesSyncTimer: ReturnType<typeof setTimeout> | null = null;
@@ -101,13 +94,8 @@ const dedupeMessagesForStore = (
 };
 
 /**
- * Legend State diffs a nested array keyed on the first element's `id` field,
- * so a parts array whose first part carries an emote id must have distinct,
- * defined ids on every element or child nodes get mis-keyed (and dev warns
- * "Multiple elements in array have the same ID"). Ids only need to be unique
- * within one array, so index ids are assigned in place, once per array -
- * parse-cached arrays shared across identical messages keep their identity
- * and pay this exactly once. Non-enumerable so persistence never sees them.
+ * Legend State keys nested array diffs on element `id`s, so parts need
+ * distinct ids or child nodes mis-key; non-enumerable so persistence never sees them.
  */
 const partIdsAssigned = new WeakSet<AnyChatMessageType['message']>();
 
@@ -177,8 +165,7 @@ const getSenderChatterRole = (
 
 const indexMessage = (message: AnyChatMessageType, index: number) => {
   // Stored messages carry the key as their id (prepareMessageForStore), so
-  // this is a field read, not a recompute; the fallback covers direct calls
-  // with unprepared messages.
+  // this is a field read; the fallback covers unprepared messages.
   const key = getChatMessageStoreId(message);
   messageKeyToIndex.set(key, index + windowBaseOffset);
 
@@ -329,9 +316,8 @@ const syncRecentMessagesForCurrentChannel = (
     return;
   }
 
-  // Hold the reference only - persistRecentMessagesForChannel slices to
-  // MAX_RECENT_MESSAGES at flush time, so slicing here on every deferred
-  // sync (~10/s under load) would be redundant allocation.
+  // Hold the reference only - the flush slices to MAX_RECENT_MESSAGES, so
+  // slicing per deferred sync (~10/s under load) would be redundant.
   pendingRecentMessagesChannelId = currentChannelId;
   pendingRecentMessages = nextMessages;
 
@@ -388,9 +374,8 @@ const appendToMessageWindow = (
   }
 
   /**
-   * Slice before concatenating. Building the joined window first and then
-   * slicing it twice copied the whole window an extra time on every flush,
-   * which a busy channel pays ~10x a second.
+   * Slice before concatenating - joining first copied the whole window an
+   * extra time per flush, ~10x a second on busy channels.
    */
   if (extraMessageCount >= currentMessages.length) {
     const storedDropCount = extraMessageCount - currentMessages.length;
@@ -420,10 +405,8 @@ const shiftMessageIndexes = (offset: number) => {
   windowBaseOffset += offset;
 };
 
-// Once the window is full, every flush trims from the front. A full
-// rebuildMessageIndexes there re-ran the mention/color registrations for the
-// whole window (iterating every part of every message) ~10x/s on busy chats;
-// dropping the evicted entries and shifting the survivors is pure Map work.
+// Dropping evicted entries and shifting survivors is pure Map work; a full
+// rebuild per front-trim re-ran the whole window ~10x/s on busy chats.
 const indexAppendedMessages = (
   storedMessages: AnyChatMessageType[],
   appendStartIndex: number,
@@ -567,9 +550,8 @@ export const addMessage = (message?: AnyChatMessageType) => {
   }
 
   chatStore$.messages.set(nextMessages);
-  // Defer the MMKV persist (matching addMessages) so a single message never
-  // triggers a synchronous full-store stringify+write of recentMessagesByChannel
-  // on the hot path; the recent-messages cache is only a warm-start aid.
+  // Defer the MMKV persist so a single message never triggers a synchronous
+  // full-store write on the hot path; the cache is only a warm-start aid.
   syncRecentMessagesForCurrentChannel(nextMessages, 'defer');
 };
 

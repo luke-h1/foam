@@ -4,16 +4,14 @@ import { prefetchToDisk } from '@app/utils/image/prefetchToDisk';
 
 import type { PassResult } from './benchResults';
 
-// Decoded references are retained in this bag during a run so host-side memory
-// sampling captures peak decoded-bitmap footprint. Cleared between passes.
+// Decoded references retained during a run so host-side memory sampling captures peak decoded-bitmap footprint; cleared between passes.
 let retained: unknown[] = [];
 
 export function clearRetained(): void {
   retained = [];
 }
 
-// Downloads every image to expo-image's disk cache so the timed passes measure
-// decode (not network), making cold fair and order-independent.
+// Pre-downloads every image to disk cache so timed passes measure decode, not network.
 export async function prewarm(urls: string[]): Promise<void> {
   await prefetchToDisk(urls).catch(() => undefined);
   clearRetained();
@@ -47,7 +45,7 @@ function summarise(
   fail: number,
   totalMs: number,
 ): PassResult {
-  // eslint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks Array.prototype.toSorted (throws "undefined is not a function"); copy-then-sort is the safe equivalent
+  // eslint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks toSorted
   const sorted = [...durations].sort((a, b) => a - b);
   const sum = durations.reduce((acc, d) => acc + d, 0);
   return {
@@ -82,7 +80,7 @@ export async function runSequential(
     }
     const t0 = performance.now();
     try {
-      // eslint-disable-next-line react-doctor/async-await-in-loop -- sequential is the measurement: one decode at a time, timed individually
+      // eslint-disable-next-line react-doctor/async-await-in-loop -- sequential is the measurement
       await decodeOne(url);
       durations.push(performance.now() - t0);
     } catch {
@@ -96,8 +94,7 @@ export async function runSequential(
   return summarise(pass, 'sequential', durations, fail, totalMs);
 }
 
-// Fires all decodes with bounded concurrency to mimic a busy-chat burst and
-// measure wall-clock throughput of the decode pipeline under contention.
+// Bounded-concurrency decodes mimic a busy-chat burst to measure throughput under contention.
 export async function runConcurrent(
   urls: string[],
   concurrency = 16,
@@ -118,7 +115,7 @@ export async function runConcurrent(
       }
       const t0 = performance.now();
       try {
-        // eslint-disable-next-line react-doctor/async-await-in-loop -- each worker drains the shared queue serially; concurrency comes from running N workers
+        // eslint-disable-next-line react-doctor/async-await-in-loop -- workers drain the queue serially; concurrency = N workers
         await decodeOne(url);
         durations.push(performance.now() - t0);
       } catch {

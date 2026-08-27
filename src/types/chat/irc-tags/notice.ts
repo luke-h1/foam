@@ -25,7 +25,7 @@ type NoticeMsgId =
    */
   | 'msg_banned'
   /**
-   * Your message was not sent because it contained too many unprocessable characters. If you believe this is an error, please rephrase and try again.
+   * Message contained too many unprocessable characters.
    */
   | 'msg_bad_characters'
   /**
@@ -41,11 +41,12 @@ type NoticeMsgId =
    */
   | 'msg_duplicate'
   /**
-   * This room is in emote-only mode. You can find your currently available emoticons using the smiley in the chat text area.
+   * This room is in emote-only mode.
    */
   | 'msg_emoteonly'
   /**
-   * This room is in <duration> followers-only mode. Follow <channel> to join the community! Note: These msg_followers tags are kickbacks to a user who does not meet the criteria; that is, does not follow or has not followed long enough.
+   * This room is in <duration> followers-only mode; the user does not follow
+   * or has not followed long enough.
    */
   | 'msg_followersonly'
   /**
@@ -73,7 +74,7 @@ type NoticeMsgId =
    */
   | 'msg_rejected_mandatory'
   /**
-   * A verified phone number is required to chat in this channel. Please visit https://www.twitch.tv/settings/security to verify your phone number.
+   * A verified phone number is required to chat in this channel.
    */
   | 'msg_requires_verified_phone_number'
   /**
@@ -81,7 +82,7 @@ type NoticeMsgId =
    */
   | 'msg_slowmode'
   /**
-   * This room is in subscribers only mode. To talk, purchase a channel subscription at https://www.twitch.tv/products/<broadcaster login name>/ticket?ref=subscriber_only_mode_chat.
+   * This room is in subscribers-only mode.
    */
   | 'msg_subsonly'
   /**
@@ -93,7 +94,7 @@ type NoticeMsgId =
    */
   | 'msg_timedout'
   /**
-   * This room requires a verified account to chat. Please verify your account at https://www.twitch.tv/settings/security.
+   * This room requires a verified account to chat.
    */
   | 'msg_verified_email'
   /**
@@ -123,13 +124,7 @@ type NoticeMsgId =
   | 'unrecognized_cmd';
 
 export interface NoticeTags {
-  /**
-   * The ID to determine the actions outcome
-   */
   'msg-id': NoticeMsgId;
 
-  /**
-   * The ID of the user that the action targeted
-   */
   'target-user-id': string;
 }

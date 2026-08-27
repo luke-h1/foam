@@ -1,7 +1,6 @@
 /**
- * Latest 7TV EventAPI session id, captured from the HELLO frame. Presence
- * writes attach it so 7TV can push the user's own entitlements to this
- * session, and reconnects use it to RESUME and replay missed dispatches.
+ * Latest 7TV EventAPI session id from the HELLO frame; presence writes attach
+ * it and reconnects use it to RESUME.
  */
 let sevenTvSessionId: string | null = null;
 

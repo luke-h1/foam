@@ -2,8 +2,7 @@ import { Platform } from 'react-native';
 
 /**
  * Each cap is sized against its own cadence (see pickFlushDelay): raid mode
- * widens the interval 100ms -> 180ms, so its cap grows by the same factor or
- * the drain falls behind arrivals.
+ * widens the interval, so its cap grows by the same factor or the drain falls behind.
  */
 export const maxLiveCommitPerFlush = (
   isAtBottom: boolean,

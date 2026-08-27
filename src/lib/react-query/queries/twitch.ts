@@ -65,9 +65,8 @@ export function followedChannelsQueryOptions(userId: string) {
 }
 
 /**
- * Profile images are an enrichment resolved as a dependent query so the
- * channel list renders one round trip sooner; rows fall back to text avatars
- * until (or if never) the lookup lands.
+ * A dependent query so the channel list renders one round trip sooner; rows
+ * fall back to text avatars until the lookup lands.
  */
 export function followedChannelProfileImagesQueryOptions(
   broadcasterIds: string[],

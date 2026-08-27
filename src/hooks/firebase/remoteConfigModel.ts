@@ -26,8 +26,7 @@ export interface RemoteConfigSchema {
   admins: string[];
 
   /**
-   * Logins allowed to see the "update app" button in Settings. An empty array
-   * means the button is shown to everyone.
+   * Logins allowed to see the Settings "update app" button; empty array = everyone.
    */
   updateAppButtonAllowedUsers: string[];
 
@@ -42,8 +41,7 @@ export interface RemoteConfigSchema {
   };
 
   /**
-   * A/B test variant assignments keyed by experiment name. Firebase A/B Testing
-   * sets this per user; the client reads it via `useExperiment`.
+   * A/B variant assignments keyed by experiment name; Firebase sets them per user, read via `useExperiment`.
    */
   experiments: Record<string, string>;
 

@@ -14,19 +14,8 @@ type VisibleAssetHydrationState = {
 };
 
 /**
- * Scratch state for the visible-asset hydration pass: which rows have already
- * been hydrated, which users have had personal emotes / cosmetics fetched, and
- * the rows waiting on the next debounced pass.
- *
- * Plain module state rather than an observable or a bag of React refs. Ingest
- * and the hydration pass only ever read and write it imperatively - nothing
- * renders off it - and as refs it had to be created in a hook that had no
- * other business owning it, then drilled two levels down to the only consumer.
- * The sets are bounded by `boundedSetAdd` at their write sites.
- *
- * The debounce timer, epoch and in-flight pass live here beside the state
- * they guard, so arming and releasing the pass are owned by one module: any
- * clear below invalidates a scheduled or running pass with it.
+ * Scratch state for the visible-asset hydration pass; plain module state
+ * because everything reads and writes it imperatively, never via React.
  */
 export const visibleAssetHydration: VisibleAssetHydrationState = {
   hydratedMessageKeys: new Set(),
@@ -55,9 +44,8 @@ export function invalidateVisibleAssetHydrationPass(): void {
 }
 
 /**
- * Called on channel switch and unmount: a new channel's rows must not inherit
- * the previous channel's hydration keys, and a pass armed for the old channel
- * must not run against the new one's messages.
+ * Called on channel switch and unmount: a new channel must not inherit the
+ * old channel's hydration keys or an armed pass.
  */
 export function clearVisibleAssetHydration(): void {
   visibleAssetHydration.hydratedMessageKeys.clear();
@@ -68,10 +56,8 @@ export function clearVisibleAssetHydration(): void {
 }
 
 /**
- * Debounces `runPass` behind one shared timer, serialised behind any pass
- * still in flight. `runPass` is skipped if the epoch moves before it starts;
- * it receives the epoch it was armed under so it can stop mid-pass via
- * `visibleAssetHydration.epoch` comparison.
+ * Debounces `runPass` behind one shared timer; `runPass` gets the epoch it was
+ * armed under and is skipped or stopped if the epoch moves.
  */
 export function scheduleVisibleAssetHydrationPass(
   runPass: (epoch: number) => Promise<void> | undefined,

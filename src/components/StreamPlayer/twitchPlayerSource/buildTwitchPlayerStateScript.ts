@@ -1,7 +1,6 @@
 /**
- * Reports the <video> element's playback state to the bridge (ready/playing/
- * pause) so foam's custom controls know when to appear and reflect play/pause.
- * Without it the bridge stays dormant and the overlay never shows.
+ * Reports the <video> element's playback state to the bridge; without it the
+ * bridge stays dormant and the controls overlay never shows.
  */
 export function buildTwitchPlayerStateScript(): string {
   return `

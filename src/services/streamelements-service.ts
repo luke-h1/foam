@@ -5,9 +5,8 @@ import { streamElementsApi } from './api/clients';
 
 export const streamElementsService = {
   /**
-   * Returns aggregate chat stats for a channel. StreamElements responds with a
-   * 404 for channels that do not use StreamElements, so callers should treat a
-   * rejected promise as "no data available" rather than a hard error.
+   * StreamElements 404s for channels that do not use it, so treat a rejected
+   * promise as "no data available" rather than a hard error.
    */
   getChatStats: async (
     channelName: string,

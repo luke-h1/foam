@@ -1,5 +1,4 @@
-// This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
-// field (see types/seventv/cosmetics.ts), not a naming choice.
+// "shape" is the 7TV paint API field (types/seventv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import { getPaintLayers } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/paintLayer/getPaintLayers';
 import { isRenderablePaintLayer } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/paintLayer/isRenderablePaintLayer';
@@ -32,9 +31,8 @@ function stopColorCss(color: number, layerOpacity: number): string {
 }
 
 /**
- * Stops stay in written order - the browser clamps out-of-order positions
- * itself (css-images-3 §3.4.2). Layer opacity folds into each stop's alpha,
- * since a single-element background list has no per-layer opacity.
+ * Stops stay in written order (the browser clamps them, css-images-3 §3.4.2);
+ * layer opacity folds into each stop's alpha.
  */
 function cssStopList(layer: PaintLayerData): string {
   const layerOpacity = layer.opacity;
@@ -49,9 +47,8 @@ function cssLayer(layer: PaintLayerData): CssLayer {
     case 'LINEAR_GRADIENT':
     case 'RADIAL_GRADIENT':
       /**
-       * A single-stop gradient is invalid CSS, and one invalid entry wipes
-       * the whole comma-separated background-image list; the reference span
-       * would show only its currentColor backing, so emit exactly that.
+       * A single-stop gradient is invalid CSS and one invalid entry wipes the
+       * whole background-image list, so emit the currentColor backing instead.
        */
       if (layer.stops.length < 2) {
         image = 'linear-gradient(0deg, currentColor 0%, currentColor 100%)';

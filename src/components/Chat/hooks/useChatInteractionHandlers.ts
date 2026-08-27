@@ -86,8 +86,7 @@ export function useChatComposerActions({
 }
 
 /**
- * Press handlers that open an overlay. They call the overlay store directly
- * rather than taking openers from the overlay hook, so the chat root never
+ * Press handlers call the overlay store directly, so the chat root never
  * subscribes to which sheet is open.
  */
 export function useChatOverlayActions(channelId: string) {

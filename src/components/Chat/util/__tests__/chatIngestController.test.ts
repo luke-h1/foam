@@ -25,9 +25,8 @@ function stripPendingParse(message: BufferedMessage): BufferedMessage {
 }
 
 /**
- * The full headless ingest path: a raw IRC line through the parser, the
- * shared command demux, the handlers factory and the ingest controller into
- * the real chatStore$ - no socket, no React, fake timers.
+ * The full headless ingest path: raw IRC line through to the real chatStore$
+ * - no socket, no React, fake timers.
  */
 function createHeadlessIngest(options?: {
   isAtBottom?: () => boolean;

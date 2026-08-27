@@ -1,20 +1,14 @@
 import { Directory, Paths } from 'expo-file-system';
 
 /**
- * Anything bigger than this in Sentry's disk cache is an envelope the server
- * would reject anyway (profile envelopes reached ~80MB, FOAM-TV-MOBILE-1C).
- * Legitimate envelopes (events with screenshot/view-hierarchy attachments,
- * replay segments, transactions) stay in the low single-digit MB.
+ * Anything bigger is an envelope the server would reject (profile envelopes
+ * hit ~80MB, FOAM-TV-MOBILE-1C); legitimate ones stay low single-digit MB.
  */
 const MAX_CACHED_ENVELOPE_BYTES = 8 * 1024 * 1024;
 
 /**
- * Deletes oversized envelopes from the native Sentry SDK's disk cache
- * (Caches/io.sentry on iOS, cacheDir/sentry on Android) before the transport
- * gets stuck on them. The transport keeps an envelope on disk whenever an
- * upload dies without an HTTP response, and re-reads it with a full in-memory
- * copy on every retry - an oversized envelope therefore wedges the install in
- * an OOM crash loop that only ends when the file disappears.
+ * Deletes oversized envelopes from the native Sentry disk cache: a stuck one
+ * wedges the install in an OOM crash loop until the file disappears.
  */
 export function sweepOversizedSentryEnvelopesNow(): void {
   for (const dirName of ['io.sentry', 'sentry']) {
@@ -27,10 +21,7 @@ export function sweepOversizedSentryEnvelopesNow(): void {
 }
 
 export function sweepOversizedSentryEnvelopes(): void {
-  // Deferred off the boot critical path: the walk is a synchronous
-  // stat-per-file over the envelope cache, and the OOM it defends against
-  // only needs the file gone before the transport retries, not before the
-  // first frame.
+  // Deferred off boot: the file only needs to be gone before the transport retries, not before first frame.
   setTimeout(sweepOversizedSentryEnvelopesNow, 0);
 }
 

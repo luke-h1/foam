@@ -3,12 +3,8 @@ import type { IrcMessage } from '@app/utils/chat/ircProtocol/parseIrcMessage';
 const EMPTY_TAGS: Record<string, string> = Object.freeze({});
 
 /**
- * Per-command handlers for a routed IRC message. Handlers receive positional
- * arguments, never a payload object - this runs once per received line and
- * must not allocate. Transport policy (auth state, self-nick splitting,
- * block/mute filtering, socket control) stays with the consumer; the router
- * owns only the command dispatch, the per-command parameter guards, and the
- * login-from-prefix repair PRIVMSG tags need.
+ * Handlers receive positional arguments, never a payload object - this runs
+ * once per received line and must not allocate.
  */
 export interface IrcRouteHandlers {
   privmsg?: (
@@ -87,8 +83,7 @@ export function routeIrcMessage(
         const channel = params[0];
         const text = params[1];
         // PRIVMSG tags carry no `login`; the canonical Twitch login is the
-        // nick in the IRC prefix (`nick!user@host`). Localised display names
-        // are not the login, so derive it from the prefix instead.
+        // nick in the IRC prefix (`nick!user@host`), so derive it from there.
         if (!tags.login && prefix) {
           tags.login = prefix.split('!')[0] ?? '';
         }

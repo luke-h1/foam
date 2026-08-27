@@ -78,10 +78,8 @@ export const Image = function Image({
       ? descriptor.url
       : null;
   /**
-   * Once the remote source has rendered, swapping to the freshly downloaded
-   * file:// URI would make the native view fetch/decode the same bytes a
-   * second time and replay the fade transition - the disk copy serves the
-   * NEXT mount instead (getCachedImageUri resolves it synchronously then).
+   * Once the remote source has rendered, swapping to the file:// URI would
+   * re-decode and replay the fade - the disk copy serves the NEXT mount instead.
    */
   const loadedRemoteUrlRef = useRef<string | null>(null);
   const shouldUseFileCache = cacheToFile && imageFileStore.enabled;
@@ -133,10 +131,8 @@ export const Image = function Image({
   }, [cacheVariant, diskCachedUrl, shouldUseFileCache, url]);
 
   /**
-   * When the wrapper's own file cache is handling persistence, keep
-   * expo-image to memory caching - otherwise the same bytes land on disk
-   * twice (expo-image's disk cache for the remote fetch plus our MMKV-
-   * manifested file cache), burning through both caches' eviction budgets.
+   * When our file cache handles persistence, keep expo-image to memory
+   * caching - otherwise the same bytes land on disk twice.
    */
   const resolvedCachePolicy =
     cachePolicy ?? (shouldUseFileCache ? 'memory' : undefined);
@@ -179,9 +175,8 @@ export const Image = function Image({
         transition={transition}
         decodeFormat='rgb'
         /**
-         * Keyed on the ORIGINAL url: keying on the resolved url flipped the
-         * recycling identity when the disk-cache swap landed, forcing a
-         * needless teardown of the native image.
+         * Keyed on the ORIGINAL url - the resolved url flipped recycling
+         * identity when the disk-cache swap landed.
          */
         recyclingKey={recyclingKey ?? url ?? undefined}
         useAppleWebpCodec={useAppleWebpCodec}

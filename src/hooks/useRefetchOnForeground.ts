@@ -9,10 +9,7 @@ interface UseRefetchOnForegroundOptions<TRefetched> {
   enabled?: boolean;
   refetch: () => Promise<TRefetched>;
   /**
-   * Minimum time between triggered refetches. The refetch callbacks passed in
-   * bypass query staleTime (`refetchQueries` refetches unconditionally), so
-   * without a floor a quick tab hop away and back fires a guaranteed network
-   * request each time. Defaults to the app-wide 30s query staleTime.
+   * Floor between refetches - the callbacks bypass staleTime (`refetchQueries` is unconditional), so a quick tab hop would fire a guaranteed request. Defaults to the app-wide 30s staleTime.
    */
   minIntervalMs?: number;
 }
@@ -41,9 +38,7 @@ export function useRefetchOnForeground<TRefetched>({
         return undefined;
       }
 
-      // If the screen regains focus while the app is active (e.g. returning
-      // from background while still on this tab, or switching back to this
-      // tab after a long pause) ensure data is refreshed.
+      // Refresh when the screen regains focus while the app is active.
       refetchIfDue();
 
       return subscribeToAppForeground(refetchIfDue);

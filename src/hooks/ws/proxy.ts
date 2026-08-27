@@ -14,8 +14,7 @@ type WritableKeys<T> = {
 }[keyof T];
 
 /**
- * The proxy answers `reconnect` itself, so its trap sees one key the socket
- * type does not declare.
+ * The proxy answers `reconnect` itself, so its trap sees one key the socket type does not declare.
  */
 type WebSocketProxyKey = keyof WebSocket | 'reconnect';
 

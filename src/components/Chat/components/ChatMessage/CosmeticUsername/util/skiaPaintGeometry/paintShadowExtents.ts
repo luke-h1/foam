@@ -14,19 +14,14 @@ export interface ShadowExtents {
 const BLUR_EXTENT_MULTIPLE = 3;
 
 /**
- * Above this the subset walk is not worth it; 7TV paints top out around eight
- * chained shadows, and the running-total bound below is still safe, just
- * slightly generous.
+ * Above this the subset walk is not worth it; 7TV paints top out around
+ * eight chained shadows.
  */
 const MAX_ENUMERATED_DROP_SHADOWS = 12;
 
 /**
- * `filter: drop-shadow(a) drop-shadow(b)` makes b shadow a's whole output -
- * source included - so the composite is the union of every subset of the
- * chain: the glyph, a's shadow, b's shadow, and b's shadow of a's. Padding has
- * to cover the furthest-reaching subset, not just the fully-cumulative one; a
- * chain whose first shadow is offset far right would otherwise report no left
- * extent at all and clip a later, wider shadow that sits back at the origin.
+ * Chained drop-shadows compose, so padding must cover the furthest-reaching
+ * subset of the chain, not just the fully-cumulative one.
  */
 function* dropShadowSubsets(
   dropShadows: PaintShadow[],

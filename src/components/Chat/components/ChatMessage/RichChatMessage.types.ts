@@ -84,9 +84,8 @@ export interface ChatRowBodyState {
 }
 
 /**
- * The row's whole derived state. Named rather than inferred from the hook so
- * the two renderers below it declare a contract instead of inheriting whatever
- * the hook happens to return today.
+ * The row's whole derived state; named rather than inferred so the renderers
+ * declare a contract instead of inheriting whatever the hook returns today.
  */
 export interface RichChatMessageState
   extends ChatRowSurfaceState, ChatRowBodyState {

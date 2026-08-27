@@ -40,9 +40,8 @@ const flushMicrotasks = () =>
   });
 
 /**
- * requestAnimationFrame is polyfilled onto setTimeout here, so each turn drains
- * one deferred release pass. A release can be re-queued a few times, hence
- * several turns.
+ * requestAnimationFrame is polyfilled onto setTimeout here, so each turn
+ * drains one deferred release pass; a release can be re-queued a few times.
  */
 const flushAnimationFrames = async (turns = 6) => {
   for (let turn = 0; turn < turns; turn += 1) {
@@ -57,9 +56,7 @@ describe('cache-service', () => {
   afterEach(() => {
     clearCachedEmoteRefs();
     jest.clearAllMocks();
-    // clearAllMocks leaves queued mockReturnValueOnce values behind; a test
-    // whose decode is fenced before loadAsync runs would leak its pending
-    // promise into the next test's first decode.
+    // clearAllMocks leaves queued mockReturnValueOnce values behind, leaking a fenced decode's pending promise into the next test.
     loadAsync.mockReset();
   });
 

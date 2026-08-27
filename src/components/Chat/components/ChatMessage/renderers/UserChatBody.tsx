@@ -114,9 +114,8 @@ export function UserChatBody({
   const actionColor = isAction ? inlineUsernameColor : undefined;
   const textStyles = getChatTextStyles(fontScale, compact);
   /**
-   * A painted row keeps the username out of the body Text but still flows the
-   * body inline, so the body carries emotes on its own and needs the taller
-   * emote leading on every nested span - see InlineMessageLine.
+   * A painted row's body still flows inline, so it needs the taller emote
+   * leading on every nested span - see InlineMessageLine.
    */
   const bodyEmoteLineStyle = getMessageStructure(message).containsEmotes
     ? textStyles.bodyEmoteLine

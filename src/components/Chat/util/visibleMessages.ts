@@ -108,7 +108,7 @@ function messageHiddenByPhrase(
 
   const { body } = getNormalisedMessageFields(message);
 
-  // eslint-disable-next-line react-doctor/js-set-map-lookups -- body.includes(phrase) is String.includes (substring containment), not Array.includes; a Set only helps with exact-value membership
+  // eslint-disable-next-line react-doctor/js-set-map-lookups -- String.includes substring check, not membership
   return hiddenPhrases.some(phrase => body.includes(phrase));
 }
 

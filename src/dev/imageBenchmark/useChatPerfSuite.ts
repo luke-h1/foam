@@ -24,7 +24,7 @@ const pct = (a: number[], q: number) => {
   if (a.length === 0) {
     return 0;
   }
-  // eslint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks Array.prototype.toSorted (throws "undefined is not a function"); copy-then-sort is the safe equivalent
+  // eslint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks toSorted
   const s = [...a].sort((x, y) => x - y);
   return s[Math.min(s.length - 1, Math.floor(q * s.length))]!;
 };
@@ -79,17 +79,14 @@ export function useChatPerfSuite() {
   const runningRef = useRef(false);
 
   /**
-   * Reanimated ticks this worklet on the UI thread; we gate accumulation to
-   * measure windows via uiActive and read the totals back on JS when each
-   * phase ends.
+   * UI-thread accumulators; uiActive gates them to measure windows and JS reads the totals at phase end.
    */
   const uiFrames = useSharedValue(0);
   const uiJank = useSharedValue(0);
   const uiActive = useSharedValue(false);
 
   /**
-   * Countdown is driven here on the UI thread so it keeps ticking even while
-   * the JS thread is saturated by the flood being measured.
+   * Countdown ticks on the UI thread so it survives a JS thread saturated by the flood.
    */
   const phaseCountdownMs = useSharedValue(0);
   const totalCountdownMs = useSharedValue(0);
@@ -220,18 +217,17 @@ export function useChatPerfSuite() {
         const phase = SUITE_PHASES[i]!;
         const label = phase.preset;
 
-        // Start the flood for warmup ramp; restart the fixture replay at measure
-        // start so each run processes a byte-identical stream (repeatable).
+        // Restart the fixture replay at measure start so each run processes a byte-identical stream.
         syntheticChatControl.current = SYNTHETIC_PRESETS[phase.preset]!;
 
-        // eslint-disable-next-line react-doctor/async-await-in-loop, react-doctor/async-defer-await -- phases are ordered and the window must run to completion (it IS the work); cancellation is checked after
+        // eslint-disable-next-line react-doctor/async-await-in-loop, react-doctor/async-defer-await -- ordered phases; the window is the work
         await runWindow(i, label, 'warming up', WARMUP_MS, false, suiteEnd);
         if (cancelRef.current) {
           break;
         }
 
         resetFloodReplay();
-        // eslint-disable-next-line react-doctor/async-defer-await -- the measure window must run fully before we can check whether it was cancelled
+        // eslint-disable-next-line react-doctor/async-defer-await -- window must finish before the cancel check
         await runWindow(i, label, 'measuring', phase.measureMs, true, suiteEnd);
         if (cancelRef.current) {
           break;
@@ -259,7 +255,7 @@ export function useChatPerfSuite() {
         // Cooldown: stop the flood so memory/GC settles before the next phase.
         syntheticChatControl.current = SYNTHETIC_PRESETS.off!;
         if (i < SUITE_PHASES.length - 1) {
-          // eslint-disable-next-line react-doctor/async-defer-await -- the cooldown window must run fully before we can check whether it was cancelled
+          // eslint-disable-next-line react-doctor/async-defer-await -- window must finish before the cancel check
           await runWindow(i, label, 'cooldown', COOLDOWN_MS, false, suiteEnd);
           if (cancelRef.current) {
             break;
@@ -277,9 +273,7 @@ export function useChatPerfSuite() {
     });
   }, [runWindow, uiFrames, uiJank, countdownTicking]);
 
-  // Signal cancel + stop the flood immediately, but let runSuite's finally own
-  // the transition to IDLE — otherwise the Run button reappears mid-cancel and a
-  // re-tap would reset cancelRef and start a second overlapping run.
+  // runSuite's finally owns the transition to IDLE - otherwise the Run button reappears mid-cancel and a re-tap starts a second overlapping run.
   const stopSuite = useCallback(() => {
     cancelRef.current = true;
     syntheticChatControl.current = SYNTHETIC_PRESETS.off!;

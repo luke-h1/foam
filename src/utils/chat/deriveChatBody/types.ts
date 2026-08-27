@@ -14,15 +14,14 @@ export type ChatBodyVariant =
   | 'user_chat';
 
 /**
- * The part types a single Text element can host, which is what lets a body
- * wrap inline after the username (Twitch-web style) instead of dropping to a
- * rectangular block on the next flex line.
+ * The part types a single Text element can host, which lets a body wrap
+ * inline after the username instead of dropping to a block on a new flex line.
  */
 export type InlineFlowPart = ParsedPart<'text' | 'mention' | 'link' | 'emote'>;
 
 export interface MessageStructure {
   /**
-   * Every part fits in a single Text — ignores paint/moderation, which
+   * Every part fits in a single Text - ignores paint/moderation, which
    * `canFlowInline` ANDs in for the caller.
    */
   canBeInline: boolean;

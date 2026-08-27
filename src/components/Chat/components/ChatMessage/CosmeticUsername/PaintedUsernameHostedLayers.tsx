@@ -37,10 +37,8 @@ interface PaintedUsernameHostedLayersProps {
 }
 
 /**
- * The renderers that hang native views off every painted row: a WKWebView per
- * name, or a MaskedView over a stack of gradient and image layers. Both shed
- * to a solid paint colour while the list is flinging, when the render encoder
- * is most pressured (FOAM-TV-MOBILE-BJ), and return ~150ms after it settles.
+ * Both renderers shed to a solid paint colour while the list is flinging
+ * (FOAM-TV-MOBILE-BJ) and return ~150ms after it settles.
  */
 export function PaintedUsernameHostedLayers({
   displayUsername,

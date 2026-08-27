@@ -1,13 +1,8 @@
 import performance from 'react-native-performance';
 
 /**
- * Stage timing for the chat ingest pipeline, off by default and enableable in
- * a release build with EXPO_PUBLIC_PERF_MARKS=1 (metro inlines the literal,
- * so disabled builds ship no-ops and none of this module's state). Emits
- * user-timing marks per stage plus one `chat.ingest_to_commit` measure per
- * commit batch spanning oldest-buffered -> committed, readable from a
- * PerformanceObserver, the Rozenite performance panel, or Instruments /
- * Perfetto alongside the existing signposts.
+ * Chat ingest stage timing, enabled with EXPO_PUBLIC_PERF_MARKS=1; metro
+ * inlines the literal, so disabled builds ship no-ops.
  */
 const ENABLED = process.env.EXPO_PUBLIC_PERF_MARKS === '1';
 

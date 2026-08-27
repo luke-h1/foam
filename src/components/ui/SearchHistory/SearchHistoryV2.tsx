@@ -103,25 +103,22 @@ function SwipeableHistoryItem({
   }));
 
   const animatedContainerStyle = useAnimatedStyle(() => ({
-    // Collapsing the row height reclaims layout space as the item is deleted;
-    // a scaleY transform would leave a gap where the row used to be.
+    // Height collapse reclaims layout space on delete; scaleY would leave a gap.
     // ast-grep-ignore: no-animated-layout-props-tsx
     height: itemHeight.get(),
     opacity: opacity.get(),
     overflow: 'hidden',
   }));
 
-  // The red fill grows with the swipe so it always sits flush behind the row —
-  // no bare background peeking through, even on a full swipe-to-delete.
+  // The red fill grows with the swipe so no bare background peeks through.
   const animatedDeleteStyle = useAnimatedStyle(() => ({
-    // The fill reveals the fixed-width trash button beneath it; a scaleX
-    // transform would squash that icon/label child instead of clipping to it.
+    // Width reveal clips to the fixed-width trash button; scaleX would squash it.
     // ast-grep-ignore: no-animated-layout-props-tsx
     width: Math.max(-translateX.get(), 0),
   }));
 
-  // The icon + label stay pinned to the right edge within a fixed-width slot so
-  // they don't drift as the fill expands, and ease in as the action is revealed.
+  // Pinned right in a fixed-width slot so the icon + label don't drift as the
+  // fill expands; eases in as the action is revealed.
   const animatedDeleteContentStyle = useAnimatedStyle(() => {
     const progress = interpolate(
       translateX.get(),
@@ -270,8 +267,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: '100%',
     justifyContent: 'center',
-    // Fixed slot pinned to the right edge keeps the icon + label from drifting
-    // while the red fill expands beneath them during the swipe.
+    // Fixed slot keeps the icon + label from drifting as the fill expands.
     width: ACTION_WIDTH,
   },
   deleteActionContent: {

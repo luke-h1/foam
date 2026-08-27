@@ -327,10 +327,8 @@ describe('hydrateVisibleSevenTvAssets', () => {
     expect(secondPassDidReprocess).toBe(false);
   });
 
-  // When bulk cosmetics land, every visible message has cached assets and the
-  // whole screenful used to re-parse synchronously in a single tick (Sentry #1
-  // chat hotspot, p75 157ms). The reprocess calls must be spread across
-  // event-loop turns so frames can interleave.
+  // Reprocess calls must spread across event-loop turns: a whole screenful
+  // re-parsing in one tick was the #1 Sentry chat hotspot (p75 157ms).
   test('spreads cached-asset reprocessing across event-loop turns', async () => {
     const messages = Array.from({ length: 24 }, (_, index) =>
       createMessageForUser(`turn-user-${index}`),

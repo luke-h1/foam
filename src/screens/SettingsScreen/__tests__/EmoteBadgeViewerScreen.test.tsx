@@ -19,13 +19,9 @@ import {
   twitchGlobalEmotesFixture,
 } from './__fixtures__/globalEmoteBadgeData.fixture';
 
-// @legendapp/list's LegendList and SectionList are faked by the root
-// __mocks__/@legendapp/list/* manual mocks (render every item/section
-// through renderItem so grid content is assertable under jest). The preview
-// sheets render for real - expo-media-library is faked at the root too.
+// LegendList/SectionList come from the root __mocks__/@legendapp/list manual mocks (every item renders through renderItem so grid content is assertable). Preview sheets render for real; expo-media-library is faked at the root too.
 
-// SegmentedControl wraps the native @expo/ui control, which cannot receive
-// segment-change events in tests; expose each segment as a pressable instead.
+// The native @expo/ui SegmentedControl cannot receive segment-change events in tests; expose each segment as a pressable.
 jest
   .spyOn(SegmentedControlModule, 'SegmentedControl')
   .mockImplementation(({ items, onChange }) => {

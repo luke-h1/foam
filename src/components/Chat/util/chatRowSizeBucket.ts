@@ -3,10 +3,8 @@ import { getMessageStructure } from '@app/utils/chat/deriveChatBody/getMessageSt
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 /**
- * Weights are "one average character wide", never points. A bucket only has to
- * group rows of similar height; the list learns each bucket's real height from
- * the first row of that shape it measures, at the current width, density and
- * font scale.
+ * Weights are "one average character wide", never points; the list learns each
+ * bucket's real height from the first measured row of that shape.
  */
 const EMOTE_WEIGHT = 4;
 /**
@@ -90,9 +88,8 @@ function getPartWeight(part: ParsedPart): number {
 }
 
 /**
- * Reads the message only. Badges, paints and the rest of the cosmetics land
- * after the row is placed, and the list treats a row's type as fixed from that
- * point.
+ * Reads the message only: cosmetics land after the row is placed, and the
+ * list treats a row's type as fixed from that point.
  */
 export function getChatRowSizeBucket(item: AnyChatMessageType): string {
   const cached = bucketCache.get(item);

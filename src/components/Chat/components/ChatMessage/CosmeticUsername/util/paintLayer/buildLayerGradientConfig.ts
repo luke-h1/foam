@@ -14,7 +14,7 @@ export interface LayerGradientConfig {
 
 /**
  * Expand repeating-gradient stops across [0, 1] (no SVG spreadMethod).
- * Keeps absolute stop phase (e.g. [0.4, 0.6] tiles at …, 0.2–0.4, 0.4–0.6, …).
+ * Keeps absolute stop phase (e.g. [0.4, 0.6] tiles at 0.2-0.4, 0.4-0.6, ...).
  */
 function expandRepeatingStops(stops: PaintStop[]): PaintStop[] {
   if (stops.length === 0) {
@@ -61,9 +61,8 @@ function expandRepeatingStops(stops: PaintStop[]): PaintStop[] {
   return expanded;
 }
 
-// Keyed on the (memoised, stable) layer object. Repeating-gradient stop
-// expansion + colour conversion are the heaviest paint work; sharing the
-// result across every user wearing the paint is the main per-render saving.
+// Keyed on the stable layer object; stop expansion + colour conversion are
+// the heaviest paint work, so share the result across users wearing the paint.
 const layerGradientConfigCache = new WeakMap<
   PaintLayerData,
   { config: LayerGradientConfig | null }
@@ -71,8 +70,7 @@ const layerGradientConfigCache = new WeakMap<
 
 /**
  * Gradient config for a layer span, or null when the layer draws no gradient
- * (URL layers, and gradients with fewer than two stops - invalid CSS whose
- * span keeps only its base-colour backing).
+ * (URL layers, and gradients with fewer than two stops).
  */
 export function buildLayerGradientConfig(
   layer: PaintLayerData,

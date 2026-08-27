@@ -62,7 +62,6 @@ export function useRecentChatMessages({
           if (abortController.signal.aborted) {
             return;
           }
-          // Recent messages must replay in server order.
           // eslint-disable-next-line react-doctor/async-await-in-loop -- IRC replay order is required
           await processRecentIrcLineRef.current(message);
         }

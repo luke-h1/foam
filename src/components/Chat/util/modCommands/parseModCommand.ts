@@ -15,9 +15,8 @@ const DEFAULT_TIMEOUT_SECONDS = 600;
 const DEFAULT_SLOW_MODE_SECONDS = 30;
 
 /**
- * Parses composer input into a moderation command, or null when the input is
- * not one. Twitch removed slash commands from IRC in 2023, so these map to
- * Helix endpoints instead of being sent as chat text.
+ * Twitch removed slash commands from IRC in 2023, so these map to Helix
+ * endpoints instead of being sent as chat text.
  */
 export function parseModCommand(input: string): ModCommand | null {
   const trimmed = input.trim();

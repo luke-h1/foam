@@ -4,8 +4,7 @@ import { useSyncRef } from '@app/hooks/useSyncRef';
 
 interface UseSleepTimerOptions {
   /**
-   * Called once when the timer elapses. Read via a ref so a stale closure can
-   * never fire against an unmounted screen.
+   * Called once on expiry; read via a ref so a stale closure never fires against an unmounted screen.
    */
   onExpire: () => void;
 }
@@ -59,8 +58,7 @@ export function useSleepTimer({ onExpire }: UseSleepTimerOptions): SleepTimer {
     return Math.max(1, Math.ceil((deadline - Date.now()) / 60_000));
   }, [deadline]);
 
-  // Stable identity so consumers can hold callbacks that only change when the
-  // timer state actually changes, not on every render of the owning screen.
+  // Stable identity so consumer callbacks change only with timer state, not every render.
   return useMemo(
     () => ({ cancel, getRemainingMinutes, isActive: deadline !== null, start }),
     [cancel, deadline, getRemainingMinutes, start],

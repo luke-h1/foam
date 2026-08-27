@@ -1,7 +1,6 @@
 /**
- * The two halves of a chat row, consumed as a namespace
- * (`import * as ChatRow`) so a call site reads `<ChatRow.Surface>` /
- * `<ChatRow.Body>` rather than two unrelated-looking component names.
+ * The two halves of a chat row, consumed as a namespace so a call site reads
+ * `<ChatRow.Surface>` / `<ChatRow.Body>`.
  */
 import { View } from 'react-native';
 import type { ReactNode } from 'react';

@@ -1,7 +1,6 @@
 /**
- * Skia paint bitmap cache lives here so `clearImageCache` can empty it without
- * importing the Skia rasterizer (keeps web / non-skia bundles free of that
- * dependency). Values are `PaintBitmaps` from the rasterizer.
+ * Lives here so `clearImageCache` can empty the Skia paint bitmap cache
+ * without importing the Skia rasterizer.
  */
 
 interface DisposableTexture {
@@ -9,9 +8,8 @@ interface DisposableTexture {
 }
 
 /**
- * The disposable surface of `PaintBitmaps`. Declared structurally so this
- * module never reaches for Skia, while a renamed or retyped field in the
- * rasterizer still fails the typecheck at the `cachePaintBitmaps` call.
+ * Structural mirror of `PaintBitmaps` so this module never imports Skia; a
+ * renamed rasterizer field still fails typecheck at `cachePaintBitmaps`.
  */
 export interface DisposablePaintBitmaps {
   staticImage: DisposableTexture;
@@ -36,10 +34,8 @@ const cache = new Map<string, DisposablePaintBitmaps>();
 const retainCounts = new Map<DisposablePaintBitmaps, number>();
 
 /**
- * Evicted, not yet freed. `PaintedUsernameSkia` retains in a layout effect, so
- * the retain lands in the same commit as the render that read the entry — but
- * a concurrent render can be interrupted between the two, so disposal is still
- * deferred two frames rather than running on eviction.
+ * Evicted, not yet freed: disposal defers two frames so an interrupted render
+ * can still land its layout-effect retain.
  */
 const pendingDisposal = new Set<DisposablePaintBitmaps>();
 let disposalFlushScheduled = false;
@@ -119,10 +115,8 @@ export function cachePaintBitmaps(
 }
 
 /**
- * Pins an entry's textures for as long as a canvas draws them. Returns false if
- * the entry was disposed before this retain landed — the caller must rebuild
- * rather than draw it, which keeps the eviction race recoverable instead of
- * putting a dead texture on screen.
+ * Returns false if the entry was disposed before the retain landed - the
+ * caller must rebuild rather than draw a dead texture.
  */
 export function retainPaintBitmaps(entry: DisposablePaintBitmaps): boolean {
   if (disposedEntries.has(entry)) {

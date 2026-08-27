@@ -1,10 +1,6 @@
 /**
- * Unescapes IRCv3 message-tag escape sequences (`\s`→space, `\:`→`;`,
- * `\r`→CR, `\n`→LF, `\\`→`\`). Decoding is a single left-to-right pass so an
- * escaped backslash is consumed as one unit: the wire value `\\s` becomes the
- * literal `\s`, not a space. A chained
- * `.replace('\\s',' ')...replace('\\\\','\\')` gets that case wrong because the
- * `\s` pass fires before the `\\` pass.
+ * Unescapes IRCv3 tag escapes in one pass so wire `\\s` becomes the literal
+ * `\s`, not a space - chained `.replace()` calls get that case wrong.
  */
 export function unescapeIrcTag(value: string): string {
   if (!value.includes('\\')) {

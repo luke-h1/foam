@@ -40,10 +40,7 @@ let cachedRemoteConfig: ReturnType<typeof getRemoteConfig> | null = null;
 let remoteConfigFetchPromise: Promise<boolean> | null = null;
 
 /**
- * Created on first use instead of at module scope - the handle plus
- * setConfigSettings/setDefaults were three Firebase bridge calls at import
- * time, and this module sits in the boot graph via the force-update modal
- * and the settings tab.
+ * Created on first use - the handle plus setConfigSettings/setDefaults were three Firebase bridge calls at import time, and this module sits in the boot graph.
  */
 function getRemoteConfigHandle() {
   if (cachedRemoteConfig) {
@@ -156,9 +153,7 @@ export function useRemoteConfig(): UseRemoteConfigResult {
     },
     staleTime: 5 * 60 * 1000,
     initialData: () => buildRemoteConfigFromDefaults('default'),
-    // Without this, initialData (admins: []) counts as fresh for staleTime, so
-    // queryFn never runs on mount and the real config is never fetched/read.
-    // Backdating it marks the defaults stale immediately so we fetch on mount.
+    // initialData counts as fresh for staleTime; backdating marks the defaults stale so the real config is fetched on mount.
     initialDataUpdatedAt: 0,
   });
 

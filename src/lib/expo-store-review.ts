@@ -47,8 +47,7 @@ export function recordWatchTime(durationMs: number): void {
 }
 
 /**
- * Request a store review if the user has earned a prompt (see
- * reviewPromptGate). Safe to call opportunistically; the gate plus the
+ * Safe to call opportunistically; the gate (reviewPromptGate) plus the
  * OS-level throttle decide whether anything is shown.
  */
 export async function maybeRequestStoreReview(): Promise<void> {

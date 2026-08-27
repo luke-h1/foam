@@ -24,11 +24,8 @@ type ImageLoadSource = Parameters<ExpoImageLoaders['loadAsync']>[0];
 const instrumentedClasses = new WeakSet<ExpoImageLoaders>();
 
 /**
- * Replaces Sentry's wrapExpoImage with two load-bearing differences: spans are
- * created with onlyIfParent so chat emote loads (which run outside any
- * transaction) never become root transactions of their own, and spans are
- * force-ended after IMAGE_SPAN_DEADLINE_MS so a load that never settles cannot
- * hold its parent transaction open.
+ * Replaces Sentry's wrapExpoImage: onlyIfParent stops emote loads becoming
+ * root transactions, and spans force-end so a hung load frees its parent.
  */
 export function instrumentExpoImageLoads(imageClass: ExpoImageLoaders): void {
   if (instrumentedClasses.has(imageClass)) {
@@ -61,9 +58,7 @@ function trackImageSpan<T>(
     return run();
   }
 
-  // Only the first of deadline/settlement may report the span: the span's
-  // status is read when the parent transaction ends, so a late setStatus after
-  // the deadline fired would rewrite deadline_exceeded to ok.
+  // First of deadline/settlement wins: a late setStatus would rewrite deadline_exceeded to ok.
   let settled = false;
 
   const deadline = setTimeout(() => {

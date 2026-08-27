@@ -11,9 +11,8 @@ const MEASURE_OPTIONS = {
 } as const;
 
 /**
- * `capMentionIndex` holds 8000 entries per index, so a long session in a busy
- * channel fills both. Chatters carry a colour; the login-only index does not,
- * which is the half that has to synthesise one per match.
+ * `capMentionIndex` holds 8000 entries per index; the login-only half has to
+ * synthesise a colour per match.
  */
 function seedIndexes(): void {
   clearMentionLoginIndex();

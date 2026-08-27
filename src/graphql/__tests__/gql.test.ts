@@ -8,8 +8,7 @@ import { gql } from '@app/graphql/gql';
 const occurrences = (document: string, fragment: string) =>
   document.split(fragment).length - 1;
 
-// Prettier reformats the GraphQL inside a `gql` tag, so these assert on the
-// interpolated fragments, which it leaves alone, rather than exact output.
+// Prettier reformats GraphQL inside a `gql` tag, so assert on the interpolated fragments it leaves alone.
 describe('gql', () => {
   const fragmentA = 'fragment A on T { a }';
   const fragmentB = 'fragment B on T { b }';
@@ -44,9 +43,7 @@ describe('gql', () => {
   });
 
   /**
-   * `graphQLTag` mode interpolates only direct spreads, so two fragments that
-   * share a nested one arrive already carrying it. Repeating the definition
-   * makes the whole operation invalid.
+   * `graphQLTag` mode interpolates only direct spreads, so fragments sharing a nested one arrive already carrying it; a repeated definition invalidates the operation.
    */
   test('appends a repeated fragment only once', () => {
     const shared = 'fragment ImageFragment on Image { url }';
@@ -64,9 +61,7 @@ describe('gql', () => {
 });
 
 /**
- * The clients post documents straight into a JSON body, so codegen has to keep
- * emitting plain strings. These fail if it drifts back to `documentMode`
- * `'string'`, which emits a `TypedDocumentString` class nothing here defines.
+ * Clients post documents straight into a JSON body, so codegen must keep emitting plain strings. These fail if it drifts back to `documentMode` `'string'`, which emits a `TypedDocumentString` class nothing here defines.
  */
 describe('generated documents', () => {
   test('are plain strings', () => {

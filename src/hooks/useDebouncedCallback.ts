@@ -11,8 +11,7 @@ export type UseDebouncedCallbackReturn<Args extends unknown[]> = [
 ];
 
 /**
- * Debounce `callback` so it only runs after `timeout` ms have passed.
- * Running it again resets the timer and swaps in the new arguments.
+ * Runs `callback` only after `timeout` ms; re-invoking resets the timer and swaps in the new arguments.
  */
 export function useDebouncedCallback<Args extends unknown[] = []>(
   callback: (...args: Args) => void,

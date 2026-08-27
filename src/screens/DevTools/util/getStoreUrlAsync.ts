@@ -5,17 +5,12 @@ import * as Application from 'expo-application';
 import { getAppStoreLink } from './getAppStoreLink';
 
 /**
- * The production bundle ID — the only one with an App Store listing.
- * All other variants (foam-tv-internal, foam-tv-testflight, foam-tv-dev, etc.)
- * should be directed to TestFlight instead.
+ * The only bundle ID with an App Store listing; every other variant goes to TestFlight.
  */
 const PRODUCTION_BUNDLE_ID = 'foam-tv';
 
 /**
- * Get the appropriate store URL based on the platform and release type.
- * - iOS TestFlight builds will open TestFlight
- * - iOS App Store builds will open the App Store
- * - Android builds will open the Play Store (works for all test tracks when user is enrolled)
+ * Store URL for the platform and release type: TestFlight for iOS test builds, App Store for production, Play Store on Android.
  */
 export async function getStoreUrlAsync() {
   if (process.env.EXPO_OS === 'ios') {
@@ -25,10 +20,7 @@ export async function getStoreUrlAsync() {
       releaseType !== Application.ApplicationReleaseType.APP_STORE &&
       releaseType !== Application.ApplicationReleaseType.SIMULATOR;
 
-    // Non-production bundle IDs (internal, testflight, dev, e2e variants) share the
-    // App Store signing certificate, so getIosApplicationReleaseTypeAsync() returns
-    // APP_STORE for them too — making isTestFlight unreliable on its own.
-    // Guard with the bundle ID to ensure only the real production build hits the App Store.
+    // Non-production bundle IDs share the App Store signing cert, so release type reads APP_STORE for them too; guard on bundle ID.
     const isProductionBuild =
       Application.applicationId === PRODUCTION_BUNDLE_ID;
 
@@ -45,10 +37,7 @@ export async function getStoreUrlAsync() {
   }
 
   if (process.env.EXPO_OS === 'android') {
-    /**
-     * Play store URL works for all tracks (production, internal, closed, open)
-     * as long as the user is enrolled in the test track
-     */
+    // Works for all Play tracks when the user is enrolled in the test track.
     return `https://play.google.com/store/apps/details?id=${Application.applicationId}`;
   }
 

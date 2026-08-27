@@ -16,9 +16,8 @@ interface PaintLayerTiledImageProps {
 }
 
 /**
- * Skia image-shader tiling for CSS `background-repeat` paint layers.
- * Uses the shared per-URL animation clock so animated tile textures advance
- * on the UI thread in phase with every other row showing the same paint.
+ * Skia image-shader tiling for CSS `background-repeat` paint layers; the
+ * shared per-URL clock keeps animated tiles in phase across rows.
  */
 export function PaintLayerTiledImage({
   canvasRepeat,

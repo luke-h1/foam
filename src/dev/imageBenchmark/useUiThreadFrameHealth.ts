@@ -7,8 +7,7 @@ export interface UiFrameHealth {
   jank: number;
 }
 
-// A 60hz frame is ~16.7ms; a missed vsync presents as ~33ms. >25ms means at
-// least one frame was genuinely dropped on the UI thread.
+// 60hz frame ~16.7ms, missed vsync ~33ms; >25ms means a genuinely dropped UI-thread frame.
 const DROPPED_FRAME_MS = 25;
 
 export function useUiThreadFrameHealth(): UiFrameHealth {

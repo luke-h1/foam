@@ -759,10 +759,8 @@ describe('useChatScroll', () => {
 
       expect(mocks.scrollToEnd).toHaveBeenCalledTimes(2);
 
-      // Even after the hydration anchor window expires, a content-size change
-      // while still pinned to the bottom keeps the newest row fully visible -
-      // otherwise an under-estimated emote/username row stays clipped at the
-      // viewport bottom.
+      // Even after the anchor window expires, a content-size change while
+      // pinned must keep the newest row visible, or an under-estimated row stays clipped.
       act(() => {
         jest.advanceTimersByTime(600);
         result.current.scrollHandlers.onContentSizeChange();
@@ -830,10 +828,8 @@ describe('useChatScroll', () => {
         }),
       );
 
-      // No scrollToBottom / maintainBottomAfterContentChange: this mirrors the
-      // live stream of messages arriving while the user simply sits at the
-      // bottom. The newest row must still be re-revealed after its real (often
-      // under-estimated) height is measured.
+      // No scrollToBottom / maintainBottomAfterContentChange: mirrors live
+      // messages arriving while the user sits at the bottom; the newest row must re-reveal after measurement.
       act(() => {
         result.current.scrollHandlers.onContentSizeChange();
       });

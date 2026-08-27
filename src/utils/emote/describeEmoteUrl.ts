@@ -29,9 +29,8 @@ export function describeEmoteUrl(url: string): EmoteUrlDescriptor {
 
   const b = bttv.exec(url);
   if (b) {
-    // BTTV's bare `{n}x` url serves whatever the emote actually is (static png
-    // or animated gif/webp) — it doesn't encode the kind. Only the explicit
-    // `.png` variant is reliably static; leave the bare form unknown.
+    // BTTV's bare `{n}x` url doesn't encode the kind; only the explicit
+    // `.png` variant is reliably static, so leave the bare form unknown.
     return {
       provider: 'bttv',
       id: b[1] ?? null,
@@ -46,11 +45,8 @@ export function describeEmoteUrl(url: string): EmoteUrlDescriptor {
       provider: 'ffz',
       id: f[1] ?? null,
       scale: f[3] ?? null,
-      // Only the explicit `animated/` path segment guarantees the content is
-      // animated. Without it, FFZ may still serve an animated WebP at the
-      // bare scale URL (e.g. /emote/6/2), so treat it as unknown to avoid
-      // opting into Apple's synchronous main-thread ImageIO decoder via
-      // useAppleWebpCodec=true, which causes fatal app hangs on animated WebP.
+      // A bare scale URL may still serve animated WebP; leave kind unknown so
+      // useAppleWebpCodec never routes animated WebP to ImageIO (fatal hang).
       kind: f[2] ? 'animated' : null,
     };
   }

@@ -2,8 +2,7 @@ export interface SyntheticChatConfig {
   active: boolean;
   // Sustained baseline throughput.
   msgPerSec: number;
-  // Periodic burst: every `burstEveryMs`, emit `burstSize` messages at once to
-  // simulate emote-spam raids and stress the list's batch-insert path.
+  // Every `burstEveryMs`, emit `burstSize` at once to simulate raids and stress the batch-insert path.
   burstSize: number;
   burstEveryMs: number;
   // 0..1 share of messages that are pure emote spam (no words).
@@ -22,9 +21,7 @@ const OFF: SyntheticChatConfig = {
 };
 
 /**
- * Preset lookup keyed by the name a dev-tools screen or deep-link param
- * carries, so an unrecognised key resolves to `undefined` rather than failing
- * to compile.
+ * Keyed by dev-tools / deep-link preset name, so an unrecognised key resolves to `undefined` rather than failing to compile.
  */
 export interface SyntheticPresets {
   [presetKey: string]: SyntheticChatConfig;

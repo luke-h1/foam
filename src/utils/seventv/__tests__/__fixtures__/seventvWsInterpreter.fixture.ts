@@ -1,5 +1,4 @@
-// This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
-// field (see types/seventv/cosmetics.ts), not a naming choice.
+// `shape` here mirrors the 7TV paint API field name, not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import type {
   BadgeCosmetic,
@@ -369,9 +368,8 @@ export function createDispatchMessage(
 }
 
 /**
- * Builds an event payload from raw data the way the runtime receives it,
- * via a JSON round trip. Used for malformed payload cases the type system
- * would otherwise reject.
+ * Builds an event payload via a JSON round trip, for malformed payload cases
+ * the type system would otherwise reject.
  */
 export function coerceEvent<T extends SevenTvEventType>(
   raw: RawSeventvPayload,

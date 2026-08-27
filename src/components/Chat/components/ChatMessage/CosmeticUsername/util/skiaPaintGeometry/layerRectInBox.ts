@@ -6,9 +6,8 @@ export interface LayerRect {
 }
 
 /**
- * Absolute-pixel form of `getLayerLayoutStyle`'s percentage maths: CSS
- * `background-position: p%` aligns the p% point of the layer with the p%
- * point of the box, i.e. offset = (box - layer) * p.
+ * Absolute-pixel form of `getLayerLayoutStyle`'s percentage maths:
+ * offset = (box - layer) * p, per CSS `background-position: p%`.
  */
 export function layerRectInBox(
   at: [number, number] | null,

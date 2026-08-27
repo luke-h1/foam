@@ -47,10 +47,8 @@ export const twitchApi = createApiClient({
 });
 
 /**
- * Helix rejects requests whose Client-Id header does not match the client the
- * token was issued for. Anonymous tokens come from the auth proxy and may be
- * issued under a different client ID than EXPO_PUBLIC_TWITCH_CLIENT_ID, so we
- * sync the header to the active token's client ID.
+ * Helix rejects a Client-Id header that mismatches the token's client; sync
+ * the header to the active token's client ID.
  */
 export function setTwitchClientId(clientId: string) {
   currentTwitchClientId = clientId;

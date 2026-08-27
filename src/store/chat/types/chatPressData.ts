@@ -5,9 +5,8 @@ import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 /**
- * The payloads a chat row hands to the overlay layer on press. They live
- * store-side because the overlay observables carry them; the renderers
- * re-export them from `RichChatMessage.types`.
+ * The payloads a chat row hands to the overlay layer on press; store-side
+ * because the overlay observables carry them.
  */
 export type EmotePressData = ParsedPart<'emote'>;
 export type BadgePressData = SanitisedBadgeSet;

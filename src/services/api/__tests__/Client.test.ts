@@ -20,9 +20,8 @@ type MockResponseBody = {
 };
 
 /**
- * `expo/fetch` already carries a faithful jest.fn() mock at
- * __mocks__/expo/fetch.ts (auto-applied to every test), so this file only
- * needs a typed handle onto it.
+ * `expo/fetch` already carries a jest.fn() mock at __mocks__/expo/fetch.ts,
+ * so this file only needs a typed handle onto it.
  */
 const mockFetch = jest.mocked(fetch);
 
@@ -43,9 +42,7 @@ function jsonResponse(body: MockResponseBody, status = 200): FetchResponse {
     json: () => Promise.resolve(body),
     text: () => Promise.resolve(JSON.stringify(body)),
   };
-  // SAFETY: Client.ts only ever reads `.ok`, `.status` and `.text()` off the
-  // response it awaits from fetch(); the real FetchResponse class carries
-  // private fields and native-bridge methods this plain object never needs.
+  // SAFETY: Client.ts only reads .ok/.status/.text() off the response, so this plain object stands in for FetchResponse.
   return response as FetchResponse;
 }
 
@@ -58,10 +55,7 @@ function firstRequestInit(): MockRequestInit {
   if (init === undefined) {
     throw new Error('fetch was called without an init');
   }
-  // SAFETY: createApiClient always calls fetch with a headers/body/signal
-  // request init shaped exactly like MockRequestInit; FetchRequestInit's
-  // broader HeadersInit/BodyInit/AbortSignal-or-null types only cover fetch
-  // callers this client never exercises.
+  // SAFETY: createApiClient always calls fetch with an init shaped exactly like MockRequestInit; FetchRequestInit's wider types cover callers this client never exercises.
   return init as MockRequestInit;
 }
 
@@ -164,9 +158,7 @@ describe('createApiClient', () => {
   });
 
   test('resolves undefined for 204 responses', async () => {
-    // SAFETY: Client.ts never calls `.json()` on a 204 response, only `.ok`,
-    // `.status` and `.text()`, so this plain object stands in for the real
-    // FetchResponse class without its private fields.
+    // SAFETY: Client.ts never calls .json() on a 204, only .ok/.status/.text().
     mockFetch.mockResolvedValueOnce({
       ok: true,
       status: 204,

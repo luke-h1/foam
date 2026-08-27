@@ -21,8 +21,7 @@ interface VodPlayerScreenProps {
   id: string;
 }
 
-// Hold the screen awake while watching so playback isn't interrupted by the
-// idle-timer auto-lock — VODs are long-form, so this matters more than live.
+// Keep the screen awake while watching - idle-timer auto-lock matters more on long-form VODs.
 const KEEP_AWAKE_TAG = 'vod-player';
 
 export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
@@ -42,17 +41,14 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
       windowWidth,
     });
 
-  // In landscape the notch / Dynamic Island and home indicator sit on the left
-  // and right edges, so reserve those insets rather than the top.
+  // In landscape the safe-area insets land on left and right; reserve those, not the top.
   const landscapeInsetLeft = isLandscape ? insets.left : 0;
   const landscapeInsetRight = isLandscape ? insets.right : 0;
   const videoWidth = Math.max(
     1,
     screenWidth - landscapeInsetLeft - landscapeInsetRight,
   );
-  // Portrait pins a 16:9 video below the status-bar inset; landscape fills the
-  // available height. Sizing the container to the video means the embedded
-  // WebView is exactly video-sized and never letterboxes inside black bars.
+  // Portrait pins 16:9 below the status bar, landscape fills the height; sizing the container to the video keeps the WebView video-sized with no letterboxing.
   const videoHeight = isLandscape ? layoutHeight : videoWidth * (9 / 16);
 
   useEffect(() => {

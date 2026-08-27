@@ -45,8 +45,7 @@ export function SyncedEmotesScreen() {
     const next = !sharedClock;
     sharedClockEnabled = next;
     setSharedClock(next);
-    // Remounting before the driver has the new value races it: the fresh views
-    // read the old one and the label ends up disagreeing with what is on screen.
+    // Remounting before the driver has the new value races it: fresh views read the old one and the label disagrees with the screen.
     await setSharedAnimationEnabled(next);
     remountCells(false);
   };

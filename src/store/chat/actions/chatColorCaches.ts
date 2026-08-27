@@ -1,10 +1,6 @@
 /**
  * Render caches for chat colours, read imperatively at up to ~100 msg/s and
  * never subscribed - plain Maps per the chat-state rule.
- *
- * `lightenedColors` memoizes a pure function, so the size cap alone bounds
- * it. `mentionColors` keeps a TTL as a staleness backstop (a chatter's
- * colour can change mid-session).
  */
 export const CHAT_SESSION_CACHE_TTL_MS = 30_000;
 

@@ -25,9 +25,7 @@ function splitTrailingUrlPunctuation(word: string): SplitUrlWord {
 
 export function parseWordLinkParts(word: string): ParsedPart[] | null {
   // Runs for every word of every parsed message; ~99.9% of words aren't
-  // links, so reject before allocating the punctuation split. Words arrive
-  // pre-split on whitespace, and stripping trailing punctuation can't make a
-  // non-http prefix into one.
+  // links, so reject before allocating the punctuation split.
   if (!word || !GENERIC_HTTP_URL_REGEX.test(word)) {
     return null;
   }

@@ -10,7 +10,6 @@ function getViewCountFormatter() {
 }
 
 /**
- * Format viewer count for display.
  * Missing and invalid counts render as '0'.
  */
 export function formatViewCount(count: number | undefined | null): string {

@@ -13,12 +13,8 @@ const ScreenDimensionsContext = createContext<
 >(undefined);
 
 /**
- * Screen dimensions provider.
- *
- * Each `useWindowDimensions` hook call registers a separate listener.
- * Ideally, we want only one instance (singleton) to avoid multiple listeners.
- * This pattern uses a single, global instance of `useWindowDimensions`,
- * reducing unnecessary re-renders.
+ * One global useWindowDimensions instance: every hook call registers its own
+ * listener, so sharing one cuts listeners and re-renders.
  */
 
 export const ScreenDimensionsProvider = ({ children }: PropsWithChildren) => {

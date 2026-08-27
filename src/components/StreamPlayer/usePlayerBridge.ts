@@ -491,8 +491,8 @@ export function usePlayerBridge({
         stability.noteLatency(action.latencySeconds);
         break;
       // Latency display flows through the videoLatencyDisplay$ observable via
-      // onPlaybackLatencyChange — holding it in React state here re-rendered
-      // the whole player subtree on every ~4s latency tick for nothing.
+      // onPlaybackLatencyChange - React state here re-rendered the whole
+      // player subtree on every ~4s latency tick.
       case 'publishLatency':
         lastPlaybackLatencySecondsRef.current = action.latencySeconds;
         onPlaybackLatencyChange?.(action.latencySeconds);

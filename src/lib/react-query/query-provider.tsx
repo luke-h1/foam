@@ -99,10 +99,7 @@ function stopConnectivityPolling() {
   }
 }
 
-// Armed after boot interactions settle - a module-scope start wakes the JS
-// thread at 2 Hz through the busiest part of startup; the AppState
-// subscription and the reconcile fallback below cover any transition that
-// happens before this runs.
+// Armed after boot interactions settle - a module-scope start would poll at 2 Hz through startup; the AppState subscription and reconcile fallback cover earlier transitions.
 InteractionManager.runAfterInteractions(() => {
   if (AppState.currentState === 'active') {
     startConnectivityPolling();
@@ -117,16 +114,10 @@ subscribeToAppStateTransitions(({ current }) => {
   }
 });
 
-// Fallback in case an AppState 'change' event is dropped — this is a known,
-// occasional issue on some Android OEMs/versions and would otherwise leave
-// polling stopped indefinitely after a missed foreground transition.
-// start/stopConnectivityPolling are both idempotent, so this just reconciles
-// against the actual current state rather than trusting event delivery alone.
+// Some Android OEMs occasionally drop AppState 'change' events, which would stop polling forever. Both start/stop are idempotent, so reconcile against the actual state.
 const APP_STATE_RECONCILE_INTERVAL_MS = 15_000;
 
-// Stored on globalThis and cleared before re-arming so a module re-evaluation
-// (Fast Refresh in dev) can't leak a second interval. In production the module
-// is evaluated once.
+// On globalThis so Fast Refresh re-evaluation can't leak a second interval.
 declare global {
   var __foamAppStateReconcileInterval:
     ReturnType<typeof setInterval> | undefined;
@@ -151,11 +142,7 @@ focusManager.setEventListener(onFocus => {
     });
   }
   if (globalThis.window) {
-    // these handlers are a bit redundant but focus catches when the browser window
-    // is blurred/focused while visibilitychange seems to only handle when the
-    // window minimizes (both of them catch tab changes)
-    // there's no harm to redundant fires because refetchOnWindowFocus is only
-    // used with queries that employ stale data times
+    // focus and visibilitychange overlap but cover different cases; redundant fires are harmless with stale times.
     const handler = () => onFocus();
     // eslint-disable-next-line no-undef
     window.addEventListener('focus', handler, false);

@@ -12,12 +12,8 @@ const AT_SIGN = 64;
 const COLON = 58;
 
 /**
- * Parse a raw Twitch IRC line (`[@tags] [:prefix] COMMAND params [:trailing]`)
- * into its parts. Returns null for blank or structurally invalid lines.
- *
- * Cursor-based on purpose: the previous shape re-copied the remaining tail of
- * the line (trim + substring) once per stage, which a busy channel pays per
- * message; this slices only the segments that end up in the result.
+ * Parse a raw Twitch IRC line into its parts; null for invalid lines.
+ * Cursor-based on purpose - the old per-stage tail copies cost per message in a busy channel.
  */
 export function parseIrcMessage(line: string): IrcMessage | null {
   let cursor = 0;

@@ -11,11 +11,8 @@ export interface ResolvableDisplayEmote {
 }
 
 /**
- * Owns which url an emote displays at. Warm, prefetch, render and the action
- * sheet all resolve through here so they cannot disagree on scale or animation
- * variant. `disableAnimations` defaults to the persisted preference; pass it
- * only when a surface renders a value the store does not hold yet (the chat
- * preferences preview).
+ * Owns which url an emote displays at: warm, prefetch, render and the action
+ * sheet all resolve here so they cannot disagree on scale or animation variant.
  */
 export function resolveEmoteDisplayUrl(
   emote: ResolvableDisplayEmote,

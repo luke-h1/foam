@@ -14,12 +14,8 @@ const PULSE_MIN = 0.35;
 const PULSE_MAX = 0.85;
 
 /**
- * Fills its (relatively/absolutely positioned) parent with a grey box that
- * pulses on the UI thread while an inline chat image loads, so a not-yet-decoded
- * emote/badge reads as "loading" instead of a dead grey square. One Animated.View
- * + one shared value — no gradient/canvas — because a busy chat can have many
- * loading at once. When `animate` is false (the image gave up after retries) it
- * settles to a static grey so a permanently-broken image still shows a box.
+ * Grey box that pulses on the UI thread while an inline chat image loads; one
+ * Animated.View + one shared value because a busy chat has many at once.
  */
 export function ChatImageShimmer({ animate = true }: { animate?: boolean }) {
   const opacity = useSharedValue(PULSE_MIN);

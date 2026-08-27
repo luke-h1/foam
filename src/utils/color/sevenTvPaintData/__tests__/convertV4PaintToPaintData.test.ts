@@ -1,5 +1,5 @@
-// This file's `shape` usages are GraphQL-codegen names from the 7TV schema
-// and the PaintData.shape field they convert to, not a naming choice.
+// `shape` here is a GraphQL-codegen name from the 7TV schema, not a naming
+// choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import { PaintRadialGradientShape } from '@app/graphql/generated/gql';
 import { indexedCollectionToArray } from '@app/services/ws/util/indexedCollection';

@@ -8,9 +8,8 @@ import type {
 } from '@app/types/emote';
 
 /**
- * Overrides a fixture caller can apply to any provider's emote. Dropping the
- * two discriminants keeps this assignable to each provider's own partial, so
- * the branches below stay checked instead of asserted.
+ * Dropping the two discriminants keeps this assignable to each provider's own
+ * partial, so the branches below stay checked instead of asserted.
  */
 type MenuEmoteOverrides = Partial<
   Omit<SevenTvSanitisedEmote, 'provider' | 'site'> &

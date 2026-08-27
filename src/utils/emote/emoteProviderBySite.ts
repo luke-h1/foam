@@ -1,10 +1,8 @@
 import type { EmoteProvider, EmoteSite } from '@app/types/emote';
 
 /**
- * The one mapping from the `site` display string to the `provider`
- * discriminant. Emote constructors stamp `provider` directly; this map exists
- * for the persisted-cache backfill, which hydrates emotes written by builds
- * that predate the field.
+ * Exists for the persisted-cache backfill, which hydrates emotes written by
+ * builds that predate the `provider` field.
  */
 export const EMOTE_PROVIDER_BY_SITE = {
   '7TV Channel': '7tv',

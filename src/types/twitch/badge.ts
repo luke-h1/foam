@@ -1,9 +1,8 @@
 import { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
 
 /**
- * The canonical provider discriminant for badges, matching the emote
- * `EmoteProvider` spelling ('7tv', 'bttv', 'ffz') plus the badge-only
- * providers. Dispatch on this field, never on the `type` display string.
+ * The canonical provider discriminant for badges; dispatch on this field,
+ * never on the `type` display string.
  */
 export type BadgeProvider = 'twitch' | '7tv' | 'bttv' | 'ffz' | 'chatterino';
 
@@ -24,9 +23,6 @@ export interface SanitisedBadgeSet {
 
   color?: string;
   owner_username?: string;
-  /**
-   * The set ID
-   */
   set: string;
   provider: BadgeProvider;
 }

@@ -709,9 +709,8 @@ describe('useChatMessages', () => {
     test('commits every message when arrivals outrun the flush cadence', () => {
       const { result } = renderHook(() => useChatMessages(scrolledUpOptions));
 
-      // Exceeds the ingest controller's fixed backpressure threshold (400,
-      // independent of the chat scrollback preference) so the burst forces a
-      // synchronous drain before the flush timer ever fires.
+      // Exceeds the fixed backpressure threshold (400) so the burst forces a
+      // synchronous drain before the flush timer fires.
       const pushCount = 500;
 
       act(() => {
@@ -823,9 +822,8 @@ describe('useChatMessages', () => {
     });
 
     /**
-     * Raid mode must widen the batch alongside the interval. Pairing the wider
-     * interval with the narrow batch made the drain slower than arrival, and
-     * because the leftover backlog fed the raid check it then latched on.
+     * Raid mode must widen the batch alongside the interval, or the backlog
+     * drains slower than arrival and latches raid mode on.
      */
     test('raid mode does not drain slower than the normal live cadence', () => {
       const { result } = renderHook(() =>

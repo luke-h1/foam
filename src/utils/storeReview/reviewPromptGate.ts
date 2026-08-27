@@ -19,10 +19,8 @@ export interface ReviewPromptInput {
 }
 
 /**
- * Review prompts are rate-limited well below Apple/Google's hard caps:
- * only engaged users (3+ sessions, 30+ minutes watched), never in a
- * session that hit an error, at most once per app version, and at least
- * 90 days apart.
+ * Rate-limits review prompts well below Apple/Google's hard caps: engaged,
+ * error-free sessions only, once per app version, 90 days apart.
  */
 export function shouldRequestReview({
   state,

@@ -6,9 +6,8 @@ interface ExperimentDefinition {
 }
 
 /**
- * Registry of A/B experiments. Each entry maps to a key inside the Remote
- * Config `experiments` object that Firebase A/B Testing assigns per user. Add
- * real experiments here;
+ * A/B experiment registry; each entry maps to a key inside the Remote Config
+ * `experiments` object Firebase assigns per user.
  */
 const EXPERIMENTS = {
   chatComposerLayout: {

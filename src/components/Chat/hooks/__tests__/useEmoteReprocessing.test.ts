@@ -112,9 +112,8 @@ describe('useEmoteReprocessing', () => {
   });
 
   test('does nothing when getCurrentEmoteData returns null', () => {
-    // SAFETY: the hook defensively checks for a null result even though the
-    // real function never returns one; `never` bridges through in one
-    // assertion to exercise that branch.
+    // SAFETY: the hook defensively handles a null the real function never
+    // returns; `never` bridges through to exercise that branch.
     mockGetCurrentEmoteData.mockReturnValue(null as never);
     const peek = jest
       .fn()

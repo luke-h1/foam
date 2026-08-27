@@ -11,20 +11,15 @@ import { clearVisibleAssetHydration } from '@app/store/chat/actions/visibleAsset
 import { resetMentionLoginResolver } from '@app/utils/chat/mentionLoginResolver/resetMentionLoginResolver';
 
 /**
- * The four ways a channel session ends. `leave` is the navigation
- * `beforeRemove` (surface stays mounted for the outro), `unmount` is the chat
- * surface going away, `switch` is an in-place channel change on a mounted
- * surface, and `part` is the IRC PART echo for the current room.
+ * The four ways a channel session ends: navigation `beforeRemove`, chat
+ * surface unmount, in-place channel switch, and the IRC PART echo.
  */
 export type ChannelSessionResetTrigger =
   'leave' | 'unmount' | 'switch' | 'part';
 
 /**
- * The one owner of the module-level resets a channel switch requires. The
- * per-trigger lists were previously spread over ~9 owners across four
- * triggers, which let them drift; anything armed by a hook (scroll timers,
- * buffers, socket refs) stays with its structural owner and is NOT reset
- * here.
+ * The one owner of the module-level resets a channel switch requires; anything
+ * armed by a hook (timers, buffers, socket refs) is NOT reset here.
  */
 export function resetChannelSession(trigger: ChannelSessionResetTrigger): void {
   switch (trigger) {
