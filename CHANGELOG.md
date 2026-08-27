@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.0.9 (Production)
+
+### 🐛 Bug Fixes
+
+- **chat:** Blank rows, a11y labels, skeleton sizing, comment cleanup ([#881](https://github.com/lhowsam/foam/issues/881))
+
+### 👷 CI/CD
+
+- Remove Cursor review from the PR pipeline ([#878](https://github.com/lhowsam/foam/issues/878))
+
+### 🔧 Miscellaneous Tasks
+
+- **tooling:** Install anti-slop oxlint plugin and clear all in-scope violations ([#876](https://github.com/lhowsam/foam/issues/876))
+- **app:** Update expo to latest 57 ([#880](https://github.com/lhowsam/foam/issues/880))
+
 ## 1.0.8 (Production)
 
 ### 🐛 Bug Fixes
@@ -17,17 +32,6 @@
 
 - **infrastructure:** Reduce ci mins
 - **infrastructure:** Bump actions/cache from 4.3.0 to 6.1.0 ([#871](https://github.com/lhowsam/foam/issues/871))
-
-## 1.0.8 (Internal)
-
-### 👷 CI/CD
-
-- Remove Cursor review from the PR pipeline ([#878](https://github.com/lhowsam/foam/issues/878))
-
-### 🔧 Miscellaneous Tasks
-
-- **tooling:** Install anti-slop oxlint plugin and clear all in-scope violations ([#876](https://github.com/lhowsam/foam/issues/876))
-- **app:** Update expo to latest 57 ([#880](https://github.com/lhowsam/foam/issues/880))
 
 ## 1.0.7 (Production)
 
