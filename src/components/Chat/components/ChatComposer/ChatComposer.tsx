@@ -21,9 +21,8 @@ export type { ChatComposerHandle };
 export type { SuggestionType } from './util/chatComposerTypes';
 
 /**
- * 40% alpha. The highlight sits under the glyphs, so it stays translucent while
- * the caret and handles take the solid accent - iOS derives the same pair from
- * a single tint, and Android is pinned to that palette.
+ * 40% alpha: the highlight stays translucent under the glyphs while the caret
+ * and handles take the solid accent, matching iOS's derived pair.
  */
 const SELECTION_HIGHLIGHT_ALPHA = '66';
 
@@ -192,6 +191,7 @@ function ChatComposerComponent({
           onSubmitEditing={handleSubmit}
           selection={selection}
           value={text}
+          accessibilityLabel='Send a message'
           placeholder={placeholder ?? 'Send a message...'}
           placeholderTextColor={theme.color.textSecondary.dark}
           returnKeyType='send'

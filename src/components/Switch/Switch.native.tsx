@@ -1,11 +1,13 @@
 import { memo, useEffect } from 'react';
 import {
+  Platform,
   StyleSheet,
   type SwitchProps as NativeSwitchProps,
   View,
 } from 'react-native';
 
 import { Host, Switch as ExpoSwitch } from '@expo/ui';
+import { accessibilityLabel as accessibilityLabelModifier } from '@expo/ui/swift-ui/modifiers';
 import { useObservable, useSelector } from '@legendapp/state/react';
 
 export const Switch = memo(function Switch({
@@ -44,6 +46,11 @@ export const Switch = memo(function Switch({
       <Host colorScheme='dark' style={styles.host}>
         <ExpoSwitch
           disabled={disabled}
+          modifiers={
+            Platform.OS === 'ios' && accessibilityLabel
+              ? [accessibilityLabelModifier(accessibilityLabel)]
+              : undefined
+          }
           onValueChange={handleValueChange}
           testID={testID}
           value={displayValue}

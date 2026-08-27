@@ -131,15 +131,14 @@ function ChatComposerComponent({
               handleSelectionChange(selection.start)
             }
             onSubmitEditing={handleSubmit}
+            accessibilityLabel='Send a message'
             placeholder={placeholder ?? 'Send a message...'}
             placeholderTextColor={theme.color.textSecondary.dark}
             radius='xl'
             returnKeyType='send'
             /**
-             * Drives the SwiftUI `.tint`, so the caret and the selection
-             * highlight follow the accent the way every other iOS text field
-             * does. Without it the field falls back to its text colour and
-             * carets near-white.
+             * Drives the SwiftUI `.tint` so caret and selection follow the
+             * accent; without it the caret falls back near-white.
              */
             selectionColor={accentHex}
             style={styles.input}
@@ -177,9 +176,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 0,
     /**
-     * `Input`'s variants derive every colour - text included - from the accent,
-     * so without this the typed message renders in the accent instead of the
-     * body colour the Android composer uses.
+     * `Input` variants derive every colour from the accent; without this the
+     * typed message renders in the accent instead of the body colour.
      */
     color: theme.color.text.dark,
     maxHeight: 120,
