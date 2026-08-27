@@ -27,10 +27,8 @@ export function ChatMessageBody({
   textColor,
 }: ChatMessageBodyProps) {
   /**
-   * Rebuilt as a literal instead of an object-rest collect: rest
-   * materialization is an unconditionally-fresh object the React Compiler
-   * cannot cache, which invalidated every memo scope keyed on it per render.
-   * A literal over stable fields compiles to a cached object.
+   * A literal, not object-rest: rest materialization is a fresh object the
+   * React Compiler cannot cache, invalidating every memo scope keyed on it.
    */
   const rendererArgs = {
     compact,

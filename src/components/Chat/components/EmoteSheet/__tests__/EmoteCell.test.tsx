@@ -26,11 +26,8 @@ const mockStopAnimating = jest.fn();
 let lastOnDisplay: (() => void) | undefined;
 
 /**
- * The mocked Image is a forwardRef object, so its `render` function (what
- * React actually invokes) is the spyable seam - the exotic component itself
- * isn't a function. The real `Image` types as a class component, which has no
- * static `render`, so the bridge below narrows through `never` rather than
- * the class type.
+ * The mocked Image is a forwardRef object, so its `render` function is the
+ * spyable seam; the class type has no static `render`, hence the `never` bridge.
  */
 type MockableExpoImage = {
   render: (
@@ -38,8 +35,7 @@ type MockableExpoImage = {
     ref: Ref<MockImageHandle>,
   ) => null;
 };
-// SAFETY: ExpoImage is the class component described above; `never` is the
-// only type TS accepts as a bridge to the plain object shape MockableExpoImage.
+// SAFETY: `never` is the only bridge TS accepts from the class component to MockableExpoImage.
 const mockableExpoImage: MockableExpoImage = ExpoImage as never;
 
 jest.spyOn(mockableExpoImage, 'render').mockImplementation((props, ref) => {

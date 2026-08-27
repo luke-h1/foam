@@ -26,10 +26,6 @@ interface BuiltShareLink {
   message: string;
 }
 
-/**
- * Build the deep-link payload for a given shareable entity.
- * Returns both an app-scheme URL (foam://) and a public https fallback.
- */
 function buildShareLink(entity: ShareableEntity): BuiltShareLink {
   switch (entity.kind) {
     case 'streamer': {
@@ -76,12 +72,6 @@ function buildShareLink(entity: ShareableEntity): BuiltShareLink {
   }
 }
 
-/**
- * Open the native share sheet for the given entity.
- * Shares the Foam deep link (foam://) so recipients who have the app open the
- * content directly in Foam, with the public Twitch URL appended as a fallback
- * for anyone who doesn't have Foam installed.
- */
 export async function shareDeepLink(entity: ShareableEntity): Promise<void> {
   const link = buildShareLink(entity);
   const message = `${link.message}\n${link.appUrl}\n\nNo Foam? ${link.webUrl}`;

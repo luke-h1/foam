@@ -16,12 +16,8 @@ const loggableEmoteSchema = z.object({
 });
 
 /**
- * An empty-shape loose object schema accepts exactly what
- * `typeof value === 'object' && value !== null && !Array.isArray(value)`
- * accepted: plain objects, class instances, `Date`, `Map`, `Set`, thenables.
- * It rejects `null`, arrays, functions and primitives the same way that
- * check did, so swapping the runtime `typeof` for this schema does not
- * change which values take the record branch below.
+ * Accepts exactly what the old plain-object typeof check accepted, so the
+ * record branch below is unchanged.
  */
 const looseObjectSchema = z.looseObject({});
 
@@ -45,12 +41,8 @@ function summariseHomogeneousArray(value: unknown[]): string | null {
 }
 
 /**
- * Bounds an arbitrary value to a small, safe shape for logging and crash
- * reporting: caps string length, previews long arrays, summarises emote
- * arrays, limits object breadth, and breaks circular references. Used both for
- * the console log message and - critically - for the metadata forwarded to
- * Sentry, so a caller passing a huge object (an emote list, a WebSocket
- * payload, an API response) can't blow up envelope serialization on-device.
+ * Bounds an arbitrary value so a huge object can't blow up Sentry envelope
+ * serialization on-device.
  */
 export function sanitiseLogValue(value: string, seen?: WeakSet<object>): string;
 export function sanitiseLogValue<T>(

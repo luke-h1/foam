@@ -15,9 +15,7 @@ import {
   createSevenTvEmote,
 } from './__fixtures__/useChat.fixture';
 
-// The whole point of this suite is to exercise the real resolver + emote
-// worklet, badge lookup and message store, so only the channel-emote-cache
-// lookup and the personal-emote source are stubbed.
+// Only the channel-emote-cache lookup and the personal-emote source are stubbed; the real resolver, worklet and store run.
 const mockGetCurrentEmoteData = jest.spyOn(
   channelLoadActions,
   'getCurrentEmoteData',
@@ -142,8 +140,7 @@ describe('useEmoteReprocessing personal 7TV emotes', () => {
     // Message arrived already resolved to the personal emote on ingest.
     renderReprocess(createMessage(ingestParts('plaska')));
 
-    // The reprocess pass must re-resolve `plaska` via the personal set and leave
-    // the emote untouched - never rewrite it back to a plain "plaska" text part.
+    // Reprocess must leave the resolved emote untouched - never rewrite it back to text.
     expect(mockGetUserPersonalEmotes).toHaveBeenCalledWith(
       'sender-1',
       channelId,
@@ -162,9 +159,8 @@ describe('useEmoteReprocessing personal 7TV emotes', () => {
   });
 
   test('downgrades to text only when 7TV emotes are turned off', () => {
-    // With the toggle off the personal set is intentionally dropped, so the
-    // emote falls back to text. A channel emote keeps the reprocess gate open
-    // (7TV off no longer holds it open on its own) so the resolver still runs.
+    // 7TV off drops the personal set so the emote falls back to text; the
+    // channel emote keeps the reprocess gate open so the resolver still runs.
     mockGetCurrentEmoteData.mockReturnValue(
       createEmoteData({ sevenTvChannelEmotes: [channelKappa] }),
     );

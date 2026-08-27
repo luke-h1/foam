@@ -1,11 +1,6 @@
 /**
- * Detects Twitch's "Whoops, this embed is misconfigured" error page and posts
- * an `embedMisconfigured` bridge message so the native side can surface it to
- * Sentry with the offending `parent` value. Twitch serves this as a bare error
- * document (no player `<video>`) when the embed `parent` is empty or is not an
- * allowed domain; without this watcher the failure only shows up as a generic
- * load timeout. Polls briefly at load and stops as soon as a real player
- * `<video>` appears, so the healthy player's large DOM is never scanned.
+ * Detects Twitch's misconfigured-embed page and posts an `embedMisconfigured`
+ * bridge message; without it the failure shows only as a generic load timeout.
  */
 export function buildTwitchEmbedErrorWatcherScript(): string {
   return `

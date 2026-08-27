@@ -1,8 +1,6 @@
 /**
- * Each flush commits a new Fabric shadow tree for the chat list, and at high
- *  message rates releasing the dead trees dominated the Hermes GC thread
- * (issue #594). 100ms still reads as live (10 updates/s) and cut app CPU by
- * ~40% on an 18k-viewer chat; at moderate rates it measures neutral.
+ * Each flush commits a new Fabric shadow tree (issue #594); 100ms still reads
+ * as live and cut app CPU by ~40% on an 18k-viewer chat.
  */
 const LIVE_BUFFER_FLUSH_INTERVAL_MS = 100;
 const BACKLOG_BUFFER_FLUSH_INTERVAL_MS = 250;

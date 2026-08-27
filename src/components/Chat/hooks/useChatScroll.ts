@@ -35,11 +35,8 @@ interface UseChatScrollOptions {
 }
 
 /**
- * The stable scroll-position readers the ingest and message-processing paths
- * need: where the list is anchored, whether a jump-to-bottom is settling,
- * whether the user's finger or a fling is on the list, and the one hook for
- * re-pinning the bottom after content grows. Threaded through the chat hook
- * bags as a single value instead of four.
+ * Stable scroll-position readers for the ingest and message-processing paths,
+ * threaded through the chat hook bags as one value instead of four.
  */
 export interface ChatScrollAnchor {
   isAtBottomRef: MutableRefObject<boolean>;
@@ -137,8 +134,7 @@ export const useChatScroll = ({
 
   /**
    * Don't re-enable immediately: a fling fires onMomentumScrollBegin within
-   * a few ms, which cancels this timeout and prevents premature re-enable.
-   * For a slow drag-release with no fling the timeout fires and re-enables.
+   * ms and cancels this timeout; a fling-less drag-release lets it fire.
    */
   const handleScrollEndDrag = useCallback(() => {
     isDraggingRef.current = false;

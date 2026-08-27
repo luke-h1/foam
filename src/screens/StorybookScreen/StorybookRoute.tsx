@@ -3,12 +3,7 @@ import type { ComponentType } from 'react';
 import { Redirect } from 'expo-router';
 
 /**
- * Storybook must stay out of production bundles. The require below is only
- * reachable when EXPO_PUBLIC_APP_VARIANT folds to a dev-tools variant at
- * build time, so Metro excludes the storybook dependency chain (~3MB of
- * minified JS) from production/testflight bundles entirely. The conditions
- * must stay inline literals in this file — hoisting them into a shared
- * constant (e.g. isDevToolsEnabled) defeats Metro's constant folding.
+ * The require is reachable only when EXPO_PUBLIC_APP_VARIANT folds to a dev-tools variant at build time, so Metro drops ~3MB of storybook JS from production bundles. Keep the conditions inline literals - hoisting them into a shared constant defeats Metro's constant folding.
  */
 let StorybookRoute: ComponentType = function StorybookUnavailable() {
   return <Redirect href='/tabs/settings' />;

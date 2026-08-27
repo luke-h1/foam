@@ -19,9 +19,8 @@ const ENRICH_BATCH_SIZE = 6;
 const ENRICH_BATCH_DELAY_MS = 32;
 
 /**
- * The one skip predicate for post-commit enrichment: system rows and
- * usernotices (other than announcements and highlighted messages) never have
- * their parts or badges recomputed.
+ * The one skip predicate for post-commit enrichment: system rows and most
+ * usernotices never have their parts or badges recomputed.
  */
 export function shouldEnrichMessage(message: AnyChatMessageType): boolean {
   if (message.sender === 'System') {
@@ -41,10 +40,8 @@ export function shouldEnrichMessage(message: AnyChatMessageType): boolean {
 }
 
 /**
- * The one "is there anything to resolve against" check. With
- * `includePersonalEmotes` the answer is always yes: personal 7TV emotes are
- * per-sender, not part of the channel emote data, so a personal-emote-only
- * channel would otherwise skip enrichment.
+ * With `includePersonalEmotes` the answer is always yes: personal 7TV emotes
+ * are per-sender, so a personal-emote-only channel would skip enrichment.
  */
 export function hasEnrichmentEmoteSources(
   emoteData: ChatEmoteData,
@@ -70,10 +67,7 @@ export function hasEnrichmentEmoteSources(
 
 /**
  * Recomputes parts and badges for committed messages in timed batches so a
- * full window never parses in one tick. With `processedMessageIds`, already
- * processed messages are skipped unless a text part still holds a raw
- * @mention; without it every message is recomputed. Returns a cancel
- * function.
+ * full window never parses in one tick. Returns a cancel function.
  */
 export function enrichMessageSet({
   channelId,

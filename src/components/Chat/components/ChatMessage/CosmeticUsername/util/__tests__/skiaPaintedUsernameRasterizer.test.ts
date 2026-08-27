@@ -1,5 +1,4 @@
-// This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
-// field (see types/seventv/cosmetics.ts), not a naming choice.
+// "shape" is the 7TV paint API field (types/seventv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import type { PaintLayerData } from '@app/types/seventv/cosmetics';
 
@@ -167,7 +166,7 @@ describe('buildPaintImageLayers', () => {
 
 describe('planPaintLayerSlotKinds', () => {
   test('puts a gradient listed above a URL after the URL slot', () => {
-    // CSS order: first = top. Gradient on top of URL → draw URL then gradient.
+    // CSS order: first = top. Gradient on top of URL - draw URL then gradient.
     expect(
       planPaintLayerSlotKinds([
         createLayer({

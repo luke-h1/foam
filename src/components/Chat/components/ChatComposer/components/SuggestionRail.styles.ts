@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 import { theme } from '@app/styles/themes';
 
 /**
- * Surfaces for composer suggestion rails — slate chips, not iOS system gray.
+ * Surfaces for composer suggestion rails - slate chips, not iOS system gray.
  */
 export const suggestionRailColors = {
   chipBackground: theme.darkActiveContent,

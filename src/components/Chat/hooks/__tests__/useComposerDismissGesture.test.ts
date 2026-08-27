@@ -90,11 +90,8 @@ function mockCreateGestureMock(): GestureMock {
   return gesture;
 }
 
-// The root react-native-gesture-handler mock's chainable builders discard the
-// callbacks passed to onEnd/onUpdate/onFinalize, but these tests need to
-// invoke those callbacks directly to simulate gesture events. Only the
-// callbacks/methods captured on GestureMock are ever read back, so the stubs
-// below stand in for the real chainable-builder classes.
+// The root gesture-handler mock discards onEnd/onUpdate/onFinalize callbacks;
+// these tests invoke them directly, so the stubs capture them on GestureMock.
 const flingGestureStub = () => (mockLastFlingGesture = mockCreateGestureMock());
 const panGestureStub = () => (mockLastPanGesture = mockCreateGestureMock());
 const simultaneousGestureStub = (pan: GestureMock, fling: GestureMock) => ({
@@ -110,9 +107,8 @@ jest
   .spyOn(Gesture, 'Simultaneous')
   .mockImplementation(simultaneousGestureStub as never);
 
-// react-native-worklets' root mock schedules scheduleOnRN onto a microtask;
-// these tests assert the dismiss call synchronously right after the gesture
-// callback fires, so it's overridden to run inline here.
+// The root worklets mock schedules scheduleOnRN onto a microtask; these tests
+// assert synchronously, so run it inline.
 const mockScheduleOnRN = jest
   .spyOn(Worklets, 'scheduleOnRN')
   .mockImplementation((fn: () => void) => fn());

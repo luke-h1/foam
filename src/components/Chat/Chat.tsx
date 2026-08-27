@@ -30,11 +30,8 @@ export interface ChatProps {
   channelId: string;
   channelName: string;
   transparent?: boolean;
-  // DEV/perf only: replace the live Twitch transports (IRC, recent-message
-  // replay, EventSub) with nothing, so the synthetic flood is the sole,
-  // deterministic message source. Lets the Chat Perf screen replay a repeatable
-  // fake of cinna's chat regardless of whether she's live. Channel emote/badge
-  // sets still load, so the fake messages render with her real 7TV emotes.
+  // DEV/perf only: drops the live Twitch transports so the synthetic flood is
+  // the sole deterministic source; channel emote/badge sets still load so fake messages render real emotes.
   syntheticTransport?: boolean;
 }
 

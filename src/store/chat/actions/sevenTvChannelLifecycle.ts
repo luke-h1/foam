@@ -44,9 +44,8 @@ export const notify7TVPresence = async (
   }
 };
 
-// Session-lifetime per-channel bookkeeping maps stay bounded like every
-// other per-key guard in the chat store; 100 channels comfortably exceeds a
-// realistic session while capping marathon channel-hopping growth.
+// Bounded like the other per-key guards; 100 channels comfortably exceeds a
+// realistic session.
 const MAX_TRACKED_CHANNEL_ENTRIES = 100;
 
 function setBoundedChannelEntry<V>(
@@ -63,16 +62,14 @@ function setBoundedChannelEntry<V>(
   map.set(channelId, value);
 }
 
-// 7TV rebroadcasts entitlements to the whole channel on every active
-// presence, so cap writes per channel the same way the official extension
-// does.
+// 7TV rebroadcasts entitlements channel-wide on every active presence, so cap
+// writes per channel like the official extension does.
 const ACTIVE_PRESENCE_MIN_INTERVAL_MS = 10_000;
 const lastActivePresenceAt = new Map<string, number>();
 
 /**
- * Broadcast the user's presence to the channel when they chat, which makes
- * 7TV push this user's entitlements (paint/badge/personal emotes) to every
- * other client subscribed to the channel.
+ * Broadcasts the user's presence when they chat, so 7TV pushes their
+ * entitlements to every other subscribed client.
  */
 export const notify7TVActivePresence = async (
   twitchUserId: string | undefined,
@@ -101,15 +98,13 @@ export const getSevenTvEmoteSetId = (channelId?: string): string | null => {
   return cache?.sevenTvEmoteSetId ?? null;
 };
 
-// Guards the check-fetch-assign sequence below: rapid consecutive switches
-// (or a replayed dispatch) race their fetches, and without this the slower
+// Guards the check-fetch-assign sequence: without this a slower racing
 // fetch's assign would win, leaving the cache on a stale set.
 const latestRequestedEmoteSetByChannel = new Map<string, string>();
 
 /**
- * Swap the channel's active 7TV emote set after a live `user.update` says the
- * broadcaster switched sets - replaces the cached channel set wholesale
- * instead of waiting for the user to leave and re-enter the channel.
+ * Swap the channel's active 7TV set after a live `user.update` - replaces
+ * the cached set wholesale instead of waiting for a channel re-entry.
  */
 export const switchSevenTvEmoteSet = async (
   channelId: string,
@@ -130,7 +125,7 @@ export const switchSevenTvEmoteSet = async (
   invalidateSevenTvUser(channelId);
 
   try {
-    // eslint-disable-next-line react-doctor/async-defer-await -- the guard below checks state that can only go stale DURING this await; reordering would defeat it
+    // eslint-disable-next-line react-doctor/async-defer-await -- guard checks state that goes stale during this await
     const newEmotes = await sevenTvService.getSanitisedEmoteSet(newSetId);
     if (latestRequestedEmoteSetByChannel.get(channelId) !== newSetId) {
       return false;

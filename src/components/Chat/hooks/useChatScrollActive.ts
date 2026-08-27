@@ -3,10 +3,8 @@ import { useSyncExternalStore } from 'react';
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
 
 /**
- * Subscribe a component to the global chat scroll-activity signal, re-rendering
- * it when a fling starts and when it settles (~150ms quiet window). Used to shed
- * expensive offscreen render work — e.g. painted-username MaskedViews — during
- * scroll, the moment the Core Animation render encoder is most pressured.
+ * Subscribes to the global chat scroll-activity signal (fling start, ~150ms
+ * settle window), used to shed expensive render work during scroll.
  */
 export function useChatScrollActive(): boolean {
   return useSyncExternalStore(

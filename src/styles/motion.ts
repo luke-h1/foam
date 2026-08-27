@@ -13,8 +13,7 @@ export const motion = {
   },
 
   /**
-   * withSpring configs: `responsive` for gesture and layout-driven motion,
-   * `gentle` for ambient reveals.
+   * withSpring configs: `responsive` for gesture and layout-driven motion, `gentle` for ambient reveals.
    */
   spring: {
     responsive: { damping: 28, stiffness: 320, mass: 0.8 },

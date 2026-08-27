@@ -11,11 +11,8 @@ interface FindBadgesParams {
   bttvBadges: SanitisedBadgeSet[];
   chatterinoBadges: SanitisedBadgeSet[];
   /**
-   * The 7TV entitlement lookup (`getUserBadge` in production). An explicit
-   * input because it reads live store state that entitlement events
-   * invalidate - the reason a result-level cache of this function was
-   * rejected (see PERF_REPORT.md) - so the signature must not present the
-   * resolution as a pure function of the roster arrays.
+   * The 7TV entitlement lookup reads live store state that entitlement events
+   * invalidate - why a result-level findBadges cache was rejected (PERF_REPORT.md).
    */
   getEntitledBadge: (userId: string) => SanitisedBadgeSet | null | undefined;
 }
@@ -79,12 +76,8 @@ const getRawTwitchBadges = (userstate: UserStateTags): string => {
 };
 
 /**
- * findBadges runs once per message (and again per visible message during 7TV
- * hydration reprocessing), so linear scans over the badge arrays add up fast -
- * the flattened Chatterino list alone holds thousands of entries, almost none
- * of which match a given chatter. Index each array once per array identity
- * (the arrays are stable until the channel's badge data is refetched) so every
- * per-message lookup is a single Map hit.
+ * Index each array once per array identity so every per-message lookup is a
+ * single Map hit instead of a scan over thousands of entries.
  */
 const badgeSetIndexCache = new WeakMap<
   SanitisedBadgeSet[],

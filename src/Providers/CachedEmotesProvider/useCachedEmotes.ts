@@ -13,12 +13,8 @@ import {
 
 const WARM_BATCH_SIZE = 24;
 /**
- * How many static emotes to eagerly decode into the shared ref cache on channel
- * entry. Decodes are capped at 8 concurrent, so these counts set the warm
- * storm's *duration*, and while it runs it starves the per-frame decoding of an
- * animated emote that's on screen (it plays choppy until the storm drains). Warm
- * the common set; the long tail decodes on-demand. Tune against the Chat Perf
- * harness.
+ * Static emotes to eagerly decode on channel entry; the warm storm starves
+ * on-screen animated-emote decoding, so warm the common set only.
  */
 const WARM_LIMIT = 64;
 const GLOBAL_WARM_LIMIT = 64;
@@ -86,11 +82,7 @@ async function warmInBatches(
 
 export function useCachedEmotes(channelId: string) {
   useEffect(() => {
-    // A channel hop releases the old channel's refs in this cleanup. The
-    // cancel flag stops the warm pass scheduling further batches and the
-    // decode fence drops the batch already in flight - either would otherwise
-    // refill a cache nothing reads while holding the decode slots the new
-    // channel needs.
+    // On channel hop the cancel flag stops further batches and the decode fence drops the in-flight one; either would refill a cache nothing reads while holding decode slots.
     let cancelled = false;
     const isCancelled = () => cancelled;
     const warm = async () => {

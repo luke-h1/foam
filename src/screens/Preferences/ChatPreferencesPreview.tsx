@@ -282,9 +282,7 @@ const ChatPreviewSurface = function ChatPreviewSurface({
   settings?: Partial<PreviewState>;
   testID: string;
 }) {
-  // Per-key ?? instead of spreading settings over PREVIEW_DEFAULTS: a caller
-  // passing e.g. `{ chatTimestamps: undefined }` would otherwise clobber the
-  // default with an explicit undefined rather than falling back to it.
+  // Per-key ?? instead of a spread: `{ chatTimestamps: undefined }` would clobber the default with an explicit undefined.
   const previewState: PreviewState = {
     chatDensity: settings?.chatDensity ?? PREVIEW_DEFAULTS.chatDensity,
     chatFontScale: settings?.chatFontScale ?? PREVIEW_DEFAULTS.chatFontScale,
@@ -370,10 +368,7 @@ const ChatPreviewSurface = function ChatPreviewSurface({
 };
 
 /**
- * Renders `username: text [emote] text` with plain primitives. The full
- * RichChatMessage flex body collapses its standalone text nodes to a few pixels
- * inside the RNHostView-embedded SwiftUI form, so the words vanish; EmoteRenderer
- * still measures correctly and keeps the animation toggle for the emote parts.
+ * Renders `username: text [emote] text` with plain primitives - the full RichChatMessage flex body collapses its text nodes to a few pixels inside the RNHostView-embedded SwiftUI form. EmoteRenderer still measures correctly and keeps the animation toggle.
  */
 const PreviewEmoteLine = function PreviewEmoteLine({
   disableAnimations = false,

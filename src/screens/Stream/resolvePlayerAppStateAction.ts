@@ -10,18 +10,7 @@ export interface PlayerAppStateAction {
 }
 
 /**
- * Decides what an app-state transition should do to the stream player.
- *
- * Only a full `background` pauses: `inactive` also fires for interruptions that
- * never background the app (Control Center, notification pulldown, call banner,
- * Face ID, app-switcher peek), and pausing on those left the player stopped
- * with nothing to resume it. The resume, by contrast, runs on every return to
- * `active`, because WebKit pauses the inline video on some of those same
- * interruptions and nothing else brings it back.
- *
- * The play state is captured on the first step away from `active` rather than
- * on `background`, since `inactive` lands first and WebKit's own pause can
- * arrive in between - reading it later reports the user as having paused.
+ * Only a full `background` pauses - `inactive` also fires for interruptions that never background the app (Control Center, Face ID) - while resume runs on every return to `active` because WebKit pauses inline video on some of those interruptions. Play state is captured on the first step away from `active`; WebKit's own pause can land before `background` and would read as a user pause.
  */
 export function resolvePlayerAppStateAction({
   current,

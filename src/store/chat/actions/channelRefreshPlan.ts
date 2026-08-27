@@ -38,11 +38,8 @@ const GLOBAL_EMOTE_SLICES = [
 const GLOBAL_BADGE_SLICES = ['twitchGlobalBadges', 'ffzGlobalBadges'] as const;
 
 /**
- * Pure freshness policy for a channel's cached resources: decides between a
- * full reload and serving the cache, and which slices of a served cache still
- * need fetching. Global provider slices live in the shared global slot with
- * their own freshness stamp, so they are judged separately from the channel's
- * TTL. Effects live in loadChannelResourcesInternal.
+ * Pure freshness policy for a channel's cached resources; global provider
+ * slices carry their own stamp, judged separately from the channel's TTL.
  */
 export const planChannelRefresh = ({
   cache,

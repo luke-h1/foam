@@ -102,8 +102,7 @@ function runBuildPaintImageLayersBatch(): void {
 }
 
 /**
- * Same scenarios as the Reassure `*.perf-test.ts` files for ingest / badges /
- * emote reprocess / paint, so CI and on-device numbers describe the same work.
+ * Same scenarios as the Reassure `*.perf-test.ts` files, so CI and on-device numbers describe the same work.
  */
 export const CHAT_HOTSPOT_SCENARIOS: ChatHotspotScenario[] = [
   {

@@ -2,16 +2,7 @@ import { isAuthCallbackUrl } from '@app/navigators/authLinking';
 import { logger } from '@app/utils/logger';
 
 /**
- * Expo Router native intent handler.
- *
- * Only auth callback URLs need explicit handling here: they carry a token and
- * must reach RouterEffects unchanged for the async exchange. This runs outside
- * the React tree, so it has no access to auth state.
- *
- * All other deep links (`foam://` routes, Twitch universal links, etc.) pass
- * through and are resolved by the router as normal.
- *
- * Must never throw: a crash here would break cold-start deep links.
+ * Expo Router native intent handler. Auth callback URLs must reach RouterEffects unchanged for the token exchange; every other deep link resolves as normal. Must never throw - that breaks cold-start deep links.
  *
  * @see https://docs.expo.dev/router/advanced/native-intent/
  */

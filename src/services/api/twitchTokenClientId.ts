@@ -2,13 +2,9 @@ import { parseJsonOnWorklet } from '@app/lib/offThreadJson/parseJsonOnWorklet';
 import { logger } from '@app/utils/logger';
 
 /**
- * Validates a Twitch OAuth token and returns the client ID it was issued for.
- *
- * Helix rejects requests whose Client-Id header does not match the client the
- * token was issued for. Anonymous tokens from the auth proxy may be issued
- * under a different client ID than EXPO_PUBLIC_TWITCH_CLIENT_ID, so we read the
- * token's own client ID from the validate endpoint to re-sync the header.
- *
+ * Returns the client ID a token was issued for. Helix rejects a mismatched
+ * Client-Id header, and proxy tokens may not match
+ * EXPO_PUBLIC_TWITCH_CLIENT_ID, so the header re-syncs from this.
  * @see https://dev.twitch.tv/docs/authentication/validate-tokens#validating-tokens
  */
 export async function fetchTwitchTokenClientId(

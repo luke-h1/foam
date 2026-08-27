@@ -13,15 +13,8 @@ interface ChatSearchFieldProps {
 }
 
 /**
- * Its own component so that closing search unmounts it. The query lives on a
- * per-channel observable the root Chat component subscribes to, so writing
- * every keystroke straight through would re-render the tree and re-filter the
- * whole message window per character; the field keeps a local draft and lets
- * the store catch up.
- *
- * Unmounting is what makes that safe: it discards the draft and cancels any
- * pending write, which would otherwise land after the user closed search and
- * silently re-apply the filter.
+ * Own component so closing search unmounts it, discarding the draft and
+ * cancelling pending writes that would re-apply the filter after close.
  */
 export const ChatSearchField = memo(
   ({ onClose, onQueryChange }: ChatSearchFieldProps) => {

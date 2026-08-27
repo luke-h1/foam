@@ -105,12 +105,10 @@ export function buildIrcFixtureMessage(
 }
 
 /**
- * ~120 messages based on busy chatroom; heavy 7tv emote spam,
- * sentences, mentions and replies
+ * ~120 messages modelled on a busy chatroom: heavy 7tv emote spam, sentences, mentions and replies.
  */
 export const IRC_FIXTURE_MESSAGES: IrcFixtureMessage[] = [
-  // Coverage the original corpus lacked: long copypasta, unicode +
-  // zero-width emote stacks, cheers, mention storms, and reply chains.
+  // Covers long copypasta, unicode + zero-width emote stacks, cheers, mention storms, reply chains.
   {
     user: 'copypasta_enjoyer',
     text: 'I am not saying chat is washed but I have seen glaciers move faster than this gameplay and honestly at this point I am just here for the soundtrack, the vibes, and the occasional jumpscare, so keep it together everyone we are almost at the boss, trust the process, believe in the heart of the cards, and most importantly protect the streamer at all costs no matter what happens next',

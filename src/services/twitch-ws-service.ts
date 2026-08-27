@@ -11,11 +11,8 @@ import { twitchService } from './twitch-service';
 type EventCallback = TwitchEventSubCallback;
 
 /**
- * One server-side EventSub subscription and its consumers. Identity is
- * eventType + condition, never eventType alone: two screens overlapping
- * during a transition hold subscriptions for two broadcasters of the same
- * event type, and keying by type made the second silently reuse (and the
- * first orphan) the other's server-side subscription.
+ * Identity is eventType + condition: keying by type alone made overlapping
+ * screens reuse and orphan each other's server-side subscription.
  */
 type EventSubEntry = {
   eventType: string;
@@ -59,14 +56,13 @@ function hasEventSubscriptionData(
 }
 
 /**
- * TODO: abstract methods to a interface using discriminated unions so that we can type it based on the provider we want to consume
+ * TODO: abstract to a provider-typed interface via discriminated unions
  */
 class TwitchWsService {
   private static instance: WebSocket | null = null;
 
   /**
-   * @see https://dev.twitch.tv/docs/eventsub/handling-websocket-events and @see https://dev.twitch.tv/docs/eventsub/websocket-reference
-   * for valid params
+   * @see https://dev.twitch.tv/docs/eventsub/websocket-reference
    */
   private static url: string = 'wss://eventsub.wss.twitch.tv/ws';
 
@@ -116,13 +112,8 @@ class TwitchWsService {
   }
 
   /**
-   * Detaches and closes whatever socket is currently held, so replacing it
-   * cannot leave a live one behind. `isConnected()` is false for a socket that
-   * is still connecting or has not had its `session_welcome` yet, so the
-   * foreground revive can reach `connect()` mid-handshake; without this the
-   * abandoned socket would still receive its welcome and register a second set
-   * of server-side subscriptions for the same listeners. Closing with 1000
-   * keeps `onclose` from treating it as an unexpected drop and reconnecting.
+   * Detach and close so an abandoned socket cannot register duplicate
+   * subscriptions on its welcome. Code 1000 keeps onclose from reconnecting.
    */
   private static discardInstance(): void {
     const existing = TwitchWsService.instance;
@@ -328,8 +319,7 @@ class TwitchWsService {
     TwitchWsService.isReconnecting = true;
 
     /**
-     * TODO: we may need to emit or expose this so that we can
-     * display a message in chat to say we're reconnecting
+     * TODO: expose this so chat can show a reconnecting message
      */
     if (TwitchWsService.instance) {
       TwitchWsService.instance.close(1000, 'Reconnecting');
@@ -379,9 +369,8 @@ class TwitchWsService {
   }
 
   /**
-   * Reconnects are always scheduled through here so a teardown can cancel one
-   * mid-backoff. An uncancelled timer would otherwise reopen the socket, and
-   * re-arm the keepalive, after every consumer has already gone away.
+   * All reconnects go through here so teardown can cancel one mid-backoff;
+   * an uncancelled timer would reopen the socket after every consumer left.
    */
   private static scheduleReconnect(delayMs: number): void {
     TwitchWsService.clearReconnectTimer();
@@ -421,9 +410,8 @@ class TwitchWsService {
   }
 
   /**
-   * Subscribe to an EventSub event type for one condition. Subscriptions are
-   * identified by eventType + condition; the same type may be held for
-   * several broadcasters at once during screen overlaps.
+   * Subscriptions are keyed by eventType + condition; the same type may be
+   * held for several broadcasters during screen overlaps.
    */
   public static async subscribeToEvent(
     eventType: string,
@@ -512,10 +500,8 @@ class TwitchWsService {
   }
 
   /**
-   * Unsubscribe a callback from an event type. Without a callback, every
-   * entry of the type is torn down; with one, only the entries holding that
-   * callback are affected, so a sibling screen's subscription for another
-   * broadcaster survives.
+   * Without a callback, tears down every entry of the type; with one, only
+   * entries holding it, so a sibling screen's subscription survives.
    */
   public static async unsubscribeFromEvent(
     eventType: string,
@@ -550,10 +536,7 @@ class TwitchWsService {
         entry.callbacks = [];
       }
 
-      // Claim the entry before awaiting. The hooks unsubscribe several event
-      // types through one Promise.all, so a sibling that settles first can
-      // reach teardownIfIdle -> cleanupSubscriptions while this delete is
-      // still in flight, and would otherwise delete the same id a second time.
+      // Claim the entry before awaiting: a sibling settling first can reach cleanupSubscriptions mid-flight and delete the same id twice.
       TwitchWsService.entries.delete(key);
       const subscriptionId = entry.subscriptionId;
 
@@ -587,9 +570,6 @@ class TwitchWsService {
     }
   }
 
-  /**
-   * Re-subscribe to events after reconnection
-   */
   private static resubscribeToEvents(): void {
     const entries = Array.from(TwitchWsService.entries.values());
 
@@ -601,7 +581,7 @@ class TwitchWsService {
       `💜 Re-subscribing to ${entries.length} subscriptions`,
     );
 
-    // Clear old subscription IDs since we have a new session
+    // New session invalidates old subscription ids.
     for (const entry of entries) {
       entry.subscriptionId = null;
     }
@@ -619,9 +599,6 @@ class TwitchWsService {
     });
   }
 
-  /**
-   * Get all active subscriptions from Twitch API
-   */
   public static async getActiveSubscriptions(): Promise<void> {
     try {
       const response = await twitchService.listEventSubscriptions({
@@ -668,9 +645,6 @@ class TwitchWsService {
     }
   }
 
-  /**
-   * Clean up all subscriptions when disconnecting
-   */
   public static async cleanupSubscriptions(): Promise<void> {
     const subscriptionIds: string[] = [];
     for (const [key, entry] of TwitchWsService.entries) {
@@ -740,10 +714,8 @@ class TwitchWsService {
   }
 
   /**
-   * iOS suspends the socket and every timer in the background, so the
-   * keepalive watchdog cannot be the only recovery path: after a long
-   * suspension the app can foreground with dead feeds and no timer left to
-   * notice. Reviving on foreground mirrors the IRC and 7TV sockets.
+   * iOS suspends the socket and timers in the background, so revive on
+   * foreground like the IRC and 7TV sockets.
    */
   private static armForegroundRevive(): void {
     if (TwitchWsService.appStateSubscription) {
@@ -780,10 +752,8 @@ class TwitchWsService {
   }
 
   /**
-   * Polls, predictions and channel-point redemptions share one EventSub socket,
-   * so the listener registry is the refcount: the socket closes only once the
-   * last consumer has unsubscribed. Closing on any one consumer's unmount would
-   * silently kill the feeds the others are still mounted on.
+   * The listener registry is the refcount: close only after the last consumer
+   * unsubscribes, or one unmount kills the others' feeds.
    */
   private static teardownIfIdle(): void {
     if (TwitchWsService.hasActiveListeners()) {
@@ -795,14 +765,12 @@ class TwitchWsService {
     TwitchWsService.disarmForegroundRevive();
     TwitchWsService.isReconnecting = false;
 
-    // Close WebSocket immediately for fast disconnection
     if (TwitchWsService.instance) {
       TwitchWsService.instance.close(1000, 'Manual Disconnect');
       TwitchWsService.instance = null;
       TwitchWsService.sessionId = '';
     }
 
-    // Clean up subscriptions in background without blocking disconnection
     void TwitchWsService.cleanupSubscriptions();
   }
 

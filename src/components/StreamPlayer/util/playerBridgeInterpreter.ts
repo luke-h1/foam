@@ -71,9 +71,8 @@ export type PlayerBridgeAction =
   | { type: 'unlockOverlay' };
 
 /**
- * Pure interpreter for WebView player bridge messages: given a parsed message
- * and a context snapshot, returns the ordered actions the hook must execute.
- * Unknown message types and non-object payloads interpret to no actions.
+ * Pure interpreter for WebView player bridge messages: returns the ordered
+ * actions the hook must execute; unknown messages interpret to no actions.
  */
 export function interpretPlayerMessage(
   message: PlayerMessage,
@@ -299,11 +298,8 @@ export function interpretPlayerMessage(
           },
         },
       ];
-      // AbortError is the player core interrupting our play() while it
-      // swaps sources during startup - routine, recovered automatically.
-      // Anything else (NotAllowedError, NotSupportedError) means
-      // playback could not start and the player is stuck on its first
-      // frame; that is the report worth alerting on.
+      // AbortError is routine, self-recovered startup source-swap noise;
+      // anything else means playback could not start and is worth alerting on.
       if (errName !== 'AbortError' && !context.reportedPlaybackBlocked) {
         actions.push(
           { type: 'markPlaybackBlockedReported' },

@@ -3,7 +3,6 @@ import { storageService } from '@app/lib/storage';
 // Bumped from `user-id:`: older entries have no emoteSetId and would read back
 // as a user with no active set.
 const SEVEN_TV_USER_CACHE_PREFIX = 'user:v2:';
-// Keep persisted 7TV user lookups for at most 12 hours before resolving again.
 const SEVEN_TV_USER_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
 const SEVEN_TV_USER_NEGATIVE_CACHE_TTL_MS = 30 * 60 * 1000;
 /**
@@ -135,11 +134,8 @@ export function createSevenTvUserCache(
 
   return {
     /**
-     * Resolves to `null` when the lookup failed and nothing was cached, so
-     * callers can tell that apart from a user that resolved to empty ids.
-     *
-     * `maxAgeMs` lets a caller demand a fresher entry than the 12h TTL: a
-     * user id never changes, but the active emote set does.
+     * `null` means the lookup failed with nothing cached, distinct from empty
+     * ids; `maxAgeMs` demands a fresher entry than the 12h TTL.
      */
     async resolve(
       twitchUserId: string,

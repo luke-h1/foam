@@ -1,5 +1,4 @@
-// DEV-ONLY: persists benchmark results to Documents/img-bench.json so they can
-// be read off the simulator data container from the host shell.
+// DEV-ONLY: persists results to Documents/img-bench.json so the host shell can read them off the simulator data container.
 import { File, Paths } from 'expo-file-system';
 
 const RESULTS_FILENAME = 'img-bench.json';

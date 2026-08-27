@@ -1,5 +1,4 @@
-// This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
-// field (see types/seventv/cosmetics.ts), not a naming choice.
+// `shape` here mirrors the 7TV paint API field name, not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import type { IndexedCollection } from '@app/services/ws/util/indexedCollection';
 import type { PaintData, PaintStop } from '@app/types/seventv/cosmetics';

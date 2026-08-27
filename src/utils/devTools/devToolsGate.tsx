@@ -32,10 +32,9 @@ export function useDevToolsAccess(): DevToolsAccess {
   if (isAdminLogin(user?.login, config.admins.value)) {
     return 'enabled';
   }
-  // The admin list comes from remote config and the login from restored auth.
-  // Until both have settled, "not an admin" is indistinguishable from "not
-  // loaded yet", so hold rather than redirect — otherwise an admin opening a
-  // gated screen during the initial fetch gets bounced straight back out.
+  // Until remote config and restored auth settle, "not an admin" is
+  // indistinguishable from "not loaded yet" - hold rather than redirect so an
+  // admin isn't bounced out during the initial fetch.
   return !ready || isLoading ? 'pending' : 'denied';
 }
 

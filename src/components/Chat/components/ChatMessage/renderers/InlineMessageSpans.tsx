@@ -28,10 +28,8 @@ type InlineMessageSpansProps = Pick<
   message: InlineFlowPart[];
   textStyle?: StyleProp<TextStyle>;
   /**
-   * Line height override applied to every span on lines that contain emotes.
-   * TextKit derives a wrapped line's height from the paragraph style of the
-   * spans on it, so each nested span needs the taller line height or the
-   * emote attachment overflows and clips.
+   * Line height override for every span on lines with emotes; each nested
+   * span needs the taller line height or the emote attachment clips.
    */
   emoteLineStyle?: StyleProp<TextStyle>;
   textColor?: string;
@@ -130,9 +128,8 @@ function InlineMessageSpansComponent({
     }
 
     if (part.type === 'mention') {
-      // A self-subscribing span so mention resolution re-renders only the span,
-      // not the whole row (mentionLoginRevision is intentionally out of the
-      // list's extraData — see MentionSpan).
+      // Self-subscribing so mention resolution re-renders only the span, not
+      // the row - see MentionSpan.
       spans.push(
         <MentionSpan
           key={getPartKey(part, index)}

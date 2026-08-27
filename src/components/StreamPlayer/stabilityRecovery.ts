@@ -14,10 +14,8 @@ interface StabilityRecoveryOptions {
 }
 
 /**
- * Decides when a stall, video-element error, or sustained high latency should
- * force a WebView refresh, and when to give up because refreshing isn't
- * helping. Refreshes are capped per rolling window; side effects stay with the
- * caller via onRefresh/onGiveUp.
+ * Decides when playback trouble should force a WebView refresh and when to
+ * give up; refreshes are capped per rolling window.
  */
 export function createStabilityRecovery({
   now = Date.now,

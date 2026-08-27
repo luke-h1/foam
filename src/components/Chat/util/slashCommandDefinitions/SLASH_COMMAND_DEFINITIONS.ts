@@ -1,11 +1,8 @@
 import type { SlashCommandDefinition } from '@app/components/Chat/util/slashCommandDefinitions/types';
 
 /**
- * Declarative list mirroring the commands `parseModCommand` recognises.
- * Kept in sync by hand since the parser is a switch, not a table.
- *
- * `refresh` is the one exception: it's handled by an exact-match check in
- * `ChatInputShell` before `parseModCommand` runs, so it has no case there.
+ * Kept in sync by hand with `parseModCommand`'s switch; `refresh` alone is
+ * handled in `ChatInputShell` before the parser runs, so it has no case there.
  */
 export const SLASH_COMMAND_DEFINITIONS: SlashCommandDefinition[] = [
   {

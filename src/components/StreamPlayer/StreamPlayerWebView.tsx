@@ -103,10 +103,9 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
     onError?.(`HTTP ${nativeEvent.statusCode}: ${nativeEvent.description}`);
   };
 
-  // WKWebView kills its content process under memory pressure (and Android
-  // its render process); the player goes black until the remount completes.
-  // Previously this happened silently — record it so field blank-player
-  // reports can be correlated with process kills.
+  // WKWebView kills its content process under memory pressure (Android its
+  // render process) and the player goes black until remount; record it so
+  // blank-player field reports correlate with process kills.
   const handleWebViewProcessGone = (
     reason: 'content_process_terminated' | 'render_process_gone',
   ) => {
@@ -150,10 +149,9 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
       // don't delay the overlay's tap.
       pointerEvents={allowsTwitchInteraction ? 'auto' : 'none'}
       scrollEnabled={allowsTwitchInteraction}
-      // Baked into the WKWebView config at creation and never re-applied on
-      // prop updates, so these can't track the live allowsTwitchInteraction.
-      // Kept permissive so the content gate's login form is focusable/typeable;
-      // pointerEvents='none' keeps the WebView inert during normal playback.
+      // Baked into the WKWebView config at creation, so these can't track the
+      // live allowsTwitchInteraction. Kept permissive so the content gate's
+      // login form is typeable; pointerEvents='none' keeps playback inert.
       keyboardDisplayRequiresUserAction={false}
       setBuiltInZoomControls={false}
       setDisplayZoomControls={false}

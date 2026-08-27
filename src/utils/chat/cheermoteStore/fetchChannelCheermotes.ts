@@ -3,9 +3,8 @@ import { cheermoteFetchGuard } from '@app/utils/chat/cheermoteStore/cheermoteFet
 import { setChannelCheermotes } from '@app/utils/chat/cheermoteStore/setChannelCheermotes';
 
 /**
- * Fetches and stores a channel's cheermotes at most once per TTL window,
- * deduping while a fetch is in flight. A rejected fetcher propagates to the
- * caller and leaves the channel immediately retryable.
+ * Fetches a channel's cheermotes at most once per TTL window; a rejected
+ * fetcher propagates and leaves the channel immediately retryable.
  */
 export function fetchChannelCheermotes(
   channelId: string,

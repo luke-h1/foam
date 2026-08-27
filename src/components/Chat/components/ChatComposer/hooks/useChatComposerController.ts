@@ -31,8 +31,7 @@ const CHARACTER_COUNT_VISIBLE_FROM = MAX_MESSAGE_LENGTH - 50;
 
 interface UseChatComposerControllerOptions {
   /**
-   * Characters the send path prepends to the payload that the input never
-   * shows - currently the `@user ` on a reply. Counted against the same ceiling
+   * Hidden characters the send path prepends (the `@user ` on a reply), counted
    * so the composer cannot green-light a message Twitch will drop for length.
    */
   reservedCharacters?: number;

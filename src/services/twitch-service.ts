@@ -89,87 +89,32 @@ interface TwitchClipResponse {
 }
 
 type EventSubStatus =
-  /**
-   * The subscription is enabled.
-   */
   | 'enabled'
-  /**
-   * The subscription is pending verification of the specified callback URL.
-   */
   | 'webhook_callback_verification_pending'
-  /**
-   * The specified callback URL failed verification.
-   */
   | 'webhook_callback_verification_failed'
-
-  /**
-   * The notification delivery failure rate was too high
-   */
   | 'notification_failures_exceeded'
-  /**
-   * The authorization was revoked for one or more users specified in the Condition object.
-   */
   | 'authorization_revoked'
-  /**
-   * The moderator that authorized the subscription is no longer one of the broadcaster's moderators.
-   */
   | 'moderator_removed'
-  /**
-   *  One of the users specified in the Condition object was removed.
-   */
   | 'user_removed'
-  /**
-   * The user specified in the Condition object was banned from the broadcaster's chat.
-   */
   | 'chat_user_banned'
-  /**
-   * The subscription to subscription type and version is no longer supported.
-   */
   | 'version_removed'
-
-  /**
-   * The subscription to the beta subscription type was removed due to maintenance.
-   */
   | 'beta_maintenance'
-
   /**
-   * The client closed the connection.
+   * The client (not the server) closed the connection.
    */
   | 'websocket_disconnected'
-
-  /**
-   * The client failed to respond to a ping message.
-   */
   | 'websocket_failed_ping_pong'
-
   /**
    * The client sent a non-pong message.
    */
   | 'websocket_received_inbound_traffic'
-
   /**
    * The client failed to subscribe to events within the required time.
    */
   | 'websocket_connection_unused'
-
-  /**
-   * The Twitch WebSocket server experienced an unexpected error.
-   */
   | 'websocket_internal_error'
-
-  /**
-   * The Twitch WebSocket server timed out writing the message to the client.
-   */
   | 'websocket_network_timeout'
-
-  /**
-   *  The Twitch WebSocket server experienced a network error writing the message to the client.
-   */
   | 'websocket_network_error'
-
-  /**
-   * The client failed to reconnect to the Twitch WebSocket server within the required time after a Reconnect Message.
-   */
   | 'websocket_failed_to_reconnect';
 
 interface EventSubscription {
@@ -215,9 +160,8 @@ function normalizeDuration(durationSeconds: number | undefined) {
   return Math.max(1, Math.trunc(durationSeconds));
 }
 
-// Helix endpoints like /users and /clips take repeated id params (max 100 per
-// request), which the shared client's comma-joining array serializer can't
-// produce.
+// Helix takes repeated id params (max 100 per request), which the shared
+// client's comma-joining array serializer can't produce.
 async function fetchBatchedByIds<T>(
   basePath: string,
   ids: string[],
@@ -445,8 +389,7 @@ export const twitchService = {
   },
 
   /**
-   * @param token
-   * @returns a boolean indicating whether the token is valid or not
+   * @returns whether the token is valid
    * @see https://dev.twitch.tv/docs/authentication/validate-tokens#validating-tokens
    */
   validateToken: async (token: string): Promise<boolean> => {
@@ -684,11 +627,8 @@ export const twitchService = {
     });
   },
   /**
+   * Needs clips:edit; null when Twitch accepts but produces no clip.
    * @see https://dev.twitch.tv/docs/api/reference/#create-clip
-   * Requires the clips:edit scope. Twitch captures the clip asynchronously;
-   * the returned edit_url is valid immediately, the clip itself shortly after.
-   * Returns null when Twitch accepts the request but produces no clip (e.g.
-   * clipping restricted on the channel or the stream just went offline).
    */
   createClip: async (
     broadcasterId: string,

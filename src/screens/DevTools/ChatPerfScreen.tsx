@@ -38,8 +38,7 @@ const CINNA = { channelId: '204730616', channelName: 'cinna' };
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 /**
- * `text` is the native-only TextInput prop Reanimated writes directly on the
- * UI thread; it is absent from the public TextInputProps surface.
+ * `text` is the native-only TextInput prop Reanimated writes on the UI thread; absent from public TextInputProps.
  */
 interface AnimatedTextInputProps extends TextInputProps {
   text: string;

@@ -1,7 +1,5 @@
-// Single source of truth lives in preferenceStore; this module re-exports it
-// so both import paths share one observable. Two parallel observables
-// persisted to the same MMKV key desync within a session (writes through one
-// are invisible to the other until relaunch).
+// Re-export shim over preferenceStore so both import paths share one
+// observable - two parallel observables on the same MMKV key desync within a session.
 export {
   getPreferences,
   type Preferences,

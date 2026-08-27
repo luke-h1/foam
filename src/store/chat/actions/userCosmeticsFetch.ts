@@ -11,9 +11,8 @@ import {
 const MAX_FETCHED_COSMETICS_USERS = 500;
 
 /**
- * Chatters whose cosmetics this session already requested. A plain bounded
- * module Set (see chatColorCaches): it is only ever read imperatively during
- * ingest and the hydrate pass, never rendered.
+ * Chatters whose cosmetics this session already requested; a plain bounded
+ * module Set because it is only read imperatively, never rendered.
  */
 const fetchedCosmeticsUsers = new Set<string>();
 

@@ -19,9 +19,8 @@ const emote = (overrides: Partial<ParsedPart<'emote'>> = {}) =>
   }) satisfies ParsedPart<'emote'>;
 
 /**
- * The inline rule used to be written three times - a predicate, a cached
- * structure scan, and the notice scan - and a new inline-breaking part type
- * had to be added to all three. They now share one scan; this pins that.
+ * The inline rule used to be written three times; they now share one scan,
+ * and this pins that.
  */
 describe('inline eligibility is decided in one place', () => {
   const cases: { name: string; message: ParsedPart[]; inline: boolean }[] = [

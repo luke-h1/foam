@@ -1,7 +1,6 @@
 /**
- * Auto-accepts Twitch's mature-content classification gate: clicks the
- * "Continue" button as soon as it appears. parent=www.twitch.tv makes Twitch
- * render the anonymous gate rather than a login-required one.
+ * Auto-accepts Twitch's mature-content gate; parent=www.twitch.tv makes
+ * Twitch render the anonymous gate rather than a login-required one.
  */
 export function buildTwitchContentGateAcceptScript(): string {
   return `

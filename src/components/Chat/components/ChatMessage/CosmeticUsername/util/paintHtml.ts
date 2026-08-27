@@ -20,10 +20,8 @@ function escapeHtml(value: string): string {
 }
 
 /**
- * Standalone document matching the extension's painted span. The measure
- * script reports the span rect so the host can size itself; drop-shadow
- * paints outside that rect, like the extension. Body color/font-weight are
- * the inherit context for the paint rule's `color` / `font-weight: inherit`.
+ * Standalone document matching the extension's painted span; the measure
+ * script reports the span rect so the host can size itself.
  */
 export function buildPaintedUsernameHtml({
   displayUsername,

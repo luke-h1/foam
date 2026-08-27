@@ -1,5 +1,4 @@
-// This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
-// field (see types/seventv/cosmetics.ts), not a naming choice.
+// "shape" is the 7TV paint API field (types/seventv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import { type ReactNode, useState } from 'react';
 import { type LayoutChangeEvent, StyleSheet, View } from 'react-native';
@@ -24,10 +23,8 @@ import { isTilingCanvasRepeat } from './util/paintLayer/isTilingCanvasRepeat';
 
 interface PaintLayerBackgroundProps {
   /**
-   * Resolved paint base colour (`paint.color` or the fallback). Painted under
-   * the layer content like the reference span's `background-color:
-   * currentColor`, so the layer opacity fades backing and content together
-   * and an upper layer covers lower ones with the base colour.
+   * Resolved paint base colour under the layer content, so the layer opacity
+   * fades backing and content together.
    */
   baseColor: string;
   layer: PaintLayerData;

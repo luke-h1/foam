@@ -18,9 +18,7 @@ export default function TabsLayout() {
       blurEffect={liquidGlass ? undefined : 'systemChromeMaterial'}
       disableTransparentOnScrollEdge={!liquidGlass}
       backgroundColor={
-        // Pin the Android tab bar to app tokens; the Material defaults come from
-        // the activity theme, which OEM overlays can recolor away from the
-        // iOS-matched palette.
+        // Pin the Android tab bar to app tokens; OEM overlays can recolor the activity-theme Material defaults away from the iOS-matched palette.
         process.env.EXPO_OS === 'android'
           ? theme.color.backgroundSecondary.dark
           : undefined

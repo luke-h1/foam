@@ -169,8 +169,7 @@ export const useChannelEmoteData = (channelId: string | null) => {
 
 export const useChannelEmoteDataForReprocess = (channelId: string | null) => {
   // Omits sevenTvPersonalEmotes on purpose: that map churns per chatter and
-  // would re-storm the channel reprocess. Personal emotes hydrate via
-  // hydrateVisibleSevenTvAssets instead.
+  // would re-storm the channel reprocess.
   return useSelector(() => {
     if (!channelId) {
       return null;
@@ -198,9 +197,8 @@ export const useChannelEmoteDataForReprocess = (channelId: string | null) => {
 };
 
 /**
- * Global provider caches for surfaces outside a joined channel (the
- * emote/badge viewer). Pair with `ensureGlobalChatResources()` so the caches
- * fill on cold entry.
+ * Global provider caches for surfaces outside a joined channel; pair with
+ * `ensureGlobalChatResources()` so the caches fill on cold entry.
  */
 export const useGlobalEmoteBadgeCaches = () =>
   useSelector(() => {

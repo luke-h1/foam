@@ -8,9 +8,8 @@ import type {
 import type { Variant } from '../../../app.config';
 
 /**
- * Resolves the minimum required app version for the current platform and
- * release track from Remote Config. Returns an empty string (no force-upgrade)
- * for tracks that are never gated, such as `e2e` builds.
+ * Resolves the minimum required app version from Remote Config; returns an
+ * empty string (no force-upgrade) for never-gated tracks like `e2e`.
  */
 export function getMinimumVersion(
   variant: Variant,

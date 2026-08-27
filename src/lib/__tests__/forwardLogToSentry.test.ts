@@ -5,12 +5,8 @@ import * as SentryImageSpans from '@app/lib/sentryImageSpans';
 import { forwardLogToSentry, type LogTagValue } from '../sentry';
 
 /**
- * `@sentry/react-native` is auto-mocked from the root `__mocks__/` file,
- * whose Scope-free surface only covers the functions this codebase actually
- * imports - so a fake Scope object would need to invent all ~46 of its real
- * fields. `requireActual` reaches past the mock for the real, pure-JS Scope
- * class instead, giving `applyLogScope` (src/lib/sentry.ts) a genuine
- * instance to call setTag/setFingerprint/setContext on.
+ * The root Sentry mock has no Scope, and faking one means inventing ~46
+ * fields; requireActual reaches past it for the real pure-JS Scope class.
  */
 const { Scope } = jest.requireActual<typeof SentryReactNative>(
   '@sentry/react-native',
@@ -25,10 +21,8 @@ jest
   .mockImplementation(() => undefined);
 
 /**
- * Reached through the root `__mocks__/@sentry/react-native.ts` manual mock
- * rather than an import alias: `no-restricted-imports` bans
- * `@sentry/react-native` outside `src/lib/sentry`, and the transport under
- * test is the very thing that boundary exists to funnel through.
+ * Reached through the root manual mock: no-restricted-imports bans
+ * @sentry/react-native outside src/lib/sentry.
  */
 const mockCaptureException = jest.mocked(SentryReactNative.captureException);
 const mockCaptureMessage = jest.mocked(SentryReactNative.captureMessage);
@@ -42,10 +36,7 @@ const mockWithScope = jest.mocked(SentryReactNative.withScope);
 function appliedTags(): Record<string, NonNullable<LogTagValue>> {
   return Object.fromEntries(
     setTagSpy.mock.calls.map(([key, value]) => {
-      // SAFETY: applyLogScope (src/lib/sentry.ts) skips null/undefined tag
-      // values before calling setTag and never passes a bigint or symbol, so
-      // every recorded value is a LogTagValue even though Scope's own
-      // setTag signature accepts the wider Sentry `Primitive` type.
+      // SAFETY: applyLogScope skips null/undefined and never passes bigint/symbol, so every recorded value is a LogTagValue.
       return [key, value as NonNullable<LogTagValue>] as const;
     }),
   );

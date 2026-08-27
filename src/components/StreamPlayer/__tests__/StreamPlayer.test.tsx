@@ -2,9 +2,8 @@ import { createRef, useImperativeHandle } from 'react';
 import { AppState, InteractionManager, StyleSheet } from 'react-native';
 import type { Ref } from 'react';
 import type { AppStateStatus, ViewStyle } from 'react-native';
-// Spy on the submodule directly: the package barrel re-exports it via
-// `export *`, and Babel's wildcard re-export getter is non-configurable, so
-// jest.spyOn on the barrel's binding throws "Cannot redefine property".
+// Spy on the submodule: the barrel re-exports via `export *`, whose Babel
+// getter is non-configurable, so jest.spyOn on the barrel throws.
 import * as SafeAreaContext from 'react-native-safe-area-context/src/SafeAreaContext';
 import type { WebViewNavigation, WebViewProps } from 'react-native-webview';
 import * as RNWebView from 'react-native-webview';
@@ -23,22 +22,14 @@ interface MockWebViewHandle {
 }
 
 /**
- * Installs every module-level spy this file relies on. `afterEach` calls
- * `jest.restoreAllMocks()` (needed to reset the per-test `AppState`
- * listener spy below), which also reverts spies installed once at module
- * scope back to their real implementations - so these are (re)installed
- * fresh before every test instead.
+ * `jest.restoreAllMocks()` in `afterEach` also reverts module-scope spies,
+ * so reinstall these fresh before every test.
  */
 function installModuleSpies() {
-  // The real WebView needs a native browser engine unavailable under
-  // react-test-renderer, so swap in a View that forwards the props under
-  // test and captures the props/ref used to assert on the player bridge.
-  // WebView's real type declares its render as returning a WebView class
-  // instance rather than a ReactElement, so build the element through
-  // requireActual (typed `any`) the same way PaintedUsernameWebView.test.tsx
-  // does, rather than fighting that declaration with a cast.
+  // Swap the native WebView for a View that captures props/ref; untyped
+  // requireActual dodges WebView's class-instance render signature.
   jest.spyOn(RNWebView, 'WebView').mockImplementation(rawProps => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- untyped requireActual keeps this element's type from fighting WebView's class-instance render signature, matching PaintedUsernameWebView.test.tsx.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- untyped requireActual dodges WebView's class-instance render signature.
     const ReactActual = jest.requireActual('react');
     const { View: RNView } = jest.requireActual('react-native');
     // SAFETY: the mocked component only ever receives WebViewProps plus a ref.
@@ -52,9 +43,8 @@ function installModuleSpies() {
     return ReactActual.createElement(RNView, { testID: 'stream-webview' });
   });
 
-  // StreamPlayer defers mounting the WebView until interactions settle (see
-  // canMountWebView); run the callback synchronously so tests can read the
-  // WebView props right after render.
+  // StreamPlayer defers WebView mount until interactions settle; run the
+  // callback synchronously so tests can read WebView props right after render.
   jest
     .spyOn(InteractionManager, 'runAfterInteractions')
     .mockImplementation(task => {

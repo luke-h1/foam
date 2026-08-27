@@ -32,24 +32,15 @@ import { ReadyState } from '../hooks/ws/constants';
 import { useWebsocket } from '../hooks/ws/useWebsocket';
 
 /**
- * The authenticated user's IRC userstate, held module-level behind an
- * external-store subscription. Ingest-path readers call getChatUserState
- * imperatively; render-time derivations (canModerateChat) go through
- * useChatUserState so they recompute when a new USERSTATE lands. Each
- * USERSTATE replaces the record wholesale, so the snapshot identity only
- * changes when the tags do.
+ * Module-level external store for the IRC userstate; each USERSTATE replaces
+ * the record wholesale.
  */
 let currentUserState: Record<string, string> = {};
 const userStateListeners = new Set<() => void>();
 
 /**
- * Which hook instance owns the shared userstate. A channel switch mounts the
- * next instance before the previous one's cleanup runs, and the outgoing
- * instance keeps a live IRC socket that still emits USERSTATE for the old
- * channel (a token refresh or a join/part bounce is enough). Both the writes
- * and the reset are gated on ownership, so the departing channel can neither
- * overwrite the new channel's userstate - which would render mod tools for a
- * channel the user has no powers in - nor blank it on the way out.
+ * Owner token: a channel switch mounts the next hook before the old one's
+ * cleanup, so ownership gating stops the departing channel clobbering the new state.
  */
 let currentUserStateOwner: symbol | null = null;
 
@@ -80,31 +71,21 @@ export function getChatUserState(): Record<string, string> {
 }
 
 /**
- * Reactive view over the userstate: re-renders the caller when a USERSTATE
- * or GLOBALUSERSTATE arrives, without the userstate being drilled through
- * hook option bags.
+ * Reactive view over the userstate: re-renders when USERSTATE or
+ * GLOBALUSERSTATE arrives.
  */
 export function useChatUserState(): Record<string, string> {
   return useSyncExternalStore(subscribeUserState, getChatUserState);
 }
 
 /**
- * Twitch IRC PINGs roughly every 5 min and we PONG, but a half-open socket
- * (Wi-Fi↔cellular handoff, NAT/idle timeout, background→foreground) frequently
- * fires no close event: the WebSocket sits in OPEN forever, no messages arrive,
- * and the reconnect path never runs - chat silently stops while the app still
- * believes it is connected. Once the socket has been quiet for an interval we
- * send our own PING and mark that we are awaiting a PONG; if the next tick still
- * hasn't seen any inbound line (PONG or otherwise) the socket is dead and we
- * force a reconnect. A busy channel proves liveness through its own traffic, so
- * it never needs to probe. React Native's WebSocket exposes no ping frames, so
- * this application-level PING/PONG is the only half-open detector available.
+ * Half-open sockets often fire no close event, so we PING after this much
+ * silence; RN's WebSocket exposes no ping frames, so this is the only detector.
  */
 const CHAT_HEARTBEAT_INTERVAL_MS = 30_000;
 /**
- * After returning to the foreground or regaining connectivity, probe the socket
- * and reconnect if Twitch does not answer within this window - far faster than
- * waiting for the next heartbeat tick to notice a suspended socket is dead.
+ * Probe deadline after foreground/network regain - much faster than waiting
+ * for the next heartbeat tick.
  */
 const CHAT_FOREGROUND_LIVENESS_DEADLINE_MS = 5_000;
 
@@ -173,7 +154,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     channel,
     matchWholeWord = false,
     mutedWords = [],
-    // eslint-disable-next-line react-doctor/no-event-handler -- these are data fields on the hook's options; the handler props on the same object are read through optionsRef inside the socket callbacks
+    // eslint-disable-next-line react-doctor/no-event-handler -- data fields; handlers go through optionsRef
   } = options;
 
   const isAuthenticatedRef = useRef(false);
@@ -183,23 +164,15 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   const anonymousNickRef = useLazyRef(
     () => `justinfan${Math.floor(Math.random() * 90000) + 10000}`,
   );
-  // The nick we authenticated with (login or anonymous justinfan). JOIN/PART
-  // lines carry the acting user in their prefix, so this lets us tell our own
-  // connection join/part apart from other chatters'.
+  // Authenticated nick; JOIN/PART prefixes let us tell our own join/part from other chatters'.
   const currentNickRef = useRef('');
   const pendingIrcMessagesRef = useRef<string[]>([]);
   // Seeded on open and refreshed on every inbound line; the heartbeat only
   // reads it once readyState is OPEN, by which point onOpen has set it.
   const lastActivityAtRef = useRef(0);
-  // True while a heartbeat/foreground PING is outstanding. Any inbound line
-  // clears it (a live socket answers, or is already busy); if it survives past
-  // its deadline the socket is half-open and we reconnect.
+  // True while a probe PING is outstanding; any inbound line clears it, surviving past the deadline means half-open.
   const awaitingPongRef = useRef(false);
-  // When the outstanding probe's PING was sent. The heartbeat and the
-  // foreground liveness check share awaitingPongRef, so each needs to know how
-  // old the pending probe actually is before declaring the socket dead - a
-  // flushed heartbeat tick right after resume must not tear down a socket whose
-  // probe is milliseconds old.
+  // When the probe was sent; the heartbeat and foreground check share awaitingPongRef, so a resume tick must not kill a socket whose probe is milliseconds old.
   const probeSentAtRef = useRef(0);
   const probeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sendIrcMessageRef = useRef<((message: string) => void) | null>(null);
@@ -388,8 +361,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     privmsg: (channelName, tagsRecord, messageText) => {
       const username = tagsRecord['display-name'] || tagsRecord.login;
 
-      // The mod/owner exemption strings are only needed when a blocklist
-      // exists - skip the per-message lowercasing otherwise.
+      // Skip the per-message lowercasing when there is no blocklist.
       if (blockedUsers.length > 0) {
         const isMod = tagsRecord.mod === '1';
         const isChannelOwner =
@@ -560,11 +532,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
           continue;
         }
 
-        // Flood backstop, consulted before the full tag parse so dropped
-        // messages cost almost nothing. Only PRIVMSG lines consume tokens;
-        // control lines (CLEARCHAT, ROOMSTATE, USERNOTICE…) always pass.
-        // Replay is unaffected - it flows through the recent-messages path,
-        // never this socket.
+        // Flood backstop before the tag parse; only PRIVMSG consumes tokens, control lines always pass.
         if (isPrivmsgLine(line) && !shouldProcessLiveMessage()) {
           recordChatDebugIrcLine(line, true);
           continue;
@@ -632,10 +600,8 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       onError: handleWebSocketError,
       shouldReconnect,
       /**
-       * A long outage (tunnel/commute) used to exhaust 30 attempts in ~7min and
-       * then never retry, leaving chat permanently dead until the screen
-       * remounted. The backoff caps the interval at ~16s, so a higher ceiling
-       * just keeps chat trying to come back across a longer gap.
+       * A long outage exhausted 30 attempts in ~7min and left chat dead until
+       * remount; backoff caps at ~16s, so a higher ceiling just retries longer.
        */
       reconnectAttempts: 100,
       reconnectInterval: 2000,
@@ -648,11 +614,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   const reconnectRef = useSyncRef(reconnect);
   const shouldConnectRef = useSyncRef(shouldConnect);
 
-  // Probe an OPEN-but-possibly-half-open socket after the app returns to the
-  // foreground or regains connectivity: send a PING and, if Twitch has not
-  // answered within a short deadline, force a reconnect. If the socket isn't
-  // OPEN (its automatic retries may have been exhausted during a long
-  // background/outage), revive it directly.
+  // On foreground/network regain: PING an OPEN socket and reconnect if unanswered by the deadline; revive a non-OPEN socket directly.
   const verifyChatLiveness = () => {
     if (!shouldConnectRef.current) {
       return;
@@ -668,9 +630,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     }
 
     if (awaitingPongRef.current) {
-      // A probe is already in flight with its own deadline (AppState and the
-      // network-regain listener often fire together on resume) - don't stack a
-      // second PING and a second close timer on top of it.
+      // AppState and network-regain often fire together on resume - don't stack a second probe.
       return;
     }
 
@@ -727,8 +687,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       }
 
       if (action === 'reconnect') {
-        // The outstanding probe went unanswered past its deadline - the
-        // socket is half-open.
+        // Probe unanswered past its deadline - half-open socket.
         const idleMs = Date.now() - lastActivityAtRef.current;
         logger.chat.warn(
           '💬 Twitch IRC PING unanswered past heartbeat, forcing reconnect',
@@ -749,10 +708,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     return () => clearInterval(interval);
   }, [getWebSocketRef, readyState, sendIrcCommand, shouldConnect]);
 
-  // Chat has no proactive recovery on its own: a suspended or network-flapped
-  // socket often stays OPEN with no close event, so without this it would take
-  // a full heartbeat cycle to notice. Re-verify liveness the moment the app
-  // returns to the foreground or connectivity is regained.
+  // Re-verify liveness on foreground/network regain; otherwise a flapped socket takes a full heartbeat cycle to notice.
   useEffect(() => {
     if (!shouldConnect) {
       return;
@@ -809,9 +765,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     }
   }, [authState?.token?.accessToken, getWebSocketRef, shouldConnect]);
 
-  // Membership is negotiated once at authenticate time, so a live socket won't
-  // start (or stop) receiving other users' JOIN/PART until it reconnects with a
-  // new CAP REQ. Bounce the socket when the preference flips.
+  // Membership is negotiated once per connection, so bounce the socket when the preference flips to renegotiate CAP REQ.
   const previousShowJoinPartRef = useRef(showJoinPartMessages);
   useEffect(() => {
     const previous = previousShowJoinPartRef.current;

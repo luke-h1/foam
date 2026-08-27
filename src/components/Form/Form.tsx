@@ -312,7 +312,6 @@ if (__DEV__) {
   Text.displayName = 'FormText';
 }
 
-// React Navigation compatible Link component
 export function Link({
   bold,
   children,
@@ -364,8 +363,7 @@ export function Link({
       return (
         <Pressable
           style={({ pressed }) => [
-            // Offset on the side so the margins line up. Unclear how to handle when this is used in headerLeft.
-            // We should automatically detect it somehow.
+            // Offset so the margins line up; headerLeft case not handled.
             {
               marginRight: -8,
               opacity: pressed ? 0.7 : 1,
@@ -456,7 +454,6 @@ export function Section({
       return child;
     }
 
-    // If the child is a fragment, unwrap it and add the children to the list
     if (child.type === Fragment && child.key == null) {
       Children.forEach(child, child => {
         if (!isValidElement(child)) {
@@ -506,11 +503,7 @@ export function Section({
       child = <RNText {...resolvedProps}>{title}</RNText>;
     }
 
-    if (
-      // If child is type of Text, add default props
-      child.type === RNText ||
-      child.type === Text
-    ) {
+    if (child.type === RNText || child.type === Text) {
       child = cloneElement(child, {
         dynamicTypeRamp: 'body',
         numberOfLines: 1,
@@ -740,8 +733,6 @@ export function Section({
 
               paddingVertical: 8,
               fontSize: 14,
-              // use Apple condensed font
-              // fontVariant: ["small-caps"],
             }}
           >
             {title}
@@ -780,7 +771,7 @@ function isStringishNode(node: ReactNode): boolean {
 
   Children.forEach(node, child => {
     if (containsStringChildren) {
-      return; // Early return if we already found a string
+      return;
     }
 
     if (typeof child === 'string' || typeof child === 'number') {
@@ -792,8 +783,7 @@ function isStringishNode(node: ReactNode): boolean {
       child.props !== null &&
       'children' in child.props
     ) {
-      // Recurse on children prop, not the entire child element
-      // This prevents infinite recursion
+      // Recurse on the children prop only - recursing on the element itself loops forever.
       containsStringChildren = isStringishNode(
         child.props.children as ReactNode,
       );

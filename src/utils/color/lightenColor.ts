@@ -1,12 +1,6 @@
 import { hexToRgb } from './hexToRgb';
 import { rgbToHex } from './rgbToHex';
 
-/**
- * The composited chat row surface. A lightness floor says nothing about
- * legibility - Twitch's default blue clears one and still lands near 2.6:1 -
- * so colours are corrected against the real background. Tinted highlight rows
- * sit a little lighter, so they land just under the target.
- */
 type RgbChannels = {
   r: number;
   g: number;
@@ -19,6 +13,10 @@ type HslChannels = {
   l: number;
 };
 
+/**
+ * The composited chat row surface; colours are corrected against this real
+ * background because a lightness floor says nothing about legibility.
+ */
 const CHAT_SURFACE_RGB = { r: 20, g: 27, b: 35 };
 
 // WCAG AA for normal-size text; higher washes the hues together.

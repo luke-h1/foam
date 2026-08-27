@@ -71,24 +71,15 @@ function getVirtualizedWindow(
 }
 
 /**
- * `__mocks__/@legendapp/list/react-native.tsx` already stubs `LegendList` for
- * every test, but its default renders every row - this suite measures the
- * virtualized window itself, so it overrides that export with a fake that
- * windows rows the way the real list does.
- *
- * Pulled in via `require`, not `import`: a named import only gives a local
- * binding, not the module object `jest.spyOn` needs to patch, and a namespace
- * import goes through babel's ES-interop copy instead of the object
- * `ChatList` actually reads `LegendList` off.
+ * Overrides the render-everything LegendList mock with a windowing fake;
+ * `require` because spyOn needs the module object, not babel's interop copy.
  */
-// SAFETY: `require` erases module typing; this reattaches the real
-// `@legendapp/list/react-native` module type so `jest.spyOn` below type-checks.
+// SAFETY: reattaches the module type `require` erases so spyOn type-checks.
 const legendListReactNative =
   require('@legendapp/list/react-native') as typeof import('@legendapp/list/react-native');
 
 jest.spyOn(legendListReactNative, 'LegendList').mockImplementation(
-  // SAFETY: the mock only exercises the props this suite reads; it doesn't
-  // implement every prop `LegendListComponent` accepts.
+  // SAFETY: the mock implements only the props this suite reads.
   ((props: MockLegendListProps & { ref?: Ref<View> }) => {
     const { extraData, keyExtractor, ref, renderItem } = props;
     const items = props.data ?? [];

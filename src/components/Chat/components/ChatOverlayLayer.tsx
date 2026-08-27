@@ -50,9 +50,8 @@ export interface ChatOverlayLayerProps {
 }
 
 /**
- * Every chat sheet, and the actions they fire. It subscribes to the overlay
- * observable itself rather than taking the open sheet as a prop, so opening or
- * dismissing a sheet re-renders this subtree and nothing above it.
+ * Subscribes to the overlay observable itself, so opening or dismissing a
+ * sheet re-renders this subtree and nothing above it.
  */
 export const ChatOverlayLayer = memo(function ChatOverlayLayer({
   canModerateChat,

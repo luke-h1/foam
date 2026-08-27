@@ -57,13 +57,8 @@ import * as useSeventvWsModule from '../hooks/useSeventvWs';
 import * as createSevenTvCallbacksModule from '../util/createSevenTvCallbacks';
 
 /**
- * The package only ships types for `lib/typescript/src`, not the
- * `lib/commonjs` submodule Jest actually resolves - `useSafeAreaInsets` is a
- * non-configurable re-export getter on the package root, so `jest.spyOn`
- * can't patch it there and must target this submodule instead. Loading it
- * through `requireActual` (typed via the package root, which re-exports the
- * same shape) reaches the real submodule at runtime without a static import
- * of its untyped build output.
+ * `useSafeAreaInsets` is a non-configurable re-export getter on the package
+ * root, so `jest.spyOn` must target the commonjs submodule Jest resolves.
  */
 const safeAreaContextModule = jest.requireActual<
   typeof import('react-native-safe-area-context')
@@ -74,12 +69,8 @@ const mockScrollToBottom = jest.fn();
 jest.spyOn(FlashListModule, 'FlashList').mockImplementation(() => <View />);
 
 /**
- * Auth is off-limits to edit directly (src/context/AuthContext.tsx), but the
- * test may still change how it stubs the real hook - spy the export instead
- * of replacing the module.
- *
- * SAFETY: Chat only reads `user` off the auth context on the paths this
- * suite exercises; the rest of `AuthContextState` is unused here.
+ * Auth code is off-limits to edit; spy the export instead of replacing the
+ * module. SAFETY: Chat only reads `user` off the auth context here.
  */
 jest.spyOn(authContextModule, 'useAuthContext').mockReturnValue({
   user: {
@@ -89,23 +80,19 @@ jest.spyOn(authContextModule, 'useAuthContext').mockReturnValue({
   },
 } as ReturnType<typeof authContextModule.useAuthContext>);
 
-// The chat pipeline mounts the dev-only synthetic flood (useChat), now gated on
-// dev-tools access. This suite never activates the flood; stub access so it
-// stays inert without pulling remote-config / a QueryClient into the render.
+// Deny dev-tools access so the dev-only synthetic flood stays inert without remote-config / a QueryClient.
 jest.spyOn(devToolsGateModule, 'useDevToolsAccess').mockReturnValue('denied');
 
 /**
- * The chat surface resolves the paint-renderer experiment through
- * react-query + remote config; stub it so the suite needs no QueryClient.
+ * Stub the paint-renderer flag so the suite needs no QueryClient.
  */
 jest
   .spyOn(useSyncPaintRendererFlagModule, 'useSyncPaintRendererFlag')
   .mockImplementation(() => {});
 
 /**
- * `Object.create(WebSocket.prototype)` gives a structurally valid `WebSocket`
- * without opening a real connection - this suite's sockets are stubbed out
- * entirely, so nothing ever calls through the prototype's methods.
+ * Structurally valid `WebSocket` without a real connection; the suite's
+ * sockets are stubbed so nothing calls the prototype's methods.
  */
 const createWebSocketStub = (): WebSocket => Object.create(WebSocket.prototype);
 
@@ -118,8 +105,7 @@ jest.spyOn(useSeventvWsModule, 'useSeventvWs').mockReturnValue({
   ws: createWebSocketStub(),
 });
 
-// `@app/hooks/ws/constants`'s real `ReadyState` enum already carries these
-// same numeric values, so no override is needed there.
+// The real `ReadyState` enum already carries these numeric values; no override needed.
 
 jest
   .spyOn(recentMessagesService, 'getRecentMessages')
@@ -127,8 +113,7 @@ jest
 
 /**
  * The real resolver falls back to `''` (never `undefined`) when a Twitch
- * user has no linked 7TV account - match that instead of asserting a value
- * the function's return type (`Promise<string>`) can't actually produce.
+ * user has no linked 7TV account.
  */
 jest.spyOn(sevenTvService, 'get7tvUserId').mockResolvedValue('');
 
@@ -159,8 +144,7 @@ jest.spyOn(channelLoadModule, 'clearCache').mockImplementation(() => {});
 jest
   .spyOn(channelLoadModule, 'getCurrentEmoteData')
   .mockReturnValue(emptyResolvedEmoteData);
-// `getSevenTvEmoteSetId`/`updateSevenTvEmotes` aren't exports of this module
-// (they live on sevenTvChannelLifecycle) - the old mock stubbed dead keys.
+// `getSevenTvEmoteSetId`/`updateSevenTvEmotes` live on sevenTvChannelLifecycle, not this module.
 jest
   .spyOn(personalEmotesModule, 'fetchUserPersonalEmotes')
   .mockImplementation(async () => null);
@@ -177,10 +161,7 @@ jest
   .spyOn(cosmeticsModule, 'requestUserCosmeticsViaPresence')
   .mockResolvedValue(undefined);
 
-// `@app/store/chat/react/selectors` and `@app/store/chat/observables/chatStore`
-// are exercised for real: the selectors just read `chatStore$`, which starts
-// at its documented defaults (empty messages, no caches), matching what the
-// old stub returned. `chatStore$.messages` is reset in `beforeEach` below.
+// Selectors and `chatStore$` run for real; the store starts at its defaults and `chatStore$.messages` resets in `beforeEach`.
 
 jest.spyOn(messagesModule, 'addMessage');
 jest.spyOn(messagesModule, 'clearMessages');
@@ -190,10 +171,8 @@ jest.spyOn(messagesModule, 'getMaxChatMessages').mockReturnValue(600);
 jest.spyOn(messagesModule, 'restoreRecentMessagesForChannel');
 
 /**
- * SAFETY: only `chatScrollback`, `deletedMessageStyle`, `ignoreClearChat` and
- * `chatTimestampFormat` are read through the direct `getPreferences()` call
- * (message ingest + notice styling); every other preference this suite needs
- * goes through the hooks stubbed via `setPreferences` below instead.
+ * SAFETY: only these four preferences are read via direct `getPreferences()`;
+ * the rest go through the hooks stubbed via `setPreferences` below.
  */
 jest.spyOn(preferenceStoreModule, 'getPreferences').mockReturnValue({
   chatTimestampFormat: '24h',
@@ -222,16 +201,11 @@ jest.spyOn(logger.stvWs, 'warn').mockImplementation(() => {});
 
 jest.spyOn(Clipboard, 'setStringAsync').mockResolvedValue(true);
 
-// `__mocks__/expo-router.tsx` already stubs `useNavigation` with an
-// equivalent (superset) shape, so no per-file override is needed here.
+// `__mocks__/expo-router.tsx` already stubs `useNavigation`; no per-file override needed.
 
 /**
- * `__mocks__/react-native-keyboard-controller.ts` stubs the animation hooks
- * this app actually uses elsewhere, but doesn't export `KeyboardStickyView` -
- * add it here since `Chat` docks its composer with it. The real export is a
- * `forwardRef` component (an object, not a function), and its named export is
- * read-only on the ES module namespace, so it is swapped via
- * `Object.defineProperty` rather than `jest.spyOn` or direct assignment.
+ * The real `KeyboardStickyView` export is a read-only forwardRef object, so
+ * swap via `Object.defineProperty`, not spyOn or assignment.
  */
 Object.defineProperty(keyboardControllerModule, 'KeyboardStickyView', {
   configurable: true,
@@ -240,25 +214,18 @@ Object.defineProperty(keyboardControllerModule, 'KeyboardStickyView', {
   ),
 });
 
-// The package's top-level `useSafeAreaInsets` is a non-configurable
-// re-export getter (jest.spyOn can't patch it); spy the submodule that
-// actually defines it instead - the barrel forwards to it live.
+// spyOn can't patch the root's non-configurable getter; spy the defining submodule - the barrel forwards live.
 jest
   .spyOn(safeAreaContextModule, 'useSafeAreaInsets')
   .mockReturnValue({ top: 0, right: 0, bottom: 0, left: 0 });
 
-// `test/setupTests.ts` already mocks `sonner-native` globally with an
-// equivalent (superset) `toast.success`, so no per-file override is needed.
+// `test/setupTests.ts` already mocks `sonner-native` globally; no per-file override needed.
 
 const noRender = () => null;
 
 /**
- * Each of these is `memo()` (or, for EmoteSheet, `forwardRef`-shaped)
- * wrapped - an object, not a function - so `jest.spyOn` cannot wrap it, and
- * its named export is read-only on the ES module namespace, so a plain
- * assignment cannot replace it either. `Object.defineProperty` swaps the
- * binding directly; this suite asserts how `Chat` orchestrates its children,
- * not what any of these children render.
+ * Each is memo()/forwardRef wrapped (an object, not a function), so spyOn
+ * cannot wrap it; `Object.defineProperty` swaps the read-only binding.
  */
 Object.defineProperty(actionSheetModule, 'ActionSheet', {
   configurable: true,
@@ -352,9 +319,8 @@ jest
   .mockReturnValue(settledChatScrollResult);
 
 /**
- * SAFETY: `useSeventvWs` (the only consumer of these callbacks) is itself
- * stubbed above, so it never invokes any of them - an empty object is a safe
- * stand-in for the full callback bag.
+ * SAFETY: `useSeventvWs` (the only consumer) is stubbed above and never
+ * invokes these, so an empty object is a safe stand-in.
  */
 jest
   .spyOn(createSevenTvCallbacksModule, 'createSevenTvCallbacks')

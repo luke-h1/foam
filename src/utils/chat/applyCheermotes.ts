@@ -44,10 +44,8 @@ function resolveCheermotePart(
 }
 
 /**
- * Splits cheer tokens (e.g. "Cheer100") out of the text parts of an already
- * parsed message. Only called for messages carrying a bits tag, so ordinary
- * words that merely look like cheers ("word1") never reach this path.
- * Returns the input array untouched when no token matches.
+ * Only called for messages carrying a bits tag, so ordinary words that merely
+ * look like cheers ("word1") never reach this path.
  */
 export function applyCheermotesToParts(
   parts: ParsedPart[],

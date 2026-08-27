@@ -2,9 +2,8 @@ import { deriveFromResponseOnWorklet } from '@app/lib/offThreadJson/deriveFromRe
 import type { JsonValue } from '@app/utils/object/deepEqualJson';
 
 /**
- * Runs a 7TV GraphQL query and derives the result from the response on the UI
- * thread via `parse` (a worklet returning only the compact shape the caller
- * needs so the cross-runtime payload stays small).
+ * Runs a 7TV GraphQL query and parses the response off the JS thread; `parse`
+ * is a worklet returning only a compact shape so the cross-runtime payload stays small.
  */
 export async function runCosmeticsQuery<TResult>(
   query: string,

@@ -1,18 +1,6 @@
 /**
- * Drives playback on the stock (unscripted) player so a stream never sits
- * paused after load. Twitch's embed honours neither the `muted=false` URL param
- * nor unmuted autoplay reliably, and on iOS an unmuted play() resolves but is
- * then silently re-paused by WebKit (no rejection to catch) — leaving the video
- * stuck on the play button. This guarantees playback: it tries the requested
- * audio state, and on any pause — a rejected play() OR a silent re-pause —
- * falls back to muted playback so the picture is always moving. Once unmuting a
- * playing video makes WebKit re-pause it, it stops fighting and stays muted
- * (a later user tap can unmute), which avoids an unmute/re-pause oscillation.
- *
- * The first attempt is deferred past the WKWebView init window: starting the
- * inline video too early intermittently leaves its AVPlayer layer out of the
- * compositor (audio advances, picture is black). The deferral plus the
- * StreamPlayer layout nudge keep playback off that race.
+ * Drives playback on the stock player: iOS WebKit silently re-pauses unmuted
+ * play(), so this falls back to muted; the first attempt defers past the WKWebView init window.
  */
 export function buildTwitchAutoplayEnsureScript(options: {
   muted: boolean;

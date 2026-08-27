@@ -1,9 +1,8 @@
 import { lightenColor } from '../lightenColor';
 
 /**
- * Expected values are pinned literals rather than recomputed contrast: deriving
- * them from the same luminance maths the implementation uses would pass even if
- * that maths were wrong.
+ * Expected values are pinned literals: deriving them from the implementation's
+ * own luminance maths would pass even if that maths were wrong.
  */
 describe('lightenColor', () => {
   test.each([

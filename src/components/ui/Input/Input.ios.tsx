@@ -1,6 +1,4 @@
-// This file's shape usages are @expo/ui SwiftUI/Jetpack Compose API names
-// (clipShape, shapes, Shape, contentShape and their option/prop keys), not a
-// naming choice.
+// "shape" here means @expo/ui SwiftUI/Compose API names, not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import {
   type Ref,
@@ -34,6 +32,7 @@ import {
   VStack,
 } from '@expo/ui/swift-ui';
 import {
+  accessibilityLabel as accessibilityLabelModifier,
   Animation,
   animation,
   autocorrectionDisabled,
@@ -101,6 +100,7 @@ export type ThemedInputProps = Omit<
 };
 
 function useIosInputField({
+  accessibilityLabel,
   autoCapitalize,
   autoComplete,
   autoCorrect,
@@ -259,6 +259,7 @@ function useIosInputField({
   }, [inputInstanceId, nativeText, onSubmitEditing]);
 
   const textFieldModifiers = buildTextFieldModifiers({
+    accessibilityLabel,
     autoCapitalize,
     autoComplete,
     autoCorrect,
@@ -448,9 +449,8 @@ export function Input(props: ThemedInputProps) {
     <Host
       colorScheme={scheme}
       /**
-       * RN owns this field's placement; without this the hosting view
-       * re-applies the window safe area (home indicator / keyboard) inside its
-       * own bounds and the field content renders shifted out of the host frame.
+       * RN owns placement; without this the hosting view re-applies the window
+       * safe area and the field renders shifted out of the host frame.
        */
       ignoreSafeArea='all'
       matchContents={{ vertical: true }}
@@ -500,6 +500,7 @@ export function Input(props: ThemedInputProps) {
 }
 
 type BuildTextFieldModifierOptions = {
+  accessibilityLabel?: string;
   autoCapitalize?: TextInputProps['autoCapitalize'];
   autoComplete?: TextInputProps['autoComplete'];
   autoCorrect?: boolean;
@@ -519,6 +520,7 @@ type BuildTextFieldModifierOptions = {
 };
 
 function buildTextFieldModifiers({
+  accessibilityLabel,
   autoCapitalize,
   autoComplete,
   autoCorrect,
@@ -575,6 +577,9 @@ function buildTextFieldModifiers({
   }
   if (disabled) {
     modifiers.push(disabledModifier(true));
+  }
+  if (accessibilityLabel) {
+    modifiers.push(accessibilityLabelModifier(accessibilityLabel));
   }
 
   return modifiers;
@@ -735,10 +740,8 @@ function frameForStyle(
       : numberValue(style.height);
 
   /**
-   * A flexible SwiftUI frame expands to fill maxHeight rather than hugging its
-   * content, which makes the host measure max-tall (e.g. a one-line composer
-   * reserving 120pt). Leave maxHeight to the RN host style, which clamps
-   * without expanding; growth is already limited by lineLimit for multiline.
+   * A flexible SwiftUI frame fills maxHeight instead of hugging content, so
+   * leave maxHeight to the RN host style, which clamps without expanding.
    */
   const maxHeight =
     alignment === 'topLeading' ? undefined : numberValue(style.maxHeight);

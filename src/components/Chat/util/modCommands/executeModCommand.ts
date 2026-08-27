@@ -17,9 +17,8 @@ async function resolveUserId(login: string): Promise<string> {
 }
 
 /**
- * Runs a parsed moderation command against Helix and resolves with the toast
- * text to show on success. Rejections surface as a generic failure toast at
- * the call site (Helix 403s here simply mean the sender is not a moderator).
+ * Runs a parsed moderation command against Helix and resolves with the success
+ * toast text; a Helix 403 here simply means the sender is not a moderator.
  */
 export async function executeModCommand(
   command: ModCommand,

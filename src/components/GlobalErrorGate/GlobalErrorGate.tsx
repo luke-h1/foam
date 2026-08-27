@@ -3,10 +3,8 @@ import { useEffect, useState } from 'react';
 import { setFatalErrorListener } from '@app/lib/global-error-handlers';
 
 /**
- * Bridges fatal errors caught by the global JS error handler into the
- * nearest ErrorBoundary: rethrowing during render makes the boundary
- * show ErrorDetails with its usual reset flow. Must be mounted inside
- * the root ErrorBoundary.
+ * Bridges fatal global JS errors into the nearest ErrorBoundary by rethrowing
+ * during render; must be mounted inside the root ErrorBoundary.
  */
 export function GlobalErrorGate() {
   const [fatalError, setFatalError] = useState<Error | null>(null);

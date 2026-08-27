@@ -12,9 +12,8 @@ export interface SevenTvEmoteSetMetadata {
 }
 
 /**
- * The canonical provider discriminant for emotes and badges. The spelling
- * matches the values `SanitisedBadgeSet.provider` already persists ('7tv',
- * 'bttv', 'ffz'); dispatch on this field, never on the `site` display string.
+ * The canonical provider discriminant for emotes and badges; dispatch on this
+ * field, never on the `site` display string.
  */
 export type EmoteProvider = 'twitch' | '7tv' | 'bttv' | 'ffz' | 'emoji';
 

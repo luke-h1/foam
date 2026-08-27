@@ -1,6 +1,5 @@
 /**
- * A union of known string literals that still accepts any other string.
- * `string & {}` keeps the literals from being absorbed into `string`, so
- * autocomplete for the known values survives.
+ * A union of known string literals that still accepts any other string;
+ * `string & {}` keeps autocomplete for the known values alive.
  */
 export type OpenStringUnion<T> = T | (string & {});

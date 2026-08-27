@@ -16,9 +16,8 @@ export interface OptimisticReplyTarget {
 }
 
 /**
- * Userstate for the local echo of a message the user just sent. IRC will
- * eventually echo the real tags back, but the row has to render immediately,
- * so this fills the gaps from the authenticated user and the last USERSTATE.
+ * Userstate for the local echo of a just-sent message; the row renders before
+ * IRC echoes real tags, so this fills gaps from the last USERSTATE.
  */
 export function createOptimisticUserState({
   currentUserState,

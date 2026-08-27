@@ -10,9 +10,8 @@ import { buildSevenTvBadgeImageUrl } from './buildSevenTvBadgeImageUrl';
 const BADGE_IMAGE_EXTENSION = /\.(webp|png|avif|gif|jpe?g)(?:$|\?)/i;
 
 /**
- * Every chat row normalises each of its badges on every render, and the result
- * depends only on the badge object. WeakMap-keyed so entries drop with the
- * badge; no eviction needed.
+ * Runs per badge on every row render; WeakMap-keyed so entries drop with the
+ * badge and no eviction is needed.
  */
 const normalizedBadges = new WeakMap<SanitisedBadgeSet, SanitisedBadgeSet>();
 

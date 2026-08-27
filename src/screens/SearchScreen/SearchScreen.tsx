@@ -91,7 +91,7 @@ function getSearchResultKey(item: SearchItem) {
 }
 
 function sortSearchHistory(history: SearchHistoryItem[]) {
-  // eslint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks Array.prototype.toSorted (throws "undefined is not a function"); copy-then-sort is the safe equivalent
+  // eslint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks toSorted
   return [...history].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );

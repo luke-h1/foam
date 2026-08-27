@@ -12,16 +12,8 @@ import {
 const GUARD_KEY = 'globalChatResources';
 
 /**
- * Fills `chatStore$.persisted.globalCaches` without joining a channel, for
- * surfaces (the emote/badge viewer) that read global provider data before
- * any chat has loaded. Rides the same resource specs as the channel-load
- * path, so a chat opened later serves from this fetch rather than repeating
- * it; a failed slice keeps its previous value and the stale `lastUpdated`,
- * exactly like the channel-load settle.
- *
- * Freshness is the store's own `lastUpdated` window, not a guard stamp - the
- * guard is here for single-flight and for the fence that stops a fetch
- * completing after a cache purge from writing its pre-purge payload back.
+ * Fills `chatStore$.persisted.globalCaches` without joining a channel; the
+ * guard only provides single-flight plus the post-purge write-back fence.
  */
 export function ensureGlobalChatResources(): Promise<void> {
   const cache = chatStore$.persisted.globalCaches.peek();
@@ -31,10 +23,8 @@ export function ensureGlobalChatResources(): Promise<void> {
       cache.sevenTvGlobalEmotes.length > 0 ||
       cache.bttvGlobalEmotes.length > 0 ||
       cache.ffzGlobalEmotes.length > 0);
-  // Badges are checked separately because a seed from channel copies can fill
-  // the emote slices and stamp `lastUpdated` while leaving badges empty. An
-  // emote-only gate would then serve the viewer an empty Badges tab until the
-  // TTL expired.
+  // Checked separately: a channel-copy seed can stamp `lastUpdated` with
+  // badges still empty, serving an empty Badges tab until the TTL expired.
   const hasBadges =
     cache &&
     (cache.twitchGlobalBadges.length > 0 || cache.ffzGlobalBadges.length > 0);

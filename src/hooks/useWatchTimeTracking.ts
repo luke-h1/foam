@@ -7,10 +7,7 @@ import {
 import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
 
 /**
- * Accumulates foreground stream watch time for the store-review prompt
- * gate. Mount once per stream player instance; the review request is
- * attempted when the player unmounts (i.e. after a watch session, not
- * during one).
+ * Accumulates foreground watch time for the store-review prompt gate. Mount once per player instance; the review request runs on player unmount, after a session rather than during one.
  */
 export function useWatchTimeTracking(): void {
   const segmentStartRef = useRef<number | null>(null);

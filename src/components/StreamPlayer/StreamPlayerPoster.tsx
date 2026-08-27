@@ -14,9 +14,8 @@ import { LoadingState } from '../LoadingState/LoadingState';
 
 interface StreamPlayerPosterProps {
   /**
-   * Stream thumbnail shown behind the spinner while the player loads. Sized to
-   * match the live-stream card so it's an instant cache hit when arriving from
-   * the stream list. Absent on VOD/clip — the spinner shows over black instead.
+   * Thumbnail behind the spinner, sized to match the live-stream card so it
+   * is an instant cache hit when arriving from the stream list.
    */
   posterUrl?: string;
   visible: boolean;

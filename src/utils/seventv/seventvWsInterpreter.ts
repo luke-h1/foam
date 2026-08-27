@@ -16,7 +16,7 @@ import type {
 import type { SevenTvEmote, SevenTvFile } from '@app/types/seventv/emotes';
 import type { StvUser } from '@app/types/seventv/users';
 
-export const HISTORICAL_EVENT_BUFFER = 10000; // 10 seconds
+export const HISTORICAL_EVENT_BUFFER = 10000;
 
 interface ResumeAckPayload {
   success?: boolean;
@@ -140,12 +140,8 @@ const withScales = (format: string) =>
   ['4x', '3x', '2x', '1x'].map(scale => `${scale}.${format}`);
 
 /**
- * The EventAPI advertises several encodes per emote. Take the largest scale of
- * the cheaper format for the emote's kind, then the other format so an emote
- * whose host ships only one still resolves real dimensions — otherwise
- * width/height collapse to 0 and a non-square emote renders as a 1:1 square at
- * the wrong width. As a last resort take the widest encode that carries
- * dimensions so the aspect ratio is at least correct.
+ * Prefer the cheaper format for the emote's kind, then the other format -
+ * width/height of 0 render a non-square emote as a 1:1 square.
  */
 const SEVEN_TV_STATIC_PREFERENCE = [
   ...withScales('avif'),
@@ -184,10 +180,8 @@ function pickBestSevenTvFile(
 }
 
 /**
- * Reused for every emote in an `emote_set.update` burst so routing through
- * `buildSanitisedEmote` costs no source-bag allocation per emote; every field
- * is overwritten before each call and the builder copies rather than retains
- * the source.
+ * Reused across an `emote_set.update` burst so `buildSanitisedEmote` costs no
+ * source-bag allocation per emote; every field is overwritten before each call.
  */
 const wireEmoteSource: SevenTvEmoteSource = {
   site: '7TV Channel',
@@ -282,9 +276,8 @@ function interpretEmoteSetUpdate(
     return { type: 'ignoreEmoteSetUpdate', reason: 'inactiveEmoteSet' };
   }
 
-  // Updates for a set other than the channel's active one are usually a
-  // chatter's personal emote set; hand the set id to the caller so it can
-  // refresh the matching personal set instead of dropping the event.
+  // Updates for another set are usually a chatter's personal emote set;
+  // hand the set id to the caller so it can refresh that set.
   if (!expectedEmoteSetId || receivedEmoteSetId !== expectedEmoteSetId) {
     return {
       type: 'emoteSetUpdateForOtherSet',
@@ -541,9 +534,8 @@ function interpretEntitlementReset(
 }
 
 /**
- * A `user.update` for the channel owner carries the active emote set switch
- * as a nested change: `updated[key=connections].value[key=emote_set]` with
- * `{id, name}` old/new values. Anything else on the user object is ignored.
+ * A `user.update` for the channel owner carries the active emote set switch as
+ * `updated[key=connections].value[key=emote_set]`; everything else is ignored.
  */
 function interpretUserUpdate(
   data: SevenTvEventData<'user.update'>,

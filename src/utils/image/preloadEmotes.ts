@@ -1,10 +1,6 @@
 /**
- * Emote preloading utility.
- *
- * Warms emote images into expo-image's disk cache so they resolve without a
- * network hop the first time they appear in chat. This must target the same
- * cache the chat renderer reads — ChatInlineImage renders via expo-image, so
- * preloading goes through prefetchToDisk.
+ * Warms emote images into expo-image's disk cache; goes through prefetchToDisk
+ * so it targets the same cache ChatInlineImage reads.
  */
 import type { SanitisedEmote } from '@app/types/emote';
 import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
@@ -17,9 +13,8 @@ const preloadedUrls = new Set<string>();
 const MAX_PRELOADED_CACHE = 500;
 
 /**
- * `prefetch` resolves false when it skips any url in the batch and rejects when
- * the whole call fails, so both outcomes are reported with the batch's shape
- * rather than the urls themselves.
+ * `prefetch` reports false-or-reject per batch, so both outcomes are reported
+ * with the batch's shape rather than the urls themselves.
  */
 function describePreloadBatch(batch: string[]) {
   const [firstUrl] = batch;
@@ -35,9 +30,6 @@ function describePreloadBatch(batch: string[]) {
   };
 }
 
-/**
- * Preload a batch of emotes in the background
- */
 export async function preloadEmotes(
   emotes: SanitisedEmote[],
   limit = 50,
@@ -45,10 +37,8 @@ export async function preloadEmotes(
   const toPreload: string[] = [];
   const seen = new Set<string>();
 
-  // Keep copy-only variants out of the eager preload path. They remain on the
-  // emote metadata for copy actions, but warming every static/animated scale
-  // would multiply channel-entry network work. Warm only the display URL
-  // that chat rows actually render.
+  // Warm only the display URL chat rows render; warming every copy-only
+  // static/animated scale would multiply channel-entry network work.
   for (const emote of emotes) {
     if (toPreload.length >= limit) {
       break;
@@ -103,8 +93,7 @@ export async function preloadEmotes(
 }
 
 /**
- * Preload global emotes (call once per session)
- * These are shown across all channels so preloading them improves UX everywhere
+ * Call once per session.
  */
 export async function preloadGlobalEmotes(emoteData: {
   twitchGlobalEmotes?: SanitisedEmote[];
@@ -119,15 +108,11 @@ export async function preloadGlobalEmotes(emoteData: {
     ...(emoteData.ffzGlobalEmotes || []),
   ];
 
-  // Kept in step with the shared-ref warm limits (useCachedEmotes) so channel
-  // entry doesn't fire two large, overlapping decode storms that together
-  // starve on-screen animated emotes. The long tail warms on-demand instead.
+  // Kept in step with the useCachedEmotes warm limits so channel entry
+  // doesn't fire two overlapping decode storms.
   await preloadEmotes(allGlobal, 64);
 }
 
-/**
- * Preload channel-specific emotes when entering a channel
- */
 export async function preloadChannelEmotes(emoteData: {
   twitchChannelEmotes?: SanitisedEmote[];
   sevenTvChannelEmotes?: SanitisedEmote[];

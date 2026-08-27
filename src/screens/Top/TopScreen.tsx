@@ -13,9 +13,7 @@ export function TopScreen() {
   const activeKey = TOP_TAB_ROUTES[index]?.key;
 
   /**
-   * Activity keeps both scenes mounted across segment flips (scroll and query
-   * state survive) while pausing the hidden scene's effects, so background
-   * refetches can't re-render a display:none FlashList at 0x0.
+   * Activity keeps both scenes mounted across segment flips (scroll/query state survive) while pausing the hidden scene's effects, so background refetches can't re-render a display:none FlashList at 0x0.
    */
   return (
     <View style={styles.container}>

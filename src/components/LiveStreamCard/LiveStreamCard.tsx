@@ -68,9 +68,8 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
 
   const avatarInitial = stream.user_name.trim().charAt(0).toUpperCase();
 
-  // Media-layout avatars come pre-batched on the stream via
-  // useStreamProfilePictures at the list level — one /users request per
-  // screen instead of one per visible card.
+  // Media-layout avatars come pre-batched via useStreamProfilePictures at the
+  // list level - one /users request per screen, not one per visible card.
   const profilePicture = stream.profilePicture;
 
   const handleStreamPressIn = useCallback(() => {

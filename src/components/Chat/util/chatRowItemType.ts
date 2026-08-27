@@ -72,9 +72,8 @@ function getUserChatRowItemType(
   }
 
   /**
-   * The list lays an unmeasured row out at the running average of its item
-   * type, so one `user_chat` type averages a one-line "gg" with an eight-line
-   * copypasta and the over-estimated rows leave unpainted background behind.
+   * Unmeasured rows lay out at their item type's running average; one
+   * `user_chat` type would average one-line and eight-line rows together.
    */
   flags.push(getChatRowSizeBucket(item));
 
@@ -82,18 +81,15 @@ function getUserChatRowItemType(
 }
 
 /**
- * The list asks for a row's type several times per row (container render,
- * size estimation, container allocation) and the collaborators are all
- * WeakMap-cached already - this memoises the composed string per message and
- * inline-reply setting so repeat calls are a Map hit.
+ * The list asks for a row's type several times per row; memoise the composed
+ * string per message and inline-reply setting.
  */
 const itemTypeWithReplyContext = new WeakMap<AnyChatMessageType, string>();
 const itemTypeWithoutReplyContext = new WeakMap<AnyChatMessageType, string>();
 
 /**
- * The row's recycling identity, which the list treats as fixed once the row is
- * placed. Every flag must come from the message itself, never from
- * asynchronously resolved state such as a 7TV paint.
+ * The row's recycling identity, fixed once the row is placed. Every flag must
+ * come from the message itself, never async-resolved state like a 7TV paint.
  */
 export function getChatRowItemType(
   item: AnyChatMessageType,

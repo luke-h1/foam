@@ -18,9 +18,7 @@ export function SearchInputBar({
   const inputRef = useRef<TextInput | null>(null);
 
   /**
-   * No-op text mutators: this variant is controlled by `value`, and routing
-   * them through `onChangeText` re-enters type-to-search and double-fires the
-   * query. They exist for the uncontrolled iOS native search bar.
+   * No-op text mutators: this variant is controlled by `value`, and routing them through `onChangeText` re-enters type-to-search and double-fires the query. They exist for the uncontrolled iOS native search bar.
    */
   useImperativeHandle(ref, () => ({
     setText: () => {},

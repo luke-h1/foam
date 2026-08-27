@@ -129,8 +129,7 @@ describe('SavedPhrasesScreen', () => {
       Platform.OS = 'android';
     });
 
-    // The @expo/ui/swift-ui primitives render as opaque native host views, so
-    // their text is not queryable in tests.
+    // @expo/ui/swift-ui primitives render as opaque native host views; their text is not queryable in tests.
     test('mounts the native list branch without crashing', () => {
       seedSavedPhrases([{ id: 'a', text: 'be right back' }]);
 

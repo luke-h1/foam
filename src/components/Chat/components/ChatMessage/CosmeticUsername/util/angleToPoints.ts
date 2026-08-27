@@ -4,13 +4,10 @@ type GradientPoints = {
 };
 
 /**
- * Calculate gradient start and end points based on angle
- * CSS gradient angles: 0deg = bottom to top, 90deg = left to right
- * We convert to expo-linear-gradient's coordinate system
+ * CSS gradient angle (0deg = bottom to top, clockwise) to
+ * expo-linear-gradient start/end points, where (0,0) is top-left.
  */
 export function angleToPoints(angle: number): GradientPoints {
-  // CSS: 0deg = bottom to top, clockwise positive
-  // We need to convert to coordinate points where (0,0) is top-left
   const rad = ((angle - 90) * Math.PI) / 180;
 
   const x1 = 0.5 + 0.5 * Math.cos(rad + Math.PI);

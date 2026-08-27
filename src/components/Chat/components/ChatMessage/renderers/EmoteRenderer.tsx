@@ -32,12 +32,9 @@ export const EmoteRenderer = memo(
   }: EmoteRendererProps) => {
     const displayUrl = resolveEmoteDisplayUrl(part, { disableAnimations });
 
-    // Twitch and BTTV don't advertise emote dimensions, and some 7TV encodes
-    // arrive without size metadata too, so the box would default to 1:1 and a
-    // non-square emote renders letterboxed at the wrong width. When metadata is
-    // missing, size from the decoded emote's true aspect ratio instead — it's
-    // usually already known for warm channel emotes (no visible shift) and lands
-    // via the subscription once the emote decodes otherwise.
+    // Twitch, BTTV and some 7TV emotes arrive without size metadata, so the
+    // box would default to 1:1 and letterbox non-square emotes. When metadata
+    // is missing, size from the decoded emote's true aspect ratio.
     const measuredRatio = useCachedEmoteAspectRatio(
       part.width && part.height ? null : displayUrl,
     );
@@ -46,9 +43,9 @@ export const EmoteRenderer = memo(
       part.width && part.height
         ? calculateAspectRatio(part.width, part.height, targetSize)
         : calculateAspectRatio(measuredRatio ?? 1, 1, targetSize);
-    // No Pressable: long-press is detected by the row's timer, this just
-    // records which emote the touch started on. A busy screen renders
-    // hundreds of emotes, so each Pressable's gesture machinery added up.
+    // No Pressable: the row's timer detects long-press, this only records
+    // which emote the touch started on. Hundreds of emotes per screen made
+    // per-Pressable gesture machinery add up.
     const handleTouchStart = onEmoteTouchStart
       ? () => onEmoteTouchStart(part)
       : undefined;
@@ -91,9 +88,8 @@ export const EmoteRenderer = memo(
         onTouchStart={handleTouchStart}
         style={getContainerStyle(width, shouldOverlayPrevious, isModerated)}
       >
-        {/* No containerStyle: the size + clip live on the image style so each
-            inline emote is one fewer Fabric/Yoga node. A busy message has many
-            emotes, so this trims hundreds of views per screen on scroll. */}
+        {/* No containerStyle: size + clip live on the image style so each
+            inline emote is one fewer Fabric/Yoga node. */}
         <ChatInlineImage
           sourceUrl={displayUrl}
           style={getEmoteImageStyle(width, height)}

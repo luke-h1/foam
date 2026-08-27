@@ -1,5 +1,4 @@
-/* eslint-disable react-doctor/no-event-handler -- useSyncExternalStore's
-   subscribe + the lazy-decode effect are store wiring, not faked event handlers */
+/* eslint-disable react-doctor/no-event-handler -- store wiring, not event handlers */
 import { useCallback, useEffect, useSyncExternalStore } from 'react';
 
 import type { ImageRef } from 'expo-image';
@@ -14,10 +13,8 @@ import {
 } from './cache-service';
 
 /**
- * Returns a shared, size-capped decoded {@link ImageRef} for `url`, or `null`
- * until it has decoded. Kicks off the decode on first use and re-renders the
- * caller once it lands. Consumers render `source={ref ?? { uri }}` so the first
- * occurrence still shows (expo-image memory+disk caches the url too).
+ * Shared, size-capped decoded {@link ImageRef} for `url`, or `null` until
+ * decoded; consumers render `source={ref ?? { uri }}`.
  */
 export function useCachedEmote(
   url: string,
@@ -33,8 +30,8 @@ export function useCachedEmote(
     () => null,
   );
   /**
-   * Lazily decode on first use (the ref subscription above re-renders when
-   * ready); once decoded, mark it recently-used so eviction keeps hot emotes.
+   * Decode on first use; once decoded, mark recently-used so eviction keeps
+   * hot emotes.
    */
   useEffect(() => {
     if (ref) {
@@ -47,12 +44,8 @@ export function useCachedEmote(
 }
 
 /**
- * Subscribes to the intrinsic aspect ratio (width / height) of the decoded emote
- * for `url`, returning `null` until it decodes. Only pass a url for emotes whose
- * provider doesn't advertise dimensions (Twitch, BTTV, and 7TV encodes that
- * arrive without size metadata); pass `null` when reliable dimensions are
- * already known so the hook stays inert. This piggybacks on the decode kicked
- * off by {@link useCachedEmote}, so it never triggers a decode of its own.
+ * Intrinsic aspect ratio of the decoded emote, `null` until it decodes; pass
+ * `null` when dimensions are already known so the hook stays inert.
  */
 export function useCachedEmoteAspectRatio(url: string | null): number | null {
   const subscribe = useCallback(

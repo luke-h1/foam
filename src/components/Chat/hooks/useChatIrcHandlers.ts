@@ -23,9 +23,8 @@ export function useChatIrcHandlers({
   removeChatMessagesByLogin,
 }: UseChatIrcHandlersOptions) {
   /**
-   * Keyed to the channel: `onPart` also resets the tracker, but the PART echo
-   * for the old room is not guaranteed to arrive on a channel switch (the
-   * socket can be dead mid-switch), so a switch must not depend on it.
+   * Keyed to the channel: the PART echo for the old room is not guaranteed to
+   * arrive on a switch, so the reset must not depend on it.
    */
   const roomStateTracker = useMemo(
     () => createRoomStateTracker(),

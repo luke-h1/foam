@@ -17,9 +17,8 @@ const CONTROLS_AUTO_HIDE_MS = 5000;
 const CONTROLS_FADE = { duration: 140 } as const;
 
 /**
- * Module-level factory so the worklets (and their `Date.now()` call at gesture
- * end) are not closures created in render scope, which React Compiler would
- * refuse to optimize as an impure render call.
+ * Module-level factory so the worklets are not render-scope closures, which
+ * React Compiler would refuse to optimize as an impure render call.
  */
 function createVideoTapGesture(options: {
   controlsOpacity: SharedValue<number>;
@@ -164,7 +163,7 @@ export function useStreamPlayerControls({
 
   const videoTapGesture = useMemo(
     () =>
-      // react-doctor-disable-next-line react-hooks-js/refs -- the shared values are only read inside the worklets at gesture time, never during render; the compiler cannot see through the factory call
+      // react-doctor-disable-next-line react-hooks-js/refs -- shared values only read in worklets at gesture time, never during render
       createVideoTapGesture({
         controlsOpacity,
         controlsTarget,

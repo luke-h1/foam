@@ -14,12 +14,8 @@ import type { ParsedPart } from '@app/utils/chat/parsedPart';
 type EmoteData = ReturnType<typeof getCurrentEmoteData>;
 
 /**
- * Assembles the per-message emote inputs (personal 7TV emotes, scoped Twitch
- * subscriber emotes, emoji) and runs the emote worklet, returning the rendered
- * parts. This is the single place that decides which emote sources feed a
- * message — both the live ingest path and the visible-message reprocess path
- * call through here so the precedence and scoping rules can only diverge in one
- * spot.
+ * The single place that decides which emote sources feed a message, so live
+ * ingest and the visible-message reprocess cannot diverge.
  */
 export function resolveMessageEmoteParts({
   channelId,
@@ -57,9 +53,7 @@ export function resolveMessageEmoteParts({
       ? emoteData.twitchSubscriberEmotes
       : [];
   // Keep the cached tagged-emotes array's identity when there's nothing to
-  // merge (subscriber emotes are only present for the current user's own
-  // messages) - a fresh array here missed the WeakMap content-id interning
-  // downstream on every tagged message.
+  // merge - a fresh array here missed the WeakMap content-id interning.
   const scopedTwitchSubscriberEmotes =
     twitchTaggedSubscriberEmotes.length > 0
       ? twitchSubscriberEmotes.length > 0
@@ -84,8 +78,7 @@ export function resolveMessageEmoteParts({
   });
 
   // The worklet caches parsed parts by text alone, so bits handling stays
-  // outside it: applyCheermotesToParts returns a fresh array and never
-  // mutates the cached one.
+  // outside it and never mutates the cached array.
   const bits = Number.parseInt(userstate.bits ?? '', 10);
   if (Number.isFinite(bits) && bits > 0) {
     const cheermotes = getChannelCheermotes(channelId);

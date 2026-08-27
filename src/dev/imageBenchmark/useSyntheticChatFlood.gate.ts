@@ -12,9 +12,7 @@ interface SyntheticChatFloodArgs {
 }
 
 /**
- * No-op in production. The inline EXPO_PUBLIC_APP_VARIANT literals let Metro
- * drop the require (and the fixtures) from production; do not hoist them into
- * a shared constant (mirrors StorybookRoute.tsx).
+ * No-op in production; inline EXPO_PUBLIC_APP_VARIANT literals let Metro drop the require and fixtures - do not hoist them (mirrors StorybookRoute.tsx).
  */
 let useSyntheticChatFlood: (args: SyntheticChatFloodArgs) => void = () => {};
 

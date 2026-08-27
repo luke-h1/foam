@@ -101,8 +101,12 @@ const BlockedUserItemSkeleton = function BlockedUserItemSkeleton({
       ]}
     >
       <View style={styles.userInfo}>
-        <Skeleton style={styles.nameSkeleton} />
-        <Skeleton style={styles.loginSkeleton} />
+        <View style={styles.nameSkeletonLine}>
+          <Skeleton style={styles.nameSkeleton} />
+        </View>
+        <View style={styles.loginSkeletonLine}>
+          <Skeleton style={styles.loginSkeleton} />
+        </View>
       </View>
       <Skeleton style={styles.iconSkeleton} />
     </View>
@@ -487,9 +491,9 @@ const styles = StyleSheet.create({
     borderTopRightRadius: theme.borderRadius12,
   },
   iconSkeleton: {
-    borderRadius: theme.borderRadius12,
-    height: 28,
-    width: 72,
+    borderRadius: theme.borderRadius20,
+    height: 36,
+    width: 104,
   },
   itemContainer: {
     alignItems: 'center',
@@ -516,9 +520,17 @@ const styles = StyleSheet.create({
     height: 14,
     width: 80,
   },
+  loginSkeletonLine: {
+    height: 24,
+    justifyContent: 'center',
+  },
   nameSkeleton: {
     height: 16,
     width: 120,
+  },
+  nameSkeletonLine: {
+    height: 28,
+    justifyContent: 'center',
   },
   retryButton: {
     marginTop: theme.space8,

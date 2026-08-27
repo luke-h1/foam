@@ -15,18 +15,13 @@ type EnvVar = {
   key: string;
   value: string | undefined;
   /**
-   * Secrets (API keys, tokens, DSNs) are masked until the reveal toggle is on
-   * so the values are not exposed on a screen-share or screenshot by default.
+   * Masked until the reveal toggle is on, so values are not exposed on a screen-share or screenshot.
    */
   secret?: boolean;
 };
 
 /**
- * Only variables statically referenced as `process.env.EXPO_PUBLIC_*` are
- * inlined into the JS bundle at build time, so this list is written out
- * explicitly rather than enumerated - `process.env` is not a real object at
- * runtime and cannot be iterated. Non-`EXPO_PUBLIC_` entries in `.env`
- * (AWS keys, GitHub tokens) never reach the app and would read `undefined`.
+ * Only vars statically referenced as `process.env.EXPO_PUBLIC_*` are inlined at build time, and `process.env` is not iterable at runtime, so the list is written out. Non-`EXPO_PUBLIC_` `.env` entries never reach the app.
  */
 function getEnvVars(): EnvVar[] {
   return [

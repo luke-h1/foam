@@ -48,8 +48,7 @@ export type OTAUpdateState = {
 async function setExtraParams() {
   await setExtraParamAsync(
     Platform.OS === 'ios' ? 'ios-build-number' : 'android-build-number',
-    // Hilariously, `buildVersion` is not actually a string on Android even though the TS type says it is.
-    // This just ensures it gets passed as a string
+    // `buildVersion` is not actually a string on Android despite the TS type.
     `${nativeBuildVersion}`,
   );
   await setExtraParamAsync('channel', Updates.channel || 'unknown');
@@ -304,10 +303,7 @@ export function useOTAUpdates() {
         return;
       }
 
-      // Do not force a reload here: reloadAsync() races the reconnect
-      // refetch burst that fires on the same foreground and tears down
-      // the runtime mid-fetch (#699). The update is already downloaded,
-      // so expo-updates applies it on the next cold start.
+      // No reload here: reloadAsync() races the foreground reconnect refetch burst and tears down the runtime mid-fetch (#699); the downloaded update applies on next cold start.
       logger.main.info(
         'App foregrounded with pending update, deferring to cold start',
         {

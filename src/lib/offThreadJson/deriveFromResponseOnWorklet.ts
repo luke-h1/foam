@@ -4,18 +4,14 @@ import { getParseRuntime } from '@app/lib/offThreadJson/getParseRuntime';
 import { logger } from '@app/utils/logger';
 
 /**
- * Below this size the round trip (copy the string over, schedule, copy the
- * result back) costs more than the parse itself - and the first oversized
- * body is what spawns the worklet runtime, so small early responses (token
- * refresh, the first followed-streams page on boot) no longer pay a runtime +
- * thread spawn on the startup critical path.
+ * Below this size the worklet round trip costs more than the parse, so small
+ * boot responses skip the runtime + thread spawn.
  */
 const MIN_OFF_THREAD_BODY_BYTES = 64 * 1024;
 
 /**
- * Derives a result from a network response body on a background worklet thread
- * via `derive` (a worklet returning only what the caller needs), falling back
- * to the JS thread when the runtime is unavailable.
+ * Derives a result from a response body on a background worklet thread,
+ * falling back to the JS thread when the runtime is unavailable.
  */
 export async function deriveFromResponseOnWorklet<TResult>(
   responseText: string,

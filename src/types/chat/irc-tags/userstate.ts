@@ -1,6 +1,5 @@
 /**
- * ChatUserstate represents the user state from Twitch IRC messages
- * Based on Twitch IRC tag format - see https://dev.twitch.tv/docs/irc/tags/
+ * Twitch IRC user-state tags - see https://dev.twitch.tv/docs/irc/tags/
  */
 export interface UserStateTags {
   'display-name'?: string;
@@ -50,8 +49,7 @@ export interface UserStateTags {
   'msg-param-reward-title'?: string;
 
   /**
-   * Custom tags we're adding to the response to
-   * support reply threads
+   * Custom tags we add to support reply threads.
    */
   'reply-parent-msg-id': string;
   'reply-parent-msg-body': string;

@@ -20,9 +20,8 @@ afterAll(() => {
 const mockRequestClose = jest.fn();
 
 /**
- * The real BottomSheet is `memo(...)`-wrapped, which types as an exotic
- * component object rather than a plain function, so the bridge below narrows
- * through `never` to reach a spyable function property.
+ * BottomSheet is a memo-wrapped exotic component; the bridge narrows through
+ * `never` to reach a spyable function property.
  */
 type MockableBottomSheet = {
   BottomSheet: (props: {
@@ -32,9 +31,7 @@ type MockableBottomSheet = {
     ref?: Ref<{ requestClose: () => void }>;
   }) => ReactNode;
 };
-// SAFETY: the real BottomSheet is the memo-wrapped exotic component
-// described above; `never` is the only type TS accepts as a bridge to the
-// plain function shape MockableBottomSheet.
+// SAFETY: `never` is the only bridge TS accepts from the exotic component to MockableBottomSheet.
 const mockableBottomSheet: MockableBottomSheet = BottomSheetModule as never;
 
 jest

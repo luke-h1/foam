@@ -123,9 +123,8 @@ export function BottomSheet({
     enableFixedSnapPoints && snapPoints?.length ? snapPoints : undefined;
 
   /**
-   * iOS maps these onto `presentationDetents`. Android's `ModalBottomSheet` has
-   * only partial and expanded states, so a fraction has nowhere to land there -
-   * it sizes to content and the content carries the resolved height below.
+   * iOS maps these onto `presentationDetents`; Android has no fractional
+   * states, so it sizes to content and the content carries the resolved height.
    */
   const detents = useMemo(
     () => (Platform.OS === 'ios' ? fixedSnapPoints?.map(toDetent) : undefined),
@@ -170,9 +169,8 @@ export function BottomSheet({
         {showDragIndicator === true ? <SheetDragHandle /> : null}
         {children}
         {/**
-         * The sheet is added to android.R.id.content, above the react root and
-         * therefore above the app's Toaster, so toasts fired from inside a sheet
-         * (badge/emote copy and save) need a Toaster of their own.
+         * The Android sheet sits above the app's Toaster, so toasts fired from
+         * inside a sheet need a Toaster of their own.
          */}
         {process.env.EXPO_OS === 'android' ? (
           <Toaster style={styles.toaster} />

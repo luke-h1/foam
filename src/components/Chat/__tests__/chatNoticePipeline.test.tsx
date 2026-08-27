@@ -31,12 +31,8 @@ import {
 jest.spyOn(dateModule, 'formatDate').mockReturnValue('12:00');
 
 /**
- * MediaLinkCard (reached via ChatRow -> ChatNoticeBody -> ChatMessageBody ->
- * ChatMessagePart) calls this for a twitchClip part; none of the fixtures
- * below include one, but stub it so a real fetch never fires if that changes.
- *
- * SAFETY: no fixture below renders a twitchClip part, so this resolved value
- * is never read - the empty object only needs to satisfy the return type.
+ * Stub so a real fetch never fires. SAFETY: the resolved value is never read,
+ * it only satisfies the return type.
  */
 jest.spyOn(twitchService, 'getClip').mockResolvedValue({} as TwitchClip);
 

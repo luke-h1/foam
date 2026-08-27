@@ -4,9 +4,8 @@ export type EllipseRadii = {
 };
 
 /**
- * Radii of a CSS `radial-gradient(ellipse, ...)` with default sizing. For a
- * centred gradient the farthest-corner ellipse is the farthest-side ellipse
- * scaled by sqrt(2) so it passes through the corner (css-images-3 §3.2.3).
+ * For a centred gradient the farthest-corner ellipse is the farthest-side
+ * ellipse scaled by sqrt(2) so it passes the corner (css-images-3 §3.2.3).
  */
 export function farthestCornerEllipseRadii(
   width: number,

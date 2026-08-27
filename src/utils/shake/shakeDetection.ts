@@ -22,9 +22,8 @@ export type ShakeDetector = (
 ) => boolean;
 
 /**
- * Stateful spike counter over accelerometer samples. At rest the
- * magnitude sits near 1g; a deliberate shake produces repeated spikes
- * well above 2g, while a single bump or sitting down does not.
+ * Stateful spike counter over accelerometer samples: a deliberate shake
+ * produces repeated spikes well above 2g, a single bump does not.
  */
 export function createShakeDetector({
   magnitudeThreshold = 2.2,

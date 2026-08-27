@@ -1,9 +1,8 @@
 import type { PaintLayerData } from '@app/types/seventv/cosmetics';
 
 /**
- * Whether a paint layer produces a span at all. The reference drops layers
- * with nothing to draw (no texture url, no gradient stops) and we also skip
- * fully transparent layers, which render as nothing.
+ * Whether a paint layer produces a span at all; drops layers with nothing to
+ * draw and fully transparent layers.
  */
 export function isRenderablePaintLayer(layer: PaintLayerData): boolean {
   if (layer.opacity <= 0) {

@@ -1,12 +1,8 @@
 type AnimationBudgetListener = (granted: boolean) => void;
 
 /**
- * Caps how many picker cells may animate at once.
- *
- * Every mounted cell autoplaying meant a reopened sheet committed ~100 animated
- * WebP layers in a single CoreAnimation transaction, decoding all of them on the
- * main thread (Sentry FOAM-TV-MOBILE-W, 3.8-4.6s fully-blocked hang). Cells
- * beyond the cap hold their first frame instead.
+ * Caps concurrently animating picker cells; full autoplay caused a 3.8-4.6s
+ * main-thread hang (Sentry FOAM-TV-MOBILE-W). Cells over the cap hold frame 1.
  */
 export const MAX_CONCURRENT_ANIMATED = 96;
 
@@ -60,9 +56,8 @@ export function createAnimationBudget(
       };
     },
     reset(): void {
-      // Cells unmount after the sheet dismisses, so their release closures still
-      // hold these slots. Clearing `granted` first stops those late releases
-      // from decrementing `grantedCount` below zero and doubling the cap.
+      // Unmounted cells' release closures still hold these slots; clearing
+      // `granted` first stops late releases dropping `grantedCount` below zero.
       for (const slot of slots) {
         slot.granted = false;
       }

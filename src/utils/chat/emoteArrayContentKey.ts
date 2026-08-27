@@ -1,34 +1,21 @@
 import type { SanitisedEmote } from '@app/types/emote';
 
 /**
- * A key for an emote array derived from what parsing actually consumes, so a
- * rebuilt array with unchanged content keys identically and the parse caches
- * stay warm across identity churn (7TV events and channel-load settles
- * replace these arrays wholesale). Covers every field a cached parse bakes
- * in: id/name/original_name drive tokenization, url is embedded in the parts,
- * zero_width changes overlay composition. Hashed (dual FNV-1a/djb2 plus
- * length) instead of joined so a 5k-emote channel array doesn't build a
- * multi-hundred-KB string per rebuild.
+ * Content-derived key so a rebuilt array with unchanged emotes keys the same;
+ * hashed rather than joined so 5k emotes don't build a huge string per rebuild.
  */
 const contentKeyCache = new WeakMap<SanitisedEmote[], string>();
 
 /**
- * Field and record delimiters. Without them the fields concatenate into one
- * byte stream, so `{id:'25',name:'Kappa'}` and `{id:'2',name:'5Kappa'}` key
- * identically and one set's parse cache resolves the other set's emotes.
- * A 7TV name is user-set and could in principle contain either byte, so the
- * per-record presence flags below - not the delimiters alone - are what makes
- * the layout unambiguous.
+ * Delimiters stop field-boundary collisions; the presence flags below, not
+ * the delimiters alone, make the layout unambiguous.
  */
 const FIELD_SEPARATOR = 0x1f;
 const RECORD_SEPARATOR = 0x1e;
 
 /**
- * Which optional fields this record carries, plus `zero_width`, mixed before
- * the fields themselves. Both optional fields are skipped when absent, so
- * without this an `original_name` could occupy the slot a `url` would have
- * and key the same as the record that had only the url. Values stay below
- * the delimiters so a flag byte can never be mistaken for one.
+ * Presence flags stop a skipped optional field from letting `original_name`
+ * occupy a `url`'s slot and key the same.
  */
 const HAS_ALIAS = 1;
 const HAS_URL = 2;

@@ -320,10 +320,8 @@ export function createChatIrcHandlers({
 
   const onPart = (channel: string) => {
     /**
-     * The IRC service reuses one socket across channel switches, so a PART
-     * echo for the previous room can arrive after the next room has already
-     * joined and restored history. Only a PART for this handler's own room
-     * may reset the roomstate baseline or clear messages.
+     * The shared socket can echo a stale PART for the previous room; only a
+     * PART for this handler's own room may reset roomstate or clear messages.
      */
     const partedChannel = channel.replace(/^#/, '').toLowerCase();
     if (partedChannel !== channelName.toLowerCase()) {

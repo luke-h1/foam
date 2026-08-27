@@ -51,9 +51,7 @@ export function attachListeners(
   let reconnectTimeout: ReturnType<typeof setTimeout> | undefined;
 
   /**
-   * A socket error is normally followed by a close, and both arm a reconnect.
-   * Without clearing first the second assignment orphans the first timer, so
-   * two reconnects race and open two sockets.
+   * Error is normally followed by close, and both arm a reconnect; without clearing first the second assignment orphans the first timer and two sockets open.
    */
   function scheduleReconnect(attempt: number, baseInterval: number): void {
     if (reconnectTimeout) {

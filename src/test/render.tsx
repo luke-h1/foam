@@ -55,8 +55,7 @@ export const DefaultWrapper = ({ children }: { children: ReactNode }) => {
 };
 
 /**
- * Custom test render function that is pre-configured with any contexts
- * that would otherwise create unnecessary boilerplate.
+ * Test render pre-wired with the app's providers.
  */
 export default function render(
   ui: ReactElement,

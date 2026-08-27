@@ -8,7 +8,7 @@ import {
   buildUserUpdateSubscribeMessage,
 } from '@app/utils/seventv/seventvWsInterpreter';
 
-export const ID_WAIT_TIMEOUT = 30000; // 30 seconds
+export const ID_WAIT_TIMEOUT = 30000;
 
 type SeventvSubscribeMessage = SevenTvWsMessage<
   never,
@@ -24,12 +24,8 @@ export interface SetupInitialSubscriptionsOptions {
 }
 
 /**
- * The initial-subscription pass for a fresh 7TV socket: waits (up to 30s) for
- * the channel and emote-set ids to resolve, then subscribes the
- * channel-scoped streams and the emote set, recording what it subscribed on
- * the session state. Every wait iteration is fenced by
- * `session.beginSubscriptionRun()` - a session reset or channel hop mid-poll
- * makes the run bail without subscribing or marking the session initialised.
+ * Initial-subscription pass for a fresh 7TV socket; every wait iteration is
+ * fenced by `session.beginSubscriptionRun()` so a reset or channel hop mid-poll bails the run.
  */
 export const setupInitialSubscriptions = async ({
   getSevenTvChannelUserId,
@@ -47,7 +43,7 @@ export const setupInitialSubscriptions = async ({
     Date.now() - waitStartTime < ID_WAIT_TIMEOUT
   ) {
     logger.stvWs.debug('💚 Waiting for twitchChannelId to be set...');
-    // eslint-disable-next-line react-doctor/async-await-in-loop, react-doctor/async-defer-await -- poll until channel id is available; the fence below checks state that can only go stale DURING this await
+    // eslint-disable-next-line react-doctor/async-await-in-loop, react-doctor/async-defer-await -- poll for channel id; fenced below
     await new Promise(resolve => {
       setTimeout(resolve, 1000);
     });
@@ -91,7 +87,7 @@ export const setupInitialSubscriptions = async ({
     Date.now() - waitStartTime < ID_WAIT_TIMEOUT
   ) {
     logger.stvWs.debug('💚 Waiting for sevenTVemoteSetId to be set...');
-    // eslint-disable-next-line react-doctor/async-await-in-loop, react-doctor/async-defer-await -- poll until emote set id is available; the fence below checks state that can only go stale DURING this await
+    // eslint-disable-next-line react-doctor/async-await-in-loop, react-doctor/async-defer-await -- poll for emote set id; fenced below
     await new Promise(resolve => {
       setTimeout(resolve, 1000);
     });

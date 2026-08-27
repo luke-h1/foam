@@ -95,9 +95,8 @@ const initialChatStoreState: ChatStoreState = {
   recentMessagesByChannel: {},
   loadingState: 'IDLE',
   currentChannelId: null,
-  // Seeded empty and hydrated after first interactions - building the full
-  // emoji emote set is thousands of allocations and this module loads with
-  // the root layout, before the first chat screen can possibly need it.
+  // Hydrated after first interactions - the emoji set is thousands of
+  // allocations and this module loads with the root layout.
   emojis: [],
   bits: [],
   messages: [],
@@ -180,10 +179,8 @@ const backfillBadgeProviders = (
 };
 
 /**
- * Caches persisted by builds that predate the `provider` discriminant hydrate
- * without it, and every dispatch site now reads it. Stamped in place on the
- * peeked arrays (idempotent, re-runs each launch until the cache is
- * rewritten) so hydration cost stays one pass instead of a store rewrite.
+ * Stamps the `provider` discriminant onto caches from builds that predate it;
+ * idempotent, re-runs each launch until the cache is rewritten.
  */
 const backfillPersistedProviders = () => {
   const globalCaches = chatStore$.persisted.globalCaches.peek();
@@ -209,24 +206,16 @@ const backfillPersistedProviders = () => {
 };
 
 /**
- * Chat-only hydration deferred off the startup critical path: the emoji emote
- * set, the 7TV cosmetics snapshot, and the per-channel recent-message caches
- * are all pure JS-thread work (allocation plus blocking MMKV `JSON.parse`)
- * for screens the app does not boot into - the entry route redirects to the
- * stream tabs, not chat. Runs after first interactions, well before a user
- * can navigate into a chat.
+ * Chat-only hydration deferred off the startup critical path; runs after
+ * first interactions, well before a user can reach a chat.
  */
 const hydrateDeferredChatState = () => {
   if (chatStore$.emojis.peek().length === 0) {
     chatStore$.emojis.set(getEmojiEmotes(getPreferences().emojiStyle));
   }
 
-  // Rehydrate the 7TV cosmetic maps from the previous session's MMKV snapshot
-  // so paints/badges render on launch instead of waiting for the event API to
-  // re-stream every entitlement. The websocket still corrects and extends
-  // this live (create/update/delete). It can also outrace this deferred
-  // hydration, so in-memory entries win over the snapshot, same as the
-  // recent-messages hydration below.
+  // Seed 7TV cosmetics from the last session's snapshot; the websocket can
+  // outrace this, so in-memory entries win.
   const persistedCosmetics = loadPersistedCosmetics();
   if (persistedCosmetics) {
     backfillBadgeProviders(Object.values(persistedCosmetics.badges));
@@ -251,11 +240,8 @@ const hydrateDeferredChatState = () => {
   }
 
   if (RECENT_MESSAGES_PERSISTENCE_ENABLED) {
-    // Native: seed from the per-channel MMKV keys (writes are handled
-    // per-channel in the message-sync path, not via Legend State, so a sync
-    // only re-serializes the active channel instead of every cached channel -
-    // issue #594). Channels already live in memory win over the snapshot in
-    // case a chat was joined before this deferred hydration ran.
+    // Per-channel MMKV keys so a sync re-serializes only the active channel
+    // (issue #594); in-memory channels win if a chat was joined before this ran.
     chatStore$.recentMessagesByChannel.set({
       ...loadPersistedRecentMessages(),
       ...chatStore$.recentMessagesByChannel.peek(),
@@ -274,14 +260,8 @@ const GLOBAL_CACHE_SLICE_KEYS = [
   'ffzGlobalBadges',
 ] as const;
 
-// Fields older builds persisted per channel but the current schema no longer
-// holds: chatterino badges (~4,100 entries each, now resolved from the
-// bundled table at read time), the `emotes`/`badges` aggregates (duplicated
-// the per-provider arrays stored alongside them), 7TV personal emotes (now
-// session state refetched per sighting), personal badges (only ever written
-// empty), and the global provider slices (moved to the shared
-// `persisted.globalCaches` slot). Stripping them on hydrate stops every
-// future channelCaches write from re-serializing them.
+// Fields older builds persisted per channel; stripping them on hydrate stops
+// every future channelCaches write from re-serializing them.
 const STALE_CHANNEL_CACHE_KEYS = [
   'chatterinoBadges',
   'emotes',
@@ -295,10 +275,8 @@ type LegacyChannelCache = ChannelCacheType &
   Partial<Pick<GlobalCacheType, (typeof GLOBAL_CACHE_SLICE_KEYS)[number]>>;
 
 /**
- * Old installs duplicated the global provider slices into every channel
- * cache; the newest copy is as fresh as any global data the app has ever
- * held, so it becomes the shared slot's first value instead of forcing an
- * empty slot on the first launch after the upgrade.
+ * Old installs duplicated the global provider slices into every channel cache;
+ * the newest copy seeds the shared slot so the first post-upgrade launch is not empty.
  */
 const seedGlobalCachesFromChannelCopies = (
   caches: Record<string, LegacyChannelCache>,

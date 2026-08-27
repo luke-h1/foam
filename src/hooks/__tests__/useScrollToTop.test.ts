@@ -17,10 +17,7 @@ describe('useScrollToTop', () => {
     if (!call) {
       throw new Error('useScrollToTop was not registered');
     }
-    // SAFETY: useScrollToTop (src/hooks/useScrollToTop.ts) always passes a
-    // ref whose `.current` getter returns either null or
-    // `{ scrollToTop }`; expo-router's exported ScrollableWrapper type is
-    // wider only to cover its other callers' scroll/getNode variants.
+    // SAFETY: useScrollToTop always passes a ref whose getter returns null or `{ scrollToTop }`; expo-router's ScrollableWrapper type is wider only for its other callers.
     return call[0] as RefObject<{ scrollToTop: () => void } | null>;
   };
 

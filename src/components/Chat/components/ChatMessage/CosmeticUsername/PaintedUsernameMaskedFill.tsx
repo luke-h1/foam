@@ -15,9 +15,8 @@ interface PaintedUsernameMaskedFillProps {
 }
 
 /**
- * Clips the painted fill to the username glyphs via Expo UI MaskedView
- * (SwiftUI `.mask` / Compose `DstIn`). Avoids @react-native-masked-view's
- * Fabric recycle SIGABRT under painted-row churn.
+ * Clips the painted fill to the username glyphs via Expo UI MaskedView;
+ * avoids @react-native-masked-view's Fabric recycle SIGABRT under row churn.
  */
 export function PaintedUsernameMaskedFill({
   displayUsername,

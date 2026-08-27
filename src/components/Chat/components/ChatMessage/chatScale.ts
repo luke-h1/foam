@@ -4,9 +4,8 @@ export type ChatDensity = 'comfortable' | 'compact';
 export type ChatFontScale = 'small' | 'default' | 'large';
 
 /**
- * Body font size is a function of the font-scale preference alone. Density
- * deliberately does not touch it, so a compact row is the same typeface at the
- * same size as a comfortable one - only tighter.
+ * Body font size follows the font-scale preference alone; density never
+ * touches it - a compact row is the same size, only tighter.
  */
 const BASE_FONT_SIZE = {
   small: theme.fontSize12,
@@ -15,9 +14,8 @@ const BASE_FONT_SIZE = {
 } satisfies Record<ChatFontScale, number>;
 
 /**
- * Density moves leading and row padding. Comfortable matches the 1.5 ratio the
- * 7TV extension locks its chat list to; compact tightens it without changing
- * any other part of the ramp.
+ * Density moves leading and row padding. Comfortable matches the 1.5 ratio
+ * the 7TV extension locks its chat list to.
  */
 const LINE_HEIGHT_RATIO = {
   comfortable: 1.5,
@@ -63,9 +61,8 @@ export interface ChatScale {
 }
 
 /**
- * Neutral chrome shared by every chat surface. `muted` is the single secondary
- * text colour - timestamps, reply context, meta rows and moderated bodies all
- * resolve to it rather than to their own rgba literals.
+ * Neutral chrome shared by every chat surface; `muted` is the one secondary
+ * text colour instead of per-surface rgba literals.
  */
 export const CHAT_SURFACE_COLORS = {
   accentBarWidth: 2,
@@ -127,9 +124,8 @@ const CHAT_SCALES = {
 } satisfies Record<ChatFontScale, Record<ChatDensity, ChatScale>>;
 
 /**
- * The resolved chat metrics for a preference pair. Every value the renderer
- * uses must come from here rather than a local literal, so density and font
- * scale cannot drift apart.
+ * Resolved chat metrics for a preference pair. Renderers must use these, never
+ * local literals, so density and font scale cannot drift apart.
  */
 export function getChatScale(
   fontScale: ChatFontScale | undefined,
@@ -144,9 +140,8 @@ export interface ChatLineMetrics {
 }
 
 /**
- * The default-font-scale body metrics per density, for the surfaces that size
- * themselves outside a React render - the painted-username rasterizers and the
- * chat bench - and so cannot resolve a live font-scale preference.
+ * Default-font-scale body metrics per density, for surfaces that size
+ * themselves outside a React render and cannot read the live preference.
  */
 export const chatLineMetrics = {
   comfortable: {

@@ -267,7 +267,7 @@ describe('interpretSeventvWsMessage', () => {
         throw new Error(`expected applyEmoteUpdate, got ${decision?.type}`);
       }
       const added = decision.added[0];
-      // Only the size/url resolution matters here — a webp-only emote must not
+      // Only the size/url resolution matters here - a webp-only emote must not
       // collapse to 0x0 (which renders as a 1:1 square at the wrong width).
       expect({
         url: added?.url,

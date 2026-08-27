@@ -46,9 +46,8 @@ export function Skeleton({ shimmer = true, style, testID }: SkeletonProps) {
 }
 
 /**
- * A gradient band swept across the skeleton via a single `translateX` (no Skia
- * canvas, so many skeletons render without separate TextureViews). Pauses while
- * off-screen.
+ * A gradient band swept via a single `translateX` (no Skia canvas, so no
+ * per-skeleton TextureViews); pauses while off-screen.
  */
 function SkeletonShimmer({ containerWidth }: { containerWidth: number }) {
   const focused = useScreenFocused();

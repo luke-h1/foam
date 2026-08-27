@@ -63,9 +63,8 @@ function getBaseCollectionKey(
   bttvChannelEmotes: SanitisedEmote[],
   bttvGlobalEmotes: SanitisedEmote[],
 ): string {
-  // One-entry identity memo: the nine arrays are stable between emote-set
-  // changes, so per message this is nine pointer compares instead of nine
-  // WeakMap reads plus an array and a join.
+  // One-entry identity memo: nine pointer compares per message instead of
+  // nine WeakMap reads plus an array and a join.
   const last = lastBaseKeyInputs;
   if (
     last &&
@@ -83,9 +82,7 @@ function getBaseCollectionKey(
   }
 
   // Content-derived so a rebuilt array with unchanged emotes keys the same -
-  // 7TV events and channel-load settles replace these arrays wholesale, and
-  // identity keying invalidated every cached parse each time (issue: the
-  // whole window re-parsed for ~800ms sustained after an emote_set.update).
+  // identity keying re-parsed the whole window (~800ms) after an emote_set.update.
   const key = [
     getEmoteArrayContentKey(emojiEmotes),
     getEmoteArrayContentKey(sevenTvGlobalEmotes),
@@ -208,10 +205,8 @@ const MAX_CONTENT_ID_CACHE_SIZE = 32;
 let nextContentId = 0;
 
 /**
- * A small integer standing in for the array's contents. The scoped arrays get
- * rebuilt with the same emotes, so they can't use `getEmoteArrayId` identity -
- * but spelling their ids into the key made per-message cost scale with how many
- * emotes the account has unlocked. The walk runs once per new array identity.
+ * Small integer standing in for the array's contents - spelling the ids into
+ * the key scaled per-message cost with the account's unlocked emotes.
  */
 function getEmoteContentId(emotes: SanitisedEmote[]): number {
   if (emotes.length === 0) {
@@ -295,9 +290,8 @@ function createScopedEmoteLookup(
   return lookup;
 }
 
-// Emoji hexcode keys always include a code point above 0x7F, so pure-ASCII
-// words (the vast majority of chat words) can never match the emoji map -
-// skip the per-word code-point expansion for them.
+// Pure-ASCII words can never match the emoji map, so skip the per-word
+// code-point expansion for them.
 function hasNonAsciiChar(word: string): boolean {
   for (let i = 0; i < word.length; i += 1) {
     if (word.charCodeAt(i) > 0x7f) {

@@ -2,10 +2,8 @@ import { getChatMessageKey } from '@app/utils/chat/messageIdentity/getChatMessag
 import { normaliseMessageField } from '@app/utils/chat/messageIdentity/normaliseMessageField';
 
 /**
- * A message's stable id: the store-assigned `id` once it has been committed,
- * falling back to the key it will be committed under. Buffered (pre-commit)
- * and stored messages therefore answer to the same identity, so `id` is
- * optional here even though the committed type requires it.
+ * A message's stable id: the store-assigned `id` once committed, else the key
+ * it commits under - buffered and stored messages share one identity.
  */
 export function getChatMessageStoreId(message: {
   id?: string;

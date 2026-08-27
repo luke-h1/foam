@@ -74,8 +74,7 @@ export function ImageBenchmarkScreen() {
   const [busy, setBusy] = useState(false);
   const [flood, setFlood] = useState('off');
   const autoStarted = useRef(false);
-  // Runs (auto-started or button-triggered) take 90s+; guards every post-await
-  // setState so a run that outlives the screen doesn't write to unmounted state.
+  // Runs take 90s+; guards every post-await setState so a run outliving the screen doesn't write to unmounted state.
   const unmountedRef = useRef(false);
   useEffect(() => {
     return () => {
@@ -161,8 +160,7 @@ export function ImageBenchmarkScreen() {
   };
 
   useEffect(() => {
-    // Auto-start runs once on mount (guarded by autoStarted); runAll closes over
-    // benchmark state we deliberately don't want to re-trigger the suite.
+    // Auto-start runs once on mount; runAll closes over benchmark state that must not re-trigger the suite.
     if (!auto || autoStarted.current) {
       return undefined;
     }

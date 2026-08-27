@@ -32,9 +32,7 @@ import { useStreamPlayerControls } from './useStreamPlayerControls';
 export type { StreamInfo, StreamPlayerProps, StreamPlayerRef } from './types';
 
 /**
- * The unscripted live player gives no 'playing' bridge event, so the poster is
- * dismissed off WebView load-end. Linger briefly past that so the first decoded
- * frame is already on screen before the loading frame fades away.
+ * Linger so the first decoded frame is on screen before the poster fades.
  */
 const POSTER_HIDE_DELAY_MS = 450;
 
@@ -70,9 +68,8 @@ export const StreamPlayer = memo(function StreamPlayer({
   width,
   ref,
 }: StreamPlayerProps) {
-  // Twitch's embed `parent`, hardcoded to Twitch's own domain, which its embed
-  // always accepts. A blank or invalid value makes Twitch render "this embed is
-  // misconfigured" and breaks every stream.
+  // Twitch always accepts its own domain as embed `parent`; a blank or invalid
+  // value renders "this embed is misconfigured" and breaks every stream.
   const embedParent = 'www.twitch.tv';
   const webViewRef = useRef<WebView>(null);
   const needsInitRef = useRef(true);
@@ -85,11 +82,8 @@ export const StreamPlayer = memo(function StreamPlayer({
     statusCode: number;
   } | null>(null);
   /**
-   * Mounting the WebView while the screen-push animation is still running
-   * makes WKWebView start the inline video mid-transition; its AVPlayer
-   * layer then intermittently never attaches to the compositor (audio and
-   * currentTime advance but the picture is black or frozen on one frame).
-   * Wait for interactions/transitions to settle before creating the WebView.
+   * Mount after interactions settle: a mid-transition WKWebView start can
+   * leave the AVPlayer layer detached (audio advances, picture black).
    */
   const [canMountWebView, setCanMountWebView] = useState(false);
   useEffect(() => {
@@ -100,15 +94,8 @@ export const StreamPlayer = memo(function StreamPlayer({
   }, []);
 
   /**
-   * Even when mounted post-transition, WKWebView sometimes fails to attach
-   * the inline video's AVPlayer layer to the compositor (picture stays black
-   * or frozen while playback advances). The page cannot observe this, so we
-   * unconditionally force a frame change shortly after playback starts —
-   * resizing the WKWebView makes it rebuild its layer tree and pick the
-   * video layer up.
-   * With the unscripted player there is no bridge 'playing' event, so the
-   * nudge fires off WebView load-end; autoplay starts shortly after, which
-   * the second pulse at +2.5s covers.
+   * Force a resize after playback starts to rebuild the layer tree when
+   * WKWebView fails to attach the AVPlayer layer; +2.5s pulse covers late autoplay.
    */
   const [layoutNudge, setLayoutNudge] = useState(0);
   const nudgeTimeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -126,8 +113,8 @@ export const StreamPlayer = memo(function StreamPlayer({
     pulse(2500);
   }, []);
   /**
-   * Loading frame shown over the WebView (stream thumbnail + spinner) until the
-   * player has actually started, replacing the black box during page load.
+   * Loading frame stays over the WebView until playback starts, hiding the
+   * black box during page load.
    */
   const [loadedGeneration, setLoadedGeneration] = useState<string | null>(null);
   const generationRef = useRef('');
@@ -149,11 +136,8 @@ export const StreamPlayer = memo(function StreamPlayer({
   }, [nudgeLayerTree]);
 
   /**
-   * iOS suspends the WKWebView while the app is backgrounded and does not
-   * reliably re-attach the inline video's AVPlayer layer to the compositor on
-   * the way back, so the player returns as a blank rectangle. The mount-time
-   * nudge above is once-per-generation and has long since fired by then, so
-   * pulse the frame again on every foreground.
+   * iOS does not reliably re-attach the AVPlayer layer after backgrounding,
+   * so pulse again on every foreground.
    */
   useOnAppStateChange(transition => {
     if (isForegroundTransition(transition)) {
@@ -300,10 +284,8 @@ export const StreamPlayer = memo(function StreamPlayer({
   const channelName = channel || 'twitch';
   const awaitBridgePlaybackStart = showOverlayControls && !clip;
   /**
-   * Memoised so the URL only changes when the source or a remount (webViewKey)
-   * does — never on an incidental re-render (e.g. the layout nudge), which
-   * would otherwise reload the WebView. On remount it reads the latest
-   * resume offset so a VOD picks up where it left off.
+   * URL must only change on source change or remount (webViewKey) - an
+   * incidental re-render would reload the WebView.
    */
   const webViewSource = useMemo(
     () =>
@@ -339,13 +321,13 @@ export const StreamPlayer = memo(function StreamPlayer({
   });
 
   /**
-   * The tracker posts unsolicited `vodProgress` messages; capture those for
-   * resume-on-reload and forward everything else to the player bridge.
+   * Captures the tracker's `vodProgress` messages for resume-on-reload;
+   * everything else forwards to the player bridge.
    */
   const handleWebViewMessage = useCallback(
     (event: WebViewMessageEvent) => {
       try {
-        // SAFETY: the tracker script is the only sender of `vodProgress`; every field below is optional and re-checked before use.
+        // SAFETY: only the tracker script sends `vodProgress`; fields are re-checked before use.
         const message = JSON.parse(event.nativeEvent.data) as {
           type?: string;
           payload?: { currentTime?: number };

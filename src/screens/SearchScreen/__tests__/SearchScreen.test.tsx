@@ -40,8 +40,7 @@ jest
     () => {},
   ]);
 
-// SegmentedControl wraps the native @expo/ui control, which cannot receive
-// segment-change events in tests; expose each segment as a pressable instead.
+// The native @expo/ui SegmentedControl cannot receive segment-change events in tests; expose each segment as a pressable.
 jest
   .spyOn(SegmentedControlModule, 'SegmentedControl')
   .mockImplementation(({ items, onChange }) =>
@@ -146,8 +145,7 @@ describe('SearchScreen', () => {
     await waitFor(() => {
       expect(twitchService.searchCategories).toHaveBeenCalledTimes(1);
     });
-    // The imperative setText handle must not re-enter type-to-search, or a
-    // single tap issues the same query twice.
+    // The imperative setText handle must not re-enter type-to-search, or one tap issues the same query twice.
     expect(twitchService.searchChannels).toHaveBeenCalledTimes(1);
   });
 
@@ -158,8 +156,7 @@ describe('SearchScreen', () => {
 
     render(<SearchScreen />);
 
-    // The history list is rendered with native @expo/ui views, whose text is
-    // exposed as props rather than findable Text nodes, so query by testID.
+    // Native @expo/ui history rows carry text as props, not findable Text nodes; query by testID.
     expect(screen.getByTestId('search-history')).toBeOnTheScreen();
     expect(screen.getByTestId('search-history-item-xqc')).toBeOnTheScreen();
   });

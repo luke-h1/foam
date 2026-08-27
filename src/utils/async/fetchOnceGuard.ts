@@ -18,9 +18,8 @@ export interface FetchOnceRunContext {
    */
   stillCurrent(): boolean;
   /**
-   * Stamps a key as fetched, defaulting to the run key. No-ops once `clear`
-   * has run after this fetch started, so a completing fetch cannot re-poison
-   * a freshly cleared guard.
+   * Stamps a key as fetched (default: the run key). No-ops after `clear`, so
+   * a completing fetch cannot re-poison a freshly cleared guard.
    */
   markFetched(key?: string): void;
 }
@@ -28,8 +27,7 @@ export interface FetchOnceRunContext {
 export interface FetchOnceGuard {
   /**
    * Single-flight fetch: concurrent runs for the same key share one promise.
-   * Does not stamp the key; stamping is the fetcher's decision via
-   * `ctx.markFetched`. Rejections propagate to every caller.
+   * Stamping is the fetcher's decision via `ctx.markFetched`.
    */
   run<V>(
     key: string,
@@ -44,9 +42,8 @@ export interface FetchOnceGuard {
   markFetched(key: string): void;
   clearKey(key: string): void;
   /**
-   * Drops all stamps and in-flight tracking and fences out fetches that are
-   * still running: their `stillCurrent` turns false and their `markFetched`
-   * becomes a no-op.
+   * Drops all stamps and in-flight tracking and fences out running fetches:
+   * their `stillCurrent` turns false and `markFetched` becomes a no-op.
    */
   clear(): void;
 }

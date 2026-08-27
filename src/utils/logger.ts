@@ -190,9 +190,6 @@ const loggingConfig = {
     color: 'black',
   },
 
-  /**
-   * Websocket connections
-   */
   twitchWs: {
     enabled: true,
     color: 'blueBright',

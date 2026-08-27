@@ -35,7 +35,7 @@ function loadBttvBadges(): void {
         onBadgesLoaded.current?.();
         return;
       }
-      // Empty success can be transient CDN/API flakiness — back off and retry
+      // Empty success can be transient CDN/API flakiness - back off and retry
       // instead of sticking on fetchStarted forever with no loaded callback.
       scheduleRetry();
     })
@@ -51,9 +51,8 @@ function loadBttvBadges(): void {
 }
 
 /**
- * Invalidates the once-per-process fetch so the next read starts a new one and
- * fences whatever is in flight. The loaded badges stay readable until the new
- * list lands, so a failed refresh degrades to the badges already on screen.
+ * Invalidates the once-per-process fetch and fences whatever is in flight;
+ * loaded badges stay readable until the new list lands.
  */
 export function clearBttvBadgesCache(): void {
   generation += 1;

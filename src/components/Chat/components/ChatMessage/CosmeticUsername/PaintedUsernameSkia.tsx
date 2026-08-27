@@ -1,4 +1,11 @@
-import { type ReactNode, useLayoutEffect, useMemo, useState } from 'react';
+import {
+  type ReactNode,
+  use,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { PixelRatio } from 'react-native';
 
 import {
@@ -9,6 +16,7 @@ import {
   ImageShader,
   Mask,
   Skia,
+  useCanvasRef,
 } from '@shopify/react-native-skia';
 
 import { chatLineMetrics } from '@app/components/Chat/components/ChatMessage/chatScale';
@@ -20,6 +28,7 @@ import {
   retainPaintBitmaps,
 } from '@app/utils/image/paintBitmapCacheLifecycle';
 
+import { RowVisibilityContext } from '../rowVisibility';
 import {
   getPaintTextureUrl,
   paintDependsOnTexture,
@@ -48,6 +57,24 @@ interface PaintedUsernameSkiaProps {
   fontSize?: number;
 }
 
+function useCanvasRedrawOnVisible() {
+  const canvasRef = useCanvasRef();
+  const rowVisibility = use(RowVisibilityContext);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => canvasRef.current?.redraw());
+    const unsubscribe = rowVisibility?.subscribe(() => {
+      if (rowVisibility.isVisible()) {
+        canvasRef.current?.redraw();
+      }
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      unsubscribe?.();
+    };
+  }, [canvasRef, rowVisibility]);
+  return canvasRef;
+}
+
 function paintMaskNode(bitmaps: PaintBitmaps): ReactNode {
   if (!bitmaps.maskImage) {
     return null;
@@ -65,9 +92,8 @@ function paintMaskNode(bitmaps: PaintBitmaps): ReactNode {
 }
 
 /**
- * Overlay frame from the shared per-URL animation clock — advances on the UI
- * thread for both stretch and tiled URL layers (animated WebP/GIF included),
- * in phase with every other row using the same paint texture.
+ * Overlay frame from the shared per-URL animation clock - advances on the UI
+ * thread, in phase with every other row using the same paint texture.
  */
 function TiledPaintLayerOverlay({
   url,
@@ -212,9 +238,8 @@ function renderLayerSlot(
 }
 
 /**
- * One URL layer span: base-colour backing under the texture, faded together
- * by the layer opacity. `layer` forces a real saveLayer so the fade applies
- * to the flattened span, not to backing and texture independently.
+ * One URL layer span: `layer` forces a real saveLayer so the fade applies to
+ * the flattened span, not to backing and texture independently.
  */
 function UrlLayerSpan({
   opacity,
@@ -243,9 +268,11 @@ function ImageLayerPaintCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
   const { width, height, insets, staticImage, layerSlots, strokeImage } =
     bitmaps;
   const maskNode = paintMaskNode(bitmaps);
+  const canvasRef = useCanvasRedrawOnVisible();
 
   return (
     <Canvas
+      ref={canvasRef}
       style={{
         width,
         height,
@@ -282,9 +309,11 @@ function ImageLayerPaintCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
 
 function PaintBitmapCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
   const { width, height, insets, staticImage } = bitmaps;
+  const canvasRef = useCanvasRedrawOnVisible();
 
   return (
     <Canvas
+      ref={canvasRef}
       style={{
         width,
         height,
@@ -307,9 +336,8 @@ function PaintBitmapCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
 }
 
 /**
- * Renders a painted username with Skia. The foundation (shadows, base fill) is
- * baked once; URL textures animate on the UI thread in z-order with any
- * gradients that stack above them, and stroke composites last.
+ * Renders a painted username with Skia: foundation baked once, URL textures
+ * animate on the UI thread, stroke composites last.
  */
 export function PaintedUsernameSkia({
   username,
@@ -324,9 +352,8 @@ export function PaintedUsernameSkia({
   const textureReady = useSharedPaintAnimationReady(textureUrl ?? '');
 
   const bitmaps = useMemo(() => {
-    // rebuildToken re-reads the cache after a lost retain (see below);
-    // referenced here so the dep is legitimate - a lint disable would make
-    // the React Compiler skip this whole component.
+    // rebuildToken re-reads the cache after a lost retain; referenced so the
+    // dep is legitimate without a lint disable.
     void rebuildToken;
     return fontProvider
       ? getPaintBitmaps({
@@ -350,17 +377,15 @@ export function PaintedUsernameSkia({
   ]);
 
   /**
-   * Pins the textures while this canvas draws them, so an eviction or a
-   * memory-warning clear cannot dispose a bitmap that is on screen. Layout
-   * effect so the retain lands in the same commit as the render that read the
-   * entry; if disposal still won the race, rebuild rather than draw a dead one.
+   * Pins the textures while the canvas draws them so eviction cannot dispose
+   * an on-screen bitmap; layout effect so the retain lands in the same commit.
    */
   useLayoutEffect(() => {
     if (!bitmaps) {
       return;
     }
     if (!retainPaintBitmaps(bitmaps)) {
-      // react-doctor-disable-next-line react-hooks-js/set-state-in-effect -- recovery branch, not a cascade: it only runs when disposal beat this retain, and the entry cannot be re-derived before render because retaining during render would leak on a discarded one
+      // react-doctor-disable-next-line react-hooks-js/set-state-in-effect -- recovery branch: runs only when disposal beat this retain
       setRebuildToken(token => token + 1);
       return;
     }

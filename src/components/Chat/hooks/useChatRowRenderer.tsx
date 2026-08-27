@@ -50,9 +50,8 @@ import { isUserNoticeTags } from '../util/richChatMessage/isUserNoticeTags';
 const messageRowEntering = chatEntranceSpring(FadeInUp);
 
 /**
- * A row renders an arbitrary message from the union, so its notice tags have
- * to be read through a guard rather than the generic - the variant is only
- * known at runtime.
+ * A row renders the whole message union, so notice tags go through a runtime
+ * guard rather than the generic.
  */
 function getRowNoticeTags(
   message: AnyChatMessageType,
@@ -216,9 +215,7 @@ const ChatMessageRow = function ChatMessageRow({
       highlightedUserSet={highlightedUserSet}
       messageDisplay={messageDisplay}
       onReplyContextPress={onReplyContextPress}
-      // RichChatMessage is generic over one notice variant; a row renders the
-      // whole union, so TS collapses this prop to `undefined`. The value is
-      // guarded above - widening the component's generic is the real fix.
+      // RichChatMessage is generic over one notice variant; the row's union collapses this prop to `undefined`. Value guarded above.
       // @ts-expect-error - notice_tags cannot narrow against the row's union
       notice_tags={getRowNoticeTags(msg)}
     />
@@ -362,14 +359,11 @@ export function useChatRowRenderer({
     [highlightedUsers],
   );
   /**
-   * Spreads `displayFlags` rather than restating it: a flag added to the rows
-   * but missed here would silently stop that preference from re-rendering them.
+   * Spreads `displayFlags` rather than restating it: a flag missed here would
+   * silently stop that preference from re-rendering the rows.
    */
-  // Note: mentionLoginRevision is intentionally excluded. It bumps ~every 400ms
-  // as @mention logins resolve from Helix; including it re-rendered every visible
-  // row each time (the dominant frame-drop source in mention-heavy chat - busy
-  // chat went from ~57fps to a flat 60fps once removed). Mention spans subscribe
-  // to the revision themselves (MentionSpan), so only those spans re-render.
+  // mentionLoginRevision is deliberately excluded: it bumps ~every 400ms and
+  // re-rendered every visible row (~57fps -> 60fps once removed); MentionSpan subscribes itself.
   const messageListExtraData = useMemo(
     () => ({
       ...displayFlags,
@@ -458,10 +452,9 @@ export function useChatRowRenderer({
         />
       );
     },
-    // The *Ref entries are stable ref objects from useSyncRef; they are listed
-    // only because the rule cannot see through the custom hook. Reading
-    // `.current` here is the point — it keeps renderItem stable when a handler
-    // changes identity, which would otherwise re-render every visible row.
+    // The *Ref entries are stable useSyncRef objects, listed only because the
+    // rule cannot see through the hook. Reading `.current` keeps renderItem
+    // stable when a handler changes identity.
     [
       channelId,
       currentUsernameForMentions,

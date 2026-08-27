@@ -39,9 +39,7 @@ export const useWebsocket = <TJsonMessage = never>(
   const connectRef = useSyncRef(connect);
 
   /**
-   * `convertedUrl` is resolved asynchronously by the connect effect, so the
-   * ready state a consumer sees has to be derived from it during render -
-   * there is no state to mirror it into without an extra commit.
+   * The connect effect resolves `convertedUrl` asynchronously, so ready state must derive from the ref during render.
    */
   // react-doctor-disable-next-line react-hooks-js/refs -- see above
   const activeUrl = convertedUrl.current;
@@ -71,16 +69,10 @@ export const useWebsocket = <TJsonMessage = never>(
   };
 
   const getWebSocket = useCallback((): WebSocket => {
-    /**
-     * For non-shared connections, return the direct websocket if available
-     */
     if (optionsCache.current?.share !== true && websocketRef.current !== null) {
       return websocketRef.current;
     }
 
-    /**
-     * For shared connections, use the proxy
-     */
     if (
       webSocketProxy.current === null &&
       websocketRef.current &&
@@ -94,16 +86,10 @@ export const useWebsocket = <TJsonMessage = never>(
       return webSocketProxy.current;
     }
 
-    /**
-     * If we have a websocket ref, return it (even if proxy isn't set up yet)
-     */
     if (websocketRef.current !== null) {
       return websocketRef.current;
     }
 
-    /**
-     * For shared connections, check the shared WebSockets map if the socket is already created.
-     */
     if (optionsCache.current?.share && convertedUrl.current) {
       const sharedSocket = sharedWebSockets[convertedUrl.current];
       if (sharedSocket !== undefined) {
@@ -111,10 +97,7 @@ export const useWebsocket = <TJsonMessage = never>(
       }
     }
 
-    /**
-     * This is a dummy WebSocket object that is used to prevent null errors when the WebSocket is not initialized yet.
-     */
-    // SAFETY: created from WebSocket.prototype, and the two properties read off it below are defined here.
+    // Dummy socket so callers never get null before init. SAFETY: built from WebSocket.prototype; only the two properties defined here are read.
     const dummySocket = Object.create(WebSocket.prototype) as WebSocket;
     Object.defineProperty(dummySocket, 'readyState', {
       value: WebSocket.CLOSED,
@@ -190,9 +173,7 @@ export const useWebsocket = <TJsonMessage = never>(
     return undefined;
   }, [url, stringifiedQueryParams, optionsCache, connectRef]);
 
-  // Tear down the current socket (if any) and start a fresh connection.
-  // Lets callers revive a connection whose automatic retries were exhausted,
-  // e.g. when the app returns to the foreground after a long network outage.
+  // Fresh connection that revives a socket whose retries were exhausted, e.g. on foreground after a long outage.
   const reconnect = useCallback(() => {
     reconnectCount.current = 0;
     startRef.current();

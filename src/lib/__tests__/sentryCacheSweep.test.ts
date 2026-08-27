@@ -1,10 +1,8 @@
 import { sweepOversizedSentryEnvelopesNow } from '@app/lib/sentryCacheSweep';
 
 /**
- * `require`, not a static import: `__mockFileSystem` only exists on the
- * `__mocks__/expo-file-system.ts` manual mock, not the real module's types,
- * and `jest.requireMock` resolves a separate module instance from the one
- * Jest auto-substitutes for `sentryCacheSweep.ts`'s own import.
+ * require, not a static import: __mockFileSystem only exists on the manual
+ * mock, and jest.requireMock resolves a separate module instance.
  */
 // SAFETY: __mocks__/expo-file-system.ts defines __mockFileSystem with exactly this shape.
 const { __mockFileSystem: fileSystemMock } = require('expo-file-system') as {

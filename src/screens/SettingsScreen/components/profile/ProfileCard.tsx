@@ -14,9 +14,7 @@ import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 
 /**
- * Foam has no backend accounts - sign-in is Twitch OAuth - so account deletion
- * is handled by Twitch. This is the Security & Privacy settings page that holds
- * the "Disable or Delete My Account" option.
+ * Foam has no backend accounts (sign-in is Twitch OAuth), so deletion goes through Twitch's Security & Privacy page with "Disable or Delete My Account".
  */
 const TWITCH_ACCOUNT_SETTINGS_URL = 'https://www.twitch.tv/settings/security';
 

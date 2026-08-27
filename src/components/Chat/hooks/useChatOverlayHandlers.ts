@@ -57,9 +57,8 @@ interface UseChatOverlayHandlersOptions {
 }
 
 /**
- * The actions the chat sheets fire. Split out of `ChatOverlayLayer` so that
- * component stays the sheet tree; it takes the current selection as arguments
- * rather than subscribing, so the overlay state still has exactly one reader.
+ * The actions the chat sheets fire; takes the current selection as arguments
+ * rather than subscribing, so the overlay state keeps exactly one reader.
  */
 export function useChatOverlayHandlers({
   channelId,

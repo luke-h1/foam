@@ -1,9 +1,6 @@
 /**
- * Tiny event bus so the chat settings sheet can ask the (sibling) stream player
- * to seek back to the live edge without threading a callback through the whole
- * Chat → overlay tree. The live-stream screen subscribes and forwards to the
- * player ref; the settings button fires it. Mirrors the module-signal approach
- * used for video latency.
+ * Event bus so the chat settings sheet can ask the sibling stream player to
+ * seek to the live edge without threading a callback through the overlay tree.
  */
 type LiveSyncListener = () => void;
 

@@ -1,12 +1,8 @@
 import { StyleSheet, View } from 'react-native';
 
 /**
- * The platform grabber cannot be restyled: `@expo/ui`'s `handleComponent` is
- * documented as not rendering on iOS or Android (only `null` vs non-null is
- * read), and `handleStyle` / `handleIndicatorStyle` have no effect there. So
- * the wrapper hides the native indicator and draws this as the first row of
- * sheet content instead, which puts the grabber on the sheet's own background
- * with no band or seam of its own.
+ * `@expo/ui` never renders `handleComponent` on iOS/Android and its handle
+ * style props do nothing, so hide the native grabber and draw this instead.
  */
 export function SheetDragHandle() {
   return (

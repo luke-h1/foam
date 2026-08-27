@@ -13,10 +13,8 @@ function isMessageObject(
 }
 
 /**
- * List key for a message. Unlike `getChatMessageStoreId` this never returns a
- * shared key for an unrenderable message - two malformed rows must not
- * collapse onto the same React key - so it hands those a stable unique
- * fallback instead.
+ * Unlike `getChatMessageStoreId` this hands unrenderable messages a stable
+ * unique fallback - two malformed rows must not share a React key.
  */
 export function getChatMessageListKey(
   message: AnyChatMessageType | undefined,

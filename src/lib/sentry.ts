@@ -15,9 +15,8 @@ import { markSessionError } from '@app/utils/storeReview/sessionErrorFlag';
 import type { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
 
 /**
- * expoRouterIntegration auto-instruments Expo Router navigation, so no manual
- * registerNavigationContainer call is required — it is created here and passed
- * straight to Sentry.init's integrations below.
+ * Auto-instruments Expo Router navigation; no manual
+ * registerNavigationContainer call is needed.
  */
 export const navigationIntegration = expoRouterIntegration({
   enableTimeToInitialDisplay: true,
@@ -29,11 +28,8 @@ export const navigationIntegration = expoRouterIntegration({
 let didInitializeSentry = false;
 
 /**
- * Strip personally-identifying fields before an event leaves the device: the
- * IP address (which Sentry geolocates server-side), account identifiers that
- * may have reached the scope, device names like "Luke's iPhone" that embed a
- * person's name, and the host name. User-submitted feedback carries its email
- * on the feedback context, not event.user, so it is unaffected.
+ * Strips PII before an event leaves the device; feedback email lives on the
+ * feedback context, not event.user, so it is unaffected.
  */
 function scrubPii<T extends Sentry.ErrorEvent | Sentry.TransactionEvent>(
   event: T,
@@ -95,9 +91,7 @@ export function init() {
     debug,
   };
 
-  // A release build with no DSN means Sentry silently captures nothing, which
-  // is indistinguishable from "no errors" in the dashboard. Make it loud so it
-  // shows up in device logs (Console.app / adb logcat) during triage.
+  // A release build with no DSN silently captures nothing; be loud in device logs.
   if (!hasDsn && !__DEV__) {
     console.error(
       '[sentry] EXPO_PUBLIC_SENTRY_DSN is missing from this build — error reporting is disabled.',
@@ -126,12 +120,8 @@ export function init() {
     ignoreErrors: ['Network request failed'],
     sampleRate: 1.0,
     /**
-     * Replay/tracing encoders were a measured production JS-thread cost, so
-     * production samples them down while keeping errors at 100%.
-     *
-     * Trace profiling (profilesSampleRate) is deliberately not set: oversized
-     * profile envelopes wedged the native transport and OOM-crashed the app
-     * (FOAM-TV-MOBILE-1C).
+     * Production samples replay/tracing down (measured JS-thread cost);
+     * profilesSampleRate stays unset - profile envelopes OOM-crashed the app (FOAM-TV-MOBILE-1C).
      */
     tracesSampleRate: isProduction ? 0.15 : 1.0,
     enableAutoPerformanceTracing: true,
@@ -149,9 +139,7 @@ export function init() {
       }),
     ],
     beforeSend(event) {
-      // Keep the store-review prompt gate honest: any error-level event
-      // (including unhandled rejections Sentry tracks itself) marks the
-      // session so we never ask for a rating in a bad session.
+      // Any error-level event marks the session so the store-review prompt never fires in a bad session.
       if (event.level === 'fatal' || event.level === 'error') {
         markSessionError();
       }
@@ -172,9 +160,8 @@ export function flushSentry(): Promise<boolean> {
 }
 
 /**
- * Sends a message event and waits for the transport to flush. Lets a real
- * TestFlight build confirm the whole pipeline (init -> capture -> network)
- * works, rather than guessing from an empty dashboard.
+ * Sends a message event and flushes, so a TestFlight build can confirm the
+ * whole pipeline works.
  */
 export async function verifySentryDelivery(): Promise<{
   eventId?: string;
@@ -206,9 +193,7 @@ export function showFeedbackWidget(): void {
 export type FeedbackType = 'bug' | 'idea';
 
 /**
- * Submit user feedback from the custom in-app feedback screen.
- * Tagged with the feedback type so bug reports and ideas can be triaged
- * separately in Sentry.
+ * Tagged with the feedback type so bugs and ideas triage separately in Sentry.
  */
 export function sendFeedback(feedback: {
   type: FeedbackType;
@@ -251,9 +236,8 @@ export type Span = Sentry.Span;
 export type SpanOutcome = 'ok' | 'error' | 'cancelled';
 
 /**
- * Starts a span that is not automatically bound to the current scope. Use this
- * for multi-step work (e.g. player load) that finishes outside the call stack
- * that created the span.
+ * Span not bound to the current scope; for work that finishes outside the
+ * creating call stack (e.g. player load).
  */
 export function startInactiveSpan(
   name: string,
@@ -331,8 +315,7 @@ export type MonitoringEventName =
   MonitoringErrorName | MonitoringWarningName | MonitoringInfoName;
 
 /**
- * Everything a caller may attach to a log entry. `sanitiseLogValue` bounds each
- * one before it reaches Sentry, so this is the widest shape that survives.
+ * The widest shape sanitiseLogValue can bound before it reaches Sentry.
  */
 export type LogMetadataValue =
   | string
@@ -386,14 +369,13 @@ function extractLogExtra(metadata?: LogMetadata) {
 }
 
 /**
- * Sentry's own ceiling for a tag value; past it the ingest pipeline truncates
- * or drops. Truncating here keeps the value deterministic instead.
+ * Sentry's own tag-value ceiling; truncating here keeps the value
+ * deterministic instead of ingest-side truncation.
  */
 const MAX_TAG_VALUE_LENGTH = 200;
 /**
- * `LogMetadata['tags']` is caller-facing and open, so a caller can hand over an
- * arbitrarily wide record. `sanitiseLogValue` bounds the extra but never sees
- * the tags, so they need a bound of their own (FOAM-TV-MOBILE-9V).
+ * sanitiseLogValue never sees the tags, so they need their own bound
+ * (FOAM-TV-MOBILE-9V).
  */
 const MAX_TAGS = 24;
 
@@ -411,9 +393,7 @@ function applyLogScope(
     safeExtra: Record<string, LogMetadataValue>;
   },
 ): void {
-  // Caller tags go on first so the canonical pair below always wins: a later
-  // setTag overwrites an earlier one, so a caller passing `log_category` or
-  // `error_type` would otherwise replace the value the grouping relies on.
+  // Caller tags go first so the canonical log_category/error_type pair below always wins.
   if (metadata?.tags) {
     let applied = 0;
     for (const [key, value] of Object.entries(metadata.tags)) {
@@ -476,10 +456,7 @@ export function forwardLogToSentry(entry: {
         cause instanceof Error ? cause.toString() : cause
       ) as LogMetadataValue;
     }
-    // Bound the metadata before it reaches Sentry. Callers can pass arbitrarily
-    // large objects (emote lists, WebSocket payloads, API responses); left raw
-    // they bloat the event and have OOM-aborted envelope serialization on the
-    // JS thread on low-memory devices (FOAM-TV-MOBILE-9V).
+    // Bound metadata first: raw caller objects have OOM-aborted envelope serialization (FOAM-TV-MOBILE-9V).
     // SAFETY: sanitiseLogValue maps a record to a record of the bounded values it produces.
     const safeExtra = sanitiseLogValue(extra) as Record<
       string,
@@ -514,11 +491,7 @@ export function forwardLogToSentry(entry: {
     });
 
     if (level === 'warn') {
-      // A warn stays a structured log rather than a captured message. As an
-      // issue it reaches the alerting rules that page on-call, and the warns
-      // this app emits are degraded-but-handled paths (a badge falling back to
-      // its uri, a token refresh dropping to anon) that nobody should be woken
-      // for.
+      // Warns stay structured logs, not issues: they are degraded-but-handled paths nobody should be paged for.
       Sentry.logger.warn(headline, safeExtra);
       return;
     }

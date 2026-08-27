@@ -29,12 +29,8 @@ type UserSuggestionListExtra = {
 };
 
 /**
- * Module-level `renderItem` for the suggestions LegendList.
- *
- * Defined outside the parent component so the reference is stable across
- * re-renders (avoids LegendList tearing down rows when the parent re-renders).
- * The press handler is threaded through `extraData` rather than captured in a
- * closure for the same reason — keeps this function pure and reusable.
+ * Module-level `renderItem` so its reference stays stable - LegendList tears
+ * down rows otherwise; the press handler comes through `extraData` likewise.
  */
 function renderUserSuggestionItem({
   item,

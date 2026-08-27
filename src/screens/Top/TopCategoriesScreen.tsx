@@ -6,6 +6,9 @@ import type { ListRenderItem } from '@shopify/flash-list';
 
 import {
   CATEGORY_CARD_HEIGHT,
+  CATEGORY_CARD_IMAGE_HEIGHT,
+  CATEGORY_CARD_IMAGE_WIDTH,
+  CATEGORY_CARD_TITLE_HEIGHT,
   MemoizedCategoryCard,
 } from '@app/components/CategoryCard/CategoryCard';
 import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
@@ -28,7 +31,9 @@ function CategoryCardSkeleton() {
   return (
     <View style={styles.cardContainer} testID='category-skeleton'>
       <Skeleton style={styles.skeletonImage} />
-      <Skeleton style={styles.skeletonTitle} />
+      <View style={styles.skeletonTitleLine}>
+        <Skeleton style={styles.skeletonTitle} />
+      </View>
     </View>
   );
 }
@@ -168,18 +173,19 @@ const styles = StyleSheet.create({
   skeletonImage: {
     alignSelf: 'center',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius8,
-    height: 150,
-    marginBottom: 8,
-    width: 110,
+    borderRadius: theme.borderRadius20,
+    height: CATEGORY_CARD_IMAGE_HEIGHT,
+    width: CATEGORY_CARD_IMAGE_WIDTH,
   },
   skeletonTitle: {
     alignSelf: 'center',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius4,
-    height: 40,
-    marginBottom: theme.space16,
-    width: 80,
+    height: 14,
+    width: 90,
+  },
+  skeletonTitleLine: {
+    height: CATEGORY_CARD_TITLE_HEIGHT,
+    justifyContent: 'center',
+    marginTop: theme.space12,
   },
   wrapper: {
     backgroundColor: theme.color.background.dark,

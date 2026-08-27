@@ -4,10 +4,8 @@ import {
 } from '@app/utils/image/image-cache';
 
 /**
- * Indirection over the file cache so tests can substitute it. The real store
- * touches MMKV and the filesystem, so Jest runs default it off; Image tests
- * flip `enabled` and swap the functions to exercise the wrapper's caching
- * rules.
+ * Indirection over the file cache so tests can substitute it; Jest runs
+ * default it off because the real store touches MMKV and the filesystem.
  */
 export const imageFileStore = {
   enabled: process.env.NODE_ENV !== 'test',

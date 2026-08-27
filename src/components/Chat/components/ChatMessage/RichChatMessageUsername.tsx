@@ -57,6 +57,7 @@ export function RichChatMessageUsername({
 
   return (
     <ChatMessagePressable
+      accessibilityLabel={username}
       onPress={onUsernamePress}
       testID='chat-username-button'
     >

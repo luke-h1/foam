@@ -19,9 +19,8 @@ export type ProviderResourceType = 'badges' | 'emotes';
 export type Identifiable = { id: string };
 
 /**
- * What a provider resource fetch rejects with by the time it reaches this
- * module: an error raised by the service layer, or a bare string from a
- * rejection that never carried one.
+ * What a resource fetch rejects with: a service-layer error, or a bare
+ * string from a rejection that never carried one.
  */
 export type ProviderFailureReason = Error | string;
 
@@ -49,12 +48,8 @@ export type BadgeCacheKey = ChannelBadgeCacheKey | GlobalBadgeCacheKey;
 export type ResourceCacheKey = EmoteCacheKey | BadgeCacheKey;
 
 /**
- * One ordered description of a single (provider, scope) resource: how to fetch
- * it, which cache field it populates, and how to label it in logs. The spec
- * list is the seam — adding a provider is a single entry, and the fan-out,
- * reporting, cache-reconcile, and merge are all driven from it. Channel-scope
- * specs populate the per-channel cache; global-scope specs populate the shared
- * `persisted.globalCaches` slot.
+ * One (provider, scope) resource. The spec list is the seam - adding a
+ * provider is one entry; fan-out, reporting, reconcile and merge follow.
  */
 export interface ResourceSpec<
   TKey extends ResourceCacheKey,
@@ -103,10 +98,8 @@ export const deduplicateById = <T extends Identifiable>(
 ): T[] => Array.from(new Map(items.map(item => [item.id, item])).values());
 
 /**
- * Global (channel-independent) provider data is identical for every channel,
- * so re-downloading it on each channel join wastes a round trip per provider.
- * Cache the successful fetch per session with a TTL matching the cached-path
- * badge refresh window; failures are never cached, so the next join retries.
+ * Global provider data is identical for every channel; cache successful
+ * fetches per session. Failures are never cached, so the next join retries.
  */
 const GLOBAL_RESOURCE_TTL_MS = 60 * 60 * 1000;
 
@@ -117,8 +110,7 @@ const globalResourceCache = new Map<
 
 /**
  * Fences the channel-independent fetches that write straight into
- * `globalCaches` (see `globalResourceEnsure`). Held here so every existing
- * `clearGlobalResourceCache` caller fences without a second call.
+ * `globalCaches`; held here so `clearGlobalResourceCache` callers fence too.
  */
 export const globalChatResourceGuard = createFetchOnceGuard();
 
@@ -168,11 +160,8 @@ export const buildSubscriberEmoteSpec = ({
 });
 
 /**
- * Cap on how much of the overall resource-fetch timeout the 7TV set-id lookup
- * may consume when `sevenTvSetId` is still pending. Without this, a slow id
- * lookup could eat the whole `RESOURCE_FETCH_TIMEOUT_MS` window and leave no
- * time for the actual emote-set fetch, timing it out for a reason unrelated
- * to the emote-set request itself.
+ * Caps a pending 7TV set-id lookup so it cannot eat the whole
+ * `RESOURCE_FETCH_TIMEOUT_MS` window and time out the emote-set fetch.
  */
 export const SEVEN_TV_SET_ID_LOOKUP_BUDGET_MS = 3000;
 
@@ -280,15 +269,13 @@ export const buildEmoteResourceSpecs = ({
 }: {
   channelId: string;
   /**
-   * Only the 7TV channel-emote fetch depends on the set id, so it may be
-   * passed as a pending promise — every other resource fetch starts
-   * immediately instead of waiting a full round trip behind the id lookup.
+   * Only the 7TV channel-emote fetch depends on the set id, so it may be a
+   * pending promise - every other fetch starts without waiting on the lookup.
    */
   sevenTvSetId: string | Promise<string>;
   /**
    * Used if `sevenTvSetId` is still pending after
-   * `SEVEN_TV_SET_ID_LOOKUP_BUDGET_MS`, so the lookup can't consume the
-   * emote-set fetch's whole timeout budget.
+   * `SEVEN_TV_SET_ID_LOOKUP_BUDGET_MS`.
    */
   sevenTvSetIdFallback?: string;
   twitchUserId?: string;

@@ -102,11 +102,8 @@ export const ChatMessagePane = memo(
       [],
     );
 
-    // The composer floats over the bottom of the list — Chat.tsx lifts its
-    // KeyboardStickyView up by `insets.bottom`, so without this the newest row
-    // scrolls to the list's true bottom and lands *behind* the composer (only
-    // a sliver visible above it). Reserve that lift plus a small gap so the
-    // newest message always rests just above the composer.
+    // The composer floats over the list bottom (Chat.tsx lifts its
+    // KeyboardStickyView by `insets.bottom`); reserve that lift plus a gap or the newest row lands behind the composer.
     const listContentStyle = useMemo(
       () => [
         styles.listContent,

@@ -1,11 +1,5 @@
 /**
- * Tag for the generated documents, set as codegen's `gqlImport`. Joins the
- * literal with its interpolated fragments and returns a plain string - the
- * clients post documents as-is, and this keeps `graphql` out of the bundle.
- *
- * Fragments are deduped because `graphQLTag` mode interpolates only direct
- * spreads: two that share a nested fragment would otherwise define it twice
- * and the server would reject the operation.
+ * Codegen `gqlImport` tag: joins the literal with its fragments into a plain string, keeping `graphql` out of the bundle. Fragments are deduped - `graphQLTag` mode interpolates only direct spreads, so a shared nested fragment would be defined twice and the server would reject the operation.
  */
 export const gql = (
   strings: TemplateStringsArray,

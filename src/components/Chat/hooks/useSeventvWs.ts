@@ -87,8 +87,8 @@ interface UseSeventvWsOptions {
   twitchChannelId?: string;
   sevenTvEmoteSetId?: string;
   /**
-   * The channel owner's 7TV user id; when set, the hook subscribes to
-   * `user.update` for the owner so live emote-set switches are detected.
+   * The channel owner's 7TV user id; when set, subscribes to `user.update`
+   * so live emote-set switches are detected.
    */
   sevenTvChannelUserId?: string;
 }
@@ -113,9 +113,8 @@ const DEFAULT_URL = 'wss://events.7tv.io/v3';
 // If the RESUME ack never arrives, fall back to fresh subscriptions.
 const RESUME_ACK_TIMEOUT = 5000;
 
-// Mobile sockets go half-open without firing onclose; treat prolonged
-// heartbeat silence as a dead connection and close so reconnect + RESUME
-// kicks in (same lesson as the IRC socket's PING watchdog).
+// Mobile sockets go half-open without onclose; prolonged heartbeat silence
+// closes the socket so reconnect + RESUME kicks in (same as the IRC PING watchdog).
 const DEFAULT_HEARTBEAT_INTERVAL_MS = 30000;
 const HEARTBEAT_WATCHDOG_TICK_MS = 10000;
 const MISSED_HEARTBEATS_BEFORE_RECONNECT = 3;
@@ -168,7 +167,7 @@ export function useSeventvWs(
   const eventCallbackRef = useSyncRef(options?.onEvent);
   const pathname = usePathname();
 
-  // eslint-disable-next-line react-doctor/no-event-handler -- useSyncRef mirrors an id into a ref for the socket callbacks; it is not a handler
+  // eslint-disable-next-line react-doctor/no-event-handler -- ref mirror for socket callbacks, not a handler
   const twitchChannelIdRef = useSyncRef(options?.twitchChannelId);
   const sevenTvEmoteSetIdRef = useSyncRef(options?.sevenTvEmoteSetId);
 
@@ -340,9 +339,7 @@ export function useSeventvWs(
 
       case 'applyEntitlementCreate': {
         if (__DEV__) {
-          // Entitlement bursts arrive at hundreds per channel entry; release
-          // severity drops info logs anyway, so don't build the template
-          // strings there.
+          // Entitlement bursts arrive hundreds at a time; release drops info logs, so skip building the strings.
           logger.stvWs.info(`💚 Received WS 'entitlement.create' event`);
           logger.stvWs.info(
             `Entitlement create: ${decision.kind} for user ${decision.userDisplayName} (ttv: ${decision.ttvUserId}, paint: ${decision.paintId}, badge: ${decision.badgeId})`,
@@ -565,7 +562,7 @@ export function useSeventvWs(
   const handleMessage = (event: MessageEvent<string>) => {
     sessionRef.current.lastMessageAt = Date.now();
     try {
-      // SAFETY: the 7TV event API only frames envelopes of this shape; a body that is not one fails on `message.op` inside this try and is handled by the catch below.
+      // SAFETY: a non-envelope body fails on `message.op` in this try and hits the catch.
       const message = JSON.parse(event.data) as SevenTvWsMessage<
         SevenTvEventData<SevenTvEventType>
       >;
@@ -629,9 +626,7 @@ export function useSeventvWs(
           }
         }, HEARTBEAT_WATCHDOG_TICK_MS);
 
-        // When resuming, subscriptions are restored server-side after the
-        // RESUME handshake (sent on hello); only subscribe from scratch when
-        // no resumable session exists.
+        // RESUME restores subscriptions server-side; only subscribe from scratch with no resumable session.
         const willAttemptResume =
           session.shouldResume && session.sessionId !== null;
 
@@ -667,8 +662,7 @@ export function useSeventvWs(
             screen: currentScreen,
             seven_tv_emote_set_id: sevenTvEmoteSetIdRef.current,
           });
-          // Unexpected close: try to RESUME the session on the next connect
-          // so missed dispatches replay instead of being lost.
+          // Unexpected close: RESUME on next connect so missed dispatches replay.
           session.shouldResume = session.sessionId !== null;
         }
         session.reset('close');
@@ -783,9 +777,8 @@ export function useSeventvWs(
 
   const shouldConnectRef = useSyncRef(!!shouldConnect);
 
-  // Automatic retries are budgeted per outage; a long background stretch can
-  // exhaust them. Foregrounding with a dead socket forces a fresh connect
-  // (which then attempts a session RESUME).
+  // A long background stretch can exhaust the retry budget; foregrounding
+  // with a dead socket forces a fresh connect (then RESUME).
   useEffect(() => {
     const subscription = AppState.addEventListener('change', state => {
       if (state !== 'active' || !shouldConnectRef.current) {
@@ -802,10 +795,9 @@ export function useSeventvWs(
     return () => subscription.remove();
   }, [getWebSocket, reconnect, shouldConnectRef]);
 
-  // The channel owner's 7TV id resolves asynchronously and can land after
-  // the initial subscriptions were sent; (re)subscribe user.update when it
-  // becomes available or changes.
-  // eslint-disable-next-line react-doctor/no-event-handler -- syncs an external WebSocket subscription to an async-resolved id, not a UI event
+  // The owner's 7TV id resolves async and can land after initial
+  // subscriptions; (re)subscribe user.update when it arrives or changes.
+  // eslint-disable-next-line react-doctor/no-event-handler -- syncs a WS subscription to an async id, not a UI event
   const sevenTvChannelUserId = options?.sevenTvChannelUserId;
   const syncChannelOwnerSubscription = (ownerId: string) => {
     const session = sessionRef.current;

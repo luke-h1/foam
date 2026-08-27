@@ -1,6 +1,4 @@
-// This file's shape usages are @expo/ui SwiftUI/Jetpack Compose API names
-// (clipShape, shapes, Shape, contentShape and their option/prop keys), not a
-// naming choice.
+// Shape names here are @expo/ui SwiftUI/Compose API names, not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import { StyleSheet } from 'react-native';
 
@@ -38,7 +36,6 @@ export interface ComposerIconButtonProps {
   prominent?: boolean;
   /**
    * Surface color for the prominent variant; defaults to the app violet.
-   *
    */
   prominentColor?: string;
 }
@@ -96,7 +93,8 @@ export function ComposerIconButton({
     buttonStyle(resolvedButtonStyle),
 
     /**
-     * Pin the button to the host's exact size. Button styles (glass, glassProminent, bordered) measure differently per style and OS, and a content-sized button drifts out of line with its RN row siblings.
+     * Pin to the host's exact size - a content-sized button drifts out of
+     * line with its RN row siblings.
      */
     frame({ width: COMPOSER_CONTROL_SIZE, height: COMPOSER_CONTROL_SIZE }),
     background(resolvedBackground),
@@ -110,9 +108,8 @@ export function ComposerIconButton({
 
   return (
     /**
-     * no matchContents — SwiftUI must not re-measure it) and ignoreSafeArea
-     * stops the hosting view re-applying the home-indicator inset inside its
-     * own bounds, which renders the button shifted out of the host frame.
+     * No matchContents - SwiftUI must not re-measure; ignoreSafeArea stops the
+     * home-indicator inset shifting the button out of the host frame.
      */
     <Host ignoreSafeArea='all' style={styles.host}>
       <GlassEffectContainer>

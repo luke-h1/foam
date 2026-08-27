@@ -3,9 +3,8 @@ import { InteractionManager, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 /**
- * Preconnect hints for the hosts the Twitch embed hits first (embed page,
- * player assets, GQL, HLS manifests), so DNS and TLS are already done when
- * the real player mounts.
+ * Preconnect hints for the hosts the Twitch embed hits first, so DNS and TLS
+ * are already done when the real player mounts.
  */
 const PREWARM_HTML = `<!doctype html><html><head>
 <link rel="preconnect" href="https://player.twitch.tv">
@@ -20,11 +19,8 @@ const PREWARM_MOUNT_DELAY_MS = 2_500;
 const PREWARM_LIFETIME_MS = 10_000;
 
 /**
- * Spawns the WebView engine's content/networking processes and preconnects
- * to Twitch's player hosts once at boot, so the first stream open skips
- * process launch and TLS setup. Renders nothing visible, never intercepts
- * touches, and unmounts itself after a few seconds; the warmed processes and
- * the shared process pool outlive it.
+ * Warms WebKit's processes and Twitch preconnects once at boot, so the first
+ * stream open skips process launch and TLS setup; unmounts itself after.
  */
 export function PlayerWebViewPrewarm() {
   const [phase, setPhase] = useState<'idle' | 'warming' | 'done'>('idle');

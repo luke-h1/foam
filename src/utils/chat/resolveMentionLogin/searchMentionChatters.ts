@@ -34,11 +34,8 @@ function toMentionChatter(candidate: MentionCandidate): MentionChatter {
 }
 
 /**
- * Both indexes are keyed by the lower-cased login, so matching and ordering
- * read the key rather than lower-casing every entry on each keystroke.
- * Prefix matches outrank substring matches, so bucketing on the way past also
- * removes the need to order the (much larger) substring bucket unless the
- * prefix bucket comes up short.
+ * Prefix matches outrank substring matches; bucketing on the way past skips
+ * sorting the (much larger) substring bucket unless the prefix bucket is short.
  */
 export function searchMentionChatters(
   query: string,
