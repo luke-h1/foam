@@ -29,10 +29,8 @@ const mockStartAnimating = jest.fn();
 const mockStopAnimating = jest.fn();
 
 /**
- * ChatInlineImage's own onError/onLoad handlers take an optional event
- * (they also fire from an internal watchdog timer with no event at all), so
- * these tests calling them with no arguments matches a real call path -
- * ImageProps itself declares the callbacks as always receiving an event.
+ * ChatInlineImage's handlers take an optional event (the watchdog fires them
+ * with none), so calling them with no arguments matches a real path.
  */
 type CapturedImageProps = Omit<ImageProps, 'onError' | 'onLoad'> & {
   onError?: (event?: ImageErrorEventData) => void;
@@ -42,15 +40,14 @@ type CapturedImageProps = Omit<ImageProps, 'onError' | 'onLoad'> & {
 let mockImageProps: CapturedImageProps | null = null;
 
 /**
- * expo-image's `Image` is a forwardRef object, not a plain function, so
- * jest.spyOn cannot wrap it - swap the export directly instead.
+ * expo-image's `Image` is a forwardRef object, so jest.spyOn cannot wrap it -
+ * swap the export directly.
  */
 Object.defineProperty(ExpoImage, 'Image', {
   configurable: true,
   value: forwardRef<MockImageHandle, ImageProps>((props, ref) => {
-    // SAFETY: CapturedImageProps is ImageProps with onError/onLoad widened to
-    // accept the no-argument calls this file's tests make on them below;
-    // every other field is untouched, so the real props always satisfy it.
+    // SAFETY: CapturedImageProps only widens onError/onLoad to accept the
+    // no-argument calls below; the real props always satisfy it.
     mockImageProps = props as CapturedImageProps;
     useImperativeHandle(ref, () => ({
       startAnimating: mockStartAnimating,
@@ -133,11 +130,11 @@ describe('ChatInlineImage off-screen pause', () => {
     act(() => store.setVisible(false));
     act(() => store.setVisible(true));
 
-    expect(mockStartAnimating).toHaveBeenCalledTimes(1);
+    expect(mockStartAnimating).toHaveBeenCalledTimes(2);
     expect(catchSpy).toHaveBeenCalledTimes(1);
   });
 
-  test('does not touch animation on a visible mount (autoplay handles it)', () => {
+  test('starts animation on a visible mount so a pre-subscribe visibility flip cannot strand a stopped view', () => {
     const store = createRowVisibilityStore(true);
 
     render(
@@ -149,14 +146,14 @@ describe('ChatInlineImage off-screen pause', () => {
       </RowVisibilityContext.Provider>,
     );
 
-    expect(mockStartAnimating).not.toHaveBeenCalled();
+    expect(mockStartAnimating).toHaveBeenCalledTimes(1);
     expect(mockStopAnimating).not.toHaveBeenCalled();
 
     act(() => store.setVisible(false));
     expect(mockStopAnimating).toHaveBeenCalledTimes(1);
 
     act(() => store.setVisible(true));
-    expect(mockStartAnimating).toHaveBeenCalledTimes(1);
+    expect(mockStartAnimating).toHaveBeenCalledTimes(2);
   });
 
   test('leaves animation running when there is no row context', () => {
