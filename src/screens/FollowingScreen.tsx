@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
@@ -38,17 +38,22 @@ function FollowingSkeleton({
   streamListLayout: 'compact' | 'media';
 }) {
   return (
-    <View style={styles.container}>
+    <ScrollView
+      contentInsetAdjustmentBehavior='automatic'
+      scrollEnabled={false}
+      style={styles.container}
+    >
       {showHeader && (
         <View style={styles.header}>
           <View style={styles.headerEyebrow} />
         </View>
       )}
-      {Array.from({ length: 5 }).map((_, index) => (
-        // eslint-disable-next-line react/no-array-index-key
-        <LiveStreamCardSkeleton key={index} layout={streamListLayout} />
-      ))}
-    </View>
+      <LiveStreamCardSkeleton layout={streamListLayout} />
+      <LiveStreamCardSkeleton layout={streamListLayout} />
+      <LiveStreamCardSkeleton layout={streamListLayout} />
+      <LiveStreamCardSkeleton layout={streamListLayout} />
+      <LiveStreamCardSkeleton layout={streamListLayout} />
+    </ScrollView>
   );
 }
 
@@ -106,9 +111,7 @@ export default function FollowingScreen() {
     retry: 2,
     retryDelay: (attemptIndex: number) =>
       Math.min(1000 * 2 ** attemptIndex, 3000),
-    // Focus/foreground refreshes are handled by useRefetchOnForeground below;
-    // stacking refetchOnMount/refetchOnWindowFocus on top forced a network
-    // request on every tab switch regardless of staleness.
+    // useRefetchOnForeground handles focus/foreground refreshes; stacking refetchOnMount/refetchOnWindowFocus forced a network request on every tab switch.
   });
 
   useRefetchOnForeground({
@@ -265,8 +268,7 @@ export default function FollowingScreen() {
     );
   }
 
-  // The offline list resolves after the streams query (two-step fetch), so
-  // wait for it before declaring nobody live or the empty state flashes.
+  // The offline list resolves after the streams query; wait for it or the empty state flashes.
   if (
     !streams ||
     (streamsArray.length === 0 &&

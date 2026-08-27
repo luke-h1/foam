@@ -17,12 +17,14 @@ import {
   type ViewabilityConfig,
 } from '@legendapp/list/react-native';
 
+import { getChatScale } from '@app/components/Chat/components/ChatMessage/chatScale';
 import {
   getViewableChatMessages,
   type ViewableMessageToken,
 } from '@app/components/Chat/util/getViewableChatMessages';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import { theme } from '@app/styles/themes';
 
 /**
  * Roughly seven rows of lookahead; at 96 fast flings outran the renderer and
@@ -30,9 +32,8 @@ import type { AnyChatMessageType } from '@app/store/chat/types/constants';
  */
 const CHAT_DRAW_DISTANCE = 250;
 /**
- * One line of body text: 31 comfortable, 22 compact. Deliberately under the
- * average - an over-estimate leaves bare list background under any row whose
- * position recompute gets skipped.
+ * Deliberately under the average row height - an over-estimate leaves bare
+ * list background under any row whose position recompute gets skipped.
  */
 const CHAT_ESTIMATED_ITEM_SIZE = 26;
 const CHAT_END_REACHED_THRESHOLD = 0.02;
@@ -41,9 +42,7 @@ const CHAT_VIEWABILITY_CONFIG = {
 } satisfies ViewabilityConfig;
 
 /**
- * Re-pin to the end on new messages (dataChange) and when an already-rendered
- * row grows after its real height is measured (itemLayout) - the latter keeps
- * an under-estimated emote/username row from staying clipped at the bottom.
+ * itemLayout keeps an under-estimated row from staying clipped at the bottom.
  */
 const CHAT_MAINTAIN_SCROLL_AT_END = {
   on: { dataChange: true, itemLayout: true },
@@ -54,6 +53,8 @@ const CHAT_MAINTAIN_SCROLL_AT_END_THRESHOLD = 0.1;
  * Off: recycling crashed on iOS when rows updated while scrolled.
  */
 const CHAT_RECYCLE_ITEMS = false;
+
+const SKELETON_CHAT_SCALE = getChatScale('default', 'comfortable');
 
 function ChatListRowSkeleton({ index }: { index: number }) {
   return (
@@ -100,10 +101,8 @@ export interface ChatListScrollHandlers {
 interface ChatListProps {
   data: AnyChatMessageType[];
   /**
-   * Identity of the logical dataset. Switching channel swaps the store's
-   * messages while the list stays mounted, so without this the list carries the
-   * previous channel's layout readiness, size averages and anchoring into the
-   * new one.
+   * Dataset identity; without this a channel switch carries the old channel's
+   * layout state and anchoring into the new one.
    */
   dataKey: string;
   listRef: RefObject<ChatListRef | null>;
@@ -220,33 +219,35 @@ const styles = StyleSheet.create({
   },
   skeletonBadge: {
     borderCurve: 'continuous',
-    borderRadius: 999,
-    height: 12,
-    width: 12,
+    borderRadius: theme.borderRadius4,
+    height: SKELETON_CHAT_SCALE.badgeSize,
+    width: SKELETON_CHAT_SCALE.badgeSize,
   },
   skeletonBodyLong: {
-    height: 10,
+    height: 12,
     width: '54%',
   },
   skeletonBodyMedium: {
-    height: 10,
+    height: 12,
     width: '42%',
   },
   skeletonBodyShort: {
-    height: 10,
+    height: 12,
     width: '28%',
   },
   skeletonRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: 6,
-    minHeight: CHAT_ESTIMATED_ITEM_SIZE,
-    paddingHorizontal: 16,
-    paddingVertical: 3,
+    gap: SKELETON_CHAT_SCALE.gap,
+    minHeight:
+      SKELETON_CHAT_SCALE.bodyLineHeight +
+      SKELETON_CHAT_SCALE.rowPaddingVertical * 2,
+    paddingHorizontal: SKELETON_CHAT_SCALE.rowPaddingHorizontal,
+    paddingVertical: SKELETON_CHAT_SCALE.rowPaddingVertical,
     width: '100%',
   },
   skeletonUsername: {
-    height: 10,
-    width: 58,
+    height: 12,
+    width: 64,
   },
 });

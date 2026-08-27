@@ -18,16 +18,22 @@ interface Props {
 }
 
 const IMAGE_ASPECT_RATIO = 110 / 155;
-const IMAGE_HEIGHT = 150;
-const IMAGE_WIDTH = IMAGE_HEIGHT * IMAGE_ASPECT_RATIO;
+export const CATEGORY_CARD_IMAGE_HEIGHT = 150;
+export const CATEGORY_CARD_IMAGE_WIDTH =
+  CATEGORY_CARD_IMAGE_HEIGHT * IMAGE_ASPECT_RATIO;
 const IMAGE_SOURCE_SCALE = 2;
-const IMAGE_SOURCE_WIDTH = Math.round(IMAGE_WIDTH * IMAGE_SOURCE_SCALE);
-const IMAGE_SOURCE_HEIGHT = IMAGE_HEIGHT * IMAGE_SOURCE_SCALE;
+const IMAGE_SOURCE_WIDTH = Math.round(
+  CATEGORY_CARD_IMAGE_WIDTH * IMAGE_SOURCE_SCALE,
+);
+const IMAGE_SOURCE_HEIGHT = CATEGORY_CARD_IMAGE_HEIGHT * IMAGE_SOURCE_SCALE;
 const TITLE_LINE_HEIGHT = 24;
 const TITLE_MAX_LINES = 2;
-const TITLE_HEIGHT = TITLE_LINE_HEIGHT * TITLE_MAX_LINES;
+export const CATEGORY_CARD_TITLE_HEIGHT = TITLE_LINE_HEIGHT * TITLE_MAX_LINES;
 export const CATEGORY_CARD_HEIGHT =
-  IMAGE_HEIGHT + theme.space12 + TITLE_HEIGHT + theme.space16;
+  CATEGORY_CARD_IMAGE_HEIGHT +
+  theme.space12 +
+  CATEGORY_CARD_TITLE_HEIGHT +
+  theme.space16;
 
 export function CategoryCard({ category }: Props) {
   const handlePress = useCallback(() => {
@@ -93,15 +99,15 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     borderWidth: 1,
-    height: IMAGE_HEIGHT,
-    width: IMAGE_WIDTH,
+    height: CATEGORY_CARD_IMAGE_HEIGHT,
+    width: CATEGORY_CARD_IMAGE_WIDTH,
   },
   title: {
     lineHeight: TITLE_LINE_HEIGHT,
     marginTop: theme.space12,
-    minHeight: TITLE_HEIGHT,
+    minHeight: CATEGORY_CARD_TITLE_HEIGHT,
     textAlign: 'center',
-    width: IMAGE_WIDTH + theme.space24,
+    width: CATEGORY_CARD_IMAGE_WIDTH + theme.space24,
   },
   wrapper: {
     alignItems: 'center',
