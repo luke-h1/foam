@@ -42,9 +42,6 @@ export const isTokenExpired = (token: TwitchToken): boolean => {
   return now >= expiresAt - bufferTime;
 };
 
-/**
- * Calculate the expiration timestamp from `expiresIn` and add it to a token.
- */
 export const addExpirationTimestamp = (
   token: Omit<TwitchToken, 'expiresAt'>,
 ): TwitchToken => {

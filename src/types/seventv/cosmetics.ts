@@ -104,10 +104,6 @@ export interface BadgeData extends EventObject {
   tooltip: string;
 }
 
-/**
- * A 7TV paint cosmetic applied to a username: a linear/radial gradient,
- * solid colour or image fill, plus optional drop shadows.
- */
 export interface PaintData {
   id: string;
 

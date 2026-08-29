@@ -54,9 +54,6 @@ export const DefaultWrapper = ({ children }: { children: ReactNode }) => {
   );
 };
 
-/**
- * Test render pre-wired with the app's providers.
- */
 export default function render(
   ui: ReactElement,
   options?: Omit<RenderOptions, 'queries'>,

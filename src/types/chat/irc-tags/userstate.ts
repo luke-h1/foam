@@ -1,6 +1,3 @@
-/**
- * Twitch IRC user-state tags - see https://dev.twitch.tv/docs/irc/tags/
- */
 export interface UserStateTags {
   'display-name'?: string;
   login?: string;

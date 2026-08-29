@@ -164,7 +164,7 @@ export function EmoteSheet({
                   drawDistance={emoteRowSize * 3}
                   showsVerticalScrollIndicator
                   nestedScrollEnabled
-                  indicatorStyle='white' // todo - once we have light theme, adjust this
+                  indicatorStyle='white'
                   style={styles.list}
                 />
               )}
