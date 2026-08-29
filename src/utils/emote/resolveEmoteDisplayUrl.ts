@@ -10,10 +10,6 @@ export interface ResolvableDisplayEmote {
   static_url?: string | null;
 }
 
-/**
- * Owns which url an emote displays at: warm, prefetch, render and the action
- * sheet all resolve here so they cannot disagree on scale or animation variant.
- */
 export function resolveEmoteDisplayUrl(
   emote: ResolvableDisplayEmote,
   {

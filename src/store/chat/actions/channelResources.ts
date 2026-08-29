@@ -18,10 +18,6 @@ export type ProviderResourceType = 'badges' | 'emotes';
 
 export type Identifiable = { id: string };
 
-/**
- * What a resource fetch rejects with: a service-layer error, or a bare
- * string from a rejection that never carried one.
- */
 export type ProviderFailureReason = Error | string;
 
 export type ChannelEmoteCacheKey =
@@ -56,13 +52,7 @@ export interface ResourceSpec<
   TItem extends Identifiable,
 > {
   key: TKey;
-  /**
-   * snake_case identifier used for failure reporting (`resource_name`).
-   */
   name: string;
-  /**
-   * Human-readable name used for the cache-fallback breadcrumb.
-   */
   label: string;
   provider: ProviderName;
   resourceType: ProviderResourceType;

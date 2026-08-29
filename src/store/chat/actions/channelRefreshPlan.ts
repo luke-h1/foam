@@ -37,10 +37,6 @@ const GLOBAL_EMOTE_SLICES = [
 
 const GLOBAL_BADGE_SLICES = ['twitchGlobalBadges', 'ffzGlobalBadges'] as const;
 
-/**
- * Pure freshness policy for a channel's cached resources; global provider
- * slices carry their own stamp, judged separately from the channel's TTL.
- */
 export const planChannelRefresh = ({
   cache,
   forceRefresh,

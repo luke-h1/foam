@@ -35,9 +35,5 @@ export interface ChatBodyScan extends MessageStructure {
   hasStvEmoteEvent: boolean;
   hasViewerMilestone: boolean;
   hasModAnniversary: boolean;
-  /**
-   * Normalised logins this message @-mentions; render compares against the
-   * current user instead of re-scanning parts.
-   */
   mentionLogins: string[];
 }

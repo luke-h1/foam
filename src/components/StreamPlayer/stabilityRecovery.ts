@@ -13,10 +13,6 @@ interface StabilityRecoveryOptions {
   onRefresh: (reason: StabilityRefreshReason, attempt: number) => void;
 }
 
-/**
- * Decides when playback trouble should force a WebView refresh and when to
- * give up; refreshes are capped per rolling window.
- */
 export function createStabilityRecovery({
   now = Date.now,
   onGiveUp,

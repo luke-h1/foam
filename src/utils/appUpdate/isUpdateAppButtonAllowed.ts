@@ -1,9 +1,5 @@
 import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
 
-/**
- * An empty allow-list shows the Settings "update app" button to everyone;
- * otherwise only Twitch logins on the list see it.
- */
 export function isUpdateAppButtonAllowed(
   login: string | null | undefined,
   allowedUsers: readonly string[],

@@ -55,9 +55,6 @@ function hasEventSubscriptionData(
   return Array.isArray(response?.data);
 }
 
-/**
- * TODO: abstract to a provider-typed interface via discriminated unions
- */
 class TwitchWsService {
   private static instance: WebSocket | null = null;
 
@@ -144,9 +141,6 @@ class TwitchWsService {
       });
     };
 
-    /**
-     * TODO: type more strictly
-     */
     TwitchWsService.instance.onmessage = (event: MessageEvent) => {
       TwitchWsService.onMessage(event);
     };
@@ -183,9 +177,6 @@ class TwitchWsService {
     };
   }
 
-  /**
-   * TODO: type MessageEvent better
-   */
   private static onMessage(event: MessageEvent) {
     try {
       // SAFETY: every frame on this socket is a Helix EventSub envelope; a body that is not one fails on `message.metadata` inside this try and is handled by the catch below.
@@ -318,9 +309,6 @@ class TwitchWsService {
     TwitchWsService.reconnectUrl = session.reconnect_url;
     TwitchWsService.isReconnecting = true;
 
-    /**
-     * TODO: expose this so chat can show a reconnecting message
-     */
     if (TwitchWsService.instance) {
       TwitchWsService.instance.close(1000, 'Reconnecting');
     }

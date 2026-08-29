@@ -2,10 +2,6 @@ import type { IrcMessage } from '@app/utils/chat/ircProtocol/parseIrcMessage';
 
 const EMPTY_TAGS: Record<string, string> = Object.freeze({});
 
-/**
- * Handlers receive positional arguments, never a payload object - this runs
- * once per received line and must not allocate.
- */
 export interface IrcRouteHandlers {
   privmsg?: (
     channel: string,
@@ -47,10 +43,6 @@ export interface IrcRouteHandlers {
   unhandled?: (command: string, params: string[]) => void;
 }
 
-/**
- * The one command demux for Twitch IRC lines, shared by the live socket and
- * the recent-messages replay so a new command or tag contract is one edit.
- */
 export function routeIrcMessage(
   message: IrcMessage,
   handlers: IrcRouteHandlers,

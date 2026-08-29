@@ -1,9 +1,5 @@
 import { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
 
-/**
- * The canonical provider discriminant for badges; dispatch on this field,
- * never on the `type` display string.
- */
 export type BadgeProvider = 'twitch' | '7tv' | 'bttv' | 'ffz' | 'chatterino';
 
 export interface SanitisedBadgeSet {

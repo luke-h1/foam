@@ -122,9 +122,9 @@ interface EventSubscription {
   status: EventSubStatus;
   type: string;
   version: string;
-  condition: object; // todo - type better
+  condition: object;
   created_at: string;
-  transport: object; // todo - type better
+  transport: object;
   method: 'webhook' | 'websocket';
   callback: string;
   session_id: string;

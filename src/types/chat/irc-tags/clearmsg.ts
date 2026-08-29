@@ -4,9 +4,5 @@ export interface ClearMsgTags {
   'room-id'?: string;
 
   'target-msg-id': string;
-
-  /**
-   * UNIX timestamp
-   */
   'tmi-sent-ts': string;
 }

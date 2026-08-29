@@ -8,10 +8,6 @@ import {
 } from '@app/store/chat/actions/cosmetics';
 import { logger } from '@app/utils/logger';
 
-/**
- * Resolves and caches a user's 7TV cosmetics when unknown; the observable
- * store re-renders consumers once data lands.
- */
 export function useEnsureSevenTvCosmetics(twitchUserId?: string) {
   useEffect(() => {
     if (!twitchUserId) {

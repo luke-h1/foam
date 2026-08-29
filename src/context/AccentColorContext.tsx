@@ -70,7 +70,6 @@ export function AccentColorProvider({
       : colors[scheme].background;
   }, [selectedHex, scheme]);
 
-  // Memoized so consumers re-render only when the accent changes, not on every provider render.
   const contextValue = useMemo(
     () =>
       ({

@@ -9,10 +9,6 @@ export interface StreamElementsChatterStat {
   amount: number;
 }
 
-/**
- * Public chat statistics for a Twitch channel that uses StreamElements.
- * @see https://api.streamelements.com/kappa/v2/chatstats/:channel/stats
- */
 export interface StreamElementsChatStats {
   channel: string;
   totalMessages: number;

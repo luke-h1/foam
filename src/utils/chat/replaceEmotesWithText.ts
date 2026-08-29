@@ -1,9 +1,6 @@
 import { ParsedPart } from './parsedPart';
 import { getParsedPartStringContent } from './parsedPartContent';
 
-/**
- * Rebuilds the plain text of a parsed message, for copying it back out.
- */
 export function replaceEmotesWithText(parts: ParsedPart[]): string {
   if (parts.length === 0) {
     return '';

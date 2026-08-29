@@ -1,9 +1,5 @@
 import type { RoomStateModeDefinition } from '@app/components/Chat/util/roomState/types';
 
-/**
- * Single source of truth for the chat modes a room state activates; table
- * order is the notice order, and adding a mode is one new entry here.
- */
 export const ROOM_STATE_MODES = {
   emote: {
     getStatus: state => ({ active: state.emoteOnly }),

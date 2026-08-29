@@ -18,7 +18,6 @@ interface AppVariantConfig {
 export type Variant =
   'development' | 'internal' | 'testflight' | 'e2e' | 'production';
 
-// https://docs.expo.dev/tutorial/eas/multiple-app-variants
 export const VARIANT_CONFIG = {
   development: {
     name: 'Foam (dev)',
@@ -201,15 +200,12 @@ const config: ExpoConfig = {
   userInterfaceStyle: 'dark',
   updates: {
     url: 'https://u.expo.dev/950a1e2f-6b25-4be7-adb2-3c16287a2b5e',
-    // Configure the channel to "local" for local development, if we
-    // compile/run locally EAS Build will configure this for us automatically
-    // based on the value provided in the build profile, and that will
-    // overwrite this value.
     requestHeaders: {
       'expo-channel-name': 'local',
     },
-    // Disable automatic update checks on launch to prevent blank screen issues
-    // Updates are checked manually after the app has fully loaded
+    /**
+     * Manual update checks only; auto-check on launch left a blank screen.
+     */
     checkAutomatically: 'NEVER',
     fallbackToCacheTimeout: 30000,
     disableAntiBrickingMeasures: variant !== 'production',
@@ -347,7 +343,6 @@ const config: ExpoConfig = {
       },
     ],
     '@bacons/apple-colors',
-    // '@bacons/apple-targets',
     'react-native-legal',
     'react-native-edge-to-edge',
     [
@@ -388,9 +383,6 @@ const config: ExpoConfig = {
     './src/plugins/withAndroidAccentColor.js',
     './src/plugins/withAndroidLibsActivityTheme.js',
     './plugins/with-fix-dev-launcher-cycle.js',
-    // ['./src/plugins/withAnimatedWebPSupport.js'],
-    // ['./src/plugins/withFastImageWebPSupportIOS.js'],
-    // ['./src/plugins/withFastImageWebPSupportAndroid.js'],
   ],
   experiments: {
     reactCompiler: true,
@@ -406,7 +398,6 @@ const config: ExpoConfig = {
       : undefined,
     icon: './assets/app-icon.icon',
     config: {
-      // needed for expo-secure-store
       usesNonExemptEncryption: false,
     },
     infoPlist: {

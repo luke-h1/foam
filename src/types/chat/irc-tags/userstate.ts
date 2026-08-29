@@ -1,6 +1,3 @@
-/**
- * Twitch IRC user-state tags - see https://dev.twitch.tv/docs/irc/tags/
- */
 export interface UserStateTags {
   'display-name'?: string;
   login?: string;
@@ -33,9 +30,6 @@ export interface UserStateTags {
   mod?: string;
   subscriber?: string;
   turbo?: string;
-  /**
-   * Total bits cheered in this message (PRIVMSG `bits` tag).
-   */
   bits?: string;
   emotes?: string;
   'emote-sets'?: string;
@@ -48,9 +42,6 @@ export interface UserStateTags {
   'msg-param-custom-reward-title'?: string;
   'msg-param-reward-title'?: string;
 
-  /**
-   * Custom tags we add to support reply threads.
-   */
   'reply-parent-msg-id': string;
   'reply-parent-msg-body': string;
   'reply-parent-display-name': string;

@@ -6,10 +6,6 @@ import { toast } from 'sonner-native';
 import { kappaService } from '@app/services/kappa-service';
 import { logger } from '@app/utils/logger';
 
-/**
- * Picks a library image, uploads it to kappa.lol, and hands the public URL
- * back for the chat composer.
- */
 export function useChatImageUpload(onUploaded: (url: string) => void) {
   const [isUploading, setIsUploading] = useState(false);
 

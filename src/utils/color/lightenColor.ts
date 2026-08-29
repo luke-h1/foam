@@ -13,10 +13,6 @@ type HslChannels = {
   l: number;
 };
 
-/**
- * The composited chat row surface; colours are corrected against this real
- * background because a lightness floor says nothing about legibility.
- */
 const CHAT_SURFACE_RGB = { r: 20, g: 27, b: 35 };
 
 // WCAG AA for normal-size text; higher washes the hues together.
@@ -43,7 +39,6 @@ export function lightenColor(hex: string): string {
 
   const { h, s, l } = rgbToHsl(rgb.r, rgb.g, rgb.b);
 
-  // Lowest lightness that clears the target, so a colour keeps its identity.
   let low = l;
   let high = 1;
   let best = hslToRgb(h, s, 1);

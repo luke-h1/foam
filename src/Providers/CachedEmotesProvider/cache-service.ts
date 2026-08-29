@@ -557,7 +557,6 @@ function handleAppStateForMemory(nextAppState: AppStateStatus): void {
     startMemoryMonitor();
     return;
   }
-  // background/inactive: shed the unpinned set and stop the background timer.
   stopMemoryMonitor();
   if (nextAppState === 'background') {
     trimDecodedEmotes('reclaim');
@@ -598,9 +597,6 @@ export function getCachedEmoteStats(): CachedEmoteStats {
   return { decoded: refs.size, inflight: inflight.size, pinned: pinned.size };
 }
 
-/**
- * Estimated resident decoded-bitmap bytes, for the chat-perf harness.
- */
 export function getCachedEmoteByteEstimate(): number {
   return totalBytes;
 }

@@ -17,9 +17,7 @@ import { usePreferences } from '@app/store/preferences/selectors';
 import { theme } from '@app/styles/themes';
 
 const emoteUrls = [
-  // om
   'https://cdn.7tv.app/emote/01GZ577RM8000DE3H3K22S8S7G/4x.avif',
-  // LOL
   'https://cdn.7tv.app/emote/01FZ975PV8000B4AWRZNMVNEXN/2x.avif',
 ];
 

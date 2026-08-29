@@ -39,7 +39,6 @@ describe('createUserStateFromTags', () => {
 
     const result = createUserStateFromTags(tags);
 
-    // When display-name is missing, username falls back to login.
     expect(result).toEqual<UserStateTags>({
       login: 'testuser',
       username: 'testuser',

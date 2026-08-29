@@ -36,7 +36,6 @@ const withAndroidLibsActivityTheme = config => {
     if (libsActivity) {
       libsActivity.$['android:theme'] = MATERIAL_THEME;
     } else {
-      // Activity entry not yet present (e.g. first prebuild); add it.
       activities.push({
         $: {
           'android:name': LIBS_ACTIVITY,

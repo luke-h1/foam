@@ -5,7 +5,6 @@ import { Text } from '@app/components/ui/Text/Text';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
 
-// todo - in the future, read from github md
 const mockChangelog = `
 # Changelog
 

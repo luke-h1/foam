@@ -9,20 +9,12 @@ import { buildSevenTvBadgeImageUrl } from './buildSevenTvBadgeImageUrl';
  */
 const BADGE_IMAGE_EXTENSION = /\.(webp|png|avif|gif|jpe?g)(?:$|\?)/i;
 
-/**
- * Runs per badge on every row render; WeakMap-keyed so entries drop with the
- * badge and no eviction is needed.
- */
 const normalizedBadges = new WeakMap<SanitisedBadgeSet, SanitisedBadgeSet>();
 
 function isSevenTvBadge(badge: SanitisedBadgeSet): boolean {
   return badge.provider === '7tv';
 }
 
-/**
- * A url an image loader can actually fetch: absolute, and pointing at a badge
- * file rather than a bare CDN directory.
- */
 function isLoadableBadgeUrl(url: string): boolean {
   return (
     url.startsWith('https://') &&

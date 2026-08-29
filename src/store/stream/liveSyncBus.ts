@@ -1,7 +1,3 @@
-/**
- * Event bus so the chat settings sheet can ask the sibling stream player to
- * seek to the live edge without threading a callback through the overlay tree.
- */
 type LiveSyncListener = () => void;
 
 const listeners = new Set<LiveSyncListener>();

@@ -15,10 +15,6 @@ const loggableEmoteSchema = z.object({
   site: z.string(),
 });
 
-/**
- * Accepts exactly what the old plain-object typeof check accepted, so the
- * record branch below is unchanged.
- */
 const looseObjectSchema = z.looseObject({});
 
 export function isRecord<T>(
@@ -40,10 +36,6 @@ function summariseHomogeneousArray(value: unknown[]): string | null {
   return null;
 }
 
-/**
- * Bounds an arbitrary value so a huge object can't blow up Sentry envelope
- * serialization on-device.
- */
 export function sanitiseLogValue(value: string, seen?: WeakSet<object>): string;
 export function sanitiseLogValue<T>(
   value: T,

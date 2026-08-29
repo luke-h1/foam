@@ -39,9 +39,6 @@ export type ReadyStateState = {
 export type WebSocketMessage = string | ArrayBuffer | Blob | ArrayBufferView;
 
 export type SendMessage = (message: WebSocketMessage) => void;
-/**
- * `TJsonMessage` defaults to `never` so callers that only use `sendMessage` (Twitch IRC) need not name an outbound type.
- */
 export type SendJsonMessage<TJsonMessage = never> = (
   jsonMessage: TJsonMessage,
 ) => void;

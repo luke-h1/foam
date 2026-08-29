@@ -38,7 +38,6 @@ export function useRefetchOnForeground<TRefetched>({
         return undefined;
       }
 
-      // Refresh when the screen regains focus while the app is active.
       refetchIfDue();
 
       return subscribeToAppForeground(refetchIfDue);

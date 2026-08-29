@@ -11,10 +11,6 @@ export interface SevenTvEmoteSetMetadata {
   totalCount: number;
 }
 
-/**
- * The canonical provider discriminant for emotes and badges; dispatch on this
- * field, never on the `site` display string.
- */
 export type EmoteProvider = 'twitch' | '7tv' | 'bttv' | 'ffz' | 'emoji';
 
 export type EmoteImageScale = '1x' | '2x' | '3x' | '4x';
