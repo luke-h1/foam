@@ -42,9 +42,6 @@ export const clearAllMissingBadges = (): void => {
   loggedMissingBadgeIds.clear();
 };
 
-/**
- * Badge ids referenced by an entitlement whose definition never loaded.
- */
 export const getMissingBadgeIds = (): string[] => Array.from(missingBadgeIds);
 
 export const hasMissingBadges = (): boolean => missingBadgeIds.size > 0;

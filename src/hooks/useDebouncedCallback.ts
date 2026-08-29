@@ -10,9 +10,6 @@ export type UseDebouncedCallbackReturn<Args extends unknown[]> = [
   () => void,
 ];
 
-/**
- * Runs `callback` only after `timeout` ms; re-invoking resets the timer and swaps in the new arguments.
- */
 export function useDebouncedCallback<Args extends unknown[] = []>(
   callback: (...args: Args) => void,
   timeout = 0,

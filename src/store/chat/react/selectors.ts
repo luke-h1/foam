@@ -196,10 +196,6 @@ export const useChannelEmoteDataForReprocess = (channelId: string | null) => {
   });
 };
 
-/**
- * Global provider caches for surfaces outside a joined channel; pair with
- * `ensureGlobalChatResources()` so the caches fill on cold entry.
- */
 export const useGlobalEmoteBadgeCaches = () =>
   useSelector(() => {
     const globalCache$ = chatStore$.persisted.globalCaches;

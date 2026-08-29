@@ -16,10 +16,6 @@ async function resolveUserId(login: string): Promise<string> {
   return userId;
 }
 
-/**
- * Runs a parsed moderation command against Helix and resolves with the success
- * toast text; a Helix 403 here simply means the sender is not a moderator.
- */
 export async function executeModCommand(
   command: ModCommand,
   context: ModCommandContext,

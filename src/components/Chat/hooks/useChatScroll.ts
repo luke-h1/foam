@@ -34,10 +34,6 @@ interface UseChatScrollOptions {
   getMessagesLength: () => number;
 }
 
-/**
- * Stable scroll-position readers for the ingest and message-processing paths,
- * threaded through the chat hook bags as one value instead of four.
- */
 export interface ChatScrollAnchor {
   isAtBottomRef: MutableRefObject<boolean>;
   isScrollingToBottomRef: MutableRefObject<boolean>;

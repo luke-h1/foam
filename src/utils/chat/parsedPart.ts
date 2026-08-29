@@ -20,18 +20,12 @@ export type TwitchNotices =
 
 export type PartVariant =
   | 'text'
-  /**
-   * Emoji i.e. a normal unicode emoji 🚀
-   */
   | 'emote'
   | 'mention'
   | 'stvEmote'
   | 'twitchClip'
   | 'link'
   | 'notice'
-  /**
-   * Bits cheer token, e.g. Cheer100
-   */
   | 'cheermote'
   | 'stv_emote_added'
   | 'stv_emote_removed'
@@ -188,9 +182,6 @@ export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
                         : TType extends 'cheermote'
                           ? {
                               type: TType;
-                              /**
-                               * The original cheer token, e.g. "Cheer100".
-                               */
                               content: string;
                               cheermote: {
                                 bits: number;
@@ -200,10 +191,7 @@ export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
                                 url: string;
                               };
                             }
-                          : /**
-                             * Normal message
-                             */
-                            Pick<
+                          : Pick<
                               Partial<SanitisedEmote>,
                               | 'creator'
                               | 'emote_link'
@@ -231,8 +219,5 @@ export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
                                */
                               overlaid?: ParsedPart<'emote'>[];
 
-                              /**
-                               * Used for emote and twitch clip previews
-                               */
                               thumbnail?: string;
                             };

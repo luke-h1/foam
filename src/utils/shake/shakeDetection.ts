@@ -5,13 +5,7 @@ export interface AccelerometerSample {
 }
 
 export interface ShakeDetectorOptions {
-  /**
-   * Total acceleration (in g, gravity included) that counts as a spike.
-   */
   magnitudeThreshold?: number;
-  /**
-   * Spikes required inside the window to register a shake.
-   */
   minSpikes?: number;
   windowMs?: number;
 }
@@ -21,10 +15,6 @@ export type ShakeDetector = (
   timestampMs: number,
 ) => boolean;
 
-/**
- * Stateful spike counter over accelerometer samples: a deliberate shake
- * produces repeated spikes well above 2g, a single bump does not.
- */
 export function createShakeDetector({
   magnitudeThreshold = 2.2,
   minSpikes = 3,

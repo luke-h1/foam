@@ -14,7 +14,6 @@ const fontScale = (value: number) =>
   isIpad ? Math.round(value * FONT_SCALE) : value;
 
 const alpha = (hex: string, opacityHex: string) => `${hex}${opacityHex}`;
-// Flat legacy `colorX` tokens read the dark value; theme.color.accent / accentPress carries the { light, dark } pair.
 const primaryAccent = { light: '#1083FE', dark: '#2E86FF' } as const;
 const primaryAccentPress = { light: '#0A6CE0', dark: '#5AA1FF' } as const;
 
@@ -27,7 +26,6 @@ export const semanticColorGroups = {
     accentHover: primaryAccentPress.dark,
     accentHoverAlpha: alpha(primaryAccentPress.dark, 'CC'),
     bgAltAlpha: alpha(primaryAccent.dark, '1A'),
-    // Accent takes white text in both themes.
     contrast: '#FFFFFF',
     ui: primaryAccent.dark,
     uiAlpha: alpha(primaryAccent.dark, '24'),
@@ -139,7 +137,6 @@ export const theme = {
   colorBorderTertiary: semanticColorGroups.gray.borderUi,
   colorSurfaceAlpha: semanticColorGroups.gray.uiAlpha,
 
-  // Each token is a { light, dark } pair resolved with theme.color.X[useColorScheme() ?? 'dark'], except brand/notice/chatSample - scheme-independent raw strings.
   color: {
     reactBlue: {
       light: '#087EA4',
@@ -149,15 +146,12 @@ export const theme = {
       light: 'rgba(255,255,255,0)',
       dark: 'rgba(0,0,0,0)',
     },
-    // Page background.
     canvas: CANVAS,
     background: {
       ...CANVAS,
-      // Retained for existing call sites; mapped onto the new slate surfaces.
       darkAlt: SURFACE.dark,
       darkAltAlpha: 'rgba(22,29,38,0.92)',
     },
-    // Raised surfaces (cards, sheets, inputs).
     surface: SURFACE,
     surfaceSunken: SURFACE_SUNKEN,
     surfaceElevated: SURFACE_ELEVATED,
@@ -166,7 +160,6 @@ export const theme = {
       light: 'rgba(16,24,40,0.04)',
       dark: 'rgba(255,255,255,0.04)',
     },
-    // Existing surface aliases re-pointed at the slate palette for coherence.
     backgroundSecondary: SURFACE,
     backgroundTertiary: SURFACE_SUNKEN,
     backgroundElement: SURFACE_PRESSED,
@@ -210,7 +203,6 @@ export const theme = {
       light: 'rgba(16,131,254,0.35)',
       dark: 'rgba(46,134,255,0.45)',
     },
-    // Accent takes white text in both themes.
     onAccent: {
       light: '#FFFFFF',
       dark: '#FFFFFF',
@@ -231,7 +223,6 @@ export const theme = {
       light: '#DC4B4B',
       dark: '#FF6B6B',
     },
-    // Twitch purple — chat links/mentions only.
     twitch: {
       light: '#8A4FE6',
       dark: '#A172F0',
@@ -244,7 +235,6 @@ export const theme = {
       light: '#FFFFFF',
       dark: '#1C1C1E',
     },
-    // Near-black menu surfaces (emote sheet), off the blue-slate palette to read as a system menu; dark-only raw strings.
     menu: {
       background: '#0A0A0B',
       header: '#0E0E10',
@@ -272,7 +262,6 @@ export const theme = {
       purple: Color.purple[400],
       amber: Color.amber[500],
     },
-    // Video chrome — dark in both themes.
     scrim: {
       light: 'rgba(0,0,0,0.60)',
       dark: 'rgba(0,0,0,0.62)',
@@ -350,11 +339,9 @@ export const theme = {
   borderRadius80: 80,
   borderRadius999: 999,
 
-  // Retained for existing call sites (theme.dropShadow.boxShadow).
   dropShadow: {
     boxShadow: '0 24px 64px 0 rgba(0, 0, 0, 0.45)',
   },
-  // Elevation scale; each a { light, dark } boxShadow pair resolved with useColorScheme().
   shadow: {
     sm: {
       light: '0 1px 2px rgba(16,30,50,0.06)',

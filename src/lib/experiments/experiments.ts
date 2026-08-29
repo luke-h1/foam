@@ -5,10 +5,6 @@ interface ExperimentDefinition {
   readonly control: string;
 }
 
-/**
- * A/B experiment registry; each entry maps to a key inside the Remote Config
- * `experiments` object Firebase assigns per user.
- */
 const EXPERIMENTS = {
   chatComposerLayout: {
     variants: ['control', 'compact'],

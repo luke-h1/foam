@@ -37,10 +37,6 @@ export interface MessageBuffer {
   moderateByLogin(login: string, moderationNotice: string): void;
 }
 
-/**
- * Live-chat ingest buffer: dedup-by-key list with an O(1) index and an
- * oldest-drop cap. Owns only data - the hook drives flush timing and publishing.
- */
 export const createMessageBuffer = (
   getMaxBufferedMessages: () => number = getMaxChatMessages,
 ): MessageBuffer => {

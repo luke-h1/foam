@@ -12,9 +12,6 @@ export const motion = {
     standard: Easing.inOut(Easing.cubic),
   },
 
-  /**
-   * withSpring configs: `responsive` for gesture and layout-driven motion, `gentle` for ambient reveals.
-   */
   spring: {
     responsive: { damping: 28, stiffness: 320, mass: 0.8 },
     gentle: { damping: 22, stiffness: 240, mass: 0.55 },

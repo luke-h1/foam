@@ -2,15 +2,7 @@ import { Share } from 'react-native';
 
 import { logger } from '@app/utils/logger';
 
-/**
- * App URL scheme defined in app.config.ts.
- */
 const APP_SCHEME = 'foam';
-
-/**
- * Public https fallback for users who don't have the app installed.
- * Matches the intentFilters/associated domains in app.config.ts.
- */
 const PUBLIC_TWITCH_BASE = 'https://www.twitch.tv';
 
 export type ShareableEntity =

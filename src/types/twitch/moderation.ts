@@ -1,6 +1,3 @@
-/**
- * PATCH /helix/chat/settings body; only the provided fields change.
- */
 export interface TwitchChatSettingsPatch {
   emote_mode?: boolean;
   follower_mode?: boolean;

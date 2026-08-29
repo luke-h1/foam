@@ -6,10 +6,6 @@ export interface ChannelActivityEvent<TState> {
   normalise: (event: EventSubEvent) => TState;
 }
 
-/**
- * One broadcaster-driven channel activity (a poll or a prediction). Pure data
- * plus pure functions - `useChannelActivity` drives the orchestration.
- */
 export interface ChannelActivity<THelix, TState> {
   fetch: (broadcasterId: string) => Promise<PaginatedList<THelix>>;
   normaliseHelix: (item: THelix) => TState;

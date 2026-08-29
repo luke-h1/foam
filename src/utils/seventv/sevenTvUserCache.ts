@@ -49,10 +49,6 @@ export type SevenTvUserFetcher = (
   twitchUserId: string,
 ) => Promise<SevenTvUser | null>;
 
-/**
- * Twitch to 7TV user resolution cache: bounded in-memory map, MMKV persistence
- * with positive/negative TTLs, and in-flight request dedup.
- */
 export function createSevenTvUserCache(
   storage: SevenTvUserCacheStorage,
   options: { maxResolvedEntries?: number } = {},

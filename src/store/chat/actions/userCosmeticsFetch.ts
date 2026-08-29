@@ -68,9 +68,6 @@ export async function fetchUserCosmetics(
   }
 }
 
-/**
- * Called on chat unmount so the next session re-requests cosmetics.
- */
 export function clearFetchedCosmeticsUsers(): void {
   fetchedCosmeticsUsers.clear();
 }

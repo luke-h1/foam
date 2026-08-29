@@ -85,10 +85,6 @@ function buildHostedVariants(
   };
 }
 
-/**
- * The single constructor for a domain `SanitisedEmote`; returns `null` when
- * the source resolves no renderable url.
- */
 export function buildSanitisedEmote(
   source: SevenTvEmoteSource,
 ): SevenTvSanitisedEmote | null;

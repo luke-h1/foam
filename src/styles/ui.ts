@@ -38,7 +38,6 @@ export type UIColor =
   | 'white'
   | 'transparent';
 
-// Biased to the small end for a tighter, more native feel.
 export const RADIUS_VALUES = {
   none: 0,
   xxs: 4,

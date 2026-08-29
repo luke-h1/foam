@@ -46,9 +46,6 @@ const NO_MARGIN = Object.freeze({});
 
 export function getMargin(theme: AppTheme) {
   return ({ m, mb, ml, mr, mt, mx, my }: MarginProps) => {
-    /**
-     * Chat spans route every rendered text through this and almost none pass margin props - skip the fourteen resolve calls and seven conditional spreads for that case.
-     */
     if (
       m === undefined &&
       mb === undefined &&

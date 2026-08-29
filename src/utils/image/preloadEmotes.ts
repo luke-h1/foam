@@ -1,7 +1,3 @@
-/**
- * Warms emote images into expo-image's disk cache; goes through prefetchToDisk
- * so it targets the same cache ChatInlineImage reads.
- */
 import type { SanitisedEmote } from '@app/types/emote';
 import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
 import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants/withResolvedEmoteImageVariants';
@@ -92,9 +88,6 @@ export async function preloadEmotes(
   }
 }
 
-/**
- * Call once per session.
- */
 export async function preloadGlobalEmotes(emoteData: {
   twitchGlobalEmotes?: SanitisedEmote[];
   sevenTvGlobalEmotes?: SanitisedEmote[];

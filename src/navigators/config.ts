@@ -11,8 +11,5 @@ export const BaseConfig: ConfigBaseProps = {
 
   catchErrors: __DEV__ ? 'dev' : 'always',
 
-  /**
-   * Route names where the Android back button exits the app.
-   */
   exitRoutes: [],
 };

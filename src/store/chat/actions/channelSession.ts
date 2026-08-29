@@ -10,10 +10,6 @@ import { clearFetchedCosmeticsUsers } from '@app/store/chat/actions/userCosmetic
 import { clearVisibleAssetHydration } from '@app/store/chat/actions/visibleAssetHydration';
 import { resetMentionLoginResolver } from '@app/utils/chat/mentionLoginResolver/resetMentionLoginResolver';
 
-/**
- * The four ways a channel session ends: navigation `beforeRemove`, chat
- * surface unmount, in-place channel switch, and the IRC PART echo.
- */
 export type ChannelSessionResetTrigger =
   'leave' | 'unmount' | 'switch' | 'part';
 

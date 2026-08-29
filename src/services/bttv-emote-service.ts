@@ -13,9 +13,6 @@ interface BttvChannelEmoteSet {
   id: string;
   bots: string[];
 
-  /**
-   * the user's twitch avatar
-   */
   avatar: string;
 
   channelEmotes: BttvEmote[];

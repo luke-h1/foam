@@ -37,9 +37,6 @@ export interface Preferences {
   streamListLayout: 'compact' | 'media';
   chatDensity: 'comfortable' | 'compact';
   showAlternatingChatRows: boolean;
-  /**
-   * Slide-in animation for new chat messages.
-   */
   animate: boolean;
   chatTimestamps: boolean;
   highlightOwnMentions: boolean;
@@ -85,14 +82,7 @@ export interface Preferences {
    * re-clamped to the current screen at layout time.
    */
   landscapeChatWidth: number | null;
-  /**
-   * Use foam's custom-controls player (hidden Twitch chrome + ControlsOverlay).
-   * Off = stock player.
-   */
   customPlayerEnabled: boolean;
-  /**
-   * Opt in to anonymous Firebase usage analytics.
-   */
   analyticsEnabled: boolean;
   sharedChatEnabled: boolean;
   enhancedVideoStability: boolean;

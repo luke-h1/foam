@@ -17,9 +17,6 @@ import type {
 
 const analytics = getAnalytics(getApp());
 
-/**
- * The single privacy gate: when disabled the SDK drops every event, so the log helpers never re-check the preference.
- */
 export async function setAnalyticsEnabled(enabled: boolean): Promise<void> {
   try {
     await setAnalyticsCollectionEnabled(analytics, enabled);
@@ -28,9 +25,6 @@ export async function setAnalyticsEnabled(enabled: boolean): Promise<void> {
   }
 }
 
-/**
- * Logs an allow-listed event from analyticsEvents.ts; an unlisted name or wrong param shape fails to compile.
- */
 export async function logAnalyticsEvent<K extends AnalyticsEventName>(
   name: K,
   params: AnalyticsEventParams[K],

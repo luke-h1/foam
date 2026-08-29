@@ -6,10 +6,6 @@ import { logger } from '@app/utils/logger';
 import { executeModCommand } from './executeModCommand';
 import type { ModCommand } from './parseModCommand';
 
-/**
- * Fire-and-forget wrapper: runs a parsed moderation command against Helix and
- * shows the outcome as a success/failure toast.
- */
 export function runModCommand(
   command: ModCommand,
   channelId: string,

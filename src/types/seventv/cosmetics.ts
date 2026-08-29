@@ -32,23 +32,13 @@ export type SevenTvColor = number;
 
 export interface PaintShadow {
   color: SevenTvColor;
-
-  /**
-   * Blur radius in pixels.
-   */
   radius: number;
-
   x_offset: number;
-
   y_offset: number;
 }
 
 export interface PaintStop {
   color: SevenTvColor;
-
-  /**
-   * Position along the gradient axis, 0-1.
-   */
   at: number;
 }
 
@@ -80,8 +70,7 @@ export interface PaintLayerData {
   at: [number, number] | null;
   size: [number, number] | null;
   /**
-   * v4 per-layer opacity (0-1); the whole layer span fades by this amount.
-   * v3-era data carries no opacity; normalization defaults it to 1.
+   * v4 per-layer opacity (0-1). v3-era data has no opacity; normalize it to 1.
    */
   opacity: number;
 }
@@ -108,22 +97,12 @@ export interface PaintData {
   id: string;
 
   name: string;
-
-  /**
-   * Solid fallback used when the paint is not gradient-based or stops are missing.
-   */
   color: SevenTvColor | null;
-
   layers: IndexedCollection<PaintLayerData>;
-
   shadows: IndexedCollection<PaintShadow>;
-
   textStyle: PaintTextStyle | null;
-
   function: PaintFunction;
-
   repeat: boolean;
-
   /**
    * Linear gradient angle in degrees; 0 = left to right, 90 = bottom to top.
    */
@@ -299,8 +278,8 @@ export interface SevenTvEventData<
 }
 
 /**
- * Condition for Subscribe (op 35) / Unsubscribe (op 36) payloads. Creation
- * events filter by platform context; everything else filters on an object id.
+ * Subscribe (op 35) / Unsubscribe (op 36). Creation events filter by platform
+ * context; everything else filters on an object id.
  */
 type SevenTvSubscriptionCondition<TEventType> = TEventType extends
   'entitlement.create' | 'cosmetic.create'
@@ -314,26 +293,20 @@ type SevenTvSubscriptionCondition<TEventType> = TEventType extends
     };
 
 export type SevenTvWsMessage<TData = unknown, TEventType = SevenTvEventType> =
-  /**
-   * Dispatch: sent when a subscribed event fires.
-   */
   | {
+      /**
+       * Dispatch
+       */
       op: 0;
       d: TData;
     }
-  /**
-   * Hello: session info, sent on connect.
-   */
   | {
+      /**
+       * Hello
+       */
       op: 1;
       d?: {
-        /**
-         * Milliseconds between heartbeats.
-         */
         heartbeat_interval: number;
-        /**
-         * Token used to resume or mutate the session.
-         */
         session_id: string;
         subscription_limit: number;
         instance: {
@@ -344,10 +317,10 @@ export type SevenTvWsMessage<TData = unknown, TEventType = SevenTvEventType> =
       t?: number;
       s?: number;
     }
-  /**
-   * Heartbeat.
-   */
   | {
+      /**
+       * Heartbeat
+       */
       op: 2;
       d: {
         count: number;
@@ -355,35 +328,28 @@ export type SevenTvWsMessage<TData = unknown, TEventType = SevenTvEventType> =
       t: number;
       s: number;
     }
-  /**
-   * Reconnect: server wants the client to reconnect.
-   */
   | {
+      /**
+       * Reconnect
+       */
       op: 4;
     }
-  /**
-   * ACK
-   */
   | {
+      /**
+       * ACK
+       */
       op: 5;
       d: {
-        /**
-         * The acknowledged opcode in text form.
-         */
         command: string;
-        /**
-         * Echoed client data for SUBSCRIBE/UNSUBSCRIBE; a result object for RESUME.
-         */
         data: unknown;
       };
       t: number;
       s: number;
     }
-
-  /**
-   * Invalid subscription condition.
-   */
   | {
+      /**
+       * Invalid subscription condition
+       */
       op: 6;
       d: {
         code: number;
@@ -392,10 +358,10 @@ export type SevenTvWsMessage<TData = unknown, TEventType = SevenTvEventType> =
       t: number;
       s: number;
     }
-  /**
-   * Resume the previous connection.
-   */
   | {
+      /**
+       * Resume
+       */
       op: 34;
       d: {
         session_id: string;
@@ -403,25 +369,22 @@ export type SevenTvWsMessage<TData = unknown, TEventType = SevenTvEventType> =
       t?: number;
       s?: number;
     }
-
-  /**
-   * End of stream: server closed the connection; the code says why and
-   * whether to reconnect.
-   */
   | {
+      /**
+       * End of stream
+       */
       op: 7;
       d?: {
         code: number;
-
         message: string;
       };
       t?: never;
       s?: never;
     }
-  /**
-   * Subscribe to an event.
-   */
   | {
+      /**
+       * Subscribe
+       */
       op: 35;
       d: {
         type: TEventType;
@@ -430,10 +393,10 @@ export type SevenTvWsMessage<TData = unknown, TEventType = SevenTvEventType> =
       t?: number;
       s?: never;
     }
-  /**
-   * Unsubscribe from an event.
-   */
   | {
+      /**
+       * Unsubscribe
+       */
       op: 36;
       d: {
         type: TEventType;

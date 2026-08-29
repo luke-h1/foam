@@ -154,10 +154,6 @@ export interface ChannelCacheType {
   badgesLastUpdated?: number;
 }
 
-/**
- * Channel-invariant provider data stored once; `lastUpdated` gives global
- * slices their own TTL, independent of any channel's.
- */
 export interface GlobalCacheType {
   lastUpdated: number;
   twitchGlobalEmotes: SanitisedEmote[];
@@ -204,10 +200,6 @@ export const makeEmptyGlobalCacheData = () =>
     ffzGlobalBadges: [],
   }) satisfies GlobalCacheType;
 
-/**
- * Channel-cache fields plus the slices not stored per channel: global slices,
- * session 7TV personal emotes, and chatterinoBadges resolved at read time.
- */
 export interface ResolvedEmoteData extends ChannelCacheType, GlobalCacheType {
   sevenTvPersonalEmotes: Record<string, SanitisedEmote[]>;
   chatterinoBadges: SanitisedBadgeSet[];

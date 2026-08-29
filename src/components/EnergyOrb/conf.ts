@@ -50,7 +50,6 @@ const NAMED_COLORS: NamedColorTable = {
   pink: [1, 0.75, 0.8],
 };
 
-// Sky-blue accent family, matching the app theme.
 const DEFAULT_COLORS = [
   theme.color.accent.light,
   theme.color.accent.dark,

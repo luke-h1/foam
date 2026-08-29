@@ -40,9 +40,6 @@ export interface SubscriptionTags extends BaseUserNoticeTags {
 
   'msg-param-should-share-streak': '1' | '0';
 
-  /**
-   * Zero when msg-param-should-share-streak is 0.
-   */
   'msg-param-streak-months': string;
 
   'msg-param-sub-plan': MsgParamSubPlan;
@@ -63,9 +60,6 @@ export interface SubGiftTags extends BaseUserNoticeTags {
 
   'msg-param-recipient-id': string;
 
-  /**
-   * The recipient's total subscribed months.
-   */
   'msg-param-months': string;
 }
 

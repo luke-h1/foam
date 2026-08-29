@@ -1,6 +1,3 @@
-/**
- * A JSON-shaped value: primitives, arrays, and plain key-value objects.
- */
 export type JsonValue =
   | string
   | number
@@ -22,10 +19,6 @@ function isJsonObject<T>(value: T): value is T & { [key: string]: JsonValue } {
   );
 }
 
-/**
- * Key-order-insensitive structural equality for JSON-shaped values; the object
- * overload covers domain types that lack `JsonValue`'s index signature.
- */
 export function deepEqualJson(a: JsonValue, b: JsonValue): boolean;
 export function deepEqualJson<T extends object>(
   a: T | null | undefined,

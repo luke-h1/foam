@@ -9,9 +9,6 @@ function getViewCountFormatter() {
   return viewCountFormatter;
 }
 
-/**
- * Missing and invalid counts render as '0'.
- */
 export function formatViewCount(count: number | undefined | null): string {
   if (count == null || !Number.isFinite(count) || count < 0) {
     return '0';

@@ -23,10 +23,6 @@ export interface SetupInitialSubscriptionsOptions {
   getSevenTvEmoteSetId: () => string | undefined;
 }
 
-/**
- * Initial-subscription pass for a fresh 7TV socket; every wait iteration is
- * fenced by `session.beginSubscriptionRun()` so a reset or channel hop mid-poll bails the run.
- */
 export const setupInitialSubscriptions = async ({
   getSevenTvChannelUserId,
   getSevenTvEmoteSetId,

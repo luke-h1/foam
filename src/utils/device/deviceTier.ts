@@ -5,10 +5,6 @@ export type DeviceTier = 'low' | 'high';
 let cached: DeviceTier | null = null;
 let cachedTotalMemoryBytes: number | null = null;
 
-/**
- * Total physical RAM in bytes (0 when unavailable); used to scale
- * image-memory budgets to the device.
- */
 export function getTotalDeviceMemoryBytes(): number {
   if (cachedTotalMemoryBytes !== null) {
     return cachedTotalMemoryBytes;

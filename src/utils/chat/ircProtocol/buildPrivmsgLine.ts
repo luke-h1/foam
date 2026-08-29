@@ -16,9 +16,6 @@ export function buildPrivmsgLine({
   message,
   replyParentMsgId,
 }: {
-  /**
-   * Already formatted with its `#` prefix.
-   */
   channel: string;
   message: string;
   replyParentMsgId?: string;

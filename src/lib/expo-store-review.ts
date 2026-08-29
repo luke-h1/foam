@@ -46,10 +46,6 @@ export function recordWatchTime(durationMs: number): void {
   setState({ ...state, watchTimeMs: state.watchTimeMs + durationMs });
 }
 
-/**
- * Safe to call opportunistically; the gate (reviewPromptGate) plus the
- * OS-level throttle decide whether anything is shown.
- */
 export async function maybeRequestStoreReview(): Promise<void> {
   if (Platform.OS === 'web' || requestInFlight) {
     return;

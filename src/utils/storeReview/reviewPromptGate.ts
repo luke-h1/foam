@@ -18,10 +18,6 @@ export interface ReviewPromptInput {
   now: number;
 }
 
-/**
- * Rate-limits review prompts well below Apple/Google's hard caps: engaged,
- * error-free sessions only, once per app version, 90 days apart.
- */
 export function shouldRequestReview({
   state,
   currentVersion,

@@ -7,10 +7,6 @@ import type {
 } from '@app/utils/chat/messageHandlers/createOptimisticUserState';
 import { formatDate } from '@app/utils/date-time/date';
 
-/**
- * Local echo of a just-sent message; `sentAt` doubles as id and nonce, and
- * the real message carries Twitch's own id so the two never collide.
- */
 export function createOptimisticMessage({
   badges,
   channelName,

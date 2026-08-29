@@ -54,10 +54,6 @@ export function isForegroundTransition(
   );
 }
 
-/**
- * All subscribers share one `AppState` listener, attached on the first
- * subscribe and removed with the last unsubscribe.
- */
 export function subscribeToAppStateTransitions(
   listener: AppStateTransitionListener,
 ): () => void {
@@ -83,10 +79,6 @@ export function subscribeToAppStateTransitions(
   };
 }
 
-/**
- * Subscribes to came-to-foreground events only (see
- * {@link isForegroundTransition}).
- */
 export function subscribeToAppForeground(listener: () => void): () => void {
   return subscribeToAppStateTransitions(transition => {
     if (isForegroundTransition(transition)) {

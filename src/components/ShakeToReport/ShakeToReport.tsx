@@ -10,10 +10,6 @@ const SHAKE_COOLDOWN_MS = 30_000;
 // Detox shakes the simulator during scroll synthesis; keep e2e inert.
 const isE2E = process.env.EXPO_PUBLIC_APP_VARIANT === 'e2e';
 
-/**
- * Opens the feedback screen on device shake; toggled via the shakeToReport
- * preference.
- */
 export function ShakeToReport() {
   const shakeToReport = usePreference('shakeToReport');
   const lastTriggeredAtRef = useRef(0);
