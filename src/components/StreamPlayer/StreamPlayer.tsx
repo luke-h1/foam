@@ -1,5 +1,11 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { InteractionManager, Platform, StyleSheet, View } from 'react-native';
+import {
+  InteractionManager,
+  type LayoutChangeEvent,
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native';
 import type { WebViewMessageEvent } from 'react-native-webview';
 import { WebView } from 'react-native-webview';
 
@@ -144,6 +150,25 @@ export const StreamPlayer = memo(function StreamPlayer({
       nudgeLayerTree();
     }
   });
+
+  const lastPlayerSizeRef = useRef<{ width: number; height: number } | null>(
+    null,
+  );
+  const handlePlayerLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      const { width: nextWidth, height: nextHeight } = event.nativeEvent.layout;
+      const previous = lastPlayerSizeRef.current;
+      lastPlayerSizeRef.current = { width: nextWidth, height: nextHeight };
+      if (
+        previous &&
+        (Math.round(previous.width) !== Math.round(nextWidth) ||
+          Math.round(previous.height) !== Math.round(nextHeight))
+      ) {
+        nudgeLayerTree();
+      }
+    },
+    [nudgeLayerTree],
+  );
 
   useEffect(() => {
     const timeoutsRef = nudgeTimeoutsRef;
@@ -400,6 +425,7 @@ export const StreamPlayer = memo(function StreamPlayer({
   return (
     <View
       collapsable={false}
+      onLayout={handlePlayerLayout}
       style={[
         styles.container,
         { width: playerWidth, height: playerHeight },
