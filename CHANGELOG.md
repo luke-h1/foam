@@ -4,6 +4,18 @@
 
 ### 🐛 Bug Fixes
 
+- IPad type legibility for App Review, player rotation recovery ([#885](https://github.com/lhowsam/foam/issues/885))
+
+### 🔧 Miscellaneous Tasks
+
+- **infrastructure:** Bump 1password/load-secrets-action from 5.0.0 to 5.0.1 ([#883](https://github.com/lhowsam/foam/issues/883))
+- **infrastructure:** Bump openai/codex-action from 1.11 to 1.12 ([#882](https://github.com/lhowsam/foam/issues/882))
+- Strip non-essential comments across src ([#884](https://github.com/lhowsam/foam/issues/884))
+
+## 1.0.9 (Production)
+
+### 🐛 Bug Fixes
+
 - **chat:** Blank rows, a11y labels, skeleton sizing, comment cleanup ([#881](https://github.com/lhowsam/foam/issues/881))
 
 ### 👷 CI/CD
