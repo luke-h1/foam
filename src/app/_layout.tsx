@@ -1,6 +1,7 @@
 import '../utils/performance/wdyr';
 import 'expo-dev-client';
 
+import { Appearance } from 'react-native';
 import {
   configureReanimatedLogger,
   ReanimatedLogLevel,
@@ -19,6 +20,8 @@ configureReanimatedLogger({
 });
 
 enableFreeze(false);
+
+Appearance.setColorScheme('dark');
 
 WebBrowser.maybeCompleteAuthSession();
 sweepOversizedSentryEnvelopes();
