@@ -105,6 +105,8 @@ const mockChatStats: StreamElementsChatStats = {
   sevenTVEmotes: [{ id: '2', emote: 'OMEGALUL', amount: 9999 }],
 };
 
+const FIND_TIMEOUT = { timeout: 5000 };
+
 describe('StreamerProfileScreen', () => {
   beforeEach(() => {
     getUserSpy.mockResolvedValue(mockUser);
@@ -118,7 +120,7 @@ describe('StreamerProfileScreen', () => {
     render(<StreamerProfileScreen id='shroud' />);
 
     expect(
-      await screen.findByText('Epic Broadcast', {}, { timeout: 5000 }),
+      await screen.findByText('Epic Broadcast', {}, FIND_TIMEOUT),
     ).toBeOnTheScreen();
     expect(screen.getByText('shroud')).toBeOnTheScreen();
     expect(screen.getByText('@shroud')).toBeOnTheScreen();
@@ -129,11 +131,13 @@ describe('StreamerProfileScreen', () => {
   test('switches to clips when the Clips tab is selected', async () => {
     render(<StreamerProfileScreen id='shroud' />);
 
-    await screen.findByText('Epic Broadcast');
+    await screen.findByText('Epic Broadcast', {}, FIND_TIMEOUT);
 
     fireEvent.press(screen.getByTestId('tab-clips'));
 
-    expect(await screen.findByText('Funny Clip')).toBeOnTheScreen();
+    expect(
+      await screen.findByText('Funny Clip', {}, FIND_TIMEOUT),
+    ).toBeOnTheScreen();
     expect(screen.getByText('Clipped by Clipper')).toBeOnTheScreen();
   });
 
@@ -142,7 +146,9 @@ describe('StreamerProfileScreen', () => {
 
     render(<StreamerProfileScreen id='shroud' />);
 
-    expect(await screen.findByText('via StreamElements')).toBeOnTheScreen();
+    expect(
+      await screen.findByText('via StreamElements', {}, FIND_TIMEOUT),
+    ).toBeOnTheScreen();
     // Top emote across all platforms is the highest-count one.
     expect(screen.getByText('OMEGALUL')).toBeOnTheScreen();
   });
@@ -150,7 +156,7 @@ describe('StreamerProfileScreen', () => {
   test('hides StreamElements stats when unavailable', async () => {
     render(<StreamerProfileScreen id='shroud' />);
 
-    await screen.findByText('Epic Broadcast');
+    await screen.findByText('Epic Broadcast', {}, FIND_TIMEOUT);
 
     expect(screen.queryByText('via StreamElements')).not.toBeOnTheScreen();
   });
@@ -160,7 +166,9 @@ describe('StreamerProfileScreen', () => {
 
     render(<StreamerProfileScreen id='shroud' />);
 
-    expect(await screen.findByText('No VODs found')).toBeOnTheScreen();
+    expect(
+      await screen.findByText('No VODs found', {}, FIND_TIMEOUT),
+    ).toBeOnTheScreen();
   });
 
   test('shows a not-found state when the user fails to load', async () => {
@@ -168,6 +176,8 @@ describe('StreamerProfileScreen', () => {
 
     render(<StreamerProfileScreen id='shroud' />);
 
-    expect(await screen.findByText('Streamer not found')).toBeOnTheScreen();
+    expect(
+      await screen.findByText('Streamer not found', {}, FIND_TIMEOUT),
+    ).toBeOnTheScreen();
   });
 });

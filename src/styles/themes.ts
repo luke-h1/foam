@@ -2,8 +2,8 @@ import * as Device from 'expo-device';
 
 import { Color } from './palette';
 
-const SPACE_SCALE = 1.33;
-const FONT_SCALE = 1.2;
+const SPACE_SCALE = 1.4;
+const FONT_SCALE = 1.4;
 
 const isIpad = Device.osName === 'iPadOS';
 
