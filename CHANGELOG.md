@@ -5,6 +5,7 @@
 ### 🐛 Bug Fixes
 
 - IPad type legibility for App Review, player rotation recovery ([#885](https://github.com/lhowsam/foam/issues/885))
+- Lock color scheme to dark so light-mode devices don't render light ([#886](https://github.com/lhowsam/foam/issues/886))
 
 ### 🔧 Miscellaneous Tasks
 
