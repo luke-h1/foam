@@ -29,6 +29,10 @@
         "rules": ["react-hooks-js/purity", "react-doctor/effect-needs-cleanup"]
       },
       {
+        "files": ["src/hooks/ws/useWebsocket.ts"],
+        "rules": ["react-doctor/effect-needs-cleanup"]
+      },
+      {
         "files": ["src/services/twitch-chat-service.ts"],
         "rules": ["react-hooks-js/purity"]
       },
