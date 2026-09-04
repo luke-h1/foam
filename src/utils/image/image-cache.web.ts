@@ -1,5 +1,3 @@
-export const BLURHASH = 'LBDbA}oL00Na~B9u57={XRay-Uj[';
-
 export interface CachedImageInfo {
   uri: string;
   name: string;

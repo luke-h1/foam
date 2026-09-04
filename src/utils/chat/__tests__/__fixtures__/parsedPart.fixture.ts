@@ -24,14 +24,3 @@ export function createEmotePart(
     ...overrides,
   };
 }
-
-export function createMentionPart(
-  content: string,
-  overrides: Partial<ParsedPart<'mention'>> = {},
-): ParsedPart<'mention'> {
-  return {
-    type: 'mention',
-    content,
-    ...overrides,
-  };
-}

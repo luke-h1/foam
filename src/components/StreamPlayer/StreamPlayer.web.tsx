@@ -1,70 +1,11 @@
-import { type Ref, useImperativeHandle } from 'react';
-import { type DimensionValue, Linking, StyleSheet, View } from 'react-native';
+import { useImperativeHandle } from 'react';
+import { Linking, StyleSheet, View } from 'react-native';
 
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 
-export interface StreamPlayerRef {
-  forceRefresh: () => void;
-  getChannel: () => string | undefined;
-  getCurrentTime: () => Promise<number>;
-  getDuration: () => Promise<number>;
-  getMuted: () => boolean;
-  getPaused: () => boolean;
-  getVolume: () => number;
-  mute: () => void;
-  pause: () => void;
-  play: () => void;
-  seek: (timestamp: number) => void;
-  setChannel: (channel: string) => void;
-  setMuted: (muted: boolean) => void;
-  setQuality: (quality: string) => void;
-  setVideo: (videoId: string, timestamp?: number) => void;
-  setVolume: (volume: number) => void;
-  releaseMedia: () => void;
-  syncToLive: () => void;
-  unmute: () => void;
-}
-
-export interface StreamInfo {
-  gameName?: string;
-  profileImageUrl?: string;
-  startedAt?: string;
-  title?: string;
-  userName?: string;
-  userLogin?: string;
-  viewerCount?: number;
-}
-
-export interface StreamPlayerProps {
-  autoplay?: boolean;
-  channel?: string;
-  clip?: string;
-  deferOverlayUntilUserUnmute?: boolean;
-  height?: DimensionValue;
-  muted?: boolean;
-  onBackPress?: () => void;
-  onContentGateChange?: (hasGate: boolean) => void;
-  onEnded?: () => void;
-  onError?: (error: string) => void;
-  onOffline?: () => void;
-  onOnline?: () => void;
-  onPause?: () => void;
-  onPlay?: () => void;
-  onReady?: () => void;
-  onRefresh?: () => void;
-  onSharePress?: () => void;
-  onVideoAreaPress?: () => void;
-  onVideoAreaSwipeDown?: () => void;
-  onWebViewLoaded?: () => void;
-  parent?: string;
-  showOverlayControls?: boolean;
-  streamInfo?: StreamInfo;
-  video?: string;
-  width?: DimensionValue;
-  ref?: Ref<StreamPlayerRef>;
-}
+import type { StreamPlayerProps } from './types';
 
 function getEmbedParent(parent?: string): string {
   if ('window' in globalThis && window.location.hostname) {
@@ -149,6 +90,8 @@ export function StreamPlayer({
       getDuration: async () => 0,
       getMuted: () => muted,
       getPaused: () => false,
+      isPictureInPicture: () => false,
+      togglePictureInPicture: () => {},
       getVolume: () => (muted ? 0 : 1),
       mute: () => undefined,
       pause: () => undefined,

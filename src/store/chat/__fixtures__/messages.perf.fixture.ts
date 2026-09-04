@@ -6,9 +6,7 @@ function createMessageParts(index: number): ParsedPart[] {
   return [{ type: 'text', content: `raid flood message ${index}` }];
 }
 
-export function createIngestMessage(
-  index: number,
-): ChatMessageType<'usernotice'> {
+function createIngestMessage(index: number): ChatMessageType<'usernotice'> {
   const sender = `raider${index % 40}`;
   return {
     id: `ingest-${index}_nonce-${index}`,
@@ -36,8 +34,8 @@ export function createIngestMessage(
 /**
  * Near-full window seed + burst that forces front-trim on a capped store.
  */
-export const INGEST_SEED_COUNT = 120;
-export const INGEST_BURST_COUNT = 80;
+const INGEST_SEED_COUNT = 120;
+const INGEST_BURST_COUNT = 80;
 
 export const ingestSeedMessages = Array.from(
   { length: INGEST_SEED_COUNT },

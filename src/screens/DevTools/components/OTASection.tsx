@@ -6,7 +6,7 @@ export function OTASection() {
   return (
     <Form.Section title='Current Update'>
       <Form.Text hint={Updates.runtimeVersion}>Runtime version</Form.Text>
-      <Form.Text hint={`${Updates.channel || 'unknown'}`}>Channel</Form.Text>
+      <Form.Text hint={Updates.channel || 'unknown'}>Channel</Form.Text>
       <Form.Text
         hint={
           Updates.createdAt?.toLocaleString('en-US', {

@@ -1,8 +1,8 @@
-export const STALL_RECOVERY_GRACE_MS = 4_000;
-export const AUTO_REFRESH_WINDOW_MS = 120_000;
-export const MAX_AUTO_REFRESHES_PER_WINDOW = 3;
-export const HIGH_LATENCY_RECOVERY_S = 20;
-export const HIGH_LATENCY_READINGS_BEFORE_RECOVERY = 3;
+const STALL_RECOVERY_GRACE_MS = 4_000;
+const AUTO_REFRESH_WINDOW_MS = 120_000;
+const MAX_AUTO_REFRESHES_PER_WINDOW = 3;
+const HIGH_LATENCY_RECOVERY_S = 20;
+const HIGH_LATENCY_READINGS_BEFORE_RECOVERY = 3;
 
 export type StabilityRefreshReason =
   'highLatency' | 'stall' | 'videoElementError';
@@ -92,5 +92,3 @@ export function createStabilityRecovery({
     },
   };
 }
-
-export type StabilityRecovery = ReturnType<typeof createStabilityRecovery>;

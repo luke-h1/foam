@@ -66,12 +66,10 @@ src/store/
     types/         # shared chat store types and constants
     actions/       # pure mutations against observables (no React hooks)
     react/         # useSelector / useObservable hooks for components
-  preferences/
-    state.ts       # re-export shim over store/preferenceStore.ts
-    selectors.ts   # usePreferences and related hooks
+  preferenceStore.ts  # preferences$, persistence, getPreferences and the preference hooks
 ```
 
-The preferences observable itself lives in `src/store/preferenceStore.ts` - that file is the source of truth for `preferences$`, persistence, and `getPreferences`. `store/preferences/state.ts` only re-exports it so both import paths share one observable; two parallel observables persisted to the same MMKV key desync within a session.
+`src/store/preferenceStore.ts` is the only module that owns `preferences$`, its persistence, `getPreferences` and the preference hooks. Import it directly. Do not add a second module that reads or re-exports the observable: two parallel observables persisted to the same MMKV key desync within a session.
 
 Import chat store modules directly (for example `@app/store/chat/observables/chatStore`, `@app/store/chat/actions/messages`, `@app/store/chat/types/constants`). Do not add barrel exports under `store/chat`.
 

@@ -68,8 +68,6 @@ describe('useSeventvWs', () => {
       return {
         sendMessage: jest.fn(),
         sendJsonMessage,
-        lastMessage: new MessageEvent('message'),
-        lastJsonMessage: null,
         readyState: ReadyState.OPEN,
         getWebSocket: () => fakeWs,
         reconnect: jest.fn(),

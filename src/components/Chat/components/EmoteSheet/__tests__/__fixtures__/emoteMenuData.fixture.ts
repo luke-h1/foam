@@ -28,7 +28,7 @@ const defaultSevenTvMetadata = {
   totalCount: 2,
 } satisfies SevenTvSanitisedEmote['set_metadata'];
 
-export function createSevenTvMenuEmote(
+function createSevenTvMenuEmote(
   id: string,
   name: string,
   site: SevenTvSanitisedEmote['site'],
@@ -55,7 +55,7 @@ export function createSevenTvMenuEmote(
   };
 }
 
-export function createTwitchMenuEmote(
+function createTwitchMenuEmote(
   id: string,
   name: string,
   site: TwitchSanitisedEmote['site'],

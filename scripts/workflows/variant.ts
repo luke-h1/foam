@@ -55,12 +55,6 @@ export function sentryDistFor(variant: string): string {
  * profiles map 1:1 to our deploy variants, so encode the variant in the
  * configuration name (Release-production, Release-internal, …).
  */
-export function sentrySizeAnalysisBuildConfigurationFor(
-  variant: string,
-): string {
-  return `Release-${variant}`;
-}
-
 export function variantLabel(variant: string): string {
   return getVariantMeta(variant).label;
 }

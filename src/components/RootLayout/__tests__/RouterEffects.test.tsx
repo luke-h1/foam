@@ -14,7 +14,6 @@ import {
   endDeepLinkAuth,
   isDeepLinkAuthInProgress,
 } from '@app/navigators/deepLinkAuthState';
-import * as navigationUtilities from '@app/navigators/navigationUtilities';
 import { logger } from '@app/utils/logger';
 
 import { RouterEffects } from '../RouterEffects';
@@ -40,13 +39,6 @@ jest
     recoveredFromError: false,
     setRecoveredFromError: jest.fn(),
   });
-
-jest
-  .spyOn(navigationUtilities, 'setNavigationReady')
-  .mockImplementation(() => {});
-jest
-  .spyOn(navigationUtilities, 'syncNavigationState')
-  .mockImplementation(() => {});
 
 jest.spyOn(logger.main, 'warn').mockImplementation(() => {});
 jest.spyOn(logger.auth, 'info').mockImplementation(() => {});

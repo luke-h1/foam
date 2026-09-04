@@ -22,27 +22,27 @@ export const RITUAL = String.raw`@display-name=Newbie;id=ritual-1;login=newbie;m
 
 export const BITS_BADGE = String.raw`@display-name=Cheerer;id=bits-1;login=cheerer;msg-id=bitsbadgetier;msg-param-threshold=1000;room-id=1;system-msg=Cheerer\sjust\searned\sa\snew\s1000\sBits\sbadge!;tmi-sent-ts=1700000000000;user-id=13 :tmi.twitch.tv USERNOTICE #foam :`;
 
-export const PRIME_UPGRADE = String.raw`@display-name=PrimeUser;id=prime-1;login=primeuser;msg-id=primepaidupgrade;msg-param-sub-plan=1000;room-id=1;system-msg=PrimeUser\sconverted\sfrom\sa\sPrime\ssub\sto\sa\sTier\s1\ssub!;tmi-sent-ts=1700000000000;user-id=14 :tmi.twitch.tv USERNOTICE #foam :`;
+const PRIME_UPGRADE = String.raw`@display-name=PrimeUser;id=prime-1;login=primeuser;msg-id=primepaidupgrade;msg-param-sub-plan=1000;room-id=1;system-msg=PrimeUser\sconverted\sfrom\sa\sPrime\ssub\sto\sa\sTier\s1\ssub!;tmi-sent-ts=1700000000000;user-id=14 :tmi.twitch.tv USERNOTICE #foam :`;
 
-export const EXTENDSUB = String.raw`@display-name=ExtendUser;id=extend-1;login=extenduser;msg-id=extendsub;msg-param-cumulative-months=9;msg-param-sub-plan=1000;room-id=1;system-msg=ExtendUser\sextended\stheir\sTier\s1\ssubscription!;tmi-sent-ts=1700000000000;user-id=15 :tmi.twitch.tv USERNOTICE #foam :`;
+const EXTENDSUB = String.raw`@display-name=ExtendUser;id=extend-1;login=extenduser;msg-id=extendsub;msg-param-cumulative-months=9;msg-param-sub-plan=1000;room-id=1;system-msg=ExtendUser\sextended\stheir\sTier\s1\ssubscription!;tmi-sent-ts=1700000000000;user-id=15 :tmi.twitch.tv USERNOTICE #foam :`;
 
-export const STANDARDPAYFORWARD = String.raw`@display-name=Forwarder;id=payfwd-1;login=forwarder;msg-id=standardpayforward;msg-param-sub-plan=1000;room-id=1;system-msg=Forwarder\sis\spaying\sforward\sthe\sgift\sthey\sgot!;tmi-sent-ts=1700000000000;user-id=16 :tmi.twitch.tv USERNOTICE #foam :`;
+const STANDARDPAYFORWARD = String.raw`@display-name=Forwarder;id=payfwd-1;login=forwarder;msg-id=standardpayforward;msg-param-sub-plan=1000;room-id=1;system-msg=Forwarder\sis\spaying\sforward\sthe\sgift\sthey\sgot!;tmi-sent-ts=1700000000000;user-id=16 :tmi.twitch.tv USERNOTICE #foam :`;
 
-export const COMMUNITYPAYFORWARD = String.raw`@display-name=Forwarder;id=payfwd-2;login=forwarder;msg-id=communitypayforward;msg-param-recipient-display-name=Lucky;msg-param-recipient-user-name=lucky;msg-param-sub-plan=1000;room-id=1;system-msg=Forwarder\sis\spaying\sforward\stheir\sgift\sto\sthe\scommunity!;tmi-sent-ts=1700000000000;user-id=16 :tmi.twitch.tv USERNOTICE #foam :`;
+const COMMUNITYPAYFORWARD = String.raw`@display-name=Forwarder;id=payfwd-2;login=forwarder;msg-id=communitypayforward;msg-param-recipient-display-name=Lucky;msg-param-recipient-user-name=lucky;msg-param-sub-plan=1000;room-id=1;system-msg=Forwarder\sis\spaying\sforward\stheir\sgift\sto\sthe\scommunity!;tmi-sent-ts=1700000000000;user-id=16 :tmi.twitch.tv USERNOTICE #foam :`;
 
-export const ANONSUBGIFT = String.raw`@display-name=AnonGifter;id=anongift-1;login=anongifter;msg-id=anonsubgift;msg-param-gift-months=1;msg-param-months=2;msg-param-recipient-display-name=Lucky;msg-param-recipient-user-name=lucky;msg-param-sub-plan=1000;room-id=1;system-msg=An\sanonymous\sgifter\sgifted\sa\sTier\s1\ssub\sto\sLucky!;tmi-sent-ts=1700000000000;user-id=17 :tmi.twitch.tv USERNOTICE #foam :`;
+const ANONSUBGIFT = String.raw`@display-name=AnonGifter;id=anongift-1;login=anongifter;msg-id=anonsubgift;msg-param-gift-months=1;msg-param-months=2;msg-param-recipient-display-name=Lucky;msg-param-recipient-user-name=lucky;msg-param-sub-plan=1000;room-id=1;system-msg=An\sanonymous\sgifter\sgifted\sa\sTier\s1\ssub\sto\sLucky!;tmi-sent-ts=1700000000000;user-id=17 :tmi.twitch.tv USERNOTICE #foam :`;
 
-export const ANONSUBMYSTERYGIFT = String.raw`@display-name=AnonGifter;id=anonmystery-1;login=anongifter;msg-id=anonsubmysterygift;msg-param-mass-gift-count=3;msg-param-sub-plan=1000;room-id=1;system-msg=An\sanonymous\sgifter\sgifted\s3\sTier\s1\sSubs!;tmi-sent-ts=1700000000000;user-id=17 :tmi.twitch.tv USERNOTICE #foam :`;
+const ANONSUBMYSTERYGIFT = String.raw`@display-name=AnonGifter;id=anonmystery-1;login=anongifter;msg-id=anonsubmysterygift;msg-param-mass-gift-count=3;msg-param-sub-plan=1000;room-id=1;system-msg=An\sanonymous\sgifter\sgifted\s3\sTier\s1\sSubs!;tmi-sent-ts=1700000000000;user-id=17 :tmi.twitch.tv USERNOTICE #foam :`;
 
-export const GIFTPAIDUPGRADE = String.raw`@display-name=UpgradeUser;id=upgrade-1;login=upgradeuser;msg-id=giftpaidupgrade;msg-param-sender-login=giftgiver;msg-param-sender-name=GiftGiver;room-id=1;system-msg=UpgradeUser\sis\scontinuing\sthe\sGift\sSub\sthey\sgot\sfrom\sGiftGiver!;tmi-sent-ts=1700000000000;user-id=18 :tmi.twitch.tv USERNOTICE #foam :`;
+const GIFTPAIDUPGRADE = String.raw`@display-name=UpgradeUser;id=upgrade-1;login=upgradeuser;msg-id=giftpaidupgrade;msg-param-sender-login=giftgiver;msg-param-sender-name=GiftGiver;room-id=1;system-msg=UpgradeUser\sis\scontinuing\sthe\sGift\sSub\sthey\sgot\sfrom\sGiftGiver!;tmi-sent-ts=1700000000000;user-id=18 :tmi.twitch.tv USERNOTICE #foam :`;
 
-export const ANONGIFTPAIDUPGRADE = String.raw`@display-name=UpgradeUser;id=upgrade-2;login=upgradeuser;msg-id=anongiftpaidupgrade;room-id=1;system-msg=UpgradeUser\sis\scontinuing\sthe\sGift\sSub\sthey\sgot\sfrom\san\sanonymous\suser!;tmi-sent-ts=1700000000000;user-id=18 :tmi.twitch.tv USERNOTICE #foam :`;
+const ANONGIFTPAIDUPGRADE = String.raw`@display-name=UpgradeUser;id=upgrade-2;login=upgradeuser;msg-id=anongiftpaidupgrade;room-id=1;system-msg=UpgradeUser\sis\scontinuing\sthe\sGift\sSub\sthey\sgot\sfrom\san\sanonymous\suser!;tmi-sent-ts=1700000000000;user-id=18 :tmi.twitch.tv USERNOTICE #foam :`;
 
-export const HIGHLIGHTED = String.raw`@display-name=Shouty;id=highlight-1;login=shouty;msg-id=highlighted-message;room-id=1;tmi-sent-ts=1700000000000;user-id=19 :tmi.twitch.tv USERNOTICE #foam :look at me`;
+const HIGHLIGHTED = String.raw`@display-name=Shouty;id=highlight-1;login=shouty;msg-id=highlighted-message;room-id=1;tmi-sent-ts=1700000000000;user-id=19 :tmi.twitch.tv USERNOTICE #foam :look at me`;
 
-export const SHARED_CHAT = String.raw`@display-name=Streamer;id=shared-1;login=streamer;msg-id=sharedchatnotice;room-id=1;system-msg=Shared\schat\sconnected\swith\sa\spartner\schannel.;tmi-sent-ts=1700000000000;user-id=20 :tmi.twitch.tv USERNOTICE #foam :`;
+const SHARED_CHAT = String.raw`@display-name=Streamer;id=shared-1;login=streamer;msg-id=sharedchatnotice;room-id=1;system-msg=Shared\schat\sconnected\swith\sa\spartner\schannel.;tmi-sent-ts=1700000000000;user-id=20 :tmi.twitch.tv USERNOTICE #foam :`;
 
-export const UNKNOWN_NOTICE = String.raw`@display-name=Twitch;id=unknown-1;login=twitch;msg-id=somethingtwitchaddedlastweek;room-id=1;system-msg=Something\sbrand\snew\shappened!;tmi-sent-ts=1700000000000;user-id=21 :tmi.twitch.tv USERNOTICE #foam :`;
+const UNKNOWN_NOTICE = String.raw`@display-name=Twitch;id=unknown-1;login=twitch;msg-id=somethingtwitchaddedlastweek;room-id=1;system-msg=Something\sbrand\snew\shappened!;tmi-sent-ts=1700000000000;user-id=21 :tmi.twitch.tv USERNOTICE #foam :`;
 
 export const ALL_NOTICES = [
   ['resub', RESUB],

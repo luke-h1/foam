@@ -3,8 +3,6 @@ import { createMMKV } from 'react-native-mmkv';
 import { Directory, File, Paths } from 'expo-file-system';
 import * as FileSystemLegacy from 'expo-file-system/legacy';
 
-export const BLURHASH = 'LBDbA}oL00Na~B9u57={XRay-Uj[';
-
 const CACHE_DIR_NAME = 'chat-img-cache';
 const RECORD_PREFIX = 'image-cache-record:';
 const MAX_CACHE_BYTES = 100 * 1024 * 1024;

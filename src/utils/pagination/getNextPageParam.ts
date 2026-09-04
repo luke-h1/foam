@@ -7,7 +7,7 @@ export const getNextPageParam: GetNextPageParamFunction<
   string | undefined,
   PaginatedList<TwitchStream>
 > = lastPage => {
-  if (!lastPage || !lastPage.pagination) {
+  if (!lastPage.pagination) {
     return undefined;
   }
   return lastPage.pagination.cursor || undefined;

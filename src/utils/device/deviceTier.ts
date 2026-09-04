@@ -40,7 +40,3 @@ export function getDeviceTier(): DeviceTier {
   cached = tier;
   return tier;
 }
-
-export function isLowEndDevice(): boolean {
-  return getDeviceTier() === 'low';
-}

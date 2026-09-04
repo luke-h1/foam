@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { toast } from 'sonner-native';
 
@@ -15,10 +15,10 @@ import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useFollowedChannelsQuery } from '@app/hooks/queries/useFollowedChannelsQuery';
-import { useFollowedStreamsQuery } from '@app/hooks/queries/useFollowedStreamsQuery';
 import { useStreamProfilePictures } from '@app/hooks/queries/useStreamProfilePictures';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
+import { followedStreamsQueryOptions } from '@app/lib/react-query/queries/twitch';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
 import { usePreference } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
@@ -106,7 +106,8 @@ export default function FollowingScreen() {
     isFetching,
     isError,
     isFetched,
-  } = useFollowedStreamsQuery(user?.id as string, {
+  } = useQuery({
+    ...followedStreamsQueryOptions(user?.id as string),
     enabled: !!user?.id,
     retry: 2,
     retryDelay: (attemptIndex: number) =>
@@ -119,10 +120,7 @@ export default function FollowingScreen() {
     refetch: refetchFollowingStreams,
   });
 
-  const rawStreamsArray = useMemo(
-    () => (Array.isArray(streams) ? streams : []),
-    [streams],
-  );
+  const rawStreamsArray = useMemo(() => streams ?? [], [streams]);
   const streamsArray = useStreamProfilePictures(
     rawStreamsArray,
     streamListLayout === 'media',
@@ -135,7 +133,7 @@ export default function FollowingScreen() {
     });
 
   const offlineChannels = useMemo(() => {
-    if (!Array.isArray(followedChannels)) {
+    if (!followedChannels) {
       return [];
     }
     const liveBroadcasterIds = new Set(

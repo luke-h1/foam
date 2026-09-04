@@ -8,7 +8,7 @@ import {
   buildUserUpdateSubscribeMessage,
 } from '@app/utils/seventv/seventvWsInterpreter';
 
-export const ID_WAIT_TIMEOUT = 30000;
+const ID_WAIT_TIMEOUT = 30000;
 
 type SeventvSubscribeMessage = SevenTvWsMessage<
   never,

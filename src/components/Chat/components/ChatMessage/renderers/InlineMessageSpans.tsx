@@ -127,25 +127,22 @@ function InlineMessageSpansComponent({
       continue;
     }
 
-    if (part.type === 'mention') {
-      // Self-subscribing so mention resolution re-renders only the span, not
-      // the row - see MentionSpan.
-      spans.push(
-        <MentionSpan
-          key={getPartKey(part, index)}
-          content={content}
-          baseTextStyle={baseTextStyle}
-          emoteLineStyle={emoteLineStyle}
-          compact={compact}
-          fontScale={fontScale}
-          getMentionColor={getMentionColor}
-          effectiveHighlightedUserSet={effectiveHighlightedUserSet}
-          normalisedCurrentUsername={normalisedCurrentUsername}
-          replyPlainMentionTarget={replyPlainMentionTarget}
-        />,
-      );
-      continue;
-    }
+    // Self-subscribing so mention resolution re-renders only the span, not
+    // the row - see MentionSpan.
+    spans.push(
+      <MentionSpan
+        key={getPartKey(part, index)}
+        content={content}
+        baseTextStyle={baseTextStyle}
+        emoteLineStyle={emoteLineStyle}
+        compact={compact}
+        fontScale={fontScale}
+        getMentionColor={getMentionColor}
+        effectiveHighlightedUserSet={effectiveHighlightedUserSet}
+        normalisedCurrentUsername={normalisedCurrentUsername}
+        replyPlainMentionTarget={replyPlainMentionTarget}
+      />,
+    );
   }
 
   flushPendingText();

@@ -2,7 +2,7 @@ import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import { createTextPart } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
 
-export const createMockUserstate = (
+const createMockUserstate = (
   displayName = 'TestUser',
 ): AnyChatMessageType['userstate'] =>
   createUserStateTags({

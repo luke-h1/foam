@@ -28,7 +28,7 @@ export function ChatPreferenceFormHighlightsSection({
       <Toggle
         label='Mention Feedback'
         systemImage='hand.tap'
-        isOn={preferences.chatMentionHaptics !== false}
+        isOn={preferences.chatMentionHaptics}
         onIsOnChange={value => update({ chatMentionHaptics: value })}
       />
     </Section>

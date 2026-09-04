@@ -107,7 +107,7 @@ export function SettingsAppearanceScreen() {
             title='Theme'
             subtitle='The redesigned app currently ships with one canonical visual mode'
             icon={{ icon: 'moon', color: theme.colorAmber }}
-            value={selectedTheme === 'foam-dark' ? 'Foam Dark' : selectedTheme}
+            value='Foam Dark'
             onPress={() => {
               update({ theme: 'foam-dark' });
             }}

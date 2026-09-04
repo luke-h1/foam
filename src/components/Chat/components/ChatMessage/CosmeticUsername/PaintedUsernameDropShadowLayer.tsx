@@ -2,8 +2,7 @@ import { type StyleProp, StyleSheet, TextStyle } from 'react-native';
 
 import { Text } from '@app/components/ui/Text/Text';
 import type { PaintShadow } from '@app/types/seventv/cosmetics';
-
-import { paintShadowTextColor } from './util/paintTextStyle/paintShadowTextColor';
+import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 
 interface PaintedUsernameDropShadowLayerProps {
   displayUsername: string;
@@ -20,7 +19,7 @@ export function PaintedUsernameDropShadowLayer({
   maskTextStyle,
   shadow,
 }: PaintedUsernameDropShadowLayerProps) {
-  const shadowColor = paintShadowTextColor(shadow);
+  const shadowColor = sevenTvColorToCss(shadow.color);
 
   return (
     <Text

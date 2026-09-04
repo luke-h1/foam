@@ -1,19 +1,13 @@
 import {
-  logEvent,
   logScreenView,
   setAnalyticsCollectionEnabled,
 } from '@react-native-firebase/analytics';
 
 import { logger } from '@app/utils/logger';
 
-import {
-  logAnalyticsEvent,
-  logAnalyticsScreenView,
-  setAnalyticsEnabled,
-} from './analytics';
+import { logAnalyticsScreenView, setAnalyticsEnabled } from './analytics';
 
 const mockedSetCollectionEnabled = jest.mocked(setAnalyticsCollectionEnabled);
-const mockedLogEvent = jest.mocked(logEvent);
 const mockedLogScreenView = jest.mocked(logScreenView);
 const mockedWarn = jest.spyOn(logger.main, 'warn').mockImplementation();
 
@@ -31,19 +25,6 @@ describe('analytics', () => {
     );
   });
 
-  test('logAnalyticsEvent forwards name and params', async () => {
-    await logAnalyticsEvent('experiment_exposure', {
-      experiment: 'chatComposerLayout',
-      variant: 'compact',
-    });
-
-    expect(mockedLogEvent).toHaveBeenCalledWith(
-      expect.anything(),
-      'experiment_exposure',
-      { experiment: 'chatComposerLayout', variant: 'compact' },
-    );
-  });
-
   test('logAnalyticsScreenView reports screen name and class', async () => {
     await logAnalyticsScreenView('/streams/foam');
 
@@ -54,16 +35,13 @@ describe('analytics', () => {
   });
 
   test('swallows and logs SDK failures instead of throwing', async () => {
-    mockedLogEvent.mockRejectedValueOnce(new Error('offline'));
+    mockedLogScreenView.mockRejectedValueOnce(new Error('offline'));
 
     await expect(
-      logAnalyticsEvent('experiment_exposure', {
-        experiment: 'chatComposerLayout',
-        variant: 'control',
-      }),
+      logAnalyticsScreenView('/streams/foam'),
     ).resolves.toBeUndefined();
     expect(mockedWarn).toHaveBeenCalledWith(
-      'Failed to log analytics event',
+      'Failed to log analytics screen view',
       expect.any(Error),
     );
   });

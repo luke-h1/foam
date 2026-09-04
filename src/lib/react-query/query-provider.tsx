@@ -9,10 +9,6 @@ import {
 import { fetch } from 'expo/fetch';
 
 import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
-import {
-  listenNetworkConfirmed,
-  listenNetworkLost,
-} from '@app/utils/network/network-events';
 
 import { queryClient } from './query-client';
 
@@ -41,39 +37,15 @@ async function checkIsOnline(): Promise<boolean> {
   }
 }
 
-let receivedNetworkLost = false;
-let receivedNetworkConfirmed = false;
-let isNetworkStateUnclear = false;
-
-listenNetworkLost(() => {
-  receivedNetworkLost = true;
-  onlineManager.setOnline(false);
-});
-
-listenNetworkConfirmed(() => {
-  receivedNetworkConfirmed = true;
-  onlineManager.setOnline(true);
-});
-
 let checkPromise: Promise<void> | undefined;
 
 function checkIsOnlineIfNeeded() {
   if (checkPromise) {
     return;
   }
-  receivedNetworkLost = false;
-  receivedNetworkConfirmed = false;
   checkPromise = checkIsOnline().then(nextIsOnline => {
     checkPromise = undefined;
-    if (nextIsOnline && receivedNetworkLost) {
-      isNetworkStateUnclear = true;
-    }
-    if (!nextIsOnline && receivedNetworkConfirmed) {
-      isNetworkStateUnclear = true;
-    }
-    if (!isNetworkStateUnclear) {
-      onlineManager.setOnline(nextIsOnline);
-    }
+    onlineManager.setOnline(nextIsOnline);
   });
 }
 
@@ -86,7 +58,7 @@ function startConnectivityPolling() {
     return;
   }
   connectivityPollInterval = setInterval(() => {
-    if (!onlineManager.isOnline() || isNetworkStateUnclear) {
+    if (!onlineManager.isOnline()) {
       checkIsOnlineIfNeeded();
     }
   }, 2000);

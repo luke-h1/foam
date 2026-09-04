@@ -7,7 +7,6 @@ import {
   DEFAULT_RECONNECT_LIMIT,
   FAST_FIRST_RECONNECT_INTERVAL_MS,
   ReadyState,
-  setupSocketPing,
 } from './constants';
 import type { Options, WebSocketEventMap } from './types';
 
@@ -23,63 +22,17 @@ export function getReconnectDelay(
 
 const RECONNECT_MAX_JITTER_MS = 250;
 
-function getReconnectDelayWithJitter(
-  attempt: number,
-  baseInterval: number,
-): number {
-  return (
-    getReconnectDelay(attempt, baseInterval) +
-    Math.random() * RECONNECT_MAX_JITTER_MS
-  );
-}
-
-export interface Setters {
-  setLastMessage: (message: WebSocketEventMap['message']) => void;
-  setReadyState: (readyState: ReadyState) => void;
-}
-
 export function attachListeners(
   instance: WebSocket,
-  setters: Setters,
+  setReadyState: (readyState: ReadyState) => void,
   optionsRef: RefObject<Options>,
   reconnect: () => void,
   reconnectCount: RefObject<number>,
 ): () => void {
-  const { setLastMessage, setReadyState } = setters;
-
-  let interval: ReturnType<typeof setInterval>;
   let reconnectTimeout: ReturnType<typeof setTimeout> | undefined;
-
-  /**
-   * Error is normally followed by close, and both arm a reconnect; without clearing first the second assignment orphans the first timer and two sockets open.
-   */
-  function scheduleReconnect(attempt: number, baseInterval: number): void {
-    if (reconnectTimeout) {
-      clearTimeout(reconnectTimeout);
-    }
-    const delay = getReconnectDelayWithJitter(attempt, baseInterval);
-    reconnectTimeout = setTimeout(() => {
-      reconnectTimeout = undefined;
-      reconnectCount.current += 1;
-      reconnect();
-    }, delay);
-  }
-
-  if (optionsRef.current.fromSocketIO) {
-    interval = setupSocketPing(instance);
-  }
 
   instance.onmessage = (message: WebSocketEventMap['message']) => {
     optionsRef.current.onMessage?.(message);
-
-    if (!optionsRef.current.trackLastMessage) {
-      return;
-    }
-    const messageFilter = optionsRef.current.filter;
-    if (messageFilter !== undefined && messageFilter(message) !== true) {
-      return;
-    }
-    setLastMessage(message);
   };
 
   instance.onopen = () => {
@@ -92,41 +45,35 @@ export function attachListeners(
     optionsRef.current.onClose?.(event);
     setReadyState(ReadyState.CLOSED);
 
-    if (optionsRef.current.shouldReconnect?.(event)) {
-      const reconnectAttempts =
-        optionsRef.current.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT;
-      const baseInterval =
-        optionsRef.current.reconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS;
-
-      if (reconnectCount.current < reconnectAttempts) {
-        scheduleReconnect(reconnectCount.current, baseInterval);
-      } else {
-        optionsRef.current.onReconnectStop?.(reconnectAttempts);
-        logger.main.error(
-          `Maximum reconnect attempts reached: ${reconnectAttempts}`,
-        );
-      }
+    if (!optionsRef.current.shouldReconnect?.(event)) {
+      return;
     }
+    const reconnectAttempts =
+      optionsRef.current.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT;
+    if (reconnectCount.current >= reconnectAttempts) {
+      logger.main.error(
+        `Maximum reconnect attempts reached: ${reconnectAttempts}`,
+      );
+      return;
+    }
+    const baseInterval =
+      optionsRef.current.reconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS;
+    if (reconnectTimeout) {
+      clearTimeout(reconnectTimeout);
+    }
+    reconnectTimeout = setTimeout(
+      () => {
+        reconnectTimeout = undefined;
+        reconnectCount.current += 1;
+        reconnect();
+      },
+      getReconnectDelay(reconnectCount.current, baseInterval) +
+        Math.random() * RECONNECT_MAX_JITTER_MS,
+    );
   };
 
   instance.onerror = (event: WebSocketEventMap['error']) => {
     optionsRef.current.onError?.(event);
-
-    if (optionsRef.current.retryOnError) {
-      const reconnectAttempts =
-        optionsRef.current.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT;
-      const baseInterval =
-        optionsRef.current.reconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS;
-
-      if (reconnectCount.current < reconnectAttempts) {
-        scheduleReconnect(reconnectCount.current, baseInterval);
-      } else {
-        optionsRef.current.onReconnectStop?.(reconnectAttempts);
-        logger.main.error(
-          `Maximum reconnect attempts reached: ${reconnectAttempts}`,
-        );
-      }
-    }
   };
 
   return () => {
@@ -135,8 +82,5 @@ export function attachListeners(
       clearTimeout(reconnectTimeout);
     }
     instance.close();
-    if (interval) {
-      clearInterval(interval);
-    }
   };
 }

@@ -4,11 +4,9 @@ import type {
   BaseUserNoticeTags,
   BitsBadgeTierTags,
   CharityDonationTags,
-  ExtendSubTags,
   GiftPaidUpgradeTags,
   HighlightedMessageTags,
   ModiversaryTags,
-  PayForwardTags,
   PrimePaidUpgradeTags,
   RaidTags,
   RewardGiftTags,
@@ -307,44 +305,6 @@ export function createPrimePaidUpgradeTags(
     'msg-param-sub-plan': 'Prime',
     'msg-param-sub-plan-name': 'Prime',
     'msg-param-cumulative-months': '3',
-    ...overrides,
-  };
-}
-
-export function createExtendSubTags(
-  overrides: Partial<ExtendSubTags> = {},
-): ExtendSubTags {
-  return {
-    ...createBaseUserNoticeTags({
-      'display-name': 'ExtendUser',
-      login: 'extenduser',
-      'system-msg': 'ExtendUser extended their subscription',
-    }),
-    'msg-id': 'extendsub',
-    'msg-param-sub-plan': '2000',
-    'msg-param-sub-plan-name': 'Tier 1',
-    'msg-param-cumulative-months': '6',
-    'msg-param-streak-months': '3',
-    'msg-param-should-share-streak': '1',
-    ...overrides,
-  };
-}
-
-export function createPayForwardTags(
-  overrides: Partial<PayForwardTags> = {},
-): PayForwardTags {
-  return {
-    ...createBaseUserNoticeTags({
-      'display-name': 'ForwardUser',
-      login: 'forwarduser',
-      'system-msg': 'ForwardUser paid forward a subscription',
-    }),
-    'msg-id': 'standardpayforward',
-    'msg-param-sub-plan': '2000',
-    'msg-param-sub-plan-name': 'Tier 1',
-    'msg-param-recipient-display-name': 'Recipient',
-    'msg-param-recipient-user-name': 'recipient',
-    'msg-param-months': '1',
     ...overrides,
   };
 }

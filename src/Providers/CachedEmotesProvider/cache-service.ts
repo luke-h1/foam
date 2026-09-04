@@ -353,15 +353,12 @@ export function subscribeCachedEmoteRef(
       });
     }
   }
-  let set = listeners.get(url);
-  if (!set) {
-    set = new Set();
-    listeners.set(url, set);
-  }
+  const set = listeners.get(url) ?? new Set<typeof cb>();
+  listeners.set(url, set);
   set.add(cb);
   return () => {
-    set?.delete(cb);
-    if (set && set.size === 0) {
+    set.delete(cb);
+    if (set.size === 0) {
       listeners.delete(url);
     }
   };

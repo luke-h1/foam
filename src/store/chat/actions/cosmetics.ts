@@ -37,8 +37,6 @@ import {
   reportMissingBadge,
 } from './missingBadges';
 
-export { getMissingBadgeIds, hasMissingBadges } from './missingBadges';
-
 const COSMETIC_BINDINGS_BUMP_COALESCE_MS = 1000;
 let cosmeticBindingsBumpTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -63,7 +61,7 @@ let cosmeticBindingsDirty = false;
  * Debounced MMKV snapshot; definitions and bindings persist under separate
  * keys so only the dirty group(s) flush.
  */
-export const scheduleCosmeticsPersist = (
+const scheduleCosmeticsPersist = (
   kind: 'definitions' | 'bindings' | 'both' = 'both',
 ): void => {
   if (kind !== 'bindings') {

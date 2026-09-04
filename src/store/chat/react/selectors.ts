@@ -1,13 +1,12 @@
 import { useSelector } from '@legendapp/state/react';
 
-import { useEmoteRenderPreferences } from '@app/store/preferences/selectors';
+import { useEmoteRenderPreferences } from '@app/store/preferenceStore';
 import { getChatterinoBadges } from '@app/utils/chat/chatterinoBadges';
 
 import { getChannelPersonalEmotes } from '../actions/personalEmotes';
 import { chatStore$ } from '../observables/chatStore';
 import {
   type ChannelCacheType,
-  emptyResolvedEmoteData,
   type GlobalCacheType,
   makeEmptyEmoteData,
   makeEmptyGlobalCacheData,
@@ -53,58 +52,54 @@ const EMPTY_SUBSCRIBER_PROFILES: NonNullable<
 const EMPTY_PERSONAL_EMOTES: Record<string, SanitisedEmote[]> = {};
 
 function resolveEmoteData(
-  cache: ChannelEmoteCache | undefined,
+  cache: ChannelEmoteCache,
   preferences: ReturnType<typeof useEmoteRenderPreferences>,
 ): ChannelEmoteData {
-  if (!cache) {
-    return emptyResolvedEmoteData;
-  }
-
   return {
     twitchChannelEmotes: preferences.showTwitchEmotes
-      ? (cache.twitchChannelEmotes ?? EMPTY_EMOTES)
+      ? cache.twitchChannelEmotes
       : EMPTY_EMOTES,
     twitchGlobalEmotes: preferences.showTwitchEmotes
-      ? (cache.twitchGlobalEmotes ?? EMPTY_EMOTES)
+      ? cache.twitchGlobalEmotes
       : EMPTY_EMOTES,
     twitchSubscriberEmotes: preferences.showTwitchEmotes
-      ? (cache.twitchSubscriberEmotes ?? EMPTY_EMOTES)
+      ? cache.twitchSubscriberEmotes
       : EMPTY_EMOTES,
     twitchSubscriberChannelProfiles: preferences.showTwitchEmotes
-      ? (cache.twitchSubscriberChannelProfiles ?? EMPTY_SUBSCRIBER_PROFILES)
+      ? cache.twitchSubscriberChannelProfiles
       : EMPTY_SUBSCRIBER_PROFILES,
     sevenTvPersonalEmotes: preferences.show7TvEmotes
-      ? (cache.sevenTvPersonalEmotes ?? EMPTY_PERSONAL_EMOTES)
+      ? cache.sevenTvPersonalEmotes
       : EMPTY_PERSONAL_EMOTES,
     sevenTvChannelEmotes: preferences.show7TvEmotes
-      ? (cache.sevenTvChannelEmotes ?? EMPTY_EMOTES)
+      ? cache.sevenTvChannelEmotes
       : EMPTY_EMOTES,
     sevenTvGlobalEmotes: preferences.show7TvEmotes
-      ? (cache.sevenTvGlobalEmotes ?? EMPTY_EMOTES)
+      ? cache.sevenTvGlobalEmotes
       : EMPTY_EMOTES,
     ffzChannelEmotes: preferences.showFFzEmotes
-      ? (cache.ffzChannelEmotes ?? EMPTY_EMOTES)
+      ? cache.ffzChannelEmotes
       : EMPTY_EMOTES,
     ffzGlobalEmotes: preferences.showFFzEmotes
-      ? (cache.ffzGlobalEmotes ?? EMPTY_EMOTES)
+      ? cache.ffzGlobalEmotes
       : EMPTY_EMOTES,
     bttvGlobalEmotes: preferences.showBttvEmotes
-      ? (cache.bttvGlobalEmotes ?? EMPTY_EMOTES)
+      ? cache.bttvGlobalEmotes
       : EMPTY_EMOTES,
     bttvChannelEmotes: preferences.showBttvEmotes
-      ? (cache.bttvChannelEmotes ?? EMPTY_EMOTES)
+      ? cache.bttvChannelEmotes
       : EMPTY_EMOTES,
     twitchChannelBadges: preferences.showTwitchBadges
-      ? (cache.twitchChannelBadges ?? EMPTY_BADGES)
+      ? cache.twitchChannelBadges
       : EMPTY_BADGES,
     twitchGlobalBadges: preferences.showTwitchBadges
-      ? (cache.twitchGlobalBadges ?? EMPTY_BADGES)
+      ? cache.twitchGlobalBadges
       : EMPTY_BADGES,
     ffzChannelBadges: preferences.showFFzBadges
-      ? (cache.ffzChannelBadges ?? EMPTY_BADGES)
+      ? cache.ffzChannelBadges
       : EMPTY_BADGES,
     ffzGlobalBadges: preferences.showFFzBadges
-      ? (cache.ffzGlobalBadges ?? EMPTY_BADGES)
+      ? cache.ffzGlobalBadges
       : EMPTY_BADGES,
     chatterinoBadges: preferences.showChatterinoEmotes
       ? getChatterinoBadges()
@@ -157,12 +152,6 @@ export const useCurrentEmoteData = () => {
     const channelId = chatStore$.currentChannelId.get();
     return getChannelEmoteData(channelId);
   });
-  const preferences = useEmoteRenderPreferences();
-  return resolveEmoteData(cache, preferences);
-};
-
-export const useChannelEmoteData = (channelId: string | null) => {
-  const cache = useSelector(() => getChannelEmoteData(channelId));
   const preferences = useEmoteRenderPreferences();
   return resolveEmoteData(cache, preferences);
 };

@@ -47,8 +47,6 @@ export interface SubscriptionTags extends BaseUserNoticeTags {
   'msg-param-sub-plan-name': string;
 }
 
-export type ResubTags = SubscriptionTags;
-
 export interface SubGiftTags extends BaseUserNoticeTags {
   'msg-id': 'subgift';
   'msg-param-sub-plan': MsgParamSubPlan;
@@ -192,11 +190,6 @@ export interface SkipSubsModeMessageTags extends BaseUserNoticeTags {
 
 export interface MidnightSquidTags extends BaseUserNoticeTags {
   'msg-id': 'midnightsquid';
-}
-
-export interface SharedChatSourceTags {
-  'source-room-id'?: string;
-  'source-msg-id'?: string;
 }
 
 export type UserNoticeVariantMap = {

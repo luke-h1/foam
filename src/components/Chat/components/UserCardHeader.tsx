@@ -1,11 +1,12 @@
 import { StyleSheet, View } from 'react-native';
 
 import { useSelector } from '@legendapp/state/react';
+import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
-import { useUserQuery } from '@app/hooks/queries/useUserQuery';
+import { userQueryOptions } from '@app/lib/react-query/queries/twitch';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { theme } from '@app/styles/themes';
 import { formatDate } from '@app/utils/date-time/date';
@@ -31,7 +32,8 @@ export function UserCardHeader({
   username,
 }: UserCardHeaderProps) {
   const queryLogin = login ?? username.toLowerCase();
-  const { data: user } = useUserQuery(queryLogin, {
+  const { data: user } = useQuery({
+    ...userQueryOptions(queryLogin),
     enabled: Boolean(queryLogin),
   });
 
@@ -54,7 +56,7 @@ export function UserCardHeader({
   });
 
   const joinedDate = user?.created_at
-    ? formatDate(user.created_at, 'MMMM D YYYY')
+    ? formatDate(user.created_at, 'MMMM d yyyy')
     : null;
   const showLogin = Boolean(login) && login !== username.toLowerCase();
 

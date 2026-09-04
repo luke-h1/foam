@@ -1,6 +1,6 @@
 import { Presets } from 'react-native-pulsar';
 
-import { getPreferences } from '@app/store/preferences/state';
+import { getPreferences } from '@app/store/preferenceStore';
 
 function hapticsEnabled(): boolean {
   return getPreferences().hapticFeedback;

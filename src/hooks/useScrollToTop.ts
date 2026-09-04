@@ -1,4 +1,4 @@
-import { Ref, RefObject, useRef } from 'react';
+import { Ref, RefObject } from 'react';
 
 import { useScrollToTop as useNavigationScrollToTop } from 'expo-router';
 
@@ -116,14 +116,3 @@ export function useScrollToTop(ref: ScrollableRef, offset: number = 0) {
 
   useNavigationScrollToTop(scrollToTopRef);
 }
-
-export const useScrollRef =
-  process.env.EXPO_OS === 'web'
-    ? () => undefined
-    : () => {
-        const ref = useRef<ScrollableWrapper>(null);
-
-        useScrollToTop(ref);
-
-        return ref;
-      };

@@ -60,7 +60,7 @@ export function CategoryCard({ category }: Props) {
     });
   }, [category.id, category.name]);
 
-  if (!category?.id) {
+  if (!category.id) {
     return null;
   }
 
@@ -74,8 +74,8 @@ export function CategoryCard({ category }: Props) {
       <View style={styles.wrapper}>
         <Image
           source={category.box_art_url
-            ?.replace('{width}', String(IMAGE_SOURCE_WIDTH))
-            ?.replace('{height}', String(IMAGE_SOURCE_HEIGHT))}
+            .replace('{width}', String(IMAGE_SOURCE_WIDTH))
+            .replace('{height}', String(IMAGE_SOURCE_HEIGHT))}
           style={styles.image}
           contentFit='cover'
         />

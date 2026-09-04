@@ -18,18 +18,15 @@ const GUARD_KEY = 'globalChatResources';
 export function ensureGlobalChatResources(): Promise<void> {
   const cache = chatStore$.persisted.globalCaches.peek();
   const hasEmotes =
-    cache &&
-    (cache.twitchGlobalEmotes.length > 0 ||
-      cache.sevenTvGlobalEmotes.length > 0 ||
-      cache.bttvGlobalEmotes.length > 0 ||
-      cache.ffzGlobalEmotes.length > 0);
+    cache.twitchGlobalEmotes.length > 0 ||
+    cache.sevenTvGlobalEmotes.length > 0 ||
+    cache.bttvGlobalEmotes.length > 0 ||
+    cache.ffzGlobalEmotes.length > 0;
   // Checked separately: a channel-copy seed can stamp `lastUpdated` with
   // badges still empty, serving an empty Badges tab until the TTL expired.
   const hasBadges =
-    cache &&
-    (cache.twitchGlobalBadges.length > 0 || cache.ffzGlobalBadges.length > 0);
+    cache.twitchGlobalBadges.length > 0 || cache.ffzGlobalBadges.length > 0;
   if (
-    cache &&
     hasEmotes &&
     hasBadges &&
     Date.now() - cache.lastUpdated < CACHE_DURATION
@@ -75,27 +72,19 @@ export function ensureGlobalChatResources(): Promise<void> {
       });
 
       chatStore$.persisted.globalCaches.set({
-        lastUpdated: anyFailure ? (existing?.lastUpdated ?? 0) : Date.now(),
+        lastUpdated: anyFailure ? existing.lastUpdated : Date.now(),
         twitchGlobalEmotes:
-          emoteByKey.get('twitchGlobalEmotes') ??
-          existing?.twitchGlobalEmotes ??
-          [],
+          emoteByKey.get('twitchGlobalEmotes') ?? existing.twitchGlobalEmotes,
         sevenTvGlobalEmotes:
-          emoteByKey.get('sevenTvGlobalEmotes') ??
-          existing?.sevenTvGlobalEmotes ??
-          [],
+          emoteByKey.get('sevenTvGlobalEmotes') ?? existing.sevenTvGlobalEmotes,
         ffzGlobalEmotes:
-          emoteByKey.get('ffzGlobalEmotes') ?? existing?.ffzGlobalEmotes ?? [],
+          emoteByKey.get('ffzGlobalEmotes') ?? existing.ffzGlobalEmotes,
         bttvGlobalEmotes:
-          emoteByKey.get('bttvGlobalEmotes') ??
-          existing?.bttvGlobalEmotes ??
-          [],
+          emoteByKey.get('bttvGlobalEmotes') ?? existing.bttvGlobalEmotes,
         twitchGlobalBadges:
-          badgeByKey.get('twitchGlobalBadges') ??
-          existing?.twitchGlobalBadges ??
-          [],
+          badgeByKey.get('twitchGlobalBadges') ?? existing.twitchGlobalBadges,
         ffzGlobalBadges:
-          badgeByKey.get('ffzGlobalBadges') ?? existing?.ffzGlobalBadges ?? [],
+          badgeByKey.get('ffzGlobalBadges') ?? existing.ffzGlobalBadges,
       });
     });
   });

@@ -13,7 +13,7 @@ import {
 } from '@app/components/Chat/components/ChatMessage/rowVisibility';
 import { Text } from '@app/components/ui/Text/Text';
 import { setSharedAnimationEnabled } from '@app/lib/expo-image/setSharedAnimationEnabled';
-import { usePreferences } from '@app/store/preferences/selectors';
+import { usePreferences } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 
 const emoteUrls = [

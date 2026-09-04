@@ -47,10 +47,6 @@ export function useEmoteReprocessing({
 
     const emoteData = getCurrentEmoteData(channelId);
 
-    if (!emoteData) {
-      return;
-    }
-
     if (
       !hasEnrichmentEmoteSources(emoteData, {
         includePersonalEmotes: show7TvEmotes,

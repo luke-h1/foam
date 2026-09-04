@@ -341,15 +341,21 @@ export function usePreference<K extends keyof Preferences>(
   return useSelector(() => preferences$[key].get()) as Preferences[K];
 }
 
+function updatePreferences(payload: Partial<Preferences>): void {
+  preferences$.assign({
+    ...payload,
+    updatedAt: Date.now(),
+  });
+}
+
+/**
+ * Returns a module-level function so memo()d children that receive it keep
+ * their bailout.
+ */
 export function useUpdatePreferences(): (
   payload: Partial<Preferences>,
 ) => void {
-  return (payload: Partial<Preferences>) => {
-    preferences$.assign({
-      ...payload,
-      updatedAt: Date.now(),
-    });
-  };
+  return updatePreferences;
 }
 
 export function replacePreferences(preferences: Preferences): void {

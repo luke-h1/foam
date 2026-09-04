@@ -11,10 +11,6 @@ export type RowIcon =
     }
   | undefined;
 
-export interface ComposeRowComponent {
-  isComposeRow?: boolean;
-}
-
 export function resolveIconName(
   icon: SFSymbol,
   androidIcon: AndroidSymbol | undefined,

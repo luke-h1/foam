@@ -351,5 +351,3 @@ export function createApiClient({
     getAuthToken: () => authToken,
   };
 }
-
-export type ApiClient = ReturnType<typeof createApiClient>;

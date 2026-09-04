@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { LegendListRenderItemProps } from '@legendapp/list/react-native';
 import { LegendList } from '@legendapp/list/react-native';
 import { SectionList as LegendSectionList } from '@legendapp/list/section-list';
+import { useQuery } from '@tanstack/react-query';
 
 import { Button } from '@app/components/Button/Button';
 import { BadgePreviewSheet } from '@app/components/Chat/components/BadgePreviewSheet/BadgePreviewSheet';
@@ -28,7 +29,7 @@ import {
 import { Image } from '@app/components/Image/Image';
 import { SegmentedControl } from '@app/components/SegmentedControl/SegmentedControl';
 import { Text } from '@app/components/ui/Text/Text';
-import { useSevenTvBadgesQuery } from '@app/hooks/queries/useSevenTvBadgesQuery';
+import { sevenTvBadgesQueryOptions } from '@app/lib/react-query/queries/emotes';
 import { EmoteBadgeViewerLoader } from '@app/screens/SettingsScreen/components/EmoteBadgeViewerLoader';
 import { ensureGlobalChatResources } from '@app/store/chat/actions/globalResourceEnsure';
 import { useGlobalEmoteBadgeCaches } from '@app/store/chat/react/selectors';
@@ -258,8 +259,9 @@ function BadgesTab({
   }, []);
 
   const twitchLoading = !ensureSettled && twitchGlobalBadges.length === 0;
-  const { data: sevenTvBadges, isLoading: sevenTvLoading } =
-    useSevenTvBadgesQuery();
+  const { data: sevenTvBadges, isLoading: sevenTvLoading } = useQuery(
+    sevenTvBadgesQueryOptions(),
+  );
 
   const badges = useMemo(
     () => [...twitchGlobalBadges, ...(sevenTvBadges ?? [])],

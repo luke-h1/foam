@@ -252,7 +252,7 @@ export const useChatScroll = ({
 
       lastAtBottomRef.current = resolved;
 
-      if (resolved === false) {
+      if (!resolved) {
         if (scrollThrottleRef.current) {
           clearTimeout(scrollThrottleRef.current);
           scrollThrottleRef.current = null;

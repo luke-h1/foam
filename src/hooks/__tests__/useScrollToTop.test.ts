@@ -3,7 +3,7 @@ import type { RefObject } from 'react';
 import { act, renderHook } from '@testing-library/react-native';
 import * as ExpoRouter from 'expo-router';
 
-import { useScrollRef, useScrollToTop } from '../useScrollToTop';
+import { useScrollToTop } from '../useScrollToTop';
 
 const mockUseNavigationScrollToTop = jest
   .spyOn(ExpoRouter, 'useScrollToTop')
@@ -125,12 +125,5 @@ describe('useScrollToTop', () => {
 
     renderHook(() => useScrollToTop({ current: null }));
     expect(getRegisteredRef().current).toBeNull();
-  });
-
-  test('creates a native scroll ref helper', () => {
-    const { result } = renderHook(() => useScrollRef());
-
-    expect(result.current).toEqual({ current: null });
-    expect(mockUseNavigationScrollToTop).toHaveBeenCalled();
   });
 });

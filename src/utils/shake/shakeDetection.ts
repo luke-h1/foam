@@ -4,22 +4,16 @@ export interface AccelerometerSample {
   z: number;
 }
 
-export interface ShakeDetectorOptions {
-  magnitudeThreshold?: number;
-  minSpikes?: number;
-  windowMs?: number;
-}
-
 export type ShakeDetector = (
   sample: AccelerometerSample,
   timestampMs: number,
 ) => boolean;
 
-export function createShakeDetector({
-  magnitudeThreshold = 2.2,
-  minSpikes = 3,
-  windowMs = 1200,
-}: ShakeDetectorOptions = {}): ShakeDetector {
+const magnitudeThreshold = 2.2;
+const minSpikes = 3;
+const windowMs = 1200;
+
+export function createShakeDetector(): ShakeDetector {
   let spikeTimestamps: number[] = [];
 
   return (sample, timestampMs) => {

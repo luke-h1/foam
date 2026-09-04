@@ -19,8 +19,6 @@ import { ErrorBoundary } from '@app/screens/ErrorScreen/ErrorBoundary';
 import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
 
-import { ScreenDimensionsProvider } from './ScreenDimensionsProvider/ScreenDimensionsProvider';
-
 function QueryDevTools({ children }: PropsWithChildren) {
   return (
     <>
@@ -42,28 +40,26 @@ export function Providers({ children }: PropsWithChildren) {
   return (
     <AuthContextProvider>
       <AccentColorProvider>
-        <ScreenDimensionsProvider>
-          <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-            <ErrorBoundary
-              catchErrors={BaseConfig.catchErrors}
-              onReset={() => setRecoveredFromError(true)}
-            >
-              <GestureHandlerRootView style={styles.gestureContainer}>
-                <PortalProvider>
-                  <QueryProvider>
-                    <QueryDevTools>
-                      <PressablesConfig
-                        config={{ minScale: motion.pressMinScale }}
-                      >
-                        {children}
-                      </PressablesConfig>
-                    </QueryDevTools>
-                  </QueryProvider>
-                </PortalProvider>
-              </GestureHandlerRootView>
-            </ErrorBoundary>
-          </SafeAreaProvider>
-        </ScreenDimensionsProvider>
+        <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+          <ErrorBoundary
+            catchErrors={BaseConfig.catchErrors}
+            onReset={() => setRecoveredFromError(true)}
+          >
+            <GestureHandlerRootView style={styles.gestureContainer}>
+              <PortalProvider>
+                <QueryProvider>
+                  <QueryDevTools>
+                    <PressablesConfig
+                      config={{ minScale: motion.pressMinScale }}
+                    >
+                      {children}
+                    </PressablesConfig>
+                  </QueryDevTools>
+                </QueryProvider>
+              </PortalProvider>
+            </GestureHandlerRootView>
+          </ErrorBoundary>
+        </SafeAreaProvider>
       </AccentColorProvider>
     </AuthContextProvider>
   );

@@ -39,7 +39,6 @@ import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
 
 import { AnalyticsProvider } from './AnalyticsProvider';
-import { ScreenDimensionsProvider } from './ScreenDimensionsProvider/ScreenDimensionsProvider';
 
 function QueryProviderWithDevTools({ children }: PropsWithChildren) {
   return (
@@ -124,41 +123,39 @@ export function Providers({ children }: PropsWithChildren) {
   return (
     <AuthContextProvider>
       <AccentColorProvider>
-        <ScreenDimensionsProvider>
-          <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-            <GestureHandlerRootView style={styles.gestureContainer}>
-              <ErrorBoundary
-                catchErrors={BaseConfig.catchErrors}
-                onReset={() => setRecoveredFromError(true)}
-              >
-                <KeyboardProvider preload>
-                  <PortalProvider>
-                    {__DEV__ ? <DevTools /> : null}
-                    <AnalyticsProvider>
-                      <QueryProviderWithDevTools>
-                        <GlobalErrorGate />
-                        <ShakeToReport />
-                        <OfflineBanner />
-                        {/* No global press haptic: feed taps stay silent
+        <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+          <GestureHandlerRootView style={styles.gestureContainer}>
+            <ErrorBoundary
+              catchErrors={BaseConfig.catchErrors}
+              onReset={() => setRecoveredFromError(true)}
+            >
+              <KeyboardProvider preload>
+                <PortalProvider>
+                  {__DEV__ ? <DevTools /> : null}
+                  <AnalyticsProvider>
+                    <QueryProviderWithDevTools>
+                      <GlobalErrorGate />
+                      <ShakeToReport />
+                      <OfflineBanner />
+                      {/* No global press haptic: feed taps stay silent
                             so deliberate actions (send, block, refresh)
                             keep their weight. Haptics are opt-in per
                             control via lib/haptics. */}
-                        <PressablesConfig
-                          config={{ minScale: motion.pressMinScale }}
-                        >
-                          {children}
-                          <ActionMenuHost />
-                          <ChangelogAndroidHost />
-                          <MediaPermissionHost />
-                        </PressablesConfig>
-                      </QueryProviderWithDevTools>
-                    </AnalyticsProvider>
-                  </PortalProvider>
-                </KeyboardProvider>
-              </ErrorBoundary>
-            </GestureHandlerRootView>
-          </SafeAreaProvider>
-        </ScreenDimensionsProvider>
+                      <PressablesConfig
+                        config={{ minScale: motion.pressMinScale }}
+                      >
+                        {children}
+                        <ActionMenuHost />
+                        <ChangelogAndroidHost />
+                        <MediaPermissionHost />
+                      </PressablesConfig>
+                    </QueryProviderWithDevTools>
+                  </AnalyticsProvider>
+                </PortalProvider>
+              </KeyboardProvider>
+            </ErrorBoundary>
+          </GestureHandlerRootView>
+        </SafeAreaProvider>
       </AccentColorProvider>
     </AuthContextProvider>
   );

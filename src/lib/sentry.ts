@@ -18,7 +18,7 @@ import type { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
  * Auto-instruments Expo Router navigation; no manual
  * registerNavigationContainer call is needed.
  */
-export const navigationIntegration = expoRouterIntegration({
+const navigationIntegration = expoRouterIntegration({
   enableTimeToInitialDisplay: true,
   enablePrefetchTracking: true,
   enableTimeToInitialDisplayForPreloadedRoutes: true,
@@ -183,11 +183,6 @@ type SentryRootComponent = Parameters<typeof Sentry.wrap>[0];
 
 export function wrapWithSentry(RootComponent: SentryRootComponent) {
   return Sentry.wrap(RootComponent);
-}
-
-export function showFeedbackWidget(): void {
-  init();
-  Sentry.showFeedbackWidget();
 }
 
 export type FeedbackType = 'bug' | 'idea';

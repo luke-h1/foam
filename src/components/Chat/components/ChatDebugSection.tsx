@@ -82,7 +82,7 @@ export function ChatDebugSection<TPayload>({
                 style={styles.mono}
                 variant='mono'
               >
-                {entry.dropped ? `[${'DROPPED'}] ` : ''}
+                {entry.dropped ? '[DROPPED] ' : ''}
                 {entry.line}
               </Text>
             ))

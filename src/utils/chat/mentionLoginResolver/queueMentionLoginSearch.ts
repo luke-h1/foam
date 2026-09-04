@@ -4,6 +4,7 @@ import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchC
 import { lastMentionSearchQuery } from '@app/utils/chat/mentionLoginResolver/lastMentionSearchQuery';
 import { mentionSearchRequestId } from '@app/utils/chat/mentionLoginResolver/mentionSearchRequestId';
 import { mentionSearchTimer } from '@app/utils/chat/mentionLoginResolver/mentionSearchTimer';
+import { normaliseChatText } from '@app/utils/chat/normaliseChatText';
 import { getMentionLogin } from '@app/utils/chat/resolveMentionLogin/getMentionLogin';
 import { registerMentionChatter } from '@app/utils/chat/resolveMentionLogin/registerMentionChatter';
 import { logger } from '@app/utils/logger';
@@ -36,7 +37,7 @@ async function searchMentionLoginsRemote(query: string): Promise<boolean> {
 }
 
 export function queueMentionLoginSearch(query: string): void {
-  const trimmedQuery = query.trim().toLowerCase();
+  const trimmedQuery = normaliseChatText(query);
   if (trimmedQuery.length < MIN_REMOTE_MENTION_SEARCH_LENGTH) {
     return;
   }

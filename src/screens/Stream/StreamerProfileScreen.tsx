@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { router, Stack } from 'expo-router';
 
 import { Button } from '@app/components/Button/Button';
@@ -15,13 +16,15 @@ import { LoadingState } from '@app/components/LoadingState/LoadingState';
 import { SegmentedControl } from '@app/components/SegmentedControl/SegmentedControl';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { Text } from '@app/components/ui/Text/Text';
-import { useClipsQuery } from '@app/hooks/queries/useClipsQuery';
-import { useStreamElementsStatsQuery } from '@app/hooks/queries/useStreamelementsStatsQuery';
-import { useUserQuery } from '@app/hooks/queries/useUserQuery';
-import { useVideosQuery } from '@app/hooks/queries/useVideosQuery';
 import { useFlattenedInfiniteQuery } from '@app/hooks/useFlattenedInfiniteQuery';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
+import { streamElementsChatStatsQueryOptions } from '@app/lib/react-query/queries/streamelements';
+import {
+  clipsInfiniteQueryOptions,
+  userQueryOptions,
+  videosInfiniteQueryOptions,
+} from '@app/lib/react-query/queries/twitch';
 import { theme } from '@app/styles/themes';
 import type { StreamElementsChatStats } from '@app/types/streamelements/stats';
 import type { TwitchClip } from '@app/types/twitch/clip';
@@ -379,22 +382,22 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
     isError: isUserError,
     isLoading: isUserLoading,
     refetch: refetchUser,
-  } = useUserQuery(id, {
-    enabled: Boolean(id),
-  });
+  } = useQuery({ ...userQueryOptions(id), enabled: Boolean(id) });
 
   const broadcasterId = user?.id ?? '';
   const enabled = Boolean(broadcasterId);
 
-  const clipsQuery = useClipsQuery({ broadcasterId, first: 20 }, { enabled });
-  const videosQuery = useVideosQuery(
-    { userId: broadcasterId, first: 20 },
-    {
-      enabled,
-    },
-  );
+  const clipsQuery = useInfiniteQuery({
+    ...clipsInfiniteQueryOptions({ broadcasterId, first: 20 }),
+    enabled,
+  });
+  const videosQuery = useInfiniteQuery({
+    ...videosInfiniteQueryOptions({ userId: broadcasterId, first: 20 }),
+    enabled,
+  });
 
-  const streamElementsQuery = useStreamElementsStatsQuery(user?.login ?? '', {
+  const streamElementsQuery = useQuery({
+    ...streamElementsChatStatsQueryOptions(user?.login ?? ''),
     enabled: Boolean(user?.login),
   });
 

@@ -16,7 +16,7 @@ import {
   refreshable,
 } from '@expo/ui/swift-ui/modifiers';
 import { ListRenderItem } from '@shopify/flash-list';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner-native';
 
 import type { FlashListRef } from '@app/components/FlashList/FlashList';
@@ -25,8 +25,8 @@ import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
-import { useUserBlockListQuery } from '@app/hooks/queries/useUserBlockListQuery';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
+import { userBlockListQueryOptions } from '@app/lib/react-query/queries/twitch';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
 import { twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
@@ -395,10 +395,10 @@ export function BlockedUsersScreen() {
   const userBlockListQueryKey = twitchKeys.blockList(user?.id as string);
 
   // SAFETY: enabled gates the query on user?.id being set
-  const { data, isLoading, isError } = useUserBlockListQuery(
-    user?.id as string,
-    { enabled: !!user?.id },
-  );
+  const { data, isLoading, isError } = useQuery({
+    ...userBlockListQueryOptions(user?.id as string),
+    enabled: !!user?.id,
+  });
 
   const { mutate: unblockUser } = useMutation({
     mutationFn: (targetUserId: string) =>

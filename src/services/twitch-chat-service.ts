@@ -591,23 +591,19 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     sendMessage: sendWebSocketMessage,
     readyState,
     reconnect,
-  } = useWebsocket(
-    shouldConnect ? TWITCH_CHAT_URL : null,
-    {
-      onOpen: handleWebSocketOpen,
-      onMessage: handleMessage,
-      onClose: handleWebSocketClose,
-      onError: handleWebSocketError,
-      shouldReconnect,
-      /**
-       * A long outage exhausted 30 attempts in ~7min and left chat dead until
-       * remount; backoff caps at ~16s, so a higher ceiling just retries longer.
-       */
-      reconnectAttempts: 100,
-      reconnectInterval: 2000,
-    },
-    shouldConnect,
-  );
+  } = useWebsocket(shouldConnect ? TWITCH_CHAT_URL : null, {
+    onOpen: handleWebSocketOpen,
+    onMessage: handleMessage,
+    onClose: handleWebSocketClose,
+    onError: handleWebSocketError,
+    shouldReconnect,
+    /**
+     * A long outage exhausted 30 attempts in ~7min and left chat dead until
+     * remount; backoff caps at ~16s, so a higher ceiling just retries longer.
+     */
+    reconnectAttempts: 100,
+    reconnectInterval: 2000,
+  });
 
   // Reconnect chat when token changes (e.g. after 401 refresh) so we authenticate with the new token.
   const getWebSocketRef = useSyncRef(getWebSocket);
