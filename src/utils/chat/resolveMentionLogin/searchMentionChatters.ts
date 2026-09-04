@@ -1,4 +1,5 @@
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
+import { normaliseChatText } from '@app/utils/chat/normaliseChatText';
 import { mentionChatterIndex } from '@app/utils/chat/resolveMentionLogin/mentionChatterIndex';
 import { mentionLoginIndex } from '@app/utils/chat/resolveMentionLogin/mentionLoginIndex';
 import type { MentionChatter } from '@app/utils/chat/resolveMentionLogin/types';
@@ -43,7 +44,7 @@ export function searchMentionChatters(
   _mentionLoginRevision = 0,
 ): MentionChatter[] {
   void _mentionLoginRevision;
-  const normalisedQuery = query.trim().toLowerCase();
+  const normalisedQuery = normaliseChatText(query);
   if (!normalisedQuery) {
     return [];
   }

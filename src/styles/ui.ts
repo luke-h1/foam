@@ -73,13 +73,10 @@ export const getColorValue = (
     return 'transparent';
   }
 
-  if (color === 'black') {
-    return Color.grayscale[shade] || Color.grayscale[500];
-  }
-  if (color === 'white') {
-    return Color.grayscale[shade] || Color.grayscale[500];
+  if (color === 'black' || color === 'white') {
+    return Color.grayscale[shade];
   }
 
   const colorObj: PaletteColorScale = Color[color];
-  return colorObj[shade] || colorObj[500];
+  return colorObj[shade];
 };

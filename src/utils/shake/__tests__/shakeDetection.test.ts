@@ -31,7 +31,7 @@ describe('createShakeDetector', () => {
   });
 
   test('does not count spikes spread beyond the window', () => {
-    const detect = createShakeDetector({ windowMs: 1200 });
+    const detect = createShakeDetector();
 
     expect(detect(SPIKE, 0)).toEqual(false);
     expect(detect(SPIKE, 1000)).toEqual(false);

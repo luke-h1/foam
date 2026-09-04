@@ -40,7 +40,7 @@ import {
 } from '@app/store/preferenceStore';
 import { Color } from '@app/styles/palette';
 import { theme } from '@app/styles/themes';
-import { normaliseHighlightPhrase } from '@app/utils/chat/customHighlights/normaliseHighlightPhrase';
+import { normaliseChatText } from '@app/utils/chat/normaliseChatText';
 
 const HIGHLIGHT_COLORS = [
   theme.colorPrimary,
@@ -62,7 +62,7 @@ function useCustomHighlights() {
   const highlights = customHighlights ?? EMPTY_HIGHLIGHTS;
 
   const addHighlight = (rawText: string, color: string): AddHighlightResult => {
-    const phrase = normaliseHighlightPhrase(rawText);
+    const phrase = normaliseChatText(rawText);
     if (!phrase) return 'empty';
 
     if (highlights.some(highlight => highlight.phrase === phrase)) {

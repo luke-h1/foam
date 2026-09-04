@@ -13,6 +13,7 @@ import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Input } from '@app/components/ui/Input/Input';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
+import { normaliseChatText } from '@app/utils/chat/normaliseChatText';
 import { getAllMentionChatters } from '@app/utils/chat/resolveMentionLogin/getAllMentionChatters';
 import {
   type ChatterRole,
@@ -54,7 +55,7 @@ function buildChattersListItems(
   chatters: MentionChatter[],
   query: string,
 ): ChattersListItem[] {
-  const normalisedQuery = query.trim().toLowerCase();
+  const normalisedQuery = normaliseChatText(query);
   const filtered = normalisedQuery
     ? chatters.filter(chatter =>
         chatter.login.toLowerCase().includes(normalisedQuery),

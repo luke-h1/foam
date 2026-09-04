@@ -29,11 +29,7 @@ export function UserSuggestionRail({
     maxSuggestions,
   });
 
-  const validUsers = filteredUsers.filter(
-    (user): user is ChatUser => user !== undefined,
-  );
-
-  if (validUsers.length === 0) {
+  if (filteredUsers.length === 0) {
     return null;
   }
 
@@ -44,7 +40,7 @@ export function UserSuggestionRail({
       exiting={suggestionRailExiting}
     >
       <UserSuggestions
-        users={validUsers}
+        users={filteredUsers}
         showUserSuggestions
         handleUserSelect={handleUserSelect}
       />

@@ -104,7 +104,7 @@ function runBuildPaintImageLayersBatch(): void {
 /**
  * Same scenarios as the Reassure `*.perf-test.ts` files, so CI and on-device numbers describe the same work.
  */
-export const CHAT_HOTSPOT_SCENARIOS: ChatHotspotScenario[] = [
+const CHAT_HOTSPOT_SCENARIOS: ChatHotspotScenario[] = [
   {
     id: 'message-ingest-burst',
     name: 'message ingest burst',

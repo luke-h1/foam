@@ -1,8 +1,7 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import { useSyncRef } from '@app/hooks/useSyncRef';
 
-import { useMountedRef } from './useMountedRef';
 import { useUnmountCallback } from './useUnmountCallback';
 
 export type UseDebouncedCallbackReturn<Args extends unknown[]> = [
@@ -18,7 +17,15 @@ export function useDebouncedCallback<Args extends unknown[] = []>(
     undefined,
   );
   const callbackRef = useSyncRef(callback);
-  const mountedRef = useMountedRef();
+  const mountedRef = useRef(false);
+
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return () => {
+      mountedRef.current = false;
+    };
+  });
 
   const run = async (...args: Args) => {
     if (timeoutRef.current) {

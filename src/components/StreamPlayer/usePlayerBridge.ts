@@ -26,12 +26,24 @@ import type {
   PlayerMessage,
   PlayerState,
   PlayerStatusState,
+  StreamPlayerProps,
   StreamPlayerRef,
 } from './types';
 import type { PlayerBridgeAction } from './util/playerBridgeInterpreter';
 import { interpretPlayerMessage } from './util/playerBridgeInterpreter';
 
-interface UsePlayerBridgeOptions {
+interface UsePlayerBridgeOptions extends Pick<
+  StreamPlayerProps,
+  | 'onContentGateChange'
+  | 'onEnded'
+  | 'onError'
+  | 'onOffline'
+  | 'onOnline'
+  | 'onPause'
+  | 'onPlaybackLatencyChange'
+  | 'onPlay'
+  | 'onReady'
+> {
   autoplay: boolean;
   channel?: string;
   clip?: string;
@@ -40,15 +52,6 @@ interface UsePlayerBridgeOptions {
   enhancedStabilityEnabled: boolean;
   forceRefresh: () => void;
   initialMuted: boolean;
-  onContentGateChange?: (hasGate: boolean) => void;
-  onEnded?: () => void;
-  onError?: (error: string) => void;
-  onOffline?: () => void;
-  onOnline?: () => void;
-  onPause?: () => void;
-  onPlaybackLatencyChange?: (latencySeconds: number) => void;
-  onPlay?: () => void;
-  onReady?: () => void;
   ref?: Ref<StreamPlayerRef>;
   runJavaScript: (script: string) => void;
   scheduleAuthCompletionReload: () => void;

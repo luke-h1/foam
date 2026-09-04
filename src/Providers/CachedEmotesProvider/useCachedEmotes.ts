@@ -36,9 +36,6 @@ function collectDisplayUrls(emotes: SanitisedEmote[], limit: number): string[] {
 
 function getGlobalDisplayUrls(channelId: string): string[] {
   const data = getCurrentEmoteData(channelId);
-  if (!data) {
-    return [];
-  }
   return collectDisplayUrls(
     [
       ...data.sevenTvGlobalEmotes,
@@ -52,9 +49,6 @@ function getGlobalDisplayUrls(channelId: string): string[] {
 
 function getChannelDisplayUrls(channelId: string): string[] {
   const data = getCurrentEmoteData(channelId);
-  if (!data) {
-    return [];
-  }
   return collectDisplayUrls(
     [
       ...data.sevenTvChannelEmotes,

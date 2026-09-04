@@ -7,7 +7,7 @@ import {
   sevenTvService,
 } from '@app/services/seventv-service';
 import { twitchService } from '@app/services/twitch-service';
-import { getPreferences } from '@app/store/preferences/state';
+import { getPreferences } from '@app/store/preferenceStore';
 import type { SanitisedEmote } from '@app/types/emote';
 import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
 import {
@@ -181,10 +181,7 @@ function notifyProviderLoadFailures(
 export {
   clearPersonalEmotesCache,
   fetchUserPersonalEmotes,
-  findPersonalEmoteSetOwner,
   getUserPersonalEmotes,
-  handlePersonalEmoteSetEntitlement,
-  refreshUserPersonalEmotes,
 } from './personalEmotes';
 
 // Runs keyed by channel id; only owner ids Twitch never returns get stamped,
@@ -717,7 +714,7 @@ const loadChannelResourcesInternal = async (
  * Fire-and-forget cheermote fetch; failures only log because cheer rendering
  * degrades to plain text without them.
  */
-export const loadChannelCheermotes = (channelId: string): void => {
+const loadChannelCheermotes = (channelId: string): void => {
   fetchChannelCheermotes(channelId, () =>
     twitchService.getCheermotes(channelId),
   ).catch((cause: unknown) => {
@@ -892,43 +889,43 @@ const buildResolvedEmoteData = (
 ) => {
   return {
     twitchChannelEmotes: preferences.showTwitchEmotes
-      ? (cache.twitchChannelEmotes ?? NO_EMOTES)
+      ? cache.twitchChannelEmotes
       : NO_EMOTES,
     twitchGlobalEmotes: preferences.showTwitchEmotes
-      ? (globalCache?.twitchGlobalEmotes ?? NO_EMOTES)
+      ? globalCache.twitchGlobalEmotes
       : NO_EMOTES,
     twitchSubscriberEmotes: preferences.showTwitchEmotes
-      ? (cache.twitchSubscriberEmotes ?? NO_EMOTES)
+      ? cache.twitchSubscriberEmotes
       : NO_EMOTES,
     sevenTvChannelEmotes: preferences.show7TvEmotes
-      ? (cache.sevenTvChannelEmotes ?? NO_EMOTES)
+      ? cache.sevenTvChannelEmotes
       : NO_EMOTES,
     sevenTvGlobalEmotes: preferences.show7TvEmotes
-      ? (globalCache?.sevenTvGlobalEmotes ?? NO_EMOTES)
+      ? globalCache.sevenTvGlobalEmotes
       : NO_EMOTES,
     ffzChannelEmotes: preferences.showFFzEmotes
-      ? (cache.ffzChannelEmotes ?? NO_EMOTES)
+      ? cache.ffzChannelEmotes
       : NO_EMOTES,
     ffzGlobalEmotes: preferences.showFFzEmotes
-      ? (globalCache?.ffzGlobalEmotes ?? NO_EMOTES)
+      ? globalCache.ffzGlobalEmotes
       : NO_EMOTES,
     bttvGlobalEmotes: preferences.showBttvEmotes
-      ? (globalCache?.bttvGlobalEmotes ?? NO_EMOTES)
+      ? globalCache.bttvGlobalEmotes
       : NO_EMOTES,
     bttvChannelEmotes: preferences.showBttvEmotes
-      ? (cache.bttvChannelEmotes ?? NO_EMOTES)
+      ? cache.bttvChannelEmotes
       : NO_EMOTES,
     twitchChannelBadges: preferences.showTwitchBadges
-      ? (cache.twitchChannelBadges ?? NO_BADGES)
+      ? cache.twitchChannelBadges
       : NO_BADGES,
     twitchGlobalBadges: preferences.showTwitchBadges
-      ? (globalCache?.twitchGlobalBadges ?? NO_BADGES)
+      ? globalCache.twitchGlobalBadges
       : NO_BADGES,
     ffzChannelBadges: preferences.showFFzBadges
-      ? (cache.ffzChannelBadges ?? NO_BADGES)
+      ? cache.ffzChannelBadges
       : NO_BADGES,
     ffzGlobalBadges: preferences.showFFzBadges
-      ? (globalCache?.ffzGlobalBadges ?? NO_BADGES)
+      ? globalCache.ffzGlobalBadges
       : NO_BADGES,
     chatterinoBadges: preferences.showChatterinoEmotes
       ? chatterinoBadges

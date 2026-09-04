@@ -83,9 +83,8 @@ export type SettledSpec<
 
 type AnySettledSpec = SettledSpec<ResourceCacheKey, Identifiable>;
 
-export const deduplicateById = <T extends Identifiable>(
-  items: readonly T[],
-): T[] => Array.from(new Map(items.map(item => [item.id, item])).values());
+const deduplicateById = <T extends Identifiable>(items: readonly T[]): T[] =>
+  Array.from(new Map(items.map(item => [item.id, item])).values());
 
 /**
  * Global provider data is identical for every channel; cache successful
@@ -153,7 +152,7 @@ export const buildSubscriberEmoteSpec = ({
  * Caps a pending 7TV set-id lookup so it cannot eat the whole
  * `RESOURCE_FETCH_TIMEOUT_MS` window and time out the emote-set fetch.
  */
-export const SEVEN_TV_SET_ID_LOOKUP_BUDGET_MS = 3000;
+const SEVEN_TV_SET_ID_LOOKUP_BUDGET_MS = 3000;
 
 const SEVEN_TV_GLOBAL_EMOTE_SPEC: EmoteResourceSpec = {
   key: 'sevenTvGlobalEmotes',
@@ -357,7 +356,7 @@ export const buildBadgeResourceSpecs = ({
   },
 ];
 
-export const RESOURCE_FETCH_TIMEOUT_MS = 8000;
+const RESOURCE_FETCH_TIMEOUT_MS = 8000;
 
 export class ResourceFetchTimeoutError extends Error {
   constructor(resourceName: string, timeoutMs: number) {
@@ -513,7 +512,7 @@ export const reportResourceResults = ({
   });
 };
 
-export const PROVIDER_DISPLAY_NAMES = new Map<ProviderName, string>([
+const PROVIDER_DISPLAY_NAMES = new Map<ProviderName, string>([
   ['bttv', 'BTTV'],
   ['ffz', 'FFZ'],
   ['seven_tv', '7TV'],

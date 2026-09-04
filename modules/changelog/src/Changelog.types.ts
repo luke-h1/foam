@@ -1,9 +1,3 @@
-import type { StyleProp, ViewStyle } from 'react-native';
-
-export type OnLoadEventPayload = {
-  url: string;
-};
-
 export type ChangelogModuleEvents = Record<string, never>;
 
 export type ChangelogMediaKind = 'image' | 'video';
@@ -54,10 +48,4 @@ export type ChangelogNativeModule = {
   getLatestSeenOTAVersion(): string | null;
   present(options: ChangelogPresentOptions): Promise<void>;
   resetSeenVersions(): void;
-};
-
-export type ChangelogViewProps = {
-  url: string;
-  onLoad: (event: { nativeEvent: OnLoadEventPayload }) => void;
-  style?: StyleProp<ViewStyle>;
 };

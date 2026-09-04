@@ -64,7 +64,7 @@ export const ChatViewControls = memo(
             <Button
               accessibilityLabel='Clear'
               accessibilityRole='button'
-              style={styles.clearChip}
+              style={styles.filterChip}
               onPress={onClearFilters}
             >
               <SymbolView
@@ -82,18 +82,6 @@ export const ChatViewControls = memo(
 );
 
 const styles = StyleSheet.create({
-  clearChip: {
-    alignItems: 'center',
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.color.border.dark,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: theme.space8,
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space8,
-  },
   filterChip: {
     alignItems: 'center',
     backgroundColor: theme.color.background.darkAlt,

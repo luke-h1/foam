@@ -1,7 +1,9 @@
 import { theme } from '@app/styles/themes';
 
 export type ChatDensity = 'comfortable' | 'compact';
-export type ChatFontScale = 'small' | 'default' | 'large';
+import type { ChatFontScale } from '@app/store/preferenceStore';
+
+export type { ChatFontScale };
 
 /**
  * Body font size follows the font-scale preference alone; density never

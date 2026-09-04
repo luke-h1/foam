@@ -111,28 +111,6 @@ describe('useEmoteReprocessing', () => {
     expect(mockUpdateMessages).not.toHaveBeenCalled();
   });
 
-  test('does nothing when getCurrentEmoteData returns null', () => {
-    // SAFETY: the hook defensively handles a null the real function never
-    // returns; `never` bridges through to exercise that branch.
-    mockGetCurrentEmoteData.mockReturnValue(null as never);
-    const peek = jest
-      .fn()
-      .mockReturnValue([createTextOnlyMessage('1', 'n1', 'hello')]);
-    renderHook(() =>
-      useEmoteReprocessing({
-        channelId,
-        channelEmoteData: {},
-        messages$: { peek },
-        emoteLoadStatus: 'success',
-        processedMessageIdsRef,
-        show7TvEmotes: true,
-      }),
-    );
-
-    expect(mockGetCurrentEmoteData).toHaveBeenCalledWith(channelId);
-    expect(mockUpdateMessages).not.toHaveBeenCalled();
-  });
-
   const emptyEmoteData = createEmoteData({
     sevenTvGlobalEmotes: [],
     sevenTvChannelEmotes: [],

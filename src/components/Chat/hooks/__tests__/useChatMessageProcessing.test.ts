@@ -8,10 +8,7 @@ import * as personalEmotesActions from '@app/store/chat/actions/personalEmotes';
 import * as userCosmeticsFetchActions from '@app/store/chat/actions/userCosmeticsFetch';
 import { visibleAssetHydration } from '@app/store/chat/actions/visibleAssetHydration';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import {
-  getPreferences,
-  replacePreferences,
-} from '@app/store/preferences/state';
+import { getPreferences, replacePreferences } from '@app/store/preferenceStore';
 import * as emoteProcessorModule from '@app/utils/chat/emoteProcessor';
 import * as extractEmotesFromTagModule from '@app/utils/chat/extractEmotes/extractEmotesFromTag';
 import * as getCachedSharedChatBadgeContextModule from '@app/utils/chat/sharedChatBadges/getCachedSharedChatBadgeContext';

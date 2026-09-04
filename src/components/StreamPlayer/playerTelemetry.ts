@@ -284,5 +284,3 @@ export function createPlayerTelemetry() {
     },
   };
 }
-
-export type PlayerTelemetry = ReturnType<typeof createPlayerTelemetry>;

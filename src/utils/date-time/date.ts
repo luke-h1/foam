@@ -1,15 +1,10 @@
-import dayjs from 'dayjs';
-import isToday from 'dayjs/plugin/isToday';
-import isYesterday from 'dayjs/plugin/isYesterday';
+import { format } from 'date-fns/format';
 
-dayjs.extend(isToday);
-dayjs.extend(isYesterday);
-
-export type DatePattern = 'DD/MM/YY' | 'HH:mm' | 'h:mm a' | 'MMMM D YYYY';
+export type DatePattern = 'dd/MM/yy' | 'HH:mm' | 'h:mm a' | 'MMMM d yyyy';
 
 export function formatDate(
   date: Date | string | number,
-  pattern: DatePattern = 'DD/MM/YY',
+  pattern: DatePattern = 'dd/MM/yy',
 ): string {
-  return dayjs(date).format(pattern);
+  return format(new Date(date), pattern);
 }

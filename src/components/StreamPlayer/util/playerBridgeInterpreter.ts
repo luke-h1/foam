@@ -467,7 +467,7 @@ export function interpretPlayerMessage(
       const actions: PlayerBridgeAction[] = [
         { type: 'applyMuteState', muted, volume },
       ];
-      if (context.deferOverlayUntilUserUnmute && muted === false) {
+      if (context.deferOverlayUntilUserUnmute && !muted) {
         actions.push({ type: 'unlockOverlay' });
       }
       return actions;

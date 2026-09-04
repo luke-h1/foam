@@ -1,4 +1,5 @@
 import { SLASH_COMMAND_DEFINITIONS } from '@app/components/Chat/util/slashCommandDefinitions/SLASH_COMMAND_DEFINITIONS';
+import { normaliseChatText } from '@app/utils/chat/normaliseChatText';
 
 interface UseCommandSuggestionsProps {
   searchTerm: string;
@@ -9,7 +10,7 @@ export function useCommandSuggestions({
   searchTerm,
   maxSuggestions = 20,
 }: UseCommandSuggestionsProps) {
-  const lowerSearch = searchTerm.trim().toLowerCase();
+  const lowerSearch = normaliseChatText(searchTerm);
 
   const filteredCommands = SLASH_COMMAND_DEFINITIONS.filter(command => {
     if (lowerSearch.length < 1) {

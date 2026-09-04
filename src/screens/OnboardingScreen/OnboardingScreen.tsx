@@ -13,8 +13,6 @@ import { theme } from '@app/styles/themes';
 
 import { ONBOARDING_SEEN_KEY } from './constants';
 
-export { ONBOARDING_SEEN_KEY } from './constants';
-
 function handleGetStarted() {
   storage.set(ONBOARDING_SEEN_KEY, true);
   router.replace('/');

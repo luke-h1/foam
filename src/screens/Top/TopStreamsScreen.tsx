@@ -2,18 +2,19 @@ import { useCallback, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import type { ListRenderItem } from '@shopify/flash-list';
+import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { useStreamProfilePictures } from '@app/hooks/queries/useStreamProfilePictures';
-import { useTopStreamsQuery } from '@app/hooks/queries/useTopStreamsQuery';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
 import { useFlattenedInfiniteQuery } from '@app/hooks/useFlattenedInfiniteQuery';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
+import { topStreamsInfiniteQueryOptions } from '@app/lib/react-query/queries/twitch';
 import { usePreference } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import type { TwitchStream } from '@app/types/twitch/stream';
@@ -33,7 +34,10 @@ export function TopStreamsScreen() {
     isLoading,
     isFetching,
     isFetchingNextPage,
-  } = useTopStreamsQuery();
+  } = useInfiniteQuery({
+    ...topStreamsInfiniteQueryOptions(),
+    refetchOnWindowFocus: true,
+  });
 
   useRefetchOnForeground({
     refetch,

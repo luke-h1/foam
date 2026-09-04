@@ -5,6 +5,7 @@ import { useSelector } from '@legendapp/state/react';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import type { ChatUser } from '@app/store/chat/types/constants';
 import { queueMentionLoginSearch } from '@app/utils/chat/mentionLoginResolver/queueMentionLoginSearch';
+import { normaliseChatText } from '@app/utils/chat/normaliseChatText';
 import { searchMentionChatters } from '@app/utils/chat/resolveMentionLogin/searchMentionChatters';
 import { type MentionChatter } from '@app/utils/chat/resolveMentionLogin/types';
 
@@ -29,7 +30,7 @@ export function useUserSuggestions({
   maxSuggestions = 20,
 }: UseUserSuggestionsProps) {
   const mentionLoginRevision = useSelector(chatStore$.mentionLoginRevision);
-  const cleanSearch = searchTerm.slice(1).toLowerCase().trim();
+  const cleanSearch = normaliseChatText(searchTerm.slice(1));
   /**
    * The search scans both mention indexes, so it trails the keystroke rather
    * than sharing a frame with the character the composer is echoing.

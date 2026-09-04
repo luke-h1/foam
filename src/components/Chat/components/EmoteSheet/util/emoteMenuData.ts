@@ -1,6 +1,7 @@
 import { BrandIconName } from '@app/components/BrandIcon/brandIconRegistry';
 import type { SubscriberChannelProfile } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
+import { normaliseChatText } from '@app/utils/chat/normaliseChatText';
 
 import type { EmotePickerItem } from '../emoteSheetTypes';
 
@@ -426,7 +427,7 @@ export function filterProviderSets(
     return [];
   }
 
-  const normalizedQuery = query.trim().toLowerCase();
+  const normalizedQuery = normaliseChatText(query);
   if (!normalizedQuery) {
     return provider.sets;
   }

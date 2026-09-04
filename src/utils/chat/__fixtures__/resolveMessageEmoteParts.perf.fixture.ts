@@ -1,8 +1,8 @@
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
-export const emptyEmotes: SanitisedEmote[] = [];
-export const emptyBadges: SanitisedBadgeSet[] = [];
+const emptyEmotes: SanitisedEmote[] = [];
+const emptyBadges: SanitisedBadgeSet[] = [];
 
 function createBttvEmote(index: number): SanitisedEmote {
   const id = `bttv-${index}`;

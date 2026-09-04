@@ -33,10 +33,6 @@ export interface UserCosmetics {
   };
 }
 
-export interface UserPaint extends PaintData {
-  ttv_user_id: string;
-}
-
 export interface ChatUser {
   name: string;
   color: string;

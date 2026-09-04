@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { getPreferences } from '@app/store/preferences/state';
+import { getPreferences } from '@app/store/preferenceStore';
 import type { EmoteImageScale, EmoteImageVariants } from '@app/types/emote';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import { CHAT_INLINE_EMOTE_SCALE } from '@app/utils/emote/resolveEmoteScale';

@@ -596,99 +596,95 @@ export function useSeventvWs(
 
   const { getWebSocket, sendJsonMessage, readyState, reconnect } = useWebsocket<
     SevenTvWsMessage<never, SevenTvEventType>
-  >(
-    shouldConnect ? DEFAULT_URL : null,
-    {
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      onOpen: async () => {
-        logger.stvWs.info('💚 SevenTV WebSocket connected');
-        const session = sessionRef.current;
-        session.connectionTimestamp = Date.now();
-        session.lastMessageAt = Date.now();
-        session.stopHeartbeatWatchdog();
-        session.heartbeatWatchdog = setInterval(() => {
-          const ws = getWebSocket();
-          if (ws?.readyState !== WebSocket.OPEN) {
-            return;
-          }
-          const silenceMs = Date.now() - session.lastMessageAt;
-          const timeoutMs =
-            session.heartbeatIntervalMs * MISSED_HEARTBEATS_BEFORE_RECONNECT;
-          if (silenceMs > timeoutMs) {
-            logger.stvWs.warn('7TV socket silent past heartbeat budget', {
-              name: 'seven_tv_ws_warning',
-              action: 'heartbeat_timeout',
-              channel_id: twitchChannelIdRef.current,
-              provider: 'seven_tv',
-              silence_ms: silenceMs,
-            });
-            ws.close(4008, '7tv heartbeat timeout');
-          }
-        }, HEARTBEAT_WATCHDOG_TICK_MS);
-
-        // RESUME restores subscriptions server-side; only subscribe from scratch with no resumable session.
-        const willAttemptResume =
-          session.shouldResume && session.sessionId !== null;
-
-        if (!session.hasInitialSubscriptions && !willAttemptResume) {
-          await runInitialSubscriptions();
+  >(shouldConnect ? DEFAULT_URL : null, {
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    onOpen: async () => {
+      logger.stvWs.info('💚 SevenTV WebSocket connected');
+      const session = sessionRef.current;
+      session.connectionTimestamp = Date.now();
+      session.lastMessageAt = Date.now();
+      session.stopHeartbeatWatchdog();
+      session.heartbeatWatchdog = setInterval(() => {
+        const ws = getWebSocket();
+        if (ws?.readyState !== WebSocket.OPEN) {
+          return;
         }
+        const silenceMs = Date.now() - session.lastMessageAt;
+        const timeoutMs =
+          session.heartbeatIntervalMs * MISSED_HEARTBEATS_BEFORE_RECONNECT;
+        if (silenceMs > timeoutMs) {
+          logger.stvWs.warn('7TV socket silent past heartbeat budget', {
+            name: 'seven_tv_ws_warning',
+            action: 'heartbeat_timeout',
+            channel_id: twitchChannelIdRef.current,
+            provider: 'seven_tv',
+            silence_ms: silenceMs,
+          });
+          ws.close(4008, '7tv heartbeat timeout');
+        }
+      }, HEARTBEAT_WATCHDOG_TICK_MS);
 
-        logger.stvWs.info('💚 SevenTV WebSocket setup complete', {
-          name: 'seven_tv_ws_info',
-          action: 'connected',
+      // RESUME restores subscriptions server-side; only subscribe from scratch with no resumable session.
+      const willAttemptResume =
+        session.shouldResume && session.sessionId !== null;
+
+      if (!session.hasInitialSubscriptions && !willAttemptResume) {
+        await runInitialSubscriptions();
+      }
+
+      logger.stvWs.info('💚 SevenTV WebSocket setup complete', {
+        name: 'seven_tv_ws_info',
+        action: 'connected',
+        channel_id: twitchChannelIdRef.current,
+        provider: 'seven_tv',
+        screen: currentScreen,
+        seven_tv_emote_set_id: sevenTvEmoteSetIdRef.current,
+      });
+    },
+    onMessage: (event: MessageEvent) => {
+      handleMessage(event);
+    },
+    onClose: (event: CloseEvent) => {
+      logger.stvWs.warn(
+        `🟢 SevenTV WebSocket closed: ${event.code} - ${event.reason}`,
+      );
+      const session = sessionRef.current;
+      if (event.code !== 1000) {
+        logger.stvWs.warn('7TV WebSocket closed unexpectedly', {
+          name: 'seven_tv_ws_warning',
+          action: 'closed',
+          channel_id: twitchChannelIdRef.current,
+          code: event.code,
+          provider: 'seven_tv',
+          reason: event.reason,
+          screen: currentScreen,
+          seven_tv_emote_set_id: sevenTvEmoteSetIdRef.current,
+        });
+        // Unexpected close: RESUME on next connect so missed dispatches replay.
+        session.shouldResume = session.sessionId !== null;
+      }
+      session.reset('close');
+    },
+    onError: (error: Event) => {
+      logger.stvWs.warn(
+        `💚 SevenTv WS error: ${JSON.stringify(error, null, 2)}`,
+        {
+          name: 'seven_tv_ws_warning',
+          error: error instanceof Error ? error : String(error),
+          action: 'error',
           channel_id: twitchChannelIdRef.current,
           provider: 'seven_tv',
           screen: currentScreen,
           seven_tv_emote_set_id: sevenTvEmoteSetIdRef.current,
-        });
-      },
-      onMessage: (event: MessageEvent) => {
-        handleMessage(event);
-      },
-      onClose: (event: CloseEvent) => {
-        logger.stvWs.warn(
-          `🟢 SevenTV WebSocket closed: ${event.code} - ${event.reason}`,
-        );
-        const session = sessionRef.current;
-        if (event.code !== 1000) {
-          logger.stvWs.warn('7TV WebSocket closed unexpectedly', {
-            name: 'seven_tv_ws_warning',
-            action: 'closed',
-            channel_id: twitchChannelIdRef.current,
-            code: event.code,
-            provider: 'seven_tv',
-            reason: event.reason,
-            screen: currentScreen,
-            seven_tv_emote_set_id: sevenTvEmoteSetIdRef.current,
-          });
-          // Unexpected close: RESUME on next connect so missed dispatches replay.
-          session.shouldResume = session.sessionId !== null;
-        }
-        session.reset('close');
-      },
-      onError: (error: Event) => {
-        logger.stvWs.warn(
-          `💚 SevenTv WS error: ${JSON.stringify(error, null, 2)}`,
-          {
-            name: 'seven_tv_ws_warning',
-            error: error instanceof Error ? error : String(error),
-            action: 'error',
-            channel_id: twitchChannelIdRef.current,
-            provider: 'seven_tv',
-            screen: currentScreen,
-            seven_tv_emote_set_id: sevenTvEmoteSetIdRef.current,
-          },
-        );
-      },
-      shouldReconnect: (event: CloseEvent) => {
-        return !!(shouldConnect && event.code !== 1000);
-      },
-      reconnectAttempts: RECONNECT_ATTEMPTS,
-      reconnectInterval: 1000,
+        },
+      );
     },
-    !!shouldConnect,
-  );
+    shouldReconnect: (event: CloseEvent) => {
+      return !!(shouldConnect && event.code !== 1000);
+    },
+    reconnectAttempts: RECONNECT_ATTEMPTS,
+    reconnectInterval: 1000,
+  });
 
   const subscribeToChannel = (emoteSetId: string) => {
     const session = sessionRef.current;

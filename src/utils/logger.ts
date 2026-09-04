@@ -53,10 +53,6 @@ function stringifyLogMessage(value: LogArgument): string {
 const createGenericTransport =
   (): transportFunctionType<ConsoleTransportOptions> =>
   (props: TransportProps) => {
-    if (!props?.level) {
-      return;
-    }
-
     const { msg, rawMsg, level, extension } = props;
     const category = extension ?? 'app';
     const rawArgs = Array.isArray(rawMsg) ? rawMsg : [rawMsg];
@@ -79,10 +75,6 @@ const genericTransport = createGenericTransport();
 const createMonitoringTransport =
   (): transportFunctionType<ConsoleTransportOptions> =>
   (props: TransportProps) => {
-    if (!props?.level) {
-      return;
-    }
-
     const { rawMsg, level, extension } = props;
     const levelText = level.text;
     if (levelText === 'debug') {

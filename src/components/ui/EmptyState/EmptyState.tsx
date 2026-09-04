@@ -115,8 +115,8 @@ export function EmptyState({
   if (
     supportsContentUnavailableView &&
     !resolvedImageSource &&
-    (resolvedHeading == null || headingText !== undefined) &&
-    (resolvedContent == null || contentText !== undefined)
+    headingText !== undefined &&
+    contentText !== undefined
   ) {
     return (
       <SafeAreaView style={[styles.container, style]}>

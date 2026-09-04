@@ -1,4 +1,4 @@
-import { preferences$ } from '@app/store/preferences/state';
+import { preferences$ } from '@app/store/preferenceStore';
 import type { SanitisedEmote } from '@app/types/emote';
 
 import { resolveEmoteDisplayUrl } from '../resolveEmoteDisplayUrl';

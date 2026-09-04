@@ -28,7 +28,7 @@ export function ChatPreferenceFormContextSection({
       <Toggle
         label='Historical Recent Messages'
         systemImage='clock.arrow.circlepath'
-        isOn={preferences.showRecentMessages !== false}
+        isOn={preferences.showRecentMessages}
         onIsOnChange={value => update({ showRecentMessages: value })}
       />
       <Toggle

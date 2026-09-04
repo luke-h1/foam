@@ -76,8 +76,6 @@ describe('useTwitchChat foreground liveness probe', () => {
       return {
         sendMessage,
         sendJsonMessage: jest.fn(),
-        lastMessage: new MessageEvent('message'),
-        lastJsonMessage: null,
         readyState: ReadyState.OPEN,
         getWebSocket: () => socket,
         reconnect,
@@ -202,8 +200,6 @@ describe('useTwitchChat join/part routing', () => {
       return {
         sendMessage,
         sendJsonMessage: jest.fn(),
-        lastMessage: new MessageEvent('message'),
-        lastJsonMessage: null,
         readyState: ReadyState.OPEN,
         getWebSocket: () => socket,
         reconnect,

@@ -94,7 +94,7 @@ export const ChatInputShell = memo(function ChatInputShell({
   const [draft, setDraft] = useState<ChatDraftState>(createEmptyDraft);
   const { messageInput, replyTo } = draft;
   const messageInputRef = useRef(messageInput);
-  const isAuthenticated = Boolean(user?.id && user?.login);
+  const isAuthenticated = Boolean(user?.id && user.login);
   const clearDraft = useCallback(() => {
     messageInputRef.current = '';
     chatInputRef.current?.setText('');
@@ -202,18 +202,16 @@ export const ChatInputShell = memo(function ChatInputShell({
     });
 
     const emoteData = getCurrentEmoteData(channelId);
-    const userBadges = emoteData
-      ? findBadges({
-          userstate: optimisticUserstate,
-          bttvBadges: emoteData.bttvBadges,
-          chatterinoBadges: emoteData.chatterinoBadges,
-          ffzChannelBadges: emoteData.ffzChannelBadges,
-          ffzGlobalBadges: emoteData.ffzGlobalBadges,
-          twitchChannelBadges: emoteData.twitchChannelBadges,
-          twitchGlobalBadges: emoteData.twitchGlobalBadges,
-          getEntitledBadge: getUserBadge,
-        })
-      : [];
+    const userBadges = findBadges({
+      userstate: optimisticUserstate,
+      bttvBadges: emoteData.bttvBadges,
+      chatterinoBadges: emoteData.chatterinoBadges,
+      ffzChannelBadges: emoteData.ffzChannelBadges,
+      ffzGlobalBadges: emoteData.ffzGlobalBadges,
+      twitchChannelBadges: emoteData.twitchChannelBadges,
+      twitchGlobalBadges: emoteData.twitchGlobalBadges,
+      getEntitledBadge: getUserBadge,
+    });
 
     const optimisticMessage = createOptimisticMessage({
       badges: userBadges,

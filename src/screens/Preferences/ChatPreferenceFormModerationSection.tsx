@@ -29,7 +29,7 @@ export function ChatPreferenceFormModerationSection({
       <Toggle
         label='Keep History on Clear'
         systemImage='clock.arrow.circlepath'
-        isOn={preferences.ignoreClearChat === true}
+        isOn={preferences.ignoreClearChat}
         onIsOnChange={value => update({ ignoreClearChat: value })}
       />
     </Section>

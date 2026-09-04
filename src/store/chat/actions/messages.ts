@@ -695,6 +695,18 @@ export const moderateMessagesByLogin = (
   syncRecentMessagesForCurrentChannel(nextMessages);
 };
 
+const forgetMessageKeys = (messages: AnyChatMessageType[]) => {
+  messages.forEach(message => {
+    const key = getChatMessageKey(message.message_id, message.message_nonce);
+    messageKeySet.delete(key);
+
+    const orderIndex = messageKeyOrder.indexOf(key);
+    if (orderIndex >= 0) {
+      messageKeyOrder.splice(orderIndex, 1);
+    }
+  });
+};
+
 export const removeMessagesByLogin = (login: string) => {
   const target = normaliseChatUsername(login);
   if (!target) {
@@ -724,15 +736,7 @@ export const removeMessagesByLogin = (login: string) => {
     return;
   }
 
-  removedMessages.forEach(message => {
-    const key = getChatMessageKey(message.message_id, message.message_nonce);
-    messageKeySet.delete(key);
-
-    const orderIndex = messageKeyOrder.indexOf(key);
-    if (orderIndex >= 0) {
-      messageKeyOrder.splice(orderIndex, 1);
-    }
-  });
+  forgetMessageKeys(removedMessages);
 
   rebuildMessageIndexes(nextMessages);
   chatStore$.messages.set(nextMessages);
@@ -767,15 +771,7 @@ export const removeMessageById = (messageId: string) => {
     return;
   }
 
-  removedMessages.forEach(message => {
-    const key = getChatMessageKey(message.message_id, message.message_nonce);
-    messageKeySet.delete(key);
-
-    const orderIndex = messageKeyOrder.indexOf(key);
-    if (orderIndex >= 0) {
-      messageKeyOrder.splice(orderIndex, 1);
-    }
-  });
+  forgetMessageKeys(removedMessages);
 
   const nextMessages = currentMessages.filter(
     message =>

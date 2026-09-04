@@ -37,14 +37,6 @@ const OTA_RELOAD_SCREEN_OPTIONS = {
 
 const getIsUpdatePending = () => latestContext.isUpdatePending;
 
-export type OTAUpdateUrgency = 'normal' | 'critical';
-
-export type OTAUpdateState = {
-  status: 'idle' | 'checking' | 'downloading' | 'available' | 'pending';
-  urgency: OTAUpdateUrgency;
-  criticalIndex: number;
-};
-
 async function setExtraParams() {
   await setExtraParamAsync(
     Platform.OS === 'ios' ? 'ios-build-number' : 'android-build-number',

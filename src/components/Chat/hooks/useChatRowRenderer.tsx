@@ -266,9 +266,6 @@ export function useChatRowRenderer({
       }
 
       const emoteData = getCurrentEmoteData(channelId);
-      if (!emoteData) {
-        return [{ type: 'text', content: text }];
-      }
 
       const hasEmotes =
         chatStore$.emojis.peek().length > 0 ||

@@ -21,6 +21,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { useQuery } from '@tanstack/react-query';
 import { BlurView } from 'expo-blur';
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
@@ -38,13 +39,15 @@ import type { StreamPlayerRef } from '@app/components/StreamPlayer/types';
 import { BACK_SYMBOL_NAME, SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
-import { useStreamQuery } from '@app/hooks/queries/useStreamQuery';
-import { useUserQuery } from '@app/hooks/queries/useUserQuery';
 import { useChannelPoll } from '@app/hooks/useChannelPoll';
 import { useChannelPrediction } from '@app/hooks/useChannelPrediction';
 import { useOnAppStateChange } from '@app/hooks/useOnAppStateChange';
 import { useSyncRef } from '@app/hooks/useSyncRef';
 import { notification } from '@app/lib/haptics';
+import {
+  streamQueryOptions,
+  userQueryOptions,
+} from '@app/lib/react-query/queries/twitch';
 import type { LogMetadataValue } from '@app/lib/sentry';
 import { markSignpost } from '@app/lib/signpost';
 import { twitchService } from '@app/services/twitch-service';
@@ -58,6 +61,7 @@ import { setMeasuredVideoLatencySeconds } from '@app/store/stream/videoLatency';
 import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
+import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
 import { logger } from '@app/utils/logger';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 
@@ -143,7 +147,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     showSleepTimerMenu(sleepTimer);
   }, [sleepTimer]);
   const wasPlayingBeforeBackgroundRef = useRef(false);
-  const normalizedLogin = id.trim().toLowerCase();
+  const normalizedLogin = normaliseChatUsername(id);
   const disableChat = usePreference('disableChat');
   const disableStream = usePreference('disableStream');
   const persistedLandscapeChatWidth = usePreference('landscapeChatWidth');
@@ -414,11 +418,13 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
   const shouldResolveChannelIdentity = isChatEnabled || isStreamEnabled;
   const shouldFetchChannelMetadata = isFocused && normalizedLogin.length > 0;
-  const { data: stream } = useStreamQuery(normalizedLogin, {
+  const { data: stream } = useQuery({
+    ...streamQueryOptions(normalizedLogin),
     enabled: isStreamEnabled && shouldFetchChannelMetadata,
   });
 
-  const { data: user } = useUserQuery(normalizedLogin, {
+  const { data: user } = useQuery({
+    ...userQueryOptions(normalizedLogin),
     enabled:
       shouldResolveChannelIdentity &&
       shouldFetchChannelMetadata &&

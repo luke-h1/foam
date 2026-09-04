@@ -9,7 +9,7 @@ import {
   createObservablePersistenceLocalConfig,
   ensureObservablePersistenceConfig,
 } from '@app/lib/observablePersistence';
-import { getPreferences } from '@app/store/preferences/state';
+import { getPreferences } from '@app/store/preferenceStore';
 import type { EmoteProvider, EmoteSite } from '@app/types/emote';
 import type { BadgeProvider } from '@app/types/twitch/badge';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
@@ -184,14 +184,12 @@ const backfillBadgeProviders = (
  */
 const backfillPersistedProviders = () => {
   const globalCaches = chatStore$.persisted.globalCaches.peek();
-  if (globalCaches) {
-    backfillEmoteProviders(globalCaches.twitchGlobalEmotes);
-    backfillEmoteProviders(globalCaches.sevenTvGlobalEmotes);
-    backfillEmoteProviders(globalCaches.ffzGlobalEmotes);
-    backfillEmoteProviders(globalCaches.bttvGlobalEmotes);
-    backfillBadgeProviders(globalCaches.twitchGlobalBadges);
-    backfillBadgeProviders(globalCaches.ffzGlobalBadges);
-  }
+  backfillEmoteProviders(globalCaches.twitchGlobalEmotes);
+  backfillEmoteProviders(globalCaches.sevenTvGlobalEmotes);
+  backfillEmoteProviders(globalCaches.ffzGlobalEmotes);
+  backfillEmoteProviders(globalCaches.bttvGlobalEmotes);
+  backfillBadgeProviders(globalCaches.twitchGlobalBadges);
+  backfillBadgeProviders(globalCaches.ffzGlobalBadges);
 
   const channelCaches = chatStore$.persisted.channelCaches.peek() ?? {};
   for (const cache of Object.values(channelCaches)) {
@@ -283,8 +281,8 @@ const seedGlobalCachesFromChannelCopies = (
 ): void => {
   const globalCache = chatStore$.persisted.globalCaches.peek();
   const hasGlobalData =
-    (globalCache?.lastUpdated ?? 0) > 0 ||
-    GLOBAL_CACHE_SLICE_KEYS.some(key => (globalCache?.[key]?.length ?? 0) > 0);
+    globalCache.lastUpdated > 0 ||
+    GLOBAL_CACHE_SLICE_KEYS.some(key => globalCache[key].length > 0);
   if (hasGlobalData) {
     return;
   }
@@ -382,5 +380,3 @@ export const migratePersistedChatStore = () => {
 };
 
 when(persistedState$?._state?.isLoadedLocal, migratePersistedChatStore);
-
-export type ChatMessagesObservable = typeof chatStore$.messages;

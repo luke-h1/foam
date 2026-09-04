@@ -6,7 +6,7 @@ import { Linking, Platform } from 'react-native';
 import { focusManager } from '@tanstack/react-query';
 import * as QuickActions from 'expo-quick-actions';
 import type { RouterAction } from 'expo-quick-actions/router';
-import { router, usePathname } from 'expo-router';
+import { router } from 'expo-router';
 import { z } from 'zod';
 
 import { useAuthContext } from '@app/context/AuthContext';
@@ -25,10 +25,6 @@ import {
   beginDeepLinkAuth,
   endDeepLinkAuth,
 } from '@app/navigators/deepLinkAuthState';
-import {
-  setNavigationReady,
-  syncNavigationState,
-} from '@app/navigators/navigationUtilities';
 import { logger } from '@app/utils/logger';
 
 const quickActionHrefSchema = z.string();
@@ -74,7 +70,6 @@ const getHomeQuickActions = (showFollowingAction: boolean): RouterAction[] => {
 };
 
 export function RouterEffects() {
-  const pathname = usePathname();
   const { authState, loginWithTwitch, ready } = useAuthContext();
   const { recoveredFromError, setRecoveredFromError } = useRecoveredFromError();
 
@@ -113,11 +108,6 @@ export function RouterEffects() {
       subscription.remove();
     };
   }, []);
-
-  useEffect(() => {
-    setNavigationReady(true);
-    syncNavigationState(pathname);
-  }, [pathname]);
 
   useEffect(() => {
     const homeScreenQuickActions = getHomeQuickActions(

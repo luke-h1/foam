@@ -1,6 +1,7 @@
 import { FC, memo, useCallback, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 
 import {
@@ -14,11 +15,13 @@ import { LoadingState } from '@app/components/LoadingState/LoadingState';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { Text } from '@app/components/ui/Text/Text';
-import { useCategoryQuery } from '@app/hooks/queries/useCategoryQuery';
-import { useStreamsByCategoryQuery } from '@app/hooks/queries/useStreamsByCategoryQuery';
 import { useFlattenedInfiniteQuery } from '@app/hooks/useFlattenedInfiniteQuery';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
+import {
+  categoryQueryOptions,
+  streamsByCategoryInfiniteQueryOptions,
+} from '@app/lib/react-query/queries/twitch';
 import { theme } from '@app/styles/themes';
 import type { Category } from '@app/types/twitch/category';
 import type { TwitchStream } from '@app/types/twitch/stream';
@@ -44,16 +47,12 @@ const CategoryStreamsHeader = memo(function CategoryStreamsHeader({
       title={category.name}
       subtitle={`${formatViewCount(totalViewers)} viewers`}
       subtitleTestID='category-viewer-count'
-      backgroundImage={
-        category.box_art_url
-          ?.replace('{width}', '600')
-          ?.replace('{height}', '800') ?? ''
-      }
-      featuredImage={
-        category.box_art_url
-          ?.replace('{width}', '300')
-          ?.replace('{height}', '400') ?? ''
-      }
+      backgroundImage={category.box_art_url
+        .replace('{width}', '600')
+        .replace('{height}', '800')}
+      featuredImage={category.box_art_url
+        .replace('{width}', '300')
+        .replace('{height}', '400')}
       back={false}
       safeArea={false}
     >
@@ -79,7 +78,7 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
     data: category,
     isLoading: isCategoryLoading,
     isError: isCategoryError,
-  } = useCategoryQuery(id);
+  } = useQuery(categoryQueryOptions(id));
 
   const {
     data: streams,
@@ -89,7 +88,7 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
     isLoading: isLoadingStreams,
     isError: isErrorStreams,
     isFetchingNextPage,
-  } = useStreamsByCategoryQuery(id);
+  } = useInfiniteQuery(streamsByCategoryInfiniteQueryOptions(id));
 
   const handleLoadMore = useInfiniteQueryLoadMore({
     fetchNextPage,
@@ -136,7 +135,7 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
     );
   }
 
-  if (!streams || !streams.pages) {
+  if (!streams) {
     return <LoadingState />;
   }
 

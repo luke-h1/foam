@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { useObservable, useSelector } from '@legendapp/state/react';
 import type { ListRenderItem } from '@shopify/flash-list';
+import { useInfiniteQuery } from '@tanstack/react-query';
 
 import {
   CATEGORY_CARD_HEIGHT,
@@ -14,11 +15,11 @@ import {
 import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
-import { useTopCategoriesQuery } from '@app/hooks/queries/useTopCategoriesQuery';
 import { useFlattenedInfiniteQuery } from '@app/hooks/useFlattenedInfiniteQuery';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
+import { topCategoriesInfiniteQueryOptions } from '@app/lib/react-query/queries/twitch';
 import { theme } from '@app/styles/themes';
 import type { Category } from '@app/types/twitch/category';
 
@@ -54,7 +55,10 @@ export function TopCategoriesScreen() {
     isFetching,
     isError,
     isFetchingNextPage,
-  } = useTopCategoriesQuery();
+  } = useInfiniteQuery({
+    ...topCategoriesInfiniteQueryOptions(),
+    refetchOnWindowFocus: true,
+  });
 
   useRefetchOnForeground({
     refetch,

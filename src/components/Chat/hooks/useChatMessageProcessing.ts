@@ -60,9 +60,6 @@ export function useChatMessageProcessing({
       userId?: string,
     ): AnyChatMessageType => {
       const emoteData = getCurrentEmoteData(channelId);
-      if (!emoteData) {
-        return baseMessage;
-      }
 
       if (!hasEnrichmentEmoteSources(emoteData)) {
         return baseMessage;
@@ -238,9 +235,6 @@ export function useChatMessageProcessing({
 
   const reprocessAllMessages = useCallback(() => {
     const emoteData = getCurrentEmoteData(channelId);
-    if (!emoteData) {
-      return;
-    }
 
     cancelEnrichMessageSetRef.current?.();
     cancelEnrichMessageSetRef.current = enrichMessageSet({

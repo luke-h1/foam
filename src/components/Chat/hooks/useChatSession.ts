@@ -66,7 +66,7 @@ export function useChatSession({
 }: UseChatSessionOptions) {
   const navigation = useNavigation();
   const chatDelay = usePreference('chatDelay');
-  const showRecentMessages = preferences.showRecentMessages !== false;
+  const showRecentMessages = preferences.showRecentMessages;
   const messages$ = chatStore$.messages;
 
   const processedMessageIdsRef = useLazyRef(() => new Set<string>());

@@ -3,7 +3,7 @@ import { twitchSanitisedGlobalBadges } from '@app/services/__fixtures__/badges/t
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
-export function createChatterinoBadge(index: number): SanitisedBadgeSet {
+function createChatterinoBadge(index: number): SanitisedBadgeSet {
   return {
     // Indexed by badge.id === chatter user-id for BTTV/Chatterino lookups.
     id: `chatterino-user-${index}`,
@@ -20,7 +20,7 @@ export function createChatterinoBadge(index: number): SanitisedBadgeSet {
  * Chatterino's flattened list is thousands of entries; almost none match a
  * given chatter. Large enough to punish a per-message linear scan.
  */
-export const denseChatterinoBadges = Array.from({ length: 2500 }, (_, index) =>
+const denseChatterinoBadges = Array.from({ length: 2500 }, (_, index) =>
   createChatterinoBadge(index),
 );
 
