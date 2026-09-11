@@ -310,9 +310,7 @@ function getFontFamily(
   }
 
   if (variant === 'display') {
-    return italic
-      ? 'InstrumentSerif_400Regular_Italic'
-      : 'InstrumentSerif_400Regular';
+    return italic ? theme.fontFamilyDisplayItalic : theme.fontFamilyDisplay;
   }
 
   return italic ? italicFontMap[weight] : uprightFontMap[weight];

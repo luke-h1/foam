@@ -7,6 +7,7 @@ import {
   Text,
   type TextWeight,
 } from '@app/components/ui/Text/Text';
+import { theme } from '@app/styles/themes';
 
 type FontResolution = Pick<TextStyle, 'fontFamily' | 'fontWeight'>;
 
@@ -66,7 +67,7 @@ describe('Text', () => {
     render(<Text style={{ fontWeight: '600' }}>semibold</Text>);
 
     expect(getFontResolution('semibold')).toEqual<FontResolution>({
-      fontFamily: 'Montserrat_600SemiBold',
+      fontFamily: theme.fontFamilySemiBold,
       fontWeight: undefined,
     });
   });
@@ -77,7 +78,7 @@ describe('Text', () => {
     );
 
     expect(getFontResolution('bold')).toEqual<FontResolution>({
-      fontFamily: 'Montserrat_700Bold',
+      fontFamily: theme.fontFamilyBold,
       fontWeight: undefined,
     });
   });
@@ -103,7 +104,7 @@ describe('Text', () => {
     );
 
     expect(getFontResolution('heavy italic')).toEqual<FontResolution>({
-      fontFamily: 'Montserrat_800ExtraBold_Italic',
+      fontFamily: theme.fontFamilyHeavyItalic,
       fontWeight: undefined,
     });
   });
@@ -112,7 +113,7 @@ describe('Text', () => {
     render(<Text weight='medium'>medium</Text>);
 
     expect(getFontResolution('medium')).toEqual<FontResolution>({
-      fontFamily: 'Montserrat_500Medium',
+      fontFamily: theme.fontFamily,
       fontWeight: undefined,
     });
   });

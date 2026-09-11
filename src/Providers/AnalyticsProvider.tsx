@@ -1,4 +1,5 @@
 import { PropsWithChildren, useEffect, useRef, useState } from 'react';
+import { InteractionManager } from 'react-native';
 
 import { usePathname } from 'expo-router';
 
@@ -36,10 +37,15 @@ export function AnalyticsProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     let cancelled = false;
 
-    void setAnalyticsEnabled(analyticsEnabled).then(() => {
-      if (!cancelled) {
-        setCollectionEnabled(analyticsEnabled);
+    void InteractionManager.runAfterInteractions(() => {
+      if (cancelled) {
+        return;
       }
+      void setAnalyticsEnabled(analyticsEnabled).then(() => {
+        if (!cancelled) {
+          setCollectionEnabled(analyticsEnabled);
+        }
+      });
     });
 
     return () => {

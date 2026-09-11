@@ -77,7 +77,7 @@ export const VARIANT_CONFIG = {
 const variant =
   (process.env.EXPO_PUBLIC_APP_VARIANT as Variant) || 'development';
 
-const VERSION = '1.0.9';
+const VERSION = '1.0.10';
 
 const appConfig: AppVariantConfig = VARIANT_CONFIG[variant];
 const twitchClientId = process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID;
@@ -303,6 +303,26 @@ const config: ExpoConfig = {
           'node_modules/@expo-google-fonts/source-code-pro/600SemiBold',
           'node_modules/@expo-google-fonts/source-code-pro/700Bold',
         ],
+        ios: {
+          fonts: [
+            'node_modules/@expo-google-fonts/instrument-serif/400Regular',
+            'node_modules/@expo-google-fonts/instrument-serif/400Regular_Italic',
+            'node_modules/@expo-google-fonts/montserrat/300Light',
+            'node_modules/@expo-google-fonts/montserrat/300Light_Italic',
+            'node_modules/@expo-google-fonts/montserrat/400Regular',
+            'node_modules/@expo-google-fonts/montserrat/400Regular_Italic',
+            'node_modules/@expo-google-fonts/montserrat/500Medium',
+            'node_modules/@expo-google-fonts/montserrat/500Medium_Italic',
+            'node_modules/@expo-google-fonts/montserrat/600SemiBold',
+            'node_modules/@expo-google-fonts/montserrat/600SemiBold_Italic',
+            'node_modules/@expo-google-fonts/montserrat/700Bold',
+            'node_modules/@expo-google-fonts/montserrat/700Bold_Italic',
+            'node_modules/@expo-google-fonts/montserrat/800ExtraBold',
+            'node_modules/@expo-google-fonts/montserrat/800ExtraBold_Italic',
+            'node_modules/@expo-google-fonts/montserrat/900Black',
+            'node_modules/@expo-google-fonts/montserrat/900Black_Italic',
+          ],
+        },
         android: {
           fonts: [
             'node_modules/@expo-google-fonts/instrument-serif/400Regular',
@@ -382,6 +402,7 @@ const config: ExpoConfig = {
     './src/plugins/withAndroidAllowBackupReplace.js',
     './src/plugins/withAndroidAccentColor.js',
     './src/plugins/withAndroidLibsActivityTheme.js',
+    './src/plugins/withAndroidBaselineProfile.js',
     './plugins/with-fix-dev-launcher-cycle.js',
   ],
   experiments: {

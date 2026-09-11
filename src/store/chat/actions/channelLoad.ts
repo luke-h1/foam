@@ -22,6 +22,11 @@ import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
 import { clearSessionCache } from '@app/utils/image/image-cache';
 import { logger } from '@app/utils/logger';
 
+import {
+  CHANNEL_CACHE_PERSISTENCE_ENABLED,
+  clearPersistedChannelCaches,
+  prunePersistedChannelCaches,
+} from '../observables/channelCachePersistence';
 import { chatStore$, limitChannelCaches } from '../observables/chatStore';
 import {
   clearPersistedRecentMessages,
@@ -37,6 +42,7 @@ import {
   emptyResolvedEmoteData,
   makeEmptyGlobalCacheData,
 } from '../types/constants';
+import { ensureChannelCacheHydrated } from './channelCacheHydration';
 import { planChannelRefresh } from './channelRefreshPlan';
 import {
   type BadgeCacheKey,
@@ -317,6 +323,7 @@ const loadChannelResourcesInternal = async (
     invalidateSevenTvUser(channelId);
   }
   try {
+    ensureChannelCacheHydrated(channelId);
     const caches = chatStore$.persisted.channelCaches.peek();
     const existingCache = caches?.[channelId];
     const existingGlobalCache = chatStore$.persisted.globalCaches.peek();
@@ -663,6 +670,10 @@ const loadChannelResourcesInternal = async (
       );
       chatStore$.loadingState.set('COMPLETED');
     });
+    // After the batch, so the listener has queued the new channel's write.
+    for (const droppedId of prunePersistedChannelCaches(channelId)) {
+      chatStore$.persisted.channelCaches[droppedId]?.delete();
+    }
 
     notifyProviderLoadFailures(
       channelId,
@@ -784,6 +795,9 @@ export const clearCache = (channelId?: string) => {
       chatStore$.currentChannelId.set(null);
       chatStore$.loadingState.set('IDLE');
     });
+    if (CHANNEL_CACHE_PERSISTENCE_ENABLED) {
+      clearPersistedChannelCaches();
+    }
     clearGlobalResourceCache();
     invalidateCosmeticsCache();
   }
@@ -802,6 +816,9 @@ export const clearChatCosmeticsCache = (): void => {
   });
   if (RECENT_MESSAGES_PERSISTENCE_ENABLED) {
     clearPersistedRecentMessages();
+  }
+  if (CHANNEL_CACHE_PERSISTENCE_ENABLED) {
+    clearPersistedChannelCaches();
   }
   clearUserCosmeticsCache();
   clearPersonalEmotesCache();

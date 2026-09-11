@@ -11,6 +11,7 @@
   "scripts": {
     "alphabetize": "node scripts/alphabetizePackageJson.js",
     "android": "EXPO_PUBLIC_APP_VARIANT=development expo run:android",
+    "android:check-16kb": "./scripts/check-android-16kb.sh",
     "android:production": "EXPO_PUBLIC_APP_VARIANT=production expo run:android --variant release",
     "atlas:analyze": "expo-atlas",
     "atlas:analyze:file": "expo-atlas .expo/atlas.jsonl",

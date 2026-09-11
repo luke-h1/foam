@@ -207,6 +207,10 @@ export function sendFeedback(feedback: {
   });
 }
 
+export function recordMeasurement(name: string, milliseconds: number): void {
+  Sentry.setMeasurement(name, milliseconds, 'millisecond');
+}
+
 export function countMetric(
   name: string,
   attributes?: Record<string, string | number | boolean>,

@@ -56,6 +56,12 @@ const jestConfig = {
   ],
   cache: true,
   maxWorkers: Math.max(1, Math.floor(require('os').cpus().length * 0.5)),
+  /**
+   * The screen suites take 14-16s each under the full-suite worker load; the
+   * first test in each paid the cold transform plus first render and tripped
+   * the 5s Jest default.
+   */
+  testTimeout: 20000,
   clearMocks: true,
   resetMocks: false,
   restoreMocks: false,

@@ -7,7 +7,6 @@ import { focusManager } from '@tanstack/react-query';
 import * as QuickActions from 'expo-quick-actions';
 import type { RouterAction } from 'expo-quick-actions/router';
 import { router } from 'expo-router';
-import { z } from 'zod';
 
 import { useAuthContext } from '@app/context/AuthContext';
 import { useClearExpiredStorageItems } from '@app/hooks/useClearExpiredStorageItems';
@@ -26,8 +25,6 @@ import {
   endDeepLinkAuth,
 } from '@app/navigators/deepLinkAuthState';
 import { logger } from '@app/utils/logger';
-
-const quickActionHrefSchema = z.string();
 
 const quickActionsBase: RouterAction[] = [
   {
@@ -92,9 +89,9 @@ export function RouterEffects() {
     let isMounted = true;
 
     const handleQuickAction = (action: QuickActions.Action) => {
-      const href = quickActionHrefSchema.safeParse(action.params?.href);
-      if (isMounted && href.success) {
-        router.replace(href.data);
+      const href = action.params?.href;
+      if (isMounted && href) {
+        router.replace(String(href));
       }
     };
 

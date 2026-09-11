@@ -20,6 +20,7 @@ import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { followedStreamsQueryOptions } from '@app/lib/react-query/queries/twitch';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
+import { markFirstScreenInteractive } from '@app/lib/startupMarks';
 import { usePreference } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import type { FollowedChannelWithProfile } from '@app/types/twitch/channel';
@@ -293,6 +294,7 @@ export default function FollowingScreen() {
     <View style={styles.container}>
       <FlashList<FollowingListItem>
         ref={listRef}
+        onLoad={markFirstScreenInteractive}
         data={listItems}
         keyExtractor={getFollowingItemKey}
         contentInsetAdjustmentBehavior='automatic'

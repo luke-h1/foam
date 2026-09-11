@@ -15,6 +15,7 @@ import { ObservablePersistIndexedDbJson } from './observablePersistIndexedDbJson
 let initialized = false;
 
 export const CHAT_STORE_PERSISTENCE_KEY = 'chat-store-v2';
+export const CHAT_GLOBAL_CACHES_PERSISTENCE_KEY = 'chat-global-caches-v1';
 // Recent messages persist under their own key so the frequent message syncs
 // never re-serialize the (much larger) channel emote caches (issue #594).
 export const CHAT_RECENT_MESSAGES_PERSISTENCE_KEY = 'chat-recent-messages-v1';
@@ -79,10 +80,14 @@ export async function clearChatStorePersistence(): Promise<void> {
 
   // SAFETY: pluginClass is one of the two local persistence plugins, so its registered instance is local.
   const persist = entry.persist as ObservablePersistLocal;
-  await Promise.all([
-    persist.deleteTable(CHAT_STORE_PERSISTENCE_KEY, config),
-    persist.deleteMetadata(CHAT_STORE_PERSISTENCE_KEY, config),
-  ]);
+  await Promise.all(
+    [CHAT_STORE_PERSISTENCE_KEY, CHAT_GLOBAL_CACHES_PERSISTENCE_KEY].flatMap(
+      key => [
+        persist.deleteTable(key, config),
+        persist.deleteMetadata(key, config),
+      ],
+    ),
+  );
 }
 
 export function ensureObservablePersistenceConfig(): void {

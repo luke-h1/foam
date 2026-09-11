@@ -6,12 +6,14 @@ import { Button } from '@app/components/Button/Button';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
+import { useStartupMark } from '@app/hooks/useStartupMark';
 import { storage } from '@app/lib/storage';
 import { ONBOARDING_SEEN_KEY } from '@app/screens/OnboardingScreen/constants';
 import { isE2EMode } from '@app/services/api/clients';
 import { theme } from '@app/styles/themes';
 
 export default function IndexRoute() {
+  useStartupMark('index_route_render');
   const { authState, ready } = useAuthContext();
   const hasSeenOnboarding = storage.getBoolean(ONBOARDING_SEEN_KEY);
 

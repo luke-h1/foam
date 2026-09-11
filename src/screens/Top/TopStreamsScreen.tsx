@@ -15,6 +15,7 @@ import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { topStreamsInfiniteQueryOptions } from '@app/lib/react-query/queries/twitch';
+import { markFirstScreenInteractive } from '@app/lib/startupMarks';
 import { usePreference } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import type { TwitchStream } from '@app/types/twitch/stream';
@@ -128,6 +129,7 @@ function TopStreamsList({
     <View testID='top-streams-list' style={styles.container}>
       <FlashList
         ref={listRef}
+        onLoad={markFirstScreenInteractive}
         contentInsetAdjustmentBehavior='automatic'
         data={remainingStreams}
         renderItem={renderItem}

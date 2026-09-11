@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   AppState,
+  InteractionManager,
   Modal as RNModal,
   Platform,
   StyleSheet,
@@ -39,7 +40,29 @@ const UPDATE_REQUIRED_BODY =
   'A new version of Foam is available. Please update to continue using the app.';
 const ALERT_REPRESENT_DELAY_MS = 300;
 
+/**
+ * Mounted after first interactions to keep the Remote Config fetch off the
+ * first frame.
+ */
 export function ForceUpdateModal() {
+  const [armed, setArmed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void InteractionManager.runAfterInteractions(() => {
+      if (!cancelled) {
+        setArmed(true);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return armed ? <ForceUpdateModalContent /> : null;
+}
+
+function ForceUpdateModalContent() {
   const { config: remoteConfig } = useRemoteConfig();
   const insets = useSafeAreaInsets();
   const alertVisibleRef = useRef(false);

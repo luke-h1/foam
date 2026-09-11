@@ -6,6 +6,7 @@ export const expoRouterIntegration = jest.fn(() => ({}));
 export const flush = jest.fn(() => Promise.resolve(true));
 export const init = jest.fn();
 export const showFeedbackWidget = jest.fn();
+export const setMeasurement = jest.fn();
 export const startInactiveSpan = jest.fn();
 type SpanOptions = {
   name: string;
