@@ -10,7 +10,6 @@ import { FlashList, ListRenderItem } from '@app/components/FlashList/FlashList';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { MemoizedOfflineChannelRow } from '@app/components/OfflineChannelRow/OfflineChannelRow';
-import { FirstScreenInteractiveMark } from '@app/components/StartupMarks/FirstScreenInteractiveMark';
 import { useBottomTabOverflow } from '@app/components/TabBarBackground/useBottomTabOverflow';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { Text } from '@app/components/ui/Text/Text';
@@ -21,6 +20,7 @@ import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { followedStreamsQueryOptions } from '@app/lib/react-query/queries/twitch';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
+import { markFirstScreenInteractive } from '@app/lib/startupMarks';
 import { usePreference } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import type { FollowedChannelWithProfile } from '@app/types/twitch/channel';
@@ -292,9 +292,9 @@ export default function FollowingScreen() {
 
   return (
     <View style={styles.container}>
-      <FirstScreenInteractiveMark />
       <FlashList<FollowingListItem>
         ref={listRef}
+        onLoad={markFirstScreenInteractive}
         data={listItems}
         keyExtractor={getFollowingItemKey}
         contentInsetAdjustmentBehavior='automatic'

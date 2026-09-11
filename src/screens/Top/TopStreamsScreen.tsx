@@ -7,7 +7,6 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
-import { FirstScreenInteractiveMark } from '@app/components/StartupMarks/FirstScreenInteractiveMark';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { useStreamProfilePictures } from '@app/hooks/queries/useStreamProfilePictures';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
@@ -16,6 +15,7 @@ import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { topStreamsInfiniteQueryOptions } from '@app/lib/react-query/queries/twitch';
+import { markFirstScreenInteractive } from '@app/lib/startupMarks';
 import { usePreference } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import type { TwitchStream } from '@app/types/twitch/stream';
@@ -127,9 +127,9 @@ function TopStreamsList({
 }) {
   return (
     <View testID='top-streams-list' style={styles.container}>
-      <FirstScreenInteractiveMark />
       <FlashList
         ref={listRef}
+        onLoad={markFirstScreenInteractive}
         contentInsetAdjustmentBehavior='automatic'
         data={remainingStreams}
         renderItem={renderItem}

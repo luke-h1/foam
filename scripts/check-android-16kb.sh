@@ -29,7 +29,12 @@ fail=0
 count=0
 while IFS= read -r lib; do
   count=$((count + 1))
-  for align in $("$READELF" -lW "$lib" | awk '$1 == "LOAD" { print $NF }'); do
+  if ! aligns=$("$READELF" -lW "$lib" | awk '$1 == "LOAD" { print $NF }') || [ -z "$aligns" ]; then
+    echo "FAIL ${lib#"$TMP"/}: could not read LOAD segments"
+    fail=1
+    continue
+  fi
+  for align in $aligns; do
     if [ "$((align))" -lt 16384 ]; then
       echo "FAIL ${lib#"$TMP"/}: LOAD segment align $align"
       fail=1

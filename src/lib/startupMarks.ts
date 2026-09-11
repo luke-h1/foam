@@ -19,15 +19,25 @@ export function markStartup(name: StartupMark): void {
   }
   recorded.add(name);
   performance.mark(`startup.${name}`);
+  if (name === 'first_screen_interactive') {
+    FullyDrawn.report();
+  }
   // performance.now() counts from device boot, not process start.
-  const launchStart =
-    performance.getEntriesByName('nativeLaunchStart')[0]?.startTime ?? 0;
-  const msSinceLaunch = Math.round(performance.now() - launchStart);
+  const launchStart = performance.getEntriesByName('nativeLaunchStart')[0];
+  if (!launchStart) {
+    return;
+  }
+  const msSinceLaunch = Math.round(performance.now() - launchStart.startTime);
   recordMeasurement(`startup.${name}`, msSinceLaunch);
   logger.performance.info(`startup.${name}`, {
     ms_since_launch: msSinceLaunch,
   });
-  if (name === 'first_screen_interactive') {
-    FullyDrawn.report();
-  }
+}
+
+/**
+ * FlashList `onLoad` on the first screen's list, so the mark lands once items
+ * are drawn.
+ */
+export function markFirstScreenInteractive(): void {
+  markStartup('first_screen_interactive');
 }
