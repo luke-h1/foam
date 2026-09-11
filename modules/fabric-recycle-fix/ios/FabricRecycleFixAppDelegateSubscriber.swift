@@ -22,6 +22,10 @@ public class FabricRecycleFixAppDelegateSubscriber: ExpoAppDelegateSubscriber {
     else {
       return true
     }
+    let inherited = class_getSuperclass(viewClass).flatMap { class_getInstanceMethod($0, selector) }
+    guard method != inherited else {
+      return true
+    }
     typealias PrepareForRecycle = @convention(c) (AnyObject, Selector) -> Void
     let original = unsafeBitCast(method_getImplementation(method), to: PrepareForRecycle.self)
     let replacement: @convention(block) (AnyObject) -> Void = { view in
