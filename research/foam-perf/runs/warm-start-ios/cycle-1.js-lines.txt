@@ -1,0 +1,2 @@
+\134^[[34m13:05:55 | \134^[[0m\134^[[45m twitch \134^[[0m\134^[[34m | INFO : https://api.twitch.tv/helix/streams \134^[[0m
+\134^[[34m13:05:55 | \134^[[0m\134^[[45m twitch \134^[[0m\134^[[34m | INFO : GET /helix/streams 200 {"name":"api_info","action":"response_ok","service":"twitch","endpoint":"/helix/streams","host":"api

@@ -1,0 +1,22 @@
+run 1 done (waited 27s): Starting: Intent { act=android.intent.action.VIEW dat=foam://expo-development-client/... pkg=com.lhowsam.foam.dev } Status: ok LaunchState: COLD Activity: com.lhowsam.foam.dev/.MainActivity TotalTime: 2614 WaitTime: 2666 Complete 
+run 2 done (waited 24s): Starting: Intent { act=android.intent.action.VIEW dat=foam://expo-development-client/... pkg=com.lhowsam.foam.dev } Status: ok LaunchState: COLD Activity: com.lhowsam.foam.dev/.MainActivity TotalTime: 1373 WaitTime: 1378 Complete 
+run 3 done (waited 29s): Starting: Intent { act=android.intent.action.VIEW dat=foam://expo-development-client/... pkg=com.lhowsam.foam.dev } Status: ok LaunchState: COLD Activity: com.lhowsam.foam.dev/.MainActivity TotalTime: 4601 WaitTime: 4627 Complete 
+run 4 done (waited 26s): Starting: Intent { act=android.intent.action.VIEW dat=foam://expo-development-client/... pkg=com.lhowsam.foam.dev } Status: ok LaunchState: COLD Activity: com.lhowsam.foam.dev/.MainActivity TotalTime: 3948 WaitTime: 3950 Complete 
+run 5 done (waited 29s): Starting: Intent { act=android.intent.action.VIEW dat=foam://expo-development-client/... pkg=com.lhowsam.foam.dev } Status: ok LaunchState: COLD Activity: com.lhowsam.foam.dev/.MainActivity TotalTime: 1793 WaitTime: 1805 Complete 
+
+runs=5 (ms since am start; am_* are reported by ActivityManager)
+stage                        median      p90      min      max  per-run
+am_total_time                  2614     4601     1373     4601  2614,1373,4601,3948,1793
+am_wait_time                   2666     4627     1378     4627  2666,1378,4627,3950,1805
+activity_displayed             2669     4696     1409     4696  2669,1409,4696,4017,1833
+js_bundle_start               13882    19127    12325    19127  13882,12325,19127,13696,17299
+js_bundle_end                 15334    22364    14316    22364  15334,14316,22364,14944,19062
+app_startup_end               15334    22365    14316    22365  15334,14316,22365,14944,19062
+content_appeared              23506    28565    21097    28565  23506,21097,28565,23194,26865
+bundle_request                 null     null     null     null  ,,,,
+run_application               15342    22368    14320    22368  15342,14320,22368,14948,19071
+router_effects_mounted        23663    28712    21259    28712  23663,21259,28712,23326,26986
+auth_ready                    27826    32903    24755    32903  27826,24755,32903,27257,30705
+first_screen_query            26910    32652    23973    32652  26809,23973,32652,26910,30209
+first_screen_data             30103    34438    25036    34438  30103,25036,34438,29941,31056
+EXIT 0

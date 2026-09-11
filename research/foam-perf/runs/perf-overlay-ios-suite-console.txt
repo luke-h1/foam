@@ -1,0 +1,21 @@
+sample 1: ,,,,,
+sample 2: 36,2,51,3,97,0
+sample 3: 33,2,53,3,131,0
+sample 4: ,,,,,
+sample 5: ,,,,,
+sample 6: ,,,,,
+sample 7: 39,2,47,3,148,0
+sample 8: 38,3,50,5,72,0
+sample 9: ,,,,,
+sample 10: 60,0,55,2,9,0
+sample 11: ,,,,,
+sample 12: 60,0,54,1,8,0
+sample 13: 60,0,55,2,12,0
+sample 14: ,,,,,
+samples=14 span=78s
+js_fps       median      0 p90     60 min      0 max     60
+js_jank      median      0 p90      2 min      0 max      3
+ui_fps       median      0 p90     55 min      0 max     55
+ui_jank      median      0 p90      3 min      0 max      5
+cpu_pct      median      0 p90    131 min      0 max    148
+mem_mb       median      0 p90      0 min      0 max      0

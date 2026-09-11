@@ -1,0 +1,15 @@
+cycle 1: foreground at 13:05:54; js log lines=2; requests=1; responses=1; socket revive/reconnect lines=0; ota checks=0; remote config fetches=0
+    13:05:55 |  twitch  | INFO : https://api.twitch.tv/helix/streams 
+    13:05:55 |  twitch  | INFO : GET /helix/streams 200 {"name":"api_info","action":"response_ok","service":"twitch","endpoi
+cycle 2: foreground at 13:06:27; js log lines=2; requests=1; responses=1; socket revive/reconnect lines=0; ota checks=0; remote config fetches=0
+    13:06:28 |  twitch  | INFO : https://api.twitch.tv/helix/streams 
+    13:06:28 |  twitch  | INFO : GET /helix/streams 200 {"name":"api_info","action":"response_ok","service":"twitch","endpoi
+cycle 3: foreground at 13:07:00; js log lines=2; requests=1; responses=1; socket revive/reconnect lines=0; ota checks=0; remote config fetches=0
+    13:07:02 |  twitch  | INFO : https://api.twitch.tv/helix/streams 
+    13:07:02 |  twitch  | INFO : GET /helix/streams 200 {"name":"api_info","action":"response_ok","service":"twitch","endpoi
+cycle 4: foreground at 13:07:35; js log lines=2; requests=1; responses=1; socket revive/reconnect lines=0; ota checks=0; remote config fetches=0
+    13:07:36 |  twitch  | INFO : https://api.twitch.tv/helix/streams 
+    13:07:36 |  twitch  | INFO : GET /helix/streams 200 {"name":"api_info","action":"response_ok","service":"twitch","endpoi
+cycle 5: foreground at 13:08:10; js log lines=2; requests=1; responses=1; socket revive/reconnect lines=0; ota checks=0; remote config fetches=0
+    13:08:11 |  twitch  | INFO : https://api.twitch.tv/helix/streams 
+    13:08:12 |  twitch  | INFO : GET /helix/streams 200 {"name":"api_info","action":"response_ok","service":"twitch","endpoi

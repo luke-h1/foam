@@ -1,0 +1,185 @@
+getpwuid_r did not find a match for uid 501
+Filtering the log data using "process == "Foamdev""
+Timestamp               Ty Process[PID:TID]
+2026-09-11 13:06:28.026 A  Foamdev[43144:4dce4f] (RunningBoardServices) observedProcessStatesDidChange
+2026-09-11 13:06:28.027 Df Foamdev[43144:4dc520] [com.apple.CFNetwork:Default] Connection 16: cleaning up
+2026-09-11 13:06:28.028 Df Foamdev[43144:4dce4f] [com.apple.runningboard:monitor] Received state update for 43144 (app<foam-tv-dev((null))>, unknown-NotVisible
+2026-09-11 13:06:28.028 Df Foamdev[43144:4dc520] [com.apple.network:connection] [C16 A219D8E0-0F66-40AA-AAA5-54FC04CF86CF Hostname#97c6b710:443 quic-connection, url: https://id.twitch.tv/oauth2/validate, definite, attribution: developer] cancel
+2026-09-11 13:06:28.028 A  Foamdev[43144:4dce4f] (RunningBoardServices) didChangeInheritances
+2026-09-11 13:06:28.028 I  Foamdev[43144:4dae8d] [com.apple.runningboard:monitor] Update delivered for [app<foam-tv-dev((null))>:43144] with taskState 0
+2026-09-11 13:06:28.028 Df Foamdev[43144:4d82ab] [com.apple.UIKit:AppLifecycle] sceneOfRecord: sceneID: sceneID:foam-tv-dev-default  persistentID: C4AE952A-AFFB-492D-86F2-BB81F34BE667
+2026-09-11 13:06:28.028 Df Foamdev[43144:4dc520] [com.apple.network:connection] [C16 A219D8E0-0F66-40AA-AAA5-54FC04CF86CF Hostname#97c6b710:443 quic-connection, url: https://id.twitch.tv/oauth2/validate, definite, attribution: developer] cancelled
+	[C16.1.1.1 EEAA6938-3AF2-40F8-B0CE-A6987E2FF762 192.168.1.128:55461<->IPv4#fc558ae9:443]
+	Connected Path: satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown
+	Privacy Stance: Not Eligible
+	Duration: 126.495s, DNS @0.011s took 0.072s, TCP @0.087s took 0.011s, TLS 1.3 took 0.062s
+	bytes in/out: 6714/2242, packets in/out: 7/6, rtt: 0.017s, retransmitted bytes: 0, out-of-order bytes: 0
+	ecn packets sent/acked/marked/lost: 6/5/0/0
+2026-09-11 13:06:28.028 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_endpoint_handler_cancel [C16 IPv4#fc558ae9:443 ready parent-flow (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)]
+2026-09-11 13:06:28.028 Df Foamdev[43144:4d82ab] [com.apple.UIKit:Application] Deactivation reason added: 5; deactivation reasons: 6144 -> 6176; animating application lifecycle event: 1
+2026-09-11 13:06:28.028 Df Foamdev[43144:4d82ab] [com.apple.UIKit:Application] Ignoring already applied deactivation reason: 12; deactivation reasons: 6176
+2026-09-11 13:06:28.028 I  Foamdev[43144:4dc520] [com.apple.network:boringssl] boringssl_context_handle_warning_alert(2335) [C16.1.1.1:2][0x101984ce0] write alert, level: warning, description: close notify
+2026-09-11 13:06:28.029 A  Foamdev[43144:4d82ab] (StoreKit) StoreKit/QueueCheck
+2026-09-11 13:06:28.029 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_endpoint_handler_cancel [C16.1 Hostname#97c6b710:443 ready transform (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)]
+2026-09-11 13:06:28.029 I  Foamdev[43144:4d82ab] [dev.expo.modules:expo] 🟢 Posting 'appEntersForeground' event to registered modules
+2026-09-11 13:06:28.029 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_association_schedule_deactivation <nw_association Hostname#97c6b710:443> will become dormant after 10000ms of inactivity
+2026-09-11 13:06:28.029 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_endpoint_handler_cancel [C16.1.1 Hostname#97c6b710:443 ready resolver (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)]
+2026-09-11 13:06:28.030 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_association_schedule_deactivation <nw_association Hostname#97c6b710:443> will become dormant after 10000ms of inactivity
+2026-09-11 13:06:28.030 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_endpoint_handler_cancel [C16.1.1.1 IPv4#fc558ae9:443 ready socket-flow (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)]
+2026-09-11 13:06:28.030 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_association_schedule_deactivation <nw_association IPv4#fc558ae9:443> will become dormant after 10000ms of inactivity
+2026-09-11 13:06:28.030 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_endpoint_handler_cancel [C16.1.1.2 IPv4#4c37d4ea:443 cancelled path ((null))]
+2026-09-11 13:06:28.030 Df Foamdev[43144:4d82ab] [com.apple.UIKit:Application] Deactivation reason removed: 11; deactivation reasons: 6176 -> 4128; animating application lifecycle event: 1
+2026-09-11 13:06:28.030 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_endpoint_handler_cancel [C16.1.1.3 IPv4#a0b51f6a:443 cancelled path ((null))]
+2026-09-11 13:06:28.028 A  Foamdev[43144:4dae8d] (RunningBoardServices) observedProcessStatesDidChange
+2026-09-11 13:06:28.030 Df Foamdev[43144:4dce4f] [com.apple.UIIntelligenceSupport:xpc] establishing connection to agent
+2026-09-11 13:06:28.031 Df Foamdev[43144:4dce4f] [com.apple.xpc:session] [0x60000e222940] Session created.
+2026-09-11 13:06:28.031 Df Foamdev[43144:4dce4f] [com.apple.xpc:session] [0x60000e222940] Session created from connection [0x311fc11a0]
+2026-09-11 13:06:28.031 Df Foamdev[43144:4dce4f] [com.apple.xpc:connection] [0x311fc11a0] activating connection: mach=true listener=false peer=false name=com.apple.uiintelligencesupport.agent
+2026-09-11 13:06:28.031 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_endpoint_handler_cancel [C16.1.1.4 IPv4#e3d4ab63:443 cancelled path ((null))]
+2026-09-11 13:06:28.031 Df Foamdev[43144:4d82ab] [com.apple.UIKit:EventDeferring] [0x60000290e530] [keyboardFocus] Recreation of event deferring records requested: removing recreation reason: detachedContext; for reason: _UIEventDeferringManager: 0x60000290e530: recreating keyboardFocus: context attached for window: 0x101614fe0; contextID: 0xE9112C9A
+2026-09-11 13:06:28.031 Df Foamdev[43144:4dce4f] [com.apple.xpc:session] [0x60000e222940] Session activated
+2026-09-11 13:06:28.031 Df Foamdev[43144:4dc520] [com.apple.network:connection] nw_connection_report_state_with_handler_on_nw_queue [C16] reporting state cancelled
+2026-09-11 13:06:28.032 Df Foamdev[43144:4dc520] [com.apple.CFNetwork:Default] Connection 16: done
+2026-09-11 13:06:28.032 I  Foamdev[43144:4dc520] [com.apple.network:connection] [C16 Hostname#97c6b710:443 quic-connection, url: https://id.twitch.tv/oauth2/validate, definite, attribution: developer] dealloc
+2026-09-11 13:06:28.031 Df Foamdev[43144:4dae8d] [com.apple.runningboard:monitor] Received state update for 43144 (app<foam-tv-dev((null))>, unknown-NotVisible
+2026-09-11 13:06:28.033 Df Foamdev[43144:4dc520] [com.apple.CFNetwork:Default] Connection 19: cleaning up
+2026-09-11 13:06:28.033 Df Foamdev[43144:4dc520] [com.apple.network:connection] [C19 4C57DF4C-B7D5-48F5-AB92-4FC274AAF3FD Hostname#e44c2618:443 quic-connection, url: https://static-cdn.jtvnw.net/previews-ttv/live_user_inkmate0-320x180.jpg, definite, attribution: developer] cancel
+2026-09-11 13:06:28.033 Df Foamdev[43144:4dc520] [com.apple.network:connection] [C19 4C57DF4C-B7D5-48F5-AB92-4FC274AAF3FD Hostname#e44c2618:443 quic-connection, url: https://static-cdn.jtvnw.net/previews-ttv/live_user_inkmate0-320x180.jpg, definite, attribution: developer] cancelled
+	[C19.1.1.1 B7C36540-80F1-4958-BA09-734618828252 192.168.1.128:55465<->IPv4#559b3967:443]
+	Connected Path: satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown
+	Privacy Stance: Not Eligible
+	Duration: 124.204s, DNS @0.002s took 0.007s, TCP @0.012s took 0.014s, TLS 1.3 took 0.065s
+	bytes in/out: 62980/2283, packets in/out: 10/6, rtt: 0.011s, retransmitted bytes: 0, out-of-order bytes: 0
+	ecn packets sent/acked/marked/lost: 0/0/0/0
+2026-09-11 13:06:28.033 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_endpoint_handler_cancel [C19 IPv4#559b3967:443 ready parent-flow (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)]
+2026-09-11 13:06:28.033 I  Foamdev[43144:4dc520] [com.apple.network:boringssl] boringssl_context_handle_warning_alert(2335) [C19.1.1.1:2][0x33a71ce90] write alert, level: warning, description: close notify
+2026-09-11 13:06:28.034 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_endpoint_handler_cancel [C19.1 Hostname#e44c2618:443 ready transform (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)]
+2026-09-11 13:06:28.032 I  Foamdev[43144:4dce4f] [com.apple.runningboard:monitor] Update skipped for [app<foam-tv-dev((null))>:43144]
+2026-09-11 13:06:28.034 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_association_schedule_deactivation <nw_association Hostname#e44c2618:443> will become dormant after 10000ms of inactivity
+2026-09-11 13:06:28.035 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_endpoint_handler_cancel [C19.1.1 Hostname#e44c2618:443 ready resolver (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)]
+2026-09-11 13:06:28.035 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_association_schedule_deactivation <nw_association Hostname#e44c2618:443> will become dormant after 10000ms of inactivity
+2026-09-11 13:06:28.035 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_endpoint_handler_cancel [C19.1.1.1 IPv4#559b3967:443 ready socket-flow (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)]
+2026-09-11 13:06:28.035 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_association_schedule_deactivation <nw_association IPv4#559b3967:443> will become dormant after 10000ms of inactivity
+2026-09-11 13:06:28.035 Df Foamdev[43144:4dc520] [com.apple.network:connection] nw_connection_report_state_with_handler_on_nw_queue [C19] reporting state cancelled
+2026-09-11 13:06:28.036 Df Foamdev[43144:4dc520] [com.apple.CFNetwork:Default] Connection 19: done
+2026-09-11 13:06:28.036 I  Foamdev[43144:4dc520] [com.apple.network:connection] [C19 Hostname#e44c2618:443 quic-connection, url: https://static-cdn.jtvnw.net/previews-ttv/live_user_inkmate0-320x180.jpg, definite, attribution: developer] dealloc
+2026-09-11 13:06:28.036 Df Foamdev[43144:4dc520] [com.apple.CFNetwork:Default] Connection 18: cleaning up
+2026-09-11 13:06:28.036 Df Foamdev[43144:4dc520] [com.apple.network:connection] [C18 D371EED3-D9AB-4208-A891-DD31BEECDCB9 Hostname#e44c2618:443 quic-connection, url: https://static-cdn.jtvnw.net/previews-ttv/live_user_inkmate0-320x180.jpg, definite, attribution: developer] cancel
+2026-09-11 13:06:28.036 Df Foamdev[43144:4dc520] [com.apple.network:connection] [C18 D371EED3-D9AB-4208-A891-DD31BEECDCB9 Hostname#e44c2618:443 quic-connection, url: https://static-cdn.jtvnw.net/previews-ttv/live_user_inkmate0-320x180.jpg, definite, attribution: developer] cancelled
+	[C18.1.1.1 48DD5F51-ED93-4B00-9355-D29B8FF0597F 192.168.1.128:55464<->IPv4#559b3967:443]
+	Connected Path: satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown
+	Privacy Stance: Not Eligible
+	Duration: 124.225s, DNS @0.011s took 0.004s, TCP @0.025s took 0.011s, TLS 1.3 took 0.053s
+	bytes in/out: 63002/2269, packets in/out: 10/6, rtt: 0.011s, retransmitted bytes: 0, out-of-order bytes: 0
+	ecn packets sent/acked/marked/lost: 0/0/0/0
+2026-09-11 13:06:28.036 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_endpoint_handler_cancel [C18 IPv4#559b3967:443 ready parent-flow (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)]
+2026-09-11 13:06:28.036 I  Foamdev[43144:4dc520] [com.apple.network:boringssl] boringssl_context_handle_warning_alert(2335) [C18.1.1.1:2][0x10227f9a0] write alert, level: warning, description: close notify
+2026-09-11 13:06:28.037 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_endpoint_handler_cancel [C18.1 Hostname#e44c2618:443 ready transform (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)]
+2026-09-11 13:06:28.037 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_association_schedule_deactivation <nw_association Hostname#e44c2618:443> will become dormant after 10000ms of inactivity
+2026-09-11 13:06:28.037 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_endpoint_handler_cancel [C18.1.1 Hostname#e44c2618:443 ready resolver (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)]
+2026-09-11 13:06:28.037 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_association_schedule_deactivation <nw_association Hostname#e44c2618:443> will become dormant after 10000ms of inactivity
+2026-09-11 13:06:28.037 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_endpoint_handler_cancel [C18.1.1.1 IPv4#559b3967:443 ready socket-flow (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)]
+2026-09-11 13:06:28.038 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_association_schedule_deactivation <nw_association IPv4#559b3967:443> will become dormant after 10000ms of inactivity
+2026-09-11 13:06:28.038 Df Foamdev[43144:4dc520] [com.apple.network:connection] nw_connection_report_state_with_handler_on_nw_queue [C18] reporting state cancelled
+2026-09-11 13:06:28.038 Df Foamdev[43144:4dc520] [com.apple.CFNetwork:Default] Connection 18: done
+2026-09-11 13:06:28.038 I  Foamdev[43144:4dc520] [com.apple.network:connection] [C18 Hostname#e44c2618:443 quic-connection, url: https://static-cdn.jtvnw.net/previews-ttv/live_user_inkmate0-320x180.jpg, definite, attribution: developer] dealloc
+2026-09-11 13:06:28.038 Df Foamdev[43144:4dc520] [com.apple.CFNetwork:Default] Connection 3: cleaning up
+2026-09-11 13:06:28.038 Df Foamdev[43144:4dc520] [com.apple.network:connection] [C3 93BCF713-F55A-4E19-9676-735C6E25F624 Hostname#a5352465:443 quic-connection, url hash: d99f6900, definite, attribution: developer] cancel
+2026-09-11 13:06:28.038 Df Foamdev[43144:4dc520] [com.apple.network:connection] [C3 93BCF713-F55A-4E19-9676-735C6E25F624 Hostname#a5352465:443 quic-connection, url hash: d99f6900, definite, attribution: developer] cancelled
+	[C3.1.1.1 B786EB27-1EA9-419F-B433-706DE9F9311A 192.168.1.128:55186<->IPv4#760af050:443]
+	Connected Path: satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown
+	Privacy Stance: Not Eligible
+	Duration: 241.153s, DNS @0.002s took 0.008s, TCP @0.011s took 0.110s, TLS 1.3 took 0.379s
+	bytes in/out: 4580/2604, packets in/out: 4/8, rtt: 0.032s, retransmitted bytes: 0, out-of-order bytes: 0
+	ecn packets sent/acked/marked/lost: 0/0/0/0
+2026-09-11 13:06:28.038 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_endpoint_handler_cancel [C3 IPv4#760af050:443 ready parent-flow (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)]
+2026-09-11 13:06:28.039 I  Foamdev[43144:4dc520] [com.apple.network:boringssl] boringssl_context_handle_warning_alert(2335) [C3.1.1.1:2][0x101805b40] write alert, level: warning, description: close notify
+2026-09-11 13:06:28.039 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_endpoint_handler_cancel [C3.1 Hostname#a5352465:443 ready transform (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)]
+2026-09-11 13:06:28.039 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_association_schedule_deactivation <nw_association Hostname#a5352465:443> will become dormant after 10000ms of inactivity
+2026-09-11 13:06:28.039 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_endpoint_handler_cancel [C3.1.1 Hostname#a5352465:443 ready resolver (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)]
+2026-09-11 13:06:28.039 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_association_schedule_deactivation <nw_association Hostname#a5352465:443> will become dormant after 10000ms of inactivity
+2026-09-11 13:06:28.039 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_endpoint_handler_cancel [C3.1.1.1 IPv4#760af050:443 ready socket-flow (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)]
+2026-09-11 13:06:28.039 I  Foamdev[43144:4dc520] [com.apple.network:connection] nw_association_schedule_deactivation <nw_association IPv4#760af050:443> will become dormant after 10000ms of inactivity
+2026-09-11 13:06:28.039 Df Foamdev[43144:4dc520] [com.apple.network:connection] nw_connection_report_state_with_handler_on_nw_queue [C3] reporting state cancelled
+2026-09-11 13:06:28.040 Df Foamdev[43144:4dc520] [com.apple.CFNetwork:Default] Connection 3: done
+2026-09-11 13:06:28.040 I  Foamdev[43144:4dc520] [com.apple.network:connection] [C3 Hostname#a5352465:443 quic-connection, url hash: d99f6900, definite, attribution: developer] dealloc
+2026-09-11 13:06:28.053 Df Foamdev[43144:4d82ab] [com.apple.KeyboardArbiter:Client] startConnection
+2026-09-11 13:06:28.053 Df Foamdev[43144:4d82ab] [com.apple.xpc:connection] [0x33305fd50] activating connection: mach=true listener=false peer=false name=com.apple.UIKit.KeyboardManagement.hosted
+2026-09-11 13:06:28.054 Df Foamdev[43144:4d82ab] [com.apple.UIKit:UpdateScheduler] Target list changed: <CADisplay:LCD PurpleMain>
+2026-09-11 13:06:28.056 Df Foamdev[43144:4d82ab] [com.apple.KeyboardArbiter:Client] handleKeyboardChange: set currentKeyboard:N (wasKeyboard:N)
+2026-09-11 13:06:28.064 Df Foamdev[43144:4d82ab] [com.apple.UIKit:AppLifecycle] sceneOfRecord: sceneID: sceneID:foam-tv-dev-default  persistentID: C4AE952A-AFFB-492D-86F2-BB81F34BE667
+2026-09-11 13:06:28.065 Df Foamdev[43144:4d82ab] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x102108240> (C4AE952A-AFFB-492D-86F2-BB81F34BE667)
+2026-09-11 13:06:28.071 A  Foamdev[43144:4dce4f] (RunningBoardServices) didChangeInheritances
+2026-09-11 13:06:28.071 Df Foamdev[43144:4d82ab] [com.apple.UIKit:AppLifecycle] sceneOfRecord: sceneID: sceneID:foam-tv-dev-default  persistentID: C4AE952A-AFFB-492D-86F2-BB81F34BE667
+2026-09-11 13:06:28.075 A  Foamdev[43144:4dce4f] (RunningBoardServices) didChangeInheritances
+2026-09-11 13:06:28.080 Df Foamdev[43144:4dce4f] [com.apple.BackBoard:EventDelivery] policyStatus:<BKSHIDEventDeliveryPolicyObserver: 0x60000260c4e0; token: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Afoam-tv-dev-default; status: ancestor> was:none
+2026-09-11 13:06:28.080 Df Foamdev[43144:4dce4f] [com.apple.BackBoard:EventDelivery] policyStatus:<BKSHIDEventDeliveryPolicyObserver: 0x6000028f4a20; environment: keyboardFocus; status: target> was:none
+2026-09-11 13:06:28.087 Df Foamdev[43144:4d82ab] [com.apple.UIKit:AppLifecycle] sceneOfRecord: sceneID: sceneID:foam-tv-dev-default  persistentID: C4AE952A-AFFB-492D-86F2-BB81F34BE667
+2026-09-11 13:06:28.087 Df Foamdev[43144:4d82ab] [com.apple.UIKit:KeyWindow] Scene target of keyboard event deferring environment did change: 1; scene: UIWindowScene: 0x102108240; scene identity: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Afoam-tv-dev-default
+2026-09-11 13:06:28.087 Df Foamdev[43144:4d82ab] [com.apple.UIKit:EventDeferring] [0x60000290e530] Scene target of event deferring environments did update: scene: 0x102108240; current systemShellManagesKeyboardFocus: 1; systemShellManagesKeyboardFocusForScene: 0; eligibleForRecordRemoval: 1;
+2026-09-11 13:06:28.087 Df Foamdev[43144:4d82ab] [com.apple.UIKit:KeyWindow] Scene became target of keyboard event deferring environment: UIWindowScene: 0x102108240; scene identity: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Afoam-tv-dev-default
+2026-09-11 13:06:28.114 A  Foamdev[43144:4dae8d] (RunningBoardServices) observedProcessStatesDidChange
+2026-09-11 13:06:28.115 Df Foamdev[43144:4dae8d] [com.apple.runningboard:monitor] Received state update for 43144 (app<foam-tv-dev((null))>, unknown-NotVisible
+2026-09-11 13:06:28.115 I  Foamdev[43144:4dc520] [com.apple.runningboard:monitor] Update delivered for [app<foam-tv-dev((null))>:43144] with taskState 0
+2026-09-11 13:06:28.180 A  Foamdev[43144:4dc520] (RunningBoardServices) didChangeInheritances
+2026-09-11 13:06:28.456 Df Foamdev[43144:4d82ab] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x102108240> (C4AE952A-AFFB-492D-86F2-BB81F34BE667)
+2026-09-11 13:06:28.456 Df Foamdev[43144:4d82ab] [com.apple.UIKit:AppLifecycle] sceneOfRecord: sceneID: sceneID:foam-tv-dev-default  persistentID: C4AE952A-AFFB-492D-86F2-BB81F34BE667
+2026-09-11 13:06:28.456 Df Foamdev[43144:4d82ab] [com.apple.UIKit:Application] Deactivation reason removed: 12; deactivation reasons: 4128 -> 32; animating application lifecycle event: 1
+2026-09-11 13:06:28.456 Df Foamdev[43144:4d82ab] [com.apple.KeyboardArbiter:Client] Send setDeactivating: N (-DeactivationReason:SuspendedEventsOnly)
+2026-09-11 13:06:28.459 Df Foamdev[43144:4d82ab] [com.apple.UIKit:Application] Deactivation reason removed: 5; deactivation reasons: 32 -> 0; animating application lifecycle event: 0
+2026-09-11 13:06:28.459 I  Foamdev[43144:4d82ab] [dev.expo.modules:expo] 🟢 Posting 'appBecomesActive' event to registered modules
+2026-09-11 13:06:28.460 A  Foamdev[43144:4d82ab] (GameController) Notify ApplicationDidBecomeActive
+2026-09-11 13:06:28.461 I  Foamdev[43144:4d9f1c] [com.facebook.react.log:javascript] \134^[[34m13:06:28 | \134^[[0m\134^[[45m twitch \134^[[0m\134^[[34m | INFO : https://api.twitch.tv/helix/streams \134^[[0m
+2026-09-11 13:06:28.463 Df Foamdev[43144:4dce4e] [com.apple.CFNetwork:Default] Task <5C2D17E8-3611-4B01-AB17-72A0624BA384>.<5> resuming, timeouts(0.0, 604800.0) qos(0x19) voucher((null)) activity(00000000-0000-0000-0000-000000000000)
+2026-09-11 13:06:28.463 Df Foamdev[43144:4d9f68] [com.apple.CFNetwork:Default] Task <1D6D1E77-3470-4C79-ACAB-0413C480DF0A>.<13> resuming, timeouts(0.0, 604800.0) qos(0x19) voucher((null)) activity(00000000-0000-0000-0000-000000000000)
+2026-09-11 13:06:28.467 Df Foamdev[43144:4dae8d] [com.apple.network:connection] [C17] event: client:connection_reused @126.326s
+2026-09-11 13:06:28.467 I  Foamdev[43144:4dae8d] [com.apple.network:connection] nw_endpoint_handler_report_connection_idle [C17 IPv4#59b0aa4b:443 ready parent-flow (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)] Reporting connection not idle to protocols
+2026-09-11 13:06:28.467 I  Foamdev[43144:4dae8d] [com.apple.network:connection] nw_flow_passthrough_notify [C17.1.1.1 IPv4#59b0aa4b:443 ready socket-flow (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)] received notification connection_idle
+2026-09-11 13:06:28.468 Df Foamdev[43144:4dae8d] [com.apple.network:connection] nw_protocol_socket_notify [C17.1.1.1:3] nw_protocol_notification_type_connection_idle is false
+2026-09-11 13:06:28.468 Df Foamdev[43144:4dae8d] [com.apple.CFNetwork:Default] Task <1D6D1E77-3470-4C79-ACAB-0413C480DF0A>.<13> now using Connection 17
+2026-09-11 13:06:28.468 Df Foamdev[43144:4dae8d] [com.apple.CFNetwork:Default] Task <1D6D1E77-3470-4C79-ACAB-0413C480DF0A>.<13> sent request, body N 0
+2026-09-11 13:06:28.621 Df Foamdev[43144:4dce4f] [com.apple.CFNetwork:Default] Task <1D6D1E77-3470-4C79-ACAB-0413C480DF0A>.<13> received response, status 200 content U
+2026-09-11 13:06:28.621 Df Foamdev[43144:4dce4f] [com.apple.CFNetwork:Default] Task <1D6D1E77-3470-4C79-ACAB-0413C480DF0A>.<13> done using Connection 17
+2026-09-11 13:06:28.621 Df Foamdev[43144:4dce4f] [com.apple.network:connection] [C17] event: client:connection_idle @126.480s
+2026-09-11 13:06:28.621 I  Foamdev[43144:4dce4f] [com.apple.network:connection] nw_endpoint_handler_report_connection_idle [C17 IPv4#59b0aa4b:443 ready parent-flow (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)] Reporting connection idle to protocols
+2026-09-11 13:06:28.621 I  Foamdev[43144:4dce4f] [com.apple.network:connection] nw_flow_passthrough_notify [C17.1.1.1 IPv4#59b0aa4b:443 ready socket-flow (satisfied (Path is satisfied), interface: en0[802.11], uses wifi, LQM: unknown)] received notification connection_idle
+2026-09-11 13:06:28.621 Df Foamdev[43144:4dce4f] [com.apple.network:connection] nw_protocol_socket_notify [C17.1.1.1:3] nw_protocol_notification_type_connection_idle is true
+2026-09-11 13:06:28.621 Df Foamdev[43144:4dce4f] [com.apple.CFNetwork:Default] Task <1D6D1E77-3470-4C79-ACAB-0413C480DF0A>.<13> response ended
+2026-09-11 13:06:28.622 Df Foamdev[43144:4dce4e] [com.apple.CFNetwork:Summary] Task <1D6D1E77-3470-4C79-ACAB-0413C480DF0A>.<13> summary for task success {transaction_duration_ms=157, response_status=200, connection=17, reused=1, reused_after_ms=33026, request_start_ms=4, request_duration_ms=0, response_start_ms=156, response_duration_ms=0, request_bytes=67, request_throughput_kbps=4429, response_bytes=4280, response_throughput_kbps=45533, cache_hit=false}
+2026-09-11 13:06:28.622 I  Foamdev[43144:4dae8d] [com.apple.runningboard:assertion] Acquiring assertion: <RBSAssertionDescriptor| "com.apple.CFNetwork.StorageDB" ID:(null) target:43144>
+2026-09-11 13:06:28.622 Df Foamdev[43144:4dce4e] [com.apple.CFNetwork:Default] Task <1D6D1E77-3470-4C79-ACAB-0413C480DF0A>.<13> finished successfully
+2026-09-11 13:06:28.622 Df Foamdev[43144:4dc520] [com.apple.CFNetwork:Summary] Task <5C2D17E8-3611-4B01-AB17-72A0624BA384>.<5> summary for task success {transaction_duration_ms=159, response_status=200, cache_hit=true}
+2026-09-11 13:06:28.623 Df Foamdev[43144:4dc520] [com.apple.CFNetwork:Default] Task <5C2D17E8-3611-4B01-AB17-72A0624BA384>.<5> finished successfully
+2026-09-11 13:06:28.623 I  Foamdev[43144:4d9f1c] [com.facebook.react.log:javascript] \134^[[34m13:06:28 | \134^[[0m\134^[[45m twitch \134^[[0m\134^[[34m | INFO : GET /helix/streams 200 {"name":"api_info","action":"response_ok","service":"twitch","endpoint":"/helix/streams","host":"api.twitch.tv","method":"GET","provider":"twitch","status":200,"url":"https://api.twitch.tv/helix/streams"} \134^[[0m
+2026-09-11 13:06:33.615 Df Foamdev[43144:4dce4e] [com.apple.coremedia:] <<<< FigExportCommmon >>>> remakerFamily_handleLastStep: (0x102194770) state finish writing called
+2026-09-11 13:06:33.615 Df Foamdev[43144:4dce4e] [com.apple.coremedia:] <<<< FigExportCommmon >>>> remakerFamily_handleLastStep: Was not in started state when trying to handle last step finish writing called
+2026-09-11 13:06:33.615 Df Foamdev[43144:4dd9a2] [com.apple.coremedia:] <<<< FigFile >>>> FigFileForkSynchronize: fsync starts fork 0x6000000d1f80 fd 19
+2026-09-11 13:06:33.615 Df Foamdev[43144:4dd9a2] [com.apple.coremedia:] <<<< FigFile >>>> FigFileForkSynchronize: fsync ends   fork 0x6000000d1f80 fd 19
+2026-09-11 13:06:33.619 Df Foamdev[43144:4dce4e] [com.apple.coremedia:] <<<< FigExportCommmon >>>> remakerfamily_setFailureStatusIfError: (0x102194770) err 0 state finish writing called
+2026-09-11 13:06:33.619 Df Foamdev[43144:4dce4e] [com.apple.coremedia:] <<<< FigExportCommmon >>>> remakerFamily_handleLastStep: Leaving [0x102194770] err 0 state finish writing completed
+2026-09-11 13:06:33.619 Df Foamdev[43144:4dce4f] [com.apple.coremedia:] <<<< FigExportCommmon >>>> assetReaderTrack_Invalidate: (0x600003975110)
+2026-09-11 13:06:33.620 Df Foamdev[43144:4dae8d] [com.apple.coremedia:] <<<< FigExportCommmon >>>> remakerFamily_Finalize: (0x102194770) state invalidated
+2026-09-11 13:06:33.620 Df Foamdev[43144:4dae8d] [com.apple.coremedia:] <<<< FigExportCommmon >>>> FigAssetReaderTrackFinalize: (0x600003975110)
+2026-09-11 13:06:33.620 Df Foamdev[43144:4dae8d] [com.apple.coremedia:] <<<< FigExportCommmon >>>> assetReaderTrack_Invalidate: (0x600003975110)
+2026-09-11 13:06:33.620 Df Foamdev[43144:4dae8d] (CoreVideo) pool 0x6000035bf2e0 being deallocated [0 in use, 3 free] _targetBufferCountsBitfield 0x0
+2026-09-11 13:06:33.621 Df Foamdev[43144:4dae8d] (CoreVideo) pool 0x0 being deallocated [0 in use, 0 free] _targetBufferCountsBitfield 0x0
+2026-09-11 13:06:33.621 Df Foamdev[43144:4dae8d] (CoreVideo) pool 0x6000035bf020 being deallocated [0 in use, 0 free] _targetBufferCountsBitfield 0x0
+2026-09-11 13:06:33.621 Df Foamdev[43144:4dae8d] (CoreVideo) pool 0x0 being deallocated [0 in use, 0 free] _targetBufferCountsBitfield 0x0
+2026-09-11 13:06:38.047 I  Foamdev[43144:4dae8d] [com.apple.network:] nw_context_dealloc Deallocating context <nw_context (null) (sensitive)>
+2026-09-11 13:06:38.047 I  Foamdev[43144:4dae8d] [com.apple.network:] nw_context_purge_endpoints Context <nw_context com.apple.CFNetwork.NSURLSession.{03D17837-0765-4CD7-BC3C-DE620C8466B0}{(null)}{Y}{3}{0x0} (sensitive)> has more than 0 cache entries, purging 1 from 1 down to 0
+2026-09-11 13:06:38.047 I  Foamdev[43144:4dae8d] [com.apple.network:] nw_context_dealloc Deallocating context <nw_context (null) (sensitive)>
+2026-09-11 13:06:38.682 Df Foamdev[43144:4dce79] [com.apple.coremedia:] <<<< FigExportCommmon >>>> remakerFamily_handleLastStep: (0x327d96d10) state finish writing called
+2026-09-11 13:06:38.682 Df Foamdev[43144:4dce79] [com.apple.coremedia:] <<<< FigExportCommmon >>>> remakerFamily_handleLastStep: Was not in started state when trying to handle last step finish writing called
+2026-09-11 13:06:38.682 Df Foamdev[43144:4dda25] [com.apple.coremedia:] <<<< FigFile >>>> FigFileForkSynchronize: fsync starts fork 0x6000000cd010 fd 19
+2026-09-11 13:06:38.683 Df Foamdev[43144:4dda25] [com.apple.coremedia:] <<<< FigFile >>>> FigFileForkSynchronize: fsync ends   fork 0x6000000cd010 fd 19
+2026-09-11 13:06:38.686 Df Foamdev[43144:4dce79] [com.apple.coremedia:] <<<< FigExportCommmon >>>> remakerfamily_setFailureStatusIfError: (0x327d96d10) err 0 state finish writing called
+2026-09-11 13:06:38.686 Df Foamdev[43144:4dce79] [com.apple.coremedia:] <<<< FigExportCommmon >>>> remakerFamily_handleLastStep: Leaving [0x327d96d10] err 0 state finish writing completed
+2026-09-11 13:06:38.686 Df Foamdev[43144:4dda1a] [com.apple.coremedia:] <<<< FigExportCommmon >>>> assetReaderTrack_Invalidate: (0x6000039004e0)
+2026-09-11 13:06:38.687 Df Foamdev[43144:4dce4f] [com.apple.coremedia:] <<<< FigExportCommmon >>>> remakerFamily_Finalize: (0x327d96d10) state invalidated
+2026-09-11 13:06:38.688 Df Foamdev[43144:4dce4f] [com.apple.coremedia:] <<<< FigExportCommmon >>>> FigAssetReaderTrackFinalize: (0x6000039004e0)
+2026-09-11 13:06:38.688 Df Foamdev[43144:4dce4f] [com.apple.coremedia:] <<<< FigExportCommmon >>>> assetReaderTrack_Invalidate: (0x6000039004e0)
+2026-09-11 13:06:38.688 Df Foamdev[43144:4dce4f] (CoreVideo) pool 0x600017623e90 being deallocated [0 in use, 3 free] _targetBufferCountsBitfield 0x0
+2026-09-11 13:06:38.688 Df Foamdev[43144:4dce4f] (CoreVideo) pool 0x0 being deallocated [0 in use, 0 free] _targetBufferCountsBitfield 0x0
+2026-09-11 13:06:38.688 Df Foamdev[43144:4dce4f] (CoreVideo) pool 0x600017623de0 being deallocated [0 in use, 0 free] _targetBufferCountsBitfield 0x0
+2026-09-11 13:06:38.688 Df Foamdev[43144:4dce4f] (CoreVideo) pool 0x0 being deallocated [0 in use, 0 free] _targetBufferCountsBitfield 0x0
+Child process terminated with signal 15: Terminated

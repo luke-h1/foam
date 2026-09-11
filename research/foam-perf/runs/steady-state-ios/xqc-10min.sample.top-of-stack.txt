@@ -1,0 +1,40 @@
+Sort by top of stack, same collapsed (when >= 5):
+        __psynch_cvwait  (in libsystem_kernel.dylib)        60295
+        __workq_kernreturn  (in libsystem_kernel.dylib)        54587
+        mach_msg2_trap  (in libsystem_kernel.dylib)        50907
+        semaphore_wait_trap  (in libsystem_kernel.dylib)        29399
+        __semwait_signal  (in libsystem_kernel.dylib)        9196
+        semaphore_timedwait_trap  (in libsystem_kernel.dylib)        5507
+        __select  (in libsystem_kernel.dylib)        4624
+        hermes::vm::Interpreter::interpretFunction<false, false>(hermes::vm::Runtime&, hermes::vm::InterpreterState&)  (in hermesvm)        792
+        __ulock_wait  (in libsystem_kernel.dylib)        695
+        vTransformTRCParametric_Planar16Q12_vec  (in vImage)        216
+        start_wqthread  (in libsystem_pthread.dylib)        170
+        _platform_memmove  (in libsystem_platform.dylib)        114
+        __bzero  (in libsystem_platform.dylib)        111
+        hermes::readSignedLEB128(llvh::ArrayRef<unsigned char>, unsigned int, long long*)  (in hermesvm)        109
+        hermes::hbc::detail::FunctionDebugInfoDeserializer::next()  (in hermesvm)        97
+        objc_msgSend  (in libobjc.A.dylib)        74
+        swift_conformsToProtocolMaybeInstantiateSuperclasses(swift::TargetMetadata<swift::InProcess> const*, swift::TargetProtocolDescriptor<swift::InProcess> const*, bool)::$_1::operator()((anonymous namespace)::ConformanceSection const&) const::'lambda'(swift::TargetProtocolConformanceDescriptor<swift::InProcess> const&)::operator()(swift::TargetProtocolConformanceDescriptor<swift::InProcess> const&) const  (in libswiftCore.dylib)        70
+        hermes::vm::HadesGC::OldGen::search(unsigned int)  (in hermesvm)        56
+        hermes::vm::toBoolean(hermes::vm::HermesValue)  (in hermesvm)        51
+        __CFBasicHashRehash  (in CoreFoundation)        50
+        vUnpremultiplyData_RGBA8888_CV_vec  (in vImage)        47
+        __ulock_wake  (in libsystem_kernel.dylib)        41
+        hermes::ManagedChunkedList<hermes::vm::WeakMapEntrySlot, 16ul>::forEach<unsigned long long hermes::vm::HadesGC::youngGenEvacuateImpl<false>(bool)::'lambda'(hermes::vm::WeakMapEntrySlot&)>(unsigned long long hermes::vm::HadesGC::youngGenEvacuateImpl<false>(bool)::'lambda'(hermes::vm::WeakMapEntrySlot&)) const  (in hermesvm)        41
+        _nanov2_free  (in libsystem_malloc.dylib)        40
+        pwrite  (in libsystem_kernel.dylib)        39
+        __psynch_mutexwait  (in libsystem_kernel.dylib)        38
+        hermes::ManagedChunkedList<hermes::vm::WeakRefSlot, 16ul>::forEach<hermes::vm::GCBase::markWeakRoots(hermes::vm::WeakRootAcceptor&, bool)::'lambda'(hermes::vm::WeakRefSlot&)>(hermes::vm::GCBase::markWeakRoots(hermes::vm::WeakRootAcceptor&, bool)::'lambda'(hermes::vm::WeakRefSlot&)) const  (in hermesvm)        38
+        hermes::vm::strictEqualityTest(hermes::vm::HermesValue, hermes::vm::HermesValue)  (in hermesvm)        35
+        nanov2_find_block_and_allocate  (in libsystem_malloc.dylib)        35
+        _platform_memset_pattern16  (in libsystem_platform.dylib)        34
+        hermes::vm::HadesGC::scanDirtyCardsForSegment<false>(hermes::vm::HadesGC::EvacAcceptor<false>&, hermes::vm::FixedSizeHeapSegment&)  (in hermesvm)        34
+        hermes::vm::Interpreter::defineOwnByIdSlowPath(hermes::vm::Runtime&, hermes::vm::SmallHermesValueAdaptor, hermes::vm::CodeBlock*, hermes::vm::PinnedHermesValue*, hermes::inst::Inst const*)  (in hermesvm)        33
+        ???  (in libz.1.dylib)  load address 0x1d194b000 + 0x15bc  [0x1d194c5bc]        32
+        CF_IS_OBJC  (in CoreFoundation)        31
+        nanov2_malloc_type  (in libsystem_malloc.dylib)        29
+        hermes::vm::JSObject::getNamedDescriptorUnsafe(hermes::vm::Handle<hermes::vm::JSObject>, hermes::vm::Runtime&, hermes::vm::SymbolID, hermes::vm::NamedPropertyDescriptor&)  (in hermesvm)        28
+        kevent_id  (in libsystem_kernel.dylib)        28
+        argb32_sample_argb32  (in CoreGraphics)        26
+        _platform_memset  (in libsystem_platform.dylib)        25

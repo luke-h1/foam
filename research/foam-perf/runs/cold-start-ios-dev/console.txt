@@ -1,0 +1,21 @@
+run 1 done (waited 14s)
+run 2 done (waited 14s)
+run 3 done (waited 16s)
+run 4 done (waited 14s)
+run 5 done (waited 16s)
+
+runs=5 (ms since launch command)
+stage                        median      p90      min      max  per-run
+process_start                   151      154      140      154  154,151,140,154,144
+did_finish_launching            933      954      921      954  954,931,921,933,934
+window_key                     1178     1230     1175     1230  1230,1175,1178,1185,1178
+expo_modules_register          4769     6168     4629     6168  4629,5123,6168,4633,4769
+bundle_request                 7802     8933     6295     8933  6295,7802,8933,6511,8086
+js_first_native_call           9244    10174     7399    10174  7399,9244,10174,7906,9977
+run_application                9515    10661     7769    10661  7769,9515,10661,8252,10253
+router_effects_mounted        12990    14751    11380    14751  11380,12990,14274,11943,14751
+auth_ready                    14567    17312    13056    17312  13056,14567,15866,13535,17312
+first_screen_query            14608    17408    13105    17408  13105,14608,15916,13578,17408
+first_screen_data             14895    18040    13499    18040  13499,14895,16219,13883,18040
+webview_prewarm               15095    18956    15095    18956  15095,,,,18956
+EXIT 0

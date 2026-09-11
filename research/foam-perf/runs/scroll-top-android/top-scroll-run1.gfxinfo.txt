@@ -1,0 +1,9 @@
+label=top-scroll-run1 swipes=20 swipe_ms=250 elapsed_s=102
+pss_before_mb=186 pss_after_mb=190
+Total frames rendered: 386
+Janky frames: 279 (72.28%)
+Janky frames (legacy): 385 (99.74%)
+50th percentile: 129ms
+90th percentile: 750ms
+95th percentile: 1500ms
+99th percentile: 4950ms

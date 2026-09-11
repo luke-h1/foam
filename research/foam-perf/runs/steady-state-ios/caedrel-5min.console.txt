@@ -1,0 +1,5 @@
+samples=48 span=301s
+cpu_pct      median     82 p90    225 min     14 max    265
+rss_mb       median   1104 p90   2059 min    840 max   2138
+threads      median    168 p90    181 min    136 max    186
+rss first-fifth median 1646 MB -> last-fifth median 947 MB (delta -699 MB)
