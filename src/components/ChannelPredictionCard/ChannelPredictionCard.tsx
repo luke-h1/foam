@@ -170,6 +170,7 @@ const styles = StyleSheet.create({
   },
   outcomeFill: {
     borderRadius: 10,
+    borderCurve: 'continuous',
     bottom: 0,
     left: 0,
     position: 'absolute',
@@ -188,6 +189,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.color.background.darkAlt,
     borderColor: theme.colorBorderSecondary,
     borderRadius: 10,
+    borderCurve: 'continuous',
     borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
     position: 'relative',

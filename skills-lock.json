@@ -7,6 +7,18 @@
       "skillPath": "skills/agent-device/SKILL.md",
       "computedHash": "d76647cbe0e151da0b1019dc3da7bffd17b735704a45a50a2f2f4aeed0afe8b2"
     },
+    "appllama-app-design-skill": {
+      "source": "appllama/appllama-skills",
+      "sourceType": "github",
+      "skillPath": "skills/appllama-app-design-skill/SKILL.md",
+      "computedHash": "023b25559a5e9a4ab85ccffc9612d0d0f650608eb7f281dce8408a32649b2340"
+    },
+    "appllama-usage": {
+      "source": "appllama/appllama-skills",
+      "sourceType": "github",
+      "skillPath": "skills/appllama-usage/SKILL.md",
+      "computedHash": "9b9ecf34e1585ad0e77d749e5e5178270ea1b73147459ef53db7340aa16eb4e2"
+    },
     "ask-matt": {
       "source": "mattpocock/skills",
       "sourceType": "github",

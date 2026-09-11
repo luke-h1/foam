@@ -22,6 +22,7 @@ export const chatComposerStyles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.darkActiveContent,
     borderRadius: COMPOSER_CONTROL_RADIUS,
+    borderCurve: 'continuous',
     height: COMPOSER_CONTROL_SIZE,
     justifyContent: 'center',
     width: COMPOSER_CONTROL_SIZE,
@@ -33,6 +34,7 @@ export const chatComposerStyles = StyleSheet.create({
   submitButton: {
     alignItems: 'center',
     borderRadius: COMPOSER_CONTROL_RADIUS,
+    borderCurve: 'continuous',
     height: COMPOSER_CONTROL_SIZE,
     justifyContent: 'center',
     width: COMPOSER_CONTROL_SIZE,
@@ -46,6 +48,7 @@ export const chatComposerStyles = StyleSheet.create({
   input: {
     backgroundColor: theme.darkActiveContent,
     borderRadius: 20,
+    borderCurve: 'continuous',
     color: theme.color.text.dark,
     flex: 1,
     fontSize: 16,

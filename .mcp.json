@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "appllama": {
+      "type": "http",
+      "url": "https://mcp.appllama.io/mcp"
+    },
+    "runway": {
+      "type": "http",
+      "url": "https://mcp.runway.team",
+      "headers": {
+        "Authorization": "Bearer ${RUNWAY_API_KEY:-}"
+      }
+    }
+  }
+}

@@ -95,11 +95,13 @@ export const EmoteMenuIcon = memo(EmoteMenuIconComponent);
 const styles = StyleSheet.create({
   avatarIcon: {
     borderRadius: 12,
+    borderCurve: 'continuous',
     height: 24,
     width: 24,
   },
   avatarIconContainer: {
     borderRadius: 12,
+    borderCurve: 'continuous',
     height: 24,
     overflow: 'hidden',
     width: 24,

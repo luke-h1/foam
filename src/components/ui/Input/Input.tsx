@@ -256,6 +256,7 @@ export function Input({
             ...baseStyles,
             borderWidth: variantConfig.borderWidth,
             borderRadius: RADIUS_VALUES[radius],
+            borderCurve: 'continuous' as const,
           },
           style,
         ];

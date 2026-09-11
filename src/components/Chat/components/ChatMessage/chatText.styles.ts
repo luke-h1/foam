@@ -65,6 +65,7 @@ function buildChatTextStyles(
     },
     badgeTintSlot: {
       borderRadius: CHAT_SURFACE_COLORS.radius,
+      borderCurve: 'continuous',
       height: scale.badgeSize,
       marginRight: scale.badgeGap,
       overflow: 'hidden',
@@ -86,6 +87,7 @@ function buildChatTextStyles(
     },
     placeholder: {
       borderRadius: CHAT_SURFACE_COLORS.radius,
+      borderCurve: 'continuous',
       height: Math.round(scale.bodyFontSize * 0.86),
       marginHorizontal: 2,
       width: Math.round(scale.bodyFontSize * 6.9),

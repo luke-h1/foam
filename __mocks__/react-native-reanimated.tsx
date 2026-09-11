@@ -70,6 +70,7 @@ export const runOnUI = <T,>(fn: T) => fn;
 export const useAnimatedReaction = jest.fn();
 export const useAnimatedRef = () => ({ current: null });
 export const useFrameCallback = jest.fn(() => ({ setActive: jest.fn() }));
+export const useReducedMotion = () => false;
 export const useAnimatedStyle = <T,>(updater: () => T) => updater();
 export const useDerivedValue = <T,>(updater: () => T) => mutable(updater());
 export const useSharedValue = <T,>(value: T) => mutable(value);

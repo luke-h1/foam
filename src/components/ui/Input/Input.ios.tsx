@@ -191,6 +191,7 @@ function useIosInputField({
             ...baseStyles,
             borderWidth: variantConfig.borderWidth,
             borderRadius: RADIUS_VALUES[radius],
+            borderCurve: 'continuous' as const,
           },
           style,
         ];

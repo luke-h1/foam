@@ -149,7 +149,12 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
               style={[styles.compactLiveBadge, styles.mediaLiveBadge]}
             />
             <View style={styles.viewerBadge}>
-              <Text type='sm' weight='bold' style={styles.viewerBadgeText}>
+              <Text
+                type='sm'
+                weight='bold'
+                tabular
+                style={styles.viewerBadgeText}
+              >
                 {formatViewCountCompact(stream.viewer_count)} watching
               </Text>
             </View>
@@ -273,14 +278,19 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
 
           <View style={styles.metadataRow}>
             <View style={styles.liveMeta}>
-              <Text type='xs' style={styles.liveText}>
+              <Text type='xs' tabular style={styles.liveText}>
                 {elapsedStreamTime(stream.started_at)}
               </Text>
             </View>
             <Text type='xs' style={styles.metaDivider}>
               •
             </Text>
-            <Text type='xs' numberOfLines={1} style={styles.viewersText}>
+            <Text
+              type='xs'
+              tabular
+              numberOfLines={1}
+              style={styles.viewersText}
+            >
               {formatViewCountCompact(stream.viewer_count)} watching
             </Text>
           </View>

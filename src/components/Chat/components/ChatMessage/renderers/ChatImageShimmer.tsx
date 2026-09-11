@@ -56,5 +56,6 @@ const styles = StyleSheet.create({
   fill: {
     backgroundColor: 'rgba(255, 255, 255, 0.13)',
     borderRadius: 4,
+    borderCurve: 'continuous',
   },
 });

@@ -258,6 +258,7 @@ const styles = {
   },
   image: {
     borderRadius: theme.borderRadius20,
+    borderCurve: 'continuous',
     height: 112,
     width: 112,
   },

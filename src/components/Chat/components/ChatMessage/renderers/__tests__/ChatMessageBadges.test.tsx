@@ -64,6 +64,7 @@ describe('ChatMessageBadges', () => {
       StyleSheet.flatten(getByTestId('chat-badge').props.style),
     ).toEqual<ViewStyle>({
       backgroundColor: '#1ac9a2',
+      borderCurve: 'continuous',
       borderRadius: 4,
       height: 18,
       marginRight: 4,
