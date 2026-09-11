@@ -65,6 +65,7 @@ function ChatMessagePressableComponent({
 const pressedStyle = {
   backgroundColor: CHAT_SURFACE_COLORS.pressed,
   borderRadius: CHAT_SURFACE_COLORS.radius,
+  borderCurve: 'continuous',
 } as const;
 
 export const ChatMessagePressable = memo(ChatMessagePressableComponent);

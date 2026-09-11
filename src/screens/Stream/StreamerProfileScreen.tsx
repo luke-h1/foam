@@ -135,7 +135,7 @@ function StreamElementsStats({ stats }: { stats: StreamElementsChatStats }) {
     <View style={styles.statsStrip}>
       <View style={styles.statsRow}>
         <View style={styles.statChip}>
-          <Text type='sm' weight='bold'>
+          <Text type='sm' weight='bold' tabular>
             {formatViewCountCompact(stats.totalMessages)}
           </Text>
           <Text type='xxs' color='gray.textLow'>
@@ -143,7 +143,7 @@ function StreamElementsStats({ stats }: { stats: StreamElementsChatStats }) {
           </Text>
         </View>
         <View style={styles.statChip}>
-          <Text type='sm' weight='bold'>
+          <Text type='sm' weight='bold' tabular>
             {formatViewCountCompact(stats.uniqueChatters)}
           </Text>
           <Text type='xxs' color='gray.textLow'>

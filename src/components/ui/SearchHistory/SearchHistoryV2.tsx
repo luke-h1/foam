@@ -297,6 +297,7 @@ const styles = StyleSheet.create({
   historyList: {
     backgroundColor: theme.colorBorderSecondary,
     borderRadius: theme.borderRadius12,
+    borderCurve: 'continuous',
     gap: StyleSheet.hairlineWidth,
     overflow: 'hidden',
     marginHorizontal: theme.space16,

@@ -174,6 +174,7 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: theme.darkActiveContent,
     borderRadius: 20,
+    borderCurve: 'continuous',
     borderWidth: 0,
     /**
      * `Input` variants derive every colour from the accent; without this the

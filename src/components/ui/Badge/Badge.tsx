@@ -240,6 +240,7 @@ export function Badge({
       borderColor: variantConfig.borderColor,
       borderWidth: variantConfig.borderWidth,
       borderRadius: RADIUS_VALUES[radius],
+      borderCurve: 'continuous',
     },
     style,
   ];

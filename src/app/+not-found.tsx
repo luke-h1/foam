@@ -14,7 +14,7 @@ export default function NotFound() {
           This screen does not exist.
         </Text>
         <Link href='/' style={styles.link}>
-          <Text type='link' color='blue' align='center'>
+          <Text type='link' color='accent' align='center'>
             Go to home screen
           </Text>
         </Link>

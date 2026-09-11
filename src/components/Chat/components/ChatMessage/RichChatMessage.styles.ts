@@ -204,6 +204,7 @@ export const styles = StyleSheet.create({
     alignSelf: 'stretch',
     backgroundColor: noticeSurfaceTint(CHAT_NOTICE_ACCENTS.replyToYou, 0.14),
     borderRadius: CHAT_SURFACE_COLORS.radius,
+    borderCurve: 'continuous',
     marginBottom: 4,
     paddingHorizontal: 6,
     paddingVertical: 3,
