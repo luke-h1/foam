@@ -4,6 +4,7 @@ import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
 
 import { ForceUpdateModal } from '@app/components/ForceUpdateModal/ForceUpdateModal';
 import { OTAUpdates } from '@app/components/OTAUpdates/OTAUpdates';
+import { useStartupMark } from '@app/hooks/useStartupMark';
 import { Providers } from '@app/Providers/Providers';
 import { theme } from '@app/styles/themes';
 import { nativeStackScreenOptions } from '@app/utils/navigation/nativeStackOptions';
@@ -35,6 +36,8 @@ const rootStackScreens = [
 ] as const;
 
 export function RootLayoutNav() {
+  useStartupMark('root_layout_render');
+
   return (
     <ThemeProvider value={navigationTheme}>
       <Providers>

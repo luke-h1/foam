@@ -1,9 +1,18 @@
+import { Platform } from 'react-native';
+
 import * as Device from 'expo-device';
 
 import { Color } from './palette';
 
 const SPACE_SCALE = 1.4;
 const FONT_SCALE = 1.4;
+
+/**
+ * iOS resolves the fonts embedded by the expo-font config plugin by PostScript
+ * name; Android and web register them under the file name.
+ */
+const fontFamilyFor = (fileName: string, postScriptName: string) =>
+  Platform.OS === 'ios' ? postScriptName : fileName;
 
 const isIpad = Device.osName === 'iPadOS';
 
@@ -304,23 +313,62 @@ export const theme = {
   fontSize34: fontScale(34),
   fontSize42: fontScale(42),
 
-  fontFamilyLight: 'Montserrat_300Light',
-  fontFamilyLightItalic: 'Montserrat_300Light_Italic',
+  fontFamilyLight: fontFamilyFor('Montserrat_300Light', 'Montserrat-Light'),
+  fontFamilyLightItalic: fontFamilyFor(
+    'Montserrat_300Light_Italic',
+    'Montserrat-LightItalic',
+  ),
 
-  fontFamily: 'Montserrat_500Medium',
-  fontFamilyItalic: 'Montserrat_500Medium_Italic',
+  fontFamily: fontFamilyFor('Montserrat_500Medium', 'Montserrat-Medium'),
+  fontFamilyItalic: fontFamilyFor(
+    'Montserrat_500Medium_Italic',
+    'Montserrat-MediumItalic',
+  ),
 
-  fontFamilySemiBold: 'Montserrat_600SemiBold',
-  fontFamilySemiBoldItalic: 'Montserrat_600SemiBold_Italic',
+  fontFamilySemiBold: fontFamilyFor(
+    'Montserrat_600SemiBold',
+    'Montserrat-SemiBold',
+  ),
+  fontFamilySemiBoldItalic: fontFamilyFor(
+    'Montserrat_600SemiBold_Italic',
+    'Montserrat-SemiBoldItalic',
+  ),
 
-  fontFamilyBold: 'Montserrat_700Bold',
-  fontFamilyBoldItalic: 'Montserrat_700Bold_Italic',
-  fontFamilyHeavy: 'Montserrat_800ExtraBold',
-  fontFamilyHeavyItalic: 'Montserrat_800ExtraBold_Italic',
-  fontFamilyBlack: 'Montserrat_900Black',
-  fontFamilyBlackItalic: 'Montserrat_900Black_Italic',
-  fontFamilyRegular: 'Montserrat_400Regular',
-  fontFamilyRegularItalic: 'Montserrat_400Regular_Italic',
+  fontFamilyBold: fontFamilyFor('Montserrat_700Bold', 'Montserrat-Bold'),
+  fontFamilyBoldItalic: fontFamilyFor(
+    'Montserrat_700Bold_Italic',
+    'Montserrat-BoldItalic',
+  ),
+  fontFamilyHeavy: fontFamilyFor(
+    'Montserrat_800ExtraBold',
+    'Montserrat-ExtraBold',
+  ),
+  fontFamilyHeavyItalic: fontFamilyFor(
+    'Montserrat_800ExtraBold_Italic',
+    'Montserrat-ExtraBoldItalic',
+  ),
+  fontFamilyBlack: fontFamilyFor('Montserrat_900Black', 'Montserrat-Black'),
+  fontFamilyBlackItalic: fontFamilyFor(
+    'Montserrat_900Black_Italic',
+    'Montserrat-BlackItalic',
+  ),
+  fontFamilyRegular: fontFamilyFor(
+    'Montserrat_400Regular',
+    'Montserrat-Regular',
+  ),
+  fontFamilyRegularItalic: fontFamilyFor(
+    'Montserrat_400Regular_Italic',
+    'Montserrat-Italic',
+  ),
+
+  fontFamilyDisplay: fontFamilyFor(
+    'InstrumentSerif_400Regular',
+    'InstrumentSerif-Regular',
+  ),
+  fontFamilyDisplayItalic: fontFamilyFor(
+    'InstrumentSerif_400Regular_Italic',
+    'InstrumentSerif-Italic',
+  ),
 
   borderRadius4: 4,
   borderRadius6: 6,

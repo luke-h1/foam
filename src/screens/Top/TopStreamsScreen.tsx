@@ -7,6 +7,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
+import { FirstScreenInteractiveMark } from '@app/components/StartupMarks/FirstScreenInteractiveMark';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { useStreamProfilePictures } from '@app/hooks/queries/useStreamProfilePictures';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
@@ -126,6 +127,7 @@ function TopStreamsList({
 }) {
   return (
     <View testID='top-streams-list' style={styles.container}>
+      <FirstScreenInteractiveMark />
       <FlashList
         ref={listRef}
         contentInsetAdjustmentBehavior='automatic'

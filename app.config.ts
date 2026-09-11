@@ -303,6 +303,29 @@ const config: ExpoConfig = {
           'node_modules/@expo-google-fonts/source-code-pro/600SemiBold',
           'node_modules/@expo-google-fonts/source-code-pro/700Bold',
         ],
+        // Embedded so text paints with the right face on the first frame
+        // instead of after a runtime Font.loadAsync; iOS resolves these by
+        // PostScript name (see fontFamilyFor in styles/themes.ts).
+        ios: {
+          fonts: [
+            'node_modules/@expo-google-fonts/instrument-serif/400Regular',
+            'node_modules/@expo-google-fonts/instrument-serif/400Regular_Italic',
+            'node_modules/@expo-google-fonts/montserrat/300Light',
+            'node_modules/@expo-google-fonts/montserrat/300Light_Italic',
+            'node_modules/@expo-google-fonts/montserrat/400Regular',
+            'node_modules/@expo-google-fonts/montserrat/400Regular_Italic',
+            'node_modules/@expo-google-fonts/montserrat/500Medium',
+            'node_modules/@expo-google-fonts/montserrat/500Medium_Italic',
+            'node_modules/@expo-google-fonts/montserrat/600SemiBold',
+            'node_modules/@expo-google-fonts/montserrat/600SemiBold_Italic',
+            'node_modules/@expo-google-fonts/montserrat/700Bold',
+            'node_modules/@expo-google-fonts/montserrat/700Bold_Italic',
+            'node_modules/@expo-google-fonts/montserrat/800ExtraBold',
+            'node_modules/@expo-google-fonts/montserrat/800ExtraBold_Italic',
+            'node_modules/@expo-google-fonts/montserrat/900Black',
+            'node_modules/@expo-google-fonts/montserrat/900Black_Italic',
+          ],
+        },
         android: {
           fonts: [
             'node_modules/@expo-google-fonts/instrument-serif/400Regular',
@@ -382,6 +405,7 @@ const config: ExpoConfig = {
     './src/plugins/withAndroidAllowBackupReplace.js',
     './src/plugins/withAndroidAccentColor.js',
     './src/plugins/withAndroidLibsActivityTheme.js',
+    './src/plugins/withAndroidBaselineProfile.js',
     './plugins/with-fix-dev-launcher-cycle.js',
   ],
   experiments: {

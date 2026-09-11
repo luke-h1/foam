@@ -4,6 +4,7 @@ import { batch, observable, when } from '@legendapp/state';
 import { persistObservable } from '@legendapp/state/persist';
 
 import {
+  CHAT_GLOBAL_CACHES_PERSISTENCE_KEY,
   CHAT_RECENT_MESSAGES_PERSISTENCE_KEY,
   CHAT_STORE_PERSISTENCE_KEY,
   createObservablePersistenceLocalConfig,
@@ -30,6 +31,12 @@ import {
   makeEmptyGlobalCacheData,
   MAX_CACHED_CHANNELS,
 } from '../types/constants';
+import {
+  CHANNEL_CACHE_PERSISTENCE_ENABLED,
+  isHydratingChannelCache,
+  queuePersistedChannelCacheWrite,
+  removeLegacyChatStoreBlob,
+} from './channelCachePersistence';
 import { loadPersistedCosmetics } from './cosmeticsPersistence';
 import {
   loadPersistedRecentMessages,
@@ -114,9 +121,52 @@ ensureObservablePersistenceConfig();
 
 export const chatStore$ = observable<ChatStoreState>(initialChatStoreState);
 
-const persistedState$ = persistObservable(chatStore$.persisted, {
-  local: createObservablePersistenceLocalConfig(CHAT_STORE_PERSISTENCE_KEY),
-});
+// Native persists the global slices through Legend State and each channel
+// cache under its own MMKV key (channelCachePersistence.ts); web keeps the
+// whole slice in one IndexedDB row.
+const persistedState$ = CHANNEL_CACHE_PERSISTENCE_ENABLED
+  ? persistObservable(chatStore$.persisted.globalCaches, {
+      local: createObservablePersistenceLocalConfig(
+        CHAT_GLOBAL_CACHES_PERSISTENCE_KEY,
+      ),
+    })
+  : persistObservable(chatStore$.persisted, {
+      local: createObservablePersistenceLocalConfig(CHAT_STORE_PERSISTENCE_KEY),
+    });
+
+if (CHANNEL_CACHE_PERSISTENCE_ENABLED) {
+  removeLegacyChatStoreBlob(CHAT_STORE_PERSISTENCE_KEY);
+
+  // Write-through per channel. A whole-map set only touches the channels
+  // whose entry changed identity, so one load does not re-serialise the rest.
+  chatStore$.persisted.channelCaches.onChange(
+    ({ value, getPrevious, changes }) => {
+      if (isHydratingChannelCache()) {
+        return;
+      }
+      const dirty = new Set<string>();
+      for (const change of changes) {
+        const channelId = change.path[0];
+        if (channelId !== undefined) {
+          dirty.add(channelId);
+          continue;
+        }
+        const previous = getPrevious() ?? {};
+        for (const id of new Set([
+          ...Object.keys(previous),
+          ...Object.keys(value ?? {}),
+        ])) {
+          if (previous[id] !== value?.[id]) {
+            dirty.add(id);
+          }
+        }
+      }
+      for (const id of dirty) {
+        queuePersistedChannelCacheWrite(id, value?.[id]);
+      }
+    },
+  );
+}
 
 if (!RECENT_MESSAGES_PERSISTENCE_ENABLED) {
   persistObservable(chatStore$.recentMessagesByChannel, {

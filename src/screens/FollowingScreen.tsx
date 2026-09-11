@@ -10,6 +10,7 @@ import { FlashList, ListRenderItem } from '@app/components/FlashList/FlashList';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { MemoizedOfflineChannelRow } from '@app/components/OfflineChannelRow/OfflineChannelRow';
+import { FirstScreenInteractiveMark } from '@app/components/StartupMarks/FirstScreenInteractiveMark';
 import { useBottomTabOverflow } from '@app/components/TabBarBackground/useBottomTabOverflow';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { Text } from '@app/components/ui/Text/Text';
@@ -291,6 +292,7 @@ export default function FollowingScreen() {
 
   return (
     <View style={styles.container}>
+      <FirstScreenInteractiveMark />
       <FlashList<FollowingListItem>
         ref={listRef}
         data={listItems}

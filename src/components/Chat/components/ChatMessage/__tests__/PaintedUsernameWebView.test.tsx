@@ -5,6 +5,7 @@ import * as RNWebView from 'react-native-webview';
 
 import { act, render, screen } from '@testing-library/react-native';
 
+import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seventv/cosmetics';
 
 import { chatLineMetrics } from '../chatScale';
@@ -69,7 +70,7 @@ describe('PaintedUsernameWebView', () => {
     }).toEqual({
       color: '#FF0000',
       fontSize: chatLineMetrics.comfortable.fontSize,
-      fontFamily: 'Montserrat_700Bold',
+      fontFamily: theme.fontFamilyBold,
       fontWeight: undefined,
       lineHeight: chatLineMetrics.comfortable.lineHeight,
     });

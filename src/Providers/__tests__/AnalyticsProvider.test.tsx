@@ -1,6 +1,6 @@
 import { Text } from 'react-native';
 
-import { act, render, screen } from '@testing-library/react-native';
+import { act, render, screen, waitFor } from '@testing-library/react-native';
 import { usePathname } from 'expo-router';
 
 import * as analyticsModule from '@app/hooks/firebase/analytics';
@@ -33,6 +33,9 @@ describe('AnalyticsProvider', () => {
     );
 
     expect(screen.getByText('child')).toBeOnTheScreen();
+    await waitFor(() => {
+      expect(mockedSetAnalyticsEnabled).toHaveBeenCalledWith(true);
+    });
     await act(async () => {});
   });
 
@@ -51,7 +54,9 @@ describe('AnalyticsProvider', () => {
       </AnalyticsProvider>,
     );
 
-    expect(mockedSetAnalyticsEnabled).toHaveBeenCalledWith(true);
+    await waitFor(() => {
+      expect(mockedSetAnalyticsEnabled).toHaveBeenCalledWith(true);
+    });
     expect(mockedLogScreenView).not.toHaveBeenCalled();
 
     await act(async () => {
@@ -72,9 +77,10 @@ describe('AnalyticsProvider', () => {
       </AnalyticsProvider>,
     );
 
+    await waitFor(() => {
+      expect(mockedSetAnalyticsEnabled).toHaveBeenCalledWith(false);
+    });
     await act(async () => {});
-
-    expect(mockedSetAnalyticsEnabled).toHaveBeenCalledWith(false);
     expect(mockedLogScreenView).not.toHaveBeenCalled();
   });
 });

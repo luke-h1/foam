@@ -11,6 +11,7 @@ import { useSelector } from '@legendapp/state/react';
 
 import { useAuthContext } from '@app/context/AuthContext';
 import { useSyncRef } from '@app/hooks/useSyncRef';
+import { ensureChannelCacheHydrated } from '@app/store/chat/actions/channelCacheHydration';
 import {
   abortCurrentLoad,
   getCurrentEmoteData,
@@ -165,6 +166,7 @@ export const useChatEmoteLoader = ({
     lastCosmeticsCacheVersionRef.current = cosmeticsCacheVersion;
 
     if (enabled && channelId) {
+      ensureChannelCacheHydrated(channelId);
       const hasChannelCache = Boolean(
         chatStore$.persisted.channelCaches[channelId]?.peek(),
       );
