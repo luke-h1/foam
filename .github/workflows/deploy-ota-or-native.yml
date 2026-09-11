@@ -1,4 +1,7 @@
 name: Deploy native or OTA
+# Runway reads the key=value tokens in the run name to match this run to its
+# workflow arguments (see docs/runway.md).
+run-name: Deploy variant=${{ inputs.variant || 'production' }} platform=${{ inputs.platform || 'ios' }} deploy_type=${{ inputs.deploy_type || 'auto' }}
 
 on:
   workflow_dispatch:

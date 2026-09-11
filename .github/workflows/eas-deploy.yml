@@ -1,4 +1,7 @@
 name: EAS app deployment
+# Runway reads the key=value tokens in the run name to match this run to its
+# workflow arguments (see docs/runway.md).
+run-name: EAS deploy variant=${{ inputs.variant }} platform=${{ inputs.platform }}
 on:
   workflow_dispatch:
     inputs:
