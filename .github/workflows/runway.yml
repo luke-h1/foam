@@ -1,0 +1,35 @@
+name: Runway release sync
+
+on:
+  release:
+    types: [published, edited]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to sync (for example 1.0.9 or 1.0.9-internal)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    name: Sync release into Runway
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Sync release into Runway
+        env:
+          RUNWAY_API_KEY: ${{ secrets.RUNWAY_API_KEY }}
+          RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
+          RELEASE_BODY: ${{ github.event.release.body }}
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$RELEASE_BODY" > .release-notes-body.md
+          ./scripts/runway-sync-release.sh "$RELEASE_TAG" .release-notes-body.md
