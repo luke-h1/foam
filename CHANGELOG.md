@@ -1,17 +1,32 @@
 # Changelog
 
-## 1.0.9 (Production)
+## 1.0.10 (Internal)
+
+### ⚡ Performance
+
+- **app:** Split the chat cache blob, embed iOS fonts and move boot work off the first frame ([#897](https://github.com/lhowsam/foam/issues/897))
+
+### ✨ Features
+
+- **ui:** Design foundations - continuous corners, tabular counts, DESIGN.md and the audit ([#894](https://github.com/lhowsam/foam/issues/894))
 
 ### 🐛 Bug Fixes
 
 - IPad type legibility for App Review, player rotation recovery ([#885](https://github.com/lhowsam/foam/issues/885))
 - Lock color scheme to dark so light-mode devices don't render light ([#886](https://github.com/lhowsam/foam/issues/886))
+- **chat:** Reset hidden on recycled Fabric views so rows, badges and emotes stop going blank ([#893](https://github.com/lhowsam/foam/issues/893))
+
+### 📚 Documentation
+
+- **agents:** Add writing density guidance ([#892](https://github.com/lhowsam/foam/issues/892))
 
 ### 🔧 Miscellaneous Tasks
 
 - **infrastructure:** Bump 1password/load-secrets-action from 5.0.0 to 5.0.1 ([#883](https://github.com/lhowsam/foam/issues/883))
 - **infrastructure:** Bump openai/codex-action from 1.11 to 1.12 ([#882](https://github.com/lhowsam/foam/issues/882))
 - Strip non-essential comments across src ([#884](https://github.com/lhowsam/foam/issues/884))
+- **app:** Delete dead code, thin wrappers and redundant guards ([#888](https://github.com/lhowsam/foam/issues/888))
+- **infrastructure:** Bump millionco/react-doctor from 2.2.8 to 2.2.9 ([#890](https://github.com/lhowsam/foam/issues/890))
 
 ## 1.0.9 (Production)
 
