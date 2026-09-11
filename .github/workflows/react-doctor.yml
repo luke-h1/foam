@@ -44,7 +44,7 @@ jobs:
       # dump of every pre-existing issue). Silence the warning rather than the
       # tool guessing wrong; revisit alongside the origin workaround above.
       - name: Run React Doctor
-        uses: millionco/react-doctor@01820bb4fd4d0a4aebcd8df2b2a143a098649cb2 # v2.2.8
+        uses: millionco/react-doctor@013f7373f91a3b9e68bd1dc7d4d354f4b041b117 # v2.2.9
         with:
           blocking: error
           commit-status: false
