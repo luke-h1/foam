@@ -77,8 +77,6 @@ export const VARIANT_CONFIG = {
 const variant =
   (process.env.EXPO_PUBLIC_APP_VARIANT as Variant) || 'development';
 
-// 1.0.10 embeds the iOS fonts; an OTA of this JS onto a 1.0.9 binary has no
-// UIAppFonts entries and renders every Montserrat face as the system font.
 const VERSION = '1.0.10';
 
 const appConfig: AppVariantConfig = VARIANT_CONFIG[variant];
