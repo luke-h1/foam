@@ -77,7 +77,9 @@ export const VARIANT_CONFIG = {
 const variant =
   (process.env.EXPO_PUBLIC_APP_VARIANT as Variant) || 'development';
 
-const VERSION = '1.0.9';
+// 1.0.10 embeds the iOS fonts; an OTA of this JS onto a 1.0.9 binary has no
+// UIAppFonts entries and renders every Montserrat face as the system font.
+const VERSION = '1.0.10';
 
 const appConfig: AppVariantConfig = VARIANT_CONFIG[variant];
 const twitchClientId = process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID;
@@ -303,9 +305,6 @@ const config: ExpoConfig = {
           'node_modules/@expo-google-fonts/source-code-pro/600SemiBold',
           'node_modules/@expo-google-fonts/source-code-pro/700Bold',
         ],
-        // Embedded so text paints with the right face on the first frame
-        // instead of after a runtime Font.loadAsync; iOS resolves these by
-        // PostScript name (see fontFamilyFor in styles/themes.ts).
         ios: {
           fonts: [
             'node_modules/@expo-google-fonts/instrument-serif/400Regular',

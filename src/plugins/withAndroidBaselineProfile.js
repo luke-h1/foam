@@ -12,8 +12,6 @@ const PROFILE_INSTALLER = 'androidx.profileinstaller:profileinstaller:1.4.1';
 const MARKER = '// foam: baseline profile installer';
 const PROFILE_SOURCE = 'src/plugins/android/baseline-prof.txt';
 
-// Installs the checked-in profile on builds that do not get a Play cloud
-// profile (sideloads, internal track, `am start -W` measurements).
 const withProfileInstallerDependency = config =>
   withAppBuildGradle(config, configWithGradle => {
     const { contents } = configWithGradle.modResults;
@@ -23,8 +21,7 @@ const withProfileInstallerDependency = config =>
     return configWithGradle;
   });
 
-// AGP compiles `app/src/main/baseline-prof.txt` into the APK or AAB; the
-// android/ tree is generated, so the file is copied in on every prebuild.
+// android/ is generated, so the profile is copied in on every prebuild.
 const withBaselineProfileFile = config =>
   withDangerousMod(config, [
     'android',

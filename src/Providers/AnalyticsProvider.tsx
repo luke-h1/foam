@@ -37,8 +37,6 @@ export function AnalyticsProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     let cancelled = false;
 
-    // The first getAnalytics() call and the native enable stay off the
-    // first-frame path.
     void InteractionManager.runAfterInteractions(() => {
       if (cancelled) {
         return;

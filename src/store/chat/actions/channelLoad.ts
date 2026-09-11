@@ -670,7 +670,7 @@ const loadChannelResourcesInternal = async (
       );
       chatStore$.loadingState.set('COMPLETED');
     });
-    // After the batch so the new channel is already in the on-disk index.
+    // After the batch, so the listener has queued the new channel's write.
     for (const droppedId of prunePersistedChannelCaches(channelId)) {
       chatStore$.persisted.channelCaches[droppedId]?.delete();
     }

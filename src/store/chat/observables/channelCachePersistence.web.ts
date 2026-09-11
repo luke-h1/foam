@@ -1,8 +1,7 @@
 import type { ChannelCacheType } from '../types/constants';
 
-// Web keeps the Legend State IndexedDB persistence for the whole `persisted`
-// slice (see chatStore.ts), so these are no-ops. The flag is statically false
-// here, so the native MMKV branch is dead-code-eliminated from the web bundle.
+// Web keeps the Legend State IndexedDB row for the whole `persisted` slice
+// (see chatStore.ts), so these are no-ops.
 export const CHANNEL_CACHE_PERSISTENCE_ENABLED = false;
 
 export const readPersistedChannelCache = (

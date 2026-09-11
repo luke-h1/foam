@@ -121,9 +121,6 @@ ensureObservablePersistenceConfig();
 
 export const chatStore$ = observable<ChatStoreState>(initialChatStoreState);
 
-// Native persists the global slices through Legend State and each channel
-// cache under its own MMKV key (channelCachePersistence.ts); web keeps the
-// whole slice in one IndexedDB row.
 const persistedState$ = CHANNEL_CACHE_PERSISTENCE_ENABLED
   ? persistObservable(chatStore$.persisted.globalCaches, {
       local: createObservablePersistenceLocalConfig(
@@ -137,8 +134,7 @@ const persistedState$ = CHANNEL_CACHE_PERSISTENCE_ENABLED
 if (CHANNEL_CACHE_PERSISTENCE_ENABLED) {
   removeLegacyChatStoreBlob(CHAT_STORE_PERSISTENCE_KEY);
 
-  // Write-through per channel. A whole-map set only touches the channels
-  // whose entry changed identity, so one load does not re-serialise the rest.
+  // A whole-map set only queues the entries whose identity changed.
   chatStore$.persisted.channelCaches.onChange(
     ({ value, getPrevious, changes }) => {
       if (isHydratingChannelCache()) {

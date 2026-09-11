@@ -41,9 +41,8 @@ const UPDATE_REQUIRED_BODY =
 const ALERT_REPRESENT_DELAY_MS = 300;
 
 /**
- * Mounts the check after first interactions so the Remote Config fetch and the
- * Firebase bridge calls stay off the first-frame path; the modal sits over the
- * tab UI, so a later decision changes nothing visible.
+ * Mounted after first interactions to keep the Remote Config fetch off the
+ * first frame.
  */
 export function ForceUpdateModal() {
   const [armed, setArmed] = useState(false);

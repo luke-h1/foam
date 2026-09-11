@@ -15,8 +15,6 @@ import { ObservablePersistIndexedDbJson } from './observablePersistIndexedDbJson
 let initialized = false;
 
 export const CHAT_STORE_PERSISTENCE_KEY = 'chat-store-v2';
-// Native splits the global provider slices out of the chat store blob; the
-// channel caches live under their own MMKV keys (channelCachePersistence.ts).
 export const CHAT_GLOBAL_CACHES_PERSISTENCE_KEY = 'chat-global-caches-v1';
 // Recent messages persist under their own key so the frequent message syncs
 // never re-serialize the (much larger) channel emote caches (issue #594).

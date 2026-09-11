@@ -3,8 +3,7 @@ import { useEffect } from 'react';
 import { markStartup } from '@app/lib/startupMarks';
 
 /**
- * Render inside the first screen's loaded list so the mark (and Android
- * `reportFullyDrawn`) lands when real content is on screen.
+ * Render inside the first screen's loaded list, not its skeleton.
  */
 export function FirstScreenInteractiveMark() {
   useEffect(() => {

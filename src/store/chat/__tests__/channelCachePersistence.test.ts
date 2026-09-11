@@ -39,11 +39,12 @@ describe('channel cache persistence', () => {
     chatStore$.persisted.channelCaches['channel-1']?.lastUpdated.set(2);
 
     expect(caches.getAllKeys()).toEqual([]);
-    expect(index.getNumber('channel-1')).toEqual(2);
+    expect(index.getAllKeys()).toEqual([]);
 
     flushWrites();
 
     expect(caches.getAllKeys()).toEqual(['channel-1']);
+    expect(index.getNumber('channel-1')).toEqual(2);
     expect(readPersistedChannelCache('channel-1')).toEqual<ChannelCacheType>(
       makeCache(2),
     );
@@ -132,12 +133,16 @@ describe('channel cache persistence', () => {
   });
 
   test('prunes the oldest channels beyond the cap and keeps the current one', () => {
-    for (let i = 0; i <= MAX_CACHED_CHANNELS; i += 1) {
+    for (let i = 0; i < MAX_CACHED_CHANNELS; i += 1) {
       caches.set(`channel-${i}`, JSON.stringify(makeCache(i)));
       index.set(`channel-${i}`, i);
     }
+    chatStore$.persisted.channelCaches.set({
+      'channel-new': makeCache(MAX_CACHED_CHANNELS),
+    });
 
     expect(prunePersistedChannelCaches('channel-0')).toEqual(['channel-1']);
+    expect(caches.contains('channel-new')).toEqual(true);
     expect(index.getAllKeys()).toHaveLength(MAX_CACHED_CHANNELS);
     expect(caches.contains('channel-0')).toEqual(true);
     expect(caches.contains('channel-1')).toEqual(false);

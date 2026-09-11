@@ -1,5 +1,6 @@
 import performance from 'react-native-performance';
 
+import { recordMeasurement } from '@app/lib/sentry';
 import { logger } from '@app/utils/logger';
 import FullyDrawn from '@modules/fully-drawn/src/FullyDrawnModule';
 
@@ -9,8 +10,8 @@ export type StartupMark =
 const recorded = new Set<StartupMark>();
 
 /**
- * Splits `runApplication -> first frame -> usable screen`. One-shot per
- * process; the log line is what `scripts/perf` reads from the console.
+ * One-shot per process. The log line feeds the dev cold-start harness; the
+ * Sentry measurement is what release builds report.
  */
 export function markStartup(name: StartupMark): void {
   if (recorded.has(name)) {
@@ -18,8 +19,13 @@ export function markStartup(name: StartupMark): void {
   }
   recorded.add(name);
   performance.mark(`startup.${name}`);
+  // performance.now() counts from device boot, not process start.
+  const launchStart =
+    performance.getEntriesByName('nativeLaunchStart')[0]?.startTime ?? 0;
+  const msSinceLaunch = Math.round(performance.now() - launchStart);
+  recordMeasurement(`startup.${name}`, msSinceLaunch);
   logger.performance.info(`startup.${name}`, {
-    ms_since_launch: Math.round(performance.now()),
+    ms_since_launch: msSinceLaunch,
   });
   if (name === 'first_screen_interactive') {
     FullyDrawn.report();

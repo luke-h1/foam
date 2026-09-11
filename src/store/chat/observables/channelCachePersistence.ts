@@ -4,10 +4,9 @@ import { createMMKV } from 'react-native-mmkv';
 import type { ChannelCacheType } from '../types/constants';
 import { MAX_CACHED_CHANNELS } from '../types/constants';
 
-// One MMKV key per channel so opening a chat parses only that channel's cache;
-// the shared `chat-store-v2` blob held every channel (20 MB on a 14-channel
-// install) and was parsed on first chat open and re-serialised per save.
-// Native only - the `.web.ts` sibling keeps the Legend State blob.
+// One MMKV key per channel: the shared `chat-store-v2` blob reached 20 MB and
+// was parsed whole on first chat open. Native only - the `.web.ts` sibling
+// keeps the Legend State blob.
 export const CHANNEL_CACHE_PERSISTENCE_ENABLED = true;
 
 const caches = createMMKV({ id: 'chat-channel-caches' });
@@ -48,6 +47,7 @@ const flush = (): void => {
   for (const [channelId, cache] of pendingWrites) {
     if (cache) {
       caches.set(channelId, JSON.stringify(cache));
+      index.set(channelId, cache.lastUpdated || 0);
     } else {
       caches.remove(channelId);
       index.remove(channelId);
@@ -56,28 +56,25 @@ const flush = (): void => {
   pendingWrites.clear();
 };
 
-// Writes coalesce for 250ms (a channel load assigns several slices in a row)
-// and flush when the app leaves the foreground, like the Legend State patch.
+// Coalesced for 250ms and flushed on background, like the Legend State patch.
 export const queuePersistedChannelCacheWrite = (
   channelId: string,
   cache: ChannelCacheType | undefined,
 ): void => {
   pendingWrites.set(channelId, cache);
-  if (cache) {
-    index.set(channelId, cache.lastUpdated || 0);
-  }
   if (!flushTimer) {
     flushTimer = setTimeout(flush, 250);
   }
 };
 
 /**
- * Drops the least recently updated channels beyond MAX_CACHED_CHANNELS from
- * disk and returns their ids so the caller drops them from memory too.
+ * Returns the dropped ids so the caller drops them from memory too.
  */
 export const prunePersistedChannelCaches = (
   currentChannelId: string,
 ): string[] => {
+  // Index and blob land together in flush, so count after flushing.
+  flush();
   const ids = index.getAllKeys();
   if (ids.length <= MAX_CACHED_CHANNELS) {
     return [];
@@ -105,8 +102,7 @@ export const clearPersistedChannelCaches = (): void => {
 };
 
 /**
- * Runs a store write that mirrors disk, so the write-through listener skips
- * it instead of re-serialising what was just read.
+ * The write-through listener skips writes made inside this.
  */
 export const runChannelCacheHydration = (write: () => void): void => {
   hydrating = true;
@@ -120,10 +116,8 @@ export const runChannelCacheHydration = (write: () => void): void => {
 export const isHydratingChannelCache = (): boolean => hydrating;
 
 /**
- * Removes the whole-store blob older builds wrote into the shared `obsPersist`
- * instance. Its channel caches are not migrated: every slice has a one hour
- * TTL, so the next chat open refetches at most what it would have refreshed
- * anyway, and migrating would parse the 20 MB blob this change exists to avoid.
+ * Not migrated: every slice has a one hour TTL, and migrating would parse the
+ * 20 MB blob this module exists to avoid.
  */
 export const removeLegacyChatStoreBlob = (key: string): void => {
   try {
@@ -133,7 +127,7 @@ export const removeLegacyChatStoreBlob = (key: string): void => {
       legacy.remove(`${key}__m`);
     }
   } catch {
-    // Best-effort; a failed cleanup just leaves a stale key behind.
+    // A failed cleanup only leaves a stale key behind.
   }
 };
 

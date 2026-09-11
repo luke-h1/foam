@@ -26,12 +26,6 @@ import {
 } from '@app/navigators/deepLinkAuthState';
 import { logger } from '@app/utils/logger';
 
-type QuickActionParam = NonNullable<QuickActions.Action['params']>[string];
-
-function isStringValue(value: QuickActionParam): value is string {
-  return String(value) === value;
-}
-
 const quickActionsBase: RouterAction[] = [
   {
     id: 'live',
@@ -96,8 +90,8 @@ export function RouterEffects() {
 
     const handleQuickAction = (action: QuickActions.Action) => {
       const href = action.params?.href;
-      if (isMounted && isStringValue(href)) {
-        router.replace(href);
+      if (isMounted && href) {
+        router.replace(String(href));
       }
     };
 

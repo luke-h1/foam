@@ -6,8 +6,7 @@ import {
 import { chatStore$ } from '../observables/chatStore';
 
 /**
- * Loads one channel's persisted cache into the store the first time that
- * channel is opened this session. In-memory data wins.
+ * In-memory data wins over disk.
  */
 export const ensureChannelCacheHydrated = (channelId: string): void => {
   if (!CHANNEL_CACHE_PERSISTENCE_ENABLED) {
