@@ -48,20 +48,20 @@ step — this skill tells you what to study; that one tells you how to build.
 
 ## Tool map
 
-| Tool | What it gives you | Typical use |
-|---|---|---|
-| `get_credits` | Balance, limits, reset date. **Free.** | Session start |
-| `search_apps` | 10 apps/page: name, revenue, downloads, rating, launch date, screens count, **flow list with screen counts**. Natural-language `query` + filters (revenue/downloads/rating/launch date/price/onboarding steps) + `sort` + `board_id` | Find the top apps for a category or need |
-| `get_app` | One app in full: ratings breakdown, category rank, IAP pricing, top countries, flows | Decide if an app deserves a deep study |
-| `list_app_screens` | 10 screens/page **in journey order** (welcome → onboarding → paywall → product), each with media URL, flow, UI elements, colors. Filter by `flow` or `section` | Walk an app screen by screen |
-| `search_screens` | Screens across the whole library. `mode="keyword"` matches screen names + filters (flow, screen_type, element, app_id); `mode="semantic"` searches by meaning/visual language | Gather design references for one screen type |
-| `get_screen` | One screen in full + up to 5 visually similar screens from other apps. Accepts `screen_ref` = `app_id/screen_id` (what appllama.io's "Copy Screen ID" produces) | The user pasted a screen ref; or drill into one reference |
-| `list_flows` | The flow taxonomy with screen/app counts | Discover what flows exist for a category |
-| `get_flow_apps` | Apps containing a flow, top revenue first | Find the best examples of one flow |
-| `list_ui_elements` | ~38 UI-element families with counts (one call) | Vocabulary for element-level research |
-| `get_element_screens` | Screens featuring an element family | Study how winners build one component |
-| `list_my_boards` | The member's own appllama.io boards (screens / apps / flows) | Find their curation first |
-| `get_board` | A board's full contents: screens with media, app profiles, or (app, flow) pairs | When the member curated a board for the task, START from it |
+| Tool                  | What it gives you                                                                                                                                                                                                                    | Typical use                                                 |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| `get_credits`         | Balance, limits, reset date. **Free.**                                                                                                                                                                                               | Session start                                               |
+| `search_apps`         | 10 apps/page: name, revenue, downloads, rating, launch date, screens count, **flow list with screen counts**. Natural-language `query` + filters (revenue/downloads/rating/launch date/price/onboarding steps) + `sort` + `board_id` | Find the top apps for a category or need                    |
+| `get_app`             | One app in full: ratings breakdown, category rank, IAP pricing, top countries, flows                                                                                                                                                 | Decide if an app deserves a deep study                      |
+| `list_app_screens`    | 10 screens/page **in journey order** (welcome → onboarding → paywall → product), each with media URL, flow, UI elements, colors. Filter by `flow` or `section`                                                                       | Walk an app screen by screen                                |
+| `search_screens`      | Screens across the whole library. `mode="keyword"` matches screen names + filters (flow, screen_type, element, app_id); `mode="semantic"` searches by meaning/visual language                                                        | Gather design references for one screen type                |
+| `get_screen`          | One screen in full + up to 5 visually similar screens from other apps. Accepts `screen_ref` = `app_id/screen_id` (what appllama.io's "Copy Screen ID" produces)                                                                      | The user pasted a screen ref; or drill into one reference   |
+| `list_flows`          | The flow taxonomy with screen/app counts                                                                                                                                                                                             | Discover what flows exist for a category                    |
+| `get_flow_apps`       | Apps containing a flow, top revenue first                                                                                                                                                                                            | Find the best examples of one flow                          |
+| `list_ui_elements`    | ~38 UI-element families with counts (one call)                                                                                                                                                                                       | Vocabulary for element-level research                       |
+| `get_element_screens` | Screens featuring an element family                                                                                                                                                                                                  | Study how winners build one component                       |
+| `list_my_boards`      | The member's own appllama.io boards (screens / apps / flows)                                                                                                                                                                         | Find their curation first                                   |
+| `get_board`           | A board's full contents: screens with media, app profiles, or (app, flow) pairs                                                                                                                                                      | When the member curated a board for the task, START from it |
 
 **The screen_ref handshake:** members can click "Copy Screen ID" on any
 screen at appllama.io and paste it to you. It looks like
@@ -71,11 +71,11 @@ mean, plus its closest siblings across the library.
 
 ## The playbooks
 
-| Scenario | Reference |
-|---|---|
+| Scenario                                                    | Reference                                                            |
+| ----------------------------------------------------------- | -------------------------------------------------------------------- |
 | Build an app from scratch (e.g. "build me a habit tracker") | [references/build-from-scratch.md](references/build-from-scratch.md) |
-| Make an existing screen better | [references/improve-a-screen.md](references/improve-a-screen.md) |
-| Flow & element research; general research method | [references/research-methods.md](references/research-methods.md) |
+| Make an existing screen better                              | [references/improve-a-screen.md](references/improve-a-screen.md)     |
+| Flow & element research; general research method            | [references/research-methods.md](references/research-methods.md)     |
 
 Both build playbooks end the same way: **the simulator loop from
 appllama-app-design-skill, repeated until you cannot find a flaw.** Research

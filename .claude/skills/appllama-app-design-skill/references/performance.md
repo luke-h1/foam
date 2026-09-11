@@ -66,10 +66,10 @@ store), commit to state on submit/debounce.
 
 ## Budgets to hold
 
-| Metric | Budget |
-|---|---|
-| Transition/gesture FPS | 60 (no dropped frames in the hero flow) |
-| Cold-start TTI (mid-tier device) | < 2 s |
-| Keystroke → echo | < 50 ms |
-| List scroll (FlashList) | blank-cell-free at fling speed |
-| JS bundle (initial) | watch the trend; investigate any +10% jump |
+| Metric                           | Budget                                     |
+| -------------------------------- | ------------------------------------------ |
+| Transition/gesture FPS           | 60 (no dropped frames in the hero flow)    |
+| Cold-start TTI (mid-tier device) | < 2 s                                      |
+| Keystroke → echo                 | < 50 ms                                    |
+| List scroll (FlashList)          | blank-cell-free at fling speed             |
+| JS bundle (initial)              | watch the trend; investigate any +10% jump |

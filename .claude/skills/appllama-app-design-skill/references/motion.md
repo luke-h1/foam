@@ -5,10 +5,10 @@ the working reference for gesture-driven and system-driven animation.
 
 ## The two families of motion
 
-| Family | Driver | Curve | Examples |
-|---|---|---|---|
+| Family                               | Driver                    | Curve                                | Examples                                                |
+| ------------------------------------ | ------------------------- | ------------------------------------ | ------------------------------------------------------- |
 | **Responsive** (user is touching it) | Gesture position/velocity | Spring, seeded with gesture velocity | Sheet drag, swipe-to-dismiss, pull-to-refresh, card pan |
-| **Narrative** (system initiated) | Time | `withTiming`, ease-out, 150–350 ms | Screen entrances, fades, reveals, toasts |
+| **Narrative** (system initiated)     | Time                      | `withTiming`, ease-out, 150–350 ms   | Screen entrances, fades, reveals, toasts                |
 
 Mixing them up is the #1 tell of non-native motion: a sheet that closes on a
 fixed 300 ms timing after a fling feels dead; a button that springs for 800 ms
@@ -32,15 +32,18 @@ offset.set(withSpring(dest, { ...SNAP, velocity: event.velocityY }));
 
 ```ts
 const pan = Gesture.Pan()
-  .onChange((e) => { offset.set(offset.get() + e.changeY); })   // worklet
-  .onEnd((e) => {
+  .onChange(e => {
+    offset.set(offset.get() + e.changeY);
+  }) // worklet
+  .onEnd(e => {
     const dismiss = offset.get() > H * 0.3 || e.velocityY > 800;
     offset.set(withSpring(dismiss ? H : 0, { ...SNAP, velocity: e.velocityY }));
-    if (dismiss) scheduleOnRN(onClose);   // react-native-worklets; replaces the deprecated runOnJS
+    if (dismiss) scheduleOnRN(onClose); // react-native-worklets; replaces the deprecated runOnJS
   });
 ```
 
 Rules:
+
 - Never read/write React state inside `onChange`. `scheduleOnRN` only at
   gesture end, for navigation/effects — and read/write shared values with
   `.get()`/`.set()`, never during render.
@@ -68,6 +71,7 @@ Rules:
 ## Shared-element feel without shared elements
 
 True shared-element transitions are still niche; fake the continuity:
+
 - Keep the tapped thumbnail's position stable while the detail screen fades in
   over it (measure with `measure()` in a worklet).
 - Match corner radius and aspect ratio between the origin card and the
@@ -79,11 +83,21 @@ True shared-element transitions are still niche; fake the continuity:
 const y = useScrollViewOffset(scrollRef);
 const headerStyle = useAnimatedStyle(() => ({
   opacity: interpolate(y.value, [0, 64], [0, 1], Extrapolation.CLAMP),
-  transform: [{ translateY: interpolate(y.value, [-100, 0], [-50, 0], Extrapolation.CLAMP) }],
+  transform: [
+    {
+      translateY: interpolate(
+        y.value,
+        [-100, 0],
+        [-50, 0],
+        Extrapolation.CLAMP,
+      ),
+    },
+  ],
 }));
 ```
 
 Standard native behaviors worth reproducing exactly:
+
 - Large title collapses into the nav bar between ~0 and ~52 pt of scroll.
 - Content scrolling under a translucent bar gets a fade/blur mask, not a hard
   clip.

@@ -6,19 +6,19 @@ platform's timing and haptics so it still reads as native.
 
 ## Control selection table
 
-| Need | iOS | Android | Package |
-|---|---|---|---|
-| Toggle | Switch | Material Switch | `react-native` `Switch` (renders native on both) |
-| Single choice, 2–5 options | Segmented control | Tabs / segmented buttons | `@react-native-segmented-control/segmented-control` |
-| Value in a range | Slider | Material Slider | `@react-native-community/slider` |
-| Date / time | Wheel or inline calendar | Material pickers | `@react-native-community/datetimepicker` (`display="inline"` for calendars on iOS) |
-| Contextual actions | Context menu (long-press/tap) | Popup menu | `zeego` (native menus on both) — never a JS dropdown for item actions |
-| Destructive confirm | Action sheet | Bottom sheet / dialog | `ActionSheetIOS` via `@expo/react-native-action-sheet` |
-| Bottom sheet content | Detented sheet | Bottom sheet | `@gorhom/bottom-sheet` (see notes) |
-| Search | Nav-bar integrated search | SearchView | Expo Router `headerSearchBarOptions` |
-| Pull to refresh | UIRefreshControl | SwipeRefreshLayout | `RefreshControl` on the ScrollView/list |
-| Haptics | UIImpactFeedbackGenerator | Vibrator | `expo-haptics` |
-| In-app browser | SFSafariViewController | Custom Tabs | `expo-web-browser` |
+| Need                       | iOS                           | Android                  | Package                                                                            |
+| -------------------------- | ----------------------------- | ------------------------ | ---------------------------------------------------------------------------------- |
+| Toggle                     | Switch                        | Material Switch          | `react-native` `Switch` (renders native on both)                                   |
+| Single choice, 2–5 options | Segmented control             | Tabs / segmented buttons | `@react-native-segmented-control/segmented-control`                                |
+| Value in a range           | Slider                        | Material Slider          | `@react-native-community/slider`                                                   |
+| Date / time                | Wheel or inline calendar      | Material pickers         | `@react-native-community/datetimepicker` (`display="inline"` for calendars on iOS) |
+| Contextual actions         | Context menu (long-press/tap) | Popup menu               | `zeego` (native menus on both) — never a JS dropdown for item actions              |
+| Destructive confirm        | Action sheet                  | Bottom sheet / dialog    | `ActionSheetIOS` via `@expo/react-native-action-sheet`                             |
+| Bottom sheet content       | Detented sheet                | Bottom sheet             | `@gorhom/bottom-sheet` (see notes)                                                 |
+| Search                     | Nav-bar integrated search     | SearchView               | Expo Router `headerSearchBarOptions`                                               |
+| Pull to refresh            | UIRefreshControl              | SwipeRefreshLayout       | `RefreshControl` on the ScrollView/list                                            |
+| Haptics                    | UIImpactFeedbackGenerator     | Vibrator                 | `expo-haptics`                                                                     |
+| In-app browser             | SFSafariViewController        | Custom Tabs              | `expo-web-browser`                                                                 |
 
 ## Menus (zeego / native context menus)
 
@@ -29,11 +29,11 @@ anchored to the element, with SF Symbols on iOS:
 <ContextMenu.Root>
   <ContextMenu.Trigger>{card}</ContextMenu.Trigger>
   <ContextMenu.Content>
-    <ContextMenu.Item key="share" onSelect={share}>
+    <ContextMenu.Item key='share' onSelect={share}>
       <ContextMenu.ItemTitle>Share</ContextMenu.ItemTitle>
       <ContextMenu.ItemIcon ios={{ name: 'square.and.arrow.up' }} />
     </ContextMenu.Item>
-    <ContextMenu.Item key="delete" destructive onSelect={confirmDelete}>
+    <ContextMenu.Item key='delete' destructive onSelect={confirmDelete}>
       <ContextMenu.ItemTitle>Delete</ContextMenu.ItemTitle>
       <ContextMenu.ItemIcon ios={{ name: 'trash' }} />
     </ContextMenu.Item>
@@ -64,7 +64,7 @@ bare tap-to-delete.
 - Return-key chaining: `returnKeyType="next"` + focus the next field;
   final field submits.
 - Validate on blur or submit, never on keystroke; errors appear beneath the
-  field in the platform's error color and *stay* until fixed.
+  field in the platform's error color and _stay_ until fixed.
 - Wrap forms in a keyboard-avoiding strategy you have actually tested
   (`react-native-keyboard-controller` is the current best answer).
 
@@ -81,6 +81,7 @@ bare tap-to-delete.
 ## When you DO rebuild a control
 
 Match the OS's numbers, not your instincts:
+
 - iOS switch: thumb travel ~22 pt in ~0.2 s with a slight squish; haptic on
   toggle.
 - Pressed states: opacity 0.4 for plain-text buttons, scale 0.97 + slight

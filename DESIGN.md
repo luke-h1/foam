@@ -20,14 +20,14 @@ The locked rules for every screen. Load this before you touch UI. Where a rule c
 
 ## Radius scale
 
-| Use | Radius | Token |
-|---|---|---|
-| Chips, tags, badges | 4 | `borderRadius4` |
-| Inputs, small buttons, thumbnails in rows | 8 | `borderRadius8` |
-| Inner cards, emote tiles, previews | 12 | `borderRadius12` |
-| Cards, list groups | 16 | `borderRadius16` |
-| Sheets, modals | 28 | `borderRadius28` |
-| Pills, avatars | 999 | `borderRadius999` |
+| Use                                       | Radius | Token             |
+| ----------------------------------------- | ------ | ----------------- |
+| Chips, tags, badges                       | 4      | `borderRadius4`   |
+| Inputs, small buttons, thumbnails in rows | 8      | `borderRadius8`   |
+| Inner cards, emote tiles, previews        | 12     | `borderRadius12`  |
+| Cards, list groups                        | 16     | `borderRadius16`  |
+| Sheets, modals                            | 28     | `borderRadius28`  |
+| Pills, avatars                            | 999    | `borderRadius999` |
 
 Every rounded rectangle also sets `borderCurve: 'continuous'`. Pills and the 2 to 3 px drag handle may skip it. Radii are not scaled on iPad. The other radius tokens (6, 10, 14, 18, 20, 32, 34, 40, 45, 80) are legacy; do not add new uses.
 

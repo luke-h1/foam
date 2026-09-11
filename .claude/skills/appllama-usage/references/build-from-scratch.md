@@ -30,7 +30,7 @@ You are extracting the **category's design language**, so read across apps,
 not just within one:
 
 - What does the first-open moment look like in this category?
-- How long is onboarding, and what does each step *earn* (permission,
+- How long is onboarding, and what does each step _earn_ (permission,
   personalization data, commitment)?
 - Where does the paywall sit, and what's on it (trial framing, price
   anchoring, feature grid, social proof)?
@@ -54,7 +54,7 @@ where you stop being a catalog and start being a design director.
 From `patterns.md`, write the app's spec: the best features across all
 studied apps, minus the bloat, plus the opening you found. Screen list with
 flows, in journey order — and the **navigation map**: for every screen, what
-it *is* (push, modal with its own stack, form sheet, full-screen modal,
+it _is_ (push, modal with its own stack, form sheet, full-screen modal,
 overlay, tab root) and what back does from it, including the one-way doors
 (sign-in, onboarding done, purchase, finished session) where back must not
 re-enter the old state. The grammar comes from appllama-app-design-skill's

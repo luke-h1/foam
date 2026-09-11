@@ -10,12 +10,12 @@ like?".
    exact flow names and their footprint (screens/apps counts tell you how
    universal a flow is).
 2. `get_flow_apps(flow="Paywall")` — the apps that contain it, top revenue
-   first, each with its screen count *inside that flow*. A 9-screen paywall
+   first, each with its screen count _inside that flow_. A 9-screen paywall
    flow from a $2M/mo app is a masterclass; read it.
 3. `list_app_screens(app_id=…, flow=…)` — the flow itself, in order. Study
    3–5 apps' versions of the same flow side by side and chart the common
    spine: step count, what each step asks vs. gives, where friction is
-   deliberately placed, where it's removed — and what each step *is*
+   deliberately placed, where it's removed — and what each step _is_
    (a pushed screen, a modal with its own steps, a sheet, an overlay),
    which the videos show better than stills. Winners are consistent about
    presentation; that grammar is part of the spec.

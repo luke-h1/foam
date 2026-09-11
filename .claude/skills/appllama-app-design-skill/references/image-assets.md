@@ -46,7 +46,7 @@ generous negative space, app illustration, no text, no watermark
 ```
 
 - Always append `no text` — models love baking in gibberish labels.
-- For empty states: subject should be *quiet* (a resting object, a soft
+- For empty states: subject should be _quiet_ (a resting object, a soft
   scene), not a busy hero.
 - For celebration/success: motion implied by composition (confetti arcs,
   tilt), not literal speed lines.
@@ -74,6 +74,7 @@ generous negative space, app illustration, no text, no watermark
 ## 6. Quality gate
 
 Reject an asset if ANY of:
+
 - Style drifts from the set (different lighting, palette, line weight)
 - Halo/fringe on its background at 400% zoom
 - Baked-in text or watermark artifacts

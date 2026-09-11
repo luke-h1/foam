@@ -104,8 +104,8 @@ destination to here, must the user be able to come back, and what does back
 1. **Push goes deeper, replace moves on.** `router.push` when the user will
    want to return here; `router.replace` / `<Redirect>` when coming back
    would land in a state the world has moved past; `router.dismissTo(href)`
-   for "finish this flow and land on X". Back undoes *navigation*, never
-   *events*.
+   for "finish this flow and land on X". Back undoes _navigation_, never
+   _events_.
 2. **Presentation is meaning.** A self-contained task with steps →
    `presentation: 'modal'` with its own stack and its own Cancel/Done; a
    short interruption (picker, filters, item options) → `formSheet` with
@@ -120,7 +120,7 @@ destination to here, must the user be able to come back, and what does back
    onboarding (Skip included), a purchase, a completed session: guard with
    `Stack.Protected` and land with `replace`, so back can never re-enter
    the old state — Android back from home exits the app, never shows
-   Login; a paid paywall never re-opens. But keep the user's *place*:
+   Login; a paid paywall never re-opens. But keep the user's _place_:
    sign-in demanded by one action (save, follow, buy) is a modal over the
    screen that completes the action where it was tapped, and a paywall
    opened from a feature dismisses back onto the feature, unlocked — never
@@ -134,18 +134,18 @@ destination to here, must the user be able to come back, and what does back
    edge swipe works everywhere else.
 5. **Tabs are peers.** No slide between tabs, each tab keeps its own stack,
    re-tapping the active tab pops to its root; full-attention screens
-   (composer, player, checkout) live in the root stack *above* the tabs.
+   (composer, player, checkout) live in the root stack _above_ the tabs.
    Deep links land with a real stack underneath (`initialRouteName` /
    `withAnchor`); cold start lands by state, splash held until session
    state has resolved — never a Login flash before Home.
 6. **Study the grammar, not just the pixels.** Walking a winning flow on
-   Appllama, note what each step *is* — push, modal, sheet — and copy that
+   Appllama, note what each step _is_ — push, modal, sheet — and copy that
    consistency.
 
 ## Anti-slop laws
 
 AI-built apps share a look, and users file it under "template" within seconds.
-Each of these is a *default ban* — there is always an override when the brand
+Each of these is a _default ban_ — there is always an override when the brand
 explicitly asks for the thing AND you can articulate why it fits this product.
 
 1. **No AI-default styling.** Purple/indigo gradient CTAs with a glow,
@@ -202,7 +202,7 @@ Decide in this order:
   sheets — and bounce only when the gesture carried momentum.
 - **Everything else is timing, under 300 ms, strong ease-out**
   (`Easing.bezier(0.23, 1, 0.32, 1)` — built-in curves are too weak; never
-  ease-in on an entrance). Press feedback lands on press-*in*, 100–150 ms:
+  ease-in on an entrance). Press feedback lands on press-_in_, 100–150 ms:
   scale 0.97 on buttons and cards, a background highlight (never scale) on
   list rows, opacity on bar buttons. Exits are faster than entrances and
   leave the way they came in; enter from `scale(0.95)` + fade, never
@@ -316,7 +316,7 @@ zero UX glitches. One glitchy frame means the flow is not done.
 
 - [ ] Studied 10+ real reference screens for this screen type (via Appllama
       MCP when available) and can name the pattern you adopted
-- [ ] Navigation answered: what this screen *is* (push / modal / sheet /
+- [ ] Navigation answered: what this screen _is_ (push / modal / sheet /
       overlay / replace), what back does from it on iOS and Android, and —
       behind a one-way door — that back cannot re-enter the old state
 - [ ] Light + dark mode verified in the simulator
@@ -334,10 +334,10 @@ zero UX glitches. One glitchy frame means the flow is not done.
 
 ## References
 
-| File | Load when |
-|---|---|
-| [references/native-controls.md](references/native-controls.md) | Choosing/wiring iOS+Android native controls, menus, pickers, sheets |
-| [references/motion.md](references/motion.md) | Any Reanimated work: gestures, transitions, springs, layout animations |
-| [references/performance.md](references/performance.md) | Jank, slow TTI, big bundles, memory leaks, profiling method |
-| [references/image-assets.md](references/image-assets.md) | Generating illustrations/icons/hero art with image models |
-| [references/simulator-loop.md](references/simulator-loop.md) | Final verification checklist + device matrix |
+| File                                                           | Load when                                                              |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| [references/native-controls.md](references/native-controls.md) | Choosing/wiring iOS+Android native controls, menus, pickers, sheets    |
+| [references/motion.md](references/motion.md)                   | Any Reanimated work: gestures, transitions, springs, layout animations |
+| [references/performance.md](references/performance.md)         | Jank, slow TTI, big bundles, memory leaks, profiling method            |
+| [references/image-assets.md](references/image-assets.md)       | Generating illustrations/icons/hero art with image models              |
+| [references/simulator-loop.md](references/simulator-loop.md)   | Final verification checklist + device matrix                           |
