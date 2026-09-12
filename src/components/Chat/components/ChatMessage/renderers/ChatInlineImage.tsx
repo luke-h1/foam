@@ -1,10 +1,12 @@
 import {
+  type ContextType,
   memo,
   type ReactElement,
+  type RefObject,
   use,
   useCallback,
   useEffect,
-  useEffectEvent,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -24,12 +26,14 @@ import {
 } from 'expo-image';
 
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
+import { useSyncRef } from '@app/hooks/useSyncRef';
 import { resolveUseAppleWebpCodec } from '@app/lib/expo-image/resolveUseAppleWebpCodec';
 import { runAnimationCommand } from '@app/lib/expo-image/runAnimationCommand';
 import {
   evictCachedEmoteRef,
   getCachedEmoteByteEstimate,
   getCachedEmoteStats,
+  getEmoteDecodeTimeoutCount,
   getEmoteRefReleaseRaceCount,
 } from '@app/Providers/CachedEmotesProvider/cache-service';
 import { useCachedEmote } from '@app/Providers/CachedEmotesProvider/useCachedEmote';
@@ -48,40 +52,21 @@ const MAX_RELOAD_ATTEMPTS = 8;
 const RELOAD_BASE_DELAY_MS = 400;
 const RELOAD_MAX_DELAY_MS = 8000;
 /**
- * Route silent hangs (no onLoad/onError) through the error path after this long.
+ * Retry a load that has reported nothing (no onLoad or onError) for this long.
+ * The ref path hands off to the uri. The uri path moves along its candidates
+ * like a real error would, but never evicts the shared ref.
  */
 const LOAD_WATCHDOG_MS = 12000;
 
-interface ChatInlineImageProps {
-  containerStyle?: StyleProp<ViewStyle>;
-  priority?: 'low' | 'normal' | 'high';
-  resizeMode?: 'contain' | 'cover' | 'stretch';
-  sourceUrl: string;
-  style: StyleProp<ImageStyle>;
-  testID?: string;
-  transitionMs?: number;
-}
-
-// eslint-disable-next-line react-doctor/no-giant-component -- a split adds a mount boundary on the hottest chat path
-function ChatInlineImageComponent({
-  containerStyle,
-  priority = 'high',
-  resizeMode = 'contain',
-  sourceUrl,
-  style,
-  testID,
-  transitionMs = 100,
-}: ChatInlineImageProps) {
-  const sharedRef = useCachedEmote(sourceUrl);
-
-  const rowVisibility = use(RowVisibilityContext);
-  // The native isAnimated getter is a JSI hop per render; the url already
-  // encodes the kind for everything but BTTV's bare url form.
-  const urlKind = useMemo(() => describeEmoteUrl(sourceUrl).kind, [sourceUrl]);
-  const animated =
-    urlKind === null ? sharedRef?.isAnimated === true : urlKind === 'animated';
-  const imageRef = useRef<ExpoImage>(null);
-
+/**
+ * Pauses an animated emote while its row is off-screen or the list is flung,
+ * and resumes it after; static images never subscribe.
+ */
+function useEmoteAnimationSync(
+  imageRef: RefObject<ExpoImage | null>,
+  rowVisibility: ContextType<typeof RowVisibilityContext>,
+  animated: boolean,
+) {
   const syncAnimation = useCallback(() => {
     if (!rowVisibility || !animated) {
       return;
@@ -92,8 +77,38 @@ function ChatInlineImageComponent({
       imageRef.current,
       shouldAnimate ? 'startAnimating' : 'stopAnimating',
     );
-  }, [rowVisibility, animated]);
+  }, [imageRef, rowVisibility, animated]);
 
+  useEffect(() => {
+    if (!rowVisibility || !animated) {
+      return;
+    }
+    syncAnimation();
+    const unsubscribeVisibility = rowVisibility.subscribe(syncAnimation);
+    const unsubscribeScroll = chatScrollActivity.subscribe(syncAnimation);
+    return () => {
+      unsubscribeVisibility();
+      unsubscribeScroll();
+    };
+  }, [rowVisibility, animated, syncAnimation]);
+
+  const autoplay =
+    rowVisibility && animated
+      ? rowVisibility.isVisible() && !chatScrollActivity.isActive()
+      : true;
+
+  return { autoplay, syncAnimation };
+}
+
+/**
+ * Owns one row's load state: the shared-ref path, the uri fallback chain, the
+ * backoff retries and the watchdog that covers silent loads.
+ */
+function useEmoteLoadRecovery(
+  sourceUrl: string,
+  sharedRef: ImageRef | null,
+  syncAnimation: () => void,
+) {
   const fallbackChain = useMemo(
     () => buildImageFallbackChain(sourceUrl),
     [sourceUrl],
@@ -130,27 +145,34 @@ function ChatInlineImageComponent({
   if (banOwnerUrl !== sourceUrl) {
     setBanOwnerUrl(sourceUrl);
     setFailedRefUrl(null);
+    // An A -> B -> A recycle would otherwise revive A's old 'failed' or
+    // 'loaded' tag with nothing armed behind it.
+    setLoad({ index: 0, status: 'loading', url: sourceUrl, viaRef: false });
   }
 
   // retryCountRef isn't rendered, so reset it here rather than during render.
-  // A recycled slot's ref has not drawn yet even when still cached.
-  useEffect(() => {
+  // A recycled slot's ref has not drawn yet even when still cached. Layout
+  // phase: the new url's onDisplay can reach JS before a passive effect runs.
+  useLayoutEffect(() => {
     retryCountRef.current = 0;
     displayedSharedRef.current = null;
   }, [sourceUrl]);
 
+  const clearRetryTimer = useCallback(() => {
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+  }, []);
+
   // Drop the previous url's retry timer, or it reloads the wrong emote.
-  useEffect(
-    () => () => {
-      if (retryTimerRef.current) {
-        clearTimeout(retryTimerRef.current);
-        retryTimerRef.current = null;
-      }
-    },
-    [sourceUrl],
-  );
+  useEffect(() => clearRetryTimer, [sourceUrl, clearRetryTimer]);
+  // A ref that arrives mid-backoff makes the pending reload moot; reloading
+  // anyway would recycle the drawn ref.
+  const showRefRef = useSyncRef(showRef);
 
   const handleLoad = useCallback(() => {
+    clearRetryTimer();
     retryCountRef.current = 0;
     setLoad(prev => ({
       index: prev.url === sourceUrl ? prev.index : 0,
@@ -159,7 +181,7 @@ function ChatInlineImageComponent({
       viaRef: showRef,
     }));
     syncAnimation();
-  }, [showRef, sourceUrl, syncAnimation]);
+  }, [clearRetryTimer, showRef, sourceUrl, syncAnimation]);
 
   const handleError = useCallback(
     (event?: ImageErrorEventData) => {
@@ -171,6 +193,7 @@ function ChatInlineImageComponent({
         }
         // The ref never drew, which says nothing about the url - hand off to
         // the fallback chain with a full budget.
+        clearRetryTimer();
         setFailedRefUrl(sourceUrl);
         retryCountRef.current = 0;
         setLoad({ index: 0, status: 'loading', url: sourceUrl, viaRef: false });
@@ -178,12 +201,14 @@ function ChatInlineImageComponent({
         return;
       }
 
-      if (candidateIndex === 0) {
+      // The watchdog fires with no event. A slow load says nothing about the
+      // shared ref other rows are drawing, so only a real error evicts it.
+      if (event !== undefined && candidateIndex === 0) {
         evictCachedEmoteRef(candidateUrl);
       }
 
       // The variant is unavailable (typically a 404 on a variant 7TV
-      // advertises but never serves) - move to the next candidate immediately.
+      // advertises but never serves) or stalled - move to the next candidate.
       if (candidateIndex < fallbackChain.length - 1) {
         logger.chat.debug('chat.emote.fallback', {
           from: candidateUrl,
@@ -199,29 +224,15 @@ function ChatInlineImageComponent({
         return;
       }
 
-      // Every variant 404'd - backoff-retry the smallest candidate to ride
-      // out a transient blip.
+      // Every variant 404'd or stalled - backoff-retry the smallest candidate
+      // to ride out a transient blip.
       if (retryCountRef.current >= MAX_RELOAD_ATTEMPTS) {
-        const descriptor = describeEmoteUrl(candidateUrl);
-        const cache = getCachedEmoteStats();
-        logger.chat.warn('chat.emote.load_failed', {
-          name: 'chat_resources_warning',
-          error: event?.error,
-          url: sourceUrl,
-          finalUrl: candidateUrl,
-          candidatesTried: fallbackChain.length,
+        logEmoteLoadFailure({
           attempts: retryCountRef.current,
-          renderPath: showRef ? 'imageRef' : 'uri',
-          tags: {
-            emoteProvider: descriptor.provider,
-            emoteScale: descriptor.scale,
-            emoteKind: descriptor.kind,
-            cacheDecoded: cache.decoded,
-            cacheInflight: cache.inflight,
-            cachePinned: cache.pinned,
-            cacheBytes: getCachedEmoteByteEstimate(),
-            cacheReleaseRaces: getEmoteRefReleaseRaceCount(),
-          },
+          candidateIndex,
+          candidateUrl,
+          event,
+          sourceUrl,
         });
         setLoad({
           index: candidateIndex,
@@ -241,20 +252,22 @@ function ChatInlineImageComponent({
         RELOAD_MAX_DELAY_MS,
         RELOAD_BASE_DELAY_MS * 2 ** (retryCountRef.current - 1),
       );
-      if (retryTimerRef.current) {
-        clearTimeout(retryTimerRef.current);
-      }
+      clearRetryTimer();
       retryTimerRef.current = setTimeout(() => {
         retryTimerRef.current = null;
-        setReloadNonce(nonce => nonce + 1);
+        if (!showRefRef.current) {
+          setReloadNonce(nonce => nonce + 1);
+        }
       }, delay);
     },
     [
       candidateIndex,
       candidateUrl,
+      clearRetryTimer,
       fallbackChain,
       sharedRef,
       showRef,
+      showRefRef,
       sourceUrl,
     ],
   );
@@ -269,28 +282,112 @@ function ChatInlineImageComponent({
   }, [sharedRef, showRef, syncAnimation]);
 
   // A displayed ref pins status at 'loading' (no onLoad), so the timer always
-  // fires on the ref path; handleError's displayed-ref guard no-ops it.
-  const onWatchdogTimeout = useEffectEvent(() => handleError());
+  // fires on the ref path; handleError's displayed-ref guard no-ops it. A
+  // synced ref, not useEffectEvent: the test renderer never updates the event
+  // function, so a recycled row would fire its first url's handler.
+  const handleErrorRef = useSyncRef(handleError);
   useEffect(() => {
     if (status !== 'loading') {
       return undefined;
     }
-    const timer = setTimeout(onWatchdogTimeout, LOAD_WATCHDOG_MS);
+    const timer = setTimeout(() => handleErrorRef.current(), LOAD_WATCHDOG_MS);
     return () => clearTimeout(timer);
-  }, [showRef, status, candidateUrl, reloadNonce]);
+    // sourceUrl: a recycle can land on the previous url's fallback candidate.
+  }, [handleErrorRef, showRef, status, candidateUrl, reloadNonce, sourceUrl]);
 
-  useEffect(() => {
-    if (!rowVisibility || !animated) {
-      return;
-    }
-    syncAnimation();
-    const unsubscribeVisibility = rowVisibility.subscribe(syncAnimation);
-    const unsubscribeScroll = chatScrollActivity.subscribe(syncAnimation);
-    return () => {
-      unsubscribeVisibility();
-      unsubscribeScroll();
-    };
-  }, [rowVisibility, animated, syncAnimation]);
+  return {
+    candidateUrl,
+    handleDisplay,
+    handleError,
+    handleLoad,
+    reloadNonce,
+    showRef,
+    status,
+  };
+}
+
+function logEmoteLoadFailure({
+  attempts,
+  candidateIndex,
+  candidateUrl,
+  event,
+  sourceUrl,
+}: {
+  attempts: number;
+  candidateIndex: number;
+  candidateUrl: string;
+  event: ImageErrorEventData | undefined;
+  sourceUrl: string;
+}): void {
+  const descriptor = describeEmoteUrl(candidateUrl);
+  const cache = getCachedEmoteStats();
+  logger.chat.warn('chat.emote.load_failed', {
+    name: 'chat_resources_warning',
+    error: event?.error,
+    failure: event === undefined ? 'timeout' : 'error',
+    url: sourceUrl,
+    finalUrl: candidateUrl,
+    candidatesTried: candidateIndex + 1,
+    attempts,
+    renderPath: 'uri',
+    tags: {
+      emoteProvider: descriptor.provider,
+      emoteScale: descriptor.scale,
+      emoteKind: descriptor.kind,
+      cacheDecoded: cache.decoded,
+      cacheInflight: cache.inflight,
+      cachePinned: cache.pinned,
+      cacheBytes: getCachedEmoteByteEstimate(),
+      cacheReleaseRaces: getEmoteRefReleaseRaceCount(),
+      cacheDecodeTimeouts: getEmoteDecodeTimeoutCount(),
+    },
+  });
+}
+
+interface ChatInlineImageProps {
+  containerStyle?: StyleProp<ViewStyle>;
+  priority?: 'low' | 'normal' | 'high';
+  resizeMode?: 'contain' | 'cover' | 'stretch';
+  sourceUrl: string;
+  style: StyleProp<ImageStyle>;
+  testID?: string;
+  transitionMs?: number;
+}
+
+// eslint-disable-next-line react-doctor/no-giant-component -- a split adds a mount boundary on the hottest chat path
+function ChatInlineImageComponent({
+  containerStyle,
+  priority = 'high',
+  resizeMode = 'contain',
+  sourceUrl,
+  style,
+  testID,
+  transitionMs = 100,
+}: ChatInlineImageProps) {
+  const sharedRef = useCachedEmote(sourceUrl);
+
+  const rowVisibility = use(RowVisibilityContext);
+  // The native isAnimated getter is a JSI hop per render; the url already
+  // encodes the kind for everything but BTTV's bare url form.
+  const urlKind = useMemo(() => describeEmoteUrl(sourceUrl).kind, [sourceUrl]);
+  const animated =
+    urlKind === null ? sharedRef?.isAnimated === true : urlKind === 'animated';
+  const imageRef = useRef<ExpoImage>(null);
+  const { autoplay, syncAnimation } = useEmoteAnimationSync(
+    imageRef,
+    rowVisibility,
+    animated,
+  );
+
+  const {
+    candidateUrl,
+    handleDisplay,
+    handleError,
+    handleLoad,
+    reloadNonce,
+    showRef,
+    status,
+  } = useEmoteLoadRecovery(sourceUrl, sharedRef, syncAnimation);
 
   // Shimmer only while nothing real is on screen; cached emotes stay on the
   // bare-image fast path with no extra Fabric node.
@@ -304,11 +401,7 @@ function ChatInlineImageComponent({
       source={source}
       contentFit={resizeMode === 'stretch' ? 'fill' : resizeMode}
       recyclingKey={`${candidateUrl}#${reloadNonce}`}
-      autoplay={
-        rowVisibility && animated
-          ? rowVisibility.isVisible() && !chatScrollActivity.isActive()
-          : true
-      }
+      autoplay={autoplay}
       // Keep the transient uri branch out of expo-image's memory cache to
       // avoid a second decoded-bitmap pool beside our ImageRef cache.
       cachePolicy={showRef ? 'memory-disk' : 'disk'}

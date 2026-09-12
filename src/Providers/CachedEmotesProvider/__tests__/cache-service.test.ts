@@ -8,12 +8,14 @@ import {
   getCachedEmoteByteEstimate,
   getCachedEmoteRef,
   getCachedEmoteStats,
+  getEmoteDecodeTimeoutCount,
   releaseChannelEmoteRefs,
   subscribeCachedEmoteRef,
   touchCachedEmoteRef,
   trimDecodedEmotes,
   warmCachedEmoteRefs,
 } from '@app/Providers/CachedEmotesProvider/cache-service';
+import { logger } from '@app/utils/logger';
 
 // 5% of the mocked 8GB device (under the 600MB high-tier ceiling).
 const MAX_DECODED_BYTES_HIGH_TIER = Math.floor(8 * 1024 * 1024 * 1024 * 0.05);
@@ -134,6 +136,116 @@ describe('cache-service', () => {
 
     expect(getCachedEmoteRef(url)).toBeNull();
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  describe('decode timeout', () => {
+    const warn = jest.spyOn(logger.chat, 'warn').mockImplementation(() => {});
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+    afterEach(async () => {
+      // A failed assertion must not strand fake timers holding decode slots.
+      await jest.runOnlyPendingTimersAsync();
+      jest.useRealTimers();
+    });
+
+    test('a decode that settles in time keeps its ref past the timeout', async () => {
+      const url = 'https://cdn.7tv.app/emote/quick/2x.avif';
+      const release = jest.fn();
+      loadAsync.mockResolvedValueOnce(makeImageRef({ release }));
+
+      ensureCachedEmoteRef(url);
+      await jest.advanceTimersByTimeAsync(0);
+      await jest.advanceTimersByTimeAsync(20_001);
+
+      expect(getCachedEmoteRef(url)).toEqual({ release });
+      expect(release).not.toHaveBeenCalled();
+      expect(getEmoteDecodeTimeoutCount()).toEqual(0);
+    });
+
+    test('a result that lands after the timeout is still cached and announced', async () => {
+      const url = 'https://cdn.7tv.app/emote/late/2x.avif';
+      const release = jest.fn();
+      let resolveDecode: (ref: ImageRef) => void = () => {};
+      loadAsync.mockReturnValueOnce(
+        new Promise<ImageRef>(resolve => {
+          resolveDecode = resolve;
+        }),
+      );
+      const onChange = jest.fn();
+      subscribeCachedEmoteRef(url, onChange);
+
+      ensureCachedEmoteRef(url);
+      await jest.advanceTimersByTimeAsync(20_000);
+      expect(getCachedEmoteStats().inflight).toEqual(0);
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn).toHaveBeenCalledWith('chat.emote.decode_timeout', {
+        name: 'chat_resources_warning',
+        url,
+        count: 1,
+        activeDecodes: 1,
+        queuedDecodes: 0,
+      });
+
+      resolveDecode(makeImageRef({ release }));
+      await jest.advanceTimersByTimeAsync(0);
+
+      expect(getCachedEmoteRef(url)).toEqual({ release });
+      expect(release).not.toHaveBeenCalled();
+      expect(onChange).toHaveBeenCalledTimes(1);
+    });
+
+    test('a late result loses to a newer decode of the same url', async () => {
+      const url = 'https://cdn.7tv.app/emote/raced/2x.avif';
+      const release = jest.fn();
+      let resolveDecode: (ref: ImageRef) => void = () => {};
+      loadAsync.mockReturnValueOnce(
+        new Promise<ImageRef>(resolve => {
+          resolveDecode = resolve;
+        }),
+      );
+
+      ensureCachedEmoteRef(url);
+      await jest.advanceTimersByTimeAsync(20_000);
+      ensureCachedEmoteRef(url);
+      await jest.advanceTimersByTimeAsync(0);
+      expect(getCachedEmoteRef(url)).toEqual({});
+
+      resolveDecode(makeImageRef({ release }));
+      await jest.advanceTimersByTimeAsync(0);
+
+      expect(getCachedEmoteRef(url)).toEqual({});
+      expect(release).toHaveBeenCalledTimes(1);
+    });
+
+    test('hung decodes do not starve the slot pool for good', async () => {
+      const hung = Array.from(
+        { length: 8 },
+        (_, i) => `https://cdn.7tv.app/emote/hung${i}/2x.avif`,
+      );
+      loadAsync.mockImplementation(source =>
+        hung.includes(decodedUri(source))
+          ? new Promise<ImageRef>(() => {})
+          : Promise.resolve(makeImageRef()),
+      );
+      hung.forEach(url => ensureCachedEmoteRef(url));
+      const queued = 'https://cdn.7tv.app/emote/queued/2x.avif';
+      ensureCachedEmoteRef(queued);
+      await jest.advanceTimersByTimeAsync(0);
+      expect(loadAsync).toHaveBeenCalledTimes(8);
+
+      await jest.advanceTimersByTimeAsync(20_000);
+
+      expect(loadAsync).toHaveBeenCalledTimes(9);
+      expect(getCachedEmoteRef(queued)).toEqual({});
+      expect(getCachedEmoteStats().inflight).toEqual(0);
+
+      // The hung urls can be asked for again.
+      loadAsync.mockImplementation(() => Promise.resolve(makeImageRef()));
+      ensureCachedEmoteRef(hung[0]!);
+      await jest.advanceTimersByTimeAsync(0);
+      expect(loadAsync).toHaveBeenCalledTimes(10);
+    });
   });
 
   test('a channel-hop fence drops an in-flight decode and lets a re-request start fresh', async () => {
