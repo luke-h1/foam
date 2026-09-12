@@ -4,7 +4,7 @@ import {
   use,
   useCallback,
   useEffect,
-  useEffectEvent,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -24,12 +24,14 @@ import {
 } from 'expo-image';
 
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
+import { useSyncRef } from '@app/hooks/useSyncRef';
 import { resolveUseAppleWebpCodec } from '@app/lib/expo-image/resolveUseAppleWebpCodec';
 import { runAnimationCommand } from '@app/lib/expo-image/runAnimationCommand';
 import {
   evictCachedEmoteRef,
   getCachedEmoteByteEstimate,
   getCachedEmoteStats,
+  getEmoteDecodeTimeoutCount,
   getEmoteRefReleaseRaceCount,
 } from '@app/Providers/CachedEmotesProvider/cache-service';
 import { useCachedEmote } from '@app/Providers/CachedEmotesProvider/useCachedEmote';
@@ -48,7 +50,9 @@ const MAX_RELOAD_ATTEMPTS = 8;
 const RELOAD_BASE_DELAY_MS = 400;
 const RELOAD_MAX_DELAY_MS = 8000;
 /**
- * Route silent hangs (no onLoad/onError) through the error path after this long.
+ * Retry a load that has reported nothing (no onLoad or onError) for this long.
+ * The ref path hands off to the uri. The uri path moves along its candidates
+ * like a real error would, but never evicts the shared ref.
  */
 const LOAD_WATCHDOG_MS = 12000;
 
@@ -130,27 +134,31 @@ function ChatInlineImageComponent({
   if (banOwnerUrl !== sourceUrl) {
     setBanOwnerUrl(sourceUrl);
     setFailedRefUrl(null);
+    // An A -> B -> A recycle would otherwise revive A's old 'failed' or
+    // 'loaded' tag with nothing armed behind it.
+    setLoad({ index: 0, status: 'loading', url: sourceUrl, viaRef: false });
   }
 
   // retryCountRef isn't rendered, so reset it here rather than during render.
-  // A recycled slot's ref has not drawn yet even when still cached.
-  useEffect(() => {
+  // A recycled slot's ref has not drawn yet even when still cached. Layout
+  // phase: the new url's onDisplay can reach JS before a passive effect runs.
+  useLayoutEffect(() => {
     retryCountRef.current = 0;
     displayedSharedRef.current = null;
   }, [sourceUrl]);
 
+  const clearRetryTimer = useCallback(() => {
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+  }, []);
+
   // Drop the previous url's retry timer, or it reloads the wrong emote.
-  useEffect(
-    () => () => {
-      if (retryTimerRef.current) {
-        clearTimeout(retryTimerRef.current);
-        retryTimerRef.current = null;
-      }
-    },
-    [sourceUrl],
-  );
+  useEffect(() => clearRetryTimer, [sourceUrl, clearRetryTimer]);
 
   const handleLoad = useCallback(() => {
+    clearRetryTimer();
     retryCountRef.current = 0;
     setLoad(prev => ({
       index: prev.url === sourceUrl ? prev.index : 0,
@@ -159,7 +167,7 @@ function ChatInlineImageComponent({
       viaRef: showRef,
     }));
     syncAnimation();
-  }, [showRef, sourceUrl, syncAnimation]);
+  }, [clearRetryTimer, showRef, sourceUrl, syncAnimation]);
 
   const handleError = useCallback(
     (event?: ImageErrorEventData) => {
@@ -171,6 +179,7 @@ function ChatInlineImageComponent({
         }
         // The ref never drew, which says nothing about the url - hand off to
         // the fallback chain with a full budget.
+        clearRetryTimer();
         setFailedRefUrl(sourceUrl);
         retryCountRef.current = 0;
         setLoad({ index: 0, status: 'loading', url: sourceUrl, viaRef: false });
@@ -178,12 +187,16 @@ function ChatInlineImageComponent({
         return;
       }
 
-      if (candidateIndex === 0) {
+      // The watchdog fires with no event. A slow load says nothing about the
+      // shared ref other rows are drawing, so only a real error evicts it.
+      const isSilentTimeout = event === undefined;
+
+      if (!isSilentTimeout && candidateIndex === 0) {
         evictCachedEmoteRef(candidateUrl);
       }
 
       // The variant is unavailable (typically a 404 on a variant 7TV
-      // advertises but never serves) - move to the next candidate immediately.
+      // advertises but never serves) or stalled - move to the next candidate.
       if (candidateIndex < fallbackChain.length - 1) {
         logger.chat.debug('chat.emote.fallback', {
           from: candidateUrl,
@@ -199,17 +212,18 @@ function ChatInlineImageComponent({
         return;
       }
 
-      // Every variant 404'd - backoff-retry the smallest candidate to ride
-      // out a transient blip.
+      // Every variant 404'd or stalled - backoff-retry the smallest candidate
+      // to ride out a transient blip.
       if (retryCountRef.current >= MAX_RELOAD_ATTEMPTS) {
         const descriptor = describeEmoteUrl(candidateUrl);
         const cache = getCachedEmoteStats();
         logger.chat.warn('chat.emote.load_failed', {
           name: 'chat_resources_warning',
           error: event?.error,
+          failure: isSilentTimeout ? 'timeout' : 'error',
           url: sourceUrl,
           finalUrl: candidateUrl,
-          candidatesTried: fallbackChain.length,
+          candidatesTried: candidateIndex + 1,
           attempts: retryCountRef.current,
           renderPath: showRef ? 'imageRef' : 'uri',
           tags: {
@@ -221,6 +235,7 @@ function ChatInlineImageComponent({
             cachePinned: cache.pinned,
             cacheBytes: getCachedEmoteByteEstimate(),
             cacheReleaseRaces: getEmoteRefReleaseRaceCount(),
+            cacheDecodeTimeouts: getEmoteDecodeTimeoutCount(),
           },
         });
         setLoad({
@@ -241,9 +256,7 @@ function ChatInlineImageComponent({
         RELOAD_MAX_DELAY_MS,
         RELOAD_BASE_DELAY_MS * 2 ** (retryCountRef.current - 1),
       );
-      if (retryTimerRef.current) {
-        clearTimeout(retryTimerRef.current);
-      }
+      clearRetryTimer();
       retryTimerRef.current = setTimeout(() => {
         retryTimerRef.current = null;
         setReloadNonce(nonce => nonce + 1);
@@ -252,6 +265,7 @@ function ChatInlineImageComponent({
     [
       candidateIndex,
       candidateUrl,
+      clearRetryTimer,
       fallbackChain,
       sharedRef,
       showRef,
@@ -269,15 +283,18 @@ function ChatInlineImageComponent({
   }, [sharedRef, showRef, syncAnimation]);
 
   // A displayed ref pins status at 'loading' (no onLoad), so the timer always
-  // fires on the ref path; handleError's displayed-ref guard no-ops it.
-  const onWatchdogTimeout = useEffectEvent(() => handleError());
+  // fires on the ref path; handleError's displayed-ref guard no-ops it. A
+  // synced ref, not useEffectEvent: the test renderer never updates the event
+  // function, so a recycled row would fire its first url's handler.
+  const handleErrorRef = useSyncRef(handleError);
   useEffect(() => {
     if (status !== 'loading') {
       return undefined;
     }
-    const timer = setTimeout(onWatchdogTimeout, LOAD_WATCHDOG_MS);
+    const timer = setTimeout(() => handleErrorRef.current(), LOAD_WATCHDOG_MS);
     return () => clearTimeout(timer);
-  }, [showRef, status, candidateUrl, reloadNonce]);
+    // sourceUrl: a recycle can land on the previous url's fallback candidate.
+  }, [handleErrorRef, showRef, status, candidateUrl, reloadNonce, sourceUrl]);
 
   useEffect(() => {
     if (!rowVisibility || !animated) {

@@ -185,7 +185,14 @@ function evictUnpinnedToFit(incomingBytes: number): void {
 }
 
 const MAX_CONCURRENT_DECODES = isLowTier ? 4 : 8;
+/**
+ * A native load that never settles would hold its slot and in-flight marker
+ * for the whole session. Eight of those and nothing decodes again. After this
+ * long the slot is freed and the url can be requested again.
+ */
+const DECODE_TIMEOUT_MS = 20_000;
 let activeDecodes = 0;
+let decodeTimeoutCount = 0;
 type DecodeWaiter = { url: string; resolve: () => void };
 const decodeWaiters: DecodeWaiter[] = [];
 const lowPriorityDecodeWaiters: DecodeWaiter[] = [];
@@ -224,6 +231,46 @@ function releaseDecodeSlot(): void {
   } else {
     activeDecodes -= 1;
   }
+}
+
+/**
+ * Frees the JS slot after DECODE_TIMEOUT_MS; the native load keeps running and
+ * `onLate` gets its result, since a slow download is still a good ref.
+ */
+function loadWithTimeout(
+  url: string,
+  maxPx: number,
+  requestEpoch: number,
+  onLate: (ref: ImageRef) => void,
+): Promise<ImageRef> {
+  const load = Image.loadAsync(
+    { uri: url },
+    { maxWidth: maxPx, maxHeight: maxPx },
+  );
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      load.then(onLate).catch(() => {
+        // ignore
+      });
+      // A channel hop already abandoned this decode; that is not a stall.
+      if (requestEpoch === cacheEpoch) {
+        decodeTimeoutCount += 1;
+        if (decodeTimeoutCount === 1 || decodeTimeoutCount % 50 === 0) {
+          logger.chat.warn('chat.emote.decode_timeout', {
+            name: 'chat_resources_warning',
+            url,
+            count: decodeTimeoutCount,
+            activeDecodes,
+            queuedDecodes:
+              decodeWaiters.length + lowPriorityDecodeWaiters.length,
+          });
+        }
+      }
+      reject(new Error(`emote decode timed out after ${DECODE_TIMEOUT_MS}ms`));
+    }, DECODE_TIMEOUT_MS);
+  });
+  return Promise.race([load, timeout]).finally(() => clearTimeout(timer));
 }
 
 function notify(url: string): void {
@@ -292,36 +339,10 @@ async function runDecode(
       return;
     }
     // eslint-disable-next-line react-doctor/async-defer-await -- epoch fence re-checks after the decode
-    const ref = await Image.loadAsync(
-      { uri: url },
-      { maxWidth: maxPx, maxHeight: maxPx },
+    const ref = await loadWithTimeout(url, maxPx, requestEpoch, late =>
+      commitDecodedRef(url, maxPx, pin, requestEpoch, late, true),
     );
-    if (inflight.get(url) !== requestEpoch || requestEpoch !== cacheEpoch) {
-      // Decode outlived its epoch: release now, GC lags when memory is tight.
-      try {
-        ref.release();
-      } catch {
-        // ignore
-      }
-      return;
-    }
-    const kind = describeEmoteUrl(url).kind;
-    const cost = estimateRefBytes(
-      kind === null ? ref.isAnimated === true : kind === 'animated',
-      maxPx,
-    );
-    evictUnpinnedToFit(cost);
-    // width/height is a JSI hop, but a one-off after the far costlier decode.
-    refs.set(url, {
-      ref,
-      bytes: cost,
-      aspect: ref.width > 0 && ref.height > 0 ? ref.width / ref.height : null,
-    });
-    totalBytes += cost;
-    if (pin) {
-      pinned.add(url);
-    }
-    notify(url);
+    commitDecodedRef(url, maxPx, pin, requestEpoch, ref, false);
   } catch {
     // ignore
   } finally {
@@ -330,6 +351,49 @@ async function runDecode(
       inflight.delete(url);
     }
   }
+}
+
+/**
+ * A late ref (its slot already timed out) lands unless the cache moved on:
+ * a newer decode for the url, an entry already present, or a channel hop.
+ */
+function commitDecodedRef(
+  url: string,
+  maxPx: number,
+  pin: boolean,
+  requestEpoch: number,
+  ref: ImageRef,
+  late: boolean,
+): void {
+  const superseded = late
+    ? inflight.has(url) || refs.has(url)
+    : inflight.get(url) !== requestEpoch;
+  if (superseded || requestEpoch !== cacheEpoch) {
+    // Decode outlived its epoch: release now, GC lags when memory is tight.
+    try {
+      ref.release();
+    } catch {
+      // ignore
+    }
+    return;
+  }
+  const kind = describeEmoteUrl(url).kind;
+  const cost = estimateRefBytes(
+    kind === null ? ref.isAnimated === true : kind === 'animated',
+    maxPx,
+  );
+  evictUnpinnedToFit(cost);
+  // width/height is a JSI hop, but a one-off after the far costlier decode.
+  refs.set(url, {
+    ref,
+    bytes: cost,
+    aspect: ref.width > 0 && ref.height > 0 ? ref.width / ref.height : null,
+  });
+  totalBytes += cost;
+  if (pin) {
+    pinned.add(url);
+  }
+  notify(url);
 }
 
 export function ensureCachedEmoteRef(
@@ -416,6 +480,7 @@ export function clearCachedEmoteRefs(): void {
   pinned.clear();
   recentlyReleased.clear();
   releaseRaceCount = 0;
+  decodeTimeoutCount = 0;
   notifyAll();
 }
 
@@ -600,4 +665,8 @@ export function getCachedEmoteByteEstimate(): number {
 
 export function getEmoteRefReleaseRaceCount(): number {
   return releaseRaceCount;
+}
+
+export function getEmoteDecodeTimeoutCount(): number {
+  return decodeTimeoutCount;
 }
