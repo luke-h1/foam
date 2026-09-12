@@ -433,6 +433,22 @@ describe('ChatInlineImage load watchdog', () => {
     expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
   });
 
+  test('a shared ref arriving mid-backoff cancels the pending uri reload', () => {
+    const sourceUrl =
+      'https://static-cdn.jtvnw.net/emoticons/v2/handoff/default/dark/2.0';
+    const { rerender } = render(
+      <ChatInlineImage sourceUrl={sourceUrl} style={{}} />,
+    );
+    act(() => jest.advanceTimersByTime(12000));
+
+    mockSharedRef = fakeImageRef(false);
+    rerender(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
+    act(() => jest.advanceTimersByTime(8000));
+
+    expect(mockImageProps?.source).toEqual(mockSharedRef);
+    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
+  });
+
   test('a recycle onto the previous url fallback candidate re-arms the watchdog', () => {
     const base = 'https://cdn.7tv.app/emote/collide';
     const { rerender } = render(
