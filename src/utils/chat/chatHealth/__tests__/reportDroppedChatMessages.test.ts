@@ -5,7 +5,11 @@ import {
   resetDroppedChatMessageReports,
 } from '../reportDroppedChatMessages';
 
-const context = { bufferSize: 600, maxBufferedMessages: 600 };
+const context = {
+  reason: 'ingest-buffer-overflow' as const,
+  bufferSize: 600,
+  maxBufferedMessages: 600,
+};
 
 describe('reportDroppedChatMessages', () => {
   let mockError: jest.SpiedFunction<typeof logger.chat.error>;
@@ -70,6 +74,31 @@ describe('reportDroppedChatMessages', () => {
     jest.advanceTimersByTime(120_000);
 
     expect(mockError).toHaveBeenCalledTimes(1);
+  });
+
+  test('reports by-design drops as warnings under their own fingerprint', () => {
+    const mockWarn = jest
+      .spyOn(logger.chat, 'warn')
+      .mockImplementation(() => {});
+
+    reportDroppedChatMessages(3, {
+      reason: 'ingest-rate-limit',
+      limitPerSecond: 150,
+    });
+
+    expect(mockError).not.toHaveBeenCalled();
+    expect(mockWarn).toHaveBeenCalledWith('chat.pipeline.messages_dropped', {
+      name: 'twitch_chat_warning',
+      fingerprint: [
+        'chat',
+        'pipeline',
+        'messages-dropped',
+        'ingest-rate-limit',
+      ],
+      tags: { reason: 'ingest-rate-limit' },
+      droppedMessages: 3,
+      limitPerSecond: 150,
+    });
   });
 
   test('abandons the pending report when the session is reset', () => {

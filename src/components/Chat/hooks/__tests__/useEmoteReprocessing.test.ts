@@ -238,6 +238,7 @@ describe('useEmoteReprocessing', () => {
         }),
       );
 
+      // The first batch commits at once so emotes start to show.
       expect(mockUpdateMessages).toHaveBeenCalledTimes(1);
       expect(mockUpdateMessages.mock.calls[0]?.[0]).toHaveLength(6);
 
@@ -245,8 +246,15 @@ describe('useEmoteReprocessing', () => {
         jest.runOnlyPendingTimers();
       });
 
+      // Later batches accumulate instead of committing one store write each.
+      expect(mockUpdateMessages).toHaveBeenCalledTimes(1);
+
+      act(() => {
+        jest.runAllTimers();
+      });
+
       expect(mockUpdateMessages).toHaveBeenCalledTimes(2);
-      expect(mockUpdateMessages.mock.calls[1]?.[0]).toHaveLength(6);
+      expect(mockUpdateMessages.mock.calls[1]?.[0]).toHaveLength(24);
     } finally {
       jest.useRealTimers();
     }

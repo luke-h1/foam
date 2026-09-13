@@ -68,6 +68,11 @@ export interface ChatMessageType<
    * treatment such as the slide-in entrance.
    */
   isHistorical?: boolean;
+  /**
+   * Set when the message committed as part of a raid-sized flush, so a burst
+   * of rows does not start one entrance animation per row in the same frame.
+   */
+  arrivedInBurst?: boolean;
   userstate: UserStateTags;
   message: ParsedPart[];
   badges: SanitisedBadgeSet[];

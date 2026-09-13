@@ -82,6 +82,7 @@ describe('useChatMessages', () => {
     isAtBottomRef: { current: true },
     isScrollingToBottomRef: { current: false },
     isUserActivelyScrolling: () => false,
+    noteScrollAwayIntent: () => {},
     maintainBottomAfterContentChange: () => {},
     ...overrides,
   });
@@ -97,6 +98,7 @@ describe('useChatMessages', () => {
   });
 
   afterEach(() => {
+    messagesActions.setChatFrontTrimSuspended(false);
     jest.useRealTimers();
   });
 
@@ -683,7 +685,16 @@ describe('useChatMessages', () => {
       }),
     };
 
+    /**
+     * Chat.tsx suspends front-trim while the list is scrolled up, which widens
+     * the store window and with it the ingest buffer bound.
+     */
+    const suspendFrontTrimLikeScrolledUp = () => {
+      messagesActions.setChatFrontTrimSuspended(true);
+    };
+
     test('flushes entire buffer so all messages appear', () => {
+      suspendFrontTrimLikeScrolledUp();
       const { result } = renderHook(() => useChatMessages(scrolledUpOptions));
 
       act(() => {
@@ -707,6 +718,7 @@ describe('useChatMessages', () => {
     });
 
     test('commits every message when arrivals outrun the flush cadence', () => {
+      suspendFrontTrimLikeScrolledUp();
       const { result } = renderHook(() => useChatMessages(scrolledUpOptions));
 
       // Exceeds the fixed backpressure threshold (400) so the burst forces a
@@ -736,6 +748,7 @@ describe('useChatMessages', () => {
     });
 
     test('keeps every message while the user is dragging the list', () => {
+      suspendFrontTrimLikeScrolledUp();
       const { result } = renderHook(() =>
         useChatMessages({
           scrollAnchor: createScrollAnchor({
@@ -794,7 +807,7 @@ describe('useChatMessages', () => {
       expect(result.current.getBufferSize()).toBe(0);
     });
 
-    test('caps a live raid flush at the bottom to a bounded batch of rows', () => {
+    test('commits a whole burst at the bottom instead of capping it at the raid batch', () => {
       const { result } = renderHook(() =>
         useChatMessages({
           scrollAnchor: createScrollAnchor({
@@ -814,11 +827,12 @@ describe('useChatMessages', () => {
       });
 
       const flushedMessages = getLastFlushedMessages();
-      // 50 arrivals in one interval trips raid mode, which commits the wider
-      // batch against its wider 180ms cadence.
-      expect(flushedMessages).toHaveLength(15);
+      // The cap rises to the arrivals since the last flush, so the burst
+      // commits in one flush and the visible chat stays on live.
+      expect(flushedMessages).toHaveLength(50);
       expect(flushedMessages[0]?.message_id).toBe('0');
-      expect(flushedMessages.at(-1)?.message_id).toBe('14');
+      expect(flushedMessages.at(-1)?.message_id).toBe('49');
+      expect(result.current.getBufferSize()).toBe(0);
     });
 
     /**
@@ -863,17 +877,32 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(180);
       });
 
-      // A backlog is still buffered, but no new arrivals - the next flush must
-      // drop back to the normal 100ms cadence rather than staying in raid mode.
-      expect(result.current.getBufferSize()).toBeGreaterThan(0);
+      expect(result.current.getBufferSize()).toBe(0);
       mockAddMessages.mockClear();
 
+      // The burst flush left raid mode on, so this single row waits out the
+      // wider 180ms cadence.
       act(() => {
+        result.current.handleNewMessage(createMockMessage('after-raid'));
         jest.advanceTimersByTime(100);
       });
+      expect(mockAddMessages).not.toHaveBeenCalled();
+      act(() => {
+        jest.advanceTimersByTime(80);
+      });
+      expect(
+        getLastFlushedMessages().map(message => message.message_id),
+      ).toEqual(['after-raid']);
+      mockAddMessages.mockClear();
 
-      expect(mockAddMessages).toHaveBeenCalled();
-      expect(getLastFlushedMessages()).toHaveLength(8);
+      // That quiet flush cleared raid mode, so the next row commits at 100ms.
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('quiet'));
+        jest.advanceTimersByTime(100);
+      });
+      expect(
+        getLastFlushedMessages().map(message => message.message_id),
+      ).toEqual(['quiet']);
     });
 
     test('a raid drains in order across flushes instead of dropping the overflow', () => {
@@ -906,6 +935,7 @@ describe('useChatMessages', () => {
     });
 
     test('counts every message toward unread when the user is scrolled up', () => {
+      suspendFrontTrimLikeScrolledUp();
       const { result } = renderHook(() =>
         useChatMessages({
           scrollAnchor: createScrollAnchor({
@@ -956,7 +986,7 @@ describe('useChatMessages', () => {
       ]);
     });
 
-    test('only the rows a capped flush commits are finalized', () => {
+    test('finalizes every row a burst flush commits', () => {
       const finalizeMessageForCommit = jest.fn(
         (message: BufferedMessage) => message,
       );
@@ -971,27 +1001,12 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(100);
       });
 
-      // 20 arrivals in one interval is raid-sized, so the wider batch commits.
-      expect(finalizeMessageForCommit).toHaveBeenCalledTimes(15);
+      // The cap rises to the 20 arrivals, so the whole burst commits and is
+      // finalized in one flush.
+      expect(finalizeMessageForCommit).toHaveBeenCalledTimes(20);
       expect(
         getLastFlushedMessages().map(message => message.message_id),
-      ).toEqual([
-        '0',
-        '1',
-        '2',
-        '3',
-        '4',
-        '5',
-        '6',
-        '7',
-        '8',
-        '9',
-        '10',
-        '11',
-        '12',
-        '13',
-        '14',
-      ]);
+      ).toEqual(Array.from({ length: 20 }, (_, index) => `${index}`));
     });
 
     test('force flush finalizes the drained backlog', () => {

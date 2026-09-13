@@ -3,6 +3,15 @@ import { createChatMessageFixture } from '@app/components/Chat/util/__tests__/__
 import { shouldAnimateMessageEntrance } from '../shouldAnimateMessageEntrance';
 
 describe('shouldAnimateMessageEntrance', () => {
+  test('does not animate a row that committed in a raid-sized burst', () => {
+    const message = createChatMessageFixture({
+      committedAt: 1_000,
+      arrivedInBurst: true,
+    });
+
+    expect(shouldAnimateMessageEntrance(message, 1_000)).toBe(false);
+  });
+
   test('animates a message committed moments before mount', () => {
     const message = createChatMessageFixture({ committedAt: 10_000 });
 

@@ -1,8 +1,8 @@
 import * as channelLoadModule from '@app/store/chat/actions/channelLoad';
 import {
   enrichMessageSet,
-  enrichVisibleMessage,
   hasEnrichmentEmoteSources,
+  resolveVisibleMessageUpdate,
   shouldEnrichMessage,
 } from '@app/store/chat/actions/messageEnrichment';
 import * as messagesModule from '@app/store/chat/actions/messages';
@@ -269,7 +269,7 @@ describe('enrichMessageSet', () => {
   });
 });
 
-describe('enrichVisibleMessage', () => {
+describe('resolveVisibleMessageUpdate', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     chatStore$.emojis.set([]);
@@ -286,14 +286,14 @@ describe('enrichVisibleMessage', () => {
     mockGetMessageBadges.mockReturnValue([]);
   });
 
-  test('rewrites parts and badges from the current caches', async () => {
+  test('resolves parts and badges from the current caches without publishing', async () => {
     const message = createMockMessage({
       message_id: 'visible-1',
       message_nonce: 'nv',
       message: [createTextPart('hello')],
     });
 
-    await enrichVisibleMessage({
+    const update = await resolveVisibleMessageUpdate({
       channelId: 'channel-1',
       message,
       show7TvEmotes: true,
@@ -303,19 +303,19 @@ describe('enrichVisibleMessage', () => {
     expect(mockGetSharedChatBadgeContext).toHaveBeenCalledWith(
       message.userstate,
     );
-    expect(mockUpdateMessages).toHaveBeenCalledWith([
-      expectMessageUpdate('visible-1', 'nv', 'hello'),
-    ]);
+    expect(update).toEqual(expectMessageUpdate('visible-1', 'nv', 'hello'));
+    expect(mockUpdateMessages).not.toHaveBeenCalled();
   });
 
   test('skips system messages', async () => {
-    await enrichVisibleMessage({
+    const update = await resolveVisibleMessageUpdate({
       channelId: 'channel-1',
       message: createSystemMessage(),
       show7TvEmotes: true,
       userLogin: 'me',
     });
 
+    expect(update).toBeNull();
     expect(mockUpdateMessages).not.toHaveBeenCalled();
   });
 });

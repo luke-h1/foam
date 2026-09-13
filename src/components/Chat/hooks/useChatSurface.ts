@@ -34,6 +34,7 @@ interface UseChatSurfaceOptions {
   inputShellRef: RefObject<ChatInputShellHandle | null>;
   joinChannel: (channel: string) => void;
   listRef: RefObject<ChatListRef | null>;
+  noteScrollAwayIntent: () => void;
   partChannel: (channel: string) => void;
   preferences: ChatRenderPreferences;
   refetchEmotes: () => Promise<void>;
@@ -61,6 +62,7 @@ export function useChatSurface({
   inputShellRef,
   joinChannel,
   listRef,
+  noteScrollAwayIntent,
   partChannel,
   preferences,
   refetchEmotes,
@@ -184,6 +186,7 @@ export function useChatSurface({
       highlightedUsers,
       listRef,
       messages$,
+      noteScrollAwayIntent,
       onBadgePress: handleBadgeLongPress,
       onEmotePress: handleEmotePress,
       onMessageLongPress: handleMessageLongPress,

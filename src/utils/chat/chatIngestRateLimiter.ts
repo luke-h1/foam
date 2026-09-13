@@ -1,8 +1,11 @@
-// Flood backstop on live-message ingest. The emote/badge parse is deferred to
-// commit time, so 150/s only bounds cheap buffer/bookkeeping work; the token
-// bucket lets normal/busy chat through untouched and samples sustained floods.
-const MAX_INGESTED_PER_SEC = 150;
-const BUCKET_SIZE = 30;
+/**
+ * Flood backstop on live-message ingest. Sits above the highest sustained
+ * single-channel rates seen on Twitch (100-200/s at the largest events), so
+ * it only samples a flood the commit path could not render anyway. Drops are
+ * reported to Sentry.
+ */
+export const MAX_INGESTED_PER_SEC = 300;
+const BUCKET_SIZE = 60;
 
 let tokens = BUCKET_SIZE;
 let lastRefill = 0;

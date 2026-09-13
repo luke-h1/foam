@@ -9,6 +9,7 @@ import {
 } from '@app/utils/seventv/seventvWsInterpreter';
 
 const ID_WAIT_TIMEOUT = 30000;
+const ID_POLL_INTERVAL_MS = 250;
 
 type SeventvSubscribeMessage = SevenTvWsMessage<
   never,
@@ -41,7 +42,7 @@ export const setupInitialSubscriptions = async ({
     logger.stvWs.debug('💚 Waiting for twitchChannelId to be set...');
     // eslint-disable-next-line react-doctor/async-await-in-loop, react-doctor/async-defer-await -- poll for channel id; fenced below
     await new Promise(resolve => {
-      setTimeout(resolve, 1000);
+      setTimeout(resolve, ID_POLL_INTERVAL_MS);
     });
     if (!stillCurrent()) {
       return;
@@ -85,7 +86,7 @@ export const setupInitialSubscriptions = async ({
     logger.stvWs.debug('💚 Waiting for sevenTVemoteSetId to be set...');
     // eslint-disable-next-line react-doctor/async-await-in-loop, react-doctor/async-defer-await -- poll for emote set id; fenced below
     await new Promise(resolve => {
-      setTimeout(resolve, 1000);
+      setTimeout(resolve, ID_POLL_INTERVAL_MS);
     });
     if (!stillCurrent()) {
       return;

@@ -55,15 +55,17 @@ export const setChatFrontTrimSuspended = (suspended: boolean): void => {
   frontTrimSuspended = suspended;
 };
 
-const getEffectiveMaxChatMessages = (): number =>
+export const getEffectiveMaxChatMessages = (): number =>
   getMaxChatMessages() +
   (frontTrimSuspended ? SUSPENDED_FRONT_TRIM_HEADROOM : 0);
 const MAX_RECENT_MESSAGE_CHANNELS = 10;
 // Each sync re-serializes recentMessagesByChannel to MMKV - a top JS hotspot
 // in busy chats (issue #594); moderation/clear paths still flush immediately.
 export const RECENT_MESSAGES_SYNC_DELAY_MS = 15_000;
+const RECENT_MESSAGES_MODERATION_SYNC_DELAY_MS = 1_000;
 
 let recentMessagesSyncTimer: ReturnType<typeof setTimeout> | null = null;
+let recentMessagesSyncTimerDelayMs = 0;
 let pendingRecentMessagesChannelId: string | null = null;
 let pendingRecentMessages: AnyChatMessageType[] | null = null;
 
@@ -287,6 +289,7 @@ const flushPendingRecentMessagesSync = () => {
     clearTimeout(recentMessagesSyncTimer);
     recentMessagesSyncTimer = null;
   }
+  recentMessagesSyncTimerDelayMs = 0;
 
   const channelId = pendingRecentMessagesChannelId;
   const nextMessages = pendingRecentMessages;
@@ -301,9 +304,16 @@ const flushPendingRecentMessagesSync = () => {
   persistRecentMessagesForChannel(channelId, nextMessages);
 };
 
+type RecentMessagesSyncMode = 'defer' | 'soon' | 'immediate';
+
+/**
+ * 'soon' is for moderation: a ban wave fires several events a second and each
+ * immediate sync serialises the window to MMKV on the JS thread, but a deleted
+ * row still has to leave the persisted copy well before the 15s defer window.
+ */
 const syncRecentMessagesForCurrentChannel = (
   nextMessages: AnyChatMessageType[],
-  mode: 'defer' | 'immediate' = 'immediate',
+  mode: RecentMessagesSyncMode = 'immediate',
 ) => {
   const currentChannelId = chatStore$.currentChannelId.peek();
   if (!currentChannelId) {
@@ -321,19 +331,42 @@ const syncRecentMessagesForCurrentChannel = (
   pendingRecentMessagesChannelId = currentChannelId;
   pendingRecentMessages = nextMessages;
 
+  const delayMs =
+    mode === 'soon'
+      ? RECENT_MESSAGES_MODERATION_SYNC_DELAY_MS
+      : RECENT_MESSAGES_SYNC_DELAY_MS;
+
   if (recentMessagesSyncTimer) {
-    return;
+    if (delayMs >= recentMessagesSyncTimerDelayMs) {
+      return;
+    }
+    clearTimeout(recentMessagesSyncTimer);
   }
 
-  recentMessagesSyncTimer = setTimeout(
-    flushPendingRecentMessagesSync,
-    RECENT_MESSAGES_SYNC_DELAY_MS,
-  );
+  recentMessagesSyncTimerDelayMs = delayMs;
+  recentMessagesSyncTimer = setTimeout(flushPendingRecentMessagesSync, delayMs);
 };
 
-const trimMessageIndexes = (): number => {
-  const maxChatMessages = getEffectiveMaxChatMessages();
-  const trimCount = messageKeyOrder.length - maxChatMessages;
+/**
+ * Returning to the bottom releases the suspended-trim headroom (up to 350
+ * rows). Trimming it in one commit is a visible hitch, so each commit trims
+ * the rows it appends plus at most this many extra.
+ */
+const MAX_HEADROOM_TRIM_PER_COMMIT = 50;
+
+const getWindowTrimCount = (
+  currentCount: number,
+  appendCount: number,
+): number => {
+  const excess = currentCount + appendCount - getEffectiveMaxChatMessages();
+  if (excess <= 0) {
+    return 0;
+  }
+  return Math.min(excess, appendCount + MAX_HEADROOM_TRIM_PER_COMMIT);
+};
+
+const trimMessageIndexes = (targetLength: number): number => {
+  const trimCount = messageKeyOrder.length - targetLength;
   if (trimCount <= 0) {
     return 0;
   }
@@ -361,10 +394,10 @@ const appendToMessageWindow = (
   currentMessages: AnyChatMessageType[],
   storedMessages: AnyChatMessageType[],
 ): MessageWindowAppendResult => {
-  const extraMessageCount =
-    currentMessages.length +
-    storedMessages.length -
-    getEffectiveMaxChatMessages();
+  const extraMessageCount = getWindowTrimCount(
+    currentMessages.length,
+    storedMessages.length,
+  );
 
   if (extraMessageCount <= 0) {
     return {
@@ -443,7 +476,7 @@ const indexAppendedMessages = (
 const publishMessageAtIndex = (
   index: number,
   message: AnyChatMessageType,
-  mode: 'defer' | 'immediate' = 'defer',
+  mode: RecentMessagesSyncMode = 'defer',
 ) => {
   const currentMessages = chatStore$.messages.peek();
   if (!currentMessages[index]) {
@@ -456,7 +489,7 @@ const publishMessageAtIndex = (
   syncRecentMessagesForCurrentChannel(nextMessages, mode);
 };
 
-type MessageUpdateInput = {
+export type MessageUpdateInput = {
   messageId: string;
   messageNonce: string;
   updates: Partial<
@@ -541,7 +574,7 @@ export const addMessage = (message?: AnyChatMessageType) => {
     [storedMessage],
   );
 
-  const trimmedKeyCount = trimMessageIndexes();
+  const trimmedKeyCount = trimMessageIndexes(nextMessages.length);
   if (trimmedKeyCount === droppedMessages.length) {
     indexAppendedMessages([storedMessage], nextMessageIndex, droppedMessages);
   } else {
@@ -584,7 +617,7 @@ export const addMessages = (messages: (AnyChatMessageType | undefined)[]) => {
     storedMessages,
   );
 
-  const trimmedKeyCount = trimMessageIndexes();
+  const trimmedKeyCount = trimMessageIndexes(nextMessages.length);
   if (trimmedKeyCount === droppedMessages.length) {
     indexAppendedMessages(
       storedMessages,
@@ -639,7 +672,7 @@ export const moderateMessageById = (
       ],
       moderationNotice,
     },
-    'immediate',
+    'soon',
   );
 };
 
@@ -692,19 +725,20 @@ export const moderateMessagesByLogin = (
   }
 
   chatStore$.messages.set(nextMessages);
-  syncRecentMessagesForCurrentChannel(nextMessages);
+  syncRecentMessagesForCurrentChannel(nextMessages, 'soon');
 };
 
 const forgetMessageKeys = (messages: AnyChatMessageType[]) => {
+  const removedKeys = new Set<string>();
   messages.forEach(message => {
     const key = getChatMessageKey(message.message_id, message.message_nonce);
     messageKeySet.delete(key);
-
-    const orderIndex = messageKeyOrder.indexOf(key);
-    if (orderIndex >= 0) {
-      messageKeyOrder.splice(orderIndex, 1);
-    }
+    removedKeys.add(key);
   });
+
+  const remainingKeys = messageKeyOrder.filter(key => !removedKeys.has(key));
+  messageKeyOrder.length = 0;
+  messageKeyOrder.push(...remainingKeys);
 };
 
 export const removeMessagesByLogin = (login: string) => {
@@ -740,7 +774,7 @@ export const removeMessagesByLogin = (login: string) => {
 
   rebuildMessageIndexes(nextMessages);
   chatStore$.messages.set(nextMessages);
-  syncRecentMessagesForCurrentChannel(nextMessages);
+  syncRecentMessagesForCurrentChannel(nextMessages, 'soon');
 };
 
 export const getMessageById = (
@@ -781,7 +815,7 @@ export const removeMessageById = (messageId: string) => {
 
   rebuildMessageIndexes(nextMessages);
   chatStore$.messages.set(nextMessages);
-  syncRecentMessagesForCurrentChannel(nextMessages);
+  syncRecentMessagesForCurrentChannel(nextMessages, 'soon');
 };
 
 export const clearMessages = () => {

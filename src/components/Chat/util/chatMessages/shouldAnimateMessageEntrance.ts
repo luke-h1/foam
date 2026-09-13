@@ -10,7 +10,7 @@ export function shouldAnimateMessageEntrance(
   message: AnyChatMessageType,
   now: number,
 ): boolean {
-  if (message.isHistorical) {
+  if (message.isHistorical || message.arrivedInBurst) {
     return false;
   }
 

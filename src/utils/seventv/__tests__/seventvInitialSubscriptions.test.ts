@@ -85,7 +85,8 @@ describe('setupInitialSubscriptions', () => {
     expect(harness.sendJsonMessage).not.toHaveBeenCalled();
 
     harness.ids.twitchChannelId = 'channel-1';
-    await jest.advanceTimersByTimeAsync(1_000);
+    // The id poll runs every 250ms, so the subscribe lands within one tick.
+    await jest.advanceTimersByTimeAsync(250);
     await setup;
 
     expect(harness.sendJsonMessage.mock.calls).toEqual([

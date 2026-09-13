@@ -80,6 +80,7 @@ interface UseChatRowRendererOptions {
   highlightedUsers: string[];
   listRef: RefObject<ChatListRef | null>;
   messages$: { peek: () => AnyChatMessageType[] };
+  noteScrollAwayIntent: () => void;
   onBadgePress: (badge: BadgePressData) => void;
   onEmotePress: (emote: EmotePressData) => void;
   onMessageLongPress: (data: MessageActionData<'usernotice'>) => void;
@@ -238,6 +239,7 @@ export function useChatRowRenderer({
   highlightedUsers,
   listRef,
   messages$,
+  noteScrollAwayIntent,
   onBadgePress,
   onEmotePress,
   onMessageLongPress,
@@ -388,6 +390,7 @@ export function useChatRowRenderer({
         return;
       }
 
+      noteScrollAwayIntent();
       void listRef.current?.scrollToItem({
         animated: true,
         item: targetMessage,
@@ -408,6 +411,7 @@ export function useChatRowRenderer({
     [
       highlightedReplyTargetTimeoutRef,
       listRef,
+      noteScrollAwayIntent,
       messages$,
       setHighlightedReplyTargetMessageId,
     ],

@@ -101,6 +101,7 @@ describe('hydrateVisibleSevenTvAssets', () => {
       getUserBadge: jest.fn(() => null),
       fetchUserCosmetics: jest.fn(),
       reprocessMessage,
+      publishMessageUpdates: jest.fn(),
     });
 
     expect(fetchUserPersonalEmotes).toHaveBeenCalledWith(
@@ -127,6 +128,7 @@ describe('hydrateVisibleSevenTvAssets', () => {
       getUserBadge: jest.fn(() => null),
       fetchUserCosmetics: jest.fn(),
       reprocessMessage: jest.fn(),
+      publishMessageUpdates: jest.fn(),
     });
 
     expect(fetchUserPersonalEmotes).toHaveBeenCalledTimes(1);
@@ -149,6 +151,7 @@ describe('hydrateVisibleSevenTvAssets', () => {
       getUserBadge: jest.fn(() => null),
       fetchUserCosmetics: jest.fn(),
       reprocessMessage: jest.fn(),
+      publishMessageUpdates: jest.fn(),
     });
 
     expect(fetchUserPersonalEmotes).toHaveBeenCalledTimes(1);
@@ -169,6 +172,7 @@ describe('hydrateVisibleSevenTvAssets', () => {
       getUserBadge: jest.fn(() => null),
       fetchUserCosmetics: jest.fn(),
       reprocessMessage: jest.fn(),
+      publishMessageUpdates: jest.fn(),
     });
 
     expect(fetchUserPersonalEmotes).toHaveBeenCalledTimes(3);
@@ -196,6 +200,7 @@ describe('hydrateVisibleSevenTvAssets', () => {
       fetchUserCosmetics: jest.fn(),
       hydratePersonalEmotes: false,
       reprocessMessage,
+      publishMessageUpdates: jest.fn(),
     });
 
     expect(getUserPersonalEmotes).not.toHaveBeenCalled();
@@ -225,6 +230,7 @@ describe('hydrateVisibleSevenTvAssets', () => {
       getUserBadge,
       fetchUserCosmetics,
       reprocessMessage,
+      publishMessageUpdates: jest.fn(),
     });
 
     expect(fetchUserCosmetics).toHaveBeenCalledWith('twitch-user', {
@@ -248,6 +254,7 @@ describe('hydrateVisibleSevenTvAssets', () => {
       getUserBadge: jest.fn(() => null),
       fetchUserCosmetics,
       reprocessMessage: jest.fn(),
+      publishMessageUpdates: jest.fn(),
     });
 
     expect(fetchUserCosmetics).toHaveBeenCalledTimes(16);
@@ -272,6 +279,7 @@ describe('hydrateVisibleSevenTvAssets', () => {
       fetchUserCosmetics,
       hydrateCosmetics: false,
       reprocessMessage,
+      publishMessageUpdates: jest.fn(),
     });
 
     expect(getUserBadge).not.toHaveBeenCalled();
@@ -296,6 +304,7 @@ describe('hydrateVisibleSevenTvAssets', () => {
       getUserBadge: jest.fn(() => null),
       fetchUserCosmetics: jest.fn(),
       reprocessMessage,
+      publishMessageUpdates: jest.fn(),
     });
 
     expect(reprocessMessage).toHaveBeenCalledWith(message);
@@ -317,6 +326,7 @@ describe('hydrateVisibleSevenTvAssets', () => {
       getUserBadge: jest.fn(() => sevenTvBadge),
       fetchUserCosmetics: jest.fn(),
       reprocessMessage,
+      publishMessageUpdates: jest.fn(),
     };
 
     const firstPassDidReprocess = await hydrateVisibleSevenTvAssets(params);
@@ -361,6 +371,7 @@ describe('hydrateVisibleSevenTvAssets', () => {
       reprocessMessage: () => {
         reprocessTurns.push(turn);
       },
+      publishMessageUpdates: jest.fn(),
       hydratePersonalEmotes: false,
     });
     tickerActive = false;
@@ -403,6 +414,7 @@ describe('hydrateVisibleSevenTvAssets', () => {
       getUserBadge: jest.fn(() => sevenTvBadge),
       fetchUserCosmetics: jest.fn(),
       reprocessMessage,
+      publishMessageUpdates: jest.fn(),
       hydratePersonalEmotes: false,
       shouldContinue: () => !cancelled,
     });

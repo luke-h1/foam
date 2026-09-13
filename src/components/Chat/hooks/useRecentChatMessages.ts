@@ -9,6 +9,17 @@ import {
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { logger } from '@app/utils/logger';
 
+/**
+ * Lines per chunk before the replay yields, so the flush timer can commit the
+ * chunk while the next one parses.
+ */
+const REPLAY_CHUNK_SIZE = 25;
+
+const yieldToEventLoop = () =>
+  new Promise<void>(resolve => {
+    setTimeout(resolve, 0);
+  });
+
 export function useRecentChatMessages({
   channelId,
   channelName,
@@ -21,7 +32,7 @@ export function useRecentChatMessages({
   channelId: string;
   channelName: string;
   forceFlush: () => void;
-  processRecentIrcLine: (line: string) => Promise<void>;
+  processRecentIrcLine: (line: string) => void;
   isLoadingRecentMessagesRef: MutableRefObject<boolean>;
   scrollChatToEnd: () => void;
   showRecentMessages: boolean;
@@ -58,12 +69,15 @@ export function useRecentChatMessages({
           getMaxChatMessages(),
         );
 
-        for (const message of recentMessages) {
+        for (let index = 0; index < recentMessages.length; index += 1) {
           if (abortController.signal.aborted) {
             return;
           }
-          // eslint-disable-next-line react-doctor/async-await-in-loop -- IRC replay order is required
-          await processRecentIrcLineRef.current(message);
+          processRecentIrcLineRef.current(recentMessages[index]!);
+          if ((index + 1) % REPLAY_CHUNK_SIZE === 0) {
+            // eslint-disable-next-line react-doctor/async-await-in-loop -- IRC replay order is required
+            await yieldToEventLoop();
+          }
         }
 
         forceFlushRef.current();

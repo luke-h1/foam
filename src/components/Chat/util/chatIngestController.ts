@@ -3,6 +3,7 @@ import { startTransition } from 'react';
 import { incrementChatUnread } from '@app/store/chat/actions/chatUnread';
 import {
   addMessages,
+  getEffectiveMaxChatMessages,
   getMessageById,
   getUserMessageColor,
   moderateMessageById,
@@ -17,6 +18,7 @@ import {
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor/resolveCachedSenderColor';
 
 import { createChatDelayQueue } from './chatDelay/chatDelayQueue';
+import { createChatDelayRamp } from './chatDelay/chatDelayRamp';
 import { SCROLL_DEFERRED_FLUSH_RETRY_MS } from './chatFlushCadence/constants/deferredFlushRetry';
 import { maxLiveCommitPerFlush } from './chatFlushCadence/maxLiveCommitPerFlush';
 import { pickFlushDelay } from './chatFlushCadence/pickFlushDelay';
@@ -26,8 +28,10 @@ import { type BufferedMessage, createMessageBuffer } from './messageBuffer';
 // Floor on delay-queue checks so a burst of releases coalesces into one drain.
 const DELAY_RELEASE_MIN_INTERVAL_MS = 80;
 
-const INGEST_BUFFER_CAPACITY = 1000;
 const BUFFER_BACKPRESSURE_SIZE = 400;
+
+const sanitiseDelayMs = (delayMs: number): number =>
+  Number.isFinite(delayMs) && delayMs > 0 ? delayMs : 0;
 
 export type HandleNewMessageOptions = {
   countUnread?: boolean;
@@ -54,13 +58,17 @@ export interface ChatIngestControllerDeps {
   onBottomContentChange: () => void;
 }
 
-function publishBufferedMessages(messages: BufferedMessage[]) {
+function publishBufferedMessages(messages: BufferedMessage[], burst = false) {
   if (messages.length === 0) {
     return;
   }
 
+  const toCommit = burst
+    ? messages.map(message => ({ ...message, arrivedInBurst: true }))
+    : messages;
+
   startTransition(() => {
-    addMessages(messages);
+    addMessages(toCommit);
   });
 }
 
@@ -69,8 +77,10 @@ function publishBufferedMessages(messages: BufferedMessage[]) {
  * its lifecycle and jest can drive it with fake timers.
  */
 export function createChatIngestController(deps: ChatIngestControllerDeps) {
-  const buffer = createMessageBuffer(() => INGEST_BUFFER_CAPACITY);
+  // The store trims to this window on commit, so buffering more only adds parse work and lag.
+  const buffer = createMessageBuffer(getEffectiveMaxChatMessages);
   const delayQueue = createChatDelayQueue();
+  const delayRamp = createChatDelayRamp();
 
   let flushTimer: ReturnType<typeof setTimeout> | null = null;
   let delayTickTimer: ReturnType<typeof setTimeout> | null = null;
@@ -84,8 +94,10 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
    */
   let arrivalsSinceFlush = 0;
 
+  // Never above the buffer bound, or a deferred flush drops rows instead of forcing them through.
   const isBufferUnderBackpressure = () =>
-    buffer.size() >= BUFFER_BACKPRESSURE_SIZE;
+    buffer.size() >=
+    Math.min(BUFFER_BACKPRESSURE_SIZE, getEffectiveMaxChatMessages());
 
   const shouldArmBottomContentAnchor = () => deps.isScrollingToBottom();
 
@@ -135,17 +147,22 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
     try {
       const isAtBottom = deps.isAtBottom();
       raidFlushMode = shouldEnterRaidFlushMode(arrivalsSinceFlush, isAtBottom);
-      arrivalsSinceFlush = 0;
       const messagesToFlush = buffer.drain(
         underBackpressure
           ? undefined
-          : maxLiveCommitPerFlush(isAtBottom, raidFlushMode),
+          : maxLiveCommitPerFlush(
+              isAtBottom,
+              raidFlushMode,
+              arrivalsSinceFlush,
+            ),
       );
+      arrivalsSinceFlush = 0;
       const shouldMaintainBottom = shouldArmBottomContentAnchor();
 
       const finalize = deps.getFinalizeMessageForCommit();
       publishBufferedMessages(
         finalize ? messagesToFlush.map(finalize) : messagesToFlush,
+        raidFlushMode,
       );
 
       if (shouldMaintainBottom) {
@@ -191,8 +208,9 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
     if (dropped > 0) {
       pendingUnreadCount = Math.max(0, pendingUnreadCount - dropped);
       reportDroppedChatMessages(dropped, {
+        reason: 'ingest-buffer-overflow',
         bufferSize: buffer.size(),
-        maxBufferedMessages: INGEST_BUFFER_CAPACITY,
+        maxBufferedMessages: getEffectiveMaxChatMessages(),
       });
     }
 
@@ -236,6 +254,18 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
     delayTickTimer = setTimeout(runDelayTick, wait);
   };
 
+  const enqueueDelayed = (message: BufferedMessage, releaseAt: number) => {
+    const dropped = delayQueue.enqueue(message, releaseAt, true);
+    if (dropped > 0) {
+      reportDroppedChatMessages(dropped, {
+        reason: 'delay-queue-overflow',
+        bufferSize: delayQueue.size(),
+        maxBufferedMessages: delayQueue.maxSize(),
+      });
+    }
+    scheduleDelayTick();
+  };
+
   const handleNewMessage = (
     newMessage: BufferedMessage,
     messageOptions?: HandleNewMessageOptions,
@@ -250,35 +280,30 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
 
     const countUnread = messageOptions?.countUnread;
     // Historical replay (countUnread === false) is already old, so it bypasses the delay.
-    const rawDelayMs = countUnread === false ? 0 : deps.getChatDelayMs();
     const delayMs =
-      Number.isFinite(rawDelayMs) && rawDelayMs > 0 ? rawDelayMs : 0;
+      countUnread === false
+        ? 0
+        : delayRamp.resolve(sanitiseDelayMs(deps.getChatDelayMs()), Date.now());
 
     if (delayMs <= 0) {
       // An auto-sync delay can collapse to zero mid-stream; a live message
       // still can't skip past older ones held in the queue.
       if (countUnread !== false && delayQueue.size() > 0) {
-        delayQueue.enqueue(messageWithCachedColor, Date.now(), true);
-        scheduleDelayTick();
+        enqueueDelayed(messageWithCachedColor, Date.now());
         return;
       }
       ingestMessage(messageWithCachedColor, countUnread);
       return;
     }
 
-    delayQueue.enqueue(
-      messageWithCachedColor,
-      Date.now() + delayMs,
-      countUnread !== false,
-    );
-    scheduleDelayTick();
+    enqueueDelayed(messageWithCachedColor, Date.now() + delayMs);
   };
 
   // On delay-setting change: drain held messages if delay is off, else ensure a tick is pending.
   const reconcileChatDelay = () => {
-    const effectiveDelayMs = deps.getChatDelayMs();
-    if (!Number.isFinite(effectiveDelayMs) || effectiveDelayMs <= 0) {
+    if (sanitiseDelayMs(deps.getChatDelayMs()) <= 0) {
       clearDelayTick();
+      delayRamp.reset();
       delayQueue
         .drainAll()
         .forEach(entry => ingestMessage(entry.message, entry.countUnread));
@@ -314,6 +339,7 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
     }
     buffer.clear();
     delayQueue.clear();
+    delayRamp.reset();
     clearDelayTick();
     pendingUnreadCount = 0;
     arrivalsSinceFlush = 0;

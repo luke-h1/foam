@@ -143,6 +143,7 @@ function renderRowRenderer() {
       messages$: {
         peek: jest.fn(() => messages),
       },
+      noteScrollAwayIntent: jest.fn(),
       onBadgePress,
       onEmotePress,
       onMessageLongPress,

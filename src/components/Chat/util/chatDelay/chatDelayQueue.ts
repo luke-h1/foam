@@ -12,11 +12,16 @@ export interface DelayedChatMessage {
 }
 
 export interface ChatDelayQueue {
+  /**
+   * Returns how many of the oldest held messages were dropped to stay under
+   * the ceiling.
+   */
   enqueue(
     message: BufferedMessage,
     releaseAt: number,
     countUnread: boolean,
-  ): void;
+  ): number;
+  maxSize(): number;
   drainDue(now: number): DelayedChatMessage[];
   drainAll(): DelayedChatMessage[];
   peekNextReleaseAt(): number | null;
@@ -44,8 +49,15 @@ export const createChatDelayQueue = (
     enqueue(message, releaseAt, countUnread) {
       queue.push({ countUnread, message, releaseAt });
       if (queue.length > maxDelayedMessages) {
+        const dropped = queue.length - maxDelayedMessages;
         queue = queue.slice(-maxDelayedMessages);
+        return dropped;
       }
+      return 0;
+    },
+
+    maxSize() {
+      return maxDelayedMessages;
     },
 
     drainDue(now) {
