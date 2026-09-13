@@ -108,6 +108,16 @@ export const useChatScroll = ({
     clearBottomContentAnchor();
     isScrollingToBottomRef.current = false;
     setIsScrollingToBottom(false);
+    // Leave the bottom now, not on the first scroll event, or a commit in
+    // between scrolls the list straight back to the end.
+    isAtBottomRef.current = false;
+    lastAtBottomRef.current = false;
+    if (scrollThrottleRef.current) {
+      clearTimeout(scrollThrottleRef.current);
+      scrollThrottleRef.current = null;
+    }
+    setShouldMaintainScrollAtEnd(false);
+    setIsAtBottom(false);
   }, [cancelScrollToBottom, clearBottomContentAnchor]);
 
   const scrollToLatestOnce = useCallback(() => {

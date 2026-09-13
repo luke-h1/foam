@@ -714,6 +714,14 @@ describe('useChatScroll', () => {
 
       act(() => {
         result.current.scrollAnchor.noteScrollAwayIntent();
+      });
+      // Flips before the scroll event lands, so a commit in between cannot
+      // scroll the list back to the end.
+      expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(false);
+      expect(result.current.isAtBottom).toBe(false);
+      expect(result.current.shouldMaintainScrollAtEnd).toBe(false);
+
+      act(() => {
         result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 200 }, { height: 500 }, { height: 2000 }),
         );
