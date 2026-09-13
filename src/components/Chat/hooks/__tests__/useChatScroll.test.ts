@@ -722,6 +722,33 @@ describe('useChatScroll', () => {
       expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(false);
     });
 
+    test('a scroll-away intent cancels a pending scroll-to-bottom and clears its settling state', () => {
+      const { ref: listRef } = createMockListRef();
+      const { result } = renderHook(() =>
+        useChatScroll({
+          listRef,
+          getMessagesLength: getMessagesLength(10),
+        }),
+      );
+
+      act(() => {
+        result.current.scrollToBottom();
+      });
+      expect(result.current.isScrollingToBottom).toBe(true);
+      expect(result.current.scrollAnchor.isScrollingToBottomRef.current).toBe(
+        true,
+      );
+
+      act(() => {
+        result.current.scrollAnchor.noteScrollAwayIntent();
+      });
+
+      expect(result.current.isScrollingToBottom).toBe(false);
+      expect(result.current.scrollAnchor.isScrollingToBottomRef.current).toBe(
+        false,
+      );
+    });
+
     test('does not treat the list scrolling itself to the end as user activity', () => {
       const { ref: listRef } = createMockListRef();
       const { result } = renderHook(() =>

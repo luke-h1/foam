@@ -106,6 +106,8 @@ export const useChatScroll = ({
     hasUserScrollIntentRef.current = true;
     cancelScrollToBottom();
     clearBottomContentAnchor();
+    isScrollingToBottomRef.current = false;
+    setIsScrollingToBottom(false);
   }, [cancelScrollToBottom, clearBottomContentAnchor]);
 
   const scrollToLatestOnce = useCallback(() => {

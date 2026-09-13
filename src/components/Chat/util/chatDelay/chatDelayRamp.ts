@@ -8,15 +8,17 @@ const CHAT_DELAY_RAMP_RATE = 0.5;
 /**
  * Latency samples jitter by a few hundred ms. Re-timing the queue on each
  * would wobble the delay, so a new target only applies once it moves this far
- * from the current one. Turning the delay off always applies.
+ * from the current one, in either direction. Turning the delay off always
+ * applies.
  */
 const CHAT_DELAY_DEADBAND_MS = 2_000;
 
 /**
- * Smooths increases of the chat delay. The first target applies at once;
- * later increases ramp, decreases apply at once. Without this an 'auto' delay
- * that jumps from 0 to the measured video latency freezes chat for the whole
- * latency, because every new message is held that long and nothing is due.
+ * Smooths increases of the chat delay. The first target applies at once.
+ * Later targets outside the deadband ramp when they increase and apply at
+ * once when they decrease. Without this an 'auto' delay that jumps from 0 to
+ * the measured video latency freezes chat for the whole latency, because
+ * every new message is held that long and nothing is due.
  */
 export const createChatDelayRamp = (
   rate = CHAT_DELAY_RAMP_RATE,
