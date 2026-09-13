@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 
 import { shouldEnrichMessage } from '@app/store/chat/actions/messageEnrichment';
+import type { MessageUpdateInput } from '@app/store/chat/actions/messages';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
@@ -9,6 +10,8 @@ import { boundedSetAdd } from '@app/utils/object/boundedSetAdd';
 type FetchUserCosmeticsOptions = {
   retryMissingBadge?: boolean;
 };
+
+type VisibleMessageUpdate = MessageUpdateInput | null | undefined;
 
 type HydrateVisibleSevenTvAssetsParams = {
   channelId: string;
@@ -31,7 +34,16 @@ type HydrateVisibleSevenTvAssetsParams = {
   ) => Promise<void>;
   hydratePersonalEmotes?: boolean;
   hydrateCosmetics?: boolean;
-  reprocessMessage: (message: AnyChatMessageType) => void | Promise<void>;
+  /**
+   * Resolves the store update for one row without publishing it.
+   */
+  reprocessMessage: (
+    message: AnyChatMessageType,
+  ) => VisibleMessageUpdate | Promise<VisibleMessageUpdate>;
+  /**
+   * Commits a batch of resolved updates in one store write.
+   */
+  publishMessageUpdates: (updates: MessageUpdateInput[]) => void;
   /**
    * Return false to abort a pass after unmount / channel hop.
    */
@@ -83,6 +95,18 @@ function shouldAbort(shouldContinue?: () => boolean): boolean {
   return shouldContinue?.() === false;
 }
 
+const publishResolvedUpdates = (
+  publishMessageUpdates: (updates: MessageUpdateInput[]) => void,
+  resolved: VisibleMessageUpdate[],
+) => {
+  const updates = resolved.filter(
+    (update): update is MessageUpdateInput => update != null,
+  );
+  if (updates.length > 0) {
+    publishMessageUpdates(updates);
+  }
+};
+
 export async function hydrateVisibleSevenTvAssets({
   channelId,
   messages,
@@ -95,6 +119,7 @@ export async function hydrateVisibleSevenTvAssets({
   fetchUserCosmetics,
   hydratePersonalEmotes = true,
   hydrateCosmetics = true,
+  publishMessageUpdates,
   reprocessMessage,
   shouldContinue,
 }: HydrateVisibleSevenTvAssetsParams): Promise<boolean> {
@@ -159,11 +184,12 @@ export async function hydrateVisibleSevenTvAssets({
       personalEmoteFetchesStarted += 1;
       boundedSetAdd(personalEmoteUsers, userId, MAX_VISIBLE_USER_GUARDS);
       pending.push(
-        fetchUserPersonalEmotes(userId, channelId).then(emotes => {
+        fetchUserPersonalEmotes(userId, channelId).then(async emotes => {
           if (emotes && emotes.length > 0) {
-            return reprocessIfChanged(message);
+            publishResolvedUpdates(publishMessageUpdates, [
+              await reprocessIfChanged(message),
+            ]);
           }
-          return undefined;
         }),
       );
     }
@@ -179,18 +205,23 @@ export async function hydrateVisibleSevenTvAssets({
       pending.push(
         fetchUserCosmetics(userId, {
           retryMissingBadge: true,
-        }).then(() => {
+        }).then(async () => {
           if (getUserBadge(userId)) {
-            return reprocessIfChanged(message);
+            publishResolvedUpdates(publishMessageUpdates, [
+              await reprocessIfChanged(message),
+            ]);
           }
-          return undefined;
         }),
       );
     }
   }
 
-  for (let index = 0; index < cachedAssetMessages.length; index += 1) {
-    if (index > 0 && index % REPROCESS_BATCH_SIZE === 0) {
+  for (
+    let start = 0;
+    start < cachedAssetMessages.length;
+    start += REPROCESS_BATCH_SIZE
+  ) {
+    if (start > 0) {
       // Yield between batches so a full screenful does not parse in one tick.
       // eslint-disable-next-line react-doctor/async-await-in-loop
       await waitBetweenReprocessBatches();
@@ -198,10 +229,15 @@ export async function hydrateVisibleSevenTvAssets({
     if (shouldAbort(shouldContinue)) {
       break;
     }
-    const message = cachedAssetMessages[index];
-    if (message) {
-      pending.push(Promise.resolve(reprocessIfChanged(message)));
-    }
+    const batch = cachedAssetMessages.slice(
+      start,
+      start + REPROCESS_BATCH_SIZE,
+    );
+    // eslint-disable-next-line react-doctor/async-await-in-loop -- one commit per batch
+    const resolved = await Promise.all(
+      batch.map(message => reprocessIfChanged(message)),
+    );
+    publishResolvedUpdates(publishMessageUpdates, resolved);
   }
 
   await Promise.all(pending);

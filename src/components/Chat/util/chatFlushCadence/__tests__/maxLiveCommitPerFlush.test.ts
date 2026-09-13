@@ -25,6 +25,16 @@ describe('maxLiveCommitPerFlush', () => {
     expect(maxLiveCommitPerFlush(true, true)).toBe(8);
   });
 
+  test('raises the cap to the arrivals since the last flush', () => {
+    Platform.OS = 'ios';
+    expect(maxLiveCommitPerFlush(true, false, 3)).toBe(8);
+    expect(maxLiveCommitPerFlush(true, false, 30)).toBe(30);
+    expect(maxLiveCommitPerFlush(true, true, 30)).toBe(30);
+
+    Platform.OS = 'android';
+    expect(maxLiveCommitPerFlush(true, false, 30)).toBe(30);
+  });
+
   test('leaves the backlog uncapped while reading scrollback', () => {
     Platform.OS = 'ios';
     expect(maxLiveCommitPerFlush(false, false)).toBeUndefined();

@@ -300,6 +300,7 @@ const settledChatScrollResult = {
     isAtBottomRef: { current: true },
     isScrollingToBottomRef: { current: false },
     isUserActivelyScrolling: () => false,
+    noteScrollAwayIntent: jest.fn(),
     maintainBottomAfterContentChange: jest.fn(),
   },
   scrollHandlers: {

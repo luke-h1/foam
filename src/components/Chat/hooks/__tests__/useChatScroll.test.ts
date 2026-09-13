@@ -696,6 +696,50 @@ describe('useChatScroll', () => {
       expect(mocks.scrollToEnd).not.toHaveBeenCalled();
     });
 
+    test('a noted scroll-away intent lets a programmatic scroll leave the bottom', () => {
+      const { ref: listRef } = createMockListRef();
+      const { result } = renderHook(() =>
+        useChatScroll({
+          listRef,
+          getMessagesLength: getMessagesLength(10),
+        }),
+      );
+
+      act(() => {
+        result.current.scrollHandlers.onScroll(
+          createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
+        );
+      });
+      expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(true);
+
+      act(() => {
+        result.current.scrollAnchor.noteScrollAwayIntent();
+        result.current.scrollHandlers.onScroll(
+          createScrollEvent({ y: 200 }, { height: 500 }, { height: 2000 }),
+        );
+      });
+
+      expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(false);
+    });
+
+    test('does not treat the list scrolling itself to the end as user activity', () => {
+      const { ref: listRef } = createMockListRef();
+      const { result } = renderHook(() =>
+        useChatScroll({
+          listRef,
+          getMessagesLength: getMessagesLength(10),
+        }),
+      );
+
+      act(() => {
+        result.current.scrollHandlers.onScroll(
+          createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
+        );
+      });
+
+      expect(result.current.scrollAnchor.isUserActivelyScrolling()).toBe(false);
+    });
+
     test('keeps treating a momentum fling as active between scroll events', () => {
       const { ref: listRef } = createMockListRef();
       const { result } = renderHook(() =>

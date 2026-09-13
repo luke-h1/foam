@@ -426,12 +426,13 @@ export const fetchUserCosmeticsByTwitchId = async (
 export const requestUserCosmeticsViaPresence = async (
   twitchUserId: string,
 ): Promise<void> => {
-  await userPresenceRequestGuard.run(twitchUserId, async () => {
-    const sevenTvUserId = await sevenTvService.get7tvUserId(twitchUserId);
-    if (!sevenTvUserId) {
-      return;
-    }
+  // The id lookup is cached and single-flight on its own, so it does not need a slot.
+  const sevenTvUserId = await sevenTvService.get7tvUserId(twitchUserId);
+  if (!sevenTvUserId) {
+    return;
+  }
 
+  await userPresenceRequestGuard.run(twitchUserId, async () => {
     const sessionId = getSevenTvSessionId();
     const channelId = chatStore$.currentChannelId.peek();
     if (sessionId && channelId) {

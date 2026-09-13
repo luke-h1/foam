@@ -11,12 +11,18 @@ import { logger } from '@app/utils/logger';
 import { chatStore$ } from '../observables/chatStore';
 import type { AnyChatMessageType } from '../types/constants';
 import { getCurrentEmoteData } from './channelLoad';
-import { updateMessages } from './messages';
+import { type MessageUpdateInput, updateMessages } from './messages';
 
 type ChatEmoteData = NonNullable<ReturnType<typeof getCurrentEmoteData>>;
 
 const ENRICH_BATCH_SIZE = 6;
 const ENRICH_BATCH_DELAY_MS = 32;
+/**
+ * The first batch commits at once so emotes start to show. Later batches
+ * commit every fourth, so a full window is a handful of store writes rather
+ * than one per batch while live rows are also committing.
+ */
+const ENRICH_PUBLISH_EVERY_BATCHES = 4;
 
 /**
  * The one skip predicate for post-commit enrichment: system rows and most
@@ -87,6 +93,8 @@ export function enrichMessageSet({
   let cancelled = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
   let index = 0;
+  let batchesSincePublish = 0;
+  let hasPublished = false;
   let pendingUpdates: Parameters<typeof updateMessages>[0] = [];
 
   const processMessage = (msg?: AnyChatMessageType) => {
@@ -171,12 +179,21 @@ export function enrichMessageSet({
       processedInBatch += 1;
     }
 
-    if (pendingUpdates.length > 0) {
+    batchesSincePublish += 1;
+    const isLastBatch = index >= messages.length;
+    if (
+      pendingUpdates.length > 0 &&
+      (isLastBatch ||
+        !hasPublished ||
+        batchesSincePublish >= ENRICH_PUBLISH_EVERY_BATCHES)
+    ) {
       updateMessages(pendingUpdates);
       pendingUpdates = [];
+      batchesSincePublish = 0;
+      hasPublished = true;
     }
 
-    if (index < messages.length) {
+    if (!isLastBatch) {
       timer = setTimeout(processBatch, ENRICH_BATCH_DELAY_MS);
     }
   };
@@ -193,9 +210,11 @@ export function enrichMessageSet({
 
 /**
  * Recomputes a single visible message from the current caches, awaiting the
- * shared-chat badge context so the source badge lands with the parts.
+ * shared-chat badge context so the source badge lands with the parts. Returns
+ * the store update without publishing it, so a hydration pass can commit a
+ * whole batch of rows in one store write.
  */
-export async function enrichVisibleMessage({
+export async function resolveVisibleMessageUpdate({
   channelId,
   message,
   show7TvEmotes,
@@ -205,19 +224,19 @@ export async function enrichVisibleMessage({
   message: AnyChatMessageType;
   show7TvEmotes: boolean;
   userLogin?: string | null;
-}): Promise<void> {
+}): Promise<MessageUpdateInput | null> {
   if (!shouldEnrichMessage(message)) {
-    return;
+    return null;
   }
 
   const emoteData = getCurrentEmoteData(channelId);
   if (!emoteData) {
-    return;
+    return null;
   }
 
   const text = replaceEmotesWithText(message.message).trimEnd();
   if (!text.trim()) {
-    return;
+    return null;
   }
 
   const userId = message.userstate['user-id'];
@@ -242,18 +261,17 @@ export async function enrichVisibleMessage({
       sourceChannelBadges,
     });
 
-    updateMessages([
-      {
-        messageId: message.message_id,
-        messageNonce: message.message_nonce,
-        updates: {
-          message: replacedMessage,
-          badges,
-        },
+    return {
+      messageId: message.message_id,
+      messageNonce: message.message_nonce,
+      updates: {
+        message: replacedMessage,
+        badges,
       },
-    ]);
+    };
   } catch (error) {
     logger.chat.debug('Failed to reprocess visible chat message:', error);
+    return null;
   }
 }
 

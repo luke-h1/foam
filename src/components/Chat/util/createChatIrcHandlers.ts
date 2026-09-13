@@ -133,18 +133,7 @@ export function createChatIrcHandlers({
       ...historicalFlag(countUnread),
     };
 
-    if (countUnread) {
-      enqueueLiveChatMessage(messageWithParentColor, countUnread);
-      return;
-    }
-
-    processMessageEmotes(
-      text,
-      createUserStateFromTags(tags),
-      messageWithParentColor,
-      tags['user-id'],
-      countUnread,
-    );
+    enqueueLiveChatMessage(messageWithParentColor, countUnread);
   };
 
   const onMessage = (
@@ -396,7 +385,7 @@ export function createChatIrcHandlers({
     roomstate: onRoomState,
   };
 
-  const handleRecentIrcMessage = async (line: string) => {
+  const handleRecentIrcMessage = (line: string) => {
     const ircMessage = parseIrcMessage(line);
     if (!ircMessage?.tags) {
       return;

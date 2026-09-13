@@ -39,6 +39,11 @@ export interface ChatScrollAnchor {
   isScrollingToBottomRef: MutableRefObject<boolean>;
   isUserActivelyScrolling: () => boolean;
   maintainBottomAfterContentChange: () => void;
+  /**
+   * Call before a programmatic scroll away from the bottom, or the anchor
+   * logic keeps `isAtBottom` true and the list stops following live.
+   */
+  noteScrollAwayIntent: () => void;
 }
 
 export const useChatScroll = ({
@@ -96,6 +101,12 @@ export const useChatScroll = ({
       bottomContentAnchorTickRef.current = null;
     }
   }, []);
+
+  const noteScrollAwayIntent = useCallback(() => {
+    hasUserScrollIntentRef.current = true;
+    cancelScrollToBottom();
+    clearBottomContentAnchor();
+  }, [cancelScrollToBottom, clearBottomContentAnchor]);
 
   const scrollToLatestOnce = useCallback(() => {
     if (
@@ -178,8 +189,9 @@ export const useChatScroll = ({
 
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      lastScrollEventAtRef.current = Date.now();
+      // The list scrolls itself to the end after each commit; only a drag or fling is user activity.
       if (isDraggingRef.current || isMomentumScrollingRef.current) {
+        lastScrollEventAtRef.current = Date.now();
         chatScrollActivity.poke();
       }
       const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
@@ -399,8 +411,13 @@ export const useChatScroll = ({
       isScrollingToBottomRef,
       isUserActivelyScrolling,
       maintainBottomAfterContentChange,
+      noteScrollAwayIntent,
     }),
-    [isUserActivelyScrolling, maintainBottomAfterContentChange],
+    [
+      isUserActivelyScrolling,
+      maintainBottomAfterContentChange,
+      noteScrollAwayIntent,
+    ],
   );
 
   return {

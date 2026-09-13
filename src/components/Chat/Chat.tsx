@@ -152,6 +152,7 @@ export const Chat = memo(
       inputShellRef,
       joinChannel,
       listRef,
+      noteScrollAwayIntent: scrollAnchor.noteScrollAwayIntent,
       partChannel,
       preferences,
       refetchEmotes,

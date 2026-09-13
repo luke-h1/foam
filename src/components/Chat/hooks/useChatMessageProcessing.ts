@@ -8,10 +8,11 @@ import {
 import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import {
   enrichMessageSet,
-  enrichVisibleMessage,
   hasEnrichmentEmoteSources,
   refreshSharedChatBadges,
+  resolveVisibleMessageUpdate,
 } from '@app/store/chat/actions/messageEnrichment';
+import { updateMessages } from '@app/store/chat/actions/messages';
 import { fetchUserCosmetics } from '@app/store/chat/actions/userCosmeticsFetch';
 import {
   invalidateVisibleAssetHydrationPass,
@@ -152,7 +153,7 @@ export function useChatMessageProcessing({
 
   const reprocessVisibleMessageFromCache = useCallback(
     (message: AnyChatMessageType) =>
-      enrichVisibleMessage({
+      resolveVisibleMessageUpdate({
         channelId,
         message,
         show7TvEmotes,
@@ -191,6 +192,7 @@ export function useChatMessageProcessing({
         hydratePersonalEmotes: show7TvEmotes,
         hydrateCosmetics: show7tvBadges,
         reprocessMessage: reprocessVisibleMessageFromCache,
+        publishMessageUpdates: updateMessages,
         shouldContinue: () => visibleAssetHydration.epoch === epoch,
       }).then(didReprocessMessages => {
         if (

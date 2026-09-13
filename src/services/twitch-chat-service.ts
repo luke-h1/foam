@@ -12,8 +12,12 @@ import { usePreference } from '@app/store/preferenceStore';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
 import { applyAntiDuplicateSuffix } from '@app/utils/chat/applyAntiDuplicateSuffix';
+import { reportDroppedChatMessages } from '@app/utils/chat/chatHealth/reportDroppedChatMessages';
 import { getHeartbeatAction } from '@app/utils/chat/chatHeartbeat';
-import { shouldProcessLiveMessage } from '@app/utils/chat/chatIngestRateLimiter';
+import {
+  MAX_INGESTED_PER_SEC,
+  shouldProcessLiveMessage,
+} from '@app/utils/chat/chatIngestRateLimiter';
 import { containsMutedWords } from '@app/utils/chat/chatMessageFilters/containsMutedWords';
 import { isUserBlocked } from '@app/utils/chat/chatMessageFilters/isUserBlocked';
 import { buildPrivmsgLine } from '@app/utils/chat/ircProtocol/buildPrivmsgLine';
@@ -81,8 +85,10 @@ export function useChatUserState(): Record<string, string> {
 /**
  * Half-open sockets often fire no close event, so we PING after this much
  * silence; RN's WebSocket exposes no ping frames, so this is the only detector.
+ * Inbound lines count as activity, so a busy chat never pings and this only
+ * costs radio on quiet rooms.
  */
-const CHAT_HEARTBEAT_INTERVAL_MS = 30_000;
+const CHAT_HEARTBEAT_INTERVAL_MS = 60_000;
 /**
  * Probe deadline after foreground/network regain - much faster than waiting
  * for the next heartbeat tick.
@@ -535,6 +541,10 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
         // Flood backstop before the tag parse; only PRIVMSG consumes tokens, control lines always pass.
         if (isPrivmsgLine(line) && !shouldProcessLiveMessage()) {
           recordChatDebugIrcLine(line, true);
+          reportDroppedChatMessages(1, {
+            reason: 'ingest-rate-limit',
+            limitPerSecond: MAX_INGESTED_PER_SEC,
+          });
           continue;
         }
 
@@ -696,13 +706,12 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
         return;
       }
 
-      awaitingPongRef.current = true;
-      probeSentAtRef.current = Date.now();
-      sendIrcCommand('PING', 'tmi.twitch.tv');
+      // Same probe as the resume path, so the 5s deadline is armed now rather than judged next tick.
+      verifyChatLivenessRef.current();
     }, CHAT_HEARTBEAT_INTERVAL_MS);
 
     return () => clearInterval(interval);
-  }, [getWebSocketRef, readyState, sendIrcCommand, shouldConnect]);
+  }, [getWebSocketRef, readyState, shouldConnect, verifyChatLivenessRef]);
 
   // Re-verify liveness on foreground/network regain; otherwise a flapped socket takes a full heartbeat cycle to notice.
   useEffect(() => {
