@@ -1,4 +1,4 @@
-import { memo, type Ref, useCallback, useRef } from 'react';
+import { memo, type Ref, useCallback, useMemo, useRef } from 'react';
 import { TextInput, type TextInput as TextInputType, View } from 'react-native';
 
 import { PressableScale } from 'pressto';
@@ -8,6 +8,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import { useAccentColor } from '@app/context/AccentColorContext';
 import { theme } from '@app/styles/themes';
 
+import { ComposerOverflowButton } from '../ComposerOverflowButton';
 import { chatComposerStyles as styles } from './ChatComposer.styles';
 import { CommandSuggestionRail } from './CommandSuggestionRail';
 import { EmoteSuggestionRail } from './EmoteSuggestionRail';
@@ -16,6 +17,7 @@ import {
   useChatComposerController,
 } from './hooks/useChatComposerController';
 import { UserSuggestionRail } from './UserSuggestionRail';
+import { buildComposerOverflowActions } from './util/buildComposerOverflowActions';
 
 export type { ChatComposerHandle };
 export type { SuggestionType } from './util/chatComposerTypes';
@@ -30,6 +32,9 @@ export interface ChatComposerProps {
   onChangeText?: (text: string) => void;
   onSubmit?: () => void;
   onPressAdd?: () => void;
+  onAttachImage?: () => void;
+  onOpenSettings?: () => void;
+  isUploadingImage?: boolean;
   maxSuggestions?: number;
   prioritizeChannelEmotes?: boolean;
   placeholder?: string;
@@ -43,6 +48,9 @@ function ChatComposerComponent({
   onChangeText,
   onSubmit,
   onPressAdd,
+  onAttachImage,
+  onOpenSettings,
+  isUploadingImage,
   maxSuggestions = 50,
   prioritizeChannelEmotes = true,
   placeholder,
@@ -76,7 +84,6 @@ function ChatComposerComponent({
     remainingCharacters,
     showCharacterCount,
     canRecallLastMessage,
-    hasLastMessage,
     recallLastMessage,
     handleChangeText,
     handleSelectionChange,
@@ -96,6 +103,24 @@ function ChatComposerComponent({
       setSelection({ start: cursor, end: cursor });
     },
   });
+
+  const overflowActions = useMemo(
+    () =>
+      buildComposerOverflowActions({
+        canRecallLastMessage,
+        isUploadingImage,
+        onAttachImage,
+        onOpenSettings,
+        onRecallLastMessage: recallLastMessage,
+      }),
+    [
+      canRecallLastMessage,
+      isUploadingImage,
+      onAttachImage,
+      onOpenSettings,
+      recallLastMessage,
+    ],
+  );
 
   return (
     <View style={styles.mainContainer}>
@@ -128,7 +153,7 @@ function ChatComposerComponent({
           weight='semibold'
           style={[
             styles.characterCount,
-            isOverLimit ? { color: theme.colorRed } : undefined,
+            isOverLimit ? styles.characterCountOverLimit : undefined,
           ]}
         >
           {remainingCharacters}
@@ -136,77 +161,63 @@ function ChatComposerComponent({
       ) : null}
 
       <View style={styles.row}>
-        {/**
-         * Reserved from the first send onward so the row stops resizing every
-         * time the input empties.
-         */}
-        {hasLastMessage ? (
-          <View style={styles.recallSlot}>
-            {canRecallLastMessage ? (
-              <PressableScale
-                accessibilityLabel='Recall last message'
-                accessibilityRole='button'
-                style={styles.addButton}
-                onPress={recallLastMessage}
-              >
-                <SymbolView
-                  name='clock.arrow.circlepath'
-                  size={22}
-                  tintColor={theme.colorGreyHoverAlpha}
-                />
-              </PressableScale>
-            ) : null}
-          </View>
-        ) : null}
-
-        {onPressAdd ? (
-          <PressableScale
-            accessibilityLabel='Open emote picker'
-            accessibilityRole='button'
-            style={styles.addButton}
-            onPress={onPressAdd}
-          >
-            <SymbolView
-              name='face.smiling'
-              size={22}
-              tintColor={theme.colorGreyHoverAlpha}
-            />
-          </PressableScale>
-        ) : null}
-
-        <TextInput
-          ref={inputRef}
-          autoCapitalize='none'
-          autoComplete='off'
-          autoCorrect={false}
-          blurOnSubmit
-          editable={editable}
-          multiline
-          onChangeText={handleChangeText}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          onSelectionChange={event =>
-            handleSelectionChange(event.nativeEvent.selection.start)
-          }
-          onSubmitEditing={handleSubmit}
-          selection={selection}
-          value={text}
-          accessibilityLabel='Send a message'
-          placeholder={placeholder ?? 'Send a message...'}
-          placeholderTextColor={theme.color.textSecondary.dark}
-          returnKeyType='send'
-          cursorColor={accentHex}
-          selectionColor={`${accentHex}${SELECTION_HIGHLIGHT_ALPHA}`}
-          selectionHandleColor={accentHex}
-          style={styles.input}
-          submitBehavior='blurAndSubmit'
-          /**
-           * Android: without this, landscape drops into the fullscreen IME
-           * editor, covering the stream and chat.
-           */
-          disableFullscreenUI
-          underlineColorAndroid='transparent'
+        <ComposerOverflowButton
+          actions={overflowActions}
+          busy={isUploadingImage}
         />
+
+        <View
+          style={[styles.pill, isOverLimit ? styles.pillOverLimit : undefined]}
+        >
+          <TextInput
+            ref={inputRef}
+            autoCapitalize='none'
+            autoComplete='off'
+            autoCorrect={false}
+            blurOnSubmit
+            editable={editable}
+            multiline
+            onChangeText={handleChangeText}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            onSelectionChange={event =>
+              handleSelectionChange(event.nativeEvent.selection.start)
+            }
+            onSubmitEditing={handleSubmit}
+            selection={selection}
+            value={text}
+            accessibilityLabel='Send a message'
+            placeholder={placeholder ?? 'Send a message...'}
+            placeholderTextColor={theme.color.textSecondary.dark}
+            returnKeyType='send'
+            cursorColor={accentHex}
+            selectionColor={`${accentHex}${SELECTION_HIGHLIGHT_ALPHA}`}
+            selectionHandleColor={accentHex}
+            style={[styles.input, styles.inputWrapper]}
+            submitBehavior='blurAndSubmit'
+            /**
+             * Android: without this, landscape drops into the fullscreen IME
+             * editor, covering the stream and chat.
+             */
+            disableFullscreenUI
+            underlineColorAndroid='transparent'
+          />
+
+          {onPressAdd ? (
+            <PressableScale
+              accessibilityLabel='Open emote picker'
+              accessibilityRole='button'
+              style={styles.pillGlyphSlot}
+              onPress={onPressAdd}
+            >
+              <SymbolView
+                name='face.smiling'
+                size={22}
+                tintColor={theme.colorGreyHoverAlpha}
+              />
+            </PressableScale>
+          ) : null}
+        </View>
 
         {onSubmit ? (
           <PressableScale

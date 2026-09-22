@@ -3,6 +3,7 @@ import { StyleSheet } from 'react-native';
 import {
   COMPOSER_CONTROL_RADIUS,
   COMPOSER_CONTROL_SIZE,
+  COMPOSER_GLYPH_SIZE,
   COMPOSER_INPUT_MIN_HEIGHT,
   COMPOSER_ROW_GAP,
 } from '@app/components/Chat/util/composerSizing';
@@ -18,23 +19,38 @@ export const chatComposerStyles = StyleSheet.create({
     flexDirection: 'row',
     gap: COMPOSER_ROW_GAP,
   },
-  addButton: {
-    alignItems: 'center',
+  pill: {
+    alignItems: 'flex-end',
     backgroundColor: theme.darkActiveContent,
-    borderRadius: COMPOSER_CONTROL_RADIUS,
+    borderColor: 'transparent',
     borderCurve: 'continuous',
-    height: COMPOSER_CONTROL_SIZE,
-    justifyContent: 'center',
-    width: COMPOSER_CONTROL_SIZE,
+    borderRadius: COMPOSER_CONTROL_RADIUS,
+    borderWidth: 1,
+    flex: 1,
+    flexDirection: 'row',
+    minHeight: COMPOSER_INPUT_MIN_HEIGHT,
+    minWidth: 0,
+    paddingRight: 6,
   },
-  recallSlot: {
-    height: COMPOSER_CONTROL_SIZE,
-    width: COMPOSER_CONTROL_SIZE,
+  pillOverLimit: {
+    borderColor: theme.colorRed,
+  },
+  inputWrapper: {
+    flex: 1,
+    minWidth: 0,
+  },
+  pillGlyphSlot: {
+    alignItems: 'center',
+    height: COMPOSER_GLYPH_SIZE,
+    justifyContent: 'center',
+    marginBottom: (COMPOSER_INPUT_MIN_HEIGHT - COMPOSER_GLYPH_SIZE) / 2 - 1,
+    width: COMPOSER_GLYPH_SIZE,
   },
   submitButton: {
     alignItems: 'center',
-    borderRadius: COMPOSER_CONTROL_RADIUS,
     borderCurve: 'continuous',
+    borderRadius: COMPOSER_CONTROL_RADIUS,
+    flexShrink: 0,
     height: COMPOSER_CONTROL_SIZE,
     justifyContent: 'center',
     width: COMPOSER_CONTROL_SIZE,
@@ -42,19 +58,27 @@ export const chatComposerStyles = StyleSheet.create({
   characterCount: {
     alignSelf: 'flex-end',
     color: theme.color.textSecondary.dark,
+    fontVariant: ['tabular-nums'],
     paddingBottom: theme.space4,
-    paddingHorizontal: theme.space8,
+    paddingHorizontal: theme.space12,
   },
+  characterCountOverLimit: {
+    color: theme.colorRed,
+  },
+  /**
+   * The RN pill paints the surface, so this must be the literal 'transparent':
+   * iOS `Input` treats any other value as a surface and adds its own glass
+   * over it. Its variants also derive every colour from the accent, so without
+   * an explicit `color` the typed message renders in the accent.
+   */
   input: {
-    backgroundColor: theme.darkActiveContent,
-    borderRadius: 20,
-    borderCurve: 'continuous',
+    backgroundColor: 'transparent',
+    borderWidth: 0,
     color: theme.color.text.dark,
-    flex: 1,
     fontSize: 16,
     maxHeight: 120,
-    minHeight: COMPOSER_INPUT_MIN_HEIGHT,
-    paddingHorizontal: 12,
+    minHeight: COMPOSER_INPUT_MIN_HEIGHT - 2,
+    paddingHorizontal: theme.space16,
     paddingVertical: 12,
   },
 });

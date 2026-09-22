@@ -17,10 +17,12 @@ import { truncate } from '@app/utils/string/truncate';
 import { useComposerDismissGesture } from '../hooks/useComposerDismissGesture';
 import { chatEntranceSpring } from '../util/chatEntranceSpring';
 import type { ChatInputSectionProps } from '../util/chatInputSectionTypes';
-import { COMPOSER_ROW_GAP } from '../util/composerSizing';
+import {
+  COMPOSER_CONTROL_RADIUS,
+  COMPOSER_ROW_GAP,
+} from '../util/composerSizing';
 import { isRefreshCommand } from '../util/slashCommandDefinitions/isRefreshCommand';
 import { ChatComposer } from './ChatComposer/ChatComposer';
-import { ComposerIconButton } from './ComposerIconButton';
 import { ReplyPreviewBody } from './ReplyPreviewBody';
 
 export type { ReplyToData } from '../util/chatInputSectionTypes';
@@ -122,6 +124,9 @@ export const ChatInputSection = memo(
                   onChangeText={onChangeText}
                   onSubmit={onSubmit}
                   onPressAdd={onOpenEmoteSheet}
+                  onAttachImage={isAuthenticated ? onAttachImage : undefined}
+                  onOpenSettings={onOpenSettingsSheet}
+                  isUploadingImage={isUploadingImage}
                   placeholder={inputPlaceholder}
                   editable
                   canSend={canSend}
@@ -130,20 +135,6 @@ export const ChatInputSection = memo(
                   prioritizeChannelEmotes
                 />
               </View>
-
-              {onAttachImage ? (
-                <ComposerIconButton
-                  disabled={isUploadingImage || !isAuthenticated}
-                  icon={isUploadingImage ? 'arrow.up.circle' : 'photo'}
-                  label='Attach image'
-                  onPress={onAttachImage}
-                />
-              ) : null}
-              <ComposerIconButton
-                icon='gearshape'
-                label='Open chat settings'
-                onPress={onOpenSettingsSheet}
-              />
             </View>
           </Animated.View>
         </GestureDetector>
@@ -213,16 +204,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(10,10,12,0.74)',
     borderColor: 'rgba(255,255,255,0.08)',
     borderCurve: 'continuous',
-    borderRadius: 20,
+    borderRadius: COMPOSER_CONTROL_RADIUS,
     borderWidth: 1,
     flexDirection: 'row',
     gap: theme.space12,
-    marginBottom: theme.space8,
     marginHorizontal: theme.space12,
     overflow: 'hidden',
     paddingHorizontal: theme.space16,
     paddingVertical: theme.space12,
-    boxShadow: '0 10px 20px rgba(0, 0, 0, 0.18)',
   },
   wrapper: {
     gap: theme.space8,
