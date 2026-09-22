@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,10 +10,7 @@ import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { lightenColor } from '@app/utils/color/lightenColor';
-import {
-  createHitslop,
-  createHorizontalHitslop,
-} from '@app/utils/string/createHitSlop';
+import { createHitslop } from '@app/utils/string/createHitSlop';
 import { truncate } from '@app/utils/string/truncate';
 
 import { useComposerDismissGesture } from '../hooks/useComposerDismissGesture';
@@ -22,11 +19,7 @@ import type {
   ChatInputSectionProps,
   ReplyToData,
 } from '../util/chatInputSectionTypes';
-import {
-  COMPOSER_CONTROL_RADIUS,
-  COMPOSER_CONTROL_SIZE,
-  COMPOSER_ROW_GAP,
-} from '../util/composerSizing';
+import { COMPOSER_ROW_GAP } from '../util/composerSizing';
 import { isRefreshCommand } from '../util/slashCommandDefinitions/isRefreshCommand';
 import { ChatComposer } from './ChatComposer/ChatComposer';
 import { ReplyPreviewBody } from './ReplyPreviewBody';
@@ -135,6 +128,9 @@ export const ChatInputSection = memo(
                   onChangeText={onChangeText}
                   onSubmit={onSubmit}
                   onPressAdd={onOpenEmoteSheet}
+                  onAttachImage={isAuthenticated ? onAttachImage : undefined}
+                  onOpenSettings={onOpenSettingsSheet}
+                  isUploadingImage={isUploadingImage}
                   placeholder={inputPlaceholder}
                   editable
                   canSend={canSend}
@@ -143,41 +139,6 @@ export const ChatInputSection = memo(
                   prioritizeChannelEmotes
                 />
               </View>
-
-              {onAttachImage ? (
-                <Button
-                  label='Attach image'
-                  style={styles.actionButton}
-                  onPress={onAttachImage}
-                  disabled={isUploadingImage || !isAuthenticated}
-                  hitSlop={createHorizontalHitslop(COMPOSER_CONTROL_SIZE)}
-                >
-                  {isUploadingImage ? (
-                    <ActivityIndicator
-                      size='small'
-                      color={theme.colorGreyHoverAlpha}
-                    />
-                  ) : (
-                    <SymbolView
-                      name='photo'
-                      size={20}
-                      tintColor={theme.colorGreyHoverAlpha}
-                    />
-                  )}
-                </Button>
-              ) : null}
-
-              <Button
-                style={styles.actionButton}
-                onPress={onOpenSettingsSheet}
-                hitSlop={createHorizontalHitslop(COMPOSER_CONTROL_SIZE)}
-              >
-                <SymbolView
-                  name='gearshape'
-                  size={22}
-                  tintColor={theme.colorGreyHoverAlpha}
-                />
-              </Button>
             </View>
           </Animated.View>
         </GestureDetector>
@@ -187,16 +148,6 @@ export const ChatInputSection = memo(
 );
 
 const styles = StyleSheet.create({
-  actionButton: {
-    alignItems: 'center',
-    backgroundColor: theme.darkActiveContent,
-    borderColor: theme.colorBorderSecondary,
-    borderRadius: COMPOSER_CONTROL_RADIUS,
-    borderWidth: 1,
-    height: COMPOSER_CONTROL_SIZE,
-    justifyContent: 'center',
-    width: COMPOSER_CONTROL_SIZE,
-  },
   composerShell: {
     backgroundColor: theme.colorBlack,
     paddingBottom: theme.space8,

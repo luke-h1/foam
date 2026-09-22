@@ -26,6 +26,92 @@ import { theme } from '@app/styles/themes';
 
 import { COMPOSER_CONTROL_SIZE } from '../util/composerSizing';
 
+interface ComposerButtonAppearanceOptions {
+  active?: boolean;
+  disabled?: boolean;
+  label?: string;
+  prominent?: boolean;
+  prominentColor: string;
+  /**
+   * Drops the backing circle for a glyph that sits inside the input pill.
+   */
+  quiet?: boolean;
+  size: number;
+}
+
+export function composerButtonAppearance({
+  active,
+  disabled,
+  label,
+  prominent,
+  prominentColor,
+  quiet,
+  size,
+}: ComposerButtonAppearanceOptions) {
+  const liquidGlassAvailable = isLiquidGlassAvailable();
+  const isHighlighted = Boolean(active || prominent);
+
+  let resolvedButtonStyle: 'glassProminent' | 'glass' | 'bordered' | 'plain';
+
+  if (quiet) {
+    resolvedButtonStyle = 'plain';
+  } else if (liquidGlassAvailable) {
+    resolvedButtonStyle = prominent && !disabled ? 'glassProminent' : 'glass';
+  } else {
+    resolvedButtonStyle = prominent && !disabled ? 'bordered' : 'plain';
+  }
+
+  let iconColor: string;
+
+  if (disabled) {
+    iconColor = 'rgba(255,255,255,0.36)';
+  } else if (isHighlighted) {
+    iconColor = theme.colorWhite;
+  } else if (quiet) {
+    iconColor = 'rgba(255,255,255,0.45)';
+  } else {
+    iconColor = 'rgba(255,255,255,0.86)';
+  }
+
+  let resolvedBackground: string;
+
+  if (quiet) {
+    resolvedBackground = 'transparent';
+  } else if (prominent && !disabled) {
+    /**
+     * `glassProminent` fills from the tint. A background of the same colour
+     * under it leaves a lighter rim.
+     */
+    resolvedBackground = liquidGlassAvailable ? 'transparent' : prominentColor;
+  } else if (liquidGlassAvailable) {
+    resolvedBackground = 'transparent';
+  } else if (active) {
+    resolvedBackground = 'rgba(255,255,255,0.18)';
+  } else {
+    resolvedBackground = 'rgba(255,255,255,0.12)';
+  }
+
+  const buttonModifiers: ViewModifier[] = [
+    tint(prominent && !disabled ? prominentColor : iconColor),
+    buttonStyle(resolvedButtonStyle),
+
+    /**
+     * Pin to the host's exact size - a content-sized button drifts out of
+     * line with its RN row siblings.
+     */
+    frame({ width: size, height: size }),
+    background(resolvedBackground),
+    clipShape('circle'),
+    disabledModifier(Boolean(disabled)),
+  ];
+
+  if (label) {
+    buttonModifiers.push(accessibilityLabel(label));
+  }
+
+  return { buttonModifiers, iconColor, liquidGlassAvailable };
+}
+
 export interface ComposerIconButtonProps {
   active?: boolean;
   disabled?: boolean;
@@ -38,6 +124,8 @@ export interface ComposerIconButtonProps {
    * Surface color for the prominent variant; defaults to the app violet.
    */
   prominentColor?: string;
+  quiet?: boolean;
+  size?: number;
 }
 
 export function ComposerIconButton({
@@ -49,69 +137,35 @@ export function ComposerIconButton({
   onPress,
   prominent,
   prominentColor = theme.colorViolet,
+  quiet,
+  size = COMPOSER_CONTROL_SIZE,
 }: ComposerIconButtonProps) {
-  const liquidGlassAvailable = isLiquidGlassAvailable();
-  const isHighlighted = Boolean(active || prominent);
-
-  let resolvedButtonStyle: 'glassProminent' | 'glass' | 'bordered' | 'plain';
-
-  if (liquidGlassAvailable) {
-    resolvedButtonStyle = prominent ? 'glassProminent' : 'glass';
-  } else {
-    resolvedButtonStyle = prominent ? 'bordered' : 'plain';
-  }
-
-  let iconColor: string;
-
-  if (disabled) {
-    iconColor = 'rgba(255,255,255,0.36)';
-  } else if (isHighlighted) {
-    iconColor = theme.colorWhite;
-  } else {
-    iconColor = 'rgba(255,255,255,0.86)';
-  }
-
-  let resolvedBackground: string;
-
-  if (prominent && !disabled) {
-    resolvedBackground = prominentColor;
-  } else if (liquidGlassAvailable) {
-    resolvedBackground = 'transparent';
-  } else if (active) {
-    resolvedBackground = 'rgba(255,255,255,0.18)';
-  } else {
-    resolvedBackground = 'rgba(255,255,255,0.12)';
-  }
+  const { buttonModifiers, iconColor, liquidGlassAvailable } =
+    composerButtonAppearance({
+      active,
+      disabled,
+      label,
+      prominent,
+      prominentColor,
+      quiet,
+      size,
+    });
 
   const handlePress = () => {
     if (!disabled) {
       onPress();
     }
   };
-  const buttonModifiers: ViewModifier[] = [
-    tint(prominent && !disabled ? prominentColor : iconColor),
-    buttonStyle(resolvedButtonStyle),
-
-    /**
-     * Pin to the host's exact size - a content-sized button drifts out of
-     * line with its RN row siblings.
-     */
-    frame({ width: COMPOSER_CONTROL_SIZE, height: COMPOSER_CONTROL_SIZE }),
-    background(resolvedBackground),
-    clipShape('circle'),
-    disabledModifier(Boolean(disabled)),
-  ];
-
-  if (label) {
-    buttonModifiers.push(accessibilityLabel(label));
-  }
 
   return (
     /**
      * No matchContents - SwiftUI must not re-measure; ignoreSafeArea stops the
      * home-indicator inset shifting the button out of the host frame.
      */
-    <Host ignoreSafeArea='all' style={styles.host}>
+    <Host
+      ignoreSafeArea='all'
+      style={[styles.host, { width: size, height: size }]}
+    >
       <GlassEffectContainer>
         <SwiftUIButton onPress={handlePress} modifiers={buttonModifiers}>
           <Image
@@ -120,8 +174,8 @@ export function ComposerIconButton({
               padding({ vertical: 6, horizontal: 0 }),
               clipShape('circle'),
               padding({
-                horizontal: liquidGlassAvailable ? 0 : 12,
-                vertical: liquidGlassAvailable ? 0 : 8,
+                horizontal: liquidGlassAvailable || quiet ? 0 : 12,
+                vertical: liquidGlassAvailable || quiet ? 0 : 8,
               }),
             ]}
             size={iconSize}
@@ -136,7 +190,5 @@ export function ComposerIconButton({
 const styles = StyleSheet.create({
   host: {
     flexShrink: 0,
-    height: COMPOSER_CONTROL_SIZE,
-    width: COMPOSER_CONTROL_SIZE,
   },
 });
