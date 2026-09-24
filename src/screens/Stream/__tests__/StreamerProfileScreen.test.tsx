@@ -105,7 +105,12 @@ const mockChatStats: StreamElementsChatStats = {
   sevenTVEmotes: [{ id: '2', emote: 'OMEGALUL', amount: 9999 }],
 };
 
-const FIND_TIMEOUT = { timeout: 5000 };
+/**
+ * Matches the 20s `testTimeout` in jest.config.js rather than the 1s testing-library
+ * default. At `--maxWorkers=100%` the cold transform plus first render of this
+ * screen runs past 5s and the VOD list arrives after the profile header.
+ */
+const FIND_TIMEOUT = { timeout: 15000 };
 
 describe('StreamerProfileScreen', () => {
   beforeEach(() => {
