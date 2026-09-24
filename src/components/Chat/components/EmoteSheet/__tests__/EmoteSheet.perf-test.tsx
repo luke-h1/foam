@@ -63,6 +63,7 @@ const MOCK_VIEWPORT_HEIGHT = 680;
 type MockableLegendListModule = {
   LegendList: (props: MockLegendListProps) => ReactNode;
 };
+
 // SAFETY: `never` is the only bridge TS accepts from the exotic component to the plain function shape.
 const mockableLegendList: MockableLegendListModule =
   LegendListReactNative as never;
@@ -144,6 +145,7 @@ function createEmotes(
 }
 
 const subscriberProfiles: Record<string, SubscriberChannelProfile> = {};
+
 for (let owner = 0; owner < 6; owner += 1) {
   subscriberProfiles[`owner-${owner}`] = {
     name: `Streamer${owner}`,

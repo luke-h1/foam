@@ -11,12 +11,14 @@ import { createUserStateFromTags } from '@app/utils/chat/messageHandlers/createU
 import { resolveMessageEmoteParts } from '../resolveMessageEmoteParts';
 
 const worklet = jest.spyOn(emoteProcessor, 'processEmotesWorklet');
+
 const mockGetUserPersonalEmotes = jest.spyOn(
   personalEmotes,
   'getUserPersonalEmotes',
 );
 
 const channelId = 'channel-1';
+
 const subscriberEmote = createTwitchEmote({
   id: 'sub-1',
   name: 'SubEmote',

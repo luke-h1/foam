@@ -19,24 +19,30 @@ import {
 } from './__fixtures__/useChat.fixture';
 
 const mockAbortCurrentLoad = jest.spyOn(channelLoadActions, 'abortCurrentLoad');
+
 const mockGetCurrentEmoteData = jest.spyOn(
   channelLoadActions,
   'getCurrentEmoteData',
 );
+
 const mockLoadChannelResources = jest.spyOn(
   channelLoadActions,
   'loadChannelResources',
 );
+
 const mockPreloadChannelEmotes = jest
   .spyOn(preloadEmotesModule, 'preloadChannelEmotes')
   .mockResolvedValue(undefined);
+
 const mockPreloadGlobalEmotes = jest
   .spyOn(preloadEmotesModule, 'preloadGlobalEmotes')
   .mockResolvedValue(undefined);
+
 const mockStartChannelLoadAbort = jest.spyOn(
   channelLoadActions,
   'startChannelLoadAbort',
 );
+
 const mockUseAuthContext = jest.spyOn(AuthContextModule, 'useAuthContext');
 
 jest.spyOn(logger.chat, 'debug').mockImplementation(() => {});

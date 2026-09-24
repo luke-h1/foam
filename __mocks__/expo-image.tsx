@@ -21,6 +21,7 @@ const ImageComponent = forwardRef<MockImageHandle, ViewProps>((props, ref) => {
 
   return <View testID='expo-image' {...props} />;
 });
+
 ImageComponent.displayName = 'Image';
 
 /**

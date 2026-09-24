@@ -28,6 +28,7 @@ const SPINNER_SIZES = {
   small: 20,
   large: 36,
 } satisfies Record<'small' | 'large', number>;
+
 const STROKE_WIDTH = 3;
 const ROTATION_DURATION_MS = 900;
 const ARC_SWEEP_DEGREES = 270;

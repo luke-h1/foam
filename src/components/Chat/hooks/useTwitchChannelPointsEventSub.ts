@@ -10,6 +10,7 @@ import { logger } from '@app/utils/logger';
 
 const CUSTOM_REWARD_REDEMPTION_EVENT =
   'channel.channel_points_custom_reward_redemption.add';
+
 const AUTOMATIC_REWARD_REDEMPTION_EVENT =
   'channel.channel_points_automatic_reward_redemption.add';
 

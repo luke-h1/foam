@@ -170,6 +170,7 @@ const isAndroid = process.env.EXPO_OS === 'android';
  * Keeps row separators aligned with the text column, past the thumbnail.
  */
 const RESULT_THUMBNAIL_WIDTH = 55;
+
 const RESULT_SEPARATOR_INSET =
   theme.space16 + RESULT_THUMBNAIL_WIDTH + theme.space16;
 

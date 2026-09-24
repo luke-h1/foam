@@ -55,6 +55,7 @@ const DEFAULT_COLORS = [
   theme.color.accent.dark,
   theme.color.accentPress.dark,
 ];
+
 const DEFAULT_SPEED = 1.0;
 const DEFAULT_INTENSITY = 2.0;
 const DEFAULT_GLOW_RADIUS = 0.45;

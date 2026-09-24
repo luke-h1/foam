@@ -26,23 +26,28 @@ const mockGetCurrentEmoteData = jest.spyOn(
   channelLoadModule,
   'getCurrentEmoteData',
 );
+
 const mockGetMessageBadges = jest.spyOn(
   getMessageBadgesModule,
   'getMessageBadges',
 );
+
 const mockGetSharedChatBadgeContext = jest.spyOn(
   getSharedChatBadgeContextModule,
   'getSharedChatBadgeContext',
 );
+
 const mockResolveMessageEmoteParts = jest.spyOn(
   resolveMessageEmotePartsModule,
   'resolveMessageEmoteParts',
 );
+
 const mockUpdateMessages = jest.spyOn(messagesModule, 'updateMessages');
 
 type ChatEmoteData = NonNullable<
   ReturnType<typeof channelLoadModule.getCurrentEmoteData>
 >;
+
 type ResolveMessageEmotePartsParams = Parameters<
   typeof resolveMessageEmotePartsModule.resolveMessageEmoteParts
 >[0];

@@ -9,10 +9,13 @@ export interface EmoteUrlDescriptor {
 
 const sevenTv =
   /^https:\/\/cdn\.7tv\.app\/emote\/([^/]+)\/([1234])x(_static)?\.(?:avif|webp)$/;
+
 const bttv =
   /^https:\/\/cdn\.betterttv\.net\/emote\/([^/]+)\/([123])x(\.png)?$/;
+
 const ffz =
   /^https:\/\/cdn\.frankerfacez\.com\/emote\/([^/]+)\/(animated\/)?([124])$/;
+
 const twitch =
   /^https:\/\/static-cdn\.jtvnw\.net\/emoticons\/v2\/([^/]+)\/(default|static)\/dark\/([123])\.0$/;
 

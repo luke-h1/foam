@@ -60,4 +60,5 @@ function ButtonComponent({
     </PressableScale>
   );
 }
+
 export const Button = memo(ButtonComponent);

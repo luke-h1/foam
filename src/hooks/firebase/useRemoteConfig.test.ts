@@ -12,9 +12,11 @@ const wrapper = ({ children }: PropsWithChildren) =>
   createElement(DefaultWrapper, null, children);
 
 const mockedFetchAndActivate = jest.mocked(fetchAndActivate);
+
 const mockRemoteConfigError = jest
   .spyOn(logger.remoteConfig, 'error')
   .mockImplementation();
+
 const mockRemoteConfigInfo = jest
   .spyOn(logger.remoteConfig, 'info')
   .mockImplementation();

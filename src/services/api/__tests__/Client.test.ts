@@ -26,10 +26,13 @@ type MockResponseBody = {
 const mockFetch = jest.mocked(fetch);
 
 const apiWarnSpy = jest.spyOn(logger.api, 'warn').mockImplementation(() => {});
+
 const apiErrorSpy = jest
   .spyOn(logger.api, 'error')
   .mockImplementation(() => {});
+
 const ffzWarnSpy = jest.spyOn(logger.ffz, 'warn').mockImplementation(() => {});
+
 const ffzErrorSpy = jest
   .spyOn(logger.ffz, 'error')
   .mockImplementation(() => {});

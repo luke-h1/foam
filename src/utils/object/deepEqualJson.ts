@@ -20,10 +20,12 @@ function isJsonObject<T>(value: T): value is T & { [key: string]: JsonValue } {
 }
 
 export function deepEqualJson(a: JsonValue, b: JsonValue): boolean;
+
 export function deepEqualJson<T extends object>(
   a: T | null | undefined,
   b: T | null | undefined,
 ): boolean;
+
 export function deepEqualJson<T>(a: T, b: T): boolean {
   if (a === b) {
     return true;

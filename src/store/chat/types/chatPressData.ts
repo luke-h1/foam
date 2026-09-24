@@ -6,6 +6,7 @@ import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 export type EmotePressData = ParsedPart<'emote'>;
 export type BadgePressData = SanitisedBadgeSet;
+
 export type MessageActionData<
   TNoticeType extends NoticeVariants,
   TVariant extends (TNoticeType extends 'usernotice'

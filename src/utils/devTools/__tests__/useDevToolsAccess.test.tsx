@@ -14,6 +14,7 @@ import * as useRemoteConfigModule from '@app/hooks/firebase/useRemoteConfig';
 import { useDevToolsAccess } from '@app/utils/devTools/devToolsGate';
 
 const mockUseAuthContext = jest.spyOn(AuthContextModule, 'useAuthContext');
+
 const mockUseRemoteConfig = jest.spyOn(
   useRemoteConfigModule,
   'useRemoteConfig',

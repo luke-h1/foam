@@ -17,6 +17,7 @@ import {
 import { createChatMessage } from './__fixtures__/useChat.fixture';
 
 const mockGetMessageById = jest.spyOn(messagesActions, 'getMessageById');
+
 const mockFetchUserCosmetics = jest
   .spyOn(userCosmeticsFetchActions, 'fetchUserCosmetics')
   .mockResolvedValue(undefined);

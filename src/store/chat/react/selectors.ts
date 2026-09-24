@@ -46,9 +46,11 @@ type ChannelEmoteData = ChannelEmoteCache & {
 
 const EMPTY_EMOTES: SanitisedEmote[] = [];
 const EMPTY_BADGES: SanitisedBadgeSet[] = [];
+
 const EMPTY_SUBSCRIBER_PROFILES: NonNullable<
   ChannelCacheType['twitchSubscriberChannelProfiles']
 > = {};
+
 const EMPTY_PERSONAL_EMOTES: Record<string, SanitisedEmote[]> = {};
 
 function resolveEmoteData(
@@ -199,7 +201,9 @@ export const useGlobalEmoteBadgeCaches = () =>
   });
 
 export const usePaints = () => useSelector(chatStore$.paints);
+
 export const useCosmeticBindingsVersion = () =>
   useSelector(chatStore$.cosmeticBindingsVersion);
+
 export const usePersonalEmotesVersion = () =>
   useSelector(chatStore$.personalEmotesVersion);

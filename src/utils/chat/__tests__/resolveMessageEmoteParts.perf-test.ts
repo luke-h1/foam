@@ -11,6 +11,7 @@ import {
 } from '../__fixtures__/resolveMessageEmoteParts.perf.fixture';
 
 jest.spyOn(personalEmotes, 'getUserPersonalEmotes').mockReturnValue([]);
+
 jest
   .spyOn(getChannelCheermotesModule, 'getChannelCheermotes')
   .mockReturnValue(undefined);

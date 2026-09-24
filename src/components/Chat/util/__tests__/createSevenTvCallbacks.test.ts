@@ -37,14 +37,17 @@ const applyCosmeticCreateEvent = jest.spyOn(
   cosmeticsBridgeActions,
   'applyCosmeticCreateEvent',
 );
+
 const applyEntitlementCreateEvent = jest.spyOn(
   cosmeticsBridgeActions,
   'applyEntitlementCreateEvent',
 );
+
 const applyEntitlementUpdateEvent = jest.spyOn(
   cosmeticsBridgeActions,
   'applyEntitlementUpdateEvent',
 );
+
 const applyEntitlementDeleteEvent = jest.spyOn(
   cosmeticsBridgeActions,
   'applyEntitlementDeleteEvent',
@@ -56,9 +59,11 @@ const generateStvEmoteNotice = jest.spyOn(
 );
 
 const mockAddBadge = addBadge;
+
 const mockCountMetric = jest
   .spyOn(sentryModule, 'countMetric')
   .mockImplementation(() => {});
+
 const mockApplyCosmeticCreateEvent = applyCosmeticCreateEvent;
 const mockApplyEntitlementCreateEvent = applyEntitlementCreateEvent;
 

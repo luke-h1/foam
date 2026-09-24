@@ -65,6 +65,7 @@ export type ChannelEmoteResourceSets = Pick<
   ChannelCacheType,
   ChannelEmoteCacheKey
 >;
+
 export type ChannelBadgeResourceSets = Pick<
   ChannelCacheType,
   ChannelBadgeCacheKey

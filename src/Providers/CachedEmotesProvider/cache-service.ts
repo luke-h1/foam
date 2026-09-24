@@ -39,6 +39,7 @@ const MAX_DECODED_BYTES = (() => {
   }
   return Math.max(floor, Math.min(ceil, Math.floor(totalMemoryBytes * 0.05)));
 })();
+
 const ANIMATED_BYTE_FACTOR = 8;
 
 type CacheEntry = {
@@ -544,6 +545,7 @@ const ANDROID_TRIM_MEMORY_RUNNING_CRITICAL = 15;
 
 const LOW_MEMORY_HEADROOM_BYTES =
   Platform.OS === 'android' ? 100 * 1024 * 1024 : 200 * 1024 * 1024;
+
 const MEMORY_POLL_INTERVAL_MS = 5000;
 // Trims can recur every poll; throttle so a constrained session can't flood Sentry Logs.
 const MEMORY_PRESSURE_LOG_THROTTLE_MS = 60_000;

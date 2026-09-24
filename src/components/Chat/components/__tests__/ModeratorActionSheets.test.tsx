@@ -8,9 +8,11 @@ import { ActionSheet } from '../ActionSheet/ActionSheet';
 import { UserActionSheet } from '../UserActionSheet';
 
 const originalOS = Platform.OS;
+
 beforeAll(() => {
   Platform.OS = 'android';
 });
+
 afterAll(() => {
   Platform.OS = originalOS;
 });

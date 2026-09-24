@@ -5,6 +5,7 @@ import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 
 const messageTextCache = new WeakMap<ParsedPart[], string>();
+
 const normalisedMessageFieldsCache = new WeakMap<
   FilterableMessage,
   {

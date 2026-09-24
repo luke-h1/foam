@@ -12,14 +12,18 @@ import TwitchWsService from '@app/services/twitch-ws-service';
 import { logger } from '@app/utils/logger';
 
 const mockUseAuthContext = jest.spyOn(AuthContextModule, 'useAuthContext');
+
 // SAFETY: getInstance's return value is never read by these hooks, only passed through.
 const mockGetInstance = jest
   .spyOn(TwitchWsService, 'getInstance')
   .mockReturnValue({} as WebSocket);
+
 const mockSubscribeToEvent = jest.spyOn(TwitchWsService, 'subscribeToEvent');
+
 jest
   .spyOn(TwitchWsService, 'unsubscribeFromEvent')
   .mockResolvedValue(undefined);
+
 const mockGetPolls = jest.spyOn(twitchService, 'getPolls');
 const mockGetPredictions = jest.spyOn(twitchService, 'getPredictions');
 jest.spyOn(logger.twitchWs, 'warn').mockImplementation(() => undefined);

@@ -9,23 +9,29 @@ import { useChatMessages } from '../useChatMessages';
 import type { ChatScrollAnchor } from '../useChatScroll';
 
 const mockAddMessages = jest.spyOn(messagesActions, 'addMessages');
+
 const mockIncrementChatUnread = jest.spyOn(
   chatUnreadActions,
   'incrementChatUnread',
 );
+
 const mockModerateMessageById = jest.spyOn(
   messagesActions,
   'moderateMessageById',
 );
+
 const mockModerateMessagesByLogin = jest.spyOn(
   messagesActions,
   'moderateMessagesByLogin',
 );
+
 const mockRemoveMessageById = jest.spyOn(messagesActions, 'removeMessageById');
+
 const mockRemoveMessagesByLogin = jest.spyOn(
   messagesActions,
   'removeMessagesByLogin',
 );
+
 const MAX_BUFFERED = messagesActions.getMaxChatMessages();
 
 function getLastFlushedMessages(): ChatMessageType<never>[] {

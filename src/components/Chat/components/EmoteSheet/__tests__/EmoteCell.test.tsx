@@ -35,6 +35,7 @@ type MockableExpoImage = {
     ref: Ref<MockImageHandle>,
   ) => null;
 };
+
 // SAFETY: `never` is the only bridge TS accepts from the class component to MockableExpoImage.
 const mockableExpoImage: MockableExpoImage = ExpoImage as never;
 

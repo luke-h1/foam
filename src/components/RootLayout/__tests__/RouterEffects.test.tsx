@@ -24,15 +24,19 @@ const mockedUseAuthContext = jest.spyOn(AuthContextModule, 'useAuthContext');
 jest
   .spyOn(useClearExpiredStorageItemsModule, 'useClearExpiredStorageItems')
   .mockImplementation(() => {});
+
 jest
   .spyOn(useIcloudPreferenceSyncModule, 'useIcloudPreferenceSync')
   .mockImplementation(() => {});
+
 jest
   .spyOn(useOnAppStateChangeModule, 'useOnAppStateChange')
   .mockImplementation(() => {});
+
 jest
   .spyOn(usePopulateAuthModule, 'usePopulateAuth')
   .mockImplementation(() => {});
+
 jest
   .spyOn(useRecoveredFromErrorModule, 'useRecoveredFromError')
   .mockReturnValue({

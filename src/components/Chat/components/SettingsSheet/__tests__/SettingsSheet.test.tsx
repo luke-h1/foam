@@ -10,9 +10,11 @@ import render from '@app/test/render';
 import { SettingsSheet } from '../SettingsSheet';
 
 const originalOS = Platform.OS;
+
 beforeAll(() => {
   Platform.OS = 'android';
 });
+
 afterAll(() => {
   Platform.OS = originalOS;
 });
@@ -31,6 +33,7 @@ type MockableBottomSheet = {
     ref?: Ref<{ requestClose: () => void }>;
   }) => ReactNode;
 };
+
 // SAFETY: `never` is the only bridge TS accepts from the exotic component to MockableBottomSheet.
 const mockableBottomSheet: MockableBottomSheet = BottomSheetModule as never;
 

@@ -10,10 +10,12 @@ import { setCachedCosmetics } from './__fixtures__/useChatCosmetics.fixture';
 jest.spyOn(logger.stv, 'debug').mockImplementation(() => undefined);
 
 const mockGet7tvUserId = jest.spyOn(sevenTvService, 'get7tvUserId');
+
 const mockFetchAndCacheUserCosmetics = jest.spyOn(
   cosmeticsActions,
   'fetchAndCacheUserCosmetics',
 );
+
 const mockGetUserBadge = jest.spyOn(cosmeticsActions, 'getUserBadge');
 jest.spyOn(cosmeticsActions, 'getUserBadgeId');
 jest.spyOn(cosmeticsActions, 'getUserPaintId');

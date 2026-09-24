@@ -63,11 +63,15 @@ function resetChatStore(): void {
 let mockFetchUserCosmeticsByTwitchId: jest.SpiedFunction<
   typeof cosmetics.fetchUserCosmeticsByTwitchId
 >;
+
 let mockRemoveUserBadge: jest.SpiedFunction<typeof cosmetics.removeUserBadge>;
+
 let mockRemoveUserCosmetics: jest.SpiedFunction<
   typeof cosmetics.removeUserCosmetics
 >;
+
 let mockRemoveUserPaint: jest.SpiedFunction<typeof cosmetics.removeUserPaint>;
+
 let mockHandlePersonalEmoteSetEntitlement: jest.SpiedFunction<
   typeof personalEmotes.handlePersonalEmoteSetEntitlement
 >;

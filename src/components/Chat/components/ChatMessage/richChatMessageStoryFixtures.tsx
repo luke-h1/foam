@@ -24,14 +24,17 @@ export const stvGlobalEmote1 = requireFixture(
   seventvSanitiisedGlobalEmoteSetFixture[0],
   '7TV global emote 1 fixture is missing',
 );
+
 export const stvGlobalEmote2 = requireFixture(
   seventvSanitiisedGlobalEmoteSetFixture[1],
   '7TV global emote 2 fixture is missing',
 );
+
 export const stvGlobalBaseEmote = requireFixture(
   seventvSanitiisedGlobalEmoteSetFixture.find(emote => !emote.zero_width),
   '7TV base emote fixture is missing',
 );
+
 export const stvChannelEmote1 = requireFixture(
   sevenTvSanitisedChannelEmoteSetFixture[0],
   '7TV channel emote fixture is missing',
@@ -70,14 +73,17 @@ const subscriberBadge = requireFixture(
   twitchSanitisedGlobalBadges.find(badge => badge.id === 'subscriber_0'),
   'subscriber badge fixture is missing',
 );
+
 export const premiumBadge = requireFixture(
   twitchSanitisedGlobalBadges.find(badge => badge.id === 'premium_1'),
   'premium badge fixture is missing',
 );
+
 const moderatorBadge = requireFixture(
   twitchSanitisedGlobalBadges.find(badge => badge.id === 'moderator_1'),
   'moderator badge fixture is missing',
 );
+
 export const broadcasterBadge = requireFixture(
   twitchSanitisedGlobalBadges.find(badge => badge.id === 'broadcaster_1'),
   'broadcaster badge fixture is missing',
@@ -90,10 +96,12 @@ export const ffzVipBadge = requireFixture(
   ffzSanitiisedChannelBadges.find(badge => badge.id === 'vip_badge'),
   'FFZ VIP badge fixture is missing',
 );
+
 export const ffzModBadge = requireFixture(
   ffzSanitiisedChannelBadges.find(badge => badge.id === 'mod_badge'),
   'FFZ mod badge fixture is missing',
 );
+
 export const chatterinoBadge = requireFixture(
   chatterinoService.listSanitisedBadges()[0],
   'Chatterino badge fixture is missing',

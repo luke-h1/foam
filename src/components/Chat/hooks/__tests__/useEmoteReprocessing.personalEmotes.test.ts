@@ -20,10 +20,12 @@ const mockGetCurrentEmoteData = jest.spyOn(
   channelLoadActions,
   'getCurrentEmoteData',
 );
+
 const mockGetUserPersonalEmotes = jest.spyOn(
   personalEmotesActions,
   'getUserPersonalEmotes',
 );
+
 const mockUpdateMessages = jest.spyOn(messagesActions, 'updateMessages');
 
 const channelId = 'channel-1';
@@ -31,6 +33,7 @@ const channelId = 'channel-1';
 // Only used to keep the reprocess gate open in the 7TV-disabled case below;
 // `plaska` itself always resolves via the personal set, never this emote.
 const channelKappa = createSevenTvEmote({ id: 'kappa', name: 'Kappa' });
+
 const personalPlaska = createSevenTvEmote({
   id: 'plaska-id',
   name: 'plaska',

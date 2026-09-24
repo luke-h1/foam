@@ -12,6 +12,7 @@ const resetMessagesStore = messagesActions.clearMessages;
 
 const mockAddMessage = jest.spyOn(messagesActions, 'addMessage');
 const mockClearMessages = jest.spyOn(messagesActions, 'clearMessages');
+
 const mockClearMessagesWithNotice = jest.spyOn(
   messagesActions,
   'clearMessagesWithNotice',

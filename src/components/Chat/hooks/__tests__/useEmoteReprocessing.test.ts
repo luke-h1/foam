@@ -18,7 +18,9 @@ const mockGetCurrentEmoteData = jest.spyOn(
   channelLoadActions,
   'getCurrentEmoteData',
 );
+
 const mockUpdateMessages = jest.spyOn(messagesActions, 'updateMessages');
+
 const mockResolveMessageEmoteParts = jest.spyOn(
   resolveMessageEmotePartsModule,
   'resolveMessageEmoteParts',

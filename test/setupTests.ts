@@ -41,6 +41,7 @@ function canvasKitStub(): any {
     apply: () => canvasKitStub(),
   });
 }
+
 // SAFETY: the Skia jest mock reads global.CanvasKit, which no global type declares.
 (global as any).CanvasKit = canvasKitStub();
 
@@ -135,6 +136,7 @@ const createReactNativeHostMock = (hostName: string) =>
 const skiaMock = require('@shopify/react-native-skia') as {
   Skia?: { Data?: { fromURI?: (uri: string) => Promise<SkData | null> } };
 };
+
 if (skiaMock.Skia?.Data) {
   skiaMock.Skia.Data.fromURI = jest.fn(() => Promise.resolve(null));
 }

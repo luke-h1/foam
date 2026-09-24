@@ -23,6 +23,7 @@ export const createdClips$ = observable<{ clips: CreatedClipRecord[] }>({
 });
 
 ensureObservablePersistenceConfig();
+
 persistObservable(createdClips$, {
   local: createObservablePersistenceLocalConfig(CREATED_CLIPS_PERSISTENCE_KEY),
 });

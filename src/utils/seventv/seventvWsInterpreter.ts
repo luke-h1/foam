@@ -147,6 +147,7 @@ const SEVEN_TV_STATIC_PREFERENCE = [
   ...withScales('avif'),
   ...withScales('webp'),
 ];
+
 const SEVEN_TV_ANIMATED_PREFERENCE = [
   ...withScales('webp'),
   ...withScales('avif'),

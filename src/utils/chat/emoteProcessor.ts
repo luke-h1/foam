@@ -29,10 +29,12 @@ const MAX_CACHE_SIZE = 1000;
 const baseCollectionCache = new Map<string, EmoteCollection>();
 
 const MAX_BASE_COLLECTION_CACHE_SIZE = 4;
+
 const scopedLookupCache = new Map<
   string,
   (name: string) => SanitisedEmote | undefined
 >();
+
 const MAX_SCOPED_LOOKUP_CACHE_SIZE = 256;
 
 type EmoteCollection = {

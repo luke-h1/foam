@@ -15,6 +15,7 @@ import tseslint from 'typescript-eslint';
 
 import requireMemoizedComponentExport from './eslint-rules/require-memoized-component-export.cjs';
 import preferAliasImports from './eslint-rules/prefer-alias-imports.cjs';
+import blankLineBetweenTopLevel from './eslint-rules/blank-line-between-top-level.cjs';
 
 const restrictedSentryImports = [
   {
@@ -131,6 +132,7 @@ export default tseslint.config(
       'jsx-a11y': jsxA11y,
       local: {
         rules: {
+          'blank-line-between-top-level': blankLineBetweenTopLevel,
           'require-memoized-component-export': requireMemoizedComponentExport,
           'prefer-alias-imports': preferAliasImports,
         },
@@ -158,6 +160,7 @@ export default tseslint.config(
       ...reactDoctor.configs['react-native'].rules,
       ...reactDoctor.configs['tanstack-query'].rules,
       'react-doctor/rn-no-raw-text': 'error',
+      'local/blank-line-between-top-level': 'error',
       'local/prefer-alias-imports': 'warn',
       'simple-import-sort/imports': [
         'warn',

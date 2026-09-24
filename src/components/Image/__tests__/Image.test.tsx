@@ -26,6 +26,7 @@ const getCachedImageUriMock = jest.fn<
   ReturnType<typeof imageFileStore.getCachedImageUri>,
   Parameters<typeof imageFileStore.getCachedImageUri>
 >();
+
 const cacheImageFromUrlMock = jest.fn<
   ReturnType<typeof imageFileStore.cacheImageFromUrl>,
   Parameters<typeof imageFileStore.cacheImageFromUrl>

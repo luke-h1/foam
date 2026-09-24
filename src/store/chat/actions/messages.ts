@@ -58,6 +58,7 @@ export const setChatFrontTrimSuspended = (suspended: boolean): void => {
 export const getEffectiveMaxChatMessages = (): number =>
   getMaxChatMessages() +
   (frontTrimSuspended ? SUSPENDED_FRONT_TRIM_HEADROOM : 0);
+
 const MAX_RECENT_MESSAGE_CHANNELS = 10;
 // Each sync re-serializes recentMessagesByChannel to MMKV - a top JS hotspot
 // in busy chats (issue #594); moderation/clear paths still flush immediately.

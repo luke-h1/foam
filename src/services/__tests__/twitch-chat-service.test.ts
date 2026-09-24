@@ -21,12 +21,15 @@ jest.spyOn(AuthContext, 'useAuthContext').mockReturnValue({
 });
 
 const mockedUseWebsocket = jest.spyOn(UseWebsocketModule, 'useWebsocket');
+
 const mockedAddNetworkStateListener = jest
   .spyOn(Network, 'addNetworkStateListener')
   .mockReturnValue({ remove: jest.fn() });
+
 const mockedGetNetworkStateAsync = jest
   .spyOn(Network, 'getNetworkStateAsync')
   .mockResolvedValue({ isConnected: true });
+
 const mockedSubscribeToAppStateTransitions = jest
   .spyOn(AppStateTransitionsModule, 'subscribeToAppStateTransitions')
   .mockReturnValue(jest.fn());
@@ -44,9 +47,11 @@ let socketReadyState: number;
 let wsOptions: Options;
 
 const socket: WebSocket = Object.create(WebSocket.prototype);
+
 Object.defineProperty(socket, 'readyState', {
   get: () => socketReadyState,
 });
+
 Object.defineProperty(socket, 'close', { value: close });
 
 function getForegroundTransitionListener() {
