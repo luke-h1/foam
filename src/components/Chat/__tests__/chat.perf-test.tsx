@@ -1,11 +1,9 @@
 import { Fragment, Profiler, useEffect } from 'react';
 import { View } from 'react-native';
 import type { ProfilerOnRenderCallback, ReactElement, Ref } from 'react';
+import { makeMutable } from 'react-native-reanimated';
 
-import type {
-  LegendListComponent,
-  MaintainScrollAtEndOptions,
-} from '@legendapp/list/react-native';
+import type { MaintainScrollAtEndOptions } from '@legendapp/list/react-native';
 import { render } from '@testing-library/react-native';
 import { measureFunction, measureRenders } from 'reassure';
 
@@ -71,14 +69,14 @@ function getVirtualizedWindow(
 }
 
 /**
- * Overrides the render-everything LegendList mock with a windowing fake;
- * `require` because spyOn needs the module object, not babel's interop copy.
+ * Overrides the render-everything KeyboardAwareLegendList mock with a windowing
+ * fake; `require` because spyOn needs the module object, not babel's interop copy.
  */
 // SAFETY: reattaches the module type `require` erases so spyOn type-checks.
-const legendListReactNative =
-  require('@legendapp/list/react-native') as typeof import('@legendapp/list/react-native');
+const legendListKeyboard =
+  require('@legendapp/list/keyboard') as typeof import('@legendapp/list/keyboard');
 
-jest.spyOn(legendListReactNative, 'LegendList').mockImplementation(
+jest.spyOn(legendListKeyboard, 'KeyboardAwareLegendList').mockImplementation(
   // SAFETY: the mock implements only the props this suite reads.
   ((props: MockLegendListProps & { ref?: Ref<View> }) => {
     const { extraData, keyExtractor, ref, renderItem } = props;
@@ -108,8 +106,10 @@ jest.spyOn(legendListReactNative, 'LegendList').mockImplementation(
         })}
       </View>
     );
-  }) as LegendListComponent,
+  }) as typeof legendListKeyboard.KeyboardAwareLegendList,
 );
+
+const contentInsetEndAdjustment = makeMutable(0);
 
 type PerfChatMessage = ChatMessageType<'usernotice'>;
 
@@ -193,6 +193,7 @@ function createChatMessage(index: number): PerfChatMessage {
 const chatWindow = Array.from({ length: 600 }, (_, index) =>
   createChatMessage(index),
 );
+
 const visibleRows = chatWindow.slice(-120);
 const virtualizedVisibleRowCount = Math.ceil((680 + 96 * 2) / 34);
 const virtualizedRows = visibleRows.slice(-virtualizedVisibleRowCount);
@@ -223,6 +224,7 @@ function ChatListPerfFixture() {
 
   return (
     <ChatList
+      contentInsetEndAdjustment={contentInsetEndAdjustment}
       data={visibleRows}
       dataKey='perf-channel'
       extraData={{

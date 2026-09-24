@@ -3,12 +3,11 @@ import { View } from 'react-native';
 import type { RefObject } from 'react';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { KeyboardController } from 'react-native-keyboard-controller';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { SharedValue } from 'react-native-reanimated';
 
 import { Text } from '@app/components/ui/Text/Text';
 import { useMessages } from '@app/store/chat/react/selectors';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
-import { theme } from '@app/styles/themes';
 import { logger } from '@app/utils/logger';
 
 import type { PinnedChatMessageViewModel } from '../hooks/usePinnedChatMessage';
@@ -27,6 +26,7 @@ import { PinnedMessageBanner } from './PinnedMessageBanner';
 export interface ChatMessagePaneProps {
   channelId: string;
   channelName: string;
+  contentInsetEndAdjustment: SharedValue<number>;
   currentUsername?: string;
   hiddenUsers: string[];
   hiddenPhrases: string[];
@@ -55,6 +55,7 @@ export const ChatMessagePane = memo(
   ({
     channelId,
     channelName,
+    contentInsetEndAdjustment,
     currentUsername,
     hiddenUsers,
     hiddenPhrases,
@@ -89,7 +90,6 @@ export const ChatMessagePane = memo(
     const hasMessages = rawMessages.length > 0;
     const hasEverHadMessagesRef = useRef(false);
     const lastEmptyLogAtRef = useRef<number>(0);
-    const insets = useSafeAreaInsets();
 
     const dismissKeyboardGesture = useMemo(
       () =>
@@ -100,16 +100,6 @@ export const ChatMessagePane = memo(
           })
           .runOnJS(true),
       [],
-    );
-
-    // The composer floats over the list bottom (Chat.tsx lifts its
-    // KeyboardStickyView by `insets.bottom`); reserve that lift plus a gap or the newest row lands behind the composer.
-    const listContentStyle = useMemo(
-      () => [
-        styles.listContent,
-        { paddingBottom: insets.bottom + theme.space8 },
-      ],
-      [insets.bottom],
     );
 
     const visibleMessages = useMemo(
@@ -202,6 +192,7 @@ export const ChatMessagePane = memo(
         <GestureDetector gesture={dismissKeyboardGesture}>
           <View style={styles.listGestureWrapper}>
             <ChatList
+              contentInsetEndAdjustment={contentInsetEndAdjustment}
               data={visibleMessages}
               dataKey={channelId}
               listRef={listRef}
@@ -211,7 +202,7 @@ export const ChatMessagePane = memo(
               keyExtractor={keyExtractor}
               getItemType={getItemType}
               extraData={messageListExtraData}
-              contentContainerStyle={listContentStyle}
+              contentContainerStyle={styles.listContent}
               onViewableMessagesChange={onViewableMessagesChange}
             />
           </View>

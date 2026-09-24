@@ -48,10 +48,9 @@ function StoryStage({ children }: { children: React.ReactNode }) {
         backgroundColor: theme.colorBlack,
         flex: 1,
         justifyContent: 'flex-end',
-        paddingBottom: insets.bottom,
       }}
     >
-      <KeyboardStickyView offset={{ closed: -insets.bottom }}>
+      <KeyboardStickyView offset={{ closed: 0, opened: insets.bottom }}>
         {children}
       </KeyboardStickyView>
     </View>

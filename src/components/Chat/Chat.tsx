@@ -1,7 +1,13 @@
 import { memo, useCallback, useEffect, useRef } from 'react';
 import { View } from 'react-native';
-import { KeyboardStickyView } from 'react-native-keyboard-controller';
+import {
+  KeyboardStickyView,
+  useReanimatedKeyboardAnimation,
+} from 'react-native-keyboard-controller';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { useKeyboardChatComposerInset } from '@legendapp/list/keyboard';
 
 import { useAuthContext } from '@app/context/AuthContext';
 import { BenchFrameProbe } from '@app/dev/imageBenchmark/BenchFrameProbe.gate';
@@ -24,6 +30,12 @@ import { useChatScroll } from './hooks/useChatScroll';
 import { useChatSession } from './hooks/useChatSession';
 import { useChatSurface } from './hooks/useChatSurface';
 import { useChatTransientState } from './hooks/useChatTransientState';
+
+/**
+ * First-frame guess at the composer height, before `onComposerLayout` reports
+ * the measured value. Only affects the bottom inset on the very first render.
+ */
+const ESTIMATED_COMPOSER_HEIGHT = 56;
 
 export interface ChatProps {
   applyTopInset?: boolean;
@@ -69,6 +81,30 @@ export const Chat = memo(
     } = useChatTransientState(channelId);
     const listRef = useRef<ChatListRef | null>(null);
     const inputShellRef = useRef<ChatInputShellHandle>(null);
+    const composerRef = useRef<View>(null);
+
+    // The composer floats over the list bottom, so the list carries its height
+    // as a bottom content inset and the keyboard lifts the content itself.
+    const { contentInsetEndAdjustment, onComposerLayout } =
+      useKeyboardChatComposerInset(
+        listRef,
+        composerRef,
+        insets.bottom + ESTIMATED_COMPOSER_HEIGHT,
+      );
+
+    // Ride above the composer, and follow it up when the keyboard lifts it;
+    // `keyboard.height` is negative while the keyboard is open.
+    const keyboard = useReanimatedKeyboardAnimation();
+    const resumeScrollLiftStyle = useAnimatedStyle(() => ({
+      transform: [
+        {
+          translateY:
+            keyboard.height.value -
+            contentInsetEndAdjustment.value +
+            keyboard.progress.value * insets.bottom,
+        },
+      ],
+    }));
 
     const getMessagesLength = useCallback(
       () => messages$.peek().length,
@@ -193,6 +229,7 @@ export const Chat = memo(
               <ChatMessagePane
                 channelId={channelId}
                 channelName={channelName}
+                contentInsetEndAdjustment={contentInsetEndAdjustment}
                 currentUsername={currentUsername}
                 hiddenUsers={hiddenUsers}
                 hiddenPhrases={hiddenPhrases}
@@ -220,28 +257,39 @@ export const Chat = memo(
               {preferences.showUnreadJumpPill &&
               !isAtBottom &&
               !isScrollingToBottom ? (
-                <ResumeScroll onScrollToBottom={handleResumeScrollToBottom} />
+                <Animated.View
+                  pointerEvents='box-none'
+                  style={[styles.resumeScrollLift, resumeScrollLiftStyle]}
+                >
+                  <ResumeScroll onScrollToBottom={handleResumeScrollToBottom} />
+                </Animated.View>
               ) : null}
             </View>
 
             <KeyboardStickyView
-              offset={{ closed: -insets.bottom }}
+              offset={{ closed: 0, opened: insets.bottom }}
               style={styles.inputStickyView}
             >
-              <ChatInputShell
-                key={user?.id ?? 'signed-out'}
-                ref={inputShellRef}
-                channelId={channelId}
-                channelName={channelName}
-                connected={connected}
-                isChatConnected={isChatConnected}
-                onOpenEmoteSheet={handleOpenEmoteSheet}
-                onOpenSettingsSheet={handleOpenSettingsSheet}
-                onRefreshCommand={handleRefreshEmotesAndBadges}
-                processMessageEmotes={processMessageEmotes}
-                sendMessage={sendMessage}
-                user={user}
-              />
+              <View
+                collapsable={false}
+                onLayout={onComposerLayout}
+                ref={composerRef}
+              >
+                <ChatInputShell
+                  key={user?.id ?? 'signed-out'}
+                  ref={inputShellRef}
+                  channelId={channelId}
+                  channelName={channelName}
+                  connected={connected}
+                  isChatConnected={isChatConnected}
+                  onOpenEmoteSheet={handleOpenEmoteSheet}
+                  onOpenSettingsSheet={handleOpenSettingsSheet}
+                  onRefreshCommand={handleRefreshEmotesAndBadges}
+                  processMessageEmotes={processMessageEmotes}
+                  sendMessage={sendMessage}
+                  user={user}
+                />
+              </View>
             </KeyboardStickyView>
 
             <ChatOverlayLayer {...overlayProps} />

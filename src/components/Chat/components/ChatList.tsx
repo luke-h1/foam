@@ -8,13 +8,14 @@ import {
   ViewStyle,
 } from 'react-native';
 import type { ReactElement } from 'react';
+import type { SharedValue } from 'react-native-reanimated';
 
-import {
-  LegendList,
-  type LegendListRef,
-  type LegendListRenderItemProps,
-  type MaintainScrollAtEndOptions,
-  type ViewabilityConfig,
+import { KeyboardAwareLegendList } from '@legendapp/list/keyboard';
+import type {
+  LegendListRef,
+  LegendListRenderItemProps,
+  MaintainScrollAtEndOptions,
+  ViewabilityConfig,
 } from '@legendapp/list/react-native';
 
 import { getChatScale } from '@app/components/Chat/components/ChatMessage/chatScale';
@@ -37,6 +38,7 @@ const CHAT_DRAW_DISTANCE = 250;
  */
 const CHAT_ESTIMATED_ITEM_SIZE = 26;
 const CHAT_END_REACHED_THRESHOLD = 0.02;
+
 const CHAT_VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 1,
 } satisfies ViewabilityConfig;
@@ -47,6 +49,7 @@ const CHAT_VIEWABILITY_CONFIG = {
 const CHAT_MAINTAIN_SCROLL_AT_END = {
   on: { dataChange: true, itemLayout: true },
 } satisfies MaintainScrollAtEndOptions;
+
 const CHAT_MAINTAIN_SCROLL_AT_END_THRESHOLD = 0.1;
 
 /**
@@ -99,6 +102,11 @@ export interface ChatListScrollHandlers {
 }
 
 interface ChatListProps {
+  /**
+   * Height of the composer that floats over the list bottom. The list keeps
+   * this much bottom content inset so the newest row clears the composer.
+   */
+  contentInsetEndAdjustment: SharedValue<number>;
   data: AnyChatMessageType[];
   /**
    * Dataset identity; without this a channel switch carries the old channel's
@@ -118,6 +126,7 @@ interface ChatListProps {
 
 export const ChatList = memo(
   ({
+    contentInsetEndAdjustment,
     data,
     dataKey,
     listRef,
@@ -168,7 +177,8 @@ export const ChatList = memo(
     );
 
     return (
-      <LegendList
+      <KeyboardAwareLegendList
+        contentInsetEndAdjustment={contentInsetEndAdjustment}
         data={data}
         dataKey={dataKey}
         ref={listRef}

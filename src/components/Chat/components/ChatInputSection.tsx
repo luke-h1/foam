@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -113,10 +113,10 @@ export const ChatInputSection = memo(
           <Animated.View
             style={[
               styles.composerShell,
-              // offsets the KeyboardStickyView closed:-insets.bottom shift in Chat.tsx
-              Platform.OS === 'ios' && {
-                paddingBottom: insets.bottom + theme.space8,
-              },
+              // The composer sits at the very bottom of the screen; clear the
+              // home indicator. Chat.tsx cancels this lift while the keyboard
+              // covers that area.
+              { paddingBottom: insets.bottom + theme.space8 },
               composerAnimatedStyle,
             ]}
           >

@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BlurView } from 'expo-blur';
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
@@ -29,6 +30,7 @@ export type { ReplyToData } from '../util/chatInputSectionTypes';
 
 const replyPreviewEntering = chatEntranceSpring(FadeInUp);
 const replyPreviewExiting = FadeOutDown.duration(140);
+
 export const ChatInputSection = memo(
   ({
     connection,
@@ -46,6 +48,7 @@ export const ChatInputSection = memo(
     const { isAuthenticated, isSending } = connection;
     const { composerAnimatedStyle, composerGesture } =
       useComposerDismissGesture();
+    const insets = useSafeAreaInsets();
 
     const trimmedInput = messageInput.trim();
     // /refresh is purely client-side, so it works signed out
@@ -116,7 +119,16 @@ export const ChatInputSection = memo(
         ) : null}
 
         <GestureDetector gesture={composerGesture}>
-          <Animated.View style={[styles.composerShell, composerAnimatedStyle]}>
+          <Animated.View
+            style={[
+              styles.composerShell,
+              // The composer sits at the very bottom of the screen; clear the
+              // home indicator. Chat.tsx cancels this while the keyboard
+              // covers that area.
+              { paddingBottom: insets.bottom },
+              composerAnimatedStyle,
+            ]}
+          >
             <View style={styles.inputRow}>
               <View style={styles.inputContainer}>
                 <ChatComposer

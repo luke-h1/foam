@@ -1,8 +1,8 @@
 import { View } from 'react-native';
 import type { ReactElement } from 'react';
+import { makeMutable } from 'react-native-reanimated';
 
 import type {
-  LegendListComponent,
   MaintainScrollAtEndOptions,
   ViewabilityConfig,
 } from '@legendapp/list/react-native';
@@ -40,24 +40,26 @@ const mockLegendList = jest.fn((_props: LegendListMockProps) => (
   <View testID='flash-list' />
 ));
 
+const contentInsetEndAdjustment = makeMutable(0);
+
 /**
- * Override the global LegendList mock with a fake that records props.
+ * Override the global KeyboardAwareLegendList mock with a fake that records props.
  * `require`, not `import` - spyOn needs the module object, not babel's ES-interop copy.
  */
 // SAFETY: reattaches the module type `require` erases so spyOn type-checks.
-const legendListReactNative =
-  require('@legendapp/list/react-native') as typeof import('@legendapp/list/react-native');
+const legendListKeyboard =
+  require('@legendapp/list/keyboard') as typeof import('@legendapp/list/keyboard');
 
-jest.spyOn(legendListReactNative, 'LegendList').mockImplementation(
+jest.spyOn(legendListKeyboard, 'KeyboardAwareLegendList').mockImplementation(
   // SAFETY: the mock implements only the props this suite reads.
   ((props: LegendListMockProps) =>
-    mockLegendList(props)) as LegendListComponent,
+    mockLegendList(props)) as typeof legendListKeyboard.KeyboardAwareLegendList,
 );
 
 function getRenderedProps(): LegendListMockProps {
   const call = mockLegendList.mock.calls[0];
   if (!call) {
-    throw new Error('LegendList did not render');
+    throw new Error('KeyboardAwareLegendList did not render');
   }
   return call[0];
 }
@@ -72,6 +74,7 @@ describe('ChatList', () => {
 
     render(
       <ChatList
+        contentInsetEndAdjustment={contentInsetEndAdjustment}
         data={[]}
         dataKey='test-channel'
         extraData={{ showTimestamps: false }}
@@ -131,6 +134,7 @@ describe('ChatList', () => {
 
     render(
       <ChatList
+        contentInsetEndAdjustment={contentInsetEndAdjustment}
         data={[visibleMessage]}
         dataKey='test-channel'
         listRef={listRef}
@@ -184,6 +188,7 @@ describe('ChatList', () => {
 
     render(
       <ChatList
+        contentInsetEndAdjustment={contentInsetEndAdjustment}
         data={[visibleMessage]}
         dataKey='test-channel'
         listRef={listRef}
@@ -222,6 +227,7 @@ describe('ChatList', () => {
 
     render(
       <ChatList
+        contentInsetEndAdjustment={contentInsetEndAdjustment}
         data={[]}
         dataKey='test-channel'
         listRef={listRef}
@@ -255,6 +261,7 @@ describe('ChatList', () => {
     const listRef = { current: null };
     render(
       <ChatList
+        contentInsetEndAdjustment={contentInsetEndAdjustment}
         data={[]}
         dataKey='test-channel'
         listRef={listRef}
@@ -287,6 +294,7 @@ describe('ChatList', () => {
 
     render(
       <ChatList
+        contentInsetEndAdjustment={contentInsetEndAdjustment}
         data={[]}
         dataKey='test-channel'
         listRef={listRef}
@@ -316,6 +324,7 @@ describe('ChatList', () => {
     const listRef = { current: null };
     const renderList = (dataKey: string) => (
       <ChatList
+        contentInsetEndAdjustment={contentInsetEndAdjustment}
         data={[]}
         dataKey={dataKey}
         listRef={listRef}
