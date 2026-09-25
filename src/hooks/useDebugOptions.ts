@@ -9,6 +9,7 @@ export type DebugOptions = {
 const enabledDebugOptions: DebugOptions = {
   ReactQueryDebug: { enabled: true },
 };
+
 const disabledDebugOptions: DebugOptions = {
   ReactQueryDebug: { enabled: false },
 };

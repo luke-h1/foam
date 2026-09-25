@@ -49,6 +49,7 @@ Object.defineProperty(actionSheetModule, 'ActionSheet', {
 const showActionMenuMock = jest
   .spyOn(showActionMenuModule, 'showActionMenu')
   .mockImplementation(() => {});
+
 const runModCommandMock = jest
   .spyOn(runModCommandModule, 'runModCommand')
   .mockImplementation(() => {});

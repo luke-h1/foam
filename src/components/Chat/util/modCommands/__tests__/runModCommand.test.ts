@@ -10,6 +10,7 @@ const mockExecuteModCommand = jest.spyOn(
   executeModCommandModule,
   'executeModCommand',
 );
+
 const mockToast = jest.mocked(toast);
 const mockWarn = jest.spyOn(logger.chat, 'warn').mockImplementation(() => {});
 

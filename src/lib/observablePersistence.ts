@@ -25,6 +25,7 @@ export const CREATED_CLIPS_PERSISTENCE_KEY = 'created-clips-v1';
 const WEB_OBSERVABLE_DATABASE_NAME = 'foam-observable-cache';
 // Bumped when WEB_OBSERVABLE_TABLE_NAMES gains a store so onupgradeneeded runs.
 const WEB_OBSERVABLE_DATABASE_VERSION = 3;
+
 const WEB_OBSERVABLE_TABLE_NAMES = [
   CHAT_STORE_PERSISTENCE_KEY,
   CHAT_RECENT_MESSAGES_PERSISTENCE_KEY,

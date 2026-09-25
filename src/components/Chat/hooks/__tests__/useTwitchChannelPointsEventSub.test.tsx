@@ -13,10 +13,13 @@ import { logger } from '@app/utils/logger';
 jest.spyOn(logger.chat, 'debug').mockImplementation(() => {});
 
 const mockUseAuthContext = jest.spyOn(AuthContextModule, 'useAuthContext');
+
 const mockGetInstance = jest
   .spyOn(TwitchWsService, 'getInstance')
   .mockReturnValue(Object.create(WebSocket.prototype));
+
 const mockSubscribeToEvent = jest.spyOn(TwitchWsService, 'subscribeToEvent');
+
 const mockUnsubscribeFromEvent = jest.spyOn(
   TwitchWsService,
   'unsubscribeFromEvent',

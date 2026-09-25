@@ -36,10 +36,12 @@ const CLIP_SCOPES = [
 ] as const;
 
 const CHAT_SCOPES = ['chat:read', 'chat:edit', 'user:write:chat'] as const;
+
 const MODERATOR_CHAT_SCOPES = [
   'moderator:read:chat_messages',
   'moderator:manage:chat_messages',
 ] as const;
+
 const MODERATION_SCOPES = [
   'moderator:manage:banned_users',
   'moderator:manage:shield_mode',
@@ -48,6 +50,7 @@ const MODERATION_SCOPES = [
   'moderator:manage:warnings',
   'moderator:manage:chat_settings',
 ] as const;
+
 const WHISPER_SCOPES = ['whispers:read', 'whispers:edit'] as const;
 
 const authProxyBaseUrl =
@@ -72,6 +75,7 @@ function getWebAuthRedirectUrl() {
 }
 
 const redirectUri = Platform.OS === 'web' ? getWebAuthRedirectUrl() : proxyUrl;
+
 const appReturnUrl =
   Platform.OS === 'web' ? getWebAuthRedirectUrl() : 'foam://auth';
 

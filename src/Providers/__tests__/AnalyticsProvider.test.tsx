@@ -9,9 +9,11 @@ import { getPreferences, replacePreferences } from '@app/store/preferenceStore';
 import { AnalyticsProvider } from '../AnalyticsProvider';
 
 const mockedUsePathname = jest.mocked(usePathname);
+
 const mockedSetAnalyticsEnabled = jest
   .spyOn(analyticsModule, 'setAnalyticsEnabled')
   .mockResolvedValue(undefined);
+
 const mockedLogScreenView = jest
   .spyOn(analyticsModule, 'logAnalyticsScreenView')
   .mockResolvedValue(undefined);

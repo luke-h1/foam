@@ -14,6 +14,7 @@ jest.spyOn(ImageModule, 'Image').mockImplementation(() => <></>);
 const clipboardSetStringAsyncMock = jest
   .spyOn(Clipboard, 'setStringAsync')
   .mockResolvedValue(true);
+
 const toastSuccessMock = jest.mocked(toast.success);
 
 const part = {

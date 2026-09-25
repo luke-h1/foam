@@ -11,6 +11,7 @@ import {
 const prefetchMock = jest
   .spyOn(prefetchToDiskModule, 'prefetchToDisk')
   .mockResolvedValue(true);
+
 const warnMock = jest.spyOn(logger.chat, 'warn').mockImplementation(() => {});
 const errorMock = jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
 

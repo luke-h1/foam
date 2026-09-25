@@ -16,6 +16,7 @@ const badge: SanitisedBadgeSet = {
 let clearBttvBadgesCache: typeof GetBttvBadges.clearBttvBadgesCache;
 let getBttvBadges: typeof GetBttvBadges.getBttvBadges;
 let setOnBttvBadgesLoaded: typeof SetOnBttvBadgesLoaded.setOnBttvBadgesLoaded;
+
 let getSanitisedGlobalBadges: jest.SpiedFunction<
   typeof BttvEmoteService.getSanitisedGlobalBadges
 >;

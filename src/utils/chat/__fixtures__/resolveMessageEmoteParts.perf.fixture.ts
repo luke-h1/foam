@@ -53,6 +53,7 @@ function createTwitchEmote(index: number): SanitisedEmote {
 const bttvEmotes = Array.from({ length: 120 }, (_, index) =>
   createBttvEmote(index),
 );
+
 const twitchEmotes = Array.from({ length: 80 }, (_, index) =>
   createTwitchEmote(index),
 );

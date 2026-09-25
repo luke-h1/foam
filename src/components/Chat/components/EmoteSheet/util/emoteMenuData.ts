@@ -6,6 +6,7 @@ import { normaliseChatText } from '@app/utils/chat/normaliseChatText';
 import type { EmotePickerItem } from '../emoteSheetTypes';
 
 export type EmoteMenuProviderId = '7TV' | 'Twitch' | 'FFZ' | 'BTTV' | 'Emoji';
+
 export type EmoteMenuIcon =
   BrandIconName | 'twitch' | 'ffz' | `emoji:${string}` | `avatar:${string}`;
 

@@ -16,6 +16,7 @@ const mockGetSevenTvEmoteSetId = jest.spyOn(
   sevenTvChannelLifecycleActions,
   'getSevenTvEmoteSetId',
 );
+
 const mockUseSeventvWs = jest.spyOn(useSeventvWsModule, 'useSeventvWs');
 
 const createWebSocketStub = (): WebSocket => Object.create(WebSocket.prototype);

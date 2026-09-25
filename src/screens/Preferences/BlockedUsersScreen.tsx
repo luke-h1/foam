@@ -35,6 +35,7 @@ import type { UserBlockList } from '@app/types/twitch/user';
 import { BlockedUsersActionButton } from './components/BlockedUsersActionButton';
 
 const SKELETON_COUNT = 5;
+
 const SKELETON_DATA = Array.from(
   { length: SKELETON_COUNT },
   (_, index) => index,

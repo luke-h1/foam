@@ -37,6 +37,7 @@ const EMPTY_PROVIDERS: EmoteMenuProvider[] = [];
 
 const EMOTE_WARMUP_DELAY_MS = 250;
 const PROVIDER_WARMUP_ROWS = 4;
+
 const EMOTE_SHEET_VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 10,
   minimumViewTime: 50,

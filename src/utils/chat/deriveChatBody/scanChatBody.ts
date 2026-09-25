@@ -12,12 +12,15 @@ const SUBSCRIPTION_NOTICE_TYPES = new Set<ParsedPart['type']>([
   'giftpaidupgrade',
   'primepaidupgrade',
 ]);
+
 const CHARITY_DONATION_TYPES = new Set<ParsedPart['type']>(['charitydonation']);
 const RITUAL_NOTICE_TYPES = new Set<ParsedPart['type']>(['ritual']);
+
 const STV_EMOTE_EVENT_TYPES = new Set<ParsedPart['type']>([
   'stv_emote_added',
   'stv_emote_removed',
 ]);
+
 const VIEWER_MILESTONE_TYPES = new Set<ParsedPart['type']>(['viewermilestone']);
 const MOD_ANNIVERSARY_TYPES = new Set<ParsedPart['type']>(['modiversary']);
 

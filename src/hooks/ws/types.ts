@@ -13,6 +13,7 @@ export interface Options {
 export type SendMessage = (
   message: string | ArrayBuffer | Blob | ArrayBufferView,
 ) => void;
+
 export type SendJsonMessage<TJsonMessage = never> = (
   jsonMessage: TJsonMessage,
 ) => void;

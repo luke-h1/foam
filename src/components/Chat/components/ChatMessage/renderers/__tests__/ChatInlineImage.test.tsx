@@ -74,9 +74,11 @@ jest
 const evictMock = jest
   .spyOn(cacheService, 'evictCachedEmoteRef')
   .mockImplementation(() => {});
+
 jest
   .spyOn(cacheService, 'getCachedEmoteStats')
   .mockReturnValue({ decoded: 0, inflight: 0, pinned: 0 });
+
 jest.spyOn(cacheService, 'getCachedEmoteByteEstimate').mockReturnValue(0);
 jest.spyOn(cacheService, 'getEmoteRefReleaseRaceCount').mockReturnValue(0);
 jest.spyOn(cacheService, 'getEmoteDecodeTimeoutCount').mockReturnValue(0);

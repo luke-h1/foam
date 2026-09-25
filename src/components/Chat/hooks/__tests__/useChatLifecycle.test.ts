@@ -10,10 +10,12 @@ import { visibleAssetHydration } from '@app/store/chat/actions/visibleAssetHydra
 import { useChatLifecycle } from '../useChatLifecycle';
 
 const abortCurrentLoad = jest.spyOn(channelLoadActions, 'abortCurrentLoad');
+
 const clearChannelResources = jest.spyOn(
   channelLoadActions,
   'clearChannelResources',
 );
+
 // channelLoad re-exports this from personalEmotes.ts; babel compiles
 // re-exports as non-configurable getters, so the spy must target the
 // source module directly.
@@ -21,8 +23,10 @@ const clearPersonalEmotesCache = jest.spyOn(
   personalEmotesActions,
   'clearPersonalEmotesCache',
 );
+
 const clearMessages = jest.spyOn(messagesActions, 'clearMessages');
 const clearPaintBindings = jest.spyOn(cosmeticsActions, 'clearPaintBindings');
+
 const clearFetchedCosmeticsUsers = jest.spyOn(
   userCosmeticsFetchActions,
   'clearFetchedCosmeticsUsers',

@@ -88,15 +88,19 @@ function buildHostedVariants(
 export function buildSanitisedEmote(
   source: SevenTvEmoteSource,
 ): SevenTvSanitisedEmote | null;
+
 export function buildSanitisedEmote(
   source: BttvEmoteSource,
 ): BttvSanitisedEmote | null;
+
 export function buildSanitisedEmote(
   source: FfzEmoteSource,
 ): FfzSanitisedEmote | null;
+
 export function buildSanitisedEmote(
   source: TwitchEmoteSource,
 ): TwitchSanitisedEmote | null;
+
 export function buildSanitisedEmote(
   source: EmoteProviderSource,
 ): SanitisedEmote | null {

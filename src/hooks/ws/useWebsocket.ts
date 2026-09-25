@@ -13,12 +13,14 @@ import type {
 
 // Dummy socket so callers never get null before init. SAFETY: built from WebSocket.prototype; only the two properties defined here are read.
 const dummySocket = Object.create(WebSocket.prototype) as WebSocket;
+
 Object.defineProperty(dummySocket, 'readyState', {
   value: WebSocket.CLOSED,
   writable: false,
   enumerable: true,
   configurable: false,
 });
+
 Object.defineProperty(dummySocket, 'url', {
   value: '',
   writable: false,

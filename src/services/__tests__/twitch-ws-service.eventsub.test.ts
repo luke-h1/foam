@@ -12,16 +12,20 @@ import {
 } from './__fixtures__/twitchWsService.fixture';
 
 const twitchWsState = getTwitchWsTestState();
+
 const mockCreateEventSubscription = jest.spyOn(
   twitchService,
   'createEventSubscription',
 );
+
 const mockDeleteEventSubscription = jest.spyOn(
   twitchService,
   'deleteEventSubscription',
 );
+
 jest.spyOn(logger.twitchWs, 'error').mockImplementation(() => {});
 jest.spyOn(logger.twitchWs, 'info').mockImplementation(() => {});
+
 const mockWarn = jest
   .spyOn(logger.twitchWs, 'warn')
   .mockImplementation(() => {});

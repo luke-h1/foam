@@ -10,6 +10,7 @@
 const consoleInstrumentation: {
   instrumentConsole: (() => void) | undefined;
 } = require('../node_modules/@sentry/core/build/cjs/instrument/console.js');
+
 const debugLogger: {
   originalConsoleMethods: Partial<Record<string, (...args: unknown[]) => void>>;
 } = require('../node_modules/@sentry/core/build/cjs/utils/debug-logger.js');

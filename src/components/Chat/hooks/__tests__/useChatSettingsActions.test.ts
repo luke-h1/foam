@@ -9,13 +9,16 @@ import { logger } from '@app/utils/logger';
 import { useChatSettingsActions } from '../useChatSettingsActions';
 
 const mockClearCache = jest.spyOn(channelLoadActions, 'clearCache');
+
 const mockInvalidateChatResourceCaches = jest.spyOn(
   channelLoadActions,
   'invalidateChatResourceCaches',
 );
+
 const mockClearImageCache = jest
   .spyOn(clearImageCacheModule, 'clearImageCache')
   .mockResolvedValue(undefined);
+
 const mockClearUserCosmeticsCache = jest.spyOn(
   cosmeticsActions,
   'clearUserCosmeticsCache',

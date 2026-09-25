@@ -19,14 +19,18 @@ const mockGetPinnedChatMessage = jest.spyOn(
   twitchService,
   'getPinnedChatMessage',
 );
+
 const mockPinChatMessage = jest
   .spyOn(twitchService, 'pinChatMessage')
   .mockResolvedValue(undefined);
+
 const mockToastError = jest.mocked(toast.error);
 const mockToastSuccess = jest.mocked(toast.success);
+
 const mockUnpinChatMessage = jest
   .spyOn(twitchService, 'unpinChatMessage')
   .mockResolvedValue(undefined);
+
 const mockUpdatePinnedChatMessage = jest
   .spyOn(twitchService, 'updatePinnedChatMessage')
   .mockResolvedValue(undefined);

@@ -18,6 +18,7 @@ import * as sharedPaintAnimationFrames from '../util/sharedPaintAnimationFrames'
 jest
   .spyOn(sharedPaintAnimationFrames, 'useSharedPaintAnimationFrame')
   .mockReturnValue(makeMutable<SkImage | null>(null));
+
 jest
   .spyOn(sharedPaintAnimationFrames, 'useSharedPaintAnimationReady')
   .mockReturnValue(false);

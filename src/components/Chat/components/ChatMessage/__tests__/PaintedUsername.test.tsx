@@ -37,6 +37,7 @@ Object.defineProperty(ExpoImage, 'Image', {
 jest
   .spyOn(sharedPaintAnimationFrames, 'useSharedPaintAnimationFrame')
   .mockReturnValue(makeMutable<SkImage | null>(null));
+
 jest
   .spyOn(sharedPaintAnimationFrames, 'useSharedPaintAnimationReady')
   .mockReturnValue(true);

@@ -13,6 +13,7 @@ import { logger } from '@app/utils/logger';
 import { ENV_SUPPORTS_OTA } from '../util/envSupportsOta';
 
 const otaLoadingTitleHint = <ActivityIndicator animating />;
+
 const otaReloadHint = (
   <SymbolView name='arrow.clockwise' tintColor={AC.secondaryLabel} />
 );

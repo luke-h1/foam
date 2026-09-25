@@ -769,4 +769,5 @@ class TwitchWsService {
     );
   }
 }
+
 export default TwitchWsService;

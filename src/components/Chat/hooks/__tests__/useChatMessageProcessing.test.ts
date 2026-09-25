@@ -31,36 +31,46 @@ import {
 const mockFetchUserPersonalEmotes = jest
   .spyOn(personalEmotesActions, 'fetchUserPersonalEmotes')
   .mockResolvedValue([]);
+
 const mockGetUserPersonalEmotes = jest
   .spyOn(personalEmotesActions, 'getUserPersonalEmotes')
   .mockReturnValue([]);
+
 const mockGetCurrentEmoteData = jest.spyOn(
   channelLoadActions,
   'getCurrentEmoteData',
 );
+
 const mockGetUserBadge = jest.spyOn(cosmeticsActions, 'getUserBadge');
 const mockUpdateMessages = jest.spyOn(messagesActions, 'updateMessages');
+
 const mockFetchUserCosmetics = jest
   .spyOn(userCosmeticsFetchActions, 'fetchUserCosmetics')
   .mockResolvedValue(undefined);
+
 const mockProcessEmotesWorklet = jest
   .spyOn(emoteProcessorModule, 'processEmotesWorklet')
   .mockImplementation((params: { inputString: string }) => [
     { type: 'text', content: `processed:${params.inputString}` },
   ]);
+
 const mockExtractEmotesFromTag = jest
   .spyOn(extractEmotesFromTagModule, 'extractEmotesFromTag')
   .mockReturnValue([]);
+
 const mockHydrateVisibleSevenTvAssets = jest
   .spyOn(hydrateVisibleSevenTvAssetsModule, 'hydrateVisibleSevenTvAssets')
   .mockResolvedValue(false);
+
 const mockGetCachedSharedChatBadgeContext = jest.spyOn(
   getCachedSharedChatBadgeContextModule,
   'getCachedSharedChatBadgeContext',
 );
+
 const mockGetMessageBadges = jest
   .spyOn(getMessageBadgesModule, 'getMessageBadges')
   .mockReturnValue([]);
+
 const mockGetSharedChatBadgeContext = jest
   .spyOn(getSharedChatBadgeContextModule, 'getSharedChatBadgeContext')
   .mockResolvedValue({

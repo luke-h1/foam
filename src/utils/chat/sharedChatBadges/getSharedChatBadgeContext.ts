@@ -17,6 +17,7 @@ const sharedChatSourceBadgePromises = new Map<
   string,
   Promise<SanitisedBadgeSet | null>
 >();
+
 const sharedChatChannelBadgePromises = new Map<
   string,
   Promise<SanitisedBadgeSet[]>

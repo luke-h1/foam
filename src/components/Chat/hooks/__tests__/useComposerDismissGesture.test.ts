@@ -38,17 +38,21 @@ type GestureMock = {
 };
 
 const mockDismiss = jest.mocked(KeyboardController.dismiss);
+
 const mockSharedValue = {
   get: jest.fn(() => 0),
   set: jest.fn(),
 };
+
 const mockWithSpring = jest.fn(
   (value: number, _config?: ComposerSpringConfig) => value,
 );
+
 // SAFETY: the hook only calls .get()/.set() on the shared value, which this stub provides; the real SharedValue shape is not needed.
 jest
   .spyOn(Reanimated, 'useSharedValue')
   .mockReturnValue(mockSharedValue as never);
+
 jest
   .spyOn(Reanimated, 'withSpring')
   .mockImplementation((value: AnimatableValue, config?: WithSpringConfig) => {
@@ -94,14 +98,17 @@ function mockCreateGestureMock(): GestureMock {
 // these tests invoke them directly, so the stubs capture them on GestureMock.
 const flingGestureStub = () => (mockLastFlingGesture = mockCreateGestureMock());
 const panGestureStub = () => (mockLastPanGesture = mockCreateGestureMock());
+
 const simultaneousGestureStub = (pan: GestureMock, fling: GestureMock) => ({
   gestures: [pan, fling],
   type: 'simultaneous',
 });
+
 // SAFETY: these stubs return GestureMock, not the real chainable-builder classes; only the captured callbacks are ever read back.
 jest.spyOn(Gesture, 'Fling').mockImplementation(flingGestureStub as never);
 // SAFETY: see above - panGestureStub returns GestureMock, not the real chainable-builder class.
 jest.spyOn(Gesture, 'Pan').mockImplementation(panGestureStub as never);
+
 // SAFETY: see above - simultaneousGestureStub returns GestureMock, not the real chainable-builder class.
 jest
   .spyOn(Gesture, 'Simultaneous')

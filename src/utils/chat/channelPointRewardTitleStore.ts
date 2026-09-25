@@ -43,6 +43,7 @@ export function getCachedChannelPointRewardTitle(
     channelPointRewardCacheKey(broadcasterId, rewardId),
   );
 }
+
 const pendingStandaloneByKey = new Map<
   string,
   { timeout: ReturnType<typeof setTimeout> }

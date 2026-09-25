@@ -82,11 +82,14 @@ const VERSION = '1.0.10';
 const appConfig: AppVariantConfig = VARIANT_CONFIG[variant];
 const twitchClientId = process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID;
 const sentryRelease = process.env.EXPO_PUBLIC_SENTRY_RELEASE ?? VERSION;
+
 const sentryDist =
   process.env.EXPO_PUBLIC_SENTRY_DIST ??
   process.env.SENTRY_DIST ??
   appConfig.iosBundleIdentifier;
+
 const iosICloudContainerIdentifier = `iCloud.${appConfig.iosBundleIdentifier}`;
+
 const enableICloudEntitlements =
   process.env.ENABLE_IOS_ICLOUD_ENTITLEMENTS === 'true';
 

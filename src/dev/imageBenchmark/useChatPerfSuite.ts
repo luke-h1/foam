@@ -18,8 +18,10 @@ import {
 import { resetFloodReplay } from './useSyntheticChatFlood';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 const mean = (a: number[]) =>
   a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0;
+
 const pct = (a: number[], q: number) => {
   if (a.length === 0) {
     return 0;

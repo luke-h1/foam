@@ -11,6 +11,7 @@ import { forwardLogToSentry, type LogTagValue } from '../sentry';
 const { Scope } = jest.requireActual<typeof SentryReactNative>(
   '@sentry/react-native',
 );
+
 const scope = new Scope();
 const setTagSpy = jest.spyOn(scope, 'setTag');
 jest.spyOn(scope, 'setFingerprint');

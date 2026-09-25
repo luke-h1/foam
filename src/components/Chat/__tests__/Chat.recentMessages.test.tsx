@@ -123,12 +123,14 @@ jest.spyOn(twitchChatServiceModule, 'getChatUserState').mockReturnValue({
   badges: '',
   color: '#ffffff',
 });
+
 jest.spyOn(twitchChatServiceModule, 'useChatUserState').mockReturnValue({
   mod: '0',
   'badges-raw': '',
   badges: '',
   color: '#ffffff',
 });
+
 jest.spyOn(twitchChatServiceModule, 'useTwitchChat').mockReturnValue({
   connectionState: 1,
   getWebSocket: createWebSocketStub,
@@ -141,22 +143,27 @@ jest.spyOn(twitchChatServiceModule, 'useTwitchChat').mockReturnValue({
 });
 
 jest.spyOn(channelLoadModule, 'clearCache').mockImplementation(() => {});
+
 jest
   .spyOn(channelLoadModule, 'getCurrentEmoteData')
   .mockReturnValue(emptyResolvedEmoteData);
+
 // `getSevenTvEmoteSetId`/`updateSevenTvEmotes` live on sevenTvChannelLifecycle, not this module.
 jest
   .spyOn(personalEmotesModule, 'fetchUserPersonalEmotes')
   .mockImplementation(async () => null);
+
 jest.spyOn(personalEmotesModule, 'getUserPersonalEmotes').mockReturnValue([]);
 
 jest
   .spyOn(cosmeticsModule, 'fetchAndCacheUserCosmetics')
   .mockImplementation(async () => null);
+
 jest.spyOn(cosmeticsModule, 'getUserBadge').mockReturnValue(undefined);
 jest.spyOn(cosmeticsModule, 'getUserBadgeId').mockReturnValue(undefined);
 jest.spyOn(cosmeticsModule, 'getUserPaintId').mockReturnValue(undefined);
 jest.spyOn(cosmeticsModule, 'hasUserPaint').mockReturnValue(false);
+
 jest
   .spyOn(cosmeticsModule, 'requestUserCosmeticsViaPresence')
   .mockResolvedValue(undefined);
@@ -180,6 +187,7 @@ jest.spyOn(preferenceStoreModule, 'getPreferences').mockReturnValue({
   deletedMessageStyle: 'notice',
   ignoreClearChat: false,
 } as ReturnType<typeof preferenceStoreModule.getPreferences>);
+
 jest.spyOn(preferenceStoreModule, 'useChatRenderPreferences');
 jest.spyOn(preferenceStoreModule, 'usePreference');
 jest.spyOn(preferenceStoreModule, 'usePreferences');
@@ -231,38 +239,47 @@ Object.defineProperty(actionSheetModule, 'ActionSheet', {
   configurable: true,
   value: noRender,
 });
+
 Object.defineProperty(badgePreviewSheetModule, 'BadgePreviewSheet', {
   configurable: true,
   value: noRender,
 });
+
 Object.defineProperty(chatInputSectionModule, 'ChatInputSection', {
   configurable: true,
   value: noRender,
 });
+
 Object.defineProperty(chatListModule, 'ChatList', {
   configurable: true,
   value: noRender,
 });
+
 Object.defineProperty(richChatMessageModule, 'RichChatMessage', {
   configurable: true,
   value: noRender,
 });
+
 Object.defineProperty(chatViewControlsModule, 'ChatViewControls', {
   configurable: true,
   value: noRender,
 });
+
 Object.defineProperty(emotePreviewSheetModule, 'EmotePreviewSheet', {
   configurable: true,
   value: noRender,
 });
+
 Object.defineProperty(resumeScrollModule, 'ResumeScroll', {
   configurable: true,
   value: noRender,
 });
+
 Object.defineProperty(settingsSheetModule, 'SettingsSheet', {
   configurable: true,
   value: noRender,
 });
+
 Object.defineProperty(userActionSheetModule, 'UserActionSheet', {
   configurable: true,
   value: noRender,
@@ -276,6 +293,7 @@ const emptyChatEmoteLoaderResult = {
   refetch: jest.fn().mockResolvedValue(undefined),
   cancel: jest.fn(),
 } satisfies ReturnType<typeof useChatEmoteLoaderModule.useChatEmoteLoader>;
+
 jest
   .spyOn(useChatEmoteLoaderModule, 'useChatEmoteLoader')
   .mockReturnValue(emptyChatEmoteLoaderResult);
@@ -286,6 +304,7 @@ const inertChatLifecycleResult = {
   isMountedRef: { current: true },
   currentEmoteSetIdRef: { current: null },
 } satisfies ReturnType<typeof useChatLifecycleModule.useChatLifecycle>;
+
 jest
   .spyOn(useChatLifecycleModule, 'useChatLifecycle')
   .mockReturnValue(inertChatLifecycleResult);
@@ -315,6 +334,7 @@ const settledChatScrollResult = {
   scrollToBottom: mockScrollToBottom,
   cleanup: jest.fn(),
 } satisfies ReturnType<typeof useChatScrollModule.useChatScroll>;
+
 jest
   .spyOn(useChatScrollModule, 'useChatScroll')
   .mockReturnValue(settledChatScrollResult);
@@ -339,10 +359,13 @@ const mockedUsePreferences = jest.mocked(usePreferences);
 const mockedUsePreference = jest.mocked(usePreference);
 const mockedUseChatRenderPreferences = jest.mocked(useChatRenderPreferences);
 const mockedUseUpdatePreferences = jest.mocked(useUpdatePreferences);
+
 const mockedGetRecentMessages = jest.mocked(
   recentMessagesService.getRecentMessages,
 );
+
 const mockedUseChatMessages = jest.mocked(useChatMessages);
+
 const mockedRestoreRecentMessagesForChannel = jest.mocked(
   restoreRecentMessagesForChannel,
 );

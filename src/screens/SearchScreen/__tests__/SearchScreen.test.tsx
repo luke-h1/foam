@@ -27,6 +27,7 @@ const storageService = {
   set: jest.spyOn(realStorageService, 'set').mockImplementation(() => {}),
   remove: jest.spyOn(realStorageService, 'remove').mockImplementation(() => {}),
 };
+
 jest.spyOn(realStorageService.events, 'on').mockReturnThis();
 jest.spyOn(realStorageService.events, 'off').mockReturnThis();
 

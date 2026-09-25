@@ -98,6 +98,7 @@ declare global {
 if (globalThis.__foamAppStateReconcileInterval) {
   clearInterval(globalThis.__foamAppStateReconcileInterval);
 }
+
 globalThis.__foamAppStateReconcileInterval = setInterval(() => {
   if (AppState.currentState === 'active') {
     startConnectivityPolling();

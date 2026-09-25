@@ -3,10 +3,13 @@ import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants/cr
 
 const bttvCdnUrlPattern =
   /^https:\/\/cdn\.betterttv\.net\/emote\/([^/]+)\/([123])x(?:\.png)?$/;
+
 const ffzCdnUrlPattern =
   /^https:\/\/cdn\.frankerfacez\.com\/emote\/([^/]+)\/(?:(animated)\/)?([124])$/;
+
 const sevenTvCdnUrlPattern =
   /^https:\/\/cdn\.7tv\.app\/emote\/([^/]+)\/([1234])x\.(avif|webp)$/;
+
 const twitchCdnUrlPattern =
   /^https:\/\/static-cdn\.jtvnw\.net\/emoticons\/v2\/([^/]+)\/(?:default|static)\/dark\/[123]\.0$/;
 

@@ -11,6 +11,7 @@ import { usePlayerBridge } from '../usePlayerBridge';
 const mockCountMetric = jest
   .spyOn(sentry, 'countMetric')
   .mockImplementation(() => {});
+
 jest.spyOn(sentry, 'endSpan').mockImplementation(() => {});
 jest.spyOn(sentry, 'startInactiveSpan').mockImplementation(() => undefined);
 

@@ -26,25 +26,31 @@ const mockGetCurrentEmoteData = jest.spyOn(
   channelLoadActions,
   'getCurrentEmoteData',
 );
+
 const mockGetSessionCacheString = jest.spyOn(
   chatColorCachesActions,
   'getSessionCacheString',
 );
+
 const mockSetSessionCacheString = jest.spyOn(
   chatColorCachesActions,
   'setSessionCacheString',
 );
+
 const mockProcessEmotesWorklet = jest
   .spyOn(emoteProcessorModule, 'processEmotesWorklet')
   .mockImplementation((params: { inputString: string }) => [
     { type: 'text', content: `parsed:${params.inputString}` },
   ]);
+
 const mockResolveMentionColor = jest
   .spyOn(resolveMentionColorModule, 'resolveMentionColor')
   .mockReturnValue('#mention-color');
+
 jest
   .spyOn(resolveCachedSenderColorModule, 'resolveCachedSenderColor')
   .mockReturnValue('#resolved-sender');
+
 /**
  * RichChatMessage is memo() wrapped (an object, not a function), so
  * jest.spyOn cannot wrap it - swap the export directly instead.
@@ -53,11 +59,13 @@ const mockRichChatMessage = jest.fn<
   null,
   [RichChatMessageProps<NoticeVariants>]
 >(() => null);
+
 Object.defineProperty(RichChatMessageModule, 'RichChatMessage', {
   configurable: true,
   value: (props: RichChatMessageProps<NoticeVariants>) =>
     mockRichChatMessage(props),
 });
+
 const mockUseIsHighlightedReplyTargetMessage = jest.spyOn(
   transientSelectorsModule,
   'useIsHighlightedReplyTargetMessage',

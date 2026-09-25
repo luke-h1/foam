@@ -8,6 +8,7 @@ export const init = jest.fn();
 export const showFeedbackWidget = jest.fn();
 export const setMeasurement = jest.fn();
 export const startInactiveSpan = jest.fn();
+
 type SpanOptions = {
   name: string;
   op?: string;
@@ -17,6 +18,7 @@ type SpanOptions = {
 export const startSpan = jest.fn(<T>(_options: SpanOptions, fn: () => T): T =>
   fn(),
 );
+
 export const withScope = jest.fn();
 export const wrap = jest.fn(<T>(component: T): T => component);
 

@@ -26,6 +26,7 @@ jest.spyOn(logger.stvWs, 'warn').mockImplementation(() => {});
 
 const mockUsePathname = jest.spyOn(ExpoRouter, 'usePathname');
 const mockUseWebsocket = jest.spyOn(useWebsocketModule, 'useWebsocket');
+
 const mockSetSevenTvSessionId = jest.spyOn(
   sevenTvSessionIdModule,
   'setSevenTvSessionId',

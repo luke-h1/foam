@@ -27,22 +27,28 @@ jest.spyOn(logger.stvWs, 'warn').mockImplementation(() => {});
 jest.spyOn(logger.stvWs, 'error').mockImplementation(() => {});
 
 const mockGet7tvUserId = jest.spyOn(sevenTvService, 'get7tvUserId');
+
 const mockGetUserCosmeticsGql = jest.spyOn(
   sevenTvService,
   'getUserCosmeticsGql',
 );
+
 const mockSendPresence = jest
   .spyOn(sevenTvService, 'sendPresence')
   .mockResolvedValue(undefined);
+
 const mockGetSessionId = jest.spyOn(
   SevenTvSessionIdModule,
   'getSevenTvSessionId',
 );
+
 const mockGetString = jest
   .spyOn(storageService, 'getString')
   .mockReturnValue(null);
+
 const mockSet = jest.spyOn(storageService, 'set').mockImplementation(() => {});
 jest.spyOn(storageService, 'clearNamespace').mockImplementation(() => {});
+
 const mockReportMissingBadge = jest.spyOn(
   MissingBadgesModule,
   'reportMissingBadge',

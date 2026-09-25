@@ -59,61 +59,76 @@ jest.spyOn(logger.stvWs, 'warn').mockImplementation(() => {});
 const mockClearBttvBadgesCache = jest
   .spyOn(GetBttvBadgesModule, 'clearBttvBadgesCache')
   .mockImplementation(() => {});
+
 jest.spyOn(GetBttvBadgesModule, 'getBttvBadges').mockReturnValue([]);
 
 const mockGetEmoteSetId = jest.spyOn(sevenTvService, 'getEmoteSetId');
+
 const mockGetSanitisedEmoteSet = jest.spyOn(
   sevenTvService,
   'getSanitisedEmoteSet',
 );
+
 const mockGet7tvUserId = jest.spyOn(sevenTvService, 'get7tvUserId');
 const mockSendPresence = jest.spyOn(sevenTvService, 'sendPresence');
 const mockGetChannelEmotes = jest.spyOn(twitchEmoteService, 'getChannelEmotes');
 const mockGetGlobalEmotes = jest.spyOn(twitchEmoteService, 'getGlobalEmotes');
+
 const mockGetSubscriberEmotes = jest.spyOn(
   twitchEmoteService,
   'getSubscriberEmotes',
 );
+
 const mockGetBttvGlobalEmotes = jest.spyOn(
   bttvEmoteService,
   'getSanitisedGlobalEmotes',
 );
+
 const mockGetBttvChannelEmotes = jest.spyOn(
   bttvEmoteService,
   'getSanitisedChannelEmotes',
 );
+
 const mockGetFfzChannelEmotes = jest.spyOn(
   ffzService,
   'getSanitisedChannelEmotes',
 );
+
 const mockGetFfzGlobalEmotes = jest.spyOn(
   ffzService,
   'getSanitisedGlobalEmotes',
 );
+
 const mockListTwitchChannelBadges = jest.spyOn(
   twitchBadgeService,
   'listSanitisedChannelBadges',
 );
+
 const mockListTwitchGlobalBadges = jest.spyOn(
   twitchBadgeService,
   'listSanitisedGlobalBadges',
 );
+
 const mockGetFfzChannelBadges = jest.spyOn(
   ffzService,
   'getSanitisedChannelBadges',
 );
+
 const mockGetFfzGlobalBadges = jest.spyOn(
   ffzService,
   'getSanitisedGlobalBadges',
 );
+
 const mockListChatterinoBadges = jest.spyOn(
   chatterinoService,
   'listSanitisedBadges',
 );
+
 const mockGetPersonalEmoteSet = jest.spyOn(
   sevenTvService,
   'getPersonalEmoteSet',
 );
+
 const mockGetUsersById = jest.spyOn(twitchService, 'getUsersById');
 jest.spyOn(twitchService, 'getCheermotes').mockResolvedValue([]);
 

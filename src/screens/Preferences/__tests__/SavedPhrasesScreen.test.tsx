@@ -11,9 +11,11 @@ import {
 import { SavedPhrasesScreen } from '../SavedPhrasesScreen';
 
 const originalOS = Platform.OS;
+
 beforeAll(() => {
   Platform.OS = 'android';
 });
+
 afterAll(() => {
   Platform.OS = originalOS;
 });

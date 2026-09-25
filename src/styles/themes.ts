@@ -410,6 +410,7 @@ export type AppTheme = typeof theme;
 export type ThemeColor = keyof typeof semanticColorGroups;
 type ThemeColorGroup = (typeof semanticColorGroups)[ThemeColor];
 type ThemeColorValue = ThemeColor | ThemeColorToken;
+
 export type ThemeColorToken = {
   [Group in ThemeColor]: `${Group}.${Extract<
     keyof (typeof semanticColorGroups)[Group],

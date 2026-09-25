@@ -37,10 +37,12 @@ function summariseHomogeneousArray(value: unknown[]): string | null {
 }
 
 export function sanitiseLogValue(value: string, seen?: WeakSet<object>): string;
+
 export function sanitiseLogValue<T>(
   value: T,
   seen?: WeakSet<object>,
 ): LogMetadataValue;
+
 export function sanitiseLogValue<T>(
   value: T,
   seen = new WeakSet<object>(),

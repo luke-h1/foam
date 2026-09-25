@@ -35,6 +35,7 @@ import { deriveEmoteImageVariantsFromUrl } from '@app/utils/emote/emoteImageVari
 import { resolveEmoteDisplayUrl } from '@app/utils/emote/resolveEmoteDisplayUrl';
 
 type PartVariant = ParsedPart<'emote'>;
+
 type ActionId =
   'copy-name' | 'copy-url' | 'copy-url-2x' | 'copy-url-4x' | 'preview';
 

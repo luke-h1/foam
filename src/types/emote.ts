@@ -16,6 +16,7 @@ export type EmoteProvider = 'twitch' | '7tv' | 'bttv' | 'ffz' | 'emoji';
 export type EmoteImageScale = '1x' | '2x' | '3x' | '4x';
 export type EmoteImageVariantKind = 'animated' | 'static';
 export type EmoteImageVariantSet = Partial<Record<EmoteImageScale, string>>;
+
 export type EmoteImageVariants = Partial<
   Record<EmoteImageVariantKind, EmoteImageVariantSet>
 >;

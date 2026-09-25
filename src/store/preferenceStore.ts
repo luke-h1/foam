@@ -207,6 +207,7 @@ ensureObservablePersistenceConfig();
 export const preferences$ = observable(initialPreferences);
 
 export const paintRendererFlag$ = observable<PaintRendererFlag>('native');
+
 const persistedPreferences$ = persistObservable(preferences$, {
   local: createObservablePersistenceLocalConfig(PREFERENCES_PERSISTENCE_KEY),
 });

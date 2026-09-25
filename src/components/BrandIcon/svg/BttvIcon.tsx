@@ -34,4 +34,5 @@ const BttvIconComponent: React.FC<BttvIconProps> = ({
     />
   </Svg>
 );
+
 export const BttvIcon = memo(BttvIconComponent);

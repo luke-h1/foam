@@ -12,10 +12,12 @@ const mockLaunchImageLibrary = jest.spyOn(
   ImagePicker,
   'launchImageLibraryAsync',
 );
+
 const mockRequestPermissions = jest.spyOn(
   ImagePicker,
   'requestMediaLibraryPermissionsAsync',
 );
+
 const mockUpload = jest.spyOn(kappaService, 'upload');
 const mockToastError = jest.spyOn(toast, 'error');
 const mockToastSuccess = jest.spyOn(toast, 'success');

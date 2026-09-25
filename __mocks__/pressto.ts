@@ -9,6 +9,7 @@ export const PressableScale = (props: any & { ref?: Ref<never> }) => {
   const { ref, ...rest } = props;
   return createElement(RNPressable, { ref, ...rest });
 };
+
 PressableScale.displayName = 'PressableScale';
 
 export type CustomPressableProps = PressableProps;

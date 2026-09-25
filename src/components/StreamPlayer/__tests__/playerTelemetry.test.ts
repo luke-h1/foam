@@ -41,8 +41,10 @@ function createFakeSpan(id: string): sentry.Span & { id: string } {
 const countMetric = jest
   .spyOn(sentry, 'countMetric')
   .mockImplementation(() => {});
+
 const endSpan = jest.spyOn(sentry, 'endSpan').mockImplementation(() => {});
 const fakeSpan = createFakeSpan('span-1');
+
 const startInactiveSpan = jest
   .spyOn(sentry, 'startInactiveSpan')
   .mockImplementation(() => fakeSpan);

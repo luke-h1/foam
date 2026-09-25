@@ -45,16 +45,20 @@ jest
   });
 
 const getGlobalEmotesSpy = jest.spyOn(twitchEmoteService, 'getGlobalEmotes');
+
 const bttvGlobalEmotesSpy = jest.spyOn(
   bttvEmoteService,
   'getSanitisedGlobalEmotes',
 );
+
 const ffzGlobalEmotesSpy = jest.spyOn(ffzService, 'getSanitisedGlobalEmotes');
 const sevenTvEmoteSetSpy = jest.spyOn(sevenTvService, 'getSanitisedEmoteSet');
+
 const listGlobalBadgesSpy = jest.spyOn(
   twitchBadgeService,
   'listSanitisedGlobalBadges',
 );
+
 const ffzGlobalBadgesSpy = jest.spyOn(ffzService, 'getSanitisedGlobalBadges');
 const sevenTvBadgesSpy = jest.spyOn(sevenTvService, 'fetchAllBadges');
 
