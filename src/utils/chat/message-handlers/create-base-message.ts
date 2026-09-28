@@ -1,0 +1,57 @@
+import type { ChatMessageType } from '@app/store/chat/types/constants';
+import { enrichChannelPointPrivmsgTags } from '@app/utils/chat/channel-point-reward-title-store';
+import { isHighlightMyMessageTags } from '@app/utils/chat/channel-points-reward-title/is-highlight-my-message-tags';
+import { generateNonce } from '@app/utils/string/generate-nonce';
+
+import { createChatTimestampFromTags } from './create-chat-timestamp-from-tags';
+import { createUserStateFromTags } from './create-user-state-from-tags';
+
+interface CreateBaseMessageParams {
+  tags: Record<string, string>;
+  channelName: string;
+  text: string;
+  broadcasterId?: string;
+  isAction?: boolean;
+}
+
+export const createBaseMessage = ({
+  tags,
+  channelName,
+  text,
+  broadcasterId,
+  isAction,
+}: CreateBaseMessageParams): ChatMessageType<'usernotice'> => {
+  const enrichedTags = enrichChannelPointPrivmsgTags(tags, broadcasterId);
+  const userstate = createUserStateFromTags(enrichedTags);
+  const messageId = userstate.id || '0';
+  const messageNonce = messageId !== '0' ? messageId : generateNonce();
+  const isHighlightedMessage = isHighlightMyMessageTags(enrichedTags);
+
+  const message: ChatMessageType<'usernotice'> = {
+    id: `${messageId}_${messageNonce}`,
+    userstate,
+    message: [{ type: 'text', content: text.trimEnd() }],
+    badges: [],
+    channel: channelName,
+    message_id: messageId,
+    message_nonce: messageNonce,
+    timestamp: createChatTimestampFromTags(tags),
+    sender: userstate.username || '',
+    parentDisplayName: tags['reply-parent-display-name'] || '',
+    replyDisplayName: tags['reply-parent-user-login'] || '',
+    replyBody: tags['reply-parent-msg-body'] || '',
+    parentColor: undefined,
+    isChannelPointRedemption:
+      Boolean(enrichedTags['custom-reward-id']) || isHighlightedMessage,
+  };
+
+  if (isHighlightedMessage) {
+    message.isHighlightedMessage = true;
+  }
+
+  if (isAction) {
+    message.isAction = true;
+  }
+
+  return message;
+};

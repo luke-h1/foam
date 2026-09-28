@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { Link, Stack } from 'expo-router';
 
-import { Text } from '@app/components/ui/Text/Text';
+import { Text } from '@app/components/ui/text/text';
 import { theme } from '@app/styles/themes';
 
 export default function NotFound() {

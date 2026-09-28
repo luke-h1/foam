@@ -1,0 +1,184 @@
+import { memo, useCallback, useMemo, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+
+import { useQuery } from '@tanstack/react-query';
+import { router } from 'expo-router';
+
+import { Button } from '@app/components/button/button';
+import { FlashList } from '@app/components/flash-list/flash-list';
+import { Image } from '@app/components/image/image';
+import { EmptyState } from '@app/components/ui/empty-state/empty-state';
+import { Text } from '@app/components/ui/text/text';
+import { twitchKeys } from '@app/lib/react-query/query-keys';
+import { twitchService } from '@app/services/twitch-service';
+import { removeCreatedClip } from '@app/store/created-clips/actions/created-clips';
+import type { CreatedClipRecord } from '@app/store/created-clips/observables/created-clips';
+import { useCreatedClips } from '@app/store/created-clips/react/selectors';
+import { showActionMenu } from '@app/store/overlays/show-action-menu';
+import { theme } from '@app/styles/themes';
+import type { TwitchClip } from '@app/types/twitch/clip';
+
+interface MyClipListItem {
+  record: CreatedClipRecord;
+  clip?: TwitchClip;
+}
+
+const MyClipRow = memo(function MyClipRow({ clip, record }: MyClipListItem) {
+  const handlePress = useCallback(() => {
+    router.push(`/streams/clip/${encodeURIComponent(record.id)}`);
+  }, [record.id]);
+
+  const handleLongPress = useCallback(() => {
+    showActionMenu({
+      title: clip?.title || record.broadcasterName,
+      actions: [
+        {
+          label: 'Remove from My Clips',
+          onPress: () => removeCreatedClip(record.id),
+        },
+      ],
+      cancelLabel: 'Cancel',
+    });
+  }, [clip?.title, record.broadcasterName, record.id]);
+
+  const thumbnail = clip?.thumbnail_url || undefined;
+
+  return (
+    <Button
+      label={clip?.title || 'Untitled clip'}
+      onPress={handlePress}
+      onLongPress={handleLongPress}
+      style={styles.row}
+    >
+      {thumbnail ? (
+        <Image
+          source={thumbnail}
+          cacheVariant='thumbnail'
+          style={styles.thumbnail}
+          containerStyle={styles.thumbnailWrapper}
+          transition={150}
+        />
+      ) : (
+        <View style={[styles.thumbnailWrapper, styles.thumbnailEmpty]} />
+      )}
+      <View style={styles.rowText}>
+        <Text numberOfLines={2} type='sm' weight='semibold'>
+          {clip ? clip.title || 'Untitled clip' : 'Processing…'}
+        </Text>
+        <Text numberOfLines={1} type='xs' color='gray'>
+          {record.broadcasterName}
+        </Text>
+        {clip ? (
+          <Text numberOfLines={1} type='xs' color='gray'>
+            {`${clip.view_count} views`}
+          </Text>
+        ) : null}
+      </View>
+    </Button>
+  );
+});
+
+function renderMyClipRow({ item }: { item: MyClipListItem }) {
+  return <MyClipRow clip={item.clip} record={item.record} />;
+}
+
+function myClipKeyExtractor(item: MyClipListItem): string {
+  return item.record.id;
+}
+
+export function MyClipsScreen() {
+  const records = useCreatedClips();
+  const clipIds = useMemo(() => records.map(record => record.id), [records]);
+
+  const { data: clips, refetch } = useQuery({
+    queryKey: twitchKeys.clipsByIds(clipIds),
+    queryFn: () => twitchService.getClipsByIds(clipIds),
+    enabled: clipIds.length > 0,
+    staleTime: 60_000,
+  });
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await refetch().finally(() => setIsRefreshing(false));
+  }, [refetch]);
+
+  const rows = useMemo<MyClipListItem[]>(() => {
+    const clipsById = new Map(
+      (clips ?? []).map(clip => [clip.id, clip] as const),
+    );
+    return records.map(record => ({
+      record,
+      clip: clipsById.get(record.id),
+    }));
+  }, [records, clips]);
+
+  if (records.length === 0) {
+    return (
+      <EmptyState
+        button={null}
+        content='Clips you create from the live player will show up here.'
+        heading='No clips yet'
+        iconName='scissors'
+        style={styles.emptyState}
+      />
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <FlashList<MyClipListItem>
+        data={rows}
+        keyExtractor={myClipKeyExtractor}
+        contentInsetAdjustmentBehavior='automatic'
+        renderItem={renderMyClipRow}
+        contentContainerStyle={styles.listContent}
+        refreshing={isRefreshing}
+        onRefresh={handleRefresh}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: theme.color.background.dark,
+    flex: 1,
+  },
+  emptyState: {
+    alignItems: 'center',
+    backgroundColor: theme.color.background.dark,
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: theme.space20,
+  },
+  listContent: {
+    paddingVertical: theme.space8,
+  },
+  row: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.space12,
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space8,
+  },
+  rowText: {
+    flex: 1,
+    gap: 2,
+  },
+  thumbnail: {
+    height: '100%',
+    width: '100%',
+  },
+  thumbnailEmpty: {
+    backgroundColor: theme.darkActiveContent,
+  },
+  thumbnailWrapper: {
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius8,
+    height: 54,
+    overflow: 'hidden',
+    width: 96,
+  },
+});

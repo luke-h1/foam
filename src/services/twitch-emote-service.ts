@@ -64,12 +64,14 @@ function sanitiseTwitchEmotes(
   creator: string | null,
 ): TwitchSanitisedEmote[] {
   const sanitised: TwitchSanitisedEmote[] = [];
+
   for (const emote of emotes) {
     const result = sanitiseTwitchEmote(emote, site, creator);
     if (result) {
       sanitised.push(result);
     }
   }
+
   return sanitised;
 }
 

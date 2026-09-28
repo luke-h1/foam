@@ -404,6 +404,7 @@ describe('changelog generation', () => {
   test('normalizes generated changelog markdown written to a file', () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'foam-changelog-generation-'));
     const changelogPath = join(tempDir, 'CHANGELOG.md');
+
     const generatedChangelog = [
       '# Changelog',
       '',
@@ -422,6 +423,7 @@ describe('changelog generation', () => {
       '## [Unreleased]',
       '- future change',
     ].join('\n');
+
     const expectedChangelog = [
       '# Changelog',
       '',
@@ -455,6 +457,7 @@ describe('changelog generation', () => {
   test('is stable when run over an already generated changelog file', () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'foam-changelog-generation-'));
     const changelogPath = join(tempDir, 'CHANGELOG.md');
+
     const generatedChangelog = [
       '# Changelog',
       '',
@@ -511,6 +514,7 @@ describe('changelog per-environment sections', () => {
     releaseTags: ReleaseTag[],
   ): GitCliffContext {
     const indexOf = (commit: string): number => commitOrder.indexOf(commit);
+
     return {
       headCommit: () => commitOrder[commitOrder.length - 1] ?? '',
       listReleaseTags: () => releaseTags,
@@ -533,6 +537,7 @@ describe('changelog per-environment sections', () => {
       version: '1.0.1',
       environment: 'production',
     });
+
     expect(parseReleaseTag('1.0.1-internal')).toEqual<
       Omit<ReleaseTag, 'commit'>
     >({
@@ -540,11 +545,13 @@ describe('changelog per-environment sections', () => {
       version: '1.0.1',
       environment: 'internal',
     });
+
     expect(parseReleaseTag('v0.0.37')).toEqual<Omit<ReleaseTag, 'commit'>>({
       tag: 'v0.0.37',
       version: '0.0.37',
       environment: 'production',
     });
+
     expect(parseReleaseTag('ota-deadbeef')).toEqual(null);
   });
 
@@ -699,6 +706,7 @@ describe('changelog per-environment sections', () => {
         commit: 'c1',
       },
     ];
+
     const generated = [
       '# Changelog',
       '',
@@ -766,6 +774,7 @@ describe('s3Cache', () => {
         const { copier, uploads } = createMemoryCopier();
 
         saveEntries(copier, [{ local: iosPath, remote: 's3://bucket/ios' }]);
+
         expect(uploads).toEqual([
           { local: iosPath, remote: 's3://bucket/ios' },
         ]);
@@ -1003,6 +1012,7 @@ describe('chat performance comment workflow', () => {
     const red = '\u{1F534}';
     const green = '\u{1F7E2}';
     const yellow = '\u{1F7E1}';
+
     const table = buildCurrentTable(
       [
         {
@@ -1164,6 +1174,7 @@ describe('chat performance comment workflow', () => {
 
     try {
       mkdirSync(reassureDir);
+
       writeFileSync(
         join(reassureDir, 'current.perf'),
         JSON.stringify({
@@ -1174,6 +1185,7 @@ describe('chat performance comment workflow', () => {
         }),
         'utf8',
       );
+
       writeFileSync(join(reassureDir, 'output.md'), 'Comparison', 'utf8');
 
       writeChatPerformanceComment({

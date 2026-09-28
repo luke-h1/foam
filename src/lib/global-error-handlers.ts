@@ -1,5 +1,5 @@
 import { logger } from '@app/utils/logger';
-import { markSessionError } from '@app/utils/storeReview/sessionErrorFlag';
+import { markSessionError } from '@app/utils/store-review/session-error-flag';
 
 import { flushSentry } from './sentry';
 
@@ -28,6 +28,7 @@ export function installGlobalErrorHandlers(): void {
   if (didInstall || !('ErrorUtils' in globalThis)) {
     return;
   }
+
   didInstall = true;
 
   const previousHandler = ErrorUtils.getGlobalHandler();

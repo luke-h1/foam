@@ -1,0 +1,490 @@
+import { ReactNode } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
+
+import { Text, TextType, TextWeight } from '@app/components/ui/text/text';
+import {
+  theme,
+  type ThemeColor,
+  type ThemeColorToken,
+} from '@app/styles/themes';
+
+import { IconButton } from '../icon-button/icon-button';
+import { Image } from '../image/image';
+
+export interface ScreenHeaderProps {
+  title: string;
+  subtitle?: string;
+  subtitleTestID?: string;
+  /**
+   * Show back button; calls router.back unless onBack is set.
+   */
+  back?: boolean;
+  onBack?: () => void;
+  trailing?: ReactNode;
+  /**
+   * Rendered as a trailing icon button.
+   */
+  share?: {
+    label: string;
+    onPress: () => void;
+  };
+  /**
+   * Rendered below the title/subtitle.
+   */
+  children?: ReactNode;
+  /**
+   * large/medium: primary bold title block; compact: small inline nav-row
+   * title; hero: hero-style header with background.
+   */
+  size?: 'large' | 'medium' | 'compact' | 'hero';
+  type?: TextType;
+  weight?: TextWeight;
+  color?: ThemeColor | ThemeColorToken;
+  subtitleType?: TextType;
+  subtitleColor?: ThemeColor | ThemeColorToken;
+  safeArea?: boolean;
+  /**
+   * Hero variant only.
+   */
+  backgroundImage?: string;
+  /**
+   * Hero variant only.
+   */
+  featuredImage?: string;
+  /**
+   * Hero variant only.
+   */
+  heroHeight?: number;
+}
+
+/**
+ * Title scale per header size, unless the caller pinned one.
+ */
+function resolveTitleType(
+  type: ScreenHeaderProps['type'],
+  size: ScreenHeaderProps['size'],
+): TextType {
+  if (type) {
+    return type;
+  }
+
+  if (size === 'large' || size === 'medium') {
+    return '4xl';
+  }
+
+  return size === 'hero' ? 'xl' : 'md';
+}
+
+function resolveTitleWeight(
+  weight: ScreenHeaderProps['weight'],
+  size: ScreenHeaderProps['size'],
+): TextWeight {
+  if (weight) {
+    return weight;
+  }
+
+  const isBold = size === 'hero' || size === 'large' || size === 'medium';
+  return isBold ? 'bold' : 'semibold';
+}
+
+function resolveSubtitleType(
+  subtitleType: ScreenHeaderProps['subtitleType'],
+): TextType {
+  return subtitleType ?? 'xs';
+}
+
+type HeroScreenHeaderProps = Pick<
+  ScreenHeaderProps,
+  | 'back'
+  | 'backgroundImage'
+  | 'children'
+  | 'featuredImage'
+  | 'heroHeight'
+  | 'safeArea'
+  | 'subtitle'
+  | 'subtitleColor'
+  | 'subtitleTestID'
+  | 'title'
+> & {
+  handleBack: () => void;
+  insets: { top: number };
+  navTrailing: ReactNode;
+  subtitleTypeValue: TextType;
+  titleColorValue: ScreenHeaderProps['color'];
+  titleTypeValue: TextType;
+  titleWeightValue: TextWeight;
+};
+
+/**
+ * The hero layout is a different header entirely: a full-bleed background, an
+ * overlaid nav row, and the title sitting on top of the artwork.
+ */
+function HeroScreenHeader({
+  back,
+  backgroundImage,
+  children,
+  featuredImage,
+  handleBack,
+  heroHeight,
+  insets,
+  navTrailing,
+  safeArea,
+  subtitle,
+  subtitleColor,
+  subtitleTestID,
+  subtitleTypeValue,
+  title,
+  titleColorValue,
+  titleTypeValue,
+  titleWeightValue,
+}: HeroScreenHeaderProps) {
+  return (
+    <View style={styles.container}>
+      {backgroundImage && (
+        <View style={[styles.heroBackground, { height: heroHeight }]}>
+          <Image
+            source={backgroundImage}
+            style={styles.heroBackgroundImage}
+            contentFit='cover'
+          />
+          <LinearGradient
+            colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.85)', 'rgba(0,0,0,1)']}
+            locations={[0, 0.6, 1]}
+            style={styles.heroGradient}
+          />
+        </View>
+      )}
+
+      {(back || navTrailing) && (
+        <View
+          style={[
+            styles.navRow,
+            getNavRowOffsetStyle(safeArea ? insets.top + 8 : 8),
+          ]}
+        >
+          {back && (
+            <IconButton
+              icon={{ type: 'symbol', name: 'chevron.left', size: 20 }}
+              label='Go back'
+              onPress={handleBack}
+              size='2xl'
+              hitSlop={12}
+            />
+          )}
+          <View style={styles.navSpacer} />
+          {navTrailing}
+        </View>
+      )}
+
+      <View
+        style={[
+          styles.heroContent,
+          getHeroContentOffsetStyle(Boolean(backgroundImage)),
+        ]}
+      >
+        <View style={styles.heroInner}>
+          {featuredImage && (
+            <Image source={featuredImage} style={styles.featuredImage} />
+          )}
+          <View style={styles.textContent}>
+            <Text
+              accessibilityRole='header'
+              type={titleTypeValue}
+              weight={titleWeightValue}
+              color={titleColorValue}
+              style={styles.heroTitle}
+              numberOfLines={2}
+            >
+              {title}
+            </Text>
+            {subtitle && (
+              <Text
+                testID={subtitleTestID}
+                type={subtitleTypeValue}
+                color={subtitleColor}
+                style={styles.subtitle}
+              >
+                {subtitle}
+              </Text>
+            )}
+            {children}
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+export function ScreenHeader({
+  title,
+  subtitle,
+  subtitleTestID,
+  back = true,
+  onBack,
+  trailing,
+  share,
+  children,
+  size = 'large',
+  type,
+  weight,
+  color,
+  subtitleType,
+  subtitleColor = 'gray.textLow',
+  safeArea = true,
+  backgroundImage,
+  featuredImage,
+  heroHeight = 280,
+}: ScreenHeaderProps) {
+  const insets = useSafeAreaInsets();
+
+  const handleBack =
+    onBack ??
+    (() => {
+      if (router.canGoBack()) {
+        router.back();
+      }
+    });
+
+  const isHero = size === 'hero';
+  const isInline = size === 'compact';
+
+  const titleTypeValue = resolveTitleType(type, size);
+  const titleWeightValue = resolveTitleWeight(weight, size);
+  const titleColorValue = color;
+  const subtitleTypeValue = resolveSubtitleType(subtitleType);
+
+  const shareButton = share ? (
+    <IconButton
+      icon={{ type: 'symbol', name: 'square.and.arrow.up', size: 18 }}
+      label={share.label}
+      onPress={share.onPress}
+      size='2xl'
+    />
+  ) : null;
+
+  const navTrailing = shareButton ?? trailing;
+
+  const showNavRow = back || isInline || navTrailing;
+
+  if (isHero) {
+    return (
+      <HeroScreenHeader
+        back={back}
+        backgroundImage={backgroundImage}
+        featuredImage={featuredImage}
+        handleBack={handleBack}
+        heroHeight={heroHeight}
+        insets={insets}
+        navTrailing={navTrailing}
+        safeArea={safeArea}
+        subtitle={subtitle}
+        subtitleColor={subtitleColor}
+        subtitleTestID={subtitleTestID}
+        subtitleTypeValue={subtitleTypeValue}
+        title={title}
+        titleColorValue={titleColorValue}
+        titleTypeValue={titleTypeValue}
+        titleWeightValue={titleWeightValue}
+      >
+        {children}
+      </HeroScreenHeader>
+    );
+  }
+
+  return (
+    <View
+      style={[
+        styles.standardContainer,
+        safeArea && { paddingTop: insets.top + 8 },
+      ]}
+    >
+      {showNavRow && (
+        <View style={styles.standardNavRow}>
+          {back && (
+            <IconButton
+              icon={{ type: 'symbol', name: 'chevron.left', size: 20 }}
+              label='Go back'
+              onPress={handleBack}
+              size='2xl'
+              hitSlop={12}
+              style={styles.backButton}
+            />
+          )}
+
+          {isInline ? (
+            <View style={styles.inlineTitleSection}>
+              <Text
+                accessibilityRole='header'
+                type={titleTypeValue}
+                weight={titleWeightValue}
+                color={titleColorValue}
+                numberOfLines={1}
+              >
+                {title}
+              </Text>
+              {subtitle && (
+                <Text
+                  testID={subtitleTestID}
+                  type={subtitleTypeValue}
+                  color={subtitleColor}
+                >
+                  {subtitle}
+                </Text>
+              )}
+            </View>
+          ) : (
+            <View style={styles.navSpacer} />
+          )}
+
+          {navTrailing}
+        </View>
+      )}
+
+      {!isInline && (
+        <View
+          style={[
+            styles.titleSection,
+            showNavRow ? styles.titleSectionWithNav : null,
+          ]}
+        >
+          {subtitle && (
+            <Text
+              testID={subtitleTestID}
+              type={subtitleTypeValue}
+              weight='semibold'
+              color={subtitleColor}
+              style={styles.standardEyebrow}
+              numberOfLines={1}
+            >
+              {subtitle}
+            </Text>
+          )}
+          <Text
+            accessibilityRole='header'
+            type={titleTypeValue}
+            weight={titleWeightValue}
+            color={titleColorValue}
+            style={styles.standardTitle}
+            numberOfLines={2}
+          >
+            {title}
+          </Text>
+        </View>
+      )}
+
+      {children}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  backButton: {
+    justifyContent: 'center',
+    marginLeft: -theme.space8,
+  },
+  container: {
+    position: 'relative',
+  },
+  featuredImage: {
+    borderColor: theme.color.border.dark,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius20,
+    borderWidth: 1,
+    height: 134,
+    boxShadow: '0 4px 18px rgba(0, 0, 0, 0.4)',
+    width: 100,
+  },
+  heroBackground: {
+    left: 0,
+    overflow: 'hidden',
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  heroBackgroundImage: {
+    height: '100%',
+    opacity: 0.4,
+    width: '100%',
+  },
+  heroContent: {
+    paddingBottom: theme.space28,
+    paddingHorizontal: theme.space20,
+  },
+  heroGradient: {
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  heroInner: {
+    alignItems: 'flex-end',
+    flexDirection: 'row',
+    gap: theme.space16,
+  },
+  heroTitle: {
+    lineHeight: 28,
+  },
+  inlineTitleSection: {
+    flex: 1,
+    marginLeft: theme.space12,
+  },
+
+  navRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    left: theme.space20,
+    position: 'absolute',
+    right: theme.space20,
+    zIndex: 10,
+  },
+  navSpacer: {
+    flex: 1,
+  },
+  standardContainer: {
+    paddingBottom: theme.space20,
+    paddingHorizontal: theme.space20,
+  },
+  standardNavRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginBottom: theme.space8,
+    minHeight: 52,
+  },
+  standardEyebrow: {
+    letterSpacing: 1,
+    marginBottom: theme.space8,
+    textTransform: 'uppercase',
+  },
+  standardTitle: {
+    lineHeight: 44,
+  },
+  subtitle: {
+    lineHeight: 20,
+  },
+  textContent: {
+    flex: 1,
+    gap: theme.space12,
+    paddingBottom: theme.space8,
+  },
+  titleSection: {
+    gap: theme.space8,
+  },
+  titleSectionWithNav: {
+    marginTop: 0,
+  },
+});
+
+function getNavRowOffsetStyle(top: number) {
+  return { top };
+}
+
+function getHeroContentOffsetStyle(hasBackgroundImage: boolean) {
+  return {
+    paddingTop: hasBackgroundImage ? 100 : 80,
+  };
+}

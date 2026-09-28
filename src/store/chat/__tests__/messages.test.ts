@@ -1,4 +1,4 @@
-import type { ParsedPart } from '@app/utils/chat/parsedPart';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 import {
   addMessage,
@@ -14,7 +14,7 @@ import {
   restoreRecentMessagesForChannel,
   updateMessages,
 } from '../actions/messages';
-import { chatStore$ } from '../observables/chatStore';
+import { chatStore$ } from '../observables/chat-store';
 import type { AnyChatMessageType } from '../types/constants';
 import type { ChatMessageType } from '../types/constants';
 
@@ -104,13 +104,16 @@ describe('chatStore messages', () => {
     const messages = chatStore$.messages.peek();
     expect(messages).toHaveLength(max);
     expect(getMessageById('old')).toBeUndefined();
+
     // The front of the burst is dropped too, so the window ends on the newest.
     expect(getMessageById('burst-0')).toBeUndefined();
+
     expect(getMessageById(`burst-${max + 4}`)).toBeDefined();
   });
 
   test('drops only the overflow when a flush partially overfills the window', () => {
     const max = getMaxChatMessages();
+
     addMessages(
       Array.from({ length: max }, (_unused, index) =>
         createMessage(`seed-${index}`, `seed-nonce-${index}`, `body ${index}`),
@@ -159,7 +162,8 @@ describe('chatStore messages', () => {
     ]);
 
     expect(chatStore$.messages.peek()).not.toBe(before);
-    expect(getMessageById('msg-1')?.message).toEqual<ParsedPart[]>([
+
+    expect(getMessageById('msg-1')?.message).toEqual<MessageToken[]>([
       { type: 'text', content: 'updated' },
     ]);
   });
@@ -171,7 +175,8 @@ describe('chatStore messages', () => {
     ]);
 
     expect(chatStore$.messages.peek()).toHaveLength(1);
-    expect(getMessageById('msg-1')?.message).toEqual<ParsedPart[]>([
+
+    expect(getMessageById('msg-1')?.message).toEqual<MessageToken[]>([
       { type: 'text', content: 'historical' },
     ]);
   });
@@ -181,14 +186,16 @@ describe('chatStore messages', () => {
 
     moderateMessageById('msg-1', 'Deleted');
 
-    expect(getMessageById('msg-1')?.message).toEqual<ParsedPart[]>([
+    expect(getMessageById('msg-1')?.message).toEqual<MessageToken[]>([
       { type: 'text', content: 'peepoHappy—Deleted' },
     ]);
+
     expect(getMessageById('msg-1')?.moderationNotice).toBe('Deleted');
   });
 
   test('moderateMessagesByLogin replaces all messages for the targeted login', () => {
     addMessage(createMessage('msg-1', 'nonce-1', 'first'));
+
     addMessage({
       ...createMessage('msg-2', 'nonce-2', 'second'),
       userstate: {
@@ -201,10 +208,11 @@ describe('chatStore messages', () => {
 
     moderateMessagesByLogin('tester', 'Timed out (1s)');
 
-    expect(getMessageById('msg-1')?.message).toEqual<ParsedPart[]>([
+    expect(getMessageById('msg-1')?.message).toEqual<MessageToken[]>([
       { type: 'text', content: 'first—Timed out (1s)' },
     ]);
-    expect(getMessageById('msg-2')?.message).toEqual<ParsedPart[]>([
+
+    expect(getMessageById('msg-2')?.message).toEqual<MessageToken[]>([
       { type: 'text', content: 'second' },
     ]);
   });
@@ -219,6 +227,7 @@ describe('chatStore messages', () => {
     const restoredCount = restoreRecentMessagesForChannel('channel-1');
 
     expect(restoredCount).toBe(2);
+
     expect(
       chatStore$.messages.peek().map(message => message.message_id),
     ).toEqual(['msg-1', 'msg-2']);
@@ -238,6 +247,7 @@ describe('chatStore messages', () => {
     const restoredCount = restoreRecentMessagesForChannel('channel-1');
 
     expect(restoredCount).toBe(2);
+
     expect(
       chatStore$.messages.peek().map(message => ({
         id: message.message_id,
@@ -271,6 +281,7 @@ describe('chatStore messages', () => {
     const restoredCount = restoreRecentMessagesForChannel('channel-1');
 
     expect(restoredCount).toBe(1);
+
     expect(
       chatStore$.messages.peek().map(message => message.message_id),
     ).toEqual(['msg-1']);
@@ -294,9 +305,11 @@ describe('chatStore messages', () => {
     const restoredCount = restoreRecentMessagesForChannel('channel-1');
 
     expect(restoredCount).toBe(2);
+
     expect(
       chatStore$.messages.peek().map(message => message.message_id),
     ).toEqual(['msg-1', 'msg-3']);
+
     expect(warnSpy).not.toHaveBeenCalledWith(
       expect.stringContaining('Multiple elements in array have the same ID'),
       expect.anything(),
@@ -324,6 +337,7 @@ describe('chatStore messages', () => {
     ]);
 
     expect(chatStore$.messages.peek()).toHaveLength(2);
+
     expect(
       chatStore$.recentMessagesByChannel.peek()['channel-1'],
     ).toBeUndefined();
@@ -355,9 +369,10 @@ describe('chatStore messages', () => {
       },
     ]);
 
-    expect(getMessageById('msg-1')?.message).toEqual<ParsedPart[]>([
+    expect(getMessageById('msg-1')?.message).toEqual<MessageToken[]>([
       { type: 'text', content: 'hydrated' },
     ]);
+
     expect(
       chatStore$.recentMessagesByChannel.peek()['channel-1'],
     ).toBeUndefined();
@@ -366,7 +381,7 @@ describe('chatStore messages', () => {
 
     expect(
       chatStore$.recentMessagesByChannel.peek()['channel-1']?.[0]?.message,
-    ).toEqual<ParsedPart[]>([{ type: 'text', content: 'hydrated' }]);
+    ).toEqual<MessageToken[]>([{ type: 'text', content: 'hydrated' }]);
 
     jest.useRealTimers();
   });
@@ -380,10 +395,12 @@ describe('chatStore messages', () => {
     ]);
 
     expect(chatStore$.messages.peek()).not.toBe(before);
-    expect(getMessageById('msg-1')?.message).toEqual<ParsedPart[]>([
+
+    expect(getMessageById('msg-1')?.message).toEqual<MessageToken[]>([
       { type: 'text', content: 'first' },
     ]);
-    expect(getMessageById('msg-2')?.message).toEqual<ParsedPart[]>([
+
+    expect(getMessageById('msg-2')?.message).toEqual<MessageToken[]>([
       { type: 'text', content: 'second' },
     ]);
   });
@@ -399,7 +416,7 @@ describe('chatStore messages', () => {
     expect(chatStore$.messages.peek()[0]?.message_id).toBe('msg-1');
   });
 
-  test('message part arrays do not warn when mixed emote and text parts are updated', () => {
+  test('message token arrays do not warn when mixed emote and text tokens are updated', () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
     const message = createMessage('msg-1', 'nonce-1', 'first');
 
@@ -437,6 +454,7 @@ describe('chatStore messages', () => {
   test('addMessages keeps the in-memory chat window bounded', () => {
     const cap = getMaxChatMessages();
     const total = cap + 50;
+
     addMessages(
       Array.from({ length: total }, (_, index) =>
         createMessage(`msg-${index}`, `nonce-${index}`, `${index}`),
@@ -450,13 +468,15 @@ describe('chatStore messages', () => {
     expect(messages[0]?.message_id).toBe('msg-50');
     expect(messages.at(-1)?.message_id).toBe(`msg-${lastId}`);
     expect(getMessageById('msg-0')).toBeUndefined();
-    expect(getMessageById(`msg-${lastId}`)?.message).toEqual<ParsedPart[]>([
+
+    expect(getMessageById(`msg-${lastId}`)?.message).toEqual<MessageToken[]>([
       { type: 'text', content: `${lastId}` },
     ]);
   });
 
   test('surviving messages stay addressable after later flushes trim the window', () => {
     const cap = getMaxChatMessages();
+
     addMessages(
       Array.from({ length: cap }, (_, index) =>
         createMessage(`msg-${index}`, `nonce-${index}`, `${index}`),
@@ -477,7 +497,8 @@ describe('chatStore messages', () => {
     expect(getMessageById('msg-9')).toBeUndefined();
 
     const survivor = cap - 50;
-    expect(getMessageById(`msg-${survivor}`)?.message).toEqual<ParsedPart[]>([
+
+    expect(getMessageById(`msg-${survivor}`)?.message).toEqual<MessageToken[]>([
       { type: 'text', content: `${survivor}` },
     ]);
 
@@ -486,12 +507,15 @@ describe('chatStore messages', () => {
     expect(getMessageById(`msg-${survivor}`)?.moderationNotice).toBe(
       'Timed out (10s)',
     );
-    expect(getMessageById(`msg-${survivor}`)?.message).toEqual<ParsedPart[]>([
+
+    expect(getMessageById(`msg-${survivor}`)?.message).toEqual<MessageToken[]>([
       { type: 'text', content: `${survivor}—Timed out (10s)` },
     ]);
+
     expect(
       getMessageById(`msg-${survivor - 1}`)?.moderationNotice,
     ).toBeUndefined();
+
     expect(
       getMessageById(`msg-${survivor + 1}`)?.moderationNotice,
     ).toBeUndefined();

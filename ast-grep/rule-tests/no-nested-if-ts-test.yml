@@ -1,0 +1,36 @@
+id: no-nested-if-ts
+valid:
+  # An else-if chain is flat, not nested.
+  - |
+    if (a) { one(); } else if (b) { two(); } else { three(); }
+  # Combining the two tests is the fix this rule asks for.
+  - |
+    if (a && b) { one(); }
+  # An early return leaves the rest of the body unnested.
+  - |
+    if (!a) { return; }
+    if (b) { two(); }
+  # A function declared in the branch opens a new scope.
+  - |
+    if (a) {
+      const run = () => {
+        if (b) { two(); }
+      };
+      run();
+    }
+invalid:
+  # An if in the consequent block.
+  - |
+    if (a) {
+      if (b) { two(); }
+    }
+  # An if in the else block, which else-if would express flat.
+  - |
+    if (a) {
+      one();
+    } else {
+      if (b) { two(); }
+    }
+  # A braceless nested if.
+  - |
+    if (a) if (b) two();

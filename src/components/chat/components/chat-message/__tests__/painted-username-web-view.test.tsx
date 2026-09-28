@@ -1,0 +1,182 @@
+// "shape" is the 7TV paint API field (types/seven-tv/cosmetics.ts), not a naming choice.
+// oxlint-disable anti-slop/no-shape-in-symbol-names
+import { StyleSheet } from 'react-native';
+import * as RNWebView from 'react-native-webview';
+
+import { act, render, screen } from '@testing-library/react-native';
+
+import { theme } from '@app/styles/themes';
+import type { PaintData } from '@app/types/seven-tv/cosmetics';
+
+import { PaintedUsernameWebView } from '../cosmetic-username/painted-username-web-view';
+import { chatLineMetrics } from '../util/chat-scale';
+
+/**
+ * The real WebView needs a native browser engine unavailable under
+ * react-test-renderer, so swap in a View that forwards the props under test.
+ */
+jest.spyOn(RNWebView, 'WebView').mockImplementation(props => {
+  const React = jest.requireActual('react');
+  const { View } = jest.requireActual('react-native');
+
+  return React.createElement(View, {
+    testID: 'painted-webview',
+    ...props,
+  });
+});
+
+const paint: PaintData = {
+  id: 'paint-1',
+  name: 'Test Paint',
+  color: null,
+  layers: { length: 0 },
+  shadows: { length: 0 },
+  textStyle: null,
+  function: 'LINEAR_GRADIENT',
+  repeat: false,
+  angle: 90,
+  shape: 'circle',
+  image_url: '',
+  stops: { length: 0 },
+};
+
+const sendSizeMessage = (width: number, height: number) => {
+  const webView = screen.getByTestId('painted-webview');
+  act(() => {
+    webView.props.onMessage({
+      nativeEvent: { data: JSON.stringify({ width, height }) },
+    });
+  });
+};
+
+describe('PaintedUsernameWebView', () => {
+  test('sizes the layout from the fallback text sizer before the webview reports a size', () => {
+    render(
+      <PaintedUsernameWebView
+        username='PaintUser'
+        paint={paint}
+        fallbackColor='#FF0000'
+      />,
+    );
+
+    const sizerStyle = StyleSheet.flatten(
+      screen.getByText('PaintUser').props.style,
+    );
+
+    expect({
+      color: sizerStyle.color,
+      fontSize: sizerStyle.fontSize,
+      fontFamily: sizerStyle.fontFamily,
+      fontWeight: sizerStyle.fontWeight,
+      lineHeight: sizerStyle.lineHeight,
+    }).toEqual({
+      color: '#FF0000',
+      fontSize: chatLineMetrics.comfortable.fontSize,
+      fontFamily: theme.fontFamilyBold,
+      fontWeight: undefined,
+      lineHeight: chatLineMetrics.comfortable.lineHeight,
+    });
+
+    const containerStyle = StyleSheet.flatten(
+      screen.getByTestId('painted-webview').props.containerStyle,
+    );
+
+    expect({
+      opacity: containerStyle.opacity,
+      position: containerStyle.position,
+    }).toEqual({
+      opacity: 0,
+      position: 'absolute',
+    });
+
+    const rootStyle = StyleSheet.flatten(screen.root.props.style);
+
+    expect({
+      alignSelf: rootStyle.alignSelf,
+      height: rootStyle.height,
+      width: rootStyle.width,
+    }).toEqual({
+      alignSelf: 'flex-start',
+      height: undefined,
+      width: undefined,
+    });
+  });
+
+  test('applies the measured size and reveals the webview after the sizing message', () => {
+    render(
+      <PaintedUsernameWebView
+        username='PaintUser'
+        paint={paint}
+        fallbackColor='#FF0000'
+      />,
+    );
+
+    sendSizeMessage(123.4, 21.2);
+
+    expect(screen.queryByText('PaintUser')).not.toBeOnTheScreen();
+
+    const rootStyle = StyleSheet.flatten(screen.root.props.style);
+
+    expect({
+      height: rootStyle.height,
+      width: rootStyle.width,
+    }).toEqual({
+      height: 22,
+      width: 124,
+    });
+
+    const containerStyle = StyleSheet.flatten(
+      screen.getByTestId('painted-webview').props.containerStyle,
+    );
+
+    expect({
+      opacity: containerStyle.opacity,
+      position: containerStyle.position,
+    }).toEqual({
+      opacity: undefined,
+      position: undefined,
+    });
+  });
+
+  test('keeps the fallback sizer when the webview posts a malformed message', () => {
+    render(
+      <PaintedUsernameWebView
+        username='PaintUser'
+        paint={paint}
+        fallbackColor='#FF0000'
+      />,
+    );
+
+    const webView = screen.getByTestId('painted-webview');
+
+    act(() => {
+      webView.props.onMessage({ nativeEvent: { data: 'not json' } });
+    });
+
+    expect(screen.getByText('PaintUser')).toBeOnTheScreen();
+  });
+
+  test('keeps the fallback sizer when the webview posts a non-positive size', () => {
+    render(
+      <PaintedUsernameWebView
+        username='PaintUser'
+        paint={paint}
+        fallbackColor='#FF0000'
+      />,
+    );
+
+    sendSizeMessage(0, 21);
+
+    expect(screen.getByText('PaintUser')).toBeOnTheScreen();
+
+    const rootStyle = StyleSheet.flatten(screen.root.props.style);
+
+    expect({
+      height: rootStyle.height,
+      width: rootStyle.width,
+    }).toEqual({
+      height: undefined,
+      width: undefined,
+    });
+  });
+});

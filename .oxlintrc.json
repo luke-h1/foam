@@ -36,7 +36,7 @@
     "src/foam/**",
     "src/player-website/**",
     "src/graphql/generated/**",
-    "src/components/Chat/components/ChatMessage/__fixtures__/sevenTvPaints.fixture.ts"
+    "src/components/chat/components/chat-message/__fixtures__/seven-tv-paints.fixture.ts"
   ],
   "jsPlugins": [
     { "name": "anti-slop", "specifier": "./tools/oxlint/anti-slop/index.ts" }
@@ -60,5 +60,19 @@
     "anti-slop/no-unsafe-dictionary-type": "error",
     "anti-slop/no-widen-then-assert": "error",
     "anti-slop/require-safety-comment-for-type-assertion": "error"
-  }
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/__tests__/**",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/*.spec.ts",
+        "**/*.spec.tsx"
+      ],
+      "rules": {
+        "anti-slop/no-module-mocking": "off"
+      }
+    }
+  ]
 }

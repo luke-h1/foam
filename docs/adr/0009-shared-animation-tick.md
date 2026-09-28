@@ -27,7 +27,7 @@ platform where the domain is native, and never by per-view timers:
   This half of the patch compiles only because `^expo-image$` is in
   `expo.autolinking.android.buildFromSource`; without that entry the RNRepo
   prebuilt AAR ships and the patch silently does nothing.
-- **Skia paint animation (JS)** - `sharedPaintAnimationFrames.ts`
+- **Skia paint animation (JS)** - `components/chat/components/chat-message/cosmetic-username/util/shared-paint-animation-frames.ts`
   (`components/ChatMessage/CosmeticUsername/util/`): one clock and one decode
   per paint URL, held in a module-level map of SharedValues. Subscribing rows
   each register a Reanimated `useFrameCallback`, and the first to observe a

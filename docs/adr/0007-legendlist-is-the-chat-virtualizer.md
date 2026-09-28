@@ -1,6 +1,6 @@
 # LegendList is the chat virtualizer; FlashList stays on non-chat screens
 
-The chat message list (`components/Chat/components/ChatList.tsx`) renders
+The chat message list (`components/chat/components/chat-list.tsx`) renders
 through `@legendapp/list` v3 (patched, ADR-0006). FlashList 2.0.2 remains the
 virtualizer for non-chat screens (Top, Search, Blocked Users) and two chat
 sheets (Chatters, Saved Phrases) via the `components/FlashList` wrapper.
@@ -8,7 +8,7 @@ sheets (Chatters, Saved Phrases) via the `components/FlashList` wrapper.
 The chat list's requirements are the ones LegendList was adopted for:
 bottom-anchored chat with `maintainVisibleContentPosition` semantics that are
 disabled at-bottom, stable scroll anchoring across prepend/append under the
-trimming window, and per-row visibility callbacks (`rowVisibility.ts`) that
+trimming window, and per-row visibility callbacks (`components/chat/components/chat-message/util/row-visibility.ts`) that
 drive animation pause and asset hydration. The chat composer suggestion rails
 and the emote sheet ride the same library so chat carries one virtualizer.
 
@@ -22,7 +22,7 @@ Two stronger alternatives were evaluated and rejected:
   row-state-outliving-recycle fixes (`ChatInlineImage` recyclingKey races) and
   on-device fling QA; see `PERF_REPORT.md` "F1".
 
-The list's row identity contract is owned by `utils/chat/messageIdentity/`
+The list's row identity contract is owned by `utils/chat/message-identity/`
 (`getChatMessageListKey` is the `keyExtractor`); the list dropped its
 render-time dedup on the strength of that shared module, so any list change
 that re-derives keys locally is a regression.

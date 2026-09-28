@@ -1,5 +1,5 @@
-import { RemoteConfigScreen } from '@app/screens/DevTools/RemoteConfigScreen';
-import { withDevToolsGate } from '@app/utils/devTools/devToolsGate';
+import { RemoteConfigScreen } from '@app/screens/dev-tools/remote-config-screen';
+import { withDevToolsGate } from '@app/utils/dev-tools/dev-tools-gate';
 
 const GatedRemoteConfigScreen = withDevToolsGate(RemoteConfigScreen);
 

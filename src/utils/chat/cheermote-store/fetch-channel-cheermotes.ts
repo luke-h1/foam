@@ -1,0 +1,19 @@
+import type { TwitchCheermote } from '@app/types/twitch/bits';
+import { cheermoteFetchGuard } from '@app/utils/chat/cheermote-store/cheermote-fetch-guard';
+import { setChannelCheermotes } from '@app/utils/chat/cheermote-store/set-channel-cheermotes';
+
+export function fetchChannelCheermotes(
+  channelId: string,
+  fetcher: () => Promise<TwitchCheermote[]>,
+): Promise<void> {
+  if (!cheermoteFetchGuard.shouldFetch(channelId)) {
+    return Promise.resolve();
+  }
+
+  return cheermoteFetchGuard.run(channelId, async ctx => {
+    const cheermotes = await fetcher();
+    if (ctx.stillCurrent()) {
+      setChannelCheermotes(channelId, cheermotes);
+    }
+  });
+}

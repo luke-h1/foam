@@ -98,6 +98,7 @@ export const getTopCategoriesResponse = (
     startIndex,
     startIndex + pageSize,
   );
+
   const nextCursor =
     startIndex + pageSize < mockCategories.length
       ? String(startIndex + pageSize)

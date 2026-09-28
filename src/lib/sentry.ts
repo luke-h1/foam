@@ -9,10 +9,10 @@ import {
 } from '@sentry/react-native';
 import { Image as ExpoImage } from 'expo-image';
 
-import { instrumentExpoImageLoads } from '@app/lib/sentryImageSpans';
-import { sanitiseLogValue } from '@app/utils/log/sanitiseLogValue';
-import { markSessionError } from '@app/utils/storeReview/sessionErrorFlag';
-import type { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
+import { instrumentExpoImageLoads } from '@app/lib/sentry-image-spans';
+import { sanitiseLogValue } from '@app/utils/log/sanitise-log-value';
+import { markSessionError } from '@app/utils/store-review/session-error-flag';
+import type { OpenStringUnion } from '@app/utils/typescript/open-string-union';
 
 /**
  * Auto-instruments Expo Router navigation; no manual
@@ -41,9 +41,11 @@ function scrubPii<T extends Sentry.ErrorEvent | Sentry.TransactionEvent>(
     delete event.user.name;
     delete event.user.geo;
   }
+
   if (event.contexts?.device) {
     delete event.contexts.device.name;
   }
+
   delete event.server_name;
   return event;
 }
@@ -76,6 +78,7 @@ export function init() {
   const dsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
   const appVariant = process.env.EXPO_PUBLIC_APP_VARIANT ?? 'development';
   const hasDsn = Boolean(dsn);
+
   const enabled =
     hasDsn && (!__DEV__ || process.env.EXPO_PUBLIC_ENABLE_SENTRY === 'true');
 
@@ -168,13 +171,16 @@ export async function verifySentryDelivery(): Promise<{
   flushed: boolean;
 }> {
   init();
+
   if (!sentryStatus.enabled || !sentryStatus.hasDsn) {
     return { flushed: false };
   }
+
   const eventId = Sentry.captureMessage(
     `Foam Sentry delivery check (${sentryStatus.environment})`,
     'info',
   );
+
   const flushed = await Sentry.flush();
   return { eventId, flushed };
 }
@@ -197,6 +203,7 @@ export function sendFeedback(feedback: {
   name?: string;
 }): void {
   init();
+
   Sentry.withScope(scope => {
     scope.setTag('feedback_type', feedback.type);
     Sentry.captureFeedback({
@@ -244,9 +251,11 @@ export function startInactiveSpan(
   attributes?: Record<string, string | number | boolean>,
 ): Sentry.Span | undefined {
   init();
+
   if (!sentryStatus.enabled) {
     return undefined;
   }
+
   return Sentry.startInactiveSpan({ name, op, attributes });
 }
 
@@ -257,6 +266,7 @@ export function endSpan(
   if (!span) {
     return;
   }
+
   if (outcome === 'ok') {
     span.setStatus({ code: 1, message: 'ok' });
   } else if (outcome === 'error') {
@@ -264,6 +274,7 @@ export function endSpan(
   } else {
     span.setStatus({ code: 2, message: 'cancelled' });
   }
+
   span.end();
 }
 
@@ -356,14 +367,17 @@ const RESERVED_LOG_META_KEYS = new Set([
 
 function extractLogExtra(metadata?: LogMetadata) {
   const extra: Record<string, LogMetadataValue> = {};
+
   if (!metadata) {
     return extra;
   }
+
   for (const [key, value] of Object.entries(metadata)) {
     if (!RESERVED_LOG_META_KEYS.has(key)) {
       extra[key] = value;
     }
   }
+
   return extra;
 }
 
@@ -372,11 +386,33 @@ function extractLogExtra(metadata?: LogMetadata) {
  * deterministic instead of ingest-side truncation.
  */
 const MAX_TAG_VALUE_LENGTH = 200;
+
 /**
  * sanitiseLogValue never sees the tags, so they need their own bound
  * (FOAM-TV-MOBILE-9V).
  */
 const MAX_TAGS = 24;
+
+/**
+ * Copies the caller's tags onto the scope, skipping empty entries and cutting
+ * the list off at MAX_TAGS so one noisy call cannot fill the tag budget.
+ */
+function applyCallerTags(scope: Sentry.Scope, tags: LogMetadata['tags']): void {
+  const usableTags = Object.entries(tags ?? {})
+    .filter(([key, value]) => key && value !== undefined && value !== null)
+    .slice(0, MAX_TAGS);
+
+  for (const [key, value] of usableTags) {
+    const text = String(value);
+
+    scope.setTag(
+      key,
+      text.length > MAX_TAG_VALUE_LENGTH
+        ? text.slice(0, MAX_TAG_VALUE_LENGTH)
+        : value,
+    );
+  }
+}
 
 function applyLogScope(
   scope: Sentry.Scope,
@@ -393,33 +429,18 @@ function applyLogScope(
   },
 ): void {
   // Caller tags go first so the canonical log_category/error_type pair below always wins.
-  if (metadata?.tags) {
-    let applied = 0;
-    for (const [key, value] of Object.entries(metadata.tags)) {
-      if (applied >= MAX_TAGS) {
-        break;
-      }
-      if (!key || value === undefined || value === null) {
-        continue;
-      }
-      applied += 1;
-      const text = String(value);
-      scope.setTag(
-        key,
-        text.length > MAX_TAG_VALUE_LENGTH
-          ? text.slice(0, MAX_TAG_VALUE_LENGTH)
-          : value,
-      );
-    }
-  }
+  applyCallerTags(scope, metadata?.tags);
 
   scope.setTag('log_category', category);
+
   if (name) {
     scope.setTag('error_type', name);
   }
+
   if (metadata?.fingerprint) {
     scope.setFingerprint(metadata.fingerprint);
   }
+
   scope.setContext('log_metadata', safeExtra);
 }
 
@@ -431,6 +452,7 @@ function buildSentryException(
 ): Error {
   const exception =
     cause !== undefined ? new Error(message, { cause }) : new Error(message);
+
   exception.name = exceptionName ?? name ?? 'Error';
   return exception;
 }
@@ -449,12 +471,14 @@ export function forwardLogToSentry(entry: {
     const cause = error ?? metadata?.error;
     const headline = name ? `${name}: ${message}` : message;
     const extra = extractLogExtra(metadata);
+
     if (cause !== undefined) {
       // SAFETY: an arbitrary thrown value is held as metadata here and bounded by sanitiseLogValue with the rest of the extra below.
       extra.cause = (
         cause instanceof Error ? cause.toString() : cause
       ) as LogMetadataValue;
     }
+
     // Bound metadata first: raw caller objects have OOM-aborted envelope serialization (FOAM-TV-MOBILE-9V).
     // SAFETY: sanitiseLogValue maps a record to a record of the bounded values it produces.
     const safeExtra = sanitiseLogValue(extra) as Record<
@@ -477,8 +501,10 @@ export function forwardLogToSentry(entry: {
                 metadata?.exceptionName,
                 cause,
               );
+
         Sentry.captureException(exception);
       });
+
       return;
     }
 

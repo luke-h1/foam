@@ -1,9 +1,11 @@
+import { Platform } from 'react-native';
 import { Presets } from 'react-native-pulsar';
 
-import { getPreferences } from '@app/store/preferenceStore';
+import { getPreferences } from '@app/store/preference-store';
 
 function hapticsEnabled(): boolean {
-  return getPreferences().hapticFeedback;
+  // There is no haptics engine on web, so every preset is a no-op there.
+  return Platform.OS !== 'web' && getPreferences().hapticFeedback;
 }
 
 export type HapticIntensity = 'light' | 'medium' | 'heavy';
@@ -12,6 +14,7 @@ export function impact(style: HapticIntensity = 'medium') {
   if (!hapticsEnabled()) {
     return;
   }
+
   switch (style) {
     case 'light':
       return Presets.System.impactLight();
@@ -36,6 +39,7 @@ export function notification(type: NotificationHapticType) {
   if (!hapticsEnabled()) {
     return;
   }
+
   switch (type) {
     case 'success':
       return Presets.System.notificationSuccess();

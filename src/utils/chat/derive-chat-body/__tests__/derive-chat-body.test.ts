@@ -1,0 +1,87 @@
+import { deriveChatBody } from '@app/utils/chat/derive-chat-body/derive-chat-body';
+
+import {
+  charityDonation,
+  emote,
+  mention,
+  ritual,
+  stvEmoteEvent,
+  subscription,
+  text,
+  viewerMilestone,
+} from './__fixtures__/derive-chat-body.fixture';
+
+describe('deriveChatBody', () => {
+  test('collects normalised mention logins', () => {
+    const message = [mention('@Forsen'), text(' and '), mention('NymN')];
+
+    expect(deriveChatBody(message).mentionLogins).toEqual(['forsen', 'nymn']);
+  });
+
+  test('resolves variant from flags before scanning content', () => {
+    const message = [text('hi')];
+
+    expect(deriveChatBody(message, { isAnnouncement: true }).variant).toBe(
+      'announcement',
+    );
+
+    expect(
+      deriveChatBody([text('hi again')], { isTwitchSystemNotice: true })
+        .variant,
+    ).toBe('twitch_system_notice');
+
+    expect(deriveChatBody([text('sys')], { sender: 'System' }).variant).toBe(
+      'app_system_sender',
+    );
+  });
+
+  test('detects notice variants from tokens', () => {
+    expect(deriveChatBody([ritual()]).variant).toBe('ritual');
+  });
+
+  test('detects the subscription variant from a sub token', () => {
+    expect(deriveChatBody([subscription()]).variant).toBe('subscription');
+  });
+
+  test('detects the charity_donation variant from a charity token', () => {
+    expect(deriveChatBody([charityDonation()]).variant).toBe(
+      'charity_donation',
+    );
+  });
+
+  test('detects the stv_emote_event variant from an stv emote token', () => {
+    expect(deriveChatBody([stvEmoteEvent()]).variant).toBe('stv_emote_event');
+  });
+
+  test('detects the viewer_milestone variant from a milestone token', () => {
+    expect(deriveChatBody([viewerMilestone()]).variant).toBe(
+      'viewer_milestone',
+    );
+  });
+
+  test('defaults to user_chat', () => {
+    expect(deriveChatBody([text('gg'), emote('Kappa')]).variant).toBe(
+      'user_chat',
+    );
+  });
+
+  test('reuses the cached scan across calls for the same tokens array', () => {
+    const message = [mention('@forsen')];
+
+    expect(deriveChatBody(message).mentionLogins).toBe(
+      deriveChatBody(message).mentionLogins,
+    );
+  });
+
+  test('recomputes variant when flags differ for the same tokens array', () => {
+    const message = [text('hi')];
+
+    expect(deriveChatBody(message, { isAnnouncement: true }).variant).toBe(
+      'announcement',
+    );
+
+    expect(deriveChatBody(message, { isAnnouncement: false }).variant).toBe(
+      'user_chat',
+    );
+  });
+});

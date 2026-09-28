@@ -1,0 +1,210 @@
+import { chatPerfMarks } from '@app/lib/chat-perf-marks';
+import { getMaxChatMessages } from '@app/store/chat/actions/messages';
+import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-chat-username';
+import { getChatMessageStoreId } from '@app/utils/chat/message-identity/get-chat-message-store-id';
+import { normaliseMessageField } from '@app/utils/chat/message-identity/normalise-message-field';
+
+import { createModeratedBufferMessage } from './buffered-message-ops/create-moderated-buffer-message';
+import { getBufferedMessageLogin } from './buffered-message-ops/get-buffered-message-login';
+import type { BufferedMessage } from './buffered-message-ops/types';
+
+export type { BufferedMessage } from './buffered-message-ops/types';
+
+export type AddResult = {
+  /**
+   * False when the message merged into an existing entry (same key) - callers
+   * skip unread/flush bookkeeping then.
+   */
+  added: boolean;
+  /**
+   * How many of the oldest entries were dropped to keep the buffer under cap.
+   */
+  dropped: number;
+};
+
+export interface MessageBuffer {
+  add(message: BufferedMessage): AddResult;
+  /**
+   * Take the oldest buffered messages, up to `limit` when given. Anything over
+   * the limit stays buffered for the next flush rather than being discarded.
+   */
+  drain(limit?: number): BufferedMessage[];
+  clear(): void;
+  size(): number;
+  removeById(messageId: string): boolean;
+  removeByLogin(login: string): boolean;
+  moderateById(messageId: string, moderationNotice: string): void;
+  moderateByLogin(login: string, moderationNotice: string): void;
+}
+
+export const createMessageBuffer = (
+  getMaxBufferedMessages: () => number = getMaxChatMessages,
+): MessageBuffer => {
+  let messages: BufferedMessage[] = [];
+  const index = new Map<string, number>();
+
+  const rebuildIndex = (): void => {
+    index.clear();
+    messages.forEach((message, position) => {
+      index.set(getChatMessageStoreId(message), position);
+    });
+  };
+
+  return {
+    add(message) {
+      const key = getChatMessageStoreId(message);
+      const existingIndex = index.get(key);
+
+      if (existingIndex !== undefined) {
+        const existing = messages[existingIndex];
+
+        messages[existingIndex] = {
+          ...message,
+          cachedSenderColor:
+            existing?.cachedSenderColor ?? message.cachedSenderColor,
+        };
+
+        return { added: false, dropped: 0 };
+      }
+
+      index.set(key, messages.length);
+      messages.push(message);
+      chatPerfMarks.buffered();
+
+      const max = getMaxBufferedMessages();
+
+      if (messages.length > max) {
+        const dropped = messages.length - max;
+        messages = messages.slice(-max);
+        rebuildIndex();
+        return { added: true, dropped };
+      }
+
+      return { added: true, dropped: 0 };
+    },
+
+    drain(limit) {
+      if (limit === undefined || limit >= messages.length) {
+        const drained = messages;
+        messages = [];
+        index.clear();
+        chatPerfMarks.drained(drained.length);
+        return drained;
+      }
+
+      const drained = messages.slice(0, Math.max(0, limit));
+      messages = messages.slice(drained.length);
+      rebuildIndex();
+      chatPerfMarks.drained(drained.length);
+      return drained;
+    },
+
+    clear() {
+      messages = [];
+      index.clear();
+    },
+
+    size() {
+      return messages.length;
+    },
+
+    removeById(messageId) {
+      const normalisedMessageId = messageId.trim();
+
+      if (!normalisedMessageId) {
+        return false;
+      }
+
+      const next = messages.filter(
+        message =>
+          message.message_id.trim() !== normalisedMessageId &&
+          message.id?.trim() !== normalisedMessageId,
+      );
+
+      if (next.length === messages.length) {
+        return false;
+      }
+
+      messages = next;
+      rebuildIndex();
+      return true;
+    },
+
+    removeByLogin(login) {
+      const target = normaliseChatUsername(login);
+
+      if (!target) {
+        return false;
+      }
+
+      const next = messages.filter(
+        message => getBufferedMessageLogin(message) !== target,
+      );
+
+      if (next.length === messages.length) {
+        return false;
+      }
+
+      messages = next;
+      rebuildIndex();
+      return true;
+    },
+
+    moderateById(messageId, moderationNotice) {
+      const normalisedMessageId = normaliseMessageField(messageId);
+
+      if (!normalisedMessageId) {
+        return;
+      }
+
+      let nextBuffer: BufferedMessage[] | null = null;
+
+      messages.forEach((message, position) => {
+        if (
+          message.message_id.trim() !== normalisedMessageId &&
+          message.id?.trim() !== normalisedMessageId
+        ) {
+          return;
+        }
+
+        nextBuffer ??= messages.slice();
+
+        nextBuffer[position] = createModeratedBufferMessage(
+          message,
+          moderationNotice,
+        );
+      });
+
+      if (nextBuffer) {
+        messages = nextBuffer;
+      }
+    },
+
+    moderateByLogin(login, moderationNotice) {
+      const target = normaliseChatUsername(login);
+
+      if (!target) {
+        return;
+      }
+
+      let nextBuffer: BufferedMessage[] | null = null;
+
+      messages.forEach((message, position) => {
+        if (getBufferedMessageLogin(message) !== target) {
+          return;
+        }
+
+        nextBuffer ??= messages.slice();
+
+        nextBuffer[position] = createModeratedBufferMessage(
+          message,
+          moderationNotice,
+        );
+      });
+
+      if (nextBuffer) {
+        messages = nextBuffer;
+      }
+    },
+  };
+};

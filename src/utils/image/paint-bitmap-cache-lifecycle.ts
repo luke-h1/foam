@@ -1,0 +1,166 @@
+/**
+ * Lives here so `clearImageCache` can empty the Skia paint bitmap cache
+ * without importing the Skia rasterizer.
+ */
+
+interface DisposableTexture {
+  dispose(): void;
+}
+
+/**
+ * Structural mirror of `PaintBitmaps` so this module never imports Skia; a
+ * renamed rasterizer field still fails typecheck at `cachePaintBitmaps`.
+ */
+export interface DisposablePaintBitmaps {
+  staticImage: DisposableTexture;
+  maskImage: DisposableTexture | null;
+  backingImage: DisposableTexture | null;
+  strokeImage: DisposableTexture | null;
+  layerSlots: ({ kind: 'baked'; image: DisposableTexture } | { kind: 'url' })[];
+}
+
+/**
+ * Caps entries, not textures - one entry owns a foundation bitmap plus an
+ * optional mask, stroke, and a baked bitmap per gradient run above a URL layer.
+ */
+export const MAX_CACHED_PAINT_BITMAPS = 256;
+
+const cache = new Map<string, DisposablePaintBitmaps>();
+
+/**
+ * Retain counts for entries a mounted canvas is still drawing. Eviction only
+ * unlinks an entry from the cache; the last release frees its textures.
+ */
+const retainCounts = new Map<DisposablePaintBitmaps, number>();
+
+/**
+ * Evicted, not yet freed: disposal defers two frames so an interrupted render
+ * can still land its layout-effect retain.
+ */
+const pendingDisposal = new Set<DisposablePaintBitmaps>();
+
+let disposalFlushScheduled = false;
+
+/**
+ * Lets a retain that lost the race above find out its textures are gone,
+ * rather than handing a dead entry to a canvas.
+ */
+const disposedEntries = new WeakSet<DisposablePaintBitmaps>();
+
+function disposeTextures(entry: DisposablePaintBitmaps): void {
+  disposedEntries.add(entry);
+  entry.staticImage.dispose();
+  entry.maskImage?.dispose();
+  entry.backingImage?.dispose();
+  entry.strokeImage?.dispose();
+
+  for (const slot of entry.layerSlots) {
+    if (slot.kind === 'baked') {
+      slot.image.dispose();
+    }
+  }
+}
+
+function flushPendingDisposal(): void {
+  disposalFlushScheduled = false;
+
+  for (const entry of [...pendingDisposal]) {
+    if (retainCounts.has(entry)) {
+      // A canvas mounted onto this entry after it was evicted; the matching
+      // release frees it instead.
+      continue;
+    }
+
+    pendingDisposal.delete(entry);
+    disposeTextures(entry);
+  }
+}
+
+function scheduleDisposal(entry: DisposablePaintBitmaps): void {
+  pendingDisposal.add(entry);
+
+  if (disposalFlushScheduled) {
+    return;
+  }
+
+  disposalFlushScheduled = true;
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(flushPendingDisposal);
+  });
+}
+
+/**
+ * Map iteration order is insertion order, so re-inserting on a hit keeps
+ * eviction least-recently-used rather than first-inserted.
+ */
+export function getCachedPaintBitmaps(
+  key: string,
+): DisposablePaintBitmaps | undefined {
+  const entry = cache.get(key);
+
+  if (entry === undefined) {
+    return undefined;
+  }
+
+  cache.delete(key);
+  cache.set(key, entry);
+  return entry;
+}
+
+export function cachePaintBitmaps(
+  key: string,
+  entry: DisposablePaintBitmaps,
+): void {
+  const oldest =
+    cache.size >= MAX_CACHED_PAINT_BITMAPS
+      ? cache.entries().next().value
+      : undefined;
+
+  if (oldest) {
+    const [oldestKey, oldestEntry] = oldest;
+    cache.delete(oldestKey);
+    scheduleDisposal(oldestEntry);
+  }
+
+  cache.set(key, entry);
+}
+
+/**
+ * Returns false if the entry was disposed before the retain landed - the
+ * caller must rebuild rather than draw a dead texture.
+ */
+export function retainPaintBitmaps(entry: DisposablePaintBitmaps): boolean {
+  if (disposedEntries.has(entry)) {
+    return false;
+  }
+
+  retainCounts.set(entry, (retainCounts.get(entry) ?? 0) + 1);
+  return true;
+}
+
+export function releasePaintBitmaps(entry: DisposablePaintBitmaps): void {
+  const remaining = (retainCounts.get(entry) ?? 0) - 1;
+
+  if (remaining > 0) {
+    retainCounts.set(entry, remaining);
+    return;
+  }
+
+  retainCounts.delete(entry);
+
+  if (pendingDisposal.delete(entry)) {
+    disposeTextures(entry);
+  }
+}
+
+/**
+ * Drop cached paint bitmaps (session reset / clear image cache / memory
+ * warning). Entries still on screen are freed by their last release.
+ */
+export function clearPaintBitmapCache(): void {
+  for (const entry of cache.values()) {
+    scheduleDisposal(entry);
+  }
+  cache.clear();
+}

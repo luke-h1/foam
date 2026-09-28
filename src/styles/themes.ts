@@ -441,6 +441,7 @@ export function resolveThemeColor(
   if (isThemeColorToken(color)) {
     // SAFETY: ThemeColorToken is built as `${ThemeColor}.${key}`, and no key contains a dot.
     const [groupName, tokenName] = color.split('.') as [ThemeColor, string];
+
     const group = getThemeColorGroup(groupName);
 
     return (

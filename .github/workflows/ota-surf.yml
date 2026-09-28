@@ -58,13 +58,13 @@ jobs:
 
       - name: 🥟 Setup Bun and install dependencies
         if: steps.pr.outputs.should_run == 'true'
-        uses: ./.github/actions/setup-bun-install
+        uses: $/.github/actions/setup-bun-install
         with:
           ignore-scripts: 'true'
 
       - name: Load OTA deploy secrets
         if: steps.pr.outputs.should_run == 'true'
-        uses: ./.github/actions/load-ota-deploy-secrets
+        uses: $/.github/actions/load-ota-deploy-secrets
         with:
           op_service_account_token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           variant: development

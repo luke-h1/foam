@@ -161,6 +161,7 @@ export default tseslint.config(
       ...reactDoctor.configs['tanstack-query'].rules,
       'react-doctor/rn-no-raw-text': 'error',
       'local/blank-line-between-top-level': 'error',
+      'import/newline-after-import': ['error', { count: 1 }],
       'local/prefer-alias-imports': 'warn',
       'simple-import-sort/imports': [
         'warn',
@@ -195,6 +196,7 @@ export default tseslint.config(
       'local/require-memoized-component-export': 'off',
       'no-console': 'off',
       'no-extra-boolean-cast': 'off',
+      'no-nested-ternary': 'error',
       'no-restricted-imports': [
         'error',
         {
@@ -254,18 +256,18 @@ export default tseslint.config(
   {
     files: [
       'src/lib/sentry.ts',
-      'src/lib/sentryImageSpans.ts',
-      'src/lib/__tests__/sentryImageSpans.test.ts',
+      'src/lib/sentry-image-spans.ts',
+      'src/lib/__tests__/sentry-image-spans.test.ts',
       'src/lib/__tests__/sentry.test.ts',
-      'src/lib/__tests__/forwardLogToSentry.test.ts',
+      'src/lib/__tests__/forward-log-to-sentry.test.ts',
       'src/lib/haptics.ts',
       'src/hooks/firebase/analytics.ts',
       'src/hooks/firebase/analytics.test.ts',
       '__mocks__/@react-native-firebase/analytics.ts',
-      'src/components/Chat/util/__tests__/createSevenTvCallbacks.test.ts',
-      'src/components/StreamPlayer/__tests__/StreamPlayer.test.tsx',
-      'src/components/StreamPlayer/__tests__/playerTelemetry.test.ts',
-      'src/components/StreamPlayer/__tests__/usePlayerBridge.stability.test.tsx',
+      'src/components/chat/util/__tests__/create-seven-tv-callbacks.test.ts',
+      'src/components/stream-player/__tests__/stream-player.test.tsx',
+      'src/components/stream-player/__tests__/player-telemetry.test.ts',
+      'src/components/stream-player/__tests__/use-player-bridge.stability.test.tsx',
     ],
     rules: {
       'no-restricted-imports': 'off',
@@ -279,12 +281,12 @@ export default tseslint.config(
   },
   {
     files: [
-      'src/context/AuthContext.tsx',
-      'src/components/Chat/components/ChatOverlayController.tsx',
-      'src/components/Chat/components/ChatOverlayLayer.tsx',
-      'src/components/ui/Input/Input.ios.tsx',
-      'src/screens/Preferences/ChatPreferenceScreen.tsx',
-      'src/screens/Stream/LiveStreamScreen.tsx',
+      'src/context/auth-context.tsx',
+      'src/components/chat/components/ChatOverlayController.tsx',
+      'src/components/chat/components/chat-overlay-layer.tsx',
+      'src/components/ui/input/input.ios.tsx',
+      'src/screens/preferences/chat-preference-screen.tsx',
+      'src/screens/stream/live-stream-screen.tsx',
     ],
     rules: {
       'react-doctor/no-giant-component': 'off',
@@ -298,14 +300,14 @@ export default tseslint.config(
      * dismiss animation before unmounting. The rules read that as derived
      * state, but replacing the gate breaks the exit animation.
      */
-    files: ['src/components/BottomSheet/BottomSheet.native.tsx'],
+    files: ['src/components/bottom-sheet/bottom-sheet.native.tsx'],
     rules: {
       'react-doctor/no-derived-useState': 'off',
       'react-doctor/no-cascading-set-state': 'off',
     },
   },
   {
-    files: ['src/components/StreamPlayer/StreamPlayerPoster.tsx'],
+    files: ['src/components/stream-player/stream-player-poster.tsx'],
     rules: {
       'react-doctor/no-derived-useState': 'off',
     },
@@ -319,7 +321,7 @@ export default tseslint.config(
      * source change, but the player has no coverage for source switching and
      * it is not worth a blind rewrite. Tracked in the tech-debt register.
      */
-    files: ['src/components/StreamPlayer/usePlayerBridge.ts'],
+    files: ['src/components/stream-player/hooks/use-player-bridge.ts'],
     rules: {
       'react-doctor/no-cascading-set-state': 'off',
     },
@@ -345,7 +347,7 @@ export default tseslint.config(
      * binding; it is lazy because constructing ICU formatters at module scope
      * sat on the boot path via LiveStreamCard. Hoisting undoes that.
      */
-    files: ['src/utils/string/formatViewCount.ts'],
+    files: ['src/utils/string/format-view-count.ts'],
     rules: {
       'react-doctor/js-hoist-intl': 'off',
     },
@@ -356,7 +358,7 @@ export default tseslint.config(
      * check the shared animation clock. Virtualising it would unmount the
      * copies the screen exists to compare.
      */
-    files: ['src/screens/DevTools/SyncedEmotesScreen.tsx'],
+    files: ['src/screens/dev-tools/synced-emotes-screen.tsx'],
     rules: {
       'react-doctor/rn-no-scrollview-mapped-list': 'off',
     },
@@ -382,8 +384,8 @@ export default tseslint.config(
       'src/**/*.test.{ts,tsx}',
       'src/**/*.stories.{ts,tsx}',
       'src/**/*StoryFixtures.{ts,tsx}',
-      'src/components/BrandIcon/**',
-      'src/screens/DevTools/**',
+      'src/components/brand-icon/**',
+      'src/screens/dev-tools/**',
     ],
     rules: {
       'no-restricted-syntax': [

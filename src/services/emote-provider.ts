@@ -8,9 +8,9 @@ import type {
   SevenTvSanitisedEmote,
   TwitchSanitisedEmote,
 } from '@app/types/emote';
-import type { StvUser } from '@app/types/seventv/users';
-import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants/createEmoteImageVariants';
-import { pickEmoteVariantUrl } from '@app/utils/emote/emoteImageVariants/pickEmoteVariantUrl';
+import type { StvUser } from '@app/types/seven-tv/users';
+import { createEmoteImageVariants } from '@app/utils/emote/emote-image-variants/create-emote-image-variants';
+import { pickEmoteVariantUrl } from '@app/utils/emote/emote-image-variants/pick-emote-variant-url';
 
 interface HostedEmoteSourceBase {
   id: string;
@@ -78,6 +78,7 @@ function buildHostedVariants(
     animated: source.animated,
     static: source.static,
   });
+
   return {
     imageVariants,
     url: pickEmoteVariantUrl({ imageVariants, preferredKind: 'animated' }),
@@ -104,10 +105,11 @@ export function buildSanitisedEmote(
 export function buildSanitisedEmote(
   source: EmoteProviderSource,
 ): SanitisedEmote | null {
+  if ('setMetadata' in source && !source.url) {
+    return null;
+  }
+
   if ('setMetadata' in source) {
-    if (!source.url) {
-      return null;
-    }
     return {
       name: source.name,
       id: source.id,
@@ -132,6 +134,7 @@ export function buildSanitisedEmote(
   }
 
   const { imageVariants, url, staticUrl } = buildHostedVariants(source);
+
   if (!url) {
     return null;
   }

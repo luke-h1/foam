@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 
-import { LiveStreamScreen } from '@app/screens/Stream/LiveStreamScreen';
+import { LiveStreamScreen } from '@app/screens/stream/live-stream-screen';
 
 export default function LiveStreamRoute() {
   const { id } = useLocalSearchParams<{ id?: string | string[] }>();

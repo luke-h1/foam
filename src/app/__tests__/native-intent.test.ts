@@ -1,4 +1,4 @@
-import * as authLinking from '@app/navigators/authLinking';
+import * as authLinking from '@app/navigators/auth-linking';
 
 import { redirectSystemPath } from '../+native-intent';
 

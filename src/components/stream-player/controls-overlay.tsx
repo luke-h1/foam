@@ -1,0 +1,616 @@
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+import {
+  type StyleProp,
+  StyleSheet,
+  type TextStyle,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import Animated, {
+  type SharedValue,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import {
+  type MenuAction,
+  MenuView,
+  type NativeActionEvent,
+} from '@expo/ui/community/menu';
+import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
+import { LinearGradient } from 'expo-linear-gradient';
+
+import { Button } from '@app/components/button/button';
+import { LiveBadge } from '@app/components/live-badge/live-badge';
+import { SymbolView } from '@app/components/ui/icon/icon';
+import { Text } from '@app/components/ui/text/text';
+import { theme } from '@app/styles/themes';
+import { formatViewCount } from '@app/utils/string/format-view-count';
+
+import type { StreamInfo } from './types';
+import { formatDuration } from './util/format-stream-duration';
+
+interface ControlsOverlayProps {
+  isVisible: boolean;
+  muted?: boolean;
+  /**
+   * Drives the overlay fade + pointer events on the UI thread.
+   */
+  opacity: SharedValue<number>;
+  onBackPress?: () => void;
+  onCreateClipPress?: () => void;
+  onMutePress?: () => void;
+  onPipPress?: () => void;
+  onPlayPausePress: () => void;
+  onRefresh?: () => void;
+  onSharePress?: () => void;
+  onSleepTimerPress?: () => void;
+  paused: boolean;
+  pipActive?: boolean;
+  sleepTimerActive?: boolean;
+  streamInfo?: StreamInfo;
+}
+
+function StreamDurationLabel({
+  isVisible,
+  startedAt,
+  style,
+}: {
+  isVisible: boolean;
+  startedAt?: string;
+  style?: StyleProp<TextStyle>;
+}) {
+  const [duration, setDuration] = useState('0:00');
+
+  useEffect(() => {
+    if (!isVisible || !startedAt) {
+      return;
+    }
+
+    const updateDuration = () => {
+      setDuration(formatDuration(startedAt));
+    };
+
+    updateDuration();
+
+    const interval = setInterval(updateDuration, 1000);
+    return () => clearInterval(interval);
+  }, [isVisible, startedAt]);
+
+  return <Text style={style}>{startedAt ? duration : '0:00'}</Text>;
+}
+
+function GlassButtonSurface({ children }: { children: ReactNode }) {
+  if (isLiquidGlassAvailable()) {
+    return (
+      <GlassView
+        colorScheme='dark'
+        glassEffectStyle='regular'
+        isInteractive
+        style={styles.liquidGlassButton}
+      >
+        {children}
+      </GlassView>
+    );
+  }
+
+  return <View style={styles.glassButton}>{children}</View>;
+}
+
+interface PlayerActionButtonsProps {
+  handleSecondaryAction: (event: { nativeEvent: { event: string } }) => void;
+  muted: boolean | undefined;
+  onMutePress: ControlsOverlayProps['onMutePress'];
+  secondaryActions: MenuAction[];
+}
+
+/**
+ * Mute, and the overflow menu of everything else the player can do.
+ */
+function PlayerActionButtons({
+  handleSecondaryAction,
+  muted,
+  onMutePress,
+  secondaryActions,
+}: PlayerActionButtonsProps) {
+  return (
+    <>
+      {onMutePress && (
+        <GlassButtonSurface>
+          <Button
+            label={muted ? 'Unmute' : 'Mute'}
+            style={styles.controlButton}
+            onPress={onMutePress}
+          >
+            <SymbolView
+              name={muted ? 'speaker.slash.fill' : 'speaker.wave.2.fill'}
+              size={18}
+              tintColor={theme.colorWhite}
+            />
+          </Button>
+        </GlassButtonSurface>
+      )}
+
+      {secondaryActions.length > 0 && (
+        <MenuView
+          actions={secondaryActions}
+          onPressAction={handleSecondaryAction}
+        >
+          <GlassButtonSurface>
+            <View
+              accessibilityLabel='More'
+              accessibilityRole='button'
+              style={styles.controlButton}
+            >
+              <SymbolView
+                name='ellipsis.circle'
+                size={18}
+                tintColor={theme.colorWhite}
+              />
+            </View>
+          </GlassButtonSurface>
+        </MenuView>
+      )}
+    </>
+  );
+}
+
+/**
+ * Live badge, uptime, viewer count and category, shown under the player.
+ * Portrait has no room for the title or category, so both are dropped there.
+ */
+function StreamMetadataColumn({
+  isPortrait,
+  isVisible,
+  streamInfo,
+}: {
+  isPortrait: boolean;
+  isVisible: boolean;
+  streamInfo: ControlsOverlayProps['streamInfo'];
+}) {
+  return (
+    <View pointerEvents='box-none' style={styles.streamMetadataColumn}>
+      <View style={[styles.liveRail, isPortrait && styles.liveRailPortrait]}>
+        <LiveBadge label='LIVE' />
+        <StreamDurationLabel
+          isVisible={isVisible}
+          startedAt={streamInfo?.startedAt}
+          style={[
+            styles.durationText,
+            isPortrait && styles.durationTextPortrait,
+          ]}
+        />
+        <View
+          style={[
+            styles.viewerCountRow,
+            isPortrait && styles.viewerCountRowPortrait,
+          ]}
+        >
+          <SymbolView
+            name='person'
+            size={13}
+            style={styles.userIcon}
+            tintColor={theme.colorWhite}
+          />
+          <Text style={styles.viewerCountText}>
+            {formatViewCount(streamInfo?.viewerCount)}
+          </Text>
+        </View>
+      </View>
+      {streamInfo?.gameName && !isPortrait && (
+        <Text numberOfLines={1} style={styles.categoryText}>
+          {streamInfo.gameName}
+        </Text>
+      )}
+    </View>
+  );
+}
+
+export function ControlsOverlay({
+  isVisible,
+  muted,
+  opacity,
+  onBackPress,
+  onCreateClipPress,
+  onMutePress,
+  onPipPress,
+  onPlayPausePress,
+  onRefresh,
+  onSharePress,
+  onSleepTimerPress,
+  paused,
+  pipActive,
+  sleepTimerActive,
+  streamInfo,
+}: ControlsOverlayProps) {
+  const insets = useSafeAreaInsets();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const isPortrait = windowHeight >= windowWidth;
+  const headerTopOffset = isPortrait ? theme.space12 : insets.top + 8;
+  const bottomOffset = isPortrait ? theme.space8 : insets.bottom + 12;
+
+  // box-none while visible: empty-area taps fall through to the video gesture, only buttons
+  // capture touches; 'none' while hidden so buttons don't swallow the reveal tap.
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.get(),
+    pointerEvents: opacity.get() > 0.01 ? 'box-none' : 'none',
+  }));
+
+  const secondaryActions = useMemo(() => {
+    const actions: MenuAction[] = [];
+
+    if (onRefresh) {
+      actions.push({
+        id: 'refresh',
+        title: 'Refresh',
+        image: 'arrow.clockwise',
+      });
+    }
+
+    if (onPipPress) {
+      actions.push({
+        id: 'pip',
+        title: 'Picture in Picture',
+        image: 'pip',
+        state: pipActive ? 'on' : undefined,
+      });
+    }
+
+    if (onCreateClipPress) {
+      actions.push({
+        id: 'create-clip',
+        title: 'Create clip',
+        image: 'scissors',
+      });
+    }
+
+    if (onSleepTimerPress) {
+      actions.push({
+        id: 'sleep-timer',
+        title: 'Sleep timer',
+        image: 'moon.zzz',
+        state: sleepTimerActive ? 'on' : undefined,
+      });
+    }
+
+    if (onSharePress) {
+      actions.push({
+        id: 'share',
+        title: 'Share',
+        image: 'square.and.arrow.up',
+      });
+    }
+
+    return actions;
+  }, [
+    onRefresh,
+    onPipPress,
+    onCreateClipPress,
+    onSleepTimerPress,
+    onSharePress,
+    pipActive,
+    sleepTimerActive,
+  ]);
+
+  const handleSecondaryAction = useCallback(
+    ({ nativeEvent }: NativeActionEvent) => {
+      switch (nativeEvent.event) {
+        case 'refresh':
+          onRefresh?.();
+          return;
+        case 'pip':
+          onPipPress?.();
+          return;
+        case 'create-clip':
+          onCreateClipPress?.();
+          return;
+        case 'sleep-timer':
+          onSleepTimerPress?.();
+          return;
+        case 'share':
+          onSharePress?.();
+          return;
+      }
+    },
+    [onRefresh, onPipPress, onCreateClipPress, onSleepTimerPress, onSharePress],
+  );
+
+  return (
+    <Animated.View style={[styles.controlsOverlay, animatedStyle]}>
+      <LinearGradient
+        colors={['rgba(0,0,0,0.86)', 'rgba(0,0,0,0.42)', 'transparent']}
+        style={styles.topGradient}
+        pointerEvents='none'
+      />
+
+      <View
+        pointerEvents='box-none'
+        style={[
+          styles.header,
+          isPortrait && styles.headerPortrait,
+          { paddingTop: headerTopOffset },
+        ]}
+      >
+        {onBackPress && (
+          <GlassButtonSurface>
+            <Button
+              label='Back'
+              style={styles.headerButton}
+              onPress={onBackPress}
+            >
+              <SymbolView
+                name='chevron.left'
+                size={24}
+                tintColor={theme.colorWhite}
+              />
+            </Button>
+          </GlassButtonSurface>
+        )}
+
+        <View
+          pointerEvents='none'
+          style={[
+            styles.headerMetadata,
+            isPortrait && styles.headerMetadataPortrait,
+          ]}
+        >
+          <Text numberOfLines={1} style={styles.streamerNameTop}>
+            {streamInfo?.userName || streamInfo?.userLogin || ''}
+          </Text>
+          {streamInfo?.title && !isPortrait && (
+            <Text numberOfLines={1} style={styles.streamTitleTop}>
+              {streamInfo.title}
+            </Text>
+          )}
+        </View>
+      </View>
+
+      <View pointerEvents='box-none' style={styles.centerControls}>
+        <Button
+          label={paused ? 'Play' : 'Pause'}
+          style={[
+            styles.playPauseButton,
+            isPortrait && styles.playPauseButtonPortrait,
+          ]}
+          onPress={onPlayPausePress}
+        >
+          <SymbolView
+            name={paused ? 'play.fill' : 'pause.fill'}
+            size={44}
+            tintColor={theme.colorWhite}
+          />
+        </Button>
+      </View>
+
+      <LinearGradient
+        colors={['transparent', 'rgba(0,0,0,0.48)', 'rgba(0,0,0,0.92)']}
+        style={styles.bottomGradient}
+        pointerEvents='none'
+      />
+
+      <View
+        pointerEvents='box-none'
+        style={[
+          styles.bottomControls,
+          isPortrait && styles.bottomControlsPortrait,
+          { paddingBottom: bottomOffset },
+        ]}
+      >
+        <StreamMetadataColumn
+          isPortrait={isPortrait}
+          isVisible={isVisible}
+          streamInfo={streamInfo}
+        />
+
+        <View style={styles.spacer} />
+        <PlayerActionButtons
+          handleSecondaryAction={handleSecondaryAction}
+          muted={muted}
+          onMutePress={onMutePress}
+          secondaryActions={secondaryActions}
+        />
+      </View>
+    </Animated.View>
+  );
+}
+
+const styles = StyleSheet.create({
+  bottomControls: {
+    alignItems: 'flex-end',
+    bottom: 0,
+    flexDirection: 'row',
+    gap: theme.space8,
+    left: 0,
+    paddingHorizontal: theme.space20,
+    paddingTop: theme.space44,
+    position: 'absolute',
+    right: 0,
+    zIndex: 1,
+  },
+  bottomControlsPortrait: {
+    alignItems: 'center',
+    bottom: theme.space8,
+    paddingHorizontal: theme.space12,
+    paddingTop: 0,
+  },
+  bottomGradient: {
+    bottom: 0,
+    height: 156,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+  },
+  centerControls: {
+    alignItems: 'center',
+    bottom: 0,
+    justifyContent: 'center',
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  controlButton: {
+    alignItems: 'center',
+    height: 44,
+    justifyContent: 'center',
+    width: 44,
+  },
+  glassButton: {
+    alignItems: 'center',
+    backgroundColor: theme.colorBlackOverlay,
+    borderCurve: 'continuous',
+    borderColor: theme.color.borderStrong.dark,
+    borderRadius: theme.borderRadius999,
+    borderWidth: 1,
+    height: 44,
+    justifyContent: 'center',
+    boxShadow: '0 8px 18px rgba(0, 0, 0, 0.28)',
+    width: 44,
+  },
+  liquidGlassButton: {
+    alignItems: 'center',
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius999,
+    height: 44,
+    justifyContent: 'center',
+    width: 44,
+  },
+  controlsOverlay: {
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  durationText: {
+    color: theme.colorWhite,
+    fontSize: theme.fontSize12,
+    fontWeight: '600',
+    opacity: 0.88,
+  },
+  durationTextPortrait: {
+    fontSize: theme.fontSize11,
+  },
+  header: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    gap: theme.space12,
+    left: 0,
+    paddingHorizontal: theme.space20,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    zIndex: 1,
+  },
+  headerPortrait: {
+    alignItems: 'center',
+    paddingHorizontal: theme.space12,
+  },
+  headerButton: {
+    alignItems: 'center',
+    height: 44,
+    justifyContent: 'center',
+    width: 44,
+  },
+  liveRail: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.space8,
+    minWidth: 0,
+  },
+  liveRailPortrait: {
+    backgroundColor: 'rgba(0,0,0,0.36)',
+    borderColor: 'rgba(255,255,255,0.10)',
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius999,
+    borderWidth: 1,
+    paddingHorizontal: theme.space8,
+    paddingVertical: theme.space4,
+  },
+  playPauseButton: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderColor: 'rgba(255,255,255,0.24)',
+    borderRadius: 48,
+    borderWidth: 1,
+    height: 96,
+    justifyContent: 'center',
+    boxShadow: '0 18px 30px rgba(0, 0, 0, 0.42)',
+    width: 96,
+  },
+  playPauseButtonPortrait: {
+    borderRadius: 34,
+    height: 68,
+    width: 68,
+  },
+  spacer: {
+    flex: 1,
+  },
+  streamMetadataColumn: {
+    alignItems: 'flex-start',
+    flex: 1,
+    gap: theme.space8,
+    minWidth: 0,
+  },
+  streamerNameTop: {
+    color: theme.colorWhite,
+    flex: 1,
+    fontSize: theme.fontSize16,
+    fontWeight: '800',
+    opacity: 0.95,
+  },
+  headerMetadata: {
+    flex: 1,
+    gap: 2,
+    justifyContent: 'center',
+    minHeight: 44,
+    minWidth: 0,
+  },
+  headerMetadataPortrait: {
+    flex: 0,
+    maxWidth: '52%',
+  },
+  streamTitleTop: {
+    color: theme.colorWhite,
+    fontSize: theme.fontSize12,
+    fontWeight: '500',
+    opacity: 0.74,
+  },
+  categoryText: {
+    color: theme.colorWhite,
+    fontSize: theme.fontSize12,
+    fontWeight: '600',
+    maxWidth: '85%',
+    opacity: 0.72,
+  },
+  topGradient: {
+    height: 132,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  userIcon: {
+    opacity: 0.86,
+  },
+  viewerCountRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.space8,
+  },
+  viewerCountRowPortrait: {
+    display: 'none',
+  },
+  viewerCountText: {
+    color: theme.colorWhite,
+    fontSize: theme.fontSize12,
+    fontWeight: '600',
+    opacity: 0.88,
+  },
+});

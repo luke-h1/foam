@@ -96,7 +96,7 @@ jobs:
           persist-credentials: false
 
       - name: 🥟 Setup Bun and install dependencies
-        uses: ./.github/actions/setup-bun-install
+        uses: $/.github/actions/setup-bun-install
 
       - name: 🧪 Run tests
         run: bun run test:ci
@@ -124,10 +124,10 @@ jobs:
           persist-credentials: false
 
       - name: 🥟 Setup Bun and install dependencies
-        uses: ./.github/actions/setup-bun-install
+        uses: $/.github/actions/setup-bun-install
 
       - name: Load fingerprint cache secrets
-        uses: ./.github/actions/load-fingerprint-cache-secrets
+        uses: $/.github/actions/load-fingerprint-cache-secrets
         with:
           op_service_account_token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           variant: ${{ inputs.variant || 'production' }}
@@ -212,7 +212,7 @@ jobs:
           persist-credentials: false
 
       - name: 🥟 Setup Bun and install dependencies
-        uses: ./.github/actions/setup-bun-install
+        uses: $/.github/actions/setup-bun-install
 
       - name: ☕ Setup JDK
         if: ${{ (inputs.platform || 'ios') != 'ios' }}
@@ -256,13 +256,13 @@ jobs:
           VARIANT: ${{ inputs.variant || 'production' }}
 
       - name: Load secrets
-        uses: ./.github/actions/load-native-deploy-secrets
+        uses: $/.github/actions/load-native-deploy-secrets
         with:
           op_service_account_token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           variant: ${{ inputs.variant || 'production' }}
 
       - name: 📄 Decode and write Google service files
-        uses: ./.github/actions/write-google-service-files
+        uses: $/.github/actions/write-google-service-files
         with:
           variant: ${{ inputs.variant || 'production' }}
 
@@ -274,7 +274,7 @@ jobs:
           packager: bun
 
       - name: 🔨 Build & Submit
-        uses: ./.github/actions/native-build-submit
+        uses: $/.github/actions/native-build-submit
         with:
           variant: ${{ inputs.variant || 'production' }}
           platform: ${{ inputs.platform || 'ios' }}
@@ -282,7 +282,7 @@ jobs:
           sentry_dist: ${{ steps.sentry_dist.outputs.dist }}
 
       - name: 💾 Save fingerprints for next run
-        uses: ./.github/actions/save-fingerprint-cache
+        uses: $/.github/actions/save-fingerprint-cache
         with:
           variant: ${{ inputs.variant || 'production' }}
           ios_fingerprint: ${{ needs['detect-changes'].outputs['ios-fingerprint'] }}
@@ -317,7 +317,7 @@ jobs:
           persist-credentials: false
 
       - name: 🥟 Setup Bun and install dependencies
-        uses: ./.github/actions/setup-bun-install
+        uses: $/.github/actions/setup-bun-install
 
       - name: 🏷️ Resolve Sentry dist
         id: sentry_dist
@@ -332,7 +332,7 @@ jobs:
           VARIANT: ${{ inputs.variant || 'production' }}
 
       - name: Load OTA deploy secrets
-        uses: ./.github/actions/load-ota-deploy-secrets
+        uses: $/.github/actions/load-ota-deploy-secrets
         with:
           op_service_account_token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           variant: ${{ inputs.variant || 'production' }}
@@ -366,7 +366,7 @@ jobs:
 
       - name: Determine critical OTA metadata
         id: critical_metadata
-        uses: ./.github/actions/determine-critical-ota-metadata
+        uses: $/.github/actions/determine-critical-ota-metadata
         with:
           critical_update: ${{ inputs.critical_update }}
           head_commit_message: ${{ steps.head_commit.outputs.message }}
@@ -389,7 +389,7 @@ jobs:
           OTA_CRITICAL_INDEX: ${{ steps.critical_metadata.outputs.next_index }}
 
       - name: 💾 Save fingerprints for next run
-        uses: ./.github/actions/save-fingerprint-cache
+        uses: $/.github/actions/save-fingerprint-cache
         with:
           variant: ${{ inputs.variant || 'production' }}
           ios_fingerprint: ${{ needs['detect-changes'].outputs['ios-fingerprint'] }}
@@ -448,7 +448,7 @@ jobs:
           persist-credentials: false
 
       - name: 🥟 Setup Bun and install dependencies
-        uses: ./.github/actions/setup-bun-install
+        uses: $/.github/actions/setup-bun-install
 
       - name: 🏷️ Determine release tag
         id: release_tag
@@ -464,7 +464,7 @@ jobs:
 
       - name: 📝 Update changelog and release artifacts
         id: create_release
-        uses: ./.github/actions/create-release
+        uses: $/.github/actions/create-release
         with:
           github_token: ${{ secrets.LUKE_H1_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           dry: ${{ inputs.dry_run }}
@@ -527,13 +527,13 @@ jobs:
           persist-credentials: false
 
       - name: Load fingerprint cache secrets
-        uses: ./.github/actions/load-fingerprint-cache-secrets
+        uses: $/.github/actions/load-fingerprint-cache-secrets
         with:
           op_service_account_token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           variant: ${{ inputs.variant || 'production' }}
 
       - name: 🥟 Setup Bun and install dependencies
-        uses: ./.github/actions/setup-bun-install
+        uses: $/.github/actions/setup-bun-install
 
       - name: Restore previous OTA update IDs
         run: >
@@ -570,7 +570,7 @@ jobs:
           SLACK_WEBHOOK_URL: op://ci-cd/foam-mobile-${{ (inputs.variant || 'production') == 'production' && 'production' || 'staging' }}/SLACK_WEBHOOK_URL
 
       - name: Send Slack notification
-        uses: ./.github/actions/slack-deploy-notification
+        uses: $/.github/actions/slack-deploy-notification
         with:
           webhook_url: ${{ steps.secrets.outputs.SLACK_WEBHOOK_URL }}
           version: ${{ needs.release.outputs.version }}

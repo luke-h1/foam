@@ -9,7 +9,7 @@ import type {
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { logger } from '@app/utils/logger';
 
-import { ApiError } from './api/Client';
+import { ApiError } from './api/client';
 import { ffzApi } from './api/clients';
 import { buildSanitisedEmote } from './emote-provider';
 
@@ -35,9 +35,11 @@ function ffzScaleSlug(scale: '1x' | '2x' | '4x'): '1' | '2' | '4' {
   if (scale === '2x') {
     return '2';
   }
+
   if (scale === '4x') {
     return '4';
   }
+
   return '1';
 }
 
@@ -59,6 +61,7 @@ function sanitiseFfzEmote(
     '2x': emote.urls['2'] || toFfzStaticUrl(emote.id, '2x'),
     '4x': emote.urls['4'] || toFfzStaticUrl(emote.id, '4x'),
   } satisfies EmoteImageVariantSet;
+
   const animatedVariants: EmoteImageVariantSet = emote.animated
     ? {
         '1x': toFfzAnimatedUrl(emote.id, '1x'),
@@ -86,13 +89,30 @@ function sanitiseFfzEmotes(
   creatorOf: (emote: FfzEmoticon) => string | null,
 ): FfzSanitisedEmote[] {
   const sanitised: FfzSanitisedEmote[] = [];
+
   for (const emote of emotes) {
     const result = sanitiseFfzEmote(emote, site, creatorOf(emote));
     if (result) {
       sanitised.push(result);
     }
   }
+
   return sanitised;
+}
+
+/**
+ * FFZ ships each badge at several sizes, keyed by scale. Take the largest.
+ */
+function largestBadgeUrl(
+  urlsByScale: Record<string, string> | undefined,
+): string | undefined {
+  const scales = Object.keys(urlsByScale ?? {});
+
+  if (scales.length === 0) {
+    return undefined;
+  }
+
+  return urlsByScale?.[Math.max(...scales.map(Number)).toString()];
 }
 
 export const ffzService = {
@@ -102,6 +122,7 @@ export const ffzService = {
 
       const defaultSetId = String(result.default_sets[0]);
       const defaultSet = result.sets[defaultSetId];
+
       if (!defaultSet) {
         return [];
       }
@@ -120,6 +141,7 @@ export const ffzService = {
         resource_type: 'emotes',
         scope: 'global',
       });
+
       throw error;
     }
   },
@@ -138,66 +160,57 @@ export const ffzService = {
 
       const sanitisedBadges: SanitisedBadgeSet[] = [];
 
-      if ('room' in result) {
-        const { room } = result;
+      const room = 'room' in result ? result.room : undefined;
+      const vipBadgeUrl = largestBadgeUrl(room?.vip_badge);
+      const modBadgeUrl = largestBadgeUrl(room?.mod_urls);
 
-        if (room.vip_badge && Object.keys(room.vip_badge).length > 0) {
-          const maxKey = Math.max(...Object.keys(room.vip_badge).map(Number));
-          // SAFETY: maxKey is the largest of this record's own keys, so the lookup always hits.
-          const maxUrl = room.vip_badge[maxKey.toString()] as string;
-
-          sanitisedBadges.push({
-            id: 'vip_badge',
-            url: maxUrl,
-            title: 'VIP',
-            color: '#ff0000',
-            owner_username: channelId,
-            set: 'vip',
-            type: 'FFZ channel badge',
-            provider: 'ffz',
-          });
-        }
-
-        if (room.mod_urls && Object.keys(room.mod_urls).length > 0) {
-          const maxKey = Math.max(...Object.keys(room.mod_urls).map(Number));
-          // SAFETY: maxKey is the largest of this record's own keys, so the lookup always hits.
-          const maxUrl = room.mod_urls[maxKey.toString()] as string;
-
-          sanitisedBadges.push({
-            id: 'mod_badge',
-            url: maxUrl,
-            title: 'Moderator',
-            color: '#1ac9a2',
-            owner_username: channelId,
-            set: 'mod',
-            type: 'FFZ channel badge',
-            provider: 'ffz',
-          });
-        }
-
-        if (room.user_badges) {
-          Object.entries(room.user_badges).forEach(([badge, users]) => {
-            users.forEach(user => {
-              sanitisedBadges.push({
-                id: badge,
-                url: '',
-                title: badge,
-                color: '#ffffff',
-                owner_username: user,
-                set: badge,
-                type: 'FFZ user badge',
-                provider: 'ffz',
-              });
-            });
-          });
-        }
+      if (vipBadgeUrl) {
+        sanitisedBadges.push({
+          id: 'vip_badge',
+          url: vipBadgeUrl,
+          title: 'VIP',
+          color: '#ff0000',
+          owner_username: channelId,
+          set: 'vip',
+          type: 'FFZ channel badge',
+          provider: 'ffz',
+        });
       }
+
+      if (modBadgeUrl) {
+        sanitisedBadges.push({
+          id: 'mod_badge',
+          url: modBadgeUrl,
+          title: 'Moderator',
+          color: '#1ac9a2',
+          owner_username: channelId,
+          set: 'mod',
+          type: 'FFZ channel badge',
+          provider: 'ffz',
+        });
+      }
+
+      Object.entries(room?.user_badges ?? {}).forEach(([badge, users]) => {
+        users.forEach(user => {
+          sanitisedBadges.push({
+            id: badge,
+            url: '',
+            title: badge,
+            color: '#ffffff',
+            owner_username: user,
+            set: badge,
+            type: 'FFZ user badge',
+            provider: 'ffz',
+          });
+        });
+      });
 
       return sanitisedBadges;
     } catch (error) {
       if (isNoSuchRoomError(error)) {
         return [];
       }
+
       logger.ffz.warn('Failed to fetch channel FFZ badges', {
         name: 'ffz_badges_warning',
         error,
@@ -207,6 +220,7 @@ export const ffzService = {
         resource_type: 'badges',
         scope: 'channel',
       });
+
       throw error;
     }
   },
@@ -225,6 +239,7 @@ export const ffzService = {
 
       if ('sets' in result) {
         const emoteSet = result.sets[result.room.set];
+
         return emoteSet?.emoticons
           ? sanitiseFfzEmotes(
               emoteSet.emoticons,
@@ -233,11 +248,13 @@ export const ffzService = {
             )
           : [];
       }
+
       return [];
     } catch (error) {
       if (isNoSuchRoomError(error)) {
         return [];
       }
+
       logger.ffz.warn(`Failed to fetch channel FFZ emotes for ${channelId}`, {
         name: 'ffz_emotes_warning',
         error,
@@ -247,6 +264,7 @@ export const ffzService = {
         resource_type: 'emotes',
         scope: 'channel',
       });
+
       throw error;
     }
   },
@@ -261,8 +279,10 @@ export const ffzService = {
       result.badges.forEach(badge => {
         result.users[badge.id]?.forEach(username => {
           const key = `${badge.title.replace(' ', '_').toLowerCase()}|${username}`;
+
           if (!seen.has(key)) {
             seen.add(key);
+
             sanitisedSet.push({
               id: badge.title.replace(' ', '_').toLowerCase(),
               url: badge.urls['4'],
@@ -287,6 +307,7 @@ export const ffzService = {
         resource_type: 'badges',
         scope: 'global',
       });
+
       throw error;
     }
   },

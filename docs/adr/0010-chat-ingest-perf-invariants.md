@@ -8,11 +8,11 @@ leverage by spending one of them is a regression, not a candidate.
 The invariants:
 
 - **Frame-cadenced, bounded commits.** Raw lines buffer pre-commit
-  (`components/Chat/util/messageBuffer`) and enter the store in cadenced
-  flushes (`components/Chat/util/chatFlushCadence`), draining bounded batches
+  (`components/chat/util/message-buffer`) and enter the store in cadenced
+  flushes (`components/chat/util/chat-flush-cadence`), draining bounded batches
   without dropping messages (sampling live commits silently dropped messages
   above 30/s once; never again). No abstraction may commit per-message.
-- **One message identity, referentially stable.** `utils/chat/messageIdentity/`
+- **One message identity, referentially stable.** `utils/chat/message-identity/`
   is the only source of message keys; buffer, store dedup index, and list
   keyExtractor agree, and the list's render-time dedup was deleted on that
   guarantee. Committed message objects and their parts arrays keep reference

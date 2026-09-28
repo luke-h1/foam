@@ -1,0 +1,1097 @@
+import { batch } from '@legendapp/state';
+
+import { clearChatStorePersistence } from '@app/lib/observable-persistence';
+import { startSpanAsync } from '@app/lib/sentry';
+import {
+  invalidateSevenTvUser,
+  sevenTvService,
+} from '@app/services/seven-tv-service';
+import { twitchService } from '@app/services/twitch-service';
+import { getPreferences } from '@app/store/preference-store';
+import type { SanitisedEmote } from '@app/types/emote';
+import { createFetchOnceGuard } from '@app/utils/async/fetch-once-guard';
+import {
+  clearBttvBadgesCache,
+  getBttvBadges,
+} from '@app/utils/chat/bttv-badges/get-bttv-badges';
+import { getChatterinoBadges } from '@app/utils/chat/chatterino-badges';
+import { cheermoteFetchGuard } from '@app/utils/chat/cheermote-store/cheermote-fetch-guard';
+import { fetchChannelCheermotes } from '@app/utils/chat/cheermote-store/fetch-channel-cheermotes';
+import { createSystemMessage } from '@app/utils/chat/message-handlers/create-system-message';
+import { getEmojiEmotes } from '@app/utils/emoji/emoji-emotes';
+import { clearSessionCache } from '@app/utils/image/image-cache';
+import { logger } from '@app/utils/logger';
+
+import {
+  CHANNEL_CACHE_PERSISTENCE_ENABLED,
+  clearPersistedChannelCaches,
+  prunePersistedChannelCaches,
+} from '../observables/channel-cache-persistence';
+import { chatStore$, limitChannelCaches } from '../observables/chat-store';
+import {
+  clearPersistedRecentMessages,
+  RECENT_MESSAGES_PERSISTENCE_ENABLED,
+} from '../observables/recent-messages-persistence';
+import type {
+  ChannelCacheType,
+  GlobalCacheType,
+  SanitisedBadgeSet,
+  SubscriberChannelProfile,
+} from '../types/constants';
+import {
+  emptyResolvedEmoteData,
+  makeEmptyGlobalCacheData,
+} from '../types/constants';
+import { ensureChannelCacheHydrated } from './channel-cache-hydration';
+import {
+  type CachedChannelRefreshPlan,
+  planChannelRefresh,
+} from './channel-refresh-plan';
+import {
+  type BadgeCacheKey,
+  buildBadgeResourceSpecs,
+  buildEmoteResourceSpecs,
+  buildGlobalBadgeResourceSpecs,
+  buildGlobalEmoteResourceSpecs,
+  buildSubscriberEmoteSpec,
+  type ChannelBadgeResourceSets,
+  type ChannelEmoteResourceSets,
+  clearGlobalResourceCache,
+  collectFailedProviderReasons,
+  type EmoteCacheKey,
+  hadCachedResourcesForFailedSpecs,
+  reconcileSettledSpecs,
+  reportResourceResults,
+  settleSpecs,
+} from './channel-resources';
+import { clearUserCosmeticsCache } from './cosmetics';
+import { invalidateCosmeticsCache } from './invalidation';
+import { addMessage } from './messages';
+import {
+  clearChannelPersonalEmotes,
+  clearPersonalEmotesCache,
+  fetchUserPersonalEmotes,
+} from './personal-emotes';
+import { notify7TVPresence } from './seven-tv-channel-lifecycle';
+
+const channelLoadAbort = (() => {
+  let current: AbortController | null = null;
+
+  return {
+    startNext(): AbortController {
+      if (current) {
+        current.abort();
+      }
+
+      current = new AbortController();
+      return current;
+    },
+    abortActive(): void {
+      if (!current) {
+        return;
+      }
+
+      current.abort();
+      current = null;
+    },
+  };
+})();
+
+export const startChannelLoadAbort = (): AbortController =>
+  channelLoadAbort.startNext();
+
+export const abortCurrentLoad = (): void => channelLoadAbort.abortActive();
+
+const exitIfAborted = (
+  signal: AbortSignal | undefined,
+  resetLoading: boolean,
+): boolean => {
+  if (!signal?.aborted) {
+    return false;
+  }
+
+  if (resetLoading) {
+    chatStore$.loadingState.set('IDLE');
+  }
+
+  return true;
+};
+
+type ProviderFailureSettled = Parameters<
+  typeof collectFailedProviderReasons
+>[0][number];
+
+const countReconciledItems = (
+  reconciled: ReadonlyMap<string, readonly unknown[]>,
+): number => {
+  let total = 0;
+
+  reconciled.forEach(items => {
+    total += items.length;
+  });
+
+  return total;
+};
+
+interface WriteGlobalCachesOptions {
+  badgeByKey: ReadonlyMap<BadgeCacheKey, SanitisedBadgeSet[]>;
+  emoteByKey: ReadonlyMap<EmoteCacheKey, SanitisedEmote[]>;
+  existingGlobalCache: GlobalCacheType | undefined;
+  now: number;
+  settled: readonly ProviderFailureSettled[];
+}
+
+/**
+ * The freshness stamp only advances when every global fetch succeeded, so a
+ * failed slice keeps its retry pressure.
+ */
+function writeGlobalCaches({
+  badgeByKey,
+  emoteByKey,
+  existingGlobalCache,
+  now,
+  settled,
+}: WriteGlobalCachesOptions): void {
+  const hasGlobalResourceFailure = settled.some(
+    entry =>
+      entry.spec.scope === 'global' && entry.result.status === 'rejected',
+  );
+
+  chatStore$.persisted.globalCaches.set({
+    lastUpdated: hasGlobalResourceFailure
+      ? (existingGlobalCache?.lastUpdated ?? 0)
+      : now,
+    twitchGlobalEmotes: emoteByKey.get('twitchGlobalEmotes') ?? [],
+    sevenTvGlobalEmotes: emoteByKey.get('sevenTvGlobalEmotes') ?? [],
+    ffzGlobalEmotes: emoteByKey.get('ffzGlobalEmotes') ?? [],
+    bttvGlobalEmotes: emoteByKey.get('bttvGlobalEmotes') ?? [],
+    twitchGlobalBadges: badgeByKey.get('twitchGlobalBadges') ?? [],
+    ffzGlobalBadges: badgeByKey.get('ffzGlobalBadges') ?? [],
+  });
+}
+
+function notifyProviderLoadFailures(
+  channelId: string,
+  settled: readonly ProviderFailureSettled[],
+  existingCache: ChannelCacheType | undefined,
+  existingGlobalCache: GlobalCacheType | undefined,
+): void {
+  const failedProviders = collectFailedProviderReasons(settled);
+
+  if (failedProviders.length === 0) {
+    return;
+  }
+
+  const hadCache = hadCachedResourcesForFailedSpecs(
+    { existingCache, existingGlobalCache },
+    settled,
+  );
+
+  addMessage(
+    createSystemMessage(
+      channelId,
+      hadCache
+        ? `Couldn't load emotes and badges from ${failedProviders.join(
+            ', ',
+          )}, falling back to cached emotes/badges`
+        : `Couldn't load emotes and badges from ${failedProviders.join(', ')}`,
+    ),
+  );
+}
+
+export {
+  clearPersonalEmotesCache,
+  fetchUserPersonalEmotes,
+  getUserPersonalEmotes,
+} from './personal-emotes';
+
+// Runs keyed by channel id; only owner ids Twitch never returns get stamped,
+// or they re-request on every cached-path revisit.
+const subscriberProfilesGuard = createFetchOnceGuard();
+
+export const clearSubscriberProfilesCache = () => {
+  subscriberProfilesGuard.clear();
+};
+
+export const resolveSubscriberChannelProfiles = async (
+  channelId: string,
+): Promise<void> => {
+  if (subscriberProfilesGuard.isInFlight(channelId)) {
+    return;
+  }
+
+  const channelCache = chatStore$.persisted.channelCaches[channelId];
+  const cache = channelCache?.peek();
+
+  if (!channelCache || !cache) {
+    return;
+  }
+
+  const existingProfiles = cache.twitchSubscriberChannelProfiles ?? {};
+
+  const ownerIds = [
+    ...new Set(
+      (cache.twitchSubscriberEmotes ?? []).flatMap(emote =>
+        // Helix returns sentinel owner ids like "twitch"; a non-numeric id
+        // 400s the whole batched /users request.
+        'owner_id' in emote && emote.owner_id && /^\d+$/.test(emote.owner_id)
+          ? [emote.owner_id]
+          : [],
+      ),
+    ),
+  ].filter(
+    ownerId =>
+      !existingProfiles[ownerId] &&
+      !subscriberProfilesGuard.hasFetched(ownerId),
+  );
+
+  if (ownerIds.length === 0) {
+    return;
+  }
+
+  await subscriberProfilesGuard.run(channelId, async ctx => {
+    try {
+      const users = await twitchService.getUsersById(ownerIds);
+      const profiles: Record<string, SubscriberChannelProfile> = {};
+
+      users.forEach(user => {
+        if (user?.id) {
+          profiles[user.id] = {
+            name: user.display_name,
+            profileImageUrl: user.profile_image_url,
+          };
+        }
+      });
+
+      ownerIds.forEach(ownerId => {
+        if (!profiles[ownerId]) {
+          ctx.markFetched(ownerId);
+        }
+      });
+
+      if (Object.keys(profiles).length === 0) {
+        return;
+      }
+
+      // The cache entry may have been LRU-evicted during the fetch; writing
+      // through the keyed proxy would silently resurrect a stub entry.
+      const latestCache = channelCache.peek();
+
+      if (!latestCache) {
+        return;
+      }
+
+      channelCache.twitchSubscriberChannelProfiles.set({
+        ...(latestCache.twitchSubscriberChannelProfiles ?? {}),
+        ...profiles,
+      });
+    } catch (error) {
+      logger.chat.warn('Failed to resolve subscriber channel profiles', {
+        name: 'chat_resources_warning',
+        error,
+        action: 'subscriber_channel_profiles_failed',
+        channel_id: channelId,
+        provider: 'twitch',
+        resource_type: 'emotes',
+        scope: 'channel',
+        screen: 'chat',
+      });
+    }
+  });
+};
+
+export const clearChannelResources = () => {
+  const channelId = chatStore$.currentChannelId.peek();
+
+  batch(() => {
+    chatStore$.currentChannelId.set(null);
+    chatStore$.loadingState.set('IDLE');
+    chatStore$.emojis.set(getEmojiEmotes(getPreferences().emojiStyle));
+    chatStore$.bits.set([]);
+  });
+
+  if (channelId) {
+    clearChannelPersonalEmotes(channelId);
+  }
+};
+
+export interface LoadChannelResourcesOptions {
+  channelId: string;
+  forceRefresh?: boolean;
+  signal?: AbortSignal;
+  twitchUserId?: string;
+}
+
+/**
+ * Runs the cache-hit path: refresh only the slices the plan marked stale,
+ * then mark the channel loaded. Returns false when the load was aborted.
+ */
+type CachedRefreshArgs = {
+  channelId: string;
+  existingCache: ChannelCacheType;
+  existingGlobalCache: GlobalCacheType | undefined;
+  plan: CachedChannelRefreshPlan;
+  signal?: AbortSignal;
+  twitchUserId?: string;
+};
+
+/**
+ * One step of the cache-hit path. `aborted` unwinds the whole load; `settled`
+ * carries whatever the step fetched, and is empty when the plan skipped it.
+ */
+type CachedRefreshOutcome =
+  | { aborted: true }
+  | { aborted: false; settled: readonly ProviderFailureSettled[] };
+
+const REFRESH_ABORTED: CachedRefreshOutcome = { aborted: true };
+const REFRESH_SKIPPED: CachedRefreshOutcome = { aborted: false, settled: [] };
+
+const refreshCachedSevenTvEmoteSetId = async ({
+  channelId,
+  plan,
+  signal,
+}: CachedRefreshArgs): Promise<CachedRefreshOutcome> => {
+  if (!plan.fetchEmoteSetId) {
+    return REFRESH_SKIPPED;
+  }
+
+  if (exitIfAborted(signal, true)) {
+    return REFRESH_ABORTED;
+  }
+
+  try {
+    const sevenTvSetId = await sevenTvService.getEmoteSetId(channelId);
+
+    if (exitIfAborted(signal, true)) {
+      return REFRESH_ABORTED;
+    }
+
+    chatStore$.persisted.channelCaches[channelId]?.assign({
+      sevenTvEmoteSetId: sevenTvSetId === 'global' ? undefined : sevenTvSetId,
+    });
+  } catch (error) {
+    if (exitIfAborted(signal, true)) {
+      return REFRESH_ABORTED;
+    }
+
+    logger.chat.warn('Failed to resolve cached 7TV emote set ID', {
+      name: 'seven_tv_emotes_warning',
+      error,
+      action: 'cached_emote_set_id_failed',
+      channel_id: channelId,
+      provider: 'seven_tv',
+      resource_type: 'emotes',
+      scope: 'channel',
+      screen: 'chat',
+    });
+  }
+
+  return REFRESH_SKIPPED;
+};
+
+const refreshCachedSubscriberEmotes = async ({
+  channelId,
+  plan,
+  signal,
+  twitchUserId,
+}: CachedRefreshArgs): Promise<CachedRefreshOutcome> => {
+  if (!plan.fetchSubscriberEmotes || !twitchUserId) {
+    return REFRESH_SKIPPED;
+  }
+
+  if (exitIfAborted(signal, true)) {
+    return REFRESH_ABORTED;
+  }
+
+  const settled = await settleSpecs([
+    buildSubscriberEmoteSpec({ channelId, twitchUserId }),
+  ]);
+
+  if (exitIfAborted(signal, true)) {
+    return REFRESH_ABORTED;
+  }
+
+  reportResourceResults({
+    channelId,
+    settled,
+    trigger: 'cached_subscriber_emotes_refresh',
+  });
+
+  const subscriberResult = settled[0]?.result;
+
+  chatStore$.persisted.channelCaches[channelId]?.assign({
+    twitchSubscriberEmotes:
+      subscriberResult?.status === 'fulfilled' ? subscriberResult.value : [],
+    twitchSubscriberEmotesUserId: twitchUserId,
+  });
+
+  return { aborted: false, settled };
+};
+
+const refreshCachedBadges = async ({
+  channelId,
+  existingCache,
+  existingGlobalCache,
+  plan,
+  signal,
+}: CachedRefreshArgs): Promise<CachedRefreshOutcome> => {
+  if (!plan.refreshBadges) {
+    logger.chat.info('Using cached channel resources', {
+      name: 'chat_resources_info',
+      action: 'cached_channel_resources_used',
+      cache_age_ms: plan.cacheAgeMs,
+      category: 'data_loading',
+      channel_id: channelId,
+      screen: 'chat',
+    });
+    return REFRESH_SKIPPED;
+  }
+
+  if (exitIfAborted(signal, true)) {
+    return REFRESH_ABORTED;
+  }
+
+  const badgeSpecs = buildBadgeResourceSpecs({ channelId }).filter(
+    spec => spec.scope !== 'global',
+  );
+
+  const settled = await settleSpecs(badgeSpecs);
+
+  if (exitIfAborted(signal, true)) {
+    return REFRESH_ABORTED;
+  }
+
+  reportResourceResults({
+    channelId,
+    settled,
+    trigger: 'cached_badges_refresh',
+  });
+
+  const badgeByKey = reconcileSettledSpecs(settled, {
+    channelId,
+    existingCache,
+    existingGlobalCache,
+  });
+
+  const badgeResourceSets: ChannelBadgeResourceSets = {
+    twitchChannelBadges: badgeByKey.get('twitchChannelBadges') ?? [],
+    ffzChannelBadges: badgeByKey.get('ffzChannelBadges') ?? [],
+  };
+
+  const hasBadgeResourceFailure = settled.some(
+    entry => entry.result.status === 'rejected',
+  );
+
+  chatStore$.persisted.channelCaches[channelId]?.assign({
+    ...badgeResourceSets,
+    badgesLastUpdated: hasBadgeResourceFailure
+      ? existingCache.badgesLastUpdated
+      : Date.now(),
+  });
+
+  logger.chat.info('Refetched badges (1h TTL); using cached emotes', {
+    name: 'chat_resources_info',
+    action: 'badges_refetched_cached_emotes',
+    badge_cache_age_ms: plan.badgeCacheAgeMs,
+    category: 'data_loading',
+    channel_id: channelId,
+    screen: 'chat',
+  });
+
+  return { aborted: false, settled };
+};
+
+const refreshStaleGlobalResources = async ({
+  channelId,
+  existingCache,
+  existingGlobalCache,
+  plan,
+  signal,
+}: CachedRefreshArgs): Promise<CachedRefreshOutcome> => {
+  if (!plan.refreshGlobalResources) {
+    return REFRESH_SKIPPED;
+  }
+
+  if (exitIfAborted(signal, true)) {
+    return REFRESH_ABORTED;
+  }
+
+  const [globalEmoteSettled, globalBadgeSettled] = await Promise.all([
+    settleSpecs(buildGlobalEmoteResourceSpecs()),
+    settleSpecs(buildGlobalBadgeResourceSpecs()),
+  ]);
+
+  if (exitIfAborted(signal, true)) {
+    return REFRESH_ABORTED;
+  }
+
+  const settled = [...globalEmoteSettled, ...globalBadgeSettled];
+
+  reportResourceResults({
+    channelId,
+    settled,
+    trigger: 'cached_global_resources_refresh',
+  });
+
+  const globalCacheContext = { channelId, existingCache, existingGlobalCache };
+
+  writeGlobalCaches({
+    badgeByKey: reconcileSettledSpecs(globalBadgeSettled, globalCacheContext),
+    emoteByKey: reconcileSettledSpecs(globalEmoteSettled, globalCacheContext),
+    existingGlobalCache,
+    now: Date.now(),
+    settled,
+  });
+
+  logger.chat.info('Refetched stale global provider slices', {
+    name: 'chat_resources_info',
+    action: 'global_resources_refetched',
+    category: 'data_loading',
+    channel_id: channelId,
+    screen: 'chat',
+  });
+
+  return { aborted: false, settled };
+};
+
+/**
+ * Runs the cache-hit path: refresh only the slices the plan marked stale, then
+ * mark the channel loaded. The steps run in order because each one writes the
+ * cache the next one reads. Returns false when the load was aborted.
+ */
+const refreshCachedChannelResources = async (
+  args: CachedRefreshArgs,
+): Promise<boolean> => {
+  const emoteSetId = await refreshCachedSevenTvEmoteSetId(args);
+  if (emoteSetId.aborted) {
+    return false;
+  }
+
+  const subscriberEmotes = await refreshCachedSubscriberEmotes(args);
+  if (subscriberEmotes.aborted) {
+    return false;
+  }
+
+  const badges = await refreshCachedBadges(args);
+  if (badges.aborted) {
+    return false;
+  }
+
+  const globalResources = await refreshStaleGlobalResources(args);
+  if (globalResources.aborted) {
+    return false;
+  }
+
+  const { channelId, existingCache, existingGlobalCache, twitchUserId } = args;
+
+  notifyProviderLoadFailures(
+    channelId,
+    [
+      ...subscriberEmotes.settled,
+      ...badges.settled,
+      ...globalResources.settled,
+    ],
+    existingCache,
+    existingGlobalCache,
+  );
+
+  batch(() => {
+    chatStore$.currentChannelId.set(channelId);
+    chatStore$.loadingState.set('COMPLETED');
+  });
+
+  if (twitchUserId) {
+    void notify7TVPresence(twitchUserId, channelId);
+    void fetchUserPersonalEmotes(twitchUserId, channelId);
+  }
+
+  void resolveSubscriberChannelProfiles(channelId);
+  return true;
+};
+
+const loadChannelResourcesInternal = async (
+  channelId: string,
+  shouldForceRefresh: boolean,
+  signal?: AbortSignal,
+  twitchUserId?: string,
+): Promise<boolean> => {
+  if (signal?.aborted) {
+    return false;
+  }
+
+  chatStore$.loadingState.set('LOADING');
+
+  if (shouldForceRefresh) {
+    // Forget the fetch-once users too, or fetchUserPersonalEmotes
+    // short-circuits into the emptied cache.
+    clearPersonalEmotesCache();
+
+    // An explicit refresh re-downloads global provider data too.
+    clearGlobalResourceCache();
+
+    // "Refresh emotes" is what a user reaches for when the 7TV set looks
+    // wrong, so re-resolve it.
+    invalidateSevenTvUser(channelId);
+  }
+
+  try {
+    ensureChannelCacheHydrated(channelId);
+    const caches = chatStore$.persisted.channelCaches.peek();
+    const existingCache = caches?.[channelId];
+    const existingGlobalCache = chatStore$.persisted.globalCaches.peek();
+
+    const plan = planChannelRefresh({
+      cache: existingCache,
+      forceRefresh: shouldForceRefresh,
+      globalCache: existingGlobalCache,
+      now: Date.now(),
+      twitchUserId,
+    });
+
+    if (plan.kind === 'cached' && existingCache) {
+      return await refreshCachedChannelResources({
+        channelId,
+        existingCache,
+        existingGlobalCache,
+        plan,
+        signal,
+        twitchUserId,
+      });
+    }
+
+    chatStore$.currentChannelId.set(channelId);
+
+    if (exitIfAborted(signal, true)) {
+      return false;
+    }
+
+    // Resolve the 7TV set id as a promise the spec awaits internally, so the
+    // other 13 resource fetches start immediately instead of stalling behind it.
+    const fallbackSevenTvSetId = existingCache?.sevenTvEmoteSetId ?? 'global';
+
+    const sevenTvSetIdPromise = sevenTvService
+      .getEmoteSetId(channelId)
+      .catch((cause: unknown) => {
+        logger.chat.warn('Failed to resolve 7TV emote set ID', {
+          name: 'seven_tv_emotes_warning',
+          error: cause,
+          action: 'emote_set_id_failed',
+          channel_id: channelId,
+          provider: 'seven_tv',
+          resource_type: 'emotes',
+          scope: 'channel',
+          screen: 'chat',
+        });
+
+        return fallbackSevenTvSetId;
+      });
+
+    const emoteSpecs = buildEmoteResourceSpecs({
+      channelId,
+      sevenTvSetId: sevenTvSetIdPromise,
+      sevenTvSetIdFallback: fallbackSevenTvSetId,
+      twitchUserId,
+    });
+
+    const badgeSpecs = buildBadgeResourceSpecs({ channelId });
+
+    const [emoteSettled, badgeSettled] = await startSpanAsync(
+      'fetch-emotes-and-badges',
+      'http.client',
+      () => Promise.all([settleSpecs(emoteSpecs), settleSpecs(badgeSpecs)]),
+      {
+        channel_id: channelId,
+        service_count: emoteSpecs.length + badgeSpecs.length,
+      },
+    );
+
+    if (exitIfAborted(signal, true)) {
+      return false;
+    }
+
+    // Settled (or about to settle behind the same client timeout) by the time
+    // the resource fetches above have finished.
+    const sevenTvSetId = await sevenTvSetIdPromise;
+
+    reportResourceResults({
+      channelId,
+      settled: [...emoteSettled, ...badgeSettled],
+      trigger: 'full_channel_resource_load',
+    });
+
+    const cacheContext = { channelId, existingCache, existingGlobalCache };
+    const emoteByKey = reconcileSettledSpecs(emoteSettled, cacheContext);
+    const badgeByKey = reconcileSettledSpecs(badgeSettled, cacheContext);
+
+    const emoteResourceSets: ChannelEmoteResourceSets = {
+      sevenTvChannelEmotes: emoteByKey.get('sevenTvChannelEmotes') ?? [],
+      twitchChannelEmotes: emoteByKey.get('twitchChannelEmotes') ?? [],
+      twitchSubscriberEmotes: emoteByKey.get('twitchSubscriberEmotes') ?? [],
+      bttvChannelEmotes: emoteByKey.get('bttvChannelEmotes') ?? [],
+      ffzChannelEmotes: emoteByKey.get('ffzChannelEmotes') ?? [],
+    };
+
+    const badgeResourceSets: ChannelBadgeResourceSets = {
+      twitchChannelBadges: badgeByKey.get('twitchChannelBadges') ?? [],
+      ffzChannelBadges: badgeByKey.get('ffzChannelBadges') ?? [],
+    };
+
+    if (exitIfAborted(signal, true)) {
+      return false;
+    }
+
+    const hasChannelEmoteFailure = emoteSettled.some(
+      entry =>
+        entry.spec.scope !== 'global' && entry.result.status === 'rejected',
+    );
+
+    const hasChannelBadgeFailure = badgeSettled.some(
+      entry =>
+        entry.spec.scope !== 'global' && entry.result.status === 'rejected',
+    );
+
+    const now = Date.now();
+
+    const channelData: ChannelCacheType = {
+      lastUpdated: hasChannelEmoteFailure
+        ? (existingCache?.lastUpdated ?? 0)
+        : now,
+      badgesLastUpdated: hasChannelBadgeFailure
+        ? (existingCache?.badgesLastUpdated ?? 0)
+        : now,
+      ...emoteResourceSets,
+      twitchSubscriberEmotesUserId: twitchUserId ?? undefined,
+      twitchSubscriberChannelProfiles:
+        existingCache?.twitchSubscriberChannelProfiles ?? {},
+      ...badgeResourceSets,
+      sevenTvEmoteSetId: sevenTvSetId === 'global' ? undefined : sevenTvSetId,
+    };
+
+    clearChannelPersonalEmotes(channelId);
+
+    batch(() => {
+      writeGlobalCaches({
+        badgeByKey,
+        emoteByKey,
+        existingGlobalCache,
+        now,
+        settled: [...emoteSettled, ...badgeSettled],
+      });
+
+      const currentCaches = chatStore$.persisted.channelCaches.peek() ?? {};
+
+      chatStore$.persisted.channelCaches.set(
+        limitChannelCaches(
+          { ...currentCaches, [channelId]: channelData },
+          channelId,
+        ),
+      );
+
+      chatStore$.loadingState.set('COMPLETED');
+    });
+
+    // After the batch, so the listener has queued the new channel's write.
+    for (const droppedId of prunePersistedChannelCaches(channelId)) {
+      chatStore$.persisted.channelCaches[droppedId]?.delete();
+    }
+
+    notifyProviderLoadFailures(
+      channelId,
+      [...emoteSettled, ...badgeSettled],
+      existingCache,
+      existingGlobalCache,
+    );
+
+    if (twitchUserId) {
+      void notify7TVPresence(twitchUserId, channelId);
+      void fetchUserPersonalEmotes(twitchUserId, channelId);
+    }
+
+    void resolveSubscriberChannelProfiles(channelId);
+
+    logger.chat.info('Loaded channel resources', {
+      name: 'chat_resources_info',
+      action: 'channel_resources_loaded',
+      badge_count: countReconciledItems(badgeByKey),
+      category: 'data_loading',
+      channel_id: channelId,
+      emote_count: countReconciledItems(emoteByKey),
+      screen: 'chat',
+    });
+
+    return true;
+  } catch (error) {
+    if (exitIfAborted(signal, true)) {
+      return false;
+    }
+
+    logger.chat.error('Failed to load channel resources', {
+      name: 'chat_resources_error',
+      error,
+      action: 'channel_resources_failed',
+      channel_id: channelId,
+      screen: 'chat',
+    });
+
+    addMessage(
+      createSystemMessage(
+        channelId,
+        "Couldn't load channel emotes and badges. Try refreshing.",
+      ),
+    );
+
+    chatStore$.loadingState.set('ERROR');
+    return false;
+  }
+};
+
+/**
+ * Fire-and-forget cheermote fetch; failures only log because cheer rendering
+ * degrades to plain text without them.
+ */
+const loadChannelCheermotes = (channelId: string): void => {
+  fetchChannelCheermotes(channelId, () =>
+    twitchService.getCheermotes(channelId),
+  ).catch((cause: unknown) => {
+    logger.chat.warn('Failed to load channel cheermotes', {
+      name: 'chat_resources_warning',
+      error: cause,
+      action: 'cheermotes_failed',
+      channel_id: channelId,
+      screen: 'chat',
+    });
+  });
+};
+
+export const loadChannelResources = async ({
+  channelId,
+  forceRefresh: shouldForceRefresh = false,
+  signal,
+  twitchUserId,
+}: LoadChannelResourcesOptions): Promise<boolean> => {
+  loadChannelCheermotes(channelId);
+
+  return startSpanAsync(
+    'load-channel-resources',
+    'chat.load',
+    () =>
+      loadChannelResourcesInternal(
+        channelId,
+        shouldForceRefresh,
+        signal,
+        twitchUserId,
+      ),
+    { channel_id: channelId, force_refresh: shouldForceRefresh },
+  );
+};
+
+/**
+ * Stale-stamps the channel's cached slices and drops the process-level caches
+ * a reload does not clear itself (BTTV badge list, cheermote stamp).
+ */
+export const invalidateChatResourceCaches = (channelId: string): void => {
+  const channelCache = chatStore$.persisted.channelCaches[channelId];
+
+  if (channelCache?.peek()) {
+    channelCache.assign({ lastUpdated: 0, badgesLastUpdated: 0 });
+  }
+
+  clearGlobalResourceCache();
+  clearBttvBadgesCache();
+  cheermoteFetchGuard.clearKey(channelId);
+};
+
+const clearOneChannelCache = (channelId: string): void => {
+  batch(() => {
+    const currentCaches = chatStore$.persisted.channelCaches.peek() ?? {};
+
+    const { [channelId]: _, ...rest } = currentCaches;
+    chatStore$.persisted.channelCaches.set(rest);
+
+    // Leave a different channel's id alone; only the cleared one resets.
+    if (chatStore$.currentChannelId.peek() === channelId) {
+      chatStore$.currentChannelId.set(null);
+    }
+  });
+};
+
+const clearEveryChannelCache = (): void => {
+  batch(() => {
+    chatStore$.persisted.channelCaches.set({});
+    chatStore$.persisted.globalCaches.set(makeEmptyGlobalCacheData());
+    chatStore$.currentChannelId.set(null);
+    chatStore$.loadingState.set('IDLE');
+  });
+
+  if (CHANNEL_CACHE_PERSISTENCE_ENABLED) {
+    clearPersistedChannelCaches();
+  }
+};
+
+export const clearCache = (channelId?: string) => {
+  if (channelId) {
+    clearOneChannelCache(channelId);
+  } else {
+    clearEveryChannelCache();
+  }
+
+  clearGlobalResourceCache();
+  invalidateCosmeticsCache();
+};
+
+export const clearChatCosmeticsCache = (): void => {
+  batch(() => {
+    chatStore$.persisted.channelCaches.set({});
+    chatStore$.recentMessagesByChannel.set({});
+    chatStore$.persisted.globalCaches.set(makeEmptyGlobalCacheData());
+    chatStore$.currentChannelId.set(null);
+    chatStore$.loadingState.set('IDLE');
+    chatStore$.emojis.set(getEmojiEmotes(getPreferences().emojiStyle));
+    chatStore$.bits.set([]);
+    chatStore$.messages.set([]);
+  });
+
+  if (RECENT_MESSAGES_PERSISTENCE_ENABLED) {
+    clearPersistedRecentMessages();
+  }
+
+  if (CHANNEL_CACHE_PERSISTENCE_ENABLED) {
+    clearPersistedChannelCaches();
+  }
+
+  clearUserCosmeticsCache();
+  clearPersonalEmotesCache();
+  clearSubscriberProfilesCache();
+  clearSessionCache();
+  clearGlobalResourceCache();
+  void clearChatStorePersistence();
+};
+
+const NO_EMOTES: SanitisedEmote[] = [];
+const NO_BADGES: SanitisedBadgeSet[] = [];
+
+/**
+ * Reference-keyed memo: getCurrentEmoteData runs once per ingested message
+ * but its inputs only change a handful of times per session.
+ */
+let resolvedEmoteDataCache: {
+  channelId: string;
+  cache: unknown;
+  globalCache: unknown;
+  preferences: unknown;
+  chatterinoBadges: unknown;
+  bttvBadges: unknown;
+  value: ReturnType<typeof buildResolvedEmoteData>;
+} | null = null;
+
+export const getCurrentEmoteData = (channelId?: string) => {
+  const targetChannelId = channelId ?? chatStore$.currentChannelId.peek();
+
+  if (!targetChannelId) {
+    return emptyResolvedEmoteData;
+  }
+
+  const caches = chatStore$.persisted.channelCaches.peek();
+  const cache = caches?.[targetChannelId];
+
+  if (!cache) {
+    return emptyResolvedEmoteData;
+  }
+
+  const globalCache = chatStore$.persisted.globalCaches.peek();
+  const preferences = getPreferences();
+  const chatterinoBadges = getChatterinoBadges();
+  const bttvBadges = getBttvBadges();
+
+  const memo = resolvedEmoteDataCache;
+
+  if (
+    memo &&
+    memo.channelId === targetChannelId &&
+    memo.cache === cache &&
+    memo.globalCache === globalCache &&
+    memo.preferences === preferences &&
+    memo.chatterinoBadges === chatterinoBadges &&
+    memo.bttvBadges === bttvBadges
+  ) {
+    return memo.value;
+  }
+
+  const value = buildResolvedEmoteData(
+    cache,
+    globalCache,
+    preferences,
+    chatterinoBadges,
+    bttvBadges,
+  );
+
+  resolvedEmoteDataCache = {
+    channelId: targetChannelId,
+    cache,
+    globalCache,
+    preferences,
+    chatterinoBadges,
+    bttvBadges,
+    value,
+  };
+
+  return value;
+};
+
+const buildResolvedEmoteData = (
+  cache: NonNullable<
+    NonNullable<
+      ReturnType<typeof chatStore$.persisted.channelCaches.peek>
+    >[string]
+  >,
+  globalCache: ReturnType<typeof chatStore$.persisted.globalCaches.peek>,
+  preferences: ReturnType<typeof getPreferences>,
+  chatterinoBadges: SanitisedBadgeSet[],
+  bttvBadges: SanitisedBadgeSet[],
+) => {
+  return {
+    twitchChannelEmotes: preferences.showTwitchEmotes
+      ? cache.twitchChannelEmotes
+      : NO_EMOTES,
+    twitchGlobalEmotes: preferences.showTwitchEmotes
+      ? globalCache.twitchGlobalEmotes
+      : NO_EMOTES,
+    twitchSubscriberEmotes: preferences.showTwitchEmotes
+      ? cache.twitchSubscriberEmotes
+      : NO_EMOTES,
+    sevenTvChannelEmotes: preferences.show7TvEmotes
+      ? cache.sevenTvChannelEmotes
+      : NO_EMOTES,
+    sevenTvGlobalEmotes: preferences.show7TvEmotes
+      ? globalCache.sevenTvGlobalEmotes
+      : NO_EMOTES,
+    ffzChannelEmotes: preferences.showFFzEmotes
+      ? cache.ffzChannelEmotes
+      : NO_EMOTES,
+    ffzGlobalEmotes: preferences.showFFzEmotes
+      ? globalCache.ffzGlobalEmotes
+      : NO_EMOTES,
+    bttvGlobalEmotes: preferences.showBttvEmotes
+      ? globalCache.bttvGlobalEmotes
+      : NO_EMOTES,
+    bttvChannelEmotes: preferences.showBttvEmotes
+      ? cache.bttvChannelEmotes
+      : NO_EMOTES,
+    twitchChannelBadges: preferences.showTwitchBadges
+      ? cache.twitchChannelBadges
+      : NO_BADGES,
+    twitchGlobalBadges: preferences.showTwitchBadges
+      ? globalCache.twitchGlobalBadges
+      : NO_BADGES,
+    ffzChannelBadges: preferences.showFFzBadges
+      ? cache.ffzChannelBadges
+      : NO_BADGES,
+    ffzGlobalBadges: preferences.showFFzBadges
+      ? globalCache.ffzGlobalBadges
+      : NO_BADGES,
+    chatterinoBadges: preferences.showChatterinoEmotes
+      ? chatterinoBadges
+      : NO_BADGES,
+    bttvBadges: preferences.showBttvBadges ? bttvBadges : NO_BADGES,
+  };
+};

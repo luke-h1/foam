@@ -1,3 +1,3 @@
-import { ChatHighlightsScreen } from '@app/screens/Preferences/ChatHighlightsScreen';
+import { ChatHighlightsScreen } from '@app/screens/preferences/chat-highlights-screen';
 
 export default ChatHighlightsScreen;

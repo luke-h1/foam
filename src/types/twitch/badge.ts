@@ -1,4 +1,4 @@
-import { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
+import { OpenStringUnion } from '@app/utils/typescript/open-string-union';
 
 export type BadgeProvider = 'twitch' | '7tv' | 'bttv' | 'ffz' | 'chatterino';
 

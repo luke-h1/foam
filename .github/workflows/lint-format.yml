@@ -23,7 +23,7 @@ jobs:
           persist-credentials: false
 
       - name: 🥟 Setup Bun and install dependencies
-        uses: ./.github/actions/setup-bun-install
+        uses: $/.github/actions/setup-bun-install
         with:
           node: 'true'
 
@@ -34,6 +34,10 @@ jobs:
       - name: 🔍 TypeScript
         if: ${{ !cancelled() }}
         run: bun run ts:check
+
+      - name: 🗺 Doc paths
+        if: ${{ !cancelled() }}
+        run: bun run docs:check
 
       - name: 🧪 ast-grep rule tests
         if: ${{ !cancelled() }}
@@ -46,6 +50,10 @@ jobs:
       - name: 🤓 ESLint
         if: ${{ !cancelled() }}
         run: bun run lint
+
+      - name: 🧹 oxlint
+        if: ${{ !cancelled() }}
+        run: bun run lint:oxlint
 
       - name: 🧑‍🔬 Commit messages
         if: ${{ !cancelled() }}

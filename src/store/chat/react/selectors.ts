@@ -1,10 +1,10 @@
 import { useSelector } from '@legendapp/state/react';
 
-import { useEmoteRenderPreferences } from '@app/store/preferenceStore';
-import { getChatterinoBadges } from '@app/utils/chat/chatterinoBadges';
+import { useEmoteRenderPreferences } from '@app/store/preference-store';
+import { getChatterinoBadges } from '@app/utils/chat/chatterino-badges';
 
-import { getChannelPersonalEmotes } from '../actions/personalEmotes';
-import { chatStore$ } from '../observables/chatStore';
+import { getChannelPersonalEmotes } from '../actions/personal-emotes';
+import { chatStore$ } from '../observables/chat-store';
 import {
   type ChannelCacheType,
   type GlobalCacheType,
@@ -154,6 +154,7 @@ export const useCurrentEmoteData = () => {
     const channelId = chatStore$.currentChannelId.get();
     return getChannelEmoteData(channelId);
   });
+
   const preferences = useEmoteRenderPreferences();
   return resolveEmoteData(cache, preferences);
 };
@@ -165,8 +166,10 @@ export const useChannelEmoteDataForReprocess = (channelId: string | null) => {
     if (!channelId) {
       return null;
     }
+
     const cache$ = chatStore$.persisted.channelCaches[channelId];
     const globalCache$ = chatStore$.persisted.globalCaches;
+
     return {
       twitchChannelEmotes: cache$?.twitchChannelEmotes.get() ?? EMPTY_EMOTES,
       twitchGlobalEmotes: globalCache$.twitchGlobalEmotes.get() ?? EMPTY_EMOTES,
@@ -190,6 +193,7 @@ export const useChannelEmoteDataForReprocess = (channelId: string | null) => {
 export const useGlobalEmoteBadgeCaches = () =>
   useSelector(() => {
     const globalCache$ = chatStore$.persisted.globalCaches;
+
     return {
       twitchGlobalEmotes: globalCache$.twitchGlobalEmotes.get() ?? EMPTY_EMOTES,
       sevenTvGlobalEmotes:

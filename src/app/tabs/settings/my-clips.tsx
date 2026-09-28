@@ -1,3 +1,3 @@
-import { MyClipsScreen } from '@app/screens/Stream/MyClipsScreen';
+import { MyClipsScreen } from '@app/screens/stream/my-clips-screen';
 
 export default MyClipsScreen;

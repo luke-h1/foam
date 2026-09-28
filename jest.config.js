@@ -29,8 +29,8 @@ const jestConfig = {
       '<rootDir>/__mocks__/.rnstorybook/index.tsx',
     '^(\\./|\\.\\./)*\\.rnstorybook$':
       '<rootDir>/__mocks__/.rnstorybook/index.tsx',
-    '^@app/screens/StorybookScreen$':
-      '<rootDir>/__mocks__/src/screens/StorybookScreen.tsx',
+    '^@app/screens/storybook-screen$':
+      '<rootDir>/__mocks__/src/screens/storybook-screen.tsx',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   verbose: process.env.CI === 'true' || process.env.JEST_VERBOSE === 'true',

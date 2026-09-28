@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 
-import { nativeStackScreenOptions } from '@app/utils/navigation/nativeStackOptions';
+import { nativeStackScreenOptions } from '@app/utils/navigation/native-stack-options';
 
 export default function PreferencesLayout() {
   return (
@@ -12,14 +12,6 @@ export default function PreferencesLayout() {
       <Stack.Screen
         name='chat'
         options={{ title: 'Chat', headerBackTitle: 'Settings' }}
-      />
-      <Stack.Screen
-        name='theming'
-        options={{ title: 'Theme', headerBackTitle: 'Settings' }}
-      />
-      <Stack.Screen
-        name='video'
-        options={{ title: 'Video', headerBackTitle: 'Settings' }}
       />
     </Stack>
   );

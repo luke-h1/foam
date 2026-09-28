@@ -1,0 +1,930 @@
+// "shape" is the 7TV paint API field (types/seven-tv/cosmetics.ts), not a naming choice.
+// oxlint-disable anti-slop/no-shape-in-symbol-names
+import { AppState, Platform } from 'react-native';
+
+import type {
+  SkCanvas,
+  SkImage,
+  SkImageFilter,
+  SkPaint,
+  SkShader,
+  SkTypefaceFontProvider,
+} from '@shopify/react-native-skia';
+import {
+  ClipOp,
+  FontWeight,
+  PaintStyle,
+  Skia,
+  TileMode,
+} from '@shopify/react-native-skia';
+
+import { indexedCollectionToArray } from '@app/services/ws/util/indexed-collection';
+import type {
+  PaintData,
+  PaintLayerData,
+  PaintShadow,
+  PaintStop,
+  PaintTextStroke,
+} from '@app/types/seven-tv/cosmetics';
+import { isVisibleSevenTvColor } from '@app/utils/color/is-visible-seven-tv-color';
+import { sevenTvColorToCss } from '@app/utils/color/seven-tv-color-to-css';
+import {
+  cachePaintBitmaps,
+  clearPaintBitmapCache,
+  getCachedPaintBitmaps,
+} from '@app/utils/image/paint-bitmap-cache-lifecycle';
+
+import { cssClampedStops } from './paint-layer/css-clamped-stops';
+import { getPaintDropShadows } from './paint-layer/get-paint-drop-shadows';
+import { getPaintLayers } from './paint-layer/get-paint-layers';
+import { isRenderablePaintLayer } from './paint-layer/is-renderable-paint-layer';
+import { isTilingCanvasRepeat } from './paint-layer/is-tiling-canvas-repeat';
+import {
+  type PaintLayerTileMode,
+  paintLayerTileModes,
+} from './paint-layer/paint-layer-tile-modes';
+import { getPaintTextShadows } from './paint-text-style/get-paint-text-shadows';
+import { getPaintTextStroke } from './paint-text-style/get-paint-text-stroke';
+import { cssDropShadowBlur } from './skia-paint-geometry/css-drop-shadow-blur';
+import { cssLinearGradientLine } from './skia-paint-geometry/css-linear-gradient-line';
+import { cssTextShadowBlur } from './skia-paint-geometry/css-text-shadow-blur';
+import { farthestCornerCircleRadius } from './skia-paint-geometry/farthest-corner-circle-radius';
+import { farthestCornerEllipseRadii } from './skia-paint-geometry/farthest-corner-ellipse-radii';
+import {
+  type LayerRect,
+  layerRectInBox,
+} from './skia-paint-geometry/layer-rect-in-box';
+import { paintShadowExtents } from './skia-paint-geometry/paint-shadow-extents';
+
+export interface RasterizePaintedUsernameOptions {
+  displayUsername: string;
+  paint: PaintData;
+  fallbackColor: string;
+  fontSize: number;
+  pixelRatio: number;
+  fontProvider: SkTypefaceFontProvider;
+  fontFamily: string;
+}
+
+const LAYOUT_WIDTH = 8192;
+
+const GRADIENT_PREMUL_FLAG = 1;
+
+function isDrawableGradientLayer(layer: PaintLayerData): boolean {
+  return layer.function !== 'URL' && isRenderablePaintLayer(layer);
+}
+
+function isLiveUrlLayer(layer: PaintLayerData): boolean {
+  return layer.function === 'URL' && isRenderablePaintLayer(layer);
+}
+
+function skColor(color: number): Float32Array {
+  return Skia.Color(sevenTvColorToCss(color));
+}
+
+function layerShader(layer: PaintLayerData, rect: LayerRect): SkShader | null {
+  const stops = cssClampedStops(
+    indexedCollectionToArray<PaintStop>(layer.stops),
+  );
+
+  if (stops.length < 2) {
+    return null;
+  }
+
+  const colors = stops.map(stop => skColor(stop.color));
+  const firstAt = stops[0]?.at ?? 0;
+  const lastAt = stops[stops.length - 1]?.at ?? 1;
+  const period = lastAt - firstAt;
+  const repeats = layer.repeat && period > 0.0001;
+
+  const positions = repeats
+    ? stops.map(stop => (stop.at - firstAt) / period)
+    : stops.map(stop => stop.at);
+
+  const tileMode = repeats ? TileMode.Repeat : TileMode.Clamp;
+
+  if (layer.function === 'LINEAR_GRADIENT') {
+    const line = cssLinearGradientLine(
+      layer.angle ?? 0,
+      rect.width,
+      rect.height,
+    );
+
+    const toCanvas = (point: { x: number; y: number }) => ({
+      x: rect.x + point.x,
+      y: rect.y + point.y,
+    });
+
+    const lineVector = {
+      x: line.end.x - line.start.x,
+      y: line.end.y - line.start.y,
+    };
+
+    const pointAt = (t: number) =>
+      toCanvas({
+        x: line.start.x + lineVector.x * t,
+        y: line.start.y + lineVector.y * t,
+      });
+
+    const start = repeats ? pointAt(firstAt) : toCanvas(line.start);
+    const end = repeats ? pointAt(lastAt) : toCanvas(line.end);
+
+    return Skia.Shader.MakeLinearGradient(
+      start,
+      end,
+      colors,
+      positions,
+      tileMode,
+      undefined,
+      GRADIENT_PREMUL_FLAG,
+    );
+  }
+
+  const center = {
+    x: rect.x + rect.width / 2,
+    y: rect.y + rect.height / 2,
+  };
+
+  const circleRadius = farthestCornerCircleRadius(rect.width, rect.height);
+
+  let localMatrix;
+  let radius = circleRadius;
+
+  if (layer.shape === 'ellipse') {
+    const { rx, ry } = farthestCornerEllipseRadii(rect.width, rect.height);
+    radius = rx;
+    localMatrix = Skia.Matrix();
+    localMatrix.translate(center.x, center.y);
+    localMatrix.scale(1, ry / rx);
+    localMatrix.translate(-center.x, -center.y);
+  }
+
+  if (repeats) {
+    return Skia.Shader.MakeTwoPointConicalGradient(
+      center,
+      radius * firstAt,
+      center,
+      radius * lastAt,
+      colors,
+      positions,
+      TileMode.Repeat,
+      localMatrix,
+      GRADIENT_PREMUL_FLAG,
+    );
+  }
+
+  return Skia.Shader.MakeRadialGradient(
+    center,
+    radius,
+    colors,
+    positions,
+    TileMode.Clamp,
+    localMatrix,
+    GRADIENT_PREMUL_FLAG,
+  );
+}
+
+/**
+ * Skia decodes WebP but not AVIF, so swap 7TV CDN AVIF layer urls to their
+ * WebP sibling (same path, always served).
+ */
+function skiaDecodableLayerUrl(url: string): string {
+  return url.replace(
+    /^(https:\/\/cdn\.7tv\.app\/paint\/[^?\s]+)\.avif(\?\S*)?$/,
+    '$1.webp$2',
+  );
+}
+
+interface PaintUsernameLayout {
+  text: string;
+  scale: number;
+  fontSizePx: number;
+  fontWeight: FontWeight;
+  glyphWidthPx: number;
+  glyphHeightPx: number;
+  dropShadows: PaintShadow[];
+  textShadows: PaintShadow[];
+  stroke: PaintTextStroke | null;
+  layers: PaintLayerData[];
+  originX: number;
+  originY: number;
+  surfaceWidthPx: number;
+  surfaceHeightPx: number;
+  insetsPx: { left: number; top: number; right: number; bottom: number };
+}
+
+/**
+ * SkParagraph's getLongestLine() drops trailing breakable spaces, gluing the
+ * name to the message text; NBSP keeps the gap.
+ */
+function keepTrailingSpaces(text: string): string {
+  return text.replace(/ +$/, match => '\u00A0'.repeat(match.length));
+}
+
+function paintUsernameText(paint: PaintData, displayUsername: string): string {
+  const transform = paint.textStyle?.transform;
+
+  if (transform === 'uppercase') {
+    return keepTrailingSpaces(displayUsername.toLocaleUpperCase());
+  }
+
+  if (transform === 'lowercase') {
+    return keepTrailingSpaces(displayUsername.toLocaleLowerCase());
+  }
+
+  return keepTrailingSpaces(displayUsername);
+}
+
+function buildUsernameParagraph(
+  opts: RasterizePaintedUsernameOptions,
+  layout: Pick<PaintUsernameLayout, 'text' | 'fontSizePx' | 'fontWeight'>,
+  fillPaint: SkPaint,
+) {
+  const skiaTextStyle = {
+    fontFamilies: [opts.fontFamily],
+    fontSize: layout.fontSizePx,
+    fontStyle: { weight: layout.fontWeight },
+  };
+
+  const builder = Skia.ParagraphBuilder.Make(
+    { maxLines: 1, textStyle: skiaTextStyle },
+    opts.fontProvider,
+  );
+
+  builder.pushStyle(skiaTextStyle, fillPaint);
+  builder.addText(layout.text);
+  const paragraph = builder.build();
+  paragraph.layout(LAYOUT_WIDTH);
+  return paragraph;
+}
+
+function buildPaintLayout(
+  opts: RasterizePaintedUsernameOptions,
+): PaintUsernameLayout | null {
+  const { paint, displayUsername, fontSize, pixelRatio } = opts;
+  const scale = pixelRatio;
+
+  let fontWeight: FontWeight =
+    Platform.OS === 'android' ? FontWeight.Bold : FontWeight.Normal;
+
+  if (paint.textStyle?.weight) {
+    // SAFETY: 7TV encodes textStyle.weight as CSS hundreds (1-9), so x100 lands on a FontWeight member.
+    fontWeight = (paint.textStyle.weight * 100) as FontWeight;
+  }
+
+  const partial = {
+    text: paintUsernameText(paint, displayUsername),
+    fontSizePx: fontSize * scale,
+    fontWeight,
+  };
+
+  const measured = buildUsernameParagraph(opts, partial, Skia.Paint());
+  const glyphWidthPx = Math.ceil(measured.getLongestLine());
+  const glyphHeightPx = Math.ceil(measured.getHeight());
+
+  if (glyphWidthPx === 0 || glyphHeightPx === 0) {
+    return null;
+  }
+
+  const dropShadows = getPaintDropShadows(paint, 2);
+  const textShadows = getPaintTextShadows(paint);
+  const stroke = getPaintTextStroke(paint);
+
+  const extents = paintShadowExtents(
+    dropShadows,
+    textShadows,
+    stroke?.width ?? 0,
+  );
+
+  const insetsPx = {
+    left: Math.ceil(extents.left * scale),
+    top: Math.ceil(extents.top * scale),
+    right: Math.ceil(extents.right * scale),
+    bottom: Math.ceil(extents.bottom * scale),
+  };
+
+  return {
+    ...partial,
+    scale,
+    glyphWidthPx,
+    glyphHeightPx,
+    dropShadows,
+    textShadows,
+    stroke,
+    layers: getPaintLayers(paint),
+    originX: insetsPx.left,
+    originY: insetsPx.top,
+    surfaceWidthPx: glyphWidthPx + insetsPx.left + insetsPx.right,
+    surfaceHeightPx: glyphHeightPx + insetsPx.top + insetsPx.bottom,
+    insetsPx,
+  };
+}
+
+function drawPaintedUsername(
+  canvas: SkCanvas,
+  opts: RasterizePaintedUsernameOptions,
+  layout: PaintUsernameLayout,
+  options: {
+    includeDropShadows: boolean;
+    includeTextShadows: boolean;
+    includeBaseFill: boolean;
+    gradientLayers: PaintLayerData[] | null;
+    includeStroke: boolean;
+  } = {
+    includeDropShadows: true,
+    includeTextShadows: true,
+    includeBaseFill: true,
+    gradientLayers: null,
+    includeStroke: true,
+  },
+): void {
+  const { paint, fallbackColor } = opts;
+  const { scale, glyphWidthPx, glyphHeightPx, originX, originY } = layout;
+  const measurePaint = Skia.Paint();
+
+  const drawGlyphs = (fillPaint: SkPaint) => {
+    buildUsernameParagraph(opts, layout, fillPaint).paint(
+      canvas,
+      originX,
+      originY,
+    );
+  };
+
+  let dropShadowChain: SkImageFilter | null = null;
+
+  if (options.includeDropShadows) {
+    for (const shadow of layout.dropShadows) {
+      dropShadowChain = Skia.ImageFilter.MakeDropShadow(
+        shadow.x_offset * scale,
+        shadow.y_offset * scale,
+        cssDropShadowBlur(shadow.radius) * scale,
+        cssDropShadowBlur(shadow.radius) * scale,
+        skColor(shadow.color),
+        dropShadowChain,
+      );
+    }
+  }
+
+  const chainPaint = Skia.Paint();
+
+  if (dropShadowChain) {
+    chainPaint.setImageFilter(dropShadowChain);
+  }
+
+  canvas.saveLayer(dropShadowChain ? chainPaint : undefined);
+
+  if (options.includeTextShadows) {
+    for (const shadow of [...layout.textShadows].reverse()) {
+      const shadowLayerPaint = Skia.Paint();
+
+      shadowLayerPaint.setImageFilter(
+        Skia.ImageFilter.MakeDropShadowOnly(
+          shadow.x_offset * scale,
+          shadow.y_offset * scale,
+          cssTextShadowBlur(shadow.radius) * scale,
+          cssTextShadowBlur(shadow.radius) * scale,
+          skColor(shadow.color),
+          null,
+        ),
+      );
+
+      canvas.saveLayer(shadowLayerPaint);
+      drawGlyphs(measurePaint);
+      canvas.restore();
+    }
+  }
+
+  const basePaint = Skia.Paint();
+
+  basePaint.setColor(
+    isVisibleSevenTvColor(paint.color)
+      ? skColor(paint.color)
+      : Skia.Color(fallbackColor),
+  );
+
+  const gradientsToDraw = (
+    options.gradientLayers ?? [...layout.layers].reverse()
+  ).filter(isDrawableGradientLayer);
+
+  if (options.includeBaseFill && gradientsToDraw.length === 0) {
+    drawGlyphs(basePaint);
+  }
+
+  for (const layer of gradientsToDraw) {
+    const grouped = layer.opacity < 1;
+
+    if (grouped) {
+      const groupPaint = Skia.Paint();
+      groupPaint.setAlphaf(layer.opacity);
+      canvas.saveLayer(groupPaint);
+    }
+
+    drawGlyphs(basePaint);
+
+    const rect = layerRectInBox(
+      layer.at,
+      layer.size,
+      glyphWidthPx,
+      glyphHeightPx,
+    );
+
+    const canvasRect = {
+      x: originX + rect.x,
+      y: originY + rect.y,
+      width: rect.width,
+      height: rect.height,
+    };
+
+    const shader = layerShader(layer, canvasRect);
+
+    if (shader) {
+      const fillPaint = Skia.Paint();
+      fillPaint.setShader(shader);
+      canvas.save();
+
+      canvas.clipRect(
+        Skia.XYWHRect(
+          canvasRect.x,
+          canvasRect.y,
+          canvasRect.width,
+          canvasRect.height,
+        ),
+        ClipOp.Intersect,
+        true,
+      );
+
+      drawGlyphs(fillPaint);
+      canvas.restore();
+    }
+
+    if (grouped) {
+      canvas.restore();
+    }
+  }
+
+  /**
+   * WebKit paints -webkit-text-stroke centred over the fill; drawing inside
+   * the drop-shadow layer keeps the stroke in the shadow silhouette.
+   */
+  if (options.includeStroke && layout.stroke) {
+    const strokePaint = Skia.Paint();
+    strokePaint.setStyle(PaintStyle.Stroke);
+    strokePaint.setStrokeWidth(layout.stroke.width * scale);
+    strokePaint.setColor(skColor(layout.stroke.color));
+    drawGlyphs(strokePaint);
+  }
+
+  canvas.restore();
+}
+
+function snapshotPaintSurface(
+  layout: PaintUsernameLayout,
+  draw: (canvas: SkCanvas) => void,
+): SkImage | null {
+  const surface = Skia.Surface.Make(
+    layout.surfaceWidthPx,
+    layout.surfaceHeightPx,
+  );
+
+  if (!surface) {
+    return null;
+  }
+
+  draw(surface.getCanvas());
+  const image = surface.makeImageSnapshot();
+  surface.dispose();
+  return image;
+}
+
+interface LogicalRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface PaintImageLayer {
+  url: string;
+  rect: LogicalRect | null;
+  tile: { tx: PaintLayerTileMode; ty: PaintLayerTileMode } | null;
+  /**
+   * v4 layer-span opacity; the live compositor fades the span (backing +
+   * texture) by this.
+   */
+  opacity: number;
+}
+
+/**
+ * One live-composite step after the foundation bitmap. Gradients above a URL
+ * layer bake into their own slot so they paint after the live texture.
+ */
+export type PaintLayerSlot =
+  { kind: 'url'; layer: PaintImageLayer } | { kind: 'baked'; image: SkImage };
+
+/**
+ * Only spans above other slots, or faded ones, need the base-colour backing;
+ * shared with the live compositor so the two cannot disagree.
+ */
+export function urlSlotNeedsBacking(
+  index: number,
+  layer: PaintImageLayer,
+): boolean {
+  return index > 0 || layer.opacity < 1;
+}
+
+/**
+ * Render inputs for a painted username; `layerSlots` keeps CSS stacking for
+ * URL layers. Sizes are logical points; bitmaps bake at device pixels.
+ */
+export interface PaintBitmaps {
+  staticImage: SkImage;
+  maskImage: SkImage | null;
+  /**
+   * Base-colour glyphs under each URL texture (the reference's per-span
+   * `background-color: currentColor`). Null when the foundation fill covers it.
+   */
+  backingImage: SkImage | null;
+  layerSlots: PaintLayerSlot[];
+  strokeImage: SkImage | null;
+  /**
+   * URL layers back-to-front, for callers that only need the texture list.
+   */
+  imageLayers: PaintImageLayer[];
+  width: number;
+  height: number;
+  insets: { left: number; top: number; right: number; bottom: number };
+}
+
+function toPaintImageLayer(
+  layer: PaintLayerData,
+  layout: Pick<
+    PaintUsernameLayout,
+    'glyphWidthPx' | 'glyphHeightPx' | 'originX' | 'originY' | 'scale'
+  >,
+): PaintImageLayer | null {
+  if (!isLiveUrlLayer(layer)) {
+    return null;
+  }
+
+  const { opacity } = layer;
+  const url = skiaDecodableLayerUrl(layer.image_url);
+
+  if (isTilingCanvasRepeat(layer.canvas_repeat, layer.repeat)) {
+    return {
+      url,
+      rect: null,
+      tile: paintLayerTileModes(layer.canvas_repeat),
+      opacity,
+    };
+  }
+
+  const rect = layerRectInBox(
+    layer.at,
+    layer.size,
+    layout.glyphWidthPx,
+    layout.glyphHeightPx,
+  );
+
+  return {
+    url,
+    rect: {
+      x: (layout.originX + rect.x) / layout.scale,
+      y: (layout.originY + rect.y) / layout.scale,
+      width: rect.width / layout.scale,
+      height: rect.height / layout.scale,
+    },
+    tile: null,
+    opacity,
+  };
+}
+
+export function buildPaintImageLayers(
+  layout: Pick<
+    PaintUsernameLayout,
+    | 'layers'
+    | 'glyphWidthPx'
+    | 'glyphHeightPx'
+    | 'originX'
+    | 'originY'
+    | 'scale'
+  >,
+): PaintImageLayer[] {
+  const imageLayers: PaintImageLayer[] = [];
+
+  for (const layer of [...layout.layers].reverse()) {
+    const imageLayer = toPaintImageLayer(layer, layout);
+    if (imageLayer) {
+      imageLayers.push(imageLayer);
+    }
+  }
+
+  return imageLayers;
+}
+
+/**
+ * Contiguous gradient runs bake into one slot; each URL gets a live overlay
+ * slot so a gradient above a URL still composites on top of it.
+ */
+export function planPaintLayerSlotKinds(
+  layers: PaintLayerData[],
+): ('url' | 'baked')[] {
+  const kinds: ('url' | 'baked')[] = [];
+  let pendingGradients = false;
+
+  const flushGradients = () => {
+    if (!pendingGradients) {
+      return;
+    }
+
+    pendingGradients = false;
+    kinds.push('baked');
+  };
+
+  for (const layer of [...layers].reverse()) {
+    if (isLiveUrlLayer(layer)) {
+      flushGradients();
+      kinds.push('url');
+      continue;
+    }
+
+    if (isDrawableGradientLayer(layer)) {
+      pendingGradients = true;
+    }
+  }
+
+  flushGradients();
+
+  return kinds;
+}
+
+function buildPaintLayerSlots(
+  opts: RasterizePaintedUsernameOptions,
+  layout: PaintUsernameLayout,
+): Pick<PaintBitmaps, 'imageLayers' | 'layerSlots'> {
+  const layerSlots: PaintLayerSlot[] = [];
+  const imageLayers: PaintImageLayer[] = [];
+  let gradientBatch: PaintLayerData[] = [];
+
+  const flushGradients = () => {
+    if (gradientBatch.length === 0) {
+      return;
+    }
+
+    const batch = gradientBatch;
+    gradientBatch = [];
+
+    const baked = snapshotPaintSurface(layout, canvas => {
+      drawPaintedUsername(canvas, opts, layout, {
+        includeDropShadows: false,
+        includeTextShadows: false,
+        includeBaseFill: false,
+        gradientLayers: batch,
+        includeStroke: false,
+      });
+    });
+
+    if (baked) {
+      layerSlots.push({ kind: 'baked', image: baked });
+    }
+  };
+
+  for (const layer of [...layout.layers].reverse()) {
+    const imageLayer = toPaintImageLayer(layer, layout);
+
+    if (imageLayer) {
+      flushGradients();
+      imageLayers.push(imageLayer);
+      layerSlots.push({ kind: 'url', layer: imageLayer });
+      continue;
+    }
+
+    if (isDrawableGradientLayer(layer)) {
+      gradientBatch.push(layer);
+    }
+  }
+
+  flushGradients();
+
+  return { layerSlots, imageLayers };
+}
+
+export { clearPaintBitmapCache };
+
+let memoryWarningSubscribed = false;
+
+function subscribeToMemoryWarnings(): void {
+  if (memoryWarningSubscribed) {
+    return;
+  }
+
+  memoryWarningSubscribed = true;
+
+  AppState.addEventListener('memoryWarning', () => {
+    clearPaintBitmapCache();
+  });
+}
+
+let nextPaintRevision = 1;
+const paintRevisions = new WeakMap<PaintData, number>();
+
+function paintRevision(paint: PaintData): number {
+  let revision = paintRevisions.get(paint);
+
+  if (revision === undefined) {
+    revision = nextPaintRevision;
+    nextPaintRevision += 1;
+    paintRevisions.set(paint, revision);
+  }
+
+  return revision;
+}
+
+function paintBitmapCacheKey(opts: RasterizePaintedUsernameOptions): string {
+  // When the render falls back, the fallback colour is token of the raster - key it.
+  const fallbackPart = isVisibleSevenTvColor(opts.paint.color)
+    ? ''
+    : `|${opts.fallbackColor}`;
+  return `${opts.paint.id}|${paintRevision(opts.paint)}|${opts.displayUsername}|${opts.fontSize}|${opts.pixelRatio}${fallbackPart}`;
+}
+
+/**
+ * Build or return cached render inputs. Pure and synchronous - URL layers
+ * load live via `useAnimatedImageValue`.
+ */
+type PaintSurfaces = {
+  staticImage: SkImage;
+  layerSlots: PaintLayerSlot[];
+  imageLayers: PaintImageLayer[];
+  strokeImage: SkImage | null;
+  backingImage: SkImage | null;
+};
+
+/**
+ * A paint with no live URL layer draws in one pass, so there is nothing to
+ * composite over and no slots to track.
+ */
+function renderFlatSurface(
+  opts: RasterizePaintedUsernameOptions,
+  layout: PaintUsernameLayout,
+): PaintSurfaces | null {
+  const staticImage = snapshotPaintSurface(layout, canvas => {
+    drawPaintedUsername(canvas, opts, layout);
+  });
+
+  if (!staticImage) {
+    return null;
+  }
+
+  return {
+    staticImage,
+    layerSlots: [],
+    imageLayers: [],
+    strokeImage: null,
+    backingImage: null,
+  };
+}
+
+/**
+ * A URL layer is composited at draw time, so the text is rendered into
+ * separate passes: the visible base, an unshadowed backing for slots that need
+ * one, and the stroke on its own.
+ */
+function renderUrlLayeredSurfaces(
+  opts: RasterizePaintedUsernameOptions,
+  layout: PaintUsernameLayout,
+): PaintSurfaces | null {
+  const staticImage = snapshotPaintSurface(layout, canvas => {
+    drawPaintedUsername(canvas, opts, layout, {
+      includeDropShadows: true,
+      includeTextShadows: true,
+      includeBaseFill: true,
+      gradientLayers: [],
+      includeStroke: false,
+    });
+  });
+
+  if (!staticImage) {
+    return null;
+  }
+
+  const { layerSlots, imageLayers } = buildPaintLayerSlots(opts, layout);
+
+  const needsUrlBacking = layerSlots.some(
+    (slot, index) =>
+      slot.kind === 'url' && urlSlotNeedsBacking(index, slot.layer),
+  );
+
+  const backingImage = needsUrlBacking
+    ? snapshotPaintSurface(layout, canvas => {
+        drawPaintedUsername(canvas, opts, layout, {
+          includeDropShadows: false,
+          includeTextShadows: false,
+          includeBaseFill: true,
+          gradientLayers: [],
+          includeStroke: false,
+        });
+      })
+    : null;
+
+  const strokeImage = layout.stroke
+    ? snapshotPaintSurface(layout, canvas => {
+        drawPaintedUsername(canvas, opts, layout, {
+          includeDropShadows: false,
+          includeTextShadows: false,
+          includeBaseFill: false,
+          gradientLayers: [],
+          includeStroke: true,
+        });
+      })
+    : null;
+
+  return { staticImage, layerSlots, imageLayers, strokeImage, backingImage };
+}
+
+/**
+ * White text on a clear surface, used to clip image layers to the glyphs.
+ */
+function renderUsernameMask(
+  opts: RasterizePaintedUsernameOptions,
+  layout: PaintUsernameLayout,
+): SkImage | null {
+  const maskSurface = Skia.Surface.Make(
+    layout.surfaceWidthPx,
+    layout.surfaceHeightPx,
+  );
+
+  if (!maskSurface) {
+    return null;
+  }
+
+  const whitePaint = Skia.Paint();
+  whitePaint.setColor(Skia.Color('white'));
+
+  buildUsernameParagraph(opts, layout, whitePaint).paint(
+    maskSurface.getCanvas(),
+    layout.originX,
+    layout.originY,
+  );
+
+  const maskImage = maskSurface.makeImageSnapshot();
+  maskSurface.dispose();
+  return maskImage;
+}
+
+export function getPaintBitmaps(
+  opts: RasterizePaintedUsernameOptions,
+): PaintBitmaps | null {
+  subscribeToMemoryWarnings();
+  const key = paintBitmapCacheKey(opts);
+
+  // SAFETY: this module is the cache's only writer, and every entry it stores is a PaintBitmaps.
+  const cached = getCachedPaintBitmaps(key) as PaintBitmaps | undefined;
+
+  if (cached) {
+    return cached;
+  }
+
+  const layout = buildPaintLayout(opts);
+
+  if (!layout) {
+    return null;
+  }
+
+  const hasUrlLayers = layout.layers.some(isLiveUrlLayer);
+
+  const surfaces = hasUrlLayers
+    ? renderUrlLayeredSurfaces(opts, layout)
+    : renderFlatSurface(opts, layout);
+
+  if (!surfaces) {
+    return null;
+  }
+
+  const { staticImage, layerSlots, imageLayers, strokeImage, backingImage } =
+    surfaces;
+
+  const { scale } = layout;
+
+  const maskImage =
+    imageLayers.length > 0 ? renderUsernameMask(opts, layout) : null;
+
+  const bitmaps: PaintBitmaps = {
+    staticImage,
+    maskImage,
+    backingImage,
+    layerSlots,
+    strokeImage,
+    imageLayers,
+    width: layout.surfaceWidthPx / scale,
+    height: layout.surfaceHeightPx / scale,
+    insets: {
+      left: layout.insetsPx.left / scale,
+      top: layout.insetsPx.top / scale,
+      right: layout.insetsPx.right / scale,
+      bottom: layout.insetsPx.bottom / scale,
+    },
+  };
+
+  cachePaintBitmaps(key, bitmaps);
+  return bitmaps;
+}

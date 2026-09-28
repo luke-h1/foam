@@ -13,6 +13,7 @@ export function normalizeChangelogFile(changelogPath: string): string {
 
 function main(): void {
   const changelogPath = process.argv[2];
+
   if (changelogPath == null || changelogPath === '') {
     console.error('Expected a path to CHANGELOG.md');
     process.exit(1);

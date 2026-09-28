@@ -77,7 +77,7 @@ export const VARIANT_CONFIG = {
 const variant =
   (process.env.EXPO_PUBLIC_APP_VARIANT as Variant) || 'development';
 
-const VERSION = '1.0.10';
+const VERSION = '1.0.9';
 
 const appConfig: AppVariantConfig = VARIANT_CONFIG[variant];
 const twitchClientId = process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID;

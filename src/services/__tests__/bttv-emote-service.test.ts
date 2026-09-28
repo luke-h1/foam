@@ -39,6 +39,7 @@ describe('bttvEmoteService', () => {
     const result = await bttvEmoteService.getSanitisedGlobalEmotes();
 
     expect(apiGetSpy).toHaveBeenCalledWith('/emotes/global');
+
     expect(result).toEqual<BttvSanitisedEmote[]>([
       {
         name: 'catJAM',
@@ -113,12 +114,14 @@ describe('bttvEmoteService', () => {
     const result = await bttvEmoteService.getSanitisedChannelEmotes('123');
 
     expect(apiGetSpy).toHaveBeenCalledWith('/users/twitch/123');
+
     expect(
       result.map(emote => ({ id: emote.id, creator: emote.creator })),
     ).toEqual([
       { id: 'emote1', creator: 'creator1' },
       { id: 'emote2', creator: null },
     ]);
+
     expect(result.map(emote => emote.site)).toEqual(['BTTV', 'BTTV']);
   });
 
@@ -134,17 +137,20 @@ describe('bttvEmoteService', () => {
         svg: 'https://cdn.betterttv.net/badges/developer.svg',
       },
     };
+
     const badgeWithoutArtwork: BttvBadge = {
       id: 'badge2',
       name: 'bare_badge',
       displayName: 'Bare',
       providerId: 'twitch-user-2',
     };
+
     apiGetSpy.mockResolvedValue([fullBadge, badgeWithoutArtwork]);
 
     const result = await bttvEmoteService.getSanitisedGlobalBadges();
 
     expect(apiGetSpy).toHaveBeenCalledWith('/badges');
+
     expect(result).toEqual<SanitisedBadgeSet[]>([
       {
         id: 'twitch-user-1',

@@ -1,3 +1,3 @@
-import { LicensesScreen } from '@app/screens/Other/LicensesScreen';
+import { LicensesScreen } from '@app/screens/other/licenses-screen';
 
 export default LicensesScreen;

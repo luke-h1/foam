@@ -3,11 +3,11 @@ import { StyleSheet, View } from 'react-native';
 
 import { type ErrorBoundaryProps, router, Stack } from 'expo-router';
 
-import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
-import { Button } from '@app/components/Button/Button';
-import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
-import { SymbolView } from '@app/components/ui/Icon/Icon';
-import { Text } from '@app/components/ui/Text/Text';
+import { BodyScrollView } from '@app/components/body-scroll-view/body-scroll-view';
+import { Button } from '@app/components/button/button';
+import { ScreenHeader } from '@app/components/screen-header/screen-header';
+import { SymbolView } from '@app/components/ui/icon/icon';
+import { Text } from '@app/components/ui/text/text';
 import { theme } from '@app/styles/themes';
 import { logger } from '@app/utils/logger';
 

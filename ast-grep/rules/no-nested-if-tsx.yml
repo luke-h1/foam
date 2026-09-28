@@ -1,0 +1,31 @@
+id: no-nested-if-tsx
+language: tsx
+severity: warning
+message: Nested `if` statements are hard to follow. Flatten the branch instead.
+note: |
+  A second `if` inside the body of another one hides the real condition from
+  the reader: you have to hold the outer test in your head to understand the
+  inner one. Flatten it with one of these:
+    - combine the two tests with `&&`;
+    - return, continue or throw early so the rest of the body is not nested;
+    - pull the inner branch into its own named function.
+  An `else if` chain is not nested and does not match this rule, and neither
+  is an `if` inside a function declared in the branch.
+files:
+  - 'src/**/*.tsx'
+ignores:
+  - '**/__tests__/**'
+  - '**/*.test.tsx'
+  - '**/*.perf-test.tsx'
+rule:
+  kind: if_statement
+  any:
+    - inside:
+        kind: statement_block
+        inside:
+          any:
+            - kind: if_statement
+            - kind: else_clause
+    - inside:
+        kind: if_statement
+        field: consequence

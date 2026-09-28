@@ -1,5 +1,5 @@
-import { SettingsDevtoolsScreen } from '@app/screens/SettingsScreen/SettingsDevtoolsScreen';
-import { withDevToolsGate } from '@app/utils/devTools/devToolsGate';
+import { SettingsDevtoolsScreen } from '@app/screens/settings-screen/settings-devtools-screen';
+import { withDevToolsGate } from '@app/utils/dev-tools/dev-tools-gate';
 
 const GatedSettingsDevtoolsScreen = withDevToolsGate(SettingsDevtoolsScreen);
 

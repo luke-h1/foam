@@ -1,5 +1,5 @@
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
+import { OpenStringUnion } from '@app/utils/typescript/open-string-union';
 
 import { twitchApi } from './api/clients';
 
@@ -29,9 +29,11 @@ function channelBadgeType(
   if (setId === 'bits') {
     return 'Twitch Bit Badge';
   }
+
   if (setId === 'subscriber') {
     return 'Twitch Subscriber Badge';
   }
+
   return 'Twitch Channel Badge';
 }
 
@@ -62,6 +64,7 @@ export const twitchBadgeService = {
         });
       });
     });
+
     return sanitisedBadges;
   },
   listSanitisedGlobalBadges: async (): Promise<SanitisedBadgeSet[]> => {

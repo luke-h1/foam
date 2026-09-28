@@ -1,3 +1,3 @@
-import { SettingsAppearanceScreen } from '@app/screens/SettingsScreen/SettingsAppearanceScreen';
+import { SettingsAppearanceScreen } from '@app/screens/settings-screen/settings-appearance-screen';
 
 export default SettingsAppearanceScreen;

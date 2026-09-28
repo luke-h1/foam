@@ -41,6 +41,7 @@ describe('changelogAndroidPresenter', () => {
 
   test('a concurrent present resolves false without replacing state', async () => {
     const first = presentChangelogAndroid(baseOptions);
+
     const second = presentChangelogAndroid({
       ...baseOptions,
       version: '2.0.0',

@@ -46,6 +46,7 @@ describe('storageService expiry', () => {
 
     // Reading after expiry removes the key, so a later valid window stays empty.
     jest.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
+
     expect(storageService.getString('previous_searches')).toBeNull();
   });
 
@@ -53,6 +54,7 @@ describe('storageService expiry', () => {
     storageService.set('previous_searches', ['kappa'], undefined, {
       expiry: new Date('2026-01-01T00:01:00.000Z'),
     });
+
     storageService.set('sevenTvUserId_1', 'a', 'seven_tv_cache');
 
     jest.setSystemTime(new Date('2026-01-01T00:02:00.000Z'));
@@ -78,6 +80,7 @@ describe('storageService namespaces', () => {
     expect(
       storageService.getString('sevenTvUserId_1', 'seven_tv_cache'),
     ).toBeNull();
+
     expect(storageService.getString('previous_searches')).toEqual(['kappa']);
   });
 
@@ -90,6 +93,7 @@ describe('storageService namespaces', () => {
     expect(
       storageService.getString('appStoreLink_x', 'image_cache'),
     ).toBeNull();
+
     expect(storageService.getString('sevenTvUserId_1', 'seven_tv_cache')).toBe(
       'a',
     );

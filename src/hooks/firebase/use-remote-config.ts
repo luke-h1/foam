@@ -1,0 +1,186 @@
+import '@react-native-firebase/installations';
+
+import { useState } from 'react';
+
+import { getApp } from '@react-native-firebase/app';
+import {
+  fetchAndActivate,
+  getAll,
+  getRemoteConfig,
+  setConfigSettings,
+  setDefaults,
+} from '@react-native-firebase/remote-config';
+import { useQuery } from '@tanstack/react-query';
+
+import { logger } from '@app/utils/logger';
+
+import {
+  buildRemoteConfigFromDefaults,
+  defaultRemoteConfig,
+  parseRemoteConfigValue,
+  type RemoteConfigEntry,
+  type RemoteConfigKey,
+  type RemoteConfigSchema,
+  type RemoteConfigType,
+  type UseRemoteConfigResult,
+} from './remote-config-model';
+
+export type {
+  BundleUpdateButtonEnabled,
+  MinimumVersionTrack,
+  RemoteConfigEntry,
+  RemoteConfigKey,
+  RemoteConfigSchema,
+  RemoteConfigType,
+  UseRemoteConfigResult,
+} from './remote-config-model';
+export { defaultRemoteConfig } from './remote-config-model';
+
+let cachedRemoteConfig: ReturnType<typeof getRemoteConfig> | null = null;
+let remoteConfigFetchPromise: Promise<boolean> | null = null;
+
+/**
+ * Created on first use - the handle plus setConfigSettings/setDefaults were three Firebase bridge calls at import time, and this module sits in the boot graph.
+ */
+function getRemoteConfigHandle() {
+  if (cachedRemoteConfig) {
+    return cachedRemoteConfig;
+  }
+
+  const remoteConfig = getRemoteConfig(getApp());
+  cachedRemoteConfig = remoteConfig;
+
+  void setConfigSettings(remoteConfig, {
+    minimumFetchIntervalMillis: __DEV__ ? 60 * 1000 : 5 * 60 * 1000,
+  });
+
+  setDefaults(remoteConfig, defaultRemoteConfig).catch(e => {
+    logger.remoteConfig.error('Failed to set default remote config values', e);
+  });
+
+  return remoteConfig;
+}
+
+function isStringValue(cause: unknown): cause is string {
+  return String(cause) === cause;
+}
+
+function getErrorMessage(cause: unknown): string | null {
+  if (cause instanceof Error) {
+    return cause.message;
+  }
+
+  if (isStringValue(cause)) {
+    return cause;
+  }
+
+  if (
+    cause instanceof Object &&
+    'message' in cause &&
+    isStringValue(cause.message)
+  ) {
+    return cause.message;
+  }
+
+  return null;
+}
+
+function isRemoteConfigCancellation(cause: unknown): boolean {
+  const message = getErrorMessage(cause)?.toLowerCase();
+  return message?.includes('cancelled') ?? false;
+}
+
+async function fetchRemoteConfig(): Promise<boolean> {
+  if (remoteConfigFetchPromise) {
+    return remoteConfigFetchPromise;
+  }
+
+  remoteConfigFetchPromise = fetchAndActivate(getRemoteConfigHandle())
+    .then(activated => {
+      logger.remoteConfig.info('fetchAndActivate', {
+        activated,
+        message: activated
+          ? 'Fetched new config from server'
+          : 'Using cached config (no new data)',
+      });
+
+      return activated;
+    })
+    .catch(error => {
+      if (isRemoteConfigCancellation(error)) {
+        logger.remoteConfig.info('fetchAndActivate cancelled', {
+          error: getErrorMessage(error),
+        });
+        return false;
+      }
+
+      logger.remoteConfig.error('fetchAndActivate failed', error);
+      return false;
+    })
+    .finally(() => {
+      remoteConfigFetchPromise = null;
+    });
+
+  return remoteConfigFetchPromise;
+}
+
+function readRemoteConfig(): RemoteConfigType {
+  const allConfig = getAll(getRemoteConfigHandle());
+
+  // SAFETY: defaultRemoteConfig is satisfies-checked against Record<RemoteConfigKey, string>
+  const keys = Object.keys(defaultRemoteConfig) as RemoteConfigKey[];
+
+  const entries = keys.map(key => {
+    const entry = allConfig[key];
+    const raw = entry?.asString() ?? defaultRemoteConfig[key];
+
+    return [
+      key,
+      {
+        raw,
+        value: parseRemoteConfigValue(key, raw),
+        source: entry?.getSource() ?? 'default',
+      } satisfies RemoteConfigEntry<RemoteConfigSchema[RemoteConfigKey]>,
+    ];
+  });
+
+  // SAFETY: entries holds one RemoteConfigEntry per RemoteConfigKey
+  return Object.fromEntries(entries) as RemoteConfigType;
+}
+
+export function useRemoteConfig(): UseRemoteConfigResult {
+  const [isManualRefetching, setIsManualRefetching] = useState(false);
+
+  const {
+    data: config = buildRemoteConfigFromDefaults('default'),
+    refetch: refetchQuery,
+    isFetching,
+    isFetched,
+  } = useQuery({
+    queryKey: ['remoteConfig'],
+    queryFn: async () => {
+      await fetchRemoteConfig();
+      return readRemoteConfig();
+    },
+    staleTime: 5 * 60 * 1000,
+    initialData: () => buildRemoteConfigFromDefaults('default'),
+    // initialData counts as fresh for staleTime; backdating marks the defaults stale so the real config is fetched on mount.
+    initialDataUpdatedAt: 0,
+  });
+
+  const refetch = async (): Promise<boolean> => {
+    setIsManualRefetching(true);
+    return refetchQuery()
+      .then(result => result.data !== undefined)
+      .finally(() => {
+        setIsManualRefetching(false);
+      });
+  };
+
+  return {
+    config,
+    refetch,
+    isRefetching: isFetching || isManualRefetching,
+    isLoading: !isFetched,
+  };
+}

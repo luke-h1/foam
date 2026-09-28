@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 
-import { ClipPlayerScreen } from '@app/screens/Stream/ClipPlayerScreen';
+import { ClipPlayerScreen } from '@app/screens/stream/clip-player-screen';
 
 export default function ClipPlayerRoute() {
   const { id } = useLocalSearchParams<{ id?: string | string[] }>();

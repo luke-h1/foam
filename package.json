@@ -23,6 +23,7 @@
     "clean": "rm -rf ios android .expo node_modules",
     "commit": "cz",
     "deploy": "./scripts/deploy.sh",
+    "docs:check": "bun run scripts/check-doc-paths.ts",
     "e2e:build:android": "eas build --profile e2e --platform android --local",
     "e2e:build:ios": "eas build --profile e2e --platform ios --local",
     "e2e:build:ios:sim": "APP_VARIANT=e2e xcodebuild ONLY_ACTIVE_ARCH=YES -workspace ios/Foamdev.xcworkspace -scheme Foamdev -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build -quiet",

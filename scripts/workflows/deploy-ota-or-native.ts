@@ -131,15 +131,14 @@ function restoreFingerprintCacheCommand(args: string[]): void {
     return;
   }
 
-  if (fallbackBranch !== branch) {
-    const restoredFromFallback = restore(fallbackBranch);
+  const restoredFromFallback =
+    fallbackBranch === branch ? 0 : restore(fallbackBranch);
 
-    if (restoredFromFallback > 0) {
-      console.log(
-        `📂 Restored ${restoredFromFallback} fingerprint(s) from S3 for ${fallbackBranch}/${variant} 🚀`,
-      );
-      return;
-    }
+  if (restoredFromFallback > 0) {
+    console.log(
+      `📂 Restored ${restoredFromFallback} fingerprint(s) from S3 for ${fallbackBranch}/${variant} 🚀`,
+    );
+    return;
   }
 
   console.log(`ℹ️ No S3 fingerprint cache found for ${branch}/${variant} ⚠️`);
@@ -264,14 +263,17 @@ function compareFingerprintsCommand(args: string[]): void {
   const cacheDir = getRequiredArg(args, 'cache-dir');
   const currentIos = getRequiredArg(args, 'current-ios');
   const currentAndroid = getRequiredArg(args, 'current-android');
+
   const previous = {
     ios: readFingerprint(cacheDir, 'ios'),
     android: readFingerprint(cacheDir, 'android'),
   };
+
   const current = {
     ios: currentIos,
     android: currentAndroid,
   };
+
   const changed = compareFingerprints(previous, current);
 
   if (previous.ios == null) {
@@ -302,6 +304,7 @@ function decideDeployTypeCommand(args: string[]): void {
 
   const fingerprintChanged =
     getRequiredArg(args, 'fingerprint-changed', 'false') === 'true';
+
   const deployType = decideDeployType(manualType, fingerprintChanged);
 
   if (manualType === 'ota') {

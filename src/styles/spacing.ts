@@ -57,6 +57,7 @@ export function getMargin(theme: AppTheme) {
     ) {
       return NO_MARGIN;
     }
+
     return buildMargin(theme, { m, mb, ml, mr, mt, mx, my });
   };
 }

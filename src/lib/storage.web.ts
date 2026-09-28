@@ -1,6 +1,6 @@
 import EventEmitter from 'eventemitter3';
 
-import { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
+import { OpenStringUnion } from '@app/utils/typescript/open-string-union';
 
 export type StorageSetterOptions = {
   expiry?: Date;
@@ -92,6 +92,7 @@ export const storageService = {
     }
 
     let parsed: StorageItem<T>;
+
     try {
       parsed = JSON.parse(item);
     } catch {
@@ -124,15 +125,14 @@ export const storageService = {
   ): void {
     const { expiry } = options;
 
-    let item: StorageItem<T> = { value };
-
-    if (expiry) {
-      if (expiry <= new Date()) {
-        return;
-      }
-
-      item = { value, expiry: expiry.toISOString() };
+    // Writing an already-expired entry would only be read back as a miss.
+    if (expiry && expiry <= new Date()) {
+      return;
     }
+
+    const item: StorageItem<T> = expiry
+      ? { value, expiry: expiry.toISOString() }
+      : { value };
 
     const namespacedKey = namespaceKey(key, namespacePrefix);
     storage.set(namespacedKey, JSON.stringify(item));
@@ -166,11 +166,13 @@ export const storageService = {
 
     keys.forEach(key => {
       const item = storage.getString(key);
+
       if (!item) {
         return;
       }
 
       let parsed: StorageItem;
+
       try {
         parsed = JSON.parse(item);
       } catch {
@@ -182,6 +184,7 @@ export const storageService = {
       }
 
       const { expiry } = parsed;
+
       if (expiry && new Date() >= new Date(expiry)) {
         storage.remove(key);
       }
@@ -191,6 +194,7 @@ export const storageService = {
     const keys = storage
       .getAllKeys()
       .filter(key => key.startsWith(`${NAMESPACE}_image_cache`));
+
     keys.forEach(key => storage.remove(key));
     storageEvents.emit('storageChange', 'image_cache');
   },
@@ -200,6 +204,7 @@ export const storageService = {
       .filter(key =>
         key.startsWith(`${NAMESPACE}_${namespacePrefix}_${keyPrefix}`),
       );
+
     keys.forEach(key => storage.remove(key));
     storageEvents.emit('storageChange', namespacePrefix);
   },

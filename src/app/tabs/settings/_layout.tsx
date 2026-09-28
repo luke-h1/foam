@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 import {
   nativeStackScreenOptions,
   nativeStackTabRootScreenOptions,
-} from '@app/utils/navigation/nativeStackOptions';
+} from '@app/utils/navigation/native-stack-options';
 
 export default function SettingsLayout() {
   return (
@@ -27,10 +27,6 @@ export default function SettingsLayout() {
       <Stack.Screen
         name='cached-images'
         options={{ title: 'Cached Images', headerBackTitle: 'Settings' }}
-      />
-      <Stack.Screen
-        name='changelog'
-        options={{ title: 'Changelog', headerBackTitle: 'Settings' }}
       />
       <Stack.Screen
         name='blocked-terms'
@@ -70,10 +66,6 @@ export default function SettingsLayout() {
           title: 'Emotes & Badges',
           headerBackTitle: 'Settings',
         }}
-      />
-      <Stack.Screen
-        name='faq'
-        options={{ title: 'FAQ', headerBackTitle: 'Settings' }}
       />
       <Stack.Screen
         name='licenses'

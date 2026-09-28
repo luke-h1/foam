@@ -30,7 +30,7 @@ Query: one cache, one staleness model, and the Query side is the one that
 yields.
 
 Preferences persist through the one `preferences$` observable in
-`store/preferenceStore.ts` (MMKV-backed); server data outside the
+`store/preference-store.ts` (MMKV-backed); server data outside the
 synchronous-ingest class is never persisted through Legend-State, and session
 data is never mirrored into Query.
 

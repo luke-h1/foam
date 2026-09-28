@@ -1,0 +1,424 @@
+import { createSevenTvEmote } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
+import {
+  createBadgeChangeEntry,
+  createBadgeCosmeticCreateData,
+  createBadgeCosmeticUpdateData,
+  createBadgeData,
+  createBadgePushedEntry,
+  createEmptyChangeMap,
+  createEntitlementDeleteData,
+  createEntitlementUpdateData,
+  createPaintChangeEntry,
+  createPaintCosmeticCreateData,
+  createPaintCosmeticUpdateData,
+  createPaintInput,
+  createPaintPushedEntry,
+} from '@app/components/chat/util/__tests__/__fixtures__/create-seven-tv-callbacks.fixture';
+import { createSevenTvCallbacks } from '@app/components/chat/util/create-seven-tv-callbacks';
+import * as sentryModule from '@app/lib/sentry';
+import * as cosmeticsActions from '@app/store/chat/actions/cosmetics';
+import * as cosmeticsBridgeActions from '@app/store/chat/actions/cosmetics-bridge';
+import type { BadgeData, PaintData } from '@app/types/seven-tv/cosmetics';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import * as generateSevenTvEmoteNoticeModule from '@app/utils/emote/stv/generate-seven-tv-emote-notice';
+import { logger } from '@app/utils/logger';
+import { normalizeSevenTvPaint } from '@app/utils/seven-tv/cosmetics/normalize-seven-tv-paint';
+
+jest.spyOn(logger.stvWs, 'info').mockImplementation(() => {});
+jest.spyOn(logger.stvWs, 'debug').mockImplementation(() => {});
+
+const addBadge = jest.spyOn(cosmeticsActions, 'addBadge');
+const addPaint = jest.spyOn(cosmeticsActions, 'addPaint');
+const removeBadge = jest.spyOn(cosmeticsActions, 'removeBadge');
+const removePaint = jest.spyOn(cosmeticsActions, 'removePaint');
+
+const applyCosmeticCreateEvent = jest.spyOn(
+  cosmeticsBridgeActions,
+  'applyCosmeticCreateEvent',
+);
+
+const applyEntitlementCreateEvent = jest.spyOn(
+  cosmeticsBridgeActions,
+  'applyEntitlementCreateEvent',
+);
+
+const applyEntitlementUpdateEvent = jest.spyOn(
+  cosmeticsBridgeActions,
+  'applyEntitlementUpdateEvent',
+);
+
+const applyEntitlementDeleteEvent = jest.spyOn(
+  cosmeticsBridgeActions,
+  'applyEntitlementDeleteEvent',
+);
+
+const generateStvEmoteNotice = jest.spyOn(
+  generateSevenTvEmoteNoticeModule,
+  'generateStvEmoteNotice',
+);
+
+const mockAddBadge = addBadge;
+
+const mockCountMetric = jest
+  .spyOn(sentryModule, 'countMetric')
+  .mockImplementation(() => {});
+
+const mockApplyCosmeticCreateEvent = applyCosmeticCreateEvent;
+const mockApplyEntitlementCreateEvent = applyEntitlementCreateEvent;
+
+const mockUpdateSevenTvEmotes = jest.fn();
+const mockOnEmoteNotice = jest.fn();
+
+const defaultProps = {
+  channelId: 'twitch-123',
+  channelName: 'testchannel',
+  sevenTvEmoteSetId: 'emote-set-1',
+  updateSevenTvEmotes: mockUpdateSevenTvEmotes,
+  onEmoteNotice: mockOnEmoteNotice,
+};
+
+describe('createSevenTvCallbacks', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('return shape', () => {
+    test('returns all callbacks and channel/set ids', () => {
+      const result = createSevenTvCallbacks(defaultProps);
+
+      expect(result.onEmoteUpdate).toBeDefined();
+      expect(result.onCosmeticCreate).toBeDefined();
+      expect(result.onEntitlementCreate).toBeDefined();
+      expect(result.onCosmeticUpdate).toBeDefined();
+      expect(result.onCosmeticDelete).toBeDefined();
+      expect(result.onEntitlementUpdate).toBeDefined();
+      expect(result.onEntitlementDelete).toBeDefined();
+      expect(result.twitchChannelId).toBe('twitch-123');
+      expect(result.sevenTvEmoteSetId).toBe('emote-set-1');
+    });
+  });
+
+  describe('onEmoteUpdate', () => {
+    test('calls updateSevenTvEmotes with channelId, added, removed', () => {
+      const result = createSevenTvCallbacks(defaultProps);
+
+      result.onEmoteUpdate({
+        channelId: 'c1',
+        added: [
+          createSevenTvEmote({ id: 'e1', name: 'e1', original_name: 'e1' }),
+        ],
+        removed: [
+          createSevenTvEmote({ id: 'e2', name: 'e2', original_name: 'e2' }),
+        ],
+      });
+
+      expect(mockUpdateSevenTvEmotes).toHaveBeenCalledWith(
+        'c1',
+        [createSevenTvEmote({ id: 'e1', name: 'e1', original_name: 'e1' })],
+        [createSevenTvEmote({ id: 'e2', name: 'e2', original_name: 'e2' })],
+      );
+    });
+
+    test('emits notice messages for added and removed emotes', () => {
+      const result = createSevenTvCallbacks(defaultProps);
+
+      const added = [
+        createSevenTvEmote({ id: 'e1', name: 'Added', original_name: 'Added' }),
+      ];
+
+      const removed = [
+        createSevenTvEmote({
+          id: 'e2',
+          name: 'Removed',
+          original_name: 'Removed',
+        }),
+      ];
+
+      result.onEmoteUpdate({
+        channelId: 'c1',
+        added,
+        removed,
+      });
+
+      expect(generateStvEmoteNotice).toHaveBeenCalledWith({
+        channelName: 'testchannel',
+        emote: added[0],
+        type: 'added',
+      });
+
+      expect(generateStvEmoteNotice).toHaveBeenCalledWith({
+        channelName: 'testchannel',
+        emote: removed[0],
+        type: 'removed',
+      });
+
+      expect(mockOnEmoteNotice).toHaveBeenCalledTimes(2);
+    });
+
+    test('suppresses visible notices for nnys emote changes', () => {
+      const result = createSevenTvCallbacks(defaultProps);
+
+      const added = [
+        createSevenTvEmote({
+          id: 'e1',
+          name: 'nnysPat',
+          original_name: 'nnysPat',
+        }),
+      ];
+
+      const removed = [
+        createSevenTvEmote({
+          id: 'e2',
+          name: 'CoolNnysThing',
+          original_name: 'CoolNnysThing',
+        }),
+      ];
+
+      result.onEmoteUpdate({
+        channelId: 'c1',
+        added,
+        removed,
+      });
+
+      expect(mockUpdateSevenTvEmotes).toHaveBeenCalledWith(
+        'c1',
+        added,
+        removed,
+      );
+
+      expect(generateStvEmoteNotice).not.toHaveBeenCalled();
+      expect(mockOnEmoteNotice).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('onCosmeticCreate', () => {
+    test('no-ops when cosmetic.object is missing', () => {
+      const result = createSevenTvCallbacks(defaultProps);
+
+      // @ts-expect-error -- exercising runtime guard when cosmetic.object is absent
+      result.onCosmeticCreate({ kind: 'BADGE', cosmetic: {} });
+
+      expect(applyCosmeticCreateEvent).not.toHaveBeenCalled();
+    });
+
+    test('delegates badge creates to applyCosmeticCreateEvent', () => {
+      const result = createSevenTvCallbacks(defaultProps);
+
+      const data = createBadgeCosmeticCreateData(
+        createBadgeData({
+          id: 'badge-id',
+          name: 'Badge',
+          tooltip: 'Tip',
+        }),
+      );
+
+      result.onCosmeticCreate(data);
+
+      expect(mockApplyCosmeticCreateEvent.mock.calls).toEqual([
+        [data.cosmetic, 'BADGE'],
+      ]);
+    });
+
+    test('delegates paint creates to applyCosmeticCreateEvent', () => {
+      const result = createSevenTvCallbacks(defaultProps);
+
+      const data = createPaintCosmeticCreateData(
+        createPaintInput({
+          id: 'paint-id',
+          name: 'Paint',
+          color: 0xff0000ff,
+        }),
+      );
+
+      result.onCosmeticCreate(data);
+
+      expect(mockApplyCosmeticCreateEvent.mock.calls).toEqual([
+        [data.cosmetic, 'PAINT'],
+      ]);
+    });
+  });
+
+  describe('onEntitlementCreate', () => {
+    test('delegates to applyEntitlementCreateEvent', () => {
+      const result = createSevenTvCallbacks(defaultProps);
+
+      const data = {
+        entitlement: {
+          id: 'entitlement-1',
+          kind: 0,
+          object: {
+            id: 'entitlement-1',
+            kind: 'BADGE' as const,
+            ref_id: 'badge-1',
+            user: {
+              id: 'stv-user-1',
+              username: 'user',
+              display_name: 'User',
+              avatar_url: '',
+              style: {},
+              role_ids: { length: 0 },
+              connections: { length: 0 },
+            },
+          },
+        },
+        kind: 'BADGE' as const,
+        ttvUserId: 'ttv-1',
+        paintId: null,
+        badgeId: 'badge-1',
+      };
+
+      result.onEntitlementCreate(data);
+
+      expect(mockApplyEntitlementCreateEvent.mock.calls).toEqual([[data]]);
+    });
+  });
+
+  describe('onCosmeticUpdate', () => {
+    test('records a Sentry count metric for paint updates', () => {
+      const result = createSevenTvCallbacks(defaultProps);
+
+      result.onCosmeticUpdate(
+        createPaintCosmeticUpdateData({
+          ...createEmptyChangeMap<PaintData>(),
+          updated: [
+            createPaintChangeEntry(
+              createPaintInput({ id: 'paint-1', name: 'Updated Paint' }),
+              createPaintInput({ id: 'paint-1', name: 'Old Paint' }),
+            ),
+          ],
+          pushed: [
+            createPaintPushedEntry(
+              createPaintInput({ id: 'paint-2', name: 'Added Paint' }),
+            ),
+          ],
+        }),
+      );
+
+      expect(addPaint).toHaveBeenCalledWith(
+        normalizeSevenTvPaint(
+          createPaintInput({ id: 'paint-1', name: 'Updated Paint' }),
+        ),
+      );
+
+      expect(addPaint).toHaveBeenCalledWith(
+        normalizeSevenTvPaint(
+          createPaintInput({ id: 'paint-2', name: 'Added Paint' }),
+        ),
+      );
+
+      expect(mockCountMetric.mock.calls[0]).toEqual([
+        'seven_tv.cosmetic_update.applied',
+        {
+          action: 'paint_update_applied',
+          channel_id: 'twitch-123',
+          channel_name: 'testchannel',
+          provider: 'seven_tv',
+          resource_type: 'paints',
+          screen: 'chat',
+          seven_tv_emote_set_id: 'emote-set-1',
+        },
+        2,
+      ]);
+    });
+
+    test('records a Sentry count metric for badge updates', () => {
+      const result = createSevenTvCallbacks(defaultProps);
+
+      result.onCosmeticUpdate(
+        createBadgeCosmeticUpdateData({
+          ...createEmptyChangeMap<BadgeData>(),
+          updated: [
+            createBadgeChangeEntry(
+              createBadgeData({
+                id: 'badge-1',
+                name: 'Updated Badge',
+                tooltip: 'Updated Badge',
+              }),
+            ),
+          ],
+          pushed: [
+            createBadgePushedEntry(
+              createBadgeData({
+                id: 'badge-2',
+                name: 'Added Badge',
+                tooltip: 'Added Badge',
+              }),
+            ),
+          ],
+        }),
+      );
+
+      expect(mockAddBadge.mock.calls[0]?.[0]).toEqual<SanitisedBadgeSet>({
+        id: 'badge-1',
+        provider: '7tv',
+        set: 'badge-1',
+        title: 'Updated Badge',
+        type: '7TV Badge',
+        url: 'https://cdn.7tv.app/badge/badge-1/4x.webp',
+      });
+
+      expect(mockAddBadge.mock.calls[1]?.[0]).toEqual<SanitisedBadgeSet>({
+        id: 'badge-2',
+        provider: '7tv',
+        set: 'badge-2',
+        title: 'Added Badge',
+        type: '7TV Badge',
+        url: 'https://cdn.7tv.app/badge/badge-2/4x.webp',
+      });
+
+      expect(mockCountMetric.mock.calls[0]).toEqual([
+        'seven_tv.cosmetic_update.applied',
+        {
+          action: 'badge_update_applied',
+          channel_id: 'twitch-123',
+          channel_name: 'testchannel',
+          provider: 'seven_tv',
+          resource_type: 'badges',
+          screen: 'chat',
+          seven_tv_emote_set_id: 'emote-set-1',
+        },
+        2,
+      ]);
+    });
+  });
+
+  describe('onCosmeticDelete', () => {
+    test('calls removeBadge and removePaint with cosmeticId', () => {
+      const result = createSevenTvCallbacks(defaultProps);
+
+      result.onCosmeticDelete({
+        cosmeticId: 'cosmetic-123',
+      });
+
+      expect(removeBadge).toHaveBeenCalledWith('cosmetic-123');
+      expect(removePaint).toHaveBeenCalledWith('cosmetic-123');
+    });
+  });
+
+  describe('onEntitlementUpdate', () => {
+    test('delegates entitlement updates to the bridge', () => {
+      const updateData = createEntitlementUpdateData({
+        ttvUserId: 'ttv-1',
+        paintId: 'paint-1',
+        badgeId: 'badge-1',
+      });
+
+      const result = createSevenTvCallbacks(defaultProps);
+
+      result.onEntitlementUpdate(updateData);
+
+      expect(applyEntitlementUpdateEvent).toHaveBeenCalledWith(updateData);
+    });
+  });
+
+  describe('onEntitlementDelete', () => {
+    test('delegates entitlement deletes to the bridge', () => {
+      const deleteData = createEntitlementDeleteData({ ttvUserId: 'ttv-1' });
+      const result = createSevenTvCallbacks(defaultProps);
+
+      result.onEntitlementDelete(deleteData);
+
+      expect(applyEntitlementDeleteEvent).toHaveBeenCalledWith(deleteData);
+    });
+  });
+});

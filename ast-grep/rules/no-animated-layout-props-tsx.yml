@@ -21,7 +21,7 @@ ignores:
   # and position as the divider is dragged and on rotation - there is no
   # transform equivalent, since scaling would distort the WKWebView player and
   # reflow chat text. Layout animation is this screen's whole purpose.
-  - 'src/screens/Stream/LiveStreamScreen.tsx'
+  - 'src/screens/stream/live-stream-screen.tsx'
 rule:
   kind: pair
   has:

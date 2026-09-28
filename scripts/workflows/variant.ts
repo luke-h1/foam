@@ -69,6 +69,7 @@ export function ignoreTagsPattern(version: string, variant: string): string {
   getVariantMeta(variant);
 
   const escapedVersion = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
   // SAFETY: Object.keys widens to string[]; VARIANTS is a literal Record
   // with exactly the Variant keys, so every key is a Variant.
   const siblings = (Object.keys(VARIANTS) as Variant[])

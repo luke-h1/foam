@@ -1,7 +1,7 @@
 import Constants from 'expo-constants';
 
-import { createApiClient } from './Client';
-import { fetchTwitchTokenClientId } from './twitchTokenClientId';
+import { createApiClient } from './client';
+import { fetchTwitchTokenClientId } from './twitch-token-client-id';
 
 const expoExtra: Record<string, string | undefined> | undefined =
   Constants.expoConfig?.extra;
@@ -26,15 +26,20 @@ async function recoverTwitchClientId(body: string): Promise<boolean> {
   if (!body.includes('Client ID and OAuth token do not match')) {
     return false;
   }
+
   const token = twitchApi.getAuthToken();
+
   if (!token) {
     return false;
   }
+
   const clientId = await fetchTwitchTokenClientId(token);
+
   if (clientId && clientId !== currentTwitchClientId) {
     setTwitchClientId(clientId);
     return true;
   }
+
   return false;
 }
 

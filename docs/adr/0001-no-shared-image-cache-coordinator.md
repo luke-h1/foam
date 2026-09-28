@@ -1,6 +1,6 @@
 # Keep the decoded-emote cache and the file image cache separate
 
-Foam has two image caches — `Providers/CachedEmotesProvider/cache-service.ts`
+Foam has two image caches — `providers/cached-emotes-provider/cache-service.ts`
 (decode-once `ImageRef` cache for inline chat emotes) and
 `utils/image/image-cache.ts` (on-disk file cache for avatars/thumbnails/badges).
 They superficially share four concerns (LRU eviction, byte-budget accounting, a
@@ -35,8 +35,8 @@ constraints, and each is changed for different reasons.
 ## Amendment (2026-08): four caches, separation unchanged
 
 The full cache inventory is four, not two: the decoded `ImageRef` cache
-(`cache-service.ts`), the MMKV-manifested file cache (`image-cache.ts`), the
-Skia paint bitmap cache (`paintBitmapCacheLifecycle.ts`), and expo-image's own
+(`providers/cached-emotes-provider/cache-service.ts`), the MMKV-manifested file cache (`utils/image/image-cache.ts`), the
+Skia paint bitmap cache (`utils/image/paint-bitmap-cache-lifecycle.ts`), and expo-image's own
 memory/disk caches. The separation decision above is unchanged - none of them
 share a coordinator. What did change:
 
@@ -44,8 +44,8 @@ share a coordinator. What did change:
   and `AbortSignal` handling; the `visible`/`interactive`/`background` priority
   ranking was dead (every live caller passed `visible`), so the scheduling
   bullet above no longer distinguishes the two queues.
-- `utils/image/clearImageCache.ts` is the one user-facing clear and empties all
+- `utils/image/clear-image-cache.ts` is the one user-facing clear and empties all
   four caches. Clearing a subset left the file-cache manifest serving stale
   `file://` records after an expo-image wipe.
-- `utils/image/prefetchToDisk.ts` is the only expo-image prefetch entry point;
+- `utils/image/prefetch-to-disk.ts` is the only expo-image prefetch entry point;
   the "never 'memory-disk'" rule lives there.

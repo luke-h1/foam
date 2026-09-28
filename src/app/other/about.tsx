@@ -1,3 +1,3 @@
-import { AboutScreen } from '@app/screens/Other/AboutScreen';
+import { AboutScreen } from '@app/screens/other/about-screen';
 
 export default AboutScreen;

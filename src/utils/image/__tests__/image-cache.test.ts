@@ -50,6 +50,7 @@ describe('image-cache', () => {
     // Successful stats are trusted for a while so the render path does not
     // re-stat per emote; eviction is detected once the verification expires.
     const realNow = Date.now();
+
     const nowSpy = jest
       .spyOn(Date, 'now')
       .mockImplementation(() => realNow + 11 * 60 * 1000);
@@ -74,10 +75,13 @@ describe('image-cache', () => {
     fileSystemMock.evict(cachedUri);
 
     const realNow = Date.now();
+
     const nowSpy = jest
       .spyOn(Date, 'now')
       .mockImplementation(() => realNow + 11 * 60 * 1000);
+
     let refreshedUri: string;
+
     try {
       refreshedUri = await cacheImageFromUrl(url, options);
     } finally {
@@ -106,6 +110,7 @@ describe('image-cache', () => {
     // Two 60MB files overflow the 100MB budget, so caching the second must
     // evict the first while protecting the record being inserted.
     fileSystemMock.setFileSize(60 * 1024 * 1024);
+
     const firstUrl = 'https://example.com/big-first.png';
     const secondUrl = 'https://example.com/big-second.png';
 
@@ -133,6 +138,7 @@ describe('image-cache', () => {
 
   test('downloads at most four files concurrently and drains as slots free', async () => {
     fileSystemMock.setDeferDownloads(true);
+
     const urls = Array.from(
       { length: 6 },
       (_, i) => `https://example.com/concurrent-${i}.png`,

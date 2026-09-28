@@ -115,6 +115,7 @@ export const searchChannels = (query: string): SearchChannelResponse[] => {
 
   return matchingUsers.map(user => {
     const stream = mockStreams.find(s => s.user_id === user.id);
+
     return {
       broadcaster_language: 'en',
       broadcaster_login: user.login,

@@ -28,7 +28,7 @@ _deepening_ — deleting the split would not concentrate any complexity.
 
 ## Consequences
 
-`twitch-service.ts` stays large. If it becomes an active friction point, revisit
+`services/twitch-service.ts` stays large. If it becomes an active friction point, revisit
 by first moving the shared response types to `src/types/twitch/*` (decoupling the
 type-import tangle), then splitting methods — but only if the navigability pain
 is real, not pre-emptively.

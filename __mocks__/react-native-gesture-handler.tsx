@@ -14,6 +14,7 @@ type MockChainableGesture = Record<string, () => MockChainableGesture>;
 const createGesture = () => {
   const gesture: MockChainableGesture = {};
   const chainable = () => gesture;
+
   [
     'activeOffsetX',
     'activeOffsetY',
@@ -38,6 +39,7 @@ const createGesture = () => {
   ].forEach(method => {
     gesture[method] = chainable;
   });
+
   return gesture;
 };
 

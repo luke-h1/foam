@@ -56,15 +56,15 @@ the orchestration is generic and a descriptor is the adapter at that seam.
 
 **Roomstate** — a channel's chat-mode restrictions from Twitch IRC ROOMSTATE
 (slow, followers-only, sub-only, emote-only, unique). The **roomstate tracker**
-(`components/Chat/util/roomStateTracker.ts`) owns current state, the diff
+(`components/chat/util/room-state/room-state-tracker.ts`) owns current state, the diff
 baseline, and notice/chip derivation from the single `ROOM_STATE_MODES` table in
-`roomState.ts`; `useChatIrcHandlers` feeds it tags and syncs the observable.
+`store/chat/types/room-state.ts`; `useChatIrcHandlers` feeds it tags and syncs the observable.
 Adding a mode is one table entry, not four coordinated edits.
 
 **Channel refresh plan** — the pure freshness decision for a channel's cached
 chat resources: full reload vs served-from-cache, and which slices (7TV set id,
 subscriber emotes, badges) a served cache still needs. Lives in
-`store/chat/actions/channelRefreshPlan.ts` (`planChannelRefresh`);
+`store/chat/actions/channel-refresh-plan.ts` (`planChannelRefresh`);
 `loadChannelResourcesInternal` is the side-effecting executor over it, mirroring
 the deploy-decision/dispatcher split in the release pipeline.
 
@@ -86,31 +86,64 @@ distinct from the Channel that persists offline. ⚠ UI surfaces say
 
 **Chat message** - `ChatMessageType<TNoticeType, TVariant>`, workhorse alias
 `AnyChatMessageType` (`store/chat/types/constants.ts`): `userstate`,
-`message: ParsedPart[]`, `seq`, `committedAt`, `isHistorical`. IRC command
+`message: MessageToken[]`, `seq`, `committedAt`, `isHistorical`. IRC command
 variants are the `NoticeVariants` union (`usernotice`, `clearchat`,
 `clearmsg`, `roomstate`, `notice`, `userstate`, `globalusernotice`), typed
 per command in `types/chat/irc-tags/`; USERNOTICE sub-variants (`sub`,
 `raid`, ...) are `TwitchNotices`. ⚠ `BufferedMessage`
-(`components/Chat/util/bufferedMessageOps/`) is the same entity pre-commit
+(`components/chat/util/buffered-message-ops/`) is the same entity pre-commit
 (plus `cachedSenderColor`).
 
-**Tags** - IRCv3 metadata. `parseIrcTags` (`utils/chat/ircProtocol/`) yields
+**Tags** - IRCv3 metadata. `parseIrcTags` (`utils/chat/irc-protocol/`) yields
 a plain string record with no named type; named shapes exist only
 post-coercion as the `*Tags` interfaces (`UserStateTags`, `RoomStateTags`,
 ...). `parseIrcMessage` is the line parser.
 
-**Part** - the parsed span within a message body:
-`ParsedPart<PartVariant>` (`utils/chat/parsedPart.ts`) - `text`, `emote`,
-`mention`, `stvEmote`, `twitchClip`, `link`, `cheermote`, and notice parts.
-_Avoid_: "token" (unused in code). ⚠ two variants name provider emotes: the
-one resolution path (`processEmotesWorklet`, the only resolver since
-ADR-0011) emits `'emote'` for every provider, while the word/link parse path
-(`parseWordLinkParts`) emits `'stvEmote'`; the `parsedPart.ts` doc comment
-saying `'emote'` means a unicode emoji has drifted from reality.
+**Token** - the parsed span within a message body:
+`MessageToken<MessageTokenKind>` (`utils/chat/message-token.ts`) - `text`,
+`emote`, `mention`, `link`, `stvEmoteLink`, `twitchClip`, `cheermote`,
+`stvEmoteAdded`, `stvEmoteRemoved`, and the Twitch notice kinds.
+`MessageToken` is a lookup into a shape map keyed by `type`, so it narrows on
+`token.type`.
+
+_Avoid_: "part". The 7TV Extension reserves `Part` for Twitch's own wire
+format (`messageParts`) and uses `Token` for the parsed model; foam follows
+that split. Renderers are named for the token they draw - `TextToken`,
+`EmoteToken`, `MentionToken`, `MediaLinkToken`, `CheermoteToken`,
+`NoticeToken` - and `ChatMessageToken` is the dispatcher over them.
+
+**Token kind naming** - `emote` is a rendered emote from any provider;
+`stvEmoteLink` is a _pasted 7TV URL_ that draws as a card, never an emote;
+`stvEmoteAdded` / `stvEmoteRemoved` are channel emote-set events. The one
+resolution path (`processEmotesWorklet`, the only resolver since ADR-0011)
+emits `'emote'` for every provider; the word/link parse path
+(`parseWordLinkTokens`) emits `'stvEmoteLink'`.
+
+Token kinds foam owns are camelCase. The Twitch USERNOTICE kinds
+(`submysterygift`, `viewermilestone`, ...) keep the wire spelling because they
+are `msg-id` values, not names foam chose.
+
+**Chat row** - one message as the list draws it. `ChatRowItem`
+(`components/chat/components/chat-message/chat-row-item.tsx`) is the list item
+and owns the entrance animation and row visibility; `ChatRow`
+(`chat-row.tsx`) is the row itself, built from `useChatRow`; `ChatRowSurface`
+draws the background and owns the long-press target, and `ChatRowBody` picks
+the body renderer from the body variant. _Avoid_: "rich chat message" - there
+is no plain one.
+
+**Flows inline** - whether a body fits inside a single `Text` instead of
+dropping to a wrapping block. `flowsInline`
+(`utils/chat/derive-chat-body/flows-inline.ts`) is the one predicate;
+`fitsInOneText` on the scan is the structural half, before paint and
+moderation are ANDed in. Callers ask it about different things and name what
+they asked: `rowFlowsInline` (username and body together), `bodyFlowsInline`
+(the body alone, paint ignored) and `quoteFlowsInline` (a reply quote, which
+is a different message). Those three are not redundant - do not collapse them
+into one value.
 
 **Buffer** - three holding areas, in order: the **delay queue**
-(`components/Chat/util/chatDelay/chatDelayQueue.ts`, max 1000), the
-pre-commit **`MessageBuffer`** (`components/Chat/util/messageBuffer.ts`,
+(`components/chat/util/chat-delay/chat-delay-queue.ts`, max 1000), the
+pre-commit **`MessageBuffer`** (`components/chat/util/message-buffer.ts`,
 dedup index, injectable bound), and the committed window
 `chatStore$.messages` (150 via `getMaxChatMessages`, trimmed by
 **front-trim**).
@@ -119,41 +152,41 @@ dedup index, injectable bound), and the committed window
 It ends through exactly four triggers - `leave` (navigation beforeRemove),
 `unmount`, `switch` (in-place channel change), `part` (IRC PART echo for the
 current room) - and `resetChannelSession(trigger)`
-(`store/chat/actions/channelSession.ts`) is the one owner of the
+(`store/chat/actions/channel-session.ts`) is the one owner of the
 module-level resets each trigger requires. Hook-armed resources (scroll
 timers, buffers, socket refs) are released by their arming hooks, never
 here.
 
 **Ingest** - raw line to committed message. The stage names are the perf
 marks: `line_received` → `buffered` → `drained` → `committed`
-(`lib/chatPerfMarks.ts`). Verbs: the buffer **drains**, the cadence
-(`components/Chat/util/chatFlushCadence/`) **flushes**, the store write
+(`lib/chat-perf-marks.ts`). Verbs: the buffer **drains**, the cadence
+(`components/chat/util/chat-flush-cadence/`) **flushes**, the store write
 (`addMessages`, `store/chat/actions/messages.ts`) **commits**. Front-door
 rate limiting is `chatIngestRateLimiter`.
 
 **Ingest controller** - the headless ingest state machine
-(`components/Chat/util/chatIngestController.ts`): buffer, delay queue, flush
+(`components/chat/util/chat-ingest-controller.ts`): buffer, delay queue, flush
 cadence, raid latch, backpressure, unread accounting and moderation
 coherence behind one factory. `useChatMessages` is its React lifecycle
 adapter; jest drives a raw line into the real store through it with fake
 timers.
 
 **Enrichment** - post-commit emote/badge re-resolution over already-parsed
-messages (`store/chat/actions/messageEnrichment.ts`: `enrichMessageSet`,
+messages (`store/chat/actions/message-enrichment.ts`: `enrichMessageSet`,
 `enrichVisibleMessage`). Parse-time resolution is **processing**
-(`emoteProcessor.ts` / `resolveMessageEmoteParts`). The two words are
+(`utils/chat/emote-processor.ts` / `resolveMessageEmoteParts`). The two words are
 deliberate - keep them distinct.
 
-**Message identity** - `utils/chat/messageIdentity/`: `getChatMessageKey`,
+**Message identity** - `utils/chat/message-identity/`: `getChatMessageKey`,
 `getChatMessageStoreId`, `getChatMessageListKey`, `isRenderableChatMessage`.
 The one rule for what identifies a message; buffer, store dedup index and
 list keyExtractor agree (see AGENTS.md).
 
 **Userstate / room state** - the authenticated user's chat state is
-`UserStateTags`, held imperatively in `twitch-chat-service.ts` behind an
+`UserStateTags`, held imperatively in `services/twitch-chat-service.ts` behind an
 external-store revision (`subscribeUserState`); the channel's mode state is
 **room state** (`RoomStateTags` → `ParsedRoomState`, tracked by
-`createRoomStateTracker` in `components/Chat/util/roomState/`). ⚠
+`createRoomStateTracker` in `components/chat/util/room-state/`). ⚠
 `ChatMessageType.userstate` is the _sender's_ per-message tags - same word,
 different concept from the user's own USERSTATE.
 
@@ -168,35 +201,44 @@ intermediate - two shapes for one glyph.
 **Emote collection / emote set** - ⚠ dual naming, both live: ingest says
 **collection** (`EmoteCollection`, `getBaseCollectionKey`,
 `baseCollectionCache`, content-hash `getEmoteContentId` - all in
-`emoteProcessor.ts`) for the resolved per-channel lookup; providers and the
+`utils/chat/emote-processor.ts`) for the resolved per-channel lookup; providers and the
 7TV wire say **emote set** (`getSanitisedEmoteSet`, `emote_set.update`) for
 the fetched unit.
 
 **Emote provider** - `SanitisedEmote.provider` / `SanitisedBadgeSet.provider`
 is the discriminant (`'7tv' | 'bttv' | 'ffz' | 'twitch' | 'emoji'`, plus
 `'chatterino'` for badges); `site` is display-only and must not be
-pattern-matched. Per-provider service modules (`seventv-service.ts`,
-`bttv-emote-service.ts`, `ffz-service.ts`, `twitch-emote-service.ts`) share
+pattern-matched. Per-provider service modules (`services/seven-tv-service.ts`,
+`services/bttv-emote-service.ts`, `services/ffz-service.ts`, `services/twitch-emote-service.ts`) share
 the sanitiser (`buildSanitisedEmote` behind `EmoteProviderSource`), which
-emits the discriminant. ⚠ 7TV is spelled four
-ways: `seventv` (paths), `sevenTv` (values), `SevenTv` (types), `stv`
-(part variants, `StvUser`).
+emits the discriminant.
+
+**Spelling 7TV** - three forms, each with one job. Paths are `seven-tv`
+(`utils/seven-tv/`, `services/seven-tv-service.ts`). Values are `sevenTv` and
+types are `SevenTv`. `stv` is the short form kept for token kinds and a few
+wire-facing names (`stvEmoteLink`, `StvUser`, `utils/emote/stv/`).
+
+_Avoid_: `seventv` and `Seventv`, which were a fourth and fifth spelling until
+they were folded into the three above. Two exceptions stay because they are
+data, not names foam chose: the icon key `seventv.badge.missing` and the 7TV
+API exception name `SevenTVApiError`. The StreamElements field `sevenTVEmotes`
+is likewise a wire name.
 
 **Badge** - `SanitisedBadgeSet` (`types/twitch/badge.ts`) is the
 cross-provider badge type despite its path; resolved by `findBadges`
-(`utils/chat/findBadges.ts`) from userstate plus per-provider inputs. 7TV
+(`utils/chat/find-badges.ts`) from userstate plus per-provider inputs. 7TV
 badges bypass `findBadges` and arrive via cosmetics (`chatStore$.badges`).
 
 **Cosmetics** - the umbrella for 7TV paints, badges and entitlements
-(`store/chat/actions/cosmetics.ts`, `cosmeticsBridge.ts`; types in
-`types/seventv/cosmetics.ts`: `PaintData`, `PaintLayerData`,
-`Entitlement*`). Rendered by `components/ChatMessage/CosmeticUsername/`
+(`store/chat/actions/cosmetics.ts`, `store/chat/actions/cosmetics-bridge.ts`; types in
+`types/seven-tv/cosmetics.ts`: `PaintData`, `PaintLayerData`,
+`Entitlement*`). Rendered by `components/chat/components/chat-message/cosmetic-username/`
 (`PaintedUsername`).
 
 **Tick** - two shared animation pulses, one per domain: native animated
 emotes on iOS ride `SharedAnimationDriver` (one `CADisplayLink` + global
 epoch, added by the expo-image patch); Skia paint animation rides
-`sharedPaintAnimationFrames.ts` (one Reanimated `useFrameCallback`, paused
+`components/chat/components/chat-message/cosmetic-username/util/shared-paint-animation-frames.ts` (one Reanimated `useFrameCallback`, paused
 by `chatScrollActiveShared`). Android has its own phase lock in the same
 patch, supervised by a Choreographer callback rather than seeking per tick
 (ADR-0009). ⚠ No `SyncedAnimationCoordinator` exists.
@@ -211,10 +253,10 @@ type exists.
 
 **Fetch-once guard** — the single-flight + negative-cache + TTL + generation-fence
 mechanism behind session-scoped resource fetches
-(`src/utils/async/fetchOnceGuard.ts`). The guard owns _mechanism_ only; stamping
+(`src/utils/async/fetch-once-guard.ts`). The guard owns _mechanism_ only; stamping
 policy and value storage stay in each adapter. Adapters: channel cheermotes
-(`utils/chat/cheermoteStore`), 7TV personal emotes and Twitch subscriber channel
-profiles (`store/chat/actions/channelLoad`), 7TV user cosmetics
+(`utils/chat/cheermote-store`), 7TV personal emotes and Twitch subscriber channel
+profiles (`store/chat/actions/channel-load`), 7TV user cosmetics
 (`store/chat/actions/cosmetics`). `clear()` fences in-flight fetches: their
 `stillCurrent()` turns false and `markFetched` no-ops, so a completing fetch can
 never re-poison a freshly cleared cache. Do not hand-roll in-flight Sets or
@@ -224,9 +266,9 @@ attempted-id negative caches next to a new fetch path; instantiate a guard.
 bridge: given a parsed inbound message plus a snapshot context of what the
 decision actually needs, it returns typed decisions/actions; the owning hook
 executes them (store writes, callbacks, timers, logging). Instances: the 7TV
-EventAPI interpreter (`utils/seventv/seventvWsInterpreter.ts`, executed by
+EventAPI interpreter (`utils/seven-tv/seven-tv-ws-interpreter.ts`, executed by
 `hooks/useSeventvWs`) and the player bridge interpreter
-(`components/StreamPlayer/util/playerBridgeInterpreter.ts`, executed by
+(`components/stream-player/util/player-bridge-interpreter.ts`, executed by
 `usePlayerBridge`). Decision logic goes in the interpreter, never back into the
 hook's message handler.
 

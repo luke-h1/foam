@@ -1,0 +1,183 @@
+import { StyleSheet, View } from 'react-native';
+
+import { getChatTextStyles } from '@app/components/chat/components/chat-message/chat-text.styles';
+import { Image } from '@app/components/image/image';
+import { Text } from '@app/components/ui/text/text';
+import { theme } from '@app/styles/themes';
+import type { SanitisedEmote } from '@app/types/emote';
+
+import type {
+  PreviewProvider,
+  ProviderPreviewVariant,
+} from '../util/chat-preference-types';
+import { ChatPreferencePreview } from './chat-preferences-preview';
+
+export const DensityPreview = function DensityPreview({
+  density,
+}: {
+  density: 'comfortable' | 'compact';
+}) {
+  const compact = density === 'compact';
+
+  return (
+    <View style={[styles.previewPanel, compact && styles.previewPanelCompact]}>
+      <PreviewMessage
+        compact={compact}
+        time='12:42'
+        username='needlework'
+        message='linework healed clean'
+      />
+      <PreviewMessage
+        compact={compact}
+        time='12:43'
+        username='inkmod'
+        message='shading pass is ready'
+      />
+    </View>
+  );
+};
+
+interface PreviewMessageProps {
+  compact: boolean;
+  message: string;
+  time: string;
+  username: string;
+}
+
+const PreviewMessage = function PreviewMessage({
+  compact,
+  message,
+  time,
+  username,
+}: PreviewMessageProps) {
+  const textStyles = getChatTextStyles(undefined, compact);
+
+  return (
+    <View style={[styles.previewMessage, textStyles.row]}>
+      <Text style={[textStyles.timestamp, styles.previewTime]} tabular>
+        {time}
+      </Text>
+      <Text
+        color='accent.accentHover'
+        style={[textStyles.username, styles.previewUsername]}
+      >
+        {username}
+      </Text>
+      <Text color='gray' style={[textStyles.body, styles.previewText]}>
+        {message}
+      </Text>
+    </View>
+  );
+};
+
+export const EmojiStylePreview = function EmojiStylePreview({
+  emotes,
+}: {
+  emotes: SanitisedEmote[];
+}) {
+  return (
+    <View style={styles.previewPanel}>
+      <View style={styles.emojiPreviewRow}>
+        {emotes.map(emote => (
+          <View key={`${emote.site}-${emote.name}`} style={styles.emojiTile}>
+            <Image
+              cachePolicy='memory-disk'
+              contentFit='contain'
+              source={{ uri: emote.url }}
+              style={styles.emojiImage}
+              transition={0}
+            />
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+};
+
+export function PreviewLabel() {
+  return (
+    <Text color='gray.textLow' type='xxs' weight='semibold'>
+      Preview
+    </Text>
+  );
+}
+
+export const ProviderPreviewItem = function ProviderPreviewItem({
+  enabled,
+  provider,
+  variant,
+}: {
+  enabled: boolean;
+  provider: PreviewProvider;
+  variant: ProviderPreviewVariant;
+}) {
+  return (
+    <View style={styles.providerPreviewItem}>
+      <ChatPreferencePreview
+        provider={provider}
+        variant={variant === 'emotes' ? 'providerEmotes' : 'providerBadges'}
+        value={enabled}
+      />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  emojiImage: {
+    height: 28,
+    width: 28,
+  },
+  emojiPreviewRow: {
+    flexDirection: 'row',
+    gap: theme.space8,
+  },
+  emojiTile: {
+    alignItems: 'center',
+    backgroundColor: theme.color.background.dark,
+    borderColor: theme.colorBorderSecondary,
+    borderRadius: theme.borderRadius6,
+    borderCurve: 'continuous',
+    borderWidth: StyleSheet.hairlineWidth,
+    height: 44,
+    justifyContent: 'center',
+    width: 44,
+  },
+  iosSwitchSlot: {
+    alignItems: 'flex-end',
+    flexShrink: 0,
+    width: 76,
+  },
+  previewMessage: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.space4,
+  },
+  previewPanel: {
+    backgroundColor: theme.color.background.dark,
+    borderColor: theme.colorBorderSecondary,
+    borderRadius: theme.borderRadius6,
+    borderCurve: 'continuous',
+    borderWidth: StyleSheet.hairlineWidth,
+    gap: theme.space4,
+    padding: theme.space8,
+  },
+  previewPanelCompact: {
+    gap: theme.space2,
+    paddingVertical: theme.space4,
+  },
+  previewText: {
+    flex: 1,
+  },
+  previewTime: {
+    minWidth: 34,
+  },
+  previewUsername: {
+    flexShrink: 0,
+  },
+  providerPreviewItem: {
+    gap: theme.space8,
+    paddingBottom: theme.space12,
+    paddingHorizontal: 20,
+    paddingTop: theme.space4,
+  },
+});

@@ -9,7 +9,7 @@
       "**/*.spec.ts",
       "**/*.spec.tsx",
       "tools/oxlint/anti-slop/**",
-      "src/components/Chat/components/ChatMessage/__fixtures__/sevenTvPaints.fixture.ts"
+      "src/components/chat/components/chat-message/__fixtures__/seven-tv-paints.fixture.ts"
     ],
     "overrides": [
       {
@@ -18,18 +18,18 @@
       },
       {
         "files": [
-          "src/screens/Preferences/BlockedTermsScreen.tsx",
-          "src/screens/Preferences/ChatHighlightsScreen.tsx",
-          "src/screens/Preferences/SavedPhrasesScreen.tsx"
+          "src/screens/preferences/blocked-terms-screen.tsx",
+          "src/screens/preferences/chat-highlights-screen.tsx",
+          "src/screens/preferences/saved-phrases-screen.tsx"
         ],
         "rules": ["react-hooks-js/immutability"]
       },
       {
-        "files": ["src/components/Chat/hooks/useSeventvWs.ts"],
+        "files": ["src/components/chat/hooks/use-seven-tv-ws.ts"],
         "rules": ["react-hooks-js/purity", "react-doctor/effect-needs-cleanup"]
       },
       {
-        "files": ["src/hooks/ws/useWebsocket.ts"],
+        "files": ["src/hooks/ws/use-websocket.ts"],
         "rules": ["react-doctor/effect-needs-cleanup"]
       },
       {
@@ -38,15 +38,21 @@
       },
       {
         "files": [
-          "src/components/Chat/hooks/useChatMessages.ts",
-          "src/components/StreamPlayer/usePlayerBridge.ts",
-          "src/components/Chat/components/ChatMessage/renderers/EmoteActionSheet.tsx"
+          "src/components/chat/hooks/use-chat-messages.ts",
+          "src/components/stream-player/hooks/use-player-bridge.ts",
+          "src/components/stream-player/hooks/use-stream-player-source.ts",
+          "src/components/chat/components/chat-message/renderers/emote-action-sheet.tsx",
+          "src/services/twitch-chat-service.ts"
         ],
         "rules": ["react-hooks-js/refs"]
       },
       {
-        "files": ["src/hooks/useLazyRef.ts"],
+        "files": ["src/hooks/use-lazy-ref.ts"],
         "rules": ["react-doctor/no-ref-current-in-render"]
+      },
+      {
+        "files": ["src/screens/stream/hooks/use-live-stream-orientation.ts"],
+        "rules": ["react-hooks-js/set-state-in-effect"]
       },
       {
         "files": ["src/services/twitch-ws-service.ts"],
@@ -56,15 +62,15 @@
         ]
       },
       {
-        "files": ["src/utils/string/formatViewCount.ts"],
+        "files": ["src/utils/string/format-view-count.ts"],
         "rules": ["react-doctor/js-hoist-intl"]
       },
       {
-        "files": ["src/screens/DevTools/SyncedEmotesScreen.tsx"],
+        "files": ["src/screens/dev-tools/synced-emotes-screen.tsx"],
         "rules": ["react-doctor/rn-no-scrollview-mapped-list"]
       },
       {
-        "files": ["src/screens/DevTools/ImageBenchmarkScreen.tsx"],
+        "files": ["src/screens/dev-tools/image-benchmark-screen.tsx"],
         "rules": ["react-doctor/no-set-state-after-await-in-effect"]
       }
     ]

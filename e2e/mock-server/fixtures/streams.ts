@@ -131,6 +131,7 @@ export const getTopStreamsResponse = (
   }
 
   const pageStreams = streams.slice(startIndex, startIndex + pageSize);
+
   const nextCursor =
     startIndex + pageSize < streams.length
       ? String(startIndex + pageSize)

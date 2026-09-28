@@ -1,10 +1,10 @@
 import { Stack } from 'expo-router';
 
-import { StreamListLayoutMenu } from '@app/components/StreamListLayoutToggle/StreamListLayoutMenu';
+import { StreamListLayoutMenu } from '@app/components/stream-list-layout-toggle/stream-list-layout-menu';
 import {
   nativeStackScreenOptions,
   nativeStackTabRootScreenOptions,
-} from '@app/utils/navigation/nativeStackOptions';
+} from '@app/utils/navigation/native-stack-options';
 
 export default function FollowingLayout() {
   return (

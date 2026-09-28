@@ -7,6 +7,7 @@ const createMockIconSet = (name: string) => {
       <Text>{name}</Text>
     </View>
   );
+
   IconComponent.displayName = name;
   return IconComponent;
 };

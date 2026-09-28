@@ -1,7 +1,11 @@
-import { Stack } from 'expo-router';
+import { NativeStackHeaderItemProps, Stack } from 'expo-router';
 
-import { StreamListLayoutMenu } from '@app/components/StreamListLayoutToggle/StreamListLayoutMenu';
-import { nativeStackScreenOptions } from '@app/utils/navigation/nativeStackOptions';
+import { StreamListLayoutMenu } from '@app/components/stream-list-layout-toggle/stream-list-layout-menu';
+import { nativeStackScreenOptions } from '@app/utils/navigation/native-stack-options';
+
+const headerRight = (_props: NativeStackHeaderItemProps) => {
+  return <StreamListLayoutMenu />;
+};
 
 export default function TopLayout() {
   return (
@@ -11,16 +15,8 @@ export default function TopLayout() {
         options={{
           title: 'Top',
           headerTransparent: false,
-          headerRight: () => <StreamListLayoutMenu />,
+          headerRight,
         }}
-      />
-      <Stack.Screen
-        name='categories'
-        options={{ title: 'Categories', headerBackTitle: 'Top' }}
-      />
-      <Stack.Screen
-        name='streams'
-        options={{ title: 'Streams', headerBackTitle: 'Top' }}
       />
     </Stack>
   );

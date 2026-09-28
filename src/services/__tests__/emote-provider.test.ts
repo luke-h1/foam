@@ -199,6 +199,7 @@ describe('buildSanitisedEmote', () => {
       static: {},
       zeroWidth: false,
     });
+
     const sevenTv = buildSanitisedEmote({
       site: '7TV Channel',
       id: 'emote-c',

@@ -8,7 +8,7 @@ import {
 } from '@tanstack/react-query';
 import { fetch } from 'expo/fetch';
 
-import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
+import { subscribeToAppStateTransitions } from '@app/utils/app-state/app-state-transitions';
 
 import { queryClient } from './query-client';
 
@@ -17,9 +17,11 @@ const authProxyBaseUrl = process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
 async function checkIsOnline(): Promise<boolean> {
   try {
     const controller = new AbortController();
+
     setTimeout(() => {
       controller.abort();
     }, 15e3);
+
     const res = await fetch(`${authProxyBaseUrl}/api/healthcheck`, {
       headers: { 'Cache-Control': 'no-store' },
       signal: controller.signal,
@@ -57,6 +59,7 @@ function startConnectivityPolling() {
   if (connectivityPollInterval) {
     return;
   }
+
   connectivityPollInterval = setInterval(() => {
     if (!onlineManager.isOnline()) {
       checkIsOnlineIfNeeded();
@@ -114,13 +117,17 @@ focusManager.setEventListener(onFocus => {
       focusManager.setFocused(current === 'active');
     });
   }
+
   if (globalThis.window) {
     // focus and visibilitychange overlap but cover different cases; redundant fires are harmless with stale times.
     const handler = () => onFocus();
+
     // eslint-disable-next-line no-undef
     window.addEventListener('focus', handler, false);
+
     // eslint-disable-next-line no-undef
     window.addEventListener('visibilitychange', handler, false);
+
     return () => {
       // eslint-disable-next-line no-undef
       window.removeEventListener('visibilitychange', handler);

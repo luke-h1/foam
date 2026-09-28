@@ -2,7 +2,7 @@ import { createMMKV } from 'react-native-mmkv';
 
 import EventEmitter from 'eventemitter3';
 
-import { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
+import { OpenStringUnion } from '@app/utils/typescript/open-string-union';
 
 export type StorageSetterOptions = {
   expiry?: Date;
@@ -58,6 +58,7 @@ export const storageService = {
     namespacePrefix?: NamespacePrefixes,
   ): T | null {
     const item = storage.getString(namespaceKey(key, namespacePrefix));
+
     if (!item) {
       return null;
     }
@@ -81,15 +82,14 @@ export const storageService = {
   ): void {
     const { expiry } = options;
 
-    let item: StorageItem<T> = { value };
-
-    if (expiry) {
-      if (expiry <= new Date()) {
-        return;
-      }
-
-      item = { value, expiry: expiry.toISOString() };
+    // Writing an already-expired entry would only be read back as a miss.
+    if (expiry && expiry <= new Date()) {
+      return;
     }
+
+    const item: StorageItem<T> = expiry
+      ? { value, expiry: expiry.toISOString() }
+      : { value };
 
     const namespacedKey = namespaceKey(key, namespacePrefix);
     storage.set(namespacedKey, JSON.stringify(item));
