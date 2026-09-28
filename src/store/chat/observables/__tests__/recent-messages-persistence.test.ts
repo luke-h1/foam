@@ -1,6 +1,6 @@
 import { createChatMessageFixture } from '@app/components/chat/util/__tests__/__fixtures__/chat-message.fixture';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
-import { createTextPart } from '@app/utils/chat/__tests__/__fixtures__/parsed-part.fixture';
+import { createTextToken } from '@app/utils/chat/__tests__/__fixtures__/message-token.fixture';
 
 import {
   clearPersistedRecentMessages,
@@ -17,7 +17,7 @@ const makeMessage = (id: string): AnyChatMessageType =>
     id: `${id}_${id}-nonce`,
     message_id: id,
     message_nonce: `${id}-nonce`,
-    message: [createTextPart(id)],
+    message: [createTextToken(id)],
   });
 
 beforeEach(() => {
@@ -74,6 +74,24 @@ describe('recentMessagesPersistence', () => {
     clearPersistedRecentMessages();
 
     expect(loadPersistedRecentMessages()).toEqual({});
+  });
+
+  test('drops every channel written before the current schema version', () => {
+    const { createMMKV } = require('react-native-mmkv');
+    const storage = createMMKV({ id: 'chat-recent-messages' });
+
+    // What an older build left behind: messages, no schema version key.
+    storage.set('channel-a', JSON.stringify([makeMessage('a1')]));
+
+    expect(loadPersistedRecentMessages()).toEqual({});
+  });
+
+  test('keeps channels once the schema version is stamped', () => {
+    writePersistedRecentMessagesForChannel('channel-a', [makeMessage('a1')]);
+
+    expect(loadPersistedRecentMessages()).toEqual({
+      'channel-a': [makeMessage('a1')],
+    });
   });
 
   test('drops a channel whose stored value is corrupt', () => {

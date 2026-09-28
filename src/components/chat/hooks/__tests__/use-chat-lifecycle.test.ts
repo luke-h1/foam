@@ -100,7 +100,7 @@ describe('useChatLifecycle', () => {
       );
     });
 
-    test('beforeRemove stops active work and parts without clearing rendered messages', () => {
+    test('beforeRemove stops active work and tokens without clearing rendered messages', () => {
       renderHook(() => useChatLifecycle(defaultProps));
       const cb = getBeforeRemoveCb();
       expect(cb).toBeDefined();

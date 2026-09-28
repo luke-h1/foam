@@ -1,4 +1,4 @@
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 import * as generateNonceModule from '@app/utils/string/generate-nonce';
 
 import { createBaseMessage } from '../create-base-message';
@@ -32,7 +32,7 @@ describe('createBaseMessage', () => {
     expect(result.sender).toBe('TestUser');
     expect(result.message_id).toBe('msg-123');
 
-    expect(result.message).toEqual<ParsedPart[]>([
+    expect(result.message).toEqual<MessageToken[]>([
       { type: 'text', content: 'Hello world!' },
     ]);
   });
@@ -50,7 +50,7 @@ describe('createBaseMessage', () => {
 
     const result = createBaseMessage(params);
 
-    expect(result.message[0]).toEqual<ParsedPart>({
+    expect(result.message[0]).toEqual<MessageToken>({
       type: 'text',
       content: 'Hello world!',
     });

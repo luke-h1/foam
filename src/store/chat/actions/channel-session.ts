@@ -11,7 +11,7 @@ import { clearVisibleAssetHydration } from '@app/store/chat/actions/visible-asse
 import { resetMentionLoginResolver } from '@app/utils/chat/mention-login-resolver/reset-mention-login-resolver';
 
 export type ChannelSessionResetTrigger =
-  'leave' | 'unmount' | 'switch' | 'part';
+  'leave' | 'unmount' | 'switch' | 'token';
 
 /**
  * The one owner of the module-level resets a channel switch requires; anything
@@ -42,7 +42,7 @@ export function resetChannelSession(trigger: ChannelSessionResetTrigger): void {
       clearVisibleAssetHydration();
       break;
     }
-    case 'part': {
+    case 'token': {
       clearMessages();
       break;
     }

@@ -1,6 +1,6 @@
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
-import { createTextPart } from '@app/utils/chat/__tests__/__fixtures__/parsed-part.fixture';
+import { createTextToken } from '@app/utils/chat/__tests__/__fixtures__/message-token.fixture';
 
 export function createChatMessageFixture(
   overrides: Partial<AnyChatMessageType> = {},
@@ -13,7 +13,7 @@ export function createChatMessageFixture(
     channel: 'channel',
     badges: [],
     cachedSenderColor: '#fff',
-    message: [createTextPart('hello chat')],
+    message: [createTextToken('hello chat')],
     replyBody: '',
     replyDisplayName: '',
     parentDisplayName: '',

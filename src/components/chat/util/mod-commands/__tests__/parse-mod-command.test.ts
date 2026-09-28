@@ -25,7 +25,7 @@ describe('parseModCommand', () => {
     });
   });
 
-  test('treats a non-numeric second argument as part of the reason', () => {
+  test('treats a non-numeric second argument as token of the reason', () => {
     expect(parseModCommand('/timeout zoil spamming links')).toEqual<ModCommand>(
       {
         type: 'timeout',

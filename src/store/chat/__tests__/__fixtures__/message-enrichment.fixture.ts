@@ -1,6 +1,6 @@
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
-import { createTextPart } from '@app/utils/chat/__tests__/__fixtures__/parsed-part.fixture';
+import { createTextToken } from '@app/utils/chat/__tests__/__fixtures__/message-token.fixture';
 
 const createMockUserstate = (
   displayName = 'TestUser',
@@ -20,7 +20,7 @@ export const createMockMessage = (
   id: 'msg-123_nonce-123',
   message_id: 'msg-123',
   message_nonce: 'nonce-123',
-  message: [createTextPart('Hello world')],
+  message: [createTextToken('Hello world')],
   channel: 'testchannel',
   sender: 'TestUser',
   badges: [],
@@ -34,7 +34,7 @@ export const createMockMessage = (
 export const createSystemMessage = (): AnyChatMessageType =>
   createMockMessage({
     sender: 'System',
-    message: [createTextPart('System message')],
+    message: [createTextToken('System message')],
     userstate: {
       ...createMockUserstate('System'),
       login: 'system',

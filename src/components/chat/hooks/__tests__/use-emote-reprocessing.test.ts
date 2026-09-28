@@ -10,8 +10,8 @@ import * as messagesActions from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
-import { createEmotePart } from '@app/utils/chat/__tests__/__fixtures__/parsed-part.fixture';
-import * as resolveMessageEmotePartsModule from '@app/utils/chat/resolve-message-emote-parts';
+import { createEmoteToken } from '@app/utils/chat/__tests__/__fixtures__/message-token.fixture';
+import * as resolveMessageEmotePartsModule from '@app/utils/chat/resolve-message-emote-tokens';
 
 const mockGetCurrentEmoteData = jest.spyOn(
   channelLoadActions,
@@ -68,7 +68,7 @@ const expectMessageUpdate = (
   messageId: id,
   messageNonce: nonce,
   updates: {
-    message: [createEmotePart(resolvedText, { id: 'e1', url: '' })],
+    message: [createEmoteToken(resolvedText, { id: 'e1', url: '' })],
     badges: [],
   },
 });
@@ -88,7 +88,7 @@ describe('useEmoteReprocessing', () => {
     chatStore$.emojis.set([]);
 
     mockResolveMessageEmoteParts.mockImplementation((x: { text: string }) => [
-      createEmotePart(x.text, { id: 'e1', url: '' }),
+      createEmoteToken(x.text, { id: 'e1', url: '' }),
     ]);
 
     processedMessageIdsRef.current.clear();
@@ -276,8 +276,8 @@ describe('useEmoteReprocessing', () => {
     }
   });
 
-  test('skips equivalent reprocessed message parts and badges', () => {
-    const existingParts = [createEmotePart('Kappa', { id: 'e1', url: '' })];
+  test('skips equivalent reprocessed message tokens and badges', () => {
+    const existingParts = [createEmoteToken('Kappa', { id: 'e1', url: '' })];
     mockResolveMessageEmoteParts.mockReturnValueOnce(existingParts);
     mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
 
@@ -408,7 +408,7 @@ describe('useEmoteReprocessing', () => {
     expect(mockUpdateMessages).not.toHaveBeenCalled();
   });
 
-  test('reprocesses existing emote parts when reprocessKey changes', () => {
+  test('reprocesses existing emote tokens when reprocessKey changes', () => {
     mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
     processedMessageIdsRef.current.add('1');
 
@@ -455,7 +455,7 @@ describe('useEmoteReprocessing', () => {
     ]);
   });
 
-  test('skips messages with non-chat content parts', () => {
+  test('skips messages with non-chat content tokens', () => {
     mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
 
     const withMedia = {

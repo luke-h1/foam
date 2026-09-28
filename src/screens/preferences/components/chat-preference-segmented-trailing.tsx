@@ -12,17 +12,19 @@ const styles = StyleSheet.create({
   },
 });
 
+interface ChatPreferenceSegmentedTrailingProps {
+  selectedIndex: number;
+  onSelectIndex: (index: number) => void;
+  values: readonly string[];
+  variant?: 'ios' | 'settings';
+}
+
 export function ChatPreferenceSegmentedTrailing({
   selectedIndex,
   onSelectIndex,
   values,
   variant = 'settings',
-}: {
-  selectedIndex: number;
-  onSelectIndex: (index: number) => void;
-  values: readonly string[];
-  variant?: 'ios' | 'settings';
-}) {
+}: ChatPreferenceSegmentedTrailingProps) {
   return (
     <SegmentedControl
       appearance='dark'

@@ -299,12 +299,13 @@ const styles = StyleSheet.create({
 });
 
 function getSourceTagStyle(source: string) {
-  return {
-    backgroundColor:
-      source === 'remote'
-        ? theme.colorPrimary
-        : source === 'default'
-          ? theme.colorOrange
-          : theme.color.text.dark,
-  };
+  let backgroundColor = theme.color.text.dark;
+
+  if (source === 'remote') {
+    backgroundColor = theme.colorPrimary;
+  } else if (source === 'default') {
+    backgroundColor = theme.colorOrange;
+  }
+
+  return { backgroundColor };
 }

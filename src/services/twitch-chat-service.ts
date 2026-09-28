@@ -107,6 +107,16 @@ const TWITCH_CHAT_URL = isE2EMode
   ? 'ws://localhost:6667'
   : 'wss://irc-ws.chat.twitch.tv:443';
 
+interface CreateChannelStateRouteHandlersOptions {
+  isSelfNick: (nick: string | undefined) => boolean;
+  joinedChannelsRef: RefObject<Set<string>>;
+  markChannelJoined: (channelName: string) => void;
+  optionsRef: RefObject<UseTwitchChatOptions>;
+  pendingJoinChannelsRef: RefObject<Set<string>>;
+  pendingMessageRef: RefObject<{ channel: string; message: string } | null>;
+  setCurrentUserState: (tags: Record<string, string>) => void;
+}
+
 /**
  * The handlers that track where the connection stands: which channels it has
  * joined, and the USERSTATE tags Twitch answers a send with.
@@ -119,17 +129,14 @@ function createChannelStateRouteHandlers({
   pendingJoinChannelsRef,
   pendingMessageRef,
   setCurrentUserState,
-}: {
-  isSelfNick: (nick: string | undefined) => boolean;
-  joinedChannelsRef: RefObject<Set<string>>;
-  markChannelJoined: (channelName: string) => void;
-  optionsRef: RefObject<UseTwitchChatOptions>;
-  pendingJoinChannelsRef: RefObject<Set<string>>;
-  pendingMessageRef: RefObject<{ channel: string; message: string } | null>;
-  setCurrentUserState: (tags: Record<string, string>) => void;
-}): Pick<
+}: CreateChannelStateRouteHandlersOptions): Pick<
   IrcRouteHandlers,
-  'roomstate' | 'userstate' | 'globaluserstate' | 'join' | 'part' | 'namesReply'
+  | 'roomstate'
+  | 'userstate'
+  | 'globaluserstate'
+  | 'join'
+  | 'token'
+  | 'namesReply'
 > {
   return {
     roomstate: (channelName, tagsRecord) => {
@@ -171,7 +178,7 @@ function createChannelStateRouteHandlers({
       }
     },
 
-    part: (channelName, nick) => {
+    token: (channelName, nick) => {
       if (isSelfNick(nick)) {
         logger.chat.info(`Left channel: ${channelName}`);
         pendingJoinChannelsRef.current.delete(channelName);
@@ -188,6 +195,14 @@ function createChannelStateRouteHandlers({
   };
 }
 
+interface CreateChatMessageRouteHandlersOptions {
+  blockedUsers: { userLogin: string }[];
+  matchWholeWord: boolean;
+  mutedWords: string[];
+  optionsRef: RefObject<UseTwitchChatOptions>;
+  user: ReturnType<typeof useAuthContext>['user'];
+}
+
 /**
  * The handlers that carry chat content: a message, a notice, a moderation
  * clear. Filtering lives here, so the socket plumbing above stays free of it.
@@ -198,13 +213,7 @@ function createChatMessageRouteHandlers({
   mutedWords,
   optionsRef,
   user,
-}: {
-  blockedUsers: { userLogin: string }[];
-  matchWholeWord: boolean;
-  mutedWords: string[];
-  optionsRef: RefObject<UseTwitchChatOptions>;
-  user: ReturnType<typeof useAuthContext>['user'];
-}): Pick<
+}: CreateChatMessageRouteHandlersOptions): Pick<
   IrcRouteHandlers,
   | 'privmsg'
   | 'notice'
@@ -292,6 +301,17 @@ function createChatMessageRouteHandlers({
   };
 }
 
+interface UseChatLivenessWatchdogOptions {
+  awaitingPongRef: RefObject<boolean>;
+  getWebSocketRef: RefObject<() => WebSocket>;
+  lastActivityAtRef: RefObject<number>;
+  probeSentAtRef: RefObject<number>;
+  probeTimeoutRef: RefObject<ReturnType<typeof setTimeout> | null>;
+  readyState: ReadyState;
+  shouldConnect: boolean;
+  verifyChatLivenessRef: RefObject<() => void>;
+}
+
 /**
  * Keeps the IRC socket honest. A periodic probe catches a half-open socket that
  * still reports OPEN, and returning to the foreground or regaining the network
@@ -306,16 +326,7 @@ function useChatLivenessWatchdog({
   readyState,
   shouldConnect,
   verifyChatLivenessRef,
-}: {
-  awaitingPongRef: RefObject<boolean>;
-  getWebSocketRef: RefObject<() => WebSocket>;
-  lastActivityAtRef: RefObject<number>;
-  probeSentAtRef: RefObject<number>;
-  probeTimeoutRef: RefObject<ReturnType<typeof setTimeout> | null>;
-  readyState: ReadyState;
-  shouldConnect: boolean;
-  verifyChatLivenessRef: RefObject<() => void>;
-}): void {
+}: UseChatLivenessWatchdogOptions): void {
   useEffect(() => {
     if (!shouldConnect) {
       return;
@@ -359,7 +370,15 @@ function useChatLivenessWatchdog({
     }, CHAT_HEARTBEAT_INTERVAL_MS);
 
     return () => clearInterval(interval);
-  }, [getWebSocketRef, readyState, shouldConnect, verifyChatLivenessRef]);
+  }, [
+    awaitingPongRef,
+    getWebSocketRef,
+    lastActivityAtRef,
+    probeSentAtRef,
+    readyState,
+    shouldConnect,
+    verifyChatLivenessRef,
+  ]);
 
   // Re-verify liveness on foreground/network regain; otherwise a flapped socket takes a full heartbeat cycle to notice.
   useEffect(() => {
@@ -405,7 +424,7 @@ function useChatLivenessWatchdog({
         probeTimeoutRef.current = null;
       }
     };
-  }, [shouldConnect, verifyChatLivenessRef]);
+  }, [probeTimeoutRef, shouldConnect, verifyChatLivenessRef]);
 }
 
 type IrcLineHandlers = {
@@ -567,7 +586,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     () => `justinfan${Math.floor(Math.random() * 90000) + 10000}`,
   );
 
-  // Authenticated nick; JOIN/PART prefixes let us tell our own join/part from other chatters'.
+  // Authenticated nick; JOIN/PART prefixes let us tell our own join/token from other chatters'.
   const currentNickRef = useRef('');
 
   const pendingIrcMessagesRef = useRef<string[]>([]);
@@ -990,7 +1009,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     }
 
     logger.chat.info(
-      '[useTwitchChat] Join/part preference changed, reconnecting IRC to renegotiate membership capability',
+      '[useTwitchChat] Join/token preference changed, reconnecting IRC to renegotiate membership capability',
     );
 
     getWebSocketRef.current().close(4005, 'membership capability change');

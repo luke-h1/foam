@@ -126,7 +126,7 @@ describe('chatDebugLog', () => {
     expect(lines).toEqual([privmsg('alice', 'three'), privmsg('alice', 'one')]);
   });
 
-  test('matches usernotices through the login tag', () => {
+  test('matches user notices through the login tag', () => {
     const usernotice =
       '@badge-info=;login=alice;msg-id=resub;system-msg=resubbed :tmi.twitch.tv USERNOTICE #channel';
 

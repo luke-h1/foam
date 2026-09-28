@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { toast } from 'sonner-native';
 
-import type { MessageActionData } from '@app/components/chat/components/chat-message/rich-chat-message';
+import type { MessageActionData } from '@app/components/chat/components/chat-message/chat-row';
 import { useSyncRef } from '@app/hooks/use-sync-ref';
 import {
   getPinnedChatMessageText,

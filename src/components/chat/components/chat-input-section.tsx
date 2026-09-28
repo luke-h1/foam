@@ -29,6 +29,27 @@ export type { ReplyToData };
 const replyPreviewEntering = chatEntranceSpring(FadeInUp);
 const replyPreviewExiting = FadeOutDown.duration(140);
 
+function ReplyPreviewMessage({ replyTo }: { replyTo: ReplyToData }) {
+  if (replyTo.messageParts?.length) {
+    return (
+      <ReplyPreviewBody
+        tokens={replyTo.messageParts}
+        textStyle={styles.replyMessagePreview}
+      />
+    );
+  }
+
+  if (replyTo.message) {
+    return (
+      <Text style={styles.replyMessagePreview} numberOfLines={1}>
+        {truncate(replyTo.message.trim() || replyTo.message, 60)}
+      </Text>
+    );
+  }
+
+  return null;
+}
+
 export const ChatInputSection = memo(
   ({
     connection,
@@ -58,11 +79,13 @@ export const ChatInputSection = memo(
       trimmedInput && (isAuthenticated || isRefresh) && !isSending,
     );
 
-    const inputPlaceholder = !isAuthenticated
-      ? 'Sign in to send messages'
-      : replyTo !== null
-        ? `Reply to ${replyTo.username}...`
-        : 'Send a message...';
+    let inputPlaceholder = 'Send a message...';
+
+    if (!isAuthenticated) {
+      inputPlaceholder = 'Sign in to send messages';
+    } else if (replyTo !== null) {
+      inputPlaceholder = `Reply to ${replyTo.username}...`;
+    }
 
     return (
       <View style={styles.wrapper} testID='chat-input-bar'>
@@ -86,16 +109,7 @@ export const ChatInputSection = memo(
                   }
                 />
               </View>
-              {replyTo.messageParts?.length ? (
-                <ReplyPreviewBody
-                  parts={replyTo.messageParts}
-                  textStyle={styles.replyMessagePreview}
-                />
-              ) : replyTo.message ? (
-                <Text style={styles.replyMessagePreview} numberOfLines={1}>
-                  {truncate(replyTo.message.trim() || replyTo.message, 60)}
-                </Text>
-              ) : null}
+              <ReplyPreviewMessage replyTo={replyTo} />
             </View>
             <Button
               style={styles.replyDismissButton}

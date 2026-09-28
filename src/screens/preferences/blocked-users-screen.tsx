@@ -354,17 +354,19 @@ function NativeBlockedUsersList({
   );
 }
 
+interface BlockedUsersDataListProps {
+  data: UserBlockList[];
+  listRef: RefObject<FlashListRef<UserBlockList> | null>;
+  onRefresh: () => Promise<void>;
+  renderItem: ListRenderItem<UserBlockList>;
+}
+
 function BlockedUsersDataList({
   data,
   listRef,
   onRefresh,
   renderItem,
-}: {
-  data: UserBlockList[];
-  listRef: RefObject<FlashListRef<UserBlockList> | null>;
-  onRefresh: () => Promise<void>;
-  renderItem: ListRenderItem<UserBlockList>;
-}) {
+}: BlockedUsersDataListProps) {
   return (
     <View style={styles.content}>
       <FlashList

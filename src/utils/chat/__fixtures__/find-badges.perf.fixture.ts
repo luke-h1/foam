@@ -52,8 +52,8 @@ export const badgeLookupUserstates = Array.from({ length: 120 }, (_, index) => {
   return createUserStateTags({
     'badges-raw': rawParts.join(','),
     badges: Object.fromEntries(
-      rawParts.map(part => {
-        const [set, version] = part.split('/');
+      rawParts.map(token => {
+        const [set, version] = token.split('/');
         return [set, version];
       }),
     ),

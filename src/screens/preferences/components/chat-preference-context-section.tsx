@@ -16,6 +16,15 @@ import { PreviewLabel } from './chat-preference-preview-widgets';
 import { ChatPreferenceSegmentedSettingsRow } from './chat-preference-settings-rows';
 import { ChatPreferencePreview } from './chat-preferences-preview';
 
+interface ChatPreferenceContextSectionProps {
+  handleContextToggle: (key: ContextPreviewKey, value: boolean) => void;
+  handleTimestampFormatChange: (index: number) => void;
+  onShowRecentMessagesChange: (value: boolean) => void;
+  previewContext: ContextPreviewValue;
+  showRecentMessages: boolean | undefined;
+  timestampFormatIndex: number;
+}
+
 export function ChatPreferenceContextSection({
   handleContextToggle,
   handleTimestampFormatChange,
@@ -23,14 +32,7 @@ export function ChatPreferenceContextSection({
   onShowRecentMessagesChange,
   showRecentMessages,
   timestampFormatIndex,
-}: {
-  handleContextToggle: (key: ContextPreviewKey, value: boolean) => void;
-  handleTimestampFormatChange: (index: number) => void;
-  onShowRecentMessagesChange: (value: boolean) => void;
-  previewContext: ContextPreviewValue;
-  showRecentMessages: boolean | undefined;
-  timestampFormatIndex: number;
-}) {
+}: ChatPreferenceContextSectionProps) {
   return (
     <SettingsSection title='Context'>
       <SettingsToggleRow

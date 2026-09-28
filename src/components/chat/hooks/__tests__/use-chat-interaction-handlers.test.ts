@@ -2,7 +2,7 @@ import { act, renderHook } from '@testing-library/react-native';
 
 import type { ReplyToData } from '@app/components/chat/components/chat-input-section';
 import type { ChatInputShellHandle } from '@app/components/chat/components/chat-input-shell';
-import type { EmotePressData } from '@app/components/chat/components/chat-message/rich-chat-message.types';
+import type { EmotePressData } from '@app/components/chat/components/chat-message/chat-row.types';
 import { createChatMessage } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
 import {
   useChatComposerActions,
@@ -13,7 +13,7 @@ import * as messagesActions from '@app/store/chat/actions/messages';
 import * as userCosmeticsFetchActions from '@app/store/chat/actions/user-cosmetics-fetch';
 import { chatOverlays$ } from '@app/store/chat/observables/chat-overlays';
 import { createRef } from '@app/test/create-ref';
-import { createEmotePart } from '@app/utils/chat/__tests__/__fixtures__/parsed-part.fixture';
+import { createEmoteToken } from '@app/utils/chat/__tests__/__fixtures__/message-token.fixture';
 
 const mockGetMessageById = jest.spyOn(messagesActions, 'getMessageById');
 
@@ -140,7 +140,7 @@ describe('useChatOverlayActions', () => {
     const message = createChatMessage();
     const hook = renderOverlayActions();
 
-    const emote: EmotePressData = createEmotePart('Kappa', {
+    const emote: EmotePressData = createEmoteToken('Kappa', {
       name: 'Kappa',
       original_name: 'Kappa',
       site: '7TV Channel',

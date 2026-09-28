@@ -5,7 +5,7 @@ import * as Clipboard from 'expo-clipboard';
 import { toast } from 'sonner-native';
 
 import * as ImageModule from '@app/components/image/image';
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 import { EmoteActionSheet } from '../emote-action-sheet';
 
@@ -17,7 +17,7 @@ const clipboardSetStringAsyncMock = jest
 
 const toastSuccessMock = jest.mocked(toast.success);
 
-const part = {
+const token = {
   type: 'emote',
   content: 'Dance',
   name: 'Dance',
@@ -36,7 +36,7 @@ const part = {
       '4x': 'https://example.com/static-4x.webp',
     },
   },
-} satisfies ParsedPart<'emote'>;
+} satisfies MessageToken<'emote'>;
 
 const partWithoutStructuredVariants = {
   type: 'emote',
@@ -47,7 +47,7 @@ const partWithoutStructuredVariants = {
   site: 'Twitch Global',
   url: 'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/1.0',
   static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/25/static/dark/1.0',
-} satisfies ParsedPart<'emote'>;
+} satisfies MessageToken<'emote'>;
 
 describe('EmoteActionSheet', () => {
   beforeEach(() => {
@@ -56,7 +56,7 @@ describe('EmoteActionSheet', () => {
 
   test('copies scaled animated emote URLs from image variants', async () => {
     const { getByText } = render(
-      <EmoteActionSheet part={part}>
+      <EmoteActionSheet token={token}>
         <Text>Dance trigger</Text>
       </EmoteActionSheet>,
     );
@@ -80,7 +80,7 @@ describe('EmoteActionSheet', () => {
 
   test('copies static scaled URLs when animations are disabled', async () => {
     const { getByText } = render(
-      <EmoteActionSheet part={part} disableAnimations>
+      <EmoteActionSheet token={token} disableAnimations>
         <Text>Dance trigger</Text>
       </EmoteActionSheet>,
     );
@@ -100,7 +100,7 @@ describe('EmoteActionSheet', () => {
 
   test('derives scaled copy actions from known emote CDN URLs', async () => {
     const { getByText } = render(
-      <EmoteActionSheet part={partWithoutStructuredVariants}>
+      <EmoteActionSheet token={partWithoutStructuredVariants}>
         <Text>Kappa trigger</Text>
       </EmoteActionSheet>,
     );
@@ -123,7 +123,7 @@ describe('EmoteActionSheet', () => {
     const onPreview = jest.fn();
 
     const { getByText } = render(
-      <EmoteActionSheet part={part} disableAnimations onPress={onPreview}>
+      <EmoteActionSheet token={token} disableAnimations onPress={onPreview}>
         <Text>Dance trigger</Text>
       </EmoteActionSheet>,
     );

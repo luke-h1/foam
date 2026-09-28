@@ -124,7 +124,7 @@ describe('chatIngestController (headless line → commit)', () => {
 
     expect(
       message.message.some(
-        part => part.type === 'text' && part.content.includes('hello world'),
+        token => token.type === 'text' && token.content.includes('hello world'),
       ),
     ).toBe(true);
   });
@@ -285,9 +285,9 @@ describe('chatIngestController (headless line → commit)', () => {
     expect(
       committedMessages().some(message =>
         message.message.some(
-          part =>
-            part.type === 'text' &&
-            part.content.includes('chatter has been permanently banned'),
+          token =>
+            token.type === 'text' &&
+            token.content.includes('chatter has been permanently banned'),
         ),
       ),
     ).toBe(true);

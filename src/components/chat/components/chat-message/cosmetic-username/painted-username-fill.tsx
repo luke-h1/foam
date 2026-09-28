@@ -1,7 +1,7 @@
 import { type StyleProp, StyleSheet, TextStyle, View } from 'react-native';
 
 import { Text } from '@app/components/ui/text/text';
-import type { PaintData } from '@app/types/seventv/cosmetics';
+import type { PaintData } from '@app/types/seven-tv/cosmetics';
 import { isVisibleSevenTvColor } from '@app/utils/color/is-visible-seven-tv-color';
 import { sevenTvColorToCss } from '@app/utils/color/seven-tv-color-to-css';
 

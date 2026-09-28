@@ -108,19 +108,21 @@ export function EmptyLayoutContent({
   return <View style={[styles.content, style]}>{children}</View>;
 }
 
+interface EmptyLayoutButtonProps {
+  title?: string;
+  children?: ReactNode;
+  variant?: EmptyLayoutVariant;
+  onPress?: () => void;
+  style?: StyleProp<ViewStyle>;
+}
+
 export function EmptyLayoutButton({
   title,
   children,
   variant = 'default',
   onPress,
   style,
-}: {
-  title?: string;
-  children?: ReactNode;
-  variant?: EmptyLayoutVariant;
-  onPress?: () => void;
-  style?: StyleProp<ViewStyle>;
-}) {
+}: EmptyLayoutButtonProps) {
   if (title) {
     return (
       <View style={style}>

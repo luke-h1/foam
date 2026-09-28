@@ -1,6 +1,6 @@
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 
-import type { PaintCanvasRepeat } from '@app/types/seventv/cosmetics';
+import type { PaintCanvasRepeat } from '@app/types/seven-tv/cosmetics';
 
 interface PaintLayerTiledImageProps {
   canvasRepeat: PaintCanvasRepeat;

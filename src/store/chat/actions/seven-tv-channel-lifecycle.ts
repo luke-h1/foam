@@ -3,11 +3,11 @@ import { batch } from '@legendapp/state';
 import {
   invalidateSevenTvUser,
   sevenTvService,
-} from '@app/services/seventv-service';
+} from '@app/services/seven-tv-service';
 import type { SanitisedEmote } from '@app/types/emote';
 import { evictOldestWhenFull } from '@app/utils/collection/evict-oldest-when-full';
 import { logger } from '@app/utils/logger';
-import { getSevenTvSessionId } from '@app/utils/seventv/seven-tv-session-id';
+import { getSevenTvSessionId } from '@app/utils/seven-tv/seven-tv-session-id';
 
 import { chatStore$ } from '../observables/chat-store';
 

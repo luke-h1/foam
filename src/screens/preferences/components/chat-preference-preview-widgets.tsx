@@ -37,17 +37,19 @@ export const DensityPreview = function DensityPreview({
   );
 };
 
+interface PreviewMessageProps {
+  compact: boolean;
+  message: string;
+  time: string;
+  username: string;
+}
+
 const PreviewMessage = function PreviewMessage({
   compact,
   message,
   time,
   username,
-}: {
-  compact: boolean;
-  message: string;
-  time: string;
-  username: string;
-}) {
+}: PreviewMessageProps) {
   const textStyles = getChatTextStyles(undefined, compact);
 
   return (

@@ -57,6 +57,26 @@ type UserActionItem = {
   tone?: 'accent' | 'danger' | 'default' | 'warning';
 };
 
+type UserActionTone = UserActionItem['tone'];
+
+function getUserActionTintColor(tone: UserActionTone) {
+  switch (tone) {
+    case 'danger':
+      return theme.colorRed;
+    case 'warning':
+      return theme.colorAmber;
+    case 'accent':
+      return theme.colorPrimary;
+    case 'default':
+    case undefined:
+      return theme.color.textSecondary.dark;
+    default: {
+      const unreachable: never = tone;
+      return unreachable;
+    }
+  }
+}
+
 const MAX_RECENT_USER_MESSAGES = 5;
 
 function getRecentUserMessages(login?: string, username?: string) {
@@ -107,45 +127,40 @@ function getRecentUserMessages(login?: string, username?: string) {
   return recentMessages.reverse();
 }
 
-function UserActionSheetComponent({
-  color,
-  login,
-  userId,
-  moderation,
-  visibility,
-  onClose,
+/**
+ * The rows a user sheet shows, in order. Report, block and the moderation
+ * actions only appear when the caller supplied a handler for them.
+ */
+function buildUserActionRows({
+  canModerateChat,
+  canModerateUser,
+  isHidden,
+  isHighlighted,
+  onBanUser,
+  onBlockUser,
   onCopyUsername,
   onHideUser,
   onHighlightUser,
   onMentionUser,
-  onBlockUser,
   onReportUser,
   onTimeoutUser,
   onWarnUser,
-  onBanUser,
-  username,
-}: UserActionSheetProps) {
-  const { canModerateChat, canModerateUser } = moderation;
-  const { isHidden, isHighlighted, visible } = visibility;
-  const sheetRef = useRef<BottomSheetHandle>(null);
-
-  const requestClose = () => {
-    sheetRef.current?.requestClose();
-  };
-
-  const runAndClose = (action?: () => void) => {
-    action?.();
-    requestClose();
-  };
-
-  // peek() on open: the scrollback updates constantly and re-rendering the
-  // sheet per message would defeat the chat flush batching.
-  const recentMessages = useMemo(
-    () => (visible ? getRecentUserMessages(login, username) : []),
-    [login, username, visible],
-  );
-
-  const actionRows: UserActionItem[] = [
+}: UserActionSheetProps['moderation'] & {
+  isHidden: boolean;
+  isHighlighted: boolean;
+} & Pick<
+    UserActionSheetProps,
+    | 'onBanUser'
+    | 'onBlockUser'
+    | 'onCopyUsername'
+    | 'onHideUser'
+    | 'onHighlightUser'
+    | 'onMentionUser'
+    | 'onReportUser'
+    | 'onTimeoutUser'
+    | 'onWarnUser'
+  >): UserActionItem[] {
+  return [
     {
       icon: 'at',
       label: 'Mention',
@@ -220,6 +235,61 @@ function UserActionSheetComponent({
         ]
       : []),
   ];
+}
+
+function UserActionSheetComponent({
+  color,
+  login,
+  userId,
+  moderation,
+  visibility,
+  onClose,
+  onCopyUsername,
+  onHideUser,
+  onHighlightUser,
+  onMentionUser,
+  onBlockUser,
+  onReportUser,
+  onTimeoutUser,
+  onWarnUser,
+  onBanUser,
+  username,
+}: UserActionSheetProps) {
+  const { canModerateChat, canModerateUser } = moderation;
+  const { isHidden, isHighlighted, visible } = visibility;
+  const sheetRef = useRef<BottomSheetHandle>(null);
+
+  const requestClose = () => {
+    sheetRef.current?.requestClose();
+  };
+
+  const runAndClose = (action?: () => void) => {
+    action?.();
+    requestClose();
+  };
+
+  // peek() on open: the scrollback updates constantly and re-rendering the
+  // sheet per message would defeat the chat flush batching.
+  const recentMessages = useMemo(
+    () => (visible ? getRecentUserMessages(login, username) : []),
+    [login, username, visible],
+  );
+
+  const actionRows = buildUserActionRows({
+    canModerateChat,
+    canModerateUser,
+    isHidden,
+    isHighlighted,
+    onBanUser,
+    onBlockUser,
+    onCopyUsername,
+    onHideUser,
+    onHighlightUser,
+    onMentionUser,
+    onReportUser,
+    onTimeoutUser,
+    onWarnUser,
+  });
 
   const { height: windowHeight } = useWindowDimensions();
 
@@ -346,15 +416,7 @@ function UserActionSheetComponent({
                   <SymbolView
                     name={action.icon}
                     size={18}
-                    tintColor={
-                      action.tone === 'danger'
-                        ? theme.colorRed
-                        : action.tone === 'warning'
-                          ? theme.colorAmber
-                          : action.tone === 'accent'
-                            ? theme.colorPrimary
-                            : theme.color.textSecondary.dark
-                    }
+                    tintColor={getUserActionTintColor(action.tone)}
                   />
                 </View>
                 <View style={styles.actionCopy}>

@@ -1,4 +1,4 @@
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 export type ChatBodyVariant =
   | 'twitch_system_notice'
@@ -14,17 +14,19 @@ export type ChatBodyVariant =
   | 'user_chat';
 
 /**
- * The part types a single Text element can host, which lets a body wrap
+ * The token kinds a single Text element can host, which lets a body wrap
  * inline after the username instead of dropping to a block on a new flex line.
  */
-export type InlineFlowPart = ParsedPart<'text' | 'mention' | 'link' | 'emote'>;
+export type InlineFlowToken = MessageToken<
+  'text' | 'mention' | 'link' | 'emote'
+>;
 
 export interface MessageStructure {
   /**
-   * Every part fits in a single Text - ignores paint/moderation, which
-   * `canFlowInline` ANDs in for the caller.
+   * Every token fits in a single Text. Ignores paint and moderation, which
+   * `flowsInline` ANDs in for the caller.
    */
-  canBeInline: boolean;
+  fitsInOneText: boolean;
   containsEmotes: boolean;
 }
 

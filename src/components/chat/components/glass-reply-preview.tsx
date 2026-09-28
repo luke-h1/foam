@@ -83,7 +83,7 @@ const ReplyPreviewLine = ({ replyTo }: { replyTo: ReplyToData }) => {
   if (replyTo.messageParts?.length) {
     return (
       <ReplyPreviewBody
-        parts={replyTo.messageParts}
+        tokens={replyTo.messageParts}
         textStyle={styles.replyMessagePreview}
       />
     );

@@ -1,4 +1,4 @@
-import { getTwitchClipIdFromUrl } from '@app/utils/chat/parse-word-link-parts/get-twitch-clip-id-from-url';
+import { getTwitchClipIdFromUrl } from '@app/utils/chat/parse-word-link-tokens/get-twitch-clip-id-from-url';
 
 describe('getTwitchClipIdFromUrl', () => {
   test('extracts clip slugs from Twitch clip URL shapes', () => {

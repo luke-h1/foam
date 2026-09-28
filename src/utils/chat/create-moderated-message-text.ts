@@ -1,8 +1,8 @@
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 import { replaceEmotesWithText } from '@app/utils/chat/replace-emotes-with-text';
 
 export function createModeratedMessageText(
-  message: ParsedPart[],
+  message: MessageToken[],
   moderationNotice: string,
 ): string {
   const plainText = replaceEmotesWithText(message).trim();

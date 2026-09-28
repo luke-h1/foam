@@ -5,7 +5,7 @@ import { startSpanAsync } from '@app/lib/sentry';
 import {
   invalidateSevenTvUser,
   sevenTvService,
-} from '@app/services/seventv-service';
+} from '@app/services/seven-tv-service';
 import { twitchService } from '@app/services/twitch-service';
 import { getPreferences } from '@app/store/preference-store';
 import type { SanitisedEmote } from '@app/types/emote';
@@ -133,6 +133,14 @@ const countReconciledItems = (
   return total;
 };
 
+interface WriteGlobalCachesOptions {
+  badgeByKey: ReadonlyMap<BadgeCacheKey, SanitisedBadgeSet[]>;
+  emoteByKey: ReadonlyMap<EmoteCacheKey, SanitisedEmote[]>;
+  existingGlobalCache: GlobalCacheType | undefined;
+  now: number;
+  settled: readonly ProviderFailureSettled[];
+}
+
 /**
  * The freshness stamp only advances when every global fetch succeeded, so a
  * failed slice keeps its retry pressure.
@@ -143,13 +151,7 @@ function writeGlobalCaches({
   existingGlobalCache,
   now,
   settled,
-}: {
-  badgeByKey: ReadonlyMap<BadgeCacheKey, SanitisedBadgeSet[]>;
-  emoteByKey: ReadonlyMap<EmoteCacheKey, SanitisedEmote[]>;
-  existingGlobalCache: GlobalCacheType | undefined;
-  now: number;
-  settled: readonly ProviderFailureSettled[];
-}): void {
+}: WriteGlobalCachesOptions): void {
   const hasGlobalResourceFailure = settled.some(
     entry =>
       entry.spec.scope === 'global' && entry.result.status === 'rejected',

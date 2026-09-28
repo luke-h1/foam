@@ -18,11 +18,11 @@ import { createSevenTvCallbacks } from '@app/components/chat/util/create-seven-t
 import * as sentryModule from '@app/lib/sentry';
 import * as cosmeticsActions from '@app/store/chat/actions/cosmetics';
 import * as cosmeticsBridgeActions from '@app/store/chat/actions/cosmetics-bridge';
-import type { BadgeData, PaintData } from '@app/types/seventv/cosmetics';
+import type { BadgeData, PaintData } from '@app/types/seven-tv/cosmetics';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import * as generateSevenTvEmoteNoticeModule from '@app/utils/emote/stv/generate-seven-tv-emote-notice';
 import { logger } from '@app/utils/logger';
-import { normalizeSevenTvPaint } from '@app/utils/seventv/cosmetics/normalize-seven-tv-paint';
+import { normalizeSevenTvPaint } from '@app/utils/seven-tv/cosmetics/normalize-seven-tv-paint';
 
 jest.spyOn(logger.stvWs, 'info').mockImplementation(() => {});
 jest.spyOn(logger.stvWs, 'debug').mockImplementation(() => {});

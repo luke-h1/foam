@@ -1,4 +1,4 @@
-import type { PaintLayerData } from '@app/types/seventv/cosmetics';
+import type { PaintLayerData } from '@app/types/seven-tv/cosmetics';
 
 /**
  * Whether a paint layer produces a span at all; drops layers with nothing to

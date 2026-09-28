@@ -4,7 +4,6 @@ import {
   charityDonation,
   emote,
   mention,
-  raid,
   ritual,
   stvEmoteEvent,
   subscription,
@@ -36,32 +35,28 @@ describe('deriveChatBody', () => {
     );
   });
 
-  test('detects notice variants from parts', () => {
+  test('detects notice variants from tokens', () => {
     expect(deriveChatBody([ritual()]).variant).toBe('ritual');
   });
 
-  test('detects the subscription variant from a sub part', () => {
+  test('detects the subscription variant from a sub token', () => {
     expect(deriveChatBody([subscription()]).variant).toBe('subscription');
   });
 
-  test('detects the charity_donation variant from a charity part', () => {
+  test('detects the charity_donation variant from a charity token', () => {
     expect(deriveChatBody([charityDonation()]).variant).toBe(
       'charity_donation',
     );
   });
 
-  test('detects the stv_emote_event variant from an stv emote part', () => {
+  test('detects the stv_emote_event variant from an stv emote token', () => {
     expect(deriveChatBody([stvEmoteEvent()]).variant).toBe('stv_emote_event');
   });
 
-  test('detects the viewer_milestone variant from a milestone part', () => {
+  test('detects the viewer_milestone variant from a milestone token', () => {
     expect(deriveChatBody([viewerMilestone()]).variant).toBe(
       'viewer_milestone',
     );
-  });
-
-  test('has no dedicated variant for a raid part and falls back to user_chat', () => {
-    expect(deriveChatBody([raid()]).variant).toBe('user_chat');
   });
 
   test('defaults to user_chat', () => {
@@ -70,7 +65,7 @@ describe('deriveChatBody', () => {
     );
   });
 
-  test('reuses the cached scan across calls for the same parts array', () => {
+  test('reuses the cached scan across calls for the same tokens array', () => {
     const message = [mention('@forsen')];
 
     expect(deriveChatBody(message).mentionLogins).toBe(
@@ -78,7 +73,7 @@ describe('deriveChatBody', () => {
     );
   });
 
-  test('recomputes variant when flags differ for the same parts array', () => {
+  test('recomputes variant when flags differ for the same tokens array', () => {
     const message = [text('hi')];
 
     expect(deriveChatBody(message, { isAnnouncement: true }).variant).toBe(

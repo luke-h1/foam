@@ -3,7 +3,7 @@ import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import { createTextPart } from '@app/utils/chat/__tests__/__fixtures__/parsed-part.fixture';
+import { createTextToken } from '@app/utils/chat/__tests__/__fixtures__/message-token.fixture';
 
 import { hydrateVisibleSevenTvAssets } from '../hydrate-visible-seven-tv-assets';
 
@@ -48,7 +48,7 @@ function createMessage(): AnyChatMessageType {
     id: 'message-1_nonce-1',
     message_id: 'message-1',
     message_nonce: 'nonce-1',
-    message: [createTextPart('Personal')],
+    message: [createTextToken('Personal')],
     badges: [],
     channel: 'channel',
     parentDisplayName: '',

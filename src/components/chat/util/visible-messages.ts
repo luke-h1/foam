@@ -1,10 +1,10 @@
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-chat-username';
+import type { MessageToken } from '@app/utils/chat/message-token';
 import { normaliseChatText } from '@app/utils/chat/normalise-chat-text';
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
 import { replaceEmotesWithText } from '@app/utils/chat/replace-emotes-with-text';
 
-const messageTextCache = new WeakMap<ParsedPart[], string>();
+const messageTextCache = new WeakMap<MessageToken[], string>();
 
 const normalisedMessageFieldsCache = new WeakMap<
   FilterableMessage,
@@ -17,7 +17,7 @@ const normalisedMessageFieldsCache = new WeakMap<
 >();
 
 interface FilterableMessage {
-  message: ParsedPart[];
+  message: MessageToken[];
   message_id: string;
   sender: string;
   userstate: UserStateTags;
@@ -71,12 +71,12 @@ function messageMentionsUsername(
     return false;
   }
 
-  for (const part of message.message) {
-    if (part.type !== 'mention') {
+  for (const token of message.message) {
+    if (token.type !== 'mention') {
       continue;
     }
 
-    if (normaliseChatUsername(part.content.replace(/^@/, '')) === target) {
+    if (normaliseChatUsername(token.content.replace(/^@/, '')) === target) {
       return true;
     }
   }

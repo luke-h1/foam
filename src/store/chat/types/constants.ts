@@ -11,9 +11,9 @@ import type {
 } from '@app/types/chat/irc-tags/usernotice';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
-import type { PaintData } from '@app/types/seventv/cosmetics';
+import type { PaintData } from '@app/types/seven-tv/cosmetics';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 export type { PaintData, SanitisedBadgeSet, SanitisedEmote };
 
@@ -69,12 +69,12 @@ export interface ChatMessageType<
    */
   isHistorical?: boolean;
   /**
-   * Set when the message committed as part of a raid-sized flush, so a burst
+   * Set when the message committed as token of a raid-sized flush, so a burst
    * of rows does not start one entrance animation per row in the same frame.
    */
   arrivedInBurst?: boolean;
   userstate: UserStateTags;
-  message: ParsedPart[];
+  message: MessageToken[];
   badges: SanitisedBadgeSet[];
   channel: string;
   message_id: string;

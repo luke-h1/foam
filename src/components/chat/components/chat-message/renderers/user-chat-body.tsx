@@ -3,31 +3,26 @@ import type { ReactNode } from 'react';
 
 import { useSelector } from '@legendapp/state/react';
 
-import { CHAT_NOTICE_ACCENTS } from '@app/components/chat/components/util/chat-notice-accents';
-import { Text } from '@app/components/ui/text/text';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-chat-username';
-import { canFlowInline } from '@app/utils/chat/derive-chat-body/can-flow-inline';
+import { flowsInline } from '@app/utils/chat/derive-chat-body/flows-inline';
 import { getMessageStructure } from '@app/utils/chat/derive-chat-body/get-message-structure';
 import { generateRandomTwitchColor } from '@app/utils/chat/generate-random-twitch-color';
 import { cachedLighten } from '@app/utils/chat/resolve-cached-sender-color/cached-lighten';
 
+import { styles } from '../chat-row.styles';
+import type { BadgePressData } from '../chat-row.types';
 import { getChatTextStyles } from '../chat-text.styles';
-import { styles } from '../rich-chat-message.styles';
-import type { BadgePressData } from '../rich-chat-message.types';
-import { RichChatMessageUsername } from '../rich-chat-message-username';
 import { ChannelPointsRewardMetaRow } from './channel-points-reward-meta-row';
-import { ChatMessageBadges } from './chat-message-badges';
-import { ChatMessageBody } from './chat-message-body';
-import { ChatNoticeMetaRow } from './chat-notice-meta-row';
+import { ChatRowMetaHeader } from './chat-row-meta-header';
 import { InlineMessageLine } from './inline-message-line';
-import { InlineMessageSpans } from './inline-message-spans';
-import { ReplyingToHeader } from './replying-to-header';
-import type { ChatMessagePartRendererArgs } from './types/chat-message-part-renderer-args';
+import { StackedMessageLine } from './stacked-message-line';
+import type { ChatTokenRenderProps } from './types/chat-token-render-props';
+import type { ReplyFlags } from './types/reply-flags';
 
-interface UserChatBodyProps extends ChatMessagePartRendererArgs {
+interface UserChatBodyProps extends ChatTokenRenderProps {
   badgeList: SanitisedBadgeSet[];
   cachedSenderColor?: string;
   onBadgePress?: (badge: BadgePressData) => void;
@@ -38,15 +33,7 @@ interface UserChatBodyProps extends ChatMessagePartRendererArgs {
   onUsernamePress?: () => void;
   parentDisplayName?: string;
   replyBody?: string;
-  replyFlags: {
-    canJumpToReplyTarget: boolean;
-    isFirstMessage: boolean;
-    isReturningChatter?: boolean;
-    isReplyingToCurrentUser: boolean;
-    shouldRenderInlineReply: boolean;
-    showChannelPointsRewardChrome: boolean;
-    showTimestamp: boolean;
-  };
+  replyFlags: ReplyFlags;
   replyParentMessageId?: string;
   roomId?: string;
   timestamp?: string;
@@ -80,10 +67,6 @@ export function UserChatBody({
   ...rendererArgs
 }: UserChatBodyProps): ReactNode {
   const {
-    canJumpToReplyTarget,
-    isFirstMessage,
-    isReturningChatter,
-    isReplyingToCurrentUser,
     shouldRenderInlineReply,
     showChannelPointsRewardChrome,
     showTimestamp,
@@ -110,10 +93,7 @@ export function UserChatBody({
    * A paint renders through a mask, so a painted row cannot put the username
    * in the same Text as the body - but the body alone still flows.
    */
-  const renderInline = canFlowInline(message, { hasPaint, isModerated });
-
-  const bodyFlowsInline =
-    !renderInline && canFlowInline(message, { hasPaint: false, isModerated });
+  const rowFlowsInline = flowsInline(message, { hasPaint, isModerated });
 
   const inlineUsernameColor =
     cachedSenderColor ??
@@ -133,33 +113,15 @@ export function UserChatBody({
 
   return (
     <View style={styles.messageColumn}>
-      {shouldRenderInlineReply && parentDisplayName ? (
-        <ReplyingToHeader
-          canJumpToReplyTarget={canJumpToReplyTarget}
-          isReplyingToCurrentUser={isReplyingToCurrentUser}
-          onReplyContextPress={onReplyContextPress}
-          parentDisplayName={parentDisplayName}
-          replyBody={replyBody}
-          replyParentMessageId={replyParentMessageId}
-          rendererArgs={{ ...rendererArgs, message }}
-        />
-      ) : isFirstMessage ? (
-        <ChatNoticeMetaRow
-          compact={compact}
-          icon='sparkles'
-          label='First message'
-          labelColor={CHAT_NOTICE_ACCENTS.firstMessage}
-          labelStyle={styles.firstMessageMetaText}
-        />
-      ) : isReturningChatter ? (
-        <ChatNoticeMetaRow
-          compact={compact}
-          icon='arrow.uturn.left'
-          label='Returning chatter'
-          labelColor={CHAT_NOTICE_ACCENTS.returningChatter}
-          labelStyle={styles.returningChatterMetaText}
-        />
-      ) : null}
+      <ChatRowMetaHeader
+        message={message}
+        onReplyContextPress={onReplyContextPress}
+        parentDisplayName={parentDisplayName}
+        rendererArgs={rendererArgs}
+        replyBody={replyBody}
+        replyFlags={replyFlags}
+        replyParentMessageId={replyParentMessageId}
+      />
       {showChannelPointsRewardChrome && userstate ? (
         <ChannelPointsRewardMetaRow
           compact={compact}
@@ -172,7 +134,7 @@ export function UserChatBody({
           userstate={userstate}
         />
       ) : null}
-      {renderInline ? (
+      {rowFlowsInline ? (
         <InlineMessageLine
           {...rendererArgs}
           badgeList={badgeList}
@@ -188,65 +150,25 @@ export function UserChatBody({
           usernameColor={inlineUsernameColor}
         />
       ) : (
-        <View
-          style={[
-            styles.messageLine,
-            moderationNotice ? styles.messageLineModerated : null,
-          ]}
-        >
-          {moderationNotice ? (
-            <View style={styles.moderatedStrikeOverlay} />
-          ) : null}
-          {showTimestamp && timestamp ? (
-            <Text tabular style={textStyles.timestamp}>
-              {timestamp}
-            </Text>
-          ) : null}
-          <ChatMessageBadges
-            badges={badgeList}
-            compact={compact}
-            fontScale={fontScale}
-            moderationNotice={moderationNotice}
-            onBadgePress={onBadgePress}
-          />
-          {username ? (
-            <View
-              style={
-                moderationNotice ? styles.moderatedUsernameContainer : null
-              }
-            >
-              <RichChatMessageUsername
-                cachedSenderColor={cachedSenderColor}
-                compact={compact}
-                fontScale={fontScale}
-                isModerated={Boolean(moderationNotice)}
-                onUsernamePress={onUsernamePress}
-                userId={userId}
-                userstateColor={userstateColor}
-                username={username}
-              />
-            </View>
-          ) : null}
-          {bodyFlowsInline ? (
-            <Text style={[textStyles.body, bodyEmoteLineStyle]}>
-              <InlineMessageSpans
-                {...rendererArgs}
-                emoteLineStyle={bodyEmoteLineStyle}
-                message={message}
-                replyPlainMentionTarget={replyPlainMentionTarget}
-                textColor={actionColor}
-              />
-            </Text>
-          ) : (
-            <ChatMessageBody
-              mode='message'
-              message={message}
-              replyPlainMentionTarget={replyPlainMentionTarget}
-              textColor={actionColor}
-              {...rendererArgs}
-            />
-          )}
-        </View>
+        <StackedMessageLine
+          badgeList={badgeList}
+          bodyEmoteLineStyle={bodyEmoteLineStyle}
+          cachedSenderColor={cachedSenderColor}
+          isModerated={isModerated}
+          message={message}
+          moderationNotice={moderationNotice}
+          onBadgePress={onBadgePress}
+          onUsernamePress={onUsernamePress}
+          rendererArgs={rendererArgs}
+          replyPlainMentionTarget={replyPlainMentionTarget}
+          showTimestamp={showTimestamp}
+          textColor={actionColor}
+          textStyles={textStyles}
+          timestamp={timestamp}
+          userId={userId}
+          username={username}
+          userstateColor={userstateColor}
+        />
       )}
     </View>
   );

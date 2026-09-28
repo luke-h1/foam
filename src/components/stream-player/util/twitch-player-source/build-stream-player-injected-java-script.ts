@@ -85,6 +85,14 @@ const VOD_PROGRESS_TRACKER_SCRIPT = `
 true;
 `;
 
+interface BuildStreamPlayerInjectedJavaScriptOptions {
+  autoplay: boolean;
+  clip: string | undefined;
+  initialMuted: boolean;
+  showOverlayControls: boolean;
+  video: string | undefined;
+}
+
 /**
  * Scripts injected after content loads. Text tracks are set 'hidden', not
  * 'disabled', which stalls WKWebView's native HLS AVPlayer.
@@ -95,13 +103,7 @@ export function buildStreamPlayerInjectedJavaScript({
   initialMuted,
   showOverlayControls,
   video,
-}: {
-  autoplay: boolean;
-  clip: string | undefined;
-  initialMuted: boolean;
-  showOverlayControls: boolean;
-  video: string | undefined;
-}): string {
+}: BuildStreamPlayerInjectedJavaScriptOptions): string {
   return (
     TWITCH_AUTH_HELPER_SCRIPT +
     '\n' +

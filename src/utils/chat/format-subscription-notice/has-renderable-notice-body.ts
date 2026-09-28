@@ -1,7 +1,7 @@
-import { ParsedPart } from '@app/utils/chat/parsed-part';
+import { MessageToken } from '@app/utils/chat/message-token';
 
 export function hasRenderableNoticeBody(
-  part: ParsedPart<'modiversary' | 'viewermilestone'>,
+  token: MessageToken<'modiversary' | 'viewermilestone'>,
 ): boolean {
-  return Boolean(part.systemMsg.trim() || part.content.trim());
+  return Boolean(token.systemMsg.trim() || token.content.trim());
 }

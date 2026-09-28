@@ -1,46 +1,25 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  InteractionManager,
-  type LayoutChangeEvent,
-  Platform,
-  StyleSheet,
-  View,
-} from 'react-native';
-import type { WebViewMessageEvent } from 'react-native-webview';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { InteractionManager, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
-import { useOnAppStateChange } from '@app/hooks/use-on-app-state-change';
 import { useWatchTimeTracking } from '@app/hooks/use-watch-time-tracking';
 import { usePreference } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
-import { isForegroundTransition } from '@app/utils/app-state/app-state-transitions';
-import { logger } from '@app/utils/logger';
 
 import { Image } from '../image/image';
-import { ControlsOverlay } from './controls-overlay';
 import { usePlayerBridge } from './hooks/use-player-bridge';
 import { useStreamPlayerControls } from './hooks/use-stream-player-controls';
-import { DebugErrorOverlay, TouchBlockOverlay } from './stream-player-overlays';
+import { useStreamPlayerLifecycle } from './hooks/use-stream-player-lifecycle';
+import { useStreamPlayerSource } from './hooks/use-stream-player-source';
+import { useWebViewMessageRouter } from './hooks/use-web-view-message-router';
+import { StreamPlayerOverlayStack } from './stream-player-overlay-stack';
 import { StreamPlayerPoster } from './stream-player-poster';
 import { StreamPlayerWebView } from './stream-player-web-view';
 import type { StreamPlayerProps } from './types';
-import { PIP_ENABLED } from './util/pip-feature';
-import { PLAYER_LOAD_TIMEOUT_MS } from './util/player-telemetry';
-import { buildRawTwitchPlayerUrl } from './util/twitch-player-source/build-raw-twitch-player-url';
-import {
-  buildStreamPlayerInjectedJavaScript,
-  buildTwitchAuthHelperScript,
-} from './util/twitch-player-source/build-stream-player-injected-java-script';
-import { buildTwitchClipPlayerUrl } from './util/twitch-player-source/build-twitch-clip-player-url';
-import { buildTwitchPlayerAudioDefaultScript } from './util/twitch-player-source/build-twitch-player-audio-default-script';
-import { buildTwitchPlayerQualityDefaultScript } from './util/twitch-player-source/build-twitch-player-quality-default-script';
+import { buildStreamSourceKey } from './util/build-stream-source-key';
+import { getStreamPlayerVisibility } from './util/get-stream-player-visibility';
 
 export type { StreamInfo, StreamPlayerProps, StreamPlayerRef } from './types';
-
-/**
- * Linger so the first decoded frame is on screen before the poster fades.
- */
-const POSTER_HIDE_DELAY_MS = 450;
 
 export const StreamPlayer = memo(function StreamPlayer({
   autoplay = true,
@@ -79,13 +58,6 @@ export const StreamPlayer = memo(function StreamPlayer({
   const embedParent = 'www.twitch.tv';
 
   const webViewRef = useRef<WebView>(null);
-  const needsInitRef = useRef(true);
-
-  const authCompletionReloadTimeoutRef = useRef<ReturnType<
-    typeof setTimeout
-  > | null>(null);
-
-  const [webViewKey, setWebViewKey] = useState(0);
 
   const [lastHttpError, setLastHttpError] = useState<{
     url: string;
@@ -105,190 +77,52 @@ export const StreamPlayer = memo(function StreamPlayer({
     return () => task.cancel();
   }, []);
 
-  /**
-   * Force a resize after playback starts to rebuild the layer tree when
-   * WKWebView fails to attach the AVPlayer layer; +2.5s pulse covers late autoplay.
-   */
-  const [layoutNudge, setLayoutNudge] = useState(0);
-
-  const nudgeTimeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const nudgePlayedRef = useRef(false);
-
-  const nudgeLayerTree = useCallback(() => {
-    nudgeTimeoutsRef.current.forEach(clearTimeout);
-    nudgeTimeoutsRef.current = [];
-
-    const pulse = (delay: number) => {
-      nudgeTimeoutsRef.current.push(
-        setTimeout(() => setLayoutNudge(1), delay),
-        setTimeout(() => setLayoutNudge(0), delay + 120),
-      );
-    };
-
-    pulse(0);
-    pulse(2500);
-  }, []);
-
-  /**
-   * Loading frame stays over the WebView until playback starts, hiding the
-   * black box during page load.
-   */
-  const [loadedGeneration, setLoadedGeneration] = useState<string | null>(null);
-
-  const generationRef = useRef('');
-
-  const posterHideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
-
-  const handleBridgePlaying = useCallback(() => {
-    if (nudgePlayedRef.current) {
-      return;
-    }
-
-    nudgePlayedRef.current = true;
-
-    if (!posterHideTimeoutRef.current) {
-      posterHideTimeoutRef.current = setTimeout(() => {
-        posterHideTimeoutRef.current = null;
-        setLoadedGeneration(generationRef.current);
-      }, POSTER_HIDE_DELAY_MS);
-    }
-
-    nudgeLayerTree();
-  }, [nudgeLayerTree]);
-
-  /**
-   * iOS does not reliably re-attach the AVPlayer layer after backgrounding,
-   * so pulse again on every foreground.
-   */
-  useOnAppStateChange(transition => {
-    if (isForegroundTransition(transition)) {
-      nudgeLayerTree();
-    }
+  const sourceKey = buildStreamSourceKey({
+    autoplay,
+    channel,
+    clip,
+    deferOverlayUntilUserUnmute,
+    embedParent,
+    initialMuted,
+    video,
   });
 
-  const lastPlayerSizeRef = useRef<{ width: number; height: number } | null>(
-    null,
-  );
+  const {
+    handleBridgePlaying,
+    handlePlayerLayout,
+    isPlayerLoading,
+    layoutNudge,
+    needsInitRef,
+    remountEmbedWebView,
+    resumeTimeRef,
+    scheduleAuthCompletionReload,
+    webViewKey,
+  } = useStreamPlayerLifecycle({ channel, sourceKey });
 
-  const handlePlayerLayout = useCallback(
-    (event: LayoutChangeEvent) => {
-      const { width: nextWidth, height: nextHeight } = event.nativeEvent.layout;
-      const previous = lastPlayerSizeRef.current;
-      lastPlayerSizeRef.current = { width: nextWidth, height: nextHeight };
-
-      if (
-        previous &&
-        (Math.round(previous.width) !== Math.round(nextWidth) ||
-          Math.round(previous.height) !== Math.round(nextHeight))
-      ) {
-        nudgeLayerTree();
-      }
-    },
-    [nudgeLayerTree],
-  );
-
-  useEffect(() => {
-    const timeoutsRef = nudgeTimeoutsRef;
-    const posterTimeoutRef = posterHideTimeoutRef;
-
-    return () => {
-      timeoutsRef.current.forEach(clearTimeout);
-      if (posterTimeoutRef.current) {
-        clearTimeout(posterTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  const sourceKey = `${channel ?? ''}|${clip ?? ''}|${video ?? ''}|${embedParent}|${autoplay}|${initialMuted}|${deferOverlayUntilUserUnmute}`;
-
-  const generation = `${sourceKey}|${webViewKey}`;
-
-  useEffect(() => {
-    generationRef.current = generation;
-  }, [generation]);
-
-  const isPlayerLoading = loadedGeneration !== generation;
-
-  /**
-   * Last reported VOD playback offset (seconds). Survives a WebView remount so
-   * the embed can resume instead of restarting at 0:00; reset per source.
-   */
-  const resumeTimeRef = useRef(0);
+  const {
+    contentKind,
+    injectedJavaScript,
+    injectedJavaScriptBeforeContentLoaded,
+    webViewSource,
+  } = useStreamPlayerSource({
+    autoplay,
+    channel,
+    clip,
+    embedParent,
+    initialMuted,
+    resumeTimeRef,
+    showOverlayControls,
+    video,
+    webViewKey,
+  });
 
   useWatchTimeTracking();
-
-  useEffect(() => {
-    needsInitRef.current = true;
-    nudgePlayedRef.current = false;
-    resumeTimeRef.current = 0;
-  }, [sourceKey]);
-
-  /**
-   * Arm a safety dismissal per generation so a load that never finishes can't
-   * trap the loading frame over the player.
-   */
-  useEffect(() => {
-    const timeout = setTimeout(
-      () => setLoadedGeneration(generationRef.current),
-      PLAYER_LOAD_TIMEOUT_MS,
-    );
-    return () => clearTimeout(timeout);
-  }, [sourceKey, webViewKey]);
-
-  const remountEmbedWebView = useCallback(() => {
-    logger.main.info('webview remounted', {
-      name: 'twitch_player_info',
-      channel,
-    });
-
-    needsInitRef.current = true;
-    nudgePlayedRef.current = false;
-
-    if (posterHideTimeoutRef.current) {
-      clearTimeout(posterHideTimeoutRef.current);
-      posterHideTimeoutRef.current = null;
-    }
-
-    setWebViewKey(key => key + 1);
-  }, [channel]);
-
-  const scheduleAuthCompletionReload = useCallback(() => {
-    if (authCompletionReloadTimeoutRef.current) {
-      return;
-    }
-
-    authCompletionReloadTimeoutRef.current = setTimeout(() => {
-      authCompletionReloadTimeoutRef.current = null;
-      remountEmbedWebView();
-    }, 750);
-  }, [remountEmbedWebView]);
-
-  useEffect(() => {
-    const timeoutRef = authCompletionReloadTimeoutRef;
-
-    return () => {
-      const timeoutId = timeoutRef.current;
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-        timeoutRef.current = null;
-      }
-    };
-  }, []);
 
   const runJavaScript = (script: string) => {
     webViewRef.current?.injectJavaScript(script);
   };
 
   const enhancedVideoStability = usePreference('enhancedVideoStability');
-  let contentKind: 'clip' | 'vod' | 'live' = 'live';
-
-  if (clip) {
-    contentKind = 'clip';
-  } else if (video) {
-    contentKind = 'vod';
-  }
 
   const {
     handleMessage,
@@ -333,88 +167,10 @@ export const StreamPlayer = memo(function StreamPlayer({
     webViewKey,
   });
 
-  const channelName = channel || 'twitch';
-  const awaitBridgePlaybackStart = showOverlayControls && !clip;
-
-  /**
-   * URL must only change on source change or remount (webViewKey) - an
-   * incidental re-render would reload the WebView.
-   */
-  const webViewSource = useMemo(
-    () =>
-      clip
-        ? {
-            uri: buildTwitchClipPlayerUrl({
-              clip,
-              parent: embedParent,
-              autoplay,
-              muted: initialMuted,
-            }),
-          }
-        : {
-            uri: buildRawTwitchPlayerUrl({
-              channel: channelName,
-              video,
-              parent: embedParent,
-              autoplay,
-              muted: initialMuted,
-              timeSeconds: video ? resumeTimeRef.current : undefined,
-            }),
-          },
-    // eslint-disable-next-line react-hooks/exhaustive-deps, react-doctor/exhaustive-deps
-    [clip, channelName, video, embedParent, autoplay, initialMuted, webViewKey],
-  );
-
-  const injectedJavaScript = buildStreamPlayerInjectedJavaScript({
-    autoplay,
-    clip,
-    initialMuted,
-    showOverlayControls,
-    video,
+  const handleWebViewMessage = useWebViewMessageRouter({
+    handleMessage,
+    resumeTimeRef,
   });
-
-  /**
-   * Captures the tracker's `vodProgress` messages for resume-on-reload;
-   * everything else forwards to the player bridge.
-   */
-  const handleWebViewMessage = useCallback(
-    (event: WebViewMessageEvent) => {
-      try {
-        // SAFETY: only the tracker script sends `vodProgress`; fields are re-checked before use.
-        const message = JSON.parse(event.nativeEvent.data) as {
-          type?: string;
-          payload?: { currentTime?: number };
-        };
-
-        const time =
-          message.type === 'vodProgress'
-            ? message.payload?.currentTime
-            : undefined;
-
-        if (time !== undefined && Number.isFinite(time)) {
-          resumeTimeRef.current = time;
-        }
-
-        if (message.type === 'vodProgress') {
-          return;
-        }
-      } catch {
-        // Fall through to the bridge for non-JSON / unexpected payloads.
-      }
-
-      handleMessage(event);
-    },
-    [handleMessage],
-  );
-
-  const injectedJavaScriptBeforeContentLoaded = clip
-    ? buildTwitchAuthHelperScript()
-    : buildTwitchPlayerQualityDefaultScript({
-        defaultQuality: '720p60',
-        maxBitrateBps: 3_500_000,
-      }) +
-      '\n' +
-      buildTwitchPlayerAudioDefaultScript({ muted: initialMuted });
 
   const handleWebViewHttpError = useCallback(
     (error: { statusCode: number; url: string }) => {
@@ -441,24 +197,38 @@ export const StreamPlayer = memo(function StreamPlayer({
     setMuted(!playerState.muted);
   }, [playerState.muted, setMuted]);
 
-  const playerWidth = width ?? '100%';
-  const playerHeight = height ?? '100%';
+  const {
+    allowsTwitchInteraction,
+    awaitBridgePlaybackStart,
+    showBehindThumbnail,
+    showNativeControls,
+  } = getStreamPlayerVisibility({
+    clip,
+    deferOverlayUntilUserUnmute,
+    hasContentGate,
+    isPlayerReady: playerStatus.isReady,
+    overlayUnlocked,
+    posterUrl,
+    showOverlayControls,
+    video,
+  });
 
-  const allowsTwitchInteraction =
-    Boolean(clip) || !showOverlayControls || hasContentGate;
+  const handleWebViewLoaded = () => {
+    if (!awaitBridgePlaybackStart) {
+      noteWebViewPlaybackStarted();
+    }
 
-  /**
-   * Thumbnail behind a transparent WebView so the iOS rotation snapshot shows the poster,
-   * not the WebView's black backing. Live only.
-   */
-  const showBehindThumbnail = Boolean(posterUrl) && !clip && !video;
+    handleBridgePlaying();
 
-  const shouldShowNativeControls =
-    showOverlayControls &&
-    !clip &&
-    !allowsTwitchInteraction &&
-    playerStatus.isReady &&
-    (!deferOverlayUntilUserUnmute || overlayUnlocked);
+    // Kick autoplay off the WebView-ready signal so the stream starts without a tap.
+    if (autoplay && !clip) {
+      runJavaScript(
+        'window.__foamEnsurePlaying && window.__foamEnsurePlaying(); true;',
+      );
+    }
+
+    onWebViewLoaded?.();
+  };
 
   return (
     <View
@@ -466,7 +236,7 @@ export const StreamPlayer = memo(function StreamPlayer({
       onLayout={handlePlayerLayout}
       style={[
         styles.container,
-        { width: playerWidth, height: playerHeight },
+        { width: width ?? '100%', height: height ?? '100%' },
         layoutNudge !== 0 && { paddingBottom: layoutNudge },
         hasContentGate && styles.containerScrollable,
       ]}
@@ -495,22 +265,7 @@ export const StreamPlayer = memo(function StreamPlayer({
           onHttpError={handleWebViewHttpError}
           onLoadFailed={noteWebViewLoadFailed}
           onMessage={handleWebViewMessage}
-          onWebViewLoaded={() => {
-            if (!awaitBridgePlaybackStart) {
-              noteWebViewPlaybackStarted();
-            }
-
-            handleBridgePlaying();
-
-            // Kick autoplay off the WebView-ready signal so the stream starts without a tap.
-            if (autoplay && !clip) {
-              runJavaScript(
-                'window.__foamEnsurePlaying && window.__foamEnsurePlaying(); true;',
-              );
-            }
-
-            onWebViewLoaded?.();
-          }}
+          onWebViewLoaded={handleWebViewLoaded}
           remountWebView={remountEmbedWebView}
           scheduleAuthCompletionReload={scheduleAuthCompletionReload}
           source={webViewSource}
@@ -522,40 +277,28 @@ export const StreamPlayer = memo(function StreamPlayer({
 
       <StreamPlayerPoster posterUrl={posterUrl} visible={isPlayerLoading} />
 
-      {shouldShowNativeControls && (
-        <TouchBlockOverlay gesture={videoTapGesture} />
-      )}
-
-      {__DEV__ && lastHttpError && (
-        <DebugErrorOverlay
-          error={lastHttpError}
-          onDismiss={() => setLastHttpError(null)}
-        />
-      )}
-
-      {shouldShowNativeControls && (
-        <ControlsOverlay
-          isVisible={controlsVisible}
-          muted={playerState.muted}
-          opacity={controlsOpacity}
-          onBackPress={onBackPress}
-          onMutePress={handleMutePress}
-          onPlayPausePress={handlePlayPause}
-          onCreateClipPress={onCreateClipPress}
-          onPipPress={
-            PIP_ENABLED && Platform.OS === 'ios' && !clip
-              ? togglePictureInPicture
-              : undefined
-          }
-          onRefresh={onRefresh ? handleRefresh : undefined}
-          onSharePress={onSharePress}
-          onSleepTimerPress={onSleepTimerPress}
-          paused={playerState.isPaused}
-          pipActive={pipActive}
-          sleepTimerActive={sleepTimerActive}
-          streamInfo={streamInfo}
-        />
-      )}
+      <StreamPlayerOverlayStack
+        clip={clip}
+        controlsOpacity={controlsOpacity}
+        controlsVisible={controlsVisible}
+        lastHttpError={lastHttpError}
+        muted={playerState.muted}
+        onBackPress={onBackPress}
+        onCreateClipPress={onCreateClipPress}
+        onDismissHttpError={() => setLastHttpError(null)}
+        onMutePress={handleMutePress}
+        onPlayPausePress={handlePlayPause}
+        onRefresh={onRefresh ? handleRefresh : undefined}
+        onSharePress={onSharePress}
+        onSleepTimerPress={onSleepTimerPress}
+        paused={playerState.isPaused}
+        pipActive={pipActive}
+        showNativeControls={showNativeControls}
+        sleepTimerActive={sleepTimerActive}
+        streamInfo={streamInfo}
+        togglePictureInPicture={togglePictureInPicture}
+        videoTapGesture={videoTapGesture}
+      />
     </View>
   );
 });

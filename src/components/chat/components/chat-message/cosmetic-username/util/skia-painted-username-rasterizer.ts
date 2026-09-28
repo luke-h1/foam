@@ -1,4 +1,4 @@
-// "shape" is the 7TV paint API field (types/seventv/cosmetics.ts), not a naming choice.
+// "shape" is the 7TV paint API field (types/seven-tv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import { AppState, Platform } from 'react-native';
 
@@ -25,7 +25,7 @@ import type {
   PaintShadow,
   PaintStop,
   PaintTextStroke,
-} from '@app/types/seventv/cosmetics';
+} from '@app/types/seven-tv/cosmetics';
 import { isVisibleSevenTvColor } from '@app/utils/color/is-visible-seven-tv-color';
 import { sevenTvColorToCss } from '@app/utils/color/seven-tv-color-to-css';
 import {
@@ -265,11 +265,12 @@ function buildPaintLayout(
   const scale = pixelRatio;
 
   // SAFETY: 7TV encodes textStyle.weight as CSS hundreds (1-9), so x100 lands on a FontWeight member.
-  const fontWeight: FontWeight = paint.textStyle?.weight
-    ? ((paint.textStyle.weight * 100) as FontWeight)
-    : Platform.OS === 'android'
-      ? FontWeight.Bold
-      : FontWeight.Normal;
+  let fontWeight: FontWeight =
+    Platform.OS === 'android' ? FontWeight.Bold : FontWeight.Normal;
+
+  if (paint.textStyle?.weight) {
+    fontWeight = (paint.textStyle.weight * 100) as FontWeight;
+  }
 
   const partial = {
     text: paintUsernameText(paint, displayUsername),
@@ -739,7 +740,7 @@ function paintRevision(paint: PaintData): number {
 }
 
 function paintBitmapCacheKey(opts: RasterizePaintedUsernameOptions): string {
-  // When the render falls back, the fallback colour is part of the raster - key it.
+  // When the render falls back, the fallback colour is token of the raster - key it.
   const fallbackPart = isVisibleSevenTvColor(opts.paint.color)
     ? ''
     : `|${opts.fallbackColor}`;

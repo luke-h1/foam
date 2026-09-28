@@ -1,4 +1,4 @@
-import type { PaintCanvasRepeat } from '@app/types/seventv/cosmetics';
+import type { PaintCanvasRepeat } from '@app/types/seven-tv/cosmetics';
 
 export type PaintLayerTileMode = 'clamp' | 'decal' | 'mirror' | 'repeat';
 

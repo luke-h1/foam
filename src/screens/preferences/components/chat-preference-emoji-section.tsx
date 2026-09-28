@@ -7,17 +7,19 @@ import type { SanitisedEmote } from '@app/types/emote';
 import { EmojiStylePreview } from './chat-preference-preview-widgets';
 import { ChatPreferenceSegmentedSettingsRow } from './chat-preference-settings-rows';
 
+interface ChatPreferenceEmojiSectionProps {
+  emojiIndex: number;
+  emojiLabels: string[];
+  emojiPreviewEmotes: SanitisedEmote[];
+  handleEmojiStyleChange: (index: number) => void;
+}
+
 export function ChatPreferenceEmojiSection({
   emojiIndex,
   emojiLabels,
   emojiPreviewEmotes,
   handleEmojiStyleChange,
-}: {
-  emojiIndex: number;
-  emojiLabels: string[];
-  emojiPreviewEmotes: SanitisedEmote[];
-  handleEmojiStyleChange: (index: number) => void;
-}) {
+}: ChatPreferenceEmojiSectionProps) {
   return (
     <SettingsSection title='Emoji Style'>
       <ChatPreferenceSegmentedSettingsRow

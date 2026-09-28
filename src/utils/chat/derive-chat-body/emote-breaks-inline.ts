@@ -1,9 +1,9 @@
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 /**
  * Standalone zero-width emotes and attached overlays both need the
  * flex-wrap renderer; absolute positioning breaks inside a Text.
  */
-export function emoteBreaksInline(part: ParsedPart<'emote'>): boolean {
-  return Boolean(part.zero_width || part.overlaid?.length);
+export function emoteBreaksInline(token: MessageToken<'emote'>): boolean {
+  return Boolean(token.zero_width || token.overlaid?.length);
 }

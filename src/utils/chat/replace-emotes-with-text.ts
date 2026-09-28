@@ -1,25 +1,25 @@
-import { ParsedPart } from './parsed-part';
-import { getParsedPartStringContent } from './parsed-part-content';
+import { MessageToken } from './message-token';
+import { getMessageTokenText } from './message-token-content';
 
-export function replaceEmotesWithText(parts: ParsedPart[]): string {
-  if (parts.length === 0) {
+export function replaceEmotesWithText(tokens: MessageToken[]): string {
+  if (tokens.length === 0) {
     return '';
   }
 
   // eslint-disable-next-line @typescript-eslint/no-base-to-string
-  return parts
-    .map(part => {
-      switch (part.type) {
+  return tokens
+    .map(token => {
+      switch (token.type) {
         case 'emote': {
           /**
            * `content` is the channel-facing alias, so reconstructed text
            * matches what was shown; restore overlaid zero-width words too.
            */
-          const baseText = getParsedPartStringContent(part);
+          const baseText = getMessageTokenText(token);
 
-          const overlaidText = (part.overlaid ?? [])
+          const overlaidText = (token.overlaid ?? [])
             .flatMap(overlay => {
-              const overlayText = getParsedPartStringContent(overlay);
+              const overlayText = getMessageTokenText(overlay);
               return overlayText ? [overlayText] : [];
             })
             .join(' ');
@@ -28,10 +28,10 @@ export function replaceEmotesWithText(parts: ParsedPart[]): string {
         }
 
         case 'mention':
-          return part.content ? `${part.content} ` : '';
+          return token.content ? `${token.content} ` : '';
 
         default:
-          return getParsedPartStringContent(part);
+          return getMessageTokenText(token);
       }
     })
     .join('');

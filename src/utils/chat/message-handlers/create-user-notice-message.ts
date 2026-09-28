@@ -6,11 +6,11 @@ import {
 } from '@app/types/chat/irc-tags/usernotice';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { ingestChannelPointRewardTags } from '@app/utils/chat/channel-point-reward-title-store';
-import { createCharityDonationPart } from '@app/utils/chat/format-subscription-notice/create-charity-donation-part';
-import { createModiversaryPart } from '@app/utils/chat/format-subscription-notice/create-modiversary-part';
-import { createRitualPart } from '@app/utils/chat/format-subscription-notice/create-ritual-part';
-import { createSubscriptionPart } from '@app/utils/chat/format-subscription-notice/create-subscription-part';
-import { createViewerMilestonePart } from '@app/utils/chat/format-subscription-notice/create-viewer-milestone-part';
+import { createCharityDonationPart } from '@app/utils/chat/format-subscription-notice/create-charity-donation-token';
+import { createModiversaryPart } from '@app/utils/chat/format-subscription-notice/create-modiversary-token';
+import { createRitualPart } from '@app/utils/chat/format-subscription-notice/create-ritual-token';
+import { createSubscriptionPart } from '@app/utils/chat/format-subscription-notice/create-subscription-token';
+import { createViewerMilestonePart } from '@app/utils/chat/format-subscription-notice/create-viewer-milestone-token';
 import { hasRenderableNoticeBody } from '@app/utils/chat/format-subscription-notice/has-renderable-notice-body';
 import { isSharedChatDuplicatedNotice } from '@app/utils/chat/user-notice-msg-ids/is-shared-chat-duplicated-notice';
 import { isSubscriptionUserNotice } from '@app/utils/chat/user-notice-msg-ids/is-subscription-user-notice';

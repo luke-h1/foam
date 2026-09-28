@@ -135,6 +135,15 @@ export function TopCategoriesScreen() {
   );
 }
 
+interface TopCategoriesListProps {
+  allCategories: Category[];
+  listRef: RefObject<FlashListRef<Category> | null>;
+  onEndReached: () => void;
+  onRefresh: () => void;
+  refreshing: boolean;
+  renderTopCategoryItem: ListRenderItem<Category>;
+}
+
 function TopCategoriesList({
   allCategories,
   listRef,
@@ -142,14 +151,7 @@ function TopCategoriesList({
   onRefresh,
   refreshing,
   renderTopCategoryItem,
-}: {
-  allCategories: Category[];
-  listRef: RefObject<FlashListRef<Category> | null>;
-  onEndReached: () => void;
-  onRefresh: () => void;
-  refreshing: boolean;
-  renderTopCategoryItem: ListRenderItem<Category>;
-}) {
+}: TopCategoriesListProps) {
   return (
     <View style={styles.wrapper} testID='top-categories-list'>
       <FlashList<Category>

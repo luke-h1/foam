@@ -133,6 +133,15 @@ export function TopStreamsScreen() {
   );
 }
 
+interface TopStreamsListProps {
+  debouncedHandleLoadMore: () => void;
+  listRef: React.RefObject<FlashListRef<TwitchStream> | null>;
+  onRefresh: () => void;
+  refreshing: boolean;
+  remainingStreams: TwitchStream[];
+  renderItem: ListRenderItem<TwitchStream>;
+}
+
 function TopStreamsList({
   debouncedHandleLoadMore,
   listRef,
@@ -140,14 +149,7 @@ function TopStreamsList({
   refreshing,
   remainingStreams,
   renderItem,
-}: {
-  debouncedHandleLoadMore: () => void;
-  listRef: React.RefObject<FlashListRef<TwitchStream> | null>;
-  onRefresh: () => void;
-  refreshing: boolean;
-  remainingStreams: TwitchStream[];
-  renderItem: ListRenderItem<TwitchStream>;
-}) {
+}: TopStreamsListProps) {
   return (
     <View testID='top-streams-list' style={styles.container}>
       <FlashList

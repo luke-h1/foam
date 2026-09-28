@@ -4,7 +4,7 @@ import {
   type BufferedMessage,
   createMessageBuffer,
 } from '@app/components/chat/util/message-buffer';
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 function message(
   id: string,
@@ -107,7 +107,7 @@ describe('createMessageBuffer edits', () => {
 
     const [moderated] = buffer.drain();
 
-    expect(moderated!.message).toEqual<ParsedPart[]>([
+    expect(moderated!.message).toEqual<MessageToken[]>([
       { type: 'text', content: 'a—Deleted by a moderator' },
     ]);
 

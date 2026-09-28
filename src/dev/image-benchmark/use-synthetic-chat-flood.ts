@@ -45,17 +45,19 @@ export function resetFloodReplay(): void {
   replayEpoch += 1;
 }
 
+interface UseSyntheticChatFloodOptions {
+  channelName: string;
+  channelId: string;
+  onMessage: OnMessage;
+  enabled: boolean;
+}
+
 export function useSyntheticChatFlood({
   channelName,
   channelId,
   onMessage,
   enabled,
-}: {
-  channelName: string;
-  channelId: string;
-  onMessage: OnMessage;
-  enabled: boolean;
-}): void {
+}: UseSyntheticChatFloodOptions): void {
   const devToolsAccess = useDevToolsAccess();
 
   useEffect(() => {

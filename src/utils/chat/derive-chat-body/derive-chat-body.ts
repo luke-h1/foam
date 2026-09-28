@@ -4,22 +4,28 @@ import type {
   ChatBodyVariant,
   MessageStructure,
 } from '@app/utils/chat/derive-chat-body/types';
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 export interface ChatBodyDerived extends MessageStructure {
-  variant: ChatBodyVariant;
   hasSubscriptionNotice: boolean;
   /**
    * Normalised logins this message @-mentions; render compares against the
-   * current user instead of re-scanning parts.
+   * current user instead of re-scanning tokens.
    */
   mentionLogins: string[];
+  mentionsCurrentUser: boolean;
+  variant: ChatBodyVariant;
 }
 
-interface DeriveChatBodyFlags {
-  sender?: string;
-  isTwitchSystemNotice?: boolean;
+export interface DeriveChatBodyFlags {
+  /**
+   * Already normalised by `normaliseChatUsername`, so it compares directly
+   * against `mentionLogins`.
+   */
+  currentUsername?: string;
   isAnnouncement?: boolean;
+  isTwitchSystemNotice?: boolean;
+  sender?: string;
 }
 
 function resolveChatBodyVariant(
@@ -66,16 +72,19 @@ function resolveChatBodyVariant(
 }
 
 export function deriveChatBody(
-  message: ParsedPart[],
+  message: MessageToken[],
   flags: DeriveChatBodyFlags = {},
 ): ChatBodyDerived {
   const scan = scanChatBody(message);
 
   return {
-    canBeInline: scan.canBeInline,
+    fitsInOneText: scan.fitsInOneText,
     containsEmotes: scan.containsEmotes,
     hasSubscriptionNotice: scan.hasSubscriptionNotice,
     mentionLogins: scan.mentionLogins,
+    mentionsCurrentUser: flags.currentUsername
+      ? scan.mentionLogins.includes(flags.currentUsername)
+      : false,
     variant: resolveChatBodyVariant(flags, scan),
   };
 }

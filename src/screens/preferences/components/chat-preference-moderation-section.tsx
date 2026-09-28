@@ -7,17 +7,19 @@ import { theme } from '@app/styles/themes';
 import { DELETED_STYLE_OPTIONS } from '../util/chat-preference-types';
 import { ChatPreferenceSegmentedSettingsRow } from './chat-preference-settings-rows';
 
+interface ChatPreferenceModerationSectionProps {
+  deletedStyleIndex: number;
+  handleDeletedStyleChange: (index: number) => void;
+  ignoreClearChat: boolean | undefined;
+  onIgnoreClearChatChange: (value: boolean) => void;
+}
+
 export function ChatPreferenceModerationSection({
   deletedStyleIndex,
   handleDeletedStyleChange,
   ignoreClearChat,
   onIgnoreClearChatChange,
-}: {
-  deletedStyleIndex: number;
-  handleDeletedStyleChange: (index: number) => void;
-  ignoreClearChat: boolean | undefined;
-  onIgnoreClearChatChange: (value: boolean) => void;
-}) {
+}: ChatPreferenceModerationSectionProps) {
   return (
     <SettingsSection title='Moderation'>
       <ChatPreferenceSegmentedSettingsRow

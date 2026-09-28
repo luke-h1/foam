@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-import { sevenTvService } from '@app/services/seventv-service';
+import { sevenTvService } from '@app/services/seven-tv-service';
 import { fetchAndCacheUserCosmetics } from '@app/store/chat/actions/cosmetics';
 import { hasRenderableCosmetics } from '@app/store/chat/actions/user-cosmetics-fetch';
 import { logger } from '@app/utils/logger';

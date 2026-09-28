@@ -1,6 +1,6 @@
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { getMessageStructure } from '@app/utils/chat/derive-chat-body/get-message-structure';
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 /**
  * Weights are "one average character wide", never points; the list learns each
@@ -34,18 +34,18 @@ function textLength(value: string | undefined): number {
   return value?.length ?? 0;
 }
 
-function getPartWeight(part: ParsedPart): number {
-  switch (part.type) {
+function getPartWeight(token: MessageToken): number {
+  switch (token.type) {
     case 'text':
     case 'link':
     case 'mention':
     case 'cheermote':
-      return part.content.length;
+      return token.content.length;
     case 'emote':
       return EMOTE_WEIGHT;
     case 'twitchClip':
       return TWITCH_CLIP_WEIGHT;
-    case 'stvEmote':
+    case 'stvEmoteLink':
       return STV_EMOTE_LINK_WEIGHT;
     case 'sub':
     case 'resub':
@@ -57,34 +57,34 @@ function getPartWeight(part: ParsedPart): number {
       return (
         NOTICE_META_ROW_WEIGHT +
         SUBSCRIPTION_DESCRIPTION_WEIGHT +
-        textLength(part.subscriptionEvent.displayName) +
-        textLength(part.subscriptionEvent.message)
+        textLength(token.subscriptionEvent.displayName) +
+        textLength(token.subscriptionEvent.message)
       );
     case 'viewermilestone':
     case 'modiversary':
       return (
         NOTICE_META_ROW_WEIGHT +
-        textLength(part.systemMsg) +
-        textLength(part.content)
+        textLength(token.systemMsg) +
+        textLength(token.content)
       );
     case 'charitydonation':
       return (
         NOTICE_META_ROW_WEIGHT +
-        textLength(part.displayName) +
-        textLength(part.charityName) +
-        textLength(part.systemMsg) +
-        textLength(part.message)
+        textLength(token.displayName) +
+        textLength(token.charityName) +
+        textLength(token.systemMsg) +
+        textLength(token.message)
       );
     case 'ritual':
       return (
         NOTICE_META_ROW_WEIGHT +
-        textLength(part.displayName) +
-        textLength(part.systemMsg) +
-        textLength(part.message)
+        textLength(token.displayName) +
+        textLength(token.systemMsg) +
+        textLength(token.message)
       );
-    case 'stv_emote_added':
-    case 'stv_emote_removed':
-      return NOTICE_META_ROW_WEIGHT + textLength(part.stvEvents.data.name);
+    case 'stvEmoteAdded':
+    case 'stvEmoteRemoved':
+      return NOTICE_META_ROW_WEIGHT + textLength(token.stvEvents.data.name);
     default:
       return 0;
   }
@@ -103,8 +103,8 @@ export function getChatRowSizeBucket(item: AnyChatMessageType): string {
 
   let weight = item.userstate?.username?.length ?? 0;
 
-  for (const part of item.message) {
-    weight += getPartWeight(part);
+  for (const token of item.message) {
+    weight += getPartWeight(token);
   }
 
   const bounded = BUCKET_UPPER_BOUNDS.findIndex(bound => weight <= bound);

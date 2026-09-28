@@ -1,7 +1,7 @@
 import { getChatRowItemType } from '@app/components/chat/util/chat-row-item-type';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
-import { createTextPart } from '@app/utils/chat/__tests__/__fixtures__/parsed-part.fixture';
+import { createTextToken } from '@app/utils/chat/__tests__/__fixtures__/message-token.fixture';
 
 function createUserChatMessage(
   overrides: Partial<AnyChatMessageType> = {},
@@ -12,7 +12,7 @@ function createUserChatMessage(
     message_nonce: 'nonce-1',
     channel: 'channel',
     sender: 'viewer',
-    message: [createTextPart('hello')],
+    message: [createTextToken('hello')],
     userstate: createUserStateTags({
       username: 'Viewer',
       login: 'viewer',
@@ -130,11 +130,11 @@ describe('getChatRowItemType', () => {
   });
 
   test('splits user chat rows by how much room their content needs', () => {
-    const short = createUserChatMessage({ message: [createTextPart('gg')] });
+    const short = createUserChatMessage({ message: [createTextToken('gg')] });
 
     const copypasta = createUserChatMessage({
       message: [
-        createTextPart('OHNE YOU JUST DECLINED A 0.000005 FLOAT '.repeat(8)),
+        createTextToken('OHNE YOU JUST DECLINED A 0.000005 FLOAT '.repeat(8)),
       ],
     });
 

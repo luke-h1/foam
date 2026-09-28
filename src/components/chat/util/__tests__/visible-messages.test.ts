@@ -2,14 +2,14 @@ import { getVisibleMessages } from '@app/components/chat/util/visible-messages';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 type TestMessage = ChatMessageType<'usernotice'>;
 
 function createMessage(
   id: string,
   sender: string,
-  message: ParsedPart[],
+  message: MessageToken[],
   userstateOverrides: Partial<UserStateTags> = {},
 ): TestMessage {
   return {

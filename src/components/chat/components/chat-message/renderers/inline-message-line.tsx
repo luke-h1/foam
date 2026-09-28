@@ -5,19 +5,19 @@ import { getChatColorStyle } from '@app/components/chat/util/chat-color-styles';
 import { Text } from '@app/components/ui/text/text';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { getMessageStructure } from '@app/utils/chat/derive-chat-body/get-message-structure';
-import type { InlineFlowPart } from '@app/utils/chat/derive-chat-body/types';
+import type { InlineFlowToken } from '@app/utils/chat/derive-chat-body/types';
 
+import { styles } from '../chat-row.styles';
+import type { BadgePressData } from '../chat-row.types';
 import { getChatTextStyles } from '../chat-text.styles';
-import { styles } from '../rich-chat-message.styles';
-import type { BadgePressData } from '../rich-chat-message.types';
 import { ChatMessageBadges } from './chat-message-badges';
-import { InlineMessageSpans } from './inline-message-spans';
-import type { ChatMessagePartRendererArgs } from './types/chat-message-part-renderer-args';
+import { InlineTokens } from './inline-tokens';
+import type { ChatTokenRenderProps } from './types/chat-token-render-props';
 
-interface InlineMessageLineProps extends ChatMessagePartRendererArgs {
+interface InlineMessageLineProps extends ChatTokenRenderProps {
   badgeList: SanitisedBadgeSet[];
   isAction?: boolean;
-  message: InlineFlowPart[];
+  message: InlineFlowToken[];
   onBadgePress?: (badge: BadgePressData) => void;
   onUsernamePress?: () => void;
   showTimestamp: boolean;
@@ -41,7 +41,7 @@ export function InlineMessageLine({
   effectiveHighlightedUserSet,
   fontScale,
   getMentionColor,
-  getPartKey,
+  getTokenKey,
   onEmoteTouchStart,
   normalisedCurrentUsername,
   replyPlainMentionTarget,
@@ -83,14 +83,14 @@ export function InlineMessageLine({
             {isAction ? `${username} ` : `${username}: `}
           </Text>
         ) : null}
-        <InlineMessageSpans
+        <InlineTokens
           emoteLineStyle={emoteLineStyle}
           compact={compact}
           disableEmoteAnimations={disableEmoteAnimations}
           effectiveHighlightedUserSet={effectiveHighlightedUserSet}
           fontScale={fontScale}
           getMentionColor={getMentionColor}
-          getPartKey={getPartKey}
+          getTokenKey={getTokenKey}
           onEmoteTouchStart={onEmoteTouchStart}
           message={message}
           normalisedCurrentUsername={normalisedCurrentUsername}

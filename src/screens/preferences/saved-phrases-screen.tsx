@@ -89,17 +89,14 @@ function useSavedPhrases() {
   return { phrases, savePhrase, updatePreferences };
 }
 
-function PhraseRow({
-  phrase,
-  isEditing,
-  onEdit,
-  onRemove,
-}: {
+interface PhraseRowProps {
   phrase: SavedPhrase;
   isEditing: boolean;
   onEdit: (phrase: SavedPhrase) => void;
   onRemove: (id: string) => void;
-}) {
+}
+
+function PhraseRow({ phrase, isEditing, onEdit, onRemove }: PhraseRowProps) {
   const handleRemove = useCallback(() => {
     Alert.alert(
       'Remove phrase',

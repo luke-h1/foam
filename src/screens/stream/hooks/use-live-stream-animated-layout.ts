@@ -39,6 +39,24 @@ const CHAT_REVEAL_ANIMATION_CONFIG: WithSpringConfig = {
 
 type Dimensions = { width: number; height: number };
 
+interface UseLiveStreamAnimatedLayoutOptions {
+  chatDimensions: Dimensions;
+  closeLandscapeChatBySwipe: () => void;
+  commitLandscapeChatWidth: (width: number) => void;
+  contentWidth: number;
+  effectiveChatHeight: number;
+  effectiveChatWidth: number;
+  fullscreenChatMode: FullscreenChatMode;
+  isChatVisibleForLayout: boolean;
+  isLandscape: boolean;
+  isLandscapeChatHidden: boolean;
+  landscapeInsetLeft: number;
+  landscapeInsetRight: number;
+  portraitTopInset: number;
+  previousIsLandscapeRef: RefObject<boolean>;
+  videoDimensions: Dimensions;
+}
+
 /**
  * Owns the animated layer: the shared values the styles read, the layout sync
  * that updates them atomically on rotation, and the landscape resize gesture.
@@ -61,23 +79,7 @@ export function useLiveStreamAnimatedLayout({
   portraitTopInset,
   previousIsLandscapeRef,
   videoDimensions,
-}: {
-  chatDimensions: Dimensions;
-  closeLandscapeChatBySwipe: () => void;
-  commitLandscapeChatWidth: (width: number) => void;
-  contentWidth: number;
-  effectiveChatHeight: number;
-  effectiveChatWidth: number;
-  fullscreenChatMode: FullscreenChatMode;
-  isChatVisibleForLayout: boolean;
-  isLandscape: boolean;
-  isLandscapeChatHidden: boolean;
-  landscapeInsetLeft: number;
-  landscapeInsetRight: number;
-  portraitTopInset: number;
-  previousIsLandscapeRef: RefObject<boolean>;
-  videoDimensions: Dimensions;
-}) {
+}: UseLiveStreamAnimatedLayoutOptions) {
   const videoWidth = useSharedValue(videoDimensions.width);
   const videoHeight = useSharedValue(videoDimensions.height);
   const chatWidth = useSharedValue(effectiveChatWidth);

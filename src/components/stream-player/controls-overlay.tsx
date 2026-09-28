@@ -103,6 +103,115 @@ function GlassButtonSurface({ children }: { children: ReactNode }) {
   return <View style={styles.glassButton}>{children}</View>;
 }
 
+interface PlayerActionButtonsProps {
+  handleSecondaryAction: (event: { nativeEvent: { event: string } }) => void;
+  muted: boolean | undefined;
+  onMutePress: ControlsOverlayProps['onMutePress'];
+  secondaryActions: MenuAction[];
+}
+
+/**
+ * Mute, and the overflow menu of everything else the player can do.
+ */
+function PlayerActionButtons({
+  handleSecondaryAction,
+  muted,
+  onMutePress,
+  secondaryActions,
+}: PlayerActionButtonsProps) {
+  return (
+    <>
+      {onMutePress && (
+        <GlassButtonSurface>
+          <Button
+            label={muted ? 'Unmute' : 'Mute'}
+            style={styles.controlButton}
+            onPress={onMutePress}
+          >
+            <SymbolView
+              name={muted ? 'speaker.slash.fill' : 'speaker.wave.2.fill'}
+              size={18}
+              tintColor={theme.colorWhite}
+            />
+          </Button>
+        </GlassButtonSurface>
+      )}
+
+      {secondaryActions.length > 0 && (
+        <MenuView
+          actions={secondaryActions}
+          onPressAction={handleSecondaryAction}
+        >
+          <GlassButtonSurface>
+            <View
+              accessibilityLabel='More'
+              accessibilityRole='button'
+              style={styles.controlButton}
+            >
+              <SymbolView
+                name='ellipsis.circle'
+                size={18}
+                tintColor={theme.colorWhite}
+              />
+            </View>
+          </GlassButtonSurface>
+        </MenuView>
+      )}
+    </>
+  );
+}
+
+/**
+ * Live badge, uptime, viewer count and category, shown under the player.
+ * Portrait has no room for the title or category, so both are dropped there.
+ */
+function StreamMetadataColumn({
+  isPortrait,
+  isVisible,
+  streamInfo,
+}: {
+  isPortrait: boolean;
+  isVisible: boolean;
+  streamInfo: ControlsOverlayProps['streamInfo'];
+}) {
+  return (
+    <View pointerEvents='box-none' style={styles.streamMetadataColumn}>
+      <View style={[styles.liveRail, isPortrait && styles.liveRailPortrait]}>
+        <LiveBadge label='LIVE' />
+        <StreamDurationLabel
+          isVisible={isVisible}
+          startedAt={streamInfo?.startedAt}
+          style={[
+            styles.durationText,
+            isPortrait && styles.durationTextPortrait,
+          ]}
+        />
+        <View
+          style={[
+            styles.viewerCountRow,
+            isPortrait && styles.viewerCountRowPortrait,
+          ]}
+        >
+          <SymbolView
+            name='person'
+            size={13}
+            style={styles.userIcon}
+            tintColor={theme.colorWhite}
+          />
+          <Text style={styles.viewerCountText}>
+            {formatViewCount(streamInfo?.viewerCount)}
+          </Text>
+        </View>
+      </View>
+      {streamInfo?.gameName && !isPortrait && (
+        <Text numberOfLines={1} style={styles.categoryText}>
+          {streamInfo.gameName}
+        </Text>
+      )}
+    </View>
+  );
+}
+
 export function ControlsOverlay({
   isVisible,
   muted,
@@ -293,80 +402,19 @@ export function ControlsOverlay({
           { paddingBottom: bottomOffset },
         ]}
       >
-        <View pointerEvents='box-none' style={styles.streamMetadataColumn}>
-          <View
-            style={[styles.liveRail, isPortrait && styles.liveRailPortrait]}
-          >
-            <LiveBadge label='LIVE' />
-            <StreamDurationLabel
-              isVisible={isVisible}
-              startedAt={streamInfo?.startedAt}
-              style={[
-                styles.durationText,
-                isPortrait && styles.durationTextPortrait,
-              ]}
-            />
-            <View
-              style={[
-                styles.viewerCountRow,
-                isPortrait && styles.viewerCountRowPortrait,
-              ]}
-            >
-              <SymbolView
-                name='person'
-                size={13}
-                style={styles.userIcon}
-                tintColor={theme.colorWhite}
-              />
-              <Text style={styles.viewerCountText}>
-                {formatViewCount(streamInfo?.viewerCount)}
-              </Text>
-            </View>
-          </View>
-          {streamInfo?.gameName && !isPortrait && (
-            <Text numberOfLines={1} style={styles.categoryText}>
-              {streamInfo.gameName}
-            </Text>
-          )}
-        </View>
+        <StreamMetadataColumn
+          isPortrait={isPortrait}
+          isVisible={isVisible}
+          streamInfo={streamInfo}
+        />
 
         <View style={styles.spacer} />
-        {onMutePress && (
-          <GlassButtonSurface>
-            <Button
-              label={muted ? 'Unmute' : 'Mute'}
-              style={styles.controlButton}
-              onPress={onMutePress}
-            >
-              <SymbolView
-                name={muted ? 'speaker.slash.fill' : 'speaker.wave.2.fill'}
-                size={18}
-                tintColor={theme.colorWhite}
-              />
-            </Button>
-          </GlassButtonSurface>
-        )}
-
-        {secondaryActions.length > 0 && (
-          <MenuView
-            actions={secondaryActions}
-            onPressAction={handleSecondaryAction}
-          >
-            <GlassButtonSurface>
-              <View
-                accessibilityLabel='More'
-                accessibilityRole='button'
-                style={styles.controlButton}
-              >
-                <SymbolView
-                  name='ellipsis.circle'
-                  size={18}
-                  tintColor={theme.colorWhite}
-                />
-              </View>
-            </GlassButtonSurface>
-          </MenuView>
-        )}
+        <PlayerActionButtons
+          handleSecondaryAction={handleSecondaryAction}
+          muted={muted}
+          onMutePress={onMutePress}
+          secondaryActions={secondaryActions}
+        />
       </View>
     </Animated.View>
   );

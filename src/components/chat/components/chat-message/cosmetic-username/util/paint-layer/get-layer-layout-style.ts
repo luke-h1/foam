@@ -1,6 +1,6 @@
 import { StyleSheet, type ViewStyle } from 'react-native';
 
-import type { PaintLayerData } from '@app/types/seventv/cosmetics';
+import type { PaintLayerData } from '@app/types/seven-tv/cosmetics';
 
 export function getLayerLayoutStyle(layer: PaintLayerData): ViewStyle {
   if (!layer.at && !layer.size) {

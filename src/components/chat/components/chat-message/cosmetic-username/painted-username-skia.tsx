@@ -22,7 +22,7 @@ import {
 import { chatLineMetrics } from '@app/components/chat/components/chat-message/util/chat-scale';
 import { Text } from '@app/components/ui/text/text';
 import { theme } from '@app/styles/themes';
-import type { PaintData } from '@app/types/seventv/cosmetics';
+import type { PaintData } from '@app/types/seven-tv/cosmetics';
 import {
   releasePaintBitmaps,
   retainPaintBitmaps,

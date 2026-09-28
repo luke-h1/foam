@@ -11,17 +11,19 @@ import { SymbolView } from '@app/components/ui/icon/icon';
 import { Text } from '@app/components/ui/text/text';
 import { theme } from '@app/styles/themes';
 
+interface SettingsSectionProps {
+  title?: string;
+  footer?: ReactNode;
+  children: ReactNode;
+  cardColor?: string;
+}
+
 export function SettingsSection({
   title,
   footer,
   children,
   cardColor,
-}: {
-  title?: string;
-  footer?: ReactNode;
-  children: ReactNode;
-  cardColor?: string;
-}) {
+}: SettingsSectionProps) {
   return (
     <View style={styles.section}>
       {title ? (
@@ -53,6 +55,15 @@ export function SettingsSection({
   );
 }
 
+interface SettingsRowProps {
+  title: string;
+  subtitle?: string;
+  icon?: RowIcon;
+  trailing?: ReactNode;
+  onPress?: () => void;
+  danger?: boolean;
+}
+
 export function SettingsRow({
   title,
   subtitle,
@@ -60,14 +71,7 @@ export function SettingsRow({
   trailing,
   onPress,
   danger,
-}: {
-  title: string;
-  subtitle?: string;
-  icon?: RowIcon;
-  trailing?: ReactNode;
-  onPress?: () => void;
-  danger?: boolean;
-}) {
+}: SettingsRowProps) {
   const content = (
     <View style={styles.row}>
       {icon ? (

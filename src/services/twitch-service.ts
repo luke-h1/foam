@@ -865,7 +865,13 @@ export const twitchService = {
     first?: number;
     after?: string;
   }) => {
-    const ids = Array.isArray(id) ? id : id ? [id] : undefined;
+    let ids: string[] | undefined;
+
+    if (Array.isArray(id)) {
+      ids = id;
+    } else if (id) {
+      ids = [id];
+    }
 
     return twitchApi.get<PaginatedList<TwitchHelixPoll>>('/polls', {
       params: {
@@ -888,7 +894,13 @@ export const twitchService = {
     first?: number;
     after?: string;
   }) => {
-    const ids = Array.isArray(id) ? id : id ? [id] : undefined;
+    let ids: string[] | undefined;
+
+    if (Array.isArray(id)) {
+      ids = id;
+    } else if (id) {
+      ids = [id];
+    }
 
     return twitchApi.get<PaginatedList<TwitchHelixPrediction>>('/predictions', {
       params: {

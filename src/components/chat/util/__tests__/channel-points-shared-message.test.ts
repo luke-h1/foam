@@ -1,7 +1,7 @@
 import { hasSharedChannelPointsMessage } from '@app/components/chat/util/channel-points-shared-message';
 
 describe('hasSharedChannelPointsMessage', () => {
-  test('returns false for empty message parts', () => {
+  test('returns false for empty message tokens', () => {
     expect(hasSharedChannelPointsMessage([])).toBe(false);
   });
 

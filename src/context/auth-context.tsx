@@ -1,5 +1,4 @@
 import {
-  createContext,
   ReactNode,
   use,
   useCallback,
@@ -38,6 +37,12 @@ import {
 import { parseTwitchAuthTokenFromResponse } from '@app/utils/authentication/twitch-auth';
 import { logger } from '@app/utils/logger';
 
+import {
+  AuthContext,
+  type AuthContextState,
+  type AuthState,
+} from './auth-context-value';
+
 /**
  * Prefetch initial data for faster startup
  */
@@ -56,34 +61,13 @@ const queueInitialDataPrefetch = (userId?: string) => {
   });
 };
 
-export const storageKeys = {
+const storageKeys = {
   anon: 'V1_foam-anon', // anon token
   user: 'V1_foam-user', // logged in token
 } as const;
 
 const AUTH_STARTUP_TIMEOUT_MS = 12_000;
 const USER_TOKEN_REFRESH_POLL_INTERVAL_MS = 60_000;
-
-interface AuthState {
-  isLoggedIn: boolean;
-  isAnonAuth: boolean;
-  token: TwitchToken;
-}
-
-export interface AuthContextState {
-  user?: UserInfoResponse;
-  authState?: AuthState;
-  loginWithTwitch: (
-    response: AuthSessionResult | null,
-  ) => Promise<null | undefined>;
-  populateAuthState: () => Promise<void>;
-  logout: () => Promise<void>;
-
-  // for unit tests only
-  fetchAnonToken: (testResult?: DefaultTokenResponse) => Promise<void>;
-
-  ready: boolean;
-}
 
 interface State {
   authState?: AuthState;
@@ -211,10 +195,6 @@ async function refreshCurrentUserTokenForState(
   }
 }
 
-export const AuthContext = createContext<AuthContextState | undefined>(
-  undefined,
-);
-
 export type AuthContextProviderProps = {
   children: ReactNode;
   enableTestResult?: boolean;
@@ -239,31 +219,24 @@ function useAuthContextValue({
       return;
     }
 
-    let didApplyFallback = false;
-
-    setState(prev => {
-      if (prev.ready) {
-        return prev;
-      }
-
-      didApplyFallback = true;
-
-      return {
-        ...prev,
-        ready: true,
-        authState: prev.authState ?? {
-          isAnonAuth: true,
-          isLoggedIn: false,
-          token: getFallbackAnonToken(),
-        },
-      };
-    });
-
-    if (!didApplyFallback || hasTimedOut.current) {
-      return;
-    }
-
+    // Claim the fallback before the state write, so a second call in the same
+    // tick cannot log it twice. The updater keeps its own guard for the state.
     hasTimedOut.current = true;
+
+    setState(prev =>
+      prev.ready
+        ? prev
+        : {
+            ...prev,
+            ready: true,
+            authState: prev.authState ?? {
+              isAnonAuth: true,
+              isLoggedIn: false,
+              token: getFallbackAnonToken(),
+            },
+          },
+    );
+
     logAuthStartupFallback(reason, error);
   };
 
@@ -741,6 +714,9 @@ export const AuthContextProvider = ({
     <AuthContext.Provider value={contextState}>{children}</AuthContext.Provider>
   );
 };
+
+export type { AuthContextState } from './auth-context-value';
+export { AuthContext } from './auth-context-value';
 
 export function useAuthContext() {
   const context = use(AuthContext);

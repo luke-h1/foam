@@ -2,7 +2,7 @@ import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { SevenTvSanitisedEmote } from '@app/types/emote';
 
 import { processEmotesWorklet } from '../emote-processor';
-import type { ParsedPart } from '../parsed-part';
+import type { MessageToken } from '../message-token';
 
 const baseEmote: SevenTvSanitisedEmote = {
   id: 'base-id',
@@ -42,11 +42,13 @@ const createEmote = (
   ...overrides,
 });
 
-const emotePart = (part: ParsedPart | undefined): ParsedPart<'emote'> => {
-  if (part?.type !== 'emote') {
-    throw new Error(`expected an emote part, received ${part?.type ?? 'none'}`);
+const emotePart = (token: MessageToken | undefined): MessageToken<'emote'> => {
+  if (token?.type !== 'emote') {
+    throw new Error(
+      `expected an emote token, received ${token?.type ?? 'none'}`,
+    );
   }
-  return part;
+  return token;
 };
 
 const emptyParams = {

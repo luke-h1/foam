@@ -11,7 +11,7 @@ const setMetadata = {
   totalCount: 44,
 } as const;
 
-export const seventvSanitiisedGlobalEmoteSetFixture: SevenTvSanitisedEmote[] = [
+export const sevenTvSanitisedGlobalEmoteSetFixture: SevenTvSanitisedEmote[] = [
   {
     name: 'RainTime',
     id: '01FCY771D800007PQ2DF3GDTN6',

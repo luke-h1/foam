@@ -8,17 +8,19 @@ import { EMOJI_STYLE_OPTIONS } from '@app/utils/emoji/emoji-emotes';
 import { hostPreview } from './chat-preference-form-host-preview';
 import { EmojiStylePreview } from './chat-preference-preview-widgets';
 
+interface ChatPreferenceFormEmojiSectionProps {
+  emojiPreviewEmotes: SanitisedEmote[];
+  preferences: Preferences;
+  previewWidth: number;
+  update: (payload: Partial<Preferences>) => void;
+}
+
 export function ChatPreferenceFormEmojiSection({
   emojiPreviewEmotes,
   preferences,
   previewWidth,
   update,
-}: {
-  emojiPreviewEmotes: SanitisedEmote[];
-  preferences: Preferences;
-  previewWidth: number;
-  update: (payload: Partial<Preferences>) => void;
-}) {
+}: ChatPreferenceFormEmojiSectionProps) {
   return (
     <Section title='Emoji Style'>
       <Picker

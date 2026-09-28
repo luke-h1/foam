@@ -28,6 +28,19 @@ function addedSystemMessageContents(): (string | undefined)[] {
   );
 }
 
+interface RenderIrcHandlersOptions {
+  isLoadingRecentMessages?: boolean;
+  isMounted?: boolean;
+  messageCount?: number;
+  clearLocalMessages?: jest.Mock;
+  enqueueLiveChatMessage?: jest.Mock;
+  processMessageEmotes?: jest.Mock;
+  moderateChatMessageById?: jest.Mock;
+  moderateChatMessagesByLogin?: jest.Mock;
+  removeChatMessageById?: jest.Mock;
+  removeChatMessagesByLogin?: jest.Mock;
+}
+
 function renderIrcHandlers({
   isLoadingRecentMessages = false,
   isMounted = true,
@@ -39,18 +52,7 @@ function renderIrcHandlers({
   moderateChatMessagesByLogin = jest.fn(),
   removeChatMessageById = jest.fn(),
   removeChatMessagesByLogin = jest.fn(),
-}: {
-  isLoadingRecentMessages?: boolean;
-  isMounted?: boolean;
-  messageCount?: number;
-  clearLocalMessages?: jest.Mock;
-  enqueueLiveChatMessage?: jest.Mock;
-  processMessageEmotes?: jest.Mock;
-  moderateChatMessageById?: jest.Mock;
-  moderateChatMessagesByLogin?: jest.Mock;
-  removeChatMessageById?: jest.Mock;
-  removeChatMessagesByLogin?: jest.Mock;
-} = {}) {
+}: RenderIrcHandlersOptions = {}) {
   return renderHook(() =>
     useChatIrcHandlers({
       channelId: 'channel-1',
@@ -325,7 +327,7 @@ describe('useChatIrcHandlers', () => {
     expect(content).toEqual('Chat was cleared by a moderator');
   });
 
-  test('does not clear rendered messages when part fires after chat unmounts', () => {
+  test('does not clear rendered messages when token fires after chat unmounts', () => {
     const clearLocalMessages = jest.fn();
 
     const { result } = renderIrcHandlers({
@@ -341,7 +343,7 @@ describe('useChatIrcHandlers', () => {
     expect(clearLocalMessages).not.toHaveBeenCalled();
   });
 
-  test('clears rendered messages when part fires while chat is still mounted', () => {
+  test('clears rendered messages when token fires while chat is still mounted', () => {
     const clearLocalMessages = jest.fn();
     const { result } = renderIrcHandlers({ clearLocalMessages });
 
@@ -353,7 +355,7 @@ describe('useChatIrcHandlers', () => {
     expect(clearLocalMessages).toHaveBeenCalledTimes(1);
   });
 
-  test('ignores a stale part for a previously watched channel', () => {
+  test('ignores a stale token for a previously watched channel', () => {
     const clearLocalMessages = jest.fn();
     const { result } = renderIrcHandlers({ clearLocalMessages });
 
@@ -365,7 +367,7 @@ describe('useChatIrcHandlers', () => {
     expect(clearLocalMessages).not.toHaveBeenCalled();
   });
 
-  test('stale part does not reset the room state diff baseline', () => {
+  test('stale token does not reset the room state diff baseline', () => {
     const { result } = renderIrcHandlers();
 
     act(() => {
@@ -431,7 +433,7 @@ describe('useChatIrcHandlers', () => {
     ]);
   });
 
-  test('part resets the room state diff baseline', () => {
+  test('token resets the room state diff baseline', () => {
     const { result } = renderIrcHandlers();
 
     act(() => {
@@ -453,7 +455,7 @@ describe('useChatIrcHandlers', () => {
     ]);
   });
 
-  test('announces a chatter joining when join/part messages are enabled', () => {
+  test('announces a chatter joining when join/token messages are enabled', () => {
     preferences$.showJoinPartMessages.set(true);
     const { result } = renderIrcHandlers();
 
@@ -464,7 +466,7 @@ describe('useChatIrcHandlers', () => {
     expect(addedSystemMessageContents()).toEqual(['bob joined']);
   });
 
-  test('announces a chatter parting when join/part messages are enabled', () => {
+  test('announces a chatter parting when join/token messages are enabled', () => {
     preferences$.showJoinPartMessages.set(true);
     const { result } = renderIrcHandlers();
 
@@ -475,7 +477,7 @@ describe('useChatIrcHandlers', () => {
     expect(addedSystemMessageContents()).toEqual(['bob parted']);
   });
 
-  test('suppresses join/part notices while the preference is off', () => {
+  test('suppresses join/token notices while the preference is off', () => {
     const { result } = renderIrcHandlers();
 
     act(() => {

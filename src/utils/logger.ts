@@ -118,13 +118,16 @@ const createMonitoringTransport =
       message = parsedMessage.success ? parsedMessage.data : String(firstArg);
     }
 
+    let level: 'error' | 'warn' | 'info' = 'info';
+
+    if (levelText === 'error') {
+      level = 'error';
+    } else if (levelText === 'warn') {
+      level = 'warn';
+    }
+
     const entry = {
-      level:
-        levelText === 'error'
-          ? ('error' as const)
-          : levelText === 'warn'
-            ? ('warn' as const)
-            : ('info' as const),
+      level,
       category: extension ?? 'app',
       message,
       error,

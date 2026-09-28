@@ -118,20 +118,20 @@ describe('routeIrcMessage', () => {
     expect(notice).toHaveBeenCalledTimes(1);
   });
 
-  test('extracts the nick from the prefix for join and part', () => {
+  test('extracts the nick from the prefix for join and token', () => {
     const join = jest.fn();
-    const part = jest.fn();
+    const token = jest.fn();
 
     route(':someuser!someuser@someuser.tmi.twitch.tv JOIN #somechannel', {
       join,
     });
 
     route(':someuser!someuser@someuser.tmi.twitch.tv PART #somechannel', {
-      part,
+      token,
     });
 
     expect(join).toHaveBeenCalledWith('#somechannel', 'someuser');
-    expect(part).toHaveBeenCalledWith('#somechannel', 'someuser');
+    expect(token).toHaveBeenCalledWith('#somechannel', 'someuser');
   });
 
   test('defaults the ping server', () => {

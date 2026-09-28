@@ -16,7 +16,7 @@ import {
   UNRAID,
   WATCH_STREAK,
 } from '@app/components/chat/__tests__/__fixtures__/chat-notice-pipeline.fixture';
-import { RichChatMessage } from '@app/components/chat/components/chat-message/rich-chat-message';
+import { ChatRow } from '@app/components/chat/components/chat-message/chat-row';
 import { getChatRowItemType } from '@app/components/chat/util/chat-row-item-type';
 import { twitchService } from '@app/services/twitch-service';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
@@ -54,7 +54,7 @@ function renderNoticeFromIrc(line: string) {
   const message = buildNoticeFromIrc(line);
 
   const rendered = render(
-    <RichChatMessage<'usernotice', keyof UserNoticeVariantMap> {...message} />,
+    <ChatRow<'usernotice', keyof UserNoticeVariantMap> {...message} />,
   );
 
   return { message, ...rendered };

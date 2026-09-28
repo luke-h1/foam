@@ -5,7 +5,7 @@ import { WebView } from 'react-native-webview';
 import { chatLineMetrics } from '@app/components/chat/components/chat-message/util/chat-scale';
 import { Text } from '@app/components/ui/text/text';
 import { theme } from '@app/styles/themes';
-import type { PaintData } from '@app/types/seventv/cosmetics';
+import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
 import { buildPaintedUsernameHtml } from './util/paint-html';
 
@@ -55,17 +55,19 @@ export function PaintedUsernameWebView({
   );
 }
 
+interface MeasuredPaintedUsernameWebViewProps {
+  html: string;
+  username: string;
+  fallbackColor: string;
+  fontSize: number;
+}
+
 function MeasuredPaintedUsernameWebView({
   html,
   username,
   fallbackColor,
   fontSize,
-}: {
-  html: string;
-  username: string;
-  fallbackColor: string;
-  fontSize: number;
-}) {
+}: MeasuredPaintedUsernameWebViewProps) {
   const [size, setSize] = useState<{ width: number; height: number } | null>(
     null,
   );

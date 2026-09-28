@@ -1,4 +1,4 @@
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 import { findCustomHighlight } from '../find-custom-highlight';
 
@@ -7,7 +7,7 @@ const rules = [
   { id: '2', phrase: 'drop a follow', color: '#38bdf8' },
 ];
 
-function textMessage(content: string): ParsedPart[] {
+function textMessage(content: string): MessageToken[] {
   return [{ type: 'text', content }];
 }
 
@@ -25,7 +25,7 @@ describe('findCustomHighlight', () => {
   });
 
   test('matches text across emote boundaries', () => {
-    const message: ParsedPart[] = [
+    const message: MessageToken[] = [
       { type: 'text', content: 'drop a ' },
       { type: 'text', content: 'follow please' },
     ];

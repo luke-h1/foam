@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query';
 
-import { sevenTvService } from '@app/services/seventv-service';
+import { sevenTvService } from '@app/services/seven-tv-service';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 import { emoteKeys } from '../query-keys';

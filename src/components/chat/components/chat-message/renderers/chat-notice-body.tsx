@@ -5,11 +5,11 @@ import { Text } from '@app/components/ui/text/text';
 import { reportUnrenderableNotice } from '@app/utils/chat/chat-health/report-unrenderable-notice';
 import type { ChatBodyVariant } from '@app/utils/chat/derive-chat-body/types';
 
+import { styles } from '../chat-row.styles';
 import { getChatTextStyles } from '../chat-text.styles';
-import { styles } from '../rich-chat-message.styles';
-import { ChatMessageBody } from './chat-message-body';
 import { ChatNoticeMetaRow } from './chat-notice-meta-row';
-import type { ChatMessagePartRendererArgs } from './types/chat-message-part-renderer-args';
+import type { ChatTokenRenderProps } from './types/chat-token-render-props';
+import { WrappedTokens } from './wrapped-tokens';
 
 /**
  * `announcement` and `user_chat` are dispatched by `ChatRow.Body` before
@@ -29,7 +29,7 @@ const NOTICE_BODY_MODES = {
   viewer_milestone: 'message',
 } satisfies Record<ChatNoticeVariant, 'message' | 'system'>;
 
-interface ChatNoticeBodyProps extends ChatMessagePartRendererArgs {
+interface ChatNoticeBodyProps extends ChatTokenRenderProps {
   bodyVariant: ChatNoticeVariant;
   showTimestamp: boolean;
   timestamp?: string;
@@ -45,13 +45,13 @@ export function ChatNoticeBody({
   if (message.length === 0) {
     reportUnrenderableNotice({
       msgId: rendererArgs.noticeTags?.['msg-id'],
-      reason: `no-parts:${bodyVariant}`,
+      reason: `no-tokens:${bodyVariant}`,
       stage: 'render',
     });
   }
 
   const body = (
-    <ChatMessageBody
+    <WrappedTokens
       mode={NOTICE_BODY_MODES[bodyVariant]}
       message={message}
       {...rendererArgs}

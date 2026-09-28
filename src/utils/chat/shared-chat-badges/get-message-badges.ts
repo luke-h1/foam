@@ -6,17 +6,19 @@ import { findBadges } from '@app/utils/chat/find-badges';
 
 type ChatEmoteData = NonNullable<ReturnType<typeof getCurrentEmoteData>>;
 
+interface GetMessageBadgesOptions {
+  emoteData: ChatEmoteData;
+  sourceBadge?: SanitisedBadgeSet | null;
+  sourceChannelBadges?: SanitisedBadgeSet[] | null;
+  userstate: UserStateTags;
+}
+
 export function getMessageBadges({
   emoteData,
   sourceBadge,
   sourceChannelBadges,
   userstate,
-}: {
-  emoteData: ChatEmoteData;
-  sourceBadge?: SanitisedBadgeSet | null;
-  sourceChannelBadges?: SanitisedBadgeSet[] | null;
-  userstate: UserStateTags;
-}): SanitisedBadgeSet[] {
+}: GetMessageBadgesOptions): SanitisedBadgeSet[] {
   const foundBadges = findBadges({
     userstate,
     bttvBadges: emoteData.bttvBadges,

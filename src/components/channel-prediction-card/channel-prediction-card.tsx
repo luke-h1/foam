@@ -56,13 +56,15 @@ function ChannelPredictionCardComponent({
 }: ChannelPredictionCardProps) {
   const timeRemaining = formatTimeRemaining(prediction);
 
-  const statusLabel = prediction.isActive
-    ? 'Live prediction'
-    : prediction.isLocked
-      ? 'Prediction locked'
-      : prediction.status === 'resolved'
-        ? 'Prediction result'
-        : 'Prediction canceled';
+  let statusLabel = 'Prediction canceled';
+
+  if (prediction.isActive) {
+    statusLabel = 'Live prediction';
+  } else if (prediction.isLocked) {
+    statusLabel = 'Prediction locked';
+  } else if (prediction.status === 'resolved') {
+    statusLabel = 'Prediction result';
+  }
 
   return (
     <View style={styles.container}>

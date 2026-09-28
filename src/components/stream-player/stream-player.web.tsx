@@ -15,6 +15,15 @@ function getEmbedParent(parent?: string): string {
   return parent ?? 'foam-app.com';
 }
 
+interface BuildTwitchPlayerUrlOptions {
+  autoplay: boolean;
+  channel?: string;
+  clip?: string;
+  muted: boolean;
+  parent: string;
+  video?: string;
+}
+
 function buildTwitchPlayerUrl({
   autoplay,
   channel,
@@ -22,14 +31,7 @@ function buildTwitchPlayerUrl({
   muted,
   parent,
   video,
-}: {
-  autoplay: boolean;
-  channel?: string;
-  clip?: string;
-  muted: boolean;
-  parent: string;
-  video?: string;
-}) {
+}: BuildTwitchPlayerUrlOptions) {
   if (clip) {
     const params = new URLSearchParams({
       clip,

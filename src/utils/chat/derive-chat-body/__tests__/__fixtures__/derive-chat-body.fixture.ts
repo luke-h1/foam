@@ -1,16 +1,16 @@
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
-export const text = (content: string): ParsedPart => ({
+export const text = (content: string): MessageToken => ({
   type: 'text',
   content,
 });
 
-export const mention = (content: string): ParsedPart => ({
+export const mention = (content: string): MessageToken => ({
   type: 'mention',
   content,
 });
 
-export const link = (content: string): ParsedPart => ({
+export const link = (content: string): MessageToken => ({
   type: 'link',
   content,
 });
@@ -18,26 +18,21 @@ export const link = (content: string): ParsedPart => ({
 export const emote = (
   name: string,
   zeroWidth = false,
-): ParsedPart<'emote'> => ({
+): MessageToken<'emote'> => ({
   type: 'emote',
   content: name,
   name,
   zero_width: zeroWidth,
 });
 
-export const ritual = (): ParsedPart => ({
+export const ritual = (): MessageToken => ({
   type: 'ritual',
   displayName: 'forsen',
   ritualName: 'new_chatter',
   systemMsg: 'forsen is new here',
 });
 
-export const raid = (): ParsedPart => ({
-  type: 'raid',
-  content: 'forsen is raiding with a party of 100',
-});
-
-export const subscription = (): ParsedPart => ({
+export const subscription = (): MessageToken => ({
   type: 'sub',
   subscriptionEvent: {
     msgId: 'sub',
@@ -46,7 +41,7 @@ export const subscription = (): ParsedPart => ({
   },
 });
 
-export const charityDonation = (): ParsedPart => ({
+export const charityDonation = (): MessageToken => ({
   type: 'charitydonation',
   displayName: 'forsen',
   charityName: 'Save the Kappa',
@@ -55,8 +50,8 @@ export const charityDonation = (): ParsedPart => ({
   systemMsg: 'forsen donated $5.00',
 });
 
-export const stvEmoteEvent = (): ParsedPart<'stv_emote_added'> => ({
-  type: 'stv_emote_added',
+export const stvEmoteEvent = (): MessageToken<'stvEmoteAdded'> => ({
+  type: 'stvEmoteAdded',
   stvEvents: {
     type: 'added',
     data: {
@@ -74,7 +69,7 @@ export const stvEmoteEvent = (): ParsedPart<'stv_emote_added'> => ({
   },
 });
 
-export const viewerMilestone = (): ParsedPart => ({
+export const viewerMilestone = (): MessageToken => ({
   type: 'viewermilestone',
   category: 'watch-streak',
   reward: '',

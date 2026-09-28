@@ -1,12 +1,12 @@
 // This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
-// field (see types/seventv/cosmetics.ts), not a naming choice.
+// field (see types/seven-tv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import type {
   CosmeticCreateCallbackData,
   CosmeticUpdateCallbackData,
   EntitlementDeleteCallbackData,
   EntitlementUpdateCallbackData,
-} from '@app/components/chat/hooks/use-seventv-ws';
+} from '@app/components/chat/hooks/use-seven-tv-ws';
 import type {
   BadgeCosmetic,
   BadgeData,
@@ -14,8 +14,8 @@ import type {
   CosmeticCreate,
   PaintCosmetic,
   PaintData,
-} from '@app/types/seventv/cosmetics';
-import type { SevenTvHost } from '@app/types/seventv/emotes';
+} from '@app/types/seven-tv/cosmetics';
+import type { SevenTvHost } from '@app/types/seven-tv/emotes';
 
 const emptyIndexedCollection = { length: 0 };
 

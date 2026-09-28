@@ -1,4 +1,4 @@
-import type { PaintCanvasRepeat } from '@app/types/seventv/cosmetics';
+import type { PaintCanvasRepeat } from '@app/types/seven-tv/cosmetics';
 
 import { isTilingCanvasRepeat } from '../is-tiling-canvas-repeat';
 

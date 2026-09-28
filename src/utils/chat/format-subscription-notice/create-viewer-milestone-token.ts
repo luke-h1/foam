@@ -1,0 +1,38 @@
+import { ViewerMilestoneTags } from '@app/types/chat/irc-tags/usernotice';
+import { getTagValue } from '@app/utils/chat/format-subscription-notice/get-tag-value';
+import { withNoticeSubject } from '@app/utils/chat/format-subscription-notice/with-notice-subject';
+import { MessageToken } from '@app/utils/chat/message-token';
+
+export function createViewerMilestonePart(
+  tags: ViewerMilestoneTags,
+  messageText?: string,
+): MessageToken<'viewermilestone'> {
+  const category = getTagValue(tags, 'msg-param-category');
+  const value = getTagValue(tags, 'msg-param-value');
+  const displayName = getTagValue(tags, 'display-name');
+
+  const systemMsg = withNoticeSubject(
+    getTagValue(tags, 'system-msg'),
+    displayName,
+  );
+
+  const streamCount = Number.parseInt(value, 10);
+
+  const fallback =
+    category === 'watch-streak' && displayName && value
+      ? `${displayName} watched ${value} consecutive ${
+          streamCount === 1 ? 'stream' : 'streams'
+        } and sparked a watch streak!`
+      : '';
+
+  return {
+    type: 'viewermilestone',
+    category,
+    reward: getTagValue(tags, 'msg-param-copoReward'),
+    value,
+    content: messageText?.trim() ?? '',
+    systemMsg: systemMsg || fallback,
+    login: getTagValue(tags, 'login'),
+    displayName,
+  };
+}

@@ -20,7 +20,7 @@ import {
   type MentionChatter,
 } from '@app/utils/chat/resolve-mention-login/types';
 
-import type { UsernamePressData } from '../chat-message/rich-chat-message.types';
+import type { UsernamePressData } from '../chat-message/chat-row.types';
 
 export interface ChattersSheetProps {
   isPresented: boolean;

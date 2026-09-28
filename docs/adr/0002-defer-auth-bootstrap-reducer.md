@@ -28,7 +28,7 @@ distinct reasons:
    a regression logs users out or breaks cold start).
 
 The high-value, safe auth extraction is already done: the pure token lifecycle
-(`tokenLifecycle.ts`), unit-tested.
+(`utils/authentication/token-lifecycle.ts`), unit-tested.
 
 If revisited, do it **test-first**: stabilise the background-revalidation timing
 (or its test) so the path isn't microtask-racy, then extract the bootstrap.

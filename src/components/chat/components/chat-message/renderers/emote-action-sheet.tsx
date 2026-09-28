@@ -30,11 +30,11 @@ import { SymbolView } from '@app/components/ui/icon/icon';
 import { Text } from '@app/components/ui/text/text';
 import { theme } from '@app/styles/themes';
 import type { EmoteImageScale } from '@app/types/emote';
-import { ParsedPart } from '@app/utils/chat/parsed-part';
+import { MessageToken } from '@app/utils/chat/message-token';
 import { deriveEmoteImageVariantsFromUrl } from '@app/utils/emote/emote-image-variants/derive-emote-image-variants-from-url';
 import { resolveEmoteDisplayUrl } from '@app/utils/emote/resolve-emote-display-url';
 
-type PartVariant = ParsedPart<'emote'>;
+type MessageTokenKind = MessageToken<'emote'>;
 
 type ActionId =
   'copy-name' | 'copy-url' | 'copy-url-2x' | 'copy-url-4x' | 'preview';
@@ -65,8 +65,8 @@ interface EmoteActionSheetProps {
   disableAnimations?: boolean;
   isPresented?: boolean;
   onDismiss?: () => void;
-  onPress?: (part: PartVariant) => void;
-  part: PartVariant;
+  onPress?: (token: MessageTokenKind) => void;
+  token: MessageTokenKind;
 }
 
 function EmoteActionSheetComponent({
@@ -74,7 +74,7 @@ function EmoteActionSheetComponent({
   disableAnimations = false,
   isPresented,
   onDismiss,
-  part,
+  token,
   onPress,
 }: EmoteActionSheetProps) {
   const [uncontrolledVisible, setUncontrolledVisible] = useState(false);
@@ -91,8 +91,8 @@ function EmoteActionSheetComponent({
   ];
 
   const resolvedImageVariants = useMemo(
-    () => part.image_variants ?? deriveEmoteImageVariantsFromUrl(part.url),
-    [part.image_variants, part.url],
+    () => token.image_variants ?? deriveEmoteImageVariantsFromUrl(token.url),
+    [token.image_variants, token.url],
   );
 
   const preferredVariantKind = disableAnimations ? 'static' : 'animated';
@@ -119,25 +119,25 @@ function EmoteActionSheetComponent({
   const displayUrl = resolveEmoteDisplayUrl(
     {
       image_variants: resolvedImageVariants,
-      url: part.url,
-      static_url: part.static_url,
+      url: token.url,
+      static_url: token.static_url,
     },
     { disableAnimations, preferredScale: '4x' },
   );
 
   const previewPart = useMemo(
     () =>
-      displayUrl === part.url
-        ? part
+      displayUrl === token.url
+        ? token
         : {
-            ...part,
+            ...token,
             url: displayUrl,
           },
-    [displayUrl, part],
+    [displayUrl, token],
   );
 
   const previewImageSize = useMemo(() => {
-    const aspectRatio = (part.width || 28) / (part.height || 28);
+    const aspectRatio = (token.width || 28) / (token.height || 28);
 
     return aspectRatio >= 1
       ? {
@@ -148,7 +148,7 @@ function EmoteActionSheetComponent({
           width: Math.round(PREVIEW_IMAGE_MAX_SIZE * aspectRatio),
           height: PREVIEW_IMAGE_MAX_SIZE,
         };
-  }, [part.width, part.height]);
+  }, [token.width, token.height]);
 
   const openSheet = useCallback(
     (e: GestureResponderEvent) => {
@@ -175,7 +175,7 @@ function EmoteActionSheetComponent({
 
   const copyName = useCallback(() => {
     requestClose();
-    const text = part.name ?? part.original_name ?? '';
+    const text = token.name ?? token.original_name ?? '';
 
     if (!text) {
       return;
@@ -184,7 +184,7 @@ function EmoteActionSheetComponent({
     void Clipboard.setStringAsync(text).then(() => {
       toast.success('Emote name copied to clipboard');
     });
-  }, [part.name, part.original_name, requestClose]);
+  }, [token.name, token.original_name, requestClose]);
 
   const copyImageUrl = useCallback(() => {
     requestClose();
@@ -291,7 +291,7 @@ function EmoteActionSheetComponent({
               />
             </Button>
           </View>
-          {(displayUrl || part.name || part.original_name) && (
+          {(displayUrl || token.name || token.original_name) && (
             <View style={styles.previewCard}>
               <View style={styles.previewRow}>
                 {displayUrl ? (
@@ -307,9 +307,9 @@ function EmoteActionSheetComponent({
                   </View>
                 ) : null}
                 <View style={styles.previewMeta}>
-                  {part.name || part.original_name ? (
+                  {token.name || token.original_name ? (
                     <Text style={styles.previewName}>
-                      {part.name ?? part.original_name}
+                      {token.name ?? token.original_name}
                     </Text>
                   ) : null}
                   <Text style={styles.previewHint}>{previewSubtitle}</Text>

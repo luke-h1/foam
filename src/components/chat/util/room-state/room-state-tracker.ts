@@ -17,7 +17,7 @@ export interface RoomStateTracker {
   ingest: (tags: Record<string, string>) => RoomStateUpdate;
   /**
    * Clears the diff baseline so the next ingest is announced as an initial
-   * room state again; call on part, reconnect, or channel switch.
+   * room state again; call on token, reconnect, or channel switch.
    */
   reset: () => RoomStateUpdate;
 }

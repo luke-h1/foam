@@ -2,8 +2,8 @@ import { renderHook } from '@testing-library/react-native';
 import { act, render } from '@testing-library/react-native';
 
 import type { ChatListRef } from '@app/components/chat/components/chat-list';
-import * as RichChatMessageModule from '@app/components/chat/components/chat-message/rich-chat-message';
-import type { RichChatMessageProps } from '@app/components/chat/components/chat-message/rich-chat-message.types';
+import * as ChatRowModule from '@app/components/chat/components/chat-message/chat-row';
+import type { ChatRowProps } from '@app/components/chat/components/chat-message/chat-row.types';
 import {
   createChatMessage,
   createEmoteData,
@@ -17,7 +17,7 @@ import * as transientSelectorsModule from '@app/store/chat/react/transient-selec
 import { createRef } from '@app/test/create-ref';
 import type { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import * as emoteProcessorModule from '@app/utils/chat/emote-processor';
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 import * as resolveCachedSenderColorModule from '@app/utils/chat/resolve-cached-sender-color/resolve-cached-sender-color';
 import * as resolveMentionColorModule from '@app/utils/chat/resolve-mention-color';
 
@@ -51,18 +51,14 @@ jest
   .mockReturnValue('#resolved-sender');
 
 /**
- * RichChatMessage is memo() wrapped (an object, not a function), so
+ * ChatRow is memo() wrapped (an object, not a function), so
  * jest.spyOn cannot wrap it - swap the export directly instead.
  */
-const mockRichChatMessage = jest.fn<
-  null,
-  [RichChatMessageProps<NoticeVariants>]
->(() => null);
+const mockChatRow = jest.fn<null, [ChatRowProps<NoticeVariants>]>(() => null);
 
-Object.defineProperty(RichChatMessageModule, 'RichChatMessage', {
+Object.defineProperty(ChatRowModule, 'ChatRow', {
   configurable: true,
-  value: (props: RichChatMessageProps<NoticeVariants>) =>
-    mockRichChatMessage(props),
+  value: (props: ChatRowProps<NoticeVariants>) => mockChatRow(props),
 });
 
 const mockUseIsHighlightedReplyTargetMessage = jest.spyOn(
@@ -230,7 +226,7 @@ describe('useChatRowRenderer', () => {
       fontScale: undefined,
       highlightedUsersKey: 'VIPUser|viewer',
       // mentionLoginRevision intentionally excluded from extraData (would
-      // re-render every row per mention resolve); MentionSpan subscribes to it.
+      // re-render every row per mention resolve); MentionToken subscribes to it.
       showAlternatingChatRows: true,
       showInlineReplyContext: true,
       showTimestamps: true,
@@ -261,7 +257,7 @@ describe('useChatRowRenderer', () => {
 
     render(rendered);
 
-    const props = mockRichChatMessage.mock.calls[0]?.[0];
+    const props = mockChatRow.mock.calls[0]?.[0];
 
     if (
       !props?.parseTextForEmotes ||
@@ -269,7 +265,7 @@ describe('useChatRowRenderer', () => {
       !props.onEmotePress ||
       !props.onUsernamePress
     ) {
-      throw new Error('Expected RichChatMessage callback props');
+      throw new Error('Expected ChatRow callback props');
     }
 
     expect({
@@ -303,7 +299,7 @@ describe('useChatRowRenderer', () => {
 
     expect(props.timestamp).toBe('12:34');
 
-    expect(props.parseTextForEmotes('OMEGALUL')).toEqual<ParsedPart[]>([
+    expect(props.parseTextForEmotes('OMEGALUL')).toEqual<MessageToken[]>([
       { type: 'text', content: 'parsed:OMEGALUL' },
     ]);
 
@@ -354,7 +350,7 @@ describe('useChatRowRenderer', () => {
       }
 
       render(rendered);
-      const props = mockRichChatMessage.mock.calls[0]?.[0];
+      const props = mockChatRow.mock.calls[0]?.[0];
       const onReplyContextPress = props?.onReplyContextPress;
 
       if (!onReplyContextPress) {

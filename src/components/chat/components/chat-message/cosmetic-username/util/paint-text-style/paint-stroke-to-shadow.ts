@@ -1,7 +1,7 @@
 import type {
   PaintShadow,
   PaintTextStroke,
-} from '@app/types/seventv/cosmetics';
+} from '@app/types/seven-tv/cosmetics';
 
 /**
  * Approximates -webkit-text-stroke with a same-position glyph copy in the

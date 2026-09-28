@@ -4,12 +4,12 @@ import { StyleSheet, View } from 'react-native';
 import { BrandIcon } from '@app/components/brand-icon/brand-icon';
 import { Image } from '@app/components/image/image';
 import { Text } from '@app/components/ui/text/text';
-import { ParsedPart } from '@app/utils/chat/parsed-part';
+import { MessageToken } from '@app/utils/chat/message-token';
 import { getDisplayEmoteUrl } from '@app/utils/emote/get-display-emote-url';
 
+import { styles as chatStyles } from './chat-message/chat-row.styles';
 import { getChatTextStyles } from './chat-message/chat-text.styles';
 import { ChatNoticeMetaRow } from './chat-message/renderers/chat-notice-meta-row';
-import { styles as chatStyles } from './chat-message/rich-chat-message.styles';
 import type { ChatFontScale } from './chat-message/util/chat-scale';
 import { CHAT_NOTICE_ACCENTS } from './util/chat-notice-accents';
 
@@ -17,20 +17,20 @@ interface StvEmoteEventProps {
   compact?: boolean;
   disableAnimations?: boolean;
   fontScale?: ChatFontScale;
-  part: ParsedPart<'stv_emote_added' | 'stv_emote_removed'>;
+  token: MessageToken<'stvEmoteAdded' | 'stvEmoteRemoved'>;
 }
 
 function StvEmoteEventComponent({
   compact,
   fontScale,
-  part,
+  token,
   disableAnimations = false,
 }: StvEmoteEventProps) {
   const textStyles = getChatTextStyles(fontScale, compact);
-  const added = part.type === 'stv_emote_added';
-  const removed = part.type === 'stv_emote_removed';
+  const added = token.type === 'stvEmoteAdded';
+  const removed = token.type === 'stvEmoteRemoved';
 
-  const content = part.stvEvents?.data;
+  const content = token.stvEvents?.data;
 
   if (!content) {
     return null;

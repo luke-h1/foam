@@ -1,4 +1,4 @@
-// oxlint-disable anti-slop/no-shape-in-symbol-names -- mirrors the 7TV paint API shape field (types/seventv/cosmetics.ts)
+// oxlint-disable anti-slop/no-shape-in-symbol-names -- mirrors the 7TV paint API shape field (types/seven-tv/cosmetics.ts)
 import * as cosmetics from '@app/store/chat/actions/cosmetics';
 import {
   addBadge,
@@ -22,7 +22,7 @@ import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import type {
   EntitlementCreate,
   PaintData,
-} from '@app/types/seventv/cosmetics';
+} from '@app/types/seven-tv/cosmetics';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { logger } from '@app/utils/logger';
 

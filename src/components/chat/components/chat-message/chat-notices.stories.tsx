@@ -5,7 +5,7 @@ import type {
   SubscriptionTags,
 } from '@app/types/chat/irc-tags/usernotice';
 
-import { RichChatMessage } from './rich-chat-message';
+import { ChatRow } from './chat-row';
 import {
   broadcasterBadge,
   chatStoryDecorator,
@@ -15,16 +15,16 @@ import {
   premiumBadge,
   stvChannelEmote1,
   stvGlobalEmote1,
-} from './rich-chat-message-story-fixtures';
+} from './chat-row-story-fixtures';
 
 const meta = {
   title: 'components/Chat/notices',
-  component: RichChatMessage,
+  component: ChatRow,
   decorators: [chatStoryDecorator],
   argTypes: {
     onReply: { action: 'onReply' },
   },
-} satisfies Meta<typeof RichChatMessage>;
+} satisfies Meta<typeof ChatRow>;
 
 export default meta;
 
@@ -348,7 +348,7 @@ export const StvEmoteAdded: Story = {
   args: {
     ...createBaseMessage([
       {
-        type: 'stv_emote_added',
+        type: 'stvEmoteAdded',
         stvEvents: {
           type: 'added',
           data: stvGlobalEmote1,
@@ -363,7 +363,7 @@ export const StvEmoteRemoved: Story = {
   args: {
     ...createBaseMessage([
       {
-        type: 'stv_emote_removed',
+        type: 'stvEmoteRemoved',
         stvEvents: {
           type: 'removed',
           data: stvChannelEmote1,

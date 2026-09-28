@@ -1,13 +1,6 @@
 export type HeartbeatAction = 'reconnect' | 'probe' | 'wait';
 
-export function getHeartbeatAction({
-  isOpen,
-  awaitingPong,
-  msSinceProbeSent,
-  msSinceLastActivity,
-  intervalMs,
-  probeDeadlineMs,
-}: {
+interface GetHeartbeatActionOptions {
   isOpen: boolean;
   awaitingPong: boolean;
   /**
@@ -18,7 +11,16 @@ export function getHeartbeatAction({
   msSinceLastActivity: number;
   intervalMs: number;
   probeDeadlineMs: number;
-}): HeartbeatAction {
+}
+
+export function getHeartbeatAction({
+  isOpen,
+  awaitingPong,
+  msSinceProbeSent,
+  msSinceLastActivity,
+  intervalMs,
+  probeDeadlineMs,
+}: GetHeartbeatActionOptions): HeartbeatAction {
   if (!isOpen) {
     return 'wait';
   }

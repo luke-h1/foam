@@ -11,8 +11,8 @@ import * as personalEmotesActions from '@app/store/chat/actions/personal-emotes'
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
-import { resolveMessageEmoteParts } from '@app/utils/chat/resolve-message-emote-parts';
+import type { MessageToken } from '@app/utils/chat/message-token';
+import { resolveMessageEmoteParts } from '@app/utils/chat/resolve-message-emote-tokens';
 
 // Only the channel-emote-cache lookup and the personal-emote source are stubbed; the real resolver, worklet and store run.
 const mockGetCurrentEmoteData = jest.spyOn(
@@ -51,14 +51,14 @@ const senderUserstate = createUserStateTags({
 });
 
 function createMessage(
-  parts: ParsedPart[],
+  tokens: MessageToken[],
   messageId = 'm1',
 ): AnyChatMessageType {
   return {
     id: messageId,
     message_id: messageId,
     message_nonce: 'n1',
-    message: parts,
+    message: tokens,
     channel: 'test',
     sender: 'chatter',
     badges: [],
@@ -101,9 +101,9 @@ beforeEach(() => {
 
 /**
  * Resolves `text` the same way live ingest does, so a test can seed a message
- * with the parts it would have had when it first arrived.
+ * with the tokens it would have had when it first arrived.
  */
-function ingestParts(text: string): ParsedPart[] {
+function ingestParts(text: string): MessageToken[] {
   return resolveMessageEmoteParts({
     channelId,
     emoteData: createEmoteData(),
@@ -116,17 +116,19 @@ function ingestParts(text: string): ParsedPart[] {
 }
 
 /**
- * Reduces parts to the fields these tests assert on so the shape can be
+ * Reduces tokens to the fields these tests assert on so the shape can be
  * compared with `toEqual` instead of a partial matcher.
  */
-function partIdentities(parts: ParsedPart[]): { type: string; id?: string }[] {
-  return parts.map(part => ({
-    type: part.type,
-    id: 'id' in part ? part.id : undefined,
+function partIdentities(
+  tokens: MessageToken[],
+): { type: string; id?: string }[] {
+  return tokens.map(token => ({
+    type: token.type,
+    id: 'id' in token ? token.id : undefined,
   }));
 }
 
-function updatedMessage(): ParsedPart[] {
+function updatedMessage(): MessageToken[] {
   const message = mockUpdateMessages.mock.calls[0]?.[0]?.[0]?.updates?.message;
 
   if (!message) {

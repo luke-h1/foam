@@ -1,7 +1,7 @@
 import { type StyleProp, StyleSheet, TextStyle } from 'react-native';
 
 import { Text } from '@app/components/ui/text/text';
-import type { PaintShadow } from '@app/types/seventv/cosmetics';
+import type { PaintShadow } from '@app/types/seven-tv/cosmetics';
 import { sevenTvColorToCss } from '@app/utils/color/seven-tv-color-to-css';
 
 interface PaintedUsernameDropShadowLayerProps {

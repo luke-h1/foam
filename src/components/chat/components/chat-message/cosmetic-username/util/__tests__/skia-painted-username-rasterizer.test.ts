@@ -1,6 +1,6 @@
-// "shape" is the 7TV paint API field (types/seventv/cosmetics.ts), not a naming choice.
+// "shape" is the 7TV paint API field (types/seven-tv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
-import type { PaintLayerData } from '@app/types/seventv/cosmetics';
+import type { PaintLayerData } from '@app/types/seven-tv/cosmetics';
 
 import {
   buildPaintImageLayers,

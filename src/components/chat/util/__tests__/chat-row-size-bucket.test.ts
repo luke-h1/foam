@@ -2,9 +2,9 @@ import { getChatRowSizeBucket } from '@app/components/chat/util/chat-row-size-bu
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
 import {
-  createEmotePart,
-  createTextPart,
-} from '@app/utils/chat/__tests__/__fixtures__/parsed-part.fixture';
+  createEmoteToken,
+  createTextToken,
+} from '@app/utils/chat/__tests__/__fixtures__/message-token.fixture';
 
 function createMessage(
   overrides: Partial<AnyChatMessageType> = {},
@@ -15,7 +15,7 @@ function createMessage(
     message_nonce: 'nonce-1',
     channel: 'channel',
     sender: 'viewer',
-    message: [createTextPart('hello')],
+    message: [createTextToken('hello')],
     userstate: createUserStateTags({
       username: 'viewer',
       'display-name': 'Viewer',
@@ -33,7 +33,7 @@ describe('getChatRowSizeBucket', () => {
   test('keeps every one-line row in the first bucket', () => {
     expect(getChatRowSizeBucket(createMessage())).toBe('w0');
     expect(
-      getChatRowSizeBucket(createMessage({ message: [createTextPart('gg')] })),
+      getChatRowSizeBucket(createMessage({ message: [createTextToken('gg')] })),
     ).toBe('w0');
   });
 
@@ -43,7 +43,7 @@ describe('getChatRowSizeBucket', () => {
     const buckets = [30, 60, 100, 150, 220, 320, 460, 640].flatMap(bound =>
       [bound - usernameWeight, bound - usernameWeight + 1].map(length =>
         getChatRowSizeBucket(
-          createMessage({ message: [createTextPart('a'.repeat(length))] }),
+          createMessage({ message: [createTextToken('a'.repeat(length))] }),
         ),
       ),
     );
@@ -69,8 +69,8 @@ describe('getChatRowSizeBucket', () => {
   });
 
   test('separates emote rows from text rows of the same width', () => {
-    const text = createMessage({ message: [createTextPart('hello')] });
-    const emote = createMessage({ message: [createEmotePart('Kappa')] });
+    const text = createMessage({ message: [createTextToken('hello')] });
+    const emote = createMessage({ message: [createEmoteToken('Kappa')] });
 
     expect(getChatRowSizeBucket(text)).toBe('w0');
     expect(getChatRowSizeBucket(emote)).toBe('w0e');
@@ -78,11 +78,11 @@ describe('getChatRowSizeBucket', () => {
 
   test('climbs a bucket as an emote wall grows', () => {
     const few = createMessage({
-      message: Array.from({ length: 4 }, () => createEmotePart('Kappa')),
+      message: Array.from({ length: 4 }, () => createEmoteToken('Kappa')),
     });
 
     const wall = createMessage({
-      message: Array.from({ length: 12 }, () => createEmotePart('Kappa')),
+      message: Array.from({ length: 12 }, () => createEmoteToken('Kappa')),
     });
 
     expect(getChatRowSizeBucket(few)).toBe('w0e');
@@ -93,7 +93,7 @@ describe('getChatRowSizeBucket', () => {
     const url = 'https://7tv.app/emotes/01F6MZGCNG000255K4X1V15WQE';
 
     const stvEmote = createMessage({
-      message: [{ type: 'stvEmote', content: url, url }],
+      message: [{ type: 'stvEmoteLink', content: url, url }],
     });
 
     const clip = createMessage({

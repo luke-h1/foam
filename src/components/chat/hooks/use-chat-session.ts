@@ -151,7 +151,7 @@ export function useChatSession({
       let shouldTriggerHaptic = false;
 
       if (chatMentionHaptics && options?.countUnread !== false) {
-        // Deferred-parse live messages carry no mention parts yet, so fall
+        // Deferred-parse live messages carry no mention tokens yet, so fall
         // back to scanning the raw text for an @self token.
         const mentionsSelf =
           normalisedSelfForFeedback.length > 0 &&
@@ -161,9 +161,9 @@ export function useChatSession({
                 normalisedSelfForFeedback,
               )
             : message.message.some(
-                part =>
-                  part.type === 'mention' &&
-                  normaliseChatUsername(part.content.replace(/^@/, '')) ===
+                token =>
+                  token.type === 'mention' &&
+                  normaliseChatUsername(token.content.replace(/^@/, '')) ===
                     normalisedSelfForFeedback,
               ));
 

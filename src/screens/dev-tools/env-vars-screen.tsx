@@ -150,11 +150,13 @@ export function EnvVarsScreen() {
             const isSet = entry.value != null && entry.value !== '';
             const raw = entry.value == null ? '' : String(entry.value);
 
-            const display = !isSet
-              ? 'undefined'
-              : entry.secret && !revealed
-                ? maskValue(raw)
-                : raw;
+            let display = raw;
+
+            if (!isSet) {
+              display = 'undefined';
+            } else if (entry.secret && !revealed) {
+              display = maskValue(raw);
+            }
 
             return (
               <Pressable

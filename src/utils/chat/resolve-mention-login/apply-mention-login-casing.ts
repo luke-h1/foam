@@ -1,33 +1,35 @@
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 import { getMentionLogin } from '@app/utils/chat/resolve-mention-login/get-mention-login';
 import { registerMentionLogin } from '@app/utils/chat/resolve-mention-login/register-mention-login';
 
-export function applyMentionLoginCasing(parts: ParsedPart[]): ParsedPart[] {
-  let nextParts: ParsedPart[] | null = null;
+export function applyMentionLoginCasing(
+  tokens: MessageToken[],
+): MessageToken[] {
+  let nextParts: MessageToken[] | null = null;
 
-  for (let i = 0; i < parts.length; i += 1) {
-    const part = parts[i];
+  for (let i = 0; i < tokens.length; i += 1) {
+    const token = tokens[i];
 
-    if (!part || part.type !== 'mention' || !('content' in part)) {
+    if (!token || token.type !== 'mention' || !('content' in token)) {
       continue;
     }
 
-    const login = part.content.replace(/^@/, '').trim();
+    const login = token.content.replace(/^@/, '').trim();
     registerMentionLogin(login);
 
     const canonicalLogin = getMentionLogin(login);
     const content = `@${canonicalLogin}`;
 
-    if (content === part.content) {
+    if (content === token.content) {
       continue;
     }
 
     if (!nextParts) {
-      nextParts = parts.slice();
+      nextParts = tokens.slice();
     }
 
-    nextParts[i] = { ...part, content };
+    nextParts[i] = { ...token, content };
   }
 
-  return nextParts ?? parts;
+  return nextParts ?? tokens;
 }

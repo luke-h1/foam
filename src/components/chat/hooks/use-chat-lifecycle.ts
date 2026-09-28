@@ -11,6 +11,19 @@ type NavigationLike = {
   addListener: (event: 'beforeRemove', cb: () => void) => () => void;
 };
 
+interface UseChatLifecycleOptions {
+  navigation: NavigationLike;
+  channelId: string;
+  channelName: string;
+  partChannel: PartChannel;
+  clearLocalMessages: () => void;
+  cleanupScroll: () => void;
+  cleanupMessages: () => void;
+  cancelEmoteLoad: () => void;
+  isMountedRef: MutableRefObject<boolean>;
+  processedMessageIdsRef: MutableRefObject<Set<string>>;
+}
+
 export function useChatLifecycle({
   navigation,
   channelId,
@@ -22,18 +35,7 @@ export function useChatLifecycle({
   cancelEmoteLoad,
   isMountedRef,
   processedMessageIdsRef,
-}: {
-  navigation: NavigationLike;
-  channelId: string;
-  channelName: string;
-  partChannel: PartChannel;
-  clearLocalMessages: () => void;
-  cleanupScroll: () => void;
-  cleanupMessages: () => void;
-  cancelEmoteLoad: () => void;
-  isMountedRef: MutableRefObject<boolean>;
-  processedMessageIdsRef: MutableRefObject<Set<string>>;
-}) {
+}: UseChatLifecycleOptions) {
   const hasPartedRef = useRef(false);
   const initializedChannelRef = useRef<string | null>(null);
   const currentEmoteSetIdRef = useRef<string | null>(null);

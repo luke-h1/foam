@@ -5,8 +5,41 @@ import { useCpuUsage } from './use-cpu-usage';
 import { useUiThreadFrameHealth } from './use-ui-thread-frame-health';
 import { useUsedMemoryMb } from './use-used-memory';
 
-const fpsColor = (fps: number) =>
-  fps >= 55 ? '#3ddc84' : fps >= 30 ? '#ffcc00' : '#ff5252';
+function fpsColor(fps: number) {
+  if (fps >= 55) {
+    return '#3ddc84';
+  }
+
+  if (fps >= 30) {
+    return '#ffcc00';
+  }
+
+  return '#ff5252';
+}
+
+function cpuColor(cpu: number) {
+  if (cpu > 80) {
+    return '#ff5252';
+  }
+
+  if (cpu > 50) {
+    return '#ffcc00';
+  }
+
+  return '#3ddc84';
+}
+
+function memColor(memMb: number) {
+  if (memMb > 1500) {
+    return '#ff5252';
+  }
+
+  if (memMb > 900) {
+    return '#ffcc00';
+  }
+
+  return '#8ab4ff';
+}
 
 export function LiveChatPerfOverlay({
   live,
@@ -33,15 +66,11 @@ export function LiveChatPerfOverlay({
         value={String(ui.jank)}
         color={ui.jank > 3 ? '#ff5252' : '#3ddc84'}
       />
-      <Stat
-        label='cpu'
-        value={`${cpu}%`}
-        color={cpu > 80 ? '#ff5252' : cpu > 50 ? '#ffcc00' : '#3ddc84'}
-      />
+      <Stat label='cpu' value={`${cpu}%`} color={cpuColor(cpu)} />
       <Stat
         label='mem'
         value={memMb >= 1024 ? `${(memMb / 1024).toFixed(1)}G` : `${memMb}MB`}
-        color={memMb > 1500 ? '#ff5252' : memMb > 900 ? '#ffcc00' : '#8ab4ff'}
+        color={memColor(memMb)}
       />
       <Stat label='lib' value={renderer} color='#fff' />
     </View>

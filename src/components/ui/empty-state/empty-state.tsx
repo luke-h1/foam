@@ -7,6 +7,7 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
+import type { ComponentProps } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ContentUnavailableView, Host } from '@expo/ui/swift-ui';
@@ -74,6 +75,142 @@ interface EmptyStateProps {
   iconTintColor?: string;
 }
 
+interface NativeEmptyStateProps {
+  buttonOnPress: EmptyStateProps['buttonOnPress'];
+  buttonStyle: EmptyStateProps['buttonStyle'];
+  contentText: string;
+  headingText: string;
+  iosSymbol: ComponentProps<typeof ContentUnavailableView>['systemImage'];
+  resolvedButton: EmptyStateProps['button'];
+  style: EmptyStateProps['style'];
+}
+
+/**
+ * iOS draws an empty state natively when there is no custom image and both
+ * strings are plain text, so use the system view and keep only the button.
+ */
+function NativeEmptyState({
+  buttonOnPress,
+  buttonStyle,
+  contentText,
+  headingText,
+  iosSymbol,
+  resolvedButton,
+  style,
+}: NativeEmptyStateProps) {
+  return (
+    <SafeAreaView style={[styles.container, style]}>
+      <Host style={styles.iosHost}>
+        <ContentUnavailableView
+          title={headingText}
+          systemImage={iosSymbol}
+          description={contentText}
+        />
+      </Host>
+      {resolvedButton ? (
+        <EmptyLayoutButton
+          title={resolvedButton}
+          onPress={buttonOnPress}
+          style={[styles.buttonWrap, styles.iosButtonWrap, buttonStyle]}
+          variant='default'
+        />
+      ) : null}
+    </SafeAreaView>
+  );
+}
+
+interface EmptyStateHeaderProps {
+  contentStyle: EmptyStateProps['contentStyle'];
+  contentTextProps: EmptyStateProps['contentTextProps'];
+  headingStyle: EmptyStateProps['headingStyle'];
+  headingTextProps: EmptyStateProps['headingTextProps'];
+  iconSize: number;
+  iconTintColor: string;
+  imageProps: Omit<AppImageProps, 'source'> | undefined;
+  imageStyle: EmptyStateProps['imageStyle'];
+  resolvedButton: EmptyStateProps['button'];
+  resolvedContent: EmptyStateProps['content'];
+  resolvedHeading: EmptyStateProps['heading'];
+  resolvedIconName: SymbolViewProps['name'] | undefined;
+  resolvedImageSource: AppImageProps['source'] | undefined;
+}
+
+/**
+ * The stacked media, heading and body of an empty state. Each piece is
+ * optional, and the spacing of the ones present depends on which others are.
+ */
+function EmptyStateHeader({
+  contentStyle,
+  contentTextProps,
+  headingStyle,
+  headingTextProps,
+  iconSize,
+  iconTintColor,
+  imageProps,
+  imageStyle,
+  resolvedButton,
+  resolvedContent,
+  resolvedHeading,
+  resolvedIconName,
+  resolvedImageSource,
+}: EmptyStateHeaderProps) {
+  return (
+    <EmptyLayoutHeader>
+      {resolvedIconName ? (
+        <EmptyLayoutMedia style={styles.iconWrap}>
+          <SymbolView
+            name={resolvedIconName}
+            size={iconSize}
+            tintColor={iconTintColor}
+          />
+        </EmptyLayoutMedia>
+      ) : null}
+
+      {resolvedImageSource ? (
+        <EmptyLayoutContent style={styles.mediaWrap}>
+          <Image
+            {...imageProps}
+            source={resolvedImageSource}
+            style={[styles.image, imageStyle]}
+          />
+        </EmptyLayoutContent>
+      ) : null}
+
+      {resolvedHeading ? (
+        <EmptyLayoutTitle
+          {...headingTextProps}
+          style={[
+            styles.heading,
+            resolvedImageSource ? styles.headingWithImage : null,
+            resolvedContent || resolvedButton ? styles.headingWithBody : null,
+            headingTextProps?.style,
+            headingStyle,
+          ]}
+        >
+          {resolvedHeading}
+        </EmptyLayoutTitle>
+      ) : null}
+
+      {resolvedContent ? (
+        <EmptyLayoutDescription
+          {...contentTextProps}
+          style={[
+            styles.content,
+            resolvedImageSource || resolvedHeading
+              ? styles.contentWithHeader
+              : null,
+            resolvedButton ? styles.contentWithButton : null,
+            contentTextProps?.style,
+            contentStyle,
+          ]}
+        >
+          {resolvedContent}
+        </EmptyLayoutDescription>
+      ) : null}
+    </EmptyLayoutHeader>
+  );
+}
+
 export function EmptyState({
   preset = 'generic',
   style,
@@ -123,84 +260,36 @@ export function EmptyState({
     contentText !== undefined
   ) {
     return (
-      <SafeAreaView style={[styles.container, style]}>
-        <Host style={styles.iosHost}>
-          <ContentUnavailableView
-            title={headingText}
-            systemImage={iosSymbol}
-            description={contentText}
-          />
-        </Host>
-        {resolvedButton ? (
-          <EmptyLayoutButton
-            title={resolvedButton}
-            onPress={buttonOnPress}
-            style={[styles.buttonWrap, styles.iosButtonWrap, buttonStyle]}
-            variant='default'
-          />
-        ) : null}
-      </SafeAreaView>
+      <NativeEmptyState
+        buttonOnPress={buttonOnPress}
+        buttonStyle={buttonStyle}
+        contentText={contentText}
+        headingText={headingText}
+        iosSymbol={iosSymbol}
+        resolvedButton={resolvedButton}
+        style={style}
+      />
     );
   }
 
   return (
     <SafeAreaView style={[styles.container, style]}>
       <EmptyLayout style={styles.emptyLayout}>
-        <EmptyLayoutHeader>
-          {resolvedIconName ? (
-            <EmptyLayoutMedia style={styles.iconWrap}>
-              <SymbolView
-                name={resolvedIconName}
-                size={iconSize}
-                tintColor={iconTintColor}
-              />
-            </EmptyLayoutMedia>
-          ) : null}
-
-          {resolvedImageSource ? (
-            <EmptyLayoutContent style={styles.mediaWrap}>
-              <Image
-                {...imageProps}
-                source={resolvedImageSource}
-                style={[styles.image, imageStyle]}
-              />
-            </EmptyLayoutContent>
-          ) : null}
-
-          {resolvedHeading ? (
-            <EmptyLayoutTitle
-              {...headingTextProps}
-              style={[
-                styles.heading,
-                resolvedImageSource ? styles.headingWithImage : null,
-                resolvedContent || resolvedButton
-                  ? styles.headingWithBody
-                  : null,
-                headingTextProps?.style,
-                headingStyle,
-              ]}
-            >
-              {resolvedHeading}
-            </EmptyLayoutTitle>
-          ) : null}
-
-          {resolvedContent ? (
-            <EmptyLayoutDescription
-              {...contentTextProps}
-              style={[
-                styles.content,
-                resolvedImageSource || resolvedHeading
-                  ? styles.contentWithHeader
-                  : null,
-                resolvedButton ? styles.contentWithButton : null,
-                contentTextProps?.style,
-                contentStyle,
-              ]}
-            >
-              {resolvedContent}
-            </EmptyLayoutDescription>
-          ) : null}
-        </EmptyLayoutHeader>
+        <EmptyStateHeader
+          contentStyle={contentStyle}
+          contentTextProps={contentTextProps}
+          headingStyle={headingStyle}
+          headingTextProps={headingTextProps}
+          iconSize={iconSize}
+          iconTintColor={iconTintColor}
+          imageProps={imageProps}
+          imageStyle={imageStyle}
+          resolvedButton={resolvedButton}
+          resolvedContent={resolvedContent}
+          resolvedHeading={resolvedHeading}
+          resolvedIconName={resolvedIconName}
+          resolvedImageSource={resolvedImageSource}
+        />
 
         {resolvedButton ? (
           <EmptyLayoutButton

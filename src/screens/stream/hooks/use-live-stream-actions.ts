@@ -10,20 +10,29 @@ import { openLinkInBrowser } from '@app/utils/browser/open-link-in-browser';
 import { logger } from '@app/utils/logger';
 import { shareDeepLink } from '@app/utils/sharing/share-deep-link';
 
+interface UseLiveStreamActionsOptions {
+  authState: { isAnonAuth: boolean; isLoggedIn: boolean } | undefined;
+  broadcasterName: string | undefined;
+  resolvedChannelId: string | undefined;
+  resolvedChannelLogin: string | undefined;
+}
+
 /**
  * The two things a viewer can do with the stream itself: share a deep link to
  * it, and clip it. Clipping is guarded by a ref rather than state because a
  * second tap must be dropped without re-rendering the player.
  */
 export function useLiveStreamActions({
+  authState,
   broadcasterName,
   resolvedChannelId,
   resolvedChannelLogin,
-}: {
-  broadcasterName: string | undefined;
-  resolvedChannelId: string | undefined;
-  resolvedChannelLogin: string | undefined;
-}) {
+}: UseLiveStreamActionsOptions) {
+  // Clipping needs a real Twitch account, not the anonymous session.
+  const canCreateClip = Boolean(
+    authState?.isLoggedIn && !authState.isAnonAuth && resolvedChannelId,
+  );
+
   const isCreatingClipRef = useRef(false);
 
   const handleSharePress = useCallback(() => {
@@ -84,5 +93,5 @@ export function useLiveStreamActions({
       });
   }, [broadcasterName, resolvedChannelId, resolvedChannelLogin]);
 
-  return { handleCreateClipPress, handleSharePress };
+  return { canCreateClip, handleCreateClipPress, handleSharePress };
 }

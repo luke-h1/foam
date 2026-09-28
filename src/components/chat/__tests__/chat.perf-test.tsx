@@ -11,10 +11,10 @@ import type { ChatDensity } from '@app/components/chat/components/chat-message/u
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 import { ChatList } from '../components/chat-list';
-import { RichChatMessage } from '../components/chat-message/rich-chat-message';
+import { ChatRow } from '../components/chat-message/chat-row';
 import { getVisibleMessages } from '../util/visible-messages';
 
 type MockExtraData = {
@@ -124,7 +124,7 @@ const MEASURE_OPTIONS = {
   warmupRuns: 1,
 } as const;
 
-function createMessageParts(index: number): ParsedPart[] {
+function createMessageParts(index: number): MessageToken[] {
   const messageKind = index % 5;
 
   if (messageKind === 0) {
@@ -216,7 +216,7 @@ function renderChatMessage(message: AnyChatMessageType) {
   }
 
   return (
-    <RichChatMessage<'usernotice'>
+    <ChatRow<'usernotice'>
       {...message}
       density='compact'
       currentUsername='luke'
@@ -260,7 +260,7 @@ function RichMessageRowsPerfFixture() {
   return (
     <View>
       {virtualizedRows.map(message => (
-        <RichChatMessage
+        <ChatRow
           key={message.id}
           {...message}
           density='compact'
@@ -280,7 +280,7 @@ function RichMessageRowsMountFixture({
   return (
     <View>
       {virtualizedRows.map(message => (
-        <TrackedRichChatMessage
+        <TrackedChatRow
           key={message.id}
           message={message}
           onRowMount={onRowMount}
@@ -290,7 +290,7 @@ function RichMessageRowsMountFixture({
   );
 }
 
-function TrackedRichChatMessage({
+function TrackedChatRow({
   message,
   onRowMount,
 }: {
@@ -302,7 +302,7 @@ function TrackedRichChatMessage({
   }, [message.id, onRowMount]);
 
   return (
-    <RichChatMessage
+    <ChatRow
       {...message}
       density='compact'
       currentUsername='luke'

@@ -2,7 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { setCachedCosmetics } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat-cosmetics.fixture';
 import { useChatCosmetics } from '@app/components/chat/hooks/use-chat-cosmetics';
-import { sevenTvService } from '@app/services/seventv-service';
+import { sevenTvService } from '@app/services/seven-tv-service';
 import * as cosmeticsActions from '@app/store/chat/actions/cosmetics';
 import { logger } from '@app/utils/logger';
 

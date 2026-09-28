@@ -310,13 +310,18 @@ export const useChatScroll = ({
         !isDraggingRef.current &&
         !isMomentumScrollingRef.current;
 
-      const resolved = userDraggedAway
-        ? false
-        : shouldStayAnchoredToBottom
-          ? true
-          : hasUserScrollIntentRef.current || isMomentumScrollingRef.current
-            ? atBottom || reachedPreviousEndDuringGrowth
-            : true;
+      let resolved = true;
+
+      if (userDraggedAway) {
+        resolved = false;
+      } else if (shouldStayAnchoredToBottom) {
+        resolved = true;
+      } else if (
+        hasUserScrollIntentRef.current ||
+        isMomentumScrollingRef.current
+      ) {
+        resolved = atBottom || reachedPreviousEndDuringGrowth;
+      }
 
       isAtBottomRef.current = resolved;
 

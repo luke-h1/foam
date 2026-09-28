@@ -99,6 +99,46 @@ export type ThemedInputProps = Omit<
   ref?: Ref<InputRef>;
 };
 
+interface ResolveInputColorsOptions {
+  cursorColor: ThemedInputProps['cursorColor'];
+  flattenedStyle: TextStyle & ViewStyle;
+  placeholderTextColor: ThemedInputProps['placeholderTextColor'];
+  selectionColor: ThemedInputProps['selectionColor'];
+  variantConfig: {
+    backgroundColor: string;
+    borderColor: string;
+    placeholderColor: string;
+    textColor: string;
+  };
+}
+
+/**
+ * An explicit style or prop wins; otherwise the variant supplies the colour.
+ */
+function resolveInputColors({
+  cursorColor,
+  flattenedStyle,
+  placeholderTextColor,
+  selectionColor,
+  variantConfig,
+}: ResolveInputColorsOptions) {
+  return {
+    resolvedBackgroundColor: colorValue(
+      flattenedStyle.backgroundColor ?? variantConfig.backgroundColor,
+    ),
+    resolvedBorderColor: colorValue(
+      flattenedStyle.borderColor ?? variantConfig.borderColor,
+    ),
+    resolvedCursorColor: colorValue(
+      cursorColor ?? selectionColor ?? variantConfig.textColor,
+    ),
+    resolvedPlaceholderColor: colorValue(
+      placeholderTextColor ?? variantConfig.placeholderColor,
+    ),
+    textColor: colorValue(flattenedStyle.color ?? variantConfig.textColor),
+  };
+}
+
 function useIosInputField({
   accessibilityLabel,
   autoCapitalize,
@@ -203,23 +243,20 @@ function useIosInputField({
     StyleSheet.flatten<TextStyle & ViewStyle>(inputStyles) ?? {};
 
   const liquidGlassAvailable = isLiquidGlassAvailable();
-  const textColor = colorValue(flattenedStyle.color ?? variantConfig.textColor);
 
-  const resolvedPlaceholderColor = colorValue(
-    placeholderTextColor ?? variantConfig.placeholderColor,
-  );
-
-  const resolvedBackgroundColor = colorValue(
-    flattenedStyle.backgroundColor ?? variantConfig.backgroundColor,
-  );
-
-  const resolvedBorderColor = colorValue(
-    flattenedStyle.borderColor ?? variantConfig.borderColor,
-  );
-
-  const resolvedCursorColor = colorValue(
-    cursorColor ?? selectionColor ?? variantConfig.textColor,
-  );
+  const {
+    resolvedBackgroundColor,
+    resolvedBorderColor,
+    resolvedCursorColor,
+    resolvedPlaceholderColor,
+    textColor,
+  } = resolveInputColors({
+    cursorColor,
+    flattenedStyle,
+    placeholderTextColor,
+    selectionColor,
+    variantConfig,
+  });
 
   const disabled = editable === false || readOnly === true;
   const onSubmitEditingRef = useRef(onSubmitEditing);

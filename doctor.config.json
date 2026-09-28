@@ -40,13 +40,19 @@
         "files": [
           "src/components/chat/hooks/use-chat-messages.ts",
           "src/components/stream-player/hooks/use-player-bridge.ts",
-          "src/components/chat/components/chat-message/renderers/emote-action-sheet.tsx"
+          "src/components/stream-player/hooks/use-stream-player-source.ts",
+          "src/components/chat/components/chat-message/renderers/emote-action-sheet.tsx",
+          "src/services/twitch-chat-service.ts"
         ],
         "rules": ["react-hooks-js/refs"]
       },
       {
         "files": ["src/hooks/use-lazy-ref.ts"],
         "rules": ["react-doctor/no-ref-current-in-render"]
+      },
+      {
+        "files": ["src/screens/stream/hooks/use-live-stream-orientation.ts"],
+        "rules": ["react-hooks-js/set-state-in-effect"]
       },
       {
         "files": ["src/services/twitch-ws-service.ts"],

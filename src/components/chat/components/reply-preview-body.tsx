@@ -3,26 +3,26 @@ import { type StyleProp, StyleSheet, type TextStyle, View } from 'react-native';
 
 import { Image } from '@app/components/image/image';
 import { Text } from '@app/components/ui/text/text';
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
-import { getParsedPartStringContent } from '@app/utils/chat/parsed-part-content';
+import type { MessageToken } from '@app/utils/chat/message-token';
+import { getMessageTokenText } from '@app/utils/chat/message-token-content';
 
 interface ReplyPreviewBodyProps {
-  parts: ParsedPart[];
+  tokens: MessageToken[];
   textStyle?: StyleProp<TextStyle>;
 }
 
 function ReplyPreviewBodyComponent({
-  parts,
+  tokens,
   textStyle,
 }: ReplyPreviewBodyProps) {
   const keyCounts = new Map<string, number>();
 
   return (
     <View style={styles.row}>
-      {parts.slice(0, 24).map(part => {
-        const isEmote = part.type === 'emote' && Boolean(part.url);
-        const content = getParsedPartStringContent(part);
-        const base = isEmote ? `emote:${part.url}` : `text:${content}`;
+      {tokens.slice(0, 24).map(token => {
+        const isEmote = token.type === 'emote' && Boolean(token.url);
+        const content = getMessageTokenText(token);
+        const base = isEmote ? `emote:${token.url}` : `text:${content}`;
         const occurrence = keyCounts.get(base) ?? 0;
         keyCounts.set(base, occurrence + 1);
         const key = `${base}:${occurrence}`;
@@ -31,7 +31,7 @@ function ReplyPreviewBodyComponent({
           return (
             <Image
               key={key}
-              source={part.url}
+              source={token.url}
               cacheVariant='emote'
               contentFit='contain'
               transition={100}

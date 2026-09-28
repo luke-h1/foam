@@ -1,4 +1,4 @@
-// "shape" is the 7TV paint API field (types/seventv/cosmetics.ts), not a naming choice.
+// "shape" is the 7TV paint API field (types/seven-tv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import { getPaintLayers } from '@app/components/chat/components/chat-message/cosmetic-username/util/paint-layer/get-paint-layers';
 import { isRenderablePaintLayer } from '@app/components/chat/components/chat-message/cosmetic-username/util/paint-layer/is-renderable-paint-layer';
@@ -7,7 +7,7 @@ import type {
   PaintData,
   PaintLayerData,
   PaintStop,
-} from '@app/types/seventv/cosmetics';
+} from '@app/types/seven-tv/cosmetics';
 import { isVisibleSevenTvColor } from '@app/utils/color/is-visible-seven-tv-color';
 import { sevenTvColorToCss } from '@app/utils/color/seven-tv-color-to-css';
 import { sevenTvColorToRgba } from '@app/utils/color/seven-tv-color-to-rgba';

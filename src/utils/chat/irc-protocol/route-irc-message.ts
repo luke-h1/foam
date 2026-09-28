@@ -34,7 +34,7 @@ export interface IrcRouteHandlers {
   userstate?: (channel: string, tags: Record<string, string>) => void;
   globaluserstate?: (tags: Record<string, string>) => void;
   join?: (channel: string, nick: string | undefined) => void;
-  part?: (channel: string, nick: string | undefined) => void;
+  token?: (channel: string, nick: string | undefined) => void;
   ping?: (server: string) => void;
   reconnect?: () => void;
   welcome?: () => void;
@@ -181,7 +181,7 @@ export function routeIrcMessage(
       const channel = params[0];
 
       if (channel) {
-        handlers.part?.(channel, prefix?.split('!')[0]);
+        handlers.token?.(channel, prefix?.split('!')[0]);
       }
 
       break;

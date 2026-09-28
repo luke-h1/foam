@@ -13,6 +13,17 @@ function handleSendFeedback() {
   router.push('/feedback');
 }
 
+interface SettingsIndexIOSFormProps {
+  bundleButtonEnabled: boolean;
+  canSeeUpdateAppButton: boolean;
+  hasUser: boolean;
+  openStore: () => void;
+  shouldShowDevTools: boolean;
+  statusPageUrl: string;
+  updateBundle: () => void;
+  websiteUrl: string;
+}
+
 export function SettingsIndexIOSForm({
   bundleButtonEnabled,
   canSeeUpdateAppButton,
@@ -22,16 +33,7 @@ export function SettingsIndexIOSForm({
   statusPageUrl,
   updateBundle,
   websiteUrl,
-}: {
-  bundleButtonEnabled: boolean;
-  canSeeUpdateAppButton: boolean;
-  hasUser: boolean;
-  openStore: () => void;
-  shouldShowDevTools: boolean;
-  statusPageUrl: string;
-  updateBundle: () => void;
-  websiteUrl: string;
-}) {
+}: SettingsIndexIOSFormProps) {
   return (
     <Host style={styles.iosHost}>
       <Form>

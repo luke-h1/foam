@@ -44,11 +44,13 @@ export const ChatInputSection = memo(
     const canSend =
       trimmedInput.length > 0 && (isAuthenticated || isRefresh) && !isSending;
 
-    const inputPlaceholder = !isAuthenticated
-      ? 'Sign in to send messages'
-      : replyTo !== null
-        ? `Reply to ${replyTo.username}...`
-        : 'Send a message...';
+    let inputPlaceholder = 'Send a message...';
+
+    if (!isAuthenticated) {
+      inputPlaceholder = 'Sign in to send messages';
+    } else if (replyTo !== null) {
+      inputPlaceholder = `Reply to ${replyTo.username}...`;
+    }
 
     return (
       <View style={styles.wrapper} testID='chat-input-bar'>

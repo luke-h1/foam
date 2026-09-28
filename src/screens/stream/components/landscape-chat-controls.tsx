@@ -7,6 +7,15 @@ import { theme } from '@app/styles/themes';
 
 import type { FullscreenChatMode } from '../types';
 
+interface LandscapeChatControlsProps {
+  animatedStyle: AnimatedStyle<ViewStyle>;
+  fullscreenChatMode: FullscreenChatMode;
+  isChatVisible: boolean;
+  onToggleChat: () => void;
+  onToggleMode: () => void;
+  topOffset: number;
+}
+
 /**
  * Floating chat controls shown over the player in landscape: show/hide chat,
  * and switch between the sidebar and overlay layouts.
@@ -18,14 +27,7 @@ export function LandscapeChatControls({
   onToggleChat,
   onToggleMode,
   topOffset,
-}: {
-  animatedStyle: AnimatedStyle<ViewStyle>;
-  fullscreenChatMode: FullscreenChatMode;
-  isChatVisible: boolean;
-  onToggleChat: () => void;
-  onToggleMode: () => void;
-  topOffset: number;
-}) {
+}: LandscapeChatControlsProps) {
   const isOverlay = fullscreenChatMode === 'overlay';
 
   return (

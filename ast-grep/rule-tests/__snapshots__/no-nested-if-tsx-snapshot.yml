@@ -1,0 +1,61 @@
+id: no-nested-if-tsx
+snapshots:
+  ? |
+    if (a) if (b) two();
+  : labels:
+      - source: if (b) two();
+        style: primary
+        start: 7
+        end: 20
+      - source: if (a) if (b) two();
+        style: secondary
+        start: 0
+        end: 20
+  ? |
+    if (a) {
+      if (b) { two(); }
+    }
+  : labels:
+      - source: if (b) { two(); }
+        style: primary
+        start: 11
+        end: 28
+      - source: |-
+          if (a) {
+            if (b) { two(); }
+          }
+        style: secondary
+        start: 0
+        end: 30
+      - source: |-
+          {
+            if (b) { two(); }
+          }
+        style: secondary
+        start: 7
+        end: 30
+  ? |
+    if (a) {
+      one();
+    } else {
+      if (b) { two(); }
+    }
+  : labels:
+      - source: if (b) { two(); }
+        style: primary
+        start: 29
+        end: 46
+      - source: |-
+          else {
+            if (b) { two(); }
+          }
+        style: secondary
+        start: 20
+        end: 48
+      - source: |-
+          {
+            if (b) { two(); }
+          }
+        style: secondary
+        start: 25
+        end: 48

@@ -1,11 +1,11 @@
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
 import { getEmoteArrayContentKey } from '@app/utils/chat/emote-array-content-key';
-import { parseWordLinkParts } from '@app/utils/chat/parse-word-link-parts/parse-word-link-parts';
+import { parseWordLinkParts } from '@app/utils/chat/parse-word-link-tokens/parse-word-link-tokens';
 import { evictOldestWhenFull } from '@app/utils/collection/evict-oldest-when-full';
 
-import { queueMentionLoginsFromParts } from './mention-login-resolver/queue-mention-logins-from-parts';
-import type { ParsedPart } from './parsed-part';
+import { queueMentionLoginsFromParts } from './mention-login-resolver/queue-mention-logins-from-tokens';
+import type { MessageToken } from './message-token';
 import { applyMentionLoginCasing } from './resolve-mention-login/apply-mention-login-casing';
 import { stripInvisibleChars } from './strip-invisible-chars';
 
@@ -25,7 +25,7 @@ interface EmoteProcessorParams {
   bttvGlobalEmotes: SanitisedEmote[];
 }
 
-const cache = new Map<string, ParsedPart[]>();
+const cache = new Map<string, MessageToken[]>();
 const MAX_CACHE_SIZE = 1000;
 const baseCollectionCache = new Map<string, EmoteCollection>();
 
@@ -319,12 +319,12 @@ function hasNonAsciiChar(word: string): boolean {
 }
 
 /**
- * Index of the first non-whitespace part at or after `from`.
+ * Index of the first non-whitespace token at or after `from`.
  */
-function skipWhitespaceForward(parts: ParsedPart[], from: number): number {
+function skipWhitespaceForward(tokens: MessageToken[], from: number): number {
   let index = from;
 
-  while (index < parts.length && isWhitespacePart(parts[index])) {
+  while (index < tokens.length && isWhitespacePart(tokens[index])) {
     index += 1;
   }
 
@@ -332,12 +332,12 @@ function skipWhitespaceForward(parts: ParsedPart[], from: number): number {
 }
 
 /**
- * Index of the last non-whitespace part at or before `from`, or -1.
+ * Index of the last non-whitespace token at or before `from`, or -1.
  */
-function skipWhitespaceBackward(parts: ParsedPart[], from: number): number {
+function skipWhitespaceBackward(tokens: MessageToken[], from: number): number {
   let index = from;
 
-  while (index >= 0 && isWhitespacePart(parts[index])) {
+  while (index >= 0 && isWhitespacePart(tokens[index])) {
     index -= 1;
   }
 
@@ -372,17 +372,17 @@ function findEmojiForWord(
 
 const BACKWARD_EMOTE_MODIFIERS = new Set(['w!', 'h!', 'v!']);
 
-function isWhitespacePart(part: ParsedPart | undefined): boolean {
-  return part?.type === 'text' && /^\s+$/.test(part.content);
+function isWhitespacePart(token: MessageToken | undefined): boolean {
+  return token?.type === 'text' && /^\s+$/.test(token.content);
 }
 
 /**
  * Folds a zero-width emote onto the emote in front of it. Returns true when
- * the part was absorbed, so the caller drops it instead of pushing it.
+ * the token was absorbed, so the caller drops it instead of pushing it.
  */
 function stackZeroWidthEmote(
-  out: ParsedPart[],
-  part: ParsedPart<'emote'>,
+  out: MessageToken[],
+  token: MessageToken<'emote'>,
 ): boolean {
   let anchor = out.length - 1;
 
@@ -402,44 +402,46 @@ function stackZeroWidthEmote(
   const overlaid = base.overlaid ?? [];
 
   const alreadyStacked =
-    base.id === part.id || overlaid.some(overlay => overlay.id === part.id);
+    base.id === token.id || overlaid.some(overlay => overlay.id === token.id);
 
   if (!alreadyStacked) {
-    base.overlaid = [...overlaid, part];
+    base.overlaid = [...overlaid, token];
   }
 
   return true;
 }
 
-function applyEmoteCompositionPass(parts: ParsedPart[]): ParsedPart[] {
-  const out: ParsedPart[] = [];
+function applyEmoteCompositionPass(tokens: MessageToken[]): MessageToken[] {
+  const out: MessageToken[] = [];
 
-  for (let index = 0; index < parts.length; index += 1) {
-    const part = parts[index];
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index];
 
-    if (!part) {
+    if (!token) {
       // eslint-disable-next-line no-continue
       continue;
     }
 
     if (
-      part.type === 'emote' &&
-      part.zero_width &&
-      stackZeroWidthEmote(out, part)
+      token.type === 'emote' &&
+      token.zero_width &&
+      stackZeroWidthEmote(out, token)
     ) {
       // eslint-disable-next-line no-continue
       continue;
     }
 
     const content =
-      part.type === 'emote' || part.type === 'text' ? part.content.trim() : '';
+      token.type === 'emote' || token.type === 'text'
+        ? token.content.trim()
+        : '';
 
     const modifierTarget =
       content && BACKWARD_EMOTE_MODIFIERS.has(content)
-        ? skipWhitespaceForward(parts, index + 1)
+        ? skipWhitespaceForward(tokens, index + 1)
         : -1;
 
-    if (parts[modifierTarget]?.type === 'emote') {
+    if (tokens[modifierTarget]?.type === 'emote') {
       index = modifierTarget - 1;
       // eslint-disable-next-line no-continue
       continue;
@@ -456,7 +458,7 @@ function applyEmoteCompositionPass(parts: ParsedPart[]): ParsedPart[] {
       continue;
     }
 
-    out.push(part);
+    out.push(token);
   }
 
   return out;
@@ -464,7 +466,7 @@ function applyEmoteCompositionPass(parts: ParsedPart[]): ParsedPart[] {
 
 export const processEmotesWorklet = (
   params: EmoteProcessorParams,
-): ParsedPart[] => {
+): MessageToken[] => {
   const {
     inputString,
     emojiEmotes = [],
@@ -525,7 +527,7 @@ export const processEmotesWorklet = (
   const emojiMap = baseCollection.emojiMap;
 
   const words = cleanInput.split(/(\s+)/);
-  const result: ParsedPart[] = [];
+  const result: MessageToken[] = [];
 
   let i = 0;
 

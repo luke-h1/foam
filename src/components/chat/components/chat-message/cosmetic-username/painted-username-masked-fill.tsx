@@ -3,7 +3,7 @@ import { type StyleProp, StyleSheet, TextStyle, View } from 'react-native';
 import { MaskedView } from '@expo/ui/community/masked-view';
 
 import { Text } from '@app/components/ui/text/text';
-import type { PaintData } from '@app/types/seventv/cosmetics';
+import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
 import { PaintedUsernameFill } from './painted-username-fill';
 

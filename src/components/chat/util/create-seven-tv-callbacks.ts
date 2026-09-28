@@ -6,7 +6,7 @@ import type {
   EntitlementDeleteCallbackData,
   EntitlementResetCallbackData,
   EntitlementUpdateCallbackData,
-} from '@app/components/chat/hooks/use-seventv-ws';
+} from '@app/components/chat/hooks/use-seven-tv-ws';
 import { countMetric } from '@app/lib/sentry';
 import {
   addBadge,
@@ -31,11 +31,11 @@ import type {
   ChangeMap,
   CosmeticCreate,
   PaintData,
-} from '@app/types/seventv/cosmetics';
+} from '@app/types/seven-tv/cosmetics';
 import { generateStvEmoteNotice } from '@app/utils/emote/stv/generate-seven-tv-emote-notice';
 import { logger } from '@app/utils/logger';
-import { normalizeSevenTvPaint } from '@app/utils/seventv/cosmetics/normalize-seven-tv-paint';
-import { sanitise7TvBadge } from '@app/utils/seventv/cosmetics/sanitise7-tv-badge';
+import { normalizeSevenTvPaint } from '@app/utils/seven-tv/cosmetics/normalize-seven-tv-paint';
+import { sanitise7TvBadge } from '@app/utils/seven-tv/cosmetics/sanitise7-tv-badge';
 
 type CosmeticChangeValue = NonNullable<
   ChangeMap<CosmeticCreate>['updated' | 'pushed']
@@ -156,13 +156,7 @@ function applyBadgeCosmeticUpdate(
   return { added, updated };
 }
 
-export function createSevenTvCallbacks({
-  channelId,
-  channelName,
-  sevenTvEmoteSetId,
-  updateSevenTvEmotes,
-  onEmoteNotice,
-}: {
+interface CreateSevenTvCallbacksOptions {
   channelId: string;
   sevenTvEmoteSetId: string | undefined;
   updateSevenTvEmotes: (
@@ -172,7 +166,15 @@ export function createSevenTvCallbacks({
   ) => void;
   onEmoteNotice?: (message: ReturnType<typeof generateStvEmoteNotice>) => void;
   channelName: string;
-}) {
+}
+
+export function createSevenTvCallbacks({
+  channelId,
+  channelName,
+  sevenTvEmoteSetId,
+  updateSevenTvEmotes,
+  onEmoteNotice,
+}: CreateSevenTvCallbacksOptions) {
   const onEmoteUpdate = ({
     added,
     removed,

@@ -3,19 +3,21 @@ import type { EmoteImageScale, EmoteImageVariants } from '@app/types/emote';
 
 import { pickEmoteVariantUrl } from './emote-image-variants/pick-emote-variant-url';
 
+interface GetDisplayEmoteUrlOptions {
+  image_variants?: EmoteImageVariants | null;
+  url?: string | null;
+  static_url?: string | null;
+  disableAnimations?: boolean;
+  preferredScale?: EmoteImageScale;
+}
+
 export function getDisplayEmoteUrl({
   image_variants,
   url,
   static_url,
   disableAnimations = false,
   preferredScale,
-}: {
-  image_variants?: EmoteImageVariants | null;
-  url?: string | null;
-  static_url?: string | null;
-  disableAnimations?: boolean;
-  preferredScale?: EmoteImageScale;
-}) {
+}: GetDisplayEmoteUrlOptions) {
   if (disableAnimations) {
     return pickEmoteVariantUrl({
       fallbackUrl: static_url ?? url,

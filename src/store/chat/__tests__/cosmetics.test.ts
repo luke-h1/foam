@@ -1,5 +1,5 @@
 import { storageService } from '@app/lib/storage';
-import { sevenTvService } from '@app/services/seventv-service';
+import { sevenTvService } from '@app/services/seven-tv-service';
 import {
   type CachedUserCosmetics,
   getUserBadge,
@@ -10,8 +10,8 @@ import * as MissingBadgesModule from '@app/store/chat/actions/missing-badges';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { logger } from '@app/utils/logger';
-import * as NormalizeSevenTvBadgeModule from '@app/utils/seventv/cosmetics/normalize-seven-tv-badge';
-import * as SevenTvSessionIdModule from '@app/utils/seventv/seven-tv-session-id';
+import * as NormalizeSevenTvBadgeModule from '@app/utils/seven-tv/cosmetics/normalize-seven-tv-badge';
+import * as SevenTvSessionIdModule from '@app/utils/seven-tv/seven-tv-session-id';
 
 // getUserBadge's title-fallback branch only fires when a stored badge's url
 // is unresolvable as-is; the real normalizer repairs empty/relative 7TV urls,

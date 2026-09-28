@@ -1,4 +1,4 @@
-import type { PaintShadow } from '@app/types/seventv/cosmetics';
+import type { PaintShadow } from '@app/types/seven-tv/cosmetics';
 
 import { cssDropShadowBlur } from './css-drop-shadow-blur';
 import { cssTextShadowBlur } from './css-text-shadow-blur';

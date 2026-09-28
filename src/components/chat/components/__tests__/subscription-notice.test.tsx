@@ -1,14 +1,14 @@
 import { screen } from '@testing-library/react-native';
 
 import render from '@app/test/render';
-import { ParsedPart } from '@app/utils/chat/parsed-part';
+import { MessageToken } from '@app/utils/chat/message-token';
 
-import { SubscriptionNotice } from '../usernotices/subscription-notice';
+import { SubscriptionNotice } from '../user-notices/subscription-notice';
 
 describe('SubscriptionNotice', () => {
   describe('sub (new subscription)', () => {
     test('displays subscription message for new subscription', () => {
-      const part: ParsedPart<'sub'> = {
+      const token: MessageToken<'sub'> = {
         type: 'sub',
         subscriptionEvent: {
           msgId: 'sub',
@@ -18,14 +18,14 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText('TestUser')).toBeOnTheScreen();
       expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
     });
 
     test('displays Prime subscription correctly', () => {
-      const part: ParsedPart<'sub'> = {
+      const token: MessageToken<'sub'> = {
         type: 'sub',
         subscriptionEvent: {
           msgId: 'sub',
@@ -35,14 +35,14 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText('PrimeUser')).toBeOnTheScreen();
       expect(screen.getByText(/Subscribed with Prime/)).toBeOnTheScreen();
     });
 
     test('displays plan name for non-Prime subscriptions', () => {
-      const part: ParsedPart<'sub'> = {
+      const token: MessageToken<'sub'> = {
         type: 'sub',
         subscriptionEvent: {
           msgId: 'sub',
@@ -52,13 +52,13 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText(/with Tier 2/)).toBeOnTheScreen();
     });
 
     test('displays subscriber message when provided', () => {
-      const part: ParsedPart<'sub'> = {
+      const token: MessageToken<'sub'> = {
         type: 'sub',
         subscriptionEvent: {
           msgId: 'sub',
@@ -69,7 +69,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(
         screen.getByText('Thanks for the great content!'),
@@ -79,7 +79,7 @@ describe('SubscriptionNotice', () => {
 
   describe('resub (resubscription)', () => {
     test('displays resubscription message with months', () => {
-      const part: ParsedPart<'resub'> = {
+      const token: MessageToken<'resub'> = {
         type: 'resub',
         subscriptionEvent: {
           msgId: 'resub',
@@ -90,7 +90,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText('ResubUser')).toBeOnTheScreen();
       expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
@@ -98,7 +98,7 @@ describe('SubscriptionNotice', () => {
     });
 
     test('displays singular month for resubscription', () => {
-      const part: ParsedPart<'resub'> = {
+      const token: MessageToken<'resub'> = {
         type: 'resub',
         subscriptionEvent: {
           msgId: 'resub',
@@ -109,13 +109,13 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText('1 month')).toBeOnTheScreen();
     });
 
     test('displays Prime resubscription correctly', () => {
-      const part: ParsedPart<'resub'> = {
+      const token: MessageToken<'resub'> = {
         type: 'resub',
         subscriptionEvent: {
           msgId: 'resub',
@@ -126,14 +126,14 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText(/Subscribed with Prime/)).toBeOnTheScreen();
       expect(screen.getByText(/12 months/)).toBeOnTheScreen();
     });
 
     test('displays streak information for resubscription', () => {
-      const part: ParsedPart<'resub'> = {
+      const token: MessageToken<'resub'> = {
         type: 'resub',
         subscriptionEvent: {
           msgId: 'resub',
@@ -146,13 +146,13 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText(/, 6 months in a row/)).toBeOnTheScreen();
     });
 
     test('displays plan name for non-Prime resubscription', () => {
-      const part: ParsedPart<'resub'> = {
+      const token: MessageToken<'resub'> = {
         type: 'resub',
         subscriptionEvent: {
           msgId: 'resub',
@@ -163,7 +163,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText(/with Tier 3/)).toBeOnTheScreen();
     });
@@ -171,7 +171,7 @@ describe('SubscriptionNotice', () => {
 
   describe('subgift (gift subscription)', () => {
     test('displays gift subscription with recipient', () => {
-      const part: ParsedPart<'anongift'> = {
+      const token: MessageToken<'anongift'> = {
         type: 'anongift',
         subscriptionEvent: {
           msgId: 'subgift',
@@ -185,7 +185,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText('GifterUser')).toBeOnTheScreen();
 
@@ -197,7 +197,7 @@ describe('SubscriptionNotice', () => {
     });
 
     test('displays gift subscription without recipient', () => {
-      const part: ParsedPart<'anongift'> = {
+      const token: MessageToken<'anongift'> = {
         type: 'anongift',
         subscriptionEvent: {
           msgId: 'subgift',
@@ -211,7 +211,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(
         screen.getByText(/Gifted a Tier 1 subscription/),
@@ -219,7 +219,7 @@ describe('SubscriptionNotice', () => {
     });
 
     test('displays gift months for gift subscription with multiple months', () => {
-      const part: ParsedPart<'anongift'> = {
+      const token: MessageToken<'anongift'> = {
         type: 'anongift',
         subscriptionEvent: {
           msgId: 'subgift',
@@ -233,13 +233,13 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText(/\(3 months\)/)).toBeOnTheScreen();
     });
 
     test('does not display gift months for single month gift', () => {
-      const part: ParsedPart<'anongift'> = {
+      const token: MessageToken<'anongift'> = {
         type: 'anongift',
         subscriptionEvent: {
           msgId: 'subgift',
@@ -253,14 +253,14 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       // Single month gifts don't show the month count in parentheses
       expect(screen.queryByText(/\(1 month\)/)).not.toBeOnTheScreen();
     });
 
     test('displays Prime gift subscription correctly', () => {
-      const part: ParsedPart<'anongift'> = {
+      const token: MessageToken<'anongift'> = {
         type: 'anongift',
         subscriptionEvent: {
           msgId: 'subgift',
@@ -274,13 +274,13 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText(/Gifted a Prime subscription/)).toBeOnTheScreen();
     });
 
     test('does not display gift months when giftMonths is 0', () => {
-      const part: ParsedPart<'anongift'> = {
+      const token: MessageToken<'anongift'> = {
         type: 'anongift',
         subscriptionEvent: {
           msgId: 'subgift',
@@ -294,7 +294,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.queryByText(/\(\d+ month/)).not.toBeOnTheScreen();
     });
@@ -302,7 +302,7 @@ describe('SubscriptionNotice', () => {
 
   describe('anongiftpaidupgrade', () => {
     test('displays anonymous gift paid upgrade', () => {
-      const part: ParsedPart<'anongiftpaidupgrade'> = {
+      const token: MessageToken<'anongiftpaidupgrade'> = {
         type: 'anongiftpaidupgrade',
         subscriptionEvent: {
           msgId: 'anongiftpaidupgrade',
@@ -312,7 +312,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText('AnonymousGifter')).toBeOnTheScreen();
 
@@ -324,7 +324,7 @@ describe('SubscriptionNotice', () => {
     });
 
     test('displays anonymous gift paid upgrade without total', () => {
-      const part: ParsedPart<'anongiftpaidupgrade'> = {
+      const token: MessageToken<'anongiftpaidupgrade'> = {
         type: 'anongiftpaidupgrade',
         subscriptionEvent: {
           msgId: 'anongiftpaidupgrade',
@@ -334,13 +334,13 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText(/\(SummerPromo\)/)).toBeOnTheScreen();
     });
 
     test('displays anonymous gift paid upgrade without promo name', () => {
-      const part: ParsedPart<'anongiftpaidupgrade'> = {
+      const token: MessageToken<'anongiftpaidupgrade'> = {
         type: 'anongiftpaidupgrade',
         subscriptionEvent: {
           msgId: 'anongiftpaidupgrade',
@@ -350,7 +350,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(
         screen.getByText(/Continuing their gift subscription/),
@@ -360,7 +360,7 @@ describe('SubscriptionNotice', () => {
 
   describe('submysterygift', () => {
     test('displays community gift count and channel total', () => {
-      const part: ParsedPart<'submysterygift'> = {
+      const token: MessageToken<'submysterygift'> = {
         type: 'submysterygift',
         subscriptionEvent: {
           msgId: 'submysterygift',
@@ -372,7 +372,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText('MysteryGifter')).toBeOnTheScreen();
       expect(screen.getByText(/Gifted/)).toBeOnTheScreen();
@@ -388,7 +388,7 @@ describe('SubscriptionNotice', () => {
     });
 
     test('handles a single community gift cleanly', () => {
-      const part: ParsedPart<'submysterygift'> = {
+      const token: MessageToken<'submysterygift'> = {
         type: 'submysterygift',
         subscriptionEvent: {
           msgId: 'submysterygift',
@@ -399,7 +399,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText(/Gifted/)).toBeOnTheScreen();
       expect(screen.getByText('1')).toBeOnTheScreen();
@@ -412,7 +412,7 @@ describe('SubscriptionNotice', () => {
 
   describe('giftpaidupgrade', () => {
     test('displays the original gifter when available', () => {
-      const part: ParsedPart<'giftpaidupgrade'> = {
+      const token: MessageToken<'giftpaidupgrade'> = {
         type: 'giftpaidupgrade',
         subscriptionEvent: {
           msgId: 'giftpaidupgrade',
@@ -424,7 +424,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText('UpgradeUser')).toBeOnTheScreen();
       expect(screen.getByText(/Continuing the gift sub/)).toBeOnTheScreen();
@@ -433,7 +433,7 @@ describe('SubscriptionNotice', () => {
     });
 
     test('renders without sender or promo metadata', () => {
-      const part: ParsedPart<'giftpaidupgrade'> = {
+      const token: MessageToken<'giftpaidupgrade'> = {
         type: 'giftpaidupgrade',
         subscriptionEvent: {
           msgId: 'giftpaidupgrade',
@@ -441,7 +441,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText(/Continuing the gift sub/)).toBeOnTheScreen();
     });
@@ -449,7 +449,7 @@ describe('SubscriptionNotice', () => {
 
   describe('plan display', () => {
     test('maps plan code 1000 to Prime', () => {
-      const part: ParsedPart<'sub'> = {
+      const token: MessageToken<'sub'> = {
         type: 'sub',
         subscriptionEvent: {
           msgId: 'sub',
@@ -458,13 +458,13 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText(/Subscribed with Prime/)).toBeOnTheScreen();
     });
 
     test('maps plan code 2000 to Tier 1', () => {
-      const part: ParsedPart<'sub'> = {
+      const token: MessageToken<'sub'> = {
         type: 'sub',
         subscriptionEvent: {
           msgId: 'sub',
@@ -473,13 +473,13 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText(/with Tier 1/)).toBeOnTheScreen();
     });
 
     test('maps plan code 3000 to Tier 2', () => {
-      const part: ParsedPart<'sub'> = {
+      const token: MessageToken<'sub'> = {
         type: 'sub',
         subscriptionEvent: {
           msgId: 'sub',
@@ -488,13 +488,13 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText(/with Tier 2/)).toBeOnTheScreen();
     });
 
     test('maps plan code 3001 to Tier 3', () => {
-      const part: ParsedPart<'sub'> = {
+      const token: MessageToken<'sub'> = {
         type: 'sub',
         subscriptionEvent: {
           msgId: 'sub',
@@ -503,13 +503,13 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText(/with Tier 3/)).toBeOnTheScreen();
     });
 
     test('handles unknown plan code by defaulting to Tier 1', () => {
-      const part: ParsedPart<'sub'> = {
+      const token: MessageToken<'sub'> = {
         type: 'sub',
         subscriptionEvent: {
           msgId: 'sub',
@@ -518,7 +518,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText('TestUser')).toBeOnTheScreen();
       expect(screen.getByText(/Subscribed with Tier 1/)).toBeOnTheScreen();
@@ -527,7 +527,7 @@ describe('SubscriptionNotice', () => {
 
   describe('edge cases', () => {
     test('handles missing optional fields gracefully', () => {
-      const part: ParsedPart<'sub'> = {
+      const token: MessageToken<'sub'> = {
         type: 'sub',
         subscriptionEvent: {
           msgId: 'sub',
@@ -536,14 +536,14 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText('MinimalUser')).toBeOnTheScreen();
       expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
     });
 
     test('handles empty display name', () => {
-      const part: ParsedPart<'sub'> = {
+      const token: MessageToken<'sub'> = {
         type: 'sub',
         subscriptionEvent: {
           msgId: 'sub',
@@ -553,13 +553,13 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
     });
 
     test('renders a unicode/emoji display name verbatim', () => {
-      const part: ParsedPart<'sub'> = {
+      const token: MessageToken<'sub'> = {
         type: 'sub',
         subscriptionEvent: {
           msgId: 'sub',
@@ -569,7 +569,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText('日本語ユーザー🎉')).toBeOnTheScreen();
       expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
@@ -578,7 +578,7 @@ describe('SubscriptionNotice', () => {
     test('renders a very long display name without dropping characters', () => {
       const longDisplayName = 'A'.repeat(200);
 
-      const part: ParsedPart<'sub'> = {
+      const token: MessageToken<'sub'> = {
         type: 'sub',
         subscriptionEvent: {
           msgId: 'sub',
@@ -588,14 +588,14 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText(longDisplayName)).toBeOnTheScreen();
       expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
     });
 
     test('renders no subscriber message row when the message field is undefined', () => {
-      const part: ParsedPart<'sub'> = {
+      const token: MessageToken<'sub'> = {
         type: 'sub',
         subscriptionEvent: {
           msgId: 'sub',
@@ -606,7 +606,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice part={part} />);
+      render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText('NoMessageUser')).toBeOnTheScreen();
       expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();

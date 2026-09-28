@@ -161,6 +161,7 @@ export default tseslint.config(
       ...reactDoctor.configs['tanstack-query'].rules,
       'react-doctor/rn-no-raw-text': 'error',
       'local/blank-line-between-top-level': 'error',
+      'import/newline-after-import': ['error', { count: 1 }],
       'local/prefer-alias-imports': 'warn',
       'simple-import-sort/imports': [
         'warn',
@@ -195,6 +196,7 @@ export default tseslint.config(
       'local/require-memoized-component-export': 'off',
       'no-console': 'off',
       'no-extra-boolean-cast': 'off',
+      'no-nested-ternary': 'error',
       'no-restricted-imports': [
         'error',
         {

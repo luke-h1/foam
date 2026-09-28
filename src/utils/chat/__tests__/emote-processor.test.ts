@@ -3,46 +3,46 @@ import type { SanitisedEmote } from '@app/types/emote';
 import { EMOTE_PROVIDER_BY_SITE } from '@app/utils/emote/emote-provider-by-site';
 
 import { processEmotesWorklet } from '../emote-processor';
-import type { ParsedPart } from '../parsed-part';
+import type { MessageToken } from '../message-token';
 import { clearMentionLoginIndex } from '../resolve-mention-login/clear-mention-login-index';
 import { registerMentionLogin } from '../resolve-mention-login/register-mention-login';
 
 type PickableField = 'content' | 'id' | 'name' | 'type' | 'zero_width';
 
-type ParsedPartFieldValue = string | boolean | undefined;
+type MessageTokenFieldValue = string | boolean | undefined;
 
-type PickedPartFields = Partial<Record<PickableField, ParsedPartFieldValue>>;
+type PickedPartFields = Partial<Record<PickableField, MessageTokenFieldValue>>;
 
 const readField = (
-  part: ParsedPart | undefined,
+  token: MessageToken | undefined,
   field: PickableField,
-): ParsedPartFieldValue => {
-  if (part === undefined) {
+): MessageTokenFieldValue => {
+  if (token === undefined) {
     return undefined;
   }
 
   switch (field) {
     case 'content':
-      return 'content' in part ? part.content : undefined;
+      return 'content' in token ? token.content : undefined;
     case 'id':
-      return 'id' in part ? part.id : undefined;
+      return 'id' in token ? token.id : undefined;
     case 'name':
-      return 'name' in part ? part.name : undefined;
+      return 'name' in token ? token.name : undefined;
     case 'type':
-      return part.type;
+      return token.type;
     case 'zero_width':
-      return 'zero_width' in part ? part.zero_width : undefined;
+      return 'zero_width' in token ? token.zero_width : undefined;
   }
 };
 
 const pickFields = (
-  part: ParsedPart | undefined,
+  token: MessageToken | undefined,
   keys: readonly PickableField[],
 ): PickedPartFields =>
   Object.fromEntries(
-    keys.map((key): [PickableField, ParsedPartFieldValue] => [
+    keys.map((key): [PickableField, MessageTokenFieldValue] => [
       key,
-      readField(part, key),
+      readField(token, key),
     ]),
   );
 
@@ -106,16 +106,16 @@ describe('processEmotesWorklet', () => {
     clearMentionLoginIndex();
   });
 
-  test('parses @mentions as mention parts', () => {
+  test('parses @mentions as mention tokens', () => {
     const result = processEmotesWorklet({
       ...emptyParams,
       inputString: 'hey @VelvetFathom93 look',
     });
 
     expect(
-      result.map(part => ({
-        type: part.type,
-        content: 'content' in part ? part.content : undefined,
+      result.map(token => ({
+        type: token.type,
+        content: 'content' in token ? token.content : undefined,
       })),
     ).toEqual([
       { type: 'text', content: 'hey' },
@@ -150,9 +150,9 @@ describe('processEmotesWorklet', () => {
     });
 
     expect(
-      result.map(part => ({
-        type: part.type,
-        content: 'content' in part ? part.content : undefined,
+      result.map(token => ({
+        type: token.type,
+        content: 'content' in token ? token.content : undefined,
       })),
     ).toEqual([
       { type: 'mention', content: '@VelvetFathom93' },
@@ -172,11 +172,13 @@ describe('processEmotesWorklet', () => {
       sevenTvChannelEmotes: [waveEmote],
     });
 
-    expect(result.map(part => pickFields(part, ['type', 'content']))).toEqual([
-      { type: 'mention', content: '@Wave' },
-      { type: 'text', content: ' ' },
-      { type: 'text', content: 'hello' },
-    ]);
+    expect(result.map(token => pickFields(token, ['type', 'content']))).toEqual(
+      [
+        { type: 'mention', content: '@Wave' },
+        { type: 'text', content: ' ' },
+        { type: 'text', content: 'hello' },
+      ],
+    );
   });
 
   test('matches bare EmoteName as an emote', () => {
@@ -188,20 +190,22 @@ describe('processEmotesWorklet', () => {
       sevenTvChannelEmotes: [waveEmote],
     });
 
-    expect(result.map(part => pickFields(part, ['type', 'content']))).toEqual([
-      { type: 'emote', content: 'Wave' },
-      { type: 'text', content: ' ' },
-      { type: 'text', content: 'hello' },
-    ]);
+    expect(result.map(token => pickFields(token, ['type', 'content']))).toEqual(
+      [
+        { type: 'emote', content: 'Wave' },
+        { type: 'text', content: ' ' },
+        { type: 'text', content: 'hello' },
+      ],
+    );
   });
 
-  test('parses https URLs as purple link parts', () => {
+  test('parses https URLs as purple link tokens', () => {
     const result = processEmotesWorklet({
       ...emptyParams,
       inputString: 'https://tetr.io/#WLBR',
     });
 
-    expect(result).toEqual<ParsedPart[]>([
+    expect(result).toEqual<MessageToken[]>([
       {
         type: 'link',
         content: 'https://tetr.io/#WLBR',
@@ -223,7 +227,7 @@ describe('processEmotesWorklet', () => {
       sevenTvChannelEmotes: [curtisEmote],
     });
 
-    expect(lowerCaseResult).toEqual<ParsedPart[]>([
+    expect(lowerCaseResult).toEqual<MessageToken[]>([
       { type: 'text', content: 'curtis' },
     ]);
 
@@ -257,7 +261,7 @@ describe('processEmotesWorklet', () => {
       name: 'This',
     });
 
-    expect(originalNameResult).toEqual<ParsedPart[]>([
+    expect(originalNameResult).toEqual<MessageToken[]>([
       { type: 'text', content: 'THIS' },
     ]);
   });
@@ -288,10 +292,10 @@ describe('processEmotesWorklet', () => {
     });
 
     expect(
-      result.map(part => ({
-        content: 'content' in part ? part.content : undefined,
-        id: part.type === 'emote' ? part.id : undefined,
-        type: part.type,
+      result.map(token => ({
+        content: 'content' in token ? token.content : undefined,
+        id: token.type === 'emote' ? token.id : undefined,
+        type: token.type,
       })),
     ).toEqual([
       { content: 'Wave', id: 'personal-wave', type: 'emote' },
@@ -317,10 +321,10 @@ describe('processEmotesWorklet', () => {
     });
 
     expect(
-      result.map(part => ({
-        content: 'content' in part ? part.content : undefined,
-        original_name: part.type === 'emote' ? part.original_name : undefined,
-        type: part.type,
+      result.map(token => ({
+        content: 'content' in token ? token.content : undefined,
+        original_name: token.type === 'emote' ? token.original_name : undefined,
+        type: token.type,
       })),
     ).toEqual([
       { content: 'hi', original_name: undefined, type: 'text' },
@@ -346,10 +350,10 @@ describe('processEmotesWorklet', () => {
     });
 
     expect(
-      result.map(part => ({
-        content: 'content' in part ? part.content : undefined,
-        id: part.type === 'emote' ? part.id : undefined,
-        type: part.type,
+      result.map(token => ({
+        content: 'content' in token ? token.content : undefined,
+        id: token.type === 'emote' ? token.id : undefined,
+        type: token.type,
       })),
     ).toEqual([{ content: '❤️', id: '2764', type: 'emote' }]);
   });
@@ -377,10 +381,10 @@ describe('processEmotesWorklet', () => {
     });
 
     expect(
-      result.map(part => ({
-        content: 'content' in part ? part.content : undefined,
-        name: part.type === 'emote' ? part.name : undefined,
-        type: part.type,
+      result.map(token => ({
+        content: 'content' in token ? token.content : undefined,
+        name: token.type === 'emote' ? token.name : undefined,
+        type: token.type,
       })),
     ).toEqual([
       { content: 'hello', name: undefined, type: 'text' },
@@ -400,7 +404,9 @@ describe('processEmotesWorklet', () => {
       sevenTvChannelEmotes: [kappa],
     });
 
-    expect(result).toEqual<ParsedPart[]>([{ type: 'text', content: 'Kappa!' }]);
+    expect(result).toEqual<MessageToken[]>([
+      { type: 'text', content: 'Kappa!' },
+    ]);
   });
 
   test('strips the duplicate-message bypass char fused to an emote name', () => {
@@ -413,9 +419,9 @@ describe('processEmotesWorklet', () => {
     });
 
     expect(
-      result.map(part => ({
-        type: part.type,
-        content: 'content' in part ? part.content : undefined,
+      result.map(token => ({
+        type: token.type,
+        content: 'content' in token ? token.content : undefined,
       })),
     ).toEqual([{ type: 'emote', content: 'dogE' }]);
   });
@@ -427,9 +433,9 @@ describe('processEmotesWorklet', () => {
     });
 
     expect(
-      result.map(part => ({
-        type: part.type,
-        content: 'content' in part ? part.content : undefined,
+      result.map(token => ({
+        type: token.type,
+        content: 'content' in token ? token.content : undefined,
       })),
     ).toEqual([
       { type: 'text', content: 'safe' },
@@ -526,7 +532,7 @@ describe('processEmotesWorklet', () => {
       ],
     });
 
-    expect(firstResult).toEqual<ParsedPart[]>([
+    expect(firstResult).toEqual<MessageToken[]>([
       {
         type: 'emote',
         content: 'MiddleA',
@@ -546,7 +552,7 @@ describe('processEmotesWorklet', () => {
       },
     ]);
 
-    expect(secondResult).toEqual<ParsedPart[]>([
+    expect(secondResult).toEqual<MessageToken[]>([
       { type: 'text', content: 'MiddleA' },
     ]);
   });
@@ -572,7 +578,7 @@ describe('processEmotesWorklet', () => {
       sevenTvChannelEmotes: [baseEmote, snowEmote, coldEmote],
     });
 
-    expect(result).toEqual<ParsedPart[]>([
+    expect(result).toEqual<MessageToken[]>([
       {
         type: 'emote',
         content: 'peepoHappy',
@@ -658,9 +664,9 @@ describe('processEmotesWorklet', () => {
       sevenTvChannelEmotes: [baseEmote],
     });
 
-    expect(result.map(part => pickFields(part, ['type', 'content']))).toEqual([
-      { type: 'emote', content: 'peepoHappy' },
-    ]);
+    expect(result.map(token => pickFields(token, ['type', 'content']))).toEqual(
+      [{ type: 'emote', content: 'peepoHappy' }],
+    );
   });
 
   test('keeps modifier-looking words that do not precede an emote', () => {
@@ -669,11 +675,13 @@ describe('processEmotesWorklet', () => {
       inputString: 'w! hello',
     });
 
-    expect(result.map(part => pickFields(part, ['type', 'content']))).toEqual([
-      { type: 'text', content: 'w!' },
-      { type: 'text', content: ' ' },
-      { type: 'text', content: 'hello' },
-    ]);
+    expect(result.map(token => pickFields(token, ['type', 'content']))).toEqual(
+      [
+        { type: 'text', content: 'w!' },
+        { type: 'text', content: ' ' },
+        { type: 'text', content: 'hello' },
+      ],
+    );
   });
 
   test('hides ffz modifier words after an emote', () => {
@@ -685,10 +693,12 @@ describe('processEmotesWorklet', () => {
       sevenTvChannelEmotes: [baseEmote],
     });
 
-    expect(result.map(part => pickFields(part, ['type', 'content']))).toEqual([
-      { type: 'emote', content: 'peepoHappy' },
-      { type: 'text', content: ' ' },
-      { type: 'text', content: 'done' },
-    ]);
+    expect(result.map(token => pickFields(token, ['type', 'content']))).toEqual(
+      [
+        { type: 'emote', content: 'peepoHappy' },
+        { type: 'text', content: ' ' },
+        { type: 'text', content: 'done' },
+      ],
+    );
   });
 });

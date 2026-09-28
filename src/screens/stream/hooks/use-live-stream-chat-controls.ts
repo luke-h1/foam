@@ -1,4 +1,7 @@
 import { type Dispatch, useCallback, useRef } from 'react';
+import { StyleSheet } from 'react-native';
+
+import * as ScreenOrientation from 'expo-screen-orientation';
 
 import type { useUpdatePreferences } from '@app/store/preference-store';
 
@@ -38,6 +41,16 @@ const CHAT_CYCLE_STEPS = {
   }
 >;
 
+interface UseLiveStreamChatControlsOptions {
+  contentWidth: number;
+  dispatchUi: Dispatch<LiveStreamScreenAction>;
+  fullscreenChatMode: FullscreenChatMode;
+  isChatVisible: boolean;
+  isLandscape: boolean;
+  landscapeChatCycleAction: LandscapeChatCycleAction;
+  updatePreferences: ReturnType<typeof useUpdatePreferences>;
+}
+
 /**
  * Owns how chat is shown beside the player: visibility, the landscape cycle
  * between sidebar, overlay and hidden, and the persisted sidebar width.
@@ -47,16 +60,10 @@ export function useLiveStreamChatControls({
   dispatchUi,
   fullscreenChatMode,
   isChatVisible,
+  isLandscape,
   landscapeChatCycleAction,
   updatePreferences,
-}: {
-  contentWidth: number;
-  dispatchUi: Dispatch<LiveStreamScreenAction>;
-  fullscreenChatMode: FullscreenChatMode;
-  isChatVisible: boolean;
-  landscapeChatCycleAction: LandscapeChatCycleAction;
-  updatePreferences: ReturnType<typeof useUpdatePreferences>;
-}) {
+}: UseLiveStreamChatControlsOptions) {
   const lastChatToggleTimeRef = useRef<number>(0);
 
   const commitLandscapeChatWidth = useCallback(
@@ -126,10 +133,49 @@ export function useLiveStreamChatControls({
     applyLandscapeChatCycleAction('hide');
   }, [applyLandscapeChatCycleAction]);
 
+  // Leaving landscape always brings chat back, so returning to portrait does
+  // not strand the user on a hidden panel.
+  const handleExitLandscape = useCallback(() => {
+    if (!isLandscape) {
+      return;
+    }
+
+    dispatchUi({ type: 'setChatVisible', isChatVisible: true });
+
+    void ScreenOrientation.lockAsync(
+      ScreenOrientation.OrientationLock.PORTRAIT_UP,
+    );
+  }, [dispatchUi, isLandscape]);
+
+  const toggleFullscreenChatMode = useCallback(() => {
+    const nextMode = fullscreenChatMode === 'sidebar' ? 'overlay' : 'sidebar';
+
+    dispatchUi({
+      type: 'patch',
+      patch: {
+        isChatVisible: true,
+        fullscreenChatMode: nextMode,
+        landscapeChatCycleAction: nextMode === 'overlay' ? 'hide' : 'overlay',
+      },
+    });
+  }, [dispatchUi, fullscreenChatMode]);
+
   return {
     closeLandscapeChatBySwipe,
     commitLandscapeChatWidth,
     cycleLandscapeChatMode,
+    handleExitLandscape,
+    landscapeChatContainerStyle:
+      isLandscape && fullscreenChatMode === 'overlay'
+        ? styles.overlayChatContainer
+        : undefined,
     toggleChat,
+    toggleFullscreenChatMode,
   };
 }
+
+const styles = StyleSheet.create({
+  overlayChatContainer: {
+    zIndex: 3,
+  },
+});

@@ -55,11 +55,13 @@ function logOtaDevToolsAction(updates: {
   isUpdatePending: boolean;
   isUpdateAvailable: boolean;
 }): void {
-  const state = updates.isUpdatePending
-    ? 'pending'
-    : updates.isUpdateAvailable
-      ? 'available'
-      : 'idle';
+  let state: keyof typeof OTA_DEV_TOOLS_ACTIONS = 'idle';
+
+  if (updates.isUpdatePending) {
+    state = 'pending';
+  } else if (updates.isUpdateAvailable) {
+    state = 'available';
+  }
 
   const { action, message } = OTA_DEV_TOOLS_ACTIONS[state];
 

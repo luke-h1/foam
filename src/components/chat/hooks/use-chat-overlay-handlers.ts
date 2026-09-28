@@ -7,7 +7,7 @@ import { toast } from 'sonner-native';
 import type {
   MessageActionData,
   UsernamePressData,
-} from '@app/components/chat/components/chat-message/rich-chat-message.types';
+} from '@app/components/chat/components/chat-message/chat-row.types';
 import type { ModCommand } from '@app/components/chat/util/mod-commands/parse-mod-command';
 import { runModCommand } from '@app/components/chat/util/mod-commands/run-mod-command';
 import { queryClient } from '@app/lib/react-query/query-client';

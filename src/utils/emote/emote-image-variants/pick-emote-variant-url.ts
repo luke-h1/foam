@@ -13,17 +13,19 @@ const scaleScanOrders = {
   '4x': ['4x', '3x', '2x'],
 } satisfies Record<EmoteImageScale, EmoteImageScale[]>;
 
+interface PickEmoteVariantUrlOptions {
+  fallbackUrl?: string | null;
+  imageVariants?: EmoteImageVariants | null;
+  preferredKind: EmoteImageVariantKind;
+  preferredScale?: EmoteImageScale;
+}
+
 export function pickEmoteVariantUrl({
   fallbackUrl,
   imageVariants,
   preferredKind,
   preferredScale = '4x',
-}: {
-  fallbackUrl?: string | null;
-  imageVariants?: EmoteImageVariants | null;
-  preferredKind: EmoteImageVariantKind;
-  preferredScale?: EmoteImageScale;
-}): string {
+}: PickEmoteVariantUrlOptions): string {
   const scanOrder = scaleScanOrders[preferredScale];
   const preferredSet = imageVariants?.[preferredKind];
 

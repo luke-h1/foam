@@ -301,17 +301,19 @@ function SearchHeader({
   );
 }
 
+interface SearchResultsEmptyProps {
+  onRetry: () => void;
+  query: string;
+  selectedFilter: SearchFilter;
+  status: SearchStatus;
+}
+
 function SearchResultsEmpty({
   onRetry,
   query,
   selectedFilter,
   status,
-}: {
-  onRetry: () => void;
-  query: string;
-  selectedFilter: SearchFilter;
-  status: SearchStatus;
-}) {
+}: SearchResultsEmptyProps) {
   if (status === 'searching') {
     return <SearchResultsSkeleton />;
   }

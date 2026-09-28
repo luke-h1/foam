@@ -1,4 +1,4 @@
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 import { applyMentionLoginCasing } from '../apply-mention-login-casing';
 import { clearMentionLoginIndex } from '../clear-mention-login-index';
@@ -9,15 +9,15 @@ describe('applyMentionLoginCasing', () => {
     clearMentionLoginIndex();
   });
 
-  test('applyMentionLoginCasing rewrites mention parts when canonical login is known', () => {
+  test('applyMentionLoginCasing rewrites mention tokens when canonical login is known', () => {
     registerMentionLogin('VelvetFathom93');
 
-    const parts = applyMentionLoginCasing([
+    const tokens = applyMentionLoginCasing([
       { type: 'mention', content: '@velvetfathom93' },
       { type: 'text', content: ' high hopes' },
     ]);
 
-    expect(parts[0]).toEqual<ParsedPart>({
+    expect(tokens[0]).toEqual<MessageToken>({
       type: 'mention',
       content: '@VelvetFathom93',
     });

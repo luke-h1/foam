@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -9,8 +8,8 @@ import {
 
 import { logger } from '@app/utils/logger';
 
+import { useFileCachedSource } from './hooks/use-file-cached-source';
 import type { ImageProps } from './image.types';
-import { imageFileStore } from './util/image-file-store';
 
 type ImageSourceDescriptor =
   | { kind: 'none' }
@@ -78,70 +77,19 @@ export const Image = function Image({
 }: ImageProps) {
   const descriptor = describeSource(source);
 
-  const url =
-    descriptor.kind === 'remote' || descriptor.kind === 'uriObject'
-      ? descriptor.url
-      : null;
-
-  /**
-   * Once the remote source has rendered, swapping to the file:// URI would
-   * re-decode and replay the fade - the disk copy serves the NEXT mount instead.
-   */
-  const loadedRemoteUrlRef = useRef<string | null>(null);
-
-  const shouldUseFileCache = cacheToFile && imageFileStore.enabled;
-
-  const diskCachedUrl =
-    url && shouldUseFileCache
-      ? imageFileStore.getCachedImageUri(url, { variant: cacheVariant })
-      : null;
-
-  const [downloadedCache, setDownloadedCache] = useState<{
-    sourceUrl: string | null;
-    cachedUrl: string | null;
-  }>({ sourceUrl: null, cachedUrl: null });
-
-  const downloadedCachedUrl =
-    downloadedCache.sourceUrl === url ? downloadedCache.cachedUrl : null;
-
-  const fileCachedUrl = diskCachedUrl ?? downloadedCachedUrl;
-  const resolvedUrl = fileCachedUrl ?? url;
-
-  const resolvedSource =
-    fileCachedUrl && descriptor.kind === 'uriObject'
-      ? { ...descriptor.source, uri: fileCachedUrl }
-      : fileCachedUrl && descriptor.kind === 'remote'
-        ? fileCachedUrl
-        : source;
-
-  useEffect(() => {
-    if (!url || !shouldUseFileCache || diskCachedUrl) {
-      return;
-    }
-
-    const controller = new AbortController();
-    let cancelled = false;
-
-    void imageFileStore
-      .cacheImageFromUrl(url, {
-        signal: controller.signal,
-        variant: cacheVariant,
-      })
-      .then(cachedUrl => {
-        if (
-          !cancelled &&
-          cachedUrl !== url &&
-          loadedRemoteUrlRef.current !== url
-        ) {
-          setDownloadedCache({ sourceUrl: url, cachedUrl });
-        }
-      });
-
-    return () => {
-      cancelled = true;
-      controller.abort();
-    };
-  }, [cacheVariant, diskCachedUrl, shouldUseFileCache, url]);
+  const {
+    fileCachedUrl,
+    loadedRemoteUrlRef,
+    resolvedSource,
+    resolvedUrl,
+    shouldUseFileCache,
+    url,
+  } = useFileCachedSource({
+    cacheToFile,
+    cacheVariant,
+    descriptor,
+    source,
+  });
 
   /**
    * When our file cache handles persistence, keep expo-image to memory
@@ -152,7 +100,7 @@ export const Image = function Image({
 
   const handleLoad = (event: ImageLoadEventData) => {
     if (!fileCachedUrl) {
-      loadedRemoteUrlRef.current = url;
+      loadedRemoteUrlRef.current = url ?? null;
     }
     props.onLoad?.(event);
   };

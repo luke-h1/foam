@@ -1,4 +1,4 @@
-// oxlint-disable anti-slop/no-shape-in-symbol-names -- mirrors the 7TV paint API shape field (types/seventv/cosmetics.ts)
+// oxlint-disable anti-slop/no-shape-in-symbol-names -- mirrors the 7TV paint API shape field (types/seven-tv/cosmetics.ts)
 import { storageService } from '@app/lib/storage';
 import type { PaintData } from '@app/store/chat/types/constants';
 

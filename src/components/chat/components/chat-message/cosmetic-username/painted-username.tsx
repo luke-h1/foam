@@ -7,7 +7,7 @@ import { Text } from '@app/components/ui/text/text';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import { usePaintRenderer } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
-import type { PaintData } from '@app/types/seventv/cosmetics';
+import type { PaintData } from '@app/types/seven-tv/cosmetics';
 import { isVisibleSevenTvColor } from '@app/utils/color/is-visible-seven-tv-color';
 import { sevenTvColorToCss } from '@app/utils/color/seven-tv-color-to-css';
 

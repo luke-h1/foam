@@ -7,6 +7,17 @@ export type LiveStreamVideoDimensions = {
   height: number;
 };
 
+interface GetLiveStreamVideoDimensionsOptions {
+  fullscreenChatMode: FullscreenChatMode;
+  isChatEnabled: boolean;
+  isChatVisible: boolean;
+  isLandscape: boolean;
+  landscapeChatWidth: number | null;
+  layoutHeight: number;
+  isStreamEnabled: boolean;
+  screenWidth: number;
+}
+
 export function getLiveStreamVideoDimensions({
   fullscreenChatMode,
   isChatEnabled,
@@ -16,16 +27,7 @@ export function getLiveStreamVideoDimensions({
   layoutHeight,
   isStreamEnabled,
   screenWidth,
-}: {
-  fullscreenChatMode: FullscreenChatMode;
-  isChatEnabled: boolean;
-  isChatVisible: boolean;
-  isLandscape: boolean;
-  landscapeChatWidth: number | null;
-  layoutHeight: number;
-  isStreamEnabled: boolean;
-  screenWidth: number;
-}): LiveStreamVideoDimensions {
+}: GetLiveStreamVideoDimensionsOptions): LiveStreamVideoDimensions {
   if (!isStreamEnabled) {
     return { width: 0, height: 0 };
   }

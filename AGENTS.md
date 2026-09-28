@@ -32,7 +32,7 @@ The anti-pattern to avoid is mannered prose:
 The PR workflows can be run here rather than waiting on a runner.
 
 - `bun run ci:local` - runs everything the PR workflows run. Does not fail fast: every job runs and the summary at the end lists what broke. Run this before handing a branch back.
-- `bun run ci:local <job>...` - only the named jobs, for iterating on one failure. Jobs are `prettier`, `ast-grep`, `ts`, `lint`, `test`, `native`, `commitlint`, `doctor`, `zizmor`.
+- `bun run ci:local <job>...` - only the named jobs, for iterating on one failure. Jobs are `prettier`, `ast-grep`, `ts`, `docs`, `lint`, `oxlint`, `test`, `native`, `commitlint`, `doctor`, `zizmor`.
 - `bun run signoff` - runs the full suite and, if it is green, posts a `signoff` commit status via [gh-signoff](https://github.com/basecamp/gh-signoff). Push first: `gh signoff` refuses unless HEAD is contained in `@{push}`.
 
 `signoff` is **not** a required check - merges still gate on the GitHub workflows - so it records that the suite passed locally rather than unlocking anything. `gh signoff install` would make it required. It deliberately takes no job filter, because the status asserts that every check passed. If a job fails for a reason the change did not cause, fix it or say so explicitly; do not sign off around it.
@@ -174,9 +174,10 @@ state machine, and prising them apart would make it worse.
 
 ## No nested `if`
 
-There are no nested `if` statements left in `src/` or `scripts/`, and new code
-should keep it that way. An `if` inside another `if` is the signal to do one of
-these instead:
+The `no-nested-if-ts` / `no-nested-if-tsx` ast-grep rules enforce this, so
+`bun run lint:ast-grep` (and the `ast-grep` CI job) fails on a new one. There
+are no nested `if` statements left in `src/`, and new code should keep it that
+way. An `if` inside another `if` is the signal to do one of these instead:
 
 - **Merge the conditions.** `if (a) { if (b) {...} }` is `if (a && b) {...}`.
 - **Name the combined condition** when merging makes the line unreadable:
@@ -208,6 +209,12 @@ if (!cosmetics) {
 }
 ```
 
+Two shapes deliberately do **not** match the rule. An `else if` chain is flat,
+not nested, so it stays as it is. An `if` inside a function declared in the
+branch opens its own scope, so it does not read as nested either - though the
+"hoist a callback" point above still applies when that function is an inline
+callback rather than a named one.
+
 ## Test Assertions
 
 Use `toEqual` for object assertions. Do not use `expect.objectContaining`, and do not use `toMatchObject`.
@@ -234,7 +241,7 @@ Name fixture files after the thing under test, using the pattern `{thing}.fixtur
 
 That naming keeps the fixture tied to the surface it supports. A file called `chat-hook-fixtures.ts` sounds like a generic bucket. A file called `use-chat.fixture.ts` says what it exists for and makes it harder to keep adding unrelated test data over time.
 
-The one exception is a fixture the app itself imports. `src/dev/chat-hotspot-bench` runs the perf fixtures on-device from the `dev-tools/chat-perf` route, so those files are part of the app's module graph. EAS strips `__tests__` directories from the build context, so a fixture under `__tests__` resolves locally and then fails the eager bundle in CI with `Unable to resolve module`. Fixtures shared with the bench live in a sibling `__fixtures__` directory _outside_ `__tests__` (for example `src/utils/chat/__fixtures__/resolve-message-emote-parts.perf.fixture.ts`), and the perf-test imports them with `../__fixtures__/...`. The `no-tests-dir-import` ast-grep rules enforce this.
+The one exception is a fixture the app itself imports. `src/dev/chat-hotspot-bench` runs the perf fixtures on-device from the `dev-tools/chat-perf` route, so those files are part of the app's module graph. EAS strips `__tests__` directories from the build context, so a fixture under `__tests__` resolves locally and then fails the eager bundle in CI with `Unable to resolve module`. Fixtures shared with the bench live in a sibling `__fixtures__` directory _outside_ `__tests__` (for example `src/utils/chat/__fixtures__/resolve-message-emote-tokens.perf.fixture.ts`), and the perf-test imports them with `../__fixtures__/...`. The `no-tests-dir-import` ast-grep rules enforce this.
 
 ## Legend State Store Layout
 
@@ -273,6 +280,58 @@ This is **not** a blanket "inline every single-use value" rule. Keep a named con
 
 **The chat render path is exempt.** Every font size, line height, emote size and row padding a chat row uses must come from `getChatScale` / `getChatTextStyles` (`components/chat/components/chat-message/util/chat-scale.ts`, `chat-text.styles.ts`), never from a literal at the use site. Density and font scale are two preferences over one ramp; a literal in a renderer silently opts that surface out of one of them, which is the bug the ramp was introduced to fix. Inlining a `lineHeight: 21` in a chat renderer follows the letter of the rule above and regresses the feature.
 
+## Name large parameter types
+
+A function whose single destructured parameter has **four or more members** declares
+that shape as a named type above the function. Three or fewer stays inline.
+
+```ts
+// avoid
+export function SettingsRow({
+  title,
+  subtitle,
+  icon,
+  trailing,
+}: {
+  title: string;
+  subtitle?: string;
+  icon?: RowIcon;
+  trailing?: ReactNode;
+}) {
+
+// prefer
+interface SettingsRowProps {
+  title: string;
+  subtitle?: string;
+  icon?: RowIcon;
+  trailing?: ReactNode;
+}
+
+export function SettingsRow({ title, subtitle, icon, trailing }: SettingsRowProps) {
+```
+
+An inline shape pushes the whole contract between the parameter list and the body,
+so a reader has to scroll past the type to reach the code. It also gives the shape
+no name to refer to, so a caller that wants to build the argument, a test that wants
+to type a fixture, or a wrapper that wants `Pick<>` or `Omit<>` has nothing to point
+at.
+
+Naming follows what the function is:
+
+- A React component gets `interface <Component>Props`.
+- A hook or a plain function gets `interface <PascalCaseName>Options`, so
+  `useChatLifecycle` gets `UseChatLifecycleOptions` and `getHeartbeatAction` gets
+  `GetHeartbeatActionOptions`.
+
+Use `interface`, which is what most of the codebase already uses. Put the
+declaration directly above the function, above its JSDoc block if it has one, so
+the doc comment stays attached to the function. Export it only when another module
+imports it.
+
+This rule is about the size of the shape, not about reuse. A four-member type with
+one caller still gets a name. It does not ask you to add members, split a function,
+or build a wrapper type for a shape a library already names.
+
 ## JSDoc Comments
 
 Write JSDoc comments as multi-line blocks. Never collapse them onto a single line.
@@ -289,6 +348,22 @@ Do not write `/** VOD resume offset in seconds; only applied when video is set. 
 The multi-line form is the format the repo uses everywhere, so keeping to it avoids a mix of styles and keeps comments easy to extend later without reflowing the line.
 
 Put new module-level observables in `observables/`. Put write helpers that call `.set()` / `.peek()` in `actions/`. Put `useSelector` and `useObservable` in `react/`. Session-scoped state that components subscribe to belongs on `chatStore$`. Hot-path caches that are only read imperatively during ingest or render (mention colours, shared chat badges) are the exception: keep those as plain module-level `Map`s with an explicit size bound and clear function (see `src/store/chat/actions/chat-color-caches.ts`) - routing them through an observable clones and key-diffs the whole bucket on every write. Such caches live in a store `actions/` or chat `util/` module, never inline in a component file. Pure message transforms like `getVisibleMessages` live in `components/chat/util/`. Do not wrap Legend State mutations in `useCallback` unless a React API (imperative ref, effect deps) needs a stable function reference.
+
+## oxlint and the anti-slop rules
+
+`bun run lint:oxlint` runs the local `anti-slop` plugin (`tools/oxlint/anti-slop/`)
+and is a separate pass from ESLint. It is a job in both `ci:local` and the
+Lint and format workflow, so treat an oxlint error the same as an ESLint one.
+
+`anti-slop/no-module-mocking` is turned off for test files in `.oxlintrc.json`.
+The rule is aimed at production code reaching for `jest.mock` instead of a real
+seam; in a test file `jest.mock` is the point. Every other anti-slop rule still
+applies to tests.
+
+When a rule is genuinely wrong for one line, suppress that line and say why:
+`// oxlint-disable-next-line <rule> -- <reason>`. Put it directly above the
+reported line, not above the JSDoc block - a comment between the disable and
+the code silently suppresses nothing.
 
 ## React Doctor: package.json dependency rules
 
@@ -317,8 +392,17 @@ Each of these was checked against the code before being suppressed; none is a bl
 - **`use-seventv-ws.ts` - `react-hooks-js/purity` and `react-doctor/effect-needs-cleanup`.** The purity hits are `Date.now()` inside WebSocket callbacks (`onOpen`, `handleMessage`, the resume-ack branch); a socket message has to be stamped with the wall clock, and the calls run at event time, not during render. The cleanup hit is the heartbeat watchdog `setInterval`, whose handle is stored on the session object and cleared by `session.reset()` from all three teardown paths - `onClose`, leaving the chat screen, and the unmount callback - which the rule cannot follow off the effect.
 - **`use-websocket.ts` - `react-doctor/effect-needs-cleanup`.** The connect effect opens the `WebSocket` inside a local `start()` so a reconnect can reopen it, and returns a cleanup that calls `removeListeners()`, the teardown `attachListeners` returned, which closes the socket and clears the reconnect timer. The rule wants to see `socket.close()` in the effect body itself and cannot follow the close through that returned function.
 - **`twitch-chat-service.ts` - `react-hooks-js/purity`.** Despite the filename, this module exports the `useTwitchChat` hook. The two `Date.now()` hits are `lastActivityAtRef.current = Date.now()` in the `reconnect` IRC route handler and at the top of the WebSocket `onMessage` callback (`handleMessage`) - both stamp when an inbound line actually arrived, and both only run when `routeIrcMessage`/the socket dispatch invoke them, never while the hook itself is rendering. Same shape as the `use-seventv-ws.ts` entry above.
+- **`twitch-chat-service.ts` - `react-hooks-js/refs`.** `createChatMessageRouteHandlers` and `createChannelStateRouteHandlers` are called while the handler table is built, and are handed ref _objects_ (`optionsRef`, `joinedChannelsRef`, `pendingMessageRef`). Nothing reads `.current` at that point - every read happens when an IRC line arrives and the matching handler runs. Same shape as the `use-chat-messages.ts` entry below, and the file is already exempt from `react-hooks-js/purity` for the same reason.
 - **`use-player-bridge.ts` and `use-chat-messages.ts` - `react-hooks-js/refs`.** In `usePlayerBridge`, `playerMountedAtRef` is re-stamped on every player generation change, so it is a genuinely mutable ref and cannot become `useState`. In `useChatMessages`, the controller itself is held in a `useState` initializer, but the callbacks handed to it read `optionsRef.current` so each one resolves against the latest render's options - that indirection is the adapter's whole job, and the reads run at ingest time rather than during render.
 - **`emote-action-sheet.tsx` - `react-hooks-js/refs`.** The only `.current` read in the file is `sheetRef.current?.requestClose()` inside the `requestClose` callback, which only runs from a `Button`'s `onPress` or another callback - never during render. The compiler still flags the whole `actions` array literal (it closes over `requestClose`) because the array itself is rebuilt inline every render instead of being memoized; that's a missed-memoization diagnostic, not an actual render-phase ref read.
+- **`use-live-stream-orientation.ts` - `react-hooks-js/set-state-in-effect`.** `useWindowDimsAreStuck` debounces the disagreement between the window dimensions and the native orientation event. The flag has to clear the moment the two agree again, which is a `setState` in the effect. Deriving it instead was tried and is wrong: with nothing to clear, a remembered "stuck" value matches the _next_ rotation's lagging window value and the 350ms wait is skipped entirely, which is the one-frame rotation flicker the debounce exists to prevent.
+- **`use-stream-player-source.ts` - `react-hooks-js/refs`.** The
+  `resumeTimeRef.current` read inside the `webViewSource` memo is the point of
+  that memo. The URL has to carry the last known VOD offset at the moment the
+  source is rebuilt, and a remount (`webViewKey`) is what rebuilds it. Making
+  the offset a reactive dependency would rebuild the URL on every progress tick
+  and reload the WebView, which is the bug the memo prevents. The deps array
+  already carries an `exhaustive-deps` disable for the same reason.
 - **`use-lazy-ref.ts` - `react-doctor/no-ref-current-in-render`.** This hook is the textbook null-guarded lazy-init pattern the rule's own help text calls out as supported (`if (ref.current === null) ref.current = initializer()`), but the linter still flags the assignment line. Every consumer (`useSeventvWs`, `useChatSession`, `RouterEffects`, `usePlayerBridge`, `twitch-chat-service`) only calls it to seed a ref once per mount - none re-runs the initializer or relies on re-init behavior on a later render.
 - **`twitch-ws-service.ts` - `async-await-in-loop` and `js-set-map-lookups`.** The sequential `await` in `cleanupSubscriptions` is deliberate: a `Promise.all` version let a sibling reach `teardownIfIdle` while a delete was in flight and double-deleted the same id (the comment above the loop records this). The lookup hits are `includes`/`indexOf` over `entry.callbacks`, which holds one entry per subscribed component (typically one to three) and is iterated in order to dispatch - a Set would be slower and would drop the ordering.
 - **`format-view-count.ts` - `js-hoist-intl`.** The formatter is already built once and cached in a module-level binding; it is lazy specifically because constructing ICU formatters at module scope sat on the boot path via `LiveStreamCard`. Hoisting it as the rule suggests would undo that.
@@ -376,10 +460,10 @@ value.
 `src/utils/chat/derive-chat-body/scan-chat-body.ts` walks a message's parts exactly
 once and caches the result: whether the body can flow inline, whether it holds
 emotes, which notice it is, and who it mentions. `deriveChatBody`,
-`getMessageStructure` and `canFlowInline` are all views over that one scan.
+`getMessageStructure` and `flowsInline` are all views over that one scan.
 
 Inline eligibility in particular used to be written three times, and a new
-inline-breaking part type had to be added to all three. Ask `canFlowInline`
+inline-breaking token kind had to be added to all three. Ask `flowsInline`
 (a type predicate, so it also narrows the parts for the inline renderers)
 rather than re-testing part types at a call site.
 

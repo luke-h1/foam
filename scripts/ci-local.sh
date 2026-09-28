@@ -86,8 +86,16 @@ if wants ts; then
   run 'TypeScript' bun run ts:check
 fi
 
+if wants docs; then
+  run 'Doc paths' bun run docs:check
+fi
+
 if wants lint; then
   run 'ESLint' bun run lint
+fi
+
+if wants oxlint; then
+  run 'oxlint' bun run lint:oxlint
 fi
 
 if wants test; then

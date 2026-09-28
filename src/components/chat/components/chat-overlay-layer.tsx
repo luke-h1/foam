@@ -14,7 +14,7 @@ import { isDevToolsEnabled } from '@app/utils/dev-tools/is-dev-tools-enabled';
 import { ActionSheet } from './action-sheet/action-sheet';
 import { BadgePreviewSheet } from './badge-preview-sheet/badge-preview-sheet';
 import { ChatDebugLogRecorder } from './chat-debug-log-recorder';
-import type { MessageActionData } from './chat-message/rich-chat-message.types';
+import type { MessageActionData } from './chat-message/chat-row.types';
 import { ChattersSheet } from './chatters-sheet/chatters-sheet';
 import { EmotePreviewSheet } from './emote-preview-sheet/emote-preview-sheet';
 import { EmoteSheet } from './emote-sheet/emote-sheet';

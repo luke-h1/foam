@@ -2,7 +2,7 @@ import type { MonitoringWarningName } from '@app/lib/sentry';
 import { ApiError } from '@app/services/api/client';
 import { bttvEmoteService } from '@app/services/bttv-emote-service';
 import { ffzService } from '@app/services/ffz-service';
-import { sevenTvService } from '@app/services/seventv-service';
+import { sevenTvService } from '@app/services/seven-tv-service';
 import { twitchBadgeService } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
 import type { SanitisedEmote } from '@app/types/emote';
@@ -254,12 +254,7 @@ export const buildGlobalBadgeResourceSpecs = (): BadgeResourceSpec[] => [
   FFZ_GLOBAL_BADGE_SPEC,
 ];
 
-export const buildEmoteResourceSpecs = ({
-  channelId,
-  sevenTvSetId,
-  sevenTvSetIdFallback = 'global',
-  twitchUserId,
-}: {
+interface BuildEmoteResourceSpecsOptions {
   channelId: string;
   /**
    * Only the 7TV channel-emote fetch depends on the set id, so it may be a
@@ -272,7 +267,14 @@ export const buildEmoteResourceSpecs = ({
    */
   sevenTvSetIdFallback?: string;
   twitchUserId?: string;
-}): EmoteResourceSpec[] => [
+}
+
+export const buildEmoteResourceSpecs = ({
+  channelId,
+  sevenTvSetId,
+  sevenTvSetIdFallback = 'global',
+  twitchUserId,
+}: BuildEmoteResourceSpecsOptions): EmoteResourceSpec[] => [
   {
     key: 'sevenTvChannelEmotes',
     name: 'seven_tv_channel_emotes',

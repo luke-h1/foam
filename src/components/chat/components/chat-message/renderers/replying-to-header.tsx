@@ -5,21 +5,21 @@ import { CHAT_NOTICE_ACCENTS } from '@app/components/chat/components/util/chat-n
 import { SymbolView } from '@app/components/ui/icon/icon';
 import { Text } from '@app/components/ui/text/text';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-chat-username';
-import { canFlowInline } from '@app/utils/chat/derive-chat-body/can-flow-inline';
+import { flowsInline } from '@app/utils/chat/derive-chat-body/flows-inline';
 import { getMessageStructure } from '@app/utils/chat/derive-chat-body/get-message-structure';
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 import { ChatMessagePressable } from '../chat-message-pressable';
+import { styles } from '../chat-row.styles';
 import { getChatTextStyles } from '../chat-text.styles';
-import { styles } from '../rich-chat-message.styles';
 import {
   CHAT_SURFACE_COLORS,
   densityFromCompact,
   getChatScale,
 } from '../util/chat-scale';
-import { ChatMessageBody } from './chat-message-body';
-import { InlineMessageSpans } from './inline-message-spans';
-import type { ChatMessagePartRendererArgs } from './types/chat-message-part-renderer-args';
+import { InlineTokens } from './inline-tokens';
+import type { ChatTokenRenderProps } from './types/chat-token-render-props';
+import { WrappedTokens } from './wrapped-tokens';
 
 interface ReplyingToHeaderProps {
   canJumpToReplyTarget: boolean;
@@ -28,7 +28,7 @@ interface ReplyingToHeaderProps {
   parentDisplayName?: string;
   replyBody?: string;
   replyParentMessageId?: string;
-  rendererArgs: ChatMessagePartRendererArgs;
+  rendererArgs: ChatTokenRenderProps;
 }
 
 export function ReplyingToHeader({
@@ -40,11 +40,11 @@ export function ReplyingToHeader({
   replyParentMessageId,
   rendererArgs,
 }: ReplyingToHeaderProps) {
-  const { parseTextForEmotes, ...partRendererArgs } = rendererArgs;
+  const { parseTextForEmotes, ...tokenRenderProps } = rendererArgs;
   const { compact, fontScale } = rendererArgs;
   const replyPlainMentionTarget = normaliseChatUsername(parentDisplayName);
 
-  const parsedReplyBody = useMemo((): ParsedPart[] => {
+  const parsedReplyBody = useMemo((): MessageToken[] => {
     const trimmed = replyBody?.trim();
 
     if (!trimmed) {
@@ -62,7 +62,7 @@ export function ReplyingToHeader({
     ? 'Replying to you'
     : `Replying to @${parentDisplayName}`;
 
-  const canRenderInlineQuote = canFlowInline(parsedReplyBody, {
+  const quoteFlowsInline = flowsInline(parsedReplyBody, {
     hasPaint: false,
     isModerated: false,
   });
@@ -101,7 +101,7 @@ export function ReplyingToHeader({
         style={styles.replyContextIcon}
       />
       <View style={styles.replyContextContent}>
-        {canRenderInlineQuote ? (
+        {quoteFlowsInline ? (
           <Text
             numberOfLines={1}
             style={[
@@ -112,8 +112,8 @@ export function ReplyingToHeader({
             <Text style={replyContextPrefixTextStyle}>
               {parsedReplyBody.length > 0 ? `${prefix}: ` : prefix}
             </Text>
-            <InlineMessageSpans
-              {...partRendererArgs}
+            <InlineTokens
+              {...tokenRenderProps}
               emoteTargetSize={replyEmoteSize}
               message={parsedReplyBody}
               replyPlainMentionTarget={replyPlainMentionTarget}
@@ -131,8 +131,8 @@ export function ReplyingToHeader({
                   :{' '}
                 </Text>
                 <View style={styles.replyContextBodyParts}>
-                  <ChatMessageBody
-                    {...partRendererArgs}
+                  <WrappedTokens
+                    {...tokenRenderProps}
                     emoteTargetSize={replyEmoteSize}
                     mode='message'
                     message={parsedReplyBody}

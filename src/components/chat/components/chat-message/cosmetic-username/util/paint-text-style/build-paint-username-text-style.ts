@@ -1,6 +1,6 @@
 import type { TextStyle } from 'react-native';
 
-import type { PaintData } from '@app/types/seventv/cosmetics';
+import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
 // Memoised on the paint object so every user wearing a shared paint reuses
 // one result; WeakMap-keyed so entries drop with the paint.

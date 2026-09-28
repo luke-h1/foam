@@ -12,8 +12,8 @@ import { resolveCachedSenderColor } from '@app/utils/chat/resolve-cached-sender-
 import { clearMentionLoginIndex } from '@app/utils/chat/resolve-mention-login/clear-mention-login-index';
 import { registerMentionChatter } from '@app/utils/chat/resolve-mention-login/register-mention-chatter';
 import { registerMentionLogin } from '@app/utils/chat/resolve-mention-login/register-mention-login';
-import { registerMentionLoginsFromParts } from '@app/utils/chat/resolve-mention-login/register-mention-logins-from-parts';
 import { registerMentionLoginsFromSender } from '@app/utils/chat/resolve-mention-login/register-mention-logins-from-sender';
+import { registerMentionLoginsFromParts } from '@app/utils/chat/resolve-mention-login/register-mention-logins-from-tokens';
 import { type ChatterRole } from '@app/utils/chat/resolve-mention-login/types';
 
 import { chatStore$ } from '../observables/chat-store';
@@ -103,7 +103,7 @@ const dedupeMessagesForStore = (
 };
 
 /**
- * Legend State keys nested array diffs on element `id`s, so parts need
+ * Legend State keys nested array diffs on element `id`s, so tokens need
  * distinct ids or child nodes mis-key; non-enumerable so persistence never sees them.
  */
 const partIdsAssigned = new WeakSet<AnyChatMessageType['message']>();
@@ -116,10 +116,10 @@ const ensurePartIdsForStore = (
   }
 
   for (let index = 0; index < messageParts.length; index += 1) {
-    const part = messageParts[index];
+    const token = messageParts[index];
 
-    if (part) {
-      Object.defineProperty(part, 'id', {
+    if (token) {
+      Object.defineProperty(token, 'id', {
         configurable: true,
         enumerable: false,
         value: String(index),
@@ -259,11 +259,13 @@ const trimRecentMessageChannels = () => {
 
   const keptChannelIds = new Set(nextEntries.map(([channelId]) => channelId));
 
-  const droppedChannelIds = entries.reduce<string[]>(
-    (dropped, [channelId]) =>
-      keptChannelIds.has(channelId) ? dropped : [...dropped, channelId],
-    [],
-  );
+  const droppedChannelIds: string[] = [];
+
+  for (const [channelId] of entries) {
+    if (!keptChannelIds.has(channelId)) {
+      droppedChannelIds.push(channelId);
+    }
+  }
 
   if (RECENT_MESSAGES_PERSISTENCE_ENABLED && droppedChannelIds.length > 0) {
     deletePersistedRecentMessagesForChannels(droppedChannelIds);

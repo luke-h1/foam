@@ -10,6 +10,17 @@ import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 
 const MAX_PROCESSED_MESSAGE_IDS = 5000;
 
+interface UseEmoteReprocessingOptions {
+  channelId: string;
+  channelEmoteData: unknown;
+  messages$: { peek: () => AnyChatMessageType[] };
+  emoteLoadStatus: string;
+  processedMessageIdsRef: RefObject<Set<string>>;
+  reprocessKey?: string;
+  show7TvEmotes: boolean;
+  userLogin?: string | null;
+}
+
 export function useEmoteReprocessing({
   channelId,
   channelEmoteData,
@@ -19,16 +30,7 @@ export function useEmoteReprocessing({
   reprocessKey,
   show7TvEmotes,
   userLogin,
-}: {
-  channelId: string;
-  channelEmoteData: unknown;
-  messages$: { peek: () => AnyChatMessageType[] };
-  emoteLoadStatus: string;
-  processedMessageIdsRef: RefObject<Set<string>>;
-  reprocessKey?: string;
-  show7TvEmotes: boolean;
-  userLogin?: string | null;
-}) {
+}: UseEmoteReprocessingOptions) {
   const previousReprocessKeyRef = useRef(reprocessKey);
 
   useEffect(() => {

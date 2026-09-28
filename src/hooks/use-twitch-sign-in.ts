@@ -103,10 +103,6 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
   const handledAuthResponseKeyRef = useRef<string | null>(null);
   const [isPromptingAuth, setIsPromptingAuth] = useState(false);
 
-  const [authResponse, setAuthResponse] = useState<AuthSessionResult | null>(
-    null,
-  );
-
   const [request] = useAuthRequest(
     {
       // SAFETY: app.config.ts copies EXPO_PUBLIC_TWITCH_CLIENT_ID into `extra`
@@ -244,12 +240,9 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
       if (isNewAuthResponse) {
         handledAuthResponseKeyRef.current = successAuthResponseKey;
         await completeAuth(parsedResult);
-        setAuthResponse(null);
         endPrompt();
         return;
       }
-
-      setAuthResponse(parsedResult);
     } catch (error) {
       logger.auth.warn('Twitch sign-in prompt failed', {
         name: 'twitch_sign_in_warning',
@@ -261,9 +254,6 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
 
     endPrompt();
   };
-
-  const authResponseRef = useRef(authResponse);
-  authResponseRef.current = authResponse;
 
   return {
     isPromptingAuth,

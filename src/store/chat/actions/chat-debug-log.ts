@@ -129,7 +129,7 @@ function splitIrcLine(line: string): IrcLineParts {
 
   const tagEnd = line.startsWith('@') ? line.indexOf(' ') : null;
 
-  // A part with no space after it is the whole line; nothing follows it.
+  // A token with no space after it is the whole line; nothing follows it.
   if (tagEnd === -1) {
     return { tags: line, prefix: null, rest: '', trailing: null };
   }

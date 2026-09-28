@@ -206,7 +206,7 @@ describe('useTwitchChat foreground liveness probe', () => {
   });
 });
 
-describe('useTwitchChat join/part routing', () => {
+describe('useTwitchChat join/token routing', () => {
   beforeEach(() => {
     socketReadyState = WebSocket.OPEN;
     wsOptions = {};
@@ -266,7 +266,7 @@ describe('useTwitchChat join/part routing', () => {
     expect(onPart).not.toHaveBeenCalled();
   });
 
-  test('requests the membership capability only when join/part messages are enabled', () => {
+  test('requests the membership capability only when join/token messages are enabled', () => {
     preferences$.showJoinPartMessages.set(true);
     renderHook(() => useTwitchChat({ channel: 'foam' }));
 

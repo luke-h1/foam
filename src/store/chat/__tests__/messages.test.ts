@@ -1,4 +1,4 @@
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 import {
   addMessage,
@@ -163,7 +163,7 @@ describe('chatStore messages', () => {
 
     expect(chatStore$.messages.peek()).not.toBe(before);
 
-    expect(getMessageById('msg-1')?.message).toEqual<ParsedPart[]>([
+    expect(getMessageById('msg-1')?.message).toEqual<MessageToken[]>([
       { type: 'text', content: 'updated' },
     ]);
   });
@@ -176,7 +176,7 @@ describe('chatStore messages', () => {
 
     expect(chatStore$.messages.peek()).toHaveLength(1);
 
-    expect(getMessageById('msg-1')?.message).toEqual<ParsedPart[]>([
+    expect(getMessageById('msg-1')?.message).toEqual<MessageToken[]>([
       { type: 'text', content: 'historical' },
     ]);
   });
@@ -186,7 +186,7 @@ describe('chatStore messages', () => {
 
     moderateMessageById('msg-1', 'Deleted');
 
-    expect(getMessageById('msg-1')?.message).toEqual<ParsedPart[]>([
+    expect(getMessageById('msg-1')?.message).toEqual<MessageToken[]>([
       { type: 'text', content: 'peepoHappy—Deleted' },
     ]);
 
@@ -208,11 +208,11 @@ describe('chatStore messages', () => {
 
     moderateMessagesByLogin('tester', 'Timed out (1s)');
 
-    expect(getMessageById('msg-1')?.message).toEqual<ParsedPart[]>([
+    expect(getMessageById('msg-1')?.message).toEqual<MessageToken[]>([
       { type: 'text', content: 'first—Timed out (1s)' },
     ]);
 
-    expect(getMessageById('msg-2')?.message).toEqual<ParsedPart[]>([
+    expect(getMessageById('msg-2')?.message).toEqual<MessageToken[]>([
       { type: 'text', content: 'second' },
     ]);
   });
@@ -369,7 +369,7 @@ describe('chatStore messages', () => {
       },
     ]);
 
-    expect(getMessageById('msg-1')?.message).toEqual<ParsedPart[]>([
+    expect(getMessageById('msg-1')?.message).toEqual<MessageToken[]>([
       { type: 'text', content: 'hydrated' },
     ]);
 
@@ -381,7 +381,7 @@ describe('chatStore messages', () => {
 
     expect(
       chatStore$.recentMessagesByChannel.peek()['channel-1']?.[0]?.message,
-    ).toEqual<ParsedPart[]>([{ type: 'text', content: 'hydrated' }]);
+    ).toEqual<MessageToken[]>([{ type: 'text', content: 'hydrated' }]);
 
     jest.useRealTimers();
   });
@@ -396,11 +396,11 @@ describe('chatStore messages', () => {
 
     expect(chatStore$.messages.peek()).not.toBe(before);
 
-    expect(getMessageById('msg-1')?.message).toEqual<ParsedPart[]>([
+    expect(getMessageById('msg-1')?.message).toEqual<MessageToken[]>([
       { type: 'text', content: 'first' },
     ]);
 
-    expect(getMessageById('msg-2')?.message).toEqual<ParsedPart[]>([
+    expect(getMessageById('msg-2')?.message).toEqual<MessageToken[]>([
       { type: 'text', content: 'second' },
     ]);
   });
@@ -416,7 +416,7 @@ describe('chatStore messages', () => {
     expect(chatStore$.messages.peek()[0]?.message_id).toBe('msg-1');
   });
 
-  test('message part arrays do not warn when mixed emote and text parts are updated', () => {
+  test('message token arrays do not warn when mixed emote and text tokens are updated', () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
     const message = createMessage('msg-1', 'nonce-1', 'first');
 
@@ -469,7 +469,7 @@ describe('chatStore messages', () => {
     expect(messages.at(-1)?.message_id).toBe(`msg-${lastId}`);
     expect(getMessageById('msg-0')).toBeUndefined();
 
-    expect(getMessageById(`msg-${lastId}`)?.message).toEqual<ParsedPart[]>([
+    expect(getMessageById(`msg-${lastId}`)?.message).toEqual<MessageToken[]>([
       { type: 'text', content: `${lastId}` },
     ]);
   });
@@ -498,7 +498,7 @@ describe('chatStore messages', () => {
 
     const survivor = cap - 50;
 
-    expect(getMessageById(`msg-${survivor}`)?.message).toEqual<ParsedPart[]>([
+    expect(getMessageById(`msg-${survivor}`)?.message).toEqual<MessageToken[]>([
       { type: 'text', content: `${survivor}` },
     ]);
 
@@ -508,7 +508,7 @@ describe('chatStore messages', () => {
       'Timed out (10s)',
     );
 
-    expect(getMessageById(`msg-${survivor}`)?.message).toEqual<ParsedPart[]>([
+    expect(getMessageById(`msg-${survivor}`)?.message).toEqual<MessageToken[]>([
       { type: 'text', content: `${survivor}—Timed out (10s)` },
     ]);
 

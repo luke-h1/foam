@@ -9,7 +9,7 @@ import * as FlashListModule from '@app/components/flash-list/flash-list';
 import * as authContextModule from '@app/context/auth-context';
 import * as useSyncPaintRendererFlagModule from '@app/hooks/firebase/use-sync-paint-renderer-flag';
 import { recentMessagesService } from '@app/services/recent-messages-service';
-import { sevenTvService } from '@app/services/seventv-service';
+import { sevenTvService } from '@app/services/seven-tv-service';
 import * as twitchChatServiceModule from '@app/services/twitch-chat-service';
 import * as channelLoadModule from '@app/store/chat/actions/channel-load';
 import * as cosmeticsModule from '@app/store/chat/actions/cosmetics';
@@ -40,7 +40,7 @@ import * as actionSheetModule from '../components/action-sheet/action-sheet';
 import * as badgePreviewSheetModule from '../components/badge-preview-sheet/badge-preview-sheet';
 import * as chatInputSectionModule from '../components/chat-input-section';
 import * as chatListModule from '../components/chat-list';
-import * as richChatMessageModule from '../components/chat-message/rich-chat-message';
+import * as chatRowModule from '../components/chat-message/chat-row';
 import * as chatViewControlsModule from '../components/chat-view-controls';
 import * as emotePreviewSheetModule from '../components/emote-preview-sheet/emote-preview-sheet';
 import * as emoteSheetModule from '../components/emote-sheet/emote-sheet';
@@ -53,7 +53,7 @@ import * as useChatMessagesModule from '../hooks/use-chat-messages';
 import { useChatMessages } from '../hooks/use-chat-messages';
 import * as useChatScrollModule from '../hooks/use-chat-scroll';
 import * as useEmoteReprocessingModule from '../hooks/use-emote-reprocessing';
-import * as useSeventvWsModule from '../hooks/use-seventv-ws';
+import * as useSevenTvWsModule from '../hooks/use-seven-tv-ws';
 import * as createSevenTvCallbacksModule from '../util/create-seven-tv-callbacks';
 
 /**
@@ -96,7 +96,7 @@ jest
  */
 const createWebSocketStub = (): WebSocket => Object.create(WebSocket.prototype);
 
-jest.spyOn(useSeventvWsModule, 'useSeventvWs').mockReturnValue({
+jest.spyOn(useSevenTvWsModule, 'useSevenTvWs').mockReturnValue({
   subscribeToChannel: jest.fn(),
   unsubscribeFromChannel: jest.fn(),
   isConnected: () => false,
@@ -256,7 +256,7 @@ Object.defineProperty(chatListModule, 'ChatList', {
   value: noRender,
 });
 
-Object.defineProperty(richChatMessageModule, 'RichChatMessage', {
+Object.defineProperty(chatRowModule, 'ChatRow', {
   configurable: true,
   value: noRender,
 });
@@ -341,7 +341,7 @@ jest
   .mockReturnValue(settledChatScrollResult);
 
 /**
- * SAFETY: `useSeventvWs` (the only consumer) is stubbed above and never
+ * SAFETY: `useSevenTvWs` (the only consumer) is stubbed above and never
  * invokes these, so an empty object is a safe stand-in.
  */
 jest

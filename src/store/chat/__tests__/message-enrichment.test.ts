@@ -9,10 +9,10 @@ import * as messagesModule from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import type { SanitisedEmote } from '@app/types/emote';
 import {
-  createEmotePart,
-  createTextPart,
-} from '@app/utils/chat/__tests__/__fixtures__/parsed-part.fixture';
-import * as resolveMessageEmotePartsModule from '@app/utils/chat/resolve-message-emote-parts';
+  createEmoteToken,
+  createTextToken,
+} from '@app/utils/chat/__tests__/__fixtures__/message-token.fixture';
+import * as resolveMessageEmotePartsModule from '@app/utils/chat/resolve-message-emote-tokens';
 import * as getMessageBadgesModule from '@app/utils/chat/shared-chat-badges/get-message-badges';
 import * as getSharedChatBadgeContextModule from '@app/utils/chat/shared-chat-badges/get-shared-chat-badge-context';
 
@@ -79,7 +79,7 @@ const expectMessageUpdate = (id: string, nonce: string, text: string) => ({
   messageId: id,
   messageNonce: nonce,
   updates: {
-    message: [createEmotePart(text, { id: 'e1', url: '' })],
+    message: [createEmoteToken(text, { id: 'e1', url: '' })],
     badges: [],
   },
 });
@@ -180,7 +180,7 @@ describe('enrichMessageSet', () => {
 
     mockResolveMessageEmoteParts.mockImplementation(
       ({ text }: ResolveMessageEmotePartsParams) => [
-        createEmotePart(text, { id: 'e1', url: '' }),
+        createEmoteToken(text, { id: 'e1', url: '' }),
       ],
     );
   });
@@ -190,12 +190,12 @@ describe('enrichMessageSet', () => {
       createMockMessage({
         message_id: 'a',
         message_nonce: 'na',
-        message: [createTextPart('first')],
+        message: [createTextToken('first')],
       }),
       createMockMessage({
         message_id: 'b',
         message_nonce: 'nb',
-        message: [createTextPart('second')],
+        message: [createTextToken('second')],
       }),
     ];
 
@@ -222,12 +222,12 @@ describe('enrichMessageSet', () => {
       createMockMessage({
         message_id: 'a',
         message_nonce: 'na',
-        message: [createTextPart('first')],
+        message: [createTextToken('first')],
       }),
       createMockMessage({
         message_id: 'b',
         message_nonce: 'nb',
-        message: [createTextPart('second')],
+        message: [createTextToken('second')],
       }),
     ];
 
@@ -255,7 +255,7 @@ describe('enrichMessageSet', () => {
         createMockMessage({
           message_id: `msg-${index}`,
           message_nonce: `nonce-${index}`,
-          message: [createTextPart(`text ${index}`)],
+          message: [createTextToken(`text ${index}`)],
         }),
       );
 
@@ -287,7 +287,7 @@ describe('resolveVisibleMessageUpdate', () => {
 
     mockResolveMessageEmoteParts.mockImplementation(
       ({ text }: ResolveMessageEmotePartsParams) => [
-        createEmotePart(text, { id: 'e1', url: '' }),
+        createEmoteToken(text, { id: 'e1', url: '' }),
       ],
     );
 
@@ -301,11 +301,11 @@ describe('resolveVisibleMessageUpdate', () => {
     mockGetMessageBadges.mockReturnValue([]);
   });
 
-  test('resolves parts and badges from the current caches without publishing', async () => {
+  test('resolves tokens and badges from the current caches without publishing', async () => {
     const message = createMockMessage({
       message_id: 'visible-1',
       message_nonce: 'nv',
-      message: [createTextPart('hello')],
+      message: [createTextToken('hello')],
     });
 
     const update = await resolveVisibleMessageUpdate({

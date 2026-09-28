@@ -1,7 +1,7 @@
-// "shape" is the 7TV paint API field (types/seventv/cosmetics.ts), not a naming choice.
+// "shape" is the 7TV paint API field (types/seven-tv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import { indexedCollectionToArray } from '@app/services/ws/util/indexed-collection';
-import type { PaintData, PaintLayerData } from '@app/types/seventv/cosmetics';
+import type { PaintData, PaintLayerData } from '@app/types/seven-tv/cosmetics';
 
 // A paint is shared across every user wearing it (the extension builds one
 // CSS rule per paint), so memoise pure derivations on the paint object;

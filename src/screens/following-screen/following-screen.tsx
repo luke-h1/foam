@@ -72,12 +72,17 @@ const FollowingListHeader = memo(function FollowingListHeader() {
 
 const followingListHeader = <FollowingListHeader />;
 
-const getFollowingItemKey = (item: FollowingListItem) =>
-  item.type === 'stream'
-    ? `stream-${item.stream.id}`
-    : item.type === 'offlineChannel'
-      ? `offline-${item.channel.broadcaster_id}`
-      : 'offline-header';
+const getFollowingItemKey = (item: FollowingListItem) => {
+  if (item.type === 'stream') {
+    return `stream-${item.stream.id}`;
+  }
+
+  if (item.type === 'offlineChannel') {
+    return `offline-${item.channel.broadcaster_id}`;
+  }
+
+  return 'offline-header';
+};
 
 const getFollowingItemType = (item: FollowingListItem) => item.type;
 

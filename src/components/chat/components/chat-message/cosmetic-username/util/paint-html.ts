@@ -1,4 +1,4 @@
-import type { PaintData } from '@app/types/seventv/cosmetics';
+import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
 import { buildPaintCssDeclarations } from './paint-css/build-paint-css-declarations';
 import { paintCssDeclarationsToBlock } from './paint-css/paint-css-declarations-to-block';

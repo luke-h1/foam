@@ -1,4 +1,4 @@
-import type { PaintCanvasRepeat } from '@app/types/seventv/cosmetics';
+import type { PaintCanvasRepeat } from '@app/types/seven-tv/cosmetics';
 
 /**
  * True when the layer's texture is meant to tile across the paint area

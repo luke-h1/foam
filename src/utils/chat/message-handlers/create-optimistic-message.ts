@@ -7,6 +7,17 @@ import type {
 } from '@app/utils/chat/message-handlers/create-optimistic-user-state';
 import { formatDate } from '@app/utils/date-time/date';
 
+interface CreateOptimisticMessageOptions {
+  badges: SanitisedBadgeSet[];
+  channelName: string;
+  isAction: boolean;
+  messageText: string;
+  replyTo?: OptimisticReplyTarget | null;
+  sentAt: number;
+  user?: OptimisticSender;
+  userstate: ReturnType<typeof createOptimisticUserState>;
+}
+
 export function createOptimisticMessage({
   badges,
   channelName,
@@ -16,16 +27,7 @@ export function createOptimisticMessage({
   sentAt,
   user,
   userstate,
-}: {
-  badges: SanitisedBadgeSet[];
-  channelName: string;
-  isAction: boolean;
-  messageText: string;
-  replyTo?: OptimisticReplyTarget | null;
-  sentAt: number;
-  user?: OptimisticSender;
-  userstate: ReturnType<typeof createOptimisticUserState>;
-}): AnyChatMessageType {
+}: CreateOptimisticMessageOptions): AnyChatMessageType {
   const messageId = `${sentAt}`;
 
   const optimisticMessage: AnyChatMessageType = {

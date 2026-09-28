@@ -2,17 +2,17 @@ import type { RefObject } from 'react';
 
 import type { ChatComposerHandle } from '@app/components/chat/components/chat-composer/chat-composer';
 import type { ChatConnectionFlags } from '@app/components/chat/types/chat-ui-flags';
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 export interface ReplyToData {
   messageId: string;
   username: string;
   message: string;
   /**
-   * Parsed parts of the replied-to message so the preview can render its
+   * Parsed tokens of the replied-to message so the preview can render its
    * emotes inline instead of showing their names as text.
    */
-  messageParts?: ParsedPart[];
+  messageParts?: MessageToken[];
   replyParentUserLogin: string;
   parentMessage: string;
   color?: string;

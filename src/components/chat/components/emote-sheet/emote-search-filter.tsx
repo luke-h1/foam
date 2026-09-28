@@ -7,19 +7,21 @@ import { theme } from '@app/styles/themes';
 
 import { emoteSheetStyles as styles } from './emote-sheet.styles';
 
+interface EmoteSearchFilterProps {
+  onChange?: (value: string) => void;
+  onSubmitEditing?: () => void;
+  placeholder?: string;
+  rightOnPress?: () => void;
+  value?: string;
+}
+
 export function EmoteSearchFilter({
   onChange,
   onSubmitEditing,
   placeholder,
   rightOnPress,
   value,
-}: {
-  onChange?: (value: string) => void;
-  onSubmitEditing?: () => void;
-  placeholder?: string;
-  rightOnPress?: () => void;
-  value?: string;
-}) {
+}: EmoteSearchFilterProps) {
   const hasValue = Boolean(value && value.length > 0);
 
   return (

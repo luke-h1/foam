@@ -1,18 +1,9 @@
-import {
-  memo,
-  useCallback,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-} from 'react';
+import { memo, useCallback, useEffect, useReducer, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { useQuery } from '@tanstack/react-query';
 import { router, Stack, useIsFocused } from 'expo-router';
-import * as ScreenOrientation from 'expo-screen-orientation';
 
-import { MEDIA_THUMBNAIL_SIZE } from '@app/components/live-stream-card/util/thumbnail-sizes';
 import type { StreamPlayerRef } from '@app/components/stream-player/types';
 import { useAuthContext } from '@app/context/auth-context';
 import { useChannelPoll } from '@app/hooks/use-channel-poll';
@@ -41,11 +32,14 @@ import { useLiveStreamChatControls } from './hooks/use-live-stream-chat-controls
 import { useLiveStreamDimensions } from './hooks/use-live-stream-dimensions';
 import { useLiveStreamOrientation } from './hooks/use-live-stream-orientation';
 import { useLiveStreamPlayerLifecycle } from './hooks/use-live-stream-player-lifecycle';
+import { useLiveStreamPlayerProps } from './hooks/use-live-stream-player-props';
 import { useSleepTimer } from './hooks/use-sleep-timer';
+import { getLiveStreamVisibility } from './util/get-live-stream-visibility';
 import {
   initialLiveStreamScreenState,
   liveStreamScreenReducer,
 } from './util/live-stream-screen-reducer';
+import { resolveChannelIdentity } from './util/resolve-channel-identity';
 import { showSleepTimerMenu } from './util/show-sleep-timer-menu';
 
 interface LiveStreamScreenProps {
@@ -151,12 +145,16 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     closeLandscapeChatBySwipe,
     commitLandscapeChatWidth,
     cycleLandscapeChatMode,
+    handleExitLandscape,
+    landscapeChatContainerStyle,
     toggleChat,
+    toggleFullscreenChatMode,
   } = useLiveStreamChatControls({
     contentWidth,
     dispatchUi,
     fullscreenChatMode,
     isChatVisible,
+    isLandscape,
     landscapeChatCycleAction,
     updatePreferences,
   });
@@ -232,124 +230,55 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
   const contentContainerStyle = styles.contentContainer;
 
-  const resolvedChannelLogin =
-    stream?.user_login ?? user?.login ?? normalizedLogin;
+  const {
+    broadcasterName,
+    displayName,
+    profileImageUrl,
+    resolvedChannelId,
+    resolvedChannelLogin,
+  } = resolveChannelIdentity({ normalizedLogin, stream, user });
 
-  const resolvedChannelId = stream?.user_id ?? user?.id;
-  const hasResolvedChannelLogin = Boolean(resolvedChannelLogin);
-  const hasResolvedChannelId = Boolean(resolvedChannelId);
+  const {
+    isChannelOffline,
+    isStreamUnavailable,
+    predictionChannelId,
+    shouldMountChat,
+    shouldRenderChatPanel,
+    shouldRenderStreamPlayer,
+    shouldShowChatConnectionNotice,
+  } = getLiveStreamVisibility({
+    isChatConnectionReady,
+    isChatEnabled,
+    isFocused,
+    isStreamEnabled,
+    isStreamRequestError,
+    isStreamRequestSuccess,
+    resolvedChannelId,
+    resolvedChannelLogin,
+    shouldRenderChat,
+    stream,
+  });
 
-  const shouldShowChatConnectionNotice =
-    isFocused &&
-    isStreamEnabled &&
-    shouldRenderChat &&
-    hasResolvedChannelLogin &&
-    (!hasResolvedChannelId || !isChatConnectionReady);
-
-  const shouldRenderChatPanel =
-    isChatEnabled && (shouldRenderChat || shouldShowChatConnectionNotice);
-
-  const shouldMountChat =
-    isFocused &&
-    shouldRenderChat &&
-    hasResolvedChannelLogin &&
-    hasResolvedChannelId &&
-    isChatConnectionReady;
-
-  const isChannelOffline =
-    isStreamEnabled && isStreamRequestSuccess && stream === undefined;
-
-  const didStreamRequestFail = isStreamEnabled && isStreamRequestError;
-  const isStreamUnavailable = isChannelOffline || didStreamRequestFail;
-
-  const shouldRenderStreamPlayer =
-    isFocused &&
-    isStreamEnabled &&
-    hasResolvedChannelLogin &&
-    !isStreamUnavailable;
-
-  const shouldLoadChannelEngagement =
-    isFocused && isStreamEnabled && hasResolvedChannelId;
-
-  const predictionChannelId = shouldLoadChannelEngagement
-    ? resolvedChannelId
-    : undefined;
+  const shouldRenderLandscapeChatControls =
+    isStreamEnabled && isChatEnabled && isLandscape;
 
   const { prediction } = useChannelPrediction(predictionChannelId);
   const { poll } = useChannelPoll(predictionChannelId);
 
-  const handleExitLandscape = () => {
-    if (!isLandscape) {
-      return;
-    }
-
-    dispatchUi({ type: 'setChatVisible', isChatVisible: true });
-
-    void ScreenOrientation.lockAsync(
-      ScreenOrientation.OrientationLock.PORTRAIT_UP,
-    );
-  };
-
-  const toggleFullscreenChatMode = () => {
-    const nextMode = fullscreenChatMode === 'sidebar' ? 'overlay' : 'sidebar';
-
-    dispatchUi({
-      type: 'patch',
-      patch: {
-        isChatVisible: true,
-        fullscreenChatMode: nextMode,
-        landscapeChatCycleAction: nextMode === 'overlay' ? 'hide' : 'overlay',
-      },
-    });
-  };
-
-  const landscapeChatContainerStyle =
-    isLandscape && fullscreenChatMode === 'overlay'
-      ? styles.overlayChatContainer
-      : undefined;
-
-  // Matches the live-stream card's request size so the poster is a cache hit from the stream list.
-  const posterUrl = useMemo(
-    () =>
-      stream?.thumbnail_url
-        ? stream.thumbnail_url
-            .replace('{width}', MEDIA_THUMBNAIL_SIZE.width)
-            .replace('{height}', MEDIA_THUMBNAIL_SIZE.height)
-        : undefined,
-    [stream?.thumbnail_url],
-  );
-
-  const streamInfo = useMemo(
-    () =>
-      isStreamEnabled && resolvedChannelLogin
-        ? {
-            userName: stream?.user_name ?? user?.display_name,
-            userLogin: resolvedChannelLogin,
-            viewerCount: stream?.viewer_count,
-            startedAt: stream?.started_at,
-            gameName: stream?.game_name,
-          }
-        : undefined,
-    [
-      isStreamEnabled,
-      resolvedChannelLogin,
-      stream?.user_name,
-      user?.display_name,
-      stream?.viewer_count,
-      stream?.started_at,
-      stream?.game_name,
-    ],
-  );
-
-  const { handleCreateClipPress, handleSharePress } = useLiveStreamActions({
-    broadcasterName: stream?.user_name ?? user?.display_name ?? undefined,
-    resolvedChannelId,
+  const { posterUrl, streamInfo } = useLiveStreamPlayerProps({
+    isStreamEnabled,
     resolvedChannelLogin,
+    stream,
+    user,
   });
 
-  const canCreateClip = Boolean(
-    authState?.isLoggedIn && !authState.isAnonAuth && resolvedChannelId,
-  );
+  const { canCreateClip, handleCreateClipPress, handleSharePress } =
+    useLiveStreamActions({
+      authState,
+      broadcasterName,
+      resolvedChannelId,
+      resolvedChannelLogin,
+    });
 
   return (
     <View style={contentContainerStyle}>
@@ -358,7 +287,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
         animatedStyle={animatedVideoStyle}
         canCreateClip={canCreateClip}
         customPlayerEnabled={customPlayerEnabled}
-        displayName={user?.display_name}
+        displayName={displayName}
         isChannelOffline={isChannelOffline}
         isLandscape={isLandscape}
         isStreamUnavailable={isStreamUnavailable}
@@ -373,7 +302,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
         onVideoAreaPress={cycleLandscapeChatMode}
         playerRef={streamPlayerRef}
         posterUrl={posterUrl}
-        profileImageUrl={user?.profile_image_url}
+        profileImageUrl={profileImageUrl}
         resolvedChannelLogin={resolvedChannelLogin}
         shouldRenderStreamPlayer={shouldRenderStreamPlayer}
         sleepTimerActive={sleepTimer.isActive}
@@ -399,7 +328,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
         />
       ) : null}
 
-      {isStreamEnabled && isChatEnabled && isLandscape ? (
+      {shouldRenderLandscapeChatControls ? (
         <LandscapeChatControls
           animatedStyle={animatedFullscreenControlsStyle}
           fullscreenChatMode={fullscreenChatMode}

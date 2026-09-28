@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 
 import { Canvas, Fill, ImageShader } from '@shopify/react-native-skia';
 
-import type { PaintCanvasRepeat } from '@app/types/seventv/cosmetics';
+import type { PaintCanvasRepeat } from '@app/types/seven-tv/cosmetics';
 
 import { paintLayerTileModes } from './util/paint-layer/paint-layer-tile-modes';
 import {

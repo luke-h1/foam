@@ -15,6 +15,19 @@ import { DensityPreview } from './chat-preference-preview-widgets';
 import { ChatPreferenceSegmentedSettingsRow } from './chat-preference-settings-rows';
 import { ChatPreferencePreview } from './chat-preferences-preview';
 
+interface ChatPreferenceLayoutSectionProps {
+  animate: boolean;
+  densityIndex: number;
+  fontScaleIndex: number;
+  handleDensityChange: (index: number) => void;
+  handleFontScaleChange: (index: number) => void;
+  onAlternatingRowsToggle: (value: boolean) => void;
+  onAnimateChange: (value: boolean) => void;
+  previewAlternatingRows: boolean;
+  previewDensity: 'comfortable' | 'compact';
+  previewFontScale: ChatFontScale;
+}
+
 export function ChatPreferenceLayoutSection({
   animate,
   densityIndex,
@@ -26,18 +39,7 @@ export function ChatPreferenceLayoutSection({
   previewFontScale,
   previewDensity,
   onAlternatingRowsToggle,
-}: {
-  animate: boolean;
-  densityIndex: number;
-  fontScaleIndex: number;
-  handleDensityChange: (index: number) => void;
-  handleFontScaleChange: (index: number) => void;
-  onAlternatingRowsToggle: (value: boolean) => void;
-  onAnimateChange: (value: boolean) => void;
-  previewAlternatingRows: boolean;
-  previewDensity: 'comfortable' | 'compact';
-  previewFontScale: ChatFontScale;
-}) {
+}: ChatPreferenceLayoutSectionProps) {
   return (
     <SettingsSection title='Layout'>
       <ChatPreferenceSegmentedSettingsRow

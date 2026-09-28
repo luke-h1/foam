@@ -1,5 +1,5 @@
 // This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
-// field (see types/seventv/cosmetics.ts), not a naming choice.
+// field (see types/seven-tv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import {
   BLUE,
@@ -9,7 +9,7 @@ import {
   toIndexed,
 } from '@app/components/chat/components/chat-message/cosmetic-username/util/paint-css/__fixtures__/paint-css.fixture';
 import { getPaintLayers } from '@app/components/chat/components/chat-message/cosmetic-username/util/paint-layer/get-paint-layers';
-import type { PaintData, PaintLayerData } from '@app/types/seventv/cosmetics';
+import type { PaintData, PaintLayerData } from '@app/types/seven-tv/cosmetics';
 
 export const multiLayerPaint: PaintData = makePaint({
   id: 'perf-multi-layer',

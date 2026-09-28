@@ -1,14 +1,14 @@
 import { resolveCheermoteTier } from '@app/utils/chat/cheermote-store/resolve-cheermote-tier';
 import { type ChannelCheermotes } from '@app/utils/chat/cheermote-store/types';
 
-import type { ParsedPart } from './parsed-part';
+import type { MessageToken } from './message-token';
 
 const CHEER_TOKEN_REGEX = /^([A-Za-z]+)(\d+)$/;
 
 function resolveCheermotePart(
   token: string,
   cheermotes: ChannelCheermotes,
-): ParsedPart<'cheermote'> | null {
+): MessageToken<'cheermote'> | null {
   const match = token.match(CHEER_TOKEN_REGEX);
 
   if (!match) {
@@ -52,19 +52,19 @@ function resolveCheermotePart(
  * look like cheers ("word1") never reach this path.
  */
 export function applyCheermotesToParts(
-  parts: ParsedPart[],
+  tokens: MessageToken[],
   cheermotes: ChannelCheermotes,
-): ParsedPart[] {
+): MessageToken[] {
   let changed = false;
-  const result: ParsedPart[] = [];
+  const result: MessageToken[] = [];
 
-  for (const part of parts) {
-    if (part.type !== 'text' || !part.content) {
-      result.push(part);
+  for (const token of tokens) {
+    if (token.type !== 'text' || !token.content) {
+      result.push(token);
       continue;
     }
 
-    const segments = part.content.split(/(\s+)/);
+    const segments = token.content.split(/(\s+)/);
     let pendingText = '';
 
     for (const segment of segments) {
@@ -94,5 +94,5 @@ export function applyCheermotesToParts(
     }
   }
 
-  return changed ? result : parts;
+  return changed ? result : tokens;
 }

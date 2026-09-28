@@ -14,7 +14,7 @@ import { Button } from '@app/components/button/button';
 import { SymbolView } from '@app/components/ui/icon/icon';
 import { Text } from '@app/components/ui/text/text';
 import { theme } from '@app/styles/themes';
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 import { MessageActionPreview } from './message-action-preview';
 
@@ -70,7 +70,7 @@ interface Props {
   visible: boolean;
   onClose: () => void;
   username?: string;
-  messagePreview?: ParsedPart[];
+  messagePreview?: MessageToken[];
   onReply: () => void;
   onCopy: () => void;
   onHidePhrase?: () => void;

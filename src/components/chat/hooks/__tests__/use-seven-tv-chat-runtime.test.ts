@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react-native';
 
 import { useSevenTvChatRuntime } from '@app/components/chat/hooks/use-seven-tv-chat-runtime';
-import * as useSeventvWsModule from '@app/components/chat/hooks/use-seventv-ws';
+import * as useSevenTvWsModule from '@app/components/chat/hooks/use-seven-tv-ws';
 import { ReadyState } from '@app/hooks/ws/constants';
 import * as sevenTvChannelLifecycleActions from '@app/store/chat/actions/seven-tv-channel-lifecycle';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
@@ -16,21 +16,23 @@ const mockGetSevenTvEmoteSetId = jest.spyOn(
   'getSevenTvEmoteSetId',
 );
 
-const mockUseSeventvWs = jest.spyOn(useSeventvWsModule, 'useSeventvWs');
+const mockUseSevenTvWs = jest.spyOn(useSevenTvWsModule, 'useSevenTvWs');
 
 const createWebSocketStub = (): WebSocket => Object.create(WebSocket.prototype);
+
+interface MakeWsReturnOptions {
+  readyState: ReadyState;
+  wsConnected: boolean;
+  subscribeToChannel: jest.Mock;
+  unsubscribeFromChannel: jest.Mock;
+}
 
 function makeWsReturn({
   readyState,
   wsConnected,
   subscribeToChannel,
   unsubscribeFromChannel,
-}: {
-  readyState: ReadyState;
-  wsConnected: boolean;
-  subscribeToChannel: jest.Mock;
-  unsubscribeFromChannel: jest.Mock;
-}): ReturnType<typeof useSeventvWsModule.useSeventvWs> {
+}: MakeWsReturnOptions): ReturnType<typeof useSevenTvWsModule.useSevenTvWs> {
   return {
     getConnectionState: jest.fn(() => 'CONNECTED'),
     isConnected: jest.fn(() => wsConnected),
@@ -41,21 +43,23 @@ function makeWsReturn({
   };
 }
 
+interface RenderRuntimeOptions {
+  currentEmoteSetIdRef?: { current: string | null };
+  emoteLoadStatus?: string;
+  readyState?: ReadyState;
+  wsConnected?: boolean;
+}
+
 function renderRuntime({
   currentEmoteSetIdRef = { current: null },
   emoteLoadStatus = 'success',
   readyState = ReadyState.OPEN,
   wsConnected = true,
-}: {
-  currentEmoteSetIdRef?: { current: string | null };
-  emoteLoadStatus?: string;
-  readyState?: ReadyState;
-  wsConnected?: boolean;
-} = {}) {
+}: RenderRuntimeOptions = {}) {
   const subscribeToChannel = jest.fn();
   const unsubscribeFromChannel = jest.fn();
 
-  mockUseSeventvWs.mockReturnValue(
+  mockUseSevenTvWs.mockReturnValue(
     makeWsReturn({
       readyState,
       wsConnected,
@@ -121,7 +125,7 @@ describe('useSevenTvChatRuntime', () => {
 
     const unsubscribeFromChannel = jest.fn();
 
-    mockUseSeventvWs.mockReturnValue(
+    mockUseSevenTvWs.mockReturnValue(
       makeWsReturn({
         readyState: ReadyState.CLOSED,
         wsConnected: false,
@@ -147,7 +151,7 @@ describe('useSevenTvChatRuntime', () => {
 
     expect(subscribeToChannel.mock.calls).toEqual([]);
 
-    mockUseSeventvWs.mockReturnValue(
+    mockUseSevenTvWs.mockReturnValue(
       makeWsReturn({
         readyState: ReadyState.OPEN,
         wsConnected: true,
@@ -195,7 +199,7 @@ describe('useSevenTvChatRuntime', () => {
 
   test('passes chat callback wiring into the websocket hook', () => {
     renderRuntime();
-    const wsOptions = mockUseSeventvWs.mock.calls[0]?.[0];
+    const wsOptions = mockUseSevenTvWs.mock.calls[0]?.[0];
 
     expect({
       hasCosmeticCreateHandler: wsOptions?.onCosmeticCreate instanceof Function,

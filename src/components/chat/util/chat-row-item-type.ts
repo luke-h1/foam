@@ -1,5 +1,5 @@
-import { getChatBodyInfo } from '@app/components/chat/util/rich-chat-message/get-chat-body-info';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import { deriveChatBody } from '@app/utils/chat/derive-chat-body/derive-chat-body';
 import type { ChatBodyVariant } from '@app/utils/chat/derive-chat-body/types';
 import { isRenderableChatMessage } from '@app/utils/chat/message-identity/is-renderable-chat-message';
 
@@ -11,13 +11,11 @@ export interface ChatRowItemTypeOptions {
 }
 
 function resolveBodyVariant(item: AnyChatMessageType): ChatBodyVariant {
-  const { variant } = getChatBodyInfo(
-    item.message,
-    undefined,
-    item.sender,
-    item.isTwitchSystemNotice,
-    item.isAnnouncement,
-  );
+  const { variant } = deriveChatBody(item.message, {
+    isAnnouncement: item.isAnnouncement,
+    isTwitchSystemNotice: item.isTwitchSystemNotice,
+    sender: item.sender,
+  });
 
   const noticeMsgId =
     item.notice_tags && 'msg-id' in item.notice_tags

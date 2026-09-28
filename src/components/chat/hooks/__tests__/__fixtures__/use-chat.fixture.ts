@@ -126,19 +126,21 @@ export function createChatTags(overrides: Record<string, string> = {}) {
   } satisfies Record<string, string>;
 }
 
+interface CreateChatMessageOptions {
+  broadcasterId?: string;
+  channelName?: string;
+  overrides?: Partial<UserChatMessage>;
+  tags?: Record<string, string>;
+  text?: string;
+}
+
 export function createChatMessage({
   broadcasterId = 'channel-1',
   channelName = 'foam',
   overrides = {},
   tags = {},
   text = 'hello chat',
-}: {
-  broadcasterId?: string;
-  channelName?: string;
-  overrides?: Partial<UserChatMessage>;
-  tags?: Record<string, string>;
-  text?: string;
-} = {}): UserChatMessage {
+}: CreateChatMessageOptions = {}): UserChatMessage {
   const message = createBaseMessage({
     broadcasterId,
     channelName,

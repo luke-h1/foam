@@ -1,5 +1,5 @@
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 import * as generateNonceModule from '@app/utils/string/generate-nonce';
 
 import { createSystemMessage } from '../create-system-message';
@@ -21,7 +21,7 @@ describe('createSystemMessage', () => {
     expect(result.channel).toBe('testchannel');
     expect(result.sender).toBe('System');
 
-    expect(result.message).toEqual<ParsedPart[]>([
+    expect(result.message).toEqual<MessageToken[]>([
       { type: 'text', content: 'Connection established' },
     ]);
   });

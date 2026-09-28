@@ -8,7 +8,7 @@ import {
 } from '@app/components/flash-list/flash-list';
 import { Text } from '@app/components/ui/text/text';
 import { indexedCollectionToArray } from '@app/services/ws/util/indexed-collection';
-import type { PaintData } from '@app/types/seventv/cosmetics';
+import type { PaintData } from '@app/types/seven-tv/cosmetics';
 import { convertV4PaintToPaintData } from '@app/utils/color/seven-tv-paint-data/convert-v4-paint-to-paint-data';
 import { type SevenTvPaintSource } from '@app/utils/color/seven-tv-paint-data/types';
 

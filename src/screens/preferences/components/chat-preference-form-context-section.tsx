@@ -12,17 +12,19 @@ import { hostPreview } from './chat-preference-form-host-preview';
 import { PreviewLabel } from './chat-preference-preview-widgets';
 import { ChatPreferencePreview } from './chat-preferences-preview';
 
+interface ChatPreferenceFormContextSectionProps {
+  contextPreview: ContextPreviewValue;
+  preferences: Preferences;
+  previewWidth: number;
+  update: (payload: Partial<Preferences>) => void;
+}
+
 export function ChatPreferenceFormContextSection({
   contextPreview,
   preferences,
   previewWidth,
   update,
-}: {
-  contextPreview: ContextPreviewValue;
-  preferences: Preferences;
-  previewWidth: number;
-  update: (payload: Partial<Preferences>) => void;
-}) {
+}: ChatPreferenceFormContextSectionProps) {
   return (
     <Section title='Context'>
       <Toggle

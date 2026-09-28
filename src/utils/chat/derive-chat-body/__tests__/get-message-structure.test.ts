@@ -14,7 +14,7 @@ describe('getMessageStructure', () => {
     const message = [text('hello '), mention('@forsen'), link('https://x.y')];
 
     expect(getMessageStructure(message)).toEqual<MessageStructure>({
-      canBeInline: true,
+      fitsInOneText: true,
       containsEmotes: false,
     });
   });
@@ -23,7 +23,7 @@ describe('getMessageStructure', () => {
     const message = [text('nice '), emote('Kappa')];
 
     expect(getMessageStructure(message)).toEqual<MessageStructure>({
-      canBeInline: true,
+      fitsInOneText: true,
       containsEmotes: true,
     });
   });
@@ -32,7 +32,7 @@ describe('getMessageStructure', () => {
     const message = [emote('Kappa'), emote('RainTime', true)];
 
     expect(getMessageStructure(message)).toEqual<MessageStructure>({
-      canBeInline: false,
+      fitsInOneText: false,
       containsEmotes: true,
     });
   });
@@ -42,21 +42,21 @@ describe('getMessageStructure', () => {
     base.overlaid = [emote('SoSnowy', true)];
 
     expect(getMessageStructure([text('gg '), base])).toEqual<MessageStructure>({
-      canBeInline: false,
+      fitsInOneText: false,
       containsEmotes: true,
     });
   });
 
-  test('a notice part is not inlineable', () => {
+  test('a notice token is not inlineable', () => {
     const message = [ritual()];
 
     expect(getMessageStructure(message)).toEqual<MessageStructure>({
-      canBeInline: false,
+      fitsInOneText: false,
       containsEmotes: false,
     });
   });
 
-  test('returns the cached reference for the same parts array', () => {
+  test('returns the cached reference for the same tokens array', () => {
     const message = [text('cached')];
 
     expect(getMessageStructure(message)).toBe(getMessageStructure(message));

@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { router, Stack } from 'expo-router';
 
 import { Button } from '@app/components/button/button';
@@ -16,15 +16,9 @@ import { LoadingState } from '@app/components/loading-state/loading-state';
 import { SegmentedControl } from '@app/components/segmented-control/segmented-control';
 import { EmptyState } from '@app/components/ui/empty-state/empty-state';
 import { Text } from '@app/components/ui/text/text';
-import { useFlattenedInfiniteQuery } from '@app/hooks/use-flattened-infinite-query';
-import { useInfiniteQueryLoadMore } from '@app/hooks/use-infinite-query-load-more';
 import { useScrollToTop } from '@app/hooks/use-scroll-to-top';
 import { streamElementsChatStatsQueryOptions } from '@app/lib/react-query/queries/streamelements';
-import {
-  clipsInfiniteQueryOptions,
-  userQueryOptions,
-  videosInfiniteQueryOptions,
-} from '@app/lib/react-query/queries/twitch';
+import { userQueryOptions } from '@app/lib/react-query/queries/twitch';
 import { theme } from '@app/styles/themes';
 import type { StreamElementsChatStats } from '@app/types/streamelements/stats';
 import type { TwitchClip } from '@app/types/twitch/clip';
@@ -36,14 +30,12 @@ import {
   formatViewCountCompact,
 } from '@app/utils/string/format-view-count';
 
+import { useStreamerProfileTab } from './hooks/use-streamer-profile-tab';
+import type { ProfileListItem, ProfileTab } from './types';
+
 interface StreamerProfileScreenProps {
   id: string;
 }
-
-type ProfileTab = 'vods' | 'clips';
-
-type ProfileListItem =
-  { kind: 'clip'; clip: TwitchClip } | { kind: 'vod'; vod: TwitchVideo };
 
 type ProfileListExtraData = {
   activeTab: ProfileTab;
@@ -170,17 +162,19 @@ function StreamElementsStats({ stats }: { stats: StreamElementsChatStats }) {
   );
 }
 
+interface StreamerProfileHeaderProps {
+  activeTab: ProfileTab;
+  onTabChange: (tab: ProfileTab) => void;
+  streamElementsStats?: StreamElementsChatStats;
+  user: UserInfoResponse;
+}
+
 function StreamerProfileHeader({
   activeTab,
   onTabChange,
   streamElementsStats,
   user,
-}: {
-  activeTab: ProfileTab;
-  onTabChange: (tab: ProfileTab) => void;
-  streamElementsStats?: StreamElementsChatStats;
-  user: UserInfoResponse;
-}) {
+}: StreamerProfileHeaderProps) {
   return (
     <View style={styles.header}>
       <View style={styles.profileRow}>
@@ -318,17 +312,19 @@ const ClipCard = memo(function ClipCard({
   );
 });
 
+interface ProfileTabEmptyStateProps {
+  activeTab: ProfileTab;
+  isError: boolean;
+  isLoading: boolean;
+  onRetry: () => void;
+}
+
 function ProfileTabEmptyState({
   activeTab,
   isError,
   isLoading,
   onRetry,
-}: {
-  activeTab: ProfileTab;
-  isError: boolean;
-  isLoading: boolean;
-  onRetry: () => void;
-}) {
+}: ProfileTabEmptyStateProps) {
   if (isLoading) {
     return (
       <View style={styles.centeredBody}>
@@ -381,25 +377,13 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
   } = useQuery({ ...userQueryOptions(id), enabled: Boolean(id) });
 
   const broadcasterId = user?.id ?? '';
-  const enabled = Boolean(broadcasterId);
 
-  const clipsQuery = useInfiniteQuery({
-    ...clipsInfiniteQueryOptions({ broadcasterId, first: 20 }),
-    enabled,
-  });
-
-  const videosQuery = useInfiniteQuery({
-    ...videosInfiniteQueryOptions({ userId: broadcasterId, first: 20 }),
-    enabled,
-  });
-
+  const { handleLoadMore, isTabError, isTabLoading, items, refetchTab } =
+    useStreamerProfileTab({ activeTab, broadcasterId });
   const streamElementsQuery = useQuery({
     ...streamElementsChatStatsQueryOptions(user?.login ?? ''),
     enabled: Boolean(user?.login),
   });
-
-  const clips = useFlattenedInfiniteQuery(clipsQuery.data?.pages);
-  const vods = useFlattenedInfiniteQuery(videosQuery.data?.pages);
 
   const cardWidth =
     Platform.OS === 'web' && windowWidth >= 820
@@ -407,18 +391,6 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
       : windowWidth - theme.space20 * 2;
 
   const columns = Platform.OS === 'web' && windowWidth >= 820 ? 2 : 1;
-
-  const handleLoadMoreClips = useInfiniteQueryLoadMore({
-    fetchNextPage: clipsQuery.fetchNextPage,
-    hasNextPage: clipsQuery.hasNextPage,
-    isFetchingNextPage: clipsQuery.isFetchingNextPage,
-  });
-
-  const handleLoadMoreVods = useInfiniteQueryLoadMore({
-    fetchNextPage: videosQuery.fetchNextPage,
-    hasNextPage: videosQuery.hasNextPage,
-    isFetchingNextPage: videosQuery.isFetchingNextPage,
-  });
 
   const vodFallbackImage =
     user?.offline_image_url ?? user?.profile_image_url ?? '';
@@ -444,21 +416,6 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
     },
     [cardWidth, vodFallbackImage],
   );
-
-  const isVods = activeTab === 'vods';
-
-  const items = useMemo(
-    (): ProfileListItem[] =>
-      isVods
-        ? vods.map(vod => ({ kind: 'vod' as const, vod }))
-        : clips.map(clip => ({ kind: 'clip' as const, clip })),
-    [clips, isVods, vods],
-  );
-
-  const isTabLoading = isVods ? videosQuery.isLoading : clipsQuery.isLoading;
-  const isTabError = isVods ? videosQuery.isError : clipsQuery.isError;
-  const handleLoadMore = isVods ? handleLoadMoreVods : handleLoadMoreClips;
-  const refetchTab = isVods ? videosQuery.refetch : clipsQuery.refetch;
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 

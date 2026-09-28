@@ -1,9 +1,9 @@
 import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { findBadges } from '@app/utils/chat/find-badges';
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 import { replaceEmotesWithText } from '@app/utils/chat/replace-emotes-with-text';
-import { resolveMessageEmoteParts } from '@app/utils/chat/resolve-message-emote-parts';
+import { resolveMessageEmoteParts } from '@app/utils/chat/resolve-message-emote-tokens';
 import { getMessageBadges } from '@app/utils/chat/shared-chat-badges/get-message-badges';
 import { getSharedChatBadgeContext } from '@app/utils/chat/shared-chat-badges/get-shared-chat-badge-context';
 import { logger } from '@app/utils/logger';
@@ -27,7 +27,7 @@ const ENRICH_PUBLISH_EVERY_BATCHES = 4;
 
 /**
  * The one skip predicate for post-commit enrichment: system rows and most
- * usernotices never have their parts or badges recomputed.
+ * user notices never have their tokens or badges recomputed.
  */
 export function shouldEnrichMessage(message: AnyChatMessageType): boolean {
   if (message.sender === 'System') {
@@ -72,8 +72,17 @@ export function hasEnrichmentEmoteSources(
   );
 }
 
+interface EnrichMessageSetOptions {
+  channelId: string;
+  emoteData: ChatEmoteData;
+  messages: (AnyChatMessageType | undefined)[];
+  processedMessageIds?: Set<string>;
+  show7TvEmotes: boolean;
+  userLogin?: string | null;
+}
+
 /**
- * Recomputes parts and badges for committed messages in timed batches so a
+ * Recomputes tokens and badges for committed messages in timed batches so a
  * full window never parses in one tick. Returns a cancel function.
  */
 export function enrichMessageSet({
@@ -83,14 +92,7 @@ export function enrichMessageSet({
   processedMessageIds,
   show7TvEmotes,
   userLogin,
-}: {
-  channelId: string;
-  emoteData: ChatEmoteData;
-  messages: (AnyChatMessageType | undefined)[];
-  processedMessageIds?: Set<string>;
-  show7TvEmotes: boolean;
-  userLogin?: string | null;
-}): () => void {
+}: EnrichMessageSetOptions): () => void {
   let cancelled = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
   let index = 0;
@@ -107,12 +109,12 @@ export function enrichMessageSet({
       return;
     }
 
-    // An already-processed message is only re-checked when a text part still
+    // An already-processed message is only re-checked when a text token still
     // holds a raw @mention.
     const needsMentionRecheck =
       !processedMessageIds?.has(msg.message_id) ||
       msg.message.some(
-        part => part.type === 'text' && /(?:^|\s)@[\w-]+/.test(part.content),
+        token => token.type === 'text' && /(?:^|\s)@[\w-]+/.test(token.content),
       );
 
     if (!needsMentionRecheck) {
@@ -154,7 +156,7 @@ export function enrichMessageSet({
     });
 
     if (
-      areParsedPartsEqual(msg.message, replacedMessage) &&
+      areMessageTokensEqual(msg.message, replacedMessage) &&
       areBadgesEqual(msg.badges, replacedBadges)
     ) {
       return;
@@ -213,9 +215,16 @@ export function enrichMessageSet({
   };
 }
 
+interface ResolveVisibleMessageUpdateOptions {
+  channelId: string;
+  message: AnyChatMessageType;
+  show7TvEmotes: boolean;
+  userLogin?: string | null;
+}
+
 /**
  * Recomputes a single visible message from the current caches, awaiting the
- * shared-chat badge context so the source badge lands with the parts. Returns
+ * shared-chat badge context so the source badge lands with the tokens. Returns
  * the store update without publishing it, so a hydration pass can commit a
  * whole batch of rows in one store write.
  */
@@ -224,12 +233,7 @@ export async function resolveVisibleMessageUpdate({
   message,
   show7TvEmotes,
   userLogin,
-}: {
-  channelId: string;
-  message: AnyChatMessageType;
-  show7TvEmotes: boolean;
-  userLogin?: string | null;
-}): Promise<MessageUpdateInput | null> {
+}: ResolveVisibleMessageUpdateOptions): Promise<MessageUpdateInput | null> {
   if (!shouldEnrichMessage(message)) {
     return null;
   }
@@ -283,6 +287,13 @@ export async function resolveVisibleMessageUpdate({
   }
 }
 
+interface RefreshSharedChatBadgesOptions {
+  emoteData: ChatEmoteData;
+  messageId: string;
+  messageNonce: string;
+  userstate: UserStateTags;
+}
+
 /**
  * Rewrites a committed message's badges once the shared-chat source context
  * resolves; called when the message was composed from an incomplete cache.
@@ -292,12 +303,7 @@ export function refreshSharedChatBadges({
   messageId,
   messageNonce,
   userstate,
-}: {
-  emoteData: ChatEmoteData;
-  messageId: string;
-  messageNonce: string;
-  userstate: UserStateTags;
-}): void {
+}: RefreshSharedChatBadgesOptions): void {
   void getSharedChatBadgeContext(userstate)
     .then(({ sourceBadge, sourceChannelBadges }) => {
       updateMessages([
@@ -358,8 +364,8 @@ function areBadgesEqual(
 }
 
 function areImageVariantsEqual(
-  previous?: ParsedPart<'emote'>['image_variants'],
-  next?: ParsedPart<'emote'>['image_variants'],
+  previous?: MessageToken<'emote'>['image_variants'],
+  next?: MessageToken<'emote'>['image_variants'],
 ): boolean {
   if (previous === next) {
     return true;
@@ -381,14 +387,17 @@ function areImageVariantsEqual(
   );
 }
 
-function areParsedPartEqual(previous: ParsedPart, next: ParsedPart): boolean {
+function areMessageTokenEqual(
+  previous: MessageToken,
+  next: MessageToken,
+): boolean {
   if (previous === next) {
     return true;
   }
 
   if (
     previous.type !== next.type ||
-    getParsedPartContent(previous) !== getParsedPartContent(next)
+    getMessageTokenContent(previous) !== getMessageTokenContent(next)
   ) {
     return false;
   }
@@ -412,9 +421,9 @@ function areParsedPartEqual(previous: ParsedPart, next: ParsedPart): boolean {
   );
 }
 
-function areParsedPartsEqual(
-  previous?: ParsedPart[],
-  next?: ParsedPart[],
+function areMessageTokensEqual(
+  previous?: MessageToken[],
+  next?: MessageToken[],
 ): boolean {
   if (previous === next) {
     return true;
@@ -425,14 +434,14 @@ function areParsedPartsEqual(
   }
 
   for (let index = 0; index < previous.length; index += 1) {
-    const previousPart = previous[index];
+    const previousToken = previous[index];
     const nextPart = next[index];
 
-    if (!previousPart || !nextPart) {
+    if (!previousToken || !nextPart) {
       return false;
     }
 
-    if (!areParsedPartEqual(previousPart, nextPart)) {
+    if (!areMessageTokenEqual(previousToken, nextPart)) {
       return false;
     }
   }
@@ -440,21 +449,21 @@ function areParsedPartsEqual(
   return true;
 }
 
-function getParsedPartContent(part: ParsedPart) {
-  return 'content' in part ? part.content : undefined;
+function getMessageTokenContent(token: MessageToken) {
+  return 'content' in token ? token.content : undefined;
 }
 
-function getEnrichableText(parts: ParsedPart[]): string | null {
+function getEnrichableText(tokens: MessageToken[]): string | null {
   let textContent = '';
 
-  for (const part of parts) {
-    if (part.type === 'text' || part.type === 'mention') {
-      textContent += part.content;
+  for (const token of tokens) {
+    if (token.type === 'text' || token.type === 'mention') {
+      textContent += token.content;
       continue;
     }
 
-    if (part.type === 'emote') {
-      textContent += part.content || part.name || part.original_name;
+    if (token.type === 'emote') {
+      textContent += token.content || token.name || token.original_name;
       continue;
     }
 

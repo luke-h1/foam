@@ -1,18 +1,18 @@
 import type { CustomHighlight } from '@app/store/preference-store';
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 import { replaceEmotesWithText } from '@app/utils/chat/replace-emotes-with-text';
 
-// Match results are cached per message-part array; the rules array is part of
+// Match results are cached per message-token array; the rules array is token of
 // the cache entry so edits to the rules invalidate stale hits without a
 // revision counter.
 const matchCache = new WeakMap<
-  ParsedPart[],
+  MessageToken[],
   { rules: CustomHighlight[]; match: CustomHighlight | undefined }
 >();
 
-const messageTextCache = new WeakMap<ParsedPart[], string>();
+const messageTextCache = new WeakMap<MessageToken[], string>();
 
-function getMessageText(message: ParsedPart[]): string {
+function getMessageText(message: MessageToken[]): string {
   const cached = messageTextCache.get(message);
 
   if (cached !== undefined) {
@@ -25,7 +25,7 @@ function getMessageText(message: ParsedPart[]): string {
 }
 
 export function findCustomHighlight(
-  message: ParsedPart[],
+  message: MessageToken[],
   rules: CustomHighlight[],
 ): CustomHighlight | undefined {
   if (rules.length === 0 || message.length === 0) {

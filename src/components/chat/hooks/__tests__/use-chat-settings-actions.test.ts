@@ -133,7 +133,7 @@ describe('useChatSettingsActions', () => {
     expect(mockClearCache).not.toHaveBeenCalled();
   });
 
-  test('settings reconnect parts immediately and rejoins after the reconnect delay', () => {
+  test('settings reconnect tokens immediately and rejoins after the reconnect delay', () => {
     jest.useFakeTimers();
     const { hook, joinChannel, partChannel } = renderSettingsActions();
 

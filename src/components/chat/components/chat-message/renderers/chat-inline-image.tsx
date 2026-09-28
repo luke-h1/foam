@@ -338,19 +338,21 @@ function useEmoteLoadRecovery(
   };
 }
 
+interface LogEmoteLoadFailureOptions {
+  attempts: number;
+  candidateIndex: number;
+  candidateUrl: string;
+  event: ImageErrorEventData | undefined;
+  sourceUrl: string;
+}
+
 function logEmoteLoadFailure({
   attempts,
   candidateIndex,
   candidateUrl,
   event,
   sourceUrl,
-}: {
-  attempts: number;
-  candidateIndex: number;
-  candidateUrl: string;
-  event: ImageErrorEventData | undefined;
-  sourceUrl: string;
-}): void {
+}: LogEmoteLoadFailureOptions): void {
   const descriptor = describeEmoteUrl(candidateUrl);
   const cache = getCachedEmoteStats();
 

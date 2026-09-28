@@ -12,7 +12,7 @@ const AT_SIGN = 64;
 const COLON = 58;
 
 /**
- * Parse a raw Twitch IRC line into its parts; null for invalid lines.
+ * Parse a raw Twitch IRC line into its tokens; null for invalid lines.
  * Cursor-based on purpose - the old per-stage tail copies cost per message in a busy channel.
  */
 /**

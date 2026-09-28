@@ -5,17 +5,19 @@ import { mentionChatterIndex } from '@app/utils/chat/resolve-mention-login/menti
 import { registerMentionLogin } from '@app/utils/chat/resolve-mention-login/register-mention-login';
 import type { ChatterRole } from '@app/utils/chat/resolve-mention-login/types';
 
+interface RegisterMentionChatterOptions {
+  login?: string | null;
+  userId?: string | null;
+  color?: string | null;
+  role?: ChatterRole;
+}
+
 export function registerMentionChatter({
   login,
   userId,
   color,
   role,
-}: {
-  login?: string | null;
-  userId?: string | null;
-  color?: string | null;
-  role?: ChatterRole;
-}): void {
+}: RegisterMentionChatterOptions): void {
   const trimmedLogin = login?.trim();
 
   if (!trimmedLogin) {

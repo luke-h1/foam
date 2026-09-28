@@ -1,4 +1,4 @@
-import type { EntitlementCreate } from '@app/types/seventv/cosmetics';
+import type { EntitlementCreate } from '@app/types/seven-tv/cosmetics';
 
 export function createBadgeEntitlement(
   badgeId: string,

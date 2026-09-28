@@ -1,6 +1,6 @@
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import { normalizeSevenTvBadge } from '@app/utils/seventv/cosmetics/normalize-seven-tv-badge';
+import { normalizeSevenTvBadge } from '@app/utils/seven-tv/cosmetics/normalize-seven-tv-badge';
 
 interface FindBadgesParams {
   userstate: UserStateTags;

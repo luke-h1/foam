@@ -1,4 +1,4 @@
-// "shape" is the 7TV paint API field (types/seventv/cosmetics.ts), not a naming choice.
+// "shape" is the 7TV paint API field (types/seven-tv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import { StyleSheet } from 'react-native';
 import { makeMutable } from 'react-native-reanimated';
@@ -11,7 +11,7 @@ import { Image, type ImageProps } from 'expo-image';
 import { chatScrollActivity } from '@app/components/chat/util/chat-scroll-activity';
 import { paintRendererFlag$ } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
-import type { PaintData } from '@app/types/seventv/cosmetics';
+import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
 import { PaintLayerTiledImage } from '../cosmetic-username/paint-layer-tiled-image';
 import { PaintedUsername } from '../cosmetic-username/painted-username';

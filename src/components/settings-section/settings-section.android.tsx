@@ -122,17 +122,19 @@ function RowText({
   );
 }
 
+interface SettingsSectionProps {
+  title?: string;
+  footer?: ReactNode;
+  children: ReactNode;
+  cardColor?: string;
+}
+
 export function SettingsSection({
   title,
   footer,
   children,
   cardColor,
-}: {
-  title?: string;
-  footer?: ReactNode;
-  children: ReactNode;
-  cardColor?: string;
-}) {
+}: SettingsSectionProps) {
   const rows = Children.toArray(children).filter(isValidElement);
 
   const cardColors = cardColor
@@ -185,6 +187,15 @@ export function SettingsSection({
   );
 }
 
+interface SettingsRowProps {
+  title: string;
+  subtitle?: string;
+  icon?: RowIcon;
+  trailing?: ReactNode;
+  onPress?: () => void;
+  danger?: boolean;
+}
+
 export function SettingsRow({
   title,
   subtitle,
@@ -192,14 +203,7 @@ export function SettingsRow({
   trailing,
   onPress,
   danger,
-}: {
-  title: string;
-  subtitle?: string;
-  icon?: RowIcon;
-  trailing?: ReactNode;
-  onPress?: () => void;
-  danger?: boolean;
-}) {
+}: SettingsRowProps) {
   return (
     <ListItem
       colors={listItemColors}
@@ -226,19 +230,21 @@ export function SettingsRow({
   );
 }
 
+interface SettingsToggleRowProps {
+  title: string;
+  subtitle?: string;
+  icon?: RowIcon;
+  value: boolean;
+  onValueChange: (value: boolean) => void;
+}
+
 export function SettingsToggleRow({
   title,
   subtitle,
   icon,
   value,
   onValueChange,
-}: {
-  title: string;
-  subtitle?: string;
-  icon?: RowIcon;
-  value: boolean;
-  onValueChange: (value: boolean) => void;
-}) {
+}: SettingsToggleRowProps) {
   return (
     <ListItem colors={listItemColors}>
       <RowLeading icon={icon} />
@@ -254,6 +260,15 @@ export function SettingsToggleRow({
   );
 }
 
+interface SettingsLinkRowProps {
+  title: string;
+  subtitle?: string;
+  icon?: RowIcon;
+  value?: string;
+  onPress?: () => void;
+  danger?: boolean;
+}
+
 export function SettingsLinkRow({
   title,
   subtitle,
@@ -261,14 +276,7 @@ export function SettingsLinkRow({
   value,
   onPress,
   danger,
-}: {
-  title: string;
-  subtitle?: string;
-  icon?: RowIcon;
-  value?: string;
-  onPress?: () => void;
-  danger?: boolean;
-}) {
+}: SettingsLinkRowProps) {
   return (
     <ListItem
       colors={listItemColors}

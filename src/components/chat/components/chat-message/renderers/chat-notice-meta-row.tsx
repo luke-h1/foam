@@ -4,8 +4,8 @@ import type { ReactNode } from 'react';
 import { SymbolView } from '@app/components/ui/icon/icon';
 import { Text } from '@app/components/ui/text/text';
 
+import { styles } from '../chat-row.styles';
 import { getChatTextStyles } from '../chat-text.styles';
-import { styles } from '../rich-chat-message.styles';
 import { CHAT_SURFACE_COLORS, type ChatFontScale } from '../util/chat-scale';
 
 interface ChatNoticeMetaRowProps {

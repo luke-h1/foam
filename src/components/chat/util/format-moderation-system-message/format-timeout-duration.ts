@@ -15,14 +15,14 @@ export function formatTimeoutDuration(totalSeconds: number): string {
   }
 
   let remaining = Math.floor(totalSeconds);
-  const parts: string[] = [];
+  const tokens: string[] = [];
 
   for (const [unitSeconds, label] of DURATION_UNITS) {
     if (remaining >= unitSeconds) {
-      parts.push(`${Math.floor(remaining / unitSeconds)}${label}`);
+      tokens.push(`${Math.floor(remaining / unitSeconds)}${label}`);
       remaining %= unitSeconds;
     }
   }
 
-  return parts.join(' ');
+  return tokens.join(' ');
 }

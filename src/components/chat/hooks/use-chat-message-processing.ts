@@ -25,7 +25,7 @@ import { usePersonalEmotesVersion } from '@app/store/chat/react/selectors';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateFromTags } from '@app/utils/chat/message-handlers/create-user-state-from-tags';
 import { replaceEmotesWithText } from '@app/utils/chat/replace-emotes-with-text';
-import { resolveMessageEmoteParts } from '@app/utils/chat/resolve-message-emote-parts';
+import { resolveMessageEmoteParts } from '@app/utils/chat/resolve-message-emote-tokens';
 import { getCachedSharedChatBadgeContext } from '@app/utils/chat/shared-chat-badges/get-cached-shared-chat-badge-context';
 import { getMessageBadges } from '@app/utils/chat/shared-chat-badges/get-message-badges';
 import { logger } from '@app/utils/logger';

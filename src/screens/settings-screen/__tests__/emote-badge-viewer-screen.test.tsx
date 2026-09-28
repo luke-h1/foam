@@ -4,7 +4,7 @@ import * as SegmentedControlModule from '@app/components/segmented-control/segme
 import { EmoteBadgeViewerScreen } from '@app/screens/settings-screen/emote-badge-viewer-screen';
 import { bttvEmoteService } from '@app/services/bttv-emote-service';
 import { ffzService } from '@app/services/ffz-service';
-import { sevenTvService } from '@app/services/seventv-service';
+import { sevenTvService } from '@app/services/seven-tv-service';
 import { twitchBadgeService } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
 import { clearGlobalResourceCache } from '@app/store/chat/actions/channel-resources';

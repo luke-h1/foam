@@ -1,11 +1,11 @@
 import type {
   CosmeticCreate,
   EntitlementCreate,
-} from '@app/types/seventv/cosmetics';
+} from '@app/types/seven-tv/cosmetics';
 import { logger } from '@app/utils/logger';
-import { get7TvCosmeticId } from '@app/utils/seventv/cosmetics/get7-tv-cosmetic-id';
-import { normalizeSevenTvPaint } from '@app/utils/seventv/cosmetics/normalize-seven-tv-paint';
-import { sanitise7TvBadge } from '@app/utils/seventv/cosmetics/sanitise7-tv-badge';
+import { get7TvCosmeticId } from '@app/utils/seven-tv/cosmetics/get7-tv-cosmetic-id';
+import { normalizeSevenTvPaint } from '@app/utils/seven-tv/cosmetics/normalize-seven-tv-paint';
+import { sanitise7TvBadge } from '@app/utils/seven-tv/cosmetics/sanitise7-tv-badge';
 
 import { chatStore$ } from '../observables/chat-store';
 import {

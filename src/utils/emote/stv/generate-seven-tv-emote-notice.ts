@@ -2,7 +2,7 @@
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
-import { ParsedPart } from '@app/utils/chat/parsed-part';
+import { MessageToken } from '@app/utils/chat/message-token';
 import { generateNonce } from '@app/utils/string/generate-nonce';
 
 interface GenerateStvEmoteNoticeArgs {
@@ -45,12 +45,12 @@ export function generateStvEmoteNotice({
       userstate,
       message: [
         {
-          type: 'stv_emote_removed',
+          type: 'stvEmoteRemoved',
           stvEvents: {
             data: emote,
             type: 'removed',
           },
-        } satisfies ParsedPart<'stv_emote_removed'>,
+        } satisfies MessageToken<'stvEmoteRemoved'>,
       ],
       ...tail,
     };
@@ -61,12 +61,12 @@ export function generateStvEmoteNotice({
     userstate,
     message: [
       {
-        type: 'stv_emote_added',
+        type: 'stvEmoteAdded',
         stvEvents: {
           data: emote,
           type: 'added',
         },
-      } satisfies ParsedPart<'stv_emote_added'>,
+      } satisfies MessageToken<'stvEmoteAdded'>,
     ],
     ...tail,
   };

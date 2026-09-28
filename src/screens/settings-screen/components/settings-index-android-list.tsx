@@ -18,6 +18,18 @@ function handleSendFeedback() {
   router.push('/feedback');
 }
 
+interface SettingsIndexAndroidListProps {
+  bottomInset: number;
+  canSeeUpdateAppButton: boolean;
+  hasUser: boolean;
+  openStore: () => void;
+  scrollRef: RefObject<ScrollView | null>;
+  shouldShowDevTools: boolean;
+  statusPageUrl: string;
+  updateBundle: () => void;
+  websiteUrl: string;
+}
+
 export function SettingsIndexAndroidList({
   bottomInset,
   canSeeUpdateAppButton,
@@ -28,17 +40,7 @@ export function SettingsIndexAndroidList({
   statusPageUrl,
   updateBundle,
   websiteUrl,
-}: {
-  bottomInset: number;
-  canSeeUpdateAppButton: boolean;
-  hasUser: boolean;
-  openStore: () => void;
-  scrollRef: RefObject<ScrollView | null>;
-  shouldShowDevTools: boolean;
-  statusPageUrl: string;
-  updateBundle: () => void;
-  websiteUrl: string;
-}) {
+}: SettingsIndexAndroidListProps) {
   return (
     <View style={styles.container}>
       <ScrollView

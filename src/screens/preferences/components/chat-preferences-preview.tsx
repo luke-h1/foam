@@ -2,8 +2,8 @@ import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { ReactNode } from 'react';
 
-import { EmoteRenderer } from '@app/components/chat/components/chat-message/renderers/emote-renderer';
-import { RichChatMessage } from '@app/components/chat/components/chat-message/rich-chat-message';
+import { ChatRow } from '@app/components/chat/components/chat-message/chat-row';
+import { EmoteToken } from '@app/components/chat/components/chat-message/renderers/emote-token';
 import { SymbolView } from '@app/components/ui/icon/icon';
 import { Text } from '@app/components/ui/text/text';
 import { type ChatMessageType } from '@app/store/chat/types/constants';
@@ -13,8 +13,8 @@ import { type UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { type SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { processEmotesWorklet } from '@app/utils/chat/emote-processor';
-import { type ParsedPart } from '@app/utils/chat/parsed-part';
-import { getParsedPartStringContent } from '@app/utils/chat/parsed-part-content';
+import { type MessageToken } from '@app/utils/chat/message-token';
+import { getMessageTokenText } from '@app/utils/chat/message-token-content';
 
 import { chatPreferencePreviewFixtures } from '../util/chat-preference-preview-fixtures';
 
@@ -132,7 +132,7 @@ const previewMessages = {
 
 const getMentionColor = () => theme.colorViolet;
 
-const parseTextForEmotes = (text: string): ParsedPart[] => [textPart(text)];
+const parseTextForEmotes = (text: string): MessageToken[] => [textPart(text)];
 
 export const ChatPreferencePreview = memo(function ChatPreferencePreview(
   props: ChatPreferencePreviewProps,
@@ -232,7 +232,7 @@ export const ChatPreferencePreview = memo(function ChatPreferencePreview(
       return (
         <PreviewEmoteLine
           disableAnimations={value}
-          parts={previewMessages.emoteAnimations.message}
+          tokens={previewMessages.emoteAnimations.message}
           testID='chat-preference-preview-emote-animations'
           username='EmoteFan'
           usernameColor={theme.color.chatSample.amber}
@@ -273,17 +273,19 @@ export const ChatPreferencePreview = memo(function ChatPreferencePreview(
   }
 });
 
+interface ChatPreviewSurfaceProps {
+  label?: string;
+  messages: PreviewMessage[];
+  settings?: Partial<PreviewState>;
+  testID: string;
+}
+
 const ChatPreviewSurface = function ChatPreviewSurface({
   label,
   messages,
   settings,
   testID,
-}: {
-  label?: string;
-  messages: PreviewMessage[];
-  settings?: Partial<PreviewState>;
-  testID: string;
-}) {
+}: ChatPreviewSurfaceProps) {
   // Per-key ?? instead of a spread: `{ chatTimestamps: undefined }` would clobber the default with an explicit undefined.
   const previewState: PreviewState = {
     chatDensity: settings?.chatDensity ?? PREVIEW_DEFAULTS.chatDensity,
@@ -316,7 +318,7 @@ const ChatPreviewSurface = function ChatPreviewSurface({
         pointerEvents='none'
       >
         {messages.map((message, index) => (
-          <RichChatMessage
+          <ChatRow
             key={message.id}
             {...message}
             currentUsername={
@@ -369,22 +371,24 @@ const ChatPreviewSurface = function ChatPreviewSurface({
   );
 };
 
-/**
- * Renders `username: text [emote] text` with plain primitives - the full RichChatMessage flex body collapses its text nodes to a few pixels inside the RNHostView-embedded SwiftUI form. EmoteRenderer still measures correctly and keeps the animation toggle.
- */
-const PreviewEmoteLine = function PreviewEmoteLine({
-  disableAnimations = false,
-  parts,
-  testID,
-  username,
-  usernameColor,
-}: {
+interface PreviewEmoteLineProps {
   disableAnimations?: boolean;
-  parts: ParsedPart[];
+  tokens: MessageToken[];
   testID: string;
   username: string;
   usernameColor: string;
-}) {
+}
+
+/**
+ * Renders `username: text [emote] text` with plain primitives - the full ChatRow flex body collapses its text nodes to a few pixels inside the RNHostView-embedded SwiftUI form. EmoteToken still measures correctly and keeps the animation toggle.
+ */
+const PreviewEmoteLine = function PreviewEmoteLine({
+  disableAnimations = false,
+  tokens,
+  testID,
+  username,
+  usernameColor,
+}: PreviewEmoteLineProps) {
   return (
     <PreviewCard testID={testID}>
       <View style={styles.providerPreviewSurface} pointerEvents='none'>
@@ -392,19 +396,19 @@ const PreviewEmoteLine = function PreviewEmoteLine({
           <Text style={{ color: usernameColor }} type='caption' weight='bold'>
             {username}:
           </Text>
-          {parts.map(part => {
-            if (part.type === 'emote') {
+          {tokens.map(token => {
+            if (token.type === 'emote') {
               return (
-                <EmoteRenderer
-                  key={`emote-${part.name}`}
+                <EmoteToken
+                  key={`emote-${token.name}`}
                   disableAnimations={disableAnimations}
-                  part={part}
+                  token={token}
                   targetSize={24}
                 />
               );
             }
 
-            const content = getParsedPartStringContent(part).trim();
+            const content = getMessageTokenText(token).trim();
 
             if (!content) {
               return null;
@@ -422,23 +426,25 @@ const PreviewEmoteLine = function PreviewEmoteLine({
   );
 };
 
+interface ProviderAssetPreviewProps {
+  enabled: boolean;
+  provider: PreviewProvider;
+  testID: string;
+  variant: 'badges' | 'emotes';
+}
+
 const ProviderAssetPreview = function ProviderAssetPreview({
   enabled,
   provider,
   testID,
   variant,
-}: {
-  enabled: boolean;
-  provider: PreviewProvider;
-  testID: string;
-  variant: 'badges' | 'emotes';
-}) {
+}: ProviderAssetPreviewProps) {
   const sample = getProviderPreviewSample(provider);
 
   if (variant === 'emotes' && enabled && sample.emotes.length > 0) {
     return (
       <PreviewEmoteLine
-        parts={buildProviderEmoteParts(provider, sample.emotes)}
+        tokens={buildProviderEmoteParts(provider, sample.emotes)}
         testID={testID}
         username='username'
         usernameColor={getProviderPreviewColor(provider)}
@@ -471,7 +477,7 @@ const ProviderAssetPreview = function ProviderAssetPreview({
   return (
     <PreviewCard testID={testID}>
       <View style={styles.providerPreviewSurface} pointerEvents='none'>
-        <RichChatMessage
+        <ChatRow
           {...message}
           density='comfortable'
           getMentionColor={getMentionColor}
@@ -501,6 +507,20 @@ const PreviewCard = function PreviewCard({
   );
 };
 
+interface CreatePreviewMessageOptions {
+  badges?: SanitisedBadgeSet[];
+  color: string;
+  displayName: string;
+  id: string;
+  login: string;
+  message?: MessageToken[];
+  replyBody?: string;
+  replyDisplayName?: string;
+  replyLogin?: string;
+  text?: string;
+  userId: string;
+}
+
 function createPreviewMessage({
   badges = [],
   color,
@@ -513,19 +533,7 @@ function createPreviewMessage({
   replyLogin,
   text,
   userId,
-}: {
-  badges?: SanitisedBadgeSet[];
-  color: string;
-  displayName: string;
-  id: string;
-  login: string;
-  message?: ParsedPart[];
-  replyBody?: string;
-  replyDisplayName?: string;
-  replyLogin?: string;
-  text?: string;
-  userId: string;
-}): PreviewMessage {
+}: CreatePreviewMessageOptions): PreviewMessage {
   const userstate: UserStateTags = {
     'display-name': displayName,
     login,
@@ -563,14 +571,14 @@ function createPreviewMessage({
   };
 }
 
-function textPart(content: string): ParsedPart<'text'> {
+function textPart(content: string): MessageToken<'text'> {
   return {
     type: 'text',
     content,
   };
 }
 
-function mentionPart(content: string): ParsedPart<'mention'> {
+function mentionPart(content: string): MessageToken<'mention'> {
   return {
     type: 'mention',
     content,
@@ -595,7 +603,7 @@ function buildProviderEmoteFallbackText(emotes: SanitisedEmote[]) {
 function buildProviderEmoteParts(
   provider: PreviewProvider,
   emotes: SanitisedEmote[],
-): ParsedPart[] {
+): MessageToken[] {
   if (emotes.length === 0) {
     return [textPart(' hello world')];
   }

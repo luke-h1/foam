@@ -2,7 +2,7 @@ import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-
 
 /**
  * Raw-text mention check for live messages whose emote parse is deferred to
- * commit time, where there are no mention parts to scan yet.
+ * commit time, where there are no mention tokens to scan yet.
  */
 export function textMentionsUser(
   text: string,

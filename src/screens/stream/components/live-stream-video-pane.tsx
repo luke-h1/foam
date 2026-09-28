@@ -41,6 +41,36 @@ type LiveStreamVideoPaneProps = {
 };
 
 /**
+ * Landscape-only gesture handlers; portrait leaves them unwired.
+ */
+const landscapeOnly = (isLandscape: boolean, handler: () => void) =>
+  isLandscape ? handler : undefined;
+
+/**
+ * Android has no system back affordance over the player, so draw one.
+ */
+function AndroidBackButton({ onPress }: { onPress: () => void }) {
+  return (
+    <Button
+      label='Go back'
+      onPress={onPress}
+      // videoContainer already sits at landscapeInsetLeft; only the local
+      // offset here, or the button drifts inward on cutouts.
+      style={[
+        styles.androidBackButton,
+        { left: theme.space8, top: theme.space8 },
+      ]}
+    >
+      <SymbolView
+        name={BACK_SYMBOL_NAME}
+        size={18}
+        tintColor={theme.colorWhite}
+      />
+    </Button>
+  );
+}
+
+/**
  * The video half of the screen: the player itself, the panel that replaces it
  * when the channel is offline or the request failed, and the chrome that only
  * appears in landscape or on Android.
@@ -70,6 +100,9 @@ export function LiveStreamVideoPane({
   sleepTimerActive,
   streamInfo,
 }: LiveStreamVideoPaneProps) {
+  // The player draws its own back control on iOS; Android gets the overlay below.
+  const showsOwnBackButton = customPlayerEnabled && !isAndroid;
+
   return (
     <Animated.View
       testID='stream-player-container'
@@ -84,9 +117,7 @@ export function LiveStreamVideoPane({
           autoplay
           muted={false}
           showOverlayControls={customPlayerEnabled}
-          onBackPress={
-            customPlayerEnabled && !isAndroid ? onBackPress : undefined
-          }
+          onBackPress={showsOwnBackButton ? onBackPress : undefined}
           onPlay={onPlayerLoaded}
           onPlaybackLatencyChange={onPlaybackLatencyChange}
           onReady={onPlayerLoaded}
@@ -94,8 +125,8 @@ export function LiveStreamVideoPane({
           onSharePress={resolvedChannelLogin ? onSharePress : undefined}
           onSleepTimerPress={onSleepTimerPress}
           sleepTimerActive={sleepTimerActive}
-          onVideoAreaPress={isLandscape ? onVideoAreaPress : undefined}
-          onVideoAreaSwipeDown={isLandscape ? onExitLandscape : undefined}
+          onVideoAreaPress={landscapeOnly(isLandscape, onVideoAreaPress)}
+          onVideoAreaSwipeDown={landscapeOnly(isLandscape, onExitLandscape)}
           onWebViewLoaded={onPlayerLoaded}
           posterUrl={posterUrl}
           streamInfo={streamInfo}
@@ -116,24 +147,7 @@ export function LiveStreamVideoPane({
         <SystemBars hidden={{ navigationBar: true, statusBar: true }} />
       ) : null}
 
-      {isAndroid ? (
-        <Button
-          label='Go back'
-          onPress={onBackPress}
-          // videoContainer already sits at landscapeInsetLeft; only the local
-          // offset here, or the button drifts inward on cutouts.
-          style={[
-            styles.androidBackButton,
-            { left: theme.space8, top: theme.space8 },
-          ]}
-        >
-          <SymbolView
-            name={BACK_SYMBOL_NAME}
-            size={18}
-            tintColor={theme.colorWhite}
-          />
-        </Button>
-      ) : null}
+      {isAndroid ? <AndroidBackButton onPress={onBackPress} /> : null}
     </Animated.View>
   );
 }

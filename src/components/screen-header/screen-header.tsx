@@ -61,6 +61,164 @@ export interface ScreenHeaderProps {
   heroHeight?: number;
 }
 
+/**
+ * Title scale per header size, unless the caller pinned one.
+ */
+function resolveTitleType(
+  type: ScreenHeaderProps['type'],
+  size: ScreenHeaderProps['size'],
+): TextType {
+  if (type) {
+    return type;
+  }
+
+  if (size === 'large' || size === 'medium') {
+    return '4xl';
+  }
+
+  return size === 'hero' ? 'xl' : 'md';
+}
+
+function resolveTitleWeight(
+  weight: ScreenHeaderProps['weight'],
+  size: ScreenHeaderProps['size'],
+): TextWeight {
+  if (weight) {
+    return weight;
+  }
+
+  const isBold = size === 'hero' || size === 'large' || size === 'medium';
+  return isBold ? 'bold' : 'semibold';
+}
+
+function resolveSubtitleType(
+  subtitleType: ScreenHeaderProps['subtitleType'],
+): TextType {
+  return subtitleType ?? 'xs';
+}
+
+type HeroScreenHeaderProps = Pick<
+  ScreenHeaderProps,
+  | 'back'
+  | 'backgroundImage'
+  | 'children'
+  | 'featuredImage'
+  | 'heroHeight'
+  | 'safeArea'
+  | 'subtitle'
+  | 'subtitleColor'
+  | 'subtitleTestID'
+  | 'title'
+> & {
+  handleBack: () => void;
+  insets: { top: number };
+  navTrailing: ReactNode;
+  subtitleTypeValue: TextType;
+  titleColorValue: ScreenHeaderProps['color'];
+  titleTypeValue: TextType;
+  titleWeightValue: TextWeight;
+};
+
+/**
+ * The hero layout is a different header entirely: a full-bleed background, an
+ * overlaid nav row, and the title sitting on top of the artwork.
+ */
+function HeroScreenHeader({
+  back,
+  backgroundImage,
+  children,
+  featuredImage,
+  handleBack,
+  heroHeight,
+  insets,
+  navTrailing,
+  safeArea,
+  subtitle,
+  subtitleColor,
+  subtitleTestID,
+  subtitleTypeValue,
+  title,
+  titleColorValue,
+  titleTypeValue,
+  titleWeightValue,
+}: HeroScreenHeaderProps) {
+  return (
+    <View style={styles.container}>
+      {backgroundImage && (
+        <View style={[styles.heroBackground, { height: heroHeight }]}>
+          <Image
+            source={backgroundImage}
+            style={styles.heroBackgroundImage}
+            contentFit='cover'
+          />
+          <LinearGradient
+            colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.85)', 'rgba(0,0,0,1)']}
+            locations={[0, 0.6, 1]}
+            style={styles.heroGradient}
+          />
+        </View>
+      )}
+
+      {(back || navTrailing) && (
+        <View
+          style={[
+            styles.navRow,
+            getNavRowOffsetStyle(safeArea ? insets.top + 8 : 8),
+          ]}
+        >
+          {back && (
+            <IconButton
+              icon={{ type: 'symbol', name: 'chevron.left', size: 20 }}
+              label='Go back'
+              onPress={handleBack}
+              size='2xl'
+              hitSlop={12}
+            />
+          )}
+          <View style={styles.navSpacer} />
+          {navTrailing}
+        </View>
+      )}
+
+      <View
+        style={[
+          styles.heroContent,
+          getHeroContentOffsetStyle(Boolean(backgroundImage)),
+        ]}
+      >
+        <View style={styles.heroInner}>
+          {featuredImage && (
+            <Image source={featuredImage} style={styles.featuredImage} />
+          )}
+          <View style={styles.textContent}>
+            <Text
+              accessibilityRole='header'
+              type={titleTypeValue}
+              weight={titleWeightValue}
+              color={titleColorValue}
+              style={styles.heroTitle}
+              numberOfLines={2}
+            >
+              {title}
+            </Text>
+            {subtitle && (
+              <Text
+                testID={subtitleTestID}
+                type={subtitleTypeValue}
+                color={subtitleColor}
+                style={styles.subtitle}
+              >
+                {subtitle}
+              </Text>
+            )}
+            {children}
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+}
+
 export function ScreenHeader({
   title,
   subtitle,
@@ -94,45 +252,10 @@ export function ScreenHeader({
   const isHero = size === 'hero';
   const isInline = size === 'compact';
 
-  const getTitleType = (): TextType => {
-    if (type) {
-      return type;
-    }
-
-    if (size === 'large' || size === 'medium') {
-      return '4xl';
-    }
-
-    if (size === 'hero') {
-      return 'xl';
-    }
-
-    return 'md';
-  };
-
-  const getTitleWeight = (): TextWeight => {
-    if (weight) {
-      return weight;
-    }
-
-    if (isHero || size === 'large' || size === 'medium') {
-      return 'bold';
-    }
-
-    return 'semibold';
-  };
-
-  const getSubtitleType = (): TextType => {
-    if (subtitleType) {
-      return subtitleType;
-    }
-    return 'xs';
-  };
-
-  const titleTypeValue = getTitleType();
-  const titleWeightValue = getTitleWeight();
+  const titleTypeValue = resolveTitleType(type, size);
+  const titleWeightValue = resolveTitleWeight(weight, size);
   const titleColorValue = color;
-  const subtitleTypeValue = getSubtitleType();
+  const subtitleTypeValue = resolveSubtitleType(subtitleType);
 
   const shareButton = share ? (
     <IconButton
@@ -149,79 +272,26 @@ export function ScreenHeader({
 
   if (isHero) {
     return (
-      <View style={styles.container}>
-        {backgroundImage && (
-          <View style={[styles.heroBackground, { height: heroHeight }]}>
-            <Image
-              source={backgroundImage}
-              style={styles.heroBackgroundImage}
-              contentFit='cover'
-            />
-            <LinearGradient
-              colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.85)', 'rgba(0,0,0,1)']}
-              locations={[0, 0.6, 1]}
-              style={styles.heroGradient}
-            />
-          </View>
-        )}
-
-        {(back || navTrailing) && (
-          <View
-            style={[
-              styles.navRow,
-              getNavRowOffsetStyle(safeArea ? insets.top + 8 : 8),
-            ]}
-          >
-            {back && (
-              <IconButton
-                icon={{ type: 'symbol', name: 'chevron.left', size: 20 }}
-                label='Go back'
-                onPress={handleBack}
-                size='2xl'
-                hitSlop={12}
-              />
-            )}
-            <View style={styles.navSpacer} />
-            {navTrailing}
-          </View>
-        )}
-
-        <View
-          style={[
-            styles.heroContent,
-            getHeroContentOffsetStyle(Boolean(backgroundImage)),
-          ]}
-        >
-          <View style={styles.heroInner}>
-            {featuredImage && (
-              <Image source={featuredImage} style={styles.featuredImage} />
-            )}
-            <View style={styles.textContent}>
-              <Text
-                accessibilityRole='header'
-                type={titleTypeValue}
-                weight={titleWeightValue}
-                color={titleColorValue}
-                style={styles.heroTitle}
-                numberOfLines={2}
-              >
-                {title}
-              </Text>
-              {subtitle && (
-                <Text
-                  testID={subtitleTestID}
-                  type={subtitleTypeValue}
-                  color={subtitleColor}
-                  style={styles.subtitle}
-                >
-                  {subtitle}
-                </Text>
-              )}
-              {children}
-            </View>
-          </View>
-        </View>
-      </View>
+      <HeroScreenHeader
+        back={back}
+        backgroundImage={backgroundImage}
+        featuredImage={featuredImage}
+        handleBack={handleBack}
+        heroHeight={heroHeight}
+        insets={insets}
+        navTrailing={navTrailing}
+        safeArea={safeArea}
+        subtitle={subtitle}
+        subtitleColor={subtitleColor}
+        subtitleTestID={subtitleTestID}
+        subtitleTypeValue={subtitleTypeValue}
+        title={title}
+        titleColorValue={titleColorValue}
+        titleTypeValue={titleTypeValue}
+        titleWeightValue={titleWeightValue}
+      >
+        {children}
+      </HeroScreenHeader>
     );
   }
 

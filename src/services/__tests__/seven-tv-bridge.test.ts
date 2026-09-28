@@ -1,5 +1,5 @@
 import { sevenTvApi } from '@app/services/api/clients';
-import { sevenTvService } from '@app/services/seventv-service';
+import { sevenTvService } from '@app/services/seven-tv-service';
 
 const mockSevenTvApiPost = jest.spyOn(sevenTvApi, 'post');
 

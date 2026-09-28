@@ -1,11 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { MutableRefObject } from 'react';
 
-import { useSeventvWs } from '@app/components/chat/hooks/use-seventv-ws';
+import { useSevenTvWs } from '@app/components/chat/hooks/use-seven-tv-ws';
 import { createSevenTvCallbacks } from '@app/components/chat/util/create-seven-tv-callbacks';
 import { useSyncRef } from '@app/hooks/use-sync-ref';
 import { ReadyState } from '@app/hooks/ws/constants';
-import { sevenTvService } from '@app/services/seventv-service';
+import { sevenTvService } from '@app/services/seven-tv-service';
 import {
   getSevenTvEmoteSetId,
   switchSevenTvEmoteSet,
@@ -14,14 +14,7 @@ import {
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { logger } from '@app/utils/logger';
 
-export function useSevenTvChatRuntime({
-  channelId,
-  channelName,
-  currentEmoteSetIdRef,
-  emoteLoadStatus,
-  handleNewMessage,
-  sevenTvEmoteSetId,
-}: {
+interface UseSevenTvChatRuntimeOptions {
   channelId: string;
   channelName: string;
   currentEmoteSetIdRef: MutableRefObject<string | null>;
@@ -31,7 +24,16 @@ export function useSevenTvChatRuntime({
     options?: { countUnread?: boolean },
   ) => void;
   sevenTvEmoteSetId?: string;
-}) {
+}
+
+export function useSevenTvChatRuntime({
+  channelId,
+  channelName,
+  currentEmoteSetIdRef,
+  emoteLoadStatus,
+  handleNewMessage,
+  sevenTvEmoteSetId,
+}: UseSevenTvChatRuntimeOptions) {
   const sevenTvCallbacks = createSevenTvCallbacks({
     channelId,
     channelName,
@@ -102,7 +104,7 @@ export function useSevenTvChatRuntime({
     unsubscribeFromChannel,
     isConnected,
     readyState,
-  } = useSeventvWs({
+  } = useSevenTvWs({
     ...sevenTvCallbacks,
     sevenTvChannelUserId,
     onEmoteSetSwitch,
@@ -112,7 +114,7 @@ export function useSevenTvChatRuntime({
   const wsConnected = readyState === ReadyState.OPEN && isConnected();
   const unsubscribeFromChannelRef = useSyncRef(unsubscribeFromChannel);
 
-  // Declared above so the `onEmoteSetSwitch` handler passed into useSeventvWs
+  // Declared above so the `onEmoteSetSwitch` handler passed into useSevenTvWs
   // can close over it, so it is filled in on commit rather than during render.
   useLayoutEffect(() => {
     subscribeToChannelRef.current = subscribeToChannel;

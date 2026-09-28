@@ -19,6 +19,15 @@ import { theme } from '@app/styles/themes';
 
 type SettingsRowIcon = ComponentProps<typeof SettingsRow>['icon'];
 
+interface ChatPreferenceSegmentedSettingsRowProps {
+  title: string;
+  subtitle: string;
+  icon: SettingsRowIcon;
+  selectedIndex: number;
+  onSelectIndex: (index: number) => void;
+  values: readonly string[];
+}
+
 export function ChatPreferenceSegmentedSettingsRow({
   title,
   subtitle,
@@ -26,14 +35,7 @@ export function ChatPreferenceSegmentedSettingsRow({
   selectedIndex,
   onSelectIndex,
   values,
-}: {
-  title: string;
-  subtitle: string;
-  icon: SettingsRowIcon;
-  selectedIndex: number;
-  onSelectIndex: (index: number) => void;
-  values: readonly string[];
-}) {
+}: ChatPreferenceSegmentedSettingsRowProps) {
   return (
     <Column modifiers={[fillMaxWidth()]}>
       <SettingsRow title={title} subtitle={subtitle} icon={icon} />

@@ -2,7 +2,7 @@ import { type StyleProp, StyleSheet, TextStyle, View } from 'react-native';
 
 import { useChatScrollActive } from '@app/components/chat/hooks/use-chat-scroll-active';
 import { Text } from '@app/components/ui/text/text';
-import type { PaintData } from '@app/types/seventv/cosmetics';
+import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
 import { chatLineMetrics } from '../util/chat-scale';
 import { PaintedUsernameDropShadowLayer } from './painted-username-drop-shadow-layer';

@@ -5,45 +5,45 @@ import { Image } from '@app/components/image/image';
 import { Text } from '@app/components/ui/text/text';
 import { theme } from '@app/styles/themes';
 import { generateRandomTwitchColor } from '@app/utils/chat/generate-random-twitch-color';
-import { ParsedPart } from '@app/utils/chat/parsed-part';
+import { MessageToken } from '@app/utils/chat/message-token';
 import { lightenColor } from '@app/utils/color/lighten-color';
 
 import { PaintedUsername } from '../chat-message/cosmetic-username/painted-username';
 
 interface MessageActionPreviewProps {
-  message: ParsedPart[];
+  message: MessageToken[];
   username?: string;
 }
 
-function partTextContent(part: ParsedPart): string | undefined {
-  return 'content' in part ? part.content : undefined;
+function partTextContent(token: MessageToken): string | undefined {
+  return 'content' in token ? token.content : undefined;
 }
 
-function getMessagePartKey(part: ParsedPart, occurrence: number): string {
-  switch (part.type) {
+function getMessagePartKey(token: MessageToken, occurrence: number): string {
+  switch (token.type) {
     case 'emote':
-      return `emote:${part.url ?? part.content}:${occurrence}`;
+      return `emote:${token.url ?? token.content}:${occurrence}`;
     case 'mention':
     case 'text':
-      return `${part.type}:${part.content}:${occurrence}`;
+      return `${token.type}:${token.content}:${occurrence}`;
     default:
-      return `${part.type}:${partTextContent(part) ?? ''}:${occurrence}`;
+      return `${token.type}:${partTextContent(token) ?? ''}:${occurrence}`;
   }
 }
 
-function renderMessagePart(part: ParsedPart, occurrence: number) {
-  const key = getMessagePartKey(part, occurrence);
+function renderMessagePart(token: MessageToken, occurrence: number) {
+  const key = getMessagePartKey(token, occurrence);
 
-  switch (part.type) {
+  switch (token.type) {
     case 'emote':
-      if (!part.url) {
+      if (!token.url) {
         return null;
       }
       return (
         <Image
           key={key}
           trackLoadContext='chat.message-action-sheet'
-          source={part.url}
+          source={token.url}
           cacheVariant='emote'
           style={styles.messageEmote}
           contentFit='contain'
@@ -54,11 +54,11 @@ function renderMessagePart(part: ParsedPart, occurrence: number) {
     case 'text':
       return (
         <Text key={key} style={styles.messageText}>
-          {part.content}
+          {token.content}
         </Text>
       );
     default: {
-      const content = partTextContent(part);
+      const content = partTextContent(token);
 
       if (content !== undefined) {
         return (
@@ -93,11 +93,11 @@ export const MessageActionPreview = memo(function MessageActionPreview({
             usernameTextStyle={styles.previewUsername}
           />
         ) : null}
-        {message.map(part => {
-          const baseKey = getMessagePartKey(part, 0).replace(/:\d+$/, '');
+        {message.map(token => {
+          const baseKey = getMessagePartKey(token, 0).replace(/:\d+$/, '');
           const occurrence = partKeyCounts.get(baseKey) ?? 0;
           partKeyCounts.set(baseKey, occurrence + 1);
-          return renderMessagePart(part, occurrence);
+          return renderMessagePart(token, occurrence);
         })}
       </View>
     </View>

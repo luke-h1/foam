@@ -1,6 +1,5 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import type { RefObject } from 'react';
-import Animated, { FadeInUp } from 'react-native-reanimated';
 
 import { useSyncRef } from '@app/hooks/use-sync-ref';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channel-load';
@@ -8,69 +7,31 @@ import {
   getSessionCacheString,
   setSessionCacheString,
 } from '@app/store/chat/actions/chat-color-caches';
-import { getUserMessageColor } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
-import { useIsHighlightedReplyTargetMessage } from '@app/store/chat/react/transient-selectors';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
-import type {
-  ChatFontScale,
-  CustomHighlight,
-} from '@app/store/preference-store';
-import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-chat-username';
 import { processEmotesWorklet } from '@app/utils/chat/emote-processor';
 import { getChatMessageListKey } from '@app/utils/chat/message-identity/get-chat-message-list-key';
 import { isRenderableChatMessage } from '@app/utils/chat/message-identity/is-renderable-chat-message';
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
-import { resolveCachedSenderColor } from '@app/utils/chat/resolve-cached-sender-color/resolve-cached-sender-color';
+import type { MessageToken } from '@app/utils/chat/message-token';
 import { resolveMentionColor } from '@app/utils/chat/resolve-mention-color';
 
 import type {
   ChatListRef,
   ChatListRenderItemInfo,
 } from '../components/chat-list';
-import { getChatTextStyles } from '../components/chat-message/chat-text.styles';
 import {
   type BadgePressData,
   type EmotePressData,
   type MessageActionData,
-  RichChatMessage,
   type UsernamePressData,
-} from '../components/chat-message/rich-chat-message';
+} from '../components/chat-message/chat-row';
 import {
-  RowVisibilityContext,
-  useRowVisibility,
-} from '../components/chat-message/util/row-visibility';
+  ChatRowItem,
+  type ChatRowPreferences,
+} from '../components/chat-message/chat-row-item';
 import type { ChatRowDisplayFlags } from '../types/chat-ui-flags';
-import { chatEntranceSpring } from '../util/chat-entrance-spring';
-import { shouldAnimateMessageEntrance } from '../util/chat-messages/should-animate-message-entrance';
 import { getChatRowItemType } from '../util/chat-row-item-type';
-import { isUserNoticeTags } from '../util/rich-chat-message/is-user-notice-tags';
-
-const messageRowEntering = chatEntranceSpring(FadeInUp);
-
-/**
- * A row renders the whole message union, so notice tags go through a runtime
- * guard rather than the generic.
- */
-function getRowNoticeTags(
-  message: AnyChatMessageType,
-): UserNoticeTags | undefined {
-  const tags = 'notice_tags' in message ? message.notice_tags : undefined;
-  return isUserNoticeTags(tags) ? tags : undefined;
-}
-
-interface ChatRowPreferences {
-  animate: boolean;
-  chatDensity: 'comfortable' | 'compact';
-  chatFontScale?: ChatFontScale;
-  chatTimestamps: boolean;
-  customHighlights?: CustomHighlight[];
-  disableEmoteAnimations: boolean;
-  highlightOwnMentions?: boolean;
-  showAlternatingChatRows: boolean;
-  showInlineReplyContext: boolean;
-}
 
 interface UseChatRowRendererOptions {
   channelId: string;
@@ -94,149 +55,6 @@ interface UseChatRowRendererOptions {
     login?: string | null;
   } | null;
 }
-
-interface ChatMessageRowProps {
-  chatDensity: 'comfortable' | 'compact';
-  channelId: string;
-  currentUsername?: string;
-  currentUsernameNormalized: string;
-  customHighlights?: CustomHighlight[];
-  displayFlags: ChatRowDisplayFlags;
-  getMentionColor: (username: string) => string;
-  highlightedUserSet: ReadonlySet<string>;
-  index: number;
-  message: AnyChatMessageType;
-  onBadgePress: (badge: BadgePressData) => void;
-  onEmotePress: (emote: EmotePressData) => void;
-  onMessageLongPress: (data: MessageActionData<'usernotice'>) => void;
-  onReplyContextPress: (replyParentMessageId: string) => void;
-  onUsernamePress: (data: UsernamePressData) => void;
-  parseTextForEmotes: (text: string) => ParsedPart[];
-}
-
-const ChatMessageRow = function ChatMessageRow({
-  chatDensity,
-  channelId,
-  currentUsername,
-  currentUsernameNormalized,
-  customHighlights,
-  displayFlags,
-  getMentionColor,
-  highlightedUserSet,
-  index,
-  message: msg,
-  onBadgePress,
-  onEmotePress,
-  onMessageLongPress,
-  onReplyContextPress,
-  onUsernamePress,
-  parseTextForEmotes,
-}: ChatMessageRowProps) {
-  const {
-    animate,
-    disableEmoteAnimations,
-    fontScale,
-    showAlternatingChatRows,
-    showInlineReplyContext,
-    showTimestamps,
-  } = displayFlags;
-
-  const isHighlightedMessageTarget = useIsHighlightedReplyTargetMessage(
-    channelId,
-    msg.message_id,
-  );
-
-  const rowVisibility = useRowVisibility();
-
-  // Decided once at mount; a row must not replay its entrance on re-render.
-  const [animateEntrance] = useState(
-    () => animate && shouldAnimateMessageEntrance(msg, Date.now()),
-  );
-
-  const isAlternatingRow =
-    showAlternatingChatRows && (msg.seq ?? index) % 2 === 1;
-
-  const rowStyle = getChatTextStyles(fontScale, chatDensity === 'compact').row;
-
-  const messageDisplay = useMemo(
-    () => ({
-      disableEmoteAnimations,
-      isAlternatingRow,
-      isChannelPointRedemption: msg.isChannelPointRedemption,
-      isAnnouncement: msg.isAnnouncement,
-      isHighlightedMessage: msg.isHighlightedMessage,
-      isSharedChatDuplicated: msg.isSharedChatDuplicated,
-      isHighlightedMessageTarget,
-      isTwitchSystemNotice: msg.isTwitchSystemNotice,
-      showInlineReplyContext,
-      showTimestamp: showTimestamps,
-    }),
-    [
-      disableEmoteAnimations,
-      isAlternatingRow,
-      isHighlightedMessageTarget,
-      msg.isAnnouncement,
-      msg.isChannelPointRedemption,
-      msg.isHighlightedMessage,
-      msg.isSharedChatDuplicated,
-      msg.isTwitchSystemNotice,
-      showInlineReplyContext,
-      showTimestamps,
-    ],
-  );
-
-  const row = (
-    <RichChatMessage
-      id={msg.id}
-      broadcasterId={channelId}
-      channel={msg.channel}
-      message={msg.message}
-      userstate={msg.userstate}
-      badges={msg.badges}
-      cachedSenderColor={
-        msg.cachedSenderColor ??
-        resolveCachedSenderColor(msg, getUserMessageColor)
-      }
-      message_id={msg.message_id}
-      message_nonce={msg.message_nonce}
-      timestamp={msg.timestamp}
-      sender={msg.sender}
-      isAction={msg.isAction}
-      style={rowStyle}
-      parentDisplayName={msg.parentDisplayName}
-      parentColor={msg.parentColor}
-      replyDisplayName={msg.replyDisplayName}
-      replyBody={msg.replyBody}
-      onBadgePress={onBadgePress}
-      onMessageLongPress={onMessageLongPress}
-      onEmotePress={onEmotePress}
-      onUsernamePress={onUsernamePress}
-      getMentionColor={getMentionColor}
-      parseTextForEmotes={parseTextForEmotes}
-      currentUsername={currentUsername}
-      currentUsernameNormalized={currentUsernameNormalized}
-      density={chatDensity}
-      fontScale={fontScale}
-      customHighlights={customHighlights}
-      highlightedUserSet={highlightedUserSet}
-      messageDisplay={messageDisplay}
-      onReplyContextPress={onReplyContextPress}
-      // RichChatMessage is generic over one notice variant; the row's union collapses this prop to `undefined`. Value guarded above.
-      // @ts-expect-error - notice_tags cannot narrow against the row's union
-      notice_tags={getRowNoticeTags(msg)}
-    />
-  );
-
-  return (
-    <RowVisibilityContext.Provider value={rowVisibility}>
-      {animateEntrance ? (
-        <Animated.View entering={messageRowEntering}>{row}</Animated.View>
-      ) : (
-        row
-      )}
-    </RowVisibilityContext.Provider>
-  );
-};
 
 export function useChatRowRenderer({
   channelId,
@@ -268,7 +86,7 @@ export function useChatRowRenderer({
   }, []);
 
   const parseTextForEmotes = useCallback(
-    (text: string): ParsedPart[] => {
+    (text: string): MessageToken[] => {
       if (!text.trim()) {
         return [];
       }
@@ -376,7 +194,7 @@ export function useChatRowRenderer({
    * silently stop that preference from re-rendering the rows.
    */
   // mentionLoginRevision is deliberately excluded: it bumps ~every 400ms and
-  // re-rendered every visible row (~57fps -> 60fps once removed); MentionSpan subscribes itself.
+  // re-rendered every visible row (~57fps -> 60fps once removed); MentionToken subscribes itself.
   const messageListExtraData = useMemo(
     () => ({
       ...displayFlags,
@@ -453,7 +271,7 @@ export function useChatRowRenderer({
       }
 
       return (
-        <ChatMessageRow
+        <ChatRowItem
           chatDensity={preferences.chatDensity}
           channelId={channelId}
           currentUsername={currentUsernameForMentions}

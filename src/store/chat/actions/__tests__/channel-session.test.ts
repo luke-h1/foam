@@ -90,8 +90,8 @@ describe('resetChannelSession', () => {
     ]);
   });
 
-  test('part drops only the committed window', () => {
-    resetChannelSession('part');
+  test('token drops only the committed window', () => {
+    resetChannelSession('token');
 
     expect(calledResets()).toEqual(['clearMessages']);
   });

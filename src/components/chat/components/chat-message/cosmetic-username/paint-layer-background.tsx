@@ -1,4 +1,4 @@
-// "shape" is the 7TV paint API field (types/seventv/cosmetics.ts), not a naming choice.
+// "shape" is the 7TV paint API field (types/seven-tv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import { type ReactNode, useState } from 'react';
 import { type LayoutChangeEvent, StyleSheet, View } from 'react-native';
@@ -13,7 +13,7 @@ import Svg, {
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import type { PaintLayerData } from '@app/types/seventv/cosmetics';
+import type { PaintLayerData } from '@app/types/seven-tv/cosmetics';
 
 import { PaintLayerTiledImage } from './paint-layer-tiled-image';
 import { buildLayerGradientConfig } from './util/paint-layer/build-layer-gradient-config';
@@ -29,6 +29,195 @@ interface PaintLayerBackgroundProps {
   baseColor: string;
   layer: PaintLayerData;
   layerIndex: number;
+}
+
+type GradientFillProps = {
+  gradientConfig: NonNullable<ReturnType<typeof buildLayerGradientConfig>>;
+  gradientId: string;
+};
+
+/**
+ * CSS radial-gradient defaults to farthest-corner sizing, which needs the
+ * rendered layer size in pixels to resolve to a true circle.
+ */
+function RadialGradientFill({
+  gradientConfig,
+  gradientId,
+  isEllipse,
+  layerSize,
+}: GradientFillProps & {
+  isEllipse: boolean;
+  layerSize: { width: number; height: number } | null;
+}): ReactNode {
+  const width = layerSize?.width ?? 0;
+
+  const height = layerSize?.height ?? 0;
+  const halfW = width / 2;
+  const halfH = height / 2;
+  const farthestCorner = Math.hypot(halfW, halfH);
+  const rx = isEllipse ? halfW * Math.SQRT2 : farthestCorner;
+  const ry = isEllipse ? halfH * Math.SQRT2 : farthestCorner;
+
+  return layerSize ? (
+    <Svg width='100%' height='100%' style={styles.fill}>
+      <Defs>
+        <SvgRadialGradient
+          id={`${gradientId}-radial`}
+          gradientUnits='userSpaceOnUse'
+          cx={halfW}
+          cy={halfH}
+          rx={rx}
+          ry={ry}
+          fx={halfW}
+          fy={halfH}
+        >
+          {gradientConfig.colors.map((color, index) => (
+            <Stop
+              key={`${color}-${gradientConfig.locations[index]}`}
+              offset={`${(gradientConfig.locations[index] ?? 0) * 100}%`}
+              stopColor={color}
+            />
+          ))}
+        </SvgRadialGradient>
+      </Defs>
+      <Rect
+        x='0'
+        y='0'
+        width='100%'
+        height='100%'
+        fill={`url(#${gradientId}-radial)`}
+      />
+    </Svg>
+  ) : null;
+}
+
+/**
+ * A repeating linear gradient, which the native gradient cannot express.
+ */
+function LinearGradientSvgFill({
+  gradientConfig,
+  gradientId,
+}: GradientFillProps): ReactNode {
+  const { start, end } = gradientConfig;
+
+  return (
+    <Svg width='100%' height='100%' style={styles.fill}>
+      <Defs>
+        <SvgLinearGradient
+          id={`${gradientId}-linear`}
+          x1={`${start.x * 100}%`}
+          y1={`${start.y * 100}%`}
+          x2={`${end.x * 100}%`}
+          y2={`${end.y * 100}%`}
+        >
+          {gradientConfig.colors.map((color, index) => (
+            <Stop
+              key={`${color}-${gradientConfig.locations[index]}`}
+              offset={`${(gradientConfig.locations[index] ?? 0) * 100}%`}
+              stopColor={color}
+            />
+          ))}
+        </SvgLinearGradient>
+      </Defs>
+      <Rect
+        x='0'
+        y='0'
+        width='100%'
+        height='100%'
+        fill={`url(#${gradientId}-linear)`}
+      />
+    </Svg>
+  );
+}
+
+type PaintLayerContentProps = {
+  gradientConfig: ReturnType<typeof buildLayerGradientConfig>;
+  gradientId: string;
+  isAssetPaint: boolean;
+  isEllipse: boolean;
+  isRadial: boolean;
+  layer: PaintLayerBackgroundProps['layer'];
+  layerSize: { width: number; height: number } | null;
+  setUrlTextureReady: (ready: boolean) => void;
+  urlTextureReady: boolean;
+  useSvgLinear: boolean;
+};
+
+/**
+ * Paints one layer's fill. 7TV describes a layer as an image, a radial or
+ * linear gradient, or a flat colour, and each needs a different primitive -
+ * SVG for the two gradients CSS semantics require, the native gradient
+ * otherwise.
+ */
+function PaintLayerContent({
+  gradientConfig,
+  gradientId,
+  isAssetPaint,
+  isEllipse,
+  isRadial,
+  layer,
+  layerSize,
+  setUrlTextureReady,
+  urlTextureReady,
+  useSvgLinear,
+}: PaintLayerContentProps): ReactNode {
+  if (isAssetPaint) {
+    return isTilingCanvasRepeat(layer.canvas_repeat, layer.repeat) ? (
+      <PaintLayerTiledImage
+        canvasRepeat={layer.canvas_repeat}
+        imageUrl={layer.image_url}
+      />
+    ) : (
+      <Image
+        contentFit={imageRepeatFromCanvasRepeat(
+          layer.canvas_repeat,
+          layer.repeat,
+        )}
+        source={{ uri: layer.image_url }}
+        useAppleWebpCodec={false}
+        style={urlTextureReady ? styles.fill : styles.unloadedTexture}
+        onLoad={() => setUrlTextureReady(true)}
+        onError={() => setUrlTextureReady(false)}
+      />
+    );
+  }
+
+  if (!gradientConfig) {
+    // Invalid gradient (fewer than two stops): the span keeps only its
+    // base-colour backing, like the reference's invalid background-image.
+    return null;
+  }
+
+  if (isRadial) {
+    return (
+      <RadialGradientFill
+        gradientConfig={gradientConfig}
+        gradientId={gradientId}
+        isEllipse={isEllipse}
+        layerSize={layerSize}
+      />
+    );
+  }
+  if (useSvgLinear) {
+    return (
+      <LinearGradientSvgFill
+        gradientConfig={gradientConfig}
+        gradientId={gradientId}
+      />
+    );
+  }
+  {
+    // SAFETY: buildLayerGradientConfig returns null below two stops, so colors and locations both hold at least two entries here.
+    return (
+      <LinearGradient
+        colors={gradientConfig.colors as [string, string, ...string[]]}
+        locations={gradientConfig.locations as [number, number, ...number[]]}
+        start={gradientConfig.start}
+        end={gradientConfig.end}
+        style={styles.fill}
+      />
+    );
+  }
 }
 
 export function PaintLayerBackground({
@@ -64,117 +253,20 @@ export function PaintLayerBackground({
     }
   };
 
-  let content: ReactNode;
-
-  if (isAssetPaint) {
-    content = isTilingCanvasRepeat(layer.canvas_repeat, layer.repeat) ? (
-      <PaintLayerTiledImage
-        canvasRepeat={layer.canvas_repeat}
-        imageUrl={layer.image_url}
-      />
-    ) : (
-      <Image
-        contentFit={imageRepeatFromCanvasRepeat(
-          layer.canvas_repeat,
-          layer.repeat,
-        )}
-        source={{ uri: layer.image_url }}
-        useAppleWebpCodec={false}
-        style={urlTextureReady ? styles.fill : styles.unloadedTexture}
-        onLoad={() => setUrlTextureReady(true)}
-        onError={() => setUrlTextureReady(false)}
-      />
-    );
-  } else if (!gradientConfig) {
-    // Invalid gradient (fewer than two stops): the span keeps only its
-    // base-colour backing, like the reference's invalid background-image.
-    content = null;
-  } else if (isRadial) {
-    // CSS radial-gradient default sizing is farthest-corner, which needs the
-    // rendered layer size in pixels to resolve to a true circle.
-    const width = layerSize?.width ?? 0;
-
-    const height = layerSize?.height ?? 0;
-    const halfW = width / 2;
-    const halfH = height / 2;
-    const farthestCorner = Math.hypot(halfW, halfH);
-    const rx = isEllipse ? halfW * Math.SQRT2 : farthestCorner;
-    const ry = isEllipse ? halfH * Math.SQRT2 : farthestCorner;
-
-    content = layerSize ? (
-      <Svg width='100%' height='100%' style={styles.fill}>
-        <Defs>
-          <SvgRadialGradient
-            id={`${gradientId}-radial`}
-            gradientUnits='userSpaceOnUse'
-            cx={halfW}
-            cy={halfH}
-            rx={rx}
-            ry={ry}
-            fx={halfW}
-            fy={halfH}
-          >
-            {gradientConfig.colors.map((color, index) => (
-              <Stop
-                key={`${color}-${gradientConfig.locations[index]}`}
-                offset={`${(gradientConfig.locations[index] ?? 0) * 100}%`}
-                stopColor={color}
-              />
-            ))}
-          </SvgRadialGradient>
-        </Defs>
-        <Rect
-          x='0'
-          y='0'
-          width='100%'
-          height='100%'
-          fill={`url(#${gradientId}-radial)`}
-        />
-      </Svg>
-    ) : null;
-  } else if (useSvgLinear) {
-    const { start, end } = gradientConfig;
-
-    content = (
-      <Svg width='100%' height='100%' style={styles.fill}>
-        <Defs>
-          <SvgLinearGradient
-            id={`${gradientId}-linear`}
-            x1={`${start.x * 100}%`}
-            y1={`${start.y * 100}%`}
-            x2={`${end.x * 100}%`}
-            y2={`${end.y * 100}%`}
-          >
-            {gradientConfig.colors.map((color, index) => (
-              <Stop
-                key={`${color}-${gradientConfig.locations[index]}`}
-                offset={`${(gradientConfig.locations[index] ?? 0) * 100}%`}
-                stopColor={color}
-              />
-            ))}
-          </SvgLinearGradient>
-        </Defs>
-        <Rect
-          x='0'
-          y='0'
-          width='100%'
-          height='100%'
-          fill={`url(#${gradientId}-linear)`}
-        />
-      </Svg>
-    );
-  } else {
-    // SAFETY: buildLayerGradientConfig returns null below two stops, so colors and locations both hold at least two entries here.
-    content = (
-      <LinearGradient
-        colors={gradientConfig.colors as [string, string, ...string[]]}
-        locations={gradientConfig.locations as [number, number, ...number[]]}
-        start={gradientConfig.start}
-        end={gradientConfig.end}
-        style={styles.fill}
-      />
-    );
-  }
+  const content = (
+    <PaintLayerContent
+      gradientConfig={gradientConfig}
+      gradientId={gradientId}
+      isAssetPaint={isAssetPaint}
+      isEllipse={isEllipse}
+      isRadial={isRadial}
+      layer={layer}
+      layerSize={layerSize}
+      setUrlTextureReady={setUrlTextureReady}
+      urlTextureReady={urlTextureReady}
+      useSvgLinear={useSvgLinear}
+    />
+  );
 
   return (
     <View

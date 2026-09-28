@@ -124,7 +124,7 @@ const MEASURE_OPTIONS = {
 
 const CURRENT_USER_ID = '123456';
 
-const SEVENTV_CHANNEL_SETS = [
+const SEVEN_TV_CHANNEL_SETS = [
   { setId: 'set-main', setName: 'Channel Main' },
   { setId: 'set-prime', setName: 'Channel Prime' },
   { setId: 'set-mods', setName: 'Mod Picks' },
@@ -159,7 +159,7 @@ for (let owner = 0; owner < 6; owner += 1) {
 // subscriber emotes over six channels - a real popular stream's population.
 const menuInput: EmoteMenuDataInput = {
   sevenTvChannelEmotes: createEmotes(1200, '7TV Channel', 'stvc', index => {
-    const set = SEVENTV_CHANNEL_SETS[index % SEVENTV_CHANNEL_SETS.length]!;
+    const set = SEVEN_TV_CHANNEL_SETS[index % SEVEN_TV_CHANNEL_SETS.length]!;
 
     return {
       set_metadata: {

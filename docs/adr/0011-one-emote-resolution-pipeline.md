@@ -1,8 +1,8 @@
 # One emote resolution pipeline; the preview predicts live chat
 
-`processEmotesWorklet` (`utils/chat/emoteProcessor.ts`) is the only
+`processEmotesWorklet` (`utils/chat/emote-processor.ts`) is the only
 text-to-emote resolver. The preferences preview
-(`ChatPreferencesPreview.tsx`) calls it directly; `replaceTextWithEmotes`
+(`screens/preferences/components/chat-preferences-preview.tsx`) calls it directly; `replaceTextWithEmotes`
 and its private support code (`findEmotesInText`, `getEmoteMatchIndex`,
 `splitTextWithTwemoji`, `sanitizeInput`) are deleted.
 
@@ -22,12 +22,12 @@ fallback: standalone emoji are keyed without the variant selector in the
 dataset (`2764` for ❤️), so the retry fixes a data-format mismatch rather
 than loosening the matching rules.
 
-`utils/chat/__tests__/emoteProcessor.test.ts` pins the unified semantics
+`utils/chat/__tests__/emote-processor.test.ts` pins the unified semantics
 (alias non-resolution, trailing punctuation, shortcode and FE0F emoji paths);
-`emoteProcessor.overlays.test.ts` pins zero-width composition. The former
+`utils/chat/__tests__/emote-processor.overlays.test.ts` pins zero-width composition. The former
 divergence-pinning suite (`emoteResolutionDivergence.test.ts`) is gone with
 the divergence. Link/clip/7TV-link words are handled by the shared
-`utils/chat/parseWordLinkParts/`, which both this pipeline and
+`utils/chat/parse-word-link-tokens/`, which both this pipeline and
 `MediaLinkCard` consume.
 
 ## Consequences

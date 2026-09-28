@@ -8,8 +8,8 @@ import { channelPointsRewardTitleFieldsFromUserstate } from '@app/utils/chat/cha
 import { channelPointsRewardTitleFromTags } from '@app/utils/chat/channel-points-reward-title/channel-points-reward-title-from-tags';
 import { channelPointsRewardTitleFromUserstate } from '@app/utils/chat/channel-points-reward-title/channel-points-reward-title-from-userstate';
 
+import { styles } from '../chat-row.styles';
 import { getChatTextStyles } from '../chat-text.styles';
-import { styles } from '../rich-chat-message.styles';
 import type { ChatFontScale } from '../util/chat-scale';
 import { ChatNoticeMetaRow } from './chat-notice-meta-row';
 

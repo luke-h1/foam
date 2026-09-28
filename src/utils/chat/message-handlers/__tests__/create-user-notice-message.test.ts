@@ -21,7 +21,7 @@ import {
 import type { BaseUserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { getCachedChannelPointRewardTitle } from '@app/utils/chat/channel-point-reward-title-store';
-import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import type { MessageToken } from '@app/utils/chat/message-token';
 import * as generateNonceModule from '@app/utils/string/generate-nonce';
 
 import { createUserNoticeMessage } from '../create-user-notice-message';
@@ -146,7 +146,7 @@ describe('createUserNoticeMessage', () => {
     expect(result.notice_tags?.['msg-id']).toBe('raid');
     expect(result.isTwitchSystemNotice).toBe(true);
 
-    expect(result.message).toEqual<ParsedPart[]>([
+    expect(result.message).toEqual<MessageToken[]>([
       { type: 'text', content: '500 raiders from RaidLeader have joined!' },
     ]);
   });
@@ -233,7 +233,7 @@ describe('createUserNoticeMessage', () => {
     expect(result.isChannelPointRedemption).not.toBe(true);
     expect(result.isTwitchSystemNotice).toBe(true);
 
-    expect(result.message[0]).toEqual<ParsedPart>({
+    expect(result.message[0]).toEqual<MessageToken>({
       type: 'text',
       content: 'RewardUser redeemed Hydrate',
     });
@@ -260,7 +260,7 @@ describe('createUserNoticeMessage', () => {
     expect(result.notice_tags?.['msg-id']).toBe('bitsbadgetier');
     expect(result.isTwitchSystemNotice).toBe(true);
 
-    expect(result.message).toEqual<ParsedPart[]>([
+    expect(result.message).toEqual<MessageToken[]>([
       { type: 'text', content: 'Cheerer earned the 1,000 Bits badge!' },
     ]);
   });
@@ -281,7 +281,7 @@ describe('createUserNoticeMessage', () => {
     expect(result.notice_tags?.['msg-id']).toBe('unraid');
     expect(result.isTwitchSystemNotice).toBe(true);
 
-    expect(result.message).toEqual<ParsedPart[]>([
+    expect(result.message).toEqual<MessageToken[]>([
       { type: 'text', content: 'The raid has been cancelled.' },
     ]);
   });
@@ -302,7 +302,7 @@ describe('createUserNoticeMessage', () => {
     expect(result.notice_tags?.['msg-id']).toBe('sharedchatnotice');
     expect(result.isTwitchSystemNotice).toBe(true);
 
-    expect(result.message).toEqual<ParsedPart[]>([
+    expect(result.message).toEqual<MessageToken[]>([
       {
         type: 'text',
         content: 'Shared chat connected with partner channel.',
@@ -310,7 +310,7 @@ describe('createUserNoticeMessage', () => {
     ]);
   });
 
-  test('creates modiversary as a mod anniversary notice part', () => {
+  test('creates modiversary as a mod anniversary notice token', () => {
     const tags = createModiversaryTags({
       'display-name': 'ModUser',
       login: 'moduser',
@@ -327,7 +327,7 @@ describe('createUserNoticeMessage', () => {
 
     expect(result.notice_tags?.['msg-id']).toBe('modiversary');
 
-    expect(result.message).toEqual<ParsedPart[]>([
+    expect(result.message).toEqual<MessageToken[]>([
       {
         type: 'modiversary',
         displayName: 'ModUser',
@@ -353,7 +353,7 @@ describe('createUserNoticeMessage', () => {
       text: "I'm celebrating my 1 year, 6 month Mod Anniversary!",
     });
 
-    expect(result.message).toEqual<ParsedPart[]>([
+    expect(result.message).toEqual<MessageToken[]>([
       {
         type: 'modiversary',
         displayName: 'Jimmotep',
@@ -381,7 +381,7 @@ describe('createUserNoticeMessage', () => {
 
     expect(result.notice_tags?.['msg-id']).toBe('modiversary');
 
-    expect(result.message).toEqual<ParsedPart[]>([
+    expect(result.message).toEqual<MessageToken[]>([
       {
         type: 'modiversary',
         displayName: 'ModUser',
@@ -409,7 +409,7 @@ describe('createUserNoticeMessage', () => {
     expect(result.sender).toBe('Gekon');
     expect(result.userstate.username).toBe('Gekon');
 
-    expect(result.message).toEqual<ParsedPart[]>([
+    expect(result.message).toEqual<MessageToken[]>([
       {
         type: 'text',
         content: 'this is an announcement to bait him',
@@ -431,7 +431,7 @@ describe('createUserNoticeMessage', () => {
     expect(result.isTwitchSystemNotice).toBeUndefined();
     expect(result.sender).toBe('HighlightedUser');
 
-    expect(result.message).toEqual<ParsedPart[]>([
+    expect(result.message).toEqual<MessageToken[]>([
       { type: 'text', content: 'this message is highlighted' },
     ]);
   });
@@ -541,7 +541,7 @@ describe('createUserNoticeMessage', () => {
       text: '',
     });
 
-    expect(result.message).toEqual<ParsedPart[]>([
+    expect(result.message).toEqual<MessageToken[]>([
       { type: 'text', content: 'Some unknown notice' },
     ]);
 

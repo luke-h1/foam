@@ -19,7 +19,7 @@ import { theme } from '@app/styles/themes';
 
 import type { ComposerOverflowAction } from '../util/composer-overflow-actions';
 import { COMPOSER_CONTROL_SIZE } from '../util/composer-sizing';
-import { composerButtonAppearance } from './composer-icon-button';
+import { composerButtonAppearance } from './util/composer-button-appearance';
 
 export interface ComposerOverflowButtonProps {
   actions: ComposerOverflowAction[];

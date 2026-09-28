@@ -3,7 +3,7 @@ import { bttvSanitisedGlobalEmoteSet } from '@app/services/__fixtures__/emotes/b
 import { ffzSanitisedChannelEmoteSet } from '@app/services/__fixtures__/emotes/ffz/ffz-sanitised-channel-emote-set.fixture';
 import { ffzSanitisedGlobalEmoteSet } from '@app/services/__fixtures__/emotes/ffz/ffz-sanitised-global-emote-set.fixture';
 import { sevenTvSanitisedChannelEmoteSetFixture } from '@app/services/__fixtures__/emotes/stv/seven-tv-sanitised-channel-emote-set.fixture';
-import { seventvSanitiisedGlobalEmoteSetFixture } from '@app/services/__fixtures__/emotes/stv/seven-tv-sanitised-global-emote-set.fixture';
+import { sevenTvSanitisedGlobalEmoteSetFixture } from '@app/services/__fixtures__/emotes/stv/seven-tv-sanitised-global-emote-set.fixture';
 import { twitchTvSanitisedEmoteSetChannelFixture } from '@app/services/__fixtures__/emotes/twitch/twitch-tv-sanitised-emote-set-channel.fixture';
 import { twitchTvSanitisedEmoteSetGlobalFixture } from '@app/services/__fixtures__/emotes/twitch/twitch-tv-sanitised-emote-set-global.fixture';
 import type { SanitisedEmote } from '@app/types/emote';
@@ -19,7 +19,7 @@ describe('replaceEmotesWithText', () => {
     { name: 'FFZ Channel', emotes: ffzSanitisedChannelEmoteSet },
     { name: 'FFZ Global', emotes: ffzSanitisedGlobalEmoteSet },
     { name: '7TV Channel', emotes: sevenTvSanitisedChannelEmoteSetFixture },
-    { name: '7TV Global', emotes: seventvSanitiisedGlobalEmoteSetFixture },
+    { name: '7TV Global', emotes: sevenTvSanitisedGlobalEmoteSetFixture },
     { name: 'Twitch Channel', emotes: twitchTvSanitisedEmoteSetChannelFixture },
     { name: 'Twitch Global', emotes: twitchTvSanitisedEmoteSetGlobalFixture },
     { name: 'BTTV Channel', emotes: bttvSanitisedChannelEmoteSet },
@@ -122,11 +122,11 @@ describe('replaceEmotesWithText', () => {
     expect(result).toBe('Hello @user  World');
   });
 
-  test('does not stringify custom object parts', () => {
+  test('does not stringify custom object tokens', () => {
     const result = replaceEmotesWithText([
       { type: 'text', content: 'Added ' },
       {
-        type: 'stv_emote_added',
+        type: 'stvEmoteAdded',
         stvEvents: {
           type: 'added',
           data: {

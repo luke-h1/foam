@@ -2,7 +2,7 @@ import { EmoteSetKind } from '@app/graphql/generated/gql';
 import { bttvEmoteService } from '@app/services/bttv-emote-service';
 import { chatterinoService } from '@app/services/chatterino-service';
 import { ffzService } from '@app/services/ffz-service';
-import { sevenTvService } from '@app/services/seventv-service';
+import { sevenTvService } from '@app/services/seven-tv-service';
 import { twitchBadgeService } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
 import { twitchService } from '@app/services/twitch-service';
@@ -548,7 +548,7 @@ describe('loadChannelResources cache fallback', () => {
     expect(systemMessages).toHaveLength(1);
 
     const text = systemMessages[0]!.message
-      .flatMap(part => (part.type === 'text' ? [part.content] : []))
+      .flatMap(token => (token.type === 'text' ? [token.content] : []))
       .join('');
 
     expect(text).toContain('BTTV');
@@ -592,7 +592,7 @@ describe('loadChannelResources cache fallback', () => {
     expect(systemMessages).toHaveLength(1);
 
     const text = systemMessages[0]!.message
-      .flatMap(part => (part.type === 'text' ? [part.content] : []))
+      .flatMap(token => (token.type === 'text' ? [token.content] : []))
       .join('');
 
     expect(text).toContain('BTTV');
@@ -630,7 +630,7 @@ describe('loadChannelResources cache fallback', () => {
     expect(systemMessages).toHaveLength(1);
 
     const text = systemMessages[0]!.message
-      .flatMap(part => (part.type === 'text' ? [part.content] : []))
+      .flatMap(token => (token.type === 'text' ? [token.content] : []))
       .join('');
 
     expect(text).toContain('FFZ');

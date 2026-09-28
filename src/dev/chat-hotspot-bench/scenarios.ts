@@ -22,9 +22,9 @@ import {
 import {
   denseEmoteData,
   reprocessChatLines,
-} from '@app/utils/chat/__fixtures__/resolve-message-emote-parts.perf.fixture';
+} from '@app/utils/chat/__fixtures__/resolve-message-emote-tokens.perf.fixture';
 import { findBadges } from '@app/utils/chat/find-badges';
-import { resolveMessageEmoteParts } from '@app/utils/chat/resolve-message-emote-parts';
+import { resolveMessageEmoteParts } from '@app/utils/chat/resolve-message-emote-tokens';
 
 import { measureSync, type SyncMeasureResult } from './measure-sync';
 
@@ -127,7 +127,7 @@ const CHAT_HOTSPOT_SCENARIOS: ChatHotspotScenario[] = [
     run: runFindBadgesDense,
   },
   {
-    id: 'resolve-emote-parts',
+    id: 'resolve-emote-tokens',
     name: 'resolveMessageEmoteParts batch',
     run: runResolveMessageEmotePartsBatch,
   },

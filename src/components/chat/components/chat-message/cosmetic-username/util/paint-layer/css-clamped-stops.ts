@@ -1,4 +1,4 @@
-import type { PaintStop } from '@app/types/seventv/cosmetics';
+import type { PaintStop } from '@app/types/seven-tv/cosmetics';
 
 /**
  * CSS clamps each stop to the running maximum, never reordering (css-images-3

@@ -5,8 +5,8 @@ import { Image as ExpoImage } from 'expo-image';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 import { ChatMessagePressable } from '../chat-message-pressable';
+import { styles } from '../chat-row.styles';
 import { getChatTextStyles } from '../chat-text.styles';
-import { styles } from '../rich-chat-message.styles';
 import type { ChatFontScale } from '../util/chat-scale';
 
 interface ChatBadgeProps {

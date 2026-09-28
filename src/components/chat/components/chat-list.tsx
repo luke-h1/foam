@@ -61,21 +61,26 @@ const CHAT_RECYCLE_ITEMS = false;
 
 const SKELETON_CHAT_SCALE = getChatScale('default', 'comfortable');
 
+function getSkeletonBodyStyle(index: number) {
+  const variant = index % 3;
+
+  if (variant === 0) {
+    return styles.skeletonBodyShort;
+  }
+
+  if (variant === 1) {
+    return styles.skeletonBodyMedium;
+  }
+
+  return styles.skeletonBodyLong;
+}
+
 function ChatListRowSkeleton({ index }: { index: number }) {
   return (
     <View style={styles.skeletonRow} testID='chat-row-skeleton'>
       <Skeleton shimmer={false} style={styles.skeletonBadge} />
       <Skeleton shimmer={false} style={styles.skeletonUsername} />
-      <Skeleton
-        shimmer={false}
-        style={
-          index % 3 === 0
-            ? styles.skeletonBodyShort
-            : index % 3 === 1
-              ? styles.skeletonBodyMedium
-              : styles.skeletonBodyLong
-        }
-      />
+      <Skeleton shimmer={false} style={getSkeletonBodyStyle(index)} />
     </View>
   );
 }

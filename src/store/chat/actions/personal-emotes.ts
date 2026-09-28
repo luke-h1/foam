@@ -1,4 +1,4 @@
-import { sevenTvService } from '@app/services/seventv-service';
+import { sevenTvService } from '@app/services/seven-tv-service';
 import type { SanitisedEmote } from '@app/types/emote';
 import { createFetchOnceGuard } from '@app/utils/async/fetch-once-guard';
 import { evictOldestWhenFull } from '@app/utils/collection/evict-oldest-when-full';

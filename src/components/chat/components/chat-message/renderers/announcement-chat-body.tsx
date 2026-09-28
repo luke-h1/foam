@@ -2,13 +2,13 @@ import { View } from 'react-native';
 
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
-import { styles } from '../rich-chat-message.styles';
-import type { BadgePressData } from '../rich-chat-message.types';
+import { styles } from '../chat-row.styles';
+import type { BadgePressData } from '../chat-row.types';
 import { ChatNoticeMetaRow } from './chat-notice-meta-row';
-import type { ChatMessagePartRendererArgs } from './types/chat-message-part-renderer-args';
+import type { ChatTokenRenderProps } from './types/chat-token-render-props';
 import { UserChatBody } from './user-chat-body';
 
-interface AnnouncementChatBodyProps extends ChatMessagePartRendererArgs {
+interface AnnouncementChatBodyProps extends ChatTokenRenderProps {
   accentColor?: string;
   badgeList: SanitisedBadgeSet[];
   cachedSenderColor?: string;

@@ -72,6 +72,13 @@ const EMOJI_MENU_SECTIONS = [
   ),
 ];
 
+interface WarmProviderImagesOptions {
+  columns: number;
+  providers: EmoteMenuProvider[];
+  signal: AbortSignal;
+  warmupProviderId: EmoteMenuProviderId | null;
+}
+
 /**
  * Decodes the first rows of each provider ahead of the user reaching them. The
  * active provider gets a deeper warm-up, and providers are walked one at a
@@ -82,12 +89,7 @@ async function warmProviderImages({
   providers,
   signal,
   warmupProviderId,
-}: {
-  columns: number;
-  providers: EmoteMenuProvider[];
-  signal: AbortSignal;
-  warmupProviderId: EmoteMenuProviderId | null;
-}): Promise<void> {
+}: WarmProviderImagesOptions): Promise<void> {
   for (const provider of providers) {
     if (signal.aborted) {
       return;
@@ -130,19 +132,21 @@ function takeProviderEmotes(
   return emotes;
 }
 
+interface UseEmoteSheetOptions {
+  isPresented: boolean;
+  onDismiss: () => void;
+  onEmoteSelect?: (item: EmotePickerItem) => void;
+  emoteListRef: React.RefObject<LegendListRef | null>;
+  layoutWidth: number;
+}
+
 export function useEmoteSheet({
   isPresented,
   onDismiss,
   onEmoteSelect,
   emoteListRef,
   layoutWidth,
-}: {
-  isPresented: boolean;
-  onDismiss: () => void;
-  onEmoteSelect?: (item: EmotePickerItem) => void;
-  emoteListRef: React.RefObject<LegendListRef | null>;
-  layoutWidth: number;
-}) {
+}: UseEmoteSheetOptions) {
   const { width: screenWidth } = useWindowDimensions();
   const sheetWidth = layoutWidth > 0 ? layoutWidth : screenWidth;
   const [searchQuery, setSearchQuery] = useState('');

@@ -170,6 +170,55 @@ export function CachedImagesScreen() {
   );
 }
 
+const CACHE_TABS = [
+  { id: 'images', label: 'Images', activeColor: theme.colorBlue },
+  { id: 'badges', label: 'Badges', activeColor: theme.colorOrange },
+  { id: 'paints', label: 'Paints', activeColor: theme.colorViolet },
+] as const satisfies readonly {
+  id: TabType;
+  label: string;
+  activeColor: string;
+}[];
+
+function CacheTabButton({
+  isActive,
+  onPress,
+  tab,
+}: {
+  isActive: boolean;
+  onPress: (tab: TabType) => void;
+  tab: (typeof CACHE_TABS)[number];
+}) {
+  return (
+    <Button
+      onPress={() => onPress(tab.id)}
+      style={[
+        styles.tabButton,
+        isActive && styles.tabButtonActive,
+        isActive && { backgroundColor: tab.activeColor },
+      ]}
+    >
+      <Text
+        style={[styles.tabButtonText, isActive && styles.tabButtonTextActive]}
+      >
+        {tab.label}
+      </Text>
+    </Button>
+  );
+}
+
+interface CachedImagesListHeaderProps {
+  activeTab: TabType;
+  badgeList: BadgeInfo[];
+  images: CachedImageInfo[];
+  onClearBadges: () => void;
+  onClearCache: () => void;
+  onClearPaints: () => void;
+  onRefresh: () => void;
+  onSelectTab: (tab: TabType) => void;
+  paintList: PaintInfo[];
+}
+
 function CachedImagesListHeader({
   activeTab,
   badgeList,
@@ -180,140 +229,59 @@ function CachedImagesListHeader({
   onRefresh,
   onSelectTab,
   paintList,
-}: {
-  activeTab: TabType;
-  badgeList: BadgeInfo[];
-  images: CachedImageInfo[];
-  onClearBadges: () => void;
-  onClearCache: () => void;
-  onClearPaints: () => void;
-  onRefresh: () => void;
-  onSelectTab: (tab: TabType) => void;
-  paintList: PaintInfo[];
-}) {
+}: CachedImagesListHeaderProps) {
+  const clearTarget = {
+    images: images.length,
+    badges: badgeList.length,
+    paints: paintList.length,
+  }[activeTab];
+
+  const onClear = {
+    images: onClearCache,
+    badges: onClearBadges,
+    paints: onClearPaints,
+  }[activeTab];
+
   return (
     <View style={styles.headerContainer}>
       <View style={styles.tabContainer}>
-        <Button
-          onPress={() => onSelectTab('images')}
-          style={[
-            styles.tabButton,
-            activeTab === 'images' && styles.tabButtonActive,
-            activeTab === 'images' && {
-              backgroundColor: theme.colorBlue,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.tabButtonText,
-              activeTab === 'images' && styles.tabButtonTextActive,
-            ]}
-          >
-            Images
-          </Text>
-        </Button>
-        <Button
-          onPress={() => onSelectTab('badges')}
-          style={[
-            styles.tabButton,
-            activeTab === 'badges' && styles.tabButtonActive,
-            activeTab === 'badges' && {
-              backgroundColor: theme.colorOrange,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.tabButtonText,
-              activeTab === 'badges' && styles.tabButtonTextActive,
-            ]}
-          >
-            Badges
-          </Text>
-        </Button>
-        <Button
-          onPress={() => onSelectTab('paints')}
-          style={[
-            styles.tabButton,
-            activeTab === 'paints' && styles.tabButtonActive,
-            activeTab === 'paints' && {
-              backgroundColor: theme.colorViolet,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.tabButtonText,
-              activeTab === 'paints' && styles.tabButtonTextActive,
-            ]}
-          >
-            Paints
-          </Text>
-        </Button>
+        {CACHE_TABS.map(tab => (
+          <CacheTabButton
+            key={tab.id}
+            isActive={activeTab === tab.id}
+            onPress={onSelectTab}
+            tab={tab}
+          />
+        ))}
       </View>
 
-      {activeTab === 'images' && (
+      {activeTab === 'images' ? (
         <View style={styles.pathContainer}>
           <Text style={styles.pathLabel}>Cache Location</Text>
           <Text style={styles.pathValue} numberOfLines={1} selectable>
             {getCacheDirectoryPath()}
           </Text>
         </View>
-      )}
+      ) : null}
 
       <View style={styles.actions}>
         <Button onPress={onRefresh} style={styles.button}>
           <Text style={styles.buttonText}>Refresh</Text>
         </Button>
-        {activeTab === 'images' && (
-          <Button
-            onPress={onClearCache}
-            style={styles.button}
-            disabled={images.length === 0}
+        <Button
+          onPress={onClear}
+          style={styles.button}
+          disabled={clearTarget === 0}
+        >
+          <Text
+            style={[
+              styles.buttonText,
+              clearTarget === 0 && styles.buttonTextDisabled,
+            ]}
           >
-            <Text
-              style={[
-                styles.buttonText,
-                images.length === 0 && styles.buttonTextDisabled,
-              ]}
-            >
-              Clear
-            </Text>
-          </Button>
-        )}
-        {activeTab === 'badges' && (
-          <Button
-            onPress={onClearBadges}
-            style={styles.button}
-            disabled={badgeList.length === 0}
-          >
-            <Text
-              style={[
-                styles.buttonText,
-                badgeList.length === 0 && styles.buttonTextDisabled,
-              ]}
-            >
-              Clear
-            </Text>
-          </Button>
-        )}
-        {activeTab === 'paints' && (
-          <Button
-            onPress={onClearPaints}
-            style={styles.button}
-            disabled={paintList.length === 0}
-          >
-            <Text
-              style={[
-                styles.buttonText,
-                paintList.length === 0 && styles.buttonTextDisabled,
-              ]}
-            >
-              Clear
-            </Text>
-          </Button>
-        )}
+            Clear
+          </Text>
+        </Button>
       </View>
     </View>
   );
@@ -655,19 +623,21 @@ function CachedImagesEmptyState({
   );
 }
 
+interface CachedImagesTabContentProps {
+  activeTab: TabType;
+  badgeList: BadgeInfo[];
+  images: CachedImageInfo[];
+  listRef: RefObject<FlashListRef<CachedImageInfo> | null>;
+  paintList: PaintInfo[];
+}
+
 function CachedImagesTabContent({
   activeTab,
   badgeList,
   images,
   listRef,
   paintList,
-}: {
-  activeTab: TabType;
-  badgeList: BadgeInfo[];
-  images: CachedImageInfo[];
-  listRef: RefObject<FlashListRef<CachedImageInfo> | null>;
-  paintList: PaintInfo[];
-}) {
+}: CachedImagesTabContentProps) {
   if (activeTab === 'images') {
     return (
       <FlashList

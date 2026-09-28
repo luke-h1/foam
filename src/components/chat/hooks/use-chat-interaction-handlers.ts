@@ -7,7 +7,7 @@ import type {
   EmotePressData,
   MessageActionData,
   UsernamePressData,
-} from '@app/components/chat/components/chat-message/rich-chat-message.types';
+} from '@app/components/chat/components/chat-message/chat-row.types';
 import type { EmotePickerItem } from '@app/components/chat/components/emote-sheet/util/emote-sheet-types';
 import { impact, selection } from '@app/lib/haptics';
 import {

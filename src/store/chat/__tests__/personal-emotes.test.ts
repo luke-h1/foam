@@ -1,5 +1,5 @@
 import { EmoteSetKind } from '@app/graphql/generated/gql';
-import { sevenTvService } from '@app/services/seventv-service';
+import { sevenTvService } from '@app/services/seven-tv-service';
 import type { SevenTvSanitisedEmote } from '@app/types/emote';
 import { logger } from '@app/utils/logger';
 

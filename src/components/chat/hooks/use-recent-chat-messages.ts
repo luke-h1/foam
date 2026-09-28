@@ -20,6 +20,16 @@ const yieldToEventLoop = () =>
     setTimeout(resolve, 0);
   });
 
+interface UseRecentChatMessagesOptions {
+  channelId: string;
+  channelName: string;
+  forceFlush: () => void;
+  processRecentIrcLine: (line: string) => void;
+  isLoadingRecentMessagesRef: MutableRefObject<boolean>;
+  scrollChatToEnd: () => void;
+  showRecentMessages: boolean;
+}
+
 export function useRecentChatMessages({
   channelId,
   channelName,
@@ -28,15 +38,7 @@ export function useRecentChatMessages({
   isLoadingRecentMessagesRef,
   scrollChatToEnd,
   showRecentMessages,
-}: {
-  channelId: string;
-  channelName: string;
-  forceFlush: () => void;
-  processRecentIrcLine: (line: string) => void;
-  isLoadingRecentMessagesRef: MutableRefObject<boolean>;
-  scrollChatToEnd: () => void;
-  showRecentMessages: boolean;
-}) {
+}: UseRecentChatMessagesOptions) {
   const restoredRecentCountRef = useRef(0);
   const scrollChatToEndRef = useSyncRef(scrollChatToEnd);
   const processRecentIrcLineRef = useSyncRef(processRecentIrcLine);

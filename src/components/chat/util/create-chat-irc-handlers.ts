@@ -340,7 +340,7 @@ export function createChatIrcHandlers({
       return;
     }
 
-    resetChannelSession('part');
+    resetChannelSession('token');
     clearLocalMessages();
   };
 

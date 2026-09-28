@@ -2,7 +2,7 @@ import * as sevenTvWorkletClient from '@app/services/gql/seven-tv-worklet-client
 import {
   clearSevenTvUserCache,
   sevenTvService,
-} from '@app/services/seventv-service';
+} from '@app/services/seven-tv-service';
 
 import {
   noSevenTvUserResponse,

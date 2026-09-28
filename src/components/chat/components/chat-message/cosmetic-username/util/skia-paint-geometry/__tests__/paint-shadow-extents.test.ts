@@ -1,4 +1,4 @@
-import type { PaintShadow } from '@app/types/seventv/cosmetics';
+import type { PaintShadow } from '@app/types/seven-tv/cosmetics';
 
 import {
   paintShadowExtents,
