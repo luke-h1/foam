@@ -1,4 +1,4 @@
-import type { IndexedCollection } from '@app/services/ws/util/indexedCollection';
+import type { IndexedCollection } from '@app/services/ws/util/indexed-collection';
 import type {
   PaintData,
   PaintFunction,

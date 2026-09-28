@@ -88,6 +88,7 @@ export function getApiMonitoringContext({
 
   try {
     const parsedUrl = new URL(raw_url);
+
     return {
       endpoint: parsedUrl.pathname,
       host: parsedUrl.host,

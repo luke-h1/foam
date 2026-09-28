@@ -89,18 +89,23 @@ const renderRedirectPage = ({
 
 const renderStreamPage = (request: Request, url: URL) => {
   const requestedChannel = url.searchParams.get('channel') ?? undefined;
+
   const channel =
     requestedChannel && TWITCH_CHANNEL_PATTERN.test(requestedChannel)
       ? requestedChannel
       : DEFAULT_STREAM_CHANNEL;
+
   const requestedVideo = url.searchParams.get('video') ?? undefined;
+
   const video =
     requestedVideo && TWITCH_VIDEO_PATTERN.test(requestedVideo)
       ? requestedVideo
       : undefined;
+
   const host = request.headers.get('host') || 'localhost';
   const parent = host.split(':')[0] ?? 'localhost';
   const safeChannel = encodeURIComponent(channel);
+
   const iframeSrc = video
     ? `https://player.twitch.tv/?video=${encodeURIComponent(
         video,
@@ -200,6 +205,7 @@ const getDefaultToken = async () => {
 
 const renderPendingPage = (url: URL) => {
   const redirectUrl = `foam://?${url.searchParams.toString()}`;
+
   const safeRedirectUrl = JSON.stringify(redirectUrl)
     .replace(/</g, '\\u003c')
     .replace(/>/g, '\\u003e')
@@ -232,15 +238,18 @@ interface MagicLinkBlob {
 
 const getMagicLinkBlob = (): MagicLinkBlob | null => {
   const raw = process.env.MAGIC_LINK_BLOB;
+
   if (!raw) {
     return null;
   }
 
   try {
     const parsed: MagicLinkBlob = JSON.parse(raw);
+
     if (!parsed.key || !parsed.access_token) {
       return null;
     }
+
     return parsed;
   } catch {
     console.error('failed to parse MAGIC_LINK_BLOB');
@@ -253,22 +262,28 @@ const constantTimeEquals = (a: string, b: string): boolean => {
   const bBytes = Buffer.from(b);
   const length = Math.max(aBytes.length, bBytes.length);
   let result = aBytes.length === bBytes.length ? 0 : 1;
+
   for (let i = 0; i < length; i += 1) {
     result |= (aBytes[i] ?? 0) ^ (bBytes[i] ?? 0);
   }
+
   return result === 0;
 };
 
 const buildMagicTargetUrl = (blob: MagicLinkBlob): string => {
   const params = new URLSearchParams();
   params.set('access_token', blob.access_token);
+
   if (blob.refresh_token) {
     params.set('refresh_token', blob.refresh_token);
   }
+
   params.set('token_type', blob.token_type ?? 'bearer');
+
   if (blob.expires_in && blob.expires_in > 0) {
     params.set('expires_in', String(blob.expires_in));
   }
+
   return `foam://auth?${params.toString()}`;
 };
 
@@ -277,6 +292,7 @@ const renderMagicRedirect = (target: string) => {
     .replace(/</g, '\\u003c')
     .replace(/>/g, '\\u003e')
     .replace(/&/g, '\\u0026');
+
   const hrefAttr = target
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')

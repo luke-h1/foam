@@ -3,16 +3,19 @@ export function parseCurrentRolloutPercentage(
 ): string | null {
   for (const line of viewOutput.split('\n')) {
     const trimmed = line.trim();
+
     if (!trimmed.startsWith('Rollout Percentage')) {
       continue;
     }
 
     const value = trimmed.slice('Rollout Percentage'.length).trim();
+
     if (!value.endsWith('%')) {
       continue;
     }
 
     const percentage = value.slice(0, -1).trim();
+
     if (/^\d+$/.test(percentage)) {
       return percentage;
     }

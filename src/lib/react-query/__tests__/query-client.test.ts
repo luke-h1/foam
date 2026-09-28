@@ -47,6 +47,7 @@ describe('handleMutationError', () => {
     handleMutationError(new Error('boom'), undefined);
 
     expect(errorMock).toHaveBeenCalledTimes(1);
+
     expect(toastErrorMock.mock.calls).toEqual([
       ['Something went wrong. Try again.'],
     ]);

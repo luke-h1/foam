@@ -1,0 +1,333 @@
+import { useCallback, useEffect, useRef } from 'react';
+import { Alert, Platform } from 'react-native';
+
+import { nativeBuildVersion } from 'expo-application';
+import * as Updates from 'expo-updates';
+import {
+  addUpdatesStateChangeListener,
+  checkForUpdateAsync,
+  fetchUpdateAsync,
+  isEnabled,
+  latestContext,
+  reloadAsync,
+  type ReloadScreenOptions,
+  setExtraParamAsync,
+} from 'expo-updates';
+
+import { useSyncRef } from '@app/hooks/use-sync-ref';
+import { countOtaMetric } from '@app/lib/sentry';
+import { theme } from '@app/styles/themes';
+import {
+  isForegroundTransition,
+  subscribeToAppStateTransitions,
+} from '@app/utils/app-state/app-state-transitions';
+import { logger } from '@app/utils/logger';
+
+const MINIMUM_MINIMIZE_TIME = 15 * 60e3; // 15 minutes
+const INITIAL_CHECK_DELAY = 3e3; // 3 seconds
+
+const OTA_RELOAD_SCREEN_OPTIONS = {
+  backgroundColor: theme.color.background.dark,
+  fade: true,
+  spinner: {
+    color: theme.colorPrimary,
+    size: 'large' as const,
+  },
+} satisfies ReloadScreenOptions;
+
+const getIsUpdatePending = () => latestContext.isUpdatePending;
+
+async function setExtraParams() {
+  await setExtraParamAsync(
+    Platform.OS === 'ios' ? 'ios-build-number' : 'android-build-number',
+    // `buildVersion` is not actually a string on Android despite the TS type.
+    `${nativeBuildVersion}`,
+  );
+  await setExtraParamAsync('channel', Updates.channel || 'unknown');
+}
+
+/**
+ * The fields every OTA log line and metric carries, so the channel and
+ * environment are reported the same way everywhere.
+ */
+function otaTelemetryFields(isProduction: boolean) {
+  return {
+    channel: Updates.channel || 'unknown',
+    environment: isProduction ? 'production' : 'non-production',
+    platform: Platform.OS,
+  };
+}
+
+/**
+ * Asks the update server what it has and downloads it when there is something
+ * newer. A failure here is logged and swallowed - the app keeps running the
+ * bundle it already has.
+ */
+async function fetchAvailableOtaUpdate(isProduction: boolean): Promise<void> {
+  const fields = otaTelemetryFields(isProduction);
+
+  try {
+    await setExtraParams();
+
+    logger.main.info('Checking for OTA update', {
+      name: 'ota_updates_service_info',
+      category: 'ota',
+      action: 'check_started',
+      buildVersion: nativeBuildVersion,
+      isProduction,
+      ...fields,
+    });
+
+    countOtaMetric('ota.check.started', fields);
+
+    const res = await checkForUpdateAsync();
+
+    if (!res.isAvailable) {
+      return;
+    }
+
+    logger.main.info('OTA update available', {
+      name: 'ota_updates_service_info',
+      category: 'ota',
+      action: 'update_available',
+      manifestId: res.manifest?.id,
+      ...fields,
+    });
+
+    countOtaMetric('ota.update.available', fields);
+
+    await fetchUpdateAsync();
+
+    logger.main.info('OTA update fetched successfully', {
+      name: 'ota_updates_service_info',
+      category: 'ota',
+      action: 'update_fetched',
+      ...fields,
+    });
+
+    countOtaMetric('ota.update.fetched', fields);
+  } catch (caught) {
+    logger.main.error('OTA update check failed', {
+      name: 'ota_updates_service_error',
+      error: caught instanceof Error ? caught : new Error(String(caught)),
+      category: 'OTAUpdatesService',
+      action: 'check_failed',
+      isProduction,
+      ...fields,
+    });
+  }
+}
+
+export function useOTAUpdates() {
+  const shouldReceiveUpdates = isEnabled && !__DEV__;
+  const isProduction = process.env.EXPO_PUBLIC_APP_VARIANT === 'production';
+  const lastMinimize = useRef(0);
+  const ranInitialCheck = useRef(false);
+  const handledPendingUpdate = useRef(false);
+  const timeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const checkForUpdates = useCallback(async () => {
+    if (!shouldReceiveUpdates) {
+      return;
+    }
+
+    await fetchAvailableOtaUpdate(isProduction);
+  }, [isProduction, shouldReceiveUpdates]);
+
+  const applyUpdate = useCallback(async () => {
+    try {
+      await reloadAsync({
+        reloadScreenOptions: OTA_RELOAD_SCREEN_OPTIONS,
+      });
+    } catch (caught) {
+      const error =
+        caught instanceof Error ? caught : new Error(String(caught));
+
+      logger.main.error('OTA update reload failed', {
+        name: 'ota_updates_service_error',
+        error,
+        category: 'OTAUpdatesService',
+        action: 'reload_failed',
+        isProduction,
+        channel: Updates.channel || 'unknown',
+        platform: Platform.OS,
+      });
+    }
+  }, [isProduction]);
+
+  const promptAndReload = useCallback(() => {
+    countOtaMetric('ota.update.alert_shown', {
+      category: 'ota',
+      platform: Platform.OS,
+      channel: Updates.channel || 'unknown',
+      environment: isProduction ? 'production' : 'non-production',
+    });
+
+    Alert.alert(
+      'Update Available',
+      'A new version has been downloaded and is ready to install. Relaunch now?',
+      [
+        {
+          text: 'Relaunch',
+          style: 'default',
+          onPress: () => {
+            countOtaMetric('ota.update.applied', {
+              category: 'ota',
+              platform: Platform.OS,
+              channel: Updates.channel || 'unknown',
+              environment: isProduction ? 'production' : 'non-production',
+              method: 'manual',
+            });
+
+            logger.main.info('App relaunch requested from OTA modal', {
+              name: 'ota_updates_service_info',
+              category: 'ota',
+              action: 'manual_relaunch_requested',
+              isProduction,
+              platform: Platform.OS,
+            });
+
+            void applyUpdate();
+          },
+        },
+      ],
+      { cancelable: false },
+    );
+  }, [applyUpdate, isProduction]);
+
+  const checkForUpdatesRef = useSyncRef(checkForUpdates);
+  const promptAndReloadRef = useSyncRef(promptAndReload);
+
+  useEffect(() => {
+    if (!shouldReceiveUpdates || ranInitialCheck.current) {
+      return;
+    }
+
+    ranInitialCheck.current = true;
+
+    timeout.current = setTimeout(
+      () => {
+        void checkForUpdatesRef.current();
+      },
+      isProduction ? MINIMUM_MINIMIZE_TIME : INITIAL_CHECK_DELAY,
+    );
+
+    return () => {
+      clearTimeout(timeout.current);
+    };
+  }, [checkForUpdatesRef, isProduction, shouldReceiveUpdates]);
+
+  useEffect(() => {
+    const handlePendingUpdate = () => {
+      if (!getIsUpdatePending()) {
+        handledPendingUpdate.current = false;
+        return;
+      }
+
+      if (handledPendingUpdate.current) {
+        return;
+      }
+
+      handledPendingUpdate.current = true;
+
+      logger.main.info('OTA update pending - ready to apply', {
+        name: 'ota_updates_service_info',
+        category: 'ota',
+        action: 'update_pending',
+        isProduction,
+        buildVersion: nativeBuildVersion,
+        platform: Platform.OS,
+      });
+
+      countOtaMetric('ota.update.pending', {
+        channel: Updates.channel || 'unknown',
+        environment: isProduction ? 'production' : 'non-production',
+        platform: Platform.OS,
+      });
+
+      if (!isProduction) {
+        promptAndReloadRef.current();
+      }
+    };
+
+    handlePendingUpdate();
+
+    const subscription = addUpdatesStateChangeListener(() => {
+      handlePendingUpdate();
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [isProduction, promptAndReloadRef]);
+
+  useEffect(() => {
+    if (!isEnabled) {
+      return;
+    }
+
+    const unsubscribe = subscribeToAppStateTransitions(transition => {
+      if (
+        transition.current === 'inactive' ||
+        transition.current === 'background'
+      ) {
+        lastMinimize.current = Date.now();
+        return;
+      }
+
+      if (!isForegroundTransition(transition)) {
+        return;
+      }
+
+      const shouldUpdate =
+        isProduction ||
+        lastMinimize.current <= Date.now() - MINIMUM_MINIMIZE_TIME;
+
+      if (!shouldUpdate) {
+        return;
+      }
+
+      if (!getIsUpdatePending()) {
+        logger.main.info('App foregrounded, checking for updates', {
+          name: 'ota_updates_service_info',
+          category: 'ota',
+          action: 'foreground_check_for_updates',
+          timeSinceMinimize: Date.now() - lastMinimize.current,
+          isProduction,
+        });
+
+        void checkForUpdatesRef.current();
+        return;
+      }
+
+      if (!isProduction) {
+        promptAndReloadRef.current();
+        return;
+      }
+
+      // No reload here: reloadAsync() races the foreground reconnect refetch burst and tears down the runtime mid-fetch (#699); the downloaded update applies on next cold start.
+      logger.main.info(
+        'App foregrounded with pending update, deferring to cold start',
+        {
+          name: 'ota_updates_service_info',
+          category: 'ota',
+          action: 'foreground_defer_to_cold_start',
+          timeSinceMinimize: Date.now() - lastMinimize.current,
+          isProduction,
+        },
+      );
+
+      countOtaMetric('ota.update.deferred', {
+        category: 'ota',
+        environment: isProduction ? 'production' : 'non-production',
+        platform: Platform.OS,
+        method: 'cold_start',
+        channel: Updates.channel || 'unknown',
+      });
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [checkForUpdatesRef, isProduction, promptAndReloadRef]);
+}

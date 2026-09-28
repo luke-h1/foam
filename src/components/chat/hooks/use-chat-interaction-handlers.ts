@@ -1,0 +1,141 @@
+import { useCallback } from 'react';
+import type { RefObject } from 'react';
+
+import type { ChatInputShellHandle } from '@app/components/chat/components/chat-input-shell';
+import type {
+  BadgePressData,
+  EmotePressData,
+  MessageActionData,
+  UsernamePressData,
+} from '@app/components/chat/components/chat-message/rich-chat-message.types';
+import type { EmotePickerItem } from '@app/components/chat/components/emote-sheet/util/emote-sheet-types';
+import { impact, selection } from '@app/lib/haptics';
+import {
+  openChatBadgePreview,
+  openChatEmotePreview,
+  openChatEmoteSheet,
+  openChatMessageActions,
+  openChatSettingsSheet,
+  openChatUserActions,
+} from '@app/store/chat/actions/chat-overlays';
+import { getMessageById } from '@app/store/chat/actions/messages';
+import { fetchUserCosmetics } from '@app/store/chat/actions/user-cosmetics-fetch';
+import type { ChatMessageType } from '@app/store/chat/types/constants';
+import { replaceEmotesWithText } from '@app/utils/chat/replace-emotes-with-text';
+
+export function useChatComposerActions({
+  inputShellRef,
+}: {
+  inputShellRef: RefObject<ChatInputShellHandle | null>;
+}) {
+  const handleReply = useCallback(
+    (message: ChatMessageType<'usernotice'>) => {
+      const messageText = replaceEmotesWithText(message.message);
+      const parentMessage = getMessageById(message.message_id);
+
+      const twitchUserId = message.userstate['user-id'];
+
+      if (twitchUserId) {
+        void fetchUserCosmetics(twitchUserId);
+      }
+
+      inputShellRef.current?.setReplyTo({
+        messageId: message.message_id,
+        username: message.sender,
+        message: messageText,
+        messageParts: message.message,
+        replyParentUserLogin: message.userstate.username || '',
+        parentMessage: parentMessage
+          ? replaceEmotesWithText(parentMessage.message)
+          : '',
+        color: message.userstate.color,
+        userId: twitchUserId || undefined,
+      });
+    },
+    [inputShellRef],
+  );
+
+  const handleEmoteSelect = useCallback(
+    (item: EmotePickerItem) => {
+      const emoteName = item instanceof Object ? item.name : item;
+      inputShellRef.current?.appendEmote(emoteName);
+    },
+    [inputShellRef],
+  );
+
+  const appendMentionToComposer = useCallback(
+    (username: string) => {
+      inputShellRef.current?.appendMention(username);
+    },
+    [inputShellRef],
+  );
+
+  const insertPhraseToComposer = useCallback(
+    (text: string) => {
+      inputShellRef.current?.insertPhrase(text);
+    },
+    [inputShellRef],
+  );
+
+  return {
+    appendMentionToComposer,
+    handleEmoteSelect,
+    handleReply,
+    insertPhraseToComposer,
+  };
+}
+
+/**
+ * Press handlers call the overlay store directly, so the chat root never
+ * subscribes to which sheet is open.
+ */
+export function useChatOverlayActions(channelId: string) {
+  const handleOpenEmoteSheet = useCallback(() => {
+    openChatEmoteSheet(channelId);
+  }, [channelId]);
+
+  const handleOpenSettingsSheet = useCallback(() => {
+    openChatSettingsSheet(channelId);
+  }, [channelId]);
+
+  const handleBadgeLongPress = useCallback(
+    (badge: BadgePressData) => {
+      selection();
+      openChatBadgePreview(channelId, badge);
+    },
+    [channelId],
+  );
+
+  const handleMessageLongPress = useCallback(
+    (data: MessageActionData<'usernotice'>) => {
+      impact('light');
+      openChatMessageActions(channelId, data);
+    },
+    [channelId],
+  );
+
+  const handleEmotePress = useCallback(
+    (emote: EmotePressData) => {
+      selection();
+      openChatEmotePreview(channelId, emote);
+    },
+    [channelId],
+  );
+
+  const handleUsernamePress = useCallback(
+    (usernameData: UsernamePressData) => {
+      selection();
+      openChatUserActions(channelId, usernameData);
+    },
+    [channelId],
+  );
+
+  return {
+    handleBadgeLongPress,
+    handleEmotePress,
+    handleMessageLongPress,
+    handleOpenEmoteSheet,
+    handleOpenSettingsSheet,
+    handleUsernamePress,
+  };
+}

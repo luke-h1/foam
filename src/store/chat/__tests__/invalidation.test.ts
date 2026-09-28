@@ -1,14 +1,14 @@
 import {
   getSessionCacheString,
   setSessionCacheString,
-} from '@app/store/chat/actions/chatColorCaches';
+} from '@app/store/chat/actions/chat-color-caches';
 import {
   invalidateBakedBadges,
   invalidateCosmeticsCache,
   invalidateMentionColors,
   invalidatePersonalEmotes,
 } from '@app/store/chat/actions/invalidation';
-import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { chatStore$ } from '@app/store/chat/observables/chat-store';
 
 describe('invalidation', () => {
   beforeEach(() => {

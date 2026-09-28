@@ -23,6 +23,7 @@ import mockFile from '../__mocks__/mockFile';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 global.TextEncoder = TextEncoder;
+
 // SAFETY: Node's util.TextDecoder implements the DOM TextDecoder surface the app code decodes with.
 global.TextDecoder = TextDecoder as typeof global.TextDecoder;
 
@@ -55,6 +56,7 @@ function canvasKitStub(): any {
   const skia = require('@shopify/react-native-skia') as {
     useAnimatedImageValue?: () => { value?: unknown };
   };
+
   if (skia.useAnimatedImageValue === undefined) {
     skia.useAnimatedImageValue = () => ({});
   }
@@ -97,7 +99,9 @@ const createReactNativeHostMock = (hostName: string) =>
 {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const ReactNative = require('react-native');
+
   const mockNativeView = createReactNativeHostMock('View');
+
   const overrides = {
     FlatList: mockNativeView,
     Share: { share: jest.fn() },
@@ -115,6 +119,7 @@ const createReactNativeHostMock = (hostName: string) =>
       ),
     },
   };
+
   Object.entries(overrides).forEach(([key, value]) => {
     Object.defineProperty(ReactNative, key, {
       configurable: true,

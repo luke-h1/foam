@@ -1,5 +1,5 @@
-import { chatStore$ } from '../observables/chatStore';
-import { clearSessionCache } from './chatColorCaches';
+import { chatStore$ } from '../observables/chat-store';
+import { clearSessionCache } from './chat-color-caches';
 
 /**
  * Mention spans subscribe to `mentionLoginRevision` themselves, so a bump

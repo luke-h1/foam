@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 
 import { theme } from '@app/styles/themes';
-import { nativeStackScreenOptions } from '@app/utils/navigation/nativeStackOptions';
+import { nativeStackScreenOptions } from '@app/utils/navigation/native-stack-options';
 
 export default function StreamsLayout() {
   return (
@@ -11,6 +11,7 @@ export default function StreamsLayout() {
         options={{
           headerShown: false,
           gestureEnabled: true,
+          title: '',
           fullScreenGestureEnabled: true,
         }}
       />

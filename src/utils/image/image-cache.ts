@@ -55,6 +55,7 @@ let validationStarted = false;
 
 function hashString(str: string): string {
   let hash = 2166136261;
+
   for (let i = 0; i < str.length; i += 1) {
     // eslint-disable-next-line no-bitwise
     hash ^= str.charCodeAt(i);
@@ -62,6 +63,7 @@ function hashString(str: string): string {
     hash +=
       (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
   }
+
   // eslint-disable-next-line no-bitwise
   return (hash >>> 0).toString(16);
 }
@@ -69,9 +71,11 @@ function hashString(str: string): string {
 function getFileExtensionFromUrl(url: string): string {
   try {
     const match = new URL(url).pathname.match(/\.(png|jpg|jpeg|gif|webp|svg)/i);
+
     if (!match?.[1]) {
       return 'img';
     }
+
     return match[1].toLowerCase() === 'jpeg' ? 'jpg' : match[1].toLowerCase();
   } catch {
     return 'img';
@@ -96,13 +100,16 @@ function hydrateManifest(): void {
   if (hydrated) {
     return;
   }
+
   hydrated = true;
 
   manifestStorage.getAllKeys().forEach(storageKey => {
     if (!storageKey.startsWith(RECORD_PREFIX)) {
       return;
     }
+
     const raw = manifestStorage.getString(storageKey);
+
     if (!raw) {
       return;
     }
@@ -110,6 +117,7 @@ function hydrateManifest(): void {
     try {
       // SAFETY: persistRecord is the only writer of these keys and stringifies a CacheRecord.
       const record = JSON.parse(raw) as CacheRecord;
+
       const previous = manifest.get(record.key);
       manifestTotalBytes += record.size - (previous?.size ?? 0);
       manifest.set(record.key, record);
@@ -136,8 +144,10 @@ function removeRecord(key: string): void {
   if (!record) {
     return;
   }
+
   manifestTotalBytes -= record.size;
   verifiedFiles.delete(record.uri);
+
   try {
     const file = new File(record.uri);
     if (file.exists) {
@@ -150,11 +160,13 @@ function removeRecord(key: string): void {
 
 async function ensureCacheDirectoryAsync(): Promise<Directory> {
   const cacheDir = new Directory(Paths.cache, CACHE_DIR_NAME);
+
   if (!cacheDir.exists) {
     await FileSystemLegacy.makeDirectoryAsync(cacheDir.uri, {
       intermediates: true,
     });
   }
+
   return cacheDir;
 }
 
@@ -173,10 +185,12 @@ function touchRecord(record: CacheRecord): string {
  * stat for a while; removeRecord / clearSessionCache still invalidate at once.
  */
 const FILE_VERIFICATION_TTL_MS = 10 * 60 * 1000;
+
 const verifiedFiles = new Map<string, number>();
 
 function cachedFileExists(record: CacheRecord): boolean {
   const verifiedAt = verifiedFiles.get(record.uri);
+
   if (
     verifiedAt !== undefined &&
     Date.now() - verifiedAt < FILE_VERIFICATION_TTL_MS
@@ -186,11 +200,13 @@ function cachedFileExists(record: CacheRecord): boolean {
 
   try {
     const exists = new File(record.uri).exists;
+
     if (exists) {
       verifiedFiles.set(record.uri, Date.now());
     } else {
       verifiedFiles.delete(record.uri);
     }
+
     return exists;
   } catch {
     verifiedFiles.delete(record.uri);
@@ -200,6 +216,7 @@ function cachedFileExists(record: CacheRecord): boolean {
 
 function getValidRecord(key: string): CacheRecord | undefined {
   const record = manifest.get(key);
+
   if (!record) {
     return undefined;
   }
@@ -215,6 +232,7 @@ function getValidRecord(key: string): CacheRecord | undefined {
 function drainQueue(): void {
   while (activeDownloads < DOWNLOAD_CONCURRENCY && taskQueue.length > 0) {
     const task = taskQueue.shift();
+
     if (!task) {
       return;
     }
@@ -226,6 +244,7 @@ function drainQueue(): void {
     }
 
     activeDownloads += 1;
+
     task
       .run()
       .then(task.resolve, task.reject)
@@ -244,6 +263,7 @@ function enqueueDownload(
   run: () => Promise<string>,
 ): Promise<string> {
   const existing = inFlight.get(key);
+
   if (existing) {
     return existing;
   }
@@ -257,8 +277,10 @@ function enqueueDownload(
       run,
       url,
     });
+
     drainQueue();
   });
+
   inFlight.set(key, promise);
   return promise;
 }
@@ -289,6 +311,7 @@ function validateManifestSoon(): void {
   if (validationStarted) {
     return;
   }
+
   validationStarted = true;
 
   setTimeout(() => {
@@ -316,6 +339,7 @@ export async function cacheImageFromUrl(
 
   const key = getCacheKey(url, options.variant);
   const existing = getValidRecord(key);
+
   if (existing) {
     return touchRecord(existing);
   }
@@ -334,6 +358,7 @@ export async function cacheImageFromUrl(
         uri: cachedFile.uri,
         variant: options.variant,
       };
+
       persistRecord(record);
       evictIfNeeded(key);
       return cachedFile.uri;
@@ -342,12 +367,16 @@ export async function cacheImageFromUrl(
     try {
       const downloadedFile = await File.downloadFileAsync(url, cacheDir);
 
-      if (downloadedFile.uri !== cachedFile.uri) {
-        if (cachedFile.exists) {
-          downloadedFile.delete();
-        } else {
-          await downloadedFile.move(cachedFile);
-        }
+      // A parallel download already produced the file, so drop the duplicate.
+      const isDuplicate =
+        downloadedFile.uri !== cachedFile.uri && cachedFile.exists;
+
+      if (isDuplicate) {
+        downloadedFile.delete();
+      }
+
+      if (!isDuplicate && downloadedFile.uri !== cachedFile.uri) {
+        await downloadedFile.move(cachedFile);
       }
 
       const record: CacheRecord = {
@@ -359,6 +388,7 @@ export async function cacheImageFromUrl(
         uri: cachedFile.uri,
         variant: options.variant,
       };
+
       persistRecord(record);
       evictIfNeeded(key);
       return cachedFile.uri;
@@ -376,9 +406,11 @@ export function getCachedImageUri(
   options: Pick<CacheImageOptions, 'variant'> = {},
 ): string | null {
   hydrateManifest();
+
   if (!url) {
     return null;
   }
+
   const record = getValidRecord(getCacheKey(url, options.variant));
   return record ? touchRecord(record) : null;
 }

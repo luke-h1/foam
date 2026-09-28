@@ -14,7 +14,7 @@ if (
 ) {
   SentryDemoRoute =
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    require('@app/screens/DevTools/SentryTestScreen').SentryTestScreen;
+    require('@app/screens/dev-tools/sentry-test-screen').SentryTestScreen;
 }
 
 export default SentryDemoRoute;

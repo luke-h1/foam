@@ -1,0 +1,32 @@
+import { useRef } from 'react';
+
+import { router } from 'expo-router';
+
+import { useShakeDetector } from '@app/hooks/use-shake-detector';
+import { usePreference } from '@app/store/preference-store';
+
+const SHAKE_COOLDOWN_MS = 30_000;
+
+// Detox shakes the simulator during scroll synthesis; keep e2e inert.
+const isE2E = process.env.EXPO_PUBLIC_APP_VARIANT === 'e2e';
+
+export function ShakeToReport() {
+  const shakeToReport = usePreference('shakeToReport');
+  const lastTriggeredAtRef = useRef(0);
+
+  useShakeDetector(
+    () => {
+      const now = Date.now();
+
+      if (now - lastTriggeredAtRef.current < SHAKE_COOLDOWN_MS) {
+        return;
+      }
+
+      lastTriggeredAtRef.current = now;
+      router.push('/feedback');
+    },
+    { enabled: shakeToReport && !isE2E },
+  );
+
+  return null;
+}

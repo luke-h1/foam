@@ -1,0 +1,50 @@
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import * as generateNonceModule from '@app/utils/string/generate-nonce';
+
+import { createSystemMessage } from '../create-system-message';
+
+describe('createSystemMessage', () => {
+  beforeEach(() => {
+    jest
+      .spyOn(generateNonceModule, 'generateNonce')
+      .mockReturnValue('test-nonce-123');
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  test('creates a system message', () => {
+    const result = createSystemMessage('testchannel', 'Connection established');
+
+    expect(result.channel).toBe('testchannel');
+    expect(result.sender).toBe('System');
+
+    expect(result.message).toEqual<ParsedPart[]>([
+      { type: 'text', content: 'Connection established' },
+    ]);
+  });
+
+  test('has system userstate', () => {
+    const result = createSystemMessage('testchannel', 'Test message');
+
+    expect(result.userstate['display-name']).toBe('System');
+    expect(result.userstate.login).toBe('system');
+    expect(result.userstate.color).toBe('#808080');
+  });
+
+  test('generates unique message IDs', () => {
+    const result1 = createSystemMessage('channel', 'Message 1');
+    const result2 = createSystemMessage('channel', 'Message 2');
+
+    expect(result1.message_id).toMatch(/^system-/);
+    expect(result2.message_id).toMatch(/^system-/);
+  });
+
+  test('has empty badges', () => {
+    const result = createSystemMessage('testchannel', 'Test');
+
+    expect(result.badges).toEqual<SanitisedBadgeSet[]>([]);
+  });
+});

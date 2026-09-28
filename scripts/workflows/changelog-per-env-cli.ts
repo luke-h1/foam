@@ -9,13 +9,17 @@ import {
 
 function resolveGitCliffBin(): string {
   const fromEnv = process.env.GIT_CLIFF_BIN;
+
   if (fromEnv != null && fromEnv !== '' && existsSync(fromEnv)) {
     return fromEnv;
   }
+
   const cargoBin = join(homedir(), '.cargo', 'bin', 'git-cliff');
+
   if (existsSync(cargoBin)) {
     return cargoBin;
   }
+
   return 'git-cliff';
 }
 
@@ -24,11 +28,13 @@ export function rewriteChangelogFile(
   currentTag: string | null,
 ): string {
   const source = readFileSync(changelogPath, 'utf8');
+
   const context = createGitCliffContext({
     gitCliffBin: resolveGitCliffBin(),
     configPath: process.env.CLIFF_CONFIG ?? 'cliff.toml',
     currentTag,
   });
+
   const rewritten = rewritePerEnvironmentSections(source, context);
 
   writeFileSync(changelogPath, rewritten, 'utf8');
@@ -38,10 +44,12 @@ export function rewriteChangelogFile(
 
 function main(): void {
   const changelogPath = process.argv[2];
+
   if (changelogPath == null || changelogPath === '') {
     console.error('Expected a path to CHANGELOG.md');
     process.exit(1);
   }
+
   const currentTag = process.argv[3] ?? null;
 
   rewriteChangelogFile(changelogPath, currentTag);

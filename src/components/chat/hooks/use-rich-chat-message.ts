@@ -1,0 +1,376 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { GestureResponderEvent } from 'react-native';
+
+import type { ChatMessagePartRendererArgs } from '@app/components/chat/components/chat-message/renderers/types/chat-message-part-renderer-args';
+import type {
+  BadgePressData,
+  EmotePressData,
+  RichChatMessageProps,
+  RichChatMessageState,
+} from '@app/components/chat/components/chat-message/rich-chat-message.types';
+import { hasSharedChannelPointsMessage } from '@app/components/chat/util/channel-points-shared-message';
+import { getAnnouncementAccentColor } from '@app/components/chat/util/get-announcement-accent-color';
+import { getAnnouncementColorParam } from '@app/components/chat/util/rich-chat-message/get-announcement-color-param';
+import { getChatBodyInfo } from '@app/components/chat/util/rich-chat-message/get-chat-body-info';
+import { getPartIdentity } from '@app/components/chat/util/rich-chat-message/get-part-identity';
+import { isUserNoticeTags } from '@app/components/chat/util/rich-chat-message/is-user-notice-tags';
+import { toChatMessageData } from '@app/components/chat/util/rich-chat-message/to-chat-message-data';
+import { usePreference } from '@app/store/preference-store';
+import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
+import { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
+import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-chat-username';
+import { findCustomHighlight } from '@app/utils/chat/custom-highlights/find-custom-highlight';
+
+export const MESSAGE_LONG_PRESS_DELAY_MS = 650;
+
+const LONG_PRESS_MOVE_TOLERANCE_DP = 10;
+
+export function useRichChatMessage<
+  TNoticeType extends NoticeVariants,
+  TVariant extends (TNoticeType extends 'usernotice'
+    ? keyof UserNoticeVariantMap
+    : never) = never,
+>(props: RichChatMessageProps<TNoticeType, TVariant>): RichChatMessageState {
+  const {
+    userstate,
+    message,
+    badges,
+    sender,
+    parentDisplayName,
+    replyBody,
+    replyDisplayName,
+    notice_tags,
+    broadcasterId,
+    onReply,
+    onBadgePress,
+    onMessageLongPress,
+    onEmotePress,
+    getMentionColor,
+    parseTextForEmotes,
+    messageDisplay,
+    onUsernamePress,
+    currentUsername,
+    currentUsernameNormalized,
+    density = 'comfortable',
+    fontScale,
+    customHighlights,
+    highlightedUserSet,
+    highlightedUsers,
+    moderationNotice,
+    onReplyContextPress,
+    isChannelPointRedemption: messageIsChannelPointRedemption = false,
+    isAction = false,
+    isAnnouncement: messageIsAnnouncement = false,
+    isHighlightedMessage: messageIsHighlightedMessage = false,
+    isSharedChatDuplicated: messageIsSharedChatDuplicated = false,
+    isTwitchSystemNotice: messageIsTwitchSystemNotice = false,
+  } = props;
+
+  // Flags a message carries in its own data default from the message; the
+  // renderer's messageDisplay wins wherever it sets one.
+  const {
+    disableEmoteAnimations = false,
+    isChannelPointRedemption = messageIsChannelPointRedemption,
+    isAnnouncement = messageIsAnnouncement,
+    isHighlightedMessage = messageIsHighlightedMessage,
+    isSharedChatDuplicated:
+      displayIsSharedChatDuplicated = messageIsSharedChatDuplicated,
+    isTwitchSystemNotice = messageIsTwitchSystemNotice,
+    showInlineReplyContext = true,
+    showTimestamp = true,
+    isAlternatingRow = false,
+    isHighlightedMessageTarget = false,
+  } = messageDisplay ?? {};
+
+  const sharedChatEnabled = usePreference('sharedChatEnabled');
+
+  const isSharedChatDuplicated =
+    displayIsSharedChatDuplicated && sharedChatEnabled;
+
+  const [selectedEmoteAction, setSelectedEmoteAction] =
+    useState<EmotePressData | null>(null);
+
+  const rowLongPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  // Set from each emote's onTouchStart (which bubbles before the row's), so
+  // the single row-level long-press timer can open the emote sheet without a
+  // Pressable per emote (busy rows would mount hundreds of them).
+  const pressedEmotePartRef = useRef<EmotePressData | null>(null);
+
+  const rowTouchOriginRef = useRef<{ x: number; y: number } | null>(null);
+
+  const compact = density === 'compact';
+
+  const normalisedCurrentUsername =
+    currentUsernameNormalized ?? normaliseChatUsername(currentUsername);
+
+  // Identity-stable so the memoized span renderers can bail out.
+  const effectiveHighlightedUserSet = useMemo(
+    () =>
+      highlightedUserSet ??
+      new Set((highlightedUsers ?? []).map(normaliseChatUsername)),
+    [highlightedUserSet, highlightedUsers],
+  );
+
+  const messageSenderKey = normaliseChatUsername(
+    userstate.username || userstate.login || sender,
+  );
+
+  const isHighlightedSender =
+    messageSenderKey.length > 0 &&
+    effectiveHighlightedUserSet?.has(messageSenderKey);
+
+  const handleEmotePress = (part: EmotePressData) => {
+    onEmotePress?.(part);
+  };
+
+  const stopRowLongPressTimer = () => {
+    if (!rowLongPressTimerRef.current) {
+      return;
+    }
+
+    clearTimeout(rowLongPressTimerRef.current);
+    rowLongPressTimerRef.current = null;
+  };
+
+  const clearRowLongPressTimer = () => {
+    pressedEmotePartRef.current = null;
+    rowTouchOriginRef.current = null;
+    stopRowLongPressTimer();
+  };
+
+  const handleRowTouchMove = (event: GestureResponderEvent) => {
+    const origin = rowTouchOriginRef.current;
+
+    if (!origin) {
+      return;
+    }
+
+    const { pageX, pageY } = event.nativeEvent;
+
+    if (
+      Math.abs(pageX - origin.x) > LONG_PRESS_MOVE_TOLERANCE_DP ||
+      Math.abs(pageY - origin.y) > LONG_PRESS_MOVE_TOLERANCE_DP
+    ) {
+      clearRowLongPressTimer();
+    }
+  };
+
+  useEffect(
+    () => () => {
+      if (rowLongPressTimerRef.current) {
+        clearTimeout(rowLongPressTimerRef.current);
+        rowLongPressTimerRef.current = null;
+      }
+    },
+    [],
+  );
+
+  const handleEmoteTouchStart = useCallback((part: EmotePressData) => {
+    pressedEmotePartRef.current = part;
+  }, []);
+
+  const closeEmoteActionSheet = () => {
+    setSelectedEmoteAction(null);
+  };
+
+  const handleBadgePress = (badge: BadgePressData) => {
+    onBadgePress?.(badge);
+  };
+
+  const handleUsernamePress = () => {
+    if (!userstate.username) {
+      return;
+    }
+
+    onUsernamePress?.({
+      username: userstate.username,
+      login: userstate.login,
+      userId: userstate['user-id'],
+      color: userstate.color,
+    });
+  };
+
+  const partRendererArgs = {
+    compact,
+    disableEmoteAnimations,
+    effectiveHighlightedUserSet,
+    fontScale,
+    getMentionColor,
+    getPartKey: getPartIdentity,
+    onEmoteTouchStart: handleEmoteTouchStart,
+    message,
+    moderationNotice,
+    normalisedCurrentUsername,
+    noticeTags: isUserNoticeTags(notice_tags) ? notice_tags : undefined,
+    parseTextForEmotes,
+  } satisfies ChatMessagePartRendererArgs;
+
+  const {
+    hasSubscriptionNotice,
+    mentionsCurrentUser,
+    variant: detectedBodyVariant,
+  } = getChatBodyInfo(
+    message,
+    normalisedCurrentUsername,
+    sender,
+    isTwitchSystemNotice,
+    isAnnouncement,
+  );
+
+  const customHighlight =
+    detectedBodyVariant === 'user_chat' &&
+    !moderationNotice &&
+    customHighlights &&
+    customHighlights.length > 0
+      ? findCustomHighlight(message, customHighlights)
+      : undefined;
+
+  const noticeMsgId =
+    notice_tags && 'msg-id' in notice_tags ? notice_tags['msg-id'] : undefined;
+
+  const bodyVariant =
+    detectedBodyVariant === 'twitch_system_notice' &&
+    (noticeMsgId === 'raid' || noticeMsgId === 'unraid')
+      ? 'raid'
+      : detectedBodyVariant;
+
+  const isAppSystemSender = bodyVariant === 'app_system_sender';
+  const isUserChat = bodyVariant === 'user_chat';
+
+  const showChannelPointsRewardChrome = Boolean(
+    isUserChat &&
+    userstate.username &&
+    (isHighlightedMessage ||
+      (isChannelPointRedemption && hasSharedChannelPointsMessage(message))),
+  );
+
+  const messageRoomId = userstate['room-id'];
+
+  const roomId =
+    String(messageRoomId) === messageRoomId ? messageRoomId : broadcasterId;
+
+  const canReply =
+    onReply &&
+    !moderationNotice &&
+    !hasSubscriptionNotice &&
+    bodyVariant !== 'stv_emote_event' &&
+    bodyVariant !== 'viewer_milestone' &&
+    bodyVariant !== 'mod_anniversary' &&
+    userstate.username &&
+    sender?.toLowerCase() !== 'system';
+
+  const handleLongPress = () => {
+    const messageData = toChatMessageData(props);
+
+    if (canReply) {
+      onReply?.(messageData);
+    }
+
+    onMessageLongPress?.({
+      message,
+      username: userstate.username,
+      login: userstate.login,
+      userId: userstate['user-id'],
+      messageData,
+    });
+  };
+
+  const startRowLongPressTimer = (event: GestureResponderEvent) => {
+    // Only stop the timer here: the pressed emote (if any) was just recorded
+    // by the emote's own onTouchStart, which bubbles before the row's.
+    stopRowLongPressTimer();
+
+    rowTouchOriginRef.current = {
+      x: event.nativeEvent.pageX,
+      y: event.nativeEvent.pageY,
+    };
+
+    rowLongPressTimerRef.current = setTimeout(() => {
+      rowLongPressTimerRef.current = null;
+      const pressedEmotePart = pressedEmotePartRef.current;
+      pressedEmotePartRef.current = null;
+
+      if (pressedEmotePart) {
+        setSelectedEmoteAction(pressedEmotePart);
+        return;
+      }
+
+      if (canReply || onMessageLongPress) {
+        handleLongPress();
+      }
+    }, MESSAGE_LONG_PRESS_DELAY_MS);
+  };
+
+  const isReply = Boolean(parentDisplayName);
+  const replyParentMessageId = userstate['reply-parent-msg-id'];
+  const isFirstMessage = userstate['first-msg'] === '1';
+
+  const isReturningChatter =
+    !isFirstMessage && userstate['returning-chatter'] === '1';
+
+  const shouldRenderInlineReply =
+    showInlineReplyContext &&
+    isReply &&
+    Boolean(replyBody || parentDisplayName);
+
+  const canJumpToReplyTarget =
+    Boolean(onReplyContextPress) && Boolean(replyParentMessageId);
+
+  const isReplyingToCurrentUser = Boolean(
+    normalisedCurrentUsername &&
+    (normaliseChatUsername(replyDisplayName) === normalisedCurrentUsername ||
+      normaliseChatUsername(parentDisplayName) === normalisedCurrentUsername),
+  );
+
+  const announcementAccentColor = isAnnouncement
+    ? getAnnouncementAccentColor(getAnnouncementColorParam(notice_tags))
+    : undefined;
+
+  return {
+    badges,
+    announcementAccentColor,
+    bodyVariant,
+    cachedSenderColor: props.cachedSenderColor,
+    canJumpToReplyTarget,
+    clearRowLongPressTimer,
+    closeEmoteActionSheet,
+    handleRowTouchMove,
+    compact,
+    customHighlightColor: customHighlight?.color,
+    disableEmoteAnimations,
+    handleBadgePress,
+    handleEmotePress,
+    isAppSystemSender,
+    isAction,
+    isAnnouncement,
+    isHighlightedMessage,
+    isSharedChatDuplicated,
+    isChannelPointRedemption,
+    isFirstMessage,
+    isReturningChatter,
+    isReplyingToCurrentUser,
+    isHighlightedSender,
+    isHighlightedMessageTarget,
+    isAlternatingRow,
+    isUserChat,
+    mentionsCurrentUser,
+    onReplyContextPress,
+    onUsernamePress: onUsernamePress ? handleUsernamePress : undefined,
+    parentDisplayName,
+    partRendererArgs,
+    replyBody,
+    replyParentMessageId,
+    roomId,
+    selectedEmoteAction,
+    shouldRenderInlineReply,
+    showChannelPointsRewardChrome,
+    showTimestamp,
+    startRowLongPressTimer,
+    style: props.style,
+    timestamp: props.timestamp,
+    userstate,
+  };
+}

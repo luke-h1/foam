@@ -1,0 +1,618 @@
+import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import type { SanitisedEmote } from '@app/types/emote';
+import { getEmoteArrayContentKey } from '@app/utils/chat/emote-array-content-key';
+import { parseWordLinkParts } from '@app/utils/chat/parse-word-link-parts/parse-word-link-parts';
+import { evictOldestWhenFull } from '@app/utils/collection/evict-oldest-when-full';
+
+import { queueMentionLoginsFromParts } from './mention-login-resolver/queue-mention-logins-from-parts';
+import type { ParsedPart } from './parsed-part';
+import { applyMentionLoginCasing } from './resolve-mention-login/apply-mention-login-casing';
+import { stripInvisibleChars } from './strip-invisible-chars';
+
+interface EmoteProcessorParams {
+  inputString: string;
+  userstate: UserStateTags | null;
+  emojiEmotes?: SanitisedEmote[];
+  sevenTvGlobalEmotes: SanitisedEmote[];
+  sevenTvChannelEmotes: SanitisedEmote[];
+  sevenTvPersonalEmotes?: SanitisedEmote[];
+  twitchGlobalEmotes: SanitisedEmote[];
+  twitchChannelEmotes: SanitisedEmote[];
+  twitchSubscriberEmotes?: SanitisedEmote[];
+  ffzChannelEmotes: SanitisedEmote[];
+  ffzGlobalEmotes: SanitisedEmote[];
+  bttvChannelEmotes: SanitisedEmote[];
+  bttvGlobalEmotes: SanitisedEmote[];
+}
+
+const cache = new Map<string, ParsedPart[]>();
+const MAX_CACHE_SIZE = 1000;
+const baseCollectionCache = new Map<string, EmoteCollection>();
+
+const MAX_BASE_COLLECTION_CACHE_SIZE = 4;
+
+const scopedLookupCache = new Map<
+  string,
+  (name: string) => SanitisedEmote | undefined
+>();
+
+const MAX_SCOPED_LOOKUP_CACHE_SIZE = 256;
+
+type EmoteCollection = {
+  cacheKey: string;
+  emojiMap: ReadonlyMap<string, SanitisedEmote>;
+  emoteMap: ReadonlyMap<string, SanitisedEmote>;
+};
+
+let lastBaseKeyInputs: SanitisedEmote[][] | null = null;
+let lastBaseKey = '';
+
+const createCacheKey = (
+  inputString: string,
+  baseCollectionKey: string,
+  scopedEmoteKey: string,
+): string => {
+  return `${baseCollectionKey}:${scopedEmoteKey}:${inputString}`;
+};
+
+function getBaseCollectionKey(
+  emojiEmotes: SanitisedEmote[],
+  sevenTvGlobalEmotes: SanitisedEmote[],
+  sevenTvChannelEmotes: SanitisedEmote[],
+  twitchGlobalEmotes: SanitisedEmote[],
+  twitchChannelEmotes: SanitisedEmote[],
+  ffzChannelEmotes: SanitisedEmote[],
+  ffzGlobalEmotes: SanitisedEmote[],
+  bttvChannelEmotes: SanitisedEmote[],
+  bttvGlobalEmotes: SanitisedEmote[],
+): string {
+  // One-entry identity memo: nine pointer compares per message instead of
+  // nine WeakMap reads plus an array and a join.
+  const last = lastBaseKeyInputs;
+
+  if (
+    last &&
+    last[0] === emojiEmotes &&
+    last[1] === sevenTvGlobalEmotes &&
+    last[2] === sevenTvChannelEmotes &&
+    last[3] === twitchGlobalEmotes &&
+    last[4] === twitchChannelEmotes &&
+    last[5] === ffzChannelEmotes &&
+    last[6] === ffzGlobalEmotes &&
+    last[7] === bttvChannelEmotes &&
+    last[8] === bttvGlobalEmotes
+  ) {
+    return lastBaseKey;
+  }
+
+  // Content-derived so a rebuilt array with unchanged emotes keys the same -
+  // identity keying re-parsed the whole window (~800ms) after an emote_set.update.
+  const key = [
+    getEmoteArrayContentKey(emojiEmotes),
+    getEmoteArrayContentKey(sevenTvGlobalEmotes),
+    getEmoteArrayContentKey(sevenTvChannelEmotes),
+    getEmoteArrayContentKey(twitchGlobalEmotes),
+    getEmoteArrayContentKey(twitchChannelEmotes),
+    getEmoteArrayContentKey(ffzChannelEmotes),
+    getEmoteArrayContentKey(ffzGlobalEmotes),
+    getEmoteArrayContentKey(bttvChannelEmotes),
+    getEmoteArrayContentKey(bttvGlobalEmotes),
+  ].join('|');
+
+  lastBaseKeyInputs = [
+    emojiEmotes,
+    sevenTvGlobalEmotes,
+    sevenTvChannelEmotes,
+    twitchGlobalEmotes,
+    twitchChannelEmotes,
+    ffzChannelEmotes,
+    ffzGlobalEmotes,
+    bttvChannelEmotes,
+    bttvGlobalEmotes,
+  ];
+
+  lastBaseKey = key;
+  return key;
+}
+
+function setIfMissing(
+  emoteMap: Map<string, SanitisedEmote>,
+  emotes: SanitisedEmote[],
+): void {
+  emotes.forEach(emote => {
+    if (!emoteMap.has(emote.name)) {
+      emoteMap.set(emote.name, emote);
+    }
+  });
+}
+
+function getBaseCollection({
+  bttvChannelEmotes,
+  bttvGlobalEmotes,
+  emojiEmotes,
+  ffzChannelEmotes,
+  ffzGlobalEmotes,
+  sevenTvChannelEmotes,
+  sevenTvGlobalEmotes,
+  twitchChannelEmotes,
+  twitchGlobalEmotes,
+}: Pick<
+  Required<EmoteProcessorParams>,
+  | 'bttvChannelEmotes'
+  | 'bttvGlobalEmotes'
+  | 'emojiEmotes'
+  | 'ffzChannelEmotes'
+  | 'ffzGlobalEmotes'
+  | 'sevenTvChannelEmotes'
+  | 'sevenTvGlobalEmotes'
+  | 'twitchChannelEmotes'
+  | 'twitchGlobalEmotes'
+>): EmoteCollection {
+  const cacheKey = getBaseCollectionKey(
+    emojiEmotes,
+    sevenTvGlobalEmotes,
+    sevenTvChannelEmotes,
+    twitchGlobalEmotes,
+    twitchChannelEmotes,
+    ffzChannelEmotes,
+    ffzGlobalEmotes,
+    bttvChannelEmotes,
+    bttvGlobalEmotes,
+  );
+
+  const cached = baseCollectionCache.get(cacheKey);
+
+  if (cached) {
+    return cached;
+  }
+
+  const emoteMap = new Map<string, SanitisedEmote>();
+  const emojiMap = new Map<string, SanitisedEmote>();
+
+  setIfMissing(emoteMap, sevenTvChannelEmotes);
+  setIfMissing(emoteMap, twitchChannelEmotes);
+  setIfMissing(emoteMap, ffzChannelEmotes);
+  setIfMissing(emoteMap, bttvChannelEmotes);
+  setIfMissing(emoteMap, emojiEmotes);
+  setIfMissing(emoteMap, sevenTvGlobalEmotes);
+  setIfMissing(emoteMap, twitchGlobalEmotes);
+  setIfMissing(emoteMap, ffzGlobalEmotes);
+  setIfMissing(emoteMap, bttvGlobalEmotes);
+
+  emojiEmotes.forEach(emote => {
+    if (emote.provider !== 'emoji') {
+      return;
+    }
+
+    const emojiHexcode = emote.emoji_hexcode ?? emote.id;
+
+    if (!emojiMap.has(emojiHexcode)) {
+      emojiMap.set(emojiHexcode, emote);
+    }
+  });
+
+  const collection = { cacheKey, emojiMap, emoteMap };
+
+  if (baseCollectionCache.size >= MAX_BASE_COLLECTION_CACHE_SIZE) {
+    evictOldestBaseCollection();
+  }
+
+  baseCollectionCache.set(cacheKey, collection);
+  return collection;
+}
+
+/**
+ * Drops the oldest base collection plus every scoped lookup derived from it.
+ */
+function evictOldestBaseCollection(): void {
+  const firstKey = baseCollectionCache.keys().next().value;
+
+  if (!firstKey) {
+    return;
+  }
+
+  baseCollectionCache.delete(firstKey);
+  const evictedPrefix = `${firstKey}:`;
+
+  scopedLookupCache.forEach((_, scopedKey) => {
+    if (scopedKey.startsWith(evictedPrefix)) {
+      scopedLookupCache.delete(scopedKey);
+    }
+  });
+}
+
+const contentIdByEmoteArray = new WeakMap<SanitisedEmote[], number>();
+const contentIdByIds = new Map<string, number>();
+const MAX_CONTENT_ID_CACHE_SIZE = 32;
+let nextContentId = 0;
+
+/**
+ * Small integer standing in for the array's contents - spelling the ids into
+ * the key scaled per-message cost with the account's unlocked emotes.
+ */
+function mintEmoteContentId(idsKey: string): number {
+  nextContentId += 1;
+
+  /**
+   * Eviction mints a fresh id for contents seen again, costing a parse-cache
+   * miss and never a wrong hit.
+   */
+  evictOldestWhenFull(contentIdByIds, MAX_CONTENT_ID_CACHE_SIZE);
+
+  contentIdByIds.set(idsKey, nextContentId);
+  return nextContentId;
+}
+
+function getEmoteContentId(emotes: SanitisedEmote[]): number {
+  if (emotes.length === 0) {
+    return 0;
+  }
+
+  const cached = contentIdByEmoteArray.get(emotes);
+
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const idsKey = emotes.map(emote => emote.id).join(',');
+  const contentId = contentIdByIds.get(idsKey) ?? mintEmoteContentId(idsKey);
+
+  contentIdByEmoteArray.set(emotes, contentId);
+  return contentId;
+}
+
+function getScopedEmoteKey(
+  sevenTvPersonalEmotes: SanitisedEmote[],
+  twitchSubscriberEmotes: SanitisedEmote[],
+): string {
+  return `${getEmoteContentId(sevenTvPersonalEmotes)}|${getEmoteContentId(
+    twitchSubscriberEmotes,
+  )}`;
+}
+
+function createScopedEmoteLookup(
+  baseCollection: EmoteCollection,
+  sevenTvPersonalEmotes: SanitisedEmote[],
+  twitchSubscriberEmotes: SanitisedEmote[],
+  scopedEmoteKey: string,
+): (name: string) => SanitisedEmote | undefined {
+  if (
+    sevenTvPersonalEmotes.length === 0 &&
+    twitchSubscriberEmotes.length === 0
+  ) {
+    return name => baseCollection.emoteMap.get(name);
+  }
+
+  const cacheKey = `${baseCollection.cacheKey}:${scopedEmoteKey}`;
+  const cached = scopedLookupCache.get(cacheKey);
+
+  if (cached) {
+    return cached;
+  }
+
+  const personalEmoteMap = new Map<string, SanitisedEmote>();
+  const subscriberEmoteMap = new Map<string, SanitisedEmote>();
+  setIfMissing(personalEmoteMap, sevenTvPersonalEmotes);
+  setIfMissing(subscriberEmoteMap, twitchSubscriberEmotes);
+
+  const lookup = (name: string) =>
+    personalEmoteMap.get(name) ??
+    subscriberEmoteMap.get(name) ??
+    baseCollection.emoteMap.get(name);
+
+  evictOldestWhenFull(scopedLookupCache, MAX_SCOPED_LOOKUP_CACHE_SIZE);
+
+  scopedLookupCache.set(cacheKey, lookup);
+
+  return lookup;
+}
+
+// Pure-ASCII words can never match the emoji map, so skip the per-word
+// code-point expansion for them.
+function hasNonAsciiChar(word: string): boolean {
+  for (let i = 0; i < word.length; i += 1) {
+    if (word.charCodeAt(i) > 0x7f) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Index of the first non-whitespace part at or after `from`.
+ */
+function skipWhitespaceForward(parts: ParsedPart[], from: number): number {
+  let index = from;
+
+  while (index < parts.length && isWhitespacePart(parts[index])) {
+    index += 1;
+  }
+
+  return index;
+}
+
+/**
+ * Index of the last non-whitespace part at or before `from`, or -1.
+ */
+function skipWhitespaceBackward(parts: ParsedPart[], from: number): number {
+  let index = from;
+
+  while (index >= 0 && isWhitespacePart(parts[index])) {
+    index -= 1;
+  }
+
+  return index;
+}
+
+/**
+ * Emoji are keyed by their code points. Retry without the FE0F variation
+ * selector, which clients send but the dataset leaves off.
+ */
+function findEmojiForWord(
+  emojiMap: ReadonlyMap<string, SanitisedEmote>,
+  word: string,
+): SanitisedEmote | undefined {
+  const upperWord = [...word]
+    .map(char => char.codePointAt(0)?.toString(16).toUpperCase() || '')
+    .join('-');
+
+  const exact = emojiMap.get(upperWord);
+
+  if (exact || !upperWord.includes('FE0F')) {
+    return exact;
+  }
+
+  return emojiMap.get(
+    upperWord
+      .split('-')
+      .filter(hex => hex !== 'FE0F')
+      .join('-'),
+  );
+}
+
+const BACKWARD_EMOTE_MODIFIERS = new Set(['w!', 'h!', 'v!']);
+
+function isWhitespacePart(part: ParsedPart | undefined): boolean {
+  return part?.type === 'text' && /^\s+$/.test(part.content);
+}
+
+/**
+ * Folds a zero-width emote onto the emote in front of it. Returns true when
+ * the part was absorbed, so the caller drops it instead of pushing it.
+ */
+function stackZeroWidthEmote(
+  out: ParsedPart[],
+  part: ParsedPart<'emote'>,
+): boolean {
+  let anchor = out.length - 1;
+
+  while (anchor >= 0 && isWhitespacePart(out[anchor])) {
+    anchor -= 1;
+  }
+
+  const base = anchor >= 0 ? out[anchor] : undefined;
+
+  if (base?.type !== 'emote' || base.zero_width) {
+    return false;
+  }
+
+  out.length = anchor + 1;
+
+  // Skip duplicate overlay ids (double decode + darkened alpha).
+  const overlaid = base.overlaid ?? [];
+
+  const alreadyStacked =
+    base.id === part.id || overlaid.some(overlay => overlay.id === part.id);
+
+  if (!alreadyStacked) {
+    base.overlaid = [...overlaid, part];
+  }
+
+  return true;
+}
+
+function applyEmoteCompositionPass(parts: ParsedPart[]): ParsedPart[] {
+  const out: ParsedPart[] = [];
+
+  for (let index = 0; index < parts.length; index += 1) {
+    const part = parts[index];
+
+    if (!part) {
+      // eslint-disable-next-line no-continue
+      continue;
+    }
+
+    if (
+      part.type === 'emote' &&
+      part.zero_width &&
+      stackZeroWidthEmote(out, part)
+    ) {
+      // eslint-disable-next-line no-continue
+      continue;
+    }
+
+    const content =
+      part.type === 'emote' || part.type === 'text' ? part.content.trim() : '';
+
+    const modifierTarget =
+      content && BACKWARD_EMOTE_MODIFIERS.has(content)
+        ? skipWhitespaceForward(parts, index + 1)
+        : -1;
+
+    if (parts[modifierTarget]?.type === 'emote') {
+      index = modifierTarget - 1;
+      // eslint-disable-next-line no-continue
+      continue;
+    }
+
+    const ffzAnchor =
+      content.startsWith('ffz') && content.length > 3
+        ? skipWhitespaceBackward(out, out.length - 1)
+        : -1;
+
+    if (ffzAnchor >= 0 && out[ffzAnchor]?.type === 'emote') {
+      out.length = ffzAnchor + 1;
+      // eslint-disable-next-line no-continue
+      continue;
+    }
+
+    out.push(part);
+  }
+
+  return out;
+}
+
+export const processEmotesWorklet = (
+  params: EmoteProcessorParams,
+): ParsedPart[] => {
+  const {
+    inputString,
+    emojiEmotes = [],
+    sevenTvGlobalEmotes,
+    sevenTvChannelEmotes,
+    sevenTvPersonalEmotes = [],
+    twitchGlobalEmotes,
+    twitchChannelEmotes,
+    twitchSubscriberEmotes = [],
+    ffzChannelEmotes,
+    ffzGlobalEmotes,
+    bttvChannelEmotes,
+    bttvGlobalEmotes,
+  } = params;
+
+  const cleanInput = stripInvisibleChars(inputString);
+
+  if (!cleanInput) {
+    return [{ type: 'text', content: cleanInput }];
+  }
+
+  const baseCollection = getBaseCollection({
+    bttvChannelEmotes,
+    bttvGlobalEmotes,
+    emojiEmotes,
+    ffzChannelEmotes,
+    ffzGlobalEmotes,
+    sevenTvChannelEmotes,
+    sevenTvGlobalEmotes,
+    twitchChannelEmotes,
+    twitchGlobalEmotes,
+  });
+
+  const scopedEmoteKey = getScopedEmoteKey(
+    sevenTvPersonalEmotes,
+    twitchSubscriberEmotes,
+  );
+
+  const cacheKey = createCacheKey(
+    cleanInput,
+    baseCollection.cacheKey,
+    scopedEmoteKey,
+  );
+
+  const cached = cache.get(cacheKey);
+
+  if (cached) {
+    return applyMentionLoginCasing(cached);
+  }
+
+  const getEmote = createScopedEmoteLookup(
+    baseCollection,
+    sevenTvPersonalEmotes,
+    twitchSubscriberEmotes,
+    scopedEmoteKey,
+  );
+
+  const emojiMap = baseCollection.emojiMap;
+
+  const words = cleanInput.split(/(\s+)/);
+  const result: ParsedPart[] = [];
+
+  let i = 0;
+
+  while (i < words.length) {
+    const word = words[i];
+
+    if (!word) {
+      i += 1;
+      // eslint-disable-next-line no-continue
+      continue;
+    }
+
+    if (/^\s+$/.test(word)) {
+      result.push({ type: 'text', content: word });
+      i += 1;
+
+      // eslint-disable-next-line no-continue
+      continue;
+    }
+
+    if (word.startsWith('@')) {
+      const mentionText = word.endsWith(' ') ? word.trimEnd() : word;
+
+      result.push({
+        type: 'mention',
+        content: mentionText,
+      });
+
+      i += 1;
+
+      // eslint-disable-next-line no-continue
+      continue;
+    }
+
+    const linkParts = parseWordLinkParts(word);
+
+    if (linkParts) {
+      result.push(...linkParts);
+      i += 1;
+
+      // eslint-disable-next-line no-continue
+      continue;
+    }
+
+    let emote = getEmote(word);
+
+    if (!emote && word.length <= 8 && hasNonAsciiChar(word)) {
+      emote = findEmojiForWord(emojiMap, word);
+    }
+
+    if (emote) {
+      result.push({
+        id: emote.id,
+        name: emote.name,
+        type: 'emote',
+        content: word,
+        creator: emote.creator || '',
+        emote_link: emote.emote_link || '',
+        original_name:
+          emote.provider === 'emoji' && !word.startsWith(':')
+            ? word
+            : emote.original_name || '',
+        site: emote.site || '',
+        static_url: emote.static_url,
+        thumbnail: emote.url,
+        url: emote.url,
+        width: emote.width,
+        height: emote.height,
+        aspect_ratio: emote.aspect_ratio,
+        zero_width: emote.zero_width,
+      });
+    } else {
+      result.push({ type: 'text', content: word });
+    }
+
+    i += 1;
+  }
+
+  evictOldestWhenFull(cache, MAX_CACHE_SIZE);
+
+  const resolvedResult = applyMentionLoginCasing(
+    applyEmoteCompositionPass(result),
+  );
+
+  queueMentionLoginsFromParts(resolvedResult);
+
+  cache.set(cacheKey, resolvedResult);
+
+  return resolvedResult;
+};

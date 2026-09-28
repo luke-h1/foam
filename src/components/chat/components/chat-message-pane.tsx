@@ -1,0 +1,218 @@
+import { memo, useEffect, useMemo, useRef } from 'react';
+import { View } from 'react-native';
+import type { RefObject } from 'react';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { KeyboardController } from 'react-native-keyboard-controller';
+import type { SharedValue } from 'react-native-reanimated';
+
+import { Text } from '@app/components/ui/text/text';
+import { useMessages } from '@app/store/chat/react/selectors';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import { logger } from '@app/utils/logger';
+
+import type { PinnedChatMessageViewModel } from '../hooks/use-pinned-chat-message';
+import type { ChatPaneFlags } from '../types/chat-ui-flags';
+import { getVisibleMessages } from '../util/visible-messages';
+import {
+  ChatList,
+  type ChatListRef,
+  type ChatListRenderItem,
+  type ChatListScrollHandlers,
+} from './chat-list';
+import { styles } from './chat-message-pane.styles';
+import { ChatViewControls } from './chat-view-controls';
+import { PinnedMessageBanner } from './pinned-message-banner';
+
+export interface ChatMessagePaneProps {
+  channelId: string;
+  channelName: string;
+  contentInsetEndAdjustment: SharedValue<number>;
+  currentUsername?: string;
+  hiddenUsers: string[];
+  hiddenPhrases: string[];
+  paneFlags: ChatPaneFlags;
+  listRef: RefObject<ChatListRef | null>;
+  scrollHandlers: ChatListScrollHandlers;
+  renderItem: ChatListRenderItem;
+  keyExtractor: (item: AnyChatMessageType, index: number) => string;
+  getItemType: (item: AnyChatMessageType) => string;
+  messageListExtraData?: unknown;
+  onClearFilters: () => void;
+  onRefreshPinnedMessage: () => void;
+  onUnpinPinnedMessage: () => void;
+  onCloseSearch: () => void;
+  onSearchQueryChange: (query: string) => void;
+  hasActiveFilters: boolean;
+  searchActive: boolean;
+  onToggleShowOnlyMentions: () => void;
+  onViewableMessagesChange?: (messages: AnyChatMessageType[]) => void;
+  searchQuery: string;
+  pinnedMessage: PinnedChatMessageViewModel | null;
+  pinnedMessageBusy: boolean;
+}
+
+export const ChatMessagePane = memo(
+  ({
+    channelId,
+    channelName,
+    contentInsetEndAdjustment,
+    currentUsername,
+    hiddenUsers,
+    hiddenPhrases,
+    paneFlags,
+    listRef,
+    scrollHandlers,
+    renderItem,
+    keyExtractor,
+    getItemType,
+    messageListExtraData,
+    onClearFilters,
+    onRefreshPinnedMessage,
+    onUnpinPinnedMessage,
+    onCloseSearch,
+    onSearchQueryChange,
+    hasActiveFilters,
+    onToggleShowOnlyMentions,
+    onViewableMessagesChange,
+    pinnedMessage,
+    pinnedMessageBusy,
+    searchActive,
+    searchQuery,
+  }: ChatMessagePaneProps) => {
+    const {
+      canModerateChat,
+      connected,
+      shouldMaintainScrollAtEnd,
+      showOnlyMentions,
+    } = paneFlags;
+
+    // SAFETY: Legend's selector types sparse arrays; the store always holds dense messages.
+    const rawMessages = useMessages() as AnyChatMessageType[];
+
+    const hasMessages = rawMessages.length > 0;
+    const hasEverHadMessagesRef = useRef(false);
+    const lastEmptyLogAtRef = useRef<number>(0);
+
+    const dismissKeyboardGesture = useMemo(
+      () =>
+        Gesture.Tap()
+          .maxDuration(250)
+          .onEnd(() => {
+            void KeyboardController.dismiss();
+          })
+          .runOnJS(true),
+      [],
+    );
+
+    const visibleMessages = useMemo(
+      () =>
+        getVisibleMessages(rawMessages, {
+          currentUsername,
+          hiddenUsers,
+          hiddenPhrases,
+          searchQuery,
+          showOnlyMentions,
+        }),
+      [
+        currentUsername,
+        hiddenPhrases,
+        hiddenUsers,
+        rawMessages,
+        searchQuery,
+        showOnlyMentions,
+      ],
+    );
+
+    useEffect(() => {
+      if (hasMessages) {
+        hasEverHadMessagesRef.current = true;
+      }
+    }, [hasMessages]);
+
+    useEffect(() => {
+      if (!hasEverHadMessagesRef.current) {
+        return;
+      }
+
+      if (hasMessages) {
+        return;
+      }
+
+      const now = Date.now();
+
+      if (now - lastEmptyLogAtRef.current < 2000) {
+        return;
+      }
+
+      lastEmptyLogAtRef.current = now;
+
+      logger.chat.warn('Chat messages became empty', {
+        channelId,
+        channelName,
+      });
+    }, [channelId, channelName, hasMessages]);
+
+    return (
+      <View style={styles.messagePane}>
+        {!connected && !hasMessages && (
+          <View
+            style={styles.connectingContainer}
+            testID='chat-sync-placeholder'
+          >
+            <Text style={styles.connectingText}>
+              {`Connecting to ${channelName}'s chat...`}
+            </Text>
+          </View>
+        )}
+
+        <ChatViewControls
+          hasActiveFilters={hasActiveFilters}
+          onClearFilters={onClearFilters}
+          onCloseSearch={onCloseSearch}
+          onSearchQueryChange={onSearchQueryChange}
+          searchActive={searchActive}
+          onToggleShowOnlyMentions={onToggleShowOnlyMentions}
+          showOnlyMentions={showOnlyMentions}
+        />
+
+        <PinnedMessageBanner
+          canModerateChat={canModerateChat}
+          onRefresh={onRefreshPinnedMessage}
+          onUnpin={onUnpinPinnedMessage}
+          pinnedMessage={pinnedMessage}
+          pinnedMessageBusy={pinnedMessageBusy}
+        />
+
+        {visibleMessages.length === 0 && rawMessages.length > 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateTitle}>
+              No chat messages match the current view
+            </Text>
+            <Text style={styles.emptyStateBody}>
+              Clear filters or jump back to the latest messages.
+            </Text>
+          </View>
+        ) : null}
+
+        <GestureDetector gesture={dismissKeyboardGesture}>
+          <View style={styles.listGestureWrapper}>
+            <ChatList
+              contentInsetEndAdjustment={contentInsetEndAdjustment}
+              data={visibleMessages}
+              dataKey={channelId}
+              listRef={listRef}
+              shouldMaintainScrollAtEnd={shouldMaintainScrollAtEnd}
+              scrollHandlers={scrollHandlers}
+              renderItem={renderItem}
+              keyExtractor={keyExtractor}
+              getItemType={getItemType}
+              extraData={messageListExtraData}
+              contentContainerStyle={styles.listContent}
+              onViewableMessagesChange={onViewableMessagesChange}
+            />
+          </View>
+        </GestureDetector>
+      </View>
+    );
+  },
+);

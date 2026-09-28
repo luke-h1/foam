@@ -9,9 +9,11 @@ export const gql = (
 
   return strings.reduce((document, literal, index) => {
     const fragment = fragments[index];
+
     if (fragment === undefined || appended.has(fragment)) {
       return `${document}${literal}`;
     }
+
     appended.add(fragment);
     return `${document}${literal}${fragment}`;
   }, '');

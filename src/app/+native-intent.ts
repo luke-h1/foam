@@ -1,4 +1,4 @@
-import { isAuthCallbackUrl } from '@app/navigators/authLinking';
+import { isAuthCallbackUrl } from '@app/navigators/auth-linking';
 import { logger } from '@app/utils/logger';
 
 /**

@@ -1,0 +1,70 @@
+import { memo } from 'react';
+import { View } from 'react-native';
+
+import { Text } from '@app/components/ui/text/text';
+import type { ParsedPart } from '@app/utils/chat/parsed-part';
+
+import { getChatTextStyles } from '../chat-message/chat-text.styles';
+import { ChatNoticeMetaRow } from '../chat-message/renderers/chat-notice-meta-row';
+import { styles } from '../chat-message/rich-chat-message.styles';
+import type { ChatFontScale } from '../chat-message/util/chat-scale';
+import { CHAT_NOTICE_ACCENTS } from '../util/chat-notice-accents';
+import { NoticeUserMessage } from './notice-user-message';
+
+interface CharityDonationNoticeProps {
+  compact?: boolean;
+  disableAnimations?: boolean;
+  fontScale?: ChatFontScale;
+  parsedMessage?: ParsedPart[];
+  part: ParsedPart<'charitydonation'>;
+}
+
+function CharityDonationNoticeComponent({
+  compact,
+  disableAnimations,
+  fontScale,
+  parsedMessage,
+  part,
+}: CharityDonationNoticeProps) {
+  const displayName = part.displayName?.trim();
+  const systemMsg = part.systemMsg;
+  const message = part.message?.trim() ?? '';
+  const donationSummary = `donated ${part.amount} to ${part.charityName}`;
+  const textStyles = getChatTextStyles(fontScale, compact);
+  const mutedStyle = [textStyles.meta, styles.channelPointsMetaMuted];
+
+  return (
+    <View style={styles.messageColumn}>
+      <ChatNoticeMetaRow
+        compact={compact}
+        fontScale={fontScale}
+        icon='heart.fill'
+        label='Charity donation'
+        labelColor={CHAT_NOTICE_ACCENTS.charity}
+      />
+      <Text style={textStyles.meta}>
+        {displayName ? (
+          <Text style={[textStyles.meta, styles.channelPointsMetaName]}>
+            {displayName}
+          </Text>
+        ) : null}
+        {displayName ? <Text style={mutedStyle}> · </Text> : null}
+        <Text style={mutedStyle}>{donationSummary}</Text>
+        {systemMsg && !message ? (
+          <Text style={mutedStyle}>. {systemMsg}</Text>
+        ) : (
+          <Text style={mutedStyle}>.</Text>
+        )}
+      </Text>
+      <NoticeUserMessage
+        compact={compact}
+        disableAnimations={disableAnimations}
+        fontScale={fontScale}
+        message={message}
+        parsedMessage={parsedMessage}
+      />
+    </View>
+  );
+}
+
+export const CharityDonationNotice = memo(CharityDonationNoticeComponent);

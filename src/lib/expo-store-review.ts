@@ -8,8 +8,8 @@ import { logger } from '@app/utils/logger';
 import {
   type ReviewPromptState,
   shouldRequestReview,
-} from '@app/utils/storeReview/reviewPromptGate';
-import { hasSessionError } from '@app/utils/storeReview/sessionErrorFlag';
+} from '@app/utils/store-review/review-prompt-gate';
+import { hasSessionError } from '@app/utils/store-review/session-error-flag';
 
 const STORE_REVIEW_STATE_KEY = 'store_review_state';
 
@@ -42,6 +42,7 @@ export function recordWatchTime(durationMs: number): void {
   if (durationMs <= 0) {
     return;
   }
+
   const state = getState();
   setState({ ...state, watchTimeMs: state.watchTimeMs + durationMs });
 }
@@ -66,6 +67,7 @@ export async function maybeRequestStoreReview(): Promise<void> {
   }
 
   requestInFlight = true;
+
   try {
     if (!(await StoreReview.hasAction())) {
       return;

@@ -1,0 +1,50 @@
+/* eslint-disable camelcase */
+import { memo } from 'react';
+
+import { useRichChatMessage } from '@app/components/chat/hooks/use-rich-chat-message';
+import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
+import { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
+
+import * as ChatRow from './chat-row';
+import { EmoteActionSheet } from './renderers/emote-action-sheet';
+import type { RichChatMessageProps } from './rich-chat-message.types';
+
+export type {
+  BadgePressData,
+  EmotePressData,
+  MessageActionData,
+  UsernamePressData,
+} from './rich-chat-message.types';
+
+function ChatMessageComponent<
+  TNoticeType extends NoticeVariants,
+  TVariant extends (TNoticeType extends 'usernotice'
+    ? keyof UserNoticeVariantMap
+    : never) = never,
+>(props: RichChatMessageProps<TNoticeType, TVariant>) {
+  const state = useRichChatMessage(props);
+
+  return (
+    <>
+      <ChatRow.Surface state={state}>
+        <ChatRow.Body {...state} />
+      </ChatRow.Surface>
+      {state.selectedEmoteAction ? (
+        <EmoteActionSheet
+          disableAnimations={state.disableEmoteAnimations}
+          isPresented
+          onDismiss={state.closeEmoteActionSheet}
+          onPress={state.handleEmotePress}
+          part={state.selectedEmoteAction}
+        />
+      ) : null}
+    </>
+  );
+}
+
+/**
+ * memo() erases generics; one cast restores the component's type signature.
+ */
+export const RichChatMessage =
+  // SAFETY: memo forwards the same props to ChatMessageComponent, so the wrapper keeps its call signature.
+  memo(ChatMessageComponent) as typeof ChatMessageComponent;

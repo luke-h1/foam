@@ -9,7 +9,7 @@ import {
   createFakeSocket,
   getTwitchWsTestState,
   resetTwitchWsTestState,
-} from './__fixtures__/twitchWsService.fixture';
+} from './__fixtures__/twitch-ws-service.fixture';
 
 const twitchWsState = getTwitchWsTestState();
 
@@ -108,6 +108,7 @@ describe('TwitchWsService EventSub response handling', () => {
 
   test('does not treat Twitch API error bodies as subscription responses', async () => {
     const callback = jest.fn();
+
     mockCreateEventSubscription.mockResolvedValue(
       unvalidatedCreateResponse({ message: 'Forbidden', status: 403 }),
     );
@@ -121,6 +122,7 @@ describe('TwitchWsService EventSub response handling', () => {
 
     expect(twitchWsState.entries.size).toBe(0);
     expect(mockCreateEventSubscription).toHaveBeenCalledTimes(1);
+
     expect(mockWarn.mock.calls).toEqual([
       [
         'Failed to subscribe to Twitch EventSub event channel.prediction.begin',
@@ -170,10 +172,12 @@ describe('TwitchWsService shared socket teardown', () => {
     const onRedemption = jest.fn();
 
     await subscribe('channel.poll.begin', onPoll);
+
     await subscribe(
       'channel.channel_points_custom_reward_redemption.add',
       onRedemption,
     );
+
     twitchWsState.instance = socket;
 
     await TwitchWsService.unsubscribeFromEvent('channel.poll.begin', onPoll);
@@ -188,13 +192,16 @@ describe('TwitchWsService shared socket teardown', () => {
     const onRedemption = jest.fn();
 
     await subscribe('channel.poll.begin', onPoll);
+
     await subscribe(
       'channel.channel_points_custom_reward_redemption.add',
       onRedemption,
     );
+
     twitchWsState.instance = socket;
 
     await TwitchWsService.unsubscribeFromEvent('channel.poll.begin', onPoll);
+
     await TwitchWsService.unsubscribeFromEvent(
       'channel.channel_points_custom_reward_redemption.add',
       onRedemption,
@@ -216,6 +223,7 @@ describe('TwitchWsService shared socket teardown', () => {
     // The unmount path in useChannelPoll / useChannelPrediction: several event
     // types torn down through one Promise.all rather than sequentially.
     let resolveBegin: () => void = () => {};
+
     mockDeleteEventSubscription.mockImplementation(id =>
       id === 'channel.poll.begin-sub-id'
         ? new Promise(resolve => {
@@ -232,6 +240,7 @@ describe('TwitchWsService shared socket teardown', () => {
     // Let the sibling settle and run teardown while the first delete is still
     // in flight, then release it.
     await Promise.resolve();
+
     resolveBegin();
     await unsubscribed;
 
@@ -249,6 +258,7 @@ describe('TwitchWsService shared socket teardown', () => {
     mockCreateEventSubscription.mockResolvedValueOnce(
       createSubscriptionResponse('sub-channel-1', 'channel.poll.begin'),
     );
+
     await TwitchWsService.subscribeToEvent(
       'channel.poll.begin',
       '1',
@@ -259,12 +269,14 @@ describe('TwitchWsService shared socket teardown', () => {
     mockCreateEventSubscription.mockResolvedValueOnce(
       createSubscriptionResponse('sub-channel-2', 'channel.poll.begin'),
     );
+
     await TwitchWsService.subscribeToEvent(
       'channel.poll.begin',
       '1',
       { broadcaster_user_id: '2' },
       onChannelTwo,
     );
+
     twitchWsState.instance = socket;
 
     expect(mockCreateEventSubscription).toHaveBeenCalledTimes(2);
@@ -277,7 +289,9 @@ describe('TwitchWsService shared socket teardown', () => {
     expect(mockDeleteEventSubscription.mock.calls.map(([id]) => id)).toEqual([
       'sub-channel-1',
     ]);
+
     const remaining = Array.from(twitchWsState.entries.values());
+
     expect(
       remaining.map(entry => ({
         condition: entry.condition,
@@ -289,6 +303,7 @@ describe('TwitchWsService shared socket teardown', () => {
         subscriptionId: 'sub-channel-2',
       },
     ]);
+
     expect(socket.close).not.toHaveBeenCalled();
   });
 
@@ -297,9 +312,11 @@ describe('TwitchWsService shared socket teardown', () => {
     const onChannelTwo = jest.fn();
 
     await subscribe('channel.poll.begin', onChannelOne);
+
     mockCreateEventSubscription.mockResolvedValueOnce(
       createSubscriptionResponse('sub-other', 'channel.poll.begin'),
     );
+
     await TwitchWsService.subscribeToEvent(
       'channel.poll.begin',
       '1',
@@ -319,6 +336,7 @@ describe('TwitchWsService shared socket teardown', () => {
 
   test('revives the socket on foreground when consumers are still subscribed', async () => {
     const listeners: ((state: AppStateStatus) => void)[] = [];
+
     const appStateSpy = jest
       .spyOn(AppState, 'addEventListener')
       .mockImplementation((_type, handler) => {
@@ -348,6 +366,7 @@ describe('TwitchWsService shared socket teardown', () => {
 
     // The socket drops and arms the backoff reconnect.
     twitchWsState.attemptReconnect();
+
     expect(twitchWsState.reconnectTimer).not.toBeNull();
 
     await TwitchWsService.unsubscribeFromEvent('channel.poll.begin', onPoll);
@@ -357,6 +376,7 @@ describe('TwitchWsService shared socket teardown', () => {
 
     // The orphaned timer would have reopened the socket here.
     jest.advanceTimersByTime(10_000);
+
     expect(twitchWsState.instance).toBeNull();
   });
 });

@@ -3,7 +3,7 @@ import { fetch } from 'expo/fetch';
 import Constants from 'expo-constants';
 import { z } from 'zod';
 
-import { parseJsonOnWorklet } from '@app/lib/offThreadJson/parseJsonOnWorklet';
+import { parseJsonOnWorklet } from '@app/lib/off-thread-json/parse-json-on-worklet';
 import type { PaginatedList } from '@app/types/twitch/api';
 import type {
   DefaultTokenResponse,
@@ -41,7 +41,7 @@ import type {
 import {
   cacheChannelPointRewardTitle,
   getCachedChannelPointRewardTitle,
-} from '@app/utils/chat/channelPointRewardTitleStore';
+} from '@app/utils/chat/channel-point-reward-title-store';
 import { logger } from '@app/utils/logger';
 
 import {
@@ -171,6 +171,7 @@ async function fetchBatchedByIds<T>(
   }
 
   const batches: string[][] = [];
+
   for (let i = 0; i < ids.length; i += 100) {
     batches.push(ids.slice(i, i + 100));
   }
@@ -219,11 +220,13 @@ export const twitchService = {
     refreshToken: string,
   ): Promise<RefreshTokenResponse> => {
     let url: URL;
+
     try {
       url = new URL(`${authProxyBaseUrl}/refresh-token`);
     } catch {
       throw new Error('Failed to refresh Twitch token');
     }
+
     url.searchParams.set('token', refreshToken);
     url.searchParams.set('app', 'foam-app');
 
@@ -231,6 +234,7 @@ export const twitchService = {
       method: 'POST',
       headers: { 'x-api-key': authProxyApiKey ?? '' },
     });
+
     const body = await parseJsonOnWorklet<
       AuthProxyResponse<RefreshTokenResponse>
     >(await res.text());
@@ -373,6 +377,7 @@ export const twitchService = {
     const res = await fetch(tokenUrl, {
       headers: isE2EMode ? {} : { 'x-api-key': authProxyApiKey ?? '' },
     });
+
     const body = await parseJsonOnWorklet<{ data: DefaultTokenResponse }>(
       await res.text(),
     );
@@ -396,22 +401,28 @@ export const twitchService = {
     if (isE2EMode) {
       return true;
     }
+
     const res = await fetch('https://id.twitch.tv/oauth2/validate', {
       headers: { Authorization: `Bearer ${token}` },
     });
+
     if (res.status !== 200) {
       return false;
     }
+
     // Helix rejects requests whose Client-Id header does not match the client
     // the token was issued for, so adopt the token's client ID.
     const body = await parseJsonOnWorklet<{
       client_id?: string;
       expires_in?: number;
     } | null>(await res.text()).catch(() => null);
+
     if (body?.client_id && body.client_id !== getTwitchClientId()) {
       setTwitchClientId(body.client_id);
     }
+
     const expiresIn = tokenExpirySecondsSchema.safeParse(body?.expires_in);
+
     if (expiresIn.success) {
       logger.auth.info('twitch token validated', {
         name: 'auth_info',
@@ -419,6 +430,7 @@ export const twitchService = {
         expiresAt: new Date(Date.now() + expiresIn.data * 1000).toISOString(),
       });
     }
+
     return true;
   },
 
@@ -520,6 +532,7 @@ export const twitchService = {
         },
       },
     );
+
     return result.data;
   },
 
@@ -532,6 +545,7 @@ export const twitchService = {
         },
       },
     );
+
     return result.data;
   },
 
@@ -550,6 +564,7 @@ export const twitchService = {
           },
         },
       );
+
       channels.push(...result.data);
       cursor = result.pagination?.cursor;
     } while (cursor && channels.length < MAX_FOLLOWED_CHANNELS);
@@ -568,6 +583,7 @@ export const twitchService = {
   },
   getUser: async (userId?: string, id?: string): Promise<UserInfoResponse> => {
     const params: Record<string, string> = {};
+
     if (userId) {
       params.login = userId;
     }
@@ -642,6 +658,7 @@ export const twitchService = {
         },
       },
     );
+
     return result.data?.[0] ?? null;
   },
 
@@ -1003,6 +1020,7 @@ export const twitchService = {
     rewardId: string,
   ): Promise<string | undefined> => {
     const cached = getCachedChannelPointRewardTitle(broadcasterId, rewardId);
+
     if (cached) {
       return cached;
     }
@@ -1016,7 +1034,9 @@ export const twitchService = {
           id: rewardId,
         },
       });
+
       const title = data[0]?.title?.trim();
+
       if (title) {
         cacheChannelPointRewardTitle(broadcasterId, rewardId, title);
         return title;
@@ -1024,6 +1044,7 @@ export const twitchService = {
     } catch {
       return undefined;
     }
+
     return undefined;
   },
 };

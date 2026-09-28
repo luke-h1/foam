@@ -40,6 +40,7 @@ describe('analytics', () => {
     await expect(
       logAnalyticsScreenView('/streams/foam'),
     ).resolves.toBeUndefined();
+
     expect(mockedWarn).toHaveBeenCalledWith(
       'Failed to log analytics screen view',
       expect.any(Error),

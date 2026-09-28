@@ -12,6 +12,7 @@ function main(): void {
   const variant = getBuildVariant(
     getRequiredArg(process.argv.slice(2), 'variant'),
   );
+
   const config = VARIANT_CONFIG[variant];
 
   const read = (file: string) => {

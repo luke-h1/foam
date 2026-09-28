@@ -57,6 +57,7 @@ function sanitiseBttvEmote(
     '2x': toBttvEmoteUrl(emote.id, '2x'),
     '3x': toBttvEmoteUrl(emote.id, '3x'),
   } satisfies EmoteImageVariantSet;
+
   const staticVariants: EmoteImageVariantSet = emote.animated
     ? {
         '1x': toBttvStaticEmoteUrl(emote.id, '1x'),
@@ -84,12 +85,14 @@ function sanitiseBttvEmotes(
   creatorOf: (emote: BttvEmote) => string | null,
 ): BttvSanitisedEmote[] {
   const sanitised: BttvSanitisedEmote[] = [];
+
   for (const emote of emotes) {
     const result = sanitiseBttvEmote(emote, site, creatorOf(emote));
     if (result) {
       sanitised.push(result);
     }
   }
+
   return sanitised;
 }
 
@@ -133,6 +136,7 @@ export const bttvEmoteService = {
           provider: 'bttv',
         });
       }
+
       return badges;
     }, []);
   },

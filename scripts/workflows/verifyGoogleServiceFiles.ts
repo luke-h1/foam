@@ -72,6 +72,7 @@ export function verifyGoogleServiceFiles({
   const problems: GoogleServiceFileProblem[] = [];
 
   let packageNames: string[] | undefined;
+
   try {
     packageNames = androidPackageNames(androidContents);
   } catch {

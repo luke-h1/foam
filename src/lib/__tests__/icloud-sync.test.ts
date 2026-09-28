@@ -2,7 +2,7 @@ import { parsePreferencesPayload } from '@app/lib/icloud-sync';
 import {
   initialPreferences,
   type Preferences,
-} from '@app/store/preferenceStore';
+} from '@app/store/preference-store';
 import { logger } from '@app/utils/logger';
 
 const warnSpy = jest.spyOn(logger.main, 'warn').mockImplementation(() => {});
@@ -29,6 +29,7 @@ describe('parsePreferencesPayload', () => {
       blockedTerms: ['kappa'],
       analyticsEnabled: true,
     });
+
     expect(warnSpy).not.toHaveBeenCalled();
   });
 

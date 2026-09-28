@@ -12,7 +12,7 @@ if (
   process.env.EXPO_PUBLIC_APP_VARIANT === 'e2e'
 ) {
   SyncedEmotesRoute =
-    require('@app/screens/DevTools/SyncedEmotesScreen').SyncedEmotesScreen;
+    require('@app/screens/dev-tools/synced-emotes-screen').SyncedEmotesScreen;
 }
 
 export default SyncedEmotesRoute;

@@ -1,0 +1,57 @@
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+
+import { absoluteSevenTvUrl } from './absolute-seven-tv-url';
+import { buildSevenTvBadgeImageUrl } from './build-seven-tv-badge-image-url';
+
+/**
+ * Hoisted so the hot path reuses one compiled pattern; a literal inside the
+ * function is a fresh RegExp on every call.
+ */
+const BADGE_IMAGE_EXTENSION = /\.(webp|png|avif|gif|jpe?g)(?:$|\?)/i;
+
+const normalizedBadges = new WeakMap<SanitisedBadgeSet, SanitisedBadgeSet>();
+
+function isSevenTvBadge(badge: SanitisedBadgeSet): boolean {
+  return badge.provider === '7tv';
+}
+
+function isLoadableBadgeUrl(url: string): boolean {
+  return (
+    url.startsWith('https://') &&
+    url.includes('/badge/') &&
+    BADGE_IMAGE_EXTENSION.test(url)
+  );
+}
+
+function computeNormalizedSevenTvBadge(
+  badge: SanitisedBadgeSet,
+): SanitisedBadgeSet {
+  if (!isSevenTvBadge(badge) || !badge.id) {
+    return badge;
+  }
+
+  const url = absoluteSevenTvUrl(badge.url);
+
+  if (isLoadableBadgeUrl(url)) {
+    return url === badge.url ? badge : { ...badge, url };
+  }
+
+  return {
+    ...badge,
+    url: buildSevenTvBadgeImageUrl(badge.id),
+  };
+}
+
+export function normalizeSevenTvBadge(
+  badge: SanitisedBadgeSet,
+): SanitisedBadgeSet {
+  const cached = normalizedBadges.get(badge);
+
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const normalized = computeNormalizedSevenTvBadge(badge);
+  normalizedBadges.set(badge, normalized);
+  return normalized;
+}

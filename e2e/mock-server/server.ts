@@ -454,9 +454,11 @@ Bun.serve({
       ws.send(':tmi.twitch.tv 003 justinfan12345 :This server is rather new');
       ws.send(':tmi.twitch.tv 004 justinfan12345 :-');
       ws.send(':tmi.twitch.tv 375 justinfan12345 :-');
+
       ws.send(
         ':tmi.twitch.tv 372 justinfan12345 :You are in a maze of twisty passages.',
       );
+
       ws.send(':tmi.twitch.tv 376 justinfan12345 :>');
     },
     message(ws, message) {
@@ -471,26 +473,33 @@ Bun.serve({
 
       if (msg.startsWith('JOIN')) {
         const channel = msg.split(' ')[1]?.trim() ?? '#unknown';
+
         ws.send(
           `:justinfan12345!justinfan12345@justinfan12345.tmi.twitch.tv JOIN ${channel}`,
         );
+
         ws.send(
           `@emote-only=0;followers-only=-1;r9k=0;slow=0;subs-only=0 :tmi.twitch.tv ROOMSTATE ${channel}`,
         );
+
         ws.send(
           `@color=;display-name=justinfan12345;emote-sets=0;user-id=12345;user-type= :tmi.twitch.tv GLOBALUSERSTATE`,
         );
+
         ws.send(
           `:tmi.twitch.tv 353 justinfan12345 = ${channel} :justinfan12345`,
         );
+
         ws.send(
           `:tmi.twitch.tv 366 justinfan12345 ${channel} :End of /NAMES list`,
         );
+
         // Send a burst of sample chat messages with third-party emote references
         // so the chat renders populated content in E2E tests.
         for (const chatMsg of sampleChatMessages(channel)) {
           ws.send(chatMsg);
         }
+
         return;
       }
 

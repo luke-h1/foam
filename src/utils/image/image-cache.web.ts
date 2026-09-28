@@ -35,6 +35,7 @@ function getCachedName(url: string): string {
 
 function rememberObjectUrl(url: string, objectUrl: string, size: number) {
   const existing = objectUrlCache.get(url);
+
   if (existing?.uri === objectUrl) {
     return existing.uri;
   }
@@ -51,14 +52,17 @@ function rememberObjectUrl(url: string, objectUrl: string, size: number) {
 
   while (objectUrlCache.size > MAX_MEMORY_CACHE_ENTRIES) {
     const oldestEntry = objectUrlCache.entries().next().value;
+
     if (!oldestEntry) {
       break;
     }
 
     const [oldUrl, oldEntry] = oldestEntry;
+
     if (oldEntry.uri.startsWith('blob:')) {
       globalThis.URL.revokeObjectURL(oldEntry.uri);
     }
+
     objectUrlCache.delete(oldUrl);
   }
 
@@ -72,11 +76,13 @@ export async function cacheImageFromUrl(
   if (!isCacheableWebUri(url) || !canUseWebImageCache()) {
     return url;
   }
+
   if (options.signal?.aborted) {
     return url;
   }
 
   const cachedObjectUrl = objectUrlCache.get(url)?.uri;
+
   if (cachedObjectUrl) {
     return cachedObjectUrl;
   }
@@ -85,16 +91,26 @@ export async function cacheImageFromUrl(
     const cache = await globalThis.caches.open(WEB_IMAGE_CACHE_NAME);
     let response = await cache.match(url);
 
-    if (!response) {
-      const fetched = await globalThis.fetch(url, { cache: 'force-cache' });
-      if (!fetched.ok) {
-        return url;
-      }
+    const fetched = response
+      ? undefined
+      : await globalThis.fetch(url, { cache: 'force-cache' });
+
+    if (fetched && !fetched.ok) {
+      return url;
+    }
+
+    if (fetched) {
       await cache.put(url, fetched.clone());
-      response = fetched;
+    }
+
+    response = response ?? fetched;
+
+    if (!response) {
+      return url;
     }
 
     const blob = await response.blob();
+
     if (blob.size === 0) {
       return url;
     }
@@ -122,6 +138,7 @@ export function clearSessionCache(): void {
       globalThis.URL.revokeObjectURL(entry.uri);
     }
   });
+
   objectUrlCache.clear();
 
   if (globalThis.caches !== undefined) {

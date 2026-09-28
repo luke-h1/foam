@@ -1,7 +1,10 @@
-import type { IndexedCollection } from '@app/services/ws/util/indexedCollection';
+import type { IndexedCollection } from '@app/services/ws/util/indexed-collection';
 import type { SevenTvEmote, SevenTvHost } from '@app/types/seventv/emotes';
 import type { StvUser } from '@app/types/seventv/users';
-import type { V4Badge, V4Paint } from '@app/utils/color/sevenTvPaintData/types';
+import type {
+  V4Badge,
+  V4Paint,
+} from '@app/utils/color/seven-tv-paint-data/types';
 
 interface EventObject {
   id: string;

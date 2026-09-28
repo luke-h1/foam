@@ -64,6 +64,7 @@ describe('twitchEmoteService', () => {
     const result = await twitchEmoteService.getGlobalEmotes();
 
     expect(api.get).toHaveBeenCalledWith('/chat/emotes/global');
+
     expect(result).toEqual<TwitchSanitisedEmote[]>([
       {
         name: 'Kappa',
@@ -96,6 +97,7 @@ describe('twitchEmoteService', () => {
       data: [makeTwitchEmote('emotesv2_abc', 'streamerHi')],
       pagination: {},
     });
+
     mockTwitchService.getUser.mockResolvedValue(broadcaster);
 
     const result = await twitchEmoteService.getChannelEmotes('123');
@@ -103,7 +105,9 @@ describe('twitchEmoteService', () => {
     expect(api.get).toHaveBeenCalledWith('/chat/emotes', {
       params: { broadcaster_id: '123' },
     });
+
     expect(mockTwitchService.getUser).toHaveBeenCalledWith(undefined, '123');
+
     expect(
       result.map(emote => ({
         id: emote.id,
@@ -131,9 +135,11 @@ describe('twitchEmoteService', () => {
     expect(api.get).toHaveBeenNthCalledWith(1, '/chat/emotes/user', {
       params: { user_id: '42', broadcaster_id: '123', after: undefined },
     });
+
     expect(api.get).toHaveBeenNthCalledWith(2, '/chat/emotes/user', {
       params: { user_id: '42', broadcaster_id: '123', after: 'cursor1' },
     });
+
     expect(result.map(emote => ({ id: emote.id, site: emote.site }))).toEqual([
       { id: 'emote1', site: 'Twitch Subscriber' },
       { id: 'emote2', site: 'Twitch Subscriber' },

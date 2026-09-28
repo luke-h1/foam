@@ -1,27 +1,27 @@
 import { batch } from '@legendapp/state';
 
-import { chatPerfMarks } from '@app/lib/chatPerfMarks';
-import { getPreferences } from '@app/store/preferenceStore';
-import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
-import { createModeratedMessageText } from '@app/utils/chat/createModeratedMessageText';
-import { getChatMessageKey } from '@app/utils/chat/messageIdentity/getChatMessageKey';
-import { getChatMessageStoreId } from '@app/utils/chat/messageIdentity/getChatMessageStoreId';
-import { isRenderableChatMessage } from '@app/utils/chat/messageIdentity/isRenderableChatMessage';
-import { normaliseMessageField } from '@app/utils/chat/messageIdentity/normaliseMessageField';
-import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor/resolveCachedSenderColor';
-import { clearMentionLoginIndex } from '@app/utils/chat/resolveMentionLogin/clearMentionLoginIndex';
-import { registerMentionChatter } from '@app/utils/chat/resolveMentionLogin/registerMentionChatter';
-import { registerMentionLogin } from '@app/utils/chat/resolveMentionLogin/registerMentionLogin';
-import { registerMentionLoginsFromParts } from '@app/utils/chat/resolveMentionLogin/registerMentionLoginsFromParts';
-import { registerMentionLoginsFromSender } from '@app/utils/chat/resolveMentionLogin/registerMentionLoginsFromSender';
-import { type ChatterRole } from '@app/utils/chat/resolveMentionLogin/types';
+import { chatPerfMarks } from '@app/lib/chat-perf-marks';
+import { getPreferences } from '@app/store/preference-store';
+import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-chat-username';
+import { createModeratedMessageText } from '@app/utils/chat/create-moderated-message-text';
+import { getChatMessageKey } from '@app/utils/chat/message-identity/get-chat-message-key';
+import { getChatMessageStoreId } from '@app/utils/chat/message-identity/get-chat-message-store-id';
+import { isRenderableChatMessage } from '@app/utils/chat/message-identity/is-renderable-chat-message';
+import { normaliseMessageField } from '@app/utils/chat/message-identity/normalise-message-field';
+import { resolveCachedSenderColor } from '@app/utils/chat/resolve-cached-sender-color/resolve-cached-sender-color';
+import { clearMentionLoginIndex } from '@app/utils/chat/resolve-mention-login/clear-mention-login-index';
+import { registerMentionChatter } from '@app/utils/chat/resolve-mention-login/register-mention-chatter';
+import { registerMentionLogin } from '@app/utils/chat/resolve-mention-login/register-mention-login';
+import { registerMentionLoginsFromParts } from '@app/utils/chat/resolve-mention-login/register-mention-logins-from-parts';
+import { registerMentionLoginsFromSender } from '@app/utils/chat/resolve-mention-login/register-mention-logins-from-sender';
+import { type ChatterRole } from '@app/utils/chat/resolve-mention-login/types';
 
-import { chatStore$ } from '../observables/chatStore';
+import { chatStore$ } from '../observables/chat-store';
 import {
   deletePersistedRecentMessagesForChannels,
   RECENT_MESSAGES_PERSISTENCE_ENABLED,
   writePersistedRecentMessagesForChannel,
-} from '../observables/recentMessagesPersistence';
+} from '../observables/recent-messages-persistence';
 import type { AnyChatMessageType } from '../types/constants';
 import {
   clearMessageColorIndexes,
@@ -29,14 +29,16 @@ import {
   getUserMessageColor,
   indexMessageColor,
   removeMessageColor,
-} from './messageColorIndex';
+} from './message-color-index';
 
 const messageKeySet = new Set<string>();
+
 /**
  * Stored positions are absolute and reads subtract this running offset, so a
  * front-trim never rewrites both index Maps per flush.
  */
 let windowBaseOffset = 0;
+
 const messageKeyOrder: string[] = [];
 const messageIdToIndex = new Map<string, number>();
 const messageKeyToIndex = new Map<string, number>();
@@ -49,6 +51,7 @@ export const getMaxChatMessages = (): number =>
 // While scrolled up a front-trim re-anchors index 0 and yanks the list to the
 // top, so pause trimming and let the window grow to a bounded ceiling.
 const SUSPENDED_FRONT_TRIM_HEADROOM = 350;
+
 let frontTrimSuspended = false;
 
 export const setChatFrontTrimSuspended = (suspended: boolean): void => {
@@ -60,9 +63,11 @@ export const getEffectiveMaxChatMessages = (): number =>
   (frontTrimSuspended ? SUSPENDED_FRONT_TRIM_HEADROOM : 0);
 
 const MAX_RECENT_MESSAGE_CHANNELS = 10;
+
 // Each sync re-serializes recentMessagesByChannel to MMKV - a top JS hotspot
 // in busy chats (issue #594); moderation/clear paths still flush immediately.
 export const RECENT_MESSAGES_SYNC_DELAY_MS = 15_000;
+
 const RECENT_MESSAGES_MODERATION_SYNC_DELAY_MS = 1_000;
 
 let recentMessagesSyncTimer: ReturnType<typeof setTimeout> | null = null;
@@ -84,6 +89,7 @@ const dedupeMessagesForStore = (
 
     const key = getChatMessageKey(message.message_id, message.message_nonce);
     const id = getChatMessageStoreId(message);
+
     if (seenKeys.has(key) || seenIds.has(id)) {
       return;
     }
@@ -108,8 +114,10 @@ const ensurePartIdsForStore = (
   if (messageParts.length < 2 || partIdsAssigned.has(messageParts)) {
     return messageParts;
   }
+
   for (let index = 0; index < messageParts.length; index += 1) {
     const part = messageParts[index];
+
     if (part) {
       Object.defineProperty(part, 'id', {
         configurable: true,
@@ -119,6 +127,7 @@ const ensurePartIdsForStore = (
       });
     }
   }
+
   partIdsAssigned.add(messageParts);
   return messageParts;
 };
@@ -132,11 +141,14 @@ const prepareMessageForStore = (
   const messageKey =
     precomputedKey ??
     getChatMessageKey(message.message_id, message.message_nonce);
+
   const cachedSenderColor = resolveCachedSenderColor(
     message,
     getUserMessageColor,
   );
+
   nextMessageSeq += 1;
+
   const storedMessage: AnyChatMessageType = {
     ...message,
     id: messageKey,
@@ -144,9 +156,11 @@ const prepareMessageForStore = (
     committedAt: message.committedAt ?? Date.now(),
     message: ensurePartIdsForStore(message.message),
   };
+
   if (cachedSenderColor) {
     storedMessage.cachedSenderColor = cachedSenderColor;
   }
+
   return storedMessage;
 };
 
@@ -154,15 +168,19 @@ const getSenderChatterRole = (
   message: AnyChatMessageType,
 ): ChatterRole | undefined => {
   const badgesRaw = message.userstate?.['badges-raw'] ?? '';
+
   if (badgesRaw.includes('broadcaster/')) {
     return 'broadcaster';
   }
+
   if (message.userstate?.mod === '1' || badgesRaw.includes('moderator/')) {
     return 'moderator';
   }
+
   if (badgesRaw.includes('vip/')) {
     return 'vip';
   }
+
   return undefined;
 };
 
@@ -170,9 +188,11 @@ const indexMessage = (message: AnyChatMessageType, index: number) => {
   // Stored messages carry the key as their id (prepareMessageForStore), so
   // this is a field read; the fallback covers unprepared messages.
   const key = getChatMessageStoreId(message);
+
   messageKeyToIndex.set(key, index + windowBaseOffset);
 
   const normalisedMessageId = normaliseMessageField(message.message_id);
+
   if (normalisedMessageId) {
     messageIdToIndex.set(normalisedMessageId, index + windowBaseOffset);
   }
@@ -185,10 +205,12 @@ const indexMessage = (message: AnyChatMessageType, index: number) => {
     color: message.userstate?.color,
     role: getSenderChatterRole(message),
   });
+
   registerMentionLoginsFromSender(
     message.userstate?.login,
     message.userstate?.username ?? message.sender,
   );
+
   registerMentionLogin(message.replyDisplayName);
   registerMentionLoginsFromParts(message.message);
 };
@@ -211,6 +233,7 @@ const rebuildMessageIndexes = (
 const trimRecentMessageChannels = () => {
   const recentMessagesByChannel =
     chatStore$.recentMessagesByChannel.peek() ?? {};
+
   const entries = Object.entries(recentMessagesByChannel);
 
   if (entries.length <= MAX_RECENT_MESSAGE_CHANNELS) {
@@ -220,32 +243,30 @@ const trimRecentMessageChannels = () => {
   const currentChannelId = chatStore$.currentChannelId.peek();
   const nextEntries = entries.slice(-MAX_RECENT_MESSAGE_CHANNELS);
 
-  if (currentChannelId) {
-    const currentEntryIndex = entries.findIndex(
-      ([channelId]) => channelId === currentChannelId,
-    );
-    const currentEntry =
-      currentEntryIndex >= 0 ? entries[currentEntryIndex] : undefined;
+  const currentEntry = currentChannelId
+    ? entries.find(([channelId]) => channelId === currentChannelId)
+    : undefined;
 
-    if (
-      currentEntry &&
-      !nextEntries.some(([channelId]) => channelId === currentChannelId)
-    ) {
-      nextEntries[0] = currentEntry;
-    }
+  // The channel being watched must survive the prune even when it is the
+  // least recently written one.
+  const keepsCurrentChannel = nextEntries.some(
+    ([channelId]) => channelId === currentChannelId,
+  );
+
+  if (currentEntry && !keepsCurrentChannel) {
+    nextEntries[0] = currentEntry;
   }
 
-  if (RECENT_MESSAGES_PERSISTENCE_ENABLED) {
-    const keptChannelIds = new Set(nextEntries.map(([channelId]) => channelId));
-    const droppedChannelIds: string[] = [];
-    for (const [channelId] of entries) {
-      if (!keptChannelIds.has(channelId)) {
-        droppedChannelIds.push(channelId);
-      }
-    }
-    if (droppedChannelIds.length > 0) {
-      deletePersistedRecentMessagesForChannels(droppedChannelIds);
-    }
+  const keptChannelIds = new Set(nextEntries.map(([channelId]) => channelId));
+
+  const droppedChannelIds = entries.reduce<string[]>(
+    (dropped, [channelId]) =>
+      keptChannelIds.has(channelId) ? dropped : [...dropped, channelId],
+    [],
+  );
+
+  if (RECENT_MESSAGES_PERSISTENCE_ENABLED && droppedChannelIds.length > 0) {
+    deletePersistedRecentMessagesForChannels(droppedChannelIds);
   }
 
   chatStore$.recentMessagesByChannel.set(Object.fromEntries(nextEntries));
@@ -257,12 +278,15 @@ const persistRecentMessagesForChannel = (
 ) => {
   const recentMessagesByChannel =
     chatStore$.recentMessagesByChannel.peek() ?? {};
+
   const existingMessages = recentMessagesByChannel[channelId];
+
   if (existingMessages === nextMessages) {
     return;
   }
 
   const nextRecentMessages = nextMessages.slice(-MAX_RECENT_MESSAGES);
+
   if (
     existingMessages &&
     existingMessages.length === nextRecentMessages.length &&
@@ -277,11 +301,13 @@ const persistRecentMessagesForChannel = (
     ...recentMessagesByChannel,
     [channelId]: nextRecentMessages,
   });
+
   // Native persistence is per-channel, so only the channel that changed is
   // serialized + written here (web persists the whole node via Legend State).
   if (RECENT_MESSAGES_PERSISTENCE_ENABLED) {
     writePersistedRecentMessagesForChannel(channelId, nextRecentMessages);
   }
+
   trimRecentMessageChannels();
 };
 
@@ -290,6 +316,7 @@ const flushPendingRecentMessagesSync = () => {
     clearTimeout(recentMessagesSyncTimer);
     recentMessagesSyncTimer = null;
   }
+
   recentMessagesSyncTimerDelayMs = 0;
 
   const channelId = pendingRecentMessagesChannelId;
@@ -317,6 +344,7 @@ const syncRecentMessagesForCurrentChannel = (
   mode: RecentMessagesSyncMode = 'immediate',
 ) => {
   const currentChannelId = chatStore$.currentChannelId.peek();
+
   if (!currentChannelId) {
     return;
   }
@@ -330,6 +358,7 @@ const syncRecentMessagesForCurrentChannel = (
   // Hold the reference only - the flush slices to MAX_RECENT_MESSAGES, so
   // slicing per deferred sync (~10/s under load) would be redundant.
   pendingRecentMessagesChannelId = currentChannelId;
+
   pendingRecentMessages = nextMessages;
 
   const delayMs =
@@ -337,10 +366,12 @@ const syncRecentMessagesForCurrentChannel = (
       ? RECENT_MESSAGES_MODERATION_SYNC_DELAY_MS
       : RECENT_MESSAGES_SYNC_DELAY_MS;
 
+  // A pending sync already covers this one unless the new request is sooner.
+  if (recentMessagesSyncTimer && delayMs >= recentMessagesSyncTimerDelayMs) {
+    return;
+  }
+
   if (recentMessagesSyncTimer) {
-    if (delayMs >= recentMessagesSyncTimerDelayMs) {
-      return;
-    }
     clearTimeout(recentMessagesSyncTimer);
   }
 
@@ -360,14 +391,17 @@ const getWindowTrimCount = (
   appendCount: number,
 ): number => {
   const excess = currentCount + appendCount - getEffectiveMaxChatMessages();
+
   if (excess <= 0) {
     return 0;
   }
+
   return Math.min(excess, appendCount + MAX_HEADROOM_TRIM_PER_COMMIT);
 };
 
 const trimMessageIndexes = (targetLength: number): number => {
   const trimCount = messageKeyOrder.length - targetLength;
+
   if (trimCount <= 0) {
     return 0;
   }
@@ -375,7 +409,9 @@ const trimMessageIndexes = (targetLength: number): number => {
   // One splice instead of shift-per-key - shift moves the whole remaining
   // window each call, which a full window pays per flush.
   const removedKeys = messageKeyOrder.splice(0, trimCount);
+
   let trimmedCount = 0;
+
   for (const removedKey of removedKeys) {
     if (removedKey) {
       messageKeySet.delete(removedKey);
@@ -413,6 +449,7 @@ const appendToMessageWindow = (
    */
   if (extraMessageCount >= currentMessages.length) {
     const storedDropCount = extraMessageCount - currentMessages.length;
+
     return {
       droppedMessages: [
         ...currentMessages,
@@ -451,6 +488,7 @@ const indexAppendedMessages = (
     messageKeyToIndex.delete(key);
 
     const normalisedMessageId = normaliseMessageField(message.message_id);
+
     // Another window entry can share this message_id under a different
     // nonce; only drop the id entry when it still points at the evicted row.
     if (
@@ -480,6 +518,7 @@ const publishMessageAtIndex = (
   mode: RecentMessagesSyncMode = 'defer',
 ) => {
   const currentMessages = chatStore$.messages.peek();
+
   if (!currentMessages[index]) {
     return;
   }
@@ -512,9 +551,11 @@ const getMessageUpdatesFromInputs = (
     if (storedIndex === undefined) {
       continue;
     }
+
     const index = storedIndex - windowBaseOffset;
 
     const currentMessage = nextMessages[index];
+
     if (!currentMessage) {
       continue;
     }
@@ -531,6 +572,7 @@ const getMessageUpdatesFromInputs = (
       ...currentMessage,
       ...messageUpdates,
     };
+
     didUpdate = true;
   }
 
@@ -547,6 +589,7 @@ export const updateMessages = (
 
   const currentMessages = chatStore$.messages.peek();
   const nextMessages = getMessageUpdatesFromInputs(currentMessages, updates);
+
   if (!nextMessages) {
     return;
   }
@@ -561,6 +604,7 @@ export const addMessage = (message?: AnyChatMessageType) => {
   }
 
   const key = getChatMessageKey(message.message_id, message.message_nonce);
+
   if (messageKeySet.has(key)) {
     return;
   }
@@ -570,12 +614,14 @@ export const addMessage = (message?: AnyChatMessageType) => {
   messageKeyOrder.push(key);
   const currentMessages = chatStore$.messages.peek();
   const nextMessageIndex = currentMessages.length;
+
   const { droppedMessages, nextMessages } = appendToMessageWindow(
     currentMessages,
     [storedMessage],
   );
 
   const trimmedKeyCount = trimMessageIndexes(nextMessages.length);
+
   if (trimmedKeyCount === droppedMessages.length) {
     indexAppendedMessages([storedMessage], nextMessageIndex, droppedMessages);
   } else {
@@ -584,6 +630,7 @@ export const addMessage = (message?: AnyChatMessageType) => {
   }
 
   chatStore$.messages.set(nextMessages);
+
   // Defer the MMKV persist so a single message never triggers a synchronous
   // full-store write on the hot path; the cache is only a warm-start aid.
   syncRecentMessagesForCurrentChannel(nextMessages, 'defer');
@@ -593,16 +640,20 @@ export const addMessages = (messages: (AnyChatMessageType | undefined)[]) => {
   if (messages.length === 0) {
     return;
   }
+
   const storedMessages: AnyChatMessageType[] = [];
+
   for (const msg of messages) {
     if (!isRenderableChatMessage(msg)) {
       continue;
     }
 
     const key = getChatMessageKey(msg.message_id, msg.message_nonce);
+
     if (messageKeySet.has(key)) {
       continue;
     }
+
     messageKeySet.add(key);
     messageKeyOrder.push(key);
     storedMessages.push(prepareMessageForStore(msg, key));
@@ -611,14 +662,17 @@ export const addMessages = (messages: (AnyChatMessageType | undefined)[]) => {
   if (storedMessages.length === 0) {
     return;
   }
+
   const currentMessages = chatStore$.messages.peek();
   const nextMessageStartIndex = currentMessages.length;
+
   const { droppedMessages, nextMessages } = appendToMessageWindow(
     currentMessages,
     storedMessages,
   );
 
   const trimmedKeyCount = trimMessageIndexes(nextMessages.length);
+
   if (trimmedKeyCount === droppedMessages.length) {
     indexAppendedMessages(
       storedMessages,
@@ -640,6 +694,7 @@ export const moderateMessageById = (
   moderationNotice: string,
 ) => {
   const message = getMessageById(messageId);
+
   if (!message) {
     return;
   }
@@ -650,10 +705,12 @@ export const moderateMessageById = (
   if (storedIndex === undefined) {
     return;
   }
+
   const index = storedIndex - windowBaseOffset;
 
   const currentMessages = chatStore$.messages.peek();
   const currentMessage = currentMessages[index];
+
   if (!currentMessage) {
     return;
   }
@@ -682,6 +739,7 @@ export const moderateMessagesByLogin = (
   moderationNotice: string,
 ) => {
   const target = normaliseChatUsername(login);
+
   if (!target) {
     return;
   }
@@ -692,6 +750,7 @@ export const moderateMessagesByLogin = (
 
   for (let index = 0; index < currentMessages.length; index += 1) {
     const message = currentMessages[index];
+
     if (!isRenderableChatMessage(message)) {
       continue;
     }
@@ -731,6 +790,7 @@ export const moderateMessagesByLogin = (
 
 const forgetMessageKeys = (messages: AnyChatMessageType[]) => {
   const removedKeys = new Set<string>();
+
   messages.forEach(message => {
     const key = getChatMessageKey(message.message_id, message.message_nonce);
     messageKeySet.delete(key);
@@ -744,12 +804,14 @@ const forgetMessageKeys = (messages: AnyChatMessageType[]) => {
 
 export const removeMessagesByLogin = (login: string) => {
   const target = normaliseChatUsername(login);
+
   if (!target) {
     return;
   }
 
   const currentMessages = chatStore$.messages.peek();
   const removedMessages: AnyChatMessageType[] = [];
+
   const nextMessages = currentMessages.filter(message => {
     if (!isRenderableChatMessage(message)) {
       return true;
@@ -782,6 +844,7 @@ export const getMessageById = (
   messageId: string,
 ): AnyChatMessageType | undefined => {
   const storedIndex = messageIdToIndex.get(normaliseMessageField(messageId));
+
   if (storedIndex === undefined) {
     return undefined;
   }
@@ -791,11 +854,13 @@ export const getMessageById = (
 
 export const removeMessageById = (messageId: string) => {
   const normalisedMessageId = normaliseMessageField(messageId);
+
   if (!normalisedMessageId) {
     return;
   }
 
   const currentMessages = chatStore$.messages.peek();
+
   const removedMessages = currentMessages.filter(
     message =>
       isRenderableChatMessage(message) &&
@@ -867,6 +932,7 @@ export const restoreRecentMessagesForChannel = (channelId: string): number => {
   const storedMessages = recentMessages.map(message =>
     prepareMessageForStore({ ...message, isHistorical: true }),
   );
+
   rebuildMessageIndexes(storedMessages);
   chatStore$.messages.set(storedMessages);
 
@@ -876,4 +942,4 @@ export const restoreRecentMessagesForChannel = (channelId: string): number => {
 export const getMessageColor = (messageId: string): string | undefined =>
   getIndexedMessageColor(messageId);
 
-export { getUserMessageColor } from './messageColorIndex';
+export { getUserMessageColor } from './message-color-index';

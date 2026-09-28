@@ -1,5 +1,5 @@
 /**
- * Generates src/utils/emoji/emojiDataset.json from emojibase-data.
+ * Generates src/utils/emoji/emoji-dataset.json from emojibase-data.
  *
  * emojibase-data ships ~1.1MB of JSON across data.json and three shortcode
  * maps, but the app only needs hexcode → deduped aliases. Precomputing that
@@ -56,7 +56,7 @@ for (const { hexcode } of emojiData) {
 
 const outPath = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
-  '../src/utils/emoji/emojiDataset.json',
+  '../src/utils/emoji/emoji-dataset.json',
 );
 
 writeFileSync(outPath, JSON.stringify(entries));

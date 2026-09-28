@@ -102,6 +102,7 @@ describe('sevenTvService emote set sanitisation', () => {
     expect(result.map(emote => ({ id: emote.id, site: emote.site }))).toEqual([
       { id: 'emote-b', site: '7TV Global' },
     ]);
+
     expect(result[0]?.set_metadata).toEqual<
       SevenTvSanitisedEmote['set_metadata']
     >({

@@ -1,0 +1,243 @@
+import { useMemo } from 'react';
+import type { RefObject } from 'react';
+
+import { ReadyState } from '@app/hooks/ws/constants';
+import { useChatUserState } from '@app/services/twitch-chat-service';
+import { chatStore$ } from '@app/store/chat/observables/chat-store';
+import type { ChatRenderPreferences } from '@app/store/preference-store';
+import type { UserInfoResponse } from '@app/types/twitch/user';
+import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-chat-username';
+import { parseBadges } from '@app/utils/chat/parse-badges';
+
+import type { ChatInputShellHandle } from '../components/chat-input-shell';
+import type { ChatListRef } from '../components/chat-list';
+import type { ChatOverlayLayerProps } from '../components/chat-overlay-layer';
+import {
+  useChatComposerActions,
+  useChatOverlayActions,
+} from './use-chat-interaction-handlers';
+import { useChatRowRenderer } from './use-chat-row-renderer';
+import { useChatSettingsActions } from './use-chat-settings-actions';
+import { usePinnedChatMessage } from './use-pinned-chat-message';
+
+interface UseChatSurfaceOptions {
+  channelId: string;
+  channelName: string;
+  forceFlush: () => void;
+  hiddenUsers: string[];
+  hidePhraseFromView: (phrase?: string) => void;
+  hideUserFromView: (username?: string) => void;
+  highlightedReplyTargetTimeoutRef: RefObject<ReturnType<
+    typeof setTimeout
+  > | null>;
+  highlightedUsers: string[];
+  inputShellRef: RefObject<ChatInputShellHandle | null>;
+  joinChannel: (channel: string) => void;
+  listRef: RefObject<ChatListRef | null>;
+  noteScrollAwayIntent: () => void;
+  partChannel: (channel: string) => void;
+  preferences: ChatRenderPreferences;
+  refetchEmotes: () => Promise<void>;
+  reprocessAllMessages: () => void;
+  scrollToBottom: () => void;
+  setHighlightedReplyTargetMessageId: (
+    value: string | null | ((current: string | null) => string | null),
+  ) => void;
+  shouldMaintainScrollAtEnd: boolean;
+  showOnlyMentions: boolean;
+  toggleHighlightedUser: (username?: string) => void;
+  twitchConnectionState: ReadyState;
+  user?: UserInfoResponse;
+}
+
+export function useChatSurface({
+  channelId,
+  channelName,
+  forceFlush,
+  hiddenUsers,
+  hidePhraseFromView,
+  hideUserFromView,
+  highlightedReplyTargetTimeoutRef,
+  highlightedUsers,
+  inputShellRef,
+  joinChannel,
+  listRef,
+  noteScrollAwayIntent,
+  partChannel,
+  preferences,
+  refetchEmotes,
+  reprocessAllMessages,
+  scrollToBottom,
+  setHighlightedReplyTargetMessageId,
+  shouldMaintainScrollAtEnd,
+  showOnlyMentions,
+  toggleHighlightedUser,
+  twitchConnectionState,
+  user,
+}: UseChatSurfaceOptions) {
+  const messages$ = chatStore$.messages;
+
+  const chatAssetPreferenceKey = useMemo(
+    () =>
+      [
+        preferences.emojiStyle,
+        preferences.show7TvEmotes,
+        preferences.showBttvEmotes,
+        preferences.showFFzEmotes,
+        preferences.showTwitchEmotes,
+        preferences.show7tvBadges,
+        preferences.showBttvBadges,
+        preferences.showFFzBadges,
+        preferences.showTwitchBadges,
+        preferences.showChatterinoEmotes,
+      ].join('|'),
+    [
+      preferences.emojiStyle,
+      preferences.show7TvEmotes,
+      preferences.showBttvEmotes,
+      preferences.showFFzEmotes,
+      preferences.showTwitchEmotes,
+      preferences.show7tvBadges,
+      preferences.showBttvBadges,
+      preferences.showFFzBadges,
+      preferences.showTwitchBadges,
+      preferences.showChatterinoEmotes,
+    ],
+  );
+
+  const {
+    appendMentionToComposer,
+    handleEmoteSelect,
+    handleReply,
+    insertPhraseToComposer,
+  } = useChatComposerActions({
+    inputShellRef,
+  });
+
+  const userState = useChatUserState();
+
+  const canModerateChat = useMemo(() => {
+    const parsedBadges = parseBadges(userState['badges-raw']).badges;
+    return (
+      userState.mod === '1' ||
+      parsedBadges.broadcaster === '1' ||
+      normaliseChatUsername(user?.login) === normaliseChatUsername(channelName)
+    );
+  }, [userState, user?.login, channelName]);
+
+  const {
+    handlePinMessage,
+    handleRefreshPinnedMessage,
+    handleUnpinPinnedMessage,
+    pinnedMessage,
+    pinnedMessageBusy,
+    pinnedMessageId,
+  } = usePinnedChatMessage({
+    canModerateChat,
+    channelId,
+    moderatorId: user?.id,
+  });
+
+  const {
+    handleClearChatCache,
+    handleClearImageCache,
+    handleClearSevenTvCosmeticsCache,
+    handleRefreshEmotesAndBadges,
+    handleResumeScrollToBottom,
+    handleSettingsReconnect,
+  } = useChatSettingsActions({
+    channelId,
+    channelName,
+    forceFlush,
+    joinChannel,
+    partChannel,
+    refetchEmotes,
+    reprocessAllMessages,
+    scrollToBottom,
+  });
+
+  const {
+    handleBadgeLongPress,
+    handleEmotePress,
+    handleMessageLongPress,
+    handleOpenEmoteSheet,
+    handleOpenSettingsSheet,
+    handleUsernamePress,
+  } = useChatOverlayActions(channelId);
+
+  const paneFlags = useMemo(
+    () => ({
+      canModerateChat,
+      connected: twitchConnectionState === ReadyState.OPEN,
+      showOnlyMentions,
+      shouldMaintainScrollAtEnd,
+    }),
+    [
+      canModerateChat,
+      shouldMaintainScrollAtEnd,
+      showOnlyMentions,
+      twitchConnectionState,
+    ],
+  );
+
+  const { getItemType, keyExtractor, messageListExtraData, renderItem } =
+    useChatRowRenderer({
+      channelId,
+      highlightedReplyTargetTimeoutRef,
+      highlightedUsers,
+      listRef,
+      messages$,
+      noteScrollAwayIntent,
+      onBadgePress: handleBadgeLongPress,
+      onEmotePress: handleEmotePress,
+      onMessageLongPress: handleMessageLongPress,
+      onUsernamePress: handleUsernamePress,
+      preferences,
+      setHighlightedReplyTargetMessageId,
+      user,
+    });
+
+  const overlayProps: ChatOverlayLayerProps = {
+    canModerateChat,
+    channelId,
+    channelName,
+    currentUserId: user?.id,
+    hiddenUsers,
+    highlightedUsers,
+    hidePhraseFromView,
+    hideUserFromView,
+    onAppendMention: appendMentionToComposer,
+    onClearChatCache: handleClearChatCache,
+    onClearImageCache: handleClearImageCache,
+    onClearSevenTvCosmeticsCache: handleClearSevenTvCosmeticsCache,
+    onInsertEmote: handleEmoteSelect,
+    onInsertPhrase: insertPhraseToComposer,
+    onPinMessage: handlePinMessage,
+    onRefreshPinnedMessage: handleRefreshPinnedMessage,
+    onReply: handleReply,
+    onSettingsReconnect: handleSettingsReconnect,
+    onSettingsRefetchEmotes: handleRefreshEmotesAndBadges,
+    onUnpinPinnedMessage: handleUnpinPinnedMessage,
+    pinnedMessageBusy,
+    pinnedMessageId,
+    toggleHighlightedUser,
+  };
+
+  return {
+    chatAssetPreferenceKey,
+    getItemType,
+    handleOpenEmoteSheet,
+    handleOpenSettingsSheet,
+    handleRefreshEmotesAndBadges,
+    handleRefreshPinnedMessage,
+    handleResumeScrollToBottom,
+    handleUnpinPinnedMessage,
+    keyExtractor,
+    messageListExtraData,
+    overlayProps,
+    paneFlags,
+    pinnedMessage,
+    pinnedMessageBusy,
+    renderItem,
+  };
+}

@@ -1,13 +1,13 @@
 import { act, renderHook } from '@testing-library/react-native';
 import * as Network from 'expo-network';
 
-import * as AuthContext from '@app/context/AuthContext';
+import * as AuthContext from '@app/context/auth-context';
 import { ReadyState } from '@app/hooks/ws/constants';
 import type { Options } from '@app/hooks/ws/types';
-import * as UseWebsocketModule from '@app/hooks/ws/useWebsocket';
+import * as UseWebsocketModule from '@app/hooks/ws/use-websocket';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
-import { preferences$ } from '@app/store/preferenceStore';
-import * as AppStateTransitionsModule from '@app/utils/appState/appStateTransitions';
+import { preferences$ } from '@app/store/preference-store';
+import * as AppStateTransitionsModule from '@app/utils/app-state/app-state-transitions';
 import { logger } from '@app/utils/logger';
 
 jest.spyOn(AuthContext, 'useAuthContext').mockReturnValue({
@@ -56,17 +56,21 @@ Object.defineProperty(socket, 'close', { value: close });
 
 function getForegroundTransitionListener() {
   const listener = mockedSubscribeToAppStateTransitions.mock.calls[0]?.[0];
+
   if (!listener) {
     throw new Error('useTwitchChat did not subscribe to app-state transitions');
   }
+
   return listener;
 }
 
 function renderConnectedChatHook() {
   const view = renderHook(() => useTwitchChat({ channel: 'foam' }));
+
   act(() => {
     wsOptions.onOpen?.();
   });
+
   sendMessage.mockClear();
   return view;
 }
@@ -76,8 +80,10 @@ describe('useTwitchChat foreground liveness probe', () => {
     jest.useFakeTimers();
     socketReadyState = WebSocket.OPEN;
     wsOptions = {};
+
     mockedUseWebsocket.mockImplementation((_url, options = {}) => {
       wsOptions = options;
+
       return {
         sendMessage,
         sendJsonMessage: jest.fn(),
@@ -110,6 +116,7 @@ describe('useTwitchChat foreground liveness probe', () => {
     });
 
     expect(close).toHaveBeenCalledWith(4004, 'chat liveness probe timeout');
+
     expect(
       wsOptions.shouldReconnect?.(new CloseEvent('close', { code: 4004 })),
     ).toBe(true);
@@ -143,12 +150,14 @@ describe('useTwitchChat foreground liveness probe', () => {
   test('probes on the first connectivity regain after mounting offline', async () => {
     mockedGetNetworkStateAsync.mockResolvedValueOnce({ isConnected: false });
     renderConnectedChatHook();
+
     await act(async () => {
       await jest.advanceTimersByTimeAsync(0);
     });
 
     const networkListener =
       mockedAddNetworkStateListener.mock.calls.at(-1)?.[0];
+
     if (!networkListener) {
       throw new Error('useTwitchChat did not subscribe to network state');
     }
@@ -162,12 +171,14 @@ describe('useTwitchChat foreground liveness probe', () => {
 
   test('does not probe on a network event when connectivity never dropped', async () => {
     renderConnectedChatHook();
+
     await act(async () => {
       await jest.advanceTimersByTimeAsync(0);
     });
 
     const networkListener =
       mockedAddNetworkStateListener.mock.calls.at(-1)?.[0];
+
     if (!networkListener) {
       throw new Error('useTwitchChat did not subscribe to network state');
     }
@@ -200,8 +211,10 @@ describe('useTwitchChat join/part routing', () => {
     socketReadyState = WebSocket.OPEN;
     wsOptions = {};
     preferences$.showJoinPartMessages.set(false);
+
     mockedUseWebsocket.mockImplementation((_url, options = {}) => {
       wsOptions = options;
+
       return {
         sendMessage,
         sendJsonMessage: jest.fn(),
@@ -229,6 +242,7 @@ describe('useTwitchChat join/part routing', () => {
     const onUserPart = jest.fn();
     const onJoin = jest.fn();
     const onPart = jest.fn();
+
     renderHook(() =>
       useTwitchChat({
         channel: 'foam',
@@ -238,6 +252,7 @@ describe('useTwitchChat join/part routing', () => {
         onPart,
       }),
     );
+
     act(() => {
       wsOptions.onOpen?.();
     });
@@ -254,6 +269,7 @@ describe('useTwitchChat join/part routing', () => {
   test('requests the membership capability only when join/part messages are enabled', () => {
     preferences$.showJoinPartMessages.set(true);
     renderHook(() => useTwitchChat({ channel: 'foam' }));
+
     act(() => {
       wsOptions.onOpen?.();
     });
@@ -265,6 +281,7 @@ describe('useTwitchChat join/part routing', () => {
 
   test('omits the membership capability when the preference is off', () => {
     renderHook(() => useTwitchChat({ channel: 'foam' }));
+
     act(() => {
       wsOptions.onOpen?.();
     });

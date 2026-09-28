@@ -8,7 +8,7 @@ import { z } from 'zod';
 
 import type { LogMetadata } from '@app/lib/sentry';
 import { forwardLogToSentry } from '@app/lib/sentry';
-import { isRecord, sanitiseLogValue } from '@app/utils/log/sanitiseLogValue';
+import { isRecord, sanitiseLogValue } from '@app/utils/log/sanitise-log-value';
 
 export type { LogMetadata } from '@app/lib/sentry';
 
@@ -31,6 +31,7 @@ const logStringSchema = z.string();
 
 function stringifyLogMessage(value: LogArgument): string {
   const stringValue = logStringSchema.safeParse(value);
+
   if (stringValue.success) {
     return `${sanitiseLogValue(stringValue.data)} `;
   }
@@ -56,16 +57,20 @@ const createGenericTransport =
     const { msg, rawMsg, level, extension } = props;
     const category = extension ?? 'app';
     const rawArgs = Array.isArray(rawMsg) ? rawMsg : [rawMsg];
+
     const errorFromArgs = rawArgs.find(
       (arg): arg is Error => arg instanceof Error,
     );
 
     if (level.text === 'error') {
       console.error(`[${category}]`, msg);
-      if (errorFromArgs) {
-        console.error(`[${category}]`, errorFromArgs);
-      }
-    } else if (level.text === 'warn') {
+    }
+
+    if (level.text === 'error' && errorFromArgs) {
+      console.error(`[${category}]`, errorFromArgs);
+    }
+
+    if (level.text === 'warn') {
       console.warn(`[${category}]`, msg);
     }
   };
@@ -77,6 +82,7 @@ const createMonitoringTransport =
   (props: TransportProps) => {
     const { rawMsg, level, extension } = props;
     const levelText = level.text;
+
     if (levelText === 'debug') {
       return;
     }
@@ -86,6 +92,7 @@ const createMonitoringTransport =
 
     let metadata: LogMetadata | undefined;
     let error: unknown;
+
     if (secondArg instanceof Error) {
       error = secondArg;
     } else if (isRecord(secondArg)) {
@@ -102,6 +109,7 @@ const createMonitoringTransport =
     }
 
     let message: string;
+
     if (firstArg instanceof Error) {
       error ??= firstArg;
       message = firstArg.message;
@@ -264,6 +272,7 @@ const baseLogger = rnlogger.createLogger({
 
 const createExtendedLogger = (prefix: AllowedPrefix): LoggingMethods => {
   const base = baseLogger.extend(prefix);
+
   return {
     debug: (message: string, ...args: unknown[]) =>
       base.debug(message, ...args),

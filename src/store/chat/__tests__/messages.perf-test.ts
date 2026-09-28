@@ -5,7 +5,7 @@ import {
   clearMessages,
   getMaxChatMessages,
 } from '@app/store/chat/actions/messages';
-import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { chatStore$ } from '@app/store/chat/observables/chat-store';
 
 import {
   ingestBurstMessages,

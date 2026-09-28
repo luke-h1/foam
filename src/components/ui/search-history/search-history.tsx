@@ -1,0 +1,321 @@
+import { useCallback, useMemo } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
+
+import { PressableArea } from '@app/components/pressable-area/pressable-area';
+import { SymbolView } from '@app/components/ui/icon/icon';
+import { Text } from '@app/components/ui/text/text';
+import { impact } from '@app/lib/haptics';
+import { theme } from '@app/styles/themes';
+
+const SWIPE_THRESHOLD = -80;
+const DELETE_THRESHOLD = -150;
+const HISTORY_ROW_HEIGHT = 44;
+
+// Width of the resting (snapped-open) delete affordance.
+const ACTION_WIDTH = 88;
+
+interface SwipeableHistoryItemProps {
+  query: string;
+  onSelect: () => void;
+  onDelete: () => void;
+}
+
+function SwipeableHistoryItem({
+  query,
+  onSelect,
+  onDelete,
+}: SwipeableHistoryItemProps) {
+  const translateX = useSharedValue(0);
+  const itemHeight = useSharedValue(HISTORY_ROW_HEIGHT);
+  const opacity = useSharedValue(1);
+
+  const handleDelete = useCallback(() => {
+    impact('light');
+    onDelete();
+  }, [onDelete]);
+
+  const composedGesture = useMemo(() => {
+    const panGesture = Gesture.Pan()
+      .activeOffsetX([-10, 10])
+      .onUpdate(event => {
+        if (event.translationX < 0) {
+          translateX.set(event.translationX);
+        }
+      })
+      .onEnd(event => {
+        if (event.translationX < DELETE_THRESHOLD) {
+          translateX.set(withTiming(-400, { duration: 200 }));
+          itemHeight.set(withTiming(0, { duration: 200 }));
+
+          opacity.set(
+            withTiming(0, { duration: 200 }, finished =>
+              finished ? scheduleOnRN(handleDelete) : undefined,
+            ),
+          );
+        } else if (event.translationX < SWIPE_THRESHOLD) {
+          translateX.set(
+            withSpring(-ACTION_WIDTH, {
+              damping: 20,
+              stiffness: 200,
+              mass: 4,
+            }),
+          );
+        } else {
+          translateX.set(
+            withSpring(0, {
+              damping: 20,
+              stiffness: 200,
+              mass: 4,
+            }),
+          );
+        }
+      });
+
+    const tapGesture = Gesture.Tap().onEnd(() => {
+      if (translateX.get() < -40) {
+        translateX.set(
+          withSpring(0, {
+            damping: 20,
+            stiffness: 200,
+            mass: 4,
+          }),
+        );
+      } else {
+        scheduleOnRN(onSelect);
+      }
+    });
+
+    return Gesture.Race(panGesture, tapGesture);
+  }, [translateX, itemHeight, opacity, handleDelete, onSelect]);
+
+  const animatedRowStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.get() }],
+  }));
+
+  const animatedContainerStyle = useAnimatedStyle(() => ({
+    // Height collapse reclaims layout space on delete; scaleY would leave a gap.
+    // ast-grep-ignore: no-animated-layout-props-tsx
+    height: itemHeight.get(),
+    opacity: opacity.get(),
+    overflow: 'hidden',
+  }));
+
+  // The red fill grows with the swipe so no bare background peeks through.
+  const animatedDeleteStyle = useAnimatedStyle(() => ({
+    // Width reveal clips to the fixed-width trash button; scaleX would squash it.
+    // ast-grep-ignore: no-animated-layout-props-tsx
+    width: Math.max(-translateX.get(), 0),
+  }));
+
+  // Pinned right in a fixed-width slot so the icon + label don't drift as the
+  // fill expands; eases in as the action is revealed.
+  const animatedDeleteContentStyle = useAnimatedStyle(() => {
+    const progress = interpolate(
+      translateX.get(),
+      [0, -ACTION_WIDTH],
+      [0, 1],
+      Extrapolation.CLAMP,
+    );
+
+    return {
+      opacity: progress,
+      transform: [{ scale: 0.8 + progress * 0.2 }],
+    };
+  });
+
+  return (
+    <Animated.View style={animatedContainerStyle}>
+      <View style={styles.itemContainer}>
+        <Animated.View style={[styles.deleteAction, animatedDeleteStyle]}>
+          <PressableArea
+            onPress={handleDelete}
+            style={styles.deleteActionButton}
+            hitSlop={8}
+          >
+            <Animated.View
+              style={[styles.deleteActionContent, animatedDeleteContentStyle]}
+            >
+              <SymbolView
+                name='trash.fill'
+                size={20}
+                tintColor={theme.colorWhite}
+              />
+              <Text style={styles.deleteActionLabel} weight='semibold'>
+                Delete
+              </Text>
+            </Animated.View>
+          </PressableArea>
+        </Animated.View>
+
+        <GestureDetector gesture={composedGesture}>
+          <Animated.View style={[styles.historyItem, animatedRowStyle]}>
+            <SymbolView
+              name='clock'
+              tintColor={theme.color.textSecondary.dark}
+              size={16}
+            />
+            <Text style={styles.query} numberOfLines={1}>
+              {query}
+            </Text>
+            <SymbolView
+              name='arrow.up.left'
+              tintColor={theme.color.textSecondary.dark}
+              size={16}
+            />
+          </Animated.View>
+        </GestureDetector>
+      </View>
+    </Animated.View>
+  );
+}
+
+interface SearchHistoryProps {
+  history: string[];
+  onClearItem: (id: string) => void;
+  onSelectItem: (query: string) => void;
+  onClearAll: () => void;
+}
+
+// The history section does not scroll; anything beyond this would render
+// underneath the floating search bar.
+const MAX_VISIBLE_HISTORY = 8;
+
+export function SearchHistory({
+  history,
+  onClearAll,
+  onClearItem,
+  onSelectItem,
+}: SearchHistoryProps) {
+  const handleClearAll = useCallback(() => {
+    Alert.alert(
+      'Clear Search History',
+      'Are you sure you want to clear all your recent searches?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Clear All',
+          style: 'destructive',
+          onPress: () => {
+            impact('medium');
+            onClearAll();
+          },
+        },
+      ],
+    );
+  }, [onClearAll]);
+
+  if (history.length === 0) {
+    return null;
+  }
+
+  return (
+    <View style={styles.wrapper}>
+      <View style={styles.headerRow}>
+        <Text
+          type='xs'
+          weight='semibold'
+          color='gray.textLow'
+          style={styles.sectionTitle}
+        >
+          RECENT SEARCHES
+        </Text>
+        <PressableArea onPress={handleClearAll} hitSlop={8}>
+          <Text type='xs' color='red.accent'>
+            Clear All
+          </Text>
+        </PressableArea>
+      </View>
+
+      <View style={styles.historyList}>
+        {history.slice(0, MAX_VISIBLE_HISTORY).map(query => (
+          <SwipeableHistoryItem
+            key={query}
+            query={query}
+            onSelect={() => onSelectItem(query)}
+            onDelete={() => onClearItem(query)}
+          />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  deleteAction: {
+    alignItems: 'flex-end',
+    backgroundColor: theme.colorRed,
+    bottom: 0,
+    justifyContent: 'center',
+    overflow: 'hidden',
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  deleteActionButton: {
+    alignItems: 'center',
+    height: '100%',
+    justifyContent: 'center',
+    // Fixed slot keeps the icon + label from drifting as the fill expands.
+    width: ACTION_WIDTH,
+  },
+  deleteActionContent: {
+    alignItems: 'center',
+    gap: theme.space4,
+    justifyContent: 'center',
+  },
+  deleteActionLabel: {
+    color: theme.colorWhite,
+    fontSize: 12,
+  },
+  headerRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: theme.space12,
+    paddingHorizontal: theme.space16,
+  },
+  historyItem: {
+    alignItems: 'center',
+    backgroundColor: theme.color.backgroundSecondary.dark,
+    flexDirection: 'row',
+    gap: theme.space12,
+    height: HISTORY_ROW_HEIGHT,
+    paddingHorizontal: theme.space16,
+  },
+  historyList: {
+    backgroundColor: theme.colorBorderSecondary,
+    borderRadius: theme.borderRadius12,
+    borderCurve: 'continuous',
+    gap: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
+    marginHorizontal: theme.space16,
+  },
+  itemContainer: {
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  query: {
+    color: theme.color.text.dark,
+    flex: 1,
+    minWidth: 0,
+  },
+  sectionTitle: {
+    letterSpacing: 0.5,
+  },
+  wrapper: {
+    paddingTop: theme.space20,
+  },
+});

@@ -31,9 +31,11 @@ export class Directory {
 
   list(): (Directory | File)[] {
     const node = nodes.get(this.uri);
+
     if (node?.kind !== 'directory') {
       throw new Error(`Directory does not exist: ${this.uri}`);
     }
+
     return node.children.map(childUri =>
       nodes.get(childUri)?.kind === 'directory'
         ? new Directory(childUri)
@@ -66,6 +68,7 @@ export class File {
         pendingDownloads.push(resolve);
       });
     }
+
     downloadCount += 1;
     const file = new File(cacheDir, `download-${downloadCount}.png`);
     nodes.set(file.uri, { kind: 'file', size: defaultFileSize });
@@ -85,6 +88,7 @@ export class File {
     if (failingDeletes.has(this.uri)) {
       throw new Error(`Cannot delete: ${this.uri}`);
     }
+
     nodes.delete(this.uri);
     deletedUris.push(this.uri);
   }

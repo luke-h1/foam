@@ -48,25 +48,31 @@ export function buildCurrentTable(
   }
 
   const reportHighlights = buildEntryHighlights(entries, report);
+
   const baselineByName = new Map(
     baselineEntries.map(entry => [entry.name, entry]),
   );
+
   const scenarioWidth = Math.max(
     'Scenario'.length,
     ...entries.map(entry => entry.name.length),
   );
+
   const meanWidth = Math.max(
     'Mean'.length,
     ...entries.map(entry => formatMs(entry.meanDuration).length),
   );
+
   const swingWidth = Math.max(
     'Typical time swing'.length,
     ...entries.map(entry => formatMs(entry.stdevDuration ?? 0).length),
   );
+
   const countWidth = Math.max(
     'Count'.length,
     ...entries.map(entry => (entry.meanCount ?? 1).toFixed(2).length),
   );
+
   const formatRow = (
     scenario: string,
     mean: string,
@@ -79,10 +85,12 @@ export function buildCurrentTable(
       runVariation.padStart(swingWidth),
       count.padStart(countWidth),
     ].join('  ');
+
   const rows = entries
     .map(entry => {
       const runVariation = entry.stdevDuration ?? 0;
       const count = entry.meanCount ?? 1;
+
       const highlight =
         reportHighlights.get(entry.name) ??
         classifyAgainstBaseline(entry, baselineByName.get(entry.name)) ??
@@ -262,6 +270,7 @@ export function buildChatPerformanceComment({
 }): string {
   const statusLabel = status === 'success' ? 'passed' : 'failed';
   const currentTable = buildCurrentTable(entries, report, baselineEntries);
+
   const highlightedSummary = buildHighlightedSummary({
     entries,
     report,
@@ -314,10 +323,13 @@ export function writeChatPerformanceComment({
   status: string;
 }): void {
   const entries = readCurrentEntries(currentPath);
+
   const report = existsSync(reportPath)
     ? readFileSync(reportPath, 'utf8').trim()
     : '';
+
   const baselineEntries = readCurrentEntries(baselinePath);
+
   const body = buildChatPerformanceComment({
     baselineEntries,
     entries,
@@ -332,6 +344,7 @@ export function writeChatPerformanceComment({
 
 function main(): void {
   const args = process.argv.slice(2);
+
   writeChatPerformanceComment({
     currentPath: '.reassure/current.perf',
     outputPath: getRequiredArg(args, 'output'),

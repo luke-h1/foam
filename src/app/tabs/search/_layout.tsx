@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 import {
   nativeStackScreenOptions,
   nativeStackTabRootScreenOptions,
-} from '@app/utils/navigation/nativeStackOptions';
+} from '@app/utils/navigation/native-stack-options';
 
 export default function SearchLayout() {
   return (

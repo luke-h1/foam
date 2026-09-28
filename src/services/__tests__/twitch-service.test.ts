@@ -60,14 +60,17 @@ describe('twitchService.getUsersById', () => {
     await twitchService.getUsersById(ids);
 
     expect(api.get).toHaveBeenCalledTimes(2);
+
     const firstBatch = `/users?${ids
       .slice(0, 100)
       .map(id => `id=${id}`)
       .join('&')}`;
+
     const secondBatch = `/users?${ids
       .slice(100)
       .map(id => `id=${id}`)
       .join('&')}`;
+
     expect(api.get).toHaveBeenNthCalledWith(1, firstBatch);
     expect(api.get).toHaveBeenNthCalledWith(2, secondBatch);
   });
@@ -119,6 +122,7 @@ describe('twitchService.getClipsByIds', () => {
 
   test('splits requests into batches of 100 ids and flattens the pages', async () => {
     const ids = Array.from({ length: 150 }, (_, index) => `clip${index + 1}`);
+
     api.get
       .mockResolvedValueOnce({ data: [makeClip('clip1')] })
       .mockResolvedValueOnce({ data: [makeClip('clip101')] });
@@ -126,16 +130,20 @@ describe('twitchService.getClipsByIds', () => {
     const result = await twitchService.getClipsByIds(ids);
 
     expect(api.get).toHaveBeenCalledTimes(2);
+
     const firstBatch = `/clips?${ids
       .slice(0, 100)
       .map(id => `id=${id}`)
       .join('&')}`;
+
     const secondBatch = `/clips?${ids
       .slice(100)
       .map(id => `id=${id}`)
       .join('&')}`;
+
     expect(api.get).toHaveBeenNthCalledWith(1, firstBatch);
     expect(api.get).toHaveBeenNthCalledWith(2, secondBatch);
+
     expect(result).toEqual<TwitchClip[]>([
       makeClip('clip1'),
       makeClip('clip101'),
@@ -196,6 +204,7 @@ describe('twitchService.getCheermotes', () => {
     expect(api.get).toHaveBeenCalledWith('/bits/cheermotes', {
       params: { broadcaster_id: '42' },
     });
+
     expect(result).toEqual<TwitchCheermote[]>([makeCheermote('Pog')]);
   });
 });
@@ -221,6 +230,7 @@ describe('twitchService.getFollowedChannels', () => {
 
     expect(result).toEqual<FollowedChannel[]>([makeFollowedChannel('1')]);
     expect(api.get).toHaveBeenCalledTimes(1);
+
     expect(api.get).toHaveBeenCalledWith('/channels/followed', {
       params: { user_id: '42', first: 100 },
     });
@@ -240,7 +250,9 @@ describe('twitchService.getFollowedChannels', () => {
       makeFollowedChannel('1'),
       makeFollowedChannel('2'),
     ]);
+
     expect(api.get).toHaveBeenCalledTimes(2);
+
     expect(api.get).toHaveBeenLastCalledWith('/channels/followed', {
       params: { user_id: '42', first: 100, after: 'abc' },
     });
@@ -248,9 +260,11 @@ describe('twitchService.getFollowedChannels', () => {
 
   test('stops paginating once the channel cap is reached', async () => {
     const pageSize = 100;
+
     const page = Array.from({ length: pageSize }, (_, index) =>
       makeFollowedChannel(String(index)),
     );
+
     api.get.mockResolvedValue({ data: page, pagination: { cursor: 'next' } });
 
     const result = await twitchService.getFollowedChannels('42');
@@ -276,6 +290,7 @@ describe('twitchService.getFollowedChannels', () => {
       makeFollowedChannel('1'),
       makeFollowedChannel('2'),
     ]);
+
     expect(api.get).toHaveBeenCalledTimes(2);
   });
 });
@@ -295,6 +310,7 @@ describe('twitchService.createClip', () => {
     expect(api.post).toHaveBeenCalledWith('/clips', undefined, {
       params: { broadcaster_id: '42' },
     });
+
     expect(result).toEqual<TwitchCreatedClip>({
       id: 'clip-1',
       edit_url: 'https://clips.twitch.tv/clip-1/edit',

@@ -1,0 +1,61 @@
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | JsonValue[]
+  | { [key: string]: JsonValue };
+
+function isJsonArray<T>(value: T): value is T & JsonValue[] {
+  return Array.isArray(value);
+}
+
+function isJsonObject<T>(value: T): value is T & { [key: string]: JsonValue } {
+  return (
+    Object(value) === value &&
+    !Array.isArray(value) &&
+    !(value instanceof Function)
+  );
+}
+
+export function deepEqualJson(a: JsonValue, b: JsonValue): boolean;
+
+export function deepEqualJson<T extends object>(
+  a: T | null | undefined,
+  b: T | null | undefined,
+): boolean;
+
+export function deepEqualJson<T>(a: T, b: T): boolean {
+  if (a === b) {
+    return true;
+  }
+
+  if (isJsonArray(a) && isJsonArray(b)) {
+    return (
+      a.length === b.length &&
+      a.every((item, index) => deepEqualJson(item, b[index]))
+    );
+  }
+
+  // One side is an array and the other is not, so they cannot match.
+  if (isJsonArray(a) || isJsonArray(b)) {
+    return false;
+  }
+
+  if (!isJsonObject(a) || !isJsonObject(b)) {
+    return false;
+  }
+
+  const aKeys = Object.keys(a);
+
+  if (aKeys.length !== Object.keys(b).length) {
+    return false;
+  }
+
+  return aKeys.every(
+    key =>
+      Object.prototype.hasOwnProperty.call(b, key) &&
+      deepEqualJson(a[key], b[key]),
+  );
+}

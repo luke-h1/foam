@@ -36,22 +36,22 @@ import type {
 } from '@app/types/seventv/cosmetics';
 import type { SevenTvEmotePreview } from '@app/types/seventv/emotes';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import { convertV4PaintToPaintData } from '@app/utils/color/sevenTvPaintData/convertV4PaintToPaintData';
-import { pickAnimatedFormat } from '@app/utils/color/sevenTvPaintData/pickAnimatedFormat';
-import { pickBestFormat } from '@app/utils/color/sevenTvPaintData/pickBestFormat';
-import { pickBestImage } from '@app/utils/color/sevenTvPaintData/pickBestImage';
-import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants/createEmoteImageVariants';
+import { convertV4PaintToPaintData } from '@app/utils/color/seven-tv-paint-data/convert-v4-paint-to-paint-data';
+import { pickAnimatedFormat } from '@app/utils/color/seven-tv-paint-data/pick-animated-format';
+import { pickBestFormat } from '@app/utils/color/seven-tv-paint-data/pick-best-format';
+import { pickBestImage } from '@app/utils/color/seven-tv-paint-data/pick-best-image';
+import { createEmoteImageVariants } from '@app/utils/emote/emote-image-variants/create-emote-image-variants';
 import { logger } from '@app/utils/logger';
 import {
   SEVEN_TV_EMOTE_SET_MAX_AGE_MS,
   type SevenTvUser,
   sevenTvUserCache,
-} from '@app/utils/seventv/sevenTvUserCache';
+} from '@app/utils/seventv/seven-tv-user-cache';
 
 import { sevenTvApi } from './api/clients';
 import { buildSanitisedEmote } from './emote-provider';
 import { sevenTvV4Client } from './gql/client';
-import { runCosmeticsQuery } from './gql/sevenTvWorkletClient';
+import { runCosmeticsQuery } from './gql/seven-tv-worklet-client';
 
 type SevenTvGqlResponse<TData> = {
   data?: TData;
@@ -78,15 +78,19 @@ async function fetchSevenTvUser(
     { platformId: twitchUserId },
     responseText => {
       'worklet';
+
       const parsed: SevenTvGqlResponse<UserByConnectionQuery> =
         JSON.parse(responseText);
+
       if (parsed.errors?.length) {
         throw new Error(
           parsed.errors.flatMap(e => e.message ?? []).join('; ') ||
             '7TV GQL error',
         );
       }
+
       const user = parsed.data?.users?.userByConnection;
+
       return {
         userId: user?.id ?? '',
         emoteSetId: user?.style?.activeEmoteSetId ?? '',
@@ -106,6 +110,7 @@ async function fetchSevenTvUser(
         twitch_user_id: twitchUserId,
       },
     );
+
     return null;
   }
 
@@ -118,18 +123,23 @@ function buildV4ImageVariants(images: readonly Image[]): EmoteImageVariants {
 
   for (const scale of ['1x', '2x', '3x', '4x'] as const) {
     const atScale = images.filter(image => `${image.scale}x` === scale);
+
     if (atScale.length === 0) {
       continue;
     }
+
     const animatedImage = pickAnimatedFormat(
       atScale.filter(image => image.frameCount > 1),
     );
+
     if (animatedImage) {
       animated[scale] = animatedImage.url;
     }
+
     const staticImage = pickBestFormat(
       atScale.filter(image => image.frameCount <= 1),
     );
+
     if (staticImage) {
       staticSet[scale] = staticImage.url;
     }
@@ -147,6 +157,7 @@ function pickBestStaticImage(images: readonly Image[]): Image | undefined {
     }
 
     const atScale = images.filter(img => img.scale === targetScale);
+
     if (atScale.length === 0) {
       return undefined;
     }
@@ -173,6 +184,7 @@ function sanitiseV4EmoteSet(
   };
 
   const sanitisedEmotes: SevenTvSanitisedEmote[] = [];
+
   for (const item of emoteSet.emotes.items) {
     const { emote } = item;
     const bestImage = pickBestImage(emote.images);
@@ -199,11 +211,28 @@ function sanitiseV4EmoteSet(
       height,
       setMetadata,
     });
+
     if (sanitised) {
       sanitisedEmotes.push(sanitised);
     }
   }
+
   return sanitisedEmotes;
+}
+
+/**
+ * The global set lives behind its own query rather than the id-keyed one.
+ */
+async function fetchGlobalSevenTvEmoteSet(): Promise<SevenTvSanitisedEmote[]> {
+  const { data, error } = await sevenTvV4Client.query<GlobalEmoteSetQuery>({
+    query: GlobalEmoteSetDocument,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data ? sanitiseV4EmoteSet(data.emoteSets.global, '7TV Global') : [];
 }
 
 export const sevenTvService = {
@@ -244,19 +273,7 @@ export const sevenTvService = {
     emoteSetId: string,
   ): Promise<SevenTvSanitisedEmote[]> => {
     if (emoteSetId === 'global') {
-      const { data, error } = await sevenTvV4Client.query<GlobalEmoteSetQuery>({
-        query: GlobalEmoteSetDocument,
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (!data) {
-        return [];
-      }
-
-      return sanitiseV4EmoteSet(data.emoteSets.global, '7TV Global');
+      return fetchGlobalSevenTvEmoteSet();
     }
 
     const { data, error } = await sevenTvV4Client.query<
@@ -276,6 +293,7 @@ export const sevenTvService = {
     }
 
     const emoteSet = data.emoteSets.emoteSet;
+
     if (!emoteSet) {
       return [];
     }
@@ -297,6 +315,7 @@ export const sevenTvService = {
     }
 
     const emote = data?.emotes.emote;
+
     if (!emote) {
       return null;
     }
@@ -325,10 +344,12 @@ export const sevenTvService = {
     if (twitchLogins.length === 0) {
       return [];
     }
+
     const events = await sevenTvApi.post<SevenTvEventData<SevenTvEventType>[]>(
       '/bridge/event-api',
       { identifiers: twitchLogins.map(login => `username:${login}`) },
     );
+
     return Array.isArray(events) ? events : [];
   },
 
@@ -381,6 +402,7 @@ export const sevenTvService = {
           twitch_user_id: twitchUserId,
         },
       );
+
       return [];
     }
 
@@ -401,6 +423,7 @@ export const sevenTvService = {
     };
 
     const sanitisedEmotes: SevenTvSanitisedEmote[] = [];
+
     for (const item of personalEmoteSet.emotes.items) {
       const { emote } = item;
 
@@ -429,10 +452,12 @@ export const sevenTvService = {
         height: imgHeight,
         setMetadata,
       });
+
       if (sanitised) {
         sanitisedEmotes.push(sanitised);
       }
     }
+
     return sanitisedEmotes;
   },
 
@@ -444,28 +469,36 @@ export const sevenTvService = {
     sevenTvUserId: string,
   ): Promise<UserCosmeticsInfo | null> => {
     const twitchPlatform = Platform.Twitch;
+
     try {
       const { result, error } = await runCosmeticsQuery(
         UserCosmeticsDocument,
         { id: sevenTvUserId },
         responseText => {
           'worklet';
+
           const parsed: SevenTvGqlResponse<UserCosmeticsQuery> =
             JSON.parse(responseText);
+
           if (parsed.errors?.length) {
             throw new Error(
               parsed.errors.flatMap(e => e.message ?? []).join('; ') ||
                 '7TV GQL error',
             );
           }
+
           const user = parsed.data?.users?.user;
+
           if (!user) {
             return null;
           }
+
           const twitchConnection = user.connections.find(
             conn => conn.platform === twitchPlatform,
           );
+
           const { style } = user;
+
           return {
             userId: user.id,
             ttvUserId: twitchConnection?.platformId ?? null,
@@ -486,6 +519,7 @@ export const sevenTvService = {
           resource_type: 'cosmetics',
           seven_tv_user_id: sevenTvUserId,
         });
+
         return null;
       }
 
@@ -499,6 +533,7 @@ export const sevenTvService = {
         resource_type: 'cosmetics',
         seven_tv_user_id: sevenTvUserId,
       });
+
       return null;
     }
   },
@@ -531,6 +566,7 @@ export const sevenTvService = {
     return (data?.badges?.badges ?? [])
       .flatMap<SanitisedBadgeSet>(badge => {
         const url = pickBestImage(badge.images)?.url;
+
         return url
           ? [
               {

@@ -30,6 +30,7 @@ export const kappaService = {
     }
 
     let data: KappaUploadResponseBody;
+
     try {
       data = JSON.parse(response.body);
     } catch {

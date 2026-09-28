@@ -1,3 +1,3 @@
-import StorybookRoute from '@app/screens/StorybookScreen/StorybookRoute';
+import StorybookRoute from '@app/screens/storybook-screen/storybook-route';
 
 export default StorybookRoute;

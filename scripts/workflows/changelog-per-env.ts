@@ -74,29 +74,36 @@ export function parseReleaseTag(
   tag: string,
 ): Omit<ReleaseTag, 'commit'> | null {
   const match = RELEASE_TAG_REGEXP.exec(tag);
+
   if (!match) {
     return null;
   }
+
   // SAFETY: group 1 is a mandatory capture in RELEASE_TAG_REGEXP, so it is
   // always defined whenever exec() matches.
   const version = match[1] as string;
+
   // SAFETY: group 2 is either undefined or one of the environment suffix
   // literals the regex enumerates, so the fallback-applied value is always a
   // valid ChangelogEnvironment.
   const environment = (match[2] ?? 'production') as ChangelogEnvironment;
+
   return { tag, version, environment };
 }
 
 export function compareVersions(a: string, b: string): number {
   const left = a.split('.').map(Number);
   const right = b.split('.').map(Number);
+
   for (let i = 0; i < 3; i += 1) {
     const leftPart = left[i] ?? 0;
     const rightPart = right[i] ?? 0;
+
     if (leftPart !== rightPart) {
       return leftPart - rightPart;
     }
   }
+
   return 0;
 }
 
@@ -111,17 +118,21 @@ function escapeRegExp(value: string): string {
  */
 function mustGet<K, V>(map: Map<K, V>, key: K): V {
   const value = map.get(key);
+
   if (value === undefined) {
     throw new Error(`expected map to contain key ${String(key)}`);
   }
+
   return value;
 }
 
 function mustAt<T>(items: T[], index: number): T {
   const value = items[index];
+
   if (value === undefined) {
     throw new Error(`expected index ${index} to be present`);
   }
+
   return value;
 }
 
@@ -135,15 +146,18 @@ function freshestTag(
   isAncestor: (a: string, b: string) => boolean,
 ): ReleaseTag {
   let best = tags[0];
+
   if (!best) {
     throw new Error('freshestTag requires at least one tag');
   }
+
   for (let i = 1; i < tags.length; i += 1) {
     const candidate = tags[i];
     if (candidate && isAncestor(best.commit, candidate.commit)) {
       best = candidate;
     }
   }
+
   return best;
 }
 
@@ -152,6 +166,7 @@ export function planPerEnvironmentSections(
   isAncestor: (a: string, b: string) => boolean,
 ): VersionPlan[] {
   const byVersion = new Map<string, ReleaseTag[]>();
+
   for (const tag of releaseTags) {
     const list = byVersion.get(tag.version) ?? [];
     list.push(tag);
@@ -163,6 +178,7 @@ export function planPerEnvironmentSections(
 
   for (const version of versionsAscending) {
     const tags = byVersion.get(version) ?? [];
+
     // Single-channel versions render correctly straight from git-cliff; only
     // versions that reached more than one channel need re-bucketing.
     if (tags.length < 2) {
@@ -170,9 +186,11 @@ export function planPerEnvironmentSections(
     }
 
     const byEnvironment = new Map<ChangelogEnvironment, ReleaseTag>();
+
     for (const tag of tags) {
       byEnvironment.set(tag.environment, tag);
     }
+
     const presentEnvironments = ENVIRONMENT_LADDER.filter(environment =>
       byEnvironment.has(environment),
     );
@@ -180,6 +198,7 @@ export function planPerEnvironmentSections(
     const previousVersion = versionsAscending
       .filter(candidate => compareVersions(candidate, version) < 0)
       .pop();
+
     const previousFreshest = previousVersion
       ? freshestTag(byVersion.get(previousVersion) ?? [], isAncestor)
       : null;
@@ -187,6 +206,7 @@ export function planPerEnvironmentSections(
     const sections = presentEnvironments.map<PlannedSection>(
       (environment, index) => {
         const head = mustGet(byEnvironment, environment);
+
         if (index === 0) {
           return {
             tag: head.tag,
@@ -198,8 +218,10 @@ export function planPerEnvironmentSections(
               : null,
           };
         }
+
         const baselineEnvironment = mustAt(presentEnvironments, index - 1);
         const baseline = mustGet(byEnvironment, baselineEnvironment);
+
         return {
           tag: head.tag,
           environment,
@@ -229,12 +251,15 @@ function intermediateTagPattern(
       isAncestor(candidate.commit, headCommit) &&
       !isAncestor(candidate.commit, baselineCommit),
   );
+
   if (inside.length === 0) {
     return null;
   }
+
   const alternation = inside
     .map(candidate => escapeRegExp(candidate.tag))
     .join('|');
+
   return `^(${alternation})$`;
 }
 
@@ -257,6 +282,7 @@ function renderSection(
   allTags: TagCommit[],
 ): string {
   const heading = `## ${section.tag}`;
+
   if (!section.baselineCommit) {
     return `${heading}\n\n${placeholderBody(section)}`;
   }
@@ -267,6 +293,7 @@ function renderSection(
     allTags,
     context.isAncestor,
   );
+
   const rendered = context
     .renderRange(
       section.baselineCommit,
@@ -283,17 +310,21 @@ function renderSection(
   // git-cliff renders its own `## <tag>` heading; pin it to the exact tag so
   // the downstream environment-label pass always finds a match.
   const body = rendered.replace(/^##[^\n]*(\n|$)/, '').trim();
+
   return `${heading}\n\n${body}`;
 }
 
 function headingVersion(line: string): string | null {
   const match = /^##\s+(.+?)\s*$/.exec(line);
+
   if (!match) {
     return null;
   }
+
   // SAFETY: group 1 is a mandatory capture in this regex, so it is always
   // defined whenever exec() matches.
   const parsed = parseReleaseTag(match[1] as string);
+
   return parsed ? parsed.version : null;
 }
 
@@ -306,23 +337,31 @@ function spliceVersionBlocks(
   const emitted = new Set<string>();
 
   let index = 0;
+
   while (index < lines.length) {
     const line = lines[index] ?? '';
-    if (line.startsWith('## ')) {
-      const version = headingVersion(line);
-      if (version != null && blockByVersion.has(version)) {
-        if (!emitted.has(version)) {
-          output.push(...mustGet(blockByVersion, version).split('\n'));
-          output.push('');
-          emitted.add(version);
-        }
-        index += 1;
-        while (index < lines.length && !lines[index]?.startsWith('## ')) {
-          index += 1;
-        }
-        continue;
-      }
+
+    const version = line.startsWith('## ') ? headingVersion(line) : null;
+    const hasReplacement = version != null && blockByVersion.has(version);
+
+    if (hasReplacement && !emitted.has(version)) {
+      output.push(...mustGet(blockByVersion, version).split('\n'));
+      output.push('');
+      emitted.add(version);
     }
+
+    // The rewritten block replaces every line of the old section.
+    if (hasReplacement) {
+      index += 1;
+
+      while (index < lines.length && !lines[index]?.startsWith('## ')) {
+        index += 1;
+      }
+
+      // eslint-disable-next-line no-continue
+      continue;
+    }
+
     output.push(line);
     index += 1;
   }
@@ -341,17 +380,20 @@ export function rewritePerEnvironmentSections(
   context: GitCliffContext,
 ): string {
   const releaseTags = context.listReleaseTags();
+
   if (releaseTags.length === 0) {
     return markdown;
   }
 
   const plans = planPerEnvironmentSections(releaseTags, context.isAncestor);
+
   if (plans.length === 0) {
     return markdown;
   }
 
   const allTags = context.listAllTagCommits();
   const blockByVersion = new Map<string, string>();
+
   for (const plan of plans) {
     const sections = plan.sections.map(section =>
       renderSection(section, context, allTags),
@@ -381,16 +423,21 @@ export function createGitCliffContext(options: {
     runStdout('git', ['rev-parse', 'HEAD']).trim();
 
   const ancestorCache = new Map<string, boolean>();
+
   const isAncestor = (ancestor: string, descendant: string): boolean => {
     if (ancestor === descendant) {
       return true;
     }
+
     const key = `${ancestor} ${descendant}`;
     const cached = ancestorCache.get(key);
+
     if (cached !== undefined) {
       return cached;
     }
+
     let result = false;
+
     try {
       execFileSync(
         'git',
@@ -401,6 +448,7 @@ export function createGitCliffContext(options: {
     } catch {
       result = false;
     }
+
     ancestorCache.set(key, result);
     return result;
   };
@@ -411,40 +459,49 @@ export function createGitCliffContext(options: {
       '--format=%(refname:short)\t%(objectname)\t%(*objectname)',
       'refs/tags',
     ]);
+
     const rows: TagCommit[] = [];
+
     for (const line of output.split('\n')) {
       if (line.trim() === '') {
         continue;
       }
+
       const [tag, objectName, dereferenced] = line.split('\t');
+
       if (tag == null || objectName == null) {
         continue;
       }
+
       const commit =
         dereferenced != null && dereferenced.length > 0
           ? dereferenced
           : objectName;
+
       rows.push({ tag, commit });
     }
+
     return rows;
   };
 
   const listReleaseTags = (): ReleaseTag[] => {
     const byTag = new Map<string, ReleaseTag>();
+
     for (const { tag, commit } of listAllTagCommits()) {
       const parsed = parseReleaseTag(tag);
       if (parsed) {
         byTag.set(tag, { ...parsed, commit });
       }
     }
+
     // The tag for the release in flight is not created until after the
     // changelog is written, so add it at HEAD to plan its sections now.
-    if (currentTag) {
-      const parsed = parseReleaseTag(currentTag);
-      if (parsed && !byTag.has(currentTag)) {
-        byTag.set(currentTag, { ...parsed, commit: headCommit() });
-      }
+    const parsedCurrentTag = currentTag ? parseReleaseTag(currentTag) : null;
+
+    if (currentTag && parsedCurrentTag && !byTag.has(currentTag)) {
+      byTag.set(currentTag, { ...parsedCurrentTag, commit: headCommit() });
     }
+
     return [...byTag.values()];
   };
 
@@ -463,9 +520,11 @@ export function createGitCliffContext(options: {
       '--strip',
       'all',
     ];
+
     if (ignoreTagsPattern) {
       args.push('--ignore-tags', ignoreTagsPattern);
     }
+
     try {
       return runStdout(gitCliffBin, args);
     } catch {

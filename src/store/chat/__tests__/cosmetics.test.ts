@@ -6,12 +6,12 @@ import {
   requestUserCosmeticsViaPresence,
   syncCachedUserCosmeticsFromStore,
 } from '@app/store/chat/actions/cosmetics';
-import * as MissingBadgesModule from '@app/store/chat/actions/missingBadges';
-import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import * as MissingBadgesModule from '@app/store/chat/actions/missing-badges';
+import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { logger } from '@app/utils/logger';
-import * as NormalizeSevenTvBadgeModule from '@app/utils/seventv/cosmetics/normalizeSevenTvBadge';
-import * as SevenTvSessionIdModule from '@app/utils/seventv/sevenTvSessionId';
+import * as NormalizeSevenTvBadgeModule from '@app/utils/seventv/cosmetics/normalize-seven-tv-badge';
+import * as SevenTvSessionIdModule from '@app/utils/seventv/seven-tv-session-id';
 
 // getUserBadge's title-fallback branch only fires when a stored badge's url
 // is unresolvable as-is; the real normalizer repairs empty/relative 7TV urls,
@@ -74,6 +74,7 @@ describe('getUserBadge', () => {
       set: 'badge-1',
       provider: '7tv',
     };
+
     chatStore$.userBadgeIds.set({ 'ttv-1': 'badge-1' });
     chatStore$.badges.set({ 'badge-1': badge });
 
@@ -94,6 +95,7 @@ describe('getUserBadge', () => {
       set: '01GAF994D8000E8VNG1S1RMTBC',
       provider: '7tv',
     });
+
     expect(mockReportMissingBadge.mock.calls).toEqual([
       ['01GAF994D8000E8VNG1S1RMTBC', 'ttv-scummy'],
     ]);
@@ -101,6 +103,7 @@ describe('getUserBadge', () => {
 
   test('derives the badge from its id when the stored definition has an empty url', () => {
     chatStore$.userBadgeIds.set({ 'ttv-1': 'badge-1' });
+
     chatStore$.badges.set({
       'badge-1': {
         id: 'badge-1',
@@ -120,6 +123,7 @@ describe('getUserBadge', () => {
       set: 'badge-1',
       provider: '7tv',
     });
+
     expect(mockReportMissingBadge.mock.calls).toEqual([['badge-1', 'ttv-1']]);
   });
 });
@@ -143,6 +147,7 @@ describe('syncCachedUserCosmeticsFromStore', () => {
 
   test('writes a 2h cache expiry when the user has cosmetic bindings', () => {
     chatStore$.userBadgeIds.set({ 'ttv-1': 'badge-1' });
+
     chatStore$.badges.set({
       'badge-1': {
         id: 'badge-1',
@@ -162,6 +167,7 @@ describe('syncCachedUserCosmeticsFromStore', () => {
       paintId: null,
       ttvUserId: 'ttv-1',
     };
+
     expect(mockSet.mock.calls).toEqual([
       [
         'sevenTvUserCosmetics_user-cosmetics:stv-user-1',
@@ -181,6 +187,7 @@ describe('syncCachedUserCosmeticsFromStore', () => {
       paintId: null,
       ttvUserId: 'ttv-1',
     };
+
     expect(mockSet.mock.calls).toEqual([
       [
         'sevenTvUserCosmetics_user-cosmetics:stv-user-1',
@@ -207,9 +214,11 @@ describe('requestUserCosmeticsViaPresence', () => {
     await requestUserCosmeticsViaPresence('ttv-1');
 
     expect(mockGet7tvUserId.mock.calls).toEqual([['ttv-1']]);
+
     expect(mockSendPresence.mock.calls).toEqual([
       ['channel-1', '7tv-user-1', { passive: true, sessionId: 'session-1' }],
     ]);
+
     expect(mockGetUserCosmeticsGql).not.toHaveBeenCalled();
   });
 

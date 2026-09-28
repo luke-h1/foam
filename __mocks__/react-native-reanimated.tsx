@@ -30,6 +30,7 @@ const mutable = <T,>(value: T) => {
       sv.value = v;
     },
   };
+
   return sv;
 };
 
@@ -87,6 +88,7 @@ type MockChainableAnimationBuilder = Record<
 
 const createAnimationBuilder = () => {
   const builder: MockChainableAnimationBuilder = {};
+
   for (const method of [
     'duration',
     'delay',
@@ -99,6 +101,7 @@ const createAnimationBuilder = () => {
   ]) {
     builder[method] = () => builder;
   }
+
   return builder;
 };
 

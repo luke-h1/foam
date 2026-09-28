@@ -2,13 +2,12 @@ import { StyleSheet, View } from 'react-native';
 
 import { Redirect, router } from 'expo-router';
 
-import { Button } from '@app/components/Button/Button';
-import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
-import { Text } from '@app/components/ui/Text/Text';
-import { useAuthContext } from '@app/context/AuthContext';
-import { useStartupMark } from '@app/hooks/useStartupMark';
+import { Button } from '@app/components/button/button';
+import { Text } from '@app/components/ui/text/text';
+import { useAuthContext } from '@app/context/auth-context';
+import { useStartupMark } from '@app/hooks/use-startup-mark';
 import { storage } from '@app/lib/storage';
-import { ONBOARDING_SEEN_KEY } from '@app/screens/OnboardingScreen/constants';
+import { ONBOARDING_SEEN_KEY } from '@app/screens/onboarding-screen/constants';
 import { isE2EMode } from '@app/services/api/clients';
 import { theme } from '@app/styles/themes';
 
@@ -22,14 +21,7 @@ export default function IndexRoute() {
   }
 
   if (!ready) {
-    return (
-      <View style={styles.skeletonContainer}>
-        {Array.from({ length: 6 }).map((_, index) => (
-          // eslint-disable-next-line react/no-array-index-key
-          <LiveStreamCardSkeleton key={index} />
-        ))}
-      </View>
-    );
+    return <View style={styles.splash} />;
   }
 
   if (!authState) {
@@ -67,9 +59,8 @@ const styles = StyleSheet.create({
   message: {
     marginTop: theme.space16,
   },
-  skeletonContainer: {
+  splash: {
     backgroundColor: theme.color.background.dark,
     flex: 1,
-    paddingTop: theme.space84,
   },
 });

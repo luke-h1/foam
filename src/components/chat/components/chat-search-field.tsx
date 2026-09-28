@@ -1,0 +1,112 @@
+import { memo, useState } from 'react';
+import { Platform, StyleSheet, TextInput, View } from 'react-native';
+
+import { Button } from '@app/components/button/button';
+import { SymbolView } from '@app/components/ui/icon/icon';
+import { Input } from '@app/components/ui/input/input';
+import { useDebouncedCallback } from '@app/hooks/use-debounced-callback';
+import { theme } from '@app/styles/themes';
+
+interface ChatSearchFieldProps {
+  onClose: () => void;
+  onQueryChange: (query: string) => void;
+}
+
+/**
+ * Own component so closing search unmounts it, discarding the draft and
+ * cancelling pending writes that would re-apply the filter after close.
+ */
+export const ChatSearchField = memo(
+  ({ onClose, onQueryChange }: ChatSearchFieldProps) => {
+    const [draftQuery, setDraftQuery] = useState('');
+
+    const [pushQuery] = useDebouncedCallback((value: string) => {
+      onQueryChange(value);
+    }, 150);
+
+    const handleQueryChange = (value: string) => {
+      setDraftQuery(value);
+      void pushQuery(value);
+    };
+
+    return (
+      <View style={styles.searchField}>
+        <SymbolView
+          name='magnifyingglass'
+          size={14}
+          tintColor={theme.colorGreyHoverAlpha}
+        />
+        {Platform.OS === 'ios' ? (
+          <Input
+            accessibilityLabel='Search messages'
+            autoCapitalize='none'
+            autoComplete='off'
+            autoCorrect={false}
+            color='white'
+            onChangeText={handleQueryChange}
+            placeholder='Search messages'
+            placeholderTextColor={theme.color.textSecondary.dark}
+            radius='none'
+            returnKeyType='search'
+            size='sm'
+            style={{
+              backgroundColor: 'transparent',
+              flex: 1,
+              fontSize: theme.fontSize14,
+            }}
+            value={draftQuery}
+            variant='soft'
+          />
+        ) : (
+          <TextInput
+            accessibilityLabel='Search messages'
+            autoCapitalize='none'
+            autoCorrect={false}
+            cursorColor={theme.color.text.dark}
+            onChangeText={handleQueryChange}
+            placeholder='Search messages'
+            placeholderTextColor={theme.color.textSecondary.dark}
+            returnKeyType='search'
+            selectionColor={theme.colorTextSelection}
+            selectionHandleColor={theme.colorPrimary}
+            style={styles.searchInput}
+            underlineColorAndroid='transparent'
+            value={draftQuery}
+          />
+        )}
+        <Button
+          accessibilityLabel='Close search'
+          accessibilityRole='button'
+          onPress={onClose}
+        >
+          <SymbolView
+            name='xmark'
+            size={14}
+            tintColor={theme.colorGreyHoverAlpha}
+          />
+        </Button>
+      </View>
+    );
+  },
+);
+
+const styles = StyleSheet.create({
+  searchField: {
+    alignItems: 'center',
+    backgroundColor: theme.color.background.darkAlt,
+    borderColor: theme.color.border.dark,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius12,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: theme.space8,
+    paddingHorizontal: theme.space12,
+  },
+  searchInput: {
+    color: theme.color.text.dark,
+    flex: 1,
+    fontSize: theme.fontSize14,
+    height: 36,
+    paddingVertical: 0,
+  },
+});

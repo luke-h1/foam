@@ -1,0 +1,184 @@
+import { renderHook } from '@testing-library/react-native';
+
+import {
+  createEmoteData,
+  createSevenTvEmote,
+} from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
+import { useEmoteReprocessing } from '@app/components/chat/hooks/use-emote-reprocessing';
+import * as channelLoadActions from '@app/store/chat/actions/channel-load';
+import * as messagesActions from '@app/store/chat/actions/messages';
+import * as personalEmotesActions from '@app/store/chat/actions/personal-emotes';
+import { chatStore$ } from '@app/store/chat/observables/chat-store';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
+import type { ParsedPart } from '@app/utils/chat/parsed-part';
+import { resolveMessageEmoteParts } from '@app/utils/chat/resolve-message-emote-parts';
+
+// Only the channel-emote-cache lookup and the personal-emote source are stubbed; the real resolver, worklet and store run.
+const mockGetCurrentEmoteData = jest.spyOn(
+  channelLoadActions,
+  'getCurrentEmoteData',
+);
+
+const mockGetUserPersonalEmotes = jest.spyOn(
+  personalEmotesActions,
+  'getUserPersonalEmotes',
+);
+
+const mockUpdateMessages = jest.spyOn(messagesActions, 'updateMessages');
+
+const channelId = 'channel-1';
+
+// Only used to keep the reprocess gate open in the 7TV-disabled case below;
+// `plaska` itself always resolves via the personal set, never this emote.
+const channelKappa = createSevenTvEmote({ id: 'kappa', name: 'Kappa' });
+
+const personalPlaska = createSevenTvEmote({
+  id: 'plaska-id',
+  name: 'plaska',
+  original_name: 'plaska',
+  url: 'https://cdn.example.test/plaska.webp',
+  static_url: 'https://cdn.example.test/plaska.png',
+});
+
+const senderUserstate = createUserStateTags({
+  'display-name': 'chatter',
+  login: 'chatter',
+  username: 'chatter',
+  'user-id': 'sender-1',
+  id: 'm1',
+  color: '#fff',
+});
+
+function createMessage(
+  parts: ParsedPart[],
+  messageId = 'm1',
+): AnyChatMessageType {
+  return {
+    id: messageId,
+    message_id: messageId,
+    message_nonce: 'n1',
+    message: parts,
+    channel: 'test',
+    sender: 'chatter',
+    badges: [],
+    userstate: senderUserstate,
+    parentDisplayName: '',
+    replyDisplayName: '',
+    replyBody: '',
+  };
+}
+
+function renderReprocess(
+  message: AnyChatMessageType,
+  overrides: { show7TvEmotes?: boolean } = {},
+) {
+  const processedMessageIdsRef = { current: new Set<string>() };
+
+  renderHook(() =>
+    useEmoteReprocessing({
+      channelId,
+      channelEmoteData: {},
+      messages$: { peek: () => [message] },
+      emoteLoadStatus: 'success',
+      processedMessageIdsRef,
+      show7TvEmotes: overrides.show7TvEmotes ?? true,
+      userLogin: 'me',
+    }),
+  );
+}
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  chatStore$.emojis.set([]);
+
+  // Empty channel emote data: `plaska` is reachable only via the personal set,
+  // so these tests also prove a personal-emote-only channel still reprocesses.
+  mockGetCurrentEmoteData.mockReturnValue(createEmoteData());
+
+  mockGetUserPersonalEmotes.mockReturnValue([personalPlaska]);
+});
+
+/**
+ * Resolves `text` the same way live ingest does, so a test can seed a message
+ * with the parts it would have had when it first arrived.
+ */
+function ingestParts(text: string): ParsedPart[] {
+  return resolveMessageEmoteParts({
+    channelId,
+    emoteData: createEmoteData(),
+    show7TvEmotes: true,
+    text,
+    userId: 'sender-1',
+    userLogin: 'me',
+    userstate: senderUserstate,
+  });
+}
+
+/**
+ * Reduces parts to the fields these tests assert on so the shape can be
+ * compared with `toEqual` instead of a partial matcher.
+ */
+function partIdentities(parts: ParsedPart[]): { type: string; id?: string }[] {
+  return parts.map(part => ({
+    type: part.type,
+    id: 'id' in part ? part.id : undefined,
+  }));
+}
+
+function updatedMessage(): ParsedPart[] {
+  const message = mockUpdateMessages.mock.calls[0]?.[0]?.[0]?.updates?.message;
+
+  if (!message) {
+    throw new Error('updateMessages was not called with a message update');
+  }
+
+  return message;
+}
+
+describe('useEmoteReprocessing personal 7TV emotes', () => {
+  test('seeds a message where `plaska` resolves to the personal emote', () => {
+    expect(partIdentities(ingestParts('plaska'))).toEqual([
+      { type: 'emote', id: 'plaska-id' },
+    ]);
+  });
+
+  test('keeps a resolved personal emote as an emote on reprocess (no text downgrade)', () => {
+    // Message arrived already resolved to the personal emote on ingest.
+    renderReprocess(createMessage(ingestParts('plaska')));
+
+    // Reprocess must leave the resolved emote untouched - never rewrite it back to text.
+    expect(mockGetUserPersonalEmotes).toHaveBeenCalledWith(
+      'sender-1',
+      channelId,
+    );
+
+    expect(mockUpdateMessages).not.toHaveBeenCalled();
+  });
+
+  test('upgrades a text-only message to the personal emote once it is available', () => {
+    // Message arrived as text (personal set not loaded yet), then reprocess runs.
+    renderReprocess(createMessage([{ type: 'text', content: 'plaska' }]));
+
+    expect(mockUpdateMessages).toHaveBeenCalledTimes(1);
+
+    expect(partIdentities(updatedMessage())).toEqual([
+      { type: 'emote', id: 'plaska-id' },
+    ]);
+  });
+
+  test('downgrades to text only when 7TV emotes are turned off', () => {
+    // 7TV off drops the personal set so the emote falls back to text; the
+    // channel emote keeps the reprocess gate open so the resolver still runs.
+    mockGetCurrentEmoteData.mockReturnValue(
+      createEmoteData({ sevenTvChannelEmotes: [channelKappa] }),
+    );
+
+    renderReprocess(createMessage(ingestParts('plaska')), {
+      show7TvEmotes: false,
+    });
+
+    expect(mockUpdateMessages).toHaveBeenCalledTimes(1);
+    expect(updatedMessage()).toEqual([{ type: 'text', content: 'plaska' }]);
+  });
+});

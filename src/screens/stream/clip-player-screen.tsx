@@ -1,0 +1,85 @@
+import { StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { router } from 'expo-router';
+
+import { IconButton } from '@app/components/icon-button/icon-button';
+import { StreamPlayer } from '@app/components/stream-player/stream-player';
+import { EmptyState } from '@app/components/ui/empty-state/empty-state';
+import { theme } from '@app/styles/themes';
+import { shareDeepLink } from '@app/utils/sharing/share-deep-link';
+
+interface ClipPlayerScreenProps {
+  id: string;
+}
+
+export function ClipPlayerScreen({ id }: ClipPlayerScreenProps) {
+  const insets = useSafeAreaInsets();
+
+  if (!id) {
+    return (
+      <EmptyState
+        heading='Clip not found'
+        content='Could not open this clip.'
+        button='Close'
+        buttonOnPress={() => router.back()}
+      />
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <StreamPlayer
+        clip={id}
+        autoplay
+        muted={false}
+        height='100%'
+        width='100%'
+      />
+
+      <View
+        style={[styles.closeButtonWrap, { top: insets.top + theme.space12 }]}
+      >
+        <IconButton
+          icon={{ type: 'symbol', name: 'square.and.arrow.up', size: 18 }}
+          label='Share clip'
+          onPress={() => {
+            void shareDeepLink({ kind: 'clip', id });
+          }}
+          size='2xl'
+          style={styles.closeButton}
+        />
+        <IconButton
+          icon={{ type: 'symbol', name: 'xmark', size: 18 }}
+          label='Close'
+          onPress={() => router.back()}
+          size='2xl'
+          style={styles.closeButton}
+        />
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  closeButton: {
+    alignItems: 'center',
+    backgroundColor: theme.darkActiveContent,
+    borderColor: theme.colorBorderSecondary,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius999,
+    borderWidth: 1,
+    justifyContent: 'center',
+  },
+  closeButtonWrap: {
+    flexDirection: 'row',
+    gap: theme.space12,
+    position: 'absolute',
+    right: theme.space16,
+    zIndex: 2,
+  },
+  container: {
+    backgroundColor: theme.colorBlack,
+    flex: 1,
+  },
+});

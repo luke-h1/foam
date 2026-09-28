@@ -5,7 +5,7 @@ import type {
   FfzGlobalEmotesResponse,
 } from '@app/types/ffz/emote';
 
-import { ApiError } from '../api/Client';
+import { ApiError } from '../api/client';
 import { ffzApi } from '../api/clients';
 import { ffzService } from '../ffz-service';
 
@@ -64,6 +64,7 @@ describe('ffzService', () => {
     const result = await ffzService.getSanitisedGlobalEmotes();
 
     expect(apiGetSpy).toHaveBeenCalledWith('/set/global');
+
     expect(result).toEqual<FfzSanitisedEmote[]>([
       {
         name: 'OMEGALUL',
@@ -110,6 +111,7 @@ describe('ffzService', () => {
     const result = await ffzService.getSanitisedChannelEmotes('123');
 
     expect(apiGetSpy).toHaveBeenCalledWith('/room/id/123');
+
     expect(result).toEqual<FfzSanitisedEmote[]>([
       {
         name: 'peepoDance',

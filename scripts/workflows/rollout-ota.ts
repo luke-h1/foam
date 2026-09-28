@@ -34,6 +34,7 @@ function fetchCurrentCommand(args: string[], run: ToolRunner = runTool): void {
     console.log(
       '::warning::No rollout percentage was found in eas update:view output. This update group likely is not a rollout update.',
     );
+
     writeGithubOutput('is_rollout', 'false');
     writeGithubOutput('current_rollout', '');
     return;
@@ -56,6 +57,7 @@ function progressCommand(args: string[], run: ToolRunner = runTool): void {
   }
 
   console.log(`Setting rollout for ${otaId} to ${target}%...`);
+
   try {
     run(
       'eas',

@@ -1,6 +1,6 @@
 import type { ChatMessageType } from '@app/store/chat/types/constants';
-import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
-import type { ParsedPart } from '@app/utils/chat/parsedPart';
+import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
+import type { ParsedPart } from '@app/utils/chat/parsed-part';
 
 function createMessageParts(index: number): ParsedPart[] {
   return [{ type: 'text', content: `raid flood message ${index}` }];
@@ -8,6 +8,7 @@ function createMessageParts(index: number): ParsedPart[] {
 
 function createIngestMessage(index: number): ChatMessageType<'usernotice'> {
   const sender = `raider${index % 40}`;
+
   return {
     id: `ingest-${index}_nonce-${index}`,
     message_id: `ingest-${index}`,
@@ -35,6 +36,7 @@ function createIngestMessage(index: number): ChatMessageType<'usernotice'> {
  * Near-full window seed + burst that forces front-trim on a capped store.
  */
 const INGEST_SEED_COUNT = 120;
+
 const INGEST_BURST_COUNT = 80;
 
 export const ingestSeedMessages = Array.from(

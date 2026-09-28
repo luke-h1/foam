@@ -24,6 +24,7 @@ function clearPresentTimeout() {
   if (presentTimeout === null) {
     return;
   }
+
   clearTimeout(presentTimeout);
   presentTimeout = null;
 }
@@ -54,14 +55,17 @@ export function presentChangelogAndroid(
       if (settled) {
         return;
       }
+
       settled = true;
       clearPresentTimeout();
       presentResolve = null;
       pending = null;
+
       if (state !== null) {
         state = null;
         emit();
       }
+
       resolve(presented);
     };
 

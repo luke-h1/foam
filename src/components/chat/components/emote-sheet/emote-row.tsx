@@ -1,0 +1,60 @@
+import { memo, useCallback } from 'react';
+import { type GestureResponderEvent, Pressable } from 'react-native';
+
+import { selection } from '@app/lib/haptics';
+import type { SanitisedEmote } from '@app/types/emote';
+
+import {
+  RowVisibilityContext,
+  useRowVisibility,
+} from '../chat-message/util/row-visibility';
+import { EmoteCell } from './emote-cell';
+import { emoteSheetStyles as styles } from './emote-sheet.styles';
+import { EMOTE_CELL_GAP } from './util/emote-sheet-layout';
+import type { EmotePickerItem } from './util/emote-sheet-types';
+
+function isEmoteEntry(item: EmotePickerItem): item is SanitisedEmote {
+  return Object.prototype.hasOwnProperty.call(item, 'id');
+}
+
+function EmoteRowComponent({
+  cellSize,
+  items,
+  onPress,
+}: {
+  cellSize: number;
+  items: EmotePickerItem[];
+  onPress: (item: EmotePickerItem) => void;
+}) {
+  const handlePress = useCallback(
+    (event: GestureResponderEvent) => {
+      const stride = cellSize + EMOTE_CELL_GAP;
+      const index = Math.floor(event.nativeEvent.locationX / stride);
+      const item = items[index];
+
+      if (item !== undefined) {
+        selection();
+        onPress(item);
+      }
+    },
+    [cellSize, items, onPress],
+  );
+
+  const rowVisibility = useRowVisibility();
+
+  return (
+    <RowVisibilityContext.Provider value={rowVisibility}>
+      <Pressable style={styles.emoteRow} onPress={handlePress}>
+        {items.map(item => (
+          <EmoteCell
+            key={isEmoteEntry(item) ? item.id : `emoji-${item}`}
+            cellSize={cellSize}
+            item={item}
+          />
+        ))}
+      </Pressable>
+    </RowVisibilityContext.Provider>
+  );
+}
+
+export const EmoteRow = memo(EmoteRowComponent);

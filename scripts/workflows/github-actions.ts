@@ -9,13 +9,13 @@ export function getRequiredArg(
   const flag = `--${name}`;
   const index = args.indexOf(flag);
 
-  if (index !== -1) {
-    const value = args[index + 1];
+  const value = index === -1 ? undefined : args[index + 1];
 
-    if (value == null || value.startsWith('--')) {
-      throw new Error(`Missing value for ${flag}`);
-    }
+  if (index !== -1 && (value == null || value.startsWith('--'))) {
+    throw new Error(`Missing value for ${flag}`);
+  }
 
+  if (value != null) {
     return value;
   }
 

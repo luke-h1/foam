@@ -5,7 +5,7 @@ import {
   chatStore$,
   limitChannelCaches,
   migratePersistedChatStore,
-} from '../observables/chatStore';
+} from '../observables/chat-store';
 import type { ChannelCacheType, GlobalCacheType } from '../types/constants';
 import {
   makeEmptyEmoteData,
@@ -84,6 +84,7 @@ describe('makeEmptyGlobalCacheData', () => {
     expect(storeSlot).not.toBe(fresh);
     expect(storeSlot.twitchGlobalEmotes).not.toBe(fresh.twitchGlobalEmotes);
     expect(makeEmptyGlobalCacheData()).not.toBe(fresh);
+
     expect(makeEmptyGlobalCacheData().twitchGlobalEmotes).not.toBe(
       fresh.twitchGlobalEmotes,
     );
@@ -93,6 +94,7 @@ describe('makeEmptyGlobalCacheData', () => {
     const hydrated: GlobalCacheType = makeEmptyGlobalCacheData();
     hydrated.lastUpdated = 1_700_000_000_000;
     hydrated.twitchGlobalEmotes.push(emote('hydrated-emote'));
+
     hydrated.ffzGlobalBadges.push({
       id: 'hydrated-badge',
       set: 'hydrated-badge',
@@ -113,6 +115,7 @@ describe('makeEmptyGlobalCacheData', () => {
       twitchGlobalBadges: [],
       ffzGlobalBadges: [],
     });
+
     expect(makeEmptyGlobalCacheData()).toEqual<GlobalCacheType>({
       lastUpdated: 0,
       twitchGlobalEmotes: [],
@@ -174,6 +177,7 @@ describe('migratePersistedChatStore', () => {
       sevenTvPersonalEmotes: { 'user-1': [emote('legacy-personal-emote')] },
       twitchChannelEmotes: [emote('kept-emote')],
     };
+
     chatStore$.persisted.channelCaches.set({ 'channel-1': legacyCache });
 
     migratePersistedChatStore();
@@ -194,12 +198,14 @@ describe('migratePersistedChatStore', () => {
       bttvGlobalEmotes: [emote('old-global-emote')],
       lastUpdated: 2_000,
     };
+
     const newerCache: LegacyChannelCache = {
       ...makeEmptyEmoteData(),
       bttvGlobalEmotes: [emote('new-global-emote')],
       ffzGlobalBadges: [badge('new-global-badge')],
       lastUpdated: 8_000,
     };
+
     chatStore$.persisted.channelCaches.set({
       'channel-old': olderCache,
       'channel-new': newerCache,
@@ -221,6 +227,7 @@ describe('migratePersistedChatStore', () => {
       bttvGlobalEmotes: [emote('stale-global-emote')],
       lastUpdated: 0,
     };
+
     chatStore$.persisted.channelCaches.set({ 'channel-1': staleCache });
 
     migratePersistedChatStore();
@@ -238,11 +245,13 @@ describe('migratePersistedChatStore', () => {
       bttvGlobalEmotes: [emote('current-global-emote')],
       lastUpdated: 9_000,
     });
+
     const legacyCache: LegacyChannelCache = {
       ...makeEmptyEmoteData(),
       bttvGlobalEmotes: [emote('legacy-global-emote')],
       lastUpdated: 8_000,
     };
+
     chatStore$.persisted.channelCaches.set({ 'channel-1': legacyCache });
 
     migratePersistedChatStore();
@@ -260,6 +269,7 @@ describe('migratePersistedChatStore', () => {
       lastUpdated: 5_000,
       twitchChannelEmotes: [emote('kept-emote')],
     };
+
     chatStore$.persisted.channelCaches.set({ 'channel-1': currentCache });
 
     migratePersistedChatStore();
