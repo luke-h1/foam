@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.10 (Internal)
+## 1.0.9 (Production)
 
 ### ⚡ Performance
 
@@ -9,12 +9,22 @@
 ### ✨ Features
 
 - **ui:** Design foundations - continuous corners, tabular counts, DESIGN.md and the audit ([#894](https://github.com/lhowsam/foam/issues/894))
+- **chat:** Fold the composer's extra controls into one menu ([#904](https://github.com/lhowsam/foam/issues/904))
 
 ### 🐛 Bug Fixes
 
 - IPad type legibility for App Review, player rotation recovery ([#885](https://github.com/lhowsam/foam/issues/885))
 - Lock color scheme to dark so light-mode devices don't render light ([#886](https://github.com/lhowsam/foam/issues/886))
 - **chat:** Reset hidden on recycled Fabric views so rows, badges and emotes stop going blank ([#893](https://github.com/lhowsam/foam/issues/893))
+- **chat:** Stop stalled emote loads evicting shared refs and leaking decode slots ([#898](https://github.com/lhowsam/foam/issues/898))
+- **chat:** Keep fast chats on live and clear the join-time stalls around them ([#900](https://github.com/lhowsam/foam/issues/900))
+- **chat:** Let the list own the keyboard inset ([#906](https://github.com/lhowsam/foam/issues/906))
+- **app:** Address apple feedback ([#909](https://github.com/lhowsam/foam/issues/909))
+- **app:** Point config plugins at their kebab-case files ([#910](https://github.com/lhowsam/foam/issues/910))
+
+### 👷 CI/CD
+
+- Drop the bun install cache ([#899](https://github.com/lhowsam/foam/issues/899))
 
 ### 📚 Documentation
 
@@ -27,6 +37,8 @@
 - Strip non-essential comments across src ([#884](https://github.com/lhowsam/foam/issues/884))
 - **app:** Delete dead code, thin wrappers and redundant guards ([#888](https://github.com/lhowsam/foam/issues/888))
 - **infrastructure:** Bump millionco/react-doctor from 2.2.8 to 2.2.9 ([#890](https://github.com/lhowsam/foam/issues/890))
+- **infrastructure:** Bump zizmorcore/zizmor-action from 0.6.1 to 0.6.4 ([#902](https://github.com/lhowsam/foam/issues/902))
+- **infrastructure:** Bump actions/setup-java from 5.7.0 to 6.0.1 ([#903](https://github.com/lhowsam/foam/issues/903))
 
 ## 1.0.9 (Production)
 
