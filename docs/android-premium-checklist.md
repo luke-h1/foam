@@ -207,7 +207,7 @@ match iOS in terms of colors.** Dynamic/Material You color is OUT for foam. Fina
 - [x] `allowBackup: false` FAILED the release manifest merge: TAndroidLame (via
       react-native-compressor) declares allowBackup=true and the merger errors without
       tools:replace. Would have broken the next release build. Fixed with new config
-      plugin src/plugins/withAndroidAllowBackupReplace.js (adds
+      plugin src/plugins/with-android-allow-backup-replace.js (adds
       tools:replace="android:allowBackup" on <application>).
 - [x] Gradle :app:processReleaseMainManifest now BUILD SUCCESSFUL; merged RELEASE
       manifest verified: 0 hits for RECORD_AUDIO/SYSTEM_ALERT_WINDOW/
