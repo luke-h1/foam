@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
 });
 
 function getSourceTagStyle(source: string) {
-  let backgroundColor = theme.color.text.dark;
+  let backgroundColor: string = theme.color.text.dark;
 
   if (source === 'remote') {
     backgroundColor = theme.colorPrimary;

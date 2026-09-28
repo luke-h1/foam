@@ -25,7 +25,7 @@
         "rules": ["react-hooks-js/immutability"]
       },
       {
-        "files": ["src/components/chat/hooks/use-seventv-ws.ts"],
+        "files": ["src/components/chat/hooks/use-seven-tv-ws.ts"],
         "rules": ["react-hooks-js/purity", "react-doctor/effect-needs-cleanup"]
       },
       {

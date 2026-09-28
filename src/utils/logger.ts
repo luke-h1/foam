@@ -118,16 +118,16 @@ const createMonitoringTransport =
       message = parsedMessage.success ? parsedMessage.data : String(firstArg);
     }
 
-    let level: 'error' | 'warn' | 'info' = 'info';
+    let severity: 'error' | 'warn' | 'info' = 'info';
 
     if (levelText === 'error') {
-      level = 'error';
+      severity = 'error';
     } else if (levelText === 'warn') {
-      level = 'warn';
+      severity = 'warn';
     }
 
     const entry = {
-      level,
+      level: severity,
       category: extension ?? 'app',
       message,
       error,

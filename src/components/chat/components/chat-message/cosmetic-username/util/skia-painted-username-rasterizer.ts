@@ -264,11 +264,11 @@ function buildPaintLayout(
   const { paint, displayUsername, fontSize, pixelRatio } = opts;
   const scale = pixelRatio;
 
-  // SAFETY: 7TV encodes textStyle.weight as CSS hundreds (1-9), so x100 lands on a FontWeight member.
   let fontWeight: FontWeight =
     Platform.OS === 'android' ? FontWeight.Bold : FontWeight.Normal;
 
   if (paint.textStyle?.weight) {
+    // SAFETY: 7TV encodes textStyle.weight as CSS hundreds (1-9), so x100 lands on a FontWeight member.
     fontWeight = (paint.textStyle.weight * 100) as FontWeight;
   }
 
