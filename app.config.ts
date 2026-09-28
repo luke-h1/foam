@@ -390,22 +390,22 @@ const config: ExpoConfig = {
         },
       },
     ],
-    ['./src/plugins/withPodDeploymentTarget.js', { minIosVersion: '16.4' }],
-    './src/plugins/withIosStaticFrameworkHeaderFix.js',
+    ['./src/plugins/with-pod-deployment-target.js', { minIosVersion: '16.4' }],
+    './src/plugins/with-ios-static-framework-header-fix.js',
     // Disabled: repointing ExpoModulesCore's modulemap to the public-headers
     // path drops its Swift-generated header, hiding `@objc` classes like
     // ExpoFabricView from consumer modules (expo-blur, expo-image, ...) and
     // failing the archive. Testing whether the "no such module 'Expo'" race it
     // papered over is gone now that RNRepo's mixed modulemaps are disabled.
-    // './src/plugins/withExpoModulemapArchiveFix.js',
+    // './src/plugins/with-expo-modulemap-archive-fix.js',
     '@react-native-firebase/app',
     './plugins/with-firebase-analytics-no-ad-ids.js',
-    './src/plugins/withAndroidReleaseLintFix.js',
-    './src/plugins/withAndroidMainActivityConfigChanges.js',
-    './src/plugins/withAndroidAllowBackupReplace.js',
-    './src/plugins/withAndroidAccentColor.js',
-    './src/plugins/withAndroidLibsActivityTheme.js',
-    './src/plugins/withAndroidBaselineProfile.js',
+    './src/plugins/with-android-release-lint-fix.js',
+    './src/plugins/with-android-main-activity-config-changes.js',
+    './src/plugins/with-android-allow-backup-replace.js',
+    './src/plugins/with-android-accent-color.js',
+    './src/plugins/with-android-libs-activity-theme.js',
+    './src/plugins/with-android-baseline-profile.js',
     './plugins/with-fix-dev-launcher-cycle.js',
   ],
   experiments: {
