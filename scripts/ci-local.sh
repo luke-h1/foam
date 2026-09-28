@@ -10,7 +10,7 @@
 # fast: every job runs and the summary at the end lists what broke.
 #
 # Two jobs are close rather than exact. React Doctor runs the latest CLI where
-# CI pins v2.2.8, though both scan the same changed-files-against-the-merge-base
+# CI pins v2.2.9, though both scan the same changed-files-against-the-merge-base
 # baseline. zizmor here is whatever version is on PATH rather than the pinned
 # action.
 #
@@ -60,6 +60,34 @@ doctor_base() {
   git merge-base HEAD origin/main 2>/dev/null ||
     git merge-base HEAD main 2>/dev/null ||
     echo main
+}
+
+# The CLI only sets a failing exit code when it could diff against a baseline.
+# A branch with a large rename (1,400+ files in #909) leaves the baseline
+# "degraded": the CLI still prints every error in the changed files, then exits
+# 0, so the job passed while CI posted the same errors on the PR. Gate on the
+# error count in the JSON report instead of the exit code.
+react_doctor() {
+  local report
+  report="$(mktemp)"
+
+  if ! npx react-doctor@latest --scope changed --base "$(doctor_base)" \
+    --include-untracked --no-score --json --json-out "$report"; then
+    rm -f "$report"
+    return 1
+  fi
+
+  jq -r '.diagnostics[] | "\(.severity)  \(.plugin)/\(.rule)  \(.filePath):\(.line)"' \
+    "$report"
+
+  local errors
+  errors="$(jq '.summary.errorCount' "$report")"
+  printf '%s error(s), %s warning(s)%s\n' "$errors" \
+    "$(jq '.summary.warningCount' "$report")" \
+    "$(jq -r 'if .baselineDegraded then " (baseline degraded: showing every issue in the changed files)" else "" end' "$report")"
+
+  rm -f "$report"
+  [ "$errors" -eq 0 ]
 }
 
 wants() {
@@ -134,8 +162,7 @@ if wants doctor; then
   if [ -n "${SKIP_DOCTOR:-}" ]; then
     skip 'React Doctor' 'SKIP_DOCTOR is set'
   else
-    run 'React Doctor' npx react-doctor@latest \
-      --scope changed --base "$(doctor_base)" --include-untracked
+    run 'React Doctor' react_doctor
   fi
 fi
 

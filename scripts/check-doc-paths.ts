@@ -1,5 +1,6 @@
 /**
- * Every backticked source path in docs/ must resolve to a real file.
+ * Every backticked source path in docs/ must resolve to a real file, and so
+ * must every literal path in doctor.config.json.
  *
  * The glossary and the ADRs are the map an agent reads before touching code.
  * A kebab-case rename pass once left 26 of CONTEXT.md's 40 pointers dead, all
@@ -50,6 +51,35 @@ async function markdownFiles(target: string): Promise<string[]> {
   return nested.flat();
 }
 
+interface DoctorConfig {
+  ignore?: {
+    files?: string[];
+    overrides?: { files: string[] }[];
+  };
+}
+
+/**
+ * A React Doctor override names files by path, and a path that no longer
+ * exists matches nothing. The seven-tv rename left the `use-seven-tv-ws.ts`
+ * exemption pointing at the old name, and the rules it silenced came back as
+ * PR comments with no error to say why.
+ */
+async function deadDoctorConfigPaths(): Promise<string[]> {
+  // SAFETY: doctor.config.json is checked in and validated by its $schema.
+  const config = JSON.parse(
+    await readFile('doctor.config.json', 'utf8'),
+  ) as DoctorConfig;
+
+  const paths = [
+    ...(config.ignore?.files ?? []),
+    ...(config.ignore?.overrides ?? []).flatMap(override => override.files),
+  ];
+
+  return paths
+    .filter(path => !path.includes('*') && !existsSync(path))
+    .map(path => `doctor.config.json: ${path}`);
+}
+
 async function main(): Promise<void> {
   const files = (await Promise.all(MAPPED_DOCS.map(markdownFiles))).flat();
   const dead: string[] = [];
@@ -76,8 +106,10 @@ async function main(): Promise<void> {
     }
   }
 
+  dead.push(...(await deadDoctorConfigPaths()));
+
   if (dead.length > 0) {
-    console.error(`${dead.length} dead path(s) in docs:\n`);
+    console.error(`${dead.length} dead path(s):\n`);
     dead.forEach(entry => console.error(`  ${entry}`));
     console.error('\nUpdate the path, or delete the reference.');
     process.exit(1);
