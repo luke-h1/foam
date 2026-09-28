@@ -33,7 +33,7 @@ jobs:
           persist-credentials: false
 
       - name: 🥟 Setup Bun and install dependencies
-        uses: ./.github/actions/setup-bun-install
+        uses: $/.github/actions/setup-bun-install
 
       - name: 🌲 Create worktree for the base commit
         run: |
