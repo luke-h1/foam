@@ -150,6 +150,26 @@ export default tseslint.config(
       react: {
         version: '19.2',
       },
+      'import/resolver': {
+        typescript: {
+          project: './tsconfig.json',
+          extensions: [
+            '.ios.tsx',
+            '.ios.ts',
+            '.android.tsx',
+            '.android.ts',
+            '.native.tsx',
+            '.native.ts',
+            '.web.tsx',
+            '.web.ts',
+            '.tsx',
+            '.ts',
+            '.jsx',
+            '.js',
+            '.json',
+          ],
+        },
+      },
     },
     rules: {
       ...react.configs.flat.recommended.rules,
@@ -162,6 +182,7 @@ export default tseslint.config(
       'react-doctor/rn-no-raw-text': 'error',
       'local/blank-line-between-top-level': 'error',
       'import/newline-after-import': ['error', { count: 1 }],
+      'import/no-unresolved': ['error', { caseSensitiveStrict: true }],
       'local/prefer-alias-imports': 'warn',
       'simple-import-sort/imports': [
         'warn',
