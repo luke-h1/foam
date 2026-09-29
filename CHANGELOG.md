@@ -39,6 +39,7 @@
 - **infrastructure:** Bump millionco/react-doctor from 2.2.8 to 2.2.9 ([#890](https://github.com/lhowsam/foam/issues/890))
 - **infrastructure:** Bump zizmorcore/zizmor-action from 0.6.1 to 0.6.4 ([#902](https://github.com/lhowsam/foam/issues/902))
 - **infrastructure:** Bump actions/setup-java from 5.7.0 to 6.0.1 ([#903](https://github.com/lhowsam/foam/issues/903))
+- **app:** Fix build
 
 ## 1.0.9 (Production)
 
