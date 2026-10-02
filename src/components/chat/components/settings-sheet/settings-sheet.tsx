@@ -6,21 +6,19 @@ import {
   BottomSheet,
   type BottomSheetHandle,
 } from '@app/components/bottom-sheet/bottom-sheet';
+import { SheetHeader } from '@app/components/chat/components/sheet/sheet-header';
 import { CHAT_SETTINGS_SHEET_DETENT } from '@app/components/chat/util/chat-sheet-layout';
 import {
   SettingsLinkRow,
   SettingsSection,
   SettingsToggleRow,
 } from '@app/components/settings-section/settings-section';
-import { Text } from '@app/components/ui/text/text';
 import {
   usePreference,
   useUpdatePreferences,
 } from '@app/store/preference-store';
 import { requestLiveSync } from '@app/store/stream/live-sync-bus';
 import { theme } from '@app/styles/themes';
-
-const ICON_TINT = theme.color.textSecondary.dark;
 
 export interface SettingsSheetProps {
   isPresented: boolean;
@@ -123,9 +121,7 @@ const SettingsSheetComponent = ({
     >
       <View style={styles.container} testID='chat-settings-sheet'>
         <View style={styles.header}>
-          <Text style={styles.headerTitle} weight='semibold'>
-            Settings
-          </Text>
+          <SheetHeader title='Chat' onClose={dismissSheet} />
         </View>
 
         <ScrollView
@@ -137,86 +133,10 @@ const SettingsSheetComponent = ({
           ]}
           showsVerticalScrollIndicator={false}
         >
-          <SettingsSection
-            title='Appearance'
-            cardColor={theme.color.surfaceNeutral.dark}
-          >
-            <SettingsLinkRow
-              title='Density'
-              icon={{
-                icon: 'text.alignleft',
-                androidIcon: 'format_align_left',
-                color: ICON_TINT,
-              }}
-              value={chatDensity === 'compact' ? 'Compact' : 'Comfortable'}
-              onPress={handleToggleDensity}
-            />
-            <SettingsToggleRow
-              title='Show Timestamps'
-              icon={{
-                icon: 'clock',
-                androidIcon: 'schedule',
-                color: ICON_TINT,
-              }}
-              value={showTimestamps}
-              onValueChange={value =>
-                updatePreferences({ chatTimestamps: value })
-              }
-            />
-            <SettingsToggleRow
-              title='Highlight Own Mentions'
-              icon={{
-                icon: 'at',
-                androidIcon: 'alternate_email',
-                color: ICON_TINT,
-              }}
-              value={highlightOwnMentions}
-              onValueChange={value =>
-                updatePreferences({ highlightOwnMentions: value })
-              }
-            />
-            <SettingsToggleRow
-              title='Inline Reply Context'
-              icon={{
-                icon: 'arrowshape.turn.up.left',
-                androidIcon: 'reply',
-                color: ICON_TINT,
-              }}
-              value={showInlineReplyContext}
-              onValueChange={value =>
-                updatePreferences({ showInlineReplyContext: value })
-              }
-            />
-            <SettingsToggleRow
-              title='Show Jump Pill'
-              icon={{
-                icon: 'arrow.down.circle',
-                androidIcon: 'arrow_circle_down',
-                color: ICON_TINT,
-              }}
-              value={showUnreadJumpPill}
-              onValueChange={value =>
-                updatePreferences({ showUnreadJumpPill: value })
-              }
-            />
-            <SettingsToggleRow
-              title='Show Join/Part Messages'
-              icon={{
-                icon: 'person.badge.plus',
-                androidIcon: 'group_add',
-                color: ICON_TINT,
-              }}
-              value={showJoinPartMessages}
-              onValueChange={value =>
-                updatePreferences({ showJoinPartMessages: value })
-              }
-            />
-          </SettingsSection>
-
           {hasActions ? (
             <SettingsSection
               title='Actions'
-              cardColor={theme.color.surfaceNeutral.dark}
+              cardColor={theme.color.surfaceElevated.dark}
             >
               {onOpenMessageSearch ? (
                 <SettingsLinkRow
@@ -224,40 +144,36 @@ const SettingsSheetComponent = ({
                   icon={{
                     icon: 'magnifyingglass',
                     androidIcon: 'search',
-                    color: ICON_TINT,
                   }}
                   onPress={onOpenMessageSearch}
                 />
               ) : null}
               {onOpenChatters ? (
                 <SettingsLinkRow
-                  title='View Chatters'
+                  title='View chatters'
                   icon={{
                     icon: 'person.2',
                     androidIcon: 'group',
-                    color: ICON_TINT,
                   }}
                   onPress={onOpenChatters}
                 />
               ) : null}
               {onOpenSavedPhrases ? (
                 <SettingsLinkRow
-                  title='Saved Phrases'
+                  title='Saved phrases'
                   icon={{
                     icon: 'text.bubble',
                     androidIcon: 'chat_bubble',
-                    color: ICON_TINT,
                   }}
                   onPress={handleOpenSavedPhrases}
                 />
               ) : null}
               {onRefetchEmotes ? (
                 <SettingsLinkRow
-                  title='Refetch Emotes & Badges'
+                  title='Reload emotes and badges'
                   icon={{
                     icon: 'arrow.clockwise',
                     androidIcon: 'refresh',
-                    color: ICON_TINT,
                   }}
                   onPress={handleRefetchEmotes}
                 />
@@ -266,16 +182,85 @@ const SettingsSheetComponent = ({
           ) : null}
 
           <SettingsSection
-            title='Connection'
-            cardColor={theme.color.surfaceNeutral.dark}
+            title='Appearance'
+            cardColor={theme.color.surfaceElevated.dark}
           >
             <SettingsLinkRow
-              title='Sync to Live'
+              title='Density'
+              icon={{
+                icon: 'text.alignleft',
+                androidIcon: 'format_align_left',
+              }}
+              value={chatDensity === 'compact' ? 'Compact' : 'Comfortable'}
+              onPress={handleToggleDensity}
+            />
+            <SettingsToggleRow
+              title='Show timestamps'
+              icon={{
+                icon: 'clock',
+                androidIcon: 'schedule',
+              }}
+              value={showTimestamps}
+              onValueChange={value =>
+                updatePreferences({ chatTimestamps: value })
+              }
+            />
+            <SettingsToggleRow
+              title='Highlight own mentions'
+              icon={{
+                icon: 'at',
+                androidIcon: 'alternate_email',
+              }}
+              value={highlightOwnMentions}
+              onValueChange={value =>
+                updatePreferences({ highlightOwnMentions: value })
+              }
+            />
+            <SettingsToggleRow
+              title='Inline reply context'
+              icon={{
+                icon: 'arrowshape.turn.up.left',
+                androidIcon: 'reply',
+              }}
+              value={showInlineReplyContext}
+              onValueChange={value =>
+                updatePreferences({ showInlineReplyContext: value })
+              }
+            />
+            <SettingsToggleRow
+              title='Show jump pill'
+              icon={{
+                icon: 'arrow.down.circle',
+                androidIcon: 'arrow_circle_down',
+              }}
+              value={showUnreadJumpPill}
+              onValueChange={value =>
+                updatePreferences({ showUnreadJumpPill: value })
+              }
+            />
+            <SettingsToggleRow
+              title='Show joins and parts'
+              icon={{
+                icon: 'person.badge.plus',
+                androidIcon: 'group_add',
+              }}
+              value={showJoinPartMessages}
+              onValueChange={value =>
+                updatePreferences({ showJoinPartMessages: value })
+              }
+            />
+          </SettingsSection>
+
+          <SettingsSection
+            title='Connection'
+            cardColor={theme.color.surfaceElevated.dark}
+          >
+            <SettingsLinkRow
+              title='Sync to live'
               subtitle='Jump back to the live edge'
               icon={{
                 icon: 'forward.end.fill',
                 androidIcon: 'skip_next',
-                color: ICON_TINT,
               }}
               onPress={handleSyncToLive}
             />
@@ -285,7 +270,6 @@ const SettingsSheetComponent = ({
                 icon={{
                   icon: 'wifi',
                   androidIcon: 'wifi',
-                  color: ICON_TINT,
                 }}
                 onPress={handleReconnect}
               />
@@ -295,14 +279,13 @@ const SettingsSheetComponent = ({
           {hasStorage ? (
             <SettingsSection
               title='Storage'
-              cardColor={theme.color.surfaceNeutral.dark}
+              cardColor={theme.color.surfaceElevated.dark}
             >
               <SettingsLinkRow
-                title='Clear Cache'
+                title='Clear cache'
                 icon={{
                   icon: 'trash',
                   androidIcon: 'delete',
-                  color: theme.colorRed,
                 }}
                 onPress={handleClearCache}
                 danger
@@ -326,18 +309,12 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   content: {
-    paddingHorizontal: theme.space20,
+    paddingHorizontal: theme.space16,
     paddingTop: theme.space16,
   },
   header: {
-    borderBottomColor: theme.colorBorderSecondary,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    paddingBottom: theme.space12,
-    paddingHorizontal: theme.space20,
-    paddingTop: theme.space4,
-  },
-  headerTitle: {
-    fontSize: theme.fontSize20,
+    paddingHorizontal: theme.space16,
+    paddingTop: theme.space12,
   },
   scroll: {
     flex: 1,

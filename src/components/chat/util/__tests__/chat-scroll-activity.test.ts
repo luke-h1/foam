@@ -8,6 +8,7 @@ describe('chatScrollActivity', () => {
 
   afterEach(() => {
     chatScrollActivity.reset();
+    jest.restoreAllMocks();
     jest.useRealTimers();
   });
 
@@ -33,6 +34,29 @@ describe('chatScrollActivity', () => {
 
     jest.advanceTimersByTime(50);
     expect(chatScrollActivity.isActive()).toBe(false);
+  });
+
+  test('arms one timer per quiet window, not one per scroll tick', () => {
+    const setTimeoutSpy = jest.spyOn(globalThis, 'setTimeout');
+
+    // Nine ticks at 16ms: pokes at 0..128ms, clock at 144ms after the loop.
+    for (let tick = 0; tick < 9; tick += 1) {
+      chatScrollActivity.poke();
+      jest.advanceTimersByTime(16);
+    }
+
+    expect(setTimeoutSpy).toHaveBeenCalledTimes(1);
+    expect(chatScrollActivity.isActive()).toBe(true);
+
+    // The window ends 150ms after the last poke: at 278ms, 134ms from now.
+    jest.advanceTimersByTime(133);
+    expect(chatScrollActivity.isActive()).toBe(true);
+
+    jest.advanceTimersByTime(1);
+    expect(chatScrollActivity.isActive()).toBe(false);
+
+    // The first timer fired at 150ms and re-armed once for the remainder.
+    expect(setTimeoutSpy).toHaveBeenCalledTimes(2);
   });
 
   test('subscribers are notified only on transitions', () => {

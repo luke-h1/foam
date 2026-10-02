@@ -1,11 +1,9 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { toast } from 'sonner-native';
 
-import { EditorialSectionHeader } from '@app/components/editorial-section-header/editorial-section-header';
 import {
   FlashList,
   ListRenderItem,
@@ -13,6 +11,7 @@ import {
 import { MemoizedLiveStreamCard } from '@app/components/live-stream-card/live-stream-card';
 import { LiveStreamCardSkeleton } from '@app/components/live-stream-card/live-stream-card-skeleton';
 import { MemoizedOfflineChannelRow } from '@app/components/offline-channel-row/offline-channel-row';
+import { SectionHeader } from '@app/components/section-header/section-header';
 import { EmptyState } from '@app/components/ui/empty-state/empty-state';
 import { Text } from '@app/components/ui/text/text';
 import { useAuthContext } from '@app/context/auth-context';
@@ -30,15 +29,14 @@ import type { FollowedChannelWithProfile } from '@app/types/twitch/channel';
 import type { TwitchStream } from '@app/types/twitch/stream';
 
 type FollowingListItem =
+  | { type: 'header'; title: string; count: number }
   | { type: 'stream'; stream: TwitchStream }
-  | { type: 'offlineHeader' }
+  | { type: 'noneLive' }
   | { type: 'offlineChannel'; channel: FollowedChannelWithProfile };
 
 function FollowingSkeleton({
-  showHeader,
   streamListLayout,
 }: {
-  showHeader?: boolean;
   streamListLayout: 'compact' | 'media';
 }) {
   return (
@@ -47,11 +45,6 @@ function FollowingSkeleton({
       scrollEnabled={false}
       style={styles.container}
     >
-      {showHeader && (
-        <View style={styles.header}>
-          <View style={styles.headerEyebrow} />
-        </View>
-      )}
       <LiveStreamCardSkeleton layout={streamListLayout} />
       <LiveStreamCardSkeleton layout={streamListLayout} />
       <LiveStreamCardSkeleton layout={streamListLayout} />
@@ -60,17 +53,6 @@ function FollowingSkeleton({
     </ScrollView>
   );
 }
-
-const FollowingListHeader = memo(function FollowingListHeader() {
-  return (
-    <View>
-      <EditorialSectionHeader eyebrow='For you' />
-      <View style={styles.header} />
-    </View>
-  );
-});
-
-const followingListHeader = <FollowingListHeader />;
 
 const getFollowingItemKey = (item: FollowingListItem) => {
   if (item.type === 'stream') {
@@ -81,7 +63,11 @@ const getFollowingItemKey = (item: FollowingListItem) => {
     return `offline-${item.channel.broadcaster_id}`;
   }
 
-  return 'offline-header';
+  if (item.type === 'header') {
+    return `header-${item.title}`;
+  }
+
+  return 'none-live';
 };
 
 const getFollowingItemType = (item: FollowingListItem) => item.type;
@@ -157,13 +143,24 @@ export default function FollowingScreen() {
   }, [followedChannels, streamsArray]);
 
   const listItems = useMemo<FollowingListItem[]>(() => {
-    const items: FollowingListItem[] = streamsArray.map(stream => ({
-      type: 'stream',
-      stream,
-    }));
+    const items: FollowingListItem[] = [
+      { type: 'header', title: 'Live', count: streamsArray.length },
+    ];
+
+    if (streamsArray.length === 0) {
+      items.push({ type: 'noneLive' });
+    }
+
+    items.push(
+      ...streamsArray.map(stream => ({ type: 'stream' as const, stream })),
+    );
 
     if (offlineChannels.length > 0) {
-      items.push({ type: 'offlineHeader' });
+      items.push({
+        type: 'header',
+        title: 'Offline',
+        count: offlineChannels.length,
+      });
       items.push(
         ...offlineChannels.map(channel => ({
           type: 'offlineChannel' as const,
@@ -175,22 +172,9 @@ export default function FollowingScreen() {
     return items;
   }, [streamsArray, offlineChannels]);
 
-  const hasShownErrorToast = useRef(false);
   const listRef = useRef(null);
 
   useScrollToTop(listRef);
-
-  useEffect(() => {
-    if (!isError) {
-      hasShownErrorToast.current = false;
-      return;
-    }
-
-    if (isFetched && !hasShownErrorToast.current) {
-      hasShownErrorToast.current = true;
-      toast.error('Failed to fetch followed streams');
-    }
-  }, [isError, isFetched]);
 
   const renderItem: ListRenderItem<FollowingListItem> = useCallback(
     ({ item }) => {
@@ -202,29 +186,21 @@ export default function FollowingScreen() {
               layout={streamListLayout}
             />
           );
-        case 'offlineHeader':
+        case 'header':
           return (
-            <View style={styles.offlineHeaderRow}>
-              <Text
-                type='xs'
-                weight='semibold'
-                color='gray.textLow'
-                style={styles.offlineHeaderTitle}
-              >
-                Offline channels
-              </Text>
-            </View>
+            <SectionHeader title={item.title} detail={String(item.count)} />
+          );
+        case 'noneLive':
+          return (
+            <Text type='subhead' color='gray.textLow' style={styles.noneLive}>
+              Nobody you follow is live right now.
+            </Text>
           );
         case 'offlineChannel':
           return <MemoizedOfflineChannelRow channel={item.channel} />;
       }
     },
     [streamListLayout],
-  );
-
-  const stickyHeaderIndices = useMemo(
-    () => (offlineChannels.length > 0 ? [streamsArray.length] : undefined),
-    [offlineChannels.length, streamsArray.length],
   );
 
   const listContentStyle = useMemo(
@@ -238,7 +214,7 @@ export default function FollowingScreen() {
   if (!authState?.isLoggedIn) {
     return (
       <EmptyState
-        button='Sign In'
+        button='Sign in'
         buttonOnPress={() => router.push('/auth-sheet')}
         content='Connect your Twitch account to see streams from channels you follow.'
         heading='Your followed streams'
@@ -252,13 +228,12 @@ export default function FollowingScreen() {
     isLoading || (isFetching && streamsArray.length === 0);
 
   if (showLoadingSkeleton) {
-    return <FollowingSkeleton showHeader streamListLayout={streamListLayout} />;
+    return <FollowingSkeleton streamListLayout={streamListLayout} />;
   }
 
   if (!user?.id) {
     return (
       <EmptyState
-        button={null}
         content='Log in to see streams from channels you follow.'
         heading='Your followed streams'
         iconName='person.2'
@@ -270,7 +245,7 @@ export default function FollowingScreen() {
   if (isFetched && isError) {
     return (
       <EmptyState
-        button='Refresh'
+        button='Try again'
         buttonOnPress={() => void handleRefreshFollowing()}
         content='Twitch did not return your followed streams.'
         heading="Couldn't load following"
@@ -313,8 +288,6 @@ export default function FollowingScreen() {
         contentInsetAdjustmentBehavior='automatic'
         drawDistance={500}
         getItemType={getFollowingItemType}
-        ListHeaderComponent={followingListHeader}
-        stickyHeaderIndices={stickyHeaderIndices}
         contentContainerStyle={listContentStyle}
         renderItem={renderItem}
         refreshing={isRefreshing}
@@ -330,40 +303,14 @@ const styles = StyleSheet.create({
     flex: 1,
     overflow: 'hidden',
   },
-  header: {
-    borderBottomColor: theme.color.border.dark,
-    borderBottomWidth: 1,
-    marginBottom: theme.space12,
-    marginHorizontal: theme.space16,
-    minHeight: theme.space12,
-  },
-  headerEyebrow: {
-    backgroundColor: theme.colorPrimary,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    height: 6,
-    marginBottom: theme.space20,
-    opacity: 0.85,
-    width: 56,
-  },
   listContent: {
     paddingBottom: theme.space20,
   },
-  offlineHeaderRow: {
-    backgroundColor: theme.color.background.dark,
+  noneLive: {
     paddingBottom: theme.space8,
     paddingHorizontal: theme.space16,
-    paddingTop: theme.space20,
-  },
-  offlineHeaderTitle: {
-    letterSpacing: 1,
-    textTransform: 'uppercase',
   },
   stateContainer: {
-    alignItems: 'center',
     backgroundColor: theme.color.background.dark,
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: theme.space20,
   },
 });

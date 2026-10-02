@@ -485,7 +485,9 @@ export const twitchService = {
       },
     });
 
-    return result.data[0];
+    // An offline channel has no stream. React Query rejects `undefined` data
+    // as an error, so offline is `null`.
+    return result.data[0] ?? null;
   },
 
   getChannel: async (userId: string): Promise<Channel> => {
@@ -624,14 +626,16 @@ export const twitchService = {
     });
   },
 
-  getCategory: async (id: string): Promise<Category> => {
+  getCategory: async (id: string): Promise<Category | null> => {
     const result = await twitchApi.get<{ data: Category[] }>('/games', {
       params: {
         id,
       },
     });
-    // SAFETY: Helix /games returns one entry for a single id
-    return result.data[0] as Category;
+
+    // An unknown id returns no entry. React Query rejects `undefined` data
+    // as an error, so not found is `null`.
+    return result.data[0] ?? null;
   },
 
   searchCategories: async (query: string, cursor?: string) => {

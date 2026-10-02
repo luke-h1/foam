@@ -13,10 +13,22 @@ import {
 } from '@app/components/bottom-sheet/bottom-sheet';
 import { Button } from '@app/components/button/button';
 import { ChatDebugSection } from '@app/components/chat/components/chat-debug-section';
+import { MessageTokenLine } from '@app/components/chat/components/message-token-line/message-token-line';
+import { SheetHeader } from '@app/components/chat/components/sheet/sheet-header';
+import {
+  type SheetAction,
+  SheetActionGroup,
+} from '@app/components/chat/components/sheet-action-group';
 import type {
   ChatModerationAccessFlags,
   UserActionVisibilityFlags,
 } from '@app/components/chat/types/chat-ui-flags';
+import {
+  banUserAction,
+  blockUserAction,
+  timeoutUserAction,
+} from '@app/components/chat/util/user-sheet-actions';
+import { SettingsSection } from '@app/components/settings-section/settings-section';
 import { SymbolView, type SymbolViewProps } from '@app/components/ui/icon/icon';
 import { Text } from '@app/components/ui/text/text';
 import {
@@ -26,6 +38,8 @@ import {
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import { theme } from '@app/styles/themes';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-chat-username';
+import { getChatMessageStoreId } from '@app/utils/chat/message-identity/get-chat-message-store-id';
+import type { MessageToken } from '@app/utils/chat/message-token';
 import { replaceEmotesWithText } from '@app/utils/chat/replace-emotes-with-text';
 
 import { UserCardHeader } from './user-card-header';
@@ -49,34 +63,6 @@ interface UserActionSheetProps {
   username: string;
 }
 
-type UserActionItem = {
-  icon: SymbolViewProps['name'];
-  label: string;
-  onPress?: () => void;
-  subtitle: string;
-  tone?: 'accent' | 'danger' | 'default' | 'warning';
-};
-
-type UserActionTone = UserActionItem['tone'];
-
-function getUserActionTintColor(tone: UserActionTone) {
-  switch (tone) {
-    case 'danger':
-      return theme.colorRed;
-    case 'warning':
-      return theme.colorAmber;
-    case 'accent':
-      return theme.colorPrimary;
-    case 'default':
-    case undefined:
-      return theme.color.textSecondary.dark;
-    default: {
-      const unreachable: never = tone;
-      return unreachable;
-    }
-  }
-}
-
 const MAX_RECENT_USER_MESSAGES = 5;
 
 function getRecentUserMessages(login?: string, username?: string) {
@@ -89,8 +75,11 @@ function getRecentUserMessages(login?: string, username?: string) {
 
   const messages = chatStore$.messages.peek();
 
-  const recentMessages: { key: string; text: string; timestamp?: string }[] =
-    [];
+  const recentMessages: {
+    key: string;
+    tokens: MessageToken[];
+    timestamp?: string;
+  }[] = [];
 
   for (let index = messages.length - 1; index >= 0; index -= 1) {
     const message = messages[index];
@@ -107,15 +96,15 @@ function getRecentUserMessages(login?: string, username?: string) {
       continue;
     }
 
-    const text = replaceEmotesWithText(message.message).trim();
-
-    if (!text) {
+    // The text check only filters out empty messages; the row renders the
+    // tokens so emotes show as images.
+    if (!replaceEmotesWithText(message.message).trim()) {
       continue;
     }
 
     recentMessages.push({
-      key: message.id ?? `${message.message_id}_${message.message_nonce}`,
-      text,
+      key: getChatMessageStoreId(message),
+      tokens: message.message,
       timestamp: message.timestamp,
     });
 
@@ -128,113 +117,107 @@ function getRecentUserMessages(login?: string, username?: string) {
 }
 
 /**
- * The rows a user sheet shows, in order. Report, block and the moderation
- * actions only appear when the caller supplied a handler for them.
+ * Report and block, shown only when the caller supplied a handler.
  */
-function buildUserActionRows({
-  canModerateChat,
-  canModerateUser,
-  isHidden,
-  isHighlighted,
-  onBanUser,
+function buildSafetyActions({
   onBlockUser,
-  onCopyUsername,
-  onHideUser,
-  onHighlightUser,
-  onMentionUser,
   onReportUser,
+}: Pick<UserActionSheetProps, 'onBlockUser' | 'onReportUser'>): SheetAction[] {
+  return [
+    ...(onReportUser
+      ? [{ icon: 'flag' as const, label: 'Report user', onPress: onReportUser }]
+      : []),
+    ...(onBlockUser ? [blockUserAction(onBlockUser)] : []),
+  ];
+}
+
+interface BuildModerationActionsOptions {
+  canModerate: boolean;
+  onBanUser?: () => void;
+  onTimeoutUser?: () => void;
+  onWarnUser?: () => void;
+}
+
+function buildModerationActions({
+  canModerate,
+  onBanUser,
   onTimeoutUser,
   onWarnUser,
-}: UserActionSheetProps['moderation'] & {
-  isHidden: boolean;
-  isHighlighted: boolean;
-} & Pick<
-    UserActionSheetProps,
-    | 'onBanUser'
-    | 'onBlockUser'
-    | 'onCopyUsername'
-    | 'onHideUser'
-    | 'onHighlightUser'
-    | 'onMentionUser'
-    | 'onReportUser'
-    | 'onTimeoutUser'
-    | 'onWarnUser'
-  >): UserActionItem[] {
+}: BuildModerationActionsOptions): SheetAction[] {
+  if (!canModerate) {
+    return [];
+  }
+
   return [
     {
-      icon: 'at',
-      label: 'Mention',
-      onPress: () => onMentionUser(),
-      subtitle: 'Add to composer',
-      tone: 'accent',
+      icon: 'exclamationmark.triangle',
+      label: 'Warn user',
+      onPress: () => onWarnUser?.(),
     },
-    {
-      icon: 'doc.on.doc',
-      label: 'Copy Username',
-      onPress: () => onCopyUsername(),
-      subtitle: 'Display name',
-    },
-    {
-      icon: 'person.crop.circle.badge.xmark',
-      label: isHidden ? 'Unhide User' : 'Hide User',
-      onPress: () => onHideUser(),
-      subtitle: isHidden ? 'Show messages again' : 'Mute locally',
-    },
-    {
-      icon: 'star',
-      label: isHighlighted ? 'Unhighlight User' : 'Highlight User',
-      onPress: () => onHighlightUser(),
-      subtitle: isHighlighted ? 'Remove marker' : 'Mark future messages',
-      tone: 'accent',
-    },
-    ...(onReportUser
-      ? [
-          {
-            icon: 'flag' as const,
-            label: 'Report User',
-            onPress: () => onReportUser(),
-            subtitle: 'Open the Twitch report form',
-            tone: 'warning' as const,
-          },
-        ]
-      : []),
-    ...(onBlockUser
-      ? [
-          {
-            icon: 'nosign' as const,
-            label: 'Block User',
-            onPress: () => onBlockUser(),
-            subtitle: 'Block on Twitch',
-            tone: 'danger' as const,
-          },
-        ]
-      : []),
-    ...(canModerateChat && canModerateUser
-      ? [
-          {
-            icon: 'exclamationmark.triangle' as const,
-            label: 'Warn User',
-            onPress: () => onWarnUser?.(),
-            subtitle: 'Send an official chat warning',
-            tone: 'warning' as const,
-          },
-          {
-            icon: 'clock' as const,
-            label: 'Timeout…',
-            onPress: () => onTimeoutUser?.(),
-            subtitle: 'Temporary moderation',
-            tone: 'warning' as const,
-          },
-          {
-            icon: 'slash.circle' as const,
-            label: 'Ban User',
-            onPress: () => onBanUser?.(),
-            subtitle: 'Permanent moderation',
-            tone: 'danger' as const,
-          },
-        ]
-      : []),
+    timeoutUserAction(() => onTimeoutUser?.()),
+    banUserAction(() => onBanUser?.()),
   ];
+}
+
+interface QuickAction {
+  /**
+   * Stable across renders. The icon and label of a toggle change when it
+   * flips, and a key built from them would remount the button.
+   */
+  id: string;
+  icon: SymbolViewProps['name'];
+  label: string;
+  onPress: () => void;
+  /**
+   * Marks a toggle that is on. The label also changes, so the state never
+   * relies on colour alone.
+   */
+  active?: boolean;
+}
+
+/**
+ * The row of round shortcuts below the header, for the actions people reach
+ * for most.
+ */
+function QuickActions({ actions }: { actions: QuickAction[] }) {
+  return (
+    <View style={styles.quickActions}>
+      {actions.map(action => (
+        <Button
+          key={action.id}
+          label={action.label}
+          haptic='selection'
+          accessibilityState={{ selected: Boolean(action.active) }}
+          onPress={action.onPress}
+          style={styles.quickAction}
+        >
+          <View
+            style={[
+              styles.quickActionCircle,
+              action.active ? styles.quickActionCircleActive : null,
+            ]}
+          >
+            <SymbolView
+              name={action.icon}
+              size={20}
+              weight='medium'
+              tintColor={
+                action.active ? theme.colorWhite : theme.color.text.dark
+              }
+            />
+          </View>
+          <Text
+            type='caption'
+            color='gray.textLow'
+            align='center'
+            numberOfLines={1}
+          >
+            {action.label}
+          </Text>
+        </Button>
+      ))}
+    </View>
+  );
 }
 
 function UserActionSheetComponent({
@@ -275,50 +258,76 @@ function UserActionSheetComponent({
     [login, username, visible],
   );
 
-  const actionRows = buildUserActionRows({
-    canModerateChat,
-    canModerateUser,
-    isHidden,
-    isHighlighted,
-    onBanUser,
-    onBlockUser,
-    onCopyUsername,
-    onHideUser,
-    onHighlightUser,
-    onMentionUser,
-    onReportUser,
-    onTimeoutUser,
-    onWarnUser,
+  const withClose = (action: SheetAction): SheetAction => ({
+    ...action,
+    onPress: () => runAndClose(action.onPress),
   });
 
-  const { height: windowHeight } = useWindowDimensions();
-
-  const recentMessagesHeight =
-    recentMessages.length > 0 ? 40 + recentMessages.length * 22 : 0;
-
-  const maxScrollHeight = Math.min(
-    Math.round(windowHeight * 0.54),
-    actionRows.length * 58 + recentMessagesHeight + 2,
-  );
-
-  const sheetHeight = Math.min(
-    Math.round(windowHeight * 0.72),
-    196 +
-      actionRows.length * 58 +
-      recentMessagesHeight +
-      (isHidden || isHighlighted ? 34 : 0),
-  );
-
-  const snapPoints: SnapPoint[] = [{ height: sheetHeight }, 'full'];
-
-  const wrapperStyle = [
-    styles.wrapper,
+  const actionSections = [
     {
-      maxHeight: sheetHeight - theme.space16,
+      key: 'safety',
+      actions: buildSafetyActions({ onBlockUser, onReportUser }),
+    },
+    {
+      key: 'moderation',
+      title: 'Moderation',
+      actions: buildModerationActions({
+        canModerate: Boolean(canModerateChat && canModerateUser),
+        onBanUser,
+        onTimeoutUser,
+        onWarnUser,
+      }),
+    },
+  ].filter(section => section.actions.length > 0);
+
+  const quickActions: QuickAction[] = [
+    {
+      id: 'mention',
+      icon: 'at',
+      label: 'Mention',
+      onPress: () => runAndClose(onMentionUser),
+    },
+    {
+      id: 'copy-name',
+      icon: 'doc.on.doc',
+      label: 'Copy name',
+      onPress: () => runAndClose(onCopyUsername),
+    },
+    {
+      id: 'highlight',
+      icon: isHighlighted ? 'star.fill' : 'star',
+      label: isHighlighted ? 'Highlighted' : 'Highlight',
+      active: isHighlighted,
+      onPress: () => runAndClose(onHighlightUser),
+    },
+    {
+      id: 'hide',
+      icon: 'eye.slash',
+      label: isHidden ? 'Hidden' : 'Hide',
+      active: isHidden,
+      onPress: () => runAndClose(onHideUser),
     },
   ];
 
-  const scrollStyle = [styles.scroll, { maxHeight: maxScrollHeight }];
+  const { height: windowHeight } = useWindowDimensions();
+
+  const rowCount = actionSections.reduce(
+    (count, section) => count + section.actions.length,
+    0,
+  );
+
+  const sectionCount = actionSections.length;
+
+  const recentMessagesHeight =
+    recentMessages.length > 0 ? 64 + recentMessages.length * 30 : 0;
+
+  // Header, quick actions and padding, then each row and section on top.
+  const sheetHeight = Math.min(
+    Math.round(windowHeight * 0.72),
+    232 + recentMessagesHeight + rowCount * 57 + sectionCount * 50,
+  );
+
+  const snapPoints: SnapPoint[] = [{ height: sheetHeight }, 'full'];
 
   return (
     <BottomSheet
@@ -330,117 +339,68 @@ function UserActionSheetComponent({
       snapPoints={snapPoints}
       testID='user-action-sheet'
     >
-      <View style={wrapperStyle}>
-        <View style={styles.header}>
-          <View style={styles.identity}>
-            <UserCardHeader
-              fallbackColor={color}
-              login={login}
-              userId={userId}
-              username={username}
-            />
-          </View>
-          <Button label='Done' style={styles.doneButton} onPress={requestClose}>
-            <SymbolView
-              name='xmark'
-              size={15}
-              weight='semibold'
-              tintColor={theme.color.textSecondary.dark}
-            />
-          </Button>
-        </View>
-        {isHidden || isHighlighted ? (
-          <View style={styles.statePills}>
-            {isHidden ? (
-              <View style={styles.statePill}>
-                <Text style={styles.statePillText} weight='semibold'>
-                  Hidden
-                </Text>
-              </View>
-            ) : null}
-            {isHighlighted ? (
-              <View style={[styles.statePill, styles.statePillAccent]}>
-                <Text style={styles.statePillAccentText} weight='semibold'>
-                  Highlighted
-                </Text>
-              </View>
-            ) : null}
-          </View>
-        ) : null}
+      <View
+        style={[styles.wrapper, { maxHeight: sheetHeight - theme.space16 }]}
+      >
+        <SheetHeader onClose={requestClose}>
+          <UserCardHeader
+            fallbackColor={color}
+            login={login}
+            userId={userId}
+            username={username}
+          />
+        </SheetHeader>
+
+        <QuickActions actions={quickActions} />
 
         <ScrollView
           nestedScrollEnabled
-          style={scrollStyle}
+          style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           {recentMessages.length > 0 ? (
-            <View style={styles.recentMessages}>
-              <Text style={styles.recentMessagesTitle} weight='semibold'>
-                Recent messages
-              </Text>
-              {recentMessages.map(message => (
-                <Text
-                  key={message.key}
-                  numberOfLines={1}
-                  style={styles.recentMessageText}
-                >
-                  {message.timestamp ? (
-                    <Text style={styles.recentMessageTimestamp}>
-                      {`${message.timestamp}  `}
-                    </Text>
-                  ) : null}
-                  {message.text}
-                </Text>
-              ))}
-            </View>
-          ) : null}
-          <View style={styles.actionGroup}>
-            {actionRows.map((action, index) => (
-              <Button
-                key={action.label}
-                style={[
-                  styles.actionButton,
-                  index < actionRows.length - 1 && styles.actionButtonBorder,
-                ]}
-                onPress={() => runAndClose(action.onPress)}
-              >
-                <View
-                  style={[
-                    styles.actionIconFrame,
-                    action.tone === 'accent' && styles.actionIconAccent,
-                    action.tone === 'warning' && styles.actionIconWarning,
-                    action.tone === 'danger' && styles.actionIconDanger,
-                  ]}
-                >
-                  <SymbolView
-                    name={action.icon}
-                    size={18}
-                    tintColor={getUserActionTintColor(action.tone)}
-                  />
-                </View>
-                <View style={styles.actionCopy}>
-                  <Text
-                    weight='semibold'
-                    style={[
-                      styles.actionText,
-                      action.tone === 'danger' && styles.actionTextDanger,
-                    ]}
+            <SettingsSection
+              title='Recent messages'
+              cardColor={theme.color.surfaceElevated.dark}
+            >
+              <View style={styles.recentMessages}>
+                {recentMessages.map(message => (
+                  <MessageTokenLine
+                    key={message.key}
+                    tokens={message.tokens}
+                    emoteSize={22}
+                    textStyle={styles.recentMessageText}
+                    style={styles.recentMessage}
                   >
-                    {action.label}
-                  </Text>
-                  <Text style={styles.actionSubtitle}>{action.subtitle}</Text>
-                </View>
-              </Button>
-            ))}
-          </View>
+                    {message.timestamp ? (
+                      <Text
+                        family='brand'
+                        style={styles.recentMessageTimestamp}
+                      >
+                        {`${message.timestamp}  `}
+                      </Text>
+                    ) : null}
+                  </MessageTokenLine>
+                ))}
+              </View>
+            </SettingsSection>
+          ) : null}
+
+          {/* eslint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- at most two fixed groups of rows, not a data list */}
+          {actionSections.map(section => (
+            <SheetActionGroup
+              key={section.key}
+              title={section.title}
+              actions={section.actions.map(withClose)}
+            />
+          ))}
 
           <ChatDebugSection
             build={() => ({
               payload: getChatDebugUserSnapshot(login, username, userId),
               ircLines: getChatDebugIrcLinesForLogin(login || username),
             })}
-            style={styles.debugSection}
           />
         </ScrollView>
       </View>
@@ -451,143 +411,61 @@ function UserActionSheetComponent({
 export const UserActionSheet = memo(UserActionSheetComponent);
 
 const styles = StyleSheet.create({
-  actionButton: {
+  quickAction: {
     alignItems: 'center',
-    backgroundColor: 'transparent',
-    flexDirection: 'row',
-    gap: theme.space12,
-    minHeight: 56,
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space8,
-  },
-  actionButtonBorder: {
-    borderBottomColor: 'rgba(255,255,255,0.1)',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  actionCopy: {
     flex: 1,
-    gap: 1,
+    gap: 6,
   },
-  actionGroup: {
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
-    overflow: 'hidden',
-  },
-  actionIconAccent: {
-    backgroundColor: 'rgba(46,134,255,0.16)',
-  },
-  actionIconDanger: {
-    backgroundColor: theme.colorRedSurface,
-  },
-  actionIconFrame: {
+  quickActionCircle: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.09)',
-    borderCurve: 'continuous',
-    borderRadius: 8,
-    height: 30,
+    backgroundColor: theme.color.surfaceElevated.dark,
+    borderRadius: theme.radius.full,
+    height: 50,
     justifyContent: 'center',
-    width: 30,
+    width: 50,
   },
-  actionIconWarning: {
-    backgroundColor: 'rgba(224,163,58,0.16)',
+  quickActionCircleActive: {
+    backgroundColor: theme.color.accent.dark,
   },
-  actionSubtitle: {
-    color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize12,
-    lineHeight: theme.fontSize12 * 1.3,
-  },
-  actionText: {
-    color: theme.color.text.dark,
-    fontSize: theme.fontSize17,
-    lineHeight: theme.fontSize17 * 1.2,
-  },
-  actionTextDanger: {
-    color: theme.colorRed,
-  },
-  debugSection: {
-    marginTop: theme.space8,
-  },
-  doneButton: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.14)',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    height: 30,
-    justifyContent: 'center',
-    width: 30,
-  },
-  header: {
-    alignItems: 'flex-start',
+  quickActions: {
     flexDirection: 'row',
-    gap: theme.space12,
-    justifyContent: 'space-between',
-    paddingBottom: theme.space4,
-  },
-  identity: {
-    flex: 1,
-  },
-  wrapper: {
-    alignSelf: 'stretch',
-    gap: 10,
-    paddingHorizontal: theme.space12,
-    paddingTop: theme.space8,
-    width: '100%',
+    gap: theme.space8,
   },
   recentMessages: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
     gap: 4,
-    marginBottom: theme.space8,
-    paddingHorizontal: theme.space12,
-    paddingVertical: theme.space8,
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space12,
   },
-  recentMessagesTitle: {
-    color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize11,
-    letterSpacing: 0.2,
-    textTransform: 'uppercase',
+  /**
+   * Two lines at most, so one long message cannot push the actions away.
+   */
+  recentMessage: {
+    maxHeight: 48,
+    overflow: 'hidden',
   },
   recentMessageText: {
     color: theme.color.text.dark,
-    fontSize: theme.fontSize12,
-    lineHeight: 18,
+    fontSize: theme.fontSize14,
+    lineHeight: 24,
   },
   recentMessageTimestamp: {
     color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize11,
+    fontSize: theme.fontSize12,
   },
   scroll: {
     flexGrow: 0,
   },
+  /**
+   * No gap: each `SettingsSection` carries its own bottom margin.
+   */
   scrollContent: {
     paddingBottom: theme.space16,
   },
-  statePill: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: theme.space4,
-  },
-  statePillAccent: {
-    backgroundColor: 'rgba(46,134,255,0.16)',
-    borderColor: 'rgba(46,134,255,0.34)',
-  },
-  statePillAccentText: {
-    color: theme.colorPrimary,
-    fontSize: theme.fontSize11,
-  },
-  statePills: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.space8,
-  },
-  statePillText: {
-    color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize11,
+  wrapper: {
+    alignSelf: 'stretch',
+    gap: theme.space20,
+    paddingHorizontal: theme.space16,
+    paddingTop: theme.space12,
+    width: '100%',
   },
 });

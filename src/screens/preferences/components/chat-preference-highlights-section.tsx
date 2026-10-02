@@ -6,7 +6,6 @@ import {
   SettingsToggleRow,
 } from '@app/components/settings-section/settings-section';
 import { Text } from '@app/components/ui/text/text';
-import { theme } from '@app/styles/themes';
 
 export function ChatPreferenceHighlightsSection({
   chatMentionHaptics,
@@ -19,7 +18,7 @@ export function ChatPreferenceHighlightsSection({
     <SettingsSection
       title='Highlights'
       footer={
-        <Text color='gray.textLow' type='xs'>
+        <Text color='gray.textLow' type='subhead'>
           Highlighted phrases tint matching messages. Mention feedback also
           buzzes when a highlight matches.
         </Text>
@@ -31,7 +30,6 @@ export function ChatPreferenceHighlightsSection({
         icon={{
           icon: 'highlighter',
           androidIcon: 'edit',
-          color: theme.colorGrey,
         }}
         onPress={() => router.push('/tabs/settings/chat-highlights')}
       />
@@ -41,7 +39,6 @@ export function ChatPreferenceHighlightsSection({
         icon={{
           icon: 'hand.tap',
           androidIcon: 'touch_app',
-          color: theme.colorGrey,
         }}
         value={chatMentionHaptics !== false}
         onValueChange={onChatMentionHapticsChange}

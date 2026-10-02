@@ -244,22 +244,6 @@ export function useSearchController() {
     });
   }, []);
 
-  const handleQuickActionPress = useCallback(
-    (actionQuery: string) => {
-      searchBarRef.current?.setText(actionQuery);
-
-      setState(state => ({
-        ...state,
-        query: actionQuery,
-        selectedFilter: 'categories',
-        status: 'searching',
-      }));
-
-      void handleQuerySearch(actionQuery);
-    },
-    [handleQuerySearch],
-  );
-
   const activeResults =
     selectedFilter === 'channels' ? searchResults : categoryResults;
 
@@ -269,7 +253,6 @@ export function useSearchController() {
     handleClearSearch,
     handleFilterChange,
     handleQuerySearch,
-    handleQuickActionPress,
     handleRefresh,
     handleSearchHistoryClearAll,
     handleSearchHistoryClearItem,

@@ -58,7 +58,9 @@ export const ChatViewControls = memo(
                 size={14}
                 tintColor={theme.colorGreyHoverAlpha}
               />
-              <Text style={styles.filterChipText}>Mentions</Text>
+              <Text type='callout' family='brand' style={styles.filterChipText}>
+                Mentions
+              </Text>
             </Button>
 
             <Button
@@ -72,7 +74,9 @@ export const ChatViewControls = memo(
                 size={14}
                 tintColor={theme.colorGreyHoverAlpha}
               />
-              <Text style={styles.filterChipText}>Clear</Text>
+              <Text type='callout' family='brand' style={styles.filterChipText}>
+                Clear
+              </Text>
             </Button>
           </View>
         </View>
@@ -87,7 +91,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.color.background.darkAlt,
     borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
+    borderRadius: theme.radius.lg,
     borderWidth: 1,
     flexDirection: 'row',
     gap: theme.space8,

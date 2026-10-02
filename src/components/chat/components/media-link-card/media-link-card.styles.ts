@@ -45,7 +45,7 @@ export const styles = StyleSheet.create({
   },
   mediaMetaSkeleton: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius6,
+    borderRadius: theme.radius.sm,
     height: 10,
     width: '48%',
   },
@@ -76,7 +76,7 @@ export const styles = StyleSheet.create({
   },
   mediaTitleSkeleton: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius6,
+    borderRadius: theme.radius.sm,
     height: 13,
     width: '82%',
   },

@@ -28,7 +28,7 @@ export function SettingsSection({
     <View style={styles.section}>
       {title ? (
         <Text
-          type='xs'
+          type='footnote'
           weight='semibold'
           color='gray.textLow'
           style={styles.sectionTitle}
@@ -62,6 +62,12 @@ interface SettingsRowProps {
   trailing?: ReactNode;
   onPress?: () => void;
   danger?: boolean;
+  disabled?: boolean;
+  /**
+   * A pressable row shows a chevron unless this is false. Action rows that
+   * run in place, rather than open a screen, turn it off.
+   */
+  chevron?: boolean;
 }
 
 export function SettingsRow({
@@ -71,38 +77,32 @@ export function SettingsRow({
   trailing,
   onPress,
   danger,
+  disabled,
+  chevron = true,
 }: SettingsRowProps) {
   const content = (
-    <View style={styles.row}>
+    <View style={[styles.row, disabled ? styles.disabled : null]}>
       {icon ? (
-        <View
-          style={[
-            styles.iconWrap,
-            danger ? styles.iconWrapDanger : null,
-            icon.color ? { backgroundColor: `${icon.color}20` } : null,
-          ]}
-        >
+        <View style={[styles.iconWrap, danger ? styles.iconWrapDanger : null]}>
           <SymbolView
             name={resolveIconName(icon.icon, icon.androidIcon)}
             size={20}
-            tintColor={icon.color || theme.colorPrimary}
+            tintColor={danger ? theme.colorRed : theme.color.textSecondary.dark}
           />
         </View>
       ) : null}
 
       <View style={styles.copy}>
-        <Text weight='semibold' color={danger ? 'red' : 'gray'}>
-          {title}
-        </Text>
+        <Text color={danger ? 'red' : 'gray'}>{title}</Text>
         {subtitle ? (
-          <Text type='xs' color='gray.textLow'>
+          <Text type='subhead' color='gray.textLow'>
             {subtitle}
           </Text>
         ) : null}
       </View>
 
       {trailing ??
-        (onPress ? (
+        (onPress && chevron ? (
           <SymbolView
             name='chevron.right'
             size={18}
@@ -120,6 +120,8 @@ export function SettingsRow({
     <PressableArea
       accessibilityLabel={title}
       accessibilityRole='button'
+      accessibilityState={disabled ? { disabled } : undefined}
+      disabled={disabled}
       onPress={onPress}
     >
       {content}
@@ -169,7 +171,7 @@ export function SettingsLinkRow(props: {
       trailing={
         <View style={styles.linkTrailing}>
           {value ? (
-            <Text type='sm' color='gray.textLow' weight='semibold'>
+            <Text type='body' color='gray.textLow'>
               {value}
             </Text>
           ) : null}
@@ -190,13 +192,16 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: theme.color.backgroundSecondary.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius18,
+    borderRadius: theme.radius.lg,
     overflow: 'hidden',
   },
   copy: {
     flex: 1,
     gap: theme.space8,
     minWidth: 0,
+  },
+  disabled: {
+    opacity: 0.4,
   },
   footer: {
     marginTop: theme.space8,
@@ -205,7 +210,7 @@ const styles = StyleSheet.create({
   iconWrap: {
     alignItems: 'center',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius6,
+    borderRadius: theme.radius.sm,
     height: 24,
     justifyContent: 'center',
     width: 24,

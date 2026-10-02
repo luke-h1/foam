@@ -1,8 +1,8 @@
 import { memo, type ReactNode } from 'react';
 import type { StyleProp, TextStyle } from 'react-native';
 
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { getChatColorStyle } from '@app/components/chat/util/chat-color-styles';
-import { Text } from '@app/components/ui/text/text';
 import type { InlineFlowToken } from '@app/utils/chat/derive-chat-body/types';
 import { getMessageTokenText } from '@app/utils/chat/message-token-content';
 
@@ -84,12 +84,12 @@ function renderInlineToken(
 
   if (token.type === 'link') {
     return (
-      <Text
+      <ChatText
         key={getTokenKey(token, index)}
         style={[chatTextStyles.link, emoteLineStyle]}
       >
         {content}
-      </Text>
+      </ChatText>
     );
   }
 
@@ -140,14 +140,23 @@ function InlineTokensComponent(props: InlineTokensProps) {
       return;
     }
 
+    // A whitespace-only run, such as the gap between two emotes, needs no Text
+    // of its own. As a bare string it takes the font and size of the parent.
+    if (pendingText.trim() === '') {
+      spans.push(pendingText);
+      pendingText = null;
+      pendingTextKey = null;
+      return;
+    }
+
     spans.push(
-      <Text
+      <ChatText
         key={pendingTextKey}
         color='gray.text'
         style={[baseTextStyle, textColorStyle]}
       >
         {pendingText}
-      </Text>,
+      </ChatText>,
     );
 
     pendingText = null;

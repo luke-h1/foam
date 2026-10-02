@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.color.background.darkAlt,
     borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.radius.md,
     borderWidth: 1,
     flexDirection: 'row',
     gap: theme.space8,

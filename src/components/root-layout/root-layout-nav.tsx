@@ -69,9 +69,9 @@ export function RootLayoutNav() {
               presentation: 'formSheet',
               sheetGrabberVisible: true,
               sheetAllowedDetents: 'fitToContents',
-              sheetCornerRadius: theme.borderRadius28,
+              sheetCornerRadius: theme.radius.xl,
               contentStyle: {
-                backgroundColor: theme.color.background.dark,
+                backgroundColor: theme.color.surface.dark,
               },
             }}
           />
@@ -81,9 +81,9 @@ export function RootLayoutNav() {
               presentation: 'formSheet',
               sheetGrabberVisible: true,
               sheetAllowedDetents: [0.85],
-              sheetCornerRadius: theme.borderRadius28,
+              sheetCornerRadius: theme.radius.xl,
               contentStyle: {
-                backgroundColor: theme.color.background.dark,
+                backgroundColor: theme.color.surface.dark,
               },
             }}
           />

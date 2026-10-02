@@ -71,7 +71,11 @@ export const CHAT_SURFACE_COLORS = {
   alternatingRow: 'rgba(255, 255, 255, 0.03)',
   muted: theme.color.notice.muted,
   pressed: 'rgba(153, 153, 153, 0.24)',
-  radius: theme.borderRadius4,
+  /**
+   * Chat owns this corner rather than taking `theme.radius.sm`: an 18pt badge
+   * with a 6pt corner starts to read as a pill.
+   */
+  radius: 4,
   strike: theme.color.notice.muted,
 } as const;
 

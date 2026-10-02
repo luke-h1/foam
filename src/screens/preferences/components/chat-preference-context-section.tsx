@@ -41,7 +41,6 @@ export function ChatPreferenceContextSection({
         icon={{
           icon: 'clock.arrow.circlepath',
           androidIcon: 'history',
-          color: theme.colorGrey,
         }}
         value={showRecentMessages !== false}
         onValueChange={onShowRecentMessagesChange}
@@ -60,7 +59,6 @@ export function ChatPreferenceContextSection({
         icon={{
           icon: 'clock.badge',
           androidIcon: 'schedule',
-          color: theme.colorGrey,
         }}
         onSelectIndex={handleTimestampFormatChange}
         selectedIndex={timestampFormatIndex}

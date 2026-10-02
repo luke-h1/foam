@@ -1,7 +1,7 @@
 import { type StyleProp, StyleSheet, TextStyle, View } from 'react-native';
 
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { useChatScrollActive } from '@app/components/chat/hooks/use-chat-scroll-active';
-import { Text } from '@app/components/ui/text/text';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
 import { chatLineMetrics } from '../util/chat-scale';
@@ -64,7 +64,7 @@ export function PaintedUsernameHostedLayers({
 
   if (showPlainColor) {
     return (
-      <Text
+      <ChatText
         style={[
           styles.scrollUsername,
           usernameTextStyle,
@@ -73,7 +73,7 @@ export function PaintedUsernameHostedLayers({
         ]}
       >
         {displayUsername}
-      </Text>
+      </ChatText>
     );
   }
 

@@ -1,14 +1,18 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { ListRenderItem } from '@shopify/flash-list';
 
-import { BottomSheet } from '@app/components/bottom-sheet/bottom-sheet';
-import { Button } from '@app/components/button/button';
+import {
+  BottomSheet,
+  type BottomSheetHandle,
+} from '@app/components/bottom-sheet/bottom-sheet';
+import { SheetHeader } from '@app/components/chat/components/sheet/sheet-header';
 import { CHAT_SETTINGS_SHEET_DETENT } from '@app/components/chat/util/chat-sheet-layout';
 import { chatSheetSurface } from '@app/components/chat/util/chat-sheet-surface';
 import { FlashList } from '@app/components/flash-list/flash-list';
+import { PressableArea } from '@app/components/pressable-area/pressable-area';
 import { SymbolView } from '@app/components/ui/icon/icon';
 import { Input } from '@app/components/ui/input/input';
 import { Text } from '@app/components/ui/text/text';
@@ -114,6 +118,7 @@ const ChattersSheetComponent = ({
   onSelectChatter,
 }: ChattersSheetProps) => {
   const [query, setQuery] = useState('');
+  const sheetRef = useRef<BottomSheetHandle>(null);
   const { bottom: bottomInset } = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const sheetHeight = Math.round(windowHeight * CHAT_SETTINGS_SHEET_DETENT);
@@ -136,31 +141,36 @@ const ChattersSheetComponent = ({
     ({ item }) => {
       if (item.type === 'header') {
         return (
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionHeaderText} weight='semibold'>
-              {item.label}
-            </Text>
-            <Text style={styles.sectionHeaderCount} weight='semibold'>
-              {item.count}
-            </Text>
-          </View>
+          <Text
+            type='footnote'
+            weight='semibold'
+            color='gray.textLow'
+            tabular
+            style={styles.sectionHeader}
+          >
+            {`${item.label} · ${item.count}`}
+          </Text>
         );
       }
 
       return (
-        <Button
-          label={item.chatter.login}
-          style={styles.chatterRow}
+        <PressableArea
+          feedback='highlight'
+          accessibilityLabel={item.chatter.login}
           onPress={() => onSelectChatter(toUsernamePressData(item.chatter))}
         >
-          <Text
-            numberOfLines={1}
-            style={[styles.chatterName, { color: item.chatter.color }]}
-            weight='semibold'
-          >
-            {item.chatter.login}
-          </Text>
-        </Button>
+          <View style={styles.chatterRow}>
+            <Text
+              type='callout'
+              family='brand'
+              numberOfLines={1}
+              style={[styles.chatterName, { color: item.chatter.color }]}
+              weight='semibold'
+            >
+              {item.chatter.login}
+            </Text>
+          </View>
+        </PressableArea>
       );
     },
     [onSelectChatter],
@@ -168,6 +178,7 @@ const ChattersSheetComponent = ({
 
   return (
     <BottomSheet
+      ref={sheetRef}
       enableFixedSnapPoints
       isPresented={isPresented}
       onDismiss={onDismiss}
@@ -177,12 +188,10 @@ const ChattersSheetComponent = ({
     >
       <View style={[styles.container, { height: sheetHeight }]}>
         <View style={styles.header}>
-          <Text style={styles.headerEyebrow} weight='semibold'>
-            CHAT
-          </Text>
-          <Text style={styles.headerTitle} weight='semibold'>
-            Chatters
-          </Text>
+          <SheetHeader
+            title='Chatters'
+            onClose={() => sheetRef.current?.requestClose()}
+          />
         </View>
 
         <View style={styles.searchWrap}>
@@ -198,7 +207,7 @@ const ChattersSheetComponent = ({
             color='white'
             onChangeText={setQuery}
             placeholder='Filter chatters'
-            placeholderTextColor='rgba(255,255,255,0.42)'
+            placeholderTextColor={theme.color.textSecondary.dark}
             radius='none'
             returnKeyType='search'
             size='sm'
@@ -215,10 +224,10 @@ const ChattersSheetComponent = ({
               size={28}
               tintColor={theme.color.textSecondary.dark}
             />
-            <Text style={styles.emptyStateText}>
+            <Text type='subhead' color='gray.textLow' align='center'>
               {query.trim()
                 ? 'No chatters match your filter.'
-                : 'No chatters seen yet. Users appear here once they send a message.'}
+                : 'No chatters yet. People appear here once they send a message.'}
             </Text>
           </View>
         ) : (
@@ -249,7 +258,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     minHeight: 44,
-    paddingHorizontal: theme.space20,
+    paddingHorizontal: theme.space16,
     paddingVertical: theme.space8,
   },
   container: {
@@ -267,60 +276,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: theme.space24,
   },
-  emptyStateText: {
-    color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize12,
-    lineHeight: theme.fontSize12 * 1.4,
-    textAlign: 'center',
-  },
   header: {
-    borderBottomColor: theme.color.border.dark,
-    borderBottomWidth: 1,
-    paddingHorizontal: theme.space20,
-    paddingVertical: theme.space12,
-  },
-  headerEyebrow: {
-    color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize11,
-    letterSpacing: 0.6,
-    marginBottom: 2,
-  },
-  headerTitle: {
-    fontSize: theme.fontSize18,
+    paddingHorizontal: theme.space16,
+    paddingTop: theme.space12,
   },
   searchInput: {
     backgroundColor: 'transparent',
     flex: 1,
+    paddingHorizontal: 0,
   },
   searchWrap: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    borderColor: 'rgba(255,255,255,0.1)',
+    /**
+     * UISearchTextField dark-mode fill, the same as the emote picker.
+     */
+    backgroundColor: 'rgba(118, 118, 128, 0.24)',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
-    borderWidth: 1,
+    borderRadius: theme.radius.md,
     flexDirection: 'row',
     gap: theme.space8,
-    marginHorizontal: theme.space20,
+    marginHorizontal: theme.space16,
     marginVertical: theme.space12,
     paddingHorizontal: theme.space12,
   },
   sectionHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: theme.space8,
     paddingBottom: theme.space4,
-    paddingHorizontal: theme.space20,
-    paddingTop: theme.space12,
-  },
-  sectionHeaderCount: {
-    color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize11,
-  },
-  sectionHeaderText: {
-    color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize11,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
+    paddingHorizontal: theme.space16,
+    paddingTop: theme.space16,
   },
 });

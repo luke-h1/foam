@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.32)',
     borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
+    borderRadius: theme.radius.full,
     borderWidth: StyleSheet.hairlineWidth,
     height: 30,
     justifyContent: 'center',

@@ -31,7 +31,6 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.color.background.dark,
     flex: 1,
-    paddingHorizontal: theme.space20,
     paddingTop: theme.space16,
   },
   cta: {

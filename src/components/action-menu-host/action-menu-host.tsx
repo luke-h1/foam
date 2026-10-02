@@ -24,7 +24,7 @@ export function ActionMenuHost() {
     <Modal transparent animationType='fade' onRequestClose={dismissActionMenu}>
       <Pressable style={styles.backdrop} onPress={dismissActionMenu}>
         <Pressable style={styles.sheet}>
-          <Text type='sm' color='gray.textLow' style={styles.title}>
+          <Text type='body' color='gray.textLow' style={styles.title}>
             {options.title}
           </Text>
           {options.actions.map(action => (
@@ -71,8 +71,8 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: theme.color.menu.background,
-    borderTopLeftRadius: theme.borderRadius16,
-    borderTopRightRadius: theme.borderRadius16,
+    borderTopLeftRadius: theme.radius.lg,
+    borderTopRightRadius: theme.radius.lg,
     paddingHorizontal: theme.space16,
   },
   title: {

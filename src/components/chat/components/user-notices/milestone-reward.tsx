@@ -1,6 +1,6 @@
 import { type StyleProp, type TextStyle } from 'react-native';
 
-import { Text } from '@app/components/ui/text/text';
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 
 import { styles } from '../chat-message/chat-row.styles';
 
@@ -20,8 +20,8 @@ export function MilestoneReward({
   }
 
   return (
-    <Text style={[style, styles.channelPointsMetaReward]}>
+    <ChatText style={[style, styles.channelPointsMetaReward]}>
       {`+${reward} ${reward === 1 ? 'point' : 'points'}`}
-    </Text>
+    </ChatText>
   );
 }

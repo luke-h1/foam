@@ -34,7 +34,7 @@ describe('OnboardingScreen', () => {
   test('renders welcome heading and description', () => {
     render(<OnboardingScreen />);
 
-    expect(screen.getByText('Welcome to foam')).toBeOnTheScreen();
+    expect(screen.getByText('Welcome to Foam')).toBeOnTheScreen();
 
     expect(
       screen.getByText(/The fastest way to watch Twitch/),
@@ -50,9 +50,10 @@ describe('OnboardingScreen', () => {
     expect(mockReplace).toHaveBeenCalledWith('/');
   });
 
-  test('shows skip button', () => {
+  test('shows Get started and no Skip button', () => {
     render(<OnboardingScreen />);
 
-    expect(screen.getByText('Skip')).toBeOnTheScreen();
+    expect(screen.getByText('Get started')).toBeOnTheScreen();
+    expect(screen.queryByText('Skip')).not.toBeOnTheScreen();
   });
 });

@@ -20,8 +20,8 @@ appId: ${APP_ID}
 - runFlow: common/launch.yaml
 - tapOn: 'Settings'
 - scrollUntilVisible:
-    element: 'Dev Tools'
-- tapOn: 'Dev Tools'
+    element: 'Dev tools'
+- tapOn: 'Dev tools'
 - scrollUntilVisible:
     element: 'Debug'
 - tapOn: 'Debug'

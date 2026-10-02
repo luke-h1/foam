@@ -18,14 +18,16 @@ import type {
   ViewabilityConfig,
 } from '@legendapp/list/react-native';
 
-import { getChatScale } from '@app/components/chat/components/chat-message/util/chat-scale';
+import {
+  CHAT_SURFACE_COLORS,
+  getChatScale,
+} from '@app/components/chat/components/chat-message/util/chat-scale';
 import {
   getViewableChatMessages,
   type ViewableMessageToken,
 } from '@app/components/chat/util/get-viewable-chat-messages';
 import { Skeleton } from '@app/components/ui/skeleton/skeleton';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
-import { theme } from '@app/styles/themes';
 
 /**
  * Roughly seven rows of lookahead; at 96 fast flings outran the renderer and
@@ -236,7 +238,7 @@ const styles = StyleSheet.create({
   },
   skeletonBadge: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius4,
+    borderRadius: CHAT_SURFACE_COLORS.radius,
     height: SKELETON_CHAT_SCALE.badgeSize,
     width: SKELETON_CHAT_SCALE.badgeSize,
   },

@@ -6,9 +6,10 @@ appId: ${APP_ID}
 - assertNotVisible: 'Following'
 - tapOn: 'Settings'
 - extendedWaitUntil:
-    visible: 'Sign In'
-    timeout: 15000
-- tapOn: 'Sign In'
-- extendedWaitUntil:
     visible: 'Sign in with Twitch'
+    timeout: 15000
+- tapOn: 'Sign in with Twitch'
+# The Continue with Twitch button shows that the auth sheet opened.
+- extendedWaitUntil:
+    visible: 'Continue with Twitch'
     timeout: 10000

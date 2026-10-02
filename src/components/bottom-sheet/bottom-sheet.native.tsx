@@ -15,6 +15,7 @@ import {
 import { Toaster } from 'sonner-native';
 
 import { theme } from '@app/styles/themes';
+import { toastStyle } from '@app/styles/toast';
 
 import { SheetDragHandle } from './sheet-drag-handle';
 import type { BottomSheetHandle } from './util/bottom-sheet-handle';
@@ -72,7 +73,7 @@ function resolveSheetHeight(
 }
 
 export function BottomSheet({
-  backgroundColor = theme.color.menu.background,
+  backgroundColor = theme.color.surface.dark,
   children,
   enableFixedSnapPoints,
   isPresented,
@@ -174,7 +175,7 @@ export function BottomSheet({
          * inside a sheet need a Toaster of their own.
          */}
         {process.env.EXPO_OS === 'android' ? (
-          <Toaster style={styles.toaster} />
+          <Toaster style={toastStyle} />
         ) : null}
       </View>
     </ExpoBottomSheet>
@@ -189,10 +190,5 @@ const styles = StyleSheet.create({
   },
   fillsDetent: {
     flex: 1,
-  },
-  toaster: {
-    backgroundColor: theme.color.background.dark,
-    borderColor: theme.color.border.dark,
-    borderWidth: 1,
   },
 });

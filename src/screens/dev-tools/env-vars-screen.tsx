@@ -124,11 +124,11 @@ export function EnvVarsScreen() {
             size={16}
             tintColor='#fff'
           />
-          <Text type='sm' weight='semibold' style={styles.buttonText}>
+          <Text type='body' weight='semibold' style={styles.buttonText}>
             {revealed ? 'Hide secrets' : 'Reveal secrets'}
           </Text>
         </Button>
-        <Text type='xs' color='gray.textLow' style={styles.note}>
+        <Text type='subhead' color='gray.textLow' style={styles.note}>
           Only variables referenced as EXPO_PUBLIC_* are inlined into the app
           bundle. Other .env entries (AWS keys, GitHub tokens) never reach the
           app. Tap a row to copy its value.
@@ -137,7 +137,7 @@ export function EnvVarsScreen() {
 
       <View style={styles.section}>
         <Text
-          type='xs'
+          type='subhead'
           weight='semibold'
           color='gray.textLow'
           style={styles.sectionTitle}
@@ -173,7 +173,7 @@ export function EnvVarsScreen() {
                     size={14}
                     tintColor={isSet ? AC.systemGreen : AC.systemGray}
                   />
-                  <Text type='sm' weight='semibold' style={styles.keyText}>
+                  <Text type='body' weight='semibold' style={styles.keyText}>
                     {entry.key}
                   </Text>
                   {entry.secret ? (
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: theme.darkActiveContent,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
+    borderRadius: theme.radius.lg,
     overflow: 'hidden',
   },
   contentContainer: {
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.colorBlue,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
+    borderRadius: theme.radius.lg,
     flexDirection: 'row',
     gap: 8,
     justifyContent: 'center',
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   valueBox: {
     backgroundColor: theme.color.background.darkAltAlpha,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.radius.md,
     padding: theme.space12,
   },
   valueBoxEmpty: {

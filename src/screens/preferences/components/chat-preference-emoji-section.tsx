@@ -26,7 +26,6 @@ export function ChatPreferenceEmojiSection({
         icon={{
           icon: 'face.smiling',
           androidIcon: 'sentiment_satisfied',
-          color: theme.colorGrey,
         }}
         onSelectIndex={handleEmojiStyleChange}
         selectedIndex={emojiIndex}

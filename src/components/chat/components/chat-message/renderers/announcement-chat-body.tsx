@@ -8,7 +8,7 @@ import { ChatNoticeMetaRow } from './chat-notice-meta-row';
 import type { ChatTokenRenderProps } from './types/chat-token-render-props';
 import { UserChatBody } from './user-chat-body';
 
-interface AnnouncementChatBodyProps extends ChatTokenRenderProps {
+interface AnnouncementChatBodyProps {
   accentColor?: string;
   badgeList: SanitisedBadgeSet[];
   cachedSenderColor?: string;
@@ -16,6 +16,7 @@ interface AnnouncementChatBodyProps extends ChatTokenRenderProps {
   onUsernamePress?: () => void;
   showTimestamp: boolean;
   timestamp?: string;
+  tokenRenderProps: ChatTokenRenderProps;
   userId?: string;
   userstateColor?: string;
   username?: string;
@@ -29,10 +30,10 @@ export function AnnouncementChatBody({
   onUsernamePress,
   showTimestamp,
   timestamp,
+  tokenRenderProps: rendererArgs,
   userId,
   userstateColor,
   username,
-  ...rendererArgs
 }: AnnouncementChatBodyProps) {
   const resolvedAccentColor = accentColor ?? styles.announcementMetaText.color;
 
@@ -60,10 +61,10 @@ export function AnnouncementChatBody({
           showTimestamp,
         }}
         timestamp={timestamp}
+        tokenRenderProps={rendererArgs}
         userId={userId}
         userstateColor={userstateColor}
         username={username}
-        {...rendererArgs}
       />
     </View>
   );

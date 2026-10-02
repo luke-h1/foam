@@ -73,13 +73,18 @@ function ChannelPredictionCardComponent({
           {statusLabel}
         </Badge>
         {timeRemaining ? (
-          <Text color='gray.textLow' tabular type='xxs' weight='medium'>
+          <Text color='gray.textLow' tabular type='caption' weight='medium'>
             {timeRemaining}
           </Text>
         ) : null}
       </View>
 
-      <Text color='gray.text' style={styles.title} type='sm' weight='semibold'>
+      <Text
+        color='gray.text'
+        style={styles.title}
+        type='body'
+        weight='semibold'
+      >
         {prediction.title}
       </Text>
 
@@ -103,20 +108,25 @@ function ChannelPredictionCardComponent({
                 <Text
                   color='gray.text'
                   numberOfLines={1}
-                  type='xs'
+                  type='subhead'
                   weight='medium'
                 >
                   {outcome.title}
                 </Text>
                 {outcome.isWinner ? (
                   <Badge color='teal' size='sm' variant='soft'>
-                    <Text type='xs' weight='semibold'>
+                    <Text type='subhead' weight='semibold'>
                       Won
                     </Text>
                   </Badge>
                 ) : null}
               </View>
-              <Text color='gray.textLow' tabular type='xxs' weight='semibold'>
+              <Text
+                color='gray.textLow'
+                tabular
+                type='caption'
+                weight='semibold'
+              >
                 {outcome.percentage}% · {outcome.channelPoints} pts ·{' '}
                 {outcome.users} users
               </Text>
@@ -126,7 +136,7 @@ function ChannelPredictionCardComponent({
       </View>
 
       <View style={styles.footer}>
-        <Text color='gray.textLow' tabular type='xxs'>
+        <Text color='gray.textLow' tabular type='caption'>
           {prediction.totalChannelPoints} total points
         </Text>
         {(prediction.isActive || prediction.isLocked) && (
@@ -136,7 +146,7 @@ function ChannelPredictionCardComponent({
               openLinkInBrowser(`https://www.twitch.tv/${channelLogin}`)
             }
           >
-            <Text color='amber.accent' type='xxs' weight='semibold'>
+            <Text color='amber.accent' type='caption' weight='semibold'>
               Predict on Twitch
             </Text>
           </PressableArea>

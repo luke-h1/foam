@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { router } from 'expo-router';
 
-import { Button } from '@app/components/button/button';
+import { ActionButton } from '@app/components/action-button/action-button';
 import { Image } from '@app/components/image/image';
 import { SymbolView } from '@app/components/ui/icon/icon';
 import { Text } from '@app/components/ui/text/text';
@@ -44,47 +44,40 @@ export function StreamUnavailablePanel({
         />
       )}
 
-      <Text type='md' weight='semibold' align='center' numberOfLines={1}>
+      <Text type='headline' weight='semibold' align='center' numberOfLines={1}>
         {isOffline ? `${name} is offline` : "Couldn't load this stream"}
       </Text>
-      <Text type='body' color='gray.textLow' align='center'>
+      <Text type='subhead' color='gray.textLow' align='center'>
         {isOffline
           ? 'Chat stays open. Catch up on past broadcasts and clips.'
           : 'Check your connection and try again.'}
       </Text>
 
-      <View style={styles.actions}>
-        <Button
-          haptic='selection'
-          label={isOffline ? `View ${name}'s profile` : 'Retry'}
-          style={styles.primaryAction}
-          onPress={
-            isOffline
-              ? () => router.push(`/streams/streamer-profile/${channelLogin}`)
-              : onRetry
-          }
-        >
-          <Text type='body' weight='semibold'>
-            {isOffline ? 'Videos and clips' : 'Retry'}
-          </Text>
-        </Button>
-      </View>
+      <ActionButton
+        title={isOffline ? 'Videos and clips' : 'Try again'}
+        size='small'
+        haptic='selection'
+        style={styles.action}
+        onPress={
+          isOffline
+            ? () => router.push(`/streams/streamer-profile/${channelLogin}`)
+            : onRetry
+        }
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  actions: {
-    flexDirection: 'row',
-    gap: theme.space12,
-    marginTop: theme.space8,
+  action: {
+    marginTop: theme.space12,
   },
   avatar: {
     height: 64,
     width: 64,
   },
   avatarContainer: {
-    borderRadius: theme.borderRadius999,
+    borderRadius: theme.radius.full,
     height: 64,
     overflow: 'hidden',
     width: 64,
@@ -99,12 +92,5 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 0,
     top: 0,
-  },
-  primaryAction: {
-    backgroundColor: theme.colorPrimary,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    paddingHorizontal: theme.space20,
-    paddingVertical: theme.space12,
   },
 });

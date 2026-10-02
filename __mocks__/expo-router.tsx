@@ -11,40 +11,50 @@ export const router = {
 };
 
 export const Stack = {
-  Screen: () => null,
+  // A function headerTitle renders into the native navigation bar; render it
+  // in place so controls hosted there (the Top segment) stay testable.
+  Screen: ({
+    options,
+  }: {
+    options?: { headerTitle?: string | (() => React.ReactNode) };
+  }) =>
+    options?.headerTitle instanceof Function ? options.headerTitle() : null,
   // Stack.SearchBar renders into the native navigation header; surface it
   // as a plain TextInput so tests can type into it. The imperative ref mirrors
   // react-native-screens' SearchBarCommands: setText/clearText update the
   // visible text without re-firing onChangeText, matching the native search
   // bar (consumers rely on that to avoid double-triggering a search).
-  SearchBar: React.forwardRef(
-    (
-      props: {
-        placeholder?: string;
-        onChangeText?: (e: { nativeEvent: { text: string } }) => void;
-      },
-      ref: React.Ref<unknown>,
-    ) => {
-      const inputRef = React.useRef<TextInput | null>(null);
+  SearchBar: ({
+    ref,
+    placeholder,
+    onChangeText,
+  }: {
+    ref?: React.Ref<unknown>;
+    placeholder?: string;
+    onChangeText?: (e: { nativeEvent: { text: string } }) => void;
+  }) => {
+    const inputRef = React.useRef<TextInput | null>(null);
 
-      React.useImperativeHandle(ref, () => ({
-        setText: (text: string) => inputRef.current?.setNativeProps({ text }),
-        clearText: () => inputRef.current?.setNativeProps({ text: '' }),
-        focus: () => inputRef.current?.focus(),
-        blur: () => inputRef.current?.blur(),
-        toggleCancelButton: () => {},
-        cancelSearch: () => {},
-      }));
+    // The test renderer has no Fabric, so `setNativeProps` still updates
+    // the mock input. It stands in for the native SearchBarCommands.
+    React.useImperativeHandle(ref, () => ({
+      // eslint-disable-next-line react-doctor/rn-no-set-native-props -- Jest mock, see above
+      setText: (text: string) => inputRef.current?.setNativeProps({ text }),
+      // eslint-disable-next-line react-doctor/rn-no-set-native-props -- Jest mock, see above
+      clearText: () => inputRef.current?.setNativeProps({ text: '' }),
+      focus: () => inputRef.current?.focus(),
+      blur: () => inputRef.current?.blur(),
+      toggleCancelButton: () => {},
+      cancelSearch: () => {},
+    }));
 
-      return React.createElement(TextInput, {
-        ref: inputRef,
-        testID: 'search-input',
-        placeholder: props.placeholder,
-        onChangeText: (text: string) =>
-          props.onChangeText?.({ nativeEvent: { text } }),
-      });
-    },
-  ),
+    return React.createElement(TextInput, {
+      ref: inputRef,
+      testID: 'search-input',
+      placeholder,
+      onChangeText: (text: string) => onChangeText?.({ nativeEvent: { text } }),
+    });
+  },
 };
 
 export const useFocusEffect = jest.fn((effect: () => void | (() => void)) => {

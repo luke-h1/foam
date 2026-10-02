@@ -14,7 +14,11 @@ import {
   Switch,
   Text,
 } from '@expo/ui/jetpack-compose';
-import { clickable, fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
+import {
+  alpha,
+  clickable,
+  fillMaxWidth,
+} from '@expo/ui/jetpack-compose/modifiers';
 
 import {
   resolveIconName,
@@ -59,17 +63,11 @@ function IconTile({
   danger?: boolean;
 }) {
   return (
-    <View
-      style={[
-        styles.iconWrap,
-        danger ? styles.iconWrapDanger : null,
-        icon.color ? { backgroundColor: `${icon.color}20` } : null,
-      ]}
-    >
+    <View style={[styles.iconWrap, danger ? styles.iconWrapDanger : null]}>
       <SymbolView
         name={resolveIconName(icon.icon, icon.androidIcon)}
         size={20}
-        tintColor={icon.color || theme.colorPrimary}
+        tintColor={danger ? theme.colorRed : theme.color.textSecondary.dark}
       />
     </View>
   );
@@ -194,6 +192,23 @@ interface SettingsRowProps {
   trailing?: ReactNode;
   onPress?: () => void;
   danger?: boolean;
+  disabled?: boolean;
+  /**
+   * A pressable row shows a chevron unless this is false. Action rows that
+   * run in place, rather than open a screen, turn it off.
+   */
+  chevron?: boolean;
+}
+
+function getRowModifiers(
+  onPress: (() => void) | undefined,
+  disabled: boolean | undefined,
+) {
+  if (disabled) {
+    return [alpha(0.4)];
+  }
+
+  return onPress ? [clickable(onPress, { indication: true })] : [];
 }
 
 export function SettingsRow({
@@ -203,15 +218,17 @@ export function SettingsRow({
   trailing,
   onPress,
   danger,
+  disabled,
+  chevron = true,
 }: SettingsRowProps) {
   return (
     <ListItem
       colors={listItemColors}
-      modifiers={onPress ? [clickable(onPress, { indication: true })] : []}
+      modifiers={getRowModifiers(onPress, disabled)}
     >
       <RowLeading icon={icon} danger={danger} />
       <RowText title={title} subtitle={subtitle} danger={danger} />
-      {trailing || onPress ? (
+      {trailing || (onPress && chevron) ? (
         <ListItem.TrailingContent>
           <RNHostView matchContents>
             {trailing ? (
@@ -325,7 +342,7 @@ const styles = StyleSheet.create({
   iconWrap: {
     alignItems: 'center',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius6,
+    borderRadius: theme.radius.sm,
     height: 24,
     justifyContent: 'center',
     width: 24,

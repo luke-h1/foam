@@ -1,9 +1,9 @@
 import { memo } from 'react';
 import { View } from 'react-native';
 
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { getSubscriptionTierDisplay } from '@app/components/chat/components/user-notices/util/subscription-notice-tier';
 import { Image } from '@app/components/image/image';
-import { Text } from '@app/components/ui/text/text';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { MessageToken } from '@app/utils/chat/message-token';
 
@@ -30,9 +30,9 @@ function renderMessagePart(messagePart: MessageToken, occurrence: number) {
   switch (messagePart.type) {
     case 'text':
       return (
-        <Text key={key} style={styles.messageText}>
+        <ChatText key={key} style={styles.messageText}>
           {messagePart.content}
-        </Text>
+        </ChatText>
       );
     case 'emote':
       return (
@@ -148,7 +148,7 @@ function SubscriptionNoticeMessage({
   }
 
   if (message) {
-    return <Text style={styles.messageText}>{message.trim()}</Text>;
+    return <ChatText style={styles.messageText}>{message.trim()}</ChatText>;
   }
 
   return null;
@@ -185,7 +185,7 @@ function SubscriptionNoticeComponent({
         labelColor={CHAT_NOTICE_ACCENTS.subscription}
       >
         <View style={styles.descriptionContainer}>
-          <Text style={styles.username}>{displayName}</Text>
+          <ChatText style={styles.username}>{displayName}</ChatText>
           {description}
         </View>
       </ChatNoticeMetaRow>

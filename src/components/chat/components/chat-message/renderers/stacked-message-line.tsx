@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 import type { StyleProp, TextStyle } from 'react-native';
 
-import { Text } from '@app/components/ui/text/text';
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { flowsInline } from '@app/utils/chat/derive-chat-body/flows-inline';
 import type { MessageToken } from '@app/utils/chat/message-token';
@@ -78,9 +78,9 @@ export function StackedMessageLine({
     >
       {moderationNotice ? <View style={styles.moderatedStrikeOverlay} /> : null}
       {showTimestamp && timestamp ? (
-        <Text tabular style={textStyles.timestamp}>
+        <ChatText tabular style={textStyles.timestamp}>
           {timestamp}
-        </Text>
+        </ChatText>
       ) : null}
       <ChatMessageBadges
         badges={badgeList}
@@ -106,7 +106,7 @@ export function StackedMessageLine({
         </View>
       ) : null}
       {bodyFlowsInline ? (
-        <Text style={[textStyles.body, bodyEmoteLineStyle]}>
+        <ChatText style={[textStyles.body, bodyEmoteLineStyle]}>
           <InlineTokens
             {...rendererArgs}
             emoteLineStyle={bodyEmoteLineStyle}
@@ -114,7 +114,7 @@ export function StackedMessageLine({
             replyPlainMentionTarget={replyPlainMentionTarget}
             textColor={textColor}
           />
-        </Text>
+        </ChatText>
       ) : (
         <WrappedTokens
           mode='message'

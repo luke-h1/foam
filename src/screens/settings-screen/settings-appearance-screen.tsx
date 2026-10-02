@@ -4,18 +4,15 @@ import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import {
   Form as NativeForm,
   Host,
-  LabeledContent,
   Section,
   Text as NativeText,
   Toggle,
 } from '@expo/ui/swift-ui';
 
 import {
-  SettingsLinkRow,
   SettingsSection,
   SettingsToggleRow,
 } from '@app/components/settings-section/settings-section';
-import { Text } from '@app/components/ui/text/text';
 import { useScrollToTop } from '@app/hooks/use-scroll-to-top';
 import {
   usePreference,
@@ -23,12 +20,11 @@ import {
 } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
 
-const themeLabels = {
-  'foam-dark': 'Foam Dark',
-} satisfies Record<'foam-dark', string>;
-
+/**
+ * Haptics and shake to report. The route keeps its `appearance` name so
+ * existing links still resolve.
+ */
 export function SettingsAppearanceScreen() {
-  const selectedTheme = usePreference('theme');
   const hapticFeedback = usePreference('hapticFeedback');
   const shakeToReport = usePreference('shakeToReport');
   const update = useUpdatePreferences();
@@ -41,24 +37,10 @@ export function SettingsAppearanceScreen() {
       <Host style={styles.iosHost}>
         <NativeForm>
           <Section
-            title='Theme'
             footer={
               <NativeText>
-                Foam currently ships with one canonical visual mode. Additional
-                themes will appear here as they become available.
-              </NativeText>
-            }
-          >
-            <LabeledContent label='Theme'>
-              <NativeText>{themeLabels[selectedTheme]}</NativeText>
-            </LabeledContent>
-          </Section>
-          <Section
-            title='Feedback'
-            footer={
-              <NativeText>
-                Subtle vibrations for actions like sending messages and
-                refreshing
+                Short vibrations when you send a message, refresh, or change a
+                setting.
               </NativeText>
             }
           >
@@ -68,6 +50,14 @@ export function SettingsAppearanceScreen() {
               isOn={hapticFeedback}
               onIsOnChange={value => update({ hapticFeedback: value })}
             />
+          </Section>
+          <Section
+            footer={
+              <NativeText>
+                Shake your phone to open the feedback form.
+              </NativeText>
+            }
+          >
             <Toggle
               label='Shake to report a problem'
               systemImage='iphone.gen3.radiowaves.left.and.right'
@@ -88,33 +78,18 @@ export function SettingsAppearanceScreen() {
         indicatorStyle='white'
         contentContainerStyle={styles.content}
       >
-        <SettingsSection
-          title='Theme'
-          footer={
-            <Text type='xs' color='gray.textLow'>
-              Foam currently ships with one canonical visual mode. Additional
-              themes will appear here as they become available.
-            </Text>
-          }
-        >
-          <SettingsLinkRow
-            title='Theme'
-            icon={{ icon: 'moon', color: theme.colorAmber }}
-            value={themeLabels[selectedTheme]}
-          />
-        </SettingsSection>
-        <SettingsSection title='Feedback'>
+        <SettingsSection>
           <SettingsToggleRow
             title='Haptics'
-            subtitle='Subtle vibrations for actions like sending messages and refreshing'
-            icon={{ icon: 'hand.tap', color: theme.colorTeal }}
+            subtitle='Short vibrations when you send a message, refresh, or change a setting'
+            icon={{ icon: 'hand.tap' }}
             value={hapticFeedback}
             onValueChange={value => update({ hapticFeedback: value })}
           />
           <SettingsToggleRow
-            title='Shake to report'
-            subtitle='Shake your device to report a problem'
-            icon={{ icon: 'waveform.path', color: theme.colorAmber }}
+            title='Shake to report a problem'
+            subtitle='Shake your phone to open the feedback form'
+            icon={{ icon: 'waveform.path' }}
             value={shakeToReport}
             onValueChange={value => update({ shakeToReport: value })}
           />
@@ -131,7 +106,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingBottom: theme.space56,
-    paddingHorizontal: theme.space20,
+    paddingHorizontal: theme.space16,
     paddingTop: theme.space16,
   },
   iosHost: {

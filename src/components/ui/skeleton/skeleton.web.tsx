@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
   skeleton: {
     backgroundColor: theme.colorSurfaceAlpha,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
+    borderRadius: theme.radius.lg,
     overflow: 'hidden',
   },
 });

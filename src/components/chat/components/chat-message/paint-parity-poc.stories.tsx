@@ -2,11 +2,11 @@ import { View } from 'react-native';
 
 import type { Meta, StoryObj } from '@storybook/react';
 
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import {
   FlashList,
   type ListRenderItem,
 } from '@app/components/flash-list/flash-list';
-import { Text } from '@app/components/ui/text/text';
 import { indexedCollectionToArray } from '@app/services/ws/util/indexed-collection';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 import { convertV4PaintToPaintData } from '@app/utils/color/seven-tv-paint-data/convert-v4-paint-to-paint-data';
@@ -49,9 +49,9 @@ function firstPaint(paints: PaintData[]): PaintData {
 function ComparisonRow({ paint }: { paint: PaintData }) {
   return (
     <View style={{ gap: 4, paddingBottom: 16 }}>
-      <Text color='gray.textLow' type='xs'>
+      <ChatText color='gray.textLow' type='subhead'>
         {paint.name}
-      </Text>
+      </ChatText>
       <View style={{ flexDirection: 'row', gap: 12 }}>
         <View style={{ flex: 1 }}>
           <PaintedUsername paint={paint} showColon={false} username='Preview' />
@@ -71,15 +71,15 @@ function ColumnHeaders() {
   return (
     <View style={{ flexDirection: 'row', gap: 12, paddingBottom: 12 }}>
       {['Current', 'Skia POC', 'WebView POC'].map(label => (
-        <Text
+        <ChatText
           key={label}
           color='gray.text'
-          type='xs'
+          type='subhead'
           weight='bold'
           style={{ flex: 1 }}
         >
           {label}
-        </Text>
+        </ChatText>
       ))}
     </View>
   );

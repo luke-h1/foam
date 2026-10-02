@@ -21,9 +21,12 @@ export const nativeStackScreenOptions = {
 } as const;
 
 /**
- * Tab root screens only: iOS large title that collapses on scroll.
+ * Tab root screens only: an iOS large title that collapses on scroll, set in
+ * Montserrat. Pushed screens keep the system title font.
  */
 export const nativeStackTabRootScreenOptions = {
   headerLargeTitle: isIOS,
   headerTransparent: isIOS,
+  headerLargeTitleStyle: { fontFamily: theme.fontFamilyBold },
+  headerTitleStyle: { fontFamily: theme.fontFamilyBold },
 } as const;

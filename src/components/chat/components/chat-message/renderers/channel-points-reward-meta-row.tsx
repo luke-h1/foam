@@ -1,5 +1,5 @@
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { CHAT_NOTICE_ACCENTS } from '@app/components/chat/components/util/chat-notice-accents';
-import { Text } from '@app/components/ui/text/text';
 import { useChannelPointRewardTitleRevision } from '@app/store/chat/react/use-channel-point-reward-title-revision';
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
@@ -67,7 +67,7 @@ export function ChannelPointsRewardMetaRow({
       icon='gift.fill'
       labelColor={CHAT_NOTICE_ACCENTS.channelPoints}
     >
-      <Text
+      <ChatText
         style={[
           textStyles.meta,
           styles.messageMetaTextFlex,
@@ -75,7 +75,7 @@ export function ChannelPointsRewardMetaRow({
           styles.channelPointsMetaText,
         ]}
       >
-        <Text
+        <ChatText
           style={[
             textStyles.meta,
             styles.channelPointsMetaName,
@@ -83,8 +83,8 @@ export function ChannelPointsRewardMetaRow({
           ]}
         >
           {username}
-        </Text>
-        <Text
+        </ChatText>
+        <ChatText
           style={[
             textStyles.meta,
             styles.channelPointsMetaMuted,
@@ -93,8 +93,8 @@ export function ChannelPointsRewardMetaRow({
         >
           {' '}
           redeemed{' '}
-        </Text>
-        <Text
+        </ChatText>
+        <ChatText
           style={[
             textStyles.meta,
             styles.channelPointsMetaReward,
@@ -102,8 +102,8 @@ export function ChannelPointsRewardMetaRow({
           ]}
         >
           {rewardSummaryTitle}
-        </Text>
-      </Text>
+        </ChatText>
+      </ChatText>
     </ChatNoticeMetaRow>
   );
 }

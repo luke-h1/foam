@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { subscriptionNoticeStyles as styles } from '@app/components/chat/components/user-notices/subscription-notice.styles';
-import { Text } from '@app/components/ui/text/text';
 
 export interface SubscriptionDescriptionInput {
   msgId: string;
@@ -37,9 +37,9 @@ function pushStreakPart({
   }
 
   tokens.push(
-    <Text key='streak' style={styles.descriptionText}>
+    <ChatText key='streak' style={styles.descriptionText}>
       {`, ${streakMonths} ${streakMonths === 1 ? 'month' : 'months'} in a row`}
-    </Text>,
+    </ChatText>,
   );
 }
 
@@ -67,11 +67,11 @@ export function buildSubscriptionNoticeDescription(
   switch (msgId) {
     case 'sub': {
       tokens.push(
-        <Text key='action' style={styles.descriptionText}>
+        <ChatText key='action' style={styles.descriptionText}>
           {isPrime
             ? 'Subscribed with Prime.'
             : `Subscribed with ${tierDisplay}.`}
-        </Text>,
+        </ChatText>,
       );
 
       break;
@@ -80,24 +80,24 @@ export function buildSubscriptionNoticeDescription(
       const hasMonths = cumulativeMonths !== undefined && cumulativeMonths > 0;
 
       tokens.push(
-        <Text key='action' style={styles.descriptionText}>
+        <ChatText key='action' style={styles.descriptionText}>
           {isPrime
             ? 'Subscribed with Prime.'
             : `Subscribed with ${tierDisplay}.`}
-        </Text>,
+        </ChatText>,
       );
 
       if (hasMonths) {
         tokens.push(
-          <Text key='months' style={styles.descriptionText}>
+          <ChatText key='months' style={styles.descriptionText}>
             {" They've subscribed for "}
-          </Text>,
+          </ChatText>,
         );
 
         tokens.push(
-          <Text key='monthsCount' style={styles.monthsHighlight}>
+          <ChatText key='monthsCount' style={styles.monthsHighlight}>
             {`${cumulativeMonths} ${cumulativeMonths === 1 ? 'month' : 'months'}`}
-          </Text>,
+          </ChatText>,
         );
 
         pushStreakPart({
@@ -107,9 +107,9 @@ export function buildSubscriptionNoticeDescription(
         });
 
         tokens.push(
-          <Text key='period' style={styles.descriptionText}>
+          <ChatText key='period' style={styles.descriptionText}>
             .
-          </Text>,
+          </ChatText>,
         );
       }
 
@@ -118,271 +118,271 @@ export function buildSubscriptionNoticeDescription(
     case 'subgift': {
       if (recipientDisplayName) {
         tokens.push(
-          <Text key='action' style={styles.descriptionText}>
+          <ChatText key='action' style={styles.descriptionText}>
             {`Gifted a ${tierDisplay} subscription to `}
-          </Text>,
+          </ChatText>,
         );
 
         tokens.push(
-          <Text key='recipient' style={styles.recipientName}>
+          <ChatText key='recipient' style={styles.recipientName}>
             {recipientDisplayName}
-          </Text>,
+          </ChatText>,
         );
       } else {
         tokens.push(
-          <Text key='action' style={styles.descriptionText}>
+          <ChatText key='action' style={styles.descriptionText}>
             {`Gifted a ${tierDisplay} subscription`}
-          </Text>,
+          </ChatText>,
         );
       }
 
       if (giftMonths !== undefined && giftMonths > 1) {
         tokens.push(
-          <Text key='giftMonths' style={styles.descriptionText}>
+          <ChatText key='giftMonths' style={styles.descriptionText}>
             {` (${giftMonths} months)`}
-          </Text>,
+          </ChatText>,
         );
       }
 
       tokens.push(
-        <Text key='period' style={styles.descriptionText}>
+        <ChatText key='period' style={styles.descriptionText}>
           .
-        </Text>,
+        </ChatText>,
       );
 
       break;
     }
     case 'anongiftpaidupgrade': {
       tokens.push(
-        <Text key='action' style={styles.descriptionText}>
+        <ChatText key='action' style={styles.descriptionText}>
           Continuing their gift subscription
-        </Text>,
+        </ChatText>,
       );
 
       if (promoName) {
         tokens.push(
-          <Text key='promo' style={styles.descriptionText}>
+          <ChatText key='promo' style={styles.descriptionText}>
             {promoGiftTotal
               ? ` (${promoName}, ${promoGiftTotal} total)`
               : ` (${promoName})`}
-          </Text>,
+          </ChatText>,
         );
       }
 
       tokens.push(
-        <Text key='period' style={styles.descriptionText}>
+        <ChatText key='period' style={styles.descriptionText}>
           .
-        </Text>,
+        </ChatText>,
       );
 
       break;
     }
     case 'submysterygift': {
       tokens.push(
-        <Text key='action' style={styles.descriptionText}>
+        <ChatText key='action' style={styles.descriptionText}>
           {'Gifted '}
-        </Text>,
+        </ChatText>,
       );
 
       tokens.push(
-        <Text key='count' style={styles.monthsHighlight}>
+        <ChatText key='count' style={styles.monthsHighlight}>
           {massGiftCount ?? 0}
-        </Text>,
+        </ChatText>,
       );
 
       tokens.push(
-        <Text key='tail' style={styles.descriptionText}>
+        <ChatText key='tail' style={styles.descriptionText}>
           {` ${tierDisplay} ${
             (massGiftCount ?? 0) === 1 ? 'subscription' : 'subscriptions'
           } to the community`}
-        </Text>,
+        </ChatText>,
       );
 
       if (senderCount !== undefined && senderCount > 0) {
         tokens.push(
-          <Text key='senderCount' style={styles.descriptionText}>
+          <ChatText key='senderCount' style={styles.descriptionText}>
             {`. They've gifted ${senderCount} in the channel`}
-          </Text>,
+          </ChatText>,
         );
       }
 
       tokens.push(
-        <Text key='period' style={styles.descriptionText}>
+        <ChatText key='period' style={styles.descriptionText}>
           .
-        </Text>,
+        </ChatText>,
       );
 
       break;
     }
     case 'giftpaidupgrade': {
       tokens.push(
-        <Text key='action' style={styles.descriptionText}>
+        <ChatText key='action' style={styles.descriptionText}>
           Continuing the gift sub
-        </Text>,
+        </ChatText>,
       );
 
       if (senderName) {
         tokens.push(
-          <Text key='from' style={styles.descriptionText}>
+          <ChatText key='from' style={styles.descriptionText}>
             {' from '}
-          </Text>,
+          </ChatText>,
         );
 
         tokens.push(
-          <Text key='sender' style={styles.recipientName}>
+          <ChatText key='sender' style={styles.recipientName}>
             {senderName}
-          </Text>,
+          </ChatText>,
         );
       }
 
       if (promoName) {
         tokens.push(
-          <Text key='promo' style={styles.descriptionText}>
+          <ChatText key='promo' style={styles.descriptionText}>
             {promoGiftTotal
               ? ` (${promoName}, ${promoGiftTotal} total)`
               : ` (${promoName})`}
-          </Text>,
+          </ChatText>,
         );
       }
 
       tokens.push(
-        <Text key='period' style={styles.descriptionText}>
+        <ChatText key='period' style={styles.descriptionText}>
           .
-        </Text>,
+        </ChatText>,
       );
 
       break;
     }
     case 'primepaidupgrade': {
       tokens.push(
-        <Text key='action' style={styles.descriptionText}>
+        <ChatText key='action' style={styles.descriptionText}>
           {isPrime
             ? 'Upgraded their Prime subscription.'
             : `Upgraded their Prime subscription to ${tierDisplay}.`}
-        </Text>,
+        </ChatText>,
       );
 
       break;
     }
     case 'extendsub': {
       tokens.push(
-        <Text key='action' style={styles.descriptionText}>
+        <ChatText key='action' style={styles.descriptionText}>
           {isPrime
             ? 'Extended their subscription with Prime.'
             : `Extended their subscription with ${tierDisplay}.`}
-        </Text>,
+        </ChatText>,
       );
 
       break;
     }
     case 'standardpayforward': {
       tokens.push(
-        <Text key='action' style={styles.descriptionText}>
+        <ChatText key='action' style={styles.descriptionText}>
           Paid their subscription forward to another viewer.
-        </Text>,
+        </ChatText>,
       );
       break;
     }
     case 'communitypayforward': {
       if (recipientDisplayName) {
         tokens.push(
-          <Text key='action' style={styles.descriptionText}>
+          <ChatText key='action' style={styles.descriptionText}>
             {'Paid their subscription forward to '}
-          </Text>,
+          </ChatText>,
         );
 
         tokens.push(
-          <Text key='recipient' style={styles.recipientName}>
+          <ChatText key='recipient' style={styles.recipientName}>
             {recipientDisplayName}
-          </Text>,
+          </ChatText>,
         );
       } else {
         tokens.push(
-          <Text key='action' style={styles.descriptionText}>
+          <ChatText key='action' style={styles.descriptionText}>
             Paid their subscription forward to the community
-          </Text>,
+          </ChatText>,
         );
       }
 
       tokens.push(
-        <Text key='period' style={styles.descriptionText}>
+        <ChatText key='period' style={styles.descriptionText}>
           .
-        </Text>,
+        </ChatText>,
       );
 
       break;
     }
     case 'primecommunitygiftreceived': {
       tokens.push(
-        <Text key='action' style={styles.descriptionText}>
+        <ChatText key='action' style={styles.descriptionText}>
           Received a Prime subscription from the community.
-        </Text>,
+        </ChatText>,
       );
       break;
     }
     case 'anonsubgift': {
       if (recipientDisplayName) {
         tokens.push(
-          <Text key='action' style={styles.descriptionText}>
+          <ChatText key='action' style={styles.descriptionText}>
             {`An anonymous gifter gifted a ${tierDisplay} subscription to `}
-          </Text>,
+          </ChatText>,
         );
 
         tokens.push(
-          <Text key='recipient' style={styles.recipientName}>
+          <ChatText key='recipient' style={styles.recipientName}>
             {recipientDisplayName}
-          </Text>,
+          </ChatText>,
         );
       } else {
         tokens.push(
-          <Text key='action' style={styles.descriptionText}>
+          <ChatText key='action' style={styles.descriptionText}>
             {`An anonymous gifter gifted a ${tierDisplay} subscription`}
-          </Text>,
+          </ChatText>,
         );
       }
 
       tokens.push(
-        <Text key='period' style={styles.descriptionText}>
+        <ChatText key='period' style={styles.descriptionText}>
           .
-        </Text>,
+        </ChatText>,
       );
 
       break;
     }
     case 'anonsubmysterygift': {
       tokens.push(
-        <Text key='action' style={styles.descriptionText}>
+        <ChatText key='action' style={styles.descriptionText}>
           {'An anonymous gifter gifted '}
-        </Text>,
+        </ChatText>,
       );
 
       tokens.push(
-        <Text key='count' style={styles.monthsHighlight}>
+        <ChatText key='count' style={styles.monthsHighlight}>
           {massGiftCount ?? 0}
-        </Text>,
+        </ChatText>,
       );
 
       tokens.push(
-        <Text key='tail' style={styles.descriptionText}>
+        <ChatText key='tail' style={styles.descriptionText}>
           {' '}
           {tierDisplay} subscription{massGiftCount === 1 ? '' : 's'} to the
           community
-        </Text>,
+        </ChatText>,
       );
 
       tokens.push(
-        <Text key='period' style={styles.descriptionText}>
+        <ChatText key='period' style={styles.descriptionText}>
           .
-        </Text>,
+        </ChatText>,
       );
 
       break;
     }
     default:
       tokens.push(
-        <Text key='action' style={styles.descriptionText}>
+        <ChatText key='action' style={styles.descriptionText}>
           Subscription event.
-        </Text>,
+        </ChatText>,
       );
   }
 

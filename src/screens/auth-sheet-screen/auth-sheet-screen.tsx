@@ -1,16 +1,14 @@
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { PressableScale } from 'pressto';
 
+import { ActionButton } from '@app/components/action-button/action-button';
 import { Button } from '@app/components/button/button';
 import { Image } from '@app/components/image/image';
 import { SymbolView, type SymbolViewProps } from '@app/components/ui/icon/icon';
 import { Text } from '@app/components/ui/text/text';
 import { useTwitchSignIn } from '@app/hooks/use-twitch-sign-in';
-import { impact } from '@app/lib/haptics';
 import { theme } from '@app/styles/themes';
 
 function handleAuthSuccess() {
@@ -31,227 +29,103 @@ function handleDismiss() {
   router.back();
 }
 
+const BENEFITS = [
+  { icon: 'person.2', label: 'Your followed channels, live first' },
+  { icon: 'bubble.left.and.bubble.right', label: 'Chat as yourself' },
+  { icon: 'face.smiling', label: 'Emotes from 7TV, BTTV and FFZ' },
+] satisfies { icon: SymbolViewProps['name']; label: string }[];
+
 export function AuthSheetScreen() {
   const { isPromptingAuth, isSignInReady, startSignIn } = useTwitchSignIn({
     onSuccess: handleAuthSuccess,
   });
 
-  const isDisabled = !isSignInReady || isPromptingAuth;
-
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
       <View style={styles.sheetHeader}>
-        <PressableScale
-          accessibilityRole='button'
-          onPress={handleDismiss}
-          hitSlop={8}
-        >
-          <Text type='md' style={{ color: theme.colorPrimary }}>
+        <Button label='Cancel' onPress={handleDismiss} hitSlop={10}>
+          <Text type='body' color='accent'>
             Cancel
           </Text>
-        </PressableScale>
+        </Button>
       </View>
+
       <View style={styles.content}>
         <View style={styles.header}>
-          <View style={styles.appIconFrame}>
-            <Image
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-              source={require('../../../assets/app-icon/app-icon-production.png')}
-              style={styles.appIcon}
-              contentFit='cover'
-            />
-          </View>
-          <View style={styles.headerCopy}>
-            <Text type='xxs' weight='bold' style={styles.eyebrow}>
-              FOAM
-            </Text>
-            <Text
-              type='3xl'
-              weight='bold'
-              color='gray.text'
-              style={styles.title}
-            >
-              Sign in with Twitch
-            </Text>
-            <Text type='sm' color='gray.textLow' style={styles.subtitle}>
-              Open your followed channels, chat access, and third-party emotes
-              in one place.
-            </Text>
-          </View>
+          <Image
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+            source={require('../../../assets/app-icon/app-icon-production.png')}
+            style={styles.appIcon}
+            contentFit='cover'
+          />
+          <Text type='title2' align='center'>
+            Sign in with Twitch
+          </Text>
+          <Text type='subhead' color='gray.textLow' align='center'>
+            See the channels you follow and chat as yourself.
+          </Text>
         </View>
 
-        <Button
-          accessibilityRole='button'
-          label='Continue with Twitch'
-          onPress={() => {
-            impact('light');
-            void startSignIn();
-          }}
-          disabled={isDisabled}
-          style={[styles.loginButton, isDisabled && styles.loginButtonDisabled]}
-        >
-          <LinearGradient
-            colors={
-              isDisabled
-                ? [
-                    theme.color.backgroundElement.dark,
-                    theme.color.backgroundElement.dark,
-                  ]
-                : [theme.color.brand.twitchLight, theme.color.brand.twitch]
-            }
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.buttonGradient}
-          >
-            <View style={styles.buttonIcon}>
+        <View style={styles.benefits}>
+          {BENEFITS.map(benefit => (
+            <View key={benefit.label} style={styles.benefit}>
               <SymbolView
-                name='play.tv.fill'
-                size={20}
-                tintColor={theme.colorWhite}
+                name={benefit.icon}
+                size={18}
+                tintColor={theme.color.textSecondary.dark}
               />
+              <Text type='callout'>{benefit.label}</Text>
             </View>
-            <Text type='sm' color='gray.text' weight='bold'>
-              {isPromptingAuth ? 'Opening Twitch...' : 'Continue with Twitch'}
-            </Text>
-          </LinearGradient>
-        </Button>
-
-        <View style={styles.featureList}>
-          <FeatureItem icon='message' label='Twitch chat' />
-          <FeatureItem icon='star' label='BTTV, FFZ, and 7TV emotes' />
-          <FeatureItem icon='person.2' label='Minimal UI' />
+          ))}
         </View>
+
+        <ActionButton
+          title='Continue with Twitch'
+          variant='brand'
+          haptic='light'
+          loading={isPromptingAuth}
+          disabled={!isSignInReady}
+          onPress={() => void startSignIn()}
+        />
       </View>
     </SafeAreaView>
-  );
-}
-
-function FeatureItem({
-  icon,
-  label,
-}: {
-  icon: SymbolViewProps['name'];
-  label: string;
-}) {
-  return (
-    <View style={styles.featureItem}>
-      <View style={styles.featureIcon}>
-        <SymbolView name={icon} size={15} tintColor={theme.colorGreyHover} />
-      </View>
-      <Text
-        type='xs'
-        color='gray.textLow'
-        weight='medium'
-        style={styles.featureText}
-      >
-        {label}
-      </Text>
-    </View>
   );
 }
 
 const styles = StyleSheet.create({
   appIcon: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
-    height: 58,
-    width: 58,
+    borderRadius: theme.radius.lg,
+    height: 64,
+    marginBottom: theme.space8,
+    width: 64,
   },
-  appIconFrame: {
-    alignSelf: 'flex-start',
-    backgroundColor: theme.colorSurfaceAlpha,
-    borderColor: theme.colorBorderSecondary,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
-    borderWidth: 1,
-    boxShadow: '0px 16px 36px rgba(145, 70, 255, 0.24)',
-    padding: theme.space4,
-  },
-  buttonGradient: {
+  benefit: {
     alignItems: 'center',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
     flexDirection: 'row',
     gap: theme.space12,
-    justifyContent: 'center',
-    minHeight: 58,
-    paddingHorizontal: theme.space20,
-    width: '100%',
   },
-  buttonIcon: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.14)',
-    borderRadius: theme.borderRadius999,
-    height: 32,
-    justifyContent: 'center',
-    width: 32,
+  benefits: {
+    alignSelf: 'center',
+    gap: theme.space12,
   },
   container: {
-    backgroundColor: theme.color.background.dark,
-    flex: 1,
-  },
-  eyebrow: {
-    color: theme.colorPrimary,
-    letterSpacing: 0,
-    textTransform: 'uppercase',
-  },
-  featureIcon: {
-    alignItems: 'center',
-    backgroundColor: theme.colorSurfaceAlpha,
-    borderRadius: theme.borderRadius999,
-    height: 28,
-    justifyContent: 'center',
-    width: 28,
-  },
-  featureItem: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: theme.space12,
-    minHeight: 32,
-  },
-  featureList: {
-    backgroundColor: theme.colorSurfaceAlpha,
-    borderColor: theme.colorBorderSecondary,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
-    borderWidth: 1,
-    gap: theme.space8,
-    padding: theme.space12,
-  },
-  featureText: {
-    flex: 1,
-  },
-  header: {
-    gap: theme.space16,
-  },
-  headerCopy: {
-    gap: theme.space8,
-  },
-  loginButton: {
-    backgroundColor: theme.color.brand.twitch,
-    borderColor: theme.color.brand.twitchBorder,
-    borderRadius: theme.borderRadius16,
-    borderWidth: 1,
-    boxShadow: '0px 18px 40px rgba(145, 70, 255, 0.28)',
-    overflow: 'hidden',
-    width: '100%',
-  },
-  loginButtonDisabled: {
-    backgroundColor: theme.color.backgroundSecondary.dark,
-    borderColor: theme.color.border.dark,
-    boxShadow: 'none',
-    opacity: 0.64,
+    backgroundColor: theme.color.surface.dark,
   },
   content: {
     alignSelf: 'center',
-    flex: 1,
-    gap: theme.space20,
-    justifyContent: 'center',
+    gap: theme.space28,
     maxWidth: 520,
-    paddingBottom: theme.space20,
+    // Clears the sheet's rounded bottom corners, which are wider than the
+    // home indicator inset.
+    paddingBottom: theme.space36,
     paddingHorizontal: theme.space20,
-    paddingTop: theme.space24,
+    paddingTop: theme.space8,
     width: '100%',
+  },
+  header: {
+    alignItems: 'center',
+    gap: theme.space8,
   },
   sheetHeader: {
     alignItems: 'center',
@@ -259,11 +133,5 @@ const styles = StyleSheet.create({
     minHeight: 44,
     paddingHorizontal: theme.space16,
     paddingTop: theme.space12,
-  },
-  subtitle: {
-    color: theme.color.textSecondary.dark,
-  },
-  title: {
-    letterSpacing: 0,
   },
 });

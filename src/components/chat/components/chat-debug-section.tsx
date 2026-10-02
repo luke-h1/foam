@@ -46,7 +46,12 @@ export function ChatDebugSection<TPayload>({
   return (
     <View style={[styles.card, style]} testID='chat-debug-section'>
       <View style={styles.headerRow}>
-        <Text style={styles.title} weight='semibold'>
+        <Text
+          type='callout'
+          family='brand'
+          style={styles.title}
+          weight='semibold'
+        >
           Debug
         </Text>
         <Button
@@ -62,22 +67,35 @@ export function ChatDebugSection<TPayload>({
         </Button>
       </View>
 
-      <Text selectable style={styles.mono} variant='mono'>
+      <Text
+        type='callout'
+        family='brand'
+        selectable
+        style={styles.mono}
+        variant='mono'
+      >
         {payloadJson}
       </Text>
 
       {data.ircLines ? (
         <>
-          <Text style={styles.subheading} weight='semibold'>
+          <Text
+            type='callout'
+            family='brand'
+            style={styles.subheading}
+            weight='semibold'
+          >
             Raw IRC lines
           </Text>
           {data.ircLines.length === 0 ? (
-            <Text style={styles.empty}>
+            <Text type='callout' family='brand' style={styles.empty}>
               No captured IRC lines for this user
             </Text>
           ) : (
             data.ircLines.map(entry => (
               <Text
+                type='callout'
+                family='brand'
                 key={`${entry.receivedAt}_${entry.line}`}
                 selectable
                 style={styles.mono}
@@ -98,7 +116,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
+    borderRadius: theme.radius.lg,
     gap: theme.space8,
     padding: theme.space12,
   },
@@ -106,7 +124,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.09)',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
+    borderRadius: theme.radius.full,
     height: 26,
     justifyContent: 'center',
     width: 26,

@@ -46,7 +46,6 @@ export function ChatPreferenceLayoutSection({
         icon={{
           icon: 'list.bullet',
           androidIcon: 'format_list_bulleted',
-          color: theme.colorGrey,
         }}
         onSelectIndex={handleDensityChange}
         selectedIndex={densityIndex}
@@ -65,7 +64,6 @@ export function ChatPreferenceLayoutSection({
         icon={{
           icon: 'textformat.size',
           androidIcon: 'format_size',
-          color: theme.colorGrey,
         }}
         onSelectIndex={handleFontScaleChange}
         selectedIndex={fontScaleIndex}
@@ -82,7 +80,6 @@ export function ChatPreferenceLayoutSection({
         icon={{
           icon: 'line.3.horizontal',
           androidIcon: 'menu',
-          color: theme.colorGrey,
         }}
         value={previewAlternatingRows}
         onValueChange={onAlternatingRowsToggle}
@@ -99,7 +96,6 @@ export function ChatPreferenceLayoutSection({
         icon={{
           icon: 'arrow.up.message',
           androidIcon: 'animation',
-          color: theme.colorGrey,
         }}
         value={animate}
         onValueChange={onAnimateChange}

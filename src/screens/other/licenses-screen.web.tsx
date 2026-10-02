@@ -1,7 +1,7 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ScreenHeader } from '@app/components/screen-header/screen-header';
+import { Text } from '@app/components/ui/text/text';
 import { theme } from '@app/styles/themes';
 
 import { OtherInfoCard } from './components/other-info-card';
@@ -9,11 +9,12 @@ import { OtherInfoCard } from './components/other-info-card';
 export function LicensesScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScreenHeader
-        title='Licenses'
-        subtitle='Open-source software used by Foam'
-        size='medium'
-      />
+      <View style={styles.header}>
+        <Text type='largeTitle'>Licenses</Text>
+        <Text type='subhead' color='gray.textLow'>
+          Open-source software used by Foam
+        </Text>
+      </View>
       <OtherInfoCard
         title='Open-source acknowledgements'
         body='The native license list is available in the iOS and Android apps.'
@@ -26,5 +27,11 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.color.background.dark,
     flex: 1,
+  },
+  header: {
+    gap: theme.space4,
+    paddingBottom: theme.space16,
+    paddingHorizontal: theme.space20,
+    paddingTop: theme.space16,
   },
 });

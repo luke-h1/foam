@@ -1,5 +1,5 @@
 import { chatLineMetrics } from '@app/components/chat/components/chat-message/util/chat-scale';
-import { Text } from '@app/components/ui/text/text';
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
@@ -19,7 +19,7 @@ export function PaintedUsernameSkia({
   fontSize,
 }: PaintedUsernameSkiaProps) {
   return (
-    <Text
+    <ChatText
       style={{
         ...chatLineMetrics.comfortable,
         fontSize,
@@ -28,6 +28,6 @@ export function PaintedUsernameSkia({
       }}
     >
       {username}
-    </Text>
+    </ChatText>
   );
 }

@@ -49,6 +49,20 @@ describe('LiveStreamCard', () => {
 
     expect(screen.getByText('Test Stream Title')).toBeOnTheScreen();
     expect(screen.getByText('Test user')).toBeOnTheScreen();
-    expect(screen.getByText('10K watching')).toBeOnTheScreen();
+    expect(screen.getByText('10K')).toBeOnTheScreen();
+  });
+
+  test('drops the category line when the list is one category', () => {
+    render(<LiveStreamCard stream={mockStream} showCategory={false} />, {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <DefaultWrapper>
+          <NavigationContainer>{children}</NavigationContainer>
+        </DefaultWrapper>
+      ),
+    });
+
+    expect(screen.queryByText(mockStream.game_name, { exact: false })).toBe(
+      null,
+    );
   });
 });

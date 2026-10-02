@@ -3,7 +3,12 @@ import { StyleSheet, Text, View } from 'react-native';
 import type { ComponentProps } from 'react';
 import type { ReactTestInstance } from 'react-test-renderer';
 
-import { act, fireEvent, render } from '@testing-library/react-native';
+import {
+  act,
+  fireEvent,
+  render,
+  userEvent,
+} from '@testing-library/react-native';
 
 import { getChatTextStyles } from '@app/components/chat/components/chat-message/chat-text.styles';
 import { MESSAGE_LONG_PRESS_DELAY_MS } from '@app/components/chat/hooks/use-chat-row-long-press';
@@ -510,7 +515,7 @@ describe('ChatRow', () => {
   });
 
   describe('Reply Context Navigation', () => {
-    test('calls onReplyContextPress with the parent message id', () => {
+    test('calls onReplyContextPress with the parent message id', async () => {
       const message = createMockMessage(
         [{ type: 'text', content: 'This is a reply' }],
         {
@@ -527,7 +532,8 @@ describe('ChatRow', () => {
         <ChatRow {...message} onReplyContextPress={mockOnReplyContextPress} />,
       );
 
-      fireEvent.press(getByTestId('chat-reply-context-button'));
+      // The reply header is a responder, not an onPress element.
+      await userEvent.press(getByTestId('chat-reply-context-button'));
 
       expect(mockOnReplyContextPress).toHaveBeenCalledTimes(1);
 

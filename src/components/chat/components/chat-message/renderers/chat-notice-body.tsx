@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { CHAT_NOTICE_ACCENTS } from '@app/components/chat/components/util/chat-notice-accents';
-import { Text } from '@app/components/ui/text/text';
 import { reportUnrenderableNotice } from '@app/utils/chat/chat-health/report-unrenderable-notice';
 import type { ChatBodyVariant } from '@app/utils/chat/derive-chat-body/types';
 
@@ -69,7 +69,7 @@ export function ChatNoticeBody({
   const row = (
     <View style={styles.noticeRow}>
       {showTimestamp && timestamp ? (
-        <Text
+        <ChatText
           tabular
           style={
             getChatTextStyles(rendererArgs.fontScale, rendererArgs.compact)
@@ -77,7 +77,7 @@ export function ChatNoticeBody({
           }
         >
           {timestamp}
-        </Text>
+        </ChatText>
       ) : null}
       {body}
     </View>

@@ -95,7 +95,7 @@ describe('FollowingScreen', () => {
     renderFollowingScreen({ loggedIn: false });
 
     expect(screen.getByText('Your followed streams')).toBeOnTheScreen();
-    expect(screen.getByText('Sign In')).toBeOnTheScreen();
+    expect(screen.getByText('Sign in')).toBeOnTheScreen();
   });
 
   test('shows loading skeletons while fetching for authenticated user', () => {
@@ -126,7 +126,7 @@ describe('FollowingScreen', () => {
     renderFollowingScreen({ loggedIn: true });
 
     expect(
-      await screen.findByText('Refresh', {}, { timeout: 15000 }),
+      await screen.findByText('Try again', {}, { timeout: 15000 }),
     ).toBeOnTheScreen();
   }, 20000);
 
@@ -175,7 +175,7 @@ describe('FollowingScreen', () => {
     renderFollowingScreen({ loggedIn: true });
 
     expect(await screen.findByText('SleepyStreamer')).toBeOnTheScreen();
-    expect(screen.getByText('Offline channels')).toBeOnTheScreen();
+    expect(screen.getByText(/^Offline/)).toBeOnTheScreen();
 
     // The live channel is filtered out of the offline section, so its name appears once (on the live card).
     expect(screen.getAllByText('LiveStreamer')).toHaveLength(1);
@@ -198,7 +198,10 @@ describe('FollowingScreen', () => {
     renderFollowingScreen({ loggedIn: true });
 
     expect(await screen.findByText('SleepyStreamer')).toBeOnTheScreen();
-    expect(screen.getByText('Offline channels')).toBeOnTheScreen();
+    expect(screen.getByText(/^Offline/)).toBeOnTheScreen();
+    expect(
+      screen.getByText('Nobody you follow is live right now.'),
+    ).toBeOnTheScreen();
     expect(screen.queryByText('No one is live')).not.toBeOnTheScreen();
   });
 });

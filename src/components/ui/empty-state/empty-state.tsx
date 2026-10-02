@@ -1,29 +1,18 @@
-/* eslint-disable no-restricted-imports */
 import {
-  type ImageStyle,
   Platform,
   type StyleProp,
-  type TextProps,
-  type TextStyle,
+  StyleSheet,
+  View,
   type ViewStyle,
 } from 'react-native';
-import type { ComponentProps } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { ContentUnavailableView, Host } from '@expo/ui/swift-ui';
 
-import {
-  EmptyLayout,
-  EmptyLayoutButton,
-  EmptyLayoutContent,
-  EmptyLayoutDescription,
-  EmptyLayoutHeader,
-  EmptyLayoutMedia,
-  EmptyLayoutTitle,
-} from '@app/components/empty-layout/empty-layout';
-import { Image } from '@app/components/image/image';
-import type { ImageProps as AppImageProps } from '@app/components/image/image.types';
-import { SymbolView, type SymbolViewProps } from '@app/components/ui/icon/icon';
+import { ActionButton } from '@app/components/action-button/action-button';
+import { type SFSymbol, SymbolView } from '@app/components/ui/icon/icon';
+import { Text } from '@app/components/ui/text/text';
+import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
 
 /**
@@ -33,329 +22,114 @@ import { theme } from '@app/styles/themes';
 const supportsContentUnavailableView =
   Platform.OS === 'ios' && parseInt(String(Platform.Version), 10) >= 17;
 
-function isStringValue(
-  value: TextProps['children'] | SymbolViewProps['name'],
-): value is string {
-  return Object.prototype.toString.call(value) === '[object String]';
-}
-
-interface EmptyStatePresetItem {
-  iconName: SymbolViewProps['name'];
-  heading: string;
-  content: string;
-  button: string;
-}
-
-const EMPTY_STATE_PRESETS = {
-  generic: {
-    iconName: 'tv',
-    heading: 'Nothing here yet',
-    content: 'Refresh to try again, or come back in a moment.',
-    button: 'Refresh',
-  },
-} satisfies Record<string, EmptyStatePresetItem>;
-
 interface EmptyStateProps {
-  preset?: keyof typeof EMPTY_STATE_PRESETS;
-  style?: StyleProp<ViewStyle>;
-  imageSource?: AppImageProps['source'];
-  imageStyle?: StyleProp<ImageStyle>;
-  imageProps?: Omit<AppImageProps, 'source'>;
-  heading?: TextProps['children'];
-  headingStyle?: StyleProp<TextStyle>;
-  headingTextProps?: TextProps;
-  content?: TextProps['children'];
-  contentStyle?: StyleProp<TextStyle>;
-  contentTextProps?: TextProps;
-  button?: string | null;
-  buttonStyle?: StyleProp<ViewStyle>;
+  heading: string;
+  content?: string;
+  iconName?: SFSymbol;
+  /**
+   * The label of the one action that fills or retries this state. Leave it
+   * out when there is nothing useful to do.
+   */
+  button?: string;
   buttonOnPress?: () => void;
-  iconName?: SymbolViewProps['name'];
-  iconSize?: number;
-  iconTintColor?: string;
-}
-
-interface NativeEmptyStateProps {
-  buttonOnPress: EmptyStateProps['buttonOnPress'];
-  buttonStyle: EmptyStateProps['buttonStyle'];
-  contentText: string;
-  headingText: string;
-  iosSymbol: ComponentProps<typeof ContentUnavailableView>['systemImage'];
-  resolvedButton: EmptyStateProps['button'];
-  style: EmptyStateProps['style'];
+  style?: StyleProp<ViewStyle>;
 }
 
 /**
- * iOS draws an empty state natively when there is no custom image and both
- * strings are plain text, so use the system view and keep only the button.
+ * Empty and error state for a screen or list, with at most one action. It
+ * fades in so the switch from content or a skeleton is not abrupt.
  */
-function NativeEmptyState({
-  buttonOnPress,
-  buttonStyle,
-  contentText,
-  headingText,
-  iosSymbol,
-  resolvedButton,
-  style,
-}: NativeEmptyStateProps) {
-  return (
-    <SafeAreaView style={[styles.container, style]}>
-      <Host style={styles.iosHost}>
-        <ContentUnavailableView
-          title={headingText}
-          systemImage={iosSymbol}
-          description={contentText}
-        />
-      </Host>
-      {resolvedButton ? (
-        <EmptyLayoutButton
-          title={resolvedButton}
-          onPress={buttonOnPress}
-          style={[styles.buttonWrap, styles.iosButtonWrap, buttonStyle]}
-          variant='default'
-        />
-      ) : null}
-    </SafeAreaView>
-  );
-}
-
-interface EmptyStateHeaderProps {
-  contentStyle: EmptyStateProps['contentStyle'];
-  contentTextProps: EmptyStateProps['contentTextProps'];
-  headingStyle: EmptyStateProps['headingStyle'];
-  headingTextProps: EmptyStateProps['headingTextProps'];
-  iconSize: number;
-  iconTintColor: string;
-  imageProps: Omit<AppImageProps, 'source'> | undefined;
-  imageStyle: EmptyStateProps['imageStyle'];
-  resolvedButton: EmptyStateProps['button'];
-  resolvedContent: EmptyStateProps['content'];
-  resolvedHeading: EmptyStateProps['heading'];
-  resolvedIconName: SymbolViewProps['name'] | undefined;
-  resolvedImageSource: AppImageProps['source'] | undefined;
-}
-
-/**
- * The stacked media, heading and body of an empty state. Each piece is
- * optional, and the spacing of the ones present depends on which others are.
- */
-function EmptyStateHeader({
-  contentStyle,
-  contentTextProps,
-  headingStyle,
-  headingTextProps,
-  iconSize,
-  iconTintColor,
-  imageProps,
-  imageStyle,
-  resolvedButton,
-  resolvedContent,
-  resolvedHeading,
-  resolvedIconName,
-  resolvedImageSource,
-}: EmptyStateHeaderProps) {
-  return (
-    <EmptyLayoutHeader>
-      {resolvedIconName ? (
-        <EmptyLayoutMedia style={styles.iconWrap}>
-          <SymbolView
-            name={resolvedIconName}
-            size={iconSize}
-            tintColor={iconTintColor}
-          />
-        </EmptyLayoutMedia>
-      ) : null}
-
-      {resolvedImageSource ? (
-        <EmptyLayoutContent style={styles.mediaWrap}>
-          <Image
-            {...imageProps}
-            source={resolvedImageSource}
-            style={[styles.image, imageStyle]}
-          />
-        </EmptyLayoutContent>
-      ) : null}
-
-      {resolvedHeading ? (
-        <EmptyLayoutTitle
-          {...headingTextProps}
-          style={[
-            styles.heading,
-            resolvedImageSource ? styles.headingWithImage : null,
-            resolvedContent || resolvedButton ? styles.headingWithBody : null,
-            headingTextProps?.style,
-            headingStyle,
-          ]}
-        >
-          {resolvedHeading}
-        </EmptyLayoutTitle>
-      ) : null}
-
-      {resolvedContent ? (
-        <EmptyLayoutDescription
-          {...contentTextProps}
-          style={[
-            styles.content,
-            resolvedImageSource || resolvedHeading
-              ? styles.contentWithHeader
-              : null,
-            resolvedButton ? styles.contentWithButton : null,
-            contentTextProps?.style,
-            contentStyle,
-          ]}
-        >
-          {resolvedContent}
-        </EmptyLayoutDescription>
-      ) : null}
-    </EmptyLayoutHeader>
-  );
-}
-
 export function EmptyState({
-  preset = 'generic',
-  style,
-  imageSource,
-  imageStyle,
-  imageProps,
   heading,
-  headingStyle,
-  headingTextProps,
   content,
-  contentStyle,
-  contentTextProps,
+  iconName = 'tv',
   button,
-  buttonStyle,
   buttonOnPress,
-  iconName,
-  iconSize = 56,
-  iconTintColor = theme.color.textSecondary.dark,
+  style,
 }: EmptyStateProps) {
-  const presetConfig = EMPTY_STATE_PRESETS[preset];
-  const resolvedImageSource = imageSource;
-
-  const resolvedIconName = resolvedImageSource
-    ? undefined
-    : (iconName ?? presetConfig.iconName);
-
-  const resolvedHeading = heading ?? presetConfig.heading;
-  const resolvedContent = content ?? presetConfig.content;
-  const resolvedButton = button === undefined ? presetConfig.button : button;
-
-  const iosSymbol = isStringValue(resolvedIconName)
-    ? resolvedIconName
-    : resolvedIconName?.ios;
-
-  const headingText = isStringValue(resolvedHeading)
-    ? resolvedHeading
-    : undefined;
-
-  const contentText = isStringValue(resolvedContent)
-    ? resolvedContent
-    : undefined;
-
-  if (
-    supportsContentUnavailableView &&
-    !resolvedImageSource &&
-    headingText !== undefined &&
-    contentText !== undefined
-  ) {
-    return (
-      <NativeEmptyState
-        buttonOnPress={buttonOnPress}
-        buttonStyle={buttonStyle}
-        contentText={contentText}
-        headingText={headingText}
-        iosSymbol={iosSymbol}
-        resolvedButton={resolvedButton}
-        style={style}
+  const action =
+    button && buttonOnPress ? (
+      <ActionButton
+        title={button}
+        size='small'
+        onPress={buttonOnPress}
+        style={styles.action}
       />
+    ) : null;
+
+  if (supportsContentUnavailableView) {
+    return (
+      <Animated.View
+        entering={FadeIn.duration(motion.medium)}
+        style={[styles.container, style]}
+      >
+        <Host style={styles.iosHost}>
+          <ContentUnavailableView
+            title={heading}
+            systemImage={iconName}
+            description={content}
+          />
+        </Host>
+        {action}
+      </Animated.View>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, style]}>
-      <EmptyLayout style={styles.emptyLayout}>
-        <EmptyStateHeader
-          contentStyle={contentStyle}
-          contentTextProps={contentTextProps}
-          headingStyle={headingStyle}
-          headingTextProps={headingTextProps}
-          iconSize={iconSize}
-          iconTintColor={iconTintColor}
-          imageProps={imageProps}
-          imageStyle={imageStyle}
-          resolvedButton={resolvedButton}
-          resolvedContent={resolvedContent}
-          resolvedHeading={resolvedHeading}
-          resolvedIconName={resolvedIconName}
-          resolvedImageSource={resolvedImageSource}
+    <Animated.View
+      entering={FadeIn.duration(motion.medium)}
+      style={[styles.container, style]}
+    >
+      <View style={styles.body}>
+        <SymbolView
+          name={iconName}
+          size={44}
+          tintColor={theme.color.textSecondary.dark}
         />
 
-        {resolvedButton ? (
-          <EmptyLayoutButton
-            title={resolvedButton}
-            onPress={buttonOnPress}
-            style={[styles.buttonWrap, buttonStyle]}
-            variant='default'
-          />
+        <Text type='title3' align='center' style={styles.heading}>
+          {heading}
+        </Text>
+
+        {content ? (
+          <Text
+            type='subhead'
+            align='center'
+            color='gray.textLow'
+            style={styles.content}
+          >
+            {content}
+          </Text>
         ) : null}
-      </EmptyLayout>
-    </SafeAreaView>
+      </View>
+      {action}
+    </Animated.View>
   );
 }
 
-const styles = {
+const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
+    paddingBottom: theme.space44,
+    paddingHorizontal: theme.space28,
   },
-  content: {
-    paddingHorizontal: theme.space20,
-    textAlign: 'center',
-  },
-  contentWithButton: {
-    marginBottom: theme.space12,
-  },
-  contentWithHeader: {
-    marginTop: theme.space12,
-  },
-  emptyLayout: {
-    maxWidth: 420,
-    minHeight: 360,
-    width: '100%',
-  },
-  buttonWrap: {
-    alignSelf: 'center',
-    minWidth: 160,
+  body: {
+    alignItems: 'center',
+    maxWidth: 360,
   },
   heading: {
-    paddingHorizontal: theme.space20,
-    textAlign: 'center',
+    marginTop: theme.space16,
   },
-  headingWithBody: {
-    marginBottom: theme.space12,
+  content: {
+    marginTop: theme.space8,
   },
-  headingWithImage: {
-    marginTop: theme.space12,
-  },
-  iconWrap: {
-    marginBottom: theme.space20,
-  },
-  iosButtonWrap: {
-    marginBottom: theme.space44,
+  action: {
+    marginTop: theme.space20,
   },
   iosHost: {
     alignSelf: 'stretch',
     flex: 1,
   },
-  image: {
-    borderRadius: theme.borderRadius20,
-    borderCurve: 'continuous',
-    height: 112,
-    width: 112,
-  },
-  mediaWrap: {
-    marginBottom: theme.space20,
-  },
-} satisfies Record<string, ViewStyle | TextStyle>;
+});

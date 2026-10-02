@@ -157,7 +157,11 @@ describe('StreamerProfileScreen', () => {
     render(<StreamerProfileScreen id='shroud' />);
 
     expect(
-      await screen.findByText('via StreamElements', {}, FIND_TIMEOUT),
+      await screen.findByText(
+        'Chat stats from StreamElements',
+        {},
+        FIND_TIMEOUT,
+      ),
     ).toBeOnTheScreen();
 
     // Top emote across all platforms is the highest-count one.
@@ -169,7 +173,9 @@ describe('StreamerProfileScreen', () => {
 
     await screen.findByText('Epic Broadcast', {}, FIND_TIMEOUT);
 
-    expect(screen.queryByText('via StreamElements')).not.toBeOnTheScreen();
+    expect(
+      screen.queryByText('Chat stats from StreamElements'),
+    ).not.toBeOnTheScreen();
   });
 
   test('shows an empty state when the channel has no VODs', async () => {
@@ -178,7 +184,7 @@ describe('StreamerProfileScreen', () => {
     render(<StreamerProfileScreen id='shroud' />);
 
     expect(
-      await screen.findByText('No VODs found', {}, FIND_TIMEOUT),
+      await screen.findByText('No past broadcasts', {}, FIND_TIMEOUT),
     ).toBeOnTheScreen();
   });
 

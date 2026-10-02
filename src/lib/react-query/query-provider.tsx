@@ -7,6 +7,7 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query';
 import { fetch } from 'expo/fetch';
+import { z } from 'zod';
 
 import { subscribeToAppStateTransitions } from '@app/utils/app-state/app-state-transitions';
 
@@ -22,18 +23,16 @@ async function checkIsOnline(): Promise<boolean> {
       controller.abort();
     }, 15e3);
 
-    const res = await fetch(`${authProxyBaseUrl}/api/healthcheck`, {
+    // The base URL already ends in `/api`.
+    const res = await fetch(`${authProxyBaseUrl}/healthcheck`, {
       headers: { 'Cache-Control': 'no-store' },
       signal: controller.signal,
     });
 
-    const healthcheck: unknown = await res.json();
-
-    return (
-      healthcheck instanceof Object &&
-      'version' in healthcheck &&
-      Boolean(healthcheck.version)
-    );
+    // The proxy answers `{ "status": "OK" }`. Any other body, including a
+    // 404 page, means the backend is unreachable.
+    return z.object({ status: z.literal('OK') }).safeParse(await res.json())
+      .success;
   } catch {
     return false;
   }

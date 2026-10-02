@@ -4,10 +4,11 @@ import { StyleSheet, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 
-import { Button } from '@app/components/button/button';
 import { FlashList } from '@app/components/flash-list/flash-list';
 import { Image } from '@app/components/image/image';
+import { PressableArea } from '@app/components/pressable-area/pressable-area';
 import { EmptyState } from '@app/components/ui/empty-state/empty-state';
+import { Skeleton } from '@app/components/ui/skeleton/skeleton';
 import { Text } from '@app/components/ui/text/text';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
 import { twitchService } from '@app/services/twitch-service';
@@ -17,13 +18,23 @@ import { useCreatedClips } from '@app/store/created-clips/react/selectors';
 import { showActionMenu } from '@app/store/overlays/show-action-menu';
 import { theme } from '@app/styles/themes';
 import type { TwitchClip } from '@app/types/twitch/clip';
+import { formatViewCount } from '@app/utils/string/format-view-count';
 
 interface MyClipListItem {
   record: CreatedClipRecord;
   clip?: TwitchClip;
+  /**
+   * True while clip details are still loading, so the row shows a
+   * placeholder instead of "Processing".
+   */
+  loading: boolean;
 }
 
-const MyClipRow = memo(function MyClipRow({ clip, record }: MyClipListItem) {
+const MyClipRow = memo(function MyClipRow({
+  clip,
+  record,
+  loading,
+}: MyClipListItem) {
   const handlePress = useCallback(() => {
     router.push(`/streams/clip/${encodeURIComponent(record.id)}`);
   }, [record.id]);
@@ -33,7 +44,7 @@ const MyClipRow = memo(function MyClipRow({ clip, record }: MyClipListItem) {
       title: clip?.title || record.broadcasterName,
       actions: [
         {
-          label: 'Remove from My Clips',
+          label: 'Remove from My clips',
           onPress: () => removeCreatedClip(record.id),
         },
       ],
@@ -44,42 +55,47 @@ const MyClipRow = memo(function MyClipRow({ clip, record }: MyClipListItem) {
   const thumbnail = clip?.thumbnail_url || undefined;
 
   return (
-    <Button
-      label={clip?.title || 'Untitled clip'}
+    <PressableArea
+      feedback='highlight'
+      accessibilityLabel={clip?.title || 'Untitled clip'}
       onPress={handlePress}
       onLongPress={handleLongPress}
-      style={styles.row}
     >
-      {thumbnail ? (
-        <Image
-          source={thumbnail}
-          cacheVariant='thumbnail'
-          style={styles.thumbnail}
-          containerStyle={styles.thumbnailWrapper}
-          transition={150}
-        />
-      ) : (
-        <View style={[styles.thumbnailWrapper, styles.thumbnailEmpty]} />
-      )}
-      <View style={styles.rowText}>
-        <Text numberOfLines={2} type='sm' weight='semibold'>
-          {clip ? clip.title || 'Untitled clip' : 'Processing…'}
-        </Text>
-        <Text numberOfLines={1} type='xs' color='gray'>
-          {record.broadcasterName}
-        </Text>
-        {clip ? (
-          <Text numberOfLines={1} type='xs' color='gray'>
-            {`${clip.view_count} views`}
+      <View style={styles.row}>
+        {thumbnail ? (
+          <Image
+            source={thumbnail}
+            cacheVariant='thumbnail'
+            style={styles.thumbnail}
+            containerStyle={styles.thumbnail}
+            transition={150}
+          />
+        ) : (
+          <Skeleton shimmer={loading} style={styles.thumbnail} />
+        )}
+        <View style={styles.rowText}>
+          {loading && !clip ? (
+            <Skeleton style={styles.skeletonTitle} />
+          ) : (
+            <Text numberOfLines={2} type='callout' weight='semibold'>
+              {clip ? clip.title || 'Untitled clip' : 'Processing…'}
+            </Text>
+          )}
+          <Text numberOfLines={1} type='subhead' color='gray.textLow'>
+            {clip
+              ? `${record.broadcasterName} · ${formatViewCount(clip.view_count)} views`
+              : record.broadcasterName}
           </Text>
-        ) : null}
+        </View>
       </View>
-    </Button>
+    </PressableArea>
   );
 });
 
 function renderMyClipRow({ item }: { item: MyClipListItem }) {
-  return <MyClipRow clip={item.clip} record={item.record} />;
+  return (
+    <MyClipRow clip={item.clip} record={item.record} loading={item.loading} />
+  );
 }
 
 function myClipKeyExtractor(item: MyClipListItem): string {
@@ -90,7 +106,11 @@ export function MyClipsScreen() {
   const records = useCreatedClips();
   const clipIds = useMemo(() => records.map(record => record.id), [records]);
 
-  const { data: clips, refetch } = useQuery({
+  const {
+    data: clips,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: twitchKeys.clipsByIds(clipIds),
     queryFn: () => twitchService.getClipsByIds(clipIds),
     enabled: clipIds.length > 0,
@@ -111,13 +131,13 @@ export function MyClipsScreen() {
     return records.map(record => ({
       record,
       clip: clipsById.get(record.id),
+      loading: isLoading,
     }));
-  }, [records, clips]);
+  }, [records, clips, isLoading]);
 
   if (records.length === 0) {
     return (
       <EmptyState
-        button={null}
         content='Clips you create from the live player will show up here.'
         heading='No clips yet'
         iconName='scissors'
@@ -167,18 +187,16 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 2,
   },
+  skeletonTitle: {
+    height: 13,
+    marginVertical: 4,
+    width: '70%',
+  },
   thumbnail: {
-    height: '100%',
-    width: '100%',
-  },
-  thumbnailEmpty: {
-    backgroundColor: theme.darkActiveContent,
-  },
-  thumbnailWrapper: {
+    aspectRatio: 16 / 9,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius8,
-    height: 54,
+    borderRadius: theme.radius.md,
     overflow: 'hidden',
-    width: 96,
+    width: 112,
   },
 });

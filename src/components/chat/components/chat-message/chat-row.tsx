@@ -28,7 +28,7 @@ function ChatRowComponent<
   return (
     <>
       <ChatRowSurface state={state}>
-        <ChatRowBody {...state} />
+        <ChatRowBody state={state} />
       </ChatRowSurface>
       {state.selectedEmoteAction ? (
         <EmoteActionSheet

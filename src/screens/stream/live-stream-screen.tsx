@@ -169,7 +169,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const shouldFetchChannelMetadata = isFocused && normalizedLogin.length > 0;
 
   const {
-    data: stream,
+    data: streamData,
     isError: isStreamRequestError,
     isSuccess: isStreamRequestSuccess,
     refetch: refetchStream,
@@ -177,6 +177,9 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     ...streamQueryOptions(normalizedLogin),
     enabled: isStreamEnabled && shouldFetchChannelMetadata,
   });
+
+  // `null` means the channel is offline.
+  const stream = streamData ?? undefined;
 
   const { data: user } = useQuery({
     ...userQueryOptions(normalizedLogin),
@@ -343,62 +346,10 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 });
 
 const styles = StyleSheet.create({
-  androidBackButton: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    borderRadius: theme.borderRadius999,
-    height: 32,
-    justifyContent: 'center',
-    position: 'absolute',
-    width: 32,
-    zIndex: 12,
-  },
-  overlayChatContainer: {
-    zIndex: 3,
-  },
-  container: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-  },
   contentContainer: {
     backgroundColor: theme.colorBlack,
     flex: 1,
     overflow: 'hidden',
     position: 'relative',
-  },
-  fullscreenChatControlButton: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.32)',
-    borderColor: theme.color.border.dark,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    borderWidth: StyleSheet.hairlineWidth,
-    height: 30,
-    justifyContent: 'center',
-    width: 30,
-  },
-  fullscreenChatControlIcon: {
-    opacity: 0.75,
-  },
-  fullscreenChatControls: {
-    flexDirection: 'row',
-    gap: theme.space8,
-    position: 'absolute',
-    zIndex: 12,
-  },
-  videoContainer: {
-    alignItems: 'center',
-    backgroundColor: theme.colorBlack,
-    justifyContent: 'center',
-    position: 'absolute',
-    zIndex: 2,
-  },
-  videoUser: {
-    color: theme.colorWhite,
-    fontSize: theme.fontSize16,
-    fontWeight: 'bold',
-    marginTop: 20,
-    textAlign: 'center',
   },
 });

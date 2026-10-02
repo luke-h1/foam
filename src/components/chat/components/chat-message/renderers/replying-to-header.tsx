@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { View } from 'react-native';
 
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { CHAT_NOTICE_ACCENTS } from '@app/components/chat/components/util/chat-notice-accents';
 import { SymbolView } from '@app/components/ui/icon/icon';
-import { Text } from '@app/components/ui/text/text';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-chat-username';
 import { flowsInline } from '@app/utils/chat/derive-chat-body/flows-inline';
 import { getMessageStructure } from '@app/utils/chat/derive-chat-body/get-message-structure';
@@ -102,16 +102,16 @@ export function ReplyingToHeader({
       />
       <View style={styles.replyContextContent}>
         {quoteFlowsInline ? (
-          <Text
+          <ChatText
             numberOfLines={1}
             style={[
               replyContextPrefixTextStyle,
               quoteContainsEmotes && textStyles.replyContextEmoteLine,
             ]}
           >
-            <Text style={replyContextPrefixTextStyle}>
+            <ChatText style={replyContextPrefixTextStyle}>
               {parsedReplyBody.length > 0 ? `${prefix}: ` : prefix}
-            </Text>
+            </ChatText>
             <InlineTokens
               {...tokenRenderProps}
               emoteTargetSize={replyEmoteSize}
@@ -119,17 +119,17 @@ export function ReplyingToHeader({
               replyPlainMentionTarget={replyPlainMentionTarget}
               textStyle={replyContextBodyTextStyle}
             />
-          </Text>
+          </ChatText>
         ) : (
           <>
-            <Text numberOfLines={1} style={replyContextPrefixTextStyle}>
+            <ChatText numberOfLines={1} style={replyContextPrefixTextStyle}>
               {prefix}
-            </Text>
+            </ChatText>
             {parsedReplyBody.length > 0 ? (
               <View style={styles.replyContextBody}>
-                <Text numberOfLines={1} style={replyContextBodyTextStyle}>
+                <ChatText numberOfLines={1} style={replyContextBodyTextStyle}>
                   :{' '}
-                </Text>
+                </ChatText>
                 <View style={styles.replyContextBodyParts}>
                   <WrappedTokens
                     {...tokenRenderProps}

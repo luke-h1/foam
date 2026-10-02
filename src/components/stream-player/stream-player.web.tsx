@@ -133,7 +133,7 @@ export function StreamPlayer({
       />
       {!clip && (
         <View style={styles.footer}>
-          <Text color='gray.contrast' type='xs' numberOfLines={1}>
+          <Text color='gray.contrast' type='subhead' numberOfLines={1}>
             {channel ?? 'Twitch'} on Twitch
           </Text>
           <Button
@@ -146,7 +146,7 @@ export function StreamPlayer({
             }}
             style={styles.openButton}
           >
-            <Text color='gray.contrast' type='xs' weight='semibold'>
+            <Text color='gray.contrast' type='subhead' weight='semibold'>
               Open
             </Text>
           </Button>
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
   openButton: {
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.14)',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.radius.md,
     justifyContent: 'center',
     paddingHorizontal: theme.space12,
     paddingVertical: theme.space8,

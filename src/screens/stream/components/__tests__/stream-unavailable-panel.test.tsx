@@ -50,7 +50,7 @@ describe('StreamUnavailablePanel', () => {
 
     expect(screen.getByText("Couldn't load this stream")).toBeOnTheScreen();
 
-    fireEvent.press(screen.getByText('Retry'));
+    fireEvent.press(screen.getByText('Try again'));
 
     expect(onRetry).toHaveBeenCalledTimes(1);
   });

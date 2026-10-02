@@ -51,20 +51,25 @@ function ChannelPollCardComponent({
           </Badge>
           {poll.channelPointsVotingEnabled ? (
             <Badge color='amber' variant='soft'>
-              <Text type='xs' weight='semibold'>
+              <Text type='subhead' weight='semibold'>
                 {`+${poll.channelPointsPerVote} pts / extra vote`}
               </Text>
             </Badge>
           ) : null}
         </View>
         {timeRemaining ? (
-          <Text color='gray.textLow' tabular type='xxs' weight='medium'>
+          <Text color='gray.textLow' tabular type='caption' weight='medium'>
             {timeRemaining}
           </Text>
         ) : null}
       </View>
 
-      <Text color='gray.text' style={styles.title} type='sm' weight='semibold'>
+      <Text
+        color='gray.text'
+        style={styles.title}
+        type='body'
+        weight='semibold'
+      >
         {poll.title}
       </Text>
 
@@ -86,12 +91,17 @@ function ChannelPollCardComponent({
               <Text
                 color='gray.text'
                 numberOfLines={1}
-                type='xs'
+                type='subhead'
                 weight='medium'
               >
                 {choice.title}
               </Text>
-              <Text color='gray.textLow' tabular type='xxs' weight='semibold'>
+              <Text
+                color='gray.textLow'
+                tabular
+                type='caption'
+                weight='semibold'
+              >
                 {choice.percentage}% · {choice.votes}
               </Text>
             </View>
@@ -100,7 +110,7 @@ function ChannelPollCardComponent({
       </View>
 
       <View style={styles.footer}>
-        <Text color='gray.textLow' tabular type='xxs'>
+        <Text color='gray.textLow' tabular type='caption'>
           {poll.totalVotes} total votes
         </Text>
         {poll.isActive ? (
@@ -110,7 +120,7 @@ function ChannelPollCardComponent({
               openLinkInBrowser(`https://www.twitch.tv/${channelLogin}`)
             }
           >
-            <Text color='violet.accent' type='xxs' weight='semibold'>
+            <Text color='violet.accent' type='caption' weight='semibold'>
               Vote on Twitch
             </Text>
           </PressableArea>

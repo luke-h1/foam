@@ -1,13 +1,13 @@
 const tintColorLight = '#1083FE';
 const tintColorDark = '#2E86FF';
-const lightText = '#0F1620';
-const darkText = '#EDF1F5';
-const lightBackground = '#EBF0F6';
-const darkBackground = '#0C1014';
-const borderLight = 'rgba(16,30,50,0.10)';
+const lightText = '#000000';
+const darkText = '#F5F5F7';
+const lightBackground = '#F2F2F7';
+const darkBackground = '#000000';
+const borderLight = 'rgba(60,60,67,0.18)';
 const borderDark = 'rgba(255,255,255,0.10)';
-const iconLight = '#54657A';
-const iconDark = '#93A1B2';
+const iconLight = '#6C6C70';
+const iconDark = '#98989F';
 
 export type ThemeColor =
   | 'accent'

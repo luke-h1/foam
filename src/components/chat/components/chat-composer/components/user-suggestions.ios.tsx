@@ -57,7 +57,9 @@ function UserSuggestionItem({
           },
         ]}
       />
-      <Text style={styles.userSuggestionText}>{user.name}</Text>
+      <Text type='callout' family='brand' style={styles.userSuggestionText}>
+        {user.name}
+      </Text>
     </Button>
   );
 }
@@ -107,7 +109,7 @@ const styles = StyleSheet.create({
     backgroundColor: suggestionRailColors.chipBackground,
     borderColor: suggestionRailColors.chipBorder,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius14,
+    borderRadius: theme.radius.md,
     borderWidth: 1,
     flexDirection: 'row',
     gap: theme.space8,

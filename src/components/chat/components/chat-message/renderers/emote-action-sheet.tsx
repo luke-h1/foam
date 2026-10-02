@@ -11,7 +11,6 @@ import {
 } from 'react';
 import {
   type GestureResponderEvent,
-  Platform,
   StyleSheet,
   useWindowDimensions,
   View,
@@ -24,9 +23,9 @@ import {
   BottomSheet,
   type BottomSheetHandle,
 } from '@app/components/bottom-sheet/bottom-sheet';
-import { Button } from '@app/components/button/button';
+import { SheetHeader } from '@app/components/chat/components/sheet/sheet-header';
+import { SheetActionGroup } from '@app/components/chat/components/sheet-action-group';
 import { Image } from '@app/components/image/image';
-import { SymbolView } from '@app/components/ui/icon/icon';
 import { Text } from '@app/components/ui/text/text';
 import { theme } from '@app/styles/themes';
 import type { EmoteImageScale } from '@app/types/emote';
@@ -246,8 +245,6 @@ function EmoteActionSheetComponent({
     },
   ].filter(action => action.visible);
 
-  const previewSubtitle = 'Emote actions';
-
   // SAFETY: the trigger child is the pressable this sheet wraps, and onLongPress is the only prop cloned onto it.
   const triggerChild =
     children && isValidElement(children)
@@ -272,78 +269,37 @@ function EmoteActionSheetComponent({
         testID='emote-action-sheet'
       >
         <View style={wrapperStyle}>
-          <View style={styles.topBar}>
-            <View style={styles.heading}>
-              <Text style={styles.eyebrow} weight='semibold'>
-                Emote actions
-              </Text>
-            </View>
-            <Button
-              label='Done'
-              style={styles.doneButton}
-              onPress={requestClose}
-            >
-              <SymbolView
-                name='xmark'
-                size={15}
-                weight='semibold'
-                tintColor={theme.color.textSecondary.dark}
-              />
-            </Button>
-          </View>
-          {(displayUrl || token.name || token.original_name) && (
-            <View style={styles.previewCard}>
-              <View style={styles.previewRow}>
-                {displayUrl ? (
-                  <View style={styles.previewImageContainer}>
-                    <Image
-                      trackLoadContext='chat.emote-action-sheet'
-                      source={displayUrl}
-                      cacheVariant='emote'
-                      style={previewImageSize}
-                      contentFit='contain'
-                      transition={50}
-                    />
-                  </View>
-                ) : null}
-                <View style={styles.previewMeta}>
-                  {token.name || token.original_name ? (
-                    <Text style={styles.previewName}>
-                      {token.name ?? token.original_name}
-                    </Text>
-                  ) : null}
-                  <Text style={styles.previewHint}>{previewSubtitle}</Text>
-                </View>
-              </View>
-            </View>
-          )}
-          <View style={styles.actionGroup}>
-            {actions.map((action, index) => (
-              <Button
-                key={action.label}
-                onPress={action.onPress}
-                style={[
-                  styles.actionButton,
-                  index > 0 && styles.actionButtonWithDivider,
-                ]}
-              >
-                <View style={styles.actionIconFrame}>
-                  <SymbolView
-                    name={getEmoteActionSFSymbolName(action.id)}
-                    size={18}
-                    tintColor={theme.color.textSecondary.dark}
-                    weight='regular'
-                    style={styles.actionIcon}
+          <SheetHeader onClose={requestClose}>
+            <View style={styles.identity}>
+              {displayUrl ? (
+                <View style={styles.previewImage}>
+                  <Image
+                    trackLoadContext='chat.emote-action-sheet'
+                    source={displayUrl}
+                    cacheVariant='emote'
+                    style={previewImageSize}
+                    contentFit='contain'
+                    transition={50}
                   />
                 </View>
-                <View style={styles.actionCopy}>
-                  <Text style={styles.actionText} weight='semibold'>
-                    {action.label}
-                  </Text>
-                </View>
-              </Button>
-            ))}
-          </View>
+              ) : null}
+              <Text
+                type='callout'
+                family='brand'
+                style={styles.previewName}
+                numberOfLines={1}
+              >
+                {token.name ?? token.original_name ?? 'Emote'}
+              </Text>
+            </View>
+          </SheetHeader>
+          <SheetActionGroup
+            actions={actions.map(action => ({
+              icon: getEmoteActionSFSymbolName(action.id),
+              label: action.label,
+              onPress: action.onPress,
+            }))}
+          />
         </View>
       </BottomSheet>
     </>
@@ -353,110 +309,33 @@ function EmoteActionSheetComponent({
 export const EmoteActionSheet = memo(EmoteActionSheetComponent);
 
 const styles = StyleSheet.create({
-  actionButton: {
+  identity: {
     alignItems: 'center',
-    backgroundColor: 'transparent',
     flexDirection: 'row',
     gap: theme.space12,
-    minHeight: Platform.select({ ios: 56, android: 56 }),
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space12,
   },
-  actionButtonWithDivider: {
-    borderTopColor: 'rgba(255,255,255,0.1)',
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  actionCopy: {
-    flex: 1,
-  },
-  actionGroup: {
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
-    overflow: 'hidden',
-  },
-  actionIcon: {
-    opacity: 0.9,
-  },
-  actionIconFrame: {
+  previewImage: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.09)',
-    borderCurve: 'continuous',
-    borderRadius: 8,
-    height: 30,
+    height: 56,
     justifyContent: 'center',
-    width: 30,
-  },
-  actionText: {
-    color: theme.color.text.dark,
-    fontSize: theme.fontSize17,
-    lineHeight: theme.fontSize17 * 1.2,
-  },
-  doneButton: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.14)',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    height: 30,
-    justifyContent: 'center',
-    width: 30,
-  },
-  eyebrow: {
-    color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize11,
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-  },
-  heading: {
-    flex: 1,
-  },
-  previewCard: {
-    paddingHorizontal: 2,
-    paddingVertical: theme.space4,
-  },
-  previewHint: {
-    color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize12,
-    lineHeight: theme.fontSize12 * 1.3,
-    marginTop: 4,
-  },
-  previewImageContainer: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
-    height: 64,
-    justifyContent: 'center',
-    overflow: 'hidden',
-    width: 64,
-  },
-  previewMeta: {
-    flex: 1,
+    width: 56,
   },
   previewName: {
     color: theme.color.text.dark,
-    fontSize: theme.fontSize18,
-    fontWeight: Platform.select({ ios: '700', android: '600' }),
-    lineHeight: theme.fontSize18 * 1.2,
+    flexShrink: 1,
+    fontSize: theme.fontSize20,
+    fontWeight: '600',
+    lineHeight: 25,
   },
-  previewRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: theme.space16,
-  },
-  topBar: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: theme.space12,
-    justifyContent: 'space-between',
-    paddingBottom: theme.space8,
-  },
+  /**
+   * No bottom padding: the action group's `SettingsSection` carries a bottom
+   * margin of the same size.
+   */
   wrapper: {
     alignSelf: 'stretch',
-    gap: theme.space12,
-    paddingBottom: theme.space24,
-    paddingHorizontal: theme.space20,
-    paddingTop: theme.space4,
+    gap: theme.space20,
+    paddingHorizontal: theme.space16,
+    paddingTop: theme.space12,
     width: '100%',
   },
 });

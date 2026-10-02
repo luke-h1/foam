@@ -79,7 +79,7 @@ export function UserCardHeader({
               <SymbolView
                 name='person.fill'
                 size={22}
-                tintColor='rgba(255,255,255,0.45)'
+                tintColor={theme.color.textSecondary.dark}
               />
             </View>
           )}
@@ -93,7 +93,12 @@ export function UserCardHeader({
             usernameTextStyle={styles.displayName}
           />
           {showLogin ? (
-            <Text style={styles.login} numberOfLines={1}>
+            <Text
+              type='callout'
+              family='brand'
+              style={styles.login}
+              numberOfLines={1}
+            >
               @{login}
             </Text>
           ) : null}
@@ -109,7 +114,12 @@ export function UserCardHeader({
                 useAppleWebpCodec={false}
                 style={styles.badgeImage}
               />
-              <Text style={styles.chipText} numberOfLines={1}>
+              <Text
+                type='callout'
+                family='brand'
+                style={styles.chipText}
+                numberOfLines={1}
+              >
                 {sevenTvBadge.title}
               </Text>
             </View>
@@ -122,6 +132,8 @@ export function UserCardHeader({
                 tintColor={theme.colorPrimary}
               />
               <Text
+                type='callout'
+                family='brand'
                 style={[styles.chipText, styles.paintChipText]}
                 numberOfLines={1}
               >
@@ -134,9 +146,14 @@ export function UserCardHeader({
               <SymbolView
                 name='birthday.cake'
                 size={11}
-                tintColor='rgba(255,255,255,0.55)'
+                tintColor={theme.color.textSecondary.dark}
               />
-              <Text style={styles.chipText} numberOfLines={1}>
+              <Text
+                type='callout'
+                family='brand'
+                style={styles.chipText}
+                numberOfLines={1}
+              >
                 Joined {joinedDate}
               </Text>
             </View>
@@ -149,23 +166,20 @@ export function UserCardHeader({
 
 const styles = StyleSheet.create({
   avatar: {
-    borderRadius: theme.borderRadius999,
-    height: 52,
-    width: 52,
+    borderRadius: theme.radius.full,
+    height: 56,
+    width: 56,
   },
   avatarFrame: {
-    borderColor: 'rgba(255,255,255,0.14)',
-    borderRadius: theme.borderRadius999,
-    borderWidth: 1,
-    padding: 2,
+    borderRadius: theme.radius.full,
   },
   avatarPlaceholder: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: theme.borderRadius999,
-    height: 52,
+    backgroundColor: theme.color.surfaceElevated.dark,
+    borderRadius: theme.radius.full,
+    height: 56,
     justifyContent: 'center',
-    width: 52,
+    width: 56,
   },
   badgeImage: {
     height: 14,
@@ -173,11 +187,9 @@ const styles = StyleSheet.create({
   },
   chip: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: theme.color.surfaceElevated.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    borderWidth: 1,
+    borderRadius: theme.radius.full,
     flexDirection: 'row',
     gap: 5,
     paddingHorizontal: 10,
@@ -197,8 +209,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   displayName: {
-    fontSize: theme.fontSize18,
-    lineHeight: 22,
+    fontSize: theme.fontSize20,
+    lineHeight: 25,
   },
   identityRow: {
     alignItems: 'center',
@@ -212,12 +224,11 @@ const styles = StyleSheet.create({
   },
   login: {
     color: theme.color.textSecondary.dark,
-    fontSize: 13,
-    lineHeight: 16,
+    fontSize: theme.fontSize14,
+    lineHeight: 18,
   },
   paintChip: {
-    backgroundColor: 'rgba(46, 134, 255, 0.10)',
-    borderColor: 'rgba(46, 134, 255, 0.22)',
+    backgroundColor: theme.color.accentSurface.dark,
   },
   paintChipText: {
     color: theme.colorPrimary,

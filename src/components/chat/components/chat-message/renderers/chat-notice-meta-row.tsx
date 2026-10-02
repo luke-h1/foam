@@ -1,8 +1,8 @@
 import { type StyleProp, type TextStyle, View } from 'react-native';
 import type { ReactNode } from 'react';
 
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { SymbolView } from '@app/components/ui/icon/icon';
-import { Text } from '@app/components/ui/text/text';
 
 import { styles } from '../chat-row.styles';
 import { getChatTextStyles } from '../chat-text.styles';
@@ -38,7 +38,7 @@ export function ChatNoticeMetaRow({
         style={styles.replyContextIcon}
       />
       {children ?? (
-        <Text
+        <ChatText
           style={[
             textStyles.meta,
             styles.messageMetaTextFlex,
@@ -48,7 +48,7 @@ export function ChatNoticeMetaRow({
           ]}
         >
           {label}
-        </Text>
+        </ChatText>
       )}
     </View>
   );

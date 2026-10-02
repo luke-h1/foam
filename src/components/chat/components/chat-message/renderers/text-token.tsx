@@ -1,5 +1,5 @@
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { getChatColorStyle } from '@app/components/chat/util/chat-color-styles';
-import { Text } from '@app/components/ui/text/text';
 import type { MessageToken } from '@app/utils/chat/message-token';
 
 import { styles } from '../chat-row.styles';
@@ -28,16 +28,16 @@ export function TextToken({
 
   if (token.type === 'link') {
     return (
-      <Text
+      <ChatText
         style={[textStyles.link, isModerated && styles.moderatedMessageText]}
       >
         {token.content}
-      </Text>
+      </ChatText>
     );
   }
 
   return (
-    <Text
+    <ChatText
       color='gray.text'
       style={[
         textStyles.body,
@@ -46,6 +46,6 @@ export function TextToken({
       ]}
     >
       {token.content}
-    </Text>
+    </ChatText>
   );
 }

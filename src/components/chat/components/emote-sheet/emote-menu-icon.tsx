@@ -46,12 +46,18 @@ function EmoteMenuIconComponent({
   }
 
   if (icon.startsWith('emoji:')) {
-    return <Text style={styles.emojiIconText}>{icon.slice(6)}</Text>;
+    return (
+      <Text type='callout' family='brand' style={styles.emojiIconText}>
+        {icon.slice(6)}
+      </Text>
+    );
   }
 
   if (icon === 'ffz') {
     return (
       <Text
+        type='callout'
+        family='brand'
         style={[
           styles.fallbackIconLabel,
           styles.ffzTextIcon,
@@ -86,7 +92,9 @@ function EmoteMenuIconComponent({
   }
 
   return fallbackLabel ? (
-    <Text style={styles.fallbackIconLabel}>{fallbackLabel}</Text>
+    <Text type='callout' family='brand' style={styles.fallbackIconLabel}>
+      {fallbackLabel}
+    </Text>
   ) : null;
 }
 

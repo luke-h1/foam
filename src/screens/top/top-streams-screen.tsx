@@ -98,7 +98,7 @@ export function TopStreamsScreen() {
           iconName='exclamationmark.triangle'
           heading="Couldn't load top streams"
           content='Check your connection and try again.'
-          button='Retry'
+          button='Try again'
           // eslint-disable-next-line @typescript-eslint/no-misused-promises
           buttonOnPress={onRefresh}
         />

@@ -9,7 +9,6 @@ import { Text } from '@app/components/ui/text/text';
 import { impact } from '@app/lib/haptics';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
 import { showActionMenu } from '@app/store/overlays/show-action-menu';
-import { Color } from '@app/styles/palette';
 import { theme } from '@app/styles/themes';
 import type { TwitchStream } from '@app/types/twitch/stream';
 import { shareDeepLink } from '@app/utils/sharing/share-deep-link';
@@ -19,6 +18,7 @@ import {
   formatViewCountCompact,
 } from '@app/utils/string/format-view-count';
 
+import { Avatar } from '../avatar/avatar';
 import { Button } from '../button/button';
 import { Image } from '../image/image';
 import { PressableArea } from '../pressable-area/pressable-area';
@@ -30,6 +30,10 @@ import {
 interface Props {
   stream: TwitchStream;
   layout?: 'compact' | 'media';
+  /**
+   * Hide the category line on a list that is already one category.
+   */
+  showCategory?: boolean;
 }
 
 const LANGUAGE_NAMES = new Map([
@@ -64,7 +68,11 @@ function pushRouteOnce(path: string) {
   router.push(path);
 }
 
-function LiveStreamCard({ stream, layout = 'compact' }: Props) {
+function LiveStreamCard({
+  stream,
+  layout = 'compact',
+  showCategory = true,
+}: Props) {
   const queryClient = useQueryClient();
 
   const thumbnailSize =
@@ -73,8 +81,6 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
   const thumbnailUrl = stream.thumbnail_url
     .replace('{width}', thumbnailSize.width)
     .replace('{height}', thumbnailSize.height);
-
-  const avatarInitial = stream.user_name.trim().charAt(0).toUpperCase();
 
   // Media-layout avatars come pre-batched via useStreamProfilePictures at the
   // list level - one /users request per screen, not one per visible card.
@@ -131,6 +137,8 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
     stream.game_name
   }, ${formatViewCount(stream.viewer_count)} watching, ${stream.title}`;
 
+  const viewerLabel = formatViewCountCompact(stream.viewer_count);
+
   if (layout === 'media') {
     // Only the media layout renders the language, so keep the tag scan out of
     // the (default) compact path.
@@ -144,95 +152,49 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
         onPressIn={handleStreamPressIn}
         onLongPress={handleLongPress}
         label={cardAccessibilityLabel}
-        style={styles.mediaCardWrapper}
+        style={styles.mediaCard}
       >
-        <View style={styles.mediaContainer}>
-          <View style={styles.mediaImageShell}>
-            <Image
-              source={thumbnailUrl}
-              style={styles.mediaImage}
-              containerStyle={styles.mediaImageWrapper}
-              transition={150}
-            />
-            <LiveBadge
-              style={[styles.compactLiveBadge, styles.mediaLiveBadge]}
-            />
-            <View style={styles.viewerBadge}>
-              <Text
-                type='sm'
-                weight='bold'
-                tabular
-                style={styles.viewerBadgeText}
-              >
-                {formatViewCountCompact(stream.viewer_count)} watching
-              </Text>
-            </View>
-          </View>
+        <View>
+          <Image
+            source={thumbnailUrl}
+            style={styles.mediaImage}
+            containerStyle={styles.mediaImage}
+            transition={150}
+          />
+          <LiveBadge label={viewerLabel} style={styles.thumbnailBadge} />
+        </View>
 
-          <View style={styles.mediaDetailsRow}>
-            <PressableArea
-              accessibilityLabel={`${stream.user_name}'s profile`}
-              onPress={handleStreamerPress}
-              onPressIn={handleStreamerPressIn}
-              style={styles.avatarPressable}
-              hitSlop={8}
-            >
-              {profilePicture ? (
-                <Image
-                  source={profilePicture}
-                  style={styles.avatarImage}
-                  containerStyle={styles.avatarImageWrapper}
-                  transition={150}
-                />
-              ) : (
-                <View style={styles.avatarFallback}>
-                  <Text type='md' weight='bold' style={styles.avatarInitial}>
-                    {avatarInitial}
-                  </Text>
-                </View>
-              )}
-            </PressableArea>
+        <View style={styles.mediaDetailsRow}>
+          <PressableArea
+            accessibilityLabel={`${stream.user_name}'s profile`}
+            onPress={handleStreamerPress}
+            onPressIn={handleStreamerPressIn}
+            hitSlop={8}
+          >
+            <Avatar uri={profilePicture} name={stream.user_name} size={36} />
+          </PressableArea>
 
-            <View style={styles.mediaTextColumn}>
-              <PressableArea
-                accessibilityLabel={`${stream.user_name}'s profile`}
-                onPress={handleStreamerPress}
-                onPressIn={handleStreamerPressIn}
-                hitSlop={6}
-              >
-                <Text
-                  type='md'
-                  weight='semibold'
-                  style={styles.mediaUsername}
-                  numberOfLines={1}
-                >
-                  {stream.user_name}
-                </Text>
-              </PressableArea>
-              <Text
-                type='sm'
-                weight='medium'
-                numberOfLines={2}
-                style={styles.mediaTitle}
-              >
-                {stream.title}
-              </Text>
+          <View style={styles.details}>
+            <Text type='callout' weight='semibold' numberOfLines={1}>
+              {stream.user_name}
+            </Text>
+            <Text type='subhead' color='gray.textLow' numberOfLines={2}>
+              {stream.title}
+            </Text>
+            {showCategory ? (
               <PressableArea
                 accessibilityLabel={`${stream.game_name} category`}
                 onPress={handleCategoryPress}
                 hitSlop={6}
+                style={styles.categoryButton}
               >
-                <Text
-                  type='sm'
-                  weight='medium'
-                  style={styles.mediaCategory}
-                  numberOfLines={1}
-                >
-                  {stream.game_name}
-                  {languageLabel ? `  •  ${languageLabel}` : ''}
+                <Text type='footnote' color='gray.textLow' numberOfLines={1}>
+                  {languageLabel
+                    ? `${stream.game_name} · ${languageLabel}`
+                    : stream.game_name}
                 </Text>
               </PressableArea>
-            </View>
+            ) : null}
           </View>
         </View>
       </Button>
@@ -240,22 +202,22 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
   }
 
   return (
-    <Button
+    <PressableArea
+      feedback='highlight'
       onPress={handleStreamPress}
       onPressIn={handleStreamPressIn}
       onLongPress={handleLongPress}
-      label={cardAccessibilityLabel}
-      style={styles.cardWrapper}
+      accessibilityLabel={cardAccessibilityLabel}
     >
-      <View style={styles.container}>
-        <View style={styles.imageContainer}>
+      <View style={styles.row}>
+        <View>
           <Image
             source={thumbnailUrl}
-            style={styles.image}
-            containerStyle={styles.imageWrapper}
+            style={styles.thumbnail}
+            containerStyle={styles.thumbnail}
             transition={150}
           />
-          <LiveBadge style={styles.compactLiveBadge} />
+          <LiveBadge label={viewerLabel} style={styles.thumbnailBadge} />
         </View>
 
         <View style={styles.details}>
@@ -263,256 +225,95 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
             accessibilityLabel={`${stream.user_name}'s profile`}
             onPress={handleStreamerPress}
             onPressIn={handleStreamerPressIn}
-            style={styles.usernameButton}
             hitSlop={8}
+            style={styles.inlineButton}
           >
-            <Text
-              type='sm'
-              weight='semibold'
-              numberOfLines={1}
-              style={styles.username}
-            >
+            <Text type='callout' weight='semibold' numberOfLines={1}>
               {stream.user_name}
             </Text>
           </PressableArea>
 
-          <Text
-            type='sm'
-            weight='normal'
-            style={styles.title}
-            numberOfLines={2}
-          >
+          <Text type='subhead' color='gray.textLow' numberOfLines={2}>
             {stream.title}
           </Text>
 
-          <View style={styles.metadataRow}>
-            <View style={styles.liveMeta}>
-              <Text type='xs' tabular style={styles.liveText}>
-                {elapsedStreamTime(stream.started_at)}
-              </Text>
-            </View>
-            <Text type='xs' style={styles.metaDivider}>
-              •
-            </Text>
-            <Text
-              type='xs'
-              tabular
-              numberOfLines={1}
-              style={styles.viewersText}
+          {showCategory ? (
+            <PressableArea
+              accessibilityLabel={`${stream.game_name} category`}
+              onPress={handleCategoryPress}
+              hitSlop={6}
+              style={styles.inlineButton}
             >
-              {formatViewCountCompact(stream.viewer_count)} watching
+              <Text
+                type='footnote'
+                color='gray.textLow'
+                tabular
+                numberOfLines={1}
+              >
+                {`${stream.game_name} · ${elapsedStreamTime(stream.started_at)}`}
+              </Text>
+            </PressableArea>
+          ) : (
+            <Text type='footnote' color='gray.textLow' tabular>
+              {`Live for ${elapsedStreamTime(stream.started_at)}`}
             </Text>
-          </View>
-
-          <PressableArea
-            onPress={handleCategoryPress}
-            style={styles.categoryButton}
-            hitSlop={6}
-          >
-            <Text type='xs' numberOfLines={1} style={styles.categoryText}>
-              {stream.game_name}
-            </Text>
-          </PressableArea>
+          )}
         </View>
       </View>
-    </Button>
+    </PressableArea>
   );
 }
 
 export const MemoizedLiveStreamCard = memo(LiveStreamCard);
 
 const styles = StyleSheet.create({
-  cardWrapper: {
-    width: '100%',
-  },
-  avatarFallback: {
-    alignItems: 'center',
-    backgroundColor: theme.darkActiveContent,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    height: 44,
-    justifyContent: 'center',
-    width: 44,
-  },
-  avatarImage: {
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    height: 44,
-    width: 44,
-  },
-  avatarImageWrapper: {
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    height: 44,
-    overflow: 'hidden',
-    width: 44,
-  },
-  avatarInitial: {
-    color: Color.zinc[50],
-  },
-  avatarPressable: {
-    flexShrink: 0,
-    marginTop: 2,
-  },
-  categoryButton: {
-    alignSelf: 'flex-start',
-    minWidth: 0,
-  },
-  categoryText: {
-    color: Color.zinc[300],
-    lineHeight: 16,
-  },
-  container: {
+  row: {
     alignItems: 'flex-start',
-    backgroundColor: Color.zinc[900],
-    borderColor: theme.color.border.dark,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius10,
-    borderWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
-    flexWrap: 'nowrap',
-    marginHorizontal: theme.space16,
-    marginVertical: theme.space4,
-    minHeight: 112,
-    overflow: 'hidden',
-    paddingHorizontal: theme.space8,
+    gap: theme.space12,
+    paddingHorizontal: theme.space16,
     paddingVertical: theme.space8,
+  },
+  thumbnail: {
+    aspectRatio: 16 / 9,
+    borderCurve: 'continuous',
+    borderRadius: theme.radius.md,
+    overflow: 'hidden',
+    width: 144,
+  },
+  thumbnailBadge: {
+    bottom: theme.space8,
+    left: theme.space8,
+    position: 'absolute',
   },
   details: {
     flex: 1,
-    flexShrink: 1,
-    gap: theme.space2,
-    justifyContent: 'flex-start',
-    minHeight: 88,
+    gap: 2,
     minWidth: 0,
   },
-  image: {
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius6,
-    height: 88,
-    width: 132,
+  inlineButton: {
+    alignSelf: 'flex-start',
+    maxWidth: '100%',
   },
-  imageContainer: {
+  mediaCard: {
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space12,
+  },
+  mediaImage: {
+    aspectRatio: 16 / 9,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius6,
-    flexShrink: 0,
-    height: 88,
-    marginRight: theme.space12,
+    borderRadius: theme.radius.md,
     overflow: 'hidden',
-    width: 132,
-  },
-  imageWrapper: {
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius6,
-    height: 88,
-    overflow: 'hidden',
-    width: 132,
-  },
-  liveMeta: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 4,
-  },
-  mediaLiveBadge: {
-    left: theme.space12,
-    top: theme.space12,
-  },
-  liveText: {
-    color: Color.zinc[300],
-  },
-  compactLiveBadge: {
-    left: 6,
-    position: 'absolute',
-    top: 6,
-  },
-  mediaCardWrapper: {
     width: '100%',
-  },
-  mediaCategory: {
-    color: Color.zinc[300],
-    lineHeight: 20,
-  },
-  mediaContainer: {
-    marginHorizontal: theme.space16,
-    marginVertical: theme.space12,
   },
   mediaDetailsRow: {
     flexDirection: 'row',
     gap: theme.space12,
     marginTop: theme.space12,
   },
-  mediaImage: {
-    aspectRatio: 16 / 9,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius8,
-    width: '100%',
-  },
-  mediaImageShell: {
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius8,
-    overflow: 'hidden',
-    position: 'relative',
-    width: '100%',
-  },
-  mediaImageWrapper: {
-    aspectRatio: 16 / 9,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius8,
-    overflow: 'hidden',
-    width: '100%',
-  },
-  mediaTextColumn: {
-    flex: 1,
-    gap: 2,
-    minWidth: 0,
-  },
-  mediaTitle: {
-    color: Color.zinc[100],
-    lineHeight: 19,
-  },
-  mediaUsername: {
-    color: Color.zinc[50],
-    lineHeight: 21,
-  },
-  metaDivider: {
-    color: Color.zinc[400],
-    opacity: 0.5,
-  },
-  metadataRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    flexWrap: 'nowrap',
-    gap: 6,
-    marginTop: theme.space4,
-  },
-  title: {
-    color: Color.zinc[100],
-    lineHeight: 19,
-  },
-  username: {
-    color: Color.zinc[50],
-  },
-  usernameButton: {
+  categoryButton: {
     alignSelf: 'flex-start',
-    flex: 0,
-    minWidth: 0,
-  },
-  viewersText: {
-    color: Color.zinc[300],
-    flexShrink: 1,
-  },
-  viewerBadge: {
-    backgroundColor: 'rgba(0,0,0,0.68)',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius4,
-    bottom: theme.space12,
-    left: theme.space12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    position: 'absolute',
-  },
-  viewerBadgeText: {
-    color: Color.zinc[50],
-    lineHeight: 20,
+    marginTop: 2,
+    maxWidth: '100%',
   },
 });

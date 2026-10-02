@@ -96,7 +96,7 @@ export const EmojiStylePreview = function EmojiStylePreview({
 
 export function PreviewLabel() {
   return (
-    <Text color='gray.textLow' type='xxs' weight='semibold'>
+    <Text color='gray.textLow' type='caption' weight='semibold'>
       Preview
     </Text>
   );
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.color.background.dark,
     borderColor: theme.colorBorderSecondary,
-    borderRadius: theme.borderRadius6,
+    borderRadius: theme.radius.sm,
     borderCurve: 'continuous',
     borderWidth: StyleSheet.hairlineWidth,
     height: 44,
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   previewPanel: {
     backgroundColor: theme.color.background.dark,
     borderColor: theme.colorBorderSecondary,
-    borderRadius: theme.borderRadius6,
+    borderRadius: theme.radius.sm,
     borderCurve: 'continuous',
     borderWidth: StyleSheet.hairlineWidth,
     gap: theme.space4,

@@ -99,7 +99,11 @@ function EmoteCellComponent({
         accessibilityLabel={item}
         style={[styles.emoteCell, { height: cellSize, width: cellSize }]}
       >
-        <Text style={[styles.emojiText, { fontSize: innerSize * 0.84 }]}>
+        <Text
+          type='callout'
+          family='brand'
+          style={[styles.emojiText, { fontSize: innerSize * 0.84 }]}
+        >
           {item}
         </Text>
       </View>

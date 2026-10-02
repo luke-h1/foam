@@ -140,3 +140,6 @@ playstore-service-account.json
 
 # watchman drops these transient cookies in the repo root during a crawl
 .watchman-cookie-*
+
+# local design research notes and media
+research/

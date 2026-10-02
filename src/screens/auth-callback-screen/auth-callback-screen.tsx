@@ -8,7 +8,7 @@ export function AuthCallbackScreen() {
   return (
     <View style={styles.container}>
       <LoadingState style={styles.spinner} />
-      <Text type='md' color='gray' align='center'>
+      <Text type='headline' color='gray' align='center'>
         Completing sign in…
       </Text>
     </View>

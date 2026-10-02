@@ -4,7 +4,6 @@ import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { router } from 'expo-router';
-import { PressableScale } from 'pressto';
 import { toast } from 'sonner-native';
 
 import { Button } from '@app/components/button/button';
@@ -83,27 +82,40 @@ export function FeedbackScreen() {
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
       <View style={styles.sheetHeader}>
-        <PressableScale
-          accessibilityRole='button'
+        <Button
+          label='Cancel'
           onPress={handleDismiss}
-          hitSlop={8}
+          hitSlop={10}
           style={styles.headerSide}
         >
-          <Text type='md' style={{ color: theme.colorPrimary }}>
+          <Text type='body' color='accent'>
             Cancel
           </Text>
-        </PressableScale>
+        </Button>
         <Text
-          type='md'
-          weight='semibold'
-          color='gray.text'
+          type='headline'
           align='center'
           numberOfLines={1}
           style={styles.headerTitle}
         >
           Send feedback
         </Text>
-        <View style={styles.headerSide} />
+        <Button
+          label='Send'
+          haptic='light'
+          disabled={!canSubmit}
+          onPress={handleSubmit}
+          hitSlop={10}
+          style={[styles.headerSide, styles.headerSideEnd]}
+        >
+          <Text
+            type='headline'
+            color='accent'
+            style={canSubmit ? null : styles.sendDisabled}
+          >
+            {submitting ? 'Sending…' : 'Send'}
+          </Text>
+        </Button>
       </View>
       <KeyboardAvoidingView behavior='padding' style={styles.flex}>
         <ScrollView
@@ -112,7 +124,7 @@ export function FeedbackScreen() {
           keyboardShouldPersistTaps='handled'
           indicatorStyle='white'
         >
-          <Text type='sm' color='gray.textLow' style={styles.subtitle}>
+          <Text type='subhead' color='gray.textLow'>
             Found a bug or have an idea? Tell us and it goes straight to the
             team.
           </Text>
@@ -132,12 +144,12 @@ export function FeedbackScreen() {
 
           <View style={styles.field}>
             <Text
-              type='xxs'
+              type='footnote'
               weight='semibold'
               color='gray.textLow'
               style={styles.fieldLabel}
             >
-              MESSAGE
+              Message
             </Text>
             <Input
               autoCapitalize='sentences'
@@ -149,7 +161,7 @@ export function FeedbackScreen() {
                   ? 'What went wrong, and what were you doing when it happened?'
                   : 'What would make Foam better?'
               }
-              placeholderTextColor={theme.colorGreyHoverAlpha}
+              placeholderTextColor={theme.color.textFaint.dark}
               style={[styles.input, styles.messageInput]}
               value={message}
             />
@@ -157,7 +169,7 @@ export function FeedbackScreen() {
 
           <View style={styles.field}>
             <Text
-              type='xxs'
+              type='footnote'
               weight='semibold'
               color='gray.textLow'
               style={styles.fieldLabel}
@@ -172,29 +184,11 @@ export function FeedbackScreen() {
               keyboardType='email-address'
               onChangeText={setEmail}
               placeholder='you@example.com, so we can follow up'
-              placeholderTextColor={theme.colorGreyHoverAlpha}
+              placeholderTextColor={theme.color.textFaint.dark}
               style={styles.input}
               value={email}
             />
           </View>
-
-          <Button
-            disabled={!canSubmit}
-            haptic='light'
-            label='Send'
-            onPress={handleSubmit}
-            style={[styles.submit, !canSubmit && styles.submitDisabled]}
-          >
-            <Text
-              type='sm'
-              weight='bold'
-              color='accent'
-              contrast
-              align='center'
-            >
-              {submitting ? 'Sending…' : 'Send'}
-            </Text>
-          </Button>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -203,37 +197,38 @@ export function FeedbackScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.color.background.dark,
+    backgroundColor: theme.color.surface.dark,
     flex: 1,
   },
   content: {
     gap: theme.space20,
     paddingBottom: theme.space24,
-    paddingHorizontal: theme.space20,
+    paddingHorizontal: theme.space16,
     paddingTop: theme.space16,
   },
   field: {
     gap: theme.space8,
   },
   fieldLabel: {
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
+    paddingHorizontal: theme.space4,
   },
   flex: {
     flex: 1,
   },
   headerSide: {
-    width: 64,
+    width: 72,
+  },
+  headerSideEnd: {
+    alignItems: 'flex-end',
   },
   headerTitle: {
     flex: 1,
   },
   input: {
-    backgroundColor: theme.color.backgroundSecondary.dark,
-    borderColor: theme.colorBorderSecondary,
+    backgroundColor: theme.color.surfaceElevated.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: theme.radius.md,
+    borderWidth: 0,
     color: theme.color.text.dark,
     fontSize: theme.fontSize16,
     paddingHorizontal: theme.space16,
@@ -243,28 +238,14 @@ const styles = StyleSheet.create({
     minHeight: 132,
     textAlignVertical: 'top',
   },
+  sendDisabled: {
+    opacity: 0.35,
+  },
   sheetHeader: {
     alignItems: 'center',
     flexDirection: 'row',
     minHeight: 44,
     paddingHorizontal: theme.space16,
     paddingTop: theme.space12,
-  },
-  subtitle: {
-    lineHeight: theme.fontSize14 * 1.5,
-  },
-  submit: {
-    alignItems: 'center',
-    backgroundColor: theme.colorPrimary,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
-    justifyContent: 'center',
-    marginTop: theme.space4,
-    minHeight: 52,
-    paddingHorizontal: theme.space24,
-    paddingVertical: theme.space16,
-  },
-  submitDisabled: {
-    opacity: 0.5,
   },
 });

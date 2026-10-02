@@ -39,7 +39,9 @@ function ProviderChipComponent({
         />
       </View>
       {isActive ? (
-        <Text style={styles.providerChipTitle}>{provider.title}</Text>
+        <Text type='callout' family='brand' style={styles.providerChipTitle}>
+          {provider.title}
+        </Text>
       ) : null}
     </Button>
   );

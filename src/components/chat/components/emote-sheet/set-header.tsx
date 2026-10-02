@@ -17,7 +17,12 @@ function SetHeaderComponent({ set }: { set: EmoteMenuSet }) {
           fallbackLabel={set.shortLabel}
         />
       </View>
-      <Text numberOfLines={1} style={styles.setHeaderTitle}>
+      <Text
+        type='callout'
+        family='brand'
+        numberOfLines={1}
+        style={styles.setHeaderTitle}
+      >
         {set.title}
       </Text>
     </View>

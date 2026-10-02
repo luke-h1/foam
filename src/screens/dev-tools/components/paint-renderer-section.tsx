@@ -10,7 +10,6 @@ import {
   usePreference,
   useUpdatePreferences,
 } from '@app/store/preference-store';
-import { theme } from '@app/styles/themes';
 import { isDevToolsEnabled } from '@app/utils/dev-tools/is-dev-tools-enabled';
 
 const PAINT_RENDERER_OPTIONS = [
@@ -75,7 +74,7 @@ export function PaintRendererSection() {
       <ChatPreferenceSegmentedSettingsRow
         title='7TV Paint Renderer'
         subtitle='Choose the username paint renderer. Off renders default name colours; WebView is a dev-only reference.'
-        icon={{ icon: 'paintbrush.fill', color: theme.colorPlum }}
+        icon={{ icon: 'paintbrush.fill' }}
         onSelectIndex={index => {
           const next = PAINT_RENDERER_OPTIONS[index]?.value;
           if (next) {

@@ -8,8 +8,10 @@ import { UserChatBody } from './renderers/user-chat-body';
 /**
  * Picks the body renderer for a row from its variant: an announcement, an
  * ordinary user message, or one of the notice kinds.
+ *
+ * Takes the row state as one prop, so a row render does not copy its fields.
  */
-export function ChatRowBody(props: ChatRowBodyState) {
+export function ChatRowBody({ state }: { state: ChatRowBodyState }) {
   const {
     badges,
     announcementAccentColor,
@@ -18,7 +20,6 @@ export function ChatRowBody(props: ChatRowBodyState) {
     canJumpToReplyTarget,
     handleBadgePress,
     isAction,
-    isChannelPointRedemption,
     isFirstMessage,
     isReturningChatter,
     isReplyingToCurrentUser,
@@ -36,7 +37,7 @@ export function ChatRowBody(props: ChatRowBodyState) {
     userstate,
     isSharedChatDuplicated,
     isHighlightedMessage,
-  } = props;
+  } = state;
 
   const sharedChatLabel = isSharedChatDuplicated ? (
     <SharedChatSourceLabel
@@ -57,10 +58,10 @@ export function ChatRowBody(props: ChatRowBodyState) {
           onUsernamePress={onUsernamePress}
           showTimestamp={showTimestamp}
           timestamp={timestamp}
+          tokenRenderProps={tokenRenderProps}
           userId={userstate['user-id']}
           userstateColor={userstate.color}
           username={userstate.username}
-          {...tokenRenderProps}
         />
       </>
     );
@@ -75,7 +76,6 @@ export function ChatRowBody(props: ChatRowBodyState) {
           onBadgePress={handleBadgePress}
           cachedSenderColor={cachedSenderColor}
           isAction={isAction}
-          isChannelPointRedemption={isChannelPointRedemption}
           isHighlightedMessage={isHighlightedMessage}
           onReplyContextPress={onReplyContextPress}
           onUsernamePress={onUsernamePress}
@@ -93,11 +93,11 @@ export function ChatRowBody(props: ChatRowBodyState) {
           replyParentMessageId={replyParentMessageId}
           roomId={roomId}
           timestamp={timestamp}
+          tokenRenderProps={tokenRenderProps}
           userId={userstate['user-id']}
           userstate={userstate}
           userstateColor={userstate.color}
           username={userstate.username}
-          {...tokenRenderProps}
         />
       </>
     );

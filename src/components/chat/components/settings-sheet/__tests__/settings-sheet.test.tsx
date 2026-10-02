@@ -72,10 +72,10 @@ describe('SettingsSheet', () => {
       <SettingsSheet isPresented onDismiss={jest.fn()} />,
     );
 
-    fireEvent(getByLabelText('Show Timestamps'), 'valueChange', false);
-    fireEvent(getByLabelText('Highlight Own Mentions'), 'valueChange', false);
-    fireEvent(getByLabelText('Inline Reply Context'), 'valueChange', false);
-    fireEvent(getByLabelText('Show Jump Pill'), 'valueChange', false);
+    fireEvent(getByLabelText('Show timestamps'), 'valueChange', false);
+    fireEvent(getByLabelText('Highlight own mentions'), 'valueChange', false);
+    fireEvent(getByLabelText('Inline reply context'), 'valueChange', false);
+    fireEvent(getByLabelText('Show jump pill'), 'valueChange', false);
 
     const preferences = getPreferences();
 

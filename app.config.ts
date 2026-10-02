@@ -308,8 +308,6 @@ const config: ExpoConfig = {
         ],
         ios: {
           fonts: [
-            'node_modules/@expo-google-fonts/instrument-serif/400Regular',
-            'node_modules/@expo-google-fonts/instrument-serif/400Regular_Italic',
             'node_modules/@expo-google-fonts/montserrat/300Light',
             'node_modules/@expo-google-fonts/montserrat/300Light_Italic',
             'node_modules/@expo-google-fonts/montserrat/400Regular',
@@ -328,8 +326,6 @@ const config: ExpoConfig = {
         },
         android: {
           fonts: [
-            'node_modules/@expo-google-fonts/instrument-serif/400Regular',
-            'node_modules/@expo-google-fonts/instrument-serif/400Regular_Italic',
             'node_modules/@expo-google-fonts/montserrat/300Light',
             'node_modules/@expo-google-fonts/montserrat/300Light_Italic',
             'node_modules/@expo-google-fonts/montserrat/400Regular',

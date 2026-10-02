@@ -49,7 +49,7 @@ describe('CategoryScreen', () => {
 
     render(<CategoryScreen id='cat1' />);
 
-    expect(screen.getByTestId('loading-state')).toBeOnTheScreen();
+    expect(screen.getAllByTestId('stream-skeleton').length).toBeGreaterThan(0);
   });
 
   test('shows error empty state when category fetch fails', async () => {
@@ -61,6 +61,15 @@ describe('CategoryScreen', () => {
     expect(
       await screen.findByText("Couldn't load this category"),
     ).toBeOnTheScreen();
+  });
+
+  test('shows not found when the category id is unknown', async () => {
+    twitchService.getCategory.mockResolvedValue(null);
+    twitchService.getStreamsByCategory.mockResolvedValue({ data: [] });
+
+    render(<CategoryScreen id='cat1' />);
+
+    expect(await screen.findByText('Category not found')).toBeOnTheScreen();
   });
 
   test('shows error empty state when streams fetch fails', async () => {
@@ -87,8 +96,8 @@ describe('CategoryScreen', () => {
     render(<CategoryScreen id='cat1' />);
 
     expect(await screen.findByText('Streamer1')).toBeOnTheScreen();
-    expect(screen.getByText('10,000 viewers')).toBeOnTheScreen();
-    expect(screen.getAllByText('Just Chatting').length).toBeGreaterThan(0);
+    expect(screen.getByText('10,000 watching')).toBeOnTheScreen();
+    expect(screen.getByText('Just Chatting')).toBeOnTheScreen();
   });
 
   test('shows empty state when no streams for category', async () => {

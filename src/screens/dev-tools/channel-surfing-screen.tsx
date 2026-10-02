@@ -98,7 +98,7 @@ export function ChannelSurfingScreen() {
           <Row label='Update ID' value={updateId ?? 'embedded'} />
         </View>
 
-        <Text color='gray.textLow' style={styles.hint} type='sm'>
+        <Text color='gray.textLow' style={styles.hint} type='body'>
           {
             'Enter the channel (or branch mapped to a channel) you want to load. For PR previews this is typically pr-<number>.'
           }
@@ -115,18 +115,18 @@ export function ChannelSurfingScreen() {
 
         <View style={styles.actions}>
           <Button disabled={busy} onPress={surf} style={styles.primaryBtn}>
-            <Text type='sm' weight='semibold' style={styles.primaryBtnText}>
+            <Text type='body' weight='semibold' style={styles.primaryBtnText}>
               {busy ? 'Loading…' : 'Surf to channel'}
             </Text>
           </Button>
           <Button disabled={busy} onPress={reset} style={styles.secondaryBtn}>
-            <Text type='sm' weight='semibold' color='red.accent'>
+            <Text type='body' weight='semibold' color='red.accent'>
               Reset to build channel
             </Text>
           </Button>
         </View>
 
-        <Text color='gray.textLow' style={styles.footnote} type='xs'>
+        <Text color='gray.textLow' style={styles.footnote} type='subhead'>
           A bad update on the chosen channel can leave the app unable to start.
           If that happens, force-quit and reopen - the build channel is restored
           on next launch via the embedded bundle.
@@ -139,10 +139,10 @@ export function ChannelSurfingScreen() {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.row}>
-      <Text color='gray.textLow' type='sm'>
+      <Text color='gray.textLow' type='body'>
         {label}
       </Text>
-      <Text type='sm'>{value}</Text>
+      <Text type='body'>{value}</Text>
     </View>
   );
 }
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.colorBlue,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.radius.md,
     justifyContent: 'center',
     paddingHorizontal: theme.space20,
     paddingVertical: theme.space12,

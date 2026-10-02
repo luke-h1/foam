@@ -12,7 +12,6 @@ import {
 } from '@expo/ui/swift-ui';
 import {
   autocorrectionDisabled,
-  foregroundStyle,
   listStyle,
   onSubmit,
   submitLabel,
@@ -64,7 +63,7 @@ function TermRow({
 
   return (
     <View style={styles.row}>
-      <Text type='md' style={styles.termText} numberOfLines={1}>
+      <Text type='headline' style={styles.termText} numberOfLines={1}>
         {term}
       </Text>
       <PressableScale onPress={handleRemove} hitSlop={11}>
@@ -86,10 +85,10 @@ function EmptyState() {
         size={48}
         tintColor={theme.color.textSecondary.dark}
       />
-      <Text type='lg' weight='medium' style={styles.emptyTitle}>
+      <Text type='title3' weight='medium' style={styles.emptyTitle}>
         No blocked terms
       </Text>
-      <Text type='sm' style={styles.emptySubtitle}>
+      <Text type='body' style={styles.emptySubtitle}>
         Messages containing a blocked term will be hidden from chat.
       </Text>
     </View>
@@ -202,7 +201,16 @@ function NativeBlockedTermsList() {
   return (
     <Host style={styles.keyboardAvoid} colorScheme='dark'>
       <List modifiers={[listStyle('insetGrouped')]}>
-        <Section>
+        <Section
+          footer={
+            hasTerms ? undefined : (
+              <SwiftText>
+                Messages that contain a blocked word or phrase are hidden from
+                chat.
+              </SwiftText>
+            )
+          }
+        >
           <TextField
             text={termText}
             placeholder='Add a term to block…'
@@ -293,19 +301,10 @@ export function BlockedTermsScreen() {
         ListEmptyComponent={EmptyState}
         ListFooterComponent={
           hasTerms ? (
-            <Text type='xs' style={styles.footer}>
+            <Text type='subhead' style={styles.footer}>
               {`${blockedTerms.length} ${blockedTerms.length === 1 ? 'term' : 'terms'} · Messages containing these will be hidden from chat.`}
             </Text>
-          ) : (
-            <Section title='No blocked terms'>
-              <SwiftText
-                modifiers={[foregroundStyle(theme.color.textSecondary.dark)]}
-              >
-                Add a word or phrase above. Messages containing them will be
-                hidden from chat
-              </SwiftText>
-            </Section>
-          )
+          ) : null
         }
       />
     </KeyboardAvoidingView>
@@ -317,7 +316,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.color.surfacePressed.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
+    borderRadius: theme.radius.full,
     height: 36,
     justifyContent: 'center',
     width: 36,
@@ -352,7 +351,7 @@ const styles = StyleSheet.create({
     backgroundColor: Color.zinc[900],
     borderColor: Color.zinc[800],
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.radius.md,
     borderWidth: 1,
     color: theme.colorWhite,
     flex: 1,

@@ -1,14 +1,16 @@
 import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { Text } from '@app/components/ui/text/text';
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import type { MessageToken } from '@app/utils/chat/message-token';
 
+import type { ChatTextStyles } from '../chat-text.styles';
 import { ChatInlineImage } from './chat-inline-image';
 
 interface CheermoteTokenProps {
   disableAnimations?: boolean;
   isModerated?: boolean;
+  textStyles: ChatTextStyles;
   token: MessageToken<'cheermote'>;
   targetSize?: number;
 }
@@ -18,6 +20,7 @@ export const CheermoteToken = memo(
     token,
     disableAnimations = false,
     isModerated = false,
+    textStyles,
     targetSize = 30,
   }: CheermoteTokenProps) => {
     const sourceUrl = disableAnimations
@@ -25,7 +28,11 @@ export const CheermoteToken = memo(
       : token.cheermote.url || token.cheermote.static_url;
 
     if (!sourceUrl) {
-      return <Text style={styles.fallbackText}>{token.content}</Text>;
+      return (
+        <ChatText style={[textStyles.body, styles.fallbackText]}>
+          {token.content}
+        </ChatText>
+      );
     }
 
     return (
@@ -37,9 +44,12 @@ export const CheermoteToken = memo(
           sourceUrl={sourceUrl}
           style={{ width: targetSize, height: targetSize }}
         />
-        <Text type='xs' weight='bold' style={{ color: token.cheermote.color }}>
+        <ChatText
+          weight='bold'
+          style={[textStyles.body, { color: token.cheermote.color }]}
+        >
           {token.cheermote.bits}
-        </Text>
+        </ChatText>
       </View>
     );
   },

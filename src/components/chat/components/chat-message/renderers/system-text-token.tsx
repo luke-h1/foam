@@ -1,4 +1,4 @@
-import { Text } from '@app/components/ui/text/text';
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 
 import { styles } from '../chat-row.styles';
 import type { getChatTextStyles } from '../chat-text.styles';
@@ -25,7 +25,7 @@ export function SystemTextToken({
     noticeTags?.['msg-id'] === 'raid' || noticeTags?.['msg-id'] === 'unraid';
 
   return (
-    <Text
+    <ChatText
       style={
         isRaidNotice
           ? [textStyles.meta, styles.raidNoticeText]
@@ -33,6 +33,6 @@ export function SystemTextToken({
       }
     >
       {content}
-    </Text>
+    </ChatText>
   );
 }

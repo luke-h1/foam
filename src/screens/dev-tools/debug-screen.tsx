@@ -239,19 +239,19 @@ export function DebugScreen() {
             <SettingsToggleRow
               title='RQ DevTools'
               subtitle='Shows React Query debugger'
-              icon={{ icon: 'ladybug', color: theme.colorOrange }}
+              icon={{ icon: 'ladybug' }}
               value={reactQueryEnabled}
               onValueChange={handleToggleReactQueryDebug}
             />
             <SettingsLinkRow
               title='Copy storage state'
-              icon={{ icon: 'doc.on.doc', color: theme.colorBlue }}
+              icon={{ icon: 'doc.on.doc' }}
               onPress={() => void handleCopyStorageState()}
             />
             <SettingsLinkRow
               title='Clear storage'
               subtitle={`Wipe ${NAMESPACE}`}
-              icon={{ icon: 'trash', color: theme.colorRed }}
+              icon={{ icon: 'trash' }}
               onPress={handleClearDebugStorage}
               danger
             />
@@ -275,7 +275,7 @@ export function DebugScreen() {
                 onPress={() => void handleConvertUsername()}
                 style={styles.goBtn}
               >
-                <Text type='sm' weight='semibold'>
+                <Text type='body' weight='semibold'>
                   copy
                 </Text>
               </Button>
@@ -285,7 +285,7 @@ export function DebugScreen() {
           <SettingsSection
             title='Token'
             footer={
-              <Text type='xs' color='gray.textLow'>
+              <Text type='subhead' color='gray.textLow'>
                 {accessToken
                   ? `${tokenKind} · …${accessToken.slice(-16)}`
                   : 'No token available'}
@@ -294,7 +294,7 @@ export function DebugScreen() {
           >
             <SettingsLinkRow
               title='Copy access token'
-              icon={{ icon: 'key', color: theme.colorTeal }}
+              icon={{ icon: 'key' }}
               onPress={() => void handleCopyToken()}
             />
           </SettingsSection>
@@ -303,7 +303,7 @@ export function DebugScreen() {
             title='Join channel'
             footer={
               user ? (
-                <Text type='xs' color='gray.textLow'>
+                <Text type='subhead' color='gray.textLow'>
                   {`logged in as ${user.display_name}`}
                 </Text>
               ) : undefined
@@ -321,7 +321,7 @@ export function DebugScreen() {
                 radius='sm'
               />
               <Button onPress={handleJoinChannel} style={styles.joinBtn}>
-                <Text type='sm' weight='semibold' style={styles.joinBtnText}>
+                <Text type='body' weight='semibold' style={styles.joinBtnText}>
                   Go
                 </Text>
               </Button>
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.darkActiveContent,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.radius.md,
     height: 44,
     justifyContent: 'center',
     paddingHorizontal: theme.space16,
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.colorBlue,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.radius.md,
     justifyContent: 'center',
     paddingHorizontal: theme.space20,
   },

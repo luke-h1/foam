@@ -3,7 +3,7 @@ import { type StyleProp, StyleSheet, TextStyle } from 'react-native';
 
 import { useSelector } from '@legendapp/state/react';
 
-import { Text } from '@app/components/ui/text/text';
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import { usePaintRenderer } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
@@ -54,11 +54,11 @@ function PaintedUsernameWithPaint({
 
   if (paintRenderer === 'off') {
     return (
-      <Text
+      <ChatText
         style={[styles.plainUsername, { color: plainColor }, usernameTextStyle]}
       >
         {displayUsername}
-      </Text>
+      </ChatText>
     );
   }
 
@@ -117,7 +117,7 @@ function PaintedUsernameComponent({
 
   if (!paint) {
     return (
-      <Text
+      <ChatText
         style={[
           styles.plainUsername,
           { color: fallbackColor },
@@ -125,7 +125,7 @@ function PaintedUsernameComponent({
         ]}
       >
         {displayUsername}
-      </Text>
+      </ChatText>
     );
   }
 

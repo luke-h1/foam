@@ -1,8 +1,8 @@
 import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { Image } from '@app/components/image/image';
 import { LiveBadge } from '@app/components/live-badge/live-badge';
-import { LiveStreamImage } from '@app/components/live-stream-image/live-stream-image';
 import { Text } from '@app/components/ui/text/text';
 import { theme } from '@app/styles/themes';
 import type { SearchChannelResponse } from '@app/types/twitch/channel';
@@ -16,20 +16,26 @@ export const StreamerCard = memo(function StreamerCard({ stream }: Props) {
 
   return (
     <View style={styles.container}>
-      <LiveStreamImage thumbnail={stream.thumbnail_url} animated size='sm' />
+      <Image
+        source={stream.thumbnail_url}
+        cacheVariant='thumbnail'
+        transition={150}
+        style={styles.avatar}
+        containerStyle={styles.avatar}
+      />
       <View style={styles.info}>
         <View style={styles.nameRow}>
-          <Text type='sm' weight='semibold' numberOfLines={1}>
+          <Text type='body' weight='semibold' numberOfLines={1}>
             {stream.display_name}
           </Text>
           {isLive && <LiveBadge tone='tinted' />}
         </View>
         {stream.game_name ? (
-          <Text type='xs' color='gray.textLow' numberOfLines={1}>
+          <Text type='subhead' color='gray.textLow' numberOfLines={1}>
             {stream.game_name}
           </Text>
         ) : (
-          <Text type='xs' color='gray.textLow' numberOfLines={1}>
+          <Text type='subhead' color='gray.textLow' numberOfLines={1}>
             {isLive ? 'Streaming' : 'Offline'}
           </Text>
         )}
@@ -41,10 +47,18 @@ export const StreamerCard = memo(function StreamerCard({ stream }: Props) {
 StreamerCard.displayName = 'StreamerCard';
 
 const styles = StyleSheet.create({
+  avatar: {
+    borderCurve: 'continuous',
+    borderRadius: theme.radius.full,
+    height: 48,
+    overflow: 'hidden',
+    width: 48,
+  },
   container: {
     alignItems: 'center',
     flexDirection: 'row',
     flex: 1,
+    gap: theme.space16,
   },
   info: {
     flex: 1,
@@ -53,6 +67,6 @@ const styles = StyleSheet.create({
   nameRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: theme.space12,
+    gap: theme.space8,
   },
 });

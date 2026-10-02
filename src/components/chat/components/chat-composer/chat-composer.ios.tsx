@@ -140,7 +140,8 @@ function ChatComposerComponent({
 
       {showCharacterCount ? (
         <Text
-          type='xxs'
+          family='brand'
+          type='caption'
           weight='semibold'
           style={[
             chatComposerStyles.characterCount,
@@ -186,7 +187,7 @@ function ChatComposerComponent({
               accessibilityLabel='Send a message'
               placeholder={placeholder ?? 'Send a message...'}
               placeholderTextColor={theme.color.textSecondary.dark}
-              radius='xl'
+              radius='lg'
               returnKeyType='send'
               /**
                * Drives the SwiftUI `.tint` so caret and selection follow the

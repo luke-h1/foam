@@ -3,9 +3,12 @@ import type { SFSymbol } from 'sf-symbols-typescript';
 import type { AndroidSymbol } from '@app/components/ui/icon/icon';
 import type { SymbolViewProps } from '@app/components/ui/icon/icon';
 
+/**
+ * Row icons are monochrome glyphs, the same as the native iOS form. Colour is
+ * kept for destructive rows only, which the row's `danger` flag sets.
+ */
 export type RowIcon =
   | {
-      color?: string;
       icon: SFSymbol;
       androidIcon?: AndroidSymbol;
     }

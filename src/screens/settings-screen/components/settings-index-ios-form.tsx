@@ -1,140 +1,177 @@
-import { StyleSheet } from 'react-native';
+// "shape" here is @expo/ui API naming (clipShape, contentShape), not a naming choice.
+// oxlint-disable anti-slop/no-shape-in-symbol-names
+import { StyleSheet, View } from 'react-native';
 
-import { Button, Form, Host, Section, Text as UIText } from '@expo/ui/swift-ui';
+import {
+  Button,
+  Form,
+  Host,
+  HStack,
+  Image as NativeImage,
+  RNHostView,
+  Section,
+  Spacer,
+  Text as NativeText,
+  VStack,
+} from '@expo/ui/swift-ui';
+import {
+  buttonStyle,
+  contentShape,
+  font,
+  foregroundStyle,
+  shapes,
+} from '@expo/ui/swift-ui/modifiers';
 import { router } from 'expo-router';
 
-import { openLicenseList } from '@app/lib/legal';
-import { openLinkInBrowser } from '@app/utils/browser/open-link-in-browser';
+import { Avatar } from '@app/components/avatar/avatar';
+import { theme } from '@app/styles/themes';
+import type { UserInfoResponse } from '@app/types/twitch/user';
 import { getBuildInfoLabel } from '@app/utils/version/build-info-label';
 
+import {
+  APP_MENU_ROWS,
+  CHAT_MENU_ROWS,
+  HELP_MENU_ROWS,
+  type SettingsMenuRow,
+} from '../util/settings-menu';
 import { FormNavigationRow } from './form-navigation-row';
 
-function handleSendFeedback() {
-  router.push('/feedback');
+function MenuRows({ rows }: { rows: SettingsMenuRow[] }) {
+  return rows.map(row =>
+    row.pushes ? (
+      <FormNavigationRow
+        key={row.label}
+        label={row.label}
+        systemImage={row.icon}
+        onPress={row.onPress}
+      />
+    ) : (
+      <Button
+        key={row.label}
+        label={row.label}
+        systemImage={row.icon}
+        onPress={row.onPress}
+      />
+    ),
+  );
 }
 
 interface SettingsIndexIOSFormProps {
   bundleButtonEnabled: boolean;
   canSeeUpdateAppButton: boolean;
-  hasUser: boolean;
+  user: UserInfoResponse | undefined;
   openStore: () => void;
   shouldShowDevTools: boolean;
-  statusPageUrl: string;
   updateBundle: () => void;
-  websiteUrl: string;
+}
+
+/**
+ * The first row of the form. It shows the signed-in user, or a sign-in row
+ * when signed out. Only the avatar is a hosted React Native view. The press
+ * and the text stay native, so the row behaves like the other rows.
+ */
+function AccountRow({ user }: { user: UserInfoResponse }) {
+  return (
+    <Button
+      onPress={() => router.push('/tabs/settings/profile')}
+      modifiers={[buttonStyle('plain')]}
+    >
+      <HStack spacing={14} modifiers={[contentShape(shapes.rectangle())]}>
+        <RNHostView matchContents>
+          <View pointerEvents='none'>
+            <Avatar
+              uri={user.profile_image_url || undefined}
+              name={user.display_name}
+              size={52}
+            />
+          </View>
+        </RNHostView>
+        <VStack alignment='leading' spacing={2}>
+          <NativeText
+            modifiers={[
+              font({ size: 20, weight: 'semibold' }),
+              foregroundStyle(theme.color.text.dark),
+            ]}
+          >
+            {user.display_name}
+          </NativeText>
+          <NativeText
+            modifiers={[
+              font({ size: 15 }),
+              foregroundStyle(theme.color.textSecondary.dark),
+            ]}
+          >
+            Profile and Twitch account
+          </NativeText>
+        </VStack>
+        <Spacer />
+        <NativeImage
+          systemName='chevron.right'
+          size={13}
+          color={theme.color.textSecondary.dark}
+        />
+      </HStack>
+    </Button>
+  );
 }
 
 export function SettingsIndexIOSForm({
   bundleButtonEnabled,
   canSeeUpdateAppButton,
-  hasUser,
+  user,
   openStore,
   shouldShowDevTools,
-  statusPageUrl,
   updateBundle,
-  websiteUrl,
 }: SettingsIndexIOSFormProps) {
   return (
     <Host style={styles.iosHost}>
       <Form>
-        <Section title='Stream Experience'>
-          <FormNavigationRow
-            label='Chat'
-            systemImage='bubble.left.and.bubble.right'
-            onPress={() => router.push('/tabs/settings/chat-preferences')}
-          />
-          <FormNavigationRow
-            label='Blocked Terms'
-            systemImage='text.badge.xmark'
-            onPress={() => router.push('/tabs/settings/blocked-terms')}
-          />
-          <FormNavigationRow
-            label='Emotes & Badges'
-            systemImage='face.smiling'
-            onPress={() => router.push('/tabs/settings/emotes-and-badges')}
-          />
-          <FormNavigationRow
-            label='Saved Phrases'
-            systemImage='text.bubble'
-            onPress={() => router.push('/tabs/settings/saved-phrases')}
-          />
-          <FormNavigationRow
-            label='My Clips'
-            systemImage='scissors'
-            onPress={() => router.push('/tabs/settings/my-clips')}
-          />
-          <FormNavigationRow
-            label='Cache'
-            systemImage='externaldrive'
-            onPress={() => router.push('/tabs/settings/cache')}
-          />
-          <FormNavigationRow
-            label='Appearance'
-            systemImage='paintpalette'
-            onPress={() => router.push('/tabs/settings/appearance')}
-          />
+        {user ? (
+          <Section>
+            <AccountRow user={user} />
+            <FormNavigationRow
+              label='My clips'
+              systemImage='scissors'
+              onPress={() => router.push('/tabs/settings/my-clips')}
+            />
+          </Section>
+        ) : (
+          <Section
+            footer={
+              <NativeText>
+                See the channels you follow and chat as yourself.
+              </NativeText>
+            }
+          >
+            <Button
+              label='Sign in with Twitch'
+              systemImage='person.crop.circle'
+              onPress={() => router.push('/auth-sheet')}
+              modifiers={[foregroundStyle(theme.color.accent.dark)]}
+            />
+          </Section>
+        )}
+
+        <Section title='Chat'>
+          <MenuRows rows={CHAT_MENU_ROWS} />
         </Section>
 
-        <Section title='Account'>
-          <FormNavigationRow
-            label={hasUser ? 'Profile' : 'Sign In'}
-            systemImage='person.circle'
-            onPress={() => {
-              if (hasUser) {
-                router.push('/tabs/settings/profile');
-                return;
-              }
-
-              router.push('/auth-sheet');
-            }}
-          />
-        </Section>
-
-        <Section title='Support & Feedback'>
-          <FormNavigationRow
-            label='About Foam'
-            systemImage='info.circle'
-            onPress={() => router.push('/tabs/settings/about')}
-          />
-          <Button
-            label='FAQ'
-            systemImage='questionmark.circle'
-            onPress={() => openLinkInBrowser('https://foam-app.com/faq')}
-          />
-          <Button
-            label='Send Feedback'
-            systemImage='paperplane'
-            onPress={handleSendFeedback}
-          />
-          <Button
-            label='Status'
-            systemImage='checkmark.shield'
-            onPress={() => openLinkInBrowser(statusPageUrl)}
-          />
-          <Button
-            label='Website'
-            systemImage='globe'
-            onPress={() => openLinkInBrowser(websiteUrl)}
-          />
-          <Button
-            label='OSS Licenses'
-            systemImage='doc.text'
-            onPress={() => openLicenseList('OSS Licenses')}
-          />
+        <Section title='App'>
+          <MenuRows rows={APP_MENU_ROWS} />
         </Section>
 
         {canSeeUpdateAppButton || bundleButtonEnabled ? (
-          <Section title='App Updates'>
+          <Section title='Updates'>
             {canSeeUpdateAppButton ? (
               <Button
-                label='Update App'
+                label='Update app'
                 systemImage='arrow.down.app'
                 onPress={openStore}
               />
             ) : null}
             {bundleButtonEnabled ? (
               <Button
-                label='Update Bundle'
+                label='Update bundle'
                 systemImage='arrow.triangle.2.circlepath'
                 onPress={updateBundle}
               />
@@ -143,25 +180,28 @@ export function SettingsIndexIOSForm({
         ) : null}
 
         <Section
-          title={shouldShowDevTools ? 'Developer' : 'More'}
-          footer={<UIText>{getBuildInfoLabel()}</UIText>}
+          title='Help'
+          footer={shouldShowDevTools ? null : <BuildFooter />}
         >
-          {shouldShowDevTools ? (
+          <MenuRows rows={HELP_MENU_ROWS} />
+        </Section>
+
+        {shouldShowDevTools ? (
+          <Section title='Developer' footer={<BuildFooter />}>
             <FormNavigationRow
-              label='Dev Tools'
+              label='Dev tools'
               systemImage='hammer'
               onPress={() => router.push('/tabs/settings/dev-tools')}
             />
-          ) : null}
-          <FormNavigationRow
-            label='Other'
-            systemImage='ellipsis.circle'
-            onPress={() => router.push('/tabs/settings/other')}
-          />
-        </Section>
+          </Section>
+        ) : null}
       </Form>
     </Host>
   );
+}
+
+function BuildFooter() {
+  return <NativeText>{getBuildInfoLabel()}</NativeText>;
 }
 
 const styles = StyleSheet.create({

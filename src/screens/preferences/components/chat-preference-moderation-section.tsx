@@ -2,7 +2,6 @@ import {
   SettingsSection,
   SettingsToggleRow,
 } from '@app/components/settings-section/settings-section';
-import { theme } from '@app/styles/themes';
 
 import { DELETED_STYLE_OPTIONS } from '../util/chat-preference-types';
 import { ChatPreferenceSegmentedSettingsRow } from './chat-preference-settings-rows';
@@ -26,7 +25,6 @@ export function ChatPreferenceModerationSection({
         icon={{
           icon: 'trash.slash',
           androidIcon: 'delete',
-          color: theme.colorGrey,
         }}
         onSelectIndex={handleDeletedStyleChange}
         selectedIndex={deletedStyleIndex}
@@ -40,7 +38,6 @@ export function ChatPreferenceModerationSection({
         icon={{
           icon: 'clock.arrow.circlepath',
           androidIcon: 'history',
-          color: theme.colorGrey,
         }}
         value={ignoreClearChat === true}
         onValueChange={onIgnoreClearChatChange}

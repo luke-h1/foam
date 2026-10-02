@@ -44,10 +44,22 @@ const EmoteSuggestionItem = memo(function EmoteSuggestionItem({
         trackLoadContext='chat.emote-suggestions'
       />
       <View style={styles.emoteTextContainer}>
-        <Text style={styles.emoteName} numberOfLines={1} ellipsizeMode='tail'>
+        <Text
+          type='callout'
+          family='brand'
+          style={styles.emoteName}
+          numberOfLines={1}
+          ellipsizeMode='tail'
+        >
           {item.name}
         </Text>
-        <Text style={styles.emoteSite} numberOfLines={1} ellipsizeMode='tail'>
+        <Text
+          type='callout'
+          family='brand'
+          style={styles.emoteSite}
+          numberOfLines={1}
+          ellipsizeMode='tail'
+        >
           {item.site}
         </Text>
       </View>
@@ -69,7 +81,13 @@ export const EmoteSuggestions = memo(function EmoteSuggestions({
   return (
     <View style={suggestionRailStyles.richWrapper}>
       <View style={suggestionRailStyles.richContainer}>
-        <Text style={suggestionRailStyles.headerLabel}>Emotes</Text>
+        <Text
+          type='callout'
+          family='brand'
+          style={suggestionRailStyles.headerLabel}
+        >
+          Emotes
+        </Text>
         <LegendList
           data={emotes}
           horizontal
@@ -115,7 +133,7 @@ const styles = StyleSheet.create({
     backgroundColor: suggestionRailColors.chipBackground,
     borderColor: suggestionRailColors.chipBorder,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
+    borderRadius: theme.radius.lg,
     borderWidth: 1,
     flexDirection: 'row',
     gap: theme.space12,

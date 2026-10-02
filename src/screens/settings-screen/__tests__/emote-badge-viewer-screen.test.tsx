@@ -122,6 +122,6 @@ describe('EmoteBadgeViewerScreen', () => {
 
     fireEvent.press(screen.getByTestId('tab-badges'));
 
-    expect(await screen.findByText('No badges available')).toBeOnTheScreen();
+    expect(await screen.findByText('No badges found')).toBeOnTheScreen();
   });
 });

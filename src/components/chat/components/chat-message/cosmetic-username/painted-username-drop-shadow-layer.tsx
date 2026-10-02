@@ -1,6 +1,6 @@
 import { type StyleProp, StyleSheet, TextStyle } from 'react-native';
 
-import { Text } from '@app/components/ui/text/text';
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import type { PaintShadow } from '@app/types/seven-tv/cosmetics';
 import { sevenTvColorToCss } from '@app/utils/color/seven-tv-color-to-css';
 
@@ -22,7 +22,7 @@ export function PaintedUsernameDropShadowLayer({
   const shadowColor = sevenTvColorToCss(shadow.color);
 
   return (
-    <Text
+    <ChatText
       pointerEvents='none'
       style={[
         styles.shadowText,
@@ -38,7 +38,7 @@ export function PaintedUsernameDropShadowLayer({
       ]}
     >
       {displayUsername}
-    </Text>
+    </ChatText>
   );
 }
 

@@ -44,7 +44,9 @@ function CommandSuggestionItem({
 }) {
   return (
     <Button onPress={() => onPress(item)} style={styles.suggestionItem}>
-      <Text style={styles.commandName}>/{item.name}</Text>
+      <Text type='callout' family='brand' style={styles.commandName}>
+        /{item.name}
+      </Text>
     </Button>
   );
 }
@@ -92,7 +94,7 @@ const styles = StyleSheet.create({
     backgroundColor: suggestionRailColors.chipBackground,
     borderColor: suggestionRailColors.chipBorder,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius14,
+    borderRadius: theme.radius.md,
     borderWidth: 1,
     minHeight: 38,
     minWidth: COMMAND_SUGGESTION_ITEM_SIZE,

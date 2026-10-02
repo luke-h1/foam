@@ -32,11 +32,9 @@ const styles = StyleSheet.create({
   },
   pill: {
     alignItems: 'center',
-    backgroundColor: theme.colorBlackOverlay,
-    borderColor: theme.colorBorderSecondary,
+    backgroundColor: theme.color.scrim.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: theme.radius.full,
     flexDirection: 'row',
     gap: theme.space4,
     paddingHorizontal: theme.space8,

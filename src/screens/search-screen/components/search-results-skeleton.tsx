@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
     gap: theme.space8,
   },
   name: {
-    borderRadius: theme.borderRadius4,
+    borderRadius: theme.radius.sm,
     height: 14,
     width: '55%',
   },
@@ -39,14 +39,13 @@ const styles = StyleSheet.create({
     paddingVertical: theme.space8,
   },
   subtitle: {
-    borderRadius: theme.borderRadius4,
+    borderRadius: theme.radius.sm,
     height: 11,
     width: '35%',
   },
   thumbnail: {
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius8,
-    height: 55,
-    width: 55,
+    borderRadius: theme.radius.full,
+    height: 48,
+    width: 48,
   },
 });

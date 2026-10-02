@@ -8,38 +8,54 @@ import {
   SettingsSection,
 } from '@app/components/settings-section/settings-section';
 import { Text } from '@app/components/ui/text/text';
-import { openLicenseList } from '@app/lib/legal';
 import { theme } from '@app/styles/themes';
-import { openLinkInBrowser } from '@app/utils/browser/open-link-in-browser';
+import type { UserInfoResponse } from '@app/types/twitch/user';
 
+import {
+  APP_MENU_ROWS,
+  CHAT_MENU_ROWS,
+  HELP_MENU_ROWS,
+  type SettingsMenuRow,
+} from '../util/settings-menu';
 import { BuildStatus } from './build-status';
 
-function handleSendFeedback() {
-  router.push('/feedback');
+/**
+ * `SettingsSection` draws a separator between its direct children, so the
+ * rows are mapped in place rather than wrapped in a component.
+ */
+function toLinkRow(row: SettingsMenuRow) {
+  return (
+    <SettingsLinkRow
+      key={row.label}
+      title={row.label}
+      icon={{ icon: row.icon }}
+      onPress={row.onPress}
+    />
+  );
 }
 
 interface SettingsIndexAndroidListProps {
   bottomInset: number;
   canSeeUpdateAppButton: boolean;
-  hasUser: boolean;
+  user: UserInfoResponse | undefined;
   openStore: () => void;
   scrollRef: RefObject<ScrollView | null>;
   shouldShowDevTools: boolean;
-  statusPageUrl: string;
   updateBundle: () => void;
-  websiteUrl: string;
 }
 
+/**
+ * Same order as the iOS form: account, then chat, app and help. Rows have
+ * no subtitle. The update bundle row always shows on Android.
+ */
 export function SettingsIndexAndroidList({
   bottomInset,
   canSeeUpdateAppButton,
-  hasUser,
+  user,
   openStore,
   scrollRef,
   shouldShowDevTools,
-  statusPageUrl,
   updateBundle,
-  websiteUrl,
 }: SettingsIndexAndroidListProps) {
   return (
     <View style={styles.container}>
@@ -51,155 +67,75 @@ export function SettingsIndexAndroidList({
           { paddingBottom: bottomInset + theme.space56 },
         ]}
       >
-        <SettingsSection title='Stream Experience'>
-          <SettingsLinkRow
-            title='Chat'
-            subtitle='Density, timestamps, mentions, emotes, and badges'
-            icon={{
-              icon: 'bubble.left.and.bubble.right',
-              color: theme.colorPlum,
-            }}
-            onPress={() => router.push('/tabs/settings/chat-preferences')}
-          />
-          <SettingsLinkRow
-            title='Blocked Terms'
-            subtitle='Hide chat messages containing specific words or phrases'
-            icon={{ icon: 'text.badge.xmark', color: theme.colorRed }}
-            onPress={() => router.push('/tabs/settings/blocked-terms')}
-          />
-          <SettingsLinkRow
-            title='Emotes & Badges'
-            subtitle='Browse global Twitch, BTTV, FFZ, and 7TV emotes and badges'
-            icon={{ icon: 'face.smiling', color: theme.colorAmber }}
-            onPress={() => router.push('/tabs/settings/emotes-and-badges')}
-          />
-          <SettingsLinkRow
-            title='Saved Phrases'
-            subtitle='Save phrases to quickly insert while chatting'
-            icon={{ icon: 'text.bubble', color: theme.colorBlue }}
-            onPress={() => router.push('/tabs/settings/saved-phrases')}
-          />
-          <SettingsLinkRow
-            title='My Clips'
-            subtitle='Clips you have created in foam'
-            icon={{ icon: 'scissors', color: theme.colorViolet }}
-            onPress={() => router.push('/tabs/settings/my-clips')}
-          />
-          <SettingsLinkRow
-            title='Cache'
-            subtitle='Clear local app data, emotes, badges, and media'
-            icon={{ icon: 'externaldrive', color: theme.colorPrimary }}
-            onPress={() => router.push('/tabs/settings/cache')}
-          />
-          <SettingsLinkRow
-            title='Appearance'
-            subtitle='Theme and visual mode'
-            icon={{ icon: 'paintpalette', color: theme.colorAmber }}
-            onPress={() => router.push('/tabs/settings/appearance')}
-          />
-        </SettingsSection>
-
-        <SettingsSection title='Account'>
-          <SettingsLinkRow
-            title={hasUser ? 'Profile' : 'Sign In'}
-            subtitle={
-              hasUser
-                ? 'Channel identity, blocked users, and sign-out controls'
-                : 'Connect your Twitch account to unlock following and chat'
+        {user ? (
+          <SettingsSection>
+            <SettingsLinkRow
+              title={user.display_name}
+              subtitle='Profile and Twitch account'
+              icon={{ icon: 'person.crop.circle' }}
+              onPress={() => router.push('/tabs/settings/profile')}
+            />
+            <SettingsLinkRow
+              title='My clips'
+              icon={{ icon: 'scissors' }}
+              onPress={() => router.push('/tabs/settings/my-clips')}
+            />
+          </SettingsSection>
+        ) : (
+          <SettingsSection
+            footer={
+              <Text type='footnote' color='gray.textLow'>
+                See the channels you follow and chat as yourself.
+              </Text>
             }
-            icon={{ icon: 'person.circle', color: theme.colorTeal }}
-            onPress={() => {
-              if (hasUser) {
-                router.push('/tabs/settings/profile');
-                return;
-              }
+          >
+            <SettingsLinkRow
+              title='Sign in with Twitch'
+              icon={{ icon: 'person.crop.circle' }}
+              onPress={() => router.push('/auth-sheet')}
+            />
+          </SettingsSection>
+        )}
 
-              router.push('/auth-sheet');
-            }}
-          />
+        <SettingsSection title='Chat'>
+          {CHAT_MENU_ROWS.map(toLinkRow)}
         </SettingsSection>
 
-        <SettingsSection title='Support & Feedback'>
-          <SettingsLinkRow
-            title='About Foam'
-            subtitle='What the app is built for and where to reach us'
-            icon={{ icon: 'info.circle', color: theme.colorBlue }}
-            onPress={() => router.push('/tabs/settings/about')}
-          />
-          <SettingsLinkRow
-            title='FAQ'
-            subtitle='Common questions and help information'
-            icon={{ icon: 'questionmark.circle', color: theme.colorPrimary }}
-            onPress={() => openLinkInBrowser('https://foam-app.com/faq')}
-          />
-          <SettingsLinkRow
-            title='Send Feedback'
-            subtitle='Share feedback, ideas, or what could be better'
-            icon={{ icon: 'paperplane', color: theme.colorTeal }}
-            onPress={handleSendFeedback}
-          />
-          <SettingsLinkRow
-            title='Status'
-            subtitle='Check service availability and operational updates'
-            icon={{ icon: 'checkmark.shield', color: theme.colorOrange }}
-            onPress={() => openLinkInBrowser(statusPageUrl)}
-          />
-          <SettingsLinkRow
-            title='Website'
-            subtitle='Product site and public links'
-            icon={{ icon: 'globe', color: theme.colorViolet }}
-            onPress={() => openLinkInBrowser(websiteUrl)}
-          />
-          <SettingsLinkRow
-            title='OSS Licenses'
-            subtitle='Open-source software used by the app'
-            icon={{ icon: 'doc.text', color: theme.colorViolet }}
-            onPress={() => openLicenseList('OSS Licenses')}
-          />
+        <SettingsSection title='App'>
+          {APP_MENU_ROWS.map(toLinkRow)}
         </SettingsSection>
 
-        <SettingsSection title='App Updates'>
+        <SettingsSection title='Updates'>
           {canSeeUpdateAppButton ? (
             <SettingsLinkRow
-              title='Update App'
-              subtitle='Get the latest version from the store'
-              icon={{ icon: 'arrow.down.app', color: theme.colorTeal }}
+              title='Update app'
+              icon={{ icon: 'arrow.down.app' }}
               onPress={openStore}
             />
           ) : null}
           <SettingsLinkRow
-            title='Update Bundle'
-            subtitle='Download the latest over-the-air update'
-            icon={{
-              icon: 'arrow.triangle.2.circlepath',
-              color: theme.colorBlue,
-            }}
+            title='Update bundle'
+            icon={{ icon: 'arrow.triangle.2.circlepath' }}
             onPress={updateBundle}
           />
         </SettingsSection>
 
-        <SettingsSection title={shouldShowDevTools ? 'Developer' : 'More'}>
-          {shouldShowDevTools ? (
+        <SettingsSection title='Help'>
+          {HELP_MENU_ROWS.map(toLinkRow)}
+        </SettingsSection>
+
+        {shouldShowDevTools ? (
+          <SettingsSection title='Developer'>
             <SettingsLinkRow
-              title='Dev Tools'
-              subtitle='Diagnostics, cache tools, remote config, and Storybook'
-              icon={{ icon: 'hammer', color: theme.colorOrange }}
+              title='Dev tools'
+              icon={{ icon: 'hammer' }}
               onPress={() => router.push('/tabs/settings/dev-tools')}
             />
-          ) : null}
-          <SettingsLinkRow
-            title='Other'
-            subtitle='Licenses, changelog, and supporting reference screens'
-            icon={{ icon: 'ellipsis.circle', color: theme.colorGrey }}
-            onPress={() => router.push('/tabs/settings/other')}
-          />
-        </SettingsSection>
+          </SettingsSection>
+        ) : null}
 
         <View style={styles.buildWrap}>
           <BuildStatus />
-          <Text type='xs' color='gray.textLow' style={styles.buildNote}>
-            Build details and release state for this install of Foam.
-          </Text>
         </View>
       </ScrollView>
     </View>
@@ -207,11 +143,6 @@ export function SettingsIndexAndroidList({
 }
 
 const styles = StyleSheet.create({
-  buildNote: {
-    marginTop: theme.space12,
-    paddingHorizontal: theme.space20,
-    textAlign: 'center',
-  },
   buildWrap: {
     alignItems: 'center',
     marginTop: theme.space12,
@@ -221,7 +152,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingHorizontal: theme.space20,
+    paddingHorizontal: theme.space16,
     paddingTop: theme.space16,
   },
 });

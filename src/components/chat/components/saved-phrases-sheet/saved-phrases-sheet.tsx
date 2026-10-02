@@ -9,10 +9,12 @@ import {
   BottomSheet,
   type BottomSheetHandle,
 } from '@app/components/bottom-sheet/bottom-sheet';
-import { Button } from '@app/components/button/button';
+import { SheetHeader } from '@app/components/chat/components/sheet/sheet-header';
 import { CHAT_SETTINGS_SHEET_DETENT } from '@app/components/chat/util/chat-sheet-layout';
 import { chatSheetSurface } from '@app/components/chat/util/chat-sheet-surface';
 import { FlashList } from '@app/components/flash-list/flash-list';
+import { PressableArea } from '@app/components/pressable-area/pressable-area';
+import { EmptyState } from '@app/components/ui/empty-state/empty-state';
 import { SymbolView } from '@app/components/ui/icon/icon';
 import { Text } from '@app/components/ui/text/text';
 import { type SavedPhrase, usePreference } from '@app/store/preference-store';
@@ -32,16 +34,27 @@ function SavedPhraseRow({
   onSelect: (text: string) => void;
 }) {
   return (
-    <Button style={styles.row} onPress={() => onSelect(phrase.text)}>
-      <Text style={styles.phraseText} numberOfLines={2}>
-        {phrase.text}
-      </Text>
-      <SymbolView
-        name='arrow.up.left'
-        size={18}
-        tintColor={theme.colorGreyHoverAlpha}
-      />
-    </Button>
+    <PressableArea
+      feedback='highlight'
+      accessibilityLabel={`Insert ${phrase.text}`}
+      onPress={() => onSelect(phrase.text)}
+    >
+      <View style={styles.row}>
+        <Text
+          type='callout'
+          family='brand'
+          style={styles.phraseText}
+          numberOfLines={2}
+        >
+          {phrase.text}
+        </Text>
+        <SymbolView
+          name='arrow.up.left'
+          size={15}
+          tintColor={theme.color.textSecondary.dark}
+        />
+      </View>
+    </PressableArea>
   );
 }
 
@@ -108,37 +121,25 @@ const SavedPhrasesSheetComponent = ({
     >
       <View style={[styles.container, { height: sheetHeight }]}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle} weight='semibold'>
-            Saved Phrases
-          </Text>
-          <Button onPress={handleManage} hitSlop={8}>
-            <SymbolView
-              name='gearshape'
-              size={20}
-              tintColor={theme.colorGreyHoverAlpha}
-            />
-          </Button>
+          <SheetHeader
+            title='Saved phrases'
+            action={
+              phrases.length > 0
+                ? { label: 'Edit', onPress: handleManage }
+                : undefined
+            }
+            onClose={requestClose}
+          />
         </View>
 
         {phrases.length === 0 ? (
-          <View style={styles.emptyState}>
-            <SymbolView
-              name='text.bubble'
-              size={44}
-              tintColor={theme.colorGreyHoverAlpha}
-            />
-            <Text style={styles.emptyTitle} weight='medium'>
-              No saved phrases yet
-            </Text>
-            <Text style={styles.emptyHint}>
-              Add phrases in Settings to insert them here with a tap.
-            </Text>
-            <Button style={styles.manageButton} onPress={handleManage}>
-              <Text style={styles.manageButtonLabel} weight='medium'>
-                Manage saved phrases
-              </Text>
-            </Button>
-          </View>
+          <EmptyState
+            iconName='text.bubble'
+            heading='No saved phrases yet'
+            content='Save phrases you type often, then insert them here with one tap.'
+            button='Add a phrase'
+            buttonOnPress={handleManage}
+          />
         ) : (
           <FlashList
             data={phrases}
@@ -166,65 +167,27 @@ const styles = StyleSheet.create({
     minHeight: 0,
     width: '100%',
   },
-  emptyHint: {
-    color: theme.colorGreyHoverAlpha,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-  emptyState: {
-    alignItems: 'center',
-    flex: 1,
-    gap: theme.space12,
-    justifyContent: 'center',
-    paddingHorizontal: theme.space28,
-  },
-  emptyTitle: {
-    fontSize: theme.fontSize16,
-    marginTop: theme.space4,
-  },
   header: {
-    alignItems: 'center',
-    borderBottomColor: theme.colorBorderSecondary,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingBottom: theme.space12,
-    paddingHorizontal: theme.space20,
-    paddingTop: theme.space4,
-  },
-  headerTitle: {
-    fontSize: theme.fontSize20,
+    paddingBottom: theme.space8,
+    paddingHorizontal: theme.space16,
+    paddingTop: theme.space12,
   },
   listContent: {
-    paddingHorizontal: theme.space20,
-    paddingTop: theme.space8,
-  },
-  manageButton: {
-    backgroundColor: theme.darkActiveContent,
-    borderColor: theme.colorBorderSecondary,
-    borderRadius: theme.borderRadius12,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    marginTop: theme.space8,
-    paddingHorizontal: theme.space20,
-    paddingVertical: theme.space12,
-  },
-  manageButtonLabel: {
-    fontSize: theme.fontSize14,
+    paddingTop: theme.space4,
   },
   phraseText: {
-    color: theme.colorWhite,
+    color: theme.color.text.dark,
     flex: 1,
-    fontSize: 15,
-    lineHeight: 20,
+    fontSize: theme.fontSize16,
+    lineHeight: 21,
     minWidth: 0,
   },
   row: {
     alignItems: 'center',
-    borderBottomColor: theme.colorBorderSecondary,
-    borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: theme.space12,
-    paddingVertical: 14,
+    minHeight: 50,
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space12,
   },
 });

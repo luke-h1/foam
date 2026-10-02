@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 import { chatLineMetrics } from '@app/components/chat/components/chat-message/util/chat-scale';
-import { Text } from '@app/components/ui/text/text';
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
@@ -83,9 +83,9 @@ function MeasuredPaintedUsernameWebView({
       ]}
     >
       {size ? null : (
-        <Text style={[styles.sizer, { color: fallbackColor, fontSize }]}>
+        <ChatText style={[styles.sizer, { color: fallbackColor, fontSize }]}>
           {username}
-        </Text>
+        </ChatText>
       )}
       <WebView
         source={{ html }}

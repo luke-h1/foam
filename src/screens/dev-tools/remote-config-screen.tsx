@@ -62,7 +62,7 @@ export function RemoteConfigScreen() {
           ) : (
             <SymbolView name='arrow.clockwise' size={16} tintColor='#fff' />
           )}
-          <Text type='sm' weight='semibold' style={styles.buttonText}>
+          <Text type='body' weight='semibold' style={styles.buttonText}>
             {isRefetching ? 'Fetching...' : 'Fetch from server'}
           </Text>
         </Button>
@@ -70,14 +70,14 @@ export function RemoteConfigScreen() {
 
       <View style={styles.section}>
         <Text
-          type='xs'
+          type='subhead'
           weight='semibold'
           color='gray.textLow'
           style={styles.sectionTitle}
         >
           CONFIG VALUES
         </Text>
-        <Text type='xs' color='gray.textLow' style={styles.appVariant}>
+        <Text type='subhead' color='gray.textLow' style={styles.appVariant}>
           App variant: {process.env.EXPO_PUBLIC_APP_VARIANT}
         </Text>
         <View style={styles.card}>
@@ -109,14 +109,14 @@ export function RemoteConfigScreen() {
                           : AC.systemOrange
                       }
                     />
-                    <Text type='sm' weight='semibold'>
+                    <Text type='body' weight='semibold'>
                       {key}
                     </Text>
                   </View>
                   <View
                     style={[styles.sourceTag, getSourceTagStyle(entry.source)]}
                   >
-                    <Text type='xs' weight='semibold' color='gray.bg'>
+                    <Text type='subhead' weight='semibold' color='gray.bg'>
                       {entry.source}
                     </Text>
                   </View>
@@ -125,7 +125,7 @@ export function RemoteConfigScreen() {
                 <View style={styles.valuesContainer}>
                   <View style={styles.valueRow}>
                     <Text
-                      type='xs'
+                      type='subhead'
                       color='gray.textLow'
                       style={styles.valueLabel}
                     >
@@ -140,7 +140,7 @@ export function RemoteConfigScreen() {
 
                   <View style={styles.valueRow}>
                     <Text
-                      type='xs'
+                      type='subhead'
                       color='gray.textLow'
                       style={styles.valueLabel}
                     >
@@ -161,7 +161,7 @@ export function RemoteConfigScreen() {
 
       <View style={styles.section}>
         <Text
-          type='xs'
+          type='subhead'
           weight='semibold'
           color='gray.textLow'
           style={styles.sectionTitle}
@@ -175,7 +175,7 @@ export function RemoteConfigScreen() {
               size={16}
               tintColor={AC.systemGreen}
             />
-            <Text type='sm' color='gray.text'>
+            <Text type='body' color='gray.text'>
               Remote - fetched from Firebase
             </Text>
           </View>
@@ -185,7 +185,7 @@ export function RemoteConfigScreen() {
               size={16}
               tintColor={AC.systemOrange}
             />
-            <Text type='sm' color='gray.text'>
+            <Text type='body' color='gray.text'>
               Default - using local fallback
             </Text>
           </View>
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: theme.darkActiveContent,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
+    borderRadius: theme.radius.lg,
     overflow: 'hidden',
   },
   configHeader: {
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   defaultValueBox: {
     backgroundColor: theme.color.background.darkAltAlpha,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.radius.md,
     opacity: 0.7,
     padding: theme.space12,
   },
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.colorBlue,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
+    borderRadius: theme.radius.lg,
     flexDirection: 'row',
     gap: 8,
     justifyContent: 'center',
@@ -271,14 +271,14 @@ const styles = StyleSheet.create({
   },
   sourceTag: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.radius.md,
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
   valueBox: {
     backgroundColor: theme.color.background.darkAltAlpha,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.radius.md,
     padding: theme.space12,
   },
   valueLabel: {

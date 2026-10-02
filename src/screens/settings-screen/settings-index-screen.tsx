@@ -29,13 +29,9 @@ export function SettingsIndexScreen() {
 
   useScrollToTop(scrollRef);
 
-  const {
-    statusPageUrl,
-    websiteUrl,
-    bundleButtonEnabled: configBundleButtonEnabled,
-  } = config;
-
-  const bundleButtonEnabled = configBundleButtonEnabled.value.ios[variant];
+  // The flag is keyed by build variant and only gates iOS. Android always
+  // shows the update bundle row.
+  const bundleButtonEnabled = config.bundleButtonEnabled.value.ios[variant];
 
   const canSeeUpdateAppButton = isUpdateAppButtonAllowed(
     user?.login,
@@ -47,12 +43,10 @@ export function SettingsIndexScreen() {
       <SettingsIndexIOSForm
         bundleButtonEnabled={bundleButtonEnabled}
         canSeeUpdateAppButton={canSeeUpdateAppButton}
-        hasUser={Boolean(user)}
+        user={user}
         openStore={openStore}
         shouldShowDevTools={shouldShowDevTools}
-        statusPageUrl={statusPageUrl.value}
         updateBundle={updateBundle}
-        websiteUrl={websiteUrl.value}
       />
     );
   }
@@ -61,13 +55,11 @@ export function SettingsIndexScreen() {
     <SettingsIndexAndroidList
       bottomInset={insets.bottom}
       canSeeUpdateAppButton={canSeeUpdateAppButton}
-      hasUser={Boolean(user)}
+      user={user}
       openStore={openStore}
       scrollRef={scrollRef}
       shouldShowDevTools={shouldShowDevTools}
-      statusPageUrl={statusPageUrl.value}
       updateBundle={updateBundle}
-      websiteUrl={websiteUrl.value}
     />
   );
 }

@@ -25,8 +25,9 @@ export const LiveBadge = memo(function LiveBadge({
     >
       <View style={styles.dot} />
       <Text
-        type='xxs'
-        weight='bold'
+        type='caption'
+        weight='semibold'
+        tabular
         style={isTinted ? styles.tintedLabel : styles.overlayLabel}
       >
         {label}
@@ -39,34 +40,29 @@ const styles = StyleSheet.create({
   pill: {
     alignItems: 'center',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    borderWidth: StyleSheet.hairlineWidth,
-    columnGap: theme.space4,
+    borderRadius: theme.radius.sm,
+    columnGap: 5,
     flexDirection: 'row',
-    paddingHorizontal: theme.space8,
-    paddingVertical: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
   },
   overlay: {
-    backgroundColor: theme.colorBlackOverlay,
-    borderColor: theme.colorBorderSecondary,
+    backgroundColor: theme.color.scrim.dark,
   },
   tinted: {
     backgroundColor: theme.colorRedSurface,
-    borderColor: theme.colorRedBorder,
   },
   dot: {
     backgroundColor: theme.color.live.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
+    borderRadius: theme.radius.full,
     height: 6,
     width: 6,
   },
   overlayLabel: {
     color: theme.color.text.dark,
-    letterSpacing: 0.4,
   },
   tintedLabel: {
     color: theme.color.live.dark,
-    letterSpacing: 0.4,
   },
 });
