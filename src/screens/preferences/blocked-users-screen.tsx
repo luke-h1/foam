@@ -67,10 +67,10 @@ const BlockedUserItem = function BlockedUserItem({
       ]}
     >
       <View style={styles.userInfo}>
-        <Text type='md' weight='bold' numberOfLines={1}>
+        <Text type='headline' weight='bold' numberOfLines={1}>
           {user.display_name}
         </Text>
-        <Text type='sm' color='gray.textLow' numberOfLines={1}>
+        <Text type='body' color='gray.textLow' numberOfLines={1}>
           @{user.user_login}
         </Text>
       </View>
@@ -139,7 +139,7 @@ function ListStatePanel({
       indicatorStyle='white'
     >
       <View style={styles.stateSection}>
-        <Text type='xxs' weight='semibold' style={styles.sectionTitle}>
+        <Text type='caption' weight='semibold' style={styles.sectionTitle}>
           Blocked Accounts
         </Text>
         <View style={styles.statePanel}>
@@ -150,11 +150,11 @@ function ListStatePanel({
               tintColor={theme.colorGreyHoverAlpha}
             />
           </View>
-          <Text type='lg' weight='bold' align='center'>
+          <Text type='title3' weight='bold' align='center'>
             {title}
           </Text>
           <Text
-            type='xs'
+            type='subhead'
             color='gray.textLow'
             align='center'
             style={styles.stateDescription}
@@ -181,11 +181,15 @@ interface BlockedUsersSectionHeaderProps {
 function BlockedUsersSectionHeader({ count }: BlockedUsersSectionHeaderProps) {
   return (
     <View style={styles.sectionHeader}>
-      <Text type='xxs' weight='semibold' style={styles.sectionTitle}>
+      <Text type='caption' weight='semibold' style={styles.sectionTitle}>
         Blocked Accounts
       </Text>
       {count !== undefined ? (
-        <Text type='xxs' color='gray.textLow' style={styles.sectionCountText}>
+        <Text
+          type='caption'
+          color='gray.textLow'
+          style={styles.sectionCountText}
+        >
           {count}
         </Text>
       ) : null}
@@ -381,7 +385,11 @@ function BlockedUsersDataList({
         ListHeaderComponent={<BlockedUsersSectionHeader count={data.length} />}
         maintainVisibleContentPosition={{ disabled: true }}
         ListFooterComponent={
-          <Text type='xxs' color='gray.textLow' style={styles.sectionFooter}>
+          <Text
+            type='caption'
+            color='gray.textLow'
+            style={styles.sectionFooter}
+          >
             Unblocking restores normal Twitch interactions for that account.
           </Text>
         }
@@ -491,11 +499,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   firstItem: {
-    borderTopLeftRadius: theme.borderRadius12,
-    borderTopRightRadius: theme.borderRadius12,
+    borderTopLeftRadius: theme.radius.md,
+    borderTopRightRadius: theme.radius.md,
   },
   iconSkeleton: {
-    borderRadius: theme.borderRadius20,
+    borderRadius: theme.radius.lg,
     height: 36,
     width: 104,
   },
@@ -510,8 +518,8 @@ const styles = StyleSheet.create({
     paddingVertical: theme.space12,
   },
   lastItem: {
-    borderBottomLeftRadius: theme.borderRadius12,
-    borderBottomRightRadius: theme.borderRadius12,
+    borderBottomLeftRadius: theme.radius.md,
+    borderBottomRightRadius: theme.radius.md,
     borderBottomWidth: 0,
   },
   list: {
@@ -557,10 +565,8 @@ const styles = StyleSheet.create({
     paddingBottom: theme.space8,
   },
   sectionTitle: {
-    color: theme.colorGreyAlpha,
-    letterSpacing: 0.5,
+    color: theme.color.textSecondary.dark,
     paddingHorizontal: theme.space16,
-    textTransform: 'uppercase',
   },
   stateContent: {
     flexGrow: 1,
@@ -577,7 +583,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.colorRedSurface,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
+    borderRadius: theme.radius.lg,
     height: 64,
     justifyContent: 'center',
     marginBottom: theme.space4,
@@ -588,7 +594,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.color.backgroundSecondary.dark,
     borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.radius.md,
     borderWidth: StyleSheet.hairlineWidth,
     gap: theme.space12,
     marginHorizontal: theme.space16,

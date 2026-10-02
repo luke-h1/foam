@@ -1,6 +1,5 @@
 import { SettingsSection } from '@app/components/settings-section/settings-section';
 import { Text } from '@app/components/ui/text/text';
-import { theme } from '@app/styles/themes';
 
 import { SCROLLBACK_LABELS } from '../util/chat-preference-types';
 import { ChatPreferenceSegmentedSettingsRow } from './chat-preference-settings-rows';
@@ -16,7 +15,7 @@ export function ChatPreferencePerformanceSection({
     <SettingsSection
       title='Performance'
       footer={
-        <Text color='gray.textLow' type='xs'>
+        <Text color='gray.textLow' type='subhead'>
           Longer scrollback keeps more messages in memory; 200 is easier on
           older devices.
         </Text>
@@ -26,7 +25,6 @@ export function ChatPreferencePerformanceSection({
         icon={{
           icon: 'text.line.last.and.arrowtriangle.forward',
           androidIcon: 'sort',
-          color: theme.colorGrey,
         }}
         onSelectIndex={handleScrollbackChange}
         selectedIndex={scrollbackIndex}

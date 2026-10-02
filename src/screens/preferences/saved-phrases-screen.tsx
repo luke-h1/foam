@@ -120,7 +120,7 @@ function PhraseRow({ phrase, isEditing, onEdit, onRemove }: PhraseRowProps) {
       onPress={() => onEdit(phrase)}
       style={[styles.row, isEditing && styles.rowEditing]}
     >
-      <Text type='md' style={styles.phraseText} numberOfLines={2}>
+      <Text type='headline' style={styles.phraseText} numberOfLines={2}>
         {phrase.text}
       </Text>
       <PressableScale
@@ -147,10 +147,10 @@ function EmptyState() {
         size={48}
         tintColor={theme.color.textSecondary.dark}
       />
-      <Text type='lg' weight='medium' style={styles.emptyTitle}>
+      <Text type='title3' weight='medium' style={styles.emptyTitle}>
         No saved phrases
       </Text>
-      <Text type='sm' style={styles.emptySubtitle}>
+      <Text type='body' style={styles.emptySubtitle}>
         Save phrases you send often, then insert them into the composer with a
         tap.
       </Text>
@@ -399,7 +399,7 @@ export function SavedPhrasesScreen() {
         ListEmptyComponent={EmptyState}
         ListFooterComponent={
           hasPhrases ? (
-            <Text type='xs' style={styles.footer}>
+            <Text type='subhead' style={styles.footer}>
               {`${phrases.length} ${phrases.length === 1 ? 'phrase' : 'phrases'} · Tap a phrase in chat to insert it.`}
             </Text>
           ) : null
@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.color.surfacePressed.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
+    borderRadius: theme.radius.full,
     height: 36,
     justifyContent: 'center',
     width: 36,
@@ -448,7 +448,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.color.surface.dark,
     borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.radius.md,
     borderWidth: 1,
     color: theme.colorWhite,
     flex: 1,

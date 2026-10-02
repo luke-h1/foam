@@ -159,7 +159,7 @@ export const ChatMessagePane = memo(
             style={styles.connectingContainer}
             testID='chat-sync-placeholder'
           >
-            <Text style={styles.connectingText}>
+            <Text type='callout' family='brand' style={styles.connectingText}>
               {`Connecting to ${channelName}'s chat...`}
             </Text>
           </View>
@@ -185,10 +185,10 @@ export const ChatMessagePane = memo(
 
         {visibleMessages.length === 0 && rawMessages.length > 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyStateTitle}>
+            <Text type='callout' family='brand' style={styles.emptyStateTitle}>
               No chat messages match the current view
             </Text>
-            <Text style={styles.emptyStateBody}>
+            <Text type='callout' family='brand' style={styles.emptyStateBody}>
               Clear filters or jump back to the latest messages.
             </Text>
           </View>

@@ -1,7 +1,3 @@
-import {
-  InstrumentSerif_400Regular,
-  InstrumentSerif_400Regular_Italic,
-} from '@expo-google-fonts/instrument-serif';
 import { Montserrat_300Light } from '@expo-google-fonts/montserrat/300Light';
 import { Montserrat_300Light_Italic } from '@expo-google-fonts/montserrat/300Light_Italic';
 import { Montserrat_400Regular } from '@expo-google-fonts/montserrat/400Regular';
@@ -18,8 +14,6 @@ import { Montserrat_900Black } from '@expo-google-fonts/montserrat/900Black';
 import { Montserrat_900Black_Italic } from '@expo-google-fonts/montserrat/900Black_Italic';
 
 export const criticalFontMap = {
-  InstrumentSerif_400Regular,
-  InstrumentSerif_400Regular_Italic,
   Montserrat_400Regular,
   Montserrat_400Regular_Italic,
   Montserrat_500Medium,

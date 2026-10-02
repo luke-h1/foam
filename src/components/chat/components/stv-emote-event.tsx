@@ -2,8 +2,9 @@ import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { BrandIcon } from '@app/components/brand-icon/brand-icon';
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { Image } from '@app/components/image/image';
-import { Text } from '@app/components/ui/text/text';
+import { resolveThemeColor } from '@app/styles/themes';
 import { MessageToken } from '@app/utils/chat/message-token';
 import { getDisplayEmoteUrl } from '@app/utils/emote/get-display-emote-url';
 
@@ -67,7 +68,7 @@ function StvEmoteEventComponent({
       >
         <View style={styles.metaContent}>
           <BrandIcon name='stv' size='sm' />
-          <Text
+          <ChatText
             style={[
               textStyles.meta,
               textStyles.metaStrong,
@@ -75,9 +76,9 @@ function StvEmoteEventComponent({
             ]}
           >
             {status} emote
-          </Text>
+          </ChatText>
           {actorName ? (
-            <Text style={textStyles.meta}> · {actorName}</Text>
+            <ChatText style={textStyles.meta}> · {actorName}</ChatText>
           ) : null}
         </View>
       </ChatNoticeMetaRow>
@@ -91,11 +92,11 @@ function StvEmoteEventComponent({
           contentFit='contain'
         />
         <View style={styles.textContainer}>
-          <Text style={textStyles.meta}>{content.name}</Text>
+          <ChatText style={textStyles.meta}>{content.name}</ChatText>
           {content.creator ? (
-            <Text type='xs' color='gray.accentHover'>
+            <ChatText style={[textStyles.meta, styles.creator]}>
               By {content.creator}
-            </Text>
+            </ChatText>
           ) : null}
         </View>
       </View>
@@ -110,6 +111,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: 8,
+  },
+  creator: {
+    color: resolveThemeColor('gray.accentHover'),
   },
   emoteImage: {
     height: 28,

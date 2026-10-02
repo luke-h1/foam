@@ -3,8 +3,8 @@ import type { StyleProp, TextStyle } from 'react-native';
 
 import { useSelector } from '@legendapp/state/react';
 
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { getChatColorStyle } from '@app/components/chat/util/chat-color-styles';
-import { Text } from '@app/components/ui/text/text';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-chat-username';
 import { generateRandomTwitchColor } from '@app/utils/chat/generate-random-twitch-color';
@@ -61,9 +61,9 @@ function MentionTokenComponent({
 
   if (isReplyTargetMention) {
     return (
-      <Text color='gray.text' style={baseTextStyle}>
+      <ChatText color='gray.text' style={baseTextStyle}>
         {mentionContent}
-      </Text>
+      </ChatText>
     );
   }
 
@@ -76,7 +76,7 @@ function MentionTokenComponent({
     normalisedCurrentUsername === normalisedMentionedUsername;
 
   return (
-    <Text
+    <ChatText
       style={[
         getChatTextStyles(fontScale, compact).mention,
         emoteLineStyle,
@@ -86,7 +86,7 @@ function MentionTokenComponent({
       ]}
     >
       {mentionContent}
-    </Text>
+    </ChatText>
   );
 }
 

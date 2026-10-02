@@ -1,9 +1,12 @@
 import { render, screen } from '@testing-library/react-native';
 
+import { getChatTextStyles } from '@app/components/chat/components/chat-message/chat-text.styles';
 import type { MessageToken } from '@app/utils/chat/message-token';
 
 import * as ChatInlineImageModule from '../chat-inline-image';
 import { CheermoteToken } from '../cheermote-token';
+
+const textStyles = getChatTextStyles(undefined, undefined);
 
 const mockChatInlineImage = jest.fn<null, [{ sourceUrl: string }]>();
 
@@ -44,7 +47,7 @@ describe('CheermoteToken', () => {
   });
 
   test('falls back to the raw cheer token when no url resolves', () => {
-    render(<CheermoteToken token={makePart()} />);
+    render(<CheermoteToken textStyles={textStyles} token={makePart()} />);
 
     expect(screen.getByText('Cheer100')).toBeOnTheScreen();
     expect(mockChatInlineImage).not.toHaveBeenCalled();
@@ -53,6 +56,7 @@ describe('CheermoteToken', () => {
   test('renders the cheermote image with the bits amount', () => {
     render(
       <CheermoteToken
+        textStyles={textStyles}
         token={makePart({ url: 'https://cdn.example.com/cheer/100.gif' })}
       />,
     );
@@ -68,6 +72,7 @@ describe('CheermoteToken', () => {
   test('prefers the animated url when animations are enabled', () => {
     render(
       <CheermoteToken
+        textStyles={textStyles}
         disableAnimations={false}
         token={makePart({
           static_url: 'https://cdn.example.com/cheer/100.png',
@@ -84,6 +89,7 @@ describe('CheermoteToken', () => {
   test('prefers the static url when animations are disabled', () => {
     render(
       <CheermoteToken
+        textStyles={textStyles}
         disableAnimations
         token={makePart({
           static_url: 'https://cdn.example.com/cheer/100.png',
@@ -100,6 +106,7 @@ describe('CheermoteToken', () => {
   test('falls back to the static url when no animated url exists', () => {
     render(
       <CheermoteToken
+        textStyles={textStyles}
         token={makePart({
           static_url: 'https://cdn.example.com/cheer/100.png',
         })}
@@ -114,6 +121,7 @@ describe('CheermoteToken', () => {
   test('dims the container when the message is moderated', () => {
     render(
       <CheermoteToken
+        textStyles={textStyles}
         isModerated
         token={makePart({ url: 'https://cdn.example.com/cheer/100.gif' })}
       />,

@@ -1,8 +1,8 @@
 import { View } from 'react-native';
 import type { ReactNode } from 'react';
 
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { getChatColorStyle } from '@app/components/chat/util/chat-color-styles';
-import { Text } from '@app/components/ui/text/text';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { getMessageStructure } from '@app/utils/chat/derive-chat-body/get-message-structure';
 import type { InlineFlowToken } from '@app/utils/chat/derive-chat-body/types';
@@ -57,11 +57,11 @@ export function InlineMessageLine({
 
   return (
     <View style={styles.messageLineInline}>
-      <Text style={[textStyles.body, emoteLineStyle]}>
+      <ChatText style={[textStyles.body, emoteLineStyle]}>
         {showTimestamp && timestamp ? (
-          <Text tabular style={[textStyles.timestamp, emoteLineStyle]}>
+          <ChatText tabular style={[textStyles.timestamp, emoteLineStyle]}>
             {`${timestamp} `}
-          </Text>
+          </ChatText>
         ) : null}
         <ChatMessageBadges
           badges={badgeList}
@@ -70,7 +70,7 @@ export function InlineMessageLine({
           onBadgePress={onBadgePress}
         />
         {username ? (
-          <Text
+          <ChatText
             onPress={onUsernamePress}
             suppressHighlighting
             testID='chat-username-button'
@@ -81,7 +81,7 @@ export function InlineMessageLine({
             ]}
           >
             {isAction ? `${username} ` : `${username}: `}
-          </Text>
+          </ChatText>
         ) : null}
         <InlineTokens
           emoteLineStyle={emoteLineStyle}
@@ -98,7 +98,7 @@ export function InlineMessageLine({
           emoteTargetSize={emoteTargetSize}
           textColor={textColor}
         />
-      </Text>
+      </ChatText>
     </View>
   );
 }

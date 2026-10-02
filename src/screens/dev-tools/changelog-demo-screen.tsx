@@ -133,10 +133,10 @@ export function ChangelogDemoScreen() {
           <View style={styles.stateCard}>
             {stateRows.map(([label, value]) => (
               <View key={label} style={styles.stateRow}>
-                <Text type='xs' color='gray.textLow'>
+                <Text type='subhead' color='gray.textLow'>
                   {label}
                 </Text>
-                <Text type='xs' variant='mono' style={styles.stateValue}>
+                <Text type='subhead' variant='mono' style={styles.stateValue}>
                   {value}
                 </Text>
               </View>
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.darkActiveContent,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.radius.md,
     paddingHorizontal: theme.space16,
     paddingVertical: theme.space16,
   },
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.color.background.darkAltAlpha,
     borderCurve: 'continuous',
     borderColor: theme.colorBorderSecondary,
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.radius.md,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: theme.space16,
     paddingVertical: theme.space16,
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   stateCard: {
     backgroundColor: theme.color.background.darkAltAlpha,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.radius.md,
     gap: theme.space12,
     padding: theme.space16,
   },

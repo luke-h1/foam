@@ -1,6 +1,6 @@
 import { type StyleProp, TextStyle } from 'react-native';
 
-import { Text } from '@app/components/ui/text/text';
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
 interface PaintedUsernameMaskedFillProps {
@@ -16,8 +16,8 @@ export function PaintedUsernameMaskedFill({
   maskTextStyle,
 }: PaintedUsernameMaskedFillProps) {
   return (
-    <Text style={[maskTextStyle, { color: fallbackColor }]}>
+    <ChatText style={[maskTextStyle, { color: fallbackColor }]}>
       {displayUsername}
-    </Text>
+    </ChatText>
   );
 }

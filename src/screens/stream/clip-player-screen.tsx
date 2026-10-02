@@ -3,7 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { router } from 'expo-router';
 
-import { IconButton } from '@app/components/icon-button/icon-button';
+import { ActionButton } from '@app/components/action-button/action-button';
 import { StreamPlayer } from '@app/components/stream-player/stream-player';
 import { EmptyState } from '@app/components/ui/empty-state/empty-state';
 import { theme } from '@app/styles/themes';
@@ -13,48 +13,61 @@ interface ClipPlayerScreenProps {
   id: string;
 }
 
+/**
+ * The sheet sizes to its content: the clip at 16:9 with its actions below,
+ * so no controls sit on top of the video and there is no letterboxing.
+ */
 export function ClipPlayerScreen({ id }: ClipPlayerScreenProps) {
   const insets = useSafeAreaInsets();
 
+  // The sheet sizes to its content, and EmptyState fills its parent with
+  // `flex: 1`. A fixed height stops it measuring as zero.
   if (!id) {
     return (
-      <EmptyState
-        heading='Clip not found'
-        content='Could not open this clip.'
-        button='Close'
-        buttonOnPress={() => router.back()}
-      />
+      <View style={styles.notFound}>
+        <EmptyState
+          iconName='scissors'
+          heading='Clip not found'
+          content='This link does not point to a clip.'
+          button='Close'
+          buttonOnPress={() => router.back()}
+        />
+      </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <StreamPlayer
-        clip={id}
-        autoplay
-        muted={false}
-        height='100%'
-        width='100%'
-      />
+    <View
+      style={[
+        styles.container,
+        { paddingBottom: Math.max(insets.bottom, theme.space16) },
+      ]}
+    >
+      <View style={styles.player}>
+        <StreamPlayer
+          clip={id}
+          autoplay
+          muted={false}
+          height='100%'
+          width='100%'
+        />
+      </View>
 
-      <View
-        style={[styles.closeButtonWrap, { top: insets.top + theme.space12 }]}
-      >
-        <IconButton
-          icon={{ type: 'symbol', name: 'square.and.arrow.up', size: 18 }}
-          label='Share clip'
+      <View style={styles.actions}>
+        <ActionButton
+          title='Share'
+          icon='square.and.arrow.up'
+          variant='secondary'
+          style={styles.action}
           onPress={() => {
             void shareDeepLink({ kind: 'clip', id });
           }}
-          size='2xl'
-          style={styles.closeButton}
         />
-        <IconButton
-          icon={{ type: 'symbol', name: 'xmark', size: 18 }}
-          label='Close'
+        <ActionButton
+          title='Done'
+          variant='secondary'
+          style={styles.action}
           onPress={() => router.back()}
-          size='2xl'
-          style={styles.closeButton}
         />
       </View>
     </View>
@@ -62,24 +75,25 @@ export function ClipPlayerScreen({ id }: ClipPlayerScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  closeButton: {
-    alignItems: 'center',
-    backgroundColor: theme.darkActiveContent,
-    borderColor: theme.colorBorderSecondary,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    borderWidth: 1,
-    justifyContent: 'center',
+  action: {
+    flex: 1,
   },
-  closeButtonWrap: {
+  actions: {
     flexDirection: 'row',
     gap: theme.space12,
-    position: 'absolute',
-    right: theme.space16,
-    zIndex: 2,
+    paddingHorizontal: theme.space16,
+    paddingTop: theme.space16,
   },
   container: {
+    backgroundColor: theme.color.surface.dark,
+    paddingTop: theme.space28,
+  },
+  notFound: {
+    height: 320,
+  },
+  player: {
+    aspectRatio: 16 / 9,
     backgroundColor: theme.colorBlack,
-    flex: 1,
+    width: '100%',
   },
 });

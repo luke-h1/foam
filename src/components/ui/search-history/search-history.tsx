@@ -12,6 +12,7 @@ import Animated, {
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { PressableArea } from '@app/components/pressable-area/pressable-area';
+import { SectionHeader } from '@app/components/section-header/section-header';
 import { SymbolView } from '@app/components/ui/icon/icon';
 import { Text } from '@app/components/ui/text/text';
 import { impact } from '@app/lib/haptics';
@@ -223,21 +224,12 @@ export function SearchHistory({
 
   return (
     <View style={styles.wrapper}>
-      <View style={styles.headerRow}>
-        <Text
-          type='xs'
-          weight='semibold'
-          color='gray.textLow'
-          style={styles.sectionTitle}
-        >
-          RECENT SEARCHES
-        </Text>
-        <PressableArea onPress={handleClearAll} hitSlop={8}>
-          <Text type='xs' color='red.accent'>
-            Clear All
-          </Text>
-        </PressableArea>
-      </View>
+      <SectionHeader
+        title='Recent'
+        actionLabel='Clear'
+        onActionPress={handleClearAll}
+        style={styles.header}
+      />
 
       <View style={styles.historyList}>
         {history.slice(0, MAX_VISIBLE_HISTORY).map(query => (
@@ -280,12 +272,8 @@ const styles = StyleSheet.create({
     color: theme.colorWhite,
     fontSize: 12,
   },
-  headerRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: theme.space12,
-    paddingHorizontal: theme.space16,
+  header: {
+    paddingTop: theme.space8,
   },
   historyItem: {
     alignItems: 'center',
@@ -297,7 +285,7 @@ const styles = StyleSheet.create({
   },
   historyList: {
     backgroundColor: theme.colorBorderSecondary,
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.radius.md,
     borderCurve: 'continuous',
     gap: StyleSheet.hairlineWidth,
     overflow: 'hidden',
@@ -311,9 +299,6 @@ const styles = StyleSheet.create({
     color: theme.color.text.dark,
     flex: 1,
     minWidth: 0,
-  },
-  sectionTitle: {
-    letterSpacing: 0.5,
   },
   wrapper: {
     paddingTop: theme.space20,

@@ -40,9 +40,9 @@ describe('Moderator action sheets', () => {
       />,
     );
 
-    expect(queryByText('Delete Message')).toBeNull();
-    expect(queryByText('Timeout…')).toBeNull();
-    expect(queryByText('Ban User')).toBeNull();
+    expect(queryByText('Delete message')).toBeNull();
+    expect(queryByText('Time out…')).toBeNull();
+    expect(queryByText('Ban user')).toBeNull();
 
     rerender(
       <ActionSheet
@@ -60,13 +60,13 @@ describe('Moderator action sheets', () => {
       />,
     );
 
-    fireEvent.press(getByText('Delete Message'));
+    fireEvent.press(getByText('Delete message'));
     expect(onDeleteMessage).toHaveBeenCalledTimes(1);
 
-    fireEvent.press(getByText('Timeout…'));
+    fireEvent.press(getByText('Time out…'));
     expect(onTimeoutUser).toHaveBeenCalledTimes(1);
 
-    fireEvent.press(getByText('Ban User'));
+    fireEvent.press(getByText('Ban user'));
     expect(onBanUser).toHaveBeenCalledTimes(1);
   });
 
@@ -87,9 +87,9 @@ describe('Moderator action sheets', () => {
       />,
     );
 
-    expect(queryByText('Delete Message')).toBeNull();
-    expect(queryByText('Timeout…')).toBeOnTheScreen();
-    expect(queryByText('Ban User')).toBeOnTheScreen();
+    expect(queryByText('Delete message')).toBeNull();
+    expect(queryByText('Time out…')).toBeOnTheScreen();
+    expect(queryByText('Ban user')).toBeOnTheScreen();
   });
 
   test('shows pinned message actions for moderators with a message id', () => {
@@ -112,10 +112,10 @@ describe('Moderator action sheets', () => {
       />,
     );
 
-    fireEvent.press(getByText('Pin Message'));
+    fireEvent.press(getByText('Pin message'));
     expect(onPinMessage).toHaveBeenCalledTimes(1);
-    expect(queryByText('Refresh Pin')).toBeNull();
-    expect(queryByText('Unpin Message')).toBeNull();
+    expect(queryByText('Refresh pin')).toBeNull();
+    expect(queryByText('Unpin message')).toBeNull();
 
     rerender(
       <ActionSheet
@@ -133,10 +133,10 @@ describe('Moderator action sheets', () => {
       />,
     );
 
-    fireEvent.press(getByText('Refresh Pin'));
+    fireEvent.press(getByText('Refresh pin'));
     expect(onUpdatePinnedMessage).toHaveBeenCalledTimes(1);
 
-    fireEvent.press(getByText('Unpin Message'));
+    fireEvent.press(getByText('Unpin message'));
     expect(onUnpinMessage).toHaveBeenCalledTimes(1);
   });
 
@@ -164,8 +164,8 @@ describe('Moderator action sheets', () => {
       />,
     );
 
-    expect(queryByText('Timeout…')).toBeNull();
-    expect(queryByText('Ban User')).toBeNull();
+    expect(queryByText('Time out…')).toBeNull();
+    expect(queryByText('Ban user')).toBeNull();
 
     rerender(
       <UserActionSheet
@@ -187,10 +187,10 @@ describe('Moderator action sheets', () => {
       />,
     );
 
-    fireEvent.press(getByText('Timeout…'));
+    fireEvent.press(getByText('Time out…'));
     expect(onTimeoutUser).toHaveBeenCalledTimes(1);
 
-    fireEvent.press(getByText('Ban User'));
+    fireEvent.press(getByText('Ban user'));
     expect(onBanUser).toHaveBeenCalledTimes(1);
   });
 
@@ -215,8 +215,8 @@ describe('Moderator action sheets', () => {
       />,
     );
 
-    expect(queryByText('Timeout…')).toBeNull();
-    expect(queryByText('Ban User')).toBeNull();
+    expect(queryByText('Time out…')).toBeNull();
+    expect(queryByText('Ban user')).toBeNull();
   });
 
   test('shows block and report actions only when handlers are provided', () => {
@@ -241,8 +241,8 @@ describe('Moderator action sheets', () => {
       />,
     );
 
-    expect(queryByText('Block User')).toBeNull();
-    expect(queryByText('Report User')).toBeNull();
+    expect(queryByText('Block user')).toBeNull();
+    expect(queryByText('Report user')).toBeNull();
 
     rerender(
       <UserActionSheet
@@ -264,10 +264,10 @@ describe('Moderator action sheets', () => {
       />,
     );
 
-    fireEvent.press(getByText('Block User'));
+    fireEvent.press(getByText('Block user'));
     expect(onBlockUser).toHaveBeenCalledTimes(1);
 
-    fireEvent.press(getByText('Report User'));
+    fireEvent.press(getByText('Report user'));
     expect(onReportUser).toHaveBeenCalledTimes(1);
   });
 });
@@ -298,7 +298,7 @@ describe('iOS action sheets', () => {
       />,
     );
 
-    fireEvent.press(getByText('Delete Message'));
+    fireEvent.press(getByText('Delete message'));
     expect(onDeleteMessage).toHaveBeenCalledTimes(1);
   });
 
@@ -324,7 +324,7 @@ describe('iOS action sheets', () => {
       />,
     );
 
-    fireEvent.press(getByText('Ban User'));
+    fireEvent.press(getByText('Ban user'));
     expect(onBanUser).toHaveBeenCalledTimes(1);
   });
 });

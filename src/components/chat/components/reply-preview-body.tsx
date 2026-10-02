@@ -45,7 +45,13 @@ function ReplyPreviewBodyComponent({
         }
 
         return (
-          <Text key={key} numberOfLines={1} style={textStyle}>
+          <Text
+            type='callout'
+            family='brand'
+            key={key}
+            numberOfLines={1}
+            style={textStyle}
+          >
             {content}
           </Text>
         );

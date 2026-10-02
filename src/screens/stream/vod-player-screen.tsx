@@ -7,10 +7,10 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { router, Stack, useFocusEffect } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
 
-import { IconButton } from '@app/components/icon-button/icon-button';
 import { StreamPlayer } from '@app/components/stream-player/stream-player';
 import { EmptyState } from '@app/components/ui/empty-state/empty-state';
 import { PlayerBackButton } from '@app/screens/stream/components/player-back-button';
+import { PlayerIconButton } from '@app/screens/stream/components/player-icon-button';
 import { theme } from '@app/styles/themes';
 
 import { useSleepTimer } from './hooks/use-sleep-timer';
@@ -78,8 +78,9 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
   if (!id) {
     return (
       <EmptyState
-        heading='VOD not found'
-        content='Could not open this VOD.'
+        iconName='play.rectangle'
+        heading='Video not found'
+        content='This video may have been deleted or made private.'
         button='Close'
         buttonOnPress={() => router.back()}
       />
@@ -132,17 +133,11 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
           },
         ]}
       >
-        <IconButton
-          icon={{
-            type: 'symbol',
-            name: 'moon.zzz',
-            size: 18,
-            color: sleepTimer.isActive ? theme.colorPrimary : undefined,
-          }}
+        <PlayerIconButton
+          icon='moon.zzz'
           label='Sleep timer'
+          active={sleepTimer.isActive}
           onPress={() => showSleepTimerMenu(sleepTimer)}
-          size='2xl'
-          style={styles.closeButton}
         />
       </View>
     </View>
@@ -150,15 +145,6 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  closeButton: {
-    alignItems: 'center',
-    backgroundColor: theme.darkActiveContent,
-    borderColor: theme.colorBorderSecondary,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    borderWidth: 1,
-    justifyContent: 'center',
-  },
   closeButtonWrap: {
     flexDirection: 'row',
     gap: theme.space12,

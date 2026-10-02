@@ -1,13 +1,12 @@
 import { type ReactNode, type RefObject, useCallback } from 'react';
 import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
-import { Pressable } from 'react-native-gesture-handler';
 
 import { ListRenderItem } from '@shopify/flash-list';
 import { router } from 'expo-router';
 
-import { Button } from '@app/components/button/button';
 import { FlashList, FlashListRef } from '@app/components/flash-list/flash-list';
 import { Image } from '@app/components/image/image';
+import { PressableArea } from '@app/components/pressable-area/pressable-area';
 import { SegmentedControl } from '@app/components/segmented-control/segmented-control';
 import { EmptyState } from '@app/components/ui/empty-state/empty-state';
 import { SearchHistory } from '@app/components/ui/search-history/search-history';
@@ -16,6 +15,7 @@ import { theme } from '@app/styles/themes';
 import type { Category } from '@app/types/twitch/category';
 import type { SearchChannelResponse } from '@app/types/twitch/channel';
 
+import { SearchDiscover } from './components/search-discover';
 import { SearchInputBar } from './components/search-input-bar/search-input-bar';
 import { SearchResultsSkeleton } from './components/search-results-skeleton';
 import { StreamerCard } from './components/streamer-card';
@@ -29,32 +29,11 @@ import {
   type SearchStatus,
 } from './util/search-state';
 
-const SEARCH_QUICK_ACTIONS = [
-  {
-    title: 'Just Chatting',
-    subtitle: 'Jump into the busiest live conversations',
-    query: 'just chatting',
-  },
-  {
-    title: 'Valorant',
-    subtitle: 'Check competitive streams and ranked grinders',
-    query: 'valorant',
-  },
-  {
-    title: 'League',
-    subtitle: 'See top solo queue and pro-watch channels',
-    query: 'league of legends',
-  },
-];
-
-type SearchQuickAction = (typeof SEARCH_QUICK_ACTIONS)[number];
-
-const isAndroid = process.env.EXPO_OS === 'android';
-
 /**
- * Keeps row separators aligned with the text column, past the thumbnail.
+ * Keeps row separators aligned with the text column, past the avatar or box
+ * art.
  */
-const RESULT_THUMBNAIL_WIDTH = 55;
+const RESULT_THUMBNAIL_WIDTH = 48;
 
 const RESULT_SEPARATOR_INSET =
   theme.space16 + RESULT_THUMBNAIL_WIDTH + theme.space16;
@@ -69,19 +48,9 @@ function ResultRow({
   style: StyleProp<ViewStyle>;
 }) {
   return (
-    <Pressable
-      accessibilityRole='button'
-      onPress={onPress}
-      android_ripple={
-        isAndroid ? { color: 'rgba(255, 255, 255, 0.08)' } : undefined
-      }
-      style={({ pressed }) => [
-        style,
-        pressed && !isAndroid ? styles.rowPressed : null,
-      ]}
-    >
-      {children}
-    </Pressable>
+    <PressableArea feedback='highlight' onPress={onPress}>
+      <View style={style}>{children}</View>
+    </PressableArea>
   );
 }
 
@@ -96,7 +65,6 @@ export function SearchScreen() {
     handleClearSearch,
     handleFilterChange,
     handleQuerySearch,
-    handleQuickActionPress,
     handleRefresh,
     handleSearchHistoryClearAll,
     handleSearchHistoryClearItem,
@@ -146,36 +114,13 @@ export function SearchScreen() {
             cacheVariant='thumbnail'
             style={styles.categoryResultImage}
           />
-          <View style={styles.categoryResultInfo}>
-            <Text type='sm' weight='semibold' numberOfLines={1}>
-              {item.name}
-            </Text>
-            <Text type='xs' color='gray.textLow' numberOfLines={1}>
-              Open category
-            </Text>
-          </View>
+          <Text type='body' numberOfLines={2} style={styles.categoryResultName}>
+            {item.name}
+          </Text>
         </ResultRow>
       );
     },
     [handleCategoryPress],
-  );
-
-  const renderQuickActionItem = useCallback(
-    (item: SearchQuickAction) => {
-      return (
-        <Button
-          key={item.query}
-          haptic='selection'
-          style={styles.quickActionChip}
-          onPress={() => handleQuickActionPress(item.query)}
-        >
-          <Text type='sm' weight='semibold' style={styles.quickActionTitle}>
-            {item.title}
-          </Text>
-        </Button>
-      );
-    },
-    [handleQuickActionPress],
   );
 
   const handleRetry = useCallback(() => {
@@ -196,14 +141,6 @@ export function SearchScreen() {
 
   const listHeader = (
     <View>
-      <SearchHeader
-        activeResults={activeResults}
-        handleFilterChange={handleFilterChange}
-        query={query}
-        renderQuickActionItem={renderQuickActionItem}
-        searchResultsLength={searchResults.length}
-        selectedFilter={selectedFilter}
-      />
       {showSearchHistory ? (
         <SearchHistory
           history={searchHistoryQueries}
@@ -212,6 +149,13 @@ export function SearchScreen() {
           onClearItem={handleSearchHistoryClearItem}
         />
       ) : null}
+      <SearchHeader
+        activeResults={activeResults}
+        handleFilterChange={handleFilterChange}
+        query={query}
+        searchResultsLength={searchResults.length}
+        selectedFilter={selectedFilter}
+      />
     </View>
   );
 
@@ -244,7 +188,6 @@ type SearchHeaderProps = {
   activeResults: SearchItem[];
   handleFilterChange: (index: number) => void;
   query: string;
-  renderQuickActionItem: (item: SearchQuickAction) => React.ReactElement;
   searchResultsLength: number;
   selectedFilter: SearchFilter;
 };
@@ -253,50 +196,24 @@ function SearchHeader({
   activeResults,
   handleFilterChange,
   query,
-  renderQuickActionItem,
   searchResultsLength,
   selectedFilter,
 }: SearchHeaderProps) {
+  const hasQuery = query.length > 0;
+
+  if (!hasQuery && searchResultsLength === 0) {
+    return <SearchDiscover />;
+  }
+
+  // The filter only changes results, so it appears once there is a query.
   return (
-    <View style={styles.header}>
-      <View style={styles.filterBar}>
-        <SegmentedControl
-          currentIndex={selectedFilter === 'channels' ? 0 : 1}
-          onChange={handleFilterChange}
-          items={[{ label: 'Channels' }, { label: 'Categories' }]}
-        />
-      </View>
-
-      {query.length === 0 && searchResultsLength === 0 && (
-        <View style={styles.quickActionsSection}>
-          <View style={styles.sectionHeader}>
-            <Text
-              type='xs'
-              weight='semibold'
-              color='gray.textLow'
-              style={styles.sectionTitle}
-            >
-              SUGGESTED
-            </Text>
-          </View>
-          <View style={styles.quickActionsRow}>
-            {SEARCH_QUICK_ACTIONS.map(renderQuickActionItem)}
-          </View>
-        </View>
-      )}
-
-      {query.length > 1 && activeResults.length > 0 && (
-        <View style={styles.sectionHeader}>
-          <Text
-            type='xs'
-            weight='semibold'
-            color='gray.textLow'
-            style={styles.sectionTitle}
-          >
-            {selectedFilter === 'channels' ? 'CHANNELS' : 'CATEGORIES'}
-          </Text>
-        </View>
-      )}
+    <View style={styles.filterBar}>
+      <SegmentedControl
+        currentIndex={selectedFilter === 'channels' ? 0 : 1}
+        onChange={handleFilterChange}
+        items={[{ label: 'Channels' }, { label: 'Categories' }]}
+      />
+      {activeResults.length > 0 ? null : <View style={styles.filterGap} />}
     </View>
   );
 }
@@ -325,7 +242,7 @@ function SearchResultsEmpty({
         iconName='exclamationmark.triangle'
         heading="Couldn't search"
         content='Check your connection and try again.'
-        button='Retry'
+        button='Try again'
         buttonOnPress={onRetry}
       />
     );
@@ -338,7 +255,6 @@ function SearchResultsEmpty({
         iconName='magnifyingglass'
         heading={`No ${selectedFilter} for "${query}"`}
         content='Check the spelling, or try a shorter search.'
-        button={null}
       />
     );
   }
@@ -402,17 +318,10 @@ function SearchResultsList({
 
 const styles = StyleSheet.create({
   categoryResultImage: {
-    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius6,
-    borderWidth: 1,
-    height: 76,
-    width: 54,
-  },
-  categoryResultInfo: {
-    flex: 1,
-    gap: 2,
-    minWidth: 0,
+    borderRadius: theme.radius.sm,
+    height: 64,
+    width: RESULT_THUMBNAIL_WIDTH,
   },
   categoryResultItem: {
     alignItems: 'center',
@@ -421,38 +330,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space16,
     paddingVertical: theme.space8,
   },
+  categoryResultName: {
+    flex: 1,
+  },
   container: {
     backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   filterBar: {
-    alignSelf: 'stretch',
+    paddingBottom: theme.space8,
+    paddingHorizontal: theme.space16,
+    paddingTop: theme.space4,
+  },
+  filterGap: {
+    height: theme.space8,
   },
   listEmpty: {
     paddingTop: theme.space24,
-  },
-  header: {
-    paddingHorizontal: theme.space16,
-    paddingBottom: theme.space12,
-    paddingTop: theme.space4,
-  },
-  quickActionChip: {
-    backgroundColor: theme.colorSurfaceAlpha,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space8,
-  },
-  quickActionTitle: {
-    lineHeight: 20,
-  },
-  quickActionsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.space8,
-  },
-  quickActionsSection: {
-    marginTop: theme.space12,
   },
   resultItem: {
     flexDirection: 'row',
@@ -462,21 +356,9 @@ const styles = StyleSheet.create({
   resultsList: {
     flex: 1,
   },
-  rowPressed: {
-    backgroundColor: theme.color.surfacePressed.dark,
-  },
   separator: {
     backgroundColor: theme.color.border.dark,
     height: StyleSheet.hairlineWidth,
     marginStart: RESULT_SEPARATOR_INSET,
-  },
-  sectionHeader: {
-    gap: 2,
-    marginBottom: theme.space8,
-    marginTop: theme.space12,
-  },
-  sectionTitle: {
-    letterSpacing: 1,
-    textTransform: 'uppercase',
   },
 });

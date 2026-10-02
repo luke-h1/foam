@@ -12,6 +12,7 @@ export interface ScrollActivity {
 export function createScrollActivity(): ScrollActivity {
   let active = false;
   let settleTimer: ReturnType<typeof setTimeout> | null = null;
+  let lastPokeAt = 0;
   const listeners = new Set<ScrollActivityListener>();
 
   function setActive(next: boolean): void {
@@ -23,19 +24,34 @@ export function createScrollActivity(): ScrollActivity {
     listeners.forEach(listener => listener(next));
   }
 
+  /**
+   * Settles at `lastPokeAt + SETTLE_MS`. A fling pokes on every scroll tick,
+   * so the timer waits out the remainder instead of being cleared and
+   * re-armed sixty times a second.
+   */
+  function onSettleTimer(): void {
+    const remainingMs = lastPokeAt + SETTLE_MS - Date.now();
+
+    if (remainingMs > 0) {
+      settleTimer = setTimeout(onSettleTimer, remainingMs);
+      return;
+    }
+
+    settleTimer = null;
+    setActive(false);
+  }
+
   return {
     isActive: (): boolean => active,
     poke(): void {
+      lastPokeAt = Date.now();
       setActive(true);
 
       if (settleTimer) {
-        clearTimeout(settleTimer);
+        return;
       }
 
-      settleTimer = setTimeout(() => {
-        settleTimer = null;
-        setActive(false);
-      }, SETTLE_MS);
+      settleTimer = setTimeout(onSettleTimer, SETTLE_MS);
     },
     reset(): void {
       if (settleTimer) {

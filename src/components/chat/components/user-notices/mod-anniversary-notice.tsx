@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { View } from 'react-native';
 
-import { Text } from '@app/components/ui/text/text';
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { reportUnrenderableNotice } from '@app/utils/chat/chat-health/report-unrenderable-notice';
 import { MessageToken } from '@app/utils/chat/message-token';
 
@@ -55,18 +55,18 @@ function ModAnniversaryNoticeComponent({
         labelStyle={styles.modAnniversaryMetaText}
       />
       {systemMsg ? (
-        <Text style={textStyles.meta}>
+        <ChatText style={textStyles.meta}>
           {lead ? (
-            <Text style={[textStyles.meta, styles.channelPointsMetaName]}>
+            <ChatText style={[textStyles.meta, styles.channelPointsMetaName]}>
               {lead}
-            </Text>
+            </ChatText>
           ) : null}
           {rest ? (
-            <Text style={[textStyles.meta, styles.channelPointsMetaMuted]}>
+            <ChatText style={[textStyles.meta, styles.channelPointsMetaMuted]}>
               {lead ? ` ${rest}` : rest}
-            </Text>
+            </ChatText>
           ) : null}
-        </Text>
+        </ChatText>
       ) : null}
       <NoticeUserMessage
         compact={compact}

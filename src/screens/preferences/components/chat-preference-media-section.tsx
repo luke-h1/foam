@@ -20,7 +20,7 @@ export function ChatPreferenceMediaSection({
     <SettingsSection
       title='Media'
       footer={
-        <Text color='gray.textLow' type='xs'>
+        <Text color='gray.textLow' type='subhead'>
           Animated Twitch, BTTV, FFZ, and 7TV emotes will render as still images
           when this is enabled.
         </Text>
@@ -32,7 +32,6 @@ export function ChatPreferenceMediaSection({
         icon={{
           icon: 'slash.circle',
           androidIcon: 'block',
-          color: theme.colorGrey,
         }}
         value={previewDisableEmoteAnimations}
         onValueChange={handleDisableEmoteAnimationsToggle}

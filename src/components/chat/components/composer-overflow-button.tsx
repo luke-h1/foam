@@ -30,9 +30,11 @@ export function ComposerOverflowButton({
 
   const handlePress = () => {
     presentActionMenu({
-      actions: actions
-        .filter(action => !action.disabled)
-        .map(action => ({ label: action.label, onPress: action.onPress })),
+      actions: actions.flatMap(action =>
+        action.disabled
+          ? []
+          : [{ label: action.label, onPress: action.onPress }],
+      ),
       cancelLabel: 'Cancel',
       title: 'Message',
     });

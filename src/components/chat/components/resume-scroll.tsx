@@ -36,9 +36,14 @@ function ResumeScrollComponent({ onScrollToBottom }: ResumeScrollProps) {
           size={16}
           tintColor={theme.colorAmberAlpha}
         />
-        <Text style={styles.resumeText}>Jump to latest</Text>
+        <Text type='callout' family='brand' style={styles.resumeText}>
+          Jump to latest
+        </Text>
         {unreadCount > 0 && (
-          <Text style={styles.resumeCount}> {unreadCount}</Text>
+          <Text type='callout' family='brand' style={styles.resumeCount}>
+            {' '}
+            {unreadCount}
+          </Text>
         )}
       </Button>
     </Animated.View>
@@ -53,9 +58,9 @@ const styles = StyleSheet.create({
     backgroundColor: theme.color.background.darkAltAlpha,
     borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius28,
+    borderRadius: theme.radius.xl,
     borderWidth: 1,
-    boxShadow: '0 2px 3.84px rgba(0, 0, 0, 0.25)',
+    boxShadow: theme.elevation.floating,
     flexDirection: 'row',
     gap: theme.space8,
     paddingHorizontal: theme.space20,

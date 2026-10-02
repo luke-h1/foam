@@ -66,8 +66,8 @@ export const semanticColorGroups = {
     borderHover: alpha(Color.zinc[50], '2E'),
     borderUi: alpha(Color.zinc[50], '29'),
     contrast: Color.zinc[50],
-    text: Color.zinc[50],
-    textLow: Color.zinc[400],
+    text: '#F5F5F7',
+    textLow: '#98989F',
     ui: Color.zinc[900],
     uiActive: Color.zinc[800],
     uiAlpha: alpha(Color.zinc[50], '0F'),
@@ -95,106 +95,70 @@ export const semanticColorGroups = {
   },
 } as const;
 
-const CANVAS = { light: '#EBF0F6', dark: '#0C1014' } as const;
-const SURFACE = { light: '#FFFFFF', dark: '#161D26' } as const;
-const SURFACE_SUNKEN = { light: '#DFE7F0', dark: '#070A0E' } as const;
-const SURFACE_ELEVATED = { light: '#FFFFFF', dark: '#1B232E' } as const;
-const SURFACE_PRESSED = { light: '#F2F6FA', dark: '#1A222C' } as const;
+/**
+ * One neutral grey family, taken from the iOS dark system backgrounds, so the
+ * React Native surfaces match the native forms, sheets and tab bar beside them.
+ */
+const CANVAS = { light: '#F2F2F7', dark: '#000000' } as const;
+const SURFACE = { light: '#FFFFFF', dark: '#1C1C1E' } as const;
+const SURFACE_SUNKEN = { light: '#E5E5EA', dark: '#0A0A0B' } as const;
+const SURFACE_ELEVATED = { light: '#FFFFFF', dark: '#2C2C2E' } as const;
+const SURFACE_PRESSED = { light: '#E5E5EA', dark: '#2C2C2E' } as const;
 
 export const theme = {
   colorRed: semanticColorGroups.red.accent,
   colorWhite: semanticColorGroups.gray.text,
   colorBlack: semanticColorGroups.gray.bg,
-  colorLightGreen: primaryAccentPress.dark,
-  colorDarkGreen: primaryAccent.dark,
   colorPrimary: semanticColorGroups.accent.accent,
-  colorPrimaryAlpha: semanticColorGroups.accent.accentAlpha,
   /**
    * Android paints `selectionColor` behind the glyphs, so keep it translucent (0x66 = 40%) or selected text is unreadable.
    */
   colorTextSelection: alpha(primaryAccent.dark, '66'),
-  colorPrimaryHover: semanticColorGroups.accent.accentHover,
-  colorPrimarySurface: semanticColorGroups.accent.bgAltAlpha,
   colorGrey: semanticColorGroups.gray.accent,
   colorGreyAlpha: semanticColorGroups.gray.accentAlpha,
-  colorGreyHover: semanticColorGroups.gray.accentHover,
   colorGreyHoverAlpha: semanticColorGroups.gray.accentHoverAlpha,
   colorBlue: semanticColorGroups.blue.accent,
   colorOrange: semanticColorGroups.orange.accent,
   colorPlum: semanticColorGroups.plum.accent,
-  colorPlumBorder: semanticColorGroups.plum.border,
   colorTeal: semanticColorGroups.teal.accent,
   colorViolet: semanticColorGroups.violet.accent,
-  colorVioletSurface: semanticColorGroups.violet.ui,
   colorAmber: semanticColorGroups.amber.accent,
   colorAmberAlpha: semanticColorGroups.amber.accentAlpha,
   colorAccentAlpha: semanticColorGroups.accent.accentAlpha,
-  colorAccentHoverAlpha: semanticColorGroups.accent.accentHoverAlpha,
   colorAccentSurface: semanticColorGroups.accent.bgAltAlpha,
-  colorRedBorder: semanticColorGroups.red.border,
-  colorRedBorderAlpha: semanticColorGroups.red.borderAlpha,
-  colorRedBorderUi: semanticColorGroups.red.borderUi,
   colorRedSurface: semanticColorGroups.red.uiAlpha,
-  colorBlackAlpha: semanticColorGroups.black.accentAlpha,
   colorBlackOverlay: semanticColorGroups.black.bgAlpha,
-  colorBlackOverlayStrong: semanticColorGroups.black.bgAltAlpha,
-  colorBlackBorderHover: semanticColorGroups.black.borderHoverAlpha,
   colorBlackActiveContent: semanticColorGroups.black.uiActiveAlpha,
-  colorBackgroundTertiaryAlpha: semanticColorGroups.gray.bgAltAlpha,
   colorBorderSecondary: semanticColorGroups.gray.borderAlpha,
-  colorBorderHover: semanticColorGroups.gray.borderHover,
-  colorBorderTertiary: semanticColorGroups.gray.borderUi,
   colorSurfaceAlpha: semanticColorGroups.gray.uiAlpha,
 
   color: {
-    reactBlue: {
-      light: '#087EA4',
-      dark: '#58C4DC',
-    },
-    transparent: {
-      light: 'rgba(255,255,255,0)',
-      dark: 'rgba(0,0,0,0)',
-    },
-    canvas: CANVAS,
     background: {
       ...CANVAS,
       darkAlt: SURFACE.dark,
-      darkAltAlpha: 'rgba(22,29,38,0.92)',
+      darkAltAlpha: 'rgba(28,28,30,0.92)',
     },
     surface: SURFACE,
-    surfaceSunken: SURFACE_SUNKEN,
     surfaceElevated: SURFACE_ELEVATED,
     surfacePressed: SURFACE_PRESSED,
-    rowAlt: {
-      light: 'rgba(16,24,40,0.04)',
-      dark: 'rgba(255,255,255,0.04)',
-    },
     backgroundSecondary: SURFACE,
     backgroundTertiary: SURFACE_SUNKEN,
     backgroundElement: SURFACE_PRESSED,
     text: {
-      light: '#0F1620',
-      dark: '#EDF1F5',
+      light: '#000000',
+      dark: '#F5F5F7',
     },
     textSecondary: {
-      light: '#54657A',
-      dark: '#93A1B2',
-    },
-    textLow: {
-      light: '#54657A',
-      dark: '#93A1B2',
+      light: '#6C6C70',
+      dark: '#98989F',
     },
     textFaint: {
-      light: '#8896A8',
-      dark: '#65717F',
+      light: '#8E8E93',
+      dark: '#6C6C70',
     },
     border: {
-      light: 'rgba(16,30,50,0.10)',
+      light: 'rgba(60,60,67,0.18)',
       dark: 'rgba(255,255,255,0.10)',
-    },
-    borderStrong: {
-      light: 'rgba(16,30,50,0.16)',
-      dark: 'rgba(255,255,255,0.16)',
     },
     accent: {
       light: '#1083FE',
@@ -207,10 +171,6 @@ export const theme = {
     accentSurface: {
       light: 'rgba(16,131,254,0.10)',
       dark: 'rgba(46,134,255,0.16)',
-    },
-    accentRing: {
-      light: 'rgba(16,131,254,0.35)',
-      dark: 'rgba(46,134,255,0.45)',
     },
     onAccent: {
       light: '#FFFFFF',
@@ -231,14 +191,6 @@ export const theme = {
     danger: {
       light: '#DC4B4B',
       dark: '#FF6B6B',
-    },
-    twitch: {
-      light: '#8A4FE6',
-      dark: '#A172F0',
-    },
-    twitchSurface: {
-      light: 'rgba(138,79,230,0.10)',
-      dark: 'rgba(161,114,240,0.16)',
     },
     surfaceNeutral: {
       light: '#FFFFFF',
@@ -282,7 +234,6 @@ export const theme = {
   },
 
   darkActiveContent: semanticColorGroups.gray.uiAlpha,
-  lightActiveContent: 'rgba(0,0,0, 0.1)',
 
   space2: spaceScale(2),
   space4: spaceScale(4),
@@ -296,10 +247,12 @@ export const theme = {
   space44: spaceScale(44),
   space56: spaceScale(56),
   space72: spaceScale(72),
-  space84: spaceScale(84),
-  tabBarHeight: spaceScale(84),
 
-  fontSize10: fontScale(10),
+  /**
+   * Scales a font size up on iPad. The `Text` type ramp is built with it.
+   */
+  fontScale,
+
   fontSize11: fontScale(11),
   fontSize12: fontScale(12),
   fontSize14: fontScale(14),
@@ -307,11 +260,6 @@ export const theme = {
   fontSize17: fontScale(17),
   fontSize18: fontScale(18),
   fontSize20: fontScale(20),
-  fontSize24: fontScale(24),
-  fontSize28: fontScale(28),
-  fontSize32: fontScale(32),
-  fontSize34: fontScale(34),
-  fontSize42: fontScale(42),
 
   fontFamilyLight: fontFamilyFor('Montserrat_300Light', 'Montserrat-Light'),
   fontFamilyLightItalic: fontFamilyFor(
@@ -361,48 +309,25 @@ export const theme = {
     'Montserrat-Italic',
   ),
 
-  fontFamilyDisplay: fontFamilyFor(
-    'InstrumentSerif_400Regular',
-    'InstrumentSerif-Regular',
-  ),
-  fontFamilyDisplayItalic: fontFamilyFor(
-    'InstrumentSerif_400Regular_Italic',
-    'InstrumentSerif-Italic',
-  ),
-
-  borderRadius4: 4,
-  borderRadius6: 6,
-  borderRadius8: 8,
-  borderRadius10: 10,
-  borderRadius12: 12,
-  borderRadius14: 14,
-  borderRadius16: 16,
-  borderRadius18: 18,
-  borderRadius20: 20,
-  borderRadius28: 28,
-  borderRadius32: 32,
-  borderRadius34: 34,
-  borderRadius40: 40,
-  borderRadius45: 45,
-  borderRadius80: 80,
-  borderRadius999: 999,
-
-  dropShadow: {
-    boxShadow: '0 24px 64px 0 rgba(0, 0, 0, 0.45)',
+  /**
+   * Corner radii: `sm` for badges and small chips, `md` for thumbnails and
+   * controls, `lg` for cards and tiles, `xl` for sheets and `full` for pill
+   * buttons and avatars. Pair each with `borderCurve: 'continuous'`.
+   */
+  radius: {
+    sm: 6,
+    md: 12,
+    lg: 16,
+    xl: 28,
+    full: 999,
   },
-  shadow: {
-    sm: {
-      light: '0 1px 2px rgba(16,30,50,0.06)',
-      dark: '0 1px 2px rgba(0,0,0,0.40)',
-    },
-    md: {
-      light: '0 1px 2px rgba(16,30,50,0.05), 0 8px 24px rgba(16,30,50,0.08)',
-      dark: '0 1px 2px rgba(0,0,0,0.40), 0 12px 30px rgba(0,0,0,0.45)',
-    },
-    lg: {
-      light: '0 2px 6px rgba(16,30,50,0.06), 0 18px 44px rgba(16,30,50,0.13)',
-      dark: '0 2px 6px rgba(0,0,0,0.45), 0 18px 40px rgba(0,0,0,0.55)',
-    },
+
+  /**
+   * Shadow for UI that floats over content, such as banners, floating buttons
+   * and toasts. Lists, rows and cards have no shadow.
+   */
+  elevation: {
+    floating: '0 8px 24px rgba(0, 0, 0, 0.5)',
   },
 } as const;
 

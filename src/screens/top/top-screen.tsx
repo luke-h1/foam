@@ -1,6 +1,8 @@
 import { Activity, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { Stack } from 'expo-router';
+
 import { TOP_TAB_ROUTES } from '@app/constants/top-tab-routes';
 import { theme } from '@app/styles/themes';
 
@@ -17,9 +19,13 @@ export function TopScreen() {
    */
   return (
     <View style={styles.container}>
-      <View style={styles.segmentBar}>
-        <TopSegmentControl index={index} onIndexChange={setIndex} />
-      </View>
+      <Stack.Screen
+        options={{
+          headerTitle: () => (
+            <TopSegmentControl index={index} onIndexChange={setIndex} />
+          ),
+        }}
+      />
       <Activity mode={activeKey === 'streams' ? 'visible' : 'hidden'}>
         <View style={styles.scene}>
           <TopStreamsScreen />
@@ -41,9 +47,5 @@ const styles = StyleSheet.create({
   },
   scene: {
     flex: 1,
-  },
-  segmentBar: {
-    backgroundColor: theme.color.background.dark,
-    paddingHorizontal: theme.space16,
   },
 });

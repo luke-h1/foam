@@ -30,7 +30,7 @@ export function BlockedUsersActionButton({
       ]}
     >
       <Text
-        type='xs'
+        type='subhead'
         weight='bold'
         style={isDestructive ? styles.destructiveLabel : styles.primaryLabel}
       >
@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
+    borderRadius: theme.radius.lg,
     justifyContent: 'center',
     paddingHorizontal: theme.space12,
     paddingVertical: theme.space8,

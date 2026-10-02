@@ -1,17 +1,13 @@
 import { createElement } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
-import {
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from '@testing-library/react-native';
+import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import * as SegmentedControlModule from '@app/components/segmented-control/segmented-control';
 import * as useDebouncedCallbackModule from '@app/hooks/use-debounced-callback';
 import { storageService as realStorageService } from '@app/lib/storage';
 import { twitchService as realTwitchService } from '@app/services/twitch-service';
+import render from '@app/test/render';
 import type { Category } from '@app/types/twitch/category';
 import type { SearchChannelResponse } from '@app/types/twitch/channel';
 
@@ -20,6 +16,9 @@ import { SearchScreen } from '../search-screen';
 const twitchService = {
   searchChannels: jest.spyOn(realTwitchService, 'searchChannels'),
   searchCategories: jest.spyOn(realTwitchService, 'searchCategories'),
+  getTopStreams: jest.spyOn(realTwitchService, 'getTopStreams'),
+  getTopCategories: jest.spyOn(realTwitchService, 'getTopCategories'),
+  getUserImage: jest.spyOn(realTwitchService, 'getUserImage'),
 };
 
 const storageService = {
@@ -82,12 +81,43 @@ const mockCategoryResult: Category = {
   box_art_url: 'https://example.com/art.jpg',
 };
 
+const mockRailStream = {
+  id: 'rail-1',
+  user_id: '900',
+  user_login: 'railstreamer',
+  user_name: 'RailStreamer',
+  game_id: '1',
+  game_name: 'Just Chatting',
+  type: 'live' as const,
+  title: 'Live on the rail',
+  viewer_count: 1200,
+  started_at: new Date().toISOString(),
+  language: 'en',
+  thumbnail_url: '',
+  tag_ids: [],
+  tags: [],
+  is_mature: false,
+};
+
 describe('SearchScreen', () => {
   beforeEach(() => {
     twitchService.searchChannels.mockResolvedValue([mockChannel]);
     twitchService.searchCategories.mockResolvedValue({
       data: [mockCategoryResult],
     });
+    twitchService.getTopStreams.mockResolvedValue({
+      data: [
+        {
+          ...mockRailStream,
+        },
+      ],
+      pagination: { cursor: '' },
+    });
+    twitchService.getTopCategories.mockResolvedValue({
+      data: [{ id: 'rail-cat', name: 'Rail Category', box_art_url: '' }],
+      pagination: { cursor: '' },
+    });
+    twitchService.getUserImage.mockResolvedValue('');
   });
 
   test('renders search input', () => {
@@ -96,11 +126,13 @@ describe('SearchScreen', () => {
     expect(screen.getByTestId('search-input')).toBeOnTheScreen();
   });
 
-  test('shows quick action chips before a search is made', () => {
+  test('shows live channels and top categories before a search is made', async () => {
     render(<SearchScreen />);
 
-    expect(screen.getByText('Just Chatting')).toBeOnTheScreen();
-    expect(screen.getByText('Valorant')).toBeOnTheScreen();
+    expect(screen.getByText('Live now')).toBeOnTheScreen();
+    expect(screen.getByText('Top categories')).toBeOnTheScreen();
+    expect(await screen.findByText('RailStreamer')).toBeOnTheScreen();
+    expect(await screen.findByText('Rail Category')).toBeOnTheScreen();
   });
 
   test('shows channel results after searching', async () => {
@@ -135,19 +167,6 @@ describe('SearchScreen', () => {
     await waitFor(() => {
       expect(twitchService.searchChannels).not.toHaveBeenCalled();
     });
-  });
-
-  test('quick-action tap fires exactly one search', async () => {
-    render(<SearchScreen />);
-
-    fireEvent.press(screen.getByText('Just Chatting'));
-
-    await waitFor(() => {
-      expect(twitchService.searchCategories).toHaveBeenCalledTimes(1);
-    });
-
-    // The imperative setText handle must not re-enter type-to-search, or one tap issues the same query twice.
-    expect(twitchService.searchChannels).toHaveBeenCalledTimes(1);
   });
 
   test('shows a skeleton while a search is in flight', async () => {
@@ -191,7 +210,7 @@ describe('SearchScreen', () => {
     fireEvent.changeText(screen.getByTestId('search-input'), 'stre');
 
     expect(await screen.findByText("Couldn't search")).toBeOnTheScreen();
-    expect(screen.getByText('Retry')).toBeOnTheScreen();
+    expect(screen.getByText('Try again')).toBeOnTheScreen();
   });
 
   test('shows search history when available and no query entered', () => {
@@ -203,5 +222,23 @@ describe('SearchScreen', () => {
 
     expect(screen.getByTestId('search-history')).toBeOnTheScreen();
     expect(screen.getByTestId('search-history-item-xqc')).toBeOnTheScreen();
+  });
+
+  test('selecting a recent search fires exactly one search', async () => {
+    storageService.getString.mockReturnValue([
+      { query: 'xqc', date: new Date().toISOString() },
+    ]);
+
+    render(<SearchScreen />);
+
+    fireEvent.press(screen.getByTestId('search-history-item-xqc'));
+
+    await waitFor(() => {
+      expect(twitchService.searchChannels).toHaveBeenCalledTimes(1);
+    });
+
+    // setText must not trigger type-to-search. If it does, one tap sends the
+    // same query twice.
+    expect(twitchService.searchCategories).toHaveBeenCalledTimes(1);
   });
 });

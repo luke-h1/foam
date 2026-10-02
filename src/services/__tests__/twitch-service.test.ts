@@ -441,3 +441,15 @@ describe('twitchService moderation endpoints', () => {
     });
   });
 });
+
+describe('twitchService.getStream', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('resolves null for an offline channel, so the query reads it as offline', async () => {
+    api.get.mockResolvedValue({ data: [] });
+
+    await expect(twitchService.getStream('xqc')).resolves.toEqual(null);
+  });
+});

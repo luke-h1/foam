@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { View } from 'react-native';
 
-import { Text } from '@app/components/ui/text/text';
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { reportUnrenderableNotice } from '@app/utils/chat/chat-health/report-unrenderable-notice';
 import { MessageToken } from '@app/utils/chat/message-token';
 
@@ -66,8 +66,8 @@ function ViewerMilestoneNoticeComponent({
         icon='flame.fill'
         labelColor={CHAT_NOTICE_ACCENTS.viewerMilestone}
       >
-        <Text style={[textStyles.meta, styles.messageMetaTextFlex]}>
-          <Text
+        <ChatText style={[textStyles.meta, styles.messageMetaTextFlex]}>
+          <ChatText
             style={[
               textStyles.meta,
               textStyles.metaStrong,
@@ -75,9 +75,9 @@ function ViewerMilestoneNoticeComponent({
             ]}
           >
             {getMilestoneMetaLabel(token.category)}
-          </Text>
+          </ChatText>
           <MilestoneReward reward={reward} style={textStyles.meta} />
-        </Text>
+        </ChatText>
       </ChatNoticeMetaRow>
       {systemMsg ? (
         <MilestoneSystemMessage

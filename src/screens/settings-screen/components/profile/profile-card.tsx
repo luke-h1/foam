@@ -43,7 +43,7 @@ function ProfileSection({ title, footer, children }: ProfileSectionProps) {
   return (
     <View style={styles.section}>
       {title ? (
-        <Text type='xxs' weight='semibold' style={styles.sectionTitle}>
+        <Text type='caption' weight='semibold' style={styles.sectionTitle}>
           {title}
         </Text>
       ) : null}
@@ -56,11 +56,11 @@ function ProfileSection({ title, footer, children }: ProfileSectionProps) {
 function InfoRow({ label, value, valueColor }: InfoRowProps) {
   return (
     <View style={styles.row}>
-      <Text type='sm' weight='medium' style={styles.rowLabel}>
+      <Text type='body' weight='medium' style={styles.rowLabel}>
         {label}
       </Text>
       <Text
-        type='xs'
+        type='subhead'
         color='gray.textLow'
         numberOfLines={1}
         style={[styles.rowValue, valueColor ? { color: valueColor } : null]}
@@ -86,7 +86,7 @@ function ActionRow({
       <View style={styles.actionRow}>
         <SymbolView name={icon} size={20} tintColor={iconColor} />
         <Text
-          type='sm'
+          type='body'
           weight='medium'
           style={[styles.actionLabel, { color: iconColor }]}
         >
@@ -183,11 +183,11 @@ export function ProfileCard() {
                 tintColor={theme.colorGreyHoverAlpha}
               />
             </View>
-            <Text type='lg' weight='bold' align='center'>
+            <Text type='title3' weight='bold' align='center'>
               Not signed in
             </Text>
             <Text
-              type='xs'
+              type='subhead'
               color='gray.textLow'
               align='center'
               style={styles.signInDescription}
@@ -205,7 +205,7 @@ export function ProfileCard() {
                   size={18}
                   tintColor={theme.colorBlack}
                 />
-                <Text type='xs' weight='bold' color='accent' contrast>
+                <Text type='subhead' weight='bold' color='accent' contrast>
                   Sign in
                 </Text>
               </View>
@@ -227,7 +227,7 @@ export function ProfileCard() {
       <ProfileSection
         title='Account'
         footer={
-          <Text type='xxs' color='gray.textLow' style={styles.footerText}>
+          <Text type='caption' color='gray.textLow' style={styles.footerText}>
             {`User ID: ${user.id}`}
           </Text>
         }
@@ -253,10 +253,10 @@ export function ProfileCard() {
               </View>
             )}
             <View style={styles.identityText}>
-              <Text type='lg' weight='bold' numberOfLines={1}>
+              <Text type='title3' weight='bold' numberOfLines={1}>
                 {user.display_name}
               </Text>
-              <Text type='xs' color='gray.textLow' numberOfLines={1}>
+              <Text type='subhead' color='gray.textLow' numberOfLines={1}>
                 @{user.login}
               </Text>
             </View>
@@ -290,7 +290,7 @@ export function ProfileCard() {
       <ProfileSection
         title='Session'
         footer={
-          <Text type='xxs' color='gray.textLow' style={styles.footerText}>
+          <Text type='caption' color='gray.textLow' style={styles.footerText}>
             Signing out removes your saved Twitch token from this device.
           </Text>
         }
@@ -306,7 +306,7 @@ export function ProfileCard() {
 
       <ProfileSection
         footer={
-          <Text type='xxs' color='gray.textLow' style={styles.footerText}>
+          <Text type='caption' color='gray.textLow' style={styles.footerText}>
             {
               "Account deletion is handled by Twitch. This opens Twitch's Security and Privacy settings, where you can disable or delete your account."
             }
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   },
   avatar: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
+    borderRadius: theme.radius.lg,
     height: 52,
     width: 52,
   },
@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.color.backgroundElement.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
+    borderRadius: theme.radius.lg,
     height: 52,
     justifyContent: 'center',
     width: 52,
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     backgroundColor: theme.colorPrimary,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius10,
+    borderRadius: theme.radius.md,
     flexDirection: 'row',
     gap: theme.space8,
     justifyContent: 'center',
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
   sectionBody: {
     backgroundColor: theme.color.backgroundSecondary.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.radius.md,
     marginHorizontal: theme.space16,
     overflow: 'hidden',
   },
@@ -424,10 +424,8 @@ const styles = StyleSheet.create({
     paddingTop: theme.space8,
   },
   sectionTitle: {
-    color: theme.colorGreyAlpha,
-    letterSpacing: 0.5,
+    color: theme.color.textSecondary.dark,
     paddingHorizontal: theme.space16,
-    textTransform: 'uppercase',
   },
   signInDescription: {
     lineHeight: 20,
@@ -437,7 +435,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.color.backgroundElement.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
+    borderRadius: theme.radius.lg,
     height: 64,
     justifyContent: 'center',
     marginBottom: theme.space4,

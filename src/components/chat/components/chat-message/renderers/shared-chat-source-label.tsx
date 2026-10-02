@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { SymbolView } from '@app/components/ui/icon/icon';
-import { Text } from '@app/components/ui/text/text';
 
 import { styles } from '../chat-row.styles';
 import { getChatTextStyles } from '../chat-text.styles';
@@ -28,14 +28,14 @@ export function SharedChatSourceLabel({
         size={getChatScale(fontScale, densityFromCompact(compact)).metaIconSize}
         tintColor={CHAT_SURFACE_COLORS.muted}
       />
-      <Text
+      <ChatText
         style={[
           getChatTextStyles(fontScale, compact).meta,
           styles.sharedChatLabelText,
         ]}
       >
         Via shared chat
-      </Text>
+      </ChatText>
     </View>
   );
 }

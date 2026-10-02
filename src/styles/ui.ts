@@ -1,18 +1,9 @@
 import { Color, type ColorShade } from './palette';
+import { theme } from './themes';
 
 export type UISize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 
-export type UIRadius =
-  | 'none'
-  | 'xxs'
-  | 'xs'
-  | 'sm'
-  | 'md'
-  | 'default'
-  | 'lg'
-  | 'card'
-  | 'xl'
-  | 'full';
+export type UIRadius = 'none' | keyof typeof theme.radius;
 
 export type UIColor =
   | 'slate'
@@ -40,15 +31,7 @@ export type UIColor =
 
 export const RADIUS_VALUES = {
   none: 0,
-  xxs: 4,
-  xs: 6,
-  sm: 8,
-  md: 10,
-  default: 12,
-  lg: 12,
-  card: 14,
-  xl: 20,
-  full: 999,
+  ...theme.radius,
 } satisfies Record<UIRadius, number>;
 
 export interface ColorConfig {

@@ -44,7 +44,7 @@ export function SentryTestScreen() {
         contentContainerStyle={styles.content}
       >
         {Platform.OS === 'ios' ? null : (
-          <Text type='xl' weight='bold' style={styles.title}>
+          <Text type='title2' weight='bold' style={styles.title}>
             Sentry Test
           </Text>
         )}
@@ -69,7 +69,7 @@ export function SentryTestScreen() {
 
         <View style={styles.panel}>
           <Text weight='semibold'>Verify delivery</Text>
-          <Text type='xs' color='gray.textLow'>
+          <Text type='subhead' color='gray.textLow'>
             Sends a message event and waits for the network flush, confirming
             Sentry capture works end-to-end from this build.
           </Text>
@@ -81,14 +81,14 @@ export function SentryTestScreen() {
             disabled={delivery.status === 'sending'}
             style={styles.verifyButton}
           >
-            <Text type='sm' weight='semibold' style={styles.verifyButtonText}>
+            <Text type='body' weight='semibold' style={styles.verifyButtonText}>
               {delivery.status === 'sending' ? 'Sending…' : 'Verify delivery'}
             </Text>
           </Button>
 
           {delivery.status === 'done' ? (
             <Text
-              type='xs'
+              type='subhead'
               color={delivery.flushed ? 'gray' : 'gray.textLow'}
               style={styles.result}
             >
@@ -101,7 +101,7 @@ export function SentryTestScreen() {
 
         <View style={styles.panel}>
           <Text weight='semibold'>Throw test error</Text>
-          <Text type='xs' color='gray.textLow'>
+          <Text type='subhead' color='gray.textLow'>
             Sends an unhandled JavaScript error through the app error boundary
             and Sentry wrapper.
           </Text>
@@ -112,7 +112,7 @@ export function SentryTestScreen() {
             onPress={() => setShouldThrow(true)}
             style={styles.errorButton}
           >
-            <Text type='sm' weight='semibold' style={styles.errorButtonText}>
+            <Text type='body' weight='semibold' style={styles.errorButtonText}>
               Throw Error
             </Text>
           </Button>
@@ -133,11 +133,11 @@ function StatusRow({
 }) {
   return (
     <View style={styles.statusRow}>
-      <Text type='sm' color='gray.textLow'>
+      <Text type='body' color='gray.textLow'>
         {label}
       </Text>
       <Text
-        type='sm'
+        type='body'
         weight='semibold'
         color='gray'
         style={warn ? styles.warnValue : undefined}
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.colorRed,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.radius.md,
     marginTop: theme.space20,
     paddingHorizontal: theme.space20,
     paddingVertical: theme.space12,
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   panel: {
     backgroundColor: theme.color.backgroundSecondary.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.radius.md,
     gap: theme.space8,
     padding: theme.space16,
   },
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.colorPrimary,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.radius.md,
     marginTop: theme.space12,
     paddingHorizontal: theme.space20,
     paddingVertical: theme.space12,

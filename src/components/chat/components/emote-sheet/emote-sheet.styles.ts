@@ -12,8 +12,8 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   categoryBar: {
     alignItems: 'center',
-    backgroundColor: theme.color.menu.header,
-    borderTopColor: theme.color.menu.border,
+    backgroundColor: theme.color.surface.dark,
+    borderTopColor: theme.color.border.dark,
     borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     overflow: 'hidden',
@@ -27,7 +27,7 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   container: {
     alignSelf: 'stretch',
-    backgroundColor: theme.color.menu.background,
+    backgroundColor: theme.color.surface.dark,
     flex: 1,
     minHeight: 0,
     overflow: 'hidden',
@@ -39,7 +39,7 @@ export const emoteSheetStyles = StyleSheet.create({
   emoteCell: {
     alignItems: 'center',
     borderCurve: 'continuous',
-    borderRadius: 8,
+    borderRadius: theme.radius.sm,
     justifyContent: 'center',
     padding: 3,
   },
@@ -66,9 +66,7 @@ export const emoteSheetStyles = StyleSheet.create({
     fontWeight: '700',
   },
   header: {
-    backgroundColor: theme.color.menu.header,
-    borderBottomColor: theme.color.menu.border,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    backgroundColor: theme.color.surface.dark,
     overflow: 'hidden',
     paddingBottom: theme.space8,
     position: 'relative',
@@ -102,7 +100,7 @@ export const emoteSheetStyles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'transparent',
     borderCurve: 'continuous',
-    borderRadius: 18,
+    borderRadius: theme.radius.full,
     flexDirection: 'row',
     gap: theme.space8,
     height: 36,
@@ -112,7 +110,7 @@ export const emoteSheetStyles = StyleSheet.create({
     position: 'relative',
   },
   providerChipActive: {
-    backgroundColor: 'rgba(120, 120, 128, 0.32)',
+    backgroundColor: theme.color.surfaceElevated.dark,
     minWidth: 88,
     paddingHorizontal: theme.space16,
   },
@@ -196,10 +194,8 @@ export const emoteSheetStyles = StyleSheet.create({
   setHeaderTitle: {
     color: theme.color.textSecondary.dark,
     flex: 1,
-    fontSize: theme.fontSize12,
+    fontSize: theme.fontSize14,
     fontWeight: '600',
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
   },
   setRailAvatar: {
     borderRadius: 12,
@@ -216,20 +212,20 @@ export const emoteSheetStyles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'transparent',
     borderCurve: 'continuous',
-    borderRadius: 16,
+    borderRadius: theme.radius.full,
     height: 40,
     justifyContent: 'center',
     minWidth: 40,
     paddingHorizontal: theme.space8,
   },
   setRailButtonActive: {
-    backgroundColor: theme.color.menu.cardActive,
+    backgroundColor: theme.color.surfaceElevated.dark,
   },
   setRailEmoji: {
     fontSize: theme.fontSize16,
   },
   setRailLabel: {
-    color: 'rgba(255, 255, 255, 0.62)',
+    color: theme.color.textSecondary.dark,
     fontSize: theme.fontSize12,
     fontWeight: '600',
     textAlign: 'center',

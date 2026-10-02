@@ -1,8 +1,8 @@
 import { memo } from 'react';
 import { View } from 'react-native';
 
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { SymbolView } from '@app/components/ui/icon/icon';
-import { Text } from '@app/components/ui/text/text';
 import { reportUnrenderableNotice } from '@app/utils/chat/chat-health/report-unrenderable-notice';
 import type { MessageToken } from '@app/utils/chat/message-token';
 
@@ -83,9 +83,9 @@ function RitualNoticeComponent({
         labelStyle={styles.ritualNoticeMetaText}
       />
       {description ? (
-        <Text style={[textStyles.body, styles.channelPointsMetaMuted]}>
+        <ChatText style={[textStyles.body, styles.channelPointsMetaMuted]}>
           {description}
-        </Text>
+        </ChatText>
       ) : null}
       <NoticeUserMessage
         compact={compact}

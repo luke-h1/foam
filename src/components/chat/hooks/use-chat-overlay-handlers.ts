@@ -282,8 +282,8 @@ export function useChatOverlayHandlers({
       }
 
       Alert.alert(
-        'Block User',
-        `Are you sure you want to block ${displayName}?`,
+        `Block ${displayName}?`,
+        "They won't be able to whisper you on Twitch.",
         [
           { text: 'Cancel', style: 'cancel' },
           {

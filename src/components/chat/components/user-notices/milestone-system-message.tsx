@@ -1,6 +1,6 @@
 import { type StyleProp, type TextStyle } from 'react-native';
 
-import { Text } from '@app/components/ui/text/text';
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 
 import { styles } from '../chat-message/chat-row.styles';
 
@@ -18,15 +18,17 @@ export function MilestoneSystemMessage({
   style: StyleProp<TextStyle>;
 }) {
   return (
-    <Text style={style}>
+    <ChatText style={style}>
       {lead ? (
-        <Text style={[style, styles.channelPointsMetaName]}>{lead}</Text>
+        <ChatText style={[style, styles.channelPointsMetaName]}>
+          {lead}
+        </ChatText>
       ) : null}
       {rest ? (
-        <Text style={[style, styles.channelPointsMetaMuted]}>
+        <ChatText style={[style, styles.channelPointsMetaMuted]}>
           {lead ? ` ${rest}` : rest}
-        </Text>
+        </ChatText>
       ) : null}
-    </Text>
+    </ChatText>
   );
 }

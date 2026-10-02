@@ -1,8 +1,8 @@
 import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { getTokenIdentity } from '@app/components/chat/util/chat-row/get-token-identity';
-import { Text } from '@app/components/ui/text/text';
 import type { MessageToken } from '@app/utils/chat/message-token';
 
 import { getChatTextStyles } from '../chat-message/chat-text.styles';
@@ -64,9 +64,9 @@ function NoticeUserMessageComponent({
           case 'stvEmoteLink':
           case 'twitchClip':
             return (
-              <Text key={key} color='gray.text' style={textStyles.body}>
+              <ChatText key={key} color='gray.text' style={textStyles.body}>
                 {token.content}
-              </Text>
+              </ChatText>
             );
           default:
             return null;

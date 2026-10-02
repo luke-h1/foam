@@ -1,5 +1,5 @@
 import { FC, memo, useCallback, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
@@ -10,10 +10,12 @@ import {
   ListRenderItem,
 } from '@app/components/flash-list/flash-list';
 import { IconButton } from '@app/components/icon-button/icon-button';
+import { Image } from '@app/components/image/image';
 import { MemoizedLiveStreamCard } from '@app/components/live-stream-card/live-stream-card';
-import { LoadingState } from '@app/components/loading-state/loading-state';
-import { ScreenHeader } from '@app/components/screen-header/screen-header';
+import { LiveStreamCardSkeleton } from '@app/components/live-stream-card/live-stream-card-skeleton';
+import { SectionHeader } from '@app/components/section-header/section-header';
 import { EmptyState } from '@app/components/ui/empty-state/empty-state';
+import { Skeleton } from '@app/components/ui/skeleton/skeleton';
 import { Text } from '@app/components/ui/text/text';
 import { useFlattenedInfiniteQuery } from '@app/hooks/use-flattened-infinite-query';
 import { useInfiniteQueryLoadMore } from '@app/hooks/use-infinite-query-load-more';
@@ -22,15 +24,12 @@ import {
   categoryQueryOptions,
   streamsByCategoryInfiniteQueryOptions,
 } from '@app/lib/react-query/queries/twitch';
+import { usePreference } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
 import type { Category } from '@app/types/twitch/category';
 import type { TwitchStream } from '@app/types/twitch/stream';
 import { shareDeepLink } from '@app/utils/sharing/share-deep-link';
 import { formatViewCount } from '@app/utils/string/format-view-count';
-
-const renderCategoryStreamItem: ListRenderItem<TwitchStream> = ({ item }) => (
-  <MemoizedLiveStreamCard stream={item} />
-);
 
 interface CategoryStreamsHeaderProps {
   category: Category;
@@ -42,28 +41,56 @@ const CategoryStreamsHeader = memo(function CategoryStreamsHeader({
   totalViewers,
 }: CategoryStreamsHeaderProps) {
   return (
-    <ScreenHeader
-      size='hero'
-      title={category.name}
-      subtitle={`${formatViewCount(totalViewers)} viewers`}
-      subtitleTestID='category-viewer-count'
-      backgroundImage={category.box_art_url
-        .replace('{width}', '600')
-        .replace('{height}', '800')}
-      featuredImage={category.box_art_url
-        .replace('{width}', '300')
-        .replace('{height}', '400')}
-      back={false}
-      safeArea={false}
-    >
-      <View style={styles.sectionHeader}>
-        <Text type='sm' weight='semibold' color='gray.textLow'>
-          Live Channels
-        </Text>
+    <View>
+      <View style={styles.hero}>
+        <Image
+          source={category.box_art_url
+            .replace('{width}', '252')
+            .replace('{height}', '336')}
+          style={styles.boxArt}
+          containerStyle={styles.boxArt}
+        />
+        <View style={styles.heroText}>
+          <Text type='title1' numberOfLines={3}>
+            {category.name}
+          </Text>
+          <Text
+            type='subhead'
+            color='gray.textLow'
+            tabular
+            testID='category-viewer-count'
+          >
+            {`${formatViewCount(totalViewers)} watching`}
+          </Text>
+        </View>
       </View>
-    </ScreenHeader>
+      <SectionHeader title='Live channels' />
+    </View>
   );
 });
+
+function CategorySkeleton({ layout }: { layout: 'compact' | 'media' }) {
+  return (
+    <ScrollView
+      contentInsetAdjustmentBehavior='automatic'
+      scrollEnabled={false}
+      style={styles.container}
+    >
+      <View style={styles.hero}>
+        <Skeleton style={styles.boxArt} />
+        <View style={styles.heroText}>
+          <Skeleton style={styles.titleSkeleton} />
+          <Skeleton style={styles.metaSkeleton} />
+        </View>
+      </View>
+      <View style={styles.skeletonGap} />
+      <LiveStreamCardSkeleton layout={layout} />
+      <LiveStreamCardSkeleton layout={layout} />
+      <LiveStreamCardSkeleton layout={layout} />
+      <LiveStreamCardSkeleton layout={layout} />
+    </ScrollView>
+  );
+}
 
 interface CategoryScreenProps {
   id: string;
@@ -71,6 +98,7 @@ interface CategoryScreenProps {
 
 export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
   const flashListRef = useRef<FlashListRef<TwitchStream>>(null);
+  const streamListLayout = usePreference('streamListLayout');
 
   useScrollToTop(flashListRef);
 
@@ -78,6 +106,7 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
     data: category,
     isLoading: isCategoryLoading,
     isError: isCategoryError,
+    refetch: refetchCategory,
   } = useQuery(categoryQueryOptions(id));
 
   const {
@@ -110,6 +139,11 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
     await refetch().finally(() => setIsRefreshing(false));
   }, [refetch]);
 
+  const handleRetry = useCallback(() => {
+    void refetchCategory();
+    void refetch();
+  }, [refetch, refetchCategory]);
+
   const handleShare = useCallback(() => {
     if (!category) {
       return;
@@ -134,32 +168,49 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
     [category?.name, handleShare],
   );
 
-  if (isCategoryLoading || isLoadingStreams) {
-    return <LoadingState />;
+  const renderItem: ListRenderItem<TwitchStream> = useCallback(
+    ({ item }) => (
+      <MemoizedLiveStreamCard
+        stream={item}
+        layout={streamListLayout}
+        showCategory={false}
+      />
+    ),
+    [streamListLayout],
+  );
+
+  if (isCategoryLoading || isLoadingStreams || (!streams && !isErrorStreams)) {
+    return <CategorySkeleton layout={streamListLayout} />;
   }
 
   if (isCategoryError || isErrorStreams) {
     return (
       <EmptyState
         iconName='exclamationmark.triangle'
-        content='Check your connection and try again'
         heading="Couldn't load this category"
-        button='retry'
-        buttonOnPress={() => void refetch()}
+        content='Check your connection and try again.'
+        button='Try again'
+        buttonOnPress={handleRetry}
       />
     );
   }
 
-  if (!streams) {
-    return <LoadingState />;
+  if (!category) {
+    return (
+      <EmptyState
+        iconName='square.grid.2x2'
+        heading='Category not found'
+        content='This category may have been renamed or removed.'
+      />
+    );
   }
 
-  if (allStreams.length === 0 || !category) {
+  if (allStreams.length === 0) {
     return (
       <EmptyState
         iconName='moon.zzz'
         heading='Nobody is live'
-        content={`No one is streaming ${category?.name} right now. Refresh or check back later.`}
+        content={`No one is streaming ${category.name} right now.`}
         button='Refresh'
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         buttonOnPress={handleRefresh}
@@ -179,9 +230,10 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
         ref={flashListRef}
         data={allStreams}
         keyExtractor={item => item.id}
-        renderItem={renderCategoryStreamItem}
+        renderItem={renderItem}
         drawDistance={500}
         getItemType={() => 'category-stream'}
+        contentInsetAdjustmentBehavior='automatic'
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <CategoryStreamsHeader
@@ -207,10 +259,34 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: theme.space20,
   },
-  sectionHeader: {
-    borderBottomColor: theme.color.border.dark,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+  hero: {
+    alignItems: 'flex-end',
+    flexDirection: 'row',
+    gap: theme.space16,
     paddingHorizontal: theme.space16,
-    paddingVertical: theme.space12,
+    paddingTop: theme.space8,
+  },
+  boxArt: {
+    aspectRatio: 3 / 4,
+    borderCurve: 'continuous',
+    borderRadius: theme.radius.md,
+    overflow: 'hidden',
+    width: 84,
+  },
+  heroText: {
+    flex: 1,
+    gap: theme.space4,
+    minWidth: 0,
+  },
+  titleSkeleton: {
+    height: 24,
+    width: '70%',
+  },
+  metaSkeleton: {
+    height: 12,
+    width: 96,
+  },
+  skeletonGap: {
+    height: theme.space24,
   },
 });

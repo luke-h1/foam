@@ -47,13 +47,20 @@ export const PinnedMessageBanner = memo(
         </View>
         <View style={styles.pinnedMessageContent}>
           <Text
+            type='callout'
+            family='brand'
             numberOfLines={1}
             style={styles.pinnedMessageTitle}
             weight='semibold'
           >
             {title}
           </Text>
-          <Text numberOfLines={2} style={styles.pinnedMessageText}>
+          <Text
+            type='callout'
+            family='brand'
+            numberOfLines={2}
+            style={styles.pinnedMessageText}
+          >
             {pinnedMessage.text}
           </Text>
         </View>

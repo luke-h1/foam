@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { View } from 'react-native';
 
-import { Text } from '@app/components/ui/text/text';
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { useCachedEmoteAspectRatio } from '@app/providers/cached-emotes-provider/use-cached-emote';
 import { calculateAspectRatio } from '@app/utils/chat/calculate-aspect-ratio';
 import { MessageToken } from '@app/utils/chat/message-token';
@@ -65,7 +65,9 @@ export const EmoteToken = memo(
           style={getContainerStyle(width, shouldOverlayPrevious, isModerated)}
         >
           {fallbackLabel ? (
-            <Text style={getNameStyle(width, height)}>{fallbackLabel}</Text>
+            <ChatText style={getNameStyle(width, height)}>
+              {fallbackLabel}
+            </ChatText>
           ) : (
             <View
               style={getEmoteImageStyle(width, height)}
@@ -76,19 +78,37 @@ export const EmoteToken = memo(
       );
     }
 
+    const containerStyle = getContainerStyle(
+      width,
+      shouldOverlayPrevious,
+      isModerated,
+    );
+
+    const needsWrapper = Boolean(containerStyle || token.overlaid?.length);
+
+    // No containerStyle: size + clip live on the image style so each inline
+    // emote is one fewer Fabric/Yoga node.
+    const image = (
+      <ChatInlineImage
+        onTouchStart={needsWrapper ? undefined : handleTouchStart}
+        sourceUrl={displayUrl}
+        style={getEmoteImageStyle(width, height)}
+        priority='normal'
+        transitionMs={0}
+      />
+    );
+
+    // The plain emote is the image alone: the wrapper only exists to carry an
+    // overlay stack or an overlap margin, and most emotes have neither.
+    if (!needsWrapper) {
+      return image;
+    }
+
+    // Overlays sit above the base image, so the wrapper takes the touch and a
+    // long press anywhere on the stack still finds this emote.
     return (
-      <View
-        onTouchStart={handleTouchStart}
-        style={getContainerStyle(width, shouldOverlayPrevious, isModerated)}
-      >
-        {/* No containerStyle: size + clip live on the image style so each
-            inline emote is one fewer Fabric/Yoga node. */}
-        <ChatInlineImage
-          sourceUrl={displayUrl}
-          style={getEmoteImageStyle(width, height)}
-          priority='normal'
-          transitionMs={0}
-        />
+      <View style={containerStyle} onTouchStart={handleTouchStart}>
+        {image}
         {token.overlaid?.map(overlay => (
           <OverlaidEmoteImage
             key={overlay.id ?? overlay.content}

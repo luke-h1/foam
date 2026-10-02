@@ -22,7 +22,7 @@ import { logger } from '@app/utils/logger';
 import { isUpdateRequired } from '@app/utils/version/compare-versions';
 import { getMinimumVersion } from '@app/utils/version/get-minimum-version';
 
-import { Button } from '../button/button';
+import { ActionButton } from '../action-button/action-button';
 
 async function handleUpdatePress() {
   try {
@@ -149,25 +149,20 @@ function ForceUpdateModalContent() {
     >
       <View style={[styles.overlay, { paddingTop: insets.top }]}>
         <View style={styles.card}>
-          <View style={styles.iconContainer}>
-            <SymbolView name='arrow.up' />
-          </View>
+          <SymbolView
+            name='arrow.down.app'
+            size={44}
+            tintColor={theme.color.accent.dark}
+          />
 
-          <Text
-            color='gray'
-            type='xl'
-            weight='bold'
-            align='center'
-            family='system'
-          >
+          <Text type='title3' align='center' style={styles.title}>
             {UPDATE_REQUIRED_TITLE}
           </Text>
 
           <Text
             color='gray.textLow'
-            family='system'
-            type='sm'
-            align='left'
+            type='subhead'
+            align='center'
             style={styles.subtitle}
           >
             {UPDATE_REQUIRED_BODY}
@@ -175,32 +170,29 @@ function ForceUpdateModalContent() {
 
           <View style={styles.versionInfo}>
             <View style={styles.versionRow}>
-              <Text color='gray.textLow' type='xs'>
+              <Text color='gray.textLow' type='subhead'>
                 Current version
               </Text>
-              <Text color='gray' type='xs' weight='semibold'>
+              <Text type='subhead' weight='semibold' tabular>
                 {currentVersion}
               </Text>
             </View>
             <View style={styles.versionRow}>
-              <Text color='gray.textLow' type='xs'>
+              <Text color='gray.textLow' type='subhead'>
                 Minimum required
               </Text>
-              <Text color='gray' type='xs' weight='semibold'>
+              <Text type='subhead' weight='semibold' tabular>
                 {minimumVersion}
               </Text>
             </View>
           </View>
 
-          <Button
+          <ActionButton
+            title='Update now'
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             onPress={handleUpdatePress}
             style={styles.updateButton}
-          >
-            <Text color='accent' contrast type='md' weight='semibold'>
-              Update Now
-            </Text>
-          </Button>
+          />
         </View>
       </View>
     </RNModal>
@@ -209,59 +201,39 @@ function ForceUpdateModalContent() {
 
 const styles = StyleSheet.create({
   card: {
-    alignItems: 'center' as const,
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.color.border.dark,
+    alignItems: 'center',
+    backgroundColor: theme.color.surface.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
-    borderWidth: 1,
+    borderRadius: theme.radius.xl,
     maxWidth: 340,
-    paddingHorizontal: theme.space28,
-    paddingVertical: theme.space28,
+    padding: theme.space28,
     width: '100%',
-  },
-  iconContainer: {
-    alignItems: 'center' as const,
-    backgroundColor: theme.colorPrimary,
-    borderRadius: 36,
-    height: 72,
-    justifyContent: 'center' as const,
-    marginBottom: theme.space20,
-    width: 72,
   },
   overlay: {
-    alignItems: 'center' as const,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    alignItems: 'center',
+    backgroundColor: theme.color.scrimStrong.dark,
     flex: 1,
-    justifyContent: 'center' as const,
+    justifyContent: 'center',
     paddingHorizontal: theme.space20,
   },
+  title: {
+    marginTop: theme.space16,
+  },
   subtitle: {
-    lineHeight: 20,
     marginBottom: theme.space20,
-    marginTop: theme.space12,
+    marginTop: theme.space8,
   },
   updateButton: {
-    alignItems: 'center' as const,
-    backgroundColor: theme.colorPrimary,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
-    justifyContent: 'center' as const,
-    paddingVertical: theme.space16,
-    width: '100%',
+    alignSelf: 'stretch',
   },
   versionInfo: {
-    backgroundColor: theme.color.backgroundSecondary.dark,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
+    alignSelf: 'stretch',
     gap: theme.space8,
-    marginBottom: theme.space20,
-    padding: theme.space16,
-    width: '100%',
+    marginBottom: theme.space24,
   },
   versionRow: {
-    alignItems: 'center' as const,
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between' as const,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
 });

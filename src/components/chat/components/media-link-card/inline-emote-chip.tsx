@@ -1,9 +1,9 @@
 import { Pressable, View } from 'react-native';
 
 import { BrandIcon } from '@app/components/brand-icon/brand-icon';
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { Image } from '@app/components/image/image';
 import { Skeleton } from '@app/components/ui/skeleton/skeleton';
-import { Text } from '@app/components/ui/text/text';
 
 import { styles } from './media-link-card.styles';
 
@@ -47,9 +47,13 @@ export function InlineEmoteChip({
           contentFit='contain'
         />
       ) : null}
-      <Text ellipsizeMode='tail' numberOfLines={1} style={styles.inlineTitle}>
+      <ChatText
+        ellipsizeMode='tail'
+        numberOfLines={1}
+        style={styles.inlineTitle}
+      >
         {title}
-      </Text>
+      </ChatText>
       <BrandIcon name='stv' size='xs' />
     </Pressable>
   );

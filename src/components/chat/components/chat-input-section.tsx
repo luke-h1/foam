@@ -41,7 +41,12 @@ function ReplyPreviewMessage({ replyTo }: { replyTo: ReplyToData }) {
 
   if (replyTo.message) {
     return (
-      <Text style={styles.replyMessagePreview} numberOfLines={1}>
+      <Text
+        type='callout'
+        family='brand'
+        style={styles.replyMessagePreview}
+        numberOfLines={1}
+      >
         {truncate(replyTo.message.trim() || replyTo.message, 60)}
       </Text>
     );
@@ -98,7 +103,9 @@ export const ChatInputSection = memo(
             <View style={styles.replyIndicator} />
             <View style={styles.replyContent}>
               <View style={styles.replyLabelRow}>
-                <Text style={styles.replyLabel}>Replying to </Text>
+                <Text type='callout' family='brand' style={styles.replyLabel}>
+                  Replying to{' '}
+                </Text>
                 <PaintedUsername
                   username={replyTo.username}
                   userId={replyTo.userId}

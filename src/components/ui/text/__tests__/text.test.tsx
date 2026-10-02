@@ -2,11 +2,8 @@ import { StyleSheet, type TextStyle } from 'react-native';
 
 import { render, screen } from '@testing-library/react-native';
 
-import {
-  resolveWeightFromFontWeight,
-  Text,
-  type TextWeight,
-} from '@app/components/ui/text/text';
+import { Text, type TextWeight } from '@app/components/ui/text/text';
+import { resolveWeightFromFontWeight } from '@app/components/ui/text/text.styles';
 import { theme } from '@app/styles/themes';
 
 type FontResolution = Pick<TextStyle, 'fontFamily' | 'fontWeight'>;
@@ -64,7 +61,11 @@ describe('resolveWeightFromFontWeight', () => {
 
 describe('Text', () => {
   test('resolves a style fontWeight to the matching Montserrat family', () => {
-    render(<Text style={{ fontWeight: '600' }}>semibold</Text>);
+    render(
+      <Text family='brand' style={{ fontWeight: '600' }}>
+        semibold
+      </Text>,
+    );
 
     expect(getFontResolution('semibold')).toEqual<FontResolution>({
       fontFamily: theme.fontFamilySemiBold,
@@ -74,7 +75,12 @@ describe('Text', () => {
 
   test('resolves a numeric style fontWeight from a style array', () => {
     render(
-      <Text style={[{ fontWeight: 700 }, { letterSpacing: 0.2 }]}>bold</Text>,
+      <Text
+        family='brand'
+        style={[{ fontWeight: 700 }, { letterSpacing: 0.2 }]}
+      >
+        bold
+      </Text>,
     );
 
     expect(getFontResolution('bold')).toEqual<FontResolution>({
@@ -98,7 +104,7 @@ describe('Text', () => {
 
   test('resolves the italic family when a style fontWeight meets the italic prop', () => {
     render(
-      <Text italic style={{ fontWeight: '800' }}>
+      <Text family='brand' italic style={{ fontWeight: '800' }}>
         heavy italic
       </Text>,
     );
@@ -110,7 +116,11 @@ describe('Text', () => {
   });
 
   test('keeps the weight-prop family when the style has no fontWeight', () => {
-    render(<Text weight='medium'>medium</Text>);
+    render(
+      <Text family='brand' weight='medium'>
+        medium
+      </Text>,
+    );
 
     expect(getFontResolution('medium')).toEqual<FontResolution>({
       fontFamily: theme.fontFamily,
@@ -139,6 +149,33 @@ describe('Text', () => {
     );
 
     expect(getFontResolution('system weight')).toEqual<FontResolution>({
+      fontFamily: undefined,
+      fontWeight: '600',
+    });
+  });
+
+  test('renders body copy in the system font by default', () => {
+    render(<Text>body</Text>);
+
+    expect(getFontResolution('body')).toEqual<FontResolution>({
+      fontFamily: undefined,
+      fontWeight: '400',
+    });
+  });
+
+  test('renders the title styles in the bold brand font by default', () => {
+    render(<Text type='title1'>title</Text>);
+
+    expect(getFontResolution('title')).toEqual<FontResolution>({
+      fontFamily: theme.fontFamilyBold,
+      fontWeight: undefined,
+    });
+  });
+
+  test('gives headline a semibold system weight by default', () => {
+    render(<Text type='headline'>headline</Text>);
+
+    expect(getFontResolution('headline')).toEqual<FontResolution>({
       fontFamily: undefined,
       fontWeight: '600',
     });

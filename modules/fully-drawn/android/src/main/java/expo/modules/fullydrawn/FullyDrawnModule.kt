@@ -8,7 +8,7 @@ class FullyDrawnModule : Module() {
     Name("FullyDrawn")
 
     Function("report") {
-      val activity = appContext.currentActivity ?: return@Function
+      val activity = appContext.currentActivity ?: return@Function null
       activity.runOnUiThread { activity.reportFullyDrawn() }
     }
   }

@@ -144,8 +144,18 @@ export function EmoteSheet({
             <View style={styles.body}>
               {sheet.showEmpty ? (
                 <View style={styles.emptyState}>
-                  <Text style={styles.emptyStateTitle}>No emotes found</Text>
-                  <Text style={styles.emptyStateBody}>
+                  <Text
+                    type='callout'
+                    family='brand'
+                    style={styles.emptyStateTitle}
+                  >
+                    No emotes found
+                  </Text>
+                  <Text
+                    type='callout'
+                    family='brand'
+                    style={styles.emptyStateBody}
+                  >
                     Try a shorter filter or switch providers.
                   </Text>
                 </View>

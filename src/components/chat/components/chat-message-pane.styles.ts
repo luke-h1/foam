@@ -16,7 +16,7 @@ export const styles = StyleSheet.create({
     backgroundColor: theme.color.background.darkAltAlpha,
     borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
+    borderRadius: theme.radius.lg,
     borderWidth: 1,
     marginHorizontal: theme.space12,
     marginTop: theme.space12,

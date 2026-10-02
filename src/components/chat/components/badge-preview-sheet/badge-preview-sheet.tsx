@@ -14,11 +14,9 @@ import {
   type BottomSheetHandle,
 } from '@app/components/bottom-sheet/bottom-sheet';
 /* eslint-disable react-native/sort-styles */
-import { Button } from '@app/components/button/button';
 import { ChatDebugSection } from '@app/components/chat/components/chat-debug-section';
 import { computeSheetHeight } from '@app/components/chat/util/compute-sheet-height';
 import { Image } from '@app/components/image/image';
-import { SymbolView } from '@app/components/ui/icon/icon';
 import { Text } from '@app/components/ui/text/text';
 import { useSaveImageToGallery } from '@app/hooks/use-save-image-to-gallery';
 import {
@@ -29,7 +27,12 @@ import { theme } from '@app/styles/themes';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { openLinkInBrowser } from '@app/utils/browser/open-link-in-browser';
 
-import { type PreviewAction, SheetActionGroup } from '../sheet-action-group';
+import { SheetHeader } from '../sheet/sheet-header';
+import {
+  type SheetAction,
+  SheetActionGroup,
+  SheetDetailGroup,
+} from '../sheet-action-group';
 
 interface Props {
   visible: boolean;
@@ -79,19 +82,17 @@ function BadgePreviewSheetComponent(props: Props) {
     { label: 'ID', value: selectedBadge.id },
   ].filter(row => Boolean(row.value));
 
-  const actions: PreviewAction[] = (() => {
-    const items: PreviewAction[] = [
+  const actions: SheetAction[] = (() => {
+    const items: SheetAction[] = [
       {
         icon: 'doc.on.doc',
-        label: 'Copy Badge name',
+        label: 'Copy badge name',
         onPress: () => handleCopy('name'),
-        subtitle: selectedBadge.title,
       },
       {
         icon: 'link',
-        label: 'Copy Badge URL',
+        label: 'Copy badge URL',
         onPress: () => handleCopy('url'),
-        subtitle: 'Rendered badge source',
       },
     ];
 
@@ -100,15 +101,13 @@ function BadgePreviewSheetComponent(props: Props) {
         icon: 'square.and.arrow.down',
         label: 'Save image',
         onPress: handleSaveImage,
-        subtitle: 'Save to your photo gallery',
         disabled: isSaving,
       });
 
       items.push({
         icon: 'arrow.up.right.square',
-        label: 'Open in Browser',
+        label: 'Open in browser',
         onPress: () => openLinkInBrowser(selectedBadge.url),
-        subtitle: 'Image source',
       });
     }
 
@@ -133,24 +132,7 @@ function BadgePreviewSheetComponent(props: Props) {
       testID='badge-preview-sheet'
     >
       <View style={styles.container}>
-        <View style={styles.topBar}>
-          <View style={styles.heading}>
-            <Text style={styles.eyebrow} weight='semibold'>
-              Badge preview
-            </Text>
-            <Text style={styles.title} weight='semibold' numberOfLines={2}>
-              {selectedBadge.title}
-            </Text>
-          </View>
-          <Button label='Done' style={styles.doneButton} onPress={requestClose}>
-            <SymbolView
-              name='xmark'
-              size={15}
-              weight='semibold'
-              tintColor={theme.color.textSecondary.dark}
-            />
-          </Button>
-        </View>
+        <SheetHeader title={selectedBadge.title} onClose={requestClose} />
 
         <ScrollView
           nestedScrollEnabled
@@ -169,25 +151,12 @@ function BadgePreviewSheetComponent(props: Props) {
                 contentFit='contain'
               />
             </View>
-            <View style={styles.previewPill}>
-              <Text style={styles.previewPillText} weight='semibold'>
-                {selectedBadge.type}
-              </Text>
-            </View>
+            <Text type='footnote' color='gray.textLow' align='center'>
+              {selectedBadge.type}
+            </Text>
           </View>
 
-          <View style={styles.metadataCard}>
-            {metadataRows.map(row => (
-              <View key={row.label} style={styles.metadataRow}>
-                <Text style={styles.metadataLabel} weight='semibold'>
-                  {row.label}
-                </Text>
-                <Text style={styles.metadataValue} numberOfLines={2}>
-                  {row.value}
-                </Text>
-              </View>
-            ))}
-          </View>
+          <SheetDetailGroup details={metadataRows} />
 
           <SheetActionGroup actions={actions} />
 
@@ -217,98 +186,31 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     flex: 1,
     paddingBottom: theme.space24,
-    paddingHorizontal: theme.space20,
-    paddingTop: theme.space4,
+    paddingHorizontal: theme.space16,
+    paddingTop: theme.space12,
     width: '100%',
-  },
-  doneButton: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.14)',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    height: 30,
-    justifyContent: 'center',
-    width: 30,
-  },
-  eyebrow: {
-    color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize11,
-    letterSpacing: 0.6,
-    marginBottom: 2,
-    textTransform: 'uppercase',
-  },
-  heading: {
-    flex: 1,
-    paddingRight: theme.space12,
   },
   imageStage: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
+    borderRadius: theme.radius.lg,
     height: 128,
     justifyContent: 'center',
     width: '100%',
   },
-  metadataCard: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
-    padding: theme.space12,
-  },
-  metadataLabel: {
-    color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize11,
-    minWidth: 68,
-    textTransform: 'uppercase',
-  },
-  metadataRow: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    gap: theme.space12,
-    paddingVertical: theme.space8,
-  },
-  metadataValue: {
-    color: theme.color.text.dark,
-    flex: 1,
-    fontSize: theme.fontSize14,
-    lineHeight: theme.fontSize14 * 1.2,
-  },
   previewPanel: {
     gap: theme.space12,
+    marginBottom: theme.space24,
     paddingVertical: theme.space4,
-  },
-  previewPill: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(46,134,255,0.16)',
-    borderColor: 'rgba(46,134,255,0.34)',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    borderWidth: 1,
-    paddingHorizontal: theme.space12,
-    paddingVertical: 5,
-  },
-  previewPillText: {
-    color: theme.colorPrimary,
-    fontSize: theme.fontSize11,
   },
   scroll: {
     flex: 1,
   },
+  /**
+   * No gap: each `SettingsSection` carries its own bottom margin, and the
+   * preview panel matches it.
+   */
   scrollContent: {
-    gap: theme.space12,
     paddingBottom: theme.space16,
-  },
-  title: {
-    color: theme.color.text.dark,
-    fontSize: theme.fontSize18,
-    lineHeight: theme.fontSize18 * 1.2,
-  },
-  topBar: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    gap: theme.space12,
-    justifyContent: 'space-between',
-    paddingBottom: theme.space12,
   },
 });

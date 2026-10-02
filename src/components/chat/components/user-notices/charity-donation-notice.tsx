@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { View } from 'react-native';
 
-import { Text } from '@app/components/ui/text/text';
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import type { MessageToken } from '@app/utils/chat/message-token';
 
 import { styles } from '../chat-message/chat-row.styles';
@@ -42,20 +42,20 @@ function CharityDonationNoticeComponent({
         label='Charity donation'
         labelColor={CHAT_NOTICE_ACCENTS.charity}
       />
-      <Text style={textStyles.meta}>
+      <ChatText style={textStyles.meta}>
         {displayName ? (
-          <Text style={[textStyles.meta, styles.channelPointsMetaName]}>
+          <ChatText style={[textStyles.meta, styles.channelPointsMetaName]}>
             {displayName}
-          </Text>
+          </ChatText>
         ) : null}
-        {displayName ? <Text style={mutedStyle}> · </Text> : null}
-        <Text style={mutedStyle}>{donationSummary}</Text>
+        {displayName ? <ChatText style={mutedStyle}> · </ChatText> : null}
+        <ChatText style={mutedStyle}>{donationSummary}</ChatText>
         {systemMsg && !message ? (
-          <Text style={mutedStyle}>. {systemMsg}</Text>
+          <ChatText style={mutedStyle}>. {systemMsg}</ChatText>
         ) : (
-          <Text style={mutedStyle}>.</Text>
+          <ChatText style={mutedStyle}>.</ChatText>
         )}
-      </Text>
+      </ChatText>
       <NoticeUserMessage
         compact={compact}
         disableAnimations={disableAnimations}

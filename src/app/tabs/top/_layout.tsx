@@ -14,7 +14,6 @@ export default function TopLayout() {
         name='index'
         options={{
           title: 'Top',
-          headerTransparent: false,
           headerRight,
         }}
       />

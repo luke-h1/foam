@@ -15,7 +15,11 @@ function SetRailIcon({
   set: EmoteMenuSet;
 }) {
   if (set.icon.startsWith('emoji:')) {
-    return <Text style={styles.setRailEmoji}>{set.icon.slice(6)}</Text>;
+    return (
+      <Text type='callout' family='brand' style={styles.setRailEmoji}>
+        {set.icon.slice(6)}
+      </Text>
+    );
   }
 
   if (set.icon.startsWith('avatar:')) {
@@ -31,7 +35,11 @@ function SetRailIcon({
   }
 
   return (
-    <Text style={[styles.setRailLabel, isActive && styles.setRailLabelActive]}>
+    <Text
+      type='callout'
+      family='brand'
+      style={[styles.setRailLabel, isActive && styles.setRailLabelActive]}
+    >
       {set.shortLabel}
     </Text>
   );

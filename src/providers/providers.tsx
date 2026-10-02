@@ -36,7 +36,7 @@ import { storage } from '@app/lib/storage';
 import { BaseConfig } from '@app/navigators/config';
 import { ErrorBoundary } from '@app/screens/error-screen/error-boundary';
 import { motion } from '@app/styles/motion';
-import { theme } from '@app/styles/themes';
+import { toastStyle } from '@app/styles/toast';
 
 import { AnalyticsProvider } from './analytics-provider';
 
@@ -87,13 +87,7 @@ function QueryDevelopmentTools() {
 function QueryDevTools({ children }: PropsWithChildren) {
   return (
     <>
-      <Toaster
-        style={{
-          backgroundColor: theme.color.background.dark,
-          borderColor: theme.color.border.dark,
-          borderWidth: 1,
-        }}
-      />
+      <Toaster style={toastStyle} />
       {children}
       {__DEV__ ? <QueryDevelopmentTools /> : null}
     </>

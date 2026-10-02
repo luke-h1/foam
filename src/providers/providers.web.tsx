@@ -17,18 +17,12 @@ import { QueryProvider } from '@app/lib/react-query/query-provider';
 import { BaseConfig } from '@app/navigators/config';
 import { ErrorBoundary } from '@app/screens/error-screen/error-boundary';
 import { motion } from '@app/styles/motion';
-import { theme } from '@app/styles/themes';
+import { toastStyle } from '@app/styles/toast';
 
 function QueryDevTools({ children }: PropsWithChildren) {
   return (
     <>
-      <Toaster
-        style={{
-          backgroundColor: theme.color.background.dark,
-          borderColor: theme.color.border.dark,
-          borderWidth: 1,
-        }}
-      />
+      <Toaster style={toastStyle} />
       {children}
     </>
   );

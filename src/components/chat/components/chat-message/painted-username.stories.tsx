@@ -2,11 +2,11 @@ import { View } from 'react-native';
 
 import type { Meta, StoryObj } from '@storybook/react';
 
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import {
   FlashList,
   type ListRenderItem,
 } from '@app/components/flash-list/flash-list';
-import { Text } from '@app/components/ui/text/text';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 import { convertV4PaintToPaintData } from '@app/utils/color/seven-tv-paint-data/convert-v4-paint-to-paint-data';
 import { type SevenTvPaintSource } from '@app/utils/color/seven-tv-paint-data/types';
@@ -84,22 +84,22 @@ const galleryRows: GalleryRow[] = [
 const renderGalleryRow: ListRenderItem<GalleryRow> = ({ item }) => {
   if (item.kind === 'header') {
     return (
-      <Text
+      <ChatText
         color='gray.text'
-        type='sm'
+        type='body'
         weight='bold'
         style={{ paddingTop: 16, paddingBottom: 4 }}
       >
         {item.title} ({item.count})
-      </Text>
+      </ChatText>
     );
   }
 
   return (
     <View style={{ gap: 2, paddingBottom: 10 }}>
-      <Text color='gray.textLow' type='xs'>
+      <ChatText color='gray.textLow' type='subhead'>
         {item.paint.name}
-      </Text>
+      </ChatText>
       <PaintedUsername
         paint={item.paint}
         showColon={false}

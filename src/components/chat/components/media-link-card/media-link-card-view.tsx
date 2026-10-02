@@ -2,10 +2,10 @@ import { View } from 'react-native';
 
 import { BrandIcon } from '@app/components/brand-icon/brand-icon';
 import { Button } from '@app/components/button/button';
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { Image } from '@app/components/image/image';
 import { SymbolView } from '@app/components/ui/icon/icon';
 import { Skeleton } from '@app/components/ui/skeleton/skeleton';
-import { Text } from '@app/components/ui/text/text';
 import { theme } from '@app/styles/themes';
 
 import { styles } from './media-link-card.styles';
@@ -98,18 +98,22 @@ export function MediaLinkCardView({
             ) : (
               <BrandIcon name='stv' size='xs' />
             )}
-            <Text style={styles.mediaEyebrow}>{mediaLabel}</Text>
+            <ChatText style={styles.mediaEyebrow}>{mediaLabel}</ChatText>
           </View>
-          <Text
+          <ChatText
             ellipsizeMode='tail'
             numberOfLines={1}
             style={styles.mediaTitle}
           >
             {title}
-          </Text>
-          <Text ellipsizeMode='tail' numberOfLines={1} style={styles.mediaMeta}>
+          </ChatText>
+          <ChatText
+            ellipsizeMode='tail'
+            numberOfLines={1}
+            style={styles.mediaMeta}
+          >
             {mediaMeta}
-          </Text>
+          </ChatText>
         </View>
       </View>
     </Button>

@@ -42,10 +42,10 @@ function ChatPendingNotice() {
   return (
     <View style={styles.chatConnectionNotice}>
       <SymbolView tintColor={theme.colorGrey} name='message' size={24} />
-      <Text align='center' color='gray.contrast' type='sm' weight='semibold'>
+      <Text align='center' color='gray.contrast' type='body' weight='semibold'>
         Chat will connect when the stream starts.
       </Text>
-      <Text align='center' color='gray' type='xs'>
+      <Text align='center' color='gray' type='subhead'>
         This can take up to 10 seconds so video playback stays first.
       </Text>
     </View>
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(18,18,22,0.74)',
     borderColor: 'rgba(255,255,255,0.4)',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
+    borderRadius: theme.radius.full,
     borderWidth: StyleSheet.hairlineWidth,
     height: 52,
     justifyContent: 'center',
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
   },
   chatResizeIndicator: {
     backgroundColor: 'rgba(255,255,255,0.85)',
-    borderRadius: theme.borderRadius999,
+    borderRadius: theme.radius.full,
     height: 26,
     width: 3,
   },

@@ -41,7 +41,7 @@ export function usersByIdsQueryOptions(userIds: string[]) {
 }
 
 export function categoryQueryOptions(categoryId: string) {
-  return queryOptions<Category>({
+  return queryOptions<Category | null>({
     queryKey: twitchKeys.category(categoryId),
     staleTime: 60_000,
     queryFn: () => twitchService.getCategory(categoryId),

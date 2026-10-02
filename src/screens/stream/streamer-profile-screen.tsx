@@ -1,5 +1,11 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
+import {
+  Platform,
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 
 import { useQuery } from '@tanstack/react-query';
 import { router, Stack } from 'expo-router';
@@ -12,9 +18,9 @@ import {
 } from '@app/components/flash-list/flash-list';
 import { IconButton } from '@app/components/icon-button/icon-button';
 import { Image } from '@app/components/image/image';
-import { LoadingState } from '@app/components/loading-state/loading-state';
 import { SegmentedControl } from '@app/components/segmented-control/segmented-control';
 import { EmptyState } from '@app/components/ui/empty-state/empty-state';
+import { Skeleton } from '@app/components/ui/skeleton/skeleton';
 import { Text } from '@app/components/ui/text/text';
 import { useScrollToTop } from '@app/hooks/use-scroll-to-top';
 import { streamElementsChatStatsQueryOptions } from '@app/lib/react-query/queries/streamelements';
@@ -126,37 +132,33 @@ function StreamElementsStats({ stats }: { stats: StreamElementsChatStats }) {
   const topEmote = getTopChatEmote(stats);
 
   return (
-    <View style={styles.statsStrip}>
+    <View style={styles.stats}>
       <View style={styles.statsRow}>
-        <View style={styles.statChip}>
-          <Text type='sm' weight='bold' tabular>
-            {formatViewCountCompact(stats.totalMessages)}
-          </Text>
-          <Text type='xxs' color='gray.textLow'>
-            messages
-          </Text>
-        </View>
-        <View style={styles.statChip}>
-          <Text type='sm' weight='bold' tabular>
-            {formatViewCountCompact(stats.uniqueChatters)}
-          </Text>
-          <Text type='xxs' color='gray.textLow'>
-            chatters
-          </Text>
-        </View>
-        {topEmote ? (
-          <View style={styles.statChip}>
-            <Text type='sm' weight='bold' numberOfLines={1}>
-              {topEmote.emote}
-            </Text>
-            <Text type='xxs' color='gray.textLow'>
-              Top emote
-            </Text>
-          </View>
-        ) : null}
+        <Stat
+          value={formatViewCountCompact(stats.totalMessages)}
+          label='Messages'
+        />
+        <Stat
+          value={formatViewCountCompact(stats.uniqueChatters)}
+          label='Chatters'
+        />
+        {topEmote ? <Stat value={topEmote.emote} label='Top emote' /> : null}
       </View>
-      <Text type='xxs' color='gray.textLow' style={styles.statsAttribution}>
-        via StreamElements
+      <Text type='caption2' color='gray.textLow' align='center'>
+        Chat stats from StreamElements
+      </Text>
+    </View>
+  );
+}
+
+function Stat({ value, label }: { value: string; label: string }) {
+  return (
+    <View style={styles.stat}>
+      <Text type='headline' tabular numberOfLines={1}>
+        {value}
+      </Text>
+      <Text type='caption' color='gray.textLow'>
+        {label}
       </Text>
     </View>
   );
@@ -177,50 +179,100 @@ function StreamerProfileHeader({
 }: StreamerProfileHeaderProps) {
   return (
     <View style={styles.header}>
-      <View style={styles.profileRow}>
+      <View style={styles.identity}>
         <Image
           source={user.profile_image_url}
           cacheVariant='avatar'
           style={styles.avatar}
+          containerStyle={styles.avatar}
           contentFit='cover'
         />
-        <View style={styles.profileCopy}>
-          <Text type='xl' weight='bold' numberOfLines={1}>
-            {user.display_name}
-          </Text>
-          <Text type='xs' color='gray.textLow' numberOfLines={1}>
-            @{user.login}
-          </Text>
-        </View>
-      </View>
-
-      {user.description ? (
-        <Text
-          type='xs'
-          color='gray.textLow'
-          numberOfLines={2}
-          style={styles.description}
-        >
-          {user.description}
+        <Text type='title1' align='center' numberOfLines={1}>
+          {user.display_name}
         </Text>
-      ) : null}
+        <Text type='subhead' color='gray.textLow' numberOfLines={1}>
+          @{user.login}
+        </Text>
+        {user.description ? (
+          <Text
+            type='subhead'
+            color='gray.textLow'
+            align='center'
+            numberOfLines={3}
+            style={styles.description}
+          >
+            {user.description}
+          </Text>
+        ) : null}
+      </View>
 
       {streamElementsStats ? (
         <StreamElementsStats stats={streamElementsStats} />
       ) : null}
 
-      <View style={styles.sectionRow}>
-        <SegmentedControl
-          items={[{ label: 'VODs' }, { label: 'Clips' }]}
-          currentIndex={activeTab === 'vods' ? 0 : 1}
-          onChange={index => onTabChange(index === 0 ? 'vods' : 'clips')}
+      <SegmentedControl
+        items={[{ label: 'Videos' }, { label: 'Clips' }]}
+        currentIndex={activeTab === 'vods' ? 0 : 1}
+        onChange={index => onTabChange(index === 0 ? 'vods' : 'clips')}
+      />
+    </View>
+  );
+}
+
+interface MediaCardProps {
+  width: number;
+  thumbnail: string;
+  duration: string;
+  title: string;
+  meta: string;
+  detail?: string;
+  onPress: () => void;
+}
+
+/**
+ * One press target per card: the thumbnail and the text act as one.
+ */
+function MediaCard({
+  width,
+  thumbnail,
+  duration,
+  title,
+  meta,
+  detail,
+  onPress,
+}: MediaCardProps) {
+  return (
+    <Button label={title} onPress={onPress} style={[styles.card, { width }]}>
+      <View>
+        <Image
+          source={thumbnail}
+          cacheVariant='thumbnail'
+          style={styles.thumbnail}
+          containerStyle={styles.thumbnail}
+          contentFit='cover'
+          transition={150}
         />
+        <View style={styles.durationBadge}>
+          <Text type='caption' weight='semibold' tabular>
+            {duration}
+          </Text>
+        </View>
       </View>
 
-      <Text type='xs' color='gray.textLow' style={styles.sectionCaption}>
-        {activeTab === 'vods' ? 'Recent broadcasts' : 'Top clips'}
-      </Text>
-    </View>
+      <View style={styles.cardText}>
+        <Text type='callout' weight='semibold' numberOfLines={2}>
+          {title}
+        </Text>
+        <Text type='subhead' color='gray.textLow' tabular numberOfLines={1}>
+          {meta}
+        </Text>
+        {detail ? (
+          <Text type='subhead' color='gray.textLow' numberOfLines={1}>
+            {detail}
+          </Text>
+        ) : null}
+      </View>
+    </Button>
   );
 }
 
@@ -239,31 +291,14 @@ const VodCard = memo(function VodCard({
   }, [vod.id]);
 
   return (
-    <View style={[styles.clipCard, { width }]}>
-      <Button onPress={handleView} style={styles.thumbnailButton}>
-        <Image
-          source={getVodThumbnailUrl(vod, fallbackImage)}
-          cacheVariant='thumbnail'
-          style={styles.thumbnail}
-          contentFit='cover'
-          transition={150}
-        />
-        <View style={styles.durationBadge}>
-          <Text type='xxs' weight='bold' style={styles.badgeText}>
-            {formatVodDuration(vod.duration)}
-          </Text>
-        </View>
-      </Button>
-
-      <Button onPress={handleView} style={styles.vodTextButton}>
-        <Text type='sm' weight='bold' numberOfLines={2} style={styles.title}>
-          {vod.title || 'Untitled broadcast'}
-        </Text>
-        <Text type='xs' color='gray.textLow' numberOfLines={1}>
-          {`${formatViewCount(vod.view_count)} views - ${formatRelativeAge(vod.published_at || vod.created_at)}`}
-        </Text>
-      </Button>
-    </View>
+    <MediaCard
+      width={width}
+      thumbnail={getVodThumbnailUrl(vod, fallbackImage)}
+      duration={formatVodDuration(vod.duration)}
+      title={vod.title || 'Untitled broadcast'}
+      meta={`${formatViewCount(vod.view_count)} views · ${formatRelativeAge(vod.published_at || vod.created_at)}`}
+      onPress={handleView}
+    />
   );
 });
 
@@ -279,41 +314,33 @@ const ClipCard = memo(function ClipCard({
   }, [clip.id]);
 
   return (
-    <View style={[styles.clipCard, { width }]}>
-      <Button onPress={handleView} style={styles.thumbnailButton}>
-        <Image
-          source={getClipThumbnailUrl(clip)}
-          cacheVariant='thumbnail'
-          style={styles.thumbnail}
-          contentFit='cover'
-          transition={150}
-        />
-        <View style={styles.durationBadge}>
-          <Text type='xxs' weight='bold' style={styles.badgeText}>
-            {formatDuration(clip.duration)}
-          </Text>
-        </View>
-      </Button>
-
-      <View style={styles.clipBody}>
-        <Button onPress={handleView} style={styles.clipTextButton}>
-          <Text type='sm' weight='bold' numberOfLines={2} style={styles.title}>
-            {clip.title || 'Untitled clip'}
-          </Text>
-          <Text type='xs' color='gray.textLow' numberOfLines={1}>
-            {`${formatViewCount(clip.view_count)} views - ${formatRelativeAge(clip.created_at)}`}
-          </Text>
-          <Text type='xs' color='gray.textLow' numberOfLines={1}>
-            {`Clipped by ${clip.creator_name}`}
-          </Text>
-        </Button>
-      </View>
-    </View>
+    <MediaCard
+      width={width}
+      thumbnail={getClipThumbnailUrl(clip)}
+      duration={formatDuration(clip.duration)}
+      title={clip.title || 'Untitled clip'}
+      meta={`${formatViewCount(clip.view_count)} views · ${formatRelativeAge(clip.created_at)}`}
+      detail={`Clipped by ${clip.creator_name}`}
+      onPress={handleView}
+    />
   );
 });
 
+function MediaCardSkeleton({ width }: { width: number }) {
+  return (
+    <View style={[styles.card, { width }]}>
+      <Skeleton style={styles.thumbnail} />
+      <View style={styles.cardText}>
+        <Skeleton style={styles.skeletonTitle} />
+        <Skeleton style={styles.skeletonMeta} />
+      </View>
+    </View>
+  );
+}
+
 interface ProfileTabEmptyStateProps {
   activeTab: ProfileTab;
+  cardWidth: number;
   isError: boolean;
   isLoading: boolean;
   onRetry: () => void;
@@ -321,44 +348,66 @@ interface ProfileTabEmptyStateProps {
 
 function ProfileTabEmptyState({
   activeTab,
+  cardWidth,
   isError,
   isLoading,
   onRetry,
 }: ProfileTabEmptyStateProps) {
+  const isVods = activeTab === 'vods';
+
   if (isLoading) {
     return (
-      <View style={styles.centeredBody}>
-        <LoadingState indicatorSize='small' style={styles.inlineLoading} />
+      <View>
+        <MediaCardSkeleton width={cardWidth} />
+        <MediaCardSkeleton width={cardWidth} />
       </View>
     );
   }
 
   if (isError) {
     return (
-      <View style={styles.centeredBody}>
-        <Text type='sm' weight='bold'>
-          {activeTab === 'vods' ? 'VODs unavailable' : 'Clips unavailable'}
-        </Text>
-        <Text type='xs' color='gray.textLow' style={styles.emptyDescription}>
-          {activeTab === 'vods'
-            ? 'Could not load VODs for this channel.'
-            : 'Could not load clips for this channel.'}
-        </Text>
-        <Button onPress={onRetry} style={styles.retryButton}>
-          <Text type='sm' weight='semibold'>
-            Refresh
-          </Text>
-        </Button>
-      </View>
+      <EmptyState
+        iconName='exclamationmark.triangle'
+        heading={isVods ? "Couldn't load videos" : "Couldn't load clips"}
+        content='Check your connection and try again.'
+        button='Try again'
+        buttonOnPress={onRetry}
+        style={styles.tabState}
+      />
     );
   }
 
   return (
-    <View style={styles.centeredBody}>
-      <Text type='sm' color='gray.textLow'>
-        {activeTab === 'vods' ? 'No VODs found' : 'No clips found'}
-      </Text>
-    </View>
+    <EmptyState
+      iconName={isVods ? 'play.rectangle' : 'scissors'}
+      heading={isVods ? 'No past broadcasts' : 'No clips yet'}
+      content={
+        isVods
+          ? 'Past broadcasts appear here when the channel saves them.'
+          : 'Clips people make on this channel appear here.'
+      }
+      style={styles.tabState}
+    />
+  );
+}
+
+function StreamerProfileSkeleton({ cardWidth }: { cardWidth: number }) {
+  return (
+    <ScrollView
+      contentInsetAdjustmentBehavior='automatic'
+      scrollEnabled={false}
+      style={styles.container}
+    >
+      <View style={styles.header}>
+        <View style={styles.identity}>
+          <Skeleton style={styles.avatar} />
+          <Skeleton style={styles.skeletonName} />
+          <Skeleton style={styles.skeletonMeta} />
+        </View>
+      </View>
+      <MediaCardSkeleton width={cardWidth} />
+      <MediaCardSkeleton width={cardWidth} />
+    </ScrollView>
   );
 }
 
@@ -388,7 +437,7 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
   const cardWidth =
     Platform.OS === 'web' && windowWidth >= 820
       ? Math.min(420, (windowWidth - theme.space20 * 3) / 2)
-      : windowWidth - theme.space20 * 2;
+      : windowWidth - theme.space16 * 2;
 
   const columns = Platform.OS === 'web' && windowWidth >= 820 ? 2 : 1;
 
@@ -441,14 +490,16 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
   }, [user]);
 
   if (isUserLoading) {
-    return <LoadingState />;
+    return <StreamerProfileSkeleton cardWidth={cardWidth} />;
   }
 
   if (isUserError || !user) {
     return (
       <EmptyState
+        iconName='person.crop.circle.badge.questionmark'
         heading='Streamer not found'
         content='Could not load this channel.'
+        button='Try again'
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         buttonOnPress={() => refetchUser()}
       />
@@ -468,7 +519,8 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: user.display_name,
+          // The screen shows the name in its own header block, so the bar has no title.
+          title: '',
           headerRight: () => (
             <IconButton
               icon={{ type: 'symbol', name: 'square.and.arrow.up', size: 18 }}
@@ -492,6 +544,7 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
         ListEmptyComponent={
           <ProfileTabEmptyState
             activeTab={activeTab}
+            cardWidth={cardWidth}
             isError={isTabError}
             isLoading={isTabLoading}
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -515,136 +568,84 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
 
 const styles = StyleSheet.create({
   avatar: {
-    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
-    borderWidth: 1,
-    height: 72,
-    width: 72,
+    borderRadius: theme.radius.full,
+    height: 88,
+    overflow: 'hidden',
+    width: 88,
   },
-  badgeText: {
-    color: theme.color.text.dark,
-  },
-  centeredBody: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-    paddingBottom: theme.space56,
-  },
-  clipBody: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    gap: theme.space12,
-    paddingTop: theme.space12,
-  },
-  clipCard: {
+  card: {
     alignSelf: 'center',
-    marginBottom: theme.space20,
+    marginBottom: theme.space24,
   },
-  clipTextButton: {
-    flex: 1,
+  cardText: {
     gap: 2,
-    minWidth: 0,
+    paddingTop: theme.space12,
   },
   container: {
     backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   description: {
-    marginTop: theme.space16,
+    marginTop: theme.space8,
+    maxWidth: 360,
   },
   durationBadge: {
-    backgroundColor: theme.colorBlackOverlay,
+    backgroundColor: theme.color.scrim.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius6,
-    left: theme.space8,
-    paddingHorizontal: theme.space8,
-    paddingVertical: theme.space4,
+    borderRadius: theme.radius.sm,
+    bottom: theme.space8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     position: 'absolute',
-    top: theme.space8,
+    right: theme.space8,
   },
   header: {
+    gap: theme.space24,
     paddingBottom: theme.space20,
-    paddingHorizontal: theme.space20,
-    paddingTop: theme.space16,
+    paddingHorizontal: theme.space16,
+    paddingTop: theme.space8,
+  },
+  identity: {
+    alignItems: 'center',
+    gap: theme.space4,
   },
   listContent: {
     paddingBottom: theme.space36,
   },
-  inlineLoading: {
-    backgroundColor: 'transparent',
-    flex: 0,
+  skeletonMeta: {
+    height: 11,
+    width: 120,
   },
-  profileCopy: {
+  skeletonName: {
+    height: 22,
+    marginTop: theme.space8,
+    width: 160,
+  },
+  skeletonTitle: {
+    height: 13,
+    width: '80%',
+  },
+  stat: {
+    alignItems: 'center',
     flex: 1,
     gap: 2,
     minWidth: 0,
   },
-  profileRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: theme.space16,
-  },
-  sectionRow: {
-    borderTopColor: theme.colorBorderSecondary,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    marginTop: theme.space20,
-    paddingTop: theme.space16,
-  },
-  sectionCaption: {
-    marginTop: theme.space8,
-    textAlign: 'right',
-  },
-  statsStrip: {
-    marginTop: theme.space16,
+  stats: {
+    gap: theme.space8,
   },
   statsRow: {
     flexDirection: 'row',
-    gap: theme.space8,
   },
-  statChip: {
-    backgroundColor: theme.darkActiveContent,
-    borderColor: theme.colorBorderSecondary,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
-    borderWidth: StyleSheet.hairlineWidth,
-    flex: 1,
-    gap: 2,
-    paddingHorizontal: theme.space12,
-    paddingVertical: theme.space8,
-  },
-  statsAttribution: {
-    marginTop: theme.space8,
-  },
-  emptyDescription: {
-    marginTop: theme.space4,
-    textAlign: 'center',
-  },
-  retryButton: {
-    backgroundColor: theme.darkActiveContent,
-    borderColor: theme.colorBorderSecondary,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    borderWidth: 1,
-    marginTop: theme.space16,
-    paddingHorizontal: theme.space20,
-    paddingVertical: theme.space8,
-  },
-  vodTextButton: {
-    gap: 2,
-    minWidth: 0,
-    paddingTop: theme.space12,
+  tabState: {
+    paddingTop: theme.space24,
   },
   thumbnail: {
     aspectRatio: 16 / 9,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
+    borderRadius: theme.radius.md,
+    overflow: 'hidden',
     width: '100%',
-  },
-  thumbnailButton: {
-    position: 'relative',
-  },
-  title: {
-    lineHeight: 22,
   },
 });

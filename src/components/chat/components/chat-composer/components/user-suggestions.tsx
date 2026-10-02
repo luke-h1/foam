@@ -57,7 +57,9 @@ function UserSuggestionItem({
           },
         ]}
       />
-      <Text style={styles.userSuggestionText}>{user.name}</Text>
+      <Text type='callout' family='brand' style={styles.userSuggestionText}>
+        {user.name}
+      </Text>
     </Button>
   );
 }
@@ -79,7 +81,13 @@ export const UserSuggestions = memo(function UserSuggestions({
   return (
     <View style={suggestionRailStyles.richWrapper}>
       <View style={suggestionRailStyles.richContainer}>
-        <Text style={suggestionRailStyles.headerLabel}>Mention</Text>
+        <Text
+          type='callout'
+          family='brand'
+          style={suggestionRailStyles.headerLabel}
+        >
+          Mention
+        </Text>
         <LegendList
           data={users}
           horizontal
@@ -108,7 +116,7 @@ const styles = StyleSheet.create({
     backgroundColor: suggestionRailColors.chipBackground,
     borderColor: suggestionRailColors.chipBorder,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
+    borderRadius: theme.radius.lg,
     borderWidth: 1,
     flexDirection: 'row',
     gap: theme.space8,

@@ -45,10 +45,18 @@ function CommandSuggestionItem({
   return (
     <Button style={styles.suggestionItem} onPress={() => onPress(item)}>
       <View style={styles.commandTextContainer}>
-        <Text style={styles.commandName} numberOfLines={1} ellipsizeMode='tail'>
+        <Text
+          type='callout'
+          family='brand'
+          style={styles.commandName}
+          numberOfLines={1}
+          ellipsizeMode='tail'
+        >
           /{item.name}
         </Text>
         <Text
+          type='callout'
+          family='brand'
           style={styles.commandDescription}
           numberOfLines={1}
           ellipsizeMode='tail'
@@ -72,7 +80,13 @@ export const CommandSuggestions = memo(function CommandSuggestions({
   return (
     <View style={suggestionRailStyles.richWrapper}>
       <View style={suggestionRailStyles.richContainer}>
-        <Text style={suggestionRailStyles.headerLabel}>Commands</Text>
+        <Text
+          type='callout'
+          family='brand'
+          style={suggestionRailStyles.headerLabel}
+        >
+          Commands
+        </Text>
         <LegendList
           data={commands}
           horizontal
@@ -115,7 +129,7 @@ const styles = StyleSheet.create({
     backgroundColor: suggestionRailColors.chipBackground,
     borderColor: suggestionRailColors.chipBorder,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
+    borderRadius: theme.radius.lg,
     borderWidth: 1,
     flexDirection: 'row',
     gap: theme.space12,

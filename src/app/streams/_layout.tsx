@@ -30,10 +30,10 @@ export default function StreamsLayout() {
           headerShown: false,
           presentation: 'formSheet',
           sheetGrabberVisible: true,
-          sheetAllowedDetents: [0.85],
-          sheetCornerRadius: theme.borderRadius28,
+          sheetAllowedDetents: 'fitToContents',
+          sheetCornerRadius: theme.radius.xl,
           contentStyle: {
-            backgroundColor: theme.color.background.dark,
+            backgroundColor: theme.color.surface.dark,
           },
         }}
       />

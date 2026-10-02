@@ -5,7 +5,6 @@ import {
   SettingsToggleRow,
 } from '@app/components/settings-section/settings-section';
 import type { AndroidSymbol } from '@app/components/ui/icon/icon';
-import { theme } from '@app/styles/themes';
 
 import type {
   PreviewProvider,
@@ -85,8 +84,6 @@ export function ChatProviderPreferenceSections({
   return (
     <>
       {PROVIDER_PREFERENCE_SECTIONS.map(section => {
-        const tint = theme.colorGrey;
-
         return (
           <SettingsSection key={section.title} title={section.title}>
             <SettingsToggleRow
@@ -95,7 +92,6 @@ export function ChatProviderPreferenceSections({
               icon={{
                 icon: EMOTES_ICON,
                 androidIcon: EMOTES_ANDROID_ICON,
-                color: tint,
               }}
               value={previewProviders[section.emotes.key]}
               onValueChange={value =>
@@ -113,7 +109,6 @@ export function ChatProviderPreferenceSections({
               icon={{
                 icon: BADGES_ICON,
                 androidIcon: BADGES_ANDROID_ICON,
-                color: tint,
               }}
               value={previewProviders[section.badges.key]}
               onValueChange={value =>

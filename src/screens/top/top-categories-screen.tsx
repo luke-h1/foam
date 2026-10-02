@@ -6,15 +6,9 @@ import type { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { MemoizedCategoryCard } from '@app/components/category-card/category-card';
-import {
-  CATEGORY_CARD_HEIGHT,
-  CATEGORY_CARD_IMAGE_HEIGHT,
-  CATEGORY_CARD_IMAGE_WIDTH,
-  CATEGORY_CARD_TITLE_HEIGHT,
-} from '@app/components/category-card/constants';
+import { CategoryCardSkeleton } from '@app/components/category-card/category-card-skeleton';
 import { FlashList, FlashListRef } from '@app/components/flash-list/flash-list';
 import { EmptyState } from '@app/components/ui/empty-state/empty-state';
-import { Skeleton } from '@app/components/ui/skeleton/skeleton';
 import { useFlattenedInfiniteQuery } from '@app/hooks/use-flattened-infinite-query';
 import { useInfiniteQueryLoadMore } from '@app/hooks/use-infinite-query-load-more';
 import { useRefetchOnForeground } from '@app/hooks/use-refetch-on-foreground';
@@ -27,17 +21,6 @@ const SKELETON_COUNT = 9;
 const SKELETON_DATA = Array.from({ length: SKELETON_COUNT });
 const SKELETON_COLUMNS = 3;
 const TOP_CATEGORY_SKELETON_KEY_PREFIX = 'skeleton-';
-
-function CategoryCardSkeleton() {
-  return (
-    <View style={styles.cardContainer} testID='category-skeleton'>
-      <Skeleton style={styles.skeletonImage} />
-      <View style={styles.skeletonTitleLine}>
-        <Skeleton style={styles.skeletonTitle} />
-      </View>
-    </View>
-  );
-}
 
 export function TopCategoriesScreen() {
   const refreshing$ = useObservable(false);
@@ -95,14 +78,14 @@ export function TopCategoriesScreen() {
     );
   }
 
-  if (isError) {
+  if (isError && allCategories.length === 0) {
     return (
       <View style={styles.wrapper}>
         <EmptyState
           iconName='exclamationmark.triangle'
           heading="Couldn't load categories"
           content='Check your connection and try again.'
-          button='Retry'
+          button='Try again'
           buttonOnPress={() => void onRefresh()}
         />
       </View>
@@ -174,30 +157,10 @@ function TopCategoriesList({
 }
 
 const styles = StyleSheet.create({
-  cardContainer: {
-    flex: 1,
-    marginHorizontal: 5,
-    minHeight: CATEGORY_CARD_HEIGHT,
-  },
   listContent: {
     paddingBottom: theme.space20,
-  },
-  skeletonImage: {
-    alignSelf: 'center',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
-    height: CATEGORY_CARD_IMAGE_HEIGHT,
-    width: CATEGORY_CARD_IMAGE_WIDTH,
-  },
-  skeletonTitle: {
-    alignSelf: 'center',
-    height: 14,
-    width: 90,
-  },
-  skeletonTitleLine: {
-    height: CATEGORY_CARD_TITLE_HEIGHT,
-    justifyContent: 'center',
-    marginTop: theme.space12,
+    paddingHorizontal: 10,
+    paddingTop: theme.space8,
   },
   wrapper: {
     backgroundColor: theme.color.background.dark,
@@ -206,9 +169,7 @@ const styles = StyleSheet.create({
 });
 
 const renderTopCategoryItem: ListRenderItem<Category> = ({ item }) => (
-  <View style={styles.cardContainer}>
-    <MemoizedCategoryCard category={item} />
-  </View>
+  <MemoizedCategoryCard category={item} />
 );
 
 const renderTopCategorySkeletonItem: ListRenderItem<unknown> = () => (

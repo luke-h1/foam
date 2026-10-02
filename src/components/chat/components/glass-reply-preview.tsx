@@ -55,7 +55,9 @@ export const GlassReplyPreview = memo(
         <View style={styles.replyIndicator} />
         <View style={styles.replyContent}>
           <View style={styles.replyLabelRow}>
-            <Text style={styles.replyLabel}>Replying to</Text>
+            <Text type='callout' family='brand' style={styles.replyLabel}>
+              Replying to
+            </Text>
             <PaintedUsername
               fallbackColor={
                 replyTo.color ? lightenColor(replyTo.color) : undefined
@@ -94,7 +96,12 @@ const ReplyPreviewLine = ({ replyTo }: { replyTo: ReplyToData }) => {
   }
 
   return (
-    <Text numberOfLines={1} style={styles.replyMessagePreview}>
+    <Text
+      type='callout'
+      family='brand'
+      numberOfLines={1}
+      style={styles.replyMessagePreview}
+    >
       {truncate(replyTo.message.trim() || replyTo.message, 72)}
     </Text>
   );

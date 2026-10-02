@@ -2,7 +2,6 @@ import { StyleSheet, View } from 'react-native';
 
 import { SegmentedControl } from '@app/components/segmented-control/segmented-control';
 import { TOP_TAB_ROUTES } from '@app/constants/top-tab-routes';
-import { theme } from '@app/styles/themes';
 
 type TopSegmentControlProps = {
   index: number;
@@ -24,10 +23,14 @@ export function TopSegmentControl({
   );
 }
 
+/**
+ * The segment is the Top tab's navigation bar title, so it keeps a fixed
+ * width that leaves room for the bar button beside it.
+ */
 const styles = StyleSheet.create({
   segmentFrame: {
-    alignSelf: 'stretch',
-    paddingBottom: theme.space8,
-    paddingTop: theme.space12,
+    height: 36,
+    justifyContent: 'center',
+    width: 232,
   },
 });

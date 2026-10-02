@@ -22,7 +22,7 @@ type BottomSheetProps = PropsWithChildren<{
 }>;
 
 function BottomSheetComponent({
-  backgroundColor = theme.color.menu.background,
+  backgroundColor = theme.color.surface.dark,
   children,
   isPresented,
   onDismiss,

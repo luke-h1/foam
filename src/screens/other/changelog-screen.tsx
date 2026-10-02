@@ -54,7 +54,7 @@ export function ChangelogScreen() {
         contentContainerStyle={styles.content}
       >
         <View style={styles.card}>
-          <Text variant='mono' type='xs' style={styles.changelogText}>
+          <Text variant='mono' type='subhead' style={styles.changelogText}>
             {mockChangelog}
           </Text>
         </View>
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.color.background.darkAltAlpha,
     borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
+    borderRadius: theme.radius.lg,
     borderWidth: 1,
     paddingHorizontal: theme.space20,
     paddingVertical: theme.space20,

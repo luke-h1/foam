@@ -7,7 +7,6 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -38,9 +37,12 @@ import {
 } from '@app/providers/cached-emotes-provider/cache-service';
 import { useCachedEmote } from '@app/providers/cached-emotes-provider/use-cached-emote';
 import { describeEmoteUrl } from '@app/utils/emote/describe-emote-url';
-import { buildImageFallbackChain } from '@app/utils/emote/image-fallback-chain';
 import { logger } from '@app/utils/logger';
 
+import {
+  getEmoteUrlKind,
+  getImageFallbackChain,
+} from '../util/emote-url-cache';
 import { RowVisibilityContext } from '../util/row-visibility';
 import { ChatImageShimmer } from './chat-image-shimmer';
 
@@ -115,10 +117,7 @@ function useEmoteLoadRecovery(
   sharedRef: ImageRef | null,
   syncAnimation: () => void,
 ) {
-  const fallbackChain = useMemo(
-    () => buildImageFallbackChain(sourceUrl),
-    [sourceUrl],
-  );
+  const fallbackChain = getImageFallbackChain(sourceUrl);
 
   const [reloadNonce, setReloadNonce] = useState(0);
 
@@ -381,6 +380,11 @@ function logEmoteLoadFailure({
 
 interface ChatInlineImageProps {
   containerStyle?: StyleProp<ViewStyle>;
+  /**
+   * Records which emote a touch started on for the row's long-press timer.
+   * Taken here so the common emote needs no wrapper view of its own.
+   */
+  onTouchStart?: () => void;
   priority?: 'low' | 'normal' | 'high';
   resizeMode?: 'contain' | 'cover' | 'stretch';
   sourceUrl: string;
@@ -392,6 +396,7 @@ interface ChatInlineImageProps {
 // eslint-disable-next-line react-doctor/no-giant-component -- a split adds a mount boundary on the hottest chat path
 function ChatInlineImageComponent({
   containerStyle,
+  onTouchStart,
   priority = 'high',
   resizeMode = 'contain',
   sourceUrl,
@@ -405,7 +410,7 @@ function ChatInlineImageComponent({
 
   // The native isAnimated getter is a JSI hop per render; the url already
   // encodes the kind for everything but BTTV's bare url form.
-  const urlKind = useMemo(() => describeEmoteUrl(sourceUrl).kind, [sourceUrl]);
+  const urlKind = getEmoteUrlKind(sourceUrl);
 
   const animated =
     urlKind === null ? sharedRef?.isAnimated === true : urlKind === 'animated';
@@ -450,6 +455,7 @@ function ChatInlineImageComponent({
       onDisplay={handleDisplay}
       onLoad={handleLoad}
       onError={handleError}
+      onTouchStart={overlayVisible || containerStyle ? undefined : onTouchStart}
       style={overlayVisible ? StyleSheet.absoluteFill : style}
       testID={testID}
     />
@@ -457,7 +463,7 @@ function ChatInlineImageComponent({
 
   if (containerStyle) {
     return (
-      <View style={containerStyle}>
+      <View onTouchStart={onTouchStart} style={containerStyle}>
         {overlayVisible ? (
           <ChatImageShimmer animate={status === 'loading'} />
         ) : null}
@@ -468,7 +474,7 @@ function ChatInlineImageComponent({
 
   if (overlayVisible) {
     return (
-      <View style={style}>
+      <View onTouchStart={onTouchStart} style={style}>
         <ChatImageShimmer animate={status === 'loading'} />
         {imageElement}
       </View>

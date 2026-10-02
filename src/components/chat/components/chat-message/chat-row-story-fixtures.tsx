@@ -8,6 +8,7 @@ import { sevenTvSanitisedChannelEmoteSetFixture } from '@app/services/__fixtures
 import { sevenTvSanitisedGlobalEmoteSetFixture } from '@app/services/__fixtures__/emotes/stv/seven-tv-sanitised-global-emote-set.fixture';
 import { chatterinoService } from '@app/services/chatterino-service';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
+import { theme } from '@app/styles/themes';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { MessageToken } from '@app/utils/chat/message-token';
@@ -55,6 +56,7 @@ export const createBaseMessage = (
       username: 'testuser',
       'display-name': 'TestUser',
       login: 'testuser',
+      // eslint-disable-next-line no-restricted-syntax -- a Twitch IRC colour tag in fixture data, not a UI colour
       color: '#FF0000',
       'user-id': '123456',
       ...userstate,
@@ -112,7 +114,7 @@ export const chatStoryDecorator = (Story: () => ReactNode) => (
   <ScrollView
     style={{
       flex: 1,
-      backgroundColor: '#0E0E10',
+      backgroundColor: theme.color.background.dark,
       padding: 8,
     }}
   >

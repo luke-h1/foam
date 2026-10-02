@@ -110,6 +110,7 @@ export function ChatMessageToken({
           disableAnimations={disableEmoteAnimations}
           isModerated={isModerated}
           key={getTokenKey(token, index)}
+          textStyles={textStyles}
           token={token}
           targetSize={resolvedEmoteSize}
         />

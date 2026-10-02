@@ -149,7 +149,8 @@ function ChatComposerComponent({
 
       {showCharacterCount ? (
         <Text
-          type='xxs'
+          family='brand'
+          type='caption'
           weight='semibold'
           style={[
             styles.characterCount,

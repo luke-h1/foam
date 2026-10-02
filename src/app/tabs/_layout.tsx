@@ -34,7 +34,7 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Label>Top</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf='chart.bar.xaxis' md='leaderboard' />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name='search' role='search'>
+      <NativeTabs.Trigger name='search'>
         <NativeTabs.Trigger.Label>Search</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf='magnifyingglass' md='search' />
       </NativeTabs.Trigger>

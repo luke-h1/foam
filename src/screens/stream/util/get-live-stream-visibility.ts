@@ -41,7 +41,7 @@ export function getLiveStreamVisibility({
   // A channel that resolved to no stream is offline; a failed request is an
   // error. Both replace the player with the unavailable panel.
   const isChannelOffline =
-    isStreamEnabled && isStreamRequestSuccess && stream === undefined;
+    isStreamEnabled && isStreamRequestSuccess && stream == null;
 
   const isStreamUnavailable =
     isChannelOffline || (isStreamEnabled && isStreamRequestError);

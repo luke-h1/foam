@@ -1,4 +1,4 @@
-import { createElement, forwardRef, useImperativeHandle } from 'react';
+import { createElement, type Ref, useImperativeHandle } from 'react';
 import { View } from 'react-native';
 
 import { act, render, screen } from '@testing-library/react-native';
@@ -43,20 +43,25 @@ let mockImageProps: CapturedImageProps | null = null;
  * expo-image's `Image` is a forwardRef object, so jest.spyOn cannot wrap it -
  * swap the export directly.
  */
+function MockImage({
+  ref,
+  ...props
+}: ImageProps & { ref?: Ref<MockImageHandle> }) {
+  // SAFETY: CapturedImageProps only widens onError/onLoad to accept the
+  // no-argument calls below; the real props always satisfy it.
+  mockImageProps = props as CapturedImageProps;
+
+  useImperativeHandle(ref, () => ({
+    startAnimating: mockStartAnimating,
+    stopAnimating: mockStopAnimating,
+  }));
+
+  return createElement(View, { testID: props.testID });
+}
+
 Object.defineProperty(ExpoImage, 'Image', {
   configurable: true,
-  value: forwardRef<MockImageHandle, ImageProps>((props, ref) => {
-    // SAFETY: CapturedImageProps only widens onError/onLoad to accept the
-    // no-argument calls below; the real props always satisfy it.
-    mockImageProps = props as CapturedImageProps;
-
-    useImperativeHandle(ref, () => ({
-      startAnimating: mockStartAnimating,
-      stopAnimating: mockStopAnimating,
-    }));
-
-    return createElement(View, { testID: props.testID });
-  }),
+  value: MockImage,
 });
 
 let mockSharedRef: ImageRef | null = null;

@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { router } from 'expo-router';
 
-import { Button } from '@app/components/button/button';
+import { ActionButton } from '@app/components/action-button/action-button';
 import { EnergyOrb } from '@app/components/energy-orb/energy-orb';
 import { Text } from '@app/components/ui/text/text';
 import { storage } from '@app/lib/storage';
@@ -56,12 +56,12 @@ export function OnboardingScreen() {
         entering={gentleSpring(FadeInDown).delay(150)}
         style={styles.content}
       >
-        <Text type='3xl' weight='bold' align='center'>
-          Welcome to foam
+        <Text type='title1' align='center'>
+          Welcome to Foam
         </Text>
-        <Text type='md' align='center' color='gray' style={styles.description}>
-          The fastest way to watch Twitch - browse live streams, explore
-          categories, and follow your favourite creators.
+        <Text type='body' align='center' color='gray.textLow'>
+          The fastest way to watch Twitch. Browse live streams, explore
+          categories and follow your favourite creators.
         </Text>
       </Animated.View>
 
@@ -69,31 +69,12 @@ export function OnboardingScreen() {
         entering={gentleSpring(FadeInDown).delay(250)}
         style={styles.footer}
       >
-        <Button
-          onPress={handleGetStarted}
+        <ActionButton
+          title='Get started'
           haptic='medium'
-          label='Get started'
-          style={styles.ctaButton}
-        >
-          <Text
-            type='md'
-            color='accent'
-            contrast
-            align='center'
-            weight='semibold'
-          >
-            Get started
-          </Text>
-        </Button>
-        <Button
           onPress={handleGetStarted}
-          label='Skip'
-          style={styles.skipButton}
-        >
-          <Text type='sm' align='center' color='gray'>
-            Skip
-          </Text>
-        </Button>
+          style={styles.cta}
+        />
       </Animated.View>
     </View>
   );
@@ -115,17 +96,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: theme.space16,
   },
-  ctaButton: {
-    alignItems: 'center',
-    backgroundColor: theme.colorPrimary,
-    borderRadius: theme.borderRadius999,
-    paddingHorizontal: theme.space28,
-    paddingVertical: theme.space16,
-    width: '100%',
-  },
-  description: {
-    lineHeight: 24,
-    opacity: 0.7,
+  cta: {
+    alignSelf: 'stretch',
   },
   footer: {
     alignItems: 'center',
@@ -135,8 +107,5 @@ const styles = StyleSheet.create({
   orbContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  skipButton: {
-    paddingVertical: theme.space8,
   },
 });

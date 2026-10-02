@@ -69,9 +69,9 @@ describe('ChattersSheet', () => {
       onSelectChatter: onSelectChatter,
     });
 
-    expect(getByText('Broadcaster')).toBeOnTheScreen();
-    expect(getByText('Moderators')).toBeOnTheScreen();
-    expect(getByText('Viewers')).toBeOnTheScreen();
+    expect(getByText('Broadcaster · 1')).toBeOnTheScreen();
+    expect(getByText('Moderators · 1')).toBeOnTheScreen();
+    expect(getByText('Viewers · 1')).toBeOnTheScreen();
 
     fireEvent.press(getByText('SomeViewer'));
     expect(onSelectChatter).toHaveBeenCalledTimes(1);
@@ -108,7 +108,7 @@ describe('ChattersSheet', () => {
 
     expect(queryByText('SomeViewer')).toBeOnTheScreen();
     expect(queryByText('streamer')).toBeNull();
-    expect(queryByText('Broadcaster')).toBeNull();
+    expect(queryByText(/^Broadcaster/)).toBeNull();
   });
 
   test('shows an empty state when no chatters have been seen', () => {
@@ -120,7 +120,7 @@ describe('ChattersSheet', () => {
 
     expect(
       getByText(
-        'No chatters seen yet. Users appear here once they send a message.',
+        'No chatters yet. People appear here once they send a message.',
       ),
     ).toBeOnTheScreen();
   });

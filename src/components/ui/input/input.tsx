@@ -214,7 +214,7 @@ export function Input({
   size = 'md',
   variant = 'outline',
   color,
-  radius = 'default',
+  radius = 'md',
   ref,
   ...rest
 }: ThemedInputProps) {

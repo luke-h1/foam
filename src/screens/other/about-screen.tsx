@@ -19,7 +19,9 @@ import {
   SettingsSection,
 } from '@app/components/settings-section/settings-section';
 import { Text } from '@app/components/ui/text/text';
+import { useRemoteConfig } from '@app/hooks/firebase/use-remote-config';
 import { useScrollToTop } from '@app/hooks/use-scroll-to-top';
+import { openLicenseList } from '@app/lib/legal';
 import { SWIFTUI_ROW_CONTENT_INSET } from '@app/styles/native-form';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/open-link-in-browser';
@@ -29,6 +31,9 @@ const appIconProduction = require('../../../assets/app-icon/app-icon-production.
 export function AboutScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const otaLabel = Updates.updateId ?? 'Embedded';
+  const { config } = useRemoteConfig();
+  const websiteUrl = config.websiteUrl.value;
+  const statusPageUrl = config.statusPageUrl.value;
 
   useScrollToTop(scrollRef);
 
@@ -41,45 +46,32 @@ export function AboutScreen() {
               <View style={[styles.identityRow, styles.hostedRowInset]}>
                 <Image source={appIconProduction} style={styles.appIcon} />
                 <View style={styles.identityText}>
-                  <Text type='lg' weight='bold' numberOfLines={1}>
+                  <Text type='title3' weight='bold' numberOfLines={1}>
                     Foam
                   </Text>
-                  <Text type='xs' color='gray.textLow' numberOfLines={2}>
-                    Streams, discovery, and chat controls in one mobile-first
-                    shell.
+                  <Text type='subhead' color='gray.textLow' numberOfLines={2}>
+                    A Twitch client built for your phone.
                   </Text>
                 </View>
               </View>
             </RNHostView>
           </Section>
 
-          <Section title='Built For'>
-            <LabeledContent label='Chat'>
-              <NativeText>
-                Native feeling chat with 7TV, BTTV and FFZ support. Inspired by
-                projects such as Chatterino and the 7TV Chrome extension
-              </NativeText>
-            </LabeledContent>
-            <LabeledContent label='Discovery'>
-              <NativeText>
-                Find and discover new streamers without the clutter
-              </NativeText>
-            </LabeledContent>
-            <LabeledContent label='Viewing'>
-              <NativeText>A viewing experience to rival desktop</NativeText>
-            </LabeledContent>
-          </Section>
-
           <Section title='Resources'>
             <Button
               label='Website'
               systemImage='globe'
-              onPress={() => openLinkInBrowser('https://foam-app.com')}
+              onPress={() => openLinkInBrowser(websiteUrl)}
             />
             <Button
               label='Status'
               systemImage='checkmark.shield'
-              onPress={() => openLinkInBrowser('https://status.foam-app.com')}
+              onPress={() => openLinkInBrowser(statusPageUrl)}
+            />
+            <Button
+              label='Licenses'
+              systemImage='doc.text'
+              onPress={() => openLicenseList('Licenses')}
             />
           </Section>
 
@@ -116,41 +108,31 @@ export function AboutScreen() {
           <View style={styles.identityRow}>
             <Image source={appIconProduction} style={styles.appIcon} />
             <View style={styles.identityText}>
-              <Text type='lg' weight='bold' numberOfLines={1}>
+              <Text type='title3' weight='bold' numberOfLines={1}>
                 Foam
               </Text>
-              <Text type='xs' color='gray.textLow' numberOfLines={2}>
-                Streams, discovery, and chat controls in one mobile-first shell.
+              <Text type='subhead' color='gray.textLow' numberOfLines={2}>
+                A Twitch client built for your phone.
               </Text>
             </View>
           </View>
         </SettingsSection>
 
-        <SettingsSection title='Built For'>
-          <SettingsLinkRow
-            title='Chat'
-            subtitle='Native feeling chat with 7TV, BTTV and FFZ support. Inspired by projects such as Chatterino and the 7TV Chrome extension'
-          />
-          <SettingsLinkRow
-            title='Discovery'
-            subtitle='Find and discover new streamers without the clutter'
-          />
-          <SettingsLinkRow
-            title='Viewing'
-            subtitle='A viewing experience to rival desktop'
-          />
-        </SettingsSection>
-
         <SettingsSection title='Resources'>
           <SettingsLinkRow
             title='Website'
-            icon={{ icon: 'globe', color: theme.colorViolet }}
-            onPress={() => openLinkInBrowser('https://foam-app.com')}
+            icon={{ icon: 'globe' }}
+            onPress={() => openLinkInBrowser(websiteUrl)}
           />
           <SettingsLinkRow
             title='Status'
-            icon={{ icon: 'checkmark.shield', color: theme.colorOrange }}
-            onPress={() => openLinkInBrowser('https://status.foam-app.com')}
+            icon={{ icon: 'checkmark.shield' }}
+            onPress={() => openLinkInBrowser(statusPageUrl)}
+          />
+          <SettingsLinkRow
+            title='Licenses'
+            icon={{ icon: 'doc.text' }}
+            onPress={() => openLicenseList('Licenses')}
           />
         </SettingsSection>
 
@@ -173,7 +155,7 @@ export function AboutScreen() {
 const styles = StyleSheet.create({
   appIcon: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
+    borderRadius: theme.radius.lg,
     height: 56,
     width: 56,
   },

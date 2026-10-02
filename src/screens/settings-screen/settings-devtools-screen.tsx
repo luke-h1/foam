@@ -177,13 +177,13 @@ export function SettingsDevtoolsScreen() {
           <SettingsLinkRow
             title='App Diagnostics'
             subtitle='Version, environment, and runtime details'
-            icon={{ icon: 'stethoscope', color: theme.colorBlue }}
+            icon={{ icon: 'stethoscope' }}
             onPress={() => router.push('/tabs/settings/diagnostics')}
           />
           <SettingsLinkRow
             title='Remote Config'
             subtitle='Inspect fetched config and local overrides'
-            icon={{ icon: 'cloud', color: theme.colorPlum }}
+            icon={{ icon: 'cloud' }}
             onPress={() => router.push('/tabs/settings/remote-config')}
           />
         </SettingsSection>
@@ -192,14 +192,14 @@ export function SettingsDevtoolsScreen() {
           <SettingsToggleRow
             title='Disable Stream'
             subtitle='Remove the Twitch WebView to isolate chat performance'
-            icon={{ icon: 'video.slash', color: theme.colorOrange }}
+            icon={{ icon: 'video.slash' }}
             value={disableStream}
             onValueChange={value => update({ disableStream: value })}
           />
           <SettingsToggleRow
             title='Disable Chat'
             subtitle='Remove chat rendering to isolate the player'
-            icon={{ icon: 'message', color: theme.colorPlum }}
+            icon={{ icon: 'message' }}
             value={disableChat}
             onValueChange={value => update({ disableChat: value })}
           />
@@ -211,7 +211,6 @@ export function SettingsDevtoolsScreen() {
             subtitle='Show the source label and badge on messages relayed from another channel in a shared chat session'
             icon={{
               icon: 'bubble.left.and.bubble.right',
-              color: theme.colorTeal,
             }}
             value={sharedChatEnabled}
             onValueChange={value => update({ sharedChatEnabled: value })}
@@ -219,7 +218,7 @@ export function SettingsDevtoolsScreen() {
           <SettingsToggleRow
             title='Enhanced Video Stability'
             subtitle='Automatically refresh the player to recover from silent stalls, video errors, and high latency'
-            icon={{ icon: 'wand.and.stars', color: theme.colorBlue }}
+            icon={{ icon: 'wand.and.stars' }}
             value={enhancedVideoStability}
             onValueChange={value => update({ enhancedVideoStability: value })}
           />
@@ -227,7 +226,7 @@ export function SettingsDevtoolsScreen() {
             <SettingsToggleRow
               title='Chat Debug Tools'
               subtitle='Capture raw IRC lines and show debug details in the chat user, emote, and badge sheets'
-              icon={{ icon: 'ladybug', color: theme.colorTeal }}
+              icon={{ icon: 'ladybug' }}
               value={chatDebugTools}
               onValueChange={value => update({ chatDebugTools: value })}
             />
@@ -238,19 +237,19 @@ export function SettingsDevtoolsScreen() {
           <SettingsLinkRow
             title='Debug'
             subtitle='Manual debug helpers and experiments'
-            icon={{ icon: 'ladybug', color: theme.colorOrange }}
+            icon={{ icon: 'ladybug' }}
             onPress={() => router.push('/tabs/settings/debug')}
           />
           <SettingsLinkRow
             title='Cached Images'
             subtitle='Inspect and manage emote and badge media cache'
-            icon={{ icon: 'photo.stack', color: theme.colorPrimary }}
+            icon={{ icon: 'photo.stack' }}
             onPress={() => router.push('/tabs/settings/cached-images')}
           />
           <SettingsLinkRow
             title='Changelog Demo'
             subtitle='Present sample native changelog payloads'
-            icon={{ icon: 'list.bullet.rectangle', color: theme.colorBlue }}
+            icon={{ icon: 'list.bullet.rectangle' }}
             onPress={() => router.push('/dev-tools/changelog')}
           />
           <SettingsLinkRow
@@ -258,32 +257,31 @@ export function SettingsDevtoolsScreen() {
             subtitle='Throw an error to verify Sentry capture'
             icon={{
               icon: 'exclamationmark.triangle',
-              color: theme.colorRed,
             }}
             onPress={() => router.push('/dev-tools/sentry-demo')}
           />
           <SettingsLinkRow
             title='Image Benchmark'
             subtitle='expo-image vs nitro decode + synthetic chat stress test'
-            icon={{ icon: 'speedometer', color: theme.colorTeal }}
+            icon={{ icon: 'speedometer' }}
             onPress={() => router.push('/dev-tools/image-benchmark')}
           />
           <SettingsLinkRow
             title='Chat Perf (burst test)'
             subtitle='real cinna chat + synthetic burst flood + live FPS readout'
-            icon={{ icon: 'bolt.horizontal', color: theme.colorOrange }}
+            icon={{ icon: 'bolt.horizontal' }}
             onPress={() => router.push('/dev-tools/chat-perf')}
           />
           <SettingsLinkRow
             title='Environment Variables'
             subtitle='Inspect the EXPO_PUBLIC_ vars baked into this build'
-            icon={{ icon: 'doc.text', color: theme.colorTeal }}
+            icon={{ icon: 'doc.text' }}
             onPress={() => router.push('/dev-tools/env-vars')}
           />
           <SettingsLinkRow
             title='Synced Emotes'
             subtitle='staggered mounts of the same emote, frame-locked or not'
-            icon={{ icon: 'metronome', color: theme.colorOrange }}
+            icon={{ icon: 'metronome' }}
             onPress={() => router.push('/dev-tools/synced-emotes')}
           />
           <SettingsLinkRow
@@ -291,14 +289,13 @@ export function SettingsDevtoolsScreen() {
             subtitle='Load an EAS Update from a different channel or PR branch'
             icon={{
               icon: 'antenna.radiowaves.left.and.right',
-              color: theme.colorPlum,
             }}
             onPress={() => router.push('/tabs/settings/channel-surfing')}
           />
           <SettingsLinkRow
             title='Storybook'
             subtitle='Component previews and design-system inspection'
-            icon={{ icon: 'book.closed', color: theme.colorTeal }}
+            icon={{ icon: 'book.closed' }}
             onPress={() => router.push('/tabs/settings/storybook')}
           />
         </SettingsSection>

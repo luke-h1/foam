@@ -8,14 +8,12 @@ import {
   Section,
   Text as NativeText,
 } from '@expo/ui/swift-ui';
-import { tint } from '@expo/ui/swift-ui/modifiers';
 import { toast } from 'sonner-native';
 
 import {
   SettingsLinkRow,
   SettingsSection,
 } from '@app/components/settings-section/settings-section';
-import { Text } from '@app/components/ui/text/text';
 import { useScrollToTop } from '@app/hooks/use-scroll-to-top';
 import { queryClient } from '@app/lib/react-query/query-client';
 import { storageService } from '@app/lib/storage';
@@ -25,8 +23,8 @@ import { clearImageCache } from '@app/utils/image/clear-image-cache';
 
 function handleClearData() {
   Alert.alert(
-    'Clear Local Data',
-    'This clears cached app data and forces fresh fetches the next time screens load.',
+    'Clear saved data?',
+    'Foam will remove the data it keeps on this device and load everything fresh. You stay signed in.',
     [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -35,7 +33,7 @@ function handleClearData() {
         onPress: () => {
           storageService.clear();
           queryClient.clear();
-          toast.success('Local data cleared');
+          toast.success('Saved data cleared');
         },
       },
     ],
@@ -44,8 +42,8 @@ function handleClearData() {
 
 function handleClearCache() {
   Alert.alert(
-    'Clear Cache',
-    'This removes all cached emotes, badges, 7TV cosmetics, and downloaded media from this device. They will be fetched again as needed.',
+    'Clear cache?',
+    'Cached emotes, badges, 7TV cosmetics and images will download again when needed.',
     [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -74,28 +72,35 @@ export function SettingsCacheScreen() {
       <Host style={styles.iosHost}>
         <Form>
           <Section
-            title='Danger Zone'
             footer={
               <NativeText>
-                Use these when stream metadata, badges, emotes, or downloaded
-                chat media need a hard refresh.
+                Removes cached emotes, badges, 7TV cosmetics and images. They
+                download again when needed.
               </NativeText>
             }
-            modifiers={[tint('red')]}
           >
             <Button
-              label='Clear Local Data'
-              systemImage='externaldrive'
-              // eslint-disable-next-line jsx-a11y/aria-role, react-doctor/aria-role -- SwiftUI Button role, not ARIA
-              role='destructive'
-              onPress={handleClearData}
-            />
-            <Button
-              label='Clear Cache'
+              label='Clear cache'
               systemImage='trash'
               // eslint-disable-next-line jsx-a11y/aria-role, react-doctor/aria-role -- SwiftUI Button role, not ARIA
               role='destructive'
               onPress={handleClearCache}
+            />
+          </Section>
+          <Section
+            footer={
+              <NativeText>
+                Removes the data Foam keeps on this device and loads everything
+                fresh. You stay signed in.
+              </NativeText>
+            }
+          >
+            <Button
+              label='Clear saved data'
+              systemImage='externaldrive'
+              // eslint-disable-next-line jsx-a11y/aria-role, react-doctor/aria-role -- SwiftUI Button role, not ARIA
+              role='destructive'
+              onPress={handleClearData}
             />
           </Section>
         </Form>
@@ -110,27 +115,19 @@ export function SettingsCacheScreen() {
         contentInsetAdjustmentBehavior='automatic'
         contentContainerStyle={styles.content}
       >
-        <SettingsSection
-          title='Danger Zone'
-          footer={
-            <Text type='xs' color='gray.textLow'>
-              These actions should be used for troubleshooting and hard
-              refreshes, not routine cleanup.
-            </Text>
-          }
-        >
+        <SettingsSection>
           <SettingsLinkRow
-            title='Clear Data'
-            subtitle='Sign out and refetch stream, category, emote, and badge state'
-            icon={{ icon: 'externaldrive', color: theme.colorRed }}
-            onPress={handleClearData}
+            title='Clear cache'
+            subtitle='Emotes, badges, 7TV cosmetics and images download again when needed'
+            icon={{ icon: 'trash' }}
+            onPress={handleClearCache}
             danger
           />
           <SettingsLinkRow
-            title='Clear Cache'
-            subtitle='Remove cached emotes, badges, 7TV cosmetics, and downloaded images'
-            icon={{ icon: 'trash', color: theme.colorRed }}
-            onPress={handleClearCache}
+            title='Clear saved data'
+            subtitle='Loads everything fresh. You stay signed in'
+            icon={{ icon: 'externaldrive' }}
+            onPress={handleClearData}
             danger
           />
         </SettingsSection>
@@ -146,7 +143,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingBottom: theme.space56,
-    paddingHorizontal: theme.space20,
+    paddingHorizontal: theme.space16,
     paddingTop: theme.space16,
   },
   iosHost: {

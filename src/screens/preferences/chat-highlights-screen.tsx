@@ -110,7 +110,7 @@ function HighlightRow({
   return (
     <View style={styles.row}>
       <View style={[styles.colorDot, { backgroundColor: highlight.color }]} />
-      <Text type='md' style={styles.phraseText} numberOfLines={1}>
+      <Text type='headline' style={styles.phraseText} numberOfLines={1}>
         {highlight.phrase}
       </Text>
       <PressableScale onPress={handleRemove} hitSlop={8}>
@@ -132,10 +132,10 @@ function EmptyState() {
         size={48}
         tintColor={theme.color.textSecondary.dark}
       />
-      <Text type='lg' weight='medium' style={styles.emptyTitle}>
+      <Text type='title3' weight='medium' style={styles.emptyTitle}>
         No highlights
       </Text>
-      <Text type='sm' style={styles.emptySubtitle}>
+      <Text type='body' style={styles.emptySubtitle}>
         Messages containing a highlighted phrase get a colored tint in chat,
         plus a haptic buzz when mention feedback is on.
       </Text>
@@ -404,7 +404,7 @@ export function ChatHighlightsScreen() {
         ListEmptyComponent={EmptyState}
         ListFooterComponent={
           hasHighlights ? (
-            <Text type='xs' style={styles.footer}>
+            <Text type='subhead' style={styles.footer}>
               {`${highlights.length} ${highlights.length === 1 ? 'phrase' : 'phrases'} · Matching messages are tinted in chat.`}
             </Text>
           ) : null
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.color.surfacePressed.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
+    borderRadius: theme.radius.full,
     height: 36,
     justifyContent: 'center',
     width: 36,
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colorWhite,
   },
   colorDot: {
-    borderRadius: theme.borderRadius6,
+    borderRadius: theme.radius.sm,
     height: 12,
     width: 12,
   },
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.color.surface.dark,
     borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.radius.md,
     borderWidth: 1,
     color: theme.colorWhite,
     flex: 1,
@@ -505,7 +505,7 @@ const styles = StyleSheet.create({
   },
   swatch: {
     borderColor: 'transparent',
-    borderRadius: theme.borderRadius999,
+    borderRadius: theme.radius.full,
     borderWidth: 2,
     height: 28,
     width: 28,

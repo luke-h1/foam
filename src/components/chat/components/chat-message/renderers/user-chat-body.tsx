@@ -22,12 +22,11 @@ import { StackedMessageLine } from './stacked-message-line';
 import type { ChatTokenRenderProps } from './types/chat-token-render-props';
 import type { ReplyFlags } from './types/reply-flags';
 
-interface UserChatBodyProps extends ChatTokenRenderProps {
+interface UserChatBodyProps {
   badgeList: SanitisedBadgeSet[];
   cachedSenderColor?: string;
   onBadgePress?: (badge: BadgePressData) => void;
   isAction?: boolean;
-  isChannelPointRedemption?: boolean;
   isHighlightedMessage?: boolean;
   onReplyContextPress?: (replyParentMessageId: string) => void;
   onUsernamePress?: () => void;
@@ -37,6 +36,11 @@ interface UserChatBodyProps extends ChatTokenRenderProps {
   replyParentMessageId?: string;
   roomId?: string;
   timestamp?: string;
+  /**
+   * One object from the row. Do not spread it: object rest copies it on
+   * every row render.
+   */
+  tokenRenderProps: ChatTokenRenderProps;
   userId?: string;
   userstate?: UserStateTags;
   userstateColor?: string;
@@ -48,10 +52,7 @@ export function UserChatBody({
   onBadgePress,
   cachedSenderColor,
   isAction,
-  isChannelPointRedemption,
   isHighlightedMessage,
-  message,
-  moderationNotice,
   onReplyContextPress,
   onUsernamePress,
   parentDisplayName,
@@ -60,11 +61,11 @@ export function UserChatBody({
   replyParentMessageId,
   roomId,
   timestamp,
+  tokenRenderProps,
   userId,
   userstate,
   userstateColor,
   username,
-  ...rendererArgs
 }: UserChatBodyProps): ReactNode {
   const {
     shouldRenderInlineReply,
@@ -72,7 +73,42 @@ export function UserChatBody({
     showTimestamp,
   } = replyFlags;
 
-  const { compact, fontScale } = rendererArgs;
+  const {
+    compact,
+    disableEmoteAnimations,
+    effectiveHighlightedUserSet,
+    fontScale,
+    getMentionColor,
+    getTokenKey,
+    message,
+    moderationNotice,
+    normalisedCurrentUsername,
+    noticeTags,
+    onEmoteTouchStart,
+    parseTextForEmotes,
+  } = tokenRenderProps;
+
+  /**
+   * A literal, not object rest, so the React Compiler can cache it. It leaves
+   * out `message` (every line names its own) and `moderationNotice`: the
+   * stacked line draws one strike over the body, so its tokens and the reply
+   * header render unstruck.
+   */
+  const rendererArgs: Omit<
+    ChatTokenRenderProps,
+    'message' | 'moderationNotice'
+  > = {
+    compact,
+    disableEmoteAnimations,
+    effectiveHighlightedUserSet,
+    fontScale,
+    getMentionColor,
+    getTokenKey,
+    normalisedCurrentUsername,
+    noticeTags,
+    onEmoteTouchStart,
+    parseTextForEmotes,
+  };
 
   const replyPlainMentionTarget = shouldRenderInlineReply
     ? normaliseChatUsername(parentDisplayName)

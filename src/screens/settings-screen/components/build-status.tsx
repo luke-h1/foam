@@ -21,7 +21,7 @@ export function BuildStatus() {
           },
         ]}
       />
-      <Text type='xs' weight='medium' color='gray.textLow'>
+      <Text type='subhead' weight='medium' color='gray.textLow'>
         {getBuildInfoLabel()}
       </Text>
     </View>
@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.color.background.darkAltAlpha,
     borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
+    borderRadius: theme.radius.full,
     borderWidth: 1,
     flexDirection: 'row',
     gap: theme.space8,

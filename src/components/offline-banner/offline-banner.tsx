@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { onlineManager } from '@tanstack/react-query';
 
+import { SymbolView } from '@app/components/ui/icon/icon';
 import { Text } from '@app/components/ui/text/text';
 import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
@@ -43,7 +44,13 @@ export function OfflineBanner() {
       ]}
     >
       <View style={styles.pill}>
-        <Text type='xxs' weight='semibold' family='system' style={styles.text}>
+        <SymbolView
+          name='wifi.slash'
+          size={14}
+          tintColor={theme.color.warning.dark}
+          weight='semibold'
+        />
+        <Text type='footnote' weight='semibold'>
           No internet connection
         </Text>
       </View>
@@ -61,16 +68,14 @@ const styles = StyleSheet.create({
   },
   pill: {
     alignItems: 'center',
-    backgroundColor: theme.colorAmber,
+    backgroundColor: theme.color.surfaceElevated.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
+    borderRadius: theme.radius.full,
+    boxShadow: theme.elevation.floating,
+    flexDirection: 'row',
+    gap: theme.space8,
     justifyContent: 'center',
     paddingHorizontal: theme.space16,
     paddingVertical: theme.space8,
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
-  },
-  text: {
-    color: theme.colorBlack,
-    letterSpacing: 0.2,
   },
 });

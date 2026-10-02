@@ -47,9 +47,11 @@ const landscapeOnly = (isLandscape: boolean, handler: () => void) =>
   isLandscape ? handler : undefined;
 
 /**
- * Android has no system back affordance over the player, so draw one.
+ * A back control for when the player overlay draws none: always on Android,
+ * and on iOS when the custom player is off. The edge swipe alone is not a
+ * visible way out.
  */
-function AndroidBackButton({ onPress }: { onPress: () => void }) {
+function FallbackBackButton({ onPress }: { onPress: () => void }) {
   return (
     <Button
       label='Go back'
@@ -57,7 +59,7 @@ function AndroidBackButton({ onPress }: { onPress: () => void }) {
       // videoContainer already sits at landscapeInsetLeft; only the local
       // offset here, or the button drifts inward on cutouts.
       style={[
-        styles.androidBackButton,
+        styles.fallbackBackButton,
         { left: theme.space8, top: theme.space8 },
       ]}
     >
@@ -147,20 +149,20 @@ export function LiveStreamVideoPane({
         <SystemBars hidden={{ navigationBar: true, statusBar: true }} />
       ) : null}
 
-      {isAndroid ? <AndroidBackButton onPress={onBackPress} /> : null}
+      {showsOwnBackButton ? null : <FallbackBackButton onPress={onBackPress} />}
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  androidBackButton: {
+  fallbackBackButton: {
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    borderRadius: theme.borderRadius999,
-    height: 32,
+    backgroundColor: theme.color.scrim.dark,
+    borderRadius: theme.radius.full,
+    height: 36,
     justifyContent: 'center',
     position: 'absolute',
-    width: 32,
+    width: 36,
     zIndex: 12,
   },
   videoContainer: {

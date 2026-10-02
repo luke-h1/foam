@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Platform,
   ScrollView,
   type SectionListData,
   type SectionListRenderItemInfo,
   StyleSheet,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,6 +14,7 @@ import type { LegendListRenderItemProps } from '@legendapp/list/react-native';
 import { LegendList } from '@legendapp/list/react-native';
 import { SectionList as LegendSectionList } from '@legendapp/list/section-list';
 import { useQuery } from '@tanstack/react-query';
+import { HeaderHeightContext } from 'expo-router/build/react-navigation/elements';
 
 import { Button } from '@app/components/button/button';
 import { BadgePreviewSheet } from '@app/components/chat/components/badge-preview-sheet/badge-preview-sheet';
@@ -27,12 +29,20 @@ import {
   filterProviderSets,
   flattenProviderSets,
 } from '@app/components/chat/components/emote-sheet/util/emote-menu-data';
+import { EMOTE_CELL_GAP } from '@app/components/chat/components/emote-sheet/util/emote-sheet-layout';
 import type { EmotePickerItem } from '@app/components/chat/components/emote-sheet/util/emote-sheet-types';
 import { Image } from '@app/components/image/image';
 import { SegmentedControl } from '@app/components/segmented-control/segmented-control';
+import { EmptyState } from '@app/components/ui/empty-state/empty-state';
 import { Text } from '@app/components/ui/text/text';
 import { sevenTvBadgesQueryOptions } from '@app/lib/react-query/queries/emotes';
+import { ChannelField } from '@app/screens/settings-screen/components/channel-field';
 import { EmoteBadgeViewerLoader } from '@app/screens/settings-screen/components/emote-badge-viewer-loader';
+import {
+  type ChannelEmoteResources,
+  useChannelEmoteResources,
+} from '@app/screens/settings-screen/hooks/use-channel-emote-resources';
+import { fitGrid } from '@app/screens/settings-screen/util/fit-grid';
 import { ensureGlobalChatResources } from '@app/store/chat/actions/global-resource-ensure';
 import { useGlobalEmoteBadgeCaches } from '@app/store/chat/react/selectors';
 import { theme } from '@app/styles/themes';
@@ -55,12 +65,20 @@ function toEmotePart(emote: SanitisedEmote): MessageToken<'emote'> {
   return { ...emote, type: 'emote', content: emote.name };
 }
 
-function EmotesTab({
-  onSelectEmote,
-}: {
+interface EmotesTabProps {
+  channelResources: ChannelEmoteResources | undefined;
   onSelectEmote: (emote: SanitisedEmote) => void;
-}) {
+}
+
+function EmotesTab({ channelResources, onSelectEmote }: EmotesTabProps) {
   const { bottom: bottomInset } = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+
+  const grid = fitGrid({
+    width: width - theme.space16 * 2,
+    targetCell: 56,
+    gap: EMOTE_CELL_GAP,
+  });
   const caches = useGlobalEmoteBadgeCaches();
   const [ensureSettled, setEnsureSettled] = useState(false);
 
@@ -81,12 +99,17 @@ function EmotesTab({
   const providers = useMemo(
     () =>
       buildEmoteMenuProviders({
+        bttvChannelEmotes: channelResources?.bttvChannelEmotes,
         bttvGlobalEmotes: caches.bttvGlobalEmotes,
+        ffzChannelEmotes: channelResources?.ffzChannelEmotes,
         ffzGlobalEmotes: caches.ffzGlobalEmotes,
+        sevenTvChannelEmotes: channelResources?.sevenTvChannelEmotes,
         sevenTvGlobalEmotes: caches.sevenTvGlobalEmotes,
+        twitchChannelEmotes: channelResources?.twitchChannelEmotes,
         twitchGlobalEmotes: caches.twitchGlobalEmotes,
       }),
     [
+      channelResources,
       caches.bttvGlobalEmotes,
       caches.ffzGlobalEmotes,
       caches.sevenTvGlobalEmotes,
@@ -110,8 +133,8 @@ function EmotesTab({
   );
 
   const { items: listItems } = useMemo(
-    () => flattenProviderSets(filteredSets, 5),
-    [filteredSets],
+    () => flattenProviderSets(filteredSets, grid.columns),
+    [filteredSets, grid.columns],
   );
 
   const handleEmotePress = useCallback(
@@ -132,13 +155,13 @@ function EmotesTab({
 
       return (
         <EmoteRow
-          cellSize={56}
+          cellSize={grid.cellSize}
           items={item.items ?? []}
           onPress={handleEmotePress}
         />
       );
     },
-    [filteredSets, handleEmotePress],
+    [filteredSets, grid.cellSize, handleEmotePress],
   );
 
   if (isLoading) {
@@ -151,9 +174,11 @@ function EmotesTab({
 
   if (providers.length === 0) {
     return (
-      <View style={styles.centered}>
-        <Text weight='semibold'>No emotes found</Text>
-      </View>
+      <EmptyState
+        iconName='face.smiling'
+        heading='No emotes found'
+        content='Emote sets load from Twitch, 7TV, BTTV and FFZ. Check your connection.'
+      />
     );
   }
 
@@ -194,17 +219,17 @@ function EmotesTab({
   );
 }
 
-function BadgeCell({
-  badge,
-  onPress,
-}: {
+interface BadgeCellProps {
   badge: SanitisedBadgeSet;
+  size: number;
   onPress: (badge: SanitisedBadgeSet) => void;
-}) {
+}
+
+function BadgeCell({ badge, size, onPress }: BadgeCellProps) {
   return (
     <Button
       testID={`badge-cell-${badge.id}`}
-      style={styles.badgeCell}
+      style={[styles.badgeCell, { height: size, width: size }]}
       onPress={() => onPress(badge)}
     >
       <Image
@@ -220,9 +245,11 @@ function BadgeCell({
 
 function BadgeRowView({
   row,
+  size,
   onPress,
 }: {
   row: BadgeRow;
+  size: number;
   onPress: (badge: SanitisedBadgeSet) => void;
 }) {
   return (
@@ -231,6 +258,7 @@ function BadgeRowView({
         <BadgeCell
           key={`${badge.provider ?? 'twitch'}-${badge.id}`}
           badge={badge}
+          size={size}
           onPress={onPress}
         />
       ))}
@@ -241,19 +269,27 @@ function BadgeRowView({
 function BadgeSectionHeader({ title }: { title: string }) {
   return (
     <View style={styles.badgeSectionHeader}>
-      <Text type='sm' weight='semibold' style={styles.badgeSectionTitle}>
+      <Text type='body' weight='semibold' style={styles.badgeSectionTitle}>
         {title}
       </Text>
     </View>
   );
 }
 
-function BadgesTab({
-  onSelectBadge,
-}: {
+interface BadgesTabProps {
+  channelBadges: SanitisedBadgeSet[] | undefined;
   onSelectBadge: (badge: SanitisedBadgeSet) => void;
-}) {
+}
+
+function BadgesTab({ channelBadges, onSelectBadge }: BadgesTabProps) {
   const { bottom: bottomInset } = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+
+  const grid = fitGrid({
+    width: width - theme.space16 * 2,
+    targetCell: BADGE_CELL_SIZE,
+    gap: theme.space8,
+  });
   const { twitchGlobalBadges } = useGlobalEmoteBadgeCaches();
   const [ensureSettled, setEnsureSettled] = useState(false);
 
@@ -267,18 +303,26 @@ function BadgesTab({
     sevenTvBadgesQueryOptions(),
   );
 
+  // Channel badges first, so a chosen channel's own badges lead the list.
   const badges = useMemo(
-    () => [...twitchGlobalBadges, ...(sevenTvBadges ?? [])],
-    [twitchGlobalBadges, sevenTvBadges],
+    () => [
+      ...(channelBadges ?? []),
+      ...twitchGlobalBadges,
+      ...(sevenTvBadges ?? []),
+    ],
+    [channelBadges, twitchGlobalBadges, sevenTvBadges],
   );
 
-  const sections = useMemo(() => groupBadgesByProvider(badges, 5), [badges]);
+  const sections = useMemo(
+    () => groupBadgesByProvider(badges, grid.columns),
+    [badges, grid.columns],
+  );
 
   const renderItem = useCallback(
     ({ item }: SectionListRenderItemInfo<BadgeRow, BadgeProviderSection>) => (
-      <BadgeRowView row={item} onPress={onSelectBadge} />
+      <BadgeRowView row={item} size={grid.cellSize} onPress={onSelectBadge} />
     ),
-    [onSelectBadge],
+    [grid.cellSize, onSelectBadge],
   );
 
   const renderSectionHeader = useCallback(
@@ -300,9 +344,11 @@ function BadgesTab({
 
   if (badges.length === 0) {
     return (
-      <View style={styles.centered}>
-        <Text weight='semibold'>No badges available</Text>
-      </View>
+      <EmptyState
+        iconName='checkmark.seal'
+        heading='No badges found'
+        content='Global badges load from Twitch and 7TV. Check your connection.'
+      />
     );
   }
 
@@ -327,7 +373,13 @@ function BadgesTab({
 
 export function EmoteBadgeViewerScreen() {
   const { top: topInset } = useSafeAreaInsets();
+
+  // The context is empty outside a navigator (tests, previews); fall back to
+  // the status bar plus a standard bar.
+  const headerHeight = use(HeaderHeightContext) ?? topInset + 44;
   const [tabIndex, setTabIndex] = useState(0);
+  const [channelLogin, setChannelLogin] = useState<string | null>(null);
+  const channel = useChannelEmoteResources(channelLogin);
 
   const [selectedEmote, setSelectedEmote] =
     useState<MessageToken<'emote'> | null>(null);
@@ -344,7 +396,9 @@ export function EmoteBadgeViewerScreen() {
     <View
       style={[
         styles.container,
-        Platform.OS === 'ios' && { paddingTop: topInset + 44 },
+        // The iOS header is transparent, so the content starts below it. The
+        // real height tracks large titles and larger text sizes.
+        Platform.OS === 'ios' && { paddingTop: headerHeight },
       ]}
     >
       <View style={styles.segmentWrap}>
@@ -355,10 +409,25 @@ export function EmoteBadgeViewerScreen() {
         />
       </View>
 
+      <ChannelField
+        channelLogin={channelLogin}
+        channelName={channel.channel?.display_name}
+        isLoading={channel.isLoading}
+        isChannelMissing={channel.isChannelMissing}
+        isError={channel.isError}
+        onChangeChannel={setChannelLogin}
+      />
+
       {tabIndex === 0 ? (
-        <EmotesTab onSelectEmote={handleSelectEmote} />
+        <EmotesTab
+          channelResources={channel.resources}
+          onSelectEmote={handleSelectEmote}
+        />
       ) : (
-        <BadgesTab onSelectBadge={setSelectedBadge} />
+        <BadgesTab
+          channelBadges={channel.resources?.channelBadges}
+          onSelectBadge={setSelectedBadge}
+        />
       )}
 
       {selectedEmote ? (
@@ -384,11 +453,8 @@ const styles = StyleSheet.create({
   badgeCell: {
     alignItems: 'center',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
-    height: BADGE_CELL_SIZE,
+    borderRadius: theme.radius.md,
     justifyContent: 'center',
-    margin: theme.space4,
-    width: BADGE_CELL_SIZE,
   },
   badgeImage: {
     height: BADGE_IMAGE_SIZE,
@@ -399,7 +465,9 @@ const styles = StyleSheet.create({
   },
   badgeRow: {
     flexDirection: 'row',
-    paddingHorizontal: theme.space12,
+    gap: theme.space8,
+    marginBottom: theme.space8,
+    paddingHorizontal: theme.space16,
   },
   badgeSectionHeader: {
     backgroundColor: theme.color.background.dark,
@@ -436,7 +504,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space12,
   },
   segmentWrap: {
+    paddingBottom: theme.space12,
     paddingHorizontal: theme.space16,
-    paddingVertical: theme.space12,
+    paddingTop: theme.space12,
   },
 });

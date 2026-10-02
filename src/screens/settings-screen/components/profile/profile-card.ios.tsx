@@ -133,10 +133,10 @@ export function ProfileCard() {
                 </View>
               )}
               <View style={styles.identityText}>
-                <Text type='lg' weight='bold' numberOfLines={1}>
+                <Text type='title3' weight='bold' numberOfLines={1}>
                   {user.display_name}
                 </Text>
-                <Text type='xs' color='gray.textLow' numberOfLines={1}>
+                <Text type='subhead' color='gray.textLow' numberOfLines={1}>
                   @{user.login}
                 </Text>
               </View>
@@ -207,7 +207,7 @@ export function ProfileCard() {
 const styles = StyleSheet.create({
   avatar: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
+    borderRadius: theme.radius.lg,
     height: 52,
     width: 52,
   },
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.color.backgroundElement.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
+    borderRadius: theme.radius.lg,
     height: 52,
     justifyContent: 'center',
     width: 52,

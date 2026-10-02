@@ -1,6 +1,6 @@
 import { type StyleProp, StyleSheet, TextStyle, View } from 'react-native';
 
-import { Text } from '@app/components/ui/text/text';
+import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 import { isVisibleSevenTvColor } from '@app/utils/color/is-visible-seven-tv-color';
 import { sevenTvColorToCss } from '@app/utils/color/seven-tv-color-to-css';
@@ -48,7 +48,9 @@ export function PaintedUsernameFill({
           layerIndex={layerIndex}
         />
       ))}
-      <Text style={[textStyle, styles.hiddenText]}>{displayUsername}</Text>
+      <ChatText style={[textStyle, styles.hiddenText]}>
+        {displayUsername}
+      </ChatText>
     </View>
   );
 }

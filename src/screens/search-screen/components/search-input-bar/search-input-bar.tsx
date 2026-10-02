@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
   clearButton: {
     alignItems: 'center',
     backgroundColor: 'rgba(120, 120, 128, 0.24)',
-    borderRadius: theme.borderRadius999,
+    borderRadius: theme.radius.full,
     height: 22,
     justifyContent: 'center',
     width: 22,
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.colorSurfaceAlpha,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.radius.md,
     flexDirection: 'row',
     gap: theme.space8,
     marginBottom: theme.space4,

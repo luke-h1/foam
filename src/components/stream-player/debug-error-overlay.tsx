@@ -21,11 +21,11 @@ export function DebugErrorOverlay({
       <Text color='red' weight='semibold'>
         HTTP {error.statusCode}
       </Text>
-      <Text color='gray.contrast' type='xs' numberOfLines={3}>
+      <Text color='gray.contrast' type='subhead' numberOfLines={3}>
         {error.url}
       </Text>
       <Button onPress={onDismiss} style={styles.debugDismissButton}>
-        <Text color='gray.contrast' type='xs'>
+        <Text color='gray.contrast' type='subhead'>
           Dismiss
         </Text>
       </Button>
