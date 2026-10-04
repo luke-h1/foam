@@ -8,7 +8,11 @@ import type { EmotePickerItem } from './emote-sheet-types';
 export type EmoteMenuProviderId = '7TV' | 'Twitch' | 'FFZ' | 'BTTV' | 'Emoji';
 
 export type EmoteMenuIcon =
-  BrandIconName | 'twitch' | 'ffz' | `emoji:${string}` | `avatar:${string}`;
+  | BrandIconName
+  | 'twitch'
+  | 'ffz'
+  | `emoji:${string}`
+  | `avatar:${string}`;
 
 export interface EmoteMenuSet {
   emotes: EmotePickerItem[];

@@ -56,7 +56,7 @@ export const createBaseMessage = (
       username: 'testuser',
       'display-name': 'TestUser',
       login: 'testuser',
-      // eslint-disable-next-line no-restricted-syntax -- a Twitch IRC colour tag in fixture data, not a UI colour
+      // eslint-disable-next-line local/no-hardcoded-hex-color -- a Twitch IRC colour tag in fixture data, not a UI colour
       color: '#FF0000',
       'user-id': '123456',
       ...userstate,

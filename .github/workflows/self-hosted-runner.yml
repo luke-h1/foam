@@ -12,7 +12,7 @@ permissions:
   contents: read
 jobs:
   self-hosted-runner:
-    name: Self-hosted runner smoke test (ESLint)
+    name: Self-hosted runner smoke test (oxlint)
     runs-on: foam
     timeout-minutes: 20
     if: github.repository == 'luke-h1/foam' && (github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'self-hosted-test'))
@@ -28,5 +28,5 @@ jobs:
         with:
           node: 'true'
 
-      - name: 🤓 Run ESLint
+      - name: 🧹 Run oxlint
         run: bun run lint

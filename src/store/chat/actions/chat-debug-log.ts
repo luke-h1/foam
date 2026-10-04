@@ -280,7 +280,8 @@ interface ChatDebugEmoteSources {
 }
 
 export function getChatDebugEmoteSources():
-  ChatDebugEmoteSources | ChatDebugCacheMiss {
+  | ChatDebugEmoteSources
+  | ChatDebugCacheMiss {
   const { channelId, cache } = getCurrentChannelCache();
 
   if (!cache) {
@@ -413,7 +414,8 @@ interface ChatDebugBadgeSources {
 }
 
 export function getChatDebugBadgeSources():
-  ChatDebugBadgeSources | ChatDebugCacheMiss {
+  | ChatDebugBadgeSources
+  | ChatDebugCacheMiss {
   const { channelId, cache } = getCurrentChannelCache();
 
   if (!cache) {

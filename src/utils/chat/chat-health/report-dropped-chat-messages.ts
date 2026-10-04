@@ -3,7 +3,9 @@ import { logger } from '@app/utils/logger';
 const REPORT_WINDOW_MS = 30_000;
 
 export type DroppedChatMessagesReason =
-  'ingest-buffer-overflow' | 'ingest-rate-limit' | 'delay-queue-overflow';
+  | 'ingest-buffer-overflow'
+  | 'ingest-rate-limit'
+  | 'delay-queue-overflow';
 
 interface DroppedChatMessagesContext {
   reason: DroppedChatMessagesReason;

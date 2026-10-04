@@ -2,15 +2,17 @@ import React from 'react';
 // eslint-disable-next-line no-restricted-imports
 import { View } from 'react-native';
 
-const animatedComponent = React.forwardRef(
-  (
-    { children, ...props }: { children?: React.ReactNode },
-    ref: React.Ref<View>,
-  ) => (
-    <View {...props} ref={ref}>
-      {children}
-    </View>
-  ),
+const animatedComponent = ({
+  children,
+  ref,
+  ...props
+}: {
+  children?: React.ReactNode;
+  ref?: React.Ref<View>;
+}) => (
+  <View {...props} ref={ref}>
+    {children}
+  </View>
 );
 
 const identityAnimation = <T,>(

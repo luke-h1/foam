@@ -1,3 +1,5 @@
 {
-  "cSpell.words": ["BUGSNAG", "RNREPO", "rnrepo"]
+  "cSpell.words": ["BUGSNAG", "RNREPO", "rnrepo"],
+  "editor.defaultFormatter": "oxc.oxc-vscode",
+  "editor.formatOnSave": true
 }

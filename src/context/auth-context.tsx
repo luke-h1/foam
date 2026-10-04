@@ -554,7 +554,8 @@ function useAuthContextValue({
           // the two shapes below. doAuth() normalises them, and a parse failure
           // or a wrong shape falls through to the catch and re-authenticates.
           const parsedAuthToken = JSON.parse(storedAuthToken) as
-            TwitchToken | TokenResponse;
+            | TwitchToken
+            | TokenResponse;
           await doAuth(parsedAuthToken);
         } catch (error) {
           logger.auth.error('Failed to parse stored user token', error);

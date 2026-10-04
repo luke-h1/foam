@@ -57,7 +57,8 @@ const WHISPER_SCOPES = ['whispers:read', 'whispers:edit'] as const;
 // `extra` from the env, so the value is a string when it is set at all.
 const authProxyBaseUrl =
   (Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL as
-    string | undefined) ?? process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
+    | string
+    | undefined) ?? process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
 
 const proxyUrl = new URL(
   Platform.select({
@@ -109,7 +110,8 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
       // from the env, so the value is a string when it is set at all.
       clientId:
         (Constants.expoConfig?.extra?.EXPO_PUBLIC_TWITCH_CLIENT_ID as
-          string | undefined) ?? process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
+          | string
+          | undefined) ?? process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
       scopes: [
         ...USER_SCOPES,
         ...CHAT_SCOPES,

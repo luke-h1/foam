@@ -61,13 +61,13 @@ run() {
 }
 
 # The lines that name what broke: Jest suites and tests, tsc errors and
-# ESLint errors. A job with none of those markers shows the end of its log.
+# oxlint errors. A job with none of those markers shows the end of its log.
 print_failure_lines() {
   local log lines
   log="$(log_path "$1")"
   printf '%s        %s%s\n' "$DIM" "$log" "$RESET"
 
-  lines="$(grep -E '^FAIL |● .+ › |✕|error TS[0-9]+|^ +[0-9]+:[0-9]+ +error ' "$log" | head -n 20)"
+  lines="$(grep -E '^FAIL |● .+ › |✕|error TS[0-9]+|:[0-9]+:[0-9]+: error ' "$log" | head -n 20)"
 
   if [ -z "$lines" ]; then
     lines="$(grep -v '^error: script ' "$log" | tail -n 15)"
@@ -133,7 +133,7 @@ wants() {
 }
 
 JOBS=("$@")
-KNOWN_JOBS=(prettier ast-grep ts docs variants lint oxlint test native commitlint doctor zizmor)
+KNOWN_JOBS=(oxfmt ast-grep ts docs variants lint test native commitlint doctor zizmor)
 
 is_known_job() {
   local known
@@ -154,8 +154,8 @@ done
 rm -rf "$LOG_DIR"
 mkdir -p "$LOG_DIR"
 
-if wants prettier; then
-  run 'Prettier check' bun run format:check
+if wants oxfmt; then
+  run 'oxfmt check' bun run format:check
 fi
 
 if wants ast-grep; then
@@ -176,11 +176,7 @@ if wants variants; then
 fi
 
 if wants lint; then
-  run 'ESLint' bun run lint
-fi
-
-if wants oxlint; then
-  run 'oxlint' bun run lint:oxlint
+  run 'oxlint' bun run lint
 fi
 
 if wants test; then

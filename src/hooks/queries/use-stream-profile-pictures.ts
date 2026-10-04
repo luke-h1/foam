@@ -12,7 +12,6 @@ export function useStreamProfilePictures(
   streams: TwitchStream[],
   enabled: boolean,
 ): TwitchStream[] {
-  // eslint-disable-next-line react-doctor/no-derived-state -- accumulates across pages
   const [profileImageById, setProfileImageById] = useState<Map<string, string>>(
     () => new Map(),
   );
@@ -44,7 +43,6 @@ export function useStreamProfilePictures(
       return;
     }
 
-    // eslint-disable-next-line react-doctor/no-derived-state -- accumulates across pages
     // react-doctor-disable-next-line react-hooks-js/set-state-in-effect -- merges resolved ids across query pages
     setProfileImageById(current => {
       const next = new Map(current);

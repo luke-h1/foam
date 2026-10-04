@@ -167,7 +167,7 @@ fi
 GIT_CLIFF_BIN="$git_cliff_bin" bunx tsx scripts/workflows/changelog-per-env-cli.ts CHANGELOG.md "$tag"
 bunx tsx scripts/workflows/changelog-headings-cli.ts CHANGELOG.md
 
-bunx prettier --write CHANGELOG.md
+bunx oxfmt CHANGELOG.md
 
 if [ "$no_push" = "true" ]; then
   if git diff --quiet CHANGELOG.md 2>/dev/null; then

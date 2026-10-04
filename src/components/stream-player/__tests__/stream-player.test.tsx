@@ -249,7 +249,8 @@ describe('StreamPlayer component messaging', () => {
 
     // SAFETY: StreamPlayer logs embed errors through the LogMetadata overload of logger.main.error; jest.spyOn erases that overload to unknown[].
     const embedErrorMetadata = warnSpy.mock.calls[0]?.[1] as
-      LogMetadata | undefined;
+      | LogMetadata
+      | undefined;
 
     expect(warnSpy.mock.calls[0]?.[0]).toBe(
       '[StreamPlayer:embed ERROR] embed failed',

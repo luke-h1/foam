@@ -59,7 +59,9 @@ interface UseChatOverlayHandlersOptions {
  * When user is attempting to ban/report a given user
  */
 type ChatUserSelection =
-  { login?: string; userId?: string; username?: string } | null | undefined;
+  | { login?: string; userId?: string; username?: string }
+  | null
+  | undefined;
 
 /**
  * The actions the chat sheets fire; takes the current selection as arguments

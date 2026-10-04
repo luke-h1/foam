@@ -94,7 +94,8 @@ const APP_STATE_RECONCILE_INTERVAL_MS = 15_000;
 // On globalThis so Fast Refresh re-evaluation can't leak a second interval.
 declare global {
   var __foamAppStateReconcileInterval:
-    ReturnType<typeof setInterval> | undefined;
+    | ReturnType<typeof setInterval>
+    | undefined;
 }
 
 if (globalThis.__foamAppStateReconcileInterval) {

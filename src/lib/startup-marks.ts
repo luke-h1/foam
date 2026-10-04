@@ -5,7 +5,9 @@ import { logger } from '@app/utils/logger';
 import FullyDrawn from '@modules/fully-drawn/src/FullyDrawnModule';
 
 export type StartupMark =
-  'root_layout_render' | 'index_route_render' | 'first_screen_interactive';
+  | 'root_layout_render'
+  | 'index_route_render'
+  | 'first_screen_interactive';
 
 const recorded = new Set<StartupMark>();
 
