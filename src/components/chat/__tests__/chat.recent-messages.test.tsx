@@ -5,6 +5,7 @@ import * as keyboardControllerModule from 'react-native-keyboard-controller';
 import { render, waitFor } from '@testing-library/react-native';
 import * as Clipboard from 'expo-clipboard';
 
+import { createScrollAnchor } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat-scroll.fixture';
 import * as FlashListModule from '@app/components/flash-list/flash-list';
 import * as authContextModule from '@app/context/auth-context';
 import * as useSyncPaintRendererFlagModule from '@app/hooks/firebase/use-sync-paint-renderer-flag';
@@ -316,13 +317,10 @@ const settledChatScrollResult = {
   isAtBottom: true,
   isScrollingToBottom: false,
   shouldMaintainScrollAtEnd: true,
-  scrollAnchor: {
-    isAtBottomRef: { current: true },
-    isScrollingToBottomRef: { current: false },
-    isUserActivelyScrolling: () => false,
+  scrollAnchor: createScrollAnchor({
     noteScrollAwayIntent: jest.fn(),
     maintainBottomAfterContentChange: jest.fn(),
-  },
+  }),
   scrollHandlers: {
     onContentSizeChange: jest.fn(),
     onEndReached: jest.fn(),

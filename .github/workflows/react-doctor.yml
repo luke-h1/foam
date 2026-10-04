@@ -21,7 +21,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      # react-doctor v2.2.8 runs a best-effort `git fetch --depth=1 origin
+      # react-doctor v2.2.9 runs a best-effort `git fetch --depth=1 origin
       # <base-sha>` before its baseline diff. On a fully-fetched checkout
       # (fetch-depth: 0 above) that fetch writes .git/shallow, which breaks the
       # merge-base its own three-dot diff needs, so the scan silently falls out

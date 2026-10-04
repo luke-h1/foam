@@ -1,5 +1,21 @@
 # Agent Notes
 
+## Where things live
+
+Open the matching file before you search for it.
+
+- Domain words, the chat pipeline and the release pipeline: `docs/CONTEXT.md`.
+- Why the architecture is the way it is: `docs/adr/`.
+- UI rules for every screen: `DESIGN.md`. Read it before you touch UI.
+- React Doctor overrides and why each one exists: `docs/react-doctor.md`.
+- The bottom sheet wrapper, `patches/` and Android source builds: `docs/native-patches.md`.
+- App Store review history and rejections: `app-store-review-guidance/REVIEWER_NOTES.md` and `app-store-review-guidance/feedback/`.
+- Library mocks for tests: root `__mocks__/<package>/`. A new import entry point needs its own mock file.
+- Storybook config: `.rnstorybook/`. Metro rewrites `.rnstorybook/storybook.requires.ts` on start. Revert it unless you added or removed a story.
+- Commit scopes: `commit-scopes.js`. PR template: `.github/PULL_REQUEST_TEMPLATE` (no extension).
+
+Other agent sessions often edit this checkout at the same time. Run `ListAgents` before you treat uncommitted changes as yours. Do not run `git stash`: it takes their files too. Use `git worktree add` to compare against `main`.
+
 ## Writing style: plain English (ASD-STE100)
 
 Write everything you author in this repo - code comments, commit messages, PR descriptions, this file, any doc - in plain English, following the spirit of [ASD-STE100 Simplified Technical English](https://www.asd-ste100.org/). The goal is a comment or message that the next reader (human or agent) understands on the first pass, with nothing to decode.
@@ -32,12 +48,12 @@ The anti-pattern to avoid is mannered prose:
 The PR workflows can be run here rather than waiting on a runner.
 
 - `bun run ci:local` - runs everything the PR workflows run. Does not fail fast: every job runs and the summary at the end lists what broke. Run this before handing a branch back.
-- `bun run ci:local <job>...` - only the named jobs, for iterating on one failure. Jobs are `prettier`, `ast-grep`, `ts`, `docs`, `lint`, `oxlint`, `test`, `native`, `commitlint`, `doctor`, `zizmor`.
+- `bun run ci:local <job>...` - only the named jobs, for iterating on one failure. Jobs are `prettier`, `ast-grep`, `ts`, `docs`, `variants`, `lint`, `oxlint`, `test`, `native`, `commitlint`, `doctor`, `zizmor`.
 - `bun run signoff` - runs the full suite and, if it is green, posts a `signoff` commit status via [gh-signoff](https://github.com/basecamp/gh-signoff). Push first: `gh signoff` refuses unless HEAD is contained in `@{push}`.
 
 `signoff` is **not** a required check - merges still gate on the GitHub workflows - so it records that the suite passed locally rather than unlocking anything. `gh signoff install` would make it required. It deliberately takes no job filter, because the status asserts that every check passed. If a job fails for a reason the change did not cause, fix it or say so explicitly; do not sign off around it.
 
-The `native` job hands ktlint the git-tracked Kotlin files rather than letting `lint-kotlin.sh` pick its own roots, because that script also walks `android/` - gitignored prebuild output that exists locally but never on CI's checkout. Keep that explicit file list if you touch the job, or the suite starts failing on generated code CI never sees.
+Each job writes its full output to `.ci-local/<job>.log`. The summary prints the failing lines and the log path. Read the log; do not re-run the job to find the failure.
 
 ## Folder structure and file names
 
@@ -69,6 +85,10 @@ src/screens/search-screen/
   site.
 - Keep `.styles.ts` and `.types.ts` companions beside the file they serve -
   the shared name already ties them together.
+- Before you change a component, run `ls <name>*`. Platform variants
+  (`.ios.tsx`, `.android.tsx`, `.web.tsx`), `.stories.tsx` and `.perf-test.tsx`
+  files share its contract. `bun run variants:check` fails when a variant's
+  exports or props differ from the base file.
 
 `src/components/` holds the components more than one screen uses, and follows
 the same shape.
@@ -237,7 +257,7 @@ Put shared test fixtures in a `__fixtures__` directory inside the relevant `__te
 
 Keeping fixtures beside the tests makes the test setup easier to follow. It also stops general-purpose fixture folders from becoming a dumping ground for shapes that only make sense for one part of the app. If the fixture belongs to the chat hook tests, it should live with the chat hook tests.
 
-Name fixture files after the thing under test, using the pattern `{thing}.fixture.ts`. For example, shared fixtures for the chat hook tests should live in `__tests__/__fixtures__/use-chat.fixture.ts`.
+Name fixture files after the thing under test, using the pattern `{thing}.fixture.ts`. For example, shared fixtures for the chat hook tests should live in `components/chat/hooks/__tests__/__fixtures__/use-chat.fixture.ts`.
 
 That naming keeps the fixture tied to the surface it supports. A file called `chat-hook-fixtures.ts` sounds like a generic bucket. A file called `use-chat.fixture.ts` says what it exists for and makes it harder to keep adding unrelated test data over time.
 
@@ -356,6 +376,8 @@ and is a separate pass from ESLint. It is a job in both `ci:local` and the
 Lint and format workflow, so treat an oxlint error the same as an ESLint one.
 
 `anti-slop/no-module-mocking` is turned off for test files in `.oxlintrc.json`.
+React Doctor runs the same anti-slop rules with its own ignore list in
+`doctor.config.json` `ignore.files`. To exempt a path, change both files.
 The rule is aimed at production code reaching for `jest.mock` instead of a real
 seam; in a test file `jest.mock` is the point. Every other anti-slop rule still
 applies to tests.
@@ -364,68 +386,6 @@ When a rule is genuinely wrong for one line, suppress that line and say why:
 `// oxlint-disable-next-line <rule> -- <reason>`. Put it directly above the
 reported line, not above the JSDoc block - a comment between the disable and
 the code silently suppresses nothing.
-
-## React Doctor: package.json dependency rules
-
-`deslop/unused-dependency` and `deslop/unused-dev-dependency` are turned off for `package.json` in `doctor.config.json`. They only follow static JS imports, so they false-positive on every package this app loads through a channel they can't scan. Do not remove a dependency just because react-doctor (or a quick `bun why`) reports it unused — check these channels first:
-
-- **Config plugins** — `@rnrepo/expo-config-plugin` (string in the `app.config.ts` `plugins` array).
-- **Font assets** — `@expo-google-fonts/source-code-pro` (referenced by file path in the `expo-font` config plugin, never imported).
-- **Auto-discovered devtools** — `@rozenite/expo-atlas-plugin`, `@rozenite/react-navigation-plugin` (Rozenite loads installed plugin packages without a JS import).
-
-Because the rule is off for `package.json`, a genuinely unused dependency won't be flagged automatically — verify by hand when adding or removing deps.
-
-## React Doctor: unused-export / unused-file are off project-wide
-
-`deslop/unused-export` and `deslop/unused-file` are turned off globally in `doctor.config.json`. Both walk static imports only, and this codebase imports almost everything through the `@app/*` tsconfig path alias rather than relative paths - deslop cannot resolve that alias, so it flags the export or file as dead the moment its only importer uses `@app/...` instead of `./...`. It also cannot follow platform-variant resolution (`Foo.tsx` importing what looks unused because every real caller resolves to the `.ios.tsx`/`.web.tsx`/`.android.tsx` sibling instead). Across several 2026 triage passes this consistently produced 40-60+ false positives per full scan and only ever turned up a handful of genuinely dead exports each time - not a workable per-file allowlist at this codebase's size.
-
-Because both rules are off, genuinely dead exports and files won't be flagged automatically - when doing a react-doctor cleanup pass, verify each `unused-export`/`unused-file`-shaped candidate by hand with a project-wide grep for the symbol/file before deleting anything, and before re-enabling either rule.
-
-## React Doctor: useNativeState immutability override
-
-`react-hooks-js/immutability` is turned off for `blocked-terms-screen.tsx` and `saved-phrases-screen.tsx` in `doctor.config.json`. Their iOS branches bind `@expo/ui/swift-ui` `useNativeState` values to SwiftUI text fields, and writing back through `state.value = ...` is that API's intended write path - the rule misreads those writes as mutation of an immutable hook value. Scope any future exemption to the specific files the same way rather than turning the rule off globally.
-
-## React Doctor: the remaining file-scoped overrides
-
-Each of these was checked against the code before being suppressed; none is a blanket rule-off. Re-verify before extending one to another file.
-
-- **`use-seven-tv-ws.ts` - `react-hooks-js/purity` and `react-doctor/effect-needs-cleanup`.** The purity hits are `Date.now()` inside WebSocket callbacks (`onOpen`, `handleMessage`, the resume-ack branch); a socket message has to be stamped with the wall clock, and the calls run at event time, not during render. The cleanup hit is the heartbeat watchdog `setInterval`, whose handle is stored on the session object and cleared by `session.reset()` from all three teardown paths - `onClose`, leaving the chat screen, and the unmount callback - which the rule cannot follow off the effect.
-- **`use-websocket.ts` - `react-doctor/effect-needs-cleanup`.** The connect effect opens the `WebSocket` inside a local `start()` so a reconnect can reopen it, and returns a cleanup that calls `removeListeners()`, the teardown `attachListeners` returned, which closes the socket and clears the reconnect timer. The rule wants to see `socket.close()` in the effect body itself and cannot follow the close through that returned function.
-- **`twitch-chat-service.ts` - `react-hooks-js/purity`.** Despite the filename, this module exports the `useTwitchChat` hook. The two `Date.now()` hits are `lastActivityAtRef.current = Date.now()` in the `reconnect` IRC route handler and at the top of the WebSocket `onMessage` callback (`handleMessage`) - both stamp when an inbound line actually arrived, and both only run when `routeIrcMessage`/the socket dispatch invoke them, never while the hook itself is rendering. Same shape as the `use-seven-tv-ws.ts` entry above.
-- **`twitch-chat-service.ts` - `react-hooks-js/refs`.** `createChatMessageRouteHandlers` and `createChannelStateRouteHandlers` are called while the handler table is built, and are handed ref _objects_ (`optionsRef`, `joinedChannelsRef`, `pendingMessageRef`). Nothing reads `.current` at that point - every read happens when an IRC line arrives and the matching handler runs. Same shape as the `use-chat-messages.ts` entry below, and the file is already exempt from `react-hooks-js/purity` for the same reason.
-- **`use-player-bridge.ts` and `use-chat-messages.ts` - `react-hooks-js/refs`.** In `usePlayerBridge`, `playerMountedAtRef` is re-stamped on every player generation change, so it is a genuinely mutable ref and cannot become `useState`. In `useChatMessages`, the controller itself is held in a `useState` initializer, but the callbacks handed to it read `optionsRef.current` so each one resolves against the latest render's options - that indirection is the adapter's whole job, and the reads run at ingest time rather than during render.
-- **`emote-action-sheet.tsx` - `react-hooks-js/refs`.** The only `.current` read in the file is `sheetRef.current?.requestClose()` inside the `requestClose` callback, which only runs from a `Button`'s `onPress` or another callback - never during render. The compiler still flags the whole `actions` array literal (it closes over `requestClose`) because the array itself is rebuilt inline every render instead of being memoized; that's a missed-memoization diagnostic, not an actual render-phase ref read.
-- **`use-live-stream-orientation.ts` - `react-hooks-js/set-state-in-effect`.** `useWindowDimsAreStuck` debounces the disagreement between the window dimensions and the native orientation event. The flag has to clear the moment the two agree again, which is a `setState` in the effect. Deriving it instead was tried and is wrong: with nothing to clear, a remembered "stuck" value matches the _next_ rotation's lagging window value and the 350ms wait is skipped entirely, which is the one-frame rotation flicker the debounce exists to prevent.
-- **`use-stream-player-source.ts` - `react-hooks-js/refs`.** The
-  `resumeTimeRef.current` read inside the `webViewSource` memo is the point of
-  that memo. The URL has to carry the last known VOD offset at the moment the
-  source is rebuilt, and a remount (`webViewKey`) is what rebuilds it. Making
-  the offset a reactive dependency would rebuild the URL on every progress tick
-  and reload the WebView, which is the bug the memo prevents. The deps array
-  already carries an `exhaustive-deps` disable for the same reason.
-- **`use-lazy-ref.ts` - `react-doctor/no-ref-current-in-render`.** This hook is the textbook null-guarded lazy-init pattern the rule's own help text calls out as supported (`if (ref.current === null) ref.current = initializer()`), but the linter still flags the assignment line. Every consumer (`useSeventvWs`, `useChatSession`, `RouterEffects`, `usePlayerBridge`, `twitch-chat-service`) only calls it to seed a ref once per mount - none re-runs the initializer or relies on re-init behavior on a later render.
-- **`twitch-ws-service.ts` - `async-await-in-loop` and `js-set-map-lookups`.** The sequential `await` in `cleanupSubscriptions` is deliberate: a `Promise.all` version let a sibling reach `teardownIfIdle` while a delete was in flight and double-deleted the same id (the comment above the loop records this). The lookup hits are `includes`/`indexOf` over `entry.callbacks`, which holds one entry per subscribed component (typically one to three) and is iterated in order to dispatch - a Set would be slower and would drop the ordering.
-- **`format-view-count.ts` - `js-hoist-intl`.** The formatter is already built once and cached in a module-level binding; it is lazy specifically because constructing ICU formatters at module scope sat on the boot path via `LiveStreamCard`. Hoisting it as the rule suggests would undo that.
-- **`synced-emotes-screen.tsx` - `rn-no-scrollview-mapped-list`.** A dev-tools screen that mounts a fixed handful of copies of the same emote to check the shared animation clock. Virtualising it would unmount the very copies the screen exists to compare.
-- **`image-benchmark-screen.tsx` - `no-set-state-after-await-in-effect`.** The auto-start effect awaits `runAll`, whose 90-second decode passes (`runPasses`) make many post-await `setState` calls of their own. Every one of those is now gated behind a component-level `unmountedRef` set in a dedicated unmount effect, checked immediately after each `await` in both `runAll` and `runPasses` - strictly more coverage than the rule's own suggested local `ignore` flag, which only guards the effect's own outer continuation. The rule's pattern match only recognizes a flag declared and checked inside the same effect, so it can't see a guard that lives inside the called functions and keeps flagging the effect after the real fix lands.
-
-## Bottom sheets: `@expo/ui` plus a not-yet-released iOS touch fix
-
-Every sheet goes through `src/components/bottom-sheet/bottom-sheet.native.tsx`, which wraps `@expo/ui/community/bottom-sheet`: a SwiftUI `.sheet` on iOS, a Material 3 `ModalBottomSheet` on Android.
-
-Sizing differs per platform on purpose. iOS gets the snap points as real `presentationDetents`, so the sheet drags between them and re-lays out on rotation by itself, and the content flexes to fill. Android's `ModalBottomSheet` has only a partial and an expanded state, so a fraction like `0.78` has nowhere to land; there the wrapper omits detents, lets the sheet size to its content, and puts the resolved pixel height on the content view. A flexed child under fit-to-content measures as zero and the sheet presents blank, so `flex: 1` is applied only on the detented path.
-
-`onDismiss` fires when the dismissal starts, not when it finishes, and consumers unmount the sheet on it. The wrapper holds the callback for the length of the transition; without that the native outro is cut off partway.
-
-`patches/@expo%2Fui@57.0.8.patch` carries [expo/expo#48259](https://github.com/expo/expo/pull/48259), which is still open upstream. Sheet content is hosted in `RNHostView` on iOS, and without the patch a hosted `Pressable` drops `onPress` on any finger movement ([#48131](https://github.com/expo/expo/issues/48131)). That makes the emote grid close to untappable, since its rows resolve the tapped emote from `locationX`. The patch also needs `expo-modules-core` >= 57.0.8, where `ExpoViewShadowNode.h` consumes the `layoutRoot` prop it adds. Drop the iOS hunks once the PR ships; the Android half of the same bug is already fixed in 57.0.8.
-
-## Android: the `@expo/ui` source build is load-bearing
-
-`package.json` sets `expo.autolinking.android.buildFromSource: ["^expo-ui$"]`, which forces `@expo/ui` to compile from source on Android instead of resolving the RNRepo prebuilt. That entry exists so `patches/@expo%2Fui@57.0.8.patch` actually lands - the patch adds `icon = {}` to `SegmentedButtonView.kt`, without which the Compose segmented control renders a checkmark that shunts the label off-centre.
-
-Nothing in `src/` imports `SegmentedButton` by name, so a grep makes both the patch and the autolinking entry look dead. They are not: `src/components/segmented-control/segmented-control.tsx` imports `@expo/ui/community/segmented-control`, whose `SegmentedControl.android.tsx` renders `SingleChoiceSegmentedButtonRow` / `SegmentedButton` from the jetpack-compose tree. Removing either the patch or the `buildFromSource` entry silently regresses every Android segmented control.
-
-Do not add `minSdkVersion` to the `build.gradle` of a module in `modules/`. `expo-module-gradle-plugin` already sets `minSdk` from the root project (`ProjectConfiguration.kt`), so a local value would pin the module below the app the next time the app's `minSdkVersion` moves.
 
 ## Haptics: react-native-pulsar via the src/lib/haptics.ts wrapper
 

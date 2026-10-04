@@ -143,3 +143,4 @@ playstore-service-account.json
 
 # local design research notes and media
 research/
+.ci-local/
