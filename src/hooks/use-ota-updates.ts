@@ -157,7 +157,7 @@ async function fetchAvailableOtaUpdate(isProduction: boolean): Promise<void> {
       category: 'OTAUpdatesService',
       action: 'check_failed',
       isProduction,
-    if (!shouldReceiveUpdates || isRunningInDevClient) {
+      ...fields,
     });
   }
 }
@@ -171,7 +171,7 @@ export function useOTAUpdates() {
   const timeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const checkForUpdates = useCallback(async () => {
-    if (!shouldReceiveUpdates) {
+    if (!shouldReceiveUpdates || isRunningInDevClient) {
       return;
     }
 
