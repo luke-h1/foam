@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef } from 'react';
 import { Alert, Platform } from 'react-native';
 
 import { nativeBuildVersion } from 'expo-application';
-import { isDevelopmentBuild } from 'expo-dev-client';
 import * as Updates from 'expo-updates';
 import {
   addUpdatesStateChangeListener,
@@ -36,15 +35,37 @@ const OTA_RELOAD_SCREEN_OPTIONS = {
   },
 } satisfies ReloadScreenOptions;
 
+const getIsUpdatePending = () => latestContext.isUpdatePending;
 
 /**
- * Whether this binary can talk to the update server. Dev-client builds report
- * `isEnabled` but reject the updates APIs (e.g. `setExtraParamAsync` throws
- * NotAvailableInDevClientException), and `__DEV__` is false when the dev
- * client loads a production-mode bundle, so it has to be checked explicitly.
+ * Dev-client builds report `isEnabled` but reject the updates APIs (e.g.
+ * `setExtraParamAsync` throws NotAvailableInDevClientException), and `__DEV__`
+ * is false when the dev client loads a production-mode bundle, so the
+ * `shouldReceiveUpdates` guard can't catch it up front.
  */
-const SHOULD_RECEIVE_UPDATES = isEnabled && !__DEV__ && !isDevelopmentBuild();
-const getIsUpdatePending = () => latestContext.isUpdatePending;
+const DEV_CLIENT_UNSUPPORTED_MARKERS = [
+  'NotAvailableInDevClientException',
+  'ERR_NOT_AVAILABLE_IN_DEV_CLIENT',
+];
+
+function isDevClientUnsupportedError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const code = (error as { code?: unknown }).code;
+  const haystack = `${typeof code === 'string' ? code : ''} ${error.message}`;
+
+  return DEV_CLIENT_UNSUPPORTED_MARKERS.some(marker =>
+    haystack.includes(marker),
+  );
+}
+
+/**
+ * Set once the native updates module reports it is running in a dev client,
+ * so later foreground checks don't retry an API that can never succeed.
+ */
+let isRunningInDevClient = false;
 
 async function setExtraParams() {
   await setExtraParamAsync(
@@ -116,19 +137,33 @@ async function fetchAvailableOtaUpdate(isProduction: boolean): Promise<void> {
 
     countOtaMetric('ota.update.fetched', fields);
   } catch (caught) {
+    if (isDevClientUnsupportedError(caught)) {
+      isRunningInDevClient = true;
+
+      logger.main.info('Skipping OTA update check in dev client', {
+        name: 'ota_updates_service_info',
+        category: 'ota',
+        action: 'check_skipped_dev_client',
+        isProduction,
+        ...fields,
+      });
+
+      return;
+    }
+
     logger.main.error('OTA update check failed', {
       name: 'ota_updates_service_error',
       error: caught instanceof Error ? caught : new Error(String(caught)),
       category: 'OTAUpdatesService',
       action: 'check_failed',
       isProduction,
-      ...fields,
+    if (!shouldReceiveUpdates || isRunningInDevClient) {
     });
   }
 }
 
 export function useOTAUpdates() {
-  const shouldReceiveUpdates = SHOULD_RECEIVE_UPDATES;
+  const shouldReceiveUpdates = isEnabled && !__DEV__;
   const isProduction = process.env.EXPO_PUBLIC_APP_VARIANT === 'production';
   const lastMinimize = useRef(0);
   const ranInitialCheck = useRef(false);
@@ -271,7 +306,7 @@ export function useOTAUpdates() {
   }, [isProduction, promptAndReloadRef]);
 
   useEffect(() => {
-    if (!shouldReceiveUpdates) {
+    if (!isEnabled) {
       return;
     }
 
@@ -338,10 +373,5 @@ export function useOTAUpdates() {
     return () => {
       unsubscribe();
     };
-  }, [
-    checkForUpdatesRef,
-    isProduction,
-    promptAndReloadRef,
-    shouldReceiveUpdates,
-  ]);
+  }, [checkForUpdatesRef, isProduction, promptAndReloadRef]);
 }
