@@ -53,7 +53,7 @@ The PR workflows can be run here rather than waiting on a runner.
 
 `signoff` is **not** a required check - merges still gate on the GitHub workflows - so it records that the suite passed locally rather than unlocking anything. `gh signoff install` would make it required. It deliberately takes no job filter, because the status asserts that every check passed. If a job fails for a reason the change did not cause, fix it or say so explicitly; do not sign off around it.
 
-Each job writes its full output to `.ci-local/<job>.log`. The summary prints the failing lines and the log path. Read the log; do not re-run the job to find the failure.
+Each job writes its full output to `.ci-local/<job>.log`. The summary prints the failing lines and the log path, so read the log instead of re-running the job.
 
 ## Folder structure and file names
 
@@ -87,8 +87,8 @@ src/screens/search-screen/
   the shared name already ties them together.
 - Before you change a component, run `ls <name>*`. Platform variants
   (`.ios.tsx`, `.android.tsx`, `.web.tsx`), `.stories.tsx` and `.perf-test.tsx`
-  files share its contract. `bun run variants:check` fails when a variant's
-  exports or props differ from the base file.
+  files share its contract. `bun run variants:check` fails when a variant
+  lacks an export or a prop that the base file has.
 
 `src/components/` holds the components more than one screen uses, and follows
 the same shape.

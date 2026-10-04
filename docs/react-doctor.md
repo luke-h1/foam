@@ -2,7 +2,7 @@
 
 Config: `doctor.config.json`. CI: `.github/workflows/react-doctor.yml`. Local: `bun run ci:local doctor`.
 
-Each rule turned off below was checked against the code first. Read the matching entry before you add, remove or widen an override.
+Each override below was checked against the code before it was added. Read its entry before you add, remove or widen an override.
 
 ## package.json dependency rules
 

@@ -78,8 +78,6 @@ print_failure_lines() {
   printf '%s\n' "$lines" | sed 's/^/        /'
 }
 
-KNOWN_JOBS=(prettier ast-grep ts docs variants lint oxlint test native commitlint doctor zizmor)
-
 skip() {
   printf '\n%s▶ %s%s %s(skipped: %s)%s\n' "$BOLD" "$1" "$RESET" "$DIM" "$2" "$RESET"
   SKIPPED+=("$1")
@@ -137,6 +135,7 @@ wants() {
 }
 
 JOBS=("$@")
+KNOWN_JOBS=(prettier ast-grep ts docs variants lint oxlint test native commitlint doctor zizmor)
 
 for job in "${JOBS[@]:-}"; do
   [ -z "$job" ] && continue

@@ -61,9 +61,7 @@ function isPath(candidate: string): boolean {
   return PATH_HEADS.has(candidate.split('/')[0] ?? '');
 }
 
-function resolves(candidate: string): boolean {
-  const path = candidate.replace(/^@app\//, 'src/');
-
+function resolves(path: string): boolean {
   return ROOTS.some(root =>
     SUFFIXES.some(suffix => existsSync(`${root}${path}${suffix}`)),
   );
@@ -133,14 +131,16 @@ async function main(): Promise<void> {
         continue;
       }
 
+      const path = candidate.replace(/^@app\//, 'src/');
+
       // A bare `foo.ts` in prose is a name, not a pointer.
-      if (!isPath(candidate.replace(/^@app\//, 'src/'))) {
+      if (!isPath(path)) {
         continue;
       }
 
       checked += 1;
 
-      if (!resolves(candidate)) {
+      if (!resolves(path)) {
         dead.push(`${file}: ${candidate}`);
       }
     }

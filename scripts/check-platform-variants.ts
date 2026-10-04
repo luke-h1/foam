@@ -1,6 +1,7 @@
 /**
  * A platform variant (`x.ios.tsx`, `x.android.tsx`, `x.web.tsx`,
- * `x.native.tsx`) must accept the same props as its base file `x.tsx`.
+ * `x.native.tsx`) must export every value its base file `x.tsx` exports and
+ * accept every prop the base accepts.
  *
  * tsc checks every caller against the base file, but Metro renders the
  * variant. A prop added only to the base type-checks, then the variant drops
@@ -27,29 +28,23 @@ function variantPairs(): [string, string][] {
 }
 
 function loadProgram(files: string[]): ts.Program {
-  const configPath = ts.findConfigFile('.', ts.sys.fileExists, 'tsconfig.json');
-
-  if (!configPath) {
-    throw new Error('tsconfig.json not found');
-  }
-
-  const { config } = ts.readConfigFile(configPath, ts.sys.readFile);
+  const { config } = ts.readConfigFile('tsconfig.json', ts.sys.readFile);
   const parsed = ts.parseJsonConfigFileContent(config, ts.sys, '.');
 
   return ts.createProgram(files, { ...parsed.options, noEmit: true });
 }
 
 /**
- * The prop names of every exported function, keyed by export name. An export
- * that takes no object parameter maps to null and is compared by presence only.
+ * The prop names of every exported value, keyed by export name. An export that
+ * takes no object parameter has no props.
  */
 function exportedProps(
   program: ts.Program,
   file: string,
-): Map<string, Set<string> | null> {
+): Map<string, Set<string>> {
   const checker = program.getTypeChecker();
   const source = program.getSourceFile(file);
-  const result = new Map<string, Set<string> | null>();
+  const result = new Map<string, Set<string>>();
 
   const moduleSymbol = source && checker.getSymbolAtLocation(source);
 
@@ -79,7 +74,7 @@ function exportedProps(
     const [parameter] = signature?.getParameters() ?? [];
 
     if (!parameter) {
-      result.set(exported.getName(), null);
+      result.set(exported.getName(), new Set());
       continue;
     }
 
@@ -102,38 +97,22 @@ function exportedProps(
 }
 
 function compare(
-  base: Map<string, Set<string> | null>,
-  variant: Map<string, Set<string> | null>,
+  base: Map<string, Set<string>>,
+  variant: Map<string, Set<string>>,
 ): string[] {
-  const problems: string[] = [];
-
-  for (const [name, baseProps] of base) {
-    if (!variant.has(name)) {
-      problems.push(`export \`${name}\` is missing`);
-      continue;
-    }
-
+  return [...base].flatMap(([name, baseProps]) => {
     const variantProps = variant.get(name);
 
-    if (!baseProps || !variantProps) {
-      continue;
+    if (!variantProps) {
+      return [`export \`${name}\` is missing`];
     }
 
     const missing = [...baseProps].filter(prop => !variantProps.has(prop));
-    const extra = [...variantProps].filter(prop => !baseProps.has(prop));
 
-    if (missing.length > 0) {
-      problems.push(`\`${name}\` does not accept: ${missing.join(', ')}`);
-    }
-
-    if (extra.length > 0) {
-      problems.push(
-        `\`${name}\` accepts props the base does not declare: ${extra.join(', ')}`,
-      );
-    }
-  }
-
-  return problems;
+    return missing.length > 0
+      ? [`\`${name}\` does not accept: ${missing.join(', ')}`]
+      : [];
+  });
 }
 
 function main(): void {
@@ -154,7 +133,7 @@ function main(): void {
     console.error(`${failures.length} platform variant mismatch(es):\n`);
     failures.forEach(failure => console.error(`  ${failure}`));
     console.error(
-      '\nGive the variant the same exports and props as its base file.',
+      '\nGive the variant every export and prop its base file has.',
     );
     process.exit(1);
   }

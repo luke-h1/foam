@@ -44,7 +44,7 @@ If the dev client shows its launcher, tap the dev server entry. If the bundle ne
 - A route: `argent run open-url --udid $D --url 'foam://<route>'`.
 - Storybook: `foam://storybook` (route `src/app/storybook.tsx`, config `.rnstorybook/`).
 
-To show one story, do not tap through the sidebar or call `view._setStory` from the debugger. Both proved unreliable. Instead:
+To show one story, set `initialSelection`. Tapping through the sidebar and calling `view._setStory` from the debugger both proved unreliable.
 
 1. Add `initialSelection: '<story-id>'` to the `getStorybookUI({...})` call in `.rnstorybook/index.ts`.
 2. Reload: `argent run debugger-reload-metro --device_id $D`, then open `foam://storybook`.

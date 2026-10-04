@@ -74,6 +74,7 @@ xcuserdata
 # test
 coverage
 .jest-cache
+.ci-local/
 .cache
 .reassure
 
@@ -143,4 +144,3 @@ playstore-service-account.json
 
 # local design research notes and media
 research/
-.ci-local/
