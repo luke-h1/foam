@@ -6,13 +6,17 @@
 #   bun run ci:local lint ts      # only the named jobs
 #   SKIP_DOCTOR=1 bun run ci:local
 #
+# Each job's full output goes to a log in .ci-local/. The summary names the log
+# and prints its failure lines, so a failing test is findable without scrolling
+# the combined output.
+#
 # Jobs mirror .github/workflows, and like the CI matrices this does not fail
 # fast: every job runs and the summary at the end lists what broke.
 #
 # Two jobs are close rather than exact. React Doctor runs the latest CLI where
 # CI pins v2.2.9, though both scan the same changed-files-against-the-merge-base
-# baseline. zizmor here is whatever version is on PATH rather than the pinned
-# action.
+# baseline. zizmor runs with --offline to match the action's
+# `online-audits: false`; online audits flagged findings CI never reports.
 #
 # The native lint jobs skip themselves when swiftlint/swiftformat/ktlint are not
 # installed, and the Kotlin one has nothing to scan until `bun run prebuild` has
@@ -36,15 +40,40 @@ PASSED=()
 FAILED=()
 SKIPPED=()
 
+LOG_DIR=.ci-local
+
+log_path() {
+  printf '%s/%s.log' "$LOG_DIR" "$(printf '%s' "$1" | tr 'A-Z ' 'a-z-')"
+}
+
 run() {
   local label="$1"
   shift
   printf '\n%s▶ %s%s %s%s%s\n' "$BOLD" "$label" "$RESET" "$DIM" "$*" "$RESET"
-  if "$@"; then
+
+  "$@" 2>&1 | tee "$(log_path "$label")"
+
+  if [ "${PIPESTATUS[0]}" -eq 0 ]; then
     PASSED+=("$label")
   else
     FAILED+=("$label")
   fi
+}
+
+# The lines that name what broke: Jest suites and tests, tsc errors and
+# ESLint errors. A job with none of those markers shows the end of its log.
+print_failure_lines() {
+  local log lines
+  log="$(log_path "$1")"
+  printf '%s        %s%s\n' "$DIM" "$log" "$RESET"
+
+  lines="$(grep -E '^FAIL |● .+ › |✕|error TS[0-9]+|^ +[0-9]+:[0-9]+ +error ' "$log" | head -n 20)"
+
+  if [ -z "$lines" ]; then
+    lines="$(grep -v '^error: script ' "$log" | tail -n 15)"
+  fi
+
+  printf '%s\n' "$lines" | sed 's/^/        /'
 }
 
 skip() {
@@ -71,8 +100,12 @@ react_doctor() {
   local report
   report="$(mktemp)"
 
-  if ! npx react-doctor@latest --scope changed --base "$(doctor_base)" \
-    --include-untracked --no-score --json --json-out "$report"; then
+  npx react-doctor@latest --scope changed --base "$(doctor_base)" \
+    --include-untracked --no-score --json --json-out "$report"
+
+  # When the CLI can diff a baseline it exits non-zero on errors. Fail early
+  # only when it wrote no report, so the diagnostics below still print.
+  if ! jq -e '.summary' "$report" >/dev/null 2>&1; then
     rm -f "$report"
     return 1
   fi
@@ -100,6 +133,26 @@ wants() {
 }
 
 JOBS=("$@")
+KNOWN_JOBS=(prettier ast-grep ts docs variants lint oxlint test native commitlint doctor zizmor)
+
+is_known_job() {
+  local known
+  for known in "${KNOWN_JOBS[@]}"; do
+    [ "$known" = "$1" ] && return 0
+  done
+  return 1
+}
+
+for job in "${JOBS[@]:-}"; do
+  [ -z "$job" ] && continue
+  if ! is_known_job "$job"; then
+    printf '%sUnknown job: %s%s\nJobs: %s\n' "$RED" "$job" "$RESET" "${KNOWN_JOBS[*]}"
+    exit 2
+  fi
+done
+
+rm -rf "$LOG_DIR"
+mkdir -p "$LOG_DIR"
 
 if wants prettier; then
   run 'Prettier check' bun run format:check
@@ -116,6 +169,10 @@ fi
 
 if wants docs; then
   run 'Doc paths' bun run docs:check
+fi
+
+if wants variants; then
+  run 'Platform variants' bun run variants:check
 fi
 
 if wants lint; then
@@ -168,9 +225,9 @@ fi
 
 if wants zizmor; then
   if command -v zizmor >/dev/null; then
-    run 'zizmor' zizmor .github/workflows
+    run 'zizmor' zizmor --offline .github/workflows
   elif command -v uvx >/dev/null; then
-    run 'zizmor' uvx zizmor .github/workflows
+    run 'zizmor' uvx zizmor --offline .github/workflows
   else
     skip 'zizmor' 'install zizmor or uv to lint the workflow files'
   fi
@@ -184,7 +241,9 @@ for label in "${SKIPPED[@]:-}"; do
   [ -n "$label" ] && printf '%s  skip  %s%s\n' "$DIM" "$label" "$RESET"
 done
 for label in "${FAILED[@]:-}"; do
-  [ -n "$label" ] && printf '%s  FAIL%s  %s\n' "$RED" "$RESET" "$label"
+  [ -z "$label" ] && continue
+  printf '%s  FAIL%s  %s\n' "$RED" "$RESET" "$label"
+  print_failure_lines "$label"
 done
 
 if [ ${#FAILED[@]} -gt 0 ]; then

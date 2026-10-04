@@ -5,7 +5,7 @@ platform where the domain is native, and never by per-view timers:
 
 - **Native animated emotes (iOS)** - `SharedAnimationDriver`, a Swift
   singleton holding one `CADisplayLink` and a global epoch, introduced by
-  `patches/expo-image@57.0.1.patch` (ADR-0006). Every animated expo-image view
+  `patches/expo-image@57.0.3.patch` (ADR-0006). Every animated expo-image view
   derives its frame index from the shared epoch, so newly mounted and recycled
   rows join mid-phase instead of restarting at frame 0; frame rate is capped
   at 30fps with decode budgets. Views deregister on unmount/recycle.
@@ -28,7 +28,7 @@ platform where the domain is native, and never by per-view timers:
   `expo.autolinking.android.buildFromSource`; without that entry the RNRepo
   prebuilt AAR ships and the patch silently does nothing.
 - **Skia paint animation (JS)** - `components/chat/components/chat-message/cosmetic-username/util/shared-paint-animation-frames.ts`
-  (`components/ChatMessage/CosmeticUsername/util/`): one clock and one decode
+  (`components/chat/components/chat-message/cosmetic-username/util/`): one clock and one decode
   per paint URL, held in a module-level map of SharedValues. Subscribing rows
   each register a Reanimated `useFrameCallback`, and the first to observe a
   frame advances the shared clock - the invariant is one clock+decode per

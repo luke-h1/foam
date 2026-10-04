@@ -94,6 +94,7 @@
     "ts:check": "tsc --noEmit",
     "use-build-number": "./scripts/useBuildNumberEnv.sh",
     "use-build-number-with-bump": "./scripts/useBuildNumberEnvWithBump.sh",
+    "variants:check": "bun run scripts/check-platform-variants.ts",
     "web": "expo start --web"
   },
   "config": {

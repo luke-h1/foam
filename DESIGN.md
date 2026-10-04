@@ -1,6 +1,6 @@
 # Foam design rules
 
-The locked rules for every screen. Load this before you touch UI. Where a rule conflicts with a general design skill, this file wins. Rationale lives in `research/foam-design/`.
+The locked rules for every screen. Load this before you touch UI. Where a rule conflicts with a general design skill, this file wins. The rationale (app audit, backlog) was removed in #915. Read it with `git show 738f49de^:research/foam-design/audit.md`.
 
 ## Theme
 

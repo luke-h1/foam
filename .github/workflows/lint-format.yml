@@ -39,6 +39,10 @@ jobs:
         if: ${{ !cancelled() }}
         run: bun run docs:check
 
+      - name: 📱 Platform variants
+        if: ${{ !cancelled() }}
+        run: bun run variants:check
+
       - name: 🧪 ast-grep rule tests
         if: ${{ !cancelled() }}
         run: bun run test:ast-grep

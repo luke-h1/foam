@@ -1,12 +1,13 @@
 /**
- * Every backticked source path in docs/ must resolve to a real file, and so
- * must every literal path in doctor.config.json.
+ * Every backticked source path in docs/, AGENTS.md and DESIGN.md must resolve
+ * to a real file or folder, and so must every literal path in
+ * doctor.config.json.
  *
  * The glossary and the ADRs are the map an agent reads before touching code.
  * A kebab-case rename pass once left 26 of CONTEXT.md's 40 pointers dead, all
  * of them silently, because nothing checked them.
  */
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -15,18 +16,56 @@ import { join } from 'node:path';
  * documents describe the codebase as it stood on their date, so a path that no
  * longer resolves is a correct historical record, not a broken pointer.
  */
-const MAPPED_DOCS = ['docs/CONTEXT.md', 'docs/adr'];
+const MAPPED_DOCS = [
+  '.agents/skills/foam-run-ios/SKILL.md',
+  'AGENTS.md',
+  'DESIGN.md',
+  'docs/CONTEXT.md',
+  'docs/adr',
+  'docs/native-patches.md',
+  'docs/react-doctor.md',
+];
 
 // Paths named as prose about code that no longer exists, not as pointers.
 const DELETED_ON_PURPOSE = new Set(['emoteResolutionDivergence.test.ts']);
 
-const PATH_PATTERN = /`([A-Za-z0-9_./-]+\.tsx?)`/g;
+const PATH_PATTERN = /`([A-Za-z0-9_.@%/-]+)`/g;
 
 // docs/ writes a path relative to one of these.
 const ROOTS = ['', 'src/', 'scripts/', 'scripts/workflows/'];
 
-function resolves(candidate: string): boolean {
-  return ROOTS.some(root => existsSync(`${root}${candidate}`));
+// An import specifier such as `store/chat/actions/messages` leaves off the extension.
+const SUFFIXES = ['', '.ts', '.tsx'];
+
+/**
+ * A backticked token whose first segment is a real folder is a path. Lint rule
+ * names (`react-hooks-js/purity`), package names and illustrative shapes
+ * (`util/room-state/`) start with something else, so they are skipped.
+ */
+const PATH_HEADS = new Set(
+  ROOTS.flatMap(root =>
+    readdirSync(root || '.', { withFileTypes: true })
+      .filter(entry => entry.isDirectory() && entry.name !== 'node_modules')
+      .map(entry => entry.name),
+  ),
+);
+
+function isPath(candidate: string): boolean {
+  if (!candidate.includes('/') || candidate.includes('..')) {
+    return false;
+  }
+
+  if (/\.tsx?$/.test(candidate)) {
+    return true;
+  }
+
+  return PATH_HEADS.has(candidate.split('/')[0] ?? '');
+}
+
+function resolves(path: string): boolean {
+  return ROOTS.some(root =>
+    SUFFIXES.some(suffix => existsSync(`${root}${path}${suffix}`)),
+  );
 }
 
 async function markdownFiles(target: string): Promise<string[]> {
@@ -93,14 +132,16 @@ async function main(): Promise<void> {
         continue;
       }
 
+      const path = candidate.replace(/^@app\//, 'src/');
+
       // A bare `foo.ts` in prose is a name, not a pointer.
-      if (!candidate.includes('/')) {
+      if (!isPath(path)) {
         continue;
       }
 
       checked += 1;
 
-      if (!resolves(candidate)) {
+      if (!resolves(path)) {
         dead.push(`${file}: ${candidate}`);
       }
     }

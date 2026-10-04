@@ -267,7 +267,7 @@ bridge: given a parsed inbound message plus a snapshot context of what the
 decision actually needs, it returns typed decisions/actions; the owning hook
 executes them (store writes, callbacks, timers, logging). Instances: the 7TV
 EventAPI interpreter (`utils/seven-tv/seven-tv-ws-interpreter.ts`, executed by
-`hooks/useSeventvWs`) and the player bridge interpreter
+`components/chat/hooks/use-seven-tv-ws.ts`) and the player bridge interpreter
 (`components/stream-player/util/player-bridge-interpreter.ts`, executed by
 `usePlayerBridge`). Decision logic goes in the interpreter, never back into the
 hook's message handler.

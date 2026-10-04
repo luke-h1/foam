@@ -3,7 +3,7 @@
 The chat message list (`components/chat/components/chat-list.tsx`) renders
 through `@legendapp/list` v3 (patched, ADR-0006). FlashList 2.0.2 remains the
 virtualizer for non-chat screens (Top, Search, Blocked Users) and two chat
-sheets (Chatters, Saved Phrases) via the `components/FlashList` wrapper.
+sheets (Chatters, Saved Phrases) via the `components/flash-list` wrapper.
 
 The chat list's requirements are the ones LegendList was adopted for:
 bottom-anchored chat with `maintainVisibleContentPosition` semantics that are

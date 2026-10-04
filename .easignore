@@ -4,6 +4,7 @@
 node_modules/
 .git/
 .agents/
+.ci-local/
 
 # Expo
 .expo/

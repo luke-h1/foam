@@ -7,6 +7,7 @@ import {
   createSevenTvEmote,
   createTwitchEmote,
 } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
+import { createScrollAnchor } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat-scroll.fixture';
 import { useChatMessageProcessing } from '@app/components/chat/hooks/use-chat-message-processing';
 import * as hydrateVisibleSevenTvAssetsModule from '@app/components/chat/util/hydrate-visible-seven-tv-assets/hydrate-visible-seven-tv-assets';
 import * as channelLoadActions from '@app/store/chat/actions/channel-load';
@@ -105,13 +106,10 @@ function renderMessageProcessing() {
       messages$: {
         peek: jest.fn(() => messages),
       },
-      scrollAnchor: {
+      scrollAnchor: createScrollAnchor({
         isAtBottomRef,
-        isScrollingToBottomRef: { current: false },
-        isUserActivelyScrolling: () => false,
-        noteScrollAwayIntent: () => {},
         maintainBottomAfterContentChange,
-      },
+      }),
       show7TvEmotes: true,
       show7tvBadges: true,
       userLogin: 'viewer',
@@ -450,13 +448,7 @@ describe('useChatMessageProcessing', () => {
           messages$: {
             peek: () => messages,
           },
-          scrollAnchor: {
-            isAtBottomRef: { current: true },
-            isScrollingToBottomRef: { current: false },
-            isUserActivelyScrolling: () => false,
-            noteScrollAwayIntent: () => {},
-            maintainBottomAfterContentChange: jest.fn(),
-          },
+          scrollAnchor: createScrollAnchor(),
           show7TvEmotes: true,
           show7tvBadges: true,
           userLogin: 'viewer',
