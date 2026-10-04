@@ -67,7 +67,9 @@ const mockUseIsHighlightedReplyTargetMessage = jest.spyOn(
 );
 
 type HighlightedReplyTargetUpdate =
-  string | null | ((current: string | null) => string | null);
+  | string
+  | null
+  | ((current: string | null) => string | null);
 
 function replyTargetUpdater(
   update: HighlightedReplyTargetUpdate | undefined,

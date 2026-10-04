@@ -48,7 +48,7 @@ The anti-pattern to avoid is mannered prose:
 The PR workflows can be run here rather than waiting on a runner.
 
 - `bun run ci:local` - runs everything the PR workflows run. Does not fail fast: every job runs and the summary at the end lists what broke. Run this before handing a branch back.
-- `bun run ci:local <job>...` - only the named jobs, for iterating on one failure. Jobs are `prettier`, `ast-grep`, `ts`, `docs`, `variants`, `lint`, `oxlint`, `test`, `native`, `commitlint`, `doctor`, `zizmor`.
+- `bun run ci:local <job>...` - only the named jobs, for iterating on one failure. Jobs are `oxfmt`, `ast-grep`, `ts`, `docs`, `variants`, `lint`, `test`, `native`, `commitlint`, `doctor`, `zizmor`.
 - `bun run signoff` - runs the full suite and, if it is green, posts a `signoff` commit status via [gh-signoff](https://github.com/basecamp/gh-signoff). Push first: `gh signoff` refuses unless HEAD is contained in `@{push}`.
 
 `signoff` is **not** a required check - merges still gate on the GitHub workflows - so it records that the suite passed locally rather than unlocking anything. `gh signoff install` would make it required. It deliberately takes no job filter, because the status asserts that every check passed. If a job fails for a reason the change did not cause, fix it or say so explicitly; do not sign off around it.
@@ -369,11 +369,9 @@ The multi-line form is the format the repo uses everywhere, so keeping to it avo
 
 Put new module-level observables in `observables/`. Put write helpers that call `.set()` / `.peek()` in `actions/`. Put `useSelector` and `useObservable` in `react/`. Session-scoped state that components subscribe to belongs on `chatStore$`. Hot-path caches that are only read imperatively during ingest or render (mention colours, shared chat badges) are the exception: keep those as plain module-level `Map`s with an explicit size bound and clear function (see `src/store/chat/actions/chat-color-caches.ts`) - routing them through an observable clones and key-diffs the whole bucket on every write. Such caches live in a store `actions/` or chat `util/` module, never inline in a component file. Pure message transforms like `getVisibleMessages` live in `components/chat/util/`. Do not wrap Legend State mutations in `useCallback` unless a React API (imperative ref, effect deps) needs a stable function reference.
 
-## oxlint and the anti-slop rules
+## oxlint, oxfmt and the anti-slop rules
 
-`bun run lint:oxlint` runs the local `anti-slop` plugin (`tools/oxlint/anti-slop/`)
-and is a separate pass from ESLint. It is a job in both `ci:local` and the
-Lint and format workflow, so treat an oxlint error the same as an ESLint one.
+`bun run lint` runs oxlint and `bun run format:fix` runs oxfmt. All lint rules live in `.oxlintrc.json`, including `anti-slop` (`tools/oxlint/anti-slop/`) and the local rules in `oxlint-rules/`. oxlint skips JSON, so nothing lints `package.json`.
 
 `anti-slop/no-module-mocking` is turned off for test files in `.oxlintrc.json`.
 React Doctor runs the same anti-slop rules with its own ignore list in
@@ -389,7 +387,7 @@ the code silently suppresses nothing.
 
 ## Haptics: react-native-pulsar via the src/lib/haptics.ts wrapper
 
-All haptic feedback goes through the `impact` / `selection` helpers in `src/lib/haptics.ts`, backed by `react-native-pulsar`. The wrapper gates every call on the `hapticFeedback` preference, so importing `react-native-pulsar` directly from a component would bypass the user's setting - `no-restricted-imports` in `eslint.config.mjs` blocks it.
+All haptic feedback goes through the `impact` / `selection` helpers in `src/lib/haptics.ts`, backed by `react-native-pulsar`. The wrapper gates every call on the `hapticFeedback` preference, so importing `react-native-pulsar` directly from a component would bypass the user's setting - `no-restricted-imports` in `.oxlintrc.json` blocks it.
 
 The same rule bans `expo-haptics`, which the wrapper used to sit on. Its Android `Segment_Tick` path resolves an API 34+ `HapticFeedbackConstants` field, so every selection haptic on Android < 14 rejects with a misleading "A haptics engine is not available on this device" error (Sentry FOAM-TV-MOBILE-1R). Pulsar checks device capability (`Settings.getHapticsSupportLevel()`) instead of throwing.
 

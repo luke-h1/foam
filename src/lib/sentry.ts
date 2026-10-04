@@ -322,7 +322,9 @@ export type MonitoringWarningName = `${MonitoringEventPrefix}_warning`;
 export type MonitoringInfoName = `${MonitoringEventPrefix}_info`;
 
 export type MonitoringEventName =
-  MonitoringErrorName | MonitoringWarningName | MonitoringInfoName;
+  | MonitoringErrorName
+  | MonitoringWarningName
+  | MonitoringInfoName;
 
 /**
  * The widest shape sanitiseLogValue can bound before it reaches Sentry.

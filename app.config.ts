@@ -16,7 +16,11 @@ interface AppVariantConfig {
 }
 
 export type Variant =
-  'development' | 'internal' | 'testflight' | 'e2e' | 'production';
+  | 'development'
+  | 'internal'
+  | 'testflight'
+  | 'e2e'
+  | 'production';
 
 export const VARIANT_CONFIG = {
   development: {

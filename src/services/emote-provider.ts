@@ -63,7 +63,10 @@ export interface SevenTvEmoteSource {
 }
 
 export type EmoteProviderSource =
-  BttvEmoteSource | FfzEmoteSource | TwitchEmoteSource | SevenTvEmoteSource;
+  | BttvEmoteSource
+  | FfzEmoteSource
+  | TwitchEmoteSource
+  | SevenTvEmoteSource;
 
 type HostedEmoteVariants = {
   imageVariants: EmoteImageVariants;

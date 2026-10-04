@@ -59,7 +59,8 @@ interface ChatPaneContentProps {
   isStreamEnabled: boolean;
   poll: React.ComponentProps<typeof ChannelPollCard>['poll'] | null;
   prediction:
-    React.ComponentProps<typeof ChannelPredictionCard>['prediction'] | null;
+    | React.ComponentProps<typeof ChannelPredictionCard>['prediction']
+    | null;
   resolvedChannelId: string | undefined;
   resolvedChannelLogin: string;
   shouldMountChat: boolean;
@@ -123,7 +124,8 @@ interface LiveStreamChatPaneProps {
   isStreamEnabled: boolean;
   poll: React.ComponentProps<typeof ChannelPollCard>['poll'] | null;
   prediction:
-    React.ComponentProps<typeof ChannelPredictionCard>['prediction'] | null;
+    | React.ComponentProps<typeof ChannelPredictionCard>['prediction']
+    | null;
   resizeChatGesture: GestureType;
   resolvedChannelId: string | undefined;
   resolvedChannelLogin: string;

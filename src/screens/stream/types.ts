@@ -6,4 +6,5 @@ export type FullscreenChatMode = 'sidebar' | 'overlay';
 export type ProfileTab = 'vods' | 'clips';
 
 export type ProfileListItem =
-  { kind: 'clip'; clip: TwitchClip } | { kind: 'vod'; vod: TwitchVideo };
+  | { kind: 'clip'; clip: TwitchClip }
+  | { kind: 'vod'; vod: TwitchVideo };

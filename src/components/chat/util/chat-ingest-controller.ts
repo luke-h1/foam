@@ -47,7 +47,8 @@ export interface ChatIngestControllerDeps {
    * live path can defer emote/badge parsing to commit time.
    */
   getFinalizeMessageForCommit: () =>
-    ((message: BufferedMessage) => BufferedMessage) | undefined;
+    | ((message: BufferedMessage) => BufferedMessage)
+    | undefined;
   /**
    * Hold live messages this many ms before the render buffer (0 = no delay).
    */

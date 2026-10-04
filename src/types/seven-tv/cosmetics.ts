@@ -268,7 +268,9 @@ export interface SevenTvEventMap {
   'entitlement.delete': { id: string };
   'entitlement.reset': { id: string };
   'entitlement.*':
-    EntitlementCreate | ChangeMap<EntitlementCreate> | { id: string };
+    | EntitlementCreate
+    | ChangeMap<EntitlementCreate>
+    | { id: string };
 }
 
 export type SevenTvEventType = keyof SevenTvEventMap;
@@ -285,7 +287,8 @@ export interface SevenTvEventData<
  * context; everything else filters on an object id.
  */
 type SevenTvSubscriptionCondition<TEventType> = TEventType extends
-  'entitlement.create' | 'cosmetic.create'
+  | 'entitlement.create'
+  | 'cosmetic.create'
   ? {
       platform?: 'TWITCH';
       ctx?: 'channel';

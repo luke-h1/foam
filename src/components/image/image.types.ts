@@ -7,7 +7,11 @@ import { ImageProps as ExpoImageProps } from 'expo-image';
  * string silently forks the cache for the same url.
  */
 export type ImageCacheVariant =
-  'emote' | 'badge' | 'avatar' | 'thumbnail' | 'image';
+  | 'emote'
+  | 'badge'
+  | 'avatar'
+  | 'thumbnail'
+  | 'image';
 
 export interface ImageProps extends Omit<ExpoImageProps, 'source'> {
   containerStyle?: StyleProp<ViewStyle>;

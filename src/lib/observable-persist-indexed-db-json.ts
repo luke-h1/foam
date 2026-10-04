@@ -32,7 +32,8 @@ type PersistedJsonValue =
  * sync metadata legend-state keeps in the sibling `__m` table.
  */
 type PersistedTableState =
-  { [key: string]: PersistedJsonValue } | PersistMetadata;
+  | { [key: string]: PersistedJsonValue }
+  | PersistMetadata;
 
 function requestToPromise<T>(request: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {

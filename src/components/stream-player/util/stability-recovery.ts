@@ -5,7 +5,9 @@ const HIGH_LATENCY_RECOVERY_S = 20;
 const HIGH_LATENCY_READINGS_BEFORE_RECOVERY = 3;
 
 export type StabilityRefreshReason =
-  'highLatency' | 'stall' | 'videoElementError';
+  | 'highLatency'
+  | 'stall'
+  | 'videoElementError';
 
 interface StabilityRecoveryOptions {
   now?: () => number;

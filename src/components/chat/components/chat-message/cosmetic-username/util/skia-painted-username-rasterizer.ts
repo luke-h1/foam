@@ -519,7 +519,8 @@ export interface PaintImageLayer {
  * layer bake into their own slot so they paint after the live texture.
  */
 export type PaintLayerSlot =
-  { kind: 'url'; layer: PaintImageLayer } | { kind: 'baked'; image: SkImage };
+  | { kind: 'url'; layer: PaintImageLayer }
+  | { kind: 'baked'; image: SkImage };
 
 /**
  * Only spans above other slots, or faded ones, need the base-colour backing;

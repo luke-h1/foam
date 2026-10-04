@@ -27,7 +27,7 @@ jobs:
         with:
           node: 'true'
 
-      - name: ✨ Prettier
+      - name: ✨ oxfmt
         if: ${{ !cancelled() }}
         run: bun run format:check
 
@@ -51,13 +51,9 @@ jobs:
         if: ${{ !cancelled() }}
         run: bun run lint:ast-grep
 
-      - name: 🤓 ESLint
-        if: ${{ !cancelled() }}
-        run: bun run lint
-
       - name: 🧹 oxlint
         if: ${{ !cancelled() }}
-        run: bun run lint:oxlint
+        run: bun run lint
 
       - name: 🧑‍🔬 Commit messages
         if: ${{ !cancelled() }}

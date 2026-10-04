@@ -36,13 +36,36 @@
     "src/foam/**",
     "src/player-website/**",
     "src/graphql/generated/**",
-    "src/components/chat/components/chat-message/__fixtures__/seven-tv-paints.fixture.ts"
+    "src/components/chat/components/chat-message/__fixtures__/seven-tv-paints.fixture.ts",
+    "commitlint.config.js",
+    "modules/**/node_modules/**",
+    ".storybook/storybook.requires.ts",
+    "metro.config.js"
   ],
+  "plugins": ["unicorn"],
   "jsPlugins": [
-    { "name": "anti-slop", "specifier": "./tools/oxlint/anti-slop/index.ts" }
+    {
+      "name": "anti-slop",
+      "specifier": "./tools/oxlint/anti-slop/index.ts"
+    },
+    {
+      "name": "local",
+      "specifier": "./oxlint-rules/index.cjs"
+    },
+    "eslint-plugin-react-doctor",
+    "eslint-plugin-simple-import-sort",
+    "eslint-plugin-reanimated"
   ],
   "categories": {
     "correctness": "off"
+  },
+  "env": {
+    "builtin": true
+  },
+  "settings": {
+    "react": {
+      "version": "19.2"
+    }
   },
   "rules": {
     "anti-slop/no-chained-type-assertions": "error",
@@ -63,6 +86,764 @@
   },
   "overrides": [
     {
+      "files": ["**/*.{js,jsx,mjs,cjs,ts,tsx}"],
+      "rules": {
+        "constructor-super": "error",
+        "for-direction": "error",
+        "getter-return": "error",
+        "no-async-promise-executor": "error",
+        "no-case-declarations": "error",
+        "no-class-assign": "error",
+        "no-compare-neg-zero": "error",
+        "no-cond-assign": "error",
+        "no-const-assign": "error",
+        "no-constant-binary-expression": "error",
+        "no-constant-condition": "error",
+        "no-control-regex": "error",
+        "no-debugger": "error",
+        "no-delete-var": "error",
+        "no-dupe-class-members": "error",
+        "no-dupe-else-if": "error",
+        "no-dupe-keys": "error",
+        "no-duplicate-case": "error",
+        "no-empty": "error",
+        "no-empty-character-class": "error",
+        "no-empty-pattern": "error",
+        "no-empty-static-block": "error",
+        "no-ex-assign": "error",
+        "no-extra-boolean-cast": "error",
+        "no-fallthrough": "error",
+        "no-func-assign": "error",
+        "no-global-assign": "error",
+        "no-import-assign": "error",
+        "no-invalid-regexp": "error",
+        "no-irregular-whitespace": "error",
+        "no-loss-of-precision": "error",
+        "no-misleading-character-class": "error",
+        "no-new-native-nonconstructor": "error",
+        "no-nonoctal-decimal-escape": "error",
+        "no-obj-calls": "error",
+        "no-prototype-builtins": "error",
+        "no-redeclare": "error",
+        "no-regex-spaces": "error",
+        "no-self-assign": "error",
+        "no-setter-return": "error",
+        "no-shadow-restricted-names": "error",
+        "no-sparse-arrays": "error",
+        "no-this-before-super": "error",
+        "no-unreachable": "error",
+        "no-unsafe-finally": "error",
+        "no-unsafe-negation": "error",
+        "no-unsafe-optional-chaining": "error",
+        "no-unused-labels": "error",
+        "no-unused-private-class-members": "error",
+        "no-unused-vars": "error",
+        "no-useless-backreference": "error",
+        "no-useless-catch": "error",
+        "no-useless-escape": "error",
+        "no-with": "error",
+        "require-yield": "error",
+        "use-isnan": "error",
+        "valid-typeof": "error"
+      }
+    },
+    {
+      "files": ["**/*.{ts,tsx}"],
+      "rules": {
+        "constructor-super": "off",
+        "getter-return": "off",
+        "no-class-assign": "off",
+        "no-const-assign": "off",
+        "no-dupe-class-members": "off",
+        "no-dupe-keys": "off",
+        "no-func-assign": "off",
+        "no-import-assign": "off",
+        "no-new-native-nonconstructor": "off",
+        "no-obj-calls": "off",
+        "no-redeclare": "off",
+        "no-setter-return": "off",
+        "no-this-before-super": "off",
+        "no-unreachable": "off",
+        "no-unsafe-negation": "off",
+        "no-var": "error",
+        "no-with": "off",
+        "prefer-const": "error",
+        "prefer-rest-params": "error",
+        "prefer-spread": "error",
+        "no-array-constructor": "error",
+        "no-unused-expressions": "error",
+        "no-unused-vars": "error",
+        "typescript/ban-ts-comment": "error",
+        "typescript/no-duplicate-enum-values": "error",
+        "typescript/no-empty-object-type": "error",
+        "typescript/no-explicit-any": "error",
+        "typescript/no-extra-non-null-assertion": "error",
+        "typescript/no-misused-new": "error",
+        "typescript/no-namespace": "error",
+        "typescript/no-non-null-asserted-optional-chain": "error",
+        "typescript/no-require-imports": "error",
+        "typescript/no-this-alias": "error",
+        "typescript/no-unnecessary-type-constraint": "error",
+        "typescript/no-unsafe-declaration-merging": "error",
+        "typescript/no-unsafe-function-type": "error",
+        "typescript/no-wrapper-object-types": "error",
+        "typescript/prefer-as-const": "error",
+        "typescript/prefer-namespace-keyword": "error",
+        "typescript/triple-slash-reference": "error"
+      },
+      "plugins": ["typescript"]
+    },
+    {
+      "files": ["**/*.{js,jsx,ts,tsx}"],
+      "rules": {
+        "react/display-name": "off",
+        "react/jsx-key": "error",
+        "react/jsx-no-comment-textnodes": "error",
+        "react/jsx-no-duplicate-props": "error",
+        "react/jsx-no-target-blank": "error",
+        "react/jsx-no-undef": "error",
+        "react/no-children-prop": "error",
+        "react/no-danger-with-children": "error",
+        "react/no-direct-mutation-state": "off",
+        "react/no-find-dom-node": "error",
+        "react/no-is-mounted": "error",
+        "react/no-render-return-value": "error",
+        "react/no-string-refs": "error",
+        "react/no-unescaped-entities": "off",
+        "react/no-unknown-property": "error",
+        "react/no-unsafe": "off",
+        "react/react-in-jsx-scope": "off",
+        "jsx-a11y/alt-text": "error",
+        "jsx-a11y/anchor-ambiguous-text": "off",
+        "jsx-a11y/anchor-has-content": "error",
+        "jsx-a11y/anchor-is-valid": "error",
+        "jsx-a11y/aria-activedescendant-has-tabindex": "error",
+        "jsx-a11y/aria-props": "error",
+        "jsx-a11y/aria-proptypes": "error",
+        "jsx-a11y/aria-role": "error",
+        "jsx-a11y/aria-unsupported-elements": "error",
+        "jsx-a11y/autocomplete-valid": "error",
+        "jsx-a11y/click-events-have-key-events": "error",
+        "jsx-a11y/control-has-associated-label": [
+          "off",
+          {
+            "ignoreElements": [
+              "audio",
+              "canvas",
+              "embed",
+              "input",
+              "textarea",
+              "tr",
+              "video"
+            ],
+            "ignoreRoles": [
+              "grid",
+              "listbox",
+              "menu",
+              "menubar",
+              "radiogroup",
+              "row",
+              "tablist",
+              "toolbar",
+              "tree",
+              "treegrid"
+            ]
+          }
+        ],
+        "jsx-a11y/heading-has-content": "error",
+        "jsx-a11y/html-has-lang": "error",
+        "jsx-a11y/iframe-has-title": "error",
+        "jsx-a11y/img-redundant-alt": "error",
+        "jsx-a11y/interactive-supports-focus": [
+          "error",
+          {
+            "tabbable": [
+              "button",
+              "checkbox",
+              "link",
+              "searchbox",
+              "spinbutton",
+              "switch",
+              "textbox"
+            ]
+          }
+        ],
+        "jsx-a11y/label-has-associated-control": "error",
+        "jsx-a11y/media-has-caption": "error",
+        "jsx-a11y/mouse-events-have-key-events": "error",
+        "jsx-a11y/no-access-key": "error",
+        "jsx-a11y/no-autofocus": "error",
+        "jsx-a11y/no-distracting-elements": "error",
+        "jsx-a11y/no-interactive-element-to-noninteractive-role": [
+          "error",
+          {
+            "tr": ["none", "presentation"],
+            "canvas": ["img"]
+          }
+        ],
+        "jsx-a11y/no-noninteractive-element-interactions": [
+          "error",
+          {
+            "handlers": [
+              "onClick",
+              "onError",
+              "onLoad",
+              "onMouseDown",
+              "onMouseUp",
+              "onKeyPress",
+              "onKeyDown",
+              "onKeyUp"
+            ],
+            "alert": ["onKeyUp", "onKeyDown", "onKeyPress"],
+            "body": ["onError", "onLoad"],
+            "dialog": ["onKeyUp", "onKeyDown", "onKeyPress"],
+            "iframe": ["onError", "onLoad"],
+            "img": ["onError", "onLoad"]
+          }
+        ],
+        "jsx-a11y/no-noninteractive-element-to-interactive-role": [
+          "error",
+          {
+            "ul": [
+              "listbox",
+              "menu",
+              "menubar",
+              "radiogroup",
+              "tablist",
+              "tree",
+              "treegrid"
+            ],
+            "ol": [
+              "listbox",
+              "menu",
+              "menubar",
+              "radiogroup",
+              "tablist",
+              "tree",
+              "treegrid"
+            ],
+            "li": [
+              "menuitem",
+              "menuitemradio",
+              "menuitemcheckbox",
+              "option",
+              "row",
+              "tab",
+              "treeitem"
+            ],
+            "table": ["grid"],
+            "td": ["gridcell"],
+            "fieldset": ["radiogroup", "presentation"]
+          }
+        ],
+        "jsx-a11y/no-noninteractive-tabindex": [
+          "error",
+          {
+            "tags": [],
+            "roles": ["tabpanel"],
+            "allowExpressionValues": true
+          }
+        ],
+        "jsx-a11y/no-redundant-roles": "error",
+        "jsx-a11y/no-static-element-interactions": [
+          "error",
+          {
+            "allowExpressionValues": true,
+            "handlers": [
+              "onClick",
+              "onMouseDown",
+              "onMouseUp",
+              "onKeyPress",
+              "onKeyDown",
+              "onKeyUp"
+            ]
+          }
+        ],
+        "jsx-a11y/role-has-required-aria-props": "error",
+        "jsx-a11y/role-supports-aria-props": "error",
+        "jsx-a11y/scope": "error",
+        "jsx-a11y/tabindex-no-positive": "error",
+        "promise/always-return": "off",
+        "promise/no-return-wrap": "error",
+        "promise/param-names": "off",
+        "promise/catch-or-return": "off",
+        "promise/no-nesting": "warn",
+        "promise/no-promise-in-callback": "warn",
+        "promise/no-callback-in-promise": "warn",
+        "promise/avoid-new": "off",
+        "promise/no-new-statics": "error",
+        "promise/valid-params": "warn",
+        "react-doctor/activity-wraps-effect-heavy-subtree": "warn",
+        "react-doctor/advanced-event-handler-refs": "warn",
+        "react-doctor/alt-text": "error",
+        "react-doctor/anchor-ambiguous-text": "warn",
+        "react-doctor/anchor-has-content": "warn",
+        "react-doctor/anchor-is-valid": "warn",
+        "react-doctor/aria-activedescendant-has-tabindex": "warn",
+        "react-doctor/aria-props": "error",
+        "react-doctor/aria-proptypes": "error",
+        "react-doctor/aria-role": "error",
+        "react-doctor/aria-unsupported-elements": "error",
+        "react-doctor/async-await-in-loop": "warn",
+        "react-doctor/async-defer-await": "warn",
+        "react-doctor/async-parallel": "warn",
+        "react-doctor/autocomplete-valid": "warn",
+        "react-doctor/button-has-type": "warn",
+        "react-doctor/checked-requires-onchange-or-readonly": "warn",
+        "react-doctor/click-events-have-key-events": "warn",
+        "react-doctor/client-localstorage-no-version": "warn",
+        "react-doctor/client-passive-event-listeners": "warn",
+        "react-doctor/control-has-associated-label": "warn",
+        "react-doctor/effect-needs-cleanup": "error",
+        "react-doctor/exhaustive-deps": "off",
+        "react-doctor/forbid-dom-props": "warn",
+        "react-doctor/forbid-elements": "warn",
+        "react-doctor/forward-ref-uses-ref": "warn",
+        "react-doctor/heading-has-content": "warn",
+        "react-doctor/hooks-no-nan-in-deps": "warn",
+        "react-doctor/html-has-lang": "warn",
+        "react-doctor/html-no-invalid-paragraph-child": "warn",
+        "react-doctor/html-no-invalid-table-nesting": "warn",
+        "react-doctor/html-no-nested-interactive": "warn",
+        "react-doctor/iframe-has-title": "warn",
+        "react-doctor/iframe-missing-sandbox": "warn",
+        "react-doctor/img-redundant-alt": "warn",
+        "react-doctor/interactive-supports-focus": "warn",
+        "react-doctor/jotai-derived-atom-returns-fresh-object": "warn",
+        "react-doctor/jotai-select-atom-in-render-body": "error",
+        "react-doctor/jotai-tq-use-raw-query-atom": "warn",
+        "react-doctor/js-async-reduce-without-awaited-acc": "warn",
+        "react-doctor/js-batch-dom-css": "warn",
+        "react-doctor/js-cache-property-access": "warn",
+        "react-doctor/js-cache-storage": "warn",
+        "react-doctor/js-combine-iterations": "warn",
+        "react-doctor/js-early-exit": "warn",
+        "react-doctor/js-flatmap-filter": "warn",
+        "react-doctor/js-hoist-intl": "warn",
+        "react-doctor/js-hoist-regexp": "warn",
+        "react-doctor/js-index-maps": "warn",
+        "react-doctor/js-length-check-first": "warn",
+        "react-doctor/js-min-max-loop": "warn",
+        "react-doctor/js-set-map-lookups": "warn",
+        "react-doctor/js-tosorted-immutable": "warn",
+        "react-doctor/jsx-key": "error",
+        "react-doctor/jsx-max-depth": "warn",
+        "react-doctor/jsx-no-comment-textnodes": "warn",
+        "react-doctor/jsx-no-constructed-context-values": "warn",
+        "react-doctor/jsx-no-duplicate-props": "error",
+        "react-doctor/jsx-no-jsx-as-prop": "warn",
+        "react-doctor/jsx-no-new-array-as-prop": "warn",
+        "react-doctor/jsx-no-new-function-as-prop": "warn",
+        "react-doctor/jsx-no-new-object-as-prop": "warn",
+        "react-doctor/jsx-no-script-url": "error",
+        "react-doctor/jsx-no-target-blank": "warn",
+        "react-doctor/jsx-no-undef": "error",
+        "react-doctor/jsx-props-no-spread-multi": "warn",
+        "react-doctor/label-has-associated-control": "warn",
+        "react-doctor/lang": "warn",
+        "react-doctor/media-has-caption": "warn",
+        "react-doctor/mouse-events-have-key-events": "warn",
+        "react-doctor/no-access-key": "warn",
+        "react-doctor/no-adjust-state-on-prop-change": "error",
+        "react-doctor/no-aria-hidden-on-focusable": "warn",
+        "react-doctor/no-array-index-as-key": "warn",
+        "react-doctor/no-autofocus": "warn",
+        "react-doctor/no-barrel-import": "warn",
+        "react-doctor/no-cascading-set-state": "warn",
+        "react-doctor/no-chain-state-updates": "warn",
+        "react-doctor/no-children-prop": "warn",
+        "react-doctor/no-create-context-in-render": "error",
+        "react-doctor/no-create-store-in-render": "error",
+        "react-doctor/no-danger": "warn",
+        "react-doctor/no-danger-with-children": "error",
+        "react-doctor/no-derived-state": "warn",
+        "react-doctor/no-derived-state-effect": "warn",
+        "react-doctor/no-derived-useState": "warn",
+        "react-doctor/no-did-mount-set-state": "warn",
+        "react-doctor/no-did-update-set-state": "warn",
+        "react-doctor/no-direct-mutation-state": "error",
+        "react-doctor/no-direct-state-mutation": "warn",
+        "react-doctor/no-disabled-zoom": "error",
+        "react-doctor/no-distracting-elements": "error",
+        "react-doctor/no-document-start-view-transition": "warn",
+        "react-doctor/no-dynamic-import-path": "warn",
+        "react-doctor/no-effect-chain": "warn",
+        "react-doctor/no-effect-event-handler": "warn",
+        "react-doctor/no-effect-event-in-deps": "error",
+        "react-doctor/no-effect-with-fresh-deps": "off",
+        "react-doctor/no-eval": "error",
+        "react-doctor/no-event-handler": "warn",
+        "react-doctor/no-event-trigger-state": "warn",
+        "react-doctor/no-fetch-in-effect": "warn",
+        "react-doctor/no-find-dom-node": "warn",
+        "react-doctor/no-flush-sync": "warn",
+        "react-doctor/no-full-lodash-import": "warn",
+        "react-doctor/no-giant-component": "warn",
+        "react-doctor/no-global-css-variable-animation": "error",
+        "react-doctor/no-gray-on-colored-background": "warn",
+        "react-doctor/no-initialize-state": "warn",
+        "react-doctor/no-inline-bounce-easing": "warn",
+        "react-doctor/no-inline-exhaustive-style": "warn",
+        "react-doctor/no-inline-prop-on-memo-component": "warn",
+        "react-doctor/no-interactive-element-to-noninteractive-role": "warn",
+        "react-doctor/no-is-mounted": "warn",
+        "react-doctor/no-large-animated-blur": "warn",
+        "react-doctor/no-layout-property-animation": "error",
+        "react-doctor/no-layout-transition-inline": "warn",
+        "react-doctor/no-legacy-class-lifecycles": "error",
+        "react-doctor/no-legacy-context-api": "error",
+        "react-doctor/no-long-transition-duration": "warn",
+        "react-doctor/no-many-boolean-props": "warn",
+        "react-doctor/no-mirror-prop-effect": "warn",
+        "react-doctor/no-moment": "warn",
+        "react-doctor/no-multi-comp": "warn",
+        "react-doctor/no-mutable-in-deps": "error",
+        "react-doctor/no-mutating-reducer-state": "error",
+        "react-doctor/no-namespace": "warn",
+        "react-doctor/no-nested-component-definition": "error",
+        "react-doctor/no-noninteractive-element-interactions": "warn",
+        "react-doctor/no-noninteractive-element-to-interactive-role": "warn",
+        "react-doctor/no-noninteractive-tabindex": "warn",
+        "react-doctor/no-outline-none": "warn",
+        "react-doctor/no-pass-data-to-parent": "warn",
+        "react-doctor/no-pass-live-state-to-parent": "warn",
+        "react-doctor/no-permanent-will-change": "warn",
+        "react-doctor/no-polymorphic-children": "warn",
+        "react-doctor/no-prevent-default": "warn",
+        "react-doctor/no-prop-callback-in-effect": "warn",
+        "react-doctor/no-random-key": "error",
+        "react-doctor/no-react-dom-deprecated-apis": "warn",
+        "react-doctor/no-react19-deprecated-apis": "warn",
+        "react-doctor/no-redundant-roles": "warn",
+        "react-doctor/no-redundant-should-component-update": "warn",
+        "react-doctor/no-render-in-render": "warn",
+        "react-doctor/no-render-prop-children": "warn",
+        "react-doctor/no-render-return-value": "warn",
+        "react-doctor/no-reset-all-state-on-prop-change": "warn",
+        "react-doctor/no-scale-from-zero": "warn",
+        "react-doctor/no-secrets-in-client-code": "warn",
+        "react-doctor/no-self-updating-effect": "warn",
+        "react-doctor/no-set-state-in-render": "warn",
+        "react-doctor/no-static-element-interactions": "warn",
+        "react-doctor/no-string-refs": "warn",
+        "react-doctor/no-this-in-sfc": "warn",
+        "react-doctor/no-tiny-text": "warn",
+        "react-doctor/no-transition-all": "warn",
+        "react-doctor/no-uncontrolled-input": "warn",
+        "react-doctor/no-undeferred-third-party": "warn",
+        "react-doctor/no-unknown-property": "warn",
+        "react-doctor/no-unsafe": "warn",
+        "react-doctor/no-unstable-nested-components": "warn",
+        "react-doctor/no-usememo-simple-expression": "warn",
+        "react-doctor/no-will-update-set-state": "warn",
+        "react-doctor/only-export-components": "warn",
+        "react-doctor/prefer-dynamic-import": "warn",
+        "react-doctor/prefer-html-dialog": "warn",
+        "react-doctor/prefer-module-scope-pure-function": "warn",
+        "react-doctor/prefer-module-scope-static-value": "warn",
+        "react-doctor/prefer-stable-empty-fallback": "warn",
+        "react-doctor/prefer-tag-over-role": "warn",
+        "react-doctor/prefer-use-effect-event": "warn",
+        "react-doctor/prefer-use-sync-external-store": "warn",
+        "react-doctor/prefer-useReducer": "warn",
+        "react-doctor/react-compiler-no-manual-memoization": "off",
+        "react-doctor/redux-useselector-inline-derivation": "warn",
+        "react-doctor/redux-useselector-returns-new-collection": "warn",
+        "react-doctor/rendering-animate-svg-wrapper": "warn",
+        "react-doctor/rendering-conditional-render": "warn",
+        "react-doctor/rendering-hoist-jsx": "warn",
+        "react-doctor/rendering-hydration-mismatch-time": "warn",
+        "react-doctor/rendering-hydration-no-flicker": "warn",
+        "react-doctor/rendering-script-defer-async": "warn",
+        "react-doctor/rendering-svg-precision": "warn",
+        "react-doctor/rendering-usetransition-loading": "warn",
+        "react-doctor/require-render-return": "error",
+        "react-doctor/rerender-defer-reads-hook": "warn",
+        "react-doctor/rerender-dependencies": "error",
+        "react-doctor/rerender-derived-state-from-hook": "warn",
+        "react-doctor/rerender-functional-setstate": "warn",
+        "react-doctor/rerender-lazy-ref-init": "warn",
+        "react-doctor/rerender-lazy-state-init": "warn",
+        "react-doctor/rerender-memo-before-early-return": "warn",
+        "react-doctor/rerender-memo-with-default-value": "warn",
+        "react-doctor/rerender-state-only-in-handlers": "warn",
+        "react-doctor/rerender-transitions-scroll": "warn",
+        "react-doctor/role-has-required-aria-props": "error",
+        "react-doctor/role-supports-aria-props": "warn",
+        "react-doctor/rules-of-hooks": "error",
+        "react-doctor/scope": "warn",
+        "react-doctor/server-after-nonblocking": "warn",
+        "react-doctor/server-auth-actions": "error",
+        "react-doctor/server-cache-with-object-literal": "warn",
+        "react-doctor/server-dedup-props": "warn",
+        "react-doctor/server-fetch-without-revalidate": "warn",
+        "react-doctor/server-hoist-static-io": "warn",
+        "react-doctor/server-no-mutable-module-state": "error",
+        "react-doctor/server-sequential-independent-await": "warn",
+        "react-doctor/style-prop-object": "warn",
+        "react-doctor/tabindex-no-positive": "warn",
+        "react-doctor/use-lazy-motion": "warn",
+        "react-doctor/void-dom-elements-no-children": "warn",
+        "react-doctor/zod-v4-no-deprecated-error-apis": "warn",
+        "react-doctor/zod-v4-no-deprecated-error-customization": "warn",
+        "react-doctor/zod-v4-no-deprecated-schema-apis": "warn",
+        "react-doctor/zod-v4-prefer-top-level-string-formats": "warn",
+        "react-doctor/expo-no-non-inlined-env": "warn",
+        "react-doctor/rn-animation-reaction-as-derived": "warn",
+        "react-doctor/rn-bottom-sheet-prefer-native": "warn",
+        "react-doctor/rn-detox-missing-await": "warn",
+        "react-doctor/rn-list-callback-per-row": "warn",
+        "react-doctor/rn-list-data-mapped": "warn",
+        "react-doctor/rn-list-missing-estimated-item-size": "warn",
+        "react-doctor/rn-list-recyclable-without-types": "warn",
+        "react-doctor/rn-no-deep-imports": "warn",
+        "react-doctor/rn-no-deprecated-modules": "error",
+        "react-doctor/rn-no-dimensions-get": "warn",
+        "react-doctor/rn-no-falsy-and-render": "error",
+        "react-doctor/rn-no-image-children": "error",
+        "react-doctor/rn-no-inline-flatlist-renderitem": "warn",
+        "react-doctor/rn-no-inline-object-in-list-item": "warn",
+        "react-doctor/rn-no-legacy-expo-packages": "warn",
+        "react-doctor/rn-no-legacy-shadow-styles": "warn",
+        "react-doctor/rn-no-non-native-navigator": "warn",
+        "react-doctor/rn-no-panresponder": "warn",
+        "react-doctor/rn-no-raw-text": "error",
+        "react-doctor/rn-no-renderitem-key": "warn",
+        "react-doctor/rn-no-scroll-state": "error",
+        "react-doctor/rn-no-scrollview-mapped-list": "warn",
+        "react-doctor/rn-no-set-native-props": "warn",
+        "react-doctor/rn-no-single-element-style-array": "warn",
+        "react-doctor/rn-prefer-expo-image": "warn",
+        "react-doctor/rn-prefer-pressable": "warn",
+        "react-doctor/rn-prefer-pressable-over-gesture-detector": "warn",
+        "react-doctor/rn-prefer-reanimated": "warn",
+        "react-doctor/rn-pressable-shared-value-mutation": "warn",
+        "react-doctor/rn-scrollview-dynamic-padding": "warn",
+        "react-doctor/rn-scrollview-flex-in-content-container": "warn",
+        "react-doctor/rn-style-prefer-boxshadow": "warn",
+        "react-doctor/query-mutation-missing-invalidation": "warn",
+        "react-doctor/query-no-query-in-effect": "warn",
+        "react-doctor/query-no-rest-destructuring": "warn",
+        "react-doctor/query-no-usequery-for-mutation": "warn",
+        "react-doctor/query-no-void-query-fn": "warn",
+        "react-doctor/query-stable-query-client": "warn",
+        "import/newline-after-import": [
+          "error",
+          {
+            "count": 1
+          }
+        ],
+        "simple-import-sort/imports": [
+          "warn",
+          {
+            "groups": [
+              ["^\\u0000"],
+              ["^react$", "^react-native$", "^react", "^react-native"],
+              ["^@?\\w"],
+              ["^@app/", "^@modules/", "^@e2e/"],
+              ["^\\."],
+              ["^.+\\.(css|json)$"]
+            ]
+          }
+        ],
+        "simple-import-sort/exports": "warn",
+        "no-console": "off",
+        "no-extra-boolean-cast": "off",
+        "no-nested-ternary": "error",
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@sentry/react-native",
+                "message": "Use src/lib/sentry helpers instead of importing Sentry directly."
+              },
+              {
+                "name": "@app/lib/sentry",
+                "importNames": ["sentryService"],
+                "message": "Use recordInfo, recordWarning, recordError, countMetric, startSpan, or showFeedbackWidget instead of sentryService."
+              },
+              {
+                "name": "@react-native-firebase/analytics",
+                "message": "Use the logAnalyticsEvent / logAnalyticsScreenView helpers in src/hooks/firebase/analytics.ts so every event stays on the analyticsEvents.ts allow-list."
+              },
+              {
+                "name": "expo-haptics",
+                "message": "expo-haptics is no longer installed. Use the impact / selection helpers in src/lib/haptics.ts."
+              },
+              {
+                "name": "react-native-pulsar",
+                "message": "Use the impact / selection helpers in src/lib/haptics.ts so haptics respect the hapticFeedback preference."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["@sentry/*"],
+                "message": "Use src/lib/sentry helpers instead of importing Sentry directly."
+              }
+            ]
+          }
+        ],
+        "no-unsafe-finally": "off",
+        "no-unused-expressions": "off",
+        "reanimated/js-function-in-worklet": "error",
+        "no-unused-vars": [
+          "error",
+          {
+            "argsIgnorePattern": "^_",
+            "caughtErrorsIgnorePattern": "^_",
+            "ignoreRestSiblings": true,
+            "varsIgnorePattern": "^_"
+          }
+        ],
+        "react/exhaustive-deps": [
+          "warn",
+          {
+            "additionalHooks": "(useAnimatedStyle|useDerivedValue|useAnimatedProps)"
+          }
+        ],
+        "react/rules-of-hooks": "error",
+        "typescript/array-type": [
+          "error",
+          {
+            "default": "array"
+          }
+        ],
+        "typescript/no-misused-spread": "off",
+        "typescript/no-require-imports": "off"
+      },
+      "plugins": ["react", "jsx-a11y", "promise", "import", "typescript"]
+    },
+    {
+      "files": [
+        "**/__tests__/**/*.{ts,tsx,js,jsx}",
+        "**/*.test.{ts,tsx,js,jsx}"
+      ],
+      "rules": {
+        "typescript/no-require-imports": "off"
+      },
+      "plugins": ["typescript"]
+    },
+    {
+      "files": [
+        "src/lib/sentry.ts",
+        "src/lib/sentry-image-spans.ts",
+        "src/lib/__tests__/sentry-image-spans.test.ts",
+        "src/lib/__tests__/sentry.test.ts",
+        "src/lib/__tests__/forward-log-to-sentry.test.ts",
+        "src/lib/haptics.ts",
+        "src/hooks/firebase/analytics.ts",
+        "src/hooks/firebase/analytics.test.ts",
+        "__mocks__/@react-native-firebase/analytics.ts",
+        "src/components/chat/util/__tests__/create-seven-tv-callbacks.test.ts",
+        "src/components/stream-player/__tests__/stream-player.test.tsx",
+        "src/components/stream-player/__tests__/player-telemetry.test.ts",
+        "src/components/stream-player/__tests__/use-player-bridge.stability.test.tsx"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    },
+    {
+      "files": [
+        "src/context/auth-context.tsx",
+        "src/components/chat/components/ChatOverlayController.tsx",
+        "src/components/chat/components/chat-overlay-layer.tsx",
+        "src/components/ui/input/input.ios.tsx",
+        "src/screens/preferences/chat-preference-screen.tsx",
+        "src/screens/stream/live-stream-screen.tsx",
+        "src/screens/stream/components/live-stream-chat-pane.tsx",
+        "src/screens/stream/components/live-stream-video-pane.tsx"
+      ],
+      "rules": {
+        "react-doctor/no-giant-component": "off",
+        "react-doctor/no-many-boolean-props": "off"
+      }
+    },
+    {
+      "files": ["src/components/bottom-sheet/bottom-sheet.native.tsx"],
+      "rules": {
+        "react-doctor/no-derived-useState": "off",
+        "react-doctor/no-cascading-set-state": "off"
+      }
+    },
+    {
+      "files": ["src/components/stream-player/stream-player-poster.tsx"],
+      "rules": {
+        "react-doctor/no-derived-useState": "off"
+      }
+    },
+    {
+      "files": ["src/components/stream-player/hooks/use-player-bridge.ts"],
+      "rules": {
+        "react-doctor/no-cascading-set-state": "off"
+      }
+    },
+    {
+      "files": ["src/services/twitch-ws-service.ts"],
+      "rules": {
+        "react-doctor/async-await-in-loop": "off",
+        "react-doctor/js-set-map-lookups": "off"
+      }
+    },
+    {
+      "files": ["src/utils/string/format-view-count.ts"],
+      "rules": {
+        "react-doctor/js-hoist-intl": "off"
+      }
+    },
+    {
+      "files": ["src/screens/dev-tools/synced-emotes-screen.tsx"],
+      "rules": {
+        "react-doctor/rn-no-scrollview-mapped-list": "off"
+      }
+    },
+    {
+      "files": ["src/**/*.{ts,tsx}"],
+      "rules": {
+        "no-console": "error"
+      }
+    },
+    {
+      "files": ["**/*.{js,jsx,ts,tsx}"],
+      "rules": {
+        "local/blank-line-between-top-level": "error",
+        "local/prefer-alias-imports": "warn"
+      }
+    },
+    {
+      "files": [
+        "src/**/__tests__/**",
+        "src/**/*.test.{ts,tsx}",
+        "src/**/*.stories.{ts,tsx}",
+        "src/utils/logger.ts",
+        "src/lib/sentry.ts",
+        "src/lib/bugsnag.ts"
+      ],
+      "rules": {
+        "no-console": "off"
+      }
+    },
+    {
+      "files": ["src/components/**/*.{ts,tsx}", "src/screens/**/*.{ts,tsx}"],
+      "rules": {
+        "local/no-hardcoded-hex-color": "warn"
+      }
+    },
+    {
+      "files": [
+        "src/**/__tests__/**",
+        "src/**/*.test.{ts,tsx}",
+        "src/**/*.stories.{ts,tsx}",
+        "src/**/*StoryFixtures.{ts,tsx}",
+        "src/components/brand-icon/**",
+        "src/screens/dev-tools/**"
+      ],
+      "rules": {
+        "local/no-hardcoded-hex-color": "off"
+      }
+    },
+    {
       "files": [
         "**/__tests__/**",
         "**/*.test.ts",
@@ -73,6 +854,22 @@
       "rules": {
         "anti-slop/no-module-mocking": "off"
       }
+    },
+    {
+      "files": ["src/screens/dev-tools/image-benchmark-screen.tsx"],
+      "rules": { "react-doctor/async-defer-await": "off" }
+    },
+    {
+      "files": ["src/app/**/*.tsx"],
+      "rules": { "react-doctor/only-export-components": "off" }
+    },
+    {
+      "files": ["__mocks__/expo-image.tsx"],
+      "rules": { "react-doctor/no-react19-deprecated-apis": "off" }
+    },
+    {
+      "files": ["src/hooks/queries/use-stream-profile-pictures.ts"],
+      "rules": { "react-doctor/no-derived-state": "off" }
     }
   ]
 }

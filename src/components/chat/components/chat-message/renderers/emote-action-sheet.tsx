@@ -36,7 +36,11 @@ import { resolveEmoteDisplayUrl } from '@app/utils/emote/resolve-emote-display-u
 type MessageTokenKind = MessageToken<'emote'>;
 
 type ActionId =
-  'copy-name' | 'copy-url' | 'copy-url-2x' | 'copy-url-4x' | 'preview';
+  | 'copy-name'
+  | 'copy-url'
+  | 'copy-url-2x'
+  | 'copy-url-4x'
+  | 'preview';
 
 const COPY_IMAGE_VARIANT_ACTIONS = [
   { id: 'copy-url-2x', scale: '2x' },

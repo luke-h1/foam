@@ -1,7 +1,10 @@
 import { execFileSync } from 'node:child_process';
 
 export type ChangelogEnvironment =
-  'production' | 'testflight' | 'internal' | 'preview';
+  | 'production'
+  | 'testflight'
+  | 'internal'
+  | 'preview';
 
 /**
  * Promotion ladder ordered from the most stable channel (shipped last) to the

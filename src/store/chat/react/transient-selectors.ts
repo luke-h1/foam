@@ -23,7 +23,8 @@ function useTransientChannelField<K extends keyof typeof defaultTransientState>(
   return useSelector(() => {
     // SAFETY: indexing with a generic key widens get() to the union of field types; the observable at `field` holds that field's own type.
     const value = chatTransientState$[channelId]![field].get() as
-      (typeof defaultTransientState)[K] | undefined;
+      | (typeof defaultTransientState)[K]
+      | undefined;
     return value ?? defaultTransientState[field];
   });
 }

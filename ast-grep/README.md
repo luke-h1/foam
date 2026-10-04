@@ -1,6 +1,6 @@
 # ast-grep rules
 
-Structural lint rules that encode codebase conventions ESLint cannot easily
+Structural lint rules that encode codebase conventions oxlint cannot easily
 express. They run locally via `bun run lint:ast-grep` and in CI on every
 pull request (`.github/workflows/lint-format.yml`).
 
