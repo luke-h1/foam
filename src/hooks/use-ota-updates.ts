@@ -48,16 +48,9 @@ const DEV_CLIENT_UNSUPPORTED_MARKERS = [
   'ERR_NOT_AVAILABLE_IN_DEV_CLIENT',
 ];
 
-function isDevClientUnsupportedError(error: unknown): boolean {
-  if (!(error instanceof Error)) {
-    return false;
-  }
-
-  const code = (error as { code?: unknown }).code;
-  const haystack = `${typeof code === 'string' ? code : ''} ${error.message}`;
-
+function isDevClientUnsupportedError(error: Error): boolean {
   return DEV_CLIENT_UNSUPPORTED_MARKERS.some(marker =>
-    haystack.includes(marker),
+    error.message.includes(marker),
   );
 }
 
@@ -137,7 +130,9 @@ async function fetchAvailableOtaUpdate(isProduction: boolean): Promise<void> {
 
     countOtaMetric('ota.update.fetched', fields);
   } catch (caught) {
-    if (isDevClientUnsupportedError(caught)) {
+    const error = caught instanceof Error ? caught : new Error(String(caught));
+
+    if (isDevClientUnsupportedError(error)) {
       isRunningInDevClient = true;
 
       logger.main.info('Skipping OTA update check in dev client', {
@@ -153,7 +148,7 @@ async function fetchAvailableOtaUpdate(isProduction: boolean): Promise<void> {
 
     logger.main.error('OTA update check failed', {
       name: 'ota_updates_service_error',
-      error: caught instanceof Error ? caught : new Error(String(caught)),
+      error,
       category: 'OTAUpdatesService',
       action: 'check_failed',
       isProduction,
