@@ -71,8 +71,12 @@ react_doctor() {
   local report
   report="$(mktemp)"
 
-  if ! npx react-doctor@latest --scope changed --base "$(doctor_base)" \
-    --include-untracked --no-score --json --json-out "$report"; then
+  npx react-doctor@latest --scope changed --base "$(doctor_base)" \
+    --include-untracked --no-score --json --json-out "$report"
+
+  # The CLI also exits non-zero when it finds errors. Fail early only when it
+  # wrote no report, so the diagnostics below still print.
+  if ! jq -e '.summary' "$report" >/dev/null 2>&1; then
     rm -f "$report"
     return 1
   fi

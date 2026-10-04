@@ -5,7 +5,11 @@ const jestConfig = {
    * >1GB, and a native build churns enough files there that the crawl (or a
    * watchman recrawl) stalls every jest invocation for minutes afterwards.
    */
-  modulePathIgnorePatterns: ['<rootDir>/ios/', '<rootDir>/android/'],
+  modulePathIgnorePatterns: [
+    '<rootDir>/ios/',
+    '<rootDir>/android/',
+    '<rootDir>/.agents/',
+  ],
   setupFilesAfterEnv: [
     '@shopify/react-native-skia/jestSetup.js',
     './test/setupTests.ts',
