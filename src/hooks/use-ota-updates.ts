@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { Alert, Platform } from 'react-native';
 
 import { nativeBuildVersion } from 'expo-application';
+import { isDevelopmentBuild } from 'expo-dev-client';
 import * as Updates from 'expo-updates';
 import {
   addUpdatesStateChangeListener,
@@ -35,6 +36,14 @@ const OTA_RELOAD_SCREEN_OPTIONS = {
   },
 } satisfies ReloadScreenOptions;
 
+
+/**
+ * Whether this binary can talk to the update server. Dev-client builds report
+ * `isEnabled` but reject the updates APIs (e.g. `setExtraParamAsync` throws
+ * NotAvailableInDevClientException), and `__DEV__` is false when the dev
+ * client loads a production-mode bundle, so it has to be checked explicitly.
+ */
+const SHOULD_RECEIVE_UPDATES = isEnabled && !__DEV__ && !isDevelopmentBuild();
 const getIsUpdatePending = () => latestContext.isUpdatePending;
 
 async function setExtraParams() {
@@ -119,7 +128,7 @@ async function fetchAvailableOtaUpdate(isProduction: boolean): Promise<void> {
 }
 
 export function useOTAUpdates() {
-  const shouldReceiveUpdates = isEnabled && !__DEV__;
+  const shouldReceiveUpdates = SHOULD_RECEIVE_UPDATES;
   const isProduction = process.env.EXPO_PUBLIC_APP_VARIANT === 'production';
   const lastMinimize = useRef(0);
   const ranInitialCheck = useRef(false);
@@ -262,7 +271,7 @@ export function useOTAUpdates() {
   }, [isProduction, promptAndReloadRef]);
 
   useEffect(() => {
-    if (!isEnabled) {
+    if (!shouldReceiveUpdates) {
       return;
     }
 
@@ -329,5 +338,10 @@ export function useOTAUpdates() {
     return () => {
       unsubscribe();
     };
-  }, [checkForUpdatesRef, isProduction, promptAndReloadRef]);
+  }, [
+    checkForUpdatesRef,
+    isProduction,
+    promptAndReloadRef,
+    shouldReceiveUpdates,
+  ]);
 }
