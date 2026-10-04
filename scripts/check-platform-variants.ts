@@ -1,7 +1,8 @@
 /**
- * A platform variant (`x.ios.tsx`, `x.android.tsx`, `x.web.tsx`,
- * `x.native.tsx`) must export every value its base file `x.tsx` exports and
- * accept every prop the base accepts.
+ * A platform variant (`x.ios.tsx`, `x.android.ts`, `x.web.tsx`,
+ * `x.native.ts` and so on) must export every value its base file `x.tsx` exports and
+ * accept every prop the base accepts. A variant with no base file is not
+ * checked: there is no contract to compare it with.
  *
  * tsc checks every caller against the base file, but Metro renders the
  * variant. A prop added only to the base type-checks, then the variant drops
@@ -12,7 +13,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import ts from 'typescript';
 
-const VARIANT_PATTERN = /\.(ios|android|web|native)\.tsx$/;
+const VARIANT_PATTERN = /\.(ios|android|web|native)(\.tsx?)$/;
 
 function variantPairs(): [string, string][] {
   const tracked = execFileSync('git', ['ls-files', 'src'], { encoding: 'utf8' })
@@ -21,7 +22,7 @@ function variantPairs(): [string, string][] {
 
   return tracked
     .map((variant): [string, string] => [
-      variant.replace(VARIANT_PATTERN, '.tsx'),
+      variant.replace(VARIANT_PATTERN, '$2'),
       variant,
     ])
     .filter(([base]) => existsSync(base));
@@ -53,12 +54,12 @@ function exportedProps(
   }
 
   for (const exported of checker.getExportsOfModule(moduleSymbol)) {
-    // A type import resolves against the base file on every platform.
     const symbol =
       exported.flags & ts.SymbolFlags.Alias
         ? checker.getAliasedSymbol(exported)
         : exported;
 
+    // A type import resolves against the base file on every platform.
     if (!(symbol.flags & ts.SymbolFlags.Value)) {
       continue;
     }

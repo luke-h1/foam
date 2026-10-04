@@ -6,7 +6,7 @@
 #   bun run ci:local lint ts      # only the named jobs
 #   SKIP_DOCTOR=1 bun run ci:local
 #
-# Each job's full output goes to .ci-local/<job>.log. The summary names the log
+# Each job's full output goes to a log in .ci-local/. The summary names the log
 # and prints its failure lines, so a failing test is findable without scrolling
 # the combined output.
 #
@@ -41,8 +41,6 @@ FAILED=()
 SKIPPED=()
 
 LOG_DIR=.ci-local
-rm -rf "$LOG_DIR"
-mkdir -p "$LOG_DIR"
 
 log_path() {
   printf '%s/%s.log' "$LOG_DIR" "$(printf '%s' "$1" | tr 'A-Z ' 'a-z-')"
@@ -62,14 +60,14 @@ run() {
   fi
 }
 
-# The lines that name what broke: Jest suites and tests, tsc and lint errors.
-# A job with none of those markers shows the end of its log instead.
+# The lines that name what broke: Jest suites and tests, tsc errors and
+# ESLint errors. A job with none of those markers shows the end of its log.
 print_failure_lines() {
   local log lines
   log="$(log_path "$1")"
   printf '%s        %s%s\n' "$DIM" "$log" "$RESET"
 
-  lines="$(grep -E '^FAIL |● .+ › |✕|error' "$log" | grep -v '^error: script ' | head -n 20)"
+  lines="$(grep -E '^FAIL |● .+ › |✕|error TS[0-9]+|^ +[0-9]+:[0-9]+ +error ' "$log" | head -n 20)"
 
   if [ -z "$lines" ]; then
     lines="$(grep -v '^error: script ' "$log" | tail -n 15)"
@@ -105,8 +103,8 @@ react_doctor() {
   npx react-doctor@latest --scope changed --base "$(doctor_base)" \
     --include-untracked --no-score --json --json-out "$report"
 
-  # The CLI also exits non-zero when it finds errors. Fail early only when it
-  # wrote no report, so the diagnostics below still print.
+  # When the CLI can diff a baseline it exits non-zero on errors. Fail early
+  # only when it wrote no report, so the diagnostics below still print.
   if ! jq -e '.summary' "$report" >/dev/null 2>&1; then
     rm -f "$report"
     return 1
@@ -137,13 +135,24 @@ wants() {
 JOBS=("$@")
 KNOWN_JOBS=(prettier ast-grep ts docs variants lint oxlint test native commitlint doctor zizmor)
 
+is_known_job() {
+  local known
+  for known in "${KNOWN_JOBS[@]}"; do
+    [ "$known" = "$1" ] && return 0
+  done
+  return 1
+}
+
 for job in "${JOBS[@]:-}"; do
   [ -z "$job" ] && continue
-  if [[ ! " ${KNOWN_JOBS[*]} " =~ " $job " ]]; then
+  if ! is_known_job "$job"; then
     printf '%sUnknown job: %s%s\nJobs: %s\n' "$RED" "$job" "$RESET" "${KNOWN_JOBS[*]}"
     exit 2
   fi
 done
+
+rm -rf "$LOG_DIR"
+mkdir -p "$LOG_DIR"
 
 if wants prettier; then
   run 'Prettier check' bun run format:check

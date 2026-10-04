@@ -14,7 +14,7 @@ Open the matching file before you search for it.
 - Storybook config: `.rnstorybook/`. Metro rewrites `.rnstorybook/storybook.requires.ts` on start. Revert it unless you added or removed a story.
 - Commit scopes: `commit-scopes.js`. PR template: `.github/PULL_REQUEST_TEMPLATE` (no extension).
 
-Other agent sessions often edit this checkout at the same time. Run `ListAgents` before you treat uncommitted changes as yours. Do not run `git stash`: it takes their files too. Use `git worktree add` to compare against `main`.
+Other agent sessions often edit this checkout at the same time. Check which sessions are running (for example with `ListAgents`) before you treat uncommitted changes as yours. Do not run `git stash`: it takes their files too. Use `git worktree add` to compare against `main`.
 
 ## Writing style: plain English (ASD-STE100)
 
@@ -53,7 +53,7 @@ The PR workflows can be run here rather than waiting on a runner.
 
 `signoff` is **not** a required check - merges still gate on the GitHub workflows - so it records that the suite passed locally rather than unlocking anything. `gh signoff install` would make it required. It deliberately takes no job filter, because the status asserts that every check passed. If a job fails for a reason the change did not cause, fix it or say so explicitly; do not sign off around it.
 
-Each job writes its full output to `.ci-local/<job>.log`. The summary prints the failing lines and the log path, so read the log instead of re-running the job.
+Each job writes its full output to a log in `.ci-local/`. The summary prints the failing lines and the log path, so read the log instead of re-running the job. The `native` job passes ktlint only the tracked Kotlin files. Read the comment above it in `scripts/ci-local.sh` before you change that.
 
 ## Folder structure and file names
 

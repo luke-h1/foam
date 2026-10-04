@@ -17,6 +17,7 @@ import { join } from 'node:path';
  * longer resolves is a correct historical record, not a broken pointer.
  */
 const MAPPED_DOCS = [
+  '.agents/skills/foam-run-ios/SKILL.md',
   'AGENTS.md',
   'DESIGN.md',
   'docs/CONTEXT.md',
