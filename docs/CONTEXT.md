@@ -15,6 +15,13 @@ tag suffix. The single source of truth is `scripts/workflows/variant.ts`
 exposed to YAML and bash via the thin `variant-cli.ts` entry. Do not re-derive
 variant mappings inline in YAML ternaries or bash `case` blocks.
 
+**Distributed build** — an ad hoc IPA or an APK of the `internal` or
+`production` variant, uploaded to builds.tightlog.com for install on test
+devices. The `internal-preview` and `production-preview` EAS profiles build it.
+Run `bun run build:local -- <variant> <platform> --upload` or the
+`distribute-build.yml` workflow. Both upload with `scripts/dropper.sh`. ⚠ The
+`*-preview` EAS profiles are not the `preview` variant, which is an OTA channel.
+
 **Deploy decision** — the `auto`/`ota`/`build` choice. In `auto`, a changed native
 **fingerprint** forces a native `build`; otherwise an `ota`. Pure logic lives in
 `scripts/workflows/otaOrNativeDeployDecision.ts`; the `deploy-ota-or-native.ts`

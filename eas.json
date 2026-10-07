@@ -69,6 +69,20 @@
       },
       "channel": "internal"
     },
+    "internal-preview": {
+      "extends": "internal",
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production-preview": {
+      "extends": "production",
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
     "testflight": {
       "extends": "base",
       "environment": "testflight",

@@ -1,0 +1,120 @@
+name: Distribute build
+run-name: Distribute variant=${{ inputs.variant }} platform=${{ inputs.platform }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      variant:
+        description: 'App variant'
+        required: true
+        type: choice
+        default: 'internal'
+        options:
+          - internal
+          - production
+      platform:
+        description: 'Platform to build'
+        required: true
+        type: choice
+        default: 'all'
+        options:
+          - all
+          - ios
+          - android
+      self_hosted:
+        description: 'Run on the self-hosted foam runner (default is github-hosted)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: distribute-build-${{ inputs.variant }}-${{ inputs.platform }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: 🔨 Build & upload to builds.tightlog.com
+    runs-on: ${{ inputs.self_hosted && 'foam' || 'macos-latest' }}
+    timeout-minutes: 90
+    steps:
+      - name: 🏗 Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: 🧹 Clear stale secrets env file
+        run: rm -f .env
+
+      - name: 🥟 Setup Bun and install dependencies
+        uses: $/.github/actions/setup-bun-install
+        with:
+          node: 'true'
+
+      - name: ☕ Setup JDK
+        if: ${{ inputs.platform != 'ios' }}
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+
+      - name: ♻️ Cache CocoaPods downloads
+        if: ${{ !inputs.self_hosted && inputs.platform != 'android' }}
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cocoapods/repos
+            ~/Library/Caches/CocoaPods
+          key: cocoapods-${{ runner.os }}-${{ hashFiles('bun.lock', 'app.config.ts') }}
+          restore-keys: |
+            cocoapods-${{ runner.os }}-
+
+      - name: ♻️ Cache Gradle downloads
+        if: ${{ !inputs.self_hosted && inputs.platform != 'ios' }}
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('bun.lock', 'app.config.ts', '.java-version') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Load secrets
+        uses: $/.github/actions/load-native-deploy-secrets
+        with:
+          op_service_account_token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          variant: ${{ inputs.variant }}
+
+      - name: 📄 Decode and write Google service files
+        uses: $/.github/actions/write-google-service-files
+        with:
+          variant: ${{ inputs.variant }}
+
+      - name: Load dropper API key
+        uses: 1password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259 # v4.0.0
+        with:
+          export-env: true
+          version: 2.34.0
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          DROPPER_API_KEY: op://ci-cd/tightlog-apk-ipa-uploader/DROPPER_API_KEY
+
+      - name: Λ Setup EAS
+        uses: expo/expo-github-action@eab7a230208c952974db8c3245cfd78402c7b385
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+          packager: bun
+
+      - name: 🔨 Build & upload
+        env:
+          VARIANT: ${{ inputs.variant }}
+          PLATFORM: ${{ inputs.platform }}
+        run: bun run build:local -- "$VARIANT" "$PLATFORM" --upload
+
+      - name: 🧹 Remove secrets env file
+        if: always()
+        run: rm -f .env
