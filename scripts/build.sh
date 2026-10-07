@@ -8,17 +8,36 @@ set -euo pipefail
 #
 #  Add --interactive to let eas build prompt instead of passing --non-interactive:
 #  bun run build:local -- internal ios --interactive
+#
+#  Add --upload to build an installable preview (ad hoc IPA, APK) and upload it
+#  to builds.tightlog.com with dropper:
+#  bun run build:local -- internal all --upload
+#  bun run build:local -- production all --upload
 
 source ./scripts/deploy-common.sh
 
 validate_deploy_args "build:local"
 
 interactive_flag=""
+upload=0
 for arg in "$@"; do
   if [ "$arg" = "--interactive" ]; then
     interactive_flag="--interactive"
   fi
+  if [ "$arg" = "--upload" ]; then
+    upload=1
+  fi
 done
+
+if [ "$upload" = "1" ] && [ "$variant" = "testflight" ]; then
+  echo "--upload does not support testflight. Use internal or production."
+  exit 1
+fi
+
+profile="$variant"
+if [ "$upload" = "1" ]; then
+  profile="$variant-preview"
+fi
 
 mkdir -p build-artifacts
 
@@ -117,13 +136,21 @@ build_android() {
 
 case "$platform" in
   ios)
-    build_ios "$variant"
+    build_ios "$profile"
     ;;
   android)
-    build_android "$variant"
+    build_android "$profile"
     ;;
   all)
-    build_ios "$variant"
-    build_android "$variant"
+    build_ios "$profile"
+    build_android "$profile"
     ;;
 esac
+
+if [ "$upload" = "1" ] && [ "$platform" != "android" ]; then
+  ./scripts/dropper.sh upload "$(ios_artifact_path "$profile")" --profile "$profile" --channel "$variant"
+fi
+
+if [ "$upload" = "1" ] && [ "$platform" != "ios" ]; then
+  ./scripts/dropper.sh upload "$(android_artifact_path "$profile")" --profile "$profile" --channel "$variant"
+fi
