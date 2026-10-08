@@ -52,7 +52,7 @@ export function ChatPreferenceLayoutSection({
         subtitle={
           previewDensity === 'compact'
             ? 'Tighter rows for faster scanning'
-            : 'Roomier rows with more breathing space'
+            : 'More space between rows'
         }
         title='Message Density'
         values={DENSITY_OPTIONS.map(option => option.label)}
@@ -76,7 +76,7 @@ export function ChatPreferenceLayoutSection({
       </View>
       <SettingsToggleRow
         title='Alternating Rows'
-        subtitle='Add subtle striping between chat lines'
+        subtitle='Stripe alternate chat lines'
         icon={{
           icon: 'line.3.horizontal',
           androidIcon: 'menu',
@@ -92,7 +92,7 @@ export function ChatPreferenceLayoutSection({
       </View>
       <SettingsToggleRow
         title='New Message Animation'
-        subtitle='Slide new messages into view as they arrive'
+        subtitle='Slide in new messages'
         icon={{
           icon: 'arrow.up.message',
           androidIcon: 'animation',

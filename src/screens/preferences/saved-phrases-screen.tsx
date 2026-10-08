@@ -151,8 +151,7 @@ function EmptyState() {
         No saved phrases
       </Text>
       <Text type='body' style={styles.emptySubtitle}>
-        Save phrases you send often, then insert them into the composer with a
-        tap.
+        Save phrases you send often. Tap one to add it to the composer.
       </Text>
     </View>
   );
@@ -307,8 +306,7 @@ function NativeSavedPhrasesList() {
             <SwiftText
               modifiers={[foregroundStyle(theme.color.textSecondary.dark)]}
             >
-              Save a phrase. Then tap it in chat to send it without having to
-              re-type it
+              Save a phrase. Tap it in chat to send it again.
             </SwiftText>
           </Section>
         )}

@@ -26,7 +26,7 @@ export function useChatImageUpload(onUploaded: (url: string) => void) {
         error: error instanceof Error ? error : String(error),
       });
 
-      toast.error("Couldn't upload that image. Please try again.");
+      toast.error("Couldn't upload that image. Try again.");
       return;
     }
 
@@ -51,7 +51,7 @@ export function useChatImageUpload(onUploaded: (url: string) => void) {
       logger.chat.error('[kappa] chat image upload failed', {
         error: error instanceof Error ? error : String(error),
       });
-      toast.error("Couldn't upload that image. Please try again.");
+      toast.error("Couldn't upload that image. Try again.");
     }
 
     setIsUploading(false);

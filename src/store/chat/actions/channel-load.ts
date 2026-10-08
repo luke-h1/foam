@@ -193,7 +193,7 @@ function notifyProviderLoadFailures(
       hadCache
         ? `Couldn't load emotes and badges from ${failedProviders.join(
             ', ',
-          )}, falling back to cached emotes/badges`
+          )}. Using cached ones.`
         : `Couldn't load emotes and badges from ${failedProviders.join(', ')}`,
     ),
   );

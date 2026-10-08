@@ -200,7 +200,7 @@ export function SearchHistory({
   const handleClearAll = useCallback(() => {
     Alert.alert(
       'Clear Search History',
-      'Are you sure you want to clear all your recent searches?',
+      'This removes all your recent searches.',
       [
         {
           text: 'Cancel',

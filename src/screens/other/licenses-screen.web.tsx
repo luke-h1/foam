@@ -17,7 +17,7 @@ export function LicensesScreen() {
       </View>
       <OtherInfoCard
         title='Open-source acknowledgements'
-        body='The native license list is available in the iOS and Android apps.'
+        body='The license list is in the iOS and Android apps.'
       />
     </SafeAreaView>
   );

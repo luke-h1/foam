@@ -257,7 +257,7 @@ const SettingsSheetComponent = ({
           >
             <SettingsLinkRow
               title='Sync to live'
-              subtitle='Jump back to the live edge'
+              subtitle='Jump to the live edge'
               icon={{
                 icon: 'forward.end.fill',
                 androidIcon: 'skip_next',

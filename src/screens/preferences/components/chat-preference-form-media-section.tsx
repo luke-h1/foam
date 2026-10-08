@@ -19,8 +19,8 @@ export function ChatPreferenceFormMediaSection({
       title='Media'
       footer={
         <NativeText>
-          Animated Twitch, BTTV, FFZ, and 7TV emotes will render as still images
-          when this is enabled.
+          When on, animated Twitch, BTTV, FFZ, and 7TV emotes show as still
+          images.
         </NativeText>
       }
     >

@@ -165,7 +165,7 @@ export function useOTAUpdates() {
 
     Alert.alert(
       'Update Available',
-      'A new version has been downloaded and is ready to install. Relaunch now?',
+      'A new version is ready to install. Relaunch now?',
       [
         {
           text: 'Relaunch',

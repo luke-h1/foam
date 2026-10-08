@@ -34,7 +34,7 @@ export function ChatPreferenceModerationSection({
       />
       <SettingsToggleRow
         title='Keep History on Clear'
-        subtitle='Ignore moderator chat clears and keep your scrollback'
+        subtitle='Keep scrollback when a moderator clears chat'
         icon={{
           icon: 'clock.arrow.circlepath',
           androidIcon: 'history',

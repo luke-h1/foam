@@ -17,7 +17,7 @@ export function ChatPreferenceFormPerformanceSection({
       title='Performance'
       footer={
         <NativeText>
-          Longer scrollback keeps more messages in memory; 200 is easier on
+          Longer scrollback keeps more messages in memory. 200 is easier on
           older devices.
         </NativeText>
       }

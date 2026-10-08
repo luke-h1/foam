@@ -20,7 +20,7 @@ export function ChatPreferenceHighlightsSection({
       footer={
         <Text color='gray.textLow' type='subhead'>
           Highlighted phrases tint matching messages. Mention feedback also
-          buzzes when a highlight matches.
+          buzzes on a match.
         </Text>
       }
     >
@@ -35,7 +35,7 @@ export function ChatPreferenceHighlightsSection({
       />
       <SettingsToggleRow
         title='Mention Feedback'
-        subtitle='Buzz when a message mentions you or matches a highlight'
+        subtitle='Buzz on mentions and highlight matches'
         icon={{
           icon: 'hand.tap',
           androidIcon: 'touch_app',

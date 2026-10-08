@@ -37,7 +37,7 @@ export function ChatPreferenceContextSection({
     <SettingsSection title='Context'>
       <SettingsToggleRow
         title='Historical Recent Messages'
-        subtitle='Loads historical recent messages in chat through the third-party API service at recent-messages.robotty.de.'
+        subtitle='Load past messages from third-party recent-messages.robotty.de'
         icon={{
           icon: 'clock.arrow.circlepath',
           androidIcon: 'history',
@@ -62,7 +62,7 @@ export function ChatPreferenceContextSection({
         }}
         onSelectIndex={handleTimestampFormatChange}
         selectedIndex={timestampFormatIndex}
-        subtitle='Applies to newly received messages'
+        subtitle='Applies to new messages'
         title='Timestamp Format'
         values={TIMESTAMP_FORMAT_OPTIONS.map(option => option.label)}
       />

@@ -271,13 +271,13 @@ export function createChatIrcHandlers({
      * destroy the backfill the user is waiting on.
      */
     if (ignoreClearChat || isLoadingRecentMessagesRef?.current) {
-      appendSystemMessage('Chat was cleared by a moderator (history kept)');
+      appendSystemMessage('A moderator cleared chat (history kept)');
       return;
     }
 
     clearLocalMessages();
 
-    const systemMessageText = 'Chat was cleared by a moderator';
+    const systemMessageText = 'A moderator cleared chat';
 
     const systemMessage = createSystemMessage(channelName, systemMessageText);
 

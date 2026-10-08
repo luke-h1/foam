@@ -17,8 +17,7 @@ export function ChatPreferenceFormSyncSection({
       title='Sync'
       footer={
         <NativeText>
-          Delay chat so it lines up with the video. Auto matches the measured
-          stream latency.
+          Delay chat to match the video. Auto uses the measured stream latency.
         </NativeText>
       }
     >

@@ -93,7 +93,7 @@ export const CONTEXT_TOGGLE_ROWS = [
   {
     key: 'chatTimestamps',
     label: 'Show Timestamps',
-    subtitle: 'Display message timestamps inline',
+    subtitle: 'Show the time beside each message',
     icon: {
       icon: 'clock',
       androidIcon: 'schedule',
@@ -123,7 +123,7 @@ export const CONTEXT_TOGGLE_ROWS = [
   {
     key: 'showUnreadJumpPill',
     label: 'Show Jump Pill',
-    subtitle: 'Display the unread jump-to-latest affordance',
+    subtitle: 'Show a button to jump to new messages',
     icon: {
       icon: 'arrow.down.circle',
       androidIcon: 'arrow_circle_down',

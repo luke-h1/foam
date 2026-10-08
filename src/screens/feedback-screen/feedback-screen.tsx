@@ -50,7 +50,7 @@ export function FeedbackScreen() {
   const handleSubmit = () => {
     if (!canSubmit && trimmedMessage.length === 0) {
       notification('error');
-      toast.error('Please enter a message first.');
+      toast.error('Enter a message first.');
       return;
     }
 
@@ -69,13 +69,13 @@ export function FeedbackScreen() {
       });
 
       notification('success');
-      toast.success('Your feedback was sent - we appreciate it.');
+      toast.success('Feedback sent. Thank you.');
 
       handleDismiss();
     } catch {
       setSubmitting(false);
       notification('error');
-      toast.error("Couldn't send your feedback. Please try again.");
+      toast.error("Couldn't send feedback. Try again.");
     }
   };
 
@@ -158,7 +158,7 @@ export function FeedbackScreen() {
               onChangeText={setMessage}
               placeholder={
                 type === 'bug'
-                  ? 'What went wrong, and what were you doing when it happened?'
+                  ? 'What went wrong, and what were you doing?'
                   : 'What would make Foam better?'
               }
               placeholderTextColor={theme.color.textFaint.dark}
