@@ -37,6 +37,29 @@ const OTA_RELOAD_SCREEN_OPTIONS = {
 
 const getIsUpdatePending = () => latestContext.isUpdatePending;
 
+/**
+ * Dev-client builds report `isEnabled` but reject the updates APIs (e.g.
+ * `setExtraParamAsync` throws NotAvailableInDevClientException), and `__DEV__`
+ * is false when the dev client loads a production-mode bundle, so the
+ * `shouldReceiveUpdates` guard can't catch it up front.
+ */
+const DEV_CLIENT_UNSUPPORTED_MARKERS = [
+  'NotAvailableInDevClientException',
+  'ERR_NOT_AVAILABLE_IN_DEV_CLIENT',
+];
+
+function isDevClientUnsupportedError(error: Error): boolean {
+  return DEV_CLIENT_UNSUPPORTED_MARKERS.some(marker =>
+    error.message.includes(marker),
+  );
+}
+
+/**
+ * Set once the native updates module reports it is running in a dev client,
+ * so later foreground checks don't retry an API that can never succeed.
+ */
+let isRunningInDevClient = false;
+
 async function setExtraParams() {
   await setExtraParamAsync(
     Platform.OS === 'ios' ? 'ios-build-number' : 'android-build-number',
@@ -107,9 +130,25 @@ async function fetchAvailableOtaUpdate(isProduction: boolean): Promise<void> {
 
     countOtaMetric('ota.update.fetched', fields);
   } catch (caught) {
+    const error = caught instanceof Error ? caught : new Error(String(caught));
+
+    if (isDevClientUnsupportedError(error)) {
+      isRunningInDevClient = true;
+
+      logger.main.info('Skipping OTA update check in dev client', {
+        name: 'ota_updates_service_info',
+        category: 'ota',
+        action: 'check_skipped_dev_client',
+        isProduction,
+        ...fields,
+      });
+
+      return;
+    }
+
     logger.main.error('OTA update check failed', {
       name: 'ota_updates_service_error',
-      error: caught instanceof Error ? caught : new Error(String(caught)),
+      error,
       category: 'OTAUpdatesService',
       action: 'check_failed',
       isProduction,
@@ -127,7 +166,7 @@ export function useOTAUpdates() {
   const timeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const checkForUpdates = useCallback(async () => {
-    if (!shouldReceiveUpdates) {
+    if (!shouldReceiveUpdates || isRunningInDevClient) {
       return;
     }
 
