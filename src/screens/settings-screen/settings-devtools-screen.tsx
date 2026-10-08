@@ -81,8 +81,7 @@ export function SettingsDevtoolsScreen() {
             >
               <NativeText>Shared Chat</NativeText>
               <NativeText>
-                Show the source label and badge on messages relayed from another
-                channel in a shared chat session
+                Label messages relayed from another channel
               </NativeText>
             </Toggle>
             <Toggle
@@ -91,8 +90,7 @@ export function SettingsDevtoolsScreen() {
             >
               <NativeText>Enhanced Video Stability</NativeText>
               <NativeText>
-                Automatically refresh the player to recover from silent stalls,
-                video errors, and high latency
+                Refresh the player on stalls, errors and high latency
               </NativeText>
             </Toggle>
             {isDevToolsEnabled ? (
@@ -102,8 +100,7 @@ export function SettingsDevtoolsScreen() {
               >
                 <NativeText>Chat Debug Tools</NativeText>
                 <NativeText>
-                  Capture raw IRC lines and show debug details in the chat user,
-                  emote, and badge sheets
+                  Log raw IRC and show debug info in chat sheets
                 </NativeText>
               </Toggle>
             ) : null}
@@ -208,7 +205,7 @@ export function SettingsDevtoolsScreen() {
         <SettingsSection title='Feature Flags'>
           <SettingsToggleRow
             title='Shared Chat'
-            subtitle='Show the source label and badge on messages relayed from another channel in a shared chat session'
+            subtitle='Label messages relayed from another channel'
             icon={{
               icon: 'bubble.left.and.bubble.right',
             }}
@@ -217,7 +214,7 @@ export function SettingsDevtoolsScreen() {
           />
           <SettingsToggleRow
             title='Enhanced Video Stability'
-            subtitle='Automatically refresh the player to recover from silent stalls, video errors, and high latency'
+            subtitle='Refresh the player on stalls, errors and high latency'
             icon={{ icon: 'wand.and.stars' }}
             value={enhancedVideoStability}
             onValueChange={value => update({ enhancedVideoStability: value })}
@@ -225,7 +222,7 @@ export function SettingsDevtoolsScreen() {
           {isDevToolsEnabled ? (
             <SettingsToggleRow
               title='Chat Debug Tools'
-              subtitle='Capture raw IRC lines and show debug details in the chat user, emote, and badge sheets'
+              subtitle='Log raw IRC and show debug info in chat sheets'
               icon={{ icon: 'ladybug' }}
               value={chatDebugTools}
               onValueChange={value => update({ chatDebugTools: value })}

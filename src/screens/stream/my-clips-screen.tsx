@@ -138,7 +138,7 @@ export function MyClipsScreen() {
   if (records.length === 0) {
     return (
       <EmptyState
-        content='Clips you create from the live player will show up here.'
+        content='Create one from the live player.'
         heading='No clips yet'
         iconName='scissors'
         style={styles.emptyState}

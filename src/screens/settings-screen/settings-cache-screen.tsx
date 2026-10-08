@@ -24,7 +24,7 @@ import { clearImageCache } from '@app/utils/image/clear-image-cache';
 function handleClearData() {
   Alert.alert(
     'Clear saved data?',
-    'Foam will remove the data it keeps on this device and load everything fresh. You stay signed in.',
+    'Removes Foam data on this device and loads everything fresh. You stay signed in.',
     [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -43,7 +43,7 @@ function handleClearData() {
 function handleClearCache() {
   Alert.alert(
     'Clear cache?',
-    'Cached emotes, badges, 7TV cosmetics and images will download again when needed.',
+    'Cached emotes, badges, 7TV cosmetics and images download again when needed.',
     [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -90,8 +90,8 @@ export function SettingsCacheScreen() {
           <Section
             footer={
               <NativeText>
-                Removes the data Foam keeps on this device and loads everything
-                fresh. You stay signed in.
+                Removes Foam data on this device and loads everything fresh. You
+                stay signed in.
               </NativeText>
             }
           >
@@ -118,7 +118,7 @@ export function SettingsCacheScreen() {
         <SettingsSection>
           <SettingsLinkRow
             title='Clear cache'
-            subtitle='Emotes, badges, 7TV cosmetics and images download again when needed'
+            subtitle='Emotes, badges and images download again when needed'
             icon={{ icon: 'trash' }}
             onPress={handleClearCache}
             danger

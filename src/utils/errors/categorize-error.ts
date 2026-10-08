@@ -20,6 +20,6 @@ export function getFriendlyErrorMessage(category: ErrorCategory): string {
     case 'network':
       return 'Foam could not reach Twitch. Check your connection, then try again.';
     case 'crash':
-      return 'Try resetting or restarting the app. If the issue persists, send feedback so we can look into it.';
+      return 'Reset or restart the app. If the problem continues, send feedback.';
   }
 }

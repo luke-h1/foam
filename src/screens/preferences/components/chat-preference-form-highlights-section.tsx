@@ -16,7 +16,7 @@ export function ChatPreferenceFormHighlightsSection({
       footer={
         <NativeText>
           Highlighted phrases tint matching messages. Mention feedback also
-          buzzes when a highlight matches.
+          buzzes on a match.
         </NativeText>
       }
     >

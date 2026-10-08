@@ -12,7 +12,7 @@ export function LicensesScreen() {
     <View style={styles.container}>
       <OtherInfoCard
         title='Open-source acknowledgements'
-        body='Launch the native license list to inspect bundled dependencies and attribution details.'
+        body='See the licenses and attributions for the libraries Foam uses.'
       >
         <Button
           onPress={() =>

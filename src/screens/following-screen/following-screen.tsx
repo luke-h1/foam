@@ -216,7 +216,7 @@ export default function FollowingScreen() {
       <EmptyState
         button='Sign in'
         buttonOnPress={() => router.push('/auth-sheet')}
-        content='Connect your Twitch account to see streams from channels you follow.'
+        content='Sign in to see streams from channels you follow.'
         heading='Your followed streams'
         iconName='person.2'
         style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}

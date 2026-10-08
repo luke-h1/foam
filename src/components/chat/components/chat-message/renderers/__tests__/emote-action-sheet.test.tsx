@@ -73,9 +73,7 @@ describe('EmoteActionSheet', () => {
       );
     });
 
-    expect(toastSuccessMock).toHaveBeenCalledWith(
-      '2x emote URL copied to clipboard',
-    );
+    expect(toastSuccessMock).toHaveBeenCalledWith('Copied 2x emote URL');
   });
 
   test('copies static scaled URLs when animations are disabled', async () => {

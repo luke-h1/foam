@@ -34,11 +34,11 @@ export function formatNoticeMessage(
     case 'followers_on_zero':
       return 'Followers-only mode enabled.';
     case 'msg_banned':
-      return 'You are permanently banned from chatting in this channel.';
+      return 'You are permanently banned from this channel.';
     case 'msg_bad_characters':
       return 'Your message contained unsupported characters.';
     case 'msg_channel_blocked':
-      return 'Your account is not allowed to chat in this channel right now.';
+      return 'Your account cannot chat in this channel right now.';
     case 'msg_channel_suspended':
       return 'This channel is unavailable or suspended.';
     case 'msg_duplicate':
@@ -49,7 +49,7 @@ export function formatNoticeMessage(
     case 'msg_followersonly_zero':
       return 'Followers-only mode is enabled. Follow to chat.';
     case 'msg_followersonly_followed':
-      return 'Followers-only mode is enabled. Keep following before you can chat.';
+      return 'Followers-only mode is enabled. Keep following to chat.';
     case 'msg_r9k':
       return 'Unique-chat blocked your message.';
     case 'msg_ratelimit':
@@ -57,7 +57,7 @@ export function formatNoticeMessage(
     case 'msg_rejected':
       return 'AutoMod held your message for review.';
     case 'msg_rejected_mandatory':
-      return "Your message was blocked by the channel's moderation settings.";
+      return "The channel's moderation settings blocked your message.";
     case 'msg_requires_verified_phone_number':
       return 'Verify your phone number to chat in this channel.';
     case 'msg_slowmode': {
@@ -69,12 +69,12 @@ export function formatNoticeMessage(
     case 'msg_subsonly':
       return 'Subscribers-only mode is enabled.';
     case 'msg_suspended':
-      return "You don't have permission to perform that action.";
+      return "You don't have permission to do that.";
     case 'msg_timedout': {
       const seconds = extractFirstNumber(trimmed);
       return seconds !== null
         ? `You are timed out (${seconds}s remaining).`
-        : 'You are timed out and cannot chat right now.';
+        : 'You are timed out.';
     }
     case 'msg_verified_email':
       return 'Verify your account to chat in this channel.';
@@ -92,8 +92,7 @@ export function formatNoticeMessage(
       return 'Subscribers-only mode enabled.';
     case 'tos_ban':
       return (
-        trimmed ||
-        'This channel has been closed for Terms of Service violations.'
+        trimmed || 'This channel is closed for Terms of Service violations.'
       );
     case 'unrecognized_cmd':
       return trimmed || 'Unrecognized command.';

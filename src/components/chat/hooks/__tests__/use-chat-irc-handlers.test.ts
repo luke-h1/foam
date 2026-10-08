@@ -324,7 +324,7 @@ describe('useChatIrcHandlers', () => {
         ? notice.message[0].content
         : undefined;
 
-    expect(content).toEqual('Chat was cleared by a moderator');
+    expect(content).toEqual('A moderator cleared chat');
   });
 
   test('does not clear rendered messages when token fires after chat unmounts', () => {
@@ -500,7 +500,7 @@ describe('useChatIrcHandlers', () => {
     expect(mockClearMessagesWithNotice).not.toHaveBeenCalled();
 
     expect(addedSystemMessageContents()).toEqual([
-      'Chat was cleared by a moderator (history kept)',
+      'A moderator cleared chat (history kept)',
     ]);
   });
 

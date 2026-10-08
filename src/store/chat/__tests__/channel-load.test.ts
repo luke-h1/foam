@@ -599,7 +599,7 @@ describe('loadChannelResources cache fallback', () => {
 
     expect(text).toContain('BTTV');
     expect(text).toContain('FFZ');
-    expect(text).toContain('falling back to cached emotes/badges');
+    expect(text).toContain('. Using cached ones.');
   });
 
   test('posts a system message when stale badge refresh requests reject', async () => {
@@ -636,7 +636,7 @@ describe('loadChannelResources cache fallback', () => {
       .join('');
 
     expect(text).toContain('FFZ');
-    expect(text).toContain('falling back to cached emotes/badges');
+    expect(text).toContain('. Using cached ones.');
   });
 
   test('posts no system message when every provider fetch succeeds', async () => {

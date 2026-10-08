@@ -34,7 +34,7 @@ export function FaqScreen() {
       >
         <OtherInfoCard
           title='FAQ'
-          body='Open the Foam website in the in-app browser for common questions and product guidance.'
+          body='Read common questions on the Foam website.'
         >
           <Button
             onPress={() => openLinkInBrowser('https://foam-app.com/faq')}

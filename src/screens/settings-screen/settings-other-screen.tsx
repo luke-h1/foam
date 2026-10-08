@@ -36,9 +36,9 @@ export function SettingsOtherScreen() {
             footer={
               <NativeText>
                 Foam sends anonymous usage data, such as which screens you open,
-                to help improve the app. Screen names can include channel names.
-                The data is never linked to your Twitch account and never
-                includes chat messages.
+                to improve the app. Screen names can include channel names. The
+                data never links to your Twitch account and never includes chat
+                messages.
               </NativeText>
             }
           >
@@ -65,9 +65,9 @@ export function SettingsOtherScreen() {
           footer={
             <Text type='subhead' color='gray.textLow'>
               Foam sends anonymous usage data, such as which screens you open,
-              to help improve the app. Screen names can include channel names.
-              The data is never linked to your Twitch account and never includes
-              chat messages.
+              to improve the app. Screen names can include channel names. The
+              data never links to your Twitch account and never includes chat
+              messages.
             </Text>
           }
         >

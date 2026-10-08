@@ -250,7 +250,7 @@ function BlockedUsersList({
       <ListStatePanel
         icon='exclamationmark.circle'
         title='Could not load blocked users'
-        description='Twitch did not return your blocked users list. Refresh and try again.'
+        description='Twitch did not return your blocked users. Try again.'
         actionLabel='Retry'
         onAction={() => void onRefresh()}
         onRefresh={onRefresh}
@@ -263,7 +263,7 @@ function BlockedUsersList({
       <ListStatePanel
         icon='shield'
         title='No blocked users'
-        description='Accounts you block on Twitch will appear here for quick review.'
+        description='Accounts you block on Twitch show here.'
         onRefresh={onRefresh}
       />
     );
@@ -440,13 +440,13 @@ export function BlockedUsersScreen() {
       return { previousData };
     },
     onSuccess: () => {
-      toast.success('User unblocked successfully');
+      toast.success('User unblocked');
     },
     onError: (_error, _targetUserId, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(userBlockListQueryKey, context.previousData);
       }
-      toast.error('Failed to unblock user');
+      toast.error('Could not unblock user');
     },
     onSettled: () => {
       void queryClient.invalidateQueries({
@@ -462,18 +462,14 @@ export function BlockedUsersScreen() {
   }, [queryClient, userBlockListQueryKey]);
 
   const handleUnblockRequest = (userId: string, userName: string) => {
-    Alert.alert(
-      'Unblock User',
-      `Are you sure you want to unblock ${userName}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Unblock',
-          onPress: () => unblockUser(userId),
-          style: 'destructive',
-        },
-      ],
-    );
+    Alert.alert('Unblock User', `Unblock ${userName}?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Unblock',
+        onPress: () => unblockUser(userId),
+        style: 'destructive',
+      },
+    ]);
   };
 
   return (

@@ -136,8 +136,8 @@ function EmptyState() {
         No highlights
       </Text>
       <Text type='body' style={styles.emptySubtitle}>
-        Messages containing a highlighted phrase get a colored tint in chat,
-        plus a haptic buzz when mention feedback is on.
+        Messages with a highlighted phrase get a color tint. They also buzz when
+        mention feedback is on.
       </Text>
     </View>
   );
@@ -322,8 +322,8 @@ function NativeChatHighlightsList() {
             <SwiftText
               modifiers={[foregroundStyle(theme.color.textSecondary.dark)]}
             >
-              Add a phrase above and pick a color. Matching messages will be
-              tinted in chat
+              Add a phrase above and pick a color. Matching messages get a tint
+              in chat.
             </SwiftText>
           </Section>
         )}

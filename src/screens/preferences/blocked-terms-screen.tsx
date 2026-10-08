@@ -89,7 +89,7 @@ function EmptyState() {
         No blocked terms
       </Text>
       <Text type='body' style={styles.emptySubtitle}>
-        Messages containing a blocked term will be hidden from chat.
+        Chat hides messages that contain a blocked term.
       </Text>
     </View>
   );
@@ -172,14 +172,14 @@ function NativeBlockedTermsList() {
 
     Alert.alert(
       'Remove blocked term',
-      `Remove "${first} from your blocked terms"`,
+      `Remove "${first}" from your blocked terms?`,
       [
         {
           text: 'Cancel',
           style: 'cancel',
         },
         {
-          text: 'remove',
+          text: 'Remove',
           style: 'destructive',
           onPress: () => {
             impact('medium');
@@ -205,8 +205,7 @@ function NativeBlockedTermsList() {
           footer={
             hasTerms ? undefined : (
               <SwiftText>
-                Messages that contain a blocked word or phrase are hidden from
-                chat.
+                Chat hides messages that contain a blocked word or phrase.
               </SwiftText>
             )
           }
@@ -226,7 +225,7 @@ function NativeBlockedTermsList() {
           <Section
             footer={
               <SwiftText>
-                {`${blockedTerms.length} ${blockedTerms.length === 1 ? 'term' : 'terms'} · Messages containing these will be hidden from chat.`}
+                {`${blockedTerms.length} ${blockedTerms.length === 1 ? 'term' : 'terms'} · Chat hides messages that contain these.`}
               </SwiftText>
             }
           >
@@ -302,7 +301,7 @@ export function BlockedTermsScreen() {
         ListFooterComponent={
           hasTerms ? (
             <Text type='subhead' style={styles.footer}>
-              {`${blockedTerms.length} ${blockedTerms.length === 1 ? 'term' : 'terms'} · Messages containing these will be hidden from chat.`}
+              {`${blockedTerms.length} ${blockedTerms.length === 1 ? 'term' : 'terms'} · Chat hides messages that contain these.`}
             </Text>
           ) : null
         }

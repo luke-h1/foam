@@ -186,10 +186,10 @@ export const ChatMessagePane = memo(
         {visibleMessages.length === 0 && rawMessages.length > 0 ? (
           <View style={styles.emptyState}>
             <Text type='callout' family='brand' style={styles.emptyStateTitle}>
-              No chat messages match the current view
+              No messages match this view
             </Text>
             <Text type='callout' family='brand' style={styles.emptyStateBody}>
-              Clear filters or jump back to the latest messages.
+              Clear filters or jump to the latest messages.
             </Text>
           </View>
         ) : null}

@@ -30,7 +30,7 @@ describe('getFriendlyErrorMessage', () => {
 
   test('returns the crash copy for a crash error', () => {
     expect(getFriendlyErrorMessage('crash')).toEqual(
-      'Try resetting or restarting the app. If the issue persists, send feedback so we can look into it.',
+      'Reset or restart the app. If the problem continues, send feedback.',
     );
   });
 });

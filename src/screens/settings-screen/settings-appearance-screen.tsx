@@ -39,8 +39,7 @@ export function SettingsAppearanceScreen() {
           <Section
             footer={
               <NativeText>
-                Short vibrations when you send a message, refresh, or change a
-                setting.
+                Vibrate when you send a message, refresh, or change a setting.
               </NativeText>
             }
           >
@@ -81,7 +80,7 @@ export function SettingsAppearanceScreen() {
         <SettingsSection>
           <SettingsToggleRow
             title='Haptics'
-            subtitle='Short vibrations when you send a message, refresh, or change a setting'
+            subtitle='Vibrate on send, refresh and setting changes'
             icon={{ icon: 'hand.tap' }}
             value={hapticFeedback}
             onValueChange={value => update({ hapticFeedback: value })}

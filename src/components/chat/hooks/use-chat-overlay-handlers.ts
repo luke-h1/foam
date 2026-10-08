@@ -303,7 +303,7 @@ export function useChatOverlayHandlers({
                   }
                 })
                 .catch(() => {
-                  toast.error('Failed to block user');
+                  toast.error('Could not block user');
                 });
             },
           },

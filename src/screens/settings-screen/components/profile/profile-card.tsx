@@ -124,7 +124,7 @@ function formatMemberSince(createdAt?: string) {
 function confirmDeleteAccount() {
   Alert.alert(
     'Delete Account',
-    "Foam doesn't have its own accounts - you sign in with your Twitch account, which is managed by Twitch. To permanently delete your account, continue to Twitch's account settings. To just remove your saved login from this device, use Log out above.",
+    "Foam has no accounts of its own. You sign in with Twitch. To delete your account for good, continue to Twitch's account settings. To only remove your login from this device, use Log out above.",
     [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -145,25 +145,21 @@ export function ProfileCard() {
   const memberSince = formatMemberSince(user?.created_at);
 
   const confirmLogout = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out of your account?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: () => {
-            void (async () => {
-              await logout();
-              setTimeout(() => {
-                router.replace('/tabs/top');
-              }, 300);
-            })();
-          },
+    Alert.alert('Sign Out', 'Sign out of your account?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Sign Out',
+        style: 'destructive',
+        onPress: () => {
+          void (async () => {
+            await logout();
+            setTimeout(() => {
+              router.replace('/tabs/top');
+            }, 300);
+          })();
         },
-      ],
-    );
+      },
+    ]);
   };
 
   if (!user) {
@@ -308,7 +304,7 @@ export function ProfileCard() {
         footer={
           <Text type='caption' color='gray.textLow' style={styles.footerText}>
             {
-              "Account deletion is handled by Twitch. This opens Twitch's Security and Privacy settings, where you can disable or delete your account."
+              "Twitch handles account deletion. This opens Twitch's Security and Privacy settings, where you can disable or delete your account."
             }
           </Text>
         }

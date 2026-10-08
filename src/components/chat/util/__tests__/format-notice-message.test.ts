@@ -52,7 +52,7 @@ describe('formatNoticeMessage', () => {
         { 'msg-id': 'msg_banned' },
         'You are permanently banned from talking in channel.',
       ),
-    ).toBe('You are permanently banned from chatting in this channel.');
+    ).toBe('You are permanently banned from this channel.');
   });
 
   test('formats bad character notices', () => {
@@ -70,7 +70,7 @@ describe('formatNoticeMessage', () => {
         { 'msg-id': 'msg_channel_blocked' },
         'Your message was not sent because your account is not in good standing in this channel.',
       ),
-    ).toBe('Your account is not allowed to chat in this channel right now.');
+    ).toBe('Your account cannot chat in this channel right now.');
   });
 
   test('formats suspended channel notices', () => {
@@ -115,9 +115,7 @@ describe('formatNoticeMessage', () => {
         { 'msg-id': 'msg_followersonly_followed' },
         'This room is in 10 minute followers-only mode. You have been following for 5 minutes. Continue following to chat!',
       ),
-    ).toBe(
-      'Followers-only mode is enabled. Keep following before you can chat.',
-    );
+    ).toBe('Followers-only mode is enabled. Keep following to chat.');
   });
 
   test('formats followers-only zero kickbacks', () => {
@@ -162,7 +160,7 @@ describe('formatNoticeMessage', () => {
         { 'msg-id': 'msg_rejected_mandatory' },
         'Your message wasn’t posted due to conflicts with the channel’s moderation settings.',
       ),
-    ).toBe("Your message was blocked by the channel's moderation settings.");
+    ).toBe("The channel's moderation settings blocked your message.");
   });
 
   test('formats verified phone notices', () => {
@@ -198,7 +196,7 @@ describe('formatNoticeMessage', () => {
         { 'msg-id': 'msg_suspended' },
         'You don’t have permission to perform that action.',
       ),
-    ).toBe("You don't have permission to perform that action.");
+    ).toBe("You don't have permission to do that.");
   });
 
   test('formats timeout notices with remaining seconds', () => {

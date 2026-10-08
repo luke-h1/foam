@@ -38,7 +38,7 @@ async function handleUpdatePress() {
 const UPDATE_REQUIRED_TITLE = 'Update Required';
 
 const UPDATE_REQUIRED_BODY =
-  'A new version of Foam is available. Please update to continue using the app.';
+  'A new version of Foam is available. Update to keep using the app.';
 
 const ALERT_REPRESENT_DELAY_MS = 300;
 

@@ -136,7 +136,7 @@ const SavedPhrasesSheetComponent = ({
           <EmptyState
             iconName='text.bubble'
             heading='No saved phrases yet'
-            content='Save phrases you type often, then insert them here with one tap.'
+            content='Save phrases you type often. Tap one to insert it.'
             button='Add a phrase'
             buttonOnPress={handleManage}
           />

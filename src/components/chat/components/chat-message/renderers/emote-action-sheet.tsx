@@ -185,7 +185,7 @@ function EmoteActionSheetComponent({
     }
 
     void Clipboard.setStringAsync(text).then(() => {
-      toast.success('Emote name copied to clipboard');
+      toast.success('Copied emote name');
     });
   }, [token.name, token.original_name, requestClose]);
 
@@ -197,7 +197,7 @@ function EmoteActionSheetComponent({
     }
 
     void Clipboard.setStringAsync(displayUrl).then(() => {
-      toast.success('Emote URL copied to clipboard');
+      toast.success('Copied emote URL');
     });
   }, [displayUrl, requestClose]);
 
@@ -211,7 +211,7 @@ function EmoteActionSheetComponent({
       }
 
       void Clipboard.setStringAsync(url).then(() => {
-        toast.success(`${scale} emote URL copied to clipboard`);
+        toast.success(`Copied ${scale} emote URL`);
       });
     },
     [requestClose, scaledImageUrls],
