@@ -10,7 +10,7 @@ const COMPACT_NUMBER_FORMATTER = new Intl.NumberFormat('en', {
 interface GetMediaLinkCardContentOptions {
   fallbackThumbnail: string | undefined;
   sevenTvEmote: SevenTvEmotePreview | null | undefined;
-  twitchClip: TwitchClip | undefined;
+  twitchClip: TwitchClip | null | undefined;
   type: MediaLinkTokenKind;
 }
 

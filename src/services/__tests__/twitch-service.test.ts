@@ -103,6 +103,23 @@ describe('twitchService.getClipsByIds', () => {
     };
   }
 
+  test('getClip returns the clip for a known id', async () => {
+    api.get.mockResolvedValue({ data: [makeClip('a')] });
+
+    const result = await twitchService.getClip('a');
+
+    expect(api.get).toHaveBeenCalledWith('/clips', { params: { id: 'a' } });
+    expect(result).toEqual<TwitchClip>(makeClip('a'));
+  });
+
+  test('getClip returns null for a deleted or unknown clip', async () => {
+    api.get.mockResolvedValue({ data: [] });
+
+    const result = await twitchService.getClip('gone');
+
+    expect(result).toBeNull();
+  });
+
   test('returns an empty list without a request when no ids are given', async () => {
     const result = await twitchService.getClipsByIds([]);
 
