@@ -1,0 +1,4 @@
+executionPrerequisite: The app is cold-started. scripts/bench/measure.sh does this before each run.
+steps:
+  - echo: Wait for the app to land on the Top tab after a cold start
+  - await: { visible: { id: top-streams-list }, timeout: 90000 }
