@@ -1,0 +1,7 @@
+executionPrerequisite: The app is on foam://dev-tools/chat-perf. scripts/bench/measure.sh opens it before each run.
+steps:
+  - echo: Wait for the chat-perf screen and its chat to load, outside the measured window
+  - await: { visible: { id: perf-flood-off }, timeout: 60000 }
+  - await: { visible: { id: chat-input-bar }, timeout: 60000 }
+  # The perf overlay updates all the time, so an idle wait never settles here.
+  - wait: 8000

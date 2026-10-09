@@ -144,3 +144,6 @@ playstore-service-account.json
 
 # local design research notes and media
 research/
+
+# Flashlight benchmark output (scripts/bench/measure.sh)
+bench-results/
