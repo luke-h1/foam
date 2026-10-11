@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.9 (Production)
+## 1.0.10 (Production)
 
 ### ⚡ Performance
 
@@ -10,6 +10,13 @@
 
 - **ui:** Design foundations - continuous corners, tabular counts, DESIGN.md and the audit ([#894](https://github.com/lhowsam/foam/issues/894))
 - **chat:** Fold the composer's extra controls into one menu ([#904](https://github.com/lhowsam/foam/issues/904))
+- **app:** Redesign ([#915](https://github.com/lhowsam/foam/issues/915))
+- **release:** Upload internal builds to builds.tightlog.com ([#919](https://github.com/lhowsam/foam/issues/919))
+- **perf:** Add flashlight bench, fix chat link errors ([#922](https://github.com/lhowsam/foam/issues/922))
+
+### 🏗️ Build
+
+- **tooling:** Replace ESLint and Prettier with oxlint and oxfmt ([#917](https://github.com/lhowsam/foam/issues/917))
 
 ### 🐛 Bug Fixes
 
@@ -21,6 +28,7 @@
 - **chat:** Let the list own the keyboard inset ([#906](https://github.com/lhowsam/foam/issues/906))
 - **app:** Address apple feedback ([#909](https://github.com/lhowsam/foam/issues/909))
 - **app:** Point config plugins at their kebab-case files ([#910](https://github.com/lhowsam/foam/issues/910))
+- **auth:** Readable errors when anon sign-in is blocked ([#923](https://github.com/lhowsam/foam/issues/923))
 
 ### 👷 CI/CD
 
@@ -40,6 +48,10 @@
 - **infrastructure:** Bump zizmorcore/zizmor-action from 0.6.1 to 0.6.4 ([#902](https://github.com/lhowsam/foam/issues/902))
 - **infrastructure:** Bump actions/setup-java from 5.7.0 to 6.0.1 ([#903](https://github.com/lhowsam/foam/issues/903))
 - **app:** Fix build
+- **ai:** Make the repo easier for agents to navigate ([#916](https://github.com/lhowsam/foam/issues/916))
+- **app:** Tighten app copy ([#920](https://github.com/lhowsam/foam/issues/920))
+- **infrastructure:** Bump 1password/load-secrets-action from 4.0.0 to 5.0.1 ([#921](https://github.com/lhowsam/foam/issues/921))
+- **app:** Release 1.0.10
 
 ## 1.0.9 (Production)
 
