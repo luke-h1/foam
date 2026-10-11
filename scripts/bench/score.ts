@@ -135,15 +135,30 @@ if (files.length === 0) {
   process.exit(1);
 }
 
-for (const file of files) {
+function scoreFile(file: string): string {
+  const name = basename(file);
   const result = JSON.parse(readFileSync(file, 'utf8')) as FlashlightResult;
   const score = scoreOf(result);
-  const name = basename(file);
 
-  console.log(
-    score
-      ? formatScore(name, score)
-      : `${name.padEnd(30)} no successful iteration with measures ` +
-          `(status ${result.status}, ${result.iterations.length} iterations)`,
+  if (score) {
+    return formatScore(name, score);
+  }
+
+  process.exitCode = 1;
+
+  return (
+    `${name.padEnd(30)} no successful iteration with measures ` +
+    `(status ${result.status}, ${result.iterations.length} iterations)`
   );
+}
+
+for (const file of files) {
+  try {
+    console.log(scoreFile(file));
+  } catch (error) {
+    process.exitCode = 1;
+    console.error(
+      `${basename(file).padEnd(30)} unreadable result: ${String(error)}`,
+    );
+  }
 }

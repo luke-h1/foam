@@ -125,7 +125,11 @@ for bench in "${BENCHES[@]}"; do
     --testCommand "argent flow run $test_flow $argent_args" \
     --skipRestart \
     --iterationCount "$((ITERATIONS + 1))" \
-    --resultsFilePath "$out" >/dev/null 2>&1
+    --resultsFilePath "$out" >"$RESULTS/$bench.log" 2>&1 || {
+    echo "flashlight failed for $bench. Full log: $RESULTS/$bench.log" >&2
+    tail -n 40 "$RESULTS/$bench.log" >&2
+    exit 1
+  }
 
   bun -e '
     const file = process.argv[1];
