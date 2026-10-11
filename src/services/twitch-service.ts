@@ -378,6 +378,14 @@ export const twitchService = {
       headers: isE2EMode ? {} : { 'x-api-key': authProxyApiKey ?? '' },
     });
 
+    // An edge block (e.g. a Cloudflare 403) answers with an HTML page, which
+    // would otherwise surface as a JSON parse error.
+    if (!res.ok) {
+      throw new Error(
+        `Auth proxy token request failed: HTTP ${res.status} (${res.headers.get('content-type') ?? 'no content-type'})`,
+      );
+    }
+
     const body = await parseJsonOnWorklet<{ data: DefaultTokenResponse }>(
       await res.text(),
     );

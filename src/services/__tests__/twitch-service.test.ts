@@ -1,3 +1,6 @@
+import type { FetchResponse } from 'expo/build/winter/fetch/FetchResponse';
+import { fetch } from 'expo/fetch';
+
 import type { TwitchCheermote } from '@app/types/twitch/bits';
 import type { FollowedChannel } from '@app/types/twitch/channel';
 import type { TwitchClip, TwitchCreatedClip } from '@app/types/twitch/clip';
@@ -468,5 +471,23 @@ describe('twitchService.getStream', () => {
     api.get.mockResolvedValue({ data: [] });
 
     await expect(twitchService.getStream('xqc')).resolves.toEqual(null);
+  });
+});
+
+describe('twitchService.getDefaultToken', () => {
+  test('rejects with the HTTP status when the auth proxy is blocked at the edge', async () => {
+    const blockedResponse = {
+      ok: false,
+      status: 403,
+      headers: new Headers({ 'content-type': 'text/html' }),
+      text: () => Promise.resolve('<html>Forbidden</html>'),
+    };
+
+    // SAFETY: getDefaultToken only reads .ok/.status/.headers/.text() off the response.
+    jest.mocked(fetch).mockResolvedValueOnce(blockedResponse as FetchResponse);
+
+    await expect(twitchService.getDefaultToken()).rejects.toThrow(
+      'Auth proxy token request failed: HTTP 403 (text/html)',
+    );
   });
 });

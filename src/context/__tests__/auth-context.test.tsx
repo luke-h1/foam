@@ -8,6 +8,7 @@ import {
   waitFor,
 } from '@testing-library/react-native';
 import { type AuthSessionResult, TokenResponse } from 'expo-auth-session';
+import { toast } from 'sonner-native';
 
 import { Text } from '@app/components/ui/text/text';
 import { queryClient } from '@app/lib/react-query/query-client';
@@ -127,6 +128,23 @@ describe('AuthContext', () => {
       expect(result.current.ready).toBe(true);
       expect(result.current.user).toEqual(undefined);
     });
+  });
+
+  test('shows a friendly toast when the anon token request is blocked', async () => {
+    twitchService.getDefaultToken.mockRejectedValue(
+      new Error('Auth proxy token request failed: HTTP 403 (text/html)'),
+    );
+
+    SecureStore.getItemAsync.mockResolvedValue(null);
+
+    renderHook(() => useAuthContext(), { wrapper, initialProps });
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith('Access blocked', {
+        description:
+          'Your network blocked Foam from signing in. Try another network or turn off your VPN, then try again.',
+      }),
+    );
   });
 
   test('should login with twitch when oauth response is successful', async () => {
