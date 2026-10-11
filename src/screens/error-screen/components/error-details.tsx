@@ -12,6 +12,7 @@ import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/open-link-in-browser';
 import {
   categorizeError,
+  getErrorTitle,
   getFriendlyErrorMessage,
 } from '@app/utils/errors/categorize-error';
 
@@ -65,9 +66,7 @@ export function ErrorDetails({ error, errorInfo, onReset }: ErrorDetailsProps) {
         />
 
         <Text type='title2' align='center'>
-          {errorCategory === 'network'
-            ? 'Connection trouble'
-            : 'Something went wrong'}
+          {getErrorTitle(errorCategory)}
         </Text>
 
         <Text type='body' color='gray.textLow' align='center'>

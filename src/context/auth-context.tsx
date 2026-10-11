@@ -35,6 +35,11 @@ import {
   type TwitchToken,
 } from '@app/utils/authentication/token-lifecycle';
 import { parseTwitchAuthTokenFromResponse } from '@app/utils/authentication/twitch-auth';
+import {
+  categorizeError,
+  getErrorTitle,
+  getFriendlyErrorMessage,
+} from '@app/utils/errors/categorize-error';
 import { logger } from '@app/utils/logger';
 
 import {
@@ -283,6 +288,12 @@ function useAuthContextValue({
     } catch (e) {
       logger.auth.error('Failed to get anon auth', e);
       markAuthStateReadyFallback('fetchAnonToken failed', asError(e));
+
+      const category = categorizeError(asError(e));
+
+      toast.error(getErrorTitle(category), {
+        description: getFriendlyErrorMessage(category),
+      });
     }
   };
 
