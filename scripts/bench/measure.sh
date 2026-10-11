@@ -110,11 +110,7 @@ cd "$ROOT"
 for bench in "${BENCHES[@]}"; do
   read -r link open_flow test_flow label <<<"$(bench_config "$bench")"
 
-  cold_start="adb shell am force-stop $BUNDLE_ID && $(open_url "$launch_url") && argent flow run app-ready $argent_args"
-
-  if [ "$link" != "foam://tabs/top" ]; then
-    cold_start="$cold_start && $(open_url "$link")"
-  fi
+  cold_start="adb shell am force-stop $BUNDLE_ID && $(open_url "$launch_url") && argent flow run app-ready $argent_args && $(open_url "$link")"
 
   out="$RESULTS/$bench.json"
   echo "> $label"
