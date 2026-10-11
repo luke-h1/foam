@@ -1,0 +1,9 @@
+executionPrerequisite: The chat-perf screen is open with the flood off, as open-chat-perf leaves it.
+steps:
+  - echo: Run the raid synthetic flood for 10 seconds. This is the measured part.
+  # Coordinate taps on perf-flood-raid and perf-flood-off. A selector tap waits for a still screen, which the perf overlay never gives.
+  - tool: gesture-tap
+    args: { x: 0.520, y: 0.399 }
+  - wait: 10000
+  - tool: gesture-tap
+    args: { x: 0.067, y: 0.399 }

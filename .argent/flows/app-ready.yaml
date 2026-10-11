@@ -1,0 +1,4 @@
+executionPrerequisite: The app is cold-started. scripts/bench/measure.sh does this before each run.
+steps:
+  - echo: Wait for the tab bar after a cold start. A logged-in user lands on Following, not Top.
+  - await: { visible: { text: Search }, timeout: 90000 }

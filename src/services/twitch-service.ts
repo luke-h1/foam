@@ -666,14 +666,17 @@ export const twitchService = {
     return result.data?.[0] ?? null;
   },
 
-  getClip: async (id: string): Promise<TwitchClip> => {
+  /**
+   * Helix answers a deleted or unknown clip id with an empty `data` array.
+   */
+  getClip: async (id: string): Promise<TwitchClip | null> => {
     const result = await twitchApi.get<TwitchClipResponse>('/clips', {
       params: {
         id,
       },
     });
-    // SAFETY: Helix /clips returns one entry for a single id
-    return result.data[0] as TwitchClip;
+
+    return result.data[0] ?? null;
   },
 
   /**

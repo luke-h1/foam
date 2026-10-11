@@ -40,15 +40,25 @@ describe('parseWordLinkParts', () => {
     ]);
   });
 
-  test('still parses 7TV emote links as stvEmote tokens', () => {
+  test('parses 7TV emote links with a v4 ULID as stvEmote tokens', () => {
     expect(
-      parseWordLinkParts('https://7tv.app/emotes/64f8a1b0c4b8c8f8f8f8f8f8'),
+      parseWordLinkParts('https://7tv.app/emotes/01F6MZGCNG000255K4X1V15WQE'),
     ).toEqual<MessageToken[]>([
       {
         type: 'stvEmoteLink',
-        content: 'https://7tv.app/emotes/64f8a1b0c4b8c8f8f8f8f8f8',
-        url: 'https://7tv.app/emotes/64f8a1b0c4b8c8f8f8f8f8f8',
+        content: 'https://7tv.app/emotes/01F6MZGCNG000255K4X1V15WQE',
+        url: 'https://7tv.app/emotes/01F6MZGCNG000255K4X1V15WQE',
       },
+    ]);
+  });
+
+  test.each([
+    'https://7tv.app/emotes/foo',
+    'https://7tv.app/emotes/64f8a1b0c4b8c8f8f8f8f8f8',
+    'https://7tv.app/emotes/81F6MZGCNG000255K4X1V15WQE',
+  ])('parses a 7TV link without a valid ULID as a plain link: %s', url => {
+    expect(parseWordLinkParts(url)).toEqual<MessageToken[]>([
+      { type: 'link', content: url, url },
     ]);
   });
 

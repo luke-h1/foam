@@ -1,0 +1,77 @@
+steps:
+  - echo: Eight momentum-free swipes, the measured part on its own
+  - tool: run-sequence
+    args:
+      steps:
+        - tool: gesture-swipe
+          args:
+            fromX: 0.5
+            fromY: 0.85
+            toX: 0.5
+            toY: 0.25
+            durationMs: 600
+            momentum: false
+          delayMs: 400
+        - tool: gesture-swipe
+          args:
+            fromX: 0.5
+            fromY: 0.85
+            toX: 0.5
+            toY: 0.25
+            durationMs: 600
+            momentum: false
+          delayMs: 400
+        - tool: gesture-swipe
+          args:
+            fromX: 0.5
+            fromY: 0.85
+            toX: 0.5
+            toY: 0.25
+            durationMs: 600
+            momentum: false
+          delayMs: 400
+        - tool: gesture-swipe
+          args:
+            fromX: 0.5
+            fromY: 0.85
+            toX: 0.5
+            toY: 0.25
+            durationMs: 600
+            momentum: false
+          delayMs: 400
+        - tool: gesture-swipe
+          args:
+            fromX: 0.5
+            fromY: 0.85
+            toX: 0.5
+            toY: 0.25
+            durationMs: 600
+            momentum: false
+          delayMs: 400
+        - tool: gesture-swipe
+          args:
+            fromX: 0.5
+            fromY: 0.85
+            toX: 0.5
+            toY: 0.25
+            durationMs: 600
+            momentum: false
+          delayMs: 400
+        - tool: gesture-swipe
+          args:
+            fromX: 0.5
+            fromY: 0.85
+            toX: 0.5
+            toY: 0.25
+            durationMs: 600
+            momentum: false
+          delayMs: 400
+        - tool: gesture-swipe
+          args:
+            fromX: 0.5
+            fromY: 0.85
+            toX: 0.5
+            toY: 0.25
+            durationMs: 600
+            momentum: false
+          delayMs: 400

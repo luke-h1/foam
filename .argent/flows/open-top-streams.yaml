@@ -1,0 +1,5 @@
+executionPrerequisite: The app is on the Top tab. scripts/bench/measure.sh opens it before each run.
+steps:
+  - echo: Wait for Top streams to load, outside the measured window
+  - await: { visible: { id: top-streams-list }, timeout: 60000 }
+  - await: { idle: true, stableFor: 3000, timeout: 60000 }

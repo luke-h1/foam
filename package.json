@@ -59,12 +59,13 @@
     "lint": "bun run lint:check",
     "lint:ast-grep": "ast-grep scan",
     "lint:check": "oxlint",
-    "lint:fix": "oxlint --fix",
+    "lint:fix": "oxlint --fix --no-error-on-unmatched-pattern",
     "lint:kotlin": "./scripts/lint-kotlin.sh",
     "lint:native": "bun run lint:swift && bun run lint:kotlin",
     "lint:swift": "./scripts/lint-swift.sh",
     "metadata:push": "EXPO_PUBLIC_APP_VARIANT=production eas metadata:push --profile production",
     "ota": "./scripts/release-ota.sh",
+    "perf:bench": "./scripts/bench/measure.sh",
     "perf:chat:ios": "bash scripts/perf/capture-chat-instruments.sh",
     "perf:chat:ios:export": "bash scripts/perf/export-instruments-trace.sh",
     "perf:chat:rn": "bash scripts/perf/capture-chat-react-devtools.sh",
@@ -246,7 +247,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
-      "oxlint --fix",
+      "oxlint --fix --no-error-on-unmatched-pattern",
       "oxfmt --no-error-on-unmatched-pattern"
     ],
     "*.{ts,tsx}": "ast-grep scan",
