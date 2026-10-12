@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.11 (Production)
+
+### 🐛 Bug Fixes
+
+- **app:** Oversized yoga layout card
+
+### 🔧 Miscellaneous Tasks
+
+- **updates:** Use fingerprint runtime version ([#924](https://github.com/lhowsam/foam/issues/924))
+
 ## 1.0.10 (Production)
 
 ### ⚡ Performance
