@@ -62,28 +62,58 @@ const RELOAD_MAX_DELAY_MS = 8000;
  */
 const LOAD_WATCHDOG_MS = 12000;
 
+function shouldEmoteAnimate(
+  rowVisibility: ContextType<typeof RowVisibilityContext>,
+  animated: boolean,
+): boolean {
+  if (!rowVisibility || !animated) {
+    return true;
+  }
+
+  return rowVisibility.isVisible() && !chatScrollActivity.isActive();
+}
+
 /**
  * Pauses an animated emote while its row is off-screen or the list is flung,
  * and resumes it after; static images never subscribe.
+ *
+ * Each command finds its view with a synchronous call to the main thread, so
+ * the JS thread waits while the main thread mounts views. Send a command only
+ * when the view state differs from what the row needs. A newly set image
+ * already uses the committed `autoplay` prop.
  */
 function useEmoteAnimationSync(
   imageRef: RefObject<ExpoImage | null>,
   rowVisibility: ContextType<typeof RowVisibilityContext>,
   animated: boolean,
 ) {
+  const autoplay = shouldEmoteAnimate(rowVisibility, animated);
+  const committedAutoplayRef = useSyncRef(autoplay);
+  const viewAnimatingRef = useRef(autoplay);
+
   const syncAnimation = useCallback(() => {
     if (!rowVisibility || !animated) {
       return;
     }
 
-    const shouldAnimate =
-      rowVisibility.isVisible() && !chatScrollActivity.isActive();
+    const shouldAnimate = shouldEmoteAnimate(rowVisibility, animated);
+
+    if (shouldAnimate === viewAnimatingRef.current) {
+      return;
+    }
+
+    viewAnimatingRef.current = shouldAnimate;
 
     runAnimationCommand(
       imageRef.current,
       shouldAnimate ? 'startAnimating' : 'stopAnimating',
     );
   }, [imageRef, rowVisibility, animated]);
+
+  const syncAfterImageChange = useCallback(() => {
+    viewAnimatingRef.current = committedAutoplayRef.current;
+    syncAnimation();
+  }, [committedAutoplayRef, syncAnimation]);
 
   useEffect(() => {
     if (!rowVisibility || !animated) {
@@ -100,12 +130,7 @@ function useEmoteAnimationSync(
     };
   }, [rowVisibility, animated, syncAnimation]);
 
-  const autoplay =
-    rowVisibility && animated
-      ? rowVisibility.isVisible() && !chatScrollActivity.isActive()
-      : true;
-
-  return { autoplay, syncAnimation };
+  return { autoplay, syncAfterImageChange };
 }
 
 /**
@@ -115,7 +140,7 @@ function useEmoteAnimationSync(
 function useEmoteLoadRecovery(
   sourceUrl: string,
   sharedRef: ImageRef | null,
-  syncAnimation: () => void,
+  syncAfterImageChange: () => void,
 ) {
   const fallbackChain = getImageFallbackChain(sourceUrl);
 
@@ -193,8 +218,8 @@ function useEmoteLoadRecovery(
       viaRef: showRef,
     }));
 
-    syncAnimation();
-  }, [clearRetryTimer, showRef, sourceUrl, syncAnimation]);
+    syncAfterImageChange();
+  }, [clearRetryTimer, showRef, sourceUrl, syncAfterImageChange]);
 
   const handleError = useCallback(
     (event?: ImageErrorEventData) => {
@@ -307,8 +332,8 @@ function useEmoteLoadRecovery(
     if (showRef) {
       displayedSharedRef.current = sharedRef;
     }
-    syncAnimation();
-  }, [sharedRef, showRef, syncAnimation]);
+    syncAfterImageChange();
+  }, [sharedRef, showRef, syncAfterImageChange]);
 
   // A displayed ref pins status at 'loading' (no onLoad), so the timer always
   // fires on the ref path; handleError's displayed-ref guard no-ops it. A
@@ -417,7 +442,7 @@ function ChatInlineImageComponent({
 
   const imageRef = useRef<ExpoImage>(null);
 
-  const { autoplay, syncAnimation } = useEmoteAnimationSync(
+  const { autoplay, syncAfterImageChange } = useEmoteAnimationSync(
     imageRef,
     rowVisibility,
     animated,
@@ -431,7 +456,7 @@ function ChatInlineImageComponent({
     reloadNonce,
     showRef,
     status,
-  } = useEmoteLoadRecovery(sourceUrl, sharedRef, syncAnimation);
+  } = useEmoteLoadRecovery(sourceUrl, sharedRef, syncAfterImageChange);
 
   // Shimmer only while nothing real is on screen; cached emotes stay on the
   // bare-image fast path with no extra Fabric node.
