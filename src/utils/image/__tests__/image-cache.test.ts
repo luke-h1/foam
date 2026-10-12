@@ -2,6 +2,7 @@ import {
   cacheImageFromUrl,
   clearSessionCache,
   getCachedImageUri,
+  getCacheDirectoryPath,
   listCachedImages,
 } from '@app/utils/image/image-cache';
 
@@ -15,6 +16,7 @@ const { __mockFileSystem: fileSystemMock } = require('expo-file-system') as {
     downloadCount: () => number;
     evict: (uri: string) => boolean;
     exists: (uri: string) => boolean;
+    listFileNames: (directoryUri: string) => string[];
     pendingDownloadCount: () => number;
     releaseDownload: () => void;
     releaseAllDownloads: () => void;
@@ -174,7 +176,7 @@ describe('image-cache', () => {
     expect(fileSystemMock.downloadCount()).toBe(6);
   });
 
-  test('a download that finishes after a clear records nothing and returns the source url', async () => {
+  test('a download that finishes after a clear records nothing, deletes its file and returns the source url', async () => {
     fileSystemMock.setDeferDownloads(true);
     const url = 'https://example.com/cleared-mid-download.png';
 
@@ -183,8 +185,39 @@ describe('image-cache', () => {
 
     clearSessionCache();
     fileSystemMock.releaseAllDownloads();
+    const result = await download;
+    await flushMicrotasks();
 
-    expect([await download, listCachedImages()]).toEqual([url, []]);
+    expect([
+      result,
+      listCachedImages(),
+      fileSystemMock.listFileNames(getCacheDirectoryPath()),
+    ]).toEqual([url, [], []]);
+  });
+
+  test('a download from before a clear keeps its file when a newer download uses the same path', async () => {
+    fileSystemMock.setDeferDownloads(true);
+    const url = 'https://example.com/shared-path.png';
+
+    const staleDownload = cacheImageFromUrl(url);
+    await flushMicrotasks();
+
+    clearSessionCache();
+    const freshDownload = cacheImageFromUrl(url);
+    await flushMicrotasks();
+
+    fileSystemMock.releaseDownload();
+    await staleDownload;
+    await flushMicrotasks();
+
+    const fileCount = fileSystemMock.listFileNames(
+      getCacheDirectoryPath(),
+    ).length;
+
+    fileSystemMock.releaseAllDownloads();
+    await freshDownload;
+
+    expect(fileCount).toBe(1);
   });
 
   test('a clear resolves queued downloads with their source url', async () => {

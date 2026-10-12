@@ -415,6 +415,19 @@ function validateManifestSoon(): void {
   }, 1000);
 }
 
+/**
+ * Deletes a file that a download from before `clearSessionCache` wrote after
+ * the clear removed the directory. Nothing else would delete it. Keep the file
+ * when a newer record or download uses the same path.
+ */
+function discardClearedDownload(key: string, uri: string): void {
+  if (manifest.has(key) || inFlight.has(key)) {
+    return;
+  }
+
+  deleteSoon(uri);
+}
+
 export async function cacheImageFromUrl(
   url: string,
   options: CacheImageOptions = {},
@@ -477,6 +490,7 @@ export async function cacheImageFromUrl(
       }
 
       if (isCleared()) {
+        discardClearedDownload(key, cachedFile.uri);
         return url;
       }
 
