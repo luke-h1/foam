@@ -78,7 +78,7 @@ function AccountRow({ user }: { user: UserInfoResponse }) {
     >
       <HStack spacing={14} modifiers={[contentShape(shapes.rectangle())]}>
         <RNHostView matchContents>
-          <View pointerEvents='none'>
+          <View pointerEvents='none' style={styles.avatarHost}>
             <Avatar
               uri={user.profile_image_url || undefined}
               name={user.display_name}
@@ -205,6 +205,15 @@ function BuildFooter() {
 }
 
 const styles = StyleSheet.create({
+  /**
+   * The hosted view needs a fixed size. Without one, Yoga stretches it to
+   * the host and `matchContents` turns the account row into a screen-tall
+   * card.
+   */
+  avatarHost: {
+    height: 52,
+    width: 52,
+  },
   iosHost: {
     flex: 1,
   },
