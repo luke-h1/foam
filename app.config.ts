@@ -218,7 +218,7 @@ const config: ExpoConfig = {
     disableAntiBrickingMeasures: variant !== 'production',
   },
   runtimeVersion: {
-    policy: 'appVersion',
+    policy: 'fingerprint',
   },
   extra: {
     EXPO_PUBLIC_APP_VARIANT: variant,
