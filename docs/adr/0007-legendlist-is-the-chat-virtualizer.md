@@ -22,6 +22,17 @@ Two stronger alternatives were evaluated and rejected:
   row-state-outliving-recycle fixes (`ChatInlineImage` recyclingKey races) and
   on-device fling QA; see `PERF_REPORT.md` "F1".
 
+  The iOS crash "attempt to recycle an already mounted view" came from
+  `@react-native-masked-view`. It ran through the legacy interop layer and
+  moved its children into a mask view, so Fabric found them still attached
+  when it tried to pool them. Painted usernames stopped using it in #641.
+  With recycling on, a simulator run of more than 240 flings in a busy chat
+  did not reproduce the crash. Settled rows were correct, but some areas
+  stayed blank during a fling before their rows rendered. Recycling cut
+  native view creation by about 3x and added re-render work for reused
+  rows. Before you turn it on, run the fling QA on a device and measure the
+  result there (ADR-0010).
+
 The list's row identity contract is owned by `utils/chat/message-identity/`
 (`getChatMessageListKey` is the `keyExtractor`); the list dropped its
 render-time dedup on the strength of that shared module, so any list change

@@ -57,7 +57,8 @@ const CHAT_MAINTAIN_SCROLL_AT_END = {
 const CHAT_MAINTAIN_SCROLL_AT_END_THRESHOLD = 0.1;
 
 /**
- * Off: recycling crashed on iOS when rows updated while scrolled.
+ * Off until on-device fling QA passes. The iOS recycle crash came from the
+ * removed `@react-native-masked-view`; see ADR-0007.
  */
 const CHAT_RECYCLE_ITEMS = false;
 
