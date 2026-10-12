@@ -49,7 +49,10 @@ import {
 } from '@app/utils/seven-tv/seven-tv-user-cache';
 
 import { sevenTvApi } from './api/clients';
-import { buildSanitisedEmote } from './emote-provider';
+import {
+  buildSanitisedEmote,
+  buildSevenTvSanitisedEmote,
+} from './emote-provider';
 import { sevenTvV4Client } from './gql/client';
 import { runCosmeticsQuery } from './gql/seven-tv-worklet-client';
 
@@ -117,7 +120,14 @@ async function fetchSevenTvUser(
   return result ?? null;
 }
 
+// The emote set helpers below are worklets so the channel set can be sanitised
+// on the background parse runtime. Keep each one above its callers: the
+// worklets plugin assigns them in place, so a caller declared first captures
+// `undefined`.
+
 function buildV4ImageVariants(images: readonly Image[]): EmoteImageVariants {
+  'worklet';
+
   const animated: EmoteImageVariantSet = {};
   const staticSet: EmoteImageVariantSet = {};
 
@@ -149,6 +159,8 @@ function buildV4ImageVariants(images: readonly Image[]): EmoteImageVariants {
 }
 
 function pickBestStaticImage(images: readonly Image[]): Image | undefined {
+  'worklet';
+
   const scales = [4, 3, 2, 1];
 
   return scales.reduce<Image | undefined>((found, targetScale) => {
@@ -173,6 +185,8 @@ function sanitiseV4EmoteSet(
   emoteSet: V4EmoteSet,
   site: '7TV Channel' | '7TV Global',
 ): SevenTvSanitisedEmote[] {
+  'worklet';
+
   const setMetadata: SevenTvEmoteSetMetadata = {
     setId: emoteSet.id,
     setName: emoteSet.name,
@@ -193,7 +207,7 @@ function sanitiseV4EmoteSet(
     const height = bestImage?.height ?? 0;
     const zeroWidth = item.flags.zeroWidth || emote.flags.defaultZeroWidth;
 
-    const sanitised = buildSanitisedEmote({
+    const sanitised = buildSevenTvSanitisedEmote({
       site,
       id: emote.id,
       name: item.alias,
@@ -220,19 +234,37 @@ function sanitiseV4EmoteSet(
   return sanitisedEmotes;
 }
 
+function sanitiseGlobalEmoteSetResponse(
+  data: GlobalEmoteSetQuery,
+): SevenTvSanitisedEmote[] {
+  'worklet';
+
+  return sanitiseV4EmoteSet(data.emoteSets.global, '7TV Global');
+}
+
+function sanitiseChannelEmoteSetResponse(
+  data: EmoteSetCustomQuery,
+): SevenTvSanitisedEmote[] {
+  'worklet';
+
+  const emoteSet = data.emoteSets.emoteSet;
+  return emoteSet ? sanitiseV4EmoteSet(emoteSet, '7TV Channel') : [];
+}
+
 /**
  * The global set lives behind its own query rather than the id-keyed one.
  */
 async function fetchGlobalSevenTvEmoteSet(): Promise<SevenTvSanitisedEmote[]> {
-  const { data, error } = await sevenTvV4Client.query<GlobalEmoteSetQuery>({
+  const { data, error } = await sevenTvV4Client.queryDerived({
     query: GlobalEmoteSetDocument,
+    derive: sanitiseGlobalEmoteSetResponse,
   });
 
   if (error) {
     throw error;
   }
 
-  return data ? sanitiseV4EmoteSet(data.emoteSets.global, '7TV Global') : [];
+  return data ?? [];
 }
 
 export const sevenTvService = {
@@ -276,29 +308,25 @@ export const sevenTvService = {
       return fetchGlobalSevenTvEmoteSet();
     }
 
-    const { data, error } = await sevenTvV4Client.query<
+    /**
+     * A full channel set is ~3MB of JSON. Sanitising on the parse runtime
+     * means the JS thread rebuilds only the compact emotes, not the raw tree.
+     */
+    const { data, error } = await sevenTvV4Client.queryDerived<
       EmoteSetCustomQuery,
+      SevenTvSanitisedEmote[],
       EmoteSetCustomQueryVariables
     >({
       query: EmoteSetCustomDocument,
       variables: { id: emoteSetId },
+      derive: sanitiseChannelEmoteSetResponse,
     });
 
     if (error) {
       throw error;
     }
 
-    if (!data) {
-      return [];
-    }
-
-    const emoteSet = data.emoteSets.emoteSet;
-
-    if (!emoteSet) {
-      return [];
-    }
-
-    return sanitiseV4EmoteSet(emoteSet, '7TV Channel');
+    return data ?? [];
   },
 
   getEmote: async (emoteId: string): Promise<SevenTvEmotePreview | null> => {
