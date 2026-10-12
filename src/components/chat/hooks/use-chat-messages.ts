@@ -6,6 +6,7 @@ import {
   type ChatIngestController,
   createChatIngestController,
 } from '../util/chat-ingest-controller';
+import { isRowTouchHeld } from '../util/chat-row-touch-hold';
 import { type BufferedMessage } from '../util/message-buffer';
 import type { ChatScrollAnchor } from './use-chat-scroll';
 
@@ -38,6 +39,7 @@ export const useChatMessages = (
         optionsRef.current.finalizeMessageForCommit,
       getChatDelayMs: () => optionsRef.current.getChatDelayMs?.() ?? 0,
       isAtBottom: () => optionsRef.current.scrollAnchor.isAtBottomRef.current,
+      isRowTouchHeld,
       isScrollingToBottom: () =>
         optionsRef.current.scrollAnchor.isScrollingToBottomRef.current,
       isUserActivelyScrolling: () =>

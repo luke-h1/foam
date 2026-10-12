@@ -12,6 +12,7 @@ import {
 
 import { getChatTextStyles } from '@app/components/chat/components/chat-message/chat-text.styles';
 import { MESSAGE_LONG_PRESS_DELAY_MS } from '@app/components/chat/hooks/use-chat-row-long-press';
+import { isRowTouchHeld } from '@app/components/chat/util/chat-row-touch-hold';
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
@@ -229,6 +230,103 @@ describe('ChatRow', () => {
       fireMessageLongPress(getByTestId('chat-message'), { driftDp: 4 });
 
       expect(mockOnReply).toHaveBeenCalledTimes(1);
+    });
+
+    test('holds live flushes while a finger rests on the row, through jitter', () => {
+      const message = createMockMessage([{ type: 'text', content: 'Hello' }]);
+
+      const { getByTestId } = render(
+        <ChatRow {...message} onReply={mockOnReply} />,
+      );
+
+      const row = getByTestId('chat-message');
+
+      fireEvent(row, 'touchStart', touchAt(100, 100));
+      fireEvent(row, 'touchMove', touchAt(104, 100));
+      const heldThroughJitter = isRowTouchHeld();
+
+      fireEvent(row, 'touchEnd', touchAt(104, 100));
+
+      expect([heldThroughJitter, isRowTouchHeld()]).toEqual([true, false]);
+    });
+
+    test('releases the flush hold once the finger drifts into a scroll', () => {
+      const message = createMockMessage([{ type: 'text', content: 'Hello' }]);
+
+      const { getByTestId } = render(
+        <ChatRow {...message} onReply={mockOnReply} />,
+      );
+
+      const row = getByTestId('chat-message');
+
+      fireEvent(row, 'touchStart', touchAt(100, 100));
+      fireEvent(row, 'touchMove', touchAt(140, 100));
+
+      expect(isRowTouchHeld()).toBe(false);
+    });
+
+    test('releases the flush hold when the touch is cancelled', () => {
+      const message = createMockMessage([{ type: 'text', content: 'Hello' }]);
+
+      const { getByTestId } = render(
+        <ChatRow {...message} onReply={mockOnReply} />,
+      );
+
+      const row = getByTestId('chat-message');
+
+      fireEvent(row, 'touchStart', touchAt(100, 100));
+      const heldBeforeCancel = isRowTouchHeld();
+
+      fireEvent(row, 'touchCancel', touchAt(100, 100));
+
+      expect([heldBeforeCancel, isRowTouchHeld()]).toEqual([true, false]);
+    });
+
+    test('releases the flush hold when the long press fires, before the touch ends', () => {
+      const message = createMockMessage([{ type: 'text', content: 'Hello' }]);
+
+      const { getByTestId } = render(
+        <ChatRow {...message} onReply={mockOnReply} />,
+      );
+
+      const row = getByTestId('chat-message');
+
+      jest.useFakeTimers();
+      fireEvent(row, 'touchStart', touchAt(100, 100));
+      act(() => jest.advanceTimersByTime(MESSAGE_LONG_PRESS_DELAY_MS));
+      const heldAfterLongPress = isRowTouchHeld();
+
+      fireEvent(row, 'touchEnd', touchAt(100, 100));
+      jest.useRealTimers();
+
+      expect([mockOnReply.mock.calls.length, heldAfterLongPress]).toEqual([
+        1,
+        false,
+      ]);
+    });
+
+    test('does not hold flushes for a row that has no long press', () => {
+      const message = createMockMessage([{ type: 'text', content: 'Hello' }]);
+      const { getByTestId } = render(<ChatRow {...message} />);
+
+      fireEvent(getByTestId('chat-message'), 'touchStart', touchAt(100, 100));
+
+      expect(isRowTouchHeld()).toBe(false);
+    });
+
+    test('releases the flush hold when the held row unmounts', () => {
+      const message = createMockMessage([{ type: 'text', content: 'Hello' }]);
+
+      const { getByTestId, unmount } = render(
+        <ChatRow {...message} onReply={mockOnReply} />,
+      );
+
+      fireEvent(getByTestId('chat-message'), 'touchStart', touchAt(100, 100));
+      const heldBeforeUnmount = isRowTouchHeld();
+
+      unmount();
+
+      expect([heldBeforeUnmount, isRowTouchHeld()]).toEqual([true, false]);
     });
 
     test('cancels once the finger drifts past the tolerance', () => {

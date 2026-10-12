@@ -31,12 +31,14 @@ function stripPendingParse(message: BufferedMessage): BufferedMessage {
 function createHeadlessIngest(options?: {
   isAtBottom?: () => boolean;
   getChatDelayMs?: () => number;
+  isRowTouchHeld?: () => boolean;
   isUserActivelyScrolling?: () => boolean;
 }) {
   const controller: ChatIngestController = createChatIngestController({
     getFinalizeMessageForCommit: () => stripPendingParse,
     getChatDelayMs: options?.getChatDelayMs ?? (() => 0),
     isAtBottom: options?.isAtBottom ?? (() => true),
+    isRowTouchHeld: options?.isRowTouchHeld ?? (() => false),
     isScrollingToBottom: () => false,
     isUserActivelyScrolling: options?.isUserActivelyScrolling ?? (() => false),
     onBottomContentChange: () => {},
@@ -190,6 +192,39 @@ describe('chatIngestController (headless line → commit)', () => {
     expect(sequence).toBe(900);
     expect(maxLagMs).toBeLessThanOrEqual(200);
     expect(maxBufferSize).toBeLessThanOrEqual(30);
+  });
+
+  test('holds live flushes while a finger rests on a row, then releases them', () => {
+    let rowTouchHeld = true;
+
+    const { routeLine } = createHeadlessIngest({
+      isRowTouchHeld: () => rowTouchHeld,
+    });
+
+    routeLine(privmsgLine('msg-1'));
+    routeLine(privmsgLine('msg-2'));
+    jest.advanceTimersByTime(1_000);
+    const committedWhileHeld = committedMessages().length;
+
+    rowTouchHeld = false;
+    jest.advanceTimersByTime(300);
+
+    expect([
+      committedWhileHeld,
+      committedMessages().map(message => message.message_id),
+    ]).toEqual([0, ['msg-1', 'msg-2']]);
+  });
+
+  test('forces a held flush through at the store window instead of dropping rows', () => {
+    const { routeLine } = createHeadlessIngest({
+      isRowTouchHeld: () => true,
+    });
+
+    for (let index = 1; index <= 151; index += 1) {
+      routeLine(privmsgLine(`msg-${index}`));
+    }
+
+    expect(committedMessages()).toHaveLength(150);
   });
 
   test('forces a flush at the store window instead of dropping rows while flushes are deferred', () => {
