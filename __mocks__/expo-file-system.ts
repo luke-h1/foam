@@ -127,7 +127,23 @@ export const __mockFileSystem = {
   failDeleteOf: (uri: string) => {
     failingDeletes.add(uri);
   },
+  deletePath: (uri: string) => {
+    Array.from(nodes.keys()).forEach(nodeUri => {
+      if (nodeUri === uri || (uri.endsWith('/') && nodeUri.startsWith(uri))) {
+        nodes.delete(nodeUri);
+        deletedUris.push(nodeUri);
+      }
+    });
+  },
   deletedUris: () => [...deletedUris],
+  listFileNames: (directoryUri: string) => {
+    const prefix = directoryUri.replace(/\/?$/, '/');
+
+    return Array.from(nodes.keys())
+      .filter(uri => uri.startsWith(prefix))
+      .map(uri => uri.slice(prefix.length))
+      .filter(name => name.length > 0 && !name.includes('/'));
+  },
   downloadCount: () => downloadCount,
   evict: (uri: string) => nodes.delete(uri),
   exists: (uri: string) => nodes.has(uri),

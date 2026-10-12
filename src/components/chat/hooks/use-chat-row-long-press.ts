@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { GestureResponderEvent } from 'react-native';
 
 import type { EmotePressData } from '@app/components/chat/components/chat-message/chat-row.types';
+import { beginRowTouchHold } from '@app/components/chat/util/chat-row-touch-hold';
 
 export const MESSAGE_LONG_PRESS_DELAY_MS = 650;
 
@@ -31,6 +32,12 @@ export function useChatRowLongPress({
   const pressedEmotePartRef = useRef<EmotePressData | null>(null);
 
   const rowTouchOriginRef = useRef<{ x: number; y: number } | null>(null);
+  const releaseTouchHoldRef = useRef<(() => void) | null>(null);
+
+  const releaseTouchHold = () => {
+    releaseTouchHoldRef.current?.();
+    releaseTouchHoldRef.current = null;
+  };
 
   const stopRowLongPressTimer = () => {
     if (!rowLongPressTimerRef.current) {
@@ -44,6 +51,7 @@ export function useChatRowLongPress({
   const clearRowLongPressTimer = () => {
     pressedEmotePartRef.current = null;
     rowTouchOriginRef.current = null;
+    releaseTouchHold();
     stopRowLongPressTimer();
   };
 
@@ -66,6 +74,8 @@ export function useChatRowLongPress({
 
   useEffect(
     () => () => {
+      releaseTouchHoldRef.current?.();
+
       if (rowLongPressTimerRef.current) {
         clearTimeout(rowLongPressTimerRef.current);
         rowLongPressTimerRef.current = null;
@@ -86,6 +96,11 @@ export function useChatRowLongPress({
     // Only stop the timer here: the pressed emote (if any) was just recorded
     // by the emote's own onTouchStart, which bubbles before the row's.
     stopRowLongPressTimer();
+    releaseTouchHold();
+
+    if (canLongPress || pressedEmotePartRef.current) {
+      releaseTouchHoldRef.current = beginRowTouchHold();
+    }
 
     rowTouchOriginRef.current = {
       x: event.nativeEvent.pageX,
@@ -94,6 +109,7 @@ export function useChatRowLongPress({
 
     rowLongPressTimerRef.current = setTimeout(() => {
       rowLongPressTimerRef.current = null;
+      releaseTouchHold();
       const pressedEmotePart = pressedEmotePartRef.current;
       pressedEmotePartRef.current = null;
 

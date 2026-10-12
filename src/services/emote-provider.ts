@@ -89,6 +89,42 @@ function buildHostedVariants(
   };
 }
 
+/**
+ * The 7TV branch of `buildSanitisedEmote`. A worklet, so the emote set can be
+ * sanitised on the background parse runtime.
+ */
+export function buildSevenTvSanitisedEmote(
+  source: SevenTvEmoteSource,
+): SevenTvSanitisedEmote | null {
+  'worklet';
+
+  if (!source.url) {
+    return null;
+  }
+
+  return {
+    name: source.name,
+    id: source.id,
+    url: source.url,
+    static_url: source.staticUrl,
+    image_variants: source.imageVariants,
+    flags: source.flags,
+    original_name: source.originalName,
+    creator: source.creator,
+    emote_link: `https://7tv.app/emotes/${source.id}`,
+    site: source.site,
+    provider: '7tv',
+    frame_count: source.frameCount,
+    format: source.format,
+    aspect_ratio: source.aspectRatio,
+    zero_width: source.zeroWidth,
+    width: source.width,
+    height: source.height,
+    set_metadata: source.setMetadata,
+    actor: source.actor,
+  };
+}
+
 export function buildSanitisedEmote(
   source: SevenTvEmoteSource,
 ): SevenTvSanitisedEmote | null;
@@ -108,32 +144,8 @@ export function buildSanitisedEmote(
 export function buildSanitisedEmote(
   source: EmoteProviderSource,
 ): SanitisedEmote | null {
-  if ('setMetadata' in source && !source.url) {
-    return null;
-  }
-
   if ('setMetadata' in source) {
-    return {
-      name: source.name,
-      id: source.id,
-      url: source.url,
-      static_url: source.staticUrl,
-      image_variants: source.imageVariants,
-      flags: source.flags,
-      original_name: source.originalName,
-      creator: source.creator,
-      emote_link: `https://7tv.app/emotes/${source.id}`,
-      site: source.site,
-      provider: '7tv',
-      frame_count: source.frameCount,
-      format: source.format,
-      aspect_ratio: source.aspectRatio,
-      zero_width: source.zeroWidth,
-      width: source.width,
-      height: source.height,
-      set_metadata: source.setMetadata,
-      actor: source.actor,
-    };
+    return buildSevenTvSanitisedEmote(source);
   }
 
   const { imageVariants, url, staticUrl } = buildHostedVariants(source);

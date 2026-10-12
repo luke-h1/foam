@@ -14,6 +14,7 @@ import {
   createRowVisibilityStore,
   RowVisibilityContext,
 } from '@app/components/chat/components/chat-message/util/row-visibility';
+import { chatScrollActivity } from '@app/components/chat/util/chat-scroll-activity';
 import * as cacheService from '@app/providers/cached-emotes-provider/cache-service';
 import * as useCachedEmoteModule from '@app/providers/cached-emotes-provider/use-cached-emote';
 import { logger } from '@app/utils/logger';
@@ -102,7 +103,7 @@ describe('ChatInlineImage off-screen pause', () => {
     jest.clearAllMocks();
   });
 
-  test('stops animation when the row mounts off-screen and resumes when it scrolls back in', () => {
+  test('mounts off-screen through the autoplay prop alone and resumes when the row scrolls back in', () => {
     const store = createRowVisibilityStore(false);
 
     render(
@@ -114,14 +115,15 @@ describe('ChatInlineImage off-screen pause', () => {
       </RowVisibilityContext.Provider>,
     );
 
-    expect(mockStopAnimating).toHaveBeenCalledTimes(1);
+    expect(mockImageProps?.autoplay).toBe(false);
     expect(mockStartAnimating).not.toHaveBeenCalled();
+    expect(mockStopAnimating).not.toHaveBeenCalled();
 
     act(() => store.setVisible(true));
     expect(mockStartAnimating).toHaveBeenCalledTimes(1);
 
     act(() => store.setVisible(false));
-    expect(mockStopAnimating).toHaveBeenCalledTimes(2);
+    expect(mockStopAnimating).toHaveBeenCalledTimes(1);
   });
 
   test('attaches a catch to the animation command so a recycled-view rejection never goes unhandled (FOAM-TV-MOBILE-AH)', () => {
@@ -141,11 +143,11 @@ describe('ChatInlineImage off-screen pause', () => {
     act(() => store.setVisible(false));
     act(() => store.setVisible(true));
 
-    expect(mockStartAnimating).toHaveBeenCalledTimes(2);
+    expect(mockStartAnimating).toHaveBeenCalledTimes(1);
     expect(catchSpy).toHaveBeenCalledTimes(1);
   });
 
-  test('starts animation on a visible mount so a pre-subscribe visibility flip cannot strand a stopped view', () => {
+  test('a visible mount sends no command, then follows each visibility flip', () => {
     const store = createRowVisibilityStore(true);
 
     render(
@@ -157,14 +159,72 @@ describe('ChatInlineImage off-screen pause', () => {
       </RowVisibilityContext.Provider>,
     );
 
-    expect(mockStartAnimating).toHaveBeenCalledTimes(1);
+    expect(mockImageProps?.autoplay).toBe(true);
+    expect(mockStartAnimating).not.toHaveBeenCalled();
     expect(mockStopAnimating).not.toHaveBeenCalled();
 
     act(() => store.setVisible(false));
     expect(mockStopAnimating).toHaveBeenCalledTimes(1);
 
     act(() => store.setVisible(true));
-    expect(mockStartAnimating).toHaveBeenCalledTimes(2);
+    expect(mockStartAnimating).toHaveBeenCalledTimes(1);
+  });
+
+  test('a visibility flip between render and subscribe still reaches the view', () => {
+    const store = createRowVisibilityStore(true);
+    jest
+      .spyOn(store, 'isVisible')
+      .mockReturnValueOnce(true)
+      .mockReturnValue(false);
+
+    render(
+      <RowVisibilityContext.Provider value={store}>
+        <ChatInlineImage
+          sourceUrl='https://cdn.7tv.app/emote/flip/2x.avif'
+          style={{}}
+        />
+      </RowVisibilityContext.Provider>,
+    );
+
+    expect(mockImageProps?.autoplay).toBe(true);
+    expect(mockStopAnimating).toHaveBeenCalledTimes(1);
+  });
+
+  test('re-sends a stop when a load resets the view to the committed autoplay prop', () => {
+    const store = createRowVisibilityStore(true);
+
+    render(
+      <RowVisibilityContext.Provider value={store}>
+        <ChatInlineImage
+          sourceUrl='https://cdn.7tv.app/emote/reload/2x.avif'
+          style={{}}
+        />
+      </RowVisibilityContext.Provider>,
+    );
+
+    act(() => store.setVisible(false));
+    expect(mockStopAnimating).toHaveBeenCalledTimes(1);
+
+    act(() => mockImageProps?.onLoad?.());
+    expect(mockStopAnimating).toHaveBeenCalledTimes(2);
+  });
+
+  test('a load that matches the committed autoplay prop sends no command', () => {
+    const store = createRowVisibilityStore(true);
+
+    render(
+      <RowVisibilityContext.Provider value={store}>
+        <ChatInlineImage
+          sourceUrl='https://cdn.7tv.app/emote/steady/2x.avif'
+          style={{}}
+        />
+      </RowVisibilityContext.Provider>,
+    );
+
+    act(() => mockImageProps?.onLoad?.());
+
+    expect(mockStartAnimating).not.toHaveBeenCalled();
+    expect(mockStopAnimating).not.toHaveBeenCalled();
   });
 
   test('leaves animation running when there is no row context', () => {
@@ -192,7 +252,8 @@ describe('ChatInlineImage off-screen pause', () => {
       </RowVisibilityContext.Provider>,
     );
 
-    expect(mockStopAnimating).toHaveBeenCalledTimes(1);
+    expect(mockImageProps?.autoplay).toBe(false);
+    expect(mockStopAnimating).not.toHaveBeenCalled();
 
     act(() => store.setVisible(true));
     expect(mockStartAnimating).toHaveBeenCalledTimes(1);
@@ -235,6 +296,54 @@ describe('ChatInlineImage off-screen pause', () => {
 
     expect(mockStartAnimating).not.toHaveBeenCalled();
     expect(mockStopAnimating).not.toHaveBeenCalled();
+  });
+});
+
+describe('ChatInlineImage scroll pause', () => {
+  function renderVisibleEmote(store = createRowVisibilityStore(true)) {
+    render(
+      <RowVisibilityContext.Provider value={store}>
+        <ChatInlineImage
+          sourceUrl='https://cdn.7tv.app/emote/fling/2x.avif'
+          style={{}}
+        />
+      </RowVisibilityContext.Provider>,
+    );
+
+    return store;
+  }
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    mockSharedRef = fakeImageRef(true);
+    mockImageProps = null;
+  });
+
+  afterEach(() => {
+    act(() => chatScrollActivity.reset());
+    jest.useRealTimers();
+    jest.clearAllMocks();
+  });
+
+  test('stops a visible emote for a fling and starts it once the fling settles', () => {
+    renderVisibleEmote();
+
+    act(() => chatScrollActivity.poke());
+    expect(mockStopAnimating).toHaveBeenCalledTimes(1);
+
+    act(() => jest.advanceTimersByTime(200));
+    expect(mockStartAnimating).toHaveBeenCalledTimes(1);
+  });
+
+  test('a mount mid-fling starts paused through the autoplay prop and sends no command', () => {
+    act(() => chatScrollActivity.poke());
+    renderVisibleEmote();
+
+    expect(mockImageProps?.autoplay).toBe(false);
+    expect(mockStopAnimating).not.toHaveBeenCalled();
+
+    act(() => jest.advanceTimersByTime(200));
+    expect(mockStartAnimating).toHaveBeenCalledTimes(1);
   });
 });
 

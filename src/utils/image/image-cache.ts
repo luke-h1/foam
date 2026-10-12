@@ -7,6 +7,14 @@ const CACHE_DIR_NAME = 'chat-img-cache';
 const RECORD_PREFIX = 'image-cache-record:';
 const MAX_CACHE_BYTES = 100 * 1024 * 1024;
 const MAX_CACHE_RECORDS = 5000;
+
+/**
+ * Eviction sorts the whole manifest, so it trims to this fraction of each
+ * limit. A full cache then sorts once per few hundred downloads, not on every
+ * download.
+ */
+const EVICTION_TARGET_RATIO = 0.9;
+
 const DOWNLOAD_CONCURRENCY = 4;
 
 export type CacheImageOptions = {
@@ -32,6 +40,7 @@ type CacheRecord = Required<
 };
 
 type DownloadTask = {
+  generation: number;
   key: string;
   options: CacheImageOptions;
   reject: (cause?: unknown) => void;
@@ -52,6 +61,21 @@ const taskQueue: DownloadTask[] = [];
 let activeDownloads = 0;
 let hydrated = false;
 let validationStarted = false;
+
+/**
+ * `clearSessionCache` increments this. A download that started before the
+ * clear must not record its file, because the clear deletes the directory.
+ */
+let cacheGeneration = 0;
+
+/**
+ * Every render of a cached image reads its record, so the access time goes to
+ * storage at most this often per record. Eviction order after a restart only
+ * needs to be roughly right.
+ */
+const ACCESS_PERSIST_INTERVAL_MS = 60 * 60 * 1000;
+
+const persistedAccessAt = new Map<string, number>();
 
 function hashString(str: string): string {
   let hash = 2166136261;
@@ -121,6 +145,7 @@ function hydrateManifest(): void {
       const previous = manifest.get(record.key);
       manifestTotalBytes += record.size - (previous?.size ?? 0);
       manifest.set(record.key, record);
+      persistedAccessAt.set(record.key, record.lastAccessed);
     } catch {
       manifestStorage.remove(storageKey);
     }
@@ -134,32 +159,59 @@ function persistRecord(record: CacheRecord): void {
   manifestTotalBytes += record.size - (previous?.size ?? 0);
   manifest.set(record.key, record);
   manifestStorage.set(getRecordStorageKey(record.key), JSON.stringify(record));
+  persistedAccessAt.set(record.key, record.lastAccessed);
 }
 
-function removeRecord(key: string): void {
-  const record = manifest.get(key);
-  manifest.delete(key);
-  manifestStorage.remove(getRecordStorageKey(key));
+/**
+ * Deletes run on the native file queue. A download to the same path must
+ * await the pending delete first, or the delete can remove the new file.
+ */
+const pendingDeletes = new Map<string, Promise<void>>();
 
-  if (!record) {
-    return;
-  }
-
-  manifestTotalBytes -= record.size;
-  verifiedFiles.delete(record.uri);
-
+async function deleteQuietly(uri: string): Promise<void> {
   try {
-    const file = new File(record.uri);
-    if (file.exists) {
-      file.delete();
-    }
+    await FileSystemLegacy.deleteAsync(uri, { idempotent: true });
   } catch {
     // Ignore filesystem cleanup errors.
   }
 }
 
+function deleteSoon(uri: string): void {
+  const deletion = deleteQuietly(uri).then(() => {
+    if (pendingDeletes.get(uri) === deletion) {
+      pendingDeletes.delete(uri);
+    }
+  });
+
+  pendingDeletes.set(uri, deletion);
+}
+
+function forgetRecord(key: string): CacheRecord | undefined {
+  const record = manifest.get(key);
+  manifest.delete(key);
+  manifestStorage.remove(getRecordStorageKey(key));
+  persistedAccessAt.delete(key);
+
+  if (!record) {
+    return undefined;
+  }
+
+  manifestTotalBytes -= record.size;
+  verifiedFiles.delete(record.uri);
+  return record;
+}
+
+function removeRecord(key: string): void {
+  const record = forgetRecord(key);
+
+  if (record) {
+    deleteSoon(record.uri);
+  }
+}
+
 async function ensureCacheDirectoryAsync(): Promise<Directory> {
   const cacheDir = new Directory(Paths.cache, CACHE_DIR_NAME);
+  await pendingDeletes.get(cacheDir.uri);
 
   if (!cacheDir.exists) {
     await FileSystemLegacy.makeDirectoryAsync(cacheDir.uri, {
@@ -176,7 +228,13 @@ function getCachedFile(cacheDir: Directory, key: string, url: string): File {
 
 function touchRecord(record: CacheRecord): string {
   record.lastAccessed = Date.now();
-  manifest.set(record.key, record);
+
+  const persistedAt = persistedAccessAt.get(record.key) ?? 0;
+
+  if (record.lastAccessed - persistedAt >= ACCESS_PERSIST_INTERVAL_MS) {
+    persistRecord(record);
+  }
+
   return record.uri;
 }
 
@@ -250,7 +308,11 @@ function drainQueue(): void {
       .then(task.resolve, task.reject)
       .finally(() => {
         activeDownloads -= 1;
-        inFlight.delete(task.key);
+
+        if (task.generation === cacheGeneration) {
+          inFlight.delete(task.key);
+        }
+
         drainQueue();
       });
   }
@@ -270,6 +332,7 @@ function enqueueDownload(
 
   const promise = new Promise<string>((resolve, reject) => {
     taskQueue.push({
+      generation: cacheGeneration,
       key,
       options,
       reject,
@@ -293,18 +356,51 @@ function evictIfNeeded(protectedKey: string): void {
     return;
   }
 
-  Array.from(manifest.values())
+  const targetBytes = MAX_CACHE_BYTES * EVICTION_TARGET_RATIO;
+  const targetRecords = Math.floor(MAX_CACHE_RECORDS * EVICTION_TARGET_RATIO);
+
+  const oldestFirst = Array.from(manifest.values())
     .filter(record => record.key !== protectedKey)
-    .sort((a, b) => a.lastAccessed - b.lastAccessed)
-    .forEach(record => {
-      if (
-        manifestTotalBytes <= MAX_CACHE_BYTES &&
-        manifest.size <= MAX_CACHE_RECORDS
-      ) {
-        return;
-      }
-      removeRecord(record.key);
-    });
+    .sort((a, b) => a.lastAccessed - b.lastAccessed);
+
+  for (const record of oldestFirst) {
+    if (manifestTotalBytes <= targetBytes && manifest.size <= targetRecords) {
+      return;
+    }
+
+    removeRecord(record.key);
+  }
+}
+
+function getFileName(uri: string): string {
+  return uri.slice(uri.lastIndexOf('/') + 1);
+}
+
+/**
+ * Drops records whose file is gone, using one directory listing instead of a
+ * synchronous stat per record. Only records that existed before the listing
+ * started are checked, because a later download can be missing from it.
+ */
+async function validateManifest(): Promise<void> {
+  const snapshot = Array.from(manifest.values());
+  let fileNames: Set<string>;
+
+  try {
+    fileNames = new Set(
+      await FileSystemLegacy.readDirectoryAsync(getCacheDirectoryPath()),
+    );
+  } catch {
+    // A missing or unreadable directory leaves validation to getValidRecord.
+    return;
+  }
+
+  snapshot.forEach(record => {
+    const isUnchanged = manifest.get(record.key) === record;
+
+    if (isUnchanged && !fileNames.has(getFileName(record.uri))) {
+      forgetRecord(record.key);
+    }
+  });
 }
 
 function validateManifestSoon(): void {
@@ -315,16 +411,21 @@ function validateManifestSoon(): void {
   validationStarted = true;
 
   setTimeout(() => {
-    Array.from(manifest.values()).forEach(record => {
-      try {
-        if (!new File(record.uri).exists) {
-          removeRecord(record.key);
-        }
-      } catch {
-        removeRecord(record.key);
-      }
-    });
+    void validateManifest();
   }, 1000);
+}
+
+/**
+ * Deletes a file that a download from before `clearSessionCache` wrote after
+ * the clear removed the directory. Nothing else would delete it. Keep the file
+ * when a newer record or download uses the same path.
+ */
+function discardClearedDownload(key: string, uri: string): void {
+  if (manifest.has(key) || inFlight.has(key)) {
+    return;
+  }
+
+  deleteSoon(uri);
 }
 
 export async function cacheImageFromUrl(
@@ -344,9 +445,18 @@ export async function cacheImageFromUrl(
     return touchRecord(existing);
   }
 
+  const generation = cacheGeneration;
+  const isCleared = () => generation !== cacheGeneration;
+
   return enqueueDownload(key, url, options, async () => {
+    // eslint-disable-next-line react-doctor/async-defer-await -- a clear during this await is what the guard below checks
     const cacheDir = await ensureCacheDirectoryAsync();
     const cachedFile = getCachedFile(cacheDir, key, url);
+    await pendingDeletes.get(cachedFile.uri);
+
+    if (isCleared()) {
+      return url;
+    }
 
     if (cachedFile.exists) {
       const record: CacheRecord = {
@@ -379,6 +489,11 @@ export async function cacheImageFromUrl(
         await downloadedFile.move(cachedFile);
       }
 
+      if (isCleared()) {
+        discardClearedDownload(key, cachedFile.uri);
+        return url;
+      }
+
       const record: CacheRecord = {
         key,
         lastAccessed: Date.now(),
@@ -393,7 +508,7 @@ export async function cacheImageFromUrl(
       evictIfNeeded(key);
       return cachedFile.uri;
     } catch {
-      if (cachedFile.exists) {
+      if (!isCleared() && cachedFile.exists) {
         return cachedFile.uri;
       }
       return url;
@@ -417,20 +532,13 @@ export function getCachedImageUri(
 
 export function clearSessionCache(): void {
   hydrateManifest();
-  taskQueue.length = 0;
+  cacheGeneration += 1;
+  taskQueue.splice(0).forEach(task => task.resolve(task.url));
   inFlight.clear();
   verifiedFiles.clear();
 
-  Array.from(manifest.keys()).forEach(removeRecord);
-
-  try {
-    const cacheDir = new Directory(Paths.cache, CACHE_DIR_NAME);
-    if (cacheDir.exists) {
-      cacheDir.delete();
-    }
-  } catch {
-    // Ignore filesystem cleanup errors.
-  }
+  Array.from(manifest.keys()).forEach(forgetRecord);
+  deleteSoon(getCacheDirectoryPath());
 }
 
 export function listCachedImages(): CachedImageInfo[] {

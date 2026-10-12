@@ -1,5 +1,6 @@
 import { fetch } from 'expo/fetch';
 
+import { deriveFromResponseOnWorklet } from '@app/lib/off-thread-json/derive-from-response-on-worklet';
 import { parseJsonOnWorklet } from '@app/lib/off-thread-json/parse-json-on-worklet';
 import { type MonitoringErrorName, startSpanAsync } from '@app/lib/sentry';
 import { type AllowedPrefix, logger } from '@app/utils/logger';
@@ -204,10 +205,13 @@ export function createApiClient({
   async function request<T>(
     method: string,
     path: string,
-    options: RequestOptions & { data?: unknown } = {},
+    options: RequestOptions & {
+      data?: unknown;
+      derive?: (responseText: string) => T;
+    } = {},
     isRetry = false,
   ): Promise<T> {
-    const { params, headers: extraHeaders = {}, data } = options;
+    const { params, headers: extraHeaders = {}, data, derive } = options;
 
     const url = new URL(`${baseURL}${path}`);
 
@@ -377,7 +381,11 @@ export function createApiClient({
       return undefined as T;
     }
 
-    return parseJsonOnWorklet<T>(await response.text());
+    const responseText = await response.text();
+
+    return derive
+      ? deriveFromResponseOnWorklet(responseText, derive)
+      : parseJsonOnWorklet<T>(responseText);
   }
 
   return {
@@ -388,6 +396,18 @@ export function createApiClient({
       data?: Body,
       options?: RequestOptions,
     ) => request<T>('POST', path, { ...options, data }),
+    /**
+     * Like `post`, but `derive` turns the raw body into the result on the
+     * background parse runtime. Only the derived result crosses back to the JS
+     * thread, so return the smallest shape the caller needs. `derive` must be
+     * a worklet.
+     */
+    postDerived: <TResult, Body = unknown>(
+      path: string,
+      data: Body,
+      derive: (responseText: string) => TResult,
+      options?: RequestOptions,
+    ) => request<TResult>('POST', path, { ...options, data, derive }),
     put: <T, Body = unknown>(
       path: string,
       data?: Body,

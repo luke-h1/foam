@@ -1,5 +1,13 @@
-import { EmoteSetKind } from '@app/graphql/generated/gql';
-import { sevenTvV4Client } from '@app/services/gql/client';
+import {
+  type EmoteSetCustomQuery,
+  EmoteSetKind,
+  type GlobalEmoteSetQuery,
+} from '@app/graphql/generated/gql';
+import { sevenTvGqlApi } from '@app/services/api/clients';
+import {
+  type GraphQLResponse,
+  sevenTvV4Client,
+} from '@app/services/gql/client';
 import { sevenTvService } from '@app/services/seven-tv-service';
 import type { SevenTvSanitisedEmote } from '@app/types/emote';
 
@@ -10,6 +18,19 @@ import {
 } from './__fixtures__/seven-tv-service.fixture';
 
 const clientQuerySpy = jest.spyOn(sevenTvV4Client, 'query');
+const postDerivedSpy = jest.spyOn(sevenTvGqlApi, 'postDerived');
+
+/**
+ * Runs the real derive worklet over the serialised body, so the tests cover
+ * the GraphQL envelope and the sanitiser together.
+ */
+const respondWithBody = (
+  body: GraphQLResponse<EmoteSetCustomQuery | GlobalEmoteSetQuery | null>,
+) => {
+  postDerivedSpy.mockImplementation((_path, _data, derive) =>
+    Promise.resolve(derive(JSON.stringify(body))),
+  );
+};
 
 describe('sevenTvService emote set sanitisation', () => {
   beforeEach(() => {
@@ -17,7 +38,7 @@ describe('sevenTvService emote set sanitisation', () => {
   });
 
   test('getSanitisedEmoteSet pins the v4 mapper output and drops imageless emotes', async () => {
-    clientQuerySpy.mockResolvedValue({ data: customEmoteSetResponse });
+    respondWithBody({ data: customEmoteSetResponse });
 
     const result = await sevenTvService.getSanitisedEmoteSet('set-1');
 
@@ -95,7 +116,7 @@ describe('sevenTvService emote set sanitisation', () => {
   });
 
   test('getSanitisedEmoteSet maps the global set with the 7TV Global site', async () => {
-    clientQuerySpy.mockResolvedValue({ data: globalEmoteSetResponse });
+    respondWithBody({ data: globalEmoteSetResponse });
 
     const result = await sevenTvService.getSanitisedEmoteSet('global');
 
@@ -114,6 +135,22 @@ describe('sevenTvService emote set sanitisation', () => {
       updatedAt: '2026-01-02T00:00:00.000Z',
       totalCount: 1,
     });
+  });
+
+  test('getSanitisedEmoteSet returns no emotes when the set does not exist', async () => {
+    respondWithBody({ data: { emoteSets: { emoteSet: null } } });
+
+    await expect(sevenTvService.getSanitisedEmoteSet('gone')).resolves.toEqual(
+      [],
+    );
+  });
+
+  test('getSanitisedEmoteSet throws the GraphQL error message', async () => {
+    respondWithBody({ data: null, errors: [{ message: 'set not found' }] });
+
+    await expect(sevenTvService.getSanitisedEmoteSet('set-1')).rejects.toEqual(
+      new Error('set not found'),
+    );
   });
 
   test('getPersonalEmoteSet pins the personal mapper output', async () => {

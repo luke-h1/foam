@@ -3,6 +3,8 @@ import { pickAnimatedFormat } from '@app/utils/color/seven-tv-paint-data/pick-an
 import { pickBestFormat } from '@app/utils/color/seven-tv-paint-data/pick-best-format';
 
 export function pickBestImage(images: readonly Image[]): Image | undefined {
+  'worklet';
+
   const scales = [4, 3, 2, 1];
 
   return scales.reduce<Image | undefined>((found, targetScale) => {

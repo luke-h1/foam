@@ -54,6 +54,11 @@ export interface ChatIngestControllerDeps {
    */
   getChatDelayMs: () => number;
   isAtBottom: () => boolean;
+  /**
+   * True while a finger rests on a row. Live flushes wait, the same as during
+   * a scroll, so the pressed row stays under the finger for the long press.
+   */
+  isRowTouchHeld: () => boolean;
   isScrollingToBottom: () => boolean;
   isUserActivelyScrolling: () => boolean;
   onBottomContentChange: () => void;
@@ -141,7 +146,10 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
 
     const underBackpressure = isBufferUnderBackpressure();
 
-    if (!underBackpressure && deps.isUserActivelyScrolling()) {
+    const shouldDeferFlush =
+      deps.isUserActivelyScrolling() || deps.isRowTouchHeld();
+
+    if (!underBackpressure && shouldDeferFlush) {
       flushTimer = setTimeout(() => {
         flushBuffer();
       }, SCROLL_DEFERRED_FLUSH_RETRY_MS);

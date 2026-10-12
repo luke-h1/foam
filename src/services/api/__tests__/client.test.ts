@@ -138,6 +138,22 @@ describe('createApiClient', () => {
     ]);
   });
 
+  test('postDerived returns what derive makes of the raw body', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ data: ['a', 'b', 'c'] }));
+    const client = createApiClient({ baseURL: 'https://api.test/helix' });
+
+    await expect(
+      client.postDerived('/gql', { query: 'q' }, responseText => {
+        'worklet';
+
+        const body: MockResponseBody = JSON.parse(responseText);
+        return body.data?.length ?? 0;
+      }),
+    ).resolves.toEqual(3);
+
+    expect(firstRequestInit().body).toEqual(JSON.stringify({ query: 'q' }));
+  });
+
   test('removeAuthToken stops sending the Authorization header', async () => {
     mockFetch.mockResolvedValueOnce(jsonResponse({ ok: true }));
     const client = createApiClient({ baseURL: 'https://api.test/helix' });
