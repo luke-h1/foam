@@ -15,7 +15,9 @@ concurrency:
 jobs:
   fingerprint:
     name: Detect fingerprint changes
-    runs-on: ubuntu-latest
+    # Fork PRs stay on GitHub-hosted runners: foam is public, and a self-hosted
+    # runner would run the fork's code on the foam machine.
+    runs-on: ${{ github.event.pull_request.head.repo.full_name == github.repository && 'foam' || 'ubuntu-latest' }}
     permissions:
       contents: read
       pull-requests: write
@@ -37,6 +39,7 @@ jobs:
 
           BASE_SHA="${{ github.event.pull_request.base.sha }}"
           git worktree remove --force .__pr_base__ 2>/dev/null || true
+          git worktree prune
           git worktree add --detach .__pr_base__ "$BASE_SHA"
 
       - name: ⚙️ Install dependencies for base commit
