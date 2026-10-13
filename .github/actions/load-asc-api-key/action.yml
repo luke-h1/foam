@@ -1,0 +1,45 @@
+name: 'Load ASC API key'
+description: 'Load the App Store Connect API key and point eas-cli at it through the EXPO_ASC_* variables.'
+
+inputs:
+  op_service_account_token:
+    description: '1Password service account token'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    # The key is team-level, so the tightlog item also covers Foam (see docs/runway.md).
+    - name: Load ASC API key
+      uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
+      with:
+        export-env: true
+        version: 2.34.0
+      env:
+        OP_SERVICE_ACCOUNT_TOKEN: ${{ inputs.op_service_account_token }}
+        ASC_API_KEY_P8: op://ci-cd/tightlog-asc-api-metadata/credential
+        EXPO_ASC_KEY_ID: op://ci-cd/tightlog-asc-api-metadata/key id
+        EXPO_ASC_ISSUER_ID: op://ci-cd/tightlog-asc-api-metadata/issuer id
+
+    # eas-cli reads the key from a file. Without it, a non-interactive build
+    # cannot refresh the ad hoc provisioning profile.
+    - name: Write ASC API key file
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        for name in ASC_API_KEY_P8 EXPO_ASC_KEY_ID EXPO_ASC_ISSUER_ID; do
+          if [ -z "${!name:-}" ]; then
+            echo "::error::$name is empty in op://ci-cd/tightlog-asc-api-metadata - eas-cli cannot refresh the ad hoc provisioning profile"
+            exit 1
+          fi
+        done
+
+        key_path="$RUNNER_TEMP/asc-api-key.p8"
+        printf '%s\n' "$ASC_API_KEY_P8" > "$key_path"
+        chmod 600 "$key_path"
+
+        {
+          echo "EXPO_ASC_API_KEY_PATH=$key_path"
+          echo "EXPO_APPLE_TEAM_TYPE=INDIVIDUAL"
+        } >> "$GITHUB_ENV"
