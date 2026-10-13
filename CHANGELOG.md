@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.0.12 (Production)
+
+### ⚡ Performance
+
+- **chat:** Parse 7TV emote sets off the JS thread and cut emote main-thread hops ([#925](https://github.com/lhowsam/foam/issues/925))
+
+### ✨ Features
+
+- **release:** Comment OTA compatibility on PRs and bump the version on native builds ([#927](https://github.com/lhowsam/foam/issues/927))
+
+### 🐛 Bug Fixes
+
+- **twitch:** Drop duplicate items across infinite query pages ([#926](https://github.com/lhowsam/foam/issues/926))
+- **firebase:** Use the 1Password iOS plist for production builds ([#928](https://github.com/lhowsam/foam/issues/928))
+- **updates:** Ignore files inside RNRepo caches in the fingerprint ([#930](https://github.com/lhowsam/foam/issues/930))
+- **updates:** Go back to the appVersion runtime version policy ([#929](https://github.com/lhowsam/foam/issues/929))
+
 ## 1.0.11 (Production)
 
 ### 🐛 Bug Fixes
