@@ -6,7 +6,7 @@ interface PageWithData<TItem> {
   data?: readonly (TItem | undefined | null)[];
 }
 
-export function useFlattenedInfiniteQuery<TItem>(
+export function useFlattenedInfiniteQuery<TItem extends { id: string }>(
   pages: readonly (PageWithData<TItem> | undefined | null)[] | undefined,
 ): TItem[] {
   return useMemo(() => flattenInfiniteQueryPages(pages), [pages]);
