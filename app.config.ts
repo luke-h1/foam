@@ -71,8 +71,7 @@ export const VARIANT_CONFIG = {
     androidPackageName: 'com.lhowsam.foam_tv',
     splashImage: './assets/splash/splash-image-production.png',
     splashBackgroundColor: '#000000',
-    iosGoogleServicesFile:
-      process.env.IOS_GOOGLE_SERVICES_JSON || './GoogleService-Info-prod.plist',
+    iosGoogleServicesFile: './GoogleService-Info-prod.plist',
     androidGoogleServicesFile: './google-services-prod.json',
   },
 } as const satisfies Record<Variant, AppVariantConfig>;
