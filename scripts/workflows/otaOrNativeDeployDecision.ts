@@ -40,16 +40,6 @@ export function getCriticalOtaIndexCachePath(input: {
   return `${baseUri}/ota-critical-index/${variant}/index`;
 }
 
-export function getOtaUpdateIdsCachePrefix(input: {
-  bucket: string;
-  variant: string;
-}): string {
-  const baseUri = `s3://${input.bucket}`;
-  const variant = encodeURIComponent(input.variant);
-
-  return `${baseUri}/ota-update-ids/${variant}`;
-}
-
 export function compareFingerprints(
   previous: Fingerprints,
   current: Fingerprints,
@@ -109,6 +99,56 @@ export function getFinalReleaseTag(input: {
   }
 
   return appendVariant(input.version, input.variant);
+}
+
+const VERSION_LINE = /^const VERSION = '(\d+\.\d+\.\d+)';$/m;
+
+export function readAppVersion(appConfig: string): string {
+  const version = VERSION_LINE.exec(appConfig)?.[1];
+
+  if (version == null) {
+    throw new Error(
+      "Could not find a line like `const VERSION = '1.0.0';` in app.config.ts",
+    );
+  }
+
+  return version;
+}
+
+export function writeAppVersion(appConfig: string, version: string): string {
+  return appConfig.replace(VERSION_LINE, `const VERSION = '${version}';`);
+}
+
+interface GetReleaseVersionOptions {
+  version: string;
+  variant: string;
+  deployType: DeployType;
+  isMainBranch: boolean;
+  tags: string[];
+}
+
+/**
+ * A native build needs a version the stores have not seen yet. Bump the patch
+ * when this variant already has a release tag for the current version. An OTA
+ * update keeps the version of the build it targets. Only `main` bumps, because
+ * only `main` gets the bump committed back.
+ */
+export function getReleaseVersion({
+  version,
+  variant,
+  deployType,
+  isMainBranch,
+  tags,
+}: GetReleaseVersionOptions): string {
+  const isReleased = tags.includes(appendVariant(version, variant));
+
+  if (deployType === 'ota' || !isMainBranch || !isReleased) {
+    return version;
+  }
+
+  const [major, minor, patch] = version.split('.');
+
+  return `${major}.${minor}.${Number(patch) + 1}`;
 }
 
 export function parsePublishedUpdateJson(updateJson: string) {

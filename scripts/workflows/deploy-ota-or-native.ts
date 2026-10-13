@@ -6,11 +6,13 @@ import {
   getCriticalOtaIndexCachePath,
   getFingerprintCachePrefix,
   getFinalReleaseTag,
-  getOtaUpdateIdsCachePrefix,
   getPreliminaryReleaseTag,
+  getReleaseVersion,
   parseDeployType,
   parseManualDeployType,
   parsePublishedUpdateJson,
+  readAppVersion,
+  writeAppVersion,
 } from './otaOrNativeDeployDecision';
 import {
   getCommandErrorMessage,
@@ -210,55 +212,6 @@ function saveCriticalOtaIndexCommand(args: string[]): void {
   console.log(`💾 Saved critical OTA index to S3 for ${variant}`);
 }
 
-function restoreOtaUpdateIdsCommand(args: string[]): void {
-  const cacheDir = getRequiredArg(args, 'cache-dir');
-  const bucket = getRequiredArg(args, 'bucket');
-  const variant = getRequiredArg(args, 'variant');
-
-  requireBucketName(bucket);
-  mkdirSync(cacheDir, { recursive: true });
-
-  const prefix = getOtaUpdateIdsCachePrefix({ bucket, variant });
-
-  const restored = restoreEntries(
-    awsCopier(),
-    PLATFORMS.map(platform => ({
-      remote: `${prefix}/${platform}`,
-      local: join(cacheDir, platform),
-    })),
-  );
-
-  if (restored > 0) {
-    console.log(
-      `📂 Restored ${restored} OTA update ID(s) from S3 for ${variant}`,
-    );
-    return;
-  }
-
-  console.log(`ℹ️ No S3 OTA update IDs found for ${variant}`);
-}
-
-function saveOtaUpdateIdsCommand(args: string[]): void {
-  const cacheDir = getRequiredArg(args, 'cache-dir');
-  const bucket = getRequiredArg(args, 'bucket');
-  const variant = getRequiredArg(args, 'variant');
-
-  requireBucketName(bucket);
-
-  const prefix = getOtaUpdateIdsCachePrefix({ bucket, variant });
-
-  saveEntries(
-    awsCopier(),
-    PLATFORMS.map(platform => ({
-      local: join(cacheDir, platform),
-      remote: `${prefix}/${platform}`,
-    })),
-    { onMissing: 'skip' },
-  );
-
-  console.log(`💾 Saved OTA update IDs to S3 for ${variant}`);
-}
-
 function compareFingerprintsCommand(args: string[]): void {
   const cacheDir = getRequiredArg(args, 'cache-dir');
   const currentIos = getRequiredArg(args, 'current-ios');
@@ -402,6 +355,43 @@ function finalTagCommand(args: string[]): void {
   writeGithubOutput('tag', tag);
 }
 
+function releaseVersionCommand(
+  args: string[],
+  run: ToolRunner = runTool,
+): void {
+  const current = readAppVersion(
+    readFileSync(getRequiredArg(args, 'config', 'app.config.ts'), 'utf8'),
+  );
+
+  const version = getReleaseVersion({
+    version: current,
+    variant: getRequiredArg(args, 'variant', 'production'),
+    deployType: parseDeployType(getRequiredArg(args, 'deploy-type')),
+    isMainBranch: getRequiredArg(args, 'branch') === 'main',
+    tags: run('git', ['tag', '--list']).split('\n'),
+  });
+
+  console.log(
+    version === current
+      ? `📌 App version: ${version}`
+      : `📌 ${current} is already released - bumping to ${version}`,
+  );
+
+  writeGithubOutput('version', version);
+  writeGithubOutput('bumped', String(version !== current));
+}
+
+function writeVersionCommand(args: string[]): void {
+  const configPath = getRequiredArg(args, 'config', 'app.config.ts');
+  const version = getRequiredArg(args, 'version');
+
+  writeFileSync(
+    configPath,
+    writeAppVersion(readFileSync(configPath, 'utf8'), version),
+    'utf8',
+  );
+}
+
 function main(): void {
   const [command, ...args] = process.argv.slice(2);
 
@@ -418,12 +408,6 @@ function main(): void {
     case 'save-critical-ota-index':
       saveCriticalOtaIndexCommand(args);
       return;
-    case 'restore-ota-update-ids':
-      restoreOtaUpdateIdsCommand(args);
-      return;
-    case 'save-ota-update-ids':
-      saveOtaUpdateIdsCommand(args);
-      return;
     case 'compare-fingerprints':
       compareFingerprintsCommand(args);
       return;
@@ -438,6 +422,12 @@ function main(): void {
       return;
     case 'final-tag':
       finalTagCommand(args);
+      return;
+    case 'release-version':
+      releaseVersionCommand(args);
+      return;
+    case 'write-version':
+      writeVersionCommand(args);
       return;
     default:
       throw new Error(`Unknown command: ${command ?? '<missing>'}`);

@@ -29,19 +29,13 @@ export function restoreEntries(copier: S3Copier, entries: S3Entry[]): number {
   return restored;
 }
 
-export function saveEntries(
-  copier: S3Copier,
-  entries: S3Entry[],
-  options: { onMissing?: 'throw' | 'skip' } = {},
-): void {
-  const onMissing = options.onMissing ?? 'throw';
-
+export function saveEntries(copier: S3Copier, entries: S3Entry[]): void {
   for (const entry of entries) {
-    if (existsSync(entry.local)) {
-      copier.upload(entry.local, entry.remote);
-    } else if (onMissing === 'throw') {
+    if (!existsSync(entry.local)) {
       throw new Error(`Cache file does not exist: ${entry.local}`);
     }
+
+    copier.upload(entry.local, entry.remote);
   }
 }
 

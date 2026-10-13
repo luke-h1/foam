@@ -60,31 +60,6 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  prepare:
-    name: 📋 Prepare
-    runs-on: ${{ inputs.self_hosted && 'foam' || 'ubuntu-latest' }}
-    timeout-minutes: 10
-    outputs:
-      version: ${{ steps.get_version.outputs.version }}
-    steps:
-      - name: 🏗 Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-
-      - name: 📌 Get version from app.config.ts
-        id: get_version
-        run: |
-          set -euo pipefail
-
-          VERSION=$(grep "const VERSION = " app.config.ts | sed "s/const VERSION = '//g" | sed "s/';//g" | tr -d ' ')
-          if [ -z "$VERSION" ]; then
-            echo "::error::Could not extract VERSION from app.config.ts (expected a line like: const VERSION = '1.0.6';)"
-            exit 1
-          fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "📌 App Version: $VERSION"
-
   test:
     name: 🧪 Test
     runs-on: ${{ inputs.self_hosted && 'foam' || 'ubuntu-latest' }}
@@ -106,7 +81,6 @@ jobs:
 
   detect-changes:
     name: 🔍 Detect Changes
-    needs: [prepare]
     runs-on: ${{ inputs.self_hosted && 'foam' || 'ubuntu-latest' }}
     timeout-minutes: 20
     permissions:
@@ -116,6 +90,8 @@ jobs:
       ios-fingerprint: ${{ steps.fingerprint.outputs.ios }}
       android-fingerprint: ${{ steps.fingerprint.outputs.android }}
       deploy-type: ${{ steps.decide.outputs.deploy-type }}
+      version: ${{ steps.version.outputs.version }}
+      bumped: ${{ steps.version.outputs.bumped }}
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -183,6 +159,16 @@ jobs:
         env:
           STEPS_COMPARE_OUTPUTS_CHANGED: ${{ steps.compare.outputs.changed }}
 
+      - name: 📌 Resolve app version
+        id: version
+        run: >
+          bunx tsx scripts/workflows/deploy-ota-or-native.ts release-version
+          --variant "${{ inputs.variant || 'production' }}"
+          --deploy-type "${STEPS_DECIDE_OUTPUTS_DEPLOY_TYPE}"
+          --branch "${GITHUB_REF_NAME}"
+        env:
+          STEPS_DECIDE_OUTPUTS_DEPLOY_TYPE: ${{ steps.decide.outputs.deploy-type }}
+
       - name: 📊 Summary
         run: |
           echo "## Change Detection" >> $GITHUB_STEP_SUMMARY
@@ -200,7 +186,7 @@ jobs:
 
   build:
     name: 🔨 Native Build
-    needs: [prepare, test, detect-changes]
+    needs: [test, detect-changes]
     if: needs['detect-changes'].outputs['deploy-type'] == 'build'
     runs-on: ${{ inputs.self_hosted && 'foam' || 'macos-latest' }}
     timeout-minutes: 90
@@ -273,12 +259,17 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
           packager: bun
 
+      - name: 📌 Set app version
+        run: bunx tsx scripts/workflows/deploy-ota-or-native.ts write-version --version "${VERSION}"
+        env:
+          VERSION: ${{ needs['detect-changes'].outputs.version }}
+
       - name: 🔨 Build & Submit
         uses: $/.github/actions/native-build-submit
         with:
           variant: ${{ inputs.variant || 'production' }}
           platform: ${{ inputs.platform || 'ios' }}
-          sentry_release: ${{ needs.prepare.outputs.version }}
+          sentry_release: ${{ needs['detect-changes'].outputs.version }}
           sentry_dist: ${{ steps.sentry_dist.outputs.dist }}
 
       - name: 💾 Save fingerprints for next run
@@ -301,15 +292,11 @@ jobs:
 
   ota:
     name: 📦 OTA Update
-    needs: [prepare, test, detect-changes]
+    needs: [test, detect-changes]
     if: needs['detect-changes'].outputs['deploy-type'] == 'ota'
     runs-on: ${{ inputs.self_hosted && 'foam' || 'ubuntu-latest' }}
     timeout-minutes: 30
     concurrency: eas-update-${{ inputs.variant || 'production' }}-${{ inputs.platform || 'ios' }}
-    outputs:
-      ios_update_id: ${{ steps.publish.outputs.ios_update_id }}
-      android_update_id: ${{ steps.publish.outputs.android_update_id }}
-      update_group_id: ${{ steps.publish.outputs.update_group_id }}
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -380,9 +367,9 @@ jobs:
           --message "$DEPLOY_MESSAGE"
         env:
           EXPO_PUBLIC_APP_VARIANT: ${{ inputs.variant || 'production' }}
-          EXPO_PUBLIC_SENTRY_RELEASE: ${{ needs.prepare.outputs.version }}
+          EXPO_PUBLIC_SENTRY_RELEASE: ${{ needs['detect-changes'].outputs.version }}
           EXPO_PUBLIC_SENTRY_DIST: ${{ steps.sentry_dist.outputs.dist }}
-          SENTRY_RELEASE: ${{ needs.prepare.outputs.version }}
+          SENTRY_RELEASE: ${{ needs['detect-changes'].outputs.version }}
           SENTRY_DIST: ${{ steps.sentry_dist.outputs.dist }}
           SENTRY_LOAD_DOTENV: 0
           DEPLOY_MESSAGE: 'Deploy: ${{ steps.head_commit.outputs.subject || github.sha }}'
@@ -422,23 +409,13 @@ jobs:
 
   release:
     name: 📝 Changelog / Release
-    needs: [prepare, detect-changes, build, ota]
+    needs: [detect-changes, build, ota]
     if: always() && needs['detect-changes'].result == 'success' && (needs.build.result == 'success' || needs.build.result == 'skipped') && (needs.ota.result == 'success' || needs.ota.result == 'skipped') && !inputs.dry_run
     runs-on: ${{ inputs.self_hosted && 'foam' || 'ubuntu-latest' }}
     timeout-minutes: 20
     permissions:
       contents: write
       pull-requests: write
-    outputs:
-      version: ${{ needs.prepare.outputs.version }}
-      tag: ${{ steps.create_release.outputs.tag }}
-      deployment_type: ${{ needs['detect-changes'].outputs['deploy-type'] }}
-      release_notes: ${{ steps.create_release.outputs.release_notes }}
-      has_release_notes_file: ${{ steps.check_release_notes.outputs.has_file }}
-      ios_update_id: ${{ needs.ota.outputs.ios_update_id || '' }}
-      android_update_id: ${{ needs.ota.outputs.android_update_id || '' }}
-      update_group_id: ${{ needs.ota.outputs.update_group_id || '' }}
-      release_url: ${{ needs['detect-changes'].outputs['deploy-type'] != 'ota' && format('https://github.com/{0}/releases/tag/{1}', github.repository, steps.create_release.outputs.tag) || '' }}
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -450,17 +427,35 @@ jobs:
       - name: 🥟 Setup Bun and install dependencies
         uses: $/.github/actions/setup-bun-install
 
+      - name: 📌 Commit the version bump
+        if: needs['detect-changes'].outputs.bumped == 'true'
+        run: |
+          set -euo pipefail
+
+          bunx tsx scripts/workflows/deploy-ota-or-native.ts write-version --version "${VERSION}"
+
+          git config user.name "luke-h1"
+          git config user.email "55030296+luke-h1@users.noreply.github.com"
+          git add app.config.ts
+          git commit -m "chore(release): ${VERSION}"
+          git pull --rebase
+          AUTH_HEADER="$(printf 'luke-h1:%s' "$GITHUB_TOKEN" | base64 | tr -d '\n')"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${AUTH_HEADER}" push "https://github.com/${GITHUB_REPOSITORY}.git" HEAD:main
+        env:
+          GITHUB_TOKEN: ${{ secrets.LUKE_H1_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs['detect-changes'].outputs.version }}
+
       - name: 🏷️ Determine release tag
         id: release_tag
         run: >
           bunx tsx scripts/workflows/deploy-ota-or-native.ts final-tag
           --deploy-type "${NEEDS_DETECT_CHANGES_OUTPUTS_DEPLOY_TYPE}"
-          --version "${NEEDS_PREPARE_OUTPUTS_VERSION}"
+          --version "${NEEDS_DETECT_CHANGES_OUTPUTS_VERSION}"
           --run-number "${{ github.run_number }}"
           --variant "${{ inputs.variant || 'production' }}"
         env:
           NEEDS_DETECT_CHANGES_OUTPUTS_DEPLOY_TYPE: ${{ needs['detect-changes'].outputs['deploy-type'] }}
-          NEEDS_PREPARE_OUTPUTS_VERSION: ${{ needs.prepare.outputs.version }}
+          NEEDS_DETECT_CHANGES_OUTPUTS_VERSION: ${{ needs['detect-changes'].outputs.version }}
 
       - name: 📝 Update changelog and release artifacts
         id: create_release
@@ -469,26 +464,10 @@ jobs:
           github_token: ${{ secrets.LUKE_H1_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           dry: ${{ inputs.dry_run }}
           variant: ${{ inputs.variant || 'production' }}
-          version: ${{ needs.prepare.outputs.version }}
+          version: ${{ needs['detect-changes'].outputs.version }}
           tag: ${{ steps.release_tag.outputs.tag }}
           deployment_type: ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && 'ota' || 'native' }}
           commit_changelog: 'true'
-
-      - name: Check for release notes file
-        id: check_release_notes
-        run: |
-          if [ -f .release-notes-body.md ]; then
-            echo "has_file=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_file=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Upload release notes for Slack
-        if: steps.check_release_notes.outputs.has_file == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: release-notes
-          path: .release-notes-body.md
 
       - name: 📊 Summary
         run: |
@@ -501,7 +480,7 @@ jobs:
           if [ "${NEEDS_DETECT_CHANGES_OUTPUTS_DEPLOY_TYPE}" != "ota" ]; then
             echo "- **Tag:** \`${STEPS_CREATE_RELEASE_OUTPUTS_TAG}\`" >> $GITHUB_STEP_SUMMARY
           fi
-          echo "- **Version:** \`${NEEDS_PREPARE_OUTPUTS_VERSION}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** \`${NEEDS_DETECT_CHANGES_OUTPUTS_VERSION}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Type:** ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && '📦 OTA Update' || '🔨 Native Build' }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ "${NEEDS_DETECT_CHANGES_OUTPUTS_DEPLOY_TYPE}" = "ota" ]; then
@@ -512,94 +491,4 @@ jobs:
         env:
           NEEDS_DETECT_CHANGES_OUTPUTS_DEPLOY_TYPE: ${{ needs['detect-changes'].outputs['deploy-type'] }}
           STEPS_CREATE_RELEASE_OUTPUTS_TAG: ${{ steps.create_release.outputs.tag }}
-          NEEDS_PREPARE_OUTPUTS_VERSION: ${{ needs.prepare.outputs.version }}
-
-  slack-notify:
-    name: 📢 Slack Notification
-    needs: [release]
-    if: always() && needs.release.result == 'success' && !inputs.dry_run
-    runs-on: ${{ inputs.self_hosted && 'foam' || 'ubuntu-latest' }}
-    timeout-minutes: 10
-    steps:
-      - name: 🏗 Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-
-      - name: Load fingerprint cache secrets
-        uses: $/.github/actions/load-fingerprint-cache-secrets
-        with:
-          op_service_account_token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          variant: ${{ inputs.variant || 'production' }}
-
-      - name: 🥟 Setup Bun and install dependencies
-        uses: $/.github/actions/setup-bun-install
-
-      - name: Restore previous OTA update IDs
-        run: >
-          bunx tsx scripts/workflows/deploy-ota-or-native.ts restore-ota-update-ids
-          --cache-dir .ota-cache
-          --bucket "${FOAM_AWS_FINGERPRINT_BUCKET_NAME}"
-          --variant "${{ inputs.variant || 'production' }}"
-
-      - name: Get previous OTA IDs for Slack
-        id: previous_ota
-        run: |
-          PREV_IOS=""
-          PREV_ANDROID=""
-          [ -f .ota-cache/ios ] && PREV_IOS=$(cat .ota-cache/ios)
-          [ -f .ota-cache/android ] && PREV_ANDROID=$(cat .ota-cache/android)
-          echo "ios=$PREV_IOS" >> "$GITHUB_OUTPUT"
-          echo "android=$PREV_ANDROID" >> "$GITHUB_OUTPUT"
-
-      - name: Download release notes
-        if: needs.release.outputs.has_release_notes_file == 'true'
-        continue-on-error: true
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
-        with:
-          name: release-notes
-
-      - name: Load secrets
-        id: secrets
-        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
-        with:
-          export-env: false
-          version: 2.34.0
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          SLACK_WEBHOOK_URL: op://ci-cd/foam-mobile-${{ (inputs.variant || 'production') == 'production' && 'production' || 'staging' }}/SLACK_WEBHOOK_URL
-
-      - name: Send Slack notification
-        uses: $/.github/actions/slack-deploy-notification
-        with:
-          webhook_url: ${{ steps.secrets.outputs.SLACK_WEBHOOK_URL }}
-          version: ${{ needs.release.outputs.version }}
-          deployment_type: ${{ needs.release.outputs.deployment_type }}
-          tag: ${{ needs.release.outputs.tag }}
-          ios_update_id: ${{ needs.release.outputs.ios_update_id }}
-          android_update_id: ${{ needs.release.outputs.android_update_id }}
-          update_group_id: ${{ needs.release.outputs.update_group_id }}
-          previous_ios_update_id: ${{ steps.previous_ota.outputs.ios }}
-          previous_android_update_id: ${{ steps.previous_ota.outputs.android }}
-          release_notes: ${{ needs.release.outputs.release_notes }}
-          release_notes_file: ${{ needs.release.outputs.has_release_notes_file == 'true' && '.release-notes-body.md' || '' }}
-          release_url: ${{ needs.release.outputs.release_url }}
-          repository: ${{ github.repository }}
-
-      - name: Cache OTA update IDs for next run
-        if: needs.release.outputs.deployment_type == 'ota'
-        run: |
-          mkdir -p .ota-cache
-          echo "${NEEDS_RELEASE_OUTPUTS_IOS_UPDATE_ID}" > .ota-cache/ios
-          echo "${NEEDS_RELEASE_OUTPUTS_ANDROID_UPDATE_ID}" > .ota-cache/android
-        env:
-          NEEDS_RELEASE_OUTPUTS_IOS_UPDATE_ID: ${{ needs.release.outputs.ios_update_id }}
-          NEEDS_RELEASE_OUTPUTS_ANDROID_UPDATE_ID: ${{ needs.release.outputs.android_update_id }}
-
-      - name: Save OTA cache
-        if: needs.release.outputs.deployment_type == 'ota'
-        run: >
-          bunx tsx scripts/workflows/deploy-ota-or-native.ts save-ota-update-ids
-          --cache-dir .ota-cache
-          --bucket "${FOAM_AWS_FINGERPRINT_BUCKET_NAME}"
-          --variant "${{ inputs.variant || 'production' }}"
+          NEEDS_DETECT_CHANGES_OUTPUTS_VERSION: ${{ needs['detect-changes'].outputs.version }}

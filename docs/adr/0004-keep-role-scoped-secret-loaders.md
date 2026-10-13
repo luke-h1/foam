@@ -3,21 +3,19 @@
 CI loads secrets through three composite actions —
 `.github/actions/load-fingerprint-cache-secrets` (the AWS trio),
 `load-ota-deploy-secrets` (that trio + Sentry + auth proxy), and
-`load-native-deploy-secrets` (that set + Twitch + Google services + Slack) — plus
-two inline `1password/load-secrets-action` steps (`deploy-ota-or-native.yml`'s
-`slack-notify` job loads only `SLACK_WEBHOOK_URL`; `e2e.yml`'s build job loads only
-the iOS Google-services blob). All five pin the same action SHA and version, and
+`load-native-deploy-secrets` (that set + Twitch + Google services) — plus an
+inline `1password/load-secrets-action` step (`e2e.yml`'s build job loads only
+the iOS Google-services blob). All four pin the same action SHA and version, and
 the `op://ci-cd/foam-staging/` vault+environment prefix repeats ~26 times.
 Collapsing them onto one seam looks attractive.
 
 We deliberately keep them separate.
 
-- The differing secret **lists are least-privilege, not duplication**. The
-  slack-notify job loading only the webhook (with `export-env: false`) and the e2e
-  job loading only the Google-services file are scoped so a job never gets secrets
+- The differing secret **lists are least-privilege, not duplication**. The e2e
+  job loading only the Google-services file is scoped so a job never gets secrets
   it has no business holding. A single shared loader would hand every caller the
-  union — the native job's Twitch/Google/Slack secrets would leak into the
-  fingerprint and slack jobs. Least-privilege is a real constraint that _varies_
+  union — the native job's Twitch/Google secrets would leak into the
+  fingerprint jobs. Least-privilege is a real constraint that _varies_
   across these seams.
 - Composite-action YAML **cannot parametrize the `op://` env-block**. The
   `1password/load-secrets-action` reads refs from a step's `env:` map; a wrapper
@@ -35,7 +33,7 @@ widens each job's secret grant.
 
 ## Consequences
 
-The pinned `1password/load-secrets-action` SHA lives in five places and the
+The pinned `1password/load-secrets-action` SHA lives in four places and the
 `op://ci-cd/foam-staging/` prefix repeats across the loaders. That is accepted: a
 SHA bump or an environment move is a mechanical find-and-replace, and the cost is
 paid back by every job holding exactly the secrets it needs. If the prefix ever

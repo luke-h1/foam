@@ -33,9 +33,11 @@ import {
   getCriticalOtaIndexCachePath,
   getFinalReleaseTag,
   getFingerprintCachePrefix,
-  getOtaUpdateIdsCachePrefix,
   getPreliminaryReleaseTag,
+  getReleaseVersion,
   parsePublishedUpdateJson,
+  readAppVersion,
+  writeAppVersion,
 } from '../scripts/workflows/otaOrNativeDeployDecision';
 import {
   parseCurrentRolloutPercentage,
@@ -118,17 +120,6 @@ describe('otaOrNativeDeployDecision', () => {
           variant: 'production',
         }),
       ).toBe('s3://foam-release-cache/ota-critical-index/production/index');
-    });
-  });
-
-  describe('getOtaUpdateIdsCachePrefix', () => {
-    test('builds the variant scoped S3 prefix', () => {
-      expect(
-        getOtaUpdateIdsCachePrefix({
-          bucket: 'foam-release-cache',
-          variant: 'production',
-        }),
-      ).toBe('s3://foam-release-cache/ota-update-ids/production');
     });
   });
 
@@ -238,6 +229,68 @@ describe('otaOrNativeDeployDecision', () => {
           runNumber: 45,
         }),
       ).toBe('1.2.3-testflight');
+    });
+  });
+
+  describe('app version', () => {
+    const appConfig =
+      "const variant = 'production';\nconst VERSION = '1.0.12';\n";
+
+    test('reads the version from app.config.ts', () => {
+      expect(readAppVersion(appConfig)).toBe('1.0.12');
+    });
+
+    test('throws when app.config.ts has no VERSION line', () => {
+      expect(() => readAppVersion("const variant = 'production';")).toThrow(
+        'Could not find',
+      );
+    });
+
+    test('writes the version and leaves the rest of the file alone', () => {
+      expect(writeAppVersion(appConfig, '1.0.13')).toBe(
+        "const variant = 'production';\nconst VERSION = '1.0.13';\n",
+      );
+    });
+  });
+
+  describe('getReleaseVersion', () => {
+    const released: Parameters<typeof getReleaseVersion>[0] = {
+      version: '1.0.12',
+      variant: 'production',
+      deployType: 'build',
+      isMainBranch: true,
+      tags: ['1.0.11', '1.0.12', '1.0.12-internal'],
+    };
+
+    test('bumps the patch when a native build reuses a released version', () => {
+      expect(getReleaseVersion(released)).toBe('1.0.13');
+    });
+
+    test('keeps the version when this variant has no tag for it yet', () => {
+      expect(
+        getReleaseVersion({
+          ...released,
+          variant: 'testflight',
+        }),
+      ).toBe('1.0.12');
+    });
+
+    test('keeps the version for an OTA update', () => {
+      expect(
+        getReleaseVersion({
+          ...released,
+          deployType: 'ota',
+        }),
+      ).toBe('1.0.12');
+    });
+
+    test('keeps the version outside main', () => {
+      expect(
+        getReleaseVersion({
+          ...released,
+          isMainBranch: false,
+        }),
+      ).toBe('1.0.12');
     });
   });
 
@@ -784,24 +837,6 @@ describe('s3Cache', () => {
             { local: androidPath, remote: 's3://bucket/android' },
           ]),
         ).toThrow('Cache file does not exist');
-      } finally {
-        rmSync(dir, { recursive: true, force: true });
-      }
-    });
-
-    test('skips missing files when onMissing is skip', () => {
-      const dir = mkdtempSync(join(tmpdir(), 'foam-s3-'));
-
-      try {
-        const { copier, uploads } = createMemoryCopier();
-
-        saveEntries(
-          copier,
-          [{ local: join(dir, 'android'), remote: 's3://bucket/android' }],
-          { onMissing: 'skip' },
-        );
-
-        expect(uploads).toEqual([]);
       } finally {
         rmSync(dir, { recursive: true, force: true });
       }
