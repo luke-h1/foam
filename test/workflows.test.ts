@@ -33,7 +33,6 @@ import {
   getCriticalOtaIndexCachePath,
   getFinalReleaseTag,
   getFingerprintCachePrefix,
-  getOtaUpdateIdsCachePrefix,
   getPreliminaryReleaseTag,
   getReleaseVersion,
   parsePublishedUpdateJson,
@@ -121,17 +120,6 @@ describe('otaOrNativeDeployDecision', () => {
           variant: 'production',
         }),
       ).toBe('s3://foam-release-cache/ota-critical-index/production/index');
-    });
-  });
-
-  describe('getOtaUpdateIdsCachePrefix', () => {
-    test('builds the variant scoped S3 prefix', () => {
-      expect(
-        getOtaUpdateIdsCachePrefix({
-          bucket: 'foam-release-cache',
-          variant: 'production',
-        }),
-      ).toBe('s3://foam-release-cache/ota-update-ids/production');
     });
   });
 
@@ -849,24 +837,6 @@ describe('s3Cache', () => {
             { local: androidPath, remote: 's3://bucket/android' },
           ]),
         ).toThrow('Cache file does not exist');
-      } finally {
-        rmSync(dir, { recursive: true, force: true });
-      }
-    });
-
-    test('skips missing files when onMissing is skip', () => {
-      const dir = mkdtempSync(join(tmpdir(), 'foam-s3-'));
-
-      try {
-        const { copier, uploads } = createMemoryCopier();
-
-        saveEntries(
-          copier,
-          [{ local: join(dir, 'android'), remote: 's3://bucket/android' }],
-          { onMissing: 'skip' },
-        );
-
-        expect(uploads).toEqual([]);
       } finally {
         rmSync(dir, { recursive: true, force: true });
       }

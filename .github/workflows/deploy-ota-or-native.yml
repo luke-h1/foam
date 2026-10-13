@@ -297,10 +297,6 @@ jobs:
     runs-on: ${{ inputs.self_hosted && 'foam' || 'ubuntu-latest' }}
     timeout-minutes: 30
     concurrency: eas-update-${{ inputs.variant || 'production' }}-${{ inputs.platform || 'ios' }}
-    outputs:
-      ios_update_id: ${{ steps.publish.outputs.ios_update_id }}
-      android_update_id: ${{ steps.publish.outputs.android_update_id }}
-      update_group_id: ${{ steps.publish.outputs.update_group_id }}
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -420,16 +416,6 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    outputs:
-      version: ${{ needs['detect-changes'].outputs.version }}
-      tag: ${{ steps.create_release.outputs.tag }}
-      deployment_type: ${{ needs['detect-changes'].outputs['deploy-type'] }}
-      release_notes: ${{ steps.create_release.outputs.release_notes }}
-      has_release_notes_file: ${{ steps.check_release_notes.outputs.has_file }}
-      ios_update_id: ${{ needs.ota.outputs.ios_update_id || '' }}
-      android_update_id: ${{ needs.ota.outputs.android_update_id || '' }}
-      update_group_id: ${{ needs.ota.outputs.update_group_id || '' }}
-      release_url: ${{ needs['detect-changes'].outputs['deploy-type'] != 'ota' && format('https://github.com/{0}/releases/tag/{1}', github.repository, steps.create_release.outputs.tag) || '' }}
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -483,22 +469,6 @@ jobs:
           deployment_type: ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && 'ota' || 'native' }}
           commit_changelog: 'true'
 
-      - name: Check for release notes file
-        id: check_release_notes
-        run: |
-          if [ -f .release-notes-body.md ]; then
-            echo "has_file=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_file=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Upload release notes for Slack
-        if: steps.check_release_notes.outputs.has_file == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: release-notes
-          path: .release-notes-body.md
-
       - name: 📊 Summary
         run: |
           if [ "${NEEDS_DETECT_CHANGES_OUTPUTS_DEPLOY_TYPE}" = "ota" ]; then
@@ -522,93 +492,3 @@ jobs:
           NEEDS_DETECT_CHANGES_OUTPUTS_DEPLOY_TYPE: ${{ needs['detect-changes'].outputs['deploy-type'] }}
           STEPS_CREATE_RELEASE_OUTPUTS_TAG: ${{ steps.create_release.outputs.tag }}
           NEEDS_DETECT_CHANGES_OUTPUTS_VERSION: ${{ needs['detect-changes'].outputs.version }}
-
-  slack-notify:
-    name: 📢 Slack Notification
-    needs: [release]
-    if: always() && needs.release.result == 'success' && !inputs.dry_run
-    runs-on: ${{ inputs.self_hosted && 'foam' || 'ubuntu-latest' }}
-    timeout-minutes: 10
-    steps:
-      - name: 🏗 Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-
-      - name: Load fingerprint cache secrets
-        uses: $/.github/actions/load-fingerprint-cache-secrets
-        with:
-          op_service_account_token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          variant: ${{ inputs.variant || 'production' }}
-
-      - name: 🥟 Setup Bun and install dependencies
-        uses: $/.github/actions/setup-bun-install
-
-      - name: Restore previous OTA update IDs
-        run: >
-          bunx tsx scripts/workflows/deploy-ota-or-native.ts restore-ota-update-ids
-          --cache-dir .ota-cache
-          --bucket "${FOAM_AWS_FINGERPRINT_BUCKET_NAME}"
-          --variant "${{ inputs.variant || 'production' }}"
-
-      - name: Get previous OTA IDs for Slack
-        id: previous_ota
-        run: |
-          PREV_IOS=""
-          PREV_ANDROID=""
-          [ -f .ota-cache/ios ] && PREV_IOS=$(cat .ota-cache/ios)
-          [ -f .ota-cache/android ] && PREV_ANDROID=$(cat .ota-cache/android)
-          echo "ios=$PREV_IOS" >> "$GITHUB_OUTPUT"
-          echo "android=$PREV_ANDROID" >> "$GITHUB_OUTPUT"
-
-      - name: Download release notes
-        if: needs.release.outputs.has_release_notes_file == 'true'
-        continue-on-error: true
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
-        with:
-          name: release-notes
-
-      - name: Load secrets
-        id: secrets
-        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
-        with:
-          export-env: false
-          version: 2.34.0
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          SLACK_WEBHOOK_URL: op://ci-cd/foam-mobile-${{ (inputs.variant || 'production') == 'production' && 'production' || 'staging' }}/SLACK_WEBHOOK_URL
-
-      - name: Send Slack notification
-        uses: $/.github/actions/slack-deploy-notification
-        with:
-          webhook_url: ${{ steps.secrets.outputs.SLACK_WEBHOOK_URL }}
-          version: ${{ needs.release.outputs.version }}
-          deployment_type: ${{ needs.release.outputs.deployment_type }}
-          tag: ${{ needs.release.outputs.tag }}
-          ios_update_id: ${{ needs.release.outputs.ios_update_id }}
-          android_update_id: ${{ needs.release.outputs.android_update_id }}
-          update_group_id: ${{ needs.release.outputs.update_group_id }}
-          previous_ios_update_id: ${{ steps.previous_ota.outputs.ios }}
-          previous_android_update_id: ${{ steps.previous_ota.outputs.android }}
-          release_notes: ${{ needs.release.outputs.release_notes }}
-          release_notes_file: ${{ needs.release.outputs.has_release_notes_file == 'true' && '.release-notes-body.md' || '' }}
-          release_url: ${{ needs.release.outputs.release_url }}
-          repository: ${{ github.repository }}
-
-      - name: Cache OTA update IDs for next run
-        if: needs.release.outputs.deployment_type == 'ota'
-        run: |
-          mkdir -p .ota-cache
-          echo "${NEEDS_RELEASE_OUTPUTS_IOS_UPDATE_ID}" > .ota-cache/ios
-          echo "${NEEDS_RELEASE_OUTPUTS_ANDROID_UPDATE_ID}" > .ota-cache/android
-        env:
-          NEEDS_RELEASE_OUTPUTS_IOS_UPDATE_ID: ${{ needs.release.outputs.ios_update_id }}
-          NEEDS_RELEASE_OUTPUTS_ANDROID_UPDATE_ID: ${{ needs.release.outputs.android_update_id }}
-
-      - name: Save OTA cache
-        if: needs.release.outputs.deployment_type == 'ota'
-        run: >
-          bunx tsx scripts/workflows/deploy-ota-or-native.ts save-ota-update-ids
-          --cache-dir .ota-cache
-          --bucket "${FOAM_AWS_FINGERPRINT_BUCKET_NAME}"
-          --variant "${{ inputs.variant || 'production' }}"

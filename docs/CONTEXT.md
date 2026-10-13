@@ -38,9 +38,6 @@ when the variant already has a tag for the current version. The release job
 commits the bump. `fingerprint.config.js` skips the version, so a bump never
 changes the fingerprint.
 
-**OTA update IDs** — the iOS/Android update IDs from an EAS publish, cached so the
-Slack notification can link the previous update.
-
 **Critical OTA index** — a monotonic counter bumped when an OTA is marked critical
 (`[critical-ota]` commit tag or the `critical_update` input); the app uses it to
 force-apply an update.

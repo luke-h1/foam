@@ -6,7 +6,6 @@ import {
   getCriticalOtaIndexCachePath,
   getFingerprintCachePrefix,
   getFinalReleaseTag,
-  getOtaUpdateIdsCachePrefix,
   getPreliminaryReleaseTag,
   getReleaseVersion,
   parseDeployType,
@@ -213,55 +212,6 @@ function saveCriticalOtaIndexCommand(args: string[]): void {
   console.log(`💾 Saved critical OTA index to S3 for ${variant}`);
 }
 
-function restoreOtaUpdateIdsCommand(args: string[]): void {
-  const cacheDir = getRequiredArg(args, 'cache-dir');
-  const bucket = getRequiredArg(args, 'bucket');
-  const variant = getRequiredArg(args, 'variant');
-
-  requireBucketName(bucket);
-  mkdirSync(cacheDir, { recursive: true });
-
-  const prefix = getOtaUpdateIdsCachePrefix({ bucket, variant });
-
-  const restored = restoreEntries(
-    awsCopier(),
-    PLATFORMS.map(platform => ({
-      remote: `${prefix}/${platform}`,
-      local: join(cacheDir, platform),
-    })),
-  );
-
-  if (restored > 0) {
-    console.log(
-      `📂 Restored ${restored} OTA update ID(s) from S3 for ${variant}`,
-    );
-    return;
-  }
-
-  console.log(`ℹ️ No S3 OTA update IDs found for ${variant}`);
-}
-
-function saveOtaUpdateIdsCommand(args: string[]): void {
-  const cacheDir = getRequiredArg(args, 'cache-dir');
-  const bucket = getRequiredArg(args, 'bucket');
-  const variant = getRequiredArg(args, 'variant');
-
-  requireBucketName(bucket);
-
-  const prefix = getOtaUpdateIdsCachePrefix({ bucket, variant });
-
-  saveEntries(
-    awsCopier(),
-    PLATFORMS.map(platform => ({
-      local: join(cacheDir, platform),
-      remote: `${prefix}/${platform}`,
-    })),
-    { onMissing: 'skip' },
-  );
-
-  console.log(`💾 Saved OTA update IDs to S3 for ${variant}`);
-}
-
 function compareFingerprintsCommand(args: string[]): void {
   const cacheDir = getRequiredArg(args, 'cache-dir');
   const currentIos = getRequiredArg(args, 'current-ios');
@@ -457,12 +407,6 @@ function main(): void {
       return;
     case 'save-critical-ota-index':
       saveCriticalOtaIndexCommand(args);
-      return;
-    case 'restore-ota-update-ids':
-      restoreOtaUpdateIdsCommand(args);
-      return;
-    case 'save-ota-update-ids':
-      saveOtaUpdateIdsCommand(args);
       return;
     case 'compare-fingerprints':
       compareFingerprintsCommand(args);

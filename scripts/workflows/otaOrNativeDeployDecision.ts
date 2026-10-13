@@ -40,16 +40,6 @@ export function getCriticalOtaIndexCachePath(input: {
   return `${baseUri}/ota-critical-index/${variant}/index`;
 }
 
-export function getOtaUpdateIdsCachePrefix(input: {
-  bucket: string;
-  variant: string;
-}): string {
-  const baseUri = `s3://${input.bucket}`;
-  const variant = encodeURIComponent(input.variant);
-
-  return `${baseUri}/ota-update-ids/${variant}`;
-}
-
 export function compareFingerprints(
   previous: Fingerprints,
   current: Fingerprints,
