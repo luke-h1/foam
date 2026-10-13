@@ -434,20 +434,20 @@ If you get an error such as `no development servers found` then this means the l
 
 Pull requests run checks in [`.github/workflows/`](.github/workflows/):
 
-| Workflow                                                             | Trigger                                                                               | Purpose                                                                                                                   |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| [`lint-format.yml`](.github/workflows/lint-format.yml)               | Pull requests                                                                         | One job for oxfmt, `ts:check`, ast-grep, oxlint, and commitlint over the PR range.                                        |
-| [`jest.yml`](.github/workflows/jest.yml)                             | Pull requests                                                                         | Runs the Jest suite with `--maxWorkers=100%`.                                                                             |
-| [`native-lint.yml`](.github/workflows/native-lint.yml)               | Pull requests touching `modules/**` or the native lint config                         | SwiftLint/SwiftFormat on macOS and ktlint on Linux.                                                                       |
-| [`chat-performance.yml`](.github/workflows/chat-performance.yml)     | Pull requests touching chat sources or the dependency graph                           | Measures the reassure chat perf suite against the PR base on the same runner and comments the diff.                       |
-| [`react-doctor.yml`](.github/workflows/react-doctor.yml)             | Pull requests                                                                         | Runs React Doctor against the PR baseline.                                                                                |
-| [`detect-fp-changes.yml`](.github/workflows/detect-fp-changes.yml)   | Pull requests whose diff is not entirely JS/docs                                      | Compares Expo native fingerprints for `production`, `testflight`, and `internal` against the PR base and comments on PRs. |
-| [`enforce-rebase.yml`](.github/workflows/enforce-rebase.yml)         | Pull requests                                                                         | Rejects merge commits so branch history stays linear.                                                                     |
-| [`label.yml`](.github/workflows/label.yml)                           | Pull requests                                                                         | Applies labels via [labeler](https://github.com/actions/labeler).                                                         |
-| [`anti-slop.yml`](.github/workflows/anti-slop.yml)                   | Pull requests                                                                         | Runs `peakoss/anti-slop`, exempting draft PRs.                                                                            |
-| [`self-hosted-runner.yml`](.github/workflows/self-hosted-runner.yml) | Pull requests with the `self-hosted-test` label, or manual dispatch in `luke-h1/foam` | Runs `bun run lint` on the self-hosted `foam` runner.                                                                     |
-| [`zizmor.yml`](.github/workflows/zizmor.yml)                         | Pull requests targeting `main` that touch `.github/**`                                | Audits GitHub Actions workflows for security issues with [zizmor](https://github.com/zizmorcore/zizmor).                  |
-| [`warm-cache.yml`](.github/workflows/warm-cache.yml)                 | Pushes to `main` that change the dependency graph                                     | Writes the shared bun install cache that PR jobs restore from.                                                            |
+| Workflow                                                             | Trigger                                                                               | Purpose                                                                                                                                                                             |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`lint-format.yml`](.github/workflows/lint-format.yml)               | Pull requests                                                                         | One job for oxfmt, `ts:check`, ast-grep, oxlint, and commitlint over the PR range.                                                                                                  |
+| [`jest.yml`](.github/workflows/jest.yml)                             | Pull requests                                                                         | Runs the Jest suite with `--maxWorkers=100%`.                                                                                                                                       |
+| [`native-lint.yml`](.github/workflows/native-lint.yml)               | Pull requests touching `modules/**` or the native lint config                         | SwiftLint/SwiftFormat on macOS and ktlint on Linux.                                                                                                                                 |
+| [`chat-performance.yml`](.github/workflows/chat-performance.yml)     | Pull requests touching chat sources or the dependency graph                           | Measures the reassure chat perf suite against the PR base on the same runner and comments the diff.                                                                                 |
+| [`react-doctor.yml`](.github/workflows/react-doctor.yml)             | Pull requests                                                                         | Runs React Doctor against the PR baseline.                                                                                                                                          |
+| [`detect-fp-changes.yml`](.github/workflows/detect-fp-changes.yml)   | Pull requests that change more than docs                                              | Compares Expo native fingerprints for `production`, `testflight`, and `internal` against the PR base and comments whether the PR can ship as an OTA update or needs a native build. |
+| [`enforce-rebase.yml`](.github/workflows/enforce-rebase.yml)         | Pull requests                                                                         | Rejects merge commits so branch history stays linear.                                                                                                                               |
+| [`label.yml`](.github/workflows/label.yml)                           | Pull requests                                                                         | Applies labels via [labeler](https://github.com/actions/labeler).                                                                                                                   |
+| [`anti-slop.yml`](.github/workflows/anti-slop.yml)                   | Pull requests                                                                         | Runs `peakoss/anti-slop`, exempting draft PRs.                                                                                                                                      |
+| [`self-hosted-runner.yml`](.github/workflows/self-hosted-runner.yml) | Pull requests with the `self-hosted-test` label, or manual dispatch in `luke-h1/foam` | Runs `bun run lint` on the self-hosted `foam` runner.                                                                                                                               |
+| [`zizmor.yml`](.github/workflows/zizmor.yml)                         | Pull requests targeting `main` that touch `.github/**`                                | Audits GitHub Actions workflows for security issues with [zizmor](https://github.com/zizmorcore/zizmor).                                                                            |
+| [`warm-cache.yml`](.github/workflows/warm-cache.yml)                 | Pushes to `main` that change the dependency graph                                     | Writes the shared bun install cache that PR jobs restore from.                                                                                                                      |
 
 Scheduled [CodeQL](.github/workflows/codeql.yml) runs weekly on the default branch.
 
@@ -461,7 +461,7 @@ flowchart LR
   PR --> Slop[anti-slop.yml]
   PR -->|modules/**| Native[native-lint.yml]
   PR -->|chat sources| Perf[chat-performance.yml]
-  PR -->|non-JS diff| FP[detect-fp-changes.yml]
+  PR -->|not docs only| FP[detect-fp-changes.yml]
   PR -->|.github/**| Zizmor[zizmor.yml]
   PR -->|label self-hosted-test| SH[self-hosted-runner.yml]
   Main[main] -->|bun.lock| Warm[warm-cache.yml]
@@ -526,16 +526,23 @@ There is also a draft [EAS Workflows](https://docs.expo.dev/eas/workflows/get-st
 
 ```mermaid
 flowchart TD
-  A[Push to main] --> P[prepare version from app.config.ts]
+  A[Push to main] --> D[detect-changes fingerprints and app version]
   A --> T[bun run test:ci and ts:check]
-  P --> D[detect-changes fingerprints]
   T --> D
   D -->|fingerprint changed or force build| B[local EAS build + submit selected variant]
   D -->|fingerprint unchanged or force OTA| U[eas update selected channel]
-  B --> R[tag and changelog]
+  B --> R[commit version bump, tag and changelog]
   U --> R
   R --> S[Slack notify]
 ```
+
+A native build on `main` needs a version the stores have not seen. When
+`VERSION` in `app.config.ts` already has a release tag for the variant (`1.0.12`
+for production, `1.0.12-internal` for internal), `detect-changes` bumps the
+patch. The build uses the new version, and the release job commits
+`chore(release): 1.0.13` to `main` before it tags. OTA updates and deploys from
+other branches keep the current version. To ship a minor or major version, set
+`VERSION` by hand: an untagged version is used as it is.
 
 The native-vs-OTA decision stores fingerprints in a private S3 bucket so the
 same cache is available to GitHub Actions and local deploy scripts (also to avoid recent reliability issues with GHA). Configure

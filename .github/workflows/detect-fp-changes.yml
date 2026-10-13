@@ -1,19 +1,15 @@
 name: Detect fingerprint changes
 on:
-  # on:
-  #   pull_request:
-  #     types: [opened, synchronize, reopened, ready_for_review]
-  #     paths-ignore:
-  #       - 'src/**'
-  #       - 'e2e/**'
-  #       - 'docs/**'
-  #       - '**/*.md'
-  #       - '.claude/**'
-  #       - '.rnstorybook/**'
-  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.claude/**'
+      - '.cursor/**'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
@@ -51,8 +47,7 @@ jobs:
           bun install --frozen-lockfile
           popd >/dev/null
 
-      - name: 🧬 Compute fingerprints
-        id: fp
+      - name: 🧬 Compare fingerprints
         run: |
           set -euo pipefail
 
@@ -76,166 +71,67 @@ jobs:
           compute_tree .__pr_base__ base &
           wait
 
-          for PREFIX in head base; do
-            for VARIANT in production testflight internal; do
-              for PLATFORM in ios android; do
-                HASH="$(cat "$FP_DIR/${PREFIX}_${PLATFORM}_${VARIANT}" 2>/dev/null || true)"
+          CHANGED=()
+          ROWS=""
+
+          for VARIANT in production testflight internal; do
+            VARIANT_CHANGED="false"
+
+            for PLATFORM in ios android; do
+              BASE="$(cat "$FP_DIR/base_${PLATFORM}_${VARIANT}" 2>/dev/null || true)"
+              HEAD="$(cat "$FP_DIR/head_${PLATFORM}_${VARIANT}" 2>/dev/null || true)"
+
+              for HASH in "$BASE" "$HEAD"; do
                 if [ -z "$HASH" ] || [ "$HASH" = "null" ]; then
-                  echo "Missing fingerprint: ${PREFIX} ${PLATFORM} ${VARIANT}" >&2
+                  echo "::error::Missing fingerprint for ${PLATFORM} ${VARIANT}"
                   exit 1
                 fi
               done
+
+              if [ "$BASE" != "$HEAD" ]; then
+                VARIANT_CHANGED="true"
+              fi
+
+              ROWS+="| ${VARIANT} | ${PLATFORM} | \`${BASE}\` | \`${HEAD}\` |"$'\n'
             done
-          done
 
-          CHANGED_ANY="false"
-
-          for VARIANT in production testflight internal; do
-            HEAD_IOS="$(cat "$FP_DIR/head_ios_${VARIANT}")"
-            HEAD_ANDROID="$(cat "$FP_DIR/head_android_${VARIANT}")"
-            BASE_IOS="$(cat "$FP_DIR/base_ios_${VARIANT}")"
-            BASE_ANDROID="$(cat "$FP_DIR/base_android_${VARIANT}")"
-
-            CHANGED="false"
-            if [ "$HEAD_IOS" != "$BASE_IOS" ] || [ "$HEAD_ANDROID" != "$BASE_ANDROID" ]; then
-              CHANGED="true"
-              CHANGED_ANY="true"
+            if [ "$VARIANT_CHANGED" = "true" ]; then
+              CHANGED+=("$VARIANT")
             fi
-
-            echo "head_ios_${VARIANT}=$HEAD_IOS" >> "$GITHUB_OUTPUT"
-            echo "head_android_${VARIANT}=$HEAD_ANDROID" >> "$GITHUB_OUTPUT"
-            echo "base_ios_${VARIANT}=$BASE_IOS" >> "$GITHUB_OUTPUT"
-            echo "base_android_${VARIANT}=$BASE_ANDROID" >> "$GITHUB_OUTPUT"
-            echo "changed_${VARIANT}=$CHANGED" >> "$GITHUB_OUTPUT"
           done
 
-          echo "changed=$CHANGED_ANY" >> "$GITHUB_OUTPUT"
+          {
+            if [ "${#CHANGED[@]}" -eq 0 ]; then
+              echo "### ✅ OTA compatible"
+              echo ""
+              echo "This PR does not change the native fingerprint. It can ship as an OTA update."
+            else
+              printf -v VARIANTS '%s, ' "${CHANGED[@]}"
+              echo "### 🔨 Native build required"
+              echo ""
+              echo "This PR changes the native fingerprint for ${VARIANTS%, }. It cannot ship as an OTA update."
+              echo ""
+              echo "The deploy workflow picks a native build for it. If the current \`VERSION\` in \`app.config.ts\` already has a release tag, the workflow bumps the patch version and commits it to \`main\`."
+            fi
+            echo ""
+            echo "<details>"
+            echo "<summary>Fingerprints against the base commit</summary>"
+            echo ""
+            echo "| Variant | Platform | Base | Head |"
+            echo "|---|---|---|---|"
+            printf '%s' "$ROWS"
+            echo ""
+            echo "</details>"
+          } > "$RUNNER_TEMP/ota-compat.md"
 
-      - name: 💬 Comment on PR when fingerprints changed
-        if: ${{ steps.fp.outputs.changed == 'true' }}
+          cat "$RUNNER_TEMP/ota-compat.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 💬 Comment on PR
         uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88
         with:
           header: fingerprint-diff
           GITHUB_TOKEN: ${{ secrets.PR_COMMENT_GITHUB_TOKEN || github.token }}
-          message: |
-            This pull request introduced fingerprint changes against the base commit.
-
-            Make sure the app version is bumped before cutting a native release.
-
-            <details>
-            <summary>production</summary>
-
-            | Platform | Base | Head |
-            |---|---|---|
-            | iOS | `${{ steps.fp.outputs.base_ios_production }}` | `${{ steps.fp.outputs.head_ios_production }}` |
-            | Android | `${{ steps.fp.outputs.base_android_production }}` | `${{ steps.fp.outputs.head_android_production }}` |
-
-            </details>
-
-            <details>
-            <summary>testflight</summary>
-
-            | Platform | Base | Head |
-            |---|---|---|
-            | iOS | `${{ steps.fp.outputs.base_ios_testflight }}` | `${{ steps.fp.outputs.head_ios_testflight }}` |
-            | Android | `${{ steps.fp.outputs.base_android_testflight }}` | `${{ steps.fp.outputs.head_android_testflight }}` |
-
-            </details>
-
-            <details>
-            <summary>internal</summary>
-
-            | Platform | Base | Head |
-            |---|---|---|
-            | iOS | `${{ steps.fp.outputs.base_ios_internal }}` | `${{ steps.fp.outputs.head_ios_internal }}` |
-            | Android | `${{ steps.fp.outputs.base_android_internal }}` | `${{ steps.fp.outputs.head_android_internal }}` |
-
-            </details>
-
-            - production changed: **${{ steps.fp.outputs.changed_production }}**
-            - testflight changed: **${{ steps.fp.outputs.changed_testflight }}**
-            - internal changed: **${{ steps.fp.outputs.changed_internal }}**
-
-      - name: 💬 Comment on PR when fingerprints are unchanged
-        if: ${{ steps.fp.outputs.changed != 'true' }}
-        uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88
-        with:
-          header: fingerprint-diff
-          GITHUB_TOKEN: ${{ secrets.PR_COMMENT_GITHUB_TOKEN || github.token }}
-          message: |
-            No fingerprint differences were detected against the base commit.
-
-            <details>
-            <summary>production</summary>
-
-            | Platform | Base | Head |
-            |---|---|---|
-            | iOS | `${{ steps.fp.outputs.base_ios_production }}` | `${{ steps.fp.outputs.head_ios_production }}` |
-            | Android | `${{ steps.fp.outputs.base_android_production }}` | `${{ steps.fp.outputs.head_android_production }}` |
-
-            </details>
-
-            <details>
-            <summary>testflight</summary>
-
-            | Platform | Base | Head |
-            |---|---|---|
-            | iOS | `${{ steps.fp.outputs.base_ios_testflight }}` | `${{ steps.fp.outputs.head_ios_testflight }}` |
-            | Android | `${{ steps.fp.outputs.base_android_testflight }}` | `${{ steps.fp.outputs.head_android_testflight }}` |
-
-            </details>
-
-            <details>
-            <summary>internal</summary>
-
-            | Platform | Base | Head |
-            |---|---|---|
-            | iOS | `${{ steps.fp.outputs.base_ios_internal }}` | `${{ steps.fp.outputs.head_ios_internal }}` |
-            | Android | `${{ steps.fp.outputs.base_android_internal }}` | `${{ steps.fp.outputs.head_android_internal }}` |
-
-            </details>
-
-            - production changed: **${{ steps.fp.outputs.changed_production }}**
-            - testflight changed: **${{ steps.fp.outputs.changed_testflight }}**
-            - internal changed: **${{ steps.fp.outputs.changed_internal }}**
-
-      - name: 📊 Summary
-        run: |
-          echo "## Fingerprint comparison" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "### production" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Platform | Base | Head | Changed |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| iOS | \`${STEPS_FP_OUTPUTS_BASE_IOS_PRODUCTION}\` | \`${STEPS_FP_OUTPUTS_HEAD_IOS_PRODUCTION}\` | ${{ steps.fp.outputs.base_ios_production != steps.fp.outputs.head_ios_production }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Android | \`${STEPS_FP_OUTPUTS_BASE_ANDROID_PRODUCTION}\` | \`${STEPS_FP_OUTPUTS_HEAD_ANDROID_PRODUCTION}\` | ${{ steps.fp.outputs.base_android_production != steps.fp.outputs.head_android_production }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "### testflight" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Platform | Base | Head | Changed |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| iOS | \`${STEPS_FP_OUTPUTS_BASE_IOS_TESTFLIGHT}\` | \`${STEPS_FP_OUTPUTS_HEAD_IOS_TESTFLIGHT}\` | ${{ steps.fp.outputs.base_ios_testflight != steps.fp.outputs.head_ios_testflight }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Android | \`${STEPS_FP_OUTPUTS_BASE_ANDROID_TESTFLIGHT}\` | \`${STEPS_FP_OUTPUTS_HEAD_ANDROID_TESTFLIGHT}\` | ${{ steps.fp.outputs.base_android_testflight != steps.fp.outputs.head_android_testflight }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "### internal" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Platform | Base | Head | Changed |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| iOS | \`${STEPS_FP_OUTPUTS_BASE_IOS_INTERNAL}\` | \`${STEPS_FP_OUTPUTS_HEAD_IOS_INTERNAL}\` | ${{ steps.fp.outputs.base_ios_internal != steps.fp.outputs.head_ios_internal }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Android | \`${STEPS_FP_OUTPUTS_BASE_ANDROID_INTERNAL}\` | \`${STEPS_FP_OUTPUTS_HEAD_ANDROID_INTERNAL}\` | ${{ steps.fp.outputs.base_android_internal != steps.fp.outputs.head_android_internal }} |" >> "$GITHUB_STEP_SUMMARY"
-        env:
-          STEPS_FP_OUTPUTS_BASE_IOS_PRODUCTION: ${{ steps.fp.outputs.base_ios_production }}
-          STEPS_FP_OUTPUTS_HEAD_IOS_PRODUCTION: ${{ steps.fp.outputs.head_ios_production }}
-          STEPS_FP_OUTPUTS_BASE_ANDROID_PRODUCTION: ${{ steps.fp.outputs.base_android_production }}
-          STEPS_FP_OUTPUTS_HEAD_ANDROID_PRODUCTION: ${{ steps.fp.outputs.head_android_production }}
-          STEPS_FP_OUTPUTS_BASE_IOS_TESTFLIGHT: ${{ steps.fp.outputs.base_ios_testflight }}
-          STEPS_FP_OUTPUTS_HEAD_IOS_TESTFLIGHT: ${{ steps.fp.outputs.head_ios_testflight }}
-          STEPS_FP_OUTPUTS_BASE_ANDROID_TESTFLIGHT: ${{ steps.fp.outputs.base_android_testflight }}
-          STEPS_FP_OUTPUTS_HEAD_ANDROID_TESTFLIGHT: ${{ steps.fp.outputs.head_android_testflight }}
-          STEPS_FP_OUTPUTS_BASE_IOS_INTERNAL: ${{ steps.fp.outputs.base_ios_internal }}
-          STEPS_FP_OUTPUTS_HEAD_IOS_INTERNAL: ${{ steps.fp.outputs.head_ios_internal }}
-          STEPS_FP_OUTPUTS_BASE_ANDROID_INTERNAL: ${{ steps.fp.outputs.base_android_internal }}
-          STEPS_FP_OUTPUTS_HEAD_ANDROID_INTERNAL: ${{ steps.fp.outputs.head_android_internal }}
+          path: ${{ runner.temp }}/ota-compat.md
 
       - name: 🧹 Clean up worktree
         if: always()

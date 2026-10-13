@@ -8,9 +8,12 @@ import {
   getFinalReleaseTag,
   getOtaUpdateIdsCachePrefix,
   getPreliminaryReleaseTag,
+  getReleaseVersion,
   parseDeployType,
   parseManualDeployType,
   parsePublishedUpdateJson,
+  readAppVersion,
+  writeAppVersion,
 } from './otaOrNativeDeployDecision';
 import {
   getCommandErrorMessage,
@@ -402,6 +405,43 @@ function finalTagCommand(args: string[]): void {
   writeGithubOutput('tag', tag);
 }
 
+function releaseVersionCommand(
+  args: string[],
+  run: ToolRunner = runTool,
+): void {
+  const current = readAppVersion(
+    readFileSync(getRequiredArg(args, 'config', 'app.config.ts'), 'utf8'),
+  );
+
+  const version = getReleaseVersion({
+    version: current,
+    variant: getRequiredArg(args, 'variant', 'production'),
+    deployType: parseDeployType(getRequiredArg(args, 'deploy-type')),
+    isMainBranch: getRequiredArg(args, 'branch') === 'main',
+    tags: run('git', ['tag', '--list']).split('\n'),
+  });
+
+  console.log(
+    version === current
+      ? `📌 App version: ${version}`
+      : `📌 ${current} is already released - bumping to ${version}`,
+  );
+
+  writeGithubOutput('version', version);
+  writeGithubOutput('bumped', String(version !== current));
+}
+
+function writeVersionCommand(args: string[]): void {
+  const configPath = getRequiredArg(args, 'config', 'app.config.ts');
+  const version = getRequiredArg(args, 'version');
+
+  writeFileSync(
+    configPath,
+    writeAppVersion(readFileSync(configPath, 'utf8'), version),
+    'utf8',
+  );
+}
+
 function main(): void {
   const [command, ...args] = process.argv.slice(2);
 
@@ -438,6 +478,12 @@ function main(): void {
       return;
     case 'final-tag':
       finalTagCommand(args);
+      return;
+    case 'release-version':
+      releaseVersionCommand(args);
+      return;
+    case 'write-version':
+      writeVersionCommand(args);
       return;
     default:
       throw new Error(`Unknown command: ${command ?? '<missing>'}`);
