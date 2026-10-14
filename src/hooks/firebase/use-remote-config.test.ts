@@ -6,10 +6,8 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { DefaultWrapper } from '@app/test/render';
 import { logger } from '@app/utils/logger';
 
-import {
-  isRemoteConfigCancellation,
-  useRemoteConfig,
-} from './use-remote-config';
+import { isRemoteConfigCancellation } from './remote-config-model';
+import { useRemoteConfig } from './use-remote-config';
 
 const wrapper = ({ children }: PropsWithChildren) =>
   createElement(DefaultWrapper, null, children);
