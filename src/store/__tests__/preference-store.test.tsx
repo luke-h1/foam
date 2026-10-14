@@ -1,73 +1,153 @@
 import { act, renderHook } from '@testing-library/react-native';
 
+import { PREFERENCES_PERSISTENCE_KEY } from '@app/lib/observable-persistence';
+
 import {
+  getPreferences,
+  initialPreferences,
   type Preferences,
   replacePreferences,
   usePreferences,
 } from '../preference-store';
 
-const basePreferences = {
-  updatedAt: 1,
-  theme: 'foam-dark',
-  hapticFeedback: true,
-  streamListLayout: 'compact',
-  chatDensity: 'comfortable',
-  showAlternatingChatRows: false,
-  animate: false,
-  chatTimestamps: true,
-  highlightOwnMentions: true,
-  showInlineReplyContext: true,
-  showRecentMessages: true,
-  showUnreadJumpPill: true,
-  showJoinPartMessages: false,
-  disableChat: false,
-  disableStream: false,
-  useUIKitForWebView: false,
-  emojiStyle: 'twitter',
-  show7TvEmotes: true,
-  showBttvEmotes: true,
-  showFFzEmotes: true,
-  showChatterinoEmotes: true,
-  showTwitchEmotes: true,
-  disableEmoteAnimations: false,
-  showTwitchBadges: true,
-  show7tvBadges: true,
-  showFFzBadges: true,
-  showBttvBadges: true,
-  blockedTerms: [],
-  chatTimestampFormat: '24h',
-  chatFontScale: 'default',
-  chatScrollback: 150,
-  chatDelay: 'off',
-  deletedMessageStyle: 'notice',
-  ignoreClearChat: false,
-  chatMentionHaptics: true,
-  customHighlights: [],
-  savedPhrases: [],
-  shakeToReport: true,
-  landscapeChatWidth: null,
-  customPlayerEnabled: true,
-  analyticsEnabled: true,
-  sharedChatEnabled: true,
-  enhancedVideoStability: false,
-  chatDebugTools: false,
-  sevenTvPaintRenderer: 'native',
-} satisfies Preferences;
+jest.unmock('@legendapp/state/persist');
 
-describe('usePreferences', () => {
-  beforeEach(() => {
-    replacePreferences(basePreferences);
+const NOW = 1_700_000_000_000;
+
+/**
+ * The persist plugin coalesces writes for this long before it saves.
+ */
+const PERSIST_WRITE_DELAY_MS = 250;
+
+/**
+ * A change reaches the persist plugin after a zero-delay tick, and the plugin
+ * then waits PERSIST_WRITE_DELAY_MS before it writes. Run the two in order.
+ */
+async function flushPersistWrites() {
+  await jest.advanceTimersByTimeAsync(0);
+  await jest.advanceTimersByTimeAsync(PERSIST_WRITE_DELAY_MS);
+}
+
+const basePreferences: Preferences = { ...initialPreferences, updatedAt: 1 };
+
+interface PreferenceStoreModule {
+  getPreferences: typeof getPreferences;
+}
+
+interface MMKVModule {
+  createMMKV: (options: { id: string }) => {
+    getString: (key: string) => string | undefined;
+    set: (key: string, value: string) => void;
+  };
+}
+
+function readPersistedPreferences(mmkv: MMKVModule): Preferences | null {
+  const raw = mmkv
+    .createMMKV({ id: 'obsPersist' })
+    .getString(PREFERENCES_PERSISTENCE_KEY);
+
+  // SAFETY: every caller compares the result with toEqual, so a stored value of another shape fails the test.
+  return raw === undefined ? null : (JSON.parse(raw) as Preferences);
+}
+
+/**
+ * Loads a fresh copy of the store, the way the app starts, with `persisted`
+ * already saved in MMKV. Returns the store and the MMKV module it read.
+ */
+function startAppWithPersistedPreferences(persisted: string) {
+  let store: PreferenceStoreModule | undefined;
+  let mmkv: MMKVModule | undefined;
+
+  jest.isolateModules(() => {
+    mmkv = require('react-native-mmkv');
+
+    mmkv
+      ?.createMMKV({ id: 'obsPersist' })
+      .set(PREFERENCES_PERSISTENCE_KEY, persisted);
+
+    store = require('../preference-store');
   });
 
-  test('rerenders consumers after updating a preference', () => {
+  if (!store || !mmkv) {
+    throw new Error('preference store did not load');
+  }
+
+  return { store, mmkv };
+}
+
+describe('preference store', () => {
+  beforeEach(() => {
+    jest.useFakeTimers({ now: NOW });
+    replacePreferences({ ...basePreferences });
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  test('update writes the new value and the update time to the store and MMKV', async () => {
     const { result } = renderHook(() => usePreferences());
 
-    expect(result.current.chatTimestamps).toBe(true);
-
     act(() => {
-      result.current.update({ chatTimestamps: false });
+      result.current.update({ chatTimestamps: true });
     });
 
-    expect(result.current.chatTimestamps).toBe(false);
+    const expected: Preferences = {
+      ...basePreferences,
+      chatTimestamps: true,
+      updatedAt: NOW,
+    };
+
+    expect(getPreferences()).toEqual<Preferences>(expected);
+    expect(result.current.chatTimestamps).toBe(true);
+
+    await act(flushPersistWrites);
+
+    expect(readPersistedPreferences(require('react-native-mmkv'))).toEqual<
+      Partial<Preferences>
+    >(expected);
+  });
+
+  test.each<[string, Partial<Preferences>, Record<string, string | number>]>([
+    [
+      "'text' stream list layout to 'compact'",
+      { streamListLayout: 'compact' },
+      { streamListLayout: 'text' },
+    ],
+    [
+      "'auto' paint renderer to 'native'",
+      { sevenTvPaintRenderer: 'native' },
+      { sevenTvPaintRenderer: 'auto' },
+    ],
+    ['chat delay 0 to auto', { chatDelay: 'auto' }, { chatDelay: 0 }],
+  ])('migrates a persisted %s', async (_name, migrated, legacy) => {
+    const persisted = { ...basePreferences, ...legacy };
+
+    const { store, mmkv } = startAppWithPersistedPreferences(
+      JSON.stringify(persisted),
+    );
+
+    const expected: Preferences = { ...basePreferences, ...migrated };
+
+    expect(store.getPreferences()).toEqual<Preferences>(expected);
+
+    await flushPersistWrites();
+
+    expect(readPersistedPreferences(mmkv)).toEqual<Preferences>(expected);
+  });
+
+  test('keeps current persisted values as they are', () => {
+    const persisted: Preferences = {
+      ...basePreferences,
+      streamListLayout: 'media',
+      sevenTvPaintRenderer: 'skia',
+      chatDelay: 'off',
+    };
+
+    const { store } = startAppWithPersistedPreferences(
+      JSON.stringify(persisted),
+    );
+
+    expect(store.getPreferences()).toEqual<Preferences>(persisted);
   });
 });
