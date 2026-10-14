@@ -1,21 +1,20 @@
-import { createRef, useImperativeHandle } from 'react';
+import { createRef, useEffect, useImperativeHandle } from 'react';
 import { AppState, InteractionManager, StyleSheet } from 'react-native';
 import type { Ref } from 'react';
+import type { ReactTestRendererJSON } from 'react-test-renderer';
 import type { AppStateStatus, ViewStyle } from 'react-native';
-// Spy on the submodule: the barrel re-exports via `export *`, whose Babel
-// getter is non-configurable, so jest.spyOn on the barrel throws.
-import * as SafeAreaContext from 'react-native-safe-area-context/src/SafeAreaContext';
 import type { WebViewNavigation, WebViewProps } from 'react-native-webview';
 import * as RNWebView from 'react-native-webview';
 
-import { act, render } from '@testing-library/react-native';
+import { act } from '@testing-library/react-native';
 
 import type { LogMetadata } from '@app/lib/sentry';
-import * as sentry from '@app/lib/sentry';
+import render from '@app/test/render';
 import { logger } from '@app/utils/logger';
 
 const mockInjectJavaScript = jest.fn();
 const mockWebViewProps: WebViewProps[] = [];
+let mockWebViewMountCount = 0;
 
 interface MockWebViewHandle {
   injectJavaScript: (script: string) => void;
@@ -41,6 +40,10 @@ function installModuleSpies() {
 
     mockWebViewProps.push(props);
 
+    useEffect(() => {
+      mockWebViewMountCount += 1;
+    }, []);
+
     useImperativeHandle(ref, () => ({
       injectJavaScript: mockInjectJavaScript,
     }));
@@ -61,18 +64,6 @@ function installModuleSpies() {
         cancel: jest.fn(),
       };
     });
-
-  jest.spyOn(sentry, 'countMetric').mockImplementation(() => {});
-  jest.spyOn(sentry, 'endSpan').mockImplementation(() => {});
-  jest.spyOn(sentry, 'forwardLogToSentry').mockImplementation(() => {});
-  jest.spyOn(sentry, 'startInactiveSpan').mockImplementation(() => undefined);
-
-  jest.spyOn(SafeAreaContext, 'useSafeAreaInsets').mockReturnValue({
-    bottom: 0,
-    left: 0,
-    right: 0,
-    top: 0,
-  });
 }
 
 import { StreamPlayer } from '../stream-player';
@@ -137,16 +128,28 @@ function emitWebViewNavigationStateChange(url: string) {
 
 type RenderedTree = ReturnType<ReturnType<typeof render>['toJSON']>;
 
+function isRenderedElement(
+  node: ReactTestRendererJSON | string,
+): node is ReactTestRendererJSON {
+  return node instanceof Object;
+}
+
 /**
  * The layout nudge that forces WKWebView to rebuild its layer tree shows up as
- * a 1px `paddingBottom` on the player container (the render root).
+ * a 1px `paddingBottom` on the player container. The container is the only
+ * child of the render wrapper's `SafeAreaProvider` view.
  */
 function containerPaddingBottom(tree: RenderedTree) {
-  if (!tree || Array.isArray(tree)) {
+  const container =
+    tree && !Array.isArray(tree)
+      ? tree.children?.find(isRenderedElement)
+      : undefined;
+
+  if (!container) {
     throw new Error('expected a single player container element');
   }
 
-  const style: ViewStyle = StyleSheet.flatten(tree.props.style);
+  const style: ViewStyle = StyleSheet.flatten(container.props.style);
   return style.paddingBottom;
 }
 
@@ -157,6 +160,7 @@ describe('StreamPlayer component messaging', () => {
     installModuleSpies();
     mockInjectJavaScript.mockClear();
     mockWebViewProps.length = 0;
+    mockWebViewMountCount = 0;
 
     emitAppState = () => {
       throw new Error('no AppState change handler registered');
@@ -360,7 +364,7 @@ describe('StreamPlayer component messaging', () => {
     });
 
     expect(latestWebViewProps().source).toStrictEqual(initialSource);
-    expect(mockWebViewProps.length).toBeGreaterThan(1);
+    expect(mockWebViewMountCount).toBe(2);
 
     emitWebViewNavigationStateChange(
       'https://www.twitch.tv/passport-callback#access_token=abc',
@@ -379,7 +383,7 @@ describe('StreamPlayer component messaging', () => {
     });
 
     expect(onWebViewLoaded).toHaveBeenCalledTimes(1);
-    expect(mockWebViewProps.length).toBeGreaterThan(3);
+    expect(mockWebViewMountCount).toBe(4);
   });
 
   test('loads the stock raw Twitch player URL without the control bootstrap', () => {
