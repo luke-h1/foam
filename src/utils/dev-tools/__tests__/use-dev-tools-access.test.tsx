@@ -1,149 +1,117 @@
-import { renderHook } from '@testing-library/react-native';
+import type { ReactNode } from 'react';
+
+import { fetchAndActivate } from '@react-native-firebase/remote-config';
+import { renderHook, waitFor } from '@testing-library/react-native';
 
 import {
   createAuthContextValue,
   createTestUser,
 } from '@app/context/__tests__/__fixtures__/auth-context.fixture';
-import * as AuthContextModule from '@app/context/auth-context';
-import type {
-  RemoteConfigEntry,
-  RemoteConfigType,
-  UseRemoteConfigResult,
-} from '@app/hooks/firebase/use-remote-config';
-import * as useRemoteConfigModule from '@app/hooks/firebase/use-remote-config';
+import {
+  type AuthContextState,
+  AuthContextTestProvider,
+} from '@app/context/auth-context';
+import {
+  createQueryWrapper,
+  resetRemoteConfig,
+  serveRemoteConfig,
+} from '@app/hooks/firebase/__tests__/__fixtures__/use-remote-config.fixture';
+import { useRemoteConfig } from '@app/hooks/firebase/use-remote-config';
 import { useDevToolsAccess } from '@app/utils/dev-tools/dev-tools-gate';
 
-const mockUseAuthContext = jest.spyOn(AuthContextModule, 'useAuthContext');
+function createWrapper(auth: Partial<AuthContextState>) {
+  const QueryWrapper = createQueryWrapper();
+  const authValue = createAuthContextValue(auth);
 
-const mockUseRemoteConfig = jest.spyOn(
-  useRemoteConfigModule,
-  'useRemoteConfig',
-);
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return (
+      <QueryWrapper>
+        <AuthContextTestProvider {...authValue}>
+          {children}
+        </AuthContextTestProvider>
+      </QueryWrapper>
+    );
+  };
+}
 
-afterEach(() => {
-  mockUseAuthContext.mockReset();
-  mockUseRemoteConfig.mockReset();
+function renderDevToolsAccess(auth: Partial<AuthContextState>) {
+  return renderHook(
+    () => ({
+      access: useDevToolsAccess(),
+      isRemoteConfigLoading: useRemoteConfig().isLoading,
+    }),
+    { wrapper: createWrapper(auth) },
+  );
+}
+
+beforeEach(() => {
+  serveRemoteConfig({ admins: JSON.stringify(['admin_user']) });
 });
 
-function entry<T>(value: T): RemoteConfigEntry<T> {
-  return { raw: JSON.stringify(value), value, source: 'remote' };
-}
-
-function createRemoteConfigResult(
-  admins: string[],
-  isLoading = false,
-): UseRemoteConfigResult {
-  const config: RemoteConfigType = {
-    updateAppButtonAllowedUsers: entry([]),
-    splash: entry({ '7tvUnavailable': false, app: false }),
-    minimumVersion: entry({
-      android: {
-        development: '0.0.0',
-        internal: '0.0.0',
-        testflight: '0.0.0',
-        production: '0.0.0',
-      },
-      ios: {
-        development: '0.0.0',
-        internal: '0.0.0',
-        testflight: '0.0.0',
-        production: '0.0.0',
-      },
-    }),
-    statusPageUrl: entry('https://status.foam-app.com'),
-    websiteUrl: entry('https://foam-app.com'),
-    admins: entry(admins),
-    experiments: entry({}),
-    sevenTvPaintRenderer: entry<'off' | 'native' | 'skia'>('native'),
-    bundleButtonEnabled: entry({
-      ios: {
-        development: false,
-        internal: true,
-        testflight: false,
-        production: false,
-        e2e: false,
-      },
-    }),
-  };
-
-  return { config, refetch: jest.fn(), isRefetching: false, isLoading };
-}
+afterEach(() => {
+  resetRemoteConfig();
+});
 
 describe('useDevToolsAccess', () => {
-  test('grants access to an admin once auth and remote config have loaded', () => {
-    mockUseAuthContext.mockReturnValue(
-      createAuthContextValue({
-        ready: true,
-        user: createTestUser({ login: 'admin_user' }),
+  test('grants access to an admin once auth and remote config have loaded', async () => {
+    const { result } = renderDevToolsAccess({
+      ready: true,
+      user: createTestUser({ login: 'admin_user' }),
+    });
+
+    await waitFor(() => expect(result.current.access).toBe('enabled'));
+  });
+
+  test('holds while remote config is still loading the admin list', async () => {
+    let finishFetch: (activated: boolean) => void = () => {};
+
+    jest.mocked(fetchAndActivate).mockReturnValueOnce(
+      new Promise<boolean>(resolve => {
+        finishFetch = resolve;
       }),
     );
 
-    mockUseRemoteConfig.mockReturnValue(
-      createRemoteConfigResult(['admin_user']),
-    );
+    const { result } = renderDevToolsAccess({
+      ready: true,
+      user: createTestUser({ login: 'admin_user' }),
+    });
 
-    const { result } = renderHook(() => useDevToolsAccess());
+    await waitFor(() => expect(fetchAndActivate).toHaveBeenCalledTimes(1));
 
-    expect(result.current).toBe('enabled');
+    expect(result.current).toEqual({
+      access: 'pending',
+      isRemoteConfigLoading: true,
+    });
+
+    finishFetch(true);
+
+    await waitFor(() => expect(result.current.access).toBe('enabled'));
   });
 
-  test('holds while remote config is still loading the admin list', () => {
-    mockUseAuthContext.mockReturnValue(
-      createAuthContextValue({
-        ready: true,
-        user: createTestUser({ login: 'admin_user' }),
-      }),
+  test('holds while auth has not finished restoring', async () => {
+    const { result } = renderDevToolsAccess({ ready: false, user: undefined });
+
+    await waitFor(() =>
+      expect(result.current.isRemoteConfigLoading).toBe(false),
     );
 
-    mockUseRemoteConfig.mockReturnValue(createRemoteConfigResult([], true));
-
-    const { result } = renderHook(() => useDevToolsAccess());
-
-    expect(result.current).toBe('pending');
+    expect(result.current.access).toBe('pending');
   });
 
-  test('holds while auth has not finished restoring', () => {
-    mockUseAuthContext.mockReturnValue(
-      createAuthContextValue({ ready: false, user: undefined }),
-    );
+  test('denies a non-admin only after everything has settled', async () => {
+    const { result } = renderDevToolsAccess({
+      ready: true,
+      user: createTestUser({ login: 'someone_else' }),
+    });
 
-    mockUseRemoteConfig.mockReturnValue(
-      createRemoteConfigResult(['admin_user']),
-    );
+    expect(result.current.access).toBe('pending');
 
-    const { result } = renderHook(() => useDevToolsAccess());
-
-    expect(result.current).toBe('pending');
+    await waitFor(() => expect(result.current.access).toBe('denied'));
   });
 
-  test('denies a non-admin only after everything has settled', () => {
-    mockUseAuthContext.mockReturnValue(
-      createAuthContextValue({
-        ready: true,
-        user: createTestUser({ login: 'someone_else' }),
-      }),
-    );
+  test('denies a logged-out user once auth has settled', async () => {
+    const { result } = renderDevToolsAccess({ ready: true, user: undefined });
 
-    mockUseRemoteConfig.mockReturnValue(
-      createRemoteConfigResult(['admin_user']),
-    );
-
-    const { result } = renderHook(() => useDevToolsAccess());
-
-    expect(result.current).toBe('denied');
-  });
-
-  test('denies a logged-out user once auth has settled', () => {
-    mockUseAuthContext.mockReturnValue(
-      createAuthContextValue({ ready: true, user: undefined }),
-    );
-
-    mockUseRemoteConfig.mockReturnValue(
-      createRemoteConfigResult(['admin_user']),
-    );
-
-    const { result } = renderHook(() => useDevToolsAccess());
-
-    expect(result.current).toBe('denied');
+    await waitFor(() => expect(result.current.access).toBe('denied'));
   });
 });

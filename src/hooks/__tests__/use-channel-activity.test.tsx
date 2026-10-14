@@ -1,10 +1,12 @@
+import type { ReactNode } from 'react';
+
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import {
   createLoggedInAuthContextValue,
   createTestUser,
 } from '@app/context/__tests__/__fixtures__/auth-context.fixture';
-import * as AuthContextModule from '@app/context/auth-context';
+import { AuthContextTestProvider } from '@app/context/auth-context';
 import type { TestActivityState } from '@app/hooks/__tests__/__fixtures__/use-channel-activity.fixture';
 import {
   createEventSubMessage,
@@ -13,8 +15,6 @@ import {
 import { useChannelActivity } from '@app/hooks/use-channel-activity';
 import TwitchWsService from '@app/services/twitch-ws-service';
 import { logger } from '@app/utils/logger';
-
-const mockUseAuthContext = jest.spyOn(AuthContextModule, 'useAuthContext');
 
 // SAFETY: getInstance's return value is never read by this hook, only passed through.
 const mockGetInstance = jest
@@ -32,12 +32,18 @@ const mockWarn = jest
   .spyOn(logger.twitchWs, 'warn')
   .mockImplementation(() => undefined);
 
-function mockLoggedInViewer(userId: string) {
-  mockUseAuthContext.mockReturnValue(
-    createLoggedInAuthContextValue({
-      user: createTestUser({ id: userId }),
-    }),
-  );
+function loggedInViewer(userId: string) {
+  const authValue = createLoggedInAuthContextValue({
+    user: createTestUser({ id: userId }),
+  });
+
+  return function LoggedInViewer({ children }: { children: ReactNode }) {
+    return (
+      <AuthContextTestProvider {...authValue}>
+        {children}
+      </AuthContextTestProvider>
+    );
+  };
 }
 
 function getSubscribedHandler(type: string) {
@@ -66,7 +72,7 @@ describe('useChannelActivity', () => {
   });
 
   test('skips fetch and subscriptions for channels the viewer does not own', () => {
-    mockLoggedInViewer('viewer-id');
+    const wrapper = loggedInViewer('viewer-id');
 
     const fetch = jest.fn((broadcasterId: string) =>
       Promise.resolve({
@@ -76,8 +82,9 @@ describe('useChannelActivity', () => {
 
     const descriptor = createTestActivity({ fetch });
 
-    const { result } = renderHook(() =>
-      useChannelActivity(descriptor, 'channel-id'),
+    const { result } = renderHook(
+      () => useChannelActivity(descriptor, 'channel-id'),
+      { wrapper },
     );
 
     expect(result.current.value).toBeNull();
@@ -88,7 +95,7 @@ describe('useChannelActivity', () => {
   });
 
   test('fetches the active value and subscribes for the signed-in broadcaster', async () => {
-    mockLoggedInViewer('channel-id');
+    const wrapper = loggedInViewer('channel-id');
 
     const fetch = jest.fn((_broadcasterId: string) =>
       Promise.resolve({
@@ -101,8 +108,9 @@ describe('useChannelActivity', () => {
 
     const descriptor = createTestActivity({ fetch });
 
-    const { result } = renderHook(() =>
-      useChannelActivity(descriptor, 'channel-id'),
+    const { result } = renderHook(
+      () => useChannelActivity(descriptor, 'channel-id'),
+      { wrapper },
     );
 
     expect(result.current.isAvailable).toBe(true);
@@ -126,15 +134,16 @@ describe('useChannelActivity', () => {
   });
 
   test('updates the value from descriptor-normalised EventSub events', async () => {
-    mockLoggedInViewer('channel-id');
+    const wrapper = loggedInViewer('channel-id');
 
     const descriptor = createTestActivity({
       fetch: () =>
         Promise.resolve({ data: [{ id: 'helix-active', status: 'ACTIVE' }] }),
     });
 
-    const { result } = renderHook(() =>
-      useChannelActivity(descriptor, 'channel-id'),
+    const { result } = renderHook(
+      () => useChannelActivity(descriptor, 'channel-id'),
+      { wrapper },
     );
 
     await waitFor(() => {
@@ -169,7 +178,7 @@ describe('useChannelActivity', () => {
   });
 
   test('resets the value when the channel scope changes', async () => {
-    mockLoggedInViewer('channel-a');
+    const wrapper = loggedInViewer('channel-a');
 
     const descriptor = createTestActivity({
       fetch: broadcasterId =>
@@ -181,7 +190,7 @@ describe('useChannelActivity', () => {
     const { result, rerender } = renderHook(
       ({ channelId }: { channelId: string }) =>
         useChannelActivity(descriptor, channelId),
-      { initialProps: { channelId: 'channel-a' } },
+      { initialProps: { channelId: 'channel-a' }, wrapper },
     );
 
     await waitFor(() => {
@@ -199,11 +208,12 @@ describe('useChannelActivity', () => {
   });
 
   test('unsubscribes the descriptor events on unmount', () => {
-    mockLoggedInViewer('channel-id');
+    const wrapper = loggedInViewer('channel-id');
     const descriptor = createTestActivity();
 
-    const { unmount } = renderHook(() =>
-      useChannelActivity(descriptor, 'channel-id'),
+    const { unmount } = renderHook(
+      () => useChannelActivity(descriptor, 'channel-id'),
+      { wrapper },
     );
 
     const subscribed = mockSubscribeToEvent.mock.calls.map(call => [
@@ -222,14 +232,17 @@ describe('useChannelActivity', () => {
   });
 
   test('logs fetch failures with the descriptor log fields', async () => {
-    mockLoggedInViewer('channel-id');
+    const wrapper = loggedInViewer('channel-id');
     const error = new Error('helix down');
 
     const descriptor = createTestActivity({
       fetch: () => Promise.reject(error),
     });
 
-    renderHook(() => useChannelActivity(descriptor, 'channel-id'));
+    const { result } = renderHook(
+      () => useChannelActivity(descriptor, 'channel-id'),
+      { wrapper },
+    );
 
     await waitFor(() => {
       expect(mockWarn).toHaveBeenCalledWith(
@@ -244,5 +257,8 @@ describe('useChannelActivity', () => {
         },
       );
     });
+
+    expect(result.current.value).toBeNull();
+    expect(result.current.isAvailable).toBe(true);
   });
 });
