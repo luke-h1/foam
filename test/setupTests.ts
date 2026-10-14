@@ -145,3 +145,18 @@ const skiaMock = require('@shopify/react-native-skia') as {
 if (skiaMock.Skia?.Data) {
   skiaMock.Skia.Data.fromURI = jest.fn(() => Promise.resolve(null));
 }
+
+/**
+ * The root expo-secure-store fake keeps its values in memory. Clear it so a
+ * token one test stores does not leak into the next test. A test that
+ * replaces the module with its own factory has no reset function.
+ */
+beforeEach(() => {
+  // SAFETY: the assertion types only the reset helper the root mock adds.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const secureStore = require('expo-secure-store') as {
+    __resetSecureStore?: () => void;
+  };
+
+  secureStore.__resetSecureStore?.();
+});
