@@ -30,7 +30,6 @@ cache), not the calls that produced it.
 
 - `redirectSystemPath` returns `path` on every branch, so three of the four
   `native-intent` tests cannot fail.
-- `parseTwitchEmotesTag` has no production caller. Its test covers dead code.
 - `use-emote-reprocessing.test.ts` stubs `resolveMessageEmoteParts` to always
   return an emote token. Its "reprocesses" tests never exercise emote
   matching.
@@ -76,8 +75,6 @@ stub unchanged, or repeats another test that asserts more.
 - `suppressed-notice-ids.test.ts` (a constant `Set`).
 - `chat-notice-accents.test.ts` "wires each notice accent to its theme
   color". Keep the `noticeSurfaceTint` tests.
-- `parse-twitch-emotes-tag.test.ts`, and the unused `parseTwitchEmotesTag`.
-  Deleting the function is a production change, so it needs your yes too.
 - `channel-points-reward-title-from-system-msg.test.ts` (covered through
   its public caller).
 - `create-ritual-token.test.ts` and `create-charity-donation-token.test.ts`,
@@ -157,3 +154,28 @@ the row that touches its file. The ones with no row:
   the logic it covers breaks: break the code once by hand and confirm.
 - Rows 2, 3, 5 and 9 cover the chat pipeline. Run `bun run test:perf` after
   them as well, because the perf tests share fixtures with these suites.
+
+## Outcome
+
+Every row is done. Each rewritten test failed when the code it covers was
+broken by hand. The full suite has 344 suites and 7,324 tests.
+
+These stayed, on purpose:
+
+- `resolve-use-apple-webp-codec.test.ts`. It is the only test of the rule
+  that keeps animated WebP off the Apple codec.
+- `saved-phrases-screen.test.tsx` "mounts the native list branch without
+  crashing". It is the only test that renders the iOS branch.
+- The `getUserBadge` stub in `user-cosmetics-fetch.test.ts`. A bound badge
+  always gets a URL, so real data cannot build the "no badge" case.
+- In `chat.recent-messages.test.tsx`: the socket, native UI and child sheet
+  stubs, and the stubs for `useChatEmoteLoader` and `useChatScroll`. The
+  loader has its own suite, and the scroll hook needs the native list ref.
+
+Running the real chat pipeline showed two behaviours. The tests pin both as
+they are today:
+
+- A CLEARMSG for a replayed message that is still in the ingest buffer
+  removes the message. It does not mark it "Deleted".
+- During a history replay, timeout and NOTICE rows skip the buffer, so they
+  show before the history they refer to.
