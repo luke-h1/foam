@@ -61,8 +61,8 @@ describe('LiveStreamCard', () => {
       ),
     });
 
-    expect(screen.queryByText(mockStream.game_name, { exact: false })).toBe(
-      null,
-    );
+    expect(
+      screen.queryByText(mockStream.game_name, { exact: false }),
+    ).not.toBeOnTheScreen();
   });
 });

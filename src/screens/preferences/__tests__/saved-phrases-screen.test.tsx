@@ -68,7 +68,11 @@ describe('SavedPhrasesScreen', () => {
 
     fireEvent.press(screen.getByLabelText('Remove phrase'));
 
-    expect(alertSpy).toHaveBeenCalled();
+    expect(alertSpy.mock.calls[0]?.slice(0, 2)).toEqual([
+      'Remove phrase',
+      'Remove "be right back" from your saved phrases?',
+    ]);
+
     expect(getPreferences().savedPhrases).toEqual([]);
 
     alertSpy.mockRestore();

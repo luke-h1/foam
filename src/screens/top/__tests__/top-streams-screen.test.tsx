@@ -40,7 +40,7 @@ describe('TopStreamsScreen', () => {
 
     render(<TopStreamsScreen />);
 
-    expect(screen.getAllByTestId('stream-skeleton').length).toBeGreaterThan(0);
+    expect(screen.getAllByTestId('stream-skeleton')[0]).toBeOnTheScreen();
   });
 
   test('shows empty state when no streams returned', async () => {

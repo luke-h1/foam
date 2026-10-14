@@ -20,9 +20,7 @@ describe('TopCategoriesScreen', () => {
 
     render(<TopCategoriesScreen />);
 
-    expect(screen.getAllByTestId('category-skeleton').length).toBeGreaterThan(
-      0,
-    );
+    expect(screen.getAllByTestId('category-skeleton')[0]).toBeOnTheScreen();
   });
 
   test('shows error empty state when fetch fails', async () => {
