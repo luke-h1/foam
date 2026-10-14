@@ -181,6 +181,8 @@ Not a table row. Added on request, after rows 1 and 2.
 - **Checked:** on the iOS 26 simulator the menu opens from the bar button,
   Media switches both lists, and the Streams and Categories control still
   sits in the title. On the Android emulator the icon sits flush in the bar.
-- **Not adopted:** a change to the Streams and Categories control. It is
-  already a native `UISegmentedControl` on iOS and a Material segmented
-  button on Android.
+- **Segments:** the Streams and Categories control was already native on
+  both platforms, so it keeps its shape. On Android every `SegmentedControl`
+  now fills the selected segment with `surfaceElevated` grey, not the blue
+  accent. iOS ignores the tint and always drew a grey segment, so the two
+  platforms now match. `DESIGN.md` records the rule.
