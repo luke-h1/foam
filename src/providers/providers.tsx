@@ -35,7 +35,7 @@ import { QueryProvider } from '@app/lib/react-query/query-provider';
 import { storage } from '@app/lib/storage';
 import { BaseConfig } from '@app/navigators/config';
 import { ErrorBoundary } from '@app/screens/error-screen/error-boundary';
-import { motion } from '@app/styles/motion';
+import { motion, pressAnimation } from '@app/styles/motion';
 import { toastStyle } from '@app/styles/toast';
 
 import { AnalyticsProvider } from './analytics-provider';
@@ -136,6 +136,8 @@ export function Providers({ children }: PropsWithChildren) {
                             refresh) give haptic feedback. Each control
                             opts in through lib/haptics. */}
                       <PressablesConfig
+                        animationType='timing'
+                        animationConfig={pressAnimation}
                         config={{ minScale: motion.pressMinScale }}
                       >
                         {children}

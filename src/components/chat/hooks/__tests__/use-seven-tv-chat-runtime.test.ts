@@ -3,18 +3,12 @@ import { renderHook } from '@testing-library/react-native';
 import { useSevenTvChatRuntime } from '@app/components/chat/hooks/use-seven-tv-chat-runtime';
 import * as useSevenTvWsModule from '@app/components/chat/hooks/use-seven-tv-ws';
 import { ReadyState } from '@app/hooks/ws/constants';
-import * as sevenTvChannelLifecycleActions from '@app/store/chat/actions/seven-tv-channel-lifecycle';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import { makeEmptyEmoteData } from '@app/store/chat/types/constants';
 import { logger } from '@app/utils/logger';
 
 jest.spyOn(logger.stvWs, 'debug').mockImplementation(() => {});
 jest.spyOn(logger.stvWs, 'info').mockImplementation(() => {});
-
-const mockGetSevenTvEmoteSetId = jest.spyOn(
-  sevenTvChannelLifecycleActions,
-  'getSevenTvEmoteSetId',
-);
 
 const mockUseSevenTvWs = jest.spyOn(useSevenTvWsModule, 'useSevenTvWs');
 
@@ -105,7 +99,17 @@ describe('useSevenTvChatRuntime', () => {
 
     expect(subscribeToChannel.mock.calls).toEqual([['set-1']]);
     expect(currentEmoteSetIdRef.current).toBe('set-1');
-    expect(mockGetSevenTvEmoteSetId).toHaveBeenCalledWith('channel-1');
+  });
+
+  test('does not subscribe when the channel has no cached 7TV emote set', () => {
+    chatStore$.persisted.channelCaches.set({
+      'channel-1': makeEmptyEmoteData(),
+    });
+
+    const { currentEmoteSetIdRef, subscribeToChannel } = renderRuntime();
+
+    expect(subscribeToChannel.mock.calls).toEqual([]);
+    expect(currentEmoteSetIdRef.current).toBeNull();
   });
 
   test('does not subscribe before websocket connection or emote loading is ready', () => {

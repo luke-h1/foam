@@ -34,3 +34,8 @@ export const motion = {
 
   pressMinScale: 0.97,
 } as const;
+
+export const pressAnimation = {
+  duration: motion.instant,
+  easing: motion.easing.out,
+} as const;

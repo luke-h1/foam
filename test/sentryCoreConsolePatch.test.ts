@@ -8,7 +8,7 @@
  * level. If a dependency bump drops the patch, this test fails.
  */
 const consoleInstrumentation: {
-  instrumentConsole: (() => void) | undefined;
+  instrumentConsole: () => void;
 } = require('../node_modules/@sentry/core/build/cjs/instrument/console.js');
 
 const debugLogger: {
@@ -30,13 +30,9 @@ afterAll(() => {
 });
 
 describe('@sentry/core console instrumentation patch', () => {
-  test('exposes instrumentConsole so the patch can be exercised', () => {
-    expect(consoleInstrumentation.instrumentConsole).toBeInstanceOf(Function);
-  });
-
   test('instrumenting twice keeps the native method as the original and does not recurse', () => {
-    consoleInstrumentation.instrumentConsole?.();
-    consoleInstrumentation.instrumentConsole?.();
+    consoleInstrumentation.instrumentConsole();
+    consoleInstrumentation.instrumentConsole();
 
     // Unpatched, the second pass stores the first wrapper here instead of the
     // native method, which is the recursion cycle.

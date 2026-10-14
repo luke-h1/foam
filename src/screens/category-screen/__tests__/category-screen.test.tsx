@@ -49,7 +49,7 @@ describe('CategoryScreen', () => {
 
     render(<CategoryScreen id='cat1' />);
 
-    expect(screen.getAllByTestId('stream-skeleton').length).toBeGreaterThan(0);
+    expect(screen.getAllByTestId('stream-skeleton')[0]).toBeOnTheScreen();
   });
 
   test('shows error empty state when category fetch fails', async () => {

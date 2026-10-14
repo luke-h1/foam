@@ -1,15 +1,12 @@
-import { Linking } from 'react-native';
+import { InteractionManager, Linking } from 'react-native';
 
 import { act, render, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
-import type { AuthContextState } from '@app/context/auth-context';
-import * as AuthContextModule from '@app/context/auth-context';
-import * as useClearExpiredStorageItemsModule from '@app/hooks/use-clear-expired-storage-items';
-import * as useIcloudPreferenceSyncModule from '@app/hooks/use-icloud-preference-sync';
-import * as useOnAppStateChangeModule from '@app/hooks/use-on-app-state-change';
-import * as usePopulateAuthModule from '@app/hooks/use-populate-auth';
-import * as useRecoveredFromErrorModule from '@app/hooks/use-recovered-from-error';
+import {
+  type AuthContextState,
+  AuthContextTestProvider,
+} from '@app/context/auth-context';
 import {
   endDeepLinkAuth,
   isDeepLinkAuthInProgress,
@@ -19,29 +16,21 @@ import { logger } from '@app/utils/logger';
 import { RouterEffects } from '../router-effects';
 
 const mockedRouter = jest.mocked(router);
-const mockedUseAuthContext = jest.spyOn(AuthContextModule, 'useAuthContext');
 
 jest
-  .spyOn(useClearExpiredStorageItemsModule, 'useClearExpiredStorageItems')
-  .mockImplementation(() => {});
+  .spyOn(InteractionManager, 'runAfterInteractions')
+  .mockImplementation(task => {
+    const timer = setTimeout(() => {
+      if (task instanceof Function) {
+        task();
+      }
+    }, 0);
 
-jest
-  .spyOn(useIcloudPreferenceSyncModule, 'useIcloudPreferenceSync')
-  .mockImplementation(() => {});
-
-jest
-  .spyOn(useOnAppStateChangeModule, 'useOnAppStateChange')
-  .mockImplementation(() => {});
-
-jest
-  .spyOn(usePopulateAuthModule, 'usePopulateAuth')
-  .mockImplementation(() => {});
-
-jest
-  .spyOn(useRecoveredFromErrorModule, 'useRecoveredFromError')
-  .mockReturnValue({
-    recoveredFromError: false,
-    setRecoveredFromError: jest.fn(),
+    return {
+      then: () => Promise.resolve(),
+      done: () => undefined,
+      cancel: () => clearTimeout(timer),
+    };
   });
 
 jest.spyOn(logger.main, 'warn').mockImplementation(() => {});
@@ -80,6 +69,14 @@ const makeAuthContext = (
   ...overrides,
 });
 
+function withAuth(authContext: AuthContextState) {
+  return (
+    <AuthContextTestProvider {...authContext}>
+      <RouterEffects />
+    </AuthContextTestProvider>
+  );
+}
+
 let urlHandler: ((event: { url: string }) => void) | undefined;
 const removeSubscription = jest.fn();
 
@@ -93,7 +90,6 @@ describe('RouterEffects deep-link auth handling', () => {
     removeSubscription.mockClear();
     loginWithTwitch.mockClear();
     mockedRouter.replace.mockClear();
-    mockedUseAuthContext.mockReturnValue(makeAuthContext());
 
     linkingMock.addEventListener.mockReset();
 
@@ -111,7 +107,7 @@ describe('RouterEffects deep-link auth handling', () => {
   test('completes login once and routes to following from a cold-start magic link', async () => {
     linkingMock.getInitialURL.mockResolvedValue(magicUrl);
 
-    render(<RouterEffects />);
+    render(withAuth(makeAuthContext()));
 
     await waitFor(() =>
       expect(mockedRouter.replace).toHaveBeenCalledWith('/tabs/following'),
@@ -124,7 +120,7 @@ describe('RouterEffects deep-link auth handling', () => {
   test('does not re-read the initial URL or re-subscribe, and uses the latest loginWithTwitch, when its identity changes', async () => {
     linkingMock.getInitialURL.mockResolvedValue(magicUrl);
 
-    const { rerender } = render(<RouterEffects />);
+    const { rerender } = render(withAuth(makeAuthContext()));
 
     await waitFor(() => expect(mockedRouter.replace).toHaveBeenCalledTimes(1));
 
@@ -133,23 +129,23 @@ describe('RouterEffects deep-link auth handling', () => {
     const nextMagicUrl =
       'foam://auth?access_token=magic-access-token-2&refresh_token=magic-refresh-token-2&token_type=bearer&expires_in=14400';
 
-    mockedUseAuthContext.mockReturnValue(
-      makeAuthContext({
-        loginWithTwitch: nextLoginWithTwitch,
-        authState: {
-          isLoggedIn: true,
-          isAnonAuth: false,
-          token: {
-            accessToken: 'magic-access-token',
-            expiresIn: 14400,
-            tokenType: 'bearer',
-            expiresAt: Date.now() + 14_400_000,
+    rerender(
+      withAuth(
+        makeAuthContext({
+          loginWithTwitch: nextLoginWithTwitch,
+          authState: {
+            isLoggedIn: true,
+            isAnonAuth: false,
+            token: {
+              accessToken: 'magic-access-token',
+              expiresIn: 14400,
+              tokenType: 'bearer',
+              expiresAt: Date.now() + 14_400_000,
+            },
           },
-        },
-      }),
+        }),
+      ),
     );
-
-    rerender(<RouterEffects />);
 
     expect(linkingMock.addEventListener).toHaveBeenCalledTimes(1);
     expect(removeSubscription).not.toHaveBeenCalled();
@@ -162,7 +158,7 @@ describe('RouterEffects deep-link auth handling', () => {
   });
 
   test('deduplicates a magic link delivered twice to the warm url listener', async () => {
-    render(<RouterEffects />);
+    render(withAuth(makeAuthContext()));
 
     await waitFor(() => expect(urlHandler).toBeDefined());
 
@@ -189,7 +185,7 @@ describe('RouterEffects deep-link auth handling', () => {
         }),
     );
 
-    render(<RouterEffects />);
+    render(withAuth(makeAuthContext()));
 
     await waitFor(() => expect(urlHandler).toBeDefined());
 
@@ -228,7 +224,7 @@ describe('RouterEffects deep-link auth handling', () => {
         }),
     );
 
-    render(<RouterEffects />);
+    render(withAuth(makeAuthContext()));
 
     await waitFor(() => expect(urlHandler).toBeDefined());
     expect(isDeepLinkAuthInProgress()).toBe(false);
@@ -247,7 +243,7 @@ describe('RouterEffects deep-link auth handling', () => {
   });
 
   test('ignores non-auth deep links', async () => {
-    render(<RouterEffects />);
+    render(withAuth(makeAuthContext()));
 
     await waitFor(() => expect(urlHandler).toBeDefined());
 

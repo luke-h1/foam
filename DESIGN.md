@@ -9,7 +9,8 @@ The locked rules for every screen. Load this before you touch UI. Where a rule c
 
 ## Accent
 
-- One accent: `theme.colorPrimary` (`#2E86FF`, pressed `#5AA1FF`). Spend it on the primary action, the selected segment, links and progress.
+- One accent: `theme.colorPrimary` (`#2E86FF`, pressed `#5AA1FF`). Spend it on the primary action, links and progress.
+- A selected segment is grey (`surfaceElevated`), not the accent. iOS draws its own grey segment, and Android matches it.
 - LIVE is red (`theme.colorRed`). Chat usernames keep their Twitch colours. No other hue appears in chrome.
 - Status colours (amber, red, teal, violet) are for notices and badges only, never for buttons.
 

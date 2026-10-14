@@ -8,18 +8,18 @@ import {
   useChatComposerActions,
   useChatOverlayActions,
 } from '@app/components/chat/hooks/use-chat-interaction-handlers';
+import { sevenTvService } from '@app/services/seven-tv-service';
 import { resetChatOverlays } from '@app/store/chat/actions/chat-overlays';
+import { clearUserCosmeticsCache } from '@app/store/chat/actions/cosmetics';
 import * as messagesActions from '@app/store/chat/actions/messages';
-import * as userCosmeticsFetchActions from '@app/store/chat/actions/user-cosmetics-fetch';
+import { clearFetchedCosmeticsUsers } from '@app/store/chat/actions/user-cosmetics-fetch';
 import { chatOverlays$ } from '@app/store/chat/observables/chat-overlays';
 import { createRef } from '@app/test/create-ref';
 import { createEmoteToken } from '@app/utils/chat/__tests__/__fixtures__/message-token.fixture';
 
-const mockGetMessageById = jest.spyOn(messagesActions, 'getMessageById');
-
-const mockFetchUserCosmetics = jest
-  .spyOn(userCosmeticsFetchActions, 'fetchUserCosmetics')
-  .mockResolvedValue(undefined);
+const mockGet7tvUserId = jest
+  .spyOn(sevenTvService, 'get7tvUserId')
+  .mockResolvedValue('');
 
 function renderComposerActions() {
   const inputShell = {
@@ -52,6 +52,8 @@ describe('useChatComposerActions', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     messagesActions.clearMessages();
+    clearUserCosmeticsCache();
+    clearFetchedCosmeticsUsers();
   });
 
   test('sets composer reply context from the selected chat message and parent message', () => {
@@ -84,8 +86,7 @@ describe('useChatComposerActions', () => {
       hook.result.current.handleReply(replyMessage);
     });
 
-    expect(mockFetchUserCosmetics).toHaveBeenCalledWith('viewer-user');
-    expect(mockGetMessageById).toHaveBeenCalledWith('reply-1');
+    expect(mockGet7tvUserId.mock.calls).toEqual([['viewer-user']]);
 
     expect(inputShell.setReplyTo.mock.calls[0]?.[0]).toEqual<ReplyToData>({
       color: '#00ff00',

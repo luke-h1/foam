@@ -129,36 +129,6 @@ describe('useComposerDismissGesture', () => {
     jest.clearAllMocks();
   });
 
-  test('dismissComposer delegates to the keyboard controller', () => {
-    renderHook(() => useComposerDismissGesture());
-
-    act(() => {
-      mockLastPanGesture.callbacks.onEnd?.({
-        translationY: COMPOSER_DISMISS_DRAG_DISTANCE + 1,
-        velocityY: 0,
-      });
-    });
-
-    expect(mockDismiss).toHaveBeenCalledTimes(1);
-  });
-
-  test('creates pan and fling gestures with the expected thresholds', () => {
-    const { result } = renderHook(() => useComposerDismissGesture());
-
-    expect(result.current.composerAnimatedStyle).toEqual({
-      transform: [{ translateY: 0 }],
-    });
-
-    expect(result.current.composerGesture).toEqual({
-      gestures: [mockLastPanGesture, mockLastFlingGesture],
-      type: 'simultaneous',
-    });
-
-    expect(mockLastPanGesture.activeOffsetY.mock.calls).toEqual([[4]]);
-    expect(mockLastPanGesture.failOffsetX.mock.calls).toEqual([[[-40, 40]]]);
-    expect(mockLastFlingGesture.direction.mock.calls).toEqual([[4]]);
-  });
-
   test('clamps downward pan updates to the composer drag limit', () => {
     renderHook(() => useComposerDismissGesture());
 

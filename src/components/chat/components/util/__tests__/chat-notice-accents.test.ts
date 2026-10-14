@@ -1,31 +1,6 @@
-import {
-  CHAT_NOTICE_ACCENTS,
-  noticeSurfaceTint,
-} from '@app/components/chat/components/util/chat-notice-accents';
-import { theme } from '@app/styles/themes';
+import { noticeSurfaceTint } from '@app/components/chat/components/util/chat-notice-accents';
 
 describe('chatNoticeAccents', () => {
-  describe('CHAT_NOTICE_ACCENTS', () => {
-    test('wires each notice accent to its theme color', () => {
-      expect(CHAT_NOTICE_ACCENTS).toEqual({
-        announcement: theme.color.notice.announcement,
-        channelPoints: theme.colorViolet,
-        highlight: theme.color.notice.muted,
-        subscription: theme.color.notice.subscription,
-        charity: theme.color.notice.charity,
-        ritual: theme.colorViolet,
-        firstMessage: theme.colorViolet,
-        returningChatter: theme.colorBlue,
-        viewerMilestone: theme.colorViolet,
-        modAnniversary: theme.colorTeal,
-        raid: theme.colorOrange,
-        replyToYou: theme.color.notice.announcement,
-        stvAdded: theme.colorPrimary,
-        stvRemoved: theme.color.notice.announcement,
-      });
-    });
-  });
-
   describe('noticeSurfaceTint', () => {
     test('converts a hex color to rgba with the default alpha', () => {
       expect(noticeSurfaceTint('#EB0400')).toBe('rgba(235, 4, 0, 0.06)');

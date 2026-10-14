@@ -1,7 +1,6 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 
 import * as SegmentedControlModule from '@app/components/segmented-control/segmented-control';
-import * as useScrollToTopModule from '@app/hooks/use-scroll-to-top';
 import { StreamerProfileScreen } from '@app/screens/stream/streamer-profile-screen';
 import { streamElementsService } from '@app/services/streamelements-service';
 import { twitchService } from '@app/services/twitch-service';
@@ -10,8 +9,6 @@ import type { StreamElementsChatStats } from '@app/types/streamelements/stats';
 import type { TwitchClip } from '@app/types/twitch/clip';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 import type { TwitchVideo } from '@app/types/twitch/video';
-
-jest.spyOn(useScrollToTopModule, 'useScrollToTop').mockImplementation(() => {});
 
 // The native @expo/ui SegmentedControl cannot receive segment-change events in tests; expose each segment as a pressable.
 jest

@@ -1,56 +1,66 @@
-import * as channelLoadModule from '@app/store/chat/actions/channel-load';
+import { userInfoFixture } from '@app/services/__fixtures__/twitch/user-info.fixture';
+import { bttvEmoteService } from '@app/services/bttv-emote-service';
+import { twitchBadgeService } from '@app/services/twitch-badge-service';
+import { twitchService } from '@app/services/twitch-service';
 import {
   enrichMessageSet,
   hasEnrichmentEmoteSources,
   resolveVisibleMessageUpdate,
   shouldEnrichMessage,
 } from '@app/store/chat/actions/message-enrichment';
-import * as messagesModule from '@app/store/chat/actions/messages';
+import { addMessages, clearMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
-import type { SanitisedEmote } from '@app/types/emote';
 import {
-  createEmoteToken,
-  createTextToken,
-} from '@app/utils/chat/__tests__/__fixtures__/message-token.fixture';
-import * as resolveMessageEmotePartsModule from '@app/utils/chat/resolve-message-emote-tokens';
-import * as getMessageBadgesModule from '@app/utils/chat/shared-chat-badges/get-message-badges';
-import * as getSharedChatBadgeContextModule from '@app/utils/chat/shared-chat-badges/get-shared-chat-badge-context';
+  type AnyChatMessageType,
+  makeEmptyEmoteData,
+  makeEmptyGlobalCacheData,
+} from '@app/store/chat/types/constants';
+import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
+import type { SanitisedEmote } from '@app/types/emote';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import { createTextToken } from '@app/utils/chat/__tests__/__fixtures__/message-token.fixture';
 
 import {
   createMockMessage,
   createNoticeMessage,
   createSystemMessage,
 } from './__fixtures__/message-enrichment.fixture';
+import {
+  enrichedMessageIds,
+  storedMessage,
+  summariseTokens,
+  type TokenSummary,
+} from './__fixtures__/messages.fixture';
 
-const mockGetCurrentEmoteData = jest.spyOn(
-  channelLoadModule,
-  'getCurrentEmoteData',
-);
+type ChatEmoteData = Parameters<typeof enrichMessageSet>[0]['emoteData'];
 
-const mockGetMessageBadges = jest.spyOn(
-  getMessageBadgesModule,
-  'getMessageBadges',
-);
+const channelId = 'channel-1';
 
-const mockGetSharedChatBadgeContext = jest.spyOn(
-  getSharedChatBadgeContextModule,
-  'getSharedChatBadgeContext',
-);
+const kappa: SanitisedEmote = {
+  id: 'kappa-id',
+  name: 'Kappa',
+  original_name: 'Kappa',
+  url: 'https://cdn.example.test/kappa.webp',
+  creator: null,
+  emote_link: '',
+  site: 'Twitch Channel',
+  provider: 'twitch',
+};
 
-const mockResolveMessageEmoteParts = jest.spyOn(
-  resolveMessageEmotePartsModule,
-  'resolveMessageEmoteParts',
-);
+const subscriberBadge: SanitisedBadgeSet = {
+  id: '12',
+  set: 'subscriber',
+  type: 'Twitch Channel Badge',
+  title: '1-Year Subscriber',
+  url: 'https://cdn.example.test/sub-12.png',
+  provider: 'twitch',
+};
 
-const mockUpdateMessages = jest.spyOn(messagesModule, 'updateMessages');
-
-type ChatEmoteData = NonNullable<
-  ReturnType<typeof channelLoadModule.getCurrentEmoteData>
->;
-
-type ResolveMessageEmotePartsParams = Parameters<
-  typeof resolveMessageEmotePartsModule.resolveMessageEmoteParts
->[0];
+const resolvedKappa: TokenSummary = {
+  type: 'emote',
+  content: 'Kappa',
+  url: 'https://cdn.example.test/kappa.webp',
+};
 
 function createEmoteData(
   overrides: Partial<ChatEmoteData> = {},
@@ -75,13 +85,28 @@ function createEmoteData(
   };
 }
 
-const expectMessageUpdate = (id: string, nonce: string, text: string) => ({
-  messageId: id,
-  messageNonce: nonce,
-  updates: {
-    message: [createEmoteToken(text, { id: 'e1', url: '' })],
-    badges: [],
-  },
+function createSubscriberMessage(
+  messageId: string,
+  text: string,
+): AnyChatMessageType {
+  return createMockMessage({
+    id: messageId,
+    message_id: messageId,
+    message_nonce: `nonce-${messageId}`,
+    message: [createTextToken(text)],
+    userstate: createUserStateTags({ 'badges-raw': 'subscriber/12' }),
+  });
+}
+
+beforeEach(() => {
+  jest.restoreAllMocks();
+  clearMessages();
+  chatStore$.emojis.set([]);
+  chatStore$.persisted.channelCaches.set({});
+
+  jest
+    .spyOn(bttvEmoteService, 'getSanitisedGlobalBadges')
+    .mockResolvedValue([]);
 });
 
 describe('shouldEnrichMessage', () => {
@@ -117,11 +142,6 @@ describe('shouldEnrichMessage', () => {
 });
 
 describe('hasEnrichmentEmoteSources', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    chatStore$.emojis.set([]);
-  });
-
   test('returns false when every emote source is empty', () => {
     expect(hasEnrichmentEmoteSources(createEmoteData())).toBe(false);
   });
@@ -174,76 +194,58 @@ describe('hasEnrichmentEmoteSources', () => {
 });
 
 describe('enrichMessageSet', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    chatStore$.emojis.set([]);
-
-    mockResolveMessageEmoteParts.mockImplementation(
-      ({ text }: ResolveMessageEmotePartsParams) => [
-        createEmoteToken(text, { id: 'e1', url: '' }),
-      ],
-    );
+  const emoteData = createEmoteData({
+    twitchChannelEmotes: [kappa],
+    twitchChannelBadges: [subscriberBadge],
   });
 
   test('recomputes every message when no processed-id set is given', () => {
-    const messages = [
-      createMockMessage({
-        message_id: 'a',
-        message_nonce: 'na',
-        message: [createTextToken('first')],
-      }),
-      createMockMessage({
-        message_id: 'b',
-        message_nonce: 'nb',
-        message: [createTextToken('second')],
-      }),
-    ];
+    addMessages([
+      createSubscriberMessage('a', 'first Kappa'),
+      createSubscriberMessage('b', 'Kappa'),
+    ]);
 
     enrichMessageSet({
-      channelId: 'channel-1',
-      emoteData: createEmoteData(),
-      messages,
+      channelId,
+      emoteData,
+      messages: chatStore$.messages.peek(),
       show7TvEmotes: true,
       userLogin: 'me',
     });
 
-    expect(mockUpdateMessages).toHaveBeenCalledTimes(1);
-
-    expect(mockUpdateMessages).toHaveBeenCalledWith([
-      expectMessageUpdate('a', 'na', 'first'),
-      expectMessageUpdate('b', 'nb', 'second'),
-    ]);
+    expect({
+      aTokens: summariseTokens(storedMessage('a').message),
+      aBadges: storedMessage('a').badges,
+      bTokens: summariseTokens(storedMessage('b').message),
+    }).toEqual({
+      aTokens: [
+        { type: 'text', content: 'first' },
+        { type: 'text', content: ' ' },
+        resolvedKappa,
+      ],
+      aBadges: [subscriberBadge],
+      bTokens: [resolvedKappa],
+    });
   });
 
   test('skips messages already in the processed-id set', () => {
     const processedMessageIds = new Set(['a']);
 
-    const messages = [
-      createMockMessage({
-        message_id: 'a',
-        message_nonce: 'na',
-        message: [createTextToken('first')],
-      }),
-      createMockMessage({
-        message_id: 'b',
-        message_nonce: 'nb',
-        message: [createTextToken('second')],
-      }),
-    ];
+    addMessages([
+      createSubscriberMessage('a', 'Kappa'),
+      createSubscriberMessage('b', 'Kappa'),
+    ]);
 
     enrichMessageSet({
-      channelId: 'channel-1',
-      emoteData: createEmoteData(),
-      messages,
+      channelId,
+      emoteData,
+      messages: chatStore$.messages.peek(),
       processedMessageIds,
       show7TvEmotes: true,
       userLogin: 'me',
     });
 
-    expect(mockUpdateMessages).toHaveBeenCalledWith([
-      expectMessageUpdate('b', 'nb', 'second'),
-    ]);
-
+    expect(enrichedMessageIds()).toEqual(['b']);
     expect(processedMessageIds).toEqual(new Set(['a', 'b']));
   });
 
@@ -252,28 +254,29 @@ describe('enrichMessageSet', () => {
 
     try {
       const messages = Array.from({ length: 30 }, (_, index) =>
-        createMockMessage({
-          message_id: `msg-${index}`,
-          message_nonce: `nonce-${index}`,
-          message: [createTextToken(`text ${index}`)],
-        }),
+        createSubscriberMessage(`msg-${index}`, 'Kappa'),
       );
 
+      addMessages(messages);
+
       const cancel = enrichMessageSet({
-        channelId: 'channel-1',
-        emoteData: createEmoteData(),
-        messages,
+        channelId,
+        emoteData,
+        messages: chatStore$.messages.peek(),
         show7TvEmotes: true,
         userLogin: 'me',
       });
 
-      expect(mockUpdateMessages).toHaveBeenCalledTimes(1);
-      expect(mockUpdateMessages.mock.calls[0]?.[0]).toHaveLength(6);
+      const firstBatchIds = messages
+        .slice(0, 6)
+        .map(message => message.message_id);
+
+      expect(enrichedMessageIds()).toEqual(firstBatchIds);
 
       cancel();
-      jest.runOnlyPendingTimers();
+      jest.runAllTimers();
 
-      expect(mockUpdateMessages).toHaveBeenCalledTimes(1);
+      expect(enrichedMessageIds()).toEqual(firstBatchIds);
     } finally {
       jest.useRealTimers();
     }
@@ -282,56 +285,92 @@ describe('enrichMessageSet', () => {
 
 describe('resolveVisibleMessageUpdate', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    chatStore$.emojis.set([]);
+    chatStore$.persisted.globalCaches.set(makeEmptyGlobalCacheData());
 
-    mockResolveMessageEmoteParts.mockImplementation(
-      ({ text }: ResolveMessageEmotePartsParams) => [
-        createEmoteToken(text, { id: 'e1', url: '' }),
-      ],
-    );
-
-    mockGetCurrentEmoteData.mockReturnValue(createEmoteData());
-
-    mockGetSharedChatBadgeContext.mockResolvedValue({
-      sourceBadge: null,
-      sourceChannelBadges: null,
+    chatStore$.persisted.channelCaches.set({
+      [channelId]: {
+        ...makeEmptyEmoteData(),
+        twitchChannelEmotes: [kappa],
+        twitchChannelBadges: [subscriberBadge],
+      },
     });
-
-    mockGetMessageBadges.mockReturnValue([]);
   });
 
-  test('resolves tokens and badges from the current caches without publishing', async () => {
+  test('resolves tokens and the shared-chat badges without publishing', async () => {
+    const sourceSubscriberBadge: SanitisedBadgeSet = {
+      ...subscriberBadge,
+      title: 'Source channel subscriber',
+      url: 'https://cdn.example.test/source-sub-12.png',
+    };
+
+    jest.spyOn(twitchService, 'getUser').mockResolvedValue({
+      ...userInfoFixture,
+      login: 'sourcechannel',
+      display_name: 'SourceChannel',
+      profile_image_url: 'https://cdn.example.test/source.png',
+    });
+
+    jest
+      .spyOn(twitchBadgeService, 'listSanitisedChannelBadges')
+      .mockResolvedValue([sourceSubscriberBadge]);
+
     const message = createMockMessage({
       message_id: 'visible-1',
       message_nonce: 'nv',
-      message: [createTextToken('hello')],
+      message: [createTextToken('hello Kappa')],
+      userstate: createUserStateTags({
+        'badges-raw': 'subscriber/12',
+        'source-room-id': 'source-room',
+      }),
     });
 
+    addMessages([message]);
+
     const update = await resolveVisibleMessageUpdate({
-      channelId: 'channel-1',
+      channelId,
       message,
       show7TvEmotes: true,
       userLogin: 'me',
     });
 
-    expect(mockGetSharedChatBadgeContext).toHaveBeenCalledWith(
-      message.userstate,
-    );
-
-    expect(update).toEqual(expectMessageUpdate('visible-1', 'nv', 'hello'));
-    expect(mockUpdateMessages).not.toHaveBeenCalled();
+    expect({
+      messageId: update?.messageId,
+      messageNonce: update?.messageNonce,
+      tokens: summariseTokens(update?.updates.message ?? []),
+      badges: update?.updates.badges,
+      storedTokens: summariseTokens(storedMessage('visible-1').message),
+    }).toEqual({
+      messageId: 'visible-1',
+      messageNonce: 'nv',
+      tokens: [
+        { type: 'text', content: 'hello' },
+        { type: 'text', content: ' ' },
+        resolvedKappa,
+      ],
+      badges: [
+        {
+          id: 'source-room',
+          set: 'shared-chat-source',
+          type: 'Twitch Shared Chat Source',
+          title: 'Shared chat: SourceChannel',
+          url: 'https://cdn.example.test/source.png',
+          owner_username: 'sourcechannel',
+          provider: 'twitch',
+        },
+        sourceSubscriberBadge,
+      ],
+      storedTokens: [{ type: 'text', content: 'hello Kappa' }],
+    });
   });
 
   test('skips system messages', async () => {
     const update = await resolveVisibleMessageUpdate({
-      channelId: 'channel-1',
+      channelId,
       message: createSystemMessage(),
       show7TvEmotes: true,
       userLogin: 'me',
     });
 
     expect(update).toBeNull();
-    expect(mockUpdateMessages).not.toHaveBeenCalled();
   });
 });

@@ -1,33 +1,92 @@
 import { buildTwitchEmbedErrorWatcherScript } from '../build-twitch-embed-error-watcher-script';
+import {
+  type PlayerBridgeMessage,
+  resetPlayerPage,
+  runPlayerScript,
+  setPageBody,
+} from './__fixtures__/twitch-player-source.fixture';
+
+const MISCONFIGURED_PAGE = '<p>Whoops, this embed is misconfigured.</p>';
+
+const misconfiguredMessage: PlayerBridgeMessage = {
+  type: 'embedMisconfigured',
+  payload: {
+    message: 'Whoops, this embed is misconfigured',
+    parent: 'foam.app',
+  },
+};
 
 describe('buildTwitchEmbedErrorWatcherScript', () => {
-  test('embed-error watcher reports Twitch misconfigured pages with the parent value', () => {
-    const script = buildTwitchEmbedErrorWatcherScript();
+  beforeEach(() => {
+    jest.useFakeTimers();
+    resetPlayerPage();
+  });
 
-    // Detects Twitch's misconfigured-embed error text.
-    expect(script).toContain("text.indexOf('embed is misconfigured') !== -1");
+  afterEach(() => {
+    jest.useRealTimers();
+  });
 
-    // Posts the bridge message the native side maps to a dedicated Sentry issue.
-    expect(script).toContain("type: 'embedMisconfigured'");
+  test('reports the misconfigured page once, with the parent from the embed url', () => {
+    setPageBody(MISCONFIGURED_PAGE);
 
-    // Includes the offending parent so the report is actionable.
-    expect(script).toContain(
-      "new URLSearchParams(window.location.search).get('parent')",
-    );
+    const page = runPlayerScript(buildTwitchEmbedErrorWatcherScript(), {
+      search: '?channel=xqc&parent=foam.app',
+    });
 
-    // Stops as soon as a real player video appears, so it never scans the
-    // healthy player's large DOM.
-    expect(script).toContain("if (document.querySelector('video'))");
+    jest.advanceTimersByTime(20_000);
 
-    // Only the top frame reports, so a subframe can't duplicate the event.
-    expect(script).toContain(
-      'if (window.top !== window.self) { return true; }',
-    );
+    expect(page.messages).toEqual<PlayerBridgeMessage[]>([
+      misconfiguredMessage,
+    ]);
+  });
 
-    // The poll is only started when the synchronous check has not already
-    // resolved, so a same-tick hit never leaves an unclearable interval.
-    expect(script).toContain('if (!stopped) {');
+  test('reports an error page that appears a few seconds after load', () => {
+    const page = runPlayerScript(buildTwitchEmbedErrorWatcherScript(), {
+      search: '?parent=foam.app',
+    });
 
-    expect(script).toContain('timer = setInterval(check, 1000)');
+    jest.advanceTimersByTime(3000);
+
+    expect(page.messages).toEqual([]);
+
+    setPageBody(MISCONFIGURED_PAGE);
+    jest.advanceTimersByTime(1000);
+
+    expect(page.messages).toEqual<PlayerBridgeMessage[]>([
+      misconfiguredMessage,
+    ]);
+  });
+
+  test('stops watching once the player video loads', () => {
+    setPageBody('<video></video>');
+
+    const page = runPlayerScript(buildTwitchEmbedErrorWatcherScript());
+
+    setPageBody(MISCONFIGURED_PAGE);
+    jest.advanceTimersByTime(5000);
+
+    expect(page.messages).toEqual([]);
+  });
+
+  test('gives up after about 15 seconds', () => {
+    const page = runPlayerScript(buildTwitchEmbedErrorWatcherScript());
+
+    jest.advanceTimersByTime(15_000);
+    setPageBody(MISCONFIGURED_PAGE);
+    jest.advanceTimersByTime(5000);
+
+    expect(page.messages).toEqual([]);
+  });
+
+  test('does not report from a subframe', () => {
+    setPageBody(MISCONFIGURED_PAGE);
+
+    const page = runPlayerScript(buildTwitchEmbedErrorWatcherScript(), {
+      isTopFrame: false,
+    });
+
+    jest.advanceTimersByTime(5000);
+
+    expect(page.messages).toEqual([]);
   });
 });

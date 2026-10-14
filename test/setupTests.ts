@@ -145,3 +145,8 @@ const skiaMock = require('@shopify/react-native-skia') as {
 if (skiaMock.Skia?.Data) {
   skiaMock.Skia.Data.fromURI = jest.fn(() => Promise.resolve(null));
 }
+
+beforeEach(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  require('expo-secure-store').__resetSecureStore?.();
+});

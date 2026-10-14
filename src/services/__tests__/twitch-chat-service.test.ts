@@ -1,24 +1,14 @@
 import { act, renderHook } from '@testing-library/react-native';
 import * as Network from 'expo-network';
 
-import * as AuthContext from '@app/context/auth-context';
 import { ReadyState } from '@app/hooks/ws/constants';
 import type { Options } from '@app/hooks/ws/types';
 import * as UseWebsocketModule from '@app/hooks/ws/use-websocket';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
 import { preferences$ } from '@app/store/preference-store';
+import { DefaultWrapper } from '@app/test/render';
 import * as AppStateTransitionsModule from '@app/utils/app-state/app-state-transitions';
 import { logger } from '@app/utils/logger';
-
-jest.spyOn(AuthContext, 'useAuthContext').mockReturnValue({
-  authState: undefined,
-  user: undefined,
-  ready: true,
-  loginWithTwitch: jest.fn(),
-  populateAuthState: jest.fn(),
-  logout: jest.fn(),
-  fetchAnonToken: jest.fn(),
-});
 
 const mockedUseWebsocket = jest.spyOn(UseWebsocketModule, 'useWebsocket');
 
@@ -65,7 +55,9 @@ function getForegroundTransitionListener() {
 }
 
 function renderConnectedChatHook() {
-  const view = renderHook(() => useTwitchChat({ channel: 'foam' }));
+  const view = renderHook(() => useTwitchChat({ channel: 'foam' }), {
+    wrapper: DefaultWrapper,
+  });
 
   act(() => {
     wsOptions.onOpen?.();
@@ -243,14 +235,16 @@ describe('useTwitchChat join/token routing', () => {
     const onJoin = jest.fn();
     const onPart = jest.fn();
 
-    renderHook(() =>
-      useTwitchChat({
-        channel: 'foam',
-        onUserJoin,
-        onUserPart,
-        onJoin,
-        onPart,
-      }),
+    renderHook(
+      () =>
+        useTwitchChat({
+          channel: 'foam',
+          onUserJoin,
+          onUserPart,
+          onJoin,
+          onPart,
+        }),
+      { wrapper: DefaultWrapper },
     );
 
     act(() => {
@@ -268,7 +262,9 @@ describe('useTwitchChat join/token routing', () => {
 
   test('requests the membership capability only when join/token messages are enabled', () => {
     preferences$.showJoinPartMessages.set(true);
-    renderHook(() => useTwitchChat({ channel: 'foam' }));
+    renderHook(() => useTwitchChat({ channel: 'foam' }), {
+      wrapper: DefaultWrapper,
+    });
 
     act(() => {
       wsOptions.onOpen?.();
@@ -279,8 +275,27 @@ describe('useTwitchChat join/token routing', () => {
     );
   });
 
+  test('logs in anonymously when nobody is signed in, even with an app token', () => {
+    renderHook(() => useTwitchChat({ channel: 'foam' }), {
+      wrapper: DefaultWrapper,
+    });
+
+    act(() => {
+      wsOptions.onOpen?.();
+    });
+
+    const loginLines = sendMessage.mock.calls
+      .map(([line]) => String(line))
+      .filter(line => line.startsWith('PASS') || line.startsWith('NICK'))
+      .map(line => line.replace(/justinfan\d+/, 'justinfan'));
+
+    expect(loginLines).toEqual(['PASS SCHMOOPIIE\r\n', 'NICK justinfan\r\n']);
+  });
+
   test('omits the membership capability when the preference is off', () => {
-    renderHook(() => useTwitchChat({ channel: 'foam' }));
+    renderHook(() => useTwitchChat({ channel: 'foam' }), {
+      wrapper: DefaultWrapper,
+    });
 
     act(() => {
       wsOptions.onOpen?.();

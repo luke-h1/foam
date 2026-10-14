@@ -9,7 +9,7 @@ import {
   ListRenderItem,
 } from '@app/components/flash-list/flash-list';
 import { MemoizedLiveStreamCard } from '@app/components/live-stream-card/live-stream-card';
-import { LiveStreamCardSkeleton } from '@app/components/live-stream-card/live-stream-card-skeleton';
+import { LiveStreamCardSkeletons } from '@app/components/live-stream-card/live-stream-card-skeleton';
 import { MemoizedOfflineChannelRow } from '@app/components/offline-channel-row/offline-channel-row';
 import { SectionHeader } from '@app/components/section-header/section-header';
 import { EmptyState } from '@app/components/ui/empty-state/empty-state';
@@ -45,11 +45,7 @@ function FollowingSkeleton({
       scrollEnabled={false}
       style={styles.container}
     >
-      <LiveStreamCardSkeleton layout={streamListLayout} />
-      <LiveStreamCardSkeleton layout={streamListLayout} />
-      <LiveStreamCardSkeleton layout={streamListLayout} />
-      <LiveStreamCardSkeleton layout={streamListLayout} />
-      <LiveStreamCardSkeleton layout={streamListLayout} />
+      <LiveStreamCardSkeletons layout={streamListLayout} />
     </ScrollView>
   );
 }

@@ -12,7 +12,10 @@ export enum ExecutionEnvironment {
 const Constants = {
   expoConfig: {
     sdkVersion: '52.0.0',
-    extra: {},
+    extra: {
+      EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL: 'https://auth-proxy.test',
+      EXPO_PUBLIC_TWITCH_CLIENT_ID: 'test-client-id',
+    },
   },
   executionEnvironment: ExecutionEnvironment.Bare,
 };

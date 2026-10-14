@@ -4,10 +4,8 @@ import type { UserInfoResponse } from '@app/types/twitch/user';
 
 import { twitchApi } from '../api/clients';
 import { twitchEmoteService } from '../twitch-emote-service';
-import { twitchService } from '../twitch-service';
 
 const api = { get: jest.spyOn(twitchApi, 'get') };
-const mockTwitchService = { getUser: jest.spyOn(twitchService, 'getUser') };
 
 const broadcaster: UserInfoResponse = {
   broadcaster_type: 'partner',
@@ -93,20 +91,21 @@ describe('twitchEmoteService', () => {
   });
 
   test('getChannelEmotes resolves the broadcaster name as the creator', async () => {
-    api.get.mockResolvedValue({
-      data: [makeTwitchEmote('emotesv2_abc', 'streamerHi')],
-      pagination: {},
-    });
-
-    mockTwitchService.getUser.mockResolvedValue(broadcaster);
+    api.get.mockImplementation(async url =>
+      url === '/users'
+        ? { data: [broadcaster] }
+        : {
+            data: [makeTwitchEmote('emotesv2_abc', 'streamerHi')],
+            pagination: {},
+          },
+    );
 
     const result = await twitchEmoteService.getChannelEmotes('123');
 
-    expect(api.get).toHaveBeenCalledWith('/chat/emotes', {
-      params: { broadcaster_id: '123' },
-    });
-
-    expect(mockTwitchService.getUser).toHaveBeenCalledWith(undefined, '123');
+    expect(api.get.mock.calls).toEqual([
+      ['/chat/emotes', { params: { broadcaster_id: '123' } }],
+      ['/users', { params: { id: '123' } }],
+    ]);
 
     expect(
       result.map(emote => ({

@@ -1,38 +1,35 @@
 import { View } from 'react-native';
+import type { ReactNode } from 'react';
 import type { KeyboardStickyViewProps } from 'react-native-keyboard-controller';
 import * as keyboardControllerModule from 'react-native-keyboard-controller';
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, waitFor } from '@testing-library/react-native';
 import * as Clipboard from 'expo-clipboard';
 
+import { createChatMessage } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
 import { createScrollAnchor } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat-scroll.fixture';
 import * as FlashListModule from '@app/components/flash-list/flash-list';
-import * as authContextModule from '@app/context/auth-context';
-import * as useSyncPaintRendererFlagModule from '@app/hooks/firebase/use-sync-paint-renderer-flag';
+import {
+  createLoggedInAuthContextValue,
+  createTestUser,
+} from '@app/context/__tests__/__fixtures__/auth-context.fixture';
+import { AuthContextTestProvider } from '@app/context/auth-context';
 import { recentMessagesService } from '@app/services/recent-messages-service';
 import { sevenTvService } from '@app/services/seven-tv-service';
 import * as twitchChatServiceModule from '@app/services/twitch-chat-service';
-import * as channelLoadModule from '@app/store/chat/actions/channel-load';
-import * as cosmeticsModule from '@app/store/chat/actions/cosmetics';
-import * as messagesModule from '@app/store/chat/actions/messages';
 import {
-  addMessage,
-  clearMessages,
-  getMaxChatMessages,
-  restoreRecentMessagesForChannel,
-} from '@app/store/chat/actions/messages';
-import * as personalEmotesModule from '@app/store/chat/actions/personal-emotes';
+  getChatUnreadCount,
+  resetChatUnread,
+} from '@app/store/chat/actions/chat-unread';
+import { clearUserCosmeticsCache } from '@app/store/chat/actions/cosmetics';
+import { clearMessages } from '@app/store/chat/actions/messages';
+import { clearPersonalEmotesCache } from '@app/store/chat/actions/personal-emotes';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
-import { emptyResolvedEmoteData } from '@app/store/chat/types/constants';
-import * as preferenceStoreModule from '@app/store/preference-store';
 import {
-  useChatRenderPreferences,
-  usePreference,
-  usePreferences,
-  useUpdatePreferences,
+  initialPreferences,
+  replacePreferences,
 } from '@app/store/preference-store';
-import * as emoteProcessorModule from '@app/utils/chat/emote-processor';
-import * as devToolsGateModule from '@app/utils/dev-tools/dev-tools-gate';
 import * as clearImageCacheModule from '@app/utils/image/clear-image-cache';
 import { logger } from '@app/utils/logger';
 
@@ -49,13 +46,8 @@ import * as resumeScrollModule from '../components/resume-scroll';
 import * as settingsSheetModule from '../components/settings-sheet/settings-sheet';
 import * as userActionSheetModule from '../components/user-action-sheet';
 import * as useChatEmoteLoaderModule from '../hooks/use-chat-emote-loader';
-import * as useChatLifecycleModule from '../hooks/use-chat-lifecycle';
-import * as useChatMessagesModule from '../hooks/use-chat-messages';
-import { useChatMessages } from '../hooks/use-chat-messages';
 import * as useChatScrollModule from '../hooks/use-chat-scroll';
-import * as useEmoteReprocessingModule from '../hooks/use-emote-reprocessing';
 import * as useSevenTvWsModule from '../hooks/use-seven-tv-ws';
-import * as createSevenTvCallbacksModule from '../util/create-seven-tv-callbacks';
 
 /**
  * `useSafeAreaInsets` is a non-configurable re-export getter on the package
@@ -68,28 +60,6 @@ const safeAreaContextModule = jest.requireActual<
 const mockScrollToBottom = jest.fn();
 
 jest.spyOn(FlashListModule, 'FlashList').mockImplementation(() => <View />);
-
-/**
- * Auth code is off-limits to edit; spy the export instead of replacing the
- * module. SAFETY: Chat only reads `user` off the auth context here.
- */
-jest.spyOn(authContextModule, 'useAuthContext').mockReturnValue({
-  user: {
-    id: 'current-user-id',
-    login: 'currentuser',
-    display_name: 'CurrentUser',
-  },
-} as ReturnType<typeof authContextModule.useAuthContext>);
-
-// Deny dev-tools access so the dev-only synthetic flood stays inert without remote-config / a QueryClient.
-jest.spyOn(devToolsGateModule, 'useDevToolsAccess').mockReturnValue('denied');
-
-/**
- * Stub the paint-renderer flag so the suite needs no QueryClient.
- */
-jest
-  .spyOn(useSyncPaintRendererFlagModule, 'useSyncPaintRendererFlag')
-  .mockImplementation(() => {});
 
 /**
  * Structurally valid `WebSocket` without a real connection; the suite's
@@ -106,15 +76,17 @@ jest.spyOn(useSevenTvWsModule, 'useSevenTvWs').mockReturnValue({
   ws: createWebSocketStub(),
 });
 
-jest
+const mockedGetRecentMessages = jest
   .spyOn(recentMessagesService, 'getRecentMessages')
-  .mockImplementation(jest.fn());
+  .mockResolvedValue([]);
 
 /**
  * The real resolver falls back to `''` (never `undefined`) when a Twitch
  * user has no linked 7TV account.
  */
 jest.spyOn(sevenTvService, 'get7tvUserId').mockResolvedValue('');
+jest.spyOn(sevenTvService, 'getPersonalEmoteSet').mockResolvedValue([]);
+jest.spyOn(sevenTvService, 'getUserCosmeticsGql').mockResolvedValue(null);
 
 jest.spyOn(twitchChatServiceModule, 'getChatUserState').mockReturnValue({
   mod: '0',
@@ -140,59 +112,6 @@ jest.spyOn(twitchChatServiceModule, 'useTwitchChat').mockReturnValue({
   sendChatCommand: jest.fn(),
   sendAction: jest.fn(),
 });
-
-jest.spyOn(channelLoadModule, 'clearCache').mockImplementation(() => {});
-
-jest
-  .spyOn(channelLoadModule, 'getCurrentEmoteData')
-  .mockReturnValue(emptyResolvedEmoteData);
-
-jest
-  .spyOn(personalEmotesModule, 'fetchUserPersonalEmotes')
-  .mockImplementation(async () => null);
-
-jest.spyOn(personalEmotesModule, 'getUserPersonalEmotes').mockReturnValue([]);
-
-jest
-  .spyOn(cosmeticsModule, 'fetchAndCacheUserCosmetics')
-  .mockImplementation(async () => null);
-
-jest.spyOn(cosmeticsModule, 'getUserBadge').mockReturnValue(undefined);
-jest.spyOn(cosmeticsModule, 'getUserBadgeId').mockReturnValue(undefined);
-jest.spyOn(cosmeticsModule, 'getUserPaintId').mockReturnValue(undefined);
-jest.spyOn(cosmeticsModule, 'hasUserPaint').mockReturnValue(false);
-
-jest
-  .spyOn(cosmeticsModule, 'requestUserCosmeticsViaPresence')
-  .mockResolvedValue(undefined);
-
-// Selectors and `chatStore$` run for real; the store starts at its defaults and `chatStore$.messages` resets in `beforeEach`.
-
-jest.spyOn(messagesModule, 'addMessage');
-
-jest.spyOn(messagesModule, 'clearMessages');
-jest.spyOn(messagesModule, 'moderateMessageById');
-jest.spyOn(messagesModule, 'moderateMessagesByLogin');
-jest.spyOn(messagesModule, 'getMaxChatMessages').mockReturnValue(600);
-jest.spyOn(messagesModule, 'restoreRecentMessagesForChannel');
-
-/**
- * SAFETY: only these four preferences are read via direct `getPreferences()`;
- * the rest go through the hooks stubbed via `setPreferences` below.
- */
-jest.spyOn(preferenceStoreModule, 'getPreferences').mockReturnValue({
-  chatTimestampFormat: '24h',
-  chatScrollback: 150,
-  deletedMessageStyle: 'notice',
-  ignoreClearChat: false,
-} as ReturnType<typeof preferenceStoreModule.getPreferences>);
-
-jest.spyOn(preferenceStoreModule, 'useChatRenderPreferences');
-jest.spyOn(preferenceStoreModule, 'usePreference');
-jest.spyOn(preferenceStoreModule, 'usePreferences');
-jest.spyOn(preferenceStoreModule, 'useUpdatePreferences');
-
-jest.spyOn(emoteProcessorModule, 'processEmotesWorklet').mockReturnValue([]);
 
 jest
   .spyOn(clearImageCacheModule, 'clearImageCache')
@@ -293,24 +212,14 @@ jest
   .spyOn(useChatEmoteLoaderModule, 'useChatEmoteLoader')
   .mockReturnValue(emptyChatEmoteLoaderResult);
 
-const inertChatLifecycleResult = {
-  hasPartedRef: { current: false },
-  initializedChannelRef: { current: null },
-  isMountedRef: { current: true },
-  currentEmoteSetIdRef: { current: null },
-} satisfies ReturnType<typeof useChatLifecycleModule.useChatLifecycle>;
-
-jest
-  .spyOn(useChatLifecycleModule, 'useChatLifecycle')
-  .mockReturnValue(inertChatLifecycleResult);
-
-jest.spyOn(useChatMessagesModule, 'useChatMessages');
+const listIsAtBottomRef = { current: true };
 
 const settledChatScrollResult = {
   isAtBottom: true,
   isScrollingToBottom: false,
   shouldMaintainScrollAtEnd: true,
   scrollAnchor: createScrollAnchor({
+    isAtBottomRef: listIsAtBottomRef,
     noteScrollAwayIntent: jest.fn(),
     maintainBottomAfterContentChange: jest.fn(),
   }),
@@ -331,129 +240,116 @@ jest
   .spyOn(useChatScrollModule, 'useChatScroll')
   .mockReturnValue(settledChatScrollResult);
 
-/**
- * SAFETY: `useSevenTvWs` (the only consumer) is stubbed above and never
- * invokes these, so an empty object is a safe stand-in.
- */
-jest
-  .spyOn(createSevenTvCallbacksModule, 'createSevenTvCallbacks')
-  .mockReturnValue(
-    {} as ReturnType<
-      typeof createSevenTvCallbacksModule.createSevenTvCallbacks
-    >,
+interface StoredRow {
+  id: string;
+  isHistorical: boolean | undefined;
+  moderationNotice: string | undefined;
+  sender: string;
+}
+
+function storedRows(): StoredRow[] {
+  return chatStore$.messages.peek().map(message => {
+    const [firstPart] = message.message;
+
+    const systemText =
+      message.sender === 'System' && firstPart && 'content' in firstPart
+        ? firstPart.content
+        : undefined;
+
+    return {
+      id: systemText ?? message.message_id,
+      isHistorical: message.isHistorical,
+      moderationNotice: message.moderationNotice,
+      sender: message.sender,
+    };
+  });
+}
+
+function cachedRows(messageCount: number): StoredRow[] {
+  return Array.from({ length: messageCount }, (_, index) => ({
+    id: `cached-${index}`,
+    isHistorical: true,
+    moderationNotice: undefined,
+    sender: 'cached',
+  }));
+}
+
+function requestedHistory(): [string, number | undefined][] {
+  return mockedGetRecentMessages.mock.calls.map(([channel, , limit]) => [
+    channel,
+    limit,
+  ]);
+}
+
+function seedPersistedHistory(messageCount: number) {
+  chatStore$.recentMessagesByChannel.set({
+    'channel-1': Array.from({ length: messageCount }, (_, index) =>
+      createChatMessage({
+        overrides: { sender: 'cached' },
+        tags: { id: `cached-${index}` },
+        text: `cached ${index}`,
+      }),
+    ),
+  });
+}
+
+function SignedInWrapper({ children }: { children: ReactNode }) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+
+  const authContext = createLoggedInAuthContextValue({
+    user: createTestUser({
+      id: 'current-user-id',
+      login: 'currentuser',
+      display_name: 'CurrentUser',
+    }),
+  });
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthContextTestProvider {...authContext}>
+        {children}
+      </AuthContextTestProvider>
+    </QueryClientProvider>
   );
+}
 
-jest
-  .spyOn(useEmoteReprocessingModule, 'useEmoteReprocessing')
-  .mockImplementation(() => {});
+function renderChat() {
+  return render(<Chat channelId='channel-1' channelName='foam' />, {
+    wrapper: SignedInWrapper,
+  });
+}
 
-const mockedUsePreferences = jest.mocked(usePreferences);
-const mockedUsePreference = jest.mocked(usePreference);
-const mockedUseChatRenderPreferences = jest.mocked(useChatRenderPreferences);
-const mockedUseUpdatePreferences = jest.mocked(useUpdatePreferences);
-
-const mockedGetRecentMessages = jest.mocked(
-  recentMessagesService.getRecentMessages,
-);
-
-const mockedUseChatMessages = jest.mocked(useChatMessages);
-
-const mockedRestoreRecentMessagesForChannel = jest.mocked(
-  restoreRecentMessagesForChannel,
-);
-
-const handleNewMessage = jest.fn();
-const forceFlush = jest.fn();
-const clearLocalMessages = jest.fn();
-const moderateChatMessageById = jest.fn();
-const moderateChatMessagesByLogin = jest.fn();
-const removeChatMessageById = jest.fn();
-
-const setPreferences = (showRecentMessages = true) => {
-  const preferences = {
-    updatedAt: 0,
-    theme: 'foam-dark',
-    hapticFeedback: true,
-    streamListLayout: 'compact',
-    chatDensity: 'compact',
-    showAlternatingChatRows: false,
-    animate: false,
-    chatTimestamps: true,
-    disableEmoteAnimations: false,
-    disableChat: false,
-    disableStream: false,
-    useUIKitForWebView: false,
-    emojiStyle: 'twitter',
-    highlightOwnMentions: true,
-    show7TvEmotes: true,
-    show7tvBadges: true,
-    showBttvEmotes: true,
-    showBttvBadges: true,
-    showChatterinoEmotes: true,
-    showFFzEmotes: true,
-    showFFzBadges: true,
-    showInlineReplyContext: true,
-    showRecentMessages,
-    showTwitchEmotes: true,
-    showTwitchBadges: true,
-    showUnreadJumpPill: true,
-    showJoinPartMessages: false,
-    blockedTerms: [],
-    chatTimestampFormat: '24h',
-    chatFontScale: 'default',
+function setShowRecentMessages(showRecentMessages: boolean) {
+  replacePreferences({
+    ...initialPreferences,
     chatScrollback: 150,
     deletedMessageStyle: 'notice',
-    ignoreClearChat: false,
-    chatMentionHaptics: true,
-    customHighlights: [],
-    savedPhrases: [],
-    shakeToReport: true,
-    landscapeChatWidth: null,
-    customPlayerEnabled: true,
-    analyticsEnabled: true,
-    sharedChatEnabled: true,
-    enhancedVideoStability: false,
-    chatDebugTools: false,
-    sevenTvPaintRenderer: 'native',
-    chatDelay: 'off',
-    update: jest.fn(),
-  } satisfies ReturnType<typeof usePreferences>;
-
-  mockedUsePreferences.mockReturnValue(preferences);
-  mockedUsePreference.mockImplementation(key => preferences[key]);
-  mockedUseChatRenderPreferences.mockReturnValue(preferences);
-  mockedUseUpdatePreferences.mockReturnValue(preferences.update);
-};
+    show7TvEmotes: true,
+    showRecentMessages,
+  });
+}
 
 describe('Chat recent messages', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockedRestoreRecentMessagesForChannel.mockReturnValue(0);
-    chatStore$.messages.set([]);
-    setPreferences();
-
-    const chatMessages = {
-      handleNewMessage,
-      clearLocalMessages,
-      reconcileChatDelay: jest.fn(),
-      moderateChatMessageById,
-      moderateChatMessagesByLogin,
-      removeChatMessageById,
-      removeChatMessagesByLogin: jest.fn(),
-      cleanup: jest.fn(),
-      forceFlush,
-      getBufferSize: jest.fn(() => 0),
-    } satisfies ReturnType<typeof useChatMessages>;
-
-    mockedUseChatMessages.mockReturnValue(chatMessages);
+    clearMessages();
+    clearUserCosmeticsCache();
+    clearPersonalEmotesCache();
+    resetChatUnread();
+    listIsAtBottomRef.current = true;
+    chatStore$.recentMessagesByChannel.set({});
+    setShowRecentMessages(true);
   });
 
-  test('loads recent IRC messages through the chat pipeline without unread increments', async () => {
+  test('replays recent IRC messages into the store without unread increments', async () => {
     mockedGetRecentMessages.mockResolvedValueOnce([
       'PING',
       '@id=missing-channel PRIVMSG',
       '@display-name=RecentUser;id=msg-1;user-id=user-1 :recent!recent@recent.tmi.twitch.tv PRIVMSG #foam :hello chat',
       '@display-name=SubUser;id=notice-1;msg-id=resub :sub!sub@sub.tmi.twitch.tv USERNOTICE #foam :subbed',
+      '@display-name=BadUser;id=msg-3;user-id=user-3 :baduser!baduser@baduser.tmi.twitch.tv PRIVMSG #foam :spam',
       '@ban-duration=600 :tmi.twitch.tv CLEARCHAT #foam baduser',
       '@target-msg-id=msg-1 :tmi.twitch.tv CLEARMSG #foam',
       '@target-msg-id=msg-2 :tmi.twitch.tv CLEARMESSAGE #foam',
@@ -461,96 +357,79 @@ describe('Chat recent messages', () => {
       '@emote-only=0;followers-only=-1;r9k=0;slow=0;subs-only=0 :tmi.twitch.tv ROOMSTATE #foam',
     ]);
 
-    render(<Chat channelId='channel-1' channelName='foam' />);
+    listIsAtBottomRef.current = false;
+    renderChat();
 
     await waitFor(() => {
-      expect(forceFlush).toHaveBeenCalled();
+      expect(mockScrollToBottom).toHaveBeenCalledTimes(1);
     });
 
-    expect(mockedGetRecentMessages).toHaveBeenCalledWith(
-      'foam',
-      expect.any(AbortSignal),
-      getMaxChatMessages(),
-    );
+    expect(requestedHistory()).toEqual([['foam', 150]]);
 
-    const projectedCalls = handleNewMessage.mock.calls.map(
-      ([message, options]) => ({
-        channel: message.channel,
-        id: 'id' in message ? message.id : undefined,
-        message_id: message.message_id,
-        options,
-        sender: message.sender,
-      }),
-    );
-
-    // The usernotice carries no IRC nonce, so its store id embeds the arrival
-    // timestamp - pin the shape here, then compare everything else exactly.
-    const noticeId = projectedCalls[1]?.id ?? '';
-
-    expect(/^notice-1_\d+-\d+$/.test(noticeId)).toBe(true);
-
-    expect(
-      projectedCalls.map(entry =>
-        entry.id === noticeId ? { ...entry, id: 'notice-1_nonce' } : entry,
-      ),
-    ).toEqual([
+    expect(storedRows()).toEqual<StoredRow[]>([
       {
-        channel: 'foam',
-        id: 'msg-1_msg-1',
-        message_id: 'msg-1',
-        options: { countUnread: false },
-        sender: 'RecentUser',
+        id: 'baduser has been timed out for 10m',
+        isHistorical: undefined,
+        moderationNotice: undefined,
+        sender: 'System',
       },
       {
-        channel: 'foam',
-        id: 'notice-1_nonce',
-        message_id: 'notice-1',
-        options: { countUnread: false },
+        id: 'hosting enabled',
+        isHistorical: undefined,
+        moderationNotice: undefined,
+        sender: 'System',
+      },
+      {
+        id: 'notice-1',
+        isHistorical: true,
+        moderationNotice: undefined,
         sender: 'SubUser',
+      },
+      {
+        id: 'msg-3',
+        isHistorical: true,
+        moderationNotice: 'Timed out (600s)',
+        sender: 'BadUser',
       },
     ]);
 
-    expect(moderateChatMessagesByLogin).toHaveBeenCalledWith(
-      'baduser',
-      'Timed out (600s)',
-    );
-
-    expect(moderateChatMessageById).toHaveBeenCalledWith('msg-1', 'Deleted');
-    expect(moderateChatMessageById).toHaveBeenCalledWith('msg-2', 'Deleted');
-    expect(addMessage).toHaveBeenCalled();
-    expect(clearMessages).not.toHaveBeenCalled();
-    expect(mockScrollToBottom).toHaveBeenCalledTimes(1);
+    expect(getChatUnreadCount()).toBe(0);
   });
 
   test('settles to bottom after restoring persisted recent messages', () => {
-    setPreferences(false);
-    mockedRestoreRecentMessagesForChannel.mockReturnValueOnce(12);
+    setShowRecentMessages(false);
+    seedPersistedHistory(12);
 
-    render(<Chat channelId='channel-1' channelName='foam' />);
+    renderChat();
 
     expect(mockScrollToBottom).toHaveBeenCalledTimes(1);
+    expect(storedRows()).toEqual<StoredRow[]>(cachedRows(12));
+    expect(requestedHistory()).toEqual([]);
   });
 
   test('defers cached-history bottom settle until remote history replay finishes', async () => {
-    mockedRestoreRecentMessagesForChannel.mockReturnValueOnce(12);
+    seedPersistedHistory(12);
     mockedGetRecentMessages.mockResolvedValueOnce([]);
 
-    render(<Chat channelId='channel-1' channelName='foam' />);
+    renderChat();
 
     expect(mockScrollToBottom).not.toHaveBeenCalled();
+    expect(storedRows()).toEqual<StoredRow[]>(cachedRows(12));
 
     await waitFor(() => {
-      expect(forceFlush).toHaveBeenCalled();
+      expect(mockScrollToBottom).toHaveBeenCalledTimes(1);
     });
 
-    expect(mockScrollToBottom).toHaveBeenCalledTimes(1);
+    expect(requestedHistory()).toEqual([['foam', 150]]);
+    expect(storedRows()).toEqual<StoredRow[]>(cachedRows(12));
   });
 
   test('does not load recent messages when the preference is disabled', () => {
-    setPreferences(false);
+    setShowRecentMessages(false);
 
-    render(<Chat channelId='channel-1' channelName='foam' />);
+    renderChat();
 
-    expect(mockedGetRecentMessages).not.toHaveBeenCalled();
+    expect(requestedHistory()).toEqual([]);
+    expect(storedRows()).toEqual<StoredRow[]>([]);
   });
 });

@@ -1,10 +1,13 @@
 // oxlint-disable anti-slop/no-shape-in-symbol-names -- mirrors the 7TV paint API shape field (types/seven-tv/cosmetics.ts)
-import * as cosmetics from '@app/store/chat/actions/cosmetics';
+import { createSevenTvEmote } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
+import { sevenTvService } from '@app/services/seven-tv-service';
 import {
   addBadge,
   addPaint,
+  clearUserCosmeticsCache,
   getUserBadgeId,
   getUserPaintId,
+  setUserPaint,
 } from '@app/store/chat/actions/cosmetics';
 import {
   applyEntitlementCreateEvent,
@@ -17,7 +20,11 @@ import {
   getSevenTvUserIdForTwitchId,
   MAX_SEVEN_TV_USER_LINK_ENTRIES,
 } from '@app/store/chat/actions/cosmetics-links';
-import * as personalEmotes from '@app/store/chat/actions/personal-emotes';
+import {
+  clearPersonalEmotesCache,
+  fetchUserPersonalEmotes,
+  getUserPersonalEmotes,
+} from '@app/store/chat/actions/personal-emotes';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import type {
   EntitlementCreate,
@@ -52,6 +59,29 @@ const cachedBadge = {
   provider: '7tv',
 } satisfies SanitisedBadgeSet;
 
+interface UserBindings {
+  paintId: string | undefined;
+  badgeId: string | undefined;
+}
+
+const rebound: UserBindings = { paintId: 'paint-1', badgeId: 'badge-1' };
+
+function readBindings(): UserBindings {
+  return {
+    paintId: getUserPaintId('ttv-1'),
+    badgeId: getUserBadgeId('ttv-1'),
+  };
+}
+
+function bindPaintAndBadge() {
+  addBadge(cachedBadge);
+  applyEntitlementUpdateEvent({
+    ttvUserId: 'ttv-1',
+    paintId: 'paint-1',
+    badgeId: 'badge-1',
+  });
+}
+
 function resetChatStore(): void {
   chatStore$.currentChannelId.set('channel-1');
   chatStore$.paints.set({});
@@ -60,45 +90,46 @@ function resetChatStore(): void {
   chatStore$.userBadgeIds.set({});
 }
 
-let mockFetchUserCosmeticsByTwitchId: jest.SpiedFunction<
-  typeof cosmetics.fetchUserCosmeticsByTwitchId
+let mockGetUserCosmeticsGql: jest.SpiedFunction<
+  typeof sevenTvService.getUserCosmeticsGql
 >;
 
-let mockRemoveUserBadge: jest.SpiedFunction<typeof cosmetics.removeUserBadge>;
-
-let mockRemoveUserCosmetics: jest.SpiedFunction<
-  typeof cosmetics.removeUserCosmetics
+let mockGetPersonalEmoteSet: jest.SpiedFunction<
+  typeof sevenTvService.getPersonalEmoteSet
 >;
 
-let mockRemoveUserPaint: jest.SpiedFunction<typeof cosmetics.removeUserPaint>;
-
-let mockHandlePersonalEmoteSetEntitlement: jest.SpiedFunction<
-  typeof personalEmotes.handlePersonalEmoteSetEntitlement
->;
+async function settleBackgroundFetches() {
+  for (let step = 0; step < 5; step += 1) {
+    // eslint-disable-next-line react-doctor/async-await-in-loop -- each fetch step must settle before the next one starts
+    await new Promise(resolve => {
+      setImmediate(resolve);
+    });
+  }
+}
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  jest.restoreAllMocks();
   resetChatStore();
+  clearUserCosmeticsCache();
   clearEntitlementUserLinkState();
+  clearPersonalEmotesCache();
 
-  mockFetchUserCosmeticsByTwitchId = jest
-    .spyOn(cosmetics, 'fetchUserCosmeticsByTwitchId')
-    .mockResolvedValue(undefined);
+  jest.spyOn(sevenTvService, 'get7tvUserId').mockResolvedValue('stv-user-1');
 
-  mockRemoveUserBadge = jest.spyOn(cosmetics, 'removeUserBadge');
-  mockRemoveUserCosmetics = jest.spyOn(cosmetics, 'removeUserCosmetics');
-  mockRemoveUserPaint = jest.spyOn(cosmetics, 'removeUserPaint');
+  mockGetUserCosmeticsGql = jest
+    .spyOn(sevenTvService, 'getUserCosmeticsGql')
+    .mockResolvedValue(null);
 
-  mockHandlePersonalEmoteSetEntitlement = jest
-    .spyOn(personalEmotes, 'handlePersonalEmoteSetEntitlement')
-    .mockImplementation(() => {});
+  mockGetPersonalEmoteSet = jest
+    .spyOn(sevenTvService, 'getPersonalEmoteSet')
+    .mockResolvedValue([]);
 
   jest.spyOn(logger.stv, 'warn').mockImplementation(() => {});
   jest.spyOn(logger.stvWs, 'info').mockImplementation(() => {});
 });
 
 describe('applyEntitlementCreateEvent', () => {
-  test('binds paints and hydrates the definition when it is missing', () => {
+  test('binds paints and hydrates the definition when it is missing', async () => {
     const entitlement: EntitlementCreate = {
       id: 'entitlement-paint-1',
       kind: 0,
@@ -118,12 +149,14 @@ describe('applyEntitlementCreateEvent', () => {
       badgeId: null,
     });
 
+    await settleBackgroundFetches();
+
     expect(getUserPaintId('ttv-1')).toBe('paint-1');
     expect(getUserBadgeId('ttv-1')).toBeUndefined();
-    expect(mockFetchUserCosmeticsByTwitchId.mock.calls).toEqual([['ttv-1']]);
+    expect(mockGetUserCosmeticsGql.mock.calls).toEqual([['stv-user-1']]);
   });
 
-  test('does not refetch when the paint definition is already cached', () => {
+  test('does not refetch when the paint definition is already cached', async () => {
     addPaint(cachedPaint);
 
     applyEntitlementCreateEvent({
@@ -143,11 +176,13 @@ describe('applyEntitlementCreateEvent', () => {
       badgeId: null,
     });
 
+    await settleBackgroundFetches();
+
     expect(getUserPaintId('ttv-1')).toBe('paint-1');
-    expect(mockFetchUserCosmeticsByTwitchId).not.toHaveBeenCalled();
+    expect(mockGetUserCosmeticsGql).not.toHaveBeenCalled();
   });
 
-  test('binds badges and hydrates the definition when it is missing', () => {
+  test('binds badges and hydrates the definition when it is missing', async () => {
     applyEntitlementCreateEvent({
       entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
       kind: 'BADGE',
@@ -159,10 +194,13 @@ describe('applyEntitlementCreateEvent', () => {
     expect(getUserBadgeId('ttv-1')).toBe('badge-1');
     expect(getUserPaintId('ttv-1')).toBeUndefined();
     expect(getSevenTvUserIdForTwitchId('ttv-1')).toBe('stv-user-1');
-    expect(mockFetchUserCosmeticsByTwitchId.mock.calls).toEqual([['ttv-1']]);
+
+    await settleBackgroundFetches();
+
+    expect(mockGetUserCosmeticsGql.mock.calls).toEqual([['stv-user-1']]);
   });
 
-  test('does not refetch when the badge definition is already cached', () => {
+  test('does not refetch when the badge definition is already cached', async () => {
     addBadge(cachedBadge);
 
     applyEntitlementCreateEvent({
@@ -173,11 +211,29 @@ describe('applyEntitlementCreateEvent', () => {
       badgeId: 'badge-1',
     });
 
+    await settleBackgroundFetches();
+
     expect(getUserBadgeId('ttv-1')).toBe('badge-1');
-    expect(mockFetchUserCosmeticsByTwitchId).not.toHaveBeenCalled();
+    expect(mockGetUserCosmeticsGql).not.toHaveBeenCalled();
   });
 
-  test('binds style paint and badge on EMOTE_SET entitlements', () => {
+  test('binds style paint and badge on EMOTE_SET entitlements and refreshes personal emotes', async () => {
+    const oldPersonalEmote = createSevenTvEmote({ id: 'old-personal' });
+
+    const newPersonalEmote = createSevenTvEmote({
+      id: 'new-personal',
+      set_metadata: {
+        ...oldPersonalEmote.set_metadata,
+        setId: 'emote-set-1',
+      },
+    });
+
+    mockGetPersonalEmoteSet
+      .mockResolvedValueOnce([oldPersonalEmote])
+      .mockResolvedValueOnce([newPersonalEmote]);
+
+    await fetchUserPersonalEmotes('ttv-scummy', 'channel-1');
+
     const entitlement: EntitlementCreate = {
       id: 'entitlement-emote-set-1',
       kind: 0,
@@ -197,18 +253,15 @@ describe('applyEntitlementCreateEvent', () => {
       badgeId: 'badge-scummy',
     });
 
+    await settleBackgroundFetches();
+
     expect(getUserPaintId('ttv-scummy')).toBe('paint-1');
     expect(getUserBadgeId('ttv-scummy')).toBe('badge-scummy');
+    expect(mockGetUserCosmeticsGql.mock.calls).toEqual([['stv-user-1']]);
 
-    expect(mockFetchUserCosmeticsByTwitchId.mock.calls).toEqual([
-      ['ttv-scummy'],
-    ]);
-
-    // Resolving the personal emote set from an EMOTE_SET entitlement is a
-    // fire-and-forget side effect, so assert the dispatch itself here.
-    expect(mockHandlePersonalEmoteSetEntitlement.mock.calls).toEqual([
-      ['ttv-scummy', 'emote-set-1', 'channel-1'],
-    ]);
+    expect(
+      getUserPersonalEmotes('ttv-scummy', 'channel-1').map(emote => emote.id),
+    ).toEqual(['new-personal']);
   });
 });
 
@@ -228,9 +281,6 @@ describe('applyEntitlementResetEvent', () => {
 
     expect(getUserPaintId('ttv-1')).toBeUndefined();
     expect(getUserBadgeId('ttv-1')).toBeUndefined();
-    expect(mockRemoveUserCosmetics.mock.calls).toEqual([['ttv-1']]);
-    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
-    expect(mockRemoveUserBadge).not.toHaveBeenCalled();
   });
 
   test('clears reverse 7TV user links when entitlements reset', () => {
@@ -259,16 +309,14 @@ describe('applyEntitlementResetEvent', () => {
     });
 
     applyEntitlementResetEvent('stv-user-1');
-    mockRemoveUserPaint.mockClear();
-    mockRemoveUserBadge.mockClear();
+    bindPaintAndBadge();
 
     applyEntitlementDeleteEvent({
       entitlementId: 'entitlement-badge-1',
       ttvUserId: null,
     });
 
-    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
-    expect(mockRemoveUserBadge).not.toHaveBeenCalled();
+    expect(readBindings()).toEqual(rebound);
   });
 
   test('forgets every remembered entitlement id for a user when entitlements reset', () => {
@@ -289,8 +337,7 @@ describe('applyEntitlementResetEvent', () => {
     });
 
     applyEntitlementResetEvent('stv-user-1');
-    mockRemoveUserPaint.mockClear();
-    mockRemoveUserBadge.mockClear();
+    bindPaintAndBadge();
 
     applyEntitlementDeleteEvent({
       entitlementId: 'entitlement-1',
@@ -302,8 +349,7 @@ describe('applyEntitlementResetEvent', () => {
       ttvUserId: null,
     });
 
-    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
-    expect(mockRemoveUserBadge).not.toHaveBeenCalled();
+    expect(readBindings()).toEqual(rebound);
   });
 });
 
@@ -387,13 +433,14 @@ describe('applyEntitlementDeleteEvent', () => {
       badgeId: 'badge-1',
     });
 
+    setUserPaint('ttv-1', 'paint-1');
+
     applyEntitlementDeleteEvent({
       entitlementId: 'entitlement-badge-1',
       ttvUserId: 'ttv-1',
     });
 
-    expect(getUserBadgeId('ttv-1')).toBeUndefined();
-    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
+    expect(readBindings()).toEqual({ paintId: 'paint-1', badgeId: undefined });
   });
 
   test('clears only the badge binding when delete resolves the twitch user from a remembered entitlement id', () => {
@@ -405,13 +452,14 @@ describe('applyEntitlementDeleteEvent', () => {
       badgeId: 'badge-1',
     });
 
+    setUserPaint('ttv-1', 'paint-1');
+
     applyEntitlementDeleteEvent({
       entitlementId: 'entitlement-badge-1',
       ttvUserId: null,
     });
 
-    expect(getUserBadgeId('ttv-1')).toBeUndefined();
-    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
+    expect(readBindings()).toEqual({ paintId: 'paint-1', badgeId: undefined });
   });
 
   test('clears only the paint binding for a remembered paint entitlement delete', () => {
@@ -434,13 +482,19 @@ describe('applyEntitlementDeleteEvent', () => {
       badgeId: null,
     });
 
+    addBadge(cachedBadge);
+    applyEntitlementUpdateEvent({
+      ttvUserId: 'ttv-1',
+      paintId: null,
+      badgeId: 'badge-1',
+    });
+
     applyEntitlementDeleteEvent({
       entitlementId: 'entitlement-paint-1',
       ttvUserId: null,
     });
 
-    expect(getUserPaintId('ttv-1')).toBeUndefined();
-    expect(mockRemoveUserBadge).not.toHaveBeenCalled();
+    expect(readBindings()).toEqual({ paintId: undefined, badgeId: 'badge-1' });
   });
 
   // One entitlement past the cap evicts exactly entitlement-0; deriving the
@@ -465,8 +519,7 @@ describe('applyEntitlementDeleteEvent', () => {
       });
     }
 
-    mockRemoveUserPaint.mockClear();
-    mockRemoveUserBadge.mockClear();
+    setUserPaint('ttv-1', 'paint-1');
 
     // The evicted link can no longer resolve its Twitch user, so the delete is
     // a no-op.
@@ -475,8 +528,10 @@ describe('applyEntitlementDeleteEvent', () => {
       ttvUserId: null,
     });
 
-    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
-    expect(mockRemoveUserBadge).not.toHaveBeenCalled();
+    expect(readBindings()).toEqual({
+      paintId: 'paint-1',
+      badgeId: `badge-${OVER_CAP_INDEX}`,
+    });
 
     // The very next entitlement (the new oldest) is still remembered and does
     // clear the badge binding.
@@ -485,9 +540,7 @@ describe('applyEntitlementDeleteEvent', () => {
       ttvUserId: null,
     });
 
-    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
-    expect(mockRemoveUserBadge.mock.calls).toEqual([['ttv-1']]);
-    expect(getUserBadgeId('ttv-1')).toBeUndefined();
+    expect(readBindings()).toEqual({ paintId: 'paint-1', badgeId: undefined });
   });
 
   test('does not clear paint or badge when an evicted entitlement delete still has a twitch user id', () => {
@@ -505,8 +558,7 @@ describe('applyEntitlementDeleteEvent', () => {
       });
     }
 
-    mockRemoveUserPaint.mockClear();
-    mockRemoveUserBadge.mockClear();
+    setUserPaint('ttv-1', 'paint-1');
 
     applyEntitlementDeleteEvent({
       entitlementId: `entitlement-${EVICTED_ENTITLEMENT_INDEX}`,
@@ -515,9 +567,9 @@ describe('applyEntitlementDeleteEvent', () => {
 
     // Even with an explicit Twitch id, an evicted (unremembered) entitlement
     // delete leaves the bindings untouched.
-    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
-
-    expect(mockRemoveUserBadge).not.toHaveBeenCalled();
-    expect(getUserBadgeId('ttv-1')).toBe(`badge-${OVER_CAP_INDEX}`);
+    expect(readBindings()).toEqual({
+      paintId: 'paint-1',
+      badgeId: `badge-${OVER_CAP_INDEX}`,
+    });
   });
 });

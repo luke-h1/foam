@@ -3,111 +3,153 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import {
   createBadge,
   createChatMessage,
-  createEmoteData,
   createSevenTvEmote,
   createTwitchEmote,
 } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
 import { createScrollAnchor } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat-scroll.fixture';
 import { useChatMessageProcessing } from '@app/components/chat/hooks/use-chat-message-processing';
-import * as hydrateVisibleSevenTvAssetsModule from '@app/components/chat/util/hydrate-visible-seven-tv-assets/hydrate-visible-seven-tv-assets';
-import * as channelLoadActions from '@app/store/chat/actions/channel-load';
-import * as cosmeticsActions from '@app/store/chat/actions/cosmetics';
-import * as messagesActions from '@app/store/chat/actions/messages';
-import * as personalEmotesActions from '@app/store/chat/actions/personal-emotes';
-import * as userCosmeticsFetchActions from '@app/store/chat/actions/user-cosmetics-fetch';
-import { visibleAssetHydration } from '@app/store/chat/actions/visible-asset-hydration';
+import { userInfoFixture } from '@app/services/__fixtures__/twitch/user-info.fixture';
+import { bttvEmoteService } from '@app/services/bttv-emote-service';
+import { sevenTvService } from '@app/services/seven-tv-service';
+import { twitchBadgeService } from '@app/services/twitch-badge-service';
+import { twitchService } from '@app/services/twitch-service';
+import {
+  enrichedMessageIds,
+  storedMessage,
+  storedTokens,
+  type TokenSummary,
+} from '@app/store/chat/__tests__/__fixtures__/messages.fixture';
+import {
+  addBadge,
+  clearUserCosmeticsCache,
+  setUserBadge,
+} from '@app/store/chat/actions/cosmetics';
+import {
+  addMessage,
+  addMessages,
+  clearMessages,
+} from '@app/store/chat/actions/messages';
+import {
+  clearPersonalEmotesCache,
+  fetchUserPersonalEmotes,
+} from '@app/store/chat/actions/personal-emotes';
+import { clearFetchedCosmeticsUsers } from '@app/store/chat/actions/user-cosmetics-fetch';
+import {
+  clearVisibleAssetHydration,
+  visibleAssetHydration,
+} from '@app/store/chat/actions/visible-asset-hydration';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
+import {
+  type AnyChatMessageType,
+  makeEmptyEmoteData,
+  makeEmptyGlobalCacheData,
+} from '@app/store/chat/types/constants';
 import {
   getPreferences,
   replacePreferences,
 } from '@app/store/preference-store';
-import * as emoteProcessorModule from '@app/utils/chat/emote-processor';
-import * as extractEmotesFromTagModule from '@app/utils/chat/extract-emotes/extract-emotes-from-tag';
-import * as getCachedSharedChatBadgeContextModule from '@app/utils/chat/shared-chat-badges/get-cached-shared-chat-badge-context';
-import * as getMessageBadgesModule from '@app/utils/chat/shared-chat-badges/get-message-badges';
-import * as getSharedChatBadgeContextModule from '@app/utils/chat/shared-chat-badges/get-shared-chat-badge-context';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { logger } from '@app/utils/logger';
 
-// fetchUserPersonalEmotes/getUserPersonalEmotes are re-exported by
-// channelLoad.ts from personalEmotes.ts; babel compiles re-exports as
-// non-configurable getters, so the spy must target the source module.
-const mockFetchUserPersonalEmotes = jest
-  .spyOn(personalEmotesActions, 'fetchUserPersonalEmotes')
-  .mockResolvedValue([]);
+const channelId = 'channel-1';
 
-const mockGetUserPersonalEmotes = jest
-  .spyOn(personalEmotesActions, 'getUserPersonalEmotes')
-  .mockReturnValue([]);
+const channelEmote = createSevenTvEmote({
+  name: 'OMEGALUL',
+  url: 'https://cdn.example.test/omegalul.webp',
+});
 
-const mockGetCurrentEmoteData = jest.spyOn(
-  channelLoadActions,
-  'getCurrentEmoteData',
-);
+const personalEmote = createSevenTvEmote({
+  id: 'personal-1',
+  name: 'Personal',
+  original_name: 'Personal',
+  url: 'https://cdn.example.test/personal.webp',
+});
 
-const mockGetUserBadge = jest.spyOn(cosmeticsActions, 'getUserBadge');
-const mockUpdateMessages = jest.spyOn(messagesActions, 'updateMessages');
+const subscriberEmote = createTwitchEmote({
+  id: 'subscriber-1',
+  name: 'SubOnly',
+  original_name: 'SubOnly',
+  site: 'Twitch Subscriber',
+  url: 'https://cdn.example.test/subonly.webp',
+});
 
-const mockFetchUserCosmetics = jest
-  .spyOn(userCosmeticsFetchActions, 'fetchUserCosmetics')
-  .mockResolvedValue(undefined);
+const subscriberBadge = createBadge({
+  id: '12',
+  set: 'subscriber',
+  url: 'https://cdn.example.test/sub-12.png',
+});
 
-const mockProcessEmotesWorklet = jest
-  .spyOn(emoteProcessorModule, 'processEmotesWorklet')
-  .mockImplementation((params: { inputString: string }) => [
-    { type: 'text', content: `processed:${params.inputString}` },
-  ]);
+const sevenTvBadge: SanitisedBadgeSet = {
+  id: '7tv-badge-1',
+  set: '7tv-badge-1',
+  type: '7TV Badge',
+  title: '7TV Subscriber',
+  url: 'https://cdn.7tv.app/badge/7tv-badge-1/4x.webp',
+  provider: '7tv',
+};
 
-const mockExtractEmotesFromTag = jest
-  .spyOn(extractEmotesFromTagModule, 'extractEmotesFromTag')
-  .mockReturnValue([]);
+const sharedChatSourceBadge: SanitisedBadgeSet = {
+  id: 'source-room',
+  set: 'shared-chat-source',
+  type: 'Twitch Shared Chat Source',
+  title: 'Shared chat: SourceChannel',
+  url: 'https://cdn.example.test/source.png',
+  owner_username: 'sourcechannel',
+  provider: 'twitch',
+};
 
-const mockHydrateVisibleSevenTvAssets = jest
-  .spyOn(hydrateVisibleSevenTvAssetsModule, 'hydrateVisibleSevenTvAssets')
-  .mockResolvedValue(false);
+const resolvedOmegalul: TokenSummary = {
+  type: 'emote',
+  content: 'OMEGALUL',
+  url: 'https://cdn.example.test/omegalul.webp',
+};
 
-const mockGetCachedSharedChatBadgeContext = jest.spyOn(
-  getCachedSharedChatBadgeContextModule,
-  'getCachedSharedChatBadgeContext',
-);
+const resolvedPersonal: TokenSummary = {
+  type: 'emote',
+  content: 'Personal',
+  url: 'https://cdn.example.test/personal.webp',
+};
 
-const mockGetMessageBadges = jest
-  .spyOn(getMessageBadgesModule, 'getMessageBadges')
-  .mockReturnValue([]);
+const space: TokenSummary = { type: 'text', content: ' ' };
 
-const mockGetSharedChatBadgeContext = jest
-  .spyOn(getSharedChatBadgeContextModule, 'getSharedChatBadgeContext')
-  .mockResolvedValue({
-    sourceBadge: null,
-    sourceChannelBadges: [],
+function seedChannelCache() {
+  chatStore$.persisted.globalCaches.set(makeEmptyGlobalCacheData());
+
+  chatStore$.persisted.channelCaches.set({
+    [channelId]: {
+      ...makeEmptyEmoteData(),
+      sevenTvChannelEmotes: [channelEmote],
+      twitchSubscriberEmotes: [subscriberEmote],
+      twitchChannelBadges: [subscriberBadge],
+    },
   });
+}
 
-jest.spyOn(logger.chat, 'debug').mockImplementation(() => {});
-jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
+async function seedPersonalEmotes(twitchUserId: string) {
+  getPersonalEmoteSet.mockResolvedValueOnce([personalEmote]);
+  await fetchUserPersonalEmotes(twitchUserId, channelId);
+}
+
+let getPersonalEmoteSet: jest.SpiedFunction<
+  typeof sevenTvService.getPersonalEmoteSet
+>;
 
 function renderMessageProcessing() {
-  const handleNewMessage = jest.fn();
   const maintainBottomAfterContentChange = jest.fn();
 
-  const messages = [
-    createChatMessage({
-      tags: {
-        id: 'stored-1',
-      },
-      text: 'stored message',
-    }),
-  ];
-
-  const isAtBottomRef = { current: true };
+  const handleNewMessage = jest.fn(
+    (message: AnyChatMessageType, _options?: { countUnread?: boolean }) => {
+      addMessage(message);
+    },
+  );
 
   const hook = renderHook(() =>
     useChatMessageProcessing({
-      channelId: 'channel-1',
+      channelId,
       handleNewMessage,
-      messages$: {
-        peek: jest.fn(() => messages),
-      },
+      messages$: chatStore$.messages,
       scrollAnchor: createScrollAnchor({
-        isAtBottomRef,
+        isAtBottomRef: { current: true },
         maintainBottomAfterContentChange,
       }),
       show7TvEmotes: true,
@@ -116,34 +158,31 @@ function renderMessageProcessing() {
     }),
   );
 
-  return {
-    handleNewMessage,
-    hook,
-    maintainBottomAfterContentChange,
-    messages,
-    isAtBottomRef,
-  };
+  return { handleNewMessage, hook, maintainBottomAfterContentChange };
+}
+
+async function runHydrationPass() {
+  for (let step = 0; step < 10; step += 1) {
+    // eslint-disable-next-line react-doctor/async-await-in-loop -- each step must settle before the next timer advance
+    await act(async () => {
+      jest.advanceTimersByTime(150);
+      await Promise.resolve();
+    });
+  }
 }
 
 describe('useChatMessageProcessing', () => {
-  const sevenTvEmote = createSevenTvEmote();
-
-  const personalEmote = createSevenTvEmote({
-    id: 'personal-1',
-    name: 'Personal',
-    site: '7TV Channel',
-  });
-
-  const taggedSubscriberEmote = createTwitchEmote({
-    id: 'tagged-1',
-    name: 'SubTagged',
-    site: 'Twitch Subscriber',
-  });
-
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.restoreAllMocks();
     jest.useRealTimers();
+    clearMessages();
+    clearPersonalEmotesCache();
+    clearUserCosmeticsCache();
+    clearFetchedCosmeticsUsers();
+    clearVisibleAssetHydration();
     chatStore$.personalEmotesVersion.set(0);
+    chatStore$.currentChannelId.set(null);
+    chatStore$.emojis.set([]);
 
     replacePreferences({
       ...getPreferences(),
@@ -152,33 +191,30 @@ describe('useChatMessageProcessing', () => {
       show7tvBadges: true,
     });
 
-    mockGetCurrentEmoteData.mockReturnValue(
-      createEmoteData({
-        sevenTvChannelEmotes: [sevenTvEmote],
-        twitchSubscriberEmotes: [
-          createTwitchEmote({
-            id: 'subscriber-1',
-            name: 'SubOnly',
-            site: 'Twitch Subscriber',
-          }),
-        ],
-      }),
-    );
+    seedChannelCache();
 
-    mockGetUserPersonalEmotes.mockReturnValue([personalEmote]);
-    mockExtractEmotesFromTag.mockReturnValue([taggedSubscriberEmote]);
+    jest.spyOn(logger.chat, 'debug').mockImplementation(() => {});
 
-    chatStore$.emojis.set([
-      createSevenTvEmote({
-        id: 'emoji-1',
-        name: '😀',
-        site: '7TV Channel',
-      }),
-    ]);
+    jest
+      .spyOn(bttvEmoteService, 'getSanitisedGlobalBadges')
+      .mockResolvedValue([]);
 
-    mockGetMessageBadges.mockReturnValue([
-      createBadge({ id: '12', url: 'badge.png' }),
-    ]);
+    getPersonalEmoteSet = jest
+      .spyOn(sevenTvService, 'getPersonalEmoteSet')
+      .mockResolvedValue([]);
+
+    jest.spyOn(sevenTvService, 'get7tvUserId').mockResolvedValue('');
+
+    jest.spyOn(twitchService, 'getUser').mockResolvedValue({
+      ...userInfoFixture,
+      login: 'sourcechannel',
+      display_name: 'SourceChannel',
+      profile_image_url: 'https://cdn.example.test/source.png',
+    });
+
+    jest
+      .spyOn(twitchBadgeService, 'listSanitisedChannelBadges')
+      .mockResolvedValue([]);
   });
 
   afterEach(() => {
@@ -186,45 +222,35 @@ describe('useChatMessageProcessing', () => {
   });
 
   test('processes a live IRC message with personal, tagged, and subscriber emotes', async () => {
-    mockGetCachedSharedChatBadgeContext.mockReturnValue({
-      isComplete: false,
-      sourceBadge: createBadge({
-        set: 'shared-chat-source',
-        id: 'source',
-        url: 's.png',
-        type: 'Twitch Channel Badge',
-        title: 'Shared chat source',
-      }),
-      sourceChannelBadges: [],
-    });
+    await seedPersonalEmotes('viewer-id');
 
-    mockGetSharedChatBadgeContext.mockResolvedValue({
-      sourceBadge: createBadge({
-        set: 'shared-chat-source',
-        id: 'updated',
-        url: 'u.png',
-        type: 'Twitch Channel Badge',
-        title: 'Shared chat source',
-      }),
-      sourceChannelBadges: [],
-    });
+    const sourceSubscriberBadge: SanitisedBadgeSet = {
+      ...subscriberBadge,
+      url: 'https://cdn.example.test/source-sub-12.png',
+    };
+
+    jest
+      .spyOn(twitchBadgeService, 'listSanitisedChannelBadges')
+      .mockResolvedValue([sourceSubscriberBadge]);
 
     const baseMessage = createChatMessage({
       tags: {
+        badges: 'subscriber/12',
         emotes: '25:0-4',
         id: 'msg-1',
         login: 'viewer',
         'display-name': 'Viewer',
+        'source-room-id': 'source-room',
         'user-id': 'viewer-id',
       },
-      text: 'Kappa hello',
+      text: 'Kappa Personal SubOnly OMEGALUL',
     });
 
     const { handleNewMessage, hook } = renderMessageProcessing();
 
     act(() => {
       hook.result.current.processMessageEmotes(
-        'Kappa hello',
+        'Kappa Personal SubOnly OMEGALUL',
         baseMessage.userstate,
         baseMessage,
         'viewer-id',
@@ -232,58 +258,50 @@ describe('useChatMessageProcessing', () => {
       );
     });
 
-    const processorParams = mockProcessEmotesWorklet.mock.calls[0]?.[0];
-
-    expect({
-      inputString: processorParams?.inputString,
-      sevenTvPersonalEmotes: processorParams?.sevenTvPersonalEmotes,
-      twitchSubscriberEmotes: processorParams?.twitchSubscriberEmotes,
-      userstate: processorParams?.userstate,
-    }).toEqual({
-      inputString: 'Kappa hello',
-      sevenTvPersonalEmotes: [personalEmote],
-      twitchSubscriberEmotes: [
-        taggedSubscriberEmote,
-        createTwitchEmote({
-          id: 'subscriber-1',
-          name: 'SubOnly',
-          site: 'Twitch Subscriber',
-        }),
-      ],
-      userstate: baseMessage.userstate,
+    expect(handleNewMessage.mock.calls[0]?.[1]).toEqual({
+      countUnread: false,
     });
 
-    expect(handleNewMessage.mock.calls[0]).toEqual([
-      {
-        ...baseMessage,
-        badges: [createBadge({ id: '12', url: 'badge.png' })],
-        message: [{ type: 'text', content: 'processed:Kappa hello' }],
-      },
-      { countUnread: false },
-    ]);
+    expect({
+      tokens: storedTokens('msg-1'),
+      badges: storedMessage('msg-1').badges,
+    }).toEqual({
+      tokens: [
+        {
+          type: 'emote',
+          content: 'Kappa',
+          url: 'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0',
+        },
+        space,
+        resolvedPersonal,
+        space,
+        {
+          type: 'emote',
+          content: 'SubOnly',
+          url: 'https://cdn.example.test/subonly.webp',
+        },
+        space,
+        resolvedOmegalul,
+      ],
+      badges: [subscriberBadge],
+    });
 
     await waitFor(() => {
-      expect(mockUpdateMessages.mock.calls[0]?.[0]).toEqual([
-        {
-          messageId: 'msg-1',
-          messageNonce: 'msg-1',
-          updates: {
-            badges: [createBadge({ id: '12', url: 'badge.png' })],
-          },
-        },
+      expect(storedMessage('msg-1').badges).toEqual<SanitisedBadgeSet[]>([
+        sharedChatSourceBadge,
+        sourceSubscriberBadge,
       ]);
     });
   });
 
   test('falls back to the base message when no channel emote data is available', () => {
-    mockGetCurrentEmoteData.mockReturnValue(createEmoteData());
-    chatStore$.emojis.set([]);
-    const baseMessage = createChatMessage();
+    chatStore$.persisted.channelCaches.set({});
+    const baseMessage = createChatMessage({ text: 'hello OMEGALUL' });
     const { handleNewMessage, hook } = renderMessageProcessing();
 
     act(() => {
       hook.result.current.processMessageEmotes(
-        'hello',
+        'hello OMEGALUL',
         baseMessage.userstate,
         baseMessage,
       );
@@ -293,21 +311,23 @@ describe('useChatMessageProcessing', () => {
       baseMessage,
       { countUnread: true },
     ]);
-
-    expect(mockProcessEmotesWorklet).not.toHaveBeenCalled();
   });
 
   test('debounces visible message hydration and maintains bottom anchoring when visible messages are reprocessed', async () => {
+    await seedPersonalEmotes('visible-user');
     jest.useFakeTimers();
-    mockHydrateVisibleSevenTvAssets.mockResolvedValue(true);
 
     const visibleMessage = createChatMessage({
-      tags: {
-        id: 'visible-1',
-        'user-id': 'visible-user',
-      },
-      text: 'visible OMEGALUL',
+      tags: { id: 'visible-1', 'user-id': 'visible-user' },
+      text: 'visible Personal',
     });
+
+    const otherMessage = createChatMessage({
+      tags: { id: 'visible-2', 'user-id': 'other-user' },
+      text: 'other Personal',
+    });
+
+    addMessages([visibleMessage, otherMessage]);
 
     const { hook, maintainBottomAfterContentChange } =
       renderMessageProcessing();
@@ -317,85 +337,67 @@ describe('useChatMessageProcessing', () => {
 
       hook.result.current.handleViewableMessagesChange([
         visibleMessage,
-        createChatMessage({
-          tags: {
-            id: 'visible-2',
-          },
-        }),
+        otherMessage,
       ]);
     });
 
-    expect(mockHydrateVisibleSevenTvAssets).not.toHaveBeenCalled();
+    expect(storedTokens('visible-1')).toEqual<TokenSummary[]>([
+      { type: 'text', content: 'visible Personal' },
+    ]);
 
-    await act(async () => {
-      jest.advanceTimersByTime(150);
-      await Promise.resolve();
-    });
+    await runHydrationPass();
 
-    const hydrateParams = mockHydrateVisibleSevenTvAssets.mock.calls[0]?.[0];
+    expect(maintainBottomAfterContentChange).toHaveBeenCalledTimes(1);
 
     expect({
-      channelId: hydrateParams?.channelId,
-      fetchUserCosmetics: hydrateParams?.fetchUserCosmetics,
-      hydrateCosmetics: hydrateParams?.hydrateCosmetics,
-      hydratePersonalEmotes: hydrateParams?.hydratePersonalEmotes,
-      messages: hydrateParams?.messages.map(message => message.message_id),
+      visible: storedTokens('visible-1'),
+      other: storedTokens('visible-2'),
+      pendingMessages: visibleAssetHydration.pendingMessages,
     }).toEqual({
-      channelId: 'channel-1',
-      fetchUserCosmetics: mockFetchUserCosmetics,
-      hydrateCosmetics: true,
-      hydratePersonalEmotes: true,
-      messages: ['visible-1', 'visible-2'],
+      visible: [{ type: 'text', content: 'visible' }, space, resolvedPersonal],
+      other: [{ type: 'text', content: 'other Personal' }],
+      pendingMessages: [],
     });
-
-    expect(visibleAssetHydration.pendingMessages).toEqual([]);
-    expect(maintainBottomAfterContentChange).toHaveBeenCalledTimes(1);
   });
 
   test('re-hydrates the currently visible messages when the personal emotes version bumps', async () => {
     jest.useFakeTimers();
 
     const visibleMessage = createChatMessage({
-      tags: {
-        id: 'visible-1',
-        'user-id': 'visible-user',
-      },
-      text: 'visible OMEGALUL',
+      tags: { id: 'visible-1', 'user-id': 'late-user' },
+      text: 'visible Personal',
     });
 
+    addMessages([visibleMessage]);
     const { hook } = renderMessageProcessing();
 
     act(() => {
       hook.result.current.handleViewableMessagesChange([visibleMessage]);
     });
 
+    await runHydrationPass();
+
+    expect(getPersonalEmoteSet.mock.calls).toEqual([['late-user']]);
+
+    expect(storedTokens('visible-1')).toEqual<TokenSummary[]>([
+      { type: 'text', content: 'visible Personal' },
+    ]);
+
+    clearPersonalEmotesCache();
+
     await act(async () => {
-      jest.advanceTimersByTime(150);
-      await Promise.resolve();
-    });
-
-    expect(mockHydrateVisibleSevenTvAssets).toHaveBeenCalledTimes(1);
-    visibleAssetHydration.hydratedMessageKeys.add('stale-hydration-key');
-
-    act(() => {
-      chatStore$.personalEmotesVersion.set(1);
-      hook.rerender(undefined);
+      await seedPersonalEmotes('late-user');
     });
 
     expect(visibleAssetHydration.hydratedMessageKeys).toEqual(new Set());
 
-    await act(async () => {
-      jest.advanceTimersByTime(150);
-      await Promise.resolve();
-    });
+    await runHydrationPass();
 
-    expect(mockHydrateVisibleSevenTvAssets).toHaveBeenCalledTimes(2);
-
-    expect(
-      mockHydrateVisibleSevenTvAssets.mock.calls[1]?.[0]?.messages.map(
-        message => message.message_id,
-      ),
-    ).toEqual(['visible-1']);
+    expect(storedTokens('visible-1')).toEqual<TokenSummary[]>([
+      { type: 'text', content: 'visible' },
+      space,
+      resolvedPersonal,
+    ]);
   });
 
   test('does not schedule a hydration pass for the mount-time personal emotes version', () => {
@@ -403,31 +405,29 @@ describe('useChatMessageProcessing', () => {
     renderMessageProcessing();
 
     expect(visibleAssetHydration.timer).toBeNull();
-
-    jest.advanceTimersByTime(150);
-
-    expect(mockHydrateVisibleSevenTvAssets).not.toHaveBeenCalled();
   });
 
-  test('reprocessAllMessages rewrites the buffered store snapshot through updateMessages', () => {
+  test('reprocessAllMessages rewrites the stored messages with the current emotes', () => {
+    addMessages([
+      createChatMessage({
+        tags: { id: 'stored-1', badges: 'subscriber/12' },
+        text: 'stored OMEGALUL',
+      }),
+    ]);
+
     const { hook } = renderMessageProcessing();
 
     act(() => {
       hook.result.current.reprocessAllMessages();
     });
 
-    expect(mockUpdateMessages).toHaveBeenCalledTimes(1);
-
-    expect(mockUpdateMessages).toHaveBeenCalledWith([
-      {
-        messageId: 'stored-1',
-        messageNonce: 'stored-1',
-        updates: {
-          message: [{ type: 'text', content: 'processed:stored message' }],
-          badges: [],
-        },
-      },
-    ]);
+    expect({
+      tokens: storedTokens('stored-1'),
+      badges: storedMessage('stored-1').badges,
+    }).toEqual({
+      tokens: [{ type: 'text', content: 'stored' }, space, resolvedOmegalul],
+      badges: [subscriberBadge],
+    });
   });
 
   test('a channel switch cancels an in-flight reprocess walk', () => {
@@ -436,31 +436,35 @@ describe('useChatMessageProcessing', () => {
     const messages = Array.from({ length: 8 }, (_, index) =>
       createChatMessage({
         tags: { id: `stored-${index}` },
-        text: `stored message ${index}`,
+        text: `stored OMEGALUL ${index}`,
       }),
     );
 
+    addMessages(messages);
+
     const hook = renderHook(
-      ({ channelId }: { channelId: string }) =>
+      ({ channelId: currentChannelId }: { channelId: string }) =>
         useChatMessageProcessing({
-          channelId,
+          channelId: currentChannelId,
           handleNewMessage: jest.fn(),
-          messages$: {
-            peek: () => messages,
-          },
+          messages$: chatStore$.messages,
           scrollAnchor: createScrollAnchor(),
           show7TvEmotes: true,
           show7tvBadges: true,
           userLogin: 'viewer',
         }),
-      { initialProps: { channelId: 'channel-1' } },
+      { initialProps: { channelId } },
     );
 
     act(() => {
       hook.result.current.reprocessAllMessages();
     });
 
-    expect(mockUpdateMessages).toHaveBeenCalledTimes(1);
+    const firstBatchIds = messages
+      .slice(0, 6)
+      .map(message => message.message_id);
+
+    expect(enrichedMessageIds()).toEqual(firstBatchIds);
 
     hook.rerender({ channelId: 'channel-2' });
 
@@ -468,44 +472,47 @@ describe('useChatMessageProcessing', () => {
       jest.advanceTimersByTime(1000);
     });
 
-    expect(mockUpdateMessages).toHaveBeenCalledTimes(1);
+    expect(enrichedMessageIds()).toEqual(firstBatchIds);
   });
 
-  test('passes hydration dependencies used by visible asset loading', async () => {
+  test('hydrates a visible row with a fetched personal emote and a cached 7TV badge', async () => {
     jest.useFakeTimers();
 
-    const visibleMessage = createChatMessage({
-      tags: {
-        id: 'visible-deps',
-      },
+    getPersonalEmoteSet.mockImplementation(async twitchUserId =>
+      twitchUserId === 'emote-user' ? [personalEmote] : [],
+    );
+
+    addBadge(sevenTvBadge);
+    setUserBadge('badge-user', sevenTvBadge.id);
+
+    const emoteMessage = createChatMessage({
+      tags: { id: 'emote-row', 'user-id': 'emote-user' },
+      text: 'Personal',
     });
 
+    const badgeMessage = createChatMessage({
+      tags: { id: 'badge-row', 'user-id': 'badge-user' },
+      text: 'hello',
+    });
+
+    addMessages([emoteMessage, badgeMessage]);
     const { hook } = renderMessageProcessing();
 
     act(() => {
-      hook.result.current.handleViewableMessagesChange([visibleMessage]);
+      hook.result.current.handleViewableMessagesChange([
+        emoteMessage,
+        badgeMessage,
+      ]);
     });
 
-    await act(async () => {
-      jest.advanceTimersByTime(150);
-      await Promise.resolve();
-    });
-
-    const hydrateParams = mockHydrateVisibleSevenTvAssets.mock.calls[0]?.[0];
+    await runHydrationPass();
 
     expect({
-      fetchUserPersonalEmotes: hydrateParams?.fetchUserPersonalEmotes,
-      getUserBadge: hydrateParams?.getUserBadge('user-1'),
-      getUserPersonalEmotes: hydrateParams?.getUserPersonalEmotes(
-        'user-1',
-        'channel-1',
-      ),
+      emoteRow: storedTokens('emote-row'),
+      badgeRowBadges: storedMessage('badge-row').badges,
     }).toEqual({
-      fetchUserPersonalEmotes: mockFetchUserPersonalEmotes,
-      getUserBadge: null,
-      getUserPersonalEmotes: [personalEmote],
+      emoteRow: [resolvedPersonal],
+      badgeRowBadges: [sevenTvBadge],
     });
-
-    expect(mockGetUserBadge).toHaveBeenCalledWith('user-1');
   });
 });

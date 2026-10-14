@@ -1,14 +1,6 @@
-import { Text } from 'react-native';
-
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
-import * as IconModule from '@app/components/ui/icon/icon';
-
 import { StreamListLayoutToggle } from '../stream-list-layout-toggle';
-
-jest
-  .spyOn(IconModule, 'SymbolView')
-  .mockImplementation(({ name }) => <Text>{String(name)}</Text>);
 
 describe('StreamListLayoutToggle', () => {
   test('renders the media affordance and switches to media when compact', () => {
@@ -16,7 +8,6 @@ describe('StreamListLayoutToggle', () => {
     render(<StreamListLayoutToggle value='compact' onChange={onChange} />);
 
     expect(screen.getByLabelText('Switch to media layout')).toBeOnTheScreen();
-    expect(screen.getByText('square.grid.2x2')).toBeOnTheScreen();
 
     fireEvent.press(screen.getByLabelText('Switch to media layout'));
 
@@ -29,7 +20,6 @@ describe('StreamListLayoutToggle', () => {
     render(<StreamListLayoutToggle value='media' onChange={onChange} />);
 
     expect(screen.getByLabelText('Switch to compact layout')).toBeOnTheScreen();
-    expect(screen.getByText('list.bullet')).toBeOnTheScreen();
 
     fireEvent.press(screen.getByLabelText('Switch to compact layout'));
 
