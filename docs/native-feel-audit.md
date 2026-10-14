@@ -162,3 +162,25 @@ measurement, and anything left out and why.
   scroll cost can only go down.
 - **Not adopted:** a fully native press view like Rainbow's. Row 8 measures
   whether the remaining JavaScript hop on press-in matters.
+
+### Layout filter in the tab headers
+
+Not a table row. Added on request, after rows 1 and 2.
+
+- **Changed:** on iOS the Compact and Media filter on Top and Following is a
+  `Stack.Toolbar.Menu`, so it is a real `UIBarButtonItem` with a `UIMenu`.
+  It was a SwiftUI `Host` fixed at 34 by 34 points inside a React header
+  item. The bar button now gets the system glass, size and menu animation,
+  and the menu shows a check mark on the current layout. On Android the
+  toggle is a bare 24 dp icon in a 48 dp target, like a Material top app bar
+  action. It was an outlined circle, which is an iOS shape.
+- **Moved:** each tab page renders `StreamListLayoutMenu`, not the layout's
+  `headerRight`. `Stack.Toolbar` sets the header of the screen it renders in,
+  so it has to live in the page. Following renders it in every state, as the
+  layout did.
+- **Checked:** on the iOS 26 simulator the menu opens from the bar button,
+  Media switches both lists, and the Streams and Categories control still
+  sits in the title. On the Android emulator the icon sits flush in the bar.
+- **Not adopted:** a change to the Streams and Categories control. It is
+  already a native `UISegmentedControl` on iOS and a Material segmented
+  button on Android.

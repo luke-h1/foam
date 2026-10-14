@@ -1,6 +1,5 @@
 import { Stack } from 'expo-router';
 
-import { StreamListLayoutMenu } from '@app/components/stream-list-layout-toggle/stream-list-layout-menu';
 import {
   nativeStackScreenOptions,
   nativeStackTabRootScreenOptions,
@@ -14,7 +13,6 @@ export default function FollowingLayout() {
         options={{
           title: 'Following',
           ...nativeStackTabRootScreenOptions,
-          headerRight: () => <StreamListLayoutMenu />,
         }}
       />
     </Stack>
