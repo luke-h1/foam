@@ -1,67 +1,60 @@
-import { PropsWithChildren, type Ref, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { EaseView } from 'react-native-ease';
-import type { PressableProps } from 'react-native-gesture-handler';
+import { StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
+import Animated, {
+  interpolate,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
-import { motion } from '@app/styles/motion';
+import { pressAnimation } from '@app/styles/motion';
 
-const isAndroid = process.env.EXPO_OS === 'android';
+import type { PressableAreaProps } from './pressable-area.types';
 
 /**
- * `feedback='highlight'` fills the row background while pressed instead of
- * dimming the content; use it for full-bleed list rows.
+ * The press lives in a shared value, not in React state. List rows use this,
+ * and a press must not re-render the row.
  */
 export function PressableArea({
   ref,
   children,
   onPressIn,
   onPressOut,
-  style,
-  android_ripple,
   feedback = 'dim',
   ...rest
-}: PropsWithChildren<PressableProps> & {
-  ref?: Ref<View>;
-  feedback?: 'dim' | 'highlight';
-}) {
-  const [pressed, setPressed] = useState(false);
-  const iosPressed = pressed && !isAndroid;
+}: PressableAreaProps) {
+  const pressed = useSharedValue(0);
+
+  const feedbackStyle = useAnimatedStyle(() =>
+    feedback === 'highlight'
+      ? {
+          backgroundColor: interpolateColor(
+            pressed.get(),
+            [0, 1],
+            ['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0.08)'],
+          ),
+        }
+      : { opacity: interpolate(pressed.get(), [0, 1], [1, 0.75]) },
+  );
 
   return (
     <Pressable
       accessibilityRole='button'
-      android_ripple={
-        android_ripple ??
-        (isAndroid ? { color: 'rgba(255, 255, 255, 0.12)' } : undefined)
-      }
       {...rest}
       ref={ref}
-      style={style}
       onPressIn={e => {
-        setPressed(true);
+        pressed.set(withTiming(1, pressAnimation));
         onPressIn?.(e);
       }}
       onPressOut={e => {
-        setPressed(false);
+        pressed.set(withTiming(0, pressAnimation));
         onPressOut?.(e);
       }}
     >
-      <EaseView
-        animate={
-          feedback === 'highlight'
-            ? {
-                backgroundColor: iosPressed
-                  ? 'rgba(255, 255, 255, 0.08)'
-                  : 'rgba(255, 255, 255, 0)',
-              }
-            : { opacity: iosPressed ? 0.75 : 1 }
-        }
-        transition={{ type: 'timing', duration: motion.instant }}
-        style={styles.pressable}
-      >
+      <Animated.View style={[styles.pressable, feedbackStyle]}>
         {children}
-      </EaseView>
+      </Animated.View>
     </Pressable>
   );
 }

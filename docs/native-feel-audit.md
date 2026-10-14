@@ -116,3 +116,49 @@ or high risk to chat or playback come last, whatever their score.
 
 Add one note per primitive as it lands: what changed, the before and after
 measurement, and anything left out and why.
+
+### 1. Press timing
+
+- **Changed:** `PressablesConfig` now passes `pressAnimation`
+  (`src/styles/motion.ts`): 110 ms (`motion.instant`) on the strong ease-out
+  curve. Before this, `pressto` used its default of 250 ms on the CSS `ease`
+  curve. Every `Button` and `PressableScale` picks this up.
+- **Measured:** the share of the press-in scale shown after touch down,
+  solved from the two Bézier curves.
+
+  | Time after touch down | Before | After |
+  | --------------------- | ------ | ----- |
+  | 16 ms (first frame)   | 5%     | 54%   |
+  | 33 ms                 | 15%    | 84%   |
+  | 50 ms                 | 30%    | 95%   |
+  | 100 ms (tap lifts)    | 68%    | 100%  |
+
+- **Not adopted:** Rainbow's deeper scales (0.86 on buttons, 0.96 on rows).
+  `DESIGN.md` keeps one press scale, `motion.pressMinScale` (0.97), and only
+  the timing was out of line with it.
+
+### 2. Row press state
+
+- **Changed:** `PressableArea` keeps the press in a Reanimated shared value on
+  iOS and web, and derives the dim or highlight from it with the
+  `pressAnimation` timing. A new `pressable-area.android.tsx` keeps only the
+  Material ripple. Android used to call `setState` on every press and then
+  show nothing with it. The props live in `pressable-area.types.ts`, so both
+  files share one contract.
+- **Measured:** React renders of `PressableArea` for one press in and press
+  out (`__tests__/pressable-area.test.tsx`, which now guards this).
+
+  | Feedback    | Before | After |
+  | ----------- | ------ | ----- |
+  | `dim`       | 2      | 0     |
+  | `highlight` | 2      | 0     |
+
+  On the iOS 26 simulator the highlight still shows on a held row in
+  Following, and the press still opens the stream.
+
+- **Still to measure:** a Top list scroll on a release build. A dev-mode
+  profile on the simulator was too noisy to separate one hook from the card
+  content. Android drops a view animation and a state hook per row, so its
+  scroll cost can only go down.
+- **Not adopted:** a fully native press view like Rainbow's. Row 8 measures
+  whether the remaining JavaScript hop on press-in matters.
