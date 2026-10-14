@@ -59,19 +59,15 @@ export function resolveMessageEmoteParts({
       ? emoteData.twitchSubscriberEmotes
       : [];
 
-  // Keep the cached tagged-emotes array's identity when there's nothing to
-  // merge - a fresh array here missed the WeakMap content-id interning.
+  // Keep the cached tagged-emotes array's identity when there is nothing to
+  // merge. A fresh array would miss the WeakMap content-id interning.
   let scopedTwitchSubscriberEmotes = twitchSubscriberEmotes;
 
   if (twitchTaggedSubscriberEmotes.length > 0) {
-    if (twitchSubscriberEmotes.length > 0) {
-      scopedTwitchSubscriberEmotes = [
-        ...twitchTaggedSubscriberEmotes,
-        ...twitchSubscriberEmotes,
-      ];
-    } else {
-      scopedTwitchSubscriberEmotes = twitchTaggedSubscriberEmotes;
-    }
+    scopedTwitchSubscriberEmotes =
+      twitchSubscriberEmotes.length > 0
+        ? [...twitchTaggedSubscriberEmotes, ...twitchSubscriberEmotes]
+        : twitchTaggedSubscriberEmotes;
   }
 
   const tokens = processEmotesWorklet({

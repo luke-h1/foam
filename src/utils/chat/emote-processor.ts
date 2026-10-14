@@ -47,14 +47,6 @@ type EmoteCollection = {
 let lastBaseKeyInputs: SanitisedEmote[][] | null = null;
 let lastBaseKey = '';
 
-const createCacheKey = (
-  inputString: string,
-  baseCollectionKey: string,
-  scopedEmoteKey: string,
-): string => {
-  return `${baseCollectionKey}:${scopedEmoteKey}:${inputString}`;
-};
-
 function getBaseCollectionKey(
   emojiEmotes: SanitisedEmote[],
   sevenTvGlobalEmotes: SanitisedEmote[],
@@ -505,11 +497,7 @@ export const processEmotesWorklet = (
     twitchSubscriberEmotes,
   );
 
-  const cacheKey = createCacheKey(
-    cleanInput,
-    baseCollection.cacheKey,
-    scopedEmoteKey,
-  );
+  const cacheKey = `${baseCollection.cacheKey}:${scopedEmoteKey}:${cleanInput}`;
 
   const cached = cache.get(cacheKey);
 
@@ -549,11 +537,9 @@ export const processEmotesWorklet = (
     }
 
     if (word.startsWith('@')) {
-      const mentionText = word.endsWith(' ') ? word.trimEnd() : word;
-
       result.push({
         type: 'mention',
-        content: mentionText,
+        content: word,
       });
 
       i += 1;

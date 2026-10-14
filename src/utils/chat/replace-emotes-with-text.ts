@@ -2,10 +2,6 @@ import { MessageToken } from './message-token';
 import { getMessageTokenText } from './message-token-content';
 
 export function replaceEmotesWithText(tokens: MessageToken[]): string {
-  if (tokens.length === 0) {
-    return '';
-  }
-
   // eslint-disable-next-line @typescript-eslint/no-base-to-string
   return tokens
     .map(token => {

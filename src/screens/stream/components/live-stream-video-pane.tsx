@@ -34,7 +34,7 @@ type LiveStreamVideoPaneProps = {
   playerRef: React.RefObject<StreamPlayerRef | null>;
   posterUrl: string | undefined;
   profileImageUrl: string | undefined;
-  resolvedChannelLogin: string | undefined;
+  resolvedChannelLogin: string;
   shouldRenderStreamPlayer: boolean;
   sleepTimerActive: boolean;
   streamInfo: React.ComponentProps<typeof StreamPlayer>['streamInfo'];
@@ -137,7 +137,7 @@ export function LiveStreamVideoPane({
 
       {isStreamUnavailable ? (
         <StreamUnavailablePanel
-          channelLogin={resolvedChannelLogin ?? ''}
+          channelLogin={resolvedChannelLogin}
           displayName={displayName}
           onRetry={onRetry}
           profileImageUrl={profileImageUrl}

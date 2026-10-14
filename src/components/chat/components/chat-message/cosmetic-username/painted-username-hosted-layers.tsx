@@ -111,8 +111,7 @@ export function PaintedUsernameHostedLayers({
     <View style={styles.paintedWrapper}>
       {underlayShadows.map(({ shadow, source }, index) => (
         <PaintedUsernameDropShadowLayer
-          // Static, never-reordered list
-          // eslint-disable-next-line react-doctor/no-array-index-as-key
+          // eslint-disable-next-line react-doctor/no-array-index-as-key -- static list that never reorders
           key={`${source}-${index}-${paintShadowKey(shadow)}`}
           displayUsername={displayUsername}
           maskTextStyle={maskTextStyle}

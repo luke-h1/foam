@@ -150,7 +150,6 @@ export function ReplyingToHeader({
   if (canJumpToReplyTarget && replyParentMessageId) {
     return (
       <ChatMessagePressable
-        hitSlop={undefined}
         onPress={() => onReplyContextPress?.(replyParentMessageId)}
         style={[
           styles.replyContextRow,

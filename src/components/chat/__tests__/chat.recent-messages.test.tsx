@@ -106,8 +106,6 @@ jest.spyOn(useSevenTvWsModule, 'useSevenTvWs').mockReturnValue({
   ws: createWebSocketStub(),
 });
 
-// The real `ReadyState` enum already carries these numeric values; no override needed.
-
 jest
   .spyOn(recentMessagesService, 'getRecentMessages')
   .mockImplementation(jest.fn());
@@ -149,7 +147,6 @@ jest
   .spyOn(channelLoadModule, 'getCurrentEmoteData')
   .mockReturnValue(emptyResolvedEmoteData);
 
-// `getSevenTvEmoteSetId`/`updateSevenTvEmotes` live on sevenTvChannelLifecycle, not this module.
 jest
   .spyOn(personalEmotesModule, 'fetchUserPersonalEmotes')
   .mockImplementation(async () => null);
@@ -211,8 +208,6 @@ jest.spyOn(logger.stvWs, 'warn').mockImplementation(() => {});
 
 jest.spyOn(Clipboard, 'setStringAsync').mockResolvedValue(true);
 
-// `__mocks__/expo-router.tsx` already stubs `useNavigation`; no per-file override needed.
-
 /**
  * The real `KeyboardStickyView` export is a read-only forwardRef object, so
  * swap via `Object.defineProperty`, not spyOn or assignment.
@@ -228,8 +223,6 @@ Object.defineProperty(keyboardControllerModule, 'KeyboardStickyView', {
 jest
   .spyOn(safeAreaContextModule, 'useSafeAreaInsets')
   .mockReturnValue({ top: 0, right: 0, bottom: 0, left: 0 });
-
-// `test/setupTests.ts` already mocks `sonner-native` globally; no per-file override needed.
 
 const noRender = () => null;
 

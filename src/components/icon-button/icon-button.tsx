@@ -1,20 +1,10 @@
 import { Insets, StyleProp, StyleSheet, ViewStyle } from 'react-native';
 
-import { type SymbolViewProps } from '@app/components/ui/icon/icon';
 import { resolveSpacingValue, Spacing } from '@app/styles/spacing';
 import { theme } from '@app/styles/themes';
 
 import { Button } from '../button/button';
-import { IconButtonIcon } from './icon-button-icon';
-
-type IconType =
-  | {
-      color?: string;
-      name: SymbolViewProps['name'];
-      size?: number;
-      type: 'symbol';
-    }
-  | SymbolViewProps['name'];
+import { IconButtonIcon, type IconType } from './icon-button-icon';
 
 interface IconButtonProps {
   hitSlop?: number | Insets;

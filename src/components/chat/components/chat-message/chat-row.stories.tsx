@@ -168,25 +168,6 @@ export const WithMentions: Story = {
     ),
     onReply: () => {},
   },
-  render: args => {
-    const allMessages: ChatMessageType<never>[] = [
-      createBaseMessage([{ type: 'text', content: 'Previous message' }], {
-        username: 'streamer',
-        'display-name': 'Streamer',
-        color: '#0000FF',
-      }),
-      createBaseMessage([{ type: 'text', content: 'Another message' }], {
-        username: 'viewer',
-        'display-name': 'Viewer',
-        color: '#FF00FF',
-      }),
-    ];
-
-    return (
-      // @ts-expect-error - allMessages is a valid prop but not in Storybook's type definition
-      <ChatRow {...args} allMessages={allMessages} />
-    );
-  },
 };
 
 export const WithBadges: Story = {

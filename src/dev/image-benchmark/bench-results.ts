@@ -43,30 +43,28 @@ function resultsFile(): File {
   return new File(Paths.document, RESULTS_FILENAME);
 }
 
+function createEmptyResults(): BenchFile {
+  return {
+    workload: 'cinna-2x-avif',
+    startedAt: Date.now(),
+    runs: [],
+    phases: [],
+    frames: [],
+  };
+}
+
 export function readResults(): BenchFile {
   const file = resultsFile();
 
   if (!file.exists) {
-    return {
-      workload: 'cinna-2x-avif',
-      startedAt: Date.now(),
-      runs: [],
-      phases: [],
-      frames: [],
-    };
+    return createEmptyResults();
   }
 
   try {
     // SAFETY: img-bench.json is only ever written by `writeResults` from a `BenchFile`; anything else fails to parse and falls to the catch below.
     return JSON.parse(file.textSync()) as BenchFile;
   } catch {
-    return {
-      workload: 'cinna-2x-avif',
-      startedAt: Date.now(),
-      runs: [],
-      phases: [],
-      frames: [],
-    };
+    return createEmptyResults();
   }
 }
 
@@ -99,11 +97,5 @@ export function appendFrames(entry: FrameBatch): void {
 }
 
 export function resetResults(): void {
-  writeResults({
-    workload: 'cinna-2x-avif',
-    startedAt: Date.now(),
-    runs: [],
-    phases: [],
-    frames: [],
-  });
+  writeResults(createEmptyResults());
 }

@@ -3,7 +3,7 @@ import { channelPointsRewardTitleFromSystemMsg } from '@app/utils/chat/channel-p
 import { isHighlightMyMessageTags } from '@app/utils/chat/channel-points-reward-title/is-highlight-my-message-tags';
 import {
   ChannelPointsRewardTags,
-  RewardTitleTagSource,
+  ChannelPointsRewardTagSource,
 } from '@app/utils/chat/channel-points-reward-title/types';
 
 const HIGHLIGHT_MY_MESSAGE_REWARD_TITLE = 'Highlight My Message';
@@ -18,7 +18,7 @@ function readStringTag(
 }
 
 export function channelPointsRewardTitleFromTags(
-  tags: RewardTitleTagSource | ChannelPointsRewardTags | UserNoticeTags,
+  tags: ChannelPointsRewardTagSource | ChannelPointsRewardTags | UserNoticeTags,
 ): string | undefined {
   if (isHighlightMyMessageTags(tags)) {
     return HIGHLIGHT_MY_MESSAGE_REWARD_TITLE;

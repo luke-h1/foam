@@ -1,7 +1,7 @@
 import type { ChannelCacheType } from '../types/constants';
 
 // Web keeps the Legend State IndexedDB row for the whole `persisted` slice
-// (see chatStore.ts), so these are no-ops.
+// (see chat-store.ts), so these are no-ops.
 export const CHANNEL_CACHE_PERSISTENCE_ENABLED = false;
 
 export const readPersistedChannelCache = (

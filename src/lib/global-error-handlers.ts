@@ -36,7 +36,7 @@ export function installGlobalErrorHandlers(): void {
   ErrorUtils.setGlobalHandler((error, isFatal) => {
     markSessionError();
 
-    // Route production fatals to the recovery UI instead of crashing; dev keeps the redbox, and with no listener yet we fall through to the chain.
+    // Dev keeps the redbox. With no listener registered yet, fall through to the previous handler.
     if (!__DEV__ && isFatal && fatalErrorListener) {
       const fatalError =
         error instanceof Error ? error : new Error(String(error));

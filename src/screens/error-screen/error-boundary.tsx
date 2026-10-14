@@ -22,7 +22,7 @@ interface State {
 }
 
 /**
- * Class error boundary — required by React for catch/recover UI.
+ * A class component, because React only supports error boundaries as classes.
  */
 export class ErrorBoundary extends Component<Props, State> {
   override state: Omit<ErrorDetailsProps, 'onReset'> = {

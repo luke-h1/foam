@@ -198,6 +198,7 @@ function PaintLayerContent({
       />
     );
   }
+
   if (useSvgLinear) {
     return (
       <LinearGradientSvgFill
@@ -206,18 +207,17 @@ function PaintLayerContent({
       />
     );
   }
-  {
-    // SAFETY: buildLayerGradientConfig returns null below two stops, so colors and locations both hold at least two entries here.
-    return (
-      <LinearGradient
-        colors={gradientConfig.colors as [string, string, ...string[]]}
-        locations={gradientConfig.locations as [number, number, ...number[]]}
-        start={gradientConfig.start}
-        end={gradientConfig.end}
-        style={styles.fill}
-      />
-    );
-  }
+
+  // SAFETY: buildLayerGradientConfig returns null below two stops, so colors and locations both hold at least two entries here.
+  return (
+    <LinearGradient
+      colors={gradientConfig.colors as [string, string, ...string[]]}
+      locations={gradientConfig.locations as [number, number, ...number[]]}
+      start={gradientConfig.start}
+      end={gradientConfig.end}
+      style={styles.fill}
+    />
+  );
 }
 
 export function PaintLayerBackground({

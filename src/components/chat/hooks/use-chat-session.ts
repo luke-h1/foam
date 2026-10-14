@@ -90,10 +90,7 @@ export function useChatSession({
     sevenTvEmoteSetId,
     refetch: refetchEmotes,
     cancel: cancelEmoteLoad,
-  } = useChatEmoteLoader({
-    channelId,
-    enabled: true,
-  });
+  } = useChatEmoteLoader({ channelId });
 
   const getChatDelayMs = useCallback(
     () => resolveEffectiveChatDelayMs(chatDelay, videoLatencyDisplay$.peek()),

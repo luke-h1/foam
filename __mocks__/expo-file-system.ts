@@ -1,9 +1,8 @@
 /**
- * Faithful fake of the parts of expo-file-system's next (Directory/File)
- * API that src/utils/image/image-cache.ts and src/lib/sentryCacheSweep.ts
- * (and their tests) rely on. The real module wraps native ExpoFileSystem
- * bindings that aren't available under Jest, so this in-memory node map
- * stands in for the device disk.
+ * Fake of the parts of expo-file-system's next (Directory/File) API that
+ * src/utils/image/image-cache.ts and src/lib/sentry-cache-sweep.ts (and their
+ * tests) use. The real module wraps native ExpoFileSystem bindings that Jest
+ * does not have, so this in-memory node map stands in for the device disk.
  */
 type MockNode =
   | { kind: 'directory'; children: string[] }

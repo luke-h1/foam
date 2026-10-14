@@ -185,13 +185,12 @@ export const useChatEmoteLoader = ({
 
     const isActive = Boolean(enabled && channelId);
 
-    if (isActive && channelId) {
+    if (isActive) {
       ensureChannelCacheHydrated(channelId);
     }
 
     const hasChannelCache =
       isActive &&
-      channelId &&
       Boolean(chatStore$.persisted.channelCaches[channelId]?.peek());
 
     // A cleared cosmetics cache, or a channel whose cache vanished under it,

@@ -25,8 +25,8 @@ const ImageComponent = forwardRef<MockImageHandle, ViewProps>((props, ref) => {
 ImageComponent.displayName = 'Image';
 
 /**
- * SAFETY: the real Image is a class exposing these as static members;
- * jest.fn() stands in as a faithful, assertable fake for each one.
+ * SAFETY: the real Image is a class with these as static members. A jest.fn()
+ * stands in for each one.
  */
 export const Image = Object.assign(ImageComponent, {
   prefetch: jest.fn(() => Promise.resolve(true)),

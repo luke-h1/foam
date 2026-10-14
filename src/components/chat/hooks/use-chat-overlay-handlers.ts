@@ -56,7 +56,7 @@ interface UseChatOverlayHandlersOptions {
 }
 
 /**
- * When user is attempting to ban/report a given user
+ * The user that a report or block action targets.
  */
 type ChatUserSelection =
   | { login?: string; userId?: string; username?: string }

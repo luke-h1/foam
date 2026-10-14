@@ -66,7 +66,7 @@ interface ClientOptions {
   headers?: Record<string, string>;
   logPrefix?: AllowedPrefix;
   /**
-   * Per-request timeout in ms; unbounded, a hung request never rejects and
+   * Per-request timeout in ms. Without one, a hung request never rejects and
    * the query stays pending forever.
    */
   timeout?: number;
@@ -217,7 +217,6 @@ export function createApiClient({
 
     for (const [key, value] of Object.entries(params ?? {})) {
       if (value == null) {
-        // eslint-disable-next-line no-continue
         continue;
       }
 

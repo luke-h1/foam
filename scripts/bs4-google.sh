@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Base64 encoded Google Service files for GitHub Actions secrets
+# Prints the Google service files as base64, for the GitHub Actions secrets.
 
 set -e
 
@@ -15,79 +15,17 @@ print_base64_file() {
   base64 -i "$file" | tr -d '\n'
 }
 
-echo ""
-echo "╔═══════════════════════════════════════════════════════════════╗"
-echo "║           GOOGLE SERVICES - BASE64 ENCODED FILES              ║"
-echo "╚═══════════════════════════════════════════════════════════════╝"
-echo ""
-
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "📱 ANDROID"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
-
-echo "┌─────────────────────────────────────────────────────────────┐"
-echo "│ DEVELOPMENT                                                  │"
-echo "└─────────────────────────────────────────────────────────────┘"
-print_base64_file google-services-dev.json
-echo ""
-echo ""
-
-echo "┌─────────────────────────────────────────────────────────────┐"
-echo "│ INTERNAL                                                     │"
-echo "└─────────────────────────────────────────────────────────────┘"
-print_base64_file google-services-internal.json
-echo ""
-echo ""
-
-echo "┌─────────────────────────────────────────────────────────────┐"
-echo "│ TESTFLIGHT                                                   │"
-echo "└─────────────────────────────────────────────────────────────┘"
-print_base64_file google-services-testflight.json
-echo ""
-echo ""
-
-echo "┌─────────────────────────────────────────────────────────────┐"
-echo "│ PRODUCTION                                                   │"
-echo "└─────────────────────────────────────────────────────────────┘"
-print_base64_file google-services-prod.json
-echo ""
-echo ""
-
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "🍎 iOS"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
-
-echo "┌─────────────────────────────────────────────────────────────┐"
-echo "│ DEVELOPMENT                                                  │"
-echo "└─────────────────────────────────────────────────────────────┘"
-print_base64_file GoogleService-Info-dev.plist
-echo ""
-echo ""
-
-echo "┌─────────────────────────────────────────────────────────────┐"
-echo "│ INTERNAL                                                     │"
-echo "└─────────────────────────────────────────────────────────────┘"
-print_base64_file GoogleService-Info-internal.plist
-echo ""
-echo ""
-
-echo "┌─────────────────────────────────────────────────────────────┐"
-echo "│ TESTFLIGHT                                                   │"
-echo "└─────────────────────────────────────────────────────────────┘"
-print_base64_file GoogleService-Info-testflight.plist
-echo ""
-echo ""
-
-echo "┌─────────────────────────────────────────────────────────────┐"
-echo "│ PRODUCTION                                                   │"
-echo "└─────────────────────────────────────────────────────────────┘"
-print_base64_file GoogleService-Info-prod.plist
-echo ""
-echo ""
-
-echo "╔═══════════════════════════════════════════════════════════════╗"
-echo "║                         COMPLETE                              ║"
-echo "╚═══════════════════════════════════════════════════════════════╝"
-echo ""
+for file in \
+  google-services-dev.json \
+  google-services-internal.json \
+  google-services-testflight.json \
+  google-services-prod.json \
+  GoogleService-Info-dev.plist \
+  GoogleService-Info-internal.plist \
+  GoogleService-Info-testflight.plist \
+  GoogleService-Info-prod.plist; do
+  echo "== $file"
+  print_base64_file "$file"
+  echo ""
+  echo ""
+done

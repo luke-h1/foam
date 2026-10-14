@@ -42,10 +42,6 @@ type ProviderPreviewSample = {
 
 export type ChatPreferencePreviewProps =
   | {
-      variant: 'density';
-      value: PreviewState['chatDensity'];
-    }
-  | {
       variant: 'fontScale';
       value: PreviewState['chatFontScale'];
     }
@@ -55,10 +51,6 @@ export type ChatPreferencePreviewProps =
     }
   | {
       variant: 'alternatingRows';
-      value: boolean;
-    }
-  | {
-      variant: 'timestamps' | 'mentions' | 'inlineReply' | 'jumpPill';
       value: boolean;
     }
   | {
@@ -140,16 +132,6 @@ export const ChatPreferencePreview = memo(function ChatPreferencePreview(
   const { variant, value } = props;
 
   switch (variant) {
-    case 'density': {
-      return (
-        <ChatPreviewSurface
-          messages={[previewMessages.plain, previewMessages.reply]}
-          settings={{ chatDensity: value }}
-          testID='chat-preference-preview-density'
-        />
-      );
-    }
-
     case 'fontScale': {
       return (
         <ChatPreviewSurface
@@ -174,16 +156,6 @@ export const ChatPreferencePreview = memo(function ChatPreferencePreview(
       );
     }
 
-    case 'timestamps': {
-      return (
-        <ChatPreviewSurface
-          messages={[previewMessages.plain]}
-          settings={{ chatTimestamps: value }}
-          testID='chat-preference-preview-timestamps'
-        />
-      );
-    }
-
     case 'alternatingRows': {
       return (
         <ChatPreviewSurface
@@ -194,36 +166,6 @@ export const ChatPreferencePreview = memo(function ChatPreferencePreview(
           ]}
           settings={{ showAlternatingChatRows: value }}
           testID='chat-preference-preview-alternating-rows'
-        />
-      );
-    }
-
-    case 'mentions': {
-      return (
-        <ChatPreviewSurface
-          messages={[previewMessages.mention]}
-          settings={{ highlightOwnMentions: value }}
-          testID='chat-preference-preview-mentions'
-        />
-      );
-    }
-
-    case 'inlineReply': {
-      return (
-        <ChatPreviewSurface
-          messages={[previewMessages.reply]}
-          settings={{ showInlineReplyContext: value }}
-          testID='chat-preference-preview-inline-reply'
-        />
-      );
-    }
-
-    case 'jumpPill': {
-      return (
-        <ChatPreviewSurface
-          messages={[previewMessages.plain, previewMessages.mention]}
-          settings={{ showUnreadJumpPill: value }}
-          testID='chat-preference-preview-jump-pill'
         />
       );
     }
@@ -274,14 +216,12 @@ export const ChatPreferencePreview = memo(function ChatPreferencePreview(
 });
 
 interface ChatPreviewSurfaceProps {
-  label?: string;
   messages: PreviewMessage[];
   settings?: Partial<PreviewState>;
   testID: string;
 }
 
 const ChatPreviewSurface = function ChatPreviewSurface({
-  label,
   messages,
   settings,
   testID,
@@ -357,13 +297,6 @@ const ChatPreviewSurface = function ChatPreviewSurface({
                 3
               </Text>
             </View>
-          </View>
-        ) : null}
-        {label ? (
-          <View style={styles.previewStatePill}>
-            <Text style={styles.previewStatePillText} weight='semibold'>
-              {label}
-            </Text>
           </View>
         ) : null}
       </View>
@@ -690,20 +623,6 @@ const styles = StyleSheet.create({
   },
   previewCard: {
     width: '100%',
-  },
-  previewStatePill: {
-    alignSelf: 'flex-start',
-    backgroundColor: theme.colorBlackOverlay,
-    borderCurve: 'continuous',
-    borderRadius: theme.radius.xl,
-    marginHorizontal: theme.space12,
-    marginTop: theme.space8,
-    paddingHorizontal: theme.space12,
-    paddingVertical: theme.space4,
-  },
-  previewStatePillText: {
-    color: theme.colorWhite,
-    fontSize: theme.fontSize12,
   },
   providerEmoteRow: {
     alignItems: 'center',

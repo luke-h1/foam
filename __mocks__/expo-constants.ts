@@ -1,8 +1,7 @@
 /**
- * Faithful fake of the parts of expo-constants this app reads. The real
- * module resolves native ExponentConstants/EXDevLauncher bindings at import
- * time, which aren't registered under Jest, so importing it for real throws
- * before a test body ever runs.
+ * Fake of the parts of expo-constants this app reads. The real module
+ * resolves native ExponentConstants/EXDevLauncher bindings at import time.
+ * Jest does not register them, so the real import throws before a test runs.
  */
 export enum ExecutionEnvironment {
   Bare = 'bare',

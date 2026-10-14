@@ -1,5 +1,5 @@
-// Realistic mock emote data for 7TV, BTTV, FFZ, and Twitch
-// Matches the response shapes the app's emote services expect
+// Mock emote data for 7TV, BTTV, FFZ and Twitch, in the response shapes the
+// app's emote services expect.
 
 // ── BTTV ─────────────────────────────────────────────────────────────────────
 

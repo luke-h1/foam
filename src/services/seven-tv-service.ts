@@ -274,7 +274,8 @@ export const sevenTvService = {
 
   /**
    * Shares the cached userByConnection lookup with get7tvUserId. Throws when
-   * the channel has no 7TV account; channelLoad catches it and falls back.
+   * the channel has no 7TV account; `loadChannelResources` catches it and
+   * falls back.
    */
   getEmoteSetId: async (twitchUserId: string): Promise<string> => {
     const user = await sevenTvUserCache.resolve(
@@ -308,10 +309,8 @@ export const sevenTvService = {
       return fetchGlobalSevenTvEmoteSet();
     }
 
-    /**
-     * A full channel set is ~3MB of JSON. Sanitising on the parse runtime
-     * means the JS thread rebuilds only the compact emotes, not the raw tree.
-     */
+    // A full channel set is ~3MB of JSON. Sanitising on the parse runtime
+    // means the JS thread rebuilds only the compact emotes, not the raw tree.
     const { data, error } = await sevenTvV4Client.queryDerived<
       EmoteSetCustomQuery,
       SevenTvSanitisedEmote[],

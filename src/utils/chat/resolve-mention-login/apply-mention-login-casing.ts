@@ -10,7 +10,7 @@ export function applyMentionLoginCasing(
   for (let i = 0; i < tokens.length; i += 1) {
     const token = tokens[i];
 
-    if (!token || token.type !== 'mention' || !('content' in token)) {
+    if (!token || token.type !== 'mention') {
       continue;
     }
 

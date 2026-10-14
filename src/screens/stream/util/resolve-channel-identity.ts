@@ -16,7 +16,7 @@ export function resolveChannelIdentity({
   user: UserInfoResponse | undefined;
 }) {
   return {
-    broadcasterName: stream?.user_name ?? user?.display_name ?? undefined,
+    broadcasterName: stream?.user_name ?? user?.display_name,
     displayName: user?.display_name,
     profileImageUrl: user?.profile_image_url,
     resolvedChannelId: stream?.user_id ?? user?.id,

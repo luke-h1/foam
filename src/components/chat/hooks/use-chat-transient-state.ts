@@ -13,8 +13,8 @@ import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-
 import { normaliseChatText } from '@app/utils/chat/normalise-chat-text';
 
 /**
- * These are session-only "hide this from my view" lists, not a persisted
- * blocklist, so an old entry is worth dropping rather than growing forever.
+ * Session-only "hide from my view" lists. They are not a persisted blocklist,
+ * so drop the oldest entry instead of letting the list grow.
  */
 const MAX_FILTER_ENTRIES = 50;
 

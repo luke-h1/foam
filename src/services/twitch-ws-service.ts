@@ -22,15 +22,6 @@ type EventSubEntry = {
   subscriptionId: string | null;
 };
 
-type EventSubscriptionSummary = {
-  id: string;
-  type: string;
-  condition?: Record<string, string>;
-  transport: {
-    session_id?: string;
-  };
-};
-
 function conditionKey(condition: Record<string, string>): string {
   return Object.keys(condition)
     .sort()
@@ -45,9 +36,9 @@ function entryKey(
   return `${eventType}|${conditionKey(condition)}`;
 }
 
-type EventSubscriptionPayload =
-  | Awaited<ReturnType<typeof twitchService.createEventSubscription>>
-  | Awaited<ReturnType<typeof twitchService.listEventSubscriptions>>;
+type EventSubscriptionPayload = Awaited<
+  ReturnType<typeof twitchService.createEventSubscription>
+>;
 
 function hasEventSubscriptionData(
   response: EventSubscriptionPayload | undefined,
@@ -544,7 +535,6 @@ class TwitchWsService {
 
       // Other components still listen on this subscription, so keep it open.
       if (entry.callbacks.length > 0) {
-        // eslint-disable-next-line no-continue
         continue;
       }
 
@@ -611,55 +601,6 @@ class TwitchWsService {
         );
       }
     });
-  }
-
-  public static async getActiveSubscriptions(): Promise<void> {
-    try {
-      const response = await twitchService.listEventSubscriptions({
-        status: 'enabled',
-      });
-
-      if (!hasEventSubscriptionData(response)) {
-        throw new Error(
-          'Twitch EventSub active subscriptions returned no subscription data',
-        );
-      }
-
-      logger.twitchWs.info(
-        `💜 Found ${response.data.length} active subscriptions`,
-        response.data.map(sub => ({ type: sub.type, id: sub.id })),
-      );
-
-      // SAFETY: `twitchService` types `condition` and `transport` as bare `object`; Helix sends the websocket transport and condition maps this summary describes.
-      const subscriptions = response.data as EventSubscriptionSummary[];
-
-      subscriptions.forEach(subscription => {
-        if (subscription.transport.session_id !== TwitchWsService.sessionId) {
-          return;
-        }
-
-        const entry = subscription.condition
-          ? TwitchWsService.entries.get(
-              entryKey(subscription.type, subscription.condition),
-            )
-          : TwitchWsService.entriesOfType(subscription.type)[0];
-
-        if (entry) {
-          entry.subscriptionId = subscription.id;
-        }
-      });
-    } catch (error) {
-      logger.twitchWs.warn(
-        'Failed to fetch active Twitch EventSub subscriptions',
-        {
-          name: 'twitch_ws_warning',
-          error: error instanceof Error ? error : String(error),
-          action: 'active_subscriptions_fetch_failed',
-          provider: 'twitch',
-          source: 'twitch_ws_service',
-        },
-      );
-    }
   }
 
   public static async cleanupSubscriptions(): Promise<void> {

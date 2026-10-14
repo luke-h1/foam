@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import type { EmoteImageVariantSet, FfzSanitisedEmote } from '@app/types/emote';
 import type { FfzBadgesResponse } from '@app/types/ffz/badge';
 import type {

@@ -4,10 +4,10 @@ import { twitchService } from '@app/services/twitch-service';
 import { logger } from '@app/utils/logger';
 
 /**
- * Buffer time in seconds before token expiration to consider it expired.
- * This allows proactive refresh before actual expiration.
+ * Seconds before `expiresAt` at which a token already counts as expired, so it
+ * is refreshed before Twitch rejects it.
  */
-const TOKEN_EXPIRATION_BUFFER = 60; // 1 minute buffer
+const TOKEN_EXPIRATION_BUFFER = 60;
 
 const USER_TOKEN_REFRESH_BUFFER_MS = 5 * 60 * 1000;
 
@@ -80,16 +80,11 @@ export const normaliseTwitchToken = (
     return null;
   }
 
-  // SAFETY: isTwitchToken() returned false above, so this is a TokenResponse.
-  // A TokenResponse read back from storage may still carry a refreshToken, and
-  // Partial<TwitchToken> is how we read that field without claiming the rest.
-  const maybeStoredToken = token as Partial<TwitchToken>;
-
   return addExpirationTimestamp({
     accessToken: token.accessToken,
     expiresIn: token.expiresIn,
     tokenType: token.tokenType,
-    refreshToken: maybeStoredToken.refreshToken,
+    refreshToken: token.refreshToken,
   });
 };
 
@@ -103,7 +98,7 @@ export const getFallbackAnonToken = (): TwitchToken => ({
 /**
  * Exchange a stored refresh token for a fresh user token. Returns null when the
  * token has no refresh token or the exchange fails (network, or Twitch
- * rejection) — callers decide whether to validate, retry, or fall back to anon.
+ * rejection). Callers decide whether to validate, retry, or fall back to anon.
  */
 export async function refreshStoredUserToken(
   token: TwitchToken,

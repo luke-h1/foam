@@ -213,7 +213,6 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
     }
   };
 
-  // Shared by the direct and delayed-release paths.
   const ingestMessage = (message: BufferedMessage, countUnread?: boolean) => {
     const { added, dropped } = buffer.add(message);
 
@@ -329,7 +328,7 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
     enqueueDelayed(messageWithCachedColor, Date.now() + delayMs);
   };
 
-  // On delay-setting change: drain held messages if delay is off, else ensure a tick is pending.
+  // Call when the chat delay setting changes.
   const reconcileChatDelay = () => {
     if (sanitiseDelayMs(deps.getChatDelayMs()) <= 0) {
       clearDelayTick();

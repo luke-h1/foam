@@ -99,10 +99,9 @@ export function SearchScreen() {
 
   const renderCategoryItem: ListRenderItem<Category> = useCallback(
     ({ item }) => {
-      const imageUrl =
-        item.box_art_url
-          ?.replace('{width}', '220')
-          ?.replace('{height}', '294') ?? '';
+      const imageUrl = item.box_art_url
+        .replace('{width}', '220')
+        .replace('{height}', '294');
 
       return (
         <ResultRow

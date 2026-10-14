@@ -92,8 +92,6 @@ export function useLiveStreamAnimatedLayout({
     LANDSCAPE_CHAT_DIVIDER_RESTING_OPACITY,
   );
 
-  // Layout inputs mirrored as shared values so the animated styles read one set the effect
-  // updates atomically - reading JS values directly caused a one-frame rotation flicker.
   const landscapeSV = useSharedValue(isLandscape ? 1 : 0);
 
   const insetLeftSV = useSharedValue(landscapeInsetLeft);
@@ -139,7 +137,7 @@ export function useLiveStreamAnimatedLayout({
       chatWidth.set(effectiveChatWidth);
       chatHeight.set(effectiveChatHeight);
 
-      // Snap chat into place on rotation, no reveal - the old rAF fade made rapid rotation crawl.
+      // Snap chat into place on rotation with no reveal. A fade here makes rapid rotation slow.
       chatOpacity.set(isLandscapeChatHidden ? 0 : 1);
 
       chatTranslateX.set(

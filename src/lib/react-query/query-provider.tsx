@@ -50,7 +50,7 @@ function checkIsOnlineIfNeeded() {
   });
 }
 
-// Only poll connectivity while the app is foregrounded — a lifetime interval
+// Only poll connectivity while the app is foregrounded. A lifetime interval
 // keeps waking the JS thread in the background for work the guard skips.
 let connectivityPollInterval: ReturnType<typeof setInterval> | undefined;
 

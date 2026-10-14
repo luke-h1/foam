@@ -43,9 +43,6 @@ function ChatRowComponent<
   );
 }
 
-/**
- * memo() erases generics; one cast restores the component's type signature.
- */
 export const ChatRow =
-  // SAFETY: memo forwards the same props to ChatRowComponent, so the wrapper keeps its call signature.
+  // SAFETY: memo() erases generics. It forwards the same props to ChatRowComponent, so the wrapper keeps its call signature.
   memo(ChatRowComponent) as typeof ChatRowComponent;

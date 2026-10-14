@@ -10,9 +10,6 @@ import { getAppStoreLink } from './get-app-store-link';
 const PRODUCTION_BUNDLE_ID = 'foam-tv';
 
 /**
- * Store URL for the platform and release type: TestFlight for iOS test builds, App Store for production, Play Store on Android.
- */
-/**
  * TestFlight builds deep-link into the TestFlight app when it is installed,
  * and fall back to its web page when it is not.
  */
@@ -24,6 +21,9 @@ async function resolveTestFlightUrl(): Promise<string> {
     : 'https://testflight.apple.com';
 }
 
+/**
+ * Store URL for the platform and release type: TestFlight for iOS test builds, App Store for production, Play Store on Android.
+ */
 export async function getStoreUrlAsync() {
   if (process.env.EXPO_OS === 'ios') {
     const releaseType = await Application.getIosApplicationReleaseTypeAsync();

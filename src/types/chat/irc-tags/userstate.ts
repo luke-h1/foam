@@ -6,8 +6,6 @@ export interface UserStateTags {
   id?: string;
   color?: string;
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
   badges?: {
     broadcaster?: string;
     moderator?: string;

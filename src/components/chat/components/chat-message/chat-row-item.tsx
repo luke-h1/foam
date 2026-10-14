@@ -177,8 +177,7 @@ export const ChatRowItem = function ChatRowItem({
       highlightedUserSet={highlightedUserSet}
       messageDisplay={messageDisplay}
       onReplyContextPress={onReplyContextPress}
-      // ChatRow is generic over one notice variant; the row's union collapses this prop to `undefined`. Value guarded above.
-      // @ts-expect-error - notice_tags cannot narrow against the row's union
+      // @ts-expect-error - ChatRow is generic over one notice variant, so the row's union types this prop as `undefined`. getRowNoticeTags guards the value.
       notice_tags={getRowNoticeTags(msg)}
     />
   );

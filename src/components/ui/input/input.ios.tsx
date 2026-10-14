@@ -850,9 +850,9 @@ function radiusForStyle(style: TextStyle & ViewStyle) {
 }
 
 function borderWidthForStyle(style: TextStyle & ViewStyle) {
-  const width =
-    numberValue(style.borderWidth) ?? numberValue(style.borderBottomWidth) ?? 0;
-  return width;
+  return (
+    numberValue(style.borderWidth) ?? numberValue(style.borderBottomWidth) ?? 0
+  );
 }
 
 /**

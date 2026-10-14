@@ -60,9 +60,7 @@ export default function render(
 ): RenderResult {
   return {
     ...baseRender(ui, {
-      wrapper: ({ children }: { children: ReactNode }) => (
-        <DefaultWrapper>{children}</DefaultWrapper>
-      ),
+      wrapper: DefaultWrapper,
       ...options,
     }),
   };

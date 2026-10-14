@@ -8,11 +8,11 @@ const {
 const { getSentryExpoConfig } = require('@sentry/react-native/metro');
 const path = require('path');
 
+// includeWebReplay: false stubs @sentry-internal/replay (~310KB minified) on
+// every platform. The app never enables Sentry session replay.
 /**
  * @type {import('expo/metro-config').MetroConfig}
  */
-// includeWebReplay: false stubs @sentry-internal/replay (~310KB minified) on
-// every platform; the app never enables Sentry session replay.
 const config = getSentryExpoConfig(__dirname, { includeWebReplay: false });
 
 const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -27,8 +27,7 @@ config.resolver.blockList = [
   ...excludedRootDirs,
 ];
 
-// This helps support certain popular third-party libraries
-// such as Firebase that use the extension cjs.
+// Firebase and some other libraries ship `.cjs` files.
 config.resolver.sourceExts.push('cjs');
 
 config.transformer = {

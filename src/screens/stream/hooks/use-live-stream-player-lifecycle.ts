@@ -10,6 +10,7 @@ import { setMeasuredVideoLatencySeconds } from '@app/store/stream/video-latency'
 
 import { resolvePlayerAppStateAction } from '../util/resolve-player-app-state-action';
 
+// Keep the screen awake while watching; auto-lock is aggressive under Low Power Mode.
 const KEEP_AWAKE_TAG = 'live-stream';
 
 /**

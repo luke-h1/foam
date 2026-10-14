@@ -1,13 +1,12 @@
 /**
- * Faithful fake of react-native-device-info's native interface. The real
- * module throws at import time when NativeModules.RNDeviceInfo is missing
- * (always true under Jest), so src/utils/device/deviceTier.ts can never
- * import the real thing in tests.
+ * Fake of react-native-device-info's native interface. The real module throws
+ * at import time when NativeModules.RNDeviceInfo is missing (always true under
+ * Jest), so src/utils/device/device-tier.ts cannot import it in tests.
  *
- * deviceTier.ts caches its result at module scope, so its tests re-require
- * it fresh per case via jest.isolateModules. That gives this mock module a
- * fresh instance too, so the configured device info lives on globalThis
- * instead of module scope - it has to survive being re-required.
+ * device-tier.ts caches its result at module scope, so its tests re-require it
+ * for each case with jest.isolateModules. That also gives this mock a new
+ * instance, so the configured device info lives on globalThis, where it
+ * survives the re-require.
  */
 export interface MockDeviceInfo {
   isLowRamDevice?: boolean;

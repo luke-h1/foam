@@ -308,8 +308,6 @@ export function usePlayerBridge({
 
   const unmute = useCallback(() => applyMuted(false), [applyMuted]);
 
-  const setMuted = (muted: boolean) => applyMuted(muted);
-
   const setVolume = (volume: number) => {
     injectJS(`window.playerControls.setVolume(${volume})`);
   };
@@ -373,7 +371,7 @@ export function usePlayerBridge({
     play,
     seek,
     setChannel,
-    setMuted,
+    setMuted: applyMuted,
     setQuality,
     setVideo,
     setVolume,
@@ -517,9 +515,9 @@ export function usePlayerBridge({
       case 'notifyStabilityLatency':
         stability.noteLatency(action.latencySeconds);
         break;
-      // Latency display flows through the videoLatencyDisplay$ observable via
-      // onPlaybackLatencyChange - React state here re-rendered the whole
-      // player subtree on every ~4s latency tick.
+      // Latency goes out through onPlaybackLatencyChange to the
+      // videoLatencyDisplay$ observable. React state here would re-render the
+      // whole player subtree on every ~4s latency tick.
       case 'publishLatency':
         lastPlaybackLatencySecondsRef.current = action.latencySeconds;
         onPlaybackLatencyChange?.(action.latencySeconds);
@@ -615,7 +613,7 @@ export function usePlayerBridge({
     playerState,
     playerStatus,
     resetPlayerStatus,
-    setMuted,
+    setMuted: applyMuted,
     togglePictureInPicture,
   };
 }

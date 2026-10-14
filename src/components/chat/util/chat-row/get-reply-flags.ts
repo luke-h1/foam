@@ -5,7 +5,6 @@ interface GetReplyFlagsOptions {
   normalisedCurrentUsername: string;
   onReplyContextPress: ((replyParentMessageId: string) => void) | undefined;
   parentDisplayName: string | undefined;
-  replyBody: string | undefined;
   replyDisplayName: string | undefined;
   showInlineReplyContext: boolean;
   userstate: UserStateTags;
@@ -18,7 +17,6 @@ export function getReplyFlags({
   normalisedCurrentUsername,
   onReplyContextPress,
   parentDisplayName,
-  replyBody,
   replyDisplayName,
   showInlineReplyContext,
   userstate,
@@ -39,9 +37,6 @@ export function getReplyFlags({
     isReturningChatter:
       !isFirstMessage && userstate['returning-chatter'] === '1',
     replyParentMessageId,
-    shouldRenderInlineReply:
-      showInlineReplyContext &&
-      isReply &&
-      Boolean(replyBody || parentDisplayName),
+    shouldRenderInlineReply: showInlineReplyContext && isReply,
   };
 }

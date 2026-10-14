@@ -380,9 +380,7 @@ function runSevenTvWsDecision(
     }
 
     case 'notifyEvent': {
-      if (optionsRef.current?.onEvent) {
-        optionsRef.current?.onEvent(decision.eventType, decision.data);
-      }
+      optionsRef.current?.onEvent?.(decision.eventType, decision.data);
       break;
     }
 
@@ -1012,6 +1010,6 @@ export function useSevenTvWs(
     unsubscribeFromChannel,
     isConnected,
     readyState,
-    getConnectionState: getConnectionState,
+    getConnectionState,
   };
 }

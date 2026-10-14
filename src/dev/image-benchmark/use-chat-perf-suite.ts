@@ -57,11 +57,10 @@ interface FrameAccumulator {
 }
 
 /**
- * Folds one sampling window into the running totals, but only while a phase is
- * actually recording.
+ * Adds one sampling window to the running totals while a phase is recording.
  */
 function accumulateWindow(
-  accum: { on: boolean; fps: number[]; jank: number; frames: number },
+  accum: FrameAccumulator,
   fps: number,
   jank: number,
   frames: number,
@@ -260,8 +259,6 @@ export function useChatPerfSuite() {
 
         const phase = SUITE_PHASES[i]!;
         const label = phase.preset;
-
-        // Restart the fixture replay at measure start so each run processes a byte-identical stream.
         syntheticChatControl.current = SYNTHETIC_PRESETS[phase.preset]!;
 
         // eslint-disable-next-line react-doctor/async-await-in-loop, react-doctor/async-defer-await -- ordered phases; the window is the work
@@ -271,6 +268,7 @@ export function useChatPerfSuite() {
           break;
         }
 
+        // Restart the fixture replay at measure start so each run processes a byte-identical stream.
         resetFloodReplay();
 
         // eslint-disable-next-line react-doctor/async-defer-await -- window must finish before the cancel check

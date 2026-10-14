@@ -114,8 +114,8 @@ export function useSevenTvChatRuntime({
   const wsConnected = readyState === ReadyState.OPEN && isConnected();
   const unsubscribeFromChannelRef = useSyncRef(unsubscribeFromChannel);
 
-  // Declared above so the `onEmoteSetSwitch` handler passed into useSevenTvWs
-  // can close over it, so it is filled in on commit rather than during render.
+  // `onEmoteSetSwitch` must exist before useSevenTvWs returns
+  // `subscribeToChannel`, so it reads this ref. Fill it on commit, not during render.
   useLayoutEffect(() => {
     subscribeToChannelRef.current = subscribeToChannel;
   });

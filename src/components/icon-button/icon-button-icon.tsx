@@ -11,7 +11,7 @@ type IconSymbolDescriptor = {
   type: 'symbol';
 };
 
-type IconType = IconSymbolDescriptor | SymbolViewProps['name'];
+export type IconType = IconSymbolDescriptor | SymbolViewProps['name'];
 
 function isIconSymbolDescriptor(icon: IconType): icon is IconSymbolDescriptor {
   return icon instanceof Object && 'type' in icon;

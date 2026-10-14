@@ -34,26 +34,6 @@ const channelPointsEventSchema = z.object({
     .catch(undefined),
 });
 
-function titleFromAutomaticRewardType(
-  rewardType: string | undefined,
-): string | undefined {
-  if (!rewardType) {
-    return undefined;
-  }
-
-  return AUTOMATIC_REWARD_TITLES.get(rewardType);
-}
-
-function rewardIdFromAutomaticRewardType(
-  rewardType: string | undefined,
-): string | undefined {
-  if (!rewardType) {
-    return undefined;
-  }
-
-  return AUTOMATIC_REWARD_IDS.get(rewardType);
-}
-
 export function parseChannelPointsEventSubEvent(
   event: ChannelPointsEventSubEvent,
 ): ParsedChannelPointsRedemption | undefined {
@@ -75,13 +55,13 @@ export function parseChannelPointsEventSubEvent(
   let rewardId = reward.id;
 
   if (!rewardId && rewardType) {
-    rewardId = rewardIdFromAutomaticRewardType(rewardType);
+    rewardId = AUTOMATIC_REWARD_IDS.get(rewardType);
   }
 
   let title = reward.title?.trim() ?? '';
 
-  if (!title) {
-    title = titleFromAutomaticRewardType(rewardType) ?? '';
+  if (!title && rewardType) {
+    title = AUTOMATIC_REWARD_TITLES.get(rewardType) ?? '';
   }
 
   if (rewardId === 'animated-message') {

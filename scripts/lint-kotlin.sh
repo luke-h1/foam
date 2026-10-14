@@ -16,8 +16,8 @@ fi
 
 files=("$@")
 if [ "${#files[@]}" -eq 0 ]; then
-  # android/ is gitignored prebuild output (absent in CI) and modules/ has no
-  # Kotlin yet, so collect the real files and skip when there are none.
+  # android/ is gitignored prebuild output (absent in CI), so collect the real
+  # files and skip when there are none.
   roots=()
   for dir in android modules; do
     [ -d "$dir" ] && roots+=("$dir")

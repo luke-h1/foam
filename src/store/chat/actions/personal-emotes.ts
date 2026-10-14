@@ -11,8 +11,9 @@ const personalEmotesGuard = createFetchOnceGuard();
 const MAX_PERSONAL_EMOTE_CHANNELS = 20;
 
 /**
- * Plain bounded Map (channel -> Twitch user id) - a persisted observable
- * re-stringified the whole table per write; React subscribes via `personalEmotesVersion`.
+ * Plain bounded Map: channel id -> Twitch user id -> emotes. A persisted
+ * observable would re-stringify the whole table on every write. React
+ * subscribes through `personalEmotesVersion`.
  */
 const personalEmotesByChannel = new Map<
   string,

@@ -46,12 +46,11 @@ function readFingerprint(
 function stringifyEnv(
   env: Record<string, string | number | boolean | undefined>,
 ): NodeJS.ProcessEnv {
-  // SAFETY: every value is coerced to a string (or '' for null/undefined)
-  // below, so the result already satisfies ProcessEnv's `string | undefined`
-  // values - Object.fromEntries just can't express that from a mapped array.
-  // The subprocess env is intentionally looser than the app's own
-  // NodeJS.ProcessEnv augmentation (e.g. EXPO_PUBLIC_APP_VARIANT here is a
-  // deploy channel from ./variant, not the app.config build variant).
+  // SAFETY: every value below becomes a string ('' for null/undefined), which
+  // fits ProcessEnv. Object.fromEntries cannot express that from a mapped
+  // array. The subprocess env is looser than the app's NodeJS.ProcessEnv
+  // augmentation: EXPO_PUBLIC_APP_VARIANT here is a deploy channel from
+  // ./variant, not the app.config build variant.
   return Object.fromEntries(
     Object.entries(env).map(([key, value]) => [
       key,
@@ -85,7 +84,7 @@ function getAwsEnv(): NodeJS.ProcessEnv {
   env.AWS_REGION = region;
   env.AWS_DEFAULT_REGION = region;
 
-  console.log('AWS env ready 🚀');
+  console.log('AWS env ready');
 
   return env;
 }
@@ -128,7 +127,7 @@ function restoreFingerprintCacheCommand(args: string[]): void {
 
   if (restoredFromBranch > 0) {
     console.log(
-      `📂 Restored ${restoredFromBranch} fingerprint(s) from S3 for ${branch}/${variant} 🚀`,
+      `📂 Restored ${restoredFromBranch} fingerprint(s) from S3 for ${branch}/${variant}`,
     );
     return;
   }
@@ -138,12 +137,12 @@ function restoreFingerprintCacheCommand(args: string[]): void {
 
   if (restoredFromFallback > 0) {
     console.log(
-      `📂 Restored ${restoredFromFallback} fingerprint(s) from S3 for ${fallbackBranch}/${variant} 🚀`,
+      `📂 Restored ${restoredFromFallback} fingerprint(s) from S3 for ${fallbackBranch}/${variant}`,
     );
     return;
   }
 
-  console.log(`ℹ️ No S3 fingerprint cache found for ${branch}/${variant} ⚠️`);
+  console.log(`ℹ️ No S3 fingerprint cache found for ${branch}/${variant}`);
 }
 
 function saveFingerprintCacheCommand(args: string[]): void {
@@ -169,7 +168,7 @@ function saveFingerprintCacheCommand(args: string[]): void {
     })),
   );
 
-  console.log(`💾 Saved fingerprints to S3 for ${branch}/${variant} 🚀`);
+  console.log(`💾 Saved fingerprints to S3 for ${branch}/${variant}`);
 }
 
 function restoreCriticalOtaIndexCommand(args: string[]): void {

@@ -3,11 +3,11 @@ import type { InlineFlowToken } from '@app/utils/chat/derive-chat-body/types';
 import type { MessageToken } from '@app/utils/chat/message-token';
 
 /**
- * The one answer to "can this body live inside a single Text element".
- * Inline-breaking cases live here, never re-ANDed at a call site.
+ * Decides whether a body can render inside a single Text element. Add new
+ * inline-breaking cases here, not at a call site.
  *
- * Callers ask it about different things, so each names what it asked:
- * a row (username and body together), a body on its own, or a reply quote.
+ * Callers ask about a row (username and body together), a body on its own,
+ * or a reply quote, and each caller's variable name says which.
  */
 export function flowsInline(
   message: MessageToken[],

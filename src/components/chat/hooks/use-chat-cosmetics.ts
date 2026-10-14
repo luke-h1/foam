@@ -6,12 +6,10 @@ import { hasRenderableCosmetics } from '@app/store/chat/actions/user-cosmetics-f
 import { logger } from '@app/utils/logger';
 
 /**
- * Only the signed-in user's own cosmetics; chatter fetching lives in
- * `store/chat/actions/userCosmeticsFetch`.
+ * Only the signed-in user's own cosmetics. Chatter fetching lives in
+ * `store/chat/actions/user-cosmetics-fetch`.
  */
-export function useChatCosmetics(options: { userId?: string | null } = {}) {
-  const { userId } = options;
-
+export function useChatCosmetics({ userId }: { userId?: string | null }) {
   useEffect(() => {
     if (!userId || hasRenderableCosmetics(userId)) {
       return;

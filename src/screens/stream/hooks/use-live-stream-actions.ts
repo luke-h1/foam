@@ -14,7 +14,7 @@ interface UseLiveStreamActionsOptions {
   authState: { isAnonAuth: boolean; isLoggedIn: boolean } | undefined;
   broadcasterName: string | undefined;
   resolvedChannelId: string | undefined;
-  resolvedChannelLogin: string | undefined;
+  resolvedChannelLogin: string;
 }
 
 /**
@@ -65,8 +65,8 @@ export function useLiveStreamActions({
 
         addCreatedClip({
           id: clip.id,
-          broadcasterLogin: resolvedChannelLogin ?? '',
-          broadcasterName: broadcasterName ?? resolvedChannelLogin ?? '',
+          broadcasterLogin: resolvedChannelLogin,
+          broadcasterName: broadcasterName ?? resolvedChannelLogin,
           createdAt: Date.now(),
         });
 

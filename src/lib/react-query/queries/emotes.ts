@@ -9,16 +9,6 @@ const GLOBAL_STALE_TIME = 60 * 60 * 1000;
 
 const PARTIAL_STALE_TIME = 60 * 1000;
 
-async function fetchOrNull<TItem>(
-  fetcher: () => Promise<TItem[]>,
-): Promise<TItem[] | null> {
-  try {
-    return await fetcher();
-  } catch {
-    return null;
-  }
-}
-
 /**
  * The 7TV badge roster exists only here; the chat store holds per-user
  * entitled badges, so this stays Query-owned per ADR-0005.
@@ -28,7 +18,6 @@ export function sevenTvBadgesQueryOptions() {
     queryKey: emoteKeys.sevenTvBadges(),
     staleTime: query =>
       query.state.data?.length ? GLOBAL_STALE_TIME : PARTIAL_STALE_TIME,
-    queryFn: async () =>
-      (await fetchOrNull(() => sevenTvService.fetchAllBadges())) ?? [],
+    queryFn: () => sevenTvService.fetchAllBadges().catch(() => []),
   });
 }

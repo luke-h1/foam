@@ -32,7 +32,7 @@ configureReassure({ testingLibrary: 'react-native' });
 /**
  * The Skia jest mock renders components as plain Views but routes imperative
  * calls (Skia.Path.Make etc.) to global.CanvasKit, which is never loaded in
- * jsdom. Nothing is actually drawn in tests, so a call-through proxy is enough.
+ * jsdom. Tests draw nothing, so a call-through proxy is enough.
  */
 function canvasKitStub(): any {
   return new Proxy(function () {}, {
@@ -63,7 +63,7 @@ function canvasKitStub(): any {
 }
 
 /**
- * Polyfill for setImmediate which Sentry uses under the hood
+ * Sentry calls setImmediate, which jsdom does not provide.
  */
 global.setImmediate =
   global.setImmediate ||

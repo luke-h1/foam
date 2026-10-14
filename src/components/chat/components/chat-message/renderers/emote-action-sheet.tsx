@@ -58,8 +58,6 @@ function getEmoteActionSFSymbolName(actionId: ActionId) {
       return 'doc.on.doc' as const;
     case 'preview':
       return 'arrow.up.right.square' as const;
-    default:
-      return 'doc.on.doc' as const;
   }
 }
 

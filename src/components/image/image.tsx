@@ -110,7 +110,7 @@ export const Image = function Image({
 
     logger.main.warn('image.load_failed', {
       name: 'data_loading_warning',
-      error: event?.error,
+      error: event.error,
       url: descriptor.kind === 'remote' ? descriptor.url : 'uri-object',
       urlHost: host ?? 'unknown',
       host,
@@ -138,8 +138,8 @@ export const Image = function Image({
         transition={transition}
         decodeFormat='rgb'
         /**
-         * Keyed on the ORIGINAL url - the resolved url flipped recycling
-         * identity when the disk-cache swap landed.
+         * Key on the original url. The resolved url changes when the disk-cache
+         * swap lands, which would change the recycling identity.
          */
         recyclingKey={recyclingKey ?? url ?? undefined}
         useAppleWebpCodec={useAppleWebpCodec}
