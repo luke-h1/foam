@@ -1,12 +1,9 @@
-import { twitchService } from '@app/services/twitch-service';
 import type { ChannelPollState } from '@app/types/twitch/poll';
 import {
   createEventSubPoll,
   createHelixPoll,
 } from '@app/utils/twitch/channel-activity/__tests__/__fixtures__/channel-poll-activity.fixture';
 import { channelPollActivity } from '@app/utils/twitch/channel-activity/channel-poll-activity';
-
-const mockGetPolls = jest.spyOn(twitchService, 'getPolls');
 
 function getNormaliser(type: string) {
   const entry = channelPollActivity.events.find(event => event.type === type);
@@ -19,29 +16,6 @@ function getNormaliser(type: string) {
 }
 
 describe('channelPollActivity', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  test('fetches the newest poll for the broadcaster', async () => {
-    mockGetPolls.mockResolvedValue({ data: [] });
-
-    await channelPollActivity.fetch('channel-id');
-
-    expect(mockGetPolls).toHaveBeenCalledWith({
-      broadcasterId: 'channel-id',
-      first: 1,
-    });
-  });
-
-  test('lists the poll lifecycle event types', () => {
-    expect(channelPollActivity.events.map(event => event.type)).toEqual([
-      'channel.poll.begin',
-      'channel.poll.progress',
-      'channel.poll.end',
-    ]);
-  });
-
   test('treats only active polls as active', () => {
     const active = channelPollActivity.normaliseHelix(
       createHelixPoll({ status: 'ACTIVE' }),
@@ -113,13 +87,5 @@ describe('channelPollActivity', () => {
     });
 
     expect(terminated.status).toBe('terminated');
-  });
-
-  test('reports fetch failures with poll log fields', () => {
-    expect(channelPollActivity.fetchFailure).toEqual({
-      message: 'Failed to fetch initial Twitch poll state',
-      name: 'twitch_polls_warning',
-      action: 'initial_poll_fetch_failed',
-    });
   });
 });

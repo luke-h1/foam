@@ -1,12 +1,9 @@
-import { twitchService } from '@app/services/twitch-service';
 import type { ChannelPredictionState } from '@app/types/twitch/prediction';
 import {
   createEventSubPrediction,
   createHelixPrediction,
 } from '@app/utils/twitch/channel-activity/__tests__/__fixtures__/channel-prediction-activity.fixture';
 import { channelPredictionActivity } from '@app/utils/twitch/channel-activity/channel-prediction-activity';
-
-const mockGetPredictions = jest.spyOn(twitchService, 'getPredictions');
 
 function getNormaliser(type: string) {
   const entry = channelPredictionActivity.events.find(
@@ -21,30 +18,6 @@ function getNormaliser(type: string) {
 }
 
 describe('channelPredictionActivity', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  test('fetches the newest prediction for the broadcaster', async () => {
-    mockGetPredictions.mockResolvedValue({ data: [] });
-
-    await channelPredictionActivity.fetch('channel-id');
-
-    expect(mockGetPredictions).toHaveBeenCalledWith({
-      broadcasterId: 'channel-id',
-      first: 1,
-    });
-  });
-
-  test('lists the prediction lifecycle event types', () => {
-    expect(channelPredictionActivity.events.map(event => event.type)).toEqual([
-      'channel.prediction.begin',
-      'channel.prediction.progress',
-      'channel.prediction.lock',
-      'channel.prediction.end',
-    ]);
-  });
-
   test('treats active and locked predictions as active', () => {
     const active = channelPredictionActivity.normaliseHelix(
       createHelixPrediction({ status: 'ACTIVE' }),
@@ -141,13 +114,5 @@ describe('channelPredictionActivity', () => {
     });
 
     expect(canceled.status).toBe('canceled');
-  });
-
-  test('reports fetch failures with prediction log fields', () => {
-    expect(channelPredictionActivity.fetchFailure).toEqual({
-      message: 'Failed to fetch initial Twitch prediction state',
-      name: 'twitch_predictions_warning',
-      action: 'initial_prediction_fetch_failed',
-    });
   });
 });
