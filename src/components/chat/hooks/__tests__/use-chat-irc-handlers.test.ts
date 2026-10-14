@@ -1,37 +1,50 @@
 import { act, renderHook } from '@testing-library/react-native';
 
+import { createChatMessage } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
 import { useChatIrcHandlers } from '@app/components/chat/hooks/use-chat-irc-handlers';
-import * as messagesActions from '@app/store/chat/actions/messages';
+import { addMessages, clearMessages } from '@app/store/chat/actions/messages';
+import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import { preferences$ } from '@app/store/preference-store';
 import { logger } from '@app/utils/logger';
-
-// Captured before spying so per-test store resets do not themselves count
-// as calls against the `clearMessages` assertions below.
-const resetMessagesStore = messagesActions.clearMessages;
-
-const mockAddMessage = jest.spyOn(messagesActions, 'addMessage');
-const mockClearMessages = jest.spyOn(messagesActions, 'clearMessages');
-
-const mockClearMessagesWithNotice = jest.spyOn(
-  messagesActions,
-  'clearMessagesWithNotice',
-);
 
 jest.spyOn(logger.chat, 'info').mockImplementation(() => {});
 jest.spyOn(logger.chat, 'warn').mockImplementation(() => {});
 
+interface StoredMessageSummary {
+  sender: string;
+  content: string | undefined;
+}
+
+function storedMessages(): StoredMessageSummary[] {
+  return chatStore$.messages.peek().map(message => ({
+    sender: message.sender,
+    content:
+      message.message[0] && 'content' in message.message[0]
+        ? message.message[0].content
+        : undefined,
+  }));
+}
+
 function addedSystemMessageContents(): (string | undefined)[] {
-  return mockAddMessage.mock.calls.map(([message]) =>
-    message?.message[0] && 'content' in message.message[0]
-      ? message.message[0].content
-      : undefined,
+  return storedMessages()
+    .filter(message => message.sender === 'System')
+    .map(message => message.content);
+}
+
+function seedChatHistory(messageCount: number) {
+  addMessages(
+    Array.from({ length: messageCount }, (_, index) =>
+      createChatMessage({
+        overrides: { message_id: `history-${index}`, sender: 'bob' },
+        text: `history ${index}`,
+      }),
+    ),
   );
 }
 
 interface RenderIrcHandlersOptions {
   isLoadingRecentMessages?: boolean;
   isMounted?: boolean;
-  messageCount?: number;
   clearLocalMessages?: jest.Mock;
   enqueueLiveChatMessage?: jest.Mock;
   processMessageEmotes?: jest.Mock;
@@ -44,7 +57,6 @@ interface RenderIrcHandlersOptions {
 function renderIrcHandlers({
   isLoadingRecentMessages = false,
   isMounted = true,
-  messageCount = 0,
   clearLocalMessages = jest.fn(),
   enqueueLiveChatMessage = jest.fn(),
   processMessageEmotes = jest.fn(),
@@ -64,9 +76,7 @@ function renderIrcHandlers({
       isLoadingRecentMessagesRef: { current: isLoadingRecentMessages },
       removeChatMessagesByLogin,
       listRef: { current: null },
-      messages$: {
-        peek: jest.fn(() => Array.from({ length: messageCount })),
-      },
+      messages$: chatStore$.messages,
       moderateChatMessageById,
       moderateChatMessagesByLogin,
       processMessageEmotes,
@@ -78,7 +88,7 @@ function renderIrcHandlers({
 describe('useChatIrcHandlers', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    resetMessagesStore();
+    clearMessages();
   });
 
   afterEach(() => {
@@ -93,17 +103,21 @@ describe('useChatIrcHandlers', () => {
       result.current.onJoin();
     });
 
-    expect(mockAddMessage).not.toHaveBeenCalled();
+    expect(storedMessages()).toEqual([]);
   });
 
   test('skips the connected notice when history is already visible', () => {
-    const { result } = renderIrcHandlers({ messageCount: 12 });
+    seedChatHistory(2);
+    const { result } = renderIrcHandlers();
 
     act(() => {
       result.current.onJoin();
     });
 
-    expect(mockAddMessage).not.toHaveBeenCalled();
+    expect(storedMessages()).toEqual<StoredMessageSummary[]>([
+      { sender: 'bob', content: 'history 0' },
+      { sender: 'bob', content: 'history 1' },
+    ]);
   });
 
   test('adds the connected notice when chat starts empty', () => {
@@ -113,19 +127,9 @@ describe('useChatIrcHandlers', () => {
       result.current.onJoin();
     });
 
-    expect(mockAddMessage).toHaveBeenCalledTimes(1);
-    const message = mockAddMessage.mock.calls[0]?.[0];
-
-    expect({
-      content:
-        message?.message[0] && 'content' in message.message[0]
-          ? message.message[0].content
-          : undefined,
-      sender: message?.sender,
-    }).toEqual({
-      content: "Connected to foam's room",
-      sender: 'System',
-    });
+    expect(storedMessages()).toEqual<StoredMessageSummary[]>([
+      { sender: 'System', content: "Connected to foam's room" },
+    ]);
   });
 
   test('strips the CTCP ACTION wrapper and flags /me messages', () => {
@@ -192,18 +196,9 @@ describe('useChatIrcHandlers', () => {
       result.current.onClearChat('#foam', {}, 'baduser', 1200);
     });
 
-    const message = mockAddMessage.mock.calls[0]?.[0];
-
-    expect({
-      content:
-        message?.message[0] && 'content' in message.message[0]
-          ? message.message[0].content
-          : undefined,
-      sender: message?.sender,
-    }).toEqual({
-      content: 'baduser has been timed out for 20m',
-      sender: 'System',
-    });
+    expect(storedMessages()).toEqual<StoredMessageSummary[]>([
+      { sender: 'System', content: 'baduser has been timed out for 20m' },
+    ]);
   });
 
   test('posts a system message announcing a permanent ban when no duration is given', () => {
@@ -213,14 +208,9 @@ describe('useChatIrcHandlers', () => {
       result.current.onClearChat('#foam', {}, 'baduser');
     });
 
-    const message = mockAddMessage.mock.calls[0]?.[0];
-
-    const content =
-      message?.message[0] && 'content' in message.message[0]
-        ? message.message[0].content
-        : undefined;
-
-    expect(content).toEqual('baduser has been permanently banned');
+    expect(storedMessages()).toEqual<StoredMessageSummary[]>([
+      { sender: 'System', content: 'baduser has been permanently banned' },
+    ]);
   });
 
   test('a targeted CLEARCHAT timeout moderates through the single combined call', () => {
@@ -309,25 +299,21 @@ describe('useChatIrcHandlers', () => {
     expect(moderateChatMessageById).not.toHaveBeenCalled();
   });
 
-  test('does not announce a per-user action on a full chat clear', () => {
+  test('a full chat clear leaves only the clear notice', () => {
+    seedChatHistory(2);
     const { result } = renderIrcHandlers();
 
     act(() => {
       result.current.onClearChat('#foam', {});
     });
 
-    expect(mockAddMessage).not.toHaveBeenCalled();
-    const notice = mockClearMessagesWithNotice.mock.calls[0]?.[0];
-
-    const content =
-      notice?.message[0] && 'content' in notice.message[0]
-        ? notice.message[0].content
-        : undefined;
-
-    expect(content).toEqual('A moderator cleared chat');
+    expect(storedMessages()).toEqual<StoredMessageSummary[]>([
+      { sender: 'System', content: 'A moderator cleared chat' },
+    ]);
   });
 
   test('does not clear rendered messages when token fires after chat unmounts', () => {
+    seedChatHistory(1);
     const clearLocalMessages = jest.fn();
 
     const { result } = renderIrcHandlers({
@@ -339,11 +325,15 @@ describe('useChatIrcHandlers', () => {
       result.current.onPart('#foam');
     });
 
-    expect(mockClearMessages).not.toHaveBeenCalled();
+    expect(storedMessages()).toEqual<StoredMessageSummary[]>([
+      { sender: 'bob', content: 'history 0' },
+    ]);
+
     expect(clearLocalMessages).not.toHaveBeenCalled();
   });
 
   test('clears rendered messages when token fires while chat is still mounted', () => {
+    seedChatHistory(1);
     const clearLocalMessages = jest.fn();
     const { result } = renderIrcHandlers({ clearLocalMessages });
 
@@ -351,11 +341,12 @@ describe('useChatIrcHandlers', () => {
       result.current.onPart('#foam');
     });
 
-    expect(mockClearMessages).toHaveBeenCalledTimes(1);
+    expect(storedMessages()).toEqual([]);
     expect(clearLocalMessages).toHaveBeenCalledTimes(1);
   });
 
   test('ignores a stale token for a previously watched channel', () => {
+    seedChatHistory(1);
     const clearLocalMessages = jest.fn();
     const { result } = renderIrcHandlers({ clearLocalMessages });
 
@@ -363,7 +354,10 @@ describe('useChatIrcHandlers', () => {
       result.current.onPart('#previouschannel');
     });
 
-    expect(mockClearMessages).not.toHaveBeenCalled();
+    expect(storedMessages()).toEqual<StoredMessageSummary[]>([
+      { sender: 'bob', content: 'history 0' },
+    ]);
+
     expect(clearLocalMessages).not.toHaveBeenCalled();
   });
 
@@ -374,7 +368,7 @@ describe('useChatIrcHandlers', () => {
       result.current.onRoomState('#foam', { slow: '30' });
     });
 
-    mockAddMessage.mockClear();
+    clearMessages();
 
     act(() => {
       result.current.onPart('#previouschannel');
@@ -388,6 +382,7 @@ describe('useChatIrcHandlers', () => {
   });
 
   test('matches the parted channel case-insensitively and without the # prefix', () => {
+    seedChatHistory(1);
     const clearLocalMessages = jest.fn();
     const { result } = renderIrcHandlers({ clearLocalMessages });
 
@@ -395,7 +390,7 @@ describe('useChatIrcHandlers', () => {
       result.current.onPart('#FOAM');
     });
 
-    expect(mockClearMessages).toHaveBeenCalledTimes(1);
+    expect(storedMessages()).toEqual([]);
     expect(clearLocalMessages).toHaveBeenCalledTimes(1);
   });
 
@@ -421,7 +416,7 @@ describe('useChatIrcHandlers', () => {
       result.current.onRoomState('#foam', { slow: '30' });
     });
 
-    mockAddMessage.mockClear();
+    clearMessages();
 
     act(() => {
       result.current.onRoomState('#foam', { emote_only: '1', slow: '0' });
@@ -444,7 +439,7 @@ describe('useChatIrcHandlers', () => {
       result.current.onPart('#foam');
     });
 
-    mockAddMessage.mockClear();
+    clearMessages();
 
     act(() => {
       result.current.onRoomState('#foam', { slow: '30' });
@@ -485,10 +480,11 @@ describe('useChatIrcHandlers', () => {
       result.current.onUserPart('#foam', 'bob');
     });
 
-    expect(mockAddMessage).not.toHaveBeenCalled();
+    expect(storedMessages()).toEqual([]);
   });
 
   test('a full CLEARCHAT during history replay keeps the backfill', () => {
+    seedChatHistory(1);
     const { result } = renderIrcHandlers({ isLoadingRecentMessages: true });
 
     act(() => {
@@ -497,21 +493,10 @@ describe('useChatIrcHandlers', () => {
 
     // Replay runs through this same handler, so clearing would destroy the
     // history the user is waiting on.
-    expect(mockClearMessagesWithNotice).not.toHaveBeenCalled();
-
-    expect(addedSystemMessageContents()).toEqual([
-      'A moderator cleared chat (history kept)',
+    expect(storedMessages()).toEqual<StoredMessageSummary[]>([
+      { sender: 'bob', content: 'history 0' },
+      { sender: 'System', content: 'A moderator cleared chat (history kept)' },
     ]);
-  });
-
-  test('a full CLEARCHAT outside history replay still clears', () => {
-    const { result } = renderIrcHandlers({ isLoadingRecentMessages: false });
-
-    act(() => {
-      result.current.onClearChat('#foam', {});
-    });
-
-    expect(mockClearMessagesWithNotice).toHaveBeenCalledTimes(1);
   });
 
   test('reconnect resets the room state and announces the reconnect', () => {
@@ -521,7 +506,7 @@ describe('useChatIrcHandlers', () => {
       result.current.onRoomState('#foam', { slow: '30' });
     });
 
-    mockAddMessage.mockClear();
+    clearMessages();
 
     act(() => {
       result.current.onReconnect();

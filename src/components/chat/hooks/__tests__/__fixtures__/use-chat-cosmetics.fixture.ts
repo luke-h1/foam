@@ -1,28 +1,25 @@
-type CachedCosmeticsMocks = {
-  getUserBadgeId: jest.MockedFunction<
-    (ttvUserId: string) => string | undefined
-  >;
-  getUserPaintId: jest.MockedFunction<
-    (ttvUserId: string) => string | undefined
-  >;
-};
+import { chatStore$ } from '@app/store/chat/observables/chat-store';
 
-export function setCachedCosmetics(
-  mocks: CachedCosmeticsMocks,
-  {
-    badgeId,
-    paintId,
-    twitchUserId,
-  }: {
-    badgeId?: string;
-    paintId?: string;
-    twitchUserId: string;
-  },
-): void {
-  mocks.getUserBadgeId.mockImplementation(userId =>
-    userId === twitchUserId ? badgeId : undefined,
-  );
-  mocks.getUserPaintId.mockImplementation(userId =>
-    userId === twitchUserId ? paintId : undefined,
-  );
+interface CachedCosmeticsSeed {
+  badgeId?: string;
+  paintId?: string;
+  twitchUserId: string;
+}
+
+/**
+ * Binds the paint and badge ids to the user in the chat store, the same
+ * place a 7TV entitlement or a cached snapshot writes them.
+ */
+export function setCachedCosmetics({
+  badgeId,
+  paintId,
+  twitchUserId,
+}: CachedCosmeticsSeed): void {
+  if (paintId) {
+    chatStore$.userPaintIds.set({ [twitchUserId]: paintId });
+  }
+
+  if (badgeId) {
+    chatStore$.userBadgeIds.set({ [twitchUserId]: badgeId });
+  }
 }

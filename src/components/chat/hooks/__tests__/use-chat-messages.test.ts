@@ -4,46 +4,34 @@ import { createScrollAnchor } from '@app/components/chat/hooks/__tests__/__fixtu
 import { useChatMessages } from '@app/components/chat/hooks/use-chat-messages';
 import type { BufferedMessage } from '@app/components/chat/util/message-buffer';
 import * as chatUnreadActions from '@app/store/chat/actions/chat-unread';
+import {
+  getChatUnreadCount,
+  resetChatUnread,
+} from '@app/store/chat/actions/chat-unread';
 import * as messagesActions from '@app/store/chat/actions/messages';
+import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
-
-const mockAddMessages = jest.spyOn(messagesActions, 'addMessages');
-
-const mockIncrementChatUnread = jest.spyOn(
-  chatUnreadActions,
-  'incrementChatUnread',
-);
-
-const mockModerateMessageById = jest.spyOn(
-  messagesActions,
-  'moderateMessageById',
-);
-
-const mockModerateMessagesByLogin = jest.spyOn(
-  messagesActions,
-  'moderateMessagesByLogin',
-);
-
-const mockRemoveMessageById = jest.spyOn(messagesActions, 'removeMessageById');
-
-const mockRemoveMessagesByLogin = jest.spyOn(
-  messagesActions,
-  'removeMessagesByLogin',
-);
 
 const MAX_BUFFERED = messagesActions.getMaxChatMessages();
 
-function getLastFlushedMessages(): ChatMessageType<never>[] {
-  const lastCall = mockAddMessages.mock.calls.at(-1);
-  const messages = lastCall?.[0];
+function storedMessages() {
+  return chatStore$.messages.peek();
+}
 
-  if (!Array.isArray(messages)) {
-    return [];
-  }
+function storedIds(): string[] {
+  return storedMessages().map(message => message.message_id);
+}
 
-  return messages.filter(
-    (message): message is ChatMessageType<never> => message != null,
-  );
+interface ModerationSummary {
+  id: string;
+  moderationNotice: string | undefined;
+}
+
+function storedModeration(): ModerationSummary[] {
+  return storedMessages().map(message => ({
+    id: message.message_id,
+    moderationNotice: message.moderationNotice,
+  }));
 }
 
 describe('useChatMessages', () => {
@@ -87,9 +75,10 @@ describe('useChatMessages', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.restoreAllMocks();
     jest.useFakeTimers();
     messagesActions.clearMessages();
+    resetChatUnread();
   });
 
   afterEach(() => {
@@ -145,6 +134,7 @@ describe('useChatMessages', () => {
 
   describe('Moderation coherence', () => {
     test('moderateChatMessagesByLogin edits buffered rows and the store in one call', () => {
+      messagesActions.addMessage(createMockMessage('0'));
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
       act(() => {
@@ -158,19 +148,22 @@ describe('useChatMessages', () => {
         );
       });
 
-      expect(mockModerateMessagesByLogin.mock.calls).toEqual([
-        ['testuser', 'Timed out (600s)'],
+      expect(storedModeration()).toEqual<ModerationSummary[]>([
+        { id: '0', moderationNotice: 'Timed out (600s)' },
       ]);
 
       act(() => {
         jest.advanceTimersByTime(250);
       });
 
-      const [flushedMessage] = getLastFlushedMessages();
-      expect(flushedMessage?.moderationNotice).toBe('Timed out (600s)');
+      expect(storedModeration()).toEqual<ModerationSummary[]>([
+        { id: '0', moderationNotice: 'Timed out (600s)' },
+        { id: '1', moderationNotice: 'Timed out (600s)' },
+      ]);
     });
 
     test('removeChatMessagesByLogin drops buffered rows and the store rows in one call', () => {
+      messagesActions.addMessage(createMockMessage('0'));
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
       act(() => {
@@ -181,14 +174,14 @@ describe('useChatMessages', () => {
         result.current.removeChatMessagesByLogin('testuser');
       });
 
-      expect(mockRemoveMessagesByLogin.mock.calls).toEqual([['testuser']]);
+      expect(storedIds()).toEqual([]);
       expect(result.current.getBufferSize()).toBe(0);
 
       act(() => {
         jest.advanceTimersByTime(250);
       });
 
-      expect(mockAddMessages).not.toHaveBeenCalled();
+      expect(storedIds()).toEqual([]);
     });
 
     test('moderateChatMessageById moderates the store copy when it exists', () => {
@@ -203,15 +196,17 @@ describe('useChatMessages', () => {
         result.current.moderateChatMessageById('1', 'Deleted');
       });
 
-      expect(mockModerateMessageById.mock.calls).toEqual([['1', 'Deleted']]);
-      expect(mockRemoveMessageById).not.toHaveBeenCalled();
+      expect(storedModeration()).toEqual<ModerationSummary[]>([
+        { id: '1', moderationNotice: 'Deleted' },
+      ]);
 
       act(() => {
         jest.advanceTimersByTime(250);
       });
 
-      const [flushedMessage] = getLastFlushedMessages();
-      expect(flushedMessage?.moderationNotice).toBe('Deleted');
+      expect(storedModeration()).toEqual<ModerationSummary[]>([
+        { id: '1', moderationNotice: 'Deleted' },
+      ]);
     });
 
     test('moderateChatMessageById removes everywhere when the store never saw the message', () => {
@@ -225,12 +220,17 @@ describe('useChatMessages', () => {
         result.current.moderateChatMessageById('1', 'Deleted');
       });
 
-      expect(mockModerateMessageById).not.toHaveBeenCalled();
-      expect(mockRemoveMessageById.mock.calls).toEqual([['1']]);
       expect(result.current.getBufferSize()).toBe(0);
+
+      act(() => {
+        jest.advanceTimersByTime(250);
+      });
+
+      expect(storedIds()).toEqual([]);
     });
 
     test('removeChatMessageById drops the buffered row and the store row in one call', () => {
+      messagesActions.addMessage(createMockMessage('1'));
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
       act(() => {
@@ -241,7 +241,7 @@ describe('useChatMessages', () => {
         result.current.removeChatMessageById('1');
       });
 
-      expect(mockRemoveMessageById.mock.calls).toEqual([['1']]);
+      expect(storedIds()).toEqual([]);
       expect(result.current.getBufferSize()).toBe(0);
     });
   });
@@ -256,9 +256,11 @@ describe('useChatMessages', () => {
         }),
       );
 
-      mockIncrementChatUnread.mockImplementationOnce(() => {
-        throw new Error('flush boom');
-      });
+      jest
+        .spyOn(chatUnreadActions, 'incrementChatUnread')
+        .mockImplementationOnce(() => {
+          throw new Error('flush boom');
+        });
 
       act(() => {
         result.current.handleNewMessage(createMockMessage('1'));
@@ -272,7 +274,7 @@ describe('useChatMessages', () => {
         // ignore
       }
 
-      expect(mockAddMessages).toHaveBeenCalledTimes(1);
+      expect(storedIds()).toEqual(['1']);
 
       act(() => {
         result.current.handleNewMessage(createMockMessage('2'));
@@ -282,7 +284,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(250);
       });
 
-      expect(mockAddMessages).toHaveBeenCalledTimes(2);
+      expect(storedIds()).toEqual(['1', '2']);
     });
 
     test('buffers messages and flush periodically', () => {
@@ -294,20 +296,20 @@ describe('useChatMessages', () => {
         result.current.handleNewMessage(message);
       });
 
-      expect(mockAddMessages).not.toHaveBeenCalled();
+      expect(storedIds()).toEqual([]);
       expect(result.current.getBufferSize()).toBe(1);
 
       act(() => {
         jest.advanceTimersByTime(99);
       });
 
-      expect(mockAddMessages).not.toHaveBeenCalled();
+      expect(storedIds()).toEqual([]);
 
       act(() => {
         jest.advanceTimersByTime(1);
       });
 
-      const [flushedMessage] = getLastFlushedMessages();
+      const [flushedMessage] = storedMessages();
       expect(flushedMessage?.message_id).toBe('1');
       expect(flushedMessage?.message_nonce).toBe('nonce-1');
       expect(result.current.getBufferSize()).toBe(0);
@@ -327,13 +329,13 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(249);
       });
 
-      expect(mockAddMessages).not.toHaveBeenCalled();
+      expect(storedIds()).toEqual([]);
 
       act(() => {
         jest.advanceTimersByTime(1);
       });
 
-      const [flushedMessage] = getLastFlushedMessages();
+      const [flushedMessage] = storedMessages();
       expect(flushedMessage?.message_id).toBe('1');
       expect(flushedMessage?.message_nonce).toBe('nonce-1');
       expect(result.current.getBufferSize()).toBe(0);
@@ -354,7 +356,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(250);
       });
 
-      expect(mockAddMessages).toHaveBeenCalled();
+      expect(storedIds()).toEqual(['1', '2']);
       expect(result.current.getBufferSize()).toBe(0);
     });
 
@@ -375,7 +377,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(100);
       });
 
-      const [flushedMessage] = getLastFlushedMessages();
+      const [flushedMessage] = storedMessages();
       expect(flushedMessage?.message_id).toBe('1');
       expect(flushedMessage?.message_nonce).toBe('nonce-1');
       expect(onBottomContentChange).not.toHaveBeenCalled();
@@ -399,7 +401,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(100);
       });
 
-      const [flushedMessage] = getLastFlushedMessages();
+      const [flushedMessage] = storedMessages();
       expect(flushedMessage?.message_id).toBe('1');
       expect(flushedMessage?.message_nonce).toBe('nonce-1');
       expect(onBottomContentChange).toHaveBeenCalledTimes(1);
@@ -422,7 +424,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(250);
       });
 
-      expect(mockAddMessages).toHaveBeenCalled();
+      expect(storedIds()).toEqual(['1']);
       expect(onBottomContentChange).not.toHaveBeenCalled();
     });
 
@@ -469,15 +471,13 @@ describe('useChatMessages', () => {
       });
 
       expect(result.current.getBufferSize()).toBe(3);
-      expect(mockAddMessages).not.toHaveBeenCalled();
+      expect(storedIds()).toEqual([]);
 
       act(() => {
         result.current.forceFlush();
       });
 
-      expect(
-        getLastFlushedMessages().map(message => message.message_id),
-      ).toEqual(['1', '2', '3']);
+      expect(storedIds()).toEqual(['1', '2', '3']);
 
       expect(result.current.getBufferSize()).toBe(0);
     });
@@ -498,14 +498,13 @@ describe('useChatMessages', () => {
         result.current.handleNewMessage(createMockMessage('2'));
       });
 
-      expect(mockIncrementChatUnread).not.toHaveBeenCalled();
+      expect(getChatUnreadCount()).toBe(0);
 
       act(() => {
         jest.advanceTimersByTime(250);
       });
 
-      expect(mockIncrementChatUnread).toHaveBeenCalledTimes(1);
-      expect(mockIncrementChatUnread).toHaveBeenCalledWith(2);
+      expect(getChatUnreadCount()).toBe(2);
     });
 
     test('does not increment unread when at bottom', () => {
@@ -519,9 +518,10 @@ describe('useChatMessages', () => {
 
       act(() => {
         result.current.handleNewMessage(createMockMessage('1'));
+        jest.advanceTimersByTime(250);
       });
 
-      expect(mockIncrementChatUnread).not.toHaveBeenCalled();
+      expect(getChatUnreadCount()).toBe(0);
     });
 
     test('flushes pending unread count on forceFlush', () => {
@@ -539,8 +539,7 @@ describe('useChatMessages', () => {
         result.current.forceFlush();
       });
 
-      expect(mockIncrementChatUnread).toHaveBeenCalledTimes(1);
-      expect(mockIncrementChatUnread).toHaveBeenCalledWith(2);
+      expect(getChatUnreadCount()).toBe(2);
     });
 
     test('does not increment unread while jumping to bottom', () => {
@@ -555,9 +554,10 @@ describe('useChatMessages', () => {
 
       act(() => {
         result.current.handleNewMessage(createMockMessage('1'));
+        jest.advanceTimersByTime(250);
       });
 
-      expect(mockIncrementChatUnread).not.toHaveBeenCalled();
+      expect(getChatUnreadCount()).toBe(0);
     });
   });
 
@@ -573,7 +573,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(100);
       });
 
-      expect(mockAddMessages).toHaveBeenCalledTimes(1);
+      expect(storedIds()).toEqual(['1']);
 
       act(() => {
         result.current.handleNewMessage(createMockMessage('2'));
@@ -583,8 +583,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(100);
       });
 
-      expect(mockAddMessages).toHaveBeenCalledTimes(2);
-      expect(getLastFlushedMessages().map(m => m.message_id)).toEqual(['2']);
+      expect(storedIds()).toEqual(['1', '2']);
     });
 
     test('keeps the timer armed for a message queued while publishing', () => {
@@ -613,14 +612,14 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(100);
       });
 
-      expect(getLastFlushedMessages().map(m => m.message_id)).toEqual(['1']);
+      expect(storedIds()).toEqual(['1']);
       expect(result.current.getBufferSize()).toBe(1);
 
       act(() => {
         jest.advanceTimersByTime(100);
       });
 
-      expect(getLastFlushedMessages().map(m => m.message_id)).toEqual(['2']);
+      expect(storedIds()).toEqual(['1', '2']);
       expect(result.current.getBufferSize()).toBe(0);
     });
 
@@ -639,15 +638,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(500);
       });
 
-      const flushedIds = mockAddMessages.mock.calls.flatMap(([messages]) =>
-        (Array.isArray(messages) ? messages : [])
-          .filter(
-            (message): message is ChatMessageType<never> => message != null,
-          )
-          .map(message => message.message_id),
-      );
-
-      expect(flushedIds).toEqual(['1']);
+      expect(storedIds()).toEqual(['1']);
     });
   });
 
@@ -667,7 +658,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(500);
       });
 
-      expect(mockAddMessages).not.toHaveBeenCalled();
+      expect(storedIds()).toEqual([]);
     });
 
     test('clears buffer on clearLocalMessages', () => {
@@ -719,8 +710,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(250);
       });
 
-      expect(mockAddMessages).toHaveBeenCalledTimes(1);
-      const flushedMessages = getLastFlushedMessages();
+      const flushedMessages = storedMessages();
       expect(flushedMessages).toHaveLength(250);
       expect(flushedMessages[0]?.message_id).toBe('0');
       expect(flushedMessages.at(-1)?.message_id).toBe('249');
@@ -747,9 +737,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(250);
       });
 
-      const committed = mockAddMessages.mock.calls.flatMap(
-        call => call[0] ?? [],
-      );
+      const committed = storedMessages();
 
       expect(committed.map(message => message?.message_id)).toEqual(
         Array.from({ length: pushCount }, (_, index) => `${index}`),
@@ -770,7 +758,9 @@ describe('useChatMessages', () => {
         }),
       );
 
-      const pushCount = 1500;
+      // The store keeps 350 rows above the cap while front trim is paused.
+      // This fills that window and is still more than the buffer cap.
+      const pushCount = MAX_BUFFERED + 350;
 
       act(() => {
         for (let i = 0; i < pushCount; i += 1) {
@@ -779,9 +769,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(1000);
       });
 
-      const committed = mockAddMessages.mock.calls.flatMap(
-        call => call[0] ?? [],
-      );
+      const committed = storedMessages();
 
       expect(committed.length + result.current.getBufferSize()).toBe(pushCount);
 
@@ -807,7 +795,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(500);
       });
 
-      expect(mockAddMessages).not.toHaveBeenCalled();
+      expect(storedIds()).toEqual([]);
       expect(result.current.getBufferSize()).toBe(1);
 
       activelyScrolling = false;
@@ -816,9 +804,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(250);
       });
 
-      expect(
-        getLastFlushedMessages().map(message => message.message_id),
-      ).toEqual(['during-fling']);
+      expect(storedIds()).toEqual(['during-fling']);
 
       expect(result.current.getBufferSize()).toBe(0);
     });
@@ -842,7 +828,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(100);
       });
 
-      const flushedMessages = getLastFlushedMessages();
+      const flushedMessages = storedMessages();
 
       // The cap rises to the arrivals since the last flush, so the burst
       // commits in one flush and the visible chat stays on live.
@@ -873,7 +859,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(180);
       });
 
-      const raidRows = getLastFlushedMessages().length;
+      const raidRows = storedMessages().length;
       const raidRate = raidRows / 180;
 
       // The non-raid pairing is 8 rows per 100ms.
@@ -897,7 +883,7 @@ describe('useChatMessages', () => {
       });
 
       expect(result.current.getBufferSize()).toBe(0);
-      mockAddMessages.mockClear();
+      messagesActions.clearMessages();
 
       // The burst flush left raid mode on, so this single row waits out the
       // wider 180ms cadence.
@@ -906,17 +892,15 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(100);
       });
 
-      expect(mockAddMessages).not.toHaveBeenCalled();
+      expect(storedIds()).toEqual([]);
 
       act(() => {
         jest.advanceTimersByTime(80);
       });
 
-      expect(
-        getLastFlushedMessages().map(message => message.message_id),
-      ).toEqual(['after-raid']);
+      expect(storedIds()).toEqual(['after-raid']);
 
-      mockAddMessages.mockClear();
+      messagesActions.clearMessages();
 
       // That quiet flush cleared raid mode, so the next row commits at 100ms.
       act(() => {
@@ -924,9 +908,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(100);
       });
 
-      expect(
-        getLastFlushedMessages().map(message => message.message_id),
-      ).toEqual(['quiet']);
+      expect(storedIds()).toEqual(['quiet']);
     });
 
     test('a raid drains in order across flushes instead of dropping the overflow', () => {
@@ -949,9 +931,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(180 * 12);
       });
 
-      const committed = mockAddMessages.mock.calls.flatMap(
-        call => call[0] ?? [],
-      );
+      const committed = storedMessages();
 
       expect(committed.map(message => message?.message_id)).toEqual(
         Array.from({ length: 50 }, (_, index) => `${index}`),
@@ -980,12 +960,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(250);
       });
 
-      const counted = mockIncrementChatUnread.mock.calls.reduce(
-        (total, [count]) => total + count,
-        0,
-      );
-
-      expect(counted).toBe(pushCount);
+      expect(getChatUnreadCount()).toBe(pushCount);
     });
   });
 
@@ -1007,7 +982,7 @@ describe('useChatMessages', () => {
       });
 
       expect(finalizeMessageForCommit).toHaveBeenCalledTimes(2);
-      const flushedMessages = getLastFlushedMessages();
+      const flushedMessages = storedMessages();
 
       expect(flushedMessages.map(message => message.sender)).toEqual([
         'Finalized',
@@ -1035,9 +1010,9 @@ describe('useChatMessages', () => {
       // finalized in one flush.
       expect(finalizeMessageForCommit).toHaveBeenCalledTimes(20);
 
-      expect(
-        getLastFlushedMessages().map(message => message.message_id),
-      ).toEqual(Array.from({ length: 20 }, (_, index) => `${index}`));
+      expect(storedIds()).toEqual(
+        Array.from({ length: 20 }, (_, index) => `${index}`),
+      );
     });
 
     test('force flush finalizes the drained backlog', () => {
@@ -1062,7 +1037,7 @@ describe('useChatMessages', () => {
 
       expect(finalizeMessageForCommit).toHaveBeenCalledTimes(1);
 
-      expect(getLastFlushedMessages().map(message => message.sender)).toEqual([
+      expect(storedMessages().map(message => message.sender)).toEqual([
         'Finalized',
       ]);
     });
@@ -1082,7 +1057,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(500);
       });
 
-      expect(mockAddMessages).not.toHaveBeenCalled();
+      expect(storedIds()).toEqual([]);
 
       act(() => {
         jest.advanceTimersByTime(3000);
@@ -1092,7 +1067,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(200);
       });
 
-      expect(getLastFlushedMessages().map(m => m.message_id)).toEqual(['1']);
+      expect(storedIds()).toEqual(['1']);
     });
 
     test('does not delay when the effective delay is zero', () => {
@@ -1108,7 +1083,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(200);
       });
 
-      expect(getLastFlushedMessages().map(m => m.message_id)).toEqual(['1']);
+      expect(storedIds()).toEqual(['1']);
     });
 
     test('never delays historical replay (countUnread false)', () => {
@@ -1126,7 +1101,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(200);
       });
 
-      expect(getLastFlushedMessages().map(m => m.message_id)).toEqual(['1']);
+      expect(storedIds()).toEqual(['1']);
     });
 
     test('a live message arriving after the delay collapses to zero waits behind held messages', () => {
@@ -1154,7 +1129,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(200);
       });
 
-      expect(mockAddMessages).not.toHaveBeenCalled();
+      expect(storedIds()).toEqual([]);
 
       act(() => {
         jest.advanceTimersByTime(4500);
@@ -1164,10 +1139,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(200);
       });
 
-      expect(getLastFlushedMessages().map(m => m.message_id)).toEqual([
-        '1',
-        '2',
-      ]);
+      expect(storedIds()).toEqual(['1', '2']);
     });
 
     test('reconcile flushes everything held once the delay is turned off', () => {
@@ -1185,7 +1157,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(500);
       });
 
-      expect(mockAddMessages).not.toHaveBeenCalled();
+      expect(storedIds()).toEqual([]);
 
       delayMs = 0;
 
@@ -1197,7 +1169,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(200);
       });
 
-      expect(getLastFlushedMessages().map(m => m.message_id)).toEqual(['1']);
+      expect(storedIds()).toEqual(['1']);
     });
   });
 });
