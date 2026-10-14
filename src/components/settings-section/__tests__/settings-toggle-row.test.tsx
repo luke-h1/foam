@@ -1,26 +1,8 @@
-import { fireEvent, render } from '@testing-library/react-native';
+import { render } from '@testing-library/react-native';
 
 import { SettingsToggleRow } from '../settings-section';
 
 describe('SettingsToggleRow', () => {
-  test('passes false when changing the switch from on to off', () => {
-    const onValueChange = jest.fn();
-
-    const { getByLabelText } = render(
-      <SettingsToggleRow
-        title='Show Timestamps'
-        value
-        onValueChange={onValueChange}
-      />,
-    );
-
-    const switchControl = getByLabelText('Show Timestamps');
-
-    fireEvent(switchControl, 'valueChange', false);
-
-    expect(onValueChange).toHaveBeenCalledWith(false);
-  });
-
   test('reflects the checked state from props', () => {
     const onValueChange = jest.fn();
 

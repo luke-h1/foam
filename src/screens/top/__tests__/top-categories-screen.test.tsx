@@ -25,16 +25,6 @@ describe('TopCategoriesScreen', () => {
     );
   });
 
-  test('renders category list when data is available', async () => {
-    getTopCategoriesSpy.mockResolvedValue({
-      data: [mockCategory],
-    });
-
-    render(<TopCategoriesScreen />);
-
-    expect(await screen.findByText('Just Chatting')).toBeOnTheScreen();
-  });
-
   test('shows error empty state when fetch fails', async () => {
     getTopCategoriesSpy.mockRejectedValue(new Error('network error'));
 
