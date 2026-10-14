@@ -50,11 +50,6 @@ export function sentryDistFor(variant: string): string {
   return getVariantMeta(variant).sentryDist;
 }
 
-/**
- * Sentry Size Analysis scopes comparisons to like-for-like builds. EAS release
- * profiles map 1:1 to our deploy variants, so encode the variant in the
- * configuration name (Release-production, Release-internal, …).
- */
 export function variantLabel(variant: string): string {
   return getVariantMeta(variant).label;
 }

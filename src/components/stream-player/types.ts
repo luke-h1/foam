@@ -127,11 +127,6 @@ export interface StreamPlayerProps {
    */
   posterUrl?: string;
   /**
-   * When set, the WebView loads the Twitch embed via this proxy instead of the
-   * direct player URL.
-   */
-  streamProxyBaseUrl?: string;
-  /**
    * Show custom overlay controls.
    * @default false
    */
@@ -236,7 +231,6 @@ export type PlayerMessage =
   | { type: 'ready' }
   | { type: 'trace'; payload: { step: string; detail?: string } }
   | { type: 'twitchAuthComplete' }
-  | { type: 'error'; payload: { message: string } }
   | {
       type: 'embedMisconfigured';
       payload: { message: string; parent: string | null };

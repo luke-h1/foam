@@ -29,14 +29,14 @@ const normaliseIndexKey = (value?: string): string | null =>
   normaliseChatUsername(value) || null;
 
 export const indexMessageColor = (message: AnyChatMessageType): void => {
-  if (message.userstate?.color && message.message_id) {
-    messageColorIndex.set(message.message_id, message.userstate.color);
-  }
-
   const color = message.userstate?.color;
 
   if (!color) {
     return;
+  }
+
+  if (message.message_id) {
+    messageColorIndex.set(message.message_id, color);
   }
 
   const senderKeys = [

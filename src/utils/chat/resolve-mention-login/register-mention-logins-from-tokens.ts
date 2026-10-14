@@ -3,7 +3,7 @@ import { registerMentionLogin } from '@app/utils/chat/resolve-mention-login/regi
 
 export function registerMentionLoginsFromParts(tokens: MessageToken[]): void {
   tokens.forEach(token => {
-    if (token.type !== 'mention' || !('content' in token)) {
+    if (token.type !== 'mention') {
       return;
     }
 

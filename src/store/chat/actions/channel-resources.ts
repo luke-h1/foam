@@ -44,8 +44,8 @@ export type BadgeCacheKey = ChannelBadgeCacheKey | GlobalBadgeCacheKey;
 export type ResourceCacheKey = EmoteCacheKey | BadgeCacheKey;
 
 /**
- * One (provider, scope) resource. The spec list is the seam - adding a
- * provider is one entry; fan-out, reporting, reconcile and merge follow.
+ * One (provider, scope) resource. To add a provider, add one spec. Fan-out,
+ * reporting, reconcile and merge all read the spec list.
  */
 export interface ResourceSpec<
   TKey extends ResourceCacheKey,

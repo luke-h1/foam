@@ -33,13 +33,11 @@ interface StreamPlayerWebViewProps {
   needsInitRef: RefObject<boolean>;
   onError?: (error: string) => void;
   onHttpError: (error: { statusCode: number; url: string }) => void;
-  onLoadEnd?: (url: string) => void;
   onLoadFailed?: (
     reason: string,
     error: WebViewError | WebViewHttpError,
   ) => void;
   onMessage: ComponentProps<typeof WebView>['onMessage'];
-  onOpenWindow?: ComponentProps<typeof WebView>['onOpenWindow'];
   onWebViewLoaded?: () => void;
   // When false the WebView is transparent (non-opaque WKWebView), so the iOS rotation snapshot
   // reveals the thumbnail behind it instead of the WebView's black backing.
@@ -61,10 +59,8 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
   needsInitRef,
   onError,
   onHttpError,
-  onLoadEnd,
   onLoadFailed,
   onMessage,
-  onOpenWindow,
   onWebViewLoaded,
   opaque = true,
   remountWebView,
@@ -81,8 +77,6 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
       scheduleAuthCompletionReload();
       return;
     }
-
-    onLoadEnd?.(url);
 
     if (needsInitRef.current) {
       needsInitRef.current = false;
@@ -127,8 +121,8 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
     remountWebView();
   };
 
-  const handleLoadStart = (renderer: 'WebView') => {
-    logger.main.debug(`[StreamPlayer:${renderer}] onLoadStart`, {
+  const handleLoadStart = () => {
+    logger.main.debug('[StreamPlayer:WebView] onLoadStart', {
       channel,
       hasClip: !!clip,
       hasVideo: !!video,
@@ -188,10 +182,9 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
           scheduleAuthCompletionReload();
         }
       }}
-      onOpenWindow={onOpenWindow}
       onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
       onLoadEnd={event => handleLoadEnd(event.nativeEvent.url)}
-      onLoadStart={() => handleLoadStart('WebView')}
+      onLoadStart={handleLoadStart}
       onMessage={onMessage}
       onRenderProcessGone={() =>
         handleWebViewProcessGone('render_process_gone')

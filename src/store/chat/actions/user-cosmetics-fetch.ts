@@ -43,20 +43,15 @@ export async function fetchUserCosmetics(
     return;
   }
 
-  if (hasRenderableCosmetics(twitchUserId)) {
-    boundedSetAdd(
-      fetchedCosmeticsUsers,
-      twitchUserId,
-      MAX_FETCHED_COSMETICS_USERS,
-    );
-    return;
-  }
-
   boundedSetAdd(
     fetchedCosmeticsUsers,
     twitchUserId,
     MAX_FETCHED_COSMETICS_USERS,
   );
+
+  if (hasRenderableCosmetics(twitchUserId)) {
+    return;
+  }
 
   try {
     await requestUserCosmeticsViaPresence(twitchUserId);

@@ -56,8 +56,7 @@ type PreviousScrollFrame = {
 
 /**
  * Turns one scroll event, plus what the last one measured, into the facts the
- * anchoring logic needs. Pure, so the "where are we" question is answered
- * apart from the "what should happen" one.
+ * anchoring logic needs.
  */
 function readScrollGeometry(
   e: NativeSyntheticEvent<NativeScrollEvent>,
@@ -280,8 +279,12 @@ export const useChatScroll = ({
         viewHeight: lastViewHeightRef.current,
       });
 
-      const { atBottom, canScroll, movedTowardsTop } = geometry;
-      const { reachedPreviousEndDuringGrowth } = geometry;
+      const {
+        atBottom,
+        canScroll,
+        movedTowardsTop,
+        reachedPreviousEndDuringGrowth,
+      } = geometry;
 
       lastContentHeightRef.current = geometry.contentHeight;
       lastViewHeightRef.current = geometry.viewHeight;

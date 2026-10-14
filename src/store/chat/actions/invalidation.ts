@@ -12,7 +12,7 @@ export function invalidateMentionColors(): void {
 
 /**
  * Only badge changes may call this: bumping for paints reintroduced a
- * reprocess storm on entitlement bursts - see cosmeticsChurn.test.ts.
+ * reprocess storm on entitlement bursts - see cosmetics-churn.test.ts.
  */
 export function invalidateBakedBadges(): void {
   chatStore$.cosmeticBindingsVersion.set(version => version + 1);

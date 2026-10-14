@@ -1,5 +1,3 @@
-import { useCallback, useState } from 'react';
-
 import {
   buildRemoteConfigFromDefaults,
   type UseRemoteConfigResult,
@@ -16,15 +14,12 @@ export type {
 } from './remote-config-model';
 export { defaultRemoteConfig } from './remote-config-model';
 
+async function refetch(): Promise<boolean> {
+  return false;
+}
+
 export function useRemoteConfig(): UseRemoteConfigResult {
   const config = buildRemoteConfigFromDefaults('static');
-  const [isRefetching, setIsRefetching] = useState(false);
 
-  const refetch = useCallback(async (): Promise<boolean> => {
-    setIsRefetching(true);
-    setIsRefetching(false);
-    return false;
-  }, []);
-
-  return { config, refetch, isRefetching, isLoading: false };
+  return { config, refetch, isRefetching: false, isLoading: false };
 }

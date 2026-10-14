@@ -26,8 +26,7 @@ format() {
   fi
 }
 
-# Run format and lint independently and aggregate their status so a formatting
-# failure doesn't mask lint results (and vice versa) in a single run.
+# Run format and lint separately so a failure in one does not hide the other.
 files=("$@")
 status=0
 if [ "${#files[@]}" -eq 0 ]; then

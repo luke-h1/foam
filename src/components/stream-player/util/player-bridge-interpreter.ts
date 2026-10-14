@@ -71,13 +71,9 @@ export type PlayerBridgeAction =
   | { type: 'unlockOverlay' };
 
 /**
- * Pure interpreter for WebView player bridge messages: returns the ordered
- * actions the hook must execute; unknown messages interpret to no actions.
- */
-/**
  * The failure half of the bridge protocol: embed errors, content gates,
- * blocked or stalled playback, and video element errors. Split out so the
- * happy path above reads as a short list of state changes.
+ * blocked or stalled playback, and video element errors. Split out so
+ * `interpretPlayerMessage` reads as a short list of state changes.
  */
 function interpretPlayerFailureMessage(
   message: PlayerMessage,
@@ -294,6 +290,10 @@ function interpretPlayerFailureMessage(
   }
 }
 
+/**
+ * Pure interpreter for WebView player bridge messages: returns the ordered
+ * actions the hook must execute; unknown messages interpret to no actions.
+ */
 export function interpretPlayerMessage(
   message: PlayerMessage,
   context: PlayerBridgeContext,

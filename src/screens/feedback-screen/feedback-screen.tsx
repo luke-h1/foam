@@ -48,13 +48,13 @@ export function FeedbackScreen() {
   );
 
   const handleSubmit = () => {
-    if (!canSubmit && trimmedMessage.length === 0) {
+    if (trimmedMessage.length === 0) {
       notification('error');
       toast.error('Enter a message first.');
       return;
     }
 
-    if (!canSubmit) {
+    if (submitting) {
       return;
     }
 

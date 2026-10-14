@@ -1,14 +1,12 @@
 /* eslint-disable camelcase */
 /**
- * Mock Server for E2E Testing
+ * Mocks the Twitch Helix API, Twitch chat (IRC over WebSocket), BTTV, FFZ and
+ * 7TV with fixed responses for the Maestro e2e flows.
  *
- * This server mocks the Twitch Helix API and other services for E2E testing
- * with Detox. It provides deterministic responses for consistent test results.
+ * Run with: bun run e2e:mock-server
  *
- * Usage:
- *   bun run e2e:mock-server
- *
- * The server runs on port 3001 by default (configurable via MOCK_SERVER_PORT env var)
+ * HTTP listens on MOCK_SERVER_PORT (default 3001). IRC listens on
+ * MOCK_IRC_PORT (default 6667). The route table is in `routes` below.
  */
 
 import {
@@ -436,9 +434,9 @@ const handleRequest = (request: Request) => {
 
 const IRC_PORT = Number(process.env.MOCK_IRC_PORT ?? 6667);
 
-// Minimal IRC-over-WebSocket mock that satisfies the Twitch chat handshake.
-// Sends GLOBALUSERSTATE + ROOMSTATE after CAP / NICK / JOIN so the app
-// transitions out of the "connecting" state.
+// IRC-over-WebSocket mock of the Twitch chat handshake. It sends
+// GLOBALUSERSTATE + ROOMSTATE after CAP / NICK / JOIN so the app leaves the
+// "connecting" state.
 Bun.serve({
   port: IRC_PORT,
   fetch: (request, server) => {
@@ -494,8 +492,7 @@ Bun.serve({
           `:tmi.twitch.tv 366 justinfan12345 ${channel} :End of /NAMES list`,
         );
 
-        // Send a burst of sample chat messages with third-party emote references
-        // so the chat renders populated content in E2E tests.
+        // Sample messages with third-party emotes, so the chat has content.
         for (const chatMsg of sampleChatMessages(channel)) {
           ws.send(chatMsg);
         }
@@ -503,7 +500,7 @@ Bun.serve({
         return;
       }
 
-      if (msg === 'PING :tmi.twitch.tv' || msg.startsWith('PING')) {
+      if (msg.startsWith('PING')) {
         ws.send('PONG :tmi.twitch.tv');
       }
     },
@@ -523,36 +520,6 @@ Bun.serve({
   },
 });
 
-console.log(`
-╔══════════════════════════════════════════════════════════════════╗
-║                    Foam E2E Mock Server                         ║
-╠══════════════════════════════════════════════════════════════════╣
-║  HTTP server:  http://localhost:${PORT}                         ║
-║  IRC WebSocket: ws://localhost:${IRC_PORT}                      ║
-║                                                                 ║
-║  Available endpoints:                                           ║
-║  - GET  /health                    Health check                 ║
-║  - GET  /helix/streams             Top streams                  ║
-║  - GET  /helix/streams/followed    Followed streams             ║
-║  - GET  /helix/games/top           Top categories               ║
-║  - GET  /helix/games               Category by ID               ║
-║  - GET  /helix/search/categories   Search categories            ║
-║  - GET  /helix/search/channels     Search channels              ║
-║  - GET  /helix/users               User info                    ║
-║  - GET  /helix/channels            Channel info                 ║
-║  - GET  /token                     Auth token                   ║
-║  - GET  /3/cached/emotes/global    BTTV global emotes           ║
-║  - GET  /3/cached/users/twitch/:id BTTV channel emotes          ║
-║  - GET  /v1/set/global             FFZ global emotes            ║
-║  - GET  /v1/room/id/:id            FFZ channel emotes           ║
-║  - GET  /v1/badges                 FFZ badges                   ║
-║  - GET  /v3/emote-sets/global      7TV global emote set         ║
-║  - GET  /v3/users/twitch/:id       7TV channel user+emotes      ║
-║  - GET  /v3/cosmetics              7TV cosmetics/badges         ║
-║                                                                 ║
-║  Debug endpoints:                                               ║
-║  - GET  /mock/streams              List all mock streams        ║
-║  - GET  /mock/categories           List all mock categories     ║
-║  - POST /mock/reset                Reset mock state             ║
-╚══════════════════════════════════════════════════════════════════╝
-`);
+console.log(
+  `Foam e2e mock server: http://localhost:${PORT}, IRC ws://localhost:${IRC_PORT}`,
+);

@@ -12,10 +12,6 @@ const AT_SIGN = 64;
 const COLON = 58;
 
 /**
- * Parse a raw Twitch IRC line into its tokens; null for invalid lines.
- * Cursor-based on purpose - the old per-stage tail copies cost per message in a busy channel.
- */
-/**
  * Index of the next non-space character, so a run of separators is skipped in
  * one step.
  */
@@ -29,6 +25,11 @@ function skipSpaces(line: string, from: number, end: number): number {
   return cursor;
 }
 
+/**
+ * Parse a raw Twitch IRC line into its tokens; null for invalid lines.
+ * Walks a cursor instead of copying the tail at each stage, because those
+ * copies cost time on every message in a busy channel.
+ */
 export function parseIrcMessage(line: string): IrcMessage | null {
   let cursor = 0;
   let end = line.length;

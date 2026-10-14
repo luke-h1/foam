@@ -40,7 +40,7 @@ let cachedRemoteConfig: ReturnType<typeof getRemoteConfig> | null = null;
 let remoteConfigFetchPromise: Promise<boolean> | null = null;
 
 /**
- * Created on first use - the handle plus setConfigSettings/setDefaults were three Firebase bridge calls at import time, and this module sits in the boot graph.
+ * Created on first use. The handle, setConfigSettings and setDefaults are three Firebase bridge calls, and this module is in the boot graph.
  */
 function getRemoteConfigHandle() {
   if (cachedRemoteConfig) {

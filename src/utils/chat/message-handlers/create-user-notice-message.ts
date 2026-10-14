@@ -11,6 +11,7 @@ import { createModiversaryPart } from '@app/utils/chat/format-subscription-notic
 import { createRitualPart } from '@app/utils/chat/format-subscription-notice/create-ritual-token';
 import { createSubscriptionPart } from '@app/utils/chat/format-subscription-notice/create-subscription-token';
 import { createViewerMilestonePart } from '@app/utils/chat/format-subscription-notice/create-viewer-milestone-token';
+import { getTagValue } from '@app/utils/chat/format-subscription-notice/get-tag-value';
 import { hasRenderableNoticeBody } from '@app/utils/chat/format-subscription-notice/has-renderable-notice-body';
 import { isSharedChatDuplicatedNotice } from '@app/utils/chat/user-notice-msg-ids/is-shared-chat-duplicated-notice';
 import { isSubscriptionUserNotice } from '@app/utils/chat/user-notice-msg-ids/is-subscription-user-notice';
@@ -18,13 +19,6 @@ import { generateNonce } from '@app/utils/string/generate-nonce';
 
 import { createChatTimestampFromTags } from './create-chat-timestamp-from-tags';
 import { createUserStateFromTags } from './create-user-state-from-tags';
-
-function tagText(value: string | boolean | undefined): string {
-  if (value === true || value === false || value === undefined) {
-    return '';
-  }
-  return value;
-}
 
 function toStringTagRecord(tags: UserNoticeTags) {
   const result: Record<string, string> = {};
@@ -86,9 +80,9 @@ export const createUserNoticeMessage = ({
     message_nonce: messageNonce,
     timestamp: createChatTimestampFromTags(tags),
     sender: userstate.username || '',
-    parentDisplayName: tagText(tags['reply-parent-display-name']),
-    replyDisplayName: tagText(tags['reply-parent-user-login']),
-    replyBody: tagText(tags['reply-parent-msg-body']),
+    parentDisplayName: getTagValue(tags, 'reply-parent-display-name'),
+    replyDisplayName: getTagValue(tags, 'reply-parent-user-login'),
+    replyBody: getTagValue(tags, 'reply-parent-msg-body'),
   };
 
   const sharedChatDuplicated = isSharedChatDuplicatedNotice(tags);
@@ -151,7 +145,7 @@ export const createUserNoticeMessage = ({
   switch (tags['msg-id']) {
     case 'viewermilestone': {
       const viewerMilestoneTags: ViewerMilestoneTags = {
-        'msg-id': 'viewermilestone' as const,
+        'msg-id': 'viewermilestone',
         'msg-param-category': tags['msg-param-category'] ?? 'watch-streak',
         'msg-param-copoReward': tags['msg-param-copoReward'] ?? '',
         'msg-param-id': tags['msg-param-id'] ?? '',
@@ -176,7 +170,7 @@ export const createUserNoticeMessage = ({
 
       return {
         ...baseMessage,
-        replyDisplayName: tagText(tags['reply-parent-display-name']),
+        replyDisplayName: getTagValue(tags, 'reply-parent-display-name'),
         replyBody: '',
         badges: [],
         userstate,

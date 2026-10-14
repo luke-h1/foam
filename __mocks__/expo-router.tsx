@@ -19,8 +19,8 @@ export const Stack = {
     options?: { headerTitle?: string | (() => React.ReactNode) };
   }) =>
     options?.headerTitle instanceof Function ? options.headerTitle() : null,
-  // Stack.SearchBar renders into the native navigation header; surface it
-  // as a plain TextInput so tests can type into it. The imperative ref mirrors
+  // Stack.SearchBar renders into the native navigation header. Render it as a
+  // plain TextInput so tests can type into it. The imperative ref mirrors
   // react-native-screens' SearchBarCommands: setText/clearText update the
   // visible text without re-firing onChangeText, matching the native search
   // bar (consumers rely on that to avoid double-triggering a search).

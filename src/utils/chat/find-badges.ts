@@ -12,7 +12,7 @@ interface FindBadgesParams {
   chatterinoBadges: SanitisedBadgeSet[];
   /**
    * The 7TV entitlement lookup reads live store state that entitlement events
-   * invalidate - why a result-level findBadges cache was rejected (PERF_REPORT.md).
+   * invalidate, so a result-level findBadges cache is not safe (PERF_REPORT.md).
    */
   getEntitledBadge: (userId: string) => SanitisedBadgeSet | null | undefined;
 }
@@ -78,12 +78,9 @@ const getRawTwitchBadges = (userstate: UserStateTags): string => {
 };
 
 /**
- * Index each array once per array identity so every per-message lookup is a
- * single Map hit instead of a scan over thousands of entries.
- */
-/**
  * Builds an index once per badge array and keeps it on a WeakMap keyed by that
- * array, so a re-render handed the same array skips the rebuild.
+ * array. Each per-message lookup is then one Map hit, not a scan over
+ * thousands of entries.
  */
 const memoisedBadgeIndex = <TValue>(
   build: (badges: SanitisedBadgeSet[]) => Map<string, TValue>,

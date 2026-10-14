@@ -205,7 +205,7 @@ interface CreateChatMessageRouteHandlersOptions {
 
 /**
  * The handlers that carry chat content: a message, a notice, a moderation
- * clear. Filtering lives here, so the socket plumbing above stays free of it.
+ * clear. Filtering lives here, not in the socket code.
  */
 function createChatMessageRouteHandlers({
   blockedUsers,
@@ -226,7 +226,6 @@ function createChatMessageRouteHandlers({
     privmsg: (channelName, tagsRecord, messageText) => {
       const username = tagsRecord['display-name'] || tagsRecord.login;
 
-      // Skip the per-message lowercasing when there is no blocklist.
       // Skip the per-message lowercasing when there is no blocklist.
       // A mod or the broadcaster is never filtered out of their own chat.
       const isBlockedSender =
@@ -313,9 +312,9 @@ interface UseChatLivenessWatchdogOptions {
 }
 
 /**
- * Keeps the IRC socket honest. A periodic probe catches a half-open socket that
- * still reports OPEN, and returning to the foreground or regaining the network
- * re-probes immediately rather than waiting out a full heartbeat cycle.
+ * Detects a dead IRC socket. A periodic probe catches a half-open socket that
+ * still reports OPEN. Returning to the foreground or regaining the network
+ * probes at once, without waiting for a full heartbeat cycle.
  */
 function useChatLivenessWatchdog({
   awaitingPongRef,
@@ -500,7 +499,7 @@ function formatIrcCommand(command: string, params: string[]): string {
     return command;
   }
 
-  const trailingParams = params.slice(0, -1).filter((p): p is string => !!p);
+  const trailingParams = params.slice(0, -1).filter(Boolean);
 
   const head =
     trailingParams.length > 0
@@ -681,7 +680,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
 
   /**
    * Twitch drops a JOIN sent before it acknowledges the auth handshake, so the
-   * join waits out the handshake and then checks it actually landed.
+   * join waits 250ms and only runs if the handshake has finished.
    */
   const scheduleJoinAfterAuth = useCallback(
     (target: string) => {
@@ -859,15 +858,13 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       joinedChannelsRef.current.clear();
       pendingJoinChannelsRef.current.clear();
 
-      // Drop queued sends — reconnect must not flush commands from a dead socket.
+      // Drop queued sends. A reconnect must not flush commands from a dead socket.
       pendingIrcMessagesRef.current = [];
 
       messageBufferRef.current = '';
     },
     [joinedChannelsRef, pendingJoinChannelsRef],
   );
-
-  const handleWebSocketError = handleTwitchChatWebSocketError;
 
   const shouldReconnect = (event: CloseEvent) => {
     if (event.code === 1000) {
@@ -885,7 +882,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     onOpen: handleWebSocketOpen,
     onMessage: handleMessage,
     onClose: handleWebSocketClose,
-    onError: handleWebSocketError,
+    onError: handleTwitchChatWebSocketError,
     shouldReconnect,
     /**
      * A long outage exhausted 30 attempts in ~7min and left chat dead until
@@ -895,7 +892,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     reconnectInterval: 2000,
   });
 
-  // Reconnect chat when token changes (e.g. after 401 refresh) so we authenticate with the new token.
   const getWebSocketRef = useSyncRef(getWebSocket);
 
   const reconnectRef = useSyncRef(reconnect);
@@ -974,6 +970,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     verifyChatLivenessRef,
   });
 
+  // Reconnect chat when the token changes (e.g. after a 401 refresh) so it authenticates with the new token.
   useEffect(() => {
     const currentToken = authState?.token?.accessToken;
 
@@ -1037,9 +1034,9 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
 
     const previousChannel = Array.from(joinedChannelsRef.current)[0];
 
-    const channelFormatted = channel?.startsWith('#')
-      ? channel
-      : channel && `#${channel}`;
+    const channelFormatted = channel
+      ? formatIrcChannelName(channel)
+      : undefined;
 
     const leavesPreviousChannel =
       Boolean(previousChannel) && previousChannel !== channelFormatted;
@@ -1146,9 +1143,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     sendWebSocketMessage(`${fullMessage}\r\n`);
   };
 
-  /**
-   * Send an action message (/me)
-   */
   const sendAction = (channelName: string, action: string) => {
     const channelFormatted = formatIrcChannelName(channelName);
 
@@ -1172,10 +1166,8 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     return joinedChannelsRef.current.has(formatIrcChannelName(channel));
   };
 
-  const connectionState = readyState;
-
   return {
-    connectionState,
+    connectionState: readyState,
     getWebSocket,
     isConnected,
     joinChannel,

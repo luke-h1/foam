@@ -82,8 +82,8 @@ function LiveStreamCard({
     .replace('{width}', thumbnailSize.width)
     .replace('{height}', thumbnailSize.height);
 
-  // Media-layout avatars come pre-batched via useStreamProfilePictures at the
-  // list level - one /users request per screen, not one per visible card.
+  // useStreamProfilePictures batches media-layout avatars at the list level,
+  // so the screen makes one /users request instead of one per card.
   const profilePicture = stream.profilePicture;
 
   const handleStreamPressIn = useCallback(() => {

@@ -26,13 +26,6 @@ const sharedChatChannelBadgePromises = new Map<
   Promise<SanitisedBadgeSet[]>
 >();
 
-export function clearSharedChatBadgeCaches(): void {
-  sharedChatSourceBadgeCache.clear();
-  sharedChatChannelBadgesCache.clear();
-  sharedChatSourceBadgePromises.clear();
-  sharedChatChannelBadgePromises.clear();
-}
-
 async function getSharedChatSourceBadge(
   sourceRoomId: string,
 ): Promise<SanitisedBadgeSet | null> {

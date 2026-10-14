@@ -69,7 +69,7 @@ export interface ChatMessageType<
    */
   isHistorical?: boolean;
   /**
-   * Set when the message committed as token of a raid-sized flush, so a burst
+   * Set when the message committed as part of a raid-sized flush, so a burst
    * of rows does not start one entrance animation per row in the same frame.
    */
   arrivedInBurst?: boolean;

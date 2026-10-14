@@ -5,6 +5,7 @@ import type { MessageUpdateInput } from '@app/store/chat/actions/messages';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import { getChatMessageKey } from '@app/utils/chat/message-identity/get-chat-message-key';
 import { boundedSetAdd } from '@app/utils/object/bounded-set-add';
 
 type FetchUserCosmeticsOptions = {
@@ -69,10 +70,6 @@ function isMissingSharedChatSourceBadge(message: AnyChatMessageType): boolean {
   );
 }
 
-function getMessageKey(message: AnyChatMessageType): string {
-  return `${message.message_id.trim()}_${message.message_nonce.trim()}`;
-}
-
 function getHydrationKey({
   badge,
   message,
@@ -83,7 +80,7 @@ function getHydrationKey({
   personalEmotes: SanitisedEmote[];
 }): string {
   return [
-    getMessageKey(message),
+    getChatMessageKey(message.message_id, message.message_nonce),
     personalEmotes.map(emote => emote.id).join(','),
     badge?.id ?? '',
     badge?.url ?? '',

@@ -3,7 +3,7 @@
 #
 # Local (dev-client build): start Metro (EXPO_PUBLIC_APP_VARIANT=e2e) and the
 # mock server first, then run this script. CI (standalone e2e build) sets
-# APP_ID=foam-tv-e2e and DEV_CLIENT=false — no Metro needed.
+# APP_ID=foam-tv-e2e and DEV_CLIENT=false, so it needs no Metro.
 set -euo pipefail
 
 APP_ID="${APP_ID:-foam-tv-dev}"

@@ -190,11 +190,11 @@ export function useChatRowRenderer({
   );
 
   /**
-   * Spreads `displayFlags` rather than restating it: a flag missed here would
-   * silently stop that preference from re-rendering the rows.
+   * Spreads `displayFlags` so a new display flag also re-renders the rows.
+   * `mentionLoginRevision` is left out: it changes about every 400ms and
+   * re-rendered every visible row (about 57fps instead of 60fps).
+   * `MentionToken` subscribes to it itself.
    */
-  // mentionLoginRevision is deliberately excluded: it bumps ~every 400ms and
-  // re-rendered every visible row (~57fps -> 60fps once removed); MentionToken subscribes itself.
   const messageListExtraData = useMemo(
     () => ({
       ...displayFlags,

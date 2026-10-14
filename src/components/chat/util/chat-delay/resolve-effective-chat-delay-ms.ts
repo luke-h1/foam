@@ -23,8 +23,7 @@ export function resolveEffectiveChatDelayMs(
 }
 
 /**
- * Auto-sync holds chat for as long as the player is behind live, capped so a
- * stalled measurement cannot park chat. 0 until the first measurement lands.
+ * Auto-sync holds chat for as long as the player is behind live.
  */
 function resolveAutoChatDelayMs(
   measuredVideoLatencySeconds: number | null,

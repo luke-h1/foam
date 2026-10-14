@@ -96,7 +96,7 @@ export function useChatRow<
 
   const isHighlightedSender =
     messageSenderKey.length > 0 &&
-    effectiveHighlightedUserSet?.has(messageSenderKey);
+    effectiveHighlightedUserSet.has(messageSenderKey);
 
   const handleEmotePress = (token: EmotePressData) => {
     onEmotePress?.(token);
@@ -191,7 +191,6 @@ export function useChatRow<
     normalisedCurrentUsername,
     onReplyContextPress,
     parentDisplayName,
-    replyBody,
     replyDisplayName,
     showInlineReplyContext,
     userstate,

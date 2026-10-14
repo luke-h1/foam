@@ -199,10 +199,10 @@ export const updateSevenTvEmotes = (
 
   const currentEmotes = cache.sevenTvChannelEmotes ?? [];
   const addedById = new Map(added.map(emote => [emote.id, emote]));
-  const removedIds = new Set(removed.map((r: SanitisedEmote) => r.id));
+  const removedIds = new Set(removed.map(emote => emote.id));
   const updatedEmotes: SanitisedEmote[] = [];
 
-  currentEmotes.forEach((emote: SanitisedEmote) => {
+  currentEmotes.forEach(emote => {
     const replacement = addedById.get(emote.id);
 
     if (replacement) {

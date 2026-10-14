@@ -107,7 +107,7 @@ export default function FollowingScreen() {
     retry: 2,
     retryDelay: (attemptIndex: number) =>
       Math.min(1000 * 2 ** attemptIndex, 3000),
-    // useRefetchOnForeground handles focus/foreground refreshes; stacking refetchOnMount/refetchOnWindowFocus forced a network request on every tab switch.
+    // useRefetchOnForeground handles focus and foreground refreshes. Adding refetchOnMount or refetchOnWindowFocus sends a request on every tab switch.
   });
 
   useRefetchOnForeground({
@@ -204,10 +204,7 @@ export default function FollowingScreen() {
   );
 
   const listContentStyle = useMemo(
-    () => [
-      styles.listContent,
-      { paddingBottom: tabBarOverflow + theme.space20 },
-    ],
+    () => ({ paddingBottom: tabBarOverflow + theme.space20 }),
     [tabBarOverflow],
   );
 
@@ -302,9 +299,6 @@ const styles = StyleSheet.create({
     backgroundColor: theme.color.background.dark,
     flex: 1,
     overflow: 'hidden',
-  },
-  listContent: {
-    paddingBottom: theme.space20,
   },
   noneLive: {
     paddingBottom: theme.space8,

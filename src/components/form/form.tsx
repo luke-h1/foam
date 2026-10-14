@@ -35,7 +35,7 @@ export function HStack(props: ViewProps) {
   return (
     <View
       {...props}
-      style={mergedStyles(
+      style={mergedStyleProp<ViewStyle>(
         {
           flex: 1,
           flexDirection: 'row',
@@ -43,7 +43,7 @@ export function HStack(props: ViewProps) {
           gap: 8,
           width: '100%',
         },
-        props,
+        props.style,
       )}
     />
   );
@@ -226,13 +226,13 @@ function renderSectionHint(hint: ReactNode): ReactNode {
 }
 
 /**
- * Dresses a bare text child as a settings row: form typography, and a leading
- * system image or trailing hint laid out beside it when the row asks for one.
+ * Styles a bare text child as a settings row: form typography, and a leading
+ * system image or trailing hint beside it when the row asks for one.
  */
 function asSectionTextRow(
   child: ReactElement<Record<string, unknown>>,
-  // The row props come off a cloned element, so they are untyped by the time
-  // they reach here - the same gap the `@ts-expect-error`s above cover.
+  // The row props come off a cloned element, so they are untyped here. The
+  // `@ts-expect-error`s in `Section` cover the same gap.
   resolvedProps: {
     hint?: ReactNode;
     systemImage?: SystemImageProps | ReactNode;
@@ -501,13 +501,6 @@ function Separator() {
       }}
     />
   );
-}
-
-function mergedStyles(
-  style: ViewStyle | TextStyle,
-  props: { style?: StyleProp<ViewStyle | TextStyle> },
-) {
-  return mergedStyleProp(style, props.style);
 }
 
 function mergedStyleProp<TStyle extends ViewStyle | TextStyle>(

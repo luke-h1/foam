@@ -46,8 +46,6 @@ interface LiveStreamScreenProps {
   id: string;
 }
 
-// Keep the screen awake while watching; auto-lock is aggressive under Low Power Mode.
-
 const LANDSCAPE_CHAT_CONTROLS_TOP_OFFSET = 60;
 
 function handlePlaybackLatencyChange(latencySeconds: number) {
@@ -231,8 +229,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     videoDimensions,
   });
 
-  const contentContainerStyle = styles.contentContainer;
-
   const {
     broadcasterName,
     displayName,
@@ -284,7 +280,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     });
 
   return (
-    <View style={contentContainerStyle}>
+    <View style={styles.contentContainer}>
       <Stack.Screen options={{ autoHideHomeIndicator: isLandscape }} />
       <LiveStreamVideoPane
         animatedStyle={animatedVideoStyle}

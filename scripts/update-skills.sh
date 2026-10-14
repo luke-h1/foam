@@ -6,17 +6,17 @@ INSTALL_GLOBAL=
 while [[ $# -gt 0 ]]; do
     case $1 in
         -g|--global) INSTALL_GLOBAL=1; shift ;;
-        *) echo "Usage: $0 [-g|--global]  (default: project-level; -g = install globally for cursor + claude-code)"; exit 1 ;;
+        *) echo "Usage: $0 [-g|--global]  (default: project-level; -g = install globally for cursor, claude-code and codex)"; exit 1 ;;
     esac
 done
 
 AGENTS=(-a cursor -a claude-code -a codex)
 if [[ -n "$INSTALL_GLOBAL" ]]; then
     GLOBAL_FLAG=(-g)
-    echo "Installing skills globally (user-level) for cursor + claude-code."
+    echo "Installing skills globally (user-level) for cursor, claude-code and codex."
 else
     GLOBAL_FLAG=()
-    echo "Installing skills at project level for cursor + claude-code. Use -g or --global to install globally."
+    echo "Installing skills at project level for cursor, claude-code and codex. Use -g or --global to install globally."
 fi
 
 SKILLS=(

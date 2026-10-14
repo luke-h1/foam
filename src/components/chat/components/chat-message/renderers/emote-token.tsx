@@ -86,8 +86,8 @@ export const EmoteToken = memo(
 
     const needsWrapper = Boolean(containerStyle || token.overlaid?.length);
 
-    // No containerStyle: size + clip live on the image style so each inline
-    // emote is one fewer Fabric/Yoga node.
+    // Size and clip live on the image style, so the image needs no container
+    // node of its own.
     const image = (
       <ChatInlineImage
         onTouchStart={needsWrapper ? undefined : handleTouchStart}

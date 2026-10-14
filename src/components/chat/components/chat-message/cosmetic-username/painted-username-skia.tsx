@@ -206,8 +206,7 @@ function renderLayerSlot(
   if (slot.kind === 'baked') {
     return (
       <Image
-        // Static, never-reordered list
-        // eslint-disable-next-line react-doctor/no-array-index-as-key
+        // eslint-disable-next-line react-doctor/no-array-index-as-key -- static list that never reorders
         key={`baked-${index}`}
         image={slot.image}
         x={0}
@@ -229,8 +228,7 @@ function renderLayerSlot(
 
   return (
     <UrlLayerSpan
-      // Static, never-reordered list
-      // eslint-disable-next-line react-doctor/no-array-index-as-key
+      // eslint-disable-next-line react-doctor/no-array-index-as-key -- static list that never reorders
       key={`url-${index}|${paintImageLayerKey(slot.layer)}`}
       opacity={slot.layer.opacity}
     >
@@ -274,8 +272,9 @@ function UrlLayerSpan({
 }
 
 /**
- * Foundation → back-to-front layer slots (URL overlays interleaved with baked
- * gradients) → stroke on top so CSS stacking and -webkit-text-stroke hold.
+ * Draws the foundation, then the layer slots back to front (URL overlays
+ * between baked gradients), then the stroke on top, so CSS stacking and
+ * -webkit-text-stroke hold.
  */
 function ImageLayerPaintCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
   const { width, height, insets, staticImage, layerSlots, strokeImage } =

@@ -36,15 +36,6 @@ import {
   type SearchState,
 } from '../util/search-state';
 
-async function refreshSearchResults(
-  query: string,
-  search: (value: string) => Promise<void>,
-  setRefreshing: (refreshing: boolean) => void,
-) {
-  setRefreshing(true);
-  await search(query).finally(() => setRefreshing(false));
-}
-
 export function useSearchController() {
   const [
     { query, selectedFilter, searchResults, categoryResults, status },
@@ -133,15 +124,12 @@ export function useSearchController() {
   const handleRefresh = useCallback(() => {
     const normalizedQuery = query.trim();
 
-    if (normalizedQuery.length < 2) {
+    if (normalizedQuery.length < MIN_SEARCH_QUERY_LENGTH) {
       return Promise.resolve();
     }
 
-    return refreshSearchResults(
-      normalizedQuery,
-      performSearch,
-      setIsRefreshing,
-    );
+    setIsRefreshing(true);
+    return performSearch(normalizedQuery).finally(() => setIsRefreshing(false));
   }, [performSearch, query]);
 
   const handleClearSearch = useCallback(() => {

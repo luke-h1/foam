@@ -25,7 +25,6 @@ import {
 import type { AnyChatMessageType } from '../types/constants';
 import {
   clearMessageColorIndexes,
-  getMessageColor as getIndexedMessageColor,
   getUserMessageColor,
   indexMessageColor,
   removeMessageColor,
@@ -445,10 +444,8 @@ const appendToMessageWindow = (
     };
   }
 
-  /**
-   * Slice before concatenating - joining first copied the whole window an
-   * extra time per flush, ~10x a second on busy channels.
-   */
+  // Slice before concatenating. Joining first copies the whole window an
+  // extra time per flush, ~10x a second on busy channels.
   if (extraMessageCount >= currentMessages.length) {
     const storedDropCount = extraMessageCount - currentMessages.length;
 
@@ -478,8 +475,8 @@ const shiftMessageIndexes = (offset: number) => {
   windowBaseOffset += offset;
 };
 
-// Dropping evicted entries and shifting survivors is pure Map work; a full
-// rebuild per front-trim re-ran the whole window ~10x/s on busy chats.
+// Dropping evicted entries and shifting survivors is pure Map work. A full
+// rebuild per front-trim would re-index the whole window ~10x/s on busy chats.
 const indexAppendedMessages = (
   storedMessages: AnyChatMessageType[],
   appendStartIndex: number,
@@ -941,7 +938,4 @@ export const restoreRecentMessagesForChannel = (channelId: string): number => {
   return recentMessages.length;
 };
 
-export const getMessageColor = (messageId: string): string | undefined =>
-  getIndexedMessageColor(messageId);
-
-export { getUserMessageColor } from './message-color-index';
+export { getMessageColor, getUserMessageColor } from './message-color-index';

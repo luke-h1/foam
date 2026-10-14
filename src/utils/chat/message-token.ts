@@ -129,7 +129,7 @@ interface MessageTokenByKind {
     type: 'resub';
     subscriptionEvent: SubscriptionEventBase & {
       msgId: 'resub' | 'extendsub' | 'standardpayforward';
-      plan: string; // 1000, 2000, 3000 for Prime, Tier 1, Tier 2, Tier 3
+      plan: string; // 'Prime', '1000', '2000' or '3000' (Tier 1 to Tier 3)
       planName?: string;
       months: number;
       streakMonths?: number;

@@ -17,18 +17,16 @@ if (__DEV__ && !process.env.EXPO_PUBLIC_REACT_PERF_TRACKS) {
 
 // Bound expo-image's in-memory decoded cache. iOS only: `configureCache` is
 // declared `@platform ios` and has no counterpart in expo-image's Android
-// module, so calling it there just throws into the catch below. Android needs
-// no equivalent — Glide's default MemorySizeCalculator already scales the
-// memory cache and bitmap pool to the device's memory class, whereas
-// SDWebImage defaults both tiers to unbounded (maxMemoryCost/maxDiskSize: 0).
-// Under sustained chat raids that unbounded working set grew until iOS
-// jettisoned the app (std::bad_alloc / WatchdogTermination in busy channels
-// like caedrel). `maxMemoryCost` is in BYTES (SDWebImage: "the bytes size held
-// in memory"), so a flat 2GB let the cache grow to ~2GB of decoded emote
-// bitmaps on top of the video WebView and JS heap. Scale it to the device
-// instead: ~12% of physical RAM, clamped to [96MB, 384MB], so smaller phones
-// cap tighter and no device parks gigabytes of decoded images. NSCache still
-// self-purges under OS memory pressure.
+// module, so calling it there throws into the catch below. Android needs no
+// equivalent: Glide's default MemorySizeCalculator already scales the memory
+// cache and bitmap pool to the device's memory class. SDWebImage defaults both
+// tiers to unbounded (maxMemoryCost/maxDiskSize: 0). Under sustained chat
+// raids that unbounded working set grew until iOS jettisoned the app
+// (std::bad_alloc / WatchdogTermination in busy channels like caedrel).
+// `maxMemoryCost` is in bytes, so a flat 2GB let the cache hold ~2GB of
+// decoded emote bitmaps on top of the video WebView and JS heap. Use ~12% of
+// physical RAM, clamped to [96MB, 384MB], so smaller phones get a lower cap.
+// NSCache still purges itself under OS memory pressure.
 if (process.env.EXPO_OS === 'ios') {
   try {
     const MIN_MEMORY_CACHE_BYTES = 96 * 1024 * 1024;
@@ -39,7 +37,7 @@ if (process.env.EXPO_OS === 'ios') {
       const DeviceInfo = deviceInfo.default ?? deviceInfo;
       totalMemoryBytes = DeviceInfo.getTotalMemorySync?.() ?? 0;
     } catch {
-      // device-info unavailable — fall through to the fixed ceiling below.
+      // device-info is unavailable. Fall through to the fixed ceiling below.
     }
     const scaled =
       totalMemoryBytes > 0
@@ -54,7 +52,7 @@ if (process.env.EXPO_OS === 'ios') {
       maxDiskSize: 512 * 1024 * 1024,
     });
   } catch {
-    // expo-image unavailable — cache stays default.
+    // expo-image is unavailable. The cache keeps its defaults.
   }
 }
 

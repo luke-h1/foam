@@ -165,9 +165,9 @@ export const ChatInputShell = memo(function ChatInputShell({
       return;
     }
 
-    // A known command with missing/invalid args parses to null; surface the
-    // usage instead of letting it fall through to IRC as plain chat text,
-    // where Twitch answers with an "Unrecognized command" notice.
+    // A known command with missing or invalid args parses to null. Show the
+    // usage instead of sending it to IRC as plain chat text, where Twitch
+    // answers with an "Unrecognized command" notice.
     const [commandName = ''] = currentInput.trim().startsWith('/')
       ? currentInput.trim().slice(1).split(/\s+/)
       : [];

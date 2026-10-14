@@ -466,7 +466,6 @@ function interpretEntitlementUpdate(
     let paintId: string | null = null;
     let badgeId: string | null = null;
 
-    // eslint-disable-next-line local/no-hardcoded-hex-color
     for (const update of changes.updated ?? []) {
       const user = update.value?.object?.user;
 

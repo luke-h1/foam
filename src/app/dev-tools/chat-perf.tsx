@@ -2,7 +2,7 @@ import type { ComponentType } from 'react';
 
 import { Redirect } from 'expo-router';
 
-// Inline EXPO_PUBLIC_APP_VARIANT literals let Metro constant-fold the require away, dropping the chat perf harness from production - do not hoist them (mirrors StorybookRoute.tsx).
+// Keep the EXPO_PUBLIC_APP_VARIANT checks as inline literals so Metro can constant-fold the require, and the chat perf harness, out of production builds. See storybook-route.tsx.
 let ChatPerfRoute: ComponentType = function ChatPerfUnavailable() {
   return <Redirect href='/tabs/settings' />;
 };

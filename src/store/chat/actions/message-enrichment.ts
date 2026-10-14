@@ -13,7 +13,7 @@ import type { AnyChatMessageType } from '../types/constants';
 import { getCurrentEmoteData } from './channel-load';
 import { type MessageUpdateInput, updateMessages } from './messages';
 
-type ChatEmoteData = NonNullable<ReturnType<typeof getCurrentEmoteData>>;
+type ChatEmoteData = ReturnType<typeof getCurrentEmoteData>;
 
 const ENRICH_BATCH_SIZE = 6;
 const ENRICH_BATCH_DELAY_MS = 32;
@@ -239,11 +239,6 @@ export async function resolveVisibleMessageUpdate({
   }
 
   const emoteData = getCurrentEmoteData(channelId);
-
-  if (!emoteData) {
-    return null;
-  }
-
   const text = replaceEmotesWithText(message.message).trimEnd();
 
   if (!text.trim()) {

@@ -42,13 +42,9 @@ function getUserChatRowItemType(
     flags.push('mod');
   }
 
-  const parentDisplayName = item.parentDisplayName;
-  const replyBody = item.replyBody;
-
   const showInlineReply =
     options?.showInlineReplyContext !== false &&
-    Boolean(parentDisplayName) &&
-    Boolean(replyBody || parentDisplayName);
+    Boolean(item.parentDisplayName);
 
   if (showInlineReply) {
     flags.push('reply');

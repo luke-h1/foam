@@ -1,9 +1,9 @@
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
-import { RewardTitleTagSource } from '@app/utils/chat/channel-points-reward-title/types';
+import { ChannelPointsRewardTagSource } from '@app/utils/chat/channel-points-reward-title/types';
 
 export function rewardTitleFieldsFromUserstate(
   userstate: UserStateTags,
-): RewardTitleTagSource {
+): ChannelPointsRewardTagSource {
   return {
     'msg-id': userstate['msg-id'],
     'msg-param-custom-reward-title': userstate['msg-param-custom-reward-title'],

@@ -3,10 +3,6 @@ import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { absoluteSevenTvUrl } from './absolute-seven-tv-url';
 import { buildSevenTvBadgeImageUrl } from './build-seven-tv-badge-image-url';
 
-/**
- * Hoisted so the hot path reuses one compiled pattern; a literal inside the
- * function is a fresh RegExp on every call.
- */
 const BADGE_IMAGE_EXTENSION = /\.(webp|png|avif|gif|jpe?g)(?:$|\?)/i;
 
 const normalizedBadges = new WeakMap<SanitisedBadgeSet, SanitisedBadgeSet>();

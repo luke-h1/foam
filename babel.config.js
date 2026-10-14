@@ -29,7 +29,7 @@ module.exports = api => {
         silent: isTest,
       },
     ],
-  ].filter(Boolean);
+  ];
 
   return {
     presets: [

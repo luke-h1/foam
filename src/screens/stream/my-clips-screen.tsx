@@ -52,7 +52,7 @@ const MyClipRow = memo(function MyClipRow({
     });
   }, [clip?.title, record.broadcasterName, record.id]);
 
-  const thumbnail = clip?.thumbnail_url || undefined;
+  const thumbnail = clip?.thumbnail_url;
 
   return (
     <PressableArea

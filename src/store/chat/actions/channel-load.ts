@@ -322,10 +322,6 @@ export interface LoadChannelResourcesOptions {
   twitchUserId?: string;
 }
 
-/**
- * Runs the cache-hit path: refresh only the slices the plan marked stale,
- * then mark the channel loaded. Returns false when the load was aborted.
- */
 type CachedRefreshArgs = {
   channelId: string;
   existingCache: ChannelCacheType;

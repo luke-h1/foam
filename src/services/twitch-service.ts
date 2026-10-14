@@ -66,19 +66,6 @@ export const MAX_FOLLOWED_CHANNELS = 400;
 
 const tokenExpirySecondsSchema = z.number();
 
-interface Emote {
-  format: string[];
-  id: string;
-  images: {
-    url_1x: string;
-    url_2x: string;
-    url_4x: string;
-    name: string;
-    scale: ['1.0', '2.0', '3.0'];
-    theme_mode: ['light', 'dark'];
-  }[];
-}
-
 interface AuthProxyResponse<T> {
   data: T | null;
   error?: string | null;
@@ -247,16 +234,6 @@ export const twitchService = {
   },
 
   /**
-   * @see https://dev.twitch.tv/docs/api/reference/#get-global-emotes
-   */
-  listGlobalEmotes: async () => {
-    const { data } = await twitchApi.get<{ data: Emote[] }>(
-      '/chat/emotes/global',
-    );
-    return data;
-  },
-
-  /**
    * @see https://dev.twitch.tv/docs/api/reference/#get-pinned-chat-message
    */
   getPinnedChatMessage: async ({
@@ -379,7 +356,7 @@ export const twitchService = {
     });
 
     // An edge block (e.g. a Cloudflare 403) answers with an HTML page, which
-    // would otherwise surface as a JSON parse error.
+    // would otherwise show up as a JSON parse error.
     if (!res.ok) {
       throw new Error(
         `Auth proxy token request failed: HTTP ${res.status} (${res.headers.get('content-type') ?? 'no content-type'})`,
@@ -452,25 +429,6 @@ export const twitchService = {
       '/streams',
       {
         params: {
-          ...(cursor && { after: cursor }),
-        },
-      },
-    );
-
-    return result;
-  },
-
-  getStreamsUnderCategory: async (
-    gameId: string,
-    headers: Record<string, string>,
-    cursor?: string,
-  ): Promise<PaginatedList<TwitchStream>> => {
-    const result = await twitchApi.get<PaginatedList<TwitchStream>>(
-      '/streams',
-      {
-        headers,
-        params: {
-          game_id: gameId,
           ...(cursor && { after: cursor }),
         },
       },
@@ -922,39 +880,6 @@ export const twitchService = {
         broadcaster_id: broadcasterId,
         id: ids,
         first,
-        after,
-      },
-    });
-  },
-
-  /**
-   * Only returns subscriptions created by the client in the access token.
-   * @see https://dev.twitch.tv/docs/api/reference#get-eventsub-subscriptions
-   */
-  listEventSubscriptions: async ({
-    status,
-    type,
-    after,
-    subscription_id,
-    user_id,
-  }: {
-    status?: string;
-    type?: string;
-    after?: string;
-    subscription_id?: string;
-    user_id?: string;
-  }) => {
-    return twitchApi.get<
-      PaginatedList<EventSubscription> & {
-        total_cost: number;
-        max_total_cost: number;
-      }
-    >('/eventsub/subscriptions', {
-      params: {
-        status,
-        type,
-        user_id,
-        subscription_id,
         after,
       },
     });

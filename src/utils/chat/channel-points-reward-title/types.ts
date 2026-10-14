@@ -11,5 +11,3 @@ export type ChannelPointsRewardTagSource = {
   'custom-reward-id'?: string;
   'room-id'?: string;
 };
-
-export type RewardTitleTagSource = ChannelPointsRewardTagSource;

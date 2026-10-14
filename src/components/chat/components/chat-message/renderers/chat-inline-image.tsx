@@ -15,7 +15,6 @@ import {
   type StyleProp,
   StyleSheet,
   View,
-  type ViewStyle,
 } from 'react-native';
 
 import {
@@ -404,14 +403,12 @@ function logEmoteLoadFailure({
 }
 
 interface ChatInlineImageProps {
-  containerStyle?: StyleProp<ViewStyle>;
   /**
    * Records which emote a touch started on for the row's long-press timer.
    * Taken here so the common emote needs no wrapper view of its own.
    */
   onTouchStart?: () => void;
   priority?: 'low' | 'normal' | 'high';
-  resizeMode?: 'contain' | 'cover' | 'stretch';
   sourceUrl: string;
   style: StyleProp<ImageStyle>;
   testID?: string;
@@ -420,10 +417,8 @@ interface ChatInlineImageProps {
 
 // eslint-disable-next-line react-doctor/no-giant-component -- a split adds a mount boundary on the hottest chat path
 function ChatInlineImageComponent({
-  containerStyle,
   onTouchStart,
   priority = 'high',
-  resizeMode = 'contain',
   sourceUrl,
   style,
   testID,
@@ -468,7 +463,7 @@ function ChatInlineImageComponent({
     <ExpoImage
       ref={imageRef}
       source={source}
-      contentFit={resizeMode === 'stretch' ? 'fill' : resizeMode}
+      contentFit='contain'
       recyclingKey={`${candidateUrl}#${reloadNonce}`}
       autoplay={autoplay}
       // Keep the transient uri branch out of expo-image's memory cache to
@@ -480,22 +475,11 @@ function ChatInlineImageComponent({
       onDisplay={handleDisplay}
       onLoad={handleLoad}
       onError={handleError}
-      onTouchStart={overlayVisible || containerStyle ? undefined : onTouchStart}
+      onTouchStart={overlayVisible ? undefined : onTouchStart}
       style={overlayVisible ? StyleSheet.absoluteFill : style}
       testID={testID}
     />
   );
-
-  if (containerStyle) {
-    return (
-      <View onTouchStart={onTouchStart} style={containerStyle}>
-        {overlayVisible ? (
-          <ChatImageShimmer animate={status === 'loading'} />
-        ) : null}
-        {imageElement}
-      </View>
-    );
-  }
 
   if (overlayVisible) {
     return (

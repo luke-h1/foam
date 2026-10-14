@@ -48,7 +48,7 @@ interface BlockedUserItemProps {
   onUnblock: (userId: string, userName: string) => void;
 }
 
-const BlockedUserItem = function BlockedUserItem({
+function BlockedUserItem({
   user,
   index,
   count,
@@ -82,14 +82,14 @@ const BlockedUserItem = function BlockedUserItem({
       />
     </View>
   );
-};
+}
 
 interface BlockedUserItemSkeletonProps {
   index: number;
   count: number;
 }
 
-const BlockedUserItemSkeleton = function BlockedUserItemSkeleton({
+function BlockedUserItemSkeleton({
   index,
   count,
 }: BlockedUserItemSkeletonProps) {
@@ -112,7 +112,7 @@ const BlockedUserItemSkeleton = function BlockedUserItemSkeleton({
       <Skeleton style={styles.iconSkeleton} />
     </View>
   );
-};
+}
 
 interface ListStatePanelProps {
   icon: SymbolViewProps['name'];
@@ -120,7 +120,6 @@ interface ListStatePanelProps {
   description: string;
   actionLabel?: string;
   onAction?: () => void;
-  onRefresh?: () => Promise<void>;
 }
 
 function ListStatePanel({
@@ -129,7 +128,6 @@ function ListStatePanel({
   description,
   actionLabel,
   onAction,
-  onRefresh: _onRefresh,
 }: ListStatePanelProps) {
   return (
     <ScrollView
@@ -253,7 +251,6 @@ function BlockedUsersList({
         description='Twitch did not return your blocked users. Try again.'
         actionLabel='Retry'
         onAction={() => void onRefresh()}
-        onRefresh={onRefresh}
       />
     );
   }
@@ -264,7 +261,6 @@ function BlockedUsersList({
         icon='shield'
         title='No blocked users'
         description='Accounts you block on Twitch show here.'
-        onRefresh={onRefresh}
       />
     );
   }

@@ -21,7 +21,7 @@ interface VodPlayerScreenProps {
   id: string;
 }
 
-// Keep the screen awake while watching - idle-timer auto-lock matters more on long-form VODs.
+// Keep the screen awake while watching. Auto-lock is more likely to trigger during a long VOD.
 const KEEP_AWAKE_TAG = 'vod-player';
 
 export function VodPlayerScreen({ id }: VodPlayerScreenProps) {

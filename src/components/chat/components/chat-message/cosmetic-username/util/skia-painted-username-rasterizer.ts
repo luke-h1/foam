@@ -709,8 +709,6 @@ function buildPaintLayerSlots(
   return { layerSlots, imageLayers };
 }
 
-export { clearPaintBitmapCache };
-
 let memoryWarningSubscribed = false;
 
 function subscribeToMemoryWarnings(): void {
@@ -741,17 +739,13 @@ function paintRevision(paint: PaintData): number {
 }
 
 function paintBitmapCacheKey(opts: RasterizePaintedUsernameOptions): string {
-  // When the render falls back, the fallback colour is token of the raster - key it.
+  // A paint with no visible colour draws in the fallback colour, so the key includes it.
   const fallbackPart = isVisibleSevenTvColor(opts.paint.color)
     ? ''
     : `|${opts.fallbackColor}`;
   return `${opts.paint.id}|${paintRevision(opts.paint)}|${opts.displayUsername}|${opts.fontSize}|${opts.pixelRatio}${fallbackPart}`;
 }
 
-/**
- * Build or return cached render inputs. Pure and synchronous - URL layers
- * load live via `useAnimatedImageValue`.
- */
 type PaintSurfaces = {
   staticImage: SkImage;
   layerSlots: PaintLayerSlot[];
@@ -872,6 +866,10 @@ function renderUsernameMask(
   return maskImage;
 }
 
+/**
+ * Builds or returns the cached render inputs. Pure and synchronous: URL
+ * layers load live in the canvas through `useSharedPaintAnimationFrame`.
+ */
 export function getPaintBitmaps(
   opts: RasterizePaintedUsernameOptions,
 ): PaintBitmaps | null {

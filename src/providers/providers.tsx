@@ -49,7 +49,7 @@ function QueryProviderWithDevTools({ children }: PropsWithChildren) {
 }
 
 // Required lazily behind __DEV__ so Metro drops the devtools bundle (~94KB)
-// from release builds; the static import defeated the runtime gate below.
+// from release builds. A static import would keep it in the bundle.
 // SAFETY: the require resolves the same module the type import names.
 const DevToolsBubble = __DEV__
   ? // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -75,8 +75,7 @@ function QueryDevelopmentTools() {
         try {
           await Clipboard.setStringAsync(text);
           return true;
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        } catch (error) {
+        } catch {
           return false;
         }
       }}
@@ -132,10 +131,10 @@ export function Providers({ children }: PropsWithChildren) {
                       <GlobalErrorGate />
                       <ShakeToReport />
                       <OfflineBanner />
-                      {/* No global press haptic: feed taps stay silent
-                            so deliberate actions (send, block, refresh)
-                            keep their weight. Haptics are opt-in per
-                            control via lib/haptics. */}
+                      {/* No global press haptic. Feed taps stay silent,
+                            so only deliberate actions (send, block,
+                            refresh) give haptic feedback. Each control
+                            opts in through lib/haptics. */}
                       <PressablesConfig
                         config={{ minScale: motion.pressMinScale }}
                       >

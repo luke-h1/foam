@@ -104,7 +104,7 @@ const USER_COSMETICS_NEGATIVE_CACHE_TTL_MS = 30 * 60 * 1000;
 const SEVEN_TV_CACHE_NAMESPACE = 'seven_tv_cache';
 
 /**
- * Binding ids only; embedding a definition copy per wearer duplicated every
+ * Binding ids only. A definition copy per wearer would duplicate every
  * popular paint hundreds of times.
  */
 export type CachedUserCosmetics = {
@@ -510,7 +510,7 @@ export const clearUserCosmeticsCache = () => {
 
 /**
  * Must not bump `cosmeticBindingsVersion`: bumping here reintroduced a
- * reprocess storm on entitlement bursts - see cosmeticsChurn.test.ts.
+ * reprocess storm on entitlement bursts - see cosmetics-churn.test.ts.
  */
 export const setUserPaint = (ttvUserId: string, paintId: string): void => {
   const current = chatStore$.userPaintIds.peek();

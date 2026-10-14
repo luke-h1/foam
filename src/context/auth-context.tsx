@@ -48,9 +48,6 @@ import {
   type AuthState,
 } from './auth-context-value';
 
-/**
- * Prefetch initial data for faster startup
- */
 const prefetchInitialData = (userId?: string) => {
   if (userId) {
     void queryClient.prefetchQuery(followedStreamsQueryOptions(userId));
@@ -94,11 +91,6 @@ function logIfUnrefreshed(refreshedToken: TwitchToken | null): void {
 }
 
 /**
- * Records that auth never finished starting up and the anonymous fallback took
- * over. Logged twice on purpose: a warning for the timeline, an error so it
- * reaches Sentry.
- */
-/**
  * True when the anon token that was validated is still the one in play.
  */
 function isStillLiveAnonToken(
@@ -113,6 +105,11 @@ function isStillLiveAnonToken(
   );
 }
 
+/**
+ * Records that auth never finished starting up and the anonymous fallback took
+ * over. Logged twice on purpose: a warning for the timeline, an error so it
+ * reaches Sentry.
+ */
 function logAuthStartupFallback(reason: string, error?: Error): void {
   const errorType = error?.name ?? 'undefined';
 
@@ -322,7 +319,7 @@ function useAuthContextValue({
 
     // Implicit-grant tokens have no refresh token and Twitch omits expires_in,
     // so our local expiresAt can be a bogus 1-hour window even though the token
-    // is valid for weeks. Don't clear on that alone — try a refresh, and when
+    // is valid for weeks. Don't clear on that alone. Try a refresh, and when
     // none is available fall through to Twitch's validate endpoint below as the
     // source of truth.
     if (isTokenExpired(twitchToken)) {
@@ -409,7 +406,7 @@ function useAuthContextValue({
   };
 
   const loginWithTwitch = async (response: AuthSessionResult | null) => {
-    if (!response || response?.type !== 'success') {
+    if (!response || response.type !== 'success') {
       toast.error("Couldn't authenticate with twitch");
       await doAnonAuth();
       return null;
@@ -656,10 +653,10 @@ function useAuthContextValue({
     };
   }, [refreshCurrentUserTokenRef, state.authState]);
 
-  // The ref-backed callbacks are identity-stable so the context value only
-  // changes when auth state actually changes — this provider wraps the whole
-  // app and self-updates on a refresh poll and app foreground, so an
-  // unmemoized value re-renders every consumer on each of those ticks.
+  // The ref-backed callbacks are identity-stable, so the context value only
+  // changes when auth state changes. This provider wraps the whole app and
+  // updates itself on a refresh poll and on app foreground. An unmemoized
+  // value would re-render every consumer on each of those ticks.
   const loginWithTwitchCallback = useCallback(
     (...args: Parameters<AuthContextState['loginWithTwitch']>) =>
       loginWithTwitchRef.current(...args),

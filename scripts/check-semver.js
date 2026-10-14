@@ -2,18 +2,17 @@ const fs = require('fs');
 const semver = require('semver');
 const childProcess = require('child_process');
 
-// ANSI escape codes for red text and reset
+/**
+ * Checks that the current node and bun versions satisfy `engines` in
+ * package.json.
+ *
+ * Run with: node scripts/check-semver.js [verbose]
+ * Adapted from https://stackoverflow.com/a/72397817
+ */
 const RED = '\x1b[31m';
 const RESET = '\x1b[0m';
 
-/**
- * checks that current node and npm versions satisfies requirements in package.json
- * to run manually: node check-version.js [verbose]
- * adapted from https://stackoverflow.com/a/72397817
- */
-const VERBOSE_FORCED = false;
-const args = process.argv.slice(2);
-const VERBOSE = VERBOSE_FORCED || (args.length > 0 && args[0] === 'verbose');
+const VERBOSE = process.argv[2] === 'verbose';
 
 const printErrAndExit = error => {
   console.error(`${RED}${error}${RESET}`);

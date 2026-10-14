@@ -12,7 +12,7 @@ type FollowedChannelsQueryOptions = Omit<
 >;
 
 /**
- * Channels render immediately; profile images merge in via a dependent query (text-avatar fallback until then). Both hops used to be serialized in one queryFn, so the list waited on the second request.
+ * Channels render immediately. Profile images merge in from a dependent query, and rows show a text avatar until then.
  */
 export function useFollowedChannelsQuery(
   userId: string,

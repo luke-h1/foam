@@ -1,10 +1,10 @@
 import {
   ChannelPointsRewardTags,
-  RewardTitleTagSource,
+  ChannelPointsRewardTagSource,
 } from '@app/utils/chat/channel-points-reward-title/types';
 
 export function isHighlightMyMessageTags(
-  tags: RewardTitleTagSource | ChannelPointsRewardTags,
+  tags: ChannelPointsRewardTagSource | ChannelPointsRewardTags,
 ): boolean {
   return tags['msg-id'] === 'highlighted-message';
 }

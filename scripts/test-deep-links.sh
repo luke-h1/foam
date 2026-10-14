@@ -143,9 +143,7 @@ test_adb() {
 test_url() {
   local url=$1
   
-  echo -e "\n${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-  echo -e "${YELLOW}Testing: ${url}${NC}"
-  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "\n${YELLOW}Testing: ${url}${NC}"
   
   case "$METHOD" in
     uri-scheme)
@@ -172,9 +170,7 @@ test_url() {
   esac
 }
 
-echo -e "${BLUE}╔════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║   Foam Deep Link Testing                  ║${NC}"
-echo -e "${BLUE}╚════════════════════════════════════════════╝${NC}"
+echo -e "${BLUE}Foam deep link test${NC}"
 echo -e "${CYAN}Method:  ${METHOD}${NC}"
 echo -e "${CYAN}Platform: ${PLATFORM}${NC}"
 echo ""
@@ -197,9 +193,7 @@ else
     sleep 1
   done
   
-  echo -e "\n${BLUE}╔════════════════════════════════════════════╗${NC}"
-  echo -e "${BLUE}║   Test Summary                             ║${NC}"
-  echo -e "${BLUE}╚════════════════════════════════════════════╝${NC}"
+  echo -e "\n${BLUE}Summary${NC}"
   echo -e "${GREEN}✓ Passed: ${passed}${NC}"
   if [ $failed -gt 0 ]; then
     echo -e "${RED}✗ Failed: ${failed}${NC}"

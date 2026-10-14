@@ -158,9 +158,7 @@ export function useOTAUpdates() {
   const promptAndReload = useCallback(() => {
     countOtaMetric('ota.update.alert_shown', {
       category: 'ota',
-      platform: Platform.OS,
-      channel: Updates.channel || 'unknown',
-      environment: isProduction ? 'production' : 'non-production',
+      ...otaTelemetryFields(isProduction),
     });
 
     Alert.alert(
@@ -173,9 +171,7 @@ export function useOTAUpdates() {
           onPress: () => {
             countOtaMetric('ota.update.applied', {
               category: 'ota',
-              platform: Platform.OS,
-              channel: Updates.channel || 'unknown',
-              environment: isProduction ? 'production' : 'non-production',
+              ...otaTelemetryFields(isProduction),
               method: 'manual',
             });
 
@@ -239,11 +235,7 @@ export function useOTAUpdates() {
         platform: Platform.OS,
       });
 
-      countOtaMetric('ota.update.pending', {
-        channel: Updates.channel || 'unknown',
-        environment: isProduction ? 'production' : 'non-production',
-        platform: Platform.OS,
-      });
+      countOtaMetric('ota.update.pending', otaTelemetryFields(isProduction));
 
       if (!isProduction) {
         promptAndReloadRef.current();
@@ -319,10 +311,8 @@ export function useOTAUpdates() {
 
       countOtaMetric('ota.update.deferred', {
         category: 'ota',
-        environment: isProduction ? 'production' : 'non-production',
-        platform: Platform.OS,
+        ...otaTelemetryFields(isProduction),
         method: 'cold_start',
-        channel: Updates.channel || 'unknown',
       });
     });
 

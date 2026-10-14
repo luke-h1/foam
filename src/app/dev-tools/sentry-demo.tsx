@@ -2,7 +2,7 @@ import type { ComponentType } from 'react';
 
 import { Redirect } from 'expo-router';
 
-// Dev-only screen; inline EXPO_PUBLIC_APP_VARIANT literals let Metro constant-fold the require away - do not hoist them (mirrors StorybookRoute.tsx).
+// Dev-only screen. Keep the EXPO_PUBLIC_APP_VARIANT checks as inline literals so Metro can constant-fold the require out of production builds. See storybook-route.tsx.
 let SentryDemoRoute: ComponentType = function SentryDemoUnavailable() {
   return <Redirect href='/tabs/settings' />;
 };

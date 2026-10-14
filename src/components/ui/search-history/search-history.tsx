@@ -25,6 +25,8 @@ const HISTORY_ROW_HEIGHT = 44;
 // Width of the resting (snapped-open) delete affordance.
 const ACTION_WIDTH = 88;
 
+const SNAP_SPRING = { damping: 20, stiffness: 200, mass: 4 };
+
 interface SwipeableHistoryItemProps {
   query: string;
   onSelect: () => void;
@@ -64,33 +66,15 @@ function SwipeableHistoryItem({
             ),
           );
         } else if (event.translationX < SWIPE_THRESHOLD) {
-          translateX.set(
-            withSpring(-ACTION_WIDTH, {
-              damping: 20,
-              stiffness: 200,
-              mass: 4,
-            }),
-          );
+          translateX.set(withSpring(-ACTION_WIDTH, SNAP_SPRING));
         } else {
-          translateX.set(
-            withSpring(0, {
-              damping: 20,
-              stiffness: 200,
-              mass: 4,
-            }),
-          );
+          translateX.set(withSpring(0, SNAP_SPRING));
         }
       });
 
     const tapGesture = Gesture.Tap().onEnd(() => {
       if (translateX.get() < -40) {
-        translateX.set(
-          withSpring(0, {
-            damping: 20,
-            stiffness: 200,
-            mass: 4,
-          }),
-        );
+        translateX.set(withSpring(0, SNAP_SPRING));
       } else {
         scheduleOnRN(onSelect);
       }

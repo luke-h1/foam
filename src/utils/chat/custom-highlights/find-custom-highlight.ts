@@ -2,9 +2,9 @@ import type { CustomHighlight } from '@app/store/preference-store';
 import type { MessageToken } from '@app/utils/chat/message-token';
 import { replaceEmotesWithText } from '@app/utils/chat/replace-emotes-with-text';
 
-// Match results are cached per message-token array; the rules array is token of
-// the cache entry so edits to the rules invalidate stale hits without a
-// revision counter.
+// Match results are cached per message-token array. Each entry stores the rules
+// array it was matched against, so editing the rules invalidates old hits
+// without a revision counter.
 const matchCache = new WeakMap<
   MessageToken[],
   { rules: CustomHighlight[]; match: CustomHighlight | undefined }

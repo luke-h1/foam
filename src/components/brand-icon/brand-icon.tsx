@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { DimensionValue, ViewStyle } from 'react-native';
+import { ViewStyle } from 'react-native';
 
 import {
   BrandIconName,
@@ -15,19 +15,6 @@ interface IconProps {
   style?: ViewStyle;
 }
 
-function getIconImageStyle({
-  height,
-  width,
-}: {
-  height: DimensionValue;
-  width: DimensionValue;
-}) {
-  return {
-    height,
-    width,
-  };
-}
-
 export const BrandIcon = memo(
   ({ name, color, size = 'md', style, ...props }: IconProps) => {
     const { height, width } = resolveBrandIconSize(size);
@@ -36,7 +23,7 @@ export const BrandIcon = memo(
     return (
       <IconComponent
         color={color}
-        style={[getIconImageStyle({ height, width }), style]}
+        style={[{ height, width }, style]}
         {...props}
       />
     );

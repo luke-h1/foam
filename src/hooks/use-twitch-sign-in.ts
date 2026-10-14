@@ -64,8 +64,6 @@ const proxyUrl = new URL(
   Platform.select({
     native: `${authProxyBaseUrl}/proxy`,
     default: `${authProxyBaseUrl}/pending`,
-    web: `${authProxyBaseUrl}/pending`,
-    ios: `${authProxyBaseUrl}/proxy`,
   }),
 ).toString();
 

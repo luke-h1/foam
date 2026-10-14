@@ -26,147 +26,70 @@ interface BadgeVariantColors {
   subtle: ColorConfig;
 }
 
+const buildVariantColors = (
+  baseHex: string,
+  solidTextColor: string,
+  isDark: boolean,
+): BadgeVariantColors => {
+  const tintedBackground = `${baseHex}${isDark ? '20' : '10'}`;
+
+  return {
+    solid: {
+      backgroundColor: baseHex,
+      borderColor: baseHex,
+      textColor: solidTextColor,
+      borderWidth: 1,
+    },
+    outline: {
+      backgroundColor: 'transparent',
+      borderColor: baseHex,
+      textColor: baseHex,
+      borderWidth: 1,
+    },
+    soft: {
+      backgroundColor: tintedBackground,
+      borderColor: 'transparent',
+      textColor: baseHex,
+      borderWidth: 0,
+    },
+    subtle: {
+      backgroundColor: tintedBackground,
+      borderColor: baseHex,
+      textColor: baseHex,
+      borderWidth: 1,
+    },
+  };
+};
+
 const generateVariantConfig = (
   color: UIColor,
   colorScheme: 'light' | 'dark',
 ): BadgeVariantColors => {
   const isDark = colorScheme === 'dark';
+  const isWhite = color === 'white' || (color === 'neutral' && isDark);
+  const isBlack = color === 'black' || (color === 'neutral' && !isDark);
 
-  if (color === 'black') {
-    const bgColor = getColorValue('black', 50);
-    const textColor = getColorValue('black', 950);
-    const borderColor = bgColor;
-
-    return {
-      solid: {
-        backgroundColor: bgColor,
-        borderColor,
-        textColor,
-        borderWidth: 1,
-      },
-      outline: {
-        backgroundColor: 'transparent',
-        borderColor,
-        textColor: bgColor,
-        borderWidth: 1,
-      },
-      soft: {
-        backgroundColor: `${bgColor}${isDark ? '20' : '10'}`,
-        borderColor: 'transparent',
-        textColor: bgColor,
-        borderWidth: 0,
-      },
-      subtle: {
-        backgroundColor: `${bgColor}${isDark ? '20' : '10'}`,
-        borderColor,
-        textColor: bgColor,
-        borderWidth: 1,
-      },
-    };
+  if (isWhite) {
+    return buildVariantColors(
+      getColorValue('white', 950),
+      getColorValue('white', 50),
+      isDark,
+    );
   }
 
-  if (color === 'white') {
-    const bgColor = getColorValue('white', 950);
-    const textColor = getColorValue('white', 50);
-    const borderColor = bgColor;
-
-    return {
-      solid: {
-        backgroundColor: bgColor,
-        borderColor,
-        textColor,
-        borderWidth: 1,
-      },
-      outline: {
-        backgroundColor: 'transparent',
-        borderColor,
-        textColor: bgColor,
-        borderWidth: 1,
-      },
-      soft: {
-        backgroundColor: `${bgColor}${isDark ? '20' : '10'}`,
-        borderColor: 'transparent',
-        textColor: bgColor,
-        borderWidth: 0,
-      },
-      subtle: {
-        backgroundColor: `${bgColor}${isDark ? '20' : '10'}`,
-        borderColor,
-        textColor: bgColor,
-        borderWidth: 1,
-      },
-    };
+  if (isBlack) {
+    return buildVariantColors(
+      getColorValue('black', 50),
+      getColorValue('black', 950),
+      isDark,
+    );
   }
 
-  if (color === 'neutral') {
-    const bgColor = isDark
-      ? getColorValue('white', 950)
-      : getColorValue('black', 50);
-
-    const textColor = isDark
-      ? getColorValue('white', 50)
-      : getColorValue('black', 950);
-
-    const borderColor = bgColor;
-
-    return {
-      solid: {
-        backgroundColor: bgColor,
-        borderColor,
-        textColor,
-        borderWidth: 1,
-      },
-      outline: {
-        backgroundColor: 'transparent',
-        borderColor,
-        textColor: bgColor,
-        borderWidth: 1,
-      },
-      soft: {
-        backgroundColor: `${bgColor}${isDark ? '20' : '10'}`,
-        borderColor: 'transparent',
-        textColor: bgColor,
-        borderWidth: 0,
-      },
-      subtle: {
-        backgroundColor: `${bgColor}${isDark ? '20' : '10'}`,
-        borderColor,
-        textColor: bgColor,
-        borderWidth: 1,
-      },
-    };
-  }
-
-  return {
-    solid: {
-      backgroundColor: getColorValue(color, isDark ? 500 : 600),
-      borderColor: getColorValue(color, isDark ? 500 : 600),
-      textColor: getColorValue(color, isDark ? 950 : 50),
-      borderWidth: 1,
-    },
-    outline: {
-      backgroundColor: 'transparent',
-      borderColor: getColorValue(color, isDark ? 500 : 600),
-      textColor: getColorValue(color, isDark ? 500 : 600),
-      borderWidth: 1,
-    },
-    soft: {
-      backgroundColor: `${getColorValue(color, isDark ? 500 : 600)}${
-        isDark ? '20' : '10'
-      }`,
-      borderColor: 'transparent',
-      textColor: getColorValue(color, isDark ? 500 : 600),
-      borderWidth: 0,
-    },
-    subtle: {
-      backgroundColor: `${getColorValue(color, isDark ? 500 : 600)}${
-        isDark ? '20' : '10'
-      }`,
-      borderColor: getColorValue(color, isDark ? 500 : 600),
-      textColor: getColorValue(color, isDark ? 500 : 600),
-      borderWidth: 1,
-    },
-  };
+  return buildVariantColors(
+    getColorValue(color, isDark ? 500 : 600),
+    getColorValue(color, isDark ? 950 : 50),
+    isDark,
+  );
 };
 
 const generateVariantConfigFromBase = (
@@ -175,36 +98,11 @@ const generateVariantConfigFromBase = (
 ): BadgeVariantColors => {
   const isDark = colorScheme === 'dark';
 
-  const highContrastText = isDark
-    ? getColorValue('zinc', 950)
-    : getColorValue('zinc', 50);
-
-  return {
-    solid: {
-      backgroundColor: baseHex,
-      borderColor: baseHex,
-      textColor: highContrastText,
-      borderWidth: 1,
-    },
-    outline: {
-      backgroundColor: 'transparent',
-      borderColor: baseHex,
-      textColor: baseHex,
-      borderWidth: 1,
-    },
-    soft: {
-      backgroundColor: `${baseHex}${isDark ? '20' : '10'}`,
-      borderColor: 'transparent',
-      textColor: baseHex,
-      borderWidth: 0,
-    },
-    subtle: {
-      backgroundColor: `${baseHex}${isDark ? '20' : '10'}`,
-      borderColor: baseHex,
-      textColor: baseHex,
-      borderWidth: 1,
-    },
-  };
+  return buildVariantColors(
+    baseHex,
+    getColorValue('zinc', isDark ? 950 : 50),
+    isDark,
+  );
 };
 
 interface BadgeProps {

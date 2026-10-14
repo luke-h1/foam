@@ -277,11 +277,9 @@ export function createChatIrcHandlers({
 
     clearLocalMessages();
 
-    const systemMessageText = 'A moderator cleared chat';
-
-    const systemMessage = createSystemMessage(channelName, systemMessageText);
-
-    clearMessagesWithNotice(systemMessage);
+    clearMessagesWithNotice(
+      createSystemMessage(channelName, 'A moderator cleared chat'),
+    );
 
     setTimeout(() => {
       listRef.current?.scrollToEnd({ animated: false });
