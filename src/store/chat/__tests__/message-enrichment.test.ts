@@ -19,25 +19,20 @@ import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { createTextToken } from '@app/utils/chat/__tests__/__fixtures__/message-token.fixture';
-import type { MessageToken } from '@app/utils/chat/message-token';
 
 import {
   createMockMessage,
   createNoticeMessage,
   createSystemMessage,
 } from './__fixtures__/message-enrichment.fixture';
+import {
+  enrichedMessageIds,
+  storedMessage,
+  summariseTokens,
+  type TokenSummary,
+} from './__fixtures__/messages.fixture';
 
 type ChatEmoteData = Parameters<typeof enrichMessageSet>[0]['emoteData'];
-
-/**
- * The store replaces token ids with part indexes, so an emote is identified
- * by the url that only the resolved emote carries.
- */
-interface TokenSummary {
-  type: string;
-  content?: string;
-  url?: string;
-}
 
 const channelId = 'channel-1';
 
@@ -101,42 +96,6 @@ function createSubscriberMessage(
     message: [createTextToken(text)],
     userstate: createUserStateTags({ 'badges-raw': 'subscriber/12' }),
   });
-}
-
-/**
- * Reduces tokens to the fields these tests assert on, so the shape can be
- * compared with `toEqual` instead of a partial matcher.
- */
-function summariseTokens(tokens: MessageToken[]): TokenSummary[] {
-  return tokens.map(token => {
-    if (token.type === 'emote') {
-      return { type: token.type, content: token.content, url: token.url };
-    }
-
-    return {
-      type: token.type,
-      content: 'content' in token ? token.content : undefined,
-    };
-  });
-}
-
-function storedMessage(messageId: string): AnyChatMessageType {
-  const message = chatStore$.messages
-    .peek()
-    .find(entry => entry.message_id === messageId);
-
-  if (!message) {
-    throw new Error(`Message ${messageId} is not in the store`);
-  }
-
-  return message;
-}
-
-function enrichedMessageIds(): string[] {
-  return chatStore$.messages
-    .peek()
-    .filter(message => message.message.some(token => token.type === 'emote'))
-    .map(message => message.message_id);
 }
 
 beforeEach(() => {

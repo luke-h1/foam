@@ -11,6 +11,10 @@ import {
 import { useChatRowRenderer } from '@app/components/chat/hooks/use-chat-row-renderer';
 import { bttvEmoteService } from '@app/services/bttv-emote-service';
 import {
+  summariseTokens,
+  type TokenSummary,
+} from '@app/store/chat/__tests__/__fixtures__/messages.fixture';
+import {
   clearSessionCache,
   getSessionCacheString,
 } from '@app/store/chat/actions/chat-color-caches';
@@ -49,29 +53,6 @@ function replyTargetUpdater(
     return update;
   }
   throw new Error('Expected a reply-target updater function');
-}
-
-/**
- * Reduces tokens to the fields these tests assert on, so the shape can be
- * compared with `toEqual` instead of a partial matcher.
- */
-interface TokenSummary {
-  type: string;
-  content?: string;
-  url?: string;
-}
-
-function summariseTokens(tokens: MessageToken[]): TokenSummary[] {
-  return tokens.map(token => {
-    if (token.type === 'emote') {
-      return { type: token.type, content: token.content, url: token.url };
-    }
-
-    return {
-      type: token.type,
-      content: 'content' in token ? token.content : undefined,
-    };
-  });
 }
 
 function createChatListRef(

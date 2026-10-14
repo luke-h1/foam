@@ -14,6 +14,12 @@ import { sevenTvService } from '@app/services/seven-tv-service';
 import { twitchBadgeService } from '@app/services/twitch-badge-service';
 import { twitchService } from '@app/services/twitch-service';
 import {
+  enrichedMessageIds,
+  storedMessage,
+  storedTokens,
+  type TokenSummary,
+} from '@app/store/chat/__tests__/__fixtures__/messages.fixture';
+import {
   addBadge,
   clearUserCosmeticsCache,
   setUserBadge,
@@ -43,18 +49,7 @@ import {
   replacePreferences,
 } from '@app/store/preference-store';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import type { MessageToken } from '@app/utils/chat/message-token';
 import { logger } from '@app/utils/logger';
-
-/**
- * The store replaces token ids with part indexes, so an emote is identified
- * by the url that only the resolved emote carries.
- */
-interface TokenSummary {
-  type: string;
-  content?: string;
-  url?: string;
-}
 
 const channelId = 'channel-1';
 
@@ -116,46 +111,6 @@ const resolvedPersonal: TokenSummary = {
 };
 
 const space: TokenSummary = { type: 'text', content: ' ' };
-
-/**
- * Reduces tokens to the fields these tests assert on, so the shape can be
- * compared with `toEqual` instead of a partial matcher.
- */
-function summariseTokens(tokens: MessageToken[]): TokenSummary[] {
-  return tokens.map(token => {
-    if (token.type === 'emote') {
-      return { type: token.type, content: token.content, url: token.url };
-    }
-
-    return {
-      type: token.type,
-      content: 'content' in token ? token.content : undefined,
-    };
-  });
-}
-
-function storedMessage(messageId: string): AnyChatMessageType {
-  const message = chatStore$.messages
-    .peek()
-    .find(entry => entry.message_id === messageId);
-
-  if (!message) {
-    throw new Error(`Message ${messageId} is not in the store`);
-  }
-
-  return message;
-}
-
-function storedTokens(messageId: string): TokenSummary[] {
-  return summariseTokens(storedMessage(messageId).message);
-}
-
-function enrichedMessageIds(): string[] {
-  return chatStore$.messages
-    .peek()
-    .filter(message => message.message.some(token => token.type === 'emote'))
-    .map(message => message.message_id);
-}
 
 function seedChannelCache() {
   chatStore$.persisted.globalCaches.set(makeEmptyGlobalCacheData());

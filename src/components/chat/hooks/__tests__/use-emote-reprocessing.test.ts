@@ -7,6 +7,11 @@ import {
 import { useEmoteReprocessing } from '@app/components/chat/hooks/use-emote-reprocessing';
 import { bttvEmoteService } from '@app/services/bttv-emote-service';
 import { sevenTvService } from '@app/services/seven-tv-service';
+import {
+  enrichedMessageIds,
+  storedTokens,
+  type TokenSummary,
+} from '@app/store/chat/__tests__/__fixtures__/messages.fixture';
 import { addMessages, clearMessages } from '@app/store/chat/actions/messages';
 import {
   clearPersonalEmotesCache,
@@ -20,7 +25,6 @@ import {
   makeEmptyGlobalCacheData,
 } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
-import type { MessageToken } from '@app/utils/chat/message-token';
 
 const channelId = 'channel-1';
 
@@ -38,16 +42,6 @@ const kappa = createSevenTvEmote({
 type MessageWithoutUserstate = Omit<AnyChatMessageType, 'userstate'> & {
   userstate: undefined;
 };
-
-/**
- * The store replaces token ids with part indexes, so an emote is identified
- * by the url that only the resolved emote carries.
- */
-interface TokenSummary {
-  type: string;
-  content?: string;
-  url?: string;
-}
 
 function createTextOnlyMessage(
   messageId: string,
@@ -82,46 +76,6 @@ function seedChannelCache(overrides: Partial<ChannelCacheType> = {}) {
   chatStore$.persisted.channelCaches.set({
     [channelId]: { ...makeEmptyEmoteData(), ...overrides },
   });
-}
-
-/**
- * Reduces tokens to the fields these tests assert on, so the shape can be
- * compared with `toEqual` instead of a partial matcher.
- */
-function summariseTokens(tokens: MessageToken[]): TokenSummary[] {
-  return tokens.map(token => {
-    if (token.type === 'emote') {
-      return {
-        type: token.type,
-        content: token.content,
-        url: token.url,
-      };
-    }
-
-    return {
-      type: token.type,
-      content: 'content' in token ? token.content : undefined,
-    };
-  });
-}
-
-function storedTokens(messageId: string): TokenSummary[] {
-  const message = chatStore$.messages
-    .peek()
-    .find(entry => entry.message_id === messageId);
-
-  if (!message) {
-    throw new Error(`Message ${messageId} is not in the store`);
-  }
-
-  return summariseTokens(message.message);
-}
-
-function enrichedMessageIds(): string[] {
-  return chatStore$.messages
-    .peek()
-    .filter(message => message.message.some(token => token.type === 'emote'))
-    .map(message => message.message_id);
 }
 
 const resolvedKappa: TokenSummary = {
