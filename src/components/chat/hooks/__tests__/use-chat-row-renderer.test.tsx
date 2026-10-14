@@ -6,49 +6,25 @@ import * as ChatRowModule from '@app/components/chat/components/chat-message/cha
 import type { ChatRowProps } from '@app/components/chat/components/chat-message/chat-row.types';
 import {
   createChatMessage,
-  createEmoteData,
   createSevenTvEmote,
 } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
 import { useChatRowRenderer } from '@app/components/chat/hooks/use-chat-row-renderer';
-import * as channelLoadActions from '@app/store/chat/actions/channel-load';
-import * as chatColorCachesActions from '@app/store/chat/actions/chat-color-caches';
+import { bttvEmoteService } from '@app/services/bttv-emote-service';
+import {
+  clearSessionCache,
+  getSessionCacheString,
+} from '@app/store/chat/actions/chat-color-caches';
+import { addMessages, clearMessages } from '@app/store/chat/actions/messages';
+import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import { chatTransientState$ } from '@app/store/chat/observables/chat-transient-state';
-import * as transientSelectorsModule from '@app/store/chat/react/transient-selectors';
+import {
+  makeEmptyEmoteData,
+  makeEmptyGlobalCacheData,
+} from '@app/store/chat/types/constants';
 import { createRef } from '@app/test/create-ref';
 import type { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
-import * as emoteProcessorModule from '@app/utils/chat/emote-processor';
+import type { SevenTvSanitisedEmote } from '@app/types/emote';
 import type { MessageToken } from '@app/utils/chat/message-token';
-import * as resolveCachedSenderColorModule from '@app/utils/chat/resolve-cached-sender-color/resolve-cached-sender-color';
-import * as resolveMentionColorModule from '@app/utils/chat/resolve-mention-color';
-
-const mockGetCurrentEmoteData = jest.spyOn(
-  channelLoadActions,
-  'getCurrentEmoteData',
-);
-
-const mockGetSessionCacheString = jest.spyOn(
-  chatColorCachesActions,
-  'getSessionCacheString',
-);
-
-const mockSetSessionCacheString = jest.spyOn(
-  chatColorCachesActions,
-  'setSessionCacheString',
-);
-
-const mockProcessEmotesWorklet = jest
-  .spyOn(emoteProcessorModule, 'processEmotesWorklet')
-  .mockImplementation((params: { inputString: string }) => [
-    { type: 'text', content: `parsed:${params.inputString}` },
-  ]);
-
-const mockResolveMentionColor = jest
-  .spyOn(resolveMentionColorModule, 'resolveMentionColor')
-  .mockReturnValue('#mention-color');
-
-jest
-  .spyOn(resolveCachedSenderColorModule, 'resolveCachedSenderColor')
-  .mockReturnValue('#resolved-sender');
 
 /**
  * ChatRow is memo() wrapped (an object, not a function), so
@@ -60,11 +36,6 @@ Object.defineProperty(ChatRowModule, 'ChatRow', {
   configurable: true,
   value: (props: ChatRowProps<NoticeVariants>) => mockChatRow(props),
 });
-
-const mockUseIsHighlightedReplyTargetMessage = jest.spyOn(
-  transientSelectorsModule,
-  'useIsHighlightedReplyTargetMessage',
-);
 
 type HighlightedReplyTargetUpdate =
   | string
@@ -78,6 +49,29 @@ function replyTargetUpdater(
     return update;
   }
   throw new Error('Expected a reply-target updater function');
+}
+
+/**
+ * Reduces tokens to the fields these tests assert on, so the shape can be
+ * compared with `toEqual` instead of a partial matcher.
+ */
+interface TokenSummary {
+  type: string;
+  content?: string;
+  url?: string;
+}
+
+function summariseTokens(tokens: MessageToken[]): TokenSummary[] {
+  return tokens.map(token => {
+    if (token.type === 'emote') {
+      return { type: token.type, content: token.content, url: token.url };
+    }
+
+    return {
+      type: token.type,
+      content: 'content' in token ? token.content : undefined,
+    };
+  });
 }
 
 function createChatListRef(
@@ -187,18 +181,39 @@ function renderRowRenderer() {
   };
 }
 
+function seedChannelEmotes(sevenTvChannelEmotes: SevenTvSanitisedEmote[]) {
+  chatStore$.persisted.globalCaches.set(makeEmptyGlobalCacheData());
+
+  chatStore$.persisted.channelCaches.set({
+    'channel-1': { ...makeEmptyEmoteData(), sevenTvChannelEmotes },
+  });
+}
+
+function renderedRowCallbacks() {
+  const props = mockChatRow.mock.calls[0]?.[0];
+
+  if (!props?.getMentionColor || !props.parseTextForEmotes) {
+    throw new Error('Expected ChatRow to render with text callbacks');
+  }
+
+  return {
+    getMentionColor: props.getMentionColor,
+    parseTextForEmotes: props.parseTextForEmotes,
+  };
+}
+
 describe('useChatRowRenderer', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useRealTimers();
+    clearMessages();
+    clearSessionCache();
+    chatStore$.emojis.set([]);
+    seedChannelEmotes([createSevenTvEmote()]);
 
-    mockGetCurrentEmoteData.mockReturnValue(
-      createEmoteData({
-        sevenTvChannelEmotes: [createSevenTvEmote()],
-      }),
-    );
-
-    mockGetSessionCacheString.mockReturnValue(undefined);
+    jest
+      .spyOn(bttvEmoteService, 'getSanitisedGlobalBadges')
+      .mockResolvedValue([]);
 
     chatTransientState$['channel-1']!.highlightedReplyTargetMessageId.set(
       'msg-2',
@@ -301,27 +316,62 @@ describe('useChatRowRenderer', () => {
 
     expect(props.timestamp).toBe('12:34');
 
-    expect(props.parseTextForEmotes('OMEGALUL')).toEqual<MessageToken[]>([
-      { type: 'text', content: 'parsed:OMEGALUL' },
+    expect(summariseTokens(props.parseTextForEmotes('hi OMEGALUL'))).toEqual<
+      TokenSummary[]
+    >([
+      { type: 'text', content: 'hi' },
+      { type: 'text', content: ' ' },
+      {
+        type: 'emote',
+        content: 'OMEGALUL',
+        url: 'https://cdn.example.test/emote.webp',
+      },
+    ]);
+  });
+
+  test('colours a mention from the chatter history and keeps it for the session', () => {
+    addMessages([
+      createChatMessage({
+        tags: {
+          id: 'from-display-name',
+          login: 'displayname',
+          'display-name': 'DisplayName',
+          color: '#00FF00',
+        },
+      }),
     ]);
 
-    expect(mockProcessEmotesWorklet.mock.calls[0]?.[0].inputString).toBe(
-      'OMEGALUL',
-    );
+    const { hook, messages } = renderRowRenderer();
+    const rendered = hook.result.current.renderItem({
+      item: messages[1]!,
+      index: 1,
+      target: 'Cell',
+    });
 
-    expect(props.getMentionColor('@DisplayName')).toBe('#mention-color');
-    expect(mockResolveMentionColor).toHaveBeenCalledWith('@DisplayName');
+    render(rendered!);
+    const { getMentionColor } = renderedRowCallbacks();
+    const firstColor = getMentionColor('@DisplayName');
 
-    expect(mockSetSessionCacheString.mock.calls[0]).toEqual([
-      'mentionColors',
-      'displayname',
-      '#mention-color',
+    addMessages([
+      createChatMessage({
+        tags: {
+          id: 'recoloured',
+          login: 'displayname',
+          'display-name': 'DisplayName',
+          color: '#0000FF',
+        },
+      }),
     ]);
 
-    expect(mockUseIsHighlightedReplyTargetMessage).toHaveBeenCalledWith(
-      'channel-1',
-      'msg-2',
-    );
+    expect({
+      firstColor,
+      secondColor: getMentionColor('@displayname'),
+      cached: getSessionCacheString('mentionColors', 'displayname'),
+    }).toEqual({
+      firstColor: 'rgb(0, 255, 0)',
+      secondColor: 'rgb(0, 255, 0)',
+      cached: 'rgb(0, 255, 0)',
+    });
   });
 
   test('reply context press scrolls to the parent message and clears the highlight after the timeout', () => {
@@ -389,8 +439,8 @@ describe('useChatRowRenderer', () => {
   });
 
   test('returns null for non-renderable rows and plain text when emote data is missing', () => {
-    mockGetCurrentEmoteData.mockReturnValue(createEmoteData());
-    const { hook } = renderRowRenderer();
+    seedChannelEmotes([]);
+    const { hook, messages } = renderRowRenderer();
 
     const invalidMessage = createChatMessage({
       overrides: {
@@ -405,5 +455,17 @@ describe('useChatRowRenderer', () => {
         target: 'Cell',
       }),
     ).toBe(null);
+
+    render(
+      hook.result.current.renderItem({
+        item: messages[1]!,
+        index: 1,
+        target: 'Cell',
+      })!,
+    );
+
+    expect(renderedRowCallbacks().parseTextForEmotes('hi OMEGALUL')).toEqual<
+      MessageToken[]
+    >([{ type: 'text', content: 'hi OMEGALUL' }]);
   });
 });
