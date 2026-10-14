@@ -3,13 +3,21 @@ import { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react-native';
 
-import { twitchService } from '@app/services/twitch-service';
+import { twitchApi } from '@app/services/api/clients';
 import type { TwitchStream } from '@app/types/twitch/stream';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 
 import { useStreamProfilePictures } from '../use-stream-profile-pictures';
 
-const mockGetUsersById = jest.spyOn(twitchService, 'getUsersById');
+const mockTwitchGet = jest.spyOn(twitchApi, 'get');
+
+/**
+ * Answers a batched `/users?id=a&id=b` lookup with one user per id.
+ */
+async function answerUsersLookup(url: string) {
+  const ids = new URLSearchParams(url.split('?')[1]).getAll('id');
+  return { data: ids.map(user) };
+}
 
 function stream(userId: string): TwitchStream {
   return {
@@ -61,7 +69,7 @@ function createWrapper() {
 describe('useStreamProfilePictures', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetUsersById.mockImplementation(async (ids: string[]) => ids.map(user));
+    mockTwitchGet.mockImplementation(answerUsersLookup);
   });
 
   test('only queries newly missing ids as the stream list grows', async () => {
@@ -81,8 +89,7 @@ describe('useStreamProfilePictures', () => {
       ]);
     });
 
-    expect(mockGetUsersById).toHaveBeenCalledTimes(1);
-    expect(mockGetUsersById).toHaveBeenCalledWith(['a', 'b']);
+    expect(mockTwitchGet.mock.calls).toEqual([['/users?id=a&id=b']]);
 
     rerender({ streams: [stream('a'), stream('b'), stream('c')] });
 
@@ -95,9 +102,10 @@ describe('useStreamProfilePictures', () => {
     });
 
     // The appended page only requests the newly-seen id, not the whole list.
-    expect(mockGetUsersById).toHaveBeenCalledTimes(2);
-
-    expect(mockGetUsersById).toHaveBeenLastCalledWith(['c']);
+    expect(mockTwitchGet.mock.calls).toEqual([
+      ['/users?id=a&id=b'],
+      ['/users?id=c'],
+    ]);
   });
 
   test('skips the lookup and returns the input untouched when disabled', () => {
@@ -108,7 +116,7 @@ describe('useStreamProfilePictures', () => {
       { wrapper: createWrapper() },
     );
 
-    expect(mockGetUsersById).not.toHaveBeenCalled();
+    expect(mockTwitchGet).not.toHaveBeenCalled();
     expect(result.current).toBe(streams);
   });
 });

@@ -2,7 +2,7 @@ import * as SentryReactNative from '@sentry/react-native';
 
 import * as SentryImageSpans from '@app/lib/sentry-image-spans';
 
-import { forwardLogToSentry, type LogTagValue } from '../sentry';
+import { forwardLogToSentry } from '../sentry';
 
 /**
  * The root Sentry mock has no Scope, and faking one means inventing ~46
@@ -12,10 +12,7 @@ const { Scope } = jest.requireActual<typeof SentryReactNative>(
   '@sentry/react-native',
 );
 
-const scope = new Scope();
-const setTagSpy = jest.spyOn(scope, 'setTag');
-jest.spyOn(scope, 'setFingerprint');
-jest.spyOn(scope, 'setContext');
+let scope = new Scope();
 
 jest
   .spyOn(SentryImageSpans, 'instrumentExpoImageLoads')
@@ -31,21 +28,9 @@ const mockCaptureMessage = jest.mocked(SentryReactNative.captureMessage);
 const mockLoggerWarn = jest.mocked(SentryReactNative.logger.warn);
 const mockWithScope = jest.mocked(SentryReactNative.withScope);
 
-/**
- * The tags a scope ended up with, in the order they were written - `setTag`
- * is last-write-wins, so order is the contract under test.
- */
-function appliedTags(): Record<string, NonNullable<LogTagValue>> {
-  return Object.fromEntries(
-    setTagSpy.mock.calls.map(([key, value]) => {
-      // SAFETY: applyLogScope skips null/undefined and never passes bigint/symbol, so every recorded value is a LogTagValue.
-      return [key, value as NonNullable<LogTagValue>] as const;
-    }),
-  );
-}
-
 beforeEach(() => {
   jest.clearAllMocks();
+  scope = new Scope();
   mockWithScope.mockImplementation(callback => callback(scope));
 });
 
@@ -78,6 +63,16 @@ describe('forwardLogToSentry error', () => {
     });
 
     expect(mockCaptureException).toHaveBeenCalledTimes(1);
+
+    const exception = mockCaptureException.mock.calls[0]?.[0];
+
+    expect(exception).toBeInstanceOf(Error);
+    expect(String(exception)).toBe('chat_resources_error: boom');
+
+    expect(scope.getScopeData().tags).toEqual({
+      log_category: 'chat',
+      error_type: 'chat_resources_error',
+    });
   });
 
   test('caller tags cannot clobber the canonical grouping tags', () => {
@@ -91,7 +86,7 @@ describe('forwardLogToSentry error', () => {
       },
     });
 
-    expect(appliedTags()).toEqual({
+    expect(scope.getScopeData().tags).toEqual({
       log_category: 'chat',
       error_type: 'chat_resources_error',
       ok: 'kept',
@@ -110,7 +105,7 @@ describe('forwardLogToSentry error', () => {
       metadata: { tags },
     });
 
-    expect(appliedTags()).toEqual({
+    expect(scope.getScopeData().tags).toEqual({
       ...Object.fromEntries(
         Array.from({ length: 24 }, (_, index) => [`t${index}`, 'v']),
       ),
@@ -126,7 +121,7 @@ describe('forwardLogToSentry error', () => {
       metadata: { tags: { long: 'x'.repeat(500) } },
     });
 
-    expect(appliedTags()).toEqual({
+    expect(scope.getScopeData().tags).toEqual({
       log_category: 'chat',
       long: 'x'.repeat(200),
     });
@@ -140,6 +135,9 @@ describe('forwardLogToSentry error', () => {
       metadata: { tags: { absent: undefined, empty: null, kept: 1 } },
     });
 
-    expect(appliedTags()).toEqual({ log_category: 'chat', kept: 1 });
+    expect(scope.getScopeData().tags).toEqual({
+      log_category: 'chat',
+      kept: 1,
+    });
   });
 });

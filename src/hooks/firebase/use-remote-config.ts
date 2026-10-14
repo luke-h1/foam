@@ -85,7 +85,7 @@ function getErrorMessage(cause: unknown): string | null {
   return null;
 }
 
-function isRemoteConfigCancellation(cause: unknown): boolean {
+export function isRemoteConfigCancellation(cause: unknown): boolean {
   const message = getErrorMessage(cause)?.toLowerCase();
   return message?.includes('cancelled') ?? false;
 }
