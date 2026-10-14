@@ -13,6 +13,7 @@ import { CHAT_NOTICE_ACCENTS } from '../util/chat-notice-accents';
 import { MilestoneReward } from './milestone-reward';
 import { MilestoneSystemMessage } from './milestone-system-message';
 import { NoticeUserMessage } from './notice-user-message';
+import { getMilestoneMetaLabel } from './util/notice-labels';
 import { splitNoticeSubject } from './util/notice-sentence';
 
 interface ViewerMilestoneNoticeProps {
@@ -21,17 +22,6 @@ interface ViewerMilestoneNoticeProps {
   fontScale?: ChatFontScale;
   parsedMessage?: MessageToken[];
   token: MessageToken<'viewermilestone'>;
-}
-
-function getMilestoneMetaLabel(category: string): string {
-  switch (category) {
-    case 'watch-streak':
-      return 'Watch streak';
-    case 'follow':
-      return 'Follow milestone';
-    default:
-      return 'Milestone';
-  }
 }
 
 function ViewerMilestoneNoticeComponent({

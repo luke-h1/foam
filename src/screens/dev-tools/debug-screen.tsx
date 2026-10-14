@@ -34,6 +34,7 @@ import { NAMESPACE, storageService } from '@app/lib/storage';
 import { twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 
+import { NativeChatListSection } from './components/native-chat-list-section';
 import { PaintRendererSection } from './components/paint-renderer-section';
 
 function handleClearDebugStorage() {
@@ -164,6 +165,8 @@ export function DebugScreen() {
           </Section>
 
           <PaintRendererSection />
+
+          <NativeChatListSection />
 
           <Section title='Username → ID'>
             <TextField

@@ -2,7 +2,6 @@ import { memo } from 'react';
 import { View } from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
-import { SymbolView } from '@app/components/ui/icon/icon';
 import { reportUnrenderableNotice } from '@app/utils/chat/chat-health/report-unrenderable-notice';
 import type { MessageToken } from '@app/utils/chat/message-token';
 
@@ -12,6 +11,11 @@ import { ChatNoticeMetaRow } from '../chat-message/renderers/chat-notice-meta-ro
 import type { ChatFontScale } from '../chat-message/util/chat-scale';
 import { CHAT_NOTICE_ACCENTS } from '../util/chat-notice-accents';
 import { NoticeUserMessage } from './notice-user-message';
+import {
+  getRitualDescription,
+  getRitualIcon,
+  getRitualMetaLabel,
+} from './util/notice-labels';
 
 interface RitualNoticeProps {
   compact?: boolean;
@@ -19,32 +23,6 @@ interface RitualNoticeProps {
   fontScale?: ChatFontScale;
   parsedMessage?: MessageToken[];
   token: MessageToken<'ritual'>;
-}
-
-function getRitualMetaLabel(ritualName: string): string {
-  switch (ritualName) {
-    case 'new_chatter':
-      return 'New chatter';
-    default:
-      return ritualName ? ritualName.replace(/_/g, ' ') : 'Chat ritual';
-  }
-}
-
-function getRitualIcon(
-  ritualName: string,
-): React.ComponentProps<typeof SymbolView>['name'] {
-  return ritualName === 'new_chatter' ? 'hand.wave.fill' : 'sparkles';
-}
-
-function getRitualDescription(ritualName: string, displayName: string): string {
-  switch (ritualName) {
-    case 'new_chatter':
-      return `${displayName} is new to the chat.`;
-    default:
-      return ritualName
-        ? `${displayName} performed the ${ritualName.replace(/_/g, ' ')} ritual.`
-        : `${displayName} performed a chat ritual.`;
-  }
 }
 
 function RitualNoticeComponent({

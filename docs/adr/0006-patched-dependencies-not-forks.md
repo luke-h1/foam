@@ -5,7 +5,10 @@ Six packages ship patched via bun `patchedDependencies`:
 - `expo-image@57.0.1` - emote frame sync + decode budgets (iOS driver landed on
   main in #857) plus the Android phase lock and the `FrameAnimationDrawable`
   pause/resume fix (ADR-0009). The Android half only compiles because
-  `^expo-image$` is in `expo.autolinking.android.buildFromSource`.
+  `^expo-image$` is in `expo.autolinking.android.buildFromSource`. The iOS
+  half also adds `ImageView+NativeHost.swift`, a small additive API that lets
+  `modules/native-chat-list` host `ImageView` without React props. It changes
+  no existing behaviour.
 - `@legendapp/state@2.1.15` - diff-path rewrite, -86% per `messages.set`
   (see `PERF_REPORT.md`), plus persist coalescing.
 - `@legendapp/list@3.3.3` - chat-list fixes on the v3 line.

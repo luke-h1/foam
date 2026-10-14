@@ -173,6 +173,7 @@ export const Chat = memo(
       handleUnpinPinnedMessage,
       keyExtractor,
       messageListExtraData,
+      nativeListSetup,
       overlayProps,
       paneFlags,
       pinnedMessage,
@@ -242,6 +243,7 @@ export const Chat = memo(
                 keyExtractor={keyExtractor}
                 getItemType={getItemType}
                 messageListExtraData={messageListExtraData}
+                nativeListSetup={nativeListSetup}
                 onClearFilters={handleClearFilters}
                 hasActiveFilters={hasActiveFilters}
                 onCloseSearch={closeSearch}

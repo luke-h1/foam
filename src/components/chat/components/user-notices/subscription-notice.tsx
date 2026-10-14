@@ -2,7 +2,6 @@ import { memo } from 'react';
 import { View } from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
-import { getSubscriptionTierDisplay } from '@app/components/chat/components/user-notices/util/subscription-notice-tier';
 import { Image } from '@app/components/image/image';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { MessageToken } from '@app/utils/chat/message-token';
@@ -12,6 +11,7 @@ import { ChatNoticeMetaRow } from '../chat-message/renderers/chat-notice-meta-ro
 import { CHAT_NOTICE_ACCENTS } from '../util/chat-notice-accents';
 import { buildSubscriptionNoticeDescription } from './build-subscription-notice-description';
 import { subscriptionNoticeStyles as styles } from './subscription-notice.styles';
+import { getSubscriptionDescriptionInput } from './util/subscription-notice-segments';
 
 function getMessagePartKey(token: MessageToken, occurrence: number): string {
   switch (token.type) {
@@ -65,55 +65,6 @@ interface SubscriptionNoticeProps {
 }
 
 /**
- * Twitch's usernotice payload is a union: each subscription kind carries a
- * different subset of these fields, so each is read only when present.
- */
-function pickSubscriptionDescriptionFields(
-  subscriptionEvent: SubscriptionNoticeProps['token']['subscriptionEvent'],
-) {
-  return {
-    cumulativeMonths:
-      'months' in subscriptionEvent ? subscriptionEvent.months : undefined,
-    streakMonths:
-      'streakMonths' in subscriptionEvent
-        ? subscriptionEvent.streakMonths
-        : undefined,
-    shouldShareStreak:
-      'shouldShareStreak' in subscriptionEvent
-        ? subscriptionEvent.shouldShareStreak
-        : undefined,
-    giftMonths:
-      'giftMonths' in subscriptionEvent
-        ? subscriptionEvent.giftMonths
-        : undefined,
-    recipientDisplayName:
-      'recipientDisplayName' in subscriptionEvent
-        ? subscriptionEvent.recipientDisplayName
-        : undefined,
-    promoName:
-      'promoName' in subscriptionEvent
-        ? subscriptionEvent.promoName
-        : undefined,
-    promoGiftTotal:
-      'promoGiftTotal' in subscriptionEvent
-        ? Number(subscriptionEvent.promoGiftTotal) || undefined
-        : undefined,
-    massGiftCount:
-      'massGiftCount' in subscriptionEvent
-        ? subscriptionEvent.massGiftCount
-        : undefined,
-    senderCount:
-      'senderCount' in subscriptionEvent
-        ? subscriptionEvent.senderCount
-        : undefined,
-    senderName:
-      'senderName' in subscriptionEvent
-        ? subscriptionEvent.senderName
-        : undefined,
-  };
-}
-
-/**
  * Renders the chatter's own message under the notice. Token keys repeat within
  * one message, so each is suffixed by how many times it has been seen.
  */
@@ -159,22 +110,11 @@ function SubscriptionNoticeComponent({
   parsedMessage,
 }: SubscriptionNoticeProps) {
   const { subscriptionEvent } = token;
-  const { msgId, displayName, message } = subscriptionEvent;
+  const { displayName, message } = subscriptionEvent;
 
-  const tierDisplay = getSubscriptionTierDisplay({
-    plan: 'plan' in subscriptionEvent ? subscriptionEvent.plan : undefined,
-    planName:
-      'planName' in subscriptionEvent ? subscriptionEvent.planName : undefined,
-  });
-
-  const isPrime = tierDisplay === 'Prime';
-
-  const description = buildSubscriptionNoticeDescription({
-    ...pickSubscriptionDescriptionFields(subscriptionEvent),
-    isPrime,
-    msgId,
-    tierDisplay,
-  });
+  const description = buildSubscriptionNoticeDescription(
+    getSubscriptionDescriptionInput(subscriptionEvent),
+  );
 
   const renderedParsedMessageParts = renderParsedMessageParts(parsedMessage);
 

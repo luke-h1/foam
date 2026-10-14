@@ -14,7 +14,7 @@ index 2adb8be76b93496b638e4b3fb4b716ce13987a35..dd36fdfab37d7e102a39f50098043aa6
        val activity = appContext.currentActivity ?: return@AsyncFunction false
        activity.let {
 diff --git a/android/src/main/java/expo/modules/image/ExpoImageViewWrapper.kt b/android/src/main/java/expo/modules/image/ExpoImageViewWrapper.kt
-index 7abe582b602c194ee58c6e39e4812e6b21f3a4b8..f5845e3b36113c5df812a95e0653e4edf3459fd8 100644
+index 7abe582b602c194ee58c6e39e4812e6b21f3a4b8..11eb9bb049c932c94b2b5f0ab54f2368db7a274d 100644
 --- a/android/src/main/java/expo/modules/image/ExpoImageViewWrapper.kt
 +++ b/android/src/main/java/expo/modules/image/ExpoImageViewWrapper.kt
 @@ -7,6 +7,9 @@ import android.graphics.drawable.Animatable
@@ -419,11 +419,78 @@ index 033da4024ce4413c99df65d204717b2503d60511..e8c43c6e0d762d3b5709424feca51c7d
      AsyncFunction("prefetch") { (urls: [URL], cachePolicy: ImageCachePolicy, headersMap: [String: String]?, promise: Promise) in
        var context = SDWebImageContext()
        let sdCacheType = cachePolicy.toSdCacheType().rawValue
+diff --git a/node_modules/expo-image/ios/ImageView+NativeHost.swift b/ios/ImageView+NativeHost.swift
+new file mode 100644
+index 0000000000000000000000000000000000000000..0ff2d5a6ceb250e97f6884b8757cc31f0cfff409
+--- /dev/null
++++ b/ios/ImageView+NativeHost.swift
+@@ -0,0 +1,61 @@
++// Foam patch: lets another native module host `ImageView` directly, without
++// React props, so its animated images step on `SharedAnimationDriver` like
++// every other animated image in the app.
++
++import ExpoModulesCore
++
++public extension ImageView {
++  /**
++   Loads `url` with the settings chat emotes use from JS: the memory cache, so
++   every host of one URL shares one `UIImage` and one set of decoded frames, no
++   transition, and the SDWebImage WebP coder. Pass nil to clear the view.
++   Set the frame first, because the load reads the view size.
++   */
++  func setHostedSource(_ url: URL?) {
++    guard let url else {
++      cancelPendingOperation()
++      recyclingKey = nil
++      leaveSharedAnimation()
++      sdImageView.image = nil
++      sources = nil
++      return
++    }
++
++    recyclingKey = url.absoluteString
++    cachePolicy = .memoryAndDisk
++    useAppleWebpCodec = false
++    transition = nil
++
++    var source = ImageSource()
++    source.uri = url
++    sources = [source]
++    reload()
++  }
++
++  /**
++   Sets how the image fills the view: `true` stretches it, `false` fits it
++   inside the view.
++   */
++  func setHostedFill(_ fill: Bool) {
++    contentFit = fill ? .fill : .contain
++    sdImageView.contentMode = contentFit.toContentMode()
++  }
++
++  /**
++   Starts or pauses the animation. A paused view keeps its current frame.
++   */
++  func setHostedAnimating(_ animating: Bool) {
++    autoplay = animating
++
++    switch (hasSharedAnimation, animating) {
++    case (true, true):
++      startSharedAnimation()
++    case (true, false):
++      stopSharedAnimation()
++    case (false, true):
++      sdImageView.startAnimating()
++    case (false, false):
++      sdImageView.stopAnimating()
++    }
++  }
++}
 diff --git a/ios/ImageView.swift b/ios/ImageView.swift
-index 45c13d37da204fe5e5b67dac8ffa7e0d2a1e3aea..66308325fd618741e5c17f4c156448e3d32aa320 100644
+index 45c13d37da204fe5e5b67dac8ffa7e0d2a1e3aea..7bc3e93d4e6f28574bcf2d17299b1dc14fe37d60 100644
 --- a/ios/ImageView.swift
 +++ b/ios/ImageView.swift
-@@ -66,12 +66,23 @@ public final class ImageView: ExpoView {
+@@ -66,14 +66,25 @@ public final class ImageView: ExpoView {
    var recyclingKey: String? {
      didSet {
        if oldValue != nil && recyclingKey != oldValue {
@@ -447,6 +514,8 @@ index 45c13d37da204fe5e5b67dac8ffa7e0d2a1e3aea..66308325fd618741e5c17f4c156448e3
    var autoplay: Bool = true
  
    var sfEffect: [SFSymbolEffect]?
+ 
+   var symbolWeight: String?
 @@ -150,6 +161,22 @@ public final class ImageView: ExpoView {
      if lockResource && !force {
        return
@@ -487,7 +556,7 @@ index 45c13d37da204fe5e5b67dac8ffa7e0d2a1e3aea..66308325fd618741e5c17f4c156448e3
      }
  
      // Remove any existing symbol effects before setting new image
-@@ -571,6 +603,8 @@ public final class ImageView: ExpoView {
+@@ -571,8 +603,10 @@ public final class ImageView: ExpoView {
        }
      }
  
@@ -496,6 +565,8 @@ index 45c13d37da204fe5e5b67dac8ffa7e0d2a1e3aea..66308325fd618741e5c17f4c156448e3
      if !isPlaceholder {
        onDisplay()
      }
+ 
+ #if !os(tvOS)
 @@ -582,6 +616,118 @@ public final class ImageView: ExpoView {
  #endif
    }
@@ -615,7 +686,7 @@ index 45c13d37da204fe5e5b67dac8ffa7e0d2a1e3aea..66308325fd618741e5c17f4c156448e3
    // MARK: - Symbol Effects
  
    @available(iOS 17.0, tvOS 17.0, *)
-diff --git a/ios/SharedAnimationDriver.swift b/ios/SharedAnimationDriver.swift
+diff --git a/node_modules/expo-image/ios/SharedAnimationDriver.swift b/ios/SharedAnimationDriver.swift
 new file mode 100644
 index 0000000000000000000000000000000000000000..463cc35c6127163dfcc24446ff817239c04a6eba
 --- /dev/null

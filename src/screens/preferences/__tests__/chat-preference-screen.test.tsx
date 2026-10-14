@@ -57,6 +57,7 @@ const mockPreferences: Preferences = {
   enhancedVideoStability: false,
   chatDebugTools: false,
   sevenTvPaintRenderer: 'native',
+  nativeChatList: false,
 };
 
 // ChatPreferencePreview is React.memo-wrapped, so the export is a memo descriptor, not a callable - spy on its inner `.type` render function.

@@ -88,6 +88,11 @@ export interface Preferences {
   enhancedVideoStability: boolean;
   chatDebugTools: boolean;
   sevenTvPaintRenderer: SevenTvPaintRenderer;
+  /**
+   * Dev-only experiment: render the chat message list with the UIKit list in
+   * `modules/native-chat-list` instead of LegendList. iOS only.
+   */
+  nativeChatList: boolean;
 }
 
 let cachedPreferencesSchema: ReturnType<typeof buildPreferencesSchema> | null =
@@ -151,6 +156,7 @@ function buildPreferencesSchema() {
     enhancedVideoStability: z.boolean(),
     chatDebugTools: z.boolean(),
     sevenTvPaintRenderer: z.enum(['off', 'native', 'skia', 'webview']),
+    nativeChatList: z.boolean(),
   }) satisfies z.ZodType<Preferences>;
 }
 
@@ -200,6 +206,7 @@ export const initialPreferences: Preferences = {
   enhancedVideoStability: false,
   chatDebugTools: isDevToolsEnabled,
   sevenTvPaintRenderer: 'native',
+  nativeChatList: false,
 };
 
 ensureObservablePersistenceConfig();

@@ -6,10 +6,10 @@ import {
   useRef,
   useState,
 } from 'react';
-import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
 import { resetChatUnread } from '@app/store/chat/actions/chat-unread';
 
+import type { ChatScrollEvent } from '../types/chat-scroll-event';
 import { chatScrollActivity } from '../util/chat-scroll-activity';
 
 const RETURN_TO_BOTTOM_THRESHOLD = 80;
@@ -59,10 +59,7 @@ type PreviousScrollFrame = {
  * anchoring logic needs. Pure, so the "where are we" question is answered
  * apart from the "what should happen" one.
  */
-function readScrollGeometry(
-  e: NativeSyntheticEvent<NativeScrollEvent>,
-  previous: PreviousScrollFrame,
-) {
+function readScrollGeometry(e: ChatScrollEvent, previous: PreviousScrollFrame) {
   const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
   const { y } = contentOffset;
   const contentHeight = contentSize?.height ?? 0;
@@ -196,7 +193,7 @@ export const useChatScroll = ({
   }, [listRef]);
 
   const handleScrollBeginDrag = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    (e: ChatScrollEvent) => {
       chatScrollActivity.poke();
       cancelScrollToBottom();
       clearBottomContentAnchor();
@@ -267,7 +264,7 @@ export const useChatScroll = ({
   }, []);
 
   const handleScroll = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    (e: ChatScrollEvent) => {
       // The list scrolls itself to the end after each commit; only a drag or fling is user activity.
       if (isDraggingRef.current || isMomentumScrollingRef.current) {
         lastScrollEventAtRef.current = Date.now();

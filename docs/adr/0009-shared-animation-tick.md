@@ -8,7 +8,13 @@ platform where the domain is native, and never by per-view timers:
   `patches/expo-image@57.0.3.patch` (ADR-0006). Every animated expo-image view
   derives its frame index from the shared epoch, so newly mounted and recycled
   rows join mid-phase instead of restarting at frame 0; frame rate is capped
-  at 30fps with decode budgets. Views deregister on unmount/recycle.
+  at 30fps with decode budgets. Views deregister on unmount/recycle. The
+  experimental UIKit chat list (`modules/native-chat-list`) uses the same
+  driver: it hosts expo-image `ImageView`s through the patch's
+  `ImageView+NativeHost.swift` for emotes, badges and paint URL layers. It
+  pauses them while the list drags or decelerates and resumes them 150ms
+  after the scroll settles, the same settle time as
+  `create-scroll-activity.ts`.
 - **Native animated emotes (Android)** - `SharedAnimationDriver`, a
   Choreographer-supervised phase lock in the same patch. It is an
   `internal object` at the foot of `ExpoImageViewWrapper.kt` rather than its

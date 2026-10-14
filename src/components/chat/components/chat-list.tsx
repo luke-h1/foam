@@ -1,12 +1,5 @@
 import { memo, RefObject, useCallback, useLayoutEffect, useRef } from 'react';
-import {
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  StyleProp,
-  StyleSheet,
-  View,
-  ViewStyle,
-} from 'react-native';
+import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import type { ReactElement } from 'react';
 import type { SharedValue } from 'react-native-reanimated';
 
@@ -28,6 +21,8 @@ import {
 } from '@app/components/chat/util/get-viewable-chat-messages';
 import { Skeleton } from '@app/components/ui/skeleton/skeleton';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+
+import type { ChatScrollEvent } from '../types/chat-scroll-event';
 
 /**
  * Roughly seven rows of lookahead; at 96 fast flings outran the renderer and
@@ -106,8 +101,8 @@ export interface ChatListScrollHandlers {
   onEndReached: () => void;
   onMomentumScrollBegin: () => void;
   onMomentumScrollEnd: () => void;
-  onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
-  onScrollBeginDrag: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  onScroll: (e: ChatScrollEvent) => void;
+  onScrollBeginDrag: (e: ChatScrollEvent) => void;
   onScrollEndDrag: () => void;
 }
 

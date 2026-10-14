@@ -9,6 +9,7 @@ import {
 } from '@app/store/chat/actions/chat-color-caches';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import { usePaintRenderer, usePreference } from '@app/store/preference-store';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-chat-username';
 import { processEmotesWorklet } from '@app/utils/chat/emote-processor';
 import { getChatMessageListKey } from '@app/utils/chat/message-identity/get-chat-message-list-key';
@@ -30,6 +31,7 @@ import {
   ChatRowItem,
   type ChatRowPreferences,
 } from '../components/chat-message/chat-row-item';
+import type { NativeChatRowContext } from '../components/native-chat-list/util/native-row-context';
 import type { ChatRowDisplayFlags } from '../types/chat-ui-flags';
 import { getChatRowItemType } from '../util/chat-row-item-type';
 
@@ -256,6 +258,46 @@ export function useChatRowRenderer({
 
   const handleReplyContextPressRef = useSyncRef(handleReplyContextPress);
 
+  const sharedChatEnabled = usePreference('sharedChatEnabled');
+  const paintsEnabled = usePaintRenderer() !== 'off';
+
+  const nativeRowContext = useMemo(
+    (): NativeChatRowContext => ({
+      animate: preferences.animate,
+      channelId,
+      compact: preferences.chatDensity === 'compact',
+      currentUsernameNormalized,
+      customHighlights,
+      disableEmoteAnimations: preferences.disableEmoteAnimations,
+      fontScale: preferences.chatFontScale,
+      getMentionColor,
+      highlightedUserSet,
+      paintsEnabled,
+      parseTextForEmotes,
+      sharedChatEnabled,
+      showAlternatingChatRows: preferences.showAlternatingChatRows,
+      showInlineReplyContext: preferences.showInlineReplyContext,
+      showTimestamps: preferences.chatTimestamps,
+    }),
+    [
+      channelId,
+      currentUsernameNormalized,
+      customHighlights,
+      getMentionColor,
+      highlightedUserSet,
+      paintsEnabled,
+      parseTextForEmotes,
+      preferences.animate,
+      preferences.chatDensity,
+      preferences.chatFontScale,
+      preferences.chatTimestamps,
+      preferences.disableEmoteAnimations,
+      preferences.showAlternatingChatRows,
+      preferences.showInlineReplyContext,
+      sharedChatEnabled,
+    ],
+  );
+
   const getItemType = useCallback(
     (item: AnyChatMessageType) =>
       getChatRowItemType(item, {
@@ -314,8 +356,10 @@ export function useChatRowRenderer({
 
   return {
     getItemType,
+    handleReplyContextPress,
     keyExtractor: getChatMessageListKey,
     messageListExtraData,
+    nativeRowContext,
     renderItem,
   };
 }

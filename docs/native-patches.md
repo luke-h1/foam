@@ -19,6 +19,10 @@ A flexed child inside a sheet that sizes to its content measures as zero, and th
 
 The patch needs `expo-modules-core` 57.0.8 or later, because `ExpoViewShadowNode.h` reads the `layoutRoot` prop that the patch adds. Upstream fixed the Android half of the same bug in `@expo/ui` 57.0.8. Remove the iOS hunks when the PR ships.
 
+## iOS: `expo-image` hosting for the UIKit chat list
+
+`patches/expo-image@57.0.3.patch` adds `ios/ImageView+NativeHost.swift`. It lets another native module create an `ImageView` and drive it without React props: `setHostedSource`, `setHostedFill` and `setHostedAnimating`. `modules/native-chat-list` uses it so its animated emotes step on `SharedAnimationDriver` (ADR-0009). Set the view frame before `setHostedSource`, because the load reads the view size. A grep of `src/` does not find the API, because only Swift calls it.
+
 ## Android: the `@expo/ui` and `expo-image` source builds are required
 
 `package.json` sets `expo.autolinking.android.buildFromSource: ["^expo-image$", "^expo-ui$"]`. Each entry makes Android compile that package from source instead of using the RNRepo prebuilt, which is the only way a patch to its native code reaches the build.

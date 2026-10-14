@@ -12,6 +12,8 @@ import { parseBadges } from '@app/utils/chat/parse-badges';
 import type { ChatInputShellHandle } from '../components/chat-input-shell';
 import type { ChatListRef } from '../components/chat-list';
 import type { ChatOverlayLayerProps } from '../components/chat-overlay-layer';
+import { getNativeChatListConfig } from '../components/native-chat-list/util/get-native-chat-list-config';
+import type { NativeChatListSetup } from '../components/native-chat-list/util/native-chat-list-setup';
 import {
   useChatComposerActions,
   useChatOverlayActions,
@@ -180,22 +182,51 @@ export function useChatSurface({
     ],
   );
 
-  const { getItemType, keyExtractor, messageListExtraData, renderItem } =
-    useChatRowRenderer({
-      channelId,
-      highlightedReplyTargetTimeoutRef,
-      highlightedUsers,
-      listRef,
-      messages$,
-      noteScrollAwayIntent,
-      onBadgePress: handleBadgeLongPress,
-      onEmotePress: handleEmotePress,
-      onMessageLongPress: handleMessageLongPress,
-      onUsernamePress: handleUsernamePress,
-      preferences,
-      setHighlightedReplyTargetMessageId,
-      user,
-    });
+  const {
+    getItemType,
+    handleReplyContextPress,
+    keyExtractor,
+    messageListExtraData,
+    nativeRowContext,
+    renderItem,
+  } = useChatRowRenderer({
+    channelId,
+    highlightedReplyTargetTimeoutRef,
+    highlightedUsers,
+    listRef,
+    messages$,
+    noteScrollAwayIntent,
+    onBadgePress: handleBadgeLongPress,
+    onEmotePress: handleEmotePress,
+    onMessageLongPress: handleMessageLongPress,
+    onUsernamePress: handleUsernamePress,
+    preferences,
+    setHighlightedReplyTargetMessageId,
+    user,
+  });
+
+  const nativeListSetup = useMemo(
+    (): NativeChatListSetup => ({
+      config: getNativeChatListConfig(!preferences.disableEmoteAnimations),
+      rowContext: nativeRowContext,
+      rowHandlers: {
+        onBadgePress: handleBadgeLongPress,
+        onEmotePress: handleEmotePress,
+        onMessageLongPress: handleMessageLongPress,
+        onReplyContextPress: handleReplyContextPress,
+        onUsernamePress: handleUsernamePress,
+      },
+    }),
+    [
+      handleBadgeLongPress,
+      handleEmotePress,
+      handleMessageLongPress,
+      handleReplyContextPress,
+      handleUsernamePress,
+      nativeRowContext,
+      preferences.disableEmoteAnimations,
+    ],
+  );
 
   const overlayProps: ChatOverlayLayerProps = {
     canModerateChat,
@@ -234,6 +265,7 @@ export function useChatSurface({
     handleUnpinPinnedMessage,
     keyExtractor,
     messageListExtraData,
+    nativeListSetup,
     overlayProps,
     paneFlags,
     pinnedMessage,

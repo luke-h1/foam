@@ -1,6 +1,8 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, type TextStyle } from 'react-native';
 
 import { theme } from '@app/styles/themes';
+
+import type { SubscriptionNoticeSegmentTone } from './util/subscription-notice-segments';
 
 export const subscriptionNoticeStyles = StyleSheet.create({
   descriptionContainer: {
@@ -55,3 +57,9 @@ export const subscriptionNoticeStyles = StyleSheet.create({
     marginRight: theme.space4,
   },
 });
+
+export const subscriptionSegmentStyles = {
+  description: subscriptionNoticeStyles.descriptionText,
+  highlight: subscriptionNoticeStyles.monthsHighlight,
+  recipient: subscriptionNoticeStyles.recipientName,
+} satisfies Record<SubscriptionNoticeSegmentTone, TextStyle>;

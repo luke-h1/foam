@@ -52,6 +52,7 @@ const basePreferences = {
   enhancedVideoStability: false,
   chatDebugTools: false,
   sevenTvPaintRenderer: 'native',
+  nativeChatList: false,
 } satisfies Preferences;
 
 describe('usePreferences', () => {

@@ -8,7 +8,9 @@ import type { SharedValue } from 'react-native-reanimated';
 import { Text } from '@app/components/ui/text/text';
 import { useMessages } from '@app/store/chat/react/selectors';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import { usePreference } from '@app/store/preference-store';
 import { logger } from '@app/utils/logger';
+import { isNativeChatListAvailable } from '@modules/native-chat-list/src/NativeChatListView';
 
 import type { PinnedChatMessageViewModel } from '../hooks/use-pinned-chat-message';
 import type { ChatPaneFlags } from '../types/chat-ui-flags';
@@ -21,6 +23,8 @@ import {
 } from './chat-list';
 import { styles } from './chat-message-pane.styles';
 import { ChatViewControls } from './chat-view-controls';
+import { NativeChatList } from './native-chat-list/native-chat-list';
+import type { NativeChatListSetup } from './native-chat-list/util/native-chat-list-setup';
 import { PinnedMessageBanner } from './pinned-message-banner';
 
 export interface ChatMessagePaneProps {
@@ -37,6 +41,7 @@ export interface ChatMessagePaneProps {
   keyExtractor: (item: AnyChatMessageType, index: number) => string;
   getItemType: (item: AnyChatMessageType) => string;
   messageListExtraData?: unknown;
+  nativeListSetup: NativeChatListSetup;
   onClearFilters: () => void;
   onRefreshPinnedMessage: () => void;
   onUnpinPinnedMessage: () => void;
@@ -66,6 +71,7 @@ export const ChatMessagePane = memo(
     keyExtractor,
     getItemType,
     messageListExtraData,
+    nativeListSetup,
     onClearFilters,
     onRefreshPinnedMessage,
     onUnpinPinnedMessage,
@@ -88,6 +94,9 @@ export const ChatMessagePane = memo(
 
     // SAFETY: Legend's selector types sparse arrays; the store always holds dense messages.
     const rawMessages = useMessages() as AnyChatMessageType[];
+
+    const showNativeList =
+      usePreference('nativeChatList') && isNativeChatListAvailable;
 
     const hasMessages = rawMessages.length > 0;
     const hasEverHadMessagesRef = useRef(false);
@@ -196,20 +205,32 @@ export const ChatMessagePane = memo(
 
         <GestureDetector gesture={dismissKeyboardGesture}>
           <View style={styles.listGestureWrapper}>
-            <ChatList
-              contentInsetEndAdjustment={contentInsetEndAdjustment}
-              data={visibleMessages}
-              dataKey={channelId}
-              listRef={listRef}
-              shouldMaintainScrollAtEnd={shouldMaintainScrollAtEnd}
-              scrollHandlers={scrollHandlers}
-              renderItem={renderItem}
-              keyExtractor={keyExtractor}
-              getItemType={getItemType}
-              extraData={messageListExtraData}
-              contentContainerStyle={styles.listContent}
-              onViewableMessagesChange={onViewableMessagesChange}
-            />
+            {showNativeList ? (
+              <NativeChatList
+                composerInset={contentInsetEndAdjustment}
+                data={visibleMessages}
+                dataKey={channelId}
+                listRef={listRef}
+                onViewableMessagesChange={onViewableMessagesChange}
+                scrollHandlers={scrollHandlers}
+                setup={nativeListSetup}
+              />
+            ) : (
+              <ChatList
+                contentInsetEndAdjustment={contentInsetEndAdjustment}
+                data={visibleMessages}
+                dataKey={channelId}
+                listRef={listRef}
+                shouldMaintainScrollAtEnd={shouldMaintainScrollAtEnd}
+                scrollHandlers={scrollHandlers}
+                renderItem={renderItem}
+                keyExtractor={keyExtractor}
+                getItemType={getItemType}
+                extraData={messageListExtraData}
+                contentContainerStyle={styles.listContent}
+                onViewableMessagesChange={onViewableMessagesChange}
+              />
+            )}
           </View>
         </GestureDetector>
       </View>

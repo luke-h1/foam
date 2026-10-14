@@ -422,6 +422,7 @@ const setPreferences = (showRecentMessages = true) => {
     enhancedVideoStability: false,
     chatDebugTools: false,
     sevenTvPaintRenderer: 'native',
+    nativeChatList: false,
     chatDelay: 'off',
     update: jest.fn(),
   } satisfies ReturnType<typeof usePreferences>;
