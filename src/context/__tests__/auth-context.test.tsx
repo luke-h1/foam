@@ -1,5 +1,5 @@
 import { act } from 'react';
-import type { FC, PropsWithChildren } from 'react';
+import type { ReactNode } from 'react';
 
 import {
   render,
@@ -7,137 +7,283 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react-native';
+import type { FetchRequestInit } from 'expo/build/winter/fetch/fetch.types';
+import type { FetchResponse } from 'expo/build/winter/fetch/FetchResponse';
+import { fetch } from 'expo/fetch';
 import { type AuthSessionResult, TokenResponse } from 'expo-auth-session';
+import * as ExpoSecureStore from 'expo-secure-store';
 import { toast } from 'sonner-native';
 
 import { Text } from '@app/components/ui/text/text';
 import { queryClient } from '@app/lib/react-query/query-client';
-import { twitchApi as _twitchApi } from '@app/services/api/clients';
-import { twitchService as _twitchService } from '@app/services/twitch-service';
-import type { DefaultTokenResponse } from '@app/types/twitch/auth';
+import { setTwitchClientId, twitchApi } from '@app/services/api/clients';
 import type { UserInfoResponse } from '@app/types/twitch/user';
-import * as _SecureStore from '@app/utils/authentication/secure-store';
+import type { TwitchToken } from '@app/utils/authentication/token-lifecycle';
 
-import {
-  AuthContextProvider,
-  type AuthContextProviderProps,
-  type AuthContextState,
-  useAuthContext,
-} from '../auth-context';
+import { AuthContextProvider, useAuthContext } from '../auth-context';
+import type { AuthState } from '../auth-context-value';
+import { createTestUser } from './__fixtures__/auth-context.fixture';
 
-jest.mock('@app/services/twitch-service');
-jest.mock('@app/services/api/clients');
-jest.mock('@app/utils/authentication/secure-store');
+const NOW = 1_700_000_000_000;
+const HOUR_MS = 3600 * 1000;
+const ENV_CLIENT_ID = 'test-client-id';
+const TOKEN_URL = 'https://auth-proxy.test/token';
+const REFRESH_URL = 'https://auth-proxy.test/refresh-token';
+const VALIDATE_URL = 'https://id.twitch.tv/oauth2/validate';
+const USERS_URL = 'https://api.twitch.tv/helix/users';
 
-export const initalTestAuthContextProps: AuthContextState = {
-  loginWithTwitch: jest.fn(),
-  logout: jest.fn(),
-  fetchAnonToken: jest.fn(),
-  ready: true,
-  populateAuthState: jest.fn(),
-  user: undefined,
-  authState: undefined,
-};
+type RouteResult = FetchResponse | Promise<FetchResponse>;
 
-const twitchService = jest.mocked(_twitchService);
-const SecureStore = jest.mocked(_SecureStore);
-const twitchApi = jest.mocked(_twitchApi);
+interface FakeRequest {
+  url: string;
+  authorization: string | null;
+  clientId: string | null;
+}
 
-describe('AuthContext', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+/**
+ * The network as the auth flow sees it. Each test changes the parts it needs.
+ */
+interface FakeTwitch {
+  anonToken: () => RouteResult;
+  refreshToken: (refreshToken: string | null) => RouteResult;
+  users: () => RouteResult;
+  invalidTokens: Set<string>;
+  tokenClientIds: Map<string, string>;
+  requests: FakeRequest[];
+}
 
-    // clearAllMocks does not drain mockResolvedValueOnce queues or per-test
-    // implementations, so a test whose call count shifts can consume a stale
-    // value queued by an earlier test. Fully reset the auth mocks each test
-    // (each test sets the behaviour it needs) so the suite is not call-count
-    // fragile. Scoped to these mocks so the global setup-file mocks survive.
-    SecureStore.getItemAsync.mockReset();
+function textResponse(
+  body: string,
+  status: number,
+  contentType: string,
+): FetchResponse {
+  const response = {
+    ok: status < 400,
+    status,
+    headers: {
+      get: (name: string) =>
+        name.toLowerCase() === 'content-type' ? contentType : null,
+    },
+    text: () => Promise.resolve(body),
+  };
 
-    SecureStore.setItemAsync.mockReset();
-    SecureStore.deleteItemAsync.mockReset();
-    twitchService.getDefaultToken.mockReset();
-    twitchService.validateToken.mockReset();
-    twitchService.getUserInfo.mockReset();
-    twitchService.getRefreshToken.mockReset();
+  // SAFETY: the auth flow and the API client only read ok, status, headers.get and text() off a response.
+  return response as FetchResponse;
+}
 
-    twitchService.getTopStreams.mockResolvedValue({
-      data: [],
+function json<TBody>(body: TBody, status = 200): FetchResponse {
+  return textResponse(JSON.stringify(body), status, 'application/json');
+}
+
+function anonTokenResponse(accessToken: string): FetchResponse {
+  return json({
+    data: { access_token: accessToken, expires_in: 3600, token_type: 'bearer' },
+  });
+}
+
+let twitch: FakeTwitch;
+
+function readHeader(
+  headers: FetchRequestInit['headers'],
+  name: string,
+): string | null {
+  const entries = Object.entries(headers ?? {});
+  const match = entries.find(([key]) => key.toLowerCase() === name);
+
+  return match ? String(match[1]) : null;
+}
+
+function routeRequest(url: URL, authorization: string | null): RouteResult {
+  const route = `${url.origin}${url.pathname}`;
+
+  if (route === TOKEN_URL) {
+    return twitch.anonToken();
+  }
+
+  if (route === REFRESH_URL) {
+    return twitch.refreshToken(url.searchParams.get('token'));
+  }
+
+  if (route === VALIDATE_URL) {
+    const token = authorization?.replace('Bearer ', '') ?? '';
+
+    if (twitch.invalidTokens.has(token)) {
+      return json({ status: 401, message: 'invalid access token' }, 401);
+    }
+
+    return json({
+      client_id: twitch.tokenClientIds.get(token) ?? ENV_CLIENT_ID,
+      expires_in: 3600,
+    });
+  }
+
+  if (route === USERS_URL) {
+    return twitch.users();
+  }
+
+  if (url.origin === 'https://api.twitch.tv') {
+    return json({ data: [], pagination: {} });
+  }
+
+  return Promise.reject(new Error(`Unexpected request: ${url.toString()}`));
+}
+
+function fakeTwitchNetwork(user: UserInfoResponse) {
+  twitch = {
+    anonToken: () => anonTokenResponse('anon'),
+    refreshToken: () => json({ data: null, error: 'no refresh' }, 400),
+    users: () => json({ data: [user] }),
+    invalidTokens: new Set(),
+    tokenClientIds: new Map(),
+    requests: [],
+  };
+
+  jest.mocked(fetch).mockImplementation((input, init) => {
+    const url = new URL(String(input));
+    const authorization = readHeader(init?.headers, 'authorization');
+
+    twitch.requests.push({
+      url: `${url.origin}${url.pathname}`,
+      authorization,
+      clientId: readHeader(init?.headers, 'client-id'),
     });
 
-    twitchService.getTopCategories.mockResolvedValue({
-      data: [],
+    // A real request never answers in the same tick, so React commits the
+    // state from the previous step before the response arrives.
+    return new Promise<FetchResponse>(resolve => {
+      setTimeout(() => resolve(routeRequest(url, authorization)), 0);
     });
+  });
+}
 
-    twitchService.getFollowedStreams.mockResolvedValue([]);
+function deferred<T>() {
+  let resolve: (value: T) => void = () => {};
+
+  const promise = new Promise<T>(next => {
+    resolve = next;
   });
 
-  const initialProps: AuthContextState = {
-    ...initalTestAuthContextProps,
-  };
+  return { promise, resolve };
+}
 
-  const wrapper: FC<PropsWithChildren & AuthContextProviderProps> = ({
-    enableTestResult,
-    testResult,
-    ...props
-  }) => (
-    <AuthContextProvider
-      enableTestResult={enableTestResult}
-      testResult={testResult}
-    >
-      {props.children}
-    </AuthContextProvider>
+async function readStoredToken(key: string): Promise<TwitchToken | null> {
+  const raw = await ExpoSecureStore.getItemAsync(key);
+
+  // SAFETY: every caller compares the result with toEqual, so a stored value of another shape fails the test.
+  return raw === null ? null : (JSON.parse(raw) as TwitchToken);
+}
+
+function storeToken(key: string, token: TwitchToken) {
+  return ExpoSecureStore.setItemAsync(key, JSON.stringify(token));
+}
+
+/**
+ * Lets queued promise callbacks and zero-delay timers run.
+ */
+function flushPending() {
+  return act(() => new Promise<void>(resolve => setTimeout(resolve, 0)));
+}
+
+function wasRequested(url: string, authorization?: string) {
+  return twitch.requests.some(
+    request =>
+      request.url === url &&
+      (authorization === undefined || request.authorization === authorization),
   );
+}
 
-  const TestComponent = () => {
-    const { authState, user } = useAuthContext();
-    return (
-      <>
-        <Text>{authState?.isAnonAuth ? 'Anon' : 'User'}</Text>
-        <Text>{user ? user.display_name : 'No User'}</Text>
-      </>
-    );
+function magicLinkResponse(): AuthSessionResult {
+  return {
+    type: 'success',
+    params: {},
+    url: 'foam://auth?access_token=magic-user-token&token_type=bearer&expires_in=14400',
+    errorCode: null,
+    error: undefined,
+    authentication: new TokenResponse({
+      accessToken: 'magic-user-token',
+      expiresIn: 14400,
+      tokenType: 'bearer',
+    }),
   };
+}
+
+const magicUserAuthState: AuthState = {
+  isAnonAuth: false,
+  isLoggedIn: true,
+  token: {
+    accessToken: 'magic-user-token',
+    expiresIn: 14400,
+    tokenType: 'bearer',
+    expiresAt: NOW + 14400 * 1000,
+  },
+};
+
+const wrapper = ({ children }: { children: ReactNode }) => (
+  <AuthContextProvider>{children}</AuthContextProvider>
+);
+
+const TestComponent = () => {
+  const { authState, user } = useAuthContext();
+
+  return (
+    <>
+      <Text>{authState?.isAnonAuth ? 'Anon' : 'User'}</Text>
+      <Text>{user ? user.display_name : 'No User'}</Text>
+    </>
+  );
+};
+
+describe('AuthContext', () => {
+  const user = createTestUser({
+    id: '123',
+    login: 'test_user',
+    display_name: 'Test User',
+  });
+
+  beforeEach(() => {
+    jest.spyOn(Date, 'now').mockReturnValue(NOW);
+    twitchApi.removeAuthToken();
+    setTwitchClientId(ENV_CLIENT_ID);
+    fakeTwitchNetwork(user);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+    queryClient.clear();
+  });
 
   test('should populate auth state with anon token when no tokens are found', async () => {
-    twitchService.getDefaultToken.mockResolvedValue({
-      access_token: 'anon',
-      expires_in: 3600,
-      token_type: 'bearer',
-    });
+    const { result } = renderHook(() => useAuthContext(), { wrapper });
 
-    SecureStore.getItemAsync.mockResolvedValue(null);
+    const anonToken: TwitchToken = {
+      accessToken: 'anon',
+      expiresIn: 3600,
+      tokenType: 'bearer',
+      expiresAt: NOW + HOUR_MS,
+    };
 
-    const { result } = renderHook(() => useAuthContext(), {
-      wrapper,
-      initialProps,
-    });
-
-    await waitFor(() => {
-      expect(result.current.authState).toEqual({
+    await waitFor(async () => {
+      expect(result.current.authState).toEqual<AuthState>({
         isAnonAuth: true,
         isLoggedIn: false,
-        token: {
-          accessToken: 'anon',
-          expiresIn: 3600,
-          tokenType: 'bearer',
-          expiresAt: expect.any(Number),
-        },
+        token: anonToken,
       });
 
-      expect(result.current.ready).toBe(true);
-      expect(result.current.user).toEqual(undefined);
+      expect(await readStoredToken('V1_foam-anon')).toEqual<TwitchToken>(
+        anonToken,
+      );
     });
+
+    expect(result.current.ready).toBe(true);
+    expect(result.current.user).toBeUndefined();
+    expect(twitchApi.getAuthToken()).toBe('anon');
   });
 
   test('shows a friendly toast when the anon token request is blocked', async () => {
-    twitchService.getDefaultToken.mockRejectedValue(
-      new Error('Auth proxy token request failed: HTTP 403 (text/html)'),
-    );
+    twitch.anonToken = () =>
+      textResponse('<html>blocked</html>', 403, 'text/html');
 
-    SecureStore.getItemAsync.mockResolvedValue(null);
-
-    renderHook(() => useAuthContext(), { wrapper, initialProps });
+    renderHook(() => useAuthContext(), { wrapper });
 
     await waitFor(() =>
       expect(toast.error).toHaveBeenCalledWith('Access blocked', {
@@ -148,19 +294,6 @@ describe('AuthContext', () => {
   });
 
   test('should login with twitch when oauth response is successful', async () => {
-    const user: UserInfoResponse = {
-      id: '123',
-      login: 'test_user',
-      display_name: 'Test User',
-      type: '',
-      broadcaster_type: '',
-      description: '',
-      profile_image_url: '',
-      offline_image_url: '',
-      view_count: 0,
-      created_at: '',
-    };
-
     const succesfulOauthResponse: AuthSessionResult = {
       type: 'success',
       params: {
@@ -176,399 +309,198 @@ describe('AuthContext', () => {
       }),
     };
 
-    twitchService.getUserInfo.mockResolvedValue(user);
+    const { result } = renderHook(() => useAuthContext(), { wrapper });
 
-    twitchService.getDefaultToken.mockResolvedValue({
-      access_token: 'anon',
-      expires_in: 3600,
-      token_type: 'bearer',
-    });
-
-    SecureStore.getItemAsync.mockResolvedValue(null);
-
-    const { result } = renderHook(() => useAuthContext(), {
-      wrapper,
-      initialProps: {
-        ...initialProps,
-        ready: true,
-      },
-    });
-
-    await waitFor(() => {
-      expect(result.current.ready).toEqual(true);
-    });
+    await waitFor(async () =>
+      expect(await readStoredToken('V1_foam-anon')).not.toBeNull(),
+    );
 
     await act(async () => {
       await result.current.loginWithTwitch(succesfulOauthResponse);
     });
 
-    await waitFor(() => {
-      expect(result.current.user).toEqual(user);
-      expect(result.current.authState?.isAnonAuth).toBe(false);
-      expect(result.current.authState?.isLoggedIn).toBe(true);
+    const userToken: TwitchToken = {
+      accessToken: 'user-token',
+      expiresIn: 3600,
+      tokenType: 'bearer',
+      refreshToken: 'refresh-token',
+      expiresAt: NOW + HOUR_MS,
+    };
 
-      expect(result.current.authState).toEqual({
-        isAnonAuth: false,
-        isLoggedIn: true,
-        token: {
-          accessToken: 'user-token',
-          expiresIn: 3600,
-          tokenType: 'bearer',
-          refreshToken: 'refresh-token',
-          expiresAt: expect.any(Number),
-        },
-      });
+    expect(result.current.user).toEqual<UserInfoResponse>(user);
 
-      // Check that anon token was saved with expiresAt
-      expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
-        'V1_foam-anon',
-        expect.stringMatching(
-          /"accessToken":"anon","expiresIn":3600,"tokenType":"bearer","expiresAt":\d+/,
-        ),
-      );
-
-      // Check that user token was saved with expiresAt
-      expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
-        'V1_foam-user',
-        expect.stringMatching(
-          /"accessToken":"user-token","expiresIn":3600,"tokenType":"bearer","refreshToken":"refresh-token","expiresAt":\d+/,
-        ),
-      );
+    expect(result.current.authState).toEqual<AuthState>({
+      isAnonAuth: false,
+      isLoggedIn: true,
+      token: userToken,
     });
+
+    expect(twitchApi.getAuthToken()).toBe('user-token');
+
+    expect(await readStoredToken('V1_foam-user')).toEqual<TwitchToken>(
+      userToken,
+    );
+
+    expect(await readStoredToken('V1_foam-anon')).toBeNull();
   });
 
   test('does not clobber a magic-link login when the anon token request resolves late', async () => {
-    const user: UserInfoResponse = {
-      id: '123',
-      login: 'magic_user',
-      display_name: 'Magic User',
-      type: '',
-      broadcaster_type: '',
-      description: '',
-      profile_image_url: '',
-      offline_image_url: '',
-      view_count: 0,
-      created_at: '',
-    };
+    const anonResponse = deferred<FetchResponse>();
+    twitch.anonToken = () => anonResponse.promise;
 
-    let resolveAnon: ((value: DefaultTokenResponse) => void) | undefined;
+    const { result } = renderHook(() => useAuthContext(), { wrapper });
 
-    twitchService.getDefaultToken.mockImplementationOnce(
-      () =>
-        new Promise<DefaultTokenResponse>(resolve => {
-          resolveAnon = resolve;
-        }),
-    );
+    await waitFor(() => expect(wasRequested(TOKEN_URL)).toBe(true));
 
-    SecureStore.getItemAsync.mockResolvedValue(null);
-    twitchService.getUserInfo.mockResolvedValue(user);
+    await act(async () => {
+      await result.current.loginWithTwitch(magicLinkResponse());
+    });
 
-    const magicResponse: AuthSessionResult = {
-      type: 'success',
-      params: {},
-      url: 'foam://auth?access_token=magic-user-token&token_type=bearer&expires_in=14400',
-      errorCode: null,
-      error: undefined,
-      authentication: new TokenResponse({
-        accessToken: 'magic-user-token',
-        expiresIn: 14400,
-        tokenType: 'bearer',
-      }),
-    };
+    expect(result.current.authState).toEqual<AuthState>(magicUserAuthState);
 
-    const { result } = renderHook(() => useAuthContext(), {
-      wrapper,
-      initialProps,
+    await act(async () => {
+      anonResponse.resolve(anonTokenResponse('anon'));
     });
 
     await waitFor(() =>
-      expect(twitchService.getDefaultToken).toHaveBeenCalledTimes(1),
+      expect(wasRequested(VALIDATE_URL, 'Bearer anon')).toBe(true),
     );
 
-    await act(async () => {
-      await result.current.loginWithTwitch(magicResponse);
-    });
+    await flushPending();
 
-    expect(result.current.authState?.isLoggedIn).toBe(true);
-
-    await act(async () => {
-      resolveAnon?.({
-        access_token: 'anon',
-        expires_in: 3600,
-        token_type: 'bearer',
-      });
-      await Promise.resolve();
-    });
-
-    await waitFor(() => {
-      expect(result.current.authState).toEqual({
-        isAnonAuth: false,
-        isLoggedIn: true,
-        token: result.current.authState?.token,
-      });
-
-      expect(result.current.authState?.token?.accessToken).toBe(
-        'magic-user-token',
-      );
-    });
+    expect(result.current.authState).toEqual<AuthState>(magicUserAuthState);
+    expect(twitchApi.getAuthToken()).toBe('magic-user-token');
+    expect(await readStoredToken('V1_foam-anon')).toBeNull();
   });
 
   test('does not clobber a magic-link login that completes before the anon bootstrap reaches the network', async () => {
-    const user: UserInfoResponse = {
-      id: '123',
-      login: 'magic_user',
-      display_name: 'Magic User',
-      type: '',
-      broadcaster_type: '',
-      description: '',
-      profile_image_url: '',
-      offline_image_url: '',
-      view_count: 0,
-      created_at: '',
-    };
+    const storageGate = deferred<null>();
 
-    let resolveStorage: ((value: null) => void) | undefined;
+    jest
+      .spyOn(ExpoSecureStore, 'getItemAsync')
+      .mockReturnValue(storageGate.promise);
 
-    const storageGate = new Promise<null>(resolve => {
-      resolveStorage = resolve;
-    });
-
-    SecureStore.getItemAsync.mockReturnValue(storageGate);
-
-    twitchService.getDefaultToken.mockResolvedValue({
-      access_token: 'anon',
-      expires_in: 3600,
-      token_type: 'bearer',
-    });
-
-    twitchService.getUserInfo.mockResolvedValue(user);
-
-    const magicResponse: AuthSessionResult = {
-      type: 'success',
-      params: {},
-      url: 'foam://auth?access_token=magic-user-token&token_type=bearer&expires_in=14400',
-      errorCode: null,
-      error: undefined,
-      authentication: new TokenResponse({
-        accessToken: 'magic-user-token',
-        expiresIn: 14400,
-        tokenType: 'bearer',
-      }),
-    };
-
-    const { result } = renderHook(() => useAuthContext(), {
-      wrapper,
-      initialProps,
-    });
+    const { result } = renderHook(() => useAuthContext(), { wrapper });
 
     await act(async () => {
-      await result.current.loginWithTwitch(magicResponse);
+      await result.current.loginWithTwitch(magicLinkResponse());
     });
 
-    expect(result.current.authState?.isLoggedIn).toBe(true);
+    expect(result.current.authState).toEqual<AuthState>(magicUserAuthState);
 
     await act(async () => {
-      resolveStorage?.(null);
-      await Promise.resolve();
-      await Promise.resolve();
+      storageGate.resolve(null);
     });
 
-    await waitFor(() => {
-      expect(result.current.authState).toEqual({
-        isAnonAuth: false,
-        isLoggedIn: true,
-        token: result.current.authState?.token,
-      });
+    await waitFor(() =>
+      expect(wasRequested(VALIDATE_URL, 'Bearer anon')).toBe(true),
+    );
 
-      expect(result.current.authState?.token?.accessToken).toBe(
-        'magic-user-token',
-      );
-    });
+    await flushPending();
+    jest.mocked(ExpoSecureStore.getItemAsync).mockRestore();
+
+    expect(result.current.authState).toEqual<AuthState>(magicUserAuthState);
+    expect(twitchApi.getAuthToken()).toBe('magic-user-token');
+    expect(await readStoredToken('V1_foam-anon')).toBeNull();
   });
 
   test('validates the magic-link token before getUserInfo so the Helix Client-Id is synced to the token client', async () => {
-    const user: UserInfoResponse = {
-      id: '123',
-      login: 'magic_user',
-      display_name: 'Magic User',
-      type: '',
-      broadcaster_type: '',
-      description: '',
-      profile_image_url: '',
-      offline_image_url: '',
-      view_count: 0,
-      created_at: '',
-    };
+    jest
+      .spyOn(ExpoSecureStore, 'getItemAsync')
+      .mockReturnValue(new Promise<null>(() => {}));
 
-    let resolveStorage: ((value: null) => void) | undefined;
+    twitch.tokenClientIds.set('magic-user-token', 'magic-client-id');
 
-    const storageGate = new Promise<null>(resolve => {
-      resolveStorage = resolve;
-    });
-
-    SecureStore.getItemAsync.mockReturnValue(storageGate);
-
-    twitchService.getDefaultToken.mockResolvedValue({
-      access_token: 'anon',
-      expires_in: 3600,
-      token_type: 'bearer',
-    });
-
-    // Assert the ordering by outcome: getUserInfo must only run once
-    // validateToken has resolved (and thus synced the Helix Client-Id). Record
-    // whether validate had completed at the moment /users was called.
-    let validateResolved = false;
-
-    let validateWasResolvedWhenUserInfoCalled: boolean | undefined;
-
-    twitchService.validateToken.mockImplementation(async () => {
-      validateResolved = true;
-      return true;
-    });
-
-    twitchService.getUserInfo.mockImplementation(async () => {
-      validateWasResolvedWhenUserInfoCalled = validateResolved;
-      return user;
-    });
-
-    const magicResponse: AuthSessionResult = {
-      type: 'success',
-      params: {},
-      url: 'foam://auth?access_token=magic-user-token&token_type=bearer&expires_in=14400',
-      errorCode: null,
-      error: undefined,
-      authentication: new TokenResponse({
-        accessToken: 'magic-user-token',
-        expiresIn: 14400,
-        tokenType: 'bearer',
-      }),
-    };
-
-    const { result } = renderHook(() => useAuthContext(), {
-      wrapper,
-      initialProps,
-    });
+    const { result } = renderHook(() => useAuthContext(), { wrapper });
 
     await act(async () => {
-      await result.current.loginWithTwitch(magicResponse);
+      await result.current.loginWithTwitch(magicLinkResponse());
     });
 
-    await act(async () => {
-      resolveStorage?.(null);
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-
-    expect(result.current.authState?.isLoggedIn).toBe(true);
-
-    expect(twitchService.validateToken).toHaveBeenCalledWith(
-      'magic-user-token',
+    const magicTokenRequests = twitch.requests.filter(
+      request => request.authorization === 'Bearer magic-user-token',
     );
 
-    expect(twitchService.getUserInfo).toHaveBeenCalledWith('magic-user-token');
+    expect(magicTokenRequests).toEqual<FakeRequest[]>([
+      {
+        url: VALIDATE_URL,
+        authorization: 'Bearer magic-user-token',
+        clientId: null,
+      },
+      {
+        url: USERS_URL,
+        authorization: 'Bearer magic-user-token',
+        clientId: 'magic-client-id',
+      },
+    ]);
 
-    // Client-Id must be synced (validate) before the /users call (getUserInfo).
-    expect(validateWasResolvedWhenUserInfoCalled).toBe(true);
+    expect(result.current.user).toEqual<UserInfoResponse>(user);
   });
 
   test('falls back to anon when getUserInfo fails after login, despite the live-session guard', async () => {
-    SecureStore.getItemAsync.mockResolvedValue(null);
+    twitch.anonToken = () => anonTokenResponse('anon-after-failed-login');
 
-    twitchService.getDefaultToken.mockResolvedValue({
-      access_token: 'anon-after-failed-login',
-      expires_in: 3600,
-      token_type: 'bearer',
-    });
+    const usersResponse = deferred<FetchResponse>();
+    twitch.users = () => usersResponse.promise;
 
-    let rejectUserInfo: ((reason: Error) => void) | undefined;
-
-    twitchService.getUserInfo.mockImplementationOnce(
-      () =>
-        new Promise<UserInfoResponse>((_, reject) => {
-          rejectUserInfo = reject;
-        }),
-    );
-
-    const magicResponse: AuthSessionResult = {
-      type: 'success',
-      params: {},
-      url: 'foam://auth?access_token=magic-user-token&token_type=bearer&expires_in=14400',
-      errorCode: null,
-      error: undefined,
-      authentication: new TokenResponse({
-        accessToken: 'magic-user-token',
-        expiresIn: 14400,
-        tokenType: 'bearer',
-      }),
-    };
-
-    const { result } = renderHook(() => useAuthContext(), {
-      wrapper,
-      initialProps,
-    });
+    const { result } = renderHook(() => useAuthContext(), { wrapper });
 
     await waitFor(() => expect(result.current.ready).toBe(true));
 
     let loginPromise: Promise<null | undefined> | undefined;
 
     await act(async () => {
-      loginPromise = result.current.loginWithTwitch(magicResponse);
+      loginPromise = result.current.loginWithTwitch(magicLinkResponse());
       await Promise.resolve();
     });
 
     expect(result.current.authState?.isLoggedIn).toBe(true);
 
     await act(async () => {
-      rejectUserInfo?.(new Error('user info unavailable'));
+      usersResponse.resolve(json({ message: 'unavailable' }, 503));
       await loginPromise;
     });
 
-    await waitFor(() => {
-      expect(result.current.authState?.isAnonAuth).toBe(true);
-      expect(result.current.authState?.isLoggedIn).toBe(false);
-
-      expect(result.current.authState?.token?.accessToken).toBe(
-        'anon-after-failed-login',
-      );
-    });
-  });
-
-  test('refreshes expired stored user token before falling back to anon auth', async () => {
-    const user: UserInfoResponse = {
-      id: '123',
-      login: 'test_user',
-      display_name: 'Test User',
-      type: '',
-      broadcaster_type: '',
-      description: '',
-      profile_image_url: '',
-      offline_image_url: '',
-      view_count: 0,
-      created_at: '',
+    const anonToken: TwitchToken = {
+      accessToken: 'anon-after-failed-login',
+      expiresIn: 3600,
+      tokenType: 'bearer',
+      expiresAt: NOW + HOUR_MS,
     };
 
-    SecureStore.getItemAsync.mockResolvedValueOnce(null);
-
-    SecureStore.getItemAsync.mockResolvedValueOnce(
-      JSON.stringify({
-        accessToken: 'expired-user-token',
-        expiresIn: 3600,
-        tokenType: 'bearer',
-        refreshToken: 'stored-refresh-token',
-        expiresAt: Date.now() - 1000,
+    await waitFor(() =>
+      expect(result.current.authState).toEqual<AuthState>({
+        isAnonAuth: true,
+        isLoggedIn: false,
+        token: anonToken,
       }),
     );
 
-    twitchService.getRefreshToken.mockResolvedValueOnce({
-      access_token: 'refreshed-user-token',
-      expires_in: 3600,
-      token_type: 'bearer',
-      refresh_token: 'rotated-refresh-token',
-      scope: '',
+    expect(twitchApi.getAuthToken()).toBe('anon-after-failed-login');
+    expect(await readStoredToken('V1_foam-user')).toBeNull();
+  });
+
+  test('refreshes expired stored user token before falling back to anon auth', async () => {
+    await storeToken('V1_foam-user', {
+      accessToken: 'expired-user-token',
+      expiresIn: 3600,
+      tokenType: 'bearer',
+      refreshToken: 'stored-refresh-token',
+      expiresAt: NOW - 1000,
     });
 
-    twitchService.validateToken.mockResolvedValueOnce(true);
-    twitchService.getUserInfo.mockResolvedValueOnce(user);
+    twitch.refreshToken = refreshToken =>
+      refreshToken === 'stored-refresh-token'
+        ? json({
+            data: {
+              access_token: 'refreshed-user-token',
+              expires_in: 3600,
+              token_type: 'bearer',
+              refresh_token: 'rotated-refresh-token',
+              scope: '',
+            },
+          })
+        : json({ data: null, error: 'unknown refresh token' }, 400);
 
     render(
       <AuthContextProvider>
@@ -576,54 +508,28 @@ describe('AuthContext', () => {
       </AuthContextProvider>,
     );
 
-    await waitFor(() => {
-      expect(twitchService.getRefreshToken).toHaveBeenCalledWith(
-        'stored-refresh-token',
-      );
+    expect(await screen.findByText('Test User')).toBeOnTheScreen();
+    expect(screen.getByText('User')).toBeOnTheScreen();
+    expect(twitchApi.getAuthToken()).toBe('refreshed-user-token');
 
-      expect(twitchApi.setAuthToken.mock.calls).toContainEqual([
-        'refreshed-user-token',
-      ]);
-
-      expect(screen.getByText('User')).toBeOnTheScreen();
-      expect(screen.getByText('Test User')).toBeOnTheScreen();
-
-      expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
-        'V1_foam-user',
-        expect.stringMatching(
-          /"accessToken":"refreshed-user-token","expiresIn":3600,"tokenType":"bearer","refreshToken":"rotated-refresh-token","expiresAt":\d+/,
-        ),
-      );
+    expect(await readStoredToken('V1_foam-user')).toEqual<TwitchToken>({
+      accessToken: 'refreshed-user-token',
+      expiresIn: 3600,
+      tokenType: 'bearer',
+      refreshToken: 'rotated-refresh-token',
+      expiresAt: NOW + HOUR_MS,
     });
   });
 
   test('keeps an expired user token without a refresh token when Twitch still validates it', async () => {
-    const user: UserInfoResponse = {
-      id: '123',
-      login: 'test_user',
-      display_name: 'Test User',
-      type: '',
-      broadcaster_type: '',
-      description: '',
-      profile_image_url: '',
-      offline_image_url: '',
-      view_count: 0,
-      created_at: '',
+    const implicitToken: TwitchToken = {
+      accessToken: 'implicit-user-token',
+      expiresIn: 3600,
+      tokenType: 'bearer',
+      expiresAt: NOW - 1000,
     };
 
-    SecureStore.getItemAsync.mockResolvedValueOnce(null);
-
-    SecureStore.getItemAsync.mockResolvedValueOnce(
-      JSON.stringify({
-        accessToken: 'implicit-user-token',
-        expiresIn: 3600,
-        tokenType: 'bearer',
-        expiresAt: Date.now() - 1000,
-      }),
-    );
-
-    twitchService.validateToken.mockResolvedValueOnce(true);
-    twitchService.getUserInfo.mockResolvedValueOnce(user);
+    await storeToken('V1_foam-user', implicitToken);
 
     render(
       <AuthContextProvider>
@@ -631,58 +537,38 @@ describe('AuthContext', () => {
       </AuthContextProvider>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('User')).toBeOnTheScreen();
-      expect(screen.getByText('Test User')).toBeOnTheScreen();
-    });
+    expect(await screen.findByText('Test User')).toBeOnTheScreen();
+    expect(screen.getByText('User')).toBeOnTheScreen();
 
     // Implicit-grant token has no refresh token, so we never attempt a refresh
     // and never clear it solely because the local expiresAt has passed.
-    expect(twitchService.getRefreshToken).not.toHaveBeenCalled();
+    expect(wasRequested(REFRESH_URL)).toBe(false);
+    expect(twitchApi.getAuthToken()).toBe('implicit-user-token');
 
-    expect(twitchApi.setAuthToken).toHaveBeenCalledWith('implicit-user-token');
-
-    expect(SecureStore.deleteItemAsync).not.toHaveBeenCalledWith(
-      'V1_foam-user',
+    expect(await readStoredToken('V1_foam-user')).toEqual<TwitchToken>(
+      implicitToken,
     );
   });
 
   test('proactively refreshes near-expiry user token after startup', async () => {
-    const user: UserInfoResponse = {
-      id: '123',
-      login: 'test_user',
-      display_name: 'Test User',
-      type: '',
-      broadcaster_type: '',
-      description: '',
-      profile_image_url: '',
-      offline_image_url: '',
-      view_count: 0,
-      created_at: '',
-    };
-
-    SecureStore.getItemAsync.mockResolvedValueOnce(null);
-
-    SecureStore.getItemAsync.mockResolvedValueOnce(
-      JSON.stringify({
-        accessToken: 'near-expiry-user-token',
-        expiresIn: 3600,
-        tokenType: 'bearer',
-        refreshToken: 'stored-refresh-token',
-        expiresAt: Date.now() + 3 * 60 * 1000,
-      }),
-    );
-
-    twitchService.validateToken.mockResolvedValueOnce(true);
-    twitchService.getUserInfo.mockResolvedValueOnce(user);
-
-    twitchService.getRefreshToken.mockResolvedValueOnce({
-      access_token: 'background-refreshed-user-token',
-      expires_in: 3600,
-      token_type: 'bearer',
-      refresh_token: 'background-refresh-token',
-      scope: '',
+    await storeToken('V1_foam-user', {
+      accessToken: 'near-expiry-user-token',
+      expiresIn: 3600,
+      tokenType: 'bearer',
+      refreshToken: 'stored-refresh-token',
+      expiresAt: NOW + 3 * 60 * 1000,
     });
+
+    twitch.refreshToken = () =>
+      json({
+        data: {
+          access_token: 'background-refreshed-user-token',
+          expires_in: 3600,
+          token_type: 'bearer',
+          refresh_token: 'background-refresh-token',
+          scope: '',
+        },
+      });
 
     render(
       <AuthContextProvider>
@@ -690,107 +576,25 @@ describe('AuthContext', () => {
       </AuthContextProvider>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('User')).toBeOnTheScreen();
+    expect(await screen.findByText('Test User')).toBeOnTheScreen();
 
-      expect(twitchService.getRefreshToken).toHaveBeenCalledWith(
-        'stored-refresh-token',
-      );
-
-      expect(twitchApi.setAuthToken.mock.calls).toContainEqual([
-        'background-refreshed-user-token',
-      ]);
-
-      expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
-        'V1_foam-user',
-        expect.stringMatching(
-          /"accessToken":"background-refreshed-user-token","expiresIn":3600,"tokenType":"bearer","refreshToken":"background-refresh-token","expiresAt":\d+/,
-        ),
-      );
-    });
-  });
-
-  test('should handle anonymous token expiration and refresh', async () => {
-    const user: UserInfoResponse = {
-      id: '123',
-      login: 'test_user',
-      display_name: 'Test User',
-      type: '',
-      broadcaster_type: '',
-      description: '',
-      profile_image_url: '',
-      offline_image_url: '',
-      view_count: 0,
-      created_at: '',
-    };
-
-    twitchService.getDefaultToken.mockResolvedValue({
-      access_token: 'anon-token',
-      expires_in: 3600,
-      token_type: 'bearer',
-    });
-
-    twitchService.getRefreshToken.mockResolvedValue({
-      access_token: 'new-anon-token',
-      expires_in: 3600,
-      token_type: 'bearer',
-      refresh_token: 'new-refresh-token',
-      scope: '',
-    });
-
-    SecureStore.getItemAsync.mockResolvedValue(
-      JSON.stringify({
-        accessToken: 'anon-token',
-        expiresIn: 3600,
-        tokenType: 'bearer',
-      }),
+    await waitFor(() =>
+      expect(twitchApi.getAuthToken()).toBe('background-refreshed-user-token'),
     );
 
-    const { result } = renderHook(() => useAuthContext(), {
-      wrapper,
-      initialProps: {
-        ...initialProps,
-        user,
-        authState: {
-          token: {
-            expiresIn: 3600,
-          },
-        },
-      },
+    expect(await readStoredToken('V1_foam-user')).toEqual<TwitchToken>({
+      accessToken: 'background-refreshed-user-token',
+      expiresIn: 3600,
+      tokenType: 'bearer',
+      refreshToken: 'background-refresh-token',
+      expiresAt: NOW + HOUR_MS,
     });
-
-    await waitFor(() => {
-      expect(result.current.ready).toEqual(true);
-    });
-
-    expect(result.current.authState?.isAnonAuth).toBe(true);
-    expect(result.current.authState?.isLoggedIn).toBe(false);
   });
 
   describe('App startup', () => {
-    test('grants an anon token if user has no anon token and no user token', async () => {
-      SecureStore.getItemAsync.mockResolvedValueOnce(null);
-      SecureStore.getItemAsync.mockResolvedValueOnce(null);
-
-      twitchService.getDefaultToken.mockResolvedValueOnce({
-        access_token: 'anon_access_token',
-        expires_in: 3600,
-        token_type: 'bearer',
-      });
-
-      const { getByText } = render(
-        <AuthContextProvider>
-          <TestComponent />
-        </AuthContextProvider>,
-      );
-
-      await waitFor(() => {
-        expect(getByText('Anon')).toBeOnTheScreen();
-      });
-    });
-
     test('checks if anon token is valid and sets the right state if valid', async () => {
-      SecureStore.getItemAsync.mockResolvedValueOnce(
+      await ExpoSecureStore.setItemAsync(
+        'V1_foam-anon',
         JSON.stringify({
           accessToken: 'anon_access_token',
           expiresIn: 3600,
@@ -798,37 +602,43 @@ describe('AuthContext', () => {
         }),
       );
 
-      SecureStore.getItemAsync.mockResolvedValueOnce(null);
-      twitchService.validateToken.mockResolvedValueOnce(true);
-
       render(
         <AuthContextProvider>
           <TestComponent />
         </AuthContextProvider>,
       );
 
-      await waitFor(() => {
-        expect(screen.getByText('Anon')).toBeOnTheScreen();
+      expect(await screen.findByText('Anon')).toBeOnTheScreen();
+
+      await waitFor(() =>
+        expect(wasRequested(VALIDATE_URL, 'Bearer anon_access_token')).toBe(
+          true,
+        ),
+      );
+
+      await flushPending();
+
+      expect(wasRequested(TOKEN_URL)).toBe(false);
+      expect(twitchApi.getAuthToken()).toBe('anon_access_token');
+
+      expect(await readStoredToken('V1_foam-anon')).toEqual<TwitchToken>({
+        accessToken: 'anon_access_token',
+        expiresIn: 3600,
+        tokenType: 'bearer',
+        expiresAt: NOW + HOUR_MS,
       });
     });
 
     test('handles invalid anon token', async () => {
-      SecureStore.getItemAsync.mockResolvedValueOnce(
-        JSON.stringify({
-          accessToken: 'invalid_anon_access_token',
-          expiresIn: 3600,
-          tokenType: 'bearer',
-        }),
-      );
-
-      SecureStore.getItemAsync.mockResolvedValueOnce(null);
-      twitchService.validateToken.mockResolvedValueOnce(false);
-
-      twitchService.getDefaultToken.mockResolvedValueOnce({
-        access_token: 'new_anon_access_token',
-        expires_in: 3600,
-        token_type: 'bearer',
+      await storeToken('V1_foam-anon', {
+        accessToken: 'invalid_anon_access_token',
+        expiresIn: 3600,
+        tokenType: 'bearer',
+        expiresAt: NOW + HOUR_MS,
       });
+
+      twitch.invalidTokens.add('invalid_anon_access_token');
+      twitch.anonToken = () => anonTokenResponse('new_anon_access_token');
 
       render(
         <AuthContextProvider>
@@ -836,40 +646,29 @@ describe('AuthContext', () => {
         </AuthContextProvider>,
       );
 
-      await waitFor(() => {
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(twitchApi.setAuthToken).toHaveBeenCalledWith(
-          'new_anon_access_token',
-        );
-        expect(screen.getByText('Anon')).toBeOnTheScreen();
+      await waitFor(() =>
+        expect(twitchApi.getAuthToken()).toBe('new_anon_access_token'),
+      );
+
+      expect(screen.getByText('Anon')).toBeOnTheScreen();
+
+      expect(await readStoredToken('V1_foam-anon')).toEqual<TwitchToken>({
+        accessToken: 'new_anon_access_token',
+        expiresIn: 3600,
+        tokenType: 'bearer',
+        expiresAt: NOW + HOUR_MS,
       });
     });
 
     test('checks if auth token is valid and sets the right state if valid', async () => {
-      SecureStore.getItemAsync.mockResolvedValueOnce(null);
+      const storedToken: TwitchToken = {
+        accessToken: 'auth_access_token',
+        expiresIn: 3600,
+        tokenType: 'bearer',
+        expiresAt: NOW + HOUR_MS,
+      };
 
-      SecureStore.getItemAsync.mockResolvedValueOnce(
-        JSON.stringify({
-          accessToken: 'auth_access_token',
-          expiresIn: 3600,
-          tokenType: 'bearer',
-        }),
-      );
-
-      twitchService.validateToken.mockResolvedValueOnce(true);
-
-      twitchService.getUserInfo.mockResolvedValueOnce({
-        display_name: 'Test User',
-        broadcaster_type: 'streamer',
-        created_at: '2024',
-        description: 'test',
-        id: '123',
-        login: 'test_user',
-        offline_image_url: '',
-        profile_image_url: '',
-        type: 'test',
-        view_count: 123,
-      });
+      await storeToken('V1_foam-user', storedToken);
 
       render(
         <AuthContextProvider>
@@ -877,30 +676,25 @@ describe('AuthContext', () => {
         </AuthContextProvider>,
       );
 
-      await waitFor(() => {
-        expect(screen.getByText('User')).toBeOnTheScreen();
-        expect(screen.getByText('Test User')).toBeOnTheScreen();
-      });
+      expect(await screen.findByText('Test User')).toBeOnTheScreen();
+      expect(screen.getByText('User')).toBeOnTheScreen();
+      expect(twitchApi.getAuthToken()).toBe('auth_access_token');
+
+      expect(await readStoredToken('V1_foam-user')).toEqual<TwitchToken>(
+        storedToken,
+      );
     });
 
     test('removes invalid auth token, fetches a new one, and sets state + twitchApi.setAuthToken', async () => {
-      SecureStore.getItemAsync.mockResolvedValueOnce(null);
-
-      SecureStore.getItemAsync.mockResolvedValueOnce(
-        JSON.stringify({
-          accessToken: 'invalid_auth_access_token',
-          expiresIn: 3600,
-          tokenType: 'bearer',
-        }),
-      );
-
-      twitchService.validateToken.mockResolvedValueOnce(false);
-
-      twitchService.getDefaultToken.mockResolvedValueOnce({
-        access_token: 'new_auth_access_token',
-        expires_in: 3600,
-        token_type: 'bearer',
+      await storeToken('V1_foam-user', {
+        accessToken: 'invalid_auth_access_token',
+        expiresIn: 3600,
+        tokenType: 'bearer',
+        expiresAt: NOW + HOUR_MS,
       });
+
+      twitch.invalidTokens.add('invalid_auth_access_token');
+      twitch.anonToken = () => anonTokenResponse('new_auth_access_token');
 
       render(
         <AuthContextProvider>
@@ -908,46 +702,53 @@ describe('AuthContext', () => {
         </AuthContextProvider>,
       );
 
-      await waitFor(() => {
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(twitchApi.setAuthToken).toHaveBeenCalledWith(
-          'new_auth_access_token',
-        );
-        expect(screen.getByText('Anon')).toBeOnTheScreen();
-      });
+      await waitFor(() =>
+        expect(twitchApi.getAuthToken()).toBe('new_auth_access_token'),
+      );
+
+      expect(screen.getByText('Anon')).toBeOnTheScreen();
+      expect(await readStoredToken('V1_foam-user')).toBeNull();
     });
   });
 
   describe('logout', () => {
     test('drops the query cache instead of refetching it token-less', async () => {
-      const cancelQueries = jest.spyOn(queryClient, 'cancelQueries');
-      const removeQueries = jest.spyOn(queryClient, 'removeQueries');
-      const invalidateQueries = jest.spyOn(queryClient, 'invalidateQueries');
-      const resetQueries = jest.spyOn(queryClient, 'resetQueries');
-
-      SecureStore.getItemAsync.mockResolvedValue(null);
-
-      twitchService.getDefaultToken.mockResolvedValue({
-        access_token: 'anon',
-        expires_in: 3600,
-        token_type: 'bearer',
+      await storeToken('V1_foam-user', {
+        accessToken: 'user-token',
+        expiresIn: 3600,
+        tokenType: 'bearer',
+        expiresAt: NOW + HOUR_MS,
       });
 
-      const { result } = renderHook(() => useAuthContext(), {
-        wrapper,
-        initialProps,
+      const { result } = renderHook(() => useAuthContext(), { wrapper });
+
+      await waitFor(() =>
+        expect(result.current.authState?.isLoggedIn).toBe(true),
+      );
+
+      queryClient.setQueryData(['followed-streams', 'user-only'], ['stream']);
+
+      let logoutPromise: Promise<void> | undefined;
+
+      act(() => {
+        logoutPromise = result.current.logout();
       });
 
-      await waitFor(() => expect(result.current.ready).toBe(true));
+      await waitFor(() =>
+        expect(result.current.authState?.isAnonAuth).toBe(true),
+      );
 
-      await act(async () => {
-        await result.current.logout();
-      });
+      await act(() => logoutPromise);
 
-      expect(cancelQueries).toHaveBeenCalledTimes(1);
-      expect(removeQueries).toHaveBeenCalledTimes(1);
-      expect(invalidateQueries).not.toHaveBeenCalled();
-      expect(resetQueries).not.toHaveBeenCalled();
+      expect(
+        queryClient
+          .getQueryCache()
+          .find({ queryKey: ['followed-streams', 'user-only'] }),
+      ).toBeUndefined();
+
+      expect(result.current.user).toBeUndefined();
+      expect(twitchApi.getAuthToken()).toBe('anon');
+      expect(await readStoredToken('V1_foam-user')).toBeNull();
     });
   });
 });
