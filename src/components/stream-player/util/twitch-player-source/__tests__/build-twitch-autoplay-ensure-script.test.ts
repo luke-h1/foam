@@ -1,52 +1,141 @@
 import { buildTwitchAutoplayEnsureScript } from '../build-twitch-autoplay-ensure-script';
+import {
+  type PlayerBridgeMessage,
+  resetPlayerPage,
+  runPlayerScript,
+} from './__fixtures__/twitch-player-source.fixture';
+
+interface PlayerVideo {
+  element: HTMLVideoElement;
+  isPlaying: () => boolean;
+}
+
+/**
+ * Adds a `<video>` that models iOS WebKit: muted play always starts, and when
+ * `blocksUnmutedPlay` is set, unmuted play never starts and unmuting a playing
+ * video pauses it.
+ */
+function addVideo({ blocksUnmutedPlay = false } = {}): PlayerVideo {
+  const element = document.createElement('video');
+
+  let paused = true;
+  let muted = false;
+  let volume = 0.5;
+
+  Object.defineProperties(element, {
+    paused: { get: () => paused },
+    muted: {
+      get: () => muted,
+      set: (next: boolean) => {
+        muted = next;
+
+        if (!next && blocksUnmutedPlay) {
+          paused = true;
+        }
+      },
+    },
+    volume: {
+      get: () => volume,
+      set: (next: number) => {
+        volume = next;
+      },
+    },
+  });
+
+  element.play = () => {
+    if (muted || !blocksUnmutedPlay) {
+      paused = false;
+      element.dispatchEvent(new Event('playing'));
+    }
+
+    return Promise.resolve();
+  };
+
+  document.body.appendChild(element);
+
+  return { element, isPlaying: () => !paused };
+}
 
 describe('buildTwitchAutoplayEnsureScript', () => {
-  test('autoplay-ensure starts muted then raises the volume', () => {
-    const script = buildTwitchAutoplayEnsureScript({ muted: false });
-
-    expect(script).toContain('var TARGET_MUTED = false');
-    expect(script).toContain('var START_DELAY_MS = 800');
-
-    // Playback always begins muted (the only state iOS autoplay reliably
-    // permits) so the picture moves immediately.
-    expect(script).toContain('video.muted = true');
-
-    expect(script).toContain('video.play()');
-
-    // Once playing, reconcileAudio brings the stream up to full volume.
-    expect(script).toContain('video.muted = false');
-
-    expect(script).toContain('video.volume = 1');
+  beforeEach(() => {
+    jest.useFakeTimers();
+    resetPlayerPage();
   });
 
-  test('autoplay-ensure gives up to muted after repeated unmute re-pauses', () => {
-    const script = buildTwitchAutoplayEnsureScript({ muted: false });
-
-    // Unmuting an ongoing stream can make iOS silently re-pause it; the script
-    // resumes and retries a bounded number of times, then accepts muted
-    // playback so the picture never stalls on a pause.
-    expect(script).toContain('var unmuteBlocked = false');
-
-    expect(script).toContain('unmuteAttempts++');
-    expect(script).toContain('if (unmuteAttempts >= 3)');
-    expect(script).toContain('unmuteBlocked = true;');
-    expect(script).toContain('playMuted(v);');
-
-    // Nested unmute retries re-query the video; bail if it was torn down
-    // mid-timeout (channel switch / ad swap) so we do not throw on null.
-    expect(script).toContain('if (!video) { return; }');
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
-  test('autoplay-ensure keeps a muted start muted', () => {
-    const script = buildTwitchAutoplayEnsureScript({
-      muted: true,
-      startDelayMs: 0,
-    });
+  test('starts playback muted after the start delay, then unmutes at full volume', () => {
+    const video = addVideo();
 
-    expect(script).toContain('var TARGET_MUTED = true');
-    expect(script).toContain('var START_DELAY_MS = 0');
+    const page = runPlayerScript(
+      buildTwitchAutoplayEnsureScript({ muted: false, startDelayMs: 800 }),
+    );
 
-    // With a muted target the stream is held muted, never raised to volume.
-    expect(script).toContain('if (!video.muted) { video.muted = true; }');
+    jest.advanceTimersByTime(799);
+
+    expect(video.isPlaying()).toBe(false);
+
+    jest.advanceTimersByTime(1);
+
+    expect(video.isPlaying()).toBe(true);
+
+    jest.advanceTimersByTime(1000);
+
+    expect(video.isPlaying()).toBe(true);
+    expect(video.element.muted).toBe(false);
+    expect(video.element.volume).toBe(1);
+    expect(page.messages).toEqual<PlayerBridgeMessage[]>([
+      { type: 'muteState', payload: { muted: false, volume: 0.5 } },
+    ]);
+  });
+
+  test('keeps a muted start muted', () => {
+    const video = addVideo();
+
+    runPlayerScript(
+      buildTwitchAutoplayEnsureScript({ muted: true, startDelayMs: 0 }),
+    );
+
+    jest.advanceTimersByTime(2000);
+
+    expect(video.isPlaying()).toBe(true);
+    expect(video.element.muted).toBe(true);
+  });
+
+  test('falls back to muted playback when unmuting keeps pausing the video', () => {
+    const video = addVideo({ blocksUnmutedPlay: true });
+
+    runPlayerScript(
+      buildTwitchAutoplayEnsureScript({ muted: false, startDelayMs: 0 }),
+    );
+
+    jest.advanceTimersByTime(500);
+
+    expect(video.isPlaying()).toBe(false);
+
+    jest.advanceTimersByTime(5000);
+
+    expect(video.isPlaying()).toBe(true);
+    expect(video.element.muted).toBe(true);
+  });
+
+  test('applies a user unmute and reports the new mute state', () => {
+    const video = addVideo();
+
+    const page = runPlayerScript(
+      buildTwitchAutoplayEnsureScript({ muted: true, startDelayMs: 0 }),
+    );
+
+    jest.advanceTimersByTime(1000);
+    page.window.__foamSetMuted?.(false);
+
+    expect(video.element.muted).toBe(false);
+    expect(video.element.volume).toBe(1);
+    expect(page.messages).toEqual<PlayerBridgeMessage[]>([
+      { type: 'muteState', payload: { muted: false, volume: 0.5 } },
+      { type: 'muteState', payload: { muted: false, volume: 1 } },
+    ]);
   });
 });
