@@ -1,17 +1,27 @@
 import { createElement } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen } from '@testing-library/react-native';
 
 import * as SegmentedControlModule from '@app/components/segmented-control/segmented-control';
-import * as useDebouncedCallbackModule from '@app/hooks/use-debounced-callback';
-import { storageService as realStorageService } from '@app/lib/storage';
+import { storageService } from '@app/lib/storage';
 import { twitchService as realTwitchService } from '@app/services/twitch-service';
 import render from '@app/test/render';
 import type { Category } from '@app/types/twitch/category';
 import type { SearchChannelResponse } from '@app/types/twitch/channel';
 
 import { SearchScreen } from '../search-screen';
+import {
+  SEARCH_HISTORY_STORAGE_KEY,
+  type SearchHistoryItem,
+} from '../util/search-history';
+
+const NOW = new Date('2026-10-14T12:00:00.000Z');
+
+/**
+ * The time a search finishes: `NOW` plus the 400ms debounce.
+ */
+const SEARCHED_AT = '2026-10-14T12:00:00.400Z';
 
 const twitchService = {
   searchChannels: jest.spyOn(realTwitchService, 'searchChannels'),
@@ -20,25 +30,6 @@ const twitchService = {
   getTopCategories: jest.spyOn(realTwitchService, 'getTopCategories'),
   getUserImage: jest.spyOn(realTwitchService, 'getUserImage'),
 };
-
-const storageService = {
-  getString: jest.spyOn(realStorageService, 'getString').mockReturnValue(null),
-  set: jest.spyOn(realStorageService, 'set').mockImplementation(() => {}),
-  remove: jest.spyOn(realStorageService, 'remove').mockImplementation(() => {}),
-};
-
-jest.spyOn(realStorageService.events, 'on').mockReturnThis();
-jest.spyOn(realStorageService.events, 'off').mockReturnThis();
-
-jest
-  .spyOn(useDebouncedCallbackModule, 'useDebouncedCallback')
-  .mockImplementation((callback: (...args: unknown[]) => void) => [
-    (...args: unknown[]) => {
-      callback(...args);
-      return Promise.resolve();
-    },
-    () => {},
-  ]);
 
 jest
   .spyOn(SegmentedControlModule, 'SegmentedControl')
@@ -99,8 +90,33 @@ const mockRailStream = {
   is_mature: false,
 };
 
+/**
+ * Runs pending timers and the promises they resolve. RNTL's `findBy` never
+ * settles under fake timers in this suite, so tests flush and then query.
+ */
+async function advanceTimers(ms: number) {
+  await act(async () => {
+    await jest.advanceTimersByTimeAsync(ms);
+  });
+}
+
+/**
+ * Types a query and lets the 400ms search debounce run out.
+ */
+async function typeQuery(text: string) {
+  fireEvent.changeText(screen.getByTestId('search-input'), text);
+  await advanceTimers(400);
+}
+
 describe('SearchScreen', () => {
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   beforeEach(() => {
+    jest.useFakeTimers({ now: NOW });
+    storageService.clear();
+
     twitchService.searchChannels.mockResolvedValue([mockChannel]);
     twitchService.searchCategories.mockResolvedValue({
       data: [mockCategoryResult],
@@ -120,53 +136,49 @@ describe('SearchScreen', () => {
     twitchService.getUserImage.mockResolvedValue('');
   });
 
-  test('renders search input', () => {
-    render(<SearchScreen />);
-
-    expect(screen.getByTestId('search-input')).toBeOnTheScreen();
-  });
-
   test('shows live channels and top categories before a search is made', async () => {
     render(<SearchScreen />);
 
     expect(screen.getByText('Live now')).toBeOnTheScreen();
     expect(screen.getByText('Top categories')).toBeOnTheScreen();
-    expect(await screen.findByText('RailStreamer')).toBeOnTheScreen();
-    expect(await screen.findByText('Rail Category')).toBeOnTheScreen();
+
+    await advanceTimers(0);
+
+    expect(screen.getByText('RailStreamer')).toBeOnTheScreen();
+    expect(screen.getByText('Rail Category')).toBeOnTheScreen();
   });
 
-  test('shows channel results after searching', async () => {
+  test('shows channel results after searching and saves the query to history', async () => {
     render(<SearchScreen />);
 
-    fireEvent.changeText(screen.getByTestId('search-input'), 'stre');
+    await typeQuery('stre');
 
-    await waitFor(() => {
-      expect(screen.getByText('Streamer1')).toBeOnTheScreen();
-    });
+    expect(screen.getByText('Streamer1')).toBeOnTheScreen();
+    expect(storageService.getString(SEARCH_HISTORY_STORAGE_KEY)).toEqual<
+      SearchHistoryItem[]
+    >([{ query: 'stre', date: SEARCHED_AT }]);
   });
 
   test('shows category results when categories filter is active', async () => {
     render(<SearchScreen />);
 
-    fireEvent.changeText(screen.getByTestId('search-input'), 'just');
+    await typeQuery('just');
 
-    await waitFor(() => {
-      expect(twitchService.searchCategories).toHaveBeenCalled();
-    });
+    expect(screen.getByText('Streamer1')).toBeOnTheScreen();
 
     fireEvent.press(screen.getByTestId('filter-categories'));
 
     expect(screen.getByText('Just Chatting')).toBeOnTheScreen();
+    expect(screen.queryByText('Streamer1')).not.toBeOnTheScreen();
   });
 
   test('does not search when query is shorter than 2 chars', async () => {
     render(<SearchScreen />);
 
-    fireEvent.changeText(screen.getByTestId('search-input'), 's');
+    await typeQuery('s');
 
-    await waitFor(() => {
-      expect(twitchService.searchChannels).not.toHaveBeenCalled();
-    });
+    expect(twitchService.searchChannels).not.toHaveBeenCalled();
+    expect(storageService.getString(SEARCH_HISTORY_STORAGE_KEY)).toBe(null);
   });
 
   test('shows a skeleton while a search is in flight', async () => {
@@ -180,15 +192,15 @@ describe('SearchScreen', () => {
 
     render(<SearchScreen />);
 
-    fireEvent.changeText(screen.getByTestId('search-input'), 'stre');
+    await typeQuery('stre');
 
     expect(screen.getByTestId('search-results-skeleton')).toBeOnTheScreen();
 
-    resolveChannels([mockChannel]);
-
-    await waitFor(() => {
-      expect(screen.getByText('Streamer1')).toBeOnTheScreen();
+    await act(async () => {
+      resolveChannels([mockChannel]);
     });
+
+    expect(screen.getByText('Streamer1')).toBeOnTheScreen();
   });
 
   test('shows an empty state that echoes the query when nothing matches', async () => {
@@ -197,9 +209,9 @@ describe('SearchScreen', () => {
 
     render(<SearchScreen />);
 
-    fireEvent.changeText(screen.getByTestId('search-input'), 'zzzz');
+    await typeQuery('zzzz');
 
-    expect(await screen.findByText('No channels for "zzzz"')).toBeOnTheScreen();
+    expect(screen.getByText('No channels for "zzzz"')).toBeOnTheScreen();
   });
 
   test('shows an error state with retry when the search fails', async () => {
@@ -207,15 +219,15 @@ describe('SearchScreen', () => {
 
     render(<SearchScreen />);
 
-    fireEvent.changeText(screen.getByTestId('search-input'), 'stre');
+    await typeQuery('stre');
 
-    expect(await screen.findByText("Couldn't search")).toBeOnTheScreen();
+    expect(screen.getByText("Couldn't search")).toBeOnTheScreen();
     expect(screen.getByText('Try again')).toBeOnTheScreen();
   });
 
   test('shows search history when available and no query entered', () => {
-    storageService.getString.mockReturnValue([
-      { query: 'xqc', date: new Date().toISOString() },
+    storageService.set<SearchHistoryItem[]>(SEARCH_HISTORY_STORAGE_KEY, [
+      { query: 'xqc', date: '2026-10-13T12:00:00.000Z' },
     ]);
 
     render(<SearchScreen />);
@@ -224,18 +236,22 @@ describe('SearchScreen', () => {
     expect(screen.getByTestId('search-history-item-xqc')).toBeOnTheScreen();
   });
 
-  test('selecting a recent search fires exactly one search', async () => {
-    storageService.getString.mockReturnValue([
-      { query: 'xqc', date: new Date().toISOString() },
+  test('selecting a recent search fires exactly one search and moves it to now', async () => {
+    storageService.set<SearchHistoryItem[]>(SEARCH_HISTORY_STORAGE_KEY, [
+      { query: 'xqc', date: '2026-10-13T12:00:00.000Z' },
     ]);
 
     render(<SearchScreen />);
 
     fireEvent.press(screen.getByTestId('search-history-item-xqc'));
 
-    await waitFor(() => {
-      expect(twitchService.searchChannels).toHaveBeenCalledTimes(1);
-    });
+    await advanceTimers(400);
+
+    expect(screen.getByText('Streamer1')).toBeOnTheScreen();
+    expect(twitchService.searchChannels).toHaveBeenCalledTimes(1);
+    expect(storageService.getString(SEARCH_HISTORY_STORAGE_KEY)).toEqual<
+      SearchHistoryItem[]
+    >([{ query: 'xqc', date: SEARCHED_AT }]);
 
     // setText must not trigger type-to-search. If it does, one tap sends the
     // same query twice.
