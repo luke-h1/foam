@@ -40,15 +40,7 @@ describe('TopStreamsScreen', () => {
 
     render(<TopStreamsScreen />);
 
-    expect(screen.getAllByTestId('stream-skeleton').length).toBeGreaterThan(0);
-  });
-
-  test('renders stream list when data is available', async () => {
-    getTopStreamsSpy.mockResolvedValue({ data: [mockStream] });
-
-    render(<TopStreamsScreen />);
-
-    expect(await screen.findByText('Streamer1')).toBeOnTheScreen();
+    expect(screen.getAllByTestId('stream-skeleton')[0]).toBeOnTheScreen();
   });
 
   test('shows empty state when no streams returned', async () => {

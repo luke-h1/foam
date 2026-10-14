@@ -2,23 +2,19 @@ import { storageService } from '@app/lib/storage';
 import { sevenTvService } from '@app/services/seven-tv-service';
 import {
   type CachedUserCosmetics,
+  clearUserCosmeticsCache,
   getUserBadge,
   requestUserCosmeticsViaPresence,
   syncCachedUserCosmeticsFromStore,
 } from '@app/store/chat/actions/cosmetics';
-import * as MissingBadgesModule from '@app/store/chat/actions/missing-badges';
+import {
+  clearAllMissingBadges,
+  getMissingBadgeIds,
+} from '@app/store/chat/actions/missing-badges';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { logger } from '@app/utils/logger';
-import * as NormalizeSevenTvBadgeModule from '@app/utils/seven-tv/cosmetics/normalize-seven-tv-badge';
-import * as SevenTvSessionIdModule from '@app/utils/seven-tv/seven-tv-session-id';
-
-// getUserBadge's title-fallback branch only fires when a stored badge's url
-// is unresolvable as-is; the real normalizer repairs empty/relative 7TV urls,
-// which would mask that branch entirely.
-jest
-  .spyOn(NormalizeSevenTvBadgeModule, 'normalizeSevenTvBadge')
-  .mockImplementation((badge: SanitisedBadgeSet) => badge);
+import { setSevenTvSessionId } from '@app/utils/seven-tv/seven-tv-session-id';
 
 jest.spyOn(logger.stv, 'warn').mockImplementation(() => {});
 jest.spyOn(logger.stvWs, 'info').mockImplementation(() => {});
@@ -37,22 +33,20 @@ const mockSendPresence = jest
   .spyOn(sevenTvService, 'sendPresence')
   .mockResolvedValue(undefined);
 
-const mockGetSessionId = jest.spyOn(
-  SevenTvSessionIdModule,
-  'getSevenTvSessionId',
-);
+const cosmeticsStorageKey = 'sevenTvUserCosmetics_user-cosmetics:stv-user-1';
 
-const mockGetString = jest
-  .spyOn(storageService, 'getString')
-  .mockReturnValue(null);
+const readStoredCosmetics = () =>
+  storageService.getString<CachedUserCosmetics>(
+    cosmeticsStorageKey,
+    'seven_tv_cache',
+  );
 
-const mockSet = jest.spyOn(storageService, 'set').mockImplementation(() => {});
-jest.spyOn(storageService, 'clearNamespace').mockImplementation(() => {});
-
-const mockReportMissingBadge = jest.spyOn(
-  MissingBadgesModule,
-  'reportMissingBadge',
-);
+beforeEach(() => {
+  storageService.clearNamespace('seven_tv_cache');
+  clearUserCosmeticsCache();
+  clearAllMissingBadges();
+  setSevenTvSessionId(null);
+});
 
 describe('getUserBadge', () => {
   beforeEach(() => {
@@ -79,7 +73,7 @@ describe('getUserBadge', () => {
     chatStore$.badges.set({ 'badge-1': badge });
 
     expect(getUserBadge('ttv-1')).toEqual<SanitisedBadgeSet>(badge);
-    expect(mockReportMissingBadge).not.toHaveBeenCalled();
+    expect(getMissingBadgeIds()).toEqual([]);
   });
 
   test('derives the badge from its id when bound but not loaded, and tracks it', () => {
@@ -96,12 +90,10 @@ describe('getUserBadge', () => {
       provider: '7tv',
     });
 
-    expect(mockReportMissingBadge.mock.calls).toEqual([
-      ['01GAF994D8000E8VNG1S1RMTBC', 'ttv-scummy'],
-    ]);
+    expect(getMissingBadgeIds()).toEqual(['01GAF994D8000E8VNG1S1RMTBC']);
   });
 
-  test('derives the badge from its id when the stored definition has an empty url', () => {
+  test('repairs an empty stored url from the badge id and keeps the title', () => {
     chatStore$.userBadgeIds.set({ 'ttv-1': 'badge-1' });
 
     chatStore$.badges.set({
@@ -119,12 +111,12 @@ describe('getUserBadge', () => {
       id: 'badge-1',
       url: 'https://cdn.7tv.app/badge/badge-1/4x.webp',
       type: '7TV Badge',
-      title: '7TV Badge',
+      title: 'Supporter',
       set: 'badge-1',
       provider: '7tv',
     });
 
-    expect(mockReportMissingBadge.mock.calls).toEqual([['badge-1', 'ttv-1']]);
+    expect(getMissingBadgeIds()).toEqual([]);
   });
 });
 
@@ -168,14 +160,17 @@ describe('syncCachedUserCosmeticsFromStore', () => {
       ttvUserId: 'ttv-1',
     };
 
-    expect(mockSet.mock.calls).toEqual([
-      [
-        'sevenTvUserCosmetics_user-cosmetics:stv-user-1',
-        expectedCosmetics,
-        'seven_tv_cache',
-        { expiry: new Date(Date.now() + TWO_HOURS_MS) },
-      ],
-    ]);
+    expect(readStoredCosmetics()).toEqual<CachedUserCosmetics>(
+      expectedCosmetics,
+    );
+
+    jest.setSystemTime(Date.now() + TWO_HOURS_MS - 1);
+    expect(readStoredCosmetics()).toEqual<CachedUserCosmetics>(
+      expectedCosmetics,
+    );
+
+    jest.setSystemTime(Date.now() + 1);
+    expect(readStoredCosmetics()).toBeNull();
   });
 
   test('writes a 30m negative-cache expiry when the user has no cosmetic bindings', () => {
@@ -188,14 +183,17 @@ describe('syncCachedUserCosmeticsFromStore', () => {
       ttvUserId: 'ttv-1',
     };
 
-    expect(mockSet.mock.calls).toEqual([
-      [
-        'sevenTvUserCosmetics_user-cosmetics:stv-user-1',
-        expectedCosmetics,
-        'seven_tv_cache',
-        { expiry: new Date(Date.now() + THIRTY_MINUTES_MS) },
-      ],
-    ]);
+    expect(readStoredCosmetics()).toEqual<CachedUserCosmetics>(
+      expectedCosmetics,
+    );
+
+    jest.setSystemTime(Date.now() + THIRTY_MINUTES_MS - 1);
+    expect(readStoredCosmetics()).toEqual<CachedUserCosmetics>(
+      expectedCosmetics,
+    );
+
+    jest.setSystemTime(Date.now() + 1);
+    expect(readStoredCosmetics()).toBeNull();
   });
 });
 
@@ -205,11 +203,10 @@ describe('requestUserCosmeticsViaPresence', () => {
     chatStore$.currentChannelId.set('channel-1');
     mockGet7tvUserId.mockResolvedValue('7tv-user-1');
     mockGetUserCosmeticsGql.mockResolvedValue(null);
-    mockGetString.mockReturnValue(null);
   });
 
   test('writes a passive presence for the chatter when a session is live', async () => {
-    mockGetSessionId.mockReturnValue('session-1');
+    setSevenTvSessionId('session-1');
 
     await requestUserCosmeticsViaPresence('ttv-1');
 
@@ -223,8 +220,6 @@ describe('requestUserCosmeticsViaPresence', () => {
   });
 
   test('falls back to the GQL fetch when there is no live session', async () => {
-    mockGetSessionId.mockReturnValue(null);
-
     await requestUserCosmeticsViaPresence('ttv-1');
 
     expect(mockSendPresence).not.toHaveBeenCalled();
@@ -233,7 +228,7 @@ describe('requestUserCosmeticsViaPresence', () => {
 
   test('does nothing when the Twitch id cannot be resolved to a 7TV user', async () => {
     mockGet7tvUserId.mockResolvedValue('');
-    mockGetSessionId.mockReturnValue('session-1');
+    setSevenTvSessionId('session-1');
 
     await requestUserCosmeticsViaPresence('ttv-1');
 

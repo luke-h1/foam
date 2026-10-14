@@ -1,21 +1,18 @@
 import {
   createChatTags,
   createEmoteData,
+  createSevenTvEmote,
   createTwitchEmote,
 } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
-import * as personalEmotes from '@app/store/chat/actions/personal-emotes';
-import type { SanitisedEmote } from '@app/types/emote';
-import * as emoteProcessor from '@app/utils/chat/emote-processor';
+import { sevenTvService } from '@app/services/seven-tv-service';
+import {
+  clearPersonalEmotesCache,
+  fetchUserPersonalEmotes,
+} from '@app/store/chat/actions/personal-emotes';
 import { createUserStateFromTags } from '@app/utils/chat/message-handlers/create-user-state-from-tags';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 import { resolveMessageEmoteParts } from '../resolve-message-emote-tokens';
-
-const worklet = jest.spyOn(emoteProcessor, 'processEmotesWorklet');
-
-const mockGetUserPersonalEmotes = jest.spyOn(
-  personalEmotes,
-  'getUserPersonalEmotes',
-);
 
 const channelId = 'channel-1';
 
@@ -25,97 +22,106 @@ const subscriberEmote = createTwitchEmote({
   site: 'Twitch Subscriber',
 });
 
-function lastWorkletArgs() {
-  return worklet.mock.calls[worklet.mock.calls.length - 1]![0];
+const personalEmote = createSevenTvEmote({ id: 'p-1', name: 'PersonalEmote' });
+
+interface EmoteTokenSummary {
+  content: string;
+  site: string | undefined;
+}
+
+function emoteTokens(tokens: MessageToken[]): EmoteTokenSummary[] {
+  return tokens.flatMap(token =>
+    token.type === 'emote'
+      ? [{ content: token.content, site: token.site }]
+      : [],
+  );
+}
+
+async function seedPersonalEmotes() {
+  jest
+    .spyOn(sevenTvService, 'getPersonalEmoteSet')
+    .mockResolvedValue([personalEmote]);
+
+  await fetchUserPersonalEmotes('user-1', channelId);
 }
 
 beforeEach(() => {
-  worklet.mockReset();
-  worklet.mockReturnValue([]);
-  mockGetUserPersonalEmotes.mockReset();
-  mockGetUserPersonalEmotes.mockReturnValue([]);
+  jest.restoreAllMocks();
+  clearPersonalEmotesCache();
 });
 
 describe('resolveMessageEmoteParts subscriber scoping', () => {
-  test('includes the channel subscriber emotes when the sender is the current user', () => {
+  test('resolves the channel subscriber emotes when the sender is the current user', () => {
     const userstate = createUserStateFromTags(createChatTags({ login: 'me' }));
 
-    resolveMessageEmoteParts({
+    const tokens = resolveMessageEmoteParts({
       channelId,
       emoteData: createEmoteData({ twitchSubscriberEmotes: [subscriberEmote] }),
       show7TvEmotes: true,
-      text: 'hello',
+      text: 'own SubEmote',
       userId: 'user-1',
       userLogin: 'me',
       userstate,
     });
 
-    expect(lastWorkletArgs().twitchSubscriberEmotes).toEqual<SanitisedEmote[]>([
-      subscriberEmote,
+    expect(emoteTokens(tokens)).toEqual<EmoteTokenSummary[]>([
+      { content: 'SubEmote', site: 'Twitch Subscriber' },
     ]);
   });
 
-  test('omits the channel subscriber emotes for other senders', () => {
+  test('leaves the channel subscriber emotes as text for other senders', () => {
     const userstate = createUserStateFromTags(
       createChatTags({ login: 'someone-else' }),
     );
 
-    resolveMessageEmoteParts({
+    const tokens = resolveMessageEmoteParts({
       channelId,
       emoteData: createEmoteData({ twitchSubscriberEmotes: [subscriberEmote] }),
       show7TvEmotes: true,
-      text: 'hello',
+      text: 'other SubEmote',
       userId: 'user-1',
       userLogin: 'me',
       userstate,
     });
 
-    expect(lastWorkletArgs().twitchSubscriberEmotes).toEqual<SanitisedEmote[]>(
-      [],
-    );
+    expect(emoteTokens(tokens)).toEqual<EmoteTokenSummary[]>([]);
   });
 });
 
 describe('resolveMessageEmoteParts personal emotes', () => {
-  test('feeds the user personal emotes when 7TV emotes are enabled', () => {
-    const personalEmote = createTwitchEmote({ id: 'p-1', name: 'Personal' });
-    mockGetUserPersonalEmotes.mockReturnValue([personalEmote]);
+  test('resolves the user personal emotes when 7TV emotes are enabled', async () => {
+    await seedPersonalEmotes();
     const userstate = createUserStateFromTags(createChatTags({ login: 'me' }));
 
-    resolveMessageEmoteParts({
+    const tokens = resolveMessageEmoteParts({
       channelId,
       emoteData: createEmoteData(),
       show7TvEmotes: true,
-      text: 'hello',
+      text: 'enabled PersonalEmote',
       userId: 'user-1',
       userLogin: 'me',
       userstate,
     });
 
-    expect(mockGetUserPersonalEmotes).toHaveBeenCalledWith('user-1', channelId);
-
-    expect(lastWorkletArgs().sevenTvPersonalEmotes).toEqual<SanitisedEmote[]>([
-      personalEmote,
+    expect(emoteTokens(tokens)).toEqual<EmoteTokenSummary[]>([
+      { content: 'PersonalEmote', site: personalEmote.site },
     ]);
   });
 
-  test('skips personal emote lookup when 7TV emotes are disabled', () => {
+  test('leaves personal emotes as text when 7TV emotes are disabled', async () => {
+    await seedPersonalEmotes();
     const userstate = createUserStateFromTags(createChatTags({ login: 'me' }));
 
-    resolveMessageEmoteParts({
+    const tokens = resolveMessageEmoteParts({
       channelId,
       emoteData: createEmoteData(),
       show7TvEmotes: false,
-      text: 'hello',
+      text: 'disabled PersonalEmote',
       userId: 'user-1',
       userLogin: 'me',
       userstate,
     });
 
-    expect(mockGetUserPersonalEmotes).not.toHaveBeenCalled();
-
-    expect(lastWorkletArgs().sevenTvPersonalEmotes).toEqual<SanitisedEmote[]>(
-      [],
-    );
+    expect(emoteTokens(tokens)).toEqual<EmoteTokenSummary[]>([]);
   });
 });

@@ -108,7 +108,9 @@ describe('chatStore messages', () => {
     // The front of the burst is dropped too, so the window ends on the newest.
     expect(getMessageById('burst-0')).toBeUndefined();
 
-    expect(getMessageById(`burst-${max + 4}`)).toBeDefined();
+    expect(getMessageById(`burst-${max + 4}`)?.message_id).toBe(
+      `burst-${max + 4}`,
+    );
   });
 
   test('drops only the overflow when a flush partially overfills the window', () => {
@@ -125,8 +127,8 @@ describe('chatStore messages', () => {
     const messages = chatStore$.messages.peek();
     expect(messages).toHaveLength(max);
     expect(getMessageById('seed-0')).toBeUndefined();
-    expect(getMessageById('seed-1')).toBeDefined();
-    expect(getMessageById('fresh')).toBeDefined();
+    expect(getMessageById('seed-1')?.message_id).toBe('seed-1');
+    expect(getMessageById('fresh')?.message_id).toBe('fresh');
   });
 
   test('removeMessageById removes the targeted message and keeps others', () => {
@@ -136,7 +138,7 @@ describe('chatStore messages', () => {
     removeMessageById('msg-1');
 
     expect(getMessageById('msg-1')).toBeUndefined();
-    expect(getMessageById('msg-2')).toBeDefined();
+    expect(getMessageById('msg-2')?.message_id).toBe('msg-2');
     expect(chatStore$.messages.peek()).toHaveLength(1);
   });
 

@@ -30,6 +30,7 @@ const createGesture = () => {
     'onEnd',
     'onFinalize',
     'onStart',
+    'onTouchesCancelled',
     'onTouchesDown',
     'onTouchesUp',
     'onUpdate',
@@ -53,6 +54,7 @@ export const Directions = {
 export const Gesture = {
   Exclusive: (...gestures: unknown[]) => gestures,
   Fling: createGesture,
+  Manual: createGesture,
   Pan: createGesture,
   Pinch: createGesture,
   Race: (...gestures: unknown[]) => gestures,

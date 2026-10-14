@@ -1,40 +1,46 @@
-import { Host, Image, Menu, Picker, Text } from '@expo/ui/swift-ui';
-import { tag, tint } from '@expo/ui/swift-ui/modifiers';
+import { Stack } from 'expo-router';
 
 import { selection } from '@app/lib/haptics';
 import {
+  type Preferences,
   usePreference,
   useUpdatePreferences,
 } from '@app/store/preference-store';
-import { theme } from '@app/styles/themes';
 
-export function StreamListLayoutMenu() {
+export function StreamListLayoutMenu({ hidden = false }: { hidden?: boolean }) {
   const streamListLayout = usePreference('streamListLayout');
   const updatePreferences = useUpdatePreferences();
 
+  const chooseLayout = (layout: Preferences['streamListLayout']) => {
+    selection();
+    updatePreferences({ streamListLayout: layout });
+  };
+
   return (
-    <Host style={{ height: 34, width: 34 }}>
-      <Menu
-        label={
-          <Image
-            systemName={
-              streamListLayout === 'compact' ? 'list.bullet' : 'square.grid.2x2'
-            }
-            modifiers={[tint(theme.color.text.dark)]}
-          />
-        }
+    <Stack.Toolbar placement='right'>
+      <Stack.Toolbar.Menu
+        accessibilityLabel='Layout'
+        hidden={hidden}
+        icon='ellipsis'
+        title='Layout'
       >
-        <Picker
-          selection={streamListLayout}
-          onSelectionChange={layout => {
-            selection();
-            updatePreferences({ streamListLayout: layout });
-          }}
+        <Stack.Toolbar.MenuAction
+          icon='list.bullet'
+          isOn={streamListLayout === 'compact'}
+          onPress={() => chooseLayout('compact')}
         >
-          <Text modifiers={[tag('compact')]}>Compact</Text>
-          <Text modifiers={[tag('media')]}>Media</Text>
-        </Picker>
-      </Menu>
-    </Host>
+          {/* oxlint-disable-next-line react-doctor/rn-no-raw-text -- MenuAction reads its title from string children and renders a native UIAction, not a View. */}
+          Compact
+        </Stack.Toolbar.MenuAction>
+        <Stack.Toolbar.MenuAction
+          icon='rectangle.grid.1x2'
+          isOn={streamListLayout === 'media'}
+          onPress={() => chooseLayout('media')}
+        >
+          {/* oxlint-disable-next-line react-doctor/rn-no-raw-text -- MenuAction reads its title from string children and renders a native UIAction, not a View. */}
+          Media
+        </Stack.Toolbar.MenuAction>
+      </Stack.Toolbar.Menu>
+    </Stack.Toolbar>
   );
 }

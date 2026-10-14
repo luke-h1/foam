@@ -16,15 +16,6 @@ import {
   createWebBrowserAuthSuccess,
 } from './__fixtures__/use-twitch-sign-in.fixture';
 
-jest.mock('expo-constants', () => ({
-  expoConfig: {
-    extra: {
-      EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL: 'https://auth.example.com/api',
-      EXPO_PUBLIC_TWITCH_CLIENT_ID: 'client-id',
-    },
-  },
-}));
-
 jest.mock('expo-auth-session', () => {
   const actual =
     jest.requireActual<typeof import('expo-auth-session')>('expo-auth-session');
@@ -35,43 +26,19 @@ jest.mock('expo-auth-session', () => {
   };
 });
 
-jest.mock('expo-web-browser', () => ({
-  maybeCompleteAuthSession: jest.fn(),
-  openAuthSessionAsync: jest.fn(),
-}));
-
-jest.mock('expo-router', () => ({
-  router: {
-    replace: jest.fn(),
-  },
-}));
-
-jest.mock('sonner-native', () => ({
-  toast: {
-    error: jest.fn(),
-    success: jest.fn(),
-  },
-}));
-
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    auth: {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    },
-  },
-}));
-
 const mockedUseAuthRequest = jest.mocked(useAuthRequest);
-const mockedOpenAuthSessionAsync = jest.mocked(WebBrowser.openAuthSessionAsync);
-const mockedToast = jest.mocked(toast);
-const mockedRouter = jest.mocked(router);
 
 describe('useTwitchSignIn', () => {
+  let openAuthSessionAsync: jest.SpiedFunction<
+    typeof WebBrowser.openAuthSessionAsync
+  >;
+
   beforeEach(() => {
-    jest.clearAllMocks();
+    openAuthSessionAsync = jest.spyOn(WebBrowser, 'openAuthSessionAsync');
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   test('completes a successful auth response once when auth context re-renders', async () => {
@@ -81,7 +48,7 @@ describe('useTwitchSignIn', () => {
 
     mockedUseAuthRequest.mockReturnValue([request, null, jest.fn()]);
 
-    mockedOpenAuthSessionAsync.mockResolvedValue(
+    openAuthSessionAsync.mockResolvedValue(
       createWebBrowserAuthSuccess(authResult.url),
     );
 
@@ -117,11 +84,12 @@ describe('useTwitchSignIn', () => {
       await result.current.startSignIn();
     });
 
-    await waitFor(() => {
-      expect(loginWithTwitch).toHaveBeenCalledTimes(1);
-      expect(mockedToast.success).toHaveBeenCalledTimes(1);
-      expect(mockedRouter.replace).toHaveBeenCalledWith('/tabs/following');
-    });
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith('/tabs/following'),
+    );
+
+    expect(loginWithTwitch.mock.calls).toEqual([[authResult]]);
+    expect(jest.mocked(toast.success).mock.calls).toEqual([['Logged in']]);
   });
 
   test('uses the success callback instead of navigating when provided', async () => {
@@ -132,7 +100,7 @@ describe('useTwitchSignIn', () => {
 
     mockedUseAuthRequest.mockReturnValue([request, null, jest.fn()]);
 
-    mockedOpenAuthSessionAsync.mockResolvedValue(
+    openAuthSessionAsync.mockResolvedValue(
       createWebBrowserAuthSuccess(authResult.url),
     );
 
@@ -162,10 +130,10 @@ describe('useTwitchSignIn', () => {
       await result.current.startSignIn();
     });
 
-    await waitFor(() => {
-      expect(loginWithTwitch).toHaveBeenCalledTimes(1);
-      expect(onSuccess).toHaveBeenCalledTimes(1);
-      expect(mockedRouter.replace).not.toHaveBeenCalled();
-    });
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1));
+
+    expect(loginWithTwitch.mock.calls).toEqual([[authResult]]);
+    expect(jest.mocked(toast.success).mock.calls).toEqual([['Logged in']]);
+    expect(router.replace).not.toHaveBeenCalled();
   });
 });

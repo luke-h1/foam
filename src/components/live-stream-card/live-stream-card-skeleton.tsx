@@ -1,7 +1,38 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { Skeleton } from '@app/components/ui/skeleton/skeleton';
 import { theme } from '@app/styles/themes';
+
+type StreamListLayout = 'compact' | 'media';
+
+function getSkeletonRowHeight(layout: StreamListLayout, width: number) {
+  const textHeight = 21 + 20 * 2 + 18 + 2 * 3;
+
+  if (layout === 'media') {
+    const imageHeight = ((width - theme.space16 * 2) * 9) / 16;
+
+    return theme.space12 * 3 + imageHeight + textHeight;
+  }
+
+  return theme.space8 * 2 + Math.max((144 * 9) / 16, textHeight);
+}
+
+export function LiveStreamCardSkeletons({
+  layout,
+}: {
+  layout: StreamListLayout;
+}) {
+  const { height, width } = useWindowDimensions();
+  const count = Math.ceil(height / getSkeletonRowHeight(layout, width));
+
+  return (
+    <>
+      {Array.from({ length: count }, (_, index) => (
+        <LiveStreamCardSkeleton key={index} layout={layout} />
+      ))}
+    </>
+  );
+}
 
 /**
  * Mirrors the line boxes of `LiveStreamCard` (callout, two subhead lines,
@@ -10,7 +41,7 @@ import { theme } from '@app/styles/themes';
 export function LiveStreamCardSkeleton({
   layout = 'compact',
 }: {
-  layout?: 'compact' | 'media';
+  layout?: StreamListLayout;
 }) {
   if (layout === 'media') {
     return (

@@ -21,21 +21,13 @@ describe('streamElementsService.getChatStats', () => {
     jest.clearAllMocks();
   });
 
-  test('requests the channel chat stats endpoint and returns the payload', async () => {
-    api.get.mockResolvedValue(mockStats);
-
-    const result = await streamElementsService.getChatStats('shroud');
-
-    expect(api.get).toHaveBeenCalledWith('/chatstats/shroud/stats');
-    expect(result).toEqual<StreamElementsChatStats>(mockStats);
-  });
-
   test('url-encodes the channel name in the request path', async () => {
     api.get.mockResolvedValue(mockStats);
 
-    await streamElementsService.getChatStats('odd name');
+    const result = await streamElementsService.getChatStats('odd name');
 
     expect(api.get).toHaveBeenCalledWith('/chatstats/odd%20name/stats');
+    expect(result).toEqual<StreamElementsChatStats>(mockStats);
   });
 
   test('propagates errors so callers can treat them as "no data"', async () => {

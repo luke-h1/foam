@@ -1,5 +1,6 @@
+import { Image } from 'expo-image';
+
 import type { SanitisedEmote } from '@app/types/emote';
-import * as prefetchToDiskModule from '@app/utils/image/prefetch-to-disk';
 import { logger } from '@app/utils/logger';
 
 import {
@@ -8,15 +9,16 @@ import {
   preloadGlobalEmotes,
 } from '../preload-emotes';
 
-const prefetchMock = jest
-  .spyOn(prefetchToDiskModule, 'prefetchToDisk')
-  .mockResolvedValue(true);
+const prefetchMock = jest.mocked(Image.prefetch);
 
 const warnMock = jest.spyOn(logger.chat, 'warn').mockImplementation(() => {});
 const errorMock = jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
 
-// prefetch warms a batch of urls per call; flatten to the warmed url sequence.
-const warmedUrls = () => prefetchMock.mock.calls.flatMap(([urls]) => urls);
+const warmedUrls = () =>
+  prefetchMock.mock.calls.flatMap(([urls, cachePolicy]) => {
+    expect(cachePolicy).toBe('disk');
+    return urls;
+  });
 
 function emote(name: string, url = `https://example.com/${name}.webp`) {
   return {

@@ -1,6 +1,6 @@
+import type { FetchResponse } from 'expo/build/winter/fetch/FetchResponse';
+import { fetch } from 'expo/fetch';
 import { TokenResponse } from 'expo-auth-session';
-
-import { twitchService } from '@app/services/twitch-service';
 
 import {
   addExpirationTimestamp,
@@ -11,31 +11,28 @@ import {
   type TwitchToken,
 } from '../token-lifecycle';
 
-jest.mock('@app/services/twitch-service', () => ({
-  twitchService: {
-    getRefreshToken: jest.fn(),
-  },
-}));
+const mockFetch = jest.mocked(fetch);
 
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    auth: {
-      info: jest.fn(),
-      warn: jest.fn(),
-    },
-  },
-}));
+function proxyResponse<TData>(data: TData | null, error?: string) {
+  const response = {
+    ok: data !== null,
+    status: data === null ? 400 : 200,
+    text: () => Promise.resolve(JSON.stringify({ data, error })),
+  };
 
-const getRefreshToken = jest.mocked(twitchService.getRefreshToken);
+  // SAFETY: getRefreshToken only reads text() off the auth proxy response.
+  return response as FetchResponse;
+}
+
 const NOW = 1_000_000;
 
 beforeEach(() => {
   jest.spyOn(Date, 'now').mockReturnValue(NOW);
-  getRefreshToken.mockReset();
 });
 
 afterEach(() => {
   jest.restoreAllMocks();
+  mockFetch.mockReset();
 });
 
 function token(overrides: Partial<TwitchToken> = {}): TwitchToken {
@@ -141,17 +138,20 @@ describe('refreshStoredUserToken', () => {
     expect(
       await refreshStoredUserToken(token({ refreshToken: undefined }), 'test'),
     ).toBeNull();
-    expect(getRefreshToken).not.toHaveBeenCalled();
+
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
   test('returns a refreshed token, keeping the prior refresh token when none is returned', async () => {
-    getRefreshToken.mockResolvedValue({
-      access_token: 'new-access',
-      expires_in: 7200,
-      token_type: 'bearer',
-      refresh_token: '',
-      scope: '',
-    });
+    mockFetch.mockResolvedValue(
+      proxyResponse({
+        access_token: 'new-access',
+        expires_in: 7200,
+        token_type: 'bearer',
+        refresh_token: '',
+        scope: '',
+      }),
+    );
 
     expect(
       await refreshStoredUserToken(token({ refreshToken: 'old-refresh' }), 'x'),
@@ -162,10 +162,22 @@ describe('refreshStoredUserToken', () => {
       refreshToken: 'old-refresh',
       expiresAt: NOW + 7200 * 1000,
     });
+
+    expect(mockFetch.mock.calls.map(([url]) => String(url))).toEqual([
+      'https://auth-proxy.test/refresh-token?token=old-refresh&app=foam-app',
+    ]);
   });
 
-  test('returns null when the refresh exchange throws', async () => {
-    getRefreshToken.mockRejectedValue(new Error('boom'));
+  test('returns null when the auth proxy rejects the refresh token', async () => {
+    mockFetch.mockResolvedValue(proxyResponse(null, 'invalid refresh token'));
+
+    expect(
+      await refreshStoredUserToken(token({ refreshToken: 'r' }), 'x'),
+    ).toBeNull();
+  });
+
+  test('returns null when the refresh request fails', async () => {
+    mockFetch.mockRejectedValue(new TypeError('Network request failed'));
 
     expect(
       await refreshStoredUserToken(token({ refreshToken: 'r' }), 'x'),

@@ -12,7 +12,7 @@ import {
 import { IconButton } from '@app/components/icon-button/icon-button';
 import { Image } from '@app/components/image/image';
 import { MemoizedLiveStreamCard } from '@app/components/live-stream-card/live-stream-card';
-import { LiveStreamCardSkeleton } from '@app/components/live-stream-card/live-stream-card-skeleton';
+import { LiveStreamCardSkeletons } from '@app/components/live-stream-card/live-stream-card-skeleton';
 import { SectionHeader } from '@app/components/section-header/section-header';
 import { EmptyState } from '@app/components/ui/empty-state/empty-state';
 import { Skeleton } from '@app/components/ui/skeleton/skeleton';
@@ -84,10 +84,7 @@ function CategorySkeleton({ layout }: { layout: 'compact' | 'media' }) {
         </View>
       </View>
       <View style={styles.skeletonGap} />
-      <LiveStreamCardSkeleton layout={layout} />
-      <LiveStreamCardSkeleton layout={layout} />
-      <LiveStreamCardSkeleton layout={layout} />
-      <LiveStreamCardSkeleton layout={layout} />
+      <LiveStreamCardSkeletons layout={layout} />
     </ScrollView>
   );
 }

@@ -135,7 +135,7 @@ describe('useChatComposerController', () => {
     });
 
     expect(result.current.text).toBe('hello chat');
-    expect(focusInput).toHaveBeenCalled();
+    expect(focusInput).toHaveBeenCalledTimes(1);
   });
 
   test('reserves the recall slot from the first send so the row stops resizing', () => {

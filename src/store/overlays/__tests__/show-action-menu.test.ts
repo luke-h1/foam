@@ -1,27 +1,21 @@
 import { ActionSheetIOS, Platform } from 'react-native';
 
-import type { ShowActionMenuOptions } from '../action-menu-store';
-import * as actionMenuStore from '../action-menu-store';
+import {
+  dismissActionMenu,
+  getActionMenuState,
+  type ShowActionMenuOptions,
+} from '../action-menu-store';
 import { showActionMenu } from '../show-action-menu';
 
 const originalOS = Platform.OS;
 
-let presentActionMenuMock: jest.SpiedFunction<
-  typeof actionMenuStore.presentActionMenu
->;
-
 afterEach(() => {
   Platform.OS = originalOS;
+  dismissActionMenu();
   jest.restoreAllMocks();
 });
 
 describe('showActionMenu', () => {
-  beforeEach(() => {
-    presentActionMenuMock = jest
-      .spyOn(actionMenuStore, 'presentActionMenu')
-      .mockImplementation(() => {});
-  });
-
   test('presents an ActionSheetIOS sheet on iOS and forwards the pressed action', () => {
     Platform.OS = 'ios';
     const onPress = jest.fn();
@@ -43,7 +37,7 @@ describe('showActionMenu', () => {
     });
 
     expect(onPress).toHaveBeenCalledTimes(1);
-    expect(presentActionMenuMock).not.toHaveBeenCalled();
+    expect(getActionMenuState()).toBeNull();
   });
 
   test('does nothing when cancel is chosen on iOS', () => {
@@ -63,27 +57,6 @@ describe('showActionMenu', () => {
     expect(onPress).not.toHaveBeenCalled();
   });
 
-  test('presents the action menu sheet on Android', () => {
-    Platform.OS = 'android';
-    const onPress = jest.fn();
-
-    showActionMenu({
-      title: 'Stream',
-      actions: [{ label: 'Share', onPress }],
-      cancelLabel: 'Cancel',
-    });
-
-    expect(presentActionMenuMock).toHaveBeenCalledTimes(1);
-
-    expect(
-      presentActionMenuMock.mock.calls[0]![0],
-    ).toEqual<ShowActionMenuOptions>({
-      title: 'Stream',
-      actions: [{ label: 'Share', onPress }],
-      cancelLabel: 'Cancel',
-    });
-  });
-
   test('presents all Android actions in a single sheet without paging', () => {
     Platform.OS = 'android';
     const onFirst = jest.fn();
@@ -100,9 +73,7 @@ describe('showActionMenu', () => {
       cancelLabel: 'Cancel',
     });
 
-    expect(
-      presentActionMenuMock.mock.calls[0]![0],
-    ).toEqual<ShowActionMenuOptions>({
+    expect(getActionMenuState()).toEqual<ShowActionMenuOptions>({
       title: 'Warn user',
       actions: [
         { label: 'Spam', onPress: onFirst },

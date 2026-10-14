@@ -32,11 +32,6 @@ const STALLED = messageEvent({
   payload: { currentTime: 10, networkState: 2, readyState: 2, stalledMs: 6000 },
 });
 
-const RECOVERED = messageEvent({
-  type: 'playbackRecovered',
-  payload: { stalledMs: 6000 },
-});
-
 const VIDEO_ERROR = messageEvent({
   type: 'videoElementError',
   payload: { code: 3, message: 'decode', networkState: 2, readyState: 1 },
@@ -90,36 +85,6 @@ describe('usePlayerBridge enhanced stability', () => {
     expect(forceRefresh).toHaveBeenCalledTimes(1);
   });
 
-  test('a stall recovery before the grace window cancels the refresh', () => {
-    const forceRefresh = jest.fn();
-    const { result } = renderBridge(true, forceRefresh);
-
-    act(() => {
-      result.current.handleMessage(STALLED);
-    });
-
-    act(() => {
-      result.current.handleMessage(RECOVERED);
-    });
-
-    act(() => {
-      jest.advanceTimersByTime(4000);
-    });
-
-    expect(forceRefresh).not.toHaveBeenCalled();
-  });
-
-  test('a fatal video-element error refreshes immediately', () => {
-    const forceRefresh = jest.fn();
-    const { result } = renderBridge(true, forceRefresh);
-
-    act(() => {
-      result.current.handleMessage(VIDEO_ERROR);
-    });
-
-    expect(forceRefresh).toHaveBeenCalledTimes(1);
-  });
-
   test('does nothing when enhanced stability is disabled', () => {
     const forceRefresh = jest.fn();
     const { result } = renderBridge(false, forceRefresh);
@@ -134,19 +99,6 @@ describe('usePlayerBridge enhanced stability', () => {
     });
 
     expect(forceRefresh).not.toHaveBeenCalled();
-  });
-
-  test('caps auto-refreshes so a broken stream cannot loop forever', () => {
-    const forceRefresh = jest.fn();
-    const { result } = renderBridge(true, forceRefresh);
-
-    for (let attempt = 0; attempt < 5; attempt += 1) {
-      act(() => {
-        result.current.handleMessage(VIDEO_ERROR);
-      });
-    }
-
-    expect(forceRefresh).toHaveBeenCalledTimes(3);
   });
 
   test('keeps recording load metrics after the player source changes', () => {

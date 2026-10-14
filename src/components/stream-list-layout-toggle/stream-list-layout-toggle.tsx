@@ -32,7 +32,7 @@ export function StreamListLayoutToggle({
     >
       <SymbolView
         name={isCompact ? 'square.grid.2x2' : 'list.bullet'}
-        size={18}
+        size={24}
         tintColor={theme.color.text.dark}
       />
     </Button>
@@ -42,13 +42,9 @@ export function StreamListLayoutToggle({
 const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.colorBorderSecondary,
-    borderCurve: 'continuous',
     borderRadius: theme.radius.full,
-    borderWidth: 1,
-    height: 34,
+    height: 48,
     justifyContent: 'center',
-    width: 34,
+    width: 48,
   },
 });

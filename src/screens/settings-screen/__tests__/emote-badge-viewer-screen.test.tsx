@@ -80,6 +80,7 @@ describe('EmoteBadgeViewerScreen', () => {
     render(<EmoteBadgeViewerScreen />);
 
     expect(await screen.findByText('Global Emotes')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Kappa')).toBeOnTheScreen();
   });
 
   test('renders global badges when the badges tab is selected', async () => {
@@ -94,7 +95,6 @@ describe('EmoteBadgeViewerScreen', () => {
     ).toBeOnTheScreen();
 
     expect(screen.getByText('Twitch')).toBeOnTheScreen();
-    expect(listGlobalBadgesSpy).toHaveBeenCalled();
   });
 
   test('renders 7TV badges in the badges tab', async () => {
@@ -109,7 +109,6 @@ describe('EmoteBadgeViewerScreen', () => {
     ).toBeOnTheScreen();
 
     expect(screen.getByText('7TV')).toBeOnTheScreen();
-    expect(sevenTvBadgesSpy).toHaveBeenCalled();
   });
 
   test('shows the empty state when no badges are available', async () => {

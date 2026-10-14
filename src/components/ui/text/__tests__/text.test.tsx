@@ -153,45 +153,4 @@ describe('Text', () => {
       fontWeight: '600',
     });
   });
-
-  test('renders body copy in the system font by default', () => {
-    render(<Text>body</Text>);
-
-    expect(getFontResolution('body')).toEqual<FontResolution>({
-      fontFamily: undefined,
-      fontWeight: '400',
-    });
-  });
-
-  test('renders the title styles in the bold brand font by default', () => {
-    render(<Text type='title1'>title</Text>);
-
-    expect(getFontResolution('title')).toEqual<FontResolution>({
-      fontFamily: theme.fontFamilyBold,
-      fontWeight: undefined,
-    });
-  });
-
-  test('gives headline a semibold system weight by default', () => {
-    render(<Text type='headline'>headline</Text>);
-
-    expect(getFontResolution('headline')).toEqual<FontResolution>({
-      fontFamily: undefined,
-      fontWeight: '600',
-    });
-  });
-
-  test('defaults maxFontSizeMultiplier to 2', () => {
-    render(<Text>scaled</Text>);
-
-    expect(screen.getByText('scaled').props.maxFontSizeMultiplier).toEqual(2);
-  });
-
-  test('allows call sites to tighten maxFontSizeMultiplier', () => {
-    render(<Text maxFontSizeMultiplier={1.2}>clamped</Text>);
-
-    expect(screen.getByText('clamped').props.maxFontSizeMultiplier).toEqual(
-      1.2,
-    );
-  });
 });

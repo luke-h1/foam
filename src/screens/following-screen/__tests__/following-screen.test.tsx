@@ -103,7 +103,7 @@ describe('FollowingScreen', () => {
 
     renderFollowingScreen({ loggedIn: true });
 
-    expect(screen.getAllByTestId('stream-skeleton').length).toBeGreaterThan(0);
+    expect(screen.getAllByTestId('stream-skeleton')[0]).toBeOnTheScreen();
   });
 
   test('renders followed streams for authenticated user', async () => {

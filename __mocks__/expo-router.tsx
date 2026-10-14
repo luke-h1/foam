@@ -1,6 +1,6 @@
 import React from 'react';
 // eslint-disable-next-line no-restricted-imports
-import { TextInput } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
 
 export const router = {
   back: jest.fn(),
@@ -55,6 +55,38 @@ export const Stack = {
       onChangeText: (text: string) => onChangeText?.({ nativeEvent: { text } }),
     });
   },
+  Toolbar: Object.assign(
+    ({ children }: { children?: React.ReactNode }) =>
+      React.createElement(React.Fragment, null, children),
+    {
+      Menu: ({
+        accessibilityLabel,
+        children,
+        hidden,
+      }: {
+        accessibilityLabel?: string;
+        children?: React.ReactNode;
+        hidden?: boolean;
+      }) =>
+        hidden
+          ? null
+          : React.createElement(View, { accessibilityLabel }, children),
+      MenuAction: ({
+        children,
+        isOn,
+        onPress,
+      }: {
+        children?: React.ReactNode;
+        isOn?: boolean;
+        onPress?: () => void;
+      }) =>
+        React.createElement(
+          Text,
+          { accessibilityState: { checked: isOn }, onPress },
+          children,
+        ),
+    },
+  ),
 };
 
 export const useFocusEffect = jest.fn((effect: () => void | (() => void)) => {

@@ -1,17 +1,17 @@
+import type { ReactNode } from 'react';
+
 import { renderHook, waitFor } from '@testing-library/react-native';
 
 import {
   createLoggedInAuthContextValue,
   createTestUser,
 } from '@app/context/__tests__/__fixtures__/auth-context.fixture';
-import * as AuthContextModule from '@app/context/auth-context';
+import { AuthContextTestProvider } from '@app/context/auth-context';
 import { useChannelPoll } from '@app/hooks/use-channel-poll';
 import { useChannelPrediction } from '@app/hooks/use-channel-prediction';
-import { twitchService } from '@app/services/twitch-service';
+import { twitchApi } from '@app/services/api/clients';
 import TwitchWsService from '@app/services/twitch-ws-service';
 import { logger } from '@app/utils/logger';
-
-const mockUseAuthContext = jest.spyOn(AuthContextModule, 'useAuthContext');
 
 // SAFETY: getInstance's return value is never read by these hooks, only passed through.
 const mockGetInstance = jest
@@ -24,45 +24,54 @@ jest
   .spyOn(TwitchWsService, 'unsubscribeFromEvent')
   .mockResolvedValue(undefined);
 
-const mockGetPolls = jest.spyOn(twitchService, 'getPolls');
-const mockGetPredictions = jest.spyOn(twitchService, 'getPredictions');
+const mockTwitchGet = jest.spyOn(twitchApi, 'get');
 jest.spyOn(logger.twitchWs, 'warn').mockImplementation(() => undefined);
 
-function mockLoggedInViewer(userId: string) {
-  mockUseAuthContext.mockReturnValue(
-    createLoggedInAuthContextValue({
-      user: createTestUser({ id: userId }),
-    }),
-  );
+function loggedInViewer(userId: string) {
+  const authValue = createLoggedInAuthContextValue({
+    user: createTestUser({ id: userId }),
+  });
+
+  return function LoggedInViewer({ children }: { children: ReactNode }) {
+    return (
+      <AuthContextTestProvider {...authValue}>
+        {children}
+      </AuthContextTestProvider>
+    );
+  };
 }
 
 describe('channel poll and prediction EventSub subscriptions', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockSubscribeToEvent.mockResolvedValue(undefined);
-    mockGetPolls.mockResolvedValue({ data: [] });
-    mockGetPredictions.mockResolvedValue({ data: [] });
+    mockTwitchGet.mockResolvedValue({ data: [] });
   });
 
   test('skips poll and prediction subscriptions for channels the viewer does not own', () => {
-    mockLoggedInViewer('viewer-id');
+    const wrapper = loggedInViewer('viewer-id');
 
-    const prediction = renderHook(() => useChannelPrediction('channel-id'));
-    const poll = renderHook(() => useChannelPoll('channel-id'));
+    const prediction = renderHook(() => useChannelPrediction('channel-id'), {
+      wrapper,
+    });
+
+    const poll = renderHook(() => useChannelPoll('channel-id'), { wrapper });
 
     expect(prediction.result.current.isAvailable).toBe(false);
     expect(poll.result.current.isAvailable).toBe(false);
     expect(mockGetInstance.mock.calls).toHaveLength(0);
     expect(mockSubscribeToEvent.mock.calls).toHaveLength(0);
-    expect(mockGetPredictions).not.toHaveBeenCalled();
-    expect(mockGetPolls).not.toHaveBeenCalled();
+    expect(mockTwitchGet).not.toHaveBeenCalled();
   });
 
   test('subscribes to poll and prediction events for the signed-in broadcaster', async () => {
-    mockLoggedInViewer('channel-id');
+    const wrapper = loggedInViewer('channel-id');
 
-    const prediction = renderHook(() => useChannelPrediction('channel-id'));
-    const poll = renderHook(() => useChannelPoll('channel-id'));
+    const prediction = renderHook(() => useChannelPrediction('channel-id'), {
+      wrapper,
+    });
+
+    const poll = renderHook(() => useChannelPoll('channel-id'), { wrapper });
 
     expect(prediction.result.current.isAvailable).toBe(true);
     expect(poll.result.current.isAvailable).toBe(true);
@@ -81,14 +90,16 @@ describe('channel poll and prediction EventSub subscriptions', () => {
       'channel.poll.end',
     ]);
 
-    expect(mockGetPredictions).toHaveBeenCalledWith({
-      broadcasterId: 'channel-id',
+    const helixParams = {
+      broadcaster_id: 'channel-id',
+      id: undefined,
       first: 1,
-    });
+      after: undefined,
+    };
 
-    expect(mockGetPolls).toHaveBeenCalledWith({
-      broadcasterId: 'channel-id',
-      first: 1,
-    });
+    expect(mockTwitchGet.mock.calls).toEqual([
+      ['/predictions', { params: helixParams }],
+      ['/polls', { params: helixParams }],
+    ]);
   });
 });

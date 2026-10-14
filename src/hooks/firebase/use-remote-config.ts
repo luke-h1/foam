@@ -17,6 +17,8 @@ import { logger } from '@app/utils/logger';
 import {
   buildRemoteConfigFromDefaults,
   defaultRemoteConfig,
+  getErrorMessage,
+  isRemoteConfigCancellation,
   parseRemoteConfigValue,
   type RemoteConfigEntry,
   type RemoteConfigKey,
@@ -59,35 +61,6 @@ function getRemoteConfigHandle() {
   });
 
   return remoteConfig;
-}
-
-function isStringValue(cause: unknown): cause is string {
-  return String(cause) === cause;
-}
-
-function getErrorMessage(cause: unknown): string | null {
-  if (cause instanceof Error) {
-    return cause.message;
-  }
-
-  if (isStringValue(cause)) {
-    return cause;
-  }
-
-  if (
-    cause instanceof Object &&
-    'message' in cause &&
-    isStringValue(cause.message)
-  ) {
-    return cause.message;
-  }
-
-  return null;
-}
-
-function isRemoteConfigCancellation(cause: unknown): boolean {
-  const message = getErrorMessage(cause)?.toLowerCase();
-  return message?.includes('cancelled') ?? false;
 }
 
 async function fetchRemoteConfig(): Promise<boolean> {

@@ -1,17 +1,27 @@
 import { buildTwitchPlayerAudioDefaultScript } from '../build-twitch-player-audio-default-script';
+import {
+  resetPlayerPage,
+  runPlayerScript,
+} from './__fixtures__/twitch-player-source.fixture';
 
 describe('buildTwitchPlayerAudioDefaultScript', () => {
-  test('seeds the Twitch player mute preference so it boots in the requested audio state', () => {
-    const unmuted = buildTwitchPlayerAudioDefaultScript({ muted: false });
-
-    expect(unmuted).toContain(
-      "window.localStorage.setItem(\n      'video-muted',\n      JSON.stringify({ default: false })\n    )",
-    );
-
-    expect(unmuted).toContain("window.localStorage.setItem('volume', '1')");
-
-    const muted = buildTwitchPlayerAudioDefaultScript({ muted: true });
-    expect(muted).toContain('JSON.stringify({ default: true })');
-    expect(muted).toContain("window.localStorage.setItem('volume', '1')");
+  beforeEach(() => {
+    resetPlayerPage();
   });
+
+  test.each([
+    { muted: true, storedMuted: '{"default":true}' },
+    { muted: false, storedMuted: '{"default":false}' },
+  ])(
+    'stores video-muted as $storedMuted and full volume when muted is $muted',
+    ({ muted, storedMuted }) => {
+      localStorage.setItem('video-muted', '{"default":true}');
+      localStorage.setItem('volume', '0.2');
+
+      runPlayerScript(buildTwitchPlayerAudioDefaultScript({ muted }));
+
+      expect(localStorage.getItem('video-muted')).toBe(storedMuted);
+      expect(localStorage.getItem('volume')).toBe('1');
+    },
+  );
 });

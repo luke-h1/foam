@@ -16,7 +16,7 @@ import { useRecoveredFromError } from '@app/hooks/use-recovered-from-error';
 import { QueryProvider } from '@app/lib/react-query/query-provider';
 import { BaseConfig } from '@app/navigators/config';
 import { ErrorBoundary } from '@app/screens/error-screen/error-boundary';
-import { motion } from '@app/styles/motion';
+import { motion, pressAnimation } from '@app/styles/motion';
 import { toastStyle } from '@app/styles/toast';
 
 function QueryDevTools({ children }: PropsWithChildren) {
@@ -44,6 +44,8 @@ export function Providers({ children }: PropsWithChildren) {
                 <QueryProvider>
                   <QueryDevTools>
                     <PressablesConfig
+                      animationType='timing'
+                      animationConfig={pressAnimation}
                       config={{ minScale: motion.pressMinScale }}
                     >
                       {children}

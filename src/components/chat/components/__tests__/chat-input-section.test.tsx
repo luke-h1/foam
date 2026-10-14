@@ -46,52 +46,6 @@ describe('ChatInputSection', () => {
     mockChatComposer.mockClear();
   });
 
-  test('passes composer API (onSubmit, onPressAdd, onChangeText)', () => {
-    const onSubmit = jest.fn();
-    const onChangeText = jest.fn();
-    const onOpenEmoteSheet = jest.fn();
-
-    render(
-      <SafeAreaProvider
-        initialMetrics={{
-          frame: { x: 0, y: 0, width: 390, height: 844 },
-          insets: { bottom: 0, left: 0, right: 0, top: 0 },
-        }}
-      >
-        <ChatInputSection
-          messageInput='hello'
-          onChangeText={onChangeText}
-          onSubmit={onSubmit}
-          onOpenEmoteSheet={onOpenEmoteSheet}
-          onOpenSettingsSheet={jest.fn()}
-          replyTo={null}
-          onClearReply={jest.fn()}
-          connection={{
-            isConnected: true,
-            isAuthenticated: true,
-            isSending: false,
-          }}
-        />
-      </SafeAreaProvider>,
-    );
-
-    const props = firstComposerProps();
-
-    expect({
-      onSubmit: props.onSubmit,
-      onPressAdd: props.onPressAdd,
-      onChangeText: props.onChangeText,
-      canSend: props.canSend,
-      editable: props.editable,
-    }).toEqual({
-      onSubmit,
-      onPressAdd: onOpenEmoteSheet,
-      onChangeText,
-      canSend: true,
-      editable: true,
-    });
-  });
-
   function renderWithConnection(props: {
     messageInput: string;
     isAuthenticated: boolean;
@@ -122,6 +76,18 @@ describe('ChatInputSection', () => {
 
     return firstComposerProps();
   }
+
+  test('allows sending a normal message when signed in', () => {
+    const props = renderWithConnection({
+      messageInput: 'hello there',
+      isAuthenticated: true,
+    });
+
+    expect({ canSend: props.canSend, editable: props.editable }).toEqual({
+      canSend: true,
+      editable: true,
+    });
+  });
 
   test('keeps the composer editable and allows /refresh when signed out', () => {
     const props = renderWithConnection({

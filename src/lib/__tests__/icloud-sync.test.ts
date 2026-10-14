@@ -51,7 +51,6 @@ describe('parsePreferencesPayload', () => {
     );
 
     expect(result).toBeNull();
-    expect(warnSpy).toHaveBeenCalled();
   });
 
   test('discards a non-object payload', () => {

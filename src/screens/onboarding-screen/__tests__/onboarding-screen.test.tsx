@@ -1,59 +1,26 @@
-import type { ReactElement, ReactNode } from 'react';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-
-import {
-  fireEvent,
-  render as baseRender,
-  screen,
-} from '@testing-library/react-native';
+import { fireEvent, screen } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
 import { storage } from '@app/lib/storage';
+import render from '@app/test/render';
 
 import { OnboardingScreen } from '../onboarding-screen';
 
-jest.spyOn(storage, 'set').mockImplementation(() => {});
 const mockReplace = jest.mocked(router.replace);
 
-const wrapper = ({ children }: { children: ReactNode }) => (
-  <SafeAreaProvider
-    initialMetrics={{
-      frame: { x: 0, y: 0, width: 390, height: 844 },
-      insets: { top: 0, bottom: 0, left: 0, right: 0 },
-    }}
-  >
-    {children}
-  </SafeAreaProvider>
-);
-
-function render(ui: ReactElement) {
-  return baseRender(ui, { wrapper });
-}
-
 describe('OnboardingScreen', () => {
-  test('renders welcome heading and description', () => {
-    render(<OnboardingScreen />);
-
-    expect(screen.getByText('Welcome to Foam')).toBeOnTheScreen();
-
-    expect(
-      screen.getByText(/The fastest way to watch Twitch/),
-    ).toBeOnTheScreen();
+  beforeEach(() => {
+    storage.clearAll();
   });
 
   test('navigates to root and persists seen state when Get started is pressed', () => {
     render(<OnboardingScreen />);
 
+    expect(storage.getBoolean('V1_hasSeenOnboarding')).toBe(undefined);
+
     fireEvent.press(screen.getByText('Get started'));
 
-    expect(storage.set).toHaveBeenCalledWith('V1_hasSeenOnboarding', true);
+    expect(storage.getBoolean('V1_hasSeenOnboarding')).toBe(true);
     expect(mockReplace).toHaveBeenCalledWith('/');
-  });
-
-  test('shows Get started and no Skip button', () => {
-    render(<OnboardingScreen />);
-
-    expect(screen.getByText('Get started')).toBeOnTheScreen();
-    expect(screen.queryByText('Skip')).not.toBeOnTheScreen();
   });
 });

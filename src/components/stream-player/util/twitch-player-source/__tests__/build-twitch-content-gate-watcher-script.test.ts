@@ -1,49 +1,102 @@
 import { buildTwitchContentGateWatcherScript } from '../build-twitch-content-gate-watcher-script';
+import {
+  flushMutations,
+  type PlayerBridgeMessage,
+  resetPlayerPage,
+  runPlayerScript,
+  setPageBody,
+} from './__fixtures__/twitch-player-source.fixture';
+
+const LOGIN_GATE = `
+  <div data-a-target="content-classification-gate-overlay">
+    <a href="https://www.twitch.tv/login">Log in</a>
+  </div>
+`;
+
+function gateMessage(hasContentGate: boolean): PlayerBridgeMessage {
+  return {
+    type: 'contentGateDetected',
+    payload: { hasContentGate },
+  };
+}
 
 describe('buildTwitchContentGateWatcherScript', () => {
-  test('content-gate watcher reports a login-required gate so the WebView becomes tappable', () => {
-    const script = buildTwitchContentGateWatcherScript();
+  beforeEach(() => {
+    jest.useFakeTimers();
+    resetPlayerPage();
+  });
 
-    expect(script).toContain(
-      'var GATE_SELECTOR = \'[data-a-target*="content-classification-gate"]\'',
-    );
+  afterEach(() => {
+    jest.useRealTimers();
+  });
 
-    // A gate blocks only when it has no auto-clickable continue button, so the
-    // anonymous mature gate is never reported as blocking.
-    expect(script).toContain(
-      '!gate.querySelector(\'button[data-a-target*="content-classification-gate"]\')',
-    );
+  test('reports a login-required gate as blocking', () => {
+    setPageBody(LOGIN_GATE);
 
-    // Posts the bridge message the player uses to re-enable WebView interaction.
-    expect(script).toContain("type: 'contentGateDetected'");
+    const page = runPlayerScript(buildTwitchContentGateWatcherScript());
 
-    expect(script).toContain('hasContentGate: hasGate');
+    jest.advanceTimersByTime(3000);
 
-    // Only posts on a change, so the bridge isn't spammed every tick.
-    expect(script).toContain('if (lastReported === hasGate) { return; }');
+    expect(page.messages).toEqual<PlayerBridgeMessage[]>([gateMessage(true)]);
+  });
 
-    /**
-     * The login link navigates off player.twitch.tv, and the WebView must stay
-     * tappable so the user can type/paste credentials.
-     */
-    expect(script).toContain(
-      "window.location.hostname.indexOf('player.twitch.tv') === -1",
-    );
+  test('does not treat the mature gate with a continue button as blocking', () => {
+    setPageBody(`
+      <div data-a-target="content-classification-gate-overlay">
+        <button data-a-target="content-classification-gate-overlay-start-watching-button">
+          Start Watching
+        </button>
+      </div>
+    `);
 
-    expect(script).toContain('return isInAuthFlow() || isBlockingGate();');
+    const page = runPlayerScript(buildTwitchContentGateWatcherScript());
 
-    /**
-     * The gate disappears before window.location updates to the auth host, so
-     * the clear is deferred and re-checked instead of firing synchronously.
-     */
-    expect(script).toContain('if (lastReported === true) {');
+    jest.advanceTimersByTime(3000);
 
-    expect(script).toContain('clearTimer = setTimeout(function() {');
-    expect(script).toContain('if (!isActive()) { post(false); }');
+    expect(page.messages).toEqual<PlayerBridgeMessage[]>([gateMessage(false)]);
+  });
 
-    // Only the top frame reports, so a login subframe can't race it.
-    expect(script).toContain(
-      'if (window.top !== window.self) { return true; }',
-    );
+  test('waits before reporting a cleared gate', async () => {
+    setPageBody(LOGIN_GATE);
+
+    const page = runPlayerScript(buildTwitchContentGateWatcherScript());
+
+    setPageBody('');
+    await flushMutations();
+    jest.advanceTimersByTime(500);
+
+    expect(page.messages).toEqual<PlayerBridgeMessage[]>([gateMessage(true)]);
+
+    jest.advanceTimersByTime(100);
+
+    expect(page.messages).toEqual<PlayerBridgeMessage[]>([
+      gateMessage(true),
+      gateMessage(false),
+    ]);
+  });
+
+  test('stays interactive when the login link leaves the player for the auth flow', async () => {
+    setPageBody(LOGIN_GATE);
+
+    const page = runPlayerScript(buildTwitchContentGateWatcherScript());
+
+    setPageBody('');
+    await flushMutations();
+    page.window.location.hostname = 'www.twitch.tv';
+    jest.advanceTimersByTime(5000);
+
+    expect(page.messages).toEqual<PlayerBridgeMessage[]>([gateMessage(true)]);
+  });
+
+  test('does not report from a subframe', () => {
+    setPageBody(LOGIN_GATE);
+
+    const page = runPlayerScript(buildTwitchContentGateWatcherScript(), {
+      isTopFrame: false,
+    });
+
+    jest.advanceTimersByTime(3000);
+
+    expect(page.messages).toEqual([]);
   });
 });

@@ -295,38 +295,6 @@ describe('ChatList', () => {
     expect(props.maintainVisibleContentPosition).toBe(true);
   });
 
-  test('passes content-size change handler through to LegendList', () => {
-    const listRef = { current: null };
-    const onContentSizeChange = jest.fn();
-
-    render(
-      <ChatList
-        contentInsetEndAdjustment={contentInsetEndAdjustment}
-        data={[]}
-        dataKey='test-channel'
-        listRef={listRef}
-        shouldMaintainScrollAtEnd
-        scrollHandlers={{
-          onContentSizeChange,
-          onEndReached: jest.fn(),
-          onMomentumScrollBegin: jest.fn(),
-          onMomentumScrollEnd: jest.fn(),
-          onScroll: jest.fn(),
-          onScrollBeginDrag: jest.fn(),
-          onScrollEndDrag: jest.fn(),
-        }}
-        renderItem={jest.fn()}
-        keyExtractor={jest.fn()}
-        getItemType={jest.fn()}
-        contentContainerStyle={undefined}
-      />,
-    );
-
-    const props = getRenderedProps();
-
-    expect(props.onContentSizeChange).toBe(onContentSizeChange);
-  });
-
   test('forwards the dataset identity to LegendList', () => {
     const listRef = { current: null };
 

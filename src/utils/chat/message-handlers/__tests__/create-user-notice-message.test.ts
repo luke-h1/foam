@@ -450,15 +450,50 @@ describe('createUserNoticeMessage', () => {
     const result = createUserNoticeMessage({
       tags,
       channelName: 'testchannel',
+      text: 'for the kids',
+    });
+
+    expect(result.message).toEqual<MessageToken<'charitydonation'>[]>([
+      {
+        type: 'charitydonation',
+        displayName: 'Donor',
+        charityName: 'St. Jude',
+        amount: '$5.00',
+        currency: 'USD',
+        systemMsg: 'Donor donated $5.00 to St. Jude',
+        message: 'for the kids',
+      },
+    ]);
+  });
+
+  test('falls back to login, a default charity name and USD', () => {
+    const tags = createCharityDonationTags({
+      'display-name': '',
+      login: 'donor',
+      'msg-param-charity-name': '',
+      'msg-param-donation-amount': '2500',
+      'msg-param-exponent': '2',
+      'msg-param-donation-currency': '',
+      'system-msg': 'donated $25.00',
+    });
+
+    const result = createUserNoticeMessage({
+      tags,
+      channelName: 'testchannel',
       text: '',
     });
 
-    expect(result.message[0]?.type).toBe('charitydonation');
-
-    if (result.message[0]?.type === 'charitydonation') {
-      expect(result.message[0].charityName).toBe('St. Jude');
-      expect(result.message[0].amount).toMatch(/5\.00/);
-    }
+    expect(result.message).toEqual<MessageToken<'charitydonation'>[]>([
+      {
+        type: 'charitydonation',
+        displayName: 'donor',
+        charityName: 'charity',
+        amount: '$25.00',
+        currency: 'USD',
+        systemMsg: 'donor donated $25.00',
+        message: undefined,
+      },
+    ]);
   });
 
   test('handles ritual notices for new chatters', () => {
@@ -475,11 +510,40 @@ describe('createUserNoticeMessage', () => {
       text: '',
     });
 
-    expect(result.message[0]?.type).toBe('ritual');
+    expect(result.message).toEqual<MessageToken<'ritual'>[]>([
+      {
+        type: 'ritual',
+        displayName: 'NewChatter',
+        ritualName: 'new_chatter',
+        systemMsg: 'NewChatter is new here.',
+        message: undefined,
+      },
+    ]);
+  });
 
-    if (result.message[0]?.type === 'ritual') {
-      expect(result.message[0].ritualName).toBe('new_chatter');
-    }
+  test('prefixes the ritual system message with the login and keeps the text', () => {
+    const tags = createRitualTags({
+      'display-name': '',
+      login: 'newchatter',
+      'msg-param-ritual-name': 'new_chatter',
+      'system-msg': 'is new here.',
+    });
+
+    const result = createUserNoticeMessage({
+      tags,
+      channelName: 'testchannel',
+      text: 'hi everyone',
+    });
+
+    expect(result.message).toEqual<MessageToken<'ritual'>[]>([
+      {
+        type: 'ritual',
+        displayName: 'newchatter',
+        ritualName: 'new_chatter',
+        systemMsg: 'newchatter is new here.',
+        message: 'hi everyone',
+      },
+    ]);
   });
 
   test('handles primepaidupgrade as subscription notice', () => {
