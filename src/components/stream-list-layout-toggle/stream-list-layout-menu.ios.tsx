@@ -8,10 +8,11 @@ import {
 } from '@app/store/preference-store';
 
 /**
- * A native bar button with a `UIMenu`. Render it from the page, because
- * `Stack.Toolbar` sets the header of the screen it renders in.
+ * A native bar button with a `UIMenu`, like the "View as" menu in Notes and
+ * Files. Render it from the page, because `Stack.Toolbar` sets the header of
+ * the screen it renders in.
  */
-export function StreamListLayoutMenu() {
+export function StreamListLayoutMenu({ hidden = false }: { hidden?: boolean }) {
   const streamListLayout = usePreference('streamListLayout');
   const updatePreferences = useUpdatePreferences();
 
@@ -24,9 +25,9 @@ export function StreamListLayoutMenu() {
     <Stack.Toolbar placement='right'>
       <Stack.Toolbar.Menu
         accessibilityLabel='Layout'
-        icon={
-          streamListLayout === 'compact' ? 'list.bullet' : 'square.grid.2x2'
-        }
+        hidden={hidden}
+        icon='ellipsis'
+        title='Layout'
       >
         <Stack.Toolbar.MenuAction
           icon='list.bullet'
@@ -37,7 +38,7 @@ export function StreamListLayoutMenu() {
           Compact
         </Stack.Toolbar.MenuAction>
         <Stack.Toolbar.MenuAction
-          icon='square.grid.2x2'
+          icon='rectangle.grid.1x2'
           isOn={streamListLayout === 'media'}
           onPress={() => chooseLayout('media')}
         >

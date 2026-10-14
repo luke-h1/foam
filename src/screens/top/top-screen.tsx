@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { Stack } from 'expo-router';
 
+import { StreamListLayoutMenu } from '@app/components/stream-list-layout-toggle/stream-list-layout-menu';
 import { TOP_TAB_ROUTES } from '@app/constants/top-tab-routes';
 import { theme } from '@app/styles/themes';
 
@@ -26,6 +27,7 @@ export function TopScreen() {
           ),
         }}
       />
+      <StreamListLayoutMenu hidden={activeKey !== 'streams'} />
       <Activity mode={activeKey === 'streams' ? 'visible' : 'hidden'}>
         <View style={styles.scene}>
           <TopStreamsScreen />

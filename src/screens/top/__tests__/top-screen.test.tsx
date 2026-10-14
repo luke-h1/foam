@@ -92,4 +92,20 @@ describe('TopScreen', () => {
     expect(getTopStreamsSpy).toHaveBeenCalledTimes(1);
     expect(getTopCategoriesSpy).toHaveBeenCalledTimes(1);
   });
+
+  test('shows the layout menu on streams and hides it on categories', async () => {
+    render(<TopScreen />);
+
+    await screen.findByText('Streamer1');
+
+    expect(screen.getByLabelText('Layout')).toBeOnTheScreen();
+
+    fireEvent.press(screen.getByTestId('segment-categories'));
+
+    expect(screen.queryByLabelText('Layout')).not.toBeOnTheScreen();
+
+    fireEvent.press(screen.getByTestId('segment-streams'));
+
+    expect(screen.getByLabelText('Layout')).toBeOnTheScreen();
+  });
 });

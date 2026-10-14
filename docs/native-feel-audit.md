@@ -181,6 +181,11 @@ Not a table row. Added on request, after rows 1 and 2.
 - **Checked:** on the iOS 26 simulator the menu opens from the bar button,
   Media switches both lists, and the Streams and Categories control still
   sits in the title. On the Android emulator the icon sits flush in the bar.
+- **Follow-up:** the iOS bar button is now a fixed `ellipsis`, like the
+  "View as" menu in Notes and Files. The menu has a "Layout" title, and Media
+  uses `rectangle.grid.1x2`, because the Media layout is one column of large
+  cards, not a grid. Top hides the button while Categories is selected,
+  because the categories grid has no layout to change.
 - **Segments:** the Streams and Categories control was already native on
   both platforms, so it keeps its shape. On Android every `SegmentedControl`
   now fills the selected segment with `surfaceElevated` grey, not the blue

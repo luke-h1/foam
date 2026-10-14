@@ -24,6 +24,8 @@ const headerRight = () => <HeaderLayoutToggle />;
  * Render it from the page, so it matches the iOS variant, which can only set
  * the header from there.
  */
-export function StreamListLayoutMenu() {
-  return <Stack.Screen options={{ headerRight }} />;
+export function StreamListLayoutMenu({ hidden = false }: { hidden?: boolean }) {
+  return (
+    <Stack.Screen options={{ headerRight: hidden ? undefined : headerRight }} />
+  );
 }
