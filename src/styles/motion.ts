@@ -34,3 +34,12 @@ export const motion = {
 
   pressMinScale: 0.97,
 } as const;
+
+/**
+ * A tap lasts about 100 ms. The press has to land inside that window, or the
+ * finger lifts before the press shows.
+ */
+export const pressAnimation = {
+  duration: motion.instant,
+  easing: motion.easing.out,
+} as const;
