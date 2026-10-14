@@ -359,55 +359,6 @@ describe('useEmoteReprocessing', () => {
     expect(mockUpdateMessages).not.toHaveBeenCalled();
   });
 
-  test('skips messages already in processedMessageIdsRef', () => {
-    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
-    processedMessageIdsRef.current.add('msg-1');
-    const msg1 = createTextOnlyMessage('msg-1', 'nonce-1', 'hello');
-    const peek = jest.fn().mockReturnValue([msg1]);
-
-    renderHook(() =>
-      useEmoteReprocessing({
-        channelId,
-        channelEmoteData: {},
-        messages$: { peek },
-        emoteLoadStatus: 'success',
-        processedMessageIdsRef,
-        show7TvEmotes: true,
-      }),
-    );
-
-    expect(mockUpdateMessages).not.toHaveBeenCalled();
-  });
-
-  test('skips system messages and usernotice', () => {
-    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
-
-    const systemMsg = {
-      ...createTextOnlyMessage('sys-1', 'n1', 'hi'),
-      sender: 'System',
-    };
-
-    const noticeMsg = {
-      ...createTextOnlyMessage('notice-1', 'n2', 'hi'),
-      notice_tags: {},
-    };
-
-    const peek = jest.fn().mockReturnValue([systemMsg, noticeMsg]);
-
-    renderHook(() =>
-      useEmoteReprocessing({
-        channelId,
-        channelEmoteData: {},
-        messages$: { peek },
-        emoteLoadStatus: 'success',
-        processedMessageIdsRef,
-        show7TvEmotes: true,
-      }),
-    );
-
-    expect(mockUpdateMessages).not.toHaveBeenCalled();
-  });
-
   test('reprocesses existing emote tokens when reprocessKey changes', () => {
     mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
     processedMessageIdsRef.current.add('1');

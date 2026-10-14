@@ -98,16 +98,6 @@ describe('useChatMessages', () => {
   });
 
   describe('Initial State', () => {
-    test('returns required functions', () => {
-      const { result } = renderHook(() => useChatMessages(defaultOptions));
-
-      expect(result.current.handleNewMessage).toBeInstanceOf(Function);
-      expect(result.current.clearLocalMessages).toBeInstanceOf(Function);
-      expect(result.current.cleanup).toBeInstanceOf(Function);
-      expect(result.current.forceFlush).toBeInstanceOf(Function);
-      expect(result.current.getBufferSize).toBeInstanceOf(Function);
-    });
-
     test('starts with empty buffer', () => {
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 

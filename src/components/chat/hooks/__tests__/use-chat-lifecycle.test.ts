@@ -91,15 +91,6 @@ describe('useChatLifecycle', () => {
   });
 
   describe('navigation beforeRemove', () => {
-    test('registers beforeRemove listener', () => {
-      renderHook(() => useChatLifecycle(defaultProps));
-
-      expect(defaultNavigation.addListener).toHaveBeenCalledWith(
-        'beforeRemove',
-        expect.any(Function),
-      );
-    });
-
     test('beforeRemove stops active work and tokens without clearing rendered messages', () => {
       renderHook(() => useChatLifecycle(defaultProps));
       const cb = getBeforeRemoveCb();

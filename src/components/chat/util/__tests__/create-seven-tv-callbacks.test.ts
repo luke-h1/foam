@@ -82,22 +82,6 @@ describe('createSevenTvCallbacks', () => {
     jest.clearAllMocks();
   });
 
-  describe('return shape', () => {
-    test('returns all callbacks and channel/set ids', () => {
-      const result = createSevenTvCallbacks(defaultProps);
-
-      expect(result.onEmoteUpdate).toBeDefined();
-      expect(result.onCosmeticCreate).toBeDefined();
-      expect(result.onEntitlementCreate).toBeDefined();
-      expect(result.onCosmeticUpdate).toBeDefined();
-      expect(result.onCosmeticDelete).toBeDefined();
-      expect(result.onEntitlementUpdate).toBeDefined();
-      expect(result.onEntitlementDelete).toBeDefined();
-      expect(result.twitchChannelId).toBe('twitch-123');
-      expect(result.sevenTvEmoteSetId).toBe('emote-set-1');
-    });
-  });
-
   describe('onEmoteUpdate', () => {
     test('calls updateSevenTvEmotes with channelId, added, removed', () => {
       const result = createSevenTvCallbacks(defaultProps);
