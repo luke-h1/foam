@@ -283,8 +283,39 @@ describe('reportResourceResults', () => {
       trigger: 'unit_test',
     });
 
-    expect(logger.chat.warn).toHaveBeenCalledTimes(1);
-    expect(logger.chat.info).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls).toEqual([
+      [
+        'Failed to load twitchGlobalEmotes',
+        {
+          name: 'bttv_emotes_warning',
+          error: new Error('boom'),
+          action: 'provider_resource_failed',
+          channel_id: channelId,
+          provider: 'bttv',
+          resource_name: 'twitchGlobalEmotes',
+          resource_type: 'emotes',
+          scope: 'channel',
+          screen: 'chat',
+          trigger: 'unit_test',
+        },
+      ],
+    ]);
+
+    expect(info.mock.calls).toEqual([
+      [
+        'Provider resources settled',
+        {
+          name: 'chat_resources_info',
+          action: 'provider_resources_settled',
+          channel_id: channelId,
+          failed_resources: 1,
+          screen: 'chat',
+          total_resources: 2,
+          trigger: 'unit_test',
+          bttv_channel_emotes_count: 0,
+        },
+      ],
+    ]);
   });
 });
 

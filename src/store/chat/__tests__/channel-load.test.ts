@@ -331,7 +331,6 @@ describe('loadChannelResources cache fallback', () => {
     ).resolves.toBe(true);
 
     const cache = chatStore$.persisted.channelCaches.peek()[channelId];
-    expect(cache).toBeDefined();
 
     expect(sevenTvService.getSanitisedEmoteSet).toHaveBeenCalledWith(
       'cached-seven-set',
@@ -381,7 +380,6 @@ describe('loadChannelResources cache fallback', () => {
     await expect(loadChannelResources({ channelId })).resolves.toBe(true);
 
     const cache = chatStore$.persisted.channelCaches.peek()[channelId];
-    expect(cache).toBeDefined();
 
     expect(mockListTwitchChannelBadges).toHaveBeenCalledTimes(1);
     expect(ids(cache!.ffzChannelBadges)).toEqual(['ffz-channel-badge-cached']);
@@ -441,7 +439,6 @@ describe('loadChannelResources cache fallback', () => {
     expect(globalCache.lastUpdated).toBe(10_000);
 
     const cache = chatStore$.persisted.channelCaches.peek()[channelId];
-    expect(cache).toBeDefined();
     expect('twitchGlobalEmotes' in cache!).toBe(false);
     expect('ffzGlobalBadges' in cache!).toBe(false);
   });
@@ -506,7 +503,6 @@ describe('loadChannelResources cache fallback', () => {
     await expect(loadChannelResources({ channelId })).resolves.toBe(true);
 
     const cache = chatStore$.persisted.channelCaches.peek()[channelId];
-    expect(cache).toBeDefined();
     expect(cache!.sevenTvChannelEmotes).toEqual([]);
     expect(cache!.bttvChannelEmotes).toEqual([]);
     expect(cache!.ffzChannelEmotes).toEqual([]);
