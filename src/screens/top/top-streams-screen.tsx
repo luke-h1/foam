@@ -6,7 +6,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { FlashList, FlashListRef } from '@app/components/flash-list/flash-list';
 import { MemoizedLiveStreamCard } from '@app/components/live-stream-card/live-stream-card';
-import { LiveStreamCardSkeleton } from '@app/components/live-stream-card/live-stream-card-skeleton';
+import { LiveStreamCardSkeletons } from '@app/components/live-stream-card/live-stream-card-skeleton';
 import { EmptyState } from '@app/components/ui/empty-state/empty-state';
 import { useStreamProfilePictures } from '@app/hooks/queries/use-stream-profile-pictures';
 import { useDebouncedCallback } from '@app/hooks/use-debounced-callback';
@@ -82,11 +82,7 @@ export function TopStreamsScreen() {
         scrollEnabled={false}
         style={styles.container}
       >
-        <LiveStreamCardSkeleton layout={streamListLayout} />
-        <LiveStreamCardSkeleton layout={streamListLayout} />
-        <LiveStreamCardSkeleton layout={streamListLayout} />
-        <LiveStreamCardSkeleton layout={streamListLayout} />
-        <LiveStreamCardSkeleton layout={streamListLayout} />
+        <LiveStreamCardSkeletons layout={streamListLayout} />
       </ScrollView>
     );
   }

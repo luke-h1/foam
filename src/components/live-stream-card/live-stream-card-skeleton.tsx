@@ -1,7 +1,50 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { Skeleton } from '@app/components/ui/skeleton/skeleton';
 import { theme } from '@app/styles/themes';
+
+type StreamListLayout = 'compact' | 'media';
+
+const THUMBNAIL_WIDTH = 144;
+const LINE_GAP = 2;
+const CALLOUT_LINE_HEIGHT = 21;
+const SUBHEAD_LINE_HEIGHT = 20;
+const FOOTNOTE_LINE_HEIGHT = 18;
+
+const TEXT_LINES_HEIGHT =
+  CALLOUT_LINE_HEIGHT +
+  SUBHEAD_LINE_HEIGHT * 2 +
+  FOOTNOTE_LINE_HEIGHT +
+  LINE_GAP * 3;
+
+function getSkeletonRowHeight(layout: StreamListLayout, width: number) {
+  if (layout === 'media') {
+    const imageHeight = ((width - theme.space16 * 2) * 9) / 16;
+
+    return theme.space12 * 3 + imageHeight + TEXT_LINES_HEIGHT;
+  }
+
+  return (
+    theme.space8 * 2 + Math.max((THUMBNAIL_WIDTH * 9) / 16, TEXT_LINES_HEIGHT)
+  );
+}
+
+/**
+ * Enough skeleton rows to fill the window, so the loading list has no empty
+ * gap at the bottom on a tall screen.
+ */
+export function LiveStreamCardSkeletons({
+  layout,
+}: {
+  layout: StreamListLayout;
+}) {
+  const { height, width } = useWindowDimensions();
+  const count = Math.ceil(height / getSkeletonRowHeight(layout, width));
+
+  return Array.from({ length: count }, (_, index) => (
+    <LiveStreamCardSkeleton key={index} layout={layout} />
+  ));
+}
 
 /**
  * Mirrors the line boxes of `LiveStreamCard` (callout, two subhead lines,
@@ -10,7 +53,7 @@ import { theme } from '@app/styles/themes';
 export function LiveStreamCardSkeleton({
   layout = 'compact',
 }: {
-  layout?: 'compact' | 'media';
+  layout?: StreamListLayout;
 }) {
   if (layout === 'media') {
     return (
@@ -63,23 +106,23 @@ const styles = StyleSheet.create({
     aspectRatio: 16 / 9,
     borderCurve: 'continuous',
     borderRadius: theme.radius.md,
-    width: 144,
+    width: THUMBNAIL_WIDTH,
   },
   details: {
     flex: 1,
-    gap: 2,
+    gap: LINE_GAP,
     minWidth: 0,
   },
   calloutLine: {
-    height: 21,
+    height: CALLOUT_LINE_HEIGHT,
     justifyContent: 'center',
   },
   subheadLine: {
-    height: 20,
+    height: SUBHEAD_LINE_HEIGHT,
     justifyContent: 'center',
   },
   footnoteLine: {
-    height: 18,
+    height: FOOTNOTE_LINE_HEIGHT,
     justifyContent: 'center',
   },
   name: {
