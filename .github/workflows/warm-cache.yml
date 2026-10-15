@@ -10,7 +10,6 @@ on:
       - '.bun-version'
       - '.github/actions/setup-bun-install/action.yml'
   workflow_dispatch:
-
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: true

@@ -1,6 +1,4 @@
 name: Deploy native or OTA
-# Runway reads the key=value tokens in the run name to match this run to its
-# workflow arguments (see docs/runway.md).
 run-name: Deploy variant=${{ inputs.variant || 'production' }} platform=${{ inputs.platform || 'ios' }} deploy_type=${{ inputs.deploy_type || 'auto' }}
 
 on:
@@ -21,9 +19,9 @@ on:
         type: choice
         default: 'auto'
         options:
-          - auto # Detect using fingerprint
-          - ota # Force OTA update
-          - build # Force native build
+          - auto
+          - ota
+          - build
       platform:
         description: 'Platform to deploy'
         required: false
@@ -96,7 +94,7 @@ jobs:
       - name: 🏗 Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          fetch-depth: 0 # Need history for comparison
+          fetch-depth: 0
           persist-credentials: false
 
       - name: 🥟 Setup Bun and install dependencies
