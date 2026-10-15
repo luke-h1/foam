@@ -10,7 +10,6 @@ env:
 
 concurrency:
   group: ota-surf-pr-${{ github.event.issue.number }}
-  # Never cancel a publish mid-flight; a second !surf-deploy queues behind it.
   cancel-in-progress: false
 
 jobs:

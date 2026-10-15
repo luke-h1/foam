@@ -125,6 +125,40 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: 📱 Boot Simulator
+        id: simulator
+        background: true
+        run: |
+          set -euo pipefail
+
+          DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone 16" | head -1 | grep -oE '[0-9A-F-]{36}' || true)
+          if [ -z "$DEVICE_ID" ]; then
+            echo "::error::No available 'iPhone 16' simulator on this runner"
+            xcrun simctl list devices available
+            exit 1
+          fi
+          xcrun simctl bootstatus "$DEVICE_ID" -b
+
+      - name: 🍎 Install Maestro
+        id: maestro
+        background: true
+        env:
+          MAESTRO_VERSION: '2.6.1'
+          EXPECTED_SHA256: '3440825f514f537c6a96bcf5de995780c2a4a7f83a43208fdc95d4f1fecfad3b'
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          curl --fail --location --silent --show-error \
+            "https://github.com/mobile-dev-inc/maestro/releases/download/cli-${MAESTRO_VERSION}/maestro.zip" \
+            -o "$tmp/maestro.zip"
+          echo "${EXPECTED_SHA256}  $tmp/maestro.zip" | shasum -a 256 -c -
+          rm -rf "$HOME/.maestro"
+          mkdir -p "$HOME/.maestro"
+          unzip -qo "$tmp/maestro.zip" -d "$tmp"
+          cp -rf "$tmp"/maestro/* "$HOME/.maestro"
+          rm -rf "$tmp"
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+
       - name: 🥟 Setup Bun and install dependencies
         uses: $/.github/actions/setup-bun-install
         with:
@@ -174,35 +208,8 @@ jobs:
           E2E_UPDATE_MESSAGE: ${{ github.event.pull_request.title || github.sha }}
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      - name: 🍎 Install Maestro
-        env:
-          MAESTRO_VERSION: '2.6.1'
-          EXPECTED_SHA256: '3440825f514f537c6a96bcf5de995780c2a4a7f83a43208fdc95d4f1fecfad3b'
-        run: |
-          set -euo pipefail
-          tmp="$(mktemp -d)"
-          curl --fail --location --silent --show-error \
-            "https://github.com/mobile-dev-inc/maestro/releases/download/cli-${MAESTRO_VERSION}/maestro.zip" \
-            -o "$tmp/maestro.zip"
-          echo "${EXPECTED_SHA256}  $tmp/maestro.zip" | shasum -a 256 -c -
-          rm -rf "$HOME/.maestro"
-          mkdir -p "$HOME/.maestro"
-          unzip -qo "$tmp/maestro.zip" -d "$tmp"
-          cp -rf "$tmp"/maestro/* "$HOME/.maestro"
-          rm -rf "$tmp"
-          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
-
-      - name: 📱 Boot Simulator
-        run: |
-          set -euo pipefail
-
-          DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone 16" | head -1 | grep -oE '[0-9A-F-]{36}' || true)
-          if [ -z "$DEVICE_ID" ]; then
-            echo "::error::No available 'iPhone 16' simulator on this runner"
-            xcrun simctl list devices available
-            exit 1
-          fi
-          xcrun simctl bootstatus "$DEVICE_ID" -b
+      - name: ⏳ Wait for the simulator and Maestro
+        wait: [simulator, maestro]
 
       - name: 📲 Install app on simulator
         run: |

@@ -15,8 +15,6 @@ concurrency:
 jobs:
   fingerprint:
     name: Detect fingerprint changes
-    # Fork PRs stay on GitHub-hosted runners: foam is public, and a self-hosted
-    # runner would run the fork's code on the foam machine.
     runs-on: ${{ github.event.pull_request.head.repo.full_name == github.repository && 'foam' || 'ubuntu-latest' }}
     permissions:
       contents: read

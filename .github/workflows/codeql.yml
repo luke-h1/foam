@@ -3,7 +3,6 @@ on:
   schedule:
     - cron: '19 0 * * 1'
   workflow_dispatch:
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
