@@ -24,7 +24,7 @@ jobs:
         run: git remote set-url origin https://invalid.invalid/unreachable.git
 
       - name: Run React Doctor
-        uses: millionco/react-doctor@013f7373f91a3b9e68bd1dc7d4d354f4b041b117 # v2.2.9
+        uses: millionco/react-doctor@673ce802a375eeb4c3c5cb9a96d21eaeb7eafd93 # v2.3.1
         with:
           blocking: error
           commit-status: false
