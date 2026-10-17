@@ -142,7 +142,7 @@
       },
       "android": {
         "serviceAccountKeyPath": "./playstore-service-account.json",
-        "track": "production",
+        "track": "internal",
         "releaseStatus": "completed"
       }
     }

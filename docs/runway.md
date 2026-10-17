@@ -23,7 +23,10 @@ Integrations connected in the web app (App settings > Integrations):
 
 - iOS: App Store Connect (bundle id `foam-tv`) and TestFlight (same key).
 - Android: Google Play Console (package `com.lhowsam.foam_tv`) and Google Play
-  beta on the `internal` track (same service account).
+  beta on the `internal` track (same service account). The EAS `production`
+  Android submit profile also targets `internal`: Play returns
+  `FAILED_PRECONDITION` on the production track until store setup and
+  prior-track promotion are complete.
 - Both apps: release tag pattern `{version}`, release branch `main` (all
   release types), working branch `main`. This is Runway's "trunk-based,
   release from trunk" setup. Runway treats new commits on `main` past the last
