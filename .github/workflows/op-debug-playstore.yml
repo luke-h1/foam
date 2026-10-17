@@ -1,0 +1,23 @@
+name: op-debug-playstore
+on:
+  workflow_dispatch:
+jobs:
+  debug:
+    runs-on: foam
+    steps:
+      - uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2
+        with:
+          export-env: false
+          version: 2.34.0
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+      - name: List item field labels
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          set -euo pipefail
+          # Install op if needed - load-secrets already has it
+          export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
+          which op || true
+          op item get "foam playstore service account (foam-android-testtrack)" --vault ci-cd --format json \
+            | python3 -c 'import json,sys; d=json.load(sys.stdin); print("category", d.get("category")); print("fields", [(f.get("id"), f.get("label"), f.get("type")) for f in d.get("fields") or []]); print("files", [(f.get("id"), f.get("name"), f.get("size")) for f in d.get("files") or []])'
