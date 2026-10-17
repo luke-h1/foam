@@ -5,9 +5,15 @@ jobs:
   debug:
     runs-on: foam
     steps:
-      - uses: 1password/install-cli-action@v1
+      # load-secrets installs op; we only need the CLI on PATH
+      - uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
         with:
+          export-env: false
           version: 2.34.0
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          # Dummy secret so the action still runs its setup. Value unused.
+          _PROBE: op://ci-cd/foam-mobile-production/TWITCH_CLIENT_ID
       - name: Probe playstore secret references
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
@@ -15,18 +21,11 @@ jobs:
           set -euo pipefail
           op --version
           item="$(op item get "foam playstore service account (foam-android-testtrack)" --vault ci-cd --format json)"
-          python3 - <<'PY' <<<"$item"
-          import json,sys
-          d=json.load(sys.stdin)
-          print("id", d.get("id"))
-          print("title", d.get("title"))
-          print("category", d.get("category"))
-          print("files", [(f.get("id"), f.get("name")) for f in d.get("files") or []])
-          PY
+          echo "$item" | python3 -c 'import json,sys; d=json.load(sys.stdin); print("id", d.get("id")); print("title", d.get("title")); print("category", d.get("category")); print("files", [(f.get("id"), f.get("name")) for f in d.get("files") or []])'
 
-          item_id=$(python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])' <<<"$item")
-          file_id=$(python3 -c 'import json,sys; print(json.load(sys.stdin)["files"][0]["id"])' <<<"$item")
-          file_name=$(python3 -c 'import json,sys; print(json.load(sys.stdin)["files"][0]["name"])' <<<"$item")
+          item_id=$(echo "$item" | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')
+          file_id=$(echo "$item" | python3 -c 'import json,sys; print(json.load(sys.stdin)["files"][0]["id"])')
+          file_name=$(echo "$item" | python3 -c 'import json,sys; print(json.load(sys.stdin)["files"][0]["name"])')
 
           refs=(
             "op://ci-cd/foam playstore service account (foam-android-testtrack)/${file_name}"
