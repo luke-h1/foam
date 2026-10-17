@@ -37,4 +37,22 @@ runs:
         GOOGLE_SERVICES_ANDROID_PROD_BS4: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/GOOGLE_SERVICES_ANDROID_PROD_BS4
         GOOGLE_SERVICES_ANDROID_INTERNAL_BS4: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/GOOGLE_SERVICES_ANDROID_INTERNAL_BS4
         GOOGLE_SERVICES_ANDROID_TESTFLIGHT_BS4: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/GOOGLE_SERVICES_ANDROID_TESTFLIGHT_BS4
+        # eas.json android submit.serviceAccountKeyPath; see docs/runway.md
+        PLAYSTORE_SERVICE_ACCOUNT_JSON: op://ci-cd/foam playstore service account (foam-android-testtrack)/playstore-service-account.json
         OP_ENV_FILE: '.env'
+
+    # eas submit reads this path from eas.json. Without the file, non-interactive
+    # Android submit prompts for a Google Service Account JSON and fails.
+    - name: Write Play Store service account file
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        if [ -z "${PLAYSTORE_SERVICE_ACCOUNT_JSON:-}" ]; then
+          echo "::error::PLAYSTORE_SERVICE_ACCOUNT_JSON is empty in op://ci-cd/foam playstore service account (foam-android-testtrack)"
+          exit 1
+        fi
+
+        printf '%s\n' "$PLAYSTORE_SERVICE_ACCOUNT_JSON" > playstore-service-account.json
+        chmod 600 playstore-service-account.json
+        echo "Wrote playstore-service-account.json"
