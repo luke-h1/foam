@@ -37,8 +37,9 @@ runs:
         GOOGLE_SERVICES_ANDROID_PROD_BS4: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/GOOGLE_SERVICES_ANDROID_PROD_BS4
         GOOGLE_SERVICES_ANDROID_INTERNAL_BS4: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/GOOGLE_SERVICES_ANDROID_INTERNAL_BS4
         GOOGLE_SERVICES_ANDROID_TESTFLIGHT_BS4: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/GOOGLE_SERVICES_ANDROID_TESTFLIGHT_BS4
-        # eas.json android submit.serviceAccountKeyPath; see docs/runway.md
-        PLAYSTORE_SERVICE_ACCOUNT_JSON: op://ci-cd/foam playstore service account (foam-android-testtrack)/playstore-service-account.json
+        # eas.json android submit.serviceAccountKeyPath; see docs/runway.md.
+        # Use the item UUID: parentheses in the title are invalid in op:// refs.
+        PLAYSTORE_SERVICE_ACCOUNT_JSON: op://ci-cd/vdltoyj5que6xz3gg3qwihr4wm/playstore-service-account.json
         OP_ENV_FILE: '.env'
 
     # eas submit reads this path from eas.json. Without the file, non-interactive
@@ -49,7 +50,7 @@ runs:
         set -euo pipefail
 
         if [ -z "${PLAYSTORE_SERVICE_ACCOUNT_JSON:-}" ]; then
-          echo "::error::PLAYSTORE_SERVICE_ACCOUNT_JSON is empty in op://ci-cd/foam playstore service account (foam-android-testtrack)"
+          echo "::error::PLAYSTORE_SERVICE_ACCOUNT_JSON is empty in op://ci-cd/vdltoyj5que6xz3gg3qwihr4wm"
           exit 1
         fi
 
