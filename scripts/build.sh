@@ -41,6 +41,14 @@ fi
 
 mkdir -p build-artifacts
 
+# Git fsmonitor leaves a socket at .git/fsmonitor--daemon.ipc. EAS CLI's
+# project archive step can hit that socket and exit 0 without writing an
+# artifact, so clear it before every local build.
+clear_git_fsmonitor_socket() {
+  git fsmonitor--daemon stop 2>/dev/null || true
+  rm -f .git/fsmonitor--daemon.ipc
+}
+
 build_ios() {
   local profile="$1"
   local ipa_path
@@ -54,6 +62,7 @@ build_ios() {
   rm -rf "$extracted_dir"
   mkdir -p "$extracted_dir"
   : > "$build_marker"
+  clear_git_fsmonitor_socket
 
   # RNRepo's prebuilt iOS XCFrameworks 404 on rnrepo.org for the Expo core
   # modules (expo, expo-modules-core, expo-dev-launcher, expo-dev-menu,
@@ -113,6 +122,7 @@ build_android() {
   artifact_path="$(android_artifact_path "$profile")"
 
   rm -f "$artifact_path"
+  clear_git_fsmonitor_socket
 
   local eas_build_args=(
     --local
