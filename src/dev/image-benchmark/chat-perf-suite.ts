@@ -18,24 +18,31 @@ export interface PhaseResult {
    */
   uiFpsAvg: number;
   uiJankPerSec: number;
+  memStartMb: number;
+  memEndMb: number;
+  memPeakMb: number;
+  memDeltaMb: number;
+  cpuAvg: number;
+  cpuPeak: number;
 }
 
-export const WARMUP_MS = 5000;
+export const WARMUP_MS = 10_000;
 
 /**
- * Flood-off gap so decoded-image memory / GC settles; back-to-back raid phases can OOM the simulator.
+ * Flood-off gap so decoded-image memory / GC settles; back-to-back heavy phases can OOM the simulator.
  */
-export const COOLDOWN_MS = 4000;
+export const COOLDOWN_MS = 20_000;
 
-/**
- * Total visible time ≈ (WARMUP + measure + COOLDOWN) × phases.
- */
+/** medium then heavy; each measure window is 280s. */
 export const SUITE_PHASES: SuitePhase[] = [
-  { preset: 'raid', measureMs: 15000 },
-  { preset: 'steady60', measureMs: 15000 },
+  { preset: 'medium', measureMs: 280_000 },
+  { preset: 'heavy', measureMs: 280_000 },
 ];
 
-export const SUITE_TOTAL_MS = SUITE_PHASES.reduce(
-  (sum, p) => sum + WARMUP_MS + p.measureMs + COOLDOWN_MS,
-  0,
-);
+/** Warmup + measure × 2 + cooldown between = 10 minutes. */
+export const SUITE_TOTAL_MS =
+  WARMUP_MS +
+  SUITE_PHASES[0]!.measureMs +
+  COOLDOWN_MS +
+  WARMUP_MS +
+  SUITE_PHASES[1]!.measureMs;
