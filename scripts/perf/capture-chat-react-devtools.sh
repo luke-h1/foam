@@ -16,7 +16,8 @@ CHANNEL_NAME="${FOAM_CHAT_CHANNEL_NAME:-xqc}"
 CAPTURE_SECONDS="${FOAM_RN_PROFILE_SECONDS:-10}"
 
 OUTPUT_PATH="$OUTPUT_DIR/foam-chat-${LABEL}-profile.json"
-DEEPLINK="foam://chat?channelId=${CHANNEL_ID}&channelName=${CHANNEL_NAME}"
+# Suite: FOAM_CHAT_DEEPLINK='foam://dev-tools/chat-perf?suite=1' FOAM_RN_PROFILE_SECONDS=600 bun run perf:chat:rn
+DEEPLINK="${FOAM_CHAT_DEEPLINK:-foam://chat?channelId=${CHANNEL_ID}&channelName=${CHANNEL_NAME}}"
 
 mkdir -p "$OUTPUT_DIR"
 rm -f "$OUTPUT_PATH"

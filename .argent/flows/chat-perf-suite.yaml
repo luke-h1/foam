@@ -1,0 +1,4 @@
+executionPrerequisite: The chat-perf suite is running (suite-stop visible), as open-chat-perf-suite leaves it.
+steps:
+  - echo: Wait for the 10-minute medium + heavy suite (measured window)
+  - await: { visible: { id: suite-done }, timeout: 660000 }
