@@ -742,9 +742,9 @@ In order to join the internal testing of the Android app distributed via Google 
    - open details of `Foam internal testers` group
    - provide email address of the tester that is associated with a Google account used in Play Store
    - hit `Save changes` button
-1. Instruct the invited tester to open [Internal testing joining link](https://play.google.com/apps/internaltest/).
+1. Instruct the invited tester to open the joining link from that Internal testing panel (Copy link).
 1. Anytime a new app version is published to the internal testing track the tester will have to ensure the app is updated by visiting Play Store and re-installing the app
-1. The app is available at [Play Store](https://play.google.com/store/apps/details?id=), but the link is available only to the testers that are added to the internal testing track.
+1. After opting in, the app is at [Play Store](https://play.google.com/store/apps/details?id=com.lhowsam.foam_tv) for those testers only.
 
 ## iOS internal testers
 
