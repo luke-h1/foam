@@ -5,22 +5,16 @@ jobs:
   debug:
     runs-on: foam
     steps:
+      - uses: 1password/install-cli-action@v1
+        with:
+          version: 2.34.0
       - name: Probe playstore secret references
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
         run: |
           set -euo pipefail
-          # Ensure op is available (same version load-secrets uses)
-          curl -sSfLo /tmp/op.zip "https://cache.agilebits.com/dist/1P/op2/core/v2.34.0/op_linux_amd64_v2.34.0.zip" 2>/dev/null || true
-          if [ "$(uname -s)" = "Darwin" ]; then
-            curl -sSfLo /tmp/op.zip "https://cache.agilebits.com/dist/1P/op2/core/v2.34.0/op_darwin_arm64_v2.34.0.zip"
-            unzip -o /tmp/op.zip -d /tmp/op-bin >/dev/null
-            OP=/tmp/op-bin/op
-          else
-            OP=$(command -v op)
-          fi
-          "$OP" --version
-          item="$("$OP" item get "foam playstore service account (foam-android-testtrack)" --vault ci-cd --format json)"
+          op --version
+          item="$(op item get "foam playstore service account (foam-android-testtrack)" --vault ci-cd --format json)"
           python3 - <<'PY' <<<"$item"
           import json,sys
           d=json.load(sys.stdin)
@@ -32,16 +26,17 @@ jobs:
 
           item_id=$(python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])' <<<"$item")
           file_id=$(python3 -c 'import json,sys; print(json.load(sys.stdin)["files"][0]["id"])' <<<"$item")
+          file_name=$(python3 -c 'import json,sys; print(json.load(sys.stdin)["files"][0]["name"])' <<<"$item")
 
           refs=(
-            "op://ci-cd/foam playstore service account (foam-android-testtrack)/playstore-service-account.json"
+            "op://ci-cd/foam playstore service account (foam-android-testtrack)/${file_name}"
             "op://ci-cd/foam playstore service account (foam-android-testtrack)/document"
-            "op://ci-cd/${item_id}/playstore-service-account.json"
+            "op://ci-cd/${item_id}/${file_name}"
             "op://ci-cd/${item_id}/document"
             "op://ci-cd/${item_id}/${file_id}"
           )
           for ref in "${refs[@]}"; do
-            if out=$("$OP" read "$ref" 2>/tmp/op-err.txt); then
+            if out=$(op read "$ref" 2>/tmp/op-err.txt); then
               echo "OK len=${#out} ref=$ref"
             else
               err=$(tr '\n' ' ' </tmp/op-err.txt)
