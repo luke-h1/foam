@@ -123,6 +123,14 @@ describe('twitchService.getClipsByIds', () => {
     expect(result).toBeNull();
   });
 
+  test('getClip returns null when the API response has no data field', async () => {
+    api.get.mockResolvedValue({});
+
+    const result = await twitchService.getClip('some-clip');
+
+    expect(result).toBeNull();
+  });
+
   test('returns an empty list without a request when no ids are given', async () => {
     const result = await twitchService.getClipsByIds([]);
 
