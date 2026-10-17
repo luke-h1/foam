@@ -5,19 +5,46 @@ jobs:
   debug:
     runs-on: foam
     steps:
-      - uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2
-        with:
-          export-env: false
-          version: 2.34.0
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-      - name: List item field labels
+      - name: Probe playstore secret references
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
         run: |
           set -euo pipefail
-          # Install op if needed - load-secrets already has it
-          export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
-          which op || true
-          op item get "foam playstore service account (foam-android-testtrack)" --vault ci-cd --format json \
-            | python3 -c 'import json,sys; d=json.load(sys.stdin); print("category", d.get("category")); print("fields", [(f.get("id"), f.get("label"), f.get("type")) for f in d.get("fields") or []]); print("files", [(f.get("id"), f.get("name"), f.get("size")) for f in d.get("files") or []])'
+          # Ensure op is available (same version load-secrets uses)
+          curl -sSfLo /tmp/op.zip "https://cache.agilebits.com/dist/1P/op2/core/v2.34.0/op_linux_amd64_v2.34.0.zip" 2>/dev/null || true
+          if [ "$(uname -s)" = "Darwin" ]; then
+            curl -sSfLo /tmp/op.zip "https://cache.agilebits.com/dist/1P/op2/core/v2.34.0/op_darwin_arm64_v2.34.0.zip"
+            unzip -o /tmp/op.zip -d /tmp/op-bin >/dev/null
+            OP=/tmp/op-bin/op
+          else
+            OP=$(command -v op)
+          fi
+          "$OP" --version
+          item="$("$OP" item get "foam playstore service account (foam-android-testtrack)" --vault ci-cd --format json)"
+          python3 - <<'PY' <<<"$item"
+          import json,sys
+          d=json.load(sys.stdin)
+          print("id", d.get("id"))
+          print("title", d.get("title"))
+          print("category", d.get("category"))
+          print("files", [(f.get("id"), f.get("name")) for f in d.get("files") or []])
+          PY
+
+          item_id=$(python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])' <<<"$item")
+          file_id=$(python3 -c 'import json,sys; print(json.load(sys.stdin)["files"][0]["id"])' <<<"$item")
+
+          refs=(
+            "op://ci-cd/foam playstore service account (foam-android-testtrack)/playstore-service-account.json"
+            "op://ci-cd/foam playstore service account (foam-android-testtrack)/document"
+            "op://ci-cd/${item_id}/playstore-service-account.json"
+            "op://ci-cd/${item_id}/document"
+            "op://ci-cd/${item_id}/${file_id}"
+          )
+          for ref in "${refs[@]}"; do
+            if out=$("$OP" read "$ref" 2>/tmp/op-err.txt); then
+              echo "OK len=${#out} ref=$ref"
+            else
+              err=$(tr '\n' ' ' </tmp/op-err.txt)
+              echo "FAIL ref=$ref err=$err"
+            fi
+          done
