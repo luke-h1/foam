@@ -36,6 +36,14 @@ runs:
       run: |
         set -euo pipefail
 
+        # Git fsmonitor leaves a socket at .git/fsmonitor--daemon.ipc. EAS CLI's
+        # project archive step can hit that socket and exit 0 without writing
+        # an artifact, so clear it before every local build.
+        clear_git_fsmonitor_socket() {
+          git fsmonitor--daemon stop 2>/dev/null || true
+          rm -f .git/fsmonitor--daemon.ipc
+        }
+
         build_ios() {
           echo "Building iOS ($VARIANT)..."
           local ipa_path="./build-artifacts/app.ipa"
@@ -46,6 +54,7 @@ runs:
           rm -rf "$extracted_dir"
           mkdir -p "$extracted_dir"
           : > "$build_marker"
+          clear_git_fsmonitor_socket
 
           SENTRY_AUTH_TOKEN="${SENTRY_AUTH_TOKEN:-}" \
             SENTRY_RELEASE="${EXPO_PUBLIC_SENTRY_RELEASE}" \
@@ -125,6 +134,11 @@ runs:
 
         build_android() {
           echo "Building Android ($VARIANT)..."
+          local aab_path="./build-artifacts/app.aab"
+
+          rm -f "$aab_path"
+          clear_git_fsmonitor_socket
+
           SENTRY_AUTH_TOKEN="${SENTRY_AUTH_TOKEN:-}" \
             SENTRY_RELEASE="${EXPO_PUBLIC_SENTRY_RELEASE}" \
             SENTRY_DIST="${EXPO_PUBLIC_SENTRY_DIST}" \
@@ -132,13 +146,18 @@ runs:
             EXPO_PUBLIC_APP_VARIANT="$VARIANT" \
             EXPO_PUBLIC_SENTRY_RELEASE="${EXPO_PUBLIC_SENTRY_RELEASE}" \
             EXPO_PUBLIC_SENTRY_DIST="${EXPO_PUBLIC_SENTRY_DIST}" \
-            bun run eas build --platform android --profile "$VARIANT" --non-interactive --local --output=./build-artifacts/app.aab
+            bun run eas build --platform android --profile "$VARIANT" --non-interactive --local --output="$aab_path"
+
+          if [ ! -f "$aab_path" ]; then
+            echo "Unable to find an Android artifact at $aab_path"
+            exit 1
+          fi
 
           # shellcheck source=scripts/sentry-upload.sh
           source ./scripts/sentry-upload.sh
-          sentry_upload_size_analysis ./build-artifacts/app.aab
+          sentry_upload_size_analysis "$aab_path"
 
-          bun run eas submit -p android --profile "$VARIANT" --non-interactive --path ./build-artifacts/app.aab
+          bun run eas submit -p android --profile "$VARIANT" --non-interactive --path "$aab_path"
         }
 
         if [ "$VARIANT" = "testflight" ] && [ "$PLATFORM" = "android" ]; then
