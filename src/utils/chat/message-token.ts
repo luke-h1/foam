@@ -21,6 +21,7 @@ export type MessageTokenKind =
   | 'twitchClip'
   | 'link'
   | 'cheermote'
+  | 'gif'
   | 'stvEmoteAdded'
   | 'stvEmoteRemoved'
   | TwitchNoticeKind;
@@ -103,6 +104,17 @@ interface MessageTokenByKind {
       static_url: string;
       url: string;
     };
+  };
+
+  /**
+   * Twitch chat GIF from the PRIVMSG `gifs` tag. `content` is the alt text in
+   * the message body; use `url` exactly as Twitch sent it.
+   */
+  gif: {
+    type: 'gif';
+    content: string;
+    gifId: string;
+    url: string;
   };
 
   stvEmoteAdded: {

@@ -20,6 +20,7 @@ describe('getChatScale', () => {
       emoteLineHeight: 34,
       emoteSize: 30,
       gap: 4,
+      gifSize: 112,
       metaIconSize: 12,
       replyEmoteLineHeight: 24,
       replyEmoteSize: 20,

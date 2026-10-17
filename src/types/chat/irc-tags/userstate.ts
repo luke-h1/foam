@@ -30,6 +30,11 @@ export interface UserStateTags {
   turbo?: string;
   bits?: string;
   emotes?: string;
+  /**
+   * Comma-separated GIF spans: `start-end|gif_id|url`. Positions are
+   * zero-based code-point indices into the PRIVMSG body.
+   */
+  gifs?: string;
   'emote-sets'?: string;
   'first-msg'?: string;
   'returning-chatter'?: string;

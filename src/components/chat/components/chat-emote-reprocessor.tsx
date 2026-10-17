@@ -27,6 +27,7 @@ export const ChatEmoteReprocessor = memo(
     const channelEmoteData = useChannelEmoteDataForReprocess(channelId);
     const emojiStyle = usePreference('emojiStyle');
     const show7TvEmotes = usePreference('show7TvEmotes');
+    const showChatGifs = usePreference('showChatGifs');
 
     useEffect(() => {
       chatStore$.emojis.set(getEmojiEmotes(emojiStyle));
@@ -40,6 +41,7 @@ export const ChatEmoteReprocessor = memo(
       processedMessageIdsRef,
       reprocessKey,
       show7TvEmotes,
+      showChatGifs,
       userLogin,
     });
 

@@ -11,21 +11,35 @@ import { ChatPreferencePreview } from './chat-preferences-preview';
 
 export function ChatPreferenceMediaSection({
   handleDisableEmoteAnimationsToggle,
+  handleShowChatGifsToggle,
   previewDisableEmoteAnimations,
+  previewShowChatGifs,
 }: {
   handleDisableEmoteAnimationsToggle: (value: boolean) => void;
+  handleShowChatGifsToggle: (value: boolean) => void;
   previewDisableEmoteAnimations: boolean;
+  previewShowChatGifs: boolean;
 }) {
   return (
     <SettingsSection
       title='Media'
       footer={
         <Text color='gray.textLow' type='subhead'>
-          When on, animated Twitch, BTTV, FFZ, and 7TV emotes show as still
-          images.
+          Chat GIFs load third-party media via Twitch. With animations off,
+          animated emotes and chat GIFs show as still frames.
         </Text>
       }
     >
+      <SettingsToggleRow
+        title='Show Chat GIFs'
+        subtitle='Loads third-party GIF media'
+        icon={{
+          icon: 'photo.on.rectangle.angled',
+          androidIcon: 'gif_box',
+        }}
+        value={previewShowChatGifs}
+        onValueChange={handleShowChatGifsToggle}
+      />
       <SettingsToggleRow
         title='Disable Emote Animations'
         subtitle='Show emotes as still images'

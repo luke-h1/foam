@@ -19,6 +19,11 @@ const TWITCH_CLIP_WEIGHT = 70;
  */
 const STV_EMOTE_LINK_WEIGHT = 35;
 
+/**
+ * A Twitch chat GIF at `gifSize`, about a short card tall.
+ */
+const GIF_WEIGHT = 48;
+
 const NOTICE_META_ROW_WEIGHT = 34;
 const SUBSCRIPTION_DESCRIPTION_WEIGHT = 48;
 
@@ -47,6 +52,8 @@ function getPartWeight(token: MessageToken): number {
       return TWITCH_CLIP_WEIGHT;
     case 'stvEmoteLink':
       return STV_EMOTE_LINK_WEIGHT;
+    case 'gif':
+      return GIF_WEIGHT;
     case 'sub':
     case 'resub':
     case 'anongift':

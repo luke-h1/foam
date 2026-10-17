@@ -9,6 +9,8 @@ import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-
 import { getChannelCheermotes } from '@app/utils/chat/cheermote-store/get-channel-cheermotes';
 import { processEmotesWorklet } from '@app/utils/chat/emote-processor';
 import { extractEmotesFromTag } from '@app/utils/chat/extract-emotes/extract-emotes-from-tag';
+import { parseTwitchGifsTag } from '@app/utils/chat/extract-gifs/parse-twitch-gifs-tag';
+import { splitMessageAroundGifs } from '@app/utils/chat/extract-gifs/split-message-around-gifs';
 import type { MessageToken } from '@app/utils/chat/message-token';
 
 type EmoteData = ReturnType<typeof getCurrentEmoteData>;
@@ -17,6 +19,10 @@ interface ResolveMessageEmotePartsOptions {
   channelId: string;
   emoteData: EmoteData;
   show7TvEmotes: boolean;
+  /**
+   * When false, the `gifs` tag is ignored and alt text stays as text.
+   */
+  showChatGifs?: boolean;
   /**
    * The message text, already trimmed by the caller (used both as the worklet
    * input and as the basis for resolving tagged subscriber emotes).
@@ -27,6 +33,38 @@ interface ResolveMessageEmotePartsOptions {
   userstate: UserStateTags;
 }
 
+interface ProcessTextChunkOptions {
+  emoteData: EmoteData;
+  personalEmotes: ReturnType<typeof getUserPersonalEmotes>;
+  scopedTwitchSubscriberEmotes: EmoteData['twitchSubscriberEmotes'];
+  text: string;
+  userstate: UserStateTags;
+}
+
+function processTextChunk({
+  emoteData,
+  personalEmotes,
+  scopedTwitchSubscriberEmotes,
+  text,
+  userstate,
+}: ProcessTextChunkOptions): MessageToken[] {
+  return processEmotesWorklet({
+    inputString: text,
+    userstate,
+    emojiEmotes: chatStore$.emojis.peek(),
+    sevenTvGlobalEmotes: emoteData.sevenTvGlobalEmotes,
+    sevenTvChannelEmotes: emoteData.sevenTvChannelEmotes,
+    sevenTvPersonalEmotes: personalEmotes,
+    twitchGlobalEmotes: emoteData.twitchGlobalEmotes,
+    twitchChannelEmotes: emoteData.twitchChannelEmotes,
+    twitchSubscriberEmotes: scopedTwitchSubscriberEmotes,
+    ffzChannelEmotes: emoteData.ffzChannelEmotes,
+    ffzGlobalEmotes: emoteData.ffzGlobalEmotes,
+    bttvChannelEmotes: emoteData.bttvChannelEmotes,
+    bttvGlobalEmotes: emoteData.bttvGlobalEmotes,
+  });
+}
+
 /**
  * The single place that decides which emote sources feed a message, so live
  * ingest and the visible-message reprocess cannot diverge.
@@ -35,6 +73,7 @@ export function resolveMessageEmoteParts({
   channelId,
   emoteData,
   show7TvEmotes,
+  showChatGifs = false,
   text,
   userId,
   userLogin,
@@ -70,21 +109,51 @@ export function resolveMessageEmoteParts({
         : twitchTaggedSubscriberEmotes;
   }
 
-  const tokens = processEmotesWorklet({
-    inputString: text,
+  const gifSpans = showChatGifs ? parseTwitchGifsTag(userstate.gifs, text) : [];
+
+  const textChunkOptions: ProcessTextChunkOptions = {
+    emoteData,
+    personalEmotes,
+    scopedTwitchSubscriberEmotes,
+    text,
     userstate,
-    emojiEmotes: chatStore$.emojis.peek(),
-    sevenTvGlobalEmotes: emoteData.sevenTvGlobalEmotes,
-    sevenTvChannelEmotes: emoteData.sevenTvChannelEmotes,
-    sevenTvPersonalEmotes: personalEmotes,
-    twitchGlobalEmotes: emoteData.twitchGlobalEmotes,
-    twitchChannelEmotes: emoteData.twitchChannelEmotes,
-    twitchSubscriberEmotes: scopedTwitchSubscriberEmotes,
-    ffzChannelEmotes: emoteData.ffzChannelEmotes,
-    ffzGlobalEmotes: emoteData.ffzGlobalEmotes,
-    bttvChannelEmotes: emoteData.bttvChannelEmotes,
-    bttvGlobalEmotes: emoteData.bttvGlobalEmotes,
-  });
+  };
+
+  let tokens: MessageToken[];
+
+  if (gifSpans.length === 0) {
+    tokens = processTextChunk(textChunkOptions);
+  } else {
+    // Emote tag positions are for the full body; after a GIF split, match by
+    // name from the subscriber pool already built above instead of re-using
+    // those offsets on a shorter chunk.
+    const chunkUserstate = { ...userstate, emotes: undefined };
+    tokens = [];
+
+    for (const segment of splitMessageAroundGifs(text, gifSpans)) {
+      if (segment.kind === 'gif') {
+        tokens.push({
+          type: 'gif',
+          content: segment.content,
+          gifId: segment.gifId,
+          url: segment.url,
+        });
+        continue;
+      }
+
+      if (!segment.text) {
+        continue;
+      }
+
+      tokens.push(
+        ...processTextChunk({
+          ...textChunkOptions,
+          text: segment.text,
+          userstate: chunkUserstate,
+        }),
+      );
+    }
+  }
 
   // The worklet caches parsed tokens by text alone, so bits handling stays
   // outside it and never mutates the cached array.

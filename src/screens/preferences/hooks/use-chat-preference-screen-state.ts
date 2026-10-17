@@ -49,6 +49,7 @@ export function useChatPreferenceScreenState() {
     ignoreClearChat,
     highlightOwnMentions,
     showAlternatingChatRows,
+    showChatGifs,
     showInlineReplyContext,
     showRecentMessages,
     showUnreadJumpPill,
@@ -76,6 +77,7 @@ export function useChatPreferenceScreenState() {
   });
 
   const previewDisableEmoteAnimations$ = useObservable(disableEmoteAnimations);
+  const previewShowChatGifs$ = useObservable(showChatGifs);
 
   const previewProviders$ = useObservable<ProviderPreviewValue>({
     show7TvEmotes,
@@ -97,6 +99,7 @@ export function useChatPreferenceScreenState() {
   const previewDisableEmoteAnimations = useSelector(
     previewDisableEmoteAnimations$,
   );
+  const previewShowChatGifs = useSelector(previewShowChatGifs$);
 
   const previewProviders = useSelector(previewProviders$);
 
@@ -195,6 +198,10 @@ export function useChatPreferenceScreenState() {
   }, [disableEmoteAnimations, previewDisableEmoteAnimations$]);
 
   useEffect(() => {
+    previewShowChatGifs$.set(showChatGifs);
+  }, [previewShowChatGifs$, showChatGifs]);
+
+  useEffect(() => {
     const nextProviders = {
       show7TvEmotes,
       show7tvBadges,
@@ -252,6 +259,11 @@ export function useChatPreferenceScreenState() {
   const handleDisableEmoteAnimationsToggle = (value: boolean) => {
     previewDisableEmoteAnimations$.set(value);
     update({ disableEmoteAnimations: value });
+  };
+
+  const handleShowChatGifsToggle = (value: boolean) => {
+    previewShowChatGifs$.set(value);
+    update({ showChatGifs: value });
   };
 
   const handleDensitySelect = (nextDensity: 'comfortable' | 'compact') => {
@@ -345,6 +357,7 @@ export function useChatPreferenceScreenState() {
     handleContextToggle,
     handleDensityChange,
     handleDisableEmoteAnimationsToggle,
+    handleShowChatGifsToggle,
     handleEmojiStyleChange,
     handleProviderToggle,
     previewAlternatingRows,
@@ -352,6 +365,7 @@ export function useChatPreferenceScreenState() {
     previewDensity,
     previewFontScale,
     previewDisableEmoteAnimations,
+    previewShowChatGifs,
     previewProviders,
     showRecentMessages,
     update,

@@ -57,6 +57,11 @@ export interface Preferences {
   showFFzEmotes: boolean;
   showChatterinoEmotes: boolean;
   showTwitchEmotes: boolean;
+  /**
+   * Render Twitch chat GIFs from the PRIVMSG `gifs` tag. Off by default so
+   * third-party GIF media only loads when the user opts in.
+   */
+  showChatGifs: boolean;
   disableEmoteAnimations: boolean;
   showTwitchBadges: boolean;
   show7tvBadges: boolean;
@@ -126,6 +131,7 @@ function buildPreferencesSchema() {
     showFFzEmotes: z.boolean(),
     showChatterinoEmotes: z.boolean(),
     showTwitchEmotes: z.boolean(),
+    showChatGifs: z.boolean(),
     disableEmoteAnimations: z.boolean(),
     showTwitchBadges: z.boolean(),
     show7tvBadges: z.boolean(),
@@ -177,6 +183,7 @@ export const initialPreferences: Preferences = {
   showFFzEmotes: true,
   showChatterinoEmotes: true,
   showTwitchEmotes: true,
+  showChatGifs: false,
   disableEmoteAnimations: false,
   showTwitchBadges: true,
   show7tvBadges: true,
@@ -285,6 +292,7 @@ export type ChatRenderPreferences = EmoteRenderPreferences &
     | 'disableEmoteAnimations'
     | 'highlightOwnMentions'
     | 'showAlternatingChatRows'
+    | 'showChatGifs'
     | 'showInlineReplyContext'
     | 'showRecentMessages'
     | 'showUnreadJumpPill'
@@ -325,6 +333,7 @@ export function useChatRenderPreferences(): ChatRenderPreferences {
         showBttvEmotes: preferences$.showBttvEmotes.get(),
         showFFzEmotes: preferences$.showFFzEmotes.get(),
         showChatterinoEmotes: preferences$.showChatterinoEmotes.get(),
+        showChatGifs: preferences$.showChatGifs.get(),
         showInlineReplyContext: preferences$.showInlineReplyContext.get(),
         showRecentMessages: preferences$.showRecentMessages.get(),
         showTwitchEmotes: preferences$.showTwitchEmotes.get(),

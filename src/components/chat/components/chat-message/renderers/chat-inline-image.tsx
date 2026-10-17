@@ -408,6 +408,10 @@ interface ChatInlineImageProps {
    * Taken here so the common emote needs no wrapper view of its own.
    */
   onTouchStart?: () => void;
+  /**
+   * When false, animated sources stay on the first frame.
+   */
+  playAnimation?: boolean;
   priority?: 'low' | 'normal' | 'high';
   sourceUrl: string;
   style: StyleProp<ImageStyle>;
@@ -418,6 +422,7 @@ interface ChatInlineImageProps {
 // eslint-disable-next-line react-doctor/no-giant-component -- a split adds a mount boundary on the hottest chat path
 function ChatInlineImageComponent({
   onTouchStart,
+  playAnimation = true,
   priority = 'high',
   sourceUrl,
   style,
@@ -465,7 +470,7 @@ function ChatInlineImageComponent({
       source={source}
       contentFit='contain'
       recyclingKey={`${candidateUrl}#${reloadNonce}`}
-      autoplay={autoplay}
+      autoplay={playAnimation && autoplay}
       // Keep the transient uri branch out of expo-image's memory cache to
       // avoid a second decoded-bitmap pool beside our ImageRef cache.
       cachePolicy={showRef ? 'memory-disk' : 'disk'}

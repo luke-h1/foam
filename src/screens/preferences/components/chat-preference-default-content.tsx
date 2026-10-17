@@ -33,12 +33,14 @@ export function ChatPreferenceDefaultContent() {
     handleContextToggle,
     handleDensityChange,
     handleDisableEmoteAnimationsToggle,
+    handleShowChatGifsToggle,
     handleEmojiStyleChange,
     handleProviderToggle,
     previewAlternatingRows,
     previewContext,
     previewDensity,
     previewDisableEmoteAnimations,
+    previewShowChatGifs,
     previewProviders,
     showRecentMessages,
     update,
@@ -108,7 +110,9 @@ export function ChatPreferenceDefaultContent() {
 
       <ChatPreferenceMediaSection
         handleDisableEmoteAnimationsToggle={handleDisableEmoteAnimationsToggle}
+        handleShowChatGifsToggle={handleShowChatGifsToggle}
         previewDisableEmoteAnimations={previewDisableEmoteAnimations}
+        previewShowChatGifs={previewShowChatGifs}
       />
     </>
   );

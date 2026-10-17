@@ -78,6 +78,7 @@ interface EnrichMessageSetOptions {
   messages: (AnyChatMessageType | undefined)[];
   processedMessageIds?: Set<string>;
   show7TvEmotes: boolean;
+  showChatGifs?: boolean;
   userLogin?: string | null;
 }
 
@@ -91,6 +92,7 @@ export function enrichMessageSet({
   messages,
   processedMessageIds,
   show7TvEmotes,
+  showChatGifs = false,
   userLogin,
 }: EnrichMessageSetOptions): () => void {
   let cancelled = false;
@@ -138,6 +140,7 @@ export function enrichMessageSet({
       channelId,
       emoteData,
       show7TvEmotes,
+      showChatGifs,
       text: textContent.trimEnd(),
       userId: msg.userstate['user-id'],
       userLogin,
@@ -219,6 +222,7 @@ interface ResolveVisibleMessageUpdateOptions {
   channelId: string;
   message: AnyChatMessageType;
   show7TvEmotes: boolean;
+  showChatGifs?: boolean;
   userLogin?: string | null;
 }
 
@@ -232,6 +236,7 @@ export async function resolveVisibleMessageUpdate({
   channelId,
   message,
   show7TvEmotes,
+  showChatGifs = false,
   userLogin,
 }: ResolveVisibleMessageUpdateOptions): Promise<MessageUpdateInput | null> {
   if (!shouldEnrichMessage(message)) {
@@ -252,6 +257,7 @@ export async function resolveVisibleMessageUpdate({
       channelId,
       emoteData,
       show7TvEmotes,
+      showChatGifs,
       text,
       userId,
       userLogin,
@@ -397,6 +403,10 @@ function areMessageTokenEqual(
     return false;
   }
 
+  if (previous.type === 'gif' && next.type === 'gif') {
+    return previous.gifId === next.gifId && previous.url === next.url;
+  }
+
   if (previous.type !== 'emote' || next.type !== 'emote') {
     return true;
   }
@@ -459,6 +469,11 @@ function getEnrichableText(tokens: MessageToken[]): string | null {
 
     if (token.type === 'emote') {
       textContent += token.content || token.name || token.original_name;
+      continue;
+    }
+
+    if (token.type === 'gif') {
+      textContent += token.content;
       continue;
     }
 

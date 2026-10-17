@@ -19,11 +19,17 @@ export function ChatPreferenceFormMediaSection({
       title='Media'
       footer={
         <NativeText>
-          When on, animated Twitch, BTTV, FFZ, and 7TV emotes show as still
-          images.
+          Chat GIFs load third-party media via Twitch. With animations off,
+          animated emotes and chat GIFs show as still frames.
         </NativeText>
       }
     >
+      <Toggle
+        label='Show Chat GIFs'
+        systemImage='photo.on.rectangle.angled'
+        isOn={preferences.showChatGifs}
+        onIsOnChange={value => update({ showChatGifs: value })}
+      />
       <Toggle
         label='Disable Emote Animations'
         systemImage='slash.circle'
