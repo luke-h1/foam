@@ -642,7 +642,7 @@ export const twitchService = {
       },
     });
 
-    return result.data[0] ?? null;
+    return result.data?.[0] ?? null;
   },
 
   /**

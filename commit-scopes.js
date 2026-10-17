@@ -32,6 +32,7 @@ const scopes = [
   'remote-config',
   'security',
   'sentry',
+  'services',
   'settings',
   'seventv',
   'storage',
