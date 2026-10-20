@@ -10,7 +10,7 @@ import {
 } from '@app/components/flash-list/flash-list';
 import { MemoizedLiveStreamCard } from '@app/components/live-stream-card/live-stream-card';
 import { LiveStreamCardSkeletons } from '@app/components/live-stream-card/live-stream-card-skeleton';
-import { MemoizedOfflineChannelRow } from '@app/components/offline-channel-row/offline-channel-row';
+import { OfflineChannelRow } from '@app/components/offline-channel-row/offline-channel-row';
 import { SectionHeader } from '@app/components/section-header/section-header';
 import { EmptyState } from '@app/components/ui/empty-state/empty-state';
 import { Text } from '@app/components/ui/text/text';
@@ -111,10 +111,10 @@ export default function FollowingScreen() {
     refetch: refetchFollowingStreams,
   });
 
-  const rawStreamsArray = useMemo(() => streams ?? [], [streams]);
+  const rawStreams = useMemo(() => streams ?? [], [streams]);
 
-  const streamsArray = useStreamProfilePictures(
-    rawStreamsArray,
+  const streamsWithProfilePictures = useStreamProfilePictures(
+    rawStreams,
     streamListLayout === 'media',
   );
 
@@ -130,34 +130,45 @@ export default function FollowingScreen() {
     }
 
     const liveBroadcasterIds = new Set(
-      streamsArray.map(stream => stream.user_id),
+      streamsWithProfilePictures.map(stream => stream.user_id),
     );
 
-    return followedChannels.filter(
-      channel => !liveBroadcasterIds.has(channel.broadcaster_id),
-    );
-  }, [followedChannels, streamsArray]);
+    return followedChannels
+      .filter(channel => !liveBroadcasterIds.has(channel.broadcaster_id))
+      .sort((a, b) =>
+        a.broadcaster_name.localeCompare(b.broadcaster_name, undefined, {
+          sensitivity: 'base',
+        }),
+      );
+  }, [followedChannels, streamsWithProfilePictures]);
 
   const listItems = useMemo<FollowingListItem[]>(() => {
     const items: FollowingListItem[] = [
-      { type: 'header', title: 'Live', count: streamsArray.length },
+      {
+        type: 'header',
+        title: 'Live',
+        count: streamsWithProfilePictures.length,
+      },
     ];
 
-    if (streamsArray.length === 0) {
+    if (streamsWithProfilePictures.length === 0) {
       items.push({ type: 'noneLive' });
     }
 
     items.push(
-      ...streamsArray.map(stream => ({ type: 'stream' as const, stream })),
+      ...streamsWithProfilePictures.map(stream => ({
+        type: 'stream' as const,
+        stream,
+      })),
     );
 
     if (offlineChannels.length > 0) {
-      items.push({
-        type: 'header',
-        title: 'Offline',
-        count: offlineChannels.length,
-      });
       items.push(
+        {
+          type: 'header',
+          title: 'Offline',
+          count: offlineChannels.length,
+        },
         ...offlineChannels.map(channel => ({
           type: 'offlineChannel' as const,
           channel,
@@ -166,7 +177,7 @@ export default function FollowingScreen() {
     }
 
     return items;
-  }, [streamsArray, offlineChannels]);
+  }, [streamsWithProfilePictures, offlineChannels]);
 
   const listRef = useRef(null);
 
@@ -193,7 +204,7 @@ export default function FollowingScreen() {
             </Text>
           );
         case 'offlineChannel':
-          return <MemoizedOfflineChannelRow channel={item.channel} />;
+          return <OfflineChannelRow channel={item.channel} />;
       }
     },
     [streamListLayout],
@@ -218,7 +229,7 @@ export default function FollowingScreen() {
   }
 
   const showLoadingSkeleton =
-    isLoading || (isFetching && streamsArray.length === 0);
+    isLoading || (isFetching && streamsWithProfilePictures.length === 0);
 
   if (showLoadingSkeleton) {
     return <FollowingSkeleton streamListLayout={streamListLayout} />;
@@ -251,14 +262,14 @@ export default function FollowingScreen() {
   // The offline list resolves after the streams query; wait for it or the empty state flashes.
   if (
     !streams ||
-    (streamsArray.length === 0 &&
+    (streamsWithProfilePictures.length === 0 &&
       offlineChannels.length === 0 &&
       isLoadingFollowedChannels)
   ) {
     return <FollowingSkeleton streamListLayout={streamListLayout} />;
   }
 
-  if (streamsArray.length === 0 && offlineChannels.length === 0) {
+  if (streamsWithProfilePictures.length === 0 && offlineChannels.length === 0) {
     return (
       <EmptyState
         button='Refresh'

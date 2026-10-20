@@ -15,7 +15,7 @@ interface Props {
   channel: FollowedChannelWithProfile;
 }
 
-function OfflineChannelRow({ channel }: Props) {
+function OfflineChannelRowComponent({ channel }: Props) {
   const handlePressIn = useCallback(() => {
     router.prefetch(`/streams/streamer-profile/${channel.broadcaster_login}`);
   }, [channel.broadcaster_login]);
@@ -51,7 +51,7 @@ function OfflineChannelRow({ channel }: Props) {
   );
 }
 
-export const MemoizedOfflineChannelRow = memo(OfflineChannelRow);
+export const OfflineChannelRow = memo(OfflineChannelRowComponent);
 
 const styles = StyleSheet.create({
   name: {
