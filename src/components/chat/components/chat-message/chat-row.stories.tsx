@@ -81,22 +81,97 @@ export const WithEmotes: Story = {
   },
 };
 
+const EXAMPLE_CHAT_GIF_URL =
+  'https://media4.giphy.com/media/joSNxeswxuc74Juo8X/giphy.gif?cid=095d7a5dzizsiwgabonagkmigggv8v1spfai91ac3x0dsiy0&ep=v1_gifs_trending&rid=giphy.gif&ct=g';
+
+const EXAMPLE_CHAT_GIF_CONTENT = '[Y A Y Yes GIF by Djemilah Birnie]';
+
 export const WithChatGif: Story = {
   args: {
-    ...createBaseMessage([
-      {
-        type: 'text',
-        content: 'look at this ',
-      },
-      {
-        type: 'gif',
-        content: '[Y A Y Yes GIF by Djemilah Birnie]',
-        gifId: 'joSNxeswxuc74Juo8X',
-        url: 'https://media4.giphy.com/media/joSNxeswxuc74Juo8X/giphy.gif?cid=095d7a5dzizsiwgabonagkmigggv8v1spfai91ac3x0dsiy0&ep=v1_gifs_trending&rid=giphy.gif&ct=g',
-      },
-    ]),
+    ...createBaseMessage(
+      [
+        {
+          type: 'text',
+          content: 'look at this ',
+        },
+        {
+          type: 'gif',
+          content: EXAMPLE_CHAT_GIF_CONTENT,
+          gifId: 'joSNxeswxuc74Juo8X',
+          url: EXAMPLE_CHAT_GIF_URL,
+        },
+      ],
+      { color: '#FF6B6B' },
+      mockBadges,
+    ),
     onReply: () => {},
   },
+};
+
+export const WithChatGifMidMessage: Story = {
+  args: {
+    ...createBaseMessage(
+      [
+        { type: 'text', content: 'chat said ' },
+        {
+          type: 'gif',
+          content: 'world',
+          gifId: 'abc123',
+          url: EXAMPLE_CHAT_GIF_URL,
+        },
+        { type: 'text', content: ' and then kept going' },
+      ],
+      { color: '#1AC9A2', username: 'gifposter', 'display-name': 'GifPoster' },
+      mockBadges,
+    ),
+    onReply: () => {},
+  },
+};
+
+export const ChatThreadWithGif: Story = {
+  args: {
+    ...createBaseMessage([{ type: 'text', content: 'placeholder' }]),
+    onReply: () => {},
+  },
+  render: () => (
+    <View style={{ gap: 8 }}>
+      <ChatRow
+        {...createBaseMessage(
+          [{ type: 'text', content: 'anyone got a reaction image' }],
+          { username: 'chatter', 'display-name': 'Chatter', color: '#9B59B6' },
+        )}
+        onReply={() => {}}
+      />
+      <ChatRow
+        {...createBaseMessage(
+          [
+            { type: 'text', content: 'this one ' },
+            {
+              type: 'gif',
+              content: EXAMPLE_CHAT_GIF_CONTENT,
+              gifId: 'joSNxeswxuc74Juo8X',
+              url: EXAMPLE_CHAT_GIF_URL,
+            },
+          ],
+          {
+            username: 'gifposter',
+            'display-name': 'GifPoster',
+            color: '#FF6B6B',
+          },
+          mockBadges,
+        )}
+        onReply={() => {}}
+      />
+      <ChatRow
+        {...createBaseMessage([{ type: 'text', content: 'lmao perfect' }], {
+          username: 'chatter',
+          'display-name': 'Chatter',
+          color: '#9B59B6',
+        })}
+        onReply={() => {}}
+      />
+    </View>
+  ),
 };
 
 export const ZeroWidthSevenTv: Story = {

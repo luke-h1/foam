@@ -1,7 +1,14 @@
 import { View } from 'react-native';
+import type { ReactNode } from 'react';
 
 import type { Meta, StoryObj } from '@storybook/react';
 
+import { ChatRow } from '../chat-row';
+import {
+  chatStoryDecorator,
+  createBaseMessage,
+  mockBadges,
+} from '../chat-row-story-fixtures';
 import { getChatTextStyles } from '../chat-text.styles';
 import { getChatScale } from '../util/chat-scale';
 import {
@@ -19,25 +26,25 @@ const scale = getChatScale('default', 'comfortable');
 const textStyles = getChatTextStyles('default', false);
 const storyVisibility = createRowVisibilityStore(true);
 
+const gifTokenDecorator = (Story: () => ReactNode) => (
+  <View
+    style={{
+      flex: 1,
+      backgroundColor: '#0E0E10',
+      padding: 16,
+      justifyContent: 'flex-start',
+    }}
+  >
+    <RowVisibilityContext.Provider value={storyVisibility}>
+      <Story />
+    </RowVisibilityContext.Provider>
+  </View>
+);
+
 const meta = {
   title: 'components/Chat/GifToken',
   component: GifToken,
-  decorators: [
-    Story => (
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: '#0E0E10',
-          padding: 16,
-          justifyContent: 'flex-start',
-        }}
-      >
-        <RowVisibilityContext.Provider value={storyVisibility}>
-          <Story />
-        </RowVisibilityContext.Provider>
-      </View>
-    ),
-  ],
+  decorators: [gifTokenDecorator],
 } satisfies Meta<typeof GifToken>;
 
 export default meta;
@@ -82,4 +89,59 @@ export const MissingUrl: Story = {
       url: '',
     },
   },
+};
+
+export const InChat: Story = {
+  args: Default.args,
+  decorators: [
+    chatStoryDecorator,
+    Story => (
+      <RowVisibilityContext.Provider value={storyVisibility}>
+        <Story />
+      </RowVisibilityContext.Provider>
+    ),
+  ],
+  render: () => (
+    <View style={{ gap: 8 }}>
+      <ChatRow
+        {...createBaseMessage(
+          [{ type: 'text', content: 'anyone got a reaction image' }],
+          {
+            username: 'chatter',
+            'display-name': 'Chatter',
+            color: '#9B59B6',
+          },
+        )}
+        onReply={() => {}}
+      />
+      <ChatRow
+        {...createBaseMessage(
+          [
+            { type: 'text', content: 'this one ' },
+            {
+              type: 'gif',
+              content: EXAMPLE_GIF_CONTENT,
+              gifId: 'joSNxeswxuc74Juo8X',
+              url: EXAMPLE_GIF_URL,
+            },
+          ],
+          {
+            username: 'gifposter',
+            'display-name': 'GifPoster',
+            color: '#FF6B6B',
+          },
+          mockBadges,
+        )}
+        onReply={() => {}}
+      />
+      <ChatRow
+        {...createBaseMessage([{ type: 'text', content: 'lmao perfect' }], {
+          username: 'chatter',
+          'display-name': 'Chatter',
+          color: '#9B59B6',
+        })}
+        onReply={() => {}}
+      />
+    </View>
+  ),
 };
