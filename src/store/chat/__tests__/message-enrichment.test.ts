@@ -406,6 +406,7 @@ describe('resolveVisibleMessageUpdate', () => {
         {
           type: 'emote',
           ...kappa,
+          content: kappa.name,
           overlaid: [
             {
               type: 'emote',
