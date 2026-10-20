@@ -39,8 +39,8 @@ export function ChatPreferenceFormMediaSection({
       )}
       <Toggle
         label='Show Chat GIFs'
-        systemImage='photo.on.rectangle.angled'
-        isOn={preferences.showChatGifs}
+        systemImage='photo'
+        isOn={Boolean(preferences.showChatGifs)}
         onIsOnChange={value => update({ showChatGifs: value })}
       />
     </Section>

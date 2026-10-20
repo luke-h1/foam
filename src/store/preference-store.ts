@@ -236,6 +236,10 @@ void when(persistedPreferences$?._state?.isLoadedLocal, () => {
   if (preferences$.chatDelay.peek() === 0) {
     preferences$.chatDelay.set('auto');
   }
+
+  if (preferences$.showChatGifs.peek() === undefined) {
+    preferences$.showChatGifs.set(false);
+  }
 });
 
 export function getPreferences(): Preferences {

@@ -52,7 +52,7 @@ export function ChatPreferenceMediaSection({
         title='Show Chat GIFs'
         subtitle='Loads third-party GIF media'
         icon={{
-          icon: 'photo.on.rectangle.angled',
+          icon: 'photo',
           androidIcon: 'gif_box',
         }}
         value={previewShowChatGifs}
