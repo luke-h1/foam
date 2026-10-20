@@ -23,9 +23,6 @@ export function replaceEmotesWithText(tokens: MessageToken[]): string {
           return overlaidText ? `${baseText} ${overlaidText}` : baseText;
         }
 
-        case 'mention':
-          return token.content ? `${token.content} ` : '';
-
         default:
           return getMessageTokenText(token);
       }

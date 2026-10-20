@@ -22,6 +22,8 @@ const jestConfig = {
     'node_modules/.*storybook.*',
   ],
   moduleNameMapper: {
+    '^@app/screens/storybook/storybook-screen$':
+      '<rootDir>/__mocks__/src/screens/storybook-screen.tsx',
     '^@app/(.*)$': '<rootDir>/src/$1',
     '^@modules/(.*)$': '<rootDir>/modules/$1',
     '\\.otf$': '<rootDir>/__mocks__/fileMock.js',
@@ -33,8 +35,6 @@ const jestConfig = {
       '<rootDir>/__mocks__/.rnstorybook/index.tsx',
     '^(\\./|\\.\\./)*\\.rnstorybook$':
       '<rootDir>/__mocks__/.rnstorybook/index.tsx',
-    '^@app/screens/storybook-screen$':
-      '<rootDir>/__mocks__/src/screens/storybook-screen.tsx',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   verbose: process.env.CI === 'true' || process.env.JEST_VERBOSE === 'true',

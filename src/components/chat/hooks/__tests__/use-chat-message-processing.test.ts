@@ -154,6 +154,7 @@ function renderMessageProcessing() {
       }),
       show7TvEmotes: true,
       show7tvBadges: true,
+      showChatGifs: false,
       userLogin: 'viewer',
     }),
   );
@@ -451,6 +452,7 @@ describe('useChatMessageProcessing', () => {
           scrollAnchor: createScrollAnchor(),
           show7TvEmotes: true,
           show7tvBadges: true,
+          showChatGifs: false,
           userLogin: 'viewer',
         }),
       { initialProps: { channelId } },

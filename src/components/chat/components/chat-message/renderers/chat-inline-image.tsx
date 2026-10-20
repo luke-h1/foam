@@ -403,11 +403,13 @@ function logEmoteLoadFailure({
 }
 
 interface ChatInlineImageProps {
+  accessibilityLabel?: string;
   /**
    * Records which emote a touch started on for the row's long-press timer.
    * Taken here so the common emote needs no wrapper view of its own.
    */
   onTouchStart?: () => void;
+  playAnimation?: boolean;
   priority?: 'low' | 'normal' | 'high';
   sourceUrl: string;
   style: StyleProp<ImageStyle>;
@@ -417,10 +419,12 @@ interface ChatInlineImageProps {
 
 // eslint-disable-next-line react-doctor/no-giant-component -- a split adds a mount boundary on the hottest chat path
 function ChatInlineImageComponent({
+  accessibilityLabel,
   onTouchStart,
   priority = 'high',
   sourceUrl,
   style,
+  playAnimation = true,
   testID,
   transitionMs = 100,
 }: ChatInlineImageProps) {
@@ -435,12 +439,14 @@ function ChatInlineImageComponent({
   const animated =
     urlKind === null ? sharedRef?.isAnimated === true : urlKind === 'animated';
 
+  const shouldAnimate = animated && playAnimation;
+
   const imageRef = useRef<ExpoImage>(null);
 
   const { autoplay, syncAfterImageChange } = useEmoteAnimationSync(
     imageRef,
     rowVisibility,
-    animated,
+    shouldAnimate,
   );
 
   const {
@@ -463,9 +469,11 @@ function ChatInlineImageComponent({
     <ExpoImage
       ref={imageRef}
       source={source}
+      accessible={accessibilityLabel ? true : undefined}
+      accessibilityLabel={accessibilityLabel}
       contentFit='contain'
       recyclingKey={`${candidateUrl}#${reloadNonce}`}
-      autoplay={autoplay}
+      autoplay={playAnimation && autoplay}
       // Keep the transient uri branch out of expo-image's memory cache to
       // avoid a second decoded-bitmap pool beside our ImageRef cache.
       cachePolicy={showRef ? 'memory-disk' : 'disk'}

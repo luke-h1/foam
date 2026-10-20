@@ -38,6 +38,7 @@ const SECONDARY_FONT_RATIO = 0.86;
 const EMOTE_RATIO = 2.15;
 const EMOTE_HEADROOM_RATIO = 0.3;
 const REPLY_EMOTE_RATIO = 1.43;
+const GIF_RATIO = 8;
 const BADGE_RATIO = 1.28;
 const GAP_RATIO = 0.29;
 const SURFACE_PADDING_HORIZONTAL_RATIO = 0.57;
@@ -51,6 +52,7 @@ export interface ChatScale {
   emoteLineHeight: number;
   emoteSize: number;
   gap: number;
+  gifSize: number;
   metaIconSize: number;
   replyEmoteLineHeight: number;
   replyEmoteSize: number;
@@ -98,6 +100,7 @@ function buildChatScale(
     emoteLineHeight: emoteSize + emoteHeadroom,
     emoteSize,
     gap: Math.round(bodyFontSize * GAP_RATIO),
+    gifSize: Math.round(bodyFontSize * GIF_RATIO),
     metaIconSize: secondaryFontSize,
     replyEmoteLineHeight: replyEmoteSize + emoteHeadroom,
     replyEmoteSize,

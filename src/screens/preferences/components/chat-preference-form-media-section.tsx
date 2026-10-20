@@ -37,6 +37,12 @@ export function ChatPreferenceFormMediaSection({
         />,
         previewWidth,
       )}
+      <Toggle
+        label='Show Chat GIFs'
+        systemImage='photo'
+        isOn={Boolean(preferences.showChatGifs)}
+        onIsOnChange={value => update({ showChatGifs: value })}
+      />
     </Section>
   );
 }

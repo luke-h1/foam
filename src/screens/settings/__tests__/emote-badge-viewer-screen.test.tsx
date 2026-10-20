@@ -1,7 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 
 import * as SegmentedControlModule from '@app/components/segmented-control/segmented-control';
-import { EmoteBadgeViewerScreen } from '@app/screens/settings-screen/emote-badge-viewer-screen';
+import { EmoteBadgeViewerScreen } from '@app/screens/settings/emote-badge-viewer-screen';
 import { bttvEmoteService } from '@app/services/bttv-emote-service';
 import { ffzService } from '@app/services/ffz-service';
 import { sevenTvService } from '@app/services/seven-tv-service';

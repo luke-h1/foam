@@ -16,7 +16,7 @@ if (
 ) {
   StorybookRoute =
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    require('@app/screens/storybook-screen/storybook-screen').StorybookScreen;
+    require('@app/screens/storybook/storybook-screen').StorybookScreen;
 }
 
 export default StorybookRoute;

@@ -1,5 +1,5 @@
 export type TwitchChatMessageFragment = {
-  type: 'text' | 'cheermote' | 'emote' | 'mention';
+  type: 'text' | 'cheermote' | 'emote' | 'mention' | 'gif';
   text: string;
   cheermote?: unknown;
   emote?: {
@@ -12,6 +12,10 @@ export type TwitchChatMessageFragment = {
     user_id?: string;
     user_login?: string;
     user_name?: string;
+  };
+  gif?: {
+    gif_id?: string;
+    url?: string;
   };
 };
 

@@ -109,6 +109,7 @@ function renderReprocess({
       emoteLoadStatus,
       processedMessageIdsRef,
       show7TvEmotes,
+      showChatGifs: false,
       userLogin,
     }),
   );
@@ -302,6 +303,50 @@ describe('useEmoteReprocessing', () => {
     ]);
   });
 
+  test('reprocesses stored messages when showChatGifs changes', () => {
+    const gifAlt = '[YAY GIF]';
+    const gifsTag = `0-${gifAlt.length - 1}|abc|https://example.com/a.gif`;
+
+    seedChannelCache({ sevenTvChannelEmotes: [kappa] });
+
+    addMessages([
+      {
+        ...createTextOnlyMessage('msg-1', gifAlt),
+        userstate: {
+          ...createTextOnlyMessage('msg-1', gifAlt).userstate,
+          gifs: gifsTag,
+        },
+        message: [{ type: 'text', content: gifAlt }],
+      },
+    ]);
+
+    const processedMessageIdsRef = { current: new Set(['msg-1']) };
+
+    const { rerender } = renderHook(
+      ({ showChatGifs }: { showChatGifs: boolean }) =>
+        useEmoteReprocessing({
+          channelId,
+          channelEmoteData: {},
+          messages$: chatStore$.messages,
+          emoteLoadStatus: 'success',
+          processedMessageIdsRef,
+          show7TvEmotes: true,
+          showChatGifs,
+        }),
+      { initialProps: { showChatGifs: false } },
+    );
+
+    expect(storedTokens('msg-1')).toEqual<TokenSummary[]>([
+      { type: 'text', content: gifAlt },
+    ]);
+
+    rerender({ showChatGifs: true });
+
+    expect(storedTokens('msg-1')).toEqual<TokenSummary[]>([
+      { type: 'gif', content: gifAlt },
+    ]);
+  });
+
   test('reprocesses existing emote tokens when reprocessKey changes', () => {
     seedChannelCache({ sevenTvChannelEmotes: [kappa] });
 
@@ -327,6 +372,7 @@ describe('useEmoteReprocessing', () => {
           processedMessageIdsRef,
           reprocessKey,
           show7TvEmotes: true,
+          showChatGifs: false,
         }),
       { initialProps: { reprocessKey: 'twitter' } },
     );

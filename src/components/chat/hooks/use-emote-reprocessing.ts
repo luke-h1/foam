@@ -18,6 +18,7 @@ interface UseEmoteReprocessingOptions {
   processedMessageIdsRef: RefObject<Set<string>>;
   reprocessKey?: string;
   show7TvEmotes: boolean;
+  showChatGifs: boolean;
   userLogin?: string | null;
 }
 
@@ -29,14 +30,22 @@ export function useEmoteReprocessing({
   processedMessageIdsRef,
   reprocessKey,
   show7TvEmotes,
+  showChatGifs = false,
   userLogin,
 }: UseEmoteReprocessingOptions) {
   const previousReprocessKeyRef = useRef(reprocessKey);
+  const previousShowChatGifsRef = useRef(showChatGifs);
 
   useEffect(() => {
-    if (previousReprocessKeyRef.current !== reprocessKey) {
+    const reprocessKeyChanged =
+      previousReprocessKeyRef.current !== reprocessKey;
+    const showChatGifsChanged =
+      previousShowChatGifsRef.current !== showChatGifs;
+
+    if (reprocessKeyChanged || showChatGifsChanged) {
       processedMessageIdsRef.current.clear();
       previousReprocessKeyRef.current = reprocessKey;
+      previousShowChatGifsRef.current = showChatGifs;
     } else if (
       processedMessageIdsRef.current.size > MAX_PROCESSED_MESSAGE_IDS
     ) {
@@ -69,6 +78,7 @@ export function useEmoteReprocessing({
       messages: currentMessages,
       processedMessageIds: processedMessageIdsRef.current,
       show7TvEmotes,
+      showChatGifs,
       userLogin,
     });
   }, [
@@ -79,6 +89,7 @@ export function useEmoteReprocessing({
     processedMessageIdsRef,
     reprocessKey,
     show7TvEmotes,
+    showChatGifs,
     userLogin,
   ]);
 }

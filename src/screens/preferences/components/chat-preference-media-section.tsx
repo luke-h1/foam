@@ -9,13 +9,19 @@ import { theme } from '@app/styles/themes';
 
 import { ChatPreferencePreview } from './chat-preferences-preview';
 
+interface ChatPreferenceMediaSectionProps {
+  handleDisableEmoteAnimationsToggle: (value: boolean) => void;
+  handleShowChatGifsToggle: (value: boolean) => void;
+  previewDisableEmoteAnimations: boolean;
+  previewShowChatGifs: boolean;
+}
+
 export function ChatPreferenceMediaSection({
   handleDisableEmoteAnimationsToggle,
   previewDisableEmoteAnimations,
-}: {
-  handleDisableEmoteAnimationsToggle: (value: boolean) => void;
-  previewDisableEmoteAnimations: boolean;
-}) {
+  handleShowChatGifsToggle,
+  previewShowChatGifs,
+}: ChatPreferenceMediaSectionProps) {
   return (
     <SettingsSection
       title='Media'
@@ -42,6 +48,16 @@ export function ChatPreferenceMediaSection({
           value={previewDisableEmoteAnimations}
         />
       </View>
+      <SettingsToggleRow
+        title='Show Chat GIFs'
+        subtitle='Loads third-party GIF media'
+        icon={{
+          icon: 'photo',
+          androidIcon: 'gif_box',
+        }}
+        value={previewShowChatGifs}
+        onValueChange={handleShowChatGifsToggle}
+      />
     </SettingsSection>
   );
 }

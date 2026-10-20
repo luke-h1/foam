@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render as baseRender, screen } from '@testing-library/react-native';
 
 import { AuthContextTestProvider } from '@app/context/auth-context';
-import FollowingScreen from '@app/screens/following-screen/following-screen';
+import FollowingScreen from '@app/screens/following/following-screen';
 import { twitchService as realTwitchService } from '@app/services/twitch-service';
 import type { TwitchStream } from '@app/types/twitch/stream';
 import type { UserInfoResponse } from '@app/types/twitch/user';

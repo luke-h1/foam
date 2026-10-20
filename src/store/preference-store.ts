@@ -57,6 +57,7 @@ export interface Preferences {
   showFFzEmotes: boolean;
   showChatterinoEmotes: boolean;
   showTwitchEmotes: boolean;
+  showChatGifs: boolean;
   disableEmoteAnimations: boolean;
   showTwitchBadges: boolean;
   show7tvBadges: boolean;
@@ -130,6 +131,7 @@ function buildPreferencesSchema() {
     showTwitchBadges: z.boolean(),
     show7tvBadges: z.boolean(),
     showFFzBadges: z.boolean(),
+    showChatGifs: z.boolean(),
     showBttvBadges: z.boolean(),
     blockedTerms: z.array(z.string()),
     chatTimestampFormat: z.enum(['24h', '12h']),
@@ -182,6 +184,7 @@ export const initialPreferences: Preferences = {
   show7tvBadges: true,
   showFFzBadges: true,
   showBttvBadges: true,
+  showChatGifs: false,
   blockedTerms: [],
   chatTimestampFormat: '24h',
   chatFontScale: 'default',
@@ -212,7 +215,7 @@ const persistedPreferences$ = persistObservable(preferences$, {
   local: createObservablePersistenceLocalConfig(PREFERENCES_PERSISTENCE_KEY),
 });
 
-when(persistedPreferences$?._state?.isLoadedLocal, () => {
+void when(persistedPreferences$?._state?.isLoadedLocal, () => {
   // The 'text' stream list layout was removed; migrate old persisted values.
   const persistedStreamListLayout: string =
     preferences$.streamListLayout.peek();
@@ -232,6 +235,10 @@ when(persistedPreferences$?._state?.isLoadedLocal, () => {
   // explicit value is 'off' now, so legacy zeros move to the new default.
   if (preferences$.chatDelay.peek() === 0) {
     preferences$.chatDelay.set('auto');
+  }
+
+  if (preferences$.showChatGifs.peek() === undefined) {
+    preferences$.showChatGifs.set(false);
   }
 });
 
@@ -285,6 +292,7 @@ export type ChatRenderPreferences = EmoteRenderPreferences &
     | 'disableEmoteAnimations'
     | 'highlightOwnMentions'
     | 'showAlternatingChatRows'
+    | 'showChatGifs'
     | 'showInlineReplyContext'
     | 'showRecentMessages'
     | 'showUnreadJumpPill'
@@ -329,6 +337,7 @@ export function useChatRenderPreferences(): ChatRenderPreferences {
         showRecentMessages: preferences$.showRecentMessages.get(),
         showTwitchEmotes: preferences$.showTwitchEmotes.get(),
         showTwitchBadges: preferences$.showTwitchBadges.get(),
+        showChatGifs: preferences$.showChatGifs.get(),
         show7tvBadges: preferences$.show7tvBadges.get(),
         showFFzBadges: preferences$.showFFzBadges.get(),
         showBttvBadges: preferences$.showBttvBadges.get(),

@@ -23,6 +23,11 @@ const NOTICE_META_ROW_WEIGHT = 34;
 const SUBSCRIPTION_DESCRIPTION_WEIGHT = 48;
 
 /**
+ * A Twitch chat GIF at `gifSize`, about a short card tall.
+ */
+const GIF_WEIGHT = 48;
+
+/**
  * About a wrapped line apart at the low end where nearly every row sits,
  * widening down the tail so one copypasta cannot open a bucket of its own.
  */
@@ -85,6 +90,10 @@ function getPartWeight(token: MessageToken): number {
     case 'stvEmoteAdded':
     case 'stvEmoteRemoved':
       return NOTICE_META_ROW_WEIGHT + textLength(token.stvEvents.data.name);
+
+    case 'gif':
+      return GIF_WEIGHT;
+
     default:
       return 0;
   }

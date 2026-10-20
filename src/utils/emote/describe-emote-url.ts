@@ -68,5 +68,9 @@ export function describeEmoteUrl(url: string): EmoteUrlDescriptor {
     };
   }
 
+  if (/\.gif(?:\?|#|$)/i.test(url)) {
+    return { provider: 'unknown', id: null, scale: null, kind: 'animated' };
+  }
+
   return { provider: 'unknown', id: null, scale: null, kind: null };
 }

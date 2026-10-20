@@ -1,8 +1,8 @@
 import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import { extractEmotesFromTag } from '@app/utils/chat/extract-emotes/extract-emotes-from-tag';
 import { findBadges } from '@app/utils/chat/find-badges';
 import type { MessageToken } from '@app/utils/chat/message-token';
-import { replaceEmotesWithText } from '@app/utils/chat/replace-emotes-with-text';
 import { resolveMessageEmoteParts } from '@app/utils/chat/resolve-message-emote-tokens';
 import { getMessageBadges } from '@app/utils/chat/shared-chat-badges/get-message-badges';
 import { getSharedChatBadgeContext } from '@app/utils/chat/shared-chat-badges/get-shared-chat-badge-context';
@@ -78,6 +78,7 @@ interface EnrichMessageSetOptions {
   messages: (AnyChatMessageType | undefined)[];
   processedMessageIds?: Set<string>;
   show7TvEmotes: boolean;
+  showChatGifs?: boolean;
   userLogin?: string | null;
 }
 
@@ -91,6 +92,7 @@ export function enrichMessageSet({
   messages,
   processedMessageIds,
   show7TvEmotes,
+  showChatGifs = false,
   userLogin,
 }: EnrichMessageSetOptions): () => void {
   let cancelled = false;
@@ -121,28 +123,26 @@ export function enrichMessageSet({
       return;
     }
 
-    const textContent = getEnrichableText(msg.message);
+    const replacedMessage = resolveStoredMessageTokens({
+      channelId,
+      emoteData,
+      show7TvEmotes,
+      showChatGifs,
+      tokens: msg.message,
+      userId: msg.userstate['user-id'],
+      userLogin,
+      userstate: msg.userstate,
+    });
 
-    if (textContent == null) {
+    if (replacedMessage == null) {
       return;
     }
 
     processedMessageIds?.add(msg.message_id);
 
-    if (!textContent.trim()) {
+    if (replacedMessage.length === 0) {
       return;
     }
-
-    // Shared resolver keeps personal / tagged sub emotes from downgrading to text.
-    const replacedMessage = resolveMessageEmoteParts({
-      channelId,
-      emoteData,
-      show7TvEmotes,
-      text: textContent.trimEnd(),
-      userId: msg.userstate['user-id'],
-      userLogin,
-      userstate: msg.userstate,
-    });
 
     const replacedBadges = findBadges({
       userstate: msg.userstate,
@@ -219,6 +219,7 @@ interface ResolveVisibleMessageUpdateOptions {
   channelId: string;
   message: AnyChatMessageType;
   show7TvEmotes: boolean;
+  showChatGifs?: boolean;
   userLogin?: string | null;
 }
 
@@ -232,6 +233,7 @@ export async function resolveVisibleMessageUpdate({
   channelId,
   message,
   show7TvEmotes,
+  showChatGifs = false,
   userLogin,
 }: ResolveVisibleMessageUpdateOptions): Promise<MessageUpdateInput | null> {
   if (!shouldEnrichMessage(message)) {
@@ -239,24 +241,22 @@ export async function resolveVisibleMessageUpdate({
   }
 
   const emoteData = getCurrentEmoteData(channelId);
-  const text = replaceEmotesWithText(message.message).trimEnd();
-
-  if (!text.trim()) {
-    return null;
-  }
-
-  const userId = message.userstate['user-id'];
 
   try {
-    const replacedMessage = resolveMessageEmoteParts({
+    const replacedMessage = resolveStoredMessageTokens({
       channelId,
       emoteData,
       show7TvEmotes,
-      text,
-      userId,
+      showChatGifs,
+      tokens: message.message,
+      userId: message.userstate['user-id'],
       userLogin,
       userstate: message.userstate,
     });
+
+    if (!replacedMessage?.length) {
+      return null;
+    }
 
     const { sourceBadge, sourceChannelBadges } =
       await getSharedChatBadgeContext(message.userstate);
@@ -397,6 +397,10 @@ function areMessageTokenEqual(
     return false;
   }
 
+  if (previous.type === 'gif' && next.type === 'gif') {
+    return previous.gifId === next.gifId && previous.url === next.url;
+  }
+
   if (previous.type !== 'emote' || next.type !== 'emote') {
     return true;
   }
@@ -448,17 +452,143 @@ function getMessageTokenContent(token: MessageToken) {
   return 'content' in token ? token.content : undefined;
 }
 
+interface ResolveStoredMessageTokensOptions {
+  channelId: string;
+  emoteData: ChatEmoteData;
+  show7TvEmotes: boolean;
+  showChatGifs: boolean;
+  tokens: MessageToken[];
+  userId: string | undefined;
+  userLogin?: string | null;
+  userstate: UserStateTags;
+}
+
+function resolveStoredMessageTokens({
+  channelId,
+  emoteData,
+  show7TvEmotes,
+  showChatGifs,
+  tokens,
+  userId,
+  userLogin,
+  userstate,
+}: ResolveStoredMessageTokensOptions): MessageToken[] | null {
+  const keepExistingGifs =
+    showChatGifs && tokens.some(token => token.type === 'gif');
+
+  if (!keepExistingGifs) {
+    const textContent = getEnrichableText(tokens);
+
+    if (textContent == null || !textContent.trim()) {
+      return textContent == null ? null : [];
+    }
+
+    return resolveMessageEmoteParts({
+      channelId,
+      emoteData,
+      show7TvEmotes,
+      showChatGifs,
+      text: textContent.trimEnd(),
+      userId,
+      userLogin,
+      userstate,
+    });
+  }
+
+  const rebuiltBody = getEnrichableText(tokens);
+
+  const taggedSubscriberEmotes = rebuiltBody
+    ? extractEmotesFromTag(userstate.emotes, rebuiltBody.trimEnd())
+    : [];
+
+  const resolved: MessageToken[] = [];
+  let gap: MessageToken[] = [];
+
+  const flushGap = (trimEnd: boolean) => {
+    const textContent = getEnrichableText(gap);
+    gap = [];
+
+    if (textContent == null) {
+      return false;
+    }
+
+    const text = trimEnd ? textContent.trimEnd() : textContent;
+
+    if (!text) {
+      return true;
+    }
+
+    resolved.push(
+      ...resolveMessageEmoteParts({
+        channelId,
+        emoteData,
+        show7TvEmotes,
+        showChatGifs: false,
+        taggedSubscriberEmotes,
+        text,
+        userId,
+        userLogin,
+        userstate: { ...userstate, emotes: undefined },
+      }),
+    );
+
+    return true;
+  };
+
+  for (const token of tokens) {
+    if (token.type !== 'gif') {
+      gap.push(token);
+      continue;
+    }
+
+    if (!flushGap(false)) {
+      return null;
+    }
+
+    resolved.push(token);
+  }
+
+  if (!flushGap(true)) {
+    return null;
+  }
+
+  return resolved;
+}
+
+function emoteSourceText(token: MessageToken<'emote'>): string {
+  const base = token.content || token.name || token.original_name || '';
+
+  const overlaid = (token.overlaid ?? [])
+    .flatMap(overlay => {
+      const name = overlay.content || overlay.name || overlay.original_name;
+
+      return name ? [name] : [];
+    })
+    .join(' ');
+
+  return overlaid ? `${base} ${overlaid}` : base;
+}
+
 function getEnrichableText(tokens: MessageToken[]): string | null {
   let textContent = '';
 
   for (const token of tokens) {
-    if (token.type === 'text' || token.type === 'mention') {
+    if (
+      token.type === 'text' ||
+      token.type === 'mention' ||
+      token.type === 'link'
+    ) {
       textContent += token.content;
       continue;
     }
 
     if (token.type === 'emote') {
-      textContent += token.content || token.name || token.original_name;
+      textContent += emoteSourceText(token);
+      continue;
+    }
+
+    if (token.type === 'gif') {
+      textContent += token.content;
       continue;
     }
 

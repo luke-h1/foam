@@ -21,6 +21,7 @@ export type MessageTokenKind =
   | 'twitchClip'
   | 'link'
   | 'cheermote'
+  | 'gif'
   | 'stvEmoteAdded'
   | 'stvEmoteRemoved'
   | TwitchNoticeKind;
@@ -112,6 +113,12 @@ interface MessageTokenByKind {
   stvEmoteRemoved: {
     type: 'stvEmoteRemoved';
     stvEvents: { type: 'added' | 'removed'; data: SanitisedEmote };
+  };
+  gif: {
+    type: 'gif';
+    content: string;
+    gifId: string;
+    url: string;
   };
 
   sub: {
