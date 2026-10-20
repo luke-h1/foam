@@ -2,11 +2,11 @@ import { SUITE_PHASES, SUITE_TOTAL_MS } from '../chat-perf-suite';
 import { SYNTHETIC_PRESETS } from '../synthetic-chat-control';
 
 describe('chat-perf-suite', () => {
-  test('is 10 minutes of medium then heavy', () => {
-    expect(SUITE_TOTAL_MS).toEqual(600_000);
+  test('is 2 minutes of medium then heavy', () => {
+    expect(SUITE_TOTAL_MS).toEqual(120_000);
     expect(SUITE_PHASES).toEqual([
-      { preset: 'medium', measureMs: 280_000 },
-      { preset: 'heavy', measureMs: 280_000 },
+      { preset: 'medium', measureMs: 50_000 },
+      { preset: 'heavy', measureMs: 50_000 },
     ]);
   });
 

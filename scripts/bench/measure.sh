@@ -3,7 +3,7 @@
 # Measures Android performance with Flashlight. Argent flows drive the app.
 #
 #   bun run argent:perf                       # short benches
-#   bun run argent:perf:suite                 # 10-minute medium + heavy (#942)
+#   bun run argent:perf:suite                 # 2-minute medium + heavy (#942)
 #   bun run argent:perf chat-raid             # named bench only
 #   ITERATIONS=5 bun run argent:perf
 #   BUNDLE_ID=com.lhowsam.foam.internal bun run argent:perf
@@ -13,12 +13,12 @@
 #   top-streams     scroll the Top streams list
 #   top-categories  scroll the Top categories list
 #   chat-raid       chat-perf screen, 10s of the raid synthetic flood
-#   chat-suite      chat-perf screen, 10-minute medium + heavy suite
+#   chat-suite      chat-perf screen, 2-minute medium + heavy suite
 #
 # chat-raid / chat-suite replay a fixed IRC fixture (no live channel). chat-perf
 # exists only in development, internal and e2e builds.
 #
-# chat-suite opens ?suite=1, runs medium then heavy (~4m40s each), writes
+# chat-suite opens ?suite=1, runs medium then heavy (~50s each), writes
 # Documents/chat-perf-suite.json, and reports Flashlight FPS/CPU/RAM plus the
 # in-app export. A steep RSS slope is treated as a leak.
 #
@@ -52,7 +52,7 @@ RESULTS="$ROOT/bench-results"
 
 BENCHES=("$@")
 if [ ${#BENCHES[@]} -eq 0 ]; then
-  # chat-suite is 10 minutes; name it explicitly.
+  # chat-suite is 2 minutes; name it explicitly.
   BENCHES=(top-streams top-categories chat-raid)
 fi
 

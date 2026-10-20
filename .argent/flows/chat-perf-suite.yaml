@@ -1,15 +1,13 @@
 executionPrerequisite: The chat-perf suite is running (suite-stop visible), as open-chat-perf-suite leaves it.
 steps:
-  - echo: Wait for the 10-minute medium + heavy suite; print native CPU/PSS every 2 minutes
+  - echo: Wait for the 2-minute medium + heavy suite; print native CPU/PSS every 30s
   - script: { path: ../../scripts/bench/print-native-metrics.mjs }
-  - wait: 120000
+  - wait: 30000
   - script: { path: ../../scripts/bench/print-native-metrics.mjs }
-  - wait: 120000
+  - wait: 30000
   - script: { path: ../../scripts/bench/print-native-metrics.mjs }
-  - wait: 120000
+  - wait: 30000
   - script: { path: ../../scripts/bench/print-native-metrics.mjs }
-  - wait: 120000
-  - script: { path: ../../scripts/bench/print-native-metrics.mjs }
-  - wait: 120000
-  - await: { visible: { id: suite-done }, timeout: 60000 }
+  - wait: 30000
+  - await: { visible: { id: suite-done }, timeout: 30000 }
   - script: { path: ../../scripts/bench/print-native-metrics.mjs }
