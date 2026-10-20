@@ -408,6 +408,7 @@ interface ChatInlineImageProps {
    * Taken here so the common emote needs no wrapper view of its own.
    */
   onTouchStart?: () => void;
+  playAnimation?: boolean;
   priority?: 'low' | 'normal' | 'high';
   sourceUrl: string;
   style: StyleProp<ImageStyle>;
@@ -421,6 +422,7 @@ function ChatInlineImageComponent({
   priority = 'high',
   sourceUrl,
   style,
+  playAnimation = true,
   testID,
   transitionMs = 100,
 }: ChatInlineImageProps) {
@@ -435,12 +437,14 @@ function ChatInlineImageComponent({
   const animated =
     urlKind === null ? sharedRef?.isAnimated === true : urlKind === 'animated';
 
+  const shouldAnimate = animated && playAnimation;
+
   const imageRef = useRef<ExpoImage>(null);
 
   const { autoplay, syncAfterImageChange } = useEmoteAnimationSync(
     imageRef,
     rowVisibility,
-    animated,
+    shouldAnimate,
   );
 
   const {
@@ -465,7 +469,7 @@ function ChatInlineImageComponent({
       source={source}
       contentFit='contain'
       recyclingKey={`${candidateUrl}#${reloadNonce}`}
-      autoplay={autoplay}
+      autoplay={playAnimation && autoplay}
       // Keep the transient uri branch out of expo-image's memory cache to
       // avoid a second decoded-bitmap pool beside our ImageRef cache.
       cachePolicy={showRef ? 'memory-disk' : 'disk'}

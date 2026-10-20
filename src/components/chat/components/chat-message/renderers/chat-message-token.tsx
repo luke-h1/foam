@@ -9,6 +9,7 @@ import { getChatTextStyles } from '../chat-text.styles';
 import { densityFromCompact, getChatScale } from '../util/chat-scale';
 import { CheermoteToken } from './cheermote-token';
 import { EmoteToken } from './emote-token';
+import { GifToken } from './gif-token';
 import { MediaLinkToken } from './media-link-token';
 import { MentionToken } from './mention-token';
 import { NoticeToken } from './notice-token';
@@ -142,6 +143,18 @@ export function ChatMessageToken({
           disableAnimations={disableEmoteAnimations}
           fontScale={fontScale}
           token={token}
+        />
+      );
+
+    case 'gif':
+      return (
+        <GifToken
+          disableAnimations={disableEmoteAnimations}
+          isModerated={isModerated}
+          key={getTokenKey(token, index)}
+          textStyles={textStyles}
+          token={token}
+          targetSize={scale.gifSize}
         />
       );
 

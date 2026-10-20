@@ -81,6 +81,24 @@ export const WithEmotes: Story = {
   },
 };
 
+export const WithChatGif: Story = {
+  args: {
+    ...createBaseMessage([
+      {
+        type: 'text',
+        content: 'look at this ',
+      },
+      {
+        type: 'gif',
+        content: '[Y A Y Yes GIF by Djemilah Birnie]',
+        gifId: 'joSNxeswxuc74Juo8X',
+        url: 'https://media4.giphy.com/media/joSNxeswxuc74Juo8X/giphy.gif?cid=095d7a5dzizsiwgabonagkmigggv8v1spfai91ac3x0dsiy0&ep=v1_gifs_trending&rid=giphy.gif&ct=g',
+      },
+    ]),
+    onReply: () => {},
+  },
+};
+
 export const ZeroWidthSevenTv: Story = {
   args: {
     ...createBaseMessage([

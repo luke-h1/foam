@@ -40,6 +40,7 @@ interface UseChatMessageProcessingOptions {
   scrollAnchor: ChatScrollAnchor;
   show7TvEmotes: boolean;
   show7tvBadges: boolean;
+  showChatGifs: boolean;
   userLogin?: string | null;
 }
 
@@ -50,6 +51,7 @@ export function useChatMessageProcessing({
   scrollAnchor,
   show7TvEmotes,
   show7tvBadges,
+  showChatGifs,
   userLogin,
 }: UseChatMessageProcessingOptions) {
   const composeMessageWithEmotes = useCallback(
@@ -60,8 +62,9 @@ export function useChatMessageProcessing({
       userId?: string,
     ): AnyChatMessageType => {
       const emoteData = getCurrentEmoteData(channelId);
+      const hasGifs = showChatGifs && Boolean(userstate.gifs?.trim());
 
-      if (!hasEnrichmentEmoteSources(emoteData)) {
+      if (!hasEnrichmentEmoteSources(emoteData) && !hasGifs) {
         return baseMessage;
       }
 
@@ -70,6 +73,7 @@ export function useChatMessageProcessing({
           channelId,
           emoteData,
           show7TvEmotes,
+          showChatGifs,
           text: text.trimEnd(),
           userId,
           userLogin,
@@ -105,7 +109,7 @@ export function useChatMessageProcessing({
         return baseMessage;
       }
     },
-    [channelId, show7TvEmotes, userLogin],
+    [channelId, show7TvEmotes, userLogin, showChatGifs],
   );
 
   const processMessageEmotes = useCallback(
@@ -159,9 +163,10 @@ export function useChatMessageProcessing({
         channelId,
         message,
         show7TvEmotes,
+        showChatGifs,
         userLogin,
       }),
-    [channelId, show7TvEmotes, userLogin],
+    [channelId, show7TvEmotes, userLogin, showChatGifs],
   );
 
   const latestVisibleMessagesRef = useRef<AnyChatMessageType[]>([]);

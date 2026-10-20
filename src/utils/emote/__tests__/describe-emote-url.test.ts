@@ -82,4 +82,17 @@ describe('describeEmoteUrl', () => {
       kind: null,
     });
   });
+
+  test('treats a .gif url as animated', () => {
+    expect(
+      describeEmoteUrl(
+        'https://media4.giphy.com/media/abc/giphy.gif?cid=1&rid=giphy.gif',
+      ),
+    ).toEqual<EmoteUrlDescriptor>({
+      provider: 'unknown',
+      id: null,
+      scale: null,
+      kind: 'animated',
+    });
+  });
 });

@@ -90,4 +90,19 @@ describe('flowsInline', () => {
       ),
     ).toBe(false);
   });
+  test('rejects a chat GIF token', () => {
+    expect(
+      flowsInline(
+        [
+          {
+            type: 'gif',
+            content: '[yes gif]',
+            gifId: 'abc123',
+            url: 'https://example.com/giphy.gif',
+          } satisfies MessageToken<'gif'>,
+        ],
+        { hasPaint: false, isModerated: false },
+      ),
+    ).toBe(false);
+  });
 });
