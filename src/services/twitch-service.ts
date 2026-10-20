@@ -1,48 +1,48 @@
 /* eslint-disable camelcase */
-import { fetch } from 'expo/fetch';
-import Constants from 'expo-constants';
-import { z } from 'zod';
+import { fetch } from "expo/fetch";
+import Constants from "expo-constants";
+import { z } from "zod";
 
-import { parseJsonOnWorklet } from '@app/lib/off-thread-json/parse-json-on-worklet';
-import type { PaginatedList } from '@app/types/twitch/api';
+import { parseJsonOnWorklet } from "@app/lib/off-thread-json/parse-json-on-worklet";
+import type { PaginatedList } from "@app/types/twitch/api";
 import type {
   DefaultTokenResponse,
   RefreshTokenResponse,
-} from '@app/types/twitch/auth';
-import type { TwitchCheermote } from '@app/types/twitch/bits';
-import type { Category } from '@app/types/twitch/category';
+} from "@app/types/twitch/auth";
+import type { TwitchCheermote } from "@app/types/twitch/bits";
+import type { Category } from "@app/types/twitch/category";
 import type {
   Channel,
   FollowedChannel,
   SearchChannelResponse,
-} from '@app/types/twitch/channel';
+} from "@app/types/twitch/channel";
 import type {
   TwitchPinnedChatMessage,
   TwitchSendChatMessageResult,
-} from '@app/types/twitch/chat';
+} from "@app/types/twitch/chat";
 import type {
   TwitchClip,
   TwitchClipsRequestParams,
   TwitchCreatedClip,
-} from '@app/types/twitch/clip';
-import type { TwitchChatSettingsPatch } from '@app/types/twitch/moderation';
-import type { TwitchHelixPoll } from '@app/types/twitch/poll';
-import type { TwitchHelixPrediction } from '@app/types/twitch/prediction';
-import type { TwitchStream } from '@app/types/twitch/stream';
+} from "@app/types/twitch/clip";
+import type { TwitchChatSettingsPatch } from "@app/types/twitch/moderation";
+import type { TwitchHelixPoll } from "@app/types/twitch/poll";
+import type { TwitchHelixPrediction } from "@app/types/twitch/prediction";
+import type { TwitchStream } from "@app/types/twitch/stream";
 import type {
   UserBlockList,
   UserBlockListRequestParams,
   UserInfoResponse,
-} from '@app/types/twitch/user';
+} from "@app/types/twitch/user";
 import type {
   TwitchVideo,
   TwitchVideosRequestParams,
-} from '@app/types/twitch/video';
+} from "@app/types/twitch/video";
 import {
   cacheChannelPointRewardTitle,
   getCachedChannelPointRewardTitle,
-} from '@app/utils/chat/channel-point-reward-title-store';
-import { logger } from '@app/utils/logger';
+} from "@app/utils/chat/channel-point-reward-title-store";
+import { logger } from "@app/utils/logger";
 
 import {
   getTwitchClientId,
@@ -50,7 +50,7 @@ import {
   mockServerUrl,
   setTwitchClientId,
   twitchApi,
-} from './api/clients';
+} from "./api/clients";
 
 const authProxyBaseUrl: string | undefined =
   Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL ??
@@ -76,33 +76,33 @@ interface TwitchClipResponse {
 }
 
 type EventSubStatus =
-  | 'enabled'
-  | 'webhook_callback_verification_pending'
-  | 'webhook_callback_verification_failed'
-  | 'notification_failures_exceeded'
-  | 'authorization_revoked'
-  | 'moderator_removed'
-  | 'user_removed'
-  | 'chat_user_banned'
-  | 'version_removed'
-  | 'beta_maintenance'
+  | "enabled"
+  | "webhook_callback_verification_pending"
+  | "webhook_callback_verification_failed"
+  | "notification_failures_exceeded"
+  | "authorization_revoked"
+  | "moderator_removed"
+  | "user_removed"
+  | "chat_user_banned"
+  | "version_removed"
+  | "beta_maintenance"
   /**
    * The client (not the server) closed the connection.
    */
-  | 'websocket_disconnected'
-  | 'websocket_failed_ping_pong'
+  | "websocket_disconnected"
+  | "websocket_failed_ping_pong"
   /**
    * The client sent a non-pong message.
    */
-  | 'websocket_received_inbound_traffic'
+  | "websocket_received_inbound_traffic"
   /**
    * The client failed to subscribe to events within the required time.
    */
-  | 'websocket_connection_unused'
-  | 'websocket_internal_error'
-  | 'websocket_network_timeout'
-  | 'websocket_network_error'
-  | 'websocket_failed_to_reconnect';
+  | "websocket_connection_unused"
+  | "websocket_internal_error"
+  | "websocket_network_timeout"
+  | "websocket_network_error"
+  | "websocket_failed_to_reconnect";
 
 interface EventSubscription {
   id: string;
@@ -112,7 +112,7 @@ interface EventSubscription {
   condition: object;
   created_at: string;
   transport: object;
-  method: 'webhook' | 'websocket';
+  method: "webhook" | "websocket";
   callback: string;
   session_id: string;
   connected_at?: string;
@@ -139,6 +139,12 @@ type SendChatMessageParams = {
   senderId: string;
 };
 
+interface SendWhisperParams {
+  fromUserId: string;
+  message: string;
+  toUserId: string;
+}
+
 function normalizeDuration(durationSeconds: number | undefined) {
   if (!durationSeconds) {
     return undefined;
@@ -164,23 +170,23 @@ async function fetchBatchedByIds<T>(
   }
 
   const results = await Promise.all(
-    batches.map(batch =>
+    batches.map((batch) =>
       twitchApi.get<{ data: T[] }>(
-        `${basePath}?${batch.map(id => `id=${encodeURIComponent(id)}`).join('&')}`,
+        `${basePath}?${batch.map((id) => `id=${encodeURIComponent(id)}`).join("&")}`,
       ),
     ),
   );
 
-  return results.flatMap(result => result.data ?? []);
+  return results.flatMap((result) => result.data ?? []);
 }
 
 type PinnedChatMessageParts = Exclude<
-  NonNullable<TwitchPinnedChatMessage['message']>,
+  NonNullable<TwitchPinnedChatMessage["message"]>,
   string
 >;
 
 const isPinnedChatMessageParts = (
-  message: TwitchPinnedChatMessage['message'],
+  message: TwitchPinnedChatMessage["message"],
 ): message is PinnedChatMessageParts => message instanceof Object;
 
 export function getPinnedChatMessageText(
@@ -191,12 +197,12 @@ export function getPinnedChatMessageText(
   if (isPinnedChatMessageParts(message)) {
     return (
       message.text ??
-      message.fragments?.map(fragment => fragment.text).join('') ??
-      ''
+      message.fragments?.map((fragment) => fragment.text).join("") ??
+      ""
     );
   }
 
-  return message ?? '';
+  return message ?? "";
 }
 
 export const twitchService = {
@@ -211,15 +217,15 @@ export const twitchService = {
     try {
       url = new URL(`${authProxyBaseUrl}/refresh-token`);
     } catch {
-      throw new Error('Failed to refresh Twitch token');
+      throw new Error("Failed to refresh Twitch token");
     }
 
-    url.searchParams.set('token', refreshToken);
-    url.searchParams.set('app', 'foam-app');
+    url.searchParams.set("token", refreshToken);
+    url.searchParams.set("app", "foam-app");
 
     const res = await fetch(url.toString(), {
-      method: 'POST',
-      headers: { 'x-api-key': authProxyApiKey ?? '' },
+      method: "POST",
+      headers: { "x-api-key": authProxyApiKey ?? "" },
     });
 
     const body = await parseJsonOnWorklet<
@@ -227,7 +233,7 @@ export const twitchService = {
     >(await res.text());
 
     if (!body.data) {
-      throw new Error(body.error ?? 'Failed to refresh Twitch token');
+      throw new Error(body.error ?? "Failed to refresh Twitch token");
     }
 
     return body.data;
@@ -241,7 +247,7 @@ export const twitchService = {
     moderatorId,
   }: PinnedChatMessageParams): Promise<TwitchPinnedChatMessage | null> => {
     const result = await twitchApi.get<{ data?: TwitchPinnedChatMessage[] }>(
-      '/chat/pins',
+      "/chat/pins",
       {
         params: {
           broadcaster_id: broadcasterId,
@@ -263,7 +269,7 @@ export const twitchService = {
     moderatorId,
   }: PinnedChatMessageMutationParams): Promise<void> => {
     await twitchApi.put(
-      '/chat/pins',
+      "/chat/pins",
       {
         duration: normalizeDuration(durationSeconds),
         message_id: messageId,
@@ -287,7 +293,7 @@ export const twitchService = {
     moderatorId,
   }: PinnedChatMessageMutationParams): Promise<void> => {
     await twitchApi.patch(
-      '/chat/pins',
+      "/chat/pins",
       {
         duration: normalizeDuration(durationSeconds),
         message_id: messageId,
@@ -308,7 +314,7 @@ export const twitchService = {
     broadcasterId,
     moderatorId,
   }: PinnedChatMessageParams): Promise<void> => {
-    await twitchApi.delete('/chat/pins', {
+    await twitchApi.delete("/chat/pins", {
       params: {
         broadcaster_id: broadcasterId,
         moderator_id: moderatorId,
@@ -331,7 +337,7 @@ export const twitchService = {
   > => {
     const result = await twitchApi.post<{
       data?: TwitchSendChatMessageResult[];
-    }>('/chat/messages', {
+    }>("/chat/messages", {
       broadcaster_id: broadcasterId,
       for_source_only: forSourceOnly,
       message,
@@ -341,6 +347,28 @@ export const twitchService = {
     });
 
     return result.data?.[0];
+  },
+  /**
+   * Twitch removed IRC whisper sending for third-party clients. Sends go
+   * through Helix only. The sending account must have a verified phone number.
+   *
+   * @see https://dev.twitch.tv/docs/api/reference/#send-whisper
+   */
+  sendWhisper: async ({
+    fromUserId,
+    message,
+    toUserId,
+  }: SendWhisperParams): Promise<void> => {
+    await twitchApi.post(
+      "/whispers",
+      { message },
+      {
+        params: {
+          from_user_id: fromUserId,
+          to_user_id: toUserId,
+        },
+      },
+    );
   },
 
   /**
@@ -352,14 +380,14 @@ export const twitchService = {
       : `${authProxyBaseUrl}/token`;
 
     const res = await fetch(tokenUrl, {
-      headers: isE2EMode ? {} : { 'x-api-key': authProxyApiKey ?? '' },
+      headers: isE2EMode ? {} : { "x-api-key": authProxyApiKey ?? "" },
     });
 
     // An edge block (e.g. a Cloudflare 403) answers with an HTML page, which
     // would otherwise show up as a JSON parse error.
     if (!res.ok) {
       throw new Error(
-        `Auth proxy token request failed: HTTP ${res.status} (${res.headers.get('content-type') ?? 'no content-type'})`,
+        `Auth proxy token request failed: HTTP ${res.status} (${res.headers.get("content-type") ?? "no content-type"})`,
       );
     }
 
@@ -368,7 +396,7 @@ export const twitchService = {
     );
 
     if (!body.data.access_token) {
-      logger.auth.error('no token received from auth lambda');
+      logger.auth.error("no token received from auth lambda");
     } else {
       // Fresh proxy tokens may be issued under a different client ID than
       // EXPO_PUBLIC_TWITCH_CLIENT_ID; sync the Helix Client-Id header to it.
@@ -387,7 +415,7 @@ export const twitchService = {
       return true;
     }
 
-    const res = await fetch('https://id.twitch.tv/oauth2/validate', {
+    const res = await fetch("https://id.twitch.tv/oauth2/validate", {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -409,8 +437,8 @@ export const twitchService = {
     const expiresIn = tokenExpirySecondsSchema.safeParse(body?.expires_in);
 
     if (expiresIn.success) {
-      logger.auth.info('twitch token validated', {
-        name: 'auth_info',
+      logger.auth.info("twitch token validated", {
+        name: "auth_info",
         expiresInSeconds: expiresIn.data,
         expiresAt: new Date(Date.now() + expiresIn.data * 1000).toISOString(),
       });
@@ -426,7 +454,7 @@ export const twitchService = {
     cursor?: string,
   ): Promise<PaginatedList<TwitchStream>> => {
     const result = await twitchApi.get<PaginatedList<TwitchStream>>(
-      '/streams',
+      "/streams",
       {
         params: {
           ...(cursor && { after: cursor }),
@@ -444,7 +472,7 @@ export const twitchService = {
       params.user_login = userLogin;
     }
 
-    const result = await twitchApi.get<{ data: TwitchStream[] }>('/streams', {
+    const result = await twitchApi.get<{ data: TwitchStream[] }>("/streams", {
       params: {
         first: 15,
         ...params,
@@ -457,7 +485,7 @@ export const twitchService = {
   },
 
   getChannel: async (userId: string): Promise<Channel> => {
-    const result = await twitchApi.get<Channel[]>('/channels', {
+    const result = await twitchApi.get<Channel[]>("/channels", {
       params: {
         broadcaster_id: userId,
       },
@@ -471,7 +499,7 @@ export const twitchService = {
     cursor?: string,
     beforeCursor?: string,
   ): Promise<PaginatedList<Category>> => {
-    return twitchApi.get<PaginatedList<Category>>('/games/top', {
+    return twitchApi.get<PaginatedList<Category>>("/games/top", {
       params: {
         ...(beforeCursor && { before: beforeCursor }),
         ...(cursor && { after: cursor }),
@@ -482,7 +510,7 @@ export const twitchService = {
   getUserImage: async (userId: string): Promise<string> => {
     const result = await twitchApi.get<{
       data: { profile_image_url: string }[];
-    }>('/users', {
+    }>("/users", {
       params: {
         login: userId,
       },
@@ -493,7 +521,7 @@ export const twitchService = {
   },
   getFollowedStreams: async (userId: string): Promise<TwitchStream[]> => {
     const result = await twitchApi.get<{ data: TwitchStream[] }>(
-      '/streams/followed',
+      "/streams/followed",
       {
         params: {
           user_id: userId,
@@ -506,7 +534,7 @@ export const twitchService = {
 
   getCheermotes: async (broadcasterId?: string): Promise<TwitchCheermote[]> => {
     const result = await twitchApi.get<{ data: TwitchCheermote[] }>(
-      '/bits/cheermotes',
+      "/bits/cheermotes",
       {
         params: {
           ...(broadcasterId && { broadcaster_id: broadcasterId }),
@@ -523,7 +551,7 @@ export const twitchService = {
 
     do {
       const result = await twitchApi.get<PaginatedList<FollowedChannel>>(
-        '/channels/followed',
+        "/channels/followed",
         {
           params: {
             user_id: userId,
@@ -541,7 +569,7 @@ export const twitchService = {
   },
 
   getUserInfo: async (token: string): Promise<UserInfoResponse> => {
-    const result = await twitchApi.get<{ data: UserInfoResponse[] }>('/users', {
+    const result = await twitchApi.get<{ data: UserInfoResponse[] }>("/users", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -560,20 +588,20 @@ export const twitchService = {
       params.id = id;
     }
 
-    const result = await twitchApi.get<{ data: UserInfoResponse[] }>('/users', {
+    const result = await twitchApi.get<{ data: UserInfoResponse[] }>("/users", {
       params,
     });
 
     // SAFETY: Helix /users returns one entry for a single login or id
-    return (result.data[0] as UserInfoResponse) ?? '';
+    return (result.data[0] as UserInfoResponse) ?? "";
   },
 
   getUsersById: (ids: string[]): Promise<UserInfoResponse[]> =>
-    fetchBatchedByIds<UserInfoResponse>('/users', ids),
+    fetchBatchedByIds<UserInfoResponse>("/users", ids),
 
   searchChannels: async (query: string): Promise<SearchChannelResponse[]> => {
     const result = await twitchApi.get<{ data: SearchChannelResponse[] }>(
-      '/search/channels',
+      "/search/channels",
       {
         params: {
           query,
@@ -584,7 +612,7 @@ export const twitchService = {
     return result.data;
   },
   getStreamsByCategory: async (gameId: string, cursor?: string) => {
-    return twitchApi.get<PaginatedList<TwitchStream>>('/streams', {
+    return twitchApi.get<PaginatedList<TwitchStream>>("/streams", {
       params: {
         game_id: gameId,
         ...(cursor && { after: cursor }),
@@ -593,7 +621,7 @@ export const twitchService = {
   },
 
   getCategory: async (id: string): Promise<Category | null> => {
-    const result = await twitchApi.get<{ data: Category[] }>('/games', {
+    const result = await twitchApi.get<{ data: Category[] }>("/games", {
       params: {
         id,
       },
@@ -605,7 +633,7 @@ export const twitchService = {
   },
 
   searchCategories: async (query: string, cursor?: string) => {
-    return twitchApi.get<PaginatedList<Category>>('/search/categories', {
+    return twitchApi.get<PaginatedList<Category>>("/search/categories", {
       params: {
         query,
         ...(cursor && { after: cursor }),
@@ -620,7 +648,7 @@ export const twitchService = {
     broadcasterId: string,
   ): Promise<TwitchCreatedClip | null> => {
     const result = await twitchApi.post<{ data: TwitchCreatedClip[] }>(
-      '/clips',
+      "/clips",
       undefined,
       {
         params: {
@@ -636,7 +664,7 @@ export const twitchService = {
    * Helix answers a deleted or unknown clip id with an empty `data` array.
    */
   getClip: async (id: string): Promise<TwitchClip | null> => {
-    const result = await twitchApi.get<TwitchClipResponse>('/clips', {
+    const result = await twitchApi.get<TwitchClipResponse>("/clips", {
       params: {
         id,
       },
@@ -656,7 +684,7 @@ export const twitchService = {
     options?: { durationSeconds?: number; reason?: string },
   ): Promise<void> => {
     await twitchApi.post(
-      '/moderation/bans',
+      "/moderation/bans",
       {
         data: {
           user_id: userId,
@@ -680,7 +708,7 @@ export const twitchService = {
     moderatorId: string,
     messageId: string,
   ): Promise<void> => {
-    await twitchApi.delete('/moderation/chat', {
+    await twitchApi.delete("/moderation/chat", {
       params: {
         broadcaster_id: broadcasterId,
         moderator_id: moderatorId,
@@ -694,7 +722,7 @@ export const twitchService = {
     moderatorId: string,
     userId: string,
   ): Promise<void> => {
-    await twitchApi.delete('/moderation/bans', {
+    await twitchApi.delete("/moderation/bans", {
       params: {
         broadcaster_id: broadcasterId,
         moderator_id: moderatorId,
@@ -710,7 +738,7 @@ export const twitchService = {
     reason: string,
   ): Promise<void> => {
     await twitchApi.post(
-      '/moderation/warnings',
+      "/moderation/warnings",
       {
         data: {
           user_id: userId,
@@ -732,7 +760,7 @@ export const twitchService = {
     message: string,
   ): Promise<void> => {
     await twitchApi.post(
-      '/chat/announcements',
+      "/chat/announcements",
       { message },
       {
         params: {
@@ -748,7 +776,7 @@ export const twitchService = {
     toBroadcasterId: string,
     moderatorId: string,
   ): Promise<void> => {
-    await twitchApi.post('/chat/shoutouts', undefined, {
+    await twitchApi.post("/chat/shoutouts", undefined, {
       params: {
         from_broadcaster_id: fromBroadcasterId,
         to_broadcaster_id: toBroadcasterId,
@@ -762,7 +790,7 @@ export const twitchService = {
     moderatorId: string,
     patch: TwitchChatSettingsPatch,
   ): Promise<void> => {
-    await twitchApi.patch('/chat/settings', patch, {
+    await twitchApi.patch("/chat/settings", patch, {
       params: {
         broadcaster_id: broadcasterId,
         moderator_id: moderatorId,
@@ -776,7 +804,7 @@ export const twitchService = {
     isActive: boolean,
   ): Promise<void> => {
     await twitchApi.put(
-      '/moderation/shield_mode',
+      "/moderation/shield_mode",
       { is_active: isActive },
       {
         params: {
@@ -788,7 +816,7 @@ export const twitchService = {
   },
 
   getClipsByIds: (ids: string[]): Promise<TwitchClip[]> =>
-    fetchBatchedByIds<TwitchClip>('/clips', ids),
+    fetchBatchedByIds<TwitchClip>("/clips", ids),
 
   getClips: async ({
     after,
@@ -797,7 +825,7 @@ export const twitchService = {
     first = 20,
     startedAt,
   }: TwitchClipsRequestParams): Promise<PaginatedList<TwitchClip>> => {
-    return twitchApi.get<PaginatedList<TwitchClip>>('/clips', {
+    return twitchApi.get<PaginatedList<TwitchClip>>("/clips", {
       params: {
         broadcaster_id: broadcasterId,
         first,
@@ -814,10 +842,10 @@ export const twitchService = {
   getVideos: async ({
     after,
     first = 20,
-    type = 'archive',
+    type = "archive",
     userId,
   }: TwitchVideosRequestParams): Promise<PaginatedList<TwitchVideo>> => {
-    return twitchApi.get<PaginatedList<TwitchVideo>>('/videos', {
+    return twitchApi.get<PaginatedList<TwitchVideo>>("/videos", {
       params: {
         user_id: userId,
         first,
@@ -846,7 +874,7 @@ export const twitchService = {
       ids = [id];
     }
 
-    return twitchApi.get<PaginatedList<TwitchHelixPoll>>('/polls', {
+    return twitchApi.get<PaginatedList<TwitchHelixPoll>>("/polls", {
       params: {
         broadcaster_id: broadcasterId,
         id: ids,
@@ -875,7 +903,7 @@ export const twitchService = {
       ids = [id];
     }
 
-    return twitchApi.get<PaginatedList<TwitchHelixPrediction>>('/predictions', {
+    return twitchApi.get<PaginatedList<TwitchHelixPrediction>>("/predictions", {
       params: {
         broadcaster_id: broadcasterId,
         id: ids,
@@ -898,7 +926,7 @@ export const twitchService = {
     version: string;
     condition: Record<string, string>;
     transport: {
-      method: 'websocket';
+      method: "websocket";
       session_id: string;
     };
   }) => {
@@ -907,7 +935,7 @@ export const twitchService = {
       total: number;
       total_cost: number;
       max_total_cost: number;
-    }>('/eventsub/subscriptions', {
+    }>("/eventsub/subscriptions", {
       type,
       version,
       condition,
@@ -919,7 +947,7 @@ export const twitchService = {
    * @see https://dev.twitch.tv/docs/api/reference#delete-eventsub-subscription
    */
   deleteEventSubscription: async (subscriptionId: string) => {
-    return twitchApi.delete('/eventsub/subscriptions', {
+    return twitchApi.delete("/eventsub/subscriptions", {
       params: {
         id: subscriptionId,
       },
@@ -931,11 +959,11 @@ export const twitchService = {
    */
   blockUser: async (
     targetUserId: string,
-    sourceContext?: 'chat' | 'whisper',
-    reason?: 'harassment' | 'spam' | 'other',
+    sourceContext?: "chat" | "whisper",
+    reason?: "harassment" | "spam" | "other",
   ) => {
     return twitchApi.put(
-      '/users/blocks',
+      "/users/blocks",
       {},
       {
         params: {
@@ -948,7 +976,7 @@ export const twitchService = {
   },
 
   getUserBlockList: async (params: UserBlockListRequestParams) => {
-    return twitchApi.get<PaginatedList<UserBlockList>>('/users/blocks', {
+    return twitchApi.get<PaginatedList<UserBlockList>>("/users/blocks", {
       params: {
         broadcaster_id: params.broadcasterId,
         first: params.first,
@@ -957,7 +985,7 @@ export const twitchService = {
     });
   },
   unblockUser: async (targetUserId: string) => {
-    return twitchApi.delete('/users/blocks', {
+    return twitchApi.delete("/users/blocks", {
       params: {
         target_user_id: targetUserId,
       },
@@ -980,7 +1008,7 @@ export const twitchService = {
     try {
       const { data } = await twitchApi.get<{
         data: { id: string; title: string }[];
-      }>('/channel_points/custom_rewards', {
+      }>("/channel_points/custom_rewards", {
         params: {
           broadcaster_id: broadcasterId,
           id: rewardId,

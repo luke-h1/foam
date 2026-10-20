@@ -594,7 +594,7 @@
         "react-doctor/rn-detox-missing-await": "warn",
         "react-doctor/rn-list-callback-per-row": "warn",
         "react-doctor/rn-list-data-mapped": "warn",
-        "react-doctor/rn-list-missing-estimated-item-size": "warn",
+        "react-doctor/rn-list-missing-estimated-item-size": "off",
         "react-doctor/rn-list-recyclable-without-types": "warn",
         "react-doctor/rn-no-deep-imports": "warn",
         "react-doctor/rn-no-deprecated-modules": "error",

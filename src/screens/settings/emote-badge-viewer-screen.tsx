@@ -36,13 +36,13 @@ import { SegmentedControl } from '@app/components/segmented-control/segmented-co
 import { EmptyState } from '@app/components/ui/empty-state/empty-state';
 import { Text } from '@app/components/ui/text/text';
 import { sevenTvBadgesQueryOptions } from '@app/lib/react-query/queries/emotes';
-import { ChannelField } from '@app/screens/settings-screen/components/channel-field';
-import { EmoteBadgeViewerLoader } from '@app/screens/settings-screen/components/emote-badge-viewer-loader';
+import { ChannelField } from '@app/screens/settings/components/channel-field';
+import { EmoteBadgeViewerLoader } from '@app/screens/settings/components/emote-badge-viewer-loader';
 import {
   type ChannelEmoteResources,
   useChannelEmoteResources,
-} from '@app/screens/settings-screen/hooks/use-channel-emote-resources';
-import { fitGrid } from '@app/screens/settings-screen/util/fit-grid';
+} from '@app/screens/settings/hooks/use-channel-emote-resources';
+import { fitGrid } from '@app/screens/settings/util/fit-grid';
 import { ensureGlobalChatResources } from '@app/store/chat/actions/global-resource-ensure';
 import { useGlobalEmoteBadgeCaches } from '@app/store/chat/react/selectors';
 import { theme } from '@app/styles/themes';

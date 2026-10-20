@@ -1,4 +1,4 @@
-import type { IrcMessage } from '@app/utils/chat/irc-protocol/parse-irc-message';
+import type { IrcMessage } from "@app/utils/chat/irc-protocol/parse-irc-message";
 
 const EMPTY_TAGS: Record<string, string> = Object.freeze({});
 
@@ -35,6 +35,15 @@ export interface IrcRouteHandlers {
   globaluserstate?: (tags: Record<string, string>) => void;
   join?: (channel: string, nick: string | undefined) => void;
   token?: (channel: string, nick: string | undefined) => void;
+  /**
+   * Direct message. `params[0]` is the recipient (us), not a channel; the
+   * sender login lives only in the IRC prefix.
+   */
+  whisper?: (
+    senderLogin: string,
+    tags: Record<string, string>,
+    text: string,
+  ) => void;
   ping?: (server: string) => void;
   reconnect?: () => void;
   welcome?: () => void;
@@ -52,7 +61,7 @@ function withPrefixLogin<TTags extends { login?: string }>(
   prefix: string | undefined,
 ): TTags {
   if (!tags.login && prefix) {
-    tags.login = prefix.split('!')[0] ?? '';
+    tags.login = prefix.split("!")[0] ?? "";
   }
 
   return tags;
@@ -71,25 +80,25 @@ export function routeIrcMessage(
   const taggedChannel = tags && params[0] ? params[0] : undefined;
 
   switch (command) {
-    case '001':
+    case "001":
       handlers.welcome?.();
       handlers.motd?.(command, params);
       break;
 
-    case '002':
-    case '003':
-    case '004':
-    case '375':
-    case '372':
-    case '376':
+    case "002":
+    case "003":
+    case "004":
+    case "375":
+    case "372":
+    case "376":
       handlers.motd?.(command, params);
       break;
 
-    case 'PING':
-      handlers.ping?.(params[0] || 'tmi.twitch.tv');
+    case "PING":
+      handlers.ping?.(params[0] || "tmi.twitch.tv");
       break;
 
-    case 'PRIVMSG': {
+    case "PRIVMSG": {
       const text = params[1];
 
       if (taggedChannel && text && tags) {
@@ -99,34 +108,45 @@ export function routeIrcMessage(
       break;
     }
 
-    case 'RECONNECT':
+    case "WHISPER": {
+      const text = params[1];
+      const senderLogin = prefix?.split("!")[0] ?? "";
+
+      if (text && senderLogin) {
+        handlers.whisper?.(senderLogin, tagsRecord, text);
+      }
+
+      break;
+    }
+
+    case "RECONNECT":
       handlers.reconnect?.();
       break;
 
-    case 'NOTICE': {
+    case "NOTICE": {
       const isChannelNotice = params.length >= 2 && Boolean(tags);
       const text = params[1];
 
       if (isChannelNotice && taggedChannel && text) {
         handlers.notice?.(taggedChannel, tagsRecord, text);
       } else if (!isChannelNotice && params.length > 0) {
-        handlers.channellessNotice?.(params.join(' '));
+        handlers.channellessNotice?.(params.join(" "));
       }
 
       break;
     }
 
-    case 'USERNOTICE': {
+    case "USERNOTICE": {
       if (taggedChannel) {
-        handlers.usernotice?.(taggedChannel, tagsRecord, params[1] ?? '');
+        handlers.usernotice?.(taggedChannel, tagsRecord, params[1] ?? "");
       }
 
       break;
     }
 
-    case 'CLEARCHAT': {
-      const banDuration = tagsRecord['ban-duration']
-        ? Number.parseInt(tagsRecord['ban-duration'], 10)
+    case "CLEARCHAT": {
+      const banDuration = tagsRecord["ban-duration"]
+        ? Number.parseInt(tagsRecord["ban-duration"], 10)
         : undefined;
 
       if (taggedChannel) {
@@ -136,9 +156,9 @@ export function routeIrcMessage(
       break;
     }
 
-    case 'CLEARMSG':
-    case 'CLEARMESSAGE': {
-      const targetMsgId = tagsRecord['target-msg-id'];
+    case "CLEARMSG":
+    case "CLEARMESSAGE": {
+      const targetMsgId = tagsRecord["target-msg-id"];
 
       if (taggedChannel && targetMsgId) {
         handlers.clearmsg?.(taggedChannel, tagsRecord, targetMsgId);
@@ -147,7 +167,7 @@ export function routeIrcMessage(
       break;
     }
 
-    case 'ROOMSTATE': {
+    case "ROOMSTATE": {
       if (taggedChannel) {
         handlers.roomstate?.(taggedChannel, tagsRecord);
       }
@@ -155,7 +175,7 @@ export function routeIrcMessage(
       break;
     }
 
-    case 'USERSTATE': {
+    case "USERSTATE": {
       if (taggedChannel) {
         handlers.userstate?.(taggedChannel, tagsRecord);
       }
@@ -163,33 +183,33 @@ export function routeIrcMessage(
       break;
     }
 
-    case 'GLOBALUSERSTATE':
+    case "GLOBALUSERSTATE":
       handlers.globaluserstate?.(tagsRecord);
       break;
 
-    case 'JOIN': {
+    case "JOIN": {
       const channel = params[0];
 
       if (channel) {
-        handlers.join?.(channel, prefix?.split('!')[0]);
+        handlers.join?.(channel, prefix?.split("!")[0]);
       }
 
       break;
     }
 
-    case 'PART': {
+    case "PART": {
       const channel = params[0];
 
       if (channel) {
-        handlers.token?.(channel, prefix?.split('!')[0]);
+        handlers.token?.(channel, prefix?.split("!")[0]);
       }
 
       break;
     }
 
-    case '353':
-    case '366': {
-      const roomName = params.find(param => param.startsWith('#'));
+    case "353":
+    case "366": {
+      const roomName = params.find((param) => param.startsWith("#"));
 
       if (roomName) {
         handlers.namesReply?.(roomName);
