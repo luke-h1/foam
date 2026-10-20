@@ -41,7 +41,8 @@
 
 set -euo pipefail
 
-BUNDLE_ID="${BUNDLE_ID:-com.lhowsam.foam.dev}"
+# Export so Argent `script:` children (print-native-metrics) see the same package.
+export BUNDLE_ID="${BUNDLE_ID:-com.lhowsam.foam.dev}"
 ITERATIONS="${ITERATIONS:-1}"
 # Set SKIP_WARMUP=1 to skip the Flashlight warm-up iteration (faster, less accurate CPU).
 SKIP_WARMUP="${SKIP_WARMUP:-0}"
@@ -153,7 +154,7 @@ for bench in "${BENCHES[@]}"; do
     --skipRestart \
     --iterationCount "$((ITERATIONS + warmup_count))" \
     --resultsFilePath "$out" \
-    "${record_args[@]}" >"$RESULTS/$bench.log" 2>&1 || {
+    ${record_args[@]+"${record_args[@]}"} >"$RESULTS/$bench.log" 2>&1 || {
     echo "flashlight failed for $bench. Full log: $RESULTS/$bench.log" >&2
     tail -n 40 "$RESULTS/$bench.log" >&2
     exit 1

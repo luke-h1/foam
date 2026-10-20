@@ -27,3 +27,11 @@ export const maxLiveCommitPerFlush = (
   const hard = raidMode ? 24 : 16;
   return Math.min(hard, Math.max(soft, arrivalsSinceFlush));
 };
+
+/**
+ * Chunk size when the ingest buffer hits backpressure. Live flushes stay under
+ * the hard ceiling above; without a cap here the catch-up drain would commit
+ * the whole backlog (150–400 rows) in one Fabric tree.
+ */
+export const maxBackpressureCommitPerFlush = (): number =>
+  Platform.OS === 'android' ? 32 : 48;

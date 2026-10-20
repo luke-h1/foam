@@ -1,6 +1,9 @@
 import { Platform } from 'react-native';
 
-import { maxLiveCommitPerFlush } from '../max-live-commit-per-flush';
+import {
+  maxBackpressureCommitPerFlush,
+  maxLiveCommitPerFlush,
+} from '../max-live-commit-per-flush';
 
 const originalOS = Platform.OS;
 
@@ -44,5 +47,13 @@ describe('maxLiveCommitPerFlush', () => {
     Platform.OS = 'android';
     expect(maxLiveCommitPerFlush(false, false)).toBeUndefined();
     expect(maxLiveCommitPerFlush(false, true)).toBeUndefined();
+  });
+
+  test('chunks backpressure drains below the buffer backpressure size', () => {
+    Platform.OS = 'ios';
+    expect(maxBackpressureCommitPerFlush()).toEqual(48);
+
+    Platform.OS = 'android';
+    expect(maxBackpressureCommitPerFlush()).toEqual(32);
   });
 });

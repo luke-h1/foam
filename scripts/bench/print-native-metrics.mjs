@@ -74,9 +74,7 @@ function main() {
   }
 
   const memMb =
-    memKb != null && Number.isFinite(memKb)
-      ? Math.round(memKb / 1024)
-      : null;
+    memKb != null && Number.isFinite(memKb) ? Math.round(memKb / 1024) : null;
 
   const parts = [
     `[metrics ${LABEL}]`,
