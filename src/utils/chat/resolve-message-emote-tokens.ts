@@ -21,6 +21,7 @@ interface ResolveMessageEmotePartsOptions {
   emoteData: EmoteData;
   show7TvEmotes: boolean;
   showChatGifs?: boolean;
+  taggedSubscriberEmotes?: ReturnType<typeof extractEmotesFromTag>;
   /**
    * The message text, already trimmed by the caller (used both as the worklet
    * input and as the basis for resolving tagged subscriber emotes).
@@ -72,6 +73,7 @@ export function resolveMessageEmoteParts({
   emoteData,
   show7TvEmotes,
   showChatGifs = false,
+  taggedSubscriberEmotes,
   text,
   userId,
   userLogin,
@@ -86,10 +88,8 @@ export function resolveMessageEmoteParts({
     userstate.login || userstate.username,
   );
 
-  const twitchTaggedSubscriberEmotes = extractEmotesFromTag(
-    userstate.emotes,
-    text,
-  );
+  const twitchTaggedSubscriberEmotes =
+    taggedSubscriberEmotes ?? extractEmotesFromTag(userstate.emotes, text);
 
   const twitchSubscriberEmotes =
     senderLogin && senderLogin === currentUserLogin

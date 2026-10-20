@@ -1,5 +1,6 @@
 import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import { extractEmotesFromTag } from '@app/utils/chat/extract-emotes/extract-emotes-from-tag';
 import { findBadges } from '@app/utils/chat/find-badges';
 import type { MessageToken } from '@app/utils/chat/message-token';
 import { resolveMessageEmoteParts } from '@app/utils/chat/resolve-message-emote-tokens';
@@ -494,6 +495,12 @@ function resolveStoredMessageTokens({
     });
   }
 
+  const rebuiltBody = getEnrichableText(tokens);
+
+  const taggedSubscriberEmotes = rebuiltBody
+    ? extractEmotesFromTag(userstate.emotes, rebuiltBody.trimEnd())
+    : [];
+
   const resolved: MessageToken[] = [];
   let gap: MessageToken[] = [];
 
@@ -517,6 +524,7 @@ function resolveStoredMessageTokens({
         emoteData,
         show7TvEmotes,
         showChatGifs: false,
+        taggedSubscriberEmotes,
         text,
         userId,
         userLogin,

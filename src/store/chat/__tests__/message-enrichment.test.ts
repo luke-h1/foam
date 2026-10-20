@@ -398,6 +398,46 @@ describe('resolveVisibleMessageUpdate', () => {
     ]);
   });
 
+  test('keeps a tagged Twitch emote beside a stored gif', async () => {
+    const message = createMockMessage({
+      message_id: 'tagged-gif-1',
+      message_nonce: 'tagged-gif-nonce',
+      message: [
+        createTextToken('foo '),
+        {
+          type: 'gif',
+          content: '[YAY]',
+          gifId: 'abc',
+          url: 'https://example.com/a.gif',
+        },
+      ],
+      userstate: createUserStateTags({
+        emotes: '999:0-2',
+        gifs: '4-8|abc|https://example.com/a.gif',
+      }),
+    });
+
+    const update = await resolveVisibleMessageUpdate({
+      channelId,
+      message,
+      show7TvEmotes: true,
+      showChatGifs: true,
+      userLogin: 'me',
+    });
+
+    expect(summariseTokens(update?.updates.message ?? [])).toEqual<
+      TokenSummary[]
+    >([
+      {
+        type: 'emote',
+        content: 'foo',
+        url: 'https://static-cdn.jtvnw.net/emoticons/v2/999/default/dark/3.0',
+      },
+      { type: 'text', content: ' ' },
+      { type: 'gif', content: '[YAY]' },
+    ]);
+  });
+
   test('reprocesses a link beside an overlaid emote', async () => {
     const message = createMockMessage({
       message_id: 'overlay-1',
