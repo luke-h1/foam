@@ -71,15 +71,19 @@ export function meanFps(measures: FlashlightMeasure[]): number {
   );
 }
 
+/**
+ * Mean sum of per-thread CPU % across Flashlight samples. Matches
+ * `totalCpu` in `scripts/bench/score.ts` so both reports agree.
+ */
 export function meanCpu(measures: FlashlightMeasure[]): number {
   const values = measures.flatMap(m => Object.values(m.cpu.perName));
 
-  if (values.length === 0) {
+  if (values.length === 0 || measures.length === 0) {
     return 0;
   }
 
   return Number(
-    (values.reduce((sum, v) => sum + v, 0) / values.length).toFixed(1),
+    (values.reduce((sum, v) => sum + v, 0) / measures.length).toFixed(1),
   );
 }
 
@@ -221,6 +225,6 @@ function main(): void {
   }
 }
 
-if (import.meta.main) {
+if (process.argv[1]?.endsWith('chat-suite-report.ts')) {
   main();
 }

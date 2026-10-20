@@ -1,12 +1,12 @@
 import { Platform } from 'react-native';
 
 /**
- * Each cap is sized against its own cadence (see pickFlushDelay): raid mode
- * widens the interval, so its cap grows by the same factor or the drain falls behind.
+ * Soft floor keeps the visible chat from lagging when traffic is light. Hard
+ * ceiling stops a late flush from committing every arrival in one Fabric tree
+ * (60+ rows) and dropping frames under a sustained flood.
  *
- * The cap never drops below the arrivals since the last flush. A chat that
- * sends more than the cap per interval would otherwise back up in the buffer
- * and the visible chat would lag live by seconds.
+ * Each soft floor is sized against its own cadence (see pickFlushDelay): raid
+ * mode widens the interval, so its floor grows by the same factor.
  */
 export const maxLiveCommitPerFlush = (
   isAtBottom: boolean,
@@ -18,8 +18,12 @@ export const maxLiveCommitPerFlush = (
   }
 
   if (Platform.OS === 'android') {
-    return Math.max(raidMode ? 8 : 4, arrivalsSinceFlush);
+    const soft = raidMode ? 8 : 4;
+    const hard = raidMode ? 16 : 10;
+    return Math.min(hard, Math.max(soft, arrivalsSinceFlush));
   }
 
-  return Math.max(raidMode ? 15 : 8, arrivalsSinceFlush);
+  const soft = raidMode ? 15 : 8;
+  const hard = raidMode ? 24 : 16;
+  return Math.min(hard, Math.max(soft, arrivalsSinceFlush));
 };

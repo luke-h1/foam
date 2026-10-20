@@ -5,6 +5,9 @@ const unavailableModule: CpuUsageNativeModule = {
   getUsage() {
     return 0;
   },
+  getUsedMemoryMb() {
+    return 0;
+  },
 };
 
 export default requireOptionalNativeModule<CpuUsageNativeModule>('CpuUsage') ??

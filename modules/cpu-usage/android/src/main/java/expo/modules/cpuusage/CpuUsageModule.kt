@@ -1,5 +1,6 @@
 package expo.modules.cpuusage
 
+import android.os.Debug
 import android.os.SystemClock
 import android.system.Os
 import android.system.OsConstants
@@ -19,6 +20,11 @@ class CpuUsageModule : Module() {
 
     Function("getUsage") {
       currentCpuUsage()
+    }
+
+    Function("getUsedMemoryMb") {
+      // Debug.getPss() is KiB; matches dumpsys meminfo TOTAL PSS for this PID.
+      Debug.getPss() / 1024.0
     }
   }
 

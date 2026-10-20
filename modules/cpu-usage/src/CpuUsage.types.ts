@@ -5,4 +5,10 @@ export interface CpuUsageNativeModule {
    * 0 when the native module is unavailable.
    */
   getUsage(): number;
+
+  /**
+   * Process proportional set size in MiB (Android PSS / iOS phys_footprint).
+   * Returns 0 when the native module is unavailable.
+   */
+  getUsedMemoryMb(): number;
 }

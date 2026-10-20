@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFrameCallback, useSharedValue } from 'react-native-reanimated';
 
 import { beginSignpost, endSignpost, markSignpost } from '@app/lib/signpost';
+import { clearCachedEmoteRefs } from '@app/providers/cached-emotes-provider/cache-service';
+import { clearMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 
 import {
@@ -372,8 +374,10 @@ export function useChatPerfSuite() {
 
         setSuite(s => ({ ...s, results: [...results] }));
 
-        // Cooldown: stop the flood so memory/GC settles before the next phase.
+        // Cooldown: stop the flood and clear decode/store before the next phase.
         syntheticChatControl.current = SYNTHETIC_PRESETS.off!;
+        clearMessages();
+        clearCachedEmoteRefs();
 
         const isLastPhase = i === SUITE_PHASES.length - 1;
 

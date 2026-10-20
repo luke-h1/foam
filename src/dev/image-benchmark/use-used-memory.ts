@@ -1,30 +1,24 @@
 import { useEffect, useState } from 'react';
-import DeviceInfo from 'react-native-device-info/src/internal/nativeInterface';
+
+import CpuUsage from '@modules/cpu-usage/src/CpuUsageModule';
+
+function readUsedMemoryMb(): number | null {
+  const mb = CpuUsage.getUsedMemoryMb();
+  return Number.isFinite(mb) && mb > 0 ? Math.round(mb) : null;
+}
 
 export function useUsedMemoryMb(): number {
-  const [mb, setMb] = useState(0);
+  const [mb, setMb] = useState(() => readUsedMemoryMb() ?? 0);
 
   useEffect(() => {
-    let active = true;
-
-    const sample = async () => {
-      try {
-        const bytes = (await DeviceInfo.getUsedMemory?.()) ?? 0;
-        if (active) {
-          setMb(Math.round(bytes / (1024 * 1024)));
-        }
-      } catch {
-        // getUsedMemory can reject on some platforms; leave the last reading.
+    const id = setInterval(() => {
+      const value = readUsedMemoryMb();
+      if (value !== null) {
+        setMb(value);
       }
-    };
+    }, 1000);
 
-    void sample();
-    const id = setInterval(sample, 1000);
-
-    return () => {
-      active = false;
-      clearInterval(id);
-    };
+    return () => clearInterval(id);
   }, []);
 
   return mb;

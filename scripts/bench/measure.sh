@@ -43,6 +43,8 @@ set -euo pipefail
 
 BUNDLE_ID="${BUNDLE_ID:-com.lhowsam.foam.dev}"
 ITERATIONS="${ITERATIONS:-1}"
+# Set SKIP_WARMUP=1 to skip the Flashlight warm-up iteration (faster, less accurate CPU).
+SKIP_WARMUP="${SKIP_WARMUP:-0}"
 METRO_PORT="${METRO_PORT:-8081}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 RESULTS="$ROOT/bench-results"
@@ -121,7 +123,11 @@ if [[ "$BUNDLE_ID" == *.dev ]]; then
 fi
 
 mkdir -p "$RESULTS"
-echo "$BUNDLE_ID · $ITERATIONS run(s) per bench + 1 warm-up · cold app before each"
+warmup_count=1
+if [ "$SKIP_WARMUP" = "1" ]; then
+  warmup_count=0
+fi
+echo "$BUNDLE_ID · $ITERATIONS run(s) per bench + $warmup_count warm-up · cold app before each"
 echo
 
 cd "$ROOT"
@@ -134,24 +140,33 @@ for bench in "${BENCHES[@]}"; do
   out="$RESULTS/$bench.json"
   echo "> $label"
 
+  record_args=()
+  if [ "${RECORD:-0}" = "1" ]; then
+    # Flashlight writes the recording next to the results JSON.
+    record_args=(--record)
+  fi
+
   flashlight test \
     --bundleId "$BUNDLE_ID" \
     --beforeEachCommand "$cold_start && argent flow run $open_flow $argent_args" \
     --testCommand "argent flow run $test_flow $argent_args" \
     --skipRestart \
-    --iterationCount "$((ITERATIONS + 1))" \
-    --resultsFilePath "$out" >"$RESULTS/$bench.log" 2>&1 || {
+    --iterationCount "$((ITERATIONS + warmup_count))" \
+    --resultsFilePath "$out" \
+    "${record_args[@]}" >"$RESULTS/$bench.log" 2>&1 || {
     echo "flashlight failed for $bench. Full log: $RESULTS/$bench.log" >&2
     tail -n 40 "$RESULTS/$bench.log" >&2
     exit 1
   }
 
-  bun -e '
-    const file = process.argv[1];
-    const result = await Bun.file(file).json();
-    result.iterations = result.iterations.slice(1);
-    await Bun.write(file, JSON.stringify(result));
-  ' "$out"
+  if [ "$warmup_count" -gt 0 ]; then
+    bun -e '
+      const file = process.argv[1];
+      const result = await Bun.file(file).json();
+      result.iterations = result.iterations.slice(1);
+      await Bun.write(file, JSON.stringify(result));
+    ' "$out"
+  fi
 
   bun "$ROOT/scripts/bench/score.ts" "$out"
 

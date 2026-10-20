@@ -1,6 +1,4 @@
 // DEV-ONLY: persists suite results to Documents/chat-perf-suite.json so adb / simctl can pull them after a run.
-import DeviceInfo from 'react-native-device-info/src/internal/nativeInterface';
-
 import { File, Paths } from 'expo-file-system';
 
 import CpuUsage from '@modules/cpu-usage/src/CpuUsageModule';
@@ -84,15 +82,8 @@ export function finishChatPerfSuiteResults(cancelled: boolean): void {
 }
 
 export async function sampleProcessMetrics(): Promise<ProcessMetricsSample> {
-  let memMb = 0;
-
-  try {
-    const bytes = (await DeviceInfo.getUsedMemory?.()) ?? 0;
-    memMb = Math.round(bytes / (1024 * 1024));
-  } catch {
-    // getUsedMemory can reject on some platforms.
-  }
-
+  const memRaw = CpuUsage.getUsedMemoryMb();
+  const memMb = Number.isFinite(memRaw) && memRaw > 0 ? Math.round(memRaw) : 0;
   const cpu = CpuUsage.getUsage();
 
   return {

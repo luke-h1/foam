@@ -1,7 +1,16 @@
+import { Platform } from 'react-native';
+
 import { pickFlushDelay } from '../pick-flush-delay';
 
+const originalOS = Platform.OS;
+
+afterEach(() => {
+  Platform.OS = originalOS;
+});
+
 describe('pickFlushDelay', () => {
-  test('returns the 100ms live interval when following the bottom', () => {
+  test('returns the 100ms live interval on iOS when following the bottom', () => {
+    Platform.OS = 'ios';
     expect(
       pickFlushDelay({
         isAtBottom: true,
@@ -9,6 +18,17 @@ describe('pickFlushDelay', () => {
         scrollingToBottom: false,
       }),
     ).toEqual(100);
+  });
+
+  test('returns the 150ms live interval on Android when following the bottom', () => {
+    Platform.OS = 'android';
+    expect(
+      pickFlushDelay({
+        isAtBottom: true,
+        raidMode: false,
+        scrollingToBottom: false,
+      }),
+    ).toEqual(150);
   });
 
   test('returns the slowed 180ms interval when following the bottom in raid mode', () => {
@@ -22,6 +42,7 @@ describe('pickFlushDelay', () => {
   });
 
   test('returns the live interval while scrolling back to the bottom', () => {
+    Platform.OS = 'ios';
     expect(
       pickFlushDelay({
         isAtBottom: false,
