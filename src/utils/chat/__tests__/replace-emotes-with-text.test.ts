@@ -119,7 +119,21 @@ describe('replaceEmotesWithText', () => {
       { type: 'text', content: ' World' },
     ]);
 
-    expect(result).toBe('Hello @user  World');
+    expect(result).toBe('Hello @user World');
+  });
+
+  test('round-trips gif alt text for offset-based reprocessing', () => {
+    const result = replaceEmotesWithText([
+      { type: 'text', content: 'look ' },
+      {
+        type: 'gif',
+        content: '[YAY GIF]',
+        gifId: 'abc',
+        url: 'https://example.com/a.gif',
+      },
+    ]);
+
+    expect(result).toBe('look [YAY GIF]');
   });
 
   test('does not stringify custom object tokens', () => {

@@ -253,9 +253,10 @@ export function useChatMessageProcessing({
       emoteData,
       messages: messages$.peek(),
       show7TvEmotes,
+      showChatGifs,
       userLogin,
     });
-  }, [channelId, messages$, show7TvEmotes, userLogin]);
+  }, [channelId, messages$, show7TvEmotes, showChatGifs, userLogin]);
 
   return {
     enqueueLiveChatMessage,

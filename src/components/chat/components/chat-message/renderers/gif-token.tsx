@@ -33,6 +33,7 @@ export const GifToken = memo(
 
     const image = (
       <ChatInlineImage
+        accessibilityLabel={token.content}
         playAnimation={!disableAnimations}
         sourceUrl={token.url}
         style={getGifImageStyle(targetSize)}

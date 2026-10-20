@@ -83,6 +83,7 @@ function renderReprocess(
       emoteLoadStatus: 'success',
       processedMessageIdsRef,
       show7TvEmotes: overrides.show7TvEmotes ?? true,
+      showChatGifs: false,
       userLogin: 'me',
     }),
   );

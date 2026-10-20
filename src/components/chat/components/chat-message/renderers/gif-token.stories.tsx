@@ -42,7 +42,7 @@ const gifTokenDecorator = (Story: () => ReactNode) => (
 );
 
 const meta = {
-  title: 'components/Chat/GifToken',
+  title: 'components/Chat/messages/gif',
   component: GifToken,
   decorators: [gifTokenDecorator],
 } satisfies Meta<typeof GifToken>;
@@ -91,16 +91,60 @@ export const MissingUrl: Story = {
   },
 };
 
+export const InMessage: Story = {
+  args: Default.args,
+  decorators: [chatStoryDecorator],
+  render: () => (
+    <ChatRow
+      {...createBaseMessage(
+        [
+          { type: 'text', content: 'look at this ' },
+          {
+            type: 'gif',
+            content: EXAMPLE_GIF_CONTENT,
+            gifId: 'joSNxeswxuc74Juo8X',
+            url: EXAMPLE_GIF_URL,
+          },
+        ],
+        { color: '#FF6B6B' },
+        mockBadges,
+      )}
+      onReply={() => {}}
+    />
+  ),
+};
+
+export const MidMessage: Story = {
+  args: Default.args,
+  decorators: [chatStoryDecorator],
+  render: () => (
+    <ChatRow
+      {...createBaseMessage(
+        [
+          { type: 'text', content: 'chat said ' },
+          {
+            type: 'gif',
+            content: 'world',
+            gifId: 'abc123',
+            url: EXAMPLE_GIF_URL,
+          },
+          { type: 'text', content: ' and then kept going' },
+        ],
+        {
+          color: '#1AC9A2',
+          username: 'gifposter',
+          'display-name': 'GifPoster',
+        },
+        mockBadges,
+      )}
+      onReply={() => {}}
+    />
+  ),
+};
+
 export const InChat: Story = {
   args: Default.args,
-  decorators: [
-    chatStoryDecorator,
-    Story => (
-      <RowVisibilityContext.Provider value={storyVisibility}>
-        <Story />
-      </RowVisibilityContext.Provider>
-    ),
-  ],
+  decorators: [chatStoryDecorator],
   render: () => (
     <View style={{ gap: 8 }}>
       <ChatRow

@@ -2,7 +2,6 @@ import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { findBadges } from '@app/utils/chat/find-badges';
 import type { MessageToken } from '@app/utils/chat/message-token';
-import { replaceEmotesWithText } from '@app/utils/chat/replace-emotes-with-text';
 import { resolveMessageEmoteParts } from '@app/utils/chat/resolve-message-emote-tokens';
 import { getMessageBadges } from '@app/utils/chat/shared-chat-badges/get-message-badges';
 import { getSharedChatBadgeContext } from '@app/utils/chat/shared-chat-badges/get-shared-chat-badge-context';
@@ -244,12 +243,13 @@ export async function resolveVisibleMessageUpdate({
   }
 
   const emoteData = getCurrentEmoteData(channelId);
-  const text = replaceEmotesWithText(message.message).trimEnd();
+  const textContent = getEnrichableText(message.message);
 
-  if (!text.trim()) {
+  if (textContent == null || !textContent.trim()) {
     return null;
   }
 
+  const text = textContent.trimEnd();
   const userId = message.userstate['user-id'];
 
   try {

@@ -403,6 +403,7 @@ function logEmoteLoadFailure({
 }
 
 interface ChatInlineImageProps {
+  accessibilityLabel?: string;
   /**
    * Records which emote a touch started on for the row's long-press timer.
    * Taken here so the common emote needs no wrapper view of its own.
@@ -418,6 +419,7 @@ interface ChatInlineImageProps {
 
 // eslint-disable-next-line react-doctor/no-giant-component -- a split adds a mount boundary on the hottest chat path
 function ChatInlineImageComponent({
+  accessibilityLabel,
   onTouchStart,
   priority = 'high',
   sourceUrl,
@@ -467,6 +469,8 @@ function ChatInlineImageComponent({
     <ExpoImage
       ref={imageRef}
       source={source}
+      accessible={accessibilityLabel ? true : undefined}
+      accessibilityLabel={accessibilityLabel}
       contentFit='contain'
       recyclingKey={`${candidateUrl}#${reloadNonce}`}
       autoplay={playAnimation && autoplay}
