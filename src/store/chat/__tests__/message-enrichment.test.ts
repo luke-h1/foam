@@ -363,6 +363,88 @@ describe('resolveVisibleMessageUpdate', () => {
     });
   });
 
+  test('keeps a stored gif when rebuilt text is shorter than the tag offsets', async () => {
+    const message = createMockMessage({
+      message_id: 'gif-1',
+      message_nonce: 'gif-nonce',
+      message: [
+        createTextToken('hi '),
+        {
+          type: 'gif',
+          content: '[YAY]',
+          gifId: 'abc',
+          url: 'https://example.com/a.gif',
+        },
+      ],
+      userstate: createUserStateTags({
+        gifs: '4-8|abc|https://example.com/a.gif',
+      }),
+    });
+
+    const update = await resolveVisibleMessageUpdate({
+      channelId,
+      message,
+      show7TvEmotes: true,
+      showChatGifs: true,
+      userLogin: 'me',
+    });
+
+    expect(summariseTokens(update?.updates.message ?? [])).toEqual<
+      TokenSummary[]
+    >([
+      { type: 'text', content: 'hi' },
+      { type: 'text', content: ' ' },
+      { type: 'gif', content: '[YAY]' },
+    ]);
+  });
+
+  test('reprocesses a link beside an overlaid emote', async () => {
+    const message = createMockMessage({
+      message_id: 'overlay-1',
+      message_nonce: 'overlay-nonce',
+      message: [
+        {
+          type: 'emote',
+          ...kappa,
+          overlaid: [
+            {
+              type: 'emote',
+              content: 'SoSnowy',
+              id: 'snow',
+              name: 'SoSnowy',
+              original_name: 'SoSnowy',
+              url: 'https://cdn.example.test/snow.webp',
+              creator: null,
+              emote_link: '',
+              site: '7TV Global',
+              provider: '7tv',
+            },
+          ],
+        },
+        createTextToken(' '),
+        { type: 'link', content: 'https://example.com' },
+      ],
+    });
+
+    const update = await resolveVisibleMessageUpdate({
+      channelId,
+      message,
+      show7TvEmotes: true,
+      showChatGifs: true,
+      userLogin: 'me',
+    });
+
+    expect(summariseTokens(update?.updates.message ?? [])).toEqual<
+      TokenSummary[]
+    >([
+      resolvedKappa,
+      { type: 'text', content: ' ' },
+      { type: 'text', content: 'SoSnowy' },
+      { type: 'text', content: ' ' },
+      { type: 'link', content: 'https://example.com' },
+    ]);
+  });
+
   test('skips system messages', async () => {
     const update = await resolveVisibleMessageUpdate({
       channelId,
