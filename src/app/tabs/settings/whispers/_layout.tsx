@@ -1,8 +1,13 @@
-import { Stack } from "expo-router";
+import { Stack } from 'expo-router';
 
-import { useWhisperIrcSession } from "@app/screens/whispers/hooks/use-whisper-irc-session";
-import { nativeStackScreenOptions } from "@app/utils/navigation/native-stack-options";
+import { useWhisperIrcSession } from '@app/screens/whispers/hooks/use-whisper-irc-session';
+import { theme } from '@app/styles/themes';
+import { nativeStackScreenOptions } from '@app/utils/navigation/native-stack-options';
 
+/**
+ * Owns the whispers IRC session for the lifetime of this stack. Leaving
+ * Settings → Whispers unmounts the layout and closes the socket.
+ */
 export default function WhispersLayout() {
   useWhisperIrcSession();
 
@@ -10,17 +15,20 @@ export default function WhispersLayout() {
     <Stack
       screenOptions={{
         ...nativeStackScreenOptions,
-        headerBackTitle: "Whispers",
+        // Inbox chrome sits above the list, so keep the header opaque.
+        headerTransparent: false,
+        headerStyle: { backgroundColor: theme.color.background.dark },
+        headerBackTitle: 'Whispers',
       }}
     >
-      <Stack.Screen name="index" options={{ title: "Whispers" }} />
-      <Stack.Screen name="[login]" options={{ title: "Whisper" }} />
+      <Stack.Screen name='index' options={{ title: 'Whispers' }} />
+      <Stack.Screen name='[login]' options={{ title: 'Whisper' }} />
       <Stack.Screen
-        name="compose"
+        name='compose'
         options={{
-          title: "New whisper",
-          presentation: "formSheet",
-          sheetAllowedDetents: "fitToContents",
+          title: 'New whisper',
+          presentation: 'formSheet',
+          sheetAllowedDetents: 'fitToContents',
           headerShown: false,
         }}
       />

@@ -51,7 +51,11 @@ const MODERATION_SCOPES = [
   'moderator:manage:chat_settings',
 ] as const;
 
-const WHISPER_SCOPES = ['whispers:read', 'whispers:edit'] as const;
+const WHISPER_SCOPES = [
+  'whispers:read',
+  'whispers:edit',
+  'user:manage:whispers',
+] as const;
 
 // SAFETY: app.config.ts copies EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL into
 // `extra` from the env, so the value is a string when it is set at all.

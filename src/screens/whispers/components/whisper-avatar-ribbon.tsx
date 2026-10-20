@@ -1,10 +1,14 @@
-import { Avatar } from "@app/components/avatar/avatar";
-import { Text } from "@app/components/ui/text/text";
-import { WhisperThread } from "@app/store/chat/types/whispers";
-import { theme } from "@app/styles/themes";
-import { FlashList, ListRenderItem } from "@shopify/flash-list";
-import { memo, useCallback } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { memo, useCallback } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+
+import { Avatar } from '@app/components/avatar/avatar';
+import {
+  FlashList,
+  type ListRenderItem,
+} from '@app/components/flash-list/flash-list';
+import { Text } from '@app/components/ui/text/text';
+import type { WhisperThread } from '@app/store/chat/types/whispers';
+import { theme } from '@app/styles/themes';
 
 interface WhisperAvatarRibbonProps {
   onPress: (thread: WhisperThread) => void;
@@ -18,7 +22,7 @@ export const WhisperAvatarRibbon = memo(function WhisperAvatarRibbon({
   const renderItem = useCallback<ListRenderItem<WhisperThread>>(
     ({ item: thread }) => (
       <Pressable
-        accessibilityRole="button"
+        accessibilityRole='button'
         accessibilityLabel={thread.partnerDisplayName}
         onPress={() => onPress(thread)}
         style={styles.item}
@@ -28,10 +32,9 @@ export const WhisperAvatarRibbon = memo(function WhisperAvatarRibbon({
           name={thread.partnerDisplayName}
           size={56}
         />
-        <Text type="caption2" numberOfLines={1} style={styles.name}>
+        <Text type='caption2' numberOfLines={1} style={styles.name}>
           {thread.partnerDisplayName}
         </Text>
-
         {thread.unreadCount > 0 ? <View style={styles.unread} /> : null}
       </Pressable>
     ),
@@ -44,12 +47,13 @@ export const WhisperAvatarRibbon = memo(function WhisperAvatarRibbon({
 
   return (
     <View style={styles.wrap}>
-      <Text type="footnote" weight="semibold" style={styles.label}>
+      <Text type='footnote' weight='semibold' style={styles.label}>
         Your circle
       </Text>
       <FlashList
+        horizontal
         data={threads}
-        keyExtractor={(item) => item.partnerLogin}
+        keyExtractor={item => item.partnerLogin}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.row}
         renderItem={renderItem}
@@ -59,29 +63,6 @@ export const WhisperAvatarRibbon = memo(function WhisperAvatarRibbon({
 });
 
 const styles = StyleSheet.create({
-  item: {
-    alignItems: "center",
-    gap: 6,
-    width: 64,
-  },
-  name: {
-    color: theme.color.text.dark,
-    textAlign: "center",
-    width: "100%",
-  },
-  row: {
-    gap: 14,
-    paddingHorizontal: 16,
-  },
-  unread: {
-    backgroundColor: theme.color.accent.dark,
-    borderRadius: 999,
-    height: 8,
-    position: "absolute",
-    right: 6,
-    top: 2,
-    width: 8,
-  },
   wrap: {
     gap: 10,
     paddingBottom: 8,
@@ -90,5 +71,28 @@ const styles = StyleSheet.create({
   label: {
     color: theme.color.textSecondary.dark,
     paddingHorizontal: 16,
+  },
+  row: {
+    gap: 14,
+    paddingHorizontal: 16,
+  },
+  item: {
+    alignItems: 'center',
+    gap: 6,
+    width: 64,
+  },
+  name: {
+    color: theme.color.text.dark,
+    textAlign: 'center',
+    width: '100%',
+  },
+  unread: {
+    backgroundColor: theme.color.accent.dark,
+    borderRadius: 999,
+    height: 8,
+    position: 'absolute',
+    right: 6,
+    top: 2,
+    width: 8,
   },
 });
