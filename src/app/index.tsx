@@ -7,7 +7,7 @@ import { Text } from '@app/components/ui/text/text';
 import { useAuthContext } from '@app/context/auth-context';
 import { useStartupMark } from '@app/hooks/use-startup-mark';
 import { storage } from '@app/lib/storage';
-import { ONBOARDING_SEEN_KEY } from '@app/screens/onboarding-screen/constants';
+import { ONBOARDING_SEEN_KEY } from '@app/screens/onboarding/constants';
 import { isE2EMode } from '@app/services/api/clients';
 import { theme } from '@app/styles/themes';
 

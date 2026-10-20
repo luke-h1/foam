@@ -5,7 +5,7 @@ import { LoadingState } from '@app/components/loading-state/loading-state';
 import { StreamListLayoutMenu } from '@app/components/stream-list-layout-toggle/stream-list-layout-menu';
 import { EmptyState } from '@app/components/ui/empty-state/empty-state';
 import { useAuthContext } from '@app/context/auth-context';
-import FollowingScreen from '@app/screens/following-screen/following-screen';
+import FollowingScreen from '@app/screens/following/following-screen';
 
 function FollowingRouteContent() {
   const { authState, ready } = useAuthContext();

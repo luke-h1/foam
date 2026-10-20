@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 
-import { ChatScreen } from '@app/screens/chat-screen/chat-screen';
+import { ChatScreen } from '@app/screens/chat/chat-screen';
 
 export default function ChatRoute() {
   const { channelId = '', channelName = '' } = useLocalSearchParams<{

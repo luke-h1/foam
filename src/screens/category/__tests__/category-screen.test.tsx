@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react-native';
 
-import { CategoryScreen } from '@app/screens/category-screen/category-screen';
+import { CategoryScreen } from '@app/screens/category/category-screen';
 import { twitchService as realTwitchService } from '@app/services/twitch-service';
 import render from '@app/test/render';
 import type { Category } from '@app/types/twitch/category';

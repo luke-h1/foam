@@ -15,7 +15,7 @@ import { AuthContextProvider } from '@app/context/auth-context';
 import { useRecoveredFromError } from '@app/hooks/use-recovered-from-error';
 import { QueryProvider } from '@app/lib/react-query/query-provider';
 import { BaseConfig } from '@app/navigators/config';
-import { ErrorBoundary } from '@app/screens/error-screen/error-boundary';
+import { ErrorBoundary } from '@app/screens/error/error-boundary';
 import { motion, pressAnimation } from '@app/styles/motion';
 import { toastStyle } from '@app/styles/toast';
 
