@@ -14,6 +14,14 @@ Each override below was checked against the code before it was added. None turns
 
 Because the rule is off, nothing reports a dependency that is really unused. Check by hand when you add or remove one.
 
+## FlashList estimatedItemSize
+
+`react-doctor/rn-list-missing-estimated-item-size` is off for the whole project.
+The rule is for FlashList v1, where `estimatedItemSize` was required to size
+cells before measure. This app is on `@shopify/flash-list` 2.x, which removed
+that prop and sizes cells on its own. Passing `estimatedItemSize` is a type
+error on v2, so the rule only produces false positives.
+
 ## Unused-export and unused-file
 
 `deslop/unused-export` and `deslop/unused-file` are off for the whole project. Both follow static imports only.

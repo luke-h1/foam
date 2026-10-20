@@ -1,11 +1,11 @@
-import { router } from 'expo-router';
+import { router } from "expo-router";
 
-import { DeferUntilFocused } from '@app/components/defer-until-focused/defer-until-focused';
-import { LoadingState } from '@app/components/loading-state/loading-state';
-import { StreamListLayoutMenu } from '@app/components/stream-list-layout-toggle/stream-list-layout-menu';
-import { EmptyState } from '@app/components/ui/empty-state/empty-state';
-import { useAuthContext } from '@app/context/auth-context';
-import FollowingScreen from '@app/screens/following-screen/following-screen';
+import { DeferUntilFocused } from "@app/components/defer-until-focused/defer-until-focused";
+import { LoadingState } from "@app/components/loading-state/loading-state";
+import { StreamListLayoutMenu } from "@app/components/stream-list-layout-toggle/stream-list-layout-menu";
+import { EmptyState } from "@app/components/ui/empty-state/empty-state";
+import { useAuthContext } from "@app/context/auth-context";
+import FollowingScreen from "@app/screens/following/following-screen";
 
 function FollowingRouteContent() {
   const { authState, ready } = useAuthContext();
@@ -17,11 +17,11 @@ function FollowingRouteContent() {
   if (!authState) {
     return (
       <EmptyState
-        iconName='exclamationmark.triangle'
+        iconName="exclamationmark.triangle"
         heading="Couldn't check your account"
-        content='You can still browse top streams while Foam retries.'
-        button='Browse top streams'
-        buttonOnPress={() => router.replace('/tabs/top')}
+        content="You can still browse top streams while Foam retries."
+        button="Browse top streams"
+        buttonOnPress={() => router.replace("/tabs/top")}
       />
     );
   }

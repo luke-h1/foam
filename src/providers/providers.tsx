@@ -1,44 +1,44 @@
-import { PropsWithChildren } from 'react';
-import { StyleSheet } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { KeyboardProvider } from 'react-native-keyboard-controller';
+import { PropsWithChildren } from "react";
+import { StyleSheet } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import {
   initialWindowMetrics,
   SafeAreaProvider,
-} from 'react-native-safe-area-context';
-import { PortalProvider } from 'react-native-teleport';
+} from "react-native-safe-area-context";
+import { PortalProvider } from "react-native-teleport";
 
-import { useNetworkActivityDevTools } from '@rozenite/network-activity-plugin';
-import { usePerformanceMonitorDevTools } from '@rozenite/performance-monitor-plugin';
-import { useRequireProfilerDevTools } from '@rozenite/require-profiler-plugin';
+import { useNetworkActivityDevTools } from "@rozenite/network-activity-plugin";
+import { usePerformanceMonitorDevTools } from "@rozenite/performance-monitor-plugin";
+import { useRequireProfilerDevTools } from "@rozenite/require-profiler-plugin";
 import {
   createMMKVStorageAdapter,
   useRozeniteStoragePlugin,
-} from '@rozenite/storage-plugin';
-import { useTanStackQueryDevTools } from '@rozenite/tanstack-query-plugin';
-import { useQueryClient } from '@tanstack/react-query';
-import * as Clipboard from 'expo-clipboard';
-import { PressablesConfig } from 'pressto';
-import { Toaster } from 'sonner-native';
+} from "@rozenite/storage-plugin";
+import { useTanStackQueryDevTools } from "@rozenite/tanstack-query-plugin";
+import { useQueryClient } from "@tanstack/react-query";
+import * as Clipboard from "expo-clipboard";
+import { PressablesConfig } from "pressto";
+import { Toaster } from "sonner-native";
 
-import { ActionMenuHost } from '@app/components/action-menu-host/action-menu-host';
-import { ChangelogAndroidHost } from '@app/components/changelog/changelog-android-host';
-import { GlobalErrorGate } from '@app/components/global-error-gate/global-error-gate';
-import { MediaPermissionHost } from '@app/components/media-permission-host/media-permission-host';
-import { OfflineBanner } from '@app/components/offline-banner/offline-banner';
-import { ShakeToReport } from '@app/components/shake-to-report/shake-to-report';
-import { AccentColorProvider } from '@app/context/accent-color-context';
-import { AuthContextProvider } from '@app/context/auth-context';
-import { useDebugOptions } from '@app/hooks/use-debug-options';
-import { useRecoveredFromError } from '@app/hooks/use-recovered-from-error';
-import { QueryProvider } from '@app/lib/react-query/query-provider';
-import { storage } from '@app/lib/storage';
-import { BaseConfig } from '@app/navigators/config';
-import { ErrorBoundary } from '@app/screens/error-screen/error-boundary';
-import { motion, pressAnimation } from '@app/styles/motion';
-import { toastStyle } from '@app/styles/toast';
+import { ActionMenuHost } from "@app/components/action-menu-host/action-menu-host";
+import { ChangelogAndroidHost } from "@app/components/changelog/changelog-android-host";
+import { GlobalErrorGate } from "@app/components/global-error-gate/global-error-gate";
+import { MediaPermissionHost } from "@app/components/media-permission-host/media-permission-host";
+import { OfflineBanner } from "@app/components/offline-banner/offline-banner";
+import { ShakeToReport } from "@app/components/shake-to-report/shake-to-report";
+import { AccentColorProvider } from "@app/context/accent-color-context";
+import { AuthContextProvider } from "@app/context/auth-context";
+import { useDebugOptions } from "@app/hooks/use-debug-options";
+import { useRecoveredFromError } from "@app/hooks/use-recovered-from-error";
+import { QueryProvider } from "@app/lib/react-query/query-provider";
+import { storage } from "@app/lib/storage";
+import { BaseConfig } from "@app/navigators/config";
+import { ErrorBoundary } from "@app/screens/error/error-boundary";
+import { motion, pressAnimation } from "@app/styles/motion";
+import { toastStyle } from "@app/styles/toast";
 
-import { AnalyticsProvider } from './analytics-provider';
+import { AnalyticsProvider } from "./analytics-provider";
 
 function QueryProviderWithDevTools({ children }: PropsWithChildren) {
   return (
@@ -54,7 +54,7 @@ function QueryProviderWithDevTools({ children }: PropsWithChildren) {
 const DevToolsBubble = __DEV__
   ? // eslint-disable-next-line @typescript-eslint/no-require-imports
     (
-      require('react-native-react-query-devtools') as typeof import('react-native-react-query-devtools')
+      require("react-native-react-query-devtools") as typeof import("react-native-react-query-devtools")
     ).DevToolsBubble
   : null;
 
@@ -71,7 +71,7 @@ function QueryDevelopmentTools() {
   return (
     <DevToolsBubble
       queryClient={queryClient}
-      onCopy={async text => {
+      onCopy={async (text) => {
         try {
           await Clipboard.setStringAsync(text);
           return true;
@@ -136,7 +136,7 @@ export function Providers({ children }: PropsWithChildren) {
                             refresh) give haptic feedback. Each control
                             opts in through lib/haptics. */}
                       <PressablesConfig
-                        animationType='timing'
+                        animationType="timing"
                         animationConfig={pressAnimation}
                         config={{ minScale: motion.pressMinScale }}
                       >

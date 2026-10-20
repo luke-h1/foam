@@ -4,42 +4,42 @@ import {
   useEffect,
   useRef,
   useSyncExternalStore,
-} from 'react';
+} from "react";
 
-import * as Network from 'expo-network';
+import * as Network from "expo-network";
 
-import { useAuthContext } from '@app/context/auth-context';
-import { useLazyRef } from '@app/hooks/use-lazy-ref';
-import { useSyncRef } from '@app/hooks/use-sync-ref';
-import { chatPerfMarks } from '@app/lib/chat-perf-marks';
-import { isE2EMode } from '@app/services/api/clients';
-import { recordChatDebugIrcLine } from '@app/store/chat/actions/chat-debug-log';
-import { usePreference } from '@app/store/preference-store';
-import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
-import { subscribeToAppStateTransitions } from '@app/utils/app-state/app-state-transitions';
-import { applyAntiDuplicateSuffix } from '@app/utils/chat/apply-anti-duplicate-suffix';
-import { reportDroppedChatMessages } from '@app/utils/chat/chat-health/report-dropped-chat-messages';
-import { getHeartbeatAction } from '@app/utils/chat/chat-heartbeat';
+import { useAuthContext } from "@app/context/auth-context";
+import { useLazyRef } from "@app/hooks/use-lazy-ref";
+import { useSyncRef } from "@app/hooks/use-sync-ref";
+import { chatPerfMarks } from "@app/lib/chat-perf-marks";
+import { isE2EMode } from "@app/services/api/clients";
+import { recordChatDebugIrcLine } from "@app/store/chat/actions/chat-debug-log";
+import { usePreference } from "@app/store/preference-store";
+import { UserNoticeTags } from "@app/types/chat/irc-tags/usernotice";
+import { subscribeToAppStateTransitions } from "@app/utils/app-state/app-state-transitions";
+import { applyAntiDuplicateSuffix } from "@app/utils/chat/apply-anti-duplicate-suffix";
+import { reportDroppedChatMessages } from "@app/utils/chat/chat-health/report-dropped-chat-messages";
+import { getHeartbeatAction } from "@app/utils/chat/chat-heartbeat";
 import {
   MAX_INGESTED_PER_SEC,
   shouldProcessLiveMessage,
-} from '@app/utils/chat/chat-ingest-rate-limiter';
-import { containsMutedWords } from '@app/utils/chat/chat-message-filters/contains-muted-words';
-import { isUserBlocked } from '@app/utils/chat/chat-message-filters/is-user-blocked';
-import { buildPrivmsgLine } from '@app/utils/chat/irc-protocol/build-privmsg-line';
-import { isPrivmsgLine } from '@app/utils/chat/irc-protocol/is-privmsg-line';
+} from "@app/utils/chat/chat-ingest-rate-limiter";
+import { containsMutedWords } from "@app/utils/chat/chat-message-filters/contains-muted-words";
+import { isUserBlocked } from "@app/utils/chat/chat-message-filters/is-user-blocked";
+import { buildPrivmsgLine } from "@app/utils/chat/irc-protocol/build-privmsg-line";
+import { isPrivmsgLine } from "@app/utils/chat/irc-protocol/is-privmsg-line";
 import {
   type IrcMessage,
   parseIrcMessage,
-} from '@app/utils/chat/irc-protocol/parse-irc-message';
+} from "@app/utils/chat/irc-protocol/parse-irc-message";
 import {
   type IrcRouteHandlers,
   routeIrcMessage,
-} from '@app/utils/chat/irc-protocol/route-irc-message';
-import { logger } from '@app/utils/logger';
+} from "@app/utils/chat/irc-protocol/route-irc-message";
+import { logger } from "@app/utils/logger";
 
-import { ReadyState } from '../hooks/ws/constants';
-import { useWebsocket } from '../hooks/ws/use-websocket';
+import { ReadyState } from "../hooks/ws/constants";
+import { useWebsocket } from "../hooks/ws/use-websocket";
 
 /**
  * Module-level external store for the IRC userstate; each USERSTATE replaces
@@ -57,7 +57,7 @@ let currentUserStateOwner: symbol | null = null;
 
 function setCurrentUserState(next: Record<string, string>): void {
   currentUserState = next;
-  userStateListeners.forEach(listener => listener());
+  userStateListeners.forEach((listener) => listener());
 }
 
 function setCurrentUserStateIfOwner(
@@ -104,8 +104,8 @@ const CHAT_HEARTBEAT_INTERVAL_MS = 60_000;
 const CHAT_FOREGROUND_LIVENESS_DEADLINE_MS = 5_000;
 
 const TWITCH_CHAT_URL = isE2EMode
-  ? 'ws://localhost:6667'
-  : 'wss://irc-ws.chat.twitch.tv:443';
+  ? "ws://localhost:6667"
+  : "wss://irc-ws.chat.twitch.tv:443";
 
 interface CreateChannelStateRouteHandlersOptions {
   isSelfNick: (nick: string | undefined) => boolean;
@@ -131,12 +131,12 @@ function createChannelStateRouteHandlers({
   setCurrentUserState,
 }: CreateChannelStateRouteHandlersOptions): Pick<
   IrcRouteHandlers,
-  | 'roomstate'
-  | 'userstate'
-  | 'globaluserstate'
-  | 'join'
-  | 'token'
-  | 'namesReply'
+  | "roomstate"
+  | "userstate"
+  | "globaluserstate"
+  | "join"
+  | "token"
+  | "namesReply"
 > {
   return {
     roomstate: (channelName, tagsRecord) => {
@@ -150,9 +150,9 @@ function createChannelStateRouteHandlers({
       logger.chat.debug(`USERSTATE in ${channelName}`);
       setCurrentUserState(tagsRecord);
 
-      if (pendingMessageRef.current && tagsRecord['msg-id']) {
+      if (pendingMessageRef.current && tagsRecord["msg-id"]) {
         logger.chat.debug(
-          `Received USERSTATE after sending message: ${tagsRecord['msg-id']}`,
+          `Received USERSTATE after sending message: ${tagsRecord["msg-id"]}`,
         );
 
         optionsRef.current.onUserStateAfterSend?.(tagsRecord);
@@ -162,8 +162,8 @@ function createChannelStateRouteHandlers({
       optionsRef.current.onUserState?.(channelName, tagsRecord);
     },
 
-    globaluserstate: tagsRecord => {
-      logger.chat.debug('GLOBALUSERSTATE received');
+    globaluserstate: (tagsRecord) => {
+      logger.chat.debug("GLOBALUSERSTATE received");
       setCurrentUserState(tagsRecord);
       optionsRef.current.onGlobalUserState?.(tagsRecord);
     },
@@ -189,7 +189,7 @@ function createChannelStateRouteHandlers({
       }
     },
 
-    namesReply: roomName => {
+    namesReply: (roomName) => {
       markChannelJoined(roomName);
     },
   };
@@ -200,7 +200,7 @@ interface CreateChatMessageRouteHandlersOptions {
   matchWholeWord: boolean;
   mutedWords: string[];
   optionsRef: RefObject<UseTwitchChatOptions>;
-  user: ReturnType<typeof useAuthContext>['user'];
+  user: ReturnType<typeof useAuthContext>["user"];
 }
 
 /**
@@ -215,22 +215,23 @@ function createChatMessageRouteHandlers({
   user,
 }: CreateChatMessageRouteHandlersOptions): Pick<
   IrcRouteHandlers,
-  | 'privmsg'
-  | 'notice'
-  | 'channellessNotice'
-  | 'usernotice'
-  | 'clearchat'
-  | 'clearmsg'
+  | "privmsg"
+  | "notice"
+  | "channellessNotice"
+  | "usernotice"
+  | "clearchat"
+  | "clearmsg"
+  | "whisper"
 > {
   return {
     privmsg: (channelName, tagsRecord, messageText) => {
-      const username = tagsRecord['display-name'] || tagsRecord.login;
+      const username = tagsRecord["display-name"] || tagsRecord.login;
 
       // Skip the per-message lowercasing when there is no blocklist.
       // A mod or the broadcaster is never filtered out of their own chat.
       const isBlockedSender =
         blockedUsers.length > 0 &&
-        tagsRecord.mod !== '1' &&
+        tagsRecord.mod !== "1" &&
         channelName.slice(1).toLowerCase() !== user?.login?.toLowerCase() &&
         isUserBlocked(username, blockedUsers);
 
@@ -248,8 +249,8 @@ function createChatMessageRouteHandlers({
     },
 
     notice: (channelName, tagsRecord, messageText) => {
-      if (messageText.includes('Welcome, GLHF!')) {
-        logger.chat.info('✅ Welcome message received');
+      if (messageText.includes("Welcome, GLHF!")) {
+        logger.chat.info("✅ Welcome message received");
         optionsRef.current.onWelcome?.();
       }
 
@@ -257,9 +258,9 @@ function createChatMessageRouteHandlers({
       optionsRef.current.onNotice?.(channelName, tagsRecord, messageText);
     },
 
-    channellessNotice: messageText => {
-      if (messageText.includes('Welcome, GLHF!')) {
-        logger.chat.info('✅ Welcome message received');
+    channellessNotice: (messageText) => {
+      if (messageText.includes("Welcome, GLHF!")) {
+        logger.chat.info("✅ Welcome message received");
         optionsRef.current.onWelcome?.();
       }
       logger.chat.info(`NOTICE: ${messageText}`);
@@ -267,7 +268,7 @@ function createChatMessageRouteHandlers({
 
     usernotice: (channelName, tagsRecord, messageText) => {
       logger.chat.debug(
-        `USERNOTICE in ${channelName}: ${tagsRecord['msg-id'] || 'unknown event'}`,
+        `USERNOTICE in ${channelName}: ${tagsRecord["msg-id"] || "unknown event"}`,
       );
 
       // SAFETY: routeIrcMessage only dispatches usernotice for a tagged USERNOTICE line, so tagsRecord carries the msg-id UserNoticeTags discriminates on.
@@ -280,7 +281,7 @@ function createChatMessageRouteHandlers({
 
     clearchat: (channelName, tagsRecord, username, banDuration) => {
       logger.chat.info(
-        `CLEARCHAT in ${channelName}: ${username || 'all messages cleared'}`,
+        `CLEARCHAT in ${channelName}: ${username || "all messages cleared"}`,
       );
 
       optionsRef.current.onClearChat?.(
@@ -296,6 +297,15 @@ function createChatMessageRouteHandlers({
         `CLEARMESSAGE in ${channelName}: message ${targetMsgId} deleted`,
       );
       optionsRef.current.onClearMessage?.(channelName, tagsRecord, targetMsgId);
+    },
+
+    whisper: (senderLogin, tagsRecord, messageText) => {
+      if (isUserBlocked(senderLogin, blockedUsers)) {
+        logger.chat.debug(`Filtered whisper from blocked user: ${senderLogin}`);
+        return;
+      }
+
+      optionsRef.current.onWhisper?.(senderLogin, tagsRecord, messageText);
     },
   };
 }
@@ -343,24 +353,24 @@ function useChatLivenessWatchdog({
         probeDeadlineMs: CHAT_FOREGROUND_LIVENESS_DEADLINE_MS,
       });
 
-      if (action === 'wait') {
+      if (action === "wait") {
         return;
       }
 
-      if (action === 'reconnect') {
+      if (action === "reconnect") {
         // Probe unanswered past its deadline - half-open socket.
         const idleMs = Date.now() - lastActivityAtRef.current;
 
         logger.chat.warn(
-          '💬 Twitch IRC PING unanswered past heartbeat, forcing reconnect',
-          { name: 'twitch_chat_warning', idleMs },
+          "💬 Twitch IRC PING unanswered past heartbeat, forcing reconnect",
+          { name: "twitch_chat_warning", idleMs },
         );
 
         // Bump the marker so we don't re-close before the reconnect lands.
         awaitingPongRef.current = false;
 
         lastActivityAtRef.current = Date.now();
-        getWebSocketRef.current().close(4002, 'chat heartbeat timeout');
+        getWebSocketRef.current().close(4002, "chat heartbeat timeout");
         return;
       }
 
@@ -387,7 +397,7 @@ function useChatLivenessWatchdog({
 
     const unsubscribeAppState = subscribeToAppStateTransitions(
       ({ previous, current }) => {
-        if (current === 'active' && previous !== 'active') {
+        if (current === "active" && previous !== "active") {
           verifyChatLivenessRef.current();
         }
       },
@@ -396,14 +406,14 @@ function useChatLivenessWatchdog({
     let wasConnected = true;
 
     void Network.getNetworkStateAsync()
-      .then(state => {
+      .then((state) => {
         wasConnected = Boolean(state.isConnected);
       })
       .catch(() => {
         // Ignore
       });
 
-    const networkSubscription = Network.addNetworkStateListener(state => {
+    const networkSubscription = Network.addNetworkStateListener((state) => {
       const isConnected = Boolean(state.isConnected);
 
       // Only act on the regain edge; a steady connection needn't re-probe.
@@ -441,7 +451,7 @@ function dispatchIrcLine(line: string, handlers: IrcLineHandlers): void {
     return;
   }
 
-  if (line === 'PING :tmi.twitch.tv') {
+  if (line === "PING :tmi.twitch.tv") {
     handlers.onPing();
     return;
   }
@@ -450,7 +460,7 @@ function dispatchIrcLine(line: string, handlers: IrcLineHandlers): void {
     recordChatDebugIrcLine(line, true);
 
     reportDroppedChatMessages(1, {
-      reason: 'ingest-rate-limit',
+      reason: "ingest-rate-limit",
       limitPerSecond: MAX_INGESTED_PER_SEC,
     });
 
@@ -475,7 +485,7 @@ function consumeIrcLines(text: string, handlers: IrcLineHandlers): string {
   let cursor = 0;
 
   while (cursor < text.length) {
-    const lineEnd = text.indexOf('\r\n', cursor);
+    const lineEnd = text.indexOf("\r\n", cursor);
 
     if (lineEnd === -1) {
       break;
@@ -503,24 +513,30 @@ function formatIrcCommand(command: string, params: string[]): string {
 
   const head =
     trailingParams.length > 0
-      ? `${command} ${trailingParams.join(' ')}`
+      ? `${command} ${trailingParams.join(" ")}`
       : command;
 
-  return lastParam.includes(' ')
+  return lastParam.includes(" ")
     ? `${head} :${lastParam}`
     : `${head} ${lastParam}`;
 }
 
 function formatIrcChannelName(channelName: string): string {
-  return channelName.startsWith('#') ? channelName : `#${channelName}`;
+  return channelName.startsWith("#") ? channelName : `#${channelName}`;
 }
 
 function handleTwitchChatWebSocketError(error: Event) {
-  logger.chat.error('💬 Twitch IRC WebSocket error:', error);
+  logger.chat.error("💬 Twitch IRC WebSocket error:", error);
 }
 
 interface UseTwitchChatOptions {
   channel?: string;
+  /**
+   * Open an authenticated IRC socket without joining a channel. Used by the
+   * whispers stack so inbox receive does not depend on a live chat surface.
+   * Requires a signed-in user with a token
+   */
+  connectForWhispers?: boolean;
   onMessage?: (
     channel: string,
     tags: Record<string, string>,
@@ -556,6 +572,11 @@ interface UseTwitchChatOptions {
   onUserState?: (channel: string, tags: Record<string, string>) => void;
   onGlobalUserState?: (tags: Record<string, string>) => void;
   onWelcome?: () => void;
+  onWhisper?: (
+    senderLogin: string,
+    tags: Record<string, string>,
+    message: string,
+  ) => void;
   blockedUsers?: { userLogin: string }[];
   mutedWords?: string[];
   matchWholeWord?: boolean;
@@ -565,19 +586,20 @@ interface UseTwitchChatOptions {
 export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   const optionsRef = useSyncRef(options);
   const { authState, user } = useAuthContext();
-  const showJoinPartMessages = usePreference('showJoinPartMessages');
+  const showJoinPartMessages = usePreference("showJoinPartMessages");
   const showJoinPartMessagesRef = useSyncRef(showJoinPartMessages);
 
   const {
     blockedUsers = [],
     channel,
+    connectForWhispers = false,
     matchWholeWord = false,
     mutedWords = [],
     // eslint-disable-next-line react-doctor/no-event-handler -- data fields; handlers go through optionsRef
   } = options;
 
   const isAuthenticatedRef = useRef(false);
-  const userStateTokenRef = useLazyRef(() => Symbol('twitchChatUserState'));
+  const userStateTokenRef = useLazyRef(() => Symbol("twitchChatUserState"));
   const joinedChannelsRef = useLazyRef(() => new Set<string>());
   const pendingJoinChannelsRef = useLazyRef(() => new Set<string>());
 
@@ -586,7 +608,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   );
 
   // Authenticated nick; JOIN/PART prefixes let us tell our own join/token from other chatters'.
-  const currentNickRef = useRef('');
+  const currentNickRef = useRef("");
 
   const pendingIrcMessagesRef = useRef<string[]>([]);
 
@@ -602,7 +624,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
 
   const probeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sendIrcMessageRef = useRef<((message: string) => void) | null>(null);
-  const messageBufferRef = useRef<string>('');
+  const messageBufferRef = useRef<string>("");
 
   const pendingMessageRef = useRef<{
     channel: string;
@@ -618,7 +640,11 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
    */
   const lastSentMessagesRef = useLazyRef(() => new Map<string, string>());
 
-  const shouldConnect = Boolean(channel?.trim());
+  const hasWhisperAuth = Boolean(
+    user?.login?.trim() && authState?.token?.accessToken?.trim(),
+  );
+  const shouldConnect =
+    Boolean(channel?.trim()) || (connectForWhispers && hasWhisperAuth);
 
   const previousTokenRef = useRef<string | undefined>(undefined);
 
@@ -673,7 +699,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
 
       logger.chat.info(`Joining channel: ${channelFormatted}`);
       pendingJoinChannelsRef.current.add(channelFormatted);
-      sendIrcCommand('JOIN', channelFormatted);
+      sendIrcCommand("JOIN", channelFormatted);
     },
     [joinedChannelsRef, pendingJoinChannelsRef, sendIrcCommand],
   );
@@ -704,29 +730,29 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
 
     const passToken = canUseAuthenticatedChat
       ? `oauth:${accessToken}`
-      : 'SCHMOOPIIE';
+      : "SCHMOOPIIE";
 
     currentNickRef.current = nickname;
 
     logger.chat.info(
       canUseAuthenticatedChat
-        ? 'Authenticating with Twitch IRC...'
+        ? "Authenticating with Twitch IRC..."
         : `Authenticating anonymously with Twitch IRC as ${nickname}...`,
     );
 
     if (hasUserLogin && !canUseAuthenticatedChat) {
       logger.chat.warn(
-        '[useTwitchChat] Missing auth token, falling back to anonymous IRC mode',
+        "[useTwitchChat] Missing auth token, falling back to anonymous IRC mode",
       );
     }
 
     const capabilities = showJoinPartMessagesRef.current
-      ? 'twitch.tv/tags twitch.tv/commands twitch.tv/membership'
-      : 'twitch.tv/tags twitch.tv/commands';
+      ? "twitch.tv/tags twitch.tv/commands twitch.tv/membership"
+      : "twitch.tv/tags twitch.tv/commands";
 
     sendIrcCommand(`CAP REQ :${capabilities}`);
-    sendIrcCommand('PASS', passToken);
-    sendIrcCommand('NICK', nickname);
+    sendIrcCommand("PASS", passToken);
+    sendIrcCommand("NICK", nickname);
 
     if (channel) {
       scheduleJoinAfterAuth(channel);
@@ -756,7 +782,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     }
 
     logger.chat.info(`Parting from channel: ${channelFormatted}`);
-    sendIrcCommand('PART', channelFormatted);
+    sendIrcCommand("PART", channelFormatted);
     joinedChannelsRef.current.delete(channelFormatted);
     pendingJoinChannelsRef.current.delete(channelFormatted);
     optionsRef.current.onPart?.(channelFormatted);
@@ -764,21 +790,21 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
 
   const ircRouteHandlers: IrcRouteHandlers = {
     motd: (command, params) => {
-      logger.chat.debug(`IRC ${command}: ${params.join(' ')}`);
+      logger.chat.debug(`IRC ${command}: ${params.join(" ")}`);
     },
 
     welcome: () => {
       isAuthenticatedRef.current = true;
-      logger.chat.info('✅ Authenticated with Twitch IRC');
+      logger.chat.info("✅ Authenticated with Twitch IRC");
 
       if (channel) {
         joinChannel(channel);
       }
     },
 
-    ping: server => {
+    ping: (server) => {
       logger.chat.debug(`Received PING, sending PONG to ${server}`);
-      sendIrcCommand('PONG', server);
+      sendIrcCommand("PONG", server);
     },
 
     ...createChatMessageRouteHandlers({
@@ -790,10 +816,10 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     }),
 
     reconnect: () => {
-      logger.chat.warn('Received Twitch IRC RECONNECT request');
+      logger.chat.warn("Received Twitch IRC RECONNECT request");
       optionsRef.current.onReconnect?.();
       lastActivityAtRef.current = Date.now();
-      getWebSocketRef.current().close(4003, 'twitch reconnect');
+      getWebSocketRef.current().close(4003, "twitch reconnect");
     },
 
     ...createChannelStateRouteHandlers({
@@ -803,13 +829,13 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       optionsRef,
       pendingJoinChannelsRef,
       pendingMessageRef,
-      setCurrentUserState: tags =>
+      setCurrentUserState: (tags) =>
         setCurrentUserStateIfOwner(userStateTokenRef.current, tags),
     }),
 
     unhandled: (command, params) => {
       logger.chat.debug(
-        `Unhandled IRC command: ${command} ${params.join(' ')}`,
+        `Unhandled IRC command: ${command} ${params.join(" ")}`,
       );
     },
   };
@@ -830,16 +856,16 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
         `${messageBufferRef.current}${event.data}`,
         {
           onLine: handleIrcMessage,
-          onPing: () => sendIrcCommand('PONG', 'tmi.twitch.tv'),
+          onPing: () => sendIrcCommand("PONG", "tmi.twitch.tv"),
         },
       );
     } catch (e) {
-      logger.chat.error('Failed to parse IRC message:', e);
+      logger.chat.error("Failed to parse IRC message:", e);
     }
   };
 
   const handleWebSocketOpen = useCallback(() => {
-    logger.chat.info('💬 Twitch IRC WebSocket connected');
+    logger.chat.info("💬 Twitch IRC WebSocket connected");
     isAuthenticatedRef.current = false;
     joinedChannelsRef.current.clear();
     lastActivityAtRef.current = Date.now();
@@ -861,7 +887,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       // Drop queued sends. A reconnect must not flush commands from a dead socket.
       pendingIrcMessagesRef.current = [];
 
-      messageBufferRef.current = '';
+      messageBufferRef.current = "";
     },
     [joinedChannelsRef, pendingJoinChannelsRef],
   );
@@ -907,7 +933,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
 
     if (socket.readyState !== WebSocket.OPEN) {
       logger.chat.info(
-        '💬 Twitch IRC not open on resume, restarting connection',
+        "💬 Twitch IRC not open on resume, restarting connection",
       );
 
       reconnectRef.current();
@@ -922,7 +948,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     awaitingPongRef.current = true;
     const sentAt = Date.now();
     probeSentAtRef.current = sentAt;
-    sendIrcCommand('PING', 'tmi.twitch.tv');
+    sendIrcCommand("PING", "tmi.twitch.tv");
 
     if (probeTimeoutRef.current) {
       clearTimeout(probeTimeoutRef.current);
@@ -947,13 +973,13 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       }
 
       logger.chat.warn(
-        '💬 Twitch IRC liveness probe unanswered after resume, forcing reconnect',
-        { name: 'twitch_chat_warning' },
+        "💬 Twitch IRC liveness probe unanswered after resume, forcing reconnect",
+        { name: "twitch_chat_warning" },
       );
 
       awaitingPongRef.current = false;
       lastActivityAtRef.current = Date.now();
-      currentSocket.close(4004, 'chat liveness probe timeout');
+      currentSocket.close(4004, "chat liveness probe timeout");
     }, CHAT_FOREGROUND_LIVENESS_DEADLINE_MS);
   };
 
@@ -984,9 +1010,9 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
 
     if (previousToken !== undefined && previousToken !== currentToken) {
       logger.chat.info(
-        '[useTwitchChat] Token updated, reconnecting IRC with new token',
+        "[useTwitchChat] Token updated, reconnecting IRC with new token",
       );
-      getWebSocketRef.current().close(4001, 'auth token refreshed');
+      getWebSocketRef.current().close(4001, "auth token refreshed");
     }
   }, [authState?.token?.accessToken, getWebSocketRef, shouldConnect]);
 
@@ -1006,16 +1032,16 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     }
 
     logger.chat.info(
-      '[useTwitchChat] Join/token preference changed, reconnecting IRC to renegotiate membership capability',
+      "[useTwitchChat] Join/token preference changed, reconnecting IRC to renegotiate membership capability",
     );
 
-    getWebSocketRef.current().close(4005, 'membership capability change');
+    getWebSocketRef.current().close(4005, "membership capability change");
   }, [getWebSocketRef, shouldConnect, showJoinPartMessages]);
 
   useEffect(() => {
     sendIrcMessageRef.current = sendWebSocketMessage;
     const pendingMessages = pendingIrcMessagesRef.current.splice(0);
-    pendingMessages.forEach(message => sendWebSocketMessage(message));
+    pendingMessages.forEach((message) => sendWebSocketMessage(message));
 
     return () => {
       if (sendIrcMessageRef.current === sendWebSocketMessage) {
@@ -1045,7 +1071,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       partChannelRef.current(previousChannel);
     }
 
-    if (channel && !joinedChannelsRef.current.has(channelFormatted ?? '')) {
+    if (channel && !joinedChannelsRef.current.has(channelFormatted ?? "")) {
       joinChannelRef.current(channel);
     }
   }, [
@@ -1065,11 +1091,11 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     currentUserStateOwner = userStateToken;
 
     return () => {
-      logger.chat.info('[useTwitchChat] Cleaning up Twitch IRC client');
+      logger.chat.info("[useTwitchChat] Cleaning up Twitch IRC client");
       joinedChannels.clear();
       pendingJoinChannels.clear();
       lastSentMessages.clear();
-      messageBuffer.current = '';
+      messageBuffer.current = "";
       isAuthenticatedRef.current = false;
 
       if (currentUserStateOwner === userStateToken) {
@@ -1094,7 +1120,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     replyParentMsgBody?: string,
   ) => {
     if (message.trim().length === 0) {
-      logger.chat.warn('Cannot send empty message');
+      logger.chat.warn("Cannot send empty message");
       return;
     }
 
@@ -1129,7 +1155,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     const trimmedCommand = command.trim();
 
     if (trimmedCommand.length === 0) {
-      logger.chat.warn('Cannot send empty chat command');
+      logger.chat.warn("Cannot send empty chat command");
       return;
     }
 

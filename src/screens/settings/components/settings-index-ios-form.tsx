@@ -1,6 +1,6 @@
 // "shape" here is @expo/ui API naming (clipShape, contentShape), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from "react-native";
 
 import {
   Button,
@@ -13,31 +13,31 @@ import {
   Spacer,
   Text as NativeText,
   VStack,
-} from '@expo/ui/swift-ui';
+} from "@expo/ui/swift-ui";
 import {
   buttonStyle,
   contentShape,
   font,
   foregroundStyle,
   shapes,
-} from '@expo/ui/swift-ui/modifiers';
-import { router } from 'expo-router';
+} from "@expo/ui/swift-ui/modifiers";
+import { router } from "expo-router";
 
-import { Avatar } from '@app/components/avatar/avatar';
-import { theme } from '@app/styles/themes';
-import type { UserInfoResponse } from '@app/types/twitch/user';
-import { getBuildInfoLabel } from '@app/utils/version/build-info-label';
+import { Avatar } from "@app/components/avatar/avatar";
+import { theme } from "@app/styles/themes";
+import type { UserInfoResponse } from "@app/types/twitch/user";
+import { getBuildInfoLabel } from "@app/utils/version/build-info-label";
 
 import {
   APP_MENU_ROWS,
   CHAT_MENU_ROWS,
   HELP_MENU_ROWS,
   type SettingsMenuRow,
-} from '../util/settings-menu';
-import { FormNavigationRow } from './form-navigation-row';
+} from "../util/settings-menu";
+import { FormNavigationRow } from "./form-navigation-row";
 
 function MenuRows({ rows }: { rows: SettingsMenuRow[] }) {
-  return rows.map(row =>
+  return rows.map((row) =>
     row.pushes ? (
       <FormNavigationRow
         key={row.label}
@@ -73,12 +73,12 @@ interface SettingsIndexIOSFormProps {
 function AccountRow({ user }: { user: UserInfoResponse }) {
   return (
     <Button
-      onPress={() => router.push('/tabs/settings/profile')}
-      modifiers={[buttonStyle('plain')]}
+      onPress={() => router.push("/tabs/settings/profile")}
+      modifiers={[buttonStyle("plain")]}
     >
       <HStack spacing={14} modifiers={[contentShape(shapes.rectangle())]}>
         <RNHostView matchContents>
-          <View pointerEvents='none' style={styles.avatarHost}>
+          <View pointerEvents="none" style={styles.avatarHost}>
             <Avatar
               uri={user.profile_image_url || undefined}
               name={user.display_name}
@@ -86,10 +86,10 @@ function AccountRow({ user }: { user: UserInfoResponse }) {
             />
           </View>
         </RNHostView>
-        <VStack alignment='leading' spacing={2}>
+        <VStack alignment="leading" spacing={2}>
           <NativeText
             modifiers={[
-              font({ size: 20, weight: 'semibold' }),
+              font({ size: 20, weight: "semibold" }),
               foregroundStyle(theme.color.text.dark),
             ]}
           >
@@ -106,7 +106,7 @@ function AccountRow({ user }: { user: UserInfoResponse }) {
         </VStack>
         <Spacer />
         <NativeImage
-          systemName='chevron.right'
+          systemName="chevron.right"
           size={13}
           color={theme.color.textSecondary.dark}
         />
@@ -130,9 +130,14 @@ export function SettingsIndexIOSForm({
           <Section>
             <AccountRow user={user} />
             <FormNavigationRow
-              label='My clips'
-              systemImage='scissors'
-              onPress={() => router.push('/tabs/settings/my-clips')}
+              label="My clips"
+              systemImage="scissors"
+              onPress={() => router.push("/tabs/settings/my-clips")}
+            />
+            <FormNavigationRow
+              label="Whispers"
+              systemImage="message"
+              onPress={() => router.push("/tabs/settings/whispers")}
             />
           </Section>
         ) : (
@@ -144,35 +149,35 @@ export function SettingsIndexIOSForm({
             }
           >
             <Button
-              label='Sign in with Twitch'
-              systemImage='person.crop.circle'
-              onPress={() => router.push('/auth-sheet')}
+              label="Sign in with Twitch"
+              systemImage="person.crop.circle"
+              onPress={() => router.push("/auth-sheet")}
               modifiers={[foregroundStyle(theme.color.accent.dark)]}
             />
           </Section>
         )}
 
-        <Section title='Chat'>
+        <Section title="Chat">
           <MenuRows rows={CHAT_MENU_ROWS} />
         </Section>
 
-        <Section title='App'>
+        <Section title="App">
           <MenuRows rows={APP_MENU_ROWS} />
         </Section>
 
         {canSeeUpdateAppButton || bundleButtonEnabled ? (
-          <Section title='Updates'>
+          <Section title="Updates">
             {canSeeUpdateAppButton ? (
               <Button
-                label='Update app'
-                systemImage='arrow.down.app'
+                label="Update app"
+                systemImage="arrow.down.app"
                 onPress={openStore}
               />
             ) : null}
             {bundleButtonEnabled ? (
               <Button
-                label='Update bundle'
-                systemImage='arrow.triangle.2.circlepath'
+                label="Update bundle"
+                systemImage="arrow.triangle.2.circlepath"
                 onPress={updateBundle}
               />
             ) : null}
@@ -180,18 +185,18 @@ export function SettingsIndexIOSForm({
         ) : null}
 
         <Section
-          title='Help'
+          title="Help"
           footer={shouldShowDevTools ? null : <BuildFooter />}
         >
           <MenuRows rows={HELP_MENU_ROWS} />
         </Section>
 
         {shouldShowDevTools ? (
-          <Section title='Developer' footer={<BuildFooter />}>
+          <Section title="Developer" footer={<BuildFooter />}>
             <FormNavigationRow
-              label='Dev tools'
-              systemImage='hammer'
-              onPress={() => router.push('/tabs/settings/dev-tools')}
+              label="Dev tools"
+              systemImage="hammer"
+              onPress={() => router.push("/tabs/settings/dev-tools")}
             />
           </Section>
         ) : null}
