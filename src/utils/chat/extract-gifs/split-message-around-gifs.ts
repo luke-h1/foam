@@ -11,6 +11,19 @@ export type MessageGifSegment =
 
 const SURROGATE_PAIR_REGEX = /[\uD800-\uDFFF]/;
 
+function sliceBody(
+  message: string,
+  graphemes: string[] | null,
+  start: number,
+  end: number,
+): string {
+  if (graphemes) {
+    return graphemes.slice(start, end).join('');
+  }
+
+  return message.slice(start, end);
+}
+
 /**
  * Cuts the message body into alternating text and GIF segments using
  * code-point indices from the `gifs` tag.
@@ -33,14 +46,13 @@ export function splitMessageAroundGifs(
       continue;
     }
 
-    if (span.start > cursor) {
-      const text = graphemes
-        ? graphemes.slice(cursor, span.start).join('')
-        : message.slice(cursor, span.start);
+    const leadingText =
+      span.start > cursor
+        ? sliceBody(message, graphemes, cursor, span.start)
+        : '';
 
-      if (text) {
-        segments.push({ kind: 'text', text });
-      }
+    if (leadingText) {
+      segments.push({ kind: 'text', text: leadingText });
     }
 
     const end = Math.min(span.end, length - 1);
@@ -55,14 +67,12 @@ export function splitMessageAroundGifs(
     cursor = end + 1;
   }
 
-  if (cursor < length) {
-    const text = graphemes
-      ? graphemes.slice(cursor).join('')
-      : message.slice(cursor);
+  const trailingText =
+    cursor < length ? sliceBody(message, graphemes, cursor, length) : '';
 
-    if (text) {
-      segments.push({ kind: 'text', text });
-    }
+  if (trailingText) {
+    segments.push({ kind: 'text', text: trailingText });
   }
+
   return segments;
 }

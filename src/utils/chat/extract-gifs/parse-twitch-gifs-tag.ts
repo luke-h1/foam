@@ -31,6 +31,7 @@ function splitGifEntries(gifsTag: string): string[] {
     entries.push(remaining.slice(0, nextEntry));
     remaining = remaining.slice(nextEntry + 1);
   }
+
   return entries;
 }
 
@@ -86,5 +87,6 @@ export function parseTwitchGifsTag(
 
     spans.push({ start, end, gifId, url, content });
   }
+
   return spans.sort((left, right) => left.start - right.start);
 }

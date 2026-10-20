@@ -462,7 +462,11 @@ function getEnrichableText(tokens: MessageToken[]): string | null {
   let textContent = '';
 
   for (const token of tokens) {
-    if (token.type === 'text' || token.type === 'mention') {
+    if (
+      token.type === 'text' ||
+      token.type === 'mention' ||
+      token.type === 'link'
+    ) {
       textContent += token.content;
       continue;
     }

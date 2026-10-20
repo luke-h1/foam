@@ -1,9 +1,12 @@
 import { parseTwitchGifsTag } from '../parse-twitch-gifs-tag';
-import { splitMessageAroundGifs } from '../split-message-around-gifs';
+import {
+  type MessageGifSegment,
+  splitMessageAroundGifs,
+} from '../split-message-around-gifs';
 
 describe('splitMessageAroundGifs', () => {
   test('returns the full message as text when there are no spans', () => {
-    expect(splitMessageAroundGifs('hello', [])).toEqual([
+    expect(splitMessageAroundGifs('hello', [])).toEqual<MessageGifSegment[]>([
       { kind: 'text', text: 'hello' },
     ]);
   });
@@ -14,7 +17,9 @@ describe('splitMessageAroundGifs', () => {
       'hello there',
     );
 
-    expect(splitMessageAroundGifs('hello there', spans)).toEqual([
+    expect(splitMessageAroundGifs('hello there', spans)).toEqual<
+      MessageGifSegment[]
+    >([
       {
         kind: 'gif',
         gifId: 'abc',
@@ -31,7 +36,9 @@ describe('splitMessageAroundGifs', () => {
       'hello world!',
     );
 
-    expect(splitMessageAroundGifs('hello world!', spans)).toEqual([
+    expect(splitMessageAroundGifs('hello world!', spans)).toEqual<
+      MessageGifSegment[]
+    >([
       { kind: 'text', text: 'hello ' },
       {
         kind: 'gif',

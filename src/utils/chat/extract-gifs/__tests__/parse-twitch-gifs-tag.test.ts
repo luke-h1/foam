@@ -1,4 +1,7 @@
-import { parseTwitchGifsTag } from '../parse-twitch-gifs-tag';
+import {
+  parseTwitchGifsTag,
+  type TwitchGifSpan,
+} from '../parse-twitch-gifs-tag';
 
 const EXAMPLE_URL =
   'https://media4.giphy.com/media/joSNxeswxuc74Juo8X/giphy.gif?cid=095d7a5dzizsiwgabonagkmigggv8v1spfai91ac3x0dsiy0&ep=v1_gifs_trending&rid=giphy.gif&ct=g';
@@ -12,7 +15,7 @@ describe('parseTwitchGifsTag', () => {
         `0-33|joSNxeswxuc74Juo8X|${EXAMPLE_URL}`,
         EXAMPLE_BODY,
       ),
-    ).toEqual([
+    ).toEqual<TwitchGifSpan[]>([
       {
         start: 0,
         end: 33,
@@ -31,7 +34,9 @@ describe('parseTwitchGifsTag', () => {
   test('keeps commas that sit inside a GIF URL', () => {
     const urlWithComma = 'https://example.com/giphy.gif?ids=a,b&rid=giphy.gif';
 
-    expect(parseTwitchGifsTag(`0-4|abc123|${urlWithComma}`, 'hello')).toEqual([
+    expect(parseTwitchGifsTag(`0-4|abc123|${urlWithComma}`, 'hello')).toEqual<
+      TwitchGifSpan[]
+    >([
       {
         start: 0,
         end: 4,
@@ -48,7 +53,7 @@ describe('parseTwitchGifsTag', () => {
         `6-10|second|https://b.example/g.gif,0-4|first|https://a.example/g.gif`,
         'hello world',
       ),
-    ).toEqual([
+    ).toEqual<TwitchGifSpan[]>([
       {
         start: 0,
         end: 4,
@@ -70,7 +75,7 @@ describe('parseTwitchGifsTag', () => {
     // "👍hi" is three code points; the GIF covers the thumbs-up only.
     expect(
       parseTwitchGifsTag('0-0|emoji|https://e.example/g.gif', '👍hi'),
-    ).toEqual([
+    ).toEqual<TwitchGifSpan[]>([
       {
         start: 0,
         end: 0,
@@ -84,7 +89,7 @@ describe('parseTwitchGifsTag', () => {
   test('skips malformed entries', () => {
     expect(
       parseTwitchGifsTag('not-a-gif,0-4|ok|https://ok.example/g.gif', 'hello'),
-    ).toEqual([
+    ).toEqual<TwitchGifSpan[]>([
       {
         start: 0,
         end: 4,
