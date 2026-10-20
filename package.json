@@ -251,7 +251,10 @@
       "oxlint --fix --no-error-on-unmatched-pattern",
       "oxfmt --no-error-on-unmatched-pattern"
     ],
-    "*.{ts,tsx}": "ast-grep scan",
+    "*.{ts,tsx}": [
+      "ast-grep scan",
+      "sh -c 'bun run ts:check'"
+    ],
     "*.{json,md,yml,yaml,css}": "oxfmt --no-error-on-unmatched-pattern",
     "*.swift": "./scripts/lint-swift.sh",
     "*.{kt,kts}": "./scripts/lint-kotlin.sh",
