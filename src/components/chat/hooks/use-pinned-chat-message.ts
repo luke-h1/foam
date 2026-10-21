@@ -15,12 +15,12 @@ import { logger } from '@app/utils/logger';
 const PINNED_MESSAGE_REFRESH_INTERVAL_MS = 60_000;
 
 export type PinnedChatMessageViewModel = {
-  expiresAt?: string | null | undefined;
+  expiresAt?: string | null;
   messageId: string;
-  pinnedByName?: string | undefined;
-  senderName?: string | undefined;
+  pinnedByName?: string;
+  senderName?: string;
   text: string;
-  updatedAt?: string | undefined;
+  updatedAt?: string;
 };
 
 function createPinnedMessageViewModelFromApi(
@@ -53,7 +53,7 @@ export function usePinnedChatMessage({
 }: {
   canModerateChat: boolean;
   channelId: string;
-  moderatorId?: string | undefined;
+  moderatorId?: string;
 }) {
   const [pinnedMessage, setPinnedMessage] =
     useState<PinnedChatMessageViewModel | null>(null);
@@ -141,8 +141,8 @@ export function usePinnedChatMessage({
       messageId,
       silent = false,
     }: {
-      messageId?: string | undefined;
-      silent?: boolean | undefined;
+      messageId?: string;
+      silent?: boolean;
     } = {}) => {
       const targetMessageId = messageId ?? pinnedMessage?.messageId;
 

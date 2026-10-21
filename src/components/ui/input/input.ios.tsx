@@ -67,7 +67,6 @@ import {
   type UIRadius,
   type UISize,
 } from '@app/styles/ui';
-import { omitUndefined } from '@app/types/eopt';
 
 import {
   getIosInputSubmitInvoker,
@@ -95,19 +94,19 @@ export type ThemedInputProps = Omit<
   size?: UISize;
   variant?: InputVariant;
   color?: UIColor;
-  onBlur?: (() => void) | undefined;
-  onChangeText?: ((value: string) => void) | undefined;
+  onBlur?: () => void;
+  onChangeText?: (value: string) => void;
   onContentSizeChange?:
     | ((size: { width: number; height: number }) => void)
     | undefined;
-  onFocus?: (() => void) | undefined;
-  onSelectionChange?: ((selection: InputSelection) => void) | undefined;
-  onSubmitEditing?: ((text: string) => void) | undefined;
-  placeholder?: string | undefined;
+  onFocus?: () => void;
+  onSelectionChange?: (selection: InputSelection) => void;
+  onSubmitEditing?: (text: string) => void;
+  placeholder?: string;
   radius?: UIRadius;
   style?: StyleProp<TextStyle & ViewStyle>;
-  ref?: Ref<InputRef> | undefined;
-  value?: string | undefined;
+  ref?: Ref<InputRef>;
+  value?: string;
 };
 
 interface ResolveInputColorsOptions {
@@ -534,7 +533,7 @@ export function Input(props: ThemedInputProps) {
           {secureTextEntry ? (
             <SecureField
               {...autoFocusProps}
-              {...omitUndefined({ maxLength, placeholder })}
+              {...{ maxLength, placeholder }}
               modifiers={textFieldModifiers}
               onFocusChange={handleFocusChange}
               onTextChange={handleTextChange}
@@ -547,11 +546,11 @@ export function Input(props: ThemedInputProps) {
             <TextField
               {...autoFocusProps}
               axis={multiline ? 'vertical' : 'horizontal'}
-              {...omitUndefined({
+              {...{
                 maxLength,
                 placeholder,
                 onSelectionChange,
-              })}
+              }}
               modifiers={textFieldModifiers}
               onFocusChange={handleFocusChange}
               onTextChange={handleTextChange}
@@ -569,22 +568,22 @@ export function Input(props: ThemedInputProps) {
 }
 
 type BuildTextFieldModifierOptions = {
-  accessibilityLabel?: string | undefined;
-  autoCapitalize?: TextInputProps['autoCapitalize'] | undefined;
-  autoComplete?: TextInputProps['autoComplete'] | undefined;
-  autoCorrect?: boolean | undefined;
+  accessibilityLabel?: string;
+  autoCapitalize?: TextInputProps['autoCapitalize'];
+  autoComplete?: TextInputProps['autoComplete'];
+  autoCorrect?: boolean;
   disabled: boolean;
-  enterKeyHint?: TextInputProps['enterKeyHint'] | undefined;
-  inputMode?: TextInputProps['inputMode'] | undefined;
-  keyboardType?: TextInputProps['keyboardType'] | undefined;
-  multiline?: boolean | undefined;
-  numberOfLines?: number | undefined;
-  onSubmit?: (() => void) | undefined;
-  returnKeyType?: TextInputProps['returnKeyType'] | undefined;
+  enterKeyHint?: TextInputProps['enterKeyHint'];
+  inputMode?: TextInputProps['inputMode'];
+  keyboardType?: TextInputProps['keyboardType'];
+  multiline?: boolean;
+  numberOfLines?: number;
+  onSubmit?: () => void;
+  returnKeyType?: TextInputProps['returnKeyType'];
   style: TextStyle & ViewStyle;
-  textAlign?: TextStyle['textAlign'] | undefined;
+  textAlign?: TextStyle['textAlign'];
   textColor: ColorValue;
-  textContentType?: TextInputProps['textContentType'] | undefined;
+  textContentType?: TextInputProps['textContentType'];
   tintColor: ColorValue;
 };
 
@@ -755,7 +754,7 @@ function currentInputRef({
   secureFieldRef,
   textFieldRef,
 }: {
-  secureTextEntry?: boolean | undefined;
+  secureTextEntry?: boolean;
   secureFieldRef: React.RefObject<SecureFieldRef | null>;
   textFieldRef: React.RefObject<TextFieldRef | null>;
 }) {
@@ -800,12 +799,12 @@ function paddingForStyle(style: TextStyle & ViewStyle) {
     horizontal ??
     all;
 
-  return omitUndefined({
+  return {
     top,
     bottom,
     leading,
     trailing,
-  });
+  };
 }
 
 type FrameAlignment = 'center' | 'topLeading';
@@ -840,12 +839,12 @@ function frameForStyle(
     return undefined;
   }
 
-  return omitUndefined({
+  return {
     height,
     minHeight,
     maxHeight,
     alignment,
-  });
+  };
 }
 
 function fontModifiersForStyle(style: TextStyle & ViewStyle): ViewModifier[] {
@@ -856,7 +855,7 @@ function fontModifiersForStyle(style: TextStyle & ViewStyle): ViewModifier[] {
     return [];
   }
 
-  return [font(omitUndefined({ size, weight }))];
+  return [font({ size, weight })];
 }
 
 function radiusForStyle(style: TextStyle & ViewStyle) {
@@ -1125,9 +1124,9 @@ function shouldBlurOnSubmit({
   multiline,
   submitBehavior,
 }: {
-  blurOnSubmit?: boolean | undefined;
-  multiline?: boolean | undefined;
-  submitBehavior?: TextInputProps['submitBehavior'] | undefined;
+  blurOnSubmit?: boolean;
+  multiline?: boolean;
+  submitBehavior?: TextInputProps['submitBehavior'];
 }) {
   if (submitBehavior === 'blurAndSubmit') {
     return true;
@@ -1145,8 +1144,8 @@ function shouldBlurOnSubmit({
 }
 
 function pickHostStyle(style: TextStyle & ViewStyle): ViewStyle {
-  // SAFETY: omitUndefined keeps only defined layout keys from the TextStyle & ViewStyle intersection.
-  return omitUndefined({
+  // SAFETY: only layout keys from the TextStyle & ViewStyle intersection.
+  return {
     alignSelf: style.alignSelf,
     bottom: style.bottom,
     display: style.display,
@@ -1178,7 +1177,7 @@ function pickHostStyle(style: TextStyle & ViewStyle): ViewStyle {
     transform: style.transform,
     width: style.width,
     zIndex: style.zIndex,
-  }) as ViewStyle;
+  } as ViewStyle;
 }
 
 function textChangeEvent(text: string) {

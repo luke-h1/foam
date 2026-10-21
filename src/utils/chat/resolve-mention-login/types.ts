@@ -4,5 +4,5 @@ export type MentionChatter = {
   login: string;
   userId: string;
   color: string;
-  role?: ChatterRole | undefined;
+  role?: ChatterRole;
 };

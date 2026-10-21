@@ -10,9 +10,9 @@ import { theme } from '@app/styles/themes';
 
 interface StreamUnavailablePanelProps {
   channelLogin: string;
-  displayName?: string | undefined;
+  displayName?: string;
   onRetry: () => void;
-  profileImageUrl?: string | undefined;
+  profileImageUrl?: string;
   reason: 'offline' | 'error';
 }
 

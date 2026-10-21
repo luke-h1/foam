@@ -22,7 +22,7 @@ import { formatViewCount } from '@app/utils/string/format-view-count';
 
 interface MyClipListItem {
   record: CreatedClipRecord;
-  clip?: TwitchClip | undefined;
+  clip?: TwitchClip;
   /**
    * True while clip details are still loading, so the row shows a
    * placeholder instead of "Processing".
@@ -94,7 +94,9 @@ const MyClipRow = memo(function MyClipRow({
 
 function renderMyClipRow({ item }: { item: MyClipListItem }) {
   return (
-    <MyClipRow clip={item.clip} record={item.record} loading={item.loading} />
+    <MyClipRow
+      {...{ clip: item.clip, record: item.record, loading: item.loading }}
+    />
   );
 }
 

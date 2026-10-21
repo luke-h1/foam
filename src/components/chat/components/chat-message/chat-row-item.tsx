@@ -54,9 +54,9 @@ export interface ChatRowPreferences {
 interface ChatMessageRowProps {
   chatDensity: 'comfortable' | 'compact';
   channelId: string;
-  currentUsername?: string | undefined;
+  currentUsername?: string;
   currentUsernameNormalized: string;
-  customHighlights?: CustomHighlight[] | undefined;
+  customHighlights?: CustomHighlight[];
   displayFlags: ChatRowDisplayFlags;
   getMentionColor: (username: string) => string;
   highlightedUserSet: ReadonlySet<string>;

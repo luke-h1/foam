@@ -17,11 +17,11 @@ function getEmbedParent(parent?: string): string {
 
 interface BuildTwitchPlayerUrlOptions {
   autoplay: boolean;
-  channel?: string | undefined;
-  clip?: string | undefined;
+  channel?: string;
+  clip?: string;
   muted: boolean;
   parent: string;
-  video?: string | undefined;
+  video?: string;
 }
 
 function buildTwitchPlayerUrl({

@@ -9,7 +9,7 @@ import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-
 
 interface ChannelFieldProps {
   channelLogin: string | null;
-  channelName?: string | undefined;
+  channelName?: string;
   isLoading: boolean;
   isChannelMissing: boolean;
   isError: boolean;

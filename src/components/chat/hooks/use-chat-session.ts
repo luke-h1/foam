@@ -50,7 +50,7 @@ interface UseChatSessionOptions {
   scrollAnchor: ChatScrollAnchor;
   scrollToBottom: () => void;
   syntheticTransport: boolean;
-  user?: UserInfoResponse | undefined;
+  user?: UserInfoResponse;
 }
 
 export function useChatSession({

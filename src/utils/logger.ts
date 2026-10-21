@@ -126,15 +126,13 @@ const createMonitoringTransport =
       severity = 'warn';
     }
 
-    const entry = {
+    forwardLogToSentry({
       level: severity,
       category: extension ?? 'app',
       message,
       error,
       metadata,
-    };
-
-    forwardLogToSentry(entry);
+    });
   };
 
 const monitoringTransport = createMonitoringTransport();

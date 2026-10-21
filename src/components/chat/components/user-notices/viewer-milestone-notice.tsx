@@ -16,10 +16,10 @@ import { NoticeUserMessage } from './notice-user-message';
 import { splitNoticeSubject } from './util/notice-sentence';
 
 interface ViewerMilestoneNoticeProps {
-  compact?: boolean | undefined;
-  disableAnimations?: boolean | undefined;
-  fontScale?: ChatFontScale | undefined;
-  parsedMessage?: MessageToken[] | undefined;
+  compact?: boolean;
+  disableAnimations?: boolean;
+  fontScale?: ChatFontScale;
+  parsedMessage?: MessageToken[];
   token: MessageToken<'viewermilestone'>;
 }
 
@@ -61,10 +61,12 @@ function ViewerMilestoneNoticeComponent({
   return (
     <View style={styles.messageColumn}>
       <ChatNoticeMetaRow
-        compact={compact}
-        fontScale={fontScale}
         icon='flame.fill'
-        labelColor={CHAT_NOTICE_ACCENTS.viewerMilestone}
+        {...{
+          compact,
+          fontScale,
+          labelColor: CHAT_NOTICE_ACCENTS.viewerMilestone,
+        }}
       >
         <ChatText style={[textStyles.meta, styles.messageMetaTextFlex]}>
           <ChatText
@@ -87,11 +89,13 @@ function ViewerMilestoneNoticeComponent({
         />
       ) : null}
       <NoticeUserMessage
-        compact={compact}
-        disableAnimations={disableAnimations}
-        fontScale={fontScale}
-        message={content}
-        parsedMessage={parsedMessage}
+        {...{
+          compact,
+          disableAnimations,
+          fontScale,
+          message: content,
+          parsedMessage,
+        }}
       />
     </View>
   );

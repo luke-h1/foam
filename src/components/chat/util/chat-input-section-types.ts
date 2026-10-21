@@ -12,14 +12,14 @@ export interface ReplyToData {
    * Parsed tokens of the replied-to message so the preview can render its
    * emotes inline instead of showing their names as text.
    */
-  messageParts?: MessageToken[] | undefined;
+  messageParts?: MessageToken[];
   replyParentUserLogin: string;
   parentMessage: string;
-  color?: string | undefined;
+  color?: string;
   /**
    * Twitch user-id for 7TV paint lookup in the reply preview
    */
-  userId?: string | undefined;
+  userId?: string;
 }
 
 export interface ChatInputSectionProps {
@@ -29,9 +29,9 @@ export interface ChatInputSectionProps {
   onSubmit: () => void;
   onOpenEmoteSheet: () => void;
   onOpenSettingsSheet: () => void;
-  onAttachImage?: (() => void) | undefined;
-  isUploadingImage?: boolean | undefined;
+  onAttachImage?: () => void;
+  isUploadingImage?: boolean;
   replyTo: ReplyToData | null;
   onClearReply: () => void;
-  inputRef?: RefObject<ChatComposerHandle | null> | undefined;
+  inputRef?: RefObject<ChatComposerHandle | null>;
 }

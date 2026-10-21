@@ -19,24 +19,24 @@ import type { PaintDropShadowMode } from './util/paint-layer/get-paint-drop-shad
 
 interface PaintedUsernameProps {
   username: string;
-  paint?: PaintData | undefined;
-  userId?: string | undefined;
-  fallbackColor?: string | undefined;
-  showColon?: boolean | undefined;
-  sevenTvPaintDropShadows?: PaintDropShadowMode | undefined;
-  usernameTextStyle?: StyleProp<TextStyle> | undefined;
+  paint?: PaintData;
+  userId?: string;
+  fallbackColor?: string;
+  showColon?: boolean;
+  sevenTvPaintDropShadows?: PaintDropShadowMode;
+  usernameTextStyle?: StyleProp<TextStyle>;
 }
 
 interface PaintedUsernameWithPaintProps {
   displayUsername: string;
   fallbackColor: string;
-  fontSize?: number | undefined;
-  lineHeight?: number | undefined;
+  fontSize?: number;
+  lineHeight?: number;
   isModerated: boolean;
   paint: PaintData;
   plainColor: string;
   sevenTvPaintDropShadows: PaintDropShadowMode;
-  usernameTextStyle?: StyleProp<TextStyle> | undefined;
+  usernameTextStyle?: StyleProp<TextStyle>;
 }
 
 function PaintedUsernameWithPaint({
@@ -67,25 +67,24 @@ function PaintedUsernameWithPaint({
   if (paintRenderer === 'skia' && !isModerated) {
     return (
       <PaintedUsernameSkia
-        username={displayUsername}
-        paint={paint}
-        fallbackColor={fallbackColor}
-        fontSize={fontSize}
+        {...{ username: displayUsername, paint, fallbackColor, fontSize }}
       />
     );
   }
 
   return (
     <PaintedUsernameHostedLayers
-      displayUsername={displayUsername}
-      fallbackColor={fallbackColor}
-      fontSize={fontSize}
-      lineHeight={lineHeight}
-      paint={paint}
-      plainColor={plainColor}
-      sevenTvPaintDropShadows={sevenTvPaintDropShadows}
-      usernameTextStyle={usernameTextStyle}
-      useWebView={paintRenderer === 'webview' && !isModerated}
+      {...{
+        displayUsername,
+        fallbackColor,
+        fontSize,
+        lineHeight,
+        paint,
+        plainColor,
+        sevenTvPaintDropShadows,
+        usernameTextStyle,
+        useWebView: paintRenderer === 'webview' && !isModerated,
+      }}
     />
   );
 }
@@ -138,15 +137,17 @@ function PaintedUsernameComponent({
 
   return (
     <PaintedUsernameWithPaint
-      displayUsername={displayUsername}
-      fallbackColor={solidFallback}
-      fontSize={flatUsernameStyle?.fontSize}
-      lineHeight={flatUsernameStyle?.lineHeight}
-      isModerated={isModerated}
-      paint={paint}
-      plainColor={fallbackColor}
-      sevenTvPaintDropShadows={sevenTvPaintDropShadows}
-      usernameTextStyle={usernameTextStyle}
+      {...{
+        displayUsername,
+        fallbackColor: solidFallback,
+        fontSize: flatUsernameStyle?.fontSize,
+        lineHeight: flatUsernameStyle?.lineHeight,
+        isModerated,
+        paint,
+        plainColor: fallbackColor,
+        sevenTvPaintDropShadows,
+        usernameTextStyle,
+      }}
     />
   );
 }

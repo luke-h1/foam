@@ -8,14 +8,14 @@ import { PaintedUsername } from './cosmetic-username/painted-username';
 import type { ChatFontScale } from './util/chat-scale';
 
 interface ChatRowUsernameProps {
-  cachedSenderColor?: string | undefined;
+  cachedSenderColor?: string;
   compact: boolean;
-  fontScale?: ChatFontScale | undefined;
-  isModerated?: boolean | undefined;
-  onUsernamePress?: (() => void) | undefined;
-  userId?: string | undefined;
-  userstateColor?: string | undefined;
-  username?: string | undefined;
+  fontScale?: ChatFontScale;
+  isModerated?: boolean;
+  onUsernamePress?: () => void;
+  userId?: string;
+  userstateColor?: string;
+  username?: string;
 }
 
 export function ChatRowUsername({
@@ -44,10 +44,7 @@ export function ChatRowUsername({
 
   const paintedUsername = (
     <PaintedUsername
-      username={username}
-      userId={userId}
-      fallbackColor={fallbackColor}
-      usernameTextStyle={usernameTextStyle}
+      {...{ username, userId, fallbackColor, usernameTextStyle }}
     />
   );
 

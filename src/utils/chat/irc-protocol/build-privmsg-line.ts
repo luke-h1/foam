@@ -18,7 +18,7 @@ export function buildPrivmsgLine({
 }: {
   channel: string;
   message: string;
-  replyParentMsgId?: string | undefined;
+  replyParentMsgId?: string;
 }): string {
   const command = replyParentMsgId
     ? `@reply-parent-msg-id=${escapeIrcTagValue(replyParentMsgId)} PRIVMSG`

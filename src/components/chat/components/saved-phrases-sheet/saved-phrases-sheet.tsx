@@ -123,12 +123,13 @@ const SavedPhrasesSheetComponent = ({
         <View style={styles.header}>
           <SheetHeader
             title='Saved phrases'
-            action={
-              phrases.length > 0
-                ? { label: 'Edit', onPress: handleManage }
-                : undefined
-            }
-            onClose={requestClose}
+            {...{
+              action:
+                phrases.length > 0
+                  ? { label: 'Edit', onPress: handleManage }
+                  : undefined,
+              onClose: requestClose,
+            }}
           />
         </View>
 

@@ -57,6 +57,7 @@ describe('useTwitchSignIn', () => {
 
       const contextValue: AuthContextState = {
         authState: undefined,
+        user: undefined,
         fetchAnonToken: jest.fn(),
         loginWithTwitch: async response => {
           loginWithTwitch(response);
@@ -66,7 +67,6 @@ describe('useTwitchSignIn', () => {
         logout: jest.fn(),
         populateAuthState: jest.fn(),
         ready: version >= 0,
-        user: undefined,
       };
 
       return (
@@ -107,12 +107,12 @@ describe('useTwitchSignIn', () => {
     function Wrapper({ children }: PropsWithChildren) {
       const contextValue: AuthContextState = {
         authState: undefined,
+        user: undefined,
         fetchAnonToken: jest.fn(),
         loginWithTwitch,
         logout: jest.fn(),
         populateAuthState: jest.fn(),
         ready: true,
-        user: undefined,
       };
 
       return (

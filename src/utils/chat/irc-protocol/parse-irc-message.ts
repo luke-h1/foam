@@ -1,8 +1,8 @@
 import { parseIrcTags } from '@app/utils/chat/irc-protocol/parse-irc-tags';
 
 export interface IrcMessage {
-  tags?: Record<string, string> | undefined;
-  prefix?: string | undefined;
+  tags?: Record<string, string>;
+  prefix?: string;
   command: string;
   params: string[];
 }

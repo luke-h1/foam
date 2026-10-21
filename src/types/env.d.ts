@@ -21,6 +21,25 @@ declare global {
       EXPO_PUBLIC_APP_VARIANT: Variant;
 
       MOCK_SERVER_PORT: number;
+      MOCK_IRC_PORT?: string;
+
+      ENABLE_IOS_ICLOUD_ENTITLEMENTS?: string;
+      OTA_CRITICAL_INDEX?: string;
+
+      PORT?: string;
+      HOST?: string;
+      TWITCH_CLIENT_ID?: string;
+      TWITCH_CLIENT_SECRET?: string;
+      MAGIC_LINK_BLOB?: string;
+
+      GIT_CLIFF_BIN?: string;
+      CLIFF_CONFIG?: string;
+
+      FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID?: string;
+      FOAM_AWS_FINGERPRINT_SECRET_KEY?: string;
+      FOAM_AWS_REGION?: string;
+
+      GITHUB_OUTPUT?: string;
     }
   }
 }

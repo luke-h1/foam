@@ -69,8 +69,8 @@ function createVideoTapGesture(options: {
 }
 
 interface UseStreamPlayerControlsOptions {
-  onVideoAreaPress?: (() => void) | undefined;
-  onVideoAreaSwipeDown?: (() => void) | undefined;
+  onVideoAreaPress?: () => void;
+  onVideoAreaSwipeDown?: () => void;
   pause: () => void;
   play: () => void;
   playerIsPaused: boolean;

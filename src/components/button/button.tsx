@@ -8,10 +8,10 @@ import { createHitslop } from '@app/utils/string/create-hit-slop';
 type ButtonHaptic = 'selection' | 'light' | 'medium' | 'heavy';
 
 export type ButtonProps = Omit<CustomPressableProps, 'disabled' | 'onPress'> & {
-  label?: string | undefined;
-  disabled?: boolean | undefined;
-  haptic?: ButtonHaptic | undefined;
-  onPress?: CustomPressableProps['onPress'] | undefined;
+  label?: string;
+  disabled?: boolean;
+  haptic?: ButtonHaptic;
+  onPress?: CustomPressableProps['onPress'];
 };
 
 function triggerHaptic(haptic: ButtonHaptic) {

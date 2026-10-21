@@ -654,8 +654,8 @@ export const twitchService = {
     moderatorId: string,
     userId: string,
     options?: {
-      durationSeconds?: number | undefined;
-      reason?: string | undefined;
+      durationSeconds?: number;
+      reason?: string;
     },
   ): Promise<void> => {
     await twitchApi.post(

@@ -38,23 +38,23 @@ import { formatDuration } from './util/format-stream-duration';
 
 interface ControlsOverlayProps {
   isVisible: boolean;
-  muted?: boolean | undefined;
+  muted?: boolean;
   /**
    * Drives the overlay fade + pointer events on the UI thread.
    */
   opacity: SharedValue<number>;
-  onBackPress?: (() => void) | undefined;
-  onCreateClipPress?: (() => void) | undefined;
-  onMutePress?: (() => void) | undefined;
-  onPipPress?: (() => void) | undefined;
+  onBackPress?: () => void;
+  onCreateClipPress?: () => void;
+  onMutePress?: () => void;
+  onPipPress?: () => void;
   onPlayPausePress: () => void;
-  onRefresh?: (() => void) | undefined;
-  onSharePress?: (() => void) | undefined;
-  onSleepTimerPress?: (() => void) | undefined;
+  onRefresh?: () => void;
+  onSharePress?: () => void;
+  onSleepTimerPress?: () => void;
   paused: boolean;
-  pipActive?: boolean | undefined;
-  sleepTimerActive?: boolean | undefined;
-  streamInfo?: StreamInfo | undefined;
+  pipActive?: boolean;
+  sleepTimerActive?: boolean;
+  streamInfo?: StreamInfo;
 }
 
 function StreamDurationLabel({
@@ -63,8 +63,8 @@ function StreamDurationLabel({
   style,
 }: {
   isVisible: boolean;
-  startedAt?: string | undefined;
-  style?: StyleProp<TextStyle> | undefined;
+  startedAt?: string;
+  style?: StyleProp<TextStyle>;
 }) {
   const [duration, setDuration] = useState('0:00');
 
@@ -179,12 +179,11 @@ function StreamMetadataColumn({
       <View style={[styles.liveRail, isPortrait && styles.liveRailPortrait]}>
         <LiveBadge label='LIVE' />
         <StreamDurationLabel
-          isVisible={isVisible}
-          startedAt={streamInfo?.startedAt}
           style={[
             styles.durationText,
             isPortrait && styles.durationTextPortrait,
           ]}
+          {...{ isVisible, startedAt: streamInfo?.startedAt }}
         />
         <View
           style={[

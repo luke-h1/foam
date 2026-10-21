@@ -56,22 +56,22 @@ export type TextVariant = 'default' | 'mono';
 export type TextFamily = 'brand' | 'system';
 
 export interface TextProps extends RNTextProps, MarginProps {
-  ref?: Ref<RNText> | undefined;
-  children?: ReactNode | undefined;
+  ref?: Ref<RNText>;
+  children?: ReactNode;
   type?: TextType;
-  weight?: TextWeight | undefined;
-  variant?: TextVariant | undefined;
+  weight?: TextWeight;
+  variant?: TextVariant;
   /**
    * Defaults to the family of `type`: brand for the title styles, system for
    * the rest. Only applied when `variant` is 'default'.
    */
-  family?: TextFamily | undefined;
-  color?: ThemeColor | ThemeColorToken | undefined;
-  contrast?: boolean | undefined;
-  highContrast?: boolean | undefined;
-  italic?: boolean | undefined;
-  tabular?: boolean | undefined;
-  align?: 'left' | 'center' | 'right' | undefined;
+  family?: TextFamily;
+  color?: ThemeColor | ThemeColorToken;
+  contrast?: boolean;
+  highContrast?: boolean;
+  italic?: boolean;
+  tabular?: boolean;
+  align?: 'left' | 'center' | 'right';
 }
 
 const margin = getMargin(theme);
@@ -137,7 +137,6 @@ export function Text({
   const styleWeightOverride: TextStyle | null = styleWeight
     ? {
         fontFamily: getFontFamily('default', styleWeight, italic),
-        fontWeight: undefined,
       }
     : null;
 

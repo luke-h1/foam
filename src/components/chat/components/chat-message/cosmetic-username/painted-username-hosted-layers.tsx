@@ -27,12 +27,12 @@ import { useSharedPaintAnimationReady } from './util/shared-paint-animation-fram
 interface PaintedUsernameHostedLayersProps {
   displayUsername: string;
   fallbackColor: string;
-  fontSize?: number | undefined;
-  lineHeight?: number | undefined;
+  fontSize?: number;
+  lineHeight?: number;
   paint: PaintData;
   plainColor: string;
   sevenTvPaintDropShadows: PaintDropShadowMode;
-  usernameTextStyle?: StyleProp<TextStyle> | undefined;
+  usernameTextStyle?: StyleProp<TextStyle>;
   useWebView: boolean;
 }
 
@@ -80,11 +80,13 @@ export function PaintedUsernameHostedLayers({
   if (useWebView) {
     return (
       <PaintedUsernameWebView
-        username={displayUsername}
-        paint={paint}
-        fallbackColor={fallbackColor}
-        fontSize={fontSize}
-        lineHeight={lineHeight}
+        {...{
+          username: displayUsername,
+          paint,
+          fallbackColor,
+          fontSize,
+          lineHeight,
+        }}
       />
     );
   }

@@ -6,7 +6,6 @@ import {
   type ImageLoadEventData,
 } from 'expo-image';
 
-import { omitUndefined } from '@app/types/eopt';
 import { logger } from '@app/utils/logger';
 
 import { useFileCachedSource } from './hooks/use-file-cached-source';
@@ -132,7 +131,7 @@ export const Image = function Image({
     <View style={[styles.container, containerStyle]}>
       <ExpoImage
         {...props}
-        {...omitUndefined({
+        {...{
           source: resolvedSource,
           cachePolicy: resolvedCachePolicy,
           // Key on the original url. The resolved url changes when the disk-cache
@@ -140,7 +139,7 @@ export const Image = function Image({
           recyclingKey: recyclingKey ?? url ?? undefined,
           onLoadStart,
           onLoadEnd,
-        })}
+        }}
         style={style}
         contentFit={contentFit}
         transition={transition}

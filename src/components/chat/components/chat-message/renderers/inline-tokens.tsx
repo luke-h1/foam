@@ -26,13 +26,13 @@ type InlineTokensProps = Pick<
   | 'emoteTargetSize'
 > & {
   message: InlineFlowToken[];
-  textStyle?: StyleProp<TextStyle> | undefined;
+  textStyle?: StyleProp<TextStyle>;
   /**
    * Line height override for every span on lines with emotes; each nested
    * span needs the taller line height or the emote attachment clips.
    */
-  emoteLineStyle?: StyleProp<TextStyle> | undefined;
-  textColor?: string | undefined;
+  emoteLineStyle?: StyleProp<TextStyle>;
+  textColor?: string;
 };
 
 type InlineTokenDerived = {
@@ -67,11 +67,13 @@ function renderInlineToken(
   if (token.type === 'emote') {
     return (
       <EmoteToken
-        disableAnimations={disableEmoteAnimations}
-        key={getTokenKey(token, index)}
-        token={token}
-        onEmoteTouchStart={onEmoteTouchStart}
-        targetSize={emoteSize}
+        {...{
+          disableAnimations: disableEmoteAnimations,
+          key: getTokenKey(token, index),
+          token,
+          onEmoteTouchStart,
+          targetSize: emoteSize,
+        }}
       />
     );
   }
@@ -97,16 +99,18 @@ function renderInlineToken(
   // the row - see MentionToken.
   return (
     <MentionToken
-      key={getTokenKey(token, index)}
-      content={content}
-      baseTextStyle={baseTextStyle}
-      emoteLineStyle={emoteLineStyle}
-      compact={compact}
-      fontScale={fontScale}
-      getMentionColor={getMentionColor}
-      effectiveHighlightedUserSet={effectiveHighlightedUserSet}
-      normalisedCurrentUsername={normalisedCurrentUsername}
-      replyPlainMentionTarget={replyPlainMentionTarget}
+      {...{
+        key: getTokenKey(token, index),
+        content,
+        baseTextStyle,
+        emoteLineStyle,
+        compact,
+        fontScale,
+        getMentionColor,
+        effectiveHighlightedUserSet,
+        normalisedCurrentUsername,
+        replyPlainMentionTarget,
+      }}
     />
   );
 }

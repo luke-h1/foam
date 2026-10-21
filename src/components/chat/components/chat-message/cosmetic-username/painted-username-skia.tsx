@@ -49,12 +49,12 @@ import {
 interface PaintedUsernameSkiaProps {
   username: string;
   paint: PaintData;
-  fallbackColor?: string | undefined;
+  fallbackColor?: string;
   /**
    * Glyph size in points; defaults to the chat row metric. Passed through so
    * painted names render at the right size outside chat (composer, user card).
    */
-  fontSize?: number | undefined;
+  fontSize?: number;
 }
 
 function useCanvasRedrawOnVisible() {

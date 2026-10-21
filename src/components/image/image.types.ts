@@ -14,9 +14,9 @@ export type ImageCacheVariant =
   | 'image';
 
 export interface ImageProps extends Omit<ExpoImageProps, 'source'> {
-  containerStyle?: StyleProp<ViewStyle> | undefined;
-  trackLoadContext?: string | undefined;
-  cacheToFile?: boolean | undefined;
-  cacheVariant?: ImageCacheVariant | undefined;
-  source?: string | { uri: string } | number | undefined;
+  containerStyle?: StyleProp<ViewStyle>;
+  trackLoadContext?: string;
+  cacheToFile?: boolean;
+  cacheVariant?: ImageCacheVariant;
+  source?: string | { uri: string } | number;
 }

@@ -72,7 +72,7 @@ const AUTH_STARTUP_TIMEOUT_MS = 12_000;
 const USER_TOKEN_REFRESH_POLL_INTERVAL_MS = 60_000;
 
 interface State {
-  authState?: AuthState | undefined;
+  authState?: AuthState;
   ready: boolean;
 }
 
@@ -199,8 +199,8 @@ async function refreshCurrentUserTokenForState(
 
 export type AuthContextProviderProps = {
   children: ReactNode;
-  enableTestResult?: boolean | undefined;
-  testResult?: DefaultTokenResponse | undefined;
+  enableTestResult?: boolean;
+  testResult?: DefaultTokenResponse;
 };
 
 function useAuthContextValue({

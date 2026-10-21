@@ -12,7 +12,7 @@ export interface ParsedTwitchAuthToken {
   accessToken: string;
   expiresIn: number;
   tokenType: string;
-  refreshToken?: string | undefined;
+  refreshToken?: string;
 }
 
 /**

@@ -14,18 +14,18 @@ export type ApiProvider =
  */
 export interface ApiMonitoringContext {
   endpoint: string;
-  host?: string | undefined;
-  method?: string | undefined;
+  host?: string;
+  method?: string;
   provider: ApiProvider;
-  status?: number | undefined;
+  status?: number;
   url: string;
 }
 
 interface ApiMonitoringInput {
-  baseURL?: string | undefined;
-  method?: string | undefined;
-  status?: number | undefined;
-  url?: string | undefined;
+  baseURL?: string;
+  method?: string;
+  status?: number;
+  url?: string;
 }
 
 function trimUrlParts(baseURL: string, url: string): string {

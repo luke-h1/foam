@@ -9,7 +9,6 @@ import {
 } from '@shopify/flash-list';
 
 import { theme } from '@app/styles/themes';
-import { omitUndefined } from '@app/types/eopt';
 
 export type { FlashListRef, ListRenderItem };
 
@@ -54,12 +53,12 @@ export function FlashList<TItem>({
 
   return (
     <ShopifyFlashList
-      {...omitUndefined({
+      {...{
         ref,
         refreshControl: activeRefreshControl ?? undefined,
         refreshing: activeRefreshControl ? undefined : refreshing,
         onRefresh: activeRefreshControl ? undefined : onRefresh,
-      })}
+      }}
       {...props}
     />
   );

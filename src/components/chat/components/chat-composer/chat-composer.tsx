@@ -29,19 +29,19 @@ export type { SuggestionType } from './util/chat-composer-types';
 const SELECTION_HIGHLIGHT_ALPHA = '66';
 
 export interface ChatComposerProps {
-  onChangeText?: ((text: string) => void) | undefined;
-  onSubmit?: (() => void) | undefined;
-  onPressAdd?: (() => void) | undefined;
-  onAttachImage?: (() => void) | undefined;
-  onOpenSettings?: (() => void) | undefined;
-  isUploadingImage?: boolean | undefined;
-  maxSuggestions?: number | undefined;
-  prioritizeChannelEmotes?: boolean | undefined;
-  placeholder?: string | undefined;
-  editable?: boolean | undefined;
-  canSend?: boolean | undefined;
-  reservedCharacters?: number | undefined;
-  ref?: Ref<ChatComposerHandle> | undefined;
+  onChangeText?: (text: string) => void;
+  onSubmit?: () => void;
+  onPressAdd?: () => void;
+  onAttachImage?: () => void;
+  onOpenSettings?: () => void;
+  isUploadingImage?: boolean;
+  maxSuggestions?: number;
+  prioritizeChannelEmotes?: boolean;
+  placeholder?: string;
+  editable?: boolean;
+  canSend?: boolean;
+  reservedCharacters?: number;
+  ref?: Ref<ChatComposerHandle>;
 }
 
 function ChatComposerComponent({
@@ -92,11 +92,13 @@ function ChatComposerComponent({
     handleUserSelect,
     handleCommandSelect,
   } = useChatComposerController({
-    onChangeText,
-    onSubmit,
-    canSend,
-    reservedCharacters,
-    ref,
+    ...{
+      onChangeText,
+      onSubmit,
+      canSend,
+      reservedCharacters,
+      ref,
+    },
     focusInput,
     blurInput,
     applyCursor: cursor => {
@@ -163,8 +165,7 @@ function ChatComposerComponent({
 
       <View style={styles.row}>
         <ComposerOverflowButton
-          actions={overflowActions}
-          busy={isUploadingImage}
+          {...{ actions: overflowActions, busy: isUploadingImage }}
         />
 
         <View

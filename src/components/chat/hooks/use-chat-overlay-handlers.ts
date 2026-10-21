@@ -38,8 +38,8 @@ const TIMEOUT_DURATION_OPTIONS = [
 export function resolveModTarget(
   selection:
     | {
-        login?: string | undefined;
-        username?: string | undefined;
+        login?: string;
+        username?: string;
       }
     | null
     | undefined,
@@ -49,7 +49,7 @@ export function resolveModTarget(
 
 interface UseChatOverlayHandlersOptions {
   channelId: string;
-  currentUserId?: string | undefined;
+  currentUserId?: string;
   hidePhraseFromView: (phrase?: string) => void;
   hideUserFromView: (username?: string) => void;
   onAppendMention: (username: string) => void;
@@ -66,9 +66,9 @@ interface UseChatOverlayHandlersOptions {
  */
 type ChatUserSelection =
   | {
-      login?: string | undefined;
-      userId?: string | undefined;
-      username?: string | undefined;
+      login?: string;
+      userId?: string;
+      username?: string;
     }
   | null
   | undefined;
@@ -103,8 +103,8 @@ export function useChatOverlayHandlers({
   const banSelection = useCallback(
     (
       selection: {
-        login?: string | undefined;
-        username?: string | undefined;
+        login?: string;
+        username?: string;
       } | null,
     ) => {
       const target = resolveModTarget(selection);
@@ -121,8 +121,8 @@ export function useChatOverlayHandlers({
   const promptTimeoutDuration = useCallback(
     (
       selection: {
-        login?: string | undefined;
-        username?: string | undefined;
+        login?: string;
+        username?: string;
       } | null,
     ) => {
       const target = resolveModTarget(selection);

@@ -11,12 +11,12 @@ import { logger } from '@app/utils/logger';
 import { ChatInlineImage } from './chat-inline-image';
 
 interface EmoteTokenProps {
-  disableAnimations?: boolean | undefined;
-  isModerated?: boolean | undefined;
+  disableAnimations?: boolean;
+  isModerated?: boolean;
   token: MessageToken<'emote'>;
-  onEmoteTouchStart?: ((token: MessageToken<'emote'>) => void) | undefined;
-  shouldOverlayPrevious?: boolean | undefined;
-  targetSize?: number | undefined;
+  onEmoteTouchStart?: (token: MessageToken<'emote'>) => void;
+  shouldOverlayPrevious?: boolean;
+  targetSize?: number;
 }
 
 export const EmoteToken = memo(
@@ -90,11 +90,13 @@ export const EmoteToken = memo(
     // node of its own.
     const image = (
       <ChatInlineImage
-        onTouchStart={needsWrapper ? undefined : handleTouchStart}
-        sourceUrl={displayUrl}
-        style={getEmoteImageStyle(width, height)}
         priority='normal'
         transitionMs={0}
+        {...{
+          onTouchStart: needsWrapper ? undefined : handleTouchStart,
+          sourceUrl: displayUrl,
+          style: getEmoteImageStyle(width, height),
+        }}
       />
     );
 

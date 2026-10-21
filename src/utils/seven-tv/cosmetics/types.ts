@@ -7,16 +7,16 @@ import type {
 
 export type PaintGradientLayer = {
   function: PaintFunction;
-  canvas_repeat?: string | undefined;
-  size?: [number, number] | null | undefined;
-  at?: [number, number] | undefined;
-  stops?: IndexedCollection<PaintStop> | PaintStop[] | undefined;
-  image_url?: string | undefined;
+  canvas_repeat?: string;
+  size?: [number, number] | null;
+  at?: [number, number];
+  stops?: IndexedCollection<PaintStop> | PaintStop[];
+  image_url?: string;
   // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- mirrors the 7TV paint API field name; see normalizeSevenTvPaint.ts
-  shape?: string | undefined;
-  angle?: number | undefined;
-  repeat?: boolean | undefined;
-  opacity?: number | undefined;
+  shape?: string;
+  angle?: number;
+  repeat?: boolean;
+  opacity?: number;
 };
 
 export type RawSevenTvPaintInput = Partial<PaintData> & {

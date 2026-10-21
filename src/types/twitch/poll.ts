@@ -75,10 +75,10 @@ export interface ChannelPollState {
   totalVotes: number;
   channelPointsVotingEnabled: boolean;
   channelPointsPerVote: number;
-  durationSeconds?: number | undefined;
+  durationSeconds?: number;
   startedAt: string;
-  endsAt?: string | undefined;
-  endedAt?: string | undefined;
+  endsAt?: string;
+  endedAt?: string;
   status: ChannelPollStatus;
   isActive: boolean;
 }

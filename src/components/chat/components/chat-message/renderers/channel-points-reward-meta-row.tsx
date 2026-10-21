@@ -15,12 +15,12 @@ import { ChatNoticeMetaRow } from './chat-notice-meta-row';
 
 interface ChannelPointsRewardMetaRowProps {
   compact: boolean;
-  fontScale?: ChatFontScale | undefined;
-  isHighlightedMessage?: boolean | undefined;
-  moderationNotice?: unknown | undefined;
-  noticeTags?: UserNoticeTags | undefined;
-  roomId?: string | undefined;
-  username?: string | undefined;
+  fontScale?: ChatFontScale;
+  isHighlightedMessage?: boolean;
+  moderationNotice?: unknown;
+  noticeTags?: UserNoticeTags;
+  roomId?: string;
+  username?: string;
   userstate: UserStateTags;
 }
 
@@ -50,22 +50,22 @@ export function ChannelPointsRewardMetaRow({
   if (isHighlightedMessage) {
     return (
       <ChatNoticeMetaRow
-        compact={compact}
-        fontScale={fontScale}
         icon='sparkles'
-        label={rewardSummaryTitle}
-        labelColor={CHAT_NOTICE_ACCENTS.highlight}
-        labelStyle={styles.highlightMyMessageMetaText}
+        {...{
+          compact,
+          fontScale,
+          label: rewardSummaryTitle,
+          labelColor: CHAT_NOTICE_ACCENTS.highlight,
+          labelStyle: styles.highlightMyMessageMetaText,
+        }}
       />
     );
   }
 
   return (
     <ChatNoticeMetaRow
-      compact={compact}
-      fontScale={fontScale}
       icon='gift.fill'
-      labelColor={CHAT_NOTICE_ACCENTS.channelPoints}
+      {...{ compact, fontScale, labelColor: CHAT_NOTICE_ACCENTS.channelPoints }}
     >
       <ChatText
         style={[

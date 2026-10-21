@@ -36,7 +36,6 @@ import {
   getEmoteRefReleaseRaceCount,
 } from '@app/providers/cached-emotes-provider/cache-service';
 import { useCachedEmote } from '@app/providers/cached-emotes-provider/use-cached-emote';
-import { omitUndefined } from '@app/types/eopt';
 import { describeEmoteUrl } from '@app/utils/emote/describe-emote-url';
 import { logger } from '@app/utils/logger';
 
@@ -405,18 +404,18 @@ function logEmoteLoadFailure({
 }
 
 interface ChatInlineImageProps {
-  accessibilityLabel?: string | undefined;
+  accessibilityLabel?: string;
   /**
    * Records which emote a touch started on for the row's long-press timer.
    * Taken here so the common emote needs no wrapper view of its own.
    */
-  onTouchStart?: (() => void) | undefined;
-  playAnimation?: boolean | undefined;
-  priority?: 'low' | 'normal' | 'high' | undefined;
+  onTouchStart?: () => void;
+  playAnimation?: boolean;
+  priority?: 'low' | 'normal' | 'high';
   sourceUrl: string;
   style: StyleProp<ImageStyle>;
-  testID?: string | undefined;
-  transitionMs?: number | undefined;
+  testID?: string;
+  transitionMs?: number;
 }
 
 // eslint-disable-next-line react-doctor/no-giant-component -- a split adds a mount boundary on the hottest chat path
@@ -484,12 +483,12 @@ function ChatInlineImageComponent({
       onLoad={handleLoad}
       onError={handleError}
       style={overlayVisible ? StyleSheet.absoluteFill : style}
-      {...omitUndefined({
+      {...{
         accessible: accessibilityLabel ? true : undefined,
         accessibilityLabel,
         onTouchStart: overlayVisible ? undefined : onTouchStart,
         testID,
-      })}
+      }}
     />
   );
 

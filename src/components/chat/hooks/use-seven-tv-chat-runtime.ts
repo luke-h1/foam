@@ -23,7 +23,7 @@ interface UseSevenTvChatRuntimeOptions {
     message: AnyChatMessageType,
     options?: { countUnread?: boolean },
   ) => void;
-  sevenTvEmoteSetId?: string | undefined;
+  sevenTvEmoteSetId?: string;
 }
 
 export function useSevenTvChatRuntime({
@@ -47,7 +47,7 @@ export function useSevenTvChatRuntime({
   // Keyed by channel so a stale resolution never leaks across a channel hop.
   const [resolvedOwner, setResolvedOwner] = useState<{
     channelId: string;
-    sevenTvUserId?: string | undefined;
+    sevenTvUserId?: string;
   } | null>(null);
 
   useEffect(() => {

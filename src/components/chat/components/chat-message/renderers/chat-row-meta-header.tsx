@@ -9,7 +9,7 @@ import type { ReplyFlags } from './types/reply-flags';
 
 interface ChatRowMetaHeaderProps {
   message: MessageToken[];
-  onReplyContextPress?: ((replyParentMessageId: string) => void) | undefined;
+  onReplyContextPress?: (replyParentMessageId: string) => void;
   parentDisplayName: string | undefined;
   rendererArgs: Omit<ChatTokenRenderProps, 'message'>;
   replyBody: string | undefined;
@@ -43,13 +43,15 @@ export function ChatRowMetaHeader({
   if (shouldRenderInlineReply && parentDisplayName) {
     return (
       <ReplyingToHeader
-        canJumpToReplyTarget={canJumpToReplyTarget}
-        isReplyingToCurrentUser={isReplyingToCurrentUser}
-        onReplyContextPress={onReplyContextPress}
-        parentDisplayName={parentDisplayName}
-        replyBody={replyBody}
-        replyParentMessageId={replyParentMessageId}
         rendererArgs={{ ...rendererArgs, message }}
+        {...{
+          canJumpToReplyTarget,
+          isReplyingToCurrentUser,
+          onReplyContextPress,
+          parentDisplayName,
+          replyBody,
+          replyParentMessageId,
+        }}
       />
     );
   }

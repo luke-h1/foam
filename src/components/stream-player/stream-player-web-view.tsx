@@ -10,7 +10,6 @@ import type {
 
 import { countMetric } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
-import { omitUndefined } from '@app/types/eopt';
 import { logger } from '@app/utils/logger';
 
 import { PIP_ENABLED } from './util/pip-feature';
@@ -27,26 +26,26 @@ const handleShouldStartLoadWithRequest: OnShouldStartLoadWithRequest =
 
 interface StreamPlayerWebViewProps {
   allowsTwitchInteraction: boolean;
-  channel?: string | undefined;
-  clip?: string | undefined;
-  injectedJavaScript?: string | undefined;
-  injectedJavaScriptBeforeContentLoaded?: string | undefined;
+  channel?: string;
+  clip?: string;
+  injectedJavaScript?: string;
+  injectedJavaScriptBeforeContentLoaded?: string;
   needsInitRef: RefObject<boolean>;
-  onError?: ((error: string) => void) | undefined;
+  onError?: (error: string) => void;
   onHttpError: (error: { statusCode: number; url: string }) => void;
   onLoadFailed?: (
     reason: string,
     error: WebViewError | WebViewHttpError,
   ) => void;
   onMessage: ComponentProps<typeof WebView>['onMessage'];
-  onWebViewLoaded?: (() => void) | undefined;
+  onWebViewLoaded?: () => void;
   // When false the WebView is transparent (non-opaque WKWebView), so the iOS rotation snapshot
   // reveals the thumbnail behind it instead of the WebView's black backing.
-  opaque?: boolean | undefined;
+  opaque?: boolean;
   remountWebView: () => void;
   scheduleAuthCompletionReload: () => void;
   source: WebViewSource;
-  video?: string | undefined;
+  video?: string;
   webViewKey: number;
   webViewRef: RefObject<WebView | null>;
 }
@@ -161,12 +160,12 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
       thirdPartyCookiesEnabled
       textInteractionEnabled
       originWhitelist={['*']}
-      {...omitUndefined({
+      {...{
         source,
         injectedJavaScript,
         injectedJavaScriptBeforeContentLoaded,
         onMessage,
-      })}
+      }}
       injectedJavaScriptBeforeContentLoadedForMainFrameOnly={false}
       injectedJavaScriptForMainFrameOnly={false}
       style={[

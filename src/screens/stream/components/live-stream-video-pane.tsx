@@ -112,36 +112,40 @@ export function LiveStreamVideoPane({
     >
       {shouldRenderStreamPlayer ? (
         <StreamPlayer
-          ref={playerRef}
-          channel={resolvedChannelLogin}
           height='100%'
           width='100%'
           autoplay
           muted={false}
-          showOverlayControls={customPlayerEnabled}
-          onBackPress={showsOwnBackButton ? onBackPress : undefined}
-          onPlay={onPlayerLoaded}
-          onPlaybackLatencyChange={onPlaybackLatencyChange}
-          onReady={onPlayerLoaded}
-          onCreateClipPress={canCreateClip ? onCreateClipPress : undefined}
-          onSharePress={resolvedChannelLogin ? onSharePress : undefined}
-          onSleepTimerPress={onSleepTimerPress}
-          sleepTimerActive={sleepTimerActive}
-          onVideoAreaPress={landscapeOnly(isLandscape, onVideoAreaPress)}
-          onVideoAreaSwipeDown={landscapeOnly(isLandscape, onExitLandscape)}
-          onWebViewLoaded={onPlayerLoaded}
-          posterUrl={posterUrl}
-          streamInfo={streamInfo}
+          {...{
+            ref: playerRef,
+            channel: resolvedChannelLogin,
+            showOverlayControls: customPlayerEnabled,
+            onBackPress: showsOwnBackButton ? onBackPress : undefined,
+            onPlay: onPlayerLoaded,
+            onPlaybackLatencyChange,
+            onReady: onPlayerLoaded,
+            onCreateClipPress: canCreateClip ? onCreateClipPress : undefined,
+            onSharePress: resolvedChannelLogin ? onSharePress : undefined,
+            onSleepTimerPress,
+            sleepTimerActive,
+            onVideoAreaPress: landscapeOnly(isLandscape, onVideoAreaPress),
+            onVideoAreaSwipeDown: landscapeOnly(isLandscape, onExitLandscape),
+            onWebViewLoaded: onPlayerLoaded,
+            posterUrl,
+            streamInfo,
+          }}
         />
       ) : null}
 
       {isStreamUnavailable ? (
         <StreamUnavailablePanel
-          channelLogin={resolvedChannelLogin}
-          displayName={displayName}
-          onRetry={onRetry}
-          profileImageUrl={profileImageUrl}
-          reason={isChannelOffline ? 'offline' : 'error'}
+          {...{
+            channelLogin: resolvedChannelLogin,
+            displayName,
+            onRetry,
+            profileImageUrl,
+            reason: isChannelOffline ? 'offline' : 'error',
+          }}
         />
       ) : null}
 

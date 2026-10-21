@@ -36,16 +36,18 @@ export function EmoteSearchFilter({
         autoComplete='off'
         autoCorrect={false}
         color='white'
-        onChangeText={onChange}
-        onSubmitEditing={onSubmitEditing}
-        placeholder={placeholder}
         placeholderTextColor='rgba(255,255,255,0.42)'
         radius='none'
         returnKeyType='search'
         size='sm'
-        style={styles.searchInput}
-        value={value}
         variant='soft'
+        {...{
+          onChangeText: onChange,
+          onSubmitEditing,
+          placeholder,
+          style: styles.searchInput,
+          value,
+        }}
       />
       <Button
         onPress={rightOnPress}

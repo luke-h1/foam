@@ -14,10 +14,10 @@ import { CHAT_NOTICE_ACCENTS } from '../util/chat-notice-accents';
 import { NoticeUserMessage } from './notice-user-message';
 
 interface RitualNoticeProps {
-  compact?: boolean | undefined;
-  disableAnimations?: boolean | undefined;
-  fontScale?: ChatFontScale | undefined;
-  parsedMessage?: MessageToken[] | undefined;
+  compact?: boolean;
+  disableAnimations?: boolean;
+  fontScale?: ChatFontScale;
+  parsedMessage?: MessageToken[];
   token: MessageToken<'ritual'>;
 }
 
@@ -75,12 +75,14 @@ function RitualNoticeComponent({
   return (
     <View style={styles.messageColumn}>
       <ChatNoticeMetaRow
-        compact={compact}
-        fontScale={fontScale}
-        icon={getRitualIcon(token.ritualName)}
-        label={getRitualMetaLabel(token.ritualName)}
-        labelColor={CHAT_NOTICE_ACCENTS.ritual}
-        labelStyle={styles.ritualNoticeMetaText}
+        {...{
+          compact,
+          fontScale,
+          icon: getRitualIcon(token.ritualName),
+          label: getRitualMetaLabel(token.ritualName),
+          labelColor: CHAT_NOTICE_ACCENTS.ritual,
+          labelStyle: styles.ritualNoticeMetaText,
+        }}
       />
       {description ? (
         <ChatText style={[textStyles.body, styles.channelPointsMetaMuted]}>
@@ -88,11 +90,7 @@ function RitualNoticeComponent({
         </ChatText>
       ) : null}
       <NoticeUserMessage
-        compact={compact}
-        disableAnimations={disableAnimations}
-        fontScale={fontScale}
-        message={message}
-        parsedMessage={parsedMessage}
+        {...{ compact, disableAnimations, fontScale, message, parsedMessage }}
       />
     </View>
   );

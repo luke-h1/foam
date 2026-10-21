@@ -19,7 +19,7 @@ export function createCharityDonationPart(
   );
 
   return {
-    type: 'charitydonation',
+    type: 'charitydonation' as const,
     displayName,
     charityName: getTagValue(tags, 'msg-param-charity-name') || 'charity',
     amount: formatCharityAmount(

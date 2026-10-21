@@ -6,13 +6,12 @@ import type {
   SevenTvSanitisedEmote,
   TwitchSanitisedEmote,
 } from '@app/types/emote';
-import type { PartialUndefined } from '@app/types/eopt';
 
 /**
  * Dropping the two discriminants keeps this assignable to each provider's own
  * partial, so the branches below stay checked instead of asserted.
  */
-export type MenuEmoteOverrides = PartialUndefined<
+export type MenuEmoteOverrides = Partial<
   Omit<SevenTvSanitisedEmote, 'provider' | 'site'> &
     Omit<TwitchSanitisedEmote, 'provider' | 'site'> &
     Omit<BttvSanitisedEmote, 'provider' | 'site'> &
@@ -33,7 +32,7 @@ function createSevenTvMenuEmote(
   id: string,
   name: string,
   site: SevenTvSanitisedEmote['site'],
-  overrides: PartialUndefined<SevenTvSanitisedEmote> = {},
+  overrides: Partial<SevenTvSanitisedEmote> = {},
 ): SevenTvSanitisedEmote {
   return {
     ...overrides,
@@ -60,7 +59,7 @@ function createTwitchMenuEmote(
   id: string,
   name: string,
   site: TwitchSanitisedEmote['site'],
-  overrides: PartialUndefined<TwitchSanitisedEmote> = {},
+  overrides: Partial<TwitchSanitisedEmote> = {},
 ): TwitchSanitisedEmote {
   return {
     ...overrides,

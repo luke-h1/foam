@@ -17,7 +17,7 @@ interface StreamPlayerPosterProps {
    * Thumbnail behind the spinner, sized to match the live-stream card so it
    * is an instant cache hit when arriving from the stream list.
    */
-  posterUrl?: string | undefined;
+  posterUrl?: string;
   visible: boolean;
 }
 

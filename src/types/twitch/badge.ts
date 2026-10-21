@@ -17,8 +17,8 @@ export interface SanitisedBadgeSet {
   >;
   title: string;
 
-  color?: string | undefined;
-  owner_username?: string | undefined;
+  color?: string;
+  owner_username?: string;
   set: string;
   provider: BadgeProvider;
 }

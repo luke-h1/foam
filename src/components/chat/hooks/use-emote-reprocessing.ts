@@ -16,10 +16,10 @@ interface UseEmoteReprocessingOptions {
   messages$: { peek: () => AnyChatMessageType[] };
   emoteLoadStatus: string;
   processedMessageIdsRef: RefObject<Set<string>>;
-  reprocessKey?: string | undefined;
+  reprocessKey?: string;
   show7TvEmotes: boolean;
   showChatGifs: boolean;
-  userLogin?: string | null | undefined;
+  userLogin?: string | null;
 }
 
 export function useEmoteReprocessing({

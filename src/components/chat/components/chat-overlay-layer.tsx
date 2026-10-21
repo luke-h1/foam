@@ -35,7 +35,7 @@ export interface ChatOverlayLayerProps {
   canModerateChat: boolean;
   channelId: string;
   channelName: string;
-  currentUserId?: string | undefined;
+  currentUserId?: string;
   hiddenUsers: string[];
   highlightedUsers: string[];
   hidePhraseFromView: (phrase?: string) => void;
@@ -53,7 +53,7 @@ export interface ChatOverlayLayerProps {
   onSettingsRefetchEmotes: () => void;
   onUnpinPinnedMessage: () => void;
   pinnedMessageBusy: boolean;
-  pinnedMessageId?: string | undefined;
+  pinnedMessageId?: string;
   toggleHighlightedUser: (username?: string) => void;
 }
 
@@ -222,35 +222,36 @@ export const ChatOverlayLayer = memo(function ChatOverlayLayer({
       {selectedMessage ? (
         <ActionSheet
           visible
-          onClose={handleCloseSelectedMessage}
-          username={selectedMessage.username}
-          messagePreview={selectedMessage.message}
-          onReply={handleActionSheetReply}
-          onCopy={handleActionSheetCopy}
-          onHidePhrase={handleActionSheetHidePhrase}
-          onHideUser={handleActionSheetHideUser}
-          onHighlightUser={handleActionSheetHighlightUser}
-          onPinMessage={handleActionSheetPinMessage}
-          onUpdatePinnedMessage={handleActionSheetUpdatePinnedMessage}
-          onUnpinMessage={onUnpinPinnedMessage}
-          onDeleteMessage={handleActionSheetDeleteMessage}
-          onTimeoutUser={handleActionSheetTimeoutUser}
-          onBanUser={handleActionSheetBanUser}
-          canModerateChat={canModerateChat}
-          onReportUser={handleActionSheetReportUser}
-          onBlockUser={
-            canBlockMessageAuthor ? handleActionSheetBlockUser : undefined
-          }
-          canDeleteMessage={Boolean(selectedMessageId)}
-          canPinMessage={Boolean(!pinnedMessageBusy && selectedMessageId)}
-          canModerateUser={Boolean(resolveModTarget(selectedMessage))}
-          isPinnedMessage={
-            pinnedMessageId === selectedMessage.messageData.message_id
-          }
-          isPinnedMessageBusy={pinnedMessageBusy}
-          isUserHighlighted={highlightedUsers.includes(
-            normaliseChatUsername(selectedMessage.username),
-          )}
+          {...{
+            onClose: handleCloseSelectedMessage,
+            username: selectedMessage.username,
+            messagePreview: selectedMessage.message,
+            onReply: handleActionSheetReply,
+            onCopy: handleActionSheetCopy,
+            onHidePhrase: handleActionSheetHidePhrase,
+            onHideUser: handleActionSheetHideUser,
+            onHighlightUser: handleActionSheetHighlightUser,
+            onPinMessage: handleActionSheetPinMessage,
+            onUpdatePinnedMessage: handleActionSheetUpdatePinnedMessage,
+            onUnpinMessage: onUnpinPinnedMessage,
+            onDeleteMessage: handleActionSheetDeleteMessage,
+            onTimeoutUser: handleActionSheetTimeoutUser,
+            onBanUser: handleActionSheetBanUser,
+            canModerateChat,
+            onReportUser: handleActionSheetReportUser,
+            onBlockUser: canBlockMessageAuthor
+              ? handleActionSheetBlockUser
+              : undefined,
+            canDeleteMessage: Boolean(selectedMessageId),
+            canPinMessage: Boolean(!pinnedMessageBusy && selectedMessageId),
+            canModerateUser: Boolean(resolveModTarget(selectedMessage)),
+            isPinnedMessage:
+              pinnedMessageId === selectedMessage.messageData.message_id,
+            isPinnedMessageBusy: pinnedMessageBusy,
+            isUserHighlighted: highlightedUsers.includes(
+              normaliseChatUsername(selectedMessage.username),
+            ),
+          }}
         />
       ) : null}
 
@@ -269,22 +270,24 @@ export const ChatOverlayLayer = memo(function ChatOverlayLayer({
             canModerateChat,
             canModerateUser: Boolean(resolveModTarget(selectedUser)),
           }}
-          onClose={handleCloseSelectedUser}
-          username={selectedUser.username}
-          login={selectedUser.login}
-          userId={selectedUser.userId}
-          color={selectedUser.color}
-          onMentionUser={handleMentionSelectedUser}
-          onCopyUsername={handleCopySelectedUsername}
-          onHideUser={handleHideSelectedUser}
-          onHighlightUser={handleHighlightSelectedUser}
-          onBlockUser={
-            canBlockSelectedUser ? handleBlockSelectedUser : undefined
-          }
-          onReportUser={handleReportSelectedUser}
-          onTimeoutUser={handleTimeoutSelectedUser}
-          onWarnUser={handleWarnSelectedUser}
-          onBanUser={handleBanSelectedUser}
+          {...{
+            onClose: handleCloseSelectedUser,
+            username: selectedUser.username,
+            login: selectedUser.login,
+            userId: selectedUser.userId,
+            color: selectedUser.color,
+            onMentionUser: handleMentionSelectedUser,
+            onCopyUsername: handleCopySelectedUsername,
+            onHideUser: handleHideSelectedUser,
+            onHighlightUser: handleHighlightSelectedUser,
+            onBlockUser: canBlockSelectedUser
+              ? handleBlockSelectedUser
+              : undefined,
+            onReportUser: handleReportSelectedUser,
+            onTimeoutUser: handleTimeoutSelectedUser,
+            onWarnUser: handleWarnSelectedUser,
+            onBanUser: handleBanSelectedUser,
+          }}
         />
       ) : null}
     </>

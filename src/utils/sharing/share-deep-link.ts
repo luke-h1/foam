@@ -6,10 +6,10 @@ const APP_SCHEME = 'foam';
 const PUBLIC_TWITCH_BASE = 'https://www.twitch.tv';
 
 export type ShareableEntity =
-  | { kind: 'streamer'; login: string; displayName?: string | undefined }
-  | { kind: 'liveStream'; login: string; displayName?: string | undefined }
-  | { kind: 'clip'; id: string; title?: string | undefined }
-  | { kind: 'category'; id: string; name?: string | undefined };
+  | { kind: 'streamer'; login: string; displayName?: string }
+  | { kind: 'liveStream'; login: string; displayName?: string }
+  | { kind: 'clip'; id: string; title?: string }
+  | { kind: 'category'; id: string; name?: string };
 
 interface BuiltShareLink {
   appUrl: string;

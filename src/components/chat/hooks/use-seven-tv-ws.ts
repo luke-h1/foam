@@ -70,12 +70,12 @@ export interface EmoteSetSwitchCallbackData {
 }
 
 interface UseSevenTvWsOptions {
-  onEmoteUpdate?: ((data: EmoteUpdateCallbackData) => void) | undefined;
-  onEmoteSetSwitch?: ((data: EmoteSetSwitchCallbackData) => void) | undefined;
-  onEmoteSetUpdateForOtherSet?: ((emoteSetId: string) => void) | undefined;
-  onCosmeticCreate?: ((data: CosmeticCreateCallbackData) => void) | undefined;
-  onCosmeticUpdate?: ((data: CosmeticUpdateCallbackData) => void) | undefined;
-  onCosmeticDelete?: ((data: CosmeticDeleteCallbackData) => void) | undefined;
+  onEmoteUpdate?: (data: EmoteUpdateCallbackData) => void;
+  onEmoteSetSwitch?: (data: EmoteSetSwitchCallbackData) => void;
+  onEmoteSetUpdateForOtherSet?: (emoteSetId: string) => void;
+  onCosmeticCreate?: (data: CosmeticCreateCallbackData) => void;
+  onCosmeticUpdate?: (data: CosmeticUpdateCallbackData) => void;
+  onCosmeticDelete?: (data: CosmeticDeleteCallbackData) => void;
   onEntitlementCreate?:
     | ((data: EntitlementCreateCallbackData) => void)
     | undefined;
@@ -92,13 +92,13 @@ interface UseSevenTvWsOptions {
     eventType: SevenTvEventType,
     data: SevenTvEventData<SevenTvEventType>,
   ) => void;
-  twitchChannelId?: string | undefined;
-  sevenTvEmoteSetId?: string | undefined;
+  twitchChannelId?: string;
+  sevenTvEmoteSetId?: string;
   /**
    * The channel owner's 7TV user id; when set, subscribes to `user.update`
    * so live emote-set switches are detected.
    */
-  sevenTvChannelUserId?: string | undefined;
+  sevenTvChannelUserId?: string;
 }
 
 type UseSevenTvWsReturn = {

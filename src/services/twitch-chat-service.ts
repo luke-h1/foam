@@ -40,7 +40,6 @@ import { logger } from '@app/utils/logger';
 
 import { ReadyState } from '../hooks/ws/constants';
 import { useWebsocket } from '../hooks/ws/use-websocket';
-
 /**
  * Module-level external store for the IRC userstate; each USERSTATE replaces
  * the record wholesale.
@@ -520,22 +519,22 @@ function handleTwitchChatWebSocketError(error: Event) {
 }
 
 interface UseTwitchChatOptions {
-  channel?: string | undefined;
+  channel?: string;
   onMessage?: (
     channel: string,
     tags: Record<string, string>,
     message: string,
   ) => void;
-  onJoin?: ((channel: string) => void) | undefined;
-  onPart?: ((channel: string) => void) | undefined;
-  onUserJoin?: ((channel: string, username: string) => void) | undefined;
-  onUserPart?: ((channel: string, username: string) => void) | undefined;
+  onJoin?: (channel: string) => void;
+  onPart?: (channel: string) => void;
+  onUserJoin?: (channel: string, username: string) => void;
+  onUserPart?: (channel: string, username: string) => void;
   onNotice?: (
     channel: string,
     tags: Record<string, string>,
     message: string,
   ) => void;
-  onReconnect?: (() => void) | undefined;
+  onReconnect?: () => void;
   onUserNotice?: (
     channel: string,
     tags: UserNoticeTags,
@@ -558,12 +557,12 @@ interface UseTwitchChatOptions {
   onUserState?:
     | ((channel: string, tags: Record<string, string>) => void)
     | undefined;
-  onGlobalUserState?: ((tags: Record<string, string>) => void) | undefined;
-  onWelcome?: (() => void) | undefined;
-  blockedUsers?: { userLogin: string }[] | undefined;
-  mutedWords?: string[] | undefined;
-  matchWholeWord?: boolean | undefined;
-  onUserStateAfterSend?: ((tags: Record<string, string>) => void) | undefined;
+  onGlobalUserState?: (tags: Record<string, string>) => void;
+  onWelcome?: () => void;
+  blockedUsers?: { userLogin: string }[];
+  mutedWords?: string[];
+  matchWholeWord?: boolean;
+  onUserStateAfterSend?: (tags: Record<string, string>) => void;
 }
 
 export function useTwitchChat(options: UseTwitchChatOptions = {}) {
@@ -611,9 +610,9 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   const pendingMessageRef = useRef<{
     channel: string;
     message: string;
-    replyParentMsgId?: string | undefined;
-    replyParentDisplayName?: string | undefined;
-    replyParentMsgBody?: string | undefined;
+    replyParentMsgId?: string;
+    replyParentDisplayName?: string;
+    replyParentMsgBody?: string;
   } | null>(null);
 
   /**

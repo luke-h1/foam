@@ -72,8 +72,8 @@ function latestComposerProps(): RenderedComposerProps {
 }
 
 function renderShell(props: {
-  onRefreshCommand?: jest.Mock | undefined;
-  user?: UserInfoResponse | undefined;
+  onRefreshCommand?: jest.Mock;
+  user?: UserInfoResponse;
 }) {
   render(
     <SafeAreaProvider
@@ -87,12 +87,14 @@ function renderShell(props: {
         channelName='testchannel'
         connected
         isChatConnected={() => true}
-        onOpenEmoteSheet={jest.fn()}
-        onOpenSettingsSheet={jest.fn()}
-        onRefreshCommand={props.onRefreshCommand ?? jest.fn()}
-        processMessageEmotes={jest.fn()}
-        sendMessage={jest.fn()}
-        user={props.user}
+        {...{
+          onOpenEmoteSheet: jest.fn(),
+          onOpenSettingsSheet: jest.fn(),
+          onRefreshCommand: props.onRefreshCommand ?? jest.fn(),
+          processMessageEmotes: jest.fn(),
+          sendMessage: jest.fn(),
+          user: props.user,
+        }}
       />
     </SafeAreaProvider>,
   );

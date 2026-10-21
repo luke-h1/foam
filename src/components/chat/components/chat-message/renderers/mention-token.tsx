@@ -16,15 +16,15 @@ import type { ChatFontScale } from '../util/chat-scale';
 
 interface MentionTokenProps {
   content: string;
-  baseTextStyle?: StyleProp<TextStyle> | undefined;
-  emoteLineStyle?: StyleProp<TextStyle> | undefined;
-  compact?: boolean | undefined;
-  fontScale?: ChatFontScale | undefined;
-  isModerated?: boolean | undefined;
-  getMentionColor?: ((username: string) => string) | undefined;
-  effectiveHighlightedUserSet?: ReadonlySet<string> | undefined;
-  normalisedCurrentUsername?: string | undefined;
-  replyPlainMentionTarget?: string | undefined;
+  baseTextStyle?: StyleProp<TextStyle>;
+  emoteLineStyle?: StyleProp<TextStyle>;
+  compact?: boolean;
+  fontScale?: ChatFontScale;
+  isModerated?: boolean;
+  getMentionColor?: (username: string) => string;
+  effectiveHighlightedUserSet?: ReadonlySet<string>;
+  normalisedCurrentUsername?: string;
+  replyPlainMentionTarget?: string;
 }
 
 /**

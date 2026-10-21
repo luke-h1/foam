@@ -321,8 +321,8 @@ interface ChatDebugEmoteLookupMiss {
 }
 
 export function getChatDebugEmoteDetails(emote: {
-  id?: string | undefined;
-  name?: string | undefined;
+  id?: string;
+  name?: string;
 }): ChatDebugEmoteMatch | ChatDebugEmoteLookupMiss {
   const { channelId, cache } = getCurrentChannelCache();
 

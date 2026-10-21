@@ -1,7 +1,7 @@
 export interface KappaUploadAsset {
   uri: string;
-  fileName?: string | undefined;
-  mimeType?: string | undefined;
+  fileName?: string;
+  mimeType?: string;
 }
 
 export interface KappaUploadResult {

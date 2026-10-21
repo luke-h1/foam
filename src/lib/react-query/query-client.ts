@@ -11,11 +11,11 @@ declare module '@tanstack/react-query' {
       /**
        * Skip the default error toast for this mutation.
        */
-      suppressErrorToast?: boolean | undefined;
+      suppressErrorToast?: boolean;
       /**
        * User-facing message shown in the default error toast.
        */
-      errorMessage?: string | undefined;
+      errorMessage?: string;
     };
   }
 }
@@ -45,8 +45,8 @@ export function handleMutationError(
   error: Error,
   meta:
     | {
-        suppressErrorToast?: boolean | undefined;
-        errorMessage?: string | undefined;
+        suppressErrorToast?: boolean;
+        errorMessage?: string;
       }
     | undefined,
 ): void {

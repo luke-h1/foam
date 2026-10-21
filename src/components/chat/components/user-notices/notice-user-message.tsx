@@ -14,11 +14,11 @@ import {
 } from '../chat-message/util/chat-scale';
 
 interface NoticeUserMessageProps {
-  compact?: boolean | undefined;
-  disableAnimations?: boolean | undefined;
-  fontScale?: ChatFontScale | undefined;
+  compact?: boolean;
+  disableAnimations?: boolean;
+  fontScale?: ChatFontScale;
   message: string;
-  parsedMessage?: MessageToken[] | undefined;
+  parsedMessage?: MessageToken[];
 }
 
 function NoticeUserMessageComponent({

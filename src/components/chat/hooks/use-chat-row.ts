@@ -78,6 +78,7 @@ export function useChatRow<
     displayIsSharedChatDuplicated && sharedChatEnabled;
 
   const compact = density === 'compact';
+  const resolvedFontScale = fontScale ?? 'default';
 
   const normalisedCurrentUsername =
     currentUsernameNormalized ?? normaliseChatUsername(currentUsername);
@@ -208,20 +209,22 @@ export function useChatRow<
     onLongPress: handleLongPress,
   });
 
-  const tokenRenderProps = {
+  const tokenRenderProps: ChatTokenRenderProps = {
     compact,
     disableEmoteAnimations,
     effectiveHighlightedUserSet,
-    fontScale,
-    getMentionColor,
+    fontScale: resolvedFontScale,
     getTokenKey: getTokenIdentity,
-    onEmoteTouchStart: handleEmoteTouchStart,
     message,
-    moderationNotice,
-    normalisedCurrentUsername,
-    noticeTags: isUserNoticeTags(notice_tags) ? notice_tags : undefined,
-    parseTextForEmotes,
-  } satisfies ChatTokenRenderProps;
+    ...{
+      getMentionColor,
+      onEmoteTouchStart: handleEmoteTouchStart,
+      moderationNotice,
+      normalisedCurrentUsername,
+      noticeTags: isUserNoticeTags(notice_tags) ? notice_tags : undefined,
+      parseTextForEmotes,
+    },
+  };
 
   const announcementAccentColor = isAnnouncement
     ? getAnnouncementAccentColor(getAnnouncementColorParam(notice_tags))

@@ -75,11 +75,13 @@ function renderFollowingScreen({ loggedIn }: { loggedIn: boolean }) {
               expiresAt: TEST_TOKEN_EXPIRES_AT,
             },
           }}
-          user={loggedIn ? mockUser : undefined}
-          loginWithTwitch={jest.fn()}
-          logout={jest.fn()}
-          populateAuthState={jest.fn()}
-          fetchAnonToken={jest.fn()}
+          {...{
+            user: loggedIn ? mockUser : undefined,
+            loginWithTwitch: jest.fn(),
+            logout: jest.fn(),
+            populateAuthState: jest.fn(),
+            fetchAnonToken: jest.fn(),
+          }}
         >
           {children}
         </AuthContextTestProvider>

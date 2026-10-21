@@ -54,94 +54,94 @@ export interface StreamPlayerRef {
 }
 
 export interface StreamInfo {
-  gameName?: string | undefined;
-  profileImageUrl?: string | undefined;
+  gameName?: string;
+  profileImageUrl?: string;
   /**
    * ISO string; used to calculate stream duration.
    */
-  startedAt?: string | undefined;
-  title?: string | undefined;
-  userName?: string | undefined;
-  userLogin?: string | undefined;
-  viewerCount?: number | undefined;
+  startedAt?: string;
+  title?: string;
+  userName?: string;
+  userLogin?: string;
+  viewerCount?: number;
 }
 
 export interface StreamPlayerProps {
   /**
    * @default true
    */
-  autoplay?: boolean | undefined;
-  channel?: string | undefined;
+  autoplay?: boolean;
+  channel?: string;
   /**
    * Twitch clip slug
    */
-  clip?: string | undefined;
+  clip?: string;
 
-  height?: DimensionValue | undefined;
+  height?: DimensionValue;
 
-  deferOverlayUntilUserUnmute?: boolean | undefined;
+  deferOverlayUntilUserUnmute?: boolean;
   /**
    * Initial muted state.
    * @default false
    */
-  muted?: boolean | undefined;
-  onBackPress?: (() => void) | undefined;
+  muted?: boolean;
+  onBackPress?: () => void;
   /**
    * Fires when a content gate (e.g. login required) appears or clears.
    */
-  onContentGateChange?: ((hasGate: boolean) => void) | undefined;
-  onEnded?: (() => void) | undefined;
-  onError?: ((error: string) => void) | undefined;
-  onOffline?: (() => void) | undefined;
-  onOnline?: (() => void) | undefined;
-  onPause?: (() => void) | undefined;
+  onContentGateChange?: (hasGate: boolean) => void;
+  onEnded?: () => void;
+  onError?: (error: string) => void;
+  onOffline?: () => void;
+  onOnline?: () => void;
+  onPause?: () => void;
   /**
    * Callback with Twitch's reported latency from broadcaster to viewer.
    */
-  onPlaybackLatencyChange?: ((latencySeconds: number) => void) | undefined;
-  onPlay?: (() => void) | undefined;
-  onReady?: (() => void) | undefined;
-  onRefresh?: (() => void) | undefined;
-  onSharePress?: (() => void) | undefined;
-  onCreateClipPress?: (() => void) | undefined;
-  onSleepTimerPress?: (() => void) | undefined;
+  onPlaybackLatencyChange?: (latencySeconds: number) => void;
+  onPlay?: () => void;
+  onReady?: () => void;
+  onRefresh?: () => void;
+  onSharePress?: () => void;
+  onCreateClipPress?: () => void;
+  onSleepTimerPress?: () => void;
   /**
    * Whether a sleep timer is currently counting down; tints the overlay button.
    */
-  sleepTimerActive?: boolean | undefined;
-  onVideoAreaPress?: (() => void) | undefined;
-  onVideoAreaSwipeDown?: (() => void) | undefined;
+  sleepTimerActive?: boolean;
+  onVideoAreaPress?: () => void;
+  onVideoAreaSwipeDown?: () => void;
   /**
    * Fires when the embed WebView finishes loading; used to defer IRC connect
    * until the player is ready.
    */
-  onWebViewLoaded?: (() => void) | undefined;
+  onWebViewLoaded?: () => void;
   /**
    * Parent domain for the Twitch embed. Used by the web player only; native
    * hardcodes `www.twitch.tv`, the domain Twitch's embed always accepts.
    */
-  parent?: string | undefined;
+  parent?: string;
   /**
    * Thumbnail shown behind the loading spinner while the WebView boots, so the
    * user sees the preview frame instead of a black box.
    */
-  posterUrl?: string | undefined;
+  posterUrl?: string;
   /**
    * Show custom overlay controls.
    * @default false
    */
-  showOverlayControls?: boolean | undefined;
-  streamInfo?: StreamInfo | undefined;
+  showOverlayControls?: boolean;
+  streamInfo?: StreamInfo;
   /**
    * VOD ID to play
    */
-  video?: string | undefined;
-  width?: DimensionValue | undefined;
-  ref?: Ref<StreamPlayerRef> | undefined;
+  video?: string;
+  width?: DimensionValue;
+  ref?: Ref<StreamPlayerRef>;
 }
 
 export interface PlayerState {
-  channel?: string | undefined;
+  channel?: string;
   currentTime: number;
   duration: number;
   isPaused: boolean;
@@ -164,13 +164,13 @@ interface PlayerStateUpdatePayload {
 }
 
 interface PlaybackStatsPayload {
-  bufferSize?: number | undefined;
-  displayResolution?: string | undefined;
-  fps?: number | undefined;
-  hlsLatencyBroadcaster?: number | null | undefined;
-  playbackRate?: number | undefined;
-  skippedFrames?: number | undefined;
-  videoResolution?: string | undefined;
+  bufferSize?: number;
+  displayResolution?: string;
+  fps?: number;
+  hlsLatencyBroadcaster?: number | null;
+  playbackRate?: number;
+  skippedFrames?: number;
+  videoResolution?: string;
 }
 
 export type PlayerMessage =

@@ -568,7 +568,7 @@ export const processEmotesWorklet = (
       result.push({
         id: emote.id,
         name: emote.name,
-        type: 'emote',
+        type: 'emote' as const,
         content: word,
         creator: emote.creator || '',
         emote_link: emote.emote_link || '',

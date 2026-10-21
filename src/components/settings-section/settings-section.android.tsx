@@ -60,7 +60,7 @@ function IconTile({
   danger,
 }: {
   icon: NonNullable<RowIcon>;
-  danger?: boolean | undefined;
+  danger?: boolean;
 }) {
   return (
     <View style={[styles.iconWrap, danger ? styles.iconWrapDanger : null]}>
@@ -73,13 +73,7 @@ function IconTile({
   );
 }
 
-function RowLeading({
-  icon,
-  danger,
-}: {
-  icon?: RowIcon | undefined;
-  danger?: boolean | undefined;
-}) {
+function RowLeading({ icon, danger }: { icon?: RowIcon; danger?: boolean }) {
   if (!icon) {
     return null;
   }
@@ -87,7 +81,7 @@ function RowLeading({
   return (
     <ListItem.LeadingContent>
       <RNHostView matchContents>
-        <IconTile icon={icon} danger={danger} />
+        <IconTile {...{ icon, danger }} />
       </RNHostView>
     </ListItem.LeadingContent>
   );
@@ -99,8 +93,8 @@ function RowText({
   danger,
 }: {
   title: string;
-  subtitle?: string | undefined;
-  danger?: boolean | undefined;
+  subtitle?: string;
+  danger?: boolean;
 }) {
   return (
     <>
@@ -127,10 +121,10 @@ function RowText({
 }
 
 interface SettingsSectionProps {
-  title?: string | undefined;
-  footer?: ReactNode | undefined;
+  title?: string;
+  footer?: ReactNode;
   children: ReactNode;
-  cardColor?: string | undefined;
+  cardColor?: string;
 }
 
 export function SettingsSection({
@@ -193,17 +187,17 @@ export function SettingsSection({
 
 interface SettingsRowProps {
   title: string;
-  subtitle?: string | undefined;
-  icon?: RowIcon | undefined;
-  trailing?: ReactNode | undefined;
-  onPress?: (() => void) | undefined;
-  danger?: boolean | undefined;
-  disabled?: boolean | undefined;
+  subtitle?: string;
+  icon?: RowIcon;
+  trailing?: ReactNode;
+  onPress?: () => void;
+  danger?: boolean;
+  disabled?: boolean;
   /**
    * A pressable row shows a chevron unless this is false. Action rows that
    * run in place, rather than open a screen, turn it off.
    */
-  chevron?: boolean | undefined;
+  chevron?: boolean;
 }
 
 function getRowModifiers(
@@ -232,8 +226,8 @@ export function SettingsRow({
       colors={listItemColors}
       modifiers={getRowModifiers(onPress, disabled)}
     >
-      <RowLeading icon={icon} danger={danger} />
-      <RowText title={title} subtitle={subtitle} danger={danger} />
+      <RowLeading {...{ icon, danger }} />
+      <RowText {...{ title, subtitle, danger }} />
       {trailing || (onPress && chevron) ? (
         <ListItem.TrailingContent>
           <RNHostView matchContents>
@@ -255,8 +249,8 @@ export function SettingsRow({
 
 interface SettingsToggleRowProps {
   title: string;
-  subtitle?: string | undefined;
-  icon?: RowIcon | undefined;
+  subtitle?: string;
+  icon?: RowIcon;
   value: boolean;
   onValueChange: (value: boolean) => void;
 }
@@ -271,7 +265,7 @@ export function SettingsToggleRow({
   return (
     <ListItem colors={listItemColors}>
       <RowLeading icon={icon} />
-      <RowText title={title} subtitle={subtitle} />
+      <RowText {...{ title, subtitle }} />
       <ListItem.TrailingContent>
         <Switch
           value={value}
@@ -285,11 +279,11 @@ export function SettingsToggleRow({
 
 interface SettingsLinkRowProps {
   title: string;
-  subtitle?: string | undefined;
-  icon?: RowIcon | undefined;
-  value?: string | undefined;
-  onPress?: (() => void) | undefined;
-  danger?: boolean | undefined;
+  subtitle?: string;
+  icon?: RowIcon;
+  value?: string;
+  onPress?: () => void;
+  danger?: boolean;
 }
 
 export function SettingsLinkRow({
@@ -305,8 +299,8 @@ export function SettingsLinkRow({
       colors={listItemColors}
       modifiers={onPress ? [clickable(onPress, { indication: true })] : []}
     >
-      <RowLeading icon={icon} danger={danger} />
-      <RowText title={title} subtitle={subtitle} danger={danger} />
+      <RowLeading {...{ icon, danger }} />
+      <RowText {...{ title, subtitle, danger }} />
       {value || onPress ? (
         <ListItem.TrailingContent>
           <Row

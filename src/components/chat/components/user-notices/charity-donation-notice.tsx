@@ -12,10 +12,10 @@ import { CHAT_NOTICE_ACCENTS } from '../util/chat-notice-accents';
 import { NoticeUserMessage } from './notice-user-message';
 
 interface CharityDonationNoticeProps {
-  compact?: boolean | undefined;
-  disableAnimations?: boolean | undefined;
-  fontScale?: ChatFontScale | undefined;
-  parsedMessage?: MessageToken[] | undefined;
+  compact?: boolean;
+  disableAnimations?: boolean;
+  fontScale?: ChatFontScale;
+  parsedMessage?: MessageToken[];
   token: MessageToken<'charitydonation'>;
 }
 
@@ -36,11 +36,9 @@ function CharityDonationNoticeComponent({
   return (
     <View style={styles.messageColumn}>
       <ChatNoticeMetaRow
-        compact={compact}
-        fontScale={fontScale}
         icon='heart.fill'
         label='Charity donation'
-        labelColor={CHAT_NOTICE_ACCENTS.charity}
+        {...{ compact, fontScale, labelColor: CHAT_NOTICE_ACCENTS.charity }}
       />
       <ChatText style={textStyles.meta}>
         {displayName ? (
@@ -57,11 +55,7 @@ function CharityDonationNoticeComponent({
         )}
       </ChatText>
       <NoticeUserMessage
-        compact={compact}
-        disableAnimations={disableAnimations}
-        fontScale={fontScale}
-        message={message}
-        parsedMessage={parsedMessage}
+        {...{ compact, disableAnimations, fontScale, message, parsedMessage }}
       />
     </View>
   );

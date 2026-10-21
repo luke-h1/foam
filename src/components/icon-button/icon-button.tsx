@@ -12,14 +12,14 @@ import { Button } from '../button/button';
 import { IconButtonIcon, type IconType } from './icon-button-icon';
 
 interface IconButtonProps {
-  hitSlop?: number | Insets | undefined;
+  hitSlop?: number | Insets;
   icon: IconType;
   label: string;
-  loading?: boolean | undefined;
-  onLongPress?: (() => void) | undefined;
-  onPress?: (() => void) | undefined;
-  size?: Spacing | undefined;
-  style?: StyleProp<ViewStyle> | undefined;
+  loading?: boolean;
+  onLongPress?: () => void;
+  onPress?: () => void;
+  size?: Spacing;
+  style?: StyleProp<ViewStyle>;
 }
 
 export function IconButton({
@@ -34,14 +34,13 @@ export function IconButton({
 }: IconButtonProps) {
   return (
     <Button
-      disabled={loading}
       {...(hitSlop !== undefined ? { hitSlop } : {})}
-      label={label}
       style={[styles.button, getButtonSizeStyle(size), style]}
       {...(onLongPress ? { onLongPress } : {})}
       {...(onPress ? { onPress } : {})}
+      {...{ disabled: loading, label }}
     >
-      <IconButtonIcon icon={icon} loading={loading} size={size} />
+      <IconButtonIcon {...{ icon, loading, size }} />
     </Button>
   );
 }

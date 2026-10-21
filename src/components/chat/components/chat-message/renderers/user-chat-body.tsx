@@ -24,27 +24,27 @@ import type { ReplyFlags } from './types/reply-flags';
 
 interface UserChatBodyProps {
   badgeList: SanitisedBadgeSet[];
-  cachedSenderColor?: string | undefined;
-  onBadgePress?: ((badge: BadgePressData) => void) | undefined;
-  isAction?: boolean | undefined;
-  isHighlightedMessage?: boolean | undefined;
-  onReplyContextPress?: ((replyParentMessageId: string) => void) | undefined;
-  onUsernamePress?: (() => void) | undefined;
-  parentDisplayName?: string | undefined;
-  replyBody?: string | undefined;
+  cachedSenderColor?: string;
+  onBadgePress?: (badge: BadgePressData) => void;
+  isAction?: boolean;
+  isHighlightedMessage?: boolean;
+  onReplyContextPress?: (replyParentMessageId: string) => void;
+  onUsernamePress?: () => void;
+  parentDisplayName?: string;
+  replyBody?: string;
   replyFlags: ReplyFlags;
-  replyParentMessageId?: string | undefined;
-  roomId?: string | undefined;
-  timestamp?: string | undefined;
+  replyParentMessageId?: string;
+  roomId?: string;
+  timestamp?: string;
   /**
    * One object from the row. Do not spread it: object rest copies it on
    * every row render.
    */
   tokenRenderProps: ChatTokenRenderProps;
-  userId?: string | undefined;
-  userstate?: UserStateTags | undefined;
-  userstateColor?: string | undefined;
-  username?: string | undefined;
+  userId?: string;
+  userstate?: UserStateTags;
+  userstateColor?: string;
+  username?: string;
 }
 
 export function UserChatBody({
@@ -150,60 +150,68 @@ export function UserChatBody({
   return (
     <View style={styles.messageColumn}>
       <ChatRowMetaHeader
-        message={message}
-        onReplyContextPress={onReplyContextPress}
-        parentDisplayName={parentDisplayName}
-        rendererArgs={rendererArgs}
-        replyBody={replyBody}
-        replyFlags={replyFlags}
-        replyParentMessageId={replyParentMessageId}
+        {...{
+          message,
+          onReplyContextPress,
+          parentDisplayName,
+          rendererArgs,
+          replyBody,
+          replyFlags,
+          replyParentMessageId,
+        }}
       />
       {showChannelPointsRewardChrome && userstate ? (
         <ChannelPointsRewardMetaRow
-          compact={compact}
-          fontScale={fontScale}
-          isHighlightedMessage={isHighlightedMessage}
-          moderationNotice={moderationNotice}
-          noticeTags={rendererArgs.noticeTags}
-          roomId={roomId}
-          username={username}
-          userstate={userstate}
+          {...{
+            compact,
+            fontScale,
+            isHighlightedMessage,
+            moderationNotice,
+            noticeTags: rendererArgs.noticeTags,
+            roomId,
+            username,
+            userstate,
+          }}
         />
       ) : null}
       {rowFlowsInline ? (
         <InlineMessageLine
           {...rendererArgs}
-          badgeList={badgeList}
-          isAction={isAction}
-          message={message}
-          onBadgePress={onBadgePress}
-          onUsernamePress={onUsernamePress}
-          replyPlainMentionTarget={replyPlainMentionTarget}
-          showTimestamp={showTimestamp}
-          timestamp={timestamp}
-          textColor={actionColor}
-          username={username}
-          usernameColor={inlineUsernameColor}
+          {...{
+            badgeList,
+            isAction,
+            message,
+            onBadgePress,
+            onUsernamePress,
+            replyPlainMentionTarget,
+            showTimestamp,
+            timestamp,
+            textColor: actionColor,
+            username,
+            usernameColor: inlineUsernameColor,
+          }}
         />
       ) : (
         <StackedMessageLine
-          badgeList={badgeList}
-          bodyEmoteLineStyle={bodyEmoteLineStyle}
-          cachedSenderColor={cachedSenderColor}
-          isModerated={isModerated}
-          message={message}
-          moderationNotice={moderationNotice}
-          onBadgePress={onBadgePress}
-          onUsernamePress={onUsernamePress}
-          rendererArgs={rendererArgs}
-          replyPlainMentionTarget={replyPlainMentionTarget}
-          showTimestamp={showTimestamp}
-          textColor={actionColor}
-          textStyles={textStyles}
-          timestamp={timestamp}
-          userId={userId}
-          username={username}
-          userstateColor={userstateColor}
+          {...{
+            badgeList,
+            bodyEmoteLineStyle,
+            cachedSenderColor,
+            isModerated,
+            message,
+            moderationNotice,
+            onBadgePress,
+            onUsernamePress,
+            rendererArgs,
+            replyPlainMentionTarget,
+            showTimestamp,
+            textColor: actionColor,
+            textStyles,
+            timestamp,
+            userId,
+            username,
+            userstateColor,
+          }}
         />
       )}
     </View>

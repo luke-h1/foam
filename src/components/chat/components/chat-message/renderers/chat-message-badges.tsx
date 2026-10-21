@@ -7,11 +7,11 @@ import type { ChatFontScale } from '../util/chat-scale';
 import { ChatBadge } from './chat-badge';
 
 interface ChatMessageBadgesProps {
-  badges?: SanitisedBadgeSet[] | undefined;
+  badges?: SanitisedBadgeSet[];
   compact: boolean;
-  fontScale?: ChatFontScale | undefined;
-  moderationNotice?: unknown | undefined;
-  onBadgePress?: ((badge: SanitisedBadgeSet) => void) | undefined;
+  fontScale?: ChatFontScale;
+  moderationNotice?: unknown;
+  onBadgePress?: (badge: SanitisedBadgeSet) => void;
 }
 
 export function ChatMessageBadges({
@@ -38,11 +38,13 @@ export function ChatMessageBadges({
     renderedBadges.push(
       <ChatBadge
         key={`${renderedBadges.length}\u001f${normalizedBadge.provider}\u001f${normalizedBadge.set}\u001f${normalizedBadge.id}\u001f${normalizedBadge.url}`}
-        badge={normalizedBadge}
-        compact={compact}
-        fontScale={fontScale}
-        isModerated={isModerated}
-        onPress={onBadgePress}
+        {...{
+          badge: normalizedBadge,
+          compact,
+          fontScale,
+          isModerated,
+          onPress: onBadgePress,
+        }}
       />,
     );
   }

@@ -6,7 +6,7 @@ export interface RoomStateModeStatus {
    * Slow-mode seconds or followers-only minutes; undefined for plain on/off
    * modes and for followers-only with no minimum follow age.
    */
-  value?: number | undefined;
+  value?: number;
 }
 
 export interface RoomStateModeDefinition {

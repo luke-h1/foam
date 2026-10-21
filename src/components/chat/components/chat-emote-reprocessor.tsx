@@ -22,7 +22,7 @@ export const ChatEmoteReprocessor = memo(
     messages$: { peek: () => AnyChatMessageType[] };
     processedMessageIdsRef: RefObject<Set<string>>;
     reprocessKey: string;
-    userLogin?: string | null | undefined;
+    userLogin?: string | null;
   }) => {
     const channelEmoteData = useChannelEmoteDataForReprocess(channelId);
     const emojiStyle = usePreference('emojiStyle');

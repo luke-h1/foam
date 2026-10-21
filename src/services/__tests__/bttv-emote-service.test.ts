@@ -63,7 +63,6 @@ describe('bttvEmoteService', () => {
         creator: null,
         site: 'Global BTTV',
         provider: 'bttv',
-        flags: undefined,
       },
     ]);
   });

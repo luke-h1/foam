@@ -10,9 +10,9 @@ import {
 
 interface IconProps {
   name: BrandIconName;
-  size?: IconSize | undefined;
-  color?: string | undefined;
-  style?: ViewStyle | undefined;
+  size?: IconSize;
+  color?: string;
+  style?: ViewStyle;
 }
 
 export const BrandIcon = memo(
@@ -22,8 +22,8 @@ export const BrandIcon = memo(
 
     return (
       <IconComponent
-        color={color}
         style={[{ height, width }, style]}
+        {...{ color }}
         {...props}
       />
     );

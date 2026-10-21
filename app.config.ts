@@ -94,7 +94,7 @@ const sentryDist =
 const iosICloudContainerIdentifier = `iCloud.${appConfig.iosBundleIdentifier}`;
 
 const enableICloudEntitlements =
-  process.env['ENABLE_IOS_ICLOUD_ENTITLEMENTS'] === 'true';
+  process.env.ENABLE_IOS_ICLOUD_ENTITLEMENTS === 'true';
 
 const iosGoogleServicesFileExists = fs.existsSync(
   path.resolve(__dirname, appConfig.iosGoogleServicesFile),
@@ -269,10 +269,7 @@ const config: ExpoConfig = {
     EXPO_PUBLIC_SENTRY_DIST: sentryDist,
     MOCK_SERVER_URL: appConfig.mockServerUrl,
     ota: {
-      criticalIndex: Number.parseInt(
-        process.env['OTA_CRITICAL_INDEX'] ?? '0',
-        10,
-      ),
+      criticalIndex: Number.parseInt(process.env.OTA_CRITICAL_INDEX ?? '0', 10),
     },
     updates: {
       assetPatternsToBeBundled: ['**/*'],

@@ -52,8 +52,8 @@ interface UseChatRowRendererOptions {
   ) => void;
   user?:
     | {
-        display_name?: string | null | undefined;
-        login?: string | null | undefined;
+        display_name?: string | null;
+        login?: string | null;
       }
     | null
     | undefined;
@@ -275,22 +275,24 @@ export function useChatRowRenderer({
 
       return (
         <ChatRowItem
-          chatDensity={preferences.chatDensity}
-          channelId={channelId}
-          currentUsername={currentUsernameForMentions}
-          currentUsernameNormalized={currentUsernameNormalized}
-          customHighlights={customHighlights}
-          displayFlags={displayFlags}
-          getMentionColor={getMentionColor}
-          highlightedUserSet={highlightedUserSet}
-          index={index}
-          message={msg}
-          onBadgePress={onBadgePressRef.current}
-          onEmotePress={onEmotePressRef.current}
-          onMessageLongPress={onMessageLongPressRef.current}
-          onReplyContextPress={handleReplyContextPressRef.current}
-          onUsernamePress={onUsernamePressRef.current}
-          parseTextForEmotes={parseTextForEmotesRef.current}
+          {...{
+            chatDensity: preferences.chatDensity,
+            channelId,
+            currentUsername: currentUsernameForMentions,
+            currentUsernameNormalized,
+            customHighlights,
+            displayFlags,
+            getMentionColor,
+            highlightedUserSet,
+            index,
+            message: msg,
+            onBadgePress: onBadgePressRef.current,
+            onEmotePress: onEmotePressRef.current,
+            onMessageLongPress: onMessageLongPressRef.current,
+            onReplyContextPress: handleReplyContextPressRef.current,
+            onUsernamePress: onUsernamePressRef.current,
+            parseTextForEmotes: parseTextForEmotesRef.current,
+          }}
         />
       );
     },

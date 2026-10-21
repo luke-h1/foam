@@ -317,18 +317,18 @@ export const clearChannelResources = () => {
 
 export interface LoadChannelResourcesOptions {
   channelId: string;
-  forceRefresh?: boolean | undefined;
-  signal?: AbortSignal | undefined;
-  twitchUserId?: string | undefined;
+  forceRefresh?: boolean;
+  signal?: AbortSignal;
+  twitchUserId?: string;
 }
 
 type CachedRefreshArgs = {
   channelId: string;
   existingCache: ChannelCacheType;
-  existingGlobalCache: GlobalCacheType | undefined;
+  existingGlobalCache?: GlobalCacheType;
   plan: CachedChannelRefreshPlan;
-  signal?: AbortSignal | undefined;
-  twitchUserId?: string | undefined;
+  signal?: AbortSignal;
+  twitchUserId?: string;
 };
 
 /**
@@ -756,11 +756,13 @@ const loadChannelResourcesInternal = async (
         ? (existingCache?.badgesLastUpdated ?? 0)
         : now,
       ...emoteResourceSets,
-      twitchSubscriberEmotesUserId: twitchUserId ?? undefined,
       twitchSubscriberChannelProfiles:
         existingCache?.twitchSubscriberChannelProfiles ?? {},
       ...badgeResourceSets,
-      sevenTvEmoteSetId: sevenTvSetId === 'global' ? undefined : sevenTvSetId,
+      ...{
+        twitchSubscriberEmotesUserId: twitchUserId ?? undefined,
+        sevenTvEmoteSetId: sevenTvSetId === 'global' ? undefined : sevenTvSetId,
+      },
     };
 
     clearChannelPersonalEmotes(channelId);

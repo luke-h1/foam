@@ -2,7 +2,7 @@ import { memo } from 'react';
 import Svg, { Path, type SvgProps } from 'react-native-svg';
 
 type BttvIconProps = Omit<SvgProps, 'color'> & {
-  color?: string | undefined;
+  color?: string;
 };
 
 const BttvIconComponent: React.FC<BttvIconProps> = ({

@@ -15,9 +15,9 @@ import { useEnsureSevenTvCosmetics } from '../hooks/use-ensure-seven-tv-cosmetic
 import { PaintedUsername } from './chat-message/cosmetic-username/painted-username';
 
 interface UserCardHeaderProps {
-  fallbackColor?: string | undefined;
-  login?: string | undefined;
-  userId?: string | undefined;
+  fallbackColor?: string;
+  login?: string;
+  userId?: string;
   username: string;
 }
 
@@ -86,11 +86,13 @@ export function UserCardHeader({
         </View>
         <View style={styles.identityText}>
           <PaintedUsername
-            username={username}
-            userId={userId}
-            fallbackColor={fallbackColor ?? theme.color.text.dark}
             showColon={false}
-            usernameTextStyle={styles.displayName}
+            {...{
+              username,
+              userId,
+              fallbackColor: fallbackColor ?? theme.color.text.dark,
+              usernameTextStyle: styles.displayName,
+            }}
           />
           {showLogin ? (
             <Text

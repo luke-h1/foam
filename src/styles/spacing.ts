@@ -12,13 +12,13 @@ export type Spacing =
   | '6xl';
 
 export interface MarginProps {
-  m?: Spacing | number | undefined;
-  mb?: Spacing | number | undefined;
-  ml?: Spacing | number | undefined;
-  mr?: Spacing | number | undefined;
-  mt?: Spacing | number | undefined;
-  mx?: Spacing | number | undefined;
-  my?: Spacing | number | undefined;
+  m?: Spacing | number;
+  mb?: Spacing | number;
+  ml?: Spacing | number;
+  mr?: Spacing | number;
+  mt?: Spacing | number;
+  mx?: Spacing | number;
+  my?: Spacing | number;
 }
 
 export function resolveSpacingValue(

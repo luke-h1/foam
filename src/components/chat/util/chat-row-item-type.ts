@@ -7,7 +7,7 @@ import { hasSharedChannelPointsMessage } from './channel-points-shared-message';
 import { getChatRowSizeBucket } from './chat-row-size-bucket';
 
 export interface ChatRowItemTypeOptions {
-  showInlineReplyContext?: boolean | undefined;
+  showInlineReplyContext?: boolean;
 }
 
 function resolveBodyVariant(item: AnyChatMessageType): ChatBodyVariant {

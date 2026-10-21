@@ -243,39 +243,41 @@ export const StreamPlayer = memo(function StreamPlayer({
     >
       {showBehindThumbnail ? (
         <Image
-          source={posterUrl}
           contentFit='cover'
-          containerStyle={StyleSheet.absoluteFill}
-          style={styles.behindThumbnail}
+          {...{
+            source: posterUrl,
+            containerStyle: StyleSheet.absoluteFill,
+            style: styles.behindThumbnail,
+          }}
         />
       ) : null}
 
       {canMountWebView ? (
         <StreamPlayerWebView
-          allowsTwitchInteraction={allowsTwitchInteraction}
-          channel={channel}
-          clip={clip}
-          injectedJavaScript={injectedJavaScript}
-          injectedJavaScriptBeforeContentLoaded={
-            injectedJavaScriptBeforeContentLoaded
-          }
-          needsInitRef={needsInitRef}
           opaque={!showBehindThumbnail}
-          onError={onError}
-          onHttpError={handleWebViewHttpError}
-          onLoadFailed={noteWebViewLoadFailed}
-          onMessage={handleWebViewMessage}
-          onWebViewLoaded={handleWebViewLoaded}
-          remountWebView={remountEmbedWebView}
-          scheduleAuthCompletionReload={scheduleAuthCompletionReload}
-          source={webViewSource}
-          video={video}
-          webViewKey={webViewKey}
-          webViewRef={webViewRef}
+          {...{
+            allowsTwitchInteraction,
+            channel,
+            clip,
+            injectedJavaScript,
+            injectedJavaScriptBeforeContentLoaded,
+            needsInitRef,
+            onError,
+            onHttpError: handleWebViewHttpError,
+            onLoadFailed: noteWebViewLoadFailed,
+            onMessage: handleWebViewMessage,
+            onWebViewLoaded: handleWebViewLoaded,
+            remountWebView: remountEmbedWebView,
+            scheduleAuthCompletionReload,
+            source: webViewSource,
+            video,
+            webViewKey,
+            webViewRef,
+          }}
         />
       ) : null}
 
-      <StreamPlayerPoster posterUrl={posterUrl} visible={isPlayerLoading} />
+      <StreamPlayerPoster {...{ posterUrl, visible: isPlayerLoading }} />
 
       <StreamPlayerOverlayStack
         clip={clip}

@@ -2,17 +2,17 @@ import { generateRandomTwitchColor } from '@app/utils/chat/generate-random-twitc
 import { parseBadges } from '@app/utils/chat/parse-badges';
 
 export interface OptimisticSender {
-  id?: string | undefined;
-  login?: string | undefined;
-  display_name?: string | undefined;
+  id?: string;
+  login?: string;
+  display_name?: string;
 }
 
 export interface OptimisticReplyTarget {
-  color?: string | undefined;
+  color?: string;
   messageId: string;
   username: string;
   message: string;
-  replyParentUserLogin?: string | undefined;
+  replyParentUserLogin?: string;
 }
 
 export function createOptimisticUserState({
@@ -21,8 +21,8 @@ export function createOptimisticUserState({
   user,
 }: {
   currentUserState: Record<string, string>;
-  replyTo?: OptimisticReplyTarget | null | undefined;
-  user?: OptimisticSender | undefined;
+  replyTo?: OptimisticReplyTarget | null;
+  user?: OptimisticSender;
 }) {
   const badgeData = parseBadges(currentUserState['badges'] || '');
 

@@ -9,11 +9,7 @@ import { logger } from '@app/utils/logger';
  * Only the signed-in user's own cosmetics. Chatter fetching lives in
  * `store/chat/actions/user-cosmetics-fetch`.
  */
-export function useChatCosmetics({
-  userId,
-}: {
-  userId?: string | null | undefined;
-}) {
+export function useChatCosmetics({ userId }: { userId?: string | null }) {
   useEffect(() => {
     if (!userId || hasRenderableCosmetics(userId)) {
       return;

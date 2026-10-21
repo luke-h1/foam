@@ -16,14 +16,14 @@ import type { ChatTokenRenderProps } from './types/chat-token-render-props';
 
 interface InlineMessageLineProps extends ChatTokenRenderProps {
   badgeList: SanitisedBadgeSet[];
-  isAction?: boolean | undefined;
+  isAction?: boolean;
   message: InlineFlowToken[];
-  onBadgePress?: ((badge: BadgePressData) => void) | undefined;
-  onUsernamePress?: (() => void) | undefined;
+  onBadgePress?: (badge: BadgePressData) => void;
+  onUsernamePress?: () => void;
   showTimestamp: boolean;
-  timestamp?: string | undefined;
-  username?: string | undefined;
-  usernameColor?: string | undefined;
+  timestamp?: string;
+  username?: string;
+  usernameColor?: string;
 }
 
 export function InlineMessageLine({
@@ -64,10 +64,7 @@ export function InlineMessageLine({
           </ChatText>
         ) : null}
         <ChatMessageBadges
-          badges={badgeList}
-          compact={compact}
-          fontScale={fontScale}
-          onBadgePress={onBadgePress}
+          {...{ badges: badgeList, compact, fontScale, onBadgePress }}
         />
         {username ? (
           <ChatText
@@ -84,19 +81,21 @@ export function InlineMessageLine({
           </ChatText>
         ) : null}
         <InlineTokens
-          emoteLineStyle={emoteLineStyle}
-          compact={compact}
-          disableEmoteAnimations={disableEmoteAnimations}
-          effectiveHighlightedUserSet={effectiveHighlightedUserSet}
-          fontScale={fontScale}
-          getMentionColor={getMentionColor}
-          getTokenKey={getTokenKey}
-          onEmoteTouchStart={onEmoteTouchStart}
-          message={message}
-          normalisedCurrentUsername={normalisedCurrentUsername}
-          replyPlainMentionTarget={replyPlainMentionTarget}
-          emoteTargetSize={emoteTargetSize}
-          textColor={textColor}
+          {...{
+            emoteLineStyle,
+            compact,
+            disableEmoteAnimations,
+            effectiveHighlightedUserSet,
+            fontScale,
+            getMentionColor,
+            getTokenKey,
+            onEmoteTouchStart,
+            message,
+            normalisedCurrentUsername,
+            replyPlainMentionTarget,
+            emoteTargetSize,
+            textColor,
+          }}
         />
       </ChatText>
     </View>

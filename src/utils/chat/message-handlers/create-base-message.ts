@@ -40,7 +40,6 @@ export const createBaseMessage = ({
     parentDisplayName: tags['reply-parent-display-name'] || '',
     replyDisplayName: tags['reply-parent-user-login'] || '',
     replyBody: tags['reply-parent-msg-body'] || '',
-    parentColor: undefined,
     isChannelPointRedemption:
       Boolean(enrichedTags['custom-reward-id']) || isHighlightedMessage,
   };

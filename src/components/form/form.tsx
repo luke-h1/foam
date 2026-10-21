@@ -72,10 +72,10 @@ function FormItem({
   style,
   ref,
 }: Pick<ViewProps, 'children'> & {
-  onPress?: FormPressableProps['onPress'] | undefined;
-  onLongPress?: FormPressableProps['onLongPress'] | undefined;
-  style?: ViewStyle | undefined;
-  ref?: Ref<View> | undefined;
+  onPress?: FormPressableProps['onPress'];
+  onLongPress?: FormPressableProps['onLongPress'];
+  style?: ViewStyle;
+  ref?: Ref<View>;
 }) {
   const itemStyle: StyleProp<ViewStyle> = [
     styles.itemPadding,
@@ -111,10 +111,10 @@ function FormItem({
 
 type SystemImageCustomProps = {
   name: SymbolViewProps['name'];
-  color?: OpaqueColorValue | undefined;
-  size?: number | undefined;
-  weight?: SymbolWeight | undefined;
-  style?: StyleProp<ViewStyle> | undefined;
+  color?: OpaqueColorValue;
+  size?: number;
+  weight?: SymbolWeight;
+  style?: StyleProp<ViewStyle>;
 };
 
 type SystemImageProps = SymbolViewProps['name'] | SystemImageCustomProps;
@@ -123,11 +123,11 @@ export function Text({
   bold,
   ...props
 }: TextProps & {
-  hint?: ReactNode | undefined;
-  hintBoolean?: ReactNode | undefined;
-  systemImage?: SystemImageProps | undefined;
+  hint?: ReactNode;
+  hintBoolean?: ReactNode;
+  systemImage?: SystemImageProps;
 
-  bold?: boolean | undefined;
+  bold?: boolean;
 }) {
   const font: TextStyle = {
     ...FormFont.default,
@@ -234,9 +234,9 @@ function asSectionTextRow(
   // The row props come off a cloned element, so they are untyped here. The
   // `@ts-expect-error`s in `Section` cover the same gap.
   resolvedProps: {
-    hint?: ReactNode | undefined;
-    systemImage?: SystemImageProps | ReactNode | undefined;
-    style?: StyleProp<TextStyle> | undefined;
+    hint?: ReactNode;
+    systemImage?: SystemImageProps | ReactNode;
+    style?: StyleProp<TextStyle>;
     [key: string]: unknown;
   },
 ): ReactElement {
@@ -276,9 +276,9 @@ export function Section({
   footer,
   ...props
 }: ViewProps & {
-  title?: string | ReactNode | undefined;
-  titleHint?: string | ReactNode | undefined;
-  footer?: string | ReactNode | undefined;
+  title?: string | ReactNode;
+  titleHint?: string | ReactNode;
+  footer?: string | ReactNode;
 }) {
   const allChildren = flattenSectionChildren(children);
 
@@ -459,8 +459,8 @@ function SystemImageView({
   systemImage,
   style,
 }: {
-  systemImage?: SystemImageProps | ReactNode | undefined;
-  style?: StyleProp<TextStyle> | undefined;
+  systemImage?: SystemImageProps | ReactNode;
+  style?: StyleProp<TextStyle>;
 }) {
   if (!systemImage) {
     return null;

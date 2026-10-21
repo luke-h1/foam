@@ -60,12 +60,12 @@ const makeAuthContext = (
       expiresAt: Date.now() + 3_600_000,
     },
   },
+  user: undefined,
   loginWithTwitch,
   populateAuthState: jest.fn(),
   logout: jest.fn(),
   fetchAnonToken: jest.fn(),
   ready: true,
-  user: undefined,
   ...overrides,
 });
 

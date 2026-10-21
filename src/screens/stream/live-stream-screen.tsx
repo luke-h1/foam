@@ -283,29 +283,31 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     <View style={styles.contentContainer}>
       <Stack.Screen options={{ autoHideHomeIndicator: isLandscape }} />
       <LiveStreamVideoPane
-        animatedStyle={animatedVideoStyle}
-        canCreateClip={canCreateClip}
-        customPlayerEnabled={customPlayerEnabled}
-        displayName={displayName}
-        isChannelOffline={isChannelOffline}
-        isLandscape={isLandscape}
-        isStreamUnavailable={isStreamUnavailable}
-        onBackPress={handleBack}
-        onCreateClipPress={handleCreateClipPress}
-        onExitLandscape={handleExitLandscape}
-        onPlaybackLatencyChange={handlePlaybackLatencyChange}
-        onPlayerLoaded={handlePlayerLoaded}
         onRetry={() => void refetchStream()}
-        onSharePress={handleSharePress}
-        onSleepTimerPress={handleSleepTimerPress}
-        onVideoAreaPress={cycleLandscapeChatMode}
-        playerRef={streamPlayerRef}
-        posterUrl={posterUrl}
-        profileImageUrl={profileImageUrl}
-        resolvedChannelLogin={resolvedChannelLogin}
-        shouldRenderStreamPlayer={shouldRenderStreamPlayer}
-        sleepTimerActive={sleepTimer.isActive}
-        streamInfo={streamInfo}
+        {...{
+          animatedStyle: animatedVideoStyle,
+          canCreateClip,
+          customPlayerEnabled,
+          displayName,
+          isChannelOffline,
+          isLandscape,
+          isStreamUnavailable,
+          onBackPress: handleBack,
+          onCreateClipPress: handleCreateClipPress,
+          onExitLandscape: handleExitLandscape,
+          onPlaybackLatencyChange: handlePlaybackLatencyChange,
+          onPlayerLoaded: handlePlayerLoaded,
+          onSharePress: handleSharePress,
+          onSleepTimerPress: handleSleepTimerPress,
+          onVideoAreaPress: cycleLandscapeChatMode,
+          playerRef: streamPlayerRef,
+          posterUrl,
+          profileImageUrl,
+          resolvedChannelLogin,
+          shouldRenderStreamPlayer,
+          sleepTimerActive: sleepTimer.isActive,
+          streamInfo,
+        }}
       />
 
       {shouldRenderChatPanel ? (

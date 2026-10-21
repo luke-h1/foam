@@ -5,5 +5,5 @@ export interface PaginatedList<T> {
         cursor: string;
       }
     | undefined;
-  total?: number | undefined;
+  total?: number;
 }

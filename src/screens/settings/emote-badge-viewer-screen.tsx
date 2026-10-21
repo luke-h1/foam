@@ -410,12 +410,14 @@ export function EmoteBadgeViewerScreen() {
       </View>
 
       <ChannelField
-        channelLogin={channelLogin}
-        channelName={channel.channel?.display_name}
-        isLoading={channel.isLoading}
-        isChannelMissing={channel.isChannelMissing}
-        isError={channel.isError}
-        onChangeChannel={setChannelLogin}
+        {...{
+          channelLogin,
+          channelName: channel.channel?.display_name,
+          isLoading: channel.isLoading,
+          isChannelMissing: channel.isChannelMissing,
+          isError: channel.isError,
+          onChangeChannel: setChannelLogin,
+        }}
       />
 
       {tabIndex === 0 ? (

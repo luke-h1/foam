@@ -42,7 +42,6 @@ export const createSystemMessage = (
     parentDisplayName: '',
     replyDisplayName: '',
     replyBody: '',
-    parentColor: undefined,
     isSpecialNotice: true,
   };
 };

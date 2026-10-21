@@ -12,9 +12,9 @@ import type { ChatFontScale } from '../util/chat-scale';
 interface ChatBadgeProps {
   badge: SanitisedBadgeSet;
   compact: boolean;
-  fontScale?: ChatFontScale | undefined;
-  isModerated?: boolean | undefined;
-  onPress?: ((badge: SanitisedBadgeSet) => void) | undefined;
+  fontScale?: ChatFontScale;
+  isModerated?: boolean;
+  onPress?: (badge: SanitisedBadgeSet) => void;
 }
 
 /**
@@ -39,14 +39,16 @@ function ChatBadgeComponent({
 
   return (
     <ChatMessagePressable
-      accessibilityLabel={badge.title}
-      onPress={onPress ? () => onPress(badge) : undefined}
       style={[
         tint ? textStyles.badgeTintSlot : textStyles.badgeSlot,
         tint ? { backgroundColor: tint } : null,
         isModerated ? styles.moderatedBadge : null,
       ]}
       testID='chat-badge'
+      {...{
+        accessibilityLabel: badge.title,
+        onPress: onPress ? () => onPress(badge) : undefined,
+      }}
     >
       <ExpoImage
         source={badge.url}

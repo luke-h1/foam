@@ -17,9 +17,9 @@ interface MeasuredUsernameSize {
 interface PaintedUsernameWebViewProps {
   username: string;
   paint: PaintData;
-  fallbackColor?: string | undefined;
-  fontSize?: number | undefined;
-  lineHeight?: number | undefined;
+  fallbackColor?: string;
+  fontSize?: number;
+  lineHeight?: number;
 }
 
 /**

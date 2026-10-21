@@ -71,25 +71,26 @@ export function StreamPlayerOverlayStack({
 
       {showNativeControls && (
         <ControlsOverlay
-          isVisible={controlsVisible}
-          muted={muted}
-          opacity={controlsOpacity}
-          onBackPress={onBackPress}
-          onMutePress={onMutePress}
-          onPlayPausePress={onPlayPausePress}
-          onCreateClipPress={onCreateClipPress}
-          onPipPress={
-            PIP_ENABLED && Platform.OS === 'ios' && !clip
-              ? togglePictureInPicture
-              : undefined
-          }
-          onRefresh={onRefresh}
-          onSharePress={onSharePress}
-          onSleepTimerPress={onSleepTimerPress}
-          paused={paused}
-          pipActive={pipActive}
-          sleepTimerActive={sleepTimerActive}
-          streamInfo={streamInfo}
+          {...{
+            isVisible: controlsVisible,
+            muted,
+            opacity: controlsOpacity,
+            onBackPress,
+            onMutePress,
+            onPlayPausePress,
+            onCreateClipPress,
+            onPipPress:
+              PIP_ENABLED && Platform.OS === 'ios' && !clip
+                ? togglePictureInPicture
+                : undefined,
+            onRefresh,
+            onSharePress,
+            onSleepTimerPress,
+            paused,
+            pipActive,
+            sleepTimerActive,
+            streamInfo,
+          }}
         />
       )}
     </>

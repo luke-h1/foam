@@ -8,17 +8,20 @@ import type { MessageToken } from '@app/utils/chat/message-token';
 export interface ChatTokenRenderProps {
   compact: boolean;
   disableEmoteAnimations: boolean;
-  fontScale?: ChatFontScale | undefined;
-  effectiveHighlightedUserSet?: ReadonlySet<string> | undefined;
-  getMentionColor?: ((username: string) => string) | undefined;
+  /**
+   * Always set at the chat-row boundary (`fontScale ?? 'default'`).
+   */
+  fontScale: ChatFontScale;
+  effectiveHighlightedUserSet: ReadonlySet<string>;
+  getMentionColor?: (username: string) => string;
   getTokenKey: (token: MessageToken, index: number) => Key;
-  onEmoteTouchStart?: ((token: EmotePressData) => void) | undefined;
+  onEmoteTouchStart?: (token: EmotePressData) => void;
   message: MessageToken[];
-  moderationNotice?: unknown | undefined;
-  normalisedCurrentUsername?: string | undefined;
-  noticeTags?: UserNoticeTags | undefined;
-  parseTextForEmotes?: ((text: string) => MessageToken[]) | undefined;
-  replyPlainMentionTarget?: string | undefined;
-  emoteTargetSize?: number | undefined;
-  textColor?: string | undefined;
+  moderationNotice?: unknown;
+  normalisedCurrentUsername?: string;
+  noticeTags?: UserNoticeTags;
+  parseTextForEmotes?: (text: string) => MessageToken[];
+  replyPlainMentionTarget?: string;
+  emoteTargetSize?: number;
+  textColor?: string;
 }

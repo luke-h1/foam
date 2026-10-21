@@ -41,7 +41,7 @@ interface UseChatMessageProcessingOptions {
   show7TvEmotes: boolean;
   show7tvBadges: boolean;
   showChatGifs: boolean;
-  userLogin?: string | null | undefined;
+  userLogin?: string | null;
 }
 
 export function useChatMessageProcessing({

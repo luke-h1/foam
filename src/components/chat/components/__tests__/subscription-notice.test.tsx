@@ -602,7 +602,6 @@ describe('SubscriptionNotice', () => {
           displayName: 'NoMessageUser',
           plan: '2000',
           planName: 'Tier 1',
-          message: undefined,
         },
       };
 

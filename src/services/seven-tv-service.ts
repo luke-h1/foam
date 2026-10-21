@@ -224,6 +224,7 @@ function sanitiseV4EmoteSet(
       width,
       height,
       setMetadata,
+      actor: undefined,
     });
 
     if (sanitised) {
@@ -387,7 +388,7 @@ export const sevenTvService = {
   sendPresence: async (
     channelId: string,
     userId: string,
-    options: { passive: boolean; sessionId?: string | undefined },
+    options: { passive: boolean; sessionId?: string },
   ) => {
     return sevenTvApi.post(`/users/${userId}/presences`, {
       kind: 1,
@@ -462,7 +463,7 @@ export const sevenTvService = {
       const imgHeight = bestImage ? Math.round(bestImage.height / imgScale) : 0;
 
       const sanitised = buildSanitisedEmote({
-        site: '7TV Personal',
+        site: '7TV Personal' as const,
         id: emote.id,
         name: item.alias || emote.defaultName,
         originalName: emote.defaultName,
@@ -478,6 +479,7 @@ export const sevenTvService = {
         width: imgWidth,
         height: imgHeight,
         setMetadata,
+        actor: undefined,
       });
 
       if (sanitised) {

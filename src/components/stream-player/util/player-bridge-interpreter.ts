@@ -6,7 +6,7 @@ import type { PlayerMessage } from '../types';
  */
 export interface PlayerBridgeContext {
   autoplay: boolean;
-  channel?: string | undefined;
+  channel?: string;
   deferOverlayUntilUserUnmute: boolean;
   enhancedStabilityEnabled: boolean;
   lastPublishedLatencySeconds: number | null;

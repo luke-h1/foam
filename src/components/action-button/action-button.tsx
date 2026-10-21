@@ -20,12 +20,12 @@ export interface ActionButtonProps extends Pick<
   'onPress' | 'haptic'
 > {
   title: string;
-  variant?: ActionButtonVariant | undefined;
-  size?: ActionButtonSize | undefined;
-  icon?: SFSymbol | undefined;
-  loading?: boolean | undefined;
-  disabled?: boolean | undefined;
-  style?: StyleProp<ViewStyle> | undefined;
+  variant?: ActionButtonVariant;
+  size?: ActionButtonSize;
+  icon?: SFSymbol;
+  loading?: boolean;
+  disabled?: boolean;
+  style?: StyleProp<ViewStyle>;
 }
 
 const variantColors = {
@@ -60,9 +60,7 @@ export function ActionButton({
   return (
     <Button
       label={title}
-      haptic={haptic}
       disabled={isInactive}
-      onPress={onPress}
       accessibilityState={{ disabled: isInactive, busy: loading }}
       style={[
         styles.base,
@@ -71,6 +69,7 @@ export function ActionButton({
         disabled ? styles.disabled : null,
         style,
       ]}
+      {...{ haptic, onPress }}
     >
       <View style={[styles.content, loading ? styles.hidden : null]}>
         {icon ? (

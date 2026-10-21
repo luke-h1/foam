@@ -37,12 +37,10 @@ function renderMessagePart(messagePart: MessageToken, occurrence: number) {
     case 'emote':
       return (
         <Image
-          key={key}
           trackLoadContext='chat.subscription-notice-emote'
-          source={messagePart.url}
           cacheVariant='emote'
-          style={styles.emote}
           transition={0}
+          {...{ key, source: messagePart.url, style: styles.emote }}
         />
       );
     default:
@@ -60,8 +58,8 @@ interface SubscriptionNoticeProps {
     | 'giftpaidupgrade'
     | 'primepaidupgrade'
   >;
-  notice_tags?: UserNoticeTags | undefined;
-  parsedMessage?: MessageToken[] | undefined;
+  notice_tags?: UserNoticeTags;
+  parsedMessage?: MessageToken[];
 }
 
 /**

@@ -24,14 +24,14 @@ export type { BottomSheetHandle };
 export type SnapPoint = { fraction: number } | { height: number } | 'full';
 
 type BottomSheetProps = PropsWithChildren<{
-  backgroundColor?: string | undefined;
-  enableFixedSnapPoints?: boolean | undefined;
+  backgroundColor?: string;
+  enableFixedSnapPoints?: boolean;
   isPresented: boolean;
   onDismiss: () => void;
-  ref?: Ref<BottomSheetHandle> | undefined;
-  showDragIndicator?: boolean | undefined;
-  snapPoints?: SnapPoint[] | undefined;
-  testID?: string | undefined;
+  ref?: Ref<BottomSheetHandle>;
+  showDragIndicator?: boolean;
+  snapPoints?: SnapPoint[];
+  testID?: string;
 }>;
 
 /**

@@ -24,15 +24,15 @@ const supportsContentUnavailableView =
 
 interface EmptyStateProps {
   heading: string;
-  content?: string | undefined;
-  iconName?: SFSymbol | undefined;
+  content?: string;
+  iconName?: SFSymbol;
   /**
    * The label of the one action that fills or retries this state. Leave it
    * out when there is nothing useful to do.
    */
-  button?: string | undefined;
-  buttonOnPress?: (() => void) | undefined;
-  style?: StyleProp<ViewStyle> | undefined;
+  button?: string;
+  buttonOnPress?: () => void;
+  style?: StyleProp<ViewStyle>;
 }
 
 /**

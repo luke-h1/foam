@@ -94,13 +94,15 @@ export function ChatMessageToken({
 
       return (
         <EmoteToken
-          disableAnimations={disableEmoteAnimations}
-          isModerated={isModerated}
-          key={getTokenKey(token, index)}
-          token={token}
-          onEmoteTouchStart={onEmoteTouchStart}
-          shouldOverlayPrevious={shouldOverlayPrevious}
-          targetSize={resolvedEmoteSize}
+          {...{
+            disableAnimations: disableEmoteAnimations,
+            isModerated,
+            key: getTokenKey(token, index),
+            token,
+            onEmoteTouchStart,
+            shouldOverlayPrevious,
+            targetSize: resolvedEmoteSize,
+          }}
         />
       );
     }
@@ -120,16 +122,18 @@ export function ChatMessageToken({
     case 'mention': {
       return (
         <MentionToken
-          key={getTokenKey(token, index)}
-          content={getMessageTokenText(token)}
-          baseTextStyle={mentionBaseTextStyle}
-          compact={compact}
-          fontScale={fontScale}
-          isModerated={isModerated}
-          getMentionColor={getMentionColor}
-          effectiveHighlightedUserSet={effectiveHighlightedUserSet}
-          normalisedCurrentUsername={normalisedCurrentUsername}
-          replyPlainMentionTarget={replyPlainMentionTarget}
+          {...{
+            key: getTokenKey(token, index),
+            content: getMessageTokenText(token),
+            baseTextStyle: mentionBaseTextStyle,
+            compact,
+            fontScale,
+            isModerated,
+            getMentionColor,
+            effectiveHighlightedUserSet,
+            normalisedCurrentUsername,
+            replyPlainMentionTarget,
+          }}
         />
       );
     }

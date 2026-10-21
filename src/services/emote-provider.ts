@@ -17,7 +17,7 @@ interface HostedEmoteSourceBase {
   name: string;
   creator: string | null;
   emoteLink: string;
-  originalName?: string | undefined;
+  originalName?: string;
   animated: EmoteImageVariantSet;
   static: EmoteImageVariantSet;
 }
@@ -35,7 +35,7 @@ export interface FfzEmoteSource extends HostedEmoteSourceBase {
 
 export interface TwitchEmoteSource extends HostedEmoteSourceBase {
   site: TwitchSanitisedEmote['site'];
-  ownerId?: string | undefined;
+  ownerId?: string;
 }
 
 /**
@@ -49,8 +49,8 @@ export interface SevenTvEmoteSource {
   originalName: string;
   creator: string | null;
   url: string;
-  staticUrl: string | undefined;
-  imageVariants: EmoteImageVariants | undefined;
+  staticUrl?: string;
+  imageVariants?: EmoteImageVariants;
   flags: number;
   frameCount: number;
   format: string;
@@ -59,7 +59,7 @@ export interface SevenTvEmoteSource {
   width: number;
   height: number;
   setMetadata: SevenTvEmoteSetMetadata;
-  actor?: StvUser | undefined;
+  actor?: StvUser;
 }
 
 export type EmoteProviderSource =
@@ -102,12 +102,10 @@ export function buildSevenTvSanitisedEmote(
     return null;
   }
 
-  return {
+  const result: SevenTvSanitisedEmote = {
     name: source.name,
     id: source.id,
     url: source.url,
-    static_url: source.staticUrl,
-    image_variants: source.imageVariants,
     flags: source.flags,
     original_name: source.originalName,
     creator: source.creator,
@@ -121,8 +119,21 @@ export function buildSevenTvSanitisedEmote(
     width: source.width,
     height: source.height,
     set_metadata: source.setMetadata,
-    actor: source.actor,
   };
+
+  if (source.staticUrl !== undefined) {
+    result.static_url = source.staticUrl;
+  }
+
+  if (source.imageVariants !== undefined) {
+    result.image_variants = source.imageVariants;
+  }
+
+  if (source.actor !== undefined) {
+    result.actor = source.actor;
+  }
+
+  return result;
 }
 
 export function buildSanitisedEmote(
@@ -165,7 +176,7 @@ export function buildSanitisedEmote(
       original_name: source.originalName ?? 'UNKNOWN',
       creator: source.creator,
       site: source.site,
-      provider: 'bttv',
+      provider: 'bttv' as const,
       flags: source.zeroWidth ? 256 : undefined,
       zero_width: source.zeroWidth || undefined,
     };
@@ -182,7 +193,7 @@ export function buildSanitisedEmote(
       original_name: source.originalName ?? 'UNKNOWN',
       creator: source.creator,
       site: source.site,
-      provider: 'ffz',
+      provider: 'ffz' as const,
       width: source.width,
       height: source.height,
       aspect_ratio: source.height > 0 ? source.width / source.height : 1,
@@ -199,7 +210,7 @@ export function buildSanitisedEmote(
     original_name: source.originalName ?? 'UNKNOWN',
     creator: source.creator,
     site: source.site,
-    provider: 'twitch',
+    provider: 'twitch' as const,
     owner_id: source.ownerId,
   };
 }

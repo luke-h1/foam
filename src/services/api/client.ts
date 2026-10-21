@@ -3,7 +3,6 @@ import { fetch } from 'expo/fetch';
 import { deriveFromResponseOnWorklet } from '@app/lib/off-thread-json/derive-from-response-on-worklet';
 import { parseJsonOnWorklet } from '@app/lib/off-thread-json/parse-json-on-worklet';
 import { type MonitoringErrorName, startSpanAsync } from '@app/lib/sentry';
-import { omitUndefined } from '@app/types/eopt';
 import { type AllowedPrefix, logger } from '@app/utils/logger';
 
 import {
@@ -57,29 +56,29 @@ type QueryParamValue =
   | readonly (string | number | boolean)[];
 
 interface RequestOptions {
-  params?: Record<string, QueryParamValue> | undefined;
-  headers?: Record<string, string> | undefined;
+  params?: Record<string, QueryParamValue>;
+  headers?: Record<string, string>;
 }
 
 interface ClientOptions {
   baseURL: string;
-  headers?: Record<string, string> | undefined;
-  logPrefix?: AllowedPrefix | undefined;
+  headers?: Record<string, string>;
+  logPrefix?: AllowedPrefix;
   /**
    * Per-request timeout in ms. Without one, a hung request never rejects and
    * the query stays pending forever.
    */
-  timeout?: number | undefined;
+  timeout?: number;
   /**
    * When true, requests wait for the first auth token (bounded by
    * AUTH_READY_TIMEOUT_MS) instead of firing token-less on cold start.
    */
-  requiresAuth?: boolean | undefined;
+  requiresAuth?: boolean;
   /**
    * Called once with the error body on a 401; return true if the auth state
    * was repaired so the request replays once.
    */
-  onUnauthorized?: ((body: string) => Promise<boolean>) | undefined;
+  onUnauthorized?: (body: string) => Promise<boolean>;
 }
 
 const DEFAULT_TIMEOUT_MS = 10_000;
@@ -206,8 +205,8 @@ export function createApiClient({
     method: string,
     path: string,
     options: RequestOptions & {
-      data?: unknown | undefined;
-      derive?: ((responseText: string) => T) | undefined;
+      data?: unknown;
+      derive?: (responseText: string) => T;
     } = {},
     isRetry = false,
   ): Promise<T> {
@@ -288,15 +287,12 @@ export function createApiClient({
         `${method} ${String(requestContext.provider ?? 'unknown')}`,
         'http.client',
         () =>
-          fetch(
-            url.toString(),
-            omitUndefined({
-              method,
-              headers,
-              body: data !== undefined ? JSON.stringify(data) : undefined,
-              signal: controller.signal,
-            }),
-          ),
+          fetch(url.toString(), {
+            method,
+            headers,
+            body: data !== undefined ? JSON.stringify(data) : undefined,
+            signal: controller.signal,
+          }),
         {
           provider: String(requestContext.provider ?? 'unknown'),
           'server.address': String(requestContext.host ?? url.host),

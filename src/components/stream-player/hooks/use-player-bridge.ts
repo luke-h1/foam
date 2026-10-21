@@ -45,18 +45,18 @@ interface UsePlayerBridgeOptions extends Pick<
   | 'onReady'
 > {
   autoplay: boolean;
-  channel?: string | undefined;
-  clip?: string | undefined;
+  channel?: string;
+  clip?: string;
   contentKind: PlayerContentKind;
   deferOverlayUntilUserUnmute: boolean;
   enhancedStabilityEnabled: boolean;
   forceRefresh: () => void;
   initialMuted: boolean;
-  ref?: Ref<StreamPlayerRef> | undefined;
+  ref?: Ref<StreamPlayerRef>;
   runJavaScript: (script: string) => void;
   scheduleAuthCompletionReload: () => void;
   sourceKey: string;
-  video?: string | undefined;
+  video?: string;
   webViewKey: number;
 }
 

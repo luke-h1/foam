@@ -76,10 +76,10 @@ interface EnrichMessageSetOptions {
   channelId: string;
   emoteData: ChatEmoteData;
   messages: (AnyChatMessageType | undefined)[];
-  processedMessageIds?: Set<string> | undefined;
+  processedMessageIds?: Set<string>;
   show7TvEmotes: boolean;
-  showChatGifs?: boolean | undefined;
-  userLogin?: string | null | undefined;
+  showChatGifs?: boolean;
+  userLogin?: string | null;
 }
 
 /**
@@ -219,8 +219,8 @@ interface ResolveVisibleMessageUpdateOptions {
   channelId: string;
   message: AnyChatMessageType;
   show7TvEmotes: boolean;
-  showChatGifs?: boolean | undefined;
-  userLogin?: string | null | undefined;
+  showChatGifs?: boolean;
+  userLogin?: string | null;
 }
 
 /**
@@ -458,8 +458,8 @@ interface ResolveStoredMessageTokensOptions {
   show7TvEmotes: boolean;
   showChatGifs: boolean;
   tokens: MessageToken[];
-  userId: string | undefined;
-  userLogin?: string | null | undefined;
+  userId?: string;
+  userLogin?: string | null;
   userstate: UserStateTags;
 }
 

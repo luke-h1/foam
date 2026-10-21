@@ -122,7 +122,7 @@ function ingestParts(text: string): MessageToken[] {
  */
 function partIdentities(
   tokens: MessageToken[],
-): { type: string; id?: string | undefined }[] {
+): { type: string; id?: string }[] {
   return tokens.map(token => ({
     type: token.type,
     id: 'id' in token ? token.id : undefined,

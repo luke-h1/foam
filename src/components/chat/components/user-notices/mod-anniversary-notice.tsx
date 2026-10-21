@@ -14,10 +14,10 @@ import { NoticeUserMessage } from './notice-user-message';
 import { splitNoticeSubject } from './util/notice-sentence';
 
 interface ModAnniversaryNoticeProps {
-  compact?: boolean | undefined;
-  disableAnimations?: boolean | undefined;
-  fontScale?: ChatFontScale | undefined;
-  parsedMessage?: MessageToken[] | undefined;
+  compact?: boolean;
+  disableAnimations?: boolean;
+  fontScale?: ChatFontScale;
+  parsedMessage?: MessageToken[];
   token: MessageToken<'modiversary'>;
 }
 
@@ -47,12 +47,14 @@ function ModAnniversaryNoticeComponent({
   return (
     <View style={styles.messageColumn}>
       <ChatNoticeMetaRow
-        compact={compact}
-        fontScale={fontScale}
         icon='shield.fill'
         label='Mod anniversary'
-        labelColor={CHAT_NOTICE_ACCENTS.modAnniversary}
-        labelStyle={styles.modAnniversaryMetaText}
+        {...{
+          compact,
+          fontScale,
+          labelColor: CHAT_NOTICE_ACCENTS.modAnniversary,
+          labelStyle: styles.modAnniversaryMetaText,
+        }}
       />
       {systemMsg ? (
         <ChatText style={textStyles.meta}>
@@ -69,11 +71,13 @@ function ModAnniversaryNoticeComponent({
         </ChatText>
       ) : null}
       <NoticeUserMessage
-        compact={compact}
-        disableAnimations={disableAnimations}
-        fontScale={fontScale}
-        message={content}
-        parsedMessage={parsedMessage}
+        {...{
+          compact,
+          disableAnimations,
+          fontScale,
+          message: content,
+          parsedMessage,
+        }}
       />
     </View>
   );

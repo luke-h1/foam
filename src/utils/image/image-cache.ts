@@ -18,18 +18,18 @@ const EVICTION_TARGET_RATIO = 0.9;
 const DOWNLOAD_CONCURRENCY = 4;
 
 export type CacheImageOptions = {
-  signal?: AbortSignal | undefined;
-  variant?: string | undefined;
+  signal?: AbortSignal;
+  variant?: string;
 };
 
 export interface CachedImageInfo {
   uri: string;
   name: string;
   size: number;
-  key?: string | undefined;
-  lastAccessed?: number | undefined;
-  sourceUrl?: string | undefined;
-  variant?: string | undefined;
+  key?: string;
+  lastAccessed?: number;
+  sourceUrl?: string;
+  variant?: string;
 }
 
 type CacheRecord = {
@@ -39,7 +39,7 @@ type CacheRecord = {
   size: number;
   uri: string;
   sourceUrl: string;
-  variant?: string | undefined;
+  variant?: string;
 };
 
 type DownloadTask = {

@@ -18,21 +18,21 @@ import { WrappedTokens } from './wrapped-tokens';
 interface StackedMessageLineProps {
   badgeList: SanitisedBadgeSet[];
   bodyEmoteLineStyle: StyleProp<TextStyle>;
-  cachedSenderColor?: string | undefined;
+  cachedSenderColor?: string;
   isModerated: boolean;
   message: MessageToken[];
   moderationNotice: ChatTokenRenderProps['moderationNotice'];
-  onBadgePress?: ((badge: BadgePressData) => void) | undefined;
-  onUsernamePress?: (() => void) | undefined;
+  onBadgePress?: (badge: BadgePressData) => void;
+  onUsernamePress?: () => void;
   rendererArgs: Omit<ChatTokenRenderProps, 'message'>;
   replyPlainMentionTarget: string | undefined;
   showTimestamp: boolean;
   textColor: string | undefined;
   textStyles: ReturnType<typeof getChatTextStyles>;
   timestamp: string | undefined;
-  userId?: string | undefined;
-  username?: string | undefined;
-  userstateColor?: string | undefined;
+  userId?: string;
+  username?: string;
+  userstateColor?: string;
 }
 
 /**
@@ -83,25 +83,29 @@ export function StackedMessageLine({
         </ChatText>
       ) : null}
       <ChatMessageBadges
-        badges={badgeList}
-        compact={compact}
-        fontScale={fontScale}
-        moderationNotice={moderationNotice}
-        onBadgePress={onBadgePress}
+        {...{
+          badges: badgeList,
+          compact,
+          fontScale,
+          moderationNotice,
+          onBadgePress,
+        }}
       />
       {username ? (
         <View
           style={moderationNotice ? styles.moderatedUsernameContainer : null}
         >
           <ChatRowUsername
-            cachedSenderColor={cachedSenderColor}
-            compact={compact}
-            fontScale={fontScale}
-            isModerated={Boolean(moderationNotice)}
-            onUsernamePress={onUsernamePress}
-            userId={userId}
-            userstateColor={userstateColor}
-            username={username}
+            {...{
+              cachedSenderColor,
+              compact,
+              fontScale,
+              isModerated: Boolean(moderationNotice),
+              onUsernamePress,
+              userId,
+              userstateColor,
+              username,
+            }}
           />
         </View>
       ) : null}
@@ -109,19 +113,19 @@ export function StackedMessageLine({
         <ChatText style={[textStyles.body, bodyEmoteLineStyle]}>
           <InlineTokens
             {...rendererArgs}
-            emoteLineStyle={bodyEmoteLineStyle}
-            message={message}
-            replyPlainMentionTarget={replyPlainMentionTarget}
-            textColor={textColor}
+            {...{
+              emoteLineStyle: bodyEmoteLineStyle,
+              message,
+              replyPlainMentionTarget,
+              textColor,
+            }}
           />
         </ChatText>
       ) : (
         <WrappedTokens
           mode='message'
-          message={message}
-          replyPlainMentionTarget={replyPlainMentionTarget}
-          textColor={textColor}
           {...rendererArgs}
+          {...{ message, replyPlainMentionTarget, textColor }}
         />
       )}
     </View>

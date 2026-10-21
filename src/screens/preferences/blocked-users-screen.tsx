@@ -196,7 +196,7 @@ function BlockedUsersSectionHeader({ count }: BlockedUsersSectionHeaderProps) {
 }
 
 interface BlockedUsersListProps {
-  data?: UserBlockList[] | undefined;
+  data?: UserBlockList[];
   isLoading: boolean;
   isError: boolean;
   onRefresh: () => Promise<void>;
@@ -471,12 +471,14 @@ export function BlockedUsersScreen() {
   return (
     <View style={styles.container}>
       <BlockedUsersList
-        data={data?.data}
-        isLoading={isLoading}
-        isError={isError}
-        onRefresh={onRefresh}
-        onUnblock={handleUnblockRequest}
-        onUnblockDirect={unblockUser}
+        {...{
+          data: data?.data,
+          isLoading,
+          isError,
+          onRefresh,
+          onUnblock: handleUnblockRequest,
+          onUnblockDirect: unblockUser,
+        }}
       />
     </View>
   );

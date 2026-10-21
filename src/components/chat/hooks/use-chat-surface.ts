@@ -47,7 +47,7 @@ interface UseChatSurfaceOptions {
   showOnlyMentions: boolean;
   toggleHighlightedUser: (username?: string) => void;
   twitchConnectionState: ReadyState;
-  user?: UserInfoResponse | undefined;
+  user?: UserInfoResponse;
 }
 
 export function useChatSurface({

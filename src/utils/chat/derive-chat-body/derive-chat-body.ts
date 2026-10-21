@@ -22,10 +22,10 @@ export interface DeriveChatBodyFlags {
    * Already normalised by `normaliseChatUsername`, so it compares directly
    * against `mentionLogins`.
    */
-  currentUsername?: string | undefined;
-  isAnnouncement?: boolean | undefined;
-  isTwitchSystemNotice?: boolean | undefined;
-  sender?: string | undefined;
+  currentUsername?: string;
+  isAnnouncement?: boolean;
+  isTwitchSystemNotice?: boolean;
+  sender?: string;
 }
 
 function resolveChatBodyVariant(

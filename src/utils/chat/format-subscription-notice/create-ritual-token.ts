@@ -11,7 +11,7 @@ export function createRitualPart(
     getTagValue(tags, 'display-name') || getTagValue(tags, 'login') || '';
 
   return {
-    type: 'ritual',
+    type: 'ritual' as const,
     displayName,
     ritualName: getTagValue(tags, 'msg-param-ritual-name'),
     systemMsg: withNoticeSubject(getTagValue(tags, 'system-msg'), displayName),

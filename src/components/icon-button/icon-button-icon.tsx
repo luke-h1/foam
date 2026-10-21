@@ -5,9 +5,9 @@ import { resolveSpacingValue, type Spacing } from '@app/styles/spacing';
 import { theme } from '@app/styles/themes';
 
 type IconSymbolDescriptor = {
-  color?: string | undefined;
+  color?: string;
   name: SymbolViewProps['name'];
-  size?: number | undefined;
+  size?: number;
   type: 'symbol';
 };
 
@@ -23,8 +23,8 @@ export function IconButtonIcon({
   size = 'md',
 }: {
   icon: IconType;
-  loading?: boolean | undefined;
-  size?: Spacing | undefined;
+  loading?: boolean;
+  size?: Spacing;
 }) {
   const resolvedSize = size ?? 'md';
   const fallbackSize = resolveSpacingValue(theme, resolvedSize);

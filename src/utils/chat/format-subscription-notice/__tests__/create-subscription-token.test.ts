@@ -25,7 +25,6 @@ describe('createSubscriptionPart', () => {
       subscriptionEvent: {
         msgId: 'sub',
         displayName: 'Viewer',
-        message: undefined,
         plan: '1000',
         planName: 'Tier 1',
         months: 3,
@@ -80,7 +79,6 @@ describe('createSubscriptionPart', () => {
       subscriptionEvent: {
         msgId: 'subgift',
         displayName: 'Gifter',
-        message: undefined,
         plan: '1000',
         planName: 'Tier 1',
         recipientDisplayName: 'Recipient',
@@ -104,7 +102,6 @@ describe('createSubscriptionPart', () => {
       subscriptionEvent: {
         msgId: 'primepaidupgrade',
         displayName: 'Viewer',
-        message: undefined,
         plan: 'Prime',
         planName: 'Prime',
         months: 6,
@@ -125,11 +122,9 @@ describe('createSubscriptionPart', () => {
       subscriptionEvent: {
         msgId: 'resub',
         displayName: 'ResubUser',
-        message: undefined,
         plan: '1000',
         planName: 'Tier 1',
         months: 0,
-        streakMonths: undefined,
         shouldShareStreak: false,
       },
     });

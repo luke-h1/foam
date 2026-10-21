@@ -28,7 +28,6 @@
     "noUnusedLocals": true,
     "noPropertyAccessFromIndexSignature": true,
     "verbatimModuleSyntax": true,
-    "exactOptionalPropertyTypes": true,
     "erasableSyntaxOnly": true,
     "skipLibCheck": true,
     "jsx": "react-jsx",
@@ -42,7 +41,8 @@
       "react-native-pulsar": [
         "./node_modules/react-native-pulsar/lib/typescript/src/index.d.ts"
       ]
-    }
+    },
+    "exactOptionalPropertyTypes": false
   },
   "include": [
     "assets",

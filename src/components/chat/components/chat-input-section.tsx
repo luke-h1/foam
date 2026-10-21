@@ -107,13 +107,15 @@ export const ChatInputSection = memo(
                   Replying to{' '}
                 </Text>
                 <PaintedUsername
-                  username={replyTo.username}
-                  userId={replyTo.userId}
                   showColon={false}
-                  usernameTextStyle={styles.replyPaintedUsername}
-                  fallbackColor={
-                    replyTo.color ? lightenColor(replyTo.color) : undefined
-                  }
+                  {...{
+                    username: replyTo.username,
+                    userId: replyTo.userId,
+                    usernameTextStyle: styles.replyPaintedUsername,
+                    fallbackColor: replyTo.color
+                      ? lightenColor(replyTo.color)
+                      : undefined,
+                  }}
                 />
               </View>
               <ReplyPreviewMessage replyTo={replyTo} />
@@ -147,19 +149,22 @@ export const ChatInputSection = memo(
             <View style={styles.inputRow}>
               <View style={styles.inputContainer}>
                 <ChatComposer
-                  ref={inputRef}
-                  onChangeText={onChangeText}
-                  onSubmit={onSubmit}
-                  onPressAdd={onOpenEmoteSheet}
-                  onAttachImage={isAuthenticated ? onAttachImage : undefined}
-                  onOpenSettings={onOpenSettingsSheet}
-                  isUploadingImage={isUploadingImage}
-                  placeholder={inputPlaceholder}
                   editable
-                  canSend={canSend}
-                  // The send path prepends `@user ` for a reply.
-                  reservedCharacters={replyTo ? replyTo.username.length + 2 : 0}
                   prioritizeChannelEmotes
+                  {...{
+                    ref: inputRef,
+                    onChangeText,
+                    onSubmit,
+                    onPressAdd: onOpenEmoteSheet,
+                    onAttachImage: isAuthenticated ? onAttachImage : undefined,
+                    onOpenSettings: onOpenSettingsSheet,
+                    isUploadingImage,
+                    placeholder: inputPlaceholder,
+                    canSend,
+                    reservedCharacters: replyTo
+                      ? replyTo.username.length + 2
+                      : 0,
+                  }}
                 />
               </View>
             </View>

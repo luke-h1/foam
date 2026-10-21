@@ -24,12 +24,12 @@ export function createAuthContextValue(
 ): AuthContextState {
   return {
     authState: undefined,
+    user: undefined,
     fetchAnonToken: jest.fn(),
     loginWithTwitch: jest.fn(),
     logout: jest.fn(),
     populateAuthState: jest.fn(),
     ready: true,
-    user: undefined,
     ...overrides,
   };
 }

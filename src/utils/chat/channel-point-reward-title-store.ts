@@ -77,7 +77,7 @@ export function cacheChannelPointRewardTitle(
 
 export function resolveChannelPointRewardTitle(options: {
   tags: ChannelPointsRewardTags | ChannelPointsRewardTagSource;
-  broadcasterId?: string | undefined;
+  broadcasterId?: string;
 }): string | undefined {
   const fromTags = channelPointsRewardTitleFromTags(options.tags);
 

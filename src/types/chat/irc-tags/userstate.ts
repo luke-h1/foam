@@ -1,51 +1,49 @@
-import type { EoptOptional } from '@app/types/eopt';
-
 export interface UserStateTags {
-  'display-name'?: EoptOptional<string>;
-  login?: EoptOptional<string>;
-  username?: EoptOptional<string>;
-  'user-id'?: EoptOptional<string>;
-  id?: EoptOptional<string>;
-  color?: EoptOptional<string>;
+  'display-name'?: string;
+  login?: string;
+  username?: string;
+  'user-id'?: string;
+  id?: string;
+  color?: string;
 
-  badges?: EoptOptional<{
-    broadcaster?: EoptOptional<string>;
-    moderator?: EoptOptional<string>;
-    subscriber?: EoptOptional<string>;
-    premium?: EoptOptional<string>;
-    partner?: EoptOptional<string>;
-    vip?: EoptOptional<string>;
-    'bits-leader'?: EoptOptional<string>;
-    bits?: EoptOptional<string>;
+  badges?: {
+    broadcaster?: string;
+    moderator?: string;
+    subscriber?: string;
+    premium?: string;
+    partner?: string;
+    vip?: string;
+    'bits-leader'?: string;
+    bits?: string;
     [key: string]: string | undefined;
-  }>;
-  'badges-raw'?: EoptOptional<string>;
-  'source-badge-info'?: EoptOptional<string>;
-  'source-badges'?: EoptOptional<string>;
-  'source-id'?: EoptOptional<string>;
-  'source-msg-id'?: EoptOptional<string>;
-  'source-room-id'?: EoptOptional<string>;
-  'source-only'?: EoptOptional<string>;
-  'user-type'?: EoptOptional<'' | 'admin' | 'global_mod' | 'staff'>;
-  mod?: EoptOptional<string>;
-  subscriber?: EoptOptional<string>;
-  turbo?: EoptOptional<string>;
-  bits?: EoptOptional<string>;
-  emotes?: EoptOptional<string>;
+  };
+  'badges-raw'?: string;
+  'source-badge-info'?: string;
+  'source-badges'?: string;
+  'source-id'?: string;
+  'source-msg-id'?: string;
+  'source-room-id'?: string;
+  'source-only'?: string;
+  'user-type'?: '' | 'admin' | 'global_mod' | 'staff';
+  mod?: string;
+  subscriber?: string;
+  turbo?: string;
+  bits?: string;
+  emotes?: string;
   /**
    * Comma-separated GIF spans: `start-end|gif_id|url`. Positions are
    * zero-based code-point indices into the PRIVMSG body.
    */
-  gifs?: EoptOptional<string>;
-  'emote-sets'?: EoptOptional<string>;
-  'first-msg'?: EoptOptional<string>;
-  'returning-chatter'?: EoptOptional<string>;
+  gifs?: string;
+  'emote-sets'?: string;
+  'first-msg'?: string;
+  'returning-chatter'?: string;
 
-  'room-id'?: EoptOptional<string>;
-  'msg-id'?: EoptOptional<string>;
-  'custom-reward-id'?: EoptOptional<string>;
-  'msg-param-custom-reward-title'?: EoptOptional<string>;
-  'msg-param-reward-title'?: EoptOptional<string>;
+  'room-id'?: string;
+  'msg-id'?: string;
+  'custom-reward-id'?: string;
+  'msg-param-custom-reward-title'?: string;
+  'msg-param-reward-title'?: string;
 
   'reply-parent-msg-id': string;
   'reply-parent-msg-body': string;

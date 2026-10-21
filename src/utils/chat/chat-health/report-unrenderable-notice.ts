@@ -3,10 +3,10 @@ import { logger } from '@app/utils/logger';
 export type UnrenderableNoticeStage = 'ingest' | 'render';
 
 interface ReportUnrenderableNoticeInput {
-  msgId?: string | undefined;
+  msgId?: string;
   reason: string;
   stage: UnrenderableNoticeStage;
-  systemMsg?: string | undefined;
+  systemMsg?: string;
 }
 
 const reported = new Set<string>();

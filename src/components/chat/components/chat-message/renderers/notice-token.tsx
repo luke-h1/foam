@@ -72,57 +72,63 @@ export function NoticeToken({
       if (noticeTags) {
         return (
           <SubscriptionNotice
-            token={token}
-            notice_tags={noticeTags}
-            parsedMessage={parsedMessage}
+            {...{ token, notice_tags: noticeTags, parsedMessage }}
           />
         );
       }
 
-      return <SubscriptionNotice token={token} parsedMessage={parsedMessage} />;
+      return <SubscriptionNotice {...{ token, parsedMessage }} />;
     }
 
     case 'viewermilestone':
       return (
         <ViewerMilestoneNotice
-          compact={compact}
-          disableAnimations={disableEmoteAnimations}
-          fontScale={fontScale}
-          parsedMessage={parsedMessage}
-          token={token}
+          {...{
+            compact,
+            disableAnimations: disableEmoteAnimations,
+            fontScale,
+            parsedMessage,
+            token,
+          }}
         />
       );
 
     case 'modiversary':
       return (
         <ModAnniversaryNotice
-          compact={compact}
-          disableAnimations={disableEmoteAnimations}
-          fontScale={fontScale}
-          parsedMessage={parsedMessage}
-          token={token}
+          {...{
+            compact,
+            disableAnimations: disableEmoteAnimations,
+            fontScale,
+            parsedMessage,
+            token,
+          }}
         />
       );
 
     case 'charitydonation':
       return (
         <CharityDonationNotice
-          compact={compact}
-          disableAnimations={disableEmoteAnimations}
-          fontScale={fontScale}
-          parsedMessage={parsedMessage}
-          token={token}
+          {...{
+            compact,
+            disableAnimations: disableEmoteAnimations,
+            fontScale,
+            parsedMessage,
+            token,
+          }}
         />
       );
 
     case 'ritual':
       return (
         <RitualNotice
-          compact={compact}
-          disableAnimations={disableEmoteAnimations}
-          fontScale={fontScale}
-          parsedMessage={parsedMessage}
-          token={token}
+          {...{
+            compact,
+            disableAnimations: disableEmoteAnimations,
+            fontScale,
+            parsedMessage,
+            token,
+          }}
         />
       );
 

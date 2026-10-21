@@ -9,13 +9,13 @@ import { getChatTextStyles } from '../chat-text.styles';
 import { CHAT_SURFACE_COLORS, type ChatFontScale } from '../util/chat-scale';
 
 interface ChatNoticeMetaRowProps {
-  compact?: boolean | undefined;
-  fontScale?: ChatFontScale | undefined;
+  compact?: boolean;
+  fontScale?: ChatFontScale;
   icon: React.ComponentProps<typeof SymbolView>['name'];
-  label?: string | undefined;
-  labelColor?: string | undefined;
-  children?: ReactNode | undefined;
-  labelStyle?: StyleProp<TextStyle> | undefined;
+  label?: string;
+  labelColor?: string;
+  children?: ReactNode;
+  labelStyle?: StyleProp<TextStyle>;
 }
 
 export function ChatNoticeMetaRow({

@@ -4,10 +4,10 @@ export type ChannelPointsRewardTags = Record<
 >;
 
 export type ChannelPointsRewardTagSource = {
-  'msg-id'?: string | undefined;
-  'msg-param-custom-reward-title'?: string | undefined;
-  'msg-param-reward-title'?: string | undefined;
-  'system-msg'?: string | undefined;
-  'custom-reward-id'?: string | undefined;
-  'room-id'?: string | undefined;
+  'msg-id'?: string;
+  'msg-param-custom-reward-title'?: string;
+  'msg-param-reward-title'?: string;
+  'system-msg'?: string;
+  'custom-reward-id'?: string;
+  'room-id'?: string;
 };

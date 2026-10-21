@@ -16,8 +16,8 @@ jest.unmock('@app/components/bottom-sheet/bottom-sheet');
 
 type SheetProps = {
   handleComponent?: unknown;
-  index?: number | undefined;
-  snapPoints?: (string | number)[] | undefined;
+  index?: number;
+  snapPoints?: (string | number)[];
 };
 
 type MockSheet = {

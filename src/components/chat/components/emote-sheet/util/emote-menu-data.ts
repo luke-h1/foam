@@ -32,9 +32,9 @@ export interface EmoteMenuProvider {
 }
 
 export interface EmoteMenuDataInput {
-  bttvChannelEmotes?: SanitisedEmote[] | undefined;
-  bttvGlobalEmotes?: SanitisedEmote[] | undefined;
-  emojis?: string[] | undefined;
+  bttvChannelEmotes?: SanitisedEmote[];
+  bttvGlobalEmotes?: SanitisedEmote[];
+  emojis?: string[];
   emojiSets?:
     | {
         data: string[];
@@ -43,14 +43,14 @@ export interface EmoteMenuDataInput {
         title: string;
       }[]
     | undefined;
-  ffzChannelEmotes?: SanitisedEmote[] | undefined;
-  ffzGlobalEmotes?: SanitisedEmote[] | undefined;
-  sevenTvChannelEmotes?: SanitisedEmote[] | undefined;
-  sevenTvGlobalEmotes?: SanitisedEmote[] | undefined;
-  sevenTvPersonalEmotes?: SanitisedEmote[] | undefined;
-  twitchChannelEmotes?: SanitisedEmote[] | undefined;
-  twitchGlobalEmotes?: SanitisedEmote[] | undefined;
-  twitchSubscriberEmotes?: SanitisedEmote[] | undefined;
+  ffzChannelEmotes?: SanitisedEmote[];
+  ffzGlobalEmotes?: SanitisedEmote[];
+  sevenTvChannelEmotes?: SanitisedEmote[];
+  sevenTvGlobalEmotes?: SanitisedEmote[];
+  sevenTvPersonalEmotes?: SanitisedEmote[];
+  twitchChannelEmotes?: SanitisedEmote[];
+  twitchGlobalEmotes?: SanitisedEmote[];
+  twitchSubscriberEmotes?: SanitisedEmote[];
   twitchSubscriberChannelProfiles?:
     | Record<string, SubscriberChannelProfile>
     | undefined;

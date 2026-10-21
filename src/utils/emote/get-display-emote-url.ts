@@ -4,11 +4,11 @@ import type { EmoteImageScale, EmoteImageVariants } from '@app/types/emote';
 import { pickEmoteVariantUrl } from './emote-image-variants/pick-emote-variant-url';
 
 interface GetDisplayEmoteUrlOptions {
-  image_variants?: EmoteImageVariants | null | undefined;
-  url?: string | null | undefined;
-  static_url?: string | null | undefined;
-  disableAnimations?: boolean | undefined;
-  preferredScale?: EmoteImageScale | undefined;
+  image_variants?: EmoteImageVariants | null;
+  url?: string | null;
+  static_url?: string | null;
+  disableAnimations?: boolean;
+  preferredScale?: EmoteImageScale;
 }
 
 export function getDisplayEmoteUrl({

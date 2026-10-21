@@ -27,7 +27,7 @@ export interface ChatMessagePaneProps {
   channelId: string;
   channelName: string;
   contentInsetEndAdjustment: SharedValue<number>;
-  currentUsername?: string | undefined;
+  currentUsername?: string;
   hiddenUsers: string[];
   hiddenPhrases: string[];
   paneFlags: ChatPaneFlags;
@@ -36,7 +36,7 @@ export interface ChatMessagePaneProps {
   renderItem: ChatListRenderItem;
   keyExtractor: (item: AnyChatMessageType, index: number) => string;
   getItemType: (item: AnyChatMessageType) => string;
-  messageListExtraData?: unknown | undefined;
+  messageListExtraData?: unknown;
   onClearFilters: () => void;
   onRefreshPinnedMessage: () => void;
   onUnpinPinnedMessage: () => void;

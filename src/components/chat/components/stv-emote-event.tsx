@@ -15,9 +15,9 @@ import type { ChatFontScale } from './chat-message/util/chat-scale';
 import { CHAT_NOTICE_ACCENTS } from './util/chat-notice-accents';
 
 interface StvEmoteEventProps {
-  compact?: boolean | undefined;
-  disableAnimations?: boolean | undefined;
-  fontScale?: ChatFontScale | undefined;
+  compact?: boolean;
+  disableAnimations?: boolean;
+  fontScale?: ChatFontScale;
   token: MessageToken<'stvEmoteAdded' | 'stvEmoteRemoved'>;
 }
 
@@ -61,10 +61,8 @@ function StvEmoteEventComponent({
       ]}
     >
       <ChatNoticeMetaRow
-        compact={compact}
-        fontScale={fontScale}
         icon='sparkles'
-        labelColor={accentColor}
+        {...{ compact, fontScale, labelColor: accentColor }}
       >
         <View style={styles.metaContent}>
           <BrandIcon name='stv' size='sm' />

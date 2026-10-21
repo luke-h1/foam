@@ -193,19 +193,19 @@ export type ThemedInputProps = Omit<
   size?: UISize;
   variant?: InputVariant;
   color?: UIColor;
-  onBlur?: (() => void) | undefined;
-  onChangeText?: ((value: string) => void) | undefined;
+  onBlur?: () => void;
+  onChangeText?: (value: string) => void;
   onContentSizeChange?:
     | ((size: { width: number; height: number }) => void)
     | undefined;
-  onFocus?: (() => void) | undefined;
-  onSelectionChange?: ((selection: InputSelection) => void) | undefined;
-  onSubmitEditing?: ((text: string) => void) | undefined;
-  placeholder?: string | undefined;
+  onFocus?: () => void;
+  onSelectionChange?: (selection: InputSelection) => void;
+  onSubmitEditing?: (text: string) => void;
+  placeholder?: string;
   radius?: UIRadius;
   style?: StyleProp<TextStyle & ViewStyle>;
-  ref?: Ref<InputRef> | undefined;
-  value?: string | undefined;
+  ref?: Ref<InputRef>;
+  value?: string;
 };
 
 export function Input({

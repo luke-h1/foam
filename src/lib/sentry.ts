@@ -54,8 +54,8 @@ export interface SentryStatus {
   enabled: boolean;
   hasDsn: boolean;
   environment: string;
-  release?: string | undefined;
-  dist?: string | undefined;
+  release?: string;
+  dist?: string;
   debug: boolean;
 }
 
@@ -167,7 +167,7 @@ export function flushSentry(): Promise<boolean> {
  * whole pipeline works.
  */
 export async function verifySentryDelivery(): Promise<{
-  eventId?: string | undefined;
+  eventId?: string;
   flushed: boolean;
 }> {
   init();
@@ -205,8 +205,8 @@ interface FeedbackPayload {
 export function sendFeedback(feedback: {
   type: FeedbackType;
   message: string;
-  email?: string | undefined;
-  name?: string | undefined;
+  email?: string;
+  name?: string;
 }): void {
   init();
 
@@ -381,11 +381,11 @@ export type LogMetadataValue =
 export type LogTagValue = string | number | boolean | null | undefined;
 
 export type LogMetadata = {
-  name?: OpenStringUnion<MonitoringEventName> | undefined;
-  tags?: Record<string, LogTagValue> | undefined;
-  fingerprint?: string[] | undefined;
-  error?: LogMetadataValue | undefined;
-  exceptionName?: string | undefined;
+  name?: OpenStringUnion<MonitoringEventName>;
+  tags?: Record<string, LogTagValue>;
+  fingerprint?: string[];
+  error?: LogMetadataValue;
+  exceptionName?: string;
   [key: string]: LogMetadataValue;
 };
 
@@ -464,8 +464,8 @@ function applyLogScope(
     safeExtra,
   }: {
     category: string;
-    name?: string | undefined;
-    metadata?: LogMetadata | undefined;
+    name?: string;
+    metadata?: LogMetadata;
     safeExtra: Record<string, LogMetadataValue>;
   },
 ): void {
@@ -502,8 +502,8 @@ export function forwardLogToSentry(entry: {
   level: 'info' | 'warn' | 'error';
   category: string;
   message: string;
-  error?: unknown | undefined;
-  metadata?: LogMetadata | undefined;
+  error?: unknown;
+  metadata?: LogMetadata;
 }): void {
   const { level, category, message, error, metadata } = entry;
 

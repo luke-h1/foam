@@ -167,7 +167,7 @@ function Stat({ value, label }: { value: string; label: string }) {
 interface StreamerProfileHeaderProps {
   activeTab: ProfileTab;
   onTabChange: (tab: ProfileTab) => void;
-  streamElementsStats?: StreamElementsChatStats | undefined;
+  streamElementsStats?: StreamElementsChatStats;
   user: UserInfoResponse;
 }
 
@@ -508,10 +508,12 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
 
   const listHeader = (
     <StreamerProfileHeader
-      activeTab={activeTab}
-      onTabChange={setActiveTab}
-      streamElementsStats={streamElementsQuery.data}
-      user={user}
+      {...{
+        activeTab,
+        onTabChange: setActiveTab,
+        streamElementsStats: streamElementsQuery.data,
+        user,
+      }}
     />
   );
 

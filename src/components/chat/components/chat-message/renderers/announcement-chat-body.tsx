@@ -9,17 +9,17 @@ import type { ChatTokenRenderProps } from './types/chat-token-render-props';
 import { UserChatBody } from './user-chat-body';
 
 interface AnnouncementChatBodyProps {
-  accentColor?: string | undefined;
+  accentColor?: string;
   badgeList: SanitisedBadgeSet[];
-  cachedSenderColor?: string | undefined;
-  onBadgePress?: ((badge: BadgePressData) => void) | undefined;
-  onUsernamePress?: (() => void) | undefined;
+  cachedSenderColor?: string;
+  onBadgePress?: (badge: BadgePressData) => void;
+  onUsernamePress?: () => void;
   showTimestamp: boolean;
-  timestamp?: string | undefined;
+  timestamp?: string;
   tokenRenderProps: ChatTokenRenderProps;
-  userId?: string | undefined;
-  userstateColor?: string | undefined;
-  username?: string | undefined;
+  userId?: string;
+  userstateColor?: string;
+  username?: string;
 }
 
 export function AnnouncementChatBody({
@@ -48,10 +48,6 @@ export function AnnouncementChatBody({
         labelStyle={styles.announcementMetaText}
       />
       <UserChatBody
-        badgeList={badgeList}
-        cachedSenderColor={cachedSenderColor}
-        onBadgePress={onBadgePress}
-        onUsernamePress={onUsernamePress}
         replyFlags={{
           canJumpToReplyTarget: false,
           isFirstMessage: false,
@@ -60,11 +56,17 @@ export function AnnouncementChatBody({
           showChannelPointsRewardChrome: false,
           showTimestamp,
         }}
-        timestamp={timestamp}
-        tokenRenderProps={rendererArgs}
-        userId={userId}
-        userstateColor={userstateColor}
-        username={username}
+        {...{
+          badgeList,
+          cachedSenderColor,
+          onBadgePress,
+          onUsernamePress,
+          timestamp,
+          tokenRenderProps: rendererArgs,
+          userId,
+          userstateColor,
+          username,
+        }}
       />
     </View>
   );

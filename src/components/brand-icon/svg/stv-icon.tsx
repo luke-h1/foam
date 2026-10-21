@@ -2,7 +2,7 @@ import { memo } from 'react';
 import Svg, { Path, type SvgProps } from 'react-native-svg';
 
 type StvIconProps = Omit<SvgProps, 'color'> & {
-  color?: string | undefined;
+  color?: string;
 };
 
 const StvIconComponent: React.FC<StvIconProps> = ({

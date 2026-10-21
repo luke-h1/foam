@@ -13,8 +13,8 @@ export interface AuthState {
 }
 
 export interface AuthContextState {
-  user?: UserInfoResponse | undefined;
-  authState?: AuthState | undefined;
+  user: UserInfoResponse | undefined;
+  authState: AuthState | undefined;
   loginWithTwitch: (
     response: AuthSessionResult | null,
   ) => Promise<null | undefined>;

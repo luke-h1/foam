@@ -97,10 +97,10 @@ function ChatListRowSkeleton({ index }: { index: number }) {
 export type ChatListRef = LegendListRef;
 
 export interface ChatListRenderItemInfo {
-  item?: AnyChatMessageType | undefined;
+  item?: AnyChatMessageType;
   index: number;
   target: 'Cell';
-  extraData?: unknown | undefined;
+  extraData?: unknown;
 }
 
 export type ChatListRenderItem = (
@@ -136,7 +136,7 @@ interface ChatListProps {
   keyExtractor: (item: AnyChatMessageType, index: number) => string;
   getItemType: (item: AnyChatMessageType) => string;
   contentContainerStyle: StyleProp<ViewStyle>;
-  extraData?: unknown | undefined;
+  extraData?: unknown;
   onViewableMessagesChange?:
     | ((messages: AnyChatMessageType[]) => void)
     | undefined;

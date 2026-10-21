@@ -12,21 +12,21 @@ export type ChatPaneFlags = {
 };
 
 export type ChatMessageDisplayFlags = {
-  disableEmoteAnimations?: boolean | undefined;
-  isAlternatingRow?: boolean | undefined;
-  isChannelPointRedemption?: boolean | undefined;
-  isAnnouncement?: boolean | undefined;
-  isHighlightedMessage?: boolean | undefined;
-  isSharedChatDuplicated?: boolean | undefined;
-  isHighlightedMessageTarget?: boolean | undefined;
-  isTwitchSystemNotice?: boolean | undefined;
-  showInlineReplyContext?: boolean | undefined;
-  showTimestamp?: boolean | undefined;
+  disableEmoteAnimations?: boolean;
+  isAlternatingRow?: boolean;
+  isChannelPointRedemption?: boolean;
+  isAnnouncement?: boolean;
+  isHighlightedMessage?: boolean;
+  isSharedChatDuplicated?: boolean;
+  isHighlightedMessageTarget?: boolean;
+  isTwitchSystemNotice?: boolean;
+  showInlineReplyContext?: boolean;
+  showTimestamp?: boolean;
 };
 
 export type ChatModerationAccessFlags = {
   canModerateChat: boolean;
-  canModerateUser?: boolean | undefined;
+  canModerateUser?: boolean;
 };
 
 export type UserActionVisibilityFlags = {
@@ -38,7 +38,7 @@ export type UserActionVisibilityFlags = {
 export type ChatRowDisplayFlags = {
   animate: boolean;
   disableEmoteAnimations: boolean;
-  fontScale?: 'small' | 'default' | 'large' | undefined;
+  fontScale?: 'small' | 'default' | 'large';
   showAlternatingChatRows: boolean;
   showInlineReplyContext: boolean;
   showTimestamps: boolean;
