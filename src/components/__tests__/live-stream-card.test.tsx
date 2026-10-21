@@ -1,6 +1,7 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
-import { screen } from '@testing-library/react-native';
+import { fireEvent, screen } from '@testing-library/react-native';
+import { router } from 'expo-router';
 import { NavigationContainer } from 'expo-router/react-navigation';
 
 import { twitchService as _twitchService } from '@app/services/twitch-service';
@@ -36,6 +37,28 @@ describe('LiveStreamCard', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+    jest.mocked(router.push).mockClear();
+  });
+
+  test('pushes the live stream route on press', () => {
+    render(<LiveStreamCard stream={mockStream} />, {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <DefaultWrapper>
+          <NavigationContainer>{children}</NavigationContainer>
+        </DefaultWrapper>
+      ),
+    });
+
+    fireEvent.press(
+      screen.getByLabelText(
+        `${mockStream.user_name}, live, ${mockStream.game_name}, 10,000 watching, ${mockStream.title}`,
+      ),
+    );
+
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/streams/live-stream/[id]',
+      params: { id: mockStream.user_login },
+    });
   });
 
   test('renders correctly', () => {

@@ -30,7 +30,6 @@ import { useChatScroll } from './hooks/use-chat-scroll';
 import { useChatSession } from './hooks/use-chat-session';
 import { useChatSurface } from './hooks/use-chat-surface';
 import { useChatTransientState } from './hooks/use-chat-transient-state';
-
 /**
  * First-frame guess at the composer height, before `onComposerLayout` reports
  * the measured value. Only affects the bottom inset on the very first render.
@@ -219,41 +218,45 @@ export const Chat = memo(
         >
           {syntheticTransport ? <BenchFrameProbe /> : null}
           <ChatEmoteReprocessor
-            channelId={channelId}
-            emoteLoadStatus={emoteLoadStatus}
-            messages$={messages$}
-            processedMessageIdsRef={processedMessageIdsRef}
-            reprocessKey={emoteReprocessKey}
-            userLogin={user?.login}
+            {...{
+              channelId,
+              emoteLoadStatus,
+              messages$,
+              processedMessageIdsRef,
+              reprocessKey: emoteReprocessKey,
+              userLogin: user?.login,
+            }}
           />
           <View style={styles.keyboardAvoidingView}>
             <View style={styles.chatContainer}>
               <ChatMessagePane
-                channelId={channelId}
-                channelName={channelName}
-                contentInsetEndAdjustment={contentInsetEndAdjustment}
-                currentUsername={currentUsername}
-                hiddenUsers={hiddenUsers}
-                hiddenPhrases={hiddenPhrases}
-                paneFlags={paneFlags}
-                listRef={listRef}
-                scrollHandlers={scrollHandlers}
-                renderItem={renderItem}
-                keyExtractor={keyExtractor}
-                getItemType={getItemType}
-                messageListExtraData={messageListExtraData}
-                onClearFilters={handleClearFilters}
-                hasActiveFilters={hasActiveFilters}
-                onCloseSearch={closeSearch}
-                onSearchQueryChange={handleSearchQueryChange}
-                onRefreshPinnedMessage={handleRefreshPinnedMessage}
-                onToggleShowOnlyMentions={handleToggleShowOnlyMentions}
-                onUnpinPinnedMessage={handleUnpinPinnedMessage}
-                onViewableMessagesChange={handleViewableMessagesChange}
-                pinnedMessage={pinnedMessage}
-                pinnedMessageBusy={pinnedMessageBusy}
-                searchActive={searchActive}
-                searchQuery={searchQuery}
+                {...{
+                  channelId,
+                  channelName,
+                  contentInsetEndAdjustment,
+                  currentUsername,
+                  hiddenUsers,
+                  hiddenPhrases,
+                  paneFlags,
+                  listRef,
+                  scrollHandlers,
+                  renderItem,
+                  keyExtractor,
+                  getItemType,
+                  messageListExtraData,
+                  onClearFilters: handleClearFilters,
+                  hasActiveFilters,
+                  onCloseSearch: closeSearch,
+                  onSearchQueryChange: handleSearchQueryChange,
+                  onRefreshPinnedMessage: handleRefreshPinnedMessage,
+                  onToggleShowOnlyMentions: handleToggleShowOnlyMentions,
+                  onUnpinPinnedMessage: handleUnpinPinnedMessage,
+                  onViewableMessagesChange: handleViewableMessagesChange,
+                  pinnedMessage,
+                  pinnedMessageBusy,
+                  searchActive,
+                  searchQuery,
+                }}
               />
 
               {preferences.showUnreadJumpPill &&
@@ -278,18 +281,20 @@ export const Chat = memo(
                 ref={composerRef}
               >
                 <ChatInputShell
-                  key={user?.id ?? 'signed-out'}
-                  ref={inputShellRef}
-                  channelId={channelId}
-                  channelName={channelName}
-                  connected={connected}
-                  isChatConnected={isChatConnected}
-                  onOpenEmoteSheet={handleOpenEmoteSheet}
-                  onOpenSettingsSheet={handleOpenSettingsSheet}
-                  onRefreshCommand={handleRefreshEmotesAndBadges}
-                  processMessageEmotes={processMessageEmotes}
-                  sendMessage={sendMessage}
-                  user={user}
+                  {...{
+                    key: user?.id ?? 'signed-out',
+                    ref: inputShellRef,
+                    channelId,
+                    channelName,
+                    connected,
+                    isChatConnected,
+                    onOpenEmoteSheet: handleOpenEmoteSheet,
+                    onOpenSettingsSheet: handleOpenSettingsSheet,
+                    onRefreshCommand: handleRefreshEmotesAndBadges,
+                    processMessageEmotes,
+                    sendMessage,
+                    user,
+                  }}
                 />
               </View>
             </KeyboardStickyView>

@@ -1,7 +1,7 @@
-import { ViewerMilestoneTags } from '@app/types/chat/irc-tags/usernotice';
+import type { ViewerMilestoneTags } from '@app/types/chat/irc-tags/usernotice';
 import { getTagValue } from '@app/utils/chat/format-subscription-notice/get-tag-value';
 import { withNoticeSubject } from '@app/utils/chat/format-subscription-notice/with-notice-subject';
-import { MessageToken } from '@app/utils/chat/message-token';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 export function createViewerMilestonePart(
   tags: ViewerMilestoneTags,

@@ -87,7 +87,7 @@ function renderSheet(props: Partial<Parameters<typeof BottomSheet>[0]> = {}) {
 }
 
 function getContentStyle(content: ReactTestInstance) {
-  return StyleSheet.flatten(content.props.style);
+  return StyleSheet.flatten(content.props['style']);
 }
 
 function setPlatform(os: 'android' | 'ios') {

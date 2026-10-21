@@ -11,7 +11,7 @@ import type {
  * Dropping the two discriminants keeps this assignable to each provider's own
  * partial, so the branches below stay checked instead of asserted.
  */
-type MenuEmoteOverrides = Partial<
+export type MenuEmoteOverrides = Partial<
   Omit<SevenTvSanitisedEmote, 'provider' | 'site'> &
     Omit<TwitchSanitisedEmote, 'provider' | 'site'> &
     Omit<BttvSanitisedEmote, 'provider' | 'site'> &

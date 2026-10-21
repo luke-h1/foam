@@ -43,13 +43,15 @@ export function ChatRowMetaHeader({
   if (shouldRenderInlineReply && parentDisplayName) {
     return (
       <ReplyingToHeader
-        canJumpToReplyTarget={canJumpToReplyTarget}
-        isReplyingToCurrentUser={isReplyingToCurrentUser}
-        onReplyContextPress={onReplyContextPress}
-        parentDisplayName={parentDisplayName}
-        replyBody={replyBody}
-        replyParentMessageId={replyParentMessageId}
         rendererArgs={{ ...rendererArgs, message }}
+        {...{
+          canJumpToReplyTarget,
+          isReplyingToCurrentUser,
+          onReplyContextPress,
+          parentDisplayName,
+          replyBody,
+          replyParentMessageId,
+        }}
       />
     );
   }

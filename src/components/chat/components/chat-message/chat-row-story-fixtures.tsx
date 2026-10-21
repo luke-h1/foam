@@ -9,9 +9,9 @@ import { sevenTvSanitisedGlobalEmoteSetFixture } from '@app/services/__fixtures_
 import { chatterinoService } from '@app/services/chatterino-service';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { theme } from '@app/styles/themes';
-import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import { MessageToken } from '@app/utils/chat/message-token';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 function requireFixture<T>(value: T | undefined, label: string): T {
   if (!value) {

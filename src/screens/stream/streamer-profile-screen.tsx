@@ -508,10 +508,12 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
 
   const listHeader = (
     <StreamerProfileHeader
-      activeTab={activeTab}
-      onTabChange={setActiveTab}
-      streamElementsStats={streamElementsQuery.data}
-      user={user}
+      {...{
+        activeTab,
+        onTabChange: setActiveTab,
+        streamElementsStats: streamElementsQuery.data,
+        user,
+      }}
     />
   );
 

@@ -1,6 +1,11 @@
-import { Insets, StyleProp, StyleSheet, ViewStyle } from 'react-native';
+import {
+  type Insets,
+  type StyleProp,
+  StyleSheet,
+  type ViewStyle,
+} from 'react-native';
 
-import { resolveSpacingValue, Spacing } from '@app/styles/spacing';
+import { resolveSpacingValue, type Spacing } from '@app/styles/spacing';
 import { theme } from '@app/styles/themes';
 
 import { Button } from '../button/button';
@@ -29,14 +34,13 @@ export function IconButton({
 }: IconButtonProps) {
   return (
     <Button
-      disabled={loading}
-      hitSlop={hitSlop}
-      label={label}
+      {...(hitSlop !== undefined ? { hitSlop } : {})}
       style={[styles.button, getButtonSizeStyle(size), style]}
-      onLongPress={onLongPress}
-      onPress={onPress}
+      {...(onLongPress ? { onLongPress } : {})}
+      {...(onPress ? { onPress } : {})}
+      {...{ disabled: loading, label }}
     >
-      <IconButtonIcon icon={icon} loading={loading} size={size} />
+      <IconButtonIcon {...{ icon, loading, size }} />
     </Button>
   );
 }

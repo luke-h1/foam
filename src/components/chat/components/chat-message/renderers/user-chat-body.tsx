@@ -150,60 +150,68 @@ export function UserChatBody({
   return (
     <View style={styles.messageColumn}>
       <ChatRowMetaHeader
-        message={message}
-        onReplyContextPress={onReplyContextPress}
-        parentDisplayName={parentDisplayName}
-        rendererArgs={rendererArgs}
-        replyBody={replyBody}
-        replyFlags={replyFlags}
-        replyParentMessageId={replyParentMessageId}
+        {...{
+          message,
+          onReplyContextPress,
+          parentDisplayName,
+          rendererArgs,
+          replyBody,
+          replyFlags,
+          replyParentMessageId,
+        }}
       />
       {showChannelPointsRewardChrome && userstate ? (
         <ChannelPointsRewardMetaRow
-          compact={compact}
-          fontScale={fontScale}
-          isHighlightedMessage={isHighlightedMessage}
-          moderationNotice={moderationNotice}
-          noticeTags={rendererArgs.noticeTags}
-          roomId={roomId}
-          username={username}
-          userstate={userstate}
+          {...{
+            compact,
+            fontScale,
+            isHighlightedMessage,
+            moderationNotice,
+            noticeTags: rendererArgs.noticeTags,
+            roomId,
+            username,
+            userstate,
+          }}
         />
       ) : null}
       {rowFlowsInline ? (
         <InlineMessageLine
           {...rendererArgs}
-          badgeList={badgeList}
-          isAction={isAction}
-          message={message}
-          onBadgePress={onBadgePress}
-          onUsernamePress={onUsernamePress}
-          replyPlainMentionTarget={replyPlainMentionTarget}
-          showTimestamp={showTimestamp}
-          timestamp={timestamp}
-          textColor={actionColor}
-          username={username}
-          usernameColor={inlineUsernameColor}
+          {...{
+            badgeList,
+            isAction,
+            message,
+            onBadgePress,
+            onUsernamePress,
+            replyPlainMentionTarget,
+            showTimestamp,
+            timestamp,
+            textColor: actionColor,
+            username,
+            usernameColor: inlineUsernameColor,
+          }}
         />
       ) : (
         <StackedMessageLine
-          badgeList={badgeList}
-          bodyEmoteLineStyle={bodyEmoteLineStyle}
-          cachedSenderColor={cachedSenderColor}
-          isModerated={isModerated}
-          message={message}
-          moderationNotice={moderationNotice}
-          onBadgePress={onBadgePress}
-          onUsernamePress={onUsernamePress}
-          rendererArgs={rendererArgs}
-          replyPlainMentionTarget={replyPlainMentionTarget}
-          showTimestamp={showTimestamp}
-          textColor={actionColor}
-          textStyles={textStyles}
-          timestamp={timestamp}
-          userId={userId}
-          username={username}
-          userstateColor={userstateColor}
+          {...{
+            badgeList,
+            bodyEmoteLineStyle,
+            cachedSenderColor,
+            isModerated,
+            message,
+            moderationNotice,
+            onBadgePress,
+            onUsernamePress,
+            rendererArgs,
+            replyPlainMentionTarget,
+            showTimestamp,
+            textColor: actionColor,
+            textStyles,
+            timestamp,
+            userId,
+            username,
+            userstateColor,
+          }}
         />
       )}
     </View>

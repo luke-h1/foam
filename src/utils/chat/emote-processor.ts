@@ -1,4 +1,4 @@
-import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
 import { getEmoteArrayContentKey } from '@app/utils/chat/emote-array-content-key';
 import { parseWordLinkParts } from '@app/utils/chat/parse-word-link-tokens/parse-word-link-tokens';
@@ -568,7 +568,7 @@ export const processEmotesWorklet = (
       result.push({
         id: emote.id,
         name: emote.name,
-        type: 'emote',
+        type: 'emote' as const,
         content: word,
         creator: emote.creator || '',
         emote_link: emote.emote_link || '',

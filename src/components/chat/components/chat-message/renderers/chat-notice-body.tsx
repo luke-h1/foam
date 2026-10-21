@@ -10,7 +10,6 @@ import { getChatTextStyles } from '../chat-text.styles';
 import { ChatNoticeMetaRow } from './chat-notice-meta-row';
 import type { ChatTokenRenderProps } from './types/chat-token-render-props';
 import { WrappedTokens } from './wrapped-tokens';
-
 /**
  * `announcement` and `user_chat` are dispatched by `ChatRow.Body` before
  * this component, so every variant reaching here has a row in the table below.

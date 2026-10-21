@@ -1,4 +1,4 @@
-import { DimensionValue } from 'react-native';
+import type { DimensionValue } from 'react-native';
 
 import { BttvIcon } from '../svg/bttv-icon';
 import { StvIcon } from '../svg/stv-icon';

@@ -2,9 +2,9 @@ import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
-import { MessageToken } from '@app/utils/chat/message-token';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
-import { ChatTextStyles } from '../chat-text.styles';
+import type { ChatTextStyles } from '../chat-text.styles';
 import { ChatInlineImage } from './chat-inline-image';
 
 interface GifTokenProps {

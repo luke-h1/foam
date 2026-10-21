@@ -2,7 +2,7 @@ import { memo, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { router } from 'expo-router';
+import { type Href, router } from 'expo-router';
 
 import { LiveBadge } from '@app/components/live-badge/live-badge';
 import { Text } from '@app/components/ui/text/text';
@@ -53,19 +53,26 @@ const LANGUAGE_VALUE_SET = new Set(
 // Dedupe rapid double-taps that would push the same route twice (two stacked screens).
 const NAV_DEDUPE_MS = 1000;
 
-let lastNavPath = '';
+let lastNavKey = '';
 let lastNavAt = 0;
 
-function pushRouteOnce(path: string) {
-  const now = Date.now();
+type HrefObject = Exclude<Href, string>;
 
-  if (path === lastNavPath && now - lastNavAt < NAV_DEDUPE_MS) {
+function hrefDedupeKey(href: HrefObject): string {
+  return `${href.pathname}?${JSON.stringify(href.params ?? {})}`;
+}
+
+function pushRouteOnce(href: HrefObject) {
+  const now = Date.now();
+  const key = hrefDedupeKey(href);
+
+  if (key === lastNavKey && now - lastNavAt < NAV_DEDUPE_MS) {
     return;
   }
 
-  lastNavPath = path;
+  lastNavKey = key;
   lastNavAt = now;
-  router.push(path);
+  router.push(href);
 }
 
 function LiveStreamCard({
@@ -87,24 +94,39 @@ function LiveStreamCard({
   const profilePicture = stream.profilePicture;
 
   const handleStreamPressIn = useCallback(() => {
-    router.prefetch(`/streams/live-stream/${stream.user_login}`);
+    router.prefetch({
+      pathname: '/streams/live-stream/[id]',
+      params: { id: stream.user_login },
+    });
   }, [stream.user_login]);
 
   const handleStreamPress = useCallback(() => {
     queryClient.setQueryData(twitchKeys.stream(stream.user_login), stream);
-    pushRouteOnce(`/streams/live-stream/${stream.user_login}`);
+    pushRouteOnce({
+      pathname: '/streams/live-stream/[id]',
+      params: { id: stream.user_login },
+    });
   }, [queryClient, stream]);
 
   const handleStreamerPressIn = useCallback(() => {
-    router.prefetch(`/streams/streamer-profile/${stream.user_login}`);
+    router.prefetch({
+      pathname: '/streams/streamer-profile/[id]',
+      params: { id: stream.user_login },
+    });
   }, [stream.user_login]);
 
   const handleStreamerPress = useCallback(() => {
-    pushRouteOnce(`/streams/streamer-profile/${stream.user_login}`);
+    pushRouteOnce({
+      pathname: '/streams/streamer-profile/[id]',
+      params: { id: stream.user_login },
+    });
   }, [stream.user_login]);
 
   const handleCategoryPress = useCallback(() => {
-    pushRouteOnce(`/category/${stream.game_id}`);
+    pushRouteOnce({
+      pathname: '/category/[id]',
+      params: { id: stream.game_id },
+    });
   }, [stream.game_id]);
 
   const handleLongPress = useCallback(() => {
@@ -116,7 +138,10 @@ function LiveStreamCard({
         {
           label: 'View profile',
           onPress: () =>
-            pushRouteOnce(`/streams/streamer-profile/${stream.user_login}`),
+            pushRouteOnce({
+              pathname: '/streams/streamer-profile/[id]',
+              params: { id: stream.user_login },
+            }),
         },
         {
           label: 'Share channel',

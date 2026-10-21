@@ -1,5 +1,5 @@
 import { cheermotesByChannel } from '@app/utils/chat/cheermote-store/cheermotes-by-channel';
-import { ChannelCheermotes } from '@app/utils/chat/cheermote-store/types';
+import type { ChannelCheermotes } from '@app/utils/chat/cheermote-store/types';
 
 export function getChannelCheermotes(
   channelId: string,

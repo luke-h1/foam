@@ -61,7 +61,12 @@ import { isLiquidGlassAvailable } from 'expo-glass-effect';
 
 import { useAccentColor } from '@app/context/accent-color-context';
 import { colors } from '@app/styles/colors';
-import { RADIUS_VALUES, UIColor, UIRadius, UISize } from '@app/styles/ui';
+import {
+  RADIUS_VALUES,
+  type UIColor,
+  type UIRadius,
+  type UISize,
+} from '@app/styles/ui';
 
 import {
   getIosInputSubmitInvoker,
@@ -90,13 +95,16 @@ export type ThemedInputProps = Omit<
   variant?: InputVariant;
   color?: UIColor;
   onBlur?: () => void;
+  onChangeText?: (value: string) => void;
   onContentSizeChange?: (size: { width: number; height: number }) => void;
   onFocus?: () => void;
   onSelectionChange?: (selection: InputSelection) => void;
   onSubmitEditing?: (text: string) => void;
+  placeholder?: string;
   radius?: UIRadius;
   style?: StyleProp<TextStyle & ViewStyle>;
   ref?: Ref<InputRef>;
+  value?: string;
 };
 
 interface ResolveInputColorsOptions {
@@ -509,11 +517,13 @@ export function Input(props: ThemedInputProps) {
        */
       ignoreSafeArea='all'
       matchContents={{ vertical: true }}
-      onLayoutContent={
-        onContentSizeChange
-          ? event => onContentSizeChange(event.nativeEvent)
-          : undefined
-      }
+      {...(onContentSizeChange
+        ? {
+            onLayoutContent: (event: {
+              nativeEvent: { width: number; height: number };
+            }) => onContentSizeChange(event.nativeEvent),
+          }
+        : {})}
       style={hostStyle}
     >
       <GlassEffectContainer>
@@ -521,11 +531,10 @@ export function Input(props: ThemedInputProps) {
           {secureTextEntry ? (
             <SecureField
               {...autoFocusProps}
-              maxLength={maxLength}
+              {...{ maxLength, placeholder }}
               modifiers={textFieldModifiers}
               onFocusChange={handleFocusChange}
               onTextChange={handleTextChange}
-              placeholder={placeholder}
               ref={secureFieldRef}
               text={nativeText}
             >
@@ -535,12 +544,14 @@ export function Input(props: ThemedInputProps) {
             <TextField
               {...autoFocusProps}
               axis={multiline ? 'vertical' : 'horizontal'}
-              maxLength={maxLength}
+              {...{
+                maxLength,
+                placeholder,
+                onSelectionChange,
+              }}
               modifiers={textFieldModifiers}
               onFocusChange={handleFocusChange}
-              onSelectionChange={onSelectionChange}
               onTextChange={handleTextChange}
-              placeholder={placeholder}
               ref={textFieldRef}
               selection={nativeSelection}
               text={nativeText}
@@ -1131,6 +1142,7 @@ function shouldBlurOnSubmit({
 }
 
 function pickHostStyle(style: TextStyle & ViewStyle): ViewStyle {
+  // SAFETY: only layout keys from the TextStyle & ViewStyle intersection.
   return {
     alignSelf: style.alignSelf,
     bottom: style.bottom,
@@ -1163,7 +1175,7 @@ function pickHostStyle(style: TextStyle & ViewStyle): ViewStyle {
     transform: style.transform,
     width: style.width,
     zIndex: style.zIndex,
-  };
+  } as ViewStyle;
 }
 
 function textChangeEvent(text: string) {

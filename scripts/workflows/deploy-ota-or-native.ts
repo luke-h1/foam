@@ -73,16 +73,16 @@ function getAwsEnv(): NodeJS.ProcessEnv {
 
   const env = stringifyEnv(process.env);
 
-  env.AWS_ACCESS_KEY_ID = accessKeyId;
-  env.AWS_SECRET_ACCESS_KEY = secretAccessKey;
+  env['AWS_ACCESS_KEY_ID'] = accessKeyId;
+  env['AWS_SECRET_ACCESS_KEY'] = secretAccessKey;
 
   const region =
     process.env.FOAM_AWS_REGION == null || process.env.FOAM_AWS_REGION === ''
       ? 'eu-west-2'
       : process.env.FOAM_AWS_REGION;
 
-  env.AWS_REGION = region;
-  env.AWS_DEFAULT_REGION = region;
+  env['AWS_REGION'] = region;
+  env['AWS_DEFAULT_REGION'] = region;
 
   console.log('AWS env ready');
 

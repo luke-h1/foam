@@ -1,17 +1,17 @@
 import React from 'react';
-import { StyleSheet, useColorScheme, View, ViewStyle } from 'react-native';
+import { StyleSheet, useColorScheme, View, type ViewStyle } from 'react-native';
 
-import { SFSymbol, SymbolView } from '@app/components/ui/icon/icon';
+import { type SFSymbol, SymbolView } from '@app/components/ui/icon/icon';
 import { Text } from '@app/components/ui/text/text';
 import { useAccentColor } from '@app/context/accent-color-context';
 import { colors } from '@app/styles/colors';
 import {
-  ColorConfig,
+  type ColorConfig,
   getColorValue,
   RADIUS_VALUES,
-  UIColor,
-  UIRadius,
-  UISize,
+  type UIColor,
+  type UIRadius,
+  type UISize,
 } from '@app/styles/ui';
 
 type BadgeVariant = 'solid' | 'outline' | 'soft' | 'subtle';

@@ -1,10 +1,9 @@
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
-import {
+import type {
   UserNoticeTags,
   UserNoticeTagsByVariant,
   ViewerMilestoneTags,
 } from '@app/types/chat/irc-tags/usernotice';
-import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { ingestChannelPointRewardTags } from '@app/utils/chat/channel-point-reward-title-store';
 import { createCharityDonationPart } from '@app/utils/chat/format-subscription-notice/create-charity-donation-token';
 import { createModiversaryPart } from '@app/utils/chat/format-subscription-notice/create-modiversary-token';
@@ -56,19 +55,7 @@ export const createUserNoticeMessage = ({
   broadcasterId,
 }: CreateUserNoticeParams): AnyChatMessageType => {
   const messageNonce = generateNonce();
-
-  // SAFETY: raw usernotice tag strings stand in for UserStateTags' parsed badges object and narrowed user-type union.
-  const userstate: UserStateTags = {
-    ...tags,
-    username: tags['display-name'] || tags.login || '',
-    login: tags.login || tags['display-name']?.toLowerCase() || '',
-    'reply-parent-msg-id': tags['reply-parent-msg-id'] || '',
-    'reply-parent-msg-body': tags['reply-parent-msg-body'] || '',
-    'reply-parent-display-name': tags['reply-parent-display-name'] || '',
-    'reply-parent-user-login': tags['reply-parent-user-login'] || '',
-    'user-type': tags['user-type'],
-  } as UserStateTags;
-
+  const userstate = createUserStateFromTags(toStringTagRecord(tags));
   const messageId = tags.id || generateNonce();
 
   const baseMessage = {

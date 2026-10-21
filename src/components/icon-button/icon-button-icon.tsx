@@ -1,7 +1,7 @@
 import { ActivityIndicator } from 'react-native';
 
 import { SymbolView, type SymbolViewProps } from '@app/components/ui/icon/icon';
-import { resolveSpacingValue, Spacing } from '@app/styles/spacing';
+import { resolveSpacingValue, type Spacing } from '@app/styles/spacing';
 import { theme } from '@app/styles/themes';
 
 type IconSymbolDescriptor = {
@@ -26,6 +26,9 @@ export function IconButtonIcon({
   loading?: boolean;
   size?: Spacing;
 }) {
+  const resolvedSize = size ?? 'md';
+  const fallbackSize = resolveSpacingValue(theme, resolvedSize);
+
   if (loading) {
     return <ActivityIndicator color={theme.color.text.dark} />;
   }
@@ -34,17 +37,13 @@ export function IconButtonIcon({
     return (
       <SymbolView
         name={icon.name}
-        size={icon.size ?? resolveSpacingValue(theme, size)}
+        size={icon.size ?? fallbackSize}
         tintColor={icon.color ?? theme.colorGrey}
       />
     );
   }
 
   return (
-    <SymbolView
-      name={icon}
-      size={resolveSpacingValue(theme, size)}
-      tintColor={theme.colorGrey}
-    />
+    <SymbolView name={icon} size={fallbackSize} tintColor={theme.colorGrey} />
   );
 }

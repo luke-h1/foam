@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { type StyleProp, StyleSheet, TextStyle } from 'react-native';
+import { type StyleProp, StyleSheet, type TextStyle } from 'react-native';
 
 import { useSelector } from '@legendapp/state/react';
 
@@ -67,25 +67,24 @@ function PaintedUsernameWithPaint({
   if (paintRenderer === 'skia' && !isModerated) {
     return (
       <PaintedUsernameSkia
-        username={displayUsername}
-        paint={paint}
-        fallbackColor={fallbackColor}
-        fontSize={fontSize}
+        {...{ username: displayUsername, paint, fallbackColor, fontSize }}
       />
     );
   }
 
   return (
     <PaintedUsernameHostedLayers
-      displayUsername={displayUsername}
-      fallbackColor={fallbackColor}
-      fontSize={fontSize}
-      lineHeight={lineHeight}
-      paint={paint}
-      plainColor={plainColor}
-      sevenTvPaintDropShadows={sevenTvPaintDropShadows}
-      usernameTextStyle={usernameTextStyle}
-      useWebView={paintRenderer === 'webview' && !isModerated}
+      {...{
+        displayUsername,
+        fallbackColor,
+        fontSize,
+        lineHeight,
+        paint,
+        plainColor,
+        sevenTvPaintDropShadows,
+        usernameTextStyle,
+        useWebView: paintRenderer === 'webview' && !isModerated,
+      }}
     />
   );
 }
@@ -138,15 +137,17 @@ function PaintedUsernameComponent({
 
   return (
     <PaintedUsernameWithPaint
-      displayUsername={displayUsername}
-      fallbackColor={solidFallback}
-      fontSize={flatUsernameStyle?.fontSize}
-      lineHeight={flatUsernameStyle?.lineHeight}
-      isModerated={isModerated}
-      paint={paint}
-      plainColor={fallbackColor}
-      sevenTvPaintDropShadows={sevenTvPaintDropShadows}
-      usernameTextStyle={usernameTextStyle}
+      {...{
+        displayUsername,
+        fallbackColor: solidFallback,
+        fontSize: flatUsernameStyle?.fontSize,
+        lineHeight: flatUsernameStyle?.lineHeight,
+        isModerated,
+        paint,
+        plainColor: fallbackColor,
+        sevenTvPaintDropShadows,
+        usernameTextStyle,
+      }}
     />
   );
 }

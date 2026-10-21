@@ -4,11 +4,11 @@ import type { EmoteImageScale, EmoteImageVariants } from '@app/types/emote';
 import { getDisplayEmoteUrl } from '@app/utils/emote/get-display-emote-url';
 import { CHAT_INLINE_EMOTE_SCALE } from '@app/utils/emote/resolve-emote-scale';
 
-export interface ResolvableDisplayEmote {
-  image_variants?: EmoteImageVariants | null;
-  url?: string | null;
-  static_url?: string | null;
-}
+export type ResolvableDisplayEmote = Partial<{
+  image_variants: EmoteImageVariants | null;
+  url: string | null;
+  static_url: string | null;
+}>;
 
 export function resolveEmoteDisplayUrl(
   emote: ResolvableDisplayEmote,

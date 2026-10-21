@@ -60,9 +60,7 @@ export function ActionButton({
   return (
     <Button
       label={title}
-      haptic={haptic}
       disabled={isInactive}
-      onPress={onPress}
       accessibilityState={{ disabled: isInactive, busy: loading }}
       style={[
         styles.base,
@@ -71,6 +69,7 @@ export function ActionButton({
         disabled ? styles.disabled : null,
         style,
       ]}
+      {...{ haptic, onPress }}
     >
       <View style={[styles.content, loading ? styles.hidden : null]}>
         {icon ? (

@@ -3,7 +3,7 @@ import { View } from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { reportUnrenderableNotice } from '@app/utils/chat/chat-health/report-unrenderable-notice';
-import { MessageToken } from '@app/utils/chat/message-token';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 import { styles } from '../chat-message/chat-row.styles';
 import { getChatTextStyles } from '../chat-message/chat-text.styles';
@@ -47,12 +47,14 @@ function ModAnniversaryNoticeComponent({
   return (
     <View style={styles.messageColumn}>
       <ChatNoticeMetaRow
-        compact={compact}
-        fontScale={fontScale}
         icon='shield.fill'
         label='Mod anniversary'
-        labelColor={CHAT_NOTICE_ACCENTS.modAnniversary}
-        labelStyle={styles.modAnniversaryMetaText}
+        {...{
+          compact,
+          fontScale,
+          labelColor: CHAT_NOTICE_ACCENTS.modAnniversary,
+          labelStyle: styles.modAnniversaryMetaText,
+        }}
       />
       {systemMsg ? (
         <ChatText style={textStyles.meta}>
@@ -69,11 +71,13 @@ function ModAnniversaryNoticeComponent({
         </ChatText>
       ) : null}
       <NoticeUserMessage
-        compact={compact}
-        disableAnimations={disableAnimations}
-        fontScale={fontScale}
-        message={content}
-        parsedMessage={parsedMessage}
+        {...{
+          compact,
+          disableAnimations,
+          fontScale,
+          message: content,
+          parsedMessage,
+        }}
       />
     </View>
   );

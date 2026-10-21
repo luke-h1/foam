@@ -178,7 +178,6 @@ export const makeEmptyEmoteData = () =>
   ({
     twitchChannelEmotes: [],
     twitchSubscriberEmotes: [],
-    twitchSubscriberEmotesUserId: undefined,
     twitchSubscriberChannelProfiles: {},
     sevenTvChannelEmotes: [],
     ffzChannelEmotes: [],
@@ -187,7 +186,6 @@ export const makeEmptyEmoteData = () =>
     ffzChannelBadges: [],
     lastUpdated: 0,
     badgesLastUpdated: 0,
-    sevenTvEmoteSetId: undefined,
   }) satisfies ChannelCacheType;
 
 export const makeEmptyGlobalCacheData = () =>

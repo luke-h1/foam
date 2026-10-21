@@ -1,10 +1,10 @@
 import { memo } from 'react';
-import { ViewStyle } from 'react-native';
+import type { ViewStyle } from 'react-native';
 
 import {
-  BrandIconName,
+  type BrandIconName,
   BrandIcons,
-  IconSize,
+  type IconSize,
   resolveBrandIconSize,
 } from './util/brand-icon-registry';
 
@@ -22,8 +22,8 @@ export const BrandIcon = memo(
 
     return (
       <IconComponent
-        color={color}
         style={[{ height, width }, style]}
+        {...{ color }}
         {...props}
       />
     );

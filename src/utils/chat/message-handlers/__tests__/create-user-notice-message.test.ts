@@ -491,7 +491,6 @@ describe('createUserNoticeMessage', () => {
         amount: '$25.00',
         currency: 'USD',
         systemMsg: 'donor donated $25.00',
-        message: undefined,
       },
     ]);
   });
@@ -516,7 +515,6 @@ describe('createUserNoticeMessage', () => {
         displayName: 'NewChatter',
         ritualName: 'new_chatter',
         systemMsg: 'NewChatter is new here.',
-        message: undefined,
       },
     ]);
   });

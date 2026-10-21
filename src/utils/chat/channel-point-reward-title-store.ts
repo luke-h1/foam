@@ -161,7 +161,7 @@ export function enrichChannelPointPrivmsgTags(
 
   ingestChannelPointRewardTags(tags, broadcasterId);
 
-  const login = tags.login ?? tags['display-name'];
+  const login = tags['login'] ?? tags['display-name'];
   const rewardId = tags['custom-reward-id'];
 
   if (login) {

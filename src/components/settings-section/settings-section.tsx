@@ -1,4 +1,4 @@
-import { Children, Fragment, isValidElement, ReactNode } from 'react';
+import { Children, Fragment, isValidElement, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { PressableArea } from '@app/components/pressable-area/pressable-area';
@@ -120,8 +120,7 @@ export function SettingsRow({
     <PressableArea
       accessibilityLabel={title}
       accessibilityRole='button'
-      accessibilityState={disabled ? { disabled } : undefined}
-      disabled={disabled}
+      {...(disabled ? { accessibilityState: { disabled }, disabled } : {})}
       onPress={onPress}
     >
       {content}
@@ -167,7 +166,6 @@ export function SettingsLinkRow(props: {
   return (
     <SettingsRow
       {...rowProps}
-      onPress={onPress}
       trailing={
         <View style={styles.linkTrailing}>
           {value ? (
@@ -184,6 +182,7 @@ export function SettingsLinkRow(props: {
           ) : null}
         </View>
       }
+      {...{ onPress }}
     />
   );
 }

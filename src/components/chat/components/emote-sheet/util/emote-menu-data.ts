@@ -1,4 +1,4 @@
-import { BrandIconName } from '@app/components/brand-icon/util/brand-icon-registry';
+import type { BrandIconName } from '@app/components/brand-icon/util/brand-icon-registry';
 import type { SubscriberChannelProfile } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 import { normaliseChatText } from '@app/utils/chat/normalise-chat-text';
@@ -35,12 +35,14 @@ export interface EmoteMenuDataInput {
   bttvChannelEmotes?: SanitisedEmote[];
   bttvGlobalEmotes?: SanitisedEmote[];
   emojis?: string[];
-  emojiSets?: {
-    data: string[];
-    icon: `emoji:${string}`;
-    id: string;
-    title: string;
-  }[];
+  emojiSets?:
+    | {
+        data: string[];
+        icon: `emoji:${string}`;
+        id: string;
+        title: string;
+      }[]
+    | undefined;
   ffzChannelEmotes?: SanitisedEmote[];
   ffzGlobalEmotes?: SanitisedEmote[];
   sevenTvChannelEmotes?: SanitisedEmote[];

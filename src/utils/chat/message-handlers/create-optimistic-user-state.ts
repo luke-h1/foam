@@ -24,13 +24,13 @@ export function createOptimisticUserState({
   replyTo?: OptimisticReplyTarget | null;
   user?: OptimisticSender;
 }) {
-  const badgeData = parseBadges(currentUserState.badges || '');
+  const badgeData = parseBadges(currentUserState['badges'] || '');
 
   return {
     ...currentUserState,
     'display-name':
       user?.display_name || currentUserState['display-name'] || '',
-    login: user?.login || currentUserState.login || '',
+    login: user?.login || currentUserState['login'] || '',
     username:
       user?.display_name ||
       user?.login ||
@@ -40,7 +40,7 @@ export function createOptimisticUserState({
     'badges-raw': badgeData['badges-raw'],
     badges: badgeData.badges,
     color:
-      currentUserState.color ||
+      currentUserState['color'] ||
       (user?.login ? generateRandomTwitchColor(user.login) : undefined),
     'reply-parent-msg-id': replyTo?.messageId || '',
     'reply-parent-msg-body': replyTo?.message || '',

@@ -36,7 +36,9 @@ describe('@sentry/core console instrumentation patch', () => {
 
     // Unpatched, the second pass stores the first wrapper here instead of the
     // native method, which is the recursion cycle.
-    expect(debugLogger.originalConsoleMethods.debug).toBe(nativeConsole.debug);
+    expect(debugLogger.originalConsoleMethods['debug']).toBe(
+      nativeConsole.debug,
+    );
 
     // Unpatched, this throws RangeError: Maximum call stack size exceeded.
     expect(() => {

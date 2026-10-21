@@ -2,8 +2,8 @@ import type { ChannelCacheType, GlobalCacheType } from '../types/constants';
 import { BADGE_CACHE_DURATION, CACHE_DURATION } from '../types/constants';
 
 export interface ChannelRefreshPlanInput {
-  cache: ChannelCacheType | undefined;
-  globalCache: GlobalCacheType | undefined;
+  cache?: ChannelCacheType;
+  globalCache?: GlobalCacheType;
   forceRefresh: boolean;
   now: number;
   twitchUserId?: string;

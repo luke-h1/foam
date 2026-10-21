@@ -72,19 +72,22 @@ export const ChatInputSection = memo(
             <View style={styles.inputRow}>
               <View style={styles.inputContainer}>
                 <ChatComposer
-                  ref={inputRef}
-                  onChangeText={onChangeText}
-                  onSubmit={onSubmit}
-                  onPressAdd={onOpenEmoteSheet}
-                  onAttachImage={isAuthenticated ? onAttachImage : undefined}
-                  onOpenSettings={onOpenSettingsSheet}
-                  isUploadingImage={isUploadingImage}
-                  placeholder={inputPlaceholder}
                   editable
-                  canSend={canSend}
-                  // The send path prepends `@user ` for a reply.
-                  reservedCharacters={replyTo ? replyTo.username.length + 2 : 0}
                   prioritizeChannelEmotes
+                  {...{
+                    ref: inputRef,
+                    onChangeText,
+                    onSubmit,
+                    onPressAdd: onOpenEmoteSheet,
+                    onAttachImage: isAuthenticated ? onAttachImage : undefined,
+                    onOpenSettings: onOpenSettingsSheet,
+                    isUploadingImage,
+                    placeholder: inputPlaceholder,
+                    canSend,
+                    reservedCharacters: replyTo
+                      ? replyTo.username.length + 2
+                      : 0,
+                  }}
                 />
               </View>
             </View>

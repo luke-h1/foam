@@ -15,12 +15,12 @@ import {
   type PaintsQueryQuery,
   Platform,
   UserByConnectionDocument,
-  UserByConnectionQuery,
+  type UserByConnectionQuery,
   UserCosmeticsDocument,
-  UserCosmeticsQuery,
+  type UserCosmeticsQuery,
   UserPersonalEmotesQueryDocument,
-  UserPersonalEmotesQueryQuery,
-  UserPersonalEmotesQueryQueryVariables,
+  type UserPersonalEmotesQueryQuery,
+  type UserPersonalEmotesQueryQueryVariables,
 } from '@app/graphql/generated/gql';
 import type {
   EmoteImageVariants,
@@ -224,6 +224,7 @@ function sanitiseV4EmoteSet(
       width,
       height,
       setMetadata,
+      actor: undefined,
     });
 
     if (sanitised) {
@@ -462,7 +463,7 @@ export const sevenTvService = {
       const imgHeight = bestImage ? Math.round(bestImage.height / imgScale) : 0;
 
       const sanitised = buildSanitisedEmote({
-        site: '7TV Personal',
+        site: '7TV Personal' as const,
         id: emote.id,
         name: item.alias || emote.defaultName,
         originalName: emote.defaultName,
@@ -478,6 +479,7 @@ export const sevenTvService = {
         width: imgWidth,
         height: imgHeight,
         setMetadata,
+        actor: undefined,
       });
 
       if (sanitised) {

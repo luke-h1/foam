@@ -16,7 +16,7 @@ import { PIP_ENABLED } from './util/pip-feature';
 import { isAppUrl } from './util/twitch-player-source/is-app-url';
 import { isTwitchPassportCallbackUrl } from './util/twitch-player-source/is-twitch-passport-callback-url';
 
-type WebViewSource = ComponentProps<typeof WebView>['source'];
+type WebViewSource = NonNullable<ComponentProps<typeof WebView>['source']>;
 
 // The player webview does no navigation interception beyond refusing the app's
 // own deep-link scheme. Twitch's login (id.twitch.tv), passport-callback, and
@@ -160,11 +160,12 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
       thirdPartyCookiesEnabled
       textInteractionEnabled
       originWhitelist={['*']}
-      source={source}
-      injectedJavaScript={injectedJavaScript}
-      injectedJavaScriptBeforeContentLoaded={
-        injectedJavaScriptBeforeContentLoaded
-      }
+      {...{
+        source,
+        injectedJavaScript,
+        injectedJavaScriptBeforeContentLoaded,
+        onMessage,
+      }}
       injectedJavaScriptBeforeContentLoadedForMainFrameOnly={false}
       injectedJavaScriptForMainFrameOnly={false}
       style={[
@@ -185,7 +186,6 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
       onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
       onLoadEnd={event => handleLoadEnd(event.nativeEvent.url)}
       onLoadStart={handleLoadStart}
-      onMessage={onMessage}
       onRenderProcessGone={() =>
         handleWebViewProcessGone('render_process_gone')
       }

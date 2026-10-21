@@ -1,4 +1,4 @@
-import { CheermoteTier } from '@app/utils/chat/cheermote-store/types';
+import type { CheermoteTier } from '@app/utils/chat/cheermote-store/types';
 
 /**
  * Highest tier whose min_bits threshold the cheered amount reaches.

@@ -3,8 +3,8 @@ import { Platform, RefreshControl } from 'react-native';
 
 import {
   FlashList as ShopifyFlashList,
-  FlashListProps as ShopifyFlashListProps,
-  FlashListRef,
+  type FlashListProps as ShopifyFlashListProps,
+  type FlashListRef,
   type ListRenderItem,
 } from '@shopify/flash-list';
 
@@ -53,10 +53,12 @@ export function FlashList<TItem>({
 
   return (
     <ShopifyFlashList
-      ref={ref}
-      refreshControl={activeRefreshControl}
-      refreshing={activeRefreshControl ? undefined : refreshing}
-      onRefresh={activeRefreshControl ? undefined : onRefresh}
+      {...{
+        ref,
+        refreshControl: activeRefreshControl ?? undefined,
+        refreshing: activeRefreshControl ? undefined : refreshing,
+        onRefresh: activeRefreshControl ? undefined : onRefresh,
+      }}
       {...props}
     />
   );

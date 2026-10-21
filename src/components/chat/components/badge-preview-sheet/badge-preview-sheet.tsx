@@ -156,7 +156,7 @@ function BadgePreviewSheetComponent(props: Props) {
             </Text>
           </View>
 
-          <SheetDetailGroup details={metadataRows} />
+          <SheetDetailGroup {...{ details: metadataRows }} />
 
           <SheetActionGroup actions={actions} />
 

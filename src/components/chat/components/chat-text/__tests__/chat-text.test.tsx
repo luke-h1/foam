@@ -98,7 +98,7 @@ describe('ChatText', () => {
     render(<ChatText style={[{ fontWeight: '700' }, null]}>bold</ChatText>);
 
     const flat = StyleSheet.flatten<TextStyle>(
-      screen.getByText('bold').props.style,
+      screen.getByText('bold').props['style'],
     );
 
     expect({

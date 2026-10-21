@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { useCachedEmoteAspectRatio } from '@app/providers/cached-emotes-provider/use-cached-emote';
 import { calculateAspectRatio } from '@app/utils/chat/calculate-aspect-ratio';
-import { MessageToken } from '@app/utils/chat/message-token';
+import type { MessageToken } from '@app/utils/chat/message-token';
 import { resolveEmoteDisplayUrl } from '@app/utils/emote/resolve-emote-display-url';
 import { logger } from '@app/utils/logger';
 
@@ -90,11 +90,13 @@ export const EmoteToken = memo(
     // node of its own.
     const image = (
       <ChatInlineImage
-        onTouchStart={needsWrapper ? undefined : handleTouchStart}
-        sourceUrl={displayUrl}
-        style={getEmoteImageStyle(width, height)}
         priority='normal'
         transitionMs={0}
+        {...{
+          onTouchStart: needsWrapper ? undefined : handleTouchStart,
+          sourceUrl: displayUrl,
+          style: getEmoteImageStyle(width, height),
+        }}
       />
     );
 

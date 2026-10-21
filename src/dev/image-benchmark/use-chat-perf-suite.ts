@@ -365,7 +365,7 @@ export function useChatPerfSuite() {
         setSuite(s => ({ ...s, results: [...results] }));
 
         // Cooldown: stop the flood and clear decode/store before the next phase.
-        syntheticChatControl.current = SYNTHETIC_PRESETS.off!;
+        syntheticChatControl.current = SYNTHETIC_PRESETS['off']!;
         clearMessages();
         clearCachedEmoteRefs();
 
@@ -385,7 +385,7 @@ export function useChatPerfSuite() {
     await runPhases().finally(() => {
       const cancelled = cancelRef.current;
       finishChatPerfSuiteResults(cancelled);
-      syntheticChatControl.current = SYNTHETIC_PRESETS.off!;
+      syntheticChatControl.current = SYNTHETIC_PRESETS['off']!;
       resetFloodReplay();
       countdownTicking.set(false);
       setSuite({
@@ -401,7 +401,7 @@ export function useChatPerfSuite() {
   // runSuite's finally owns the transition to IDLE - otherwise the Run button reappears mid-cancel and a re-tap starts a second overlapping run.
   const stopSuite = useCallback(() => {
     cancelRef.current = true;
-    syntheticChatControl.current = SYNTHETIC_PRESETS.off!;
+    syntheticChatControl.current = SYNTHETIC_PRESETS['off']!;
     resetFloodReplay();
     setSuite(s => (s.running ? { ...s, phaseSub: 'stopping…' } : s));
   }, []);

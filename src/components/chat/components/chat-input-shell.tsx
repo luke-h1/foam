@@ -325,21 +325,23 @@ export const ChatInputShell = memo(function ChatInputShell({
 
   return (
     <ChatInputSection
-      messageInput={messageInput}
-      onChangeText={handleComposerTextChange}
-      onSubmit={handleSendMessage}
-      onOpenEmoteSheet={onOpenEmoteSheet}
-      onOpenSettingsSheet={onOpenSettingsSheet}
-      onAttachImage={isLandscape ? undefined : handleAttachImage}
-      isUploadingImage={isUploadingImage}
-      replyTo={replyTo}
-      onClearReply={handleClearReply}
       connection={{
         isAuthenticated,
         isConnected: connected,
         isSending: false,
       }}
-      inputRef={chatInputRef}
+      {...{
+        messageInput,
+        onChangeText: handleComposerTextChange,
+        onSubmit: handleSendMessage,
+        onOpenEmoteSheet,
+        onOpenSettingsSheet,
+        onAttachImage: isLandscape ? undefined : handleAttachImage,
+        isUploadingImage,
+        replyTo,
+        onClearReply: handleClearReply,
+        inputRef: chatInputRef,
+      }}
     />
   );
 });

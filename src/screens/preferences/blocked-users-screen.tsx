@@ -15,7 +15,7 @@ import {
   listStyle,
   refreshable,
 } from '@expo/ui/swift-ui/modifiers';
-import { ListRenderItem } from '@shopify/flash-list';
+import type { ListRenderItem } from '@shopify/flash-list';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner-native';
 
@@ -471,12 +471,14 @@ export function BlockedUsersScreen() {
   return (
     <View style={styles.container}>
       <BlockedUsersList
-        data={data?.data}
-        isLoading={isLoading}
-        isError={isError}
-        onRefresh={onRefresh}
-        onUnblock={handleUnblockRequest}
-        onUnblockDirect={unblockUser}
+        {...{
+          data: data?.data,
+          isLoading,
+          isError,
+          onRefresh,
+          onUnblock: handleUnblockRequest,
+          onUnblockDirect: unblockUser,
+        }}
       />
     </View>
   );

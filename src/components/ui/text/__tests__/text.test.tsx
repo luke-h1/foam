@@ -10,7 +10,7 @@ type FontResolution = Pick<TextStyle, 'fontFamily' | 'fontWeight'>;
 
 function getFontResolution(text: string): FontResolution {
   const flat = StyleSheet.flatten<TextStyle>(
-    screen.getByText(text).props.style,
+    screen.getByText(text).props['style'],
   );
   return { fontFamily: flat.fontFamily, fontWeight: flat.fontWeight };
 }

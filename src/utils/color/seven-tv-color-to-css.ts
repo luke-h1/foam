@@ -1,4 +1,4 @@
-import { SevenTvColor } from '@app/types/seven-tv/cosmetics';
+import type { SevenTvColor } from '@app/types/seven-tv/cosmetics';
 
 import { sevenTvColorToRgba } from './seven-tv-color-to-rgba';
 

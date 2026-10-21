@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react-native';
 
 import render from '@app/test/render';
-import { MessageToken } from '@app/utils/chat/message-token';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 import { SubscriptionNotice } from '../user-notices/subscription-notice';
 
@@ -602,7 +602,6 @@ describe('SubscriptionNotice', () => {
           displayName: 'NoMessageUser',
           plan: '2000',
           planName: 'Tier 1',
-          message: undefined,
         },
       };
 

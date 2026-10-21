@@ -5,7 +5,7 @@ import { BrandIcon } from '@app/components/brand-icon/brand-icon';
 import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { Image } from '@app/components/image/image';
 import { resolveThemeColor } from '@app/styles/themes';
-import { MessageToken } from '@app/utils/chat/message-token';
+import type { MessageToken } from '@app/utils/chat/message-token';
 import { getDisplayEmoteUrl } from '@app/utils/emote/get-display-emote-url';
 
 import { styles as chatStyles } from './chat-message/chat-row.styles';
@@ -61,10 +61,8 @@ function StvEmoteEventComponent({
       ]}
     >
       <ChatNoticeMetaRow
-        compact={compact}
-        fontScale={fontScale}
         icon='sparkles'
-        labelColor={accentColor}
+        {...{ compact, fontScale, labelColor: accentColor }}
       >
         <View style={styles.metaContent}>
           <BrandIcon name='stv' size='sm' />

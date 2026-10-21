@@ -1,5 +1,5 @@
 import {
-  ReactNode,
+  type ReactNode,
   use,
   useCallback,
   useEffect,
@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { InteractionManager } from 'react-native';
 
-import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
+import { type AuthSessionResult, TokenResponse } from 'expo-auth-session';
 import { toast } from 'sonner-native';
 
 import { useSyncRef } from '@app/hooks/use-sync-ref';

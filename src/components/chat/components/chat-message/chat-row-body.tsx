@@ -51,17 +51,19 @@ export function ChatRowBody({ state }: { state: ChatRowBodyState }) {
       <>
         {sharedChatLabel}
         <AnnouncementChatBody
-          accentColor={announcementAccentColor}
-          badgeList={badges}
-          cachedSenderColor={cachedSenderColor}
-          onBadgePress={handleBadgePress}
-          onUsernamePress={onUsernamePress}
-          showTimestamp={showTimestamp}
-          timestamp={timestamp}
-          tokenRenderProps={tokenRenderProps}
-          userId={userstate['user-id']}
-          userstateColor={userstate.color}
-          username={userstate.username}
+          {...{
+            accentColor: announcementAccentColor,
+            badgeList: badges,
+            cachedSenderColor,
+            onBadgePress: handleBadgePress,
+            onUsernamePress,
+            showTimestamp,
+            timestamp,
+            tokenRenderProps,
+            userId: userstate['user-id'],
+            userstateColor: userstate.color,
+            username: userstate.username,
+          }}
         />
       </>
     );
@@ -72,15 +74,6 @@ export function ChatRowBody({ state }: { state: ChatRowBodyState }) {
       <>
         {sharedChatLabel}
         <UserChatBody
-          badgeList={badges}
-          onBadgePress={handleBadgePress}
-          cachedSenderColor={cachedSenderColor}
-          isAction={isAction}
-          isHighlightedMessage={isHighlightedMessage}
-          onReplyContextPress={onReplyContextPress}
-          onUsernamePress={onUsernamePress}
-          parentDisplayName={parentDisplayName}
-          replyBody={replyBody}
           replyFlags={{
             canJumpToReplyTarget,
             isFirstMessage,
@@ -90,14 +83,25 @@ export function ChatRowBody({ state }: { state: ChatRowBodyState }) {
             showChannelPointsRewardChrome,
             showTimestamp,
           }}
-          replyParentMessageId={replyParentMessageId}
-          roomId={roomId}
-          timestamp={timestamp}
-          tokenRenderProps={tokenRenderProps}
-          userId={userstate['user-id']}
-          userstate={userstate}
-          userstateColor={userstate.color}
-          username={userstate.username}
+          {...{
+            badgeList: badges,
+            onBadgePress: handleBadgePress,
+            cachedSenderColor,
+            isAction,
+            isHighlightedMessage,
+            onReplyContextPress,
+            onUsernamePress,
+            parentDisplayName,
+            replyBody,
+            replyParentMessageId,
+            roomId,
+            timestamp,
+            tokenRenderProps,
+            userId: userstate['user-id'],
+            userstate,
+            userstateColor: userstate.color,
+            username: userstate.username,
+          }}
         />
       </>
     );
@@ -107,10 +111,8 @@ export function ChatRowBody({ state }: { state: ChatRowBodyState }) {
     <>
       {sharedChatLabel}
       <ChatNoticeBody
-        bodyVariant={bodyVariant}
-        showTimestamp={showTimestamp}
-        timestamp={timestamp}
         {...tokenRenderProps}
+        {...{ bodyVariant, showTimestamp, timestamp }}
       />
     </>
   );

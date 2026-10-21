@@ -15,14 +15,14 @@ export default function TabsLayout() {
     <NativeTabs
       tintColor={theme.colorWhite}
       minimizeBehavior='onScrollDown'
-      blurEffect={liquidGlass ? undefined : 'systemChromeMaterial'}
+      {...(!liquidGlass ? { blurEffect: 'systemChromeMaterial' as const } : {})}
       disableTransparentOnScrollEdge={!liquidGlass}
-      backgroundColor={
-        // Pin the Android tab bar to app tokens; OEM overlays can recolor the activity-theme Material defaults away from the iOS-matched palette.
-        process.env.EXPO_OS === 'android'
-          ? theme.color.backgroundSecondary.dark
-          : undefined
-      }
+      {...(process.env.EXPO_OS === 'android'
+        ? {
+            // Pin the Android tab bar to app tokens; OEM overlays can recolor the activity-theme Material defaults away from the iOS-matched palette.
+            backgroundColor: theme.color.backgroundSecondary.dark,
+          }
+        : {})}
       indicatorColor='rgba(255, 255, 255, 0.12)'
       rippleColor='rgba(255, 255, 255, 0.12)'
     >

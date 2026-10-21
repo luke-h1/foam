@@ -1,4 +1,4 @@
-import { MessageToken } from './message-token';
+import type { MessageToken } from './message-token';
 import { getMessageTokenText } from './message-token-content';
 
 export function replaceEmotesWithText(tokens: MessageToken[]): string {

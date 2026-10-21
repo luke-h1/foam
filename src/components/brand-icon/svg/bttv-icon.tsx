@@ -1,9 +1,9 @@
 import { memo } from 'react';
-import Svg, { Path, SvgProps } from 'react-native-svg';
+import Svg, { Path, type SvgProps } from 'react-native-svg';
 
-interface BttvIconProps extends SvgProps {
+type BttvIconProps = Omit<SvgProps, 'color'> & {
   color?: string;
-}
+};
 
 const BttvIconComponent: React.FC<BttvIconProps> = ({
   color = '#FF66AA',

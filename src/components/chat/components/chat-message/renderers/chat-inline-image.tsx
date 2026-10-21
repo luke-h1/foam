@@ -15,6 +15,7 @@ import {
   type StyleProp,
   StyleSheet,
   View,
+  type ViewStyle,
 } from 'react-native';
 
 import {
@@ -469,8 +470,6 @@ function ChatInlineImageComponent({
     <ExpoImage
       ref={imageRef}
       source={source}
-      accessible={accessibilityLabel ? true : undefined}
-      accessibilityLabel={accessibilityLabel}
       contentFit='contain'
       recyclingKey={`${candidateUrl}#${reloadNonce}`}
       autoplay={playAnimation && autoplay}
@@ -483,15 +482,23 @@ function ChatInlineImageComponent({
       onDisplay={handleDisplay}
       onLoad={handleLoad}
       onError={handleError}
-      onTouchStart={overlayVisible ? undefined : onTouchStart}
       style={overlayVisible ? StyleSheet.absoluteFill : style}
-      testID={testID}
+      {...{
+        accessible: accessibilityLabel ? true : undefined,
+        accessibilityLabel,
+        onTouchStart: overlayVisible ? undefined : onTouchStart,
+        testID,
+      }}
     />
   );
 
   if (overlayVisible) {
     return (
-      <View onTouchStart={onTouchStart} style={style}>
+      <View
+        onTouchStart={onTouchStart}
+        // SAFETY: overlay host only needs ViewStyle layout; ImageStyle extras are unused here.
+        style={style as StyleProp<ViewStyle>}
+      >
         <ChatImageShimmer animate={status === 'loading'} />
         {imageElement}
       </View>

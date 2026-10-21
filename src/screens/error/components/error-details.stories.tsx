@@ -1,5 +1,5 @@
-import { ErrorInfo } from 'react';
 import { View } from 'react-native';
+import type { ErrorInfo } from 'react';
 
 import type { Meta, StoryObj } from '@storybook/react';
 

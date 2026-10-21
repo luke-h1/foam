@@ -1,7 +1,7 @@
 import type { TwitchCheermote } from '@app/types/twitch/bits';
 import { cheermoteFetchGuard } from '@app/utils/chat/cheermote-store/cheermote-fetch-guard';
 import { cheermotesByChannel } from '@app/utils/chat/cheermote-store/cheermotes-by-channel';
-import {
+import type {
   ChannelCheermotes,
   CheermoteTier,
 } from '@app/utils/chat/cheermote-store/types';

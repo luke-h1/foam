@@ -15,7 +15,7 @@ import { chatPerfMarks } from '@app/lib/chat-perf-marks';
 import { isE2EMode } from '@app/services/api/clients';
 import { recordChatDebugIrcLine } from '@app/store/chat/actions/chat-debug-log';
 import { usePreference } from '@app/store/preference-store';
-import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { subscribeToAppStateTransitions } from '@app/utils/app-state/app-state-transitions';
 import { applyAntiDuplicateSuffix } from '@app/utils/chat/apply-anti-duplicate-suffix';
 import { reportDroppedChatMessages } from '@app/utils/chat/chat-health/report-dropped-chat-messages';
@@ -40,7 +40,6 @@ import { logger } from '@app/utils/logger';
 
 import { ReadyState } from '../hooks/ws/constants';
 import { useWebsocket } from '../hooks/ws/use-websocket';
-
 /**
  * Module-level external store for the IRC userstate; each USERSTATE replaces
  * the record wholesale.
@@ -224,13 +223,13 @@ function createChatMessageRouteHandlers({
 > {
   return {
     privmsg: (channelName, tagsRecord, messageText) => {
-      const username = tagsRecord['display-name'] || tagsRecord.login;
+      const username = tagsRecord['display-name'] || tagsRecord['login'];
 
       // Skip the per-message lowercasing when there is no blocklist.
       // A mod or the broadcaster is never filtered out of their own chat.
       const isBlockedSender =
         blockedUsers.length > 0 &&
-        tagsRecord.mod !== '1' &&
+        tagsRecord['mod'] !== '1' &&
         channelName.slice(1).toLowerCase() !== user?.login?.toLowerCase() &&
         isUserBlocked(username, blockedUsers);
 

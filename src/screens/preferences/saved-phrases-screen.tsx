@@ -186,7 +186,7 @@ function InputSection({
           style={styles.input}
         />
         <PressableScale
-          onPress={canSave ? onSave : undefined}
+          {...(canSave ? { onPress: onSave } : {})}
           style={[styles.addButton, canSave ? styles.addButtonEnabled : null]}
         >
           <SymbolView

@@ -7,10 +7,11 @@ import { createHitslop } from '@app/utils/string/create-hit-slop';
 
 type ButtonHaptic = 'selection' | 'light' | 'medium' | 'heavy';
 
-export type ButtonProps = CustomPressableProps & {
+export type ButtonProps = Omit<CustomPressableProps, 'disabled' | 'onPress'> & {
   label?: string;
   disabled?: boolean;
   haptic?: ButtonHaptic;
+  onPress?: CustomPressableProps['onPress'];
 };
 
 function triggerHaptic(haptic: ButtonHaptic) {
@@ -32,12 +33,17 @@ function ButtonComponent({
   rippleColor,
   ...touchableProps
 }: ButtonProps) {
-  const handlePress: typeof onPress = event => {
+  const handlePress: NonNullable<CustomPressableProps['onPress']> = event => {
     if (haptic) {
       triggerHaptic(haptic);
     }
     onPress?.(event);
   };
+
+  const androidRipple =
+    process.env.EXPO_OS === 'android' ? 'rgba(255, 255, 255, 0.12)' : undefined;
+
+  const resolvedRipple = rippleColor ?? androidRipple;
 
   return (
     <PressableScale
@@ -48,12 +54,7 @@ function ButtonComponent({
       hitSlop={hitSlop}
       style={style}
       enabled={!disabled}
-      rippleColor={
-        rippleColor ??
-        (process.env.EXPO_OS === 'android'
-          ? 'rgba(255, 255, 255, 0.12)'
-          : undefined)
-      }
+      {...(resolvedRipple !== undefined ? { rippleColor: resolvedRipple } : {})}
       onPress={handlePress}
     >
       {children}

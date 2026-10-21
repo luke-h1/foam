@@ -6,7 +6,7 @@ import { fetchTwitchTokenClientId } from './twitch-token-client-id';
 const expoExtra: Record<string, string | undefined> | undefined =
   Constants.expoConfig?.extra;
 
-export const mockServerUrl = expoExtra?.MOCK_SERVER_URL;
+export const mockServerUrl = expoExtra?.['MOCK_SERVER_URL'];
 
 export const isE2EMode = !!mockServerUrl;
 
@@ -15,7 +15,7 @@ const twitchApiBaseUrl = mockServerUrl
   : 'https://api.twitch.tv/helix';
 
 const envTwitchClientId =
-  expoExtra?.EXPO_PUBLIC_TWITCH_CLIENT_ID ??
+  expoExtra?.['EXPO_PUBLIC_TWITCH_CLIENT_ID'] ??
   process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID;
 
 let currentTwitchClientId = envTwitchClientId;

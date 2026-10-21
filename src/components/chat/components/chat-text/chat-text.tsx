@@ -18,7 +18,6 @@ import {
 } from '@app/components/ui/text/text.styles';
 import { getMargin } from '@app/styles/spacing';
 import { resolveThemeColor, theme } from '@app/styles/themes';
-
 /**
  * Chat keeps the brand font while the rest of the app uses the system font.
  * The Skia painted usernames are rasterised in Montserrat, so a system-font

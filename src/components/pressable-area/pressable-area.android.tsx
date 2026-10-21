@@ -15,7 +15,7 @@ export function PressableArea({
       accessibilityRole='button'
       android_ripple={android_ripple ?? { color: 'rgba(255, 255, 255, 0.12)' }}
       {...rest}
-      ref={ref}
+      {...(ref !== undefined ? { ref } : {})}
     >
       <View style={styles.pressable}>{children}</View>
     </Pressable>

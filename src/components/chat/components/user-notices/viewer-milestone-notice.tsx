@@ -3,7 +3,7 @@ import { View } from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { reportUnrenderableNotice } from '@app/utils/chat/chat-health/report-unrenderable-notice';
-import { MessageToken } from '@app/utils/chat/message-token';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 import { styles } from '../chat-message/chat-row.styles';
 import { getChatTextStyles } from '../chat-message/chat-text.styles';
@@ -61,10 +61,12 @@ function ViewerMilestoneNoticeComponent({
   return (
     <View style={styles.messageColumn}>
       <ChatNoticeMetaRow
-        compact={compact}
-        fontScale={fontScale}
         icon='flame.fill'
-        labelColor={CHAT_NOTICE_ACCENTS.viewerMilestone}
+        {...{
+          compact,
+          fontScale,
+          labelColor: CHAT_NOTICE_ACCENTS.viewerMilestone,
+        }}
       >
         <ChatText style={[textStyles.meta, styles.messageMetaTextFlex]}>
           <ChatText
@@ -87,11 +89,13 @@ function ViewerMilestoneNoticeComponent({
         />
       ) : null}
       <NoticeUserMessage
-        compact={compact}
-        disableAnimations={disableAnimations}
-        fontScale={fontScale}
-        message={content}
-        parsedMessage={parsedMessage}
+        {...{
+          compact,
+          disableAnimations,
+          fontScale,
+          message: content,
+          parsedMessage,
+        }}
       />
     </View>
   );

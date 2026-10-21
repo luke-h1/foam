@@ -8,8 +8,11 @@ import type { MessageToken } from '@app/utils/chat/message-token';
 export interface ChatTokenRenderProps {
   compact: boolean;
   disableEmoteAnimations: boolean;
-  fontScale?: ChatFontScale;
-  effectiveHighlightedUserSet?: ReadonlySet<string>;
+  /**
+   * Always set at the chat-row boundary (`fontScale ?? 'default'`).
+   */
+  fontScale: ChatFontScale;
+  effectiveHighlightedUserSet: ReadonlySet<string>;
   getMentionColor?: (username: string) => string;
   getTokenKey: (token: MessageToken, index: number) => Key;
   onEmoteTouchStart?: (token: EmotePressData) => void;

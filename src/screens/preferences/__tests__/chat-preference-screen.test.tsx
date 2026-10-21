@@ -16,14 +16,14 @@ import {
 import { ChatPreferenceScrollContent } from '../chat-preference-screen';
 
 function isSwitchOn(label: string, index = 0): boolean {
-  return screen.getAllByLabelText(label)[index]!.props.accessibilityState
+  return screen.getAllByLabelText(label)[index]!.props['accessibilityState']
     .checked;
 }
 
 function getPreviewEmoteUrls(testID: string): string[] {
   return within(screen.getByTestId(testID))
     .UNSAFE_queryAllByType(ChatInlineImage.type)
-    .map(image => image.props.sourceUrl);
+    .map(image => image.props['sourceUrl']);
 }
 
 describe('ChatPreferenceScreen', () => {

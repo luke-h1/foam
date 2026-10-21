@@ -38,11 +38,13 @@ export function ChatMessageBadges({
     renderedBadges.push(
       <ChatBadge
         key={`${renderedBadges.length}\u001f${normalizedBadge.provider}\u001f${normalizedBadge.set}\u001f${normalizedBadge.id}\u001f${normalizedBadge.url}`}
-        badge={normalizedBadge}
-        compact={compact}
-        fontScale={fontScale}
-        isModerated={isModerated}
-        onPress={onBadgePress}
+        {...{
+          badge: normalizedBadge,
+          compact,
+          fontScale,
+          isModerated,
+          onPress: onBadgePress,
+        }}
       />,
     );
   }

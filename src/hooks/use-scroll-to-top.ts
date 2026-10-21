@@ -1,4 +1,4 @@
-import { Ref, RefObject } from 'react';
+import type { Ref, RefObject } from 'react';
 
 import { useScrollToTop as useNavigationScrollToTop } from 'expo-router';
 

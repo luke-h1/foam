@@ -126,13 +126,15 @@ export const Image = function Image({
     <View style={[styles.container, containerStyle]}>
       <ExpoImage
         {...props}
-        source={cachedSource ?? source}
+        {...{
+          source: cachedSource ?? source,
+          cachePolicy: cachePolicy ?? undefined,
+          recyclingKey: recyclingKey ?? sourceUri,
+        }}
         style={style}
         contentFit={contentFit}
-        cachePolicy={cachePolicy}
         transition={transition}
         decodeFormat='rgb'
-        recyclingKey={recyclingKey ?? sourceUri}
         placeholderContentFit={placeholderContentFit ?? 'cover'}
         onError={error => {
           logger.main.debug('Image loading error:', {

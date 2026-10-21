@@ -1,5 +1,5 @@
-import { PropsWithChildren } from 'react';
 import { AppState, InteractionManager, Platform } from 'react-native';
+import type { PropsWithChildren } from 'react';
 
 import {
   focusManager,

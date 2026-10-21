@@ -62,7 +62,6 @@ describe('buildPrivmsgLine', () => {
 
     expect(parseIrcMessage(line)).toEqual<IrcMessage>({
       tags: { 'reply-parent-msg-id': 'abc-123' },
-      prefix: undefined,
       command: 'PRIVMSG',
       params: ['#bar', 'hi back'],
     });

@@ -2,7 +2,6 @@ import type { TokenResponse } from 'expo-auth-session';
 
 import { twitchService } from '@app/services/twitch-service';
 import { logger } from '@app/utils/logger';
-
 /**
  * Seconds before `expiresAt` at which a token already counts as expired, so it
  * is refreshed before Twitch rejects it.

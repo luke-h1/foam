@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
-import { AllowedKey, storageService } from '@app/lib/storage';
+import { type AllowedKey, storageService } from '@app/lib/storage';
 
 export type DebugOptions = {
   [key in AllowedKey]?: { enabled: boolean };

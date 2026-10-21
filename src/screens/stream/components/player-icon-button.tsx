@@ -32,10 +32,12 @@ export function PlayerIconButton({
         size: 18,
         color: active ? theme.color.accent.dark : undefined,
       }}
-      label={active ? `${label}, on` : label}
-      onPress={onPress}
       size='2xl'
-      style={styles.button}
+      {...{
+        label: active ? `${label}, on` : label,
+        onPress,
+        style: styles.button,
+      }}
     />
   );
 }

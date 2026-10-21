@@ -133,7 +133,6 @@ describe('interpretPlayerMessage', () => {
           args: [
             {
               name: 'twitch_player_info',
-              channel: undefined,
               elapsedMs: 2_500,
             },
           ],

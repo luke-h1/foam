@@ -10,24 +10,24 @@ import {
 } from '@app/components/ui/icon/icon';
 import {
   Children,
-  ComponentProps,
+  type ComponentProps,
   Fragment,
   type ReactElement,
-  ReactNode,
-  Ref,
+  type ReactNode,
+  type Ref,
   cloneElement,
   isValidElement,
 } from 'react';
 import {
-  OpaqueColorValue,
+  type OpaqueColorValue,
   Text as RNText,
-  StyleProp,
+  type StyleProp,
   StyleSheet,
-  TextProps,
-  TextStyle,
+  type TextProps,
+  type TextStyle,
   View,
-  ViewProps,
-  ViewStyle,
+  type ViewProps,
+  type ViewStyle,
 } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 
@@ -93,10 +93,10 @@ function FormItem({
 
   return (
     <Pressable
-      ref={ref}
+      {...(ref !== undefined ? { ref } : {})}
       accessibilityRole='button'
-      onPress={onPress}
-      onLongPress={onLongPress}
+      onPress={onPress ?? null}
+      onLongPress={onLongPress ?? null}
       style={({ pressed }) => [
         itemStyle,
         pressed ? { backgroundColor: AppleColors.systemGray4 } : null,
@@ -114,7 +114,7 @@ type SystemImageCustomProps = {
   color?: OpaqueColorValue;
   size?: number;
   weight?: SymbolWeight;
-  style?: StyleProp<TextStyle>;
+  style?: StyleProp<ViewStyle>;
 };
 
 type SystemImageProps = SymbolViewProps['name'] | SystemImageCustomProps;
@@ -482,7 +482,9 @@ function SystemImageView({
       name={symbolProps.name}
       size={symbolProps.size ?? 20}
       style={[{ marginRight: 8 }, symbolProps.style]}
-      weight={symbolProps.weight}
+      {...(symbolProps.weight !== undefined
+        ? { weight: symbolProps.weight }
+        : {})}
       tintColor={
         symbolProps.color ?? extractStyle(style, 'color') ?? AppleColors.label
       }

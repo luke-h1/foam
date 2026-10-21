@@ -21,18 +21,16 @@ export function MediaLinkToken({ token }: MediaLinkTokenProps) {
     return (
       <MediaLinkCard
         layout='inline'
-        thumbnail={token.thumbnail}
         type='stvEmoteLink'
-        url={token.content}
+        {...{ thumbnail: token.thumbnail, url: token.content }}
       />
     );
   }
 
   return (
     <MediaLinkCard
-      thumbnail={token.thumbnail}
       type='twitchClip'
-      url={token.content}
+      {...{ thumbnail: token.thumbnail, url: token.content }}
     />
   );
 }

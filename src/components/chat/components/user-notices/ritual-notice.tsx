@@ -75,12 +75,14 @@ function RitualNoticeComponent({
   return (
     <View style={styles.messageColumn}>
       <ChatNoticeMetaRow
-        compact={compact}
-        fontScale={fontScale}
-        icon={getRitualIcon(token.ritualName)}
-        label={getRitualMetaLabel(token.ritualName)}
-        labelColor={CHAT_NOTICE_ACCENTS.ritual}
-        labelStyle={styles.ritualNoticeMetaText}
+        {...{
+          compact,
+          fontScale,
+          icon: getRitualIcon(token.ritualName),
+          label: getRitualMetaLabel(token.ritualName),
+          labelColor: CHAT_NOTICE_ACCENTS.ritual,
+          labelStyle: styles.ritualNoticeMetaText,
+        }}
       />
       {description ? (
         <ChatText style={[textStyles.body, styles.channelPointsMetaMuted]}>
@@ -88,11 +90,7 @@ function RitualNoticeComponent({
         </ChatText>
       ) : null}
       <NoticeUserMessage
-        compact={compact}
-        disableAnimations={disableAnimations}
-        fontScale={fontScale}
-        message={message}
-        parsedMessage={parsedMessage}
+        {...{ compact, disableAnimations, fontScale, message, parsedMessage }}
       />
     </View>
   );

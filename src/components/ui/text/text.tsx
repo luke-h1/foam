@@ -1,13 +1,11 @@
-import { ReactNode, type Ref } from 'react';
 import {
-  // eslint-disable-next-line no-restricted-imports
   Text as RNText,
-  // eslint-disable-next-line no-restricted-imports
-  TextProps as RNTextProps,
-  TextStyle,
+  type TextProps as RNTextProps,
+  type TextStyle,
 } from 'react-native';
+import type { ReactNode, Ref } from 'react';
 
-import { getMargin, MarginProps } from '@app/styles/spacing';
+import { getMargin, type MarginProps } from '@app/styles/spacing';
 import {
   resolveThemeColor,
   theme,

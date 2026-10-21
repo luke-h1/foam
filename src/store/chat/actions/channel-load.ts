@@ -325,7 +325,7 @@ export interface LoadChannelResourcesOptions {
 type CachedRefreshArgs = {
   channelId: string;
   existingCache: ChannelCacheType;
-  existingGlobalCache: GlobalCacheType | undefined;
+  existingGlobalCache?: GlobalCacheType;
   plan: CachedChannelRefreshPlan;
   signal?: AbortSignal;
   twitchUserId?: string;
@@ -756,11 +756,13 @@ const loadChannelResourcesInternal = async (
         ? (existingCache?.badgesLastUpdated ?? 0)
         : now,
       ...emoteResourceSets,
-      twitchSubscriberEmotesUserId: twitchUserId ?? undefined,
       twitchSubscriberChannelProfiles:
         existingCache?.twitchSubscriberChannelProfiles ?? {},
       ...badgeResourceSets,
-      sevenTvEmoteSetId: sevenTvSetId === 'global' ? undefined : sevenTvSetId,
+      ...{
+        twitchSubscriberEmotesUserId: twitchUserId ?? undefined,
+        sevenTvEmoteSetId: sevenTvSetId === 'global' ? undefined : sevenTvSetId,
+      },
     };
 
     clearChannelPersonalEmotes(channelId);

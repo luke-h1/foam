@@ -70,12 +70,14 @@ export function WrappedTokens({
 
     renderedParts.push(
       <ChatMessageToken
-        key={rendererArgs.getTokenKey(currentTextPart, currentTextIndex)}
-        index={currentTextIndex}
-        message={message}
-        mode={mode}
-        token={currentTextPart}
         {...rendererArgs}
+        {...{
+          key: rendererArgs.getTokenKey(currentTextPart, currentTextIndex),
+          index: currentTextIndex,
+          message,
+          mode,
+          token: currentTextPart,
+        }}
       />,
     );
 
@@ -104,12 +106,14 @@ export function WrappedTokens({
 
     renderedParts.push(
       <ChatMessageToken
-        key={rendererArgs.getTokenKey(token, index)}
-        index={index}
-        message={message}
-        mode={mode}
-        token={token}
         {...rendererArgs}
+        {...{
+          key: rendererArgs.getTokenKey(token, index),
+          index,
+          message,
+          mode,
+          token,
+        }}
       />,
     );
   }

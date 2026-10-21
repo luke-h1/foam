@@ -178,19 +178,25 @@ export function createPaintCosmeticUpdateData(
   const cosmeticChanges: ChangeMap<CosmeticCreate> = {
     id: changes.id,
     kind: changes.kind,
-    updated: changes.updated?.map(entry => ({
+  };
+
+  if (changes.updated) {
+    cosmeticChanges.updated = changes.updated.map(entry => ({
       key: entry.key,
       index: entry.index,
       old_value: toPaintCosmetic(entry.old_value),
       value: toPaintCosmetic(entry.value),
-    })),
-    pushed: changes.pushed?.map(entry => ({
+    }));
+  }
+
+  if (changes.pushed) {
+    cosmeticChanges.pushed = changes.pushed.map(entry => ({
       key: entry.key,
       index: entry.index,
       old_value: null,
       value: toPaintCosmetic(entry.value),
-    })),
-  };
+    }));
+  }
 
   return {
     kind: 'PAINT',
@@ -204,19 +210,25 @@ export function createBadgeCosmeticUpdateData(
   const cosmeticChanges: ChangeMap<CosmeticCreate> = {
     id: changes.id,
     kind: changes.kind,
-    updated: changes.updated?.map(entry => ({
+  };
+
+  if (changes.updated) {
+    cosmeticChanges.updated = changes.updated.map(entry => ({
       key: entry.key,
       index: entry.index,
       old_value: toBadgeCosmetic(entry.old_value),
       value: toBadgeCosmetic(entry.value),
-    })),
-    pushed: changes.pushed?.map(entry => ({
+    }));
+  }
+
+  if (changes.pushed) {
+    cosmeticChanges.pushed = changes.pushed.map(entry => ({
       key: entry.key,
       index: entry.index,
       old_value: null,
       value: toBadgeCosmetic(entry.value),
-    })),
-  };
+    }));
+  }
 
   return {
     kind: 'BADGE',

@@ -109,7 +109,6 @@ export function ChangelogDemoScreen() {
       await ChangelogModule.present({
         ...demoOptions,
         otaVersion: 'demo-ota',
-        version: undefined,
       });
       refreshState();
     } catch (error) {

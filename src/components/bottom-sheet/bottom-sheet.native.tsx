@@ -165,7 +165,7 @@ export function BottomSheet({
           onDismissRef.current();
         }, DISMISS_ANIMATION_MS);
       }}
-      snapPoints={detents}
+      {...(detents ? { snapPoints: detents } : {})}
     >
       <View style={[styles.content, sizingStyle]} testID={testID}>
         {showDragIndicator === true ? <SheetDragHandle /> : null}

@@ -9,8 +9,6 @@ describe('parseIrcMessage', () => {
 
   test('parses a PING with a trailing param', () => {
     expect(parseIrcMessage('PING :tmi.twitch.tv')).toEqual<IrcMessage>({
-      tags: undefined,
-      prefix: undefined,
       command: 'PING',
       params: ['tmi.twitch.tv'],
     });
@@ -31,7 +29,6 @@ describe('parseIrcMessage', () => {
 
   test('parses a prefixed command with no params', () => {
     expect(parseIrcMessage(':tmi.twitch.tv RECONNECT')).toEqual<IrcMessage>({
-      tags: undefined,
       prefix: 'tmi.twitch.tv',
       command: 'RECONNECT',
       params: [],
@@ -87,7 +84,6 @@ describe('parseIrcMessage', () => {
         historical: '',
         id: 'msg-3',
       },
-      prefix: undefined,
       command: 'PING',
       params: [],
     });

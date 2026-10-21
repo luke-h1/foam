@@ -7,6 +7,11 @@ export interface ModCommandContext {
   moderatorId: string;
 }
 
+interface TimeoutBanOptions {
+  durationSeconds: number;
+  reason?: string;
+}
+
 async function resolveUserId(login: string): Promise<string> {
   const user = await twitchService.getUser(login);
   const userId = user.id?.trim();
@@ -28,19 +33,32 @@ export async function executeModCommand(
     case 'timeout': {
       const userId = await resolveUserId(command.login);
 
-      await twitchService.banChatUser(broadcasterId, moderatorId, userId, {
+      const banOptions: TimeoutBanOptions = {
         durationSeconds: command.durationSeconds,
-        reason: command.reason,
-      });
+      };
+
+      if (command.reason !== undefined) {
+        banOptions.reason = command.reason;
+      }
+
+      await twitchService.banChatUser(
+        broadcasterId,
+        moderatorId,
+        userId,
+        banOptions,
+      );
 
       return `Timed out ${command.login} for ${command.durationSeconds}s`;
     }
     case 'ban': {
       const userId = await resolveUserId(command.login);
 
-      await twitchService.banChatUser(broadcasterId, moderatorId, userId, {
-        reason: command.reason,
-      });
+      await twitchService.banChatUser(
+        broadcasterId,
+        moderatorId,
+        userId,
+        command.reason !== undefined ? { reason: command.reason } : undefined,
+      );
 
       return `Banned ${command.login}`;
     }

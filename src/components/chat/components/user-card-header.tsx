@@ -86,11 +86,13 @@ export function UserCardHeader({
         </View>
         <View style={styles.identityText}>
           <PaintedUsername
-            username={username}
-            userId={userId}
-            fallbackColor={fallbackColor ?? theme.color.text.dark}
             showColon={false}
-            usernameTextStyle={styles.displayName}
+            {...{
+              username,
+              userId,
+              fallbackColor: fallbackColor ?? theme.color.text.dark,
+              usernameTextStyle: styles.displayName,
+            }}
           />
           {showLogin ? (
             <Text

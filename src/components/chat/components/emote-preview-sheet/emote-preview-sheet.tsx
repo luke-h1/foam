@@ -223,7 +223,7 @@ function EmotePreviewSheetComponent(props: Props) {
           </View>
 
           {metadataRows.length > 0 ? (
-            <SheetDetailGroup details={metadataRows} />
+            <SheetDetailGroup {...{ details: metadataRows }} />
           ) : null}
 
           <SheetActionGroup actions={actions} />

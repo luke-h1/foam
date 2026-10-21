@@ -1,9 +1,5 @@
 import { StyleSheet } from 'react-native';
-import {
-  Gesture,
-  GestureDetector,
-  Pressable,
-} from 'react-native-gesture-handler';
+import { Pressable } from 'react-native-gesture-handler';
 import Animated, {
   interpolate,
   interpolateColor,
@@ -16,26 +12,21 @@ import { pressAnimation } from '@app/styles/motion';
 
 import type { PressableAreaProps } from './pressable-area.types';
 
+/**
+ * Drive feedback from Pressable `onPressIn` / `onPressOut`. A child
+ * `Gesture.Manual` detector steals the touch and the card highlight flashes
+ * without firing `onPress`.
+ */
 export function PressableArea({
   ref,
   children,
   disabled,
+  onPressIn,
+  onPressOut,
   feedback = 'dim',
   ...rest
 }: PressableAreaProps) {
   const pressed = useSharedValue(0);
-
-  const pressFeedback = Gesture.Manual()
-    .enabled(disabled !== true)
-    .onTouchesDown(() => {
-      pressed.set(withTiming(1, pressAnimation));
-    })
-    .onTouchesUp(() => {
-      pressed.set(withTiming(0, pressAnimation));
-    })
-    .onTouchesCancelled(() => {
-      pressed.set(withTiming(0, pressAnimation));
-    });
 
   const feedbackStyle = useAnimatedStyle(() =>
     feedback === 'highlight'
@@ -53,15 +44,22 @@ export function PressableArea({
     <Pressable
       accessibilityRole='button'
       {...rest}
-      ref={ref}
-      disabled={disabled}
-      simultaneousWithExternalGesture={pressFeedback}
+      {...(ref !== undefined ? { ref } : {})}
+      {...(disabled !== undefined ? { disabled } : {})}
+      onPressIn={e => {
+        if (disabled !== true) {
+          pressed.set(withTiming(1, pressAnimation));
+        }
+        onPressIn?.(e);
+      }}
+      onPressOut={e => {
+        pressed.set(withTiming(0, pressAnimation));
+        onPressOut?.(e);
+      }}
     >
-      <GestureDetector gesture={pressFeedback}>
-        <Animated.View style={[styles.pressable, feedbackStyle]}>
-          {children}
-        </Animated.View>
-      </GestureDetector>
+      <Animated.View style={[styles.pressable, feedbackStyle]}>
+        {children}
+      </Animated.View>
     </Pressable>
   );
 }

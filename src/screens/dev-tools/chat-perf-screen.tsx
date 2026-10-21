@@ -124,7 +124,7 @@ export function ChatPerfScreen() {
       setSyntheticChatControl(SYNTHETIC_PRESETS[floodParam]!);
     }
     return () => {
-      setSyntheticChatControl(SYNTHETIC_PRESETS.off!);
+      setSyntheticChatControl(SYNTHETIC_PRESETS['off']!);
     };
   }, [floodParam]);
 
@@ -146,7 +146,7 @@ export function ChatPerfScreen() {
     setHotspotStatus('preparing…');
 
     // Pause any live flood so ingest/clearMessages measurements stay clean.
-    setSyntheticChatControl(SYNTHETIC_PRESETS.off!);
+    setSyntheticChatControl(SYNTHETIC_PRESETS['off']!);
 
     resetFloodReplay();
     setFlood('off');

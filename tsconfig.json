@@ -18,7 +18,7 @@
     "strictFunctionTypes": true,
     "useUnknownInCatchVariables": true,
     "experimentalDecorators": true,
-    "strictPropertyInitialization": false,
+    "strictPropertyInitialization": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "noUncheckedSideEffectImports": true,
@@ -26,6 +26,9 @@
     "noFallthroughCasesInSwitch": true,
     "noUnusedParameters": true,
     "noUnusedLocals": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
     "skipLibCheck": true,
     "jsx": "react-jsx",
     "paths": {
@@ -34,13 +37,25 @@
       "@e2e/*": ["./e2e/*"],
       "react-native-device-info/src/internal/nativeInterface": [
         "./__mocks__/react-native-device-info/src/internal/nativeInterface"
+      ],
+      "react-native-pulsar": [
+        "./node_modules/react-native-pulsar/lib/typescript/src/index.d.ts"
       ]
     }
   },
-  "include": ["assets", "**/*.ts", "**/*.tsx", "**/*.js", "app.config.ts"],
+  "include": [
+    "assets",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.js",
+    "app.config.ts",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ],
   "exclude": [
     "node_modules",
     "node_modules/expo-file-system/**/*",
+    "node_modules/react-native-pulsar/**/*",
     "tools/oxlint/anti-slop"
   ]
 }

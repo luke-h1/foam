@@ -1,7 +1,9 @@
 export interface PaginatedList<T> {
   data: T[];
-  pagination?: {
-    cursor: string;
-  };
+  pagination?:
+    | {
+        cursor: string;
+      }
+    | undefined;
   total?: number;
 }

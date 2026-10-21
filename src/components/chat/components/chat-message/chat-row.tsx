@@ -2,8 +2,8 @@
 import { memo } from 'react';
 
 import { useChatRow } from '@app/components/chat/hooks/use-chat-row';
-import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
-import { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
+import type { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
+import type { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
 
 import type { ChatRowProps } from './chat-row.types';
 import { ChatRowBody } from './chat-row-body';

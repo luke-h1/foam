@@ -11,6 +11,7 @@ describe('PressableArea', () => {
     'does not re-render on press in and press out with %s feedback',
     feedback => {
       const onRender = jest.fn();
+      const onPress = jest.fn();
       const onPressIn = jest.fn();
       const onPressOut = jest.fn();
 
@@ -19,6 +20,7 @@ describe('PressableArea', () => {
           <PressableArea
             accessibilityLabel='Open stream'
             feedback={feedback}
+            onPress={onPress}
             onPressIn={onPressIn}
             onPressOut={onPressOut}
           >
@@ -32,9 +34,11 @@ describe('PressableArea', () => {
       const pressable = getByLabelText('Open stream');
 
       fireEvent(pressable, 'pressIn');
+      fireEvent.press(pressable);
       fireEvent(pressable, 'pressOut');
 
       expect(onRender).not.toHaveBeenCalled();
+      expect(onPress).toHaveBeenCalledTimes(1);
       expect(onPressIn).toHaveBeenCalledTimes(1);
       expect(onPressOut).toHaveBeenCalledTimes(1);
     },

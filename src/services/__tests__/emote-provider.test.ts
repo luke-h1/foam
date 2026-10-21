@@ -162,6 +162,7 @@ describe('buildSanitisedEmote', () => {
       width: 96,
       height: 64,
       setMetadata,
+      actor: undefined,
     });
 
     expect(result).toEqual<SevenTvSanitisedEmote>({
@@ -201,7 +202,7 @@ describe('buildSanitisedEmote', () => {
     });
 
     const sevenTv = buildSanitisedEmote({
-      site: '7TV Channel',
+      site: '7TV Channel' as const,
       id: 'emote-c',
       name: 'Ghost',
       originalName: 'Ghost',
@@ -225,6 +226,7 @@ describe('buildSanitisedEmote', () => {
         updatedAt: '',
         totalCount: 0,
       },
+      actor: undefined,
     });
 
     expect([hosted, sevenTv]).toEqual([null, null]);

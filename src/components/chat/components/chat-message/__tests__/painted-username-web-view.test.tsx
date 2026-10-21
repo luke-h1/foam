@@ -43,7 +43,7 @@ const paint: PaintData = {
 const sendSizeMessage = (width: number, height: number) => {
   const webView = screen.getByTestId('painted-webview');
   act(() => {
-    webView.props.onMessage({
+    webView.props['onMessage']({
       nativeEvent: { data: JSON.stringify({ width, height }) },
     });
   });
@@ -60,7 +60,7 @@ describe('PaintedUsernameWebView', () => {
     );
 
     const sizerStyle = StyleSheet.flatten(
-      screen.getByText('PaintUser').props.style,
+      screen.getByText('PaintUser').props['style'],
     );
 
     expect({
@@ -78,7 +78,7 @@ describe('PaintedUsernameWebView', () => {
     });
 
     const containerStyle = StyleSheet.flatten(
-      screen.getByTestId('painted-webview').props.containerStyle,
+      screen.getByTestId('painted-webview').props['containerStyle'],
     );
 
     expect({
@@ -89,7 +89,7 @@ describe('PaintedUsernameWebView', () => {
       position: 'absolute',
     });
 
-    const rootStyle = StyleSheet.flatten(screen.root.props.style);
+    const rootStyle = StyleSheet.flatten(screen.root.props['style']);
 
     expect({
       alignSelf: rootStyle.alignSelf,
@@ -115,7 +115,7 @@ describe('PaintedUsernameWebView', () => {
 
     expect(screen.queryByText('PaintUser')).not.toBeOnTheScreen();
 
-    const rootStyle = StyleSheet.flatten(screen.root.props.style);
+    const rootStyle = StyleSheet.flatten(screen.root.props['style']);
 
     expect({
       height: rootStyle.height,
@@ -126,7 +126,7 @@ describe('PaintedUsernameWebView', () => {
     });
 
     const containerStyle = StyleSheet.flatten(
-      screen.getByTestId('painted-webview').props.containerStyle,
+      screen.getByTestId('painted-webview').props['containerStyle'],
     );
 
     expect({
@@ -150,7 +150,7 @@ describe('PaintedUsernameWebView', () => {
     const webView = screen.getByTestId('painted-webview');
 
     act(() => {
-      webView.props.onMessage({ nativeEvent: { data: 'not json' } });
+      webView.props['onMessage']({ nativeEvent: { data: 'not json' } });
     });
 
     expect(screen.getByText('PaintUser')).toBeOnTheScreen();
@@ -169,7 +169,7 @@ describe('PaintedUsernameWebView', () => {
 
     expect(screen.getByText('PaintUser')).toBeOnTheScreen();
 
-    const rootStyle = StyleSheet.flatten(screen.root.props.style);
+    const rootStyle = StyleSheet.flatten(screen.root.props['style']);
 
     expect({
       height: rootStyle.height,

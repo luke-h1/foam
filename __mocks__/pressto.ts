@@ -1,6 +1,6 @@
-import { ComponentType, createElement, type Ref } from 'react';
+import { type ComponentType, createElement, type Ref } from 'react';
 // eslint-disable-next-line no-restricted-imports
-import { Pressable as RNPressable, PressableProps } from 'react-native';
+import { Pressable as RNPressable, type PressableProps } from 'react-native';
 
 export const BasePressable: ComponentType<PressableProps> = RNPressable;
 

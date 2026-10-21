@@ -179,12 +179,11 @@ function StreamMetadataColumn({
       <View style={[styles.liveRail, isPortrait && styles.liveRailPortrait]}>
         <LiveBadge label='LIVE' />
         <StreamDurationLabel
-          isVisible={isVisible}
-          startedAt={streamInfo?.startedAt}
           style={[
             styles.durationText,
             isPortrait && styles.durationTextPortrait,
           ]}
+          {...{ isVisible, startedAt: streamInfo?.startedAt }}
         />
         <View
           style={[
@@ -254,12 +253,17 @@ export function ControlsOverlay({
     }
 
     if (onPipPress) {
-      actions.push({
+      const pipAction: MenuAction = {
         id: 'pip',
         title: 'Picture in Picture',
         image: 'pip',
-        state: pipActive ? 'on' : undefined,
-      });
+      };
+
+      if (pipActive) {
+        pipAction.state = 'on';
+      }
+
+      actions.push(pipAction);
     }
 
     if (onCreateClipPress) {
@@ -271,12 +275,17 @@ export function ControlsOverlay({
     }
 
     if (onSleepTimerPress) {
-      actions.push({
+      const sleepTimerAction: MenuAction = {
         id: 'sleep-timer',
         title: 'Sleep timer',
         image: 'moon.zzz',
-        state: sleepTimerActive ? 'on' : undefined,
-      });
+      };
+
+      if (sleepTimerActive) {
+        sleepTimerAction.state = 'on';
+      }
+
+      actions.push(sleepTimerAction);
     }
 
     if (onSharePress) {

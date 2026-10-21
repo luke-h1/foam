@@ -131,8 +131,8 @@ export function parseTwitchAuthTokenFromResponse(
 
   if (response.authentication?.accessToken) {
     const refreshToken =
-      response.params.refresh_token ??
-      response.params.refreshToken ??
+      response.params['refresh_token'] ??
+      response.params['refreshToken'] ??
       parseRefreshTokenFromUrl(response.url);
 
     return {
@@ -161,7 +161,6 @@ export function buildAuthSessionResultFromToken(
     url,
     params: token.refreshToken ? { refresh_token: token.refreshToken } : {},
     errorCode: null,
-    error: undefined,
     authentication: new TokenResponse({
       accessToken: token.accessToken,
       expiresIn: token.expiresIn,

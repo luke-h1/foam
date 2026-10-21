@@ -1,4 +1,4 @@
-import {
+import type {
   ChannelPointsRewardTags,
   ChannelPointsRewardTagSource,
 } from '@app/utils/chat/channel-points-reward-title/types';

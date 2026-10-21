@@ -59,13 +59,15 @@ export const GlassReplyPreview = memo(
               Replying to
             </Text>
             <PaintedUsername
-              fallbackColor={
-                replyTo.color ? lightenColor(replyTo.color) : undefined
-              }
               showColon={false}
-              userId={replyTo.userId}
-              username={replyTo.username}
-              usernameTextStyle={styles.replyPaintedUsername}
+              {...{
+                fallbackColor: replyTo.color
+                  ? lightenColor(replyTo.color)
+                  : undefined,
+                userId: replyTo.userId,
+                username: replyTo.username,
+                usernameTextStyle: styles.replyPaintedUsername,
+              }}
             />
           </View>
           <ReplyPreviewLine replyTo={replyTo} />

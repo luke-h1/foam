@@ -31,7 +31,10 @@ import {
   filterProviderSets,
   flattenProviderSets,
 } from '../util/emote-menu-data';
-import { createMenuEmote } from './__fixtures__/emote-menu-data.fixture';
+import {
+  createMenuEmote,
+  type MenuEmoteOverrides,
+} from './__fixtures__/emote-menu-data.fixture';
 
 type MockLegendListItem = EmoteMenuListItem | EmoteMenuSet;
 
@@ -134,7 +137,7 @@ function createEmotes(
   count: number,
   site: SanitisedEmote['site'],
   prefix: string,
-  overrides: (index: number) => Partial<SanitisedEmote> = () => ({}),
+  overrides: (index: number) => MenuEmoteOverrides = () => ({}),
 ): SanitisedEmote[] {
   return Array.from({ length: count }, (_, index) =>
     createMenuEmote(

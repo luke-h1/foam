@@ -67,7 +67,7 @@ export function EmptyState({
           <ContentUnavailableView
             title={heading}
             systemImage={iconName}
-            description={content}
+            {...(content !== undefined ? { description: content } : {})}
           />
         </Host>
         {action}

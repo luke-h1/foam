@@ -21,7 +21,20 @@ export interface MarginProps {
   my?: Spacing | number;
 }
 
-export function resolveSpacingValue(theme: AppTheme, value?: Spacing | number) {
+export function resolveSpacingValue(
+  theme: AppTheme,
+  value: Spacing | number,
+): number;
+
+export function resolveSpacingValue(
+  theme: AppTheme,
+  value?: Spacing | number,
+): number | undefined;
+
+export function resolveSpacingValue(
+  theme: AppTheme,
+  value?: Spacing | number,
+): number | undefined {
   if (value === undefined) {
     return undefined;
   }

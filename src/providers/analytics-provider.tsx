@@ -1,4 +1,4 @@
-import { PropsWithChildren, useEffect, useRef, useState } from 'react';
+import { type PropsWithChildren, useEffect, useRef, useState } from 'react';
 import { InteractionManager } from 'react-native';
 
 import { usePathname } from 'expo-router';

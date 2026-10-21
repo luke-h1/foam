@@ -44,10 +44,7 @@ export function ChatRowUsername({
 
   const paintedUsername = (
     <PaintedUsername
-      username={username}
-      userId={userId}
-      fallbackColor={fallbackColor}
-      usernameTextStyle={usernameTextStyle}
+      {...{ username, userId, fallbackColor, usernameTextStyle }}
     />
   );
 

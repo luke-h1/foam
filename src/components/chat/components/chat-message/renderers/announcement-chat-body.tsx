@@ -48,10 +48,6 @@ export function AnnouncementChatBody({
         labelStyle={styles.announcementMetaText}
       />
       <UserChatBody
-        badgeList={badgeList}
-        cachedSenderColor={cachedSenderColor}
-        onBadgePress={onBadgePress}
-        onUsernamePress={onUsernamePress}
         replyFlags={{
           canJumpToReplyTarget: false,
           isFirstMessage: false,
@@ -60,11 +56,17 @@ export function AnnouncementChatBody({
           showChannelPointsRewardChrome: false,
           showTimestamp,
         }}
-        timestamp={timestamp}
-        tokenRenderProps={rendererArgs}
-        userId={userId}
-        userstateColor={userstateColor}
-        username={username}
+        {...{
+          badgeList,
+          cachedSenderColor,
+          onBadgePress,
+          onUsernamePress,
+          timestamp,
+          tokenRenderProps: rendererArgs,
+          userId,
+          userstateColor,
+          username,
+        }}
       />
     </View>
   );

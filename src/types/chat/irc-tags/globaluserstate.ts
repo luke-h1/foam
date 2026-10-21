@@ -1,4 +1,4 @@
-import { UserStateTags } from './userstate';
+import type { UserStateTags } from './userstate';
 
 export interface GlobalUserStateTags extends Pick<
   UserStateTags,

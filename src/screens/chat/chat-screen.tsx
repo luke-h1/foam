@@ -1,5 +1,5 @@
-import { FC } from 'react';
 import { StyleSheet, View } from 'react-native';
+import type { FC } from 'react';
 
 import { Chat } from '@app/components/chat/chat';
 

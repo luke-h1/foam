@@ -38,13 +38,12 @@ function getServiceErrorInfo(logPrefix?: AllowedPrefix): ServiceErrorInfo {
 }
 
 export class ApiError extends Error {
-  constructor(
-    message: string,
-    readonly status: number,
-    exceptionName = 'ApiError',
-  ) {
+  readonly status: number;
+
+  constructor(message: string, status: number, exceptionName = 'ApiError') {
     super(message);
     this.name = exceptionName;
+    this.status = status;
   }
 }
 
@@ -241,7 +240,7 @@ export function createApiClient({
     // Merge case-insensitively: a per-request 'Client-Id' must replace a default 'Client-ID', or fetch combines them into "X, X" and Twitch rejects.
     const headers: Record<string, string> = {};
 
-    headers.Accept = 'application/json';
+    headers['Accept'] = 'application/json';
     Object.assign(headers, defaultHeaders);
 
     const headerKeyMap = new Map(

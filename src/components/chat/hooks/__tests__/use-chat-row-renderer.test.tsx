@@ -221,7 +221,6 @@ describe('useChatRowRenderer', () => {
       currentUsernameNormalized: 'viewer',
       customHighlightsKey: '',
       disableEmoteAnimations: true,
-      fontScale: undefined,
       highlightedUsersKey: 'VIPUser|viewer',
       // mentionLoginRevision intentionally excluded from extraData (would
       // re-render every row per mention resolve); MentionToken subscribes to it.
@@ -282,12 +281,8 @@ describe('useChatRowRenderer', () => {
       messageDisplay: {
         disableEmoteAnimations: true,
         isAlternatingRow: true,
-        isAnnouncement: undefined,
         isChannelPointRedemption: false,
-        isHighlightedMessage: undefined,
         isHighlightedMessageTarget: true,
-        isSharedChatDuplicated: undefined,
-        isTwitchSystemNotice: undefined,
         showInlineReplyContext: true,
         showTimestamp: true,
       },

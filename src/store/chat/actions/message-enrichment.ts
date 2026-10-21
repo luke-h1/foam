@@ -458,7 +458,7 @@ interface ResolveStoredMessageTokensOptions {
   show7TvEmotes: boolean;
   showChatGifs: boolean;
   tokens: MessageToken[];
-  userId: string | undefined;
+  userId?: string;
   userLogin?: string | null;
   userstate: UserStateTags;
 }

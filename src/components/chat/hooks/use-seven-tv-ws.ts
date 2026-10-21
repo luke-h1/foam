@@ -8,16 +8,16 @@ import { useSyncRef } from '@app/hooks/use-sync-ref';
 import { useUnmountCallback } from '@app/hooks/use-unmount-callback';
 import { ReadyState } from '@app/hooks/ws/constants';
 import { useWebsocket } from '@app/hooks/ws/use-websocket';
-import {
+import type {
   CosmeticCreate,
-  type CosmeticCreateCallbackData,
-  type CosmeticDeleteCallbackData,
-  type CosmeticUpdateCallbackData,
+  CosmeticCreateCallbackData,
+  CosmeticDeleteCallbackData,
+  CosmeticUpdateCallbackData,
   EntitlementCreate,
-  type EntitlementCreateCallbackData,
-  type EntitlementDeleteCallbackData,
-  type EntitlementResetCallbackData,
-  type EntitlementUpdateCallbackData,
+  EntitlementCreateCallbackData,
+  EntitlementDeleteCallbackData,
+  EntitlementResetCallbackData,
+  EntitlementUpdateCallbackData,
   SevenTvEventData,
   SevenTvEventType,
   SevenTvWsMessage,

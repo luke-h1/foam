@@ -35,16 +35,18 @@ export type MediaLinkTokenKind = Extract<
  * The emote metadata an emote token carries. Every field is optional because a
  * token is built before its emote is resolved, and enrichment fills it in later.
  */
-type EmotePartFields = Pick<
-  Partial<SanitisedEmote>,
-  | 'creator'
-  | 'emote_link'
-  | 'image_variants'
-  | 'original_name'
-  | 'provider'
-  | 'site'
-  | 'static_url'
-  | 'url'
+type EmotePartFields = Partial<
+  Pick<
+    SanitisedEmote,
+    | 'creator'
+    | 'emote_link'
+    | 'image_variants'
+    | 'original_name'
+    | 'provider'
+    | 'site'
+    | 'static_url'
+    | 'url'
+  >
 > & {
   id?: string;
   name?: string;
@@ -76,8 +78,16 @@ interface SubscriptionEventBase {
  */
 interface MessageTokenByKind {
   text: { type: 'text'; content: string };
-  mention: { type: 'mention'; content: string; color?: string };
-  link: { type: 'link'; content: string; url?: string };
+  mention: {
+    type: 'mention';
+    content: string;
+    color?: string;
+  };
+  link: {
+    type: 'link';
+    content: string;
+    url?: string;
+  };
 
   stvEmoteLink: {
     type: 'stvEmoteLink';

@@ -94,7 +94,9 @@ const MyClipRow = memo(function MyClipRow({
 
 function renderMyClipRow({ item }: { item: MyClipListItem }) {
   return (
-    <MyClipRow clip={item.clip} record={item.record} loading={item.loading} />
+    <MyClipRow
+      {...{ clip: item.clip, record: item.record, loading: item.loading }}
+    />
   );
 }
 

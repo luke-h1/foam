@@ -53,11 +53,11 @@ import {
 } from './api/clients';
 
 const authProxyBaseUrl: string | undefined =
-  Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL ??
+  Constants.expoConfig?.extra?.['EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL'] ??
   process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
 
 const authProxyApiKey: string | undefined =
-  Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_KEY ??
+  Constants.expoConfig?.extra?.['EXPO_PUBLIC_AUTH_PROXY_API_KEY'] ??
   process.env.EXPO_PUBLIC_AUTH_PROXY_API_KEY;
 
 // Cap follow-list pagination so a pathological follow count (Helix allows
@@ -441,7 +441,7 @@ export const twitchService = {
     const params: Record<string, string> = {};
 
     if (userLogin) {
-      params.user_login = userLogin;
+      params['user_login'] = userLogin;
     }
 
     const result = await twitchApi.get<{ data: TwitchStream[] }>('/streams', {
@@ -553,11 +553,11 @@ export const twitchService = {
     const params: Record<string, string> = {};
 
     if (userId) {
-      params.login = userId;
+      params['login'] = userId;
     }
 
     if (id) {
-      params.id = id;
+      params['id'] = id;
     }
 
     const result = await twitchApi.get<{ data: UserInfoResponse[] }>('/users', {
@@ -653,7 +653,10 @@ export const twitchService = {
     broadcasterId: string,
     moderatorId: string,
     userId: string,
-    options?: { durationSeconds?: number; reason?: string },
+    options?: {
+      durationSeconds?: number;
+      reason?: string;
+    },
   ): Promise<void> => {
     await twitchApi.post(
       '/moderation/bans',

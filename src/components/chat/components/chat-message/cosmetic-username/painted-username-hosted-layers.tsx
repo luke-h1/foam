@@ -1,4 +1,4 @@
-import { type StyleProp, StyleSheet, TextStyle, View } from 'react-native';
+import { type StyleProp, StyleSheet, type TextStyle, View } from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { useChatScrollActive } from '@app/components/chat/hooks/use-chat-scroll-active';
@@ -80,11 +80,13 @@ export function PaintedUsernameHostedLayers({
   if (useWebView) {
     return (
       <PaintedUsernameWebView
-        username={displayUsername}
-        paint={paint}
-        fallbackColor={fallbackColor}
-        fontSize={fontSize}
-        lineHeight={lineHeight}
+        {...{
+          username: displayUsername,
+          paint,
+          fallbackColor,
+          fontSize,
+          lineHeight,
+        }}
       />
     );
   }

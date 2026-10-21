@@ -103,8 +103,8 @@ export function createEmoteData(
 }
 
 export function createChatTags(overrides: Record<string, string> = {}) {
-  const id = overrides.id ?? 'msg-1';
-  const login = overrides.login ?? 'viewer';
+  const id = overrides['id'] ?? 'msg-1';
+  const login = overrides['login'] ?? 'viewer';
   const displayName = overrides['display-name'] ?? 'Viewer';
   const userId = overrides['user-id'] ?? 'user-1';
 
@@ -113,13 +113,13 @@ export function createChatTags(overrides: Record<string, string> = {}) {
     login,
     'display-name': displayName,
     'user-id': userId,
-    badges: overrides.badges ?? '',
-    color: overrides.color ?? '#9146ff',
+    badges: overrides['badges'] ?? '',
+    color: overrides['color'] ?? '#9146ff',
     'tmi-sent-ts': overrides['tmi-sent-ts'] ?? '1780876800000',
-    emotes: overrides.emotes ?? '',
-    mod: overrides.mod ?? '0',
-    subscriber: overrides.subscriber ?? '0',
-    turbo: overrides.turbo ?? '0',
+    emotes: overrides['emotes'] ?? '',
+    mod: overrides['mod'] ?? '0',
+    subscriber: overrides['subscriber'] ?? '0',
+    turbo: overrides['turbo'] ?? '0',
     'emote-sets': overrides['emote-sets'] ?? '',
     'user-type': overrides['user-type'] ?? '',
     ...overrides,

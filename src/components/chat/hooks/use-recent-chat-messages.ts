@@ -1,4 +1,4 @@
-import { MutableRefObject, useEffect, useRef } from 'react';
+import { type MutableRefObject, useEffect, useRef } from 'react';
 
 import { useSyncRef } from '@app/hooks/use-sync-ref';
 import { recentMessagesService } from '@app/services/recent-messages-service';

@@ -1,11 +1,11 @@
-import { ReactElement, ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { type Metrics, SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   render as baseRender,
-  RenderOptions,
-  RenderResult,
+  type RenderOptions,
+  type RenderResult,
 } from '@testing-library/react-native';
 
 import { AuthContextTestProvider } from '@app/context/auth-context';
@@ -31,6 +31,7 @@ export const DefaultWrapper = ({ children }: { children: ReactNode }) => {
       <QueryClientProvider client={queryClient}>
         <AuthContextTestProvider
           ready
+          user={undefined}
           authState={{
             isLoggedIn: false,
             isAnonAuth: true,
@@ -41,7 +42,6 @@ export const DefaultWrapper = ({ children }: { children: ReactNode }) => {
               expiresAt: TEST_TOKEN_EXPIRES_AT,
             },
           }}
-          user={undefined}
           loginWithTwitch={jest.fn()}
           logout={jest.fn()}
           populateAuthState={jest.fn()}

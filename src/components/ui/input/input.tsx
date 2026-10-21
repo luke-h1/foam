@@ -13,11 +13,11 @@ import { useAccentColor } from '@app/context/accent-color-context';
 import { colors } from '@app/styles/colors';
 import {
   getColorValue,
-  InputColorConfig,
+  type InputColorConfig,
   RADIUS_VALUES,
-  UIColor,
-  UIRadius,
-  UISize,
+  type UIColor,
+  type UIRadius,
+  type UISize,
 } from '@app/styles/ui';
 
 type InputVariant = 'outline' | 'soft' | 'subtle' | 'underline';
@@ -194,13 +194,16 @@ export type ThemedInputProps = Omit<
   variant?: InputVariant;
   color?: UIColor;
   onBlur?: () => void;
+  onChangeText?: (value: string) => void;
   onContentSizeChange?: (size: { width: number; height: number }) => void;
   onFocus?: () => void;
   onSelectionChange?: (selection: InputSelection) => void;
   onSubmitEditing?: (text: string) => void;
+  placeholder?: string;
   radius?: UIRadius;
   style?: StyleProp<TextStyle & ViewStyle>;
   ref?: Ref<InputRef>;
+  value?: string;
 };
 
 export function Input({

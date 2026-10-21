@@ -1,11 +1,17 @@
-import { memo, RefObject, useCallback, useLayoutEffect, useRef } from 'react';
 import {
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  StyleProp,
+  memo,
+  type RefObject,
+  useCallback,
+  useLayoutEffect,
+  useRef,
+} from 'react';
+import {
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  type StyleProp,
   StyleSheet,
   View,
-  ViewStyle,
+  type ViewStyle,
 } from 'react-native';
 import type { ReactElement } from 'react';
 import type { SharedValue } from 'react-native-reanimated';
@@ -201,9 +207,9 @@ export const ChatList = memo(
         recycleItems={CHAT_RECYCLE_ITEMS}
         keyExtractor={keyExtractor}
         getItemType={getItemType}
-        maintainVisibleContentPosition={
-          shouldMaintainScrollAtEnd ? undefined : true
-        }
+        {...(shouldMaintainScrollAtEnd
+          ? {}
+          : { maintainVisibleContentPosition: true })}
         maintainScrollAtEnd={
           shouldMaintainScrollAtEnd ? CHAT_MAINTAIN_SCROLL_AT_END : false
         }

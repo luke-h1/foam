@@ -32,9 +32,12 @@ export interface CachedImageInfo {
   variant?: string;
 }
 
-type CacheRecord = Required<
-  Pick<CachedImageInfo, 'key' | 'lastAccessed' | 'name' | 'size' | 'uri'>
-> & {
+type CacheRecord = {
+  key: string;
+  lastAccessed: number;
+  name: string;
+  size: number;
+  uri: string;
   sourceUrl: string;
   variant?: string;
 };

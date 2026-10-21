@@ -17,7 +17,6 @@ describe('buildComposerOverflowActions', () => {
 
     expect(actions).toEqual<ComposerOverflowAction[]>([
       {
-        disabled: undefined,
         icon: 'photo',
         label: 'Attach image',
         onPress: onAttachImage,

@@ -1,4 +1,4 @@
-import { PropsWithChildren, useEffect } from 'react';
+import { type PropsWithChildren, useEffect } from 'react';
 
 import { subscribeEmoteCacheMemoryPressure } from './cache-service';
 import { useCachedEmotes } from './use-cached-emotes';

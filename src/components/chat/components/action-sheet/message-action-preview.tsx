@@ -27,9 +27,11 @@ export const MessageActionPreview = memo(function MessageActionPreview({
       <MessageTokenLine tokens={message} style={styles.previewLines}>
         {username ? (
           <PaintedUsername
-            username={username}
-            fallbackColor={previewUsernameColor ?? undefined}
-            usernameTextStyle={styles.previewUsername}
+            {...{
+              username,
+              fallbackColor: previewUsernameColor ?? undefined,
+              usernameTextStyle: styles.previewUsername,
+            }}
           />
         ) : null}
       </MessageTokenLine>

@@ -39,14 +39,16 @@ function ChatBadgeComponent({
 
   return (
     <ChatMessagePressable
-      accessibilityLabel={badge.title}
-      onPress={onPress ? () => onPress(badge) : undefined}
       style={[
         tint ? textStyles.badgeTintSlot : textStyles.badgeSlot,
         tint ? { backgroundColor: tint } : null,
         isModerated ? styles.moderatedBadge : null,
       ]}
       testID='chat-badge'
+      {...{
+        accessibilityLabel: badge.title,
+        onPress: onPress ? () => onPress(badge) : undefined,
+      }}
     >
       <ExpoImage
         source={badge.url}

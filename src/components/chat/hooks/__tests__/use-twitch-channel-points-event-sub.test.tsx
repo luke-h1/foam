@@ -9,7 +9,7 @@ import {
   createTestUser,
 } from '@app/context/__tests__/__fixtures__/auth-context.fixture';
 import {
-  AuthContextState,
+  type AuthContextState,
   AuthContextTestProvider,
 } from '@app/context/auth-context';
 import TwitchWsService from '@app/services/twitch-ws-service';

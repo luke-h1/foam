@@ -4,8 +4,8 @@ import { View } from 'react-native';
 import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { getSubscriptionTierDisplay } from '@app/components/chat/components/user-notices/util/subscription-notice-tier';
 import { Image } from '@app/components/image/image';
-import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
-import { MessageToken } from '@app/utils/chat/message-token';
+import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 import { styles as chatStyles } from '../chat-message/chat-row.styles';
 import { ChatNoticeMetaRow } from '../chat-message/renderers/chat-notice-meta-row';
@@ -37,12 +37,10 @@ function renderMessagePart(messagePart: MessageToken, occurrence: number) {
     case 'emote':
       return (
         <Image
-          key={key}
           trackLoadContext='chat.subscription-notice-emote'
-          source={messagePart.url}
           cacheVariant='emote'
-          style={styles.emote}
           transition={0}
+          {...{ key, source: messagePart.url, style: styles.emote }}
         />
       );
     default:

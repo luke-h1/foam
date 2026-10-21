@@ -1,4 +1,4 @@
-import { memo, RefObject, useEffect } from 'react';
+import { memo, type RefObject, useEffect } from 'react';
 
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import { useChannelEmoteDataForReprocess } from '@app/store/chat/react/selectors';

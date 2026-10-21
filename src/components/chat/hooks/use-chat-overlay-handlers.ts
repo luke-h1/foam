@@ -36,7 +36,13 @@ const TIMEOUT_DURATION_OPTIONS = [
 ] as const satisfies readonly { label: string; seconds: number }[];
 
 export function resolveModTarget(
-  selection: { login?: string; username?: string } | null | undefined,
+  selection:
+    | {
+        login?: string;
+        username?: string;
+      }
+    | null
+    | undefined,
 ): string | undefined {
   return selection?.login?.trim() || selection?.username?.trim() || undefined;
 }
@@ -59,7 +65,11 @@ interface UseChatOverlayHandlersOptions {
  * The user that a report or block action targets.
  */
 type ChatUserSelection =
-  | { login?: string; userId?: string; username?: string }
+  | {
+      login?: string;
+      userId?: string;
+      username?: string;
+    }
   | null
   | undefined;
 
@@ -91,7 +101,12 @@ export function useChatOverlayHandlers({
   );
 
   const banSelection = useCallback(
-    (selection: { login?: string; username?: string } | null) => {
+    (
+      selection: {
+        login?: string;
+        username?: string;
+      } | null,
+    ) => {
       const target = resolveModTarget(selection);
 
       if (!target) {
@@ -104,7 +119,12 @@ export function useChatOverlayHandlers({
   );
 
   const promptTimeoutDuration = useCallback(
-    (selection: { login?: string; username?: string } | null) => {
+    (
+      selection: {
+        login?: string;
+        username?: string;
+      } | null,
+    ) => {
       const target = resolveModTarget(selection);
 
       if (!target) {

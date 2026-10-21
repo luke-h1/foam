@@ -1,4 +1,4 @@
-import { FC, memo, useCallback, useMemo, useRef, useState } from 'react';
+import { type FC, memo, useCallback, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
@@ -6,8 +6,8 @@ import { Stack } from 'expo-router';
 
 import {
   FlashList,
-  FlashListRef,
-  ListRenderItem,
+  type FlashListRef,
+  type ListRenderItem,
 } from '@app/components/flash-list/flash-list';
 import { IconButton } from '@app/components/icon-button/icon-button';
 import { Image } from '@app/components/image/image';

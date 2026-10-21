@@ -131,23 +131,23 @@ export const Image = function Image({
     <View style={[styles.container, containerStyle]}>
       <ExpoImage
         {...props}
-        source={resolvedSource}
+        {...{
+          source: resolvedSource,
+          cachePolicy: resolvedCachePolicy,
+          // Key on the original url. The resolved url changes when the disk-cache
+          // swap lands, which would change the recycling identity.
+          recyclingKey: recyclingKey ?? url ?? undefined,
+          onLoadStart,
+          onLoadEnd,
+        }}
         style={style}
         contentFit={contentFit}
-        cachePolicy={resolvedCachePolicy}
         transition={transition}
         decodeFormat='rgb'
-        /**
-         * Key on the original url. The resolved url changes when the disk-cache
-         * swap lands, which would change the recycling identity.
-         */
-        recyclingKey={recyclingKey ?? url ?? undefined}
         useAppleWebpCodec={useAppleWebpCodec}
         placeholderContentFit={placeholderContentFit ?? 'cover'}
         onLoad={handleLoad}
         onError={handleError}
-        onLoadStart={onLoadStart}
-        onLoadEnd={onLoadEnd}
       />
     </View>
   );

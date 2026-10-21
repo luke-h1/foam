@@ -64,10 +64,7 @@ export function InlineMessageLine({
           </ChatText>
         ) : null}
         <ChatMessageBadges
-          badges={badgeList}
-          compact={compact}
-          fontScale={fontScale}
-          onBadgePress={onBadgePress}
+          {...{ badges: badgeList, compact, fontScale, onBadgePress }}
         />
         {username ? (
           <ChatText
@@ -84,19 +81,21 @@ export function InlineMessageLine({
           </ChatText>
         ) : null}
         <InlineTokens
-          emoteLineStyle={emoteLineStyle}
-          compact={compact}
-          disableEmoteAnimations={disableEmoteAnimations}
-          effectiveHighlightedUserSet={effectiveHighlightedUserSet}
-          fontScale={fontScale}
-          getMentionColor={getMentionColor}
-          getTokenKey={getTokenKey}
-          onEmoteTouchStart={onEmoteTouchStart}
-          message={message}
-          normalisedCurrentUsername={normalisedCurrentUsername}
-          replyPlainMentionTarget={replyPlainMentionTarget}
-          emoteTargetSize={emoteTargetSize}
-          textColor={textColor}
+          {...{
+            emoteLineStyle,
+            compact,
+            disableEmoteAnimations,
+            effectiveHighlightedUserSet,
+            fontScale,
+            getMentionColor,
+            getTokenKey,
+            onEmoteTouchStart,
+            message,
+            normalisedCurrentUsername,
+            replyPlainMentionTarget,
+            emoteTargetSize,
+            textColor,
+          }}
         />
       </ChatText>
     </View>

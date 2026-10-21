@@ -27,8 +27,8 @@ interface ResolveMessageEmotePartsOptions {
    * input and as the basis for resolving tagged subscriber emotes).
    */
   text: string;
-  userId: string | undefined;
-  userLogin: string | null | undefined;
+  userId?: string;
+  userLogin?: string | null;
   userstate: UserStateTags;
 }
 
@@ -125,7 +125,10 @@ export function resolveMessageEmoteParts({
     // Emote tag positions are for the full body; after a GIF split, match by
     // name from the subscriber pool already built above instead of re-using
     // those offsets on a shorter chunk.
-    const chunkedUserState = { ...userstate, emotes: undefined };
+    const chunkedUserState = {
+      ...userstate,
+      emotes: undefined,
+    };
     tokens = [];
 
     for (const segment of splitMessageAroundGifs(text, gifSpans)) {

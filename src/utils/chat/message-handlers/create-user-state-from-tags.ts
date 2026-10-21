@@ -1,16 +1,16 @@
-import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { parseBadges } from '@app/utils/chat/parse-badges';
 
 export const createUserStateFromTags = (
   tags: Record<string, string>,
 ): UserStateTags => {
-  const badgeData = parseBadges(tags.badges);
+  const badgeData = parseBadges(tags['badges']);
 
   // SAFETY: the required reply-parent fields are all set below, and Twitch only sends 'user-type' as '', 'admin', 'global_mod' or 'staff'.
   return {
     ...tags,
-    username: tags['display-name'] || tags.login || '',
-    login: tags.login || tags['display-name']?.toLowerCase() || '',
+    username: tags['display-name'] || tags['login'] || '',
+    login: tags['login'] || tags['display-name']?.toLowerCase() || '',
     'badges-raw': badgeData['badges-raw'],
     badges: badgeData.badges,
     'reply-parent-msg-id': tags['reply-parent-msg-id'] || '',

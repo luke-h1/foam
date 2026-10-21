@@ -1,14 +1,14 @@
-import { Children, Fragment, isValidElement, ReactNode } from 'react';
+import { Children, Fragment, isValidElement, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import {
   Card,
-  CardColors,
+  type CardColors,
   Column,
   HorizontalDivider,
   Host,
   ListItem,
-  ListItemColors,
+  type ListItemColors,
   RNHostView,
   Row,
   Switch,
@@ -81,7 +81,7 @@ function RowLeading({ icon, danger }: { icon?: RowIcon; danger?: boolean }) {
   return (
     <ListItem.LeadingContent>
       <RNHostView matchContents>
-        <IconTile icon={icon} danger={danger} />
+        <IconTile {...{ icon, danger }} />
       </RNHostView>
     </ListItem.LeadingContent>
   );
@@ -226,8 +226,8 @@ export function SettingsRow({
       colors={listItemColors}
       modifiers={getRowModifiers(onPress, disabled)}
     >
-      <RowLeading icon={icon} danger={danger} />
-      <RowText title={title} subtitle={subtitle} danger={danger} />
+      <RowLeading {...{ icon, danger }} />
+      <RowText {...{ title, subtitle, danger }} />
       {trailing || (onPress && chevron) ? (
         <ListItem.TrailingContent>
           <RNHostView matchContents>
@@ -265,7 +265,7 @@ export function SettingsToggleRow({
   return (
     <ListItem colors={listItemColors}>
       <RowLeading icon={icon} />
-      <RowText title={title} subtitle={subtitle} />
+      <RowText {...{ title, subtitle }} />
       <ListItem.TrailingContent>
         <Switch
           value={value}
@@ -299,8 +299,8 @@ export function SettingsLinkRow({
       colors={listItemColors}
       modifiers={onPress ? [clickable(onPress, { indication: true })] : []}
     >
-      <RowLeading icon={icon} danger={danger} />
-      <RowText title={title} subtitle={subtitle} danger={danger} />
+      <RowLeading {...{ icon, danger }} />
+      <RowText {...{ title, subtitle, danger }} />
       {value || onPress ? (
         <ListItem.TrailingContent>
           <Row

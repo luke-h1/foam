@@ -1,6 +1,6 @@
-import { StyleProp, ViewStyle } from 'react-native';
+import type { StyleProp, ViewStyle } from 'react-native';
 
-import { ImageProps as ExpoImageProps } from 'expo-image';
+import type { ImageProps as ExpoImageProps } from 'expo-image';
 
 /**
  * Closed on purpose: the variant is part of the file-cache key, so a freeform

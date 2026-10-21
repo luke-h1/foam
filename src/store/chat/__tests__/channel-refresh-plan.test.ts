@@ -66,7 +66,6 @@ describe('planChannelRefresh', () => {
   test('plans a full load when there is no cache', () => {
     expect(
       planChannelRefresh({
-        cache: undefined,
         forceRefresh: false,
         globalCache: freshGlobalCache(),
         now: NOW,
@@ -90,7 +89,6 @@ describe('planChannelRefresh', () => {
       planChannelRefresh({
         cache: freshCache({ sevenTvChannelEmotes: [] }),
         forceRefresh: false,
-        globalCache: undefined,
         now: NOW,
       }),
     ).toEqual<ChannelRefreshPlan>({ kind: 'full' });

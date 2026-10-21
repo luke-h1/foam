@@ -8,7 +8,7 @@ import {
   ensureObservablePersistenceConfig,
   PREFERENCES_PERSISTENCE_KEY,
 } from '@app/lib/observable-persistence';
-import { Theme } from '@app/styles/themes';
+import type { Theme } from '@app/styles/themes';
 import { isDevToolsEnabled } from '@app/utils/dev-tools/is-dev-tools-enabled';
 
 export interface CustomHighlight {

@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 
 import {
   type AuthSessionResult,
-  DiscoveryDocument,
+  type DiscoveryDocument,
   ResponseType,
   useAuthRequest,
 } from 'expo-auth-session';
@@ -56,7 +56,7 @@ const WHISPER_SCOPES = ['whispers:read', 'whispers:edit'] as const;
 // SAFETY: app.config.ts copies EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL into
 // `extra` from the env, so the value is a string when it is set at all.
 const authProxyBaseUrl =
-  (Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL as
+  (Constants.expoConfig?.extra?.['EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL'] as
     | string
     | undefined) ?? process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
 
@@ -107,7 +107,7 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
       // SAFETY: app.config.ts copies EXPO_PUBLIC_TWITCH_CLIENT_ID into `extra`
       // from the env, so the value is a string when it is set at all.
       clientId:
-        (Constants.expoConfig?.extra?.EXPO_PUBLIC_TWITCH_CLIENT_ID as
+        (Constants.expoConfig?.extra?.['EXPO_PUBLIC_TWITCH_CLIENT_ID'] as
           | string
           | undefined) ?? process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
       scopes: [
@@ -229,7 +229,7 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
         parsedResult.type === 'success'
           ? parsedResult.url ||
             parsedResult.authentication?.accessToken ||
-            parsedResult.params.access_token ||
+            parsedResult.params['access_token'] ||
             null
           : null;
 

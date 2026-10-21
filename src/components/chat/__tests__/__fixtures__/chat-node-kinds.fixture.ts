@@ -244,7 +244,7 @@ function noticeFromIrc(line: string, index: number): AnyChatMessageType {
   const notice = createUserNoticeMessage({
     tags: coerceUserNoticeTags({
       ...parsed.tags,
-      id: `${parsed.tags.id}-${index}`,
+      id: `${parsed.tags['id']}-${index}`,
     }),
     channelName: 'foam',
     text: parsed.params[1] ?? '',
