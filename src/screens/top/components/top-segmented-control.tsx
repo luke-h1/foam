@@ -3,15 +3,15 @@ import { StyleSheet, View } from 'react-native';
 import { SegmentedControl } from '@app/components/segmented-control/segmented-control';
 import { TOP_TAB_ROUTES } from '@app/constants/top-tab-routes';
 
-type TopSegmentControlProps = {
+interface TopSegmentedControlProps {
   index: number;
   onIndexChange: (index: number) => void;
-};
+}
 
-export function TopSegmentControl({
+export function TopSegmentedControl({
   index,
   onIndexChange,
-}: TopSegmentControlProps) {
+}: TopSegmentedControlProps) {
   return (
     <View style={styles.segmentFrame}>
       <SegmentedControl
