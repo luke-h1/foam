@@ -150,7 +150,11 @@ function TopStreamsList({
   renderItem,
 }: TopStreamsListProps) {
   return (
-    <View testID='top-streams-list' style={styles.container}>
+    <View
+      collapsable={false}
+      testID='top-streams-list'
+      style={styles.container}
+    >
       <FlashList
         ref={listRef}
         onLoad={markFirstScreenInteractive}

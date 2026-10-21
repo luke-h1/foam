@@ -139,7 +139,11 @@ function TopCategoriesList({
   renderTopCategoryItem,
 }: TopCategoriesListProps) {
   return (
-    <View style={styles.wrapper} testID='top-categories-list'>
+    <View
+      collapsable={false}
+      style={styles.wrapper}
+      testID='top-categories-list'
+    >
       <FlashList<Category>
         ref={listRef}
         data={allCategories}

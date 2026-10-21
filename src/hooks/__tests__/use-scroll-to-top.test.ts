@@ -38,6 +38,25 @@ describe('useScrollToTop', () => {
     });
 
     expect(scrollToTop).toHaveBeenCalledTimes(1);
+    expect(scrollToTop).toHaveBeenCalledWith({ animated: true });
+  });
+
+  test('prefers scrollToIndex over scrollToTop for virtualized lists', () => {
+    const scrollToIndex = jest.fn(() => Promise.resolve());
+    const scrollToTop = jest.fn();
+    const ref = { current: { scrollToIndex, scrollToTop } };
+
+    renderHook(() => useScrollToTop(ref));
+
+    act(() => {
+      getRegisteredRef().current?.scrollToTop();
+    });
+
+    expect(scrollToIndex).toHaveBeenCalledWith({
+      index: 0,
+      animated: true,
+    });
+    expect(scrollToTop).not.toHaveBeenCalled();
   });
 
   test('scrolls standard scroll views to the configured offset', () => {
@@ -67,6 +86,21 @@ describe('useScrollToTop', () => {
       offset: 48,
       animated: true,
     });
+  });
+
+  test('uses scrollTo for a non-zero offset even when scrollToIndex exists', () => {
+    const scrollToIndex = jest.fn();
+    const scrollTo = jest.fn();
+    const ref = { current: { scrollToIndex, scrollTo } };
+
+    renderHook(() => useScrollToTop(ref, -120));
+
+    act(() => {
+      getRegisteredRef().current?.scrollToTop();
+    });
+
+    expect(scrollTo).toHaveBeenCalledWith({ y: -120, animated: true });
+    expect(scrollToIndex).not.toHaveBeenCalled();
   });
 
   test('scrolls legacy responder wrappers', () => {

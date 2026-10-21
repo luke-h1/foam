@@ -5,8 +5,16 @@ import { useScrollToTop as useNavigationScrollToTop } from 'expo-router';
 type ScrollOptions = { x?: number; y?: number; animated?: boolean };
 type WebScrollable = { injectJavaScript: (script: string) => void };
 
+type ScrollToIndexParams = {
+  index: number;
+  animated?: boolean;
+};
+
 type ScrollableView =
-  | { scrollToTop: () => void }
+  | {
+      scrollToIndex: (params: ScrollToIndexParams) => void | Promise<void>;
+    }
+  | { scrollToTop: (params?: { animated?: boolean }) => void }
   | { scrollTo: (options: ScrollOptions) => void }
   | {
       scrollToOffset: (options: { offset: number; animated?: boolean }) => void;
@@ -39,6 +47,7 @@ function getScrollableNode(
   const current = ref.current;
 
   if (
+    'scrollToIndex' in current ||
     'scrollToTop' in current ||
     'scrollTo' in current ||
     'scrollToOffset' in current ||
@@ -67,8 +76,13 @@ function scrollToOffset(
     return;
   }
 
+  if ('scrollToIndex' in scrollable && offset === 0) {
+    void scrollable.scrollToIndex({ index: 0, animated: true });
+    return;
+  }
+
   if ('scrollToTop' in scrollable && offset === 0) {
-    scrollable.scrollToTop();
+    scrollable.scrollToTop({ animated: true });
     return;
   }
 
