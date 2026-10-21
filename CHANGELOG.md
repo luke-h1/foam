@@ -19,6 +19,7 @@
 - **ci:** Use 1Password item UUID for playstore JSON ([#950](https://github.com/lhowsam/foam/issues/950))
 - **release:** Submit production Android builds to the internal track ([#951](https://github.com/lhowsam/foam/issues/951))
 - **perf:** Argent chat suite + leak-gate memory fixes ([#957](https://github.com/lhowsam/foam/issues/957))
+- **app:** Tighten tsc and fix blank stream-card taps ([#959](https://github.com/lhowsam/foam/issues/959))
 
 ### 👷 CI/CD
 
