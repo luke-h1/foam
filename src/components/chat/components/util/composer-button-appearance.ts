@@ -15,15 +15,15 @@ import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { theme } from '@app/styles/themes';
 
 interface ComposerButtonAppearanceOptions {
-  active?: boolean;
-  disabled?: boolean;
-  label?: string;
-  prominent?: boolean;
+  active?: boolean | undefined;
+  disabled?: boolean | undefined;
+  label?: string | undefined;
+  prominent?: boolean | undefined;
   prominentColor: string;
   /**
    * Drops the backing circle for a glyph that sits inside the input pill.
    */
-  quiet?: boolean;
+  quiet?: boolean | undefined;
   size: number;
 }
 

@@ -215,7 +215,9 @@ describe('createApiClient', () => {
     client.setAuthToken('anon-token');
     await expect(pending).resolves.toEqual({ data: [] });
 
-    expect(firstRequestInit().headers.Authorization).toBe('Bearer anon-token');
+    expect(firstRequestInit().headers['Authorization']).toBe(
+      'Bearer anon-token',
+    );
   });
 
   test('requiresAuth re-arms the gate after removeAuthToken', async () => {
@@ -236,7 +238,9 @@ describe('createApiClient', () => {
     client.setAuthToken('anon-token');
     await expect(pending).resolves.toEqual({ data: [] });
 
-    expect(firstRequestInit().headers.Authorization).toBe('Bearer anon-token');
+    expect(firstRequestInit().headers['Authorization']).toBe(
+      'Bearer anon-token',
+    );
   });
 
   test('requiresAuth does not defer when an explicit Authorization header is set', async () => {
@@ -252,7 +256,7 @@ describe('createApiClient', () => {
       client.get('/users', { headers: { Authorization: 'Bearer explicit' } }),
     ).resolves.toEqual({ data: [] });
 
-    expect(firstRequestInit().headers.Authorization).toBe('Bearer explicit');
+    expect(firstRequestInit().headers['Authorization']).toBe('Bearer explicit');
   });
 
   test('logs 4xx failures at warn level, not error', async () => {

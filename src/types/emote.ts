@@ -25,8 +25,8 @@ interface SanitisedEmoteBase {
   id: string;
   name: string;
   url: string;
-  static_url?: string;
-  image_variants?: EmoteImageVariants;
+  static_url?: string | undefined;
+  image_variants?: EmoteImageVariants | undefined;
   original_name: string;
   creator: string | null;
   emote_link: string;
@@ -45,53 +45,53 @@ export interface SevenTvSanitisedEmote extends SanitisedEmoteBase {
   width: number;
   height: number;
   set_metadata: SevenTvEmoteSetMetadata;
-  actor?: StvUser;
+  actor?: StvUser | undefined;
 }
 
 export interface BttvSanitisedEmote extends SanitisedEmoteBase {
   provider: 'bttv';
   site: 'BTTV' | 'Global BTTV';
-  flags?: number;
-  aspect_ratio?: number;
-  zero_width?: boolean;
-  width?: number;
-  height?: number;
-  actor?: StvUser;
+  flags?: number | undefined;
+  aspect_ratio?: number | undefined;
+  zero_width?: boolean | undefined;
+  width?: number | undefined;
+  height?: number | undefined;
+  actor?: StvUser | undefined;
 }
 
 export interface FfzSanitisedEmote extends SanitisedEmoteBase {
   provider: 'ffz';
   site: 'FFZ' | 'Global FFZ';
-  flags?: number;
-  aspect_ratio?: number;
-  zero_width?: boolean;
-  width?: number;
-  height?: number;
-  actor?: StvUser;
+  flags?: number | undefined;
+  aspect_ratio?: number | undefined;
+  zero_width?: boolean | undefined;
+  width?: number | undefined;
+  height?: number | undefined;
+  actor?: StvUser | undefined;
 }
 
 export interface TwitchSanitisedEmote extends SanitisedEmoteBase {
   provider: 'twitch';
   site: 'Twitch Channel' | 'Twitch Global' | 'Twitch Subscriber';
-  flags?: number;
-  aspect_ratio?: number;
-  zero_width?: boolean;
-  width?: number;
-  height?: number;
-  actor?: StvUser;
-  owner_id?: string;
+  flags?: number | undefined;
+  aspect_ratio?: number | undefined;
+  zero_width?: boolean | undefined;
+  width?: number | undefined;
+  height?: number | undefined;
+  actor?: StvUser | undefined;
+  owner_id?: string | undefined;
 }
 
 export interface EmojiSanitisedEmote extends SanitisedEmoteBase {
   provider: 'emoji';
   site: 'Emoji';
-  emoji_hexcode?: string;
-  flags?: number;
-  aspect_ratio?: number;
-  zero_width?: boolean;
-  width?: number;
-  height?: number;
-  actor?: StvUser;
+  emoji_hexcode?: string | undefined;
+  flags?: number | undefined;
+  aspect_ratio?: number | undefined;
+  zero_width?: boolean | undefined;
+  width?: number | undefined;
+  height?: number | undefined;
+  actor?: StvUser | undefined;
 }
 
 export type SanitisedEmote =

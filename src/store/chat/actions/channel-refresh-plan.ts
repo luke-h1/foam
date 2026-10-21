@@ -6,7 +6,7 @@ export interface ChannelRefreshPlanInput {
   globalCache: GlobalCacheType | undefined;
   forceRefresh: boolean;
   now: number;
-  twitchUserId?: string;
+  twitchUserId?: string | undefined;
 }
 
 export interface CachedChannelRefreshPlan {

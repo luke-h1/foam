@@ -16,14 +16,14 @@ import type { ChatTokenRenderProps } from './types/chat-token-render-props';
 
 interface InlineMessageLineProps extends ChatTokenRenderProps {
   badgeList: SanitisedBadgeSet[];
-  isAction?: boolean;
+  isAction?: boolean | undefined;
   message: InlineFlowToken[];
-  onBadgePress?: (badge: BadgePressData) => void;
-  onUsernamePress?: () => void;
+  onBadgePress?: ((badge: BadgePressData) => void) | undefined;
+  onUsernamePress?: (() => void) | undefined;
   showTimestamp: boolean;
-  timestamp?: string;
-  username?: string;
-  usernameColor?: string;
+  timestamp?: string | undefined;
+  username?: string | undefined;
+  usernameColor?: string | undefined;
 }
 
 export function InlineMessageLine({

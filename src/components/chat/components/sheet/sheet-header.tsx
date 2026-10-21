@@ -7,16 +7,16 @@ import { Text } from '@app/components/ui/text/text';
 import { theme } from '@app/styles/themes';
 
 interface SheetHeaderProps {
-  title?: string;
+  title?: string | undefined;
   /**
    * Custom leading content, such as a user identity block, in place of the
    * title.
    */
-  children?: ReactNode;
+  children?: ReactNode | undefined;
   /**
    * An optional text action before the close button, such as "Edit".
    */
-  action?: { label: string; onPress: () => void };
+  action?: { label: string; onPress: () => void } | undefined;
   onClose: () => void;
 }
 

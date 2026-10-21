@@ -5,8 +5,8 @@ import { Linking, Platform } from 'react-native';
 
 import { focusManager } from '@tanstack/react-query';
 import * as QuickActions from 'expo-quick-actions';
-import type { RouterAction } from 'expo-quick-actions/router';
-import { router } from 'expo-router';
+import { isRouterAction, type RouterAction } from 'expo-quick-actions/router';
+import { type Href, router } from 'expo-router';
 
 import { useAuthContext } from '@app/context/auth-context';
 import { useClearExpiredStorageItems } from '@app/hooks/use-clear-expired-storage-items';
@@ -25,6 +25,18 @@ import {
   endDeepLinkAuth,
 } from '@app/navigators/deep-link-auth-state';
 import { logger } from '@app/utils/logger';
+
+/**
+ * Decode `params.href` from a Quick Action at the I/O boundary.
+ */
+function parseQuickActionHref(action: QuickActions.Action): Href | undefined {
+  if (!isRouterAction(action)) {
+    return undefined;
+  }
+
+  // SAFETY: isRouterAction confirms params.href is a string or pathname object usable as Href.
+  return action.params.href as Href;
+}
 
 const quickActionsBase: RouterAction[] = [
   {
@@ -90,9 +102,14 @@ export function RouterEffects() {
     let isMounted = true;
 
     const handleQuickAction = (action: QuickActions.Action) => {
-      const href = action.params?.href;
-      if (isMounted && href) {
-        router.replace(String(href));
+      if (!isMounted) {
+        return;
+      }
+
+      const href = parseQuickActionHref(action);
+
+      if (href !== undefined) {
+        router.replace(href);
       }
     };
 

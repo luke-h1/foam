@@ -16,7 +16,7 @@ import {
 } from '@app/store/chat/actions/messages';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { getPreferences } from '@app/store/preference-store';
-import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import {
   ingestChannelPointRewardTags,
   registerDeferredRewardgiftStandalone,
@@ -50,9 +50,9 @@ export interface ChatIrcHandlerDeps {
     message: AnyChatMessageType,
     options?: { countUnread?: boolean },
   ) => void;
-  isMountedRef?: RefObject<boolean>;
+  isMountedRef?: RefObject<boolean> | undefined;
   listRef: RefObject<ChatListRef | null>;
-  isLoadingRecentMessagesRef?: RefObject<boolean>;
+  isLoadingRecentMessagesRef?: RefObject<boolean> | undefined;
   messages$: { peek: () => AnyChatMessageType[] };
   moderateChatMessageById: (messageId: string, notice: string) => void;
   moderateChatMessagesByLogin: (login: string, notice: string) => void;
@@ -294,7 +294,7 @@ export function createChatIrcHandlers({
     logger.chat.warn('Twitch CLEARMSG received', {
       channelId,
       channelName,
-      login: tags.login,
+      login: tags['login'],
       roomId: tags['room-id'],
       targetMsgId,
     });

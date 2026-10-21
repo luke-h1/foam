@@ -11,7 +11,7 @@ import { PaintedUsername } from '../chat-message/cosmetic-username/painted-usern
 
 interface MessageActionPreviewProps {
   message: MessageToken[];
-  username?: string;
+  username?: string | undefined;
 }
 
 export const MessageActionPreview = memo(function MessageActionPreview({

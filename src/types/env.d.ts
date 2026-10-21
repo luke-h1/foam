@@ -8,6 +8,7 @@ declare global {
       EXPO_PUBLIC_SENTRY_DSN?: string;
       EXPO_PUBLIC_SENTRY_RELEASE?: string;
       EXPO_PUBLIC_SENTRY_DIST?: string;
+      EXPO_PUBLIC_SENTRY_DEBUG?: string;
       SENTRY_DIST?: string;
       EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL: string;
       EXPO_PUBLIC_AUTH_PROXY_API_KEY: string;
@@ -15,6 +16,7 @@ declare global {
       EXPO_PUBLIC_ENABLE_WDYR: string;
       EXPO_PUBLIC_WITH_STORYBOOK: string;
       EXPO_PUBLIC_WITH_ROZENITE: string;
+      EXPO_PUBLIC_PERF_MARKS?: string;
 
       EXPO_PUBLIC_APP_VARIANT: Variant;
 

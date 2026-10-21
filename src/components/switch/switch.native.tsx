@@ -45,14 +45,12 @@ export const Switch = memo(function Switch({
     >
       <Host colorScheme='dark' style={styles.host}>
         <ExpoSwitch
-          disabled={disabled}
-          modifiers={
-            Platform.OS === 'ios' && accessibilityLabel
-              ? [accessibilityLabelModifier(accessibilityLabel)]
-              : undefined
-          }
+          {...(disabled !== undefined ? { disabled } : {})}
+          {...(Platform.OS === 'ios' && accessibilityLabel
+            ? { modifiers: [accessibilityLabelModifier(accessibilityLabel)] }
+            : {})}
           onValueChange={handleValueChange}
-          testID={testID}
+          {...(testID !== undefined ? { testID } : {})}
           value={displayValue}
         />
       </Host>

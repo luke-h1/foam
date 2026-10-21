@@ -2,8 +2,8 @@ import {
   cloneElement,
   isValidElement,
   memo,
-  ReactElement,
-  ReactNode,
+  type ReactElement,
+  type ReactNode,
   useCallback,
   useMemo,
   useRef,
@@ -29,7 +29,7 @@ import { Image } from '@app/components/image/image';
 import { Text } from '@app/components/ui/text/text';
 import { theme } from '@app/styles/themes';
 import type { EmoteImageScale } from '@app/types/emote';
-import { MessageToken } from '@app/utils/chat/message-token';
+import type { MessageToken } from '@app/utils/chat/message-token';
 import { deriveEmoteImageVariantsFromUrl } from '@app/utils/emote/emote-image-variants/derive-emote-image-variants-from-url';
 import { resolveEmoteDisplayUrl } from '@app/utils/emote/resolve-emote-display-url';
 

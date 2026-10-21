@@ -1,4 +1,4 @@
-import { type StyleProp, StyleSheet, TextStyle } from 'react-native';
+import { type StyleProp, StyleSheet, type TextStyle } from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import type { PaintShadow } from '@app/types/seven-tv/cosmetics';

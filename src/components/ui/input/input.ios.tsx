@@ -61,7 +61,13 @@ import { isLiquidGlassAvailable } from 'expo-glass-effect';
 
 import { useAccentColor } from '@app/context/accent-color-context';
 import { colors } from '@app/styles/colors';
-import { RADIUS_VALUES, UIColor, UIRadius, UISize } from '@app/styles/ui';
+import {
+  RADIUS_VALUES,
+  type UIColor,
+  type UIRadius,
+  type UISize,
+} from '@app/styles/ui';
+import { omitUndefined } from '@app/types/eopt';
 
 import {
   getIosInputSubmitInvoker,
@@ -89,14 +95,19 @@ export type ThemedInputProps = Omit<
   size?: UISize;
   variant?: InputVariant;
   color?: UIColor;
-  onBlur?: () => void;
-  onContentSizeChange?: (size: { width: number; height: number }) => void;
-  onFocus?: () => void;
-  onSelectionChange?: (selection: InputSelection) => void;
-  onSubmitEditing?: (text: string) => void;
+  onBlur?: (() => void) | undefined;
+  onChangeText?: ((value: string) => void) | undefined;
+  onContentSizeChange?:
+    | ((size: { width: number; height: number }) => void)
+    | undefined;
+  onFocus?: (() => void) | undefined;
+  onSelectionChange?: ((selection: InputSelection) => void) | undefined;
+  onSubmitEditing?: ((text: string) => void) | undefined;
+  placeholder?: string | undefined;
   radius?: UIRadius;
   style?: StyleProp<TextStyle & ViewStyle>;
-  ref?: Ref<InputRef>;
+  ref?: Ref<InputRef> | undefined;
+  value?: string | undefined;
 };
 
 interface ResolveInputColorsOptions {
@@ -509,11 +520,13 @@ export function Input(props: ThemedInputProps) {
        */
       ignoreSafeArea='all'
       matchContents={{ vertical: true }}
-      onLayoutContent={
-        onContentSizeChange
-          ? event => onContentSizeChange(event.nativeEvent)
-          : undefined
-      }
+      {...(onContentSizeChange
+        ? {
+            onLayoutContent: (event: {
+              nativeEvent: { width: number; height: number };
+            }) => onContentSizeChange(event.nativeEvent),
+          }
+        : {})}
       style={hostStyle}
     >
       <GlassEffectContainer>
@@ -521,11 +534,10 @@ export function Input(props: ThemedInputProps) {
           {secureTextEntry ? (
             <SecureField
               {...autoFocusProps}
-              maxLength={maxLength}
+              {...omitUndefined({ maxLength, placeholder })}
               modifiers={textFieldModifiers}
               onFocusChange={handleFocusChange}
               onTextChange={handleTextChange}
-              placeholder={placeholder}
               ref={secureFieldRef}
               text={nativeText}
             >
@@ -535,12 +547,14 @@ export function Input(props: ThemedInputProps) {
             <TextField
               {...autoFocusProps}
               axis={multiline ? 'vertical' : 'horizontal'}
-              maxLength={maxLength}
+              {...omitUndefined({
+                maxLength,
+                placeholder,
+                onSelectionChange,
+              })}
               modifiers={textFieldModifiers}
               onFocusChange={handleFocusChange}
-              onSelectionChange={onSelectionChange}
               onTextChange={handleTextChange}
-              placeholder={placeholder}
               ref={textFieldRef}
               selection={nativeSelection}
               text={nativeText}
@@ -555,22 +569,22 @@ export function Input(props: ThemedInputProps) {
 }
 
 type BuildTextFieldModifierOptions = {
-  accessibilityLabel?: string;
-  autoCapitalize?: TextInputProps['autoCapitalize'];
-  autoComplete?: TextInputProps['autoComplete'];
-  autoCorrect?: boolean;
+  accessibilityLabel?: string | undefined;
+  autoCapitalize?: TextInputProps['autoCapitalize'] | undefined;
+  autoComplete?: TextInputProps['autoComplete'] | undefined;
+  autoCorrect?: boolean | undefined;
   disabled: boolean;
-  enterKeyHint?: TextInputProps['enterKeyHint'];
-  inputMode?: TextInputProps['inputMode'];
-  keyboardType?: TextInputProps['keyboardType'];
-  multiline?: boolean;
-  numberOfLines?: number;
-  onSubmit?: () => void;
-  returnKeyType?: TextInputProps['returnKeyType'];
+  enterKeyHint?: TextInputProps['enterKeyHint'] | undefined;
+  inputMode?: TextInputProps['inputMode'] | undefined;
+  keyboardType?: TextInputProps['keyboardType'] | undefined;
+  multiline?: boolean | undefined;
+  numberOfLines?: number | undefined;
+  onSubmit?: (() => void) | undefined;
+  returnKeyType?: TextInputProps['returnKeyType'] | undefined;
   style: TextStyle & ViewStyle;
-  textAlign?: TextStyle['textAlign'];
+  textAlign?: TextStyle['textAlign'] | undefined;
   textColor: ColorValue;
-  textContentType?: TextInputProps['textContentType'];
+  textContentType?: TextInputProps['textContentType'] | undefined;
   tintColor: ColorValue;
 };
 
@@ -741,7 +755,7 @@ function currentInputRef({
   secureFieldRef,
   textFieldRef,
 }: {
-  secureTextEntry?: boolean;
+  secureTextEntry?: boolean | undefined;
   secureFieldRef: React.RefObject<SecureFieldRef | null>;
   textFieldRef: React.RefObject<TextFieldRef | null>;
 }) {
@@ -786,12 +800,12 @@ function paddingForStyle(style: TextStyle & ViewStyle) {
     horizontal ??
     all;
 
-  return {
+  return omitUndefined({
     top,
     bottom,
     leading,
     trailing,
-  };
+  });
 }
 
 type FrameAlignment = 'center' | 'topLeading';
@@ -826,12 +840,12 @@ function frameForStyle(
     return undefined;
   }
 
-  return {
+  return omitUndefined({
     height,
     minHeight,
     maxHeight,
     alignment,
-  };
+  });
 }
 
 function fontModifiersForStyle(style: TextStyle & ViewStyle): ViewModifier[] {
@@ -842,7 +856,7 @@ function fontModifiersForStyle(style: TextStyle & ViewStyle): ViewModifier[] {
     return [];
   }
 
-  return [font({ size, weight })];
+  return [font(omitUndefined({ size, weight }))];
 }
 
 function radiusForStyle(style: TextStyle & ViewStyle) {
@@ -1111,9 +1125,9 @@ function shouldBlurOnSubmit({
   multiline,
   submitBehavior,
 }: {
-  blurOnSubmit?: boolean;
-  multiline?: boolean;
-  submitBehavior?: TextInputProps['submitBehavior'];
+  blurOnSubmit?: boolean | undefined;
+  multiline?: boolean | undefined;
+  submitBehavior?: TextInputProps['submitBehavior'] | undefined;
 }) {
   if (submitBehavior === 'blurAndSubmit') {
     return true;
@@ -1131,7 +1145,8 @@ function shouldBlurOnSubmit({
 }
 
 function pickHostStyle(style: TextStyle & ViewStyle): ViewStyle {
-  return {
+  // SAFETY: omitUndefined keeps only defined layout keys from the TextStyle & ViewStyle intersection.
+  return omitUndefined({
     alignSelf: style.alignSelf,
     bottom: style.bottom,
     display: style.display,
@@ -1163,7 +1178,7 @@ function pickHostStyle(style: TextStyle & ViewStyle): ViewStyle {
     transform: style.transform,
     width: style.width,
     zIndex: style.zIndex,
-  };
+  }) as ViewStyle;
 }
 
 function textChangeEvent(text: string) {

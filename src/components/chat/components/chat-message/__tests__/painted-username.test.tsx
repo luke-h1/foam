@@ -77,7 +77,7 @@ const hasVisibleUsernameInColor = (
   expectedColor: string,
 ): boolean =>
   nodes.some(node => {
-    const style = StyleSheet.flatten(node.props.style) ?? {};
+    const style = StyleSheet.flatten(node.props['style']) ?? {};
     return style.color === expectedColor && style.opacity !== 0;
   });
 
@@ -257,7 +257,7 @@ describe('PaintedUsername', () => {
 
       const tiledLayer = UNSAFE_getByType(PaintLayerTiledImage);
 
-      expect(tiledLayer.props.imageUrl).toBe(
+      expect(tiledLayer.props['imageUrl']).toBe(
         'https://cdn.7tv.app/paint/test/2x.webp',
       );
     });
@@ -274,7 +274,7 @@ describe('PaintedUsername', () => {
       );
 
       const paintImage = UNSAFE_getByType(Image);
-      expect(paintImage.props.contentFit).toBe('fill');
+      expect(paintImage.props['contentFit']).toBe('fill');
     });
 
     test('renders the masked fill for a single-stop gradient', () => {
@@ -416,7 +416,6 @@ describe('PaintedUsername', () => {
 
     test('renders the masked gradient when the angle is undefined', () => {
       const noAnglePaint = createPaintData({
-        angle: undefined,
         stops: {
           0: { at: 0, color: rgbaToSevenTvColor(100, 100, 100, 255) },
           1: { at: 1, color: rgbaToSevenTvColor(200, 200, 200, 255) },
@@ -577,7 +576,7 @@ describe('PaintedUsername', () => {
       );
 
       const hasVisibleSolidUsername = getAllByText('Idle:').some(node => {
-        const style = StyleSheet.flatten(node.props.style) ?? {};
+        const style = StyleSheet.flatten(node.props['style']) ?? {};
         return style.color === fallbackColor && style.opacity !== 0;
       });
 

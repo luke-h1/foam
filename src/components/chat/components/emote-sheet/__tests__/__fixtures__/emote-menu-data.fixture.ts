@@ -6,12 +6,13 @@ import type {
   SevenTvSanitisedEmote,
   TwitchSanitisedEmote,
 } from '@app/types/emote';
+import type { PartialUndefined } from '@app/types/eopt';
 
 /**
  * Dropping the two discriminants keeps this assignable to each provider's own
  * partial, so the branches below stay checked instead of asserted.
  */
-type MenuEmoteOverrides = Partial<
+export type MenuEmoteOverrides = PartialUndefined<
   Omit<SevenTvSanitisedEmote, 'provider' | 'site'> &
     Omit<TwitchSanitisedEmote, 'provider' | 'site'> &
     Omit<BttvSanitisedEmote, 'provider' | 'site'> &
@@ -32,9 +33,10 @@ function createSevenTvMenuEmote(
   id: string,
   name: string,
   site: SevenTvSanitisedEmote['site'],
-  overrides: Partial<SevenTvSanitisedEmote> = {},
+  overrides: PartialUndefined<SevenTvSanitisedEmote> = {},
 ): SevenTvSanitisedEmote {
   return {
+    ...overrides,
     id,
     name,
     original_name: name,
@@ -50,7 +52,6 @@ function createSevenTvMenuEmote(
     width: 32,
     height: 32,
     set_metadata: defaultSevenTvMetadata,
-    ...overrides,
     provider: '7tv',
   };
 }
@@ -59,9 +60,10 @@ function createTwitchMenuEmote(
   id: string,
   name: string,
   site: TwitchSanitisedEmote['site'],
-  overrides: Partial<TwitchSanitisedEmote> = {},
+  overrides: PartialUndefined<TwitchSanitisedEmote> = {},
 ): TwitchSanitisedEmote {
   return {
+    ...overrides,
     id,
     name,
     original_name: name,
@@ -69,7 +71,6 @@ function createTwitchMenuEmote(
     creator: null,
     emote_link: '',
     site,
-    ...overrides,
     provider: 'twitch',
   };
 }
@@ -98,6 +99,7 @@ export function createMenuEmote(
 
   if (site === 'BTTV' || site === 'Global BTTV') {
     return {
+      ...overrides,
       id,
       name,
       original_name: name,
@@ -105,13 +107,13 @@ export function createMenuEmote(
       creator: null,
       emote_link: '',
       site,
-      ...overrides,
       provider: 'bttv',
     } satisfies BttvSanitisedEmote;
   }
 
   if (site === 'FFZ' || site === 'Global FFZ') {
     return {
+      ...overrides,
       id,
       name,
       original_name: name,
@@ -119,7 +121,6 @@ export function createMenuEmote(
       creator: null,
       emote_link: '',
       site,
-      ...overrides,
       provider: 'ffz',
     } satisfies FfzSanitisedEmote;
   }

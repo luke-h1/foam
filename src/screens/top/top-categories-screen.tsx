@@ -7,7 +7,10 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { MemoizedCategoryCard } from '@app/components/category-card/category-card';
 import { CategoryCardSkeleton } from '@app/components/category-card/category-card-skeleton';
-import { FlashList, FlashListRef } from '@app/components/flash-list/flash-list';
+import {
+  FlashList,
+  type FlashListRef,
+} from '@app/components/flash-list/flash-list';
 import { EmptyState } from '@app/components/ui/empty-state/empty-state';
 import { useFlattenedInfiniteQuery } from '@app/hooks/use-flattened-infinite-query';
 import { useInfiniteQueryLoadMore } from '@app/hooks/use-infinite-query-load-more';

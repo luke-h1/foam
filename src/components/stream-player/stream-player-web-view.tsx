@@ -10,13 +10,14 @@ import type {
 
 import { countMetric } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
+import { omitUndefined } from '@app/types/eopt';
 import { logger } from '@app/utils/logger';
 
 import { PIP_ENABLED } from './util/pip-feature';
 import { isAppUrl } from './util/twitch-player-source/is-app-url';
 import { isTwitchPassportCallbackUrl } from './util/twitch-player-source/is-twitch-passport-callback-url';
 
-type WebViewSource = ComponentProps<typeof WebView>['source'];
+type WebViewSource = NonNullable<ComponentProps<typeof WebView>['source']>;
 
 // The player webview does no navigation interception beyond refusing the app's
 // own deep-link scheme. Twitch's login (id.twitch.tv), passport-callback, and
@@ -26,26 +27,26 @@ const handleShouldStartLoadWithRequest: OnShouldStartLoadWithRequest =
 
 interface StreamPlayerWebViewProps {
   allowsTwitchInteraction: boolean;
-  channel?: string;
-  clip?: string;
-  injectedJavaScript?: string;
-  injectedJavaScriptBeforeContentLoaded?: string;
+  channel?: string | undefined;
+  clip?: string | undefined;
+  injectedJavaScript?: string | undefined;
+  injectedJavaScriptBeforeContentLoaded?: string | undefined;
   needsInitRef: RefObject<boolean>;
-  onError?: (error: string) => void;
+  onError?: ((error: string) => void) | undefined;
   onHttpError: (error: { statusCode: number; url: string }) => void;
   onLoadFailed?: (
     reason: string,
     error: WebViewError | WebViewHttpError,
   ) => void;
   onMessage: ComponentProps<typeof WebView>['onMessage'];
-  onWebViewLoaded?: () => void;
+  onWebViewLoaded?: (() => void) | undefined;
   // When false the WebView is transparent (non-opaque WKWebView), so the iOS rotation snapshot
   // reveals the thumbnail behind it instead of the WebView's black backing.
-  opaque?: boolean;
+  opaque?: boolean | undefined;
   remountWebView: () => void;
   scheduleAuthCompletionReload: () => void;
   source: WebViewSource;
-  video?: string;
+  video?: string | undefined;
   webViewKey: number;
   webViewRef: RefObject<WebView | null>;
 }
@@ -160,11 +161,12 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
       thirdPartyCookiesEnabled
       textInteractionEnabled
       originWhitelist={['*']}
-      source={source}
-      injectedJavaScript={injectedJavaScript}
-      injectedJavaScriptBeforeContentLoaded={
-        injectedJavaScriptBeforeContentLoaded
-      }
+      {...omitUndefined({
+        source,
+        injectedJavaScript,
+        injectedJavaScriptBeforeContentLoaded,
+        onMessage,
+      })}
       injectedJavaScriptBeforeContentLoadedForMainFrameOnly={false}
       injectedJavaScriptForMainFrameOnly={false}
       style={[
@@ -185,7 +187,6 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
       onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
       onLoadEnd={event => handleLoadEnd(event.nativeEvent.url)}
       onLoadStart={handleLoadStart}
-      onMessage={onMessage}
       onRenderProcessGone={() =>
         handleWebViewProcessGone('render_process_gone')
       }

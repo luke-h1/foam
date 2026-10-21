@@ -32,7 +32,7 @@ const NOTICE_BODY_MODES = {
 interface ChatNoticeBodyProps extends ChatTokenRenderProps {
   bodyVariant: ChatNoticeVariant;
   showTimestamp: boolean;
-  timestamp?: string;
+  timestamp?: string | undefined;
 }
 
 export function ChatNoticeBody({

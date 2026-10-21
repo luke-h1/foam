@@ -5,7 +5,7 @@ import { BrandIcon } from '@app/components/brand-icon/brand-icon';
 import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { Image } from '@app/components/image/image';
 import { resolveThemeColor } from '@app/styles/themes';
-import { MessageToken } from '@app/utils/chat/message-token';
+import type { MessageToken } from '@app/utils/chat/message-token';
 import { getDisplayEmoteUrl } from '@app/utils/emote/get-display-emote-url';
 
 import { styles as chatStyles } from './chat-message/chat-row.styles';
@@ -15,9 +15,9 @@ import type { ChatFontScale } from './chat-message/util/chat-scale';
 import { CHAT_NOTICE_ACCENTS } from './util/chat-notice-accents';
 
 interface StvEmoteEventProps {
-  compact?: boolean;
-  disableAnimations?: boolean;
-  fontScale?: ChatFontScale;
+  compact?: boolean | undefined;
+  disableAnimations?: boolean | undefined;
+  fontScale?: ChatFontScale | undefined;
   token: MessageToken<'stvEmoteAdded' | 'stvEmoteRemoved'>;
 }
 

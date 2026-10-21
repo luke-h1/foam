@@ -2,12 +2,12 @@ import { generateRandomTwitchColor } from '@app/utils/chat/generate-random-twitc
 import { cachedLighten } from '@app/utils/chat/resolve-cached-sender-color/cached-lighten';
 
 type SenderColorMessage = {
-  cachedSenderColor?: string;
+  cachedSenderColor?: string | undefined;
   sender: string;
   userstate?: {
-    color?: string;
-    login?: string;
-    username?: string;
+    color?: string | undefined;
+    login?: string | undefined;
+    username?: string | undefined;
   };
 };
 

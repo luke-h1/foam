@@ -8,15 +8,15 @@ const VARIANT_FILENAME_PATTERN =
 export function buildImageFallbackChain(url: string): string[] {
   const groups = VARIANT_FILENAME_PATTERN.exec(url)?.groups;
 
-  if (!groups?.base || !groups.size || !groups.ext) {
+  if (!groups?.['base'] || !groups['size'] || !groups['ext']) {
     return [url];
   }
 
-  const base = groups.base;
-  const staticSuffix = groups.staticSuffix ?? '';
-  const query = groups.query ?? '';
-  const size = Number(groups.size);
-  const ext = groups.ext.toLowerCase();
+  const base = groups['base'];
+  const staticSuffix = groups['staticSuffix'] ?? '';
+  const query = groups['query'] ?? '';
+  const size = Number(groups['size']);
+  const ext = groups['ext'].toLowerCase();
 
   const formats = [...new Set([ext, 'webp', 'avif'])];
 

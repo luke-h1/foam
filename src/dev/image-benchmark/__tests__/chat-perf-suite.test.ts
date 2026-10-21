@@ -11,7 +11,7 @@ describe('chat-perf-suite', () => {
   });
 
   test('medium and heavy alias steady60 and raid', () => {
-    expect(SYNTHETIC_PRESETS.medium).toEqual(SYNTHETIC_PRESETS.steady60);
-    expect(SYNTHETIC_PRESETS.heavy).toEqual(SYNTHETIC_PRESETS.raid);
+    expect(SYNTHETIC_PRESETS['medium']).toEqual(SYNTHETIC_PRESETS['steady60']);
+    expect(SYNTHETIC_PRESETS['heavy']).toEqual(SYNTHETIC_PRESETS['raid']);
   });
 });

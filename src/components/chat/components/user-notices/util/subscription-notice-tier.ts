@@ -1,6 +1,6 @@
 export function getSubscriptionTierDisplay(subscriptionEvent: {
-  plan?: string;
-  planName?: string;
+  plan?: string | undefined;
+  planName?: string | undefined;
 }): string {
   if ('plan' in subscriptionEvent && subscriptionEvent.plan) {
     switch (subscriptionEvent.plan) {

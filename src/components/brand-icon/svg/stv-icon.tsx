@@ -1,9 +1,9 @@
 import { memo } from 'react';
-import Svg, { Path, SvgProps } from 'react-native-svg';
+import Svg, { Path, type SvgProps } from 'react-native-svg';
 
-interface StvIconProps extends SvgProps {
-  color?: string;
-}
+type StvIconProps = Omit<SvgProps, 'color'> & {
+  color?: string | undefined;
+};
 
 const StvIconComponent: React.FC<StvIconProps> = ({
   color = '#FFF',

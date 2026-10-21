@@ -144,7 +144,7 @@ function containerPaddingBottom(tree: RenderedTree) {
     throw new Error('expected a single player container element');
   }
 
-  const style: ViewStyle = StyleSheet.flatten(container.props.style);
+  const style: ViewStyle = StyleSheet.flatten(container.props['style']);
   return style.paddingBottom;
 }
 
@@ -261,15 +261,15 @@ describe('StreamPlayer component messaging', () => {
       fingerprint: ['stream-player-embed-error'],
       channel: 'cohhcarnage',
       message: 'embed failed',
-      elapsedMs: embedErrorMetadata?.elapsedMs,
+      elapsedMs: embedErrorMetadata?.['elapsedMs'],
       autoplay: false,
       content_kind: 'live',
-      elapsed_ms: embedErrorMetadata?.elapsed_ms,
+      elapsed_ms: embedErrorMetadata?.['elapsed_ms'],
       outcome: 'failed',
       reason: 'embed_error',
     });
 
-    expect(embedErrorMetadata?.elapsedMs).toEqual(expect.any(Number));
+    expect(embedErrorMetadata?.['elapsedMs']).toEqual(expect.any(Number));
   });
 
   test('resumes autoplay after a transient player pause', () => {

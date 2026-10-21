@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { Image as ExpoImage } from 'expo-image';
 
+import { omitUndefined } from '@app/types/eopt';
 import { logger } from '@app/utils/logger';
 
 import type { ImageProps } from './image.types';
@@ -126,13 +127,15 @@ export const Image = function Image({
     <View style={[styles.container, containerStyle]}>
       <ExpoImage
         {...props}
-        source={cachedSource ?? source}
+        {...omitUndefined({
+          source: cachedSource ?? source,
+          cachePolicy: cachePolicy ?? undefined,
+          recyclingKey: recyclingKey ?? sourceUri,
+        })}
         style={style}
         contentFit={contentFit}
-        cachePolicy={cachePolicy}
         transition={transition}
         decodeFormat='rgb'
-        recyclingKey={recyclingKey ?? sourceUri}
         placeholderContentFit={placeholderContentFit ?? 'cover'}
         onError={error => {
           logger.main.debug('Image loading error:', {

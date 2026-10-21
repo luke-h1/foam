@@ -8,8 +8,8 @@ type ChatEmoteData = NonNullable<ReturnType<typeof getCurrentEmoteData>>;
 
 interface GetMessageBadgesOptions {
   emoteData: ChatEmoteData;
-  sourceBadge?: SanitisedBadgeSet | null;
-  sourceChannelBadges?: SanitisedBadgeSet[] | null;
+  sourceBadge?: SanitisedBadgeSet | null | undefined;
+  sourceChannelBadges?: SanitisedBadgeSet[] | null | undefined;
   userstate: UserStateTags;
 }
 

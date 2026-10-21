@@ -1,4 +1,4 @@
-import { type StyleProp, StyleSheet, TextStyle, View } from 'react-native';
+import { type StyleProp, StyleSheet, type TextStyle, View } from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { useChatScrollActive } from '@app/components/chat/hooks/use-chat-scroll-active';
@@ -27,12 +27,12 @@ import { useSharedPaintAnimationReady } from './util/shared-paint-animation-fram
 interface PaintedUsernameHostedLayersProps {
   displayUsername: string;
   fallbackColor: string;
-  fontSize?: number;
-  lineHeight?: number;
+  fontSize?: number | undefined;
+  lineHeight?: number | undefined;
   paint: PaintData;
   plainColor: string;
   sevenTvPaintDropShadows: PaintDropShadowMode;
-  usernameTextStyle?: StyleProp<TextStyle>;
+  usernameTextStyle?: StyleProp<TextStyle> | undefined;
   useWebView: boolean;
 }
 

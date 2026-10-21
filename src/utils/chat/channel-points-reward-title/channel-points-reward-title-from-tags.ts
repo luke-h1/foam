@@ -1,7 +1,7 @@
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { channelPointsRewardTitleFromSystemMsg } from '@app/utils/chat/channel-points-reward-title/channel-points-reward-title-from-system-msg';
 import { isHighlightMyMessageTags } from '@app/utils/chat/channel-points-reward-title/is-highlight-my-message-tags';
-import {
+import type {
   ChannelPointsRewardTags,
   ChannelPointsRewardTagSource,
 } from '@app/utils/chat/channel-points-reward-title/types';

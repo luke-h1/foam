@@ -2,9 +2,9 @@ import type { ComposerOverflowAction } from '@app/components/chat/util/composer-
 
 interface BuildComposerOverflowActionsOptions {
   canRecallLastMessage: boolean;
-  isUploadingImage?: boolean;
-  onAttachImage?: () => void;
-  onOpenSettings?: () => void;
+  isUploadingImage?: boolean | undefined;
+  onAttachImage?: (() => void) | undefined;
+  onOpenSettings?: (() => void) | undefined;
   onRecallLastMessage: () => void;
 }
 

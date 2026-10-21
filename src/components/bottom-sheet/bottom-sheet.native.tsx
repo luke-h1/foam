@@ -24,14 +24,14 @@ export type { BottomSheetHandle };
 export type SnapPoint = { fraction: number } | { height: number } | 'full';
 
 type BottomSheetProps = PropsWithChildren<{
-  backgroundColor?: string;
-  enableFixedSnapPoints?: boolean;
+  backgroundColor?: string | undefined;
+  enableFixedSnapPoints?: boolean | undefined;
   isPresented: boolean;
   onDismiss: () => void;
-  ref?: Ref<BottomSheetHandle>;
-  showDragIndicator?: boolean;
-  snapPoints?: SnapPoint[];
-  testID?: string;
+  ref?: Ref<BottomSheetHandle> | undefined;
+  showDragIndicator?: boolean | undefined;
+  snapPoints?: SnapPoint[] | undefined;
+  testID?: string | undefined;
 }>;
 
 /**
@@ -165,7 +165,7 @@ export function BottomSheet({
           onDismissRef.current();
         }, DISMISS_ANIMATION_MS);
       }}
-      snapPoints={detents}
+      {...(detents ? { snapPoints: detents } : {})}
     >
       <View style={[styles.content, sizingStyle]} testID={testID}>
         {showDragIndicator === true ? <SheetDragHandle /> : null}

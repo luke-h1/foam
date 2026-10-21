@@ -6,7 +6,7 @@ import { router } from 'expo-router';
 
 import {
   FlashList,
-  ListRenderItem,
+  type ListRenderItem,
 } from '@app/components/flash-list/flash-list';
 import { MemoizedLiveStreamCard } from '@app/components/live-stream-card/live-stream-card';
 import { LiveStreamCardSkeletons } from '@app/components/live-stream-card/live-stream-card-skeleton';

@@ -4,19 +4,19 @@ import { View } from 'react-native';
 import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { useCachedEmoteAspectRatio } from '@app/providers/cached-emotes-provider/use-cached-emote';
 import { calculateAspectRatio } from '@app/utils/chat/calculate-aspect-ratio';
-import { MessageToken } from '@app/utils/chat/message-token';
+import type { MessageToken } from '@app/utils/chat/message-token';
 import { resolveEmoteDisplayUrl } from '@app/utils/emote/resolve-emote-display-url';
 import { logger } from '@app/utils/logger';
 
 import { ChatInlineImage } from './chat-inline-image';
 
 interface EmoteTokenProps {
-  disableAnimations?: boolean;
-  isModerated?: boolean;
+  disableAnimations?: boolean | undefined;
+  isModerated?: boolean | undefined;
   token: MessageToken<'emote'>;
-  onEmoteTouchStart?: (token: MessageToken<'emote'>) => void;
-  shouldOverlayPrevious?: boolean;
-  targetSize?: number;
+  onEmoteTouchStart?: ((token: MessageToken<'emote'>) => void) | undefined;
+  shouldOverlayPrevious?: boolean | undefined;
+  targetSize?: number | undefined;
 }
 
 export const EmoteToken = memo(

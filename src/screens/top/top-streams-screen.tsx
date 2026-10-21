@@ -4,7 +4,10 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import type { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
 
-import { FlashList, FlashListRef } from '@app/components/flash-list/flash-list';
+import {
+  FlashList,
+  type FlashListRef,
+} from '@app/components/flash-list/flash-list';
 import { MemoizedLiveStreamCard } from '@app/components/live-stream-card/live-stream-card';
 import { LiveStreamCardSkeletons } from '@app/components/live-stream-card/live-stream-card-skeleton';
 import { EmptyState } from '@app/components/ui/empty-state/empty-state';

@@ -1,5 +1,5 @@
-import { PropsWithChildren } from 'react';
 import { StyleSheet } from 'react-native';
+import type { PropsWithChildren } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   initialWindowMetrics,

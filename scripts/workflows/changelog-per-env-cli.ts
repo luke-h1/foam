@@ -8,7 +8,7 @@ import {
 } from './changelog-per-env';
 
 function resolveGitCliffBin(): string {
-  const fromEnv = process.env.GIT_CLIFF_BIN;
+  const fromEnv = process.env['GIT_CLIFF_BIN'];
 
   if (fromEnv != null && fromEnv !== '' && existsSync(fromEnv)) {
     return fromEnv;
@@ -31,7 +31,7 @@ export function rewriteChangelogFile(
 
   const context = createGitCliffContext({
     gitCliffBin: resolveGitCliffBin(),
-    configPath: process.env.CLIFF_CONFIG ?? 'cliff.toml',
+    configPath: process.env['CLIFF_CONFIG'] ?? 'cliff.toml',
     currentTag,
   });
 

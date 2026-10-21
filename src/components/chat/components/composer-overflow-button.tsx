@@ -17,7 +17,7 @@ export interface ComposerOverflowButtonProps {
   /**
    * Swaps the plus for a progress glyph while an attachment uploads.
    */
-  busy?: boolean;
+  busy?: boolean | undefined;
 }
 
 export function ComposerOverflowButton({

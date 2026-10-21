@@ -50,10 +50,13 @@ interface UseChatRowRendererOptions {
   setHighlightedReplyTargetMessageId: (
     value: string | null | ((current: string | null) => string | null),
   ) => void;
-  user?: {
-    display_name?: string | null;
-    login?: string | null;
-  } | null;
+  user?:
+    | {
+        display_name?: string | null | undefined;
+        login?: string | null | undefined;
+      }
+    | null
+    | undefined;
 }
 
 export function useChatRowRenderer({

@@ -1,4 +1,4 @@
-import { memo, RefObject, useEffect } from 'react';
+import { memo, type RefObject, useEffect } from 'react';
 
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import { useChannelEmoteDataForReprocess } from '@app/store/chat/react/selectors';
@@ -22,7 +22,7 @@ export const ChatEmoteReprocessor = memo(
     messages$: { peek: () => AnyChatMessageType[] };
     processedMessageIdsRef: RefObject<Set<string>>;
     reprocessKey: string;
-    userLogin?: string | null;
+    userLogin?: string | null | undefined;
   }) => {
     const channelEmoteData = useChannelEmoteDataForReprocess(channelId);
     const emojiStyle = usePreference('emojiStyle');

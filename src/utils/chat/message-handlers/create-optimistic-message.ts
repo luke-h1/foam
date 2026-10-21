@@ -12,9 +12,9 @@ interface CreateOptimisticMessageOptions {
   channelName: string;
   isAction: boolean;
   messageText: string;
-  replyTo?: OptimisticReplyTarget | null;
+  replyTo?: OptimisticReplyTarget | null | undefined;
   sentAt: number;
-  user?: OptimisticSender;
+  user?: OptimisticSender | undefined;
   userstate: ReturnType<typeof createOptimisticUserState>;
 }
 

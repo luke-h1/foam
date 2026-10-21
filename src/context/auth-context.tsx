@@ -1,5 +1,5 @@
 import {
-  ReactNode,
+  type ReactNode,
   use,
   useCallback,
   useEffect,
@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { InteractionManager } from 'react-native';
 
-import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
+import { type AuthSessionResult, TokenResponse } from 'expo-auth-session';
 import { toast } from 'sonner-native';
 
 import { useSyncRef } from '@app/hooks/use-sync-ref';
@@ -72,7 +72,7 @@ const AUTH_STARTUP_TIMEOUT_MS = 12_000;
 const USER_TOKEN_REFRESH_POLL_INTERVAL_MS = 60_000;
 
 interface State {
-  authState?: AuthState;
+  authState?: AuthState | undefined;
   ready: boolean;
 }
 
@@ -199,8 +199,8 @@ async function refreshCurrentUserTokenForState(
 
 export type AuthContextProviderProps = {
   children: ReactNode;
-  enableTestResult?: boolean;
-  testResult?: DefaultTokenResponse;
+  enableTestResult?: boolean | undefined;
+  testResult?: DefaultTokenResponse | undefined;
 };
 
 function useAuthContextValue({

@@ -91,7 +91,7 @@ export function buildIrcFixtureMessage(
   const conditionalTags: Record<string, string> = {};
 
   if (entry.bits) {
-    conditionalTags.bits = String(entry.bits);
+    conditionalTags['bits'] = String(entry.bits);
   }
 
   if (entry.replyTo) {

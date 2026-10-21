@@ -1,10 +1,13 @@
 import { type ReactNode, type RefObject, useCallback } from 'react';
 import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 
-import { ListRenderItem } from '@shopify/flash-list';
+import type { ListRenderItem } from '@shopify/flash-list';
 import { router } from 'expo-router';
 
-import { FlashList, FlashListRef } from '@app/components/flash-list/flash-list';
+import {
+  FlashList,
+  type FlashListRef,
+} from '@app/components/flash-list/flash-list';
 import { Image } from '@app/components/image/image';
 import { PressableArea } from '@app/components/pressable-area/pressable-area';
 import { SegmentedControl } from '@app/components/segmented-control/segmented-control';

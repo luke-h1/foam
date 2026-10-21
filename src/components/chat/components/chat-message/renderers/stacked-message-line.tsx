@@ -18,21 +18,21 @@ import { WrappedTokens } from './wrapped-tokens';
 interface StackedMessageLineProps {
   badgeList: SanitisedBadgeSet[];
   bodyEmoteLineStyle: StyleProp<TextStyle>;
-  cachedSenderColor?: string;
+  cachedSenderColor?: string | undefined;
   isModerated: boolean;
   message: MessageToken[];
   moderationNotice: ChatTokenRenderProps['moderationNotice'];
-  onBadgePress?: (badge: BadgePressData) => void;
-  onUsernamePress?: () => void;
+  onBadgePress?: ((badge: BadgePressData) => void) | undefined;
+  onUsernamePress?: (() => void) | undefined;
   rendererArgs: Omit<ChatTokenRenderProps, 'message'>;
   replyPlainMentionTarget: string | undefined;
   showTimestamp: boolean;
   textColor: string | undefined;
   textStyles: ReturnType<typeof getChatTextStyles>;
   timestamp: string | undefined;
-  userId?: string;
-  username?: string;
-  userstateColor?: string;
+  userId?: string | undefined;
+  username?: string | undefined;
+  userstateColor?: string | undefined;
 }
 
 /**

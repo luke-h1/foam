@@ -137,7 +137,7 @@ export const buildSubscriberEmoteSpec = ({
   twitchUserId,
 }: {
   channelId: string;
-  twitchUserId?: string;
+  twitchUserId?: string | undefined;
 }): EmoteResourceSpec => ({
   key: 'twitchSubscriberEmotes',
   name: 'twitch_subscriber_emotes',
@@ -265,8 +265,8 @@ interface BuildEmoteResourceSpecsOptions {
    * Used if `sevenTvSetId` is still pending after
    * `SEVEN_TV_SET_ID_LOOKUP_BUDGET_MS`.
    */
-  sevenTvSetIdFallback?: string;
-  twitchUserId?: string;
+  sevenTvSetIdFallback?: string | undefined;
+  twitchUserId?: string | undefined;
 }
 
 export const buildEmoteResourceSpecs = ({

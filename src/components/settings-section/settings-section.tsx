@@ -1,4 +1,4 @@
-import { Children, Fragment, isValidElement, ReactNode } from 'react';
+import { Children, Fragment, isValidElement, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { PressableArea } from '@app/components/pressable-area/pressable-area';
@@ -12,10 +12,10 @@ import { Text } from '@app/components/ui/text/text';
 import { theme } from '@app/styles/themes';
 
 interface SettingsSectionProps {
-  title?: string;
-  footer?: ReactNode;
+  title?: string | undefined;
+  footer?: ReactNode | undefined;
   children: ReactNode;
-  cardColor?: string;
+  cardColor?: string | undefined;
 }
 
 export function SettingsSection({
@@ -57,17 +57,17 @@ export function SettingsSection({
 
 interface SettingsRowProps {
   title: string;
-  subtitle?: string;
-  icon?: RowIcon;
-  trailing?: ReactNode;
-  onPress?: () => void;
-  danger?: boolean;
-  disabled?: boolean;
+  subtitle?: string | undefined;
+  icon?: RowIcon | undefined;
+  trailing?: ReactNode | undefined;
+  onPress?: (() => void) | undefined;
+  danger?: boolean | undefined;
+  disabled?: boolean | undefined;
   /**
    * A pressable row shows a chevron unless this is false. Action rows that
    * run in place, rather than open a screen, turn it off.
    */
-  chevron?: boolean;
+  chevron?: boolean | undefined;
 }
 
 export function SettingsRow({
@@ -120,8 +120,7 @@ export function SettingsRow({
     <PressableArea
       accessibilityLabel={title}
       accessibilityRole='button'
-      accessibilityState={disabled ? { disabled } : undefined}
-      disabled={disabled}
+      {...(disabled ? { accessibilityState: { disabled }, disabled } : {})}
       onPress={onPress}
     >
       {content}
@@ -131,8 +130,8 @@ export function SettingsRow({
 
 export function SettingsToggleRow(props: {
   title: string;
-  subtitle?: string;
-  icon?: RowIcon;
+  subtitle?: string | undefined;
+  icon?: RowIcon | undefined;
   value: boolean;
   onValueChange: (value: boolean) => void;
 }) {
@@ -156,11 +155,11 @@ export function SettingsToggleRow(props: {
 
 export function SettingsLinkRow(props: {
   title: string;
-  subtitle?: string;
-  icon?: RowIcon;
-  value?: string;
-  onPress?: () => void;
-  danger?: boolean;
+  subtitle?: string | undefined;
+  icon?: RowIcon | undefined;
+  value?: string | undefined;
+  onPress?: (() => void) | undefined;
+  danger?: boolean | undefined;
 }) {
   const { value, onPress, ...rowProps } = props;
 

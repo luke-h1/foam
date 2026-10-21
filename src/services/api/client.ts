@@ -3,6 +3,7 @@ import { fetch } from 'expo/fetch';
 import { deriveFromResponseOnWorklet } from '@app/lib/off-thread-json/derive-from-response-on-worklet';
 import { parseJsonOnWorklet } from '@app/lib/off-thread-json/parse-json-on-worklet';
 import { type MonitoringErrorName, startSpanAsync } from '@app/lib/sentry';
+import { omitUndefined } from '@app/types/eopt';
 import { type AllowedPrefix, logger } from '@app/utils/logger';
 
 import {
@@ -38,13 +39,12 @@ function getServiceErrorInfo(logPrefix?: AllowedPrefix): ServiceErrorInfo {
 }
 
 export class ApiError extends Error {
-  constructor(
-    message: string,
-    readonly status: number,
-    exceptionName = 'ApiError',
-  ) {
+  readonly status: number;
+
+  constructor(message: string, status: number, exceptionName = 'ApiError') {
     super(message);
     this.name = exceptionName;
+    this.status = status;
   }
 }
 
@@ -57,29 +57,29 @@ type QueryParamValue =
   | readonly (string | number | boolean)[];
 
 interface RequestOptions {
-  params?: Record<string, QueryParamValue>;
-  headers?: Record<string, string>;
+  params?: Record<string, QueryParamValue> | undefined;
+  headers?: Record<string, string> | undefined;
 }
 
 interface ClientOptions {
   baseURL: string;
-  headers?: Record<string, string>;
-  logPrefix?: AllowedPrefix;
+  headers?: Record<string, string> | undefined;
+  logPrefix?: AllowedPrefix | undefined;
   /**
    * Per-request timeout in ms. Without one, a hung request never rejects and
    * the query stays pending forever.
    */
-  timeout?: number;
+  timeout?: number | undefined;
   /**
    * When true, requests wait for the first auth token (bounded by
    * AUTH_READY_TIMEOUT_MS) instead of firing token-less on cold start.
    */
-  requiresAuth?: boolean;
+  requiresAuth?: boolean | undefined;
   /**
    * Called once with the error body on a 401; return true if the auth state
    * was repaired so the request replays once.
    */
-  onUnauthorized?: (body: string) => Promise<boolean>;
+  onUnauthorized?: ((body: string) => Promise<boolean>) | undefined;
 }
 
 const DEFAULT_TIMEOUT_MS = 10_000;
@@ -206,8 +206,8 @@ export function createApiClient({
     method: string,
     path: string,
     options: RequestOptions & {
-      data?: unknown;
-      derive?: (responseText: string) => T;
+      data?: unknown | undefined;
+      derive?: ((responseText: string) => T) | undefined;
     } = {},
     isRetry = false,
   ): Promise<T> {
@@ -241,7 +241,7 @@ export function createApiClient({
     // Merge case-insensitively: a per-request 'Client-Id' must replace a default 'Client-ID', or fetch combines them into "X, X" and Twitch rejects.
     const headers: Record<string, string> = {};
 
-    headers.Accept = 'application/json';
+    headers['Accept'] = 'application/json';
     Object.assign(headers, defaultHeaders);
 
     const headerKeyMap = new Map(
@@ -288,12 +288,15 @@ export function createApiClient({
         `${method} ${String(requestContext.provider ?? 'unknown')}`,
         'http.client',
         () =>
-          fetch(url.toString(), {
-            method,
-            headers,
-            body: data !== undefined ? JSON.stringify(data) : undefined,
-            signal: controller.signal,
-          }),
+          fetch(
+            url.toString(),
+            omitUndefined({
+              method,
+              headers,
+              body: data !== undefined ? JSON.stringify(data) : undefined,
+              signal: controller.signal,
+            }),
+          ),
         {
           provider: String(requestContext.provider ?? 'unknown'),
           'server.address': String(requestContext.host ?? url.host),

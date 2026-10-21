@@ -15,6 +15,7 @@ import {
   type StyleProp,
   StyleSheet,
   View,
+  type ViewStyle,
 } from 'react-native';
 
 import {
@@ -35,6 +36,7 @@ import {
   getEmoteRefReleaseRaceCount,
 } from '@app/providers/cached-emotes-provider/cache-service';
 import { useCachedEmote } from '@app/providers/cached-emotes-provider/use-cached-emote';
+import { omitUndefined } from '@app/types/eopt';
 import { describeEmoteUrl } from '@app/utils/emote/describe-emote-url';
 import { logger } from '@app/utils/logger';
 
@@ -403,18 +405,18 @@ function logEmoteLoadFailure({
 }
 
 interface ChatInlineImageProps {
-  accessibilityLabel?: string;
+  accessibilityLabel?: string | undefined;
   /**
    * Records which emote a touch started on for the row's long-press timer.
    * Taken here so the common emote needs no wrapper view of its own.
    */
-  onTouchStart?: () => void;
-  playAnimation?: boolean;
-  priority?: 'low' | 'normal' | 'high';
+  onTouchStart?: (() => void) | undefined;
+  playAnimation?: boolean | undefined;
+  priority?: 'low' | 'normal' | 'high' | undefined;
   sourceUrl: string;
   style: StyleProp<ImageStyle>;
-  testID?: string;
-  transitionMs?: number;
+  testID?: string | undefined;
+  transitionMs?: number | undefined;
 }
 
 // eslint-disable-next-line react-doctor/no-giant-component -- a split adds a mount boundary on the hottest chat path
@@ -469,8 +471,6 @@ function ChatInlineImageComponent({
     <ExpoImage
       ref={imageRef}
       source={source}
-      accessible={accessibilityLabel ? true : undefined}
-      accessibilityLabel={accessibilityLabel}
       contentFit='contain'
       recyclingKey={`${candidateUrl}#${reloadNonce}`}
       autoplay={playAnimation && autoplay}
@@ -483,15 +483,23 @@ function ChatInlineImageComponent({
       onDisplay={handleDisplay}
       onLoad={handleLoad}
       onError={handleError}
-      onTouchStart={overlayVisible ? undefined : onTouchStart}
       style={overlayVisible ? StyleSheet.absoluteFill : style}
-      testID={testID}
+      {...omitUndefined({
+        accessible: accessibilityLabel ? true : undefined,
+        accessibilityLabel,
+        onTouchStart: overlayVisible ? undefined : onTouchStart,
+        testID,
+      })}
     />
   );
 
   if (overlayVisible) {
     return (
-      <View onTouchStart={onTouchStart} style={style}>
+      <View
+        onTouchStart={onTouchStart}
+        // SAFETY: overlay host only needs ViewStyle layout; ImageStyle extras are unused here.
+        style={style as StyleProp<ViewStyle>}
+      >
         <ChatImageShimmer animate={status === 'loading'} />
         {imageElement}
       </View>

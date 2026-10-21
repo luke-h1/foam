@@ -72,12 +72,12 @@ export interface ChannelPredictionState {
   outcomes: ChannelPredictionOutcomeState[];
   totalUsers: number;
   totalChannelPoints: number;
-  predictionWindowSeconds?: number;
+  predictionWindowSeconds?: number | undefined;
   startedAt: string;
-  locksAt?: string;
-  lockedAt?: string;
-  endedAt?: string;
-  winningOutcomeId?: string;
+  locksAt?: string | undefined;
+  lockedAt?: string | undefined;
+  endedAt?: string | undefined;
+  winningOutcomeId?: string | undefined;
   status: ChannelPredictionStatus;
   isActive: boolean;
   isLocked: boolean;

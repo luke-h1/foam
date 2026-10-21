@@ -28,33 +28,33 @@ import { MessageActionPreview } from './message-action-preview';
 interface Props {
   visible: boolean;
   onClose: () => void;
-  username?: string;
-  messagePreview?: MessageToken[];
+  username?: string | undefined;
+  messagePreview?: MessageToken[] | undefined;
   onReply: () => void;
   onCopy: () => void;
-  onHidePhrase?: () => void;
-  onHideUser?: () => void;
-  onHighlightUser?: () => void;
-  onReportUser?: () => void;
-  onBlockUser?: () => void;
-  onPinMessage?: () => void;
-  onUpdatePinnedMessage?: () => void;
-  onUnpinMessage?: () => void;
-  onDeleteMessage?: () => void;
-  onTimeoutUser?: () => void;
-  onBanUser?: () => void;
-  isUserHighlighted?: boolean;
-  isPinnedMessage?: boolean;
-  isPinnedMessageBusy?: boolean;
-  canModerateChat?: boolean;
-  canDeleteMessage?: boolean;
-  canPinMessage?: boolean;
-  canModerateUser?: boolean;
+  onHidePhrase?: (() => void) | undefined;
+  onHideUser?: (() => void) | undefined;
+  onHighlightUser?: (() => void) | undefined;
+  onReportUser?: (() => void) | undefined;
+  onBlockUser?: (() => void) | undefined;
+  onPinMessage?: (() => void) | undefined;
+  onUpdatePinnedMessage?: (() => void) | undefined;
+  onUnpinMessage?: (() => void) | undefined;
+  onDeleteMessage?: (() => void) | undefined;
+  onTimeoutUser?: (() => void) | undefined;
+  onBanUser?: (() => void) | undefined;
+  isUserHighlighted?: boolean | undefined;
+  isPinnedMessage?: boolean | undefined;
+  isPinnedMessageBusy?: boolean | undefined;
+  canModerateChat?: boolean | undefined;
+  canDeleteMessage?: boolean | undefined;
+  canPinMessage?: boolean | undefined;
+  canModerateUser?: boolean | undefined;
 }
 
 type MessageActionSection = {
   key: string;
-  title?: string;
+  title?: string | undefined;
   rows: SheetAction[];
 };
 

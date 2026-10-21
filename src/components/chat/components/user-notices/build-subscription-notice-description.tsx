@@ -7,16 +7,16 @@ export interface SubscriptionDescriptionInput {
   msgId: string;
   isPrime: boolean;
   tierDisplay: string;
-  cumulativeMonths?: number;
-  streakMonths?: number;
-  shouldShareStreak?: boolean;
-  recipientDisplayName?: string;
-  giftMonths?: number;
-  promoName?: string;
-  promoGiftTotal?: number;
-  massGiftCount?: number;
-  senderCount?: number;
-  senderName?: string;
+  cumulativeMonths?: number | undefined;
+  streakMonths?: number | undefined;
+  shouldShareStreak?: boolean | undefined;
+  recipientDisplayName?: string | undefined;
+  giftMonths?: number | undefined;
+  promoName?: string | undefined;
+  promoGiftTotal?: number | undefined;
+  massGiftCount?: number | undefined;
+  senderCount?: number | undefined;
+  senderName?: string | undefined;
 }
 
 /**

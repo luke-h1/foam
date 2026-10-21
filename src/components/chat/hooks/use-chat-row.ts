@@ -17,8 +17,8 @@ import { resolveMessageDisplayFlags } from '@app/components/chat/util/chat-row/r
 import { toChatMessageData } from '@app/components/chat/util/chat-row/to-chat-message-data';
 import { getAnnouncementAccentColor } from '@app/components/chat/util/get-announcement-accent-color';
 import { usePreference } from '@app/store/preference-store';
-import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
-import { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
+import type { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
+import type { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-chat-username';
 import { deriveChatBody } from '@app/utils/chat/derive-chat-body/derive-chat-body';
 

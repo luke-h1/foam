@@ -24,27 +24,27 @@ import type { ReplyFlags } from './types/reply-flags';
 
 interface UserChatBodyProps {
   badgeList: SanitisedBadgeSet[];
-  cachedSenderColor?: string;
-  onBadgePress?: (badge: BadgePressData) => void;
-  isAction?: boolean;
-  isHighlightedMessage?: boolean;
-  onReplyContextPress?: (replyParentMessageId: string) => void;
-  onUsernamePress?: () => void;
-  parentDisplayName?: string;
-  replyBody?: string;
+  cachedSenderColor?: string | undefined;
+  onBadgePress?: ((badge: BadgePressData) => void) | undefined;
+  isAction?: boolean | undefined;
+  isHighlightedMessage?: boolean | undefined;
+  onReplyContextPress?: ((replyParentMessageId: string) => void) | undefined;
+  onUsernamePress?: (() => void) | undefined;
+  parentDisplayName?: string | undefined;
+  replyBody?: string | undefined;
   replyFlags: ReplyFlags;
-  replyParentMessageId?: string;
-  roomId?: string;
-  timestamp?: string;
+  replyParentMessageId?: string | undefined;
+  roomId?: string | undefined;
+  timestamp?: string | undefined;
   /**
    * One object from the row. Do not spread it: object rest copies it on
    * every row render.
    */
   tokenRenderProps: ChatTokenRenderProps;
-  userId?: string;
-  userstate?: UserStateTags;
-  userstateColor?: string;
-  username?: string;
+  userId?: string | undefined;
+  userstate?: UserStateTags | undefined;
+  userstateColor?: string | undefined;
+  username?: string | undefined;
 }
 
 export function UserChatBody({

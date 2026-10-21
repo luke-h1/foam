@@ -11,11 +11,11 @@ declare module '@tanstack/react-query' {
       /**
        * Skip the default error toast for this mutation.
        */
-      suppressErrorToast?: boolean;
+      suppressErrorToast?: boolean | undefined;
       /**
        * User-facing message shown in the default error toast.
        */
-      errorMessage?: string;
+      errorMessage?: string | undefined;
     };
   }
 }
@@ -43,7 +43,12 @@ export function handleQueryError(
 
 export function handleMutationError(
   error: Error,
-  meta: { suppressErrorToast?: boolean; errorMessage?: string } | undefined,
+  meta:
+    | {
+        suppressErrorToast?: boolean | undefined;
+        errorMessage?: string | undefined;
+      }
+    | undefined,
 ): void {
   logger.api.error(error.message, {
     name: 'api_error',
@@ -57,7 +62,29 @@ export function handleMutationError(
   }
 }
 
+interface DefaultQueryOptions {
+  staleTime: number;
+  networkMode: 'offlineFirst';
+  refetchOnWindowFocus: boolean;
+  refetchOnReconnect: boolean;
+  retry: number;
+  gcTime?: number;
+}
+
 const createQueryClient = () => {
+  const queries: DefaultQueryOptions = {
+    staleTime: 30_000,
+    networkMode: 'offlineFirst',
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    // structuralSharing stays default (true): identical refetch payloads keep referential identity, or list screens memoized on `data` rebuild for nothing.
+    retry: 2,
+  };
+
+  if (Platform.OS === 'web') {
+    queries.gcTime = WEB_QUERY_CACHE_MAX_AGE;
+  }
+
   return new QueryClient({
     queryCache: new QueryCache({
       // Fires once per query after retries are exhausted.
@@ -68,15 +95,7 @@ const createQueryClient = () => {
         handleMutationError(error, mutation.meta),
     }),
     defaultOptions: {
-      queries: {
-        gcTime: Platform.OS === 'web' ? WEB_QUERY_CACHE_MAX_AGE : undefined,
-        staleTime: 30_000,
-        networkMode: 'offlineFirst',
-        refetchOnWindowFocus: false,
-        refetchOnReconnect: true,
-        // structuralSharing stays default (true): identical refetch payloads keep referential identity, or list screens memoized on `data` rebuild for nothing.
-        retry: 2,
-      },
+      queries,
     },
   });
 };

@@ -12,16 +12,29 @@ export type Spacing =
   | '6xl';
 
 export interface MarginProps {
-  m?: Spacing | number;
-  mb?: Spacing | number;
-  ml?: Spacing | number;
-  mr?: Spacing | number;
-  mt?: Spacing | number;
-  mx?: Spacing | number;
-  my?: Spacing | number;
+  m?: Spacing | number | undefined;
+  mb?: Spacing | number | undefined;
+  ml?: Spacing | number | undefined;
+  mr?: Spacing | number | undefined;
+  mt?: Spacing | number | undefined;
+  mx?: Spacing | number | undefined;
+  my?: Spacing | number | undefined;
 }
 
-export function resolveSpacingValue(theme: AppTheme, value?: Spacing | number) {
+export function resolveSpacingValue(
+  theme: AppTheme,
+  value: Spacing | number,
+): number;
+
+export function resolveSpacingValue(
+  theme: AppTheme,
+  value?: Spacing | number,
+): number | undefined;
+
+export function resolveSpacingValue(
+  theme: AppTheme,
+  value?: Spacing | number,
+): number | undefined {
   if (value === undefined) {
     return undefined;
   }

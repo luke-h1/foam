@@ -33,7 +33,6 @@ describe('createViewerMilestonePart', () => {
         login: 'viewer',
         'msg-param-value': '10',
         'msg-param-copoReward': '',
-        'system-msg': undefined,
       }),
     );
 
@@ -71,7 +70,6 @@ describe('createViewerMilestonePart', () => {
       createViewerMilestoneTags({
         'display-name': 'Viewer',
         'msg-param-value': '1',
-        'system-msg': undefined,
       }),
     );
 

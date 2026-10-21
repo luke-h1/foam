@@ -1,4 +1,4 @@
-import { BrandIconName } from '@app/components/brand-icon/util/brand-icon-registry';
+import type { BrandIconName } from '@app/components/brand-icon/util/brand-icon-registry';
 import type { SubscriberChannelProfile } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 import { normaliseChatText } from '@app/utils/chat/normalise-chat-text';
@@ -32,24 +32,28 @@ export interface EmoteMenuProvider {
 }
 
 export interface EmoteMenuDataInput {
-  bttvChannelEmotes?: SanitisedEmote[];
-  bttvGlobalEmotes?: SanitisedEmote[];
-  emojis?: string[];
-  emojiSets?: {
-    data: string[];
-    icon: `emoji:${string}`;
-    id: string;
-    title: string;
-  }[];
-  ffzChannelEmotes?: SanitisedEmote[];
-  ffzGlobalEmotes?: SanitisedEmote[];
-  sevenTvChannelEmotes?: SanitisedEmote[];
-  sevenTvGlobalEmotes?: SanitisedEmote[];
-  sevenTvPersonalEmotes?: SanitisedEmote[];
-  twitchChannelEmotes?: SanitisedEmote[];
-  twitchGlobalEmotes?: SanitisedEmote[];
-  twitchSubscriberEmotes?: SanitisedEmote[];
-  twitchSubscriberChannelProfiles?: Record<string, SubscriberChannelProfile>;
+  bttvChannelEmotes?: SanitisedEmote[] | undefined;
+  bttvGlobalEmotes?: SanitisedEmote[] | undefined;
+  emojis?: string[] | undefined;
+  emojiSets?:
+    | {
+        data: string[];
+        icon: `emoji:${string}`;
+        id: string;
+        title: string;
+      }[]
+    | undefined;
+  ffzChannelEmotes?: SanitisedEmote[] | undefined;
+  ffzGlobalEmotes?: SanitisedEmote[] | undefined;
+  sevenTvChannelEmotes?: SanitisedEmote[] | undefined;
+  sevenTvGlobalEmotes?: SanitisedEmote[] | undefined;
+  sevenTvPersonalEmotes?: SanitisedEmote[] | undefined;
+  twitchChannelEmotes?: SanitisedEmote[] | undefined;
+  twitchGlobalEmotes?: SanitisedEmote[] | undefined;
+  twitchSubscriberEmotes?: SanitisedEmote[] | undefined;
+  twitchSubscriberChannelProfiles?:
+    | Record<string, SubscriberChannelProfile>
+    | undefined;
 }
 
 function chunk<TItem>(items: TItem[], size: number): TItem[][] {

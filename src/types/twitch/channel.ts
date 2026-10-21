@@ -12,7 +12,7 @@ export interface FollowedChannel {
 }
 
 export interface FollowedChannelWithProfile extends FollowedChannel {
-  profile_image_url?: string;
+  profile_image_url?: string | undefined;
 }
 
 export interface SearchChannelResponse {

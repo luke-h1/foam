@@ -10,8 +10,8 @@ import { Text } from '@app/components/ui/text/text';
 import { parseRemoteConfigValue } from '@app/hooks/firebase/remote-config-model';
 import {
   defaultRemoteConfig,
-  RemoteConfigKey,
-  RemoteConfigSchema,
+  type RemoteConfigKey,
+  type RemoteConfigSchema,
   useRemoteConfig,
 } from '@app/hooks/firebase/use-remote-config';
 import { theme } from '@app/styles/themes';

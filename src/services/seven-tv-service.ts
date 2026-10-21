@@ -15,12 +15,12 @@ import {
   type PaintsQueryQuery,
   Platform,
   UserByConnectionDocument,
-  UserByConnectionQuery,
+  type UserByConnectionQuery,
   UserCosmeticsDocument,
-  UserCosmeticsQuery,
+  type UserCosmeticsQuery,
   UserPersonalEmotesQueryDocument,
-  UserPersonalEmotesQueryQuery,
-  UserPersonalEmotesQueryQueryVariables,
+  type UserPersonalEmotesQueryQuery,
+  type UserPersonalEmotesQueryQueryVariables,
 } from '@app/graphql/generated/gql';
 import type {
   EmoteImageVariants,
@@ -387,7 +387,7 @@ export const sevenTvService = {
   sendPresence: async (
     channelId: string,
     userId: string,
-    options: { passive: boolean; sessionId?: string },
+    options: { passive: boolean; sessionId?: string | undefined },
   ) => {
     return sevenTvApi.post(`/users/${userId}/presences`, {
       kind: 1,

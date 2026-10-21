@@ -61,8 +61,8 @@ interface ChatInputShellProps {
     replyParentDisplayName?: string,
     replyParentMsgBody?: string,
   ) => void;
-  user?: UserInfoResponse;
-  ref?: Ref<ChatInputShellHandle>;
+  user?: UserInfoResponse | undefined;
+  ref?: Ref<ChatInputShellHandle> | undefined;
 }
 
 interface ChatDraftState {

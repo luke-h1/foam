@@ -2,7 +2,7 @@ import { sevenTvGqlApi } from '@app/services/api/clients';
 
 interface QueryOptions<TVariables> {
   query: string;
-  variables?: TVariables;
+  variables?: TVariables | undefined;
 }
 
 interface DerivedQueryOptions<
@@ -18,18 +18,18 @@ interface DerivedQueryOptions<
 }
 
 interface QueryResult<TData> {
-  data?: TData;
-  error?: Error;
+  data?: TData | undefined;
+  error?: Error | undefined;
 }
 
 export interface GraphQLResponse<TData> {
-  data?: TData;
-  errors?: { message: string }[];
+  data?: TData | undefined;
+  errors?: { message: string }[] | undefined;
 }
 
 interface DerivedResponse<TResult> {
-  data?: TResult;
-  errorMessage?: string;
+  data?: TResult | undefined;
+  errorMessage?: string | undefined;
 }
 
 export const sevenTvV4Client = {

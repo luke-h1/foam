@@ -29,19 +29,19 @@ export type { SuggestionType } from './util/chat-composer-types';
 const SELECTION_HIGHLIGHT_ALPHA = '66';
 
 export interface ChatComposerProps {
-  onChangeText?: (text: string) => void;
-  onSubmit?: () => void;
-  onPressAdd?: () => void;
-  onAttachImage?: () => void;
-  onOpenSettings?: () => void;
-  isUploadingImage?: boolean;
-  maxSuggestions?: number;
-  prioritizeChannelEmotes?: boolean;
-  placeholder?: string;
-  editable?: boolean;
-  canSend?: boolean;
-  reservedCharacters?: number;
-  ref?: Ref<ChatComposerHandle>;
+  onChangeText?: ((text: string) => void) | undefined;
+  onSubmit?: (() => void) | undefined;
+  onPressAdd?: (() => void) | undefined;
+  onAttachImage?: (() => void) | undefined;
+  onOpenSettings?: (() => void) | undefined;
+  isUploadingImage?: boolean | undefined;
+  maxSuggestions?: number | undefined;
+  prioritizeChannelEmotes?: boolean | undefined;
+  placeholder?: string | undefined;
+  editable?: boolean | undefined;
+  canSend?: boolean | undefined;
+  reservedCharacters?: number | undefined;
+  ref?: Ref<ChatComposerHandle> | undefined;
 }
 
 function ChatComposerComponent({

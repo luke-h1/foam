@@ -13,8 +13,8 @@ import {
 } from '../util/chat-scale';
 
 interface SharedChatSourceLabelProps {
-  compact?: boolean;
-  fontScale?: ChatFontScale;
+  compact?: boolean | undefined;
+  fontScale?: ChatFontScale | undefined;
 }
 
 export function SharedChatSourceLabel({

@@ -21,7 +21,7 @@ import { theme } from '@app/styles/themes';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { generateRandomTwitchColor } from '@app/utils/chat/generate-random-twitch-color';
-import { MessageToken } from '@app/utils/chat/message-token';
+import type { MessageToken } from '@app/utils/chat/message-token';
 import { lightenColor } from '@app/utils/color/lighten-color';
 
 import { ChatRow } from '../chat-row';
@@ -831,7 +831,7 @@ describe('ChatRow', () => {
 
       const bodyText = findTextAncestor(getByTestId('emote-token'));
 
-      expect(StyleSheet.flatten(bodyText?.props.style).lineHeight).toBe(
+      expect(StyleSheet.flatten(bodyText?.props['style']).lineHeight).toBe(
         getChatTextStyles('default', false).bodyEmoteLine.lineHeight,
       );
     });

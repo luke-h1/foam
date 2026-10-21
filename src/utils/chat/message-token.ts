@@ -1,4 +1,5 @@
 import type { SanitisedEmote } from '@app/types/emote';
+import type { EoptOptional, PartialUndefined } from '@app/types/eopt';
 
 export type TwitchNoticeKind =
   | 'viewermilestone'
@@ -36,7 +37,7 @@ export type MediaLinkTokenKind = Extract<
  * token is built before its emote is resolved, and enrichment fills it in later.
  */
 type EmotePartFields = Pick<
-  Partial<SanitisedEmote>,
+  PartialUndefined<SanitisedEmote>,
   | 'creator'
   | 'emote_link'
   | 'image_variants'
@@ -46,27 +47,27 @@ type EmotePartFields = Pick<
   | 'static_url'
   | 'url'
 > & {
-  id?: string;
-  name?: string;
-  flags?: number;
-  color?: string;
-  width?: number;
-  height?: number;
-  aspect_ratio?: number;
-  zero_width?: boolean;
+  id?: EoptOptional<string>;
+  name?: EoptOptional<string>;
+  flags?: EoptOptional<number>;
+  color?: EoptOptional<string>;
+  width?: EoptOptional<number>;
+  height?: EoptOptional<number>;
+  aspect_ratio?: EoptOptional<number>;
+  zero_width?: EoptOptional<boolean>;
 
   /**
    * Zero-width emotes rendered centered on top of this emote instead of as
    * standalone tokens.
    */
-  overlaid?: MessageToken<'emote'>[];
+  overlaid?: EoptOptional<MessageToken<'emote'>[]>;
 
-  thumbnail?: string;
+  thumbnail?: EoptOptional<string>;
 };
 
 interface SubscriptionEventBase {
   displayName: string;
-  message?: string;
+  message?: EoptOptional<string>;
 }
 
 /**
@@ -76,20 +77,28 @@ interface SubscriptionEventBase {
  */
 interface MessageTokenByKind {
   text: { type: 'text'; content: string };
-  mention: { type: 'mention'; content: string; color?: string };
-  link: { type: 'link'; content: string; url?: string };
+  mention: {
+    type: 'mention';
+    content: string;
+    color?: EoptOptional<string>;
+  };
+  link: {
+    type: 'link';
+    content: string;
+    url?: EoptOptional<string>;
+  };
 
   stvEmoteLink: {
     type: 'stvEmoteLink';
     content: string;
-    url?: string;
-    thumbnail?: string;
+    url?: EoptOptional<string>;
+    thumbnail?: EoptOptional<string>;
   };
   twitchClip: {
     type: 'twitchClip';
     content: string;
-    url?: string;
-    thumbnail?: string;
+    url?: EoptOptional<string>;
+    thumbnail?: EoptOptional<string>;
   };
 
   emote: { type: 'emote'; content: string } & EmotePartFields;
@@ -126,10 +135,10 @@ interface MessageTokenByKind {
     subscriptionEvent: SubscriptionEventBase & {
       msgId: 'sub';
       plan: string;
-      planName?: string; // Prime, Tier 1, Tier 2, Tier 3
-      months?: number; // cumulative-months
-      streakMonths?: number; // streak-months
-      shouldShareStreak?: boolean; // should-share-streak
+      planName?: EoptOptional<string>; // Prime, Tier 1, Tier 2, Tier 3
+      months?: EoptOptional<number>; // cumulative-months
+      streakMonths?: EoptOptional<number>; // streak-months
+      shouldShareStreak?: EoptOptional<boolean>; // should-share-streak
     };
   };
   resub: {
@@ -137,10 +146,10 @@ interface MessageTokenByKind {
     subscriptionEvent: SubscriptionEventBase & {
       msgId: 'resub' | 'extendsub' | 'standardpayforward';
       plan: string; // 'Prime', '1000', '2000' or '3000' (Tier 1 to Tier 3)
-      planName?: string;
+      planName?: EoptOptional<string>;
       months: number;
-      streakMonths?: number;
-      shouldShareStreak?: boolean;
+      streakMonths?: EoptOptional<number>;
+      shouldShareStreak?: EoptOptional<boolean>;
     };
   };
   anongift: {
@@ -152,7 +161,7 @@ interface MessageTokenByKind {
         | 'communitypayforward'
         | 'primecommunitygiftreceived';
       plan: string;
-      planName?: string;
+      planName?: EoptOptional<string>;
       recipientDisplayName: string; // recipient-display-name
       recipientId: string; // recipient-id
       giftMonths: number; // gift-months
@@ -163,20 +172,20 @@ interface MessageTokenByKind {
     type: 'submysterygift';
     subscriptionEvent: SubscriptionEventBase & {
       msgId: 'submysterygift' | 'anonsubmysterygift';
-      plan?: string;
-      planName?: string;
-      massGiftCount?: number;
-      senderCount?: number;
+      plan?: EoptOptional<string>;
+      planName?: EoptOptional<string>;
+      massGiftCount?: EoptOptional<number>;
+      senderCount?: EoptOptional<number>;
     };
   };
   giftpaidupgrade: {
     type: 'giftpaidupgrade';
     subscriptionEvent: SubscriptionEventBase & {
       msgId: 'giftpaidupgrade';
-      senderLogin?: string;
-      senderName?: string;
-      promoName?: string;
-      promoGiftTotal?: string;
+      senderLogin?: EoptOptional<string>;
+      senderName?: EoptOptional<string>;
+      promoName?: EoptOptional<string>;
+      promoGiftTotal?: EoptOptional<string>;
     };
   };
   anongiftpaidupgrade: {
@@ -192,8 +201,8 @@ interface MessageTokenByKind {
     subscriptionEvent: SubscriptionEventBase & {
       msgId: 'primepaidupgrade';
       plan: string;
-      planName?: string;
-      months?: number;
+      planName?: EoptOptional<string>;
+      months?: EoptOptional<number>;
     };
   };
 
@@ -204,14 +213,14 @@ interface MessageTokenByKind {
     amount: string;
     currency: string;
     systemMsg: string;
-    message?: string;
+    message?: EoptOptional<string>;
   };
   ritual: {
     type: 'ritual';
     displayName: string;
     ritualName: string;
     systemMsg: string;
-    message?: string;
+    message?: EoptOptional<string>;
   };
   viewermilestone: {
     type: 'viewermilestone';

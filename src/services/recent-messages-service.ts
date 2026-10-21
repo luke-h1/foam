@@ -1,4 +1,5 @@
 import { parseJsonOnWorklet } from '@app/lib/off-thread-json/parse-json-on-worklet';
+import { omitUndefined } from '@app/types/eopt';
 
 const RECENT_MESSAGES_URL =
   'https://recent-messages.robotty.de/api/v2/recent-messages';
@@ -19,7 +20,7 @@ export const recentMessagesService = {
 
     const response = await fetch(
       `${RECENT_MESSAGES_URL}/${encodeURIComponent(channelName)}${query}`,
-      { signal },
+      omitUndefined({ signal }),
     );
 
     if (!response.ok) {

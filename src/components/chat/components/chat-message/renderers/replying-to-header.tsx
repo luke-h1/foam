@@ -24,10 +24,10 @@ import { WrappedTokens } from './wrapped-tokens';
 interface ReplyingToHeaderProps {
   canJumpToReplyTarget: boolean;
   isReplyingToCurrentUser: boolean;
-  onReplyContextPress?: (replyParentMessageId: string) => void;
-  parentDisplayName?: string;
-  replyBody?: string;
-  replyParentMessageId?: string;
+  onReplyContextPress?: ((replyParentMessageId: string) => void) | undefined;
+  parentDisplayName?: string | undefined;
+  replyBody?: string | undefined;
+  replyParentMessageId?: string | undefined;
   rendererArgs: ChatTokenRenderProps;
 }
 

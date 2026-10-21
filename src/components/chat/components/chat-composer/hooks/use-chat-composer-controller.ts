@@ -34,14 +34,14 @@ interface UseChatComposerControllerOptions {
    * Hidden characters the send path prepends (the `@user ` on a reply), counted
    * so the composer cannot green-light a message Twitch will drop for length.
    */
-  reservedCharacters?: number;
-  onChangeText?: (text: string) => void;
-  onSubmit?: () => void;
-  canSend?: boolean;
-  ref?: Ref<ChatComposerHandle>;
+  reservedCharacters?: number | undefined;
+  onChangeText?: ((text: string) => void) | undefined;
+  onSubmit?: (() => void) | undefined;
+  canSend?: boolean | undefined;
+  ref?: Ref<ChatComposerHandle> | undefined;
   focusInput: () => void;
   blurInput: () => void;
-  applyCursor?: (cursor: number) => void;
+  applyCursor?: ((cursor: number) => void) | undefined;
 }
 
 export function useChatComposerController({

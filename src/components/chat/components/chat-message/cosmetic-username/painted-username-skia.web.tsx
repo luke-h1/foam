@@ -6,8 +6,8 @@ import type { PaintData } from '@app/types/seven-tv/cosmetics';
 interface PaintedUsernameSkiaProps {
   username: string;
   paint: PaintData;
-  fallbackColor?: string;
-  fontSize?: number;
+  fallbackColor?: string | undefined;
+  fontSize?: number | undefined;
 }
 
 /**

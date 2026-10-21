@@ -28,7 +28,7 @@ describe('routeIrcMessage', () => {
 
     expect(channel).toBe('#somechannel');
     expect(text).toBe('hello world');
-    expect(tags.login).toBe('chatter');
+    expect(tags['login']).toBe('chatter');
     expect(tags['display-name']).toBe('Chatter');
   });
 
@@ -43,7 +43,7 @@ describe('routeIrcMessage', () => {
     // SAFETY: the route above dispatched one privmsg, whose arguments are the handler's parameters.
     const [, tags] = privmsg.mock.calls[0] as [string, Record<string, string>];
 
-    expect(tags.login).toBe('canonical');
+    expect(tags['login']).toBe('canonical');
   });
 
   test('drops a privmsg without tags', () => {

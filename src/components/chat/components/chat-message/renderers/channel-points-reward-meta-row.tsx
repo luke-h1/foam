@@ -15,12 +15,12 @@ import { ChatNoticeMetaRow } from './chat-notice-meta-row';
 
 interface ChannelPointsRewardMetaRowProps {
   compact: boolean;
-  fontScale?: ChatFontScale;
-  isHighlightedMessage?: boolean;
-  moderationNotice?: unknown;
-  noticeTags?: UserNoticeTags;
-  roomId?: string;
-  username?: string;
+  fontScale?: ChatFontScale | undefined;
+  isHighlightedMessage?: boolean | undefined;
+  moderationNotice?: unknown | undefined;
+  noticeTags?: UserNoticeTags | undefined;
+  roomId?: string | undefined;
+  username?: string | undefined;
   userstate: UserStateTags;
 }
 

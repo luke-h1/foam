@@ -45,9 +45,9 @@ import { replaceEmotesWithText } from '@app/utils/chat/replace-emotes-with-text'
 import { UserCardHeader } from './user-card-header';
 
 interface UserActionSheetProps {
-  color?: string;
-  login?: string;
-  userId?: string;
+  color?: string | undefined;
+  login?: string | undefined;
+  userId?: string | undefined;
   moderation: ChatModerationAccessFlags;
   visibility: UserActionVisibilityFlags;
   onClose: () => void;
@@ -55,11 +55,11 @@ interface UserActionSheetProps {
   onHideUser: () => void;
   onHighlightUser: () => void;
   onMentionUser: () => void;
-  onBlockUser?: () => void;
-  onReportUser?: () => void;
-  onTimeoutUser?: () => void;
-  onWarnUser?: () => void;
-  onBanUser?: () => void;
+  onBlockUser?: (() => void) | undefined;
+  onReportUser?: (() => void) | undefined;
+  onTimeoutUser?: (() => void) | undefined;
+  onWarnUser?: (() => void) | undefined;
+  onBanUser?: (() => void) | undefined;
   username: string;
 }
 
@@ -78,7 +78,7 @@ function getRecentUserMessages(login?: string, username?: string) {
   const recentMessages: {
     key: string;
     tokens: MessageToken[];
-    timestamp?: string;
+    timestamp?: string | undefined;
   }[] = [];
 
   for (let index = messages.length - 1; index >= 0; index -= 1) {
@@ -133,9 +133,9 @@ function buildSafetyActions({
 
 interface BuildModerationActionsOptions {
   canModerate: boolean;
-  onBanUser?: () => void;
-  onTimeoutUser?: () => void;
-  onWarnUser?: () => void;
+  onBanUser?: (() => void) | undefined;
+  onTimeoutUser?: (() => void) | undefined;
+  onWarnUser?: (() => void) | undefined;
 }
 
 function buildModerationActions({
@@ -172,7 +172,7 @@ interface QuickAction {
    * Marks a toggle that is on. The label also changes, so the state never
    * relies on colour alone.
    */
-  active?: boolean;
+  active?: boolean | undefined;
 }
 
 /**

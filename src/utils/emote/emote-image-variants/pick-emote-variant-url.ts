@@ -14,10 +14,10 @@ const scaleScanOrders = {
 } satisfies Record<EmoteImageScale, EmoteImageScale[]>;
 
 interface PickEmoteVariantUrlOptions {
-  fallbackUrl?: string | null;
-  imageVariants?: EmoteImageVariants | null;
+  fallbackUrl?: string | null | undefined;
+  imageVariants?: EmoteImageVariants | null | undefined;
   preferredKind: EmoteImageVariantKind;
-  preferredScale?: EmoteImageScale;
+  preferredScale?: EmoteImageScale | undefined;
 }
 
 export function pickEmoteVariantUrl({

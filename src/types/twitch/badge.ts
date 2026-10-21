@@ -1,4 +1,4 @@
-import { OpenStringUnion } from '@app/utils/typescript/open-string-union';
+import type { OpenStringUnion } from '@app/utils/typescript/open-string-union';
 
 export type BadgeProvider = 'twitch' | '7tv' | 'bttv' | 'ffz' | 'chatterino';
 
@@ -17,8 +17,8 @@ export interface SanitisedBadgeSet {
   >;
   title: string;
 
-  color?: string;
-  owner_username?: string;
+  color?: string | undefined;
+  owner_username?: string | undefined;
   set: string;
   provider: BadgeProvider;
 }

@@ -35,7 +35,7 @@ export interface ChatOverlayLayerProps {
   canModerateChat: boolean;
   channelId: string;
   channelName: string;
-  currentUserId?: string;
+  currentUserId?: string | undefined;
   hiddenUsers: string[];
   highlightedUsers: string[];
   hidePhraseFromView: (phrase?: string) => void;
@@ -53,7 +53,7 @@ export interface ChatOverlayLayerProps {
   onSettingsRefetchEmotes: () => void;
   onUnpinPinnedMessage: () => void;
   pinnedMessageBusy: boolean;
-  pinnedMessageId?: string;
+  pinnedMessageId?: string | undefined;
   toggleHighlightedUser: (username?: string) => void;
 }
 

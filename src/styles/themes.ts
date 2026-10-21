@@ -359,8 +359,8 @@ function getThemeColorGroupValue(group: ThemeColorGroup, token: string) {
 export function resolveThemeColor(
   color: ThemeColorValue,
   options?: {
-    contrast?: boolean;
-    highContrast?: boolean;
+    contrast?: boolean | undefined;
+    highContrast?: boolean | undefined;
   },
 ): string {
   if (isThemeColorToken(color)) {

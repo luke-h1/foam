@@ -1,4 +1,4 @@
-import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 
 export function coerceUserNoticeTags(
   tags: Record<string, string>,

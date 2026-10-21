@@ -9,17 +9,17 @@ import type { ChatTokenRenderProps } from './types/chat-token-render-props';
 import { UserChatBody } from './user-chat-body';
 
 interface AnnouncementChatBodyProps {
-  accentColor?: string;
+  accentColor?: string | undefined;
   badgeList: SanitisedBadgeSet[];
-  cachedSenderColor?: string;
-  onBadgePress?: (badge: BadgePressData) => void;
-  onUsernamePress?: () => void;
+  cachedSenderColor?: string | undefined;
+  onBadgePress?: ((badge: BadgePressData) => void) | undefined;
+  onUsernamePress?: (() => void) | undefined;
   showTimestamp: boolean;
-  timestamp?: string;
+  timestamp?: string | undefined;
   tokenRenderProps: ChatTokenRenderProps;
-  userId?: string;
-  userstateColor?: string;
-  username?: string;
+  userId?: string | undefined;
+  userstateColor?: string | undefined;
+  username?: string | undefined;
 }
 
 export function AnnouncementChatBody({

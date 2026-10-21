@@ -32,10 +32,10 @@ export type {
  * background a row gets, plus the touch handlers that drive its long press.
  */
 export interface ChatRowSurfaceState {
-  announcementAccentColor?: string;
+  announcementAccentColor?: string | undefined;
   bodyVariant: ChatBodyVariant;
   clearRowLongPressTimer: () => void;
-  customHighlightColor?: string;
+  customHighlightColor?: string | undefined;
   handleRowTouchMove: (event: GestureResponderEvent) => void;
   isAlternatingRow: boolean;
   isAppSystemSender: boolean;
@@ -48,7 +48,7 @@ export interface ChatRowSurfaceState {
   isUserChat: boolean;
   mentionsCurrentUser: boolean;
   startRowLongPressTimer: (event: GestureResponderEvent) => void;
-  style?: StyleProp<ViewStyle>;
+  style?: StyleProp<ViewStyle> | undefined;
 }
 
 /**
@@ -56,10 +56,10 @@ export interface ChatRowSurfaceState {
  * context around them.
  */
 export interface ChatRowBodyState {
-  announcementAccentColor?: string;
+  announcementAccentColor?: string | undefined;
   badges: SanitisedBadgeSet[];
   bodyVariant: ChatBodyVariant;
-  cachedSenderColor?: string;
+  cachedSenderColor?: string | undefined;
   canJumpToReplyTarget: boolean;
   handleBadgePress: (badge: BadgePressData) => void;
   isAction: boolean;
@@ -69,17 +69,17 @@ export interface ChatRowBodyState {
   isReplyingToCurrentUser: boolean;
   isReturningChatter: boolean;
   isSharedChatDuplicated: boolean;
-  onReplyContextPress?: (replyParentMessageId: string) => void;
-  onUsernamePress?: () => void;
-  parentDisplayName?: string;
+  onReplyContextPress?: ((replyParentMessageId: string) => void) | undefined;
+  onUsernamePress?: (() => void) | undefined;
+  parentDisplayName?: string | undefined;
   tokenRenderProps: ChatTokenRenderProps;
-  replyBody?: string;
-  replyParentMessageId?: string;
-  roomId?: string;
+  replyBody?: string | undefined;
+  replyParentMessageId?: string | undefined;
+  roomId?: string | undefined;
   shouldRenderInlineReply: boolean;
   showChannelPointsRewardChrome: boolean;
   showTimestamp: boolean;
-  timestamp?: string;
+  timestamp?: string | undefined;
   userstate: UserStateTags;
 }
 
@@ -102,22 +102,26 @@ export type ChatRowProps<
     ? keyof UserNoticeVariantMap
     : never) = never,
 > = ChatMessageType<TNoticeType, TVariant> & {
-  broadcasterId?: string;
-  style?: StyleProp<ViewStyle>;
-  onReply?: (args: ChatMessageType<TNoticeType, TVariant>) => void;
-  onBadgePress?: (data: BadgePressData) => void;
-  onMessageLongPress?: (data: MessageActionData<TNoticeType, TVariant>) => void;
-  onEmotePress?: (data: EmotePressData) => void;
-  getMentionColor?: (username: string) => string;
-  parseTextForEmotes?: (text: string) => MessageToken[];
-  onUsernamePress?: (data: UsernamePressData) => void;
-  currentUsername?: string;
-  currentUsernameNormalized?: string;
-  density?: 'comfortable' | 'compact';
-  messageDisplay?: ChatMessageDisplayFlags;
-  highlightedUserSet?: ReadonlySet<string>;
-  highlightedUsers?: string[];
-  customHighlights?: CustomHighlight[];
-  fontScale?: ChatFontScale;
-  onReplyContextPress?: (replyParentMessageId: string) => void;
+  broadcasterId?: string | undefined;
+  style?: StyleProp<ViewStyle> | undefined;
+  onReply?:
+    | ((args: ChatMessageType<TNoticeType, TVariant>) => void)
+    | undefined;
+  onBadgePress?: ((data: BadgePressData) => void) | undefined;
+  onMessageLongPress?:
+    | ((data: MessageActionData<TNoticeType, TVariant>) => void)
+    | undefined;
+  onEmotePress?: ((data: EmotePressData) => void) | undefined;
+  getMentionColor?: ((username: string) => string) | undefined;
+  parseTextForEmotes?: ((text: string) => MessageToken[]) | undefined;
+  onUsernamePress?: ((data: UsernamePressData) => void) | undefined;
+  currentUsername?: string | undefined;
+  currentUsernameNormalized?: string | undefined;
+  density?: 'comfortable' | 'compact' | undefined;
+  messageDisplay?: ChatMessageDisplayFlags | undefined;
+  highlightedUserSet?: ReadonlySet<string> | undefined;
+  highlightedUsers?: string[] | undefined;
+  customHighlights?: CustomHighlight[] | undefined;
+  fontScale?: ChatFontScale | undefined;
+  onReplyContextPress?: ((replyParentMessageId: string) => void) | undefined;
 };

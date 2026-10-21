@@ -1,4 +1,4 @@
-import { MessageToken } from '@app/utils/chat/message-token';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 export function hasRenderableNoticeBody(
   token: MessageToken<'modiversary' | 'viewermilestone'>,

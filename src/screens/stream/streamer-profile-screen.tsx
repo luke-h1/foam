@@ -167,7 +167,7 @@ function Stat({ value, label }: { value: string; label: string }) {
 interface StreamerProfileHeaderProps {
   activeTab: ProfileTab;
   onTabChange: (tab: ProfileTab) => void;
-  streamElementsStats?: StreamElementsChatStats;
+  streamElementsStats?: StreamElementsChatStats | undefined;
   user: UserInfoResponse;
 }
 

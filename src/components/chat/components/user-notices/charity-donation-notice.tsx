@@ -12,10 +12,10 @@ import { CHAT_NOTICE_ACCENTS } from '../util/chat-notice-accents';
 import { NoticeUserMessage } from './notice-user-message';
 
 interface CharityDonationNoticeProps {
-  compact?: boolean;
-  disableAnimations?: boolean;
-  fontScale?: ChatFontScale;
-  parsedMessage?: MessageToken[];
+  compact?: boolean | undefined;
+  disableAnimations?: boolean | undefined;
+  fontScale?: ChatFontScale | undefined;
+  parsedMessage?: MessageToken[] | undefined;
   token: MessageToken<'charitydonation'>;
 }
 

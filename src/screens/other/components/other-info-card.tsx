@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
+import type { ReactNode } from 'react';
 
 import { Text } from '@app/components/ui/text/text';
 import { theme } from '@app/styles/themes';

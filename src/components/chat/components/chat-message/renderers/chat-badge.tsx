@@ -12,9 +12,9 @@ import type { ChatFontScale } from '../util/chat-scale';
 interface ChatBadgeProps {
   badge: SanitisedBadgeSet;
   compact: boolean;
-  fontScale?: ChatFontScale;
-  isModerated?: boolean;
-  onPress?: (badge: SanitisedBadgeSet) => void;
+  fontScale?: ChatFontScale | undefined;
+  isModerated?: boolean | undefined;
+  onPress?: ((badge: SanitisedBadgeSet) => void) | undefined;
 }
 
 /**

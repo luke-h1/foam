@@ -432,7 +432,7 @@ const handleRequest = (request: Request) => {
   return handler(request, url);
 };
 
-const IRC_PORT = Number(process.env.MOCK_IRC_PORT ?? 6667);
+const IRC_PORT = Number(process.env['MOCK_IRC_PORT'] ?? 6667);
 
 // IRC-over-WebSocket mock of the Twitch chat handshake. It sends
 // GLOBALUSERSTATE + ROOMSTATE after CAP / NICK / JOIN so the app leaves the

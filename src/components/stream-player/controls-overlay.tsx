@@ -38,23 +38,23 @@ import { formatDuration } from './util/format-stream-duration';
 
 interface ControlsOverlayProps {
   isVisible: boolean;
-  muted?: boolean;
+  muted?: boolean | undefined;
   /**
    * Drives the overlay fade + pointer events on the UI thread.
    */
   opacity: SharedValue<number>;
-  onBackPress?: () => void;
-  onCreateClipPress?: () => void;
-  onMutePress?: () => void;
-  onPipPress?: () => void;
+  onBackPress?: (() => void) | undefined;
+  onCreateClipPress?: (() => void) | undefined;
+  onMutePress?: (() => void) | undefined;
+  onPipPress?: (() => void) | undefined;
   onPlayPausePress: () => void;
-  onRefresh?: () => void;
-  onSharePress?: () => void;
-  onSleepTimerPress?: () => void;
+  onRefresh?: (() => void) | undefined;
+  onSharePress?: (() => void) | undefined;
+  onSleepTimerPress?: (() => void) | undefined;
   paused: boolean;
-  pipActive?: boolean;
-  sleepTimerActive?: boolean;
-  streamInfo?: StreamInfo;
+  pipActive?: boolean | undefined;
+  sleepTimerActive?: boolean | undefined;
+  streamInfo?: StreamInfo | undefined;
 }
 
 function StreamDurationLabel({
@@ -63,8 +63,8 @@ function StreamDurationLabel({
   style,
 }: {
   isVisible: boolean;
-  startedAt?: string;
-  style?: StyleProp<TextStyle>;
+  startedAt?: string | undefined;
+  style?: StyleProp<TextStyle> | undefined;
 }) {
   const [duration, setDuration] = useState('0:00');
 
@@ -254,12 +254,17 @@ export function ControlsOverlay({
     }
 
     if (onPipPress) {
-      actions.push({
+      const pipAction: MenuAction = {
         id: 'pip',
         title: 'Picture in Picture',
         image: 'pip',
-        state: pipActive ? 'on' : undefined,
-      });
+      };
+
+      if (pipActive) {
+        pipAction.state = 'on';
+      }
+
+      actions.push(pipAction);
     }
 
     if (onCreateClipPress) {
@@ -271,12 +276,17 @@ export function ControlsOverlay({
     }
 
     if (onSleepTimerPress) {
-      actions.push({
+      const sleepTimerAction: MenuAction = {
         id: 'sleep-timer',
         title: 'Sleep timer',
         image: 'moon.zzz',
-        state: sleepTimerActive ? 'on' : undefined,
-      });
+      };
+
+      if (sleepTimerActive) {
+        sleepTimerAction.state = 'on';
+      }
+
+      actions.push(sleepTimerAction);
     }
 
     if (onSharePress) {

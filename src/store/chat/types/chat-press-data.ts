@@ -14,15 +14,15 @@ export type MessageActionData<
     : never) = never,
 > = {
   message: MessageToken[];
-  username?: string;
-  login?: string;
-  userId?: string;
+  username?: string | undefined;
+  login?: string | undefined;
+  userId?: string | undefined;
   messageData: ChatMessageType<TNoticeType, TVariant>;
 };
 
 export interface UsernamePressData {
-  color?: string;
-  login?: string;
-  userId?: string;
+  color?: string | undefined;
+  login?: string | undefined;
+  userId?: string | undefined;
   username: string;
 }

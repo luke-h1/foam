@@ -16,8 +16,8 @@ export function buildRawTwitchPlayerUrl(options: {
   /**
    * VOD resume offset in seconds; only applied when `video` is set.
    */
-  timeSeconds?: number;
-  video?: string;
+  timeSeconds?: number | undefined;
+  video?: string | undefined;
 }): string {
   const params = new URLSearchParams();
 

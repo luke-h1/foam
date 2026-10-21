@@ -189,7 +189,6 @@ function magicLinkResponse(): AuthSessionResult {
     params: {},
     url: 'foam://auth?access_token=magic-user-token&token_type=bearer&expires_in=14400',
     errorCode: null,
-    error: undefined,
     authentication: new TokenResponse({
       accessToken: 'magic-user-token',
       expiresIn: 14400,
@@ -292,7 +291,6 @@ describe('AuthContext', () => {
       },
       url: 'foam://auth?access_token=user-token&refresh_token=refresh-token',
       errorCode: null,
-      error: undefined,
       authentication: new TokenResponse({
         accessToken: 'user-token',
         expiresIn: 3600,

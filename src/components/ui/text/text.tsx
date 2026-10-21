@@ -1,13 +1,11 @@
-import { ReactNode, type Ref } from 'react';
 import {
-  // eslint-disable-next-line no-restricted-imports
   Text as RNText,
-  // eslint-disable-next-line no-restricted-imports
-  TextProps as RNTextProps,
-  TextStyle,
+  type TextProps as RNTextProps,
+  type TextStyle,
 } from 'react-native';
+import type { ReactNode, Ref } from 'react';
 
-import { getMargin, MarginProps } from '@app/styles/spacing';
+import { getMargin, type MarginProps } from '@app/styles/spacing';
 import {
   resolveThemeColor,
   theme,
@@ -58,22 +56,22 @@ export type TextVariant = 'default' | 'mono';
 export type TextFamily = 'brand' | 'system';
 
 export interface TextProps extends RNTextProps, MarginProps {
-  ref?: Ref<RNText>;
-  children?: ReactNode;
+  ref?: Ref<RNText> | undefined;
+  children?: ReactNode | undefined;
   type?: TextType;
-  weight?: TextWeight;
-  variant?: TextVariant;
+  weight?: TextWeight | undefined;
+  variant?: TextVariant | undefined;
   /**
    * Defaults to the family of `type`: brand for the title styles, system for
    * the rest. Only applied when `variant` is 'default'.
    */
-  family?: TextFamily;
-  color?: ThemeColor | ThemeColorToken;
-  contrast?: boolean;
-  highContrast?: boolean;
-  italic?: boolean;
-  tabular?: boolean;
-  align?: 'left' | 'center' | 'right';
+  family?: TextFamily | undefined;
+  color?: ThemeColor | ThemeColorToken | undefined;
+  contrast?: boolean | undefined;
+  highContrast?: boolean | undefined;
+  italic?: boolean | undefined;
+  tabular?: boolean | undefined;
+  align?: 'left' | 'center' | 'right' | undefined;
 }
 
 const margin = getMargin(theme);

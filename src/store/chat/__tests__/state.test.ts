@@ -53,7 +53,7 @@ describe('limitChannelCaches', () => {
       );
 
       expect(Object.keys(result)).toHaveLength(20);
-      expect(result.current).toEqual<ChannelCacheType>(makeCache(-1));
+      expect(result['current']).toEqual<ChannelCacheType>(makeCache(-1));
       expect(result['channel-0']).toBeUndefined();
       expect(result['channel-20']).toEqual<ChannelCacheType>(makeCache(20));
     } finally {

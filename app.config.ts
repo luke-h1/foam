@@ -94,7 +94,7 @@ const sentryDist =
 const iosICloudContainerIdentifier = `iCloud.${appConfig.iosBundleIdentifier}`;
 
 const enableICloudEntitlements =
-  process.env.ENABLE_IOS_ICLOUD_ENTITLEMENTS === 'true';
+  process.env['ENABLE_IOS_ICLOUD_ENTITLEMENTS'] === 'true';
 
 const iosGoogleServicesFileExists = fs.existsSync(
   path.resolve(__dirname, appConfig.iosGoogleServicesFile),
@@ -164,9 +164,6 @@ const androidConfig: AndroidConfig = {
     'android.permission.SYSTEM_ALERT_WINDOW',
     'android.permission.ACCESS_MEDIA_LOCATION',
   ],
-  googleServicesFile: googleServicesExist
-    ? appConfig.androidGoogleServicesFile
-    : undefined,
   intentFilters: [
     {
       action: 'VIEW',
@@ -194,6 +191,45 @@ const androidConfig: AndroidConfig = {
     monochromeImage: './assets/android-icon-monochrome.png',
   },
 };
+
+if (googleServicesExist) {
+  androidConfig.googleServicesFile = appConfig.androidGoogleServicesFile;
+}
+
+const iosConfig: NonNullable<ExpoConfig['ios']> = {
+  appleTeamId: 'XJA7HDCMMY',
+  supportsTablet: false,
+  bundleIdentifier: appConfig.iosBundleIdentifier,
+  icon: './assets/app-icon.icon',
+  config: {
+    usesNonExemptEncryption: false,
+  },
+  infoPlist: {
+    NSSupportsLiveActivities: true,
+    NSPhotoLibraryUsageDescription:
+      'Foam uses your photo library to save downloaded clips, emotes, and badges so you can use them outside the app.',
+    NSPhotoLibraryAddUsageDescription:
+      'Foam saves downloaded clips, emotes, and badges to your photo library.',
+  },
+};
+
+if (iosGoogleServicesFileExists) {
+  iosConfig.googleServicesFile = appConfig.iosGoogleServicesFile;
+}
+
+if (enableICloudEntitlements) {
+  iosConfig.entitlements = {
+    'com.apple.developer.icloud-container-identifiers': [
+      iosICloudContainerIdentifier,
+    ],
+    'com.apple.developer.icloud-services': ['CloudDocuments'],
+    'com.apple.developer.ubiquity-container-identifiers': [
+      iosICloudContainerIdentifier,
+    ],
+    'com.apple.developer.ubiquity-kvstore-identifier':
+      '$(TeamIdentifierPrefix)$(CFBundleIdentifier)',
+  };
+}
 
 const config: ExpoConfig = {
   name: appConfig.name,
@@ -233,7 +269,10 @@ const config: ExpoConfig = {
     EXPO_PUBLIC_SENTRY_DIST: sentryDist,
     MOCK_SERVER_URL: appConfig.mockServerUrl,
     ota: {
-      criticalIndex: Number.parseInt(process.env.OTA_CRITICAL_INDEX ?? '0', 10),
+      criticalIndex: Number.parseInt(
+        process.env['OTA_CRITICAL_INDEX'] ?? '0',
+        10,
+      ),
     },
     updates: {
       assetPatternsToBeBundled: ['**/*'],
@@ -408,42 +447,12 @@ const config: ExpoConfig = {
     './plugins/with-fix-dev-launcher-cycle.js',
   ],
   experiments: {
+    typedRoutes: true,
     reactCompiler: true,
     tsconfigPaths: true,
   },
   web: {},
-  ios: {
-    appleTeamId: 'XJA7HDCMMY',
-    supportsTablet: false,
-    bundleIdentifier: appConfig.iosBundleIdentifier,
-    googleServicesFile: iosGoogleServicesFileExists
-      ? appConfig.iosGoogleServicesFile
-      : undefined,
-    icon: './assets/app-icon.icon',
-    config: {
-      usesNonExemptEncryption: false,
-    },
-    infoPlist: {
-      NSSupportsLiveActivities: true,
-      NSPhotoLibraryUsageDescription:
-        'Foam uses your photo library to save downloaded clips, emotes, and badges so you can use them outside the app.',
-      NSPhotoLibraryAddUsageDescription:
-        'Foam saves downloaded clips, emotes, and badges to your photo library.',
-    },
-    entitlements: enableICloudEntitlements
-      ? {
-          'com.apple.developer.icloud-container-identifiers': [
-            iosICloudContainerIdentifier,
-          ],
-          'com.apple.developer.icloud-services': ['CloudDocuments'],
-          'com.apple.developer.ubiquity-container-identifiers': [
-            iosICloudContainerIdentifier,
-          ],
-          'com.apple.developer.ubiquity-kvstore-identifier':
-            '$(TeamIdentifierPrefix)$(CFBundleIdentifier)',
-        }
-      : undefined,
-  },
+  ios: iosConfig,
   android: androidConfig,
 };
 

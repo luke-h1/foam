@@ -11,12 +11,12 @@ export interface SheetAction {
   icon: SFSymbol;
   label: string;
   onPress: () => void;
-  disabled?: boolean;
-  destructive?: boolean;
+  disabled?: boolean | undefined;
+  destructive?: boolean | undefined;
 }
 
 interface SheetActionGroupProps {
-  title?: string;
+  title?: string | undefined;
   actions: SheetAction[];
 }
 
@@ -44,7 +44,7 @@ export function SheetActionGroup({ title, actions }: SheetActionGroupProps) {
 
 export interface SheetDetail {
   label: string;
-  value?: string | null;
+  value?: string | null | undefined;
 }
 
 export function SheetDetailGroup({ details }: { details: SheetDetail[] }) {

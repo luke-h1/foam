@@ -17,26 +17,30 @@ import { get7TvCosmeticId } from './get7-tv-cosmetic-id';
 import type { PaintGradientLayer, RawSevenTvPaintInput } from './types';
 
 interface RawPaintTextStrokeInput {
-  color?: SevenTvColor;
-  width?: number;
+  color?: SevenTvColor | undefined;
+  width?: number | undefined;
 }
 
 interface RawPaintShadowInput {
   color: SevenTvColor;
-  radius?: number;
-  x_offset?: number;
-  y_offset?: number;
+  radius?: number | undefined;
+  x_offset?: number | undefined;
+  y_offset?: number | undefined;
 }
 
 interface RawPaintTextStyleInput {
-  weight?: number;
-  transform?: string;
-  stroke?: RawPaintTextStrokeInput | null;
-  shadows?: RawPaintShadowInput[] | IndexedCollection<PaintShadow> | null;
+  weight?: number | undefined;
+  transform?: string | undefined;
+  stroke?: RawPaintTextStrokeInput | null | undefined;
+  shadows?:
+    | RawPaintShadowInput[]
+    | IndexedCollection<PaintShadow>
+    | null
+    | undefined;
 }
 
 type NormalizeSevenTvPaintInput = RawSevenTvPaintInput & {
-  text?: RawPaintTextStyleInput | null;
+  text?: RawPaintTextStyleInput | null | undefined;
 };
 
 /**

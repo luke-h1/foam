@@ -3,11 +3,14 @@
  * resolves native ExponentConstants/EXDevLauncher bindings at import time.
  * Jest does not register them, so the real import throws before a test runs.
  */
-export enum ExecutionEnvironment {
-  Bare = 'bare',
-  Standalone = 'standalone',
-  StoreClient = 'storeClient',
-}
+export const ExecutionEnvironment = {
+  Bare: 'bare',
+  Standalone: 'standalone',
+  StoreClient: 'storeClient',
+} as const;
+
+export type ExecutionEnvironment =
+  (typeof ExecutionEnvironment)[keyof typeof ExecutionEnvironment];
 
 const Constants = {
   expoConfig: {

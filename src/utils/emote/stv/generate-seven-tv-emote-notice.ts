@@ -2,7 +2,7 @@
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
-import { MessageToken } from '@app/utils/chat/message-token';
+import type { MessageToken } from '@app/utils/chat/message-token';
 import { generateNonce } from '@app/utils/string/generate-nonce';
 
 interface GenerateStvEmoteNoticeArgs {

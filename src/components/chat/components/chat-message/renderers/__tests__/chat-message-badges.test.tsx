@@ -61,7 +61,7 @@ describe('ChatMessageBadges', () => {
     const { getByTestId } = renderBadges([ffzModBadge]);
 
     expect(
-      StyleSheet.flatten(getByTestId('chat-badge').props.style),
+      StyleSheet.flatten(getByTestId('chat-badge').props['style']),
     ).toEqual<ViewStyle>({
       backgroundColor: '#1ac9a2',
       borderCurve: 'continuous',
@@ -77,7 +77,7 @@ describe('ChatMessageBadges', () => {
     const { getByTestId } = renderBadges([twitchBadge]);
 
     expect(
-      StyleSheet.flatten(getByTestId('chat-badge').props.style),
+      StyleSheet.flatten(getByTestId('chat-badge').props['style']),
     ).toEqual<ViewStyle>({
       height: 18,
       marginRight: 4,

@@ -127,7 +127,7 @@ export function sanitiseLogValue<T>(
   );
 
   if (entries.length > MAX_LOG_OBJECT_KEYS) {
-    result.__truncatedKeys = entries.length - MAX_LOG_OBJECT_KEYS;
+    result['__truncatedKeys'] = entries.length - MAX_LOG_OBJECT_KEYS;
   }
 
   return result;

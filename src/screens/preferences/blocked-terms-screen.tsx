@@ -140,7 +140,7 @@ function InputSection({ value, onChangeText, onAdd }: InputSectionProps) {
         style={styles.input}
       />
       <PressableScale
-        onPress={canAdd ? onAdd : undefined}
+        {...(canAdd ? { onPress: onAdd } : {})}
         style={[styles.addButton, canAdd ? styles.addButtonEnabled : null]}
       >
         <SymbolView

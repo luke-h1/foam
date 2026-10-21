@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { type StyleProp, StyleSheet, TextStyle } from 'react-native';
+import { type StyleProp, StyleSheet, type TextStyle } from 'react-native';
 
 import { useSelector } from '@legendapp/state/react';
 
@@ -19,24 +19,24 @@ import type { PaintDropShadowMode } from './util/paint-layer/get-paint-drop-shad
 
 interface PaintedUsernameProps {
   username: string;
-  paint?: PaintData;
-  userId?: string;
-  fallbackColor?: string;
-  showColon?: boolean;
-  sevenTvPaintDropShadows?: PaintDropShadowMode;
-  usernameTextStyle?: StyleProp<TextStyle>;
+  paint?: PaintData | undefined;
+  userId?: string | undefined;
+  fallbackColor?: string | undefined;
+  showColon?: boolean | undefined;
+  sevenTvPaintDropShadows?: PaintDropShadowMode | undefined;
+  usernameTextStyle?: StyleProp<TextStyle> | undefined;
 }
 
 interface PaintedUsernameWithPaintProps {
   displayUsername: string;
   fallbackColor: string;
-  fontSize?: number;
-  lineHeight?: number;
+  fontSize?: number | undefined;
+  lineHeight?: number | undefined;
   isModerated: boolean;
   paint: PaintData;
   plainColor: string;
   sevenTvPaintDropShadows: PaintDropShadowMode;
-  usernameTextStyle?: StyleProp<TextStyle>;
+  usernameTextStyle?: StyleProp<TextStyle> | undefined;
 }
 
 function PaintedUsernameWithPaint({

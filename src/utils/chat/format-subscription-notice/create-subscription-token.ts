@@ -1,6 +1,6 @@
-import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { getTagValue } from '@app/utils/chat/format-subscription-notice/get-tag-value';
-import { MessageToken } from '@app/utils/chat/message-token';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 function getTagNumber(
   tags: Record<string, string | boolean | undefined>,

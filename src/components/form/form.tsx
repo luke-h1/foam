@@ -10,24 +10,24 @@ import {
 } from '@app/components/ui/icon/icon';
 import {
   Children,
-  ComponentProps,
+  type ComponentProps,
   Fragment,
   type ReactElement,
-  ReactNode,
-  Ref,
+  type ReactNode,
+  type Ref,
   cloneElement,
   isValidElement,
 } from 'react';
 import {
-  OpaqueColorValue,
+  type OpaqueColorValue,
   Text as RNText,
-  StyleProp,
+  type StyleProp,
   StyleSheet,
-  TextProps,
-  TextStyle,
+  type TextProps,
+  type TextStyle,
   View,
-  ViewProps,
-  ViewStyle,
+  type ViewProps,
+  type ViewStyle,
 } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 
@@ -72,10 +72,10 @@ function FormItem({
   style,
   ref,
 }: Pick<ViewProps, 'children'> & {
-  onPress?: FormPressableProps['onPress'];
-  onLongPress?: FormPressableProps['onLongPress'];
-  style?: ViewStyle;
-  ref?: Ref<View>;
+  onPress?: FormPressableProps['onPress'] | undefined;
+  onLongPress?: FormPressableProps['onLongPress'] | undefined;
+  style?: ViewStyle | undefined;
+  ref?: Ref<View> | undefined;
 }) {
   const itemStyle: StyleProp<ViewStyle> = [
     styles.itemPadding,
@@ -93,10 +93,10 @@ function FormItem({
 
   return (
     <Pressable
-      ref={ref}
+      {...(ref !== undefined ? { ref } : {})}
       accessibilityRole='button'
-      onPress={onPress}
-      onLongPress={onLongPress}
+      onPress={onPress ?? null}
+      onLongPress={onLongPress ?? null}
       style={({ pressed }) => [
         itemStyle,
         pressed ? { backgroundColor: AppleColors.systemGray4 } : null,
@@ -111,10 +111,10 @@ function FormItem({
 
 type SystemImageCustomProps = {
   name: SymbolViewProps['name'];
-  color?: OpaqueColorValue;
-  size?: number;
-  weight?: SymbolWeight;
-  style?: StyleProp<TextStyle>;
+  color?: OpaqueColorValue | undefined;
+  size?: number | undefined;
+  weight?: SymbolWeight | undefined;
+  style?: StyleProp<ViewStyle> | undefined;
 };
 
 type SystemImageProps = SymbolViewProps['name'] | SystemImageCustomProps;
@@ -123,11 +123,11 @@ export function Text({
   bold,
   ...props
 }: TextProps & {
-  hint?: ReactNode;
-  hintBoolean?: ReactNode;
-  systemImage?: SystemImageProps;
+  hint?: ReactNode | undefined;
+  hintBoolean?: ReactNode | undefined;
+  systemImage?: SystemImageProps | undefined;
 
-  bold?: boolean;
+  bold?: boolean | undefined;
 }) {
   const font: TextStyle = {
     ...FormFont.default,
@@ -234,9 +234,9 @@ function asSectionTextRow(
   // The row props come off a cloned element, so they are untyped here. The
   // `@ts-expect-error`s in `Section` cover the same gap.
   resolvedProps: {
-    hint?: ReactNode;
-    systemImage?: SystemImageProps | ReactNode;
-    style?: StyleProp<TextStyle>;
+    hint?: ReactNode | undefined;
+    systemImage?: SystemImageProps | ReactNode | undefined;
+    style?: StyleProp<TextStyle> | undefined;
     [key: string]: unknown;
   },
 ): ReactElement {
@@ -276,9 +276,9 @@ export function Section({
   footer,
   ...props
 }: ViewProps & {
-  title?: string | ReactNode;
-  titleHint?: string | ReactNode;
-  footer?: string | ReactNode;
+  title?: string | ReactNode | undefined;
+  titleHint?: string | ReactNode | undefined;
+  footer?: string | ReactNode | undefined;
 }) {
   const allChildren = flattenSectionChildren(children);
 
@@ -459,8 +459,8 @@ function SystemImageView({
   systemImage,
   style,
 }: {
-  systemImage?: SystemImageProps | ReactNode;
-  style?: StyleProp<TextStyle>;
+  systemImage?: SystemImageProps | ReactNode | undefined;
+  style?: StyleProp<TextStyle> | undefined;
 }) {
   if (!systemImage) {
     return null;
@@ -482,7 +482,9 @@ function SystemImageView({
       name={symbolProps.name}
       size={symbolProps.size ?? 20}
       style={[{ marginRight: 8 }, symbolProps.style]}
-      weight={symbolProps.weight}
+      {...(symbolProps.weight !== undefined
+        ? { weight: symbolProps.weight }
+        : {})}
       tintColor={
         symbolProps.color ?? extractStyle(style, 'color') ?? AppleColors.label
       }

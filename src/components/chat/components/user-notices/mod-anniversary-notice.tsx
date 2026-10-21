@@ -3,7 +3,7 @@ import { View } from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { reportUnrenderableNotice } from '@app/utils/chat/chat-health/report-unrenderable-notice';
-import { MessageToken } from '@app/utils/chat/message-token';
+import type { MessageToken } from '@app/utils/chat/message-token';
 
 import { styles } from '../chat-message/chat-row.styles';
 import { getChatTextStyles } from '../chat-message/chat-text.styles';
@@ -14,10 +14,10 @@ import { NoticeUserMessage } from './notice-user-message';
 import { splitNoticeSubject } from './util/notice-sentence';
 
 interface ModAnniversaryNoticeProps {
-  compact?: boolean;
-  disableAnimations?: boolean;
-  fontScale?: ChatFontScale;
-  parsedMessage?: MessageToken[];
+  compact?: boolean | undefined;
+  disableAnimations?: boolean | undefined;
+  fontScale?: ChatFontScale | undefined;
+  parsedMessage?: MessageToken[] | undefined;
   token: MessageToken<'modiversary'>;
 }
 

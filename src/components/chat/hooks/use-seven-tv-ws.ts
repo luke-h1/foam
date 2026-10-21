@@ -8,16 +8,16 @@ import { useSyncRef } from '@app/hooks/use-sync-ref';
 import { useUnmountCallback } from '@app/hooks/use-unmount-callback';
 import { ReadyState } from '@app/hooks/ws/constants';
 import { useWebsocket } from '@app/hooks/ws/use-websocket';
-import {
+import type {
   CosmeticCreate,
-  type CosmeticCreateCallbackData,
-  type CosmeticDeleteCallbackData,
-  type CosmeticUpdateCallbackData,
+  CosmeticCreateCallbackData,
+  CosmeticDeleteCallbackData,
+  CosmeticUpdateCallbackData,
   EntitlementCreate,
-  type EntitlementCreateCallbackData,
-  type EntitlementDeleteCallbackData,
-  type EntitlementResetCallbackData,
-  type EntitlementUpdateCallbackData,
+  EntitlementCreateCallbackData,
+  EntitlementDeleteCallbackData,
+  EntitlementResetCallbackData,
+  EntitlementUpdateCallbackData,
   SevenTvEventData,
   SevenTvEventType,
   SevenTvWsMessage,
@@ -70,27 +70,35 @@ export interface EmoteSetSwitchCallbackData {
 }
 
 interface UseSevenTvWsOptions {
-  onEmoteUpdate?: (data: EmoteUpdateCallbackData) => void;
-  onEmoteSetSwitch?: (data: EmoteSetSwitchCallbackData) => void;
-  onEmoteSetUpdateForOtherSet?: (emoteSetId: string) => void;
-  onCosmeticCreate?: (data: CosmeticCreateCallbackData) => void;
-  onCosmeticUpdate?: (data: CosmeticUpdateCallbackData) => void;
-  onCosmeticDelete?: (data: CosmeticDeleteCallbackData) => void;
-  onEntitlementCreate?: (data: EntitlementCreateCallbackData) => void;
-  onEntitlementUpdate?: (data: EntitlementUpdateCallbackData) => void;
-  onEntitlementDelete?: (data: EntitlementDeleteCallbackData) => void;
-  onEntitlementReset?: (data: EntitlementResetCallbackData) => void;
+  onEmoteUpdate?: ((data: EmoteUpdateCallbackData) => void) | undefined;
+  onEmoteSetSwitch?: ((data: EmoteSetSwitchCallbackData) => void) | undefined;
+  onEmoteSetUpdateForOtherSet?: ((emoteSetId: string) => void) | undefined;
+  onCosmeticCreate?: ((data: CosmeticCreateCallbackData) => void) | undefined;
+  onCosmeticUpdate?: ((data: CosmeticUpdateCallbackData) => void) | undefined;
+  onCosmeticDelete?: ((data: CosmeticDeleteCallbackData) => void) | undefined;
+  onEntitlementCreate?:
+    | ((data: EntitlementCreateCallbackData) => void)
+    | undefined;
+  onEntitlementUpdate?:
+    | ((data: EntitlementUpdateCallbackData) => void)
+    | undefined;
+  onEntitlementDelete?:
+    | ((data: EntitlementDeleteCallbackData) => void)
+    | undefined;
+  onEntitlementReset?:
+    | ((data: EntitlementResetCallbackData) => void)
+    | undefined;
   onEvent?: (
     eventType: SevenTvEventType,
     data: SevenTvEventData<SevenTvEventType>,
   ) => void;
-  twitchChannelId?: string;
-  sevenTvEmoteSetId?: string;
+  twitchChannelId?: string | undefined;
+  sevenTvEmoteSetId?: string | undefined;
   /**
    * The channel owner's 7TV user id; when set, subscribes to `user.update`
    * so live emote-set switches are detected.
    */
-  sevenTvChannelUserId?: string;
+  sevenTvChannelUserId?: string | undefined;
 }
 
 type UseSevenTvWsReturn = {

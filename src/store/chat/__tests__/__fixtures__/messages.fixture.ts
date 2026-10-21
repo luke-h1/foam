@@ -4,8 +4,8 @@ import type { MessageToken } from '@app/utils/chat/message-token';
 
 export interface TokenSummary {
   type: string;
-  content?: string;
-  url?: string;
+  content?: string | undefined;
+  url?: string | undefined;
 }
 
 export function summariseTokens(tokens: MessageToken[]): TokenSummary[] {

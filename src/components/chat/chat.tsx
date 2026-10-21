@@ -38,13 +38,13 @@ import { useChatTransientState } from './hooks/use-chat-transient-state';
 const ESTIMATED_COMPOSER_HEIGHT = 56;
 
 export interface ChatProps {
-  applyTopInset?: boolean;
+  applyTopInset?: boolean | undefined;
   channelId: string;
   channelName: string;
-  transparent?: boolean;
+  transparent?: boolean | undefined;
   // DEV/perf only: drops the live Twitch transports so the synthetic flood is
   // the sole deterministic source; channel emote/badge sets still load so fake messages render real emotes.
-  syntheticTransport?: boolean;
+  syntheticTransport?: boolean | undefined;
 }
 
 export const Chat = memo(

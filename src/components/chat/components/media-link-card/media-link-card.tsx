@@ -14,8 +14,8 @@ import { MediaLinkCardView } from './media-link-card-view';
 import { getMediaLinkCardContent } from './util/get-media-link-card-content';
 
 type MediaLinkCardProps = {
-  layout?: 'card' | 'inline';
-  thumbnail?: string;
+  layout?: 'card' | 'inline' | undefined;
+  thumbnail?: string | undefined;
   type: MediaLinkTokenKind;
   url: string;
 };

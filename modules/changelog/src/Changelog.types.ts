@@ -37,8 +37,8 @@ export type ChangelogConfiguration = {
 
 export type ChangelogPresentOptions = {
   notes: ChangelogVersionNotes[];
-  version?: string;
-  otaVersion?: string;
+  version?: string | undefined;
+  otaVersion?: string | undefined;
   configuration?: ChangelogConfiguration;
 };
 

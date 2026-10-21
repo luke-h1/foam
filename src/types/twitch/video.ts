@@ -20,7 +20,7 @@ export interface TwitchVideo {
 
 export interface TwitchVideosRequestParams {
   userId: string;
-  after?: string;
-  first?: number;
-  type?: 'all' | 'archive' | 'highlight' | 'upload';
+  after?: string | undefined;
+  first?: number | undefined;
+  type?: 'all' | 'archive' | 'highlight' | 'upload' | undefined;
 }

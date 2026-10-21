@@ -25,8 +25,8 @@ export interface TwitchCreatedClip {
 
 export interface TwitchClipsRequestParams {
   broadcasterId: string;
-  after?: string;
-  endedAt?: string;
-  first?: number;
-  startedAt?: string;
+  after?: string | undefined;
+  endedAt?: string | undefined;
+  first?: number | undefined;
+  startedAt?: string | undefined;
 }

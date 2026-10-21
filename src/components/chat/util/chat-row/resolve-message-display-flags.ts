@@ -1,12 +1,12 @@
 import type { ChatMessageDisplayFlags } from '@app/components/chat/types/chat-ui-flags';
 
 interface ResolveMessageDisplayFlagsOptions {
-  isAnnouncement?: boolean;
-  isChannelPointRedemption?: boolean;
-  isHighlightedMessage?: boolean;
-  isSharedChatDuplicated?: boolean;
-  isTwitchSystemNotice?: boolean;
-  messageDisplay?: ChatMessageDisplayFlags;
+  isAnnouncement?: boolean | undefined;
+  isChannelPointRedemption?: boolean | undefined;
+  isHighlightedMessage?: boolean | undefined;
+  isSharedChatDuplicated?: boolean | undefined;
+  isTwitchSystemNotice?: boolean | undefined;
+  messageDisplay?: ChatMessageDisplayFlags | undefined;
 }
 
 /**

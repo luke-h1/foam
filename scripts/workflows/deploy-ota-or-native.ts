@@ -60,8 +60,8 @@ function stringifyEnv(
 }
 
 function getAwsEnv(): NodeJS.ProcessEnv {
-  const accessKeyId = process.env.FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.FOAM_AWS_FINGERPRINT_SECRET_KEY;
+  const accessKeyId = process.env['FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID'];
+  const secretAccessKey = process.env['FOAM_AWS_FINGERPRINT_SECRET_KEY'];
 
   if (accessKeyId == null || accessKeyId === '') {
     throw new Error('FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID is not set');
@@ -73,16 +73,17 @@ function getAwsEnv(): NodeJS.ProcessEnv {
 
   const env = stringifyEnv(process.env);
 
-  env.AWS_ACCESS_KEY_ID = accessKeyId;
-  env.AWS_SECRET_ACCESS_KEY = secretAccessKey;
+  env['AWS_ACCESS_KEY_ID'] = accessKeyId;
+  env['AWS_SECRET_ACCESS_KEY'] = secretAccessKey;
 
   const region =
-    process.env.FOAM_AWS_REGION == null || process.env.FOAM_AWS_REGION === ''
+    process.env['FOAM_AWS_REGION'] == null ||
+    process.env['FOAM_AWS_REGION'] === ''
       ? 'eu-west-2'
-      : process.env.FOAM_AWS_REGION;
+      : process.env['FOAM_AWS_REGION'];
 
-  env.AWS_REGION = region;
-  env.AWS_DEFAULT_REGION = region;
+  env['AWS_REGION'] = region;
+  env['AWS_DEFAULT_REGION'] = region;
 
   console.log('AWS env ready');
 

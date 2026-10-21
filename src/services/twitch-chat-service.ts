@@ -15,7 +15,7 @@ import { chatPerfMarks } from '@app/lib/chat-perf-marks';
 import { isE2EMode } from '@app/services/api/clients';
 import { recordChatDebugIrcLine } from '@app/store/chat/actions/chat-debug-log';
 import { usePreference } from '@app/store/preference-store';
-import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { subscribeToAppStateTransitions } from '@app/utils/app-state/app-state-transitions';
 import { applyAntiDuplicateSuffix } from '@app/utils/chat/apply-anti-duplicate-suffix';
 import { reportDroppedChatMessages } from '@app/utils/chat/chat-health/report-dropped-chat-messages';
@@ -224,13 +224,13 @@ function createChatMessageRouteHandlers({
 > {
   return {
     privmsg: (channelName, tagsRecord, messageText) => {
-      const username = tagsRecord['display-name'] || tagsRecord.login;
+      const username = tagsRecord['display-name'] || tagsRecord['login'];
 
       // Skip the per-message lowercasing when there is no blocklist.
       // A mod or the broadcaster is never filtered out of their own chat.
       const isBlockedSender =
         blockedUsers.length > 0 &&
-        tagsRecord.mod !== '1' &&
+        tagsRecord['mod'] !== '1' &&
         channelName.slice(1).toLowerCase() !== user?.login?.toLowerCase() &&
         isUserBlocked(username, blockedUsers);
 
@@ -520,22 +520,22 @@ function handleTwitchChatWebSocketError(error: Event) {
 }
 
 interface UseTwitchChatOptions {
-  channel?: string;
+  channel?: string | undefined;
   onMessage?: (
     channel: string,
     tags: Record<string, string>,
     message: string,
   ) => void;
-  onJoin?: (channel: string) => void;
-  onPart?: (channel: string) => void;
-  onUserJoin?: (channel: string, username: string) => void;
-  onUserPart?: (channel: string, username: string) => void;
+  onJoin?: ((channel: string) => void) | undefined;
+  onPart?: ((channel: string) => void) | undefined;
+  onUserJoin?: ((channel: string, username: string) => void) | undefined;
+  onUserPart?: ((channel: string, username: string) => void) | undefined;
   onNotice?: (
     channel: string,
     tags: Record<string, string>,
     message: string,
   ) => void;
-  onReconnect?: () => void;
+  onReconnect?: (() => void) | undefined;
   onUserNotice?: (
     channel: string,
     tags: UserNoticeTags,
@@ -552,14 +552,18 @@ interface UseTwitchChatOptions {
     tags: Record<string, string>,
     targetMsgId: string,
   ) => void;
-  onRoomState?: (channel: string, tags: Record<string, string>) => void;
-  onUserState?: (channel: string, tags: Record<string, string>) => void;
-  onGlobalUserState?: (tags: Record<string, string>) => void;
-  onWelcome?: () => void;
-  blockedUsers?: { userLogin: string }[];
-  mutedWords?: string[];
-  matchWholeWord?: boolean;
-  onUserStateAfterSend?: (tags: Record<string, string>) => void;
+  onRoomState?:
+    | ((channel: string, tags: Record<string, string>) => void)
+    | undefined;
+  onUserState?:
+    | ((channel: string, tags: Record<string, string>) => void)
+    | undefined;
+  onGlobalUserState?: ((tags: Record<string, string>) => void) | undefined;
+  onWelcome?: (() => void) | undefined;
+  blockedUsers?: { userLogin: string }[] | undefined;
+  mutedWords?: string[] | undefined;
+  matchWholeWord?: boolean | undefined;
+  onUserStateAfterSend?: ((tags: Record<string, string>) => void) | undefined;
 }
 
 export function useTwitchChat(options: UseTwitchChatOptions = {}) {
@@ -607,9 +611,9 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   const pendingMessageRef = useRef<{
     channel: string;
     message: string;
-    replyParentMsgId?: string;
-    replyParentDisplayName?: string;
-    replyParentMsgBody?: string;
+    replyParentMsgId?: string | undefined;
+    replyParentDisplayName?: string | undefined;
+    replyParentMsgBody?: string | undefined;
   } | null>(null);
 
   /**

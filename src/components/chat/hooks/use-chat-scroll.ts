@@ -1,12 +1,12 @@
 import {
-  MutableRefObject,
-  RefObject,
+  type MutableRefObject,
+  type RefObject,
   useCallback,
   useMemo,
   useRef,
   useState,
 } from 'react';
-import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
 import { resetChatUnread } from '@app/store/chat/actions/chat-unread';
 

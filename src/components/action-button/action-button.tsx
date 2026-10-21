@@ -20,12 +20,12 @@ export interface ActionButtonProps extends Pick<
   'onPress' | 'haptic'
 > {
   title: string;
-  variant?: ActionButtonVariant;
-  size?: ActionButtonSize;
-  icon?: SFSymbol;
-  loading?: boolean;
-  disabled?: boolean;
-  style?: StyleProp<ViewStyle>;
+  variant?: ActionButtonVariant | undefined;
+  size?: ActionButtonSize | undefined;
+  icon?: SFSymbol | undefined;
+  loading?: boolean | undefined;
+  disabled?: boolean | undefined;
+  style?: StyleProp<ViewStyle> | undefined;
 }
 
 const variantColors = {

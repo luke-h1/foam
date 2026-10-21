@@ -72,8 +72,8 @@ function latestComposerProps(): RenderedComposerProps {
 }
 
 function renderShell(props: {
-  onRefreshCommand?: jest.Mock;
-  user?: UserInfoResponse;
+  onRefreshCommand?: jest.Mock | undefined;
+  user?: UserInfoResponse | undefined;
 }) {
   render(
     <SafeAreaProvider

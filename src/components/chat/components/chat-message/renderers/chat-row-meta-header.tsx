@@ -9,7 +9,7 @@ import type { ReplyFlags } from './types/reply-flags';
 
 interface ChatRowMetaHeaderProps {
   message: MessageToken[];
-  onReplyContextPress?: (replyParentMessageId: string) => void;
+  onReplyContextPress?: ((replyParentMessageId: string) => void) | undefined;
   parentDisplayName: string | undefined;
   rendererArgs: Omit<ChatTokenRenderProps, 'message'>;
   replyBody: string | undefined;

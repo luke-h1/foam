@@ -52,7 +52,7 @@ describe('authLinking magic-link sign in', () => {
     }
 
     expect(response.authentication?.accessToken).toBe('magic-access-token');
-    expect(response.params.refresh_token).toBe('magic-refresh-token');
+    expect(response.params['refresh_token']).toBe('magic-refresh-token');
   });
 });
 

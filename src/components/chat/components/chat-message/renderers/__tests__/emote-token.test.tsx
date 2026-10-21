@@ -36,7 +36,8 @@ describe('EmoteToken', () => {
     );
 
     const touchTargets = screen.UNSAFE_root.findAll(
-      node => String(node.type) === 'View' && Boolean(node.props.onTouchStart),
+      node =>
+        String(node.type) === 'View' && Boolean(node.props['onTouchStart']),
     );
 
     expect(touchTargets).toHaveLength(1);

@@ -17,7 +17,7 @@ interface HostedEmoteSourceBase {
   name: string;
   creator: string | null;
   emoteLink: string;
-  originalName?: string;
+  originalName?: string | undefined;
   animated: EmoteImageVariantSet;
   static: EmoteImageVariantSet;
 }
@@ -35,7 +35,7 @@ export interface FfzEmoteSource extends HostedEmoteSourceBase {
 
 export interface TwitchEmoteSource extends HostedEmoteSourceBase {
   site: TwitchSanitisedEmote['site'];
-  ownerId?: string;
+  ownerId?: string | undefined;
 }
 
 /**
@@ -59,7 +59,7 @@ export interface SevenTvEmoteSource {
   width: number;
   height: number;
   setMetadata: SevenTvEmoteSetMetadata;
-  actor?: StvUser;
+  actor?: StvUser | undefined;
 }
 
 export type EmoteProviderSource =

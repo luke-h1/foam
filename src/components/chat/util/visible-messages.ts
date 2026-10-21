@@ -24,11 +24,11 @@ interface FilterableMessage {
 }
 
 export interface VisibleMessagesOptions {
-  currentUsername?: string;
-  hiddenPhrases?: string[];
-  hiddenUsers?: string[];
-  searchQuery?: string;
-  showOnlyMentions?: boolean;
+  currentUsername?: string | undefined;
+  hiddenPhrases?: string[] | undefined;
+  hiddenUsers?: string[] | undefined;
+  searchQuery?: string | undefined;
+  showOnlyMentions?: boolean | undefined;
 }
 
 function getMessageText(message: FilterableMessage): string {

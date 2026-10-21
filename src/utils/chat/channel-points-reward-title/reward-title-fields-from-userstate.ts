@@ -1,5 +1,5 @@
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
-import { ChannelPointsRewardTagSource } from '@app/utils/chat/channel-points-reward-title/types';
+import type { ChannelPointsRewardTagSource } from '@app/utils/chat/channel-points-reward-title/types';
 
 export function rewardTitleFieldsFromUserstate(
   userstate: UserStateTags,

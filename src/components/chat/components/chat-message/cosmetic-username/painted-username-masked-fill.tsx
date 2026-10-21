@@ -1,4 +1,4 @@
-import { type StyleProp, StyleSheet, TextStyle, View } from 'react-native';
+import { type StyleProp, StyleSheet, type TextStyle, View } from 'react-native';
 
 import { MaskedView } from '@expo/ui/community/masked-view';
 

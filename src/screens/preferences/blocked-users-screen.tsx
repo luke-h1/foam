@@ -15,7 +15,7 @@ import {
   listStyle,
   refreshable,
 } from '@expo/ui/swift-ui/modifiers';
-import { ListRenderItem } from '@shopify/flash-list';
+import type { ListRenderItem } from '@shopify/flash-list';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner-native';
 
@@ -196,7 +196,7 @@ function BlockedUsersSectionHeader({ count }: BlockedUsersSectionHeaderProps) {
 }
 
 interface BlockedUsersListProps {
-  data?: UserBlockList[];
+  data?: UserBlockList[] | undefined;
   isLoading: boolean;
   isError: boolean;
   onRefresh: () => Promise<void>;

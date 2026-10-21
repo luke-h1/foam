@@ -21,7 +21,5 @@ function HeaderLayoutToggle() {
 const headerRight = () => <HeaderLayoutToggle />;
 
 export function StreamListLayoutMenu({ hidden = false }: { hidden?: boolean }) {
-  return (
-    <Stack.Screen options={{ headerRight: hidden ? undefined : headerRight }} />
-  );
+  return <Stack.Screen options={hidden ? {} : { headerRight }} />;
 }

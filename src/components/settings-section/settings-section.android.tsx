@@ -1,14 +1,14 @@
-import { Children, Fragment, isValidElement, ReactNode } from 'react';
+import { Children, Fragment, isValidElement, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import {
   Card,
-  CardColors,
+  type CardColors,
   Column,
   HorizontalDivider,
   Host,
   ListItem,
-  ListItemColors,
+  type ListItemColors,
   RNHostView,
   Row,
   Switch,
@@ -60,7 +60,7 @@ function IconTile({
   danger,
 }: {
   icon: NonNullable<RowIcon>;
-  danger?: boolean;
+  danger?: boolean | undefined;
 }) {
   return (
     <View style={[styles.iconWrap, danger ? styles.iconWrapDanger : null]}>
@@ -73,7 +73,13 @@ function IconTile({
   );
 }
 
-function RowLeading({ icon, danger }: { icon?: RowIcon; danger?: boolean }) {
+function RowLeading({
+  icon,
+  danger,
+}: {
+  icon?: RowIcon | undefined;
+  danger?: boolean | undefined;
+}) {
   if (!icon) {
     return null;
   }
@@ -93,8 +99,8 @@ function RowText({
   danger,
 }: {
   title: string;
-  subtitle?: string;
-  danger?: boolean;
+  subtitle?: string | undefined;
+  danger?: boolean | undefined;
 }) {
   return (
     <>
@@ -121,10 +127,10 @@ function RowText({
 }
 
 interface SettingsSectionProps {
-  title?: string;
-  footer?: ReactNode;
+  title?: string | undefined;
+  footer?: ReactNode | undefined;
   children: ReactNode;
-  cardColor?: string;
+  cardColor?: string | undefined;
 }
 
 export function SettingsSection({
@@ -187,17 +193,17 @@ export function SettingsSection({
 
 interface SettingsRowProps {
   title: string;
-  subtitle?: string;
-  icon?: RowIcon;
-  trailing?: ReactNode;
-  onPress?: () => void;
-  danger?: boolean;
-  disabled?: boolean;
+  subtitle?: string | undefined;
+  icon?: RowIcon | undefined;
+  trailing?: ReactNode | undefined;
+  onPress?: (() => void) | undefined;
+  danger?: boolean | undefined;
+  disabled?: boolean | undefined;
   /**
    * A pressable row shows a chevron unless this is false. Action rows that
    * run in place, rather than open a screen, turn it off.
    */
-  chevron?: boolean;
+  chevron?: boolean | undefined;
 }
 
 function getRowModifiers(
@@ -249,8 +255,8 @@ export function SettingsRow({
 
 interface SettingsToggleRowProps {
   title: string;
-  subtitle?: string;
-  icon?: RowIcon;
+  subtitle?: string | undefined;
+  icon?: RowIcon | undefined;
   value: boolean;
   onValueChange: (value: boolean) => void;
 }
@@ -279,11 +285,11 @@ export function SettingsToggleRow({
 
 interface SettingsLinkRowProps {
   title: string;
-  subtitle?: string;
-  icon?: RowIcon;
-  value?: string;
-  onPress?: () => void;
-  danger?: boolean;
+  subtitle?: string | undefined;
+  icon?: RowIcon | undefined;
+  value?: string | undefined;
+  onPress?: (() => void) | undefined;
+  danger?: boolean | undefined;
 }
 
 export function SettingsLinkRow({

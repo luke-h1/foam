@@ -16,8 +16,8 @@ jest.unmock('@app/components/bottom-sheet/bottom-sheet');
 
 type SheetProps = {
   handleComponent?: unknown;
-  index?: number;
-  snapPoints?: (string | number)[];
+  index?: number | undefined;
+  snapPoints?: (string | number)[] | undefined;
 };
 
 type MockSheet = {
@@ -87,7 +87,7 @@ function renderSheet(props: Partial<Parameters<typeof BottomSheet>[0]> = {}) {
 }
 
 function getContentStyle(content: ReactTestInstance) {
-  return StyleSheet.flatten(content.props.style);
+  return StyleSheet.flatten(content.props['style']);
 }
 
 function setPlatform(os: 'android' | 'ios') {

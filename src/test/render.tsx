@@ -1,11 +1,11 @@
-import { ReactElement, ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { type Metrics, SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   render as baseRender,
-  RenderOptions,
-  RenderResult,
+  type RenderOptions,
+  type RenderResult,
 } from '@testing-library/react-native';
 
 import { AuthContextTestProvider } from '@app/context/auth-context';

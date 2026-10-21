@@ -1,20 +1,25 @@
-import { Insets, StyleProp, StyleSheet, ViewStyle } from 'react-native';
+import {
+  type Insets,
+  type StyleProp,
+  StyleSheet,
+  type ViewStyle,
+} from 'react-native';
 
-import { resolveSpacingValue, Spacing } from '@app/styles/spacing';
+import { resolveSpacingValue, type Spacing } from '@app/styles/spacing';
 import { theme } from '@app/styles/themes';
 
 import { Button } from '../button/button';
 import { IconButtonIcon, type IconType } from './icon-button-icon';
 
 interface IconButtonProps {
-  hitSlop?: number | Insets;
+  hitSlop?: number | Insets | undefined;
   icon: IconType;
   label: string;
-  loading?: boolean;
-  onLongPress?: () => void;
-  onPress?: () => void;
-  size?: Spacing;
-  style?: StyleProp<ViewStyle>;
+  loading?: boolean | undefined;
+  onLongPress?: (() => void) | undefined;
+  onPress?: (() => void) | undefined;
+  size?: Spacing | undefined;
+  style?: StyleProp<ViewStyle> | undefined;
 }
 
 export function IconButton({
@@ -30,11 +35,11 @@ export function IconButton({
   return (
     <Button
       disabled={loading}
-      hitSlop={hitSlop}
+      {...(hitSlop !== undefined ? { hitSlop } : {})}
       label={label}
       style={[styles.button, getButtonSizeStyle(size), style]}
-      onLongPress={onLongPress}
-      onPress={onPress}
+      {...(onLongPress ? { onLongPress } : {})}
+      {...(onPress ? { onPress } : {})}
     >
       <IconButtonIcon icon={icon} loading={loading} size={size} />
     </Button>

@@ -47,7 +47,7 @@ interface UseChatSurfaceOptions {
   showOnlyMentions: boolean;
   toggleHighlightedUser: (username?: string) => void;
   twitchConnectionState: ReadyState;
-  user?: UserInfoResponse;
+  user?: UserInfoResponse | undefined;
 }
 
 export function useChatSurface({
@@ -121,8 +121,8 @@ export function useChatSurface({
   const canModerateChat = useMemo(() => {
     const parsedBadges = parseBadges(userState['badges-raw']).badges;
     return (
-      userState.mod === '1' ||
-      parsedBadges.broadcaster === '1' ||
+      userState['mod'] === '1' ||
+      parsedBadges['broadcaster'] === '1' ||
       normaliseChatUsername(user?.login) === normaliseChatUsername(channelName)
     );
   }, [userState, user?.login, channelName]);

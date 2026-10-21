@@ -57,48 +57,48 @@ export interface ChatMessageType<
    * Monotonic per-session arrival number. Unlike a list index it never shifts
    * on front-trims, so derivations like alternating-row parity stay stable.
    */
-  seq?: number;
+  seq?: number | undefined;
   /**
    * Wall-clock ms when the message was committed to the store. Preserved on
    * cache restore so replayed rows never read as freshly arrived.
    */
-  committedAt?: number;
+  committedAt?: number | undefined;
   /**
    * Set on replayed or cache-restored messages so they skip live-arrival
    * treatment such as the slide-in entrance.
    */
-  isHistorical?: boolean;
+  isHistorical?: boolean | undefined;
   /**
    * Set when the message committed as part of a raid-sized flush, so a burst
    * of rows does not start one entrance animation per row in the same frame.
    */
-  arrivedInBurst?: boolean;
+  arrivedInBurst?: boolean | undefined;
   userstate: UserStateTags;
   message: MessageToken[];
   badges: SanitisedBadgeSet[];
   channel: string;
   message_id: string;
   message_nonce: string;
-  timestamp?: string;
+  timestamp?: string | undefined;
   sender: string;
-  parentDisplayName?: string;
-  isSpecialNotice?: boolean;
-  moderationNotice?: string;
-  cachedSenderColor?: string;
+  parentDisplayName?: string | undefined;
+  isSpecialNotice?: boolean | undefined;
+  moderationNotice?: string | undefined;
+  cachedSenderColor?: string | undefined;
   /**
    * Set at ingest while the emote/badge parse is deferred to commit time;
    * stripped when the message is finalized, so the store never sees it.
    */
-  pendingEmoteParse?: boolean;
+  pendingEmoteParse?: boolean | undefined;
   replyDisplayName: string;
   replyBody: string;
-  parentColor?: string;
-  isChannelPointRedemption?: boolean;
-  isAnnouncement?: boolean;
-  isAction?: boolean;
-  isHighlightedMessage?: boolean;
-  isSharedChatDuplicated?: boolean;
-  isTwitchSystemNotice?: boolean;
+  parentColor?: string | undefined;
+  isChannelPointRedemption?: boolean | undefined;
+  isAnnouncement?: boolean | undefined;
+  isAction?: boolean | undefined;
+  isHighlightedMessage?: boolean | undefined;
+  isSharedChatDuplicated?: boolean | undefined;
+  isTwitchSystemNotice?: boolean | undefined;
   notice_tags?: TNoticeType extends 'userstate'
     ? UserStateTags
     : TNoticeType extends 'usernotice'
@@ -140,19 +140,21 @@ export interface ChannelCacheType {
   lastUpdated: number;
   twitchChannelEmotes: SanitisedEmote[];
   twitchSubscriberEmotes: SanitisedEmote[];
-  twitchSubscriberEmotesUserId?: string;
+  twitchSubscriberEmotesUserId?: string | undefined;
   /**
    * Streamer name + pfp per owner_id in twitchSubscriberEmotes; optional
    * because older persisted caches lack it.
    */
-  twitchSubscriberChannelProfiles?: Record<string, SubscriberChannelProfile>;
+  twitchSubscriberChannelProfiles?:
+    | Record<string, SubscriberChannelProfile>
+    | undefined;
   sevenTvChannelEmotes: SanitisedEmote[];
   ffzChannelEmotes: SanitisedEmote[];
   bttvChannelEmotes: SanitisedEmote[];
   twitchChannelBadges: SanitisedBadgeSet[];
   ffzChannelBadges: SanitisedBadgeSet[];
-  sevenTvEmoteSetId?: string;
-  badgesLastUpdated?: number;
+  sevenTvEmoteSetId?: string | undefined;
+  badgesLastUpdated?: number | undefined;
 }
 
 export interface GlobalCacheType {

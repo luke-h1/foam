@@ -42,7 +42,7 @@ export interface EventSubPayload {
 export interface EventSubMessage {
   metadata: EventSubMetadata;
   payload: EventSubPayload;
-  event?: EventSubEvent;
+  event?: EventSubEvent | undefined;
 }
 
 export type TwitchEventSubCallback = (data: EventSubMessage) => void;

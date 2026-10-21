@@ -6,8 +6,8 @@ import { useSelector } from '@legendapp/state/react';
 import { Button } from '@app/components/button/button';
 import {
   FlashList,
-  FlashListRef,
-  ListRenderItem,
+  type FlashListRef,
+  type ListRenderItem,
 } from '@app/components/flash-list/flash-list';
 import { Image } from '@app/components/image/image';
 import { Text } from '@app/components/ui/text/text';
@@ -21,7 +21,7 @@ import { usePaints } from '@app/store/chat/react/selectors';
 import { theme } from '@app/styles/themes';
 import { clearImageCache } from '@app/utils/image/clear-image-cache';
 import {
-  CachedImageInfo,
+  type CachedImageInfo,
   getCacheDirectoryPath,
   listCachedImages,
 } from '@app/utils/image/image-cache';

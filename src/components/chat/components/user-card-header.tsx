@@ -15,9 +15,9 @@ import { useEnsureSevenTvCosmetics } from '../hooks/use-ensure-seven-tv-cosmetic
 import { PaintedUsername } from './chat-message/cosmetic-username/painted-username';
 
 interface UserCardHeaderProps {
-  fallbackColor?: string;
-  login?: string;
-  userId?: string;
+  fallbackColor?: string | undefined;
+  login?: string | undefined;
+  userId?: string | undefined;
   username: string;
 }
 

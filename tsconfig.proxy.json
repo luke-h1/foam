@@ -22,7 +22,7 @@
     "sourceMap": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "strictPropertyInitialization": false,
+    "strictPropertyInitialization": true,
     "types": ["node"],
     "baseUrl": ".",
     "isolatedModules": true,
@@ -30,7 +30,11 @@
     "noUncheckedIndexedAccess": true,
     "noUncheckedSideEffectImports": true,
     "useUnknownInCatchVariables": true,
-    "noImplicitReturns": true
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "verbatimModuleSyntax": true,
+    "exactOptionalPropertyTypes": true,
+    "erasableSyntaxOnly": true
   },
   "include": ["local-proxy/proxy.ts", "src/types/env.d.ts"],
   "exclude": ["node_modules"]

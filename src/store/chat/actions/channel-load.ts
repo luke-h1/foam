@@ -317,9 +317,9 @@ export const clearChannelResources = () => {
 
 export interface LoadChannelResourcesOptions {
   channelId: string;
-  forceRefresh?: boolean;
-  signal?: AbortSignal;
-  twitchUserId?: string;
+  forceRefresh?: boolean | undefined;
+  signal?: AbortSignal | undefined;
+  twitchUserId?: string | undefined;
 }
 
 type CachedRefreshArgs = {
@@ -327,8 +327,8 @@ type CachedRefreshArgs = {
   existingCache: ChannelCacheType;
   existingGlobalCache: GlobalCacheType | undefined;
   plan: CachedChannelRefreshPlan;
-  signal?: AbortSignal;
-  twitchUserId?: string;
+  signal?: AbortSignal | undefined;
+  twitchUserId?: string | undefined;
 };
 
 /**

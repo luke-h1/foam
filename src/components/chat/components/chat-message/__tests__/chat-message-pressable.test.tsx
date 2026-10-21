@@ -26,9 +26,9 @@ describe('ChatMessagePressable', () => {
       </ChatMessagePressable>,
     );
 
-    expect(screen.getByTestId('target').props.onStartShouldSetResponder).toBe(
-      undefined,
-    );
+    expect(
+      screen.getByTestId('target').props['onStartShouldSetResponder'],
+    ).toBe(undefined);
   });
 
   test('a tap fires onPress once', async () => {
@@ -63,7 +63,7 @@ describe('ChatMessagePressable', () => {
     fireEvent(target, 'responderGrant', touchAt(10, 10));
 
     const pressedStyle = StyleSheet.flatten<ViewStyle>(
-      screen.getByTestId('target').props.style,
+      screen.getByTestId('target').props['style'],
     );
 
     expect({
@@ -78,7 +78,7 @@ describe('ChatMessagePressable', () => {
 
     // A quick tap keeps the highlight for the minimum press duration.
     expect(
-      StyleSheet.flatten<ViewStyle>(screen.getByTestId('target').props.style)
+      StyleSheet.flatten<ViewStyle>(screen.getByTestId('target').props['style'])
         .backgroundColor,
     ).toEqual('rgba(153, 153, 153, 0.24)');
 
@@ -87,7 +87,9 @@ describe('ChatMessagePressable', () => {
     });
 
     expect(
-      StyleSheet.flatten<ViewStyle>(screen.getByTestId('target').props.style),
+      StyleSheet.flatten<ViewStyle>(
+        screen.getByTestId('target').props['style'],
+      ),
     ).toEqual({ padding: 2 });
   });
 
@@ -124,7 +126,7 @@ describe('ChatMessagePressable', () => {
     fireEvent(target, 'responderTerminate', touchAt(10, 10));
 
     expect(onPress).not.toHaveBeenCalled();
-    expect(screen.getByTestId('target').props.style).toEqual(undefined);
+    expect(screen.getByTestId('target').props['style']).toEqual(undefined);
   });
 
   test('a long press fires onLongPress and swallows the press', () => {
@@ -162,8 +164,8 @@ describe('ChatMessagePressable', () => {
     const target = screen.getByTestId('target');
 
     expect({
-      accessibilityState: target.props.accessibilityState,
-      responds: target.props.onStartShouldSetResponder(),
+      accessibilityState: target.props['accessibilityState'],
+      responds: target.props['onStartShouldSetResponder'](),
     }).toEqual({
       accessibilityState: { disabled: true },
       responds: false,
@@ -194,7 +196,7 @@ describe('ChatMessagePressable', () => {
     });
 
     expect({
-      actions: target.props.accessibilityActions,
+      actions: target.props['accessibilityActions'],
       longPresses: onLongPress.mock.calls.length,
       presses: onPress.mock.calls.length,
     }).toEqual({

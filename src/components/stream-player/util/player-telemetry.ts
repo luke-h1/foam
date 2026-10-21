@@ -18,10 +18,10 @@ export type PlayerPlaybackStartSource = 'bridge_playing' | 'webview_loaded';
 
 export interface PlayerTelemetryContext {
   autoplay: boolean;
-  channel?: string;
-  clip?: string;
+  channel?: string | undefined;
+  clip?: string | undefined;
   contentKind: PlayerContentKind;
-  video?: string;
+  video?: string | undefined;
 }
 
 export type PlayerTelemetryMetricAttributes = Record<
@@ -176,9 +176,9 @@ export function createPlayerTelemetry() {
     outcome: 'failed' | 'started' | 'timeout',
     details: {
       elapsedMs: number;
-      error?: unknown;
-      reason?: string;
-      startSource?: PlayerPlaybackStartSource;
+      error?: unknown | undefined;
+      reason?: string | undefined;
+      startSource?: PlayerPlaybackStartSource | undefined;
     },
   ) {
     if (!session || session.loadFinished) {

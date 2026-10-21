@@ -8,14 +8,14 @@ import { PaintedUsername } from './cosmetic-username/painted-username';
 import type { ChatFontScale } from './util/chat-scale';
 
 interface ChatRowUsernameProps {
-  cachedSenderColor?: string;
+  cachedSenderColor?: string | undefined;
   compact: boolean;
-  fontScale?: ChatFontScale;
-  isModerated?: boolean;
-  onUsernamePress?: () => void;
-  userId?: string;
-  userstateColor?: string;
-  username?: string;
+  fontScale?: ChatFontScale | undefined;
+  isModerated?: boolean | undefined;
+  onUsernamePress?: (() => void) | undefined;
+  userId?: string | undefined;
+  userstateColor?: string | undefined;
+  username?: string | undefined;
 }
 
 export function ChatRowUsername({

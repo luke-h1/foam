@@ -1,18 +1,18 @@
 import { memo } from 'react';
-import { ViewStyle } from 'react-native';
+import type { ViewStyle } from 'react-native';
 
 import {
-  BrandIconName,
+  type BrandIconName,
   BrandIcons,
-  IconSize,
+  type IconSize,
   resolveBrandIconSize,
 } from './util/brand-icon-registry';
 
 interface IconProps {
   name: BrandIconName;
-  size?: IconSize;
-  color?: string;
-  style?: ViewStyle;
+  size?: IconSize | undefined;
+  color?: string | undefined;
+  style?: ViewStyle | undefined;
 }
 
 export const BrandIcon = memo(

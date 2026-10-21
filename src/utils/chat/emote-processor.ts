@@ -1,4 +1,4 @@
-import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
 import { getEmoteArrayContentKey } from '@app/utils/chat/emote-array-content-key';
 import { parseWordLinkParts } from '@app/utils/chat/parse-word-link-tokens/parse-word-link-tokens';

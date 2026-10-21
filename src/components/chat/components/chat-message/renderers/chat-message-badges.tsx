@@ -7,11 +7,11 @@ import type { ChatFontScale } from '../util/chat-scale';
 import { ChatBadge } from './chat-badge';
 
 interface ChatMessageBadgesProps {
-  badges?: SanitisedBadgeSet[];
+  badges?: SanitisedBadgeSet[] | undefined;
   compact: boolean;
-  fontScale?: ChatFontScale;
-  moderationNotice?: unknown;
-  onBadgePress?: (badge: SanitisedBadgeSet) => void;
+  fontScale?: ChatFontScale | undefined;
+  moderationNotice?: unknown | undefined;
+  onBadgePress?: ((badge: SanitisedBadgeSet) => void) | undefined;
 }
 
 export function ChatMessageBadges({

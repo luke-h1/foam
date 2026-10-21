@@ -82,8 +82,8 @@ const legendListKeyboard =
   require('@legendapp/list/keyboard') as typeof import('@legendapp/list/keyboard');
 
 jest.spyOn(legendListKeyboard, 'KeyboardAwareLegendList').mockImplementation(
-  // SAFETY: the mock implements only the props this suite reads.
-  ((props: MockLegendListProps & { ref?: Ref<View> }) => {
+  // @ts-expect-error -- mock implements only the props this suite reads
+  (props: MockLegendListProps & { ref?: Ref<View> }) => {
     const { extraData, keyExtractor, ref, renderItem } = props;
     const items = props.data ?? [];
     const virtualizedWindow = getVirtualizedWindow(items, props);
@@ -112,7 +112,7 @@ jest.spyOn(legendListKeyboard, 'KeyboardAwareLegendList').mockImplementation(
         })}
       </View>
     );
-  }) as typeof legendListKeyboard.KeyboardAwareLegendList,
+  },
 );
 
 const contentInsetEndAdjustment = makeMutable(0);

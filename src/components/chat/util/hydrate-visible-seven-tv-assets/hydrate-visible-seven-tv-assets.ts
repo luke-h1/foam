@@ -75,7 +75,7 @@ function getHydrationKey({
   message,
   personalEmotes,
 }: {
-  badge?: SanitisedBadgeSet;
+  badge?: SanitisedBadgeSet | undefined;
   message: AnyChatMessageType;
   personalEmotes: SanitisedEmote[];
 }): string {

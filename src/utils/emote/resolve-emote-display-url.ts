@@ -5,9 +5,9 @@ import { getDisplayEmoteUrl } from '@app/utils/emote/get-display-emote-url';
 import { CHAT_INLINE_EMOTE_SCALE } from '@app/utils/emote/resolve-emote-scale';
 
 export interface ResolvableDisplayEmote {
-  image_variants?: EmoteImageVariants | null;
-  url?: string | null;
-  static_url?: string | null;
+  image_variants?: EmoteImageVariants | null | undefined;
+  url?: string | null | undefined;
+  static_url?: string | null | undefined;
 }
 
 export function resolveEmoteDisplayUrl(
@@ -16,8 +16,8 @@ export function resolveEmoteDisplayUrl(
     disableAnimations = getPreferences().disableEmoteAnimations,
     preferredScale = CHAT_INLINE_EMOTE_SCALE,
   }: {
-    disableAnimations?: boolean;
-    preferredScale?: EmoteImageScale;
+    disableAnimations?: boolean | undefined;
+    preferredScale?: EmoteImageScale | undefined;
   } = {},
 ): string {
   return getDisplayEmoteUrl({

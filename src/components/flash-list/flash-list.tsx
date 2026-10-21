@@ -3,12 +3,13 @@ import { Platform, RefreshControl } from 'react-native';
 
 import {
   FlashList as ShopifyFlashList,
-  FlashListProps as ShopifyFlashListProps,
-  FlashListRef,
+  type FlashListProps as ShopifyFlashListProps,
+  type FlashListRef,
   type ListRenderItem,
 } from '@shopify/flash-list';
 
 import { theme } from '@app/styles/themes';
+import { omitUndefined } from '@app/types/eopt';
 
 export type { FlashListRef, ListRenderItem };
 
@@ -53,10 +54,12 @@ export function FlashList<TItem>({
 
   return (
     <ShopifyFlashList
-      ref={ref}
-      refreshControl={activeRefreshControl}
-      refreshing={activeRefreshControl ? undefined : refreshing}
-      onRefresh={activeRefreshControl ? undefined : onRefresh}
+      {...omitUndefined({
+        ref,
+        refreshControl: activeRefreshControl ?? undefined,
+        refreshing: activeRefreshControl ? undefined : refreshing,
+        onRefresh: activeRefreshControl ? undefined : onRefresh,
+      })}
       {...props}
     />
   );

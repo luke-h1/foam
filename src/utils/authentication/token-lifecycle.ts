@@ -15,11 +15,11 @@ export interface TwitchToken {
   accessToken: string;
   expiresIn: number;
   tokenType: string;
-  refreshToken?: string;
+  refreshToken?: string | undefined;
   /**
    * Unix timestamp in milliseconds when the token expires.
    */
-  expiresAt?: number;
+  expiresAt?: number | undefined;
 }
 
 /**

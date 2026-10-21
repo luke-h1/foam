@@ -1,5 +1,5 @@
-import { RefObject } from 'react';
-import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import type { RefObject } from 'react';
+import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
 import { act, renderHook } from '@testing-library/react-native';
 

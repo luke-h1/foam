@@ -26,13 +26,13 @@ type InlineTokensProps = Pick<
   | 'emoteTargetSize'
 > & {
   message: InlineFlowToken[];
-  textStyle?: StyleProp<TextStyle>;
+  textStyle?: StyleProp<TextStyle> | undefined;
   /**
    * Line height override for every span on lines with emotes; each nested
    * span needs the taller line height or the emote attachment clips.
    */
-  emoteLineStyle?: StyleProp<TextStyle>;
-  textColor?: string;
+  emoteLineStyle?: StyleProp<TextStyle> | undefined;
+  textColor?: string | undefined;
 };
 
 type InlineTokenDerived = {

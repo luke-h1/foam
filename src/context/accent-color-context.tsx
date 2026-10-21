@@ -8,7 +8,7 @@ import React, {
 import { useColorScheme } from 'react-native';
 
 import { colors } from '@app/styles/colors';
-import { getColorValue, UIColor } from '@app/styles/ui';
+import { getColorValue, type UIColor } from '@app/styles/ui';
 
 interface AccentColorContextValue {
   accentHex: string;

@@ -35,10 +35,10 @@ function scrubPii<T extends Sentry.ErrorEvent | Sentry.TransactionEvent>(
   event: T,
 ): T {
   if (event.user) {
-    event.user.ip_address = undefined;
+    delete event.user.ip_address;
     delete event.user.email;
     delete event.user.username;
-    delete event.user.name;
+    delete event.user['name'];
     delete event.user.geo;
   }
 
@@ -54,8 +54,8 @@ export interface SentryStatus {
   enabled: boolean;
   hasDsn: boolean;
   environment: string;
-  release?: string;
-  dist?: string;
+  release?: string | undefined;
+  dist?: string | undefined;
   debug: boolean;
 }
 
@@ -167,7 +167,7 @@ export function flushSentry(): Promise<boolean> {
  * whole pipeline works.
  */
 export async function verifySentryDelivery(): Promise<{
-  eventId?: string;
+  eventId?: string | undefined;
   flushed: boolean;
 }> {
   init();
@@ -196,21 +196,36 @@ export type FeedbackType = 'bug' | 'idea';
 /**
  * Tagged with the feedback type so bugs and ideas triage separately in Sentry.
  */
-export function sendFeedback(feedback: {
-  type: FeedbackType;
+interface FeedbackPayload {
   message: string;
   email?: string;
   name?: string;
+}
+
+export function sendFeedback(feedback: {
+  type: FeedbackType;
+  message: string;
+  email?: string | undefined;
+  name?: string | undefined;
 }): void {
   init();
 
   Sentry.withScope(scope => {
     scope.setTag('feedback_type', feedback.type);
-    Sentry.captureFeedback({
+
+    const payload: FeedbackPayload = {
       message: feedback.message,
-      email: feedback.email || undefined,
-      name: feedback.name || undefined,
-    });
+    };
+
+    if (feedback.email) {
+      payload.email = feedback.email;
+    }
+
+    if (feedback.name) {
+      payload.name = feedback.name;
+    }
+
+    Sentry.captureFeedback(payload);
   });
 }
 
@@ -228,13 +243,28 @@ export function countMetric(
   });
 }
 
+interface SpanStartOptions {
+  name: string;
+  op: string;
+  attributes?: Record<string, string | number | boolean>;
+}
+
 export async function startSpanAsync<T>(
   name: string,
   op: string,
   fn: () => Promise<T>,
   attributes?: Record<string, string | number | boolean>,
 ): Promise<T> {
-  return Sentry.startSpan({ name, op, attributes }, fn);
+  const spanOptions: SpanStartOptions = {
+    name,
+    op,
+  };
+
+  if (attributes !== undefined) {
+    spanOptions.attributes = attributes;
+  }
+
+  return Sentry.startSpan(spanOptions, fn);
 }
 
 export type Span = Sentry.Span;
@@ -256,7 +286,16 @@ export function startInactiveSpan(
     return undefined;
   }
 
-  return Sentry.startInactiveSpan({ name, op, attributes });
+  const spanOptions: SpanStartOptions = {
+    name,
+    op,
+  };
+
+  if (attributes !== undefined) {
+    spanOptions.attributes = attributes;
+  }
+
+  return Sentry.startInactiveSpan(spanOptions);
 }
 
 export function endSpan(
@@ -342,11 +381,11 @@ export type LogMetadataValue =
 export type LogTagValue = string | number | boolean | null | undefined;
 
 export type LogMetadata = {
-  name?: OpenStringUnion<MonitoringEventName>;
-  tags?: Record<string, LogTagValue>;
-  fingerprint?: string[];
-  error?: LogMetadataValue;
-  exceptionName?: string;
+  name?: OpenStringUnion<MonitoringEventName> | undefined;
+  tags?: Record<string, LogTagValue> | undefined;
+  fingerprint?: string[] | undefined;
+  error?: LogMetadataValue | undefined;
+  exceptionName?: string | undefined;
   [key: string]: LogMetadataValue;
 };
 
@@ -425,8 +464,8 @@ function applyLogScope(
     safeExtra,
   }: {
     category: string;
-    name?: string;
-    metadata?: LogMetadata;
+    name?: string | undefined;
+    metadata?: LogMetadata | undefined;
     safeExtra: Record<string, LogMetadataValue>;
   },
 ): void {
@@ -463,8 +502,8 @@ export function forwardLogToSentry(entry: {
   level: 'info' | 'warn' | 'error';
   category: string;
   message: string;
-  error?: unknown;
-  metadata?: LogMetadata;
+  error?: unknown | undefined;
+  metadata?: LogMetadata | undefined;
 }): void {
   const { level, category, message, error, metadata } = entry;
 
@@ -476,7 +515,7 @@ export function forwardLogToSentry(entry: {
 
     if (cause !== undefined) {
       // SAFETY: an arbitrary thrown value is held as metadata here and bounded by sanitiseLogValue with the rest of the extra below.
-      extra.cause = (
+      extra['cause'] = (
         cause instanceof Error ? cause.toString() : cause
       ) as LogMetadataValue;
     }

@@ -1,5 +1,5 @@
 import {
-  RefObject,
+  type RefObject,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -50,7 +50,7 @@ interface UseChatSessionOptions {
   scrollAnchor: ChatScrollAnchor;
   scrollToBottom: () => void;
   syntheticTransport: boolean;
-  user?: UserInfoResponse;
+  user?: UserInfoResponse | undefined;
 }
 
 export function useChatSession({

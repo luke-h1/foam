@@ -27,7 +27,7 @@ export function getRequiredArg(
 }
 
 export function writeGithubOutput(name: string, value: string): void {
-  const outputPath = process.env.GITHUB_OUTPUT;
+  const outputPath = process.env['GITHUB_OUTPUT'];
 
   if (outputPath == null || outputPath === '') {
     throw new Error('GITHUB_OUTPUT is not set');

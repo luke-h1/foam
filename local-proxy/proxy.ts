@@ -1,8 +1,8 @@
 const DEFAULT_STREAM_CHANNEL = 'forsen';
 const TWITCH_CHANNEL_PATTERN = /^[a-zA-Z0-9_]{1,25}$/;
 const TWITCH_VIDEO_PATTERN = /^\d+$/;
-const PORT = Number(process.env.PORT ?? 4000);
-const HOST = process.env.HOST;
+const PORT = Number(process.env['PORT'] ?? 4000);
+const HOST = process.env['HOST'];
 
 type BunServeOptions = {
   port: number;
@@ -187,8 +187,8 @@ const getDefaultToken = async () => {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: new URLSearchParams({
-      client_id: process.env.TWITCH_CLIENT_ID ?? '',
-      client_secret: process.env.TWITCH_CLIENT_SECRET ?? '',
+      client_id: process.env['TWITCH_CLIENT_ID'] ?? '',
+      client_secret: process.env['TWITCH_CLIENT_SECRET'] ?? '',
       grant_type: 'client_credentials',
     }),
   });
@@ -237,7 +237,7 @@ interface MagicLinkBlob {
 }
 
 const getMagicLinkBlob = (): MagicLinkBlob | null => {
-  const raw = process.env.MAGIC_LINK_BLOB;
+  const raw = process.env['MAGIC_LINK_BLOB'];
 
   if (!raw) {
     return null;

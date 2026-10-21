@@ -1,4 +1,8 @@
-import { getColorValue, InputColorConfig, UIColor } from '@app/styles/ui';
+import {
+  getColorValue,
+  type InputColorConfig,
+  type UIColor,
+} from '@app/styles/ui';
 
 export type InputVariant = 'outline' | 'soft' | 'subtle' | 'underline';
 

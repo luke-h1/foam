@@ -6,10 +6,10 @@ import { registerMentionLogin } from '@app/utils/chat/resolve-mention-login/regi
 import type { ChatterRole } from '@app/utils/chat/resolve-mention-login/types';
 
 interface RegisterMentionChatterOptions {
-  login?: string | null;
-  userId?: string | null;
-  color?: string | null;
-  role?: ChatterRole;
+  login?: string | null | undefined;
+  userId?: string | null | undefined;
+  color?: string | null | undefined;
+  role?: ChatterRole | undefined;
 }
 
 export function registerMentionChatter({
