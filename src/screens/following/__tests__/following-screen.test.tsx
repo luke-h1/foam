@@ -128,9 +128,9 @@ describe('FollowingScreen', () => {
     renderFollowingScreen({ loggedIn: true });
 
     expect(
-      await screen.findByText('Try again', {}, { timeout: 15000 }),
+      await screen.findByText('Try again', {}, { timeout: 15_000 }),
     ).toBeOnTheScreen();
-  }, 20000);
+  }, 20_000);
 
   test('shows empty state when no followed streams', async () => {
     twitchService.getFollowedStreams.mockResolvedValue([]);

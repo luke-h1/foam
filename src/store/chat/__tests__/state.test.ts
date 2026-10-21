@@ -172,7 +172,7 @@ describe('migratePersistedChatStore', () => {
       emotes: [emote('legacy-emote')],
       ffzChannelBadges: [badge('kept-badge')],
       ffzGlobalBadges: [badge('legacy-global-badge')],
-      lastUpdated: 5_000,
+      lastUpdated: 5000,
       sevenTvPersonalBadges: {},
       sevenTvPersonalEmotes: { 'user-1': [emote('legacy-personal-emote')] },
       twitchChannelEmotes: [emote('kept-emote')],
@@ -187,7 +187,7 @@ describe('migratePersistedChatStore', () => {
     ).toEqual<ChannelCacheType>({
       ...makeEmptyEmoteData(),
       ffzChannelBadges: [badge('kept-badge')],
-      lastUpdated: 5_000,
+      lastUpdated: 5000,
       twitchChannelEmotes: [emote('kept-emote')],
     });
   });
@@ -196,14 +196,14 @@ describe('migratePersistedChatStore', () => {
     const olderCache: LegacyChannelCache = {
       ...makeEmptyEmoteData(),
       bttvGlobalEmotes: [emote('old-global-emote')],
-      lastUpdated: 2_000,
+      lastUpdated: 2000,
     };
 
     const newerCache: LegacyChannelCache = {
       ...makeEmptyEmoteData(),
       bttvGlobalEmotes: [emote('new-global-emote')],
       ffzGlobalBadges: [badge('new-global-badge')],
-      lastUpdated: 8_000,
+      lastUpdated: 8000,
     };
 
     chatStore$.persisted.channelCaches.set({
@@ -217,7 +217,7 @@ describe('migratePersistedChatStore', () => {
       ...makeEmptyGlobalCacheData(),
       bttvGlobalEmotes: [emote('new-global-emote')],
       ffzGlobalBadges: [badge('new-global-badge')],
-      lastUpdated: 8_000,
+      lastUpdated: 8000,
     });
   });
 
@@ -243,13 +243,13 @@ describe('migratePersistedChatStore', () => {
     chatStore$.persisted.globalCaches.set({
       ...makeEmptyGlobalCacheData(),
       bttvGlobalEmotes: [emote('current-global-emote')],
-      lastUpdated: 9_000,
+      lastUpdated: 9000,
     });
 
     const legacyCache: LegacyChannelCache = {
       ...makeEmptyEmoteData(),
       bttvGlobalEmotes: [emote('legacy-global-emote')],
-      lastUpdated: 8_000,
+      lastUpdated: 8000,
     };
 
     chatStore$.persisted.channelCaches.set({ 'channel-1': legacyCache });
@@ -259,14 +259,14 @@ describe('migratePersistedChatStore', () => {
     expect(chatStore$.persisted.globalCaches.peek()).toEqual<GlobalCacheType>({
       ...makeEmptyGlobalCacheData(),
       bttvGlobalEmotes: [emote('current-global-emote')],
-      lastUpdated: 9_000,
+      lastUpdated: 9000,
     });
   });
 
   test('leaves a current-shape cache untouched', () => {
     const currentCache: ChannelCacheType = {
       ...makeEmptyEmoteData(),
-      lastUpdated: 5_000,
+      lastUpdated: 5000,
       twitchChannelEmotes: [emote('kept-emote')],
     };
 

@@ -347,7 +347,7 @@ const routes: RouteTable = {
     '/helix/chat/emotes': channelTwitchEmotes,
     '/helix/chat/emotes/global': globalTwitchEmotes,
     '/helix/eventsub/subscriptions': () =>
-      json({ data: [], total: 0, max_total_cost: 10000, total_cost: 0 }),
+      json({ data: [], total: 0, max_total_cost: 10_000, total_cost: 0 }),
     '/helix/games': games,
     '/helix/games/top': topGames,
     '/helix/search/categories': searchGameCategories,
@@ -381,7 +381,7 @@ const routes: RouteTable = {
             },
           ],
           total: 1,
-          max_total_cost: 10000,
+          max_total_cost: 10_000,
           total_cost: 0,
         },
         { status: 202 },

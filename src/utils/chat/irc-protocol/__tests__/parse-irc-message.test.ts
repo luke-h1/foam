@@ -63,12 +63,12 @@ describe('parseIrcMessage', () => {
   test('unescapes IRCv3 tag values in replayed lines', () => {
     expect(
       parseIrcMessage(
-        '@msg-id=resub;system-msg=5\\smonths\\:\\sPog\\\\s :tmi.twitch.tv USERNOTICE #foam :resubbed',
+        String.raw`@msg-id=resub;system-msg=5\smonths\:\sPog\\s :tmi.twitch.tv USERNOTICE #foam :resubbed`,
       ),
     ).toEqual<IrcMessage>({
       tags: {
         'msg-id': 'resub',
-        'system-msg': '5 months; Pog\\s',
+        'system-msg': String.raw`5 months; Pog\s`,
       },
       prefix: 'tmi.twitch.tv',
       command: 'USERNOTICE',

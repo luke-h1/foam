@@ -11,8 +11,8 @@ export const mockStreams: TwitchStream[] = [
     game_name: 'Just Chatting',
     type: 'live',
     title: 'Hanging out with chat',
-    viewer_count: 85000,
-    started_at: new Date(Date.now() - 3600000).toISOString(),
+    viewer_count: 85_000,
+    started_at: new Date(Date.now() - 3_600_000).toISOString(),
     language: 'en',
     thumbnail_url:
       'https://static-cdn.jtvnw.net/previews-ttv/live_user_test1-{width}x{height}.jpg',
@@ -29,8 +29,8 @@ export const mockStreams: TwitchStream[] = [
     game_name: 'Just Chatting',
     type: 'live',
     title: 'cozy stream 🌸 chatting with chat',
-    viewer_count: 32000,
-    started_at: new Date(Date.now() - 7200000).toISOString(),
+    viewer_count: 32_000,
+    started_at: new Date(Date.now() - 7_200_000).toISOString(),
     language: 'en',
     thumbnail_url:
       'https://static-cdn.jtvnw.net/previews-ttv/live_user_test2-{width}x{height}.jpg',
@@ -47,8 +47,8 @@ export const mockStreams: TwitchStream[] = [
     game_name: 'Fortnite',
     type: 'live',
     title: 'Playing some games',
-    viewer_count: 28000,
-    started_at: new Date(Date.now() - 5400000).toISOString(),
+    viewer_count: 28_000,
+    started_at: new Date(Date.now() - 5_400_000).toISOString(),
     language: 'en',
     thumbnail_url:
       'https://static-cdn.jtvnw.net/previews-ttv/live_user_test3-{width}x{height}.jpg',
@@ -65,8 +65,8 @@ export const mockStreams: TwitchStream[] = [
     game_name: 'Grand Theft Auto V',
     type: 'live',
     title: 'GTA RP with friends',
-    viewer_count: 21000,
-    started_at: new Date(Date.now() - 1800000).toISOString(),
+    viewer_count: 21_000,
+    started_at: new Date(Date.now() - 1_800_000).toISOString(),
     language: 'en',
     thumbnail_url:
       'https://static-cdn.jtvnw.net/previews-ttv/live_user_test4-{width}x{height}.jpg',
@@ -83,8 +83,8 @@ export const mockStreams: TwitchStream[] = [
     game_name: 'Just Chatting',
     type: 'live',
     title: 'Hanging out',
-    viewer_count: 45000,
-    started_at: new Date(Date.now() - 9000000).toISOString(),
+    viewer_count: 45_000,
+    started_at: new Date(Date.now() - 9_000_000).toISOString(),
     language: 'en',
     thumbnail_url:
       'https://static-cdn.jtvnw.net/previews-ttv/live_user_test5-{width}x{height}.jpg',
@@ -101,8 +101,8 @@ export const mockStreams: TwitchStream[] = [
     game_name: 'Counter-Strike',
     type: 'live',
     title: 'Playing CS2',
-    viewer_count: 18000,
-    started_at: new Date(Date.now() - 4500000).toISOString(),
+    viewer_count: 18_000,
+    started_at: new Date(Date.now() - 4_500_000).toISOString(),
     language: 'en',
     thumbnail_url:
       'https://static-cdn.jtvnw.net/previews-ttv/live_user_test6-{width}x{height}.jpg',
@@ -116,7 +116,7 @@ export const getTopStreamsResponse = (
   cursor?: string,
 ): PaginatedList<TwitchStream> => {
   const pageSize = 20;
-  const startIndex = cursor ? parseInt(cursor, 10) : 0;
+  const startIndex = cursor ? Number.parseInt(cursor, 10) : 0;
   const streams = [...mockStreams];
 
   // Duplicate streams to simulate more data
@@ -124,7 +124,7 @@ export const getTopStreamsResponse = (
     streams.push(
       ...mockStreams.map((s, i) => ({
         ...s,
-        id: `${parseInt(s.id, 10) + streams.length + i}`,
+        id: `${Number.parseInt(s.id, 10) + streams.length + i}`,
         viewer_count: Math.max(100, s.viewer_count - streams.length * 100),
       })),
     );

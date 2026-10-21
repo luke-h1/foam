@@ -36,10 +36,10 @@ function buildPaint(): PaintData {
   return {
     id: PAINT_ID,
     name: 'Popular Paint',
-    color: 0x00ff00ff,
+    color: 0x00_ff_00_ff,
     layers: { length: 0 },
     shadows: {
-      0: { color: 0x000000ff, radius: 2, x_offset: 0, y_offset: 1 },
+      0: { color: 0x00_00_00_ff, radius: 2, x_offset: 0, y_offset: 1 },
       length: 1,
     },
     textStyle: null,
@@ -49,8 +49,8 @@ function buildPaint(): PaintData {
     shape: 'circle',
     image_url: '',
     stops: {
-      0: { at: 0, color: 0x00ff00ff },
-      1: { at: 1, color: 0x0000ffff },
+      0: { at: 0, color: 0x00_ff_00_ff },
+      1: { at: 1, color: 0x00_00_ff_ff },
       length: 2,
     },
   };
@@ -366,7 +366,7 @@ describe('cosmetics entitlement-burst churn', () => {
   test('a changed paint definition still replaces the stored paint', () => {
     addPaint(buildPaint());
 
-    const recolored: PaintData = { ...buildPaint(), color: 0xff0000ff };
+    const recolored: PaintData = { ...buildPaint(), color: 0xff_00_00_ff };
     addPaint(recolored);
 
     expect(chatStore$.paints[PAINT_ID]?.peek()).toEqual<PaintData>(recolored);

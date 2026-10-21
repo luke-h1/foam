@@ -115,9 +115,9 @@ const RESUME_ACK_TIMEOUT = 5000;
 
 // Mobile sockets go half-open without onclose; prolonged heartbeat silence
 // closes the socket so reconnect + RESUME kicks in (same as the IRC PING watchdog).
-const DEFAULT_HEARTBEAT_INTERVAL_MS = 30000;
+const DEFAULT_HEARTBEAT_INTERVAL_MS = 30_000;
 
-const HEARTBEAT_WATCHDOG_TICK_MS = 10000;
+const HEARTBEAT_WATCHDOG_TICK_MS = 10_000;
 const MISSED_HEARTBEATS_BEFORE_RECONNECT = 3;
 
 // Per-outage retry budget; the counter resets on every successful open and
@@ -126,12 +126,12 @@ const RECONNECT_ATTEMPTS = 60;
 
 function logEventHandlerError(
   eventType: HandledSevenTvEventType,
-  cause: unknown,
+  error: unknown,
 ) {
   if (eventType === 'emote_set.update') {
-    logger.stvWs.error('Error handling emote set update:', cause);
+    logger.stvWs.error('Error handling emote set update:', error);
   } else {
-    logger.chat.error(`Error handling ${eventType}:`, cause);
+    logger.chat.error(`Error handling ${eventType}:`, error);
   }
 }
 
@@ -662,12 +662,12 @@ export function useSevenTvWs(
       });
 
       decisions.forEach(executeDecision);
-    } catch (e) {
+    } catch (error) {
       logger.stvWs.warn(
-        `Failed to parse STV message ${JSON.stringify(e, null, 2)}`,
+        `Failed to parse STV message ${JSON.stringify(error, null, 2)}`,
         {
           name: 'seven_tv_ws_warning',
-          error: e instanceof Error ? e : String(e),
+          error: error instanceof Error ? error : String(error),
           action: 'message_parse_failed',
           channel_id: twitchChannelIdRef.current,
           provider: 'seven_tv',

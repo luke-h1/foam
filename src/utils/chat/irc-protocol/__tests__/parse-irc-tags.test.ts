@@ -26,7 +26,7 @@ describe('parseIrcTags', () => {
   test('unescapes IRCv3 escape sequences in values', () => {
     expect(
       parseIrcTags(
-        'system-msg=ModUser\\sis\\scelebrating\\s24\\smonths\\sas\\sa\\smoderator!;msg-param-reward-title=Say\\shi\\s:)',
+        String.raw`system-msg=ModUser\sis\scelebrating\s24\smonths\sas\sa\smoderator!;msg-param-reward-title=Say\shi\s:)`,
       ),
     ).toEqual({
       'system-msg': 'ModUser is celebrating 24 months as a moderator!',
@@ -37,8 +37,8 @@ describe('parseIrcTags', () => {
   test('does not double-decode a literal backslash', () => {
     // Raw `\\s` is an escaped backslash followed by a literal `s`, i.e. `\s`
     // as text - not a space. A second decode pass would corrupt it to a space.
-    expect(parseIrcTags('ban-reason=path\\\\sfoo')).toEqual({
-      'ban-reason': 'path\\sfoo',
+    expect(parseIrcTags(String.raw`ban-reason=path\\sfoo`)).toEqual({
+      'ban-reason': String.raw`path\sfoo`,
     });
   });
 

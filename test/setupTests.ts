@@ -14,8 +14,8 @@ import 'cross-fetch/polyfill';
 import type { ReactNode, Ref } from 'react';
 
 import type { SkData } from '@shopify/react-native-skia';
+import { TextDecoder, TextEncoder } from 'node:util';
 import { configure as configureReassure } from 'reassure';
-import { TextDecoder, TextEncoder } from 'util';
 
 import mockFile from '../__mocks__/mockFile';
 
@@ -35,7 +35,7 @@ configureReassure({ testingLibrary: 'react-native' });
  * jsdom. Tests draw nothing, so a call-through proxy is enough.
  */
 function canvasKitStub(): any {
-  return new Proxy(function () {}, {
+  return new Proxy(() => {}, {
     get: (_target, prop) =>
       prop === Symbol.toPrimitive ? () => 0 : canvasKitStub(),
     construct: () => canvasKitStub(),

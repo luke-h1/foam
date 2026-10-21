@@ -36,7 +36,7 @@ function formatBytes(bytes: number): string {
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
+  return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
 }
 
 interface BadgeInfo {
@@ -599,7 +599,7 @@ const renderCachedPaintItem: ListRenderItem<PaintInfo> = ({ item }) => (
         ) : null}
       </View>
       <Text style={styles.itemMeta}>
-        {item.function.replace(/_/g, ' ').toLowerCase()}
+        {item.function.replaceAll('_', ' ').toLowerCase()}
       </Text>
       <Text style={styles.itemPath} selectable numberOfLines={1}>
         {item.id}

@@ -104,7 +104,7 @@ describe('useTwitchChat foreground liveness probe', () => {
     expect(close).not.toHaveBeenCalled();
 
     act(() => {
-      jest.advanceTimersByTime(5_000);
+      jest.advanceTimersByTime(5000);
     });
 
     expect(close).toHaveBeenCalledWith(4004, 'chat liveness probe timeout');
@@ -132,7 +132,7 @@ describe('useTwitchChat foreground liveness probe', () => {
           data: ':tmi.twitch.tv PONG tmi.twitch.tv :tmi.twitch.tv\r\n',
         }),
       );
-      jest.advanceTimersByTime(5_000);
+      jest.advanceTimersByTime(5000);
     });
 
     expect(close).not.toHaveBeenCalled();

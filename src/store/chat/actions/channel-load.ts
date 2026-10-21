@@ -667,10 +667,10 @@ const loadChannelResourcesInternal = async (
 
     const sevenTvSetIdPromise = sevenTvService
       .getEmoteSetId(channelId)
-      .catch((cause: unknown) => {
+      .catch((error: unknown) => {
         logger.chat.warn('Failed to resolve 7TV emote set ID', {
           name: 'seven_tv_emotes_warning',
-          error: cause,
+          error,
           action: 'emote_set_id_failed',
           channel_id: channelId,
           provider: 'seven_tv',
@@ -850,10 +850,10 @@ const loadChannelResourcesInternal = async (
 const loadChannelCheermotes = (channelId: string): void => {
   fetchChannelCheermotes(channelId, () =>
     twitchService.getCheermotes(channelId),
-  ).catch((cause: unknown) => {
+  ).catch((error: unknown) => {
     logger.chat.warn('Failed to load channel cheermotes', {
       name: 'chat_resources_warning',
-      error: cause,
+      error,
       action: 'cheermotes_failed',
       channel_id: channelId,
       screen: 'chat',

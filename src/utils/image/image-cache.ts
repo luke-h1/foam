@@ -46,7 +46,7 @@ type DownloadTask = {
   generation: number;
   key: string;
   options: CacheImageOptions;
-  reject: (cause?: unknown) => void;
+  reject: (error?: unknown) => void;
   resolve: (uri: string) => void;
   run: () => Promise<string>;
   url: string;
@@ -81,7 +81,7 @@ const ACCESS_PERSIST_INTERVAL_MS = 60 * 60 * 1000;
 const persistedAccessAt = new Map<string, number>();
 
 function hashString(str: string): string {
-  let hash = 2166136261;
+  let hash = 2_166_136_261;
 
   for (let i = 0; i < str.length; i += 1) {
     // eslint-disable-next-line no-bitwise
@@ -114,7 +114,7 @@ function isCacheableUri(uri: string): boolean {
 }
 
 function getCacheKey(url: string, variant = 'original'): string {
-  return `${hashString(`${variant}:${url}`)}-${variant.replace(/[^a-z0-9_-]/gi, '_')}`;
+  return `${hashString(`${variant}:${url}`)}-${variant.replaceAll(/[^a-z0-9_-]/gi, '_')}`;
 }
 
 function getRecordStorageKey(key: string): string {

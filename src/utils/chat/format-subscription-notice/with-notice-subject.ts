@@ -1,6 +1,6 @@
 function mentionsSubject(sentence: string, subject: string): boolean {
   const pattern = new RegExp(
-    `(^|[^\\p{L}\\p{N}_])${subject.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^\\p{L}\\p{N}_]|$)`,
+    `(^|[^\\p{L}\\p{N}_])${subject.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`)}([^\\p{L}\\p{N}_]|$)`,
     'iu',
   );
 

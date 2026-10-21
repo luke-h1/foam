@@ -1071,7 +1071,7 @@ describe('interpretSevenTvWsMessage', () => {
         coerceMessage({
           op: 1,
           d: {
-            heartbeat_interval: 25000,
+            heartbeat_interval: 25_000,
             session_id: 'session-1',
             subscription_limit: 500,
             instance: { name: 'event-api-1', population: 1 },
@@ -1084,7 +1084,7 @@ describe('interpretSevenTvWsMessage', () => {
         {
           type: 'hello',
           sessionId: 'session-1',
-          heartbeatIntervalMs: 25000,
+          heartbeatIntervalMs: 25_000,
         },
       ]);
     });

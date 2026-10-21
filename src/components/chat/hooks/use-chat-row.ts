@@ -216,14 +216,12 @@ export function useChatRow<
     fontScale: resolvedFontScale,
     getTokenKey: getTokenIdentity,
     message,
-    ...{
-      getMentionColor,
-      onEmoteTouchStart: handleEmoteTouchStart,
-      moderationNotice,
-      normalisedCurrentUsername,
-      noticeTags: isUserNoticeTags(notice_tags) ? notice_tags : undefined,
-      parseTextForEmotes,
-    },
+    getMentionColor,
+    onEmoteTouchStart: handleEmoteTouchStart,
+    moderationNotice,
+    normalisedCurrentUsername,
+    noticeTags: isUserNoticeTags(notice_tags) ? notice_tags : undefined,
+    parseTextForEmotes,
   };
 
   const announcementAccentColor = isAnnouncement

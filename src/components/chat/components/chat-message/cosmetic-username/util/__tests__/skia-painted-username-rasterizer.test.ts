@@ -98,8 +98,8 @@ describe('buildPaintImageLayers', () => {
         createLayer({
           function: 'LINEAR_GRADIENT',
           stops: {
-            0: { at: 0, color: 0xff0000ff },
-            1: { at: 1, color: 0x0000ffff },
+            0: { at: 0, color: 0xff_00_00_ff },
+            1: { at: 1, color: 0x00_00_ff_ff },
             length: 2,
           },
         }),
@@ -172,8 +172,8 @@ describe('planPaintLayerSlotKinds', () => {
         createLayer({
           function: 'LINEAR_GRADIENT',
           stops: {
-            0: { at: 0, color: 0xff0000ff },
-            1: { at: 1, color: 0x0000ffff },
+            0: { at: 0, color: 0xff_00_00_ff },
+            1: { at: 1, color: 0x00_00_ff_ff },
             length: 2,
           },
         }),
@@ -189,8 +189,8 @@ describe('planPaintLayerSlotKinds', () => {
         createLayer({
           function: 'LINEAR_GRADIENT',
           stops: {
-            0: { at: 0, color: 0xff0000ff },
-            1: { at: 1, color: 0x0000ffff },
+            0: { at: 0, color: 0xff_00_00_ff },
+            1: { at: 1, color: 0x00_00_ff_ff },
             length: 2,
           },
         }),
@@ -205,16 +205,16 @@ describe('planPaintLayerSlotKinds', () => {
         createLayer({
           function: 'LINEAR_GRADIENT',
           stops: {
-            0: { at: 0, color: 0xff0000ff },
-            1: { at: 1, color: 0x0000ffff },
+            0: { at: 0, color: 0xff_00_00_ff },
+            1: { at: 1, color: 0x00_00_ff_ff },
             length: 2,
           },
         }),
         createLayer({
           function: 'RADIAL_GRADIENT',
           stops: {
-            0: { at: 0, color: 0xff0000ff },
-            1: { at: 1, color: 0x0000ffff },
+            0: { at: 0, color: 0xff_00_00_ff },
+            1: { at: 1, color: 0x00_00_ff_ff },
             length: 2,
           },
         }),
@@ -242,8 +242,8 @@ describe('planPaintLayerSlotKinds', () => {
         createLayer({
           function: 'LINEAR_GRADIENT',
           stops: {
-            0: { at: 0, color: 0xff0000ff },
-            1: { at: 1, color: 0x0000ffff },
+            0: { at: 0, color: 0xff_00_00_ff },
+            1: { at: 1, color: 0x00_00_ff_ff },
             length: 2,
           },
         }),
@@ -254,8 +254,8 @@ describe('planPaintLayerSlotKinds', () => {
         createLayer({
           function: 'RADIAL_GRADIENT',
           stops: {
-            0: { at: 0, color: 0xff0000ff },
-            1: { at: 1, color: 0x0000ffff },
+            0: { at: 0, color: 0xff_00_00_ff },
+            1: { at: 1, color: 0x00_00_ff_ff },
             length: 2,
           },
         }),

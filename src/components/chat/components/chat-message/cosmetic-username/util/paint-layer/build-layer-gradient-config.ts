@@ -23,7 +23,7 @@ function expandRepeatingStops(stops: PaintStop[]): PaintStop[] {
 
   const sorted = stops.slice().sort((a, b) => a.at - b.at);
   const firstAt = sorted[0]?.at ?? 0;
-  const lastAt = sorted[sorted.length - 1]?.at ?? 1;
+  const lastAt = sorted.at(-1)?.at ?? 1;
   const period = lastAt - firstAt;
 
   if (period <= 0.0001) {
@@ -58,7 +58,7 @@ function expandRepeatingStops(stops: PaintStop[]): PaintStop[] {
     expanded.unshift({ at: 0, color: first.color });
   }
 
-  const last = expanded[expanded.length - 1];
+  const last = expanded.at(-1);
 
   if (last && last.at < 1) {
     expanded.push({ at: 1, color: last.color });

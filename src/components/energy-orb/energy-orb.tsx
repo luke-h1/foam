@@ -97,7 +97,9 @@ function EnergyOrbComponent({
   }));
 
   const source = getShaderSource();
-  if (!source) return null;
+  if (!source) {
+    return null;
+  }
 
   return (
     <Canvas style={[styles.canvas, { width, height }]}>

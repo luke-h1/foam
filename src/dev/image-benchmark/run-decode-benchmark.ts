@@ -65,7 +65,7 @@ function summarise(
     p50Ms: Math.round(percentile(sorted, 50) * 100) / 100,
     p95Ms: Math.round(percentile(sorted, 95) * 100) / 100,
     minMs: Math.round((sorted[0] ?? 0) * 100) / 100,
-    maxMs: Math.round((sorted[sorted.length - 1] ?? 0) * 100) / 100,
+    maxMs: Math.round((sorted.at(-1) ?? 0) * 100) / 100,
   };
 }
 

@@ -26,7 +26,7 @@ export function PaintLayerTiledImage({
 
   const webBackgroundStyle: WebBackgroundStyle = {
     // Quoted so CDN URLs with parentheses/whitespace stay valid CSS.
-    backgroundImage: `url("${imageUrl.replace(/"/g, '%22')}")`,
+    backgroundImage: `url("${imageUrl.replaceAll('"', '%22')}")`,
     backgroundRepeat: cssRepeat,
   };
 

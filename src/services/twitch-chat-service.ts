@@ -100,7 +100,7 @@ const CHAT_HEARTBEAT_INTERVAL_MS = 60_000;
  * Probe deadline after foreground/network regain - much faster than waiting
  * for the next heartbeat tick.
  */
-const CHAT_FOREGROUND_LIVENESS_DEADLINE_MS = 5_000;
+const CHAT_FOREGROUND_LIVENESS_DEADLINE_MS = 5000;
 
 const TWITCH_CHAT_URL = isE2EMode
   ? 'ws://localhost:6667'
@@ -492,7 +492,7 @@ function consumeIrcLines(text: string, handlers: IrcLineHandlers): string {
  * trailing `:param` when it holds a space, because IRC ends the line there.
  */
 function formatIrcCommand(command: string, params: string[]): string {
-  const lastParam = params[params.length - 1];
+  const lastParam = params.at(-1);
 
   if (!lastParam) {
     return command;
@@ -581,7 +581,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   const pendingJoinChannelsRef = useLazyRef(() => new Set<string>());
 
   const anonymousNickRef = useLazyRef(
-    () => `justinfan${Math.floor(Math.random() * 90000) + 10000}`,
+    () => `justinfan${Math.floor(Math.random() * 90_000) + 10_000}`,
   );
 
   // Authenticated nick; JOIN/PART prefixes let us tell our own join/token from other chatters'.
@@ -832,8 +832,8 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
           onPing: () => sendIrcCommand('PONG', 'tmi.twitch.tv'),
         },
       );
-    } catch (e) {
-      logger.chat.error('Failed to parse IRC message:', e);
+    } catch (error) {
+      logger.chat.error('Failed to parse IRC message:', error);
     }
   };
 
@@ -1120,7 +1120,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       replyParentMsgId,
     });
 
-    logger.chat.debug(`Sending PRIVMSG: ${fullMessage.substring(0, 100)}...`);
+    logger.chat.debug(`Sending PRIVMSG: ${fullMessage.slice(0, 100)}...`);
     sendWebSocketMessage(`${fullMessage}\r\n`);
   };
 
@@ -1135,9 +1135,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     const channelFormatted = formatIrcChannelName(channelName);
     const fullMessage = `PRIVMSG ${channelFormatted} :${trimmedCommand}`;
 
-    logger.chat.debug(
-      `Sending chat command: ${fullMessage.substring(0, 100)}...`,
-    );
+    logger.chat.debug(`Sending chat command: ${fullMessage.slice(0, 100)}...`);
 
     sendWebSocketMessage(`${fullMessage}\r\n`);
   };

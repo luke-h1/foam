@@ -103,7 +103,9 @@ function useBlockedTerms() {
 
   const addTerm = (rawText: string): AddTermResult => {
     const normalised = normaliseChatText(rawText);
-    if (!normalised) return 'empty';
+    if (!normalised) {
+      return 'empty';
+    }
 
     if (blockedTerms.includes(normalised)) {
       return 'duplicate';

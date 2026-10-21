@@ -489,10 +489,12 @@ function buildSentryException(
   message: string,
   name: string | undefined,
   exceptionName: string | undefined,
-  cause: unknown,
+  error: unknown,
 ): Error {
   const exception =
-    cause !== undefined ? new Error(message, { cause }) : new Error(message);
+    error !== undefined
+      ? new Error(message, { cause: error })
+      : new Error(message);
 
   exception.name = exceptionName ?? name ?? 'Error';
   return exception;

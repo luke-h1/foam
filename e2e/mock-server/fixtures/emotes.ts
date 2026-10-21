@@ -103,7 +103,7 @@ export const ffzGlobalSet = {
       title: 'Global Emoticons',
       emoticons: [
         {
-          id: 128054,
+          id: 128_054,
           name: 'LULW',
           height: 28,
           width: 28,
@@ -111,7 +111,7 @@ export const ffzGlobalSet = {
           hidden: false,
           modifier: false,
           status: 1,
-          usage_count: 10000000,
+          usage_count: 10_000_000,
           created_at: '2014-04-06T04:00:00.000Z',
           last_updated: '2024-01-01T00:00:00.000Z',
           urls: {
@@ -121,7 +121,7 @@ export const ffzGlobalSet = {
           },
         },
         {
-          id: 159480,
+          id: 159_480,
           name: 'catJAM',
           height: 32,
           width: 32,
@@ -129,7 +129,7 @@ export const ffzGlobalSet = {
           hidden: false,
           modifier: false,
           status: 1,
-          usage_count: 5000000,
+          usage_count: 5_000_000,
           created_at: '2020-09-01T00:00:00.000Z',
           last_updated: '2024-01-01T00:00:00.000Z',
           urls: {
@@ -164,7 +164,7 @@ export const ffzRoom = (channelId: string) => ({
       title: 'Channel Emoticons',
       emoticons: [
         {
-          id: 1000001,
+          id: 1_000_001,
           name: 'PauseChamp',
           height: 32,
           width: 32,
@@ -172,7 +172,7 @@ export const ffzRoom = (channelId: string) => ({
           hidden: false,
           modifier: false,
           status: 1,
-          usage_count: 100000,
+          usage_count: 100_000,
           created_at: '2018-01-01T00:00:00.000Z',
           last_updated: '2024-01-01T00:00:00.000Z',
           urls: { 1: 'https://cdn.frankerfacez.com/emote/1000001/1' },
@@ -216,7 +216,7 @@ export const sevenTvGlobalEmoteSet = {
       id: '60ae3d83ba045b3a1a7c5f6e',
       name: 'Sadge',
       flags: 0,
-      timestamp: 1622000000000,
+      timestamp: 1_622_000_000_000,
       actor_id: null,
       data: {
         id: '60ae3d83ba045b3a1a7c5f6e',
@@ -265,7 +265,7 @@ export const sevenTvGlobalEmoteSet = {
       id: '60b0c0b43a2a3ca21e01b745',
       name: 'peepoHappy',
       flags: 0,
-      timestamp: 1622200000000,
+      timestamp: 1_622_200_000_000,
       actor_id: null,
       data: {
         id: '60b0c0b43a2a3ca21e01b745',
@@ -294,7 +294,7 @@ export const sevenTvGlobalEmoteSet = {
               width: 56,
               height: 56,
               frame_count: 6,
-              size: 16384,
+              size: 16_384,
               format: 'GIF',
             },
           ],
@@ -305,7 +305,7 @@ export const sevenTvGlobalEmoteSet = {
       id: '60b6f29c0df5adab17c7ea7e',
       name: 'HYPERS',
       flags: 0,
-      timestamp: 1622600000000,
+      timestamp: 1_622_600_000_000,
       actor_id: null,
       data: {
         id: '60b6f29c0df5adab17c7ea7e',
@@ -325,7 +325,7 @@ export const sevenTvGlobalEmoteSet = {
               width: 32,
               height: 32,
               frame_count: 12,
-              size: 12288,
+              size: 12_288,
               format: 'GIF',
             },
           ],
@@ -365,7 +365,7 @@ export const sevenTvChannelUser = (twitchId: string) => ({
             id: '62a2b8c6d46a0f21d6082a9a',
             name: 'GIGACHAD',
             flags: 0,
-            timestamp: 1654800000000,
+            timestamp: 1_654_800_000_000,
             actor_id: null,
             data: {
               id: '62a2b8c6d46a0f21d6082a9a',

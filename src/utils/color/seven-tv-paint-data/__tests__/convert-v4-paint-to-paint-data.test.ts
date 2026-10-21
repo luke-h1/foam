@@ -10,8 +10,8 @@ import type { SevenTvPaintSource } from '@app/utils/color/seven-tv-paint-data/ty
 const RED = { r: 255, g: 0, b: 0, a: 255 };
 const BLUE = { r: 0, g: 0, b: 255, a: 255 };
 
-const PACKED_RED = 0xff0000ff;
-const PACKED_BLUE = 0x0000ffff;
+const PACKED_RED = 0xff_00_00_ff;
+const PACKED_BLUE = 0x00_00_ff_ff;
 
 describe('convertV4PaintToPaintData', () => {
   test('reverses v4 layer order so the topmost layer is listed first', () => {

@@ -3,7 +3,7 @@ export function rgbToHex(rgb: string): string {
     rgb = rgb.replace('rgb(', '').replace(')', '');
 
     const [r, g, b] = rgb.split(',').map(value => {
-      const num = parseInt(value.trim(), 10);
+      const num = Number.parseInt(value.trim(), 10);
       return Number.isNaN(num) ? 255 : num;
     });
 

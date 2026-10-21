@@ -15,7 +15,7 @@ const PREWARM_HTML = `<!doctype html><html><head>
 
 // Boot is busy; wait out the first transitions before spending memory on the
 // throwaway WebView, then drop it once WebKit's processes are warm.
-const PREWARM_MOUNT_DELAY_MS = 2_500;
+const PREWARM_MOUNT_DELAY_MS = 2500;
 
 const PREWARM_LIFETIME_MS = 10_000;
 

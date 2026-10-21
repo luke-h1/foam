@@ -25,7 +25,7 @@ interface SharedPaintAnimationEntry {
 const entries = new Map<string, SharedPaintAnimationEntry>();
 
 // Keep a released texture briefly so recycled rows rejoin the running clock in phase.
-const RELEASED_ENTRY_LINGER_MS = 5_000;
+const RELEASED_ENTRY_LINGER_MS = 5000;
 
 const DEFAULT_FRAME_DURATION_MS = 60;
 

@@ -175,7 +175,7 @@ describe('chatDebugLog', () => {
 
   test('never matches identity markers quoted inside reply tag values', () => {
     recordChatDebugIrcLine(
-      '@reply-parent-msg-body=check\\s!alice@example.com\\sand\\s@login=alice;color=#FFF :bob!bob@bob.tmi.twitch.tv PRIVMSG #channel :hi',
+      String.raw`@reply-parent-msg-body=check\s!alice@example.com\sand\s@login=alice;color=#FFF :bob!bob@bob.tmi.twitch.tv PRIVMSG #channel :hi`,
     );
 
     expect(getChatDebugIrcLinesForLogin('alice')).toEqual([]);
@@ -183,8 +183,7 @@ describe('chatDebugLog', () => {
   });
 
   test('matches a display name whose spaces are tag-escaped', () => {
-    const usernotice =
-      '@display-name=Alice\\sSmith;msg-id=resub :tmi.twitch.tv USERNOTICE #channel :hi';
+    const usernotice = String.raw`@display-name=Alice\sSmith;msg-id=resub :tmi.twitch.tv USERNOTICE #channel :hi`;
 
     recordChatDebugIrcLine(usernotice);
 

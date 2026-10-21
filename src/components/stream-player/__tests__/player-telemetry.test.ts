@@ -55,7 +55,7 @@ jest.spyOn(logger.main, 'error').mockImplementation(() => {});
 describe('createPlayerTelemetry', () => {
   beforeEach(() => {
     jest.useFakeTimers();
-    jest.setSystemTime(1_000);
+    jest.setSystemTime(1000);
     jest.clearAllMocks();
   });
 
@@ -83,7 +83,7 @@ describe('createPlayerTelemetry', () => {
     const telemetry = createPlayerTelemetry();
     telemetry.beginLoad(basePlayerTelemetryContext);
 
-    jest.setSystemTime(1_500);
+    jest.setSystemTime(1500);
     telemetry.notePlaybackStarted('bridge_playing');
 
     expect(countMetric).toHaveBeenCalledWith('stream.player.start', {
@@ -104,7 +104,7 @@ describe('createPlayerTelemetry', () => {
     telemetry.beginLoad(basePlayerTelemetryContext);
     const loadError = new Error('network down');
 
-    jest.setSystemTime(1_250);
+    jest.setSystemTime(1250);
     telemetry.noteLoadFailed('webview_error', loadError);
 
     expect(countMetric).toHaveBeenCalledWith('stream.player.load_failed', {
@@ -144,11 +144,11 @@ describe('createPlayerTelemetry', () => {
       exceptionName: 'StreamPlayerEmbedError',
       fingerprint: ['stream-player-embed-error'],
       channel: 'sodapoppin',
-      elapsedMs: 2_500,
+      elapsedMs: 2500,
       message: 'embed exploded',
     };
 
-    jest.setSystemTime(1_100);
+    jest.setSystemTime(1100);
     telemetry.noteLoadFailed('embed_error', embedError);
 
     expect(logger.main.error).toHaveBeenCalledWith(
@@ -259,7 +259,7 @@ describe('createPlayerTelemetry', () => {
       video: '12345',
     });
 
-    jest.setSystemTime(1_500);
+    jest.setSystemTime(1500);
     telemetry.notePlaybackStarted('bridge_playing');
     jest.clearAllMocks();
 

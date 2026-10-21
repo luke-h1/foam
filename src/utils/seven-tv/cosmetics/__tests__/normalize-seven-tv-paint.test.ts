@@ -10,15 +10,15 @@ describe('normalizeSevenTvPaint', () => {
     const paint = normalizeSevenTvPaint({
       id: 'paint-v2',
       name: 'V2 Paint',
-      color: 0xff0000ff,
+      color: 0xff_00_00_ff,
       function: 'LINEAR_GRADIENT',
       angle: 45,
       repeat: true,
       shape: 'circle',
       image_url: '',
       stops: {
-        0: { at: 0, color: 0xff0000ff },
-        1: { at: 1, color: 0x0000ffff },
+        0: { at: 0, color: 0xff_00_00_ff },
+        1: { at: 1, color: 0x00_00_ff_ff },
         length: 2,
       },
     });
@@ -33,8 +33,8 @@ describe('normalizeSevenTvPaint', () => {
       angle: 45,
       repeat: true,
       stops: {
-        0: { at: 0, color: 0xff0000ff },
-        1: { at: 1, color: 0x0000ffff },
+        0: { at: 0, color: 0xff_00_00_ff },
+        1: { at: 1, color: 0x00_00_ff_ff },
         length: 2,
       },
     });
@@ -51,15 +51,15 @@ describe('normalizeSevenTvPaint', () => {
           shape: 'ellipse',
           repeat: false,
           stops: [
-            { at: 0, color: 0xffffffff },
-            { at: 1, color: 0x000000ff },
+            { at: 0, color: 0xff_ff_ff_ff },
+            { at: 1, color: 0x00_00_00_ff },
           ],
         },
         {
           function: 'LINEAR_GRADIENT',
           angle: 90,
           repeat: false,
-          stops: [{ at: 0, color: 0x12345678 }],
+          stops: [{ at: 0, color: 0x12_34_56_78 }],
         },
       ],
     });
@@ -70,8 +70,8 @@ describe('normalizeSevenTvPaint', () => {
     expect(paint.layers[1]?.function).toBe('LINEAR_GRADIENT');
 
     expect(paint.stops).toEqual<IndexedCollection<PaintStop>>({
-      0: { at: 0, color: 0xffffffff },
-      1: { at: 1, color: 0x000000ff },
+      0: { at: 0, color: 0xff_ff_ff_ff },
+      1: { at: 1, color: 0x00_00_00_ff },
       length: 2,
     });
   });
@@ -85,7 +85,7 @@ describe('normalizeSevenTvPaint', () => {
           function: 'LINEAR_GRADIENT',
           angle: 0,
           repeat: false,
-          stops: [{ at: 0, color: 0x111111ff }],
+          stops: [{ at: 0, color: 0x11_11_11_ff }],
         },
         {
           function: 'URL',

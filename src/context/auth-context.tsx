@@ -282,11 +282,11 @@ function useAuthContextValue({
       twitchApi.setAuthToken(result.access_token);
 
       queueInitialDataPrefetch();
-    } catch (e) {
-      logger.auth.error('Failed to get anon auth', e);
-      markAuthStateReadyFallback('fetchAnonToken failed', asError(e));
+    } catch (error) {
+      logger.auth.error('Failed to get anon auth', error);
+      markAuthStateReadyFallback('fetchAnonToken failed', asError(error));
 
-      const category = categorizeError(asError(e));
+      const category = categorizeError(asError(error));
 
       toast.error(getErrorTitle(category), {
         description: getFriendlyErrorMessage(category),

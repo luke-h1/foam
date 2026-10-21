@@ -138,7 +138,7 @@ describe('RouterEffects deep-link auth handling', () => {
             isAnonAuth: false,
             token: {
               accessToken: 'magic-access-token',
-              expiresIn: 14400,
+              expiresIn: 14_400,
               tokenType: 'bearer',
               expiresAt: Date.now() + 14_400_000,
             },

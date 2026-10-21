@@ -5,11 +5,11 @@ import { shouldAnimateMessageEntrance } from '../should-animate-message-entrance
 describe('shouldAnimateMessageEntrance', () => {
   test('does not animate a row that committed in a raid-sized burst', () => {
     const message = createChatMessageFixture({
-      committedAt: 1_000,
+      committedAt: 1000,
       arrivedInBurst: true,
     });
 
-    expect(shouldAnimateMessageEntrance(message, 1_000)).toBe(false);
+    expect(shouldAnimateMessageEntrance(message, 1000)).toBe(false);
   });
 
   test('animates a message committed moments before mount', () => {

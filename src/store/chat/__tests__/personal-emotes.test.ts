@@ -59,7 +59,7 @@ describe('fetchUserPersonalEmotes', () => {
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
         ...makeEmptyEmoteData(),
-        lastUpdated: 1_000,
+        lastUpdated: 1000,
       },
     });
   });
@@ -97,7 +97,7 @@ describe('fetchUserPersonalEmotes', () => {
       chatStore$.persisted.channelCaches.peek()[channelId],
     ).toEqual<ChannelCacheType>({
       ...makeEmptyEmoteData(),
-      lastUpdated: 1_000,
+      lastUpdated: 1000,
     });
   });
 
@@ -141,7 +141,7 @@ describe('personalEmotesVersion', () => {
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
         ...makeEmptyEmoteData(),
-        lastUpdated: 1_000,
+        lastUpdated: 1000,
       },
     });
   });

@@ -32,18 +32,18 @@ export interface BuiltFixtureMessage {
 
 // FNV-1a, stable across runs - used to derive a fixed id/colour per display name.
 function hashString(value: string): number {
-  let hash = 2166136261;
+  let hash = 2_166_136_261;
 
   for (let i = 0; i < value.length; i += 1) {
     hash ^= value.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
+    hash = Math.imul(hash, 16_777_619);
   }
 
   return hash >>> 0;
 }
 
 const userIdForName = (name: string): string =>
-  String(210000000 + (hashString(name) % 80000000));
+  String(210_000_000 + (hashString(name) % 80_000_000));
 
 const colorForName = (name: string): string =>
   FIXTURE_COLORS[hashString(`${name}#color`) % FIXTURE_COLORS.length]!;

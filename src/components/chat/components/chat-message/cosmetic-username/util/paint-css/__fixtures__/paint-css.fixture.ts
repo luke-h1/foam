@@ -5,9 +5,9 @@ import type { IndexedCollection } from '@app/services/ws/util/indexed-collection
 import type { PaintData, PaintLayerData } from '@app/types/seven-tv/cosmetics';
 
 // Packed 7TV colors: RRGGBBAA as a signed 32-bit integer.
-export const RED = -16776961; // 0xFF0000FF
+export const RED = -16_776_961; // 0xFF0000FF
 
-export const BLUE = 65535; // 0x0000FFFF
+export const BLUE = 65_535; // 0x0000FFFF
 export const HALF_BLACK = 128; // 0x00000080
 
 export function toIndexed<T>(items: T[]): IndexedCollection<T> {

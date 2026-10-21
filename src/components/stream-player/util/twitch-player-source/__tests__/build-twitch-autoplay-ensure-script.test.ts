@@ -46,7 +46,7 @@ function addVideo({ blocksUnmutedPlay = false } = {}): PlayerVideo {
     return Promise.resolve();
   };
 
-  document.body.appendChild(element);
+  document.body.append(element);
 
   return { element, isPlaying: () => !paused };
 }

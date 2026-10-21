@@ -178,8 +178,8 @@ export function getChatDebugIrcLinesForLogin(
   }
 
   const escaped = target
-    .replace(/[$()*+.?[\\\]^{|}]/g, '\\$&')
-    .replace(/ /g, '\\\\s');
+    .replaceAll(/[$()*+.?[\\\]^{|}]/g, String.raw`\$&`)
+    .replaceAll(' ', String.raw`\\s`);
 
   const tagPattern = new RegExp(
     `(?:^@|;)(?:login|display-name)=${escaped}(?:;|$)`,

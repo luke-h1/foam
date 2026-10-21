@@ -67,7 +67,7 @@ const MAX_RECENT_MESSAGE_CHANNELS = 10;
 // in busy chats (issue #594); moderation/clear paths still flush immediately.
 export const RECENT_MESSAGES_SYNC_DELAY_MS = 15_000;
 
-const RECENT_MESSAGES_MODERATION_SYNC_DELAY_MS = 1_000;
+const RECENT_MESSAGES_MODERATION_SYNC_DELAY_MS = 1000;
 
 let recentMessagesSyncTimer: ReturnType<typeof setTimeout> | null = null;
 let recentMessagesSyncTimerDelayMs = 0;

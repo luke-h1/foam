@@ -6,7 +6,7 @@ import {
 } from '../paint-shadow-extents';
 
 const shadow = (overrides: Partial<PaintShadow> = {}): PaintShadow => ({
-  color: 0xff0000ff,
+  color: 0xff_00_00_ff,
   radius: 0,
   x_offset: 0,
   y_offset: 0,

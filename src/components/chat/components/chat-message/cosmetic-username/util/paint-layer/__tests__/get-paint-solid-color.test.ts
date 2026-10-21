@@ -41,10 +41,10 @@ function createPaint(overrides: Partial<PaintData>): PaintData {
 describe('getPaintSolidColor', () => {
   test('prefers the paint solid colour', () => {
     const paint = createPaint({
-      color: 0x9c28a9ff,
+      color: 0x9c_28_a9_ff,
       layers: {
         0: createLayer({
-          stops: { 0: { at: 0, color: 0x00ff00ff }, length: 1 },
+          stops: { 0: { at: 0, color: 0x00_ff_00_ff }, length: 1 },
         }),
         length: 1,
       },
@@ -58,9 +58,9 @@ describe('getPaintSolidColor', () => {
       layers: {
         0: createLayer({
           stops: {
-            0: { at: 0, color: 0xff0000ff },
-            1: { at: 0.6, color: 0x00ff00ff },
-            2: { at: 1, color: 0x0000ffff },
+            0: { at: 0, color: 0xff_00_00_ff },
+            1: { at: 0.6, color: 0x00_ff_00_ff },
+            2: { at: 1, color: 0x00_00_ff_ff },
             length: 3,
           },
         }),
@@ -80,13 +80,13 @@ describe('getPaintSolidColor', () => {
         }),
         1: createLayer({
           stops: {
-            0: { at: 0.5, color: 0x00ff0000 },
-            1: { at: 0.9, color: 0x00ff00ff },
+            0: { at: 0.5, color: 0x00_ff_00_00 },
+            1: { at: 0.9, color: 0x00_ff_00_ff },
             length: 2,
           },
         }),
         2: createLayer({
-          stops: { 0: { at: 0.5, color: 0x0000ffff }, length: 1 },
+          stops: { 0: { at: 0.5, color: 0x00_00_ff_ff }, length: 1 },
         }),
         length: 3,
       },
@@ -111,12 +111,12 @@ describe('getPaintSolidColor', () => {
 
   test('skips a fully transparent paint colour and uses the mid-most opaque stop', () => {
     const paint = createPaint({
-      color: 0x9c28a900,
+      color: 0x9c_28_a9_00,
       layers: {
         0: createLayer({
           stops: {
-            0: { at: 0, color: 0xff0000ff },
-            1: { at: 0.5, color: 0x00ff00ff },
+            0: { at: 0, color: 0xff_00_00_ff },
+            1: { at: 0.5, color: 0x00_ff_00_ff },
             length: 2,
           },
         }),
@@ -128,6 +128,8 @@ describe('getPaintSolidColor', () => {
   });
 
   test('gives no colour for a transparent paint colour with no stops behind it', () => {
-    expect(getPaintSolidColor(createPaint({ color: 0x9c28a900 }))).toBeNull();
+    expect(
+      getPaintSolidColor(createPaint({ color: 0x9c_28_a9_00 })),
+    ).toBeNull();
   });
 });

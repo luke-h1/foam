@@ -48,5 +48,5 @@ export function pickBestBadgeFile(
     }
   }
 
-  return files[files.length - 1] ?? files[0];
+  return files.at(-1) ?? files[0];
 }

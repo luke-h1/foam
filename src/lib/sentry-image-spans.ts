@@ -5,7 +5,7 @@ import type { Image as ExpoImage, ImageRef, ImageSource } from 'expo-image';
  * Hard cap on how long a resource.image.* span may stay open; stuck CDN loads
  * otherwise hold their parent transaction open for hours (FOAM-TV-MOBILE-1C).
  */
-const IMAGE_SPAN_DEADLINE_MS = 5_000;
+const IMAGE_SPAN_DEADLINE_MS = 5000;
 
 /**
  * The two expo-image statics this module instruments.
@@ -102,9 +102,9 @@ function trackImageSpan<T>(
       finish(resultIsOk(value));
       return value;
     },
-    (cause: unknown) => {
+    (error: unknown) => {
       finish(false);
-      throw cause;
+      throw error;
     },
   );
 }

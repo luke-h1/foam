@@ -54,8 +54,6 @@ export function deepEqualJson<T>(a: T, b: T): boolean {
   }
 
   return aKeys.every(
-    key =>
-      Object.prototype.hasOwnProperty.call(b, key) &&
-      deepEqualJson(a[key], b[key]),
+    key => Object.hasOwn(b, key) && deepEqualJson(a[key], b[key]),
   );
 }

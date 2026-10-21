@@ -36,7 +36,7 @@ export function BenchFrameProbe() {
 
         frames = 0;
         windowStart = now;
-        shouldFlush = now - lastFlush >= 10000;
+        shouldFlush = now - lastFlush >= 10_000;
         lastFlush = shouldFlush ? now : lastFlush;
       }
 

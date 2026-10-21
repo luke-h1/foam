@@ -19,7 +19,7 @@ const mockStream: TwitchStream = {
   game_name: 'Just Chatting',
   type: 'live',
   title: 'Test Stream Title',
-  viewer_count: 10000,
+  viewer_count: 10_000,
   started_at: new Date().toISOString(),
   language: 'en',
   thumbnail_url: 'https://example.com/thumbnail.jpg',

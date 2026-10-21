@@ -16,7 +16,7 @@ import type {
 import type { SevenTvEmote, SevenTvFile } from '@app/types/seven-tv/emotes';
 import type { StvUser } from '@app/types/seven-tv/users';
 
-export const HISTORICAL_EVENT_BUFFER = 10000;
+export const HISTORICAL_EVENT_BUFFER = 10_000;
 
 interface ResumeAckPayload {
   success?: boolean;
@@ -649,7 +649,7 @@ function interpretDispatch(
     return [{ type: 'ignoreDispatch', reason: 'missingEventData' }];
   }
 
-  if (!Object.prototype.hasOwnProperty.call(data, 'type')) {
+  if (!Object.hasOwn(data, 'type')) {
     return [{ type: 'ignoreDispatch', reason: 'malformedEventData' }];
   }
 

@@ -1,5 +1,5 @@
 const DURATION_UNITS: [unitSeconds: number, label: string][] = [
-  [86400, 'd'],
+  [86_400, 'd'],
   [3600, 'h'],
   [60, 'm'],
   [1, 's'],

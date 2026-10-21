@@ -112,7 +112,7 @@ function summariseProcessSamples(
   const mems = samples.map(s => s.memMb);
   const cpus = samples.map(s => s.cpu);
   const memStartMb = mems[0]!;
-  const memEndMb = mems[mems.length - 1]!;
+  const memEndMb = mems.at(-1)!;
 
   return {
     memStartMb,

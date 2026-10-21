@@ -85,7 +85,7 @@ describe('setupInitialSubscriptions', () => {
     });
 
     const setup = harness.run();
-    await jest.advanceTimersByTimeAsync(2_000);
+    await jest.advanceTimersByTimeAsync(2000);
     expect(harness.sendJsonMessage).not.toHaveBeenCalled();
 
     harness.ids.twitchChannelId = 'channel-1';
@@ -113,11 +113,11 @@ describe('setupInitialSubscriptions', () => {
     });
 
     const setup = harness.run();
-    await jest.advanceTimersByTimeAsync(1_000);
+    await jest.advanceTimersByTimeAsync(1000);
 
     harness.session.reset('leave');
     harness.ids.twitchChannelId = 'old-channel';
-    await jest.advanceTimersByTimeAsync(1_000);
+    await jest.advanceTimersByTimeAsync(1000);
     await setup;
 
     expect(harness.sendJsonMessage).not.toHaveBeenCalled();
@@ -135,11 +135,11 @@ describe('setupInitialSubscriptions', () => {
     harness.session.noteChannelId('old-channel');
 
     const setup = harness.run();
-    await jest.advanceTimersByTimeAsync(1_000);
+    await jest.advanceTimersByTimeAsync(1000);
 
     harness.session.noteChannelId('new-channel');
     harness.ids.twitchChannelId = 'old-channel';
-    await jest.advanceTimersByTimeAsync(1_000);
+    await jest.advanceTimersByTimeAsync(1000);
     await setup;
 
     expect(harness.sendJsonMessage).not.toHaveBeenCalled();
@@ -156,12 +156,12 @@ describe('setupInitialSubscriptions', () => {
 
     const startTime = Date.now();
     const setup = harness.run();
-    await jest.advanceTimersByTimeAsync(1_000);
+    await jest.advanceTimersByTimeAsync(1000);
 
     const callsBeforeReset = harness.sendJsonMessage.mock.calls.length;
     harness.session.reset('close');
     harness.ids.sevenTvEmoteSetId = 'set-1';
-    await jest.advanceTimersByTimeAsync(1_000);
+    await jest.advanceTimersByTimeAsync(1000);
     await setup;
 
     expect(callsBeforeReset).toBe(3);

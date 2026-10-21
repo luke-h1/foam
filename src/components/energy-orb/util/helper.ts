@@ -14,9 +14,9 @@ const parseColor = (color: string | undefined): RGB => {
 
   if (hexMatch) {
     return [
-      parseInt(hexMatch[1] ?? '0', 16) / 255,
-      parseInt(hexMatch[2] ?? '0', 16) / 255,
-      parseInt(hexMatch[3] ?? '0', 16) / 255,
+      Number.parseInt(hexMatch[1] ?? '0', 16) / 255,
+      Number.parseInt(hexMatch[2] ?? '0', 16) / 255,
+      Number.parseInt(hexMatch[3] ?? '0', 16) / 255,
     ];
   }
 
@@ -28,9 +28,9 @@ const parseColor = (color: string | undefined): RGB => {
     const b = shortHexMatch[3] ?? '0';
 
     return [
-      parseInt(r + r, 16) / 255,
-      parseInt(g + g, 16) / 255,
-      parseInt(b + b, 16) / 255,
+      Number.parseInt(r + r, 16) / 255,
+      Number.parseInt(g + g, 16) / 255,
+      Number.parseInt(b + b, 16) / 255,
     ];
   }
 
@@ -38,9 +38,9 @@ const parseColor = (color: string | undefined): RGB => {
 
   if (rgbMatch) {
     return [
-      parseInt(rgbMatch[1] ?? '0', 10) / 255,
-      parseInt(rgbMatch[2] ?? '0', 10) / 255,
-      parseInt(rgbMatch[3] ?? '0', 10) / 255,
+      Number.parseInt(rgbMatch[1] ?? '0', 10) / 255,
+      Number.parseInt(rgbMatch[2] ?? '0', 10) / 255,
+      Number.parseInt(rgbMatch[3] ?? '0', 10) / 255,
     ];
   }
 

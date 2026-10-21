@@ -33,7 +33,7 @@ describe('createStabilityRecovery', () => {
     const { refreshes, stability } = create(now);
 
     stability.noteStalled();
-    jest.advanceTimersByTime(3_999);
+    jest.advanceTimersByTime(3999);
     expect(refreshes).toEqual([]);
 
     jest.advanceTimersByTime(1);
@@ -45,7 +45,7 @@ describe('createStabilityRecovery', () => {
     const { refreshes, stability } = create(now);
 
     stability.noteStalled();
-    jest.advanceTimersByTime(3_000);
+    jest.advanceTimersByTime(3000);
     stability.noteRecovered();
     jest.advanceTimersByTime(10_000);
 
@@ -57,9 +57,9 @@ describe('createStabilityRecovery', () => {
     const { refreshes, stability } = create(now);
 
     stability.noteStalled();
-    jest.advanceTimersByTime(2_000);
+    jest.advanceTimersByTime(2000);
     stability.noteStalled();
-    jest.advanceTimersByTime(2_000);
+    jest.advanceTimersByTime(2000);
 
     expect(refreshes).toEqual([{ attempt: 1, reason: 'stall' }]);
   });
@@ -105,13 +105,13 @@ describe('createStabilityRecovery', () => {
     const { giveUps, refreshes, stability } = create(now);
 
     stability.noteVideoError();
-    now.current += 1_000;
+    now.current += 1000;
     stability.noteVideoError();
-    now.current += 1_000;
+    now.current += 1000;
     stability.noteVideoError();
-    now.current += 1_000;
+    now.current += 1000;
     stability.noteVideoError();
-    now.current += 1_000;
+    now.current += 1000;
     stability.noteVideoError();
 
     expect(refreshes).toEqual([

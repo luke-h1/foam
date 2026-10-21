@@ -11,7 +11,7 @@ const CHAT_DELAY_RAMP_RATE = 0.5;
  * from the current one, in either direction. Turning the delay off always
  * applies.
  */
-const CHAT_DELAY_DEADBAND_MS = 2_000;
+const CHAT_DELAY_DEADBAND_MS = 2000;
 
 /**
  * Smooths increases of the chat delay. The first target applies at once.

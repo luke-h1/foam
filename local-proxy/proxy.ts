@@ -207,9 +207,9 @@ const renderPendingPage = (url: URL) => {
   const redirectUrl = `foam://?${url.searchParams.toString()}`;
 
   const safeRedirectUrl = JSON.stringify(redirectUrl)
-    .replace(/</g, '\\u003c')
-    .replace(/>/g, '\\u003e')
-    .replace(/&/g, '\\u0026');
+    .replaceAll('<', String.raw`\u003c`)
+    .replaceAll('>', String.raw`\u003e`)
+    .replaceAll('&', String.raw`\u0026`);
 
   return html(`
       <html>
@@ -289,15 +289,15 @@ const buildMagicTargetUrl = (blob: MagicLinkBlob): string => {
 
 const renderMagicRedirect = (target: string) => {
   const safeTarget = JSON.stringify(target)
-    .replace(/</g, '\\u003c')
-    .replace(/>/g, '\\u003e')
-    .replace(/&/g, '\\u0026');
+    .replaceAll('<', String.raw`\u003c`)
+    .replaceAll('>', String.raw`\u003e`)
+    .replaceAll('&', String.raw`\u0026`);
 
   const hrefAttr = target
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
 
   return html(`<!DOCTYPE html>
 <html lang="en">

@@ -66,7 +66,7 @@ describe('ChattersSheet', () => {
     const { getByText } = renderChattersSheet({
       isPresented: true,
       onDismiss: jest.fn(),
-      onSelectChatter: onSelectChatter,
+      onSelectChatter,
     });
 
     expect(getByText('Broadcaster · 1')).toBeOnTheScreen();
@@ -133,7 +133,7 @@ describe('ChattersSheet', () => {
     const { getByText } = renderChattersSheet({
       isPresented: true,
       onDismiss: jest.fn(),
-      onSelectChatter: onSelectChatter,
+      onSelectChatter,
     });
 
     fireEvent.press(getByText('MentionOnly'));

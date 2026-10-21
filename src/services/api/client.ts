@@ -82,7 +82,7 @@ interface ClientOptions {
 }
 
 const DEFAULT_TIMEOUT_MS = 10_000;
-const AUTH_READY_TIMEOUT_MS = 8_000;
+const AUTH_READY_TIMEOUT_MS = 8000;
 
 export function createApiClient({
   baseURL,

@@ -102,7 +102,7 @@ export const storageService = {
     if (
       parsed === null ||
       Array.isArray(parsed) ||
-      !Object.prototype.hasOwnProperty.call(parsed, 'value')
+      !Object.hasOwn(parsed, 'value')
     ) {
       return null;
     }

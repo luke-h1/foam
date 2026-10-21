@@ -22,11 +22,11 @@ interface FFzErrorResponse {
  * FFZ returns a 404 "No such room" for channels that have never configured FFZ;
  * that is a benign empty result, not a failure worth logging.
  */
-function isNoSuchRoomError(cause: unknown): boolean {
+function isNoSuchRoomError(error: unknown): boolean {
   return (
-    cause instanceof ApiError &&
-    cause.status === 404 &&
-    cause.message.includes('No such room')
+    error instanceof ApiError &&
+    error.status === 404 &&
+    error.message.includes('No such room')
   );
 }
 

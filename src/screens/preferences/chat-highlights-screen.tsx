@@ -62,7 +62,9 @@ function useCustomHighlights() {
 
   const addHighlight = (rawText: string, color: string): AddHighlightResult => {
     const phrase = normaliseChatText(rawText);
-    if (!phrase) return 'empty';
+    if (!phrase) {
+      return 'empty';
+    }
 
     if (highlights.some(highlight => highlight.phrase === phrase)) {
       return 'duplicate';

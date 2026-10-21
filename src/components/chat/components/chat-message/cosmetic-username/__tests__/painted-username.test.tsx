@@ -33,8 +33,8 @@ const GRADIENT_PAINT: PaintData = {
     0: {
       function: 'LINEAR_GRADIENT',
       stops: {
-        0: { at: 0, color: 0xff0000ff },
-        1: { at: 0.5, color: 0x00ff00ff },
+        0: { at: 0, color: 0xff_00_00_ff },
+        1: { at: 0.5, color: 0x00_ff_00_ff },
         length: 2,
       },
       angle: 90,

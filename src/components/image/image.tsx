@@ -20,7 +20,7 @@ type ImageSourceDescriptor =
 function isUriObjectSource(
   source: NonNullable<ImageProps['source']>,
 ): source is { uri: string } {
-  return Object.prototype.hasOwnProperty.call(source, 'uri');
+  return source instanceof Object && Object.hasOwn(source, 'uri');
 }
 
 function isModuleSource(

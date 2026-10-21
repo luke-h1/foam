@@ -10,11 +10,11 @@ export function hexToRgb(
       .join('');
   }
 
-  if (hex.length !== 6 || Number.isNaN(parseInt(hex, 16))) {
+  if (hex.length !== 6 || Number.isNaN(Number.parseInt(hex, 16))) {
     return null;
   }
 
-  const bigint = parseInt(hex, 16);
+  const bigint = Number.parseInt(hex, 16);
 
   return {
     // eslint-disable-next-line no-bitwise

@@ -65,7 +65,7 @@ const mockVideo: TwitchVideo = {
   url: 'https://twitch.tv/videos/v1',
   thumbnail_url: 'https://example.com/vod-%{width}x%{height}.jpg',
   viewable: 'public',
-  view_count: 12345,
+  view_count: 12_345,
   language: 'en',
   type: 'archive',
   duration: '1h2m3s',
@@ -94,8 +94,8 @@ const mockClip: TwitchClip = {
 
 const mockChatStats: StreamElementsChatStats = {
   channel: 'shroud',
-  totalMessages: 69134962,
-  uniqueChatters: 118560,
+  totalMessages: 69_134_962,
+  uniqueChatters: 118_560,
   chatters: [],
   twitchEmotes: [{ id: '1', emote: 'LUL', amount: 100 }],
   bttvEmotes: [],
@@ -108,7 +108,7 @@ const mockChatStats: StreamElementsChatStats = {
  * default. At `--maxWorkers=100%` the cold transform plus first render of this
  * screen runs past 5s and the VOD list arrives after the profile header.
  */
-const FIND_TIMEOUT = { timeout: 15000 };
+const FIND_TIMEOUT = { timeout: 15_000 };
 
 describe('StreamerProfileScreen', () => {
   beforeEach(() => {

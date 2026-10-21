@@ -65,7 +65,7 @@ export function useAppUpdate() {
         toast.success('Update downloaded', {
           id: pendingToastId,
           description: 'Restart the app to apply the update',
-          duration: 10000,
+          duration: 10_000,
           action: {
             label: 'Restart',
             onClick: () => {
@@ -75,13 +75,10 @@ export function useAppUpdate() {
             },
           },
         });
-      } catch (caught) {
-        const error =
-          caught instanceof Error ? caught : new Error(String(caught));
-
+      } catch (error) {
         logger.main.error('Manual OTA bundle update failed', {
           name: 'ota_updates_service_error',
-          error,
+          error: error instanceof Error ? error : new Error(String(error)),
           category: 'OTAUpdatesService',
           action: 'manual_bundle_update_failed',
           channel: Updates.channel || 'unknown',
