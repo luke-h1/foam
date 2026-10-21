@@ -35,7 +35,6 @@ function createSevenTvMenuEmote(
   overrides: Partial<SevenTvSanitisedEmote> = {},
 ): SevenTvSanitisedEmote {
   return {
-    ...overrides,
     id,
     name,
     original_name: name,
@@ -51,6 +50,7 @@ function createSevenTvMenuEmote(
     width: 32,
     height: 32,
     set_metadata: defaultSevenTvMetadata,
+    ...overrides,
     provider: '7tv',
   };
 }
@@ -62,7 +62,6 @@ function createTwitchMenuEmote(
   overrides: Partial<TwitchSanitisedEmote> = {},
 ): TwitchSanitisedEmote {
   return {
-    ...overrides,
     id,
     name,
     original_name: name,
@@ -70,6 +69,7 @@ function createTwitchMenuEmote(
     creator: null,
     emote_link: '',
     site,
+    ...overrides,
     provider: 'twitch',
   };
 }
@@ -98,7 +98,6 @@ export function createMenuEmote(
 
   if (site === 'BTTV' || site === 'Global BTTV') {
     return {
-      ...overrides,
       id,
       name,
       original_name: name,
@@ -106,13 +105,13 @@ export function createMenuEmote(
       creator: null,
       emote_link: '',
       site,
+      ...overrides,
       provider: 'bttv',
     } satisfies BttvSanitisedEmote;
   }
 
   if (site === 'FFZ' || site === 'Global FFZ') {
     return {
-      ...overrides,
       id,
       name,
       original_name: name,
@@ -120,6 +119,7 @@ export function createMenuEmote(
       creator: null,
       emote_link: '',
       site,
+      ...overrides,
       provider: 'ffz',
     } satisfies FfzSanitisedEmote;
   }

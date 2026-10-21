@@ -137,6 +137,7 @@ export function Text({
   const styleWeightOverride: TextStyle | null = styleWeight
     ? {
         fontFamily: getFontFamily('default', styleWeight, italic),
+        fontWeight: undefined,
       }
     : null;
 

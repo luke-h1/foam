@@ -370,6 +370,7 @@ describe('createUserNoticeMessage', () => {
       'display-name': 'ModUser',
       login: 'moduser',
       'msg-param-months': '24',
+      'system-msg': undefined,
     });
 
     const result = createUserNoticeMessage({

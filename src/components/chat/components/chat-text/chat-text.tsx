@@ -128,6 +128,7 @@ function getStyleWeightOverride(
 
   const override: TextStyle = {
     fontFamily: getFontFamily('default', styleWeight, italic),
+    fontWeight: undefined,
   };
 
   styleWeightOverrides.set(key, override);

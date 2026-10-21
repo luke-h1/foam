@@ -235,6 +235,7 @@ describe('planChannelRefresh', () => {
   test('falls back to lastUpdated for badge age when badgesLastUpdated is missing', () => {
     const plan = planChannelRefresh({
       cache: freshCache({
+        badgesLastUpdated: undefined,
         lastUpdated: NOW - 45 * 60 * 1000,
       }),
       forceRefresh: false,
