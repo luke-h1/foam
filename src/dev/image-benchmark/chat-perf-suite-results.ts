@@ -1,17 +1,15 @@
 // DEV-ONLY: persists suite results to Documents/chat-perf-suite.json so adb / simctl can pull them after a run.
 import { File, Paths } from 'expo-file-system';
 
-import CpuUsage from '@modules/cpu-usage/src/CpuUsageModule';
-
 import type { PhaseResult } from './chat-perf-suite';
+import {
+  type ProcessMetricsSample,
+  sampleProcessMetricsNow,
+} from './process-metrics';
+
+export type { ProcessMetricsSample } from './process-metrics';
 
 const RESULTS_FILENAME = 'chat-perf-suite.json';
-
-export interface ProcessMetricsSample {
-  t: number;
-  memMb: number;
-  cpu: number;
-}
 
 export interface ChatPerfSuiteFile {
   startedAt: number;
@@ -82,13 +80,5 @@ export function finishChatPerfSuiteResults(cancelled: boolean): void {
 }
 
 export async function sampleProcessMetrics(): Promise<ProcessMetricsSample> {
-  const memRaw = CpuUsage.getUsedMemoryMb();
-  const memMb = Number.isFinite(memRaw) && memRaw > 0 ? Math.round(memRaw) : 0;
-  const cpu = CpuUsage.getUsage();
-
-  return {
-    t: Date.now(),
-    memMb,
-    cpu: Number.isFinite(cpu) ? Math.round(cpu) : 0,
-  };
+  return sampleProcessMetricsNow();
 }

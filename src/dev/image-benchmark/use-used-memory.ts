@@ -1,25 +1,22 @@
 import { useEffect, useState } from 'react';
 
-import CpuUsage from '@modules/cpu-usage/src/CpuUsageModule';
-
-function readUsedMemoryMb(): number | null {
-  const mb = CpuUsage.getUsedMemoryMb();
-  return Number.isFinite(mb) && mb > 0 ? Math.round(mb) : null;
-}
+import {
+  peekProcessMetrics,
+  retainProcessMetricsPolling,
+} from './process-metrics';
 
 export function useUsedMemoryMb(): number {
-  const [mb, setMb] = useState(() => readUsedMemoryMb() ?? 0);
+  const [mb, setMb] = useState(() => peekProcessMetrics().memMb);
 
-  useEffect(() => {
-    const id = setInterval(() => {
-      const value = readUsedMemoryMb();
-      if (value !== null) {
-        setMb(value);
-      }
-    }, 1000);
-
-    return () => clearInterval(id);
-  }, []);
+  useEffect(
+    () =>
+      retainProcessMetricsPolling(sample => {
+        if (sample.memMb > 0) {
+          setMb(sample.memMb);
+        }
+      }),
+    [],
+  );
 
   return mb;
 }

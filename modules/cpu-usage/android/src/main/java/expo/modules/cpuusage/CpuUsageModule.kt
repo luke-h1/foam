@@ -11,6 +11,7 @@ import java.io.File
 class CpuUsageModule : Module() {
   private var lastProcessMs = 0L
   private var lastWallMs = 0L
+  private var lastReportedUsage = 0.0
   private var hasBaseline = false
 
   private val clockTck = Os.sysconf(OsConstants._SC_CLK_TCK).coerceAtLeast(1L)
@@ -39,17 +40,24 @@ class CpuUsageModule : Module() {
       return 0.0
     }
 
-    val processDelta = processMs - lastProcessMs
     val wallDelta = wallMs - lastWallMs
+
+    if (wallDelta < MIN_USAGE_WINDOW_MS) {
+      return lastReportedUsage
+    }
+
+    val processDelta = processMs - lastProcessMs
 
     lastProcessMs = processMs
     lastWallMs = wallMs
 
-    if (wallDelta <= 0L || processDelta < 0L) {
+    if (processDelta < 0L) {
+      lastReportedUsage = 0.0
       return 0.0
     }
 
-    return (processDelta.toDouble() / wallDelta.toDouble()) * 100.0
+    lastReportedUsage = (processDelta.toDouble() / wallDelta.toDouble()) * 100.0
+    return lastReportedUsage
   }
 
   private fun readProcessCpuMs(): Long? = runCatching {
@@ -61,4 +69,8 @@ class CpuUsageModule : Module() {
     val stime = fields[12].toLong()
     (utime + stime) * 1000L / clockTck
   }.getOrNull()
+
+  private companion object {
+    const val MIN_USAGE_WINDOW_MS = 500L
+  }
 }

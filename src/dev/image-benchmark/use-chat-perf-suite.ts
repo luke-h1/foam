@@ -18,8 +18,8 @@ import {
   type ProcessMetricsSample,
   recordChatPerfSuitePhase,
   resetChatPerfSuiteResults,
-  sampleProcessMetrics,
 } from './chat-perf-suite-results';
+import { retainProcessMetricsPolling } from './process-metrics';
 import {
   SYNTHETIC_PRESETS,
   syntheticChatControl,
@@ -41,8 +41,6 @@ const pct = (a: number[], q: number) => {
 
   return s[Math.min(s.length - 1, Math.floor(q * s.length))]!;
 };
-
-const METRICS_SAMPLE_MS = 1000;
 
 export interface LiveStats {
   fps: number;
@@ -254,7 +252,7 @@ export function useChatPerfSuite() {
 
       const runPhaseWindow = async () => {
         const start = performance.now();
-        let lastMetricsAt = 0;
+        let releaseMetrics: (() => void) | undefined;
 
         if (measuring) {
           accum.current = { on: true, fps: [], jank: 0, frames: 0 };
@@ -262,6 +260,9 @@ export function useChatPerfSuite() {
           uiFrames.set(0);
           uiJank.set(0);
           uiActive.set(true);
+          releaseMetrics = retainProcessMetricsPolling(sample => {
+            metricsSamplesRef.current.push(sample);
+          });
         }
 
         phaseCountdownMs.set(ms);
@@ -276,28 +277,19 @@ export function useChatPerfSuite() {
           done: false,
         }));
 
-        while (performance.now() - start < ms) {
-          if (cancelRef.current) {
-            break;
+        try {
+          while (performance.now() - start < ms) {
+            if (cancelRef.current) {
+              break;
+            }
+
+            await sleep(120);
           }
-
-          const now = performance.now();
-          const shouldSample =
-            measuring && now - lastMetricsAt >= METRICS_SAMPLE_MS;
-
-          if (shouldSample) {
-            lastMetricsAt = now;
-            // eslint-disable-next-line react-doctor/async-defer-await -- sample before the next sleep so the series stays on the 1s grid
-            // oxlint-disable-next-line react-doctor/async-await-in-loop -- sequential 1 Hz samples; Promise.all would collapse the time series
-            const sample = await sampleProcessMetrics();
-            metricsSamplesRef.current.push(sample);
-          }
-
-          await sleep(120);
+        } finally {
+          releaseMetrics?.();
+          accum.current.on = false;
+          uiActive.set(false);
         }
-
-        accum.current.on = false;
-        uiActive.set(false);
       };
 
       await runPhaseWindow().finally(() => {
