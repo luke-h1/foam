@@ -17,7 +17,7 @@ const secondShadow: PaintShadow = {
   x_offset: -1,
   y_offset: -1,
   radius: 4,
-  color: 65535,
+  color: 65_535,
 };
 
 function toIndexed<T>(items: T[]): IndexedCollection<T> {

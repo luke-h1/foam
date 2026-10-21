@@ -346,10 +346,9 @@ describe('chatStore messages', () => {
 
     jest.advanceTimersByTime(RECENT_MESSAGES_SYNC_DELAY_MS);
 
+    const recentByChannel = chatStore$.recentMessagesByChannel.peek();
     expect(
-      chatStore$.recentMessagesByChannel
-        .peek()
-        ['channel-1']?.map(message => message.message_id),
+      recentByChannel['channel-1']?.map(message => message.message_id),
     ).toEqual(['msg-1', 'msg-2']);
 
     jest.useRealTimers();

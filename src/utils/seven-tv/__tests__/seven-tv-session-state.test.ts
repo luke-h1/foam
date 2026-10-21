@@ -49,7 +49,7 @@ const createState = () =>
 const populate = (state: SevenTvSessionState) => {
   state.hasInitialized = true;
   state.hasInitialSubscriptions = true;
-  state.connectionTimestamp = 1_000;
+  state.connectionTimestamp = 1000;
   state.currentEmoteSetId = 'set-a';
   state.activeSubscriptions.add('set-a');
   state.sessionId = 'session-a';
@@ -59,7 +59,7 @@ const populate = (state: SevenTvSessionState) => {
   state.subscribedChannelId = 'channel-a';
   state.subscribedOwnerId = 'owner-a';
   state.heartbeatIntervalMs = 45_000;
-  state.lastMessageAt = 2_000;
+  state.lastMessageAt = 2000;
   state.heartbeatWatchdog = setInterval(() => {}, 10_000);
 };
 
@@ -115,7 +115,7 @@ describe('reset', () => {
       subscribedChannelId: null,
       subscribedOwnerId: null,
       heartbeatIntervalMs: 45_000,
-      lastMessageAt: 2_000,
+      lastMessageAt: 2000,
       heartbeatWatchdog: null,
     });
 
@@ -142,7 +142,7 @@ describe('reset', () => {
       subscribedChannelId: null,
       subscribedOwnerId: null,
       heartbeatIntervalMs: 45_000,
-      lastMessageAt: 2_000,
+      lastMessageAt: 2000,
       heartbeatWatchdog: null,
     });
 
@@ -159,7 +159,7 @@ describe('reset', () => {
     expect(snapshotFields(state)).toEqual<SessionFieldSnapshot>({
       hasInitialized: true,
       hasInitialSubscriptions: false,
-      connectionTimestamp: 1_000,
+      connectionTimestamp: 1000,
       currentEmoteSetId: 'set-a',
       activeSubscriptions: new Set(['set-a']),
       sessionId: 'session-a',
@@ -169,7 +169,7 @@ describe('reset', () => {
       subscribedChannelId: null,
       subscribedOwnerId: null,
       heartbeatIntervalMs: 45_000,
-      lastMessageAt: 2_000,
+      lastMessageAt: 2000,
       heartbeatWatchdog: null,
     });
 
@@ -195,7 +195,7 @@ describe('reset', () => {
     const state = createState();
     const onResumeFallback = jest.fn();
     const onWatchdogTick = jest.fn();
-    state.resumeFallbackTimer = setTimeout(() => onResumeFallback(), 5_000);
+    state.resumeFallbackTimer = setTimeout(() => onResumeFallback(), 5000);
     state.heartbeatWatchdog = setInterval(() => onWatchdogTick(), 10_000);
 
     state.reset('close');

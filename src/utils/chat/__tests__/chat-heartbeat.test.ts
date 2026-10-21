@@ -1,7 +1,7 @@
 import { getHeartbeatAction } from '../chat-heartbeat';
 
 const INTERVAL = 30_000;
-const PROBE_DEADLINE = 5_000;
+const PROBE_DEADLINE = 5000;
 
 describe('getHeartbeatAction', () => {
   test('waits while the socket is not open', () => {

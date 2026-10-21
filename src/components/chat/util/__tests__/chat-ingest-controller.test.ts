@@ -116,7 +116,7 @@ describe('chatIngestController (headless line → commit)', () => {
     const { routeLine } = createHeadlessIngest();
 
     routeLine(PRIVMSG_LINE);
-    jest.advanceTimersByTime(2_000);
+    jest.advanceTimersByTime(2000);
 
     const committed = committedMessages();
     expect(committed).toHaveLength(1);
@@ -138,7 +138,7 @@ describe('chatIngestController (headless line → commit)', () => {
     });
 
     routeLine(PRIVMSG_LINE);
-    jest.advanceTimersByTime(5_000);
+    jest.advanceTimersByTime(5000);
 
     expect(committedMessages()).toHaveLength(1);
     expect(getChatUnreadCount()).toBe(1);
@@ -146,14 +146,14 @@ describe('chatIngestController (headless line → commit)', () => {
 
   test('holds a live line in the delay queue for the configured delay', () => {
     const { routeLine } = createHeadlessIngest({
-      getChatDelayMs: () => 5_000,
+      getChatDelayMs: () => 5000,
     });
 
     routeLine(PRIVMSG_LINE);
-    jest.advanceTimersByTime(2_000);
+    jest.advanceTimersByTime(2000);
     expect(committedMessages()).toHaveLength(0);
 
-    jest.advanceTimersByTime(6_000);
+    jest.advanceTimersByTime(6000);
     expect(committedMessages()).toHaveLength(1);
   });
 
@@ -167,7 +167,7 @@ describe('chatIngestController (headless line → commit)', () => {
     let maxLagMs = 0;
     let maxBufferSize = 0;
 
-    for (let elapsed = 0; elapsed < 6_000; elapsed += 1) {
+    for (let elapsed = 0; elapsed < 6000; elapsed += 1) {
       while (nextSendAt <= elapsed) {
         sequence += 1;
         const id = `msg-${sequence}`;
@@ -179,7 +179,7 @@ describe('chatIngestController (headless line → commit)', () => {
       jest.advanceTimersByTime(1);
 
       const committed = committedMessages();
-      const newest = committed[committed.length - 1];
+      const newest = committed.at(-1);
 
       if (newest) {
         maxLagMs = Math.max(
@@ -205,7 +205,7 @@ describe('chatIngestController (headless line → commit)', () => {
 
     routeLine(privmsgLine('msg-1'));
     routeLine(privmsgLine('msg-2'));
-    jest.advanceTimersByTime(1_000);
+    jest.advanceTimersByTime(1000);
     const committedWhileHeld = committedMessages().length;
 
     rowTouchHeld = false;
@@ -248,7 +248,7 @@ describe('chatIngestController (headless line → commit)', () => {
       routeLine(privmsgLine(`msg-${index}`));
     }
 
-    jest.advanceTimersByTime(1_000);
+    jest.advanceTimersByTime(1000);
     expect(committedMessages()).toHaveLength(0);
     expect(controller.getBufferSize()).toBe(149);
 
@@ -264,7 +264,7 @@ describe('chatIngestController (headless line → commit)', () => {
 
     const committedIds = committedMessages().map(message => message.message_id);
     expect(committedIds[0]).toBe('msg-11');
-    expect(committedIds[committedIds.length - 1]).toBe('msg-160');
+    expect(committedIds.at(-1)).toBe('msg-160');
     expect(committedIds).toHaveLength(150);
   });
 
@@ -280,8 +280,8 @@ describe('chatIngestController (headless line → commit)', () => {
     let sequence = 0;
 
     for (let elapsed = 0; elapsed < 30_000; elapsed += 100) {
-      if (elapsed === 3_000) {
-        delayMs = 6_000;
+      if (elapsed === 3000) {
+        delayMs = 6000;
       }
 
       sequence += 1;
@@ -306,7 +306,7 @@ describe('chatIngestController (headless line → commit)', () => {
     }
 
     // A hard 0 -> 6s step would open a 6s gap; the ramp keeps rows flowing.
-    expect(maxGapMs).toBeLessThan(1_000);
+    expect(maxGapMs).toBeLessThan(1000);
 
     expect(commitTimes.length).toBeGreaterThan(200);
   });
@@ -315,14 +315,14 @@ describe('chatIngestController (headless line → commit)', () => {
     const { routeLine } = createHeadlessIngest();
 
     routeLine(PRIVMSG_LINE);
-    jest.advanceTimersByTime(2_000);
+    jest.advanceTimersByTime(2000);
     expect(committedMessages()).toHaveLength(1);
 
     routeLine(
       '@room-id=123;target-user-id=42;tmi-sent-ts=2000 CLEARCHAT #somechannel :chatter',
     );
 
-    jest.advanceTimersByTime(2_000);
+    jest.advanceTimersByTime(2000);
 
     const moderated = committedMessages().find(
       message => message.message_id === 'msg-1',

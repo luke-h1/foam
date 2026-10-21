@@ -92,9 +92,6 @@ export function buildSubscriptionNoticeDescription(
           <ChatText key='months' style={styles.descriptionText}>
             {" They've subscribed for "}
           </ChatText>,
-        );
-
-        tokens.push(
           <ChatText key='monthsCount' style={styles.monthsHighlight}>
             {`${cumulativeMonths} ${cumulativeMonths === 1 ? 'month' : 'months'}`}
           </ChatText>,
@@ -121,9 +118,6 @@ export function buildSubscriptionNoticeDescription(
           <ChatText key='action' style={styles.descriptionText}>
             {`Gifted a ${tierDisplay} subscription to `}
           </ChatText>,
-        );
-
-        tokens.push(
           <ChatText key='recipient' style={styles.recipientName}>
             {recipientDisplayName}
           </ChatText>,
@@ -182,9 +176,6 @@ export function buildSubscriptionNoticeDescription(
         <ChatText key='action' style={styles.descriptionText}>
           {'Gifted '}
         </ChatText>,
-      );
-
-      tokens.push(
         <ChatText key='count' style={styles.monthsHighlight}>
           {massGiftCount ?? 0}
         </ChatText>,
@@ -226,9 +217,6 @@ export function buildSubscriptionNoticeDescription(
           <ChatText key='from' style={styles.descriptionText}>
             {' from '}
           </ChatText>,
-        );
-
-        tokens.push(
           <ChatText key='sender' style={styles.recipientName}>
             {senderName}
           </ChatText>,
@@ -289,9 +277,6 @@ export function buildSubscriptionNoticeDescription(
           <ChatText key='action' style={styles.descriptionText}>
             {'Paid their subscription forward to '}
           </ChatText>,
-        );
-
-        tokens.push(
           <ChatText key='recipient' style={styles.recipientName}>
             {recipientDisplayName}
           </ChatText>,
@@ -326,9 +311,6 @@ export function buildSubscriptionNoticeDescription(
           <ChatText key='action' style={styles.descriptionText}>
             {`An anonymous gifter gifted a ${tierDisplay} subscription to `}
           </ChatText>,
-        );
-
-        tokens.push(
           <ChatText key='recipient' style={styles.recipientName}>
             {recipientDisplayName}
           </ChatText>,
@@ -354,9 +336,6 @@ export function buildSubscriptionNoticeDescription(
         <ChatText key='action' style={styles.descriptionText}>
           {'An anonymous gifter gifted '}
         </ChatText>,
-      );
-
-      tokens.push(
         <ChatText key='count' style={styles.monthsHighlight}>
           {massGiftCount ?? 0}
         </ChatText>,
@@ -368,9 +347,6 @@ export function buildSubscriptionNoticeDescription(
           {tierDisplay} subscription{massGiftCount === 1 ? '' : 's'} to the
           community
         </ChatText>,
-      );
-
-      tokens.push(
         <ChatText key='period' style={styles.descriptionText}>
           .
         </ChatText>,

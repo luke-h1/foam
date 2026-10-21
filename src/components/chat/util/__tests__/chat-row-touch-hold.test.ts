@@ -37,7 +37,7 @@ describe('chat row touch hold', () => {
     jest.useFakeTimers();
     beginRowTouchHold();
 
-    jest.advanceTimersByTime(5_000);
+    jest.advanceTimersByTime(5000);
     const heldAtLimit = isRowTouchHeld();
 
     jest.advanceTimersByTime(1);

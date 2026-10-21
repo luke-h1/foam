@@ -59,7 +59,9 @@ function useSavedPhrases() {
     editingId: string | null,
   ): SavePhraseResult => {
     const text = rawText.trim();
-    if (!text) return 'empty';
+    if (!text) {
+      return 'empty';
+    }
 
     if (
       phrases.some(phrase => phrase.id !== editingId && phrase.text === text)
@@ -207,7 +209,9 @@ function NativeSavedPhrasesList() {
 
   const handleNativeSave = () => {
     const result = savePhrase(phraseText.value, editingId);
-    if (result === 'empty') return;
+    if (result === 'empty') {
+      return;
+    }
 
     phraseText.value = '';
 
@@ -325,7 +329,9 @@ export function SavedPhrasesScreen() {
 
   const handleSave = () => {
     const result = savePhrase(inputValue, editingId);
-    if (result === 'empty') return;
+    if (result === 'empty') {
+      return;
+    }
 
     setInputValue('');
 

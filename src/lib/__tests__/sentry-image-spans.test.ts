@@ -81,7 +81,7 @@ describe('instrumentExpoImageLoads span deadline', () => {
     void imageClass.loadAsync({ uri: 'https://a.io/stuck.avif' });
     expect(end).not.toHaveBeenCalled();
 
-    jest.advanceTimersByTime(5_000);
+    jest.advanceTimersByTime(5000);
 
     expect(setStatus.mock.calls).toEqual([
       [{ code: 2, message: 'deadline_exceeded' }],
@@ -104,7 +104,7 @@ describe('instrumentExpoImageLoads span deadline', () => {
     instrumentExpoImageLoads(imageClass);
 
     const load = imageClass.loadAsync({ uri: 'https://a.io/slow.avif' });
-    jest.advanceTimersByTime(5_000);
+    jest.advanceTimersByTime(5000);
     resolveLoad(loadedImage);
     await expect(load).resolves.toBe(loadedImage);
 

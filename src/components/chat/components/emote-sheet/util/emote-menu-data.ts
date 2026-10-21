@@ -275,7 +275,7 @@ function sortSets(sets: EmoteMenuSet[]): EmoteMenuSet[] {
  * name; provider emotes always carry an `id`.
  */
 function isNamedEmote(item: EmotePickerItem): item is SanitisedEmote {
-  return Object.prototype.hasOwnProperty.call(item, 'id');
+  return item instanceof Object && Object.hasOwn(item, 'id');
 }
 
 /**

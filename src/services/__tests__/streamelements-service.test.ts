@@ -7,8 +7,8 @@ const api = { get: jest.spyOn(streamElementsApi, 'get') };
 
 const mockStats: StreamElementsChatStats = {
   channel: 'shroud',
-  totalMessages: 69134962,
-  uniqueChatters: 118560,
+  totalMessages: 69_134_962,
+  uniqueChatters: 118_560,
   chatters: [],
   twitchEmotes: [],
   bttvEmotes: [],

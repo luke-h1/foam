@@ -32,7 +32,7 @@ const TIMEOUT_DURATION_OPTIONS = [
   { label: '10 minutes', seconds: 600 },
   { label: '30 minutes', seconds: 1800 },
   { label: '1 hour', seconds: 3600 },
-  { label: '24 hours', seconds: 86400 },
+  { label: '24 hours', seconds: 86_400 },
 ] as const satisfies readonly { label: string; seconds: number }[];
 
 export function resolveModTarget(

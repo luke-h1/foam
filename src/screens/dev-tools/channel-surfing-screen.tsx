@@ -49,11 +49,11 @@ export function ChannelSurfingScreen() {
       await fetchUpdateAsync();
 
       await reloadAsync();
-    } catch (err) {
+    } catch (error) {
       setBusy(false);
       Alert.alert(
         'Failed to surf',
-        err instanceof Error ? err.message : String(err),
+        error instanceof Error ? error.message : String(error),
       );
     }
   }, [channelInput]);
@@ -73,11 +73,11 @@ export function ChannelSurfingScreen() {
             try {
               setUpdateRequestHeadersOverride(null);
               await reloadAsync();
-            } catch (err) {
+            } catch (error) {
               setBusy(false);
               Alert.alert(
                 'Failed to reset',
-                err instanceof Error ? err.message : String(err),
+                error instanceof Error ? error.message : String(error),
               );
             }
           },

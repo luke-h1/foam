@@ -32,8 +32,8 @@ export function formatViewCountCompact(
     return `${millions % 1 === 0 || millions >= 10 ? Math.floor(millions) : millions}M`;
   }
 
-  if (count >= 1_000) {
-    const thousands = Math.floor((count / 1_000) * 10) / 10;
+  if (count >= 1000) {
+    const thousands = Math.floor((count / 1000) * 10) / 10;
     return `${thousands % 1 === 0 || thousands >= 10 ? Math.floor(thousands) : thousands}K`;
   }
 

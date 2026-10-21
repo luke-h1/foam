@@ -146,31 +146,31 @@ export type UseRemoteConfigResult = {
   isLoading: boolean;
 };
 
-function isStringValue(cause: unknown): cause is string {
-  return String(cause) === cause;
+function isStringValue(error: unknown): error is string {
+  return String(error) === error;
 }
 
-export function getErrorMessage(cause: unknown): string | null {
-  if (cause instanceof Error) {
-    return cause.message;
+export function getErrorMessage(error: unknown): string | null {
+  if (error instanceof Error) {
+    return error.message;
   }
 
-  if (isStringValue(cause)) {
-    return cause;
+  if (isStringValue(error)) {
+    return error;
   }
 
   if (
-    cause instanceof Object &&
-    'message' in cause &&
-    isStringValue(cause.message)
+    error instanceof Object &&
+    'message' in error &&
+    isStringValue(error.message)
   ) {
-    return cause.message;
+    return error.message;
   }
 
   return null;
 }
 
-export function isRemoteConfigCancellation(cause: unknown): boolean {
-  const message = getErrorMessage(cause)?.toLowerCase();
+export function isRemoteConfigCancellation(error: unknown): boolean {
+  const message = getErrorMessage(error)?.toLowerCase();
   return message?.includes('cancelled') ?? false;
 }

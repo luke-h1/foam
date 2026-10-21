@@ -60,7 +60,7 @@ const RELOAD_MAX_DELAY_MS = 8000;
  * The ref path hands off to the uri. The uri path moves along its candidates
  * like a real error would, but never evicts the shared ref.
  */
-const LOAD_WATCHDOG_MS = 12000;
+const LOAD_WATCHDOG_MS = 12_000;
 
 function shouldEmoteAnimate(
   rowVisibility: ContextType<typeof RowVisibilityContext>,

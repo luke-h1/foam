@@ -24,13 +24,13 @@ const HAS_URL = 2;
 const IS_ZERO_WIDTH = 4;
 
 function mixByte(h1: number, h2: number, byte: number): [number, number] {
-  return [((h1 ^ byte) * 16777619) >>> 0, ((h2 * 33) ^ byte) >>> 0];
+  return [((h1 ^ byte) * 16_777_619) >>> 0, ((h2 * 33) ^ byte) >>> 0];
 }
 
 function mixString(h1: number, h2: number, value: string): [number, number] {
   for (let i = 0; i < value.length; i += 1) {
     const c = value.charCodeAt(i);
-    h1 = ((h1 ^ c) * 16777619) >>> 0;
+    h1 = ((h1 ^ c) * 16_777_619) >>> 0;
     h2 = ((h2 * 33) ^ c) >>> 0;
   }
   return mixByte(h1, h2, FIELD_SEPARATOR);
@@ -43,7 +43,7 @@ export function getEmoteArrayContentKey(emotes: SanitisedEmote[]): string {
     return cached;
   }
 
-  let h1 = 2166136261 >>> 0;
+  let h1 = 2_166_136_261 >>> 0;
   let h2 = 5381 >>> 0;
 
   for (const emote of emotes) {

@@ -245,7 +245,7 @@ describe('createSevenTvCallbacks', () => {
         createPaintInput({
           id: 'paint-id',
           name: 'Paint',
-          color: 0xff0000ff,
+          color: 0xff_00_00_ff,
         }),
       );
 
@@ -256,7 +256,7 @@ describe('createSevenTvCallbacks', () => {
           createPaintInput({
             id: 'paint-id',
             name: 'Paint',
-            color: 0xff0000ff,
+            color: 0xff_00_00_ff,
           }),
         ),
       });

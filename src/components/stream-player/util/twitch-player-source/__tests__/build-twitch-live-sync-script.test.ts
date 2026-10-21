@@ -19,7 +19,7 @@ interface FakeWindow {
 }
 
 function timeRanges(...ends: number[]): FakeTimeRanges {
-  return { length: ends.length, end: index => ends[index] ?? NaN };
+  return { length: ends.length, end: index => ends[index] ?? Number.NaN };
 }
 
 function makeVideo(video: Partial<FakeVideo>): FakeVideo {

@@ -16,16 +16,16 @@ describe('getTimedCacheValue / setTimedCacheValue', () => {
 
   test('returns a stored value before its ttl elapses', () => {
     const cache = new Map<string, TimedCacheEntry<string>>();
-    setTimedCacheValue(cache, 'a', 'value-a', 1_000, 10);
+    setTimedCacheValue(cache, 'a', 'value-a', 1000, 10);
 
     expect(getTimedCacheValue(cache, 'a')).toBe('value-a');
   });
 
   test('drops a value once its ttl elapses', () => {
     const cache = new Map<string, TimedCacheEntry<string>>();
-    setTimedCacheValue(cache, 'a', 'value-a', 1_000, 10);
+    setTimedCacheValue(cache, 'a', 'value-a', 1000, 10);
 
-    jest.setSystemTime(1_000);
+    jest.setSystemTime(1000);
 
     expect(getTimedCacheValue(cache, 'a')).toBeUndefined();
     expect(cache.size).toBe(0);
@@ -33,10 +33,10 @@ describe('getTimedCacheValue / setTimedCacheValue', () => {
 
   test('sweeps expired entries on write', () => {
     const cache = new Map<string, TimedCacheEntry<string>>();
-    setTimedCacheValue(cache, 'a', 'value-a', 1_000, 10);
+    setTimedCacheValue(cache, 'a', 'value-a', 1000, 10);
 
-    jest.setSystemTime(2_000);
-    setTimedCacheValue(cache, 'b', 'value-b', 1_000, 10);
+    jest.setSystemTime(2000);
+    setTimedCacheValue(cache, 'b', 'value-b', 1000, 10);
 
     expect(cache.has('a')).toBe(false);
     expect(getTimedCacheValue(cache, 'b')).toBe('value-b');

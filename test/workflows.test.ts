@@ -569,7 +569,7 @@ describe('changelog per-environment sections', () => {
     const indexOf = (commit: string): number => commitOrder.indexOf(commit);
 
     return {
-      headCommit: () => commitOrder[commitOrder.length - 1] ?? '',
+      headCommit: () => commitOrder.at(-1) ?? '',
       listReleaseTags: () => releaseTags,
       listAllTagCommits: () =>
         releaseTags.map(tag => ({ tag: tag.tag, commit: tag.commit })),
@@ -964,16 +964,16 @@ describe('variant', () => {
   describe('ignoreTagsPattern', () => {
     test('ignores every other suffixed variant for a production release', () => {
       expect(ignoreTagsPattern('1.2.3', 'production')).toBe(
-        '^1\\.2\\.3-(internal|testflight|preview)$',
+        String.raw`^1\.2\.3-(internal|testflight|preview)$`,
       );
     });
 
     test('excludes the release variant itself', () => {
       expect(ignoreTagsPattern('1.2.3', 'internal')).toBe(
-        '^1\\.2\\.3-(testflight|preview)$',
+        String.raw`^1\.2\.3-(testflight|preview)$`,
       );
       expect(ignoreTagsPattern('1.2.3', 'testflight')).toBe(
-        '^1\\.2\\.3-(internal|preview)$',
+        String.raw`^1\.2\.3-(internal|preview)$`,
       );
     });
   });

@@ -92,7 +92,7 @@ export const getTopCategoriesResponse = (
   cursor?: string,
 ): PaginatedList<Category> => {
   const pageSize = 20;
-  const startIndex = cursor ? parseInt(cursor, 10) : 0;
+  const startIndex = cursor ? Number.parseInt(cursor, 10) : 0;
 
   const pageCategories = mockCategories.slice(
     startIndex,

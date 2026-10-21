@@ -106,10 +106,10 @@ async function fetchAvailableOtaUpdate(isProduction: boolean): Promise<void> {
     });
 
     countOtaMetric('ota.update.fetched', fields);
-  } catch (caught) {
+  } catch (error) {
     logger.main.error('OTA update check failed', {
       name: 'ota_updates_service_error',
-      error: caught instanceof Error ? caught : new Error(String(caught)),
+      error: error instanceof Error ? error : new Error(String(error)),
       category: 'OTAUpdatesService',
       action: 'check_failed',
       isProduction,
@@ -139,13 +139,10 @@ export function useOTAUpdates() {
       await reloadAsync({
         reloadScreenOptions: OTA_RELOAD_SCREEN_OPTIONS,
       });
-    } catch (caught) {
-      const error =
-        caught instanceof Error ? caught : new Error(String(caught));
-
+    } catch (error) {
       logger.main.error('OTA update reload failed', {
         name: 'ota_updates_service_error',
-        error,
+        error: error instanceof Error ? error : new Error(String(error)),
         category: 'OTAUpdatesService',
         action: 'reload_failed',
         isProduction,

@@ -79,7 +79,7 @@ export function createSevenTvEmote(overrides: {
     id: overrides.id,
     name: overrides.name,
     flags: 0,
-    timestamp: 1750000000000,
+    timestamp: 1_750_000_000_000,
     actor_id: 'stv-actor-1',
     origin_id: null,
     data: {
@@ -186,7 +186,7 @@ export function createEntitlementUser(
           platform: 'TWITCH',
           username: 'chatter',
           display_name: 'Chatter',
-          linked_at: 1750000000000,
+          linked_at: 1_750_000_000_000,
           emote_capacity: 1000,
           emote_set_id: 'emote-set-1',
         },

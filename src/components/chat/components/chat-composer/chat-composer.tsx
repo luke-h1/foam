@@ -92,17 +92,18 @@ function ChatComposerComponent({
     handleUserSelect,
     handleCommandSelect,
   } = useChatComposerController({
-    ...{
-      onChangeText,
-      onSubmit,
-      canSend,
-      reservedCharacters,
-      ref,
-    },
+    onChangeText,
+    onSubmit,
+    canSend,
+    reservedCharacters,
+    ref,
     focusInput,
     blurInput,
     applyCursor: cursor => {
-      setSelection({ start: cursor, end: cursor });
+      setSelection({
+        start: cursor,
+        end: cursor,
+      });
     },
   });
 

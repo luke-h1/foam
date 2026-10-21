@@ -10,7 +10,7 @@ import { logger } from '@app/utils/logger';
  * Load failure if playback never starts; kept in sync with
  * {@link StreamPlayer} poster safety dismissal.
  */
-export const PLAYER_LOAD_TIMEOUT_MS = 9_000;
+export const PLAYER_LOAD_TIMEOUT_MS = 9000;
 
 export type PlayerContentKind = 'clip' | 'live' | 'vod';
 
@@ -78,21 +78,21 @@ function metricAttributes(
   return attributes;
 }
 
-function isPlayerErrorMetadata(cause: unknown): cause is PlayerErrorMetadata {
+function isPlayerErrorMetadata(error: unknown): error is PlayerErrorMetadata {
   return (
-    cause instanceof Object &&
-    'name' in cause &&
-    cause.name === 'twitch_player_error'
+    error instanceof Object &&
+    'name' in error &&
+    error.name === 'twitch_player_error'
   );
 }
 
-function loadFailureLogMessage(reason: string | undefined, cause: unknown) {
-  if (reason === 'embed_error' && isPlayerErrorMetadata(cause)) {
-    return `[StreamPlayer:embed ERROR] ${String(cause.message ?? 'Unknown embed error')}`;
+function loadFailureLogMessage(reason: string | undefined, error: unknown) {
+  if (reason === 'embed_error' && isPlayerErrorMetadata(error)) {
+    return `[StreamPlayer:embed ERROR] ${String(error.message ?? 'Unknown embed error')}`;
   }
 
-  if (reason === 'embed_misconfigured' && isPlayerErrorMetadata(cause)) {
-    return `[StreamPlayer:embed MISCONFIGURED] ${String(cause.message ?? 'Whoops, this embed is misconfigured')}`;
+  if (reason === 'embed_misconfigured' && isPlayerErrorMetadata(error)) {
+    return `[StreamPlayer:embed MISCONFIGURED] ${String(error.message ?? 'Whoops, this embed is misconfigured')}`;
   }
 
   if (reason === 'load_timeout') {
@@ -132,12 +132,12 @@ function reasonFailureMetadata(reason: string | undefined) {
 
 function loadFailureLogMetadata(
   reason: string | undefined,
-  cause: unknown,
+  error: unknown,
   telemetryAttrs: PlayerTelemetryMetricAttributes,
 ) {
-  if (isPlayerErrorMetadata(cause)) {
+  if (isPlayerErrorMetadata(error)) {
     return {
-      ...cause,
+      ...error,
       ...telemetryAttrs,
     };
   }
@@ -145,7 +145,7 @@ function loadFailureLogMetadata(
   return {
     name: 'twitch_player_error',
     ...reasonFailureMetadata(reason),
-    error: cause,
+    error,
     ...telemetryAttrs,
   };
 }
@@ -259,12 +259,12 @@ export function createPlayerTelemetry() {
       });
     },
 
-    noteLoadFailed(reason: string, cause?: unknown) {
+    noteLoadFailed(reason: string, error?: unknown) {
       if (session && !session.loadFinished && !session.playbackStarted) {
         finishLoad('failed', {
           elapsedMs: Date.now() - session.startedAtMs,
           reason,
-          error: cause,
+          error,
         });
         return;
       }
@@ -281,8 +281,8 @@ export function createPlayerTelemetry() {
       countMetric('stream.player.late_error', telemetryAttrs);
 
       logger.main.error(
-        loadFailureLogMessage(reason, cause),
-        loadFailureLogMetadata(reason, cause, telemetryAttrs),
+        loadFailureLogMessage(reason, error),
+        loadFailureLogMetadata(reason, error, telemetryAttrs),
       );
     },
 

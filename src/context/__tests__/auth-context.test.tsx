@@ -191,7 +191,7 @@ function magicLinkResponse(): AuthSessionResult {
     errorCode: null,
     authentication: new TokenResponse({
       accessToken: 'magic-user-token',
-      expiresIn: 14400,
+      expiresIn: 14_400,
       tokenType: 'bearer',
     }),
   };
@@ -202,9 +202,9 @@ const magicUserAuthState: AuthState = {
   isLoggedIn: true,
   token: {
     accessToken: 'magic-user-token',
-    expiresIn: 14400,
+    expiresIn: 14_400,
     tokenType: 'bearer',
-    expiresAt: NOW + 14400 * 1000,
+    expiresAt: NOW + 14_400 * 1000,
   },
 };
 

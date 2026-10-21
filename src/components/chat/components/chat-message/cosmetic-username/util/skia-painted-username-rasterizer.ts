@@ -93,7 +93,7 @@ function layerShader(layer: PaintLayerData, rect: LayerRect): SkShader | null {
 
   const colors = stops.map(stop => skColor(stop.color));
   const firstAt = stops[0]?.at ?? 0;
-  const lastAt = stops[stops.length - 1]?.at ?? 1;
+  const lastAt = stops.at(-1)?.at ?? 1;
   const period = lastAt - firstAt;
   const repeats = layer.repeat && period > 0.0001;
 

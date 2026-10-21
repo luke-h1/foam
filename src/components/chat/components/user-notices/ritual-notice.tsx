@@ -26,7 +26,7 @@ function getRitualMetaLabel(ritualName: string): string {
     case 'new_chatter':
       return 'New chatter';
     default:
-      return ritualName ? ritualName.replace(/_/g, ' ') : 'Chat ritual';
+      return ritualName ? ritualName.replaceAll('_', ' ') : 'Chat ritual';
   }
 }
 
@@ -42,7 +42,7 @@ function getRitualDescription(ritualName: string, displayName: string): string {
       return `${displayName} is new to the chat.`;
     default:
       return ritualName
-        ? `${displayName} performed the ${ritualName.replace(/_/g, ' ')} ritual.`
+        ? `${displayName} performed the ${ritualName.replaceAll('_', ' ')} ritual.`
         : `${displayName} performed a chat ritual.`;
   }
 }

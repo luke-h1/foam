@@ -4,11 +4,11 @@
  */
 function escapeIrcTagValue(value: string): string {
   return value
-    .replace(/\\/g, '\\\\')
-    .replace(/;/g, '\\:')
-    .replace(/ /g, '\\s')
-    .replace(/\r/g, '\\r')
-    .replace(/\n/g, '\\n');
+    .replaceAll('\\', String.raw`\\`)
+    .replaceAll(';', String.raw`\:`)
+    .replaceAll(' ', String.raw`\s`)
+    .replaceAll('\r', String.raw`\r`)
+    .replaceAll('\n', String.raw`\n`);
 }
 
 export function buildPrivmsgLine({
@@ -23,5 +23,5 @@ export function buildPrivmsgLine({
   const command = replyParentMsgId
     ? `@reply-parent-msg-id=${escapeIrcTagValue(replyParentMsgId)} PRIVMSG`
     : 'PRIVMSG';
-  return `${command} ${channel} :${message.replace(/[\r\n]+/g, ' ')}`;
+  return `${command} ${channel} :${message.replaceAll(/[\r\n]+/g, ' ')}`;
 }

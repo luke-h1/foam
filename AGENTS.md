@@ -371,9 +371,9 @@ Put new module-level observables in `observables/`. Put write helpers that call 
 
 ## oxlint, oxfmt and the anti-slop rules
 
-`bun run lint` runs oxlint and `bun run format:fix` runs oxfmt. All lint rules live in `.oxlintrc.json`, including `anti-slop` (`tools/oxlint/anti-slop/`) and the local rules in `oxlint-rules/`. oxlint skips JSON, so nothing lints `package.json`.
+`bun run lint` runs oxlint and `bun run format:fix` runs oxfmt. All lint rules live in `oxlint.config.ts` (extends `@nkzw/oxlint-config`), including `anti-slop` (`tools/oxlint/anti-slop/`) and the local rules in `oxlint-rules/`. oxlint skips JSON, so nothing lints `package.json`.
 
-`anti-slop/no-module-mocking` is turned off for test files in `.oxlintrc.json`.
+`anti-slop/no-module-mocking` is turned off for test files in `oxlint.config.ts`.
 React Doctor runs the same anti-slop rules with its own ignore list in
 `doctor.config.json` `ignore.files`. To exempt a path, change both files.
 The rule is aimed at production code reaching for `jest.mock` instead of a real
@@ -387,7 +387,7 @@ the code silently suppresses nothing.
 
 ## Haptics: react-native-pulsar via the src/lib/haptics.ts wrapper
 
-All haptic feedback goes through the `impact` / `selection` helpers in `src/lib/haptics.ts`, backed by `react-native-pulsar`. The wrapper gates every call on the `hapticFeedback` preference, so importing `react-native-pulsar` directly from a component would bypass the user's setting - `no-restricted-imports` in `.oxlintrc.json` blocks it.
+All haptic feedback goes through the `impact` / `selection` helpers in `src/lib/haptics.ts`, backed by `react-native-pulsar`. The wrapper gates every call on the `hapticFeedback` preference, so importing `react-native-pulsar` directly from a component would bypass the user's setting - `no-restricted-imports` in `oxlint.config.ts` blocks it.
 
 The same rule bans `expo-haptics`, which the wrapper used to sit on. Its Android `Segment_Tick` path resolves an API 34+ `HapticFeedbackConstants` field, so every selection haptic on Android < 14 rejects with a misleading "A haptics engine is not available on this device" error (Sentry FOAM-TV-MOBILE-1R). Pulsar checks device capability (`Settings.getHapticsSupportLevel()`) instead of throwing.
 

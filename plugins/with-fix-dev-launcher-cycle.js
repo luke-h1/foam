@@ -28,7 +28,7 @@ const withFixDevLauncherCycle = config =>
 
     for (const key of Object.keys(phases)) {
       const phase = phases[key];
-      const name = (phase?.name || '').replace(/^"|"$/g, '');
+      const name = (phase?.name || '').replaceAll(/^"|"$/g, '');
       if (name === TARGET_PHASE_NAME) {
         phase.inputPaths = [];
         phase.inputFileListPaths = [];

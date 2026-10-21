@@ -546,7 +546,7 @@ describe('ChatInlineImage load watchdog', () => {
 
     expect(mockImageProps?.recyclingKey).toEqual(`${base}/4x.webp#0`);
 
-    act(() => jest.advanceTimersByTime(12000));
+    act(() => jest.advanceTimersByTime(12_000));
 
     expect(mockImageProps?.recyclingKey).toEqual(`${base}/4x.avif#0`);
 
@@ -560,7 +560,7 @@ describe('ChatInlineImage load watchdog', () => {
 
     render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
-    act(() => jest.advanceTimersByTime(12000));
+    act(() => jest.advanceTimersByTime(12_000));
     act(() => mockImageProps?.onLoad?.());
     act(() => jest.advanceTimersByTime(5000));
 
@@ -575,7 +575,7 @@ describe('ChatInlineImage load watchdog', () => {
       <ChatInlineImage sourceUrl={sourceUrl} style={{}} />,
     );
 
-    act(() => jest.advanceTimersByTime(12000));
+    act(() => jest.advanceTimersByTime(12_000));
 
     mockSharedRef = fakeImageRef(false);
     rerender(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
@@ -592,11 +592,11 @@ describe('ChatInlineImage load watchdog', () => {
       <ChatInlineImage sourceUrl={`${base}/4x.webp`} style={{}} />,
     );
 
-    act(() => jest.advanceTimersByTime(12000));
+    act(() => jest.advanceTimersByTime(12_000));
     expect(mockImageProps?.recyclingKey).toEqual(`${base}/4x.avif#0`);
 
     rerender(<ChatInlineImage sourceUrl={`${base}/4x.avif`} style={{}} />);
-    act(() => jest.advanceTimersByTime(12000));
+    act(() => jest.advanceTimersByTime(12_000));
 
     expect(mockImageProps?.recyclingKey).toEqual(`${base}/4x.webp#0`);
   });
@@ -626,7 +626,7 @@ describe('ChatInlineImage load watchdog', () => {
     // The recycled native view has nothing drawn for this url yet.
     expect(screen.getByTestId('chat-image-shimmer')).toBeOnTheScreen();
 
-    act(() => jest.advanceTimersByTime(12000));
+    act(() => jest.advanceTimersByTime(12_000));
 
     expect(mockImageProps?.recyclingKey).toEqual(
       'https://cdn.7tv.app/emote/again/2x.webp#0',
@@ -638,20 +638,20 @@ describe('ChatInlineImage load watchdog', () => {
     render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
     // The first stall walks to the other format; the rest retry it.
-    act(() => jest.advanceTimersByTime(12000));
+    act(() => jest.advanceTimersByTime(12_000));
 
     expect(mockImageProps?.recyclingKey).toEqual(
       'https://cdn.7tv.app/emote/stuck/2x.webp#0',
     );
 
     for (let i = 0; i < 8; i += 1) {
-      act(() => jest.advanceTimersByTime(12000));
+      act(() => jest.advanceTimersByTime(12_000));
       act(() => jest.advanceTimersByTime(8000));
     }
 
     expect(warnMock).not.toHaveBeenCalled();
 
-    act(() => jest.advanceTimersByTime(12000));
+    act(() => jest.advanceTimersByTime(12_000));
 
     expect(warnMock).toHaveBeenCalledTimes(1);
 
@@ -692,7 +692,7 @@ describe('ChatInlineImage load watchdog', () => {
     render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
     act(() => mockImageProps?.onLoad?.());
-    act(() => jest.advanceTimersByTime(12000));
+    act(() => jest.advanceTimersByTime(12_000));
 
     expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
   });

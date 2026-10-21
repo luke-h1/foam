@@ -8,7 +8,7 @@ import {
   buildUserUpdateSubscribeMessage,
 } from '@app/utils/seven-tv/seven-tv-ws-interpreter';
 
-const ID_WAIT_TIMEOUT = 30000;
+const ID_WAIT_TIMEOUT = 30_000;
 const ID_POLL_INTERVAL_MS = 250;
 
 type SevenTvSubscribeMessage = SevenTvWsMessage<

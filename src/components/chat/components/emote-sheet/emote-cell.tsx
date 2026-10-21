@@ -17,7 +17,7 @@ import { emoteSheetScrollActivity } from './util/emote-sheet-scroll-activity';
 import type { EmotePickerItem } from './util/emote-sheet-types';
 
 function isEmoteEntry(item: EmotePickerItem): item is SanitisedEmote {
-  return Object.prototype.hasOwnProperty.call(item, 'id');
+  return item instanceof Object && Object.hasOwn(item, 'id');
 }
 
 function EmoteCellComponent({

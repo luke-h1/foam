@@ -219,10 +219,10 @@ class TwitchWsService {
             message.metadata.message_type,
           );
       }
-    } catch (e) {
+    } catch (error) {
       logger.twitchWs.warn('Failed to parse Twitch EventSub message', {
         name: 'twitch_ws_warning',
-        error: e instanceof Error ? e : String(e),
+        error: error instanceof Error ? error : String(error),
         action: 'message_parse_failed',
         provider: 'twitch',
         source: 'twitch_ws_service',
@@ -282,9 +282,9 @@ class TwitchWsService {
       for (const cb of entry.callbacks) {
         try {
           cb(message);
-        } catch (e) {
+        } catch (error) {
           logger.twitchWs.error(
-            `💜 error in event CB: ${JSON.stringify(e, null, 2)}`,
+            `💜 error in event CB: ${JSON.stringify(error, null, 2)}`,
           );
         }
       }

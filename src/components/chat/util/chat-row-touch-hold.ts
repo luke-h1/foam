@@ -2,7 +2,7 @@
  * A hold older than this is treated as lost, so a missed touch end cannot
  * freeze chat. It is far longer than the long-press delay.
  */
-const MAX_ROW_TOUCH_HOLD_MS = 5_000;
+const MAX_ROW_TOUCH_HOLD_MS = 5000;
 
 const holdStartedAt = new Map<number, number>();
 let nextHoldId = 0;

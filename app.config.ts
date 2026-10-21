@@ -249,7 +249,7 @@ const config: ExpoConfig = {
      * Manual update checks only; auto-check on launch left a blank screen.
      */
     checkAutomatically: 'NEVER',
-    fallbackToCacheTimeout: 30000,
+    fallbackToCacheTimeout: 30_000,
     disableAntiBrickingMeasures: variant !== 'production',
   },
   runtimeVersion: {

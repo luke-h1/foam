@@ -57,7 +57,7 @@ export function measureSync(
     meanMs: round2(sum / times.length),
     medianMs: round2(median(sorted)),
     minMs: round2(sorted[0] ?? 0),
-    maxMs: round2(sorted[sorted.length - 1] ?? 0),
+    maxMs: round2(sorted.at(-1) ?? 0),
     runs: times.length,
   };
 }

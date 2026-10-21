@@ -115,7 +115,7 @@ function formatRelativeAge(value: string) {
     { label: 'y', seconds: 31_536_000 },
     { label: 'mo', seconds: 2_592_000 },
     { label: 'd', seconds: 86_400 },
-    { label: 'h', seconds: 3_600 },
+    { label: 'h', seconds: 3600 },
     { label: 'm', seconds: 60 },
   ] as const;
 

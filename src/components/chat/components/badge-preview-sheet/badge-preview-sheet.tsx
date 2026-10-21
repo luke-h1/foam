@@ -97,18 +97,19 @@ function BadgePreviewSheetComponent(props: Props) {
     ];
 
     if (selectedBadge.url) {
-      items.push({
-        icon: 'square.and.arrow.down',
-        label: 'Save image',
-        onPress: handleSaveImage,
-        disabled: isSaving,
-      });
-
-      items.push({
-        icon: 'arrow.up.right.square',
-        label: 'Open in browser',
-        onPress: () => openLinkInBrowser(selectedBadge.url),
-      });
+      items.push(
+        {
+          icon: 'square.and.arrow.down',
+          label: 'Save image',
+          onPress: handleSaveImage,
+          disabled: isSaving,
+        },
+        {
+          icon: 'arrow.up.right.square',
+          label: 'Open in browser',
+          onPress: () => openLinkInBrowser(selectedBadge.url),
+        },
+      );
     }
 
     return items;

@@ -3,7 +3,7 @@ import { getTwitchClipIdFromUrl } from '@app/utils/chat/parse-word-link-tokens/g
 import { SEVEN_TV_EMOTE_LINK_REGEX } from '@app/utils/chat/parse-word-link-tokens/seven-tv-emote-link-regex';
 
 const GENERIC_HTTP_URL_REGEX = /^https?:\/\//i;
-const TRAILING_URL_PUNCTUATION = new Set('.,!?;:\'"\\)]}>'.split(''));
+const TRAILING_URL_PUNCTUATION = new Set(String.raw`.,!?;:'"\)]}>`.split(''));
 
 type SplitUrlWord = {
   urlCandidate: string;

@@ -16,7 +16,7 @@ export const mockUsers: UserInfoResponse[] = [
     description: 'Welcome to my channel!',
     profile_image_url: 'https://via.placeholder.com/300',
     offline_image_url: '',
-    view_count: 500000000,
+    view_count: 500_000_000,
     created_at: '2014-09-12T23:50:05Z',
   },
   {
@@ -28,7 +28,7 @@ export const mockUsers: UserInfoResponse[] = [
     description: 'Thanks for stopping by!',
     profile_image_url: 'https://via.placeholder.com/300',
     offline_image_url: '',
-    view_count: 250000000,
+    view_count: 250_000_000,
     created_at: '2013-06-05T21:15:44Z',
   },
   {
@@ -40,7 +40,7 @@ export const mockUsers: UserInfoResponse[] = [
     description: 'Hello!',
     profile_image_url: 'https://via.placeholder.com/300',
     offline_image_url: '',
-    view_count: 450000000,
+    view_count: 450_000_000,
     created_at: '2011-06-22T02:16:56Z',
   },
   {
@@ -52,7 +52,7 @@ export const mockUsers: UserInfoResponse[] = [
     description: 'Hi there!',
     profile_image_url: 'https://via.placeholder.com/300',
     offline_image_url: '',
-    view_count: 550000000,
+    view_count: 550_000_000,
     created_at: '2011-02-05T15:34:19Z',
   },
   {
@@ -64,7 +64,7 @@ export const mockUsers: UserInfoResponse[] = [
     description: 'Streaming stuff.',
     profile_image_url: 'https://via.placeholder.com/300',
     offline_image_url: '',
-    view_count: 300000000,
+    view_count: 300_000_000,
     created_at: '2018-03-15T18:24:12Z',
   },
   {
@@ -76,7 +76,7 @@ export const mockUsers: UserInfoResponse[] = [
     description: 'Welcome!',
     profile_image_url: 'https://via.placeholder.com/300',
     offline_image_url: '',
-    view_count: 150000000,
+    view_count: 150_000_000,
     created_at: '2012-08-20T14:22:33Z',
   },
   {

@@ -35,7 +35,9 @@ describe('buildPrivmsgLine', () => {
         message: 'hi back',
         replyParentMsgId: 'abc 123;evil=1\\',
       }),
-    ).toBe('@reply-parent-msg-id=abc\\s123\\:evil=1\\\\ PRIVMSG #bar :hi back');
+    ).toBe(
+      String.raw`@reply-parent-msg-id=abc\s123\:evil=1\\ PRIVMSG #bar :hi back`,
+    );
   });
 
   test('escaped reply parent ids survive a round-trip through the parser', () => {

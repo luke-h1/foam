@@ -30,7 +30,7 @@ describe('interpretPlayerMessage', () => {
             {
               name: 'twitch_player_info',
               channel: 'sodapoppin',
-              elapsedMs: 2_500,
+              elapsedMs: 2500,
             },
           ],
         },
@@ -83,7 +83,7 @@ describe('interpretPlayerMessage', () => {
             {
               name: 'twitch_player_info',
               channel: 'sodapoppin',
-              elapsedMs: 2_500,
+              elapsedMs: 2500,
             },
           ],
         },
@@ -133,7 +133,7 @@ describe('interpretPlayerMessage', () => {
           args: [
             {
               name: 'twitch_player_info',
-              elapsedMs: 2_500,
+              elapsedMs: 2500,
             },
           ],
         },
@@ -397,7 +397,7 @@ describe('interpretPlayerMessage', () => {
         exceptionName: 'StreamPlayerEmbedError',
         fingerprint: ['stream-player-embed-error'],
         channel: 'sodapoppin',
-        elapsedMs: 2_500,
+        elapsedMs: 2500,
         message: 'embed exploded',
       };
 
@@ -428,7 +428,7 @@ describe('interpretPlayerMessage', () => {
         exceptionName: 'StreamPlayerEmbedError',
         fingerprint: ['stream-player-embed-error'],
         channel: 'sodapoppin',
-        elapsedMs: 2_500,
+        elapsedMs: 2500,
         message: 'Unknown embed error',
       };
 
@@ -463,7 +463,7 @@ describe('interpretPlayerMessage', () => {
         fingerprint: ['stream-player-embed-misconfigured'],
         channel: 'sodapoppin',
         embedParent: '',
-        elapsedMs: 2_500,
+        elapsedMs: 2500,
         message: 'Whoops, this embed is misconfigured',
       };
 
@@ -513,7 +513,7 @@ describe('interpretPlayerMessage', () => {
         fingerprint: ['stream-player-embed-misconfigured'],
         channel: 'sodapoppin',
         embedParent: 'unknown',
-        elapsedMs: 2_500,
+        elapsedMs: 2500,
         message: 'Whoops, this embed is misconfigured',
       };
 
@@ -621,7 +621,7 @@ describe('interpretPlayerMessage', () => {
               name: 'twitch_player_warning',
               channel: 'sodapoppin',
               errName: 'NotAllowedError',
-              elapsedMs: 2_500,
+              elapsedMs: 2500,
             },
           ],
         },
@@ -698,7 +698,7 @@ describe('interpretPlayerMessage', () => {
               networkState: 2,
               readyState: 2,
               stalledMs: 6000,
-              elapsedMs: 2_500,
+              elapsedMs: 2500,
             },
           ],
         },
@@ -731,7 +731,7 @@ describe('interpretPlayerMessage', () => {
               networkState: 2,
               readyState: 2,
               stalledMs: 6000,
-              elapsedMs: 2_500,
+              elapsedMs: 2500,
             },
           ],
         },
@@ -815,7 +815,7 @@ describe('interpretPlayerMessage', () => {
               message: 'decode',
               networkState: 2,
               readyState: 1,
-              elapsedMs: 2_500,
+              elapsedMs: 2500,
             },
           ],
         },
@@ -861,7 +861,7 @@ describe('interpretPlayerMessage', () => {
               message: 'decode',
               networkState: 2,
               readyState: 1,
-              elapsedMs: 2_500,
+              elapsedMs: 2500,
             },
           ],
         },
@@ -1005,7 +1005,7 @@ describe('interpretPlayerMessage', () => {
 
     test('ignores a non-finite latency', () => {
       expect(
-        interpretPlayerMessage(statsMessage(NaN), createBridgeContext()),
+        interpretPlayerMessage(statsMessage(Number.NaN), createBridgeContext()),
       ).toEqual<PlayerBridgeAction[]>([]);
     });
 

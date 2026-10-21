@@ -56,8 +56,11 @@ function getRemoteConfigHandle() {
     minimumFetchIntervalMillis: __DEV__ ? 60 * 1000 : 5 * 60 * 1000,
   });
 
-  setDefaults(remoteConfig, defaultRemoteConfig).catch(e => {
-    logger.remoteConfig.error('Failed to set default remote config values', e);
+  setDefaults(remoteConfig, defaultRemoteConfig).catch(error => {
+    logger.remoteConfig.error(
+      'Failed to set default remote config values',
+      error,
+    );
   });
 
   return remoteConfig;

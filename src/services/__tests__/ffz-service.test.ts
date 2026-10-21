@@ -12,7 +12,7 @@ import { ffzService } from '../ffz-service';
 const apiGetSpy = jest.spyOn(ffzApi, 'get');
 
 const staticEmote: FfzEmoticon = {
-  id: 128054,
+  id: 128_054,
   name: 'OMEGALUL',
   height: 32,
   width: 32,
@@ -35,7 +35,7 @@ const staticEmote: FfzEmoticon = {
 
 const animatedEmote: FfzEmoticon = {
   ...staticEmote,
-  id: 720507,
+  id: 720_507,
   name: 'peepoDance',
   animated: true,
   width: 28,

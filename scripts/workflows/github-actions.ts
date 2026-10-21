@@ -54,11 +54,10 @@ function extractErrorMessage(error: Error): string {
   return stderr === '' || stderr == null ? error.message : stderr;
 }
 
-// `cause` is the exempted parameter name for a value whose type is only
-// known at this I/O boundary (a caught exception of unknowable shape).
-export function getCommandErrorMessage(cause: unknown): string {
-  return cause instanceof Error
-    ? extractErrorMessage(cause)
+// anti-slop allows `: unknown` only on a parameter named `error`.
+export function getCommandErrorMessage(error: unknown): string {
+  return error instanceof Error
+    ? extractErrorMessage(error)
     : 'Unknown command failure';
 }
 

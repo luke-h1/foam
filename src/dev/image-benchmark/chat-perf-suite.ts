@@ -26,7 +26,7 @@ export interface PhaseResult {
   cpuPeak: number;
 }
 
-export const WARMUP_MS = 5_000;
+export const WARMUP_MS = 5000;
 
 /**
  * Flood-off gap so decoded-image memory / GC settles; back-to-back heavy phases can OOM the simulator.

@@ -7,9 +7,9 @@ describe('sanitiseLogValue', () => {
   });
 
   test('previews long arrays instead of keeping every element', () => {
-    const huge = Array.from({ length: 50000 }, (_, index) => ({ index }));
+    const huge = Array.from({ length: 50_000 }, (_, index) => ({ index }));
     expect(sanitiseLogValue(huge)).toEqual({
-      length: 50000,
+      length: 50_000,
       preview: [{ index: 0 }, { index: 1 }, { index: 2 }],
     });
   });

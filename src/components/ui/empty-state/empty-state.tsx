@@ -20,7 +20,7 @@ import { theme } from '@app/styles/themes';
  * earlier versions keep the JS layout.
  */
 const supportsContentUnavailableView =
-  Platform.OS === 'ios' && parseInt(String(Platform.Version), 10) >= 17;
+  Platform.OS === 'ios' && Number.parseInt(String(Platform.Version), 10) >= 17;
 
 interface EmptyStateProps {
   heading: string;
