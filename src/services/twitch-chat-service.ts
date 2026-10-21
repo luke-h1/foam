@@ -551,12 +551,8 @@ interface UseTwitchChatOptions {
     tags: Record<string, string>,
     targetMsgId: string,
   ) => void;
-  onRoomState?:
-    | ((channel: string, tags: Record<string, string>) => void)
-    | undefined;
-  onUserState?:
-    | ((channel: string, tags: Record<string, string>) => void)
-    | undefined;
+  onRoomState?: (channel: string, tags: Record<string, string>) => void;
+  onUserState?: (channel: string, tags: Record<string, string>) => void;
   onGlobalUserState?: (tags: Record<string, string>) => void;
   onWelcome?: () => void;
   blockedUsers?: { userLogin: string }[];

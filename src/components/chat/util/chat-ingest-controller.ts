@@ -37,7 +37,7 @@ const sanitiseDelayMs = (delayMs: number): number =>
   Number.isFinite(delayMs) && delayMs > 0 ? delayMs : 0;
 
 export type HandleNewMessageOptions = {
-  countUnread?: boolean | undefined;
+  countUnread?: boolean;
 };
 
 /**

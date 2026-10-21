@@ -45,9 +45,7 @@ export interface ChatMessagePaneProps {
   hasActiveFilters: boolean;
   searchActive: boolean;
   onToggleShowOnlyMentions: () => void;
-  onViewableMessagesChange?:
-    | ((messages: AnyChatMessageType[]) => void)
-    | undefined;
+  onViewableMessagesChange?: (messages: AnyChatMessageType[]) => void;
   searchQuery: string;
   pinnedMessage: PinnedChatMessageViewModel | null;
   pinnedMessageBusy: boolean;

@@ -104,13 +104,9 @@ export type ChatRowProps<
 > = ChatMessageType<TNoticeType, TVariant> & {
   broadcasterId?: string;
   style?: StyleProp<ViewStyle>;
-  onReply?:
-    | ((args: ChatMessageType<TNoticeType, TVariant>) => void)
-    | undefined;
+  onReply?: (args: ChatMessageType<TNoticeType, TVariant>) => void;
   onBadgePress?: (data: BadgePressData) => void;
-  onMessageLongPress?:
-    | ((data: MessageActionData<TNoticeType, TVariant>) => void)
-    | undefined;
+  onMessageLongPress?: (data: MessageActionData<TNoticeType, TVariant>) => void;
   onEmotePress?: (data: EmotePressData) => void;
   getMentionColor?: (username: string) => string;
   parseTextForEmotes?: (text: string) => MessageToken[];

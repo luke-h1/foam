@@ -50,9 +50,9 @@ export interface ChatIrcHandlerDeps {
     message: AnyChatMessageType,
     options?: { countUnread?: boolean },
   ) => void;
-  isMountedRef?: RefObject<boolean> | undefined;
+  isMountedRef?: RefObject<boolean>;
   listRef: RefObject<ChatListRef | null>;
-  isLoadingRecentMessagesRef?: RefObject<boolean> | undefined;
+  isLoadingRecentMessagesRef?: RefObject<boolean>;
   messages$: { peek: () => AnyChatMessageType[] };
   moderateChatMessageById: (messageId: string, notice: string) => void;
   moderateChatMessagesByLogin: (login: string, notice: string) => void;

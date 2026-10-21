@@ -33,8 +33,7 @@
     "noImplicitReturns": true,
     "noPropertyAccessFromIndexSignature": true,
     "verbatimModuleSyntax": true,
-    "erasableSyntaxOnly": true,
-    "exactOptionalPropertyTypes": false
+    "erasableSyntaxOnly": true
   },
   "include": ["local-proxy/proxy.ts", "src/types/env.d.ts"],
   "exclude": ["node_modules"]

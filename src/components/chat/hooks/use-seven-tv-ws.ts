@@ -76,18 +76,10 @@ interface UseSevenTvWsOptions {
   onCosmeticCreate?: (data: CosmeticCreateCallbackData) => void;
   onCosmeticUpdate?: (data: CosmeticUpdateCallbackData) => void;
   onCosmeticDelete?: (data: CosmeticDeleteCallbackData) => void;
-  onEntitlementCreate?:
-    | ((data: EntitlementCreateCallbackData) => void)
-    | undefined;
-  onEntitlementUpdate?:
-    | ((data: EntitlementUpdateCallbackData) => void)
-    | undefined;
-  onEntitlementDelete?:
-    | ((data: EntitlementDeleteCallbackData) => void)
-    | undefined;
-  onEntitlementReset?:
-    | ((data: EntitlementResetCallbackData) => void)
-    | undefined;
+  onEntitlementCreate?: (data: EntitlementCreateCallbackData) => void;
+  onEntitlementUpdate?: (data: EntitlementUpdateCallbackData) => void;
+  onEntitlementDelete?: (data: EntitlementDeleteCallbackData) => void;
+  onEntitlementReset?: (data: EntitlementResetCallbackData) => void;
   onEvent?: (
     eventType: SevenTvEventType,
     data: SevenTvEventData<SevenTvEventType>,

@@ -51,9 +51,7 @@ export interface EmoteMenuDataInput {
   twitchChannelEmotes?: SanitisedEmote[];
   twitchGlobalEmotes?: SanitisedEmote[];
   twitchSubscriberEmotes?: SanitisedEmote[];
-  twitchSubscriberChannelProfiles?:
-    | Record<string, SubscriberChannelProfile>
-    | undefined;
+  twitchSubscriberChannelProfiles?: Record<string, SubscriberChannelProfile>;
 }
 
 function chunk<TItem>(items: TItem[], size: number): TItem[][] {

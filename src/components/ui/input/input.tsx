@@ -195,9 +195,7 @@ export type ThemedInputProps = Omit<
   color?: UIColor;
   onBlur?: () => void;
   onChangeText?: (value: string) => void;
-  onContentSizeChange?:
-    | ((size: { width: number; height: number }) => void)
-    | undefined;
+  onContentSizeChange?: (size: { width: number; height: number }) => void;
   onFocus?: () => void;
   onSelectionChange?: (selection: InputSelection) => void;
   onSubmitEditing?: (text: string) => void;

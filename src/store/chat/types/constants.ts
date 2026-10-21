@@ -145,9 +145,7 @@ export interface ChannelCacheType {
    * Streamer name + pfp per owner_id in twitchSubscriberEmotes; optional
    * because older persisted caches lack it.
    */
-  twitchSubscriberChannelProfiles?:
-    | Record<string, SubscriberChannelProfile>
-    | undefined;
+  twitchSubscriberChannelProfiles?: Record<string, SubscriberChannelProfile>;
   sevenTvChannelEmotes: SanitisedEmote[];
   ffzChannelEmotes: SanitisedEmote[];
   bttvChannelEmotes: SanitisedEmote[];

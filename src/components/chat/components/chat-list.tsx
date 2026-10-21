@@ -137,9 +137,7 @@ interface ChatListProps {
   getItemType: (item: AnyChatMessageType) => string;
   contentContainerStyle: StyleProp<ViewStyle>;
   extraData?: unknown;
-  onViewableMessagesChange?:
-    | ((messages: AnyChatMessageType[]) => void)
-    | undefined;
+  onViewableMessagesChange?: (messages: AnyChatMessageType[]) => void;
 }
 
 export const ChatList = memo(

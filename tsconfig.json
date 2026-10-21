@@ -41,8 +41,7 @@
       "react-native-pulsar": [
         "./node_modules/react-native-pulsar/lib/typescript/src/index.d.ts"
       ]
-    },
-    "exactOptionalPropertyTypes": false
+    }
   },
   "include": [
     "assets",
