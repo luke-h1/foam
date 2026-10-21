@@ -277,19 +277,17 @@ export function useChatPerfSuite() {
           done: false,
         }));
 
-        try {
-          while (performance.now() - start < ms) {
-            if (cancelRef.current) {
-              break;
-            }
-
-            await sleep(120);
+        while (performance.now() - start < ms) {
+          if (cancelRef.current) {
+            break;
           }
-        } finally {
-          releaseMetrics?.();
-          accum.current.on = false;
-          uiActive.set(false);
+
+          await sleep(120);
         }
+
+        releaseMetrics?.();
+        accum.current.on = false;
+        uiActive.set(false);
       };
 
       await runPhaseWindow().finally(() => {
