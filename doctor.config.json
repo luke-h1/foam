@@ -72,6 +72,10 @@
       {
         "files": ["src/screens/dev-tools/image-benchmark-screen.tsx"],
         "rules": ["react-doctor/no-set-state-after-await-in-effect"]
+      },
+      {
+        "files": ["src/components/pressable-area/pressable-area.tsx"],
+        "rules": ["react-doctor/rn-pressable-shared-value-mutation"]
       }
     ]
   },

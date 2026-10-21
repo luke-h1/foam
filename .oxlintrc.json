@@ -870,6 +870,12 @@
     {
       "files": ["src/hooks/queries/use-stream-profile-pictures.ts"],
       "rules": { "react-doctor/no-derived-state": "off" }
+    },
+    {
+      "files": ["src/components/pressable-area/pressable-area.tsx"],
+      "rules": {
+        "react-doctor/rn-pressable-shared-value-mutation": "off"
+      }
     }
   ]
 }
