@@ -6,6 +6,7 @@ export const KeyboardAvoidingView = ({ children, ...props }: ViewProps) =>
 
 export const KeyboardController = {
   dismiss: jest.fn(),
+  preload: jest.fn(),
 };
 
 export const useReanimatedKeyboardAnimation = jest.fn(() => ({
