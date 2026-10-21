@@ -10,6 +10,7 @@
 
 - **ui:** Native press feedback, layout menu and realistic tests ([#933](https://github.com/lhowsam/foam/issues/933))
 - **chat:** Render Twitch chat GIFs (tenor, giphy) ([#955](https://github.com/lhowsam/foam/issues/955))
+- **ui:** Swipe between Top streams and categories ([#962](https://github.com/lhowsam/foam/issues/962))
 
 ### 🐛 Bug Fixes
 
@@ -21,6 +22,7 @@
 - **perf:** Argent chat suite + leak-gate memory fixes ([#957](https://github.com/lhowsam/foam/issues/957))
 - **app:** Tighten tsc and fix blank stream-card taps ([#959](https://github.com/lhowsam/foam/issues/959))
 - **app:** Scroll FlashList tabs to top via scrollToIndex ([#961](https://github.com/lhowsam/foam/issues/961))
+- **app:** Defer keyboard preload off the boot path ([#963](https://github.com/lhowsam/foam/issues/963))
 
 ### 👷 CI/CD
 
