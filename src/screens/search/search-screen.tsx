@@ -162,7 +162,7 @@ export function SearchScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <View collapsable={false} style={styles.container}>
       <SearchInputBar
         ref={searchBarRef}
         onCancel={handleClearSearch}

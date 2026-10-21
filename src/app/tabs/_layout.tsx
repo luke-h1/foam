@@ -26,15 +26,19 @@ export default function TabsLayout() {
       indicatorColor='rgba(255, 255, 255, 0.12)'
       rippleColor='rgba(255, 255, 255, 0.12)'
     >
-      <NativeTabs.Trigger name='following' hidden={!isLoggedIn}>
+      <NativeTabs.Trigger
+        name='following'
+        hidden={!isLoggedIn}
+        disableScrollToTop
+      >
         <NativeTabs.Trigger.Label>Following</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf='person.2' md='group' />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name='top'>
+      <NativeTabs.Trigger name='top' disableScrollToTop>
         <NativeTabs.Trigger.Label>Top</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf='chart.bar.xaxis' md='leaderboard' />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name='search'>
+      <NativeTabs.Trigger name='search' disableScrollToTop>
         <NativeTabs.Trigger.Label>Search</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf='magnifyingglass' md='search' />
       </NativeTabs.Trigger>

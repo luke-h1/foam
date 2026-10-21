@@ -283,7 +283,7 @@ export default function FollowingScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View collapsable={false} style={styles.container}>
       <FlashList<FollowingListItem>
         ref={listRef}
         onLoad={markFirstScreenInteractive}
