@@ -8,6 +8,8 @@ import type { TwitchStream } from '@app/types/twitch/stream';
 
 import { TopScreen } from '../top-screen';
 
+jest.mock('@expo/ui/community/pager-view');
+
 // expo-symbols is faked by the root __mocks__/expo-symbols.ts manual mock.
 
 // The native @expo/ui SegmentedControl cannot receive segment-change events in tests; expose each segment as a pressable.
@@ -87,6 +89,22 @@ describe('TopScreen', () => {
     expect(await screen.findByText('Fortnite')).toBeOnTheScreen();
 
     fireEvent.press(screen.getByTestId('segment-streams'));
+
+    expect(await screen.findByText('Streamer1')).toBeOnTheScreen();
+    expect(getTopStreamsSpy).toHaveBeenCalledTimes(1);
+    expect(getTopCategoriesSpy).toHaveBeenCalledTimes(1);
+  });
+
+  test('swipes to categories and back without refetching streams', async () => {
+    render(<TopScreen />);
+
+    await screen.findByText('Streamer1');
+
+    fireEvent.press(screen.getByTestId('pager-swipe-next'));
+
+    expect(await screen.findByText('Fortnite')).toBeOnTheScreen();
+
+    fireEvent.press(screen.getByTestId('pager-swipe-prev'));
 
     expect(await screen.findByText('Streamer1')).toBeOnTheScreen();
     expect(getTopStreamsSpy).toHaveBeenCalledTimes(1);
