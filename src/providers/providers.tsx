@@ -123,7 +123,7 @@ export function Providers({ children }: PropsWithChildren) {
               catchErrors={BaseConfig.catchErrors}
               onReset={() => setRecoveredFromError(true)}
             >
-              <KeyboardProvider preload>
+              <KeyboardProvider preload={false}>
                 <PortalProvider>
                   {__DEV__ ? <DevTools /> : null}
                   <AnalyticsProvider>
