@@ -12,6 +12,7 @@ import { useKeyboardChatComposerInset } from '@legendapp/list/keyboard';
 import { useAuthContext } from '@app/context/auth-context';
 import { BenchFrameProbe } from '@app/dev/image-benchmark/bench-frame-probe.gate';
 import { useSyncPaintRendererFlag } from '@app/hooks/firebase/use-sync-paint-renderer-flag';
+import { preloadKeyboardOnce } from '@app/lib/keyboard';
 import { CachedEmotesProvider } from '@app/providers/cached-emotes-provider/cached-emotes-provider';
 import { setChatFrontTrimSuspended } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
@@ -124,6 +125,10 @@ export const Chat = memo(
       listRef,
       getMessagesLength,
     });
+
+    useEffect(() => {
+      preloadKeyboardOnce();
+    }, []);
 
     // While scrolled up (maintainVisibleContentPosition active) pause front-trim
     // of the message window so removing the oldest rows can't re-anchor the list
