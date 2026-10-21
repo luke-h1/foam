@@ -9,6 +9,29 @@ public class CpuUsageModule: Module {
     Function("getUsage") { () -> Double in
       Self.currentCpuUsage()
     }
+
+    Function("getUsedMemoryMb") { () -> Double in
+      Self.currentUsedMemoryMb()
+    }
+  }
+
+  private static func currentUsedMemoryMb() -> Double {
+    var info = task_vm_info_data_t()
+    var count = mach_msg_type_number_t(
+      MemoryLayout<task_vm_info_data_t>.stride / MemoryLayout<natural_t>.stride
+    )
+
+    let result = withUnsafeMutablePointer(to: &info) {
+      $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+        task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
+      }
+    }
+
+    guard result == KERN_SUCCESS else {
+      return 0
+    }
+
+    return Double(info.phys_footprint) / (1024.0 * 1024.0)
   }
 
   private static let basicInfoCount = mach_msg_type_number_t(

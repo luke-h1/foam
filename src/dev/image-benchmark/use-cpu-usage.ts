@@ -1,24 +1,20 @@
 import { useEffect, useState } from 'react';
 
-import CpuUsage from '@modules/cpu-usage/src/CpuUsageModule';
-
-function readUsage(): number | null {
-  const value = CpuUsage.getUsage();
-  return Number.isFinite(value) ? Math.round(value) : null;
-}
+import {
+  peekProcessMetrics,
+  retainProcessMetricsPolling,
+} from './process-metrics';
 
 export function useCpuUsage(): number {
-  const [pct, setPct] = useState(() => readUsage() ?? 0);
+  const [pct, setPct] = useState(() => peekProcessMetrics().cpu);
 
-  useEffect(() => {
-    const id = setInterval(() => {
-      const value = readUsage();
-      if (value !== null) {
-        setPct(value);
-      }
-    }, 1000);
-    return () => clearInterval(id);
-  }, []);
+  useEffect(
+    () =>
+      retainProcessMetricsPolling(sample => {
+        setPct(sample.cpu);
+      }),
+    [],
+  );
 
   return pct;
 }

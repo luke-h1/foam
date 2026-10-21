@@ -20,8 +20,8 @@ import { logger } from '@app/utils/logger';
 // 5% of the mocked 8GB device (under the 600MB high-tier ceiling).
 const MAX_DECODED_BYTES_HIGH_TIER = Math.floor(8 * 1024 * 1024 * 1024 * 0.05);
 
-// ~409.6MiB / (96*96*4 bytes * 8 animated factor) ≈ 1456 refs before the count cap.
-const HIGH_TIER_BYTE_BUDGET_ANIMATED_ENTRIES = 1456;
+// ~409.6MiB / (96*96*4 bytes * 16 animated factor) ≈ 728 refs before the count cap.
+const HIGH_TIER_BYTE_BUDGET_ANIMATED_ENTRIES = 728;
 
 // SAFETY: ImageRef is a native SharedRef subclass with no JS constructor; the cache only reads width/height/isAnimated off it
 const makeImageRef = (overrides: Partial<ImageRef> = {}): ImageRef =>
@@ -407,7 +407,7 @@ describe('cache-service', () => {
   });
 
   test('evicts to stay under the decoded-byte budget before the entry-count cap', async () => {
-    // Animated decodes cost 8x a static one, so the byte budget caps the cache
+    // Animated decodes cost 16x a static one, so the byte budget caps the cache
     // far below the 2400-entry count backstop.
     loadAsync.mockResolvedValue(animatedRef());
 

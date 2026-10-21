@@ -1,31 +1,22 @@
 import { useEffect, useState } from 'react';
-import DeviceInfo from 'react-native-device-info/src/internal/nativeInterface';
+
+import {
+  peekProcessMetrics,
+  retainProcessMetricsPolling,
+} from './process-metrics';
 
 export function useUsedMemoryMb(): number {
-  const [mb, setMb] = useState(0);
+  const [mb, setMb] = useState(() => peekProcessMetrics().memMb);
 
-  useEffect(() => {
-    let active = true;
-
-    const sample = async () => {
-      try {
-        const bytes = (await DeviceInfo.getUsedMemory?.()) ?? 0;
-        if (active) {
-          setMb(Math.round(bytes / (1024 * 1024)));
+  useEffect(
+    () =>
+      retainProcessMetricsPolling(sample => {
+        if (sample.memMb > 0) {
+          setMb(sample.memMb);
         }
-      } catch {
-        // getUsedMemory can reject on some platforms; leave the last reading.
-      }
-    };
-
-    void sample();
-    const id = setInterval(sample, 1000);
-
-    return () => {
-      active = false;
-      clearInterval(id);
-    };
-  }, []);
+      }),
+    [],
+  );
 
   return mb;
 }

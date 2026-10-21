@@ -1,11 +1,15 @@
 import { requireOptionalNativeModule } from 'expo-modules-core';
 import type { CpuUsageNativeModule } from './CpuUsage.types';
 
-const unavailableModule: CpuUsageNativeModule = {
+const native = requireOptionalNativeModule<CpuUsageNativeModule>('CpuUsage');
+
+const cpuUsageModule: CpuUsageNativeModule = {
   getUsage() {
-    return 0;
+    return native?.getUsage?.() ?? 0;
+  },
+  getUsedMemoryMb() {
+    return native?.getUsedMemoryMb?.() ?? 0;
   },
 };
 
-export default requireOptionalNativeModule<CpuUsageNativeModule>('CpuUsage') ??
-  unavailableModule;
+export default cpuUsageModule;

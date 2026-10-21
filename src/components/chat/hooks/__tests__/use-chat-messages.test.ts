@@ -807,7 +807,7 @@ describe('useChatMessages', () => {
       expect(result.current.getBufferSize()).toBe(0);
     });
 
-    test('commits a whole burst at the bottom instead of capping it at the raid batch', () => {
+    test('commits a live burst up to the hard ceiling and leaves the rest buffered', () => {
       const { result } = renderHook(() =>
         useChatMessages({
           scrollAnchor: createScrollAnchor({
@@ -828,13 +828,11 @@ describe('useChatMessages', () => {
 
       const flushedMessages = storedMessages();
 
-      // The cap rises to the arrivals since the last flush, so the burst
-      // commits in one flush and the visible chat stays on live.
-      expect(flushedMessages).toHaveLength(50);
+      expect(flushedMessages).toHaveLength(24);
 
       expect(flushedMessages[0]?.message_id).toBe('0');
-      expect(flushedMessages.at(-1)?.message_id).toBe('49');
-      expect(result.current.getBufferSize()).toBe(0);
+      expect(flushedMessages.at(-1)?.message_id).toBe('23');
+      expect(result.current.getBufferSize()).toBe(26);
     });
 
     /**
@@ -874,10 +872,10 @@ describe('useChatMessages', () => {
       );
 
       act(() => {
-        for (let i = 0; i < 40; i += 1) {
+        for (let i = 0; i < 20; i += 1) {
           result.current.handleNewMessage(createMockMessage(`${i}`));
         }
-        jest.advanceTimersByTime(180);
+        jest.advanceTimersByTime(100);
       });
 
       expect(result.current.getBufferSize()).toBe(0);

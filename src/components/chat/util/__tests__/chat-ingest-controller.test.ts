@@ -1,3 +1,4 @@
+import { maxBackpressureCommitPerFlush } from '@app/components/chat/util/chat-flush-cadence/max-live-commit-per-flush';
 import {
   type ChatIngestController,
   createChatIngestController,
@@ -156,10 +157,11 @@ describe('chatIngestController (headless line → commit)', () => {
     expect(committedMessages()).toHaveLength(1);
   });
 
-  test('keeps the newest committed row within one flush interval of live at 150 msg/s', () => {
+  test('keeps the newest committed row within one raid flush of live at 100 msg/s', () => {
     const { controller, routeLine } = createHeadlessIngest();
     const sentAt = new Map<string, number>();
-    const intervalMs = 1000 / 150;
+    const messagesPerSecond = 100;
+    const intervalMs = 1000 / messagesPerSecond;
     let sequence = 0;
     let nextSendAt = 0;
     let maxLagMs = 0;
@@ -189,7 +191,7 @@ describe('chatIngestController (headless line → commit)', () => {
       maxBufferSize = Math.max(maxBufferSize, controller.getBufferSize());
     }
 
-    expect(sequence).toBe(900);
+    expect(sequence).toBe(600);
     expect(maxLagMs).toBeLessThanOrEqual(200);
     expect(maxBufferSize).toBeLessThanOrEqual(30);
   });
@@ -216,7 +218,7 @@ describe('chatIngestController (headless line → commit)', () => {
   });
 
   test('forces a held flush through at the store window instead of dropping rows', () => {
-    const { routeLine } = createHeadlessIngest({
+    const { controller, routeLine } = createHeadlessIngest({
       isRowTouchHeld: () => true,
     });
 
@@ -224,7 +226,17 @@ describe('chatIngestController (headless line → commit)', () => {
       routeLine(privmsgLine(`msg-${index}`));
     }
 
-    expect(committedMessages()).toHaveLength(150);
+    const backpressureChunk = maxBackpressureCommitPerFlush();
+    const committed = committedMessages();
+
+    expect(committed).toHaveLength(backpressureChunk);
+    expect(controller.getBufferSize()).toBe(151 - backpressureChunk);
+    expect(committed.map(message => message.message_id)).toEqual(
+      Array.from(
+        { length: backpressureChunk },
+        (_, index) => `msg-${index + 1}`,
+      ),
+    );
   });
 
   test('forces a flush at the store window instead of dropping rows while flushes are deferred', () => {
@@ -244,8 +256,9 @@ describe('chatIngestController (headless line → commit)', () => {
       routeLine(privmsgLine(`msg-${index}`));
     }
 
-    expect(committedMessages()).toHaveLength(150);
-    expect(controller.getBufferSize()).toBe(10);
+    const backpressureChunk = maxBackpressureCommitPerFlush();
+    expect(committedMessages()).toHaveLength(backpressureChunk);
+    expect(controller.getBufferSize()).toBe(160 - backpressureChunk);
 
     controller.forceFlush();
 

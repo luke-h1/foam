@@ -165,7 +165,7 @@ export function ChatPerfScreen() {
     setHotspotBusy(false);
   };
 
-  const totalSecs = Math.round(SUITE_TOTAL_MS / 1000);
+  const totalMins = Math.round(SUITE_TOTAL_MS / 60_000);
 
   return (
     <View style={[styles.root, { paddingTop: insets.top + 44 }]}>
@@ -198,9 +198,7 @@ export function ChatPerfScreen() {
               ]}
             />
             <View style={styles.countdownSubRow}>
-              <Text style={styles.countdownSub}>
-                {suite.measuring ? 'measuring' : 'warming up'} · total{' '}
-              </Text>
+              <Text style={styles.countdownSub}>{suite.phaseSub} · total </Text>
               <CountdownSeconds
                 ms={totalCountdownMs}
                 suffix='s left'
@@ -217,7 +215,9 @@ export function ChatPerfScreen() {
             testID='suite-run'
             disabled={hotspotBusy}
           >
-            <Text style={styles.runText}>▶ Run Full Suite · {totalSecs}s</Text>
+            <Text style={styles.runText}>
+              ▶ Run suite · {totalMins}m medium + heavy
+            </Text>
           </Pressable>
           <Pressable
             style={[styles.hotspotBtn, hotspotBusy && styles.btnOff]}
@@ -247,11 +247,14 @@ export function ChatPerfScreen() {
         </View>
       )}
 
-      {suite.results.length > 0 ? (
-        <View style={styles.results}>
+      {suite.done || suite.results.length > 0 ? (
+        <View
+          style={styles.results}
+          testID={suite.done ? 'suite-done' : 'suite-results'}
+        >
           <ResultRow
             header
-            cells={['phase', 'ui-fps', 'ui-jank', 'js-fps', 'drop%']}
+            cells={['phase', 'ui-fps', 'ui-jank', 'memΔ', 'cpu%']}
           />
           {suite.results.map(r => (
             <ResultRow
@@ -260,8 +263,8 @@ export function ChatPerfScreen() {
                 r.preset,
                 String(r.uiFpsAvg),
                 String(r.uiJankPerSec),
-                String(r.fpsAvg),
-                String(r.droppedPct),
+                `${r.memDeltaMb >= 0 ? '+' : ''}${r.memDeltaMb}`,
+                String(r.cpuAvg),
               ]}
             />
           ))}
@@ -302,7 +305,7 @@ export function ChatPerfScreen() {
   );
 }
 
-const RESULT_COLUMNS = ['phase', 'ui-fps', 'ui-jank', 'js-fps', 'drop%'];
+const RESULT_COLUMNS = ['phase', 'ui-fps', 'ui-jank', 'memΔ', 'cpu%'];
 const HOTSPOT_COLUMNS = ['scenario', 'mean', 'med', 'min', 'max'];
 
 function ResultRow({ cells, header }: { cells: string[]; header?: boolean }) {

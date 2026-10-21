@@ -15,7 +15,8 @@ TRACE_SECONDS="${FOAM_INSTRUMENTS_SECONDS:-12}"
 SETTLE_DELAY_SECONDS="${FOAM_INSTRUMENTS_SETTLE_SECONDS:-1}"
 FORCE_XCTRACE="${FOAM_FORCE_XCTRACE:-0}"
 
-DEEPLINK="foam://chat?channelId=${CHANNEL_ID}&channelName=${CHANNEL_NAME}"
+# Suite: FOAM_CHAT_DEEPLINK='foam://dev-tools/chat-perf?suite=1' FOAM_INSTRUMENTS_SECONDS=600 bun run perf:chat:ios
+DEEPLINK="${FOAM_CHAT_DEEPLINK:-foam://chat?channelId=${CHANNEL_ID}&channelName=${CHANNEL_NAME}}"
 
 mkdir -p "$OUTPUT_DIR"
 

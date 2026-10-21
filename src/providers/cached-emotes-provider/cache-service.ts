@@ -35,14 +35,18 @@ const MAX_DECODED_BYTES = (() => {
   const floor = isLowTier ? 96 * 1024 * 1024 : 192 * 1024 * 1024;
   const totalMemoryBytes = getTotalDeviceMemoryBytes();
 
+  // Unknown RAM uses the floor, not the high-tier ceiling.
   if (totalMemoryBytes <= 0) {
-    return ceil;
+    return floor;
   }
 
   return Math.max(floor, Math.min(ceil, Math.floor(totalMemoryBytes * 0.05)));
 })();
 
-const ANIMATED_BYTE_FACTOR = 8;
+/**
+ * Frame buffers for animated AVIF/WebP; 8x under-counted (FOAM-TV-MOBILE-BG).
+ */
+const ANIMATED_BYTE_FACTOR = 16;
 
 type CacheEntry = {
   ref: ImageRef;

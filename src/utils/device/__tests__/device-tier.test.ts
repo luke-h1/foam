@@ -45,7 +45,16 @@ describe('getDeviceTier', () => {
     ).toBe('low');
   });
 
-  test('a throwing native call defaults to high tier', () => {
+  test('unknown total memory defaults to low tier', () => {
+    expect(
+      tierFor({
+        isLowRamDevice: false,
+        getTotalMemorySync: () => 0,
+      }),
+    ).toBe('low');
+  });
+
+  test('a throwing native call defaults to low tier', () => {
     expect(
       tierFor({
         get isLowRamDevice(): boolean {
@@ -53,6 +62,6 @@ describe('getDeviceTier', () => {
         },
         getTotalMemorySync: () => 0,
       }),
-    ).toBe('high');
+    ).toBe('low');
   });
 });

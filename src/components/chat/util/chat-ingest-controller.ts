@@ -20,7 +20,10 @@ import { resolveCachedSenderColor } from '@app/utils/chat/resolve-cached-sender-
 import { createChatDelayQueue } from './chat-delay/chat-delay-queue';
 import { createChatDelayRamp } from './chat-delay/chat-delay-ramp';
 import { SCROLL_DEFERRED_FLUSH_RETRY_MS } from './chat-flush-cadence/constants';
-import { maxLiveCommitPerFlush } from './chat-flush-cadence/max-live-commit-per-flush';
+import {
+  maxBackpressureCommitPerFlush,
+  maxLiveCommitPerFlush,
+} from './chat-flush-cadence/max-live-commit-per-flush';
 import { pickFlushDelay } from './chat-flush-cadence/pick-flush-delay';
 import { shouldEnterRaidFlushMode } from './chat-flush-cadence/should-enter-raid-flush-mode';
 import { type BufferedMessage, createMessageBuffer } from './message-buffer';
@@ -164,7 +167,7 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
 
       const messagesToFlush = buffer.drain(
         underBackpressure
-          ? undefined
+          ? maxBackpressureCommitPerFlush()
           : maxLiveCommitPerFlush(
               isAtBottom,
               raidFlushMode,

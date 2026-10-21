@@ -2,24 +2,28 @@
 #
 # Measures Android performance with Flashlight. Argent flows drive the app.
 #
-#   bun run perf:bench                       # every bench
-#   bun run perf:bench chat-raid             # named benches only
-#   ITERATIONS=5 bun run perf:bench          # average 5 runs per bench
-#   BUNDLE_ID=com.lhowsam.foam.internal bun run perf:bench
-#   METRO_PORT=8082 bun run perf:bench       # Metro on another port
+#   bun run argent:perf                       # short benches
+#   bun run argent:perf:suite                 # 2-minute medium + heavy (#942)
+#   bun run argent:perf chat-raid             # named bench only
+#   ITERATIONS=5 bun run argent:perf
+#   BUNDLE_ID=com.lhowsam.foam.internal bun run argent:perf
+#   METRO_PORT=8082 bun run argent:perf
 #
 # Benches:
 #   top-streams     scroll the Top streams list
 #   top-categories  scroll the Top categories list
 #   chat-raid       chat-perf screen, 10s of the raid synthetic flood
+#   chat-suite      chat-perf screen, 2-minute medium + heavy suite
 #
-# chat-raid replays the same IRC fixture from the start on every run, so it
-# does not need a live channel. The chat-perf screen exists only in the
-# development, internal and e2e builds.
+# chat-raid / chat-suite replay a fixed IRC fixture (no live channel). chat-perf
+# exists only in development, internal and e2e builds.
 #
-# Each iteration starts from a cold app. The restart, the deep link and the
-# open-* flow run in beforeEachCommand, outside the measured window, so
-# Flashlight times only the scroll or the flood.
+# chat-suite opens ?suite=1, runs medium then heavy (~50s each), writes
+# Documents/chat-perf-suite.json, and reports Flashlight FPS/CPU/RAM plus the
+# in-app export. A steep RSS slope is treated as a leak.
+#
+# Each iteration starts from a cold app. Restart, deep link and open-* run in
+# beforeEachCommand; Flashlight only times the scroll, flood, or suite.
 #
 # The first iteration is a warm-up and is dropped: in it the Flashlight
 # sampler reports every thread at 100% in alternate samples.
@@ -37,14 +41,18 @@
 
 set -euo pipefail
 
-BUNDLE_ID="${BUNDLE_ID:-com.lhowsam.foam.dev}"
+# Export so Argent `script:` children (print-native-metrics) see the same package.
+export BUNDLE_ID="${BUNDLE_ID:-com.lhowsam.foam.dev}"
 ITERATIONS="${ITERATIONS:-1}"
+# Set SKIP_WARMUP=1 to skip the Flashlight warm-up iteration (faster, less accurate CPU).
+SKIP_WARMUP="${SKIP_WARMUP:-0}"
 METRO_PORT="${METRO_PORT:-8081}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 RESULTS="$ROOT/bench-results"
 
 BENCHES=("$@")
 if [ ${#BENCHES[@]} -eq 0 ]; then
+  # chat-suite is 2 minutes; name it explicitly.
   BENCHES=(top-streams top-categories chat-raid)
 fi
 
@@ -54,6 +62,7 @@ bench_config() {
     top-streams) echo "foam://tabs/top open-top-streams scroll-only Top streams" ;;
     top-categories) echo "foam://tabs/top open-top-categories scroll-only Top categories" ;;
     chat-raid) echo "foam://dev-tools/chat-perf open-chat-perf chat-raid Chat raid" ;;
+    chat-suite) echo "foam://dev-tools/chat-perf?suite=1 open-chat-perf-suite chat-perf-suite Chat suite" ;;
     *) return 1 ;;
   esac
 }
@@ -93,6 +102,19 @@ open_url() {
   echo "adb shell am start -W -a android.intent.action.VIEW -d \"'$1'\" $BUNDLE_ID >/dev/null"
 }
 
+# Debuggable builds only (run-as).
+pull_chat_suite_app_json() {
+  local dest="$1"
+  if adb shell run-as "$BUNDLE_ID" cat files/chat-perf-suite.json >"$dest" 2>/dev/null && [ -s "$dest" ]; then
+    echo "App suite results -> $dest"
+    return 0
+  fi
+
+  rm -f "$dest"
+  echo "Could not pull files/chat-perf-suite.json (needs a debuggable build)." >&2
+  return 1
+}
+
 # A cold development build opens the dev launcher and drops the deep link, so
 # load the bundle from Metro first and send the deep link to the running app.
 launch_url="foam://tabs/top"
@@ -102,7 +124,11 @@ if [[ "$BUNDLE_ID" == *.dev ]]; then
 fi
 
 mkdir -p "$RESULTS"
-echo "$BUNDLE_ID · $ITERATIONS run(s) per bench + 1 warm-up · cold app before each"
+warmup_count=1
+if [ "$SKIP_WARMUP" = "1" ]; then
+  warmup_count=0
+fi
+echo "$BUNDLE_ID · $ITERATIONS run(s) per bench + $warmup_count warm-up · cold app before each"
 echo
 
 cd "$ROOT"
@@ -115,26 +141,45 @@ for bench in "${BENCHES[@]}"; do
   out="$RESULTS/$bench.json"
   echo "> $label"
 
+  record_args=()
+  if [ "${RECORD:-0}" = "1" ]; then
+    # Flashlight writes the recording next to the results JSON.
+    record_args=(--record)
+  fi
+
   flashlight test \
     --bundleId "$BUNDLE_ID" \
     --beforeEachCommand "$cold_start && argent flow run $open_flow $argent_args" \
     --testCommand "argent flow run $test_flow $argent_args" \
     --skipRestart \
-    --iterationCount "$((ITERATIONS + 1))" \
-    --resultsFilePath "$out" >"$RESULTS/$bench.log" 2>&1 || {
+    --iterationCount "$((ITERATIONS + warmup_count))" \
+    --resultsFilePath "$out" \
+    ${record_args[@]+"${record_args[@]}"} >"$RESULTS/$bench.log" 2>&1 || {
     echo "flashlight failed for $bench. Full log: $RESULTS/$bench.log" >&2
     tail -n 40 "$RESULTS/$bench.log" >&2
     exit 1
   }
 
-  bun -e '
-    const file = process.argv[1];
-    const result = await Bun.file(file).json();
-    result.iterations = result.iterations.slice(1);
-    await Bun.write(file, JSON.stringify(result));
-  ' "$out"
+  if [ "$warmup_count" -gt 0 ]; then
+    bun -e '
+      const file = process.argv[1];
+      const result = await Bun.file(file).json();
+      result.iterations = result.iterations.slice(1);
+      await Bun.write(file, JSON.stringify(result));
+    ' "$out"
+  fi
 
   bun "$ROOT/scripts/bench/score.ts" "$out"
+
+  if [ "$bench" = "chat-suite" ]; then
+    app_out="$RESULTS/chat-suite-app.json"
+    if pull_chat_suite_app_json "$app_out"; then
+      bun "$ROOT/scripts/bench/chat-suite-report.ts" "$out" "$app_out"
+    else
+      bun "$ROOT/scripts/bench/chat-suite-report.ts" "$out"
+    fi
+  fi
+
   echo
 done
 

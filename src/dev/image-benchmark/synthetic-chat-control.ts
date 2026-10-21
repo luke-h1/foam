@@ -27,16 +27,28 @@ export interface SyntheticPresets {
   [presetKey: string]: SyntheticChatConfig;
 }
 
+const STEADY60: SyntheticChatConfig = {
+  active: true,
+  msgPerSec: 60,
+  burstSize: 0,
+  burstEveryMs: 0,
+  emoteSpamRatio: 0.4,
+  emotesPerMessage: 3,
+};
+
+const RAID: SyntheticChatConfig = {
+  active: true,
+  msgPerSec: 120,
+  burstSize: 80,
+  burstEveryMs: 1000,
+  emoteSpamRatio: 0.75,
+  emotesPerMessage: 5,
+};
+
 export const SYNTHETIC_PRESETS: SyntheticPresets = {
   off: OFF,
-  steady60: {
-    active: true,
-    msgPerSec: 60,
-    burstSize: 0,
-    burstEveryMs: 0,
-    emoteSpamRatio: 0.4,
-    emotesPerMessage: 3,
-  },
+  steady60: STEADY60,
+  medium: STEADY60,
   burst: {
     active: true,
     msgPerSec: 80,
@@ -45,14 +57,8 @@ export const SYNTHETIC_PRESETS: SyntheticPresets = {
     emoteSpamRatio: 0.6,
     emotesPerMessage: 4,
   },
-  raid: {
-    active: true,
-    msgPerSec: 120,
-    burstSize: 80,
-    burstEveryMs: 1000,
-    emoteSpamRatio: 0.75,
-    emotesPerMessage: 5,
-  },
+  raid: RAID,
+  heavy: RAID,
 };
 
 type SyntheticChatControl = {

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFrameCallback, useSharedValue } from 'react-native-reanimated';
 
 import { beginSignpost, endSignpost, markSignpost } from '@app/lib/signpost';
+import { clearCachedEmoteRefs } from '@app/providers/cached-emotes-provider/cache-service';
+import { clearMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 
 import {
@@ -11,6 +13,13 @@ import {
   SUITE_TOTAL_MS,
   WARMUP_MS,
 } from './chat-perf-suite';
+import {
+  finishChatPerfSuiteResults,
+  type ProcessMetricsSample,
+  recordChatPerfSuitePhase,
+  resetChatPerfSuiteResults,
+} from './chat-perf-suite-results';
+import { retainProcessMetricsPolling } from './process-metrics';
 import {
   SYNTHETIC_PRESETS,
   syntheticChatControl,
@@ -47,6 +56,7 @@ export interface SuiteState {
   phaseSub: string;
   measuring: boolean;
   results: PhaseResult[];
+  done: boolean;
 }
 
 interface FrameAccumulator {
@@ -74,6 +84,46 @@ function accumulateWindow(
   accum.frames += frames;
 }
 
+interface ProcessSampleSummary {
+  memStartMb: number;
+  memEndMb: number;
+  memPeakMb: number;
+  memDeltaMb: number;
+  cpuAvg: number;
+  cpuPeak: number;
+}
+
+const EMPTY_PROCESS_SUMMARY: ProcessSampleSummary = {
+  memStartMb: 0,
+  memEndMb: 0,
+  memPeakMb: 0,
+  memDeltaMb: 0,
+  cpuAvg: 0,
+  cpuPeak: 0,
+};
+
+function summariseProcessSamples(
+  samples: ProcessMetricsSample[],
+): ProcessSampleSummary {
+  if (samples.length === 0) {
+    return EMPTY_PROCESS_SUMMARY;
+  }
+
+  const mems = samples.map(s => s.memMb);
+  const cpus = samples.map(s => s.cpu);
+  const memStartMb = mems[0]!;
+  const memEndMb = mems[mems.length - 1]!;
+
+  return {
+    memStartMb,
+    memEndMb,
+    memPeakMb: Math.max(...mems),
+    memDeltaMb: memEndMb - memStartMb,
+    cpuAvg: Math.round(mean(cpus)),
+    cpuPeak: Math.max(...cpus),
+  };
+}
+
 const IDLE: SuiteState = {
   running: false,
   phaseIndex: -1,
@@ -81,6 +131,7 @@ const IDLE: SuiteState = {
   phaseSub: '',
   measuring: false,
   results: [],
+  done: false,
 };
 
 export function useChatPerfSuite() {
@@ -102,6 +153,7 @@ export function useChatPerfSuite() {
 
   const cancelRef = useRef(false);
   const runningRef = useRef(false);
+  const metricsSamplesRef = useRef<ProcessMetricsSample[]>([]);
 
   /**
    * UI-thread accumulators; uiActive gates them to measure windows and JS reads the totals at phase end.
@@ -200,12 +252,17 @@ export function useChatPerfSuite() {
 
       const runPhaseWindow = async () => {
         const start = performance.now();
+        let releaseMetrics: (() => void) | undefined;
 
         if (measuring) {
           accum.current = { on: true, fps: [], jank: 0, frames: 0 };
+          metricsSamplesRef.current = [];
           uiFrames.set(0);
           uiJank.set(0);
           uiActive.set(true);
+          releaseMetrics = retainProcessMetricsPolling(sample => {
+            metricsSamplesRef.current.push(sample);
+          });
         }
 
         phaseCountdownMs.set(ms);
@@ -217,15 +274,18 @@ export function useChatPerfSuite() {
           phaseLabel: label,
           phaseSub: sub,
           measuring,
+          done: false,
         }));
 
         while (performance.now() - start < ms) {
           if (cancelRef.current) {
             break;
           }
+
           await sleep(120);
         }
 
+        releaseMetrics?.();
         accum.current.on = false;
         uiActive.set(false);
       };
@@ -247,6 +307,7 @@ export function useChatPerfSuite() {
     countdownTicking.set(true);
     const results: PhaseResult[] = [];
 
+    resetChatPerfSuiteResults();
     setSuite({ ...IDLE, running: true });
     markSignpost('chat-perf.suite-start');
     const suiteEnd = performance.now() + SUITE_TOTAL_MS;
@@ -281,8 +342,8 @@ export function useChatPerfSuite() {
         const fps = accum.current.fps;
         const secs = Math.max(1, fps.length);
         const uiSecs = Math.max(1, phase.measureMs / 1000);
-
-        results.push({
+        const process = summariseProcessSamples(metricsSamplesRef.current);
+        const phaseResult: PhaseResult = {
           preset: phase.preset,
           fpsAvg: Math.round(mean(fps)),
           fpsMin: fps.length ? Math.min(...fps) : 0,
@@ -295,12 +356,18 @@ export function useChatPerfSuite() {
           messages: chatStore$.messages.peek().length,
           uiFpsAvg: Math.round(uiFrames.get() / uiSecs),
           uiJankPerSec: Math.round((uiJank.get() / uiSecs) * 10) / 10,
-        });
+          ...process,
+        };
+
+        recordChatPerfSuitePhase(phaseResult, metricsSamplesRef.current);
+        results.push(phaseResult);
 
         setSuite(s => ({ ...s, results: [...results] }));
 
-        // Cooldown: stop the flood so memory/GC settles before the next phase.
+        // Cooldown: stop the flood and clear decode/store before the next phase.
         syntheticChatControl.current = SYNTHETIC_PRESETS.off!;
+        clearMessages();
+        clearCachedEmoteRefs();
 
         const isLastPhase = i === SUITE_PHASES.length - 1;
 
@@ -316,11 +383,18 @@ export function useChatPerfSuite() {
     };
 
     await runPhases().finally(() => {
+      const cancelled = cancelRef.current;
+      finishChatPerfSuiteResults(cancelled);
       syntheticChatControl.current = SYNTHETIC_PRESETS.off!;
       resetFloodReplay();
       countdownTicking.set(false);
-      setSuite(s => ({ ...IDLE, results: s.results }));
+      setSuite({
+        ...IDLE,
+        results,
+        done: !cancelled && results.length === SUITE_PHASES.length,
+      });
       runningRef.current = false;
+      markSignpost('chat-perf.suite-end');
     });
   }, [runWindow, uiFrames, uiJank, countdownTicking]);
 

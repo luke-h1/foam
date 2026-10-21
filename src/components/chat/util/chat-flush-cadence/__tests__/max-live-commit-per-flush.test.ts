@@ -1,6 +1,9 @@
 import { Platform } from 'react-native';
 
-import { maxLiveCommitPerFlush } from '../max-live-commit-per-flush';
+import {
+  maxBackpressureCommitPerFlush,
+  maxLiveCommitPerFlush,
+} from '../max-live-commit-per-flush';
 
 const originalOS = Platform.OS;
 
@@ -25,14 +28,15 @@ describe('maxLiveCommitPerFlush', () => {
     expect(maxLiveCommitPerFlush(true, true)).toBe(8);
   });
 
-  test('raises the cap to the arrivals since the last flush', () => {
+  test('raises toward arrivals but never past the hard ceiling', () => {
     Platform.OS = 'ios';
     expect(maxLiveCommitPerFlush(true, false, 3)).toBe(8);
-    expect(maxLiveCommitPerFlush(true, false, 30)).toBe(30);
-    expect(maxLiveCommitPerFlush(true, true, 30)).toBe(30);
+    expect(maxLiveCommitPerFlush(true, false, 30)).toBe(16);
+    expect(maxLiveCommitPerFlush(true, true, 30)).toBe(24);
 
     Platform.OS = 'android';
-    expect(maxLiveCommitPerFlush(true, false, 30)).toBe(30);
+    expect(maxLiveCommitPerFlush(true, false, 30)).toBe(10);
+    expect(maxLiveCommitPerFlush(true, true, 30)).toBe(16);
   });
 
   test('leaves the backlog uncapped while reading scrollback', () => {
@@ -43,5 +47,13 @@ describe('maxLiveCommitPerFlush', () => {
     Platform.OS = 'android';
     expect(maxLiveCommitPerFlush(false, false)).toBeUndefined();
     expect(maxLiveCommitPerFlush(false, true)).toBeUndefined();
+  });
+
+  test('chunks backpressure drains below the buffer backpressure size', () => {
+    Platform.OS = 'ios';
+    expect(maxBackpressureCommitPerFlush()).toEqual(48);
+
+    Platform.OS = 'android';
+    expect(maxBackpressureCommitPerFlush()).toEqual(32);
   });
 });
