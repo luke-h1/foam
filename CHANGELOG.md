@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.13 (Production)
+## 1.0.14 (Production)
 
 ### ♻️ Refactor
 
@@ -20,6 +20,7 @@
 - **release:** Submit production Android builds to the internal track ([#951](https://github.com/lhowsam/foam/issues/951))
 - **perf:** Argent chat suite + leak-gate memory fixes ([#957](https://github.com/lhowsam/foam/issues/957))
 - **app:** Tighten tsc and fix blank stream-card taps ([#959](https://github.com/lhowsam/foam/issues/959))
+- **app:** Scroll FlashList tabs to top via scrollToIndex ([#961](https://github.com/lhowsam/foam/issues/961))
 
 ### 👷 CI/CD
 
@@ -41,6 +42,8 @@
 - **ci:** Probe playstore refs ([#949](https://github.com/lhowsam/foam/issues/949))
 - **devtools:** Add expo-device-hub ([#953](https://github.com/lhowsam/foam/issues/953))
 - **app:** Alphabetize offline list ([#956](https://github.com/lhowsam/foam/issues/956))
+- **tooling:** Add @nkzw/oxlint-config ([#960](https://github.com/lhowsam/foam/issues/960))
+- **app:** Release 1.0.14
 
 ## 1.0.12 (Production)
 
