@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.16 (Production)
+
+### 🐛 Bug Fixes
+
+- **app:** Show iOS search bar on cold Search tab open ([#966](https://github.com/lhowsam/foam/issues/966))
+
 ## 1.0.15 (Production)
 
 ### 🐛 Bug Fixes
