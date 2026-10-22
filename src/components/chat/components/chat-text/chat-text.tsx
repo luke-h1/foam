@@ -108,11 +108,6 @@ function getTextStyle(options: ResolveTextStyleOptions): TextStyle {
   return textStyle;
 }
 
-/**
- * Fixed-weight font files ignore `fontWeight` on iOS, so a weight set in the
- * style maps to the theme family that renders it. One object per weight and
- * slant, shared by every span that resolves to it.
- */
 const styleWeightOverrides = new Map<string, TextStyle>();
 
 function getStyleWeightOverride(
@@ -181,7 +176,6 @@ export function ChatText({
     mx !== undefined ||
     my !== undefined;
 
-  // Margins are rare on a chat span, so only that path pays for a merge.
   const textStyle: TextStyle = hasMargin
     ? { ...margin({ m, mb, ml, mr, mt, mx, my }), ...resolvedStyle }
     : resolvedStyle;

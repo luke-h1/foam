@@ -1,5 +1,4 @@
 import { StyleSheet, View } from 'react-native';
-import type { FC } from 'react';
 
 import { Chat } from '@app/components/chat/chat';
 
@@ -8,7 +7,7 @@ interface ChatScreenProps {
   channelName: string;
 }
 
-export const ChatScreen: FC<ChatScreenProps> = ({ channelId, channelName }) => {
+export const ChatScreen = ({ channelId, channelName }: ChatScreenProps) => {
   return (
     <View style={styles.container}>
       <Chat key={channelId} channelName={channelName} channelId={channelId} />

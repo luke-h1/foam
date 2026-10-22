@@ -1,14 +1,23 @@
-import { useCallback, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { use, useCallback, useMemo, useRef, useState } from 'react';
+import {
+  Platform,
+  ScrollView,
+  type StyleProp,
+  StyleSheet,
+  View,
+  type ViewStyle,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { HeaderHeightContext } from 'expo-router/react-navigation';
 
 import {
   FlashList,
   type FlashListRef,
 } from '@app/components/flash-list/flash-list';
-import { MemoizedLiveStreamCard } from '@app/components/live-stream-card/live-stream-card';
+import { LiveStreamCard } from '@app/components/live-stream-card/live-stream-card';
 import { LiveStreamCardSkeletons } from '@app/components/live-stream-card/live-stream-card-skeleton';
 import { EmptyState } from '@app/components/ui/empty-state/empty-state';
 import { useStreamProfilePictures } from '@app/hooks/queries/use-stream-profile-pictures';
@@ -27,6 +36,20 @@ export function TopStreamsScreen() {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const streamListLayout = usePreference('streamListLayout');
   const listRef = useRef<FlashListRef<TwitchStream>>(null);
+  const { top: topInset } = useSafeAreaInsets();
+  const headerHeight = use(HeaderHeightContext) ?? topInset + 44;
+
+  const contentContainerStyle = useMemo(
+    () =>
+      [
+        styles.listContent,
+        Platform.OS === 'ios' && {
+          paddingTop: headerHeight,
+        },
+      ] satisfies StyleProp<ViewStyle>,
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
+    [headerHeight],
+  );
 
   useScrollToTop(listRef);
 
@@ -63,9 +86,7 @@ export function TopStreamsScreen() {
   }, [refetch]);
 
   const renderItem: ListRenderItem<TwitchStream> = useCallback(
-    ({ item }) => (
-      <MemoizedLiveStreamCard stream={item} layout={streamListLayout} />
-    ),
+    ({ item }) => <LiveStreamCard stream={item} layout={streamListLayout} />,
     [streamListLayout],
   );
 
@@ -83,6 +104,7 @@ export function TopStreamsScreen() {
       <ScrollView
         contentInsetAdjustmentBehavior='automatic'
         scrollEnabled={false}
+        contentContainerStyle={contentContainerStyle}
         style={styles.container}
       >
         <LiveStreamCardSkeletons layout={streamListLayout} />
@@ -124,6 +146,7 @@ export function TopStreamsScreen() {
     <TopStreamsList
       debouncedHandleLoadMore={debouncedHandleLoadMore}
       listRef={listRef}
+      contentContainerStyle={contentContainerStyle}
       onRefresh={onRefresh}
       refreshing={refreshing}
       remainingStreams={allStreams}
@@ -139,6 +162,7 @@ interface TopStreamsListProps {
   refreshing: boolean;
   remainingStreams: TwitchStream[];
   renderItem: ListRenderItem<TwitchStream>;
+  contentContainerStyle: StyleProp<ViewStyle>;
 }
 
 function TopStreamsList({
@@ -148,6 +172,7 @@ function TopStreamsList({
   refreshing,
   remainingStreams,
   renderItem,
+  contentContainerStyle,
 }: TopStreamsListProps) {
   return (
     <View
@@ -164,7 +189,7 @@ function TopStreamsList({
         keyExtractor={item => item.id}
         getItemType={() => 'stream-item'}
         drawDistance={500}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={contentContainerStyle}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={debouncedHandleLoadMore}
         refreshing={refreshing}

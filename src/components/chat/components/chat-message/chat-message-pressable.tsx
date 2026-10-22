@@ -63,8 +63,6 @@ function ChatMessagePressableComponent({
   const interactive = Boolean(onPress || onLongPress);
   const [pressed, setPressed] = useState(false);
 
-  // One ref for the whole touch: where it landed, whether it is still a tap,
-  // and the long-press timer.
   const touchRef = useRef<ActiveTouch | null>(null);
   const unpressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -160,7 +158,6 @@ function ChatMessagePressableComponent({
       setPressed(false);
     }
 
-    // A long press that already fired consumes the touch, as in Pressable.
     if (touch && !touch.longPressFired) {
       onPress?.();
     }
@@ -171,8 +168,6 @@ function ChatMessagePressableComponent({
     setPressed(false);
   };
 
-  // Screen readers activate through these actions, not through touches:
-  // TalkBack sends no touch events to a plain View.
   const handleAccessibilityAction = (event: AccessibilityActionEvent) => {
     if (event.nativeEvent.actionName === 'longpress') {
       onLongPress?.();

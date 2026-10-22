@@ -186,7 +186,7 @@ export const ChatMessagePane = memo(
         {visibleMessages.length === 0 && rawMessages.length > 0 ? (
           <View style={styles.emptyState}>
             <Text type='callout' family='brand' style={styles.emptyStateTitle}>
-              No messages match this view
+              No messages
             </Text>
             <Text type='callout' family='brand' style={styles.emptyStateBody}>
               Clear filters or jump to the latest messages.

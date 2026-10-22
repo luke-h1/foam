@@ -99,4 +99,23 @@ describe('parseTwitchGifsTag', () => {
       },
     ]);
   });
+
+  test('skips entries whose offsets overflow to Infinity', () => {
+    const hugeEnd = '9'.repeat(309);
+
+    expect(
+      parseTwitchGifsTag(
+        `0-${hugeEnd}|bad|https://bad.example/g.gif,0-4|ok|https://ok.example/g.gif`,
+        'hello',
+      ),
+    ).toEqual<TwitchGifSpan[]>([
+      {
+        start: 0,
+        end: 4,
+        gifId: 'ok',
+        url: 'https://ok.example/g.gif',
+        content: 'hello',
+      },
+    ]);
+  });
 });

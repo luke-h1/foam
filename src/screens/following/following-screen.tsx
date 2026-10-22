@@ -8,7 +8,7 @@ import {
   FlashList,
   type ListRenderItem,
 } from '@app/components/flash-list/flash-list';
-import { MemoizedLiveStreamCard } from '@app/components/live-stream-card/live-stream-card';
+import { LiveStreamCard } from '@app/components/live-stream-card/live-stream-card';
 import { LiveStreamCardSkeletons } from '@app/components/live-stream-card/live-stream-card-skeleton';
 import { OfflineChannelRow } from '@app/components/offline-channel-row/offline-channel-row';
 import { SectionHeader } from '@app/components/section-header/section-header';
@@ -188,10 +188,7 @@ export default function FollowingScreen() {
       switch (item.type) {
         case 'stream':
           return (
-            <MemoizedLiveStreamCard
-              stream={item.stream}
-              layout={streamListLayout}
-            />
+            <LiveStreamCard stream={item.stream} layout={streamListLayout} />
           );
         case 'header':
           return (
@@ -259,7 +256,6 @@ export default function FollowingScreen() {
     );
   }
 
-  // The offline list resolves after the streams query; wait for it or the empty state flashes.
   if (
     !streams ||
     (streamsWithProfilePictures.length === 0 &&

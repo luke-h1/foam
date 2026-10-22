@@ -10,8 +10,8 @@ import type { MessageToken } from '@app/utils/chat/message-token';
 import { styles as chatStyles } from '../chat-message/chat-row.styles';
 import { ChatNoticeMetaRow } from '../chat-message/renderers/chat-notice-meta-row';
 import { CHAT_NOTICE_ACCENTS } from '../util/chat-notice-accents';
-import { buildSubscriptionNoticeDescription } from './build-subscription-notice-description';
 import { subscriptionNoticeStyles as styles } from './subscription-notice.styles';
+import { buildSubscriptionNoticeDescription } from './util/build-subscription-notice-description';
 
 function getMessagePartKey(token: MessageToken, occurrence: number): string {
   switch (token.type) {

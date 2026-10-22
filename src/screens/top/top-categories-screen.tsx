@@ -1,11 +1,19 @@
-import { type RefObject, useCallback, useRef } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { type RefObject, use, useCallback, useMemo, useRef } from 'react';
+import {
+  Platform,
+  type StyleProp,
+  StyleSheet,
+  View,
+  type ViewStyle,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useObservable, useSelector } from '@legendapp/state/react';
 import type { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { HeaderHeightContext } from 'expo-router/react-navigation';
 
-import { MemoizedCategoryCard } from '@app/components/category-card/category-card';
+import { CategoryCard } from '@app/components/category-card/category-card';
 import { CategoryCardSkeleton } from '@app/components/category-card/category-card-skeleton';
 import {
   FlashList,
@@ -25,10 +33,20 @@ const SKELETON_DATA = Array.from({ length: SKELETON_COUNT });
 const SKELETON_COLUMNS = 3;
 const TOP_CATEGORY_SKELETON_KEY_PREFIX = 'skeleton-';
 
+const renderTopCategoryItem: ListRenderItem<Category> = ({ item }) => (
+  <CategoryCard category={item} />
+);
+
+const renderTopCategorySkeletonItem: ListRenderItem<unknown> = () => (
+  <CategoryCardSkeleton />
+);
+
 export function TopCategoriesScreen() {
   const refreshing$ = useObservable(false);
   const refreshing = useSelector(refreshing$);
   const listRef = useRef<FlashListRef<Category>>(null);
+  const { top: topInset } = useSafeAreaInsets();
+  const headerHeight = use(HeaderHeightContext) ?? topInset + 44;
 
   useScrollToTop(listRef);
 
@@ -65,6 +83,18 @@ export function TopCategoriesScreen() {
   const allCategories = useFlattenedInfiniteQuery(categories?.pages);
   const showSkeleton = isLoading || (isFetching && allCategories.length === 0);
 
+  const contentContainerStyle = useMemo(
+    () =>
+      [
+        styles.listContent,
+        Platform.OS === 'ios' && {
+          paddingTop: headerHeight,
+        },
+      ] satisfies StyleProp<ViewStyle>,
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
+    [headerHeight],
+  );
+
   if (showSkeleton) {
     return (
       <View style={styles.wrapper}>
@@ -75,7 +105,7 @@ export function TopCategoriesScreen() {
           keyExtractor={(_, idx) => `${TOP_CATEGORY_SKELETON_KEY_PREFIX}${idx}`}
           numColumns={SKELETON_COLUMNS}
           renderItem={renderTopCategorySkeletonItem}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={contentContainerStyle}
         />
       </View>
     );
@@ -117,6 +147,7 @@ export function TopCategoriesScreen() {
       onRefresh={onRefresh}
       refreshing={refreshing}
       renderTopCategoryItem={renderTopCategoryItem}
+      contentContainerStyle={contentContainerStyle}
     />
   );
 }
@@ -128,6 +159,7 @@ interface TopCategoriesListProps {
   onRefresh: () => void;
   refreshing: boolean;
   renderTopCategoryItem: ListRenderItem<Category>;
+  contentContainerStyle: StyleProp<ViewStyle>;
 }
 
 function TopCategoriesList({
@@ -137,6 +169,7 @@ function TopCategoriesList({
   onRefresh,
   refreshing,
   renderTopCategoryItem,
+  contentContainerStyle,
 }: TopCategoriesListProps) {
   return (
     <View
@@ -150,7 +183,7 @@ function TopCategoriesList({
         numColumns={3}
         contentInsetAdjustmentBehavior='automatic'
         getItemType={() => 'category-card'}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={contentContainerStyle}
         renderItem={renderTopCategoryItem}
         keyExtractor={item => item.id}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -174,11 +207,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-
-const renderTopCategoryItem: ListRenderItem<Category> = ({ item }) => (
-  <MemoizedCategoryCard category={item} />
-);
-
-const renderTopCategorySkeletonItem: ListRenderItem<unknown> = () => (
-  <CategoryCardSkeleton />
-);

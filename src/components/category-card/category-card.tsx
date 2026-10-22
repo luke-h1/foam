@@ -23,7 +23,7 @@ interface Props {
   category: Category;
 }
 
-export function CategoryCard({ category }: Props) {
+export function CategoryCardComponent({ category }: Props) {
   const handlePress = useCallback(() => {
     router.push(`/category/${category.id}`);
   }, [category.id]);
@@ -80,7 +80,7 @@ export function CategoryCard({ category }: Props) {
   );
 }
 
-export const MemoizedCategoryCard = memo(CategoryCard);
+export const CategoryCard = memo(CategoryCardComponent);
 
 const styles = StyleSheet.create({
   container: {

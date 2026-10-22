@@ -8,7 +8,7 @@ import { twitchService as _twitchService } from '@app/services/twitch-service';
 import render, { DefaultWrapper } from '@app/test/render';
 import type { TwitchStream } from '@app/types/twitch/stream';
 
-import { MemoizedLiveStreamCard as LiveStreamCard } from '../live-stream-card/live-stream-card';
+import { LiveStreamCard } from '../live-stream-card/live-stream-card';
 
 const mockStream: TwitchStream = {
   id: '1',

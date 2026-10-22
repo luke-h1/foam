@@ -11,7 +11,7 @@ import {
 } from '@app/components/flash-list/flash-list';
 import { IconButton } from '@app/components/icon-button/icon-button';
 import { Image } from '@app/components/image/image';
-import { MemoizedLiveStreamCard } from '@app/components/live-stream-card/live-stream-card';
+import { LiveStreamCard } from '@app/components/live-stream-card/live-stream-card';
 import { LiveStreamCardSkeletons } from '@app/components/live-stream-card/live-stream-card-skeleton';
 import { SectionHeader } from '@app/components/section-header/section-header';
 import { EmptyState } from '@app/components/ui/empty-state/empty-state';
@@ -167,7 +167,7 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
 
   const renderItem: ListRenderItem<TwitchStream> = useCallback(
     ({ item }) => (
-      <MemoizedLiveStreamCard
+      <LiveStreamCard
         stream={item}
         layout={streamListLayout}
         showCategory={false}
