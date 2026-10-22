@@ -161,8 +161,11 @@ export function SearchScreen() {
     </View>
   );
 
+  // FlashList must be a screen-root scroll view so UIKit can size the
+  // native header search bar. SearchInputBar is null on iOS (header
+  // options only) and a real field above the list on Android.
   return (
-    <View collapsable={false} style={styles.container}>
+    <>
       <SearchInputBar
         ref={searchBarRef}
         onCancel={handleClearSearch}
@@ -182,7 +185,7 @@ export function SearchScreen() {
         renderItem={renderItem}
         selectedFilter={selectedFilter}
       />
-    </View>
+    </>
   );
 }
 
@@ -335,10 +338,6 @@ const styles = StyleSheet.create({
   categoryResultName: {
     flex: 1,
   },
-  container: {
-    backgroundColor: theme.color.background.dark,
-    flex: 1,
-  },
   filterBar: {
     paddingBottom: theme.space8,
     paddingHorizontal: theme.space16,
@@ -356,6 +355,7 @@ const styles = StyleSheet.create({
     paddingVertical: theme.space8,
   },
   resultsList: {
+    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   separator: {
