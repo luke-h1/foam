@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.15 (Production)
+
+### 🐛 Bug Fixes
+
+- **app:** Fix segment control not in safe area ([#965](https://github.com/lhowsam/foam/issues/965))
+
 ## 1.0.14 (Production)
 
 ### ♻️ Refactor
