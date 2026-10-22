@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.13 (Production)
+
+### 🐛 Bug Fixes
+
+- **release:** Stop auto-bumping VERSION on native deploys ([#967](https://github.com/lhowsam/foam/issues/967))
+
 ## 1.0.16 (Production)
 
 ### 🐛 Bug Fixes
