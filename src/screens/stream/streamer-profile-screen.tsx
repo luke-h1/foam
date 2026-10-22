@@ -276,7 +276,6 @@ function MediaCard({
   );
 }
 
-// Memoized so regex/Date formatting re-runs only for changed cards - extraData ticks re-render the list wrapper, not every visible card.
 const VodCard = memo(function VodCard({
   vod,
   width,
@@ -383,7 +382,7 @@ function ProfileTabEmptyState({
       heading={isVods ? 'No past broadcasts' : 'No clips yet'}
       content={
         isVods
-          ? 'Past broadcasts appear here when the channel saves them.'
+          ? 'Past broadcasts appear here.'
           : 'Clips people make on this channel appear here.'
       }
       style={styles.tabState}
@@ -521,7 +520,6 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          // The screen shows the name in its own header block, so the bar has no title.
           title: '',
           headerRight: () => (
             <IconButton

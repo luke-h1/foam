@@ -746,9 +746,34 @@ interface AuthContextTestProviderProps extends AuthContextState {
 
 export function AuthContextTestProvider({
   children,
-  ...rest
+  authState,
+  fetchAnonToken,
+  loginWithTwitch,
+  logout,
+  populateAuthState,
+  ready,
+  user,
 }: AuthContextTestProviderProps) {
-  const value: AuthContextState = { ...rest };
+  const value = useMemo<AuthContextState>(
+    () => ({
+      authState,
+      fetchAnonToken,
+      loginWithTwitch,
+      logout,
+      populateAuthState,
+      ready,
+      user,
+    }),
+    [
+      authState,
+      fetchAnonToken,
+      loginWithTwitch,
+      logout,
+      populateAuthState,
+      ready,
+      user,
+    ],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

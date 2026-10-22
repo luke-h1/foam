@@ -31,6 +31,7 @@ import { useChatScroll } from './hooks/use-chat-scroll';
 import { useChatSession } from './hooks/use-chat-session';
 import { useChatSurface } from './hooks/use-chat-surface';
 import { useChatTransientState } from './hooks/use-chat-transient-state';
+
 /**
  * First-frame guess at the composer height, before `onComposerLayout` reports
  * the measured value. Only affects the bottom inset on the very first render.
@@ -84,8 +85,6 @@ export const Chat = memo(
     const inputShellRef = useRef<ChatInputShellHandle>(null);
     const composerRef = useRef<View>(null);
 
-    // The composer floats over the list bottom, so the list carries its height
-    // as a bottom content inset and the keyboard lifts the content itself.
     const { contentInsetEndAdjustment, onComposerLayout } =
       useKeyboardChatComposerInset(
         listRef,
@@ -93,8 +92,6 @@ export const Chat = memo(
         insets.bottom + ESTIMATED_COMPOSER_HEIGHT,
       );
 
-    // Ride above the composer, and follow it up when the keyboard lifts it;
-    // `keyboard.height` is negative while the keyboard is open.
     const keyboard = useReanimatedKeyboardAnimation();
 
     const resumeScrollLiftStyle = useAnimatedStyle(() => ({

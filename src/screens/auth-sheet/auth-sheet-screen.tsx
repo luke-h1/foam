@@ -30,8 +30,8 @@ function handleDismiss() {
 }
 
 const BENEFITS = [
-  { icon: 'person.2', label: 'Your followed channels, live first' },
-  { icon: 'bubble.left.and.bubble.right', label: 'Chat as yourself' },
+  { icon: 'person.2', label: 'Your followed channels' },
+  { icon: 'bubble.left.and.bubble.right', label: 'Chat' },
   { icon: 'face.smiling', label: 'Emotes from 7TV, BTTV and FFZ' },
 ] satisfies { icon: SymbolViewProps['name']; label: string }[];
 
@@ -62,7 +62,7 @@ export function AuthSheetScreen() {
             Sign in with Twitch
           </Text>
           <Text type='subhead' color='gray.textLow' align='center'>
-            See the channels you follow and chat as yourself.
+            See the channels you follow and get involved with chat
           </Text>
         </View>
 
@@ -116,8 +116,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     gap: theme.space28,
     maxWidth: 520,
-    // Clears the sheet's rounded bottom corners, which are wider than the
-    // home indicator inset.
     paddingBottom: theme.space36,
     paddingHorizontal: theme.space20,
     paddingTop: theme.space8,

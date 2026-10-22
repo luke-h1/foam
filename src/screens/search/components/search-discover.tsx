@@ -12,7 +12,7 @@ import { router } from 'expo-router';
 
 import { Avatar } from '@app/components/avatar/avatar';
 import { Button } from '@app/components/button/button';
-import { MemoizedCategoryCard } from '@app/components/category-card/category-card';
+import { CategoryCard } from '@app/components/category-card/category-card';
 import { SectionHeader } from '@app/components/section-header/section-header';
 import { Skeleton } from '@app/components/ui/skeleton/skeleton';
 import { Text } from '@app/components/ui/text/text';
@@ -80,12 +80,6 @@ function RailSkeleton({ cellStyle, mediaStyle }: RailSkeletonProps) {
   );
 }
 
-/**
- * The search landing below recent searches: who is live now and the top
- * categories, both from the same queries the Top tab already caches. A rail
- * shows a skeleton only while its first page loads. A rail that fails or
- * comes back empty is left out rather than shown as an error.
- */
 export function SearchDiscover() {
   const streamsQuery = useInfiniteQuery(topStreamsInfiniteQueryOptions());
   const categoriesQuery = useInfiniteQuery(topCategoriesInfiniteQueryOptions());
@@ -142,7 +136,7 @@ export function SearchDiscover() {
               {/* eslint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- capped at RAIL_LENGTH items */}
               {categories.map(category => (
                 <View key={category.id} style={styles.tile}>
-                  <MemoizedCategoryCard category={category} />
+                  <CategoryCard category={category} />
                 </View>
               ))}
             </ScrollView>
@@ -154,9 +148,6 @@ export function SearchDiscover() {
 }
 
 const styles = StyleSheet.create({
-  /**
-   * A thin live ring: it says "live" without a badge on every avatar.
-   */
   avatarRing: {
     borderColor: theme.color.live.dark,
     borderRadius: theme.radius.full,

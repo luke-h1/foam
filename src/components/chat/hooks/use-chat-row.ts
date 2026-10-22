@@ -83,7 +83,6 @@ export function useChatRow<
   const normalisedCurrentUsername =
     currentUsernameNormalized ?? normaliseChatUsername(currentUsername);
 
-  // Identity-stable so the memoized span renderers can bail out.
   const effectiveHighlightedUserSet = useMemo(
     () =>
       highlightedUserSet ??

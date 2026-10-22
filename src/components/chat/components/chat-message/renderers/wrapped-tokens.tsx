@@ -94,7 +94,7 @@ export function WrappedTokens({
     if (token.type === 'text') {
       const content = getMessageTokenText(token);
 
-      // Neighbouring text tokens render as one Text node, anchored at the
+      // Neighboring text tokens render as one Text node, anchored at the
       // index of the run's first token.
       currentTextIndex = currentTextPart === null ? index : currentTextIndex;
       currentTextPart = appendToTextRun(currentTextPart, content);

@@ -1,5 +1,20 @@
 {
   "cSpell.words": ["BUGSNAG", "RNREPO", "rnrepo"],
+
+  // Foam uses oxlint + oxfmt. Keep ESLint off so it does not fight oxc.
+  "eslint.enable": false,
+
   "editor.defaultFormatter": "oxc.oxc-vscode",
-  "editor.formatOnSave": true
+  "editor.formatOnSave": true,
+  // oxfmt should rewrite the whole file, not only the changed lines.
+  "editor.formatOnSaveMode": "file",
+  "editor.codeActionsOnSave": {
+    // Same role as source.fixAll.eslint: apply safe oxlint fixes on save.
+    "source.fixAll.oxc": "explicit"
+  },
+
+  // Start the language server only when this folder has an oxlint config.
+  "oxc.requireConfig": true,
+  "oxc.enable.oxlint": true,
+  "oxc.enable.oxfmt": true
 }

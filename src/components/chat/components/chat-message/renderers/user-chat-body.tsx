@@ -90,9 +90,7 @@ export function UserChatBody({
 
   /**
    * A literal, not object rest, so the React Compiler can cache it. It leaves
-   * out `message` (every line names its own) and `moderationNotice`: the
-   * stacked line draws one strike over the body, so its tokens and the reply
-   * header render unstruck.
+   * out `message` (every line names its own) and `moderationNotice`
    */
   const rendererArgs: Omit<
     ChatTokenRenderProps,

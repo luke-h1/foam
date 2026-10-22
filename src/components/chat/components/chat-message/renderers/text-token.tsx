@@ -12,10 +12,6 @@ interface TextTokenProps {
   token: MessageToken<'text' | 'link'>;
 }
 
-/**
- * A run of message text. A link gets the link style; everything else gets the
- * body style and the sender's colour. An all-whitespace run renders nothing.
- */
 export function TextToken({
   isModerated,
   textColor,

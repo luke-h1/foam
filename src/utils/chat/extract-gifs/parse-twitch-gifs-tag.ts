@@ -13,6 +13,12 @@ export interface TwitchGifSpan {
 const SURROGATE_PAIR_REGEX = /[\uD800-\uDFFF]/;
 
 /**
+ * One `gifs` entry: `start-end|gif_id|url`. The URL keeps any later `|`
+ * characters; only the first two bars are delimiters.
+ */
+const TWITCH_GIF_ENTRY_REGEX = /^(\d+)-(\d+)\|([^|]*)\|(.+)$/;
+
+/**
  * Splits a `gifs` tag into entries without breaking on commas that sit inside
  * a URL. The next entry always starts as `,digits-digits|`.
  */
@@ -51,24 +57,16 @@ export function parseTwitchGifsTag(
   const spans: TwitchGifSpan[] = [];
 
   for (const entry of splitGifEntries(gifsTag)) {
-    const firstBar = entry.indexOf('|');
-    const secondBar = firstBar === -1 ? -1 : entry.indexOf('|', firstBar + 1);
+    const match = TWITCH_GIF_ENTRY_REGEX.exec(entry);
 
-    if (firstBar <= 0 || secondBar <= firstBar) {
+    if (!match) {
       continue;
     }
 
-    const range = entry.slice(0, firstBar);
-    const dash = range.indexOf('-');
-
-    if (dash <= 0) {
-      continue;
-    }
-
-    const start = Number(range.slice(0, dash));
-    const end = Number(range.slice(dash + 1));
-    const gifId = entry.slice(firstBar + 1, secondBar).trim();
-    const url = entry.slice(secondBar + 1).trim();
+    const start = Number(match[1]);
+    const end = Number(match[2]);
+    const gifId = match[3]?.trim() ?? '';
+    const url = match[4]?.trim() ?? '';
 
     if (
       !Number.isFinite(start) ||

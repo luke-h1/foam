@@ -75,7 +75,7 @@ function pushRouteOnce(href: HrefObject) {
   router.push(href);
 }
 
-function LiveStreamCard({
+function LiveStreamCardComponent({
   stream,
   layout = 'compact',
   showCategory = true,
@@ -89,8 +89,6 @@ function LiveStreamCard({
     .replace('{width}', thumbnailSize.width)
     .replace('{height}', thumbnailSize.height);
 
-  // useStreamProfilePictures batches media-layout avatars at the list level,
-  // so the screen makes one /users request instead of one per card.
   const profilePicture = stream.profilePicture;
 
   const handleStreamPressIn = useCallback(() => {
@@ -165,8 +163,6 @@ function LiveStreamCard({
   const viewerLabel = formatViewCountCompact(stream.viewer_count);
 
   if (layout === 'media') {
-    // Only the media layout renders the language, so keep the tag scan out of
-    // the (default) compact path.
     const languageLabel =
       stream.tags?.find(tag => LANGUAGE_VALUE_SET.has(tag.toLowerCase())) ??
       LANGUAGE_NAMES.get(stream.language);
@@ -289,7 +285,7 @@ function LiveStreamCard({
   );
 }
 
-export const MemoizedLiveStreamCard = memo(LiveStreamCard);
+export const LiveStreamCard = memo(LiveStreamCardComponent);
 
 const styles = StyleSheet.create({
   row: {

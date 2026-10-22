@@ -87,7 +87,6 @@ const createQueryClient = () => {
 
   return new QueryClient({
     queryCache: new QueryCache({
-      // Fires once per query after retries are exhausted.
       onError: (error, query) => handleQueryError(error, query.queryKey),
     }),
     mutationCache: new MutationCache({
