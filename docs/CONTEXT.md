@@ -32,11 +32,10 @@ against the previous run's cached fingerprint to decide native-vs-OTA. On a pull
 request, `detect-fp-changes.yml` compares it against the PR base and comments
 whether the PR is OTA compatible.
 
-**Release version** — the `VERSION` a deploy ships under. `getReleaseVersion`
-in `otaOrNativeDeployDecision.ts` bumps the patch for a native build on `main`
-when the variant already has a tag for the current version. The release job
-commits the bump. `fingerprint.config.js` skips the version, so a bump never
-changes the fingerprint.
+**Release version** — the `VERSION` a deploy ships under. Bump it by hand in
+`app.config.ts` before a native build. `deploy-ota-or-native` reads it for the
+release tag, Sentry release, and changelog. `fingerprint.config.js` skips the
+version, so a bump never changes the fingerprint.
 
 **Critical OTA index** — a monotonic counter bumped when an OTA is marked critical
 (`[critical-ota]` commit tag or the `critical_update` input); the app uses it to

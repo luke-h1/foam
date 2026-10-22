@@ -115,42 +115,6 @@ export function readAppVersion(appConfig: string): string {
   return version;
 }
 
-export function writeAppVersion(appConfig: string, version: string): string {
-  return appConfig.replace(VERSION_LINE, `const VERSION = '${version}';`);
-}
-
-interface GetReleaseVersionOptions {
-  version: string;
-  variant: string;
-  deployType: DeployType;
-  isMainBranch: boolean;
-  tags: string[];
-}
-
-/**
- * A native build needs a version the stores have not seen yet. Bump the patch
- * when this variant already has a release tag for the current version. An OTA
- * update keeps the version of the build it targets. Only `main` bumps, because
- * only `main` gets the bump committed back.
- */
-export function getReleaseVersion({
-  version,
-  variant,
-  deployType,
-  isMainBranch,
-  tags,
-}: GetReleaseVersionOptions): string {
-  const isReleased = tags.includes(appendVariant(version, variant));
-
-  if (deployType === 'ota' || !isMainBranch || !isReleased) {
-    return version;
-  }
-
-  const [major, minor, patch] = version.split('.');
-
-  return `${major}.${minor}.${Number(patch) + 1}`;
-}
-
 export function parsePublishedUpdateJson(updateJson: string) {
   let updates: PublishedUpdate[] = [];
 

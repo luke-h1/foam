@@ -531,17 +531,14 @@ flowchart TD
   T --> D
   D -->|fingerprint changed or force build| B[local EAS build + submit selected variant]
   D -->|fingerprint unchanged or force OTA| U[eas update selected channel]
-  B --> R[commit version bump, tag and changelog]
+  B --> R[tag and changelog]
   U --> R
 ```
 
-A native build on `main` needs a version the stores have not seen. When
-`VERSION` in `app.config.ts` already has a release tag for the variant (`1.0.12`
-for production, `1.0.12-internal` for internal), `detect-changes` bumps the
-patch. The build uses the new version, and the release job commits
-`chore(release): 1.0.13` to `main` before it tags. OTA updates and deploys from
-other branches keep the current version. To ship a minor or major version, set
-`VERSION` by hand: an untagged version is used as it is.
+Bump `VERSION` in [`app.config.ts`](app.config.ts) by hand before a native
+build. The deploy workflow reads that value for the release tag, Sentry
+release, and changelog. OTA updates keep the same version as the build they
+target.
 
 The native-vs-OTA decision stores fingerprints in a private S3 bucket so the
 same cache is available to GitHub Actions and local deploy scripts (also to avoid recent reliability issues with GHA). Configure
@@ -711,7 +708,7 @@ You can inspect build history on the [EAS Builds dashboard](https://expo.dev/acc
 
 ## Versioning strategy
 
-- **Marketing / release tag version** — `VERSION` in [`app.config.ts`](app.config.ts) is read by `deploy-ota-or-native` for native release tags and changelog flow.
+- **Marketing / release tag version** — bump `VERSION` in [`app.config.ts`](app.config.ts) by hand before a native release. `deploy-ota-or-native` reads it for tags and the changelog.
 - **Store build numbers** — [`eas.json`](eas.json) sets `"appVersionSource": "remote"` so compatible native version fields are managed on Expo’s side for production builds (see [EAS app version](https://docs.expo.dev/build-reference/app-versions/)).
 
 ## Store assets (fastlane submodule)

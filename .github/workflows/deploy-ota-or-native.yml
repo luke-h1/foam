@@ -89,7 +89,6 @@ jobs:
       android-fingerprint: ${{ steps.fingerprint.outputs.android }}
       deploy-type: ${{ steps.decide.outputs.deploy-type }}
       version: ${{ steps.version.outputs.version }}
-      bumped: ${{ steps.version.outputs.bumped }}
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -157,15 +156,9 @@ jobs:
         env:
           STEPS_COMPARE_OUTPUTS_CHANGED: ${{ steps.compare.outputs.changed }}
 
-      - name: 📌 Resolve app version
+      - name: 📌 Read app version
         id: version
-        run: >
-          bunx tsx scripts/workflows/deploy-ota-or-native.ts release-version
-          --variant "${{ inputs.variant || 'production' }}"
-          --deploy-type "${STEPS_DECIDE_OUTPUTS_DEPLOY_TYPE}"
-          --branch "${GITHUB_REF_NAME}"
-        env:
-          STEPS_DECIDE_OUTPUTS_DEPLOY_TYPE: ${{ steps.decide.outputs.deploy-type }}
+        run: bunx tsx scripts/workflows/deploy-ota-or-native.ts release-version
 
       - name: 📊 Summary
         run: |
@@ -256,11 +249,6 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
           packager: bun
-
-      - name: 📌 Set app version
-        run: bunx tsx scripts/workflows/deploy-ota-or-native.ts write-version --version "${VERSION}"
-        env:
-          VERSION: ${{ needs['detect-changes'].outputs.version }}
 
       - name: 🔨 Build & Submit
         uses: $/.github/actions/native-build-submit
@@ -424,24 +412,6 @@ jobs:
 
       - name: 🥟 Setup Bun and install dependencies
         uses: $/.github/actions/setup-bun-install
-
-      - name: 📌 Commit the version bump
-        if: needs['detect-changes'].outputs.bumped == 'true'
-        run: |
-          set -euo pipefail
-
-          bunx tsx scripts/workflows/deploy-ota-or-native.ts write-version --version "${VERSION}"
-
-          git config user.name "luke-h1"
-          git config user.email "55030296+luke-h1@users.noreply.github.com"
-          git add app.config.ts
-          git commit -m "chore(release): ${VERSION}"
-          git pull --rebase
-          AUTH_HEADER="$(printf 'luke-h1:%s' "$GITHUB_TOKEN" | base64 | tr -d '\n')"
-          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${AUTH_HEADER}" push "https://github.com/${GITHUB_REPOSITORY}.git" HEAD:main
-        env:
-          GITHUB_TOKEN: ${{ secrets.LUKE_H1_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
-          VERSION: ${{ needs['detect-changes'].outputs.version }}
 
       - name: 🏷️ Determine release tag
         id: release_tag
