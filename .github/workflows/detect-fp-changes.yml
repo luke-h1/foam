@@ -112,7 +112,7 @@ jobs:
               echo ""
               echo "This PR changes the native fingerprint for ${VARIANTS%, }. It cannot ship as an OTA update."
               echo ""
-              echo "The deploy workflow picks a native build for it. If the current \`VERSION\` in \`app.config.ts\` already has a release tag, the workflow bumps the patch version and commits it to \`main\`."
+              echo "The deploy workflow picks a native build for it. Bump \`VERSION\` in \`app.config.ts\` by hand before merging if the current version already has a release tag."
             fi
             echo ""
             echo "<details>"

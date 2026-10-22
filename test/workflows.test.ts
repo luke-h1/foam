@@ -34,10 +34,8 @@ import {
   getFinalReleaseTag,
   getFingerprintCachePrefix,
   getPreliminaryReleaseTag,
-  getReleaseVersion,
   parsePublishedUpdateJson,
   readAppVersion,
-  writeAppVersion,
 } from '../scripts/workflows/otaOrNativeDeployDecision';
 import {
   parseCurrentRolloutPercentage,
@@ -244,53 +242,6 @@ describe('otaOrNativeDeployDecision', () => {
       expect(() => readAppVersion("const variant = 'production';")).toThrow(
         'Could not find',
       );
-    });
-
-    test('writes the version and leaves the rest of the file alone', () => {
-      expect(writeAppVersion(appConfig, '1.0.13')).toBe(
-        "const variant = 'production';\nconst VERSION = '1.0.13';\n",
-      );
-    });
-  });
-
-  describe('getReleaseVersion', () => {
-    const released: Parameters<typeof getReleaseVersion>[0] = {
-      version: '1.0.12',
-      variant: 'production',
-      deployType: 'build',
-      isMainBranch: true,
-      tags: ['1.0.11', '1.0.12', '1.0.12-internal'],
-    };
-
-    test('bumps the patch when a native build reuses a released version', () => {
-      expect(getReleaseVersion(released)).toBe('1.0.13');
-    });
-
-    test('keeps the version when this variant has no tag for it yet', () => {
-      expect(
-        getReleaseVersion({
-          ...released,
-          variant: 'testflight',
-        }),
-      ).toBe('1.0.12');
-    });
-
-    test('keeps the version for an OTA update', () => {
-      expect(
-        getReleaseVersion({
-          ...released,
-          deployType: 'ota',
-        }),
-      ).toBe('1.0.12');
-    });
-
-    test('keeps the version outside main', () => {
-      expect(
-        getReleaseVersion({
-          ...released,
-          isMainBranch: false,
-        }),
-      ).toBe('1.0.12');
     });
   });
 
