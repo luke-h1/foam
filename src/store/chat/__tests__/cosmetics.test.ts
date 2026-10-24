@@ -173,7 +173,7 @@ describe('syncCachedUserCosmeticsFromStore', () => {
     expect(readStoredCosmetics()).toBeNull();
   });
 
-  test('a later sync with the same binding does not write storage again', () => {
+  test('a later sync with the same binding refreshes storage expiry', () => {
     chatStore$.userBadgeIds.set({ 'ttv-1': 'badge-1' });
 
     chatStore$.badges.set({
@@ -203,9 +203,12 @@ describe('syncCachedUserCosmeticsFromStore', () => {
     jest.setSystemTime(Date.now() + 1000);
     syncCachedUserCosmeticsFromStore('stv-user-1', 'ttv-1');
 
-    expect(readStoredCosmetics()).toEqual<CachedUserCosmetics>(
-      expectedCosmetics,
-    );
+    expect(readStoredCosmetics()).toEqual<CachedUserCosmetics>({
+      badgeId: 'badge-1',
+      expiresAt: Date.now() + TWO_HOURS_MS,
+      paintId: null,
+      ttvUserId: 'ttv-1',
+    });
   });
 
   test('writes a 30m negative-cache expiry when the user has no cosmetic bindings', () => {
