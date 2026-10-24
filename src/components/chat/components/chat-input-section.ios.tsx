@@ -65,11 +65,12 @@ export const ChatInputSection = memo(
               styles.composerShell,
               {
                 paddingBottom: insets.bottom,
-                paddingLeft:
-                  theme.space12 + (includeHorizontalSafeArea ? insets.left : 0),
-                paddingRight:
-                  theme.space12 +
-                  (includeHorizontalSafeArea ? insets.right : 0),
+                ...(includeHorizontalSafeArea
+                  ? {
+                      paddingLeft: theme.space12 + insets.left,
+                      paddingRight: theme.space12 + insets.right,
+                    }
+                  : null),
               },
               composerAnimatedStyle,
             ]}

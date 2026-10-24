@@ -41,6 +41,10 @@
         "rules": ["react-doctor/effect-needs-cleanup"]
       },
       {
+        "files": ["src/components/stream-player/stream-player.tsx"],
+        "rules": ["react-doctor/effect-needs-cleanup"]
+      },
+      {
         "files": ["src/services/twitch-chat-service.ts"],
         "rules": ["react-hooks-js/purity"]
       },

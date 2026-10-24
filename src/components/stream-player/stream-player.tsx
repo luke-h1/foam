@@ -84,8 +84,7 @@ export const StreamPlayer = memo(function StreamPlayer({
     let idleReady = false;
     let transitionReady = navigation == null;
     let sawTransitionStart = false;
-    let settleTimer: ReturnType<typeof setTimeout> | undefined;
-    let endWatchdogTimer: ReturnType<typeof setTimeout> | undefined;
+    const pendingTimers = new Set<ReturnType<typeof setTimeout>>();
 
     const tryMount = () => {
       if (!cancelled && idleReady && transitionReady) {
@@ -98,22 +97,26 @@ export const StreamPlayer = memo(function StreamPlayer({
       tryMount();
     };
 
-    const clearSettleTimer = () => {
-      if (settleTimer === undefined) {
-        return;
-      }
+    const scheduleTimer = (callback: () => void, delayMs: number) => {
+      const timer = setTimeout(() => {
+        pendingTimers.delete(timer);
 
-      clearTimeout(settleTimer);
-      settleTimer = undefined;
+        if (cancelled) {
+          return;
+        }
+
+        callback();
+      }, delayMs);
+
+      pendingTimers.add(timer);
     };
 
-    const clearEndWatchdogTimer = () => {
-      if (endWatchdogTimer === undefined) {
-        return;
+    const clearPendingTimers = () => {
+      for (const timer of pendingTimers) {
+        clearTimeout(timer);
       }
 
-      clearTimeout(endWatchdogTimer);
-      endWatchdogTimer = undefined;
+      pendingTimers.clear();
     };
 
     const idleTask = runWhenIdle(() => {
@@ -125,6 +128,7 @@ export const StreamPlayer = memo(function StreamPlayer({
       return () => {
         cancelled = true;
         idleTask.cancel();
+        clearPendingTimers();
       };
     }
 
@@ -137,10 +141,8 @@ export const StreamPlayer = memo(function StreamPlayer({
       ): () => void;
     };
 
-    settleTimer = setTimeout(() => {
-      settleTimer = undefined;
-
-      if (cancelled || sawTransitionStart) {
+    scheduleTimer(() => {
+      if (sawTransitionStart) {
         return;
       }
 
@@ -151,16 +153,9 @@ export const StreamPlayer = memo(function StreamPlayer({
       'transitionStart',
       () => {
         sawTransitionStart = true;
-        clearSettleTimer();
-        clearEndWatchdogTimer();
+        clearPendingTimers();
 
-        endWatchdogTimer = setTimeout(() => {
-          endWatchdogTimer = undefined;
-
-          if (cancelled) {
-            return;
-          }
-
+        scheduleTimer(() => {
           markTransitionReady();
         }, WEBVIEW_MOUNT_END_WATCHDOG_MS);
       },
@@ -173,7 +168,7 @@ export const StreamPlayer = memo(function StreamPlayer({
           return;
         }
 
-        clearEndWatchdogTimer();
+        clearPendingTimers();
         markTransitionReady();
       },
     );
@@ -181,8 +176,7 @@ export const StreamPlayer = memo(function StreamPlayer({
     return () => {
       cancelled = true;
       idleTask.cancel();
-      clearSettleTimer();
-      clearEndWatchdogTimer();
+      clearPendingTimers();
       unsubscribeStart();
       unsubscribeEnd();
     };

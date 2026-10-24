@@ -34,13 +34,29 @@ function resolveBodyScrollInsets({
   ScrollViewProps,
   'contentInset' | 'scrollIndicatorInsets'
 > {
-  // When automatic inset adjustment is on, keep caller left/right; otherwise add Duo/rail insets.
-  const contentLeft = usesNativeScrollView
-    ? contentInset?.left
-    : (contentInset?.left ?? 0) + left;
-  const contentRight = usesNativeScrollView
-    ? contentInset?.right
-    : (contentInset?.right ?? 0) + right;
+  const mergeContentSide = (
+    callerSide: number | undefined,
+    safeSide: number,
+  ): number | undefined => {
+    if (usesNativeScrollView) {
+      return callerSide;
+    }
+
+    if (callerSide == null && safeSide === 0) {
+      return undefined;
+    }
+
+    return (callerSide ?? 0) + safeSide;
+  };
+
+  const contentLeft = mergeContentSide(contentInset?.left, left);
+  const contentRight = mergeContentSide(contentInset?.right, right);
+  const indicatorLeft = usesNativeScrollView
+    ? scrollIndicatorInsets?.left
+    : mergeContentSide(scrollIndicatorInsets?.left, left);
+  const indicatorRight = usesNativeScrollView
+    ? scrollIndicatorInsets?.right
+    : mergeContentSide(scrollIndicatorInsets?.right, right);
   const indicatorBottom =
     paddingBottom - (process.env.EXPO_OS === 'ios' ? bottom : 0);
 
@@ -53,12 +69,8 @@ function resolveBodyScrollInsets({
     },
     scrollIndicatorInsets: {
       ...(scrollIndicatorInsets ?? {}),
-      ...(usesNativeScrollView
-        ? null
-        : {
-            left: (scrollIndicatorInsets?.left ?? 0) + left,
-            right: (scrollIndicatorInsets?.right ?? 0) + right,
-          }),
+      ...(indicatorLeft !== undefined ? { left: indicatorLeft } : null),
+      ...(indicatorRight !== undefined ? { right: indicatorRight } : null),
       bottom: indicatorBottom,
     },
   };

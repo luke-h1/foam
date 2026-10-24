@@ -2,7 +2,7 @@
 
 Read this before you edit `src/components/bottom-sheet/`, `patches/`, `package.json` `patchedDependencies` or `expo.autolinking.android.buildFromSource`. A grep makes some of these entries look unused. They are in use.
 
-## Bottom sheets: `@expo/ui` plus an unreleased iOS touch fix
+## Bottom sheets: `@expo/ui`
 
 Every sheet goes through `src/components/bottom-sheet/bottom-sheet.native.tsx`. It wraps `@expo/ui/community/bottom-sheet`, which is a SwiftUI `.sheet` on iOS and a Material 3 `ModalBottomSheet` on Android.
 

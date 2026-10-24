@@ -135,8 +135,12 @@ const SettingsSheetComponent = ({
             styles.content,
             {
               paddingBottom: bottomInset + theme.space24,
-              paddingLeft: theme.space16 + leftInset,
-              paddingRight: theme.space16 + rightInset,
+              ...(leftInset > 0 || rightInset > 0
+                ? {
+                    paddingLeft: theme.space16 + leftInset,
+                    paddingRight: theme.space16 + rightInset,
+                  }
+                : null),
             },
           ]}
           showsVerticalScrollIndicator={false}

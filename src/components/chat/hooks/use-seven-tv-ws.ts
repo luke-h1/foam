@@ -663,7 +663,13 @@ export function useSevenTvWs(
     pendingEntitlementsRef.current = [];
 
     batch(() => {
-      for (const decision of pending) {
+      for (let index = 0; index < pending.length; index += 1) {
+        const decision = pending[index];
+
+        if (!decision) {
+          continue;
+        }
+
         try {
           executeDecision(decision);
         } catch (error) {
@@ -673,6 +679,8 @@ export function useSevenTvWs(
             action: 'entitlement_flush_failed',
             provider: 'seven_tv',
           });
+          pendingEntitlementsRef.current = pending.slice(index);
+          return;
         }
       }
     });

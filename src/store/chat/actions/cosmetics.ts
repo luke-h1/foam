@@ -250,31 +250,11 @@ const deleteCachedUserCosmetics = (sevenTvUserId: string): void => {
   );
 };
 
-function hasSameCosmeticBinding(
-  previous: CachedUserCosmetics | undefined,
-  cosmetics: CachedUserCosmetics,
-): boolean {
-  // expiresAt is Date.now() plus a TTL, so it changes on every sync.
-  return (
-    previous !== undefined &&
-    previous.badgeId === cosmetics.badgeId &&
-    previous.paintId === cosmetics.paintId &&
-    previous.ttvUserId === cosmetics.ttvUserId
-  );
-}
-
 function setCachedUserCosmetics(
   sevenTvUserId: string,
   cosmetics: CachedUserCosmetics,
 ) {
-  const previous = sessionCosmeticsCache.get(sevenTvUserId);
-  const unchanged = hasSameCosmeticBinding(previous, cosmetics);
-
   cacheSessionCosmetics(sevenTvUserId, cosmetics);
-
-  if (unchanged) {
-    return;
-  }
 
   storageService.set(
     getUserCosmeticsStorageKey(sevenTvUserId),

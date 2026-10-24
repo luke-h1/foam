@@ -10,8 +10,8 @@ Four packages ship patched via bun `patchedDependencies`:
   (see `PERF_REPORT.md`), plus persist coalescing.
 - `@legendapp/list@3.3.3` - chat-list fixes on the v3 line.
 - `@expo/ui@58.0.22` - Android `SegmentedButton` `icon = {}` so the checkmark
-  does not push the label off centre. The old iOS hosted-Pressable touch hunk
-  is not in this patch; track upstream expo/expo#48259 if taps regress.
+  does not push the label off centre. iOS touch routing is upstream in SDK 58;
+  track expo/expo#48259 if taps regress.
 
 We patch rather than fork or replace:
 

@@ -180,7 +180,10 @@ class TwitchWsService {
         return;
       }
 
-      TwitchWsService.isReconnecting = false;
+      if (TwitchWsService.isReconnecting) {
+        return;
+      }
+
       TwitchWsService.attemptReconnect();
     };
   }

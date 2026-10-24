@@ -2,20 +2,35 @@
 
 if (__DEV__ && !process.env.EXPO_PUBLIC_REACT_PERF_TRACKS) {
   require('react-native/Libraries/Core/setUpPerformance');
+  const noopMeasure = function measure() {};
   // eslint-disable-next-line no-console
-  console.timeStamp = function timeStamp() {};
-  try {
-    Object.defineProperty(globalThis.performance, 'measure', {
-      configurable: true,
-      value: function measure() {},
-    });
-    Object.defineProperty(globalThis.performance, 'clearMeasures', {
-      configurable: true,
-      value: function clearMeasures() {},
-    });
-  } catch (error) {
-    void error;
-  }
+  console.timeStamp = noopMeasure;
+
+  const defineNoopMeasure = target => {
+    if (!target) {
+      return;
+    }
+
+    try {
+      Object.defineProperty(target, 'measure', {
+        configurable: true,
+        value: noopMeasure,
+      });
+      Object.defineProperty(target, 'clearMeasures', {
+        configurable: true,
+        value: noopMeasure,
+      });
+    } catch (error) {
+      void error;
+    }
+  };
+
+  defineNoopMeasure(globalThis.performance);
+  defineNoopMeasure(
+    globalThis.performance
+      ? Object.getPrototypeOf(globalThis.performance)
+      : null,
+  );
 }
 
 // Bound expo-image's in-memory decoded cache. iOS only: `configureCache` is
