@@ -2,9 +2,65 @@
 
 ## 1.0.13 (Production)
 
+### ♻️ Refactor
+
+- **app:** Remove dead code, comment noise and AI prose ([#931](https://github.com/lhowsam/foam/issues/931))
+
+### ✨ Features
+
+- **ui:** Native press feedback, layout menu and realistic tests ([#933](https://github.com/lhowsam/foam/issues/933))
+- **chat:** Render Twitch chat GIFs (tenor, giphy) ([#955](https://github.com/lhowsam/foam/issues/955))
+- **ui:** Swipe between Top streams and categories ([#962](https://github.com/lhowsam/foam/issues/962))
+
 ### 🐛 Bug Fixes
 
+- **ci:** Clear git fsmonitor socket before local EAS builds ([#943](https://github.com/lhowsam/foam/issues/943))
+- **ci:** Write Play Store service account before Android submit ([#944](https://github.com/lhowsam/foam/issues/944))
+- **services:** Guard against undefined data field in getClip ([#945](https://github.com/lhowsam/foam/issues/945))
+- **ci:** Use 1Password item UUID for playstore JSON ([#950](https://github.com/lhowsam/foam/issues/950))
+- **release:** Submit production Android builds to the internal track ([#951](https://github.com/lhowsam/foam/issues/951))
+- **perf:** Argent chat suite + leak-gate memory fixes ([#957](https://github.com/lhowsam/foam/issues/957))
+- **app:** Tighten tsc and fix blank stream-card taps ([#959](https://github.com/lhowsam/foam/issues/959))
+- **app:** Scroll FlashList tabs to top via scrollToIndex ([#961](https://github.com/lhowsam/foam/issues/961))
+- **app:** Defer keyboard preload off the boot path ([#963](https://github.com/lhowsam/foam/issues/963))
+- **app:** Fix segment control not in safe area ([#965](https://github.com/lhowsam/foam/issues/965))
+- **app:** Show iOS search bar on cold Search tab open ([#966](https://github.com/lhowsam/foam/issues/966))
 - **release:** Stop auto-bumping VERSION on native deploys ([#967](https://github.com/lhowsam/foam/issues/967))
+
+### 👷 CI/CD
+
+- **ci:** Run the lint checks as parallel steps ([#934](https://github.com/lhowsam/foam/issues/934))
+
+### 📚 Documentation
+
+- Fix Android internal testing Play Store URL ([#952](https://github.com/lhowsam/foam/issues/952))
+
+### 🔧 Miscellaneous Tasks
+
+- **infrastructure:** Bump actions/download-artifact from 8.0.1 to 8.0.2 ([#938](https://github.com/lhowsam/foam/issues/938))
+- **infrastructure:** Bump millionco/react-doctor from 2.2.9 to 2.3.1 ([#937](https://github.com/lhowsam/foam/issues/937))
+- **infrastructure:** Bump actions/upload-artifact from 7.0.1 to 7.0.2 ([#935](https://github.com/lhowsam/foam/issues/935))
+- **infrastructure:** Bump openai/codex-action from 1.12 to 1.13 ([#936](https://github.com/lhowsam/foam/issues/936))
+- **ci:** Temporary playstore 1Password field debug ([#946](https://github.com/lhowsam/foam/issues/946))
+- **ci:** Probe playstore 1Password refs ([#947](https://github.com/lhowsam/foam/issues/947))
+- **ci:** Fix playstore op probe ([#948](https://github.com/lhowsam/foam/issues/948))
+- **ci:** Probe playstore refs ([#949](https://github.com/lhowsam/foam/issues/949))
+- **devtools:** Add expo-device-hub ([#953](https://github.com/lhowsam/foam/issues/953))
+- **app:** Alphabetize offline list ([#956](https://github.com/lhowsam/foam/issues/956))
+- **tooling:** Add @nkzw/oxlint-config ([#960](https://github.com/lhowsam/foam/issues/960))
+- **app:** Release 1.0.14
+
+## 1.0.13 (Internal)
+
+### 📝 Other Changes
+
+- Expo SDK 58 and iPhone Duo ([#971](https://github.com/lhowsam/foam/issues/971))
+
+### 🔧 Miscellaneous Tasks
+
+- **infrastructure:** Bump actions/setup-java from 6.0.1 to 6.1.0 ([#970](https://github.com/lhowsam/foam/issues/970))
+- **infrastructure:** Bump zizmorcore/zizmor-action from 0.6.4 to 0.7.1 ([#969](https://github.com/lhowsam/foam/issues/969))
+- **infrastructure:** Bump millionco/react-doctor from 2.3.1 to 2.4.0 ([#968](https://github.com/lhowsam/foam/issues/968))
 
 ## 1.0.16 (Production)
 
