@@ -325,6 +325,8 @@ function useChatLivenessWatchdog({
   shouldConnect,
   verifyChatLivenessRef,
 }: UseChatLivenessWatchdogOptions): void {
+  const readyStateRef = useSyncRef(readyState);
+
   useEffect(() => {
     if (!shouldConnect) {
       return;
@@ -332,7 +334,7 @@ function useChatLivenessWatchdog({
 
     const interval = setInterval(() => {
       const action = getHeartbeatAction({
-        isOpen: readyState === ReadyState.OPEN,
+        isOpen: readyStateRef.current === ReadyState.OPEN,
         awaitingPong: awaitingPongRef.current,
         msSinceProbeSent: awaitingPongRef.current
           ? Date.now() - probeSentAtRef.current
@@ -373,7 +375,7 @@ function useChatLivenessWatchdog({
     getWebSocketRef,
     lastActivityAtRef,
     probeSentAtRef,
-    readyState,
+    readyStateRef,
     shouldConnect,
     verifyChatLivenessRef,
   ]);

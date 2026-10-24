@@ -1,5 +1,5 @@
-import { AppState, InteractionManager, Platform } from 'react-native';
-import type { PropsWithChildren } from 'react';
+import { type PropsWithChildren, useEffect } from 'react';
+import { AppState, Platform } from 'react-native';
 
 import {
   focusManager,
@@ -10,6 +10,7 @@ import { fetch } from 'expo/fetch';
 import { z } from 'zod';
 
 import { subscribeToAppStateTransitions } from '@app/utils/app-state/app-state-transitions';
+import { runWhenIdle } from '@app/utils/run-when-idle';
 
 import { queryClient } from './query-client';
 
@@ -50,65 +51,105 @@ function checkIsOnlineIfNeeded() {
   });
 }
 
-// Only poll connectivity while the app is foregrounded. A lifetime interval
-// keeps waking the JS thread in the background for work the guard skips.
-let connectivityPollInterval: ReturnType<typeof setInterval> | undefined;
-
-function startConnectivityPolling() {
-  if (connectivityPollInterval) {
-    return;
-  }
-
-  connectivityPollInterval = setInterval(() => {
-    if (!onlineManager.isOnline()) {
-      checkIsOnlineIfNeeded();
-    }
-  }, 2000);
-}
-
-function stopConnectivityPolling() {
-  if (connectivityPollInterval) {
-    clearInterval(connectivityPollInterval);
-    connectivityPollInterval = undefined;
-  }
-}
-
-// Armed after boot interactions settle - a module-scope start would poll at 2 Hz through startup; the AppState subscription and reconcile fallback cover earlier transitions.
-InteractionManager.runAfterInteractions(() => {
-  if (AppState.currentState === 'active') {
-    startConnectivityPolling();
-  }
-});
-
-subscribeToAppStateTransitions(({ current }) => {
-  if (current === 'active') {
-    startConnectivityPolling();
-  } else {
-    stopConnectivityPolling();
-  }
-});
-
-// Some Android OEMs occasionally drop AppState 'change' events, which would stop polling forever. Both start/stop are idempotent, so reconcile against the actual state.
+const CONNECTIVITY_POLL_BASE_MS = 2000;
+const CONNECTIVITY_POLL_MAX_MS = 30_000;
 const APP_STATE_RECONCILE_INTERVAL_MS = 15_000;
 
-// On globalThis so Fast Refresh re-evaluation can't leak a second interval.
-declare global {
-  var __foamAppStateReconcileInterval:
-    | ReturnType<typeof setInterval>
-    | undefined;
-}
+function useConnectivityWatch(): void {
+  useEffect(() => {
+    let polling = false;
+    let pollTimer: ReturnType<typeof setTimeout> | undefined;
+    let delayMs = CONNECTIVITY_POLL_BASE_MS;
 
-if (globalThis.__foamAppStateReconcileInterval) {
-  clearInterval(globalThis.__foamAppStateReconcileInterval);
-}
+    const clearPollTimer = () => {
+      if (!pollTimer) {
+        return;
+      }
 
-globalThis.__foamAppStateReconcileInterval = setInterval(() => {
-  if (AppState.currentState === 'active') {
-    startConnectivityPolling();
-  } else {
-    stopConnectivityPolling();
-  }
-}, APP_STATE_RECONCILE_INTERVAL_MS);
+      clearTimeout(pollTimer);
+      pollTimer = undefined;
+    };
+
+    const schedulePoll = () => {
+      if (!polling || pollTimer || onlineManager.isOnline()) {
+        return;
+      }
+
+      pollTimer = setTimeout(() => {
+        pollTimer = undefined;
+
+        if (!polling || onlineManager.isOnline()) {
+          delayMs = CONNECTIVITY_POLL_BASE_MS;
+          return;
+        }
+
+        checkIsOnlineIfNeeded();
+        delayMs = Math.min(delayMs * 2, CONNECTIVITY_POLL_MAX_MS);
+        schedulePoll();
+      }, delayMs);
+    };
+
+    const startPolling = () => {
+      if (polling) {
+        return;
+      }
+
+      polling = true;
+      schedulePoll();
+    };
+
+    const stopPolling = () => {
+      polling = false;
+      clearPollTimer();
+      delayMs = CONNECTIVITY_POLL_BASE_MS;
+    };
+
+    const syncToAppState = () => {
+      if (AppState.currentState === 'active') {
+        startPolling();
+        return;
+      }
+
+      stopPolling();
+    };
+
+    const unsubscribeOnline = onlineManager.subscribe(isOnline => {
+      if (isOnline) {
+        delayMs = CONNECTIVITY_POLL_BASE_MS;
+        clearPollTimer();
+        return;
+      }
+
+      schedulePoll();
+    });
+
+    const unsubscribeAppState = subscribeToAppStateTransitions(
+      ({ current }) => {
+        if (current === 'active') {
+          startPolling();
+          return;
+        }
+
+        stopPolling();
+      },
+    );
+
+    const idleTask = runWhenIdle(syncToAppState);
+
+    const reconcileTimer = setInterval(
+      syncToAppState,
+      APP_STATE_RECONCILE_INTERVAL_MS,
+    );
+
+    return () => {
+      idleTask.cancel();
+      unsubscribeOnline();
+      unsubscribeAppState();
+      clearInterval(reconcileTimer);
+      stopPolling();
+    };
+  }, []);
+}
 
 // @ts-expect-error - not all codepaths return a value
 focusManager.setEventListener(onFocus => {
@@ -138,6 +179,8 @@ focusManager.setEventListener(onFocus => {
 });
 
 export function QueryProvider({ children }: PropsWithChildren) {
+  useConnectivityWatch();
+
   return (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );

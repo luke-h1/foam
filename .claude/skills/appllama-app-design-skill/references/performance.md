@@ -39,7 +39,7 @@ store), commit to state on submit/debounce.
 
 ## Startup / TTI
 
-- Measure only cold starts, with `react-native-performance` markers.
+- Measure only cold starts, with the platform performance API.
 - Native navigation (`react-native-screens`) enabled.
 - Defer everything not needed for first paint: heavy SDK init, analytics,
   below-the-fold data.

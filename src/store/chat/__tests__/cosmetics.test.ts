@@ -173,6 +173,44 @@ describe('syncCachedUserCosmeticsFromStore', () => {
     expect(readStoredCosmetics()).toBeNull();
   });
 
+  test('a later sync with the same binding refreshes storage expiry', () => {
+    chatStore$.userBadgeIds.set({ 'ttv-1': 'badge-1' });
+
+    chatStore$.badges.set({
+      'badge-1': {
+        id: 'badge-1',
+        url: 'https://cdn.7tv.app/badge/badge-1/4x.webp',
+        type: '7TV Badge',
+        title: 'Supporter',
+        set: 'badge-1',
+        provider: '7tv',
+      },
+    });
+
+    const expectedCosmetics: CachedUserCosmetics = {
+      badgeId: 'badge-1',
+      expiresAt: Date.now() + TWO_HOURS_MS,
+      paintId: null,
+      ttvUserId: 'ttv-1',
+    };
+
+    syncCachedUserCosmeticsFromStore('stv-user-1', 'ttv-1');
+
+    expect(readStoredCosmetics()).toEqual<CachedUserCosmetics>(
+      expectedCosmetics,
+    );
+
+    jest.setSystemTime(Date.now() + 1000);
+    syncCachedUserCosmeticsFromStore('stv-user-1', 'ttv-1');
+
+    expect(readStoredCosmetics()).toEqual<CachedUserCosmetics>({
+      badgeId: 'badge-1',
+      expiresAt: Date.now() + TWO_HOURS_MS,
+      paintId: null,
+      ttvUserId: 'ttv-1',
+    });
+  });
+
   test('writes a 30m negative-cache expiry when the user has no cosmetic bindings', () => {
     syncCachedUserCosmeticsFromStore('stv-user-1', 'ttv-1');
 

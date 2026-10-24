@@ -1,5 +1,4 @@
 import { type PropsWithChildren, useEffect, useRef, useState } from 'react';
-import { InteractionManager } from 'react-native';
 
 import { usePathname } from 'expo-router';
 
@@ -8,6 +7,7 @@ import {
   setAnalyticsEnabled,
 } from '@app/hooks/firebase/analytics';
 import { usePreference } from '@app/store/preference-store';
+import { runWhenIdle } from '@app/utils/run-when-idle';
 
 function ScreenAnalytics() {
   const pathname = usePathname();
@@ -37,7 +37,7 @@ export function AnalyticsProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     let cancelled = false;
 
-    void InteractionManager.runAfterInteractions(() => {
+    void runWhenIdle(() => {
       if (cancelled) {
         return;
       }

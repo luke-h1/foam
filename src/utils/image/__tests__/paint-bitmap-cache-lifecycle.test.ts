@@ -4,6 +4,7 @@ import {
   type DisposablePaintBitmaps,
   getCachedPaintBitmaps,
   MAX_CACHED_PAINT_BITMAPS,
+  MAX_PAINT_BITMAP_BYTES,
   releasePaintBitmaps,
   retainPaintBitmaps,
 } from '@app/utils/image/paint-bitmap-cache-lifecycle';
@@ -284,5 +285,18 @@ describe('paintBitmapCacheLifecycle', () => {
       strokeImage: 1,
       bakedLayers: [],
     });
+  });
+
+  test('evicts an older entry when the next one would pass the byte budget', () => {
+    const first = createEntry();
+    const second = createEntry();
+
+    cachePaintBitmaps('first', first, MAX_PAINT_BITMAP_BYTES);
+    cachePaintBitmaps('second', second, MAX_PAINT_BITMAP_BYTES);
+    flushFrames();
+
+    expect(getCachedPaintBitmaps('first')).toBeUndefined();
+    expect(getCachedPaintBitmaps('second')).toBe(second);
+    expect(disposeCallCounts(first).staticImage).toBe(1);
   });
 });

@@ -8,7 +8,7 @@ import { OtherInfoCard } from './components/other-info-card';
 
 export function LicensesScreen() {
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
         <Text type='largeTitle'>Licenses</Text>
         <Text type='subhead' color='gray.textLow'>

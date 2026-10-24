@@ -1,4 +1,4 @@
-import { InteractionManager, Linking } from 'react-native';
+import { Linking } from 'react-native';
 
 import { act, render, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
@@ -12,26 +12,21 @@ import {
   isDeepLinkAuthInProgress,
 } from '@app/navigators/deep-link-auth-state';
 import { logger } from '@app/utils/logger';
+import * as RunWhenIdle from '@app/utils/run-when-idle';
 
 import { RouterEffects } from '../router-effects';
 
 const mockedRouter = jest.mocked(router);
 
-jest
-  .spyOn(InteractionManager, 'runAfterInteractions')
-  .mockImplementation(task => {
-    const timer = setTimeout(() => {
-      if (task instanceof Function) {
-        task();
-      }
-    }, 0);
+jest.spyOn(RunWhenIdle, 'runWhenIdle').mockImplementation(task => {
+  const timer = setTimeout(() => {
+    task();
+  }, 0);
 
-    return {
-      then: () => Promise.resolve(),
-      done: () => undefined,
-      cancel: () => clearTimeout(timer),
-    };
-  });
+  return {
+    cancel: () => clearTimeout(timer),
+  };
+});
 
 jest.spyOn(logger.main, 'warn').mockImplementation(() => {});
 jest.spyOn(logger.auth, 'info').mockImplementation(() => {});

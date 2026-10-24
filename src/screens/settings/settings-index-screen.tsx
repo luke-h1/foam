@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Platform, ScrollView } from 'react-native';
+import { Platform, type ScrollViewInstance } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuthContext } from '@app/context/auth-context';
@@ -21,7 +21,7 @@ export function SettingsIndexScreen() {
   const { user } = useAuthContext();
   const { config } = useRemoteConfig();
   const insets = useSafeAreaInsets();
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const { openStore, updateBundle } = useAppUpdate();
 
   const shouldShowDevTools =

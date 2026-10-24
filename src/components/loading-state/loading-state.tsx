@@ -76,15 +76,15 @@ function Spinner({ size }: { size: number }) {
 
   const arc = useMemo(() => {
     const inset = STROKE_WIDTH / 2;
-    const path = Skia.Path.Make();
+    const builder = Skia.PathBuilder.Make();
 
-    path.addArc(
+    builder.addArc(
       Skia.XYWHRect(inset, inset, size - STROKE_WIDTH, size - STROKE_WIDTH),
       0,
       ARC_SWEEP_DEGREES,
     );
 
-    return path;
+    return builder.build();
   }, [size]);
 
   return (

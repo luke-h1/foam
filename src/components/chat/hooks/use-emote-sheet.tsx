@@ -138,6 +138,7 @@ interface UseEmoteSheetOptions {
   onEmoteSelect?: (item: EmotePickerItem) => void;
   emoteListRef: React.RefObject<LegendListRef | null>;
   layoutWidth: number;
+  horizontalInset: number;
 }
 
 export function useEmoteSheet({
@@ -146,6 +147,7 @@ export function useEmoteSheet({
   onEmoteSelect,
   emoteListRef,
   layoutWidth,
+  horizontalInset,
 }: UseEmoteSheetOptions) {
   const { width: screenWidth } = useWindowDimensions();
   const sheetWidth = layoutWidth > 0 ? layoutWidth : screenWidth;
@@ -180,7 +182,7 @@ export function useEmoteSheet({
     ? sevenTvPersonalEmotes[user.id]
     : undefined;
 
-  const gridWidth = sheetWidth - 16 * 2;
+  const gridWidth = Math.max(0, sheetWidth - 16 * 2 - horizontalInset);
 
   const columns = Math.max(
     4,

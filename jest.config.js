@@ -18,7 +18,7 @@ const jestConfig = {
     '^.+\\.(t|j)sx?$': 'babel-jest',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|@sentry/.*|native-base|react-native-svg|newrelic-react-native-agent|@shopify/react-native-skia)',
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|@sentry/.*|native-base|react-native-svg|newrelic-react-native-agent|@shopify/react-native-skia|standard-navigation)',
     'node_modules/.*storybook.*',
   ],
   moduleNameMapper: {
@@ -29,6 +29,9 @@ const jestConfig = {
     '\\.otf$': '<rootDir>/__mocks__/fileMock.js',
     '^@bacons/apple-colors$': '<rootDir>/__mocks__/@bacons/apple-colors.ts',
     '^react-native-legal$': '<rootDir>/__mocks__/react-native-legal.ts',
+    // expo-router's `./build/*` export maps to `build/*.js`, which misses directories.
+    '^expo-router/build/hooks$':
+      '<rootDir>/node_modules/expo-router/build/hooks/index.js',
     '^(\\./|\\.\\./)*\\.rnstorybook/storybook\\.requires(\\.(ts|tsx|js|jsx))?$':
       '<rootDir>/__mocks__/.rnstorybook/storybook.requires.tsx',
     '^(\\./|\\.\\./)*\\.rnstorybook/index(\\.(ts|tsx|js|jsx))?$':
@@ -38,7 +41,7 @@ const jestConfig = {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   verbose: process.env.CI === 'true' || process.env.JEST_VERBOSE === 'true',
-  testEnvironment: 'jsdom',
+  // Native env: jsdom's non-configurable `window` breaks @react-native/jest-preset on SDK 58.
   testMatch: [
     '<rootDir>/src/**/__tests__/**/*.(test|spec).(ts|tsx|js|jsx)',
     '<rootDir>/src/**/*.(test|spec).(ts|tsx|js|jsx)',

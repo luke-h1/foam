@@ -32,7 +32,15 @@ export function OnboardingScreen() {
 
   return (
     <View
-      style={[styles.container, { paddingTop: insets.top + theme.space24 }]}
+      style={[
+        styles.container,
+        {
+          paddingTop: insets.top + theme.space24,
+          paddingBottom: insets.bottom + theme.space44,
+          paddingLeft: insets.left + theme.space28,
+          paddingRight: insets.right + theme.space28,
+        },
+      ]}
     >
       <Animated.View
         entering={gentleSpring(FadeInUp).delay(50)}
@@ -86,8 +94,6 @@ const styles = StyleSheet.create({
     backgroundColor: theme.color.background.dark,
     flex: 1,
     justifyContent: 'space-between',
-    paddingBottom: theme.space44,
-    paddingHorizontal: theme.space28,
   },
   content: {
     alignItems: 'center',

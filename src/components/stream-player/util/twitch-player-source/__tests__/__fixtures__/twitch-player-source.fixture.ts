@@ -1,4 +1,42 @@
+import { JSDOM } from 'jsdom';
 import { createContext, runInContext } from 'node:vm';
+
+// Fixture-owned JSDOM: native Jest env has no document. Use JSDOM's Event —
+// Node's Event is skipped by dispatchEvent.
+const playerDom = new JSDOM(
+  '<!DOCTYPE html><html><head></head><body></body></html>',
+  {
+    url: 'https://player.twitch.tv/',
+  },
+);
+
+const playerDocument = playerDom.window.document;
+const playerLocalStorage = playerDom.window.localStorage;
+const PlayerMutationObserver = playerDom.window.MutationObserver;
+
+Object.defineProperty(globalThis, 'document', {
+  configurable: true,
+  writable: true,
+  value: playerDocument,
+});
+
+Object.defineProperty(globalThis, 'localStorage', {
+  configurable: true,
+  writable: true,
+  value: playerLocalStorage,
+});
+
+Object.defineProperty(globalThis, 'Event', {
+  configurable: true,
+  writable: true,
+  value: playerDom.window.Event,
+});
+
+Object.defineProperty(globalThis, 'getComputedStyle', {
+  configurable: true,
+  writable: true,
+  value: playerDom.window.getComputedStyle.bind(playerDom.window),
+});
 
 export interface PlayerBridgeMessage {
   type: string;
@@ -42,7 +80,7 @@ export function runPlayerScript(
       },
     },
     location: { hostname, search },
-    localStorage: globalThis.localStorage,
+    localStorage: playerLocalStorage,
   };
 
   window.self = window;
@@ -54,8 +92,8 @@ export function runPlayerScript(
       clearInterval,
       clearTimeout,
       Date,
-      document,
-      MutationObserver,
+      document: playerDocument,
+      MutationObserver: PlayerMutationObserver,
       setInterval,
       setTimeout,
       URLSearchParams,
@@ -67,9 +105,9 @@ export function runPlayerScript(
 }
 
 export function setPageBody(html: string): HTMLElement {
-  document.body.innerHTML = html;
+  playerDocument.body.innerHTML = html;
 
-  return document.body;
+  return playerDocument.body;
 }
 
 export async function flushMutations(): Promise<void> {
@@ -78,7 +116,7 @@ export async function flushMutations(): Promise<void> {
 }
 
 export function resetPlayerPage(): void {
-  document.head.innerHTML = '';
-  document.body.innerHTML = '';
-  globalThis.localStorage.clear();
+  playerDocument.head.innerHTML = '';
+  playerDocument.body.innerHTML = '';
+  playerLocalStorage.clear();
 }

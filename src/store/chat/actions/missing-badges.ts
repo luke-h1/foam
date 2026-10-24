@@ -1,4 +1,7 @@
 import { logger } from '@app/utils/logger';
+import { boundedSetAdd } from '@app/utils/object/bounded-set-add';
+
+const MAX_MISSING_BADGE_IDS = 500;
 
 /**
  * Tracks badge ids referenced by an entitlement before - or without - the
@@ -18,13 +21,13 @@ export const reportMissingBadge = (
   badgeId: string,
   ttvUserId?: string,
 ): void => {
-  missingBadgeIds.add(badgeId);
+  boundedSetAdd(missingBadgeIds, badgeId, MAX_MISSING_BADGE_IDS);
 
   if (loggedMissingBadgeIds.has(badgeId)) {
     return;
   }
 
-  loggedMissingBadgeIds.add(badgeId);
+  boundedSetAdd(loggedMissingBadgeIds, badgeId, MAX_MISSING_BADGE_IDS);
 
   const context: MissingBadgeLogContext = {
     name: 'seventv.badge.missing',

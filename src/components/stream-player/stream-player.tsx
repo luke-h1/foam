@@ -1,10 +1,13 @@
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { InteractionManager, StyleSheet, View } from 'react-native';
+import { memo, use, useCallback, useEffect, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
+
+import { NavigationContext } from 'expo-router/react-navigation';
 
 import { useWatchTimeTracking } from '@app/hooks/use-watch-time-tracking';
 import { usePreference } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
+import { runWhenIdle } from '@app/utils/run-when-idle';
 
 import { Image } from '../image/image';
 import { usePlayerBridge } from './hooks/use-player-bridge';
@@ -20,6 +23,9 @@ import { buildStreamSourceKey } from './util/build-stream-source-key';
 import { getStreamPlayerVisibility } from './util/get-stream-player-visibility';
 
 export type { StreamInfo, StreamPlayerProps, StreamPlayerRef } from './types';
+
+const WEBVIEW_MOUNT_SETTLE_MS = 500;
+const WEBVIEW_MOUNT_END_WATCHDOG_MS = 800;
 
 export const StreamPlayer = memo(function StreamPlayer({
   autoplay = true,
@@ -65,17 +71,116 @@ export const StreamPlayer = memo(function StreamPlayer({
   } | null>(null);
 
   /**
-   * Mount after interactions settle: a mid-transition WKWebView start can
-   * leave the AVPlayer layer detached (audio advances, picture black).
+   * Mount after the JS thread is idle and the native screen transition has
+   * finished. A mid-transition WKWebView start can leave the AVPlayer layer
+   * detached (audio advances, picture black). `runWhenIdle` alone is not
+   * enough: it does not wait for the navigator transition.
    */
+  const navigation = use(NavigationContext);
   const [canMountWebView, setCanMountWebView] = useState(false);
 
   useEffect(() => {
-    const task = InteractionManager.runAfterInteractions(() => {
-      setCanMountWebView(true);
+    let cancelled = false;
+    let idleReady = false;
+    let transitionReady = navigation == null;
+    let sawTransitionStart = false;
+    const pendingTimers = new Set<ReturnType<typeof setTimeout>>();
+
+    const tryMount = () => {
+      if (!cancelled && idleReady && transitionReady) {
+        setCanMountWebView(true);
+      }
+    };
+
+    const markTransitionReady = () => {
+      transitionReady = true;
+      tryMount();
+    };
+
+    const scheduleTimer = (callback: () => void, delayMs: number) => {
+      const timer = setTimeout(() => {
+        pendingTimers.delete(timer);
+
+        if (cancelled) {
+          return;
+        }
+
+        callback();
+      }, delayMs);
+
+      pendingTimers.add(timer);
+    };
+
+    const clearPendingTimers = () => {
+      for (const timer of pendingTimers) {
+        clearTimeout(timer);
+      }
+
+      pendingTimers.clear();
+    };
+
+    const idleTask = runWhenIdle(() => {
+      idleReady = true;
+      tryMount();
     });
-    return () => task.cancel();
-  }, []);
+
+    if (navigation == null) {
+      return () => {
+        cancelled = true;
+        idleTask.cancel();
+        clearPendingTimers();
+      };
+    }
+
+    // SAFETY: native-stack/stack emit transitionStart/End; the base EventMap does not list them.
+    const stackNavigation = navigation as typeof navigation & {
+      addListener(event: 'transitionStart', callback: () => void): () => void;
+      addListener(
+        event: 'transitionEnd',
+        callback: (event: { data?: { closing?: boolean } }) => void,
+      ): () => void;
+    };
+
+    scheduleTimer(() => {
+      if (sawTransitionStart) {
+        return;
+      }
+
+      markTransitionReady();
+    }, WEBVIEW_MOUNT_SETTLE_MS);
+
+    const unsubscribeStart = stackNavigation.addListener(
+      'transitionStart',
+      () => {
+        sawTransitionStart = true;
+        clearPendingTimers();
+
+        scheduleTimer(() => {
+          markTransitionReady();
+        }, WEBVIEW_MOUNT_END_WATCHDOG_MS);
+      },
+    );
+
+    const unsubscribeEnd = stackNavigation.addListener(
+      'transitionEnd',
+      event => {
+        if (event.data?.closing) {
+          return;
+        }
+
+        clearPendingTimers();
+        markTransitionReady();
+      },
+    );
+
+    return () => {
+      cancelled = true;
+      idleTask.cancel();
+      clearPendingTimers();
+      unsubscribeStart();
+      unsubscribeEnd();
+    };
+  }, [navigation]);
 
   const sourceKey = buildStreamSourceKey({
     autoplay,

@@ -34,4 +34,5 @@ export interface ChatInputSectionProps {
   replyTo: ReplyToData | null;
   onClearReply: () => void;
   inputRef?: RefObject<ChatComposerHandle | null>;
+  includeHorizontalSafeArea?: boolean;
 }

@@ -13,7 +13,7 @@ import { logger } from '@app/utils/logger';
  * Lines per chunk before the replay yields, so the flush timer can commit the
  * chunk while the next one parses.
  */
-const REPLAY_CHUNK_SIZE = 25;
+const REPLAY_CHUNK_SIZE = 8;
 
 const yieldToEventLoop = () =>
   new Promise<void>(resolve => {
@@ -71,6 +71,8 @@ export function useRecentChatMessages({
           abortController.signal,
           getMaxChatMessages(),
         );
+
+        await yieldToEventLoop();
 
         for (let index = 0; index < recentMessages.length; index += 1) {
           if (abortController.signal.aborted) {

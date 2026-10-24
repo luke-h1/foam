@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { InteractionManager, LogBox } from 'react-native';
+import { LogBox } from 'react-native';
 
 import * as Font from 'expo-font';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
@@ -7,6 +7,7 @@ import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import { PlayerWebViewPrewarm } from '@app/components/stream-player/player-web-view-prewarm';
 import { recordAppSession } from '@app/lib/expo-store-review';
 import { logger } from '@app/utils/logger';
+import { runWhenIdle } from '@app/utils/run-when-idle';
 
 import { RootLayoutNav } from './root-layout-nav';
 import { criticalFontMap, deferredFontMap } from './util/runtime-fonts';
@@ -51,7 +52,7 @@ export function RootLayoutShell() {
 
     didScheduleExtraFontLoad.current = true;
 
-    const task = InteractionManager.runAfterInteractions(() => {
+    const task = runWhenIdle(() => {
       void Font.loadAsync(deferredFontMap).catch(error => {
         logger.main.warn('Failed to load deferred fonts', error);
       });

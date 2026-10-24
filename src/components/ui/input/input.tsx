@@ -2,6 +2,7 @@ import {
   type StyleProp,
   StyleSheet,
   TextInput,
+  type TextInputInstance,
   type TextInputProps,
   type TextStyle,
   useColorScheme,
@@ -23,7 +24,7 @@ import {
 type InputVariant = 'outline' | 'soft' | 'subtle' | 'underline';
 
 type InputVariantConfig = { [TVariant in InputVariant]: InputColorConfig };
-export type InputRef = TextInput;
+export type InputRef = TextInputInstance;
 export type InputSelection = { start: number; end: number };
 
 const generateVariantConfig = (

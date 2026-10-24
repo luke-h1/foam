@@ -1,5 +1,10 @@
 import { useRef } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import {
+  StyleSheet,
+  TextInput,
+  type TextInputInstance,
+  View,
+} from 'react-native';
 
 import { Button } from '@app/components/button/button';
 import { SymbolView } from '@app/components/ui/icon/icon';
@@ -28,7 +33,7 @@ export function ChannelField({
   isError,
   onChangeChannel,
 }: ChannelFieldProps) {
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<TextInputInstance>(null);
 
   const handleClear = () => {
     inputRef.current?.clear();

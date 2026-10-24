@@ -28,6 +28,7 @@ export const ChatInputSection = memo(
     replyTo,
     onClearReply,
     inputRef,
+    includeHorizontalSafeArea = true,
   }: ChatInputSectionProps) => {
     const { isAuthenticated, isSending } = connection;
 
@@ -62,10 +63,15 @@ export const ChatInputSection = memo(
           <Animated.View
             style={[
               styles.composerShell,
-              // The composer sits at the very bottom of the screen; clear the
-              // home indicator. Chat.tsx cancels this while the keyboard
-              // covers that area.
-              { paddingBottom: insets.bottom },
+              {
+                paddingBottom: insets.bottom,
+                ...(includeHorizontalSafeArea
+                  ? {
+                      paddingLeft: theme.space12 + insets.left,
+                      paddingRight: theme.space12 + insets.right,
+                    }
+                  : null),
+              },
               composerAnimatedStyle,
             ]}
           >

@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useRef } from 'react';
-import { View } from 'react-native';
+import { View, type ViewInstance } from 'react-native';
 import {
   KeyboardStickyView,
   useReanimatedKeyboardAnimation,
@@ -43,6 +43,7 @@ export interface ChatProps {
   channelId: string;
   channelName: string;
   transparent?: boolean;
+  includeHorizontalSafeArea?: boolean;
   // DEV/perf only: drops the live Twitch transports so the synthetic flood is
   // the sole deterministic source; channel emote/badge sets still load so fake messages render real emotes.
   syntheticTransport?: boolean;
@@ -55,6 +56,7 @@ export const Chat = memo(
     channelId,
     transparent = false,
     syntheticTransport = false,
+    includeHorizontalSafeArea = true,
   }: ChatProps) => {
     const { user } = useAuthContext();
     const preferences = useChatRenderPreferences();
@@ -83,12 +85,14 @@ export const Chat = memo(
 
     const listRef = useRef<ChatListRef | null>(null);
     const inputShellRef = useRef<ChatInputShellHandle>(null);
-    const composerRef = useRef<View>(null);
+    const composerRef = useRef<ViewInstance>(null);
 
     const { contentInsetEndAdjustment, onComposerLayout } =
       useKeyboardChatComposerInset(
         listRef,
-        composerRef,
+        // SAFETY: legend-list types the host as Pick<View, 'measure'>; under
+        // the Strict API measure lives on ViewInstance.
+        composerRef as { current: Pick<ViewInstance, 'measure'> | null },
         insets.bottom + ESTIMATED_COMPOSER_HEIGHT,
       );
 
@@ -296,6 +300,7 @@ export const Chat = memo(
                     processMessageEmotes,
                     sendMessage,
                     user,
+                    includeHorizontalSafeArea,
                   }}
                 />
               </View>

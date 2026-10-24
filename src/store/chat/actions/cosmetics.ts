@@ -255,6 +255,7 @@ function setCachedUserCosmetics(
   cosmetics: CachedUserCosmetics,
 ) {
   cacheSessionCosmetics(sevenTvUserId, cosmetics);
+
   storageService.set(
     getUserCosmeticsStorageKey(sevenTvUserId),
     cosmetics,
@@ -514,6 +515,7 @@ export const clearUserCosmeticsCache = () => {
  */
 export const setUserPaint = (ttvUserId: string, paintId: string): void => {
   const current = chatStore$.userPaintIds.peek();
+  const previousPaintId = current[ttvUserId];
 
   if (
     !(ttvUserId in current) &&
@@ -530,7 +532,10 @@ export const setUserPaint = (ttvUserId: string, paintId: string): void => {
     chatStore$.userPaintIds[ttvUserId]?.set(paintId);
   }
 
-  scheduleUserCosmeticsSnapshotSync(ttvUserId);
+  if (previousPaintId !== paintId) {
+    scheduleUserCosmeticsSnapshotSync(ttvUserId);
+  }
+
   scheduleCosmeticsPersist('bindings');
 };
 
@@ -780,9 +785,9 @@ export const setUserBadge = (ttvUserId: string, badgeId: string): void => {
 
   if (previousBadgeId !== badgeId) {
     scheduleCosmeticBindingsBump();
+    scheduleUserCosmeticsSnapshotSync(ttvUserId);
   }
 
-  scheduleUserCosmeticsSnapshotSync(ttvUserId);
   scheduleCosmeticsPersist('bindings');
 };
 

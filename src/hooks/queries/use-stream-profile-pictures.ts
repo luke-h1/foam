@@ -40,6 +40,7 @@ export function useStreamProfilePictures(
   const { data: users } = useQuery({
     ...usersByIdsQueryOptions(missingUserIds),
     enabled: enabled && missingUserIds.length > 0,
+    gcTime: 0,
   });
 
   useEffect(() => {

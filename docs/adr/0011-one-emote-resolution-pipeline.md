@@ -1,6 +1,6 @@
 # One emote resolution pipeline; the preview predicts live chat
 
-`processEmotesWorklet` (`utils/chat/emote-processor.ts`) is the only
+`processEmotes` (`utils/chat/emote-processor.ts`) is the only
 text-to-emote resolver. The preferences preview
 (`screens/preferences/components/chat-preferences-preview.tsx`) calls it directly; `replaceTextWithEmotes`
 and its private support code (`findEmotesInText`, `getEmoteMatchIndex`,
@@ -17,7 +17,7 @@ the channel's emotes" and their matching semantics had drifted:
 Live semantics win. A preferences preview exists to show what chat will
 render, so any preview-only match is a lie about the product, and exact
 whitespace-delimited token matching mirrors how Twitch and 7TV render chat.
-The one preview behaviour folded into the worklet is the FE0F-stripped emoji
+The one preview behaviour folded into the resolver is the FE0F-stripped emoji
 fallback: standalone emoji are keyed without the variant selector in the
 dataset (`2764` for ❤️), so the retry fixes a data-format mismatch rather
 than loosening the matching rules.
@@ -32,7 +32,7 @@ the divergence. Link/clip/7TV-link words are handled by the shared
 
 ## Consequences
 
-Per ADR-0010, the worklet is on the ingest hot path: any new matching
+Per ADR-0010, the resolver is on the ingest hot path: any new matching
 behaviour is added to the one implementation and must state its per-message
 allocation cost (the FE0F retry allocates only on the non-ASCII miss branch).
 Surfaces may no longer reach for a second resolver to get looser matching; if

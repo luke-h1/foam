@@ -32,6 +32,18 @@ import {
 } from '../util/player-telemetry';
 import { createStabilityRecovery } from '../util/stability-recovery';
 
+interface BridgePlaybackUi {
+  overlayUnlocked: boolean;
+  pipActive: boolean;
+  status: PlayerStatusState;
+}
+
+const INITIAL_BRIDGE_PLAYBACK_UI: BridgePlaybackUi = {
+  overlayUnlocked: false,
+  pipActive: false,
+  status: { isBuffering: true, isReady: false },
+};
+
 interface UsePlayerBridgeOptions extends Pick<
   StreamPlayerProps,
   | 'onContentGateChange'
@@ -99,14 +111,11 @@ export function usePlayerBridge({
     volume: 1,
   });
 
-  const [playerStatus, setPlayerStatus] = useState<PlayerStatusState>({
-    isBuffering: true,
-    isReady: false,
-  });
+  const [playbackUi, setPlaybackUi] = useState<BridgePlaybackUi>(
+    INITIAL_BRIDGE_PLAYBACK_UI,
+  );
 
   const [hasContentGate, setHasContentGate] = useState(false);
-  const [overlayUnlocked, setOverlayUnlocked] = useState(false);
-  const [pipActive, setPipActive] = useState(false);
   const pipActiveRef = useRef(false);
   const currentTimeResolverRef = useRef<((value: number) => void) | null>(null);
   const durationResolverRef = useRef<((value: number) => void) | null>(null);
@@ -186,18 +195,12 @@ export function usePlayerBridge({
     previousPlayerSourceRef.current = { autoplay, sourceKey, webViewKey };
     lastPlaybackLatencySecondsRef.current = null;
     pipActiveRef.current = false;
-    setPipActive(false);
     playerMountedAtRef.current = Date.now();
     reportedFirstPlayingRef.current = false;
     reportedPlaybackBlockedRef.current = false;
     stability.reset();
-    setOverlayUnlocked(false);
     userPausedRef.current = !autoplay;
-
-    setPlayerStatus({
-      isReady: false,
-      isBuffering: true,
-    });
+    setPlaybackUi(INITIAL_BRIDGE_PLAYBACK_UI);
   }, [autoplay, playerMountedAtRef, sourceKey, stability, webViewKey]);
 
   const clearTransientPauseResume = useCallback(() => {
@@ -231,10 +234,10 @@ export function usePlayerBridge({
   };
 
   const resetPlayerStatus = useCallback(() => {
-    setPlayerStatus({
-      isReady: false,
-      isBuffering: true,
-    });
+    setPlaybackUi(prev => ({
+      ...prev,
+      status: { isReady: false, isBuffering: true },
+    }));
   }, []);
 
   const injectJS = useCallback(
@@ -548,27 +551,33 @@ export function usePlayerBridge({
         break;
       case 'setPipActive':
         pipActiveRef.current = action.active;
-        setPipActive(action.active);
+        setPlaybackUi(prev => ({ ...prev, pipActive: action.active }));
         break;
       case 'setPlayerReady':
-        setPlayerStatus({
-          isReady: true,
-          isBuffering: false,
-        });
+        setPlaybackUi(prev => ({
+          ...prev,
+          status: { isReady: true, isBuffering: false },
+        }));
         break;
       case 'setPlayerStatus':
-        setPlayerStatus(prev =>
-          prev.isReady === action.isReady &&
-          prev.isBuffering === action.isBuffering
+        setPlaybackUi(prev =>
+          prev.status.isReady === action.isReady &&
+          prev.status.isBuffering === action.isBuffering
             ? prev
-            : { isReady: action.isReady, isBuffering: action.isBuffering },
+            : {
+                ...prev,
+                status: {
+                  isReady: action.isReady,
+                  isBuffering: action.isBuffering,
+                },
+              },
         );
         break;
       case 'showPipUnavailableToast':
         toast.error('Picture in Picture is not available for this stream');
         break;
       case 'unlockOverlay':
-        setOverlayUnlocked(true);
+        setPlaybackUi(prev => ({ ...prev, overlayUnlocked: true }));
         break;
       default:
         assertUnreachableAction(action);
@@ -606,12 +615,12 @@ export function usePlayerBridge({
     noteWebViewLoadFailed: telemetry.noteLoadFailed,
     noteWebViewPlaybackStarted: () =>
       telemetry.notePlaybackStarted('webview_loaded'),
-    overlayUnlocked,
+    overlayUnlocked: playbackUi.overlayUnlocked,
     pause,
-    pipActive,
+    pipActive: playbackUi.pipActive,
     play,
     playerState,
-    playerStatus,
+    playerStatus: playbackUi.status,
     resetPlayerStatus,
     setMuted: applyMuted,
     togglePictureInPicture,

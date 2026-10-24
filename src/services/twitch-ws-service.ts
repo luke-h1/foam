@@ -6,7 +6,12 @@ import type {
 } from '@app/types/twitch/eventsub';
 import { logger } from '@app/utils/logger';
 
+import { getReconnectDelay } from '../hooks/ws/attach-listener';
 import { twitchService } from './twitch-service';
+
+const EVENTSUB_RECONNECT_BASE_INTERVAL_MS = 2000;
+const EVENTSUB_RECONNECT_MAX_ATTEMPTS = 10;
+const EVENTSUB_RECONNECT_MAX_JITTER_MS = 250;
 
 type EventCallback = TwitchEventSubCallback;
 
@@ -71,6 +76,8 @@ class TwitchWsService {
 
   private static isReconnecting: boolean = false;
 
+  private static reconnectAttempts: number = 0;
+
   private static appStateSubscription: { remove: () => void } | null = null;
 
   // eslint-disable-next-line no-empty-function
@@ -92,6 +99,7 @@ class TwitchWsService {
         ? TwitchWsService.reconnectUrl
         : TwitchWsService.url;
 
+    TwitchWsService.reconnectUrl = '';
     TwitchWsService.discardInstance();
     const socket = new WebSocket(wsUrl);
     TwitchWsService.instance = socket;
@@ -168,9 +176,16 @@ class TwitchWsService {
 
       TwitchWsService.clearKeepaliveTimer();
 
-      if (event.code !== 1000 && !TwitchWsService.isReconnecting) {
-        TwitchWsService.attemptReconnect();
+      if (event.code === 1000) {
+        return;
       }
+
+      if (TwitchWsService.reconnectTimer !== null) {
+        return;
+      }
+
+      TwitchWsService.isReconnecting = false;
+      TwitchWsService.attemptReconnect();
     };
   }
 
@@ -182,10 +197,12 @@ class TwitchWsService {
         event.data,
       ) as EventSubMessage;
 
-      logger.twitchWs.debug(
-        '🟣 EventSub message received:',
-        message.metadata.message_type,
-      );
+      if (__DEV__) {
+        logger.twitchWs.debug(
+          '🟣 EventSub message received:',
+          message.metadata.message_type,
+        );
+      }
 
       switch (message.metadata.message_type) {
         case 'session_welcome': {
@@ -240,6 +257,7 @@ class TwitchWsService {
 
     TwitchWsService.sessionId = session.id;
     TwitchWsService.keepaliveTimeout = session.keepalive_timeout_seconds;
+    TwitchWsService.reconnectAttempts = 0;
 
     logger.twitchWs.info(`🟣 EventSub session established: ${session.id}`);
 
@@ -262,9 +280,9 @@ class TwitchWsService {
       return;
     }
 
-    logger.twitchWs.info(
-      `🟣 EventSub notification: ${JSON.stringify(subscriptionType, null, 2)}`,
-    );
+    if (__DEV__) {
+      logger.twitchWs.debug(`🟣 EventSub notification: ${subscriptionType}`);
+    }
 
     const notifiedCondition = message.payload.subscription?.condition;
 
@@ -338,6 +356,8 @@ class TwitchWsService {
         `💜 EventSub keepalive timeout received - reconnecting`,
       );
 
+      // Drop the dead socket first. Its close would otherwise start a second reconnect.
+      TwitchWsService.discardInstance();
       TwitchWsService.attemptReconnect();
     }, timeoutInMs);
   }
@@ -368,6 +388,7 @@ class TwitchWsService {
 
       if (!TwitchWsService.hasActiveListeners()) {
         TwitchWsService.isReconnecting = false;
+        TwitchWsService.reconnectAttempts = 0;
         return;
       }
 
@@ -380,11 +401,56 @@ class TwitchWsService {
       return;
     }
 
+    const attemptsExhausted =
+      TwitchWsService.reconnectAttempts >= EVENTSUB_RECONNECT_MAX_ATTEMPTS;
+
+    if (
+      attemptsExhausted &&
+      TwitchWsService.reconnectAttempts === EVENTSUB_RECONNECT_MAX_ATTEMPTS
+    ) {
+      logger.twitchWs.warn(
+        '💜 EventSub reconnect attempts exhausted; retrying at the capped delay',
+        {
+          name: 'twitch_ws_warning',
+          action: 'reconnect_exhausted',
+          attempts: TwitchWsService.reconnectAttempts,
+          provider: 'twitch',
+          source: 'twitch_ws_service',
+        },
+      );
+      TwitchWsService.reconnectAttempts += 1;
+    }
+
+    if (attemptsExhausted) {
+      TwitchWsService.isReconnecting = true;
+
+      const cappedDelayMs =
+        getReconnectDelay(
+          TwitchWsService.reconnectAttempts,
+          EVENTSUB_RECONNECT_BASE_INTERVAL_MS,
+        ) +
+        Math.random() * EVENTSUB_RECONNECT_MAX_JITTER_MS;
+
+      TwitchWsService.scheduleReconnect(cappedDelayMs);
+      return;
+    }
+
     TwitchWsService.isReconnecting = true;
 
-    logger.twitchWs.info(`💜 Attempting EventSub reconnection`);
+    const delayMs =
+      getReconnectDelay(
+        TwitchWsService.reconnectAttempts,
+        EVENTSUB_RECONNECT_BASE_INTERVAL_MS,
+      ) +
+      Math.random() * EVENTSUB_RECONNECT_MAX_JITTER_MS;
 
-    TwitchWsService.scheduleReconnect(2000);
+    TwitchWsService.reconnectAttempts += 1;
+
+    logger.twitchWs.info(
+      `💜 Attempting EventSub reconnection in ${Math.round(delayMs)}ms (attempt ${TwitchWsService.reconnectAttempts})`,
+    );
+
+    TwitchWsService.scheduleReconnect(delayMs);
   }
 
   private static entriesOfType(eventType: string): EventSubEntry[] {
@@ -702,6 +768,7 @@ class TwitchWsService {
 
         TwitchWsService.reconnectUrl = '';
         TwitchWsService.isReconnecting = false;
+        TwitchWsService.reconnectAttempts = 0;
         TwitchWsService.sessionId = '';
         TwitchWsService.scheduleReconnect(0);
       },
@@ -726,6 +793,7 @@ class TwitchWsService {
     TwitchWsService.clearReconnectTimer();
     TwitchWsService.disarmForegroundRevive();
     TwitchWsService.isReconnecting = false;
+    TwitchWsService.reconnectAttempts = 0;
 
     if (TwitchWsService.instance) {
       TwitchWsService.instance.close(1000, 'Manual Disconnect');

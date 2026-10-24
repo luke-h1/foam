@@ -7,12 +7,10 @@ import { clearMentionSessionCaches } from '@app/store/chat/actions/chat-color-ca
 
 type PartChannel = (channelName: string) => void;
 
-type NavigationLike = {
-  addListener: (event: 'beforeRemove', cb: () => void) => () => void;
-};
-
 interface UseChatLifecycleOptions {
-  navigation: NavigationLike;
+  navigation: {
+    addListener: (event: 'beforeRemove', cb: () => void) => () => void;
+  };
   channelId: string;
   channelName: string;
   partChannel: PartChannel;

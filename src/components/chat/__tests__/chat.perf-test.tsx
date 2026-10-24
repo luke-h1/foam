@@ -1,5 +1,5 @@
 import { Fragment, Profiler, useEffect } from 'react';
-import { View } from 'react-native';
+import { View, type ViewInstance } from 'react-native';
 import type { ProfilerOnRenderCallback, ReactElement, Ref } from 'react';
 import { makeMutable } from 'react-native-reanimated';
 
@@ -83,7 +83,7 @@ const legendListKeyboard =
 
 jest.spyOn(legendListKeyboard, 'KeyboardAwareLegendList').mockImplementation(
   // @ts-expect-error -- mock implements only the props this suite reads
-  (props: MockLegendListProps & { ref?: Ref<View> }) => {
+  (props: MockLegendListProps & { ref?: Ref<ViewInstance> }) => {
     const { extraData, keyExtractor, ref, renderItem } = props;
     const items = props.data ?? [];
     const virtualizedWindow = getVirtualizedWindow(items, props);

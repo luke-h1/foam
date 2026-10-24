@@ -232,6 +232,22 @@ describe('cosmetics entitlement-burst churn', () => {
     expect(mockSet).not.toHaveBeenCalled();
   });
 
+  test('a repeated paint or badge id does not write another wearer snapshot', () => {
+    rememberSevenTvUserTwitchLink('stv-user-0', 'ttv-user-0');
+    addPaint(buildPaint());
+    addBadge(buildBadge());
+    setUserPaint('ttv-user-0', PAINT_ID);
+    setUserBadge('ttv-user-0', BADGE_ID);
+    jest.advanceTimersByTime(1000);
+    mockSet.mockClear();
+
+    setUserPaint('ttv-user-0', PAINT_ID);
+    setUserBadge('ttv-user-0', BADGE_ID);
+    jest.advanceTimersByTime(1000);
+
+    expect(mockSet).not.toHaveBeenCalled();
+  });
+
   test('a genuine entitlement write after a cached apply still schedules the snapshot sync', async () => {
     rememberSevenTvUserTwitchLink('stv-user-0', 'ttv-user-0');
     addPaint(buildPaint());

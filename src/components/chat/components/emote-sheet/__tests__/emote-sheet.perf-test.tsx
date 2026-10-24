@@ -117,7 +117,9 @@ jest
       onSelectionChange: _onSelectionChange,
       onSubmitEditing: _onSubmitEditing,
       ...props
-    }: ThemedInputProps) => createElement(TextInput, props),
+    }: ThemedInputProps) =>
+      // SAFETY: jest stand-in; only the search box mount matters here.
+      createElement(TextInput, props as never),
   );
 
 const MEASURE_OPTIONS = {

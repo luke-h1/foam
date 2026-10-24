@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { observable } from '@legendapp/state';
+import { useSelector } from '@legendapp/state/react';
 
-export function useRecoveredFromError() {
-  const [recoveredFromError, setRecoveredFromError] = useState<boolean>(false);
+const recoveredFromError$ = observable<boolean>(false);
 
-  return {
-    recoveredFromError,
-    setRecoveredFromError,
-  };
+export function setRecoveredFromError(recovered: boolean): void {
+  recoveredFromError$.set(recovered);
+}
+
+export function useRecoveredFromError(): boolean {
+  return useSelector(recoveredFromError$);
 }

@@ -1,5 +1,10 @@
 import { useEffect, useRef } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import {
+  ScrollView,
+  type ScrollViewInstance,
+  StyleSheet,
+  View,
+} from 'react-native';
 
 import { Button } from '@app/components/button/button';
 import { Text } from '@app/components/ui/text/text';
@@ -10,7 +15,7 @@ import { openLinkInBrowser } from '@app/utils/browser/open-link-in-browser';
 import { OtherInfoCard } from './components/other-info-card';
 
 export function FaqScreen() {
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const didOpenBrowser = useRef(false);
 
   useScrollToTop(scrollRef);

@@ -41,7 +41,11 @@ export function EmoteSheet({
   onDismiss,
   onEmoteSelect,
 }: EmoteSheetProps) {
-  const { bottom: bottomInset } = useSafeAreaInsets();
+  const {
+    bottom: bottomInset,
+    left: leftInset,
+    right: rightInset,
+  } = useSafeAreaInsets();
   const emoteListRef = useRef<LegendListRef>(null);
   const sheetRef = useRef<BottomSheetHandle>(null);
   const [layoutWidth, setLayoutWidth] = useState(0);
@@ -55,6 +59,7 @@ export function EmoteSheet({
     },
     emoteListRef,
     layoutWidth,
+    horizontalInset: leftInset + rightInset,
   });
 
   const handleContainerLayout = useCallback((event: LayoutChangeEvent) => {
@@ -77,9 +82,13 @@ export function EmoteSheet({
   const listContentStyle = useMemo(
     () => [
       styles.listContent,
-      { paddingBottom: theme.space36 + (hasSetRail ? 0 : bottomInset) },
+      {
+        paddingBottom: theme.space36 + (hasSetRail ? 0 : bottomInset),
+        paddingLeft: 16 + leftInset,
+        paddingRight: 16 + rightInset,
+      },
     ],
-    [hasSetRail, bottomInset],
+    [hasSetRail, bottomInset, leftInset, rightInset],
   );
 
   const setRailExtraData = useMemo(

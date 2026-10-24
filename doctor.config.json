@@ -26,10 +26,22 @@
       },
       {
         "files": ["src/components/chat/hooks/use-seven-tv-ws.ts"],
-        "rules": ["react-hooks-js/purity", "react-doctor/effect-needs-cleanup"]
+        "rules": [
+          "react-hooks-js/immutability",
+          "react-hooks-js/purity",
+          "react-doctor/effect-needs-cleanup"
+        ]
+      },
+      {
+        "files": ["src/lib/react-query/query-provider.tsx"],
+        "rules": ["react-doctor/no-fetch-in-effect"]
       },
       {
         "files": ["src/hooks/ws/use-websocket.ts"],
+        "rules": ["react-doctor/effect-needs-cleanup"]
+      },
+      {
+        "files": ["src/components/stream-player/stream-player.tsx"],
         "rules": ["react-doctor/effect-needs-cleanup"]
       },
       {

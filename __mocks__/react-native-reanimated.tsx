@@ -1,6 +1,6 @@
 import React from 'react';
 // eslint-disable-next-line no-restricted-imports
-import { View } from 'react-native';
+import { View, type ViewInstance } from 'react-native';
 
 const animatedComponent = ({
   children,
@@ -8,7 +8,7 @@ const animatedComponent = ({
   ...props
 }: {
   children?: React.ReactNode;
-  ref?: React.Ref<View>;
+  ref?: React.Ref<ViewInstance>;
 }) => (
   <View {...props} ref={ref}>
     {children}

@@ -1,15 +1,5 @@
-import performance from 'react-native-performance';
-
-/**
- * Chat ingest stage timing, enabled with EXPO_PUBLIC_PERF_MARKS=1; metro
- * inlines the literal, so disabled builds ship no-ops.
- */
 const ENABLED = process.env.EXPO_PUBLIC_PERF_MARKS === '1';
 
-/**
- * Enqueue timestamps for not-yet-committed messages; capped so a stalled
- * commit path can't grow it unbounded (matches the ingest buffer cap).
- */
 const MAX_PENDING_TIMESTAMPS = 1024;
 
 const pendingBufferedAt: number[] = [];
@@ -46,7 +36,7 @@ function markCommitted(count: number): void {
       detail: { count },
     });
   } catch {
-    // user-timing options unsupported on this platform build - marks suffice
+    return;
   }
 }
 

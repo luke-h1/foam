@@ -1,5 +1,10 @@
 import { useImperativeHandle, useRef } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import {
+  StyleSheet,
+  TextInput,
+  type TextInputInstance,
+  View,
+} from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 
 import { SymbolView } from '@app/components/ui/icon/icon';
@@ -15,7 +20,7 @@ export function SearchInputBar({
   onChangeText,
   onSubmit,
 }: SearchInputBarProps) {
-  const inputRef = useRef<TextInput | null>(null);
+  const inputRef = useRef<TextInputInstance | null>(null);
 
   /**
    * No-op text mutators: this variant is controlled by `value`, and routing them through `onChangeText` re-enters type-to-search and double-fires the query. They exist for the uncontrolled iOS native search bar.

@@ -2,7 +2,7 @@ import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { SanitisedEmote } from '@app/types/emote';
 import { EMOTE_PROVIDER_BY_SITE } from '@app/utils/emote/emote-provider-by-site';
 
-import { processEmotesWorklet } from '../emote-processor';
+import { processEmotes } from '../emote-processor';
 import type { MessageToken } from '../message-token';
 import { clearMentionLoginIndex } from '../resolve-mention-login/clear-mention-login-index';
 import { registerMentionLogin } from '../resolve-mention-login/register-mention-login';
@@ -101,13 +101,13 @@ const emptyParams = {
   bttvGlobalEmotes: [],
 };
 
-describe('processEmotesWorklet', () => {
+describe('processEmotes', () => {
   beforeEach(() => {
     clearMentionLoginIndex();
   });
 
   test('parses @mentions as mention tokens', () => {
-    const result = processEmotesWorklet({
+    const result = processEmotes({
       ...emptyParams,
       inputString: 'hey @VelvetFathom93 look',
     });
@@ -129,7 +129,7 @@ describe('processEmotesWorklet', () => {
   test('rewrites mention casing when canonical login is known', () => {
     registerMentionLogin('VelvetFathom93');
 
-    const result = processEmotesWorklet({
+    const result = processEmotes({
       ...emptyParams,
       inputString: '@velvetfathom93 high hopes',
     });
@@ -143,7 +143,7 @@ describe('processEmotesWorklet', () => {
   test('does not treat emote names as substrings of @mentions', () => {
     const singleLetterEmote = createEmote({ id: 'letter-o', name: 'o' });
 
-    const result = processEmotesWorklet({
+    const result = processEmotes({
       ...emptyParams,
       inputString: '@VelvetFathom93 high hopes',
       sevenTvChannelEmotes: [singleLetterEmote],
@@ -166,7 +166,7 @@ describe('processEmotesWorklet', () => {
   test('keeps @EmoteName as a mention even when EmoteName is an emote', () => {
     const waveEmote = createEmote({ id: 'wave-emote', name: 'Wave' });
 
-    const result = processEmotesWorklet({
+    const result = processEmotes({
       ...emptyParams,
       inputString: '@Wave hello',
       sevenTvChannelEmotes: [waveEmote],
@@ -184,7 +184,7 @@ describe('processEmotesWorklet', () => {
   test('matches bare EmoteName as an emote', () => {
     const waveEmote = createEmote({ id: 'wave-emote', name: 'Wave' });
 
-    const result = processEmotesWorklet({
+    const result = processEmotes({
       ...emptyParams,
       inputString: 'Wave hello',
       sevenTvChannelEmotes: [waveEmote],
@@ -200,7 +200,7 @@ describe('processEmotesWorklet', () => {
   });
 
   test('parses https URLs as purple link tokens', () => {
-    const result = processEmotesWorklet({
+    const result = processEmotes({
       ...emptyParams,
       inputString: 'https://tetr.io/#WLBR',
     });
@@ -215,13 +215,13 @@ describe('processEmotesWorklet', () => {
   });
 
   test('matches emotes case-sensitively', () => {
-    const lowerCaseResult = processEmotesWorklet({
+    const lowerCaseResult = processEmotes({
       ...emptyParams,
       inputString: 'curtis',
       sevenTvChannelEmotes: [curtisEmote],
     });
 
-    const exactCaseResult = processEmotesWorklet({
+    const exactCaseResult = processEmotes({
       ...emptyParams,
       inputString: 'Curtis',
       sevenTvChannelEmotes: [curtisEmote],
@@ -244,13 +244,13 @@ describe('processEmotesWorklet', () => {
       original_name: 'THIS',
     });
 
-    const aliasResult = processEmotesWorklet({
+    const aliasResult = processEmotes({
       ...emptyParams,
       inputString: 'This',
       sevenTvChannelEmotes: [aliasedEmote],
     });
 
-    const originalNameResult = processEmotesWorklet({
+    const originalNameResult = processEmotes({
       ...emptyParams,
       inputString: 'THIS',
       sevenTvChannelEmotes: [aliasedEmote],
@@ -283,7 +283,7 @@ describe('processEmotesWorklet', () => {
       provider: '7tv',
     });
 
-    const result = processEmotesWorklet({
+    const result = processEmotes({
       ...emptyParams,
       inputString: 'Wave Wave',
       sevenTvChannelEmotes: [baseEmote],
@@ -313,7 +313,7 @@ describe('processEmotesWorklet', () => {
       emoji_hexcode: '1F44B',
     });
 
-    const result = processEmotesWorklet({
+    const result = processEmotes({
       ...emptyParams,
       emojiEmotes: [emoji],
       inputString: 'hi 👋',
@@ -342,7 +342,7 @@ describe('processEmotesWorklet', () => {
       emoji_hexcode: '2764',
     });
 
-    const result = processEmotesWorklet({
+    const result = processEmotes({
       ...emptyParams,
       emojiEmotes: [heart],
       inputString: '❤️',
@@ -373,7 +373,7 @@ describe('processEmotesWorklet', () => {
       provider: 'emoji',
     });
 
-    const result = processEmotesWorklet({
+    const result = processEmotes({
       ...emptyParams,
       emojiEmotes: [joy, haha],
       inputString: 'hello :joy: :haha:',
@@ -398,7 +398,7 @@ describe('processEmotesWorklet', () => {
   test('trailing punctuation defeats an emote match', () => {
     const kappa = createEmote({ id: 'kappa-id', name: 'Kappa' });
 
-    const result = processEmotesWorklet({
+    const result = processEmotes({
       ...emptyParams,
       inputString: 'Kappa!',
       sevenTvChannelEmotes: [kappa],
@@ -412,7 +412,7 @@ describe('processEmotesWorklet', () => {
   test('strips the duplicate-message bypass char fused to an emote name', () => {
     const dogEmote = createEmote({ id: 'dog-emote', name: 'dogE' });
 
-    const result = processEmotesWorklet({
+    const result = processEmotes({
       ...emptyParams,
       inputString: 'dogE\u034F',
       sevenTvChannelEmotes: [dogEmote],
@@ -427,7 +427,7 @@ describe('processEmotesWorklet', () => {
   });
 
   test('drops a trailing bypass char instead of rendering it as a text box', () => {
-    const result = processEmotesWorklet({
+    const result = processEmotes({
       ...emptyParams,
       inputString: 'safe \u034F',
     });
@@ -450,8 +450,8 @@ describe('processEmotesWorklet', () => {
       sevenTvChannelEmotes: [curtisEmote],
     };
 
-    const firstResult = processEmotesWorklet(params);
-    const secondResult = processEmotesWorklet(params);
+    const firstResult = processEmotes(params);
+    const secondResult = processEmotes(params);
 
     expect(secondResult).toBe(firstResult);
   });
@@ -468,13 +468,13 @@ describe('processEmotesWorklet', () => {
       provider: '7tv',
     });
 
-    const firstResult = processEmotesWorklet({
+    const firstResult = processEmotes({
       ...emptyParams,
       inputString: 'Rebuilt',
       sevenTvPersonalEmotes: [personalEmote],
     });
 
-    const secondResult = processEmotesWorklet({
+    const secondResult = processEmotes({
       ...emptyParams,
       inputString: 'Rebuilt',
       sevenTvPersonalEmotes: [personalEmote],
@@ -512,7 +512,7 @@ describe('processEmotesWorklet', () => {
       provider: '7tv',
     });
 
-    const firstResult = processEmotesWorklet({
+    const firstResult = processEmotes({
       ...emptyParams,
       inputString: 'MiddleA',
       sevenTvPersonalEmotes: [
@@ -522,7 +522,7 @@ describe('processEmotesWorklet', () => {
       ],
     });
 
-    const secondResult = processEmotesWorklet({
+    const secondResult = processEmotes({
       ...emptyParams,
       inputString: 'MiddleA',
       sevenTvPersonalEmotes: [
@@ -572,7 +572,7 @@ describe('processEmotesWorklet', () => {
       zero_width: true,
     });
 
-    const result = processEmotesWorklet({
+    const result = processEmotes({
       ...emptyParams,
       inputString: 'peepoHappy SoSnowy IceCold',
       sevenTvChannelEmotes: [baseEmote, snowEmote, coldEmote],
@@ -642,7 +642,7 @@ describe('processEmotesWorklet', () => {
       zero_width: true,
     });
 
-    const result = processEmotesWorklet({
+    const result = processEmotes({
       ...emptyParams,
       inputString: 'SoSnowy hello',
       sevenTvChannelEmotes: [snowEmote],
@@ -658,7 +658,7 @@ describe('processEmotesWorklet', () => {
   test('hides BTTV backward modifiers before an emote', () => {
     const baseEmote = createEmote({ id: 'base-emote', name: 'peepoHappy' });
 
-    const result = processEmotesWorklet({
+    const result = processEmotes({
       ...emptyParams,
       inputString: 'w! peepoHappy',
       sevenTvChannelEmotes: [baseEmote],
@@ -670,7 +670,7 @@ describe('processEmotesWorklet', () => {
   });
 
   test('keeps modifier-looking words that do not precede an emote', () => {
-    const result = processEmotesWorklet({
+    const result = processEmotes({
       ...emptyParams,
       inputString: 'w! hello',
     });
@@ -687,7 +687,7 @@ describe('processEmotesWorklet', () => {
   test('hides ffz modifier words after an emote', () => {
     const baseEmote = createEmote({ id: 'base-emote', name: 'peepoHappy' });
 
-    const result = processEmotesWorklet({
+    const result = processEmotes({
       ...emptyParams,
       inputString: 'peepoHappy ffzHyper done',
       sevenTvChannelEmotes: [baseEmote],

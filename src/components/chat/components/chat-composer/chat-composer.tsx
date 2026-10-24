@@ -1,5 +1,5 @@
 import { memo, type Ref, useCallback, useMemo, useRef } from 'react';
-import { TextInput, type TextInput as TextInputType, View } from 'react-native';
+import { TextInput, type TextInputInstance, View } from 'react-native';
 
 import { PressableScale } from 'pressto';
 
@@ -59,7 +59,7 @@ function ChatComposerComponent({
   reservedCharacters,
   ref,
 }: ChatComposerProps) {
-  const inputRef = useRef<TextInputType>(null);
+  const inputRef = useRef<TextInputInstance>(null);
   const { accentHex } = useAccentColor();
 
   const focusInput = useCallback(() => {

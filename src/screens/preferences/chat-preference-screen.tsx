@@ -1,5 +1,10 @@
 import { useRef } from 'react';
-import { Platform, ScrollView, StyleSheet } from 'react-native';
+import {
+  Platform,
+  ScrollView,
+  type ScrollViewInstance,
+  StyleSheet,
+} from 'react-native';
 
 import { useScrollToTop } from '@app/hooks/use-scroll-to-top';
 import { theme } from '@app/styles/themes';
@@ -16,7 +21,7 @@ export function ChatPreferenceScreen() {
 }
 
 export function ChatPreferenceScrollContent() {
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
 
   useScrollToTop(scrollRef);
 

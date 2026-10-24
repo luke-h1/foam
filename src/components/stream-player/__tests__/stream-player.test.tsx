@@ -1,5 +1,5 @@
 import { createRef, useEffect, useImperativeHandle } from 'react';
-import { AppState, InteractionManager, StyleSheet } from 'react-native';
+import { AppState, StyleSheet } from 'react-native';
 import type { Ref } from 'react';
 import type { ReactTestRendererJSON } from 'react-test-renderer';
 import type { AppStateStatus, ViewStyle } from 'react-native';
@@ -11,6 +11,7 @@ import { act } from '@testing-library/react-native';
 import type { LogMetadata } from '@app/lib/sentry';
 import render from '@app/test/render';
 import { logger } from '@app/utils/logger';
+import * as RunWhenIdle from '@app/utils/run-when-idle';
 
 const mockInjectJavaScript = jest.fn();
 const mockWebViewProps: WebViewProps[] = [];
@@ -51,19 +52,12 @@ function installModuleSpies() {
     return ReactActual.createElement(RNView, { testID: 'stream-webview' });
   });
 
-  // StreamPlayer defers WebView mount until interactions settle; run the
-  // callback synchronously so tests can read WebView props right after render.
-  jest
-    .spyOn(InteractionManager, 'runAfterInteractions')
-    .mockImplementation(task => {
-      // SAFETY: this codebase only ever passes a plain callback to runAfterInteractions, never a SimpleTask/PromiseTask.
-      (task as (() => void) | undefined)?.();
-      return {
-        then: () => Promise.resolve(),
-        done: () => undefined,
-        cancel: jest.fn(),
-      };
-    });
+  jest.spyOn(RunWhenIdle, 'runWhenIdle').mockImplementation(task => {
+    task();
+    return {
+      cancel: jest.fn(),
+    };
+  });
 }
 
 import { StreamPlayer } from '../stream-player';

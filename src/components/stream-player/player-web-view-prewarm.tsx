@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
-import { InteractionManager, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
+
+import { getDeviceTier } from '@app/utils/device/device-tier';
+import { runWhenIdle } from '@app/utils/run-when-idle';
 
 /**
  * Preconnect hints for the hosts the Twitch embed hits first, so DNS and TLS
@@ -25,12 +28,17 @@ const PREWARM_LIFETIME_MS = 10_000;
  */
 export function PlayerWebViewPrewarm() {
   const [phase, setPhase] = useState<'idle' | 'warming' | 'done'>('idle');
+  const skipPrewarm = getDeviceTier() === 'low';
 
   useEffect(() => {
+    if (skipPrewarm) {
+      return;
+    }
+
     if (phase === 'idle') {
       let delayTimer: ReturnType<typeof setTimeout> | null = null;
 
-      const task = InteractionManager.runAfterInteractions(() => {
+      const task = runWhenIdle(() => {
         delayTimer = setTimeout(
           () => setPhase('warming'),
           PREWARM_MOUNT_DELAY_MS,
@@ -49,9 +57,9 @@ export function PlayerWebViewPrewarm() {
     }
 
     return undefined;
-  }, [phase]);
+  }, [phase, skipPrewarm]);
 
-  if (phase !== 'warming') {
+  if (skipPrewarm || phase !== 'warming') {
     return null;
   }
 
