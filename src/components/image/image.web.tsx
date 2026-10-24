@@ -26,7 +26,7 @@ export const Image = function Image({
   contentFit = 'cover',
   containerStyle,
   placeholderContentFit,
-  transition = 500,
+  transition = 0,
   source,
   cachePolicy,
   cacheToFile = true,

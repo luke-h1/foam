@@ -7,7 +7,7 @@ import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { applyCheermotesToParts } from '@app/utils/chat/apply-cheermotes';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-chat-username';
 import { getChannelCheermotes } from '@app/utils/chat/cheermote-store/get-channel-cheermotes';
-import { processEmotesWorklet } from '@app/utils/chat/emote-processor';
+import { processEmotes } from '@app/utils/chat/emote-processor';
 import { extractEmotesFromTag } from '@app/utils/chat/extract-emotes/extract-emotes-from-tag';
 import type { MessageToken } from '@app/utils/chat/message-token';
 
@@ -47,7 +47,7 @@ function processTextChunk({
   text,
   userstate,
 }: ProcessTextChunkOptions): MessageToken[] {
-  return processEmotesWorklet({
+  return processEmotes({
     inputString: text,
     userstate,
     emojiEmotes: chatStore$.emojis.peek(),

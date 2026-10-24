@@ -10,7 +10,7 @@ import {
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-chat-username';
-import { processEmotesWorklet } from '@app/utils/chat/emote-processor';
+import { processEmotes } from '@app/utils/chat/emote-processor';
 import { getChatMessageListKey } from '@app/utils/chat/message-identity/get-chat-message-list-key';
 import { isRenderableChatMessage } from '@app/utils/chat/message-identity/is-renderable-chat-message';
 import type { MessageToken } from '@app/utils/chat/message-token';
@@ -112,7 +112,7 @@ export function useChatRowRenderer({
         return [{ type: 'text', content: text }];
       }
 
-      return processEmotesWorklet({
+      return processEmotes({
         inputString: text.trimEnd(),
         userstate: null,
         emojiEmotes: chatStore$.emojis.peek(),

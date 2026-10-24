@@ -43,6 +43,7 @@ export interface ChatProps {
   channelId: string;
   channelName: string;
   transparent?: boolean;
+  includeHorizontalSafeArea?: boolean;
   // DEV/perf only: drops the live Twitch transports so the synthetic flood is
   // the sole deterministic source; channel emote/badge sets still load so fake messages render real emotes.
   syntheticTransport?: boolean;
@@ -55,6 +56,7 @@ export const Chat = memo(
     channelId,
     transparent = false,
     syntheticTransport = false,
+    includeHorizontalSafeArea = true,
   }: ChatProps) => {
     const { user } = useAuthContext();
     const preferences = useChatRenderPreferences();
@@ -298,6 +300,7 @@ export const Chat = memo(
                     processMessageEmotes,
                     sendMessage,
                     user,
+                    includeHorizontalSafeArea,
                   }}
                 />
               </View>

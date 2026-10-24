@@ -22,15 +22,7 @@ const LANDSCAPE_CHAT_DIVIDER_RESTING_OPACITY = 0.55;
 const LANDSCAPE_CHAT_CLOSE_WIDTH_FRACTION = 0.55;
 const LANDSCAPE_CHAT_CLOSE_VELOCITY = 900;
 
-/**
- * Sizing drives WKWebView and chat layout every frame, so the spring clamps and rests early instead of settling for ~600ms.
- */
-const RESIZE_ANIMATION_CONFIG: WithSpringConfig = {
-  damping: 38,
-  stiffness: 560,
-  mass: 0.8,
-  overshootClamping: true,
-};
+const RESIZE_LAYOUT_STEP_PX = 32;
 
 const CHAT_REVEAL_ANIMATION_CONFIG: WithSpringConfig = {
   ...motion.spring.responsive,
@@ -87,6 +79,7 @@ export function useLiveStreamAnimatedLayout({
   const chatOpacity = useSharedValue(1);
   const chatTranslateX = useSharedValue(0);
   const resizeStartWidth = useSharedValue(0);
+  const lastAppliedChatWidth = useSharedValue(0);
 
   const resizeHandleOpacity = useSharedValue(
     LANDSCAPE_CHAT_DIVIDER_RESTING_OPACITY,
@@ -152,14 +145,14 @@ export function useLiveStreamAnimatedLayout({
       : 'live-stream.chat-reveal';
 
     markSignpost(layoutSignpost);
-    videoWidth.set(withSpring(videoDimensions.width, RESIZE_ANIMATION_CONFIG));
-
-    videoHeight.set(
-      withSpring(videoDimensions.height, RESIZE_ANIMATION_CONFIG),
+    videoWidth.set(videoDimensions.width);
+    videoHeight.set(videoDimensions.height);
+    chatWidth.set(
+      isLandscapeChatHidden ? chatDimensions.width : effectiveChatWidth,
     );
-
-    chatWidth.set(withSpring(effectiveChatWidth, RESIZE_ANIMATION_CONFIG));
-    chatHeight.set(withSpring(effectiveChatHeight, RESIZE_ANIMATION_CONFIG));
+    chatHeight.set(
+      isLandscapeChatHidden ? chatDimensions.height : effectiveChatHeight,
+    );
 
     if (!isLandscapeChatHidden) {
       chatOpacity.set(withSpring(1, CHAT_REVEAL_ANIMATION_CONFIG));
@@ -225,7 +218,9 @@ export function useLiveStreamAnimatedLayout({
           LANDSCAPE_CHAT_RESIZE_FAIL_DISTANCE,
         ])
         .onBegin(() => {
-          resizeStartWidth.set(chatWidth.get());
+          const startWidth = chatWidth.get();
+          resizeStartWidth.set(startWidth);
+          lastAppliedChatWidth.set(startWidth);
           resizeHandleOpacity.set(1);
         })
         .onUpdate(event => {
@@ -239,6 +234,14 @@ export function useLiveStreamAnimatedLayout({
             Math.max(0, resizeStartWidth.get() - event.translationX),
           );
 
+          if (
+            Math.abs(nextWidth - lastAppliedChatWidth.get()) <
+            RESIZE_LAYOUT_STEP_PX
+          ) {
+            return;
+          }
+
+          lastAppliedChatWidth.set(nextWidth);
           chatWidth.set(nextWidth);
 
           if (fullscreenChatMode === 'sidebar' && isChatVisibleForLayout) {
@@ -246,16 +249,18 @@ export function useLiveStreamAnimatedLayout({
           }
         })
         .onEnd(event => {
-          const { minWidth } = getLandscapeChatWidthBounds(
+          const { minWidth, maxWidth } = getLandscapeChatWidthBounds(
             contentWidth,
             fullscreenChatMode,
           );
 
-          const closeWidth = minWidth * LANDSCAPE_CHAT_CLOSE_WIDTH_FRACTION;
-          const width = chatWidth.get();
+          const width = Math.min(
+            maxWidth,
+            Math.max(0, resizeStartWidth.get() - event.translationX),
+          );
 
           if (
-            width < closeWidth ||
+            width < minWidth * LANDSCAPE_CHAT_CLOSE_WIDTH_FRACTION ||
             event.velocityX > LANDSCAPE_CHAT_CLOSE_VELOCITY
           ) {
             scheduleOnRN(closeLandscapeChatBySwipe);
@@ -263,15 +268,10 @@ export function useLiveStreamAnimatedLayout({
           }
 
           const committedWidth = Math.max(minWidth, width);
-          chatWidth.set(withSpring(committedWidth, RESIZE_ANIMATION_CONFIG));
+          chatWidth.set(committedWidth);
 
           if (fullscreenChatMode === 'sidebar' && isChatVisibleForLayout) {
-            videoWidth.set(
-              withSpring(
-                Math.max(1, contentWidth - committedWidth),
-                RESIZE_ANIMATION_CONFIG,
-              ),
-            );
+            videoWidth.set(Math.max(1, contentWidth - committedWidth));
           }
 
           scheduleOnRN(commitLandscapeChatWidth, committedWidth);
@@ -288,6 +288,7 @@ export function useLiveStreamAnimatedLayout({
       chatWidth,
       videoWidth,
       resizeStartWidth,
+      lastAppliedChatWidth,
       resizeHandleOpacity,
     ],
   );

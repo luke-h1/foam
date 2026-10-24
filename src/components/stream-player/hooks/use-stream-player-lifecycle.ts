@@ -10,7 +10,13 @@ import { PLAYER_LOAD_TIMEOUT_MS } from '../util/player-telemetry';
 /**
  * Linger so the first decoded frame is on screen before the poster fades.
  */
+/**
+ * Linger so the first decoded frame is on screen before the poster fades.
+ */
 const POSTER_HIDE_DELAY_MS = 450;
+
+const LAYER_TREE_NUDGE_PX = 1;
+const LAYER_TREE_NUDGE_SETTLE_MS = 200;
 
 /**
  * Owns everything that happens around a WebView generation: when it remounts,
@@ -40,14 +46,22 @@ export function useStreamPlayerLifecycle({
 
   const nudgeTimeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const nudgePlayedRef = useRef(false);
+  const layoutSettleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   const nudgeLayerTree = useCallback(() => {
+    if (layoutSettleTimerRef.current) {
+      clearTimeout(layoutSettleTimerRef.current);
+      layoutSettleTimerRef.current = null;
+    }
+
     nudgeTimeoutsRef.current.forEach(clearTimeout);
     nudgeTimeoutsRef.current = [];
 
     const pulse = (delay: number) => {
       nudgeTimeoutsRef.current.push(
-        setTimeout(() => setLayoutNudge(1), delay),
+        setTimeout(() => setLayoutNudge(LAYER_TREE_NUDGE_PX), delay),
         setTimeout(() => setLayoutNudge(0), delay + 120),
       );
     };
@@ -105,13 +119,28 @@ export function useStreamPlayerLifecycle({
       const previous = lastPlayerSizeRef.current;
       lastPlayerSizeRef.current = { width: nextWidth, height: nextHeight };
 
-      if (
-        previous &&
-        (Math.round(previous.width) !== Math.round(nextWidth) ||
-          Math.round(previous.height) !== Math.round(nextHeight))
-      ) {
-        nudgeLayerTree();
+      if (!previous) {
+        return;
       }
+
+      const widthDelta = Math.abs(previous.width - nextWidth);
+      const heightDelta = Math.abs(previous.height - nextHeight);
+
+      if (
+        widthDelta <= LAYER_TREE_NUDGE_PX &&
+        heightDelta <= LAYER_TREE_NUDGE_PX
+      ) {
+        return;
+      }
+
+      if (layoutSettleTimerRef.current) {
+        clearTimeout(layoutSettleTimerRef.current);
+      }
+
+      layoutSettleTimerRef.current = setTimeout(() => {
+        layoutSettleTimerRef.current = null;
+        nudgeLayerTree();
+      }, LAYER_TREE_NUDGE_SETTLE_MS);
     },
     [nudgeLayerTree],
   );
@@ -119,11 +148,17 @@ export function useStreamPlayerLifecycle({
   useEffect(() => {
     const timeoutsRef = nudgeTimeoutsRef;
     const posterTimeoutRef = posterHideTimeoutRef;
+    const settleTimerRef = layoutSettleTimerRef;
 
     return () => {
       timeoutsRef.current.forEach(clearTimeout);
+
       if (posterTimeoutRef.current) {
         clearTimeout(posterTimeoutRef.current);
+      }
+
+      if (settleTimerRef.current) {
+        clearTimeout(settleTimerRef.current);
       }
     };
   }, []);

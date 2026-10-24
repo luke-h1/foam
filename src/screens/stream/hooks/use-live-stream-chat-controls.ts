@@ -176,6 +176,7 @@ export function useLiveStreamChatControls({
 
 const styles = StyleSheet.create({
   overlayChatContainer: {
+    backgroundColor: 'transparent',
     zIndex: 3,
   },
 });

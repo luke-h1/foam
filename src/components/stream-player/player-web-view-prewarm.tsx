@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
+import { getDeviceTier } from '@app/utils/device/device-tier';
 import { runWhenIdle } from '@app/utils/run-when-idle';
 
 /**
@@ -27,8 +28,13 @@ const PREWARM_LIFETIME_MS = 10_000;
  */
 export function PlayerWebViewPrewarm() {
   const [phase, setPhase] = useState<'idle' | 'warming' | 'done'>('idle');
+  const skipPrewarm = getDeviceTier() === 'low';
 
   useEffect(() => {
+    if (skipPrewarm) {
+      return;
+    }
+
     if (phase === 'idle') {
       let delayTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -51,9 +57,9 @@ export function PlayerWebViewPrewarm() {
     }
 
     return undefined;
-  }, [phase]);
+  }, [phase, skipPrewarm]);
 
-  if (phase !== 'warming') {
+  if (skipPrewarm || phase !== 'warming') {
     return null;
   }
 

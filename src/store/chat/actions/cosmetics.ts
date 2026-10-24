@@ -250,11 +250,32 @@ const deleteCachedUserCosmetics = (sevenTvUserId: string): void => {
   );
 };
 
+function hasSameCosmeticBinding(
+  previous: CachedUserCosmetics | undefined,
+  cosmetics: CachedUserCosmetics,
+): boolean {
+  return (
+    previous !== undefined &&
+    previous.badgeId === cosmetics.badgeId &&
+    previous.paintId === cosmetics.paintId &&
+    previous.ttvUserId === cosmetics.ttvUserId &&
+    previous.expiresAt === cosmetics.expiresAt
+  );
+}
+
 function setCachedUserCosmetics(
   sevenTvUserId: string,
   cosmetics: CachedUserCosmetics,
 ) {
+  const previous = sessionCosmeticsCache.get(sevenTvUserId);
+  const unchanged = hasSameCosmeticBinding(previous, cosmetics);
+
   cacheSessionCosmetics(sevenTvUserId, cosmetics);
+
+  if (unchanged) {
+    return;
+  }
+
   storageService.set(
     getUserCosmeticsStorageKey(sevenTvUserId),
     cosmetics,
@@ -514,6 +535,7 @@ export const clearUserCosmeticsCache = () => {
  */
 export const setUserPaint = (ttvUserId: string, paintId: string): void => {
   const current = chatStore$.userPaintIds.peek();
+  const previousPaintId = current[ttvUserId];
 
   if (
     !(ttvUserId in current) &&
@@ -530,7 +552,10 @@ export const setUserPaint = (ttvUserId: string, paintId: string): void => {
     chatStore$.userPaintIds[ttvUserId]?.set(paintId);
   }
 
-  scheduleUserCosmeticsSnapshotSync(ttvUserId);
+  if (previousPaintId !== paintId) {
+    scheduleUserCosmeticsSnapshotSync(ttvUserId);
+  }
+
   scheduleCosmeticsPersist('bindings');
 };
 
@@ -780,9 +805,9 @@ export const setUserBadge = (ttvUserId: string, badgeId: string): void => {
 
   if (previousBadgeId !== badgeId) {
     scheduleCosmeticBindingsBump();
+    scheduleUserCosmeticsSnapshotSync(ttvUserId);
   }
 
-  scheduleUserCosmeticsSnapshotSync(ttvUserId);
   scheduleCosmeticsPersist('bindings');
 };
 

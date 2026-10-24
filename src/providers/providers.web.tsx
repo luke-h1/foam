@@ -12,7 +12,7 @@ import { Toaster } from 'sonner-native';
 
 import { AccentColorProvider } from '@app/context/accent-color-context';
 import { AuthContextProvider } from '@app/context/auth-context';
-import { useRecoveredFromError } from '@app/hooks/use-recovered-from-error';
+import { setRecoveredFromError } from '@app/hooks/use-recovered-from-error';
 import { QueryProvider } from '@app/lib/react-query/query-provider';
 import { BaseConfig } from '@app/navigators/config';
 import { ErrorBoundary } from '@app/screens/error/error-boundary';
@@ -29,8 +29,6 @@ function QueryDevTools({ children }: PropsWithChildren) {
 }
 
 export function Providers({ children }: PropsWithChildren) {
-  const { setRecoveredFromError } = useRecoveredFromError();
-
   return (
     <AuthContextProvider>
       <AccentColorProvider>

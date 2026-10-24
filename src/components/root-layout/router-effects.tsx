@@ -14,7 +14,10 @@ import { useIcloudPreferenceSync } from '@app/hooks/use-icloud-preference-sync';
 import { useLazyRef } from '@app/hooks/use-lazy-ref';
 import { useOnAppStateChange } from '@app/hooks/use-on-app-state-change';
 import { usePopulateAuth } from '@app/hooks/use-populate-auth';
-import { useRecoveredFromError } from '@app/hooks/use-recovered-from-error';
+import {
+  setRecoveredFromError,
+  useRecoveredFromError,
+} from '@app/hooks/use-recovered-from-error';
 import { useSyncRef } from '@app/hooks/use-sync-ref';
 import {
   completeAuthWithCallbackUrl,
@@ -25,6 +28,7 @@ import {
   endDeepLinkAuth,
 } from '@app/navigators/deep-link-auth-state';
 import { logger } from '@app/utils/logger';
+import { runWhenIdle } from '@app/utils/run-when-idle';
 
 /**
  * Decode `params.href` from a Quick Action at the I/O boundary.
@@ -80,7 +84,7 @@ const getHomeQuickActions = (showFollowingAction: boolean): RouterAction[] => {
 
 export function RouterEffects() {
   const { authState, loginWithTwitch, ready } = useAuthContext();
-  const { recoveredFromError, setRecoveredFromError } = useRecoveredFromError();
+  const recoveredFromError = useRecoveredFromError();
 
   useOnAppStateChange(({ current }) => {
     if (Platform.OS !== 'web') {
@@ -96,7 +100,7 @@ export function RouterEffects() {
     if (recoveredFromError) {
       setRecoveredFromError(false);
     }
-  }, [recoveredFromError, setRecoveredFromError]);
+  }, [recoveredFromError]);
 
   useEffect(() => {
     let isMounted = true;
@@ -132,20 +136,23 @@ export function RouterEffects() {
 
     let cancelled = false;
 
-    void QuickActions.isSupported()
-      .then(isSupported => {
-        if (!isSupported || cancelled) {
-          return;
-        }
+    const idleTask = runWhenIdle(() => {
+      void QuickActions.isSupported()
+        .then(isSupported => {
+          if (!isSupported || cancelled) {
+            return;
+          }
 
-        return QuickActions.setItems(homeScreenQuickActions);
-      })
-      .catch(error => {
-        logger.main.warn('Failed to configure quick actions', error);
-      });
+          return QuickActions.setItems(homeScreenQuickActions);
+        })
+        .catch(error => {
+          logger.main.warn('Failed to configure quick actions', error);
+        });
+    });
 
     return () => {
       cancelled = true;
+      idleTask.cancel();
     };
   }, [authState?.isLoggedIn, ready]);
 

@@ -924,6 +924,33 @@ export function getPaintBitmaps(
     },
   };
 
-  cachePaintBitmaps(key, bitmaps);
+  cachePaintBitmaps(key, bitmaps, estimatePaintBitmapBytes(layout, bitmaps));
   return bitmaps;
+}
+
+function estimatePaintBitmapBytes(
+  layout: PaintUsernameLayout,
+  bitmaps: PaintBitmaps,
+): number {
+  let imageCount = 1;
+
+  if (bitmaps.maskImage) {
+    imageCount += 1;
+  }
+
+  if (bitmaps.backingImage) {
+    imageCount += 1;
+  }
+
+  if (bitmaps.strokeImage) {
+    imageCount += 1;
+  }
+
+  for (const slot of bitmaps.layerSlots) {
+    if (slot.kind === 'baked') {
+      imageCount += 1;
+    }
+  }
+
+  return layout.surfaceWidthPx * layout.surfaceHeightPx * 4 * imageCount;
 }

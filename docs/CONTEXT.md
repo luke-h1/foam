@@ -132,7 +132,7 @@ that split. Renderers are named for the token they draw - `TextToken`,
 **Token kind naming** - `emote` is a rendered emote from any provider;
 `stvEmoteLink` is a _pasted 7TV URL_ that draws as a card, never an emote;
 `stvEmoteAdded` / `stvEmoteRemoved` are channel emote-set events. The one
-resolution path (`processEmotesWorklet`, the only resolver since ADR-0011)
+resolution path (`processEmotes`, the only resolver since ADR-0011)
 emits `'emote'` for every provider; the word/link parse path
 (`parseWordLinkTokens`) emits `'stvEmoteLink'`.
 
@@ -255,7 +255,7 @@ badges bypass `findBadges` and arrive via cosmetics (`chatStore$.badges`).
 **Tick** - two shared animation pulses, one per domain: native animated
 emotes on iOS ride `SharedAnimationDriver` (one `CADisplayLink` + global
 epoch, added by the expo-image patch); Skia paint animation rides
-`components/chat/components/chat-message/cosmetic-username/util/shared-paint-animation-frames.ts` (one Reanimated `useFrameCallback`, paused
+`components/chat/components/chat-message/cosmetic-username/util/shared-paint-animation-frames.tsx` (one Reanimated `useFrameCallback`, paused
 by `chatScrollActiveShared`). Android has its own phase lock in the same
 patch, supervised by a Choreographer callback rather than seeking per tick
 (ADR-0009). ⚠ No `SyncedAnimationCoordinator` exists.

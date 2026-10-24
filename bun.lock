@@ -107,7 +107,6 @@
         "@rozenite/expo-atlas-plugin": "1.11.0",
         "@rozenite/metro": "1.11.0",
         "@rozenite/network-activity-plugin": "1.11.0",
-        "@rozenite/performance-monitor-plugin": "1.11.0",
         "@rozenite/react-navigation-plugin": "1.11.0",
         "@rozenite/require-profiler-plugin": "1.11.0",
         "@rozenite/storage-plugin": "1.11.0",
@@ -144,7 +143,6 @@
         "only-allow": "^1.2.1",
         "oxfmt": "0.74.0",
         "oxlint": "1.89.0",
-        "react-native-performance": "7.0.0",
         "react-native-url-polyfill": "^2.0.0",
         "react-test-renderer": "19.3.0",
         "reassure": "1.6.1",
@@ -1280,8 +1278,6 @@
     "@rozenite/middleware": ["@rozenite/middleware@1.11.0", "", { "dependencies": { "@rozenite/agent-shared": "1.11.0", "@rozenite/runtime": "1.11.0", "@rozenite/tools": "1.11.0", "express": "^5.1.0", "semver": "^7.7.2", "tslib": "^2.3.0", "ws": "^8.18.3" } }, "sha512-sBrrt2SswVP2hwjFEuvaXmsFteNyuipoZivoR3UOfd//dSYqhgO1mFr8IV9D20qV+e1Z/K4fkFLWHOy3JFMT7Q=="],
 
     "@rozenite/network-activity-plugin": ["@rozenite/network-activity-plugin@1.11.0", "", { "dependencies": { "@rozenite/agent-bridge": "1.11.0", "@rozenite/agent-shared": "1.11.0", "@rozenite/plugin-bridge": "1.11.0", "nanoevents": "^9.1.0" }, "peerDependencies": { "react-native-nitro-fetch": "*", "react-native-sse": "*" }, "optionalPeers": ["react-native-nitro-fetch", "react-native-sse"] }, "sha512-8JGTBxffTmYwoR4bHR5b017scu/2qg3XmyfQq+X+XZx1gSGnKsKUj4ZHZO2wzPaL4TG9UJ0MBNBvrgfIH70kog=="],
-
-    "@rozenite/performance-monitor-plugin": ["@rozenite/performance-monitor-plugin@1.11.0", "", { "dependencies": { "@rozenite/plugin-bridge": "1.11.0" }, "peerDependencies": { "react": "*", "react-native": "*", "react-native-performance": "*" } }, "sha512-SZ61ibh0z4kolc2CWsqjgG2eTaI6X3ikspLB3PQ2ZVHTMTakd3dY4wHVcaF0J6FtgD2WcYxFP4HW2QuAQwYl4g=="],
 
     "@rozenite/plugin-bridge": ["@rozenite/plugin-bridge@1.11.0", "", { "dependencies": { "tslib": "^2.3.0" }, "peerDependencies": { "react": ">=17" } }, "sha512-Zz/YypV/cgNabuenVX2vKAxgTfgxaBluQuam498ILNJFpFSr2YJGt6/muUpeqxX75aH719R438si1zBMmO3dgA=="],
 
@@ -2982,8 +2978,6 @@
     "react-native-modal-datetime-picker": ["react-native-modal-datetime-picker@18.0.0", "", { "dependencies": { "prop-types": "^15.7.2" }, "peerDependencies": { "@react-native-community/datetimepicker": ">=6.7.0", "react-native": ">=0.65.0" } }, "sha512-0jdvhhraZQlRACwr7pM6vmZ2kxgzJ4CpnmV6J3TVA6MrXMXK6Zo/upRBKkRp0+fTOiKuNblzesA2U59rYo6SGA=="],
 
     "react-native-nitro-modules": ["react-native-nitro-modules@0.37.1", "", { "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-KpW6EQVQ/bfegpCGxN9Be+ndvsfj56t4IESEvCASu9gWpJa/NDfHpIeIwCOvZQ3eXmLEj6YD4wCLqcC1FJPr2w=="],
-
-    "react-native-performance": ["react-native-performance@7.0.0", "", { "peerDependencies": { "react-native": "*" } }, "sha512-ARgGZpjxfCGPFByL5i9EB/tzwZIVesm0a30yyV/yvYPk1SbEjQqAQpIn55ZYEh9qO7GKinR5zQ7HUM1rAHwHYg=="],
 
     "react-native-pulsar": ["react-native-pulsar@1.7.0", "", { "peerDependencies": { "react": "*", "react-native": "*", "react-native-worklets": "*" } }, "sha512-izuzr3S76Ltrobvngceke380XDOea4n9J7Lbha6XDgzYBx1H+rz/obcI1b2sBNyiJ9ig9KCNXrkd+6uQY9ailw=="],
 

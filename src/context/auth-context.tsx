@@ -618,9 +618,9 @@ function useAuthContextValue({
     };
   }, [markAuthStateReadyFallbackRef, populateAuthStateRef]);
 
-  useEffect(() => {
-    const refreshIfNeeded = (reason: string) => {
-      const currentAuthState = state.authState;
+  const refreshTokenIfNeeded = useCallback(
+    (reason: string) => {
+      const currentAuthState = authStateRef.current;
 
       if (
         !currentAuthState?.isLoggedIn ||
@@ -631,18 +631,23 @@ function useAuthContextValue({
       }
 
       void refreshCurrentUserTokenRef.current(reason);
-    };
+    },
+    [authStateRef, refreshCurrentUserTokenRef],
+  );
 
-    refreshIfNeeded('token_state_changed');
+  useEffect(() => {
+    refreshTokenIfNeeded('token_state_changed');
+  }, [refreshTokenIfNeeded, state.authState]);
 
+  useEffect(() => {
     const refreshInterval = setInterval(() => {
-      refreshIfNeeded('scheduled');
+      refreshTokenIfNeeded('scheduled');
     }, USER_TOKEN_REFRESH_POLL_INTERVAL_MS);
 
     const unsubscribeAppState = subscribeToAppStateTransitions(
       ({ current }) => {
         if (current === 'active') {
-          refreshIfNeeded('app_active');
+          refreshTokenIfNeeded('app_active');
         }
       },
     );
@@ -651,7 +656,7 @@ function useAuthContextValue({
       clearInterval(refreshInterval);
       unsubscribeAppState();
     };
-  }, [refreshCurrentUserTokenRef, state.authState]);
+  }, [refreshTokenIfNeeded]);
 
   // The ref-backed callbacks are identity-stable, so the context value only
   // changes when auth state changes. This provider wraps the whole app and

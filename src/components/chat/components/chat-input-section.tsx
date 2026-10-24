@@ -68,6 +68,7 @@ export const ChatInputSection = memo(
     replyTo,
     onClearReply,
     inputRef,
+    includeHorizontalSafeArea = true,
   }: ChatInputSectionProps) => {
     const { isAuthenticated, isSending } = connection;
     const insets = useSafeAreaInsets();
@@ -140,8 +141,11 @@ export const ChatInputSection = memo(
               styles.composerShell,
               {
                 paddingBottom: insets.bottom + theme.space8,
-                paddingLeft: theme.space16 + insets.left,
-                paddingRight: theme.space16 + insets.right,
+                paddingLeft:
+                  theme.space16 + (includeHorizontalSafeArea ? insets.left : 0),
+                paddingRight:
+                  theme.space16 +
+                  (includeHorizontalSafeArea ? insets.right : 0),
               },
               composerAnimatedStyle,
             ]}

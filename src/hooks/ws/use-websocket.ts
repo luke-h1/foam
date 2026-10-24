@@ -28,22 +28,36 @@ Object.defineProperty(dummySocket, 'url', {
   configurable: false,
 });
 
+function readReadyState(
+  url: string | null,
+  entry: { url: string; state: ReadyState } | null,
+): ReadyState {
+  if (url === null) {
+    return ReadyState.UNINSTANTIATED;
+  }
+
+  if (entry?.url === url) {
+    return entry.state;
+  }
+
+  return ReadyState.CONNECTING;
+}
+
 export const useWebsocket = <TJsonMessage = never>(
   url: string | null,
   options: Options = {},
 ): WebSocketHookReturn<TJsonMessage> => {
-  const [readyStateByUrl, setReadyStateByUrl] = useState<
-    Partial<Record<string, ReadyState>>
-  >({});
+  const [readyStateEntry, setReadyStateEntry] = useState<{
+    url: string;
+    state: ReadyState;
+  } | null>(null);
 
   const websocketRef = useRef<WebSocket | null>(null);
   const startRef = useRef<() => void>(() => {});
   const reconnectCount = useRef<number>(0);
   const optionsCache = useSyncRef(options);
 
-  const readyState: ReadyState =
-    (url === null ? undefined : readyStateByUrl[url]) ??
-    (url === null ? ReadyState.UNINSTANTIATED : ReadyState.CONNECTING);
+  const readyState = readReadyState(url, readyStateEntry);
 
   // Non-OPEN sends are dropped; consumers re-issue on open/reconnect.
   const sendMessage: SendMessage = useCallback(message => {
@@ -56,9 +70,12 @@ export const useWebsocket = <TJsonMessage = never>(
     }
   }, []);
 
-  const sendJsonMessage: SendJsonMessage<TJsonMessage> = message => {
-    sendMessage(JSON.stringify(message));
-  };
+  const sendJsonMessage: SendJsonMessage<TJsonMessage> = useCallback(
+    message => {
+      sendMessage(JSON.stringify(message));
+    },
+    [sendMessage],
+  );
 
   const getWebSocket = useCallback(
     (): WebSocket => websocketRef.current ?? dummySocket,
@@ -74,9 +91,15 @@ export const useWebsocket = <TJsonMessage = never>(
     let expectClose = false;
 
     const setReadyState = (state: ReadyState) => {
-      if (!expectClose) {
-        setReadyStateByUrl(prev => ({ ...prev, [url]: state }));
+      if (expectClose) {
+        return;
       }
+
+      setReadyStateEntry(prev =>
+        prev && prev.url === url && prev.state === state
+          ? prev
+          : { url, state },
+      );
     };
 
     const start = () => {

@@ -25,7 +25,13 @@ export interface DisposablePaintBitmaps {
  */
 export const MAX_CACHED_PAINT_BITMAPS = 256;
 
+export const MAX_PAINT_BITMAP_BYTES = 32 * 1024 * 1024;
+
 const cache = new Map<string, DisposablePaintBitmaps>();
+
+const byteSizes = new Map<string, number>();
+
+let totalBytes = 0;
 
 /**
  * Retain counts for entries a mounted canvas is still drawing. Eviction only
@@ -108,22 +114,44 @@ export function getCachedPaintBitmaps(
   return entry;
 }
 
+function cacheNeedsRoom(byteSize: number): boolean {
+  if (cache.size >= MAX_CACHED_PAINT_BITMAPS) {
+    return true;
+  }
+
+  return (
+    byteSize > 0 &&
+    cache.size > 0 &&
+    totalBytes + byteSize > MAX_PAINT_BITMAP_BYTES
+  );
+}
+
+function evictOldestPaintBitmap(): void {
+  const oldest = cache.entries().next().value;
+
+  if (!oldest) {
+    return;
+  }
+
+  const [oldestKey, oldestEntry] = oldest;
+  totalBytes -= byteSizes.get(oldestKey) ?? 0;
+  byteSizes.delete(oldestKey);
+  cache.delete(oldestKey);
+  scheduleDisposal(oldestEntry);
+}
+
 export function cachePaintBitmaps(
   key: string,
   entry: DisposablePaintBitmaps,
+  byteSize = 0,
 ): void {
-  const oldest =
-    cache.size >= MAX_CACHED_PAINT_BITMAPS
-      ? cache.entries().next().value
-      : undefined;
-
-  if (oldest) {
-    const [oldestKey, oldestEntry] = oldest;
-    cache.delete(oldestKey);
-    scheduleDisposal(oldestEntry);
+  while (cacheNeedsRoom(byteSize)) {
+    evictOldestPaintBitmap();
   }
 
   cache.set(key, entry);
+  byteSizes.set(key, byteSize);
+  totalBytes += byteSize;
 }
 
 /**
@@ -163,4 +191,6 @@ export function clearPaintBitmapCache(): void {
     scheduleDisposal(entry);
   }
   cache.clear();
+  byteSizes.clear();
+  totalBytes = 0;
 }

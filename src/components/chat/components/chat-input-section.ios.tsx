@@ -28,6 +28,7 @@ export const ChatInputSection = memo(
     replyTo,
     onClearReply,
     inputRef,
+    includeHorizontalSafeArea = true,
   }: ChatInputSectionProps) => {
     const { isAuthenticated, isSending } = connection;
 
@@ -64,8 +65,11 @@ export const ChatInputSection = memo(
               styles.composerShell,
               {
                 paddingBottom: insets.bottom,
-                paddingLeft: theme.space12 + insets.left,
-                paddingRight: theme.space12 + insets.right,
+                paddingLeft:
+                  theme.space12 + (includeHorizontalSafeArea ? insets.left : 0),
+                paddingRight:
+                  theme.space12 +
+                  (includeHorizontalSafeArea ? insets.right : 0),
               },
               composerAnimatedStyle,
             ]}

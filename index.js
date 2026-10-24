@@ -1,28 +1,20 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 
 if (__DEV__ && !process.env.EXPO_PUBLIC_REACT_PERF_TRACKS) {
-  // React's dev-only component performance tracks structuredClone every
-  // rendered component's props into buffered performance.measure entries on
-  // each commit. In busy chats this allocated ~100MB/s (GC pinned a core) and
-  // leaked ~50MB/min of retained entries. React gates the feature on
-  // console.timeStamp + performance.measure existing, so removing one disables
-  // it. Set EXPO_PUBLIC_REACT_PERF_TRACKS=1 when you want the tracks back for
-  // a React DevTools Performance session.
-  //
-  // RN 0.88 / React 19.3 calls console.timeStamp whenever supportsUserTiming
-  // was true at renderer init. Deleting timeStamp (the old approach) races
-  // that gate and crashes with "undefined is not a function". Disable via
-  // performance.measure instead, and keep a named no-op timeStamp so a late
-  // gate=true path cannot crash. The no-op must be a real function with a
-  // .name: react-native-worklets copies console via Object.entries and reads
-  // `.name` on every value, so an own property holding undefined crashes its
-  // init.
+  require('react-native/Libraries/Core/setUpPerformance');
   // eslint-disable-next-line no-console
   console.timeStamp = function timeStamp() {};
   try {
-    delete globalThis.performance.measure;
-  } catch {
-    // measure missing or not configurable
+    Object.defineProperty(globalThis.performance, 'measure', {
+      configurable: true,
+      value: function measure() {},
+    });
+    Object.defineProperty(globalThis.performance, 'clearMeasures', {
+      configurable: true,
+      value: function clearMeasures() {},
+    });
+  } catch (error) {
+    void error;
   }
 }
 

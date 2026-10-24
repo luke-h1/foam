@@ -59,6 +59,7 @@ export function EmoteSheet({
     },
     emoteListRef,
     layoutWidth,
+    horizontalInset: leftInset + rightInset,
   });
 
   const handleContainerLayout = useCallback((event: LayoutChangeEvent) => {
