@@ -1,5 +1,11 @@
 import { useRef } from 'react';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Platform,
+  ScrollView,
+  type ScrollViewInstance,
+  StyleSheet,
+  View,
+} from 'react-native';
 
 import {
   Form as NativeForm,
@@ -28,7 +34,7 @@ export function SettingsAppearanceScreen() {
   const hapticFeedback = usePreference('hapticFeedback');
   const shakeToReport = usePreference('shakeToReport');
   const update = useUpdatePreferences();
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
 
   useScrollToTop(scrollRef);
 

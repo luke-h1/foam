@@ -1,5 +1,11 @@
 import { useRef } from 'react';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Platform,
+  ScrollView,
+  type ScrollViewInstance,
+  StyleSheet,
+  View,
+} from 'react-native';
 
 import {
   Button,
@@ -29,7 +35,7 @@ import { openLinkInBrowser } from '@app/utils/browser/open-link-in-browser';
 const appIconProduction = require('../../../assets/app-icon/app-icon-production.png');
 
 export function AboutScreen() {
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const otaLabel = Updates.updateId ?? 'Embedded';
   const { config } = useRemoteConfig();
   const websiteUrl = config.websiteUrl.value;

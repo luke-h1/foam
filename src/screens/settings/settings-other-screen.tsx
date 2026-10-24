@@ -1,5 +1,11 @@
 import { useRef } from 'react';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Platform,
+  ScrollView,
+  type ScrollViewInstance,
+  StyleSheet,
+  View,
+} from 'react-native';
 
 import {
   Form,
@@ -22,7 +28,7 @@ import {
 import { theme } from '@app/styles/themes';
 
 export function SettingsOtherScreen() {
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const analyticsEnabled = usePreference('analyticsEnabled');
   const update = useUpdatePreferences();
 

@@ -1,14 +1,13 @@
 import {
   startTransition,
   useCallback,
-  useEffect,
   useMemo,
   useRef,
   useState,
   useSyncExternalStore,
 } from 'react';
 
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
 
 import type { FlashListRef } from '@app/components/flash-list/flash-list';
@@ -65,11 +64,15 @@ export function useSearchController() {
     [searchHistory],
   );
 
-  useEffect(() => {
-    void ScreenOrientation.lockAsync(
-      ScreenOrientation.OrientationLock.PORTRAIT_UP,
-    );
-  }, []);
+  // Lock portrait only while search is focused. A mount lock can finish after
+  // the player unlocks and keep the stream in portrait.
+  useFocusEffect(
+    useCallback(() => {
+      void ScreenOrientation.lockAsync(
+        ScreenOrientation.OrientationLock.PORTRAIT_UP,
+      );
+    }, []),
+  );
 
   const performSearch = useCallback(async (value: string) => {
     if (value.length < MIN_SEARCH_QUERY_LENGTH) {

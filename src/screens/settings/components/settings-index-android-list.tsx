@@ -1,4 +1,9 @@
-import { ScrollView, StyleSheet, View } from 'react-native';
+import {
+  ScrollView,
+  type ScrollViewInstance,
+  StyleSheet,
+  View,
+} from 'react-native';
 import type { RefObject } from 'react';
 
 import { router } from 'expo-router';
@@ -39,7 +44,7 @@ interface SettingsIndexAndroidListProps {
   canSeeUpdateAppButton: boolean;
   user: UserInfoResponse | undefined;
   openStore: () => void;
-  scrollRef: RefObject<ScrollView | null>;
+  scrollRef: RefObject<ScrollViewInstance | null>;
   shouldShowDevTools: boolean;
   updateBundle: () => void;
 }

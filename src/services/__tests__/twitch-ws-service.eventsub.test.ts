@@ -357,6 +357,26 @@ describe('TwitchWsService shared socket teardown', () => {
     appStateSpy.mockRestore();
   });
 
+  test('a keepalive timeout reconnects once when the old socket then closes', () => {
+    const socket = createFakeSocket();
+
+    twitchWsState.instance = socket;
+    twitchWsState.setupEventListeners();
+    twitchWsState.resetKeepaliveTimer();
+
+    jest.advanceTimersByTime(15_000);
+
+    expect(twitchWsState.reconnectAttempts).toBe(1);
+    expect(socket.onclose).toBeNull();
+    expect(socket.close).toHaveBeenCalledWith(
+      1000,
+      'Replaced by a new EventSub connection',
+    );
+
+    clearTimeout(twitchWsState.reconnectTimer ?? undefined);
+    twitchWsState.reconnectTimer = null;
+  });
+
   test('cancels a pending reconnect when the last consumer leaves', async () => {
     const socket = createFakeSocket();
     const onPoll = jest.fn();

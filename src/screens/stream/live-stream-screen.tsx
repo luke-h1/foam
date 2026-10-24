@@ -1,8 +1,16 @@
-import { memo, useCallback, useEffect, useReducer, useRef } from 'react';
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { useQuery } from '@tanstack/react-query';
 import { router, Stack, useIsFocused } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 
 import type { StreamPlayerRef } from '@app/components/stream-player/types';
 import { useAuthContext } from '@app/context/auth-context';
@@ -56,6 +64,11 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   id,
 }: LiveStreamScreenProps) {
   const isFocused = useIsFocused();
+
+  const [screenOrientation, setScreenOrientation] = useState<
+    'default' | 'portrait_up'
+  >('default');
+
   const { authState } = useAuthContext();
   const customPlayerEnabled = usePreference('customPlayerEnabled');
   const streamPlayerRef = useRef<StreamPlayerRef>(null);
@@ -156,6 +169,16 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     landscapeChatCycleAction,
     updatePreferences,
   });
+
+  const exitLandscape = useCallback(() => {
+    setScreenOrientation('portrait_up');
+    handleExitLandscape();
+  }, [handleExitLandscape]);
+
+  // portrait_up forces the screen back to portrait. Once that has happened, allow rotation again.
+  if (screenOrientation === 'portrait_up' && !isLandscape) {
+    setScreenOrientation('default');
+  }
 
   const handlePlayerLoaded = useChatConnectionReadiness({
     dispatchUi,
@@ -281,7 +304,13 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
   return (
     <View style={styles.contentContainer}>
-      <Stack.Screen options={{ autoHideHomeIndicator: isLandscape }} />
+      <StatusBar verticalBarBehaviorIOS='disabled' />
+      <Stack.Screen
+        options={{
+          autoHideHomeIndicator: isLandscape,
+          orientation: screenOrientation,
+        }}
+      />
       <LiveStreamVideoPane
         onRetry={() => void refetchStream()}
         {...{
@@ -294,7 +323,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           isStreamUnavailable,
           onBackPress: handleBack,
           onCreateClipPress: handleCreateClipPress,
-          onExitLandscape: handleExitLandscape,
+          onExitLandscape: exitLandscape,
           onPlaybackLatencyChange: handlePlaybackLatencyChange,
           onPlayerLoaded: handlePlayerLoaded,
           onSharePress: handleSharePress,

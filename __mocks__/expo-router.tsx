@@ -1,6 +1,6 @@
 import React from 'react';
 // eslint-disable-next-line no-restricted-imports
-import { Text, TextInput, View } from 'react-native';
+import { Text, TextInput, type TextInputInstance, View } from 'react-native';
 
 export const router = {
   back: jest.fn(),
@@ -33,7 +33,7 @@ export const Stack = {
     placeholder?: string;
     onChangeText?: (e: { nativeEvent: { text: string } }) => void;
   }) => {
-    const inputRef = React.useRef<TextInput | null>(null);
+    const inputRef = React.useRef<TextInputInstance | null>(null);
 
     // The test renderer has no Fabric, so `setNativeProps` still updates
     // the mock input. It stands in for the native SearchBarCommands.

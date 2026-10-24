@@ -39,7 +39,7 @@ function injectIntoPodfile(contents, minIosVersion) {
   );
   const contentsWithoutExistingSnippet = contents
     .replace(markerPattern, '\n')
-    .replace(LEGACY_SNIPPET_PATTERN, '\n');
+    .replaceAll(LEGACY_SNIPPET_PATTERN, '\n');
 
   if (contents.includes(MARKER)) {
     return contentsWithoutExistingSnippet.replace(

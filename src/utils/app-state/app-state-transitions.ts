@@ -60,7 +60,9 @@ export function subscribeToAppStateTransitions(
   listener: AppStateTransitionListener,
 ): () => void {
   if (!appStateSubscription) {
-    trackedState = AppState.currentState;
+    // SAFETY: RN types currentState as string | null | undefined; runtime values
+    // are AppStateStatus, and null/undefined fall back to active.
+    trackedState = (AppState.currentState as AppStateStatus | null) ?? 'active';
     appStateSubscription = AppState.addEventListener(
       'change',
       handleAppStateChange,

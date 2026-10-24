@@ -73,6 +73,7 @@ describe('useChatScroll', () => {
     bubbles: false,
     cancelable: false,
     defaultPrevented: false,
+    dispatchConfig: { registrationName: 'onScroll' },
     eventPhase: 0,
     isTrusted: false,
     isDefaultPrevented: () => false,

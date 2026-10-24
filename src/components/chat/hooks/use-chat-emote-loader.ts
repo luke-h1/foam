@@ -5,7 +5,6 @@ import {
   useRef,
   useState,
 } from 'react';
-import { InteractionManager } from 'react-native';
 
 import { useSelector } from '@legendapp/state/react';
 
@@ -25,6 +24,7 @@ import {
   preloadGlobalEmotes,
 } from '@app/utils/image/preload-emotes';
 import { logger } from '@app/utils/logger';
+import { runWhenIdle } from '@app/utils/run-when-idle';
 
 export type EmoteLoadingStatus =
   | 'idle'
@@ -126,7 +126,7 @@ export const useChatEmoteLoader = ({
           return;
         }
 
-        InteractionManager.runAfterInteractions(() => {
+        runWhenIdle(() => {
           if (
             !isMountedRef.current ||
             currentChannelRef.current !== channelId

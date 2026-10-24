@@ -6,9 +6,6 @@ import {
 } from 'react-native-gesture-handler';
 import Animated, { type AnimatedStyle } from 'react-native-reanimated';
 
-import { BlurView } from 'expo-blur';
-import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
-
 import { ChannelPollCard } from '@app/components/channel-poll-card/channel-poll-card';
 import { ChannelPredictionCard } from '@app/components/channel-prediction-card/channel-prediction-card';
 import { Chat } from '@app/components/chat/chat';
@@ -18,22 +15,6 @@ import { theme } from '@app/styles/themes';
 
 import type { FullscreenChatMode } from '../types';
 import { ChatLatencyPill } from './chat-latency-pill';
-
-/**
- * Frosted backing for overlay chat: the liquid-glass material where the OS
- * has it, a blur everywhere else.
- */
-function OverlayChatScrim() {
-  return isLiquidGlassAvailable() ? (
-    <GlassView
-      colorScheme='dark'
-      glassEffectStyle='clear'
-      style={styles.overlayChatBlur}
-    />
-  ) : (
-    <BlurView intensity={36} style={styles.overlayChatBlur} tint='dark' />
-  );
-}
 
 /**
  * Shown in chat's place until the player reports the stream is running.
@@ -67,8 +48,8 @@ interface ChatPaneContentProps {
 }
 
 /**
- * Everything that sits inside the chat pane: the frosted backing in overlay
- * mode, the latency pill, any live poll or prediction, and chat itself.
+ * Everything that sits inside the chat pane: the latency pill, any live
+ * poll or prediction, and chat itself.
  */
 function ChatPaneContent({
   customPlayerEnabled,
@@ -88,7 +69,6 @@ function ChatPaneContent({
         isOverlayChat ? styles.overlayChatContent : null,
       ]}
     >
-      {shouldMountChat && isOverlayChat ? <OverlayChatScrim /> : null}
       {isStreamEnabled && customPlayerEnabled ? <ChatLatencyPill /> : null}
       {isStreamEnabled && prediction ? (
         <ChannelPredictionCard
@@ -106,6 +86,7 @@ function ChatPaneContent({
           channelId={resolvedChannelId ?? ''}
           channelName={resolvedChannelLogin}
           transparent={isOverlayChat}
+          includeHorizontalSafeArea={!isLandscape}
         />
       ) : (
         <ChatPendingNotice />
@@ -247,11 +228,8 @@ const styles = StyleSheet.create({
     height: 26,
     width: 3,
   },
-  overlayChatBlur: {
-    ...StyleSheet.absoluteFill,
-  },
   overlayChatContent: {
-    backgroundColor: 'rgba(10, 11, 16, 0.42)',
+    backgroundColor: 'rgba(10, 11, 16, 0.84)',
     borderLeftColor: theme.colorBorderSecondary,
     borderLeftWidth: StyleSheet.hairlineWidth,
   },

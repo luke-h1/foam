@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  Platform,
+  ScrollView,
+  type ScrollViewInstance,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 import {
@@ -59,7 +66,7 @@ export function DebugScreen() {
   const [channelName, setChannelName] = useState('');
   const channelIdRef = useRef('');
   const reactQueryEnabled = debugOptions.ReactQueryDebug?.enabled ?? false;
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const accessToken = authState?.token?.accessToken ?? '';
   const tokenKind = authState?.isAnonAuth ? 'anon' : 'user';
 

@@ -434,6 +434,8 @@ const config: ExpoConfig = {
     // papered over is gone now that RNRepo's mixed modulemaps are disabled.
     // './src/plugins/with-expo-modulemap-archive-fix.js',
     '@react-native-firebase/app',
+    // SDK 58 SceneDelegate: RNFB's plugin skips FirebaseApp.configure() — see plugin.
+    './plugins/with-firebase-scene-configure.js',
     './plugins/with-firebase-analytics-no-ad-ids.js',
     './src/plugins/with-android-release-lint-fix.js',
     './src/plugins/with-android-main-activity-config-changes.js',

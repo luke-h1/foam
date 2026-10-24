@@ -12,7 +12,7 @@ import { theme } from '@app/styles/themes';
 import { type UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { type SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import { processEmotesWorklet } from '@app/utils/chat/emote-processor';
+import { processEmotes } from '@app/utils/chat/emote-processor';
 import { type MessageToken } from '@app/utils/chat/message-token';
 import { getMessageTokenText } from '@app/utils/chat/message-token-content';
 
@@ -544,7 +544,7 @@ function buildProviderEmoteParts(
   const forProvider = (target: SanitisedEmote['provider']) =>
     emotes.filter(emote => emote.provider === target);
 
-  return processEmotesWorklet({
+  return processEmotes({
     inputString: buildProviderEmoteFallbackText(emotes),
     userstate: null,
     sevenTvChannelEmotes: provider === '7tv' ? forProvider('7tv') : [],

@@ -1,0 +1,20 @@
+diff --git a/android/src/main/java/expo/modules/ui/SegmentedButtonView.kt b/android/src/main/java/expo/modules/ui/SegmentedButtonView.kt
+index 08f853f9a7a6dd82dd7983998f41b94a0f40a13a..561fa04a3f9feb5b1777055c4de73a52777f239b 100644
+--- a/android/src/main/java/expo/modules/ui/SegmentedButtonView.kt
++++ b/android/src/main/java/expo/modules/ui/SegmentedButtonView.kt
+@@ -99,6 +99,7 @@ fun FunctionalComposableScope.SegmentedButtonContent(
+         enabled = props.enabled,
+         colors = segmentedColors,
+         modifier = modifier,
++        icon = {},
+         label = label
+       )
+     }
+@@ -111,6 +112,7 @@ fun FunctionalComposableScope.SegmentedButtonContent(
+         enabled = props.enabled,
+         colors = segmentedColors,
+         modifier = modifier,
++        icon = {},
+         label = label
+       )
+     }

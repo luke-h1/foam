@@ -64,7 +64,6 @@ export function TopStreamsScreen() {
     isFetchingNextPage,
   } = useInfiniteQuery({
     ...topStreamsInfiniteQueryOptions(),
-    refetchOnWindowFocus: true,
   });
 
   useRefetchOnForeground({

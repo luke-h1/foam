@@ -1,11 +1,8 @@
-import type { ReactNode } from 'react';
-
 import { fireEvent, screen } from '@testing-library/react-native';
 import { router } from 'expo-router';
-import { NavigationContainer } from 'expo-router/react-navigation';
 
 import { twitchService as _twitchService } from '@app/services/twitch-service';
-import render, { DefaultWrapper } from '@app/test/render';
+import render from '@app/test/render';
 import type { TwitchStream } from '@app/types/twitch/stream';
 
 import { LiveStreamCard } from '../live-stream-card/live-stream-card';
@@ -41,13 +38,7 @@ describe('LiveStreamCard', () => {
   });
 
   test('pushes the live stream route on press', () => {
-    render(<LiveStreamCard stream={mockStream} />, {
-      wrapper: ({ children }: { children: ReactNode }) => (
-        <DefaultWrapper>
-          <NavigationContainer>{children}</NavigationContainer>
-        </DefaultWrapper>
-      ),
-    });
+    render(<LiveStreamCard stream={mockStream} />);
 
     fireEvent.press(
       screen.getByLabelText(
@@ -62,13 +53,7 @@ describe('LiveStreamCard', () => {
   });
 
   test('renders correctly', () => {
-    render(<LiveStreamCard stream={mockStream} />, {
-      wrapper: ({ children }: { children: ReactNode }) => (
-        <DefaultWrapper>
-          <NavigationContainer>{children}</NavigationContainer>
-        </DefaultWrapper>
-      ),
-    });
+    render(<LiveStreamCard stream={mockStream} />);
 
     expect(screen.getByText('Test Stream Title')).toBeOnTheScreen();
     expect(screen.getByText('Test user')).toBeOnTheScreen();
@@ -76,13 +61,7 @@ describe('LiveStreamCard', () => {
   });
 
   test('drops the category line when the list is one category', () => {
-    render(<LiveStreamCard stream={mockStream} showCategory={false} />, {
-      wrapper: ({ children }: { children: ReactNode }) => (
-        <DefaultWrapper>
-          <NavigationContainer>{children}</NavigationContainer>
-        </DefaultWrapper>
-      ),
-    });
+    render(<LiveStreamCard stream={mockStream} showCategory={false} />);
 
     expect(
       screen.queryByText(mockStream.game_name, { exact: false }),

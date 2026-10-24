@@ -72,8 +72,8 @@ function useWindowDimsAreStuck(deviceLandscape: boolean | null): boolean {
 
 /**
  * Resolves the orientation the screen should lay out for, and the metrics that
- * follow from it. Landscape puts the safe-area insets on left and right, so
- * those are reserved separately from the content width.
+ * follow from it. Left/right safe-area insets are always reserved (Duo rail,
+ * notch), not only in landscape.
  */
 export function useLiveStreamOrientation() {
   const { width: winW, height: winH } = useWindowDimensions();
@@ -90,13 +90,13 @@ export function useLiveStreamOrientation() {
 
   const { isLandscape, layoutHeight, portraitTopInset, screenWidth } =
     getLiveStreamLayoutMetrics({
-      insetTop: Math.max(insets.top, insets.left, insets.right),
+      insetTop: insets.top,
       windowHeight: oriLandscape ? sideShort : sideLong,
       windowWidth: oriLandscape ? sideLong : sideShort,
     });
 
-  const landscapeInsetLeft = isLandscape ? insets.left : 0;
-  const landscapeInsetRight = isLandscape ? insets.right : 0;
+  const landscapeInsetLeft = insets.left;
+  const landscapeInsetRight = insets.right;
 
   return {
     contentWidth: Math.max(

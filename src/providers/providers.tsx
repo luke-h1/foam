@@ -8,31 +8,20 @@ import {
 } from 'react-native-safe-area-context';
 import { PortalProvider } from 'react-native-teleport';
 
-import { useNetworkActivityDevTools } from '@rozenite/network-activity-plugin';
-import { usePerformanceMonitorDevTools } from '@rozenite/performance-monitor-plugin';
-import { useRequireProfilerDevTools } from '@rozenite/require-profiler-plugin';
-import {
-  createMMKVStorageAdapter,
-  useRozeniteStoragePlugin,
-} from '@rozenite/storage-plugin';
-import { useTanStackQueryDevTools } from '@rozenite/tanstack-query-plugin';
-import { useQueryClient } from '@tanstack/react-query';
-import * as Clipboard from 'expo-clipboard';
 import { PressablesConfig } from 'pressto';
 import { Toaster } from 'sonner-native';
 
 import { ActionMenuHost } from '@app/components/action-menu-host/action-menu-host';
 import { ChangelogAndroidHost } from '@app/components/changelog/changelog-android-host';
+import { SharedPaintAnimationDrivers } from '@app/components/chat/components/chat-message/cosmetic-username/util/shared-paint-animation-frames';
 import { GlobalErrorGate } from '@app/components/global-error-gate/global-error-gate';
 import { MediaPermissionHost } from '@app/components/media-permission-host/media-permission-host';
 import { OfflineBanner } from '@app/components/offline-banner/offline-banner';
 import { ShakeToReport } from '@app/components/shake-to-report/shake-to-report';
 import { AccentColorProvider } from '@app/context/accent-color-context';
 import { AuthContextProvider } from '@app/context/auth-context';
-import { useDebugOptions } from '@app/hooks/use-debug-options';
-import { useRecoveredFromError } from '@app/hooks/use-recovered-from-error';
+import { setRecoveredFromError } from '@app/hooks/use-recovered-from-error';
 import { QueryProvider } from '@app/lib/react-query/query-provider';
-import { storage } from '@app/lib/storage';
 import { BaseConfig } from '@app/navigators/config';
 import { ErrorBoundary } from '@app/screens/error/error-boundary';
 import { motion, pressAnimation } from '@app/styles/motion';
@@ -48,72 +37,23 @@ function QueryProviderWithDevTools({ children }: PropsWithChildren) {
   );
 }
 
-// Required lazily behind __DEV__ so Metro drops the devtools bundle (~94KB)
-// from release builds. A static import would keep it in the bundle.
 // SAFETY: the require resolves the same module the type import names.
-const DevToolsBubble = __DEV__
+const devTools = __DEV__
   ? // eslint-disable-next-line @typescript-eslint/no-require-imports
-    (
-      require('react-native-react-query-devtools') as typeof import('react-native-react-query-devtools')
-    ).DevToolsBubble
+    (require('./dev-tools') as typeof import('./dev-tools'))
   : null;
-
-function QueryDevelopmentTools() {
-  const queryClient = useQueryClient();
-  const { ReactQueryDebug } = useDebugOptions();
-
-  useTanStackQueryDevTools(queryClient);
-
-  if (!ReactQueryDebug?.enabled || !DevToolsBubble) {
-    return null;
-  }
-
-  return (
-    <DevToolsBubble
-      queryClient={queryClient}
-      onCopy={async text => {
-        try {
-          await Clipboard.setStringAsync(text);
-          return true;
-        } catch {
-          return false;
-        }
-      }}
-    />
-  );
-}
 
 function QueryDevTools({ children }: PropsWithChildren) {
   return (
     <>
       <Toaster style={toastStyle} />
       {children}
-      {__DEV__ ? <QueryDevelopmentTools /> : null}
+      {devTools ? <devTools.QueryDevelopmentTools /> : null}
     </>
   );
 }
 
-function DevTools() {
-  useNetworkActivityDevTools();
-  usePerformanceMonitorDevTools();
-  useRequireProfilerDevTools();
-
-  useRozeniteStoragePlugin({
-    storages: [
-      createMMKVStorageAdapter({
-        storages: {
-          storageService: storage,
-        },
-      }),
-    ],
-  });
-
-  return null;
-}
-
 export function Providers({ children }: PropsWithChildren) {
-  const { setRecoveredFromError } = useRecoveredFromError();
-
   return (
     <AuthContextProvider>
       <AccentColorProvider>
@@ -125,7 +65,8 @@ export function Providers({ children }: PropsWithChildren) {
             >
               <KeyboardProvider preload={false}>
                 <PortalProvider>
-                  {__DEV__ ? <DevTools /> : null}
+                  {devTools ? <devTools.DevTools /> : null}
+                  <SharedPaintAnimationDrivers />
                   <AnalyticsProvider>
                     <QueryProviderWithDevTools>
                       <GlobalErrorGate />

@@ -62,6 +62,7 @@ interface ChatInputShellProps {
     replyParentMsgBody?: string,
   ) => void;
   user?: UserInfoResponse;
+  includeHorizontalSafeArea?: boolean;
   ref?: Ref<ChatInputShellHandle>;
 }
 
@@ -86,6 +87,7 @@ export const ChatInputShell = memo(function ChatInputShell({
   processMessageEmotes,
   sendMessage,
   user,
+  includeHorizontalSafeArea = true,
   ref,
 }: ChatInputShellProps) {
   const chatInputRef = useRef<ChatComposerHandle>(null);
@@ -341,6 +343,7 @@ export const ChatInputShell = memo(function ChatInputShell({
         replyTo,
         onClearReply: handleClearReply,
         inputRef: chatInputRef,
+        includeHorizontalSafeArea,
       }}
     />
   );

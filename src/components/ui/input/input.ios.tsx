@@ -247,8 +247,10 @@ function useIosInputField({
           style,
         ];
 
-  const flattenedStyle: TextStyle & ViewStyle =
-    StyleSheet.flatten<TextStyle & ViewStyle>(inputStyles) ?? {};
+  // SAFETY: inputStyles is StyleProp<TextStyle & ViewStyle>; flatten drops the
+  // array wrapper and returns that intersection (or undefined, coalesced above).
+  const flattenedStyle = (StyleSheet.flatten(inputStyles) ?? {}) as TextStyle &
+    ViewStyle;
 
   const liquidGlassAvailable = isLiquidGlassAvailable();
 

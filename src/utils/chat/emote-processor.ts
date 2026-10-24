@@ -456,9 +456,7 @@ function applyEmoteCompositionPass(tokens: MessageToken[]): MessageToken[] {
   return out;
 }
 
-export const processEmotesWorklet = (
-  params: EmoteProcessorParams,
-): MessageToken[] => {
+export const processEmotes = (params: EmoteProcessorParams): MessageToken[] => {
   const {
     inputString,
     emojiEmotes = [],

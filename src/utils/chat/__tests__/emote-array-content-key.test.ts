@@ -1,7 +1,7 @@
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { SevenTvSanitisedEmote } from '@app/types/emote';
 import { getEmoteArrayContentKey } from '@app/utils/chat/emote-array-content-key';
-import { processEmotesWorklet } from '@app/utils/chat/emote-processor';
+import { processEmotes } from '@app/utils/chat/emote-processor';
 
 function makeEmote(
   overrides: Partial<SevenTvSanitisedEmote> = {},
@@ -111,14 +111,14 @@ describe('parse cache across emote array identity churn', () => {
   };
 
   test('a rebuilt channel emote array keeps cached parses warm', () => {
-    const first = processEmotesWorklet({
+    const first = processEmotes({
       inputString: 'hello KEKW world',
       userstate: null,
       ...collections,
       sevenTvChannelEmotes: [makeEmote()],
     });
 
-    const second = processEmotesWorklet({
+    const second = processEmotes({
       inputString: 'hello KEKW world',
       userstate: null,
       ...collections,
@@ -129,14 +129,14 @@ describe('parse cache across emote array identity churn', () => {
   });
 
   test('a genuinely changed emote set re-parses', () => {
-    const first = processEmotesWorklet({
+    const first = processEmotes({
       inputString: 'hello PogU world',
       userstate: null,
       ...collections,
       sevenTvChannelEmotes: [makeEmote()],
     });
 
-    const second = processEmotesWorklet({
+    const second = processEmotes({
       inputString: 'hello PogU world',
       userstate: null,
       ...collections,

@@ -62,9 +62,10 @@ describe('ChatMessagePressable', () => {
 
     fireEvent(target, 'responderGrant', touchAt(10, 10));
 
-    const pressedStyle = StyleSheet.flatten<ViewStyle>(
-      screen.getByTestId('target').props['style'],
-    );
+    const pressedStyle =
+      StyleSheet.flatten<ViewStyle>(
+        screen.getByTestId('target').props['style'],
+      ) ?? {};
 
     expect({
       backgroundColor: pressedStyle.backgroundColor,
@@ -78,8 +79,11 @@ describe('ChatMessagePressable', () => {
 
     // A quick tap keeps the highlight for the minimum press duration.
     expect(
-      StyleSheet.flatten<ViewStyle>(screen.getByTestId('target').props['style'])
-        .backgroundColor,
+      (
+        StyleSheet.flatten<ViewStyle>(
+          screen.getByTestId('target').props['style'],
+        ) ?? {}
+      ).backgroundColor,
     ).toEqual('rgba(153, 153, 153, 0.24)');
 
     act(() => {

@@ -27,7 +27,13 @@ function loadFontProvider(): void {
 
   Promise.all(
     montserratFaces.map(async face => {
-      const data = await Skia.Data.fromURI(Image.resolveAssetSource(face).uri);
+      const uri = Image.resolveAssetSource(face)?.uri;
+
+      if (!uri) {
+        return;
+      }
+
+      const data = await Skia.Data.fromURI(uri);
       const typeface = Skia.Typeface.MakeFreeTypeFaceFromData(data);
 
       if (typeface) {

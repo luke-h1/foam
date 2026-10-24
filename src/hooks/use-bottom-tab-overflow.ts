@@ -1,6 +1,6 @@
 import { use } from 'react';
 
-import { BottomTabBarHeightContext } from 'expo-router/build/react-navigation/bottom-tabs';
+import { BottomTabBarHeightContext } from 'expo-router/build/layouts/Tabs';
 
 import { CUSTOM_TAB_BAR_HEIGHT } from '@app/constants/tab-bar';
 

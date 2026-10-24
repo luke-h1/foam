@@ -29,18 +29,13 @@ function computePaintUsernameTextStyle(paint: PaintData): TextStyle {
     return {};
   }
 
-  const style: TextStyle = {};
-
-  if (textStyle.weight) {
-    // SAFETY: 7TV paint weights are CSS weights divided by 100, so weight * 100 is one of '100'-'900'.
-    style.fontWeight = String(
-      textStyle.weight * 100,
-    ) as TextStyle['fontWeight'];
-  }
-
-  if (textStyle.transform) {
-    style.textTransform = textStyle.transform;
-  }
-
-  return style;
+  return {
+    ...(textStyle.weight
+      ? {
+          // SAFETY: 7TV paint weights are CSS weights divided by 100, so weight * 100 is one of '100'-'900'.
+          fontWeight: String(textStyle.weight * 100) as TextStyle['fontWeight'],
+        }
+      : null),
+    ...(textStyle.transform ? { textTransform: textStyle.transform } : null),
+  };
 }

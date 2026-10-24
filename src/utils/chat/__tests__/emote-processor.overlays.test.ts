@@ -1,7 +1,7 @@
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { SevenTvSanitisedEmote } from '@app/types/emote';
 
-import { processEmotesWorklet } from '../emote-processor';
+import { processEmotes } from '../emote-processor';
 import type { MessageToken } from '../message-token';
 
 const baseEmote: SevenTvSanitisedEmote = {
@@ -66,7 +66,7 @@ const emptyParams = {
   bttvGlobalEmotes: [],
 };
 
-describe('processEmotesWorklet zero-width overlays', () => {
+describe('processEmotes zero-width overlays', () => {
   test('does not stack the same zero-width emote twice in a row', () => {
     const peepoHappy = createEmote({ id: 'base-emote', name: 'peepoHappy' });
 
@@ -76,7 +76,7 @@ describe('processEmotesWorklet zero-width overlays', () => {
       zero_width: true,
     });
 
-    const result = processEmotesWorklet({
+    const result = processEmotes({
       ...emptyParams,
       inputString: 'peepoHappy SoSnowy SoSnowy',
       sevenTvChannelEmotes: [peepoHappy, soSnowy],
@@ -101,7 +101,7 @@ describe('processEmotesWorklet zero-width overlays', () => {
       zero_width: true,
     });
 
-    const result = processEmotesWorklet({
+    const result = processEmotes({
       ...emptyParams,
       inputString: 'peepoHappy SoSnowy SoSnowy SoSnowy',
       sevenTvChannelEmotes: [peepoHappy, soSnowy],
@@ -130,7 +130,7 @@ describe('processEmotesWorklet zero-width overlays', () => {
       zero_width: true,
     });
 
-    const result = processEmotesWorklet({
+    const result = processEmotes({
       ...emptyParams,
       inputString: 'peepoHappy SoSnowy IceCold SoSnowy',
       sevenTvChannelEmotes: [peepoHappy, soSnowy, iceCold],
@@ -160,7 +160,7 @@ describe('processEmotesWorklet zero-width overlays', () => {
       zero_width: true,
     });
 
-    const result = processEmotesWorklet({
+    const result = processEmotes({
       ...emptyParams,
       inputString: 'peepoHappy SoSnowy IceCold',
       sevenTvChannelEmotes: [peepoHappy, soSnowy, iceCold],

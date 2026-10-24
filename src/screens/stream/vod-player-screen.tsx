@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { router, Stack, useFocusEffect } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import { StatusBar } from 'expo-status-bar';
 
 import { StreamPlayer } from '@app/components/stream-player/stream-player';
 import { EmptyState } from '@app/components/ui/empty-state/empty-state';
@@ -44,10 +45,8 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
       windowWidth,
     });
 
-  // In landscape the safe-area insets land on left and right; reserve those, not the top.
-  const landscapeInsetLeft = isLandscape ? insets.left : 0;
-
-  const landscapeInsetRight = isLandscape ? insets.right : 0;
+  const landscapeInsetLeft = insets.left;
+  const landscapeInsetRight = insets.right;
 
   const videoWidth = Math.max(
     1,
@@ -89,6 +88,7 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
 
   return (
     <View style={styles.container}>
+      <StatusBar verticalBarBehaviorIOS='disabled' />
       <Stack.Screen options={{ autoHideHomeIndicator: isLandscape }} />
       {isLandscape ? (
         <SystemBars hidden={{ navigationBar: true, statusBar: true }} />

@@ -1,5 +1,11 @@
 import { useRef } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  ScrollView,
+  type ScrollViewInstance,
+  StyleSheet,
+  View,
+} from 'react-native';
 import type { ReactNode } from 'react';
 
 import { router } from 'expo-router';
@@ -138,7 +144,7 @@ function confirmDeleteAccount() {
 
 export function ProfileCard() {
   const { user, logout } = useAuthContext();
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
 
   useScrollToTop(scrollRef);
 

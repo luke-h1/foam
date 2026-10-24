@@ -41,7 +41,7 @@ export function AuthSheetScreen() {
   });
 
   return (
-    <SafeAreaView edges={['bottom']} style={styles.container}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
       <View style={styles.sheetHeader}>
         <Button label='Cancel' onPress={handleDismiss} hitSlop={10}>
           <Text type='body' color='accent'>

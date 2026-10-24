@@ -14,7 +14,7 @@ import type { LegendListRenderItemProps } from '@legendapp/list/react-native';
 import { LegendList } from '@legendapp/list/react-native';
 import { SectionList as LegendSectionList } from '@legendapp/list/section-list';
 import { useQuery } from '@tanstack/react-query';
-import { HeaderHeightContext } from 'expo-router/build/react-navigation/elements';
+import { HeaderHeightContext } from 'expo-router/react-navigation';
 
 import { Button } from '@app/components/button/button';
 import { BadgePreviewSheet } from '@app/components/chat/components/badge-preview-sheet/badge-preview-sheet';

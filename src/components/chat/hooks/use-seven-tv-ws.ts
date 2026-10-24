@@ -1,6 +1,7 @@
 import { type RefObject, useCallback, useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 
+import { batch } from '@legendapp/state';
 import { usePathname } from 'expo-router';
 
 import { useLazyRef } from '@app/hooks/use-lazy-ref';
@@ -642,6 +643,41 @@ export function useSevenTvWs(
     });
   };
 
+  const pendingEntitlementsRef = useRef<SevenTvWsDecision[]>([]);
+  const entitlementFlushRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  const flushPendingEntitlements = () => {
+    if (entitlementFlushRef.current) {
+      clearTimeout(entitlementFlushRef.current);
+      entitlementFlushRef.current = null;
+    }
+
+    const pending = pendingEntitlementsRef.current;
+
+    if (pending.length === 0) {
+      return;
+    }
+
+    pendingEntitlementsRef.current = [];
+
+    batch(() => {
+      for (const decision of pending) {
+        try {
+          executeDecision(decision);
+        } catch (error) {
+          logger.stvWs.warn('Failed to apply a queued 7TV decision', {
+            name: 'seven_tv_ws_warning',
+            error: error instanceof Error ? error : String(error),
+            action: 'entitlement_flush_failed',
+            provider: 'seven_tv',
+          });
+        }
+      }
+    });
+  };
+
   const handleMessage = (event: MessageEvent<string>) => {
     sessionRef.current.lastMessageAt = Date.now();
 
@@ -651,7 +687,9 @@ export function useSevenTvWs(
         SevenTvEventData<SevenTvEventType>
       >;
 
-      logger.stvWs.debug('[handleMessage] op:', message.op);
+      if (__DEV__) {
+        logger.stvWs.debug('[handleMessage] op:', message.op);
+      }
 
       const decisions = interpretSevenTvWsMessage(message, {
         expectedEmoteSetId:
@@ -661,22 +699,44 @@ export function useSevenTvWs(
         now: Date.now(),
       });
 
+      const shouldCoalesceEntitlements =
+        decisions.some(
+          decision => decision.type === 'applyEntitlementCreate',
+        ) &&
+        decisions.every(
+          decision =>
+            decision.type === 'applyEntitlementCreate' ||
+            decision.type === 'notifyEvent',
+        );
+
+      if (shouldCoalesceEntitlements) {
+        pendingEntitlementsRef.current.push(...decisions);
+
+        if (entitlementFlushRef.current === null) {
+          entitlementFlushRef.current = setTimeout(
+            flushPendingEntitlements,
+            16,
+          );
+        }
+        return;
+      }
+
+      flushPendingEntitlements();
       decisions.forEach(executeDecision);
     } catch (error) {
-      logger.stvWs.warn(
-        `Failed to parse STV message ${JSON.stringify(error, null, 2)}`,
-        {
-          name: 'seven_tv_ws_warning',
-          error: error instanceof Error ? error : String(error),
-          action: 'message_parse_failed',
-          channel_id: twitchChannelIdRef.current,
-          provider: 'seven_tv',
-          screen: currentScreen,
-          seven_tv_emote_set_id: sevenTvEmoteSetIdRef.current,
-        },
-      );
+      logger.stvWs.warn('Failed to parse STV message', {
+        name: 'seven_tv_ws_warning',
+        error: error instanceof Error ? error : String(error),
+        action: 'message_parse_failed',
+        channel_id: twitchChannelIdRef.current,
+        provider: 'seven_tv',
+        screen: currentScreen,
+        seven_tv_emote_set_id: sevenTvEmoteSetIdRef.current,
+      });
     }
   };
+
+  useUnmountCallback(flushPendingEntitlements);
 
   const { getWebSocket, sendJsonMessage, readyState, reconnect } = useWebsocket<
     SevenTvWsMessage<never, SevenTvEventType>

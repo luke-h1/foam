@@ -5,5 +5,5 @@
 const INVISIBLE_CHARS = /[\u034F\u180E\u200B\u2060\uFEFF]|\uDB40\uDC00/g;
 
 export function stripInvisibleChars(input: string): string {
-  return input.replace(INVISIBLE_CHARS, '');
+  return input.replaceAll(INVISIBLE_CHARS, '');
 }

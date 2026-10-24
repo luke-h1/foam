@@ -61,7 +61,6 @@ export function TopCategoriesScreen() {
     isFetchingNextPage,
   } = useInfiniteQuery({
     ...topCategoriesInfiniteQueryOptions(),
-    refetchOnWindowFocus: true,
   });
 
   useRefetchOnForeground({

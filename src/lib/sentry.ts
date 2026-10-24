@@ -11,6 +11,7 @@ import { Image as ExpoImage } from 'expo-image';
 
 import { instrumentExpoImageLoads } from '@app/lib/sentry-image-spans';
 import { sanitiseLogValue } from '@app/utils/log/sanitise-log-value';
+import { runWhenIdle } from '@app/utils/run-when-idle';
 import { markSessionError } from '@app/utils/store-review/session-error-flag';
 import type { OpenStringUnion } from '@app/utils/typescript/open-string-union';
 
@@ -128,7 +129,7 @@ export function init() {
      */
     tracesSampleRate: isProduction ? 0.15 : 1.0,
     enableAutoPerformanceTracing: true,
-    replaysSessionSampleRate: isProduction ? 0.05 : 1.0,
+    replaysSessionSampleRate: isProduction ? 0 : 1.0,
     replaysOnErrorSampleRate: 1.0,
     integrations: [
       navigationIntegration,
@@ -153,7 +154,9 @@ export function init() {
     },
   });
 
-  instrumentExpoImageLoads(ExpoImage);
+  runWhenIdle(() => {
+    instrumentExpoImageLoads(ExpoImage);
+  });
 
   didInitializeSentry = true;
 }
