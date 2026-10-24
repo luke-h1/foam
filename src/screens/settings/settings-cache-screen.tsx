@@ -1,5 +1,12 @@
 import { useRef } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  Platform,
+  ScrollView,
+  type ScrollViewInstance,
+  StyleSheet,
+  View,
+} from 'react-native';
 
 import {
   Button,
@@ -63,7 +70,7 @@ function handleClearCache() {
 }
 
 export function SettingsCacheScreen() {
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
 
   useScrollToTop(scrollRef);
 

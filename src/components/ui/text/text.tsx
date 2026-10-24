@@ -1,5 +1,6 @@
 import {
   Text as RNText,
+  type TextInstance,
   type TextProps as RNTextProps,
   type TextStyle,
 } from 'react-native';
@@ -56,7 +57,7 @@ export type TextVariant = 'default' | 'mono';
 export type TextFamily = 'brand' | 'system';
 
 export interface TextProps extends RNTextProps, MarginProps {
-  ref?: Ref<RNText>;
+  ref?: Ref<TextInstance>;
   children?: ReactNode;
   type?: TextType;
   weight?: TextWeight;

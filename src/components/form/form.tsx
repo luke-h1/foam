@@ -26,6 +26,7 @@ import {
   type TextProps,
   type TextStyle,
   View,
+  type ViewInstance,
   type ViewProps,
   type ViewStyle,
 } from 'react-native';
@@ -75,7 +76,7 @@ function FormItem({
   onPress?: FormPressableProps['onPress'];
   onLongPress?: FormPressableProps['onLongPress'];
   style?: ViewStyle;
-  ref?: Ref<View>;
+  ref?: Ref<ViewInstance>;
 }) {
   const itemStyle: StyleProp<ViewStyle> = [
     styles.itemPadding,
@@ -95,8 +96,8 @@ function FormItem({
     <Pressable
       {...(ref !== undefined ? { ref } : {})}
       accessibilityRole='button'
-      onPress={onPress ?? null}
-      onLongPress={onLongPress ?? null}
+      onPress={onPress}
+      onLongPress={onLongPress}
       style={({ pressed }) => [
         itemStyle,
         pressed ? { backgroundColor: AppleColors.systemGray4 } : null,
@@ -529,15 +530,20 @@ function extractStyle<K extends keyof TextStyle>(
   }
 
   if (!Array.isArray(styleProp)) {
-    return styleProp instanceof Object ? styleProp[key] : undefined;
+    if (typeof styleProp !== 'object') {
+      return undefined;
+    }
+
+    return (styleProp as TextStyle)[key];
   }
 
-  const match = styleProp.find(
-    (entry): entry is TextStyle =>
-      entry instanceof Object &&
-      !Array.isArray(entry) &&
-      (entry as TextStyle)[key] != null,
-  );
+  const match = styleProp.find((entry): entry is TextStyle => {
+    if (entry == null || typeof entry !== 'object' || Array.isArray(entry)) {
+      return false;
+    }
+
+    return (entry as TextStyle)[key] != null;
+  });
 
   return match?.[key];
 }

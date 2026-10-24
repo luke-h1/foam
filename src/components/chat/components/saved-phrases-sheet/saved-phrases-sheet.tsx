@@ -63,7 +63,11 @@ const SavedPhrasesSheetComponent = ({
   onDismiss,
   onSelectPhrase,
 }: SavedPhrasesSheetProps) => {
-  const { bottom: bottomInset } = useSafeAreaInsets();
+  const {
+    bottom: bottomInset,
+    left: leftInset,
+    right: rightInset,
+  } = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const sheetHeight = Math.round(windowHeight * CHAT_SETTINGS_SHEET_DETENT);
   const savedPhrases = usePreference('savedPhrases');
@@ -71,8 +75,15 @@ const SavedPhrasesSheetComponent = ({
   const sheetRef = useRef<BottomSheetHandle>(null);
 
   const listContentStyle = useMemo(
-    () => [styles.listContent, { paddingBottom: bottomInset + theme.space24 }],
-    [bottomInset],
+    () => [
+      styles.listContent,
+      {
+        paddingBottom: bottomInset + theme.space24,
+        paddingLeft: leftInset,
+        paddingRight: rightInset,
+      },
+    ],
+    [bottomInset, leftInset, rightInset],
   );
 
   const pendingManageRef = useRef(false);

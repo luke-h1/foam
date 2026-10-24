@@ -1,4 +1,4 @@
-import { AppState, InteractionManager, Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import type { PropsWithChildren } from 'react';
 
 import {
@@ -10,6 +10,7 @@ import { fetch } from 'expo/fetch';
 import { z } from 'zod';
 
 import { subscribeToAppStateTransitions } from '@app/utils/app-state/app-state-transitions';
+import { runWhenIdle } from '@app/utils/run-when-idle';
 
 import { queryClient } from './query-client';
 
@@ -74,7 +75,7 @@ function stopConnectivityPolling() {
 }
 
 // Armed after boot interactions settle - a module-scope start would poll at 2 Hz through startup; the AppState subscription and reconcile fallback cover earlier transitions.
-InteractionManager.runAfterInteractions(() => {
+runWhenIdle(() => {
   if (AppState.currentState === 'active') {
     startConnectivityPolling();
   }

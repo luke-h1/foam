@@ -27,12 +27,27 @@ global.TextEncoder = TextEncoder;
 // SAFETY: Node's util.TextDecoder implements the DOM TextDecoder surface the app code decodes with.
 global.TextDecoder = TextDecoder as typeof global.TextDecoder;
 
+if (globalThis.CloseEvent === undefined) {
+  globalThis.CloseEvent = class CloseEvent extends Event {
+    code: number;
+    reason: string;
+    wasClean: boolean;
+
+    constructor(type: string, eventInitDict?: CloseEventInit) {
+      super(type, eventInitDict);
+      this.code = eventInitDict?.code ?? 0;
+      this.reason = eventInitDict?.reason ?? '';
+      this.wasClean = eventInitDict?.wasClean ?? false;
+    }
+  };
+}
+
 configureReassure({ testingLibrary: 'react-native' });
 
 /**
  * The Skia jest mock renders components as plain Views but routes imperative
  * calls (Skia.Path.Make etc.) to global.CanvasKit, which is never loaded in
- * jsdom. Tests draw nothing, so a call-through proxy is enough.
+ * the Jest environment. Tests draw nothing, so a call-through proxy is enough.
  */
 function canvasKitStub(): any {
   return new Proxy(() => {}, {
@@ -63,7 +78,7 @@ function canvasKitStub(): any {
 }
 
 /**
- * Sentry calls setImmediate, which jsdom does not provide.
+ * Sentry calls setImmediate, which the Node test environment may not provide.
  */
 global.setImmediate =
   global.setImmediate ||
@@ -149,4 +164,10 @@ if (skiaMock.Skia?.Data) {
 beforeEach(() => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   require('expo-secure-store').__resetSecureStore?.();
+});
+
+// Pending Helix mention-flush timers keep Jest alive after green chat-perf suites.
+afterEach(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  require('@app/utils/chat/mention-login-resolver/reset-mention-login-resolver').resetMentionLoginResolver();
 });

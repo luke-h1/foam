@@ -1,10 +1,13 @@
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { InteractionManager, StyleSheet, View } from 'react-native';
+import { memo, use, useCallback, useEffect, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
+
+import { NavigationContext } from 'expo-router/react-navigation';
 
 import { useWatchTimeTracking } from '@app/hooks/use-watch-time-tracking';
 import { usePreference } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
+import { runWhenIdle } from '@app/utils/run-when-idle';
 
 import { Image } from '../image/image';
 import { usePlayerBridge } from './hooks/use-player-bridge';
@@ -65,17 +68,83 @@ export const StreamPlayer = memo(function StreamPlayer({
   } | null>(null);
 
   /**
-   * Mount after interactions settle: a mid-transition WKWebView start can
-   * leave the AVPlayer layer detached (audio advances, picture black).
+   * Mount after the JS thread is idle and the native screen transition has
+   * finished. A mid-transition WKWebView start can leave the AVPlayer layer
+   * detached (audio advances, picture black). `runWhenIdle` alone is not
+   * enough: it does not wait for the navigator transition.
    */
+  const navigation = use(NavigationContext);
   const [canMountWebView, setCanMountWebView] = useState(false);
 
   useEffect(() => {
-    const task = InteractionManager.runAfterInteractions(() => {
-      setCanMountWebView(true);
+    let cancelled = false;
+    let idleReady = false;
+    let transitionReady = navigation == null;
+    let sawTransitionStart = false;
+
+    const tryMount = () => {
+      if (!cancelled && idleReady && transitionReady) {
+        setCanMountWebView(true);
+      }
+    };
+
+    const idleTask = runWhenIdle(() => {
+      idleReady = true;
+      tryMount();
     });
-    return () => task.cancel();
-  }, []);
+
+    if (navigation == null) {
+      return () => {
+        cancelled = true;
+        idleTask.cancel();
+      };
+    }
+
+    // SAFETY: native-stack/stack emit transitionStart/End; the base EventMap does not list them.
+    const stackNavigation = navigation as typeof navigation & {
+      addListener(event: 'transitionStart', callback: () => void): () => void;
+      addListener(
+        event: 'transitionEnd',
+        callback: (event: { data?: { closing?: boolean } }) => void,
+      ): () => void;
+    };
+
+    const unsubscribeStart = stackNavigation.addListener(
+      'transitionStart',
+      () => {
+        sawTransitionStart = true;
+      },
+    );
+
+    const unsubscribeEnd = stackNavigation.addListener(
+      'transitionEnd',
+      event => {
+        if (event.data?.closing) {
+          return;
+        }
+
+        transitionReady = true;
+        tryMount();
+      },
+    );
+
+    // Settled remounts never see transitionStart/End. Delay past the native
+    // transitionStart round-trip so a push does not unlock mid-animation.
+    const settleFallback = setTimeout(() => {
+      if (!sawTransitionStart) {
+        transitionReady = true;
+        tryMount();
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      idleTask.cancel();
+      clearTimeout(settleFallback);
+      unsubscribeStart();
+      unsubscribeEnd();
+    };
+  }, [navigation]);
 
   const sourceKey = buildStreamSourceKey({
     autoplay,

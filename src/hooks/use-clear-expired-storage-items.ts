@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
-import { InteractionManager } from 'react-native';
 
 import { storageService } from '@app/lib/storage';
+import { runWhenIdle } from '@app/utils/run-when-idle';
 
 export function useClearExpiredStorageItems() {
   useEffect(() => {
-    const task = InteractionManager.runAfterInteractions(() => {
+    const task = runWhenIdle(() => {
       storageService.clearExpired();
     });
 

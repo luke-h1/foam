@@ -37,6 +37,12 @@ whether the PR is OTA compatible.
 release tag, Sentry release, and changelog. `fingerprint.config.js` skips the
 version, so a bump never changes the fingerprint.
 
+**iPhone Duo** — SDK 58. Prefer Expo Router `NativeTabs` / `Stack` so iOS can
+move chrome into the edge rail. Set `sidebarAdaptable` on tabs. Keep horizontal
+safe-area insets on sheets and scroll roots. On video screens set
+`StatusBar verticalBarBehaviorIOS="disabled"`. Use `expo-hinge` for effects,
+not layout.
+
 **Critical OTA index** — a monotonic counter bumped when an OTA is marked critical
 (`[critical-ota]` commit tag or the `critical_update` input); the app uses it to
 force-apply an update.

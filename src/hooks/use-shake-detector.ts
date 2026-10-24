@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
-import { AppState, InteractionManager, Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 
 import { Accelerometer } from 'expo-sensors';
 
 import { useSyncRef } from '@app/hooks/use-sync-ref';
+import { runWhenIdle } from '@app/utils/run-when-idle';
 import { createShakeDetector } from '@app/utils/shake/shake-detection';
 
 // ~6-7 Hz still catches a shake and halves the native->JS callback rate.
@@ -30,7 +31,7 @@ export function useShakeDetector(
     let cancelled = false;
 
     // The accelerometer stream costs ~12 native->JS callbacks/s from provider mount; hold it until boot interactions settle.
-    const task = InteractionManager.runAfterInteractions(() => {
+    const task = runWhenIdle(() => {
       if (cancelled) {
         return;
       }

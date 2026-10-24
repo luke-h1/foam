@@ -8,11 +8,22 @@ if (__DEV__ && !process.env.EXPO_PUBLIC_REACT_PERF_TRACKS) {
   // console.timeStamp + performance.measure existing, so removing one disables
   // it. Set EXPO_PUBLIC_REACT_PERF_TRACKS=1 when you want the tracks back for
   // a React DevTools Performance session.
-  // Must be `delete`, not `= undefined`: react-native-worklets copies console
-  // via Object.entries and reads `.name` on every value, so an own property
-  // holding undefined crashes its init.
+  //
+  // RN 0.88 / React 19.3 calls console.timeStamp whenever supportsUserTiming
+  // was true at renderer init. Deleting timeStamp (the old approach) races
+  // that gate and crashes with "undefined is not a function". Disable via
+  // performance.measure instead, and keep a named no-op timeStamp so a late
+  // gate=true path cannot crash. The no-op must be a real function with a
+  // .name: react-native-worklets copies console via Object.entries and reads
+  // `.name` on every value, so an own property holding undefined crashes its
+  // init.
   // eslint-disable-next-line no-console
-  delete console.timeStamp;
+  console.timeStamp = function timeStamp() {};
+  try {
+    delete globalThis.performance.measure;
+  } catch {
+    // measure missing or not configurable
+  }
 }
 
 // Bound expo-image's in-memory decoded cache. iOS only: `configureCache` is

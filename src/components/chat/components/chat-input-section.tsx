@@ -138,10 +138,11 @@ export const ChatInputSection = memo(
           <Animated.View
             style={[
               styles.composerShell,
-              // The composer sits at the very bottom of the screen; clear the
-              // home indicator. Chat.tsx cancels this lift while the keyboard
-              // covers that area.
-              { paddingBottom: insets.bottom + theme.space8 },
+              {
+                paddingBottom: insets.bottom + theme.space8,
+                paddingLeft: theme.space16 + insets.left,
+                paddingRight: theme.space16 + insets.right,
+              },
               composerAnimatedStyle,
             ]}
           >

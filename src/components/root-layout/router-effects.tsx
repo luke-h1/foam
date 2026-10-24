@@ -198,7 +198,7 @@ export function RouterEffects() {
       void handleIncomingUrl(url);
     });
 
-    void Linking.getInitialURL().then((initialUrl: string | null) => {
+    void Linking.getInitialURL().then(initialUrl => {
       if (cancelled || !initialUrl) {
         return;
       }

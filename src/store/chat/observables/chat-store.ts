@@ -1,5 +1,3 @@
-import { InteractionManager } from 'react-native';
-
 import { batch, observable, when } from '@legendapp/state';
 import { persistObservable } from '@legendapp/state/persist';
 
@@ -16,6 +14,7 @@ import type { BadgeProvider } from '@app/types/twitch/badge';
 import { getEmojiEmotes } from '@app/utils/emoji/emoji-emotes';
 import { EMOTE_PROVIDER_BY_SITE } from '@app/utils/emote/emote-provider-by-site';
 import { logger } from '@app/utils/logger';
+import { runWhenIdle } from '@app/utils/run-when-idle';
 
 import type {
   AnyChatMessageType,
@@ -321,7 +320,7 @@ const hydrateDeferredChatState = () => {
   }
 };
 
-InteractionManager.runAfterInteractions(hydrateDeferredChatState);
+runWhenIdle(hydrateDeferredChatState);
 
 const GLOBAL_CACHE_SLICE_KEYS = [
   'twitchGlobalEmotes',

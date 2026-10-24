@@ -55,7 +55,9 @@ function buildChatTextStyles(
     lineHeight: scale.secondaryLineHeight,
   };
 
-  return StyleSheet.create<ChatTextStyles>({
+  // SAFETY: keys and values match ChatTextStyles; StyleSheet.create no longer
+  // accepts that shape as a generic under the Strict TypeScript API.
+  return StyleSheet.create({
     badgeArtwork: {
       height: scale.badgeSize,
       width: scale.badgeSize,
@@ -121,7 +123,7 @@ function buildChatTextStyles(
       ...body,
       fontWeight: '700',
     },
-  });
+  }) as ChatTextStyles;
 }
 
 const CHAT_TEXT_STYLES = {

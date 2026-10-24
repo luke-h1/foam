@@ -52,7 +52,11 @@ const SettingsSheetComponent = ({
   const showUnreadJumpPill = usePreference('showUnreadJumpPill');
   const showJoinPartMessages = usePreference('showJoinPartMessages');
   const updatePreferences = useUpdatePreferences();
-  const { bottom: bottomInset } = useSafeAreaInsets();
+  const {
+    bottom: bottomInset,
+    left: leftInset,
+    right: rightInset,
+  } = useSafeAreaInsets();
   const sheetRef = useRef<BottomSheetHandle>(null);
 
   const dismissSheet = useCallback(() => {
@@ -129,7 +133,11 @@ const SettingsSheetComponent = ({
           style={styles.scroll}
           contentContainerStyle={[
             styles.content,
-            { paddingBottom: bottomInset + theme.space24 },
+            {
+              paddingBottom: bottomInset + theme.space24,
+              paddingLeft: theme.space16 + leftInset,
+              paddingRight: theme.space16 + rightInset,
+            },
           ]}
           showsVerticalScrollIndicator={false}
         >

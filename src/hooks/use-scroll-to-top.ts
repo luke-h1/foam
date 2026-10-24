@@ -1,4 +1,5 @@
 import type { Ref, RefObject } from 'react';
+import type { ScrollViewInstance } from 'react-native';
 
 import { useScrollToTop as useNavigationScrollToTop } from 'expo-router';
 
@@ -25,21 +26,22 @@ type ScrollableWrapper =
   | { getScrollResponder: () => ScrollableView | null }
   | { getNode: () => ScrollableView }
   | ScrollableView
+  | ScrollViewInstance
   | null;
 
+type ScrollableNode = ScrollableWrapper | WebScrollable;
+
 type ScrollableRef =
-  | RefObject<ScrollableWrapper | WebScrollable>
-  | Ref<ScrollableWrapper | WebScrollable>;
+  | RefObject<ScrollableNode | null>
+  | Ref<ScrollableNode | null>;
 
 function isRefObject(
   ref: ScrollableRef,
-): ref is RefObject<ScrollableWrapper | WebScrollable> {
+): ref is RefObject<ScrollableNode | null> {
   return ref !== null && 'current' in ref;
 }
 
-function getScrollableNode(
-  ref: ScrollableRef,
-): ScrollableWrapper | WebScrollable {
+function getScrollableNode(ref: ScrollableRef): ScrollableNode {
   if (!isRefObject(ref) || ref.current == null) {
     return null;
   }
@@ -68,10 +70,7 @@ function getScrollableNode(
   return current;
 }
 
-function scrollToOffset(
-  scrollable: ScrollableWrapper | WebScrollable,
-  offset: number,
-) {
+function scrollToOffset(scrollable: ScrollableNode, offset: number) {
   if (!scrollable) {
     return;
   }

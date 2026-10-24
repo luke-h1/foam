@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useRef } from 'react';
-import { View } from 'react-native';
+import { View, type ViewInstance } from 'react-native';
 import {
   KeyboardStickyView,
   useReanimatedKeyboardAnimation,
@@ -83,12 +83,14 @@ export const Chat = memo(
 
     const listRef = useRef<ChatListRef | null>(null);
     const inputShellRef = useRef<ChatInputShellHandle>(null);
-    const composerRef = useRef<View>(null);
+    const composerRef = useRef<ViewInstance>(null);
 
     const { contentInsetEndAdjustment, onComposerLayout } =
       useKeyboardChatComposerInset(
         listRef,
-        composerRef,
+        // SAFETY: legend-list types the host as Pick<View, 'measure'>; under
+        // the Strict API measure lives on ViewInstance.
+        composerRef as { current: Pick<ViewInstance, 'measure'> | null },
         insets.bottom + ESTIMATED_COMPOSER_HEIGHT,
       );
 

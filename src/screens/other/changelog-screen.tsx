@@ -1,5 +1,10 @@
 import { useRef } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import {
+  ScrollView,
+  type ScrollViewInstance,
+  StyleSheet,
+  View,
+} from 'react-native';
 
 import { Text } from '@app/components/ui/text/text';
 import { useScrollToTop } from '@app/hooks/use-scroll-to-top';
@@ -42,7 +47,7 @@ All notable changes to this project will be documented in this file.
 `;
 
 export function ChangelogScreen() {
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
 
   useScrollToTop(scrollRef);
 

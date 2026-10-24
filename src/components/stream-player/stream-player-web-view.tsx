@@ -1,11 +1,12 @@
 import { memo } from 'react';
 import { StyleSheet } from 'react-native';
-import type { ComponentProps, RefObject } from 'react';
-import { WebView } from 'react-native-webview';
+import type { RefObject } from 'react';
+import { WebView, type WebViewProps } from 'react-native-webview';
 import type {
   OnShouldStartLoadWithRequest,
   WebViewError,
   WebViewHttpError,
+  WebViewNavigation,
 } from 'react-native-webview/lib/WebViewTypes';
 
 import { countMetric } from '@app/lib/sentry';
@@ -16,7 +17,8 @@ import { PIP_ENABLED } from './util/pip-feature';
 import { isAppUrl } from './util/twitch-player-source/is-app-url';
 import { isTwitchPassportCallbackUrl } from './util/twitch-player-source/is-twitch-passport-callback-url';
 
-type WebViewSource = NonNullable<ComponentProps<typeof WebView>['source']>;
+type WebViewSource = NonNullable<WebViewProps['source']>;
+type WebViewHandle = InstanceType<typeof WebView>;
 
 // The player webview does no navigation interception beyond refusing the app's
 // own deep-link scheme. Twitch's login (id.twitch.tv), passport-callback, and
@@ -37,7 +39,7 @@ interface StreamPlayerWebViewProps {
     reason: string,
     error: WebViewError | WebViewHttpError,
   ) => void;
-  onMessage: ComponentProps<typeof WebView>['onMessage'];
+  onMessage: WebViewProps['onMessage'];
   onWebViewLoaded?: () => void;
   // When false the WebView is transparent (non-opaque WKWebView), so the iOS rotation snapshot
   // reveals the thumbnail behind it instead of the WebView's black backing.
@@ -47,7 +49,7 @@ interface StreamPlayerWebViewProps {
   source: WebViewSource;
   video?: string;
   webViewKey: number;
-  webViewRef: RefObject<WebView | null>;
+  webViewRef: RefObject<WebViewHandle | null>;
 }
 
 export const StreamPlayerWebView = memo(function StreamPlayerWebView({
@@ -178,13 +180,15 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
       }
       onError={handleWebViewError}
       onHttpError={handleWebViewHttpError}
-      onNavigationStateChange={event => {
+      onNavigationStateChange={(event: WebViewNavigation) => {
         if (isTwitchPassportCallbackUrl(event.url)) {
           scheduleAuthCompletionReload();
         }
       }}
       onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
-      onLoadEnd={event => handleLoadEnd(event.nativeEvent.url)}
+      onLoadEnd={(event: { nativeEvent: { url: string } }) =>
+        handleLoadEnd(event.nativeEvent.url)
+      }
       onLoadStart={handleLoadStart}
       onRenderProcessGone={() =>
         handleWebViewProcessGone('render_process_gone')

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   AppState,
-  InteractionManager,
   Modal as RNModal,
   Platform,
   StyleSheet,
@@ -19,6 +18,7 @@ import { getStoreUrlAsync } from '@app/screens/dev-tools/util/get-store-url-asyn
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowserAsync } from '@app/utils/browser/open-link-in-browser';
 import { logger } from '@app/utils/logger';
+import { runWhenIdle } from '@app/utils/run-when-idle';
 import { isUpdateRequired } from '@app/utils/version/compare-versions';
 import { getMinimumVersion } from '@app/utils/version/get-minimum-version';
 
@@ -52,7 +52,7 @@ export function ForceUpdateModal() {
   useEffect(() => {
     let cancelled = false;
 
-    void InteractionManager.runAfterInteractions(() => {
+    void runWhenIdle(() => {
       if (!cancelled) {
         setArmed(true);
       }

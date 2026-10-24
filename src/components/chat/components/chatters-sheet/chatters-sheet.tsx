@@ -119,7 +119,11 @@ const ChattersSheetComponent = ({
 }: ChattersSheetProps) => {
   const [query, setQuery] = useState('');
   const sheetRef = useRef<BottomSheetHandle>(null);
-  const { bottom: bottomInset } = useSafeAreaInsets();
+  const {
+    bottom: bottomInset,
+    left: leftInset,
+    right: rightInset,
+  } = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const sheetHeight = Math.round(windowHeight * CHAT_SETTINGS_SHEET_DETENT);
 
@@ -133,8 +137,12 @@ const ChattersSheetComponent = ({
   );
 
   const listContentStyle = useMemo(
-    () => ({ paddingBottom: bottomInset + theme.space20 }),
-    [bottomInset],
+    () => ({
+      paddingBottom: bottomInset + theme.space20,
+      paddingLeft: leftInset,
+      paddingRight: rightInset,
+    }),
+    [bottomInset, leftInset, rightInset],
   );
 
   const renderItem: ListRenderItem<ChattersListItem> = useCallback(

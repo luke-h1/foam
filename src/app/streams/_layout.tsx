@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { theme } from '@app/styles/themes';
 import { nativeStackScreenOptions } from '@app/utils/navigation/native-stack-options';
 
+// iOS 27 can refuse an expo orientation lock. The screen mask rotates the player.
 export default function StreamsLayout() {
   return (
     <Stack>
@@ -13,6 +14,7 @@ export default function StreamsLayout() {
           gestureEnabled: true,
           title: '',
           fullScreenGestureEnabled: true,
+          orientation: 'default',
         }}
       />
       <Stack.Screen
@@ -43,6 +45,7 @@ export default function StreamsLayout() {
           headerShown: false,
           gestureEnabled: true,
           fullScreenGestureEnabled: true,
+          orientation: 'default',
         }}
       />
     </Stack>

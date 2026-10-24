@@ -233,6 +233,12 @@ export function ControlsOverlay({
   const isPortrait = windowHeight >= windowWidth;
   const headerTopOffset = isPortrait ? theme.space12 : insets.top + 8;
   const bottomOffset = isPortrait ? theme.space8 : insets.bottom + 12;
+  const edgePad = isPortrait ? theme.space12 : theme.space20;
+  const horizontalInsetStyle = {
+    paddingHorizontal: 0,
+    paddingLeft: edgePad,
+    paddingRight: edgePad,
+  };
 
   // box-none while visible: empty-area taps fall through to the video gesture, only buttons
   // capture touches; 'none' while hidden so buttons don't swallow the reveal tap.
@@ -343,6 +349,7 @@ export function ControlsOverlay({
         style={[
           styles.header,
           isPortrait && styles.headerPortrait,
+          horizontalInsetStyle,
           { paddingTop: headerTopOffset },
         ]}
       >
@@ -408,6 +415,7 @@ export function ControlsOverlay({
         style={[
           styles.bottomControls,
           isPortrait && styles.bottomControlsPortrait,
+          horizontalInsetStyle,
           { paddingBottom: bottomOffset },
         ]}
       >

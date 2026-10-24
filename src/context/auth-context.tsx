@@ -7,7 +7,6 @@ import {
   useRef,
   useState,
 } from 'react';
-import { InteractionManager } from 'react-native';
 
 import { type AuthSessionResult, TokenResponse } from 'expo-auth-session';
 import { toast } from 'sonner-native';
@@ -41,6 +40,7 @@ import {
   getFriendlyErrorMessage,
 } from '@app/utils/errors/categorize-error';
 import { logger } from '@app/utils/logger';
+import { runWhenIdle } from '@app/utils/run-when-idle';
 
 import {
   AuthContext,
@@ -58,7 +58,7 @@ const prefetchInitialData = (userId?: string) => {
 };
 
 const queueInitialDataPrefetch = (userId?: string) => {
-  InteractionManager.runAfterInteractions(() => {
+  runWhenIdle(() => {
     prefetchInitialData(userId);
   });
 };

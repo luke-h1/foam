@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-import { InteractionManager } from 'react-native';
 
 import { useObserveEffect } from '@legendapp/state/react';
 
@@ -16,6 +15,7 @@ import {
 } from '@app/store/preference-store';
 import { subscribeToAppStateTransitions } from '@app/utils/app-state/app-state-transitions';
 import { logger } from '@app/utils/logger';
+import { runWhenIdle } from '@app/utils/run-when-idle';
 
 export function useIcloudPreferenceSync() {
   const latestLocalTimestampRef = useRef(getPreferences().updatedAt);
@@ -32,7 +32,7 @@ export function useIcloudPreferenceSync() {
 
     const queueRemoteSync = () => {
       pendingSync?.cancel();
-      pendingSync = InteractionManager.runAfterInteractions(() => {
+      pendingSync = runWhenIdle(() => {
         void applyRemotePreferences().finally(() => {
           hasAttemptedInitialLoadRef.current = true;
         });

@@ -268,7 +268,10 @@ export function useChatSession({
   });
 
   const { currentEmoteSetIdRef } = useChatLifecycle({
-    navigation,
+    // SAFETY: beforeRemove is valid at runtime; SDK 58's RootParamList event map omits it.
+    navigation: navigation as {
+      addListener: (event: 'beforeRemove', cb: () => void) => () => void;
+    },
     channelId,
     channelName,
     partChannel,
