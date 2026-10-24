@@ -24,6 +24,9 @@ import { getStreamPlayerVisibility } from './util/get-stream-player-visibility';
 
 export type { StreamInfo, StreamPlayerProps, StreamPlayerRef } from './types';
 
+const WEBVIEW_MOUNT_SETTLE_MS = 500;
+const WEBVIEW_MOUNT_END_WATCHDOG_MS = 800;
+
 export const StreamPlayer = memo(function StreamPlayer({
   autoplay = true,
   channel,
@@ -81,11 +84,36 @@ export const StreamPlayer = memo(function StreamPlayer({
     let idleReady = false;
     let transitionReady = navigation == null;
     let sawTransitionStart = false;
+    let settleTimer: ReturnType<typeof setTimeout> | undefined;
+    let endWatchdogTimer: ReturnType<typeof setTimeout> | undefined;
 
     const tryMount = () => {
       if (!cancelled && idleReady && transitionReady) {
         setCanMountWebView(true);
       }
+    };
+
+    const markTransitionReady = () => {
+      transitionReady = true;
+      tryMount();
+    };
+
+    const clearSettleTimer = () => {
+      if (settleTimer === undefined) {
+        return;
+      }
+
+      clearTimeout(settleTimer);
+      settleTimer = undefined;
+    };
+
+    const clearEndWatchdogTimer = () => {
+      if (endWatchdogTimer === undefined) {
+        return;
+      }
+
+      clearTimeout(endWatchdogTimer);
+      endWatchdogTimer = undefined;
     };
 
     const idleTask = runWhenIdle(() => {
@@ -109,10 +137,32 @@ export const StreamPlayer = memo(function StreamPlayer({
       ): () => void;
     };
 
+    settleTimer = setTimeout(() => {
+      settleTimer = undefined;
+
+      if (cancelled || sawTransitionStart) {
+        return;
+      }
+
+      markTransitionReady();
+    }, WEBVIEW_MOUNT_SETTLE_MS);
+
     const unsubscribeStart = stackNavigation.addListener(
       'transitionStart',
       () => {
         sawTransitionStart = true;
+        clearSettleTimer();
+        clearEndWatchdogTimer();
+
+        endWatchdogTimer = setTimeout(() => {
+          endWatchdogTimer = undefined;
+
+          if (cancelled) {
+            return;
+          }
+
+          markTransitionReady();
+        }, WEBVIEW_MOUNT_END_WATCHDOG_MS);
       },
     );
 
@@ -123,24 +173,16 @@ export const StreamPlayer = memo(function StreamPlayer({
           return;
         }
 
-        transitionReady = true;
-        tryMount();
+        clearEndWatchdogTimer();
+        markTransitionReady();
       },
     );
-
-    // Settled remounts never see transitionStart/End. Delay past the native
-    // transitionStart round-trip so a push does not unlock mid-animation.
-    const settleFallback = setTimeout(() => {
-      if (!sawTransitionStart) {
-        transitionReady = true;
-        tryMount();
-      }
-    }, 300);
 
     return () => {
       cancelled = true;
       idleTask.cancel();
-      clearTimeout(settleFallback);
+      clearSettleTimer();
+      clearEndWatchdogTimer();
       unsubscribeStart();
       unsubscribeEnd();
     };
