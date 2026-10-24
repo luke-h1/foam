@@ -12,6 +12,9 @@ type EventCallback = TwitchEventSubCallback;
  */
 type TestSocket = {
   close: (code?: number, reason?: string) => void;
+  onclose:
+    | ((event: { code: number; reason: string; timeStamp: number }) => void)
+    | null;
   readyState: number;
 };
 
@@ -38,8 +41,12 @@ export type TwitchWsTestState = {
   appStateSubscription: { remove: () => void } | null;
   instance: TestSocket | null;
   isReconnecting: boolean;
+  keepaliveTimer: ReturnType<typeof setTimeout> | null;
+  reconnectAttempts: number;
   reconnectTimer: ReturnType<typeof setTimeout> | null;
+  resetKeepaliveTimer: () => void;
   sessionId: string;
+  setupEventListeners: () => void;
 };
 
 export function getTwitchWsTestState(): TwitchWsTestState {
@@ -50,9 +57,20 @@ export function getTwitchWsTestState(): TwitchWsTestState {
 export function resetTwitchWsTestState(state: TwitchWsTestState) {
   state.appStateSubscription?.remove();
   state.appStateSubscription = null;
+
+  if (state.keepaliveTimer) {
+    clearTimeout(state.keepaliveTimer);
+  }
+
+  if (state.reconnectTimer) {
+    clearTimeout(state.reconnectTimer);
+  }
+
   state.entries = new Map();
   state.instance = null;
   state.isReconnecting = false;
+  state.keepaliveTimer = null;
+  state.reconnectAttempts = 0;
   state.reconnectTimer = null;
   state.sessionId = 'session-id';
 }
@@ -64,6 +82,7 @@ export function resetTwitchWsTestState(state: TwitchWsTestState) {
 export function createFakeSocket() {
   return {
     close: jest.fn(),
+    onclose: null,
     readyState: 1,
   } satisfies TestSocket;
 }

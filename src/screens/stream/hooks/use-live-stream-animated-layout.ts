@@ -76,6 +76,7 @@ export function useLiveStreamAnimatedLayout({
   const videoHeight = useSharedValue(videoDimensions.height);
   const chatWidth = useSharedValue(effectiveChatWidth);
   const chatHeight = useSharedValue(effectiveChatHeight);
+  const chatHidden = useSharedValue(isLandscapeChatHidden ? 1 : 0);
   const chatOpacity = useSharedValue(1);
   const chatTranslateX = useSharedValue(0);
   const resizeStartWidth = useSharedValue(0);
@@ -136,6 +137,7 @@ export function useLiveStreamAnimatedLayout({
       chatTranslateX.set(
         isLandscapeChatHidden && isLandscape ? chatDimensions.width : 0,
       );
+      chatHidden.set(isLandscapeChatHidden ? 1 : 0);
 
       return;
     }
@@ -145,6 +147,9 @@ export function useLiveStreamAnimatedLayout({
       : 'live-stream.chat-reveal';
 
     markSignpost(layoutSignpost);
+    chatHidden.set(
+      withSpring(isLandscapeChatHidden ? 1 : 0, CHAT_REVEAL_ANIMATION_CONFIG),
+    );
     videoWidth.set(videoDimensions.width);
     videoHeight.set(videoDimensions.height);
     chatWidth.set(
@@ -185,6 +190,7 @@ export function useLiveStreamAnimatedLayout({
     chatHeight,
     chatOpacity,
     chatTranslateX,
+    chatHidden,
     landscapeSV,
     insetLeftSV,
     topInsetSV,
@@ -198,8 +204,13 @@ export function useLiveStreamAnimatedLayout({
     width: videoWidth.get(),
   }));
 
+  // Hidden chat keeps its width so the panel can slide off. Controls follow
+  // the hidden flag and sit on the screen edge.
   const animatedFullscreenControlsStyle = useAnimatedStyle(() => ({
-    right: theme.space16 + landscapeInsetRight + chatWidth.get(),
+    right:
+      theme.space16 +
+      landscapeInsetRight +
+      chatWidth.get() * (1 - chatHidden.get()),
   }));
 
   const animatedResizeHandleStyle = useAnimatedStyle(() => ({

@@ -254,12 +254,12 @@ function hasSameCosmeticBinding(
   previous: CachedUserCosmetics | undefined,
   cosmetics: CachedUserCosmetics,
 ): boolean {
+  // expiresAt is Date.now() plus a TTL, so it changes on every sync.
   return (
     previous !== undefined &&
     previous.badgeId === cosmetics.badgeId &&
     previous.paintId === cosmetics.paintId &&
-    previous.ttvUserId === cosmetics.ttvUserId &&
-    previous.expiresAt === cosmetics.expiresAt
+    previous.ttvUserId === cosmetics.ttvUserId
   );
 }
 

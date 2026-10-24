@@ -352,6 +352,8 @@ class TwitchWsService {
         `💜 EventSub keepalive timeout received - reconnecting`,
       );
 
+      // Drop the dead socket first. Its close would otherwise start a second reconnect.
+      TwitchWsService.discardInstance();
       TwitchWsService.attemptReconnect();
     }, timeoutInMs);
   }
