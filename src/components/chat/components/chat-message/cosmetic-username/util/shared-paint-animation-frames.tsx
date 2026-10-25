@@ -1,34 +1,38 @@
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import { AppState } from 'react-native';
-import {
-  makeMutable,
-  type SharedValue,
-  useFrameCallback,
-} from 'react-native-reanimated';
 
-import type { SkAnimatedImage, SkImage } from '@shopify/react-native-skia';
+import type {
+  SkAnimatedImage,
+  SkData,
+  SkImage,
+} from '@shopify/react-native-skia';
 import { Skia } from '@shopify/react-native-skia';
 
-import { chatScrollActiveShared } from '@app/components/chat/util/chat-scroll-active-shared';
+import { chatScrollActivity } from '@app/components/chat/util/chat-scroll-activity';
 import type { LogMetadataValue } from '@app/lib/sentry';
 import { logger } from '@app/utils/logger';
 
 interface SharedPaintAnimationEntry {
-  animatedImage: SharedValue<SkAnimatedImage | null>;
-  frame: SharedValue<SkImage | null>;
-  lastTimestamp: SharedValue<number>;
+  animation: SkAnimatedImage | null;
+  encoded: SkData | null;
+  frameImage: SkImage | null;
+  retiredFrames: SkImage[];
+  lastAdvanceMs: number;
   refCount: number;
   disposeTimer: ReturnType<typeof setTimeout> | null;
   orphanTimer: ReturnType<typeof setTimeout> | null;
   loadStarted: boolean;
   ready: boolean;
   readyListeners: Set<() => void>;
+  frameListeners: Set<() => void>;
 }
 
 const entries = new Map<string, SharedPaintAnimationEntry>();
 const frameConsumerCounts = new Map<string, number>();
 let driverUrls: readonly string[] = [];
 const driverListeners = new Set<() => void>();
+const frameRevisionListeners = new Set<() => void>();
+let frameRevision = 0;
 const MAX_SHARED_PAINT_ANIMATION_ENTRIES = 32;
 
 // Keep a released texture briefly so recycled rows rejoin the running clock in phase.
@@ -36,8 +40,17 @@ const RELEASED_ENTRY_LINGER_MS = 5000;
 
 const DEFAULT_FRAME_DURATION_MS = 60;
 
+// SkAnimatedImage::decodeNextFrame returns this once the file has played out.
+const FINISHED_FRAME = -1;
+
 function notifyReady(entry: SharedPaintAnimationEntry): void {
   entry.readyListeners.forEach(listener => listener());
+}
+
+function notifyFrames(entry: SharedPaintAnimationEntry): void {
+  frameRevision += 1;
+  entry.frameListeners.forEach(listener => listener());
+  frameRevisionListeners.forEach(listener => listener());
 }
 
 function clearEntryTimers(entry: SharedPaintAnimationEntry): void {
@@ -59,12 +72,21 @@ function disposeEntry(url: string, entry: SharedPaintAnimationEntry): void {
     entries.delete(url);
   }
 
-  entry.frame.value?.dispose();
-  entry.frame.value = null;
-  entry.animatedImage.value?.dispose();
-  entry.animatedImage.value = null;
+  entry.frameImage?.dispose();
+  entry.frameImage = null;
+
+  for (const retired of entry.retiredFrames) {
+    retired.dispose();
+  }
+
+  entry.retiredFrames = [];
+  entry.animation?.dispose();
+  entry.animation = null;
+  entry.encoded?.dispose();
+  entry.encoded = null;
   entry.ready = false;
   notifyReady(entry);
+  notifyFrames(entry);
 }
 
 function evictLingeringEntries(): void {
@@ -106,6 +128,51 @@ function subscribeToMemoryWarnings(): void {
   });
 }
 
+function publishPaintFrame(
+  entry: SharedPaintAnimationEntry,
+  frame: SkImage | null,
+  now: number,
+): void {
+  if (!frame) {
+    return;
+  }
+
+  if (entry.frameImage) {
+    entry.retiredFrames.push(entry.frameImage);
+  }
+
+  entry.frameImage = frame;
+  entry.lastAdvanceMs = now;
+
+  // The canvas records the previous frame on the next commit. Keep it until
+  // the one after that, then drop the JS wrapper.
+  const stale =
+    entry.retiredFrames.length > 1 ? entry.retiredFrames.shift() : undefined;
+
+  stale?.dispose();
+  notifyFrames(entry);
+}
+
+function storeStillFrame(
+  url: string,
+  entry: SharedPaintAnimationEntry,
+  frame: SkImage | null,
+): void {
+  if (!frame) {
+    return;
+  }
+
+  if (entries.get(url) !== entry) {
+    frame.dispose();
+    return;
+  }
+
+  entry.frameImage = frame;
+  entry.ready = true;
+  notifyFrames(entry);
+  notifyReady(entry);
+}
+
 function beginLoad(url: string, entry: SharedPaintAnimationEntry): void {
   if (entry.loadStarted) {
     return;
@@ -115,22 +182,33 @@ function beginLoad(url: string, entry: SharedPaintAnimationEntry): void {
 
   Skia.Data.fromURI(url)
     .then(data => {
-      const image = Skia.AnimatedImage.MakeAnimatedImageFromEncoded(data);
-
       if (entries.get(url) !== entry) {
-        image?.dispose();
         return;
       }
 
-      if (!image) {
+      const animated = Skia.AnimatedImage.MakeAnimatedImageFromEncoded(data);
+
+      if (animated && animated.getFrameCount() > 1) {
+        entry.animation = animated;
+        entry.encoded = data;
+        entry.ready = true;
+        publishPaintFrame(entry, animated.getCurrentFrame(), Date.now());
+        notifyReady(entry);
         return;
       }
 
-      entry.animatedImage.value = image;
-      image.decodeNextFrame();
-      entry.frame.value = image.getCurrentFrame();
-      entry.ready = true;
-      notifyReady(entry);
+      const stillFrame = animated ? animated.getCurrentFrame() : null;
+
+      animated?.dispose();
+      storeStillFrame(url, entry, stillFrame);
+
+      if (stillFrame) {
+        return;
+      }
+
+      // A still WebP or PNG is not an animated image. Keep the decoded frame
+      // so an image paint still draws.
+      storeStillFrame(url, entry, Skia.Image.MakeImageFromEncoded(data));
     })
     .catch((error: LogMetadataValue) => {
       logger.chat.warn('Failed to load animated paint texture:', {
@@ -138,6 +216,69 @@ function beginLoad(url: string, entry: SharedPaintAnimationEntry): void {
         url,
       });
     });
+}
+
+function restartPaintAnimation(
+  entry: SharedPaintAnimationEntry,
+  now: number,
+): void {
+  const data = entry.encoded;
+
+  if (!data) {
+    return;
+  }
+
+  const next = Skia.AnimatedImage.MakeAnimatedImageFromEncoded(data);
+
+  if (!next) {
+    return;
+  }
+
+  entry.animation?.dispose();
+  entry.animation = next;
+  publishPaintFrame(entry, next.getCurrentFrame(), now);
+}
+
+function advancePaintFrame(url: string, now: number): void {
+  const entry = entries.get(url);
+  const animated = entry?.animation ?? null;
+
+  if (!entry || !animated) {
+    return;
+  }
+
+  const duration = animated.currentFrameDuration() || DEFAULT_FRAME_DURATION_MS;
+
+  if (entry.lastAdvanceMs !== -1 && now - entry.lastAdvanceMs < duration) {
+    return;
+  }
+
+  // Decode on the JS thread. SkAnimatedImage is not thread-safe, and the
+  // canvas only records images created here. A UI-thread frame never shows.
+  const status = animated.decodeNextFrame();
+
+  if (status === FINISHED_FRAME) {
+    restartPaintAnimation(entry, now);
+    return;
+  }
+
+  publishPaintFrame(entry, animated.getCurrentFrame(), now);
+}
+
+function advanceSharedPaintFrames(now: number): void {
+  const appState = AppState.currentState;
+
+  if (
+    chatScrollActivity.isActive() ||
+    appState === 'background' ||
+    appState === 'inactive'
+  ) {
+    return;
+  }
+
+  for (const url of frameConsumerCounts.keys()) {
+    advancePaintFrame(url, now);
+  }
 }
 
 function armOrphanTimer(url: string, entry: SharedPaintAnimationEntry): void {
@@ -178,15 +319,18 @@ function getOrCreateEntry(url: string): SharedPaintAnimationEntry {
   }
 
   const entry: SharedPaintAnimationEntry = {
-    animatedImage: makeMutable<SkAnimatedImage | null>(null),
-    frame: makeMutable<SkImage | null>(null),
-    lastTimestamp: makeMutable(-1),
+    animation: null,
+    encoded: null,
+    frameImage: null,
+    retiredFrames: [],
+    lastAdvanceMs: -1,
     refCount: 0,
     disposeTimer: null,
     orphanTimer: null,
     loadStarted: false,
     ready: false,
     readyListeners: new Set(),
+    frameListeners: new Set(),
   };
 
   entries.set(url, entry);
@@ -260,61 +404,10 @@ function removeFrameConsumer(url: string): void {
   syncDriverUrls();
 }
 
-function PaintUrlFrameDriver({
-  animatedImage,
-  frame,
-  lastTimestamp,
-}: {
-  animatedImage: SharedValue<SkAnimatedImage | null>;
-  frame: SharedValue<SkImage | null>;
-  lastTimestamp: SharedValue<number>;
-}) {
-  useFrameCallback(frameInfo => {
-    const image = animatedImage.value;
-
-    if (image == null) {
-      return;
-    }
-
-    if (chatScrollActiveShared.value) {
-      return;
-    }
-
-    const duration = image.currentFrameDuration() || DEFAULT_FRAME_DURATION_MS;
-
-    if (
-      lastTimestamp.value !== -1 &&
-      frameInfo.timestamp - lastTimestamp.value < duration
-    ) {
-      return;
-    }
-
-    image.decodeNextFrame();
-    const oldFrame = frame.value;
-    frame.value = image.getCurrentFrame();
-    oldFrame?.dispose();
-    lastTimestamp.value = frameInfo.timestamp;
-  });
-
-  return null;
-}
-
-function PaintUrlFrameDriverGate({ url }: { url: string }) {
-  const entry = entries.get(url);
-
-  if (!entry) {
-    return null;
-  }
-
-  return (
-    <PaintUrlFrameDriver
-      animatedImage={entry.animatedImage}
-      frame={entry.frame}
-      lastTimestamp={entry.lastTimestamp}
-    />
-  );
-}
-
+/**
+ * One JS-thread clock for every visible animated paint. Rows share a URL, so
+ * they share a frame.
+ */
 export function SharedPaintAnimationDrivers() {
   const urls = useSyncExternalStore(
     listener => {
@@ -327,19 +420,98 @@ export function SharedPaintAnimationDrivers() {
     () => driverUrls,
   );
 
-  return urls.map(url => <PaintUrlFrameDriverGate key={url} url={url} />);
+  useEffect(() => {
+    if (urls.length === 0) {
+      return;
+    }
+
+    let handle = 0;
+
+    const loop = () => {
+      advanceSharedPaintFrames(Date.now());
+      handle = requestAnimationFrame(loop);
+    };
+
+    handle = requestAnimationFrame(loop);
+
+    return () => {
+      cancelAnimationFrame(handle);
+    };
+  }, [urls]);
+
+  return null;
+}
+
+function retainPaintFrames(urls: readonly string[]): () => void {
+  for (const url of urls) {
+    retainEntry(url);
+    addFrameConsumer(url);
+  }
+
+  return () => {
+    for (const url of urls) {
+      removeFrameConsumer(url);
+      releaseEntry(url);
+    }
+  };
 }
 
 /**
- * Frame stream for an animated paint texture, shared per URL so every row
- * shows the same frame - one decode per display frame, not per row.
+ * Current frames for several paint textures. One decode per URL, shared by
+ * every row that uses it. Call this outside `<Canvas>` so the picture records
+ * the new frame. The compiler is off so a cached render cannot keep frame 0.
  */
-export function useSharedPaintAnimationFrame(
-  url: string,
-): SharedValue<SkImage | null> {
-  const entry = useMemo(() => getOrCreateEntry(url), [url]);
+export function useSharedPaintFrames(
+  urls: readonly string[],
+): ReadonlyMap<string, SkImage> {
+  'use no memo';
+
+  const urlKey = urls.join('\n');
+
+  useEffect(
+    () => retainPaintFrames(urlKey === '' ? [] : urlKey.split('\n')),
+    [urlKey],
+  );
+
+  const revision = useSyncExternalStore(
+    listener => {
+      frameRevisionListeners.add(listener);
+      return () => {
+        frameRevisionListeners.delete(listener);
+      };
+    },
+    () => frameRevision,
+    () => frameRevision,
+  );
+
+  const frames = new Map<string, SkImage>();
+
+  for (const url of urls) {
+    const frame = entries.get(url)?.frameImage ?? null;
+
+    if (frame) {
+      frames.set(url, frame);
+    }
+  }
+
+  // `revision` changes when a frame advances, which rebuilds this map.
+  void revision;
+
+  return frames;
+}
+
+/**
+ * Current frame for a paint texture, shared per URL so every row shows the
+ * same frame. One decode per display frame, not per row.
+ */
+export function useSharedPaintAnimationFrame(url: string): SkImage | null {
+  const entry = useMemo(() => (url ? getOrCreateEntry(url) : null), [url]);
 
   useEffect(() => {
+    if (!url) {
+      return;
+    }
+
     retainEntry(url);
     addFrameConsumer(url);
 
@@ -349,7 +521,21 @@ export function useSharedPaintAnimationFrame(
     };
   }, [url]);
 
-  return entry.frame;
+  return useSyncExternalStore(
+    listener => {
+      if (!entry) {
+        return () => {};
+      }
+
+      entry.frameListeners.add(listener);
+
+      return () => {
+        entry.frameListeners.delete(listener);
+      };
+    },
+    () => (entry ? entry.frameImage : null),
+    () => null,
+  );
 }
 
 export function useSharedPaintAnimationReady(url: string): boolean {

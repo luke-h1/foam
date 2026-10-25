@@ -202,14 +202,14 @@ export const initialPreferences: Preferences = {
   sharedChatEnabled: true,
   enhancedVideoStability: false,
   chatDebugTools: isDevToolsEnabled,
-  sevenTvPaintRenderer: 'native',
+  sevenTvPaintRenderer: 'skia',
 };
 
 ensureObservablePersistenceConfig();
 
 export const preferences$ = observable(initialPreferences);
 
-export const paintRendererFlag$ = observable<PaintRendererFlag>('native');
+export const paintRendererFlag$ = observable<PaintRendererFlag>('skia');
 
 const persistedPreferences$ = persistObservable(preferences$, {
   local: createObservablePersistenceLocalConfig(PREFERENCES_PERSISTENCE_KEY),
@@ -251,6 +251,7 @@ export function usePaintRenderer(): SevenTvPaintRenderer {
     if (isDevToolsEnabled) {
       return preferences$.sevenTvPaintRenderer.get();
     }
+
     return paintRendererFlag$.get();
   });
 }

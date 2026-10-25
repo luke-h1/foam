@@ -39,7 +39,6 @@ interface UseChatMessageProcessingOptions {
   messages$: { peek: () => AnyChatMessageType[] };
   scrollAnchor: ChatScrollAnchor;
   show7TvEmotes: boolean;
-  show7tvBadges: boolean;
   showChatGifs: boolean;
   userLogin?: string | null;
 }
@@ -50,7 +49,6 @@ export function useChatMessageProcessing({
   messages$,
   scrollAnchor,
   show7TvEmotes,
-  show7tvBadges,
   showChatGifs,
   userLogin,
 }: UseChatMessageProcessingOptions) {
@@ -197,7 +195,7 @@ export function useChatMessageProcessing({
         getUserBadge: twitchUserId => getUserBadge(twitchUserId) ?? null,
         fetchUserCosmetics,
         hydratePersonalEmotes: show7TvEmotes,
-        hydrateCosmetics: show7tvBadges,
+        hydrateCosmetics: true,
         reprocessMessage: reprocessVisibleMessageFromCache,
         publishMessageUpdates: updateMessages,
         shouldContinue: () => visibleAssetHydration.epoch === epoch,
@@ -211,13 +209,7 @@ export function useChatMessageProcessing({
         }
       });
     },
-    [
-      channelId,
-      scrollAnchor,
-      reprocessVisibleMessageFromCache,
-      show7TvEmotes,
-      show7tvBadges,
-    ],
+    [channelId, scrollAnchor, reprocessVisibleMessageFromCache, show7TvEmotes],
   );
 
   const handleViewableMessagesChange = useCallback(

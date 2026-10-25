@@ -1,18 +1,17 @@
 // "shape" is the 7TV paint API field (types/seven-tv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import { StyleSheet } from 'react-native';
-import { makeMutable } from 'react-native-reanimated';
 
-import type { SkImage } from '@shopify/react-native-skia';
 import { act, render } from '@testing-library/react-native';
 import * as ExpoImage from 'expo-image';
-import { Image, type ImageProps } from 'expo-image';
+import { type ImageProps } from 'expo-image';
 
 import { chatScrollActivity } from '@app/components/chat/util/chat-scroll-activity';
 import { paintRendererFlag$ } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
+import { PaintLayerStretchImage } from '../cosmetic-username/paint-layer-stretch-image';
 import { PaintLayerTiledImage } from '../cosmetic-username/paint-layer-tiled-image';
 import { PaintedUsername } from '../cosmetic-username/painted-username';
 import * as sharedPaintAnimationFrames from '../cosmetic-username/util/shared-paint-animation-frames';
@@ -36,7 +35,7 @@ Object.defineProperty(ExpoImage, 'Image', {
  */
 jest
   .spyOn(sharedPaintAnimationFrames, 'useSharedPaintAnimationFrame')
-  .mockReturnValue(makeMutable<SkImage | null>(null));
+  .mockReturnValue(null);
 
 jest
   .spyOn(sharedPaintAnimationFrames, 'useSharedPaintAnimationReady')
@@ -84,6 +83,7 @@ const hasVisibleUsernameInColor = (
 describe('PaintedUsername', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    paintRendererFlag$.set('native');
   });
 
   describe('Rendering', () => {
@@ -195,6 +195,7 @@ describe('PaintedUsername', () => {
       );
 
       expect(getByText('UserName')).toBeOnTheScreen();
+
       expect(queryByText('UserName:')).not.toBeOnTheScreen();
     });
   });
@@ -262,7 +263,7 @@ describe('PaintedUsername', () => {
       );
     });
 
-    test('stretches a non-repeating URL paint to fill the glyph box', () => {
+    test('draws a non-repeating URL paint from the shared frame clock', () => {
       const urlPaint = createPaintData({
         function: 'URL',
         image_url: 'https://cdn.7tv.app/paint/test/4x.webp',
@@ -273,8 +274,11 @@ describe('PaintedUsername', () => {
         <PaintedUsername username='AssetFill' paint={urlPaint} />,
       );
 
-      const paintImage = UNSAFE_getByType(Image);
-      expect(paintImage.props['contentFit']).toBe('fill');
+      const paintImage = UNSAFE_getByType(PaintLayerStretchImage);
+
+      expect(paintImage.props['imageUrl']).toBe(
+        'https://cdn.7tv.app/paint/test/4x.webp',
+      );
     });
 
     test('renders the masked fill for a single-stop gradient', () => {

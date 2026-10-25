@@ -1,6 +1,6 @@
 // "shape" is the 7TV paint API field (types/seven-tv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
-import { AppState, Platform } from 'react-native';
+import { AppState } from 'react-native';
 
 import type {
   SkCanvas,
@@ -264,8 +264,8 @@ function buildPaintLayout(
   const { paint, displayUsername, fontSize, pixelRatio } = opts;
   const scale = pixelRatio;
 
-  let fontWeight: FontWeight =
-    Platform.OS === 'android' ? FontWeight.Bold : FontWeight.Normal;
+  // Chat usernames use the bold Montserrat face. A paint can set its own weight.
+  let fontWeight: FontWeight = FontWeight.Bold;
 
   if (paint.textStyle?.weight) {
     // SAFETY: 7TV encodes textStyle.weight as CSS hundreds (1-9), so x100 lands on a FontWeight member.
@@ -406,21 +406,13 @@ function drawPaintedUsername(
     options.gradientLayers ?? [...layout.layers].reverse()
   ).filter(isDrawableGradientLayer);
 
-  if (options.includeBaseFill && gradientsToDraw.length === 0) {
+  // The extension paints one `currentcolor` behind the whole background-image
+  // list. A solid fill under every layer would hide the layers below it.
+  if (options.includeBaseFill) {
     drawGlyphs(basePaint);
   }
 
   for (const layer of gradientsToDraw) {
-    const grouped = layer.opacity < 1;
-
-    if (grouped) {
-      const groupPaint = Skia.Paint();
-      groupPaint.setAlphaf(layer.opacity);
-      canvas.saveLayer(groupPaint);
-    }
-
-    drawGlyphs(basePaint);
-
     const rect = layerRectInBox(
       layer.at,
       layer.size,
@@ -437,29 +429,32 @@ function drawPaintedUsername(
 
     const shader = layerShader(layer, canvasRect);
 
-    if (shader) {
-      const fillPaint = Skia.Paint();
-      fillPaint.setShader(shader);
-      canvas.save();
-
-      canvas.clipRect(
-        Skia.XYWHRect(
-          canvasRect.x,
-          canvasRect.y,
-          canvasRect.width,
-          canvasRect.height,
-        ),
-        ClipOp.Intersect,
-        true,
-      );
-
-      drawGlyphs(fillPaint);
-      canvas.restore();
+    if (!shader) {
+      continue;
     }
 
-    if (grouped) {
-      canvas.restore();
+    const fillPaint = Skia.Paint();
+    fillPaint.setShader(shader);
+
+    if (layer.opacity < 1) {
+      fillPaint.setAlphaf(layer.opacity);
     }
+
+    canvas.save();
+
+    canvas.clipRect(
+      Skia.XYWHRect(
+        canvasRect.x,
+        canvasRect.y,
+        canvasRect.width,
+        canvasRect.height,
+      ),
+      ClipOp.Intersect,
+      true,
+    );
+
+    drawGlyphs(fillPaint);
+    canvas.restore();
   }
 
   /**
@@ -521,17 +516,6 @@ export interface PaintImageLayer {
 export type PaintLayerSlot =
   | { kind: 'url'; layer: PaintImageLayer }
   | { kind: 'baked'; image: SkImage };
-
-/**
- * Only spans above other slots, or faded ones, need the base-colour backing;
- * shared with the live compositor so the two cannot disagree.
- */
-export function urlSlotNeedsBacking(
-  index: number,
-  layer: PaintImageLayer,
-): boolean {
-  return index > 0 || layer.opacity < 1;
-}
 
 /**
  * Render inputs for a painted username; `layerSlots` keeps CSS stacking for
@@ -780,9 +764,9 @@ function renderFlatSurface(
 }
 
 /**
- * A URL layer is composited at draw time, so the text is rendered into
- * separate passes: the visible base, an unshadowed backing for slots that need
- * one, and the stroke on its own.
+ * A URL layer is composited at draw time. The base and its shadow stay in the
+ * foundation. Gradient runs and the stroke are their own passes so a texture
+ * can sit between them.
  */
 function renderUrlLayeredSurfaces(
   opts: RasterizePaintedUsernameOptions,
@@ -804,23 +788,6 @@ function renderUrlLayeredSurfaces(
 
   const { layerSlots, imageLayers } = buildPaintLayerSlots(opts, layout);
 
-  const needsUrlBacking = layerSlots.some(
-    (slot, index) =>
-      slot.kind === 'url' && urlSlotNeedsBacking(index, slot.layer),
-  );
-
-  const backingImage = needsUrlBacking
-    ? snapshotPaintSurface(layout, canvas => {
-        drawPaintedUsername(canvas, opts, layout, {
-          includeDropShadows: false,
-          includeTextShadows: false,
-          includeBaseFill: true,
-          gradientLayers: [],
-          includeStroke: false,
-        });
-      })
-    : null;
-
   const strokeImage = layout.stroke
     ? snapshotPaintSurface(layout, canvas => {
         drawPaintedUsername(canvas, opts, layout, {
@@ -833,7 +800,13 @@ function renderUrlLayeredSurfaces(
       })
     : null;
 
-  return { staticImage, layerSlots, imageLayers, strokeImage, backingImage };
+  return {
+    staticImage,
+    layerSlots,
+    imageLayers,
+    strokeImage,
+    backingImage: null,
+  };
 }
 
 /**

@@ -10,23 +10,17 @@ import Svg, {
   Stop,
 } from 'react-native-svg';
 
-import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import type { PaintLayerData } from '@app/types/seven-tv/cosmetics';
 
+import { PaintLayerStretchImage } from './paint-layer-stretch-image';
 import { PaintLayerTiledImage } from './paint-layer-tiled-image';
 import { buildLayerGradientConfig } from './util/paint-layer/build-layer-gradient-config';
 import { getLayerLayoutStyle } from './util/paint-layer/get-layer-layout-style';
-import { imageRepeatFromCanvasRepeat } from './util/paint-layer/image-repeat-from-canvas-repeat';
 import { isTilingCanvasRepeat } from './util/paint-layer/is-tiling-canvas-repeat';
 
 interface PaintLayerBackgroundProps {
-  /**
-   * Resolved paint base colour under the layer content, so the layer opacity
-   * fades backing and content together.
-   */
-  baseColor: string;
   layer: PaintLayerData;
   layerIndex: number;
 }
@@ -138,8 +132,6 @@ type PaintLayerContentProps = {
   isRadial: boolean;
   layer: PaintLayerBackgroundProps['layer'];
   layerSize: { width: number; height: number } | null;
-  setUrlTextureReady: (ready: boolean) => void;
-  urlTextureReady: boolean;
   useSvgLinear: boolean;
 };
 
@@ -157,8 +149,6 @@ function PaintLayerContent({
   isRadial,
   layer,
   layerSize,
-  setUrlTextureReady,
-  urlTextureReady,
   useSvgLinear,
 }: PaintLayerContentProps): ReactNode {
   if (isAssetPaint) {
@@ -168,17 +158,7 @@ function PaintLayerContent({
         imageUrl={layer.image_url}
       />
     ) : (
-      <Image
-        contentFit={imageRepeatFromCanvasRepeat(
-          layer.canvas_repeat,
-          layer.repeat,
-        )}
-        source={{ uri: layer.image_url }}
-        useAppleWebpCodec={false}
-        style={urlTextureReady ? styles.fill : styles.unloadedTexture}
-        onLoad={() => setUrlTextureReady(true)}
-        onError={() => setUrlTextureReady(false)}
-      />
+      <PaintLayerStretchImage imageUrl={layer.image_url} />
     );
   }
 
@@ -221,7 +201,6 @@ function PaintLayerContent({
 }
 
 export function PaintLayerBackground({
-  baseColor,
   layer,
   layerIndex,
 }: PaintLayerBackgroundProps) {
@@ -232,7 +211,6 @@ export function PaintLayerBackground({
     height: number;
   } | null>(null);
 
-  const [urlTextureReady, setUrlTextureReady] = useState(false);
   const layoutStyle = getLayerLayoutStyle(layer);
   const layerOpacity = layer.opacity;
   const gradientConfig = buildLayerGradientConfig(layer);
@@ -262,19 +240,13 @@ export function PaintLayerBackground({
       isRadial={isRadial}
       layer={layer}
       layerSize={layerSize}
-      setUrlTextureReady={setUrlTextureReady}
-      urlTextureReady={urlTextureReady}
       useSvgLinear={useSvgLinear}
     />
   );
 
   return (
     <View
-      style={[
-        styles.span,
-        { backgroundColor: baseColor },
-        layerOpacity < 1 ? { opacity: layerOpacity } : null,
-      ]}
+      style={[styles.span, layerOpacity < 1 ? { opacity: layerOpacity } : null]}
     >
       <View
         style={[styles.layer, layoutStyle]}
@@ -299,10 +271,5 @@ const styles = StyleSheet.create({
   },
   span: {
     ...StyleSheet.absoluteFill,
-  },
-  unloadedTexture: {
-    height: 0,
-    opacity: 0,
-    width: 0,
   },
 });

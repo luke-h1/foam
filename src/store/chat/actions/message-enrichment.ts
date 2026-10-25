@@ -1,7 +1,5 @@
-import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { extractEmotesFromTag } from '@app/utils/chat/extract-emotes/extract-emotes-from-tag';
-import { findBadges } from '@app/utils/chat/find-badges';
 import type { MessageToken } from '@app/utils/chat/message-token';
 import { resolveMessageEmoteParts } from '@app/utils/chat/resolve-message-emote-tokens';
 import { getMessageBadges } from '@app/utils/chat/shared-chat-badges/get-message-badges';
@@ -144,15 +142,9 @@ export function enrichMessageSet({
       return;
     }
 
-    const replacedBadges = findBadges({
+    const replacedBadges = getMessageBadges({
       userstate: msg.userstate,
-      bttvBadges: emoteData.bttvBadges,
-      chatterinoBadges: emoteData.chatterinoBadges,
-      ffzChannelBadges: emoteData.ffzChannelBadges,
-      ffzGlobalBadges: emoteData.ffzGlobalBadges,
-      twitchChannelBadges: emoteData.twitchChannelBadges,
-      twitchGlobalBadges: emoteData.twitchGlobalBadges,
-      getEntitledBadge: getUserBadge,
+      emoteData,
     });
 
     if (
