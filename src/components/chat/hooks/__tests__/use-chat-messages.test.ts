@@ -2,7 +2,7 @@ import { act, renderHook } from '@testing-library/react-native';
 
 import { createScrollAnchor } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat-scroll.fixture';
 import { useChatMessages } from '@app/components/chat/hooks/use-chat-messages';
-import type { BufferedMessage } from '@app/components/chat/util/message-buffer';
+import type { BufferedMessage } from '@app/components/chat/util/messageBuffer';
 import * as chatUnreadActions from '@app/store/chat/actions/chat-unread';
 import {
   getChatUnreadCount,

@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { MutableRefObject } from 'react';
 
 import { useSevenTvWs } from '@app/components/chat/hooks/use-seven-tv-ws';
-import { createSevenTvCallbacks } from '@app/components/chat/util/create-seven-tv-callbacks';
+import { createSevenTvCallbacks } from '@app/components/chat/util/createSevenTvCallbacks';
 import { useSyncRef } from '@app/hooks/use-sync-ref';
 import { ReadyState } from '@app/hooks/ws/constants';
 import { sevenTvService } from '@app/services/seven-tv-service';

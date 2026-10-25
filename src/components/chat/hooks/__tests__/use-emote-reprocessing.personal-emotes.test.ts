@@ -11,8 +11,8 @@ import * as personalEmotesActions from '@app/store/chat/actions/personal-emotes'
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
-import type { MessageToken } from '@app/utils/chat/message-token';
-import { resolveMessageEmoteParts } from '@app/utils/chat/resolve-message-emote-tokens';
+import type { MessageToken } from '@app/utils/chat/messageToken';
+import { resolveMessageEmoteParts } from '@app/utils/chat/resolveMessageEmoteTokens';
 
 // Only the channel-emote-cache lookup and the personal-emote source are stubbed; the real resolver, worklet and store run.
 const mockGetCurrentEmoteData = jest.spyOn(

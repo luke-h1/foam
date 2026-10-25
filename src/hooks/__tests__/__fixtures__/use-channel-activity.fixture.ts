@@ -1,5 +1,5 @@
 import type { EventSubMessage } from '@app/types/twitch/eventsub';
-import type { ChannelActivity } from '@app/utils/twitch/channel-activity/channel-activity';
+import type { ChannelActivity } from '@app/utils/twitch/channel-activity/channelActivity';
 
 export interface TestActivityHelixItem {
   id: string;

@@ -7,15 +7,15 @@ import {
 } from '@app/services/seven-tv-service';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import { createFetchOnceGuard } from '@app/utils/async/fetch-once-guard';
-import { setOnBttvBadgesLoaded } from '@app/utils/chat/bttv-badges/set-on-bttv-badges-loaded';
-import { convertV4PaintToPaintData } from '@app/utils/color/seven-tv-paint-data/convert-v4-paint-to-paint-data';
+import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
+import { setOnBttvBadgesLoaded } from '@app/utils/chat/bttv-badges/setOnBttvBadgesLoaded';
+import { convertV4PaintToPaintData } from '@app/utils/color/seven-tv-paint-data/convertV4PaintToPaintData';
 import { type V4Badge } from '@app/utils/color/seven-tv-paint-data/types';
 import { logger } from '@app/utils/logger';
-import { deepEqualJson } from '@app/utils/object/deep-equal-json';
-import { buildSevenTvBadgeImageUrl } from '@app/utils/seven-tv/cosmetics/build-seven-tv-badge-image-url';
-import { normalizeSevenTvBadge } from '@app/utils/seven-tv/cosmetics/normalize-seven-tv-badge';
-import { getSevenTvSessionId } from '@app/utils/seven-tv/seven-tv-session-id';
+import { deepEqualJson } from '@app/utils/object/deepEqualJson';
+import { buildSevenTvBadgeImageUrl } from '@app/utils/seven-tv/cosmetics/buildSevenTvBadgeImageUrl';
+import { normalizeSevenTvBadge } from '@app/utils/seven-tv/cosmetics/normalizeSevenTvBadge';
+import { getSevenTvSessionId } from '@app/utils/seven-tv/sevenTvSessionId';
 
 import { chatStore$ } from '../observables/chat-store';
 import {

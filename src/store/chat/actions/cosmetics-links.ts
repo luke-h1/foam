@@ -1,4 +1,4 @@
-import { evictOldestWhenFull } from '@app/utils/collection/evict-oldest-when-full';
+import { evictOldestWhenFull } from '@app/utils/collection/evictOldestWhenFull';
 
 export const MAX_SEVEN_TV_USER_LINK_ENTRIES = 2000;
 

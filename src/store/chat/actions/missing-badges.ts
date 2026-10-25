@@ -1,5 +1,5 @@
 import { logger } from '@app/utils/logger';
-import { boundedSetAdd } from '@app/utils/object/bounded-set-add';
+import { boundedSetAdd } from '@app/utils/object/boundedSetAdd';
 
 const MAX_MISSING_BADGE_IDS = 500;
 

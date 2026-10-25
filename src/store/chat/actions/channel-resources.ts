@@ -7,7 +7,7 @@ import { twitchBadgeService } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import { createFetchOnceGuard } from '@app/utils/async/fetch-once-guard';
+import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
 import { logger } from '@app/utils/logger';
 
 import type { ChannelCacheType, GlobalCacheType } from '../types/constants';

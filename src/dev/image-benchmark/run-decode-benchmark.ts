@@ -1,6 +1,6 @@
 import { Image as ExpoImage } from 'expo-image';
 
-import { prefetchToDisk } from '@app/utils/image/prefetch-to-disk';
+import { prefetchToDisk } from '@app/utils/image/prefetchToDisk';
 
 import type { PassResult } from './bench-results';
 

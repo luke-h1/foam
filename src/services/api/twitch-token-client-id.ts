@@ -1,4 +1,4 @@
-import { parseJsonOnWorklet } from '@app/lib/off-thread-json/parse-json-on-worklet';
+import { parseJsonOnWorklet } from '@app/lib/off-thread-json/parseJsonOnWorklet';
 import { logger } from '@app/utils/logger';
 
 /**

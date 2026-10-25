@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
-import { chatScrollActivity } from '@app/components/chat/util/chat-scroll-activity';
+import { chatScrollActivity } from '@app/components/chat/util/chatScrollActivity';
 
 export function useChatScrollActive(): boolean {
   return useSyncExternalStore(

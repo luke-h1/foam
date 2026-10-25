@@ -8,7 +8,7 @@ import {
   usePaintRenderer,
 } from '../preference-store';
 
-jest.mock('@app/utils/dev-tools/is-dev-tools-enabled', () => ({
+jest.mock('@app/utils/dev-tools/isDevToolsEnabled', () => ({
   isDevToolsEnabled: true,
 }));
 

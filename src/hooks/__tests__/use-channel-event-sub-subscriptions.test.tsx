@@ -6,7 +6,7 @@ import {
   createLoggedInAuthContextValue,
   createTestUser,
 } from '@app/context/__tests__/__fixtures__/auth-context.fixture';
-import { AuthContextTestProvider } from '@app/context/auth-context';
+import { AuthContextTestProvider } from '@app/context/AuthContext';
 import { useChannelPoll } from '@app/hooks/use-channel-poll';
 import { useChannelPrediction } from '@app/hooks/use-channel-prediction';
 import { twitchApi } from '@app/services/api/clients';

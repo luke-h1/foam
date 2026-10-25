@@ -3,9 +3,9 @@ import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
 import { act, renderHook } from '@testing-library/react-native';
 
-import type { ChatListRef } from '@app/components/chat/components/chat-list';
+import type { ChatListRef } from '@app/components/chat/components/ChatList';
 import { useChatScroll } from '@app/components/chat/hooks/use-chat-scroll';
-import { chatScrollActivity } from '@app/components/chat/util/chat-scroll-activity';
+import { chatScrollActivity } from '@app/components/chat/util/chatScrollActivity';
 import {
   getChatUnreadCount,
   incrementChatUnread,

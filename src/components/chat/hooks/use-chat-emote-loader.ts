@@ -8,7 +8,7 @@ import {
 
 import { useSelector } from '@legendapp/state/react';
 
-import { useAuthContext } from '@app/context/auth-context';
+import { useAuthContext } from '@app/context/AuthContext';
 import { useSyncRef } from '@app/hooks/use-sync-ref';
 import { ensureChannelCacheHydrated } from '@app/store/chat/actions/channel-cache-hydration';
 import {
@@ -22,9 +22,9 @@ import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import {
   preloadChannelEmotes,
   preloadGlobalEmotes,
-} from '@app/utils/image/preload-emotes';
+} from '@app/utils/image/preloadEmotes';
 import { logger } from '@app/utils/logger';
-import { runWhenIdle } from '@app/utils/run-when-idle';
+import { runWhenIdle } from '@app/utils/runWhenIdle';
 
 export type EmoteLoadingStatus =
   | 'idle'

@@ -1,7 +1,7 @@
 import { Redirect, Stack } from 'expo-router';
 
-import { useDevToolsAccess } from '@app/utils/dev-tools/dev-tools-gate';
-import { nativeStackScreenOptions } from '@app/utils/navigation/native-stack-options';
+import { useDevToolsAccess } from '@app/utils/dev-tools/devToolsGate';
+import { nativeStackScreenOptions } from '@app/utils/navigation/nativeStackOptions';
 
 export default function DevToolsLayout() {
   const access = useDevToolsAccess();

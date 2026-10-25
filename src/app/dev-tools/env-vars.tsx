@@ -1,3 +1,3 @@
-import { EnvVarsScreen } from '@app/screens/dev-tools/env-vars-screen';
+import { EnvVarsScreen } from '@app/screens/dev-tools/EnvVarsScreen';
 
 export default EnvVarsScreen;

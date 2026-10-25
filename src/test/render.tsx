@@ -8,7 +8,7 @@ import {
   type RenderResult,
 } from '@testing-library/react-native';
 
-import { AuthContextTestProvider } from '@app/context/auth-context';
+import { AuthContextTestProvider } from '@app/context/AuthContext';
 
 const TEST_TOKEN_EXPIRES_AT = 4_102_444_800_000;
 

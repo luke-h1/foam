@@ -6,19 +6,19 @@ import { useChatUserState } from '@app/services/twitch-chat-service';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import type { ChatRenderPreferences } from '@app/store/preference-store';
 import type { UserInfoResponse } from '@app/types/twitch/user';
-import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-chat-username';
-import { parseBadges } from '@app/utils/chat/parse-badges';
+import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
+import { parseBadges } from '@app/utils/chat/parseBadges';
 
-import type { ChatInputShellHandle } from '../components/chat-input-shell';
-import type { ChatListRef } from '../components/chat-list';
-import type { ChatOverlayLayerProps } from '../components/chat-overlay-layer';
+import type { ChatInputShellHandle } from '../components/ChatInputShell';
+import type { ChatListRef } from '../components/ChatList';
+import type { ChatOverlayLayerProps } from '../components/ChatOverlayLayer';
 import {
   useChatComposerActions,
   useChatOverlayActions,
 } from './use-chat-interaction-handlers';
-import { useChatRowRenderer } from './use-chat-row-renderer';
 import { useChatSettingsActions } from './use-chat-settings-actions';
 import { usePinnedChatMessage } from './use-pinned-chat-message';
+import { useChatRowRenderer } from './UseChatRowRenderer';
 
 interface UseChatSurfaceOptions {
   channelId: string;

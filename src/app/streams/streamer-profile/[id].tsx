@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 
-import { StreamerProfileScreen } from '@app/screens/stream/streamer-profile-screen';
+import { StreamerProfileScreen } from '@app/screens/stream/StreamerProfileScreen';
 
 export default function StreamerProfileRoute() {
   const { id } = useLocalSearchParams<{ id?: string | string[] }>();

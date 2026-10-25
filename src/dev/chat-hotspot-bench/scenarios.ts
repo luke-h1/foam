@@ -3,11 +3,11 @@ import {
   paintedUsernames,
   paintImageLayerLayout,
 } from '@app/components/chat/components/chat-message/cosmetic-username/util/__fixtures__/paint.perf.fixture';
-import { buildPaintCssDeclarations } from '@app/components/chat/components/chat-message/cosmetic-username/util/paint-css/build-paint-css-declarations';
-import { paintCssDeclarationsToBlock } from '@app/components/chat/components/chat-message/cosmetic-username/util/paint-css/paint-css-declarations-to-block';
-import { buildPaintedUsernameHtml } from '@app/components/chat/components/chat-message/cosmetic-username/util/paint-html';
-import { buildPaintImageLayers } from '@app/components/chat/components/chat-message/cosmetic-username/util/skia-painted-username-rasterizer';
-import { chatLineMetrics } from '@app/components/chat/components/chat-message/util/chat-scale';
+import { buildPaintCssDeclarations } from '@app/components/chat/components/chat-message/cosmetic-username/util/paint-css/buildPaintCssDeclarations';
+import { paintCssDeclarationsToBlock } from '@app/components/chat/components/chat-message/cosmetic-username/util/paint-css/paintCssDeclarationsToBlock';
+import { buildPaintedUsernameHtml } from '@app/components/chat/components/chat-message/cosmetic-username/util/paintHtml';
+import { buildPaintImageLayers } from '@app/components/chat/components/chat-message/cosmetic-username/util/skiaPaintedUsernameRasterizer';
+import { chatLineMetrics } from '@app/components/chat/components/chat-message/util/chatScale';
 import {
   ingestBurstMessages,
   ingestSeedMessages,
@@ -18,13 +18,13 @@ import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-
 import {
   badgeLookupUserstates,
   denseBadgeSources,
-} from '@app/utils/chat/__fixtures__/find-badges.perf.fixture';
+} from '@app/utils/chat/__fixtures__/findBadges.perf.fixture';
 import {
   denseEmoteData,
   reprocessChatLines,
-} from '@app/utils/chat/__fixtures__/resolve-message-emote-tokens.perf.fixture';
-import { findBadges } from '@app/utils/chat/find-badges';
-import { resolveMessageEmoteParts } from '@app/utils/chat/resolve-message-emote-tokens';
+} from '@app/utils/chat/__fixtures__/resolveMessageEmoteTokens.perf.fixture';
+import { findBadges } from '@app/utils/chat/findBadges';
+import { resolveMessageEmoteParts } from '@app/utils/chat/resolveMessageEmoteTokens';
 
 import { measureSync, type SyncMeasureResult } from './measure-sync';
 

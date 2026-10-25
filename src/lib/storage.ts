@@ -2,7 +2,7 @@ import { createMMKV } from 'react-native-mmkv';
 
 import EventEmitter from 'eventemitter3';
 
-import type { OpenStringUnion } from '@app/utils/typescript/open-string-union';
+import type { OpenStringUnion } from '@app/utils/typescript/openStringUnion';
 
 export type StorageSetterOptions = {
   expiry?: Date;

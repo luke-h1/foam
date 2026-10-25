@@ -3,9 +3,9 @@ import type {
   EntitlementCreate,
 } from '@app/types/seven-tv/cosmetics';
 import { logger } from '@app/utils/logger';
-import { get7TvCosmeticId } from '@app/utils/seven-tv/cosmetics/get7-tv-cosmetic-id';
-import { normalizeSevenTvPaint } from '@app/utils/seven-tv/cosmetics/normalize-seven-tv-paint';
-import { sanitise7TvBadge } from '@app/utils/seven-tv/cosmetics/sanitise7-tv-badge';
+import { get7TvCosmeticId } from '@app/utils/seven-tv/cosmetics/get7TvCosmeticId';
+import { normalizeSevenTvPaint } from '@app/utils/seven-tv/cosmetics/normalizeSevenTvPaint';
+import { sanitise7TvBadge } from '@app/utils/seven-tv/cosmetics/sanitise7TvBadge';
 
 import { chatStore$ } from '../observables/chat-store';
 import {

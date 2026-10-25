@@ -20,7 +20,7 @@ import { theme } from '@app/styles/themes';
 import {
   isForegroundTransition,
   subscribeToAppStateTransitions,
-} from '@app/utils/app-state/app-state-transitions';
+} from '@app/utils/app-state/appStateTransitions';
 import { logger } from '@app/utils/logger';
 
 const MINIMUM_MINIMIZE_TIME = 15 * 60e3; // 15 minutes

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
-import type { ImageProps } from '../image.types';
-import { imageFileStore } from '../util/image-file-store';
+import type { ImageProps } from '../Image.types';
+import { imageFileStore } from '../util/imageFileStore';
 
 type SourceDescriptor =
   | { kind: 'none' }

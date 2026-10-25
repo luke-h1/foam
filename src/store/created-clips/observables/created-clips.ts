@@ -5,7 +5,7 @@ import {
   CREATED_CLIPS_PERSISTENCE_KEY,
   createObservablePersistenceLocalConfig,
   ensureObservablePersistenceConfig,
-} from '@app/lib/observable-persistence';
+} from '@app/lib/observablePersistence';
 
 /**
  * Clips created from inside foam. Helix has no "clips by creator" query, so

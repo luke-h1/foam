@@ -1,7 +1,7 @@
 import { sevenTvService } from '@app/services/seven-tv-service';
 import type { SanitisedEmote } from '@app/types/emote';
-import { createFetchOnceGuard } from '@app/utils/async/fetch-once-guard';
-import { evictOldestWhenFull } from '@app/utils/collection/evict-oldest-when-full';
+import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
+import { evictOldestWhenFull } from '@app/utils/collection/evictOldestWhenFull';
 import { logger } from '@app/utils/logger';
 
 import { invalidatePersonalEmotes } from './invalidation';

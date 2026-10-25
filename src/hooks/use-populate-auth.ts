@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 
 import { router } from 'expo-router';
 
-import { useAuthContext } from '@app/context/auth-context';
+import { useAuthContext } from '@app/context/AuthContext';
 import { isDeepLinkAuthInProgress } from '@app/navigators/deep-link-auth-state';
 
 export function usePopulateAuth() {

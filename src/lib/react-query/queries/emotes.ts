@@ -3,7 +3,7 @@ import { queryOptions } from '@tanstack/react-query';
 import { sevenTvService } from '@app/services/seven-tv-service';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
-import { emoteKeys } from '../query-keys';
+import { emoteKeys } from '../queryKeys';
 
 const GLOBAL_STALE_TIME = 60 * 60 * 1000;
 

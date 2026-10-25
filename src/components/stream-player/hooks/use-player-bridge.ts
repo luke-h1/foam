@@ -24,13 +24,13 @@ import type {
   StreamPlayerProps,
   StreamPlayerRef,
 } from '../types';
-import type { PlayerBridgeAction } from '../util/player-bridge-interpreter';
-import { interpretPlayerMessage } from '../util/player-bridge-interpreter';
+import type { PlayerBridgeAction } from '../util/playerBridgeInterpreter';
+import { interpretPlayerMessage } from '../util/playerBridgeInterpreter';
 import {
   createPlayerTelemetry,
   type PlayerContentKind,
-} from '../util/player-telemetry';
-import { createStabilityRecovery } from '../util/stability-recovery';
+} from '../util/playerTelemetry';
+import { createStabilityRecovery } from '../util/stabilityRecovery';
 
 interface BridgePlaybackUi {
   overlayUnlocked: boolean;

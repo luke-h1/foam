@@ -12,7 +12,7 @@ import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { toast } from 'sonner-native';
 
-import { useAuthContext } from '@app/context/auth-context';
+import { useAuthContext } from '@app/context/AuthContext';
 import { logger } from '@app/utils/logger';
 
 const USER_SCOPES = [

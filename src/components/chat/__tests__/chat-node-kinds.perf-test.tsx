@@ -10,8 +10,8 @@ import {
   PAINTED_USER_ID_PREFIX,
 } from '@app/components/chat/__tests__/__fixtures__/chat-node-kinds.fixture';
 import { sevenTvPaintsFixture } from '@app/components/chat/components/chat-message/__fixtures__/seven-tv-paints.fixture';
-import { ChatRow } from '@app/components/chat/components/chat-message/chat-row';
-import { ChatRowItem } from '@app/components/chat/components/chat-message/chat-row-item';
+import { ChatRow } from '@app/components/chat/components/chat-message/ChatRow';
+import { ChatRowItem } from '@app/components/chat/components/chat-message/ChatRowItem';
 import { sevenTvService } from '@app/services/seven-tv-service';
 import { twitchService } from '@app/services/twitch-service';
 import { addPaint, setUserPaint } from '@app/store/chat/actions/cosmetics';
@@ -20,7 +20,7 @@ import { paintRendererFlag$, preferences$ } from '@app/store/preference-store';
 import { DefaultWrapper } from '@app/test/render';
 import type { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
 import type { TwitchClip } from '@app/types/twitch/clip';
-import { convertV4PaintToPaintData } from '@app/utils/color/seven-tv-paint-data/convert-v4-paint-to-paint-data';
+import { convertV4PaintToPaintData } from '@app/utils/color/seven-tv-paint-data/convertV4PaintToPaintData';
 
 /**
  * `ChatRowItem` registers with the list's viewability tracker, which only

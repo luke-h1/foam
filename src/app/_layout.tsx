@@ -10,9 +10,9 @@ import { enableFreeze } from 'react-native-screens';
 
 import * as WebBrowser from 'expo-web-browser';
 
-import { installGlobalErrorHandlers } from '../lib/global-error-handlers';
+import { installGlobalErrorHandlers } from '../lib/globalErrorHandlers';
 import { init as initSentry } from '../lib/sentry';
-import { sweepOversizedSentryEnvelopes } from '../lib/sentry-cache-sweep';
+import { sweepOversizedSentryEnvelopes } from '../lib/sentryCacheSweep';
 
 configureReanimatedLogger({
   level: ReanimatedLogLevel.error,

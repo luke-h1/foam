@@ -57,18 +57,25 @@ Each job writes its full output to a log in `.ci-local/`. The summary prints the
 
 ## Folder structure and file names
 
-Every file and directory under `src/` is kebab-case: `live-stream-screen.tsx`,
-`use-chat-scroll.ts`, `src/components/bottom-sheet/`. Exported React components
-keep their PascalCase identifiers; only the file name changes. The one exception
-is `src/app/`, where expo-router turns the file name into the URL, so route
-files keep the name the route needs.
+Directories under `src/` stay kebab-case: `src/components/bottom-sheet/`,
+`src/screens/search/`.
+
+Component files are PascalCase: `SearchScreen.tsx`, `ChatBadge.tsx`,
+`ChatRow.styles.ts`. A `.styles.ts`, `.types.ts`, `.stories.tsx` or test that
+belongs to a component uses that component's PascalCase name.
+
+Files in `util/`, `utils/` and `lib/` are camelCase: `getChatScale.ts`,
+`queryClient.ts`.
+
+Hook files stay kebab-case in `hooks/`: `use-chat-scroll.ts`. Route files in
+`src/app/` keep the name the URL needs, because expo-router uses the file name.
 
 A component or screen owns a directory, and everything that only that surface
 uses lives inside it:
 
 ```
-src/screens/search-screen/
-  search-screen.tsx        # the screen itself
+src/screens/search/
+  SearchScreen.tsx         # the screen itself
   components/              # components this screen alone renders
   hooks/                   # use-* hooks this screen alone calls
   util/                    # pure helpers, types and state shapes
@@ -103,7 +110,7 @@ cohesive enough to want its own name, nest it _under_ `util/`
 Two more folder rules that follow from the same idea:
 
 - **A folder is named after what it holds.** A `search-history/` folder holds
-  `search-history.tsx`, not `search-history-v2.tsx`. A version suffix with no
+  `SearchHistory.tsx`, not `SearchHistoryV2.tsx`. A version suffix with no
   other version is dead naming - drop it.
 - **A component folder holds a component.** A folder whose only contents are a
   `constants.ts` or a `hooks/` directory is not a component - the hook is
@@ -151,7 +158,7 @@ The first two lines read as one step, so they stay joined. Everything after it
 is its own step and gets its own space.
 
 A short inline block is the exception. A two-statement IIFE or callback body
-reads better tight, so leave those alone. `src/components/image/image.web.tsx`
+reads better tight, so leave those alone. `src/components/image/Image.web.tsx`
 is the reference for how a finished file should look.
 
 A blank line before a comment also fixes what the comment attaches to: with no
@@ -261,7 +268,7 @@ Name fixture files after the thing under test, using the pattern `{thing}.fixtur
 
 That naming keeps the fixture tied to the surface it supports. A file called `chat-hook-fixtures.ts` sounds like a generic bucket. A file called `use-chat.fixture.ts` says what it exists for and makes it harder to keep adding unrelated test data over time.
 
-The one exception is a fixture the app itself imports. `src/dev/chat-hotspot-bench` runs the perf fixtures on-device from the `dev-tools/chat-perf` route, so those files are part of the app's module graph. EAS strips `__tests__` directories from the build context, so a fixture under `__tests__` resolves locally and then fails the eager bundle in CI with `Unable to resolve module`. Fixtures shared with the bench live in a sibling `__fixtures__` directory _outside_ `__tests__` (for example `src/utils/chat/__fixtures__/resolve-message-emote-tokens.perf.fixture.ts`), and the perf-test imports them with `../__fixtures__/...`. The `no-tests-dir-import` ast-grep rules enforce this.
+The one exception is a fixture the app itself imports. `src/dev/chat-hotspot-bench` runs the perf fixtures on-device from the `dev-tools/chat-perf` route, so those files are part of the app's module graph. EAS strips `__tests__` directories from the build context, so a fixture under `__tests__` resolves locally and then fails the eager bundle in CI with `Unable to resolve module`. Fixtures shared with the bench live in a sibling `__fixtures__` directory _outside_ `__tests__` (for example `src/utils/chat/__fixtures__/resolveMessageEmoteTokens.perf.fixture.ts`), and the perf-test imports them with `../__fixtures__/...`. The `no-tests-dir-import` ast-grep rules enforce this.
 
 ## Legend State Store Layout
 
@@ -298,7 +305,7 @@ A name like `THE_COLOR_OF_A_COMPONENT = '#55'` adds a layer of indirection witho
 
 This is **not** a blanket "inline every single-use value" rule. Keep a named constant (or an inline explanatory comment) when the literal encodes non-obvious meaning the value alone cannot convey — a magic number such as a memory threshold (`3 * 1024 * 1024 * 1024` // 3GB), a tuned timeout, a protocol constant, or anything a reader would have to reverse-engineer. Also keep module-level constants for values genuinely shared across files that must stay in sync. The rule targets needless indirection over obvious literals, not the removal of meaningful names.
 
-**The chat render path is exempt.** Every font size, line height, emote size and row padding a chat row uses must come from `getChatScale` / `getChatTextStyles` (`components/chat/components/chat-message/util/chat-scale.ts`, `chat-text.styles.ts`), never from a literal at the use site. Density and font scale are two preferences over one ramp; a literal in a renderer silently opts that surface out of one of them, which is the bug the ramp was introduced to fix. Inlining a `lineHeight: 21` in a chat renderer follows the letter of the rule above and regresses the feature.
+**The chat render path is exempt.** Every font size, line height, emote size and row padding a chat row uses must come from `getChatScale` / `getChatTextStyles` (`components/chat/components/chat-message/util/chatScale.ts`, `components/chat/components/chat-message/ChatText.styles.ts`), never from a literal at the use site. Density and font scale are two preferences over one ramp; a literal in a renderer silently opts that surface out of one of them, which is the bug the ramp was introduced to fix. Inlining a `lineHeight: 21` in a chat renderer follows the letter of the rule above and regresses the feature.
 
 ## Name large parameter types
 
@@ -402,7 +409,7 @@ key, `getChatMessageListKey` is the list's `keyExtractor`, and
 `isRenderableChatMessage` is the validity guard.
 
 All three consumers - the store's dedup index (`store/chat/actions/messages`),
-the pre-commit ingest buffer (`components/chat/util/message-buffer`) and the
+the pre-commit ingest buffer (`components/chat/util/messageBuffer`) and the
 list - must agree, because `ChatMessagePane` dropped its render-time dedup on
 the strength of that agreement. Re-deriving the key locally is how duplicate
 rows and broken scroll anchoring get in; add a consumer to the shared module
@@ -415,7 +422,7 @@ value.
 
 ## Chat body scanning
 
-`src/utils/chat/derive-chat-body/scan-chat-body.ts` walks a message's parts exactly
+`src/utils/chat/derive-chat-body/scanChatBody.ts` walks a message's parts exactly
 once and caches the result: whether the body can flow inline, whether it holds
 emotes, which notice it is, and who it mentions. `deriveChatBody`,
 `getMessageStructure` and `flowsInline` are all views over that one scan.
@@ -445,7 +452,7 @@ Two normalisers, and the distinction is load-bearing:
 
 - `normaliseChatUsername` (`utils/chat/chat-usernames/`) - trims, strips a
   leading `@`, lowercases. For logins, display names, hidden/highlighted users.
-- `normaliseChatText` (`utils/chat/normalise-chat-text`) - trims and lowercases
+- `normaliseChatText` (`utils/chat/normaliseChatText`) - trims and lowercases
   only. For message bodies, search queries, hidden phrases, highlight phrases.
 
 Running free text through the username normaliser turns a search for `@luke`

@@ -16,15 +16,15 @@ import {
   UNRAID,
   WATCH_STREAK,
 } from '@app/components/chat/__tests__/__fixtures__/chat-notice-pipeline.fixture';
-import { ChatRow } from '@app/components/chat/components/chat-message/chat-row';
-import { getChatRowItemType } from '@app/components/chat/util/chat-row-item-type';
+import { ChatRow } from '@app/components/chat/components/chat-message/ChatRow';
+import { getChatRowItemType } from '@app/components/chat/util/chatRowItemType';
 import { twitchService } from '@app/services/twitch-service';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import type { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
 import type { TwitchClip } from '@app/types/twitch/clip';
-import { parseIrcMessage } from '@app/utils/chat/irc-protocol/parse-irc-message';
-import { coerceUserNoticeTags } from '@app/utils/chat/message-handlers/coerce-user-notice-tags';
-import { createUserNoticeMessage } from '@app/utils/chat/message-handlers/create-user-notice-message';
+import { parseIrcMessage } from '@app/utils/chat/irc-protocol/parseIrcMessage';
+import { coerceUserNoticeTags } from '@app/utils/chat/message-handlers/coerceUserNoticeTags';
+import { createUserNoticeMessage } from '@app/utils/chat/message-handlers/createUserNoticeMessage';
 import * as dateModule from '@app/utils/date-time/date';
 
 jest.spyOn(dateModule, 'formatDate').mockReturnValue('12:00');

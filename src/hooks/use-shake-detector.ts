@@ -4,8 +4,8 @@ import { AppState, Platform } from 'react-native';
 import { Accelerometer } from 'expo-sensors';
 
 import { useSyncRef } from '@app/hooks/use-sync-ref';
-import { runWhenIdle } from '@app/utils/run-when-idle';
-import { createShakeDetector } from '@app/utils/shake/shake-detection';
+import { runWhenIdle } from '@app/utils/runWhenIdle';
+import { createShakeDetector } from '@app/utils/shake/shakeDetection';
 
 // ~6-7 Hz still catches a shake and halves the native->JS callback rate.
 const ACCELEROMETER_INTERVAL_MS = 150;

@@ -1,5 +1,5 @@
 import { useChannelActivity } from '@app/hooks/use-channel-activity';
-import { channelPredictionActivity } from '@app/utils/twitch/channel-activity/channel-prediction-activity';
+import { channelPredictionActivity } from '@app/utils/twitch/channel-activity/channelPredictionActivity';
 
 export function useChannelPrediction(channelId?: string) {
   const { value, isAvailable } = useChannelActivity(

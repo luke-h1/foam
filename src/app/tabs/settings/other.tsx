@@ -1,3 +1,3 @@
-import { SettingsOtherScreen } from '@app/screens/settings/settings-other-screen';
+import { SettingsOtherScreen } from '@app/screens/settings/SettingsOtherScreen';
 
 export default SettingsOtherScreen;

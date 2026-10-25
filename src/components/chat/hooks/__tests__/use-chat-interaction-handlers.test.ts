@@ -1,8 +1,8 @@
 import { act, renderHook } from '@testing-library/react-native';
 
-import type { ReplyToData } from '@app/components/chat/components/chat-input-section';
-import type { ChatInputShellHandle } from '@app/components/chat/components/chat-input-shell';
-import type { EmotePressData } from '@app/components/chat/components/chat-message/chat-row.types';
+import type { EmotePressData } from '@app/components/chat/components/chat-message/ChatRow.types';
+import type { ReplyToData } from '@app/components/chat/components/ChatInputSection';
+import type { ChatInputShellHandle } from '@app/components/chat/components/ChatInputShell';
 import { createChatMessage } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
 import {
   useChatComposerActions,
@@ -15,7 +15,7 @@ import * as messagesActions from '@app/store/chat/actions/messages';
 import { clearFetchedCosmeticsUsers } from '@app/store/chat/actions/user-cosmetics-fetch';
 import { chatOverlays$ } from '@app/store/chat/observables/chat-overlays';
 import { createRef } from '@app/test/create-ref';
-import { createEmoteToken } from '@app/utils/chat/__tests__/__fixtures__/message-token.fixture';
+import { createEmoteToken } from '@app/utils/chat/__tests__/__fixtures__/messageToken.fixture';
 
 const mockGet7tvUserId = jest
   .spyOn(sevenTvService, 'get7tvUserId')

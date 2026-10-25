@@ -1,5 +1,5 @@
-import { DeferUntilFocused } from '@app/components/defer-until-focused/defer-until-focused';
-import { SettingsIndexScreen } from '@app/screens/settings/settings-index-screen';
+import { DeferUntilFocused } from '@app/components/defer-until-focused/DeferUntilFocused';
+import { SettingsIndexScreen } from '@app/screens/settings/SettingsIndexScreen';
 
 export default function SettingsRoute() {
   return (

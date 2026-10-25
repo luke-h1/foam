@@ -11,7 +11,7 @@ import {
   createLoggedInAuthContextValue,
   createTestUser,
 } from '@app/context/__tests__/__fixtures__/auth-context.fixture';
-import { AuthContextTestProvider } from '@app/context/auth-context';
+import { AuthContextTestProvider } from '@app/context/AuthContext';
 import { bttvEmoteService } from '@app/services/bttv-emote-service';
 import { chatterinoService } from '@app/services/chatterino-service';
 import { ffzService } from '@app/services/ffz-service';
@@ -31,7 +31,7 @@ import {
   makeEmptyGlobalCacheData,
 } from '@app/store/chat/types/constants';
 import { DefaultWrapper } from '@app/test/render';
-import * as preloadEmotesModule from '@app/utils/image/preload-emotes';
+import * as preloadEmotesModule from '@app/utils/image/preloadEmotes';
 import { logger } from '@app/utils/logger';
 
 const channelEmote = createSevenTvEmote({ id: 'channel-7tv', name: 'Wave' });

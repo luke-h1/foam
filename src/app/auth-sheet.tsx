@@ -1,3 +1,3 @@
-import { AuthSheetScreen } from '@app/screens/auth-sheet/auth-sheet-screen';
+import { AuthSheetScreen } from '@app/screens/auth-sheet/AuthSheetScreen';
 
 export default AuthSheetScreen;

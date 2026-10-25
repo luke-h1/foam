@@ -1,4 +1,4 @@
-import { parseJsonOnWorklet } from '@app/lib/off-thread-json/parse-json-on-worklet';
+import { parseJsonOnWorklet } from '@app/lib/off-thread-json/parseJsonOnWorklet';
 
 const RECENT_MESSAGES_URL =
   'https://recent-messages.robotty.de/api/v2/recent-messages';

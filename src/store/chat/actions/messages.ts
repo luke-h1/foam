@@ -1,19 +1,19 @@
 import { batch } from '@legendapp/state';
 
-import { chatPerfMarks } from '@app/lib/chat-perf-marks';
+import { chatPerfMarks } from '@app/lib/chatPerfMarks';
 import { getPreferences } from '@app/store/preference-store';
-import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-chat-username';
-import { createModeratedMessageText } from '@app/utils/chat/create-moderated-message-text';
-import { getChatMessageKey } from '@app/utils/chat/message-identity/get-chat-message-key';
-import { getChatMessageStoreId } from '@app/utils/chat/message-identity/get-chat-message-store-id';
-import { isRenderableChatMessage } from '@app/utils/chat/message-identity/is-renderable-chat-message';
-import { normaliseMessageField } from '@app/utils/chat/message-identity/normalise-message-field';
-import { resolveCachedSenderColor } from '@app/utils/chat/resolve-cached-sender-color/resolve-cached-sender-color';
-import { clearMentionLoginIndex } from '@app/utils/chat/resolve-mention-login/clear-mention-login-index';
-import { registerMentionChatter } from '@app/utils/chat/resolve-mention-login/register-mention-chatter';
-import { registerMentionLogin } from '@app/utils/chat/resolve-mention-login/register-mention-login';
-import { registerMentionLoginsFromSender } from '@app/utils/chat/resolve-mention-login/register-mention-logins-from-sender';
-import { registerMentionLoginsFromParts } from '@app/utils/chat/resolve-mention-login/register-mention-logins-from-tokens';
+import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
+import { createModeratedMessageText } from '@app/utils/chat/createModeratedMessageText';
+import { getChatMessageKey } from '@app/utils/chat/message-identity/getChatMessageKey';
+import { getChatMessageStoreId } from '@app/utils/chat/message-identity/getChatMessageStoreId';
+import { isRenderableChatMessage } from '@app/utils/chat/message-identity/isRenderableChatMessage';
+import { normaliseMessageField } from '@app/utils/chat/message-identity/normaliseMessageField';
+import { resolveCachedSenderColor } from '@app/utils/chat/resolve-cached-sender-color/resolveCachedSenderColor';
+import { clearMentionLoginIndex } from '@app/utils/chat/resolve-mention-login/clearMentionLoginIndex';
+import { registerMentionChatter } from '@app/utils/chat/resolve-mention-login/registerMentionChatter';
+import { registerMentionLogin } from '@app/utils/chat/resolve-mention-login/registerMentionLogin';
+import { registerMentionLoginsFromSender } from '@app/utils/chat/resolve-mention-login/registerMentionLoginsFromSender';
+import { registerMentionLoginsFromParts } from '@app/utils/chat/resolve-mention-login/registerMentionLoginsFromTokens';
 import { type ChatterRole } from '@app/utils/chat/resolve-mention-login/types';
 
 import { chatStore$ } from '../observables/chat-store';

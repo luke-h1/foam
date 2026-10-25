@@ -14,7 +14,7 @@ import {
   COMPOSER_DISMISS_DRAG_DISTANCE,
   COMPOSER_DISMISS_VELOCITY,
   COMPOSER_DRAG_LIMIT,
-} from '@app/components/chat/util/composer-dismiss-constants';
+} from '@app/components/chat/util/composerDismissConstants';
 
 type GestureCallbacks = {
   onEnd?: (event: { translationY: number; velocityY: number }) => void;

@@ -5,10 +5,10 @@ import type { ReloadScreenOptions } from 'expo-updates';
 import * as Updates from 'expo-updates';
 import { toast } from 'sonner-native';
 
-import { ENV_SUPPORTS_OTA } from '@app/screens/dev-tools/util/env-supports-ota';
-import { getStoreUrlAsync } from '@app/screens/dev-tools/util/get-store-url-async';
+import { ENV_SUPPORTS_OTA } from '@app/screens/dev-tools/util/envSupportsOta';
+import { getStoreUrlAsync } from '@app/screens/dev-tools/util/getStoreUrlAsync';
 import { theme } from '@app/styles/themes';
-import { openLinkInBrowser } from '@app/utils/browser/open-link-in-browser';
+import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { logger } from '@app/utils/logger';
 
 const OTA_RELOAD_SCREEN_OPTIONS = {

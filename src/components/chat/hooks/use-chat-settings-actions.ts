@@ -7,8 +7,8 @@ import {
 } from '@app/store/chat/actions/channel-load';
 import { clearUserCosmeticsCache } from '@app/store/chat/actions/cosmetics';
 import { addMessage } from '@app/store/chat/actions/messages';
-import { createSystemMessage } from '@app/utils/chat/message-handlers/create-system-message';
-import { clearImageCache } from '@app/utils/image/clear-image-cache';
+import { createSystemMessage } from '@app/utils/chat/message-handlers/createSystemMessage';
+import { clearImageCache } from '@app/utils/image/clearImageCache';
 import { logger } from '@app/utils/logger';
 
 interface UseChatSettingsActionsOptions<TRefetchedEmotes> {

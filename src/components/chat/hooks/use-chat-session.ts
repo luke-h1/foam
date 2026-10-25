@@ -22,15 +22,15 @@ import {
 } from '@app/store/preference-store';
 import { videoLatencyDisplay$ } from '@app/store/stream/video-latency';
 import type { UserInfoResponse } from '@app/types/twitch/user';
-import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-chat-username';
-import { textMentionsUser } from '@app/utils/chat/chat-usernames/text-mentions-user';
-import { findCustomHighlight } from '@app/utils/chat/custom-highlights/find-custom-highlight';
-import { replaceEmotesWithText } from '@app/utils/chat/replace-emotes-with-text';
-import { registerMentionChatter } from '@app/utils/chat/resolve-mention-login/register-mention-chatter';
+import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
+import { textMentionsUser } from '@app/utils/chat/chat-usernames/textMentionsUser';
+import { findCustomHighlight } from '@app/utils/chat/custom-highlights/findCustomHighlight';
+import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
+import { registerMentionChatter } from '@app/utils/chat/resolve-mention-login/registerMentionChatter';
 
-import type { ChatListRef } from '../components/chat-list';
-import { resolveEffectiveChatDelayMs } from '../util/chat-delay/resolve-effective-chat-delay-ms';
-import { triggerMentionHaptic } from '../util/mention-haptics';
+import type { ChatListRef } from '../components/ChatList';
+import { resolveEffectiveChatDelayMs } from '../util/chat-delay/resolveEffectiveChatDelayMs';
+import { triggerMentionHaptic } from '../util/mentionHaptics';
 import { useChatCosmetics } from './use-chat-cosmetics';
 import { useChatEmoteLoader } from './use-chat-emote-loader';
 import { useChatIrcHandlers } from './use-chat-irc-handlers';

@@ -7,11 +7,11 @@ import { toast } from 'sonner-native';
 import type {
   MessageActionData,
   UsernamePressData,
-} from '@app/components/chat/components/chat-message/chat-row.types';
-import type { ModCommand } from '@app/components/chat/util/mod-commands/parse-mod-command';
-import { runModCommand } from '@app/components/chat/util/mod-commands/run-mod-command';
-import { queryClient } from '@app/lib/react-query/query-client';
-import { twitchKeys } from '@app/lib/react-query/query-keys';
+} from '@app/components/chat/components/chat-message/ChatRow.types';
+import type { ModCommand } from '@app/components/chat/util/mod-commands/parseModCommand';
+import { runModCommand } from '@app/components/chat/util/mod-commands/runModCommand';
+import { queryClient } from '@app/lib/react-query/queryClient';
+import { twitchKeys } from '@app/lib/react-query/queryKeys';
 import type { LogMetadataValue } from '@app/lib/sentry';
 import { twitchService } from '@app/services/twitch-service';
 import {
@@ -22,8 +22,8 @@ import {
 } from '@app/store/chat/actions/chat-overlays';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { showActionMenu } from '@app/store/overlays/show-action-menu';
-import { openLinkInBrowser } from '@app/utils/browser/open-link-in-browser';
-import { replaceEmotesWithText } from '@app/utils/chat/replace-emotes-with-text';
+import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
+import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { logger } from '@app/utils/logger';
 
 const TIMEOUT_DURATION_OPTIONS = [

@@ -1,4 +1,4 @@
-import type { AuthContextState } from '@app/context/auth-context';
+import type { AuthContextState } from '@app/context/AuthContext';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 
 export function createTestUser(

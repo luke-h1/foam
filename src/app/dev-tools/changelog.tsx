@@ -14,7 +14,7 @@ if (
 ) {
   ChangelogRoute =
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    require('@app/screens/dev-tools/changelog-demo-screen').ChangelogDemoScreen;
+    require('@app/screens/dev-tools/ChangelogDemoScreen').ChangelogDemoScreen;
 }
 
 export default ChangelogRoute;

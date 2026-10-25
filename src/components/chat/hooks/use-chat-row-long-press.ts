@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { GestureResponderEvent } from 'react-native';
 
-import type { EmotePressData } from '@app/components/chat/components/chat-message/chat-row.types';
-import { beginRowTouchHold } from '@app/components/chat/util/chat-row-touch-hold';
+import type { EmotePressData } from '@app/components/chat/components/chat-message/ChatRow.types';
+import { beginRowTouchHold } from '@app/components/chat/util/chatRowTouchHold';
 
 export const MESSAGE_LONG_PRESS_DELAY_MS = 650;
 

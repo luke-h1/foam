@@ -10,7 +10,7 @@ import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
 import { resetChatUnread } from '@app/store/chat/actions/chat-unread';
 
-import { chatScrollActivity } from '../util/chat-scroll-activity';
+import { chatScrollActivity } from '../util/chatScrollActivity';
 
 const RETURN_TO_BOTTOM_THRESHOLD = 80;
 const USER_SCROLL_AWAY_THRESHOLD = 40;

@@ -24,9 +24,9 @@ import type {
   SevenTvWsMessage,
 } from '@app/types/seven-tv/cosmetics';
 import { logger } from '@app/utils/logger';
-import { setupInitialSubscriptions } from '@app/utils/seven-tv/seven-tv-initial-subscriptions';
-import { setSevenTvSessionId } from '@app/utils/seven-tv/seven-tv-session-id';
-import { createSevenTvSessionState } from '@app/utils/seven-tv/seven-tv-session-state';
+import { setupInitialSubscriptions } from '@app/utils/seven-tv/sevenTvInitialSubscriptions';
+import { setSevenTvSessionId } from '@app/utils/seven-tv/sevenTvSessionId';
+import { createSevenTvSessionState } from '@app/utils/seven-tv/sevenTvSessionState';
 import {
   buildCosmeticCreateSubscribeMessage,
   buildCosmeticCreateUnsubscribeMessage,
@@ -42,7 +42,7 @@ import {
   HISTORICAL_EVENT_BUFFER,
   interpretSevenTvWsMessage,
   type SevenTvWsDecision,
-} from '@app/utils/seven-tv/seven-tv-ws-interpreter';
+} from '@app/utils/seven-tv/sevenTvWsInterpreter';
 
 const SEVEN_TV_CHAT_SCREENS = ['Chat', 'LiveStream'];
 

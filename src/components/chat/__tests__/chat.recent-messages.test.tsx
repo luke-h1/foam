@@ -9,12 +9,12 @@ import * as Clipboard from 'expo-clipboard';
 
 import { createChatMessage } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
 import { createScrollAnchor } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat-scroll.fixture';
-import * as FlashListModule from '@app/components/flash-list/flash-list';
+import * as FlashListModule from '@app/components/flash-list/FlashList';
 import {
   createLoggedInAuthContextValue,
   createTestUser,
 } from '@app/context/__tests__/__fixtures__/auth-context.fixture';
-import { AuthContextTestProvider } from '@app/context/auth-context';
+import { AuthContextTestProvider } from '@app/context/AuthContext';
 import { recentMessagesService } from '@app/services/recent-messages-service';
 import { sevenTvService } from '@app/services/seven-tv-service';
 import * as twitchChatServiceModule from '@app/services/twitch-chat-service';
@@ -30,21 +30,21 @@ import {
   initialPreferences,
   replacePreferences,
 } from '@app/store/preference-store';
-import * as clearImageCacheModule from '@app/utils/image/clear-image-cache';
+import * as clearImageCacheModule from '@app/utils/image/clearImageCache';
 import { logger } from '@app/utils/logger';
 
-import { Chat } from '../chat';
-import * as actionSheetModule from '../components/action-sheet/action-sheet';
-import * as badgePreviewSheetModule from '../components/badge-preview-sheet/badge-preview-sheet';
-import * as chatInputSectionModule from '../components/chat-input-section';
-import * as chatListModule from '../components/chat-list';
-import * as chatRowModule from '../components/chat-message/chat-row';
-import * as chatViewControlsModule from '../components/chat-view-controls';
-import * as emotePreviewSheetModule from '../components/emote-preview-sheet/emote-preview-sheet';
-import * as emoteSheetModule from '../components/emote-sheet/emote-sheet';
-import * as resumeScrollModule from '../components/resume-scroll';
-import * as settingsSheetModule from '../components/settings-sheet/settings-sheet';
-import * as userActionSheetModule from '../components/user-action-sheet';
+import { Chat } from '../Chat';
+import * as actionSheetModule from '../components/action-sheet/ActionSheet';
+import * as badgePreviewSheetModule from '../components/badge-preview-sheet/BadgePreviewSheet';
+import * as chatRowModule from '../components/chat-message/ChatRow';
+import * as chatInputSectionModule from '../components/ChatInputSection';
+import * as chatListModule from '../components/ChatList';
+import * as chatViewControlsModule from '../components/ChatViewControls';
+import * as emotePreviewSheetModule from '../components/emote-preview-sheet/EmotePreviewSheet';
+import * as emoteSheetModule from '../components/emote-sheet/EmoteSheet';
+import * as resumeScrollModule from '../components/ResumeScroll';
+import * as settingsSheetModule from '../components/settings-sheet/SettingsSheet';
+import * as userActionSheetModule from '../components/UserActionSheet';
 import * as useChatEmoteLoaderModule from '../hooks/use-chat-emote-loader';
 import * as useChatScrollModule from '../hooks/use-chat-scroll';
 import * as useSevenTvWsModule from '../hooks/use-seven-tv-ws';

@@ -2,10 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
 
 import { useOnAppStateChange } from '@app/hooks/use-on-app-state-change';
-import { isForegroundTransition } from '@app/utils/app-state/app-state-transitions';
+import { isForegroundTransition } from '@app/utils/app-state/appStateTransitions';
 import { logger } from '@app/utils/logger';
 
-import { PLAYER_LOAD_TIMEOUT_MS } from '../util/player-telemetry';
+import { PLAYER_LOAD_TIMEOUT_MS } from '../util/playerTelemetry';
 
 /**
  * Linger so the first decoded frame is on screen before the poster fades.

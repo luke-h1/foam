@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 
 import { getCurrentEmoteData } from '@app/store/chat/actions/channel-load';
 import type { SanitisedEmote } from '@app/types/emote';
-import { describeEmoteUrl } from '@app/utils/emote/describe-emote-url';
-import { resolveEmoteDisplayUrl } from '@app/utils/emote/resolve-emote-display-url';
+import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
+import { resolveEmoteDisplayUrl } from '@app/utils/emote/resolveEmoteDisplayUrl';
 
 import {
   abortInflightEmoteDecodes,

@@ -1,3 +1,3 @@
-import { FeedbackScreen } from '@app/screens/feedback/feedback-screen';
+import { FeedbackScreen } from '@app/screens/feedback/FeedbackScreen';
 
 export default FeedbackScreen;

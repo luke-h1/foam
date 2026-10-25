@@ -5,9 +5,9 @@ import { useSyncRef } from '@app/hooks/use-sync-ref';
 import {
   type ChatIngestController,
   createChatIngestController,
-} from '../util/chat-ingest-controller';
-import { isRowTouchHeld } from '../util/chat-row-touch-hold';
-import { type BufferedMessage } from '../util/message-buffer';
+} from '../util/chatIngestController';
+import { isRowTouchHeld } from '../util/chatRowTouchHold';
+import { type BufferedMessage } from '../util/messageBuffer';
 import type { ChatScrollAnchor } from './use-chat-scroll';
 
 interface UseChatMessagesOptions {

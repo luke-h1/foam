@@ -1,3 +1,3 @@
-import { BlockedTermsScreen } from '@app/screens/preferences/blocked-terms-screen';
+import { BlockedTermsScreen } from '@app/screens/preferences/BlockedTermsScreen';
 
 export default BlockedTermsScreen;

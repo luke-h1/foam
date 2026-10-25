@@ -1,14 +1,14 @@
 import { useCallback } from 'react';
 import type { RefObject } from 'react';
 
-import type { ChatInputShellHandle } from '@app/components/chat/components/chat-input-shell';
 import type {
   BadgePressData,
   EmotePressData,
   MessageActionData,
   UsernamePressData,
-} from '@app/components/chat/components/chat-message/chat-row.types';
-import type { EmotePickerItem } from '@app/components/chat/components/emote-sheet/util/emote-sheet-types';
+} from '@app/components/chat/components/chat-message/ChatRow.types';
+import type { ChatInputShellHandle } from '@app/components/chat/components/ChatInputShell';
+import type { EmotePickerItem } from '@app/components/chat/components/emote-sheet/util/emoteSheetTypes';
 import { impact, selection } from '@app/lib/haptics';
 import {
   openChatBadgePreview,
@@ -21,7 +21,7 @@ import {
 import { getMessageById } from '@app/store/chat/actions/messages';
 import { fetchUserCosmetics } from '@app/store/chat/actions/user-cosmetics-fetch';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
-import { replaceEmotesWithText } from '@app/utils/chat/replace-emotes-with-text';
+import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 
 export function useChatComposerActions({
   inputShellRef,

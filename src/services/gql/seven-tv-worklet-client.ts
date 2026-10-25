@@ -1,5 +1,5 @@
-import { deriveFromResponseOnWorklet } from '@app/lib/off-thread-json/derive-from-response-on-worklet';
-import type { JsonValue } from '@app/utils/object/deep-equal-json';
+import { deriveFromResponseOnWorklet } from '@app/lib/off-thread-json/deriveFromResponseOnWorklet';
+import type { JsonValue } from '@app/utils/object/deepEqualJson';
 
 /**
  * Runs a 7TV GraphQL query and parses the response off the JS thread; `parse`

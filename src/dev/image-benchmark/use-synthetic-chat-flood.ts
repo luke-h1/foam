@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-import { useDevToolsAccess } from '@app/utils/dev-tools/dev-tools-gate';
+import { useDevToolsAccess } from '@app/utils/dev-tools/devToolsGate';
 
 import {
   buildIrcFixtureMessage,

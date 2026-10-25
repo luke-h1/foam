@@ -6,12 +6,12 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 import type { useUpdatePreferences } from '@app/store/preference-store';
 
 import type { FullscreenChatMode } from '../types';
-import { clampLandscapeChatWidth } from '../util/clamp-landscape-chat-width';
+import { clampLandscapeChatWidth } from '../util/clampLandscapeChatWidth';
 import {
   getNextChatCycleAction,
   type LandscapeChatCycleAction,
-} from '../util/get-next-chat-cycle-action';
-import type { LiveStreamScreenAction } from '../util/live-stream-screen-reducer';
+} from '../util/getNextChatCycleAction';
+import type { LiveStreamScreenAction } from '../util/liveStreamScreenReducer';
 
 // A double-tap on the toggle would otherwise land two state changes in one frame.
 const CHAT_TOGGLE_DEBOUNCE_MS = 450;

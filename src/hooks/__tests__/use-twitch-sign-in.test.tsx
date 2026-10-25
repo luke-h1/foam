@@ -7,7 +7,7 @@ import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { toast } from 'sonner-native';
 
-import { AuthContext, type AuthContextState } from '@app/context/auth-context';
+import { AuthContext, type AuthContextState } from '@app/context/AuthContext';
 
 import { useTwitchSignIn } from '../use-twitch-sign-in';
 import {

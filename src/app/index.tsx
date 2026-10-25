@@ -2,9 +2,9 @@ import { StyleSheet, View } from 'react-native';
 
 import { Redirect, router } from 'expo-router';
 
-import { Button } from '@app/components/button/button';
-import { Text } from '@app/components/ui/text/text';
-import { useAuthContext } from '@app/context/auth-context';
+import { Button } from '@app/components/button/Button';
+import { Text } from '@app/components/ui/text/Text';
+import { useAuthContext } from '@app/context/AuthContext';
 import { useStartupMark } from '@app/hooks/use-startup-mark';
 import { storage } from '@app/lib/storage';
 import { ONBOARDING_SEEN_KEY } from '@app/screens/onboarding/constants';

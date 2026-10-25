@@ -5,22 +5,22 @@ import type {
   ChatRowProps,
   ChatRowState,
   EmotePressData,
-} from '@app/components/chat/components/chat-message/chat-row.types';
+} from '@app/components/chat/components/chat-message/ChatRow.types';
 import type { ChatTokenRenderProps } from '@app/components/chat/components/chat-message/renderers/types/chat-token-render-props';
-import { canReplyToMessage } from '@app/components/chat/util/chat-row/can-reply-to-message';
-import { getAnnouncementColorParam } from '@app/components/chat/util/chat-row/get-announcement-color-param';
-import { getChatBodyPresentation } from '@app/components/chat/util/chat-row/get-chat-body-presentation';
-import { getReplyFlags } from '@app/components/chat/util/chat-row/get-reply-flags';
-import { getTokenIdentity } from '@app/components/chat/util/chat-row/get-token-identity';
-import { isUserNoticeTags } from '@app/components/chat/util/chat-row/is-user-notice-tags';
-import { resolveMessageDisplayFlags } from '@app/components/chat/util/chat-row/resolve-message-display-flags';
-import { toChatMessageData } from '@app/components/chat/util/chat-row/to-chat-message-data';
-import { getAnnouncementAccentColor } from '@app/components/chat/util/get-announcement-accent-color';
+import { canReplyToMessage } from '@app/components/chat/util/chat-row/canReplyToMessage';
+import { getAnnouncementColorParam } from '@app/components/chat/util/chat-row/getAnnouncementColorParam';
+import { getChatBodyPresentation } from '@app/components/chat/util/chat-row/getChatBodyPresentation';
+import { getReplyFlags } from '@app/components/chat/util/chat-row/getReplyFlags';
+import { getTokenIdentity } from '@app/components/chat/util/chat-row/getTokenIdentity';
+import { isUserNoticeTags } from '@app/components/chat/util/chat-row/isUserNoticeTags';
+import { resolveMessageDisplayFlags } from '@app/components/chat/util/chat-row/resolveMessageDisplayFlags';
+import { toChatMessageData } from '@app/components/chat/util/chat-row/toChatMessageData';
+import { getAnnouncementAccentColor } from '@app/components/chat/util/getAnnouncementAccentColor';
 import { usePreference } from '@app/store/preference-store';
 import type { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import type { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
-import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-chat-username';
-import { deriveChatBody } from '@app/utils/chat/derive-chat-body/derive-chat-body';
+import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
+import { deriveChatBody } from '@app/utils/chat/derive-chat-body/deriveChatBody';
 
 import { useChatRowLongPress } from './use-chat-row-long-press';
 

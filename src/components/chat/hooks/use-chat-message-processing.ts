@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 
 import type { ChatScrollAnchor } from '@app/components/chat/hooks/use-chat-scroll';
-import { hydrateVisibleSevenTvAssets } from '@app/components/chat/util/hydrate-visible-seven-tv-assets/hydrate-visible-seven-tv-assets';
+import { hydrateVisibleSevenTvAssets } from '@app/components/chat/util/hydrate-visible-seven-tv-assets/hydrateVisibleSevenTvAssets';
 import {
   fetchUserPersonalEmotes,
   getCurrentEmoteData,
@@ -23,11 +23,11 @@ import {
 } from '@app/store/chat/actions/visible-asset-hydration';
 import { usePersonalEmotesVersion } from '@app/store/chat/react/selectors';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
-import { createUserStateFromTags } from '@app/utils/chat/message-handlers/create-user-state-from-tags';
-import { replaceEmotesWithText } from '@app/utils/chat/replace-emotes-with-text';
-import { resolveMessageEmoteParts } from '@app/utils/chat/resolve-message-emote-tokens';
-import { getCachedSharedChatBadgeContext } from '@app/utils/chat/shared-chat-badges/get-cached-shared-chat-badge-context';
-import { getMessageBadges } from '@app/utils/chat/shared-chat-badges/get-message-badges';
+import { createUserStateFromTags } from '@app/utils/chat/message-handlers/createUserStateFromTags';
+import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
+import { resolveMessageEmoteParts } from '@app/utils/chat/resolveMessageEmoteTokens';
+import { getCachedSharedChatBadgeContext } from '@app/utils/chat/shared-chat-badges/getCachedSharedChatBadgeContext';
+import { getMessageBadges } from '@app/utils/chat/shared-chat-badges/getMessageBadges';
 import { logger } from '@app/utils/logger';
 
 interface UseChatMessageProcessingOptions {

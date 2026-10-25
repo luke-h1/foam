@@ -13,7 +13,7 @@ import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import type { MessageToken } from '@app/utils/chat/message-token';
+import type { MessageToken } from '@app/utils/chat/messageToken';
 
 export type { PaintData, SanitisedBadgeSet, SanitisedEmote };
 

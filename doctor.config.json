@@ -18,9 +18,9 @@
       },
       {
         "files": [
-          "src/screens/preferences/blocked-terms-screen.tsx",
-          "src/screens/preferences/chat-highlights-screen.tsx",
-          "src/screens/preferences/saved-phrases-screen.tsx"
+          "src/screens/preferences/BlockedTermsScreen.tsx",
+          "src/screens/preferences/ChatHighlightsScreen.tsx",
+          "src/screens/preferences/SavedPhrasesScreen.tsx"
         ],
         "rules": ["react-hooks-js/immutability"]
       },
@@ -33,7 +33,7 @@
         ]
       },
       {
-        "files": ["src/lib/react-query/query-provider.tsx"],
+        "files": ["src/lib/react-query/QueryProvider.tsx"],
         "rules": ["react-doctor/no-fetch-in-effect"]
       },
       {
@@ -41,7 +41,7 @@
         "rules": ["react-doctor/effect-needs-cleanup"]
       },
       {
-        "files": ["src/components/stream-player/stream-player.tsx"],
+        "files": ["src/components/stream-player/StreamPlayer.tsx"],
         "rules": ["react-doctor/effect-needs-cleanup"]
       },
       {
@@ -53,7 +53,7 @@
           "src/components/chat/hooks/use-chat-messages.ts",
           "src/components/stream-player/hooks/use-player-bridge.ts",
           "src/components/stream-player/hooks/use-stream-player-source.ts",
-          "src/components/chat/components/chat-message/renderers/emote-action-sheet.tsx",
+          "src/components/chat/components/chat-message/renderers/EmoteActionSheet.tsx",
           "src/services/twitch-chat-service.ts"
         ],
         "rules": ["react-hooks-js/refs"]
@@ -74,19 +74,19 @@
         ]
       },
       {
-        "files": ["src/utils/string/format-view-count.ts"],
+        "files": ["src/utils/string/formatViewCount.ts"],
         "rules": ["react-doctor/js-hoist-intl"]
       },
       {
-        "files": ["src/screens/dev-tools/synced-emotes-screen.tsx"],
+        "files": ["src/screens/dev-tools/SyncedEmotesScreen.tsx"],
         "rules": ["react-doctor/rn-no-scrollview-mapped-list"]
       },
       {
-        "files": ["src/screens/dev-tools/image-benchmark-screen.tsx"],
+        "files": ["src/screens/dev-tools/ImageBenchmarkScreen.tsx"],
         "rules": ["react-doctor/no-set-state-after-await-in-effect"]
       },
       {
-        "files": ["src/components/pressable-area/pressable-area.tsx"],
+        "files": ["src/components/pressable-area/PressableArea.tsx"],
         "rules": ["react-doctor/rn-pressable-shared-value-mutation"]
       }
     ]

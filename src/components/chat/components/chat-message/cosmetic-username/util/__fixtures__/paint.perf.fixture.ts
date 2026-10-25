@@ -7,8 +7,8 @@ import {
   makePaint,
   RED,
   toIndexed,
-} from '@app/components/chat/components/chat-message/cosmetic-username/util/paint-css/__fixtures__/paint-css.fixture';
-import { getPaintLayers } from '@app/components/chat/components/chat-message/cosmetic-username/util/paint-layer/get-paint-layers';
+} from '@app/components/chat/components/chat-message/cosmetic-username/util/paint-css/__fixtures__/paintCss.fixture';
+import { getPaintLayers } from '@app/components/chat/components/chat-message/cosmetic-username/util/paint-layer/getPaintLayers';
 import type { PaintData, PaintLayerData } from '@app/types/seven-tv/cosmetics';
 
 export const multiLayerPaint: PaintData = makePaint({

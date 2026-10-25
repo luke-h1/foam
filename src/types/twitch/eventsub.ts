@@ -1,4 +1,4 @@
-import type { JsonValue } from '@app/utils/object/deep-equal-json';
+import type { JsonValue } from '@app/utils/object/deepEqualJson';
 
 export type EventSubEvent = {
   [field: string]: JsonValue;

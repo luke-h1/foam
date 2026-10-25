@@ -8,10 +8,10 @@ import type { TwitchClipsRequestParams } from '@app/types/twitch/clip';
 import type { TwitchStream } from '@app/types/twitch/stream';
 import type { UserBlockList, UserInfoResponse } from '@app/types/twitch/user';
 import type { TwitchVideosRequestParams } from '@app/types/twitch/video';
-import { getNextPageParam } from '@app/utils/pagination/get-next-page-param';
-import { getPreviousPageParam } from '@app/utils/pagination/get-previous-page-param';
+import { getNextPageParam } from '@app/utils/pagination/getNextPageParam';
+import { getPreviousPageParam } from '@app/utils/pagination/getPreviousPageParam';
 
-import { twitchKeys } from '../query-keys';
+import { twitchKeys } from '../queryKeys';
 
 const MAX_INFINITE_PAGES = 15;
 const INITIAL_PAGE_CURSOR: string | undefined = undefined;

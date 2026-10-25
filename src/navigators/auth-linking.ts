@@ -5,7 +5,7 @@ import type { AuthSessionResult } from 'expo-auth-session';
 import {
   buildAuthSessionResultFromToken,
   parseTwitchAuthTokenFromUrl,
-} from '@app/utils/authentication/twitch-auth';
+} from '@app/utils/authentication/twitchAuth';
 import { logger, type LogMetadata } from '@app/utils/logger';
 
 const log = (msg: string, data?: LogMetadata) => {

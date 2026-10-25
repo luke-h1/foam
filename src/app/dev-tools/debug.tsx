@@ -1,3 +1,3 @@
-import { DebugScreen } from '@app/screens/dev-tools/debug-screen';
+import { DebugScreen } from '@app/screens/dev-tools/DebugScreen';
 
 export default DebugScreen;

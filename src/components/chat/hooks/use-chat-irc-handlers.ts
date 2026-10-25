@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 
-import type { ChatIrcHandlerDeps } from '../util/create-chat-irc-handlers';
-import { createChatIrcHandlers } from '../util/create-chat-irc-handlers';
-import { createRoomStateTracker } from '../util/room-state/room-state-tracker';
+import type { ChatIrcHandlerDeps } from '../util/createChatIrcHandlers';
+import { createChatIrcHandlers } from '../util/createChatIrcHandlers';
+import { createRoomStateTracker } from '../util/room-state/roomStateTracker';
 
 type UseChatIrcHandlersOptions = Omit<ChatIrcHandlerDeps, 'roomStateTracker'>;
 

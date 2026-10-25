@@ -89,7 +89,7 @@ Components should import those modules directly instead of importing `@legendapp
 
 ## Image caching
 
-Chat renders many repeated remote images: Twitch badges, third-party emotes, 7TV cosmetics, thumbnails, and preview assets. The shared [`Image`](src/components/image/image.tsx) wrapper and chat inline image renderer route those URLs through [`src/utils/image/image-cache.ts`](src/utils/image/image-cache.ts) before handing them to `expo-image` or `react-native-nitro-image`.
+Chat renders many repeated remote images: Twitch badges, third-party emotes, 7TV cosmetics, thumbnails, and preview assets. The shared [`Image`](src/components/image/Image.tsx) wrapper and chat inline image renderer route those URLs through [`src/utils/image/imageCache.ts`](src/utils/image/imageCache.ts) before handing them to `expo-image` or `react-native-nitro-image`.
 
 The native cache stores files in Expo's cache directory under `chat-img-cache` and keeps an MMKV manifest keyed by source URL plus cache variant. Variants such as `emote`, `badge`, and `image` keep different asset classes from colliding. Downloads are deduplicated, priority queued (`visible`, `interactive`, `background`), capped at four concurrent downloads, and evicted by least-recent access when the cache exceeds 100 MB or 5000 records.
 

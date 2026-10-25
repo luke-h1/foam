@@ -11,7 +11,7 @@ import {
 } from '@app/store/chat/actions/user-cosmetics-fetch';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import { logger } from '@app/utils/logger';
-import { setSevenTvSessionId } from '@app/utils/seven-tv/seven-tv-session-id';
+import { setSevenTvSessionId } from '@app/utils/seven-tv/sevenTvSessionId';
 
 let mockGet7tvUserId: jest.SpiedFunction<typeof sevenTvService.get7tvUserId>;
 let mockSendPresence: jest.SpiedFunction<typeof sevenTvService.sendPresence>;
