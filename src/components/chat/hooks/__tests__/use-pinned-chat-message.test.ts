@@ -121,6 +121,7 @@ describe('usePinnedChatMessage', () => {
 
     await waitFor(() => {
       expect(mockPinChatMessage).toHaveBeenCalledTimes(1);
+
       expect(result.current.pinnedMessageBusy).toBe(false);
     });
 
@@ -239,6 +240,7 @@ describe('usePinnedChatMessage', () => {
 
     await waitFor(() => {
       expect(mockToastError).toHaveBeenCalledWith('Could not pin message');
+
       expect(result.current.pinnedMessageBusy).toBe(false);
     });
   });

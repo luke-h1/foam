@@ -182,6 +182,7 @@ describe('useEmoteReprocessing personal 7TV emotes', () => {
     });
 
     expect(mockUpdateMessages).toHaveBeenCalledTimes(1);
+
     expect(updatedMessage()).toEqual([{ type: 'text', content: 'plaska' }]);
   });
 });

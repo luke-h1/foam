@@ -30,6 +30,7 @@ const withAndroidAllowBackupReplace = config =>
       if (!entries.includes('android:allowBackup')) {
         entries.push('android:allowBackup');
       }
+
       application.$['tools:replace'] = entries.join(',');
     }
 

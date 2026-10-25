@@ -130,6 +130,7 @@ describe('ChatMessagePressable', () => {
     fireEvent(target, 'responderTerminate', touchAt(10, 10));
 
     expect(onPress).not.toHaveBeenCalled();
+
     expect(screen.getByTestId('target').props['style']).toEqual(undefined);
   });
 
@@ -155,6 +156,7 @@ describe('ChatMessagePressable', () => {
     fireEvent(target, 'responderRelease', touchAt(10, 10));
 
     expect(onLongPress).toHaveBeenCalledTimes(1);
+
     expect(onPress).not.toHaveBeenCalled();
   });
 

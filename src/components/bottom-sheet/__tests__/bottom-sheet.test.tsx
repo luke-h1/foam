@@ -159,6 +159,7 @@ describe('BottomSheet', () => {
       const style = getContentStyle(getByTestId('sheet'));
 
       expect(style.flex).toBe(1);
+
       expect(style.height).toBeUndefined();
     });
 
@@ -167,7 +168,9 @@ describe('BottomSheet', () => {
       const style = getContentStyle(getByTestId('sheet'));
 
       expect(mockSheet.props.snapPoints).toBeUndefined();
+
       expect(style.flex).toBeUndefined();
+
       expect(style.height).toBeUndefined();
     });
   });
@@ -186,7 +189,9 @@ describe('BottomSheet', () => {
       const style = getContentStyle(getByTestId('sheet'));
 
       expect(mockSheet.props.snapPoints).toBeUndefined();
+
       expect(style.height).toBe(Math.round(windowHeight * 0.9));
+
       expect(style.flex).toBeUndefined();
     });
 

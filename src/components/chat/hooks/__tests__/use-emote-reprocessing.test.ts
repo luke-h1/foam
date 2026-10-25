@@ -262,6 +262,7 @@ describe('useEmoteReprocessing', () => {
     const processedMessageIdsRef = renderReprocess();
 
     expect(chatStore$.messages.peek()).toBe(messagesAfterFirstPass);
+
     expect(processedMessageIdsRef.current).toEqual(new Set(['msg-1']));
   });
 

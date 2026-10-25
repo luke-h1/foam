@@ -126,7 +126,9 @@ describe('instrumentExpoImageLoads span deadline', () => {
     ).resolves.toBe(loadedImage);
 
     expect(setStatus.mock.calls).toEqual([[{ code: 1, message: 'ok' }]]);
+
     expect(end).toHaveBeenCalledTimes(1);
+
     expect(jest.getTimerCount()).toBe(0);
   });
 });

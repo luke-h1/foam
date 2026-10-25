@@ -112,6 +112,7 @@ describe('preloadEmotes', () => {
     await preloadEmotes([emote('skipped')]);
 
     expect(warnMock).toHaveBeenCalledTimes(1);
+
     expect(errorMock).not.toHaveBeenCalled();
   });
 });

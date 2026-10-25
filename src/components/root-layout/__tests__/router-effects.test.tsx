@@ -92,6 +92,7 @@ describe('RouterEffects deep-link auth handling', () => {
       if (type === 'url') {
         urlHandler = handler;
       }
+
       return { remove: removeSubscription };
     });
 
@@ -109,6 +110,7 @@ describe('RouterEffects deep-link auth handling', () => {
     );
 
     expect(loginWithTwitch).toHaveBeenCalledTimes(1);
+
     expect(mockedRouter.replace).toHaveBeenCalledTimes(1);
   });
 
@@ -143,7 +145,9 @@ describe('RouterEffects deep-link auth handling', () => {
     );
 
     expect(linkingMock.addEventListener).toHaveBeenCalledTimes(1);
+
     expect(removeSubscription).not.toHaveBeenCalled();
+
     expect(linkingMock.getInitialURL).toHaveBeenCalledTimes(1);
 
     act(() => urlHandler?.({ url: nextMagicUrl }));
@@ -167,6 +171,7 @@ describe('RouterEffects deep-link auth handling', () => {
     });
 
     expect(loginWithTwitch).toHaveBeenCalledTimes(1);
+
     expect(mockedRouter.replace).toHaveBeenCalledTimes(1);
   });
 
@@ -194,6 +199,7 @@ describe('RouterEffects deep-link auth handling', () => {
     });
 
     expect(loginWithTwitch).toHaveBeenCalledTimes(1);
+
     expect(mockedRouter.replace).not.toHaveBeenCalled();
 
     await act(async () => {
@@ -206,6 +212,7 @@ describe('RouterEffects deep-link auth handling', () => {
     );
 
     expect(loginWithTwitch).toHaveBeenCalledTimes(1);
+
     expect(mockedRouter.replace).toHaveBeenCalledTimes(1);
   });
 
@@ -249,7 +256,9 @@ describe('RouterEffects deep-link auth handling', () => {
     });
 
     expect(loginWithTwitch).not.toHaveBeenCalled();
+
     expect(mockedRouter.replace).not.toHaveBeenCalled();
+
     expect(isDeepLinkAuthInProgress()).toBe(false);
   });
 });

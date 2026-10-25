@@ -37,6 +37,7 @@ export function createAnimationBudget(
       if (grantedCount >= maxConcurrent) {
         return;
       }
+
       grant(slot);
     }
   }

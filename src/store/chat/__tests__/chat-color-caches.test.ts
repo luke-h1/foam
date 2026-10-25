@@ -47,6 +47,7 @@ describe('chatColorCaches', () => {
     }
 
     expect(getSessionCacheString('lightenedColors', '#0')).toBeUndefined();
+
     expect(getSessionCacheString('lightenedColors', '#200')).toBe('value-200');
   });
 
@@ -57,6 +58,7 @@ describe('chatColorCaches', () => {
     clearMentionSessionCaches();
 
     expect(getSessionCacheString('mentionColors', 'luke')).toBeUndefined();
+
     expect(getSessionCacheString('lightenedColors', '#ff0000')).toBeUndefined();
   });
 });

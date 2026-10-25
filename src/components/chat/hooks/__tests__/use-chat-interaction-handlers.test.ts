@@ -127,6 +127,7 @@ describe('useChatComposerActions', () => {
     ]);
 
     expect(inputShell.appendMention).toHaveBeenCalledWith('targetUser');
+
     expect(inputShell.insertPhrase).toHaveBeenCalledWith('be right back');
   });
 });

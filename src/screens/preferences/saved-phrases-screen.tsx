@@ -351,6 +351,7 @@ export function SavedPhrasesScreen() {
         setEditingId(null);
         setInputValue('');
       }
+
       updatePreferences({
         savedPhrases: phrases.filter(phrase => phrase.id !== id),
       });

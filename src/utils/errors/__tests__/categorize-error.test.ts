@@ -37,6 +37,7 @@ describe('categorizeError', () => {
     expect(categorizeError(new Error('undefined is not a function'))).toEqual(
       'crash',
     );
+
     expect(categorizeError(null)).toEqual('crash');
   });
 });

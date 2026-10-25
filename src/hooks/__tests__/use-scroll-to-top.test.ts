@@ -38,6 +38,7 @@ describe('useScrollToTop', () => {
     });
 
     expect(scrollToTop).toHaveBeenCalledTimes(1);
+
     expect(scrollToTop).toHaveBeenCalledWith({ animated: true });
   });
 
@@ -56,6 +57,7 @@ describe('useScrollToTop', () => {
       index: 0,
       animated: true,
     });
+
     expect(scrollToTop).not.toHaveBeenCalled();
   });
 
@@ -100,6 +102,7 @@ describe('useScrollToTop', () => {
     });
 
     expect(scrollTo).toHaveBeenCalledWith({ y: -120, animated: true });
+
     expect(scrollToIndex).not.toHaveBeenCalled();
   });
 

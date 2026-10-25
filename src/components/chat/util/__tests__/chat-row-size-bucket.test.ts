@@ -32,6 +32,7 @@ function createMessage(
 describe('getChatRowSizeBucket', () => {
   test('keeps every one-line row in the first bucket', () => {
     expect(getChatRowSizeBucket(createMessage())).toBe('w0');
+
     expect(
       getChatRowSizeBucket(createMessage({ message: [createTextToken('gg')] })),
     ).toBe('w0');
@@ -73,6 +74,7 @@ describe('getChatRowSizeBucket', () => {
     const emote = createMessage({ message: [createEmoteToken('Kappa')] });
 
     expect(getChatRowSizeBucket(text)).toBe('w0');
+
     expect(getChatRowSizeBucket(emote)).toBe('w0e');
   });
 
@@ -86,6 +88,7 @@ describe('getChatRowSizeBucket', () => {
     });
 
     expect(getChatRowSizeBucket(few)).toBe('w0e');
+
     expect(getChatRowSizeBucket(wall)).toBe('w1e');
   });
 
@@ -101,6 +104,7 @@ describe('getChatRowSizeBucket', () => {
     });
 
     expect(getChatRowSizeBucket(stvEmote)).toBe('w1');
+
     expect(getChatRowSizeBucket(clip)).toBe('w2');
   });
 

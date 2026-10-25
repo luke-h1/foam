@@ -443,6 +443,7 @@ Bun.serve({
     if (server.upgrade(request)) {
       return new Response(null, { status: 101 });
     }
+
     return new Response('IRC WebSocket server', { status: 200 });
   },
   websocket: {

@@ -11,7 +11,9 @@ describe('createShakeDetector', () => {
     const detect = createShakeDetector();
 
     expect(detect(REST, 0)).toEqual(false);
+
     expect(detect(REST, 100)).toEqual(false);
+
     expect(detect(REST, 200)).toEqual(false);
   });
 
@@ -19,6 +21,7 @@ describe('createShakeDetector', () => {
     const detect = createShakeDetector();
 
     expect(detect(SPIKE, 0)).toEqual(false);
+
     expect(detect(REST, 100)).toEqual(false);
   });
 
@@ -26,7 +29,9 @@ describe('createShakeDetector', () => {
     const detect = createShakeDetector();
 
     expect(detect(SPIKE, 0)).toEqual(false);
+
     expect(detect(SPIKE, 200)).toEqual(false);
+
     expect(detect(SPIKE, 400)).toEqual(true);
   });
 
@@ -34,7 +39,9 @@ describe('createShakeDetector', () => {
     const detect = createShakeDetector();
 
     expect(detect(SPIKE, 0)).toEqual(false);
+
     expect(detect(SPIKE, 1000)).toEqual(false);
+
     expect(detect(SPIKE, 2400)).toEqual(false);
   });
 
@@ -44,6 +51,7 @@ describe('createShakeDetector', () => {
     detect(SPIKE, 0);
     detect(SPIKE, 100);
     expect(detect(SPIKE, 200)).toEqual(true);
+
     expect(detect(SPIKE, 300)).toEqual(false);
   });
 });

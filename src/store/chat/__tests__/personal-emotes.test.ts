@@ -70,6 +70,7 @@ describe('fetchUserPersonalEmotes', () => {
     const result = await fetchUserPersonalEmotes(twitchUserId, channelId);
 
     expect(result).toEqual<SevenTvSanitisedEmote[]>([personalEmote]);
+
     expect(mockGetPersonalEmoteSet).toHaveBeenCalledTimes(1);
   });
 
@@ -80,7 +81,9 @@ describe('fetchUserPersonalEmotes', () => {
     const second = await fetchUserPersonalEmotes(twitchUserId, channelId);
 
     expect(first).toBeNull();
+
     expect(second).toEqual<SevenTvSanitisedEmote[]>([]);
+
     expect(mockGetPersonalEmoteSet).toHaveBeenCalledTimes(1);
   });
 
@@ -118,6 +121,7 @@ describe('fetchUserPersonalEmotes', () => {
     const refetched = await fetchUserPersonalEmotes(twitchUserId, channelId);
 
     expect(refetched).toEqual<SevenTvSanitisedEmote[]>([personalEmote]);
+
     expect(mockGetPersonalEmoteSet).toHaveBeenCalledTimes(3);
   });
 
@@ -129,6 +133,7 @@ describe('fetchUserPersonalEmotes', () => {
     clearPersonalEmotesCache();
 
     expect(getUserPersonalEmotes(twitchUserId, channelId)).toEqual([]);
+
     expect(chatStore$.personalEmotesVersion.peek()).toBe(versionBefore + 1);
   });
 });

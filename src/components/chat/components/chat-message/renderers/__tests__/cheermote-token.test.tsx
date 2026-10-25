@@ -50,6 +50,7 @@ describe('CheermoteToken', () => {
     render(<CheermoteToken textStyles={textStyles} token={makePart()} />);
 
     expect(screen.getByText('Cheer100')).toBeOnTheScreen();
+
     expect(mockChatInlineImage).not.toHaveBeenCalled();
   });
 
@@ -66,6 +67,7 @@ describe('CheermoteToken', () => {
     );
 
     expect(screen.getByText('100')).toBeOnTheScreen();
+
     expect(screen.queryByText('Cheer100')).not.toBeOnTheScreen();
   });
 

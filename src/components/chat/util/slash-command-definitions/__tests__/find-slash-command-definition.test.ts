@@ -30,6 +30,7 @@ describe('findSlashCommandDefinition', () => {
 
   test('returns undefined for unknown commands', () => {
     expect(findSlashCommandDefinition('me')).toBeUndefined();
+
     expect(findSlashCommandDefinition('')).toBeUndefined();
   });
 

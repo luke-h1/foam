@@ -19,6 +19,7 @@ const withProfileInstallerDependency = config =>
     if (!contents.includes(MARKER)) {
       configWithGradle.modResults.contents = `${contents}\n${MARKER}\ndependencies {\n    implementation("${PROFILE_INSTALLER}")\n}\n`;
     }
+
     return configWithGradle;
   });
 

@@ -145,9 +145,13 @@ describe('useChatScroll', () => {
       );
 
       expect(result.current.isAtBottom).toBe(true);
+
       expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(true);
+
       expect(result.current.isScrollingToBottom).toBe(false);
+
       expect(result.current.shouldMaintainScrollAtEnd).toBe(true);
+
       expect(getChatUnreadCount()).toBe(0);
     });
 
@@ -162,6 +166,7 @@ describe('useChatScroll', () => {
       );
 
       expect(result.current.scrollHandlers.onScroll).toBeInstanceOf(Function);
+
       expect(result.current.scrollToBottom).toBeInstanceOf(Function);
 
       expect(
@@ -206,7 +211,9 @@ describe('useChatScroll', () => {
       });
 
       expect(result.current.isAtBottom).toBe(false);
+
       expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(false);
+
       expect(result.current.shouldMaintainScrollAtEnd).toBe(false);
     });
 
@@ -229,6 +236,7 @@ describe('useChatScroll', () => {
       });
 
       expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(true);
+
       expect(result.current.shouldMaintainScrollAtEnd).toBe(false);
 
       act(() => {
@@ -335,6 +343,7 @@ describe('useChatScroll', () => {
       });
 
       expect(result.current.isAtBottom).toBe(false);
+
       expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(false);
     });
 
@@ -363,6 +372,7 @@ describe('useChatScroll', () => {
       });
 
       expect(result.current.isAtBottom).toBe(true);
+
       expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(true);
     });
 
@@ -391,6 +401,7 @@ describe('useChatScroll', () => {
       });
 
       expect(result.current.isAtBottom).toBe(true);
+
       expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(true);
     });
 
@@ -552,6 +563,7 @@ describe('useChatScroll', () => {
       });
 
       expect(result.current.isAtBottom).toBe(false);
+
       expect(getChatUnreadCount()).toBe(260);
 
       act(() => {
@@ -559,7 +571,9 @@ describe('useChatScroll', () => {
       });
 
       expect(result.current.isAtBottom).toBe(true);
+
       expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(true);
+
       expect(getChatUnreadCount()).toBe(0);
     });
 
@@ -635,6 +649,7 @@ describe('useChatScroll', () => {
       });
 
       expect(result.current.isAtBottom).toBe(false);
+
       expect(getChatUnreadCount()).toBe(5);
 
       act(() => {
@@ -642,8 +657,11 @@ describe('useChatScroll', () => {
       });
 
       expect(result.current.isAtBottom).toBe(true);
+
       expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(true);
+
       expect(getChatUnreadCount()).toBe(0);
+
       expect(result.current.isScrollingToBottom).toBe(true);
     });
 
@@ -670,6 +688,7 @@ describe('useChatScroll', () => {
       });
 
       expect(mocks.scrollToEnd).toHaveBeenCalledTimes(1);
+
       expect(result.current.isScrollingToBottom).toBe(true);
 
       await act(async () => {
@@ -678,6 +697,7 @@ describe('useChatScroll', () => {
       });
 
       expect(mocks.scrollToEnd).toHaveBeenCalledTimes(1);
+
       expect(result.current.isScrollingToBottom).toBe(false);
     });
 
@@ -758,6 +778,7 @@ describe('useChatScroll', () => {
       expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(false);
 
       expect(result.current.isAtBottom).toBe(false);
+
       expect(result.current.shouldMaintainScrollAtEnd).toBe(false);
 
       act(() => {
@@ -1079,6 +1100,7 @@ describe('useChatScroll', () => {
       });
 
       expect(result.current.isScrollingToBottom).toBe(true);
+
       expect(mocks.scrollToEnd).toHaveBeenCalledTimes(2);
 
       await act(async () => {

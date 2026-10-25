@@ -57,6 +57,7 @@ if (process.env.EXPO_OS === 'ios') {
     } catch {
       // device-info is unavailable. Fall through to the fixed ceiling below.
     }
+
     const scaled =
       totalMemoryBytes > 0
         ? Math.floor(totalMemoryBytes * 0.12)

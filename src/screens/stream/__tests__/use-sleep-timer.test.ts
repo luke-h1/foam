@@ -32,6 +32,7 @@ describe('useSleepTimer', () => {
     });
 
     expect(onExpire).toHaveBeenCalledTimes(1);
+
     expect(result.current.isActive).toEqual(false);
   });
 
@@ -52,6 +53,7 @@ describe('useSleepTimer', () => {
     });
 
     expect(onExpire).not.toHaveBeenCalled();
+
     expect(result.current.isActive).toEqual(false);
   });
 

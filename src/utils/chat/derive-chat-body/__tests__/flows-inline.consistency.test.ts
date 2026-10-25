@@ -67,6 +67,7 @@ describe('inline eligibility is decided in one place', () => {
       ).toBe(inline);
 
       expect(getMessageStructure(message).fitsInOneText).toBe(inline);
+
       expect(deriveChatBody(message).fitsInOneText).toBe(inline);
     },
   );

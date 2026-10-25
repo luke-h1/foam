@@ -147,6 +147,7 @@ describe('useChatIrcHandlers', () => {
     expect(enqueueLiveChatMessage).toHaveBeenCalledTimes(1);
     const [baseMessage] = enqueueLiveChatMessage.mock.calls[0] ?? [];
     expect(baseMessage.isAction).toEqual(true);
+
     expect(baseMessage.message[0].content).toEqual('waves at chat');
   });
 
@@ -164,6 +165,7 @@ describe('useChatIrcHandlers', () => {
 
     const [baseMessage] = enqueueLiveChatMessage.mock.calls[0] ?? [];
     expect(baseMessage.message[0].content).toEqual('hello world');
+
     expect(baseMessage.isAction).toBeUndefined();
   });
 
@@ -185,7 +187,9 @@ describe('useChatIrcHandlers', () => {
     });
 
     expect(enqueueLiveChatMessage).toHaveBeenCalledTimes(1);
+
     expect(enqueueLiveChatMessage.mock.calls[0]?.[1]).toEqual(true);
+
     expect(processMessageEmotes).not.toHaveBeenCalled();
   });
 
@@ -261,6 +265,7 @@ describe('useChatIrcHandlers', () => {
     });
 
     expect(removeChatMessagesByLogin.mock.calls).toEqual([['baduser']]);
+
     expect(moderateChatMessagesByLogin).not.toHaveBeenCalled();
   });
 
@@ -278,6 +283,7 @@ describe('useChatIrcHandlers', () => {
     });
 
     expect(moderateChatMessageById.mock.calls).toEqual([['msg-1', 'Deleted']]);
+
     expect(removeChatMessageById).not.toHaveBeenCalled();
   });
 
@@ -296,6 +302,7 @@ describe('useChatIrcHandlers', () => {
     });
 
     expect(removeChatMessageById.mock.calls).toEqual([['msg-1']]);
+
     expect(moderateChatMessageById).not.toHaveBeenCalled();
   });
 
@@ -342,6 +349,7 @@ describe('useChatIrcHandlers', () => {
     });
 
     expect(storedMessages()).toEqual([]);
+
     expect(clearLocalMessages).toHaveBeenCalledTimes(1);
   });
 
@@ -391,6 +399,7 @@ describe('useChatIrcHandlers', () => {
     });
 
     expect(storedMessages()).toEqual([]);
+
     expect(clearLocalMessages).toHaveBeenCalledTimes(1);
   });
 

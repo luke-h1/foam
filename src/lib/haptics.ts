@@ -30,6 +30,7 @@ export function selection() {
   if (!hapticsEnabled()) {
     return;
   }
+
   Presets.System.selection();
 }
 

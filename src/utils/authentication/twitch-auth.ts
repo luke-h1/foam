@@ -70,6 +70,7 @@ function getFirstParamValue(
       return value;
     }
   }
+
   return undefined;
 }
 

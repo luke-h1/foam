@@ -26,6 +26,7 @@ export function useEnsureSevenTvCosmetics(twitchUserId?: string) {
         if (cancelled || !sevenTvUserId) {
           return null;
         }
+
         return fetchAndCacheUserCosmetics(sevenTvUserId);
       })
       .catch(error => {

@@ -12,6 +12,7 @@ describe('StreamListLayoutToggle', () => {
     fireEvent.press(screen.getByLabelText('Switch to media layout'));
 
     expect(onChange).toHaveBeenCalledTimes(1);
+
     expect(onChange).toHaveBeenCalledWith('media');
   });
 
@@ -24,6 +25,7 @@ describe('StreamListLayoutToggle', () => {
     fireEvent.press(screen.getByLabelText('Switch to compact layout'));
 
     expect(onChange).toHaveBeenCalledTimes(1);
+
     expect(onChange).toHaveBeenCalledWith('compact');
   });
 });

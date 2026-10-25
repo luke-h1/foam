@@ -425,6 +425,7 @@ const local = {
     {
       files: ['**/*.{js,jsx,ts,tsx}'],
       rules: {
+        'local/blank-line-after-block': 'error',
         'local/blank-line-between-top-level': 'error',
         'local/prefer-alias-imports': 'warn',
       },

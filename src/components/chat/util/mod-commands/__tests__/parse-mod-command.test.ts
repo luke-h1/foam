@@ -3,8 +3,11 @@ import { type ModCommand, parseModCommand } from '../parse-mod-command';
 describe('parseModCommand', () => {
   test('returns null for plain messages and unknown commands', () => {
     expect(parseModCommand('hello world')).toBeNull();
+
     expect(parseModCommand('/me waves')).toBeNull();
+
     expect(parseModCommand('/refresh')).toBeNull();
+
     expect(parseModCommand('/nonsense arg')).toBeNull();
   });
 
@@ -80,6 +83,7 @@ describe('parseModCommand', () => {
         message: 'drops are enabled!',
       },
     );
+
     expect(parseModCommand('/announce')).toBeNull();
   });
 

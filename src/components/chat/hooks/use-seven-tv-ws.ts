@@ -223,6 +223,7 @@ function runSevenTvWsDecision(
       } catch (error) {
         logEventHandlerError('emote_set.update', error);
       }
+
       break;
     }
 
@@ -391,6 +392,7 @@ function runSevenTvWsDecision(
       } else {
         logger.stvWs.error('message.d does not have expected structure');
       }
+
       break;
     }
 
@@ -726,6 +728,7 @@ export function useSevenTvWs(
             16,
           );
         }
+
         return;
       }
 

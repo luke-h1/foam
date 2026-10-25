@@ -347,6 +347,7 @@ describe('chat performance', () => {
     );
 
     expect(onRowMount).toHaveBeenCalledTimes(virtualizedRows.length);
+
     expect(onRender.mock.calls.map(([, phase]) => phase)).toEqual(['mount']);
 
     rerender(

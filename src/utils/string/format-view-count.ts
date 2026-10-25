@@ -13,6 +13,7 @@ export function formatViewCount(count: number | undefined | null): string {
   if (count == null || !Number.isFinite(count) || count < 0) {
     return '0';
   }
+
   return getViewCountFormatter().format(Math.floor(count));
 }
 

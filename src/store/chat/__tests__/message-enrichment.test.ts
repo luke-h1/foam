@@ -246,6 +246,7 @@ describe('enrichMessageSet', () => {
     });
 
     expect(enrichedMessageIds()).toEqual(['b']);
+
     expect(processedMessageIds).toEqual(new Set(['a', 'b']));
   });
 

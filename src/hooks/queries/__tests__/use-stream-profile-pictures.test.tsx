@@ -114,6 +114,7 @@ describe('useStreamProfilePictures', () => {
     );
 
     expect(mockTwitchGet).not.toHaveBeenCalled();
+
     expect(result.current).toBe(streams);
   });
 });

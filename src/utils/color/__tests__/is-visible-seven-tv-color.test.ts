@@ -15,6 +15,7 @@ describe('isVisibleSevenTvColor', () => {
 
   test('rejects an absent colour', () => {
     expect(isVisibleSevenTvColor(null)).toBe(false);
+
     expect(isVisibleSevenTvColor(undefined)).toBe(false);
   });
 });

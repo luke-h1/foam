@@ -6,6 +6,7 @@ describe('fitGrid', () => {
       columns: 6,
       cellSize: 64,
     });
+
     expect(fitGrid({ width: 988, targetCell: 56, gap: 4 })).toEqual({
       columns: 16,
       cellSize: 58,
@@ -20,6 +21,7 @@ describe('fitGrid', () => {
     });
 
     expect(columns * cellSize + (columns - 1) * 4).toBeLessThanOrEqual(360);
+
     expect(columns * cellSize + (columns - 1) * 4).toBeGreaterThan(
       360 - columns,
     );

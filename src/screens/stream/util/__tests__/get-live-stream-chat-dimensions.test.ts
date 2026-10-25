@@ -25,6 +25,7 @@ describe('getLiveStreamChatDimensions', () => {
     });
 
     expect(video.height + chat.height).toBe(700);
+
     expect(chat).toEqual({ width: 400, height: 475 });
   });
 

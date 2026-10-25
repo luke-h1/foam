@@ -110,6 +110,7 @@ describe('Image', () => {
     render(<Image source={REMOTE_URL} />);
 
     expect(expoImageProp('source')).toBe(FILE_URL);
+
     expect(expoImageProp('recyclingKey')).toBe(REMOTE_URL);
   });
 

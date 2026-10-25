@@ -55,12 +55,15 @@ describe('parsePreferencesPayload', () => {
 
   test('discards a non-object payload', () => {
     expect(parsePreferencesPayload('[]')).toBeNull();
+
     expect(parsePreferencesPayload('42')).toBeNull();
   });
 
   test('returns null for empty or malformed JSON', () => {
     expect(parsePreferencesPayload(null)).toBeNull();
+
     expect(parsePreferencesPayload('')).toBeNull();
+
     expect(parsePreferencesPayload('not json')).toBeNull();
   });
 });

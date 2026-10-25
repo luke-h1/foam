@@ -28,6 +28,7 @@ describe('parseTwitchGifsTag', () => {
 
   test('returns an empty list when the tag is missing or blank', () => {
     expect(parseTwitchGifsTag(undefined, EXAMPLE_BODY)).toEqual([]);
+
     expect(parseTwitchGifsTag('   ', EXAMPLE_BODY)).toEqual([]);
   });
 

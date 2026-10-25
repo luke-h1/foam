@@ -125,6 +125,7 @@ const fetchGlobalResourceOnce = <T extends Identifiable>(
     if (globalResourceCache.get(key)?.promise === promise) {
       globalResourceCache.delete(key);
     }
+
     throw error;
   });
 

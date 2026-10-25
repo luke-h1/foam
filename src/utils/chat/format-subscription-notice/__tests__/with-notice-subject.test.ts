@@ -24,6 +24,7 @@ describe('withNoticeSubject', () => {
 
   test('returns an empty string when there is no sentence', () => {
     expect(withNoticeSubject(undefined, 'Jimmotep')).toBe('');
+
     expect(withNoticeSubject('   ', 'Jimmotep')).toBe('');
   });
 
@@ -43,6 +44,7 @@ describe('withNoticeSubject', () => {
     expect(withNoticeSubject('a.c is on a streak!', 'a.c')).toBe(
       'a.c is on a streak!',
     );
+
     expect(withNoticeSubject('abc is on a streak!', 'a.c')).toBe(
       'a.c abc is on a streak!',
     );

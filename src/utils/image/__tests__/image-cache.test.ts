@@ -71,6 +71,7 @@ describe('image-cache', () => {
       await cacheImageFromUrl(url, options);
 
       expect(fileSystemMock.downloadCount()).toBe(2);
+
       expect(fileSystemMock.exists(cachedUri)).toBe(true);
     } finally {
       nowSpy.mockRestore();
@@ -99,7 +100,9 @@ describe('image-cache', () => {
     }
 
     expect(refreshedUri).toBe(cachedUri);
+
     expect(fileSystemMock.downloadCount()).toBe(2);
+
     expect(fileSystemMock.exists(cachedUri)).toBe(true);
   });
 
@@ -110,9 +113,13 @@ describe('image-cache', () => {
     const badgeUri = await cacheImageFromUrl(url, { variant: 'badge' });
 
     expect(emoteUri).not.toBe(badgeUri);
+
     expect(fileSystemMock.downloadCount()).toBe(2);
+
     expect(getCachedImageUri(url, { variant: 'emote' })).toBe(emoteUri);
+
     expect(getCachedImageUri(url, { variant: 'badge' })).toBe(badgeUri);
+
     expect(getCachedImageUri(url)).toBeNull();
   });
 
@@ -130,7 +137,9 @@ describe('image-cache', () => {
     const secondUri = await cacheImageFromUrl(secondUrl);
 
     expect(getCachedImageUri(secondUrl)).toBe(secondUri);
+
     expect(getCachedImageUri(firstUrl)).toBeNull();
+
     expect(fileSystemMock.exists(firstUri)).toBe(false);
   });
 
@@ -146,7 +155,9 @@ describe('image-cache', () => {
     await cacheImageFromUrl(urls.at(-1)!);
 
     expect(listCachedImages()).toHaveLength(4500);
+
     expect(getCachedImageUri(urls.at(-1)!)).not.toBeNull();
+
     expect(getCachedImageUri(urls[0])).toBeNull();
   }, 30_000);
 
@@ -369,6 +380,7 @@ describe('image-cache manifest validation', () => {
     await jest.advanceTimersByTimeAsync(1000);
 
     expect(readDirectoryAsync.mock.calls).toEqual([[cacheDirUri]]);
+
     expect(imageCache.listCachedImages().map(record => record.key)).toEqual([
       'kept',
     ]);

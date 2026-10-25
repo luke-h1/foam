@@ -442,6 +442,7 @@ export function BlockedUsersScreen() {
       if (context?.previousData) {
         queryClient.setQueryData(userBlockListQueryKey, context.previousData);
       }
+
       toast.error('Could not unblock user');
     },
     onSettled: () => {

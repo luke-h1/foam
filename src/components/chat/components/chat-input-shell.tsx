@@ -130,6 +130,7 @@ export const ChatInputShell = memo(function ChatInputShell({
     if (!isAuthenticated) {
       return;
     }
+
     void pickAndUpload();
   }, [isAuthenticated, pickAndUpload]);
 
@@ -319,6 +320,7 @@ export const ChatInputShell = memo(function ChatInputShell({
         if (!isAuthenticated) {
           return;
         }
+
         setDraft(prev => ({ ...prev, replyTo: nextReplyTo }));
       },
     }),

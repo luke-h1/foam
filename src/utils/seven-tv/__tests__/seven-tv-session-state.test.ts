@@ -120,6 +120,7 @@ describe('reset', () => {
     });
 
     expect(mockSetSevenTvSessionId).toHaveBeenCalledTimes(1);
+
     expect(mockSetSevenTvSessionId).toHaveBeenCalledWith(null);
   });
 
@@ -147,6 +148,7 @@ describe('reset', () => {
     });
 
     expect(mockSetSevenTvSessionId).toHaveBeenCalledTimes(1);
+
     expect(mockSetSevenTvSessionId).toHaveBeenCalledWith(null);
   });
 
@@ -202,6 +204,7 @@ describe('reset', () => {
     jest.advanceTimersByTime(60_000);
 
     expect(onResumeFallback).not.toHaveBeenCalled();
+
     expect(onWatchdogTick).not.toHaveBeenCalled();
   });
 });

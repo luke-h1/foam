@@ -45,6 +45,7 @@ describe('getVisibleMessages', () => {
     });
 
     expect(visible).toHaveLength(1);
+
     expect(visible[0]?.sender).toBe('alpha');
   });
 

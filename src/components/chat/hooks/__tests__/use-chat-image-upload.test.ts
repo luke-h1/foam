@@ -51,6 +51,7 @@ test('uploads the picked image without requesting media library permission', asy
   });
 
   expect(mockRequestPermissions).not.toHaveBeenCalled();
+
   expect(mockUpload).toHaveBeenCalledTimes(1);
 
   expect(mockUpload.mock.calls[0]?.[0]).toEqual<KappaUploadAsset>({
@@ -60,6 +61,7 @@ test('uploads the picked image without requesting media library permission', asy
   });
 
   expect(onUploaded).toHaveBeenCalledWith('https://kappa.lol/abc123');
+
   expect(mockToastSuccess.mock.calls).toEqual([['Image uploaded']]);
 });
 
@@ -74,6 +76,7 @@ test('does nothing when the user cancels the picker', async () => {
   });
 
   expect(mockUpload).not.toHaveBeenCalled();
+
   expect(onUploaded).not.toHaveBeenCalled();
 });
 
@@ -115,7 +118,9 @@ test('shows an error toast when the image picker throws', async () => {
   });
 
   expect(mockUpload).not.toHaveBeenCalled();
+
   expect(onUploaded).not.toHaveBeenCalled();
+
   expect(mockToastError.mock.calls).toEqual([
     ["Couldn't upload that image. Try again."],
   ]);

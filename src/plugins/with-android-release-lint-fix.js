@@ -59,6 +59,7 @@ const withAndroidReleaseLintFix = config => {
         );
       }
     }
+
     return gradleConfig;
   });
 

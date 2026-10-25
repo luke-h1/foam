@@ -307,6 +307,7 @@ function hasNonAsciiChar(word: string): boolean {
       return true;
     }
   }
+
   return false;
 }
 

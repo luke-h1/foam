@@ -27,8 +27,11 @@ describe('routeIrcMessage', () => {
     ];
 
     expect(channel).toBe('#somechannel');
+
     expect(text).toBe('hello world');
+
     expect(tags['login']).toBe('chatter');
+
     expect(tags['display-name']).toBe('Chatter');
   });
 
@@ -56,6 +59,7 @@ describe('routeIrcMessage', () => {
     });
 
     expect(privmsg).not.toHaveBeenCalled();
+
     expect(unhandled).not.toHaveBeenCalled();
   });
 
@@ -115,6 +119,7 @@ describe('routeIrcMessage', () => {
 
     route('NOTICE :Welcome, GLHF!', { notice, channellessNotice });
     expect(channellessNotice).toHaveBeenCalledWith('Welcome, GLHF!');
+
     expect(notice).toHaveBeenCalledTimes(1);
   });
 
@@ -131,6 +136,7 @@ describe('routeIrcMessage', () => {
     });
 
     expect(join).toHaveBeenCalledWith('#somechannel', 'someuser');
+
     expect(token).toHaveBeenCalledWith('#somechannel', 'someuser');
   });
 
@@ -151,6 +157,7 @@ describe('routeIrcMessage', () => {
     });
 
     expect(welcome).toHaveBeenCalledTimes(1);
+
     expect(motd).toHaveBeenCalledTimes(1);
   });
 
@@ -176,6 +183,7 @@ describe('routeIrcMessage', () => {
     );
 
     expect(seen[0]).toBe(seen[1]);
+
     expect(Object.isFrozen(seen[0])).toBe(true);
   });
 

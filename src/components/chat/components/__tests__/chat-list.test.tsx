@@ -225,6 +225,7 @@ describe('ChatList', () => {
     props.onViewableItemsChanged(viewabilityPayload);
 
     expect(onViewableMessagesChange).toHaveBeenCalledTimes(2);
+
     expect(onViewableMessagesChange).toHaveBeenLastCalledWith([visibleMessage]);
   });
 
@@ -291,7 +292,9 @@ describe('ChatList', () => {
 
     const props = getRenderedProps();
     expect(props.maintainScrollAtEnd).toBe(false);
+
     expect(props.maintainScrollAtEndThreshold).toBe(0.1);
+
     expect(props.maintainVisibleContentPosition).toBe(true);
   });
 

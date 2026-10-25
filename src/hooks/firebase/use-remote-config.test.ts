@@ -53,6 +53,7 @@ describe('useRemoteConfig', () => {
     });
 
     expect(refetched).toBe(true);
+
     expect(errorSpy).not.toHaveBeenCalled();
   });
 });

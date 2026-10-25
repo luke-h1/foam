@@ -115,6 +115,7 @@ export function ChatPerfScreen() {
 
       return () => clearTimeout(t);
     }
+
     return undefined;
   }, [suiteParam, runSuite]);
 
@@ -123,6 +124,7 @@ export function ChatPerfScreen() {
       resetFloodReplay();
       setSyntheticChatControl(SYNTHETIC_PRESETS[floodParam]!);
     }
+
     return () => {
       setSyntheticChatControl(SYNTHETIC_PRESETS['off']!);
     };

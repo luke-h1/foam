@@ -56,12 +56,14 @@ describe('openLinkInBrowserAsync', () => {
     await Promise.resolve();
 
     expect(Linking.openURL).toHaveBeenCalledWith('itms-beta://');
+
     expect(resolved).toEqual(false);
 
     handleAppStateChange?.('inactive');
     handleAppStateChange?.('active');
 
     await expect(result).resolves.toEqual(undefined);
+
     expect(removeAppStateListener).toHaveBeenCalledTimes(1);
   });
 });

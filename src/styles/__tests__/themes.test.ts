@@ -3,6 +3,7 @@ import { resolveThemeColor, semanticColorGroups } from '../themes';
 describe('resolveThemeColor', () => {
   test('uses accent color for accent-only groups by default', () => {
     expect(resolveThemeColor('accent')).toBe(semanticColorGroups.accent.accent);
+
     expect(resolveThemeColor('red')).toBe(semanticColorGroups.red.accent);
   });
 
@@ -14,6 +15,7 @@ describe('resolveThemeColor', () => {
     expect(resolveThemeColor('gray.textLow')).toBe(
       semanticColorGroups.gray.textLow,
     );
+
     expect(resolveThemeColor('accent.accentHover')).toBe(
       semanticColorGroups.accent.accentHover,
     );

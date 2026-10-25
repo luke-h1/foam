@@ -25,15 +25,19 @@ function toEntry(value) {
   if (value === true || value === false) {
     return { kind: 'boolean', value };
   }
+
   if (value instanceof ArrayBuffer) {
     return { kind: 'buffer', value };
   }
+
   if (Number.isNaN(value) || value === Number(value)) {
     return { kind: 'number', value };
   }
+
   if (value === String(value)) {
     return { kind: 'string', value };
   }
+
   return { kind: 'other', value };
 }
 

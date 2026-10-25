@@ -116,7 +116,9 @@ describe('ChatInlineImage off-screen pause', () => {
     );
 
     expect(mockImageProps?.autoplay).toBe(false);
+
     expect(mockStartAnimating).not.toHaveBeenCalled();
+
     expect(mockStopAnimating).not.toHaveBeenCalled();
 
     act(() => store.setVisible(true));
@@ -144,6 +146,7 @@ describe('ChatInlineImage off-screen pause', () => {
     act(() => store.setVisible(true));
 
     expect(mockStartAnimating).toHaveBeenCalledTimes(1);
+
     expect(catchSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -160,7 +163,9 @@ describe('ChatInlineImage off-screen pause', () => {
     );
 
     expect(mockImageProps?.autoplay).toBe(true);
+
     expect(mockStartAnimating).not.toHaveBeenCalled();
+
     expect(mockStopAnimating).not.toHaveBeenCalled();
 
     act(() => store.setVisible(false));
@@ -187,6 +192,7 @@ describe('ChatInlineImage off-screen pause', () => {
     );
 
     expect(mockImageProps?.autoplay).toBe(true);
+
     expect(mockStopAnimating).toHaveBeenCalledTimes(1);
   });
 
@@ -224,6 +230,7 @@ describe('ChatInlineImage off-screen pause', () => {
     act(() => mockImageProps?.onLoad?.());
 
     expect(mockStartAnimating).not.toHaveBeenCalled();
+
     expect(mockStopAnimating).not.toHaveBeenCalled();
   });
 
@@ -236,6 +243,7 @@ describe('ChatInlineImage off-screen pause', () => {
     );
 
     expect(mockStartAnimating).not.toHaveBeenCalled();
+
     expect(mockStopAnimating).not.toHaveBeenCalled();
   });
 
@@ -253,6 +261,7 @@ describe('ChatInlineImage off-screen pause', () => {
     );
 
     expect(mockImageProps?.autoplay).toBe(false);
+
     expect(mockStopAnimating).not.toHaveBeenCalled();
 
     act(() => store.setVisible(true));
@@ -275,6 +284,7 @@ describe('ChatInlineImage off-screen pause', () => {
     act(() => store.setVisible(true));
 
     expect(mockStartAnimating).not.toHaveBeenCalled();
+
     expect(mockStopAnimating).not.toHaveBeenCalled();
   });
 
@@ -295,6 +305,7 @@ describe('ChatInlineImage off-screen pause', () => {
     act(() => store.setVisible(false));
 
     expect(mockStartAnimating).not.toHaveBeenCalled();
+
     expect(mockStopAnimating).not.toHaveBeenCalled();
   });
 });
@@ -340,6 +351,7 @@ describe('ChatInlineImage scroll pause', () => {
     renderVisibleEmote();
 
     expect(mockImageProps?.autoplay).toBe(false);
+
     expect(mockStopAnimating).not.toHaveBeenCalled();
 
     act(() => jest.advanceTimersByTime(200));
@@ -369,6 +381,7 @@ describe('ChatInlineImage fallback chain', () => {
     act(() => mockImageProps?.onError?.({ error: 'HTTP 404' }));
 
     expect(evictMock).toHaveBeenCalledWith(`${base}/4x.webp`);
+
     expect(mockImageProps?.recyclingKey).toEqual(`${base}/4x.avif#0`);
 
     // 4x.avif 404s -> drop to the next size down.
@@ -582,6 +595,7 @@ describe('ChatInlineImage load watchdog', () => {
     act(() => jest.advanceTimersByTime(8000));
 
     expect(mockImageProps?.source).toEqual(mockSharedRef);
+
     expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
   });
 
@@ -750,6 +764,7 @@ describe('ChatInlineImage shared-ref recovery', () => {
     act(() => mockImageProps?.onError?.({ error: 'HTTP 404' }));
 
     expect(warnMock).not.toHaveBeenCalled();
+
     expect(mockImageProps?.source).toEqual({ uri: sourceUrl });
   });
 
@@ -767,6 +782,7 @@ describe('ChatInlineImage shared-ref recovery', () => {
     act(() => mockImageProps?.onError?.({ error: 'HTTP 404' }));
 
     expect(mockImageProps?.source).toEqual(mockSharedRef);
+
     expect(warnMock).not.toHaveBeenCalled();
   });
 

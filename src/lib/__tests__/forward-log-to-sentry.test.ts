@@ -49,6 +49,7 @@ describe('forwardLogToSentry warn', () => {
     );
 
     expect(mockCaptureMessage).not.toHaveBeenCalled();
+
     expect(mockWithScope).not.toHaveBeenCalled();
   });
 });
@@ -67,6 +68,7 @@ describe('forwardLogToSentry error', () => {
     const exception = mockCaptureException.mock.calls[0]?.[0];
 
     expect(exception).toBeInstanceOf(Error);
+
     expect(String(exception)).toBe('chat_resources_error: boom');
 
     expect(scope.getScopeData().tags).toEqual({

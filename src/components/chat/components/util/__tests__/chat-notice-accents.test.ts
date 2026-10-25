@@ -16,6 +16,7 @@ describe('chatNoticeAccents', () => {
       expect(noticeSurfaceTint('not-a-color')).toBe(
         'rgba(127, 127, 127, 0.06)',
       );
+
       expect(noticeSurfaceTint('#FFF')).toBe('rgba(127, 127, 127, 0.06)');
     });
   });

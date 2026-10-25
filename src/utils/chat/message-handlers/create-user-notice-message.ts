@@ -26,6 +26,7 @@ function toStringTagRecord(tags: UserNoticeTags) {
     if (value === true || value === false || value === undefined) {
       continue;
     }
+
     result[key] = value;
   }
 

@@ -161,6 +161,7 @@ describe('useComposerDismissGesture', () => {
     });
 
     expect(mockScheduleOnRN).toHaveBeenCalledTimes(2);
+
     expect(mockDismiss).toHaveBeenCalledTimes(2);
   });
 
@@ -175,6 +176,7 @@ describe('useComposerDismissGesture', () => {
     });
 
     expect(mockScheduleOnRN.mock.calls).toEqual([]);
+
     expect(mockDismiss).not.toHaveBeenCalled();
   });
 
@@ -198,7 +200,9 @@ describe('useComposerDismissGesture', () => {
     ]);
 
     expect(mockSharedValue.set.mock.calls.at(-1)).toEqual([0]);
+
     expect(mockScheduleOnRN).toHaveBeenCalledTimes(1);
+
     expect(mockDismiss).toHaveBeenCalledTimes(1);
   });
 });

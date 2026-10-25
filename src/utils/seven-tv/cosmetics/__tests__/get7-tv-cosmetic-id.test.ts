@@ -3,6 +3,7 @@ import { get7TvCosmeticId } from '../get7-tv-cosmetic-id';
 describe('get7TvCosmeticId', () => {
   test('returns id when not zero', () => {
     expect(get7TvCosmeticId({ id: 'abc123' })).toBe('abc123');
+
     expect(get7TvCosmeticId({ id: 'abc123', ref_id: 'ref' })).toBe('abc123');
   });
 

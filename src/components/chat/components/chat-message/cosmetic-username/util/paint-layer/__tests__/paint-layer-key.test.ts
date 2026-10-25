@@ -37,8 +37,11 @@ describe('withPaintLayerKeys', () => {
     const third = keys[2]!;
 
     expect(keys).toEqual([first, second, `${first}#1`]);
+
     expect(first).not.toEqual(second);
+
     expect(first.includes('45')).toBe(true);
+
     expect(third.endsWith('#1')).toBe(true);
   });
 });

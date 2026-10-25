@@ -51,6 +51,7 @@ describe('TopCategoriesScreen', () => {
     render(<TopCategoriesScreen />);
 
     expect(await screen.findByText('Just Chatting')).toBeOnTheScreen();
+
     expect(screen.getByText('Fortnite')).toBeOnTheScreen();
   });
 });

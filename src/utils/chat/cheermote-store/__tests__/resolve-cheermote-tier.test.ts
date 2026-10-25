@@ -14,8 +14,11 @@ describe('resolveCheermoteTier', () => {
     const tiers = getChannelCheermotes('123')!.get('cheer')!;
 
     expect(resolveCheermoteTier(tiers, 1)?.minBits).toEqual(1);
+
     expect(resolveCheermoteTier(tiers, 99)?.minBits).toEqual(1);
+
     expect(resolveCheermoteTier(tiers, 100)?.minBits).toEqual(100);
+
     expect(resolveCheermoteTier(tiers, 25_000)?.minBits).toEqual(100);
   });
 

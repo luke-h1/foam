@@ -26,6 +26,7 @@ describe('channelPollActivity', () => {
     );
 
     expect(channelPollActivity.isActive(active)).toBe(true);
+
     expect(channelPollActivity.isActive(completed)).toBe(false);
   });
 

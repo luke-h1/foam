@@ -230,14 +230,23 @@ describe('StreamPlayer component messaging', () => {
     });
 
     expect(onReady).toHaveBeenCalledTimes(1);
+
     expect(onPlay).toHaveBeenCalledTimes(1);
+
     expect(onPause).toHaveBeenCalledTimes(1);
+
     expect(onEnded).toHaveBeenCalledTimes(1);
+
     expect(onOnline).toHaveBeenCalledTimes(1);
+
     expect(onOffline).toHaveBeenCalledTimes(1);
+
     expect(onContentGateChange).toHaveBeenCalledWith(true);
+
     expect(onPlaybackLatencyChange).toHaveBeenCalledWith(3.4);
+
     expect(onError).toHaveBeenCalledWith('embed failed');
+
     expect(warnSpy).toHaveBeenCalledTimes(1);
 
     // SAFETY: StreamPlayer logs embed errors through the LogMetadata overload of logger.main.error; jest.spyOn erases that overload to unknown[].
@@ -284,6 +293,7 @@ describe('StreamPlayer component messaging', () => {
     sendPlayerMessage({ type: 'pause' });
 
     expect(onPause).not.toHaveBeenCalled();
+
     expect(mockInjectJavaScript).not.toHaveBeenCalled();
 
     act(() => {
@@ -325,6 +335,7 @@ describe('StreamPlayer component messaging', () => {
     });
 
     expect(onPause).toHaveBeenCalledTimes(1);
+
     expect(mockInjectJavaScript).not.toHaveBeenCalled();
   });
 
@@ -353,6 +364,7 @@ describe('StreamPlayer component messaging', () => {
     });
 
     expect(latestWebViewProps().source).toStrictEqual(initialSource);
+
     expect(mockWebViewMountCount).toBe(2);
 
     emitWebViewNavigationStateChange(
@@ -372,6 +384,7 @@ describe('StreamPlayer component messaging', () => {
     });
 
     expect(onWebViewLoaded).toHaveBeenCalledTimes(1);
+
     expect(mockWebViewMountCount).toBe(4);
   });
 
@@ -400,6 +413,7 @@ describe('StreamPlayer component messaging', () => {
     }
 
     expect(injectedJavaScript.includes('twitchAuthComplete')).toEqual(true);
+
     expect(injectedJavaScript.includes('window.playerControls')).toEqual(false);
 
     expect(
@@ -464,6 +478,7 @@ describe('StreamPlayer component messaging', () => {
     );
 
     expect(onWebViewLoaded).toHaveBeenCalledTimes(1);
+
     expect(mockInjectJavaScript).not.toHaveBeenCalled();
   });
 
@@ -517,6 +532,7 @@ describe('StreamPlayer component messaging', () => {
     );
 
     expect(latestWebViewProps().setSupportMultipleWindows).toEqual(false);
+
     expect(latestWebViewProps().onOpenWindow).toEqual(undefined);
   });
 
@@ -543,9 +559,13 @@ describe('StreamPlayer component messaging', () => {
       onShouldStartLoadWithRequest({ ...webViewNavigation(url), isTopFrame });
 
     expect(shouldStart('foam://stream/cohhcarnage')).toBe(false);
+
     expect(shouldStart('exp+foam://stream/cohhcarnage')).toBe(false);
+
     expect(shouldStart('https://www.twitch.tv/cohhcarnage', true)).toBe(true);
+
     expect(shouldStart('https://id.twitch.tv/oauth2', true)).toBe(true);
+
     expect(shouldStart('https://evil.example/frame', false)).toBe(true);
   });
 });

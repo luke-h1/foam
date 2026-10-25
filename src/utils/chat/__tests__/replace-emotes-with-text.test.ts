@@ -161,6 +161,7 @@ describe('replaceEmotesWithText', () => {
     ]);
 
     expect(result).toEqual('Added event');
+
     expect(result).not.toContain('[object Object]');
   });
 

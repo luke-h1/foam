@@ -4,6 +4,7 @@ import { parseIrcMessage } from '../parse-irc-message';
 describe('parseIrcMessage', () => {
   test('returns null for blank lines', () => {
     expect(parseIrcMessage('')).toBeNull();
+
     expect(parseIrcMessage('   ')).toBeNull();
   });
 

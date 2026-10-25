@@ -21,6 +21,7 @@ describe('OnboardingScreen', () => {
     fireEvent.press(screen.getByText('Get started'));
 
     expect(storage.getBoolean('V1_hasSeenOnboarding')).toBe(true);
+
     expect(mockReplace).toHaveBeenCalledWith('/');
   });
 });

@@ -35,6 +35,7 @@ describe('getChatMessageListKey', () => {
     const secondKey = getChatMessageListKey(invalidMessage);
 
     expect(firstKey).toBe(secondKey);
+
     expect(firstKey.startsWith('invalid-message-')).toBe(true);
   });
 

@@ -3,6 +3,7 @@ import { normaliseChatUsername } from '../normalise-chat-username';
 describe('normaliseChatUsername', () => {
   test('returns an empty string for nullish values', () => {
     expect(normaliseChatUsername(null)).toBe('');
+
     expect(normaliseChatUsername(undefined)).toBe('');
   });
 

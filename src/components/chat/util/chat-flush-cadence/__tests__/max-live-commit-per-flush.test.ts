@@ -31,21 +31,26 @@ describe('maxLiveCommitPerFlush', () => {
   test('raises toward arrivals but never past the hard ceiling', () => {
     Platform.OS = 'ios';
     expect(maxLiveCommitPerFlush(true, false, 3)).toBe(8);
+
     expect(maxLiveCommitPerFlush(true, false, 30)).toBe(16);
+
     expect(maxLiveCommitPerFlush(true, true, 30)).toBe(24);
 
     Platform.OS = 'android';
     expect(maxLiveCommitPerFlush(true, false, 30)).toBe(10);
+
     expect(maxLiveCommitPerFlush(true, true, 30)).toBe(16);
   });
 
   test('leaves the backlog uncapped while reading scrollback', () => {
     Platform.OS = 'ios';
     expect(maxLiveCommitPerFlush(false, false)).toBeUndefined();
+
     expect(maxLiveCommitPerFlush(false, true)).toBeUndefined();
 
     Platform.OS = 'android';
     expect(maxLiveCommitPerFlush(false, false)).toBeUndefined();
+
     expect(maxLiveCommitPerFlush(false, true)).toBeUndefined();
   });
 

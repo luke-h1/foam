@@ -5,6 +5,7 @@ describe('farthestCornerEllipseRadii', () => {
     const radii = farthestCornerEllipseRadii(100, 20);
 
     expect(radii.rx).toBeCloseTo(50 * Math.SQRT2, 5);
+
     expect(radii.ry).toBeCloseTo(10 * Math.SQRT2, 5);
   });
 });

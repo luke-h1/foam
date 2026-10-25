@@ -174,6 +174,7 @@ describe('paintBitmapCacheLifecycle', () => {
     flushFrames();
 
     expect(getCachedPaintBitmaps('cold')).toBeUndefined();
+
     expect(getCachedPaintBitmaps('hit')).toBe(hit);
   });
 
@@ -296,7 +297,9 @@ describe('paintBitmapCacheLifecycle', () => {
     flushFrames();
 
     expect(getCachedPaintBitmaps('first')).toBeUndefined();
+
     expect(getCachedPaintBitmaps('second')).toBe(second);
+
     expect(disposeCallCounts(first).staticImage).toBe(1);
   });
 });

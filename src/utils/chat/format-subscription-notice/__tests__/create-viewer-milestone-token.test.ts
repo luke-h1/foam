@@ -52,6 +52,7 @@ describe('createViewerMilestonePart', () => {
     );
 
     expect(token.content).toBe('25 streams KEKW');
+
     expect(token.systemMsg).toBe('Krankel is currently on a 25-stream streak!');
   });
 

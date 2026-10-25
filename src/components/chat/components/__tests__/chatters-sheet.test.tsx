@@ -70,7 +70,9 @@ describe('ChattersSheet', () => {
     });
 
     expect(getByText('Broadcaster · 1')).toBeOnTheScreen();
+
     expect(getByText('Moderators · 1')).toBeOnTheScreen();
+
     expect(getByText('Viewers · 1')).toBeOnTheScreen();
 
     fireEvent.press(getByText('SomeViewer'));
@@ -107,7 +109,9 @@ describe('ChattersSheet', () => {
     fireEvent.changeText(getByPlaceholderText('Filter chatters'), 'viewer');
 
     expect(queryByText('SomeViewer')).toBeOnTheScreen();
+
     expect(queryByText('streamer')).toBeNull();
+
     expect(queryByText(/^Broadcaster/)).toBeNull();
   });
 

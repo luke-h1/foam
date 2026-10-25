@@ -514,6 +514,7 @@ export async function cacheImageFromUrl(
       if (!isCleared() && cachedFile.exists) {
         return cachedFile.uri;
       }
+
       return url;
     }
   });

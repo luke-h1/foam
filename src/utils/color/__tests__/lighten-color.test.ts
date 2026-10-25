@@ -26,7 +26,9 @@ describe('lightenColor', () => {
     const [, r, g, b] = /rgb\((\d+), (\d+), (\d+)\)/.exec(lifted)!.map(Number);
 
     expect(b).toBeGreaterThan(r!);
+
     expect(b).toBeGreaterThan(g!);
+
     expect(Math.min(r!, g!)).toBeLessThan(255);
   });
 

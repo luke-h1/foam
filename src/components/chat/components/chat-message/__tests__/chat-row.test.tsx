@@ -92,6 +92,7 @@ function findTextAncestor(
     if (String(ancestor.type) === 'Text') {
       return ancestor;
     }
+
     ancestor = ancestor.parent;
   }
 
@@ -145,6 +146,7 @@ describe('ChatRow', () => {
     expect(getByText('Hello world')).toBeOnTheScreen();
 
     expect(queryByText('Hello')).toBeNull();
+
     expect(queryByText('world')).toBeNull();
   });
 
@@ -214,6 +216,7 @@ describe('ChatRow', () => {
     const { queryByTestId } = render(<ChatRow {...message} />);
 
     expect(queryByTestId('chat-badge-placeholder')).toBeNull();
+
     expect(queryByTestId('chat-text-placeholder')).toBeNull();
   });
 
@@ -889,6 +892,7 @@ describe('ChatRow', () => {
       );
 
       expect(queryByText('testuser:')).toBeNull();
+
       expect(queryByText('undefined:')).toBeNull();
     });
   });
@@ -1099,7 +1103,9 @@ describe('ChatRow', () => {
     );
 
     expect(getByText('RewardUser redeemed Hydrate')).toBeOnTheScreen();
+
     expect(queryByText('Channel Points reward')).toBeNull();
+
     expect(queryByTestId('chat-username-button')).toBeNull();
   });
 
@@ -1122,10 +1128,15 @@ describe('ChatRow', () => {
     const { getByText, queryByText } = render(<ChatRow {...message} />);
 
     expect(getByText('redeemed')).toBeOnTheScreen();
+
     expect(getByText('Chinese TTS')).toBeOnTheScreen();
+
     expect(getByText('testUser')).toBeOnTheScreen();
+
     expect(getByText('testUser:')).toBeOnTheScreen();
+
     expect(getByText('你好')).toBeOnTheScreen();
+
     expect(queryByText('Channel Points reward')).toBeNull();
   });
 
@@ -1150,7 +1161,9 @@ describe('ChatRow', () => {
     );
 
     expect(getByText('Highlight My Message')).toBeOnTheScreen();
+
     expect(getByText('Rexdain:')).toBeOnTheScreen();
+
     expect(queryByText('redeemed')).toBeNull();
 
     expect(getByTestId('chat-message')).toHaveStyle({

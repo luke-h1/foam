@@ -55,6 +55,7 @@ describe('fetchUserCosmetics', () => {
     await fetchUserCosmetics('cached-user');
 
     expect(mockGet7tvUserId).not.toHaveBeenCalled();
+
     expect(mockSendPresence).not.toHaveBeenCalled();
   });
 
@@ -91,6 +92,7 @@ describe('fetchUserCosmetics', () => {
     await fetchUserCosmetics('failed-user');
 
     expect(mockGet7tvUserId.mock.calls).toEqual([['failed-user']]);
+
     expect(mockSendPresence).not.toHaveBeenCalled();
   });
 

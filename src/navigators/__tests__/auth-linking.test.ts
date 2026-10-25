@@ -43,6 +43,7 @@ describe('authLinking magic-link sign in', () => {
     );
 
     expect(handled).toBe(true);
+
     expect(loginWithTwitch).toHaveBeenCalledTimes(1);
 
     const response = loginWithTwitch.mock.calls[0]?.[0] ?? null;
@@ -52,6 +53,7 @@ describe('authLinking magic-link sign in', () => {
     }
 
     expect(response.authentication?.accessToken).toBe('magic-access-token');
+
     expect(response.params['refresh_token']).toBe('magic-refresh-token');
   });
 });
@@ -76,6 +78,7 @@ describe('authLinking native callback host restriction', () => {
     expect(isAuthCallbackUrl(`https://twitch.tv/auth?${tokenQuery}`)).toBe(
       false,
     );
+
     expect(isAuthCallbackUrl(`https://evil.example/auth?${tokenQuery}`)).toBe(
       false,
     );

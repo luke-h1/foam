@@ -5,6 +5,7 @@ import { isTilingCanvasRepeat } from '../is-tiling-canvas-repeat';
 describe('isTilingCanvasRepeat', () => {
   test('layer.repeat forces tiling regardless of canvas_repeat', () => {
     expect(isTilingCanvasRepeat('unset', true)).toBe(true);
+
     expect(isTilingCanvasRepeat('no-repeat', true)).toBe(true);
   });
 

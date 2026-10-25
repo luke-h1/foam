@@ -194,8 +194,11 @@ describe('useChatLifecycle', () => {
       });
 
       expect(partChannel.mock.calls).toEqual([['testchannel']]);
+
       expect(cancelEmoteLoad).toHaveBeenCalledTimes(1);
+
       expect(clearLocalMessages).toHaveBeenCalledTimes(1);
+
       expect(defaultProps.isMountedRef.current).toBe(false);
     });
 
@@ -231,9 +234,13 @@ describe('useChatLifecycle', () => {
       });
 
       expect(unsubscribe).toHaveBeenCalledTimes(1);
+
       expect(cancelEmoteLoad).toHaveBeenCalledTimes(1);
+
       expect(clearLocalMessages).toHaveBeenCalledTimes(1);
+
       expect(cleanupScroll).toHaveBeenCalledTimes(2);
+
       expect(cleanupMessages).toHaveBeenCalledTimes(2);
     });
 
@@ -270,7 +277,9 @@ describe('useChatLifecycle', () => {
       rerender({ channelId: 'channel-b' });
 
       expect(visibleAssetHydration.personalEmoteUsers.size).toBe(0);
+
       expect(visibleAssetHydration.cosmeticUsers.size).toBe(0);
+
       expect(visibleAssetHydration.hydratedMessageKeys.size).toBe(0);
     });
 

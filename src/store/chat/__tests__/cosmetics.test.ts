@@ -73,6 +73,7 @@ describe('getUserBadge', () => {
     chatStore$.badges.set({ 'badge-1': badge });
 
     expect(getUserBadge('ttv-1')).toEqual<SanitisedBadgeSet>(badge);
+
     expect(getMissingBadgeIds()).toEqual([]);
   });
 
@@ -261,6 +262,7 @@ describe('requestUserCosmeticsViaPresence', () => {
     await requestUserCosmeticsViaPresence('ttv-1');
 
     expect(mockSendPresence).not.toHaveBeenCalled();
+
     expect(mockGetUserCosmeticsGql.mock.calls).toEqual([['7tv-user-1']]);
   });
 
@@ -271,6 +273,7 @@ describe('requestUserCosmeticsViaPresence', () => {
     await requestUserCosmeticsViaPresence('ttv-1');
 
     expect(mockSendPresence).not.toHaveBeenCalled();
+
     expect(mockGetUserCosmeticsGql).not.toHaveBeenCalled();
   });
 });

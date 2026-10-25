@@ -122,7 +122,9 @@ describe('chatIngestController (headless line → commit)', () => {
     expect(committed).toHaveLength(1);
     const message = committed[0]!;
     expect(message.message_id).toBe('msg-1');
+
     expect(message.userstate.login).toBe('chatter');
+
     expect(message.pendingEmoteParse).toBeUndefined();
 
     expect(
@@ -141,6 +143,7 @@ describe('chatIngestController (headless line → commit)', () => {
     jest.advanceTimersByTime(5000);
 
     expect(committedMessages()).toHaveLength(1);
+
     expect(getChatUnreadCount()).toBe(1);
   });
 
@@ -192,7 +195,9 @@ describe('chatIngestController (headless line → commit)', () => {
     }
 
     expect(sequence).toBe(600);
+
     expect(maxLagMs).toBeLessThanOrEqual(200);
+
     expect(maxBufferSize).toBeLessThanOrEqual(30);
   });
 
@@ -230,7 +235,9 @@ describe('chatIngestController (headless line → commit)', () => {
     const committed = committedMessages();
 
     expect(committed).toHaveLength(backpressureChunk);
+
     expect(controller.getBufferSize()).toBe(151 - backpressureChunk);
+
     expect(committed.map(message => message.message_id)).toEqual(
       Array.from(
         { length: backpressureChunk },
@@ -250,6 +257,7 @@ describe('chatIngestController (headless line → commit)', () => {
 
     jest.advanceTimersByTime(1000);
     expect(committedMessages()).toHaveLength(0);
+
     expect(controller.getBufferSize()).toBe(149);
 
     for (let index = 150; index <= 160; index += 1) {
@@ -258,13 +266,16 @@ describe('chatIngestController (headless line → commit)', () => {
 
     const backpressureChunk = maxBackpressureCommitPerFlush();
     expect(committedMessages()).toHaveLength(backpressureChunk);
+
     expect(controller.getBufferSize()).toBe(160 - backpressureChunk);
 
     controller.forceFlush();
 
     const committedIds = committedMessages().map(message => message.message_id);
     expect(committedIds[0]).toBe('msg-11');
+
     expect(committedIds.at(-1)).toBe('msg-160');
+
     expect(committedIds).toHaveLength(150);
   });
 

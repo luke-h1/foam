@@ -44,6 +44,7 @@ const scheduleCosmeticBindingsBump = (): void => {
   if (cosmeticBindingsBumpTimer) {
     return;
   }
+
   cosmeticBindingsBumpTimer = setTimeout(() => {
     cosmeticBindingsBumpTimer = null;
     invalidateBakedBadges();
@@ -364,6 +365,7 @@ const flushUserCosmeticsSnapshotsBeforeBindingsClear = (): void => {
     clearTimeout(userCosmeticsSnapshotTimer);
     userCosmeticsSnapshotTimer = null;
   }
+
   flushPendingUserCosmeticsSnapshots();
 };
 

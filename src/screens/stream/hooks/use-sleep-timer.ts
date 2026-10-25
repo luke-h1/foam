@@ -56,6 +56,7 @@ export function useSleepTimer({ onExpire }: UseSleepTimerOptions): SleepTimer {
     if (deadline === null) {
       return 0;
     }
+
     return Math.max(1, Math.ceil((deadline - Date.now()) / 60_000));
   }, [deadline]);
 

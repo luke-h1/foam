@@ -48,6 +48,7 @@ const emotePart = (token: MessageToken | undefined): MessageToken<'emote'> => {
       `expected an emote token, received ${token?.type ?? 'none'}`,
     );
   }
+
   return token;
 };
 

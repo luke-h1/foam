@@ -490,6 +490,7 @@ describe('interpretSevenTvWsMessage', () => {
       }
 
       expect(failure.eventType).toBe('emote_set.update');
+
       expect(failure.error).toBeInstanceOf(TypeError);
 
       expect(notify).toEqual<SevenTvWsDecision>({
@@ -603,6 +604,7 @@ describe('interpretSevenTvWsMessage', () => {
       }
 
       expect(failure.eventType).toBe('cosmetic.create');
+
       expect(failure.error).toBeInstanceOf(TypeError);
     });
   });
@@ -767,6 +769,7 @@ describe('interpretSevenTvWsMessage', () => {
       }
 
       expect(failure.eventType).toBe('entitlement.create');
+
       expect(failure.error).toBeInstanceOf(TypeError);
     });
   });

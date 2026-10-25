@@ -39,11 +39,13 @@ describe('channel cache persistence', () => {
     chatStore$.persisted.channelCaches['channel-1']?.lastUpdated.set(2);
 
     expect(caches.getAllKeys()).toEqual([]);
+
     expect(index.getAllKeys()).toEqual([]);
 
     flushWrites();
 
     expect(caches.getAllKeys()).toEqual(['channel-1']);
+
     expect(index.getNumber('channel-1')).toEqual(2);
 
     expect(readPersistedChannelCache('channel-1')).toEqual<ChannelCacheType>(
@@ -85,6 +87,7 @@ describe('channel cache persistence', () => {
     flushWrites();
 
     expect(caches.getAllKeys()).toEqual(['channel-2']);
+
     expect(index.getAllKeys()).toEqual(['channel-2']);
   });
 
@@ -136,6 +139,7 @@ describe('channel cache persistence', () => {
     );
 
     expect(caches.getAllKeys()).toEqual([]);
+
     expect(index.getAllKeys()).toEqual([]);
   });
 
@@ -150,9 +154,13 @@ describe('channel cache persistence', () => {
     });
 
     expect(prunePersistedChannelCaches('channel-0')).toEqual(['channel-1']);
+
     expect(caches.contains('channel-new')).toEqual(true);
+
     expect(index.getAllKeys()).toHaveLength(MAX_CACHED_CHANNELS);
+
     expect(caches.contains('channel-0')).toEqual(true);
+
     expect(caches.contains('channel-1')).toEqual(false);
   });
 });

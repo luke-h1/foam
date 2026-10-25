@@ -58,7 +58,9 @@ describe('cosmeticsPersistence', () => {
     const loaded = loadPersistedCosmetics();
 
     expect(loaded?.paints['paint-1']).toEqual(makePaint('paint-1'));
+
     expect(loaded?.userPaintIds).toEqual({ 'user-1': 'paint-1' });
+
     expect(loaded?.userBadgeIds).toEqual({ 'user-1': 'badge-1' });
   });
 

@@ -160,6 +160,7 @@ export function BottomSheet({
         if (dismissTimerRef.current !== null) {
           return;
         }
+
         dismissTimerRef.current = setTimeout(() => {
           dismissTimerRef.current = null;
           onDismissRef.current();

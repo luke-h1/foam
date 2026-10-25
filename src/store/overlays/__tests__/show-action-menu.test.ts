@@ -37,6 +37,7 @@ describe('showActionMenu', () => {
     });
 
     expect(onPress).toHaveBeenCalledTimes(1);
+
     expect(getActionMenuState()).toBeNull();
   });
 

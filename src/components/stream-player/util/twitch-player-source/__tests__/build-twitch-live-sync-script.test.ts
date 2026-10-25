@@ -67,6 +67,7 @@ describe('buildTwitchLiveSyncScript', () => {
     });
 
     expect(installLiveSync(video)()).toBe(true);
+
     expect(video.currentTime).toBe(97);
   });
 
@@ -79,6 +80,7 @@ describe('buildTwitchLiveSyncScript', () => {
     });
 
     expect(installLiveSync(video)()).toBe(true);
+
     expect(video.currentTime).toBe(39);
   });
 
@@ -89,6 +91,7 @@ describe('buildTwitchLiveSyncScript', () => {
     });
 
     expect(installLiveSync(video)()).toBe(false);
+
     expect(video.currentTime).toBe(10);
   });
 
@@ -100,6 +103,7 @@ describe('buildTwitchLiveSyncScript', () => {
     });
 
     expect(installLiveSync(video)()).toBe(false);
+
     expect(video.currentTime).toBe(98);
   });
 
@@ -111,6 +115,7 @@ describe('buildTwitchLiveSyncScript', () => {
     });
 
     expect(installLiveSync(video)()).toBe(false);
+
     expect(video.currentTime).toBe(80);
   });
 
@@ -118,6 +123,7 @@ describe('buildTwitchLiveSyncScript', () => {
     const video = makeVideo({ currentTime: 12 });
 
     expect(installLiveSync(video)()).toBe(false);
+
     expect(video.currentTime).toBe(12);
   });
 });

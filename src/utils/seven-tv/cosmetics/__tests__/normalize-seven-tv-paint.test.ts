@@ -65,8 +65,11 @@ describe('normalizeSevenTvPaint', () => {
     });
 
     expect(paint.function).toBe('RADIAL_GRADIENT');
+
     expect(paint.shape).toBe('ellipse');
+
     expect(paint.layers.length).toBe(2);
+
     expect(paint.layers[1]?.function).toBe('LINEAR_GRADIENT');
 
     expect(paint.stops).toEqual<IndexedCollection<PaintStop>>({
@@ -97,7 +100,9 @@ describe('normalizeSevenTvPaint', () => {
     });
 
     expect(paint.layers.length).toBe(2);
+
     expect(paint.layers[1]?.function).toBe('URL');
+
     expect(paint.layers[1]?.repeat).toBe(true);
   });
 

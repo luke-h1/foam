@@ -97,6 +97,7 @@ describe('FollowingScreen', () => {
     renderFollowingScreen({ loggedIn: false });
 
     expect(screen.getByText('Your followed streams')).toBeOnTheScreen();
+
     expect(screen.getByText('Sign in')).toBeOnTheScreen();
   });
 
@@ -177,6 +178,7 @@ describe('FollowingScreen', () => {
     renderFollowingScreen({ loggedIn: true });
 
     expect(await screen.findByText('SleepyStreamer')).toBeOnTheScreen();
+
     expect(screen.getByText(/^Offline/)).toBeOnTheScreen();
 
     // The live channel is filtered out of the offline section, so its name appears once (on the live card).
@@ -200,10 +202,13 @@ describe('FollowingScreen', () => {
     renderFollowingScreen({ loggedIn: true });
 
     expect(await screen.findByText('SleepyStreamer')).toBeOnTheScreen();
+
     expect(screen.getByText(/^Offline/)).toBeOnTheScreen();
+
     expect(
       screen.getByText('Nobody you follow is live right now.'),
     ).toBeOnTheScreen();
+
     expect(screen.queryByText('No one is live')).not.toBeOnTheScreen();
   });
 });

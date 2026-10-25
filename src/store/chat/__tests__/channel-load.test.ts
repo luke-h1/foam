@@ -337,14 +337,20 @@ describe('loadChannelResources cache fallback', () => {
     );
 
     expect(ids(cache!.sevenTvChannelEmotes)).toEqual(['seven-channel-cached']);
+
     expect(cache!.bttvChannelEmotes).toEqual([]);
+
     expect(ids(cache!.ffzChannelEmotes)).toEqual(['ffz-channel-cached']);
+
     expect(ids(cache!.ffzChannelBadges)).toEqual(['ffz-channel-badge-cached']);
+
     expect(cache!.lastUpdated).toBe(1000);
+
     expect(cache!.badgesLastUpdated).toBe(2000);
 
     const globalCache = chatStore$.persisted.globalCaches.peek();
     expect(ids(globalCache.bttvGlobalEmotes)).toEqual(['bttv-global-cached']);
+
     expect(ids(globalCache.ffzGlobalEmotes)).toEqual(['ffz-global-cached']);
 
     expect(ids(globalCache.ffzGlobalBadges)).toEqual([
@@ -352,6 +358,7 @@ describe('loadChannelResources cache fallback', () => {
     ]);
 
     expect(ids(globalCache.twitchGlobalEmotes)).toEqual(['twitch-global-new']);
+
     expect(globalCache.lastUpdated).toBe(1000);
   });
 
@@ -382,9 +389,13 @@ describe('loadChannelResources cache fallback', () => {
     const cache = chatStore$.persisted.channelCaches.peek()[channelId];
 
     expect(mockListTwitchChannelBadges).toHaveBeenCalledTimes(1);
+
     expect(ids(cache!.ffzChannelBadges)).toEqual(['ffz-channel-badge-cached']);
+
     expect(cache!.badgesLastUpdated).toBe(9000);
+
     expect(cache!.lastUpdated).toBe(3_650_000);
+
     expect(mockGetFfzGlobalBadges).not.toHaveBeenCalled();
   });
 
@@ -414,6 +425,7 @@ describe('loadChannelResources cache fallback', () => {
 
     const globalCache = chatStore$.persisted.globalCaches.peek();
     expect(ids(globalCache.bttvGlobalEmotes)).toEqual(['bttv-global-new']);
+
     expect(ids(globalCache.twitchGlobalEmotes)).toEqual(['twitch-global-new']);
 
     expect(ids(globalCache.ffzGlobalBadges)).toEqual([
@@ -421,7 +433,9 @@ describe('loadChannelResources cache fallback', () => {
     ]);
 
     expect(globalCache.lastUpdated).toBe(9000);
+
     expect(mockGetChannelEmotes).not.toHaveBeenCalled();
+
     expect(mockListTwitchChannelBadges).not.toHaveBeenCalled();
 
     const cache = chatStore$.persisted.channelCaches.peek()[channelId];
@@ -433,24 +447,33 @@ describe('loadChannelResources cache fallback', () => {
 
     const globalCache = chatStore$.persisted.globalCaches.peek();
     expect(ids(globalCache.twitchGlobalEmotes)).toEqual(['twitch-global-new']);
+
     expect(ids(globalCache.bttvGlobalEmotes)).toEqual(['bttv-global-new']);
+
     expect(ids(globalCache.ffzGlobalEmotes)).toEqual(['ffz-global-new']);
+
     expect(ids(globalCache.ffzGlobalBadges)).toEqual(['ffz-global-badge-new']);
+
     expect(globalCache.lastUpdated).toBe(10_000);
 
     const cache = chatStore$.persisted.channelCaches.peek()[channelId];
     expect('twitchGlobalEmotes' in cache!).toBe(false);
+
     expect('ffzGlobalBadges' in cache!).toBe(false);
   });
 
   test('invalidating the resource caches stale-stamps the channel and drops memoised global fetches', async () => {
     await expect(loadChannelResources({ channelId })).resolves.toBe(true);
+
     expect(mockGetFfzGlobalEmotes).toHaveBeenCalledTimes(1);
+
     expect(mockListTwitchGlobalBadges).toHaveBeenCalledTimes(1);
 
     chatStore$.persisted.channelCaches.set({});
     await expect(loadChannelResources({ channelId })).resolves.toBe(true);
+
     expect(mockGetFfzGlobalEmotes).toHaveBeenCalledTimes(1);
+
     expect(mockListTwitchGlobalBadges).toHaveBeenCalledTimes(1);
 
     cheermoteFetchGuard.markFetched(channelId);
@@ -464,11 +487,14 @@ describe('loadChannelResources cache fallback', () => {
     }).toEqual({ badgesLastUpdated: 0, lastUpdated: 0 });
 
     expect(mockClearBttvBadgesCache).toHaveBeenCalledTimes(1);
+
     expect(cheermoteFetchGuard.hasFetched(channelId)).toBe(false);
 
     chatStore$.persisted.channelCaches.set({});
     await expect(loadChannelResources({ channelId })).resolves.toBe(true);
+
     expect(mockGetFfzGlobalEmotes).toHaveBeenCalledTimes(2);
+
     expect(mockListTwitchGlobalBadges).toHaveBeenCalledTimes(2);
   });
 
@@ -504,8 +530,11 @@ describe('loadChannelResources cache fallback', () => {
 
     const cache = chatStore$.persisted.channelCaches.peek()[channelId];
     expect(cache!.sevenTvChannelEmotes).toEqual([]);
+
     expect(cache!.bttvChannelEmotes).toEqual([]);
+
     expect(cache!.ffzChannelEmotes).toEqual([]);
+
     expect(cache!.ffzChannelBadges).toEqual([]);
 
     expect(cache!.twitchChannelEmotes).toEqual<SanitisedEmote[]>([
@@ -520,7 +549,9 @@ describe('loadChannelResources cache fallback', () => {
 
     const globalCache = chatStore$.persisted.globalCaches.peek();
     expect(globalCache.bttvGlobalEmotes).toEqual([]);
+
     expect(globalCache.ffzGlobalEmotes).toEqual([]);
+
     expect(globalCache.ffzGlobalBadges).toEqual([]);
 
     expect(globalCache.twitchGlobalEmotes).toEqual<SanitisedEmote[]>([
@@ -550,10 +581,15 @@ describe('loadChannelResources cache fallback', () => {
       .join('');
 
     expect(text).toContain('BTTV');
+
     expect(text).toContain('FFZ');
+
     expect(text).toContain("Couldn't load emotes and badges");
+
     expect(text).not.toContain('falling back');
+
     expect(text).not.toContain('Twitch');
+
     expect(text).not.toContain('7TV');
   });
 
@@ -594,7 +630,9 @@ describe('loadChannelResources cache fallback', () => {
       .join('');
 
     expect(text).toContain('BTTV');
+
     expect(text).toContain('FFZ');
+
     expect(text).toContain('. Using cached ones.');
   });
 
@@ -632,6 +670,7 @@ describe('loadChannelResources cache fallback', () => {
       .join('');
 
     expect(text).toContain('FFZ');
+
     expect(text).toContain('. Using cached ones.');
   });
 
@@ -860,6 +899,7 @@ describe('resolveSubscriberChannelProfiles', () => {
     await resolveSubscriberChannelProfiles(channelId);
 
     expect(mockGetUsersById).toHaveBeenCalledTimes(2);
+
     expect(mockGetUsersById).toHaveBeenNthCalledWith(2, ['100']);
     const cache = chatStore$.persisted.channelCaches.peek()[channelId];
 
@@ -983,6 +1023,7 @@ describe('switchSevenTvEmoteSet', () => {
 
     const cache = chatStore$.persisted.channelCaches.peek()[channelId];
     expect(cache!.sevenTvEmoteSetId).toBe('set-b');
+
     expect(ids(cache!.sevenTvChannelEmotes)).toEqual(['emote-b']);
   });
 
@@ -990,6 +1031,7 @@ describe('switchSevenTvEmoteSet', () => {
     await expect(switchSevenTvEmoteSet(channelId, 'set-a')).resolves.toBe(
       false,
     );
+
     expect(mockGetSanitisedEmoteSet).not.toHaveBeenCalled();
   });
 
@@ -1015,6 +1057,7 @@ describe('switchSevenTvEmoteSet', () => {
 
     const cache = chatStore$.persisted.channelCaches.peek()[channelId];
     expect(cache!.sevenTvEmoteSetId).toBe('set-c');
+
     expect(ids(cache!.sevenTvChannelEmotes)).toEqual(['emote-c']);
   });
 });

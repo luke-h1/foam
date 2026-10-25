@@ -69,6 +69,7 @@ function onCosmeticCreate(data: CosmeticCreateCallbackData) {
   if (!data.cosmetic?.object) {
     return;
   }
+
   applyCosmeticCreateEvent(data.cosmetic, data.kind);
 }
 

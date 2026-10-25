@@ -746,6 +746,7 @@ function valueOrDefault(
   if (value !== undefined) {
     return value;
   }
+
   return defaultValue ?? '';
 }
 

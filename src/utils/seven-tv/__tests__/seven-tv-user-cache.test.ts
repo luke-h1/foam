@@ -308,6 +308,7 @@ describe('sevenTvUserCache', () => {
     const first = await cache.resolve('123', fetchUser);
 
     expect(first).toBeNull();
+
     expect(storage.backing).toEqual(new Map());
 
     fetchUser.mockImplementation(async () => sevenTvUser('stv-1'));

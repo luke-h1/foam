@@ -103,6 +103,7 @@ describe('chatStore messages', () => {
 
     const messages = chatStore$.messages.peek();
     expect(messages).toHaveLength(max);
+
     expect(getMessageById('old')).toBeUndefined();
 
     // The front of the burst is dropped too, so the window ends on the newest.
@@ -126,8 +127,11 @@ describe('chatStore messages', () => {
 
     const messages = chatStore$.messages.peek();
     expect(messages).toHaveLength(max);
+
     expect(getMessageById('seed-0')).toBeUndefined();
+
     expect(getMessageById('seed-1')?.message_id).toBe('seed-1');
+
     expect(getMessageById('fresh')?.message_id).toBe('fresh');
   });
 
@@ -138,7 +142,9 @@ describe('chatStore messages', () => {
     removeMessageById('msg-1');
 
     expect(getMessageById('msg-1')).toBeUndefined();
+
     expect(getMessageById('msg-2')?.message_id).toBe('msg-2');
+
     expect(chatStore$.messages.peek()).toHaveLength(1);
   });
 
@@ -148,6 +154,7 @@ describe('chatStore messages', () => {
     addMessage(createMessage('msg-1', 'nonce-1', 'first'));
 
     expect(chatStore$.messages.peek()).not.toBe(before);
+
     expect(chatStore$.messages.peek()).toHaveLength(1);
   });
 
@@ -414,6 +421,7 @@ describe('chatStore messages', () => {
     ]);
 
     expect(chatStore$.messages.peek()).toHaveLength(1);
+
     expect(chatStore$.messages.peek()[0]?.message_id).toBe('msg-1');
   });
 
@@ -466,8 +474,11 @@ describe('chatStore messages', () => {
     const lastId = total - 1;
 
     expect(messages).toHaveLength(cap);
+
     expect(messages[0]?.message_id).toBe('msg-50');
+
     expect(messages.at(-1)?.message_id).toBe(`msg-${lastId}`);
+
     expect(getMessageById('msg-0')).toBeUndefined();
 
     expect(getMessageById(`msg-${lastId}`)?.message).toEqual<MessageToken[]>([
@@ -494,7 +505,9 @@ describe('chatStore messages', () => {
 
     const messages = chatStore$.messages.peek();
     expect(messages).toHaveLength(cap);
+
     expect(messages[0]?.message_id).toBe('msg-10');
+
     expect(getMessageById('msg-9')).toBeUndefined();
 
     const survivor = cap - 50;

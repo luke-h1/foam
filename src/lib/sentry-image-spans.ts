@@ -181,6 +181,7 @@ function sourceUrl(source: ImageLoadSource): string | undefined {
   if (isImageSourceObject(source)) {
     return source.uri;
   }
+
   return isAssetModuleId(source) ? undefined : source;
 }
 

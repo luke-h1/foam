@@ -66,8 +66,11 @@ describe('getMinimumVersion', () => {
     Platform.OS = 'ios';
 
     expect(getMinimumVersion('production', remoteConfig)).toBe('2.3.0');
+
     expect(getMinimumVersion('testflight', remoteConfig)).toBe('2.2.0');
+
     expect(getMinimumVersion('internal', remoteConfig)).toBe('2.1.0');
+
     expect(getMinimumVersion('development', remoteConfig)).toBe('2.0.0');
   });
 
@@ -75,8 +78,11 @@ describe('getMinimumVersion', () => {
     Platform.OS = 'android';
 
     expect(getMinimumVersion('production', remoteConfig)).toBe('1.3.0');
+
     expect(getMinimumVersion('testflight', remoteConfig)).toBe('1.2.0');
+
     expect(getMinimumVersion('internal', remoteConfig)).toBe('1.1.0');
+
     expect(getMinimumVersion('development', remoteConfig)).toBe('1.0.0');
   });
 

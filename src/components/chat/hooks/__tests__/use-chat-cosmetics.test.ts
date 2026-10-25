@@ -69,6 +69,7 @@ describe('useChatCosmetics', () => {
     });
 
     expect(mockGet7tvUserId.mock.calls).toEqual([['ttv-self']]);
+
     expect(mockGetUserCosmeticsGql.mock.calls).toEqual([['7tv-user-1']]);
   });
 
@@ -90,6 +91,7 @@ describe('useChatCosmetics', () => {
     });
 
     expect(mockGet7tvUserId).not.toHaveBeenCalled();
+
     expect(mockGetUserCosmeticsGql).not.toHaveBeenCalled();
   });
 
@@ -110,6 +112,7 @@ describe('useChatCosmetics', () => {
     });
 
     expect(mockGet7tvUserId).not.toHaveBeenCalled();
+
     expect(mockGetUserCosmeticsGql).not.toHaveBeenCalled();
   });
 
@@ -130,6 +133,7 @@ describe('useChatCosmetics', () => {
     });
 
     expect(mockGet7tvUserId).not.toHaveBeenCalled();
+
     expect(mockGetUserCosmeticsGql).not.toHaveBeenCalled();
   });
 

@@ -127,7 +127,9 @@ describe('useChatMessages', () => {
       );
 
       expect(result.current.cleanup).toBe(firstRender.cleanup);
+
       expect(result.current.forceFlush).toBe(firstRender.forceFlush);
+
       expect(result.current.getBufferSize).toBe(firstRender.getBufferSize);
     });
   });
@@ -175,6 +177,7 @@ describe('useChatMessages', () => {
       });
 
       expect(storedIds()).toEqual([]);
+
       expect(result.current.getBufferSize()).toBe(0);
 
       act(() => {
@@ -242,6 +245,7 @@ describe('useChatMessages', () => {
       });
 
       expect(storedIds()).toEqual([]);
+
       expect(result.current.getBufferSize()).toBe(0);
     });
   });
@@ -297,6 +301,7 @@ describe('useChatMessages', () => {
       });
 
       expect(storedIds()).toEqual([]);
+
       expect(result.current.getBufferSize()).toBe(1);
 
       act(() => {
@@ -311,7 +316,9 @@ describe('useChatMessages', () => {
 
       const [flushedMessage] = storedMessages();
       expect(flushedMessage?.message_id).toBe('1');
+
       expect(flushedMessage?.message_nonce).toBe('nonce-1');
+
       expect(result.current.getBufferSize()).toBe(0);
     });
 
@@ -337,7 +344,9 @@ describe('useChatMessages', () => {
 
       const [flushedMessage] = storedMessages();
       expect(flushedMessage?.message_id).toBe('1');
+
       expect(flushedMessage?.message_nonce).toBe('nonce-1');
+
       expect(result.current.getBufferSize()).toBe(0);
     });
 
@@ -357,6 +366,7 @@ describe('useChatMessages', () => {
       });
 
       expect(storedIds()).toEqual(['1', '2']);
+
       expect(result.current.getBufferSize()).toBe(0);
     });
 
@@ -379,7 +389,9 @@ describe('useChatMessages', () => {
 
       const [flushedMessage] = storedMessages();
       expect(flushedMessage?.message_id).toBe('1');
+
       expect(flushedMessage?.message_nonce).toBe('nonce-1');
+
       expect(onBottomContentChange).not.toHaveBeenCalled();
     });
 
@@ -403,7 +415,9 @@ describe('useChatMessages', () => {
 
       const [flushedMessage] = storedMessages();
       expect(flushedMessage?.message_id).toBe('1');
+
       expect(flushedMessage?.message_nonce).toBe('nonce-1');
+
       expect(onBottomContentChange).toHaveBeenCalledTimes(1);
     });
 
@@ -425,6 +439,7 @@ describe('useChatMessages', () => {
       });
 
       expect(storedIds()).toEqual(['1']);
+
       expect(onBottomContentChange).not.toHaveBeenCalled();
     });
 
@@ -471,6 +486,7 @@ describe('useChatMessages', () => {
       });
 
       expect(result.current.getBufferSize()).toBe(3);
+
       expect(storedIds()).toEqual([]);
 
       act(() => {
@@ -599,6 +615,7 @@ describe('useChatMessages', () => {
               hasQueued = true;
               result.current.handleNewMessage(createMockMessage('2'));
             }
+
             return message;
           },
         }),
@@ -613,6 +630,7 @@ describe('useChatMessages', () => {
       });
 
       expect(storedIds()).toEqual(['1']);
+
       expect(result.current.getBufferSize()).toBe(1);
 
       act(() => {
@@ -620,6 +638,7 @@ describe('useChatMessages', () => {
       });
 
       expect(storedIds()).toEqual(['1', '2']);
+
       expect(result.current.getBufferSize()).toBe(0);
     });
 
@@ -712,8 +731,11 @@ describe('useChatMessages', () => {
 
       const flushedMessages = storedMessages();
       expect(flushedMessages).toHaveLength(250);
+
       expect(flushedMessages[0]?.message_id).toBe('0');
+
       expect(flushedMessages.at(-1)?.message_id).toBe('249');
+
       expect(result.current.getBufferSize()).toBe(0);
     });
 
@@ -764,6 +786,7 @@ describe('useChatMessages', () => {
         for (let i = 0; i < pushCount; i += 1) {
           result.current.handleNewMessage(createMockMessage(`${i}`));
         }
+
         jest.advanceTimersByTime(1000);
       });
 
@@ -794,6 +817,7 @@ describe('useChatMessages', () => {
       });
 
       expect(storedIds()).toEqual([]);
+
       expect(result.current.getBufferSize()).toBe(1);
 
       activelyScrolling = false;
@@ -831,7 +855,9 @@ describe('useChatMessages', () => {
       expect(flushedMessages).toHaveLength(24);
 
       expect(flushedMessages[0]?.message_id).toBe('0');
+
       expect(flushedMessages.at(-1)?.message_id).toBe('23');
+
       expect(result.current.getBufferSize()).toBe(26);
     });
 
@@ -852,6 +878,7 @@ describe('useChatMessages', () => {
         for (let i = 0; i < 40; i += 1) {
           result.current.handleNewMessage(createMockMessage(`${i}`));
         }
+
         jest.advanceTimersByTime(180);
       });
 
@@ -875,6 +902,7 @@ describe('useChatMessages', () => {
         for (let i = 0; i < 20; i += 1) {
           result.current.handleNewMessage(createMockMessage(`${i}`));
         }
+
         jest.advanceTimersByTime(100);
       });
 
@@ -953,6 +981,7 @@ describe('useChatMessages', () => {
         for (let i = 0; i < pushCount; i += 1) {
           result.current.handleNewMessage(createMockMessage(`${i}`));
         }
+
         jest.advanceTimersByTime(250);
       });
 
@@ -999,6 +1028,7 @@ describe('useChatMessages', () => {
         for (let i = 0; i < 20; i += 1) {
           result.current.handleNewMessage(createMockMessage(`${i}`));
         }
+
         jest.advanceTimersByTime(100);
       });
 

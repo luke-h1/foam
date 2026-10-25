@@ -677,6 +677,7 @@ class TwitchWsService {
         subscriptionIds.push(entry.subscriptionId);
         entry.subscriptionId = null;
       }
+
       if (entry.callbacks.length === 0) {
         TwitchWsService.entries.delete(key);
       }
@@ -736,6 +737,7 @@ class TwitchWsService {
         return true;
       }
     }
+
     return false;
   }
 

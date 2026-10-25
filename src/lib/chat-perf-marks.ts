@@ -12,6 +12,7 @@ function markBuffered(): void {
   if (pendingBufferedAt.length < MAX_PENDING_TIMESTAMPS) {
     pendingBufferedAt.push(performance.now());
   }
+
   performance.mark('chat.buffered');
 }
 

@@ -346,6 +346,7 @@ export function createChatIrcHandlers({
     if (!getPreferences().showJoinPartMessages) {
       return;
     }
+
     appendSystemMessage(`${username} joined`);
   };
 
@@ -353,6 +354,7 @@ export function createChatIrcHandlers({
     if (!getPreferences().showJoinPartMessages) {
       return;
     }
+
     appendSystemMessage(`${username} parted`);
   };
 

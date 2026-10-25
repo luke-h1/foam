@@ -65,6 +65,7 @@ describe('handleMutationError', () => {
     handleMutationError(new Error('boom'), { suppressErrorToast: true });
 
     expect(errorMock).toHaveBeenCalledTimes(1);
+
     expect(toastErrorMock).not.toHaveBeenCalled();
   });
 });

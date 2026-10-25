@@ -12,6 +12,7 @@ describe('registerMentionLoginsFromSender', () => {
     registerMentionLoginsFromSender('velvetfathom93', 'VelvetFathom93');
 
     expect(getMentionLogin('velvetfathom93')).toBe('VelvetFathom93');
+
     expect(formatMentionContent('@velvetfathom93')).toBe('@VelvetFathom93');
   });
 });

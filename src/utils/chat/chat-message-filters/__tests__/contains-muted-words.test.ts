@@ -17,6 +17,7 @@ describe('containsMutedWords', () => {
 
   test('matches a substring anywhere when not matching whole words', () => {
     expect(containsMutedWords('spoiler', ['spoiler'], false)).toBe(true);
+
     expect(containsMutedWords('spoiler ahead', ['spoiler'], false)).toBe(true);
 
     expect(containsMutedWords('big SPOILERS ahead', ['spoiler'], false)).toBe(

@@ -23,6 +23,7 @@ export function useChatCosmetics({ userId }: { userId?: string | null }) {
         if (cancelled || !sevenTvUserId) {
           return null;
         }
+
         return fetchAndCacheUserCosmetics(sevenTvUserId);
       })
       .catch(error => {

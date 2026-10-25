@@ -87,6 +87,7 @@ describe('preference store', () => {
     };
 
     expect(getPreferences()).toEqual<Preferences>(expected);
+
     expect(result.current.chatTimestamps).toBe(true);
 
     await act(flushPersistWrites);

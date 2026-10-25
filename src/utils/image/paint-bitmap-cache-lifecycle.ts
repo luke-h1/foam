@@ -190,6 +190,7 @@ export function clearPaintBitmapCache(): void {
   for (const entry of cache.values()) {
     scheduleDisposal(entry);
   }
+
   cache.clear();
   byteSizes.clear();
   totalBytes = 0;

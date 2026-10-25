@@ -452,6 +452,7 @@ describe('changelog generation', () => {
       const normalized = normalizeChangelogFile(changelogPath);
 
       expect(normalized).toEqual(expectedChangelog);
+
       expect(readFileSync(changelogPath, 'utf8')).toEqual(expectedChangelog);
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
@@ -475,6 +476,7 @@ describe('changelog generation', () => {
       const normalized = normalizeChangelogFile(changelogPath);
 
       expect(normalized).toEqual(generatedChangelog);
+
       expect(readFileSync(changelogPath, 'utf8')).toEqual(generatedChangelog);
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
@@ -530,6 +532,7 @@ describe('changelog per-environment sections', () => {
         if (indexOf(headCommit) <= indexOf(baselineCommit)) {
           return '';
         }
+
         return `## ${tag}\n\n### Test\n\n- ${tag} content`;
       },
     };
@@ -561,7 +564,9 @@ describe('changelog per-environment sections', () => {
 
   test('orders versions numerically rather than lexically', () => {
     expect(compareVersions('0.0.42', '1.0.0')).toBeLessThan(0);
+
     expect(compareVersions('1.0.10', '1.0.2')).toBeGreaterThan(0);
+
     expect(compareVersions('1.0.1', '1.0.1')).toEqual(0);
   });
 
@@ -887,24 +892,31 @@ describe('verifyGoogleServiceFiles', () => {
 describe('variant', () => {
   test('maps each variant to its Sentry dist', () => {
     expect(sentryDistFor('production')).toBe('foam-tv');
+
     expect(sentryDistFor('internal')).toBe('foam-tv-internal');
+
     expect(sentryDistFor('testflight')).toBe('foam-tv-testflight');
   });
 
   test('maps each variant to its release label', () => {
     expect(variantLabel('production')).toBe('Production');
+
     expect(variantLabel('testflight')).toBe('TestFlight');
+
     expect(variantLabel('preview')).toBe('Preview');
   });
 
   test('appends the tag suffix only for non-production variants', () => {
     expect(appendVariant('1.2.3', 'production')).toBe('1.2.3');
+
     expect(appendVariant('1.2.3', 'internal')).toBe('1.2.3-internal');
+
     expect(appendVariant('1.2.3', 'preview')).toBe('1.2.3-preview');
   });
 
   test('recognises known variants and rejects unknown ones', () => {
     expect(isVariant('production')).toBe(true);
+
     expect(isVariant('e2e')).toBe(false);
   });
 
@@ -923,6 +935,7 @@ describe('variant', () => {
       expect(ignoreTagsPattern('1.2.3', 'internal')).toBe(
         String.raw`^1\.2\.3-(testflight|preview)$`,
       );
+
       expect(ignoreTagsPattern('1.2.3', 'testflight')).toBe(
         String.raw`^1\.2\.3-(internal|preview)$`,
       );
@@ -1031,10 +1044,15 @@ describe('chat performance comment workflow', () => {
     );
 
     expect(table).toContain('```diff');
+
     expect(table).toContain('  Scenario');
+
     expect(table).toContain('Typical time swing');
+
     expect(table).toContain('- slower rows');
+
     expect(table).toContain('+ faster rows');
+
     expect(table).toContain('! noisy rows');
   });
 
@@ -1072,6 +1090,7 @@ describe('chat performance comment workflow', () => {
     );
 
     expect(table).toContain('- slower rows');
+
     expect(table).toContain('+ faster rows');
   });
 

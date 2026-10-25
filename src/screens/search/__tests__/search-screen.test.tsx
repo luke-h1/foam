@@ -128,11 +128,13 @@ describe('SearchScreen', () => {
     render(<SearchScreen />);
 
     expect(screen.getByText('Live now')).toBeOnTheScreen();
+
     expect(screen.getByText('Top categories')).toBeOnTheScreen();
 
     await advanceTimers(0);
 
     expect(screen.getByText('RailStreamer')).toBeOnTheScreen();
+
     expect(screen.getByText('Rail Category')).toBeOnTheScreen();
   });
 
@@ -142,6 +144,7 @@ describe('SearchScreen', () => {
     await typeQuery('stre');
 
     expect(screen.getByText('Streamer1')).toBeOnTheScreen();
+
     expect(storageService.getString(SEARCH_HISTORY_STORAGE_KEY)).toEqual<
       SearchHistoryItem[]
     >([{ query: 'stre', date: SEARCHED_AT }]);
@@ -157,6 +160,7 @@ describe('SearchScreen', () => {
     fireEvent.press(screen.getByTestId('filter-categories'));
 
     expect(screen.getByText('Just Chatting')).toBeOnTheScreen();
+
     expect(screen.queryByText('Streamer1')).not.toBeOnTheScreen();
   });
 
@@ -166,6 +170,7 @@ describe('SearchScreen', () => {
     await typeQuery('s');
 
     expect(twitchService.searchChannels).not.toHaveBeenCalled();
+
     expect(storageService.getString(SEARCH_HISTORY_STORAGE_KEY)).toBe(null);
   });
 
@@ -210,6 +215,7 @@ describe('SearchScreen', () => {
     await typeQuery('stre');
 
     expect(screen.getByText("Couldn't search")).toBeOnTheScreen();
+
     expect(screen.getByText('Try again')).toBeOnTheScreen();
   });
 
@@ -221,6 +227,7 @@ describe('SearchScreen', () => {
     render(<SearchScreen />);
 
     expect(screen.getByTestId('search-history')).toBeOnTheScreen();
+
     expect(screen.getByTestId('search-history-item-xqc')).toBeOnTheScreen();
   });
 
@@ -236,7 +243,9 @@ describe('SearchScreen', () => {
     await advanceTimers(400);
 
     expect(screen.getByText('Streamer1')).toBeOnTheScreen();
+
     expect(twitchService.searchChannels).toHaveBeenCalledTimes(1);
+
     expect(storageService.getString(SEARCH_HISTORY_STORAGE_KEY)).toEqual<
       SearchHistoryItem[]
     >([{ query: 'xqc', date: SEARCHED_AT }]);

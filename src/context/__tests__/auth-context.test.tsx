@@ -265,7 +265,9 @@ describe('AuthContext', () => {
     });
 
     expect(result.current.ready).toBe(true);
+
     expect(result.current.user).toBeUndefined();
+
     expect(twitchApi.getAuthToken()).toBe('anon');
   });
 
@@ -358,7 +360,9 @@ describe('AuthContext', () => {
     await flushPending();
 
     expect(result.current.authState).toEqual<AuthState>(magicUserAuthState);
+
     expect(twitchApi.getAuthToken()).toBe('magic-user-token');
+
     expect(await readStoredToken('V1_foam-anon')).toBeNull();
   });
 
@@ -389,7 +393,9 @@ describe('AuthContext', () => {
     jest.mocked(ExpoSecureStore.getItemAsync).mockRestore();
 
     expect(result.current.authState).toEqual<AuthState>(magicUserAuthState);
+
     expect(twitchApi.getAuthToken()).toBe('magic-user-token');
+
     expect(await readStoredToken('V1_foam-anon')).toBeNull();
   });
 
@@ -466,6 +472,7 @@ describe('AuthContext', () => {
     );
 
     expect(twitchApi.getAuthToken()).toBe('anon-after-failed-login');
+
     expect(await readStoredToken('V1_foam-user')).toBeNull();
   });
 
@@ -498,7 +505,9 @@ describe('AuthContext', () => {
     );
 
     expect(await screen.findByText('Test User')).toBeOnTheScreen();
+
     expect(screen.getByText('User')).toBeOnTheScreen();
+
     expect(twitchApi.getAuthToken()).toBe('refreshed-user-token');
 
     expect(await readStoredToken('V1_foam-user')).toEqual<TwitchToken>({
@@ -527,11 +536,13 @@ describe('AuthContext', () => {
     );
 
     expect(await screen.findByText('Test User')).toBeOnTheScreen();
+
     expect(screen.getByText('User')).toBeOnTheScreen();
 
     // Implicit-grant token has no refresh token, so we never attempt a refresh
     // and never clear it solely because the local expiresAt has passed.
     expect(wasRequested(REFRESH_URL)).toBe(false);
+
     expect(twitchApi.getAuthToken()).toBe('implicit-user-token');
 
     expect(await readStoredToken('V1_foam-user')).toEqual<TwitchToken>(
@@ -608,6 +619,7 @@ describe('AuthContext', () => {
       await flushPending();
 
       expect(wasRequested(TOKEN_URL)).toBe(false);
+
       expect(twitchApi.getAuthToken()).toBe('anon_access_token');
 
       expect(await readStoredToken('V1_foam-anon')).toEqual<TwitchToken>({
@@ -666,7 +678,9 @@ describe('AuthContext', () => {
       );
 
       expect(await screen.findByText('Test User')).toBeOnTheScreen();
+
       expect(screen.getByText('User')).toBeOnTheScreen();
+
       expect(twitchApi.getAuthToken()).toBe('auth_access_token');
 
       expect(await readStoredToken('V1_foam-user')).toEqual<TwitchToken>(
@@ -696,6 +710,7 @@ describe('AuthContext', () => {
       );
 
       expect(screen.getByText('Anon')).toBeOnTheScreen();
+
       expect(await readStoredToken('V1_foam-user')).toBeNull();
     });
   });
@@ -736,7 +751,9 @@ describe('AuthContext', () => {
       ).toBeUndefined();
 
       expect(result.current.user).toBeUndefined();
+
       expect(twitchApi.getAuthToken()).toBe('anon');
+
       expect(await readStoredToken('V1_foam-user')).toBeNull();
     });
   });

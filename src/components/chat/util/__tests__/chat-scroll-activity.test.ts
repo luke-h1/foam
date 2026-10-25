@@ -46,6 +46,7 @@ describe('chatScrollActivity', () => {
     }
 
     expect(setTimeoutSpy).toHaveBeenCalledTimes(1);
+
     expect(chatScrollActivity.isActive()).toBe(true);
 
     // The window ends 150ms after the last poke: at 278ms, 134ms from now.
@@ -66,10 +67,12 @@ describe('chatScrollActivity', () => {
     chatScrollActivity.poke();
     chatScrollActivity.poke();
     expect(listener).toHaveBeenCalledTimes(1);
+
     expect(listener).toHaveBeenLastCalledWith(true);
 
     jest.advanceTimersByTime(150);
     expect(listener).toHaveBeenCalledTimes(2);
+
     expect(listener).toHaveBeenLastCalledWith(false);
 
     unsubscribe();

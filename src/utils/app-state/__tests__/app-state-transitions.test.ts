@@ -17,6 +17,7 @@ describe('appStateTransitions', () => {
     if (!changeHandler) {
       throw new Error('no AppState change handler registered');
     }
+
     changeHandler(nextState);
   };
 
@@ -126,6 +127,7 @@ describe('appStateTransitions', () => {
     emit('background');
 
     expect(first).toHaveBeenCalledTimes(0);
+
     expect(second).toHaveBeenCalledTimes(1);
   });
 

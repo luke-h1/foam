@@ -41,6 +41,7 @@ describe('twitchService.getUsersById', () => {
     const result = await twitchService.getUsersById([]);
 
     expect(result).toEqual([]);
+
     expect(api.get).not.toHaveBeenCalled();
   });
 
@@ -52,7 +53,9 @@ describe('twitchService.getUsersById', () => {
     const result = await twitchService.getUsersById(['100', '200']);
 
     expect(api.get).toHaveBeenCalledTimes(1);
+
     expect(api.get).toHaveBeenCalledWith('/users?id=100&id=200');
+
     expect(result.map(user => user.id)).toEqual(['100', '200']);
   });
 
@@ -75,6 +78,7 @@ describe('twitchService.getUsersById', () => {
       .join('&')}`;
 
     expect(api.get).toHaveBeenNthCalledWith(1, firstBatch);
+
     expect(api.get).toHaveBeenNthCalledWith(2, secondBatch);
   });
 });
@@ -112,6 +116,7 @@ describe('twitchService.getClipsByIds', () => {
     const result = await twitchService.getClip('a');
 
     expect(api.get).toHaveBeenCalledWith('/clips', { params: { id: 'a' } });
+
     expect(result).toEqual<TwitchClip>(makeClip('a'));
   });
 
@@ -135,6 +140,7 @@ describe('twitchService.getClipsByIds', () => {
     const result = await twitchService.getClipsByIds([]);
 
     expect(result).toEqual([]);
+
     expect(api.get).not.toHaveBeenCalled();
   });
 
@@ -144,7 +150,9 @@ describe('twitchService.getClipsByIds', () => {
     const result = await twitchService.getClipsByIds(['a', 'b']);
 
     expect(api.get).toHaveBeenCalledTimes(1);
+
     expect(api.get).toHaveBeenCalledWith('/clips?id=a&id=b');
+
     expect(result).toEqual<TwitchClip[]>([makeClip('a'), makeClip('b')]);
   });
 
@@ -170,6 +178,7 @@ describe('twitchService.getClipsByIds', () => {
       .join('&')}`;
 
     expect(api.get).toHaveBeenNthCalledWith(1, firstBatch);
+
     expect(api.get).toHaveBeenNthCalledWith(2, secondBatch);
 
     expect(result).toEqual<TwitchClip[]>([
@@ -221,6 +230,7 @@ describe('twitchService.getCheermotes', () => {
     const result = await twitchService.getCheermotes();
 
     expect(api.get).toHaveBeenCalledWith('/bits/cheermotes', { params: {} });
+
     expect(result).toEqual<TwitchCheermote[]>([makeCheermote('Cheer')]);
   });
 
@@ -257,6 +267,7 @@ describe('twitchService.getFollowedChannels', () => {
     const result = await twitchService.getFollowedChannels('42');
 
     expect(result).toEqual<FollowedChannel[]>([makeFollowedChannel('1')]);
+
     expect(api.get).toHaveBeenCalledTimes(1);
 
     expect(api.get).toHaveBeenCalledWith('/channels/followed', {
@@ -298,6 +309,7 @@ describe('twitchService.getFollowedChannels', () => {
     const result = await twitchService.getFollowedChannels('42');
 
     expect(result).toHaveLength(MAX_FOLLOWED_CHANNELS);
+
     expect(api.get).toHaveBeenCalledTimes(MAX_FOLLOWED_CHANNELS / pageSize);
   });
 

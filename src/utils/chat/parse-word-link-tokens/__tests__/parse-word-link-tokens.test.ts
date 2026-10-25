@@ -76,6 +76,7 @@ describe('parseWordLinkParts', () => {
 
   test('returns null for non-url words', () => {
     expect(parseWordLinkParts('hello')).toBeNull();
+
     expect(parseWordLinkParts('www.youtube.com')).toBeNull();
   });
 });
