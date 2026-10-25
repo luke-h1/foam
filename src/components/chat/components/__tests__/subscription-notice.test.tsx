@@ -21,6 +21,7 @@ describe('SubscriptionNotice', () => {
       render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText('TestUser')).toBeOnTheScreen();
+
       expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
     });
 
@@ -38,6 +39,7 @@ describe('SubscriptionNotice', () => {
       render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText('PrimeUser')).toBeOnTheScreen();
+
       expect(screen.getByText(/Subscribed with Prime/)).toBeOnTheScreen();
     });
 
@@ -93,7 +95,9 @@ describe('SubscriptionNotice', () => {
       render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText('ResubUser')).toBeOnTheScreen();
+
       expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
+
       expect(screen.getByText(/6 months/)).toBeOnTheScreen();
     });
 
@@ -129,6 +133,7 @@ describe('SubscriptionNotice', () => {
       render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText(/Subscribed with Prime/)).toBeOnTheScreen();
+
       expect(screen.getByText(/12 months/)).toBeOnTheScreen();
     });
 
@@ -375,7 +380,9 @@ describe('SubscriptionNotice', () => {
       render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText('MysteryGifter')).toBeOnTheScreen();
+
       expect(screen.getByText(/Gifted/)).toBeOnTheScreen();
+
       expect(screen.getByText('5')).toBeOnTheScreen();
 
       expect(
@@ -402,6 +409,7 @@ describe('SubscriptionNotice', () => {
       render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText(/Gifted/)).toBeOnTheScreen();
+
       expect(screen.getByText('1')).toBeOnTheScreen();
 
       expect(
@@ -427,8 +435,11 @@ describe('SubscriptionNotice', () => {
       render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText('UpgradeUser')).toBeOnTheScreen();
+
       expect(screen.getByText(/Continuing the gift sub/)).toBeOnTheScreen();
+
       expect(screen.getByText('GiftSender')).toBeOnTheScreen();
+
       expect(screen.getByText(/\(Subtember, 12 total\)/)).toBeOnTheScreen();
     });
 
@@ -521,6 +532,7 @@ describe('SubscriptionNotice', () => {
       render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText('TestUser')).toBeOnTheScreen();
+
       expect(screen.getByText(/Subscribed with Tier 1/)).toBeOnTheScreen();
     });
   });
@@ -539,6 +551,7 @@ describe('SubscriptionNotice', () => {
       render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText('MinimalUser')).toBeOnTheScreen();
+
       expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
     });
 
@@ -572,6 +585,7 @@ describe('SubscriptionNotice', () => {
       render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText('日本語ユーザー🎉')).toBeOnTheScreen();
+
       expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
     });
 
@@ -591,6 +605,7 @@ describe('SubscriptionNotice', () => {
       render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText(longDisplayName)).toBeOnTheScreen();
+
       expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
     });
 
@@ -608,6 +623,7 @@ describe('SubscriptionNotice', () => {
       render(<SubscriptionNotice token={token} />);
 
       expect(screen.getByText('NoMessageUser')).toBeOnTheScreen();
+
       expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
 
       expect(

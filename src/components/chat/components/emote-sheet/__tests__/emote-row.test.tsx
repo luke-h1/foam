@@ -34,6 +34,7 @@ describe('EmoteRow', () => {
     });
 
     expect(onPress).toHaveBeenCalledTimes(1);
+
     expect(onPress).toHaveBeenCalledWith(items[1]);
   });
 

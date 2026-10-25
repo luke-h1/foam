@@ -3,6 +3,7 @@ import { isRefreshCommand } from '../is-refresh-command';
 describe('isRefreshCommand', () => {
   test('matches the bare command with surrounding whitespace and any case', () => {
     expect(isRefreshCommand('/refresh')).toBe(true);
+
     expect(isRefreshCommand('  /Refresh  ')).toBe(true);
   });
 
@@ -12,8 +13,11 @@ describe('isRefreshCommand', () => {
 
   test('rejects other input', () => {
     expect(isRefreshCommand('refresh')).toBe(false);
+
     expect(isRefreshCommand('/refreshx')).toBe(false);
+
     expect(isRefreshCommand('hello /refresh')).toBe(false);
+
     expect(isRefreshCommand('')).toBe(false);
   });
 });

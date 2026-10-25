@@ -19,6 +19,7 @@ function triggerHaptic(haptic: ButtonHaptic) {
     selection();
     return;
   }
+
   impact(haptic);
 }
 
@@ -37,6 +38,7 @@ function ButtonComponent({
     if (haptic) {
       triggerHaptic(haptic);
     }
+
     onPress?.(event);
   };
 

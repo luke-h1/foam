@@ -91,6 +91,7 @@ function ForceUpdateModalContent() {
       if (alertTimer) {
         clearTimeout(alertTimer);
       }
+
       alertTimer = setTimeout(presentAlert, ALERT_REPRESENT_DELAY_MS);
     };
 

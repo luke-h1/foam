@@ -96,6 +96,7 @@ function maskValue(value: string): string {
   if (value.length <= 6) {
     return '•'.repeat(value.length);
   }
+
   return `${value.slice(0, 4)}${'•'.repeat(value.length - 6)}${value.slice(-2)}`;
 }
 

@@ -40,6 +40,7 @@ describe('resolveEmoteDisplayUrl', () => {
     });
 
     expect(warmUrl).toBe('https://example.com/animated-2x.webp');
+
     expect(renderUrl).toBe(warmUrl);
   });
 
@@ -53,6 +54,7 @@ describe('resolveEmoteDisplayUrl', () => {
     });
 
     expect(warmUrl).toBe('https://example.com/static-2x.webp');
+
     expect(renderUrl).toBe(warmUrl);
   });
 

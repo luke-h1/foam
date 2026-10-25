@@ -15,6 +15,7 @@ describe('formatCharityAmount', () => {
 
   test('renders suffix-position currencies after the number', () => {
     expect(formatCharityAmount('1500', '2', 'DKK')).toBe('15.00 kr');
+
     expect(formatCharityAmount('1500', '2', 'PLN')).toBe('15.00 zł');
   });
 

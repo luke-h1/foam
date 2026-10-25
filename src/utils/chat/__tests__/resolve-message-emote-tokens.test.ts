@@ -148,6 +148,7 @@ describe('resolveMessageEmoteParts personal emotes', () => {
       });
 
       expect(tokens.some(token => token.type === 'gif')).toBe(false);
+
       expect(
         tokens
           .map(token => (token.type === 'text' ? token.content : ''))

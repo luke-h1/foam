@@ -439,6 +439,7 @@ function commitDecodedRef(
     } catch {
       // ignore
     }
+
     return;
   }
 
@@ -614,6 +615,7 @@ export function trimDecodedEmotes(reason: TrimDecodedEmotesReason): void {
     trimForMemoryPressure({ keepSubscribed: true, throttled: true });
     return;
   }
+
   trimForMemoryPressure();
 }
 
@@ -690,6 +692,7 @@ function startMemoryMonitor(): void {
   if (memoryMonitorTimer !== null) {
     return;
   }
+
   memoryMonitorTimer = setInterval(pollMemoryHeadroom, MEMORY_POLL_INTERVAL_MS);
 }
 

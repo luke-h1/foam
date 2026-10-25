@@ -55,6 +55,7 @@ describe('fetchChannelCheermotes', () => {
     await fetchChannelCheermotes('123', succeeding);
 
     expect(succeeding).toHaveBeenCalledTimes(1);
+
     expect(getChannelCheermotes('123')?.has('cheer')).toBe(true);
   });
 });

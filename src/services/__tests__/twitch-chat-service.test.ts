@@ -101,6 +101,7 @@ describe('useTwitchChat foreground liveness probe', () => {
     });
 
     expect(sendMessage).toHaveBeenCalledWith('PING tmi.twitch.tv\r\n');
+
     expect(close).not.toHaveBeenCalled();
 
     act(() => {
@@ -136,6 +137,7 @@ describe('useTwitchChat foreground liveness probe', () => {
     });
 
     expect(close).not.toHaveBeenCalled();
+
     expect(reconnect).not.toHaveBeenCalled();
   });
 
@@ -194,6 +196,7 @@ describe('useTwitchChat foreground liveness probe', () => {
     });
 
     expect(reconnect).toHaveBeenCalledTimes(1);
+
     expect(sendMessage).not.toHaveBeenCalled();
   });
 });
@@ -255,8 +258,11 @@ describe('useTwitchChat join/token routing', () => {
     feedLine(':bob!bob@bob.tmi.twitch.tv PART #foam');
 
     expect(onUserJoin).toHaveBeenCalledWith('#foam', 'bob');
+
     expect(onUserPart).toHaveBeenCalledWith('#foam', 'bob');
+
     expect(onJoin).not.toHaveBeenCalled();
+
     expect(onPart).not.toHaveBeenCalled();
   });
 

@@ -96,7 +96,9 @@ describe('CategoryScreen', () => {
     render(<CategoryScreen id='cat1' />);
 
     expect(await screen.findByText('Streamer1')).toBeOnTheScreen();
+
     expect(screen.getByText('10,000 watching')).toBeOnTheScreen();
+
     expect(screen.getByText('Just Chatting')).toBeOnTheScreen();
   });
 

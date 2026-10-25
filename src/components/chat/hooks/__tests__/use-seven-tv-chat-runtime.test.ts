@@ -98,6 +98,7 @@ describe('useSevenTvChatRuntime', () => {
     const { currentEmoteSetIdRef, subscribeToChannel } = renderRuntime();
 
     expect(subscribeToChannel.mock.calls).toEqual([['set-1']]);
+
     expect(currentEmoteSetIdRef.current).toBe('set-1');
   });
 
@@ -109,6 +110,7 @@ describe('useSevenTvChatRuntime', () => {
     const { currentEmoteSetIdRef, subscribeToChannel } = renderRuntime();
 
     expect(subscribeToChannel.mock.calls).toEqual([]);
+
     expect(currentEmoteSetIdRef.current).toBeNull();
   });
 
@@ -117,6 +119,7 @@ describe('useSevenTvChatRuntime', () => {
     const loading = renderRuntime({ emoteLoadStatus: 'loading' });
 
     expect(disconnected.subscribeToChannel.mock.calls).toEqual([]);
+
     expect(loading.subscribeToChannel.mock.calls).toEqual([]);
   });
 
@@ -167,6 +170,7 @@ describe('useSevenTvChatRuntime', () => {
     hook.rerender({ ...props });
 
     expect(subscribeToChannel.mock.calls).toEqual([['set-1']]);
+
     expect(currentEmoteSetIdRef.current).toBe('set-1');
   });
 
@@ -187,7 +191,9 @@ describe('useSevenTvChatRuntime', () => {
     });
 
     expect(unsubscribeFromChannel.mock.calls).toEqual([[]]);
+
     expect(subscribeToChannel.mock.calls).toEqual([['set-1'], ['set-2']]);
+
     expect(currentEmoteSetIdRef.current).toBe('set-2');
   });
 
@@ -198,6 +204,7 @@ describe('useSevenTvChatRuntime', () => {
     hook.unmount();
 
     expect(unsubscribeFromChannel.mock.calls).toEqual([[]]);
+
     expect(currentEmoteSetIdRef.current).toBeNull();
   });
 

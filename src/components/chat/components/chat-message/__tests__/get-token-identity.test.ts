@@ -16,8 +16,11 @@ describe('richChatMessageBody', () => {
     } satisfies MessageToken<'emote'>;
 
     expect(getTokenIdentity(repeatedTextPart, 0)).toBe('text-0');
+
     expect(getTokenIdentity(repeatedTextPart, 2)).toBe('text-2');
+
     expect(getTokenIdentity(repeatedEmotePart, 1)).toBe('emote-1');
+
     expect(getTokenIdentity(repeatedEmotePart, 3)).toBe('emote-3');
 
     expect(getTokenIdentity(repeatedTextPart, 0)).not.toContain(

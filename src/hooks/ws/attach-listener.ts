@@ -17,6 +17,7 @@ export function getReconnectDelay(
   if (attempt === 0) {
     return FAST_FIRST_RECONNECT_INTERVAL_MS;
   }
+
   return Math.round(baseInterval * Math.min(1.5 ** (attempt - 1), 8));
 }
 

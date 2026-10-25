@@ -75,7 +75,9 @@ describe('TopScreen', () => {
     render(<TopScreen />);
 
     expect(await screen.findByText('Streamer1')).toBeOnTheScreen();
+
     expect(screen.queryByText('Fortnite')).not.toBeOnTheScreen();
+
     expect(getTopCategoriesSpy).not.toHaveBeenCalled();
   });
 
@@ -91,7 +93,9 @@ describe('TopScreen', () => {
     fireEvent.press(screen.getByTestId('segment-streams'));
 
     expect(await screen.findByText('Streamer1')).toBeOnTheScreen();
+
     expect(getTopStreamsSpy).toHaveBeenCalledTimes(1);
+
     expect(getTopCategoriesSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -107,7 +111,9 @@ describe('TopScreen', () => {
     fireEvent.press(screen.getByTestId('pager-swipe-prev'));
 
     expect(await screen.findByText('Streamer1')).toBeOnTheScreen();
+
     expect(getTopStreamsSpy).toHaveBeenCalledTimes(1);
+
     expect(getTopCategoriesSpy).toHaveBeenCalledTimes(1);
   });
 

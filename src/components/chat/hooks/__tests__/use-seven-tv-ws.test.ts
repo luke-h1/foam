@@ -137,6 +137,7 @@ describe('useSevenTvWs', () => {
     });
 
     expect(mockSetSevenTvSessionId).not.toHaveBeenCalled();
+
     expect(sendJsonMessage).not.toHaveBeenCalled();
 
     act(() => {

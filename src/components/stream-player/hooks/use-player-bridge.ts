@@ -467,6 +467,7 @@ export function usePlayerBridge({
         } else {
           logger.main.error(action.message, ...action.args);
         }
+
         break;
       case 'markFirstPlayingReported':
         reportedFirstPlayingRef.current = true;
@@ -514,6 +515,7 @@ export function usePlayerBridge({
         } else {
           stability.noteVideoError();
         }
+
         break;
       case 'notifyStabilityLatency':
         stability.noteLatency(action.latencySeconds);
@@ -530,12 +532,14 @@ export function usePlayerBridge({
           currentTimeResolverRef.current(action.seconds);
           currentTimeResolverRef.current = null;
         }
+
         break;
       case 'resolveDuration':
         if (durationResolverRef.current) {
           durationResolverRef.current(action.seconds);
           durationResolverRef.current = null;
         }
+
         break;
       case 'scheduleAuthCompletionReload':
         scheduleAuthCompletionReload();

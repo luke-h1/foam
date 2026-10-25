@@ -17,6 +17,7 @@ const withFirebaseAnalyticsNoAdIds = config =>
       if (!podfile.includes(FLAG)) {
         fs.writeFileSync(podfilePath, `${FLAG}\n${podfile}`);
       }
+
       return cfg;
     },
   ]);

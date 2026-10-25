@@ -45,9 +45,13 @@ describe('getChatScale', () => {
       const compact = getChatScale(fontScale, 'compact');
 
       expect(compact.bodyFontSize).toBe(comfortable.bodyFontSize);
+
       expect(compact.emoteSize).toBe(comfortable.emoteSize);
+
       expect(compact.badgeSize).toBe(comfortable.badgeSize);
+
       expect(compact.secondaryFontSize).toBe(comfortable.secondaryFontSize);
+
       expect(compact.metaIconSize).toBe(comfortable.metaIconSize);
     }
   });
@@ -112,7 +116,9 @@ describe('getChatScale', () => {
 describe('densityFromCompact', () => {
   test('maps the compact flag onto a density', () => {
     expect(densityFromCompact(true)).toBe('compact');
+
     expect(densityFromCompact(false)).toBe('comfortable');
+
     expect(densityFromCompact(undefined)).toBe('comfortable');
   });
 });
@@ -122,7 +128,9 @@ describe('getChatTextStyles', () => {
     const textStyles = getChatTextStyles('default', false);
 
     expect(textStyles.timestamp.color).toBe(CHAT_SURFACE_COLORS.muted);
+
     expect(textStyles.meta.color).toBe(CHAT_SURFACE_COLORS.muted);
+
     expect(textStyles.replyContext.color).toBe(CHAT_SURFACE_COLORS.muted);
   });
 
@@ -131,6 +139,7 @@ describe('getChatTextStyles', () => {
     const textStyles = getChatTextStyles('default', false);
 
     expect(textStyles.timestamp.fontSize).toBe(scale.secondaryFontSize);
+
     expect(textStyles.timestamp.fontSize).toBeLessThan(scale.bodyFontSize);
   });
 
@@ -139,12 +148,15 @@ describe('getChatTextStyles', () => {
     const textStyles = getChatTextStyles('default', true);
 
     expect(textStyles.username.fontWeight).toBe('700');
+
     expect(textStyles.username.fontSize).toBe(scale.bodyFontSize);
+
     expect(textStyles.username.lineHeight).toBe(scale.bodyLineHeight);
   });
 
   test('drives row padding from the density', () => {
     expect(getChatTextStyles('default', false).row.paddingVertical).toBe(5);
+
     expect(getChatTextStyles('default', true).row.paddingVertical).toBe(2);
   });
 

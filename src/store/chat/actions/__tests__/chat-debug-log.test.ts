@@ -47,6 +47,7 @@ describe('chatDebugLog', () => {
     releaseChatDebugLog(CHANNEL_ID, 'channel');
 
     expect(isChatDebugLogEnabled()).toBe(false);
+
     expect(getChatDebugIrcLines(CHANNEL_ID)).toEqual([]);
 
     recordChatDebugIrcLine('ignored');
@@ -84,6 +85,7 @@ describe('chatDebugLog', () => {
 
     releaseChatDebugLog('channel-2', 'other');
     expect(getChatDebugIrcLines('channel-2')).toEqual([]);
+
     expect(getChatDebugIrcLines(CHANNEL_ID)).toHaveLength(1);
   });
 
@@ -98,6 +100,7 @@ describe('chatDebugLog', () => {
     recordChatDebugIrcLine(':tmi.twitch.tv GLOBALUSERSTATE');
 
     expect(getChatDebugIrcLines(CHANNEL_ID)).toHaveLength(1);
+
     expect(getChatDebugIrcLines('channel-2')).toHaveLength(1);
 
     releaseChatDebugLog('channel-2', 'other');
@@ -110,7 +113,9 @@ describe('chatDebugLog', () => {
 
     const lines = getChatDebugIrcLines(CHANNEL_ID);
     expect(lines).toHaveLength(250);
+
     expect(lines[0]?.line).toBe('line-299');
+
     expect(lines[249]?.line).toBe('line-50');
   });
 
@@ -170,6 +175,7 @@ describe('chatDebugLog', () => {
     recordChatDebugIrcLine(privmsg('bob', 'lol CLEARCHAT incoming :alice'));
 
     expect(getChatDebugIrcLinesForLogin('alice')).toEqual([]);
+
     expect(getChatDebugIrcLinesForLogin('bob')).toHaveLength(3);
   });
 
@@ -179,6 +185,7 @@ describe('chatDebugLog', () => {
     );
 
     expect(getChatDebugIrcLinesForLogin('alice')).toEqual([]);
+
     expect(getChatDebugIrcLinesForLogin('bob')).toHaveLength(1);
   });
 
@@ -198,6 +205,7 @@ describe('chatDebugLog', () => {
     }
 
     expect(getChatDebugIrcLinesForLogin('alice')).toHaveLength(10);
+
     expect(getChatDebugIrcLinesForLogin('alice', 3)).toHaveLength(3);
   });
 
@@ -205,6 +213,7 @@ describe('chatDebugLog', () => {
     recordChatDebugIrcLine(privmsg('alice', 'one'));
 
     expect(getChatDebugIrcLinesForLogin('')).toEqual([]);
+
     expect(getChatDebugIrcLinesForLogin(undefined)).toEqual([]);
   });
 });

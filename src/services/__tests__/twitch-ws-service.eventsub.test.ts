@@ -121,6 +121,7 @@ describe('TwitchWsService EventSub response handling', () => {
     );
 
     expect(twitchWsState.entries.size).toBe(0);
+
     expect(mockCreateEventSubscription).toHaveBeenCalledTimes(1);
 
     expect(mockWarn.mock.calls).toEqual([
@@ -183,6 +184,7 @@ describe('TwitchWsService shared socket teardown', () => {
     await TwitchWsService.unsubscribeFromEvent('channel.poll.begin', onPoll);
 
     expect(socket.close).not.toHaveBeenCalled();
+
     expect(twitchWsState.instance).toBe(socket);
   });
 
@@ -208,6 +210,7 @@ describe('TwitchWsService shared socket teardown', () => {
     );
 
     expect(socket.close).toHaveBeenCalledWith(1000, 'Manual Disconnect');
+
     expect(twitchWsState.instance).toBeNull();
   });
 
@@ -331,6 +334,7 @@ describe('TwitchWsService shared socket teardown', () => {
     );
 
     expect(onChannelOne).not.toHaveBeenCalled();
+
     expect(onChannelTwo).toHaveBeenCalledTimes(1);
   });
 
@@ -367,7 +371,9 @@ describe('TwitchWsService shared socket teardown', () => {
     jest.advanceTimersByTime(15_000);
 
     expect(twitchWsState.reconnectAttempts).toBe(1);
+
     expect(socket.onclose).toBeNull();
+
     expect(socket.close).toHaveBeenCalledWith(
       1000,
       'Replaced by a new EventSub connection',
@@ -392,6 +398,7 @@ describe('TwitchWsService shared socket teardown', () => {
     await TwitchWsService.unsubscribeFromEvent('channel.poll.begin', onPoll);
 
     expect(twitchWsState.reconnectTimer).toBeNull();
+
     expect(twitchWsState.isReconnecting).toBe(false);
 
     // The orphaned timer would have reopened the socket here.

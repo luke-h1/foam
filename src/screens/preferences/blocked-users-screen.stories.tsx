@@ -25,6 +25,7 @@ const createQueryClient = (data: { data: UserBlockList[] }) => {
           if (queryKey[1] === 'blockList') {
             return Promise.resolve(data);
           }
+
           return Promise.reject(
             new Error(`No mock data for query: ${String(queryKey)}`),
           );

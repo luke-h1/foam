@@ -39,6 +39,7 @@ export function useDebouncedCallback<Args extends unknown[] = []>(
           callbackRef.current(...args);
           timeoutRef.current = undefined;
         }
+
         resolve();
       }, timeout);
     });

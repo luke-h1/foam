@@ -10,6 +10,7 @@ describe('sevenTvService.fetchBridgedCosmetics', () => {
 
   test('returns an empty array without calling the bridge when no logins are provided', async () => {
     await expect(sevenTvService.fetchBridgedCosmetics([])).resolves.toEqual([]);
+
     expect(mockSevenTvApiPost).not.toHaveBeenCalled();
   });
 

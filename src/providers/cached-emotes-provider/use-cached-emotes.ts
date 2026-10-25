@@ -77,6 +77,7 @@ async function warmInBatches(
     if (isCancelled()) {
       return;
     }
+
     // eslint-disable-next-line react-doctor/async-await-in-loop, react-doctor/async-defer-await -- batches are intentionally sequential so the warm storm stays bounded
     await warmCachedEmoteRefs(urls.slice(i, i + WARM_BATCH_SIZE), { pin });
   }

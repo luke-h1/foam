@@ -59,6 +59,7 @@ function cssLayer(layer: PaintLayerData): CssLayer {
       } else {
         image = `${layer.repeat ? 'repeating-' : ''}radial-gradient(${layer.shape ?? 'circle'}, ${cssStopList(layer)})`;
       }
+
       break;
     case 'URL':
       // Empty urls never reach here; unrenderable layers are filtered out

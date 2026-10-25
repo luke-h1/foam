@@ -17,6 +17,7 @@ describe('isPrivmsgLine', () => {
     expect(
       isPrivmsgLine('@ban-duration=600 :tmi.twitch.tv CLEARCHAT #bar :foo'),
     ).toBe(false);
+
     expect(isPrivmsgLine(':tmi.twitch.tv RECONNECT')).toBe(false);
   });
 

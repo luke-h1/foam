@@ -88,6 +88,7 @@ export const createSevenTvSessionState = (
       if (channelId && lastNotedChannelId && channelId !== lastNotedChannelId) {
         subscriptionGeneration += 1;
       }
+
       if (channelId) {
         lastNotedChannelId = channelId;
       }

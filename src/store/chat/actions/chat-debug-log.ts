@@ -357,6 +357,7 @@ export function getChatDebugEmoteDetails(emote: {
       if (emote.id && cachedEmote.id === emote.id) {
         return { foundInCache: true, sourceList, cachedEmote };
       }
+
       if (!nameMatch && emote.name && cachedEmote.name === emote.name) {
         nameMatch = { foundInCache: true, sourceList, cachedEmote };
       }

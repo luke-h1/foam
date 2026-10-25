@@ -99,6 +99,7 @@ export function createApiClient({
     if (!requiresAuth) {
       return undefined;
     }
+
     return new Promise<void>(resolve => {
       resolveTokenReady = resolve;
     });

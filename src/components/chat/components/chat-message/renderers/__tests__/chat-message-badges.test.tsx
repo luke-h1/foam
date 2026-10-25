@@ -89,6 +89,7 @@ describe('ChatMessageBadges', () => {
     renderBadges([twitchBadge]);
 
     expect(mockImageProps?.source).toEqual(twitchBadge.url);
+
     expect(mockImageProps?.cachePolicy).toEqual('memory-disk');
   });
 

@@ -73,7 +73,9 @@ describe('setupInitialSubscriptions', () => {
     ]);
 
     expect(harness.session.subscribedChannelId).toBe('channel-1');
+
     expect(harness.session.subscribedOwnerId).toBe('owner-1');
+
     expect(harness.session.hasInitialSubscriptions).toBe(true);
   });
 
@@ -102,6 +104,7 @@ describe('setupInitialSubscriptions', () => {
     ]);
 
     expect(harness.session.subscribedChannelId).toBe('channel-1');
+
     expect(harness.session.hasInitialSubscriptions).toBe(true);
   });
 
@@ -121,7 +124,9 @@ describe('setupInitialSubscriptions', () => {
     await setup;
 
     expect(harness.sendJsonMessage).not.toHaveBeenCalled();
+
     expect(harness.session.subscribedChannelId).toBeNull();
+
     expect(harness.session.hasInitialSubscriptions).toBe(false);
   });
 
@@ -143,7 +148,9 @@ describe('setupInitialSubscriptions', () => {
     await setup;
 
     expect(harness.sendJsonMessage).not.toHaveBeenCalled();
+
     expect(harness.session.subscribedChannelId).toBeNull();
+
     expect(harness.session.hasInitialSubscriptions).toBe(false);
   });
 
@@ -192,6 +199,7 @@ describe('setupInitialSubscriptions', () => {
     ]);
 
     expect(harness.session.subscribedChannelId).toBeNull();
+
     expect(harness.session.hasInitialSubscriptions).toBe(true);
   });
 });

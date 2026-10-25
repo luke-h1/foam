@@ -56,7 +56,9 @@ describe('LiveStreamCard', () => {
     render(<LiveStreamCard stream={mockStream} />);
 
     expect(screen.getByText('Test Stream Title')).toBeOnTheScreen();
+
     expect(screen.getByText('Test user')).toBeOnTheScreen();
+
     expect(screen.getByText('10K')).toBeOnTheScreen();
   });
 

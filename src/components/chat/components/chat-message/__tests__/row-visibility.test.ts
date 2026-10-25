@@ -19,6 +19,7 @@ describe('createRowVisibilityStore', () => {
 
     store.setVisible(false);
     expect(listener).toHaveBeenCalledWith(false);
+
     expect(listener).toHaveBeenCalledTimes(1);
   });
 

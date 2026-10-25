@@ -51,7 +51,9 @@ describe('sweepOversizedSentryEnvelopes', () => {
     sweepOversizedSentryEnvelopesNow();
 
     expect(fileSystemMock.deletedUris()).toEqual([`${ENVELOPES_DIR}wedged`]);
+
     expect(fileSystemMock.exists(`${ENVELOPES_DIR}crash-report`)).toBe(true);
+
     expect(fileSystemMock.exists(`${ENVELOPES_DIR}exactly-limit`)).toBe(true);
   });
 

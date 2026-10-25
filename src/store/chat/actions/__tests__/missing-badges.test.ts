@@ -21,7 +21,9 @@ describe('missingBadges', () => {
     reportMissingBadge('badge-1', 'user-2');
 
     expect(getMissingBadgeIds()).toEqual(['badge-1']);
+
     expect(hasMissingBadges()).toBe(true);
+
     expect(warn).toHaveBeenCalledTimes(1);
 
     expect(warn).toHaveBeenCalledWith(
@@ -58,6 +60,7 @@ describe('missingBadges', () => {
     clearAllMissingBadges();
 
     expect(getMissingBadgeIds()).toEqual([]);
+
     expect(hasMissingBadges()).toBe(false);
   });
 });

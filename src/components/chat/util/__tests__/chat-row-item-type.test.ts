@@ -113,8 +113,11 @@ describe('getChatRowItemType', () => {
     });
 
     expect(getChatRowItemType(plain)).toBe('user_chat-w0');
+
     expect(getChatRowItemType(moderated)).toBe('user_chat-mod-w0');
+
     expect(getChatRowItemType(reply)).toBe('user_chat-reply-w0');
+
     expect(getChatRowItemType(moderated)).not.toBe(getChatRowItemType(reply));
   });
 
@@ -139,6 +142,7 @@ describe('getChatRowItemType', () => {
     });
 
     expect(getChatRowItemType(short)).toBe('user_chat-w0');
+
     expect(getChatRowItemType(copypasta)).toBe('user_chat-w6');
   });
 });

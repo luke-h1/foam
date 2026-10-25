@@ -27,6 +27,7 @@ const namespaceKey = (key: AllowedKey, namespacePrefix?: string) => {
   if (namespacePrefix) {
     return `${NAMESPACE}_${namespacePrefix}_${key}`;
   }
+
   return `${NAMESPACE}_${key}`;
 };
 

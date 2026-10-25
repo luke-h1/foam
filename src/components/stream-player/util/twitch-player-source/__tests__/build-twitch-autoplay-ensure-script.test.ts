@@ -79,8 +79,11 @@ describe('buildTwitchAutoplayEnsureScript', () => {
     jest.advanceTimersByTime(1000);
 
     expect(video.isPlaying()).toBe(true);
+
     expect(video.element.muted).toBe(false);
+
     expect(video.element.volume).toBe(1);
+
     expect(page.messages).toEqual<PlayerBridgeMessage[]>([
       { type: 'muteState', payload: { muted: false, volume: 0.5 } },
     ]);
@@ -96,6 +99,7 @@ describe('buildTwitchAutoplayEnsureScript', () => {
     jest.advanceTimersByTime(2000);
 
     expect(video.isPlaying()).toBe(true);
+
     expect(video.element.muted).toBe(true);
   });
 
@@ -113,6 +117,7 @@ describe('buildTwitchAutoplayEnsureScript', () => {
     jest.advanceTimersByTime(5000);
 
     expect(video.isPlaying()).toBe(true);
+
     expect(video.element.muted).toBe(true);
   });
 
@@ -127,7 +132,9 @@ describe('buildTwitchAutoplayEnsureScript', () => {
     page.window.__foamSetMuted?.(false);
 
     expect(video.element.muted).toBe(false);
+
     expect(video.element.volume).toBe(1);
+
     expect(page.messages).toEqual<PlayerBridgeMessage[]>([
       { type: 'muteState', payload: { muted: false, volume: 0.5 } },
       { type: 'muteState', payload: { muted: false, volume: 1 } },

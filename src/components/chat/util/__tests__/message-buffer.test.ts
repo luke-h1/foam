@@ -34,6 +34,7 @@ describe('createMessageBuffer add/drain', () => {
 
     const drained = buffer.drain();
     expect(drained.map(m => m.message_id)).toEqual(['a', 'b']);
+
     expect(buffer.size()).toBe(0);
   });
 
@@ -42,8 +43,11 @@ describe('createMessageBuffer add/drain', () => {
     ['a', 'b', 'c', 'd'].forEach(id => buffer.add(message(id)));
 
     expect(buffer.drain(2).map(m => m.message_id)).toEqual(['a', 'b']);
+
     expect(buffer.size()).toBe(2);
+
     expect(buffer.drain(2).map(m => m.message_id)).toEqual(['c', 'd']);
+
     expect(buffer.size()).toBe(0);
   });
 
@@ -54,6 +58,7 @@ describe('createMessageBuffer add/drain', () => {
     buffer.drain(1);
 
     expect(buffer.removeById('c')).toBe(true);
+
     expect(buffer.drain().map(m => m.message_id)).toEqual(['b']);
   });
 
@@ -64,7 +69,9 @@ describe('createMessageBuffer add/drain', () => {
     const result = buffer.add(message('a', { cachedSenderColor: 'blue' }));
 
     expect(result).toEqual<AddResult>({ added: false, dropped: 0 });
+
     expect(buffer.size()).toBe(1);
+
     expect(buffer.drain()[0]!.cachedSenderColor).toBe('red');
   });
 
@@ -76,6 +83,7 @@ describe('createMessageBuffer add/drain', () => {
     const result = buffer.add(message('c'));
 
     expect(result).toEqual<AddResult>({ added: true, dropped: 1 });
+
     expect(buffer.drain().map(m => m.message_id)).toEqual(['b', 'c']);
   });
 });
@@ -87,6 +95,7 @@ describe('createMessageBuffer edits', () => {
     buffer.add(message('b'));
 
     expect(buffer.removeById('a')).toBe(true);
+
     expect(buffer.drain().map(m => m.message_id)).toEqual(['b']);
   });
 
@@ -96,6 +105,7 @@ describe('createMessageBuffer edits', () => {
     buffer.add(message('b'));
 
     expect(buffer.removeByLogin('a')).toBe(true);
+
     expect(buffer.drain().map(m => m.message_id)).toEqual(['b']);
   });
 

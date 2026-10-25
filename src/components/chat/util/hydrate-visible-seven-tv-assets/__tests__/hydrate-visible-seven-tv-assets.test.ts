@@ -112,6 +112,7 @@ describe('hydrateVisibleSevenTvAssets', () => {
     );
 
     expect(reprocessMessage).toHaveBeenCalledWith(message);
+
     expect(didReprocess).toBe(true);
   });
 
@@ -135,6 +136,7 @@ describe('hydrateVisibleSevenTvAssets', () => {
     });
 
     expect(fetchUserPersonalEmotes).toHaveBeenCalledTimes(1);
+
     expect(personalEmoteUsers.has('twitch-user')).toBe(true);
   });
 
@@ -158,6 +160,7 @@ describe('hydrateVisibleSevenTvAssets', () => {
     });
 
     expect(fetchUserPersonalEmotes).toHaveBeenCalledTimes(1);
+
     expect(personalEmoteUsers.has('twitch-user')).toBe(true);
   });
 
@@ -179,6 +182,7 @@ describe('hydrateVisibleSevenTvAssets', () => {
     });
 
     expect(fetchUserPersonalEmotes).toHaveBeenCalledTimes(3);
+
     expect(didReprocess).toBe(false);
   });
 
@@ -209,9 +213,13 @@ describe('hydrateVisibleSevenTvAssets', () => {
     });
 
     expect(getUserPersonalEmotes).not.toHaveBeenCalled();
+
     expect(fetchUserPersonalEmotes).not.toHaveBeenCalled();
+
     expect(personalEmoteUsers.has('twitch-user')).toBe(false);
+
     expect(reprocessMessage).not.toHaveBeenCalled();
+
     expect(didReprocess).toBe(false);
   });
 
@@ -291,8 +299,11 @@ describe('hydrateVisibleSevenTvAssets', () => {
     });
 
     expect(getUserBadge).not.toHaveBeenCalled();
+
     expect(fetchUserCosmetics).not.toHaveBeenCalled();
+
     expect(cosmeticUsers.has('twitch-user')).toBe(false);
+
     expect(reprocessMessage).not.toHaveBeenCalled();
   });
 
@@ -341,7 +352,9 @@ describe('hydrateVisibleSevenTvAssets', () => {
     const secondPassDidReprocess = await hydrateVisibleSevenTvAssets(params);
 
     expect(reprocessMessage).toHaveBeenCalledTimes(1);
+
     expect(firstPassDidReprocess).toBe(true);
+
     expect(secondPassDidReprocess).toBe(false);
   });
 
@@ -396,6 +409,7 @@ describe('hydrateVisibleSevenTvAssets', () => {
     const maxSyncChunk = Math.max(...chunkSizes.values());
 
     expect(reprocessTurns).toHaveLength(24);
+
     expect(maxSyncChunk).toBeLessThanOrEqual(6);
   });
 

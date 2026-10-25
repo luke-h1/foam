@@ -66,6 +66,7 @@ function setCurrentUserStateIfOwner(
   if (currentUserStateOwner !== token) {
     return;
   }
+
   setCurrentUserState(next);
 }
 
@@ -261,6 +262,7 @@ function createChatMessageRouteHandlers({
         logger.chat.info('✅ Welcome message received');
         optionsRef.current.onWelcome?.();
       }
+
       logger.chat.info(`NOTICE: ${messageText}`);
     },
 
@@ -871,6 +873,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     if (event.code === 1000) {
       return false;
     }
+
     return shouldConnect;
   };
 

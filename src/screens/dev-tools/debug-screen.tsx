@@ -135,6 +135,7 @@ export function DebugScreen() {
     if (!channelName.trim()) {
       return;
     }
+
     router.push({
       pathname: '/chat',
       params: { channelName, channelId: channelIdRef.current },

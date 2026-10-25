@@ -13,7 +13,9 @@ describe('applyAntiDuplicateSuffix', () => {
     const result = applyAntiDuplicateSuffix('hello', 'hello');
 
     expect(result).not.toBe('hello');
+
     expect(result.startsWith('hello')).toBe(true);
+
     expect(result.replace(/[\s\u{E0000}]+$/u, '')).toBe('hello');
   });
 
@@ -43,6 +45,7 @@ describe('applyAntiDuplicateSuffix', () => {
     expect(first).toBe('hello');
 
     expect(second).toBe(`hello ${'\u{E0000}'}`);
+
     expect(third).toBe('hello');
   });
 });

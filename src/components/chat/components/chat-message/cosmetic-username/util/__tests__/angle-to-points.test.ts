@@ -5,32 +5,44 @@ describe('angleToPoints', () => {
     test('0deg should go from bottom to top', () => {
       const result = angleToPoints(0);
       expect(result.start.y).toBeCloseTo(1, 5);
+
       expect(result.end.y).toBeCloseTo(0, 5);
+
       expect(result.start.x).toBeCloseTo(0.5, 5);
+
       expect(result.end.x).toBeCloseTo(0.5, 5);
     });
 
     test('90deg should go from left to right', () => {
       const result = angleToPoints(90);
       expect(result.start.x).toBeCloseTo(0, 5);
+
       expect(result.end.x).toBeCloseTo(1, 5);
+
       expect(result.start.y).toBeCloseTo(0.5, 5);
+
       expect(result.end.y).toBeCloseTo(0.5, 5);
     });
 
     test('180deg should go from top to bottom', () => {
       const result = angleToPoints(180);
       expect(result.start.y).toBeCloseTo(0, 5);
+
       expect(result.end.y).toBeCloseTo(1, 5);
+
       expect(result.start.x).toBeCloseTo(0.5, 5);
+
       expect(result.end.x).toBeCloseTo(0.5, 5);
     });
 
     test('270deg should go from right to left', () => {
       const result = angleToPoints(270);
       expect(result.start.x).toBeCloseTo(1, 5);
+
       expect(result.end.x).toBeCloseTo(0, 5);
+
       expect(result.start.y).toBeCloseTo(0.5, 5);
+
       expect(result.end.y).toBeCloseTo(0.5, 5);
     });
   });
@@ -39,32 +51,44 @@ describe('angleToPoints', () => {
     test('45deg should go from bottom-left to top-right', () => {
       const result = angleToPoints(45);
       expect(result.start.x).toBeLessThan(0.5);
+
       expect(result.start.y).toBeGreaterThan(0.5);
+
       expect(result.end.x).toBeGreaterThan(0.5);
+
       expect(result.end.y).toBeLessThan(0.5);
     });
 
     test('135deg should go from top-left to bottom-right', () => {
       const result = angleToPoints(135);
       expect(result.start.x).toBeLessThan(0.5);
+
       expect(result.start.y).toBeLessThan(0.5);
+
       expect(result.end.x).toBeGreaterThan(0.5);
+
       expect(result.end.y).toBeGreaterThan(0.5);
     });
 
     test('225deg should go from top-right to bottom-left', () => {
       const result = angleToPoints(225);
       expect(result.start.x).toBeGreaterThan(0.5);
+
       expect(result.start.y).toBeLessThan(0.5);
+
       expect(result.end.x).toBeLessThan(0.5);
+
       expect(result.end.y).toBeGreaterThan(0.5);
     });
 
     test('315deg should go from bottom-right to top-left', () => {
       const result = angleToPoints(315);
       expect(result.start.x).toBeGreaterThan(0.5);
+
       expect(result.start.y).toBeGreaterThan(0.5);
+
       expect(result.end.x).toBeLessThan(0.5);
+
       expect(result.end.y).toBeLessThan(0.5);
     });
   });
@@ -76,12 +100,19 @@ describe('angleToPoints', () => {
       angles.forEach(angle => {
         const result = angleToPoints(angle);
         expect(result.start.x).toBeGreaterThanOrEqual(0);
+
         expect(result.start.x).toBeLessThanOrEqual(1);
+
         expect(result.start.y).toBeGreaterThanOrEqual(0);
+
         expect(result.start.y).toBeLessThanOrEqual(1);
+
         expect(result.end.x).toBeGreaterThanOrEqual(0);
+
         expect(result.end.x).toBeLessThanOrEqual(1);
+
         expect(result.end.y).toBeGreaterThanOrEqual(0);
+
         expect(result.end.y).toBeLessThanOrEqual(1);
       });
     });

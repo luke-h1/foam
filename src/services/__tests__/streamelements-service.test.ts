@@ -27,6 +27,7 @@ describe('streamElementsService.getChatStats', () => {
     const result = await streamElementsService.getChatStats('odd name');
 
     expect(api.get).toHaveBeenCalledWith('/chatstats/odd%20name/stats');
+
     expect(result).toEqual<StreamElementsChatStats>(mockStats);
   });
 

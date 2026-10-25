@@ -22,5 +22,6 @@ export function isUserBlocked(
   if (!username || blockedUsers.length === 0) {
     return false;
   }
+
   return getBlockedLoginSet(blockedUsers).has(username.toLowerCase());
 }

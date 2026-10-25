@@ -403,7 +403,9 @@ describe('Chat recent messages', () => {
     renderChat();
 
     expect(mockScrollToBottom).toHaveBeenCalledTimes(1);
+
     expect(storedRows()).toEqual<StoredRow[]>(cachedRows(12));
+
     expect(requestedHistory()).toEqual([]);
   });
 
@@ -414,6 +416,7 @@ describe('Chat recent messages', () => {
     renderChat();
 
     expect(mockScrollToBottom).not.toHaveBeenCalled();
+
     expect(storedRows()).toEqual<StoredRow[]>(cachedRows(12));
 
     await waitFor(() => {
@@ -421,6 +424,7 @@ describe('Chat recent messages', () => {
     });
 
     expect(requestedHistory()).toEqual([['foam', 150]]);
+
     expect(storedRows()).toEqual<StoredRow[]>(cachedRows(12));
   });
 
@@ -430,6 +434,7 @@ describe('Chat recent messages', () => {
     renderChat();
 
     expect(requestedHistory()).toEqual([]);
+
     expect(storedRows()).toEqual<StoredRow[]>([]);
   });
 });

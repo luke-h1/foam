@@ -102,6 +102,7 @@ export const Image = function Image({
     if (!fileCachedUrl) {
       loadedRemoteUrlRef.current = url ?? null;
     }
+
     props.onLoad?.(event);
   };
 

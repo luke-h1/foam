@@ -28,11 +28,14 @@ describe('fetchOnceGuard single-flight', () => {
     const second = guard.run('key', fetcher);
 
     expect(fetcher).toHaveBeenCalledTimes(1);
+
     expect(guard.isInFlight('key')).toEqual(true);
 
     gate.resolve('value');
     expect(await first).toEqual('value');
+
     expect(await second).toEqual('value');
+
     expect(guard.isInFlight('key')).toEqual(false);
   });
 
@@ -84,6 +87,7 @@ describe('fetchOnceGuard stamps', () => {
     jest.setSystemTime(new Date('2027-01-01T00:00:00.000Z'));
 
     expect(guard.hasFetched('key')).toEqual(true);
+
     expect(guard.shouldFetch('key')).toEqual(false);
 
     guard.clearKey('key');
@@ -98,6 +102,7 @@ describe('fetchOnceGuard stamps', () => {
 
     jest.setSystemTime(new Date('2026-01-01T00:00:01.000Z'));
     expect(guard.hasFetched('key')).toEqual(false);
+
     expect(guard.shouldFetch('key')).toEqual(true);
   });
 
@@ -128,7 +133,9 @@ describe('fetchOnceGuard generation fence', () => {
     await running;
 
     expect(sawCurrent).toEqual(false);
+
     expect(guard.hasFetched('key')).toEqual(false);
+
     expect(guard.hasFetched('other-key')).toEqual(false);
   });
 
@@ -142,6 +149,7 @@ describe('fetchOnceGuard generation fence', () => {
     });
 
     expect(guard.hasFetched('key')).toEqual(true);
+
     expect(guard.hasFetched('other-key')).toEqual(true);
   });
 
@@ -156,10 +164,12 @@ describe('fetchOnceGuard generation fence', () => {
     const second = guard.run('key', () => Promise.resolve('fresh'));
 
     expect(fetcher).toHaveBeenCalledTimes(1);
+
     expect(await second).toEqual('fresh');
 
     firstGate.resolve('stale');
     expect(await first).toEqual('stale');
+
     expect(guard.isInFlight('key')).toEqual(false);
   });
 });

@@ -194,6 +194,7 @@ describe('useChatSettingsActions', () => {
     });
 
     expect(forceFlush).toHaveBeenCalledTimes(1);
+
     expect(scrollToBottom).toHaveBeenCalledTimes(1);
 
     expect(forceFlush.mock.invocationCallOrder[0]).toBeLessThan(
@@ -211,6 +212,7 @@ describe('useChatSettingsActions', () => {
 
     await waitFor(() => {
       expect(refetchEmotes).toHaveBeenCalledTimes(1);
+
       expect(reprocessAllMessages).toHaveBeenCalledTimes(1);
     });
 
@@ -241,6 +243,7 @@ describe('useChatSettingsActions', () => {
     });
 
     expect(partChannel).toHaveBeenCalledWith('foam');
+
     expect(joinChannel).not.toHaveBeenCalled();
 
     act(() => {

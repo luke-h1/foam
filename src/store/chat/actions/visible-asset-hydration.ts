@@ -78,6 +78,7 @@ export function scheduleVisibleAssetHydrationPass(
         if (visibleAssetHydration.epoch !== epoch) {
           return undefined;
         }
+
         return runPass(epoch);
       })
       .catch(error => {

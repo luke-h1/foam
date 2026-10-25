@@ -129,6 +129,7 @@ describe('ChatOverlayLayer moderation targets', () => {
     });
 
     expect(runModCommandMock).not.toHaveBeenCalled();
+
     expect(showActionMenuMock).toHaveBeenCalledTimes(1);
 
     const menu = pickDurationOption(3);
@@ -190,6 +191,7 @@ describe('ChatOverlayLayer moderation targets', () => {
     });
 
     expect(showActionMenuMock).not.toHaveBeenCalled();
+
     expect(runModCommandMock).toHaveBeenCalledTimes(1);
 
     expect(runModCommandMock.mock.calls[0]).toEqual([

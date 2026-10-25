@@ -48,6 +48,7 @@ function MediaLinkCardComponent({
           if (!twitchClipId) {
             throw new Error('Missing Twitch clip ID');
           }
+
           return twitchService.getClip(twitchClipId);
         },
         enabled: type === 'twitchClip' && Boolean(twitchClipId),

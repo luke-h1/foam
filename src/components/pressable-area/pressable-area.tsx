@@ -50,6 +50,7 @@ export function PressableArea({
         if (disabled !== true) {
           pressed.set(withTiming(1, pressAnimation));
         }
+
         onPressIn?.(e);
       }}
       onPressOut={e => {

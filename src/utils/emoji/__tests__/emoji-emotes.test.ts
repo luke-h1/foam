@@ -5,6 +5,7 @@ describe('getEmojiEmotes', () => {
     const joy = getEmojiEmotes('twitter').find(emote => emote.name === ':joy:');
 
     expect(joy?.id).toBe('1F602:joy');
+
     expect(joy?.emoji_hexcode).toBe('1F602');
 
     expect(joy?.url).toBe(
@@ -16,6 +17,7 @@ describe('getEmojiEmotes', () => {
     const joy = getEmojiEmotes('google').find(emote => emote.name === ':joy:');
 
     expect(joy?.id).toBe('1F602:joy');
+
     expect(joy?.emoji_hexcode).toBe('1F602');
 
     expect(joy?.url).toBe(

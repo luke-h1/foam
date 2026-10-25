@@ -71,6 +71,7 @@ export const createFetchOnceGuard = (
       activeFetches += 1;
       return Promise.resolve();
     }
+
     return new Promise<void>(resolve => {
       fetchQueue.push(resolve);
     });

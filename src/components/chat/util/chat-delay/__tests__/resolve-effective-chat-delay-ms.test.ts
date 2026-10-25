@@ -14,7 +14,9 @@ describe('resolveEffectiveChatDelayMs', () => {
 
   test('clamps negative and non-finite manual delays to zero', () => {
     expect(resolveEffectiveChatDelayMs(-3, null)).toBe(0);
+
     expect(resolveEffectiveChatDelayMs(Number.NaN, null)).toBe(0);
+
     expect(resolveEffectiveChatDelayMs(Number.POSITIVE_INFINITY, null)).toBe(0);
   });
 
@@ -28,6 +30,7 @@ describe('resolveEffectiveChatDelayMs', () => {
 
   test('auto clamps negative and non-finite measurements to zero', () => {
     expect(resolveEffectiveChatDelayMs('auto', -2)).toBe(0);
+
     expect(resolveEffectiveChatDelayMs('auto', Number.NaN)).toBe(0);
   });
 

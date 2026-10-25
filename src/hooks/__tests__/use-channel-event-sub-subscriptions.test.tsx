@@ -58,9 +58,13 @@ describe('channel poll and prediction EventSub subscriptions', () => {
     const poll = renderHook(() => useChannelPoll('channel-id'), { wrapper });
 
     expect(prediction.result.current.isAvailable).toBe(false);
+
     expect(poll.result.current.isAvailable).toBe(false);
+
     expect(mockGetInstance.mock.calls).toHaveLength(0);
+
     expect(mockSubscribeToEvent.mock.calls).toHaveLength(0);
+
     expect(mockTwitchGet).not.toHaveBeenCalled();
   });
 
@@ -74,6 +78,7 @@ describe('channel poll and prediction EventSub subscriptions', () => {
     const poll = renderHook(() => useChannelPoll('channel-id'), { wrapper });
 
     expect(prediction.result.current.isAvailable).toBe(true);
+
     expect(poll.result.current.isAvailable).toBe(true);
 
     await waitFor(() => {

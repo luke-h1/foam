@@ -21,6 +21,7 @@ describe('resolveMentionColor', () => {
     mockGetUserMessageColor.mockReturnValue('#9147FF');
 
     expect(resolveMentionColor('VelvetFathom93')).toBe('rgb(158, 93, 255)');
+
     expect(mockGetUserMessageColor).toHaveBeenCalledWith('VelvetFathom93');
   });
 
@@ -28,16 +29,19 @@ describe('resolveMentionColor', () => {
     const color = resolveMentionColor('@SomeUser');
 
     expect(color).toBe('rgb(255, 105, 180)');
+
     expect(mockGetUserMessageColor).toHaveBeenCalledWith('SomeUser');
   });
 
   test('returns a colour without consulting chat history for empty input', () => {
     expect(resolveMentionColor('')).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
+
     expect(mockGetUserMessageColor).not.toHaveBeenCalled();
   });
 
   test('returns a colour without consulting chat history for @-only input', () => {
     expect(resolveMentionColor('@')).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
+
     expect(mockGetUserMessageColor).not.toHaveBeenCalled();
   });
 });

@@ -50,6 +50,7 @@ describe('useTwitchChannelPointsEventSub', () => {
     renderEventSub(createLoggedOutAuthContextValue());
 
     expect(mockGetInstance).not.toHaveBeenCalled();
+
     expect(mockSubscribeToEvent).not.toHaveBeenCalled();
   });
 
@@ -61,6 +62,7 @@ describe('useTwitchChannelPointsEventSub', () => {
     );
 
     expect(mockGetInstance).not.toHaveBeenCalled();
+
     expect(mockSubscribeToEvent).not.toHaveBeenCalled();
   });
 

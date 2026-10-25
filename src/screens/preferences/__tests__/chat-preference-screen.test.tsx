@@ -44,12 +44,15 @@ describe('ChatPreferenceScreen', () => {
     const preview = screen.getByTestId('chat-preference-preview-context');
 
     expect(isSwitchOn('Show Jump Pill')).toBe(true);
+
     expect(within(preview).getByText('Jump to latest')).toBeOnTheScreen();
 
     fireEvent(screen.getByLabelText('Show Jump Pill'), 'valueChange', false);
 
     expect(isSwitchOn('Show Jump Pill')).toBe(false);
+
     expect(within(preview).queryByText('Jump to latest')).not.toBeOnTheScreen();
+
     expect(getPreferences().showUnreadJumpPill).toBe(false);
   });
 
@@ -62,6 +65,7 @@ describe('ChatPreferenceScreen', () => {
       ).getAllByTestId('chat-message')[1];
 
     expect(isSwitchOn('Alternating Rows')).toBe(false);
+
     expect(getSecondRow()).not.toHaveStyle({
       backgroundColor: CHAT_SURFACE_COLORS.alternatingRow,
     });
@@ -69,9 +73,11 @@ describe('ChatPreferenceScreen', () => {
     fireEvent(screen.getByLabelText('Alternating Rows'), 'valueChange', true);
 
     expect(isSwitchOn('Alternating Rows')).toBe(true);
+
     expect(getSecondRow()).toHaveStyle({
       backgroundColor: CHAT_SURFACE_COLORS.alternatingRow,
     });
+
     expect(getPreferences().showAlternatingChatRows).toBe(true);
   });
 
@@ -80,6 +86,7 @@ describe('ChatPreferenceScreen', () => {
 
     const previewTestID = 'chat-preference-preview-7tv-emotes';
     expect(isSwitchOn('Emotes')).toBe(true);
+
     expect(getPreviewEmoteUrls(previewTestID)).toEqual([
       'https://cdn.7tv.app/emote/01F5PA9D3000034VRANA2SYVDP/4x.avif',
       'https://cdn.7tv.app/emote/01GB4EV0Q800090V9B3D8CGEHV/4x.avif',
@@ -88,12 +95,15 @@ describe('ChatPreferenceScreen', () => {
     fireEvent(screen.getAllByLabelText('Emotes')[0]!, 'valueChange', false);
 
     expect(isSwitchOn('Emotes')).toBe(false);
+
     expect(getPreviewEmoteUrls(previewTestID)).toEqual([]);
+
     expect(
       within(screen.getByTestId(previewTestID)).getByText(
         'hello yePls FeelsStrongMan world',
       ),
     ).toBeOnTheScreen();
+
     expect(getPreferences().show7TvEmotes).toBe(false);
   });
 
@@ -103,6 +113,7 @@ describe('ChatPreferenceScreen', () => {
     const previewTestID = 'chat-preference-preview-emote-animations';
 
     expect(isSwitchOn('Disable Emote Animations')).toBe(false);
+
     expect(getPreviewEmoteUrls(previewTestID)).toEqual([
       'https://cdn.betterttv.net/emote/5f1c24b91ab9be446c4d78dc/3x',
       'https://cdn.betterttv.net/emote/5ee22dfb924aa35e32a7a112/3x',
@@ -115,10 +126,12 @@ describe('ChatPreferenceScreen', () => {
     );
 
     expect(isSwitchOn('Disable Emote Animations')).toBe(true);
+
     expect(getPreviewEmoteUrls(previewTestID)).toEqual([
       'https://cdn.betterttv.net/emote/5f1c24b91ab9be446c4d78dc/3x.png',
       'https://cdn.betterttv.net/emote/5ee22dfb924aa35e32a7a112/3x',
     ]);
+
     expect(getPreferences().disableEmoteAnimations).toBe(true);
   });
 });

@@ -31,6 +31,7 @@ describe('createChatDelayQueue release timing', () => {
     );
 
     expect(queue.size()).toBe(1);
+
     expect(queue.peekNextReleaseAt()).toBe(3000);
   });
 
@@ -57,8 +58,11 @@ describe('createChatDelayQueue release timing', () => {
 
     const all = queue.drainAll();
     expect(all.map(entry => entry.message.message_id)).toEqual(['a', 'b']);
+
     expect(all.map(entry => entry.countUnread)).toEqual([true, false]);
+
     expect(queue.size()).toBe(0);
+
     expect(queue.peekNextReleaseAt()).toBeNull();
   });
 

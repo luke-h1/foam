@@ -28,6 +28,7 @@ describe('getTimedCacheValue / setTimedCacheValue', () => {
     jest.setSystemTime(1000);
 
     expect(getTimedCacheValue(cache, 'a')).toBeUndefined();
+
     expect(cache.size).toBe(0);
   });
 
@@ -39,6 +40,7 @@ describe('getTimedCacheValue / setTimedCacheValue', () => {
     setTimedCacheValue(cache, 'b', 'value-b', 1000, 10);
 
     expect(cache.has('a')).toBe(false);
+
     expect(getTimedCacheValue(cache, 'b')).toBe('value-b');
   });
 
@@ -49,8 +51,11 @@ describe('getTimedCacheValue / setTimedCacheValue', () => {
     setTimedCacheValue(cache, 'c', 3, 60_000, 2);
 
     expect(cache.size).toBe(2);
+
     expect(getTimedCacheValue(cache, 'a')).toBeUndefined();
+
     expect(getTimedCacheValue(cache, 'b')).toBe(2);
+
     expect(getTimedCacheValue(cache, 'c')).toBe(3);
   });
 });

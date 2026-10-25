@@ -83,7 +83,9 @@ describe('useCachedEmotes', () => {
     await act(flushMicrotasks);
 
     expect(mockWarm).toHaveBeenCalledTimes(2);
+
     expect(mockWarm.mock.calls[0]?.[0]).toHaveLength(24);
+
     expect(mockWarm.mock.calls[1]?.[0]).toHaveLength(24);
   });
 
@@ -103,6 +105,7 @@ describe('useCachedEmotes', () => {
 
     unmount();
     expect(mockRelease).toHaveBeenCalledTimes(1);
+
     expect(mockAbortInflight).toHaveBeenCalledTimes(1);
 
     act(() => resolvers[0]?.());

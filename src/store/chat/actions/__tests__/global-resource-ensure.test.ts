@@ -136,6 +136,7 @@ describe('ensureGlobalChatResources', () => {
 
     const cache = chatStore$.persisted.globalCaches.peek();
     expect(cache.twitchGlobalEmotes).toEqual([]);
+
     expect(cache.lastUpdated).toBe(0);
   });
 });

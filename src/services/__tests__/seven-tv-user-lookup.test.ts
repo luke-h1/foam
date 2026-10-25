@@ -50,6 +50,7 @@ describe('sevenTvService user lookup', () => {
     const emoteSetId = await sevenTvService.getEmoteSetId('123');
 
     expect([userId, emoteSetId]).toEqual(['stv-1', 'set-1']);
+
     expect(mockRunCosmeticsQuery).toHaveBeenCalledTimes(1);
   });
 

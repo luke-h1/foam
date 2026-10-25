@@ -266,6 +266,7 @@ describe('createApiClient', () => {
     await expect(client.get('/users')).rejects.toBeInstanceOf(ApiError);
 
     expect(apiWarnSpy).toHaveBeenCalledTimes(1);
+
     expect(apiErrorSpy).not.toHaveBeenCalled();
   });
 
@@ -285,6 +286,7 @@ describe('createApiClient', () => {
     await expect(client.get('/room/id/999')).rejects.toBeInstanceOf(ApiError);
 
     expect(ffzWarnSpy).not.toHaveBeenCalled();
+
     expect(ffzErrorSpy).not.toHaveBeenCalled();
   });
 
@@ -310,6 +312,7 @@ describe('createApiClient', () => {
     await expect(client.get('/users')).rejects.toBeInstanceOf(ApiError);
 
     expect(apiErrorSpy).toHaveBeenCalledTimes(1);
+
     expect(apiWarnSpy).not.toHaveBeenCalled();
   });
 
@@ -328,7 +331,9 @@ describe('createApiClient', () => {
     const result = await client.get('/users');
 
     expect(result).toEqual({ data: ['ok'] });
+
     expect(mockFetch).toHaveBeenCalledTimes(2);
+
     expect(onUnauthorized).toHaveBeenCalledTimes(1);
 
     expect(onUnauthorized).toHaveBeenCalledWith(
@@ -350,6 +355,7 @@ describe('createApiClient', () => {
     await expect(client.get('/users')).rejects.toBeInstanceOf(ApiError);
 
     expect(mockFetch).toHaveBeenCalledTimes(1);
+
     expect(onUnauthorized).toHaveBeenCalledTimes(1);
   });
 
@@ -368,6 +374,7 @@ describe('createApiClient', () => {
     await expect(client.get('/users')).rejects.toBeInstanceOf(ApiError);
 
     expect(mockFetch).toHaveBeenCalledTimes(2);
+
     expect(onUnauthorized).toHaveBeenCalledTimes(1);
   });
 });

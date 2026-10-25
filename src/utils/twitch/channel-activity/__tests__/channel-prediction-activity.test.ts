@@ -32,7 +32,9 @@ describe('channelPredictionActivity', () => {
     );
 
     expect(channelPredictionActivity.isActive(active)).toBe(true);
+
     expect(channelPredictionActivity.isActive(locked)).toBe(true);
+
     expect(channelPredictionActivity.isActive(resolved)).toBe(false);
   });
 

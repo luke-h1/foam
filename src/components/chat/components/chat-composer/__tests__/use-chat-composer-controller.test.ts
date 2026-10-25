@@ -37,6 +37,7 @@ describe('useChatComposerController', () => {
     });
 
     expect(result.current.isOverLimit).toBe(true);
+
     expect(result.current.submitEnabled).toBe(false);
 
     act(() => {
@@ -106,6 +107,7 @@ describe('useChatComposerController', () => {
     });
 
     expect(result.current.showCharacterCount).toBe(true);
+
     expect(result.current.remainingCharacters).toBe(10);
   });
 
@@ -135,6 +137,7 @@ describe('useChatComposerController', () => {
     });
 
     expect(result.current.text).toBe('hello chat');
+
     expect(focusInput).toHaveBeenCalledTimes(1);
   });
 
@@ -173,6 +176,7 @@ describe('useChatComposerController', () => {
     });
 
     expect(result.current.showEmoteRail).toBe(true);
+
     expect(result.current.wordInfo.searchTerm).toBe('Kap');
   });
 
@@ -188,6 +192,7 @@ describe('useChatComposerController', () => {
     });
 
     expect(result.current.showUserRail).toBe(true);
+
     expect(result.current.wordInfo.word).toBe('@lu');
   });
 
@@ -209,6 +214,7 @@ describe('useChatComposerController', () => {
     });
 
     expect(result.current.showUserRail).toBe(true);
+
     expect(result.current.wordInfo.word).toBe('@lu');
   });
 

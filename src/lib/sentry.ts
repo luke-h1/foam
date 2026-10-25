@@ -147,6 +147,7 @@ export function init() {
       if (event.level === 'fatal' || event.level === 'error') {
         markSessionError();
       }
+
       return scrubPii(event);
     },
     beforeSendTransaction(event) {

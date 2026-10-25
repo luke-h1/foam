@@ -14,6 +14,7 @@ function readStringTag(
   if (value === undefined || value === true || value === false) {
     return undefined;
   }
+
   return value;
 }
 

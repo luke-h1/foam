@@ -20,10 +20,15 @@ describe('createOptimisticUserState', () => {
     });
 
     expect(userstate['display-name']).toBe('Viewer');
+
     expect(userstate.login).toBe('viewer');
+
     expect(userstate.username).toBe('Viewer');
+
     expect(userstate['user-id']).toBe('user-1');
+
     expect(userstate.color).toBe('#00ff00');
+
     expect(userstate.badges).toEqual({ moderator: '1' });
   });
 
@@ -43,8 +48,11 @@ describe('createOptimisticUserState', () => {
     });
 
     expect(userstate['reply-parent-msg-id']).toBe('');
+
     expect(userstate['reply-parent-display-name']).toBe('');
+
     expect(userstate['reply-parent-msg-body']).toBe('');
+
     expect(userstate['reply-parent-user-login']).toBe('');
   });
 
@@ -63,8 +71,11 @@ describe('createOptimisticUserState', () => {
     });
 
     expect(userstate['reply-parent-msg-id']).toBe('parent-1');
+
     expect(userstate['reply-parent-msg-body']).toBe('parent body');
+
     expect(userstate['reply-parent-display-name']).toBe('Parent');
+
     expect(userstate['reply-parent-user-login']).toBe('parent');
   });
 });
@@ -87,10 +98,15 @@ describe('createOptimisticMessage', () => {
     });
 
     expect(message.message_id).toBe(String(SENT_AT));
+
     expect(message.message_nonce).toBe(String(SENT_AT));
+
     expect(message.id).toBe(`${SENT_AT}_${SENT_AT}`);
+
     expect(message.message).toEqual([{ type: 'text', content: 'hello there' }]);
+
     expect(message.sender).toBe('Viewer');
+
     expect(message.channel).toBe('somechannel');
   });
 
@@ -116,6 +132,7 @@ describe('createOptimisticMessage', () => {
     });
 
     expect(plain.isAction).toBeUndefined();
+
     expect(action.isAction).toBe(true);
   });
 
@@ -138,8 +155,11 @@ describe('createOptimisticMessage', () => {
     });
 
     expect(message.parentDisplayName).toBe('Parent');
+
     expect(message.replyDisplayName).toBe('parent');
+
     expect(message.replyBody).toBe('parent body');
+
     expect(message.parentColor).toBe('#9146ff');
   });
 });

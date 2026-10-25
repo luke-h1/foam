@@ -85,8 +85,11 @@ describe('chat notice pipeline', () => {
     const { getByText } = renderNoticeFromIrc(RESUB);
 
     expect(getByText('Rexdain')).toBeOnTheScreen();
+
     expect(getByText('Subscribed with Tier 1.')).toBeOnTheScreen();
+
     expect(getByText('27 months')).toBeOnTheScreen();
+
     expect(getByText('still here')).toBeOnTheScreen();
   });
 
@@ -94,7 +97,9 @@ describe('chat notice pipeline', () => {
     const { getByText, queryByText } = renderNoticeFromIrc(SUB);
 
     expect(getByText('NewSubscriber')).toBeOnTheScreen();
+
     expect(getByText('Subscribed with Prime.')).toBeOnTheScreen();
+
     expect(queryByText(/months/)).toBeNull();
   });
 
@@ -102,6 +107,7 @@ describe('chat notice pipeline', () => {
     const { getByText } = renderNoticeFromIrc(SUBGIFT);
 
     expect(getByText('GiftGiver')).toBeOnTheScreen();
+
     expect(getByText('Lucky')).toBeOnTheScreen();
   });
 
@@ -109,6 +115,7 @@ describe('chat notice pipeline', () => {
     const { getByText } = renderNoticeFromIrc(SUBMYSTERYGIFT);
 
     expect(getByText('MysteryGifter')).toBeOnTheScreen();
+
     expect(getByText('5')).toBeOnTheScreen();
   });
 
@@ -116,8 +123,11 @@ describe('chat notice pipeline', () => {
     const { getByText } = renderNoticeFromIrc(WATCH_STREAK);
 
     expect(getByText('Watch streak')).toBeOnTheScreen();
+
     expect(getByText('Krankel')).toBeOnTheScreen();
+
     expect(getByText(' is currently on a 25-stream streak!')).toBeOnTheScreen();
+
     expect(getByText('25 streams')).toBeOnTheScreen();
   });
 
@@ -131,7 +141,9 @@ describe('chat notice pipeline', () => {
     const { getByText } = renderNoticeFromIrc(MOD_ANNIVERSARY);
 
     expect(getByText('Mod anniversary')).toBeOnTheScreen();
+
     expect(getByText('Jimmotep')).toBeOnTheScreen();
+
     expect(getByText(' has been a moderator for 18 months!')).toBeOnTheScreen();
 
     expect(
@@ -153,6 +165,7 @@ describe('chat notice pipeline', () => {
     const { getByText } = renderNoticeFromIrc(UNRAID);
 
     expect(getByText('Raid cancelled')).toBeOnTheScreen();
+
     expect(getByText('The raid has been cancelled.')).toBeOnTheScreen();
   });
 
@@ -166,7 +179,9 @@ describe('chat notice pipeline', () => {
     const { getByText } = renderNoticeFromIrc(CHARITY);
 
     expect(getByText('Charity donation')).toBeOnTheScreen();
+
     expect(getByText('donated $10.00 to Cancer Research')).toBeOnTheScreen();
+
     expect(getByText('for a good cause')).toBeOnTheScreen();
   });
 
@@ -174,7 +189,9 @@ describe('chat notice pipeline', () => {
     const { getByText } = renderNoticeFromIrc(RITUAL);
 
     expect(getByText('New chatter')).toBeOnTheScreen();
+
     expect(getByText('Newbie is new here. Say hello!')).toBeOnTheScreen();
+
     expect(getByText('hi everyone')).toBeOnTheScreen();
   });
 

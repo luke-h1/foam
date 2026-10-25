@@ -102,7 +102,9 @@ describe('SettingsSheet', () => {
     fireEvent.press(getByText('Density'));
 
     expect(getPreferences().chatDensity).toBe('compact');
+
     expect(mockRequestClose).toHaveBeenCalledTimes(1);
+
     expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 

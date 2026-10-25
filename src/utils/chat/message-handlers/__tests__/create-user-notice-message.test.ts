@@ -53,6 +53,7 @@ describe('createUserNoticeMessage', () => {
     });
 
     expect(result.notice_tags?.['msg-id']).toBe('viewermilestone');
+
     expect(result.message[0]?.type).toBe('viewermilestone');
   });
 
@@ -72,6 +73,7 @@ describe('createUserNoticeMessage', () => {
     });
 
     expect(result.notice_tags?.['msg-id']).toBe('sub');
+
     expect(result.message[0]?.type).toBe('sub');
 
     expect({
@@ -105,6 +107,7 @@ describe('createUserNoticeMessage', () => {
     });
 
     expect(result.notice_tags?.['msg-id']).toBe('resub');
+
     expect(result.message[0]?.type).toBe('resub');
   });
 
@@ -144,6 +147,7 @@ describe('createUserNoticeMessage', () => {
     });
 
     expect(result.notice_tags?.['msg-id']).toBe('raid');
+
     expect(result.isTwitchSystemNotice).toBe(true);
 
     expect(result.message).toEqual<MessageToken[]>([
@@ -187,6 +191,7 @@ describe('createUserNoticeMessage', () => {
     });
 
     expect(result.notice_tags?.['msg-id']).toBe('submysterygift');
+
     expect(result.message[0]?.type).toBe('submysterygift');
   });
 
@@ -210,6 +215,7 @@ describe('createUserNoticeMessage', () => {
     });
 
     expect(result.notice_tags?.['msg-id']).toBe('giftpaidupgrade');
+
     expect(result.message[0]?.type).toBe('giftpaidupgrade');
   });
 
@@ -230,7 +236,9 @@ describe('createUserNoticeMessage', () => {
     });
 
     expect(result.notice_tags?.['msg-id']).toBe('rewardgift');
+
     expect(result.isChannelPointRedemption).not.toBe(true);
+
     expect(result.isTwitchSystemNotice).toBe(true);
 
     expect(result.message[0]).toEqual<MessageToken>({
@@ -258,6 +266,7 @@ describe('createUserNoticeMessage', () => {
     });
 
     expect(result.notice_tags?.['msg-id']).toBe('bitsbadgetier');
+
     expect(result.isTwitchSystemNotice).toBe(true);
 
     expect(result.message).toEqual<MessageToken[]>([
@@ -279,6 +288,7 @@ describe('createUserNoticeMessage', () => {
     });
 
     expect(result.notice_tags?.['msg-id']).toBe('unraid');
+
     expect(result.isTwitchSystemNotice).toBe(true);
 
     expect(result.message).toEqual<MessageToken[]>([
@@ -300,6 +310,7 @@ describe('createUserNoticeMessage', () => {
     });
 
     expect(result.notice_tags?.['msg-id']).toBe('sharedchatnotice');
+
     expect(result.isTwitchSystemNotice).toBe(true);
 
     expect(result.message).toEqual<MessageToken[]>([
@@ -403,10 +414,15 @@ describe('createUserNoticeMessage', () => {
     });
 
     expect(result.notice_tags?.['msg-id']).toBe('announcement');
+
     expect(result.message_id).toBe('55d90904-e515-47d0-ac1d-879f7f1d7b01');
+
     expect(result.isAnnouncement).toBe(true);
+
     expect(result.isTwitchSystemNotice).toBeUndefined();
+
     expect(result.sender).toBe('Gekon');
+
     expect(result.userstate.username).toBe('Gekon');
 
     expect(result.message).toEqual<MessageToken[]>([
@@ -427,8 +443,11 @@ describe('createUserNoticeMessage', () => {
     });
 
     expect(result.isHighlightedMessage).toBe(true);
+
     expect(result.isChannelPointRedemption).toBe(true);
+
     expect(result.isTwitchSystemNotice).toBeUndefined();
+
     expect(result.sender).toBe('HighlightedUser');
 
     expect(result.message).toEqual<MessageToken[]>([
@@ -608,6 +627,7 @@ describe('createUserNoticeMessage', () => {
     ]);
 
     expect(result.isTwitchSystemNotice).toBe(true);
+
     expect(result.badges).toEqual<SanitisedBadgeSet[]>([]);
   });
 });

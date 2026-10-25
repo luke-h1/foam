@@ -152,7 +152,9 @@ describe('applyEntitlementCreateEvent', () => {
     await settleBackgroundFetches();
 
     expect(getUserPaintId('ttv-1')).toBe('paint-1');
+
     expect(getUserBadgeId('ttv-1')).toBeUndefined();
+
     expect(mockGetUserCosmeticsGql.mock.calls).toEqual([['stv-user-1']]);
   });
 
@@ -179,6 +181,7 @@ describe('applyEntitlementCreateEvent', () => {
     await settleBackgroundFetches();
 
     expect(getUserPaintId('ttv-1')).toBe('paint-1');
+
     expect(mockGetUserCosmeticsGql).not.toHaveBeenCalled();
   });
 
@@ -192,7 +195,9 @@ describe('applyEntitlementCreateEvent', () => {
     });
 
     expect(getUserBadgeId('ttv-1')).toBe('badge-1');
+
     expect(getUserPaintId('ttv-1')).toBeUndefined();
+
     expect(getSevenTvUserIdForTwitchId('ttv-1')).toBe('stv-user-1');
 
     await settleBackgroundFetches();
@@ -214,6 +219,7 @@ describe('applyEntitlementCreateEvent', () => {
     await settleBackgroundFetches();
 
     expect(getUserBadgeId('ttv-1')).toBe('badge-1');
+
     expect(mockGetUserCosmeticsGql).not.toHaveBeenCalled();
   });
 
@@ -256,7 +262,9 @@ describe('applyEntitlementCreateEvent', () => {
     await settleBackgroundFetches();
 
     expect(getUserPaintId('ttv-scummy')).toBe('paint-1');
+
     expect(getUserBadgeId('ttv-scummy')).toBe('badge-scummy');
+
     expect(mockGetUserCosmeticsGql.mock.calls).toEqual([['stv-user-1']]);
 
     expect(
@@ -280,6 +288,7 @@ describe('applyEntitlementResetEvent', () => {
     applyEntitlementResetEvent('stv-user-1');
 
     expect(getUserPaintId('ttv-1')).toBeUndefined();
+
     expect(getUserBadgeId('ttv-1')).toBeUndefined();
   });
 
@@ -372,6 +381,7 @@ describe('applyEntitlementUpdateEvent', () => {
     });
 
     expect(getUserPaintId('ttv-1')).toBe('paint-1');
+
     expect(getUserBadgeId('ttv-1')).toBe('badge-2');
   });
 
@@ -419,6 +429,7 @@ describe('applyEntitlementUpdateEvent', () => {
     });
 
     expect(getUserPaintId('ttv-1')).toBe('paint-2');
+
     expect(getUserBadgeId('ttv-1')).toBe('badge-1');
   });
 });

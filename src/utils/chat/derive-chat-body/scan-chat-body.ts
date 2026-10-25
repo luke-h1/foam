@@ -72,6 +72,7 @@ export function scanChatBody(message: MessageToken[]): ChatBodyScan {
         if (emoteBreaksInline(token)) {
           fitsInOneText = false;
         }
+
         break;
       default:
         fitsInOneText = false;

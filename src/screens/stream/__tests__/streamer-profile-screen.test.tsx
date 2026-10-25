@@ -128,6 +128,7 @@ describe('StreamerProfileScreen', () => {
     ).toBeOnTheScreen();
 
     expect(screen.getByText('shroud')).toBeOnTheScreen();
+
     expect(screen.getByText('@shroud')).toBeOnTheScreen();
 
     // VOD duration "1h2m3s" formatted as h:mm:ss

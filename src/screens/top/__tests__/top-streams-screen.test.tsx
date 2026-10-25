@@ -69,6 +69,7 @@ describe('TopStreamsScreen', () => {
     render(<TopStreamsScreen />);
 
     expect(await screen.findByText('Streamer1')).toBeOnTheScreen();
+
     expect(screen.getByText('Streamer2')).toBeOnTheScreen();
   });
 });

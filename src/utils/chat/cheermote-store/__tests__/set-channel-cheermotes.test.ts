@@ -40,13 +40,16 @@ describe('setChannelCheermotes', () => {
     setChannelCheermotes('channel-20', [makeCheermote('Cheer')]);
 
     expect(getChannelCheermotes('channel-0')).toBeUndefined();
+
     expect(getChannelCheermotes('channel-1')?.has('cheer')).toBe(true);
+
     expect(getChannelCheermotes('channel-20')?.has('cheer')).toBe(true);
 
     const fetcher = jest.fn(() => Promise.resolve([makeCheermote('Cheer')]));
     await fetchChannelCheermotes('channel-0', fetcher);
 
     expect(fetcher).toHaveBeenCalledTimes(1);
+
     expect(getChannelCheermotes('channel-0')?.has('cheer')).toBe(true);
   });
 
@@ -59,7 +62,9 @@ describe('setChannelCheermotes', () => {
     setChannelCheermotes('channel-20', [makeCheermote('Cheer')]);
 
     expect(getChannelCheermotes('channel-0')?.has('cheer')).toBe(true);
+
     expect(getChannelCheermotes('channel-1')).toBeUndefined();
+
     expect(getChannelCheermotes('channel-20')?.has('cheer')).toBe(true);
   });
 });

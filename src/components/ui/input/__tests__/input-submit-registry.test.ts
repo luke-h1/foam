@@ -31,6 +31,7 @@ describe('inputSubmitRegistry', () => {
     invoker();
 
     expect(staleHandler).not.toHaveBeenCalled();
+
     expect(currentHandler).toHaveBeenCalledTimes(1);
   });
 
@@ -43,6 +44,7 @@ describe('inputSubmitRegistry', () => {
     invoker();
 
     expect(handler).not.toHaveBeenCalled();
+
     expect(getIosInputSubmitInvoker('input-4')).not.toBe(invoker);
   });
 
@@ -55,6 +57,7 @@ describe('inputSubmitRegistry', () => {
     getIosInputSubmitInvoker('input-5a')();
 
     expect(handlerA).toHaveBeenCalledTimes(1);
+
     expect(handlerB).not.toHaveBeenCalled();
   });
 });

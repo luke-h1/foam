@@ -40,6 +40,7 @@ describe('findCustomHighlight', () => {
 
   test('returns undefined for empty rules or message', () => {
     expect(findCustomHighlight(textMessage('pog'), [])).toEqual(undefined);
+
     expect(findCustomHighlight([], rules)).toEqual(undefined);
   });
 

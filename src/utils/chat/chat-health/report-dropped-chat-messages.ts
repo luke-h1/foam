@@ -121,5 +121,6 @@ export function resetDroppedChatMessageReports(): void {
       clearTimeout(state.trailingReportTimer);
     }
   }
+
   states.clear();
 }

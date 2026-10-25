@@ -43,13 +43,17 @@ describe('resolveWeightFromFontWeight', () => {
 
   test('maps numeric and keyword weights', () => {
     expect(resolveWeightFromFontWeight(600)).toEqual('semibold');
+
     expect(resolveWeightFromFontWeight('bold')).toEqual('bold');
+
     expect(resolveWeightFromFontWeight('normal')).toEqual('normal');
   });
 
   test('clamps out-of-range and off-scale weights to the nearest token', () => {
     expect(resolveWeightFromFontWeight(50)).toEqual('ultralight');
+
     expect(resolveWeightFromFontWeight(450)).toEqual('medium');
+
     expect(resolveWeightFromFontWeight(1000)).toEqual('black');
   });
 

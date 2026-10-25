@@ -58,6 +58,7 @@ export function createScrollActivity(): ScrollActivity {
         clearTimeout(settleTimer);
         settleTimer = null;
       }
+
       setActive(false);
     },
     subscribe(listener: ScrollActivityListener): () => void {

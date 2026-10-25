@@ -41,7 +41,9 @@ describe('Moderator action sheets', () => {
     );
 
     expect(queryByText('Delete message')).toBeNull();
+
     expect(queryByText('Time out…')).toBeNull();
+
     expect(queryByText('Ban user')).toBeNull();
 
     rerender(
@@ -88,7 +90,9 @@ describe('Moderator action sheets', () => {
     );
 
     expect(queryByText('Delete message')).toBeNull();
+
     expect(queryByText('Time out…')).toBeOnTheScreen();
+
     expect(queryByText('Ban user')).toBeOnTheScreen();
   });
 
@@ -114,7 +118,9 @@ describe('Moderator action sheets', () => {
 
     fireEvent.press(getByText('Pin message'));
     expect(onPinMessage).toHaveBeenCalledTimes(1);
+
     expect(queryByText('Refresh pin')).toBeNull();
+
     expect(queryByText('Unpin message')).toBeNull();
 
     rerender(
@@ -165,6 +171,7 @@ describe('Moderator action sheets', () => {
     );
 
     expect(queryByText('Time out…')).toBeNull();
+
     expect(queryByText('Ban user')).toBeNull();
 
     rerender(
@@ -216,6 +223,7 @@ describe('Moderator action sheets', () => {
     );
 
     expect(queryByText('Time out…')).toBeNull();
+
     expect(queryByText('Ban user')).toBeNull();
   });
 
@@ -242,6 +250,7 @@ describe('Moderator action sheets', () => {
     );
 
     expect(queryByText('Block user')).toBeNull();
+
     expect(queryByText('Report user')).toBeNull();
 
     rerender(

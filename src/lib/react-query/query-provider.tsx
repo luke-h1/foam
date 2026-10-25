@@ -45,6 +45,7 @@ function checkIsOnlineIfNeeded() {
   if (checkPromise) {
     return;
   }
+
   checkPromise = checkIsOnline().then(nextIsOnline => {
     checkPromise = undefined;
     onlineManager.setOnline(nextIsOnline);

@@ -38,8 +38,11 @@ describe('PressableArea', () => {
       fireEvent(pressable, 'pressOut');
 
       expect(onRender).not.toHaveBeenCalled();
+
       expect(onPress).toHaveBeenCalledTimes(1);
+
       expect(onPressIn).toHaveBeenCalledTimes(1);
+
       expect(onPressOut).toHaveBeenCalledTimes(1);
     },
   );

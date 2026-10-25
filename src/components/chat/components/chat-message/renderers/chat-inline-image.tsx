@@ -332,6 +332,7 @@ function useEmoteLoadRecovery(
     if (showRef) {
       displayedSharedRef.current = sharedRef;
     }
+
     syncAfterImageChange();
   }, [sharedRef, showRef, syncAfterImageChange]);
 

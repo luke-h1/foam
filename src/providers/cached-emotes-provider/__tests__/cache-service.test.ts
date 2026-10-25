@@ -75,6 +75,7 @@ describe('cache-service', () => {
     clearCachedEmoteRefs();
 
     expect(onChange).toHaveBeenCalledTimes(1);
+
     expect(getCachedEmoteRef(url)).toBeNull();
   });
 
@@ -142,6 +143,7 @@ describe('cache-service', () => {
     await flushMicrotasks();
 
     expect(getCachedEmoteRef(url)).toBeNull();
+
     expect(onChange).not.toHaveBeenCalled();
   });
 
@@ -168,7 +170,9 @@ describe('cache-service', () => {
       await jest.advanceTimersByTimeAsync(20_001);
 
       expect(getCachedEmoteRef(url)).toEqual({ release });
+
       expect(release).not.toHaveBeenCalled();
+
       expect(getEmoteDecodeTimeoutCount()).toEqual(0);
     });
 
@@ -189,6 +193,7 @@ describe('cache-service', () => {
       ensureCachedEmoteRef(url);
       await jest.advanceTimersByTimeAsync(20_000);
       expect(getCachedEmoteStats().inflight).toEqual(0);
+
       expect(warn).toHaveBeenCalledTimes(1);
 
       expect(warn).toHaveBeenCalledWith('chat.emote.decode_timeout', {
@@ -203,7 +208,9 @@ describe('cache-service', () => {
       await jest.advanceTimersByTimeAsync(0);
 
       expect(getCachedEmoteRef(url)).toEqual({ release });
+
       expect(release).not.toHaveBeenCalled();
+
       expect(onChange).toHaveBeenCalledTimes(1);
     });
 
@@ -228,6 +235,7 @@ describe('cache-service', () => {
       await jest.advanceTimersByTimeAsync(0);
 
       expect(getCachedEmoteRef(url)).toEqual({});
+
       expect(release).toHaveBeenCalledTimes(1);
     });
 
@@ -252,7 +260,9 @@ describe('cache-service', () => {
       await jest.advanceTimersByTimeAsync(20_000);
 
       expect(loadAsync).toHaveBeenCalledTimes(9);
+
       expect(getCachedEmoteRef(queued)).toEqual({});
+
       expect(getCachedEmoteStats().inflight).toEqual(0);
 
       // The hung urls can be asked for again.
@@ -285,12 +295,14 @@ describe('cache-service', () => {
     await flushMicrotasks();
 
     expect(getCachedEmoteRef(url)).toBeNull();
+
     expect(release).toHaveBeenCalledTimes(1);
 
     ensureCachedEmoteRef(url);
     await flushMicrotasks();
 
     expect(loadAsync).toHaveBeenCalledTimes(2);
+
     expect(getCachedEmoteRef(url)).toEqual({});
   });
 
@@ -305,7 +317,9 @@ describe('cache-service', () => {
     releaseChannelEmoteRefs();
 
     expect(getCachedEmoteRef(globalUrl)).toEqual({});
+
     expect(getCachedEmoteRef(channelUrl)).toBeNull();
+
     expect(onChannelDrop).toHaveBeenCalledTimes(1);
 
     expect(getCachedEmoteStats()).toEqual({
@@ -360,7 +374,9 @@ describe('cache-service', () => {
     trimDecodedEmotes('reclaim');
 
     expect(getCachedEmoteRef(pinnedUrl)).toEqual({});
+
     expect(getCachedEmoteRef(unpinnedUrl)).toBeNull();
+
     expect(Image.clearMemoryCache).toHaveBeenCalledTimes(1);
   });
 
@@ -404,7 +420,9 @@ describe('cache-service', () => {
     ]);
 
     expect(getCachedEmoteStats().decoded).toBe(2400);
+
     expect(getCachedEmoteRef(urls[0]!)).toEqual({});
+
     expect(getCachedEmoteRef(urls[1]!)).toBeNull();
   });
 
@@ -496,6 +514,7 @@ describe('cache-service', () => {
     trimDecodedEmotes('advisory');
 
     expect(getCachedEmoteRef(mountedUrl)).toEqual({});
+
     expect(getCachedEmoteRef(offscreenUrl)).toBeNull();
     unsubscribe();
   });
@@ -587,6 +606,7 @@ describe('cache-service', () => {
 
     const saturatedSlotCount = decodedUrls.length;
     expect(saturatedSlotCount).toBeGreaterThan(0);
+
     expect(decodedUrls).not.toContain(renderUrl);
 
     releases[0]!();

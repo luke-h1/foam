@@ -21,5 +21,6 @@ export function resolveIconName(
   if (!androidIcon) {
     return icon;
   }
+
   return { ios: icon, android: androidIcon, web: androidIcon };
 }

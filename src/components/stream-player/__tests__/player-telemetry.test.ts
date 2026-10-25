@@ -96,6 +96,7 @@ describe('createPlayerTelemetry', () => {
     });
 
     expect(endSpan).toHaveBeenCalledWith(fakeSpan, 'ok');
+
     expect(logger.main.info).not.toHaveBeenCalled();
   });
 
@@ -283,6 +284,7 @@ describe('createPlayerTelemetry', () => {
     telemetry.notePlaybackStarted('webview_loaded');
 
     expect(countMetric).not.toHaveBeenCalled();
+
     expect(endSpan).not.toHaveBeenCalled();
   });
 });

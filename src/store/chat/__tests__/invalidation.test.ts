@@ -24,6 +24,7 @@ describe('invalidation', () => {
     invalidateMentionColors();
 
     expect(chatStore$.mentionLoginRevision.peek()).toBe(1);
+
     expect(getSessionCacheString('mentionColors', 'luke')).toBeUndefined();
   });
 
@@ -31,6 +32,7 @@ describe('invalidation', () => {
     invalidateBakedBadges();
 
     expect(chatStore$.cosmeticBindingsVersion.peek()).toBe(1);
+
     expect(chatStore$.cosmeticsCacheVersion.peek()).toBe(0);
   });
 
@@ -38,6 +40,7 @@ describe('invalidation', () => {
     invalidateCosmeticsCache();
 
     expect(chatStore$.cosmeticsCacheVersion.peek()).toBe(1);
+
     expect(chatStore$.cosmeticBindingsVersion.peek()).toBe(0);
   });
 

@@ -85,6 +85,7 @@ describe('sanitise7TvBadge', () => {
 
     const result = sanitise7TvBadge(badgeData, 'custom-id');
     expect(result.id).toBe('custom-id');
+
     expect(result.set).toBe('custom-id');
   });
 });

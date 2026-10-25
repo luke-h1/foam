@@ -24,6 +24,7 @@ describe('chat-suite-report metrics', () => {
       slopeMbPerMin: 114,
       samples: 20,
     });
+
     expect(isLeakSlope(drift!)).toEqual(true);
   });
 
@@ -44,6 +45,7 @@ describe('chat-suite-report metrics', () => {
     ];
 
     expect(meanFps(measures)).toEqual(50);
+
     // Sum of threads per sample, then mean across samples (a+b = 40, 60 → 50).
     expect(meanCpu(measures)).toEqual(50);
   });

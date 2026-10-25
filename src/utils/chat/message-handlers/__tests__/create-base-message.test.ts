@@ -29,7 +29,9 @@ describe('createBaseMessage', () => {
     const result = createBaseMessage(params);
 
     expect(result.channel).toBe('testchannel');
+
     expect(result.sender).toBe('TestUser');
+
     expect(result.message_id).toBe('msg-123');
 
     expect(result.message).toEqual<MessageToken[]>([
@@ -72,7 +74,9 @@ describe('createBaseMessage', () => {
     const result = createBaseMessage(params);
 
     expect(result.isHighlightedMessage).toBe(true);
+
     expect(result.isChannelPointRedemption).toBe(true);
+
     expect(result.userstate['msg-id']).toBe('highlighted-message');
   });
 
@@ -105,6 +109,7 @@ describe('createBaseMessage', () => {
     const result = createBaseMessage(params);
 
     expect(result.message_id).toBe('0');
+
     expect(result.message_nonce).toBe('test-nonce-123');
   });
 });

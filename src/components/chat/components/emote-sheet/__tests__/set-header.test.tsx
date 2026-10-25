@@ -33,6 +33,7 @@ describe('SetHeader', () => {
     render(<SetHeader set={createEmoteMenuSet('twitch')} />);
 
     expect(screen.queryByTestId('emote-set-avatar')).not.toBeOnTheScreen();
+
     expect(screen.getByText('Zoil')).toBeOnTheScreen();
   });
 });

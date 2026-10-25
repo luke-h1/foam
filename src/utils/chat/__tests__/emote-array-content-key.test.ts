@@ -147,6 +147,7 @@ describe('parse cache across emote array identity churn', () => {
     });
 
     expect(second).not.toBe(first);
+
     expect(second.some(token => token.type === 'emote')).toBe(true);
   });
 });

@@ -39,6 +39,7 @@ describe('SetRailButton', () => {
     );
 
     expect(screen.getByText('😀')).toBeOnTheScreen();
+
     expect(screen.queryByTestId('emote-set-avatar')).not.toBeOnTheScreen();
   });
 
@@ -52,6 +53,7 @@ describe('SetRailButton', () => {
     );
 
     expect(screen.getByText('Zoil')).toBeOnTheScreen();
+
     expect(screen.queryByTestId('emote-set-avatar')).not.toBeOnTheScreen();
   });
 });

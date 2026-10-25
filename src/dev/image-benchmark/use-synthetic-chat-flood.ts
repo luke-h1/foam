@@ -37,6 +37,7 @@ function getFixturePool(roomId: string): BuiltFixtureMessage[] {
     );
     builtPoolRoomId = roomId;
   }
+
   return builtPool;
 }
 

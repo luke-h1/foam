@@ -75,5 +75,6 @@ export function getBttvBadges(): SanitisedBadgeSet[] {
   if (!fetchStarted && Date.now() >= nextRetryAt) {
     loadBttvBadges();
   }
+
   return cachedBadges;
 }

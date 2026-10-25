@@ -104,6 +104,7 @@ describe('buildTwitchLatencyTrackerScript', () => {
     await jest.advanceTimersByTimeAsync(0);
 
     expect(checkbox?.checked).toBe(true);
+
     expect(page.messages).toEqual<PlayerBridgeMessage[]>([
       {
         type: 'trace',

@@ -78,6 +78,7 @@ describe('useRecentChatMessages', () => {
     renderRecentMessages({ showRecentMessages: false });
 
     expect(chatStore$.currentChannelId.peek()).toBe('channel-1');
+
     expect(chatStore$.messages.peek()).toHaveLength(4);
   });
 
@@ -88,7 +89,9 @@ describe('useRecentChatMessages', () => {
       renderRecentMessages({ showRecentMessages: false });
 
     expect(scrollChatToEnd).toHaveBeenCalledTimes(1);
+
     expect(isLoadingRecentMessagesRef.current).toBe(false);
+
     expect(mockGetRecentMessages).not.toHaveBeenCalled();
   });
 
@@ -106,6 +109,7 @@ describe('useRecentChatMessages', () => {
         ['line-2'],
         ['line-3'],
       ]);
+
       expect(forceFlush).toHaveBeenCalledTimes(1);
     });
 
@@ -127,6 +131,7 @@ describe('useRecentChatMessages', () => {
     hook.unmount();
 
     expect(abortSignal?.aborted).toBe(true);
+
     expect(isLoadingRecentMessagesRef.current).toBe(false);
   });
 });

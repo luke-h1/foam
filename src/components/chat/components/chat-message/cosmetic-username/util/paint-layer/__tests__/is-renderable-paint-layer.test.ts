@@ -31,6 +31,7 @@ describe('isRenderablePaintLayer', () => {
     expect(isRenderablePaintLayer(createLayer({ stops: TWO_STOPS }))).toBe(
       true,
     );
+
     expect(isRenderablePaintLayer(createLayer({}))).toBe(false);
   });
 

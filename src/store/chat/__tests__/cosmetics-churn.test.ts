@@ -289,6 +289,7 @@ describe('cosmetics entitlement-burst churn', () => {
     jest.advanceTimersByTime(1000);
 
     expect(readSnapshot('stv-user-0')).toBeNull();
+
     expect(mockSet).not.toHaveBeenCalled();
   });
 
@@ -428,7 +429,9 @@ describe('cosmetics entitlement-burst churn', () => {
     jest.advanceTimersByTime(1000);
 
     expect(chatStore$.cosmeticBindingsVersion.peek()).toEqual(2);
+
     expect(chatStore$.badges.peek()).toEqual({});
+
     expect(chatStore$.userBadgeIds.peek()).toEqual({});
   });
 
@@ -448,8 +451,11 @@ describe('cosmetics entitlement-burst churn', () => {
     const result = await fetchAndCacheUserCosmetics('stv-id-only-hit');
 
     expect(result).toBe('ttv-hit');
+
     expect(sevenTvService.getUserCosmeticsGql).not.toHaveBeenCalled();
+
     expect(chatStore$.userPaintIds.peek()['ttv-hit']).toBe(PAINT_ID);
+
     expect(chatStore$.userBadgeIds.peek()['ttv-hit']).toBe(BADGE_ID);
   });
 
@@ -543,6 +549,7 @@ describe('cosmetics entitlement-burst churn', () => {
     const result = await fetchAndCacheUserCosmetics('stv-offline');
 
     expect(result).toBeNull();
+
     expect(readSnapshot('stv-offline')).toEqual<CachedUserCosmetics>(stored);
   });
 
@@ -583,7 +590,9 @@ describe('cosmetics entitlement-burst churn', () => {
     const result = await fetchAndCacheUserCosmetics('stv-heal');
 
     expect(result).toBe('ttv-heal');
+
     expect(chatStore$.userBadgeIds.peek()['ttv-heal']).toBe('badge-heal');
+
     expect(Object.keys(chatStore$.badges.peek())).toEqual(['badge-heal']);
 
     expect(readSnapshot('stv-heal')).toEqual<CachedUserCosmetics>({
@@ -616,8 +625,11 @@ describe('cosmetics entitlement-burst churn', () => {
     const result = await fetchAndCacheUserCosmetics('stv-embedded');
 
     expect(result).toBe('ttv-embedded');
+
     expect(sevenTvService.getUserCosmeticsGql).not.toHaveBeenCalled();
+
     expect(chatStore$.userPaintIds.peek()['ttv-embedded']).toBe(PAINT_ID);
+
     expect(chatStore$.userBadgeIds.peek()['ttv-embedded']).toBe(BADGE_ID);
   });
 

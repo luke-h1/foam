@@ -82,6 +82,7 @@ describe('emoteMenuData', () => {
     const matchedEmote = filteredSets[0]?.emotes[0];
 
     expect(filteredSets).toHaveLength(1);
+
     expect(filteredSets[0]?.emotes).toHaveLength(1);
 
     expect(matchedEmote instanceof Object ? matchedEmote.name : null).toBe(
@@ -236,7 +237,9 @@ describe('emoteMenuData', () => {
     ]);
 
     expect(flattened.setStartIndexById.get('twitch-channel')).toBe(0);
+
     expect(flattened.items[1]?.items).toHaveLength(2);
+
     expect(flattened.items[2]?.items).toHaveLength(1);
   });
 });

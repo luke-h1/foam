@@ -52,6 +52,7 @@ function replyTargetUpdater(
   if (update instanceof Function) {
     return update;
   }
+
   throw new Error('Expected a reply-target updater function');
 }
 
@@ -408,6 +409,7 @@ describe('useChatRowRenderer', () => {
       );
 
       expect(clearHighlight('msg-1')).toBe(null);
+
       expect(clearHighlight('different-message')).toBe('different-message');
     } finally {
       jest.useRealTimers();

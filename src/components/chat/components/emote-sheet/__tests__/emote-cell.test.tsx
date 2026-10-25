@@ -79,6 +79,7 @@ describe('EmoteCell animation pause', () => {
 
     act(() => emoteSheetScrollActivity.poke());
     expect(mockStopAnimating).toHaveBeenCalledTimes(1);
+
     expect(mockStartAnimating).not.toHaveBeenCalled();
 
     act(() => jest.advanceTimersByTime(150));

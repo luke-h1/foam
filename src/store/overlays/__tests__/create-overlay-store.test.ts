@@ -58,6 +58,7 @@ describe('createAwaitableOverlayStore', () => {
 
     store.dismiss();
     await expect(pending).resolves.toBeUndefined();
+
     expect(store.getState()).toBeNull();
   });
 
@@ -68,6 +69,7 @@ describe('createAwaitableOverlayStore', () => {
     const second = store.present('second');
 
     expect(second).toBe(first);
+
     expect(store.getState()).toBe('first');
   });
 
@@ -80,6 +82,7 @@ describe('createAwaitableOverlayStore', () => {
 
     const second = store.present('second');
     expect(second).not.toBe(first);
+
     expect(store.getState()).toBe('second');
 
     store.dismiss();
@@ -99,6 +102,7 @@ describe('createAwaitableOverlayStore', () => {
     unsubscribe();
 
     expect(store.getState()).toBeNull();
+
     await expect(pending).resolves.toBeUndefined();
   });
 });

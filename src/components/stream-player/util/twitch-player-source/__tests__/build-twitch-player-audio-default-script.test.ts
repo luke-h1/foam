@@ -21,6 +21,7 @@ describe('buildTwitchPlayerAudioDefaultScript', () => {
       runPlayerScript(buildTwitchPlayerAudioDefaultScript({ muted }));
 
       expect(localStorage.getItem('video-muted')).toBe(storedMuted);
+
       expect(localStorage.getItem('volume')).toBe('1');
     },
   );

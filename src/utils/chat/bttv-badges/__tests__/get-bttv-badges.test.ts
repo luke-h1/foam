@@ -57,7 +57,9 @@ describe('getBttvBadges', () => {
     await flush();
 
     expect(getBttvBadges()).toEqual<SanitisedBadgeSet[]>([badge]);
+
     expect(getSanitisedGlobalBadges).toHaveBeenCalledTimes(1);
+
     expect(onLoaded).toHaveBeenCalledTimes(1);
   });
 
@@ -70,6 +72,7 @@ describe('getBttvBadges', () => {
     await flush();
 
     expect(getBttvBadges()).toEqual<SanitisedBadgeSet[]>([]);
+
     expect(onLoaded).not.toHaveBeenCalled();
   });
 
@@ -82,6 +85,7 @@ describe('getBttvBadges', () => {
     getBttvBadges();
     await jest.advanceTimersByTimeAsync(0);
     expect(onLoaded).not.toHaveBeenCalled();
+
     expect(getSanitisedGlobalBadges).toHaveBeenCalledTimes(1);
 
     getBttvBadges();
@@ -94,6 +98,7 @@ describe('getBttvBadges', () => {
     await jest.advanceTimersByTimeAsync(0);
 
     expect(getBttvBadges()).toEqual<SanitisedBadgeSet[]>([badge]);
+
     expect(onLoaded).toHaveBeenCalledTimes(1);
     jest.useRealTimers();
   });
@@ -114,6 +119,7 @@ describe('getBttvBadges', () => {
     await jest.advanceTimersByTimeAsync(0);
 
     expect(getBttvBadges()).toEqual<SanitisedBadgeSet[]>([badge]);
+
     expect(onLoaded).toHaveBeenCalledTimes(1);
     jest.useRealTimers();
   });
@@ -133,6 +139,7 @@ describe('getBttvBadges', () => {
     clearBttvBadgesCache();
 
     expect(getBttvBadges()).toEqual<SanitisedBadgeSet[]>([badge]);
+
     expect(getSanitisedGlobalBadges).toHaveBeenCalledTimes(2);
 
     await flush();
@@ -162,6 +169,7 @@ describe('getBttvBadges', () => {
     await flush();
 
     expect(getBttvBadges()).toEqual<SanitisedBadgeSet[]>([refreshed]);
+
     expect(getSanitisedGlobalBadges).toHaveBeenCalledTimes(2);
   });
 

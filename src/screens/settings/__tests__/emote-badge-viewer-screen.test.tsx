@@ -80,6 +80,7 @@ describe('EmoteBadgeViewerScreen', () => {
     render(<EmoteBadgeViewerScreen />);
 
     expect(await screen.findByText('Global Emotes')).toBeOnTheScreen();
+
     expect(screen.getByLabelText('Kappa')).toBeOnTheScreen();
   });
 

@@ -20,6 +20,7 @@ export function BenchFrameProbe() {
       if (samples.length === 0) {
         return;
       }
+
       appendFrames({ samples: samples.splice(0, samples.length) });
     };
 

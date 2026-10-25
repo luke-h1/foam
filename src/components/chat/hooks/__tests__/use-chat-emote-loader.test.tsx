@@ -168,9 +168,13 @@ describe('useChatEmoteLoader', () => {
     });
 
     expect(result.current.sevenTvEmoteSetId).toBe('set-1');
+
     expect(chatStore$.currentChannelId.peek()).toBe('channel-1');
+
     expect(mockGetChannelEmotes).not.toHaveBeenCalled();
+
     expect(mockPreloadGlobalEmotes).toHaveBeenCalledTimes(1);
+
     expect(preloadedChannelEmoteIds()).toEqual([['channel-7tv']]);
   });
 
@@ -181,6 +185,7 @@ describe('useChatEmoteLoader', () => {
     );
 
     expect(result.current.status).toBe('idle');
+
     expect(chatStore$.loadingState.peek()).toBe('IDLE');
   });
 
@@ -195,6 +200,7 @@ describe('useChatEmoteLoader', () => {
     });
 
     expect(result.current.status).toBe('success');
+
     expect(mockGetChannelEmotes.mock.calls).toEqual([['channel-1']]);
 
     expect({
@@ -222,6 +228,7 @@ describe('useChatEmoteLoader', () => {
     });
 
     expect(result.current.status).toBe('success');
+
     expect(channelCache()?.twitchSubscriberEmotesUserId.peek()).toBeUndefined();
   });
 
@@ -307,7 +314,9 @@ describe('useChatEmoteLoader', () => {
     });
 
     expect(result.current.status).toBe('cancelled');
+
     expect(channelCache()?.peek()).toBeUndefined();
+
     expect(chatStore$.loadingState.peek()).toBe('IDLE');
   });
 
@@ -355,7 +364,9 @@ describe('useChatEmoteLoader', () => {
     });
 
     expect(result.current.status).toBe('cancelled');
+
     expect(mockPreloadGlobalEmotes).not.toHaveBeenCalled();
+
     expect(mockPreloadChannelEmotes).not.toHaveBeenCalled();
   });
 });

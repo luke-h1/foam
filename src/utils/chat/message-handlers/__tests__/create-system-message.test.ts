@@ -19,6 +19,7 @@ describe('createSystemMessage', () => {
     const result = createSystemMessage('testchannel', 'Connection established');
 
     expect(result.channel).toBe('testchannel');
+
     expect(result.sender).toBe('System');
 
     expect(result.message).toEqual<MessageToken[]>([
@@ -30,7 +31,9 @@ describe('createSystemMessage', () => {
     const result = createSystemMessage('testchannel', 'Test message');
 
     expect(result.userstate['display-name']).toBe('System');
+
     expect(result.userstate.login).toBe('system');
+
     expect(result.userstate.color).toBe('#808080');
   });
 
@@ -39,6 +42,7 @@ describe('createSystemMessage', () => {
     const result2 = createSystemMessage('channel', 'Message 2');
 
     expect(result1.message_id).toMatch(/^system-/);
+
     expect(result2.message_id).toMatch(/^system-/);
   });
 

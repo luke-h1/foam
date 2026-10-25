@@ -31,7 +31,9 @@ describe('runModCommand', () => {
     runModCommand(command, 'channel-1', '   ');
 
     expect(mockExecuteModCommand).not.toHaveBeenCalled();
+
     expect(mockToast.error).toHaveBeenCalledTimes(2);
+
     expect(mockToast.error).toHaveBeenCalledWith('Moderation action failed');
   });
 
@@ -47,6 +49,7 @@ describe('runModCommand', () => {
     });
 
     expect(mockToast.success).toHaveBeenCalledWith('Banned zoil');
+
     expect(mockToast.error).not.toHaveBeenCalled();
   });
 
@@ -64,6 +67,7 @@ describe('runModCommand', () => {
     });
 
     expect(mockToast.error).toHaveBeenCalledWith('Moderation action failed');
+
     expect(mockToast.success).not.toHaveBeenCalled();
   });
 });

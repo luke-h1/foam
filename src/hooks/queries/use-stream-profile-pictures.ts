@@ -64,6 +64,7 @@ export function useStreamProfilePictures(
     if (!enabled || profileImageById.size === 0) {
       return streams;
     }
+
     return streams.map(stream => {
       const profilePicture = profileImageById.get(stream.user_id);
       return profilePicture ? { ...stream, profilePicture } : stream;

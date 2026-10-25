@@ -33,6 +33,7 @@ function mixString(h1: number, h2: number, value: string): [number, number] {
     h1 = ((h1 ^ c) * 16_777_619) >>> 0;
     h2 = ((h2 * 33) ^ c) >>> 0;
   }
+
   return mixByte(h1, h2, FIELD_SEPARATOR);
 }
 

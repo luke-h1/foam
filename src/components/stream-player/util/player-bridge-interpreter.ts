@@ -234,6 +234,7 @@ function interpretPlayerFailureMessage(
       if (!message.payload) {
         return [];
       }
+
       return [
         { type: 'notifyStability', event: 'recovered' },
         {
@@ -383,6 +384,7 @@ export function interpretPlayerMessage(
       if (shouldResumeTransientPause) {
         return [{ type: 'scheduleTransientResume' }];
       }
+
       return [{ type: 'setPaused', isPaused: true }, { type: 'notifyPause' }];
     case 'ended':
       return [{ type: 'notifyEnded' }];
@@ -425,11 +427,13 @@ export function interpretPlayerMessage(
       if (!message.payload || message.payload.time === undefined) {
         return [];
       }
+
       return [{ type: 'resolveCurrentTime', seconds: message.payload.time }];
     case 'duration':
       if (!message.payload || message.payload.duration === undefined) {
         return [];
       }
+
       return [{ type: 'resolveDuration', seconds: message.payload.duration }];
     case 'trace':
       return [
@@ -454,6 +458,7 @@ export function interpretPlayerMessage(
       if (!message.payload) {
         return [];
       }
+
       return [{ type: 'setPipActive', active: message.payload.active }];
     case 'pipUnavailable':
       return [

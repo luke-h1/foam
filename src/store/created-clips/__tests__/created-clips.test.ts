@@ -44,6 +44,7 @@ describe('createdClips actions', () => {
 
     const clips = createdClips$.clips.peek();
     expect(clips).toHaveLength(MAX_CREATED_CLIPS);
+
     expect(clips[0]?.id).toEqual(String(MAX_CREATED_CLIPS + 9));
   });
 

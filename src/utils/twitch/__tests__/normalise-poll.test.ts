@@ -35,9 +35,13 @@ describe('normalisePoll', () => {
     });
 
     expect(result.totalVotes).toBe(4);
+
     expect(result.status).toBe('active');
+
     expect(result.isActive).toBe(true);
+
     expect(result.choices[0]?.percentage).toBe(75);
+
     expect(result.choices[1]?.percentage).toBe(25);
   });
 
@@ -77,8 +81,11 @@ describe('normalisePoll', () => {
     );
 
     expect(result.status).toBe('completed');
+
     expect(result.isActive).toBe(false);
+
     expect(result.totalVotes).toBe(10);
+
     expect(result.choices[0]?.percentage).toBe(80);
   });
 });

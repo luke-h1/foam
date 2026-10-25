@@ -38,9 +38,13 @@ describe('normalisePrediction', () => {
     });
 
     expect(result.totalUsers).toBe(8);
+
     expect(result.totalChannelPoints).toBe(500);
+
     expect(result.outcomes[0]?.percentage).toBe(80);
+
     expect(result.outcomes[1]?.percentage).toBe(20);
+
     expect(result.status).toBe('active');
   });
 
@@ -79,8 +83,11 @@ describe('normalisePrediction', () => {
     );
 
     expect(result.status).toBe('resolved');
+
     expect(result.isActive).toBe(false);
+
     expect(result.outcomes[0]?.isWinner).toBe(true);
+
     expect(result.outcomes[1]?.isWinner).toBe(false);
   });
 });

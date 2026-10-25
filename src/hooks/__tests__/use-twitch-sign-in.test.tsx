@@ -89,6 +89,7 @@ describe('useTwitchSignIn', () => {
     );
 
     expect(loginWithTwitch.mock.calls).toEqual([[authResult]]);
+
     expect(jest.mocked(toast.success).mock.calls).toEqual([['Logged in']]);
   });
 
@@ -133,7 +134,9 @@ describe('useTwitchSignIn', () => {
     await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1));
 
     expect(loginWithTwitch.mock.calls).toEqual([[authResult]]);
+
     expect(jest.mocked(toast.success).mock.calls).toEqual([['Logged in']]);
+
     expect(router.replace).not.toHaveBeenCalled();
   });
 });

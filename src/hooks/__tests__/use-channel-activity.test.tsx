@@ -88,9 +88,13 @@ describe('useChannelActivity', () => {
     );
 
     expect(result.current.value).toBeNull();
+
     expect(result.current.isAvailable).toBe(false);
+
     expect(fetch).not.toHaveBeenCalled();
+
     expect(mockGetInstance).not.toHaveBeenCalled();
+
     expect(mockSubscribeToEvent).not.toHaveBeenCalled();
   });
 
@@ -204,6 +208,7 @@ describe('useChannelActivity', () => {
     rerender({ channelId: 'channel-b' });
 
     expect(result.current.value).toBeNull();
+
     expect(result.current.isAvailable).toBe(false);
   });
 
@@ -259,6 +264,7 @@ describe('useChannelActivity', () => {
     });
 
     expect(result.current.value).toBeNull();
+
     expect(result.current.isAvailable).toBe(true);
   });
 });

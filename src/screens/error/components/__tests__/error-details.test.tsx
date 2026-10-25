@@ -35,6 +35,7 @@ describe('ErrorDetails', () => {
     fireEvent.press(screen.getByText('Show details'));
 
     expect(screen.getByText('boom')).toBeOnTheScreen();
+
     expect(screen.getByText('Hide details')).toBeOnTheScreen();
   });
 });
