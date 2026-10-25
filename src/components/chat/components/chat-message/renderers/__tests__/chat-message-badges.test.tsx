@@ -63,26 +63,33 @@ describe('ChatMessageBadges', () => {
     expect(
       StyleSheet.flatten(getByTestId('chat-badge').props['style']),
     ).toEqual<ViewStyle>({
+      height: 18,
+      width: 22,
+    });
+
+    expect(
+      StyleSheet.flatten(getByTestId('chat-badge-tint').props['style']),
+    ).toEqual<ViewStyle>({
       backgroundColor: '#1ac9a2',
       borderCurve: 'continuous',
       borderRadius: 4,
       height: 18,
-      marginRight: 4,
       overflow: 'hidden',
       width: 18,
     });
   });
 
   test('gives an untinted badge a slot that reserves the gap', () => {
-    const { getByTestId } = renderBadges([twitchBadge]);
+    const { getByTestId, queryByTestId } = renderBadges([twitchBadge]);
 
     expect(
       StyleSheet.flatten(getByTestId('chat-badge').props['style']),
     ).toEqual<ViewStyle>({
       height: 18,
-      marginRight: 4,
-      width: 18,
+      width: 22,
     });
+
+    expect(queryByTestId('chat-badge-tint')).toBeNull();
   });
 
   test('renders the url straight through expo-image, not the emote ref cache', () => {
