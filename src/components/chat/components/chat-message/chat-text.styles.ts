@@ -64,14 +64,12 @@ function buildChatTextStyles(
     },
     badgeSlot: {
       height: scale.badgeSize,
-      marginRight: scale.badgeGap,
-      width: scale.badgeSize,
+      width: scale.badgeSize + scale.badgeGap,
     },
     badgeTintSlot: {
       borderRadius: CHAT_SURFACE_COLORS.radius,
       borderCurve: 'continuous',
       height: scale.badgeSize,
-      marginRight: scale.badgeGap,
       overflow: 'hidden',
       width: scale.badgeSize,
     },

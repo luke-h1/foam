@@ -1,4 +1,5 @@
 import { memo, useState } from 'react';
+import { View } from 'react-native';
 
 import { Image as ExpoImage } from 'expo-image';
 
@@ -37,27 +38,36 @@ function ChatBadgeComponent({
   const textStyles = getChatTextStyles(fontScale, compact);
   const tint = badge.color;
 
+  const artwork = (
+    <ExpoImage
+      source={badge.url}
+      contentFit='contain'
+      cachePolicy='memory-disk'
+      useAppleWebpCodec={false}
+      onError={() => setFailedUrl(badge.url)}
+      style={textStyles.badgeArtwork}
+    />
+  );
+
   return (
     <ChatMessagePressable
-      style={[
-        tint ? textStyles.badgeTintSlot : textStyles.badgeSlot,
-        tint ? { backgroundColor: tint } : null,
-        isModerated ? styles.moderatedBadge : null,
-      ]}
+      style={[textStyles.badgeSlot, isModerated ? styles.moderatedBadge : null]}
       testID='chat-badge'
       {...{
         accessibilityLabel: badge.title,
         onPress: onPress ? () => onPress(badge) : undefined,
       }}
     >
-      <ExpoImage
-        source={badge.url}
-        contentFit='contain'
-        cachePolicy='memory-disk'
-        useAppleWebpCodec={false}
-        onError={() => setFailedUrl(badge.url)}
-        style={textStyles.badgeArtwork}
-      />
+      {tint ? (
+        <View
+          testID='chat-badge-tint'
+          style={[textStyles.badgeTintSlot, { backgroundColor: tint }]}
+        >
+          {artwork}
+        </View>
+      ) : (
+        artwork
+      )}
     </ChatMessagePressable>
   );
 }
