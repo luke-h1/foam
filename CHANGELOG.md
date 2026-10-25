@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.14 (Production)
+
+### ✨ Features
+
+- **seventv:** Keep 7TV paints visible while chat scrolls ([#973](https://github.com/lhowsam/foam/issues/973))
+- **tooling:** Require a blank line after a block ([#974](https://github.com/lhowsam/foam/issues/974))
+
+### 🔧 Miscellaneous Tasks
+
+- **app:** Release 1.0.14
+
 ## 1.0.13 (Production)
 
 ### ♻️ Refactor
