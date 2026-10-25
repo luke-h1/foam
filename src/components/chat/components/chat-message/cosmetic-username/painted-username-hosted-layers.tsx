@@ -24,6 +24,7 @@ import {
   paintDependsOnTexture,
 } from './util/paint-layer/paint-depends-on-texture';
 import { paintShadowKey } from './util/paint-layer/paint-shadow-key';
+import { skiaDecodableLayerUrl } from './util/paint-layer/skia-decodable-layer-url';
 import { buildPaintUsernameTextStyle } from './util/paint-text-style/build-paint-username-text-style';
 import { getPaintTextShadows } from './util/paint-text-style/get-paint-text-shadows';
 import { getPaintTextStroke } from './util/paint-text-style/get-paint-text-stroke';
@@ -60,8 +61,16 @@ export function PaintedUsernameHostedLayers({
 }: PaintedUsernameHostedLayersProps) {
   const isScrolling = useChatScrollActive();
   const paintTextStyle = buildPaintUsernameTextStyle(paint);
-  const textureUrl = getPaintTextureUrl(paint);
-  const textureReady = useSharedPaintAnimationReady(textureUrl ?? '');
+  const rawTextureUrl = getPaintTextureUrl(paint);
+
+  // Web paints with CSS and never reads this flag. An empty url skips the
+  // Skia fetch. Native waits on the WebP sibling, which is what Skia can decode.
+  const textureUrl =
+    Platform.OS === 'web' || !rawTextureUrl
+      ? ''
+      : skiaDecodableLayerUrl(rawTextureUrl);
+
+  const textureReady = useSharedPaintAnimationReady(textureUrl);
 
   // Web draws the paint with CSS, which stays cheap while the list moves.
   // Native sheds the hosted fill during a fling (FOAM-TV-MOBILE-BJ).

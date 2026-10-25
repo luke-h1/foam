@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { AppState } from 'react-native';
 
 import type {
@@ -31,8 +31,6 @@ const entries = new Map<string, SharedPaintAnimationEntry>();
 const frameConsumerCounts = new Map<string, number>();
 let driverUrls: readonly string[] = [];
 const driverListeners = new Set<() => void>();
-const frameRevisionListeners = new Set<() => void>();
-let frameRevision = 0;
 const MAX_SHARED_PAINT_ANIMATION_ENTRIES = 32;
 
 // Keep a released texture briefly so recycled rows rejoin the running clock in phase.
@@ -48,9 +46,7 @@ function notifyReady(entry: SharedPaintAnimationEntry): void {
 }
 
 function notifyFrames(entry: SharedPaintAnimationEntry): void {
-  frameRevision += 1;
   entry.frameListeners.forEach(listener => listener());
-  frameRevisionListeners.forEach(listener => listener());
 }
 
 function clearEntryTimers(entry: SharedPaintAnimationEntry): void {
@@ -467,22 +463,28 @@ export function useSharedPaintFrames(
   'use no memo';
 
   const urlKey = urls.join('\n');
+  const [revision, setRevision] = useState(0);
 
-  useEffect(
-    () => retainPaintFrames(urlKey === '' ? [] : urlKey.split('\n')),
-    [urlKey],
-  );
+  useEffect(() => {
+    const retained = urlKey === '' ? [] : urlKey.split('\n');
+    const release = retainPaintFrames(retained);
 
-  const revision = useSyncExternalStore(
-    listener => {
-      frameRevisionListeners.add(listener);
-      return () => {
-        frameRevisionListeners.delete(listener);
-      };
-    },
-    () => frameRevision,
-    () => frameRevision,
-  );
+    const onFrame = () => {
+      setRevision(value => value + 1);
+    };
+
+    for (const url of retained) {
+      entries.get(url)?.frameListeners.add(onFrame);
+    }
+
+    return () => {
+      for (const url of retained) {
+        entries.get(url)?.frameListeners.delete(onFrame);
+      }
+
+      release();
+    };
+  }, [urlKey]);
 
   const frames = new Map<string, SkImage>();
 
@@ -494,7 +496,7 @@ export function useSharedPaintFrames(
     }
   }
 
-  // `revision` changes when a frame advances, which rebuilds this map.
+  // `revision` changes when one of these urls advances, which rebuilds this map.
   void revision;
 
   return frames;

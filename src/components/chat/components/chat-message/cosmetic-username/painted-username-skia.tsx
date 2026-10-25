@@ -34,6 +34,7 @@ import {
   getPaintTextureUrl,
   paintDependsOnTexture,
 } from './util/paint-layer/paint-depends-on-texture';
+import { skiaDecodableLayerUrl } from './util/paint-layer/skia-decodable-layer-url';
 import {
   useSharedPaintAnimationReady,
   useSharedPaintFrames,
@@ -389,7 +390,12 @@ export function PaintedUsernameSkia({
   const fontProvider = useSkiaPaintFontProvider();
   const pixelRatio = PixelRatio.get();
   const [rebuildToken, setRebuildToken] = useState(0);
-  const textureUrl = getPaintTextureUrl(paint);
+  const rawTextureUrl = getPaintTextureUrl(paint);
+
+  const textureUrl = rawTextureUrl
+    ? skiaDecodableLayerUrl(rawTextureUrl)
+    : null;
+
   const textureReady = useSharedPaintAnimationReady(textureUrl ?? '');
 
   const bitmaps = useMemo(() => {

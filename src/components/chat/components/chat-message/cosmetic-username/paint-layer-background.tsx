@@ -1,7 +1,12 @@
 // "shape" is the 7TV paint API field (types/seven-tv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import { type ReactNode, useState } from 'react';
-import { type LayoutChangeEvent, StyleSheet, View } from 'react-native';
+import {
+  type LayoutChangeEvent,
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native';
 import Svg, {
   Defs,
   LinearGradient as SvgLinearGradient,
@@ -19,6 +24,7 @@ import { PaintLayerTiledImage } from './paint-layer-tiled-image';
 import { buildLayerGradientConfig } from './util/paint-layer/build-layer-gradient-config';
 import { getLayerLayoutStyle } from './util/paint-layer/get-layer-layout-style';
 import { isTilingCanvasRepeat } from './util/paint-layer/is-tiling-canvas-repeat';
+import { skiaDecodableLayerUrl } from './util/paint-layer/skia-decodable-layer-url';
 
 interface PaintLayerBackgroundProps {
   layer: PaintLayerData;
@@ -152,13 +158,18 @@ function PaintLayerContent({
   useSvgLinear,
 }: PaintLayerContentProps): ReactNode {
   if (isAssetPaint) {
+    const imageUrl =
+      Platform.OS === 'web'
+        ? layer.image_url
+        : skiaDecodableLayerUrl(layer.image_url);
+
     return isTilingCanvasRepeat(layer.canvas_repeat, layer.repeat) ? (
       <PaintLayerTiledImage
         canvasRepeat={layer.canvas_repeat}
-        imageUrl={layer.image_url}
+        imageUrl={imageUrl}
       />
     ) : (
-      <PaintLayerStretchImage imageUrl={layer.image_url} />
+      <PaintLayerStretchImage imageUrl={imageUrl} />
     );
   }
 

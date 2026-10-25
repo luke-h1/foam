@@ -43,6 +43,7 @@ import {
   type PaintLayerTileMode,
   paintLayerTileModes,
 } from './paint-layer/paint-layer-tile-modes';
+import { skiaDecodableLayerUrl } from './paint-layer/skia-decodable-layer-url';
 import { getPaintTextShadows } from './paint-text-style/get-paint-text-shadows';
 import { getPaintTextStroke } from './paint-text-style/get-paint-text-stroke';
 import { cssDropShadowBlur } from './skia-paint-geometry/css-drop-shadow-blur';
@@ -181,17 +182,6 @@ function layerShader(layer: PaintLayerData, rect: LayerRect): SkShader | null {
     TileMode.Clamp,
     localMatrix,
     GRADIENT_PREMUL_FLAG,
-  );
-}
-
-/**
- * Skia decodes WebP but not AVIF, so swap 7TV CDN AVIF layer urls to their
- * WebP sibling (same path, always served).
- */
-function skiaDecodableLayerUrl(url: string): string {
-  return url.replace(
-    /^(https:\/\/cdn\.7tv\.app\/paint\/[^?\s]+)\.avif(\?\S*)?$/,
-    '$1.webp$2',
   );
 }
 
