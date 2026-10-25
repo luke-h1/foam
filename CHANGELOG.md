@@ -2,10 +2,18 @@
 
 ## 1.0.14 (Production)
 
+### ♻️ Refactor
+
+- **app:** Name component files PascalCase ([#976](https://github.com/lhowsam/foam/issues/976))
+
 ### ✨ Features
 
 - **seventv:** Keep 7TV paints visible while chat scrolls ([#973](https://github.com/lhowsam/foam/issues/973))
 - **tooling:** Require a blank line after a block ([#974](https://github.com/lhowsam/foam/issues/974))
+
+### 🐛 Bug Fixes
+
+- **chat:** Leave a gap between badges and names ([#975](https://github.com/lhowsam/foam/issues/975))
 
 ### 🔧 Miscellaneous Tasks
 
