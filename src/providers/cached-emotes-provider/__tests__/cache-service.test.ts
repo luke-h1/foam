@@ -44,9 +44,10 @@ const flushMicrotasks = () =>
 
 /**
  * requestAnimationFrame is polyfilled onto setTimeout here, so each turn
- * drains one deferred release pass; a release can be re-queued a few times.
+ * drains one deferred release pass. A release can be re-queued a few times,
+ * and a channel clear can leave those timers for the next test.
  */
-const flushAnimationFrames = async (turns = 6) => {
+const flushAnimationFrames = async (turns = 8) => {
   for (let turn = 0; turn < turns; turn += 1) {
     await flushMicrotasks();
   }
@@ -57,8 +58,9 @@ describe('cache-service', () => {
     loadAsync.mockImplementation(() => Promise.resolve(makeImageRef()));
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     clearCachedEmoteRefs();
+    await flushAnimationFrames();
     jest.clearAllMocks();
 
     // clearAllMocks leaves queued mockReturnValueOnce values behind, leaking a fenced decode's pending promise into the next test.
@@ -462,19 +464,27 @@ describe('cache-service', () => {
   });
 
   test('a memory-pressure trim frees a bitmap even while a row is still subscribed', async () => {
-    const url = 'https://cdn.7tv.app/emote/pressure/2x.avif';
-    const release = jest.fn();
-    loadAsync.mockResolvedValueOnce(makeImageRef({ release }));
-    await warmCachedEmoteRefs([url]);
-    const unsubscribe = subscribeCachedEmoteRef(url, jest.fn());
+    // Real timers share the worker queue. A full suite can leave setTimeout
+    // callbacks ahead of this release, so the deferred release never runs.
+    jest.useFakeTimers();
 
-    releaseChannelEmoteRefs();
-    await flushAnimationFrames();
+    try {
+      const url = 'https://cdn.7tv.app/emote/pressure/2x.avif';
+      const release = jest.fn();
+      loadAsync.mockResolvedValueOnce(makeImageRef({ release }));
+      await warmCachedEmoteRefs([url]);
+      const unsubscribe = subscribeCachedEmoteRef(url, jest.fn());
 
-    // The trim notified first, so the row has already dropped to its uri fallback.
-    expect(release).toHaveBeenCalledTimes(1);
+      releaseChannelEmoteRefs();
+      await jest.advanceTimersByTimeAsync(50);
 
-    unsubscribe();
+      // The trim notified first, so the row has already dropped to its uri fallback.
+      expect(release).toHaveBeenCalledTimes(1);
+
+      unsubscribe();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   test('an advisory trim keeps refs mounted rows are subscribed to', async () => {

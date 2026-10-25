@@ -217,23 +217,23 @@ runs:
         echo "variant=$VARIANT_LABEL" >> "$GITHUB_OUTPUT"
         echo "deployment=$DEPLOYMENT_LABEL" >> "$GITHUB_OUTPUT"
 
-    - name: Read head commit subject
-      id: head_commit
-      if: ${{ inputs.dry == 'false' && inputs.deployment_type == 'native' && steps.release_tag.outputs.tag_already_exists != 'true' }}
-      shell: bash
-      run: |
-        echo "subject=$(git log -1 --pretty=%s)" >> "$GITHUB_OUTPUT"
-
     - name: Create native tag
       if: ${{ inputs.dry == 'false' && inputs.deployment_type == 'native' && steps.release_tag.outputs.tag_already_exists != 'true' }}
-      uses: anothrNick/github-tag-action@a2c70ae13a881faf2b4953baaa9e49731997ab36
+      shell: bash
       env:
-        GITHUB_TOKEN: ${{ inputs.github_token }}
-        CUSTOM_TAG: ${{ steps.release_tag.outputs.tag }}
-        TAG_MESSAGE: |
-          ${{ steps.labels.outputs.variant }} ${{ steps.labels.outputs.deployment }}: ${{ steps.release_tag.outputs.tag }}
+        GH_TOKEN: ${{ inputs.github_token }}
+        INPUTS_TAG: ${{ steps.release_tag.outputs.tag }}
+      run: |
+        set -euo pipefail
 
-          ${{ steps.head_commit.outputs.subject }}
+        # github-tag-action runs in a container. The macOS runner cannot start
+        # one. Create the same lightweight tag through the Git refs API.
+        SHA="$(git rev-parse HEAD)"
+
+        gh api --method POST "repos/${GITHUB_REPOSITORY}/git/refs" \
+          -f ref="refs/tags/${INPUTS_TAG}" \
+          -f sha="$SHA" \
+          --silent
 
     - name: Build release body
       id: release_body
