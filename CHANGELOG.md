@@ -52,6 +52,10 @@
 
 ## 1.0.13 (Internal)
 
+### 🐛 Bug Fixes
+
+- **release:** Tag native deploys on the macOS runner ([#972](https://github.com/lhowsam/foam/issues/972))
+
 ### 📝 Other Changes
 
 - Expo SDK 58 and iPhone Duo ([#971](https://github.com/lhowsam/foam/issues/971))
