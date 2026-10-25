@@ -41,12 +41,7 @@ export function PaintedUsernameFill({
         style={[styles.baseColor, { backgroundColor: baseColor }]}
       />
       {keyedLayers.map(({ layer, key, layerIndex }) => (
-        <PaintLayerBackground
-          key={key}
-          baseColor={baseColor}
-          layer={layer}
-          layerIndex={layerIndex}
-        />
+        <PaintLayerBackground key={key} layer={layer} layerIndex={layerIndex} />
       ))}
       <ChatText style={[textStyle, styles.hiddenText]}>
         {displayUsername}

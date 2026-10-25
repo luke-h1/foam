@@ -45,6 +45,10 @@ export interface RemoteConfigSchema {
    */
   experiments: Record<string, string>;
 
+  /**
+   * Username paint renderer. Skia keeps the paint up while chat scrolls.
+   * Native swaps to a solid colour during a fling. Off uses the chat colour.
+   */
   sevenTvPaintRenderer: 'off' | 'native' | 'skia';
 }
 
@@ -77,7 +81,7 @@ export const defaultRemoteConfig = {
   admins: '[]',
   updateAppButtonAllowedUsers: '[]',
   experiments: '{}',
-  sevenTvPaintRenderer: 'native',
+  sevenTvPaintRenderer: 'skia',
   bundleButtonEnabled:
     '{ "ios": { "development": false, "internal": true, "testflight": false, "production": false, "e2e": false }}',
 } satisfies Record<RemoteConfigKey, string>;

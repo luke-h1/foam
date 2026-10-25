@@ -12,6 +12,9 @@ import {
 } from '@app/store/preference-store';
 import { isDevToolsEnabled } from '@app/utils/dev-tools/is-dev-tools-enabled';
 
+const PAINT_RENDERER_HELP =
+  'Skia keeps the paint up while chat scrolls. Native swaps to a solid colour during a fling. Off uses the chat colour. WebView checks the CSS.';
+
 const PAINT_RENDERER_OPTIONS = [
   { label: 'Off', value: 'off' },
   { label: 'Native', value: 'native' },
@@ -38,12 +41,7 @@ export function PaintRendererSection() {
     return (
       <Section
         title='7TV Paint Renderer'
-        footer={
-          <NativeText>
-            Choose the username paint renderer. Off renders default name
-            colours; WebView is a dev-only reference.
-          </NativeText>
-        }
+        footer={<NativeText>{PAINT_RENDERER_HELP}</NativeText>}
       >
         <Picker
           label='7TV Paint Renderer'
@@ -73,7 +71,7 @@ export function PaintRendererSection() {
     <SettingsSection title='7TV Paint Renderer'>
       <ChatPreferenceSegmentedSettingsRow
         title='7TV Paint Renderer'
-        subtitle='Choose the username paint renderer. Off renders default name colours; WebView is a dev-only reference.'
+        subtitle={PAINT_RENDERER_HELP}
         icon={{ icon: 'paintbrush.fill' }}
         onSelectIndex={index => {
           const next = PAINT_RENDERER_OPTIONS[index]?.value;

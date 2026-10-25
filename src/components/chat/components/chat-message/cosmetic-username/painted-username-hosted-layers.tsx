@@ -1,4 +1,10 @@
-import { type StyleProp, StyleSheet, type TextStyle, View } from 'react-native';
+import {
+  Platform,
+  type StyleProp,
+  StyleSheet,
+  type TextStyle,
+  View,
+} from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/chat-text';
 import { useChatScrollActive } from '@app/components/chat/hooks/use-chat-scroll-active';
@@ -18,6 +24,7 @@ import {
   paintDependsOnTexture,
 } from './util/paint-layer/paint-depends-on-texture';
 import { paintShadowKey } from './util/paint-layer/paint-shadow-key';
+import { skiaDecodableLayerUrl } from './util/paint-layer/skia-decodable-layer-url';
 import { buildPaintUsernameTextStyle } from './util/paint-text-style/build-paint-username-text-style';
 import { getPaintTextShadows } from './util/paint-text-style/get-paint-text-shadows';
 import { getPaintTextStroke } from './util/paint-text-style/get-paint-text-stroke';
@@ -37,8 +44,9 @@ interface PaintedUsernameHostedLayersProps {
 }
 
 /**
- * Both renderers shed to a solid paint colour while the list is flinging
- * (FOAM-TV-MOBILE-BJ) and return ~150ms after it settles.
+ * Native sheds this fill to a solid colour while the list is flinging
+ * (FOAM-TV-MOBILE-BJ) and restores it ~150ms after the fling settles.
+ * Web keeps the CSS paint up the whole time.
  */
 export function PaintedUsernameHostedLayers({
   displayUsername,
@@ -53,12 +61,27 @@ export function PaintedUsernameHostedLayers({
 }: PaintedUsernameHostedLayersProps) {
   const isScrolling = useChatScrollActive();
   const paintTextStyle = buildPaintUsernameTextStyle(paint);
-  const textureUrl = getPaintTextureUrl(paint);
-  const textureReady = useSharedPaintAnimationReady(textureUrl ?? '');
+  const rawTextureUrl = getPaintTextureUrl(paint);
 
-  const showPlainColor =
-    isScrolling ||
-    (paintDependsOnTexture(paint) && (!textureUrl || !textureReady));
+  // Web paints with CSS and never reads this flag. An empty url skips the
+  // Skia fetch. Native waits on the WebP sibling, which is what Skia can decode.
+  const textureUrl =
+    Platform.OS === 'web' || !rawTextureUrl
+      ? ''
+      : skiaDecodableLayerUrl(rawTextureUrl);
+
+  const textureReady = useSharedPaintAnimationReady(textureUrl);
+
+  // Web draws the paint with CSS, which stays cheap while the list moves.
+  // Native sheds the hosted fill during a fling (FOAM-TV-MOBILE-BJ).
+  const shedWhileScrolling = Platform.OS !== 'web' && isScrolling;
+
+  const waitingForTexture =
+    Platform.OS !== 'web' &&
+    paintDependsOnTexture(paint) &&
+    (!textureUrl || !textureReady);
+
+  const showPlainColor = shedWhileScrolling || waitingForTexture;
 
   const plainFillColor = getPaintSolidColor(paint) ?? plainColor;
 

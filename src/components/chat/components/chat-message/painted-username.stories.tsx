@@ -13,6 +13,8 @@ import { type SevenTvPaintSource } from '@app/utils/color/seven-tv-paint-data/ty
 
 import { sevenTvPaintsFixture } from './__fixtures__/seven-tv-paints.fixture';
 import { PaintedUsername } from './cosmetic-username/painted-username';
+import { PaintedUsernameSkia } from './cosmetic-username/painted-username-skia';
+import { chatLineMetrics } from './util/chat-scale';
 
 // A paint is animated when it has an image layer with a multi-frame texture.
 // frameCount only survives on the raw fixture (conversion drops it), so classify
@@ -72,14 +74,40 @@ export const Default: Story = {
 
 type GalleryRow =
   | { kind: 'header'; title: string; count: number }
-  | { kind: 'paint'; paint: PaintData };
+  | { kind: 'paint'; paint: PaintData; animated: boolean };
 
 const galleryRows: GalleryRow[] = [
-  { kind: 'header', title: 'Animated', count: animatedPaints.length },
-  ...animatedPaints.map(paint => ({ kind: 'paint' as const, paint })),
+  { kind: 'header', title: 'Animated, Skia', count: animatedPaints.length },
+  ...animatedPaints.map(paint => ({
+    kind: 'paint' as const,
+    paint,
+    animated: true,
+  })),
   { kind: 'header', title: 'Static', count: staticPaints.length },
-  ...staticPaints.map(paint => ({ kind: 'paint' as const, paint })),
+  ...staticPaints.map(paint => ({
+    kind: 'paint' as const,
+    paint,
+    animated: false,
+  })),
 ];
+
+function SkiaPaintName({
+  paint,
+  username,
+}: {
+  paint: PaintData;
+  username: string;
+}) {
+  return (
+    <PaintedUsernameSkia
+      fallbackColor='#FFFFFF'
+      fontSize={chatLineMetrics.comfortable.fontSize}
+      lineHeight={chatLineMetrics.comfortable.lineHeight}
+      paint={paint}
+      username={username}
+    />
+  );
+}
 
 const renderGalleryRow: ListRenderItem<GalleryRow> = ({ item }) => {
   if (item.kind === 'header') {
@@ -100,11 +128,15 @@ const renderGalleryRow: ListRenderItem<GalleryRow> = ({ item }) => {
       <ChatText color='gray.textLow' type='subhead'>
         {item.paint.name}
       </ChatText>
-      <PaintedUsername
-        paint={item.paint}
-        showColon={false}
-        username='Preview'
-      />
+      {item.animated ? (
+        <SkiaPaintName paint={item.paint} username='Preview' />
+      ) : (
+        <PaintedUsername
+          paint={item.paint}
+          showColon={false}
+          username='Preview'
+        />
+      )}
     </View>
   );
 };
@@ -117,7 +149,13 @@ function AllPaintsGallery() {
       keyExtractor={item =>
         item.kind === 'header' ? `header-${item.title}` : item.paint.id
       }
-      getItemType={item => item.kind}
+      getItemType={item => {
+        if (item.kind === 'header') {
+          return 'header';
+        }
+
+        return item.animated ? 'animated' : 'static';
+      }}
       contentContainerStyle={{ paddingBottom: 24 }}
     />
   );
@@ -129,4 +167,56 @@ export const AllPaints: Story = {
     showColon: false,
   },
   render: () => <AllPaintsGallery />,
+};
+
+const animatedPreviewNames = ['Lu', 'FoamPreview'] as const;
+
+function AnimatedPaintRow({ paint }: { paint: PaintData }) {
+  return (
+    <View style={{ gap: 4, paddingBottom: 14 }}>
+      <ChatText color='gray.textLow' type='subhead'>
+        {paint.name}
+      </ChatText>
+      {animatedPreviewNames.map(username => (
+        <SkiaPaintName key={username} paint={paint} username={username} />
+      ))}
+    </View>
+  );
+}
+
+const renderAnimatedRow: ListRenderItem<PaintData> = ({ item }) => (
+  <AnimatedPaintRow paint={item} />
+);
+
+function AnimatedPaintHeader() {
+  return (
+    <ChatText
+      color='gray.text'
+      type='body'
+      weight='bold'
+      style={{ paddingBottom: 8 }}
+    >
+      {animatedPaints.length} animated paints from the 7TV catalog
+    </ChatText>
+  );
+}
+
+function AnimatedPaintGallery() {
+  return (
+    <FlashList<PaintData>
+      data={animatedPaints}
+      renderItem={renderAnimatedRow}
+      keyExtractor={paint => paint.id}
+      ListHeaderComponent={AnimatedPaintHeader}
+      contentContainerStyle={{ paddingBottom: 24 }}
+    />
+  );
+}
+
+export const Animated: Story = {
+  args: {
+    username: 'FoamPreview',
+    showColon: false,
+  },
+  render: () => <AnimatedPaintGallery />,
 };

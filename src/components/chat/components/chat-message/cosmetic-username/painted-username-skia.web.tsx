@@ -8,21 +8,25 @@ interface PaintedUsernameSkiaProps {
   paint: PaintData;
   fallbackColor?: string;
   fontSize?: number;
+  lineHeight?: number;
 }
 
 /**
- * Skia paints are native-only; web falls back to solid colour.
+ * Skia paints are native-only. Web draws the paint with CSS in the hosted
+ * fill, so this stub is only the solid name if that path is not used.
  */
 export function PaintedUsernameSkia({
   username,
   fallbackColor = theme.color.text.dark,
   fontSize,
+  lineHeight,
 }: PaintedUsernameSkiaProps) {
   return (
     <ChatText
       style={{
         ...chatLineMetrics.comfortable,
         fontSize,
+        lineHeight: lineHeight ?? chatLineMetrics.comfortable.lineHeight,
         fontWeight: 'bold',
         color: fallbackColor,
       }}

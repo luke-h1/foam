@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 import { observable, when } from '@legendapp/state';
 import { persistObservable } from '@legendapp/state/persist';
 import { useSelector } from '@legendapp/state/react';
@@ -202,14 +204,14 @@ export const initialPreferences: Preferences = {
   sharedChatEnabled: true,
   enhancedVideoStability: false,
   chatDebugTools: isDevToolsEnabled,
-  sevenTvPaintRenderer: 'native',
+  sevenTvPaintRenderer: 'skia',
 };
 
 ensureObservablePersistenceConfig();
 
 export const preferences$ = observable(initialPreferences);
 
-export const paintRendererFlag$ = observable<PaintRendererFlag>('native');
+export const paintRendererFlag$ = observable<PaintRendererFlag>('skia');
 
 const persistedPreferences$ = persistObservable(preferences$, {
   local: createObservablePersistenceLocalConfig(PREFERENCES_PERSISTENCE_KEY),
@@ -248,10 +250,17 @@ export function getPreferences(): Preferences {
 
 export function usePaintRenderer(): SevenTvPaintRenderer {
   return useSelector(() => {
-    if (isDevToolsEnabled) {
-      return preferences$.sevenTvPaintRenderer.get();
+    if (!isDevToolsEnabled) {
+      return paintRendererFlag$.get();
     }
-    return paintRendererFlag$.get();
+
+    const renderer = preferences$.sevenTvPaintRenderer.get();
+
+    if (Platform.OS === 'web' && renderer === 'skia') {
+      return 'native';
+    }
+
+    return renderer;
   });
 }
 

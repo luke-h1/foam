@@ -1,5 +1,6 @@
 import type { getCurrentEmoteData } from '@app/store/chat/actions/channel-load';
 import { getUserBadge } from '@app/store/chat/actions/cosmetics';
+import { getPreferences } from '@app/store/preference-store';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { findBadges } from '@app/utils/chat/find-badges';
@@ -11,6 +12,14 @@ interface GetMessageBadgesOptions {
   sourceBadge?: SanitisedBadgeSet | null;
   sourceChannelBadges?: SanitisedBadgeSet[] | null;
   userstate: UserStateTags;
+}
+
+function getEntitledBadge(userId: string): SanitisedBadgeSet | undefined {
+  if (!getPreferences().show7tvBadges) {
+    return undefined;
+  }
+
+  return getUserBadge(userId);
 }
 
 export function getMessageBadges({
@@ -27,7 +36,7 @@ export function getMessageBadges({
     ffzGlobalBadges: emoteData.ffzGlobalBadges,
     twitchChannelBadges: sourceChannelBadges ?? emoteData.twitchChannelBadges,
     twitchGlobalBadges: emoteData.twitchGlobalBadges,
-    getEntitledBadge: getUserBadge,
+    getEntitledBadge,
   });
 
   if (!sourceBadge) {

@@ -1,11 +1,9 @@
 // "shape" is the 7TV paint API field (types/seven-tv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
-import { makeMutable } from 'react-native-reanimated';
-
-import type { SkImage } from '@shopify/react-native-skia';
 import { act, render, screen } from '@testing-library/react-native';
 
 import { chatScrollActivity } from '@app/components/chat/util/chat-scroll-activity';
+import { paintRendererFlag$ } from '@app/store/preference-store';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
 import { PaintedUsername } from '../painted-username';
@@ -17,7 +15,7 @@ import * as sharedPaintAnimationFrames from '../util/shared-paint-animation-fram
  */
 jest
   .spyOn(sharedPaintAnimationFrames, 'useSharedPaintAnimationFrame')
-  .mockReturnValue(makeMutable<SkImage | null>(null));
+  .mockReturnValue(null);
 
 jest
   .spyOn(sharedPaintAnimationFrames, 'useSharedPaintAnimationReady')
@@ -59,6 +57,10 @@ const GRADIENT_PAINT: PaintData = {
 };
 
 describe('PaintedUsername', () => {
+  beforeEach(() => {
+    paintRendererFlag$.set('native');
+  });
+
   afterEach(() => {
     act(() => {
       chatScrollActivity.reset();
@@ -163,6 +165,7 @@ describe('PaintedUsername', () => {
     );
 
     expect(screen.queryByTestId('masked-view')).toBeNull();
+
     expect(screen.getByText('luke')).toHaveStyle({ color: TWITCH_COLOR });
   });
 });

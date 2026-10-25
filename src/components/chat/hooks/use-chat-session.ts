@@ -198,7 +198,6 @@ export function useChatSession({
     messages$,
     scrollAnchor,
     show7TvEmotes: preferences.show7TvEmotes,
-    show7tvBadges: preferences.show7tvBadges,
     showChatGifs: preferences.showChatGifs,
     userLogin: user?.login,
   });

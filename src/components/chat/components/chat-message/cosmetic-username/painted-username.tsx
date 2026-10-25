@@ -62,12 +62,18 @@ function PaintedUsernameWithPaint({
     );
   }
 
-  // Skia draws a cached bitmap, so a fling costs it no more than rest does and
-  // it keeps its paint throughout; only the hosted renderers shed.
+  // Skia keeps the paint during a fling. Deleted names stay on the hosted
+  // fill so the strikethrough still draws. That fill sheds on native only.
   if (paintRenderer === 'skia' && !isModerated) {
     return (
       <PaintedUsernameSkia
-        {...{ username: displayUsername, paint, fallbackColor, fontSize }}
+        {...{
+          username: displayUsername,
+          paint,
+          fallbackColor,
+          fontSize,
+          lineHeight,
+        }}
       />
     );
   }

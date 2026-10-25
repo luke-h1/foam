@@ -16,7 +16,7 @@ interface PaintLayerTiledImageProps {
 }
 
 /**
- * Skia image-shader tiling for CSS `background-repeat` paint layers; the
+ * Skia image-shader tiling for CSS `background-repeat` paint layers. The
  * shared per-URL clock keeps animated tiles in phase across rows.
  */
 export function PaintLayerTiledImage({
@@ -24,18 +24,18 @@ export function PaintLayerTiledImage({
   imageUrl,
 }: PaintLayerTiledImageProps) {
   const textureReady = useSharedPaintAnimationReady(imageUrl);
-  const animatedFrame = useSharedPaintAnimationFrame(imageUrl);
+  const frame = useSharedPaintAnimationFrame(imageUrl);
 
   const { tx, ty } = paintLayerTileModes(canvasRepeat);
 
-  if (!textureReady) {
+  if (!textureReady || !frame) {
     return null;
   }
 
   return (
     <Canvas style={StyleSheet.absoluteFill}>
       <Fill>
-        <ImageShader image={animatedFrame} tx={tx} ty={ty} />
+        <ImageShader image={frame} tx={tx} ty={ty} />
       </Fill>
     </Canvas>
   );
