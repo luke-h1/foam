@@ -395,8 +395,8 @@ jobs:
 
   release:
     name: 📝 Changelog / Release
-    needs: [detect-changes, build, ota]
-    if: always() && needs['detect-changes'].result == 'success' && (needs.build.result == 'success' || needs.build.result == 'skipped') && (needs.ota.result == 'success' || needs.ota.result == 'skipped') && !inputs.dry_run
+    needs: [test, detect-changes, build, ota]
+    if: always() && needs.test.result == 'success' && needs['detect-changes'].result == 'success' && (needs.build.result == 'success' || needs.build.result == 'skipped') && (needs.ota.result == 'success' || needs.ota.result == 'skipped') && !inputs.dry_run
     runs-on: ${{ inputs.self_hosted && 'foam' || 'ubuntu-latest' }}
     timeout-minutes: 20
     permissions:
