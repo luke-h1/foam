@@ -4,7 +4,7 @@ import type { AuthSessionResult } from 'expo-auth-session';
 
 import type { DefaultTokenResponse } from '@app/types/twitch/auth';
 import type { UserInfoResponse } from '@app/types/twitch/user';
-import type { TwitchToken } from '@app/utils/authentication/token-lifecycle';
+import type { TwitchToken } from '@app/utils/authentication/tokenLifecycle';
 
 export interface AuthState {
   isLoggedIn: boolean;

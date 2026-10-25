@@ -1,4 +1,4 @@
-import type { MessageToken } from '@app/utils/chat/message-token';
+import type { MessageToken } from '@app/utils/chat/messageToken';
 
 export type ChatBodyVariant =
   | 'twitch_system_notice'

@@ -1,3 +1,3 @@
-import { FaqScreen } from '@app/screens/other/faq-screen';
+import { FaqScreen } from '@app/screens/other/FaqScreen';
 
 export default FaqScreen;

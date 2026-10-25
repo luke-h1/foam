@@ -8,34 +8,34 @@ import {
 
 import * as Network from 'expo-network';
 
-import { useAuthContext } from '@app/context/auth-context';
+import { useAuthContext } from '@app/context/AuthContext';
 import { useLazyRef } from '@app/hooks/use-lazy-ref';
 import { useSyncRef } from '@app/hooks/use-sync-ref';
-import { chatPerfMarks } from '@app/lib/chat-perf-marks';
+import { chatPerfMarks } from '@app/lib/chatPerfMarks';
 import { isE2EMode } from '@app/services/api/clients';
 import { recordChatDebugIrcLine } from '@app/store/chat/actions/chat-debug-log';
 import { usePreference } from '@app/store/preference-store';
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
-import { subscribeToAppStateTransitions } from '@app/utils/app-state/app-state-transitions';
-import { applyAntiDuplicateSuffix } from '@app/utils/chat/apply-anti-duplicate-suffix';
-import { reportDroppedChatMessages } from '@app/utils/chat/chat-health/report-dropped-chat-messages';
-import { getHeartbeatAction } from '@app/utils/chat/chat-heartbeat';
+import { subscribeToAppStateTransitions } from '@app/utils/app-state/appStateTransitions';
+import { applyAntiDuplicateSuffix } from '@app/utils/chat/applyAntiDuplicateSuffix';
+import { reportDroppedChatMessages } from '@app/utils/chat/chat-health/reportDroppedChatMessages';
+import { containsMutedWords } from '@app/utils/chat/chat-message-filters/containsMutedWords';
+import { isUserBlocked } from '@app/utils/chat/chat-message-filters/isUserBlocked';
+import { getHeartbeatAction } from '@app/utils/chat/chatHeartbeat';
 import {
   MAX_INGESTED_PER_SEC,
   shouldProcessLiveMessage,
-} from '@app/utils/chat/chat-ingest-rate-limiter';
-import { containsMutedWords } from '@app/utils/chat/chat-message-filters/contains-muted-words';
-import { isUserBlocked } from '@app/utils/chat/chat-message-filters/is-user-blocked';
-import { buildPrivmsgLine } from '@app/utils/chat/irc-protocol/build-privmsg-line';
-import { isPrivmsgLine } from '@app/utils/chat/irc-protocol/is-privmsg-line';
+} from '@app/utils/chat/chatIngestRateLimiter';
+import { buildPrivmsgLine } from '@app/utils/chat/irc-protocol/buildPrivmsgLine';
+import { isPrivmsgLine } from '@app/utils/chat/irc-protocol/isPrivmsgLine';
 import {
   type IrcMessage,
   parseIrcMessage,
-} from '@app/utils/chat/irc-protocol/parse-irc-message';
+} from '@app/utils/chat/irc-protocol/parseIrcMessage';
 import {
   type IrcRouteHandlers,
   routeIrcMessage,
-} from '@app/utils/chat/irc-protocol/route-irc-message';
+} from '@app/utils/chat/irc-protocol/routeIrcMessage';
 import { logger } from '@app/utils/logger';
 
 import { ReadyState } from '../hooks/ws/constants';

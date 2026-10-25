@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 
-import { nativeStackScreenOptions } from '@app/utils/navigation/native-stack-options';
+import { nativeStackScreenOptions } from '@app/utils/navigation/nativeStackOptions';
 
 export default function PreferencesLayout() {
   return (

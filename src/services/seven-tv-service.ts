@@ -36,17 +36,17 @@ import type {
 } from '@app/types/seven-tv/cosmetics';
 import type { SevenTvEmotePreview } from '@app/types/seven-tv/emotes';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import { convertV4PaintToPaintData } from '@app/utils/color/seven-tv-paint-data/convert-v4-paint-to-paint-data';
-import { pickAnimatedFormat } from '@app/utils/color/seven-tv-paint-data/pick-animated-format';
-import { pickBestFormat } from '@app/utils/color/seven-tv-paint-data/pick-best-format';
-import { pickBestImage } from '@app/utils/color/seven-tv-paint-data/pick-best-image';
-import { createEmoteImageVariants } from '@app/utils/emote/emote-image-variants/create-emote-image-variants';
+import { convertV4PaintToPaintData } from '@app/utils/color/seven-tv-paint-data/convertV4PaintToPaintData';
+import { pickAnimatedFormat } from '@app/utils/color/seven-tv-paint-data/pickAnimatedFormat';
+import { pickBestFormat } from '@app/utils/color/seven-tv-paint-data/pickBestFormat';
+import { pickBestImage } from '@app/utils/color/seven-tv-paint-data/pickBestImage';
+import { createEmoteImageVariants } from '@app/utils/emote/emote-image-variants/createEmoteImageVariants';
 import { logger } from '@app/utils/logger';
 import {
   SEVEN_TV_EMOTE_SET_MAX_AGE_MS,
   type SevenTvUser,
   sevenTvUserCache,
-} from '@app/utils/seven-tv/seven-tv-user-cache';
+} from '@app/utils/seven-tv/sevenTvUserCache';
 
 import { sevenTvApi } from './api/clients';
 import {

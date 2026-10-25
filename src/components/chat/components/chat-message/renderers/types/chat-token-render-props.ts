@@ -1,9 +1,9 @@
 import type { Key } from 'react';
 
-import type { EmotePressData } from '@app/components/chat/components/chat-message/chat-row.types';
-import type { ChatFontScale } from '@app/components/chat/components/chat-message/util/chat-scale';
+import type { EmotePressData } from '@app/components/chat/components/chat-message/ChatRow.types';
+import type { ChatFontScale } from '@app/components/chat/components/chat-message/util/chatScale';
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
-import type { MessageToken } from '@app/utils/chat/message-token';
+import type { MessageToken } from '@app/utils/chat/messageToken';
 
 export interface ChatTokenRenderProps {
   compact: boolean;

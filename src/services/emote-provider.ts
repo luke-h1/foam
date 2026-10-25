@@ -9,8 +9,8 @@ import type {
   TwitchSanitisedEmote,
 } from '@app/types/emote';
 import type { StvUser } from '@app/types/seven-tv/users';
-import { createEmoteImageVariants } from '@app/utils/emote/emote-image-variants/create-emote-image-variants';
-import { pickEmoteVariantUrl } from '@app/utils/emote/emote-image-variants/pick-emote-variant-url';
+import { createEmoteImageVariants } from '@app/utils/emote/emote-image-variants/createEmoteImageVariants';
+import { pickEmoteVariantUrl } from '@app/utils/emote/emote-image-variants/pickEmoteVariantUrl';
 
 interface HostedEmoteSourceBase {
   id: string;

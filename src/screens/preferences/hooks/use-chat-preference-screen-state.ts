@@ -7,7 +7,7 @@ import type { SanitisedEmote } from '@app/types/emote';
 import {
   EMOJI_STYLE_OPTIONS,
   getEmojiEmotes,
-} from '@app/utils/emoji/emoji-emotes';
+} from '@app/utils/emoji/emojiEmotes';
 
 import {
   CHAT_DELAY_OPTIONS,
@@ -23,7 +23,7 @@ import {
   type ProviderPreviewValue,
   SCROLLBACK_OPTIONS,
   TIMESTAMP_FORMAT_OPTIONS,
-} from '../util/chat-preference-types';
+} from '../util/chatPreferenceTypes';
 
 function samePreviewValues<T extends object>(
   left: T,

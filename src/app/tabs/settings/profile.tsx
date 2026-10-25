@@ -1,3 +1,3 @@
-import { SettingsProfileScreen } from '@app/screens/settings/settings-profile-screen';
+import { SettingsProfileScreen } from '@app/screens/settings/SettingsProfileScreen';
 
 export default SettingsProfileScreen;

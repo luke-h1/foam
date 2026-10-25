@@ -1,3 +1,3 @@
-import { ChangelogScreen } from '@app/screens/other/changelog-screen';
+import { ChangelogScreen } from '@app/screens/other/ChangelogScreen';
 
 export default ChangelogScreen;

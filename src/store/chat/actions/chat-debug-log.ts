@@ -5,7 +5,7 @@ import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-chat-username';
+import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
 
 export interface ChatDebugIrcLine {
   line: string;

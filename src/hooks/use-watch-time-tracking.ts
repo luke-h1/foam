@@ -3,8 +3,8 @@ import { useEffect, useRef } from 'react';
 import {
   maybeRequestStoreReview,
   recordWatchTime,
-} from '@app/lib/expo-store-review';
-import { subscribeToAppStateTransitions } from '@app/utils/app-state/app-state-transitions';
+} from '@app/lib/expoStoreReview';
+import { subscribeToAppStateTransitions } from '@app/utils/app-state/appStateTransitions';
 
 export function useWatchTimeTracking(): void {
   const segmentStartRef = useRef<number | null>(null);

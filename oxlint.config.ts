@@ -345,17 +345,17 @@ const local = {
     {
       files: [
         'src/lib/sentry.ts',
-        'src/lib/sentry-image-spans.ts',
-        'src/lib/__tests__/sentry-image-spans.test.ts',
+        'src/lib/sentryImageSpans.ts',
+        'src/lib/__tests__/sentryImageSpans.test.ts',
         'src/lib/__tests__/sentry.test.ts',
-        'src/lib/__tests__/forward-log-to-sentry.test.ts',
+        'src/lib/__tests__/forwardLogToSentry.test.ts',
         'src/lib/haptics.ts',
         'src/hooks/firebase/analytics.ts',
         'src/hooks/firebase/analytics.test.ts',
         '__mocks__/@react-native-firebase/analytics.ts',
-        'src/components/chat/util/__tests__/create-seven-tv-callbacks.test.ts',
-        'src/components/stream-player/__tests__/stream-player.test.tsx',
-        'src/components/stream-player/__tests__/player-telemetry.test.ts',
+        'src/components/chat/util/__tests__/createSevenTvCallbacks.test.ts',
+        'src/components/stream-player/__tests__/StreamPlayer.test.tsx',
+        'src/components/stream-player/__tests__/playerTelemetry.test.ts',
         'src/components/stream-player/__tests__/use-player-bridge.stability.test.tsx',
       ],
       rules: {
@@ -364,14 +364,14 @@ const local = {
     },
     {
       files: [
-        'src/context/auth-context.tsx',
+        'src/context/AuthContext.tsx',
         'src/components/chat/components/ChatOverlayController.tsx',
-        'src/components/chat/components/chat-overlay-layer.tsx',
-        'src/components/ui/input/input.ios.tsx',
-        'src/screens/preferences/chat-preference-screen.tsx',
-        'src/screens/stream/live-stream-screen.tsx',
-        'src/screens/stream/components/live-stream-chat-pane.tsx',
-        'src/screens/stream/components/live-stream-video-pane.tsx',
+        'src/components/chat/components/ChatOverlayLayer.tsx',
+        'src/components/ui/input/Input.ios.tsx',
+        'src/screens/preferences/ChatPreferenceScreen.tsx',
+        'src/screens/stream/LiveStreamScreen.tsx',
+        'src/screens/stream/components/LiveStreamChatPane.tsx',
+        'src/screens/stream/components/LiveStreamVideoPane.tsx',
       ],
       rules: {
         'react-doctor/no-giant-component': 'off',
@@ -379,14 +379,14 @@ const local = {
       },
     },
     {
-      files: ['src/components/bottom-sheet/bottom-sheet.native.tsx'],
+      files: ['src/components/bottom-sheet/BottomSheet.native.tsx'],
       rules: {
         'react-doctor/no-derived-useState': 'off',
         'react-doctor/no-cascading-set-state': 'off',
       },
     },
     {
-      files: ['src/components/stream-player/stream-player-poster.tsx'],
+      files: ['src/components/stream-player/StreamPlayerPoster.tsx'],
       rules: {
         'react-doctor/no-derived-useState': 'off',
       },
@@ -405,13 +405,13 @@ const local = {
       },
     },
     {
-      files: ['src/utils/string/format-view-count.ts'],
+      files: ['src/utils/string/formatViewCount.ts'],
       rules: {
         'react-doctor/js-hoist-intl': 'off',
       },
     },
     {
-      files: ['src/screens/dev-tools/synced-emotes-screen.tsx'],
+      files: ['src/screens/dev-tools/SyncedEmotesScreen.tsx'],
       rules: {
         'react-doctor/rn-no-scrollview-mapped-list': 'off',
       },
@@ -475,7 +475,7 @@ const local = {
       },
     },
     {
-      files: ['src/screens/dev-tools/image-benchmark-screen.tsx'],
+      files: ['src/screens/dev-tools/ImageBenchmarkScreen.tsx'],
       rules: {
         'react-doctor/async-defer-await': 'off',
       },
@@ -499,7 +499,7 @@ const local = {
       },
     },
     {
-      files: ['src/components/pressable-area/pressable-area.tsx'],
+      files: ['src/components/pressable-area/PressableArea.tsx'],
       rules: {
         'react-doctor/rn-pressable-shared-value-mutation': 'off',
       },

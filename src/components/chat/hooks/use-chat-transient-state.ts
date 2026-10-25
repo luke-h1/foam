@@ -9,8 +9,8 @@ import {
 import { defaultTransientState } from '@app/store/chat/observables/chat-transient-state';
 import { useTransientChannelFilters } from '@app/store/chat/react/transient-selectors';
 import { usePreference } from '@app/store/preference-store';
-import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-chat-username';
-import { normaliseChatText } from '@app/utils/chat/normalise-chat-text';
+import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
+import { normaliseChatText } from '@app/utils/chat/normaliseChatText';
 
 /**
  * Session-only "hide from my view" lists. They are not a persisted blocklist,

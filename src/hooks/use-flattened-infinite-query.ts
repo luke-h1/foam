@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { flattenInfiniteQueryPages } from '@app/utils/pagination/flatten-infinite-query-pages';
+import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
 
 interface PageWithData<TItem> {
   data?: readonly (TItem | undefined | null)[];

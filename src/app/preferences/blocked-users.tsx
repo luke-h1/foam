@@ -1,3 +1,3 @@
-import { BlockedUsersScreen } from '@app/screens/preferences/blocked-users-screen';
+import { BlockedUsersScreen } from '@app/screens/preferences/BlockedUsersScreen';
 
 export default BlockedUsersScreen;

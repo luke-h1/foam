@@ -14,7 +14,7 @@ import {
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { logger } from '@app/utils/logger';
-import { setSevenTvSessionId } from '@app/utils/seven-tv/seven-tv-session-id';
+import { setSevenTvSessionId } from '@app/utils/seven-tv/sevenTvSessionId';
 
 jest.spyOn(logger.stv, 'warn').mockImplementation(() => {});
 jest.spyOn(logger.stvWs, 'info').mockImplementation(() => {});

@@ -1,5 +1,5 @@
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import type { OpenStringUnion } from '@app/utils/typescript/open-string-union';
+import type { OpenStringUnion } from '@app/utils/typescript/openStringUnion';
 
 import { twitchApi } from './api/clients';
 

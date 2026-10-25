@@ -1,4 +1,4 @@
-import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normalise-chat-username';
+import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
 
 import type { AnyChatMessageType } from '../types/constants';
 

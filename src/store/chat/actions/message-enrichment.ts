@@ -1,9 +1,9 @@
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
-import { extractEmotesFromTag } from '@app/utils/chat/extract-emotes/extract-emotes-from-tag';
-import type { MessageToken } from '@app/utils/chat/message-token';
-import { resolveMessageEmoteParts } from '@app/utils/chat/resolve-message-emote-tokens';
-import { getMessageBadges } from '@app/utils/chat/shared-chat-badges/get-message-badges';
-import { getSharedChatBadgeContext } from '@app/utils/chat/shared-chat-badges/get-shared-chat-badge-context';
+import { extractEmotesFromTag } from '@app/utils/chat/extract-emotes/extractEmotesFromTag';
+import type { MessageToken } from '@app/utils/chat/messageToken';
+import { resolveMessageEmoteParts } from '@app/utils/chat/resolveMessageEmoteTokens';
+import { getMessageBadges } from '@app/utils/chat/shared-chat-badges/getMessageBadges';
+import { getSharedChatBadgeContext } from '@app/utils/chat/shared-chat-badges/getSharedChatBadgeContext';
 import { logger } from '@app/utils/logger';
 
 import { chatStore$ } from '../observables/chat-store';

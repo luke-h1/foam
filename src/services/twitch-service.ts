@@ -3,7 +3,7 @@ import { fetch } from 'expo/fetch';
 import Constants from 'expo-constants';
 import { z } from 'zod';
 
-import { parseJsonOnWorklet } from '@app/lib/off-thread-json/parse-json-on-worklet';
+import { parseJsonOnWorklet } from '@app/lib/off-thread-json/parseJsonOnWorklet';
 import type { PaginatedList } from '@app/types/twitch/api';
 import type {
   DefaultTokenResponse,
@@ -41,7 +41,7 @@ import type {
 import {
   cacheChannelPointRewardTitle,
   getCachedChannelPointRewardTitle,
-} from '@app/utils/chat/channel-point-reward-title-store';
+} from '@app/utils/chat/channelPointRewardTitleStore';
 import { logger } from '@app/utils/logger';
 
 import {

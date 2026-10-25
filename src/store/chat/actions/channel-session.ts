@@ -8,7 +8,7 @@ import { clearPaintBindings } from '@app/store/chat/actions/cosmetics';
 import { clearMessages } from '@app/store/chat/actions/messages';
 import { clearFetchedCosmeticsUsers } from '@app/store/chat/actions/user-cosmetics-fetch';
 import { clearVisibleAssetHydration } from '@app/store/chat/actions/visible-asset-hydration';
-import { resetMentionLoginResolver } from '@app/utils/chat/mention-login-resolver/reset-mention-login-resolver';
+import { resetMentionLoginResolver } from '@app/utils/chat/mention-login-resolver/resetMentionLoginResolver';
 
 export type ChannelSessionResetTrigger =
   | 'leave'

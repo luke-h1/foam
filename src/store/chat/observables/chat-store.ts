@@ -7,14 +7,14 @@ import {
   CHAT_STORE_PERSISTENCE_KEY,
   createObservablePersistenceLocalConfig,
   ensureObservablePersistenceConfig,
-} from '@app/lib/observable-persistence';
+} from '@app/lib/observablePersistence';
 import { getPreferences } from '@app/store/preference-store';
 import type { EmoteProvider, EmoteSite } from '@app/types/emote';
 import type { BadgeProvider } from '@app/types/twitch/badge';
-import { getEmojiEmotes } from '@app/utils/emoji/emoji-emotes';
-import { EMOTE_PROVIDER_BY_SITE } from '@app/utils/emote/emote-provider-by-site';
+import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
+import { EMOTE_PROVIDER_BY_SITE } from '@app/utils/emote/emoteProviderBySite';
 import { logger } from '@app/utils/logger';
-import { runWhenIdle } from '@app/utils/run-when-idle';
+import { runWhenIdle } from '@app/utils/runWhenIdle';
 
 import type {
   AnyChatMessageType,

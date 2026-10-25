@@ -1,5 +1,5 @@
-import { SLASH_COMMAND_DEFINITIONS } from '@app/components/chat/util/slash-command-definitions/slash-command-definitions';
-import { normaliseChatText } from '@app/utils/chat/normalise-chat-text';
+import { SLASH_COMMAND_DEFINITIONS } from '@app/components/chat/util/slash-command-definitions/slashCommandDefinitions';
+import { normaliseChatText } from '@app/utils/chat/normaliseChatText';
 
 interface UseCommandSuggestionsProps {
   searchTerm: string;

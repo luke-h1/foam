@@ -8,7 +8,7 @@ leverage by spending one of them is a regression, not a candidate.
 The invariants:
 
 - **Frame-cadenced, bounded commits.** Raw lines buffer pre-commit
-  (`components/chat/util/message-buffer`) and enter the store in cadenced
+  (`components/chat/util/messageBuffer`) and enter the store in cadenced
   flushes (`components/chat/util/chat-flush-cadence`), draining bounded batches
   without dropping messages (sampling live commits silently dropped messages
   above 30/s once; never again). No abstraction may commit per-message.

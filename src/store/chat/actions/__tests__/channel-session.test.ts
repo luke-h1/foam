@@ -5,7 +5,7 @@ import * as messages from '@app/store/chat/actions/messages';
 import * as personalEmotes from '@app/store/chat/actions/personal-emotes';
 import * as userCosmeticsFetch from '@app/store/chat/actions/user-cosmetics-fetch';
 import * as visibleAssetHydration from '@app/store/chat/actions/visible-asset-hydration';
-import * as resetMentionLoginResolverModule from '@app/utils/chat/mention-login-resolver/reset-mention-login-resolver';
+import * as resetMentionLoginResolverModule from '@app/utils/chat/mention-login-resolver/resetMentionLoginResolver';
 
 import { resetChannelSession } from '../channel-session';
 

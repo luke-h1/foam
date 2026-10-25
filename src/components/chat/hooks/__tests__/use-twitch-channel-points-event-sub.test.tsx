@@ -11,7 +11,7 @@ import {
 import {
   type AuthContextState,
   AuthContextTestProvider,
-} from '@app/context/auth-context';
+} from '@app/context/AuthContext';
 import TwitchWsService from '@app/services/twitch-ws-service';
 import { logger } from '@app/utils/logger';
 

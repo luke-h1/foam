@@ -1,4 +1,4 @@
-import { RootLayoutShell } from '@app/components/root-layout/root-layout-shell';
+import { RootLayoutShell } from '@app/components/root-layout/RootLayoutShell';
 
 import { wrapWithSentry } from '../lib/sentry';
 

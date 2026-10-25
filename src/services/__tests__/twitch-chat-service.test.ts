@@ -7,7 +7,7 @@ import * as UseWebsocketModule from '@app/hooks/ws/use-websocket';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
 import { preferences$ } from '@app/store/preference-store';
 import { DefaultWrapper } from '@app/test/render';
-import * as AppStateTransitionsModule from '@app/utils/app-state/app-state-transitions';
+import * as AppStateTransitionsModule from '@app/utils/app-state/appStateTransitions';
 import { logger } from '@app/utils/logger';
 
 const mockedUseWebsocket = jest.spyOn(UseWebsocketModule, 'useWebsocket');

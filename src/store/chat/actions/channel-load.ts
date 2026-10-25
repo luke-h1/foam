@@ -1,6 +1,6 @@
 import { batch } from '@legendapp/state';
 
-import { clearChatStorePersistence } from '@app/lib/observable-persistence';
+import { clearChatStorePersistence } from '@app/lib/observablePersistence';
 import { startSpanAsync } from '@app/lib/sentry';
 import {
   invalidateSevenTvUser,
@@ -9,17 +9,17 @@ import {
 import { twitchService } from '@app/services/twitch-service';
 import { getPreferences } from '@app/store/preference-store';
 import type { SanitisedEmote } from '@app/types/emote';
-import { createFetchOnceGuard } from '@app/utils/async/fetch-once-guard';
+import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
 import {
   clearBttvBadgesCache,
   getBttvBadges,
-} from '@app/utils/chat/bttv-badges/get-bttv-badges';
-import { getChatterinoBadges } from '@app/utils/chat/chatterino-badges';
-import { cheermoteFetchGuard } from '@app/utils/chat/cheermote-store/cheermote-fetch-guard';
-import { fetchChannelCheermotes } from '@app/utils/chat/cheermote-store/fetch-channel-cheermotes';
-import { createSystemMessage } from '@app/utils/chat/message-handlers/create-system-message';
-import { getEmojiEmotes } from '@app/utils/emoji/emoji-emotes';
-import { clearSessionCache } from '@app/utils/image/image-cache';
+} from '@app/utils/chat/bttv-badges/getBttvBadges';
+import { getChatterinoBadges } from '@app/utils/chat/chatterinoBadges';
+import { cheermoteFetchGuard } from '@app/utils/chat/cheermote-store/cheermoteFetchGuard';
+import { fetchChannelCheermotes } from '@app/utils/chat/cheermote-store/fetchChannelCheermotes';
+import { createSystemMessage } from '@app/utils/chat/message-handlers/createSystemMessage';
+import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
+import { clearSessionCache } from '@app/utils/image/imageCache';
 import { logger } from '@app/utils/logger';
 
 import {

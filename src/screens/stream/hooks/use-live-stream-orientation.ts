@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import * as ScreenOrientation from 'expo-screen-orientation';
 
-import { getLiveStreamLayoutMetrics } from '../util/get-live-stream-layout-metrics';
+import { getLiveStreamLayoutMetrics } from '../util/getLiveStreamLayoutMetrics';
 
 /**
  * Window dims can stick after a rotation, so the native orientation event is

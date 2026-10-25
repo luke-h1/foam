@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 
 import { useSyncRef } from '@app/hooks/use-sync-ref';
-import type { AppStateTransition } from '@app/utils/app-state/app-state-transitions';
-import { subscribeToAppStateTransitions } from '@app/utils/app-state/app-state-transitions';
+import type { AppStateTransition } from '@app/utils/app-state/appStateTransitions';
+import { subscribeToAppStateTransitions } from '@app/utils/app-state/appStateTransitions';
 
 export function useOnAppStateChange(
   onTransition: (transition: AppStateTransition) => void,

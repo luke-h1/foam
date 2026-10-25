@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { markStartup, type StartupMark } from '@app/lib/startup-marks';
+import { markStartup, type StartupMark } from '@app/lib/startupMarks';
 
 /**
  * A state initialiser runs during the first render, before any effect.

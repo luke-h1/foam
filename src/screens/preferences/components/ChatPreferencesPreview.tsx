@@ -1,0 +1,645 @@
+import { memo } from 'react';
+import { StyleSheet, View } from 'react-native';
+import type { ReactNode } from 'react';
+
+import { ChatRow } from '@app/components/chat/components/chat-message/ChatRow';
+import { EmoteToken } from '@app/components/chat/components/chat-message/renderers/EmoteToken';
+import { SymbolView } from '@app/components/ui/icon/Icon';
+import { Text } from '@app/components/ui/text/Text';
+import { type ChatMessageType } from '@app/store/chat/types/constants';
+import { type ChatFontScale } from '@app/store/preference-store';
+import { theme } from '@app/styles/themes';
+import { type UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import { type SanitisedEmote } from '@app/types/emote';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import { processEmotes } from '@app/utils/chat/emoteProcessor';
+import { type MessageToken } from '@app/utils/chat/messageToken';
+import { getMessageTokenText } from '@app/utils/chat/messageTokenContent';
+
+import { chatPreferencePreviewFixtures } from '../util/chatPreferencePreviewFixtures';
+
+const PREVIEW_CHANNEL = 'preview';
+const PREVIEW_VIEWER_LOGIN = 'foamviewer';
+
+type PreviewProvider = '7tv' | 'bttv' | 'ffz' | 'twitch';
+type PreviewMessage = ChatMessageType<'usernotice'>;
+
+type PreviewState = {
+  chatDensity: 'comfortable' | 'compact';
+  chatFontScale: ChatFontScale;
+  chatTimestamps: boolean;
+  disableEmoteAnimations: boolean;
+  highlightOwnMentions: boolean;
+  showAlternatingChatRows: boolean;
+  showInlineReplyContext: boolean;
+  showUnreadJumpPill: boolean;
+};
+
+type ProviderPreviewSample = {
+  badges: SanitisedBadgeSet[];
+  emotes: SanitisedEmote[];
+};
+
+export type ChatPreferencePreviewProps =
+  | {
+      variant: 'fontScale';
+      value: PreviewState['chatFontScale'];
+    }
+  | {
+      variant: 'context';
+      value: Partial<PreviewState>;
+    }
+  | {
+      variant: 'alternatingRows';
+      value: boolean;
+    }
+  | {
+      variant: 'emoteAnimations';
+      value: boolean;
+    }
+  | {
+      provider: PreviewProvider;
+      value: boolean;
+      variant: 'providerEmotes' | 'providerBadges';
+    };
+
+const PREVIEW_DEFAULTS: PreviewState = {
+  chatDensity: 'comfortable',
+  chatFontScale: 'default',
+  chatTimestamps: true,
+  disableEmoteAnimations: false,
+  highlightOwnMentions: true,
+  showAlternatingChatRows: false,
+  showInlineReplyContext: true,
+  showUnreadJumpPill: false,
+};
+
+const previewMessages = {
+  plain: createPreviewMessage({
+    color: theme.color.chatSample.blue,
+    displayName: 'StreamEnjoyer',
+    id: 'preview-plain',
+    login: 'streamenjoyer',
+    text: 'This overlay is so clean',
+    userId: '101',
+  }),
+  reply: createPreviewMessage({
+    color: theme.color.chatSample.green,
+    displayName: 'ChatFan',
+    id: 'preview-reply',
+    login: 'chatfan',
+    replyBody: 'Love this game choice',
+    replyDisplayName: 'StreamEnjoyer',
+    replyLogin: 'streamenjoyer',
+    text: 'Totally agree!',
+    userId: '102',
+  }),
+  mention: createPreviewMessage({
+    color: theme.color.chatSample.purple,
+    displayName: 'ModBot',
+    id: 'preview-mention',
+    login: 'modbot',
+    message: [
+      textPart('Hey '),
+      mentionPart(`@${PREVIEW_VIEWER_LOGIN}`),
+      textPart(' thanks for subscribing!'),
+    ],
+    userId: '103',
+  }),
+  emoteAnimations: createPreviewMessage({
+    color: theme.color.chatSample.amber,
+    displayName: 'EmoteFan',
+    id: 'preview-emote-animations',
+    login: 'emotefan',
+    message: [
+      textPart(' these render '),
+      ...buildProviderEmoteParts(
+        'bttv',
+        chatPreferencePreviewFixtures.bttv.emotes.slice(0, 2),
+      ),
+    ],
+    userId: '104',
+  }),
+} as const;
+
+const getMentionColor = () => theme.colorViolet;
+
+const parseTextForEmotes = (text: string): MessageToken[] => [textPart(text)];
+
+export const ChatPreferencePreview = memo(function ChatPreferencePreview(
+  props: ChatPreferencePreviewProps,
+) {
+  const { variant, value } = props;
+
+  switch (variant) {
+    case 'fontScale': {
+      return (
+        <ChatPreviewSurface
+          messages={[previewMessages.plain, previewMessages.reply]}
+          settings={{ chatFontScale: value }}
+          testID='chat-preference-preview-font-scale'
+        />
+      );
+    }
+
+    case 'context': {
+      return (
+        <ChatPreviewSurface
+          messages={[
+            previewMessages.plain,
+            previewMessages.reply,
+            previewMessages.mention,
+          ]}
+          settings={value}
+          testID='chat-preference-preview-context'
+        />
+      );
+    }
+
+    case 'alternatingRows': {
+      return (
+        <ChatPreviewSurface
+          messages={[
+            previewMessages.plain,
+            previewMessages.reply,
+            previewMessages.mention,
+          ]}
+          settings={{ showAlternatingChatRows: value }}
+          testID='chat-preference-preview-alternating-rows'
+        />
+      );
+    }
+
+    case 'emoteAnimations': {
+      return (
+        <PreviewEmoteLine
+          disableAnimations={value}
+          tokens={previewMessages.emoteAnimations.message}
+          testID='chat-preference-preview-emote-animations'
+          username='EmoteFan'
+          usernameColor={theme.color.chatSample.amber}
+        />
+      );
+    }
+
+    case 'providerEmotes': {
+      const { provider } = props;
+
+      return (
+        <ProviderAssetPreview
+          enabled={value}
+          provider={provider}
+          testID={`chat-preference-preview-${provider}-emotes`}
+          variant='emotes'
+        />
+      );
+    }
+
+    case 'providerBadges': {
+      const { provider } = props;
+
+      return (
+        <ProviderAssetPreview
+          enabled={value}
+          provider={provider}
+          testID={`chat-preference-preview-${provider}-badges`}
+          variant='badges'
+        />
+      );
+    }
+
+    default: {
+      const unreachable: never = variant;
+      return unreachable;
+    }
+  }
+});
+
+interface ChatPreviewSurfaceProps {
+  messages: PreviewMessage[];
+  settings?: Partial<PreviewState>;
+  testID: string;
+}
+
+const ChatPreviewSurface = function ChatPreviewSurface({
+  messages,
+  settings,
+  testID,
+}: ChatPreviewSurfaceProps) {
+  // Per-key ?? instead of a spread: `{ chatTimestamps: undefined }` would clobber the default with an explicit undefined.
+  const previewState: PreviewState = {
+    chatDensity: settings?.chatDensity ?? PREVIEW_DEFAULTS.chatDensity,
+    chatFontScale: settings?.chatFontScale ?? PREVIEW_DEFAULTS.chatFontScale,
+    chatTimestamps: settings?.chatTimestamps ?? PREVIEW_DEFAULTS.chatTimestamps,
+    disableEmoteAnimations:
+      settings?.disableEmoteAnimations ??
+      PREVIEW_DEFAULTS.disableEmoteAnimations,
+    highlightOwnMentions:
+      settings?.highlightOwnMentions ?? PREVIEW_DEFAULTS.highlightOwnMentions,
+    showAlternatingChatRows:
+      settings?.showAlternatingChatRows ??
+      PREVIEW_DEFAULTS.showAlternatingChatRows,
+    showInlineReplyContext:
+      settings?.showInlineReplyContext ??
+      PREVIEW_DEFAULTS.showInlineReplyContext,
+    showUnreadJumpPill:
+      settings?.showUnreadJumpPill ?? PREVIEW_DEFAULTS.showUnreadJumpPill,
+  };
+
+  return (
+    <PreviewCard testID={testID}>
+      <View
+        style={[
+          styles.chatSurface,
+          previewState.showUnreadJumpPill
+            ? styles.chatSurfaceWithJumpPill
+            : null,
+        ]}
+        pointerEvents='none'
+      >
+        {messages.map((message, index) => (
+          <ChatRow
+            key={message.id}
+            {...message}
+            currentUsername={
+              previewState.highlightOwnMentions
+                ? PREVIEW_VIEWER_LOGIN
+                : undefined
+            }
+            density={previewState.chatDensity}
+            fontScale={previewState.chatFontScale}
+            getMentionColor={getMentionColor}
+            messageDisplay={{
+              disableEmoteAnimations: previewState.disableEmoteAnimations,
+              isAlternatingRow:
+                previewState.showAlternatingChatRows && index % 2 === 1,
+              showInlineReplyContext: previewState.showInlineReplyContext,
+              showTimestamp: previewState.chatTimestamps,
+            }}
+            parseTextForEmotes={parseTextForEmotes}
+            style={styles.messageRow}
+          />
+        ))}
+
+        {previewState.showUnreadJumpPill ? (
+          <View style={styles.jumpPillWrap}>
+            <View style={styles.jumpPill}>
+              <SymbolView
+                tintColor={theme.colorAmberAlpha}
+                name='arrow.down'
+                size={16}
+              />
+              <Text style={styles.jumpPillText} weight='semibold'>
+                Jump to latest
+              </Text>
+              <Text style={styles.jumpPillCount} weight='bold'>
+                {' '}
+                3
+              </Text>
+            </View>
+          </View>
+        ) : null}
+      </View>
+    </PreviewCard>
+  );
+};
+
+interface PreviewEmoteLineProps {
+  disableAnimations?: boolean;
+  tokens: MessageToken[];
+  testID: string;
+  username: string;
+  usernameColor: string;
+}
+
+/**
+ * Renders `username: text [emote] text` with plain primitives - the full ChatRow flex body collapses its text nodes to a few pixels inside the RNHostView-embedded SwiftUI form. EmoteToken still measures correctly and keeps the animation toggle.
+ */
+const PreviewEmoteLine = function PreviewEmoteLine({
+  disableAnimations = false,
+  tokens,
+  testID,
+  username,
+  usernameColor,
+}: PreviewEmoteLineProps) {
+  return (
+    <PreviewCard testID={testID}>
+      <View style={styles.providerPreviewSurface} pointerEvents='none'>
+        <View style={styles.providerEmoteRow}>
+          <Text style={{ color: usernameColor }} type='caption' weight='bold'>
+            {username}:
+          </Text>
+          {tokens.map(token => {
+            if (token.type === 'emote') {
+              return (
+                <EmoteToken
+                  key={`emote-${token.name}`}
+                  disableAnimations={disableAnimations}
+                  token={token}
+                  targetSize={24}
+                />
+              );
+            }
+
+            const content = getMessageTokenText(token).trim();
+
+            if (!content) {
+              return null;
+            }
+
+            return (
+              <Text key={`text-${content}`} color='gray' type='caption'>
+                {content}
+              </Text>
+            );
+          })}
+        </View>
+      </View>
+    </PreviewCard>
+  );
+};
+
+interface ProviderAssetPreviewProps {
+  enabled: boolean;
+  provider: PreviewProvider;
+  testID: string;
+  variant: 'badges' | 'emotes';
+}
+
+const ProviderAssetPreview = function ProviderAssetPreview({
+  enabled,
+  provider,
+  testID,
+  variant,
+}: ProviderAssetPreviewProps) {
+  const sample = getProviderPreviewSample(provider);
+
+  if (variant === 'emotes' && enabled && sample.emotes.length > 0) {
+    return (
+      <PreviewEmoteLine
+        tokens={buildProviderEmoteParts(provider, sample.emotes)}
+        testID={testID}
+        username='username'
+        usernameColor={getProviderPreviewColor(provider)}
+      />
+    );
+  }
+
+  const message =
+    variant === 'emotes'
+      ? createPreviewMessage({
+          color: getProviderPreviewColor(provider),
+          displayName: 'username',
+          id: `preview-${provider}-emotes-${enabled ? 'on' : 'off'}`,
+          login: `${provider}-preview`,
+          message: enabled
+            ? buildProviderEmoteParts(provider, sample.emotes)
+            : [textPart(buildProviderEmoteFallbackText(sample.emotes))],
+          userId: `preview-${provider}-emotes`,
+        })
+      : createPreviewMessage({
+          badges: enabled ? sample.badges : [],
+          color: getProviderPreviewColor(provider),
+          displayName: 'username',
+          id: `preview-${provider}-badges-${enabled ? 'on' : 'off'}`,
+          login: `${provider}-preview`,
+          text: ' hello world',
+          userId: `preview-${provider}-badges`,
+        });
+
+  return (
+    <PreviewCard testID={testID}>
+      <View style={styles.providerPreviewSurface} pointerEvents='none'>
+        <ChatRow
+          {...message}
+          density='comfortable'
+          getMentionColor={getMentionColor}
+          messageDisplay={{
+            showInlineReplyContext: false,
+            showTimestamp: false,
+          }}
+          parseTextForEmotes={parseTextForEmotes}
+          style={styles.messageRow}
+        />
+      </View>
+    </PreviewCard>
+  );
+};
+
+const PreviewCard = function PreviewCard({
+  children,
+  testID,
+}: {
+  children: ReactNode;
+  testID: string;
+}) {
+  return (
+    <View style={styles.previewCard} testID={testID}>
+      {children}
+    </View>
+  );
+};
+
+interface CreatePreviewMessageOptions {
+  badges?: SanitisedBadgeSet[];
+  color: string;
+  displayName: string;
+  id: string;
+  login: string;
+  message?: MessageToken[];
+  replyBody?: string;
+  replyDisplayName?: string;
+  replyLogin?: string;
+  text?: string;
+  userId: string;
+}
+
+function createPreviewMessage({
+  badges = [],
+  color,
+  displayName,
+  id,
+  login,
+  message,
+  replyBody,
+  replyDisplayName,
+  replyLogin,
+  text,
+  userId,
+}: CreatePreviewMessageOptions): PreviewMessage {
+  const userstate: UserStateTags = {
+    'display-name': displayName,
+    login,
+    username: displayName,
+    'user-id': userId,
+    id,
+    color,
+    badges: {},
+    'badges-raw': '',
+    mod: '0',
+    subscriber: '0',
+    turbo: '0',
+    'emote-sets': '',
+    'user-type': '',
+    'first-msg': '0',
+    'reply-parent-msg-id': '',
+    'reply-parent-msg-body': replyBody ?? '',
+    'reply-parent-display-name': replyDisplayName ?? '',
+    'reply-parent-user-login': replyLogin ?? '',
+  };
+
+  return {
+    id,
+    userstate,
+    message: message ?? [textPart(text ?? '')],
+    badges,
+    channel: PREVIEW_CHANNEL,
+    message_id: id,
+    message_nonce: `${id}-nonce`,
+    sender: login,
+    parentDisplayName: replyDisplayName ?? '',
+    replyDisplayName: replyLogin ?? '',
+    replyBody: replyBody ?? '',
+    parentColor: undefined,
+  };
+}
+
+function textPart(content: string): MessageToken<'text'> {
+  return {
+    type: 'text',
+    content,
+  };
+}
+
+function mentionPart(content: string): MessageToken<'mention'> {
+  return {
+    type: 'mention',
+    content,
+  };
+}
+
+function getProviderPreviewSample(
+  provider: PreviewProvider,
+): ProviderPreviewSample {
+  const fixtures = chatPreferencePreviewFixtures[provider];
+
+  return {
+    badges: fixtures.badges.slice(0, provider === 'twitch' ? 2 : 1),
+    emotes: fixtures.emotes.slice(0, 2),
+  };
+}
+
+function buildProviderEmoteFallbackText(emotes: SanitisedEmote[]) {
+  return ` hello ${emotes.map(emote => emote.name).join(' ')} world`;
+}
+
+function buildProviderEmoteParts(
+  provider: PreviewProvider,
+  emotes: SanitisedEmote[],
+): MessageToken[] {
+  if (emotes.length === 0) {
+    return [textPart(' hello world')];
+  }
+
+  const forProvider = (target: SanitisedEmote['provider']) =>
+    emotes.filter(emote => emote.provider === target);
+
+  return processEmotes({
+    inputString: buildProviderEmoteFallbackText(emotes),
+    userstate: null,
+    sevenTvChannelEmotes: provider === '7tv' ? forProvider('7tv') : [],
+    sevenTvGlobalEmotes: [],
+    sevenTvPersonalEmotes: [],
+    twitchChannelEmotes: provider === 'twitch' ? forProvider('twitch') : [],
+    twitchGlobalEmotes: [],
+    ffzChannelEmotes: provider === 'ffz' ? forProvider('ffz') : [],
+    ffzGlobalEmotes: [],
+    bttvChannelEmotes: provider === 'bttv' ? forProvider('bttv') : [],
+    bttvGlobalEmotes: [],
+  });
+}
+
+function getProviderPreviewColor(provider: PreviewProvider) {
+  switch (provider) {
+    case '7tv':
+      return theme.colorPlum;
+    case 'bttv':
+      return theme.colorOrange;
+    case 'ffz':
+      return theme.colorBlue;
+    case 'twitch':
+      return theme.colorViolet;
+    default: {
+      const unreachable: never = provider;
+      return unreachable;
+    }
+  }
+}
+
+const styles = StyleSheet.create({
+  chatSurface: {
+    backgroundColor: theme.color.backgroundSecondary.dark,
+    borderColor: theme.colorBorderSecondary,
+    borderCurve: 'continuous',
+    borderRadius: theme.radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
+    paddingVertical: theme.space8,
+    position: 'relative',
+  },
+  chatSurfaceWithJumpPill: {
+    paddingBottom: 52,
+  },
+  jumpPill: {
+    alignItems: 'center',
+    alignSelf: 'center',
+    backgroundColor: theme.colorBlackOverlay,
+    borderCurve: 'continuous',
+    borderRadius: theme.radius.xl,
+    boxShadow: theme.elevation.floating,
+    flexDirection: 'row',
+    paddingHorizontal: theme.space20,
+    paddingVertical: theme.space12,
+  },
+  jumpPillCount: {
+    fontSize: theme.fontSize12,
+  },
+  jumpPillText: {
+    fontSize: theme.fontSize12,
+  },
+  jumpPillWrap: {
+    bottom: theme.space12,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+  },
+  messageRow: {
+    borderCurve: 'continuous',
+    borderRadius: theme.radius.sm,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: theme.space12,
+    paddingVertical: theme.space2,
+  },
+  previewCard: {
+    width: '100%',
+  },
+  providerEmoteRow: {
+    alignItems: 'center',
+    columnGap: theme.space4,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: theme.space12,
+    rowGap: theme.space2,
+  },
+  providerPreviewSurface: {
+    backgroundColor: theme.color.backgroundSecondary.dark,
+    borderColor: theme.colorBorderSecondary,
+    borderCurve: 'continuous',
+    borderRadius: theme.radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    minHeight: 48,
+    overflow: 'hidden',
+    paddingVertical: theme.space8,
+  },
+});

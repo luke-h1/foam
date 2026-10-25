@@ -1,0 +1,202 @@
+import { memo } from 'react';
+import { View } from 'react-native';
+
+import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
+import { getSubscriptionTierDisplay } from '@app/components/chat/components/user-notices/util/subscriptionNoticeTier';
+import { Image } from '@app/components/image/Image';
+import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import type { MessageToken } from '@app/utils/chat/messageToken';
+
+import { styles as chatStyles } from '../chat-message/ChatRow.styles';
+import { ChatNoticeMetaRow } from '../chat-message/renderers/ChatNoticeMetaRow';
+import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';
+import { subscriptionNoticeStyles as styles } from './SubscriptionNotice.styles';
+import { buildSubscriptionNoticeDescription } from './util/buildSubscriptionNoticeDescription';
+
+function getMessagePartKey(token: MessageToken, occurrence: number): string {
+  switch (token.type) {
+    case 'emote':
+      return `emote:${token.url ?? token.content}:${occurrence}`;
+    case 'text':
+      return `text:${token.content}:${occurrence}`;
+    default:
+      return `${token.type}:${occurrence}`;
+  }
+}
+
+function renderMessagePart(messagePart: MessageToken, occurrence: number) {
+  const key = getMessagePartKey(messagePart, occurrence);
+
+  switch (messagePart.type) {
+    case 'text':
+      return (
+        <ChatText key={key} style={styles.messageText}>
+          {messagePart.content}
+        </ChatText>
+      );
+    case 'emote':
+      return (
+        <Image
+          trackLoadContext='chat.subscription-notice-emote'
+          cacheVariant='emote'
+          transition={0}
+          {...{ key, source: messagePart.url, style: styles.emote }}
+        />
+      );
+    default:
+      return null;
+  }
+}
+
+interface SubscriptionNoticeProps {
+  token: MessageToken<
+    | 'sub'
+    | 'resub'
+    | 'anongiftpaidupgrade'
+    | 'anongift'
+    | 'submysterygift'
+    | 'giftpaidupgrade'
+    | 'primepaidupgrade'
+  >;
+  notice_tags?: UserNoticeTags;
+  parsedMessage?: MessageToken[];
+}
+
+/**
+ * Twitch's usernotice payload is a union: each subscription kind carries a
+ * different subset of these fields, so each is read only when present.
+ */
+function pickSubscriptionDescriptionFields(
+  subscriptionEvent: SubscriptionNoticeProps['token']['subscriptionEvent'],
+) {
+  return {
+    cumulativeMonths:
+      'months' in subscriptionEvent ? subscriptionEvent.months : undefined,
+    streakMonths:
+      'streakMonths' in subscriptionEvent
+        ? subscriptionEvent.streakMonths
+        : undefined,
+    shouldShareStreak:
+      'shouldShareStreak' in subscriptionEvent
+        ? subscriptionEvent.shouldShareStreak
+        : undefined,
+    giftMonths:
+      'giftMonths' in subscriptionEvent
+        ? subscriptionEvent.giftMonths
+        : undefined,
+    recipientDisplayName:
+      'recipientDisplayName' in subscriptionEvent
+        ? subscriptionEvent.recipientDisplayName
+        : undefined,
+    promoName:
+      'promoName' in subscriptionEvent
+        ? subscriptionEvent.promoName
+        : undefined,
+    promoGiftTotal:
+      'promoGiftTotal' in subscriptionEvent
+        ? Number(subscriptionEvent.promoGiftTotal) || undefined
+        : undefined,
+    massGiftCount:
+      'massGiftCount' in subscriptionEvent
+        ? subscriptionEvent.massGiftCount
+        : undefined,
+    senderCount:
+      'senderCount' in subscriptionEvent
+        ? subscriptionEvent.senderCount
+        : undefined,
+    senderName:
+      'senderName' in subscriptionEvent
+        ? subscriptionEvent.senderName
+        : undefined,
+  };
+}
+
+/**
+ * Renders the chatter's own message under the notice. Token keys repeat within
+ * one message, so each is suffixed by how many times it has been seen.
+ */
+function renderParsedMessageParts(
+  parsedMessage: SubscriptionNoticeProps['parsedMessage'],
+) {
+  if (!parsedMessage || parsedMessage.length === 0) {
+    return null;
+  }
+
+  const partKeyCounts = new Map<string, number>();
+
+  return parsedMessage.map(partItem => {
+    const baseKey = getMessagePartKey(partItem, 0).replace(/:\d+$/, '');
+    const occurrence = partKeyCounts.get(baseKey) ?? 0;
+    partKeyCounts.set(baseKey, occurrence + 1);
+    return renderMessagePart(partItem, occurrence);
+  });
+}
+
+interface SubscriptionNoticeMessageProps {
+  message: string | undefined;
+  renderedParsedMessageParts: ReturnType<typeof renderParsedMessageParts>;
+}
+
+function SubscriptionNoticeMessage({
+  message,
+  renderedParsedMessageParts,
+}: SubscriptionNoticeMessageProps) {
+  if (renderedParsedMessageParts) {
+    return renderedParsedMessageParts;
+  }
+
+  if (message) {
+    return <ChatText style={styles.messageText}>{message.trim()}</ChatText>;
+  }
+
+  return null;
+}
+
+function SubscriptionNoticeComponent({
+  token,
+  parsedMessage,
+}: SubscriptionNoticeProps) {
+  const { subscriptionEvent } = token;
+  const { msgId, displayName, message } = subscriptionEvent;
+
+  const tierDisplay = getSubscriptionTierDisplay({
+    plan: 'plan' in subscriptionEvent ? subscriptionEvent.plan : undefined,
+    planName:
+      'planName' in subscriptionEvent ? subscriptionEvent.planName : undefined,
+  });
+
+  const isPrime = tierDisplay === 'Prime';
+
+  const description = buildSubscriptionNoticeDescription({
+    ...pickSubscriptionDescriptionFields(subscriptionEvent),
+    isPrime,
+    msgId,
+    tierDisplay,
+  });
+
+  const renderedParsedMessageParts = renderParsedMessageParts(parsedMessage);
+
+  return (
+    <View style={chatStyles.subscriptionNoticeColumn}>
+      <ChatNoticeMetaRow
+        icon='star.fill'
+        labelColor={CHAT_NOTICE_ACCENTS.subscription}
+      >
+        <View style={styles.descriptionContainer}>
+          <ChatText style={styles.username}>{displayName}</ChatText>
+          {description}
+        </View>
+      </ChatNoticeMetaRow>
+      {(parsedMessage && parsedMessage.length > 0) || message ? (
+        <View style={styles.messageContainer}>
+          <SubscriptionNoticeMessage
+            message={message}
+            renderedParsedMessageParts={renderedParsedMessageParts}
+          />
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+export const SubscriptionNotice = memo(SubscriptionNoticeComponent);

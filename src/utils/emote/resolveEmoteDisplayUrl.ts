@@ -1,0 +1,30 @@
+/* eslint-disable camelcase */
+import { getPreferences } from '@app/store/preference-store';
+import type { EmoteImageScale, EmoteImageVariants } from '@app/types/emote';
+import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
+import { CHAT_INLINE_EMOTE_SCALE } from '@app/utils/emote/resolveEmoteScale';
+
+export type ResolvableDisplayEmote = Partial<{
+  image_variants: EmoteImageVariants | null;
+  url: string | null;
+  static_url: string | null;
+}>;
+
+export function resolveEmoteDisplayUrl(
+  emote: ResolvableDisplayEmote,
+  {
+    disableAnimations = getPreferences().disableEmoteAnimations,
+    preferredScale = CHAT_INLINE_EMOTE_SCALE,
+  }: {
+    disableAnimations?: boolean;
+    preferredScale?: EmoteImageScale;
+  } = {},
+): string {
+  return getDisplayEmoteUrl({
+    image_variants: emote.image_variants,
+    url: emote.url,
+    static_url: emote.static_url,
+    disableAnimations,
+    preferredScale,
+  });
+}

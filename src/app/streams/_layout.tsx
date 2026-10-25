@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 
 import { theme } from '@app/styles/themes';
-import { nativeStackScreenOptions } from '@app/utils/navigation/native-stack-options';
+import { nativeStackScreenOptions } from '@app/utils/navigation/nativeStackOptions';
 
 // iOS 27 can refuse an expo orientation lock. The screen mask rotates the player.
 export default function StreamsLayout() {

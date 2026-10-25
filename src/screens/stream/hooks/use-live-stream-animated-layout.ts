@@ -14,7 +14,7 @@ import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
 
 import type { FullscreenChatMode } from '../types';
-import { getLandscapeChatWidthBounds } from '../util/get-landscape-chat-width-bounds';
+import { getLandscapeChatWidthBounds } from '../util/getLandscapeChatWidthBounds';
 
 const LANDSCAPE_CHAT_RESIZE_ACTIVATION_DISTANCE = 6;
 const LANDSCAPE_CHAT_RESIZE_FAIL_DISTANCE = 12;

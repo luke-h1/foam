@@ -1,7 +1,7 @@
 import { useSelector } from '@legendapp/state/react';
 
 import { useEmoteRenderPreferences } from '@app/store/preference-store';
-import { getChatterinoBadges } from '@app/utils/chat/chatterino-badges';
+import { getChatterinoBadges } from '@app/utils/chat/chatterinoBadges';
 
 import { getChannelPersonalEmotes } from '../actions/personal-emotes';
 import { chatStore$ } from '../observables/chat-store';

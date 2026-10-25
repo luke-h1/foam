@@ -8,7 +8,7 @@ import {
   getPreferences,
   replacePreferences,
 } from '@app/store/preference-store';
-import * as clearImageCacheModule from '@app/utils/image/clear-image-cache';
+import * as clearImageCacheModule from '@app/utils/image/clearImageCache';
 import { logger } from '@app/utils/logger';
 
 const mockClearImageCache = jest

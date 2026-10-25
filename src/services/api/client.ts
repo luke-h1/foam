@@ -1,7 +1,7 @@
 import { fetch } from 'expo/fetch';
 
-import { deriveFromResponseOnWorklet } from '@app/lib/off-thread-json/derive-from-response-on-worklet';
-import { parseJsonOnWorklet } from '@app/lib/off-thread-json/parse-json-on-worklet';
+import { deriveFromResponseOnWorklet } from '@app/lib/off-thread-json/deriveFromResponseOnWorklet';
+import { parseJsonOnWorklet } from '@app/lib/off-thread-json/parseJsonOnWorklet';
 import { type MonitoringErrorName, startSpanAsync } from '@app/lib/sentry';
 import { type AllowedPrefix, logger } from '@app/utils/logger';
 

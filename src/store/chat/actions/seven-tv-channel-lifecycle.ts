@@ -5,9 +5,9 @@ import {
   sevenTvService,
 } from '@app/services/seven-tv-service';
 import type { SanitisedEmote } from '@app/types/emote';
-import { evictOldestWhenFull } from '@app/utils/collection/evict-oldest-when-full';
+import { evictOldestWhenFull } from '@app/utils/collection/evictOldestWhenFull';
 import { logger } from '@app/utils/logger';
-import { getSevenTvSessionId } from '@app/utils/seven-tv/seven-tv-session-id';
+import { getSevenTvSessionId } from '@app/utils/seven-tv/sevenTvSessionId';
 
 import { chatStore$ } from '../observables/chat-store';
 

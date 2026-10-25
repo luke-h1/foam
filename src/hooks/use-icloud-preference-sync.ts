@@ -7,15 +7,15 @@ import {
   loadPreferencesFromICloud,
   savePreferencesToICloud,
   synchronizeICloudPreferences,
-} from '@app/lib/icloud-sync';
+} from '@app/lib/icloudSync';
 import {
   getPreferences,
   preferences$,
   replacePreferences,
 } from '@app/store/preference-store';
-import { subscribeToAppStateTransitions } from '@app/utils/app-state/app-state-transitions';
+import { subscribeToAppStateTransitions } from '@app/utils/app-state/appStateTransitions';
 import { logger } from '@app/utils/logger';
-import { runWhenIdle } from '@app/utils/run-when-idle';
+import { runWhenIdle } from '@app/utils/runWhenIdle';
 
 export function useIcloudPreferenceSync() {
   const latestLocalTimestampRef = useRef(getPreferences().updatedAt);

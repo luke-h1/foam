@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { MEDIA_THUMBNAIL_SIZE } from '@app/components/live-stream-card/util/thumbnail-sizes';
+import { MEDIA_THUMBNAIL_SIZE } from '@app/components/live-stream-card/util/thumbnailSizes';
 import type { TwitchStream } from '@app/types/twitch/stream';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 

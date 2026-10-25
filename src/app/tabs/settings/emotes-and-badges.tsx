@@ -1,3 +1,3 @@
-import { EmoteBadgeViewerScreen } from '@app/screens/settings/emote-badge-viewer-screen';
+import { EmoteBadgeViewerScreen } from '@app/screens/settings/EmoteBadgeViewerScreen';
 
 export default EmoteBadgeViewerScreen;

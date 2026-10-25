@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react-native';
 
-import { PREFERENCES_PERSISTENCE_KEY } from '@app/lib/observable-persistence';
+import { PREFERENCES_PERSISTENCE_KEY } from '@app/lib/observablePersistence';
 
 import {
   getPreferences,

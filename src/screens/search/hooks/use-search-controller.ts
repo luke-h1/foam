@@ -10,7 +10,7 @@ import {
 import { router, useFocusEffect } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
 
-import type { FlashListRef } from '@app/components/flash-list/flash-list';
+import type { FlashListRef } from '@app/components/flash-list/FlashList';
 import { useDebouncedCallback } from '@app/hooks/use-debounced-callback';
 import { useScrollToTop } from '@app/hooks/use-scroll-to-top';
 import { storageService } from '@app/lib/storage';
@@ -27,13 +27,13 @@ import {
   sortSearchHistory,
   subscribeToSearchHistory,
   writeSearchHistoryQuery,
-} from '../util/search-history';
+} from '../util/searchHistory';
 import {
   MIN_SEARCH_QUERY_LENGTH,
   SEARCH_INITIAL_STATE,
   type SearchItem,
   type SearchState,
-} from '../util/search-state';
+} from '../util/searchState';
 
 export function useSearchController() {
   const [

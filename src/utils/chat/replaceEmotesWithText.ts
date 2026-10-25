@@ -1,0 +1,31 @@
+import type { MessageToken } from './messageToken';
+import { getMessageTokenText } from './messageTokenContent';
+
+export function replaceEmotesWithText(tokens: MessageToken[]): string {
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string
+  return tokens
+    .map(token => {
+      switch (token.type) {
+        case 'emote': {
+          /**
+           * `content` is the channel-facing alias, so reconstructed text
+           * matches what was shown; restore overlaid zero-width words too.
+           */
+          const baseText = getMessageTokenText(token);
+
+          const overlaidText = (token.overlaid ?? [])
+            .flatMap(overlay => {
+              const overlayText = getMessageTokenText(overlay);
+              return overlayText ? [overlayText] : [];
+            })
+            .join(' ');
+
+          return overlaidText ? `${baseText} ${overlaidText}` : baseText;
+        }
+
+        default:
+          return getMessageTokenText(token);
+      }
+    })
+    .join('');
+}

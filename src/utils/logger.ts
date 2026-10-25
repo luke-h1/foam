@@ -8,7 +8,7 @@ import { z } from 'zod';
 
 import type { LogMetadata } from '@app/lib/sentry';
 import { forwardLogToSentry } from '@app/lib/sentry';
-import { isRecord, sanitiseLogValue } from '@app/utils/log/sanitise-log-value';
+import { isRecord, sanitiseLogValue } from '@app/utils/log/sanitiseLogValue';
 
 export type { LogMetadata } from '@app/lib/sentry';
 

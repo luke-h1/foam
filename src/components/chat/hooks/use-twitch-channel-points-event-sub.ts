@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 
-import { useAuthContext } from '@app/context/auth-context';
+import { useAuthContext } from '@app/context/AuthContext';
 import TwitchWsService from '@app/services/twitch-ws-service';
 import type { TwitchEventSubCallback } from '@app/types/twitch/eventsub';
-import { cacheChannelPointRewardTitle } from '@app/utils/chat/channel-point-reward-title-store';
-import { eventSubEventFromMessage } from '@app/utils/chat/parse-channel-points-event-sub/event-sub-event-from-message';
-import { parseChannelPointsEventSubEvent } from '@app/utils/chat/parse-channel-points-event-sub/parse-channel-points-event-sub-event';
+import { cacheChannelPointRewardTitle } from '@app/utils/chat/channelPointRewardTitleStore';
+import { eventSubEventFromMessage } from '@app/utils/chat/parse-channel-points-event-sub/eventSubEventFromMessage';
+import { parseChannelPointsEventSubEvent } from '@app/utils/chat/parse-channel-points-event-sub/parseChannelPointsEventSubEvent';
 import { logger } from '@app/utils/logger';
 
 const CUSTOM_REWARD_REDEMPTION_EVENT =

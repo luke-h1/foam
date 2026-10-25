@@ -5,7 +5,7 @@ import { createAuthContextValue } from '@app/context/__tests__/__fixtures__/auth
 import {
   type AuthContextState,
   AuthContextTestProvider,
-} from '@app/context/auth-context';
+} from '@app/context/AuthContext';
 import {
   beginDeepLinkAuth,
   endDeepLinkAuth,

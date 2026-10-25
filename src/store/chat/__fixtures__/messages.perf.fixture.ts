@@ -1,6 +1,6 @@
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
-import type { MessageToken } from '@app/utils/chat/message-token';
+import type { MessageToken } from '@app/utils/chat/messageToken';
 
 function createMessageParts(index: number): MessageToken[] {
   return [{ type: 'text', content: `raid flood message ${index}` }];

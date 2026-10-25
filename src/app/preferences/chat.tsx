@@ -1,3 +1,3 @@
-import { ChatPreferenceScreen } from '@app/screens/preferences/chat-preference-screen';
+import { ChatPreferenceScreen } from '@app/screens/preferences/ChatPreferenceScreen';
 
 export default ChatPreferenceScreen;

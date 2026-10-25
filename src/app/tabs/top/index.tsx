@@ -1,5 +1,5 @@
-import { DeferUntilFocused } from '@app/components/defer-until-focused/defer-until-focused';
-import { TopScreen } from '@app/screens/top/top-screen';
+import { DeferUntilFocused } from '@app/components/defer-until-focused/DeferUntilFocused';
+import { TopScreen } from '@app/screens/top/TopScreen';
 
 export default function TopRoute() {
   return (

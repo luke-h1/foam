@@ -1,3 +1,3 @@
-import { DiagnosticsScreen } from '@app/screens/dev-tools/diagnostics-screen';
+import { DiagnosticsScreen } from '@app/screens/dev-tools/DiagnosticsScreen';
 
 export default DiagnosticsScreen;

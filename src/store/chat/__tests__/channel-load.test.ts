@@ -16,8 +16,8 @@ import type {
 } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import type { UserInfoResponse } from '@app/types/twitch/user';
-import * as GetBttvBadgesModule from '@app/utils/chat/bttv-badges/get-bttv-badges';
-import { cheermoteFetchGuard } from '@app/utils/chat/cheermote-store/cheermote-fetch-guard';
+import * as GetBttvBadgesModule from '@app/utils/chat/bttv-badges/getBttvBadges';
+import { cheermoteFetchGuard } from '@app/utils/chat/cheermote-store/cheermoteFetchGuard';
 import { logger } from '@app/utils/logger';
 
 import {

@@ -73,7 +73,7 @@ the orchestration is generic and a descriptor is the adapter at that seam.
 
 **Roomstate** — a channel's chat-mode restrictions from Twitch IRC ROOMSTATE
 (slow, followers-only, sub-only, emote-only, unique). The **roomstate tracker**
-(`components/chat/util/room-state/room-state-tracker.ts`) owns current state, the diff
+(`components/chat/util/room-state/roomStateTracker.ts`) owns current state, the diff
 baseline, and notice/chip derivation from the single `ROOM_STATE_MODES` table in
 `store/chat/types/room-state.ts`; `useChatIrcHandlers` feeds it tags and syncs the observable.
 Adding a mode is one table entry, not four coordinated edits.
@@ -117,7 +117,7 @@ post-coercion as the `*Tags` interfaces (`UserStateTags`, `RoomStateTags`,
 ...). `parseIrcMessage` is the line parser.
 
 **Token** - the parsed span within a message body:
-`MessageToken<MessageTokenKind>` (`utils/chat/message-token.ts`) - `text`,
+`MessageToken<MessageTokenKind>` (`utils/chat/messageToken.ts`) - `text`,
 `emote`, `mention`, `link`, `stvEmoteLink`, `twitchClip`, `cheermote`,
 `stvEmoteAdded`, `stvEmoteRemoved`, and the Twitch notice kinds.
 `MessageToken` is a lookup into a shape map keyed by `type`, so it narrows on
@@ -141,7 +141,7 @@ Token kinds foam owns are camelCase. The Twitch USERNOTICE kinds
 are `msg-id` values, not names foam chose.
 
 **Chat row** - one message as the list draws it. `ChatRowItem`
-(`components/chat/components/chat-message/chat-row-item.tsx`) is the list item
+(`components/chat/components/chat-message/ChatRowItem.tsx`) is the list item
 and owns the entrance animation and row visibility; `ChatRow`
 (`chat-row.tsx`) is the row itself, built from `useChatRow`; `ChatRowSurface`
 draws the background and owns the long-press target, and `ChatRowBody` picks
@@ -150,7 +150,7 @@ is no plain one.
 
 **Flows inline** - whether a body fits inside a single `Text` instead of
 dropping to a wrapping block. `flowsInline`
-(`utils/chat/derive-chat-body/flows-inline.ts`) is the one predicate;
+(`utils/chat/derive-chat-body/flowsInline.ts`) is the one predicate;
 `fitsInOneText` on the scan is the structural half, before paint and
 moderation are ANDed in. Callers ask it about different things and name what
 they asked: `rowFlowsInline` (username and body together), `bodyFlowsInline`
@@ -159,8 +159,8 @@ is a different message). Those three are not redundant - do not collapse them
 into one value.
 
 **Buffer** - three holding areas, in order: the **delay queue**
-(`components/chat/util/chat-delay/chat-delay-queue.ts`, max 1000), the
-pre-commit **`MessageBuffer`** (`components/chat/util/message-buffer.ts`,
+(`components/chat/util/chat-delay/chatDelayQueue.ts`, max 1000), the
+pre-commit **`MessageBuffer`** (`components/chat/util/messageBuffer.ts`,
 dedup index, injectable bound), and the committed window
 `chatStore$.messages` (150 via `getMaxChatMessages`, trimmed by
 **front-trim**).
@@ -176,13 +176,13 @@ here.
 
 **Ingest** - raw line to committed message. The stage names are the perf
 marks: `line_received` → `buffered` → `drained` → `committed`
-(`lib/chat-perf-marks.ts`). Verbs: the buffer **drains**, the cadence
+(`lib/chatPerfMarks.ts`). Verbs: the buffer **drains**, the cadence
 (`components/chat/util/chat-flush-cadence/`) **flushes**, the store write
 (`addMessages`, `store/chat/actions/messages.ts`) **commits**. Front-door
 rate limiting is `chatIngestRateLimiter`.
 
 **Ingest controller** - the headless ingest state machine
-(`components/chat/util/chat-ingest-controller.ts`): buffer, delay queue, flush
+(`components/chat/util/chatIngestController.ts`): buffer, delay queue, flush
 cadence, raid latch, backpressure, unread accounting and moderation
 coherence behind one factory. `useChatMessages` is its React lifecycle
 adapter; jest drives a raw line into the real store through it with fake
@@ -191,7 +191,7 @@ timers.
 **Enrichment** - post-commit emote/badge re-resolution over already-parsed
 messages (`store/chat/actions/message-enrichment.ts`: `enrichMessageSet`,
 `enrichVisibleMessage`). Parse-time resolution is **processing**
-(`utils/chat/emote-processor.ts` / `resolveMessageEmoteParts`). The two words are
+(`utils/chat/emoteProcessor.ts` / `resolveMessageEmoteParts`). The two words are
 deliberate - keep them distinct.
 
 **Message identity** - `utils/chat/message-identity/`: `getChatMessageKey`,
@@ -218,7 +218,7 @@ intermediate - two shapes for one glyph.
 **Emote collection / emote set** - ⚠ dual naming, both live: ingest says
 **collection** (`EmoteCollection`, `getBaseCollectionKey`,
 `baseCollectionCache`, content-hash `getEmoteContentId` - all in
-`utils/chat/emote-processor.ts`) for the resolved per-channel lookup; providers and the
+`utils/chat/emoteProcessor.ts`) for the resolved per-channel lookup; providers and the
 7TV wire say **emote set** (`getSanitisedEmoteSet`, `emote_set.update`) for
 the fetched unit.
 
@@ -243,7 +243,7 @@ is likewise a wire name.
 
 **Badge** - `SanitisedBadgeSet` (`types/twitch/badge.ts`) is the
 cross-provider badge type despite its path; resolved by `findBadges`
-(`utils/chat/find-badges.ts`) from userstate plus per-provider inputs. 7TV
+(`utils/chat/findBadges.ts`) from userstate plus per-provider inputs. 7TV
 badges bypass `findBadges` and arrive via cosmetics (`chatStore$.badges`).
 
 **Cosmetics** - the umbrella for 7TV paints, badges and entitlements
@@ -255,7 +255,7 @@ badges bypass `findBadges` and arrive via cosmetics (`chatStore$.badges`).
 **Tick** - two shared animation pulses, one per domain: native animated
 emotes on iOS ride `SharedAnimationDriver` (one `CADisplayLink` + global
 epoch, added by the expo-image patch); Skia paint animation rides
-`components/chat/components/chat-message/cosmetic-username/util/shared-paint-animation-frames.tsx` (one Reanimated `useFrameCallback`, paused
+`components/chat/components/chat-message/cosmetic-username/util/sharedPaintAnimationFrames.tsx` (one Reanimated `useFrameCallback`, paused
 by `chatScrollActiveShared`). Android has its own phase lock in the same
 patch, supervised by a Choreographer callback rather than seeking per tick
 (ADR-0009). ⚠ No `SyncedAnimationCoordinator` exists.
@@ -270,7 +270,7 @@ type exists.
 
 **Fetch-once guard** — the single-flight + negative-cache + TTL + generation-fence
 mechanism behind session-scoped resource fetches
-(`src/utils/async/fetch-once-guard.ts`). The guard owns _mechanism_ only; stamping
+(`src/utils/async/fetchOnceGuard.ts`). The guard owns _mechanism_ only; stamping
 policy and value storage stay in each adapter. Adapters: channel cheermotes
 (`utils/chat/cheermote-store`), 7TV personal emotes and Twitch subscriber channel
 profiles (`store/chat/actions/channel-load`), 7TV user cosmetics
@@ -283,9 +283,9 @@ attempted-id negative caches next to a new fetch path; instantiate a guard.
 bridge: given a parsed inbound message plus a snapshot context of what the
 decision actually needs, it returns typed decisions/actions; the owning hook
 executes them (store writes, callbacks, timers, logging). Instances: the 7TV
-EventAPI interpreter (`utils/seven-tv/seven-tv-ws-interpreter.ts`, executed by
+EventAPI interpreter (`utils/seven-tv/sevenTvWsInterpreter.ts`, executed by
 `components/chat/hooks/use-seven-tv-ws.ts`) and the player bridge interpreter
-(`components/stream-player/util/player-bridge-interpreter.ts`, executed by
+(`components/stream-player/util/playerBridgeInterpreter.ts`, executed by
 `usePlayerBridge`). Decision logic goes in the interpreter, never back into the
 hook's message handler.
 

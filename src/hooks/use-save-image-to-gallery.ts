@@ -4,9 +4,9 @@ import { useMutation } from '@tanstack/react-query';
 import * as Crypto from 'expo-crypto';
 import { Directory, File, Paths } from 'expo-file-system';
 
-import { openLinkInBrowser } from '@app/utils/browser/open-link-in-browser';
-import { saveFilesToAppAlbum } from '@app/utils/image/save-files-to-app-album';
-import { ensureMediaLibraryPermission } from '@app/utils/media/ensure-media-library-permission';
+import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
+import { saveFilesToAppAlbum } from '@app/utils/image/saveFilesToAppAlbum';
+import { ensureMediaLibraryPermission } from '@app/utils/media/ensureMediaLibraryPermission';
 
 interface SaveImageToGalleryVariables {
   url: string;

@@ -14,7 +14,7 @@ if (
 ) {
   ChatPerfRoute =
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    require('@app/screens/dev-tools/chat-perf-screen').ChatPerfScreen;
+    require('@app/screens/dev-tools/ChatPerfScreen').ChatPerfScreen;
 }
 
 export default ChatPerfRoute;

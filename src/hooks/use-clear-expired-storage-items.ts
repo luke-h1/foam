@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
 import { storageService } from '@app/lib/storage';
-import { runWhenIdle } from '@app/utils/run-when-idle';
+import { runWhenIdle } from '@app/utils/runWhenIdle';
 
 export function useClearExpiredStorageItems() {
   useEffect(() => {

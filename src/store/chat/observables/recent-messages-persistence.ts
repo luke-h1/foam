@@ -1,6 +1,6 @@
 import { createMMKV } from 'react-native-mmkv';
 
-import { CHAT_RECENT_MESSAGES_PERSISTENCE_KEY } from '@app/lib/observable-persistence';
+import { CHAT_RECENT_MESSAGES_PERSISTENCE_KEY } from '@app/lib/observablePersistence';
 
 import type { AnyChatMessageType } from '../types/constants';
 

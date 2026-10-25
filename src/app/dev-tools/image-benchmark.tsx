@@ -14,7 +14,7 @@ if (
 ) {
   ImageBenchmarkRoute =
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    require('@app/screens/dev-tools/image-benchmark-screen').ImageBenchmarkScreen;
+    require('@app/screens/dev-tools/ImageBenchmarkScreen').ImageBenchmarkScreen;
 }
 
 export default ImageBenchmarkRoute;

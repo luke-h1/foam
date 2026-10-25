@@ -9,11 +9,11 @@ import {
 } from '@sentry/react-native';
 import { Image as ExpoImage } from 'expo-image';
 
-import { instrumentExpoImageLoads } from '@app/lib/sentry-image-spans';
-import { sanitiseLogValue } from '@app/utils/log/sanitise-log-value';
-import { runWhenIdle } from '@app/utils/run-when-idle';
-import { markSessionError } from '@app/utils/store-review/session-error-flag';
-import type { OpenStringUnion } from '@app/utils/typescript/open-string-union';
+import { instrumentExpoImageLoads } from '@app/lib/sentryImageSpans';
+import { sanitiseLogValue } from '@app/utils/log/sanitiseLogValue';
+import { runWhenIdle } from '@app/utils/runWhenIdle';
+import { markSessionError } from '@app/utils/store-review/sessionErrorFlag';
+import type { OpenStringUnion } from '@app/utils/typescript/openStringUnion';
 
 /**
  * Auto-instruments Expo Router navigation; no manual

@@ -1,14 +1,14 @@
 import { useMemo } from 'react';
 import type { RefObject } from 'react';
 
-import { buildRawTwitchPlayerUrl } from '../util/twitch-player-source/build-raw-twitch-player-url';
+import { buildRawTwitchPlayerUrl } from '../util/twitch-player-source/buildRawTwitchPlayerUrl';
 import {
   buildStreamPlayerInjectedJavaScript,
   buildTwitchAuthHelperScript,
-} from '../util/twitch-player-source/build-stream-player-injected-java-script';
-import { buildTwitchClipPlayerUrl } from '../util/twitch-player-source/build-twitch-clip-player-url';
-import { buildTwitchPlayerAudioDefaultScript } from '../util/twitch-player-source/build-twitch-player-audio-default-script';
-import { buildTwitchPlayerQualityDefaultScript } from '../util/twitch-player-source/build-twitch-player-quality-default-script';
+} from '../util/twitch-player-source/buildStreamPlayerInjectedJavaScript';
+import { buildTwitchClipPlayerUrl } from '../util/twitch-player-source/buildTwitchClipPlayerUrl';
+import { buildTwitchPlayerAudioDefaultScript } from '../util/twitch-player-source/buildTwitchPlayerAudioDefaultScript';
+import { buildTwitchPlayerQualityDefaultScript } from '../util/twitch-player-source/buildTwitchPlayerQualityDefaultScript';
 
 interface UseStreamPlayerSourceOptions {
   autoplay: boolean;

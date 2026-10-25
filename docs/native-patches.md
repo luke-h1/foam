@@ -4,7 +4,7 @@ Read this before you edit `src/components/bottom-sheet/`, `patches/`, `package.j
 
 ## Bottom sheets: `@expo/ui`
 
-Every sheet goes through `src/components/bottom-sheet/bottom-sheet.native.tsx`. It wraps `@expo/ui/community/bottom-sheet`, which is a SwiftUI `.sheet` on iOS and a Material 3 `ModalBottomSheet` on Android.
+Every sheet goes through `src/components/bottom-sheet/BottomSheet.native.tsx`. It wraps `@expo/ui/community/bottom-sheet`, which is a SwiftUI `.sheet` on iOS and a Material 3 `ModalBottomSheet` on Android.
 
 Sizing is different on each platform on purpose:
 
@@ -28,6 +28,6 @@ before restoring an iOS hunk.
 - `^expo-ui$` lets `patches/@expo%2Fui@58.0.22.patch` apply. The patch adds `icon = {}` to `SegmentedButtonView.kt`. Without it, the Compose segmented control shows a checkmark that pushes the label off centre.
 - `^expo-image$` lets the Android hunks of `patches/expo-image@58.0.16.patch` apply.
 
-Nothing in `src/` imports `SegmentedButton` by name, so a grep makes the `@expo/ui` patch and its autolinking entry look unused. They are in use: `src/components/segmented-control/segmented-control.tsx` imports `@expo/ui/community/segmented-control`, and its `SegmentedControl.android.tsx` renders `SingleChoiceSegmentedButtonRow` and `SegmentedButton` from the Jetpack Compose tree. If you remove the patch or the `buildFromSource` entry, every Android segmented control shows the checkmark again.
+Nothing in `src/` imports `SegmentedButton` by name, so a grep makes the `@expo/ui` patch and its autolinking entry look unused. They are in use: `src/components/segmented-control/SegmentedControl.tsx` imports `@expo/ui/community/segmented-control`, and its `SegmentedControl.android.tsx` renders `SingleChoiceSegmentedButtonRow` and `SegmentedButton` from the Jetpack Compose tree. If you remove the patch or the `buildFromSource` entry, every Android segmented control shows the checkmark again.
 
 Do not add `minSdkVersion` to the `build.gradle` of a module in `modules/`. `expo-module-gradle-plugin` already sets `minSdk` from the root project (`ProjectConfiguration.kt`). A local value would hold the module below the app the next time the app's `minSdkVersion` goes up.

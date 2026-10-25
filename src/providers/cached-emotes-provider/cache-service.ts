@@ -6,12 +6,12 @@ import { AppState, type AppStateStatus, Platform } from 'react-native';
 
 import { Image, type ImageRef } from 'expo-image';
 
-import { subscribeToAppStateTransitions } from '@app/utils/app-state/app-state-transitions';
+import { subscribeToAppStateTransitions } from '@app/utils/app-state/appStateTransitions';
 import {
   getDeviceTier,
   getTotalDeviceMemoryBytes,
-} from '@app/utils/device/device-tier';
-import { describeEmoteUrl } from '@app/utils/emote/describe-emote-url';
+} from '@app/utils/device/deviceTier';
+import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
 import { logger } from '@app/utils/logger';
 import type { ImageMemoryPressureEvent } from '@modules/image-memory-pressure/src/ImageMemoryPressure.types';
 import ImageMemoryPressure from '@modules/image-memory-pressure/src/ImageMemoryPressureModule';

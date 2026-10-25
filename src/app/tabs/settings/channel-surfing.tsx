@@ -1,3 +1,3 @@
-import { ChannelSurfingScreen } from '@app/screens/dev-tools/channel-surfing-screen';
+import { ChannelSurfingScreen } from '@app/screens/dev-tools/ChannelSurfingScreen';
 
 export default ChannelSurfingScreen;

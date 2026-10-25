@@ -6,7 +6,7 @@ import { ReadyState } from '@app/hooks/ws/constants';
 import type { Options } from '@app/hooks/ws/types';
 import * as useWebsocketModule from '@app/hooks/ws/use-websocket';
 import { logger } from '@app/utils/logger';
-import * as sevenTvSessionIdModule from '@app/utils/seven-tv/seven-tv-session-id';
+import * as sevenTvSessionIdModule from '@app/utils/seven-tv/sevenTvSessionId';
 import {
   buildCosmeticCreateSubscribeMessage,
   buildCosmeticCreateUnsubscribeMessage,
@@ -16,7 +16,7 @@ import {
   buildResumeMessage,
   buildUserUpdateSubscribeMessage,
   buildUserUpdateUnsubscribeMessage,
-} from '@app/utils/seven-tv/seven-tv-ws-interpreter';
+} from '@app/utils/seven-tv/sevenTvWsInterpreter';
 
 jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
 jest.spyOn(logger.stvWs, 'debug').mockImplementation(() => {});

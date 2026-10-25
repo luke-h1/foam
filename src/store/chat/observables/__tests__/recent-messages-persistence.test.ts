@@ -1,6 +1,6 @@
-import { createChatMessageFixture } from '@app/components/chat/util/__tests__/__fixtures__/chat-message.fixture';
+import { createChatMessageFixture } from '@app/components/chat/util/__tests__/__fixtures__/chatMessage.fixture';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
-import { createTextToken } from '@app/utils/chat/__tests__/__fixtures__/message-token.fixture';
+import { createTextToken } from '@app/utils/chat/__tests__/__fixtures__/messageToken.fixture';
 
 import {
   clearPersistedRecentMessages,

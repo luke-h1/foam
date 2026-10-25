@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 
 import type { FullscreenChatMode } from '../types';
-import { getLiveStreamChatDimensions } from '../util/get-live-stream-chat-dimensions';
-import { getLiveStreamVideoDimensions } from '../util/get-live-stream-video-dimensions';
+import { getLiveStreamChatDimensions } from '../util/getLiveStreamChatDimensions';
+import { getLiveStreamVideoDimensions } from '../util/getLiveStreamVideoDimensions';
 
 type LiveStreamDimensionsInput = {
   contentWidth: number;

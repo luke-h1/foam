@@ -18,7 +18,7 @@ import {
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import { createTextToken } from '@app/utils/chat/__tests__/__fixtures__/message-token.fixture';
+import { createTextToken } from '@app/utils/chat/__tests__/__fixtures__/messageToken.fixture';
 
 import {
   createMockMessage,

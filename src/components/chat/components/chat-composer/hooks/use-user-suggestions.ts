@@ -4,9 +4,9 @@ import { useSelector } from '@legendapp/state/react';
 
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import type { ChatUser } from '@app/store/chat/types/constants';
-import { queueMentionLoginSearch } from '@app/utils/chat/mention-login-resolver/queue-mention-login-search';
-import { normaliseChatText } from '@app/utils/chat/normalise-chat-text';
-import { searchMentionChatters } from '@app/utils/chat/resolve-mention-login/search-mention-chatters';
+import { queueMentionLoginSearch } from '@app/utils/chat/mention-login-resolver/queueMentionLoginSearch';
+import { normaliseChatText } from '@app/utils/chat/normaliseChatText';
+import { searchMentionChatters } from '@app/utils/chat/resolve-mention-login/searchMentionChatters';
 import { type MentionChatter } from '@app/utils/chat/resolve-mention-login/types';
 
 interface UseUserSuggestionsProps {

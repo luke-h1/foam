@@ -169,5 +169,5 @@ beforeEach(() => {
 // Pending Helix mention-flush timers keep Jest alive after green chat-perf suites.
 afterEach(() => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  require('@app/utils/chat/mention-login-resolver/reset-mention-login-resolver').resetMentionLoginResolver();
+  require('@app/utils/chat/mention-login-resolver/resetMentionLoginResolver').resetMentionLoginResolver();
 });

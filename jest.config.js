@@ -22,7 +22,7 @@ const jestConfig = {
     'node_modules/.*storybook.*',
   ],
   moduleNameMapper: {
-    '^@app/screens/storybook/storybook-screen$':
+    '^@app/screens/storybook/StorybookScreen$':
       '<rootDir>/__mocks__/src/screens/storybook-screen.tsx',
     '^@app/(.*)$': '<rootDir>/src/$1',
     '^@modules/(.*)$': '<rootDir>/modules/$1',

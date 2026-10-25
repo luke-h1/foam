@@ -1,3 +1,3 @@
-import { SettingsCacheScreen } from '@app/screens/settings/settings-cache-screen';
+import { SettingsCacheScreen } from '@app/screens/settings/SettingsCacheScreen';
 
 export default SettingsCacheScreen;

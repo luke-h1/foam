@@ -1,7 +1,7 @@
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { NativeTabs } from 'expo-router/native-tabs';
 
-import { useAuthContext } from '@app/context/auth-context';
+import { useAuthContext } from '@app/context/AuthContext';
 import { theme } from '@app/styles/themes';
 
 export default function TabsLayout() {

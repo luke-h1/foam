@@ -1,10 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-import { useAuthContext } from '@app/context/auth-context';
+import { useAuthContext } from '@app/context/AuthContext';
 import TwitchWsService from '@app/services/twitch-ws-service';
 import type { EventSubMessage } from '@app/types/twitch/eventsub';
 import { logger } from '@app/utils/logger';
-import type { ChannelActivity } from '@app/utils/twitch/channel-activity/channel-activity';
+import type { ChannelActivity } from '@app/utils/twitch/channel-activity/channelActivity';
 
 export function useChannelActivity<THelix, TState>(
   descriptor: ChannelActivity<THelix, TState>,

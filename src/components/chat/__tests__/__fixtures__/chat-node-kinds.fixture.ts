@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import type { ChatDensity } from '@app/components/chat/components/chat-message/util/chat-scale';
+import type { ChatDensity } from '@app/components/chat/components/chat-message/util/chatScale';
 import type { ChatMessageDisplayFlags } from '@app/components/chat/types/chat-ui-flags';
 import type {
   AnyChatMessageType,
@@ -12,12 +12,12 @@ import type {
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import { createModeratedMessageText } from '@app/utils/chat/create-moderated-message-text';
-import { parseIrcMessage } from '@app/utils/chat/irc-protocol/parse-irc-message';
-import { coerceUserNoticeTags } from '@app/utils/chat/message-handlers/coerce-user-notice-tags';
-import { createSystemMessage } from '@app/utils/chat/message-handlers/create-system-message';
-import { createUserNoticeMessage } from '@app/utils/chat/message-handlers/create-user-notice-message';
-import type { MessageToken } from '@app/utils/chat/message-token';
+import { createModeratedMessageText } from '@app/utils/chat/createModeratedMessageText';
+import { parseIrcMessage } from '@app/utils/chat/irc-protocol/parseIrcMessage';
+import { coerceUserNoticeTags } from '@app/utils/chat/message-handlers/coerceUserNoticeTags';
+import { createSystemMessage } from '@app/utils/chat/message-handlers/createSystemMessage';
+import { createUserNoticeMessage } from '@app/utils/chat/message-handlers/createUserNoticeMessage';
+import type { MessageToken } from '@app/utils/chat/messageToken';
 
 import {
   ANNOUNCEMENT,

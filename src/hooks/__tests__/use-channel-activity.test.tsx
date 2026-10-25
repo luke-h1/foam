@@ -6,7 +6,7 @@ import {
   createLoggedInAuthContextValue,
   createTestUser,
 } from '@app/context/__tests__/__fixtures__/auth-context.fixture';
-import { AuthContextTestProvider } from '@app/context/auth-context';
+import { AuthContextTestProvider } from '@app/context/AuthContext';
 import type { TestActivityState } from '@app/hooks/__tests__/__fixtures__/use-channel-activity.fixture';
 import {
   createEventSubMessage,

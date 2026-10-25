@@ -8,7 +8,7 @@ import type { StreamPlayerRef } from '@app/components/stream-player/types';
 import { useOnAppStateChange } from '@app/hooks/use-on-app-state-change';
 import { setMeasuredVideoLatencySeconds } from '@app/store/stream/video-latency';
 
-import { resolvePlayerAppStateAction } from '../util/resolve-player-app-state-action';
+import { resolvePlayerAppStateAction } from '../util/resolvePlayerAppStateAction';
 
 // Keep the screen awake while watching; auto-lock is aggressive under Low Power Mode.
 const KEEP_AWAKE_TAG = 'live-stream';

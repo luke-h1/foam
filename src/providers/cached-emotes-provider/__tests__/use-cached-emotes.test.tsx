@@ -3,8 +3,8 @@ import { act, renderHook } from '@testing-library/react-native';
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import * as channelLoadActions from '@app/store/chat/actions/channel-load';
 import type { SevenTvSanitisedEmote } from '@app/types/emote';
-import type { ResolvableDisplayEmote } from '@app/utils/emote/resolve-emote-display-url';
-import * as resolveEmoteDisplayUrlModule from '@app/utils/emote/resolve-emote-display-url';
+import type { ResolvableDisplayEmote } from '@app/utils/emote/resolveEmoteDisplayUrl';
+import * as resolveEmoteDisplayUrlModule from '@app/utils/emote/resolveEmoteDisplayUrl';
 
 import * as cacheService from '../cache-service';
 import { useCachedEmotes } from '../use-cached-emotes';

@@ -1,0 +1,136 @@
+import { render, screen } from '@testing-library/react-native';
+
+import { getChatTextStyles } from '@app/components/chat/components/chat-message/ChatText.styles';
+import type { MessageToken } from '@app/utils/chat/messageToken';
+
+import * as ChatInlineImageModule from '../ChatInlineImage';
+import { CheermoteToken } from '../CheermoteToken';
+
+const textStyles = getChatTextStyles(undefined, undefined);
+
+const mockChatInlineImage = jest.fn<null, [{ sourceUrl: string }]>();
+
+/**
+ * ChatInlineImage is memo() wrapped (an object, not a function), so
+ * jest.spyOn cannot wrap it - swap the export directly instead.
+ */
+Object.defineProperty(ChatInlineImageModule, 'ChatInlineImage', {
+  configurable: true,
+  value: (props: { sourceUrl: string }) => mockChatInlineImage(props),
+});
+
+function lastRenderedSourceUrl(): string | undefined {
+  return mockChatInlineImage.mock.calls.at(-1)?.[0].sourceUrl;
+}
+
+function makePart(overrides?: {
+  static_url?: string;
+  url?: string;
+}): MessageToken<'cheermote'> {
+  return {
+    type: 'cheermote',
+    content: 'Cheer100',
+    cheermote: {
+      bits: 100,
+      color: '#9c3ee8',
+      prefix: 'Cheer',
+      static_url: overrides?.static_url ?? '',
+      url: overrides?.url ?? '',
+    },
+  };
+}
+
+describe('CheermoteToken', () => {
+  beforeEach(() => {
+    mockChatInlineImage.mockReset();
+    mockChatInlineImage.mockReturnValue(null);
+  });
+
+  test('falls back to the raw cheer token when no url resolves', () => {
+    render(<CheermoteToken textStyles={textStyles} token={makePart()} />);
+
+    expect(screen.getByText('Cheer100')).toBeOnTheScreen();
+
+    expect(mockChatInlineImage).not.toHaveBeenCalled();
+  });
+
+  test('renders the cheermote image with the bits amount', () => {
+    render(
+      <CheermoteToken
+        textStyles={textStyles}
+        token={makePart({ url: 'https://cdn.example.com/cheer/100.gif' })}
+      />,
+    );
+
+    expect(lastRenderedSourceUrl()).toBe(
+      'https://cdn.example.com/cheer/100.gif',
+    );
+
+    expect(screen.getByText('100')).toBeOnTheScreen();
+
+    expect(screen.queryByText('Cheer100')).not.toBeOnTheScreen();
+  });
+
+  test('prefers the animated url when animations are enabled', () => {
+    render(
+      <CheermoteToken
+        textStyles={textStyles}
+        disableAnimations={false}
+        token={makePart({
+          static_url: 'https://cdn.example.com/cheer/100.png',
+          url: 'https://cdn.example.com/cheer/100.gif',
+        })}
+      />,
+    );
+
+    expect(lastRenderedSourceUrl()).toBe(
+      'https://cdn.example.com/cheer/100.gif',
+    );
+  });
+
+  test('prefers the static url when animations are disabled', () => {
+    render(
+      <CheermoteToken
+        textStyles={textStyles}
+        disableAnimations
+        token={makePart({
+          static_url: 'https://cdn.example.com/cheer/100.png',
+          url: 'https://cdn.example.com/cheer/100.gif',
+        })}
+      />,
+    );
+
+    expect(lastRenderedSourceUrl()).toBe(
+      'https://cdn.example.com/cheer/100.png',
+    );
+  });
+
+  test('falls back to the static url when no animated url exists', () => {
+    render(
+      <CheermoteToken
+        textStyles={textStyles}
+        token={makePart({
+          static_url: 'https://cdn.example.com/cheer/100.png',
+        })}
+      />,
+    );
+
+    expect(lastRenderedSourceUrl()).toBe(
+      'https://cdn.example.com/cheer/100.png',
+    );
+  });
+
+  test('dims the container when the message is moderated', () => {
+    render(
+      <CheermoteToken
+        textStyles={textStyles}
+        isModerated
+        token={makePart({ url: 'https://cdn.example.com/cheer/100.gif' })}
+      />,
+    );
+
+    expect(screen.getByTestId('cheermote-container')).toHaveStyle({
+      opacity: 0.4,
+    });
+  });
+});

@@ -8,7 +8,7 @@ import {
 
 import { setMeasuredVideoLatencySeconds } from '@app/store/stream/video-latency';
 
-import type { LiveStreamScreenAction } from '../util/live-stream-screen-reducer';
+import type { LiveStreamScreenAction } from '../util/liveStreamScreenReducer';
 
 /**
  * Chat waits for the player to report it is running so the two start in sync.

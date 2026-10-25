@@ -1,3 +1,3 @@
-import { SavedPhrasesScreen } from '@app/screens/preferences/saved-phrases-screen';
+import { SavedPhrasesScreen } from '@app/screens/preferences/SavedPhrasesScreen';
 
 export default SavedPhrasesScreen;

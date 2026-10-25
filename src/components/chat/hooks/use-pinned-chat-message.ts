@@ -2,14 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { toast } from 'sonner-native';
 
-import type { MessageActionData } from '@app/components/chat/components/chat-message/chat-row';
+import type { MessageActionData } from '@app/components/chat/components/chat-message/ChatRow';
 import { useSyncRef } from '@app/hooks/use-sync-ref';
 import {
   getPinnedChatMessageText,
   twitchService,
 } from '@app/services/twitch-service';
 import type { TwitchPinnedChatMessage } from '@app/types/twitch/chat';
-import { replaceEmotesWithText } from '@app/utils/chat/replace-emotes-with-text';
+import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { logger } from '@app/utils/logger';
 
 const PINNED_MESSAGE_REFRESH_INTERVAL_MS = 60_000;

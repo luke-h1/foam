@@ -13,9 +13,9 @@ import type { SanitisedEmote } from '@app/types/emote';
 import {
   MAX_MESSAGE_LENGTH,
   messageLength,
-} from '@app/utils/chat/max-message-length';
+} from '@app/utils/chat/maxMessageLength';
 
-import { getEditCursorPosition } from '../util/get-edit-cursor-position';
+import { getEditCursorPosition } from '../util/getEditCursorPosition';
 import { useWordInfo } from './use-word-info';
 
 export { MAX_MESSAGE_LENGTH };

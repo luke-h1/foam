@@ -3,7 +3,7 @@ import { useCallback, useRef } from 'react';
 import { useFocusEffect } from 'expo-router';
 
 import { useSyncRef } from '@app/hooks/use-sync-ref';
-import { subscribeToAppForeground } from '@app/utils/app-state/app-state-transitions';
+import { subscribeToAppForeground } from '@app/utils/app-state/appStateTransitions';
 
 interface UseRefetchOnForegroundOptions<TRefetched> {
   enabled?: boolean;
