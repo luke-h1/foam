@@ -25,8 +25,13 @@ before restoring an iOS hunk.
 
 `package.json` sets `expo.autolinking.android.buildFromSource: ["^expo-image$", "^expo-ui$"]`. Each entry makes Android compile that package from source instead of using the RNRepo prebuilt, which is the only way a patch to its native code reaches the build.
 
-- `^expo-ui$` lets `patches/@expo%2Fui@58.0.22.patch` apply. The patch adds `icon = {}` to `SegmentedButtonView.kt`. Without it, the Compose segmented control shows a checkmark that pushes the label off centre.
-- `^expo-image$` lets the Android hunks of `patches/expo-image@58.0.16.patch` apply.
+- `^expo-ui$` lets `patches/@expo%2Fui@58.0.23.patch` apply. The patch adds `icon = {}` to `SegmentedButtonView.kt`. Without it, the Compose segmented control shows a checkmark that pushes the label off centre.
+- `^expo-image$` lets the Android hunks of `patches/expo-image@58.0.17.patch` apply. That patch keeps the shared animation clock, and it also stops a remote image over 5 MB from failing to decode. APNG4Android's animated WebP, APNG and AVIF checks read the whole stream, which invalidates Glide's 5 MB mark. The patch turns those checks off and finds the same formats with a bounded read, so animated emotes still play. The decoder class sits in `GlideExtensions.kt` because a bun patch cannot add a new file more than two directories deep.
+
+`patches/react-native-screens@4.30.0.patch` is iOS only, so it does not need a `buildFromSource` entry. The iOS build compiles the patched files from `node_modules`. Two fixes:
+
+- A second form sheet opened while the first is still closing never appears, and that stack stays stuck ([expo/expo#51740](https://github.com/expo/expo/issues/51740)). `auth-sheet` and `feedback` are both on the root stack. The patch retries the modal update when the dismissal ends.
+- SF Symbol tab icons can sit in the wrong place after a stack screen, until you tap a tab ([expo/expo#42364](https://github.com/expo/expo/issues/42364)). The patch asks the tab bar to lay out again when the icons are set and when the bar appears.
 
 Nothing in `src/` imports `SegmentedButton` by name, so a grep makes the `@expo/ui` patch and its autolinking entry look unused. They are in use: `src/components/segmented-control/SegmentedControl.tsx` imports `@expo/ui/community/segmented-control`, and its `SegmentedControl.android.tsx` renders `SingleChoiceSegmentedButtonRow` and `SegmentedButton` from the Jetpack Compose tree. If you remove the patch or the `buildFromSource` entry, every Android segmented control shows the checkmark again.
 

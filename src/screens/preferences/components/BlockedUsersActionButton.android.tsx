@@ -4,13 +4,13 @@ import { type StyleProp, StyleSheet, type ViewStyle } from 'react-native';
 
 import {
   Button,
-  Host,
   Shape,
   Text as ComposeText,
   TextButton,
 } from '@expo/ui/jetpack-compose';
 import { size } from '@expo/ui/jetpack-compose/modifiers';
 
+import { FoamComposeHost } from '@app/components/compose-host/FoamComposeHost';
 import { theme } from '@app/styles/themes';
 
 export interface BlockedUsersActionButtonProps {
@@ -31,7 +31,7 @@ export function BlockedUsersActionButton({
   const width = isDestructive ? 104 : 112;
 
   return (
-    <Host colorScheme='dark' style={[styles.host, { width }, style]}>
+    <FoamComposeHost style={[styles.host, { width }, style]}>
       <Component
         onClick={onPress}
         colors={{
@@ -51,7 +51,7 @@ export function BlockedUsersActionButton({
           {label}
         </ComposeText>
       </Component>
-    </Host>
+    </FoamComposeHost>
   );
 }
 

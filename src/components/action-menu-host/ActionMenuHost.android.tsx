@@ -4,7 +4,6 @@ import { StyleSheet, View } from 'react-native';
 import {
   Column,
   HorizontalDivider,
-  Host,
   ListItem,
   ModalBottomSheet,
   Text,
@@ -17,6 +16,7 @@ import {
   paddingAll,
 } from '@expo/ui/jetpack-compose/modifiers';
 
+import { FoamComposeHost } from '@app/components/compose-host/FoamComposeHost';
 import {
   dismissActionMenu,
   getActionMenuState,
@@ -41,11 +41,7 @@ export function ActionMenuHost() {
         style={[StyleSheet.absoluteFill, styles.scrim]}
         pointerEvents='none'
       />
-      <Host
-        colorScheme='dark'
-        style={StyleSheet.absoluteFill}
-        pointerEvents='box-none'
-      >
+      <FoamComposeHost pointerEvents='box-none' style={StyleSheet.absoluteFill}>
         <ModalBottomSheet
           containerColor={theme.color.menu.background}
           contentColor={theme.color.text.dark}
@@ -108,7 +104,7 @@ export function ActionMenuHost() {
             </TextButton>
           </Column>
         </ModalBottomSheet>
-      </Host>
+      </FoamComposeHost>
     </View>
   );
 }

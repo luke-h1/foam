@@ -1,12 +1,11 @@
+// "Shapes" is the @expo/ui clip API, not a name this file chose.
+// oxlint-disable anti-slop/no-shape-in-symbol-names
 import { Children, Fragment, isValidElement, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import {
-  Card,
-  type CardColors,
   Column,
   HorizontalDivider,
-  Host,
   ListItem,
   type ListItemColors,
   RNHostView,
@@ -16,10 +15,15 @@ import {
 } from '@expo/ui/jetpack-compose';
 import {
   alpha,
+  background,
   clickable,
+  clip,
   fillMaxWidth,
+  padding,
+  Shapes,
 } from '@expo/ui/jetpack-compose/modifiers';
 
+import { FoamComposeHost } from '@app/components/compose-host/FoamComposeHost';
 import {
   resolveIconName,
   type RowIcon,
@@ -49,11 +53,6 @@ const listItemColors = {
   containerColor: theme.color.surfaceNeutral.dark,
   contentColor: theme.color.text.dark,
 } satisfies ListItemColors;
-
-const defaultCardColors = {
-  containerColor: theme.color.surfaceNeutral.dark,
-  contentColor: theme.color.text.dark,
-} satisfies CardColors;
 
 function IconTile({
   icon,
@@ -101,7 +100,7 @@ function RowText({
       <ListItem.HeadlineContent>
         <Text
           color={danger ? theme.colorRed : theme.color.text.dark}
-          style={{ typography: 'bodyLarge', fontWeight: '600' }}
+          style={{ typography: 'titleMedium' }}
         >
           {title}
         </Text>
@@ -134,17 +133,10 @@ export function SettingsSection({
   cardColor,
 }: SettingsSectionProps) {
   const rows = Children.toArray(children).filter(isValidElement);
-
-  const cardColors = cardColor
-    ? { containerColor: cardColor, contentColor: theme.color.text.dark }
-    : defaultCardColors;
+  const groupColor = cardColor ?? theme.color.surfaceNeutral.dark;
 
   return (
-    <Host
-      colorScheme='dark'
-      matchContents={{ vertical: true }}
-      style={styles.host}
-    >
+    <FoamComposeHost matchContents={{ vertical: true }} style={styles.host}>
       <Column
         modifiers={[fillMaxWidth()]}
         verticalArrangement={{ spacedBy: 8 }}
@@ -152,36 +144,45 @@ export function SettingsSection({
         {title ? (
           <Text
             color={theme.color.textSecondary.dark}
-            style={{ typography: 'labelSmall', fontWeight: '600' }}
+            modifiers={[padding(16, 0, 16, 0)]}
+            style={{ typography: 'labelMedium', fontWeight: '600' }}
           >
             {title}
           </Text>
         ) : null}
-        <Card colors={cardColors} modifiers={[fillMaxWidth()]}>
-          <Column modifiers={[fillMaxWidth()]}>
-            {rows.map((row, index) => (
-              <Fragment key={row.key}>
-                {index > 0 ? (
-                  <HorizontalDivider color={theme.colorBorderSecondary} />
-                ) : null}
-                {isComposeRow(row) ? (
-                  row
-                ) : (
-                  <RNHostView matchContents>
-                    <View>{row}</View>
-                  </RNHostView>
-                )}
-              </Fragment>
-            ))}
-          </Column>
-        </Card>
+        <Column
+          modifiers={[
+            fillMaxWidth(),
+            clip(Shapes.RoundedCorner(theme.radius.lg)),
+            background(groupColor),
+          ]}
+        >
+          {rows.map((row, index) => (
+            <Fragment key={row.key}>
+              {index > 0 ? (
+                <HorizontalDivider
+                  color={theme.colorBorderSecondary}
+                  modifiers={[padding(16, 0, 0, 0)]}
+                  thickness={StyleSheet.hairlineWidth}
+                />
+              ) : null}
+              {isComposeRow(row) ? (
+                row
+              ) : (
+                <RNHostView matchContents>
+                  <View>{row}</View>
+                </RNHostView>
+              )}
+            </Fragment>
+          ))}
+        </Column>
         {footer ? (
-          <RNHostView matchContents>
+          <RNHostView matchContents={{ vertical: true }}>
             <View style={styles.footer}>{footer}</View>
           </RNHostView>
         ) : null}
       </Column>
-    </Host>
+    </FoamComposeHost>
   );
 }
 
@@ -335,6 +336,7 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: theme.space16,
     paddingTop: theme.space4,
+    width: '100%',
   },
   host: {
     marginBottom: theme.space24,

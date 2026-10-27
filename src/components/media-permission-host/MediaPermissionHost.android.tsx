@@ -1,8 +1,9 @@
 import { useSyncExternalStore } from 'react';
 import { Linking, StyleSheet } from 'react-native';
 
-import { AlertDialog, Host, Text, TextButton } from '@expo/ui/jetpack-compose';
+import { AlertDialog, Text, TextButton } from '@expo/ui/jetpack-compose';
 
+import { FoamComposeHost } from '@app/components/compose-host/FoamComposeHost';
 import {
   getMediaPermissionState,
   resolveMediaPermissionPrompt,
@@ -22,11 +23,7 @@ export function MediaPermissionHost() {
   }
 
   return (
-    <Host
-      colorScheme='dark'
-      style={StyleSheet.absoluteFill}
-      pointerEvents='box-none'
-    >
+    <FoamComposeHost pointerEvents='box-none' style={StyleSheet.absoluteFill}>
       <AlertDialog
         colors={{
           containerColor: theme.color.menu.card,
@@ -73,6 +70,6 @@ export function MediaPermissionHost() {
           </TextButton>
         </AlertDialog.ConfirmButton>
       </AlertDialog>
-    </Host>
+    </FoamComposeHost>
   );
 }

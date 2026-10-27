@@ -5,7 +5,6 @@ import { WebView } from 'react-native-webview';
 import {
   Button,
   Column,
-  Host,
   LazyColumn,
   ListItem,
   ModalBottomSheet,
@@ -20,6 +19,7 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 import { Image } from 'expo-image';
 
+import { FoamComposeHost } from '@app/components/compose-host/FoamComposeHost';
 import { theme } from '@app/styles/themes';
 import type {
   ChangelogListItem,
@@ -172,7 +172,7 @@ export function ChangelogAndroidHost() {
         style={[StyleSheet.absoluteFill, styles.scrim]}
         pointerEvents='none'
       />
-      <Host colorScheme='dark' style={styles.host} pointerEvents='box-none'>
+      <FoamComposeHost pointerEvents='box-none' style={styles.host}>
         <ModalBottomSheet
           containerColor={theme.color.menu.background}
           contentColor={theme.color.text.dark}
@@ -210,7 +210,7 @@ export function ChangelogAndroidHost() {
             </Button>
           </Column>
         </ModalBottomSheet>
-      </Host>
+      </FoamComposeHost>
     </View>
   );
 }
