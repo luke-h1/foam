@@ -527,18 +527,18 @@ diff --git a/ios/ImageLoader.swift b/ios/ImageLoader.swift
 index a89f1b572837b2d39875cedf106a01fca01c6b33..e6a28f92f942d62095be6fc7b0693f799478edea 100644
 --- a/ios/ImageLoader.swift
 +++ b/ios/ImageLoader.swift
-@@ -14,7 +14,10 @@ internal final class ImageLoader {
-   func load(_ source: ImageSource, options: ImageLoadOptions) async throws -> UIImage {
-     // `maxSize` isn't applied to asset catalog images. Downscaling a bundled asset through
-     // `loadAsync` is not a case worth a resize path here, see the known gaps in the docs.
--    if let image = assetCatalogImage(for: source.uri) {
+@@ -27,7 +27,10 @@ internal final class ImageLoader {
+     // This loader uses only the disk cache. We may want to give more control on this, but the memory cache
+     // doesn't make much sense for shared refs as they're kept in memory as long as their JS objects.
+-    var context = createSDWebImageContext(forSource: source, cachePolicy: .disk)
 +    // `useAppleWebpCodec` defaults to true, but images loaded here become long-lived
 +    // `ImageRef`s that are rendered directly, so the Apple codec's lazy frames would be
 +    // decoded on the main thread at render time. Use libwebp for the ref path.
 +    var context = createSDWebImageContext(forSource: source, cachePolicy: .disk, useAppleWebpCodec: false)
-       guard let tintColor = options.tintColor else {
-         return image
-       }
+ 
+     if let maxSize = options.getMaxSize() {
+       // Note that setting the thumbnail size rasterizes vector images into a bitmap.
+       context[.imageThumbnailPixelSize] = maxSize
 diff --git a/ios/ImageModule.swift b/ios/ImageModule.swift
 index c480af35f737fcfbea1b77cd40a9ff348db15821..cfe91f72c25aef42ba5d00e0669082df62da27a1 100644
 --- a/ios/ImageModule.swift
@@ -597,21 +597,21 @@ index c480af35f737fcfbea1b77cd40a9ff348db15821..cfe91f72c25aef42ba5d00e0669082df
        var context = SDWebImageContext()
        let sdCacheType = cachePolicy.toSdCacheType().rawValue
 diff --git a/ios/ImageView.swift b/ios/ImageView.swift
-index a1f94fe8c039d2649c7144a8db5229efc310c65b..7c12db22b91f13e19c693804db7bd086db02f1cd 100644
+index a1f94fe8c039d2649c7144a8db5229efc310c65b..fixed000000000000000000000000000000000000 100644
 --- a/ios/ImageView.swift
 +++ b/ios/ImageView.swift
-@@ -79,6 +79,7 @@ public final class ImageView: ExpoView {
- 
-   var enforceEarlyResizing: Bool = false
- 
-+        leaveSharedAnimation()
+@@ -82,12 +82,23 @@
    var recyclingKey: String? {
      didSet {
        if oldValue != nil && recyclingKey != oldValue {
-@@ -86,6 +87,16 @@ public final class ImageView: ExpoView {
++        leaveSharedAnimation()
+         sdImageView.image = nil
          placeholderImage = nil
          sourceImage = nil
        }
+     }
+   }
++
 +  /**
 +   The animated image `SharedAnimationDriver` is stepping this view through, and
 +   its frame schedule. Both nil whenever the view is on SDWebImage's own
@@ -621,17 +621,16 @@ index a1f94fe8c039d2649c7144a8db5229efc310c65b..7c12db22b91f13e19c693804db7bd086
 +  var sharedAnimationImage: SDAnimatedImage?
 +
 +  private var sharedAnimationTimeline: AnimationTimeline?
-+
-     }
-   }
  
-@@ -166,6 +177,22 @@ public final class ImageView: ExpoView {
+   var autoplay: Bool = true
+ 
+@@ -166,6 +177,22 @@
    // MARK: - Implementation
  
    func reload(force: Bool = false) {
 +    // A directly-set image ref (`source` is a SharedRef, so `sources == nil`) is not
-+    // reloadable. If the view was emptied after the ref was applied — e.g. a `recyclingKey`
-+    // change whose `sdImageView.image = nil` ran after the source prop in the same prop batch —
++    // reloadable. If the view was emptied after the ref was applied - e.g. a `recyclingKey`
++    // change whose `sdImageView.image = nil` ran after the source prop in the same prop batch -
 +    // reload would fall through to the placeholder and the image would stay permanently blank.
 +    // Re-assert the retained ref here so the ref path self-heals like `sources`-based loads do.
 +    if sources == nil, let sourceImage {
@@ -648,36 +647,32 @@ index a1f94fe8c039d2649c7144a8db5229efc310c65b..7c12db22b91f13e19c693804db7bd086
      if lockResource && !force {
        return
      }
-@@ -625,10 +652,15 @@ public final class ImageView: ExpoView {
-       CATransaction.begin()
-       CATransaction.setDisableActions(true)
-       sdImageView.layer.frame.origin = offset
+@@ -659,11 +686,17 @@
+   private func setImage(_ image: UIImage?, contentFit: ContentFit, isPlaceholder: Bool) {
+     sdImageView.contentMode = contentFit.toContentMode()
+ 
 +    // Resolved before the image is assigned, because assigning it is what makes
 +    // `SDAnimatedImageView` consult `autoPlayAnimatedImage` and start its own
 +    // player - which a driver-stepped image must never do.
 +    let sharedAnimation = drivableAnimatedImage(image, isPlaceholder: isPlaceholder)
 +
-       sdImageView.layer.mask?.frame.origin = CGPoint(x: -offset.x, y: -offset.y)
-       CATransaction.commit()
+     if isPlaceholder {
+       sdImageView.autoPlayAnimatedImage = true
      } else {
--      sdImageView.layer.frame.origin = offset
+-      sdImageView.autoPlayAnimatedImage = autoplay
+-    }
 +      sdImageView.autoPlayAnimatedImage = sharedAnimation == nil && autoplay
-     }
-   }
- 
-@@ -664,6 +696,8 @@ public final class ImageView: ExpoView {
-     } else {
-       sdImageView.autoPlayAnimatedImage = autoplay
-     }
++    }
 +    updateSharedAnimation(with: sharedAnimation)
-+
  
      // Remove any existing symbol effects before setting new image
      if #available(iOS 17.0, tvOS 17.0, *) {
-@@ -675,6 +709,118 @@ public final class ImageView: ExpoView {
-       let templateImage = image?.withRenderingMode(.alwaysTemplate)
-       // Use replace content transition for SF Symbols when sf:replace effect is set
-       if #available(iOS 17.0, tvOS 17.0, *), isSFSymbolSource, let effect = transition?.effect, effect.isSFReplaceEffect, let templateImage {
+@@ -707,6 +740,118 @@
+       analyzeImage()
+     }
+ #endif
++  }
++
 +  // MARK: - Shared animation
 +
 +  /**
@@ -788,11 +783,9 @@ index a1f94fe8c039d2649c7144a8db5229efc310c65b..7c12db22b91f13e19c693804db7bd086
 +    if player.currentFrameIndex != frameIndex {
 +      player.seekToFrame(at: frameIndex, loopCount: 0)
 +    }
-+  }
-+
-         let duration = (transition?.duration ?? 300) / 1000
-         applyReplaceTransition(image: templateImage, effect: effect, duration: duration)
-       } else {
+   }
+ 
+   // MARK: - Symbol Effects
 diff --git a/node_modules/expo-image/ios/SharedAnimationDriver.swift b/ios/SharedAnimationDriver.swift
 new file mode 100644
 index 0000000000000000000000000000000000000000..463cc35c6127163dfcc24446ff817239c04a6eba
