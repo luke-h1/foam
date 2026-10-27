@@ -14,6 +14,8 @@
 ### 🐛 Bug Fixes
 
 - **chat:** Leave a gap between badges and names ([#975](https://github.com/lhowsam/foam/issues/975))
+- **native:** Keep SDK 58 playback and Android chrome on the foam palette ([#977](https://github.com/lhowsam/foam/issues/977))
+- **native:** Regenerate the expo-image patch so bun drops the broken cache ([#978](https://github.com/lhowsam/foam/issues/978))
 
 ### 🔧 Miscellaneous Tasks
 
