@@ -2,17 +2,21 @@ import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { NativeTabs } from 'expo-router/native-tabs';
 
 import { useAuthContext } from '@app/context/AuthContext';
+import { useDuoLandscapeTabBarNudge } from '@app/hooks/use-duo-landscape-tab-bar-nudge';
 import { theme } from '@app/styles/themes';
 
 export default function TabsLayout() {
   const { authState } = useAuthContext();
   const isLoggedIn = authState?.isLoggedIn ?? false;
+  const nudgeTabBar = useDuoLandscapeTabBarNudge();
 
   // Below iOS 26 the default scroll-edge appearance is transparent, so pin an opaque material.
   const liquidGlass = isLiquidGlassAvailable();
 
   return (
     <NativeTabs
+      hidden={nudgeTabBar}
+      disableHiddenAnimation
       tintColor={theme.colorWhite}
       minimizeBehavior='onScrollDown'
       sidebarAdaptable
@@ -22,6 +26,10 @@ export default function TabsLayout() {
         ? {
             // Pin the Android tab bar to app tokens; OEM overlays can recolor the activity-theme Material defaults away from the iOS-matched palette.
             backgroundColor: theme.color.backgroundSecondary.dark,
+            iconColor: {
+              default: theme.color.textSecondary.dark,
+              selected: theme.color.text.dark,
+            },
           }
         : {})}
       indicatorColor='rgba(255, 255, 255, 0.12)'

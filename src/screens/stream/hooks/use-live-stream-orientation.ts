@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
-import { useWindowDimensions } from 'react-native';
+import { Platform, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import * as ScreenOrientation from 'expo-screen-orientation';
 
 import { getLiveStreamLayoutMetrics } from '../util/getLiveStreamLayoutMetrics';
+import {
+  resolveLiveStreamWindowSize,
+  trustDeviceOrientationOnPlatform,
+} from '../util/resolveLiveStreamWindowSize';
 
 /**
  * Window dims can stick after a rotation, so the native orientation event is
@@ -73,26 +77,38 @@ function useWindowDimsAreStuck(deviceLandscape: boolean | null): boolean {
 /**
  * Resolves the orientation the screen should lay out for, and the metrics that
  * follow from it. Left/right safe-area insets are always reserved (Duo rail,
- * notch), not only in landscape.
+ * notch), not only in landscape. On iOS 27 a refused lock leaves the window
+ * resizable, so the layout uses the window size.
  */
 export function useLiveStreamOrientation() {
   const { width: winW, height: winH } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
+  const trustDeviceOrientation = trustDeviceOrientationOnPlatform(
+    Platform.OS,
+    Platform.Version,
+  );
+
   const deviceLandscape = useDeviceLandscape();
-  const winStuck = useWindowDimsAreStuck(deviceLandscape);
 
-  const oriLandscape =
-    winStuck && deviceLandscape !== null ? deviceLandscape : winW > winH;
+  const winStuck = useWindowDimsAreStuck(
+    trustDeviceOrientation ? deviceLandscape : null,
+  );
 
-  const sideLong = Math.max(winW, winH);
-  const sideShort = Math.min(winW, winH);
+  const { height: windowHeight, width: windowWidth } =
+    resolveLiveStreamWindowSize({
+      deviceLandscape,
+      trustDeviceOrientation,
+      windowDimsStuck: winStuck,
+      windowHeight: winH,
+      windowWidth: winW,
+    });
 
   const { isLandscape, layoutHeight, portraitTopInset, screenWidth } =
     getLiveStreamLayoutMetrics({
       insetTop: insets.top,
-      windowHeight: oriLandscape ? sideShort : sideLong,
-      windowWidth: oriLandscape ? sideLong : sideShort,
+      windowHeight,
+      windowWidth,
     });
 
   const landscapeInsetLeft = insets.left;

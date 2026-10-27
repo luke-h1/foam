@@ -1,0 +1,89 @@
+diff --git a/node_modules/react-native-screens/.bun-tag-c0cb7e809548d0af b/.bun-tag-c0cb7e809548d0af
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/ios/RNSScreenStack.mm b/ios/RNSScreenStack.mm
+index 5da11964f5932cb44e1131c44a2480803c0a62b5..5e4a2a348830824548c75e4527b5752501f403a4 100644
+--- a/ios/RNSScreenStack.mm
++++ b/ios/RNSScreenStack.mm
+@@ -36,6 +36,7 @@ namespace react = facebook::react;
+ @property (nonatomic) NSMutableArray<UIViewController *> *presentedModals;
+ @property (nonatomic) BOOL updatingModals;
+ @property (nonatomic) BOOL scheduleModalsUpdate;
++@property (nonatomic) BOOL retryModalUpdateAfterDismissal;
+ 
+ @end
+ 
+@@ -564,8 +565,31 @@ RNS_IGNORE_SUPER_CALL_END
+       // if you want to present another modal quick enough after dismissing the previous one,
+       // it will result in wrong changeRootController, see repro in
+       // https://github.com/software-mansion/react-native-screens/issues/1299 We call `updateContainer` again in
+-      // `presentationControllerDidDismiss` to cover this case and present new controller
++      // `presentationControllerDidDismiss` to cover this case and present new controller.
++      // That delegate does not run for a programmatic dismiss, so a second form sheet
++      // opened while the first is still closing never appears (expo/expo#51740).
++      // Retry once the dismissal ends. Clear `updatingModals` first or the retry
++      // only sets `scheduleModalsUpdate` and never runs. A call that arrives
++      // while that retry is waiting returns, so a finished transition cannot recurse.
+       if (previous.beingDismissed) {
++        weakSelf.updatingModals = NO;
++        if (weakSelf.retryModalUpdateAfterDismissal) {
++          return;
++        }
++        weakSelf.retryModalUpdateAfterDismissal = YES;
++        void (^retry)(void) = ^{
++          [weakSelf updateContainer];
++          weakSelf.retryModalUpdateAfterDismissal = NO;
++        };
++        id<UIViewControllerTransitionCoordinator> coordinator = previous.transitionCoordinator;
++        if (coordinator != nil) {
++          [coordinator animateAlongsideTransition:nil
++                                      completion:^(__unused id<UIViewControllerTransitionCoordinatorContext> _) {
++                                        retry();
++                                      }];
++        } else {
++          dispatch_async(dispatch_get_main_queue(), retry);
++        }
+         return;
+       }
+ 
+diff --git a/ios/tabs/RNSTabBarAppearanceCoordinator.mm b/ios/tabs/RNSTabBarAppearanceCoordinator.mm
+index b3bc98dd720850ed88344368162360493957f0b9..edb9081aa59d2b51dce5093650b63549713148bd 100644
+--- a/ios/tabs/RNSTabBarAppearanceCoordinator.mm
++++ b/ios/tabs/RNSTabBarAppearanceCoordinator.mm
+@@ -156,6 +156,16 @@ static UIImage *_Nullable RNSImageWithSymbolRenderingMode(UIImage *_Nullable ima
+     } else {
+       tabBarItem.selectedImage = nil;
+     }
++
++    // The image-loader path lays the bar out after an async icon arrives. SF Symbol
++    // icons are set here, synchronously, and skip that pass. After a stack screen
++    // covers the tabs and comes back, UIKit keeps the previous item frames and the
++    // icons sit in the wrong place until something forces layout (expo/expo#42364).
++    UIViewController *screenParentViewController = [screenView.controller parentViewController];
++    if ([screenParentViewController isKindOfClass:[UITabBarController class]]) {
++      UITabBarController *tabBarController = (UITabBarController *)screenParentViewController;
++      [tabBarController.tabBar setNeedsLayout];
++    }
+   } else if (imageLoader != nil) {
+     bool isTemplate = screenView.iconImageRenderingMode == RNSTabsIconImageRenderingModeTemplate;
+     bool isSelectedTemplate = screenView.selectedIconImageRenderingMode == RNSTabsIconImageRenderingModeTemplate;
+diff --git a/ios/tabs/host/RNSTabBarController.mm b/ios/tabs/host/RNSTabBarController.mm
+index bc9c64436da76959ecdc22539b94ce459e1e4ed2..16173bfaaaf3cdd7f24837ff6b12b0bcbf7833ac 100644
+--- a/ios/tabs/host/RNSTabBarController.mm
++++ b/ios/tabs/host/RNSTabBarController.mm
+@@ -292,6 +292,15 @@ static void rns_pushViewController(__unsafe_unretained id self,
+   }
+ }
+ 
++- (void)viewDidAppear:(BOOL)animated
++{
++  [super viewDidAppear:animated];
++  // Returning from a stack screen reveals a tab bar whose item frames were measured
++  // while it was covered. A selection lays the bar out again, which is why tapping
++  // a tab clears the shifted icons. Do that pass when the bar comes back.
++  [self.tabBar setNeedsLayout];
++}
++
+ #pragma mark - Signals
+ 
+ - (void)setPendingNavigationStateUpdate:(nullable RNSTabsNavigationStateUpdateRequest *)stateUpdate

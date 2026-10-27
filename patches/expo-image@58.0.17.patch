@@ -1,8 +1,19 @@
+diff --git a/node_modules/expo-image/.bun-tag-ce48afbd1d49e1c b/.bun-tag-ce48afbd1d49e1c
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
 diff --git a/android/src/main/java/expo/modules/image/ExpoImageModule.kt b/android/src/main/java/expo/modules/image/ExpoImageModule.kt
-index e097d5b74157be5b9995bb9c545e553c62157804..1a11aa5a9b63da246a43cf95f899fa8c8ec9fd0f 100644
+index e097d5b74157be5b9995bb9c545e553c62157804..23f97eb8f0f60947993651e46f53d796bd0c6803 100644
 --- a/android/src/main/java/expo/modules/image/ExpoImageModule.kt
 +++ b/android/src/main/java/expo/modules/image/ExpoImageModule.kt
-@@ -261,6 +261,10 @@ class ExpoImageModule : Module() {
+@@ -93,6 +93,7 @@ class ExpoImageModule : Module() {
+           // We added `quality` and `downsample` to create the same cache key as in final image load.
+           .encodeQuality(100)
+           .downsample(NoopDownsampleStrategy)
++          .disableUnboundedAnimationChecks()
+           .customize(`when` = cachePolicy == CachePolicy.MEMORY) {
+             diskCacheStrategy(DiskCacheStrategy.NONE)
+           }
+@@ -261,6 +262,10 @@ class ExpoImageModule : Module() {
        return@AsyncFunction true
      }.runOnQueue(Queues.MAIN)
  
@@ -14,7 +25,7 @@ index e097d5b74157be5b9995bb9c545e553c62157804..1a11aa5a9b63da246a43cf95f899fa8c
        val activity = appContext.currentActivity ?: return@AsyncFunction false
        activity.let {
 diff --git a/android/src/main/java/expo/modules/image/ExpoImageViewWrapper.kt b/android/src/main/java/expo/modules/image/ExpoImageViewWrapper.kt
-index e0689c97e05316b83fdf2f1b1b190dd07f899daa..b3f36f78f3ac6083ecb4f58a587104382696f202 100644
+index e0689c97e05316b83fdf2f1b1b190dd07f899daa..0e766d058b6802a2fa1044b57d21819dbe3c85c6 100644
 --- a/android/src/main/java/expo/modules/image/ExpoImageViewWrapper.kt
 +++ b/android/src/main/java/expo/modules/image/ExpoImageViewWrapper.kt
 @@ -9,6 +9,9 @@ import android.graphics.drawable.Animatable
@@ -77,7 +88,23 @@ index e0689c97e05316b83fdf2f1b1b190dd07f899daa..b3f36f78f3ac6083ecb4f58a58710438
      }
    }
  
-@@ -719,3 +729,185 @@ class ExpoImageViewWrapper(context: Context, appContext: AppContext) : ExpoView(
+@@ -476,6 +486,7 @@ class ExpoImageViewWrapper(context: Context, appContext: AppContext) : ExpoView(
+   private fun createPropOptions(): RequestOptions {
+     return RequestOptions()
+       .priority(this@ExpoImageViewWrapper.priority.toGlidePriority())
++      .disableUnboundedAnimationChecks()
+       .customize(`when` = cachePolicy != CachePolicy.MEMORY_AND_DISK && cachePolicy != CachePolicy.MEMORY) {
+         skipMemoryCache(true)
+       }
+@@ -638,6 +649,7 @@ class ExpoImageViewWrapper(context: Context, appContext: AppContext) : ExpoView(
+           thumbnail(
+             requestManager.load(placeholderModel.getGlideModel())
+               .downsample(PlaceholderDownsampleStrategy(newTarget))
++              .disableUnboundedAnimationChecks()
+               .apply(placeholderSource.createGlideOptions(context))
+           )
+         }
+@@ -719,3 +731,185 @@ class ExpoImageViewWrapper(context: Context, appContext: AppContext) : ExpoView(
      private fun createNewRequestManager(activity: Activity): RequestManager = Glide.with(activity)
    }
  }
@@ -263,6 +290,156 @@ index e0689c97e05316b83fdf2f1b1b190dd07f899daa..b3f36f78f3ac6083ecb4f58a58710438
 +    }
 +  }
 +}
+diff --git a/android/src/main/java/expo/modules/image/GlideExtensions.kt b/android/src/main/java/expo/modules/image/GlideExtensions.kt
+index eb678bca922d5e476e97b1bc559130b939d1dfae..97fff7f26cd087df8c61999d6f23f288e017e2f9 100644
+--- a/android/src/main/java/expo/modules/image/GlideExtensions.kt
++++ b/android/src/main/java/expo/modules/image/GlideExtensions.kt
+@@ -1,7 +1,26 @@
+ package expo.modules.image
+ 
++import android.content.Context
++import com.bumptech.glide.Glide
++import com.bumptech.glide.Registry
+ import com.bumptech.glide.RequestBuilder
++import com.bumptech.glide.annotation.GlideModule
++import com.bumptech.glide.load.ImageHeaderParser.ImageType
++import com.bumptech.glide.load.ImageHeaderParserUtils
++import com.bumptech.glide.load.Options
++import com.bumptech.glide.load.ResourceDecoder
++import com.bumptech.glide.module.LibraryGlideModule
++import com.bumptech.glide.request.BaseRequestOptions
+ import com.bumptech.glide.request.RequestOptions
++import com.bumptech.glide.util.ByteBufferUtil
++import com.github.penfeizhou.animation.decode.FrameSeqDecoder
++import com.github.penfeizhou.animation.glide.AnimationDecoderOption
++import com.github.penfeizhou.animation.glide.ByteBufferAnimationDecoder
++import com.github.penfeizhou.animation.glide.StreamAnimationDecoder
++import java.io.DataInputStream
++import java.io.EOFException
++import java.io.InputStream
++import java.nio.ByteBuffer
+ 
+ /**
+  * Conditionally applies the block to the RequestBuilder if the condition is true.
+@@ -65,3 +84,106 @@ fun <T> RequestBuilder<T>.apply(options: RequestOptions?): RequestBuilder<T> {
+ 
+   return apply(options)
+ }
++
++/**
++ * APNG4Android's animated WebP, APNG and AVIF checks can read the whole input
++ * stream. Glide can't rewind a stream after 5 MB, so a larger image that is
++ * not on disk fails to load. AnimatedImageModule finds those images with a
++ * bounded read and still decodes them with APNG4Android.
++ */
++fun <T : BaseRequestOptions<T>> T.disableUnboundedAnimationChecks(): T {
++  return set(AnimationDecoderOption.DISABLE_ANIMATION_WEBP_DECODER, true)
++    .set(AnimationDecoderOption.DISABLE_ANIMATION_APNG_DECODER, true)
++    .set(AnimationDecoderOption.DISABLE_ANIMATION_AVIF_DECODER, true)
++}
++
++/**
++ * Requests disable APNG4Android's own animated WebP, APNG and AVIF checks
++ * (see `disableUnboundedAnimationChecks`). This module finds those images with bounded reads
++ * and still decodes them with APNG4Android. Static AVIF goes to APNG4Android too, because Glide's
++ * AVIF integration decodes 10-bit files as `RGBA_F16`, which needs API 26.
++ * A [LibraryGlideModule] also runs when the app excludes `ExpoImageAppGlideModule`.
++ * Library modules run before the app module, so Glide's GIF decoders there stay first.
++ *
++ * The class lives in this file because a bun patch cannot add a new file more than
++ * two directories deep.
++ */
++@GlideModule
++class AnimatedImageModule : LibraryGlideModule() {
++  override fun registerComponents(context: Context, glide: Glide, registry: Registry) {
++    super.registerComponents(context, glide, registry)
++
++    val parsers = registry.imageHeaderParsers
++    val animationDecoder = ByteBufferAnimationDecoder()
++    registry.prepend(
++      InputStream::class.java,
++      FrameSeqDecoder::class.java,
++      BoundedAnimationDecoder(
++        StreamAnimationDecoder(animationDecoder),
++        getType = { ImageHeaderParserUtils.getType(parsers, it, glide.arrayPool) },
++        toStream = { it }
++      )
++    )
++    registry.prepend(
++      ByteBuffer::class.java,
++      FrameSeqDecoder::class.java,
++      BoundedAnimationDecoder(
++        animationDecoder,
++        getType = { ImageHeaderParserUtils.getType(parsers, it) },
++        toStream = ByteBufferUtil::toStream
++      )
++    )
++  }
++}
++
++private class BoundedAnimationDecoder<T : Any>(
++  private val decoder: ResourceDecoder<T, FrameSeqDecoder<*, *>>,
++  private val getType: (T) -> ImageType,
++  private val toStream: (T) -> InputStream
++) : ResourceDecoder<T, FrameSeqDecoder<*, *>> {
++  // Glide's header parser reads only the file header. It rewinds the source before it returns.
++  override fun handles(source: T, options: Options) = when (getType(source)) {
++    ImageType.ANIMATED_WEBP, ImageType.AVIF, ImageType.ANIMATED_AVIF -> true
++    ImageType.PNG, ImageType.PNG_A -> isAnimatedPng(toStream(source))
++    else -> false
++  }
++
++  override fun decode(source: T, width: Int, height: Int, options: Options) =
++    decoder.decode(source, width, height, options)
++}
++
++private const val PNG_SIGNATURE_SIZE = 8L
++private const val CHUNK_HEADER_SIZE = 8L
++private const val CHUNK_CRC_SIZE = 4L
++private const val ACTL_CHUNK = 0x6163544C
++private const val IDAT_CHUNK = 0x49444154
++
++// Stays far below Glide's 5 MB mark limit, so Glide can still rewind the stream.
++private const val MAX_APNG_HEADER_BYTES = 1L shl 20
++
++/**
++ * APNG requires the `acTL` chunk before the first `IDAT` chunk.
++ * This reads only the chunk headers before the image data, up to [MAX_APNG_HEADER_BYTES].
++ */
++private fun isAnimatedPng(stream: InputStream): Boolean {
++  val input = DataInputStream(stream)
++  try {
++    input.skipBytes(PNG_SIGNATURE_SIZE.toInt())
++    var position = PNG_SIGNATURE_SIZE
++    while (true) {
++      val length = input.readInt().toLong() and 0xFFFFFFFFL
++      when (input.readInt()) {
++        ACTL_CHUNK -> return true
++        IDAT_CHUNK -> return false
++      }
++      val skip = length + CHUNK_CRC_SIZE
++      position += CHUNK_HEADER_SIZE + skip
++      if (position > MAX_APNG_HEADER_BYTES || input.skipBytes(skip.toInt()) < skip) {
++        return false
++      }
++    }
++  } catch (_: EOFException) {
++    // A truncated PNG has no `acTL` chunk before its image data.
++  }
++  return false
++}
+diff --git a/android/src/main/java/expo/modules/image/ImageLoadTask.kt b/android/src/main/java/expo/modules/image/ImageLoadTask.kt
+index 8274fb6c6223e304448ef5ea610d4426682ba69f..deec620819827829bddf13020ea1516426f1c302 100644
+--- a/android/src/main/java/expo/modules/image/ImageLoadTask.kt
++++ b/android/src/main/java/expo/modules/image/ImageLoadTask.kt
+@@ -30,6 +30,7 @@ open class ImageLoadTask(
+           .asDrawable()
+           .load(model)
+           .centerInside()
++          .disableUnboundedAnimationChecks()
+           // loadAsync has no configurable decode format; ARGB_8888 is the widest, so its size cap is a safe upper bound.
+           .customize(`when` = options.maxWidth <= 0 && options.maxHeight <= 0) {
+             downsample(SafeDownsampleStrategy(DecodeFormat.ARGB_8888))
 diff --git a/ios/AnimatedImage.swift b/ios/AnimatedImage.swift
 index 350c9e4d90680baf8370e49b3529f6e45781244e..a05135020be44a3ccbae94e88bfab5f21c827c40 100644
 --- a/ios/AnimatedImage.swift
@@ -347,11 +524,10 @@ index 5c92efa2ec1ca32fc4c49b0e30f3f809259508f3..2c2dd898a9b5721ac16738640a06d80e
    }
  
 diff --git a/ios/ImageLoader.swift b/ios/ImageLoader.swift
-index de6e2c368e45bedd01e563cf254c006190aca233..cd29dcd08631da9c703175756882af0127164f35 100644
+index a89f1b572837b2d39875cedf106a01fca01c6b33..e6a28f92f942d62095be6fc7b0693f799478edea 100644
 --- a/ios/ImageLoader.swift
 +++ b/ios/ImageLoader.swift
-@@ -14,7 +14,10 @@ internal final class ImageLoader {
-   func load(_ source: ImageSource, options: ImageLoadOptions) async throws -> UIImage {
+@@ -27,7 +27,10 @@ internal final class ImageLoader {
      // This loader uses only the disk cache. We may want to give more control on this, but the memory cache
      // doesn't make much sense for shared refs as they're kept in memory as long as their JS objects.
 -    var context = createSDWebImageContext(forSource: source, cachePolicy: .disk)
@@ -362,6 +538,7 @@ index de6e2c368e45bedd01e563cf254c006190aca233..cd29dcd08631da9c703175756882af01
  
      if let maxSize = options.getMaxSize() {
        // Note that setting the thumbnail size rasterizes vector images into a bitmap.
+       context[.imageThumbnailPixelSize] = maxSize
 diff --git a/ios/ImageModule.swift b/ios/ImageModule.swift
 index c480af35f737fcfbea1b77cd40a9ff348db15821..cfe91f72c25aef42ba5d00e0669082df62da27a1 100644
 --- a/ios/ImageModule.swift
@@ -420,10 +597,10 @@ index c480af35f737fcfbea1b77cd40a9ff348db15821..cfe91f72c25aef42ba5d00e0669082df
        var context = SDWebImageContext()
        let sdCacheType = cachePolicy.toSdCacheType().rawValue
 diff --git a/ios/ImageView.swift b/ios/ImageView.swift
-index bf865ebaa990861eb534b3e1695d9594b0e55de6..1420232e4df23ea7d599d0f6f1501aec2e4bdd74 100644
+index a1f94fe8c039d2649c7144a8db5229efc310c65b..fixed000000000000000000000000000000000000 100644
 --- a/ios/ImageView.swift
 +++ b/ios/ImageView.swift
-@@ -79,6 +79,7 @@ public final class ImageView: ExpoView {
+@@ -82,12 +82,23 @@
    var recyclingKey: String? {
      didSet {
        if oldValue != nil && recyclingKey != oldValue {
@@ -431,10 +608,10 @@ index bf865ebaa990861eb534b3e1695d9594b0e55de6..1420232e4df23ea7d599d0f6f1501aec
          sdImageView.image = nil
          placeholderImage = nil
          sourceImage = nil
-@@ -86,6 +87,16 @@ public final class ImageView: ExpoView {
+       }
      }
    }
- 
++
 +  /**
 +   The animated image `SharedAnimationDriver` is stepping this view through, and
 +   its frame schedule. Both nil whenever the view is on SDWebImage's own
@@ -444,17 +621,16 @@ index bf865ebaa990861eb534b3e1695d9594b0e55de6..1420232e4df23ea7d599d0f6f1501aec
 +  var sharedAnimationImage: SDAnimatedImage?
 +
 +  private var sharedAnimationTimeline: AnimationTimeline?
-+
+ 
    var autoplay: Bool = true
  
-   var sfEffect: [SFSymbolEffect]?
-@@ -166,6 +177,22 @@ public final class ImageView: ExpoView {
-     if lockResource && !force {
-       return
-     }
+@@ -166,6 +177,22 @@
+   // MARK: - Implementation
+ 
+   func reload(force: Bool = false) {
 +    // A directly-set image ref (`source` is a SharedRef, so `sources == nil`) is not
-+    // reloadable. If the view was emptied after the ref was applied — e.g. a `recyclingKey`
-+    // change whose `sdImageView.image = nil` ran after the source prop in the same prop batch —
++    // reloadable. If the view was emptied after the ref was applied - e.g. a `recyclingKey`
++    // change whose `sdImageView.image = nil` ran after the source prop in the same prop batch -
 +    // reload would fall through to the placeholder and the image would stay permanently blank.
 +    // Re-assert the retained ref here so the ref path self-heals like `sources`-based loads do.
 +    if sources == nil, let sourceImage {
@@ -468,10 +644,10 @@ index bf865ebaa990861eb534b3e1695d9594b0e55de6..1420232e4df23ea7d599d0f6f1501aec
 +      }
 +      return
 +    }
-     if isViewEmpty {
-       if placeholderImage != nil {
-         displayPlaceholderIfNecessary()
-@@ -625,10 +652,15 @@ public final class ImageView: ExpoView {
+     if lockResource && !force {
+       return
+     }
+@@ -659,11 +686,17 @@
    private func setImage(_ image: UIImage?, contentFit: ContentFit, isPlaceholder: Bool) {
      sdImageView.contentMode = contentFit.toContentMode()
  
@@ -484,23 +660,19 @@ index bf865ebaa990861eb534b3e1695d9594b0e55de6..1420232e4df23ea7d599d0f6f1501aec
        sdImageView.autoPlayAnimatedImage = true
      } else {
 -      sdImageView.autoPlayAnimatedImage = autoplay
+-    }
 +      sdImageView.autoPlayAnimatedImage = sharedAnimation == nil && autoplay
-     }
++    }
++    updateSharedAnimation(with: sharedAnimation)
  
      // Remove any existing symbol effects before setting new image
-@@ -664,6 +696,8 @@ public final class ImageView: ExpoView {
-       }
+     if #available(iOS 17.0, tvOS 17.0, *) {
+@@ -707,6 +740,118 @@
+       analyzeImage()
      }
- 
-+    updateSharedAnimation(with: sharedAnimation)
-+
-     if !isPlaceholder {
-       onDisplay()
-     }
-@@ -675,6 +709,118 @@ public final class ImageView: ExpoView {
  #endif
-   }
- 
++  }
++
 +  // MARK: - Shared animation
 +
 +  /**
@@ -611,11 +783,9 @@ index bf865ebaa990861eb534b3e1695d9594b0e55de6..1420232e4df23ea7d599d0f6f1501aec
 +    if player.currentFrameIndex != frameIndex {
 +      player.seekToFrame(at: frameIndex, loopCount: 0)
 +    }
-+  }
-+
-   // MARK: - Symbol Effects
+   }
  
-   @available(iOS 17.0, tvOS 17.0, *)
+   // MARK: - Symbol Effects
 diff --git a/node_modules/expo-image/ios/SharedAnimationDriver.swift b/ios/SharedAnimationDriver.swift
 new file mode 100644
 index 0000000000000000000000000000000000000000..463cc35c6127163dfcc24446ff817239c04a6eba

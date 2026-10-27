@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 import { requireOptionalNativeModule } from 'expo';
 
 /**
- * Phase-locks animated images to one shared clock (patches/expo-image@58.0.16.patch).
+ * Phase-locks animated images to one shared clock (patches/expo-image@58.0.17.patch).
  * Resolves once the driver holds the value - remounting earlier races the native apply.
  */
 export async function setSharedAnimationEnabled(

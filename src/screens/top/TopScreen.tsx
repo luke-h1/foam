@@ -27,6 +27,7 @@ export function TopScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
+          headerTitleAlign: 'center',
           headerTitle: () => (
             <TopSegmentedControl
               index={index}
