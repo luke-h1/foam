@@ -1,0 +1,21 @@
+// Only active while scripts/kotlin-lsp.sh runs a kotlin-lsp import. KSP modules
+// such as expo-updates make the IDE Gradle sync fail on test variants with
+// "Querying the mapped value of provider ... before task ... has completed",
+// and editor features do not need the test variants.
+if (System.getenv('KOTLIN_LSP_IMPORT') == '1') {
+  allprojects {
+    ['com.android.library', 'com.android.application'].each { id ->
+      pluginManager.withPlugin(id) {
+        def components = extensions.getByName('androidComponents')
+        components.beforeVariants(components.selector().all()) { variant ->
+          if (variant.hasProperty('enableAndroidTest')) {
+            variant.enableAndroidTest = false
+          }
+          if (variant.hasProperty('enableUnitTest')) {
+            variant.enableUnitTest = false
+          }
+        }
+      }
+    }
+  }
+}

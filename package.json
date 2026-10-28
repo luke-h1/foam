@@ -98,7 +98,11 @@
     "use-build-number": "./scripts/useBuildNumberEnv.sh",
     "use-build-number-with-bump": "./scripts/useBuildNumberEnvWithBump.sh",
     "variants:check": "bun run scripts/check-platform-variants.ts",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "lsp:android": "./scripts/kotlin-lsp.sh",
+    "lsp:ios": "./scripts/swift-lsp.sh",
+    "open:android": "node scripts/module_scripts/open-android.js",
+    "open:ios": "node scripts/module_scripts/open-ios.js"
   },
   "config": {
     "commitizen": {
