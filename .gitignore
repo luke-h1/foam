@@ -148,3 +148,9 @@ research/
 
 # Flashlight benchmark output (scripts/bench/measure.sh)
 bench-results/
+
+# sourcekit-lsp and kotlin-lsp, written by scripts/swift-lsp.sh and scripts/kotlin-lsp.sh
+.compile
+workspace.json
+workspace.json.orig
+.zed-jar-cache/
