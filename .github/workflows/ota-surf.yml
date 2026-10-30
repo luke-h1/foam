@@ -70,7 +70,7 @@ jobs:
 
       - name: Λ Setup EAS
         if: steps.pr.outputs.should_run == 'true'
-        uses: expo/expo-github-action@eab7a230208c952974db8c3245cfd78402c7b385
+        uses: expo/expo-github-action@9da89d3617bb88139671bad31b09c65714c2ee06
         with:
           eas-version: latest
           expo-version: latest
