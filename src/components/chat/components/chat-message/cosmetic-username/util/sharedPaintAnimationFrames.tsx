@@ -9,7 +9,7 @@ import type {
 import { Skia } from '@shopify/react-native-skia';
 
 import { chatScrollActivity } from '@app/components/chat/util/chatScrollActivity';
-import type { LogMetadataValue } from '@app/lib/sentry';
+import type { LogMetadataValue } from '@app/utils/log/sanitiseLogValue';
 import { logger } from '@app/utils/logger';
 
 interface SharedPaintAnimationEntry {

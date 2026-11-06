@@ -1,5 +1,5 @@
-import { indexedCollectionToArray } from '@app/services/ws/util/indexedCollection';
 import type { PaintData, PaintStop } from '@app/types/seven-tv/cosmetics';
+import { indexedCollectionToArray } from '@app/utils/collection/indexedCollection';
 import { isVisibleSevenTvColor } from '@app/utils/color/isVisibleSevenTvColor';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 

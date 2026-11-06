@@ -1,6 +1,17 @@
 import { z } from 'zod';
 
-import type { LogMetadataValue } from '@app/lib/sentry';
+/**
+ * The widest shape sanitiseLogValue can bound before it reaches Sentry.
+ */
+export type LogMetadataValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | Error
+  | readonly LogMetadataValue[]
+  | { readonly [key: string]: LogMetadataValue };
 
 const MAX_LOG_STRING_LENGTH = 500;
 const MAX_LOG_ARRAY_PREVIEW = 3;

@@ -1,8 +1,8 @@
 // `shape` is a GraphQL-codegen name from the 7TV schema, not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import { PaintRadialGradientShape } from '@app/graphql/generated/gql';
-import type { IndexedCollection } from '@app/services/ws/util/indexedCollection';
 import type { PaintData, PaintShadow } from '@app/types/seven-tv/cosmetics';
+import type { IndexedCollection } from '@app/utils/collection/indexedCollection';
 import { pickBestPaintLayerImage } from '@app/utils/color/seven-tv-paint-data/pickBestPaintLayerImage';
 import type {
   SevenTvPaintSource,

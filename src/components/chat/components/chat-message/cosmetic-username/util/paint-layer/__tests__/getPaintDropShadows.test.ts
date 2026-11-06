@@ -1,7 +1,7 @@
 // "shape" is the 7TV paint API field (types/seven-tv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
-import type { IndexedCollection } from '@app/services/ws/util/indexedCollection';
 import type { PaintData, PaintShadow } from '@app/types/seven-tv/cosmetics';
+import type { IndexedCollection } from '@app/utils/collection/indexedCollection';
 
 import { DEFAULT_PAINT_DROP_SHADOW_MODE } from '../defaultPaintDropShadowMode';
 import { getPaintDropShadows } from '../getPaintDropShadows';

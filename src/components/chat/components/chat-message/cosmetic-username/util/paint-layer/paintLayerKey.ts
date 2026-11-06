@@ -1,7 +1,7 @@
 // "shape" is the 7TV paint API field (types/seven-tv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
-import { indexedCollectionToArray } from '@app/services/ws/util/indexedCollection';
 import type { PaintLayerData } from '@app/types/seven-tv/cosmetics';
+import { indexedCollectionToArray } from '@app/utils/collection/indexedCollection';
 
 function paintLayerFingerprint(layer: PaintLayerData): string {
   const stops = indexedCollectionToArray(layer.stops)

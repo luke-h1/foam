@@ -1,10 +1,10 @@
+import { ingestChannelPointRewardTags } from '@app/store/chat/actions/channelPointRewardTitleStore';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import type {
   UserNoticeTags,
   UserNoticeTagsByVariant,
   ViewerMilestoneTags,
 } from '@app/types/chat/irc-tags/usernotice';
-import { ingestChannelPointRewardTags } from '@app/utils/chat/channelPointRewardTitleStore';
 import { createCharityDonationPart } from '@app/utils/chat/format-subscription-notice/createCharityDonationToken';
 import { createModiversaryPart } from '@app/utils/chat/format-subscription-notice/createModiversaryToken';
 import { createRitualPart } from '@app/utils/chat/format-subscription-notice/createRitualToken';

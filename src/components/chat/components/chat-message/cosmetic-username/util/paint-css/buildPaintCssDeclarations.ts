@@ -2,12 +2,12 @@
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import { getPaintLayers } from '@app/components/chat/components/chat-message/cosmetic-username/util/paint-layer/getPaintLayers';
 import { isRenderablePaintLayer } from '@app/components/chat/components/chat-message/cosmetic-username/util/paint-layer/isRenderablePaintLayer';
-import { indexedCollectionToArray } from '@app/services/ws/util/indexedCollection';
 import type {
   PaintData,
   PaintLayerData,
   PaintStop,
 } from '@app/types/seven-tv/cosmetics';
+import { indexedCollectionToArray } from '@app/utils/collection/indexedCollection';
 import { isVisibleSevenTvColor } from '@app/utils/color/isVisibleSevenTvColor';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 import { sevenTvColorToRgba } from '@app/utils/color/sevenTvColorToRgba';
