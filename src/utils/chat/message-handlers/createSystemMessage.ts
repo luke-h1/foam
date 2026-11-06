@@ -1,5 +1,6 @@
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { Color } from '@app/styles/palette';
+import { SYSTEM_SENDER_LOGIN } from '@app/utils/chat/isSystemSender';
 import { generateNonce } from '@app/utils/string/generateNonce';
 
 import { createChatTimestamp } from './createChatTimestamp';
@@ -15,7 +16,7 @@ export const createSystemMessage = (
     id: `${messageId}_${messageNonce}`,
     userstate: {
       'display-name': 'System',
-      login: 'system',
+      login: SYSTEM_SENDER_LOGIN,
       username: 'System',
       'user-id': '',
       id: '',

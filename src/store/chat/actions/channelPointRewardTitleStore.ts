@@ -4,24 +4,12 @@ import {
   type ChannelPointsRewardTags,
   type ChannelPointsRewardTagSource,
 } from '@app/utils/chat/channel-points-reward-title/types';
-import { evictOldestWhenFull } from '@app/utils/collection/evictOldestWhenFull';
+import { setBoundedMapEntry } from '@app/utils/collection/setBoundedMapEntry';
 
 const MAX_REWARD_TITLE_ENTRIES = 100;
 
 const channelPointRewardTitleCache = new Map<string, string>();
 const rewardIdOnlyCache = new Map<string, string>();
-
-function boundedMapSet(
-  map: Map<string, string>,
-  key: string,
-  value: string,
-): void {
-  if (!map.has(key)) {
-    evictOldestWhenFull(map, MAX_REWARD_TITLE_ENTRIES);
-  }
-
-  map.set(key, value);
-}
 
 function tagText(value: string | boolean | undefined): string | undefined {
   return value === true || value === false ? undefined : value;
@@ -65,13 +53,19 @@ export function cacheChannelPointRewardTitle(
     return;
   }
 
-  boundedMapSet(
+  setBoundedMapEntry(
     channelPointRewardTitleCache,
     channelPointRewardCacheKey(broadcasterId, rewardId),
     trimmed,
+    MAX_REWARD_TITLE_ENTRIES,
   );
 
-  boundedMapSet(rewardIdOnlyCache, rewardId, trimmed);
+  setBoundedMapEntry(
+    rewardIdOnlyCache,
+    rewardId,
+    trimmed,
+    MAX_REWARD_TITLE_ENTRIES,
+  );
   bumpRewardTitleRevision();
 }
 

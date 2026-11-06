@@ -1,3 +1,5 @@
+import { SURROGATE_PAIR_REGEX } from '@app/utils/string/surrogatePairRegex';
+
 import type { TwitchGifSpan } from './parseTwitchGifsTag';
 
 export type MessageGifSegment =
@@ -8,8 +10,6 @@ export type MessageGifSegment =
       kind: 'gif';
       url: string;
     };
-
-const SURROGATE_PAIR_REGEX = /[\uD800-\uDFFF]/;
 
 function sliceBody(
   message: string,

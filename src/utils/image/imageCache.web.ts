@@ -1,3 +1,5 @@
+import { isCacheableWebUri } from '@app/utils/image/isCacheableWebUri';
+
 export interface CachedImageInfo {
   uri: string;
   name: string;
@@ -12,10 +14,6 @@ export type CacheImageOptions = {
 const WEB_IMAGE_CACHE_NAME = 'foam-image-cache-v1';
 const MAX_MEMORY_CACHE_ENTRIES = 750;
 const objectUrlCache = new Map<string, CachedImageInfo>();
-
-function isCacheableWebUri(uri: string | undefined): uri is string {
-  return uri !== undefined && /^https?:\/\//i.test(uri);
-}
 
 function canUseWebImageCache() {
   return (

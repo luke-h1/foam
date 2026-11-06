@@ -6,6 +6,7 @@ import { getSubscriptionTierDisplay } from '@app/components/chat/components/user
 import { Image } from '@app/components/image/Image';
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { SubscriptionNoticeTokenType } from '@app/utils/chat/subscription-notice-token-types';
 
 import { styles as chatStyles } from '../chat-message/ChatRow.styles';
 import { ChatNoticeMetaRow } from '../chat-message/renderers/ChatNoticeMetaRow';
@@ -49,15 +50,7 @@ function renderMessagePart(messagePart: MessageToken, occurrence: number) {
 }
 
 interface SubscriptionNoticeProps {
-  token: MessageToken<
-    | 'sub'
-    | 'resub'
-    | 'anongiftpaidupgrade'
-    | 'anongift'
-    | 'submysterygift'
-    | 'giftpaidupgrade'
-    | 'primepaidupgrade'
-  >;
+  token: MessageToken<SubscriptionNoticeTokenType>;
   notice_tags?: UserNoticeTags;
   parsedMessage?: MessageToken[];
 }

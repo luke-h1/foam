@@ -2,16 +2,7 @@ import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseC
 import { emoteBreaksInline } from '@app/utils/chat/derive-chat-body/emoteBreaksInline';
 import type { ChatBodyScan } from '@app/utils/chat/derive-chat-body/types';
 import type { MessageToken } from '@app/utils/chat/messageToken';
-
-const SUBSCRIPTION_NOTICE_TYPES = new Set<MessageToken['type']>([
-  'sub',
-  'resub',
-  'anongiftpaidupgrade',
-  'anongift',
-  'submysterygift',
-  'giftpaidupgrade',
-  'primepaidupgrade',
-]);
+import { isSubscriptionNoticeToken } from '@app/utils/chat/subscription-notice-token-types';
 
 const CHARITY_DONATION_TYPES = new Set<MessageToken['type']>([
   'charitydonation',
@@ -76,7 +67,7 @@ export function scanChatBody(message: MessageToken[]): ChatBodyScan {
         break;
       default:
         fitsInOneText = false;
-        if (SUBSCRIPTION_NOTICE_TYPES.has(token.type)) {
+        if (isSubscriptionNoticeToken(token)) {
           hasSubscriptionNotice = true;
         } else if (STV_EMOTE_EVENT_TYPES.has(token.type)) {
           hasStvEmoteEvent = true;

@@ -6,7 +6,6 @@ import { Image as ExpoImage } from 'expo-image';
 import { Text } from '@app/components/ui/text/Text';
 import { resolveUseAppleWebpCodec } from '@app/lib/expo-image/resolveUseAppleWebpCodec';
 import { runAnimationCommand } from '@app/lib/expo-image/runAnimationCommand';
-import type { SanitisedEmote } from '@app/types/emote';
 import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
 
 import { RowVisibilityContext } from '../chat-message/util/rowVisibility';
@@ -14,11 +13,7 @@ import { emoteSheetStyles as styles } from './EmoteSheet.styles';
 import { getEmotePickerDisplayUrl } from './util/emotePickerDisplayUrl';
 import { emoteSheetAnimationBudget } from './util/emoteSheetAnimationBudget';
 import { emoteSheetScrollActivity } from './util/emoteSheetScrollActivity';
-import type { EmotePickerItem } from './util/emoteSheetTypes';
-
-function isEmoteEntry(item: EmotePickerItem): item is SanitisedEmote {
-  return item instanceof Object && Object.hasOwn(item, 'id');
-}
+import { type EmotePickerItem, isEmoteEntry } from './util/emoteSheetTypes';
 
 function EmoteCellComponent({
   cellSize,

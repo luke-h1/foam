@@ -1,5 +1,6 @@
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { ChatBodyVariant } from '@app/utils/chat/derive-chat-body/types';
+import { isSystemSender } from '@app/utils/chat/isSystemSender';
 
 const NON_REPLYABLE_VARIANTS: ReadonlySet<string> = new Set([
   'stv_emote_event',
@@ -34,6 +35,6 @@ export function canReplyToMessage({
     !hasSubscriptionNotice &&
     !NON_REPLYABLE_VARIANTS.has(bodyVariant) &&
     userstate.username &&
-    sender?.toLowerCase() !== 'system',
+    !isSystemSender(sender),
   );
 }

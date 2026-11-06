@@ -5,7 +5,7 @@ import {
   sevenTvService,
 } from '@app/services/seven-tv-service';
 import type { SanitisedEmote } from '@app/types/emote';
-import { evictOldestWhenFull } from '@app/utils/collection/evictOldestWhenFull';
+import { setBoundedMapEntry } from '@app/utils/collection/setBoundedMapEntry';
 import { logger } from '@app/utils/logger';
 import { getSevenTvSessionId } from '@app/utils/seven-tv/sevenTvSessionId';
 
@@ -51,18 +51,6 @@ export const notify7TVPresence = async (
 // realistic session.
 const MAX_TRACKED_CHANNEL_ENTRIES = 100;
 
-function setBoundedChannelEntry<V>(
-  map: Map<string, V>,
-  channelId: string,
-  value: V,
-): void {
-  if (!map.has(channelId)) {
-    evictOldestWhenFull(map, MAX_TRACKED_CHANNEL_ENTRIES);
-  }
-
-  map.set(channelId, value);
-}
-
 // 7TV rebroadcasts entitlements channel-wide on every active presence, so cap
 // writes per channel like the official extension does.
 const ACTIVE_PRESENCE_MIN_INTERVAL_MS = 10_000;
@@ -87,7 +75,12 @@ export const notify7TVActivePresence = async (
     return;
   }
 
-  setBoundedChannelEntry(lastActivePresenceAt, twitchChannelId, Date.now());
+  setBoundedMapEntry(
+    lastActivePresenceAt,
+    twitchChannelId,
+    Date.now(),
+    MAX_TRACKED_CHANNEL_ENTRIES,
+  );
 
   await notify7TVPresence(twitchUserId, twitchChannelId, { passive: false });
 };
@@ -126,7 +119,12 @@ export const switchSevenTvEmoteSet = async (
     return false;
   }
 
-  setBoundedChannelEntry(latestRequestedEmoteSetByChannel, channelId, newSetId);
+  setBoundedMapEntry(
+    latestRequestedEmoteSetByChannel,
+    channelId,
+    newSetId,
+    MAX_TRACKED_CHANNEL_ENTRIES,
+  );
 
   // The cached 7TV user still points at the set being replaced, and the next
   // full load would resolve it back.

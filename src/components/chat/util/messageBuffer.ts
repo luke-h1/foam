@@ -1,6 +1,7 @@
 import { chatPerfMarks } from '@app/lib/chatPerfMarks';
 import { getMaxChatMessages } from '@app/store/chat/actions/messages';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
+import { chatMessageMatchesId } from '@app/utils/chat/message-identity/chatMessageMatchesId';
 import { getChatMessageStoreId } from '@app/utils/chat/message-identity/getChatMessageStoreId';
 import { normaliseMessageField } from '@app/utils/chat/message-identity/normaliseMessageField';
 
@@ -109,16 +110,14 @@ export const createMessageBuffer = (
     },
 
     removeById(messageId) {
-      const normalisedMessageId = messageId.trim();
+      const normalisedMessageId = normaliseMessageField(messageId);
 
       if (!normalisedMessageId) {
         return false;
       }
 
       const next = messages.filter(
-        message =>
-          message.message_id.trim() !== normalisedMessageId &&
-          message.id?.trim() !== normalisedMessageId,
+        message => !chatMessageMatchesId(message, normalisedMessageId),
       );
 
       if (next.length === messages.length) {
@@ -160,10 +159,7 @@ export const createMessageBuffer = (
       let nextBuffer: BufferedMessage[] | null = null;
 
       messages.forEach((message, position) => {
-        if (
-          message.message_id.trim() !== normalisedMessageId &&
-          message.id?.trim() !== normalisedMessageId
-        ) {
+        if (!chatMessageMatchesId(message, normalisedMessageId)) {
           return;
         }
 
