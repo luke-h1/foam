@@ -4,6 +4,10 @@ import Constants from 'expo-constants';
 import { z } from 'zod';
 
 import { parseJsonOnWorklet } from '@app/lib/off-thread-json/parseJsonOnWorklet';
+import {
+  cacheChannelPointRewardTitle,
+  getCachedChannelPointRewardTitle,
+} from '@app/store/chat/actions/channelPointRewardTitleStore';
 import type { PaginatedList } from '@app/types/twitch/api';
 import type {
   DefaultTokenResponse,
@@ -38,10 +42,6 @@ import type {
   TwitchVideo,
   TwitchVideosRequestParams,
 } from '@app/types/twitch/video';
-import {
-  cacheChannelPointRewardTitle,
-  getCachedChannelPointRewardTitle,
-} from '@app/utils/chat/channelPointRewardTitleStore';
 import { logger } from '@app/utils/logger';
 
 import {

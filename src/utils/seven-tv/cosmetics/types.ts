@@ -1,9 +1,9 @@
-import type { IndexedCollection } from '@app/services/ws/util/indexedCollection';
 import type {
   PaintData,
   PaintFunction,
   PaintStop,
 } from '@app/types/seven-tv/cosmetics';
+import type { IndexedCollection } from '@app/utils/collection/indexedCollection';
 
 export type PaintGradientLayer = {
   function: PaintFunction;

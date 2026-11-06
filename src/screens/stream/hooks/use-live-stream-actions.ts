@@ -3,10 +3,10 @@ import { useCallback, useRef } from 'react';
 import { toast } from 'sonner-native';
 
 import { notification } from '@app/lib/haptics';
-import type { LogMetadataValue } from '@app/lib/sentry';
 import { twitchService } from '@app/services/twitch-service';
 import { addCreatedClip } from '@app/store/created-clips/actions/created-clips';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
+import type { LogMetadataValue } from '@app/utils/log/sanitiseLogValue';
 import { logger } from '@app/utils/logger';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 

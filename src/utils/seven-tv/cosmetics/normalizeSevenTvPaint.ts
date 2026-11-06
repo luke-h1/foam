@@ -1,6 +1,5 @@
 // `shape` here mirrors the 7TV paint API field name, not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
-import type { IndexedCollection } from '@app/services/ws/util/indexedCollection';
 import type {
   PaintCanvasRepeat,
   PaintData,
@@ -11,6 +10,7 @@ import type {
   PaintTextStyle,
   SevenTvColor,
 } from '@app/types/seven-tv/cosmetics';
+import type { IndexedCollection } from '@app/utils/collection/indexedCollection';
 
 import { absoluteSevenTvUrl } from './absoluteSevenTvUrl';
 import { get7TvCosmeticId } from './get7TvCosmeticId';

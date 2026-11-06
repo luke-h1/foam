@@ -2,8 +2,8 @@
 // choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import { PaintRadialGradientShape } from '@app/graphql/generated/gql';
-import { indexedCollectionToArray } from '@app/services/ws/util/indexedCollection';
 import type { PaintLayerData } from '@app/types/seven-tv/cosmetics';
+import { indexedCollectionToArray } from '@app/utils/collection/indexedCollection';
 import { convertV4PaintToPaintData } from '@app/utils/color/seven-tv-paint-data/convertV4PaintToPaintData';
 import type { SevenTvPaintSource } from '@app/utils/color/seven-tv-paint-data/types';
 

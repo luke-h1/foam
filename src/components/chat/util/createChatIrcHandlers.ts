@@ -10,6 +10,10 @@ import type {
 import { SUPPRESSED_NOTICE_IDS } from '@app/components/chat/util/room-state/suppressedNoticeIds';
 import { resetChannelSession } from '@app/store/chat/actions/channel-session';
 import {
+  ingestChannelPointRewardTags,
+  registerDeferredRewardgiftStandalone,
+} from '@app/store/chat/actions/channelPointRewardTitleStore';
+import {
   addMessage,
   clearMessagesWithNotice,
   getMessageColor,
@@ -17,10 +21,6 @@ import {
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { getPreferences } from '@app/store/preference-store';
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
-import {
-  ingestChannelPointRewardTags,
-  registerDeferredRewardgiftStandalone,
-} from '@app/utils/chat/channelPointRewardTitleStore';
 import { reportUnrenderableNotice } from '@app/utils/chat/chat-health/reportUnrenderableNotice';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { parseIrcMessage } from '@app/utils/chat/irc-protocol/parseIrcMessage';

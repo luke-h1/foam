@@ -1,12 +1,12 @@
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 import { CHAT_NOTICE_ACCENTS } from '@app/components/chat/components/util/chatNoticeAccents';
+import { resolveChannelPointRewardTitle } from '@app/store/chat/actions/channelPointRewardTitleStore';
 import { useChannelPointRewardTitleRevision } from '@app/store/chat/react/use-channel-point-reward-title-revision';
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { channelPointsRewardTitleFieldsFromUserstate } from '@app/utils/chat/channel-points-reward-title/channelPointsRewardTitleFieldsFromUserstate';
 import { channelPointsRewardTitleFromTags } from '@app/utils/chat/channel-points-reward-title/channelPointsRewardTitleFromTags';
 import { channelPointsRewardTitleFromUserstate } from '@app/utils/chat/channel-points-reward-title/channelPointsRewardTitleFromUserstate';
-import { resolveChannelPointRewardTitle } from '@app/utils/chat/channelPointRewardTitleStore';
 
 import { styles } from '../ChatRow.styles';
 import { getChatTextStyles } from '../ChatText.styles';

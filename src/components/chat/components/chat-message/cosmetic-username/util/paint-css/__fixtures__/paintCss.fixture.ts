@@ -1,8 +1,8 @@
 // This file's shape usages are the 7TV paint API's PaintData/PaintLayerData.shape
 // field (see types/seven-tv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
-import type { IndexedCollection } from '@app/services/ws/util/indexedCollection';
 import type { PaintData, PaintLayerData } from '@app/types/seven-tv/cosmetics';
+import type { IndexedCollection } from '@app/utils/collection/indexedCollection';
 
 // Packed 7TV colors: RRGGBBAA as a signed 32-bit integer.
 export const RED = -16_776_961; // 0xFF0000FF

@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 
 import { useAuthContext } from '@app/context/AuthContext';
 import TwitchWsService from '@app/services/twitch-ws-service';
+import { cacheChannelPointRewardTitle } from '@app/store/chat/actions/channelPointRewardTitleStore';
 import type { TwitchEventSubCallback } from '@app/types/twitch/eventsub';
-import { cacheChannelPointRewardTitle } from '@app/utils/chat/channelPointRewardTitleStore';
 import { eventSubEventFromMessage } from '@app/utils/chat/parse-channel-points-event-sub/eventSubEventFromMessage';
 import { parseChannelPointsEventSubEvent } from '@app/utils/chat/parse-channel-points-event-sub/parseChannelPointsEventSubEvent';
 import { logger } from '@app/utils/logger';

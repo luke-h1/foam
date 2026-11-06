@@ -1,5 +1,5 @@
-import { indexedCollectionToArray } from '@app/services/ws/util/indexedCollection';
 import type { PaintLayerData, PaintStop } from '@app/types/seven-tv/cosmetics';
+import { indexedCollectionToArray } from '@app/utils/collection/indexedCollection';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 
 import { angleToPoints } from '../angleToPoints';

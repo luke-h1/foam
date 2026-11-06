@@ -1,6 +1,6 @@
 import { toast } from 'sonner-native';
 
-import type { LogMetadataValue } from '@app/lib/sentry';
+import type { LogMetadataValue } from '@app/utils/log/sanitiseLogValue';
 import { logger } from '@app/utils/logger';
 
 import { executeModCommand } from './executeModCommand';

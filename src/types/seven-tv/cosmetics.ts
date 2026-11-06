@@ -1,6 +1,6 @@
-import type { IndexedCollection } from '@app/services/ws/util/indexedCollection';
 import type { SevenTvEmote, SevenTvHost } from '@app/types/seven-tv/emotes';
 import type { StvUser } from '@app/types/seven-tv/users';
+import type { IndexedCollection } from '@app/utils/collection/indexedCollection';
 import type {
   V4Badge,
   V4Paint,

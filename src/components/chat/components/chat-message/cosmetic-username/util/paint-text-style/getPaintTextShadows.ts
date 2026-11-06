@@ -1,5 +1,5 @@
-import { indexedCollectionToArray } from '@app/services/ws/util/indexedCollection';
 import type { PaintData, PaintShadow } from '@app/types/seven-tv/cosmetics';
+import { indexedCollectionToArray } from '@app/utils/collection/indexedCollection';
 
 const textShadowsCache = new WeakMap<PaintData, PaintShadow[]>();
 

@@ -10,7 +10,10 @@ import {
 import { Image as ExpoImage } from 'expo-image';
 
 import { instrumentExpoImageLoads } from '@app/lib/sentryImageSpans';
-import { sanitiseLogValue } from '@app/utils/log/sanitiseLogValue';
+import {
+  type LogMetadataValue,
+  sanitiseLogValue,
+} from '@app/utils/log/sanitiseLogValue';
 import { runWhenIdle } from '@app/utils/runWhenIdle';
 import { markSessionError } from '@app/utils/store-review/sessionErrorFlag';
 import type { OpenStringUnion } from '@app/utils/typescript/openStringUnion';
@@ -368,19 +371,6 @@ export type MonitoringEventName =
   | MonitoringErrorName
   | MonitoringWarningName
   | MonitoringInfoName;
-
-/**
- * The widest shape sanitiseLogValue can bound before it reaches Sentry.
- */
-export type LogMetadataValue =
-  | string
-  | number
-  | boolean
-  | null
-  | undefined
-  | Error
-  | readonly LogMetadataValue[]
-  | { readonly [key: string]: LogMetadataValue };
 
 export type LogTagValue = string | number | boolean | null | undefined;
 

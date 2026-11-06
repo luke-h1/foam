@@ -1,6 +1,6 @@
+import { enrichChannelPointPrivmsgTags } from '@app/store/chat/actions/channelPointRewardTitleStore';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { isHighlightMyMessageTags } from '@app/utils/chat/channel-points-reward-title/isHighlightMyMessageTags';
-import { enrichChannelPointPrivmsgTags } from '@app/utils/chat/channelPointRewardTitleStore';
 import { generateNonce } from '@app/utils/string/generateNonce';
 
 import { createChatTimestampFromTags } from './createChatTimestampFromTags';

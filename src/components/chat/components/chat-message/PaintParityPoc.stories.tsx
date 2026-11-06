@@ -7,8 +7,8 @@ import {
   FlashList,
   type ListRenderItem,
 } from '@app/components/flash-list/FlashList';
-import { indexedCollectionToArray } from '@app/services/ws/util/indexedCollection';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
+import { indexedCollectionToArray } from '@app/utils/collection/indexedCollection';
 import { convertV4PaintToPaintData } from '@app/utils/color/seven-tv-paint-data/convertV4PaintToPaintData';
 import { type SevenTvPaintSource } from '@app/utils/color/seven-tv-paint-data/types';
 
