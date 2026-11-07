@@ -1,6 +1,7 @@
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { deriveChatBody } from '@app/utils/chat/derive-chat-body/deriveChatBody';
 import type { ChatBodyVariant } from '@app/utils/chat/derive-chat-body/types';
+import { isSystemSender } from '@app/utils/chat/isSystemSender';
 import { isRenderableChatMessage } from '@app/utils/chat/message-identity/isRenderableChatMessage';
 
 import { hasSharedChannelPointsMessage } from './channelPointsSharedMessage';
@@ -109,7 +110,7 @@ export function getChatRowItemType(
 
   let itemType: string;
 
-  if (item.sender?.toLowerCase() === 'system') {
+  if (isSystemSender(item.sender)) {
     itemType = 'system-notice';
   } else {
     const bodyVariant = resolveBodyVariant(item);

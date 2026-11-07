@@ -4,6 +4,7 @@ import type {
   ChatBodyVariant,
   MessageStructure,
 } from '@app/utils/chat/derive-chat-body/types';
+import { isSystemSender } from '@app/utils/chat/isSystemSender';
 import type { MessageToken } from '@app/utils/chat/messageToken';
 
 export interface ChatBodyDerived extends MessageStructure {
@@ -64,7 +65,7 @@ function resolveChatBodyVariant(
     return 'mod_anniversary';
   }
 
-  if (flags.sender?.toLowerCase() === 'system') {
+  if (isSystemSender(flags.sender)) {
     return 'app_system_sender';
   }
 

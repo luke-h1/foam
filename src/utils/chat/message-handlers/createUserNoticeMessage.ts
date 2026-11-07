@@ -177,22 +177,6 @@ export const createUserNoticeMessage = ({
       };
     }
 
-    case 'resub':
-    case 'sub':
-    case 'subgift':
-    case 'submysterygift':
-    case 'giftpaidupgrade':
-    case 'anongiftpaidupgrade':
-    case 'primepaidupgrade':
-    case 'extendsub':
-    case 'standardpayforward':
-    case 'communitypayforward':
-    case 'primecommunitygiftreceived':
-    case 'anonsubgift':
-    case 'anonsubmysterygift': {
-      return createSubscriptionNoticeMessage();
-    }
-
     case 'charitydonation': {
       return {
         ...baseMessage,

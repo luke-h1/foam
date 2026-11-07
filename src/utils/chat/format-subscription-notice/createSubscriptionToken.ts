@@ -1,6 +1,7 @@
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { getTagValue } from '@app/utils/chat/format-subscription-notice/getTagValue';
 import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { SubscriptionNoticeTokenType } from '@app/utils/chat/subscription-notice-token-types';
 
 function getTagNumber(
   tags: Record<string, string | boolean | undefined>,
@@ -42,15 +43,7 @@ function getPlanName(planCode: string): string | undefined {
 export function createSubscriptionPart(
   tags: UserNoticeTags,
   messageText?: string,
-): MessageToken<
-  | 'sub'
-  | 'resub'
-  | 'anongiftpaidupgrade'
-  | 'anongift'
-  | 'submysterygift'
-  | 'giftpaidupgrade'
-  | 'primepaidupgrade'
-> {
+): MessageToken<SubscriptionNoticeTokenType> {
   const msgId = getTagValue(tags, 'msg-id');
 
   const displayName =

@@ -2,7 +2,6 @@ import { memo, useCallback } from 'react';
 import { type GestureResponderEvent, Pressable } from 'react-native';
 
 import { selection } from '@app/lib/haptics';
-import type { SanitisedEmote } from '@app/types/emote';
 
 import {
   RowVisibilityContext,
@@ -11,11 +10,7 @@ import {
 import { EmoteCell } from './EmoteCell';
 import { emoteSheetStyles as styles } from './EmoteSheet.styles';
 import { EMOTE_CELL_GAP } from './util/emoteSheetLayout';
-import type { EmotePickerItem } from './util/emoteSheetTypes';
-
-function isEmoteEntry(item: EmotePickerItem): item is SanitisedEmote {
-  return item instanceof Object && Object.hasOwn(item, 'id');
-}
+import { type EmotePickerItem, isEmoteEntry } from './util/emoteSheetTypes';
 
 function EmoteRowComponent({
   cellSize,

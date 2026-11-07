@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { Image as ExpoImage } from 'expo-image';
 
+import { isCacheableWebUri } from '@app/utils/image/isCacheableWebUri';
 import { logger } from '@app/utils/logger';
 
 import type { ImageProps } from './Image.types';
@@ -18,9 +19,6 @@ const getSourceUri = (source: ImageProps['source']) => {
 
   return isUriString(source) ? source : undefined;
 };
-
-const isCacheableWebUri = (uri: string | undefined): uri is string =>
-  uri !== undefined && /^https?:\/\//i.test(uri);
 
 export const Image = function Image({
   contentFit = 'cover',

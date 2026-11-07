@@ -1,3 +1,5 @@
+import { SURROGATE_PAIR_REGEX } from '@app/utils/string/surrogatePairRegex';
+
 /**
  * One GIF span from the IRC `gifs` tag. Indices are inclusive code-point
  * offsets into the message body, matching the Twitch `emotes` tag.
@@ -9,8 +11,6 @@ export interface TwitchGifSpan {
   start: number;
   url: string;
 }
-
-const SURROGATE_PAIR_REGEX = /[\uD800-\uDFFF]/;
 
 /**
  * One `gifs` entry: `start-end|gif_id|url`. The URL keeps any later `|`

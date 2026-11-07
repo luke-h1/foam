@@ -2,6 +2,7 @@ import { createModeratedBufferMessage } from '@app/components/chat/util/buffered
 import { getBufferedMessageLogin } from '@app/components/chat/util/buffered-message-ops/getBufferedMessageLogin';
 import type { BufferedMessage } from '@app/components/chat/util/buffered-message-ops/types';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
+import { chatMessageMatchesId } from '@app/utils/chat/message-identity/chatMessageMatchesId';
 import { normaliseMessageField } from '@app/utils/chat/message-identity/normaliseMessageField';
 
 export interface DelayedChatMessage {
@@ -103,9 +104,7 @@ export const createChatDelayQueue = (
       }
 
       queue = queue.filter(
-        entry =>
-          entry.message.message_id.trim() !== target &&
-          entry.message.id?.trim() !== target,
+        entry => !chatMessageMatchesId(entry.message, target),
       );
     },
 
@@ -129,8 +128,7 @@ export const createChatDelayQueue = (
       }
 
       queue = queue.map(entry =>
-        entry.message.message_id.trim() === target ||
-        entry.message.id?.trim() === target
+        chatMessageMatchesId(entry.message, target)
           ? {
               ...entry,
               message: createModeratedBufferMessage(
