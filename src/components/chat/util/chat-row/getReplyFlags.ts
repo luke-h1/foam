@@ -5,7 +5,7 @@ interface GetReplyFlagsOptions {
   normalisedCurrentUsername: string;
   onReplyContextPress: ((replyParentMessageId: string) => void) | undefined;
   parentDisplayName: string | undefined;
-  replyDisplayName: string | undefined;
+  replyParentLogin: string | undefined;
   showInlineReplyContext: boolean;
   userstate: UserStateTags;
 }
@@ -14,7 +14,7 @@ export function getReplyFlags({
   normalisedCurrentUsername,
   onReplyContextPress,
   parentDisplayName,
-  replyDisplayName,
+  replyParentLogin,
   showInlineReplyContext,
   userstate,
 }: GetReplyFlagsOptions) {
@@ -28,7 +28,7 @@ export function getReplyFlags({
     isFirstMessage,
     isReplyingToCurrentUser: Boolean(
       normalisedCurrentUsername &&
-      (normaliseChatUsername(replyDisplayName) === normalisedCurrentUsername ||
+      (normaliseChatUsername(replyParentLogin) === normalisedCurrentUsername ||
         normaliseChatUsername(parentDisplayName) === normalisedCurrentUsername),
     ),
     isReturningChatter:

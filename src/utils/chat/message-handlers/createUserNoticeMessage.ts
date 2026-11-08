@@ -92,7 +92,7 @@ export const createUserNoticeMessage = ({
       notice_tags: tags,
       isSpecialNotice: true,
       ...options,
-      replyDisplayName: '',
+      replyParentLogin: '',
       replyBody: '',
       parentDisplayName: '',
     };

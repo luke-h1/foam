@@ -35,7 +35,7 @@ export function useChatRow<
     sender,
     parentDisplayName,
     replyBody,
-    replyDisplayName,
+    replyParentLogin,
     notice_tags,
     broadcasterId,
     onBadgePress,
@@ -161,7 +161,7 @@ export function useChatRow<
     normalisedCurrentUsername,
     onReplyContextPress,
     parentDisplayName,
-    replyDisplayName,
+    replyParentLogin,
     showInlineReplyContext,
     userstate,
   });

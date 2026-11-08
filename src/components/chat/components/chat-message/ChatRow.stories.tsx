@@ -267,7 +267,7 @@ export const ReplyMessage: Story = {
     parentDisplayName: 'OriginalUser',
     parentColor: '#3498DB',
     replyBody: 'The original message that was replied to',
-    replyDisplayName: 'OriginalUser',
+    replyParentLogin: 'OriginalUser',
   },
 };
 
@@ -455,7 +455,7 @@ export const ChatterinoSplit: Story = {
         ),
         parentDisplayName: 'OriginalUser',
         replyBody: 'the original line being replied to',
-        replyDisplayName: 'OriginalUser',
+        replyParentLogin: 'OriginalUser',
         timestamp: '13:39',
       },
       {

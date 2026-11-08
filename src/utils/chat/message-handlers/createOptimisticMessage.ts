@@ -44,7 +44,7 @@ export function createOptimisticMessage({
     timestamp: createChatTimestamp(timestampFormat, sentAt),
     sender: user?.display_name || user?.login || '',
     parentDisplayName: replyTo?.username || '',
-    replyDisplayName: replyTo?.replyParentUserLogin || '',
+    replyParentLogin: replyTo?.login || '',
     replyBody: replyTo?.message || '',
     parentColor: replyTo?.color,
   };

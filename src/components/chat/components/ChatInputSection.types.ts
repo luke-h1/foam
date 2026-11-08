@@ -13,7 +13,7 @@ export interface ReplyToData {
    * emotes inline instead of showing their names as text.
    */
   messageParts?: MessageToken[];
-  replyParentUserLogin: string;
+  login: string;
   color?: string;
   userId?: string;
 }

@@ -114,7 +114,7 @@ export const Replying: Story = {
       color: '#8A4FFF',
       message: 'no way he hit that shot from across the map',
       messageId: 'story-reply',
-      replyParentUserLogin: 'somelongchattername',
+      login: 'somelongchattername',
       userId: '12345',
       username: 'somelongchattername',
     },

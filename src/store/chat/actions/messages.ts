@@ -221,7 +221,7 @@ const indexMessage = (message: AnyChatMessageType, index: number) => {
     message.userstate?.username ?? message.sender,
   );
 
-  registerMentionLogin(message.replyDisplayName);
+  registerMentionLogin(message.replyParentLogin);
   registerMentionLoginsFromTokens(message.message);
 };
 

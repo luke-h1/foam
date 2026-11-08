@@ -12,7 +12,7 @@ export interface OptimisticReplyTarget {
   messageId: string;
   username: string;
   message: string;
-  replyParentUserLogin?: string;
+  login: string;
 }
 
 export function createOptimisticUserState({
@@ -45,6 +45,6 @@ export function createOptimisticUserState({
     'reply-parent-msg-id': replyTo?.messageId || '',
     'reply-parent-msg-body': replyTo?.message || '',
     'reply-parent-display-name': replyTo?.username || '',
-    'reply-parent-user-login': replyTo?.replyParentUserLogin || '',
+    'reply-parent-user-login': replyTo?.login || '',
   };
 }

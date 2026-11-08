@@ -34,7 +34,7 @@ export function generateStvEmoteNotice({
     message_nonce,
     parentDisplayName: '',
     replyBody: '',
-    replyDisplayName: '',
+    replyParentLogin: '',
     sender: '',
     isSpecialNotice: true,
   };

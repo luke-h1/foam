@@ -65,7 +65,7 @@ export const createBaseMessage = (
     message_id,
     message_nonce,
     sender: 'testuser',
-    replyDisplayName: '',
+    replyParentLogin: '',
     replyBody: '',
   };
 };

@@ -175,7 +175,7 @@ function createChatMessage(index: number): PerfChatMessage {
     cachedSenderColor: 'rgb(145, 70, 255)',
     message: createMessageParts(index),
     replyBody: '',
-    replyDisplayName: '',
+    replyParentLogin: '',
     parentDisplayName: '',
     timestamp: '12:00',
     userstate: createUserStateTags({

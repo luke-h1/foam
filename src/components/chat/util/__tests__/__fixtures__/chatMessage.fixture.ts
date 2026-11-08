@@ -15,7 +15,7 @@ export function createChatMessageFixture(
     cachedSenderColor: '#fff',
     message: [createTextToken('hello chat')],
     replyBody: '',
-    replyDisplayName: '',
+    replyParentLogin: '',
     parentDisplayName: '',
     timestamp: '12:00',
     userstate: createUserStateTags({

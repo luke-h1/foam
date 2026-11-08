@@ -90,7 +90,7 @@ export interface ChatMessageType<
    * stripped when the message is finalized, so the store never sees it.
    */
   pendingEmoteParse?: boolean;
-  replyDisplayName: string;
+  replyParentLogin: string;
   replyBody: string;
   parentColor?: string;
   isChannelPointRedemption?: boolean;

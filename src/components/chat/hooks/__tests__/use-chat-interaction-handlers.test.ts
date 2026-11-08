@@ -81,7 +81,7 @@ describe('useChatComposerActions', () => {
       message: 'replying with Kappa',
       messageParts: replyMessage.message,
       messageId: 'reply-1',
-      replyParentUserLogin: 'Viewer',
+      login: 'viewer',
       userId: 'viewer-user',
       username: 'Viewer',
     });

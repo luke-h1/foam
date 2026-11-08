@@ -12,6 +12,7 @@ import {
   openChatSettingsSheet,
   openChatUserActions,
 } from '@app/store/chat/actions/chat-overlays';
+import { getMessageSenderLogin } from '@app/store/chat/actions/messages';
 import { fetchUserCosmetics } from '@app/store/chat/actions/user-cosmetics-fetch';
 import type {
   BadgePressData,
@@ -42,7 +43,7 @@ export function useChatComposerActions({
         username: message.sender,
         message: messageText,
         messageParts: message.message,
-        replyParentUserLogin: message.userstate.username || '',
+        login: getMessageSenderLogin(message),
         color: message.userstate.color,
         userId: twitchUserId || undefined,
       });

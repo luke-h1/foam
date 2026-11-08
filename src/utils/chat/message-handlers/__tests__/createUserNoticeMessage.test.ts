@@ -781,14 +781,14 @@ describe('createUserNoticeMessage', () => {
 
     const expected = {
       parentDisplayName: 'ParentUser',
-      replyDisplayName: 'parentuser',
+      replyParentLogin: 'parentuser',
       replyBody: 'parent body',
     };
 
     expect(
       [milestone, sub].map(message => ({
         parentDisplayName: message.parentDisplayName,
-        replyDisplayName: message.replyDisplayName,
+        replyParentLogin: message.replyParentLogin,
         replyBody: message.replyBody,
       })),
     ).toEqual([expected, expected]);

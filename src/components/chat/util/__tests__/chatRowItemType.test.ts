@@ -15,7 +15,7 @@ describe('getChatRowItemType', () => {
         message: [],
         badges: [],
         replyBody: '',
-        replyDisplayName: '',
+        replyParentLogin: '',
         parentDisplayName: '',
         userstate: createUserStateTags(),
       }),

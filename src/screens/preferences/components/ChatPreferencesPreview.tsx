@@ -502,7 +502,7 @@ function createPreviewMessage({
     message_nonce: `${id}-nonce`,
     sender: login,
     parentDisplayName: replyDisplayName ?? '',
-    replyDisplayName: replyLogin ?? '',
+    replyParentLogin: replyLogin ?? '',
     replyBody: replyBody ?? '',
     parentColor: undefined,
   };

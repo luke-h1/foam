@@ -167,7 +167,7 @@ interface MessageOverrides {
   moderationNotice?: string;
   parentDisplayName?: string;
   replyBody?: string;
-  replyDisplayName?: string;
+  replyParentLogin?: string;
   userstate?: Partial<UserStateTags>;
   userId?: string;
   flags?: Partial<
@@ -198,7 +198,7 @@ function userMessage(
     cachedSenderColor: color,
     message: overrides.message ?? [text(`regular chat message ${index}`)],
     replyBody: overrides.replyBody ?? '',
-    replyDisplayName: overrides.replyDisplayName ?? '',
+    replyParentLogin: overrides.replyParentLogin ?? '',
     parentDisplayName: overrides.parentDisplayName ?? '',
     timestamp: '12:00',
     isAction: overrides.isAction,
@@ -508,7 +508,7 @@ export const chatNodeKinds: ChatNodeKindFixture[] = [
       userMessage('reply-context', index, {
         parentDisplayName: `user${(index + 3) % 24}`,
         replyBody: `the original message ${index}`,
-        replyDisplayName: `user${(index + 3) % 24}`,
+        replyParentLogin: `user${(index + 3) % 24}`,
         message: [
           { type: 'mention', content: `@user${(index + 3) % 24}` },
           text(` agreed ${index}`),

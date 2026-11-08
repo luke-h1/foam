@@ -74,7 +74,7 @@ const createMockMessage = (
     message_id,
     message_nonce,
     sender: 'testuser',
-    replyDisplayName: '',
+    replyParentLogin: '',
     replyBody: '',
     ...overrides,
   };
@@ -408,7 +408,7 @@ describe('ChatRow', () => {
         {
           parentDisplayName: 'OriginalUser',
           replyBody: 'The original message',
-          replyDisplayName: 'OriginalUser',
+          replyParentLogin: 'OriginalUser',
         },
       );
 
@@ -435,7 +435,7 @@ describe('ChatRow', () => {
         {
           parentDisplayName: 'OriginalUser',
           replyBody: 'The original message',
-          replyDisplayName: 'OriginalUser',
+          replyParentLogin: 'OriginalUser',
         },
       );
 

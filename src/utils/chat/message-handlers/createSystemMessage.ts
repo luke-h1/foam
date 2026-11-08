@@ -45,7 +45,7 @@ export const createSystemMessage = (
     timestamp: createChatTimestamp(timestampFormat),
     sender: SYSTEM_SENDER,
     parentDisplayName: '',
-    replyDisplayName: '',
+    replyParentLogin: '',
     replyBody: '',
     isSpecialNotice: true,
   };

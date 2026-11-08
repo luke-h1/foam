@@ -61,7 +61,7 @@ describe('createOptimisticUserState', () => {
       messageId: 'parent-1',
       message: 'parent body',
       username: 'Parent',
-      replyParentUserLogin: 'parent',
+      login: 'parent',
     };
 
     const userstate = createOptimisticUserState({
@@ -151,7 +151,7 @@ describe('createOptimisticMessage', () => {
         messageId: 'parent-1',
         message: 'parent body',
         username: 'Parent',
-        replyParentUserLogin: 'parent',
+        login: 'parent',
       },
       sentAt: SENT_AT,
       user,
@@ -160,7 +160,7 @@ describe('createOptimisticMessage', () => {
 
     expect(message.parentDisplayName).toBe('Parent');
 
-    expect(message.replyDisplayName).toBe('parent');
+    expect(message.replyParentLogin).toBe('parent');
 
     expect(message.replyBody).toBe('parent body');
 
