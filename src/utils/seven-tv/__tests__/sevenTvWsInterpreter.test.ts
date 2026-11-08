@@ -32,11 +32,12 @@ import {
   createPaintCosmetic,
   createPulledChange,
   createPushedChange,
-  createSevenTvEmote,
+  createSevenTvEmoteChange,
   createSevenTvFile,
   createStvActor,
   createUpdatedChange,
   FIXTURE_NOW,
+  sevenTvVariants,
 } from './__fixtures__/sevenTvWsInterpreter.fixture';
 
 describe('interpretSevenTvWsMessage', () => {
@@ -44,13 +45,13 @@ describe('interpretSevenTvWsMessage', () => {
     test('returns the old emote as removed and the new emote as added for an in-place update', () => {
       const actor = createStvActor();
 
-      const oldEmote = createSevenTvEmote({
+      const oldEmote = createSevenTvEmoteChange({
         id: 'emote-1',
         name: 'OldPeepo',
         originalName: 'peepoHappy',
       });
 
-      const newEmote = createSevenTvEmote({
+      const newEmote = createSevenTvEmoteChange({
         id: 'emote-1',
         name: 'NewPeepo',
         originalName: 'peepoHappy',
@@ -77,6 +78,8 @@ describe('interpretSevenTvWsMessage', () => {
               name: 'NewPeepo',
               id: 'emote-1',
               url: 'https://cdn.7tv.app/emote/emote-1/4x.avif',
+              static_url: 'https://cdn.7tv.app/emote/emote-1/4x_static.avif',
+              image_variants: sevenTvVariants('emote-1', 'avif', ['1x', '4x']),
               original_name: 'peepoHappy',
               creator: 'EmoteAuthor',
               emote_link: 'https://7tv.app/emotes/emote-1',
@@ -106,6 +109,8 @@ describe('interpretSevenTvWsMessage', () => {
               name: 'OldPeepo',
               id: 'emote-1',
               url: 'https://cdn.7tv.app/emote/emote-1/4x.avif',
+              static_url: 'https://cdn.7tv.app/emote/emote-1/4x_static.avif',
+              image_variants: sevenTvVariants('emote-1', 'avif', ['1x', '4x']),
               original_name: 'peepoHappy',
               creator: 'EmoteAuthor',
               emote_link: 'https://7tv.app/emotes/emote-1',
@@ -136,10 +141,40 @@ describe('interpretSevenTvWsMessage', () => {
       ]);
     });
 
+    test('marks an emote zero-width when the set entry turns zero-width on', () => {
+      const event = createEmoteSetUpdateEvent({
+        id: 'set-1',
+        actor: createStvActor(),
+        pushed: [
+          createPushedChange(
+            createSevenTvEmoteChange({
+              id: 'emote-set-zw',
+              name: 'SetOverlay',
+              activeFlags: 1,
+            }),
+          ),
+        ],
+      });
+
+      const [decision] = interpretSevenTvWsMessage(
+        createDispatchMessage(event),
+        createContext(),
+      );
+
+      const added = decision?.type === 'applyEmoteUpdate' ? decision.added : [];
+
+      expect(
+        added.map(emote => ({
+          flags: emote.flags,
+          zeroWidth: emote.zero_width,
+        })),
+      ).toEqual([{ flags: 256, zeroWidth: true }]);
+    });
+
     test('maps pushed emotes to added and pulled emotes to removed, picking the best available file', () => {
       const actor = createStvActor();
 
-      const zeroWidthEmote = createSevenTvEmote({
+      const zeroWidthEmote = createSevenTvEmoteChange({
         id: 'emote-zw',
         name: 'SoSnowy',
         flags: 256,
@@ -154,7 +189,7 @@ describe('interpretSevenTvWsMessage', () => {
         ],
       });
 
-      const removedEmote = createSevenTvEmote({
+      const removedEmote = createSevenTvEmoteChange({
         id: 'emote-old',
         name: 'FeelsBadMan',
       });
@@ -179,6 +214,8 @@ describe('interpretSevenTvWsMessage', () => {
               name: 'SoSnowy',
               id: 'emote-zw',
               url: 'https://cdn.7tv.app/emote/emote-zw/2x.avif',
+              static_url: 'https://cdn.7tv.app/emote/emote-zw/2x_static.avif',
+              image_variants: sevenTvVariants('emote-zw', 'avif', ['1x', '2x']),
               original_name: 'SoSnowy',
               creator: 'EmoteAuthor',
               emote_link: 'https://7tv.app/emotes/emote-zw',
@@ -208,6 +245,11 @@ describe('interpretSevenTvWsMessage', () => {
               name: 'FeelsBadMan',
               id: 'emote-old',
               url: 'https://cdn.7tv.app/emote/emote-old/4x.avif',
+              static_url: 'https://cdn.7tv.app/emote/emote-old/4x_static.avif',
+              image_variants: sevenTvVariants('emote-old', 'avif', [
+                '1x',
+                '4x',
+              ]),
               original_name: 'FeelsBadMan',
               creator: 'EmoteAuthor',
               emote_link: 'https://7tv.app/emotes/emote-old',
@@ -239,7 +281,7 @@ describe('interpretSevenTvWsMessage', () => {
     });
 
     test('resolves real dimensions from a webp encode when the host ships no avif', () => {
-      const webpOnlyEmote = createSevenTvEmote({
+      const webpOnlyEmote = createSevenTvEmoteChange({
         id: 'emote-webp',
         name: 'wideEmote',
         files: [
@@ -292,9 +334,41 @@ describe('interpretSevenTvWsMessage', () => {
       });
     });
 
+    test('builds the url and a still frame from the host url the EventAPI sends', () => {
+      const emote = createSevenTvEmoteChange({
+        id: 'emote-host',
+        name: 'hostEmote',
+      });
+      emote.data.host.url = '//cdn-eu.7tv.app/emote/emote-host';
+
+      const decisions = interpretSevenTvWsMessage(
+        createDispatchMessage(
+          createEmoteSetUpdateEvent({
+            id: 'set-1',
+            pushed: [createPushedChange(emote)],
+          }),
+        ),
+        createContext(),
+      );
+
+      const decision = decisions[0];
+
+      if (decision?.type !== 'applyEmoteUpdate') {
+        throw new Error(`expected applyEmoteUpdate, got ${decision?.type}`);
+      }
+
+      expect({
+        url: decision.added[0]?.url,
+        static_url: decision.added[0]?.static_url,
+      }).toEqual({
+        url: 'https://cdn-eu.7tv.app/emote/emote-host/4x.avif',
+        static_url: 'https://cdn-eu.7tv.app/emote/emote-host/4x_static.avif',
+      });
+    });
+
     test('picks webp for an animated emote and avif for a static one', () => {
       const pickUrl = (frameCount: number) => {
-        const emote = createSevenTvEmote({
+        const emote = createSevenTvEmoteChange({
           id: 'emote-fmt',
           name: 'fmtEmote',
           files: [
@@ -345,7 +419,7 @@ describe('interpretSevenTvWsMessage', () => {
         id: 'other-set',
         pushed: [
           createPushedChange(
-            createSevenTvEmote({ id: 'emote-1', name: 'peepoHappy' }),
+            createSevenTvEmoteChange({ id: 'emote-1', name: 'peepoHappy' }),
           ),
         ],
       });
@@ -369,7 +443,7 @@ describe('interpretSevenTvWsMessage', () => {
         id: 'set-1',
         pushed: [
           createPushedChange(
-            createSevenTvEmote({ id: 'emote-1', name: 'peepoHappy' }),
+            createSevenTvEmoteChange({ id: 'emote-1', name: 'peepoHappy' }),
           ),
         ],
       });
@@ -407,7 +481,7 @@ describe('interpretSevenTvWsMessage', () => {
         id: 'set-1',
         pushed: [
           createPushedChange(
-            createSevenTvEmote({ id: 'emote-1', name: 'peepoHappy' }),
+            createSevenTvEmoteChange({ id: 'emote-1', name: 'peepoHappy' }),
           ),
         ],
       });
@@ -505,7 +579,7 @@ describe('interpretSevenTvWsMessage', () => {
         id: 'set-1',
         pushed: [
           createPushedChange(
-            createSevenTvEmote({ id: 'emote-1', name: 'peepoHappy' }),
+            createSevenTvEmoteChange({ id: 'emote-1', name: 'peepoHappy' }),
           ),
         ],
       });

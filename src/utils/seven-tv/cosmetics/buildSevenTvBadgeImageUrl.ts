@@ -1,10 +1,9 @@
 import type { SevenTvHost } from '@app/types/seven-tv/emotes';
+import { buildSevenTvBadgeUrl } from '@app/utils/emote/cdn/sevenTv';
 
 import { absoluteSevenTvUrl } from './absoluteSevenTvUrl';
 import { badgeFileName } from './badgeFileName';
 import { pickBestBadgeFile } from './pickBestBadgeFile';
-
-const SEVEN_TV_BADGE_CDN_BASE = 'https://cdn.7tv.app/badge';
 
 export function buildSevenTvBadgeImageUrl(
   badgeId: string,
@@ -18,5 +17,5 @@ export function buildSevenTvBadgeImageUrl(
     );
   }
 
-  return `${SEVEN_TV_BADGE_CDN_BASE}/${badgeId}/4x.webp`;
+  return buildSevenTvBadgeUrl(badgeId);
 }

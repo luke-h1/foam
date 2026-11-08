@@ -10,7 +10,6 @@ const mockSetSevenTvSessionId = jest.spyOn(
 );
 
 interface SessionFieldSnapshot {
-  hasInitialized: boolean;
   hasInitialSubscriptions: boolean;
   connectionTimestamp: number | null;
   currentEmoteSetId: string | undefined;
@@ -27,7 +26,6 @@ interface SessionFieldSnapshot {
 }
 
 const snapshotFields = (state: SevenTvSessionState): SessionFieldSnapshot => ({
-  hasInitialized: state.hasInitialized,
   hasInitialSubscriptions: state.hasInitialSubscriptions,
   connectionTimestamp: state.connectionTimestamp,
   currentEmoteSetId: state.currentEmoteSetId,
@@ -46,8 +44,12 @@ const snapshotFields = (state: SevenTvSessionState): SessionFieldSnapshot => ({
 const createState = () =>
   createSevenTvSessionState({ defaultHeartbeatIntervalMs: 30_000 });
 
+beforeEach(() => {
+  sevenTvSessionIdModule.setSevenTvSessionId(null);
+  mockSetSevenTvSessionId.mockClear();
+});
+
 const populate = (state: SevenTvSessionState) => {
-  state.hasInitialized = true;
   state.hasInitialSubscriptions = true;
   state.connectionTimestamp = 1000;
   state.currentEmoteSetId = 'set-a';
@@ -61,30 +63,8 @@ const populate = (state: SevenTvSessionState) => {
   state.heartbeatIntervalMs = 45_000;
   state.lastMessageAt = 2000;
   state.heartbeatWatchdog = setInterval(() => {}, 10_000);
+  mockSetSevenTvSessionId.mockClear();
 };
-
-describe('createSevenTvSessionState', () => {
-  test('starts with an empty session', () => {
-    const state = createState();
-
-    expect(snapshotFields(state)).toEqual<SessionFieldSnapshot>({
-      hasInitialized: false,
-      hasInitialSubscriptions: false,
-      connectionTimestamp: null,
-      currentEmoteSetId: undefined,
-      activeSubscriptions: new Set(),
-      sessionId: null,
-      shouldResume: false,
-      resumePending: false,
-      resumeFallbackTimer: null,
-      subscribedChannelId: null,
-      subscribedOwnerId: null,
-      heartbeatIntervalMs: 30_000,
-      lastMessageAt: 0,
-      heartbeatWatchdog: null,
-    });
-  });
-});
 
 describe('reset', () => {
   beforeEach(() => {
@@ -96,61 +76,33 @@ describe('reset', () => {
     jest.useRealTimers();
   });
 
-  test("reset('leave') drops the whole session including hasInitialized and the shared session id", () => {
-    const state = createState();
-    populate(state);
+  test.each(['leave', 'unmount'] as const)(
+    "reset('%s') drops the whole session and the shared session id",
+    reason => {
+      const state = createState();
+      populate(state);
 
-    state.reset('leave');
+      state.reset(reason);
 
-    expect(snapshotFields(state)).toEqual<SessionFieldSnapshot>({
-      hasInitialized: false,
-      hasInitialSubscriptions: false,
-      connectionTimestamp: null,
-      currentEmoteSetId: undefined,
-      activeSubscriptions: new Set(),
-      sessionId: null,
-      shouldResume: false,
-      resumePending: false,
-      resumeFallbackTimer: null,
-      subscribedChannelId: null,
-      subscribedOwnerId: null,
-      heartbeatIntervalMs: 45_000,
-      lastMessageAt: 2000,
-      heartbeatWatchdog: null,
-    });
+      expect(snapshotFields(state)).toEqual<SessionFieldSnapshot>({
+        hasInitialSubscriptions: false,
+        connectionTimestamp: null,
+        currentEmoteSetId: undefined,
+        activeSubscriptions: new Set(),
+        sessionId: null,
+        shouldResume: false,
+        resumePending: false,
+        resumeFallbackTimer: null,
+        subscribedChannelId: null,
+        subscribedOwnerId: null,
+        heartbeatIntervalMs: 45_000,
+        lastMessageAt: 2000,
+        heartbeatWatchdog: null,
+      });
 
-    expect(mockSetSevenTvSessionId).toHaveBeenCalledTimes(1);
-
-    expect(mockSetSevenTvSessionId).toHaveBeenCalledWith(null);
-  });
-
-  test("reset('unmount') drops the whole session but leaves hasInitialized alone", () => {
-    const state = createState();
-    populate(state);
-
-    state.reset('unmount');
-
-    expect(snapshotFields(state)).toEqual<SessionFieldSnapshot>({
-      hasInitialized: true,
-      hasInitialSubscriptions: false,
-      connectionTimestamp: null,
-      currentEmoteSetId: undefined,
-      activeSubscriptions: new Set(),
-      sessionId: null,
-      shouldResume: false,
-      resumePending: false,
-      resumeFallbackTimer: null,
-      subscribedChannelId: null,
-      subscribedOwnerId: null,
-      heartbeatIntervalMs: 45_000,
-      lastMessageAt: 2000,
-      heartbeatWatchdog: null,
-    });
-
-    expect(mockSetSevenTvSessionId).toHaveBeenCalledTimes(1);
-
-    expect(mockSetSevenTvSessionId).toHaveBeenCalledWith(null);
-  });
+      expect(mockSetSevenTvSessionId.mock.calls).toEqual([[null]]);
+    },
+  );
 
   test("reset('close') keeps the resumable session and only drops connection-scoped state", () => {
     const state = createState();
@@ -159,7 +111,6 @@ describe('reset', () => {
     state.reset('close');
 
     expect(snapshotFields(state)).toEqual<SessionFieldSnapshot>({
-      hasInitialized: true,
       hasInitialSubscriptions: false,
       connectionTimestamp: 1000,
       currentEmoteSetId: 'set-a',
@@ -178,21 +129,6 @@ describe('reset', () => {
     expect(mockSetSevenTvSessionId).not.toHaveBeenCalled();
   });
 
-  test.each(['leave', 'unmount', 'close'] as const)(
-    "reset('%s') re-arms the connect-time subscribe",
-    reason => {
-      const state = createState();
-      populate(state);
-
-      state.reset(reason);
-
-      // useSevenTvWs gates runInitialSubscriptions on this being false, so a
-      // reason that left it set would reconnect into a session that never
-      // subscribes and silently stops receiving 7TV emote updates.
-      expect(state.hasInitialSubscriptions).toBe(false);
-    },
-  );
-
   test('reset cancels the pending resume fallback and heartbeat watchdog', () => {
     const state = createState();
     const onResumeFallback = jest.fn();
@@ -209,69 +145,15 @@ describe('reset', () => {
   });
 });
 
-describe('subscription run fencing', () => {
-  test('a run stays current until a reset bumps the generation', () => {
+describe('sessionId', () => {
+  test('reads and writes the one shared session id store', () => {
     const state = createState();
-    const stillCurrent = state.beginSubscriptionRun();
 
-    expect(stillCurrent()).toBe(true);
+    state.sessionId = 'session-b';
 
-    state.reset('close');
-
-    expect(stillCurrent()).toBe(false);
-  });
-
-  test('every reset reason fences out an in-flight run', () => {
-    (['leave', 'unmount', 'close'] as const).forEach(reason => {
-      const state = createState();
-      const stillCurrent = state.beginSubscriptionRun();
-
-      state.reset(reason);
-
-      expect(stillCurrent()).toBe(false);
-    });
-  });
-
-  test('a hop between two known channels fences out an in-flight run', () => {
-    const state = createState();
-    state.noteChannelId('channel-a');
-    const stillCurrent = state.beginSubscriptionRun();
-
-    state.noteChannelId('channel-b');
-
-    expect(stillCurrent()).toBe(false);
-  });
-
-  test('the first known channel id does not fence a run waiting for it', () => {
-    const state = createState();
-    const stillCurrent = state.beginSubscriptionRun();
-
-    state.noteChannelId(undefined);
-    state.noteChannelId('channel-a');
-    state.noteChannelId('channel-a');
-
-    expect(stillCurrent()).toBe(true);
-  });
-
-  test('an undefined gap between two different channels still fences', () => {
-    const state = createState();
-    state.noteChannelId('channel-a');
-    const stillCurrent = state.beginSubscriptionRun();
-
-    state.noteChannelId(undefined);
-    state.noteChannelId('channel-b');
-
-    expect(stillCurrent()).toBe(false);
-  });
-
-  test("reset('leave') forgets the noted channel so the next session's first channel does not fence", () => {
-    const state = createState();
-    state.noteChannelId('channel-a');
-    state.reset('leave');
-
-    const stillCurrent = state.beginSubscriptionRun();
-    state.noteChannelId('channel-b');
-
-    expect(stillCurrent()).toBe(true);
+    expect({
+      shared: sevenTvSessionIdModule.getSevenTvSessionId(),
+      state: state.sessionId,
+    }).toEqual({ shared: 'session-b', state: 'session-b' });
   });
 });

@@ -1,4 +1,4 @@
-export interface FfzBadge {
+interface FfzBadge {
   id: number;
   name: string;
   title: string;
@@ -13,7 +13,7 @@ export interface FfzBadge {
   };
 }
 
-export interface FfzBadgeUsers {
+interface FfzBadgeUsers {
   [badgeId: string]: string[];
 }
 

@@ -1,38 +1,37 @@
+import {
+  buildSevenTvFileUrl,
+  parseSevenTvFileUrl,
+} from '@app/utils/emote/cdn/sevenTv';
+
 /**
  * `{n}x.{ext}` URLs advertise sizes/formats the CDN doesn't always serve, so
  * build an ordered candidate list: original, alternate format, sizes down to 2x.
  */
-const VARIANT_FILENAME_PATTERN =
-  /^(?<base>.+\/)(?<size>[1-4])x(?<staticSuffix>_static)?\.(?<ext>avif|webp|png|gif)(?<query>\?.*)?$/i;
-
 export function buildImageFallbackChain(url: string): string[] {
-  const groups = VARIANT_FILENAME_PATTERN.exec(url)?.groups;
+  const file = parseSevenTvFileUrl(url);
 
-  if (!groups?.['base'] || !groups['size'] || !groups['ext']) {
+  if (!file) {
     return [url];
   }
 
-  const base = groups['base'];
-  const staticSuffix = groups['staticSuffix'] ?? '';
-  const query = groups['query'] ?? '';
-  const size = Number(groups['size']);
-  const ext = groups['ext'].toLowerCase();
-
-  const formats = [...new Set([ext, 'webp', 'avif'])];
-
-  const chain: string[] = [];
-  const seen = new Set<string>();
+  const formats = [...new Set([file.ext, 'webp', 'avif'])];
+  const size = Number(file.scale[0]);
   const minScale = Math.min(2, size);
 
+  const chain = new Set<string>();
+
   for (let scale = size; scale >= minScale; scale -= 1) {
-    for (const format of formats) {
-      const candidate = `${base}${scale}x${staticSuffix}.${format}${query}`;
-      if (!seen.has(candidate)) {
-        seen.add(candidate);
-        chain.push(candidate);
-      }
+    for (const ext of formats) {
+      chain.add(
+        buildSevenTvFileUrl({
+          ...file,
+          // SAFETY: scale walks down from a parsed 1-4 scale.
+          scale: `${scale}x` as typeof file.scale,
+          ext,
+        }),
+      );
     }
   }
 
-  return chain;
+  return [...chain];
 }

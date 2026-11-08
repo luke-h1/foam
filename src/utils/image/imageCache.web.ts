@@ -6,10 +6,10 @@ export interface CachedImageInfo {
   size: number;
 }
 
-export type CacheImageOptions = {
+export interface CacheImageOptions {
   signal?: AbortSignal;
   variant?: string;
-};
+}
 
 const WEB_IMAGE_CACHE_NAME = 'foam-image-cache-v1';
 const MAX_MEMORY_CACHE_ENTRIES = 750;

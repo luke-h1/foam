@@ -1,10 +1,10 @@
-export interface StreamElementsEmoteStat {
+interface StreamElementsEmoteStat {
   id: string;
   emote: string;
   amount: number;
 }
 
-export interface StreamElementsChatterStat {
+interface StreamElementsChatterStat {
   name: string;
   amount: number;
 }

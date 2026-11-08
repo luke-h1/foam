@@ -1,7 +1,6 @@
 import { runOnRuntimeAsync } from 'react-native-worklets';
 
 import { getParseRuntime } from '@app/lib/off-thread-json/getParseRuntime';
-import { logger } from '@app/utils/logger';
 
 /**
  * Below this size the worklet round trip costs more than the parse, so small
@@ -9,10 +8,6 @@ import { logger } from '@app/utils/logger';
  */
 const MIN_OFF_THREAD_BODY_BYTES = 64 * 1024;
 
-/**
- * Derives a result from a response body on a background worklet thread,
- * falling back to the JS thread when the runtime is unavailable.
- */
 export async function deriveFromResponseOnWorklet<TResult>(
   responseText: string,
   derive: (responseText: string) => TResult,
@@ -24,13 +19,7 @@ export async function deriveFromResponseOnWorklet<TResult>(
   const runtime = getParseRuntime();
 
   if (runtime) {
-    try {
-      return await runOnRuntimeAsync(runtime, derive, responseText);
-    } catch (error) {
-      logger.main.debug('off-thread parse failed; parsing on JS thread', {
-        error,
-      });
-    }
+    return runOnRuntimeAsync(runtime, derive, responseText);
   }
 
   return derive(responseText);

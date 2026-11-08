@@ -1,9 +1,8 @@
-import { EmoteSetKind } from '@app/graphql/generated/gql';
-import {
-  buildSanitisedEmote,
-  type SevenTvEmoteSource,
-} from '@app/services/emote-provider';
 import type { SanitisedEmote, SevenTvSanitisedEmote } from '@app/types/emote';
+import type {
+  EmoteImageVariants,
+  EmoteImageVariantSet,
+} from '@app/types/emote';
 import type {
   ChangeMap,
   CosmeticCreate,
@@ -15,6 +14,20 @@ import type {
 } from '@app/types/seven-tv/cosmetics';
 import type { SevenTvEmote, SevenTvFile } from '@app/types/seven-tv/emotes';
 import type { StvUser } from '@app/types/seven-tv/users';
+import { parseSevenTvFileUrl } from '@app/utils/emote/cdn/sevenTv';
+import { createEmoteImageVariants } from '@app/utils/emote/emote-image-variants/createEmoteImageVariants';
+import { pickEmoteVariantUrl } from '@app/utils/emote/emote-image-variants/pickEmoteVariantUrl';
+import {
+  buildSevenTvSanitisedEmote,
+  type SevenTvEmoteSource,
+} from '@app/utils/emote/sanitised/buildSevenTvSanitisedEmote';
+import {
+  SEVEN_TV_ACTIVE_ZERO_WIDTH_FLAG,
+  SEVEN_TV_ANIMATED_FORMATS,
+  SEVEN_TV_STATIC_FORMATS,
+  SEVEN_TV_ZERO_WIDTH_FLAG,
+} from '@app/utils/seven-tv/constants';
+import { absoluteSevenTvUrl } from '@app/utils/seven-tv/cosmetics/absoluteSevenTvUrl';
 
 export const HISTORICAL_EVENT_BUFFER = 10_000;
 
@@ -136,22 +149,18 @@ export type SevenTvWsDecision =
   | { type: 'reconnect' }
   | { type: 'unhandledOp'; op: number };
 
-const withScales = (format: string) =>
-  ['4x', '3x', '2x', '1x'].map(scale => `${scale}.${format}`);
+const withScales = (formats: readonly string[]) =>
+  formats.flatMap(format =>
+    ['4x', '3x', '2x', '1x'].map(scale => `${scale}.${format}`),
+  );
 
 /**
- * Prefer the cheaper format for the emote's kind, then the other format -
- * width/height of 0 render a non-square emote as a 1:1 square.
+ * Width/height of 0 render a non-square emote as a 1:1 square, so a file name
+ * that the host lists always wins over the widest-file fallback.
  */
-const SEVEN_TV_STATIC_PREFERENCE = [
-  ...withScales('avif'),
-  ...withScales('webp'),
-];
+const SEVEN_TV_STATIC_PREFERENCE = withScales(SEVEN_TV_STATIC_FORMATS);
 
-const SEVEN_TV_ANIMATED_PREFERENCE = [
-  ...withScales('webp'),
-  ...withScales('avif'),
-];
+const SEVEN_TV_ANIMATED_PREFERENCE = withScales(SEVEN_TV_ANIMATED_FORMATS);
 
 function pickBestSevenTvFile(
   files: readonly SevenTvFile[],
@@ -185,6 +194,30 @@ function pickBestSevenTvFile(
 }
 
 /**
+ * Variant sets from the files the host lists, in the format of the picked
+ * file, so "disable animations" works for an emote the EventAPI added.
+ */
+function buildHostImageVariants(
+  hostUrl: string,
+  files: readonly SevenTvFile[],
+  ext: string,
+): EmoteImageVariants {
+  const animated: EmoteImageVariantSet = {};
+  const staticSet: EmoteImageVariantSet = {};
+
+  for (const file of files) {
+    const parsed = parseSevenTvFileUrl(`${hostUrl}/${file.name}`);
+
+    if (parsed?.ext === ext && !parsed.isStatic) {
+      animated[parsed.scale] = `${hostUrl}/${file.name}`;
+      staticSet[parsed.scale] = `${hostUrl}/${file.static_name || file.name}`;
+    }
+  }
+
+  return createEmoteImageVariants({ animated, static: staticSet });
+}
+
+/**
  * Reused across an `emote_set.update` burst so `buildSanitisedEmote` costs no
  * source-bag allocation per emote; every field is overwritten before each call.
  */
@@ -209,7 +242,7 @@ const wireEmoteSource: SevenTvEmoteSource = {
     setName: '',
     capacity: null,
     ownerId: null,
-    kind: EmoteSetKind.Normal,
+    kind: 'NORMAL',
     updatedAt: '',
     totalCount: 0,
   },
@@ -231,16 +264,32 @@ function toSanitisedSevenTvEmote(
   source.creator =
     (emote.data.owner?.display_name || emote.data.owner?.username) ?? 'UNKNOWN';
 
-  source.url = `https://cdn.7tv.app/emote/${emote.id}/${bestFile?.name ?? '1x.avif'}`;
-  source.flags = emote.data.flags;
+  const hostUrl = absoluteSevenTvUrl(emote.data.host.url).replace(/\/$/, '');
+  const url = `${hostUrl}/${bestFile?.name ?? '1x.avif'}`;
+  const ext = parseSevenTvFileUrl(url)?.ext;
+
+  const imageVariants = ext
+    ? buildHostImageVariants(hostUrl, emote.data.host.files, ext)
+    : undefined;
+
+  source.url = url;
+  source.imageVariants = imageVariants;
+
+  source.staticUrl = imageVariants?.static
+    ? pickEmoteVariantUrl({ imageVariants, preferredKind: 'static' })
+    : undefined;
+
   source.frameCount = bestFile?.frame_count ?? 1;
   source.format = bestFile?.format ?? 'avif';
 
   source.aspectRatio =
     bestFile && bestFile.height > 0 ? bestFile.width / bestFile.height : 1;
 
-  // eslint-disable-next-line no-bitwise
-  source.zeroWidth = Boolean(emote.data.flags & 256);
+  source.zeroWidth =
+    (emote.flags & SEVEN_TV_ACTIVE_ZERO_WIDTH_FLAG) !== 0 ||
+    (emote.data.flags & SEVEN_TV_ZERO_WIDTH_FLAG) !== 0;
+
+  source.flags = source.zeroWidth ? SEVEN_TV_ZERO_WIDTH_FLAG : 0;
 
   source.width = bestFile?.width ?? 0;
   source.height = bestFile?.height ?? 0;
@@ -250,14 +299,14 @@ function toSanitisedSevenTvEmote(
     setName: '',
     capacity: null,
     ownerId: null,
-    kind: EmoteSetKind.Normal,
+    kind: 'NORMAL',
     updatedAt: new Date(now).toISOString(),
     totalCount: 0,
   };
 
   source.actor = actor;
 
-  return buildSanitisedEmote(source);
+  return buildSevenTvSanitisedEmote(source);
 }
 
 function findTwitchUserId(
@@ -470,7 +519,6 @@ function interpretEntitlementUpdate(
       const user = update.value?.object?.user;
 
       if (!user) {
-        // eslint-disable-next-line no-continue
         continue;
       }
 
@@ -512,7 +560,7 @@ function interpretEntitlementDelete(
     return {
       type: 'applyEntitlementDelete',
       entitlementId: data.body.id,
-      ttvUserId: null, // Will be resolved in the store
+      ttvUserId: null,
     };
   } catch (error) {
     return {
@@ -549,8 +597,6 @@ function interpretUserUpdate(
   context: SevenTvWsInterpreterContext,
 ): SevenTvWsDecision {
   try {
-    // Same replay guard as emote_set.update: dispatches replayed right after
-    // a reconnect/RESUME describe switches that already happened.
     if (isHistoricalEvent(context)) {
       return { type: 'ignoreUserUpdate', reason: 'historicalEvent' };
     }

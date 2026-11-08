@@ -66,7 +66,8 @@ export function followedChannelsQueryOptions(userId: string) {
 
 /**
  * A dependent query so the channel list renders one round trip sooner; rows
- * fall back to text avatars until the lookup lands.
+ * fall back to text avatars until the lookup lands. A failed lookup rejects,
+ * so it is retried and never cached as "no images".
  */
 export function followedChannelProfileImagesQueryOptions(
   broadcasterIds: string[],
@@ -76,9 +77,7 @@ export function followedChannelProfileImagesQueryOptions(
     staleTime: 300_000,
     enabled: broadcasterIds.length > 0,
     queryFn: async () => {
-      const users = await twitchService
-        .getUsersById(broadcasterIds)
-        .catch(() => []);
+      const users = await twitchService.getUsersById(broadcasterIds);
       return new Map(users.map(user => [user.id, user.profile_image_url]));
     },
   });

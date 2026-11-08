@@ -24,7 +24,7 @@ export interface FfzEmoticon {
   last_updated: string;
 }
 
-export interface FfzSet {
+interface FfzSet {
   id: number;
   _type: number;
   title: string;

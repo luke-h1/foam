@@ -1,22 +1,12 @@
-export type ApiProvider =
-  | 'app'
-  | 'auth_proxy'
-  | 'bttv'
-  | 'ffz'
-  | 'seven_tv'
-  | 'stream_elements'
-  | 'twitch'
-  | 'unknown';
+import type { ProviderMonitoringName } from '@app/constants/emote-providers';
 
-/**
- * Span and log attributes for one API call. `host` is only known when the
- * request URL parses.
- */
+type ApiMonitoringProvider = ProviderMonitoringName | 'unknown';
+
 export interface ApiMonitoringContext {
   endpoint: string;
   host?: string;
   method?: string;
-  provider: ApiProvider;
+  provider: ApiMonitoringProvider;
   status?: number;
   url: string;
 }
@@ -24,6 +14,7 @@ export interface ApiMonitoringContext {
 interface ApiMonitoringInput {
   baseURL?: string;
   method?: string;
+  provider: ApiMonitoringProvider;
   status?: number;
   url?: string;
 }
@@ -43,44 +34,10 @@ function trimUrlParts(baseURL: string, url: string): string {
   return `${trimmedBase}/${trimmedUrl}`;
 }
 
-function getProvider(rawUrl: string, host: string): ApiProvider {
-  const target = `${host} ${rawUrl}`.toLowerCase();
-  const authProxyBaseUrl = process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
-
-  if (authProxyBaseUrl && target.includes(authProxyBaseUrl)) {
-    return 'auth_proxy';
-  }
-
-  if (target.includes('twitch.tv')) {
-    return 'twitch';
-  }
-
-  if (target.includes('frankerfacez')) {
-    return 'ffz';
-  }
-
-  if (target.includes('betterttv')) {
-    return 'bttv';
-  }
-
-  if (target.includes('7tv')) {
-    return 'seven_tv';
-  }
-
-  if (target.includes('streamelements')) {
-    return 'stream_elements';
-  }
-
-  if (target.includes('/api/')) {
-    return 'app';
-  }
-
-  return 'unknown';
-}
-
 export function getApiMonitoringContext({
   baseURL = '',
   method,
+  provider,
   status,
   url = '',
 }: ApiMonitoringInput): ApiMonitoringContext {
@@ -93,7 +50,7 @@ export function getApiMonitoringContext({
       endpoint: parsedUrl.pathname,
       host: parsedUrl.host,
       method: method?.toUpperCase(),
-      provider: getProvider(raw_url, parsedUrl.host),
+      provider,
       status,
       url: parsedUrl.toString(),
     };
@@ -101,7 +58,7 @@ export function getApiMonitoringContext({
     return {
       endpoint: url,
       method: method?.toUpperCase(),
-      provider: getProvider(raw_url, ''),
+      provider,
       status,
       url: raw_url,
     };

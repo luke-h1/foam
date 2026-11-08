@@ -1,13 +1,7 @@
-/* eslint-disable camelcase */
 import { fetch } from 'expo/fetch';
-import Constants from 'expo-constants';
 import { z } from 'zod';
 
 import { parseJsonOnWorklet } from '@app/lib/off-thread-json/parseJsonOnWorklet';
-import {
-  cacheChannelPointRewardTitle,
-  getCachedChannelPointRewardTitle,
-} from '@app/store/chat/actions/channelPointRewardTitleStore';
 import type { PaginatedList } from '@app/types/twitch/api';
 import type {
   DefaultTokenResponse,
@@ -16,7 +10,6 @@ import type {
 import type { TwitchCheermote } from '@app/types/twitch/bits';
 import type { Category } from '@app/types/twitch/category';
 import type {
-  Channel,
   FollowedChannel,
   SearchChannelResponse,
 } from '@app/types/twitch/channel';
@@ -42,27 +35,21 @@ import type {
   TwitchVideo,
   TwitchVideosRequestParams,
 } from '@app/types/twitch/video';
+import { chunk } from '@app/utils/collection/chunk';
 import { logger } from '@app/utils/logger';
 
+import { getTwitchClientId, setTwitchClientId, twitchApi } from './api/clients';
 import {
-  getTwitchClientId,
+  authProxyApiKey,
+  authProxyBaseUrl,
   isE2EMode,
   mockServerUrl,
-  setTwitchClientId,
-  twitchApi,
-} from './api/clients';
-
-const authProxyBaseUrl: string | undefined =
-  Constants.expoConfig?.extra?.['EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL'] ??
-  process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
-
-const authProxyApiKey: string | undefined =
-  Constants.expoConfig?.extra?.['EXPO_PUBLIC_AUTH_PROXY_API_KEY'] ??
-  process.env.EXPO_PUBLIC_AUTH_PROXY_API_KEY;
+} from './api/env';
+import { validateTwitchToken } from './api/twitch-token-validation';
 
 // Cap follow-list pagination so a pathological follow count (Helix allows
 // thousands) can't fan out into dozens of sequential requests on tab load.
-export const MAX_FOLLOWED_CHANNELS = 400;
+const MAX_FOLLOWED_CHANNELS = 400;
 
 const tokenExpirySecondsSchema = z.number();
 
@@ -152,21 +139,16 @@ function normalizeDuration(durationSeconds: number | undefined) {
 async function fetchBatchedByIds<T>(
   basePath: string,
   ids: string[],
+  paramName: 'id' | 'login' = 'id',
 ): Promise<T[]> {
   if (ids.length === 0) {
     return [];
   }
 
-  const batches: string[][] = [];
-
-  for (let i = 0; i < ids.length; i += 100) {
-    batches.push(ids.slice(i, i + 100));
-  }
-
   const results = await Promise.all(
-    batches.map(batch =>
+    chunk(ids, 100).map(batch =>
       twitchApi.get<{ data: T[] }>(
-        `${basePath}?${batch.map(id => `id=${encodeURIComponent(id)}`).join('&')}`,
+        `${basePath}?${batch.map(id => `${paramName}=${encodeURIComponent(id)}`).join('&')}`,
       ),
     ),
   );
@@ -199,6 +181,51 @@ export function getPinnedChatMessageText(
   return message ?? '';
 }
 
+interface AuthProxyRequest {
+  method: 'GET' | 'POST';
+  path: '/token' | '/refresh-token';
+  searchParams?: Record<string, string>;
+  label: string;
+}
+
+/**
+ * The one raw call to the auth proxy. E2E runs send it to the mock server
+ * without the API key.
+ */
+async function requestAuthProxy<T>({
+  method,
+  path,
+  searchParams = {},
+  label,
+}: AuthProxyRequest): Promise<T> {
+  let url: URL;
+
+  try {
+    url = new URL(`${isE2EMode ? mockServerUrl : authProxyBaseUrl}${path}`);
+  } catch {
+    throw new Error(`Auth proxy ${label} URL is not valid`);
+  }
+
+  for (const [key, value] of Object.entries(searchParams)) {
+    url.searchParams.set(key, value);
+  }
+
+  const res = await fetch(url.toString(), {
+    method,
+    headers: isE2EMode ? {} : { 'x-api-key': authProxyApiKey },
+  });
+
+  // An edge block (e.g. a Cloudflare 403) answers with an HTML page, which
+  // would otherwise show up as a JSON parse error.
+  if (!res.ok) {
+    throw new Error(
+      `Auth proxy ${label} request failed: HTTP ${res.status} (${res.headers.get('content-type') ?? 'no content-type'})`,
+    );
+  }
+
+  return parseJsonOnWorklet<T>(await res.text());
+}
+
 export const twitchService = {
   /**
    * @see https://dev.twitch.tv/docs/authentication/refresh-tokens#refreshing-access-tokens
@@ -206,25 +233,14 @@ export const twitchService = {
   getRefreshToken: async (
     refreshToken: string,
   ): Promise<RefreshTokenResponse> => {
-    let url: URL;
-
-    try {
-      url = new URL(`${authProxyBaseUrl}/refresh-token`);
-    } catch {
-      throw new Error('Failed to refresh Twitch token');
-    }
-
-    url.searchParams.set('token', refreshToken);
-    url.searchParams.set('app', 'foam-app');
-
-    const res = await fetch(url.toString(), {
-      method: 'POST',
-      headers: { 'x-api-key': authProxyApiKey ?? '' },
-    });
-
-    const body = await parseJsonOnWorklet<
+    const body = await requestAuthProxy<
       AuthProxyResponse<RefreshTokenResponse>
-    >(await res.text());
+    >({
+      method: 'POST',
+      path: '/refresh-token',
+      searchParams: { token: refreshToken, app: 'foam-app' },
+      label: 'refresh',
+    });
 
     if (!body.data) {
       throw new Error(body.error ?? 'Failed to refresh Twitch token');
@@ -343,29 +359,12 @@ export const twitchService = {
     return result.data?.[0];
   },
 
-  /**
-   * @returns a token for an anonymous user
-   */
   getDefaultToken: async (): Promise<DefaultTokenResponse> => {
-    const tokenUrl = isE2EMode
-      ? `${mockServerUrl}/token`
-      : `${authProxyBaseUrl}/token`;
-
-    const res = await fetch(tokenUrl, {
-      headers: isE2EMode ? {} : { 'x-api-key': authProxyApiKey ?? '' },
+    const body = await requestAuthProxy<{ data: DefaultTokenResponse }>({
+      method: 'GET',
+      path: '/token',
+      label: 'token',
     });
-
-    // An edge block (e.g. a Cloudflare 403) answers with an HTML page, which
-    // would otherwise show up as a JSON parse error.
-    if (!res.ok) {
-      throw new Error(
-        `Auth proxy token request failed: HTTP ${res.status} (${res.headers.get('content-type') ?? 'no content-type'})`,
-      );
-    }
-
-    const body = await parseJsonOnWorklet<{ data: DefaultTokenResponse }>(
-      await res.text(),
-    );
 
     if (!body.data.access_token) {
       logger.auth.error('no token received from auth lambda');
@@ -383,30 +382,21 @@ export const twitchService = {
    * @see https://dev.twitch.tv/docs/authentication/validate-tokens#validating-tokens
    */
   validateToken: async (token: string): Promise<boolean> => {
-    if (isE2EMode) {
-      return true;
-    }
+    const validation = await validateTwitchToken(token);
 
-    const res = await fetch('https://id.twitch.tv/oauth2/validate', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (res.status !== 200) {
+    if (!validation) {
       return false;
     }
 
     // Helix rejects requests whose Client-Id header does not match the client
     // the token was issued for, so adopt the token's client ID.
-    const body = await parseJsonOnWorklet<{
-      client_id?: string;
-      expires_in?: number;
-    } | null>(await res.text()).catch(() => null);
-
-    if (body?.client_id && body.client_id !== getTwitchClientId()) {
-      setTwitchClientId(body.client_id);
+    if (validation.clientId && validation.clientId !== getTwitchClientId()) {
+      setTwitchClientId(validation.clientId);
     }
 
-    const expiresIn = tokenExpirySecondsSchema.safeParse(body?.expires_in);
+    const expiresIn = tokenExpirySecondsSchema.safeParse(
+      validation.expiresInSeconds,
+    );
 
     if (expiresIn.success) {
       logger.auth.info('twitch token validated', {
@@ -456,17 +446,6 @@ export const twitchService = {
     return result.data[0] ?? null;
   },
 
-  getChannel: async (userId: string): Promise<Channel> => {
-    const result = await twitchApi.get<Channel[]>('/channels', {
-      params: {
-        broadcaster_id: userId,
-      },
-    });
-
-    // SAFETY: Helix /channels returns one entry for a single broadcaster_id
-    return result[0] as Channel;
-  },
-
   getTopCategories: async (
     cursor?: string,
     beforeCursor?: string,
@@ -479,18 +458,6 @@ export const twitchService = {
     });
   },
 
-  getUserImage: async (userId: string): Promise<string> => {
-    const result = await twitchApi.get<{
-      data: { profile_image_url: string }[];
-    }>('/users', {
-      params: {
-        login: userId,
-      },
-    });
-
-    // SAFETY: Helix /users returns one entry for a single login, and every user has a profile image
-    return result.data[0]?.profile_image_url as string;
-  },
   getFollowedStreams: async (userId: string): Promise<TwitchStream[]> => {
     const result = await twitchApi.get<{ data: TwitchStream[] }>(
       '/streams/followed',
@@ -570,6 +537,9 @@ export const twitchService = {
 
   getUsersById: (ids: string[]): Promise<UserInfoResponse[]> =>
     fetchBatchedByIds<UserInfoResponse>('/users', ids),
+
+  getUsersByLogin: (logins: string[]): Promise<UserInfoResponse[]> =>
+    fetchBatchedByIds<UserInfoResponse>('/users', logins, 'login'),
 
   searchChannels: async (query: string): Promise<SearchChannelResponse[]> => {
     const result = await twitchApi.get<{ data: SearchChannelResponse[] }>(
@@ -965,41 +935,5 @@ export const twitchService = {
         target_user_id: targetUserId,
       },
     });
-  },
-
-  /**
-   * @see https://dev.twitch.tv/docs/api/reference#get-custom-reward
-   */
-  getCustomChannelRewardTitle: async (
-    broadcasterId: string,
-    rewardId: string,
-  ): Promise<string | undefined> => {
-    const cached = getCachedChannelPointRewardTitle(broadcasterId, rewardId);
-
-    if (cached) {
-      return cached;
-    }
-
-    try {
-      const { data } = await twitchApi.get<{
-        data: { id: string; title: string }[];
-      }>('/channel_points/custom_rewards', {
-        params: {
-          broadcaster_id: broadcasterId,
-          id: rewardId,
-        },
-      });
-
-      const title = data[0]?.title?.trim();
-
-      if (title) {
-        cacheChannelPointRewardTitle(broadcasterId, rewardId, title);
-        return title;
-      }
-    } catch {
-      return undefined;
-    }
-
-    return undefined;
   },
 };

@@ -1,20 +1,24 @@
-import type { OpenStringUnion } from '@app/utils/typescript/openStringUnion';
+import type { ProviderId } from '@app/types/emote';
 
-export type BadgeProvider = 'twitch' | '7tv' | 'bttv' | 'ffz' | 'chatterino';
+export type BadgeProvider = Exclude<ProviderId, 'streamelements'>;
+
+export type SanitisedBadgeType =
+  | 'Twitch Channel Badge'
+  | 'Twitch Subscriber Badge'
+  | 'Twitch Bit Badge'
+  | 'Twitch Global Badge'
+  | 'Twitch Shared Chat Source'
+  | 'FFZ Channel Badge'
+  | 'FFZ User Badge'
+  | 'FFZ Global Badge'
+  | 'BTTV Badge'
+  | '7TV Badge'
+  | 'Chatterino Badge';
 
 export interface SanitisedBadgeSet {
   id: string;
   url: string;
-  type: OpenStringUnion<
-    | 'Twitch Channel Badge'
-    | 'Twitch Subscriber Badge'
-    | 'Twitch Bit Badge'
-    | 'Twitch Global Badge'
-    | 'FFZ Badge'
-    | 'FFZ Channel Badge'
-    | 'BTTV Badge'
-    | '7TV Badge'
-  >;
+  type: SanitisedBadgeType;
   title: string;
 
   color?: string;

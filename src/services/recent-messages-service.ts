@@ -1,13 +1,16 @@
-import { parseJsonOnWorklet } from '@app/lib/off-thread-json/parseJsonOnWorklet';
+import { logger } from '@app/utils/logger';
 
-const RECENT_MESSAGES_URL =
-  'https://recent-messages.robotty.de/api/v2/recent-messages';
+import { createApiClient } from './api/client';
 
-type RecentMessagesResponse = {
+const recentMessagesApi = createApiClient({
+  baseURL: 'https://recent-messages.robotty.de/api/v2',
+});
+
+interface RecentMessagesResponse {
   messages?: string[];
-  error?: string;
-  error_code?: string;
-};
+  error?: string | null;
+  error_code?: string | null;
+}
 
 export const recentMessagesService = {
   getRecentMessages: async (
@@ -15,20 +18,22 @@ export const recentMessagesService = {
     signal?: AbortSignal,
     limit?: number,
   ): Promise<string[]> => {
-    const query = limit && limit > 0 ? `?limit=${limit}` : '';
-
-    const response = await fetch(
-      `${RECENT_MESSAGES_URL}/${encodeURIComponent(channelName)}${query}`,
-      { signal },
+    const payload = await recentMessagesApi.get<RecentMessagesResponse>(
+      `/recent-messages/${encodeURIComponent(channelName)}`,
+      { params: { limit: limit && limit > 0 ? limit : undefined }, signal },
     );
 
-    if (!response.ok) {
-      throw new Error(`Failed to load recent messages: ${response.status}`);
+    if (payload.error) {
+      logger.chat.warn('Recent messages service returned an error', {
+        name: 'recent_messages_warning',
+        action: 'recent_messages_error',
+        channel_name: channelName,
+        error_code: payload.error_code ?? undefined,
+        reason: payload.error,
+      });
+
+      return [];
     }
-
-    const payload = await parseJsonOnWorklet<RecentMessagesResponse>(
-      await response.text(),
-    );
 
     if (!Array.isArray(payload.messages)) {
       return [];

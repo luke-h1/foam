@@ -1,7 +1,10 @@
 import type { SanitisedEmote } from '@app/types/emote';
+import { chunk } from '@app/utils/collection/chunk';
 import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
-import { withResolvedEmoteImageVariants } from '@app/utils/emote/emote-image-variants/withResolvedEmoteImageVariants';
-import { resolveEmoteDisplayUrl } from '@app/utils/emote/resolveEmoteDisplayUrl';
+import {
+  collectEmoteWarmUrls,
+  orderEmotesForWarm,
+} from '@app/utils/image/emoteWarmPlan';
 import { prefetchToDisk } from '@app/utils/image/prefetchToDisk';
 import { logger } from '@app/utils/logger';
 
@@ -26,42 +29,27 @@ function describePreloadBatch(batch: string[]) {
   };
 }
 
+interface PreloadEmotesOptions {
+  disableAnimations: boolean;
+}
+
 export async function preloadEmotes(
   emotes: SanitisedEmote[],
-  limit = 50,
+  { disableAnimations }: PreloadEmotesOptions,
 ): Promise<void> {
-  const toPreload: string[] = [];
-  const seen = new Set<string>();
-
   // Warm only the display URL chat rows render; warming every copy-only
   // static/animated scale would multiply channel-entry network work.
-  for (const emote of emotes) {
-    if (toPreload.length >= limit) {
-      break;
-    }
-
-    const url = resolveEmoteDisplayUrl(withResolvedEmoteImageVariants(emote));
-
-    if (!url || seen.has(url) || preloadedUrls.has(url)) {
-      continue;
-    }
-
-    seen.add(url);
-    toPreload.push(url);
-  }
+  const toPreload = collectEmoteWarmUrls(emotes, {
+    disableAnimations,
+    accept: url => !preloadedUrls.has(url),
+  });
 
   if (toPreload.length === 0) {
     return;
   }
 
   const BATCH_SIZE = 10;
-  const batches: string[][] = [];
-
-  for (let i = 0; i < toPreload.length; i += BATCH_SIZE) {
-    batches.push(toPreload.slice(i, i + BATCH_SIZE));
-  }
-
-  for (const batch of batches) {
+  for (const batch of chunk(toPreload, BATCH_SIZE)) {
     // Sequential batches to avoid overwhelming the network. Failed URLs stay
     // out of preloadedUrls so a later attempt can retry them.
     try {
@@ -92,38 +80,46 @@ export async function preloadEmotes(
   }
 }
 
-export async function preloadGlobalEmotes(emoteData: {
+interface GlobalEmoteData {
   twitchGlobalEmotes?: SanitisedEmote[];
   sevenTvGlobalEmotes?: SanitisedEmote[];
   bttvGlobalEmotes?: SanitisedEmote[];
   ffzGlobalEmotes?: SanitisedEmote[];
-}): Promise<void> {
-  const allGlobal = [
-    ...(emoteData.twitchGlobalEmotes || []),
-    ...(emoteData.sevenTvGlobalEmotes || []),
-    ...(emoteData.bttvGlobalEmotes || []),
-    ...(emoteData.ffzGlobalEmotes || []),
-  ];
-
-  // Kept in step with the useCachedEmotes warm limits so channel entry
-  // doesn't fire two overlapping decode storms.
-  await preloadEmotes(allGlobal, 64);
 }
 
-export async function preloadChannelEmotes(emoteData: {
+export async function preloadGlobalEmotes(
+  emoteData: GlobalEmoteData,
+  options: PreloadEmotesOptions,
+): Promise<void> {
+  await preloadEmotes(
+    orderEmotesForWarm({
+      sevenTv: emoteData.sevenTvGlobalEmotes,
+      bttv: emoteData.bttvGlobalEmotes,
+      ffz: emoteData.ffzGlobalEmotes,
+      twitch: emoteData.twitchGlobalEmotes,
+    }),
+    options,
+  );
+}
+
+interface ChannelEmoteData {
   twitchChannelEmotes?: SanitisedEmote[];
   sevenTvChannelEmotes?: SanitisedEmote[];
   bttvChannelEmotes?: SanitisedEmote[];
   ffzChannelEmotes?: SanitisedEmote[];
-}): Promise<void> {
-  const allChannel = [
-    ...(emoteData.sevenTvChannelEmotes || []), // 7TV first (most common in Twitch chat)
-    ...(emoteData.bttvChannelEmotes || []),
-    ...(emoteData.ffzChannelEmotes || []),
-    ...(emoteData.twitchChannelEmotes || []),
-  ];
+}
 
-  // Trimmed alongside the shared-ref warm limits to shrink the channel-entry
-  // decode storm that starves on-screen animated emotes (see useCachedEmotes).
-  await preloadEmotes(allChannel, 32);
+export async function preloadChannelEmotes(
+  emoteData: ChannelEmoteData,
+  options: PreloadEmotesOptions,
+): Promise<void> {
+  await preloadEmotes(
+    orderEmotesForWarm({
+      sevenTv: emoteData.sevenTvChannelEmotes,
+      bttv: emoteData.bttvChannelEmotes,
+      ffz: emoteData.ffzChannelEmotes,
+      twitch: emoteData.twitchChannelEmotes,
+    }),
+    options,
+  );
 }

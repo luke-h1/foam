@@ -1,5 +1,5 @@
 import {
-  BadgeQueryDocument,
+  BadgesQueryDocument,
   ImageFragmentFragmentDoc,
   UserByConnectionDocument,
 } from '@app/graphql/generated/gql';
@@ -75,6 +75,6 @@ describe('generated documents', () => {
   });
 
   test('inline the fragments they spread', () => {
-    expect(BadgeQueryDocument).toContain(String(ImageFragmentFragmentDoc));
+    expect(BadgesQueryDocument).toContain(String(ImageFragmentFragmentDoc));
   });
 });

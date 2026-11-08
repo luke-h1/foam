@@ -7,20 +7,20 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query';
 import { fetch } from 'expo/fetch';
+import * as Network from 'expo-network';
 import { z } from 'zod';
 
+import { authProxyBaseUrl } from '@app/services/api/env';
 import { subscribeToAppStateTransitions } from '@app/utils/app-state/appStateTransitions';
 import { runWhenIdle } from '@app/utils/runWhenIdle';
 
 import { queryClient } from './queryClient';
 
-const authProxyBaseUrl = process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
-
 async function checkIsOnline(): Promise<boolean> {
   try {
     const controller = new AbortController();
 
-    setTimeout(() => {
+    const abortTimer = setTimeout(() => {
       controller.abort();
     }, 15e3);
 
@@ -28,7 +28,7 @@ async function checkIsOnline(): Promise<boolean> {
     const res = await fetch(`${authProxyBaseUrl}/healthcheck`, {
       headers: { 'Cache-Control': 'no-store' },
       signal: controller.signal,
-    });
+    }).finally(() => clearTimeout(abortTimer));
 
     // The proxy answers `{ "status": "OK" }`. Any other body, including a
     // 404 page, means the backend is unreachable.
@@ -152,7 +152,6 @@ function useConnectivityWatch(): void {
   }, []);
 }
 
-// @ts-expect-error - not all codepaths return a value
 focusManager.setEventListener(onFocus => {
   if (Platform.OS === 'ios' || Platform.OS === 'android') {
     return subscribeToAppStateTransitions(({ current }) => {
@@ -164,19 +163,25 @@ focusManager.setEventListener(onFocus => {
     // focus and visibilitychange overlap but cover different cases; redundant fires are harmless with stale times.
     const handler = () => onFocus();
 
-    // eslint-disable-next-line no-undef
     window.addEventListener('focus', handler, false);
 
-    // eslint-disable-next-line no-undef
     window.addEventListener('visibilitychange', handler, false);
 
     return () => {
-      // eslint-disable-next-line no-undef
       window.removeEventListener('visibilitychange', handler);
-      // eslint-disable-next-line no-undef
       window.removeEventListener('focus', handler);
     };
   }
+
+  return undefined;
+});
+
+onlineManager.setEventListener(setOnline => {
+  const eventSubscription = Network.addNetworkStateListener(state => {
+    setOnline(!!state.isConnected);
+  });
+
+  return eventSubscription.remove;
 });
 
 export function QueryProvider({ children }: PropsWithChildren) {

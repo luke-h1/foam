@@ -1,71 +1,73 @@
 import { useEffect } from 'react';
 
-import { getCurrentEmoteData } from '@app/store/chat/actions/channel-load';
-import type { SanitisedEmote } from '@app/types/emote';
-import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
-import { resolveEmoteDisplayUrl } from '@app/utils/emote/resolveEmoteDisplayUrl';
-
 import {
   abortInflightEmoteDecodes,
   releaseChannelEmoteRefs,
   warmCachedEmoteRefs,
-} from './cache-service';
+} from '@app/lib/emote-cache/cacheService';
+import { getCurrentEmoteData } from '@app/store/chat/actions/channel-load';
+import {
+  type ChatResourceSliceKey,
+  EMOTE_SLICE_KEYS,
+  SLICE_BY_KEY,
+  type SliceScope,
+} from '@app/store/chat/types/chat-resource-slices';
+import { usePreference } from '@app/store/preference-store';
+import { chunk } from '@app/utils/collection/chunk';
+import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
+import {
+  collectEmoteWarmUrls,
+  type EmoteWarmLists,
+  orderEmotesForWarm,
+} from '@app/utils/image/emoteWarmPlan';
 
 const WARM_BATCH_SIZE = 24;
 
 /**
- * Static emotes to eagerly decode on channel entry; the warm storm starves
- * on-screen animated-emote decoding, so warm the common set only.
+ * Skip animated emotes: multi-frame decode is the entry storm; they warm on
+ * first paint.
  */
-const WARM_LIMIT = 64;
+const isStaticUrl = (url: string) => describeEmoteUrl(url).kind !== 'animated';
 
-const GLOBAL_WARM_LIMIT = 64;
+const WARM_LIST_BY_PROVIDER = {
+  '7tv': 'sevenTv',
+  bttv: 'bttv',
+  ffz: 'ffz',
+  twitch: 'twitch',
+} as const satisfies Record<
+  (typeof SLICE_BY_KEY)[ChatResourceSliceKey]['provider'],
+  keyof EmoteWarmLists
+>;
 
-function collectDisplayUrls(emotes: SanitisedEmote[], limit: number): string[] {
-  const urls = new Set<string>();
+/**
+ * Subscriber emotes are left out: only the viewer can use them, and they
+ * would take warm slots from the emotes everyone in chat sends.
+ */
+function getDisplayUrls(
+  channelId: string,
+  scope: SliceScope,
+  disableAnimations: boolean,
+): string[] {
+  const data = getCurrentEmoteData(channelId);
+  const lists: Required<EmoteWarmLists> = {
+    sevenTv: [],
+    bttv: [],
+    ffz: [],
+    twitch: [],
+  };
 
-  for (const emote of emotes) {
-    if (urls.size >= limit) {
-      break;
-    }
+  for (const key of EMOTE_SLICE_KEYS) {
+    const slice = SLICE_BY_KEY[key];
 
-    const url = resolveEmoteDisplayUrl(emote);
-
-    // Skip animated emotes: multi-frame decode is the entry storm; they warm on first paint.
-    if (url && describeEmoteUrl(url).kind !== 'animated') {
-      urls.add(url);
+    if (slice.scope === scope && key !== 'twitchSubscriberEmotes') {
+      lists[WARM_LIST_BY_PROVIDER[slice.provider]] = data[key];
     }
   }
 
-  return Array.from(urls);
-}
-
-function getGlobalDisplayUrls(channelId: string): string[] {
-  const data = getCurrentEmoteData(channelId);
-
-  return collectDisplayUrls(
-    [
-      ...data.sevenTvGlobalEmotes,
-      ...data.bttvGlobalEmotes,
-      ...data.ffzGlobalEmotes,
-      ...data.twitchGlobalEmotes,
-    ],
-    GLOBAL_WARM_LIMIT,
-  );
-}
-
-function getChannelDisplayUrls(channelId: string): string[] {
-  const data = getCurrentEmoteData(channelId);
-
-  return collectDisplayUrls(
-    [
-      ...data.sevenTvChannelEmotes,
-      ...data.bttvChannelEmotes,
-      ...data.ffzChannelEmotes,
-      ...data.twitchChannelEmotes,
-    ],
-    WARM_LIMIT,
-  );
+  return collectEmoteWarmUrls(orderEmotesForWarm(lists), {
+    disableAnimations,
+    accept: isStaticUrl,
+  });
 }
 
 async function warmInBatches(
@@ -73,17 +75,19 @@ async function warmInBatches(
   pin: boolean,
   isCancelled: () => boolean,
 ): Promise<void> {
-  for (let i = 0; i < urls.length; i += WARM_BATCH_SIZE) {
+  for (const batch of chunk(urls, WARM_BATCH_SIZE)) {
     if (isCancelled()) {
       return;
     }
 
-    // eslint-disable-next-line react-doctor/async-await-in-loop, react-doctor/async-defer-await -- batches are intentionally sequential so the warm storm stays bounded
-    await warmCachedEmoteRefs(urls.slice(i, i + WARM_BATCH_SIZE), { pin });
+    // oxlint-disable-next-line react-doctor/async-await-in-loop -- batches are intentionally sequential so the warm storm stays bounded
+    await warmCachedEmoteRefs(batch, { pin });
   }
 }
 
 export function useCachedEmotes(channelId: string) {
+  const disableAnimations = usePreference('disableEmoteAnimations');
+
   useEffect(() => {
     // On channel hop the cancel flag stops further batches and the decode fence drops the in-flight one; either would refill a cache nothing reads while holding decode slots.
     let cancelled = false;
@@ -91,8 +95,17 @@ export function useCachedEmotes(channelId: string) {
     const isCancelled = () => cancelled;
 
     const warm = async () => {
-      await warmInBatches(getGlobalDisplayUrls(channelId), true, isCancelled);
-      await warmInBatches(getChannelDisplayUrls(channelId), false, isCancelled);
+      await warmInBatches(
+        getDisplayUrls(channelId, 'global', disableAnimations),
+        true,
+        isCancelled,
+      );
+
+      await warmInBatches(
+        getDisplayUrls(channelId, 'channel', disableAnimations),
+        false,
+        isCancelled,
+      );
     };
 
     void warm();
@@ -102,5 +115,5 @@ export function useCachedEmotes(channelId: string) {
       abortInflightEmoteDecodes();
       releaseChannelEmoteRefs();
     };
-  }, [channelId]);
+  }, [channelId, disableAnimations]);
 }

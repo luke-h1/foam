@@ -79,11 +79,18 @@ describe('normalizeSevenTvPaint', () => {
     });
   });
 
-  test('preserves all gradient layers', () => {
+  test('maps a URL layer canvas_repeat to the repeat flag', () => {
     const paint = normalizeSevenTvPaint({
-      id: 'multi-layer',
-      name: 'Multi',
+      id: 'url-paint',
+      name: 'URL Paint',
       gradients: [
+        {
+          function: 'URL',
+          image_url: 'https://cdn.7tv.app/paint/test.webp',
+          canvas_repeat: 'repeat',
+          repeat: false,
+          stops: [],
+        },
         {
           function: 'LINEAR_GRADIENT',
           angle: 0,
@@ -99,28 +106,6 @@ describe('normalizeSevenTvPaint', () => {
       ],
     });
 
-    expect(paint.layers.length).toBe(2);
-
-    expect(paint.layers[1]?.function).toBe('URL');
-
-    expect(paint.layers[1]?.repeat).toBe(true);
-  });
-
-  test('maps URL canvas_repeat to repeat flag', () => {
-    const paint = normalizeSevenTvPaint({
-      id: 'url-paint',
-      name: 'URL Paint',
-      gradients: [
-        {
-          function: 'URL',
-          image_url: 'https://cdn.7tv.app/paint/test.webp',
-          canvas_repeat: 'repeat',
-          repeat: false,
-          stops: [],
-        },
-      ],
-    });
-
     const { function: paintFunction, image_url: imageUrl, repeat } = paint;
 
     expect({ function: paintFunction, image_url: imageUrl, repeat }).toEqual<
@@ -130,6 +115,8 @@ describe('normalizeSevenTvPaint', () => {
       image_url: 'https://cdn.7tv.app/paint/test.webp',
       repeat: true,
     });
+
+    expect(paint.layers[2]?.repeat).toBe(true);
   });
 
   test('resolves a zero id to the payload ref_id', () => {

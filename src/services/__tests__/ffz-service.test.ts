@@ -142,24 +142,12 @@ describe('ffzService', () => {
     ]);
   });
 
-  test('getSanitisedChannelEmotes returns an empty list when the room does not exist', async () => {
-    apiGetSpy.mockResolvedValue({
-      status: 404,
-      error: 'Not Found',
-      message: 'No such room',
-    });
-
-    const result = await ffzService.getSanitisedChannelEmotes('999');
-
-    expect(result).toEqual([]);
-  });
-
   test('getSanitisedChannelEmotes returns an empty list when the API throws a 404', async () => {
     apiGetSpy.mockRejectedValue(
       new ApiError('No such room', 404, 'FFZApiError'),
     );
 
-    const result = await ffzService.getSanitisedChannelEmotes('999');
+    const result = await ffzService.getSanitisedChannelEmotes('901');
 
     expect(result).toEqual([]);
   });
@@ -169,7 +157,7 @@ describe('ffzService', () => {
       new ApiError('No such room', 404, 'FFZApiError'),
     );
 
-    const result = await ffzService.getSanitisedChannelBadges('999');
+    const result = await ffzService.getSanitisedChannelBadges('902');
 
     expect(result).toEqual([]);
   });
@@ -177,7 +165,7 @@ describe('ffzService', () => {
   test('getSanitisedChannelEmotes rethrows a 404 that is not a "No such room" error', async () => {
     apiGetSpy.mockRejectedValue(new ApiError('Not Found', 404, 'FFZApiError'));
 
-    await expect(ffzService.getSanitisedChannelEmotes('999')).rejects.toThrow(
+    await expect(ffzService.getSanitisedChannelEmotes('903')).rejects.toThrow(
       'Not Found',
     );
   });
@@ -185,8 +173,48 @@ describe('ffzService', () => {
   test('getSanitisedChannelBadges rethrows a 404 that is not a "No such room" error', async () => {
     apiGetSpy.mockRejectedValue(new ApiError('Not Found', 404, 'FFZApiError'));
 
-    await expect(ffzService.getSanitisedChannelBadges('999')).rejects.toThrow(
+    await expect(ffzService.getSanitisedChannelBadges('904')).rejects.toThrow(
       'Not Found',
     );
+  });
+
+  test('shares one room request between channel badges and channel emotes', async () => {
+    apiGetSpy.mockResolvedValue({
+      room: { set: 10, mod_urls: { '1': 'https://cdn.example/mod/1' } },
+      sets: {
+        '10': { id: 10, _type: 1, title: 'Channel', emoticons: [staticEmote] },
+      },
+    } satisfies FfzChannelEmotesResponse);
+
+    const [badges, emotes] = await Promise.all([
+      ffzService.getSanitisedChannelBadges('905'),
+      ffzService.getSanitisedChannelEmotes('905'),
+    ]);
+
+    expect({
+      calls: apiGetSpy.mock.calls,
+      badgeIds: badges.map(badge => badge.id),
+      emoteIds: emotes.map(emote => emote.id),
+    }).toEqual({
+      calls: [['/room/id/905']],
+      badgeIds: ['mod_badge'],
+      emoteIds: ['128054'],
+    });
+  });
+
+  test('requests the room again after a failed request', async () => {
+    apiGetSpy
+      .mockRejectedValueOnce(new ApiError('Bad Gateway', 502, 'FFZApiError'))
+      .mockResolvedValueOnce({ room: { set: 10 }, sets: {} });
+
+    await expect(ffzService.getSanitisedChannelBadges('906')).rejects.toThrow(
+      'Bad Gateway',
+    );
+
+    await expect(ffzService.getSanitisedChannelEmotes('906')).resolves.toEqual(
+      [],
+    );
+
+    expect(apiGetSpy).toHaveBeenCalledTimes(2);
   });
 });

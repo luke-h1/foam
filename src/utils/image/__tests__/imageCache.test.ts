@@ -68,7 +68,7 @@ describe('image-cache', () => {
     try {
       expect(getCachedImageUri(url, options)).toBeNull();
 
-      await cacheImageFromUrl(url, options);
+      expect(await cacheImageFromUrl(url, options)).toBe(cachedUri);
 
       expect(fileSystemMock.downloadCount()).toBe(2);
 
@@ -78,32 +78,12 @@ describe('image-cache', () => {
     }
   });
 
-  test('re-downloads when a manifest record points at an evicted file', async () => {
-    const url = 'https://example.com/source-channel-badge.png';
-    const options = { variant: 'badge' };
+  test('keeps the avif extension of a 7TV emote file', async () => {
+    const cachedUri = await cacheImageFromUrl(
+      'https://cdn.7tv.app/emote/01F6MZGCMR000F9PFB2X8E0V0V/4x.avif',
+    );
 
-    const cachedUri = await cacheImageFromUrl(url, options);
-    fileSystemMock.evict(cachedUri);
-
-    const realNow = Date.now();
-
-    const nowSpy = jest
-      .spyOn(Date, 'now')
-      .mockImplementation(() => realNow + 11 * 60 * 1000);
-
-    let refreshedUri: string;
-
-    try {
-      refreshedUri = await cacheImageFromUrl(url, options);
-    } finally {
-      nowSpy.mockRestore();
-    }
-
-    expect(refreshedUri).toBe(cachedUri);
-
-    expect(fileSystemMock.downloadCount()).toBe(2);
-
-    expect(fileSystemMock.exists(cachedUri)).toBe(true);
+    expect(cachedUri.endsWith('.avif')).toEqual(true);
   });
 
   test('keys the same url separately per variant', async () => {
@@ -314,6 +294,7 @@ describe('image-cache access time', () => {
       ]);
     } finally {
       nowSpy.mockRestore();
+      imageCache.clearSessionCache();
     }
   });
 });

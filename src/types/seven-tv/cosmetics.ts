@@ -1,10 +1,6 @@
 import type { SevenTvEmote, SevenTvHost } from '@app/types/seven-tv/emotes';
 import type { StvUser } from '@app/types/seven-tv/users';
 import type { IndexedCollection } from '@app/utils/collection/indexedCollection';
-import type {
-  V4Badge,
-  V4Paint,
-} from '@app/utils/color/seven-tv-paint-data/types';
 
 interface EventObject {
   id: string;
@@ -145,15 +141,6 @@ export interface BadgeCosmetic {
 
 export type CosmeticCreate = BadgeCosmetic | PaintCosmetic;
 
-export interface UserCosmeticsInfo {
-  userId: string;
-  ttvUserId: string | null;
-  paintId: string | null;
-  badgeId: string | null;
-  paint: V4Paint | null;
-  badge: V4Badge | null;
-}
-
 type EmoteChange = SevenTvEmote & { origin_id: string | null };
 
 interface EmoteSetCreate extends EventObject {
@@ -171,7 +158,7 @@ export interface EntitlementUserStyle {
   badge_id?: string;
 }
 
-export interface EntitlementUserConnection {
+interface EntitlementUserConnection {
   id: string;
   platform: 'TWITCH';
   username: string;
@@ -191,7 +178,7 @@ export interface EntitlementUser {
   connections: IndexedCollection<EntitlementUserConnection>;
 }
 
-export interface EntitlementObject {
+interface EntitlementObject {
   id: string;
   kind: 'BADGE' | 'PAINT' | 'EMOTE_SET';
   ref_id: string;
@@ -242,7 +229,7 @@ export interface EntitlementResetCallbackData {
   sevenTvUserId: string;
 }
 
-export interface SevenTvEventMap {
+interface SevenTvEventMap {
   'cosmetic.create': CosmeticCreate;
   'cosmetic.update': ChangeMap<CosmeticCreate>;
   'cosmetic.delete': { id: string };

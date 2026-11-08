@@ -1,5 +1,6 @@
 // `shape` here mirrors the 7TV paint API field name, not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
+import type { EmoteImageScale, EmoteImageVariants } from '@app/types/emote';
 import type {
   BadgeCosmetic,
   ChangeMap,
@@ -14,6 +15,7 @@ import type {
 } from '@app/types/seven-tv/cosmetics';
 import type { SevenTvEmote, SevenTvFile } from '@app/types/seven-tv/emotes';
 import type { StvUser } from '@app/types/seven-tv/users';
+import { EMOTE_CDNS } from '@app/utils/emote/cdn/emoteCdnRegistry';
 import type { SevenTvWsInterpreterContext } from '@app/utils/seven-tv/sevenTvWsInterpreter';
 
 type EmoteChange = SevenTvEmote & { origin_id: string | null };
@@ -34,6 +36,26 @@ type RawJsonValue =
  */
 interface RawSevenTvPayload {
   [key: string]: RawJsonValue;
+}
+
+/**
+ * The variant sets the interpreter builds from the files a WS emote's host
+ * lists. `scales` names the files the emote fixture has.
+ */
+export function sevenTvVariants(
+  id: string,
+  ext: string,
+  scales: EmoteImageScale[],
+): EmoteImageVariants {
+  const variants: Required<EmoteImageVariants> = { animated: {}, static: {} };
+
+  for (const scale of scales) {
+    for (const kind of ['animated', 'static'] as const) {
+      variants[kind][scale] = EMOTE_CDNS['7tv'].build({ id, scale, kind, ext });
+    }
+  }
+
+  return variants;
 }
 
 export const FIXTURE_NOW = Date.parse('2025-06-01T12:00:00.000Z');
@@ -59,7 +81,7 @@ export function createSevenTvFile(overrides: {
 }): SevenTvFile {
   return {
     name: overrides.name,
-    static_name: overrides.name,
+    static_name: overrides.name.replace(/^(\dx)\./, '$1_static.'),
     width: overrides.width,
     height: overrides.height,
     frame_count: overrides.frame_count ?? 1,
@@ -68,17 +90,21 @@ export function createSevenTvFile(overrides: {
   };
 }
 
-export function createSevenTvEmote(overrides: {
+export function createSevenTvEmoteChange(overrides: {
   id: string;
   name: string;
   originalName?: string;
   flags?: number;
+  /**
+   * The set-level flags of the emote set entry.
+   */
+  activeFlags?: number;
   files?: SevenTvFile[];
 }): EmoteChange {
   return {
     id: overrides.id,
     name: overrides.name,
-    flags: 0,
+    flags: overrides.activeFlags ?? 0,
     timestamp: 1_750_000_000_000,
     actor_id: 'stv-actor-1',
     origin_id: null,

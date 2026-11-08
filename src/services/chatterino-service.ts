@@ -1,4 +1,5 @@
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import { buildSanitisedBadge } from '@app/utils/emote/sanitised/buildSanitisedBadge';
 
 const chatterinoBadges = {
   badges: [
@@ -4132,16 +4133,18 @@ export const chatterinoService = {
 
     chatterinoBadges.badges.forEach(badge => {
       badge.users.forEach(userId => {
-        sanitisedBadges.push({
-          id: userId,
-          url: badge.image3,
-          title: badge.tooltip,
-          type: 'Chatterino Badge',
-          set: 'chatterino',
-          owner_username: userId,
-          color: '#ffffff',
-          provider: 'chatterino',
-        });
+        sanitisedBadges.push(
+          buildSanitisedBadge({
+            id: userId,
+            url: badge.image3,
+            title: badge.tooltip,
+            type: 'Chatterino Badge',
+            set: 'chatterino',
+            ownerUsername: userId,
+            color: '#ffffff',
+            provider: 'chatterino',
+          }),
+        );
       });
     });
 

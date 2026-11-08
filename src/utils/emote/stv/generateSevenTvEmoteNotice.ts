@@ -1,8 +1,8 @@
-/* eslint-disable camelcase */
-import type { ChatMessageType } from '@app/store/chat/types/constants';
+import type { ChatMessageType } from '@app/types/chat/chatMessage';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import type { SanitisedEmote } from '@app/types/emote';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import { getChatMessageKey } from '@app/utils/chat/message-identity/getChatMessageKey';
 import { generateNonce } from '@app/utils/string/generateNonce';
 
 interface GenerateStvEmoteNoticeArgs {
@@ -18,7 +18,7 @@ export function generateStvEmoteNotice({
 }: GenerateStvEmoteNoticeArgs): ChatMessageType<never, never> {
   const message_id = generateNonce();
   const message_nonce = generateNonce();
-  const id = `${message_id}_${message_nonce}`;
+  const id = getChatMessageKey(message_id, message_nonce);
 
   const userstate: UserStateTags = {
     'reply-parent-msg-id': '',

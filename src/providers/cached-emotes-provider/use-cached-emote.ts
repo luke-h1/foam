@@ -1,4 +1,4 @@
-/* eslint-disable react-doctor/no-event-handler -- store wiring, not event handlers */
+/* oxlint-disable react-doctor/no-event-handler -- store wiring, not event handlers */
 import { useCallback, useEffect, useSyncExternalStore } from 'react';
 
 import type { ImageRef } from 'expo-image';
@@ -10,7 +10,7 @@ import {
   getCachedEmoteRef,
   subscribeCachedEmoteRef,
   touchCachedEmoteRef,
-} from './cache-service';
+} from '@app/lib/emote-cache/cacheService';
 
 /**
  * Shared, size-capped decoded {@link ImageRef} for `url`, or `null` until
@@ -31,10 +31,6 @@ export function useCachedEmote(
     () => null,
   );
 
-  /**
-   * Decode on first use; once decoded, mark recently-used so eviction keeps
-   * hot emotes.
-   */
   useEffect(() => {
     if (ref) {
       touchCachedEmoteRef(url);

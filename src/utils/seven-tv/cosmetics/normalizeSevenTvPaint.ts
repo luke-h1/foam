@@ -53,7 +53,6 @@ function toIndexedShadows(
 
   for (const [index, shadow] of shadows.entries()) {
     if (!shadow) {
-      // eslint-disable-next-line no-continue
       continue;
     }
 

@@ -1,3 +1,4 @@
+import { SEVEN_TV_GQL_PATH } from '@app/constants/emote-providers';
 import { sevenTvGqlApi } from '@app/services/api/clients';
 
 interface QueryOptions<TVariables> {
@@ -38,10 +39,13 @@ export const sevenTvV4Client = {
     variables,
   }: QueryOptions<TVariables>): Promise<QueryResult<TData>> {
     try {
-      const result = await sevenTvGqlApi.post<GraphQLResponse<TData>>('/gql', {
-        query,
-        variables,
-      });
+      const result = await sevenTvGqlApi.post<GraphQLResponse<TData>>(
+        SEVEN_TV_GQL_PATH,
+        {
+          query,
+          variables,
+        },
+      );
 
       if (result.errors?.length) {
         return {
@@ -72,7 +76,7 @@ export const sevenTvV4Client = {
   > {
     try {
       const result = await sevenTvGqlApi.postDerived(
-        '/gql',
+        SEVEN_TV_GQL_PATH,
         { query, variables },
         (responseText): DerivedResponse<TResult> => {
           'worklet';

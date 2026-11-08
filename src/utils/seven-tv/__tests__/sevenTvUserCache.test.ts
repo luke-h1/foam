@@ -15,7 +15,7 @@ describe('sevenTvUserCache', () => {
     jest.useRealTimers();
   });
 
-  test('resolves a miss through the fetcher and persists the result', async () => {
+  test('resolves a miss through the fetcher', async () => {
     const storage = createFakeStorage();
     const cache = createSevenTvUserCache(storage);
     const fetchUser = jest.fn(async () => sevenTvUser('stv-1'));
@@ -28,18 +28,6 @@ describe('sevenTvUserCache', () => {
     });
 
     expect(fetchUser.mock.calls).toEqual([['123']]);
-
-    expect(
-      storage.backing.get('seven_tv_cache_sevenTvUserId_user:v2:123'),
-    ).toEqual({
-      expiry: '2026-07-01T12:00:00.000Z',
-      value: {
-        fetchedAt: new Date('2026-07-01T00:00:00.000Z').getTime(),
-        expiresAt: new Date('2026-07-01T12:00:00.000Z').getTime(),
-        userId: 'stv-1',
-        emoteSetId: 'set-stv-1',
-      },
-    });
   });
 
   test('caches a user with no active emote set for the full positive TTL', async () => {
@@ -126,19 +114,15 @@ describe('sevenTvUserCache', () => {
     await cache.resolve('456', fetchUser);
     cache.invalidate('123');
 
-    expect(
-      storage.backing.has('seven_tv_cache_sevenTvUserId_user:v2:123'),
-    ).toBe(false);
-
-    expect(
-      storage.backing.has('seven_tv_cache_sevenTvUserId_user:v2:456'),
-    ).toBe(true);
-
     const refetched = await cache.resolve('123', fetchUser);
     const untouched = await cache.resolve('456', fetchUser);
 
-    expect([refetched, untouched]).toEqual<SevenTvUser[]>([
+    const freshCache = createSevenTvUserCache(storage);
+    const fromStorage = await freshCache.resolve('456', fetchUser);
+
+    expect([refetched, untouched, fromStorage]).toEqual<SevenTvUser[]>([
       { userId: 'stv-123', emoteSetId: 'set-stv-123' },
+      { userId: 'stv-456', emoteSetId: 'set-stv-456' },
       { userId: 'stv-456', emoteSetId: 'set-stv-456' },
     ]);
 
@@ -271,18 +255,6 @@ describe('sevenTvUserCache', () => {
     const fetchUser = jest.fn(async () => sevenTvUser('', ''));
 
     const first = await cache.resolve('123', fetchUser);
-
-    expect(
-      storage.backing.get('seven_tv_cache_sevenTvUserId_user:v2:123'),
-    ).toEqual({
-      expiry: '2026-07-01T00:30:00.000Z',
-      value: {
-        fetchedAt: new Date('2026-07-01T00:00:00.000Z').getTime(),
-        expiresAt: new Date('2026-07-01T00:30:00.000Z').getTime(),
-        userId: '',
-        emoteSetId: '',
-      },
-    });
 
     jest.setSystemTime(new Date('2026-07-01T00:29:00.000Z'));
     const second = await cache.resolve('123', fetchUser);

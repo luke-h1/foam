@@ -1,17 +1,18 @@
 import { AppState } from 'react-native';
 
+import { isApiClientError } from '@app/services/api/client';
 import type {
   EventSubMessage,
   TwitchEventSubCallback,
 } from '@app/types/twitch/eventsub';
+import {
+  EVENTSUB_RECONNECT_POLICY,
+  getReconnectDelay,
+} from '@app/utils/async/reconnectPolicy';
+import { withTimeout } from '@app/utils/async/withTimeout';
 import { logger } from '@app/utils/logger';
 
-import { getReconnectDelay } from '../hooks/ws/attach-listener';
 import { twitchService } from './twitch-service';
-
-const EVENTSUB_RECONNECT_BASE_INTERVAL_MS = 2000;
-const EVENTSUB_RECONNECT_MAX_ATTEMPTS = 10;
-const EVENTSUB_RECONNECT_MAX_JITTER_MS = 250;
 
 type EventCallback = TwitchEventSubCallback;
 
@@ -45,6 +46,10 @@ type EventSubscriptionPayload = Awaited<
   ReturnType<typeof twitchService.createEventSubscription>
 >;
 
+function timeoutError(): never {
+  throw new Error('Timeout');
+}
+
 function hasEventSubscriptionData(
   response: EventSubscriptionPayload | undefined,
 ): boolean {
@@ -53,6 +58,18 @@ function hasEventSubscriptionData(
 
 class TwitchWsService {
   private static instance: WebSocket | null = null;
+
+  /**
+   * The socket that got `session_reconnect`. Twitch keeps sending it events
+   * until the new socket gets its welcome, so it stays open until then.
+   */
+  private static retiringInstance: WebSocket | null = null;
+
+  /**
+   * True while the open socket came from a `session_reconnect` URL. Its
+   * welcome carries the old subscriptions over, so it must not resubscribe.
+   */
+  private static awaitingReconnectWelcome: boolean = false;
 
   /**
    * @see https://dev.twitch.tv/docs/eventsub/websocket-reference
@@ -80,7 +97,6 @@ class TwitchWsService {
 
   private static appStateSubscription: { remove: () => void } | null = null;
 
-  // eslint-disable-next-line no-empty-function
   private constructor() {}
 
   public static getInstance(): WebSocket {
@@ -98,6 +114,9 @@ class TwitchWsService {
       TwitchWsService.isReconnecting && TwitchWsService.reconnectUrl
         ? TwitchWsService.reconnectUrl
         : TwitchWsService.url;
+
+    TwitchWsService.awaitingReconnectWelcome =
+      TwitchWsService.isReconnecting && Boolean(TwitchWsService.reconnectUrl);
 
     TwitchWsService.reconnectUrl = '';
     TwitchWsService.discardInstance();
@@ -125,6 +144,37 @@ class TwitchWsService {
     existing.onerror = null;
     existing.onclose = null;
     existing.close(1000, 'Replaced by a new EventSub connection');
+  }
+
+  /**
+   * Keeps the socket open for its last events but detaches it, so its close
+   * cannot start a second reconnect.
+   */
+  private static retireInstance(): void {
+    const existing = TwitchWsService.instance;
+
+    if (!existing) {
+      return;
+    }
+
+    TwitchWsService.discardRetiringInstance();
+    TwitchWsService.instance = null;
+    existing.onopen = null;
+    existing.onerror = null;
+    existing.onclose = null;
+    TwitchWsService.retiringInstance = existing;
+  }
+
+  private static discardRetiringInstance(): void {
+    const retiring = TwitchWsService.retiringInstance;
+
+    if (!retiring) {
+      return;
+    }
+
+    TwitchWsService.retiringInstance = null;
+    retiring.onmessage = null;
+    retiring.close(1000, 'Reconnected to a new EventSub session');
   }
 
   private static setupEventListeners() {
@@ -192,10 +242,7 @@ class TwitchWsService {
   private static onMessage(event: MessageEvent) {
     try {
       // SAFETY: every frame on this socket is a Helix EventSub envelope; a body that is not one fails on `message.metadata` inside this try and is handled by the catch below.
-      const message = JSON.parse(
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        event.data,
-      ) as EventSubMessage;
+      const message = JSON.parse(event.data) as EventSubMessage;
 
       if (__DEV__) {
         logger.twitchWs.debug(
@@ -255,6 +302,10 @@ class TwitchWsService {
       return;
     }
 
+    const carriesSubscriptions = TwitchWsService.awaitingReconnectWelcome;
+
+    TwitchWsService.awaitingReconnectWelcome = false;
+    TwitchWsService.discardRetiringInstance();
     TwitchWsService.sessionId = session.id;
     TwitchWsService.keepaliveTimeout = session.keepalive_timeout_seconds;
     TwitchWsService.reconnectAttempts = 0;
@@ -262,7 +313,11 @@ class TwitchWsService {
     logger.twitchWs.info(`🟣 EventSub session established: ${session.id}`);
 
     TwitchWsService.resetKeepaliveTimer();
-    TwitchWsService.resubscribeToEvents();
+
+    // A session_reconnect welcome keeps the old subscriptions; creating them again is a duplicate.
+    if (!carriesSubscriptions) {
+      TwitchWsService.resubscribeToEvents();
+    }
   }
 
   private static handleKeepAlive(): void {
@@ -301,9 +356,7 @@ class TwitchWsService {
         try {
           cb(message);
         } catch (error) {
-          logger.twitchWs.error(
-            `💜 error in event CB: ${JSON.stringify(error, null, 2)}`,
-          );
+          logger.twitchWs.error('💜 error in event CB', error);
         }
       }
     }
@@ -324,14 +377,11 @@ class TwitchWsService {
       session.reconnect_url,
     );
 
+    TwitchWsService.retireInstance();
     TwitchWsService.reconnectUrl = session.reconnect_url;
     TwitchWsService.isReconnecting = true;
-
-    if (TwitchWsService.instance) {
-      TwitchWsService.instance.close(1000, 'Reconnecting');
-    }
-
-    TwitchWsService.scheduleReconnect(1000);
+    TwitchWsService.clearReconnectTimer();
+    TwitchWsService.connect();
   }
 
   private static handleRevocation(message: EventSubMessage): void {
@@ -358,6 +408,7 @@ class TwitchWsService {
 
       // Drop the dead socket first. Its close would otherwise start a second reconnect.
       TwitchWsService.discardInstance();
+      TwitchWsService.discardRetiringInstance();
       TwitchWsService.attemptReconnect();
     }, timeoutInMs);
   }
@@ -401,12 +452,9 @@ class TwitchWsService {
       return;
     }
 
-    const attemptsExhausted =
-      TwitchWsService.reconnectAttempts >= EVENTSUB_RECONNECT_MAX_ATTEMPTS;
-
     if (
-      attemptsExhausted &&
-      TwitchWsService.reconnectAttempts === EVENTSUB_RECONNECT_MAX_ATTEMPTS
+      TwitchWsService.reconnectAttempts ===
+      EVENTSUB_RECONNECT_POLICY.logWarningAfterAttempts
     ) {
       logger.twitchWs.warn(
         '💜 EventSub reconnect attempts exhausted; retrying at the capped delay',
@@ -418,31 +466,14 @@ class TwitchWsService {
           source: 'twitch_ws_service',
         },
       );
-      TwitchWsService.reconnectAttempts += 1;
-    }
-
-    if (attemptsExhausted) {
-      TwitchWsService.isReconnecting = true;
-
-      const cappedDelayMs =
-        getReconnectDelay(
-          TwitchWsService.reconnectAttempts,
-          EVENTSUB_RECONNECT_BASE_INTERVAL_MS,
-        ) +
-        Math.random() * EVENTSUB_RECONNECT_MAX_JITTER_MS;
-
-      TwitchWsService.scheduleReconnect(cappedDelayMs);
-      return;
     }
 
     TwitchWsService.isReconnecting = true;
 
-    const delayMs =
-      getReconnectDelay(
-        TwitchWsService.reconnectAttempts,
-        EVENTSUB_RECONNECT_BASE_INTERVAL_MS,
-      ) +
-      Math.random() * EVENTSUB_RECONNECT_MAX_JITTER_MS;
+    const delayMs = getReconnectDelay(
+      TwitchWsService.reconnectAttempts,
+      EVENTSUB_RECONNECT_POLICY,
+    );
 
     TwitchWsService.reconnectAttempts += 1;
 
@@ -541,17 +572,19 @@ class TwitchWsService {
         `💜 Successfully subscribed to ${eventType} with ID: ${subscription.id}`,
       );
     } catch (error) {
-      logger.twitchWs.warn(
-        `Failed to subscribe to Twitch EventSub event ${eventType}`,
-        {
-          name: 'twitch_ws_warning',
-          error: error instanceof Error ? error : String(error),
-          action: 'subscription_create_failed',
-          event_type: eventType,
-          provider: 'twitch',
-          source: 'twitch_ws_service',
-        },
-      );
+      if (!isApiClientError(error)) {
+        logger.twitchWs.warn(
+          `Failed to subscribe to Twitch EventSub event ${eventType}`,
+          {
+            name: 'twitch_ws_warning',
+            error: error instanceof Error ? error : String(error),
+            action: 'subscription_create_failed',
+            event_type: eventType,
+            provider: 'twitch',
+            source: 'twitch_ws_service',
+          },
+        );
+      }
 
       const idx = entry.callbacks.indexOf(callback);
 
@@ -599,7 +632,6 @@ class TwitchWsService {
         ? entry.callbacks.filter(existing => existing !== callback)
         : [];
 
-      // Other components still listen on this subscription, so keep it open.
       if (entry.callbacks.length > 0) {
         continue;
       }
@@ -621,18 +653,20 @@ class TwitchWsService {
           `💜 Successfully unsubscribed from ${eventType} (ID: ${subscriptionId})`,
         );
       } catch (error) {
-        logger.twitchWs.warn(
-          `Failed to unsubscribe from Twitch EventSub event ${eventType}`,
-          {
-            name: 'twitch_ws_warning',
-            error: error instanceof Error ? error : String(error),
-            action: 'subscription_delete_failed',
-            event_type: eventType,
-            provider: 'twitch',
-            source: 'twitch_ws_service',
-            subscription_id: subscriptionId,
-          },
-        );
+        if (!isApiClientError(error)) {
+          logger.twitchWs.warn(
+            `Failed to unsubscribe from Twitch EventSub event ${eventType}`,
+            {
+              name: 'twitch_ws_warning',
+              error: error instanceof Error ? error : String(error),
+              action: 'subscription_delete_failed',
+              event_type: eventType,
+              provider: 'twitch',
+              source: 'twitch_ws_service',
+              subscription_id: subscriptionId,
+            },
+          );
+        }
       } finally {
         TwitchWsService.teardownIfIdle();
       }
@@ -691,26 +725,15 @@ class TwitchWsService {
       `💜 Cleaning up ${subscriptionIds.length} subscriptions in background`,
     );
 
-    const cleanupTimeout = new Promise<void>(resolve => {
-      setTimeout(() => {
-        logger.twitchWs.warn(
-          '💜 Subscription cleanup timed out, continuing...',
-        );
-        resolve();
-      }, 5000);
-    });
-
     const cleanupPromises = subscriptionIds.map(subscriptionId =>
       (async () => {
         try {
-          const deletePromise =
-            twitchService.deleteEventSubscription(subscriptionId);
+          await withTimeout(
+            twitchService.deleteEventSubscription(subscriptionId),
+            2000,
+            timeoutError,
+          );
 
-          const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Timeout')), 2000);
-          });
-
-          await Promise.race([deletePromise, timeoutPromise]);
           logger.twitchWs.info(`💜 Cleaned up subscription: ${subscriptionId}`);
         } catch (error) {
           logger.twitchWs.warn(
@@ -728,7 +751,13 @@ class TwitchWsService {
       })(),
     );
 
-    await Promise.race([Promise.allSettled(cleanupPromises), cleanupTimeout]);
+    await withTimeout(
+      Promise.allSettled(cleanupPromises),
+      5000,
+      timeoutError,
+    ).catch(() => {
+      logger.twitchWs.warn('💜 Subscription cleanup timed out, continuing...');
+    });
   }
 
   private static hasActiveListeners(): boolean {
@@ -796,6 +825,7 @@ class TwitchWsService {
     TwitchWsService.disarmForegroundRevive();
     TwitchWsService.isReconnecting = false;
     TwitchWsService.reconnectAttempts = 0;
+    TwitchWsService.discardRetiringInstance();
 
     if (TwitchWsService.instance) {
       TwitchWsService.instance.close(1000, 'Manual Disconnect');

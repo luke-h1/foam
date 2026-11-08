@@ -1,4 +1,5 @@
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import { buildSanitisedBadge } from '@app/utils/emote/sanitised/buildSanitisedBadge';
 import type { OpenStringUnion } from '@app/utils/typescript/openStringUnion';
 
 import { twitchApi } from './api/clients';
@@ -54,14 +55,17 @@ export const twitchBadgeService = {
 
     result.data.forEach(badgeSet => {
       badgeSet.versions.forEach((badge: TwitchBadgeVersion) => {
-        sanitisedBadges.push({
-          id: badge.id,
-          url: badge.image_url_4x,
-          type: channelBadgeType(badgeSet.set_id),
-          title: badgeSet.set_id === 'bits' ? `Cheer ${badge.id}` : badge.title,
-          set: badgeSet.set_id,
-          provider: 'twitch',
-        });
+        sanitisedBadges.push(
+          buildSanitisedBadge({
+            id: badge.id,
+            url: badge.image_url_4x,
+            type: channelBadgeType(badgeSet.set_id),
+            title:
+              badgeSet.set_id === 'bits' ? `Cheer ${badge.id}` : badge.title,
+            set: badgeSet.set_id,
+            provider: 'twitch',
+          }),
+        );
       });
     });
 
@@ -77,14 +81,16 @@ export const twitchBadgeService = {
     result.data.forEach(badgeSet => {
       if (Object.keys(badgeSet).length > 0) {
         badgeSet.versions.forEach(version => {
-          sanitisedBadges.push({
-            id: `${badgeSet.set_id}_${version.id}`,
-            url: version.image_url_4x,
-            title: version.title,
-            type: 'Twitch Global Badge',
-            set: badgeSet.set_id,
-            provider: 'twitch',
-          });
+          sanitisedBadges.push(
+            buildSanitisedBadge({
+              id: `${badgeSet.set_id}_${version.id}`,
+              url: version.image_url_4x,
+              title: version.title,
+              type: 'Twitch Global Badge',
+              set: badgeSet.set_id,
+              provider: 'twitch',
+            }),
+          );
         });
       }
     });

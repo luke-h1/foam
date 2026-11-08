@@ -1,5 +1,6 @@
 import type { StreamElementsChatStats } from '@app/types/streamelements/stats';
 
+import { ApiError } from '../api/client';
 import { streamElementsApi } from '../api/clients';
 import { streamElementsService } from '../streamelements-service';
 
@@ -31,11 +32,23 @@ describe('streamElementsService.getChatStats', () => {
     expect(result).toEqual<StreamElementsChatStats>(mockStats);
   });
 
-  test('propagates errors so callers can treat them as "no data"', async () => {
-    api.get.mockRejectedValue(new Error('404'));
+  test('resolves null for a channel StreamElements has no data for', async () => {
+    api.get.mockRejectedValue(
+      new ApiError('Not Found', 404, 'StreamElementsApiError'),
+    );
+
+    await expect(streamElementsService.getChatStats('nobody')).resolves.toEqual(
+      null,
+    );
+  });
+
+  test('rejects on any other failure', async () => {
+    api.get.mockRejectedValue(
+      new ApiError('Bad Gateway', 502, 'StreamElementsApiError'),
+    );
 
     await expect(streamElementsService.getChatStats('nobody')).rejects.toThrow(
-      '404',
+      'Bad Gateway',
     );
   });
 });

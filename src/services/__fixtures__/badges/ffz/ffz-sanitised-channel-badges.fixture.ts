@@ -8,7 +8,7 @@ export const ffzSanitiisedChannelBadges: SanitisedBadgeSet[] = [
     color: '#ff0000',
     owner_username: '12943173',
     set: 'vip',
-    type: 'FFZ channel badge',
+    type: 'FFZ Channel Badge',
     provider: 'ffz',
   },
   {
@@ -18,7 +18,7 @@ export const ffzSanitiisedChannelBadges: SanitisedBadgeSet[] = [
     color: '#1ac9a2',
     owner_username: '12943173',
     set: 'mod',
-    type: 'FFZ channel badge',
+    type: 'FFZ Channel Badge',
     provider: 'ffz',
   },
 ];

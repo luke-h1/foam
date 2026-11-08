@@ -51,7 +51,7 @@ describe('describeEmoteUrl', () => {
     ).toEqual<EmoteUrlDescriptor>({
       provider: 'ffz',
       id: '777',
-      scale: '4',
+      scale: '4x',
       kind: 'animated',
     });
   });
@@ -64,7 +64,7 @@ describe('describeEmoteUrl', () => {
     ).toEqual<EmoteUrlDescriptor>({
       provider: 'twitch',
       id: '25',
-      scale: '3.0',
+      scale: '4x',
       kind: 'animated',
     });
   });

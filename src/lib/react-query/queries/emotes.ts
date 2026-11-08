@@ -18,6 +18,6 @@ export function sevenTvBadgesQueryOptions() {
     queryKey: emoteKeys.sevenTvBadges(),
     staleTime: query =>
       query.state.data?.length ? GLOBAL_STALE_TIME : PARTIAL_STALE_TIME,
-    queryFn: () => sevenTvService.fetchAllBadges().catch(() => []),
+    queryFn: () => sevenTvService.fetchAllBadges(),
   });
 }

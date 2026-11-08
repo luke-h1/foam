@@ -1,17 +1,37 @@
-import type { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { StvUser } from '@app/types/seven-tv/users';
+
+/**
+ * The 7TV emote set kinds. The values match the GQL `EmoteSetKind` enum, so
+ * a codegen value assigns to this type without a map.
+ */
+type SevenTvEmoteSetKind = 'GLOBAL' | 'NORMAL' | 'PERSONAL' | 'SPECIAL';
 
 export interface SevenTvEmoteSetMetadata {
   setId: string;
   setName: string;
   capacity: number | null;
   ownerId: string | null;
-  kind: EmoteSetKind;
+  kind: SevenTvEmoteSetKind;
   updatedAt: string;
   totalCount: number;
 }
 
-export type EmoteProvider = 'twitch' | '7tv' | 'bttv' | 'ffz' | 'emoji';
+/**
+ * Every third-party service the app loads emotes, badges or chat data from.
+ * `PROVIDER_DESCRIPTORS` in `constants/emote-providers.ts` holds the names
+ * and log prefix for each one.
+ */
+export type ProviderId =
+  | 'twitch'
+  | '7tv'
+  | 'bttv'
+  | 'ffz'
+  | 'chatterino'
+  | 'streamelements';
+
+export type EmoteProvider =
+  | Exclude<ProviderId, 'chatterino' | 'streamelements'>
+  | 'emoji';
 
 export type EmoteImageScale = '1x' | '2x' | '3x' | '4x';
 export type EmoteImageVariantKind = 'animated' | 'static';
@@ -32,7 +52,7 @@ interface SanitisedEmoteBase {
   emote_link: string;
 }
 
-export type SevenTvSite = '7TV Channel' | '7TV Global' | '7TV Personal';
+type SevenTvSite = '7TV Channel' | '7TV Global' | '7TV Personal';
 
 export interface SevenTvSanitisedEmote extends SanitisedEmoteBase {
   provider: '7tv';
