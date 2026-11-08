@@ -1,17 +1,14 @@
-import { use, useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
-  Platform,
   ScrollView,
   type StyleProp,
   StyleSheet,
   View,
   type ViewStyle,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { HeaderHeightContext } from 'expo-router/react-navigation';
 
 import {
   FlashList,
@@ -23,6 +20,7 @@ import { EmptyState } from '@app/components/ui/empty-state/EmptyState';
 import { useStreamProfilePictures } from '@app/hooks/queries/use-stream-profile-pictures';
 import { useDebouncedCallback } from '@app/hooks/use-debounced-callback';
 import { useFlattenedInfiniteQuery } from '@app/hooks/use-flattened-infinite-query';
+import { useHeaderInsetContentStyle } from '@app/hooks/use-header-inset-content-style';
 import { useInfiniteQueryLoadMore } from '@app/hooks/use-infinite-query-load-more';
 import { useRefetchOnForeground } from '@app/hooks/use-refetch-on-foreground';
 import { useScrollToTop } from '@app/hooks/use-scroll-to-top';
@@ -36,20 +34,8 @@ export function TopStreamsScreen() {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const streamListLayout = usePreference('streamListLayout');
   const listRef = useRef<FlashListRef<TwitchStream>>(null);
-  const { top: topInset } = useSafeAreaInsets();
-  const headerHeight = use(HeaderHeightContext) ?? topInset + 44;
 
-  const contentContainerStyle = useMemo(
-    () =>
-      [
-        styles.listContent,
-        Platform.OS === 'ios' && {
-          paddingTop: headerHeight,
-        },
-      ] satisfies StyleProp<ViewStyle>,
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-    [headerHeight],
-  );
+  const contentContainerStyle = useHeaderInsetContentStyle(styles.listContent);
 
   useScrollToTop(listRef);
 
@@ -76,7 +62,6 @@ export function TopStreamsScreen() {
     isFetchingNextPage,
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   const [debouncedHandleLoadMore] = useDebouncedCallback(handleLoadMore, 150);
 
   const onRefresh = useCallback(async () => {
@@ -119,7 +104,6 @@ export function TopStreamsScreen() {
           heading="Couldn't load top streams"
           content='Check your connection and try again.'
           button='Try again'
-          // eslint-disable-next-line @typescript-eslint/no-misused-promises
           buttonOnPress={onRefresh}
         />
       </View>
@@ -134,7 +118,6 @@ export function TopStreamsScreen() {
           heading='No streams right now'
           content='Nobody is live on Twitch top streams. Refresh to try again.'
           button='Refresh'
-          // eslint-disable-next-line @typescript-eslint/no-misused-promises
           buttonOnPress={onRefresh}
         />
       </View>
@@ -189,7 +172,6 @@ function TopStreamsList({
         getItemType={() => 'stream-item'}
         drawDistance={500}
         contentContainerStyle={contentContainerStyle}
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={debouncedHandleLoadMore}
         refreshing={refreshing}
         onEndReachedThreshold={0.3}

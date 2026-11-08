@@ -37,7 +37,7 @@ export interface TwitchHelixPoll {
   ended_at: string | null;
 }
 
-export type TwitchEventSubPollVotingSettings = {
+type TwitchEventSubPollVotingSettings = {
   is_enabled: boolean;
   amount_per_vote: number;
 };

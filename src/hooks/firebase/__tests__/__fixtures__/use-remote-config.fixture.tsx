@@ -2,9 +2,10 @@ import type { ReactNode } from 'react';
 
 import type { FirebaseRemoteConfigTypes } from '@react-native-firebase/remote-config';
 import { getAll } from '@react-native-firebase/remote-config';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 
 import type { RemoteConfigKey } from '@app/hooks/firebase/use-remote-config';
+import { createTestQueryClient } from '@app/test/render';
 
 export function serveRemoteConfig(
   values: Partial<Record<RemoteConfigKey, string>>,
@@ -28,9 +29,7 @@ export function resetRemoteConfig() {
 }
 
 export function createQueryWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
+  const queryClient = createTestQueryClient();
 
   return function QueryWrapper({ children }: { children: ReactNode }) {
     return (

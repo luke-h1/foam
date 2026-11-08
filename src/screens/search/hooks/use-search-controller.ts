@@ -8,28 +8,28 @@ import {
 } from 'react';
 
 import { router, useFocusEffect } from 'expo-router';
-import * as ScreenOrientation from 'expo-screen-orientation';
 
 import type { FlashListRef } from '@app/components/flash-list/FlashList';
 import { useDebouncedCallback } from '@app/hooks/use-debounced-callback';
 import { useScrollToTop } from '@app/hooks/use-scroll-to-top';
-import { storageService } from '@app/lib/storage';
 import { twitchService } from '@app/services/twitch-service';
 import type { Category } from '@app/types/twitch/category';
 import type { SearchChannelResponse } from '@app/types/twitch/channel';
+import { lockPortrait } from '@app/utils/device/lockPortrait';
 import { logger } from '@app/utils/logger';
 
 import type { SearchInputBarHandle } from '../components/search-input-bar/types';
 import {
+  clearSearchHistory,
   getSearchHistorySnapshot,
-  SEARCH_HISTORY_STORAGE_KEY,
+  removeSearchHistoryQuery,
   type SearchHistoryItem,
   sortSearchHistory,
   subscribeToSearchHistory,
   writeSearchHistoryQuery,
 } from '../util/searchHistory';
 import {
-  MIN_SEARCH_QUERY_LENGTH,
+  isQueryLongEnough,
   SEARCH_INITIAL_STATE,
   type SearchItem,
   type SearchState,
@@ -42,6 +42,10 @@ export function useSearchController() {
   ] = useState<SearchState>(SEARCH_INITIAL_STATE);
 
   const listRef = useRef<FlashListRef<SearchItem>>(null);
+
+  // Each search takes a new id, so a slow response for an older query cannot
+  // replace the results of a newer one.
+  const searchRequestIdRef = useRef(0);
   const searchBarRef = useRef<SearchInputBarHandle | null>(null);
 
   useScrollToTop(listRef);
@@ -68,14 +72,15 @@ export function useSearchController() {
   // the player unlocks and keep the stream in portrait.
   useFocusEffect(
     useCallback(() => {
-      void ScreenOrientation.lockAsync(
-        ScreenOrientation.OrientationLock.PORTRAIT_UP,
-      );
+      lockPortrait();
     }, []),
   );
 
   const performSearch = useCallback(async (value: string) => {
-    if (value.length < MIN_SEARCH_QUERY_LENGTH) {
+    searchRequestIdRef.current += 1;
+    const requestId = searchRequestIdRef.current;
+
+    if (!isQueryLongEnough(value)) {
       startTransition(() => {
         setState(state => ({
           ...state,
@@ -103,7 +108,15 @@ export function useSearchController() {
       categories = categoryResponse.data.slice(0, 10);
     } catch (error) {
       logger.twitch.error('Search failed', error);
-      setState(state => ({ ...state, status: 'error' }));
+
+      if (requestId === searchRequestIdRef.current) {
+        setState(state => ({ ...state, status: 'error' }));
+      }
+
+      return;
+    }
+
+    if (requestId !== searchRequestIdRef.current) {
       return;
     }
 
@@ -119,15 +132,22 @@ export function useSearchController() {
     writeSearchHistoryQuery(value);
   }, []);
 
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
-  const [search] = useDebouncedCallback(performSearch, 400);
+  const [search, cancelPendingSearch] = useDebouncedCallback(
+    performSearch,
+    400,
+  );
+
+  const discardSearch = useCallback(() => {
+    cancelPendingSearch();
+    searchRequestIdRef.current += 1;
+  }, [cancelPendingSearch]);
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleRefresh = useCallback(() => {
     const normalizedQuery = query.trim();
 
-    if (normalizedQuery.length < MIN_SEARCH_QUERY_LENGTH) {
+    if (!isQueryLongEnough(normalizedQuery)) {
       return Promise.resolve();
     }
 
@@ -137,6 +157,7 @@ export function useSearchController() {
 
   const handleClearSearch = useCallback(() => {
     searchBarRef.current?.clearText();
+    discardSearch();
 
     startTransition(() => {
       setState(state => ({
@@ -147,7 +168,7 @@ export function useSearchController() {
         status: 'idle',
       }));
     });
-  }, []);
+  }, [discardSearch]);
 
   const handleCategoryPress = useCallback((categoryId: string) => {
     router.push(`/category/${categoryId}`);
@@ -163,7 +184,7 @@ export function useSearchController() {
   const handleTextChange = useCallback(
     (text: string) => {
       const normalizedText = text.trim();
-      const willSearch = normalizedText.length > MIN_SEARCH_QUERY_LENGTH;
+      const willSearch = isQueryLongEnough(normalizedText);
 
       setState(state => ({
         ...state,
@@ -174,6 +195,8 @@ export function useSearchController() {
       if (willSearch) {
         void handleQuerySearch(normalizedText);
       } else if (normalizedText.length === 0) {
+        discardSearch();
+
         startTransition(() => {
           setState(state => ({
             ...state,
@@ -184,7 +207,7 @@ export function useSearchController() {
         });
       }
     },
-    [handleQuerySearch],
+    [discardSearch, handleQuerySearch],
   );
 
   const handleSearchSubmit = useCallback(
@@ -212,19 +235,8 @@ export function useSearchController() {
     [handleQuerySearch],
   );
 
-  const handleSearchHistoryClearAll = useCallback(() => {
-    storageService.remove(SEARCH_HISTORY_STORAGE_KEY);
-  }, []);
-
-  const handleSearchHistoryClearItem = useCallback(
-    (historyQuery: string) => {
-      const newHistory = searchHistory.filter(
-        item => item.query !== historyQuery,
-      );
-      storageService.set(SEARCH_HISTORY_STORAGE_KEY, newHistory);
-    },
-    [searchHistory],
-  );
+  const handleSearchHistoryClearAll = clearSearchHistory;
+  const handleSearchHistoryClearItem = removeSearchHistoryQuery;
 
   const handleFilterChange = useCallback((index: number) => {
     startTransition(() => {

@@ -13,7 +13,7 @@ interface SaveImageToGalleryVariables {
 }
 
 export function useSaveImageToGallery() {
-  // eslint-disable-next-line react-doctor/query-mutation-missing-invalidation
+  // oxlint-disable-next-line react-doctor/query-mutation-missing-invalidation -- saving to the photo library changes no cached query
   const { isPending, mutate } = useMutation<
     unknown,
     Error,

@@ -28,7 +28,7 @@ const primaryAccentPress = { light: '#0A6CE0', dark: '#5AA1FF' } as const;
 
 export type Theme = 'foam-dark';
 
-export const semanticColorGroups = {
+const semanticColorGroups = {
   accent: {
     accent: primaryAccent.dark,
     accentAlpha: alpha(primaryAccent.dark, 'CC'),
@@ -114,6 +114,7 @@ export const theme = {
    * Android paints `selectionColor` behind the glyphs, so keep it translucent (0x66 = 40%) or selected text is unreadable.
    */
   colorTextSelection: alpha(primaryAccent.dark, '66'),
+  colorRipple: 'rgba(255, 255, 255, 0.12)',
   colorGrey: semanticColorGroups.gray.accent,
   colorGreyAlpha: semanticColorGroups.gray.accentAlpha,
   colorGreyHoverAlpha: semanticColorGroups.gray.accentHoverAlpha,
@@ -160,14 +161,8 @@ export const theme = {
       light: 'rgba(60,60,67,0.18)',
       dark: 'rgba(255,255,255,0.10)',
     },
-    accent: {
-      light: '#1083FE',
-      dark: '#2E86FF',
-    },
-    accentPress: {
-      light: '#0A6CE0',
-      dark: '#5AA1FF',
-    },
+    accent: primaryAccent,
+    accentPress: primaryAccentPress,
     accentSurface: {
       light: 'rgba(16,131,254,0.10)',
       dark: 'rgba(46,134,255,0.16)',
@@ -248,9 +243,6 @@ export const theme = {
   space56: spaceScale(56),
   space72: spaceScale(72),
 
-  /**
-   * Scales a font size up on iPad. The `Text` type ramp is built with it.
-   */
   fontScale,
 
   fontSize11: fontScale(11),

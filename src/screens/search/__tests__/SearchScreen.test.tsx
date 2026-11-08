@@ -1,13 +1,10 @@
-import { createElement } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
-
 import { act, fireEvent, screen } from '@testing-library/react-native';
 
-import * as SegmentedControlModule from '@app/components/segmented-control/SegmentedControl';
 import { storageService } from '@app/lib/storage';
+import { createCategory } from '@app/services/__fixtures__/twitch/category.fixture';
+import { createTwitchStream } from '@app/services/__fixtures__/twitch/stream.fixture';
 import { twitchService as realTwitchService } from '@app/services/twitch-service';
 import render from '@app/test/render';
-import type { Category } from '@app/types/twitch/category';
 import type { SearchChannelResponse } from '@app/types/twitch/channel';
 
 import { SearchScreen } from '../SearchScreen';
@@ -23,28 +20,7 @@ const twitchService = {
   searchCategories: jest.spyOn(realTwitchService, 'searchCategories'),
   getTopStreams: jest.spyOn(realTwitchService, 'getTopStreams'),
   getTopCategories: jest.spyOn(realTwitchService, 'getTopCategories'),
-  getUserImage: jest.spyOn(realTwitchService, 'getUserImage'),
 };
-
-jest
-  .spyOn(SegmentedControlModule, 'SegmentedControl')
-  .mockImplementation(({ items, onChange }) =>
-    createElement(
-      View,
-      null,
-      items.map(({ label }, i) =>
-        createElement(
-          TouchableOpacity,
-          {
-            key: label,
-            testID: `filter-${label.toLowerCase()}`,
-            onPress: () => onChange(i),
-          },
-          createElement(Text, null, label),
-        ),
-      ),
-    ),
-  );
 
 const mockChannel: SearchChannelResponse = {
   id: 'ch1',
@@ -61,29 +37,20 @@ const mockChannel: SearchChannelResponse = {
   started_at: new Date().toISOString(),
 };
 
-const mockCategoryResult: Category = {
-  id: 'cat1',
-  name: 'Just Chatting',
+const mockCategoryResult = createCategory({
   box_art_url: 'https://example.com/art.jpg',
-};
+});
 
-const mockRailStream = {
+const mockRailStream = createTwitchStream({
   id: 'rail-1',
   user_id: '900',
   user_login: 'railstreamer',
   user_name: 'RailStreamer',
   game_id: '1',
-  game_name: 'Just Chatting',
-  type: 'live' as const,
   title: 'Live on the rail',
   viewer_count: 1200,
-  started_at: new Date().toISOString(),
-  language: 'en',
   thumbnail_url: '',
-  tag_ids: [],
-  tags: [],
-  is_mature: false,
-};
+});
 
 async function advanceTimers(ms: number) {
   await act(async () => {
@@ -110,18 +77,19 @@ describe('SearchScreen', () => {
       data: [mockCategoryResult],
     });
     twitchService.getTopStreams.mockResolvedValue({
-      data: [
-        {
-          ...mockRailStream,
-        },
-      ],
+      data: [mockRailStream],
       pagination: { cursor: '' },
     });
     twitchService.getTopCategories.mockResolvedValue({
-      data: [{ id: 'rail-cat', name: 'Rail Category', box_art_url: '' }],
+      data: [
+        createCategory({
+          id: 'rail-cat',
+          name: 'Rail Category',
+          box_art_url: '',
+        }),
+      ],
       pagination: { cursor: '' },
     });
-    twitchService.getUserImage.mockResolvedValue('');
   });
 
   test('shows live channels and top categories before a search is made', async () => {
@@ -157,7 +125,7 @@ describe('SearchScreen', () => {
 
     expect(screen.getByText('Streamer1')).toBeOnTheScreen();
 
-    fireEvent.press(screen.getByTestId('filter-categories'));
+    fireEvent.press(screen.getByTestId('segmented-control-option-Categories'));
 
     expect(screen.getByText('Just Chatting')).toBeOnTheScreen();
 
@@ -172,6 +140,45 @@ describe('SearchScreen', () => {
     expect(twitchService.searchChannels).not.toHaveBeenCalled();
 
     expect(storageService.getString(SEARCH_HISTORY_STORAGE_KEY)).toBe(null);
+  });
+
+  test('searches as soon as the typed query has 2 chars', async () => {
+    render(<SearchScreen />);
+
+    await typeQuery('st');
+
+    expect(twitchService.searchChannels.mock.calls).toEqual([['st']]);
+
+    expect(screen.getByText('Streamer1')).toBeOnTheScreen();
+  });
+
+  test('ignores a slow response for an older query', async () => {
+    let resolveFirst: (value: SearchChannelResponse[]) => void = () => {};
+
+    twitchService.searchChannels.mockReturnValueOnce(
+      new Promise(resolve => {
+        resolveFirst = resolve;
+      }),
+    );
+
+    twitchService.searchChannels.mockResolvedValueOnce([
+      { ...mockChannel, id: 'ch2', display_name: 'NewerStreamer' },
+    ]);
+
+    render(<SearchScreen />);
+
+    await typeQuery('old');
+    await typeQuery('new');
+
+    expect(screen.getByText('NewerStreamer')).toBeOnTheScreen();
+
+    await act(async () => {
+      resolveFirst([{ ...mockChannel, display_name: 'OlderStreamer' }]);
+    });
+
+    expect(screen.queryByText('OlderStreamer')).not.toBeOnTheScreen();
+
+    expect(screen.getByText('NewerStreamer')).toBeOnTheScreen();
   });
 
   test('shows a skeleton while a search is in flight', async () => {

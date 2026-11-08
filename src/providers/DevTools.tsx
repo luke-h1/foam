@@ -10,13 +10,12 @@ import * as Clipboard from 'expo-clipboard';
 
 import { useDebugOptions } from '@app/hooks/use-debug-options';
 import { storage } from '@app/lib/storage';
+import { logger } from '@app/utils/logger';
 
 // SAFETY: the require resolves the same module the type import names.
-const DevToolsBubble =
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  (
-    require('react-native-react-query-devtools') as typeof import('react-native-react-query-devtools')
-  ).DevToolsBubble;
+const DevToolsBubble = (
+  require('react-native-react-query-devtools') as typeof import('react-native-react-query-devtools')
+).DevToolsBubble;
 
 export function QueryDevelopmentTools() {
   const queryClient = useQueryClient();
@@ -35,7 +34,10 @@ export function QueryDevelopmentTools() {
         try {
           await Clipboard.setStringAsync(text);
           return true;
-        } catch {
+        } catch (error) {
+          logger.main.warn('[DevTools] failed to copy to clipboard', {
+            error,
+          });
           return false;
         }
       }}

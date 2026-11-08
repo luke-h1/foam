@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type { PropsWithChildren } from 'react';
 
 import { act, renderHook, waitFor } from '@testing-library/react-native';
@@ -7,7 +6,11 @@ import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { toast } from 'sonner-native';
 
-import { AuthContext, type AuthContextState } from '@app/context/AuthContext';
+import {
+  AuthContext,
+  type AuthContextState,
+  type LoginWithTwitchResult,
+} from '@app/context/AuthContext';
 
 import { useTwitchSignIn } from '../use-twitch-sign-in';
 import {
@@ -41,79 +44,18 @@ describe('useTwitchSignIn', () => {
     jest.restoreAllMocks();
   });
 
-  test('completes a successful auth response once when auth context re-renders', async () => {
-    const authResult = createTwitchSignInAuthResult('token-123');
-    const request = createTwitchSignInAuthRequest(authResult);
-    const loginWithTwitch = jest.fn();
-
-    mockedUseAuthRequest.mockReturnValue([request, null, jest.fn()]);
-
-    openAuthSessionAsync.mockResolvedValue(
-      createWebBrowserAuthSuccess(authResult.url),
-    );
-
-    function Wrapper({ children }: PropsWithChildren) {
-      const [version, setVersion] = useState(0);
-
-      const contextValue: AuthContextState = {
-        authState: undefined,
-        user: undefined,
-        fetchAnonToken: jest.fn(),
-        loginWithTwitch: async response => {
-          loginWithTwitch(response);
-          setVersion(currentVersion => currentVersion + 1);
-          return null;
-        },
-        logout: jest.fn(),
-        populateAuthState: jest.fn(),
-        ready: version >= 0,
-      };
-
-      return (
-        <AuthContext.Provider value={contextValue}>
-          {children}
-        </AuthContext.Provider>
-      );
-    }
-
-    const { result } = renderHook(() => useTwitchSignIn(), {
-      wrapper: Wrapper,
-    });
-
-    await act(async () => {
-      await result.current.startSignIn();
-    });
-
-    await waitFor(() =>
-      expect(router.replace).toHaveBeenCalledWith('/tabs/following'),
-    );
-
-    expect(loginWithTwitch.mock.calls).toEqual([[authResult]]);
-
-    expect(jest.mocked(toast.success).mock.calls).toEqual([['Logged in']]);
-  });
-
-  test('uses the success callback instead of navigating when provided', async () => {
-    const authResult = createTwitchSignInAuthResult('token-456');
-    const request = createTwitchSignInAuthRequest(authResult);
-    const loginWithTwitch = jest.fn();
-    const onSuccess = jest.fn();
-
-    mockedUseAuthRequest.mockReturnValue([request, null, jest.fn()]);
-
-    openAuthSessionAsync.mockResolvedValue(
-      createWebBrowserAuthSuccess(authResult.url),
-    );
-
+  function renderSignIn(
+    loginWithTwitch: AuthContextState['loginWithTwitch'],
+    onSuccess = jest.fn(),
+  ) {
     function Wrapper({ children }: PropsWithChildren) {
       const contextValue: AuthContextState = {
         authState: undefined,
         user: undefined,
-        fetchAnonToken: jest.fn(),
         loginWithTwitch,
         logout: jest.fn(),
-        populateAuthState: jest.fn(),
         ready: true,
+        signInId: 0,
       };
 
       return (
@@ -123,9 +65,27 @@ describe('useTwitchSignIn', () => {
       );
     }
 
-    const { result } = renderHook(() => useTwitchSignIn({ onSuccess }), {
+    return renderHook(() => useTwitchSignIn({ onSuccess }), {
       wrapper: Wrapper,
     });
+  }
+
+  test('shows the success toast and calls onSuccess once on a successful sign-in', async () => {
+    const authResult = createTwitchSignInAuthResult('token-456');
+    const request = createTwitchSignInAuthRequest(authResult);
+    const onSuccess = jest.fn();
+
+    const loginWithTwitch = jest.fn(
+      async (): Promise<LoginWithTwitchResult> => ({ ok: true }),
+    );
+
+    mockedUseAuthRequest.mockReturnValue([request, null, jest.fn()]);
+
+    openAuthSessionAsync.mockResolvedValue(
+      createWebBrowserAuthSuccess(authResult.url),
+    );
+
+    const { result } = renderSignIn(loginWithTwitch, onSuccess);
 
     await act(async () => {
       await result.current.startSignIn();
@@ -136,6 +96,75 @@ describe('useTwitchSignIn', () => {
     expect(loginWithTwitch.mock.calls).toEqual([[authResult]]);
 
     expect(jest.mocked(toast.success).mock.calls).toEqual([['Logged in']]);
+
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  test('shows no toast and does not call onSuccess when the user cancels', async () => {
+    const request = createTwitchSignInAuthRequest(
+      createTwitchSignInAuthResult('unused'),
+    );
+
+    const onSuccess = jest.fn();
+
+    const loginWithTwitch = jest.fn(
+      async (): Promise<LoginWithTwitchResult> => ({
+        ok: false,
+        reason: 'cancelled',
+      }),
+    );
+
+    mockedUseAuthRequest.mockReturnValue([request, null, jest.fn()]);
+    openAuthSessionAsync.mockResolvedValue({
+      type: WebBrowser.WebBrowserResultType.CANCEL,
+    });
+
+    const { result } = renderSignIn(loginWithTwitch, onSuccess);
+
+    await act(async () => {
+      await result.current.startSignIn();
+    });
+
+    expect(loginWithTwitch.mock.calls).toEqual([[{ type: 'cancel' }]]);
+
+    expect(toast.success).not.toHaveBeenCalled();
+
+    expect(toast.error).not.toHaveBeenCalled();
+
+    expect(onSuccess).not.toHaveBeenCalled();
+
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  test('does not report success or navigate when the login fails', async () => {
+    const authResult = createTwitchSignInAuthResult('token-789');
+    const request = createTwitchSignInAuthRequest(authResult);
+    const onSuccess = jest.fn();
+
+    const loginWithTwitch = jest.fn(
+      async (): Promise<LoginWithTwitchResult> => ({
+        ok: false,
+        reason: 'error',
+      }),
+    );
+
+    mockedUseAuthRequest.mockReturnValue([request, null, jest.fn()]);
+
+    openAuthSessionAsync.mockResolvedValue(
+      createWebBrowserAuthSuccess(authResult.url),
+    );
+
+    const { result } = renderSignIn(loginWithTwitch, onSuccess);
+
+    await act(async () => {
+      await result.current.startSignIn();
+    });
+
+    expect(loginWithTwitch).toHaveBeenCalledTimes(1);
+
+    expect(toast.success).not.toHaveBeenCalled();
+
+    expect(onSuccess).not.toHaveBeenCalled();
 
     expect(router.replace).not.toHaveBeenCalled();
   });

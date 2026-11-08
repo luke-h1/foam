@@ -1,91 +1,83 @@
+import type {
+  ChannelPollChoiceState,
+  ChannelPollState,
+} from '@app/types/twitch/poll';
+import {
+  createEventSubPoll,
+  createHelixPoll,
+} from '@app/utils/twitch/channel-activity/__tests__/__fixtures__/channelPollActivity.fixture';
+
 import { normaliseEventSubPoll, normaliseHelixPoll } from '../normalisePoll';
 
+const choices: ChannelPollChoiceState[] = [
+  {
+    id: 'choice-a',
+    title: 'Crisps',
+    votes: 3,
+    channelPointsVotes: 1,
+    bitsVotes: 0,
+    percentage: 75,
+  },
+  {
+    id: 'choice-b',
+    title: 'Chocolate',
+    votes: 1,
+    channelPointsVotes: 0,
+    bitsVotes: 0,
+    percentage: 25,
+  },
+];
+
 describe('normalisePoll', () => {
-  test('normalises helix polls with percentages', () => {
-    const result = normaliseHelixPoll({
+  test('normalises a helix poll and derives endsAt from the duration', () => {
+    expect(normaliseHelixPoll(createHelixPoll())).toEqual<ChannelPollState>({
       id: 'poll-1',
-      broadcaster_id: '1',
-      broadcaster_login: 'foo',
-      broadcaster_name: 'Foo',
+      broadcasterId: 'channel-id',
+      broadcasterLogin: 'streamer',
+      broadcasterName: 'Streamer',
       title: 'Best snack?',
-      choices: [
-        {
-          id: 'a',
-          title: 'Crisps',
-          votes: 3,
-          channel_points_votes: 1,
-          bits_votes: 0,
-        },
-        {
-          id: 'b',
-          title: 'Chocolate',
-          votes: 1,
-          channel_points_votes: 0,
-          bits_votes: 0,
-        },
-      ],
-      bits_voting_enabled: false,
-      bits_per_vote: 0,
-      channel_points_voting_enabled: true,
-      channel_points_per_vote: 200,
-      status: 'ACTIVE',
-      duration: 120,
-      started_at: '2026-05-09T10:00:00Z',
-      ended_at: null,
+      choices,
+      totalVotes: 4,
+      channelPointsVotingEnabled: true,
+      channelPointsPerVote: 200,
+      durationSeconds: 120,
+      startedAt: '2026-05-09T10:00:00Z',
+      endsAt: '2026-05-09T10:02:00.000Z',
+      status: 'active',
+      isActive: true,
     });
-
-    expect(result.totalVotes).toBe(4);
-
-    expect(result.status).toBe('active');
-
-    expect(result.isActive).toBe(true);
-
-    expect(result.choices[0]?.percentage).toBe(75);
-
-    expect(result.choices[1]?.percentage).toBe(25);
   });
 
-  test('normalises eventsub end payloads', () => {
-    const result = normaliseEventSubPoll(
-      {
-        id: 'poll-2',
-        broadcaster_user_id: '1',
-        broadcaster_user_login: 'foo',
-        broadcaster_user_name: 'Foo',
-        title: 'Best drink?',
-        choices: [
-          {
-            id: 'a',
-            title: 'Tea',
-            votes: 8,
-            channel_points_votes: 2,
-            bits_votes: 0,
-          },
-          {
-            id: 'b',
-            title: 'Coffee',
-            votes: 2,
-            channel_points_votes: 0,
-            bits_votes: 0,
-          },
-        ],
-        channel_points_voting: {
-          is_enabled: true,
-          amount_per_vote: 50,
-        },
-        started_at: '2026-05-09T10:00:00Z',
-        ended_at: '2026-05-09T10:01:00Z',
-        status: 'completed',
-      },
-      'completed',
-    );
+  test('normalises an eventsub poll with the fallback status and its own endsAt', () => {
+    expect(
+      normaliseEventSubPoll(
+        createEventSubPoll({ ended_at: '2026-05-09T10:01:00Z' }),
+        'completed',
+      ),
+    ).toEqual<ChannelPollState>({
+      id: 'poll-1',
+      broadcasterId: 'channel-id',
+      broadcasterLogin: 'streamer',
+      broadcasterName: 'Streamer',
+      title: 'Best snack?',
+      choices,
+      totalVotes: 4,
+      channelPointsVotingEnabled: true,
+      channelPointsPerVote: 200,
+      startedAt: '2026-05-09T10:00:00Z',
+      endsAt: '2026-05-09T10:02:00Z',
+      endedAt: '2026-05-09T10:01:00Z',
+      status: 'completed',
+      isActive: false,
+    });
+  });
 
-    expect(result.status).toBe('completed');
-
-    expect(result.isActive).toBe(false);
-
-    expect(result.totalVotes).toBe(10);
-
-    expect(result.choices[0]?.percentage).toBe(80);
+  test('prefers the payload status over the fallback', () => {
+    expect(
+      normaliseEventSubPoll(
+        createEventSubPoll({ status: 'terminated' }),
+        'completed',
+      ).status,
+    ).toBe('terminated');
   });
 });

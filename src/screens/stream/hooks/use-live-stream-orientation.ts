@@ -62,7 +62,7 @@ function useWindowDimsAreStuck(deviceLandscape: boolean | null): boolean {
     // clear the moment the two agree again, and a remembered "stuck" value
     // matches the next rotation's lagging window value and skips the wait.
     if (deviceLandscape === null || deviceLandscape === winLandscape) {
-      // eslint-disable-next-line react-doctor/no-adjust-state-on-prop-change -- see above
+      // oxlint-disable-next-line react-doctor/no-adjust-state-on-prop-change -- see above
       setWinStuck(false);
       return undefined;
     }

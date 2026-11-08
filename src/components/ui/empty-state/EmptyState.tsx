@@ -35,10 +35,6 @@ interface EmptyStateProps {
   style?: StyleProp<ViewStyle>;
 }
 
-/**
- * Empty and error state for a screen or list, with at most one action. It
- * fades in so the switch from content or a skeleton is not abrupt.
- */
 export function EmptyState({
   heading,
   content,

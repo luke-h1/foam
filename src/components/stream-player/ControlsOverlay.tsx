@@ -39,9 +39,6 @@ import { formatDuration } from './util/formatStreamDuration';
 interface ControlsOverlayProps {
   isVisible: boolean;
   muted?: boolean;
-  /**
-   * Drives the overlay fade + pointer events on the UI thread.
-   */
   opacity: SharedValue<number>;
   onBackPress?: () => void;
   onCreateClipPress?: () => void;
@@ -110,9 +107,6 @@ interface PlayerActionButtonsProps {
   secondaryActions: MenuAction[];
 }
 
-/**
- * Mute, and the overflow menu of everything else the player can do.
- */
 function PlayerActionButtons({
   handleSecondaryAction,
   muted,
@@ -211,6 +205,13 @@ function StreamMetadataColumn({
   );
 }
 
+function withOnState(
+  action: MenuAction,
+  isOn: boolean | undefined,
+): MenuAction {
+  return isOn ? { ...action, state: 'on' } : action;
+}
+
 export function ControlsOverlay({
   isVisible,
   muted,
@@ -259,17 +260,12 @@ export function ControlsOverlay({
     }
 
     if (onPipPress) {
-      const pipAction: MenuAction = {
-        id: 'pip',
-        title: 'Picture in Picture',
-        image: 'pip',
-      };
-
-      if (pipActive) {
-        pipAction.state = 'on';
-      }
-
-      actions.push(pipAction);
+      actions.push(
+        withOnState(
+          { id: 'pip', title: 'Picture in Picture', image: 'pip' },
+          pipActive,
+        ),
+      );
     }
 
     if (onCreateClipPress) {
@@ -281,17 +277,12 @@ export function ControlsOverlay({
     }
 
     if (onSleepTimerPress) {
-      const sleepTimerAction: MenuAction = {
-        id: 'sleep-timer',
-        title: 'Sleep timer',
-        image: 'moon.zzz',
-      };
-
-      if (sleepTimerActive) {
-        sleepTimerAction.state = 'on';
-      }
-
-      actions.push(sleepTimerAction);
+      actions.push(
+        withOnState(
+          { id: 'sleep-timer', title: 'Sleep timer', image: 'moon.zzz' },
+          sleepTimerActive,
+        ),
+      );
     }
 
     if (onSharePress) {

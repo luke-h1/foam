@@ -1,6 +1,5 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 
-import * as SegmentedControlModule from '@app/components/segmented-control/SegmentedControl';
 import { StreamerProfileScreen } from '@app/screens/stream/StreamerProfileScreen';
 import { streamElementsService } from '@app/services/streamelements-service';
 import { twitchService } from '@app/services/twitch-service';
@@ -9,30 +8,6 @@ import type { StreamElementsChatStats } from '@app/types/streamelements/stats';
 import type { TwitchClip } from '@app/types/twitch/clip';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 import type { TwitchVideo } from '@app/types/twitch/video';
-
-// The native @expo/ui SegmentedControl cannot receive segment-change events in tests; expose each segment as a pressable.
-jest
-  .spyOn(SegmentedControlModule, 'SegmentedControl')
-  .mockImplementation(({ items, onChange }) => {
-    const React = require('react');
-    const { View, TouchableOpacity, Text } = require('react-native');
-
-    return React.createElement(
-      View,
-      null,
-      items.map(({ label }: { label: string }, i: number) =>
-        React.createElement(
-          TouchableOpacity,
-          {
-            key: label,
-            testID: `tab-${label.toLowerCase()}`,
-            onPress: () => onChange(i),
-          },
-          React.createElement(Text, null, label),
-        ),
-      ),
-    );
-  });
 
 const getUserSpy = jest.spyOn(twitchService, 'getUser');
 const getClipsSpy = jest.spyOn(twitchService, 'getClips');
@@ -140,7 +115,7 @@ describe('StreamerProfileScreen', () => {
 
     await screen.findByText('Epic Broadcast', {}, FIND_TIMEOUT);
 
-    fireEvent.press(screen.getByTestId('tab-clips'));
+    fireEvent.press(screen.getByTestId('segmented-control-option-Clips'));
 
     expect(
       await screen.findByText('Funny Clip', {}, FIND_TIMEOUT),

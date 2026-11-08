@@ -10,19 +10,11 @@ import { PLAYER_LOAD_TIMEOUT_MS } from '../util/playerTelemetry';
 /**
  * Linger so the first decoded frame is on screen before the poster fades.
  */
-/**
- * Linger so the first decoded frame is on screen before the poster fades.
- */
 const POSTER_HIDE_DELAY_MS = 450;
 
 const LAYER_TREE_NUDGE_PX = 1;
 const LAYER_TREE_NUDGE_SETTLE_MS = 200;
 
-/**
- * Owns everything that happens around a WebView generation: when it remounts,
- * when the poster comes off, and the layer-tree pulses iOS needs to keep the
- * AVPlayer layer attached.
- */
 export function useStreamPlayerLifecycle({
   channel,
   sourceKey,
@@ -70,10 +62,6 @@ export function useStreamPlayerLifecycle({
     pulse(2500);
   }, []);
 
-  /**
-   * Loading frame stays over the WebView until playback starts, hiding the
-   * black box during page load.
-   */
   const [loadedGeneration, setLoadedGeneration] = useState<string | null>(null);
 
   const generationRef = useRef('');

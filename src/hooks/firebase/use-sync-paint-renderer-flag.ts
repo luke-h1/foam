@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
-import { Platform } from 'react-native';
 
-import { paintRendererFlag$ } from '@app/store/preference-store';
+import {
+  paintRendererFlag$,
+  resolvePlatformPaintRenderer,
+} from '@app/store/preference-store';
 
 import { useRemoteConfig } from './use-remote-config';
 
@@ -15,7 +17,7 @@ export function useSyncPaintRendererFlag(): void {
         paintRendererFlag$.set('off');
         break;
       case 'skia':
-        paintRendererFlag$.set(Platform.OS === 'web' ? 'native' : 'skia');
+        paintRendererFlag$.set(resolvePlatformPaintRenderer('skia'));
         break;
       default:
         paintRendererFlag$.set('native');

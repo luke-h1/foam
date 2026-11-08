@@ -1,48 +1,21 @@
 import { screen } from '@testing-library/react-native';
 
 import { CategoryScreen } from '@app/screens/category/CategoryScreen';
+import { createCategory } from '@app/services/__fixtures__/twitch/category.fixture';
+import { createTwitchStream } from '@app/services/__fixtures__/twitch/stream.fixture';
 import { twitchService as realTwitchService } from '@app/services/twitch-service';
 import render from '@app/test/render';
-import type { Category } from '@app/types/twitch/category';
-import type { TwitchStream } from '@app/types/twitch/stream';
 
 const twitchService = {
-  getUserImage: jest.spyOn(realTwitchService, 'getUserImage'),
   getCategory: jest.spyOn(realTwitchService, 'getCategory'),
   getStreamsByCategory: jest.spyOn(realTwitchService, 'getStreamsByCategory'),
 };
 
-const mockCategory: Category = {
-  id: 'cat1',
-  name: 'Just Chatting',
-  box_art_url: 'https://example.com/art-{width}x{height}.jpg',
-};
+const mockCategory = createCategory();
 
-const mockStream: TwitchStream = {
-  id: '1',
-  user_id: '100',
-  user_login: 'streamer1',
-  user_name: 'Streamer1',
-  game_id: 'cat1',
-  game_name: 'Just Chatting',
-  type: 'live' as const,
-  title: 'Test stream',
-  viewer_count: 10_000,
-  started_at: new Date().toISOString(),
-  language: 'en',
-  thumbnail_url: '',
-  tag_ids: [],
-  tags: [],
-  is_mature: false,
-};
+const mockStream = createTwitchStream({ game_id: 'cat1', thumbnail_url: '' });
 
 describe('CategoryScreen', () => {
-  beforeEach(() => {
-    twitchService.getUserImage.mockResolvedValue(
-      'https://example.com/avatar.jpg',
-    );
-  });
-
   test('shows loading state while category or streams are loading', () => {
     twitchService.getCategory.mockReturnValue(new Promise(() => {}));
     twitchService.getStreamsByCategory.mockReturnValue(new Promise(() => {}));

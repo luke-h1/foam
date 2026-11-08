@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 import { useEffect, useState } from 'react';
 
 import Constants from 'expo-constants';

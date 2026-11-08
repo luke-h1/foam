@@ -59,8 +59,8 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
 
-import { useAccentColor } from '@app/context/AccentColorContext';
-import { colors } from '@app/styles/colors';
+import { useSyncRef } from '@app/hooks/use-sync-ref';
+import { theme } from '@app/styles/themes';
 import {
   RADIUS_VALUES,
   type UIColor,
@@ -120,9 +120,6 @@ interface ResolveInputColorsOptions {
   };
 }
 
-/**
- * An explicit style or prop wins; otherwise the variant supplies the colour.
- */
 function resolveInputColors({
   cursorColor,
   flattenedStyle,
@@ -191,7 +188,6 @@ function useIosInputField({
 }: ThemedInputProps) {
   'use no memo';
   const colorScheme = useColorScheme();
-  const { accentHex } = useAccentColor();
   const scheme: 'light' | 'dark' = colorScheme === 'light' ? 'light' : 'dark';
   const textFieldRef = useRef<TextFieldRef>(null);
   const secureFieldRef = useRef<SecureFieldRef>(null);
@@ -209,7 +205,7 @@ function useIosInputField({
 
   const variants = color
     ? generateVariantConfig(color, scheme)
-    : generateVariantConfigFromBase(accentHex || colors[scheme].tint, scheme);
+    : generateVariantConfigFromBase(theme.colorPrimary, scheme);
 
   const variantConfig = variants[variant];
 
@@ -269,19 +265,11 @@ function useIosInputField({
   });
 
   const disabled = editable === false || readOnly === true;
-  const onSubmitEditingRef = useRef(onSubmitEditing);
-  const blurOnSubmitRef = useRef(blurOnSubmit);
-  const multilineRef = useRef(multiline);
-  const submitBehaviorRef = useRef(submitBehavior);
-  const secureTextEntryRef = useRef(secureTextEntry);
-
-  useLayoutEffect(() => {
-    onSubmitEditingRef.current = onSubmitEditing;
-    blurOnSubmitRef.current = blurOnSubmit;
-    multilineRef.current = multiline;
-    submitBehaviorRef.current = submitBehavior;
-    secureTextEntryRef.current = secureTextEntry;
-  });
+  const onSubmitEditingRef = useSyncRef(onSubmitEditing);
+  const blurOnSubmitRef = useSyncRef(blurOnSubmit);
+  const multilineRef = useSyncRef(multiline);
+  const submitBehaviorRef = useSyncRef(submitBehavior);
+  const secureTextEntryRef = useSyncRef(secureTextEntry);
 
   const inputInstanceId = useId();
   const stableSubmitHandler = getIosInputSubmitInvoker(inputInstanceId);
@@ -316,7 +304,16 @@ function useIosInputField({
     return () => {
       unregisterIosInputSubmitHandler(inputInstanceId);
     };
-  }, [inputInstanceId, nativeText, onSubmitEditing]);
+  }, [
+    blurOnSubmitRef,
+    inputInstanceId,
+    multilineRef,
+    nativeText,
+    onSubmitEditing,
+    onSubmitEditingRef,
+    secureTextEntryRef,
+    submitBehaviorRef,
+  ]);
 
   const textFieldModifiers = buildTextFieldModifiers({
     accessibilityLabel,
@@ -869,10 +866,6 @@ function borderWidthForStyle(style: TextStyle & ViewStyle) {
   );
 }
 
-/**
- * Every style value this file feeds to a SwiftUI modifier: lengths, radii,
- * border widths and font sizes.
- */
 type StyleMeasurement = DimensionValue | string | undefined;
 
 function isStyleNumber(value: StyleMeasurement): value is number {

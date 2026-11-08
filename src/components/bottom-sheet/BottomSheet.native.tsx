@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useImperativeHandle,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-} from 'react';
+import { useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { PropsWithChildren, Ref } from 'react';
 
@@ -14,6 +8,7 @@ import {
 } from '@expo/ui/community/bottom-sheet';
 import { Toaster } from 'sonner-native';
 
+import { useSyncRef } from '@app/hooks/use-sync-ref';
 import { theme } from '@app/styles/themes';
 import { toastStyle } from '@app/styles/toast';
 
@@ -86,11 +81,7 @@ export function BottomSheet({
   const { height: windowHeight } = useWindowDimensions();
   const sheetRef = useRef<BottomSheetMethods>(null);
   const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const onDismissRef = useRef(onDismiss);
-
-  useLayoutEffect(() => {
-    onDismissRef.current = onDismiss;
-  });
+  const onDismissRef = useSyncRef(onDismiss);
 
   useImperativeHandle(
     ref,

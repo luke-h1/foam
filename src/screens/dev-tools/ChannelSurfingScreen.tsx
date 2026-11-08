@@ -45,7 +45,7 @@ export function ChannelSurfingScreen() {
       }
 
       // Strictly ordered: fetch the update, then reload.
-      // eslint-disable-next-line react-doctor/async-parallel
+      // oxlint-disable-next-line react-doctor/async-parallel
       await fetchUpdateAsync();
 
       await reloadAsync();

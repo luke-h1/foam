@@ -1,92 +1,57 @@
 import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { PressableArea } from '@app/components/pressable-area/PressableArea';
+import {
+  ChannelActivityBar,
+  ChannelActivityBars,
+  ChannelActivityCard,
+  ChannelActivityFooter,
+  ChannelActivityHeader,
+  ChannelActivityTitle,
+} from '@app/components/channel-activity-card/ChannelActivityCard';
 import { Badge } from '@app/components/ui/badge/Badge';
 import { Text } from '@app/components/ui/text/Text';
+import { useCountdownLabel } from '@app/hooks/use-countdown-label';
 import { theme } from '@app/styles/themes';
 import type { ChannelPollState } from '@app/types/twitch/poll';
-import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 
 interface ChannelPollCardProps {
   channelLogin: string;
   poll: ChannelPollState;
 }
 
-function formatTimeRemaining(poll: ChannelPollState): string | null {
-  if (!poll.isActive || !poll.endsAt) {
-    return null;
-  }
-
-  const remainingMs = new Date(poll.endsAt).getTime() - Date.now();
-
-  if (remainingMs <= 0) {
-    return 'Ending…';
-  }
-
-  const remainingSeconds = Math.ceil(remainingMs / 1000);
-  const minutes = Math.floor(remainingSeconds / 60);
-  const seconds = remainingSeconds % 60;
-
-  if (minutes > 0) {
-    return `${minutes}:${String(seconds).padStart(2, '0')} left`;
-  }
-
-  return `${remainingSeconds}s left`;
-}
-
 function ChannelPollCardComponent({
   channelLogin,
   poll,
 }: ChannelPollCardProps) {
-  const timeRemaining = formatTimeRemaining(poll);
-  const statusLabel = poll.isActive ? 'Live poll' : 'Poll result';
+  const timeLabel = useCountdownLabel(
+    poll.isActive ? poll.endsAt : undefined,
+    'Ending…',
+  );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerMeta}>
-          <Badge color='purple' variant='soft'>
-            {statusLabel}
+    <ChannelActivityCard>
+      <ChannelActivityHeader timeLabel={timeLabel}>
+        <Badge color='purple' variant='soft'>
+          {poll.isActive ? 'Live poll' : 'Poll result'}
+        </Badge>
+        {poll.channelPointsVotingEnabled ? (
+          <Badge color='amber' variant='soft'>
+            <Text type='subhead' weight='semibold'>
+              {`+${poll.channelPointsPerVote} pts / extra vote`}
+            </Text>
           </Badge>
-          {poll.channelPointsVotingEnabled ? (
-            <Badge color='amber' variant='soft'>
-              <Text type='subhead' weight='semibold'>
-                {`+${poll.channelPointsPerVote} pts / extra vote`}
-              </Text>
-            </Badge>
-          ) : null}
-        </View>
-        {timeRemaining ? (
-          <Text color='gray.textLow' tabular type='caption' weight='medium'>
-            {timeRemaining}
-          </Text>
         ) : null}
-      </View>
-
-      <Text
-        color='gray.text'
-        style={styles.title}
-        type='body'
-        weight='semibold'
-      >
-        {poll.title}
-      </Text>
-
-      <View style={styles.choiceList}>
+      </ChannelActivityHeader>
+      <ChannelActivityTitle>{poll.title}</ChannelActivityTitle>
+      <ChannelActivityBars>
         {poll.choices.map(choice => (
-          <View key={choice.id} style={styles.choiceTrack}>
-            <View
-              style={[
-                styles.choiceFill,
-                {
-                  width: `${Math.max(
-                    choice.percentage,
-                    choice.votes > 0 ? 4 : 0,
-                  )}%`,
-                },
-              ]}
-            />
+          <ChannelActivityBar
+            key={choice.id}
+            fillColor='rgba(145, 70, 255, 0.20)'
+            hasVotes={choice.votes > 0}
+            percentage={choice.percentage}
+          >
             <View style={styles.choiceContent}>
               <Text
                 color='gray.text'
@@ -105,28 +70,19 @@ function ChannelPollCardComponent({
                 {choice.percentage}% · {choice.votes}
               </Text>
             </View>
-          </View>
+          </ChannelActivityBar>
         ))}
-      </View>
-
-      <View style={styles.footer}>
-        <Text color='gray.textLow' tabular type='caption'>
-          {poll.totalVotes} total votes
-        </Text>
-        {poll.isActive ? (
-          <PressableArea
-            accessibilityRole='button'
-            onPress={() =>
-              openLinkInBrowser(`https://www.twitch.tv/${channelLogin}`)
-            }
-          >
-            <Text color='violet.accent' type='caption' weight='semibold'>
-              Vote on Twitch
-            </Text>
-          </PressableArea>
-        ) : null}
-      </View>
-    </View>
+      </ChannelActivityBars>
+      <ChannelActivityFooter
+        channelLogin={channelLogin}
+        totalLabel={`${poll.totalVotes} total votes`}
+        twitchLink={
+          poll.isActive
+            ? { label: 'Vote on Twitch', color: 'violet.accent' }
+            : null
+        }
+      />
+    </ChannelActivityCard>
   );
 }
 
@@ -140,53 +96,5 @@ const styles = StyleSheet.create({
     minHeight: 30,
     paddingHorizontal: theme.space12,
     paddingVertical: theme.space8,
-  },
-  choiceFill: {
-    backgroundColor: 'rgba(145, 70, 255, 0.20)',
-    borderRadius: 10,
-    borderCurve: 'continuous',
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-    top: 0,
-  },
-  choiceList: {
-    gap: theme.space8,
-  },
-  choiceTrack: {
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.colorBorderSecondary,
-    borderRadius: 10,
-    borderCurve: 'continuous',
-    borderWidth: StyleSheet.hairlineWidth,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  container: {
-    backgroundColor: theme.color.surface.dark,
-    borderBottomColor: theme.colorBorderSecondary,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: theme.space12,
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space12,
-  },
-  footer: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  header: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  headerMeta: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.space8,
-  },
-  title: {
-    lineHeight: 20,
   },
 });

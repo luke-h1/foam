@@ -25,13 +25,13 @@ import {
   runChatHotspotBenchmarks,
 } from '@app/dev/chat-hotspot-bench/scenarios';
 import { SUITE_TOTAL_MS } from '@app/dev/image-benchmark/chat-perf-suite';
+import { useChatPerfSuite } from '@app/dev/image-benchmark/hooks/use-chat-perf-suite';
+import { resetFloodReplay } from '@app/dev/image-benchmark/hooks/use-synthetic-chat-flood';
 import { LiveChatPerfOverlay } from '@app/dev/image-benchmark/LiveChatPerfOverlay';
 import {
   setSyntheticChatControl,
   SYNTHETIC_PRESETS,
 } from '@app/dev/image-benchmark/synthetic-chat-control';
-import { useChatPerfSuite } from '@app/dev/image-benchmark/use-chat-perf-suite';
-import { resetFloodReplay } from '@app/dev/image-benchmark/use-synthetic-chat-flood';
 
 const CINNA = { channelId: '204730616', channelName: 'cinna' };
 
@@ -131,7 +131,6 @@ export function ChatPerfScreen() {
   }, [floodParam]);
 
   const setPreset = (key: string) => {
-    // Restart the fixture from the top so each manual run is the same replay.
     resetFloodReplay();
 
     setSyntheticChatControl(SYNTHETIC_PRESETS[key]!);

@@ -1,36 +1,18 @@
 import { useState } from 'react';
-import { Platform } from 'react-native';
 
-import type { ReloadScreenOptions } from 'expo-updates';
-import * as Updates from 'expo-updates';
 import { toast } from 'sonner-native';
 
-import { ENV_SUPPORTS_OTA } from '@app/screens/dev-tools/util/envSupportsOta';
-import { getStoreUrlAsync } from '@app/screens/dev-tools/util/getStoreUrlAsync';
-import { theme } from '@app/styles/themes';
-import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
+import { OTA_UPDATES_ACTIVE } from '@app/utils/app-update/constants';
+import { openStore } from '@app/utils/app-update/openStore';
+import { otaTelemetryFields } from '@app/utils/app-update/otaTelemetry';
+import {
+  checkAndFetchOtaUpdate,
+  reloadIntoOtaUpdate,
+} from '@app/utils/app-update/otaUpdateFlow';
 import { logger } from '@app/utils/logger';
 
-const OTA_RELOAD_SCREEN_OPTIONS = {
-  backgroundColor: theme.color.background.dark,
-  fade: true,
-  spinner: {
-    color: theme.colorPrimary,
-    size: 'large' as const,
-  },
-} satisfies ReloadScreenOptions;
-
-function openStore() {
-  void (async () => {
-    const storeUrl = await getStoreUrlAsync();
-
-    if (storeUrl) {
-      openLinkInBrowser(storeUrl);
-      return;
-    }
-
-    toast.error('Could not open the store');
-  })();
+function openStorePage() {
+  void openStore();
 }
 
 export function useAppUpdate() {
@@ -41,7 +23,7 @@ export function useAppUpdate() {
       return;
     }
 
-    if (!ENV_SUPPORTS_OTA) {
+    if (!OTA_UPDATES_ACTIVE) {
       toast.error('Over-the-air updates are not available for this build');
       return;
     }
@@ -51,16 +33,14 @@ export function useAppUpdate() {
 
     void (async () => {
       try {
-        const result = await Updates.checkForUpdateAsync();
+        const fetched = await checkAndFetchOtaUpdate();
 
-        if (!result.isAvailable) {
+        if (!fetched) {
           toast.success('You are on the latest version', {
             id: pendingToastId,
           });
           return;
         }
-
-        await Updates.fetchUpdateAsync();
 
         toast.success('Update downloaded', {
           id: pendingToastId,
@@ -69,8 +49,8 @@ export function useAppUpdate() {
           action: {
             label: 'Restart',
             onClick: () => {
-              void Updates.reloadAsync({
-                reloadScreenOptions: OTA_RELOAD_SCREEN_OPTIONS,
+              reloadIntoOtaUpdate().catch((error: unknown) => {
+                logger.main.error('Manual OTA reload failed', { error });
               });
             },
           },
@@ -81,8 +61,7 @@ export function useAppUpdate() {
           error: error instanceof Error ? error : new Error(String(error)),
           category: 'OTAUpdatesService',
           action: 'manual_bundle_update_failed',
-          channel: Updates.channel || 'unknown',
-          platform: Platform.OS,
+          ...otaTelemetryFields(),
         });
 
         toast.error('Could not download update', { id: pendingToastId });
@@ -92,5 +71,5 @@ export function useAppUpdate() {
     });
   };
 
-  return { openStore, updateBundle, isCheckingBundle };
+  return { openStore: openStorePage, updateBundle, isCheckingBundle };
 }

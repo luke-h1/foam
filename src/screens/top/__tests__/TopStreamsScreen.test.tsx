@@ -1,8 +1,8 @@
 import { screen } from '@testing-library/react-native';
 
+import { createTwitchStream } from '@app/services/__fixtures__/twitch/stream.fixture';
 import { twitchService } from '@app/services/twitch-service';
 import render from '@app/test/render';
-import type { TwitchStream } from '@app/types/twitch/stream';
 
 import { TopStreamsScreen } from '../TopStreamsScreen';
 
@@ -10,31 +10,9 @@ import { TopStreamsScreen } from '../TopStreamsScreen';
 
 const getTopStreamsSpy = jest.spyOn(twitchService, 'getTopStreams');
 
-const getUserImageSpy = jest.spyOn(twitchService, 'getUserImage');
-
-const mockStream: TwitchStream = {
-  id: '1',
-  user_id: '100',
-  user_login: 'streamer1',
-  user_name: 'Streamer1',
-  game_id: '509658',
-  game_name: 'Just Chatting',
-  type: 'live' as const,
-  title: 'Test stream',
-  viewer_count: 10_000,
-  started_at: new Date().toISOString(),
-  language: 'en',
-  thumbnail_url: 'https://example.com/thumb.jpg',
-  tag_ids: [],
-  tags: [],
-  is_mature: false,
-};
+const mockStream = createTwitchStream();
 
 describe('TopStreamsScreen', () => {
-  beforeEach(() => {
-    getUserImageSpy.mockResolvedValue('https://example.com/avatar.jpg');
-  });
-
   test('shows loading skeletons while fetching', () => {
     getTopStreamsSpy.mockReturnValue(new Promise(() => {}));
 

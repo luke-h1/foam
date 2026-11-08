@@ -12,28 +12,25 @@ import {
   ingestBurstMessages,
   ingestSeedMessages,
 } from '@app/store/chat/__fixtures__/messages.perf.fixture';
+import {
+  denseEmoteData,
+  reprocessChatLines,
+} from '@app/store/chat/__fixtures__/resolveMessageEmoteTokens.perf.fixture';
 import { addMessages, clearMessages } from '@app/store/chat/actions/messages';
+import { resolveMessageEmoteTokens } from '@app/store/chat/actions/resolveMessageEmoteTokens';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
 import {
   badgeLookupUserstates,
   denseBadgeSources,
 } from '@app/utils/chat/__fixtures__/findBadges.perf.fixture';
-import {
-  denseEmoteData,
-  reprocessChatLines,
-} from '@app/utils/chat/__fixtures__/resolveMessageEmoteTokens.perf.fixture';
 import { findBadges } from '@app/utils/chat/findBadges';
-import { resolveMessageEmoteParts } from '@app/utils/chat/resolveMessageEmoteTokens';
 
 import { measureSync, type SyncMeasureResult } from './measure-sync';
 
-export interface ChatHotspotScenario {
+interface ChatHotspotScenario {
   id: string;
   name: string;
-  /**
-   * Optional one-shot setup before warmup (e.g. build WeakMap indexes).
-   */
   setup?: () => void;
   run: () => void;
 }
@@ -60,7 +57,7 @@ function runFindBadgesDense(): void {
 
 function runResolveMessageEmotePartsBatch(): void {
   for (const line of reprocessChatLines) {
-    resolveMessageEmoteParts({
+    resolveMessageEmoteTokens({
       channelId: 'perf-channel',
       emoteData: denseEmoteData,
       show7TvEmotes: true,
@@ -128,7 +125,7 @@ const CHAT_HOTSPOT_SCENARIOS: ChatHotspotScenario[] = [
   },
   {
     id: 'resolve-emote-tokens',
-    name: 'resolveMessageEmoteParts batch',
+    name: 'resolveMessageEmoteTokens batch',
     run: runResolveMessageEmotePartsBatch,
   },
   {
@@ -176,7 +173,7 @@ export async function runChatHotspotBenchmarks(options?: {
       ...measured,
     });
 
-    // eslint-disable-next-line react-doctor/async-await-in-loop -- yield between scenarios so the UI can paint progress
+    // oxlint-disable-next-line react-doctor/async-await-in-loop -- yield between scenarios so the UI can paint progress
     await yieldToUi();
   }
 

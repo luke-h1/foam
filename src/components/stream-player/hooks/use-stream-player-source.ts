@@ -22,10 +22,6 @@ interface UseStreamPlayerSourceOptions {
   webViewKey: number;
 }
 
-/**
- * The embed URL and the scripts injected into it. All of it is derived from
- * the source props, so it lives away from the player's own state.
- */
 export function useStreamPlayerSource({
   autoplay,
   channel,
@@ -72,7 +68,7 @@ export function useStreamPlayerSource({
               timeSeconds: video ? resumeTimeRef.current : undefined,
             }),
           },
-    // eslint-disable-next-line react-hooks/exhaustive-deps, react-doctor/exhaustive-deps
+    // oxlint-disable-next-line react-hooks/exhaustive-deps, react-doctor/exhaustive-deps -- resumeTimeRef is read on purpose, see docs/react-doctor.md
     [clip, channelName, video, embedParent, autoplay, initialMuted, webViewKey],
   );
 

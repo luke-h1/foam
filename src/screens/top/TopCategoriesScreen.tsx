@@ -1,17 +1,9 @@
-import { type RefObject, use, useCallback, useMemo, useRef } from 'react';
-import {
-  Platform,
-  type StyleProp,
-  StyleSheet,
-  View,
-  type ViewStyle,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { type RefObject, useCallback, useRef } from 'react';
+import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 
 import { useObservable, useSelector } from '@legendapp/state/react';
 import type { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { HeaderHeightContext } from 'expo-router/react-navigation';
 
 import { CategoryCard } from '@app/components/category-card/CategoryCard';
 import { CategoryCardSkeleton } from '@app/components/category-card/CategoryCardSkeleton';
@@ -21,6 +13,7 @@ import {
 } from '@app/components/flash-list/FlashList';
 import { EmptyState } from '@app/components/ui/empty-state/EmptyState';
 import { useFlattenedInfiniteQuery } from '@app/hooks/use-flattened-infinite-query';
+import { useHeaderInsetContentStyle } from '@app/hooks/use-header-inset-content-style';
 import { useInfiniteQueryLoadMore } from '@app/hooks/use-infinite-query-load-more';
 import { useRefetchOnForeground } from '@app/hooks/use-refetch-on-foreground';
 import { useScrollToTop } from '@app/hooks/use-scroll-to-top';
@@ -45,8 +38,6 @@ export function TopCategoriesScreen() {
   const refreshing$ = useObservable(false);
   const refreshing = useSelector(refreshing$);
   const listRef = useRef<FlashListRef<Category>>(null);
-  const { top: topInset } = useSafeAreaInsets();
-  const headerHeight = use(HeaderHeightContext) ?? topInset + 44;
 
   useScrollToTop(listRef);
 
@@ -82,17 +73,7 @@ export function TopCategoriesScreen() {
   const allCategories = useFlattenedInfiniteQuery(categories?.pages);
   const showSkeleton = isLoading || (isFetching && allCategories.length === 0);
 
-  const contentContainerStyle = useMemo(
-    () =>
-      [
-        styles.listContent,
-        Platform.OS === 'ios' && {
-          paddingTop: headerHeight,
-        },
-      ] satisfies StyleProp<ViewStyle>,
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-    [headerHeight],
-  );
+  const contentContainerStyle = useHeaderInsetContentStyle(styles.listContent);
 
   if (showSkeleton) {
     return (
@@ -185,7 +166,6 @@ function TopCategoriesList({
         contentContainerStyle={contentContainerStyle}
         renderItem={renderTopCategoryItem}
         keyExtractor={item => item.id}
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={onEndReached}
         onEndReachedThreshold={0.4}
         onRefresh={onRefresh}

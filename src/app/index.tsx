@@ -8,7 +8,7 @@ import { useAuthContext } from '@app/context/AuthContext';
 import { useStartupMark } from '@app/hooks/use-startup-mark';
 import { storage } from '@app/lib/storage';
 import { ONBOARDING_SEEN_KEY } from '@app/screens/onboarding/constants';
-import { isE2EMode } from '@app/services/api/clients';
+import { isE2EMode } from '@app/services/api/env';
 import { theme } from '@app/styles/themes';
 
 export default function IndexRoute() {

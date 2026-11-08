@@ -1,12 +1,27 @@
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { Skeleton } from '@app/components/ui/skeleton/Skeleton';
+import { sizeStyles } from '@app/components/ui/text/Text.styles';
+import type { Preferences } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
 
-type StreamListLayout = 'compact' | 'media';
+import { COMPACT_THUMBNAIL_WIDTH } from './util/thumbnailSizes';
+
+type StreamListLayout = Preferences['streamListLayout'];
+
+// The same line heights the card's Text uses, so iPad font scaling applies
+// to the skeleton too.
+const CALLOUT_LINE_HEIGHT = sizeStyles.callout.lineHeight;
+const SUBHEAD_LINE_HEIGHT = sizeStyles.subhead.lineHeight;
+const FOOTNOTE_LINE_HEIGHT = sizeStyles.footnote.lineHeight;
+const LINE_GAP = 2;
 
 function getSkeletonRowHeight(layout: StreamListLayout, width: number) {
-  const textHeight = 21 + 20 * 2 + 18 + 2 * 3;
+  const textHeight =
+    CALLOUT_LINE_HEIGHT +
+    SUBHEAD_LINE_HEIGHT * 2 +
+    FOOTNOTE_LINE_HEIGHT +
+    LINE_GAP * 3;
 
   if (layout === 'media') {
     const imageHeight = ((width - theme.space16 * 2) * 9) / 16;
@@ -14,7 +29,9 @@ function getSkeletonRowHeight(layout: StreamListLayout, width: number) {
     return theme.space12 * 3 + imageHeight + textHeight;
   }
 
-  return theme.space8 * 2 + Math.max((144 * 9) / 16, textHeight);
+  return (
+    theme.space8 * 2 + Math.max((COMPACT_THUMBNAIL_WIDTH * 9) / 16, textHeight)
+  );
 }
 
 export function LiveStreamCardSkeletons({
@@ -38,11 +55,7 @@ export function LiveStreamCardSkeletons({
  * Mirrors the line boxes of `LiveStreamCard` (callout, two subhead lines,
  * footnote) so the list does not shift when data arrives.
  */
-export function LiveStreamCardSkeleton({
-  layout = 'compact',
-}: {
-  layout?: StreamListLayout;
-}) {
+function LiveStreamCardSkeleton({ layout }: { layout: StreamListLayout }) {
   if (layout === 'media') {
     return (
       <View style={styles.mediaCard} testID='stream-skeleton'>
@@ -94,23 +107,23 @@ const styles = StyleSheet.create({
     aspectRatio: 16 / 9,
     borderCurve: 'continuous',
     borderRadius: theme.radius.md,
-    width: 144,
+    width: COMPACT_THUMBNAIL_WIDTH,
   },
   details: {
     flex: 1,
-    gap: 2,
+    gap: LINE_GAP,
     minWidth: 0,
   },
   calloutLine: {
-    height: 21,
+    height: CALLOUT_LINE_HEIGHT,
     justifyContent: 'center',
   },
   subheadLine: {
-    height: 20,
+    height: SUBHEAD_LINE_HEIGHT,
     justifyContent: 'center',
   },
   footnoteLine: {
-    height: 18,
+    height: FOOTNOTE_LINE_HEIGHT,
     justifyContent: 'center',
   },
   name: {

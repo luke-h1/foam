@@ -9,13 +9,13 @@ import { showActionMenu } from '@app/store/overlays/show-action-menu';
 import { theme } from '@app/styles/themes';
 import type { Category } from '@app/types/twitch/category';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
+import { getTwitchThumbnailUrl } from '@app/utils/twitch/getTwitchThumbnailUrl';
 
 import { Button } from '../button/Button';
 import { Image } from '../image/Image';
 import {
+  BOX_ART_SOURCE_SIZE,
   IMAGE_ASPECT_RATIO,
-  IMAGE_SOURCE_HEIGHT,
-  IMAGE_SOURCE_WIDTH,
   TITLE_MAX_LINES,
 } from './constants';
 
@@ -23,7 +23,7 @@ interface Props {
   category: Category;
 }
 
-export function CategoryCardComponent({ category }: Props) {
+function CategoryCardComponent({ category }: Props) {
   const handlePress = useCallback(() => {
     router.push(`/category/${category.id}`);
   }, [category.id]);
@@ -45,7 +45,6 @@ export function CategoryCardComponent({ category }: Props) {
           },
         },
       ],
-      cancelLabel: 'Cancel',
     });
   }, [category.id, category.name]);
 
@@ -61,9 +60,10 @@ export function CategoryCardComponent({ category }: Props) {
       style={styles.container}
     >
       <Image
-        source={category.box_art_url
-          .replace('{width}', String(IMAGE_SOURCE_WIDTH))
-          .replace('{height}', String(IMAGE_SOURCE_HEIGHT))}
+        source={getTwitchThumbnailUrl(
+          category.box_art_url,
+          BOX_ART_SOURCE_SIZE,
+        )}
         style={styles.image}
         containerStyle={styles.image}
         contentFit='cover'

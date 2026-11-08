@@ -4,9 +4,6 @@ import { theme } from '@app/styles/themes';
 
 const isIOS = Platform.OS === 'ios';
 
-/**
- * Default for pushed/detail screens: compact title + back button.
- */
 export const nativeStackScreenOptions = {
   headerShown: true,
   headerLargeTitle: false,

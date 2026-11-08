@@ -45,7 +45,7 @@ function readReadyState(
 
 export const useWebsocket = <TJsonMessage = never>(
   url: string | null,
-  options: Options = {},
+  options: Options,
 ): WebSocketHookReturn<TJsonMessage> => {
   const [readyStateEntry, setReadyStateEntry] = useState<{
     url: string;
@@ -63,7 +63,6 @@ export const useWebsocket = <TJsonMessage = never>(
   const sendMessage: SendMessage = useCallback(message => {
     if (
       websocketRef.current &&
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
       websocketRef.current.readyState === ReadyState.OPEN
     ) {
       websocketRef.current.send(message);

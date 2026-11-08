@@ -2,9 +2,8 @@ import { createContext } from 'react';
 
 import type { AuthSessionResult } from 'expo-auth-session';
 
-import type { DefaultTokenResponse } from '@app/types/twitch/auth';
+import type { TwitchToken } from '@app/services/api/tokenLifecycle';
 import type { UserInfoResponse } from '@app/types/twitch/user';
-import type { TwitchToken } from '@app/utils/authentication/tokenLifecycle';
 
 export interface AuthState {
   isLoggedIn: boolean;
@@ -12,17 +11,23 @@ export interface AuthState {
   token: TwitchToken;
 }
 
+export type LoginWithTwitchResult =
+  | { ok: true }
+  | { ok: false; reason: 'cancelled' | 'error' };
+
 export interface AuthContextState {
   user: UserInfoResponse | undefined;
   authState: AuthState | undefined;
   loginWithTwitch: (
     response: AuthSessionResult | null,
-  ) => Promise<null | undefined>;
-  populateAuthState: () => Promise<void>;
+  ) => Promise<LoginWithTwitchResult>;
   logout: () => Promise<void>;
 
-  // for unit tests only
-  fetchAnonToken: (testResult?: DefaultTokenResponse) => Promise<void>;
+  /**
+   * Goes up by one each time a sign-in completes. A restore of a stored
+   * session at startup does not change it.
+   */
+  signInId: number;
 
   ready: boolean;
 }

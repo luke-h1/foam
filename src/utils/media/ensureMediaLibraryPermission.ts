@@ -1,37 +1,18 @@
-import { Alert, Linking, Platform } from 'react-native';
+import { Alert, Linking } from 'react-native';
 
 import * as MediaLibrary from 'expo-media-library';
 
-import { presentMediaPermissionPrompt } from '@app/store/overlays/media-permission-store';
+import { MEDIA_PERMISSION_PROMPT } from '@app/utils/media/constants';
 
 export async function ensureMediaLibraryPermission(): Promise<boolean> {
-  if (Platform.OS === 'web') {
-    return true;
-  }
-
   const { granted } = await MediaLibrary.requestPermissionsAsync();
 
   if (granted) {
     return true;
   }
 
-  const title = 'Permission required';
-
-  const message =
-    'Allow Foam to save images and clips to your photo gallery in Settings.';
-
-  const cancelLabel = 'Cancel';
-  const settingsLabel = 'Open Settings';
-
-  if (Platform.OS === 'android') {
-    await presentMediaPermissionPrompt({
-      title,
-      message,
-      cancelLabel,
-      settingsLabel,
-    });
-    return false;
-  }
+  const { title, message, cancelLabel, settingsLabel } =
+    MEDIA_PERMISSION_PROMPT;
 
   return new Promise(resolve => {
     Alert.alert(

@@ -1,3 +1,5 @@
+import type { ReconnectPolicy } from '@app/utils/async/reconnectPolicy';
+
 import type { ReadyState } from './constants';
 
 export interface Options {
@@ -6,8 +8,7 @@ export interface Options {
   onMessage?: (event: WebSocketEventMap['message']) => void;
   onError?: (event: WebSocketEventMap['error']) => void;
   shouldReconnect?: (event: WebSocketEventMap['close']) => boolean;
-  reconnectInterval?: number;
-  reconnectAttempts?: number;
+  reconnectPolicy: ReconnectPolicy;
 }
 
 export type SendMessage = (

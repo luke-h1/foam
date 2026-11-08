@@ -7,6 +7,7 @@ import {
   subscribeToAppForeground,
   subscribeToAppStateTransitions,
 } from '@app/utils/app-state/appStateTransitions';
+import { logger } from '@app/utils/logger';
 
 describe('appStateTransitions', () => {
   let changeHandler: ((nextState: AppStateStatus) => void) | undefined;
@@ -167,6 +168,24 @@ describe('appStateTransitions', () => {
 
     expect(received).toEqual<AppStateTransition[]>([
       { previous: 'background', current: 'active' },
+    ]);
+  });
+
+  test('logs a listener that returns a rejected promise', async () => {
+    const warn = jest.spyOn(logger.main, 'warn').mockImplementation(() => {});
+    const error = new Error('listener failed');
+
+    track(subscribeToAppStateTransitions(() => Promise.reject(error)));
+
+    emit('background');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(warn.mock.calls).toEqual([
+      [
+        'AppState transition listener returned a rejected promise',
+        { action: 'app_state_transition_listener_rejected', error },
+      ],
     ]);
   });
 

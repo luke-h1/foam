@@ -16,10 +16,6 @@ interface LandscapeChatControlsProps {
   topOffset: number;
 }
 
-/**
- * Floating chat controls shown over the player in landscape: show/hide chat,
- * and switch between the sidebar and overlay layouts.
- */
 export function LandscapeChatControls({
   animatedStyle,
   fullscreenChatMode,

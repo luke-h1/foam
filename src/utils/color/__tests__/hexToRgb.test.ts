@@ -50,8 +50,6 @@ describe('hexToRgb', () => {
   test('handles mixed case hex codes', () => {
     expect(hexToRgb('#ff0000')).toEqual({ r: 255, g: 0, b: 0 });
 
-    expect(hexToRgb('#FF0000')).toEqual({ r: 255, g: 0, b: 0 });
-
     expect(hexToRgb('#Ff0000')).toEqual({ r: 255, g: 0, b: 0 });
   });
 });

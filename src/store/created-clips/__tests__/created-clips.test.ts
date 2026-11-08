@@ -1,8 +1,4 @@
-import {
-  addCreatedClip,
-  MAX_CREATED_CLIPS,
-  removeCreatedClip,
-} from '../actions/created-clips';
+import { addCreatedClip, removeCreatedClip } from '../actions/created-clips';
 import {
   type CreatedClipRecord,
   createdClips$,
@@ -37,15 +33,15 @@ describe('createdClips actions', () => {
     expect(createdClips$.clips.peek().map(clip => clip.id)).toEqual(['a', 'b']);
   });
 
-  test('caps the list at the maximum', () => {
-    for (let i = 0; i < MAX_CREATED_CLIPS + 10; i += 1) {
+  test('caps the list at 100 clips', () => {
+    for (let i = 0; i < 110; i += 1) {
       addCreatedClip(makeRecord(String(i)));
     }
 
     const clips = createdClips$.clips.peek();
-    expect(clips).toHaveLength(MAX_CREATED_CLIPS);
+    expect(clips).toHaveLength(100);
 
-    expect(clips[0]?.id).toEqual(String(MAX_CREATED_CLIPS + 9));
+    expect(clips[0]?.id).toEqual('109');
   });
 
   test('removeCreatedClip drops the record', () => {

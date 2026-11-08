@@ -32,8 +32,8 @@ export default function TabsLayout() {
             },
           }
         : {})}
-      indicatorColor='rgba(255, 255, 255, 0.12)'
-      rippleColor='rgba(255, 255, 255, 0.12)'
+      indicatorColor={theme.colorRipple}
+      rippleColor={theme.colorRipple}
     >
       <NativeTabs.Trigger
         name='following'

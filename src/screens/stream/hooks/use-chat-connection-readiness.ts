@@ -16,10 +16,6 @@ import type { LiveStreamScreenAction } from '../util/liveStreamScreenReducer';
  */
 const CHAT_CONNECTION_FALLBACK_MS = 10_000;
 
-/**
- * Tracks whether chat is clear to connect. Switching channel resets the gate;
- * the player reporting loaded, or the fallback timer, opens it.
- */
 export function useChatConnectionReadiness({
   dispatchUi,
   isStreamEnabled,

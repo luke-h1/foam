@@ -3,18 +3,17 @@ import { Stack } from 'expo-router';
 import { selection } from '@app/lib/haptics';
 import {
   type Preferences,
+  updatePreferences,
   usePreference,
-  useUpdatePreferences,
 } from '@app/store/preference-store';
+
+function chooseLayout(layout: Preferences['streamListLayout']) {
+  selection();
+  updatePreferences({ streamListLayout: layout });
+}
 
 export function StreamListLayoutMenu({ hidden = false }: { hidden?: boolean }) {
   const streamListLayout = usePreference('streamListLayout');
-  const updatePreferences = useUpdatePreferences();
-
-  const chooseLayout = (layout: Preferences['streamListLayout']) => {
-    selection();
-    updatePreferences({ streamListLayout: layout });
-  };
 
   return (
     <Stack.Toolbar placement='right'>

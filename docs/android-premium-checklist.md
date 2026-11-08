@@ -9,7 +9,7 @@ Status legend: [ ] todo · [~] in progress · [x] done · [-] rejected/not appli
 
 - **Iter 1-2 (2026-07-20)**: Baseline verified - tsc green on working tree; jest + lint running.
   Working tree already contains coherent release-prep work (SystemBars edge-to-edge migration,
-  Android memory-pressure tuning in cache-service, package rename to com.lhowsam.foam_tv,
+  Android memory-pressure tuning in cacheService, package rename to com.lhowsam.foam_tv,
   PlayerBackButton dedup, changelog presenter re-entrancy fix). 4 research agents launched
   (foam gap audit, benchmarking pass 1, benchmarking pass 2, Expo/Play Store
   guidance) - results pending.

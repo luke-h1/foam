@@ -26,9 +26,6 @@ export function compareVersions(
   return 0;
 }
 
-/**
- * True when the app's version is below the remote-config minimum.
- */
 export function isUpdateRequired(
   currentVersion: string | null | undefined,
   minimumVersion: string | null | undefined,

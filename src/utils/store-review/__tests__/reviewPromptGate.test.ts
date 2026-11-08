@@ -1,10 +1,11 @@
 import {
-  REVIEW_PROMPT_COOLDOWN_MS,
   type ReviewPromptState,
   shouldRequestReview,
 } from '../reviewPromptGate';
 
 const NOW = 1_750_000_000_000;
+
+const NINETY_DAYS_MS = 7_776_000_000;
 
 const eligibleState: ReviewPromptState = {
   sessionCount: 3,
@@ -46,7 +47,7 @@ describe('shouldRequestReview', () => {
     expect(
       gate({
         lastPromptVersion: '0.0.42',
-        lastPromptAt: NOW - REVIEW_PROMPT_COOLDOWN_MS - 1,
+        lastPromptAt: NOW - NINETY_DAYS_MS - 1,
       }),
     ).toEqual(false);
   });
@@ -55,7 +56,7 @@ describe('shouldRequestReview', () => {
     expect(
       gate({
         lastPromptVersion: '0.0.41',
-        lastPromptAt: NOW - REVIEW_PROMPT_COOLDOWN_MS + 1,
+        lastPromptAt: NOW - NINETY_DAYS_MS + 1,
       }),
     ).toEqual(false);
   });
@@ -64,7 +65,7 @@ describe('shouldRequestReview', () => {
     expect(
       gate({
         lastPromptVersion: '0.0.41',
-        lastPromptAt: NOW - REVIEW_PROMPT_COOLDOWN_MS,
+        lastPromptAt: NOW - NINETY_DAYS_MS,
       }),
     ).toEqual(true);
   });

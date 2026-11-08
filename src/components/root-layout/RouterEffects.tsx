@@ -1,38 +1,26 @@
-import '@app/hooks/use-on-reconnect';
+import { useEffect } from 'react';
+import { Linking } from 'react-native';
 
-import { useEffect, useLayoutEffect } from 'react';
-import { Linking, Platform } from 'react-native';
-
-import { focusManager } from '@tanstack/react-query';
 import * as QuickActions from 'expo-quick-actions';
 import { isRouterAction, type RouterAction } from 'expo-quick-actions/router';
 import { type Href, router } from 'expo-router';
 
-import { useAuthContext } from '@app/context/AuthContext';
-import { useClearExpiredStorageItems } from '@app/hooks/use-clear-expired-storage-items';
-import { useIcloudPreferenceSync } from '@app/hooks/use-icloud-preference-sync';
-import { useLazyRef } from '@app/hooks/use-lazy-ref';
-import { useOnAppStateChange } from '@app/hooks/use-on-app-state-change';
-import { usePopulateAuth } from '@app/hooks/use-populate-auth';
 import {
-  setRecoveredFromError,
-  useRecoveredFromError,
-} from '@app/hooks/use-recovered-from-error';
-import { useSyncRef } from '@app/hooks/use-sync-ref';
+  type AuthContextState,
+  useAuthContext,
+} from '@app/context/AuthContext';
 import {
   completeAuthWithCallbackUrl,
   isAuthCallbackUrl,
-} from '@app/navigators/auth-linking';
-import {
-  beginDeepLinkAuth,
-  endDeepLinkAuth,
-} from '@app/navigators/deep-link-auth-state';
+} from '@app/context/authLinking';
+import { useClearExpiredStorageItems } from '@app/hooks/use-clear-expired-storage-items';
+import { useIcloudPreferenceSync } from '@app/hooks/use-icloud-preference-sync';
+import { useIsRouterReady } from '@app/hooks/use-is-router-ready';
+import { usePopulateAuth } from '@app/hooks/use-populate-auth';
+import { useSyncRef } from '@app/hooks/use-sync-ref';
 import { logger } from '@app/utils/logger';
 import { runWhenIdle } from '@app/utils/runWhenIdle';
 
-/**
- * Decode `params.href` from a Quick Action at the I/O boundary.
- */
 function parseQuickActionHref(action: QuickActions.Action): Href | undefined {
   if (!isRouterAction(action)) {
     return undefined;
@@ -75,6 +63,23 @@ const quickActionsAuthenticated: RouterAction[] = [
   },
 ];
 
+/**
+ * AuthContext dedupes a callback delivered twice, and usePopulateAuth moves to
+ * Following when the sign-in completes.
+ */
+function handleAuthCallbackUrl(
+  url: string | null | undefined,
+  loginWithTwitch: AuthContextState['loginWithTwitch'],
+) {
+  if (!url || !isAuthCallbackUrl(url)) {
+    return;
+  }
+
+  completeAuthWithCallbackUrl(url, loginWithTwitch).catch((error: unknown) => {
+    logger.main.warn('Failed to complete auth callback', { error });
+  });
+}
+
 const getHomeQuickActions = (showFollowingAction: boolean): RouterAction[] => {
   return [
     ...(showFollowingAction ? quickActionsAuthenticated : []),
@@ -84,23 +89,10 @@ const getHomeQuickActions = (showFollowingAction: boolean): RouterAction[] => {
 
 export function RouterEffects() {
   const { authState, loginWithTwitch, ready } = useAuthContext();
-  const recoveredFromError = useRecoveredFromError();
-
-  useOnAppStateChange(({ current }) => {
-    if (Platform.OS !== 'web') {
-      focusManager.setFocused(current === 'active');
-    }
-  });
 
   useClearExpiredStorageItems();
   useIcloudPreferenceSync();
   usePopulateAuth();
-
-  useLayoutEffect(() => {
-    if (recoveredFromError) {
-      setRecoveredFromError(false);
-    }
-  }, [recoveredFromError]);
 
   useEffect(() => {
     let isMounted = true;
@@ -157,74 +149,33 @@ export function RouterEffects() {
   }, [authState?.isLoggedIn, ready]);
 
   const loginWithTwitchRef = useSyncRef(loginWithTwitch);
-  const handledAuthUrlsRef = useLazyRef(() => new Set<string>());
-  const pendingAuthUrlsRef = useLazyRef(() => new Set<string>());
+  const routerReady = useIsRouterReady();
 
   useEffect(() => {
-    const handledAuthUrls = handledAuthUrlsRef.current;
-    const pendingAuthUrls = pendingAuthUrlsRef.current;
-    let cancelled = false;
-    let initialUrlTimeout: ReturnType<typeof setTimeout> | undefined;
-
-    async function handleIncomingUrl(url: string | null) {
-      if (cancelled || !url || !isAuthCallbackUrl(url)) {
-        return;
-      }
-
-      if (handledAuthUrls.has(url) || pendingAuthUrls.has(url)) {
-        return;
-      }
-
-      pendingAuthUrls.add(url);
-      beginDeepLinkAuth();
-
-      // Cleanup sits after the try/catch (it always runs; the catch swallows
-      // every error) because try/finally is a React Compiler bailout.
-      try {
-        const handled = await completeAuthWithCallbackUrl(
-          url,
-          loginWithTwitchRef.current,
-        );
-
-        if (handled) {
-          handledAuthUrls.add(url);
-        }
-
-        if (handled && !cancelled) {
-          router.replace('/tabs/following');
-        }
-      } catch (error) {
-        logger.main.warn('Failed to complete auth callback', error);
-      }
-
-      pendingAuthUrls.delete(url);
-      endDeepLinkAuth();
-    }
-
-    const linkingSubscription = Linking.addEventListener('url', ({ url }) => {
-      void handleIncomingUrl(url);
+    const subscription = Linking.addEventListener('url', ({ url }) => {
+      handleAuthCallbackUrl(url, loginWithTwitchRef.current);
     });
 
-    void Linking.getInitialURL().then(initialUrl => {
-      if (cancelled || !initialUrl) {
-        return;
-      }
+    return () => subscription.remove();
+  }, [loginWithTwitchRef]);
 
-      initialUrlTimeout = setTimeout(() => {
-        void handleIncomingUrl(initialUrl);
-      }, 100);
+  useEffect(() => {
+    if (!routerReady) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void Linking.getInitialURL().then(initialUrl => {
+      if (!cancelled) {
+        handleAuthCallbackUrl(initialUrl, loginWithTwitchRef.current);
+      }
     });
 
     return () => {
       cancelled = true;
-
-      if (initialUrlTimeout) {
-        clearTimeout(initialUrlTimeout);
-      }
-
-      linkingSubscription.remove();
     };
-  }, [handledAuthUrlsRef, loginWithTwitchRef, pendingAuthUrlsRef]);
+  }, [loginWithTwitchRef, routerReady]);
 
   return null;
 }

@@ -1,19 +1,26 @@
+import { theme } from '@app/styles/themes';
+
 import { hexToRgb } from './hexToRgb';
 import { rgbToHex } from './rgbToHex';
 
-type RgbChannels = {
+interface RgbChannels {
   r: number;
   g: number;
   b: number;
-};
+}
 
-type HslChannels = {
+interface HslChannels {
   h: number;
   s: number;
   l: number;
-};
+}
 
-const CHAT_SURFACE_RGB = { r: 20, g: 27, b: 35 };
+// The chat list draws on the app canvas, so contrast is measured against it.
+const CHAT_SURFACE_RGB = hexToRgb(theme.color.background.dark) ?? {
+  r: 0,
+  g: 0,
+  b: 0,
+};
 
 // WCAG AA for normal-size text; higher washes the hues together.
 const MIN_CONTRAST_RATIO = 4.5;

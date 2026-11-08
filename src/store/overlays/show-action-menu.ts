@@ -7,14 +7,13 @@ import {
 
 export function showActionMenu({
   actions,
-  cancelLabel,
   title,
 }: ShowActionMenuOptions): void {
   if (Platform.OS === 'ios') {
     ActionSheetIOS.showActionSheetWithOptions(
       {
         title,
-        options: [...actions.map(action => action.label), cancelLabel],
+        options: [...actions.map(action => action.label), 'Cancel'],
         cancelButtonIndex: actions.length,
       },
       buttonIndex => {
@@ -25,5 +24,5 @@ export function showActionMenu({
     return;
   }
 
-  presentActionMenu({ actions, cancelLabel, title });
+  presentActionMenu({ actions, title });
 }

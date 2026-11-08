@@ -45,7 +45,6 @@ export function buildTwitchLiveSyncScript(options: {
     return Math.min(seekableEnd, buffered.end(buffered.length - 1));
   }
 
-  // Seek to the live edge once; no-op if within target or during an ad.
   window.__foamSyncToLive = function() {
     if (isAdActive()) {
       post('trace', { step: 'livesync', detail: 'skipped (ad playing)' });
@@ -81,7 +80,6 @@ export function buildTwitchLiveSyncScript(options: {
     return true;
   };
 
-  // One-shot at start once the stream (not an ad) is playing; user re-triggers later.
   var attempts = 0;
   function syncAtStart() {
     attempts += 1;

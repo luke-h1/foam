@@ -7,9 +7,6 @@ import type { Image as ExpoImage, ImageRef, ImageSource } from 'expo-image';
  */
 const IMAGE_SPAN_DEADLINE_MS = 5000;
 
-/**
- * The two expo-image statics this module instruments.
- */
 export interface ExpoImageLoaders {
   prefetch: (
     ...args: Parameters<(typeof ExpoImage)['prefetch']>

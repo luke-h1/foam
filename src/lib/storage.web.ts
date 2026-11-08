@@ -31,7 +31,9 @@ const namespaceKey = (key: AllowedKey, namespacePrefix?: NamespacePrefixes) => {
 
 const storageEvents = new EventEmitter();
 
-type NamespacePrefixes = 'image_cache' | 'seven_tv_cache';
+type NamespacePrefixes = 'seven_tv_cache';
+
+export const SEVEN_TV_CACHE_NAMESPACE: NamespacePrefixes = 'seven_tv_cache';
 
 const safeLocalStorage = {
   getItem(key: string): string | null {
@@ -190,14 +192,6 @@ export const storageService = {
         storage.remove(key);
       }
     });
-  },
-  clearImageCache() {
-    const keys = storage
-      .getAllKeys()
-      .filter(key => key.startsWith(`${NAMESPACE}_image_cache`));
-
-    keys.forEach(key => storage.remove(key));
-    storageEvents.emit('storageChange', 'image_cache');
   },
   clearNamespace(namespacePrefix: NamespacePrefixes, keyPrefix = '') {
     const keys = storage

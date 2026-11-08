@@ -1,6 +1,6 @@
 import { FIXTURE_COLORS } from './chat-fixture-data';
 
-export type FixtureRole = 'sub' | 'mod' | 'vip' | 'broadcaster';
+type FixtureRole = 'sub' | 'mod' | 'vip' | 'broadcaster';
 
 export interface IrcFixtureMessage {
   /**
@@ -15,13 +15,7 @@ export interface IrcFixtureMessage {
    * Badge tier; omitted = plain viewer.
    */
   role?: FixtureRole;
-  /**
-   * When set, emitted as a reply to this (display name + body).
-   */
   replyTo?: { name: string; text: string };
-  /**
-   * When set, emitted as a cheer with this bits amount.
-   */
   bits?: number;
 }
 

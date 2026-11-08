@@ -9,10 +9,6 @@ export default function PreferencesLayout() {
         name='blocked-users'
         options={{ title: 'Blocked Users', headerBackTitle: 'Profile' }}
       />
-      <Stack.Screen
-        name='chat'
-        options={{ title: 'Chat', headerBackTitle: 'Settings' }}
-      />
     </Stack>
   );
 }

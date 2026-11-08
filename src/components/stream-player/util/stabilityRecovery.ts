@@ -1,13 +1,9 @@
-const STALL_RECOVERY_GRACE_MS = 4000;
 const AUTO_REFRESH_WINDOW_MS = 120_000;
 const MAX_AUTO_REFRESHES_PER_WINDOW = 3;
 const HIGH_LATENCY_RECOVERY_S = 20;
 const HIGH_LATENCY_READINGS_BEFORE_RECOVERY = 3;
 
-export type StabilityRefreshReason =
-  | 'highLatency'
-  | 'stall'
-  | 'videoElementError';
+export type StabilityRefreshReason = 'highLatency';
 
 interface StabilityRecoveryOptions {
   now?: () => number;
@@ -20,17 +16,9 @@ export function createStabilityRecovery({
   onGiveUp,
   onRefresh,
 }: StabilityRecoveryOptions) {
-  let stallTimer: ReturnType<typeof setTimeout> | null = null;
   let refreshTimes: number[] = [];
   let highLatencyReadings = 0;
   let gaveUp = false;
-
-  const clearStallTimer = () => {
-    if (stallTimer) {
-      clearTimeout(stallTimer);
-      stallTimer = null;
-    }
-  };
 
   const requestRefresh = (reason: StabilityRefreshReason) => {
     const at = now();
@@ -59,25 +47,8 @@ export function createStabilityRecovery({
   };
 
   return {
-    noteStalled() {
-      if (!stallTimer) {
-        stallTimer = setTimeout(() => {
-          stallTimer = null;
-          requestRefresh('stall');
-        }, STALL_RECOVERY_GRACE_MS);
-      }
-    },
     notePlaying() {
-      clearStallTimer();
       highLatencyReadings = 0;
-    },
-    noteRecovered() {
-      clearStallTimer();
-      highLatencyReadings = 0;
-    },
-    noteVideoError() {
-      clearStallTimer();
-      requestRefresh('videoElementError');
     },
     noteLatency(latencySeconds: number) {
       const isHigh = latencySeconds >= HIGH_LATENCY_RECOVERY_S;
@@ -88,13 +59,9 @@ export function createStabilityRecovery({
       }
     },
     reset() {
-      clearStallTimer();
       refreshTimes = [];
       highLatencyReadings = 0;
       gaveUp = false;
-    },
-    dispose() {
-      clearStallTimer();
     },
   };
 }

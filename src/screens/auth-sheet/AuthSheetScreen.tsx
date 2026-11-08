@@ -11,13 +11,11 @@ import { Text } from '@app/components/ui/text/Text';
 import { useTwitchSignIn } from '@app/hooks/use-twitch-sign-in';
 import { theme } from '@app/styles/themes';
 
+// usePopulateAuth owns the move to Following, so success only closes the sheet.
 function handleAuthSuccess() {
   if (router.canDismiss()) {
     router.dismiss();
-    return;
   }
-
-  router.replace('/tabs/following');
 }
 
 function handleDismiss() {
@@ -53,7 +51,6 @@ export function AuthSheetScreen() {
       <View style={styles.content}>
         <View style={styles.header}>
           <Image
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
             source={require('../../../assets/app-icon/app-icon-production.png')}
             style={styles.appIcon}
             contentFit='cover'

@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 
+import { BOX_ART_SOURCE_SIZE } from '@app/components/category-card/constants';
 import {
   FlashList,
   type FlashListRef,
@@ -30,6 +31,7 @@ import type { Category } from '@app/types/twitch/category';
 import type { TwitchStream } from '@app/types/twitch/stream';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 import { formatViewCount } from '@app/utils/string/formatViewCount';
+import { getTwitchThumbnailUrl } from '@app/utils/twitch/getTwitchThumbnailUrl';
 
 interface CategoryStreamsHeaderProps {
   category: Category;
@@ -44,9 +46,10 @@ const CategoryStreamsHeader = memo(function CategoryStreamsHeader({
     <View>
       <View style={styles.hero}>
         <Image
-          source={category.box_art_url
-            .replace('{width}', '252')
-            .replace('{height}', '336')}
+          source={getTwitchThumbnailUrl(
+            category.box_art_url,
+            BOX_ART_SOURCE_SIZE,
+          )}
           style={styles.boxArt}
           containerStyle={styles.boxArt}
         />
@@ -209,7 +212,6 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
         heading='Nobody is live'
         content={`No one is streaming ${category.name} right now.`}
         button='Refresh'
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         buttonOnPress={handleRefresh}
       />
     );
@@ -239,7 +241,6 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
           />
         }
         onEndReachedThreshold={0.3}
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={handleLoadMore}
         refreshing={isRefreshing}
         onRefresh={handleRefresh}

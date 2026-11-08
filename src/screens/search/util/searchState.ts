@@ -23,7 +23,15 @@ export const SEARCH_INITIAL_STATE: SearchState = {
   status: 'idle',
 };
 
-export const MIN_SEARCH_QUERY_LENGTH = 2;
+const MIN_SEARCH_QUERY_LENGTH = 2;
+
+/**
+ * The one length rule for a search: typing, submit, refresh and the empty
+ * state all ask this.
+ */
+export function isQueryLongEnough(query: string): boolean {
+  return query.trim().length >= MIN_SEARCH_QUERY_LENGTH;
+}
 
 export function isSearchChannelItem(
   item: SearchItem,

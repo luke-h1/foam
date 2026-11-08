@@ -1,4 +1,7 @@
-import type { EventSubMessage } from '@app/types/twitch/eventsub';
+import type {
+  EventSubEvent,
+  EventSubMessage,
+} from '@app/types/twitch/eventsub';
 import type { ChannelActivity } from '@app/utils/twitch/channel-activity/channelActivity';
 
 export interface TestActivityHelixItem {
@@ -12,9 +15,9 @@ export interface TestActivityState {
   source: 'helix' | 'event';
 }
 
-export type TestActivityEventPayload = {
+export interface TestActivityEventPayload extends EventSubEvent {
   id: string;
-};
+}
 
 export function createTestActivity(
   overrides: Partial<

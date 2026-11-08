@@ -6,6 +6,7 @@ import type {
   TwitchHelixPoll,
   TwitchPollChoice,
 } from '@app/types/twitch/poll';
+import { addSecondsToIso } from '@app/utils/date-time/addSecondsToIso';
 import { percentageOf } from '@app/utils/number/percentageOf';
 
 function normaliseStatus(status: string | undefined): ChannelPollStatus {
@@ -59,7 +60,7 @@ export function normaliseHelixPoll(poll: TwitchHelixPoll): ChannelPollState {
     channelPointsPerVote: poll.channel_points_per_vote,
     durationSeconds: poll.duration,
     startedAt: poll.started_at,
-    endsAt: poll.ended_at ?? undefined,
+    endsAt: addSecondsToIso(poll.started_at, poll.duration),
     endedAt: poll.ended_at ?? undefined,
     status,
     isActive: status === 'active',

@@ -17,6 +17,7 @@ import { Text } from '@app/components/ui/text/Text';
 import { theme } from '@app/styles/themes';
 import type { Category } from '@app/types/twitch/category';
 import type { SearchChannelResponse } from '@app/types/twitch/channel';
+import { getTwitchThumbnailUrl } from '@app/utils/twitch/getTwitchThumbnailUrl';
 
 import { SearchInputBar } from './components/search-input-bar/SearchInputBar';
 import { SearchDiscover } from './components/SearchDiscover';
@@ -25,8 +26,8 @@ import { StreamerCard } from './components/StreamerCard';
 import { useSearchController } from './hooks/use-search-controller';
 import {
   getSearchResultKey,
+  isQueryLongEnough,
   isSearchChannelItem,
-  MIN_SEARCH_QUERY_LENGTH,
   type SearchFilter,
   type SearchItem,
   type SearchStatus,
@@ -102,9 +103,10 @@ export function SearchScreen() {
 
   const renderCategoryItem: ListRenderItem<Category> = useCallback(
     ({ item }) => {
-      const imageUrl = item.box_art_url
-        .replace('{width}', '220')
-        .replace('{height}', '294');
+      const imageUrl = getTwitchThumbnailUrl(item.box_art_url, {
+        width: 220,
+        height: 294,
+      });
 
       return (
         <ResultRow
@@ -253,7 +255,7 @@ function SearchResultsEmpty({
     );
   }
 
-  if (status === 'done' && query.length >= MIN_SEARCH_QUERY_LENGTH) {
+  if (status === 'done' && isQueryLongEnough(query)) {
     return (
       <EmptyState
         style={styles.listEmpty}

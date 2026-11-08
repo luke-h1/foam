@@ -30,11 +30,13 @@ import type { StreamElementsChatStats } from '@app/types/streamelements/stats';
 import type { TwitchClip } from '@app/types/twitch/clip';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 import type { TwitchVideo } from '@app/types/twitch/video';
+import { formatClockDuration } from '@app/utils/date-time/formatClockDuration';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 import {
   formatViewCount,
   formatViewCountCompact,
 } from '@app/utils/string/formatViewCount';
+import { getTwitchThumbnailUrl } from '@app/utils/twitch/getTwitchThumbnailUrl';
 
 import { useStreamerProfileTab } from './hooks/use-streamer-profile-tab';
 import type { ProfileListItem, ProfileTab } from './types';
@@ -59,9 +61,7 @@ function getVodThumbnailUrl(vod: TwitchVideo, fallback: string) {
     return fallback;
   }
 
-  return vod.thumbnail_url
-    .replace(/%?\{width\}/, '640')
-    .replace(/%?\{height\}/, '360');
+  return getTwitchThumbnailUrl(vod.thumbnail_url, { width: 640, height: 360 });
 }
 
 function formatVodDuration(duration: string) {
@@ -71,15 +71,12 @@ function formatVodDuration(duration: string) {
     return duration;
   }
 
-  const hours = Number(match[1] ?? 0);
-  const minutes = Number(match[2] ?? 0);
-  const seconds = Number(match[3] ?? 0);
-  const paddedMinutes = minutes.toString().padStart(hours > 0 ? 2 : 1, '0');
-  const paddedSeconds = seconds.toString().padStart(2, '0');
+  const totalSeconds =
+    Number(match[1] ?? 0) * 3600 +
+    Number(match[2] ?? 0) * 60 +
+    Number(match[3] ?? 0);
 
-  return hours > 0
-    ? `${hours}:${paddedMinutes}:${paddedSeconds}`
-    : `${paddedMinutes}:${paddedSeconds}`;
+  return formatClockDuration(totalSeconds);
 }
 
 function getTopChatEmote(stats: StreamElementsChatStats) {
@@ -95,11 +92,7 @@ function getTopChatEmote(stats: StreamElementsChatStats) {
 }
 
 function formatDuration(duration: number) {
-  const totalSeconds = Math.max(0, Math.round(duration));
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  return formatClockDuration(Math.max(0, Math.round(duration)));
 }
 
 function formatRelativeAge(value: string) {
@@ -229,9 +222,6 @@ interface MediaCardProps {
   onPress: () => void;
 }
 
-/**
- * One press target per card: the thumbnail and the text act as one.
- */
 function MediaCard({
   width,
   thumbnail,
@@ -499,7 +489,6 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
         heading='Streamer not found'
         content='Could not load this channel.'
         button='Try again'
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         buttonOnPress={() => refetchUser()}
       />
     );
@@ -510,7 +499,7 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
       {...{
         activeTab,
         onTabChange: setActiveTab,
-        streamElementsStats: streamElementsQuery.data,
+        streamElementsStats: streamElementsQuery.data ?? undefined,
         user,
       }}
     />
@@ -547,7 +536,6 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
             cardWidth={cardWidth}
             isError={isTabError}
             isLoading={isTabLoading}
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             onRetry={() => refetchTab()}
           />
         }
@@ -556,7 +544,6 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
           item.kind === 'clip' ? item.clip.id : item.vod.id
         }
         getItemType={item => item.kind}
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.4}
         refreshing={isRefreshing}

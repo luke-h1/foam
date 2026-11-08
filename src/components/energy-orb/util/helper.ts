@@ -1,14 +1,7 @@
 import type { RGB } from '../types';
-import { NAMED_COLORS } from './conf';
 
 const parseColor = (color: string | undefined): RGB => {
   const c = (color ?? '').trim().toLowerCase();
-
-  const named = NAMED_COLORS[c];
-
-  if (named) {
-    return named;
-  }
 
   const hexMatch = c.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
 

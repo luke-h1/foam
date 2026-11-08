@@ -27,7 +27,6 @@ describe('showActionMenu', () => {
     showActionMenu({
       title: 'Stream',
       actions: [{ label: 'Share', onPress }],
-      cancelLabel: 'Cancel',
     });
 
     expect(sheetSpy.mock.calls[0]![0]).toEqual({
@@ -52,7 +51,6 @@ describe('showActionMenu', () => {
     showActionMenu({
       title: 'Stream',
       actions: [{ label: 'Share', onPress }],
-      cancelLabel: 'Cancel',
     });
 
     expect(onPress).not.toHaveBeenCalled();
@@ -71,7 +69,6 @@ describe('showActionMenu', () => {
         { label: 'Harassment', onPress: onSecond },
         { label: 'Other', onPress: onThird },
       ],
-      cancelLabel: 'Cancel',
     });
 
     expect(getActionMenuState()).toEqual<ShowActionMenuOptions>({
@@ -81,7 +78,6 @@ describe('showActionMenu', () => {
         { label: 'Harassment', onPress: onSecond },
         { label: 'Other', onPress: onThird },
       ],
-      cancelLabel: 'Cancel',
     });
   });
 });

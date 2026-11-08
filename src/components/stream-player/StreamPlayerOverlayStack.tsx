@@ -32,10 +32,6 @@ interface StreamPlayerOverlayStackProps {
   videoTapGesture: ComponentProps<typeof TouchBlockOverlay>['gesture'];
 }
 
-/**
- * Everything drawn over the WebView: the tap blocker, the native controls and
- * the dev-only HTTP error panel.
- */
 export function StreamPlayerOverlayStack({
   clip,
   controlsOpacity,

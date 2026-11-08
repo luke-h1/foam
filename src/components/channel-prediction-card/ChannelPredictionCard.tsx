@@ -1,40 +1,23 @@
 import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { PressableArea } from '@app/components/pressable-area/PressableArea';
+import {
+  ChannelActivityBar,
+  ChannelActivityBars,
+  ChannelActivityCard,
+  ChannelActivityFooter,
+  ChannelActivityHeader,
+  ChannelActivityTitle,
+} from '@app/components/channel-activity-card/ChannelActivityCard';
 import { Badge } from '@app/components/ui/badge/Badge';
 import { Text } from '@app/components/ui/text/Text';
+import { useCountdownLabel } from '@app/hooks/use-countdown-label';
 import { theme } from '@app/styles/themes';
 import type { ChannelPredictionState } from '@app/types/twitch/prediction';
-import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 
 interface ChannelPredictionCardProps {
   channelLogin: string;
   prediction: ChannelPredictionState;
-}
-
-function formatTimeRemaining(
-  prediction: ChannelPredictionState,
-): string | null {
-  if (!prediction.isActive || !prediction.locksAt) {
-    return prediction.isLocked ? 'Locked' : null;
-  }
-
-  const remainingMs = new Date(prediction.locksAt).getTime() - Date.now();
-
-  if (remainingMs <= 0) {
-    return 'Locking…';
-  }
-
-  const remainingSeconds = Math.ceil(remainingMs / 1000);
-  const minutes = Math.floor(remainingSeconds / 60);
-  const seconds = remainingSeconds % 60;
-
-  if (minutes > 0) {
-    return `${minutes}:${String(seconds).padStart(2, '0')} left`;
-  }
-
-  return `${remainingSeconds}s left`;
 }
 
 function getOutcomeColor(
@@ -50,59 +33,48 @@ function getOutcomeColor(
   }
 }
 
+function getStatusLabel(prediction: ChannelPredictionState): string {
+  if (prediction.isActive) {
+    return 'Live prediction';
+  }
+
+  if (prediction.isLocked) {
+    return 'Prediction locked';
+  }
+
+  return prediction.status === 'resolved'
+    ? 'Prediction result'
+    : 'Prediction canceled';
+}
+
 function ChannelPredictionCardComponent({
   channelLogin,
   prediction,
 }: ChannelPredictionCardProps) {
-  const timeRemaining = formatTimeRemaining(prediction);
+  const countdownLabel = useCountdownLabel(
+    prediction.isActive ? prediction.locksAt : undefined,
+    'Locking…',
+  );
 
-  let statusLabel = 'Prediction canceled';
-
-  if (prediction.isActive) {
-    statusLabel = 'Live prediction';
-  } else if (prediction.isLocked) {
-    statusLabel = 'Prediction locked';
-  } else if (prediction.status === 'resolved') {
-    statusLabel = 'Prediction result';
-  }
+  const lockedLabel = prediction.isLocked ? 'Locked' : null;
+  const isOpen = prediction.isActive || prediction.isLocked;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <ChannelActivityCard>
+      <ChannelActivityHeader timeLabel={countdownLabel ?? lockedLabel}>
         <Badge color='amber' variant='soft'>
-          {statusLabel}
+          {getStatusLabel(prediction)}
         </Badge>
-        {timeRemaining ? (
-          <Text color='gray.textLow' tabular type='caption' weight='medium'>
-            {timeRemaining}
-          </Text>
-        ) : null}
-      </View>
-
-      <Text
-        color='gray.text'
-        style={styles.title}
-        type='body'
-        weight='semibold'
-      >
-        {prediction.title}
-      </Text>
-
-      <View style={styles.outcomeList}>
+      </ChannelActivityHeader>
+      <ChannelActivityTitle>{prediction.title}</ChannelActivityTitle>
+      <ChannelActivityBars>
         {prediction.outcomes.map(outcome => (
-          <View key={outcome.id} style={styles.outcomeTrack}>
-            <View
-              style={[
-                styles.outcomeFill,
-                {
-                  backgroundColor: getOutcomeColor(outcome.color),
-                  width: `${Math.max(
-                    outcome.percentage,
-                    outcome.channelPoints > 0 ? 4 : 0,
-                  )}%`,
-                },
-              ]}
-            />
+          <ChannelActivityBar
+            key={outcome.id}
+            fillColor={getOutcomeColor(outcome.color)}
+            hasVotes={outcome.channelPoints > 0}
+            percentage={outcome.percentage}
+          >
             <View style={styles.outcomeContent}>
               <View style={styles.outcomeLabelRow}>
                 <Text
@@ -131,84 +103,32 @@ function ChannelPredictionCardComponent({
                 {outcome.users} users
               </Text>
             </View>
-          </View>
+          </ChannelActivityBar>
         ))}
-      </View>
-
-      <View style={styles.footer}>
-        <Text color='gray.textLow' tabular type='caption'>
-          {prediction.totalChannelPoints} total points
-        </Text>
-        {(prediction.isActive || prediction.isLocked) && (
-          <PressableArea
-            accessibilityRole='button'
-            onPress={() =>
-              openLinkInBrowser(`https://www.twitch.tv/${channelLogin}`)
-            }
-          >
-            <Text color='amber.accent' type='caption' weight='semibold'>
-              Predict on Twitch
-            </Text>
-          </PressableArea>
-        )}
-      </View>
-    </View>
+      </ChannelActivityBars>
+      <ChannelActivityFooter
+        channelLogin={channelLogin}
+        totalLabel={`${prediction.totalChannelPoints} total points`}
+        twitchLink={
+          isOpen ? { label: 'Predict on Twitch', color: 'amber.accent' } : null
+        }
+      />
+    </ChannelActivityCard>
   );
 }
 
 export const ChannelPredictionCard = memo(ChannelPredictionCardComponent);
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: theme.color.surface.dark,
-    borderBottomColor: theme.colorBorderSecondary,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: theme.space12,
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space12,
-  },
-  footer: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  header: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
   outcomeContent: {
     gap: 2,
     paddingHorizontal: theme.space12,
     paddingVertical: theme.space8,
-  },
-  outcomeFill: {
-    borderRadius: 10,
-    borderCurve: 'continuous',
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-    top: 0,
   },
   outcomeLabelRow: {
     alignItems: 'center',
     flexDirection: 'row',
     gap: theme.space8,
     justifyContent: 'space-between',
-  },
-  outcomeList: {
-    gap: theme.space8,
-  },
-  outcomeTrack: {
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.colorBorderSecondary,
-    borderRadius: 10,
-    borderCurve: 'continuous',
-    borderWidth: StyleSheet.hairlineWidth,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  title: {
-    lineHeight: 20,
   },
 });

@@ -99,7 +99,7 @@ export function ActionMenuHost() {
                 color={theme.color.textSecondary.dark}
                 style={{ typography: 'titleMedium', fontWeight: '600' }}
               >
-                {options.cancelLabel}
+                Cancel
               </Text>
             </TextButton>
           </Column>

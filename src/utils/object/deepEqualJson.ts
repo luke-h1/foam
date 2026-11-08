@@ -38,7 +38,6 @@ export function deepEqualJson<T>(a: T, b: T): boolean {
     );
   }
 
-  // One side is an array and the other is not, so they cannot match.
   if (isJsonArray(a) || isJsonArray(b)) {
     return false;
   }

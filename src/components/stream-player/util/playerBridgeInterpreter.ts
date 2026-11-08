@@ -40,7 +40,6 @@ export type PlayerBridgeAction =
   | { type: 'markFirstPlayingReported' }
   | { type: 'markPlaybackBlockedReported' }
   | { type: 'recordLoadFailed'; reason: string; error?: unknown }
-  | { type: 'recordPlaybackFreeze'; stalledMs: number }
   | {
       type: 'recordPlaybackStarted';
       startSource: 'bridge_playing';
@@ -52,12 +51,10 @@ export type PlayerBridgeAction =
   | { type: 'notifyPause' }
   | { type: 'notifyPlay' }
   | { type: 'notifyReady' }
-  | {
-      type: 'notifyStability';
-      event: 'playing' | 'recovered' | 'stalled' | 'videoError';
-    }
+  | { type: 'notifyStabilityPlaying' }
   | { type: 'notifyStabilityLatency'; latencySeconds: number }
   | { type: 'publishLatency'; latencySeconds: number }
+  | { type: 'recordResumeTime'; seconds: number }
   | { type: 'resolveCurrentTime'; seconds: number }
   | { type: 'resolveDuration'; seconds: number }
   | { type: 'scheduleAuthCompletionReload' }
@@ -70,11 +67,6 @@ export type PlayerBridgeAction =
   | { type: 'showPipUnavailableToast' }
   | { type: 'unlockOverlay' };
 
-/**
- * The failure half of the bridge protocol: embed errors, content gates,
- * blocked or stalled playback, and video element errors. Split out so
- * `interpretPlayerMessage` reads as a short list of state changes.
- */
 function interpretPlayerFailureMessage(
   message: PlayerMessage,
   context: PlayerBridgeContext,
@@ -197,104 +189,25 @@ function interpretPlayerFailureMessage(
 
       return actions;
     }
-    case 'playbackStalled': {
-      if (!message.payload) {
-        return [];
-      }
-
-      const actions: PlayerBridgeAction[] = [
-        {
-          type: 'recordPlaybackFreeze',
-          stalledMs: message.payload.stalledMs,
-        },
-        {
-          type: 'log',
-          level: 'error',
-          message: `playback stalled for ${message.payload.stalledMs}ms`,
-          args: [
-            {
-              name: 'twitch_player_error',
-              exceptionName: 'StreamPlaybackStalled',
-              fingerprint: ['stream-playback-stalled'],
-              channel: context.channel,
-              ...message.payload,
-              elapsedMs,
-            },
-          ],
-        },
-      ];
-
-      if (context.enhancedStabilityEnabled) {
-        actions.push({ type: 'notifyStability', event: 'stalled' });
-      }
-
-      return actions;
-    }
-    case 'playbackRecovered':
-      if (!message.payload) {
-        return [];
-      }
-
-      return [
-        { type: 'notifyStability', event: 'recovered' },
-        {
-          type: 'countMetric',
-          name: 'stream.playback_recovered',
-          attributes: {
-            channel: context.channel ?? 'unknown',
-          },
-        },
-        {
-          type: 'log',
-          level: 'info',
-          message: 'playback recovered after stall',
-          args: [
-            {
-              name: 'twitch_player_info',
-              channel: context.channel,
-              ...message.payload,
-            },
-          ],
-        },
-      ];
-    case 'videoElementError': {
-      if (!message.payload) {
-        return [];
-      }
-
-      const actions: PlayerBridgeAction[] = [
-        {
-          type: 'log',
-          level: 'error',
-          message: `video element error code ${message.payload.code ?? 'unknown'}`,
-          args: [
-            {
-              name: 'twitch_player_error',
-              exceptionName: 'StreamVideoElementError',
-              fingerprint: ['stream-video-element-error'],
-              channel: context.channel,
-              ...message.payload,
-              elapsedMs,
-            },
-          ],
-        },
-      ];
-
-      if (context.enhancedStabilityEnabled) {
-        actions.push({ type: 'notifyStability', event: 'videoError' });
-      }
-
-      return actions;
-    }
     default:
       return [];
   }
 }
 
 /**
- * Pure interpreter for WebView player bridge messages: returns the ordered
- * actions the hook must execute; unknown messages interpret to no actions.
+ * Returns null for a message that is not JSON or not an object.
  */
+export function parsePlayerMessage(data: string): PlayerMessage | null {
+  try {
+    const parsed: unknown = JSON.parse(data);
+
+    // SAFETY: interpretPlayerMessage checks each payload field before it uses it.
+    return parsed instanceof Object ? (parsed as PlayerMessage) : null;
+  } catch {
+    return null;
+  }
+}
+
 export function interpretPlayerMessage(
   message: PlayerMessage,
   context: PlayerBridgeContext,
@@ -342,7 +255,7 @@ export function interpretPlayerMessage(
     case 'playing': {
       const actions: PlayerBridgeAction[] = [
         { type: 'cancelTransientResume' },
-        { type: 'notifyStability', event: 'playing' },
+        { type: 'notifyStabilityPlaying' },
       ];
 
       if (!context.reportedFirstPlaying) {
@@ -423,6 +336,13 @@ export function interpretPlayerMessage(
 
       return actions;
     }
+    case 'vodProgress': {
+      const seconds = message.payload?.currentTime;
+
+      return Number.isFinite(seconds)
+        ? [{ type: 'recordResumeTime', seconds }]
+        : [];
+    }
     case 'currentTime':
       if (!message.payload || message.payload.time === undefined) {
         return [];
@@ -448,9 +368,6 @@ export function interpretPlayerMessage(
     case 'embedMisconfigured':
     case 'contentGateDetected':
     case 'playbackBlocked':
-    case 'playbackStalled':
-    case 'playbackRecovered':
-    case 'videoElementError':
       return interpretPlayerFailureMessage(message, context, elapsedMs);
     case 'twitchAuthComplete':
       return [{ type: 'scheduleAuthCompletionReload' }];

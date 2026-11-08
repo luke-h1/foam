@@ -16,11 +16,6 @@ type LiveStreamDimensionsInput = {
   layoutHeight: number;
 };
 
-/**
- * Sizes the video and chat panes for the current orientation and chat mode.
- * Memoised so the resize animation re-runs only when a dimension changes, not
- * on every render of the screen.
- */
 export function useLiveStreamDimensions({
   contentWidth,
   fullscreenChatMode,
@@ -78,7 +73,6 @@ export function useLiveStreamDimensions({
     ],
   );
 
-  // Landscape hides chat by collapsing it to zero rather than unmounting it.
   const isLandscapeChatHidden = !isChatVisibleForLayout && isLandscape;
 
   return {

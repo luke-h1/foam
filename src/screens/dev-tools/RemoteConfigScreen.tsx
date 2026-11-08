@@ -1,5 +1,4 @@
-/* eslint-disable no-nested-ternary */
-import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import * as AC from '@bacons/apple-colors';
 
@@ -132,7 +131,7 @@ export function RemoteConfigScreen() {
                       Server
                     </Text>
                     <View style={styles.valueBox}>
-                      <Text style={styles.valueText}>
+                      <Text variant='mono' style={styles.valueText}>
                         {serverValue || '(empty)'}
                       </Text>
                     </View>
@@ -147,7 +146,7 @@ export function RemoteConfigScreen() {
                       Default
                     </Text>
                     <View style={styles.defaultValueBox}>
-                      <Text style={styles.defaultValueText}>
+                      <Text variant='mono' style={styles.defaultValueText}>
                         {defaultValue || '(empty)'}
                       </Text>
                     </View>
@@ -235,7 +234,6 @@ const styles = StyleSheet.create({
   },
   defaultValueText: {
     color: theme.color.textSecondary.dark,
-    fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
     fontSize: 12,
     lineHeight: 18,
   },
@@ -289,7 +287,6 @@ const styles = StyleSheet.create({
   },
   valueText: {
     color: theme.colorPrimary,
-    fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
     fontSize: 12,
     lineHeight: 18,
   },

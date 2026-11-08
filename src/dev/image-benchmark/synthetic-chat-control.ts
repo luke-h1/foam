@@ -1,13 +1,10 @@
 export interface SyntheticChatConfig {
   active: boolean;
-  // Sustained baseline throughput.
   msgPerSec: number;
-  // Every `burstEveryMs`, emit `burstSize` at once to simulate raids and stress the batch-insert path.
   burstSize: number;
   burstEveryMs: number;
   // 0..1 share of messages that are pure emote spam (no words).
   emoteSpamRatio: number;
-  // Average emotes per message.
   emotesPerMessage: number;
 }
 

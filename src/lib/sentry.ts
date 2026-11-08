@@ -9,6 +9,7 @@ import {
 } from '@sentry/react-native';
 import { Image as ExpoImage } from 'expo-image';
 
+import { SEVEN_TV_GQL_URL } from '@app/constants/emote-providers';
 import { instrumentExpoImageLoads } from '@app/lib/sentryImageSpans';
 import {
   type LogMetadataValue,
@@ -17,6 +18,7 @@ import {
 import { runWhenIdle } from '@app/utils/runWhenIdle';
 import { markSessionError } from '@app/utils/store-review/sessionErrorFlag';
 import type { OpenStringUnion } from '@app/utils/typescript/openStringUnion';
+import { getAppVariant } from '@app/utils/version/getAppVariant';
 
 /**
  * Auto-instruments Expo Router navigation; no manual
@@ -66,7 +68,7 @@ export interface SentryStatus {
 let sentryStatus: SentryStatus = {
   enabled: false,
   hasDsn: false,
-  environment: process.env.EXPO_PUBLIC_APP_VARIANT ?? 'development',
+  environment: getAppVariant(),
   debug: false,
 };
 
@@ -80,7 +82,7 @@ export function init() {
   }
 
   const dsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
-  const appVariant = process.env.EXPO_PUBLIC_APP_VARIANT ?? 'development';
+  const appVariant = getAppVariant();
   const hasDsn = Boolean(dsn);
 
   const enabled =
@@ -138,7 +140,7 @@ export function init() {
       navigationIntegration,
       reactNativeTracingIntegration(),
       appStartIntegration(),
-      graphqlIntegration({ endpoints: ['https://7tv.io/v4/gql'] }),
+      graphqlIntegration({ endpoints: [SEVEN_TV_GQL_URL] }),
       mobileReplayIntegration({
         maskAllText: true,
         maskAllImages: true,
@@ -363,16 +365,16 @@ type MonitoringEventPrefix =
   | 'twitch_ws'
   | 'unknown';
 
-export type MonitoringErrorName = `${MonitoringEventPrefix}_error`;
+type MonitoringErrorName = `${MonitoringEventPrefix}_error`;
 export type MonitoringWarningName = `${MonitoringEventPrefix}_warning`;
-export type MonitoringInfoName = `${MonitoringEventPrefix}_info`;
+type MonitoringInfoName = `${MonitoringEventPrefix}_info`;
 
-export type MonitoringEventName =
+type MonitoringEventName =
   | MonitoringErrorName
   | MonitoringWarningName
   | MonitoringInfoName;
 
-export type LogTagValue = string | number | boolean | null | undefined;
+type LogTagValue = string | number | boolean | null | undefined;
 
 export type LogMetadata = {
   name?: OpenStringUnion<MonitoringEventName>;
@@ -428,10 +430,6 @@ const MAX_TAG_VALUE_LENGTH = 200;
  */
 const MAX_TAGS = 24;
 
-/**
- * Copies the caller's tags onto the scope, skipping empty entries and cutting
- * the list off at MAX_TAGS so one noisy call cannot fill the tag budget.
- */
 function applyCallerTags(scope: Sentry.Scope, tags: LogMetadata['tags']): void {
   const usableTags = Object.entries(tags ?? {})
     .filter(([key, value]) => key && value !== undefined && value !== null)

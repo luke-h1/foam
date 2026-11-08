@@ -49,7 +49,9 @@ const removeNamespacedKeys = (prefix: string): void => {
   }
 };
 
-type NamespacePrefixes = 'image_cache' | 'seven_tv_cache';
+type NamespacePrefixes = 'seven_tv_cache';
+
+export const SEVEN_TV_CACHE_NAMESPACE: NamespacePrefixes = 'seven_tv_cache';
 
 export const storageService = {
   events: storageEvents,
@@ -126,10 +128,6 @@ export const storageService = {
         storage.remove(key);
       }
     });
-  },
-  clearImageCache() {
-    removeNamespacedKeys(`${NAMESPACE}_image_cache`);
-    storageEvents.emit('storageChange', 'image_cache');
   },
   clearNamespace(namespacePrefix: NamespacePrefixes, keyPrefix = '') {
     removeNamespacedKeys(`${NAMESPACE}_${namespacePrefix}_${keyPrefix}`);

@@ -1,7 +1,5 @@
 import { logger } from '../logger';
 
-/* eslint-disable @typescript-eslint/no-require-imports */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 const shouldEnableWhyDidYouRender =
   __DEV__ && process.env.EXPO_PUBLIC_ENABLE_WDYR === 'true';
 
@@ -12,7 +10,6 @@ if (shouldEnableWhyDidYouRender) {
 
   logger.main.info('[WDYR] initializing');
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   whyDidYouRender(React, {
     trackAllPureComponents: true,
     onlyLogs: true,

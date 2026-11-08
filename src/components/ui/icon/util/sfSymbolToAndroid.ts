@@ -1,5 +1,7 @@
 import type { AndroidSymbol } from 'expo-symbols';
 
+import { logger } from '@app/utils/logger';
+
 interface AndroidSymbolBySfSymbol {
   [sfSymbolName: string]: AndroidSymbol;
 }
@@ -12,6 +14,7 @@ const MAP: AndroidSymbolBySfSymbol = {
   'arrow.down.circle': 'arrow_circle_down',
   'arrow.down.circle.fill': 'arrow_circle_down',
   'arrow.left.square': 'arrow_back',
+  'arrow.right.circle': 'arrow_circle_right',
   'arrow.right.square': 'logout',
   'arrow.triangle.2.circlepath': 'sync',
   'arrow.up': 'arrow_upward',
@@ -19,6 +22,7 @@ const MAP: AndroidSymbolBySfSymbol = {
   'arrow.up.left': 'north_west',
   'arrow.up.message': 'quickreply',
   'arrow.up.right.square': 'open_in_new',
+  'arrow.uturn.backward': 'undo',
   'arrow.uturn.left': 'undo',
   'arrowshape.turn.up.left': 'reply',
   at: 'alternate_email',
@@ -32,10 +36,12 @@ const MAP: AndroidSymbolBySfSymbol = {
   'chart.bar.xaxis': 'insert_chart',
   checkmark: 'check',
   'checkmark.circle.fill': 'check_circle',
+  'checkmark.seal': 'verified',
   'checkmark.shield': 'verified_user',
   'chevron.left': 'chevron_left',
   'chevron.right': 'chevron_right',
   'circle.dashed': 'radio_button_unchecked',
+  'circle.fill': 'circle',
   clock: 'schedule',
   'clock.arrow.circlepath': 'history',
   'clock.badge': 'schedule',
@@ -53,6 +59,7 @@ const MAP: AndroidSymbolBySfSymbol = {
   'eye.slash': 'visibility_off',
   'face.smiling': 'mood',
   flag: 'flag',
+  'flame.fill': 'local_fire_department',
   'forward.end.fill': 'fast_forward',
   gear: 'settings',
   // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- "gearshape" is Apple's fixed SF Symbol name, not a naming choice
@@ -65,13 +72,10 @@ const MAP: AndroidSymbolBySfSymbol = {
   'hand.wave.fill': 'waving_hand',
   'heart.fill': 'favorite',
   highlighter: 'edit',
-  house: 'home',
-  'house.fill': 'home',
   'info.circle': 'info',
   'iphone.gen3.radiowaves.left.and.right': 'phonelink_ring',
   key: 'key',
   ladybug: 'bug_report',
-  lightbulb: 'lightbulb',
   'line.3.horizontal': 'menu',
   link: 'link',
   'list.bullet': 'format_list_bulleted',
@@ -83,18 +87,18 @@ const MAP: AndroidSymbolBySfSymbol = {
   message: 'chat',
   metronome: 'av_timer',
   'minus.circle.fill': 'remove_circle',
-  moon: 'dark_mode',
   'moon.zzz': 'bedtime',
   nosign: 'block',
+  number: 'tag',
   'paintbrush.fill': 'brush',
-  paintpalette: 'palette',
   paperplane: 'send',
   'pause.fill': 'pause',
   person: 'person',
   'person.2': 'group',
   'person.3.fill': 'groups',
   'person.badge.plus': 'person_add',
-  'person.circle': 'account_circle',
+  'person.crop.circle': 'account_circle',
+  'person.crop.circle.badge.questionmark': 'person_search',
   'person.crop.circle.badge.xmark': 'person_off',
   'person.fill': 'person',
   photo: 'image',
@@ -104,15 +108,20 @@ const MAP: AndroidSymbolBySfSymbol = {
   'pin.slash': 'push_pin',
   pip: 'picture_in_picture',
   'play.fill': 'play_arrow',
+  'play.rectangle': 'smart_display',
   'play.tv.fill': 'live_tv',
   plus: 'add',
   'questionmark.circle': 'help',
+  'rectangle.grid.1x2': 'view_agenda',
   'rectangle.split.2x1': 'splitscreen',
+  rosette: 'military_tech',
   scissors: 'content_cut',
   'seventv.badge.missing': 'help',
   shield: 'shield',
+  'shield.fill': 'shield',
   'sidebar.left': 'view_sidebar',
   'slash.circle': 'block',
+  sparkles: 'auto_awesome',
   'speaker.slash.fill': 'volume_off',
   'speaker.wave.2.fill': 'volume_up',
   speedometer: 'speed',
@@ -133,16 +142,27 @@ const MAP: AndroidSymbolBySfSymbol = {
   trash: 'delete',
   'trash.fill': 'delete',
   'trash.slash': 'restore_from_trash',
-  'trophy.fill': 'emoji_events',
   tv: 'tv',
   'video.slash': 'videocam_off',
   'wand.and.stars': 'auto_awesome',
-  'waveform.path': 'graphic_eq',
   wifi: 'wifi',
+  'wifi.slash': 'wifi_off',
   xmark: 'close',
   'xmark.circle.fill': 'cancel',
 };
 
 export function sfSymbolToAndroid(name: string): AndroidSymbol {
-  return MAP[name] ?? 'circle';
+  const symbol = MAP[name];
+
+  if (symbol) {
+    return symbol;
+  }
+
+  if (__DEV__) {
+    logger.main.warn(
+      `[sfSymbolToAndroid] no Material symbol for SF Symbol "${name}"`,
+    );
+  }
+
+  return 'circle';
 }

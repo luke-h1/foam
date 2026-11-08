@@ -1,12 +1,6 @@
-import type { ReactNode } from 'react';
-
 import { renderHook, waitFor } from '@testing-library/react-native';
 
-import {
-  createLoggedInAuthContextValue,
-  createTestUser,
-} from '@app/context/__tests__/__fixtures__/auth-context.fixture';
-import { AuthContextTestProvider } from '@app/context/AuthContext';
+import { createLoggedInViewerWrapper } from '@app/context/__tests__/__fixtures__/auth-context.fixture';
 import { useChannelPoll } from '@app/hooks/use-channel-poll';
 import { useChannelPrediction } from '@app/hooks/use-channel-prediction';
 import { twitchApi } from '@app/services/api/clients';
@@ -27,20 +21,6 @@ jest
 const mockTwitchGet = jest.spyOn(twitchApi, 'get');
 jest.spyOn(logger.twitchWs, 'warn').mockImplementation(() => undefined);
 
-function loggedInViewer(userId: string) {
-  const authValue = createLoggedInAuthContextValue({
-    user: createTestUser({ id: userId }),
-  });
-
-  return function LoggedInViewer({ children }: { children: ReactNode }) {
-    return (
-      <AuthContextTestProvider {...authValue}>
-        {children}
-      </AuthContextTestProvider>
-    );
-  };
-}
-
 describe('channel poll and prediction EventSub subscriptions', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -49,7 +29,7 @@ describe('channel poll and prediction EventSub subscriptions', () => {
   });
 
   test('skips poll and prediction subscriptions for channels the viewer does not own', () => {
-    const wrapper = loggedInViewer('viewer-id');
+    const wrapper = createLoggedInViewerWrapper('viewer-id');
 
     const prediction = renderHook(() => useChannelPrediction('channel-id'), {
       wrapper,
@@ -69,7 +49,7 @@ describe('channel poll and prediction EventSub subscriptions', () => {
   });
 
   test('subscribes to poll and prediction events for the signed-in broadcaster', async () => {
-    const wrapper = loggedInViewer('channel-id');
+    const wrapper = createLoggedInViewerWrapper('channel-id');
 
     const prediction = renderHook(() => useChannelPrediction('channel-id'), {
       wrapper,

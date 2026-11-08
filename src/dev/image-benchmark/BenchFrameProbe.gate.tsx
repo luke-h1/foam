@@ -10,7 +10,6 @@ if (
   process.env.EXPO_PUBLIC_APP_VARIANT === 'internal' ||
   process.env.EXPO_PUBLIC_APP_VARIANT === 'e2e'
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   BenchFrameProbe = require('./BenchFrameProbe').BenchFrameProbe;
 }
 

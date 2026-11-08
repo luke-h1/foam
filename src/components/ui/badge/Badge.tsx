@@ -3,8 +3,7 @@ import { StyleSheet, useColorScheme, View, type ViewStyle } from 'react-native';
 
 import { type SFSymbol, SymbolView } from '@app/components/ui/icon/Icon';
 import { Text } from '@app/components/ui/text/Text';
-import { useAccentColor } from '@app/context/AccentColorContext';
-import { colors } from '@app/styles/colors';
+import { theme } from '@app/styles/themes';
 import {
   type ColorConfig,
   getColorValue,
@@ -16,9 +15,6 @@ import {
 
 type BadgeVariant = 'solid' | 'outline' | 'soft' | 'subtle';
 
-/**
- * One resolved ColorConfig per badge variant, for a single colour and scheme.
- */
 interface BadgeVariantColors {
   solid: ColorConfig;
   outline: ColorConfig;
@@ -126,13 +122,10 @@ export function Badge({
 }: BadgeProps) {
   const colorScheme = useColorScheme();
   const scheme = colorScheme === 'dark' ? 'dark' : 'light';
-  const { accentHex } = useAccentColor();
 
   const variantConfig = color
     ? generateVariantConfig(color, scheme)[variant]
-    : generateVariantConfigFromBase(accentHex || colors[scheme].tint, scheme)[
-        variant
-      ];
+    : generateVariantConfigFromBase(theme.colorPrimary, scheme)[variant];
 
   const badgeStyles = [
     {

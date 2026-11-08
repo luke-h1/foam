@@ -14,7 +14,6 @@ import { usePlayerBridge } from './hooks/use-player-bridge';
 import { useStreamPlayerControls } from './hooks/use-stream-player-controls';
 import { useStreamPlayerLifecycle } from './hooks/use-stream-player-lifecycle';
 import { useStreamPlayerSource } from './hooks/use-stream-player-source';
-import { useWebViewMessageRouter } from './hooks/use-web-view-message-router';
 import { StreamPlayerOverlayStack } from './StreamPlayerOverlayStack';
 import { StreamPlayerPoster } from './StreamPlayerPoster';
 import { StreamPlayerWebView } from './StreamPlayerWebView';
@@ -265,16 +264,12 @@ export const StreamPlayer = memo(function StreamPlayer({
     },
     onReady,
     ref,
+    resumeTimeRef,
     runJavaScript,
     scheduleAuthCompletionReload,
     sourceKey,
     video,
     webViewKey,
-  });
-
-  const handleWebViewMessage = useWebViewMessageRouter({
-    handleMessage,
-    resumeTimeRef,
   });
 
   const handleWebViewHttpError = useCallback(
@@ -325,7 +320,6 @@ export const StreamPlayer = memo(function StreamPlayer({
 
     handleBridgePlaying();
 
-    // Kick autoplay off the WebView-ready signal so the stream starts without a tap.
     if (autoplay && !clip) {
       runJavaScript(
         'window.__foamEnsurePlaying && window.__foamEnsurePlaying(); true;',
@@ -370,7 +364,7 @@ export const StreamPlayer = memo(function StreamPlayer({
             onError,
             onHttpError: handleWebViewHttpError,
             onLoadFailed: noteWebViewLoadFailed,
-            onMessage: handleWebViewMessage,
+            onMessage: handleMessage,
             onWebViewLoaded: handleWebViewLoaded,
             remountWebView: remountEmbedWebView,
             scheduleAuthCompletionReload,

@@ -15,7 +15,6 @@ if (
   process.env.EXPO_PUBLIC_APP_VARIANT === 'e2e'
 ) {
   StorybookRoute =
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     require('@app/screens/storybook/StorybookScreen').StorybookScreen;
 }
 

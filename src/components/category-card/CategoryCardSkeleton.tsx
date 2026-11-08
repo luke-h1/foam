@@ -1,6 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import { Skeleton } from '@app/components/ui/skeleton/Skeleton';
+import { sizeStyles } from '@app/components/ui/text/Text.styles';
 import { theme } from '@app/styles/themes';
 
 import { IMAGE_ASPECT_RATIO } from './constants';
@@ -29,7 +30,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   titleLine: {
-    height: 20,
+    height: sizeStyles.subhead.lineHeight,
     justifyContent: 'center',
     marginTop: theme.space8,
   },

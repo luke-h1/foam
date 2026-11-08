@@ -1,8 +1,5 @@
 import { z } from 'zod';
 
-/**
- * The widest shape sanitiseLogValue can bound before it reaches Sentry.
- */
 export type LogMetadataValue =
   | string
   | number
@@ -48,10 +45,6 @@ function summariseHomogeneousArray(value: unknown[]): string | null {
   return null;
 }
 
-/**
- * Arrays log as a summary when every item shares a shape, as a capped preview
- * when they are long, and item by item otherwise.
- */
 function sanitiseLogArray(
   value: unknown[],
   seen: WeakSet<object>,

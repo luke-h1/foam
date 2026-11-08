@@ -8,7 +8,9 @@ export interface AppStateTransition {
   current: AppStateStatus;
 }
 
-type AppStateTransitionListener = (transition: AppStateTransition) => void;
+type AppStateTransitionListener = (
+  transition: AppStateTransition,
+) => void | Promise<void>;
 
 const listeners = new Set<AppStateTransitionListener>();
 
@@ -69,9 +71,8 @@ export function subscribeToAppStateTransitions(
     );
   }
 
-  const entry: AppStateTransitionListener = transition => {
-    listener(transition);
-  };
+  // A new entry per call, so one function subscribed twice is held twice.
+  const entry: AppStateTransitionListener = transition => listener(transition);
 
   listeners.add(entry);
 

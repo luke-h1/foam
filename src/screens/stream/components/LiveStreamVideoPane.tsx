@@ -17,7 +17,6 @@ const isAndroid = process.env.EXPO_OS === 'android';
 type LiveStreamVideoPaneProps = {
   animatedStyle: AnimatedStyle<ViewStyle>;
   canCreateClip: boolean;
-  customPlayerEnabled: boolean;
   displayName: string | undefined;
   isChannelOffline: boolean;
   isLandscape: boolean;
@@ -40,9 +39,6 @@ type LiveStreamVideoPaneProps = {
   streamInfo: React.ComponentProps<typeof StreamPlayer>['streamInfo'];
 };
 
-/**
- * Landscape-only gesture handlers; portrait leaves them unwired.
- */
 const landscapeOnly = (isLandscape: boolean, handler: () => void) =>
   isLandscape ? handler : undefined;
 
@@ -72,15 +68,9 @@ function FallbackBackButton({ onPress }: { onPress: () => void }) {
   );
 }
 
-/**
- * The video half of the screen: the player itself, the panel that replaces it
- * when the channel is offline or the request failed, and the chrome that only
- * appears in landscape or on Android.
- */
 export function LiveStreamVideoPane({
   animatedStyle,
   canCreateClip,
-  customPlayerEnabled,
   displayName,
   isChannelOffline,
   isLandscape,
@@ -102,8 +92,7 @@ export function LiveStreamVideoPane({
   sleepTimerActive,
   streamInfo,
 }: LiveStreamVideoPaneProps) {
-  // The player draws its own back control on iOS; Android gets the overlay below.
-  const showsOwnBackButton = customPlayerEnabled && !isAndroid;
+  const showsOwnBackButton = !isAndroid;
 
   return (
     <Animated.View
@@ -119,7 +108,7 @@ export function LiveStreamVideoPane({
           {...{
             ref: playerRef,
             channel: resolvedChannelLogin,
-            showOverlayControls: customPlayerEnabled,
+            showOverlayControls: true,
             onBackPress: showsOwnBackButton ? onBackPress : undefined,
             onPlay: onPlayerLoaded,
             onPlaybackLatencyChange,

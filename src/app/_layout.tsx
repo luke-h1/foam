@@ -28,4 +28,4 @@ sweepOversizedSentryEnvelopes();
 initSentry();
 installGlobalErrorHandlers();
 
-export { default } from './default-root-layout';
+export { default } from '@app/components/root-layout/DefaultRootLayout';

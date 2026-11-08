@@ -92,7 +92,8 @@ the deploy-decision/dispatcher split in the release pipeline.
 type - it is `chatStore$.currentChannelId` plus a per-channel
 `ChannelCacheType` in `channelCaches` (bounded by `MAX_CACHED_CHANNELS`) plus
 `ChatTransientChannelState`. Join/part are `joinChannel` / `partChannel` on
-`useTwitchChat` (`services/twitch-chat-service.ts`). ⚠ "channel" names both
+`useTwitchChat` (`components/chat/hooks/use-twitch-chat.ts`, over the pure
+client in `components/chat/util/irc-client/`). ⚠ "channel" names both
 the Helix entity and the chat room; the joined-channel concept has no home
 module.
 
@@ -107,7 +108,7 @@ distinct from the Channel that persists offline. ⚠ UI surfaces say
 variants are the `NoticeVariants` union (`usernotice`, `clearchat`,
 `clearmsg`, `roomstate`, `notice`, `userstate`, `globalusernotice`), typed
 per command in `types/chat/irc-tags/`; USERNOTICE sub-variants (`sub`,
-`raid`, ...) are `TwitchNotices`. ⚠ `BufferedMessage`
+`raid`, ...) are the keys of `UserNoticeVariantMap` (`UserNoticeMsgId`). ⚠ `BufferedMessage`
 (`components/chat/util/buffered-message-ops/`) is the same entity pre-commit
 (plus `cachedSenderColor`).
 
@@ -117,7 +118,7 @@ post-coercion as the `*Tags` interfaces (`UserStateTags`, `RoomStateTags`,
 ...). `parseIrcMessage` is the line parser.
 
 **Token** - the parsed span within a message body:
-`MessageToken<MessageTokenKind>` (`utils/chat/messageToken.ts`) - `text`,
+`MessageToken<MessageTokenKind>` (`types/chat/messageToken.ts`) - `text`,
 `emote`, `mention`, `link`, `stvEmoteLink`, `twitchClip`, `cheermote`,
 `stvEmoteAdded`, `stvEmoteRemoved`, and the Twitch notice kinds.
 `MessageToken` is a lookup into a shape map keyed by `type`, so it narrows on
@@ -190,8 +191,9 @@ timers.
 
 **Enrichment** - post-commit emote/badge re-resolution over already-parsed
 messages (`store/chat/actions/message-enrichment.ts`: `enrichMessageSet`,
-`enrichVisibleMessage`). Parse-time resolution is **processing**
-(`utils/chat/emoteProcessor.ts` / `resolveMessageEmoteParts`). The two words are
+`refreshSharedChatBadges`). Parse-time resolution is **processing**
+(`utils/chat/emoteProcessor.ts` /
+`store/chat/actions/resolveMessageEmoteTokens.ts`). The two words are
 deliberate - keep them distinct.
 
 **Message identity** - `utils/chat/message-identity/`: `getChatMessageKey`,
@@ -200,8 +202,8 @@ The one rule for what identifies a message; buffer, store dedup index and
 list keyExtractor agree (see AGENTS.md).
 
 **Userstate / room state** - the authenticated user's chat state is
-`UserStateTags`, held imperatively in `services/twitch-chat-service.ts` behind an
-external-store revision (`subscribeUserState`); the channel's mode state is
+`UserStateTags`, held imperatively in `components/chat/util/chat-user-state.ts` behind an
+external-store revision (`subscribeChatUserState`); the channel's mode state is
 **room state** (`RoomStateTags` → `ParsedRoomState`, tracked by
 `createRoomStateTracker` in `components/chat/util/room-state/`). ⚠
 `ChatMessageType.userstate` is the _sender's_ per-message tags - same word,
@@ -211,9 +213,8 @@ different concept from the user's own USERSTATE.
 
 **Emote** - `SanitisedEmote` (`types/emote.ts`), a per-provider union over
 `SanitisedEmoteBase`; carries `zero_width` and `image_variants`
-(`animated` / `static`). ⚠ `ProviderSanitisedEmote`
-(`services/emote-provider.ts`) is a near-identical service-layer
-intermediate - two shapes for one glyph.
+(`animated` / `static`). The provider sanitisers in
+`utils/emote/sanitised/` return `SanitisedEmote` directly.
 
 **Emote collection / emote set** - ⚠ dual naming, both live: ingest says
 **collection** (`EmoteCollection`, `getBaseCollectionKey`,
@@ -227,8 +228,10 @@ is the discriminant (`'7tv' | 'bttv' | 'ffz' | 'twitch' | 'emoji'`, plus
 `'chatterino'` for badges); `site` is display-only and must not be
 pattern-matched. Per-provider service modules (`services/seven-tv-service.ts`,
 `services/bttv-emote-service.ts`, `services/ffz-service.ts`, `services/twitch-emote-service.ts`) share
-the sanitiser (`buildSanitisedEmote` behind `EmoteProviderSource`), which
-emits the discriminant.
+the sanitisers in `utils/emote/sanitised/` (`buildSanitisedEmote` for
+`BttvEmoteSource` / `FfzEmoteSource` / `TwitchEmoteSource`,
+`buildSevenTvSanitisedEmote` for `SevenTvEmoteSource`), which emit the
+discriminant.
 
 **Spelling 7TV** - three forms, each with one job. Paths are `seven-tv`
 (`utils/seven-tv/`, `services/seven-tv-service.ts`). Values are `sevenTv` and
@@ -255,8 +258,9 @@ badges bypass `findBadges` and arrive via cosmetics (`chatStore$.badges`).
 **Tick** - two shared animation pulses, one per domain: native animated
 emotes on iOS ride `SharedAnimationDriver` (one `CADisplayLink` + global
 epoch, added by the expo-image patch); Skia paint animation rides
-`components/chat/components/chat-message/cosmetic-username/util/sharedPaintAnimationFrames.tsx` (one Reanimated `useFrameCallback`, paused
-by `chatScrollActiveShared`). Android has its own phase lock in the same
+`components/chat/components/chat-message/cosmetic-username/util/sharedPaintAnimationFrames.tsx` (one `requestAnimationFrame` loop in
+`SharedPaintAnimationDrivers`, paused while `chatScrollActivity.isActive()`
+or the app is in the background). Android has its own phase lock in the same
 patch, supervised by a Choreographer callback rather than seeking per tick
 (ADR-0009). ⚠ No `SyncedAnimationCoordinator` exists.
 

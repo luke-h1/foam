@@ -1,32 +1,28 @@
-import { useCallback, useEffect } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useRef } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
-import { router, Stack, useFocusEffect } from 'expo-router';
-import * as ScreenOrientation from 'expo-screen-orientation';
+import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
 import { StreamPlayer } from '@app/components/stream-player/StreamPlayer';
+import type { StreamPlayerRef } from '@app/components/stream-player/types';
 import { EmptyState } from '@app/components/ui/empty-state/EmptyState';
 import { PlayerBackButton } from '@app/screens/stream/components/PlayerBackButton';
 import { PlayerIconButton } from '@app/screens/stream/components/PlayerIconButton';
 import { theme } from '@app/styles/themes';
 
+import { useLiveStreamOrientation } from './hooks/use-live-stream-orientation';
 import { useSleepTimer } from './hooks/use-sleep-timer';
-import { getLiveStreamLayoutMetrics } from './util/getLiveStreamLayoutMetrics';
+import { useStreamPlayerScreenLifecycle } from './hooks/use-stream-player-screen-lifecycle';
 import { showSleepTimerMenu } from './util/showSleepTimerMenu';
 
 interface VodPlayerScreenProps {
   id: string;
 }
 
-// Keep the screen awake while watching. Auto-lock is more likely to trigger during a long VOD.
-const KEEP_AWAKE_TAG = 'vod-player';
-
 export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
-  const insets = useSafeAreaInsets();
+  const streamPlayerRef = useRef<StreamPlayerRef>(null);
 
   const sleepTimer = useSleepTimer({
     onExpire: () => {
@@ -36,43 +32,23 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
     },
   });
 
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-
-  const { isLandscape, layoutHeight, portraitTopInset, screenWidth } =
-    getLiveStreamLayoutMetrics({
-      insetTop: insets.top,
-      windowHeight,
-      windowWidth,
-    });
-
-  const landscapeInsetLeft = insets.left;
-  const landscapeInsetRight = insets.right;
-
-  const videoWidth = Math.max(
-    1,
-    screenWidth - landscapeInsetLeft - landscapeInsetRight,
-  );
+  const {
+    contentWidth: videoWidth,
+    insets,
+    isLandscape,
+    landscapeInsetLeft,
+    landscapeInsetRight,
+    layoutHeight,
+    portraitTopInset,
+  } = useLiveStreamOrientation();
 
   // Portrait pins 16:9 below the status bar, landscape fills the height; sizing the container to the video keeps the WebView video-sized with no letterboxing.
   const videoHeight = isLandscape ? layoutHeight : videoWidth * (9 / 16);
 
-  useEffect(() => {
-    void ScreenOrientation.unlockAsync();
-    return () => {
-      void ScreenOrientation.lockAsync(
-        ScreenOrientation.OrientationLock.PORTRAIT_UP,
-      );
-    };
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      void activateKeepAwakeAsync(KEEP_AWAKE_TAG);
-      return () => {
-        void deactivateKeepAwake(KEEP_AWAKE_TAG);
-      };
-    }, []),
-  );
+  useStreamPlayerScreenLifecycle({
+    keepAwakeTag: 'vod-player',
+    streamPlayerRef,
+  });
 
   if (!id) {
     return (
@@ -105,6 +81,7 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
         ]}
       >
         <StreamPlayer
+          ref={streamPlayerRef}
           video={id}
           autoplay
           muted={false}

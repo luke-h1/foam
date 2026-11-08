@@ -1,7 +1,5 @@
 import { theme } from '@app/styles/themes';
 
-import type { RGB } from '../types';
-
 const SHADER_SOURCE = `
   uniform float iTime;
   uniform vec2 iResolution;
@@ -32,24 +30,6 @@ const SHADER_SOURCE = `
   }
 `;
 
-interface NamedColorTable {
-  [colorName: string]: RGB;
-}
-
-const NAMED_COLORS: NamedColorTable = {
-  red: [1, 0, 0],
-  green: [0, 1, 0],
-  blue: [0, 0, 1],
-  white: [1, 1, 1],
-  black: [0, 0, 0],
-  yellow: [1, 1, 0],
-  cyan: [0, 1, 1],
-  magenta: [1, 0, 1],
-  orange: [1, 0.65, 0],
-  purple: [0.5, 0, 0.5],
-  pink: [1, 0.75, 0.8],
-};
-
 const DEFAULT_COLORS = [
   theme.color.accent.light,
   theme.color.accent.dark,
@@ -67,6 +47,5 @@ export {
   DEFAULT_INTENSITY,
   DEFAULT_SIZE,
   DEFAULT_SPEED,
-  NAMED_COLORS,
   SHADER_SOURCE,
 };

@@ -1,4 +1,4 @@
-export type TwitchChatMessageFragment = {
+interface TwitchChatMessageFragment {
   type: 'text' | 'cheermote' | 'emote' | 'mention' | 'gif';
   text: string;
   cheermote?: unknown;
@@ -17,9 +17,9 @@ export type TwitchChatMessageFragment = {
     gif_id?: string;
     url?: string;
   };
-};
+}
 
-export type TwitchPinnedChatMessage = {
+export interface TwitchPinnedChatMessage {
   broadcaster_id?: string;
   broadcaster_login?: string;
   broadcaster_name?: string;
@@ -39,13 +39,13 @@ export type TwitchPinnedChatMessage = {
   pinned_by_name?: string;
   pinned_by_user_id?: string;
   updated_at?: string;
-};
+}
 
-export type TwitchSendChatMessageResult = {
+export interface TwitchSendChatMessageResult {
   drop_reason?: {
     code: string;
     message: string;
   } | null;
   is_sent: boolean;
   message_id: string;
-};
+}

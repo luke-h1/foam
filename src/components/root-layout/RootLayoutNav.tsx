@@ -3,7 +3,7 @@ import { SystemBars } from 'react-native-edge-to-edge';
 import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
 
 import { ForceUpdateModal } from '@app/components/force-update-modal/ForceUpdateModal';
-import { OTAUpdates } from '@app/components/ota-updates/OtaUpdates';
+import { useOTAUpdates } from '@app/hooks/use-ota-updates';
 import { useStartupMark } from '@app/hooks/use-startup-mark';
 import { Providers } from '@app/providers/Providers';
 import { theme } from '@app/styles/themes';
@@ -30,13 +30,12 @@ const rootStackScreens = [
   'chat',
   'auth',
   'preferences',
-  'storybook',
-  'other',
   'dev-tools',
 ] as const;
 
 export function RootLayoutNav() {
   useStartupMark('root_layout_render');
+  useOTAUpdates();
 
   return (
     <ThemeProvider value={navigationTheme}>
@@ -88,7 +87,6 @@ export function RootLayoutNav() {
             }}
           />
         </Stack>
-        <OTAUpdates />
       </Providers>
     </ThemeProvider>
   );

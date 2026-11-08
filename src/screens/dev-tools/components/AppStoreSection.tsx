@@ -4,9 +4,8 @@ import * as AC from '@bacons/apple-colors';
 import * as Application from 'expo-application';
 
 import * as Form from '@app/components/form/Form';
+import { getStoreUrlAsync } from '@app/utils/app-update/getStoreUrlAsync';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
-
-import { getStoreUrlAsync } from '../util/getStoreUrlAsync';
 
 export function AppStoreSection() {
   const [canOpenStore, setCanOpenStore] = useState<boolean>(true);
@@ -21,7 +20,6 @@ export function AppStoreSection() {
     >
       <Form.Text
         hint={`${Application.nativeApplicationVersion} (${Application.nativeBuildVersion})`}
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onPress={async () => {
           const appStoreLink = await getStoreUrlAsync();
           setCanOpenStore(!!appStoreLink);

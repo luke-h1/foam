@@ -125,7 +125,6 @@ export function buildStreamPlayerInjectedJavaScript({
         '\n' +
         buildTwitchContentGateWatcherScript()
       : '') +
-    // Live + custom-player only: read broadcaster latency for the chat pill and seek to live at start.
     (showOverlayControls && !clip && !video
       ? '\n' +
         buildTwitchLatencyTrackerScript() +

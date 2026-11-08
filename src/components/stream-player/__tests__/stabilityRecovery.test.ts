@@ -4,14 +4,6 @@ import {
 } from '../util/stabilityRecovery';
 
 describe('createStabilityRecovery', () => {
-  beforeEach(() => {
-    jest.useFakeTimers();
-  });
-
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
   const create = (nowValue: { current: number }) => {
     const refreshes: { attempt: number; reason: StabilityRefreshReason }[] = [];
 
@@ -25,55 +17,14 @@ describe('createStabilityRecovery', () => {
         giveUps.push({ reason, refreshCount }),
     });
 
-    return { giveUps, refreshes, stability };
+    const reportHighLatency = () => {
+      stability.noteLatency(25);
+      stability.noteLatency(25);
+      stability.noteLatency(25);
+    };
+
+    return { giveUps, refreshes, reportHighLatency, stability };
   };
-
-  test('a stall refreshes only after the 4s grace period', () => {
-    const now = { current: 10_000 };
-    const { refreshes, stability } = create(now);
-
-    stability.noteStalled();
-    jest.advanceTimersByTime(3999);
-    expect(refreshes).toEqual([]);
-
-    jest.advanceTimersByTime(1);
-    expect(refreshes).toEqual([{ attempt: 1, reason: 'stall' }]);
-  });
-
-  test('playback recovering inside the grace period cancels the refresh', () => {
-    const now = { current: 10_000 };
-    const { refreshes, stability } = create(now);
-
-    stability.noteStalled();
-    jest.advanceTimersByTime(3000);
-    stability.noteRecovered();
-    jest.advanceTimersByTime(10_000);
-
-    expect(refreshes).toEqual([]);
-  });
-
-  test('a second stall report while the grace timer is armed does not stack timers', () => {
-    const now = { current: 10_000 };
-    const { refreshes, stability } = create(now);
-
-    stability.noteStalled();
-    jest.advanceTimersByTime(2000);
-    stability.noteStalled();
-    jest.advanceTimersByTime(2000);
-
-    expect(refreshes).toEqual([{ attempt: 1, reason: 'stall' }]);
-  });
-
-  test('a video element error refreshes immediately and cancels a pending stall refresh', () => {
-    const now = { current: 10_000 };
-    const { refreshes, stability } = create(now);
-
-    stability.noteStalled();
-    stability.noteVideoError();
-    jest.advanceTimersByTime(10_000);
-
-    expect(refreshes).toEqual([{ attempt: 1, reason: 'videoElementError' }]);
-  });
 
   test('high latency must persist for 3 consecutive readings before refreshing', () => {
     const now = { current: 10_000 };
@@ -100,76 +51,92 @@ describe('createStabilityRecovery', () => {
     expect(refreshes).toEqual([]);
   });
 
+  test('playback starting resets the consecutive high-latency count', () => {
+    const now = { current: 10_000 };
+    const { refreshes, stability } = create(now);
+
+    stability.noteLatency(25);
+    stability.noteLatency(25);
+    stability.notePlaying();
+    stability.noteLatency(25);
+
+    expect(refreshes).toEqual([]);
+  });
+
   test('gives up after 3 refreshes inside the 120s window and reports it once', () => {
     const now = { current: 10_000 };
-    const { giveUps, refreshes, stability } = create(now);
+    const { giveUps, refreshes, reportHighLatency } = create(now);
 
-    stability.noteVideoError();
-    now.current += 1000;
-    stability.noteVideoError();
-    now.current += 1000;
-    stability.noteVideoError();
-    now.current += 1000;
-    stability.noteVideoError();
-    now.current += 1000;
-    stability.noteVideoError();
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      reportHighLatency();
+      now.current += 1000;
+    }
 
     expect(refreshes).toEqual([
-      { attempt: 1, reason: 'videoElementError' },
-      { attempt: 2, reason: 'videoElementError' },
-      { attempt: 3, reason: 'videoElementError' },
+      { attempt: 1, reason: 'highLatency' },
+      { attempt: 2, reason: 'highLatency' },
+      { attempt: 3, reason: 'highLatency' },
     ]);
 
-    expect(giveUps).toEqual([{ reason: 'videoElementError', refreshCount: 3 }]);
+    expect(giveUps).toEqual([{ reason: 'highLatency', refreshCount: 3 }]);
   });
 
   test('refresh budget recovers once old refreshes age out of the 120s window', () => {
     const now = { current: 10_000 };
-    const { refreshes, stability } = create(now);
+    const { refreshes, reportHighLatency } = create(now);
 
-    stability.noteVideoError();
-    stability.noteVideoError();
-    stability.noteVideoError();
+    reportHighLatency();
+    reportHighLatency();
+    reportHighLatency();
     now.current += 120_000;
-    stability.noteVideoError();
+    reportHighLatency();
 
     expect(refreshes).toEqual([
-      { attempt: 1, reason: 'videoElementError' },
-      { attempt: 2, reason: 'videoElementError' },
-      { attempt: 3, reason: 'videoElementError' },
-      { attempt: 1, reason: 'videoElementError' },
+      { attempt: 1, reason: 'highLatency' },
+      { attempt: 2, reason: 'highLatency' },
+      { attempt: 3, reason: 'highLatency' },
+      { attempt: 1, reason: 'highLatency' },
     ]);
   });
 
   test('reset clears the refresh window, latency readings, and the gave-up latch', () => {
     const now = { current: 10_000 };
-    const { giveUps, refreshes, stability } = create(now);
+    const { giveUps, refreshes, reportHighLatency, stability } = create(now);
 
-    stability.noteVideoError();
-    stability.noteVideoError();
-    stability.noteVideoError();
-    stability.noteVideoError();
-    expect(giveUps).toEqual([{ reason: 'videoElementError', refreshCount: 3 }]);
+    reportHighLatency();
+    reportHighLatency();
+    reportHighLatency();
+    reportHighLatency();
+    expect(giveUps).toEqual([{ reason: 'highLatency', refreshCount: 3 }]);
 
+    stability.noteLatency(25);
+    stability.noteLatency(25);
     stability.reset();
-    stability.noteVideoError();
+    stability.noteLatency(25);
 
     expect(refreshes).toEqual([
-      { attempt: 1, reason: 'videoElementError' },
-      { attempt: 2, reason: 'videoElementError' },
-      { attempt: 3, reason: 'videoElementError' },
-      { attempt: 1, reason: 'videoElementError' },
+      { attempt: 1, reason: 'highLatency' },
+      { attempt: 2, reason: 'highLatency' },
+      { attempt: 3, reason: 'highLatency' },
     ]);
-  });
 
-  test('dispose cancels a pending stall refresh', () => {
-    const now = { current: 10_000 };
-    const { refreshes, stability } = create(now);
+    reportHighLatency();
+    reportHighLatency();
+    reportHighLatency();
+    reportHighLatency();
 
-    stability.noteStalled();
-    stability.dispose();
-    jest.advanceTimersByTime(10_000);
+    expect(refreshes).toEqual([
+      { attempt: 1, reason: 'highLatency' },
+      { attempt: 2, reason: 'highLatency' },
+      { attempt: 3, reason: 'highLatency' },
+      { attempt: 1, reason: 'highLatency' },
+      { attempt: 2, reason: 'highLatency' },
+      { attempt: 3, reason: 'highLatency' },
+    ]);
 
-    expect(refreshes).toEqual([]);
+    expect(giveUps).toEqual([
+      { reason: 'highLatency', refreshCount: 3 },
+      { reason: 'highLatency', refreshCount: 3 },
+    ]);
   });
 });

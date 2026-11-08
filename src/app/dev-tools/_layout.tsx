@@ -1,32 +1,14 @@
-import { Redirect, Stack } from 'expo-router';
+import { Stack } from 'expo-router';
 
-import { useDevToolsAccess } from '@app/utils/dev-tools/devToolsGate';
+import { withDevToolsGate } from '@app/components/dev-tools-gate/withDevToolsGate';
 import { nativeStackScreenOptions } from '@app/utils/navigation/nativeStackOptions';
 
-export default function DevToolsLayout() {
-  const access = useDevToolsAccess();
-
-  if (access === 'pending') {
-    return null;
-  }
-
-  if (access === 'denied') {
-    return <Redirect href='/tabs/settings' />;
-  }
-
+function DevToolsLayout() {
   return (
     <Stack screenOptions={nativeStackScreenOptions}>
       <Stack.Screen
         name='changelog'
         options={{ title: 'Changelog Demo', headerBackTitle: 'Dev Tools' }}
-      />
-      <Stack.Screen
-        name='debug'
-        options={{ title: 'Debug', headerBackTitle: 'Dev Tools' }}
-      />
-      <Stack.Screen
-        name='diagnostics'
-        options={{ title: 'Diagnostics', headerBackTitle: 'Dev Tools' }}
       />
       <Stack.Screen
         name='sentry-demo'
@@ -54,3 +36,5 @@ export default function DevToolsLayout() {
     </Stack>
   );
 }
+
+export default withDevToolsGate(DevToolsLayout);

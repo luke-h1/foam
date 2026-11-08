@@ -17,11 +17,8 @@ export function hexToRgb(
   const bigint = Number.parseInt(hex, 16);
 
   return {
-    // eslint-disable-next-line no-bitwise
     r: (bigint >> 16) & 255,
-    // eslint-disable-next-line no-bitwise
     g: (bigint >> 8) & 255,
-    // eslint-disable-next-line no-bitwise
     b: bigint & 255,
   };
 }

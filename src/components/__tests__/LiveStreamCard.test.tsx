@@ -1,37 +1,22 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
-import { twitchService as _twitchService } from '@app/services/twitch-service';
+import { createTwitchStream } from '@app/services/__fixtures__/twitch/stream.fixture';
 import render from '@app/test/render';
-import type { TwitchStream } from '@app/types/twitch/stream';
 
 import { LiveStreamCard } from '../live-stream-card/LiveStreamCard';
 
-const mockStream: TwitchStream = {
-  id: '1',
+const mockStream = createTwitchStream({
   user_id: '123',
   user_login: 'test_user',
   user_name: 'Test user',
   game_id: '456',
-  game_name: 'Just Chatting',
-  type: 'live',
   title: 'Test Stream Title',
-  viewer_count: 10_000,
-  started_at: new Date().toISOString(),
-  language: 'en',
   thumbnail_url: 'https://example.com/thumbnail.jpg',
   tags: ['stream', 'live', '2024', 'foam'],
-  tag_ids: [],
-  is_mature: false,
-};
+});
 
 describe('LiveStreamCard', () => {
-  beforeEach(() => {
-    jest
-      .spyOn(_twitchService, 'getUserImage')
-      .mockResolvedValue('https://example.com/avatar.jpg');
-  });
-
   afterEach(() => {
     jest.restoreAllMocks();
     jest.mocked(router.push).mockClear();

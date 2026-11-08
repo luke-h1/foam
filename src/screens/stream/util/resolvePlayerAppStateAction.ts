@@ -1,9 +1,6 @@
 import type { AppStateTransition } from '@app/utils/app-state/appStateTransitions';
 
 export interface PlayerAppStateAction {
-  /**
-   * Read and remember whether the player was playing before this excursion.
-   */
   capturePlayState: boolean;
   pausePlayer: boolean;
   resumePlayer: boolean;

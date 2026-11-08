@@ -11,12 +11,13 @@ import { twitchKeys } from '@app/lib/react-query/queryKeys';
 import { showActionMenu } from '@app/store/overlays/show-action-menu';
 import { theme } from '@app/styles/themes';
 import type { TwitchStream } from '@app/types/twitch/stream';
+import { elapsedStreamTime } from '@app/utils/date-time/elapsedStreamTime';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
-import { elapsedStreamTime } from '@app/utils/string/elapsedStreamTime';
 import {
   formatViewCount,
   formatViewCountCompact,
 } from '@app/utils/string/formatViewCount';
+import { getTwitchThumbnailUrl } from '@app/utils/twitch/getTwitchThumbnailUrl';
 
 import { Avatar } from '../avatar/Avatar';
 import { Button } from '../button/Button';
@@ -24,15 +25,13 @@ import { Image } from '../image/Image';
 import { PressableArea } from '../pressable-area/PressableArea';
 import {
   COMPACT_THUMBNAIL_SIZE,
+  COMPACT_THUMBNAIL_WIDTH,
   MEDIA_THUMBNAIL_SIZE,
 } from './util/thumbnailSizes';
 
 interface Props {
   stream: TwitchStream;
   layout?: 'compact' | 'media';
-  /**
-   * Hide the category line on a list that is already one category.
-   */
   showCategory?: boolean;
 }
 
@@ -85,9 +84,10 @@ function LiveStreamCardComponent({
   const thumbnailSize =
     layout === 'media' ? MEDIA_THUMBNAIL_SIZE : COMPACT_THUMBNAIL_SIZE;
 
-  const thumbnailUrl = stream.thumbnail_url
-    .replace('{width}', thumbnailSize.width)
-    .replace('{height}', thumbnailSize.height);
+  const thumbnailUrl = getTwitchThumbnailUrl(
+    stream.thumbnail_url,
+    thumbnailSize,
+  );
 
   const profilePicture = stream.profilePicture;
 
@@ -152,7 +152,6 @@ function LiveStreamCardComponent({
           },
         },
       ],
-      cancelLabel: 'Cancel',
     });
   }, [stream.user_login, stream.user_name]);
 
@@ -300,7 +299,7 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     borderRadius: theme.radius.md,
     overflow: 'hidden',
-    width: 144,
+    width: COMPACT_THUMBNAIL_WIDTH,
   },
   thumbnailBadge: {
     bottom: theme.space8,
