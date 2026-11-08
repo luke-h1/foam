@@ -21,7 +21,6 @@ const DEFAULT_DEVICE_INFO: MockDeviceInfo = {
 };
 
 declare global {
-  // eslint-disable-next-line no-var -- globalThis property declaration requires var
   var __mockDeviceInfo: MockDeviceInfo | undefined;
 }
 

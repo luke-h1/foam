@@ -1,8 +1,8 @@
 import React from 'react';
 
-type MockTextElementProps = {
+interface MockTextElementProps {
   ref?: React.Ref<unknown>;
-};
+}
 
 const MockText = ({
   children,

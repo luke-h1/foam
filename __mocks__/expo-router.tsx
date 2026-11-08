@@ -1,5 +1,4 @@
 import React from 'react';
-// eslint-disable-next-line no-restricted-imports
 import { Text, TextInput, type TextInputInstance, View } from 'react-native';
 
 export const router = {
@@ -103,6 +102,8 @@ export const useNavigation = jest.fn(() => ({
 
 export const useScrollToTop = jest.fn();
 export const usePathname = jest.fn(() => '/');
+export const useSegments = jest.fn((): string[] => []);
+export const useRootNavigationState = jest.fn(() => ({ key: 'root' }));
 
 export const useRouter = jest.fn(() => ({
   back: jest.fn(),

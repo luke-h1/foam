@@ -1,8 +1,8 @@
 import React from 'react';
 
-type MockButtonElementProps = {
+interface MockButtonElementProps {
   ref?: React.Ref<unknown>;
-};
+}
 
 const MockButton = ({
   children,

@@ -1,5 +1,4 @@
 import React from 'react';
-// eslint-disable-next-line no-restricted-imports
 import { type StyleProp, View, type ViewStyle } from 'react-native';
 
 export const EaseView = ({

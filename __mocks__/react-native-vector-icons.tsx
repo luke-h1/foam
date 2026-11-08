@@ -1,4 +1,3 @@
-// eslint-disable-next-line no-restricted-imports
 import { Text, View, type ViewProps } from 'react-native';
 
 const createMockIconSet = (name: string) => {

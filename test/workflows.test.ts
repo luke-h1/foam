@@ -63,12 +63,15 @@ import {
   verifyGoogleServiceFiles,
 } from '../scripts/workflows/verifyGoogleServiceFiles';
 
-type RecordedUpload = { local: string; remote: string };
+interface RecordedUpload {
+  local: string;
+  remote: string;
+}
 
-type MemoryCopier = {
+interface MemoryCopier {
   copier: S3Copier;
   uploads: RecordedUpload[];
-};
+}
 
 function createMemoryCopier(remotes: string[] = []): MemoryCopier {
   const available = new Set(remotes);

@@ -1,5 +1,4 @@
 import React from 'react';
-// eslint-disable-next-line no-restricted-imports
 import { View, type ViewProps } from 'react-native';
 
 export const MaskedView = ({

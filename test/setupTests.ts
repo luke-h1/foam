@@ -1,12 +1,5 @@
-/* eslint-disable no-undef */
-/* eslint-disable no-restricted-imports */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* oxlint-disable @typescript-eslint/no-explicit-any -- the Skia, react-native and react mocks below have no static types */
 
-/* eslint-disable @typescript-eslint/no-require-imports */
 import '@testing-library/jest-native/extend-expect';
 import 'react-native-url-polyfill/auto';
 import 'cross-fetch/polyfill';
@@ -19,10 +12,8 @@ import { configure as configureReassure } from 'reassure';
 
 import mockFile from '../__mocks__/mockFile';
 
-// Polyfill TextEncoder/TextDecoder for Node.js environment
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-global.TextEncoder = TextEncoder;
+// SAFETY: Node's util.TextEncoder implements the DOM TextEncoder surface the app code encodes with.
+global.TextEncoder = TextEncoder as typeof global.TextEncoder;
 
 // SAFETY: Node's util.TextDecoder implements the DOM TextDecoder surface the app code decodes with.
 global.TextDecoder = TextDecoder as typeof global.TextDecoder;
@@ -67,7 +58,6 @@ function canvasKitStub(): any {
  */
 {
   // SAFETY: the assertion types only the mock export this patch reads and adds.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const skia = require('@shopify/react-native-skia') as {
     useAnimatedImageValue?: () => { value?: unknown };
   };
@@ -83,15 +73,12 @@ function canvasKitStub(): any {
 global.setImmediate =
   global.setImmediate ||
   ((callback: (...args: any[]) => void, ...args: any) =>
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     setTimeout(callback, 0, ...args));
 
 const createReactNativeHostMock = (hostName: string) =>
   // SAFETY: require('react') has no static type here; forwardRef is a real function on the real module.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (require('react').forwardRef as any)(
     ({ children, ...props }: { children?: ReactNode }, ref: Ref<unknown>) =>
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       require('react').createElement(
         hostName,
         ref == null ? props : { ...props, ref },
@@ -112,7 +99,6 @@ const createReactNativeHostMock = (hostName: string) =>
  * is invisible to every other module's own require of 'react-native'.
  */
 {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const ReactNative = require('react-native');
 
   const mockNativeView = createReactNativeHostMock('View');
@@ -152,7 +138,6 @@ const createReactNativeHostMock = (hostName: string) =>
  * treat a null image as "texture unavailable".
  */
 // SAFETY: the assertion types only the mock's Skia.Data.fromURI slot this patch replaces.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const skiaMock = require('@shopify/react-native-skia') as {
   Skia?: { Data?: { fromURI?: (uri: string) => Promise<SkData | null> } };
 };
@@ -162,12 +147,65 @@ if (skiaMock.Skia?.Data) {
 }
 
 beforeEach(() => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   require('expo-secure-store').__resetSecureStore?.();
 });
 
 // Pending Helix mention-flush timers keep Jest alive after green chat-perf suites.
 afterEach(() => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  require('@app/utils/chat/mention-login-resolver/resetMentionLoginResolver').resetMentionLoginResolver();
+  require('@app/store/chat/actions/mention-login-lookup').resetMentionLogins();
+});
+
+/**
+ * A real timer still pending when a test file ends keeps the Jest worker
+ * alive, and Jest then force-exits it with a "failed to exit gracefully"
+ * warning. Each store debounce has an owner that flushes or cancels it, so a
+ * pending timer here is a leak: print the stack that created it.
+ * Zero-delay timers are left out, because library code schedules those and
+ * they run before the worker exits.
+ */
+const pendingRealTimers = new Map<ReturnType<typeof setTimeout>, string>();
+const realSetTimeout = global.setTimeout;
+const realClearTimeout = global.clearTimeout;
+
+// SAFETY: the wrapper takes the same arguments and returns the real handle, so it keeps the setTimeout contract.
+global.setTimeout = ((
+  callback: (...args: unknown[]) => void,
+  ms?: number,
+  ...args: unknown[]
+) => {
+  const handle = realSetTimeout(
+    (...callbackArgs: unknown[]) => {
+      pendingRealTimers.delete(handle);
+      callback(...callbackArgs);
+    },
+    ms,
+    ...args,
+  );
+
+  if (ms) {
+    pendingRealTimers.set(
+      handle,
+      new Error(`${ms}ms timer`).stack ?? `${ms}ms timer`,
+    );
+  }
+
+  return handle;
+}) as typeof setTimeout;
+
+// SAFETY: the wrapper forwards the handle unchanged to the real clearTimeout.
+global.clearTimeout = ((handle?: ReturnType<typeof setTimeout>) => {
+  if (handle) {
+    pendingRealTimers.delete(handle);
+  }
+
+  realClearTimeout(handle);
+}) as typeof clearTimeout;
+
+afterAll(() => {
+  // console output is muted in this suite, so write to stderr directly.
+  for (const stack of pendingRealTimers.values()) {
+    process.stderr.write(
+      `A real timer is still pending after ${expect.getState().testPath}: ${stack}\n`,
+    );
+  }
 });
