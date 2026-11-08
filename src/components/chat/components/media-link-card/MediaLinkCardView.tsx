@@ -16,10 +16,6 @@ interface MediaLinkCardViewProps {
   mediaImageFit: 'contain' | 'cover';
   mediaLabel: string;
   mediaMeta: string;
-  /**
-   * Unset for a card with no destination: the card then renders as plain
-   * content, not as a button.
-   */
   onPress?: () => void;
   thumbnail: string | undefined;
   title: string;

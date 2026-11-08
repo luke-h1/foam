@@ -27,11 +27,6 @@ export function getPreferencesSchema() {
   return cachedPreferencesSchema;
 }
 
-/**
- * The one definition of the preference shape. `Preferences` and every enum
- * type below come from it. The object strips unknown keys, so a blob that
- * still holds a removed preference parses.
- */
 function buildPreferencesSchema() {
   return z.object({
     updatedAt: z.number(),
@@ -45,10 +40,6 @@ function buildPreferencesSchema() {
     showInlineReplyContext: z.boolean(),
     showRecentMessages: z.boolean(),
     showUnreadJumpPill: z.boolean(),
-    /**
-     * Show join/part system messages. Requires the IRC membership capability,
-     * so toggling it reconnects chat.
-     */
     showJoinPartMessages: z.boolean(),
     disableChat: z.boolean(),
     disableStream: z.boolean(),
@@ -70,10 +61,6 @@ function buildPreferencesSchema() {
     ]) satisfies z.ZodType<ChatTimestampFormat>,
     chatFontScale: z.enum(['small', 'default', 'large']),
     chatScrollback: z.union([z.literal(150), z.literal(200), z.literal(250)]),
-    /**
-     * Holds new chat messages to match video latency: 'auto' follows measured
-     * stream latency, 'off' shows immediately, a number holds for that many seconds.
-     */
     chatDelay: z.union([z.literal('auto'), z.literal('off'), z.number()]),
     deletedMessageStyle: z.enum(['notice', 'hidden']),
     ignoreClearChat: z.boolean(),
@@ -87,10 +74,6 @@ function buildPreferencesSchema() {
     ),
     savedPhrases: z.array(z.object({ id: z.string(), text: z.string() })),
     shakeToReport: z.boolean(),
-    /**
-     * Landscape chat panel width in px; null until the user resizes, then
-     * re-clamped to the current screen at layout time.
-     */
     landscapeChatWidth: z.number().nullable(),
     analyticsEnabled: z.boolean(),
     sharedChatEnabled: z.boolean(),
@@ -111,10 +94,6 @@ export type ChatDelaySetting = Preferences['chatDelay'];
 export type SevenTvPaintRenderer = Preferences['sevenTvPaintRenderer'];
 export type PaintRendererFlag = Exclude<SevenTvPaintRenderer, 'webview'>;
 
-/**
- * Keys that describe this device, not the user. iCloud does not sync them, and
- * a write to them alone does not move `updatedAt`.
- */
 const DEVICE_LOCAL_PREFERENCE_KEYS = [
   'landscapeChatWidth',
   'chatDebugTools',
@@ -129,10 +108,6 @@ export type SyncedPreferences = Omit<Preferences, DeviceLocalPreferenceKey>;
 
 const deviceLocalPreferenceKeys = new Set<string>(DEVICE_LOCAL_PREFERENCE_KEYS);
 
-/**
- * `updatedAt` is 0 until the first local edit, so a copy from iCloud is newer
- * than a fresh install and restores over it.
- */
 export const initialPreferences: Preferences = {
   updatedAt: 0,
   hapticFeedback: true,
@@ -178,10 +153,6 @@ export const initialPreferences: Preferences = {
   sevenTvPaintRenderer: 'skia',
 };
 
-/**
- * A stored blob as an older build may have written it: keys can be missing,
- * removed keys can remain and some values are retired.
- */
 export interface StoredPreferences extends Partial<
   Omit<Preferences, 'streamListLayout' | 'sevenTvPaintRenderer'>
 > {
@@ -193,11 +164,6 @@ export interface StoredPreferences extends Partial<
   useUIKitForWebView?: boolean;
 }
 
-/**
- * Brings a stored preference blob up to the current shape: it fills keys added
- * since the blob was written, drops removed keys and rewrites retired values.
- * The local load and the iCloud load both run it before validation.
- */
 export function migratePreferencesPayload(
   stored: StoredPreferences,
 ): Preferences {
@@ -216,8 +182,6 @@ export function migratePreferencesPayload(
       merged.sevenTvPaintRenderer === 'auto'
         ? 'native'
         : merged.sevenTvPaintRenderer,
-    // chatDelay 0 predates 'auto'/'off' and was the numeric Off default; the
-    // explicit value is 'off' now, so legacy zeros move to the new default.
     chatDelay: merged.chatDelay === 0 ? 'auto' : merged.chatDelay,
   };
 }
@@ -245,10 +209,6 @@ export function getPreferences(): Preferences {
   return preferences$.peek();
 }
 
-/**
- * Web has no Skia paint renderer, so a Skia choice falls back to the native
- * renderer there.
- */
 export function resolvePlatformPaintRenderer<
   Renderer extends SevenTvPaintRenderer,
 >(renderer: Renderer): Renderer | 'native' {
@@ -376,17 +336,10 @@ export function updatePreferences(payload: Partial<Preferences>): void {
   );
 }
 
-/**
- * Replaces the whole preference blob. Unlike `updatePreferences`, it does not
- * stamp `updatedAt`.
- */
 export function replacePreferences(preferences: Preferences): void {
   preferences$.set(preferences);
 }
 
-/**
- * Drops the device-local keys from a blob before it leaves the device.
- */
 export function toSyncedPreferences(
   preferences: Preferences,
 ): SyncedPreferences {
@@ -400,10 +353,6 @@ export function toSyncedPreferences(
   return synced as SyncedPreferences;
 }
 
-/**
- * Applies a copy from another device and keeps this device's own values for
- * the device-local keys.
- */
 export function applyRemotePreferences(remote: Preferences): void {
   const local = preferences$.peek();
 

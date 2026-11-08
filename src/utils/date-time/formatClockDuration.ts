@@ -1,6 +1,3 @@
-/**
- * Formats whole seconds as a clock: `m:ss`, or `h:mm:ss` from one hour.
- */
 export function formatClockDuration(totalSeconds: number): string {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);

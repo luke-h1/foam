@@ -17,8 +17,5 @@ export function useDevToolsAccess(): DevToolsAccess {
     return 'enabled';
   }
 
-  // Until remote config and restored auth settle, "not an admin" is
-  // indistinguishable from "not loaded yet" - hold rather than redirect so an
-  // admin isn't bounced out during the initial fetch.
   return !ready || isLoading ? 'pending' : 'denied';
 }

@@ -56,11 +56,6 @@ function evictOldestSevenTvUserLink(): void {
   twitchIdsBySevenTvUserId.delete(oldest);
 }
 
-/**
- * A Twitch account linked to a new 7TV user leaves the old user's list.
- * Otherwise an eviction or unlink of the old user wipes the current
- * cosmetics of that Twitch account.
- */
 function detachFromPreviousSevenTvUser(
   twitchUserId: string,
   sevenTvUserId: string,

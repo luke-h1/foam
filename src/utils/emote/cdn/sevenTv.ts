@@ -12,10 +12,6 @@ const SEVEN_TV_PAINT_BASE = /^https:\/\/cdn\.7tv\.app\/paint\//;
 
 const SEVEN_TV_SCALES = ['1x', '2x', '3x', '4x'] as const;
 
-/**
- * One 7TV CDN file url split into parts. Emotes, badges and paint layers all
- * use the `{n}x[_static].{ext}` file name under their own base path.
- */
 export interface SevenTvFileUrl {
   base: string;
   scale: EmoteImageScale;
@@ -51,10 +47,6 @@ export function buildSevenTvFileUrl({
   return `${base}${scale}${isStatic ? '_static' : ''}.${ext}${query}`;
 }
 
-/**
- * Swaps the extension of a 7TV paint layer url. Returns the url unchanged when
- * it is not a paint layer file in the `from` format.
- */
 export function swapSevenTvPaintLayerExt(
   url: string,
   from: string,
@@ -90,19 +82,12 @@ function parse(url: string): EmoteCdnAsset | null {
   };
 }
 
-/**
- * A worklet, so the 7TV emote set sanitiser can call it on the background
- * parse runtime.
- */
 export function sevenTvEmotePageUrl(id: string): string {
   'worklet';
 
   return `https://7tv.app/emotes/${id}`;
 }
 
-/**
- * The 4x WebP badge image, for a badge whose host lists no files.
- */
 export function buildSevenTvBadgeUrl(badgeId: string): string {
   return buildSevenTvFileUrl({
     base: `https://cdn.7tv.app/badge/${badgeId}/`,

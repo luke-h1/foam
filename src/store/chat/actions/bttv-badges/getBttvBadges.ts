@@ -25,8 +25,6 @@ function loadBttvBadges(): void {
       // oxlint-disable-next-line react-doctor/async-defer-await -- the guard below fences a result that a cache clear made stale during this await
       const badges = await bttvEmoteService.getSanitisedGlobalBadges();
 
-      // A refresh started a newer fetch; this one's result is stale and would
-      // otherwise overwrite the newer badges, empty result included.
       if (!ctx.stillCurrent()) {
         return;
       }
@@ -40,8 +38,6 @@ function loadBttvBadges(): void {
         return;
       }
 
-      // Empty success can be transient CDN/API flakiness - back off and retry
-      // instead of sticking on one empty list with no loaded callback.
       scheduleRetry();
     } catch (error) {
       if (!ctx.stillCurrent()) {
@@ -57,20 +53,12 @@ function loadBttvBadges(): void {
   });
 }
 
-/**
- * Invalidates the once-per-process fetch and fences whatever is in flight;
- * loaded badges stay readable until the new list lands.
- */
 export function clearBttvBadgesCache(): void {
   bttvBadgesGuard.clear();
   retryDelayMs = INITIAL_RETRY_DELAY_MS;
   nextRetryAt = 0;
 }
 
-/**
- * Synchronous accessor so the per-message badge resolver never awaits: the
- * first call kicks off the fetch and returns an empty list until it lands.
- */
 export function getBttvBadges(): SanitisedBadgeSet[] {
   if (
     bttvBadgesGuard.shouldFetch(BTTV_BADGES_KEY) &&

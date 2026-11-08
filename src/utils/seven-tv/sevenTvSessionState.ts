@@ -21,10 +21,6 @@ export interface SevenTvSessionState {
   connectionTimestamp: number | null;
   currentEmoteSetId: string | undefined;
   activeSubscriptions: Set<string>;
-  /**
-   * Reads and writes the module store in `sevenTvSessionId.ts`, which the
-   * presence path also reads. That store is the only copy of the id.
-   */
   sessionId: string | null;
   shouldResume: boolean;
   resumePending: boolean;

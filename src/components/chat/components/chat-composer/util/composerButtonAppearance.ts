@@ -24,10 +24,6 @@ interface ComposerButtonAppearanceOptions {
   size: number;
 }
 
-/**
- * Resolves a composer control's icon colour, background and size from its
- * state, so the icon button and the overflow button stay visually identical.
- */
 export function composerButtonAppearance({
   disabled,
   label,
@@ -65,10 +61,6 @@ export function composerButtonAppearance({
   if (quiet) {
     resolvedBackground = 'transparent';
   } else if (prominent && !disabled) {
-    /**
-     * `glassProminent` fills from the tint. A background of the same colour
-     * under it leaves a lighter rim.
-     */
     resolvedBackground = liquidGlassAvailable ? 'transparent' : prominentColor;
   } else if (liquidGlassAvailable) {
     resolvedBackground = 'transparent';
@@ -80,10 +72,6 @@ export function composerButtonAppearance({
     tint(prominent && !disabled ? prominentColor : iconColor),
     buttonStyle(resolvedButtonStyle),
 
-    /**
-     * Pin to the host's exact size - a content-sized button drifts out of
-     * line with its RN row siblings.
-     */
     frame({ width: size, height: size }),
     background(resolvedBackground),
     clipShape('circle'),

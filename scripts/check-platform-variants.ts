@@ -19,7 +19,6 @@ function variantPairs(): [string, string][] {
   const tracked = execFileSync('git', ['ls-files', 'src'], { encoding: 'utf8' })
     .split('\n')
     .filter(file => VARIANT_PATTERN.test(file))
-    // git still lists a tracked file that was deleted in the working tree.
     .filter(file => existsSync(file));
 
   return tracked

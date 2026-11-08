@@ -14,9 +14,6 @@ export interface ChatTokenRenderProps {
   getMentionColor?: (username: string) => string;
   onEmoteTouchStart?: (token: EmotePressData) => void;
   message: MessageToken[];
-  /**
-   * A moderator deleted the message or timed out or banned its sender.
-   */
   isModerated: boolean;
   normalisedCurrentUsername?: string;
   noticeTags?: UserNoticeTags;

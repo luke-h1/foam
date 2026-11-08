@@ -170,10 +170,6 @@ export function enrichChannelPointPrivmsgTags(
   return { ...tags, 'msg-param-custom-reward-title': resolved };
 }
 
-/**
- * Drops the cached titles and cancels every deferred redemption notice, so a
- * notice armed in one channel cannot publish into the next one.
- */
 export function clearChannelPointRewardTitles(): void {
   channelPointRewardTitleCache.clear();
   rewardIdOnlyCache.clear();

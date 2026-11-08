@@ -45,7 +45,6 @@ function getDataFromChangeValue(
   return entry.value?.object?.data;
 }
 
-// Added in #547 with no recorded reason: emotes whose name holds this text get no add/remove notice.
 const SILENT_EMOTE_NAME_FRAGMENT = 'nnys';
 
 function shouldSuppressEmoteNotice(emote: SanitisedEmote): boolean {

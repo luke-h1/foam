@@ -6,9 +6,6 @@ import { toast } from 'sonner-native';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { logger } from '@app/utils/logger';
 
-/**
- * Foam has no backend accounts (sign-in is Twitch OAuth), so deletion goes through Twitch's Security & Privacy page with "Disable or Delete My Account".
- */
 const TWITCH_ACCOUNT_SETTINGS_URL = 'https://www.twitch.tv/settings/security';
 
 export function formatMemberSince(createdAt?: string) {

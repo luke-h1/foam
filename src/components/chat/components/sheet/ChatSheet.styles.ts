@@ -3,9 +3,6 @@ import { StyleSheet } from 'react-native';
 import { theme } from '@app/styles/themes';
 
 export const chatSheetStyles = StyleSheet.create({
-  /**
-   * The container of a list sheet that fills its fraction detent.
-   */
   listContainer: {
     alignSelf: 'stretch',
     backgroundColor: 'transparent',
@@ -20,9 +17,6 @@ export const chatSheetStyles = StyleSheet.create({
   scroll: {
     flexGrow: 0,
   },
-  /**
-   * No gap: each `SettingsSection` carries its own bottom margin.
-   */
   scrollContent: {
     paddingBottom: theme.space16,
   },

@@ -363,7 +363,6 @@ const refreshCachedSubscriberEmotes = async ({
     trigger: 'cached_subscriber_emotes_refresh',
   });
 
-  // A slice stamped for another user is no fallback for this one.
   const cachedUserId = existingCache.twitchSubscriberEmotesUserId;
 
   const subscriberByKey = reconcileSettledSpecs(settled, {
@@ -375,7 +374,6 @@ const refreshCachedSubscriberEmotes = async ({
     existingGlobalCache,
   });
 
-  // A failed fetch keeps the old stamp, so the next load tries again.
   const didFetch = settled.every(entry => entry.result.status === 'fulfilled');
 
   chatStore$.persisted.channelCaches[channelId]?.assign({
@@ -858,11 +856,6 @@ export const clearCache = (channelId: string) => {
   invalidateCosmeticsCache();
 };
 
-/**
- * Drops every cached provider slice, the recent-messages window and their
- * persisted copies. `resetChannelSession('clear-cache')` is the caller; it
- * also clears the module-level session caches.
- */
 export const clearPersistedChatResources = (): void => {
   batch(() => {
     clearChannelResources();

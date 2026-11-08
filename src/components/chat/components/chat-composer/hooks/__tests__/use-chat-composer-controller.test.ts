@@ -68,7 +68,6 @@ describe('useChatComposerController', () => {
       result.current.handleChangeText('a'.repeat(489));
     });
 
-    // 489 typed + 12 reserved = 501 on the wire.
     expect(result.current.isOverLimit).toBe(true);
 
     expect(result.current.remainingCharacters).toBe(-1);
@@ -87,7 +86,6 @@ describe('useChatComposerController', () => {
       result.current.handleChangeText('😀'.repeat(300));
     });
 
-    // 300 codepoints is 600 UTF-16 units; Twitch counts the former.
     expect(result.current.isOverLimit).toBe(false);
   });
 
@@ -116,14 +114,12 @@ describe('useChatComposerController', () => {
       result.current.handleChangeText('hello chat');
     });
 
-    // Nothing to recall while the message is still being composed.
     expect(result.current.canRecallLastMessage).toBe(false);
 
     act(() => {
       result.current.handleSubmit();
     });
 
-    // The parent clears the composer after a successful send.
     act(() => {
       result.current.handleChangeText('');
     });

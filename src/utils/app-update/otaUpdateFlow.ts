@@ -6,10 +6,6 @@ interface CheckAndFetchOtaUpdateOptions {
   onUpdateAvailable?: (manifestId: string | undefined) => void;
 }
 
-/**
- * Asks the update server for a newer bundle and downloads it. Returns true when
- * an update was downloaded. Errors reach the caller.
- */
 export async function checkAndFetchOtaUpdate({
   onUpdateAvailable,
 }: CheckAndFetchOtaUpdateOptions = {}): Promise<boolean> {

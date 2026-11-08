@@ -12,10 +12,6 @@ import { updatePreferences, usePreference } from '@app/store/preference-store';
 
 import { SHAKE_TO_REPORT_ICON } from './constants';
 
-/**
- * Haptics and shake to report. The route keeps its `appearance` name so
- * existing links still resolve.
- */
 export function SettingsAppearanceScreen() {
   const hapticFeedback = usePreference('hapticFeedback');
   const shakeToReport = usePreference('shakeToReport');

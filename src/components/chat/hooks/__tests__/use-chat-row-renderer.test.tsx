@@ -32,10 +32,6 @@ import type { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import type { MessageToken } from '@app/types/chat/messageToken';
 import type { SevenTvSanitisedEmote } from '@app/types/emote';
 
-/**
- * ChatRow is memo() wrapped (an object, not a function), so
- * jest.spyOn cannot wrap it - swap the export directly instead.
- */
 const mockChatRow = jest.fn<null, [ChatRowProps<NoticeVariants>]>(() => null);
 
 Object.defineProperty(ChatRowModule, 'ChatRow', {

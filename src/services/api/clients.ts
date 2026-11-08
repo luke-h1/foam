@@ -76,10 +76,6 @@ export const sevenTvGqlApi = createApiClient({
   provider: '7tv',
 });
 
-/**
- * FFZ answers 404 "No such room" for a channel that never set up FFZ. That is
- * an empty result, not a failure.
- */
 export function isFfzNoSuchRoom(status: number, body: string): boolean {
   return status === 404 && body.includes('No such room');
 }
@@ -90,9 +86,6 @@ export const ffzApi = createApiClient({
   isExpectedFailure: isFfzNoSuchRoom,
 });
 
-/**
- * StreamElements answers 404 for a channel that never used it.
- */
 export function isStreamElementsNoData(status: number): boolean {
   return status === 404;
 }

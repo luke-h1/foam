@@ -11,20 +11,11 @@ import {
 } from '@app/utils/chat/irc-protocol/parseIrcMessage';
 
 export interface IrcLineHandlers {
-  /**
-   * Gets every raw line, for the chat debug log. `dropped` is true for a
-   * PRIVMSG the flood backstop discarded.
-   */
   onDebugLine: (line: string, dropped?: boolean) => void;
   onLine: (message: IrcMessage) => void;
   onPing: () => void;
 }
 
-/**
- * Routes one complete IRC line. A PRIVMSG passes the flood backstop before the
- * tag parse, because only chat lines consume ingest tokens; control lines
- * always get through.
- */
 function dispatchIrcLine(line: string, handlers: IrcLineHandlers): void {
   if (!line) {
     return;

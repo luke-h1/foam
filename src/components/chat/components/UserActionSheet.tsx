@@ -66,15 +66,8 @@ const MAX_RECENT_USER_MESSAGES = 5;
 
 const RECENT_MESSAGE_LINE_HEIGHT = 24;
 
-/**
- * Two lines at most, so one long message cannot push the actions away.
- */
 const RECENT_MESSAGE_MAX_LINES = 2;
 
-/**
- * Uses the same sender rule as the chat row, so the sheet finds the messages
- * the row attributes to this user.
- */
 function getRecentUserMessages(login?: string, username?: string) {
   const target = normaliseChatUsername(login || username);
 

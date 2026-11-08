@@ -59,16 +59,8 @@ function hasEventSubscriptionData(
 class TwitchWsService {
   private static instance: WebSocket | null = null;
 
-  /**
-   * The socket that got `session_reconnect`. Twitch keeps sending it events
-   * until the new socket gets its welcome, so it stays open until then.
-   */
   private static retiringInstance: WebSocket | null = null;
 
-  /**
-   * True while the open socket came from a `session_reconnect` URL. Its
-   * welcome carries the old subscriptions over, so it must not resubscribe.
-   */
   private static awaitingReconnectWelcome: boolean = false;
 
   /**
@@ -146,10 +138,6 @@ class TwitchWsService {
     existing.close(1000, 'Replaced by a new EventSub connection');
   }
 
-  /**
-   * Keeps the socket open for its last events but detaches it, so its close
-   * cannot start a second reconnect.
-   */
   private static retireInstance(): void {
     const existing = TwitchWsService.instance;
 
@@ -314,7 +302,6 @@ class TwitchWsService {
 
     TwitchWsService.resetKeepaliveTimer();
 
-    // A session_reconnect welcome keeps the old subscriptions; creating them again is a duplicate.
     if (!carriesSubscriptions) {
       TwitchWsService.resubscribeToEvents();
     }

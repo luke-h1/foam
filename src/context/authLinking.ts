@@ -16,7 +16,6 @@ const log = (msg: string, data?: LogMetadata) => {
 };
 
 function getWebAuthCallbackUrl(): string {
-  // Undefined off the web, where the app falls back to the hosted callback.
   const origin = globalThis.location?.origin;
 
   if (origin) {
@@ -26,18 +25,11 @@ function getWebAuthCallbackUrl(): string {
   return 'https://foam-app.com/auth';
 }
 
-/**
- * The URL Twitch redirects to after sign-in. Native goes through the auth
- * proxy, which then opens the app with `AUTH_APP_RETURN_URL`.
- */
 export const AUTH_REDIRECT_URI =
   Platform.OS === 'web'
     ? getWebAuthCallbackUrl()
     : new URL(`${authProxyBaseUrl}/proxy`).toString();
 
-/**
- * The URL the auth session waits for before it closes the browser.
- */
 export const AUTH_APP_RETURN_URL =
   Platform.OS === 'web' ? getWebAuthCallbackUrl() : 'foam://auth';
 

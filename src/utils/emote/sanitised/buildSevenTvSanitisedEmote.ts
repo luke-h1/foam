@@ -6,10 +6,6 @@ import type {
 import type { StvUser } from '@app/types/seven-tv/users';
 import { sevenTvEmotePageUrl } from '@app/utils/emote/cdn/sevenTv';
 
-/**
- * 7TV urls and variants arrive resolved (best file per kind already picked)
- * instead of as raw variant sets like the hosted providers.
- */
 export interface SevenTvEmoteSource {
   site: SevenTvSanitisedEmote['site'];
   id: string;
@@ -30,10 +26,6 @@ export interface SevenTvEmoteSource {
   actor?: StvUser;
 }
 
-/**
- * Builds a 7TV emote. A worklet, so the emote set can be sanitised on the
- * background parse runtime.
- */
 export function buildSevenTvSanitisedEmote(
   source: SevenTvEmoteSource,
 ): SevenTvSanitisedEmote | null {

@@ -31,10 +31,6 @@ interface CreateHeadlessIngestOptions {
   isUserActivelyScrolling?: () => boolean;
 }
 
-/**
- * The full headless ingest path: raw IRC line through to the real chatStore$
- * - no socket, no React, fake timers.
- */
 function createHeadlessIngest(options?: CreateHeadlessIngestOptions) {
   const controller: ChatIngestController = createChatIngestController({
     getFinalizeMessageForCommit: () => stripPendingParse,

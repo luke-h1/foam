@@ -15,9 +15,5 @@ export interface RoomStateModeDefinition {
   activeSummary: (value: number | undefined) => string;
   enabledNotice: (value: number | undefined) => string;
   disabledNotice: string;
-  /**
-   * Twitch NOTICE msg-ids that repeat this mode change. The ROOMSTATE notice
-   * already covers them, so chat suppresses them.
-   */
   noticeIds: readonly NoticeMsgId[];
 }

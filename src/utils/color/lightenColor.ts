@@ -15,7 +15,6 @@ interface HslChannels {
   l: number;
 }
 
-// The chat list draws on the app canvas, so contrast is measured against it.
 const CHAT_SURFACE_RGB = hexToRgb(theme.color.background.dark) ?? {
   r: 0,
   g: 0,

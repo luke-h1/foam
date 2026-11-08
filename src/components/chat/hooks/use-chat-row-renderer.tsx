@@ -59,10 +59,6 @@ interface UseChatRowRendererOptions {
     | undefined;
 }
 
-/**
- * Reply bodies and notice text come from another sender, so they get no
- * sender userstate. That keeps the viewer's own subscriber emotes out of them.
- */
 const REFERENCED_TEXT_USERSTATE: UserStateTags = {
   'reply-parent-display-name': '',
   'reply-parent-msg-body': '',
@@ -121,8 +117,6 @@ export function useChatRowRenderer({
     [channelId],
   );
 
-  // Mirrored into refs so `renderItem` stays stable when a press handler's
-  // identity changes; a new renderItem re-renders every visible row.
   const onBadgePressRef = useSyncRef(onBadgePress);
 
   const onMessageLongPressRef = useSyncRef(onMessageLongPress);
@@ -180,12 +174,6 @@ export function useChatRowRenderer({
     [highlightedUsers],
   );
 
-  /**
-   * Spreads `displayFlags` so a new display flag also re-renders the rows.
-   * `mentionLoginRevision` is left out: it changes about every 400ms and
-   * re-rendered every visible row (about 57fps instead of 60fps).
-   * `MentionToken` subscribes to it itself.
-   */
   const messageListExtraData = useMemo(
     () => ({
       ...displayFlags,
@@ -283,9 +271,6 @@ export function useChatRowRenderer({
         />
       );
     },
-    // The *Ref entries are stable useSyncRef objects, listed only because the
-    // rule cannot see through the hook. Reading `.current` keeps renderItem
-    // stable when a handler changes identity.
     [
       channelId,
       currentUsernameForMentions,

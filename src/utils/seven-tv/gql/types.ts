@@ -8,9 +8,6 @@ type V4Badge = NonNullable<V4User['style']['activeBadge']>;
 
 export type SevenTvPaintSource = Pick<V4Paint, 'id' | 'name' | 'data'>;
 
-/**
- * One user's active paint and badge, still in the 7TV GQL shape.
- */
 export interface UserCosmeticsInfo {
   userId: string;
   ttvUserId: string | null;

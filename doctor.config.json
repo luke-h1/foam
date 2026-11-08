@@ -23,6 +23,13 @@
         "rules": ["react-hooks-js/immutability"]
       },
       {
+        "files": [
+          "src/components/chat/components/chatters-sheet/ChattersSheet.tsx",
+          "src/components/chat/util/visibleMessages.ts"
+        ],
+        "rules": ["react-doctor/js-set-map-lookups"]
+      },
+      {
         "files": ["src/components/chat/hooks/use-seven-tv-ws.ts"],
         "rules": [
           "react-hooks-js/immutability",

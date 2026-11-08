@@ -68,9 +68,6 @@ interface UsePlayerBridgeOptions extends Pick<
   initialMuted: boolean;
   ref?: Ref<StreamPlayerRef>;
 
-  /**
-   * The last VOD position, so a WebView reload resumes at the same offset.
-   */
   resumeTimeRef: RefObject<number>;
   runJavaScript: (script: string) => void;
   scheduleAuthCompletionReload: () => void;

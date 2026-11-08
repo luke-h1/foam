@@ -39,10 +39,6 @@ const WARM_LIST_BY_PROVIDER = {
   keyof EmoteWarmLists
 >;
 
-/**
- * Subscriber emotes are left out: only the viewer can use them, and they
- * would take warm slots from the emotes everyone in chat sends.
- */
 function getDisplayUrls(
   channelId: string,
   scope: SliceScope,

@@ -38,10 +38,6 @@ const RELEASED_ENTRY_LINGER_MS = 5000;
 
 const DEFAULT_FRAME_DURATION_MS = 60;
 
-/**
- * A released entry reloads its url on the next mount, so a url that keeps
- * failing logs once, not on every remount.
- */
 const loggedLoadFailureUrls = new Set<string>();
 const MAX_LOGGED_LOAD_FAILURE_URLS = 256;
 

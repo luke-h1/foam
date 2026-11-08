@@ -12,16 +12,8 @@ import {
   getApiMonitoringContext,
 } from './monitoring';
 
-/**
- * Network failures the client already logged before it rethrew them as is.
- */
 const loggedNetworkErrors = new WeakSet<Error>();
 
-/**
- * True for an error the client already logged (or chose not to log as a
- * known empty result). A query error handler skips these, so each failure
- * is logged once.
- */
 export function isApiClientError(error: unknown): boolean {
   return (
     error instanceof ApiError ||
@@ -50,23 +42,13 @@ type QueryParamValue =
 interface RequestOptions {
   params?: Record<string, QueryParamValue>;
   headers?: Record<string, string>;
-  /**
-   * Cancels the request. A cancelled request rejects without a log line.
-   */
   signal?: AbortSignal;
 }
 
 interface ClientOptions {
   baseURL: string;
   headers?: Record<string, string>;
-  /**
-   * Sets the log prefix, the error names and the monitoring provider tag.
-   */
   provider?: ProviderId;
-  /**
-   * Returns true for a failed response that is a known empty result. The
-   * client does not log it, but still throws it.
-   */
   isExpectedFailure?: (status: number, body: string) => boolean;
   /**
    * Per-request timeout in ms. Without one, a hung request never rejects and
@@ -129,11 +111,6 @@ export function createApiClient({
     tokenReady = undefined;
   }
 
-  /**
-   * Every waiting request shares one timer. It starts with the first wait,
-   * not when the gate is armed, so a client that never sends a request keeps
-   * no timer.
-   */
   function waitForAuthToken(): Promise<void> {
     if (!tokenReady) {
       return Promise.resolve();

@@ -1,7 +1,3 @@
-/**
- * Freshness window for a channel's provider slices, the global slot and the
- * session copy of a global fetch.
- */
 export const CACHE_DURATION = 60 * 60 * 1000;
 
 export const MAX_CACHED_CHANNELS = 20;

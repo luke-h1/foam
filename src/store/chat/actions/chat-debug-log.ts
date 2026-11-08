@@ -72,10 +72,6 @@ export function isChatDebugLogEnabled(): boolean {
   return recorderCounts.size > 0;
 }
 
-/**
- * The `#channel` param of a line. The last param is skipped when there is more
- * than one, because it can be the trailing text, which a user types.
- */
 function getLineChannelLogin(message: IrcMessage | null): string | null {
   if (!message) {
     return null;
@@ -304,7 +300,6 @@ export function getChatDebugEmoteDetails(emote: {
     ],
   );
 
-  // Name lookups follow the chat's provider priority, with 7TV first.
   const lists = EMOTE_LOOKUP_PROVIDER_ORDER.flatMap(provider => [
     ...EMOTE_SLICE_KEYS.flatMap((key): [string, SanitisedEmote[]][] =>
       SLICE_BY_KEY[key].provider === provider ? [[key, slices[key]]] : [],

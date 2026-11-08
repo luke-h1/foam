@@ -32,10 +32,6 @@ export interface SettingsOption<Value> {
   value: Value;
 }
 
-/**
- * The position of `value` in an options table. A value the table does not
- * hold, such as one an older build wrote, falls back to the first option.
- */
 export function getOptionIndex<Value>(
   options: readonly SettingsOption<NoInfer<Value>>[],
   value: Value,
@@ -62,10 +58,6 @@ export interface SettingsRowProps {
   danger?: boolean;
   disabled?: boolean;
 
-  /**
-   * A pressable row shows a chevron unless this is false. Action rows that
-   * run in place, rather than open a screen, turn it off.
-   */
   chevron?: boolean;
 }
 

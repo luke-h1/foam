@@ -445,7 +445,6 @@ describe('TwitchWsService shared socket teardown', () => {
 
     await TwitchWsService.unsubscribeFromEvent('channel.poll.begin', onPoll);
 
-    // The orphaned timer would have reopened the socket here.
     jest.advanceTimersByTime(60_000);
 
     expect(sockets).toHaveLength(1);

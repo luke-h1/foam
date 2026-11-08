@@ -4,10 +4,6 @@ import { type StyleProp, StyleSheet, type TextStyle } from 'react-native';
 import { MessageTokenLine } from '@app/components/chat/components/message-token-line/MessageTokenLine';
 import type { MessageToken } from '@app/types/chat/messageToken';
 
-/**
- * The preview shows one line, so tokens past this count never show. The cap
- * keeps a long message from mounting views that the clip hides.
- */
 const REPLY_PREVIEW_MAX_TOKENS = 24;
 
 interface ReplyPreviewBodyProps {

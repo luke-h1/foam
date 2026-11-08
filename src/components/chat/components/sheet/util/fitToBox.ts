@@ -1,6 +1,3 @@
-/**
- * Twitch sends no size for some emotes; 28 is the size of a 1x emote.
- */
 export const UNKNOWN_EMOTE_SIZE = 28;
 
 interface AssetSize {

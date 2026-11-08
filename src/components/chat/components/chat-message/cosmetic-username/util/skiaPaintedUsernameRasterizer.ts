@@ -343,8 +343,6 @@ function drawPaintedUsername(
   let dropShadowChain: SkImageFilter | null = null;
 
   if (options.includeDropShadows) {
-    // Skia takes the CSS radius unhalved. 7TV paints target Chrome, and a
-    // halved radius made every shadow half as wide as on the web.
     for (const shadow of layout.dropShadows) {
       dropShadowChain = Skia.ImageFilter.MakeDropShadow(
         shadow.x_offset * scale,

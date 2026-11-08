@@ -2,10 +2,7 @@ import type { TokenResponse } from 'expo-auth-session';
 
 import { twitchService } from '@app/services/twitch-service';
 import { logger } from '@app/utils/logger';
-/**
- * Seconds before `expiresAt` at which a token already counts as expired, so it
- * is refreshed before Twitch rejects it.
- */
+
 const TOKEN_EXPIRATION_BUFFER = 60;
 
 const USER_TOKEN_REFRESH_BUFFER_MS = 5 * 60 * 1000;
@@ -15,17 +12,9 @@ export interface TwitchToken {
   expiresIn: number;
   tokenType: string;
   refreshToken?: string;
-  /**
-   * Unix timestamp in milliseconds when the token expires.
-   */
   expiresAt?: number;
 }
 
-/**
- * Check if a token is expired or will expire soon, using the locally-recorded
- * `expiresAt`. Implicit-grant tokens may lack `expiresAt`; callers should treat
- * Twitch's validate endpoint as the source of truth rather than this check.
- */
 export const isTokenExpired = (token: TwitchToken): boolean => {
   const { expiresAt } = token;
 
@@ -94,11 +83,6 @@ export const getFallbackAnonToken = (): TwitchToken => ({
   expiresAt: Date.now() + 60 * 60 * 1000,
 });
 
-/**
- * Exchange a stored refresh token for a fresh user token. Returns null when the
- * token has no refresh token or the exchange fails (network, or Twitch
- * rejection). Callers decide whether to validate, retry, or fall back to anon.
- */
 export async function refreshStoredUserToken(
   token: TwitchToken,
   reason: string,

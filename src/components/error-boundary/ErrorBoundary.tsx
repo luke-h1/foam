@@ -18,9 +18,6 @@ interface State {
   errorInfo: ErrorInfo | null;
 }
 
-/**
- * A class component, because React only supports error boundaries as classes.
- */
 export class ErrorBoundary extends Component<Props, State> {
   override state: Omit<ErrorDetailsProps, 'onReset'> = {
     error: null,

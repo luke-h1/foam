@@ -71,7 +71,6 @@ export function subscribeToAppStateTransitions(
     );
   }
 
-  // A new entry per call, so one function subscribed twice is held twice.
   const entry: AppStateTransitionListener = transition => listener(transition);
 
   listeners.add(entry);

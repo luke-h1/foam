@@ -14,7 +14,6 @@ import { TEST_SAFE_AREA_METRICS } from '@app/test/safe-area';
 const TEST_TOKEN_EXPIRES_AT = 4_102_444_800_000;
 
 export function createTestQueryClient() {
-  // gcTime Infinity stops react-query from scheduling a garbage-collection timer that outlives the test.
   return new QueryClient({
     defaultOptions: {
       queries: { retry: false, gcTime: Infinity },

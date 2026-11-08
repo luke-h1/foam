@@ -2,10 +2,6 @@ import type { ViewStyle } from 'react-native';
 
 import { theme } from '@app/styles/themes';
 
-/**
- * Estimated rail item widths. A horizontal LegendList reads
- * `estimatedItemSize` as the item width.
- */
 export const SUGGESTION_ITEM_WIDTH = {
   command: 180,
   emote: 130,

@@ -141,8 +141,6 @@ export const CHAT_PREFERENCE_ROWS = {
     title: 'Show Chat GIFs',
     subtitle: 'Loads third-party GIF media',
     icon: 'photo',
-    // Material Symbols has a GIF glyph and SF Symbols does not, so Android
-    // shows the more exact one.
     androidIcon: 'gif_box',
   },
   providerEmotes: {

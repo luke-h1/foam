@@ -21,7 +21,6 @@ const SAVED_PHRASES_COPY: PreferenceListCopy = {
   footerNote: 'Tap a phrase in chat to insert it.',
 };
 
-// A saved phrase keeps its case: the composer sends it exactly as typed.
 const trimPhrase = (text: string) => text.trim();
 
 export function SavedPhrasesScreen() {

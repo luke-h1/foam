@@ -43,8 +43,6 @@ export function useSearchController() {
 
   const listRef = useRef<FlashListRef<SearchItem>>(null);
 
-  // Each search takes a new id, so a slow response for an older query cannot
-  // replace the results of a newer one.
   const searchRequestIdRef = useRef(0);
   const searchBarRef = useRef<SearchInputBarHandle | null>(null);
 

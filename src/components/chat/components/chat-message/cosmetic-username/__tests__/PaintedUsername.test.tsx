@@ -49,10 +49,6 @@ const STORE_PAINT = makePaint({
   image_url: 'https://cdn.7tv.app/paint/store/2x.webp',
 });
 
-/**
- * The username renders several times in the painted tree; the one the viewer
- * sees is the in-flow solid Text with `expectedColor` and opacity !== 0.
- */
 const hasVisibleUsernameInColor = (
   nodes: ReturnType<typeof screen.getAllByText>,
   expectedColor: string,
@@ -134,7 +130,6 @@ describe('PaintedUsername with a decoded texture', () => {
         />,
       );
 
-      // No paint means no MaskedView offscreen pass: just the solid username.
       expect(queryByTestId('masked-view')).not.toBeOnTheScreen();
 
       expect(
@@ -176,7 +171,6 @@ describe('PaintedUsername with a decoded texture', () => {
         />,
       );
 
-      // The painted branch was taken (not the plain-text fallback path).
       expect(getByTestId('masked-view')).toBeOnTheScreen();
     });
 
@@ -241,8 +235,6 @@ describe('PaintedUsername with a decoded texture', () => {
 
       expect(getByTestId('masked-view')).toBeOnTheScreen();
 
-      // With no gradient stops the base colour must resolve to the fallback so
-      // the glyphs are never left transparent.
       expect(
         hasVisibleUsernameInColor(getAllByText('EmptyStops:'), '#1AC9A2'),
       ).toBe(true);
@@ -265,7 +257,6 @@ describe('PaintedUsername with a decoded texture', () => {
 
       expect(getByTestId('masked-view')).toBeOnTheScreen();
 
-      // 7TV packs RGBA as 0xRRGGBBAA; the base colour is the CSS rgba() form.
       expect(
         hasVisibleUsernameInColor(
           getAllByText('UrlPaint:'),
@@ -396,7 +387,6 @@ describe('PaintedUsername with a decoded texture', () => {
         />,
       );
 
-      // A store miss must not paint: no masked pass, plain fallback colour.
       expect(queryByTestId('masked-view')).not.toBeOnTheScreen();
 
       expect(
@@ -465,7 +455,6 @@ describe('PaintedUsername with a decoded texture', () => {
         />,
       );
 
-      // Guards the blank-row regression: an empty name must still show ": ".
       expect(queryByTestId('masked-view')).not.toBeOnTheScreen();
 
       expect(getByText(':')).toBeOnTheScreen();
@@ -508,7 +497,6 @@ describe('PaintedUsername with a decoded texture', () => {
 
       expect(getByTestId('masked-view')).toBeOnTheScreen();
 
-      // color === null must resolve the base to the supplied fallback.
       expect(
         hasVisibleUsernameInColor(getAllByText('NullColor:'), '#1AC9A2'),
       ).toBe(true);
@@ -544,7 +532,6 @@ describe('PaintedUsername with a decoded texture', () => {
 
       expect(queryByTestId('masked-view')).not.toBeOnTheScreen();
 
-      // Flattened during the fling: a single plain solid username, no mask.
       expect(getByText('Scrolling:')).toBeOnTheScreen();
     });
   });

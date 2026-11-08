@@ -457,8 +457,6 @@ describe('applyEntitlementDeleteEvent', () => {
     expect(readBindings()).toEqual({ paintId: undefined, badgeId: 'badge-1' });
   });
 
-  // The link map holds 2000 entitlements, so one more evicts exactly
-  // entitlement-0.
   const OVER_CAP_INDEX = 2000;
 
   const EVICTED_ENTITLEMENT_INDEX = 0;

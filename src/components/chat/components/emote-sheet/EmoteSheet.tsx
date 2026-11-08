@@ -39,10 +39,6 @@ interface EmoteSheetProps {
   onEmoteSelect?: (item: EmotePickerItem) => void;
 }
 
-/**
- * `ChatOverlayLayer` mounts the sheet only while it is open, so it is always
- * presented.
- */
 export function EmoteSheet({ onDismiss, onEmoteSelect }: EmoteSheetProps) {
   const {
     bottom: bottomInset,

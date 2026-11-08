@@ -3,16 +3,9 @@ import { pickAnimatedFormat } from '@app/utils/seven-tv/gql/pickAnimatedFormat';
 import { pickBestFormat } from '@app/utils/seven-tv/gql/pickBestFormat';
 
 interface PickBestImageOptions {
-  /**
-   * Skip animated images. Use this for the still frame of an animated emote.
-   */
   staticOnly?: boolean;
 }
 
-/**
- * Picks the largest image, and the best format at that scale. Without
- * `staticOnly` an animated image wins over a static one at the same scale.
- */
 export function pickBestImage(
   images: readonly Image[],
   { staticOnly = false }: PickBestImageOptions = {},

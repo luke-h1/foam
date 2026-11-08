@@ -1,11 +1,6 @@
 import { evictOldestWhenFull } from '@app/utils/collection/evictOldestWhenFull';
 
 interface SetBoundedMapEntryOptions {
-  /**
-   * Share of `maxSize` to drop, oldest first, when a new key meets a full
-   * Map. A bigger share runs the eviction less often on a hot cache. The
-   * default drops one key.
-   */
   trimFraction?: number;
 }
 

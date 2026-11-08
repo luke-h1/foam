@@ -9,8 +9,6 @@ import { COMPACT_THUMBNAIL_WIDTH } from './util/thumbnailSizes';
 
 type StreamListLayout = Preferences['streamListLayout'];
 
-// The same line heights the card's Text uses, so iPad font scaling applies
-// to the skeleton too.
 const CALLOUT_LINE_HEIGHT = sizeStyles.callout.lineHeight;
 const SUBHEAD_LINE_HEIGHT = sizeStyles.subhead.lineHeight;
 const FOOTNOTE_LINE_HEIGHT = sizeStyles.footnote.lineHeight;

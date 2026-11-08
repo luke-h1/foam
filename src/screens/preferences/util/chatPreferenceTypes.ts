@@ -16,10 +16,6 @@ export type PreviewProvider = '7tv' | 'bttv' | 'ffz' | 'twitch';
 
 export type ProviderPreviewVariant = 'badges' | 'emotes';
 
-/**
- * The copy and glyph of one settings row. Both platform section families read
- * it, so the label cannot drift between them.
- */
 export interface PreferenceRowCopy {
   title: string;
   subtitle?: string;

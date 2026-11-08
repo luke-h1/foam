@@ -60,9 +60,6 @@ export type AssetPreviewSheetProps =
 
 type AssetKind = AssetPreviewSheetProps['kind'];
 
-/**
- * The image stage, sized so the sheet height and the stage agree.
- */
 const STAGE_HEIGHT = {
   badge: 128,
   emote: 152,

@@ -2,7 +2,6 @@ import type { ComponentType } from 'react';
 
 import { Redirect } from 'expo-router';
 
-// Dev-only screen. Keep the EXPO_PUBLIC_APP_VARIANT checks as inline literals so Metro can constant-fold the require out of production builds. See src/screens/storybook/StorybookRoute.tsx.
 let ChangelogRoute: ComponentType = function ChangelogUnavailable() {
   return <Redirect href='/tabs/settings' />;
 };

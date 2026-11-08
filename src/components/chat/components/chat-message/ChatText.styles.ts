@@ -11,9 +11,6 @@ import { theme } from '@app/styles/themes';
 import { CHAT_SURFACE_COLORS, getChatScale } from './util/chatScale';
 
 export interface ChatTextStyles {
-  /**
-   * Left inset of a row that is tinted because it mentions you.
-   */
   accentInset: ViewStyle;
   badgeArtwork: ImageStyle;
   badgeSlot: ViewStyle;
@@ -24,13 +21,7 @@ export interface ChatTextStyles {
    * the outer Text clips the attachment.
    */
   bodyEmoteLine: TextStyle;
-  /**
-   * Left inset of a highlighted sender or reply-target row.
-   */
   highlightInset: ViewStyle;
-  /**
-   * Space between a meta icon and the text after it.
-   */
   iconSpacing: ViewStyle;
   link: TextStyle;
   mention: TextStyle;
@@ -40,18 +31,8 @@ export interface ChatTextStyles {
   replyContextEmoteLine: TextStyle;
   replyToYouPill: ViewStyle;
   row: ViewStyle;
-  /**
-   * Space under a header line (meta row, reply context, shared-chat label).
-   */
   spaceBelow: ViewStyle;
-  /**
-   * Gap between the stacked lines of a notice column.
-   */
   stackGap: ViewStyle;
-  /**
-   * Geometry of every tinted notice surface. The colour half comes from the
-   * notice's own style in `ChatRow.styles`.
-   */
   surface: ViewStyle;
   timestamp: TextStyle;
   username: TextStyle;

@@ -21,9 +21,6 @@ export function skipSpaces(line: string, from: number, end: number): number {
   return cursor;
 }
 
-/**
- * Index of the first character after leading whitespace and control bytes.
- */
 export function skipLeadingWhitespace(line: string): number {
   let cursor = 0;
 

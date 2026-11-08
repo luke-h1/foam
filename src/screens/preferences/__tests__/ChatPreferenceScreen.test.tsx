@@ -12,8 +12,6 @@ import {
   replacePreferences,
 } from '@app/store/preference-store';
 
-// Jest resolves '../ChatPreferenceScreen' to the iOS variant. These tests
-// cover the Android and web screen, so they load that file by its full name.
 const { ChatPreferenceScreen } = jest.requireActual<
   typeof import('../ChatPreferenceScreen')
 >('../ChatPreferenceScreen.tsx');

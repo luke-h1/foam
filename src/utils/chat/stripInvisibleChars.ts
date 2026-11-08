@@ -1,6 +1,3 @@
-/**
- * U+E0000, a tag character with no width and no glyph.
- */
 export const INVISIBLE_TAG_CHAR = '\u{E0000}';
 
 /**

@@ -11,10 +11,6 @@ import {
 } from '../util/preferenceList';
 import type { PreferenceListEditorProps } from '../util/preferenceListTypes';
 
-/**
- * The add, edit and remove rules both list editor variants share. The
- * variants only differ in how they hold the input text.
- */
 export function usePreferenceListEditor<Item>({
   items,
   getId,
@@ -59,10 +55,6 @@ export function usePreferenceListEditor<Item>({
     ? (item: Item) => setEditingId(getId(item))
     : undefined;
 
-  /**
-   * Asks before it removes `targets`. `onEditingRemoved` runs when one of
-   * them is the item being edited, so the caller can clear its input.
-   */
   const confirmRemove = (
     targets: readonly Item[],
     onEditingRemoved: () => void,

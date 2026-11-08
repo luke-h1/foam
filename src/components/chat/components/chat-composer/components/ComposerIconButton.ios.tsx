@@ -53,10 +53,6 @@ export function ComposerIconButton({
   };
 
   return (
-    /**
-     * No matchContents - SwiftUI must not re-measure; ignoreSafeArea stops the
-     * home-indicator inset shifting the button out of the host frame.
-     */
     <Host
       ignoreSafeArea='all'
       style={[styles.host, { width: size, height: size }]}

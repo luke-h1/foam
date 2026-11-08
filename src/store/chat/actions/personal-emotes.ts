@@ -6,10 +6,6 @@ import { logger } from '@app/utils/logger';
 
 import { invalidatePersonalEmotes } from './invalidation';
 
-/**
- * Keyed by channel and user, because the cache below is per channel: a user
- * fetched in one channel still needs a fetch in the next one.
- */
 const personalEmotesGuard = createFetchOnceGuard();
 
 const guardKey = (channelId: string, twitchUserId: string): string =>

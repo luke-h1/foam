@@ -28,10 +28,6 @@ export type ChannelSessionResetTrigger =
   | 'clear-cosmetics'
   | 'clear-cache';
 
-/**
- * A cleared cosmetics cache also forgets which users were fetched, or those
- * users never fetch their paint and badge again.
- */
 function clearCosmeticsSession(): void {
   clearUserCosmeticsCache();
   clearFetchedCosmeticsUsers();

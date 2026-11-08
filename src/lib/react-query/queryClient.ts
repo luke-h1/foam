@@ -17,10 +17,6 @@ declare module '@tanstack/react-query' {
 
 const WEB_QUERY_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
 
-/**
- * Logs a failed query. The API client already logs each HTTP and network
- * failure (a 4xx at warn), so this logs only the errors it did not see.
- */
 export function handleQueryError(
   error: Error,
   queryKey: readonly unknown[],

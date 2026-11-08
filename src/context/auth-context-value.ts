@@ -23,10 +23,6 @@ export interface AuthContextState {
   ) => Promise<LoginWithTwitchResult>;
   logout: () => Promise<void>;
 
-  /**
-   * Goes up by one each time a sign-in completes. A restore of a stored
-   * session at startup does not change it.
-   */
   signInId: number;
 
   ready: boolean;

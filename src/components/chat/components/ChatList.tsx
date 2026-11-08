@@ -71,10 +71,6 @@ const CHAT_RECYCLE_ITEMS = false;
 
 const SKELETON_BODY_WIDTHS = ['28%', '42%', '54%'] as const;
 
-/**
- * Sized from the live chat scale, so a placeholder row is the height of the
- * row that replaces it.
- */
 function ChatListRowSkeleton({ index }: { index: number }) {
   const scale = getChatScale(
     usePreference('chatFontScale'),

@@ -49,11 +49,6 @@ interface ResourceSpecDefinition<
   fetch: () => Promise<TItem[]>;
 }
 
-/**
- * One slice fetch. The provider, scope and kind come from the slice table
- * row the key names, so a spec cannot disagree with the cache it fills. To
- * add a provider, add one table row and one spec.
- */
 export interface ResourceSpec<
   TKey extends ResourceCacheKey,
   TItem extends Identifiable,
@@ -443,7 +438,6 @@ export const reportResourceResults = ({
 
     failedResources += 1;
 
-    // The API client already logged its own failures.
     if (isApiClientError(result.reason)) {
       return;
     }

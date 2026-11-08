@@ -152,17 +152,11 @@ export function useChatPerfSuite() {
   const runningRef = useRef(false);
   const metricsSamplesRef = useRef<ProcessMetricsSample[]>([]);
 
-  /**
-   * UI-thread accumulators; uiActive gates them to measure windows and JS reads the totals at phase end.
-   */
   const uiFrames = useSharedValue(0);
 
   const uiJank = useSharedValue(0);
   const uiActive = useSharedValue(false);
 
-  /**
-   * Countdown ticks on the UI thread so it survives a JS thread saturated by the flood.
-   */
   const phaseCountdownMs = useSharedValue(0);
 
   const totalCountdownMs = useSharedValue(0);
@@ -393,7 +387,6 @@ export function useChatPerfSuite() {
     });
   }, [runWindow, uiFrames, uiJank, countdownTicking]);
 
-  // runSuite's finally owns the transition to IDLE - otherwise the Run button reappears mid-cancel and a re-tap starts a second overlapping run.
   const stopSuite = useCallback(() => {
     cancelRef.current = true;
     syntheticChatControl.current = SYNTHETIC_PRESETS['off']!;

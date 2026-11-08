@@ -137,9 +137,6 @@ function InlineTokensComponent(props: InlineTokensProps) {
           });
         }
 
-        // A whitespace-only run, such as the gap between two emotes, needs no
-        // Text of its own. As a bare string it takes the font and size of the
-        // parent.
         if (run.content.trim() === '') {
           return run.content;
         }

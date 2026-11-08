@@ -164,9 +164,6 @@ const prepareMessageForStore = (
   return storedMessage;
 };
 
-/**
- * The one rule for the login that sent a message.
- */
 export const getMessageSenderLogin = (
   message: Pick<AnyChatMessageType, 'sender' | 'userstate'>,
 ): string =>
@@ -323,10 +320,6 @@ const persistRecentMessagesForChannel = (
   trimRecentMessageChannels();
 };
 
-/**
- * Writes a deferred recent-messages sync now. Call it before the window is
- * read back or the channel is left, or up to 15s of rows are lost.
- */
 export const flushPendingRecentMessagesSync = () => {
   if (recentMessagesSyncTimer) {
     clearTimeout(recentMessagesSyncTimer);

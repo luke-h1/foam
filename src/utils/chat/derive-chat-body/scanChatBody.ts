@@ -99,10 +99,6 @@ export function scanChatBody(message: MessageToken[]): ChatBodyScan {
   return scan;
 }
 
-/**
- * The one "does this message mention the user" check. `normalisedLogin` must
- * come from `normaliseChatUsername`.
- */
 export function messageMentionsLogin(
   message: MessageToken[],
   normalisedLogin: string,

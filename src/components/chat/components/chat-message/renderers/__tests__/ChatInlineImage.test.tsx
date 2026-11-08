@@ -40,10 +40,6 @@ type CapturedImageProps = Omit<ImageProps, 'onError' | 'onLoad'> & {
 
 let mockImageProps: CapturedImageProps | null = null;
 
-/**
- * Each new recyclingKey makes expo-image start a fresh load, so this records
- * the url of every load the native view starts, in order.
- */
 let mockLoads: string[] = [];
 let mockLastRecyclingKey: string | undefined;
 

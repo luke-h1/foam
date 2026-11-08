@@ -6,10 +6,6 @@ export interface MessageIdentity {
   message_nonce: string;
 }
 
-/**
- * The identity fields every message factory writes. Build them here so the
- * store `id` always comes from `getChatMessageKey`.
- */
 export function createMessageIdentity(
   messageId: string,
   messageNonce: string,

@@ -203,10 +203,6 @@ async function refreshCurrentUserTokenForState(
   }
 }
 
-/**
- * The prompt can also report `opened` or `locked`. Neither is a failure the
- * user must hear about, so only `error` and a missing response count as one.
- */
 function isCancelledAuthResponse(response: AuthSessionResult | null): boolean {
   return Boolean(
     response && response.type !== 'success' && response.type !== 'error',
@@ -228,9 +224,6 @@ function useAuthContextValue(): AuthContextState {
   const hasTimedOut = useRef(false);
   const userTokenRefreshInFlightRef = useRef(false);
 
-  // The same success response can arrive twice at once (the deep link, the
-  // callback screen and the prompt can all deliver it), so an access token has
-  // at most one exchange in flight.
   const loginAttemptsRef = useLazyRef(
     () => new Map<string, Promise<LoginWithTwitchResult>>(),
   );

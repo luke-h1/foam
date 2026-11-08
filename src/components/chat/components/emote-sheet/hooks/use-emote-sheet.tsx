@@ -79,11 +79,6 @@ interface WarmProviderImagesOptions {
   warmupProviderId: EmoteMenuProviderId | null;
 }
 
-/**
- * Decodes the first rows of each provider ahead of the user reaching them. The
- * active provider gets a deeper warm-up, and providers are walked one at a
- * time so a background prefetch never floods the download queue.
- */
 async function warmProviderImages({
   columns,
   providers,
@@ -154,7 +149,6 @@ export function useEmoteSheet({
 
   const [activeSetId, setActiveSetId] = useState<string | null>(null);
 
-  // Defer the O(all emotes) provider build until after the sheet has presented.
   const [contentReady, setContentReady] = useState(false);
 
   const { user } = useAuthContext();
@@ -243,10 +237,6 @@ export function useEmoteSheet({
       : (providers[0]?.id ?? null);
   };
 
-  /**
-   * The chips track the tap; the grid trails behind it, so rebuilding the grid
-   * never blocks the frame that highlights the chip.
-   */
   const selectedProviderId = resolveProviderId(activeProviderId);
 
   const renderedProviderId = resolveProviderId(
@@ -282,10 +272,6 @@ export function useEmoteSheet({
     [filteredSets, columns],
   );
 
-  /**
-   * Out of the warmup effect's deps so a tab tap doesn't abort an in-flight
-   * warmup and restart the whole cross-provider walk mid-swap.
-   */
   const warmupProviderIdRef = useRef(renderedProviderId);
 
   useLayoutEffect(() => {
@@ -354,10 +340,6 @@ export function useEmoteSheet({
   );
 
   const handleProviderPress = useCallback((providerId: EmoteMenuProviderId) => {
-    /**
-     * A switch commits a screenful of new emote images at once, so the grid
-     * holds still frames until it settles, exactly as it does mid-scroll.
-     */
     emoteSheetScrollActivity.poke();
     setActiveProviderId(providerId);
   }, []);

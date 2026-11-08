@@ -43,8 +43,6 @@ export function ErrorDetails({ error, errorInfo, onReset }: ErrorDetailsProps) {
   );
 
   const handleTryAgain = () => {
-    // Reset the failed queries. Otherwise the screen renders the same error
-    // again right after the reset.
     void queryClient.resetQueries({
       predicate: query => query.state.status === 'error',
     });

@@ -1,9 +1,5 @@
 import type { StvUser } from '@app/types/seven-tv/users';
 
-/**
- * The 7TV emote set kinds. The values match the GQL `EmoteSetKind` enum, so
- * a codegen value assigns to this type without a map.
- */
 type SevenTvEmoteSetKind = 'GLOBAL' | 'NORMAL' | 'PERSONAL' | 'SPECIAL';
 
 export interface SevenTvEmoteSetMetadata {
@@ -16,11 +12,6 @@ export interface SevenTvEmoteSetMetadata {
   totalCount: number;
 }
 
-/**
- * Every third-party service the app loads emotes, badges or chat data from.
- * `PROVIDER_DESCRIPTORS` in `constants/emote-providers.ts` holds the names
- * and log prefix for each one.
- */
 export type ProviderId =
   | 'twitch'
   | '7tv'

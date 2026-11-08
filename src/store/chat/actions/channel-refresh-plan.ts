@@ -36,22 +36,12 @@ const isEmptyGroup = (
   keys: readonly ChatResourceSliceKey<'global'>[],
 ): boolean => keys.every(key => (globalCache?.[key]?.length ?? 0) === 0);
 
-/**
- * The one emptiness rule for the global slot: an empty emote group or an
- * empty badge group needs a refetch. A channel-copy seed can stamp
- * `lastUpdated` with badges still empty, which served an empty Badges tab
- * until the TTL ran out.
- */
 const hasEmptyGlobalGroup = (
   globalCache: GlobalCacheType | undefined,
 ): boolean =>
   isEmptyGroup(globalCache, GLOBAL_EMOTE_SLICE_KEYS) ||
   isEmptyGroup(globalCache, GLOBAL_BADGE_SLICE_KEYS);
 
-/**
- * The one staleness rule for the global slot: an empty group, or a stamp
- * older than the cache window.
- */
 export const isGlobalCacheStale = (
   globalCache: GlobalCacheType | undefined,
   now: number,

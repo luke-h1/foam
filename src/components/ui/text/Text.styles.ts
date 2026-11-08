@@ -93,8 +93,6 @@ export function getFontFamily(
   weight: TextWeight,
   italic?: boolean,
 ): string | undefined {
-  // iOS does not resolve the generic 'monospace' family and falls back to
-  // the system font.
   if (variant === 'mono') {
     return Platform.OS === 'ios' ? 'Menlo' : 'monospace';
   }

@@ -43,9 +43,6 @@ export const readPersistedChannelCache = (
   }
 };
 
-/**
- * Writes the coalesced channel-cache writes now.
- */
 export const flushPersistedChannelCacheWrites = (): void => {
   if (flushTimer) {
     clearTimeout(flushTimer);

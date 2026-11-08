@@ -9,10 +9,6 @@ import { PaintedUsername } from '../chat-message/cosmetic-username/PaintedUserna
 
 const PREVIEW_LINE_HEIGHT = 22;
 
-/**
- * Three lines at most, so a long message cannot push the actions below the
- * fold when the sheet opens.
- */
 const PREVIEW_MAX_LINES = 3;
 
 interface MessageActionPreviewProps {

@@ -101,7 +101,6 @@ function createChannelStateRouteHandlers({
         return;
       }
 
-      // A local partChannel already reported this PART; the server echo must not report it again.
       const wasJoined = membership.joined.delete(channelName);
       const wasPending = membership.pending.delete(channelName);
 
@@ -169,9 +168,6 @@ interface CreateIrcClientOptions {
   getChannel: () => string | undefined;
   onDebugLine: IrcLineHandlers['onDebugLine'];
   onUserState: (tags: Record<string, string>) => void;
-  /**
-   * Twitch sent RECONNECT. The owner closes the socket so it reconnects.
-   */
   onServerReconnect: () => void;
 }
 
@@ -187,10 +183,6 @@ export function createIrcClient({
     pending: new Set<string>(),
   };
 
-  /**
-   * What was last put on the wire per channel, so a repeat can be made distinct
-   * before Twitch's duplicate filter swallows it.
-   */
   const lastSentMessages = new Map<string, string>();
 
   let queuedLines: string[] = [];
@@ -213,8 +205,6 @@ export function createIrcClient({
     transport(payload);
   };
 
-  // A JOIN/PART with no prefix, or one matching the nick we authenticated with,
-  // is our own connection; anything else is another chatter.
   const isSelfNick = (nick: string | undefined) =>
     !nick ||
     !currentNick ||
@@ -274,7 +264,6 @@ export function createIrcClient({
       logger.chat.debug(`IRC ${command}: ${params.join(' ')}`);
     },
 
-    // Twitch drops a JOIN sent before the 001 welcome, so the first join waits for it.
     welcome: () => {
       isAuthenticated = true;
       logger.chat.info('✅ Authenticated with Twitch IRC');
@@ -344,7 +333,6 @@ export function createIrcClient({
     handleClose(): void {
       resetConnection();
 
-      // A reconnect must not flush commands queued for a dead socket.
       queuedLines = [];
     },
 

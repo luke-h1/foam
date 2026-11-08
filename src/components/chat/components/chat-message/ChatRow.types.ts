@@ -70,11 +70,6 @@ export interface ChatRowState extends ChatRowSurfaceState, ChatRowBodyState {
   isAnnouncement: boolean;
 }
 
-/**
- * What a row needs besides the message itself: callbacks, viewer context and
- * display preferences. `CHAT_ROW_RENDER_PROP_KEYS` lists every key, so the
- * long-press handler can hand back the message alone.
- */
 export interface ChatRowRenderProps<
   TNoticeType extends NoticeVariants,
   TVariant extends (TNoticeType extends 'usernotice'

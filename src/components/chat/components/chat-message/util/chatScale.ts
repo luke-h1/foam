@@ -43,10 +43,6 @@ const SURFACE_PADDING_HORIZONTAL_RATIO = 0.57;
 const SURFACE_PADDING_VERTICAL_RATIO = 0.29;
 
 interface ChatScale {
-  /**
-   * Left inset of a mention highlight and side padding of the reply-to-you
-   * pill: a little wider than `gap`.
-   */
   accentInset: number;
   badgeSize: number;
   bodyFontSize: number;

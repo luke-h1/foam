@@ -67,7 +67,6 @@ export function attachListeners(
       clearTimeout(reconnectTimeout);
     }
 
-    // A replaced socket that closes late must not reach the new connection's callbacks or state.
     instance.onopen = null;
     instance.onmessage = null;
     instance.onerror = null;

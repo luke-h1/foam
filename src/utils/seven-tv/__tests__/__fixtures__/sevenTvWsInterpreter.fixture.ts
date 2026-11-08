@@ -38,10 +38,6 @@ interface RawSevenTvPayload {
   [key: string]: RawJsonValue;
 }
 
-/**
- * The variant sets the interpreter builds from the files a WS emote's host
- * lists. `scales` names the files the emote fixture has.
- */
 export function sevenTvVariants(
   id: string,
   ext: string,
@@ -95,9 +91,6 @@ export function createSevenTvEmoteChange(overrides: {
   name: string;
   originalName?: string;
   flags?: number;
-  /**
-   * The set-level flags of the emote set entry.
-   */
   activeFlags?: number;
   files?: SevenTvFile[];
 }): EmoteChange {

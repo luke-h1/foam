@@ -3,10 +3,6 @@ import type { StyleProp, TextStyle } from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 
-/**
- * Text styles for the parts of a subscription sentence. The notice builds
- * them from the chat scale so the sentence follows font scale and density.
- */
 export interface SubscriptionDescriptionStyles {
   descriptionText: StyleProp<TextStyle>;
   emphasis: StyleProp<TextStyle>;

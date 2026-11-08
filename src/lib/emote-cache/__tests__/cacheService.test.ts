@@ -17,10 +17,8 @@ import {
 } from '@app/lib/emote-cache/cacheService';
 import { logger } from '@app/utils/logger';
 
-// 5% of the mocked 8GB device (under the 600MB high-tier ceiling).
 const MAX_DECODED_BYTES_HIGH_TIER = 429_496_729;
 
-// ~409.6MiB / (96*96*4 bytes * 16 animated factor) ≈ 728 refs before the count cap.
 const HIGH_TIER_BYTE_BUDGET_ANIMATED_ENTRIES = 728;
 
 // SAFETY: ImageRef is a native SharedRef subclass with no JS constructor; the cache only reads width/height/isAnimated off it
@@ -42,11 +40,6 @@ const flushMicrotasks = () =>
     setTimeout(resolve, 0);
   });
 
-/**
- * requestAnimationFrame is polyfilled onto setTimeout here, so each turn
- * drains one deferred release pass. A release can be re-queued a few times,
- * and a channel clear can leave those timers for the next test.
- */
 const flushAnimationFrames = async (turns = 8) => {
   for (let turn = 0; turn < turns; turn += 1) {
     await flushMicrotasks();
@@ -63,7 +56,6 @@ describe('cacheService', () => {
     await flushAnimationFrames();
     jest.clearAllMocks();
 
-    // clearAllMocks leaves queued mockReturnValueOnce values behind, leaking a fenced decode's pending promise into the next test.
     loadAsync.mockReset();
   });
 
@@ -185,7 +177,6 @@ describe('cacheService', () => {
     });
 
     afterEach(async () => {
-      // A failed assertion must not strand fake timers holding decode slots.
       await jest.runOnlyPendingTimersAsync();
       jest.useRealTimers();
     });
@@ -295,7 +286,6 @@ describe('cacheService', () => {
 
       expect(getCachedEmoteStats().inflight).toEqual(0);
 
-      // The hung urls can be asked for again.
       loadAsync.mockImplementation(() => Promise.resolve(makeImageRef()));
 
       ensureCachedEmoteRef(hung[0]!);
@@ -317,7 +307,6 @@ describe('cacheService', () => {
 
     ensureCachedEmoteRef(url);
 
-    // Let the decode claim a slot and start loading before the fence lands.
     await flushMicrotasks();
 
     abortInflightEmoteDecodes();
@@ -419,7 +408,6 @@ describe('cacheService', () => {
       trimDecodedEmotes('advisory');
       expect(Image.clearMemoryCache).toHaveBeenCalledTimes(1);
 
-      // memoryWarning/backgrounding path: unthrottled even inside the window.
       trimDecodedEmotes('reclaim');
 
       expect(Image.clearMemoryCache).toHaveBeenCalledTimes(2);
@@ -441,10 +429,8 @@ describe('cacheService', () => {
     await warmCachedEmoteRefs(urls);
     expect(getCachedEmoteStats().decoded).toBe(2400);
 
-    // Mark the oldest-decoded entry as most-recently-used.
     touchCachedEmoteRef(urls[0]!);
 
-    // One more decode trips the cap and evicts the now-oldest unpinned entry.
     await warmCachedEmoteRefs([
       'https://cdn.7tv.app/emote/lruExtra/2x_static.avif',
     ]);
@@ -457,8 +443,6 @@ describe('cacheService', () => {
   });
 
   test('evicts to stay under the decoded-byte budget before the entry-count cap', async () => {
-    // Animated decodes cost 16x a static one, so the byte budget caps the cache
-    // far below the 2400-entry count backstop.
     loadAsync.mockResolvedValue(animatedRef());
 
     const urls = Array.from(
@@ -476,7 +460,6 @@ describe('cacheService', () => {
       MAX_DECODED_BYTES_HIGH_TIER,
     );
 
-    // The most-recently warmed ref survives; the oldest was evicted to fit.
     expect(getCachedEmoteRef(urls.at(-1)!)).toEqual(animatedRef());
 
     expect(getCachedEmoteRef(urls[0]!)).toBeNull();
@@ -498,8 +481,6 @@ describe('cacheService', () => {
       ),
     );
 
-    // Evicting the subscribed url would free nothing and only un-count its bytes,
-    // so the scan sheds an unsubscribed one instead.
     expect(getCachedEmoteRef(mountedUrl)).toEqual(animatedRef());
 
     expect(getCachedEmoteRef(unsubscribedUrl)).toBeNull();
@@ -512,8 +493,6 @@ describe('cacheService', () => {
   });
 
   test('a memory-pressure trim frees a bitmap even while a row is still subscribed', async () => {
-    // Real timers share the worker queue. A full suite can leave setTimeout
-    // callbacks ahead of this release, so the deferred release never runs.
     jest.useFakeTimers();
 
     try {
@@ -526,7 +505,6 @@ describe('cacheService', () => {
       releaseChannelEmoteRefs();
       await jest.advanceTimersByTimeAsync(50);
 
-      // The trim notified first, so the row has already dropped to its uri fallback.
       expect(release).toHaveBeenCalledTimes(1);
 
       unsubscribe();
@@ -561,7 +539,6 @@ describe('cacheService', () => {
 
     await warmCachedEmoteRefs(unpinned);
 
-    // Warming far past the byte budget evicts unpinned refs but never the pin.
     expect(getCachedEmoteRef(pinnedUrl)).toEqual(animatedRef());
 
     expect(getCachedEmoteStats().pinned).toBe(1);

@@ -131,7 +131,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     shouldConnect,
   });
 
-  // The client and the socket callbacks exist before useWebsocket returns, so they read these refs.
   useLayoutEffect(() => {
     getWebSocketRef.current = getWebSocket;
     noteActivityRef.current = noteActivity;
@@ -158,7 +157,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     }
   }, [authState?.token?.accessToken, shouldConnect]);
 
-  // Membership is negotiated once per connection, so bounce the socket when the preference flips to renegotiate CAP REQ.
   const previousShowJoinPartRef = useRef(showJoinPartMessages);
 
   useEffect(() => {

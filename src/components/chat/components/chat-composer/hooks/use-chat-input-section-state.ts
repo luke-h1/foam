@@ -28,11 +28,6 @@ function getInputPlaceholder(
   return 'Send a message...';
 }
 
-/**
- * The state both platform variants of the chat input section derive from
- * their props: the send gate, the placeholder, the reply prefix length and
- * the swipe-to-dismiss gesture.
- */
 export function useChatInputSectionState({
   isAuthenticated,
   messageInput,
@@ -43,7 +38,6 @@ export function useChatInputSectionState({
   const { composerAnimatedStyle, composerGesture } =
     useComposerDismissGesture();
 
-  // /refresh is purely client-side, so it works signed out
   const canSend =
     messageInput.trim().length > 0 &&
     (isAuthenticated || isRefreshCommand(messageInput));

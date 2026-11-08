@@ -85,8 +85,6 @@ export const Image = function Image({
         variant: cacheVariant,
       })
       .then(objectUrl => {
-        // The web cache owns the blob URL and revokes it when it drops the
-        // entry. Revoking here would break the next mount that reads it.
         if (!objectUrl || objectUrl === cacheableSourceUri || !isMounted) {
           return;
         }

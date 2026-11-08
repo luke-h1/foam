@@ -20,8 +20,6 @@ function parse(url: string): EmoteCdnAsset | null {
   return {
     id: match[1],
     scale,
-    // A bare scale url may still serve animated WebP. Leave the kind unknown
-    // so useAppleWebpCodec never routes animated WebP to ImageIO (fatal hang).
     kind: match[2] ? 'animated' : null,
     ext: null,
   };
@@ -40,8 +38,6 @@ export const ffzEmoteCdn: EmoteCdn = {
     const animatedSet: EmoteImageVariantSet = {};
     const staticSet: EmoteImageVariantSet = {};
 
-    // FFZ serves `animated/{n}` only for animated emotes. For any other emote
-    // that path 404s, so both sets use the bare url.
     const animatedKind = animated === true ? 'animated' : 'static';
 
     for (const scale of FFZ_SCALES.scales) {

@@ -10,10 +10,6 @@ interface SuggestionRailChromeProps {
   title: string;
 }
 
-/**
- * A compact chip strip above the composer. The chips explain themselves, so
- * the title is not shown.
- */
 export function SuggestionRailChrome({ children }: SuggestionRailChromeProps) {
   return (
     <View style={styles.wrapper}>

@@ -67,7 +67,6 @@ export function useChatLifecycle({
     };
   }, [navigation, lifecycleRef, isMountedRef]);
 
-  // The channel effect cleanup below also runs on unmount and resets the scroll, the buffers and the flags.
   useUnmountCallback(() => {
     const lifecycle = lifecycleRef.current;
     lifecycle.cancelEmoteLoad();

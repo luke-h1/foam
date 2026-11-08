@@ -11,7 +11,6 @@ import { Text } from '@app/components/ui/text/Text';
 import { useTwitchSignIn } from '@app/hooks/use-twitch-sign-in';
 import { theme } from '@app/styles/themes';
 
-// usePopulateAuth owns the move to Following, so success only closes the sheet.
 function handleAuthSuccess() {
   if (router.canDismiss()) {
     router.dismiss();

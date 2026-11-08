@@ -193,10 +193,6 @@ function pickBestSevenTvFile(
   return widest;
 }
 
-/**
- * Variant sets from the files the host lists, in the format of the picked
- * file, so "disable animations" works for an emote the EventAPI added.
- */
 function buildHostImageVariants(
   hostUrl: string,
   files: readonly SevenTvFile[],

@@ -6,10 +6,6 @@ function getRemainingMs(endsAt: string | undefined): number | null {
   return endsAt ? Date.parse(endsAt) - Date.now() : null;
 }
 
-/**
- * The time left until `endsAt`, as a label that updates each second. Gives
- * `elapsedLabel` once the time is up, and null when there is no `endsAt`.
- */
 export function useCountdownLabel(
   endsAt: string | undefined,
   elapsedLabel: string,

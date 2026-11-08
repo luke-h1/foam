@@ -155,14 +155,6 @@ afterEach(() => {
   require('@app/store/chat/actions/mention-login-lookup').resetMentionLogins();
 });
 
-/**
- * A real timer still pending when a test file ends keeps the Jest worker
- * alive, and Jest then force-exits it with a "failed to exit gracefully"
- * warning. Each store debounce has an owner that flushes or cancels it, so a
- * pending timer here is a leak: print the stack that created it.
- * Zero-delay timers are left out, because library code schedules those and
- * they run before the worker exits.
- */
 const pendingRealTimers = new Map<ReturnType<typeof setTimeout>, string>();
 const realSetTimeout = global.setTimeout;
 const realClearTimeout = global.clearTimeout;
@@ -202,7 +194,6 @@ global.clearTimeout = ((handle?: ReturnType<typeof setTimeout>) => {
 }) as typeof clearTimeout;
 
 afterAll(() => {
-  // console output is muted in this suite, so write to stderr directly.
   for (const stack of pendingRealTimers.values()) {
     process.stderr.write(
       `A real timer is still pending after ${expect.getState().testPath}: ${stack}\n`,

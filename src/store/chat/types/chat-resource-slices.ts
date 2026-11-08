@@ -7,21 +7,12 @@ export type SliceKind = 'emote' | 'badge';
 
 interface ChatResourceSliceDefinition {
   key: string;
-  /**
-   * The cache that stores the slice: one per channel, or the shared global
-   * slot.
-   */
   scope: SliceScope;
   provider: Extract<ProviderId, 'bttv' | 'ffz' | '7tv' | 'twitch'>;
   kind: SliceKind;
   preference: keyof Preferences;
 }
 
-/**
- * The one list of provider slices the chat store caches. The cache types, the
- * empty-cache factories, the global writes, the refresh plan and the
- * preference gate all read it, so a new slice is one row here.
- */
 const CHAT_RESOURCE_SLICES = [
   {
     key: 'twitchChannelEmotes',
@@ -204,10 +195,6 @@ interface GateEmoteDataOptions {
 
 const NO_ITEMS: never[] = [];
 
-/**
- * The one provider-preference gate: a slice whose preference is off reads as
- * empty. Chatterino badges have no preference, so they always pass.
- */
 export function gateEmoteData({
   slices,
   preferences,
@@ -228,10 +215,6 @@ interface SessionEmoteExtras<TPersonal, TProfiles> {
   twitchSubscriberChannelProfiles: TProfiles;
 }
 
-/**
- * Personal 7TV emotes and subscriber channel profiles have no slice row, so
- * each follows the gate of the slice it extends.
- */
 export function gateSessionEmoteExtras<TPersonal, TProfiles>(
   extras: SessionEmoteExtras<TPersonal, TProfiles>,
   empty: SessionEmoteExtras<TPersonal, TProfiles>,

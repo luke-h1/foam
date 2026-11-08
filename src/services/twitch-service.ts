@@ -188,10 +188,6 @@ interface AuthProxyRequest {
   label: string;
 }
 
-/**
- * The one raw call to the auth proxy. E2E runs send it to the mock server
- * without the API key.
- */
 async function requestAuthProxy<T>({
   method,
   path,
@@ -215,8 +211,6 @@ async function requestAuthProxy<T>({
     headers: isE2EMode ? {} : { 'x-api-key': authProxyApiKey },
   });
 
-  // An edge block (e.g. a Cloudflare 403) answers with an HTML page, which
-  // would otherwise show up as a JSON parse error.
   if (!res.ok) {
     throw new Error(
       `Auth proxy ${label} request failed: HTTP ${res.status} (${res.headers.get('content-type') ?? 'no content-type'})`,

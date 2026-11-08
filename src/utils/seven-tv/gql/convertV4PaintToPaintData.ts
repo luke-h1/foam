@@ -83,10 +83,6 @@ const convertV4Layer = (
 export const convertV4PaintToPaintData = (
   paint: SevenTvPaintSource,
 ): PaintData => {
-  /**
-   * v4 lists layers bottom-to-top; `PaintData.layers` keeps the CSS
-   * first-is-topmost convention, so reverse here.
-   */
   const gradients = paint.data.layers
     .map(convertV4Layer)
     .filter((layer): layer is PaintGradientLayer => layer !== null)

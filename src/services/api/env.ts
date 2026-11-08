@@ -2,12 +2,6 @@ import Constants from 'expo-constants';
 
 import { getAppVariant } from '@app/utils/version/getAppVariant';
 
-/**
- * app.config.ts copies the build env into `extra`. `process.env` is the
- * fallback for code that runs without the Expo config, such as tests. Each
- * `process.env.EXPO_PUBLIC_*` read stays a literal member access, so Metro
- * can inline it.
- */
 const expoExtra: Record<string, string | undefined> | undefined =
   Constants.expoConfig?.extra;
 
@@ -15,11 +9,6 @@ export const mockServerUrl = expoExtra?.['MOCK_SERVER_URL'];
 
 export const isE2EMode = !!mockServerUrl;
 
-/**
- * A production build without one of these values cannot sign anyone in, so
- * it fails at startup with the name of the missing variable. Other builds
- * and E2E runs fall back to an empty string.
- */
 function requireBuildEnv(name: string, value: string | undefined): string {
   if (value) {
     return value;

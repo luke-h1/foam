@@ -18,10 +18,6 @@ import { subscribeToAppStateTransitions } from '@app/utils/app-state/appStateTra
 import { logger } from '@app/utils/logger';
 import { runWhenIdle } from '@app/utils/runWhenIdle';
 
-/**
- * A slider or a run of toggles writes many times in a row. The wait sends one
- * iCloud write for the run.
- */
 const ICLOUD_SAVE_DEBOUNCE_MS = 500;
 
 export function useIcloudPreferenceSync() {

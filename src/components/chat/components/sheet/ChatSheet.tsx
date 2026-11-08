@@ -19,10 +19,6 @@ interface ChatSheetProps {
   testID: string;
 }
 
-/**
- * The bottom sheet every chat sheet uses. `ChatOverlayLayer` mounts a sheet
- * only while it is open, so the sheet is always presented.
- */
 export function ChatSheet({
   children,
   layout,

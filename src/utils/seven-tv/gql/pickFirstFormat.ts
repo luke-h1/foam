@@ -1,9 +1,5 @@
 import { type Image } from '@app/graphql/generated/gql';
 
-/**
- * Returns the image in the first format of `formats` that `imgs` holds, or
- * the first image when none match.
- */
 export function pickFirstFormat(
   imgs: Image[],
   formats: readonly string[],

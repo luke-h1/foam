@@ -22,10 +22,6 @@ export interface SubscriberChannelProfile {
   profileImageUrl: string;
 }
 
-/**
- * The slice fields come from `CHAT_RESOURCE_SLICES`; they are listed here too
- * so the shape reads in one place.
- */
 export interface ChannelCacheType extends ChatResourceSliceRecord<
   ChatResourceSliceKey<'channel'>
 > {
@@ -45,11 +41,6 @@ export interface ChannelCacheType extends ChatResourceSliceRecord<
   ffzChannelBadges: SanitisedBadgeSet[];
   sevenTvEmoteSetId?: string;
   badgesLastUpdated?: number;
-  /**
-   * Stamped by a 7TV-only update (set switch or live emote event). It stays
-   * apart from `lastUpdated`, which stamps a fetch of every provider, so a
-   * 7TV event cannot make the other providers look fresh.
-   */
   sevenTvUpdatedAt?: number;
 }
 

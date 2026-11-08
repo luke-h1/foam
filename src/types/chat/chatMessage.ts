@@ -35,9 +35,6 @@ export interface ChatUser {
   color: string;
   cosmetics?: UserCosmetics;
   avatar: string | null;
-  /**
-   * Unset for a chatter known only from a mention.
-   */
   userId?: string;
 }
 
@@ -53,25 +50,9 @@ export interface ChatMessageType<
     : never) = never,
 > {
   id: string;
-  /**
-   * Monotonic per-session arrival number. Unlike a list index it never shifts
-   * on front-trims, so derivations like alternating-row parity stay stable.
-   */
   seq?: number;
-  /**
-   * Wall-clock ms when the message was committed to the store. Preserved on
-   * cache restore so replayed rows never read as freshly arrived.
-   */
   committedAt?: number;
-  /**
-   * Set on replayed or cache-restored messages so they skip live-arrival
-   * treatment such as the slide-in entrance.
-   */
   isHistorical?: boolean;
-  /**
-   * Set when the message committed as part of a raid-sized flush, so a burst
-   * of rows does not start one entrance animation per row in the same frame.
-   */
   arrivedInBurst?: boolean;
   userstate: UserStateTags;
   message: MessageToken[];
@@ -85,10 +66,6 @@ export interface ChatMessageType<
   isSpecialNotice?: boolean;
   moderationNotice?: string;
   cachedSenderColor?: string;
-  /**
-   * Set at ingest while the emote/badge parse is deferred to commit time;
-   * stripped when the message is finalized, so the store never sees it.
-   */
   pendingEmoteParse?: boolean;
   replyParentLogin: string;
   replyBody: string;

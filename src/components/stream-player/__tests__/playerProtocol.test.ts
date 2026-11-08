@@ -18,11 +18,6 @@ function getPlayerMessageTypes(): Set<string> {
   );
 }
 
-/**
- * The hosted player page and the app speak one string protocol. The page
- * posts with `post('<type>', ...)`; the app parses into the PlayerMessage
- * union. Nothing else ties the two copies together.
- */
 describe('player bridge protocol', () => {
   test('every message type the hosted player posts is in the PlayerMessage union', () => {
     const playerScript = readRepoFile('player-website/src/scripts/player.js');

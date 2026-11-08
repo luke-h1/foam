@@ -39,10 +39,6 @@ import { SymbolView } from '@app/components/ui/icon/Icon';
 import { iosMatchedSwitchColors } from '@app/styles/compose-switch-colors';
 import { theme } from '@app/styles/themes';
 
-/**
- * The rows this module draws in Compose. A section places them in its Compose
- * column as they are and hosts every other child in an RN view.
- */
 function isComposeRow(element: ReactNode): boolean {
   return (
     isValidElement(element) &&

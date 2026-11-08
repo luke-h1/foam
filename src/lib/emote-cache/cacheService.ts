@@ -1,7 +1,3 @@
-/**
- * Decode-once cache for chat emotes and badges: one shared display-sized
- * ImageRef per url instead of every row decoding the full-resolution source.
- */
 import { AppState, type AppStateStatus, Platform } from 'react-native';
 
 import { Image, type ImageRef } from 'expo-image';
@@ -18,24 +14,15 @@ import ImageMemoryPressure from '@modules/image-memory-pressure/src/ImageMemoryP
 
 const isLowTier = getDeviceTier() === 'low';
 
-/**
- * Decoded bitmap edge cap; inline emotes render ~30pt (~90px at 3x) and
- * loadAsync only downscales, so this bounds memory without enlarging small art.
- */
 export const EMOTE_DECODE_MAX_PX = isLowTier ? 64 : 96;
 
 const MAX_ENTRIES = isLowTier ? 1200 : 2400;
 
-/**
- * Primary byte budget, ~5% of device RAM clamped to per-tier bounds; entry
- * count alone under-counted animated emotes and OOM'd iOS (FOAM-TV-MOBILE-BG).
- */
 const MAX_DECODED_BYTES = (() => {
   const ceil = isLowTier ? 128 * 1024 * 1024 : 600 * 1024 * 1024;
   const floor = isLowTier ? 96 * 1024 * 1024 : 192 * 1024 * 1024;
   const totalMemoryBytes = getTotalDeviceMemoryBytes();
 
-  // Unknown RAM uses the floor, not the high-tier ceiling.
   if (totalMemoryBytes <= 0) {
     return floor;
   }
@@ -43,18 +30,11 @@ const MAX_DECODED_BYTES = (() => {
   return Math.max(floor, Math.min(ceil, Math.floor(totalMemoryBytes * 0.05)));
 })();
 
-/**
- * Frame buffers for animated AVIF/WebP; 8x under-counted (FOAM-TV-MOBILE-BG).
- */
 const ANIMATED_BYTE_FACTOR = 16;
 
 type CacheEntry = {
   ref: ImageRef;
   bytes: number;
-  /**
-   * Intrinsic width / height, so the renderer can size emotes whose provider
-   * gives no dimensions.
-   */
   aspect: number | null;
 };
 
@@ -62,10 +42,6 @@ const refs = new Map<string, CacheEntry>();
 let totalBytes = 0;
 const pinned = new Set<string>();
 
-/**
- * In-flight url -> cacheEpoch at decode start; a clear bumps the epoch so a
- * late decode cannot repopulate the cache or delete a newer request's marker.
- */
 const inflight = new Map<string, number>();
 
 const listeners = new Map<string, Set<() => void>>();
@@ -92,10 +68,6 @@ function reportSampledWarning(
   return next;
 }
 
-/**
- * Estimates cost without touching the ref: ImageRef getters are JSI hops and
- * were a measured hotspot during decode storms.
- */
 function estimateRefBytes(animated: boolean, maxPx: number): number {
   const pixelBytes = maxPx * maxPx * 4;
   return Math.round(animated ? pixelBytes * ANIMATED_BYTE_FACTOR : pixelBytes);
@@ -104,16 +76,8 @@ function estimateRefBytes(animated: boolean, maxPx: number): number {
 const pendingReleases: { url: string; ref: ImageRef; frames: number }[] = [];
 let releaseFlushScheduled = false;
 
-/**
- * Covers the mount race below, bounded so a subscribed url cannot defer its
- * release forever.
- */
 const MAX_RELEASE_DEFER_FRAMES = 2;
 
-/**
- * One sweep per flush: a channel hop releases hundreds of refs in one tick;
- * urls stay marked 1-2 frames for the subscribe-after-release race check.
- */
 let recentlyReleasedSweepScheduled = false;
 
 function scheduleRecentlyReleasedSweep(): void {
@@ -142,10 +106,6 @@ function markRecentlyReleased(url: string): void {
   scheduleRecentlyReleasedSweep();
 }
 
-/**
- * Release is deferred a frame: a synchronous release can detach a bitmap a
- * mounted Image still draws (blank emote).
- */
 function flushPendingReleases(): void {
   releaseFlushScheduled = false;
   const batch = pendingReleases.splice(0, pendingReleases.length);
@@ -155,7 +115,6 @@ function flushPendingReleases(): void {
       listeners.has(pending.url) &&
       pending.frames < MAX_RELEASE_DEFER_FRAMES
     ) {
-      // A subscriber raced in - retry next frame instead of detaching mid-draw.
       pending.frames += 1;
 
       pendingReleases.push(pending);
@@ -177,10 +136,6 @@ function flushPendingReleases(): void {
   }
 }
 
-/**
- * Drops the url now and queues the native release; waiting for JS GC is too
- * late under memory pressure. Returns whether the url was cached.
- */
 function releaseRef(url: string): boolean {
   const entry = refs.get(url);
 
@@ -205,10 +160,6 @@ function withinBudget(incomingBytes: number): boolean {
   );
 }
 
-/**
- * Evicts least-recently-rendered unpinned, unsubscribed refs until the decode
- * fits; releasing a live listener's ref frees nothing yet uncounts its bytes.
- */
 function evictUnpinnedToFit(incomingBytes: number): void {
   if (withinBudget(incomingBytes)) {
     return;
@@ -229,11 +180,6 @@ function evictUnpinnedToFit(incomingBytes: number): void {
 
 const MAX_CONCURRENT_DECODES = isLowTier ? 4 : 8;
 
-/**
- * A native load that never settles would hold its slot and in-flight marker
- * for the whole session. Eight of those and nothing decodes again. After this
- * long the slot is freed and the url can be requested again.
- */
 const DECODE_TIMEOUT_MS = 20_000;
 
 let activeDecodes = 0;
@@ -256,10 +202,6 @@ function acquireDecodeSlot(url: string, lowPriority = false): Promise<void> {
   });
 }
 
-/**
- * A queued warm decode can become visible; move its waiter to the normal queue
- * so the visible render is not stuck behind other warm work.
- */
 function promoteDecodeWaiter(url: string): void {
   const index = lowPriorityDecodeWaiters.findIndex(
     waiter => waiter.url === url,
@@ -281,10 +223,6 @@ function releaseDecodeSlot(): void {
   }
 }
 
-/**
- * Frees the JS slot after DECODE_TIMEOUT_MS; the native load keeps running and
- * `onLate` gets its result, since a slow download is still a good ref.
- */
 class EmoteDecodeTimeoutError extends Error {
   constructor(timeoutMs: number) {
     super(`emote decode timed out after ${timeoutMs}ms`);
@@ -292,10 +230,6 @@ class EmoteDecodeTimeoutError extends Error {
   }
 }
 
-/**
- * Urls whose decode failed (not timed out). A broken url stays broken, so the
- * warmers and rows do not queue it for decode again until the cache clears.
- */
 const failedDecodes = new Set<string>();
 
 const MAX_FAILED_DECODES = 500;
@@ -332,7 +266,6 @@ function loadWithTimeout(
         // ignore
       });
 
-      // A channel hop already abandoned this decode; that is not a stall.
       if (requestEpoch === cacheEpoch) {
         decodeTimeoutCount = reportSampledWarning(
           'chat.emote.decode_timeout',
@@ -365,18 +298,10 @@ export function getCachedEmoteRef(url: string): ImageRef | null {
   return refs.get(url)?.ref ?? null;
 }
 
-/**
- * Intrinsic width / height of the decoded emote, or null if not decoded yet;
- * sizes emotes whose provider gives no dimensions (Twitch, BTTV).
- */
 export function getCachedEmoteAspectRatio(url: string): number | null {
   return refs.get(url)?.aspect ?? null;
 }
 
-/**
- * Re-inserts at the Map's end so eviction drops the least-recently-rendered
- * ref; kept out of getCachedEmoteRef so the store snapshot stays pure.
- */
 export function touchCachedEmoteRef(url: string): void {
   const entry = refs.get(url);
   if (entry !== undefined) {
@@ -441,10 +366,6 @@ async function runDecode(
   }
 }
 
-/**
- * A late ref (its slot already timed out) lands unless the cache moved on:
- * a newer decode for the url, an entry already present, or a channel hop.
- */
 function commitDecodedRef(
   url: string,
   maxPx: number,
@@ -458,7 +379,6 @@ function commitDecodedRef(
     : inflight.get(url) !== requestEpoch;
 
   if (superseded || requestEpoch !== cacheEpoch) {
-    // Decode outlived its epoch: release now, GC lags when memory is tight.
     try {
       ref.release();
     } catch {
@@ -477,7 +397,6 @@ function commitDecodedRef(
 
   evictUnpinnedToFit(cost);
 
-  // width/height is a JSI hop, but a one-off after the far costlier decode.
   refs.set(url, {
     ref,
     bytes: cost,
@@ -546,7 +465,6 @@ export function evictCachedEmoteRef(url: string): void {
 export function releaseChannelEmoteRefs({
   keepSubscribed = false,
 }: { keepSubscribed?: boolean } = {}): void {
-  // Deleting the current key during Map iteration is well-defined.
   for (const url of refs.keys()) {
     if (pinned.has(url)) {
       continue;
@@ -561,10 +479,6 @@ export function releaseChannelEmoteRefs({
   }
 }
 
-/**
- * Fences in-flight decodes on channel hop so stale results release on arrival;
- * memory trims must not call it - their decodes are for rows still on screen.
- */
 export function abortInflightEmoteDecodes(): void {
   cacheEpoch += 1;
   inflight.clear();
@@ -590,19 +504,8 @@ const IMAGE_CACHE_CLEAR_THROTTLE_MS = 30_000;
 let lastImageCacheClearAt = 0;
 
 type MemoryPressureTrimOptions = {
-  /**
-   * Shed refs but keep the expo-image cache; advisory trim levels use this.
-   */
   clearImageCache?: boolean;
-  /**
-   * Advisory trims keep subscribed refs - dropping one cold-decodes every
-   * mounted row. Free-memory-now signals never set it.
-   */
   keepSubscribed?: boolean;
-  /**
-   * Recurring triggers throttle the wipe; memoryWarning and backgrounding are
-   * free-memory-now signals and never set it.
-   */
   throttled?: boolean;
 };
 
@@ -632,10 +535,6 @@ function trimForMemoryPressure({
 
 type TrimDecodedEmotesReason = 'advisory' | 'reclaim';
 
-/**
- * 'advisory' keeps subscribed refs and throttles the image-cache wipe;
- * 'reclaim' (memoryWarning, backgrounding) is a full unthrottled shed.
- */
 export function trimDecodedEmotes(reason: TrimDecodedEmotesReason): void {
   if (reason === 'advisory') {
     trimForMemoryPressure({ keepSubscribed: true, throttled: true });
@@ -654,16 +553,11 @@ const LOW_MEMORY_HEADROOM_BYTES =
 
 const MEMORY_POLL_INTERVAL_MS = 5000;
 
-// Trims can recur every poll; throttle so a constrained session can't flood Sentry Logs.
 const MEMORY_PRESSURE_LOG_THROTTLE_MS = 60_000;
 
 let memoryMonitorTimer: ReturnType<typeof setInterval> | null = null;
 let lastMemoryPressureLogAt = 0;
 
-/**
- * Date.now only gates a log; a clock jump at worst drops or duplicates one
- * breadcrumb.
- */
 function logMemoryPressureTrim(
   cause: { availableBytes: number } | { trimLevel: number },
 ): void {
@@ -701,10 +595,6 @@ function pollMemoryHeadroom(): void {
   trimDecodedEmotes('advisory');
 }
 
-/**
- * Advisory, but only RUNNING_CRITICAL and above also clears the expo-image
- * memory cache; milder levels shed refs only.
- */
 function handleNativeMemoryPressure(event: ImageMemoryPressureEvent): void {
   logMemoryPressureTrim({ trimLevel: event.level });
   trimForMemoryPressure({
@@ -742,10 +632,6 @@ function handleAppStateForMemory(nextAppState: AppStateStatus): void {
   }
 }
 
-/**
- * Registered once for the app's lifetime; iOS memoryWarning fires too late
- * before a fast OOM, so the 5s headroom poll trims proactively.
- */
 export function subscribeEmoteCacheMemoryPressure(): void {
   if (memoryPressureSubscribed) {
     return;

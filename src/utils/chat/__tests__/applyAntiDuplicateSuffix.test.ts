@@ -31,8 +31,6 @@ describe('applyAntiDuplicateSuffix', () => {
     // Each send compares against what actually went on the wire.
     const second = applyAntiDuplicateSuffix('hello', 'hello');
 
-    // The third send is plain again because it differs from the suffixed
-    // second, which is what stops a run from colliding.
     expect(applyAntiDuplicateSuffix('hello', second)).toBe('hello');
   });
 });

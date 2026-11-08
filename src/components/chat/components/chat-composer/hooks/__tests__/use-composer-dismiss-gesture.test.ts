@@ -96,8 +96,6 @@ function mockCreateGestureMock(): GestureMock {
   return gesture;
 }
 
-// The root gesture-handler mock discards onEnd/onUpdate/onFinalize callbacks;
-// these tests invoke them directly, so the stubs capture them on GestureMock.
 const flingGestureStub = () => (mockLastFlingGesture = mockCreateGestureMock());
 
 const panGestureStub = () => (mockLastPanGesture = mockCreateGestureMock());
@@ -118,8 +116,6 @@ jest
   .spyOn(Gesture, 'Simultaneous')
   .mockImplementation(simultaneousGestureStub as never);
 
-// The root worklets mock schedules scheduleOnRN onto a microtask; these tests
-// assert synchronously, so run it inline.
 jest
   .spyOn(Worklets, 'scheduleOnRN')
   .mockImplementation((fn: () => void) => fn());

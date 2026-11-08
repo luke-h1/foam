@@ -21,9 +21,6 @@ const replyPreviewExiting = FadeOutDown.duration(140);
 
 const MESSAGE_LINE_HEIGHT = 20;
 
-/**
- * 36pt with a 20pt hit slop gives a touch target above the 44pt minimum.
- */
 const DISMISS_BUTTON_SIZE = 36;
 
 function ReplyPreviewMessage({ replyTo }: { replyTo: ReplyToData }) {

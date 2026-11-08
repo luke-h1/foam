@@ -46,10 +46,6 @@ function resolveCheermotePart(
   };
 }
 
-/**
- * Only called for messages carrying a bits tag, so ordinary words that merely
- * look like cheers ("word1") never reach this path.
- */
 export function applyCheermotesToTokens(
   tokens: MessageToken[],
   cheermotes: ChannelCheermotes,

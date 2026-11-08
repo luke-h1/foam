@@ -67,10 +67,6 @@ interface RefreshGlobalChatResourcesOptions {
   trigger: string;
 }
 
-/**
- * The one path that fetches the global slot. Concurrent callers share one
- * run, and a cache clear that lands mid-fetch fences the write-back.
- */
 export function refreshGlobalChatResources({
   channelId,
   trigger,
@@ -85,7 +81,6 @@ export function refreshGlobalChatResources({
 
     reportResourceResults({ channelId, settled, trigger });
 
-    // Without the fence, the pre-clear payload is written back stamped fresh.
     if (ctx.stillCurrent()) {
       writeGlobalResults(emoteSettled, badgeSettled);
     }
@@ -94,9 +89,6 @@ export function refreshGlobalChatResources({
   });
 }
 
-/**
- * Fills `chatStore$.persisted.globalCaches` without joining a channel.
- */
 export async function ensureGlobalChatResources(): Promise<void> {
   if (
     !isGlobalCacheStale(chatStore$.persisted.globalCaches.peek(), Date.now())

@@ -17,10 +17,6 @@ interface NoticeUserMessageProps {
   tokens: MessageToken[];
 }
 
-/**
- * The chatter's own message under a usernotice. It stays inside the chat row,
- * so emotes go through `EmoteToken` for their aspect ratio and the chat scale.
- */
 function NoticeUserMessageComponent({
   density,
   disableEmoteAnimations = false,

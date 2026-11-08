@@ -9,8 +9,6 @@ import { normaliseChatText } from '@app/utils/chat/normaliseChatText';
 
 import { PreferenceListEditor as IosPreferenceListEditor } from '../PreferenceListEditor.ios';
 
-// Jest resolves '../PreferenceListEditor' to the iOS variant, so the Android
-// and web editor loads by its full file name.
 const { PreferenceListEditor } = jest.requireActual<
   typeof import('../PreferenceListEditor')
 >('../PreferenceListEditor.tsx');

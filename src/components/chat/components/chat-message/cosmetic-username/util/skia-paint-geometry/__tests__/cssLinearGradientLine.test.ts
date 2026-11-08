@@ -44,7 +44,6 @@ describe('cssLinearGradientLine', () => {
   test('45deg on a wide box projects the box onto the gradient direction', () => {
     const line = cssLinearGradientLine(45, 100, 20);
 
-    // The line projects the box onto the gradient direction, so its endpoints sit outside the box, as in CSS.
     expect(line.length).toBeCloseTo(84.85281, 5);
 
     expect(line.start.x).toBeCloseTo(20, 5);

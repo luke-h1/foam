@@ -14,9 +14,6 @@ interface CapturedUsernameProps {
 
 let usernameProps: CapturedUsernameProps | undefined;
 
-/**
- * PaintedUsername is memo()-wrapped, so spyOn refuses to patch it.
- */
 Object.defineProperty(paintedUsernameModule, 'PaintedUsername', {
   configurable: true,
   value: (props: CapturedUsernameProps) => {

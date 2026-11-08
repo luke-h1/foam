@@ -39,10 +39,6 @@ type Story = StoryObj<typeof meta>;
 
 type SheetWrapperProps = Omit<SettingsSheetProps, 'onDismiss'>;
 
-/**
- * The chat mounts the sheet only while it is open, so the story does the
- * same after a short delay.
- */
 function SheetWrapper(props: SheetWrapperProps) {
   const [isMounted, setIsMounted] = useState(false);
 

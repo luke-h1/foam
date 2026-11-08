@@ -8,18 +8,8 @@ import { subscribeToAppStateTransitions } from '@app/utils/app-state/appStateTra
 import { getHeartbeatAction } from '@app/utils/chat/chatHeartbeat';
 import { logger } from '@app/utils/logger';
 
-/**
- * Half-open sockets often fire no close event, so we PING after this much
- * silence; RN's WebSocket exposes no ping frames, so this is the only detector.
- * Inbound lines count as activity, so a busy chat never pings and this only
- * costs radio on quiet rooms.
- */
 const CHAT_HEARTBEAT_INTERVAL_MS = 60_000;
 
-/**
- * Probe deadline after foreground/network regain - much faster than waiting
- * for the next heartbeat tick.
- */
 const CHAT_FOREGROUND_LIVENESS_DEADLINE_MS = 5000;
 
 interface UseChatLivenessWatchdogOptions {
@@ -30,15 +20,6 @@ interface UseChatLivenessWatchdogOptions {
   shouldConnect: boolean;
 }
 
-/**
- * Detects a dead IRC socket. A periodic probe catches a half-open socket that
- * still reports OPEN. Returning to the foreground or regaining the network
- * probes at once, without waiting for a full heartbeat cycle.
- *
- * Returns `noteActivity`, which the owner calls on open and on every inbound
- * chunk: any inbound line proves the socket is alive, and Twitch's PONG
- * arrives as a normal inbound line.
- */
 export function useChatLivenessWatchdog({
   getWebSocket,
   readyState,
@@ -48,10 +29,8 @@ export function useChatLivenessWatchdog({
 }: UseChatLivenessWatchdogOptions): () => void {
   const lastActivityAtRef = useRef(0);
 
-  // True while a probe PING is outstanding; surviving past the deadline means half-open.
   const awaitingPongRef = useRef(false);
 
-  // The heartbeat and the foreground check share awaitingPongRef, so a resume tick must not kill a socket whose probe is milliseconds old.
   const probeSentAtRef = useRef(0);
 
   const probeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -82,7 +61,6 @@ export function useChatLivenessWatchdog({
       return;
     }
 
-    // AppState and network-regain often fire together on resume - don't stack a second probe.
     if (awaitingPongRef.current) {
       return;
     }
@@ -152,13 +130,11 @@ export function useChatLivenessWatchdog({
           },
         );
 
-        // Reset the marker so the next tick does not close again before the reconnect lands.
         noteActivity();
         getWebSocketRef.current().close(4002, 'chat heartbeat timeout');
         return;
       }
 
-      // Same probe as the resume path, so the 5s deadline is armed now rather than judged next tick.
       verifyChatLivenessRef.current();
     }, CHAT_HEARTBEAT_INTERVAL_MS);
 
@@ -171,7 +147,6 @@ export function useChatLivenessWatchdog({
     verifyChatLivenessRef,
   ]);
 
-  // Re-verify liveness on foreground/network regain; otherwise a flapped socket takes a full heartbeat cycle to notice.
   useEffect(() => {
     if (!shouldConnect) {
       return;

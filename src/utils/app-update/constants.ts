@@ -3,11 +3,6 @@ import { isEnabled, type ReloadScreenOptions } from 'expo-updates';
 
 import { theme } from '@app/styles/themes';
 
-/**
- * Dev builds load JS from Metro, so they never check for or apply an OTA
- * update even when expo-updates is on. Web and Expo Go have no update
- * runtime at all.
- */
 export const OTA_UPDATES_ACTIVE =
   isEnabled &&
   !__DEV__ &&

@@ -213,7 +213,6 @@ describe('resolveMessageEmoteTokens chat GIFS', () => {
       userstate,
     });
 
-    // processTextChunk splits trailing whitespace onto its own text token.
     expect(tokens).toEqual<MessageToken[]>([
       { type: 'text', content: 'hello' },
       { type: 'text', content: ' ' },

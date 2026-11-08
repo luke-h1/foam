@@ -11,8 +11,6 @@ import {
 
 import { SavedPhrasesScreen } from '../SavedPhrasesScreen';
 
-// Jest resolves the editor to its iOS variant. These tests cover the Android
-// and web editor, so the mock loads that file by its full name.
 jest.mock('../components/PreferenceListEditor', () =>
   jest.requireActual('../components/PreferenceListEditor.tsx'),
 );

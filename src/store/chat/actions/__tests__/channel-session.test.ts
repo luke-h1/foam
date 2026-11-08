@@ -141,7 +141,6 @@ describe('resetChannelSession', () => {
   test('clear-cache drops the cached data, the cosmetics and the hydration keys', () => {
     resetChannelSession('clear-cache');
 
-    // The image cache clear arms a manifest check; a second clear cancels it.
     clearImageSessionCache();
 
     expect(readSession()).toEqual<SessionState>({

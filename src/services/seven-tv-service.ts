@@ -151,10 +151,6 @@ type V4PersonalEmoteSet = NonNullable<
   >['personalEmoteSet']
 >;
 
-/**
- * The fields of an emote set item that the set query and the personal set
- * query both return. Only the set query sends the per-item flags.
- */
 interface V4EmoteSetEntry {
   alias: string;
   flags?: { zeroWidth: boolean };

@@ -5,9 +5,6 @@ import { logger } from '@app/utils/logger';
 
 import { getStoreUrlAsync } from './getStoreUrlAsync';
 
-/**
- * Opens the store page for this build. Never rejects: a failure shows a toast.
- */
 export async function openStore(): Promise<void> {
   try {
     const storeUrl = await getStoreUrlAsync();

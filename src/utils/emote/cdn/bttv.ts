@@ -19,8 +19,6 @@ function parse(url: string): EmoteCdnAsset | null {
     id: match[1],
     // SAFETY: the pattern only matches a scale digit of 1-3.
     scale: `${match[2]}x` as EmoteImageScale,
-    // The bare url does not say whether the emote is animated. Only the
-    // `.png` form is always static.
     kind: match[3] ? 'static' : null,
     ext: match[3] ? 'png' : null,
   };
@@ -39,8 +37,6 @@ export const bttvEmoteCdn: EmoteCdn = {
     const animatedSet: EmoteImageVariantSet = {};
     const staticSet: EmoteImageVariantSet = {};
 
-    // An unknown emote keeps a `.png` static set, so "disable animations"
-    // still has a still frame to show for an animated emote.
     const staticKind = animated === false ? 'animated' : 'static';
 
     for (const scale of BTTV_SCALES) {

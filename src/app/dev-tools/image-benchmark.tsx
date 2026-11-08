@@ -2,7 +2,6 @@ import type { ComponentType } from 'react';
 
 import { Redirect } from 'expo-router';
 
-// The decode benchmark pulls in ~60KB of emote URLs plus the harness. Keep the EXPO_PUBLIC_APP_VARIANT checks as inline literals so Metro can constant-fold the require out of production builds. See src/screens/storybook/StorybookRoute.tsx.
 let ImageBenchmarkRoute: ComponentType = function ImageBenchmarkUnavailable() {
   return <Redirect href='/tabs/settings' />;
 };

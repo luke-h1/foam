@@ -1,9 +1,5 @@
 import type { ProviderId } from '@app/types/emote';
 
-/**
- * The spelling Sentry tags and log metadata use for a provider. Dashboards
- * group on these values, so they stay as they were.
- */
 export type ProviderMonitoringName =
   | 'twitch'
   | 'seven_tv'
@@ -83,14 +79,6 @@ export const SEVEN_TV_GQL_BASE_URL = 'https://7tv.io/v4';
 
 export const SEVEN_TV_GQL_PATH = '/gql';
 
-/**
- * The full 7TV GQL endpoint, for code that matches requests by url (the
- * Sentry GraphQL integration).
- */
 export const SEVEN_TV_GQL_URL = `${SEVEN_TV_GQL_BASE_URL}${SEVEN_TV_GQL_PATH}`;
 
-/**
- * The emote set id that stands for 7TV's global set. The set-id lookup returns
- * it for a channel that has no 7TV set of its own.
- */
 export const SEVEN_TV_GLOBAL_EMOTE_SET_ID = 'global';

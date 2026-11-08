@@ -19,10 +19,6 @@ interface ResolveMessageEmoteTokensOptions {
   show7TvEmotes: boolean;
   showChatGifs?: boolean;
   taggedSubscriberEmotes?: ReturnType<typeof extractEmotesFromTag>;
-  /**
-   * The message text, already trimmed by the caller (used both as the worklet
-   * input and as the basis for resolving tagged subscriber emotes).
-   */
   text: string;
   userId?: string;
   userLogin?: string | null;
@@ -61,10 +57,6 @@ function processTextChunk({
   });
 }
 
-/**
- * The single place that decides which emote sources feed a message, so live
- * ingest and the visible-message reprocess cannot diverge.
- */
 export function resolveMessageEmoteTokens({
   channelId,
   emoteData,
@@ -93,8 +85,6 @@ export function resolveMessageEmoteTokens({
       ? emoteData.twitchSubscriberEmotes
       : [];
 
-  // Keep the cached tagged-emotes array's identity when there is nothing to
-  // merge. A fresh array would miss the WeakMap content-id interning.
   let scopedTwitchSubscriberEmotes = twitchSubscriberEmotes;
 
   if (twitchTaggedSubscriberEmotes.length > 0) {
@@ -119,9 +109,6 @@ export function resolveMessageEmoteTokens({
   if (gifSpans.length === 0) {
     tokens = processTextChunk(textChunkOptions);
   } else {
-    // Emote tag positions are for the full body; after a GIF split, match by
-    // name from the subscriber pool already built above instead of re-using
-    // those offsets on a shorter chunk.
     const chunkedUserState = {
       ...userstate,
       emotes: undefined,
@@ -153,8 +140,6 @@ export function resolveMessageEmoteTokens({
     }
   }
 
-  // The worklet caches parsed tokens by text alone, so bits handling stays
-  // outside it and never mutates the cached array.
   const bits = Number.parseInt(userstate.bits ?? '', 10);
 
   const cheermotes =

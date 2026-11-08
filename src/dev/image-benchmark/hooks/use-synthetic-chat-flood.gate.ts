@@ -11,9 +11,6 @@ interface SyntheticChatFloodArgs {
   enabled: boolean;
 }
 
-/**
- * No-op in production; inline EXPO_PUBLIC_APP_VARIANT literals let Metro drop the require and fixtures - do not hoist them (mirrors StorybookRoute.tsx).
- */
 let useSyntheticChatFlood: (args: SyntheticChatFloodArgs) => void = () => {};
 
 if (

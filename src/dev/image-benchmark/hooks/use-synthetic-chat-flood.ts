@@ -18,14 +18,8 @@ type OnMessage = (
 let replayCursor = 0;
 let emitSeq = 0;
 
-/**
- * Bumped on reset so the running interval drops carryover/lastBurst and restarts its cadence.
- */
 let replayEpoch = 0;
 
-/**
- * Pool built once per room id so emitting costs a spread + two field writes, not a tag-object rebuild.
- */
 let builtPool: BuiltFixtureMessage[] | null = null;
 
 let builtPoolRoomId: string | null = null;
@@ -88,9 +82,6 @@ export function useSyntheticChatFlood({
       );
     };
 
-    /**
-     * Cap per tick and carry over so a burst surges instead of blocking the JS thread. Per-message setTimeout measured worse (180 timer fires/s) with unchanged jank.
-     */
     const MAX_EMIT_PER_TICK = 18;
 
     const interval = setInterval(() => {

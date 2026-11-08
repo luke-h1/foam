@@ -20,10 +20,6 @@ function skipSection(line: string, from: number, marker: number): number {
   return spaceIndex === -1 ? -1 : skipSpaces(line, spaceIndex + 1, line.length);
 }
 
-/**
- * A cheap PRIVMSG test that skips whitespace and sections the same way
- * `parseIrcMessage` does, without parsing the tags.
- */
 export function isPrivmsgLine(line: string): boolean {
   const tagsEnd = skipSection(line, skipLeadingWhitespace(line), AT_SIGN);
   const commandStart = skipSection(line, tagsEnd, COLON);

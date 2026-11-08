@@ -13,10 +13,6 @@ interface BuildIrcCredentialsOptions {
   membership: boolean;
 }
 
-/**
- * Picks the IRC login. Without both a login and a token, the client joins
- * anonymously as a `justinfan` nick.
- */
 export function buildIrcCredentials({
   accessToken,
   anonymousNick,

@@ -5,10 +5,6 @@ import { type EmojiStyle, getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
 
 import { CHAT_DELAY_OPTIONS, EMOJI_PREVIEW_SHORTCODES } from '../constants';
 
-/**
- * The SwiftUI picker tag for a chat delay. SwiftUI matches tags of one type,
- * and the delay mixes 'auto'/'off' with numbers, so the tag is a string.
- */
 export function chatDelayOptionTag(value: ChatDelaySetting): string {
   const option = CHAT_DELAY_OPTIONS[getOptionIndex(CHAT_DELAY_OPTIONS, value)];
 

@@ -26,10 +26,6 @@ const segmentColors = {
   inactiveContentColor: theme.color.textSecondary.dark,
 };
 
-/**
- * The Compose content of the control without its host, for a Compose tree
- * that already has one, such as a settings row.
- */
 export function SegmentedButtons({
   items,
   currentIndex,

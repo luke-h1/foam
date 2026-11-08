@@ -20,11 +20,6 @@ interface SuggestionListExtra<T> {
   onSelect: (item: T) => void;
 }
 
-/**
- * Module-level `renderItem` so its reference stays stable (LegendList tears
- * down rows otherwise); the item and the press handler come through
- * `extraData`.
- */
 function renderSuggestionItem<T>({
   item,
   extraData,

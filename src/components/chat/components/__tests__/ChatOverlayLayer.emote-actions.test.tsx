@@ -19,10 +19,6 @@ interface CapturedAssetPreviewProps {
 
 let assetPreviewProps: CapturedAssetPreviewProps | undefined;
 
-/**
- * AssetPreviewSheet is memo()-wrapped, so spyOn refuses to patch it; redefine
- * the export and capture what the layer hands it.
- */
 Object.defineProperty(assetPreviewSheetModule, 'AssetPreviewSheet', {
   configurable: true,
   value: (props: CapturedAssetPreviewProps) => {

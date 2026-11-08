@@ -63,10 +63,6 @@ const quickActionsAuthenticated: RouterAction[] = [
   },
 ];
 
-/**
- * AuthContext dedupes a callback delivered twice, and usePopulateAuth moves to
- * Following when the sign-in completes.
- */
 function handleAuthCallbackUrl(
   url: string | null | undefined,
   loginWithTwitch: AuthContextState['loginWithTwitch'],

@@ -293,7 +293,6 @@ export function createChatIrcHandlers({
       ),
     );
 
-    // The list renders the cleared store on the next frame; a scroll before that targets the removed rows.
     requestAnimationFrame(() => {
       listRef.current?.scrollToEnd({ animated: false });
     });

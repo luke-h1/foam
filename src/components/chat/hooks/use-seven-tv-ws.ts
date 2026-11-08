@@ -101,10 +101,6 @@ function logEventHandlerError(
   logger.stvWs.error(`Error handling ${eventType}:`, error);
 }
 
-/**
- * Runs one consumer callback. A throwing consumer must not stop the socket
- * from handling the rest of the frame.
- */
 function guardCallback(eventType: HandledSevenTvEventType, run: () => void) {
   try {
     run();
@@ -502,7 +498,6 @@ export function useSevenTvWs(
 
   const currentScreen = getSevenTvChatScreenFromPathname(pathname);
 
-  // The socket opens only once both ids are known, so the first subscribe never waits for them.
   const shouldConnect = Boolean(
     currentScreen && options?.twitchChannelId && options?.sevenTvEmoteSetId,
   );
@@ -653,7 +648,6 @@ export function useSevenTvWs(
     });
   };
 
-  // Entitlement bursts arrive hundreds at a time, so they commit together on the next frame.
   const queueEntitlementDecisions = (decisions: SevenTvWsDecision[]) => {
     pendingEntitlementsRef.current.push(...decisions);
 

@@ -8,10 +8,6 @@ export interface ReplyToData {
   messageId: string;
   username: string;
   message: string;
-  /**
-   * Parsed tokens of the replied-to message so the preview can render its
-   * emotes inline instead of showing their names as text.
-   */
   messageParts?: MessageToken[];
   login: string;
   color?: string;

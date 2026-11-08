@@ -31,10 +31,6 @@ export type MediaLinkTokenKind = Extract<
   'stvEmoteLink' | 'twitchClip'
 >;
 
-/**
- * The emote metadata an emote token carries. Every field is optional because a
- * token is built before its emote is resolved, and enrichment fills it in later.
- */
 type EmotePartFields = Partial<
   Pick<
     SanitisedEmote,
@@ -57,10 +53,6 @@ type EmotePartFields = Partial<
   aspect_ratio?: number;
   zero_width?: boolean;
 
-  /**
-   * Zero-width emotes rendered centered on top of this emote instead of as
-   * standalone tokens.
-   */
   overlaid?: MessageToken<'emote'>[];
 
   thumbnail?: string;
@@ -71,11 +63,6 @@ interface SubscriptionEventBase {
   message?: string;
 }
 
-/**
- * Every token shape, keyed by its `type` discriminant. `MessageToken<K>` is a
- * lookup into this map, so `MessageToken` narrows on `token.type` the way a
- * discriminated union should.
- */
 interface MessageTokenByKind {
   text: { type: 'text'; content: string };
   mention: {
@@ -229,7 +216,6 @@ interface MessageTokenByKind {
     reward: string;
     value: string;
     content: string;
-    // "LimeTitanTV\\swatched\\s20\\sconsecutive\\sstreams..."
     systemMsg: string;
     login: string;
     displayName: string;

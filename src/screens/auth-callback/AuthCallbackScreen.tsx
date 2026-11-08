@@ -16,11 +16,6 @@ function leaveCallbackScreen() {
   router.replace('/tabs/top');
 }
 
-/**
- * A successful exchange moves on through usePopulateAuth. This screen only
- * leaves by itself when the URL has no token or the exchange fails, so the
- * spinner never stays forever.
- */
 export function AuthCallbackScreen() {
   const url = useLinkingURL();
   const { loginWithTwitch } = useAuthContext();

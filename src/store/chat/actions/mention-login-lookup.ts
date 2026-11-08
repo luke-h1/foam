@@ -21,9 +21,6 @@ interface MentionLookupState {
   searchTimer: ReturnType<typeof setTimeout> | null;
   lastSearchQuery: string;
   searchRequestId: number;
-  /**
-   * Bumped on reset. A Helix response from an older generation is dropped.
-   */
   generation: number;
 }
 
@@ -41,10 +38,6 @@ interface ResolvedChatter {
   id?: string;
 }
 
-/**
- * Registers each chatter that Helix returned and bumps the mention colours
- * once if any login got new casing.
- */
 function registerResolvedChatters(chatters: ResolvedChatter[]): void {
   let didRegister = false;
 
@@ -120,10 +113,6 @@ async function flushPendingMentionLogins(): Promise<void> {
   }
 }
 
-/**
- * Registers every mention in `tokens`. A lowercase mention with no known
- * casing is queued for a Helix lookup, which gives it the chatter's casing.
- */
 export function registerMentionLoginsFromTokens(tokens: MessageToken[]): void {
   tokens.forEach(token => {
     if (token.type !== 'mention') {
@@ -198,11 +187,6 @@ export function queueMentionLoginSearch(query: string): void {
   }, MENTION_SEARCH_DELAY_MS);
 }
 
-/**
- * Clears the mention indexes and cancels every pending lookup. The generation
- * bump drops a Helix response that arrives after the reset, so it cannot write
- * the old channel's logins into the new index.
- */
 export function resetMentionLogins(): void {
   clearMentionIndexes();
   mentionLookupState.pendingLogins.clear();

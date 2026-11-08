@@ -45,8 +45,6 @@ export const createUserNoticeMessage = ({
   text,
   timestampFormat,
 }: CreateUserNoticeParams): AnyChatMessageType => {
-  // Twitch replays a USERNOTICE through recent-messages with the same id, so
-  // the nonce reuses the id and the store dedup index sees one message.
   const messageId = tags.id || generateNonce();
   const messageNonce = messageId;
   const userstate = createUserStateFromTags(tags);

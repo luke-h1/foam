@@ -18,9 +18,6 @@ export interface SettingsMenuRow {
    */
   pushes: boolean;
 
-  /**
-   * Shown under the label on Android. The iOS form shows the label only.
-   */
   subtitle?: string;
 }
 
@@ -117,10 +114,6 @@ interface GetUpdateMenuRowsOptions {
   updateBundle: () => void;
 }
 
-/**
- * The remote `bundleButtonEnabled` flag only gates iOS. Android always shows
- * the update bundle row.
- */
 export function getUpdateMenuRows({
   canSeeUpdateAppButton,
   bundleButtonEnabled,
@@ -163,10 +156,6 @@ interface GetSettingsMenuSectionsOptions {
   shouldShowDevTools: boolean;
 }
 
-/**
- * The sections of the settings index under the account section. The iOS form
- * and the Android list both render this table.
- */
 export function getSettingsMenuSections({
   updateRows,
   shouldShowDevTools,

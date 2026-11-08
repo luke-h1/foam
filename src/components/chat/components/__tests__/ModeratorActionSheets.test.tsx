@@ -6,8 +6,6 @@ import render from '@app/test/render';
 import { ActionSheet } from '../action-sheet/ActionSheet';
 import { UserActionSheet } from '../UserActionSheet';
 
-// The user card header looks the user up; a real request waits for an auth
-// token that this suite never sets.
 jest.spyOn(twitchService, 'getUser').mockReturnValue(new Promise(() => {}));
 
 describe('Moderator action sheets', () => {

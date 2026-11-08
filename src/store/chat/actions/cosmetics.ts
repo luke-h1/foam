@@ -107,10 +107,6 @@ const scheduleCosmeticsPersist = (
   }, COSMETICS_PERSIST_DEBOUNCE_MS);
 };
 
-/**
- * Writes a debounced cosmetics snapshot now, so no persist timer outlives the
- * session that armed it.
- */
 export const flushCosmeticsPersist = (): void => {
   if (cosmeticsPersistTimer) {
     clearTimeout(cosmeticsPersistTimer);
@@ -137,10 +133,6 @@ export type CachedUserCosmetics = {
 
 const sessionCosmeticsCache = new Map<string, CachedUserCosmetics>();
 
-/**
- * A full cosmetics cache drops its oldest fifth at once, so a burst of new
- * wearers does not evict one entry per write.
- */
 const TRIM_COUNT = Math.floor(MAX_COSMETIC_ENTRIES * 0.2);
 
 function dropOldestBindings(

@@ -78,10 +78,6 @@ function createBadgeEntitlement(ttvUserId: string, badgeId: string) {
   };
 }
 
-/**
- * The stored form of a legacy flat linear paint: the store lifts the top-level
- * gradient into one layer.
- */
 function storedLinearPaint(
   id: string,
   name: string,

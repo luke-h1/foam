@@ -7,9 +7,6 @@ import type { EmoteCdn, EmoteCdnAsset, EmoteCdnUrlOptions } from './types';
 const TWITCH_URL =
   /^https:\/\/static-cdn\.jtvnw\.net\/emoticons\/v2\/([^/]+)\/(default|static)\/dark\/([123]\.0)$/;
 
-/**
- * Twitch serves three sizes. Its largest, `3.0`, is the 4x image.
- */
 const TWITCH_SCALES = createScaleSlugs(
   { '1x': '1.0', '2x': '2.0', '4x': '3.0' },
   '4x',

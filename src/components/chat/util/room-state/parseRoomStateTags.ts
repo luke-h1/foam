@@ -5,10 +5,6 @@ function parseIntTag(value: string, fallback: number): number {
   return Number.isNaN(parsed) ? fallback : parsed;
 }
 
-/**
- * Twitch sends every mode on JOIN, but a later ROOMSTATE carries only the
- * tags that changed. The result holds only the modes present in `tags`.
- */
 export function parseRoomStateTags(
   tags: Record<string, string>,
 ): Partial<ParsedRoomState> {

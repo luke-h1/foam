@@ -38,10 +38,6 @@ export interface FetchOnceGuard {
   hasFetched(key: string): boolean;
   shouldFetch(key: string): boolean;
   markFetched(key: string): void;
-  /**
-   * Drops one key's stamp and in-flight tracking and fences out a running
-   * fetch for it, the same way `clear` does for every key.
-   */
   clearKey(key: string): void;
   /**
    * Drops all stamps and in-flight tracking and fences out running fetches:

@@ -17,10 +17,6 @@ interface PaintedUsernameProps {
   paint?: PaintData;
   userId?: string;
   fallbackColor?: string;
-  /**
-   * A deleted or timed-out message. The name keeps the hosted fill so the
-   * strikethrough in `usernameTextStyle` still draws.
-   */
   isModerated: boolean;
   showColon?: boolean;
   usernameTextStyle?: StyleProp<TextStyle>;

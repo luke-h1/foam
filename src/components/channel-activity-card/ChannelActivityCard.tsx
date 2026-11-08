@@ -7,11 +7,6 @@ import type { TextProps } from '@app/components/ui/text/Text.types';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 
-/**
- * The shared layout of the poll and prediction cards. Compose it from
- * ChannelActivityHeader, ChannelActivityTitle, ChannelActivityBars and
- * ChannelActivityFooter.
- */
 export function ChannelActivityCard({ children }: { children: ReactNode }) {
   return <View style={styles.container}>{children}</View>;
 }
@@ -53,9 +48,6 @@ interface ChannelActivityFooterProps {
   totalLabel: string;
   channelLogin: string;
 
-  /**
-   * The "do it on Twitch" link. Null hides it, for an activity that has ended.
-   */
   twitchLink: { label: string; color: TextProps['color'] } | null;
 }
 
@@ -91,10 +83,6 @@ interface ChannelActivityBarProps {
   children: ReactNode;
 }
 
-/**
- * One option row. An option with any votes shows at least a 4% fill, so a
- * small share is still visible.
- */
 export function ChannelActivityBar({
   children,
   fillColor,

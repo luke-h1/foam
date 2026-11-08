@@ -11,9 +11,6 @@ interface SuggestionRailChromeProps {
   title: string;
 }
 
-/**
- * A titled card above the composer.
- */
 export function SuggestionRailChrome({
   children,
   title,

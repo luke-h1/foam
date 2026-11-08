@@ -1,21 +1,10 @@
-/**
- * Twitch logins are 4-25 letters, digits or underscores. The pattern accepts
- * 1-25 so that a short legacy login still matches. The lookahead rejects a
- * run longer than 25, so a match never cuts a word in two.
- */
 const TWITCH_LOGIN_PATTERN = /^@([a-z0-9_]{1,25})(?![a-z0-9_])/i;
 
 export interface MentionLoginMatch {
   login: string;
-  /**
-   * The text after the login, such as trailing punctuation.
-   */
   rest: string;
 }
 
-/**
- * Splits `@login,` into the login and the text that follows it.
- */
 export function matchMentionLogin(word: string): MentionLoginMatch | null {
   const match = TWITCH_LOGIN_PATTERN.exec(word);
   const login = match?.[1];

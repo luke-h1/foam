@@ -9,11 +9,6 @@ export const MESSAGE_LONG_PRESS_DELAY_MS = 650;
 
 const LONG_PRESS_MOVE_TOLERANCE_DP = 10;
 
-/**
- * One long-press timer for the whole row. A long press over an emote opens the
- * channel's emote action sheet; anywhere else it runs onLongPress. A row with
- * no channel has no overlay layer to show the sheet.
- */
 export function useChatRowLongPress({
   canLongPress,
   channelId,
@@ -27,9 +22,6 @@ export function useChatRowLongPress({
     null,
   );
 
-  // Set from each emote's onTouchStart (which bubbles before the row's), so
-  // the single row-level long-press timer can open the emote sheet without a
-  // Pressable per emote (busy rows would mount hundreds of them).
   const pressedEmotePartRef = useRef<EmotePressData | null>(null);
 
   const rowTouchOriginRef = useRef<{ x: number; y: number } | null>(null);
@@ -90,8 +82,6 @@ export function useChatRowLongPress({
   }, []);
 
   const startRowLongPressTimer = (event: GestureResponderEvent) => {
-    // Only stop the timer here: the pressed emote (if any) was just recorded
-    // by the emote's own onTouchStart, which bubbles before the row's.
     stopRowLongPressTimer();
     releaseTouchHold();
 
