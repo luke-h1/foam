@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { getChatTextStyles } from '@app/components/chat/components/chat-message/ChatText.styles';
 import { Image } from '@app/components/image/Image';
 import { Text } from '@app/components/ui/text/Text';
+import type { ChatDensity } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
 
@@ -15,20 +16,20 @@ import { ChatPreferencePreview } from './ChatPreferencesPreview';
 export const DensityPreview = function DensityPreview({
   density,
 }: {
-  density: 'comfortable' | 'compact';
+  density: ChatDensity;
 }) {
   const compact = density === 'compact';
 
   return (
     <View style={[styles.previewPanel, compact && styles.previewPanelCompact]}>
       <PreviewMessage
-        compact={compact}
+        density={density}
         time='12:42'
         username='needlework'
         message='linework healed clean'
       />
       <PreviewMessage
-        compact={compact}
+        density={density}
         time='12:43'
         username='inkmod'
         message='shading pass is ready'
@@ -38,19 +39,19 @@ export const DensityPreview = function DensityPreview({
 };
 
 interface PreviewMessageProps {
-  compact: boolean;
+  density: ChatDensity;
   message: string;
   time: string;
   username: string;
 }
 
 const PreviewMessage = function PreviewMessage({
-  compact,
+  density,
   message,
   time,
   username,
 }: PreviewMessageProps) {
-  const textStyles = getChatTextStyles(undefined, compact);
+  const textStyles = getChatTextStyles(undefined, density);
 
   return (
     <View style={[styles.previewMessage, textStyles.row]}>

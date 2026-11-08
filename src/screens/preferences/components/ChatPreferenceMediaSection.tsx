@@ -5,58 +5,50 @@ import {
   SettingsToggleRow,
 } from '@app/components/settings-section/SettingsSection';
 import { Text } from '@app/components/ui/text/Text';
+import { updatePreferences, usePreference } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
 
+import {
+  CHAT_PREFERENCE_FOOTERS,
+  CHAT_PREFERENCE_ROWS as ROWS,
+  CHAT_PREFERENCE_SECTION_TITLES,
+} from '../constants';
 import { ChatPreferencePreview } from './ChatPreferencesPreview';
 
-interface ChatPreferenceMediaSectionProps {
-  handleDisableEmoteAnimationsToggle: (value: boolean) => void;
-  handleShowChatGifsToggle: (value: boolean) => void;
-  previewDisableEmoteAnimations: boolean;
-  previewShowChatGifs: boolean;
-}
+export function ChatPreferenceMediaSection() {
+  const disableEmoteAnimations = usePreference('disableEmoteAnimations');
+  const showChatGifs = usePreference('showChatGifs');
 
-export function ChatPreferenceMediaSection({
-  handleDisableEmoteAnimationsToggle,
-  previewDisableEmoteAnimations,
-  handleShowChatGifsToggle,
-  previewShowChatGifs,
-}: ChatPreferenceMediaSectionProps) {
   return (
     <SettingsSection
-      title='Media'
+      title={CHAT_PREFERENCE_SECTION_TITLES.media}
       footer={
         <Text color='gray.textLow' type='subhead'>
-          When on, animated Twitch, BTTV, FFZ, and 7TV emotes show as still
-          images.
+          {CHAT_PREFERENCE_FOOTERS.media}
         </Text>
       }
     >
       <SettingsToggleRow
-        title='Disable Emote Animations'
-        subtitle='Show emotes as still images'
-        icon={{
-          icon: 'slash.circle',
-          androidIcon: 'block',
-        }}
-        value={previewDisableEmoteAnimations}
-        onValueChange={handleDisableEmoteAnimationsToggle}
+        title={ROWS.disableEmoteAnimations.title}
+        subtitle={ROWS.disableEmoteAnimations.subtitle}
+        icon={ROWS.disableEmoteAnimations}
+        value={disableEmoteAnimations}
+        onValueChange={value =>
+          updatePreferences({ disableEmoteAnimations: value })
+        }
       />
       <View style={styles.settingsPreviewItem}>
         <ChatPreferencePreview
           variant='emoteAnimations'
-          value={previewDisableEmoteAnimations}
+          value={disableEmoteAnimations}
         />
       </View>
       <SettingsToggleRow
-        title='Show Chat GIFs'
-        subtitle='Loads third-party GIF media'
-        icon={{
-          icon: 'photo',
-          androidIcon: 'gif_box',
-        }}
-        value={previewShowChatGifs}
-        onValueChange={handleShowChatGifsToggle}
+        title={ROWS.showChatGifs.title}
+        subtitle={ROWS.showChatGifs.subtitle}
+        icon={ROWS.showChatGifs}
+        value={showChatGifs}
+        onValueChange={value => updatePreferences({ showChatGifs: value })}
       />
     </SettingsSection>
   );

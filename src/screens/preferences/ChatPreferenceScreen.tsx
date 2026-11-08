@@ -1,26 +1,20 @@
 import { useRef } from 'react';
-import {
-  Platform,
-  ScrollView,
-  type ScrollViewInstance,
-  StyleSheet,
-} from 'react-native';
+import { ScrollView, type ScrollViewInstance, StyleSheet } from 'react-native';
 
 import { useScrollToTop } from '@app/hooks/use-scroll-to-top';
 import { theme } from '@app/styles/themes';
 
-import { ChatPreferenceDefaultContent } from './components/ChatPreferenceDefaultContent';
-import { ChatPreferenceForm } from './components/ChatPreferenceForm';
+import { ChatPreferenceContextSection } from './components/ChatPreferenceContextSection';
+import { ChatPreferenceEmojiSection } from './components/ChatPreferenceEmojiSection';
+import { ChatPreferenceHighlightsSection } from './components/ChatPreferenceHighlightsSection';
+import { ChatPreferenceLayoutSection } from './components/ChatPreferenceLayoutSection';
+import { ChatPreferenceMediaSection } from './components/ChatPreferenceMediaSection';
+import { ChatPreferenceModerationSection } from './components/ChatPreferenceModerationSection';
+import { ChatPreferencePerformanceSection } from './components/ChatPreferencePerformanceSection';
+import { ChatPreferenceSyncSection } from './components/ChatPreferenceSyncSection';
+import { ChatProviderPreferenceSections } from './components/ChatProviderPreferenceSections';
 
 export function ChatPreferenceScreen() {
-  if (Platform.OS === 'ios') {
-    return <ChatPreferenceForm />;
-  }
-
-  return <ChatPreferenceScrollContent />;
-}
-
-export function ChatPreferenceScrollContent() {
   const scrollRef = useRef<ScrollViewInstance>(null);
 
   useScrollToTop(scrollRef);
@@ -33,7 +27,15 @@ export function ChatPreferenceScrollContent() {
       indicatorStyle='white'
       contentContainerStyle={styles.content}
     >
-      <ChatPreferenceDefaultContent />
+      <ChatPreferenceLayoutSection />
+      <ChatPreferenceEmojiSection />
+      <ChatPreferenceContextSection />
+      <ChatPreferenceSyncSection />
+      <ChatPreferenceHighlightsSection />
+      <ChatPreferenceModerationSection />
+      <ChatPreferencePerformanceSection />
+      <ChatProviderPreferenceSections />
+      <ChatPreferenceMediaSection />
     </ScrollView>
   );
 }

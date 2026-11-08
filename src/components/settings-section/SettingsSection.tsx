@@ -1,22 +1,21 @@
-import { Children, Fragment, isValidElement, type ReactNode } from 'react';
+import { Children, Fragment, isValidElement } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { PressableArea } from '@app/components/pressable-area/PressableArea';
+import { SegmentedControl } from '@app/components/segmented-control/SegmentedControl';
 import {
+  getOptionIndex,
   resolveIconName,
-  type RowIcon,
+  type SettingsLinkRowProps,
+  type SettingsRowProps,
+  type SettingsSectionProps,
+  type SettingsSegmentedRowProps,
+  type SettingsToggleRowProps,
 } from '@app/components/settings-section/SettingsSection.types';
 import { Switch } from '@app/components/switch/Switch';
 import { SymbolView } from '@app/components/ui/icon/Icon';
 import { Text } from '@app/components/ui/text/Text';
 import { theme } from '@app/styles/themes';
-
-interface SettingsSectionProps {
-  title?: string;
-  footer?: ReactNode;
-  children: ReactNode;
-  cardColor?: string;
-}
 
 export function SettingsSection({
   title,
@@ -53,21 +52,6 @@ export function SettingsSection({
       {footer ? <View style={styles.footer}>{footer}</View> : null}
     </View>
   );
-}
-
-interface SettingsRowProps {
-  title: string;
-  subtitle?: string;
-  icon?: RowIcon;
-  trailing?: ReactNode;
-  onPress?: () => void;
-  danger?: boolean;
-  disabled?: boolean;
-  /**
-   * A pressable row shows a chevron unless this is false. Action rows that
-   * run in place, rather than open a screen, turn it off.
-   */
-  chevron?: boolean;
 }
 
 export function SettingsRow({
@@ -128,15 +112,11 @@ export function SettingsRow({
   );
 }
 
-export function SettingsToggleRow(props: {
-  title: string;
-  subtitle?: string;
-  icon?: RowIcon;
-  value: boolean;
-  onValueChange: (value: boolean) => void;
-}) {
-  const { onValueChange, value, ...rowProps } = props;
-
+export function SettingsToggleRow({
+  onValueChange,
+  value,
+  ...rowProps
+}: SettingsToggleRowProps) {
   return (
     <SettingsRow
       {...rowProps}
@@ -153,16 +133,11 @@ export function SettingsToggleRow(props: {
   );
 }
 
-export function SettingsLinkRow(props: {
-  title: string;
-  subtitle?: string;
-  icon?: RowIcon;
-  value?: string;
-  onPress?: () => void;
-  danger?: boolean;
-}) {
-  const { value, onPress, ...rowProps } = props;
-
+export function SettingsLinkRow({
+  value,
+  onPress,
+  ...rowProps
+}: SettingsLinkRowProps) {
   return (
     <SettingsRow
       {...rowProps}
@@ -184,6 +159,36 @@ export function SettingsLinkRow(props: {
       }
       {...{ onPress }}
     />
+  );
+}
+
+export function SettingsSegmentedRow<Value>({
+  title,
+  subtitle,
+  icon,
+  options,
+  value,
+  onValueChange,
+}: SettingsSegmentedRowProps<Value>) {
+  const handleChange = (index: number) => {
+    const option = options[index];
+
+    if (option) {
+      onValueChange(option.value);
+    }
+  };
+
+  return (
+    <View>
+      <SettingsRow {...{ title, subtitle, icon }} />
+      <View style={styles.segmentedControl}>
+        <SegmentedControl
+          items={options}
+          currentIndex={getOptionIndex(options, value)}
+          onChange={handleChange}
+        />
+      </View>
+    </View>
   );
 }
 
@@ -231,6 +236,10 @@ const styles = StyleSheet.create({
     minHeight: 56,
     paddingHorizontal: theme.space16,
     paddingVertical: 14,
+  },
+  segmentedControl: {
+    paddingBottom: theme.space12,
+    paddingHorizontal: theme.space16,
   },
   section: {
     gap: theme.space8,

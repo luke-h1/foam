@@ -2,103 +2,76 @@ import { StyleSheet, View } from 'react-native';
 
 import {
   SettingsSection,
+  SettingsSegmentedRow,
   SettingsToggleRow,
 } from '@app/components/settings-section/SettingsSection';
-import type { ChatFontScale } from '@app/store/preference-store';
+import { getOptionIndex } from '@app/components/settings-section/SettingsSection.types';
+import { DENSITY_OPTIONS } from '@app/constants/chat-preferences';
+import { updatePreferences, usePreference } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
 
 import {
-  DENSITY_OPTIONS,
+  CHAT_PREFERENCE_ROWS as ROWS,
+  CHAT_PREFERENCE_SECTION_TITLES,
   FONT_SCALE_OPTIONS,
-} from '../util/chatPreferenceTypes';
+} from '../constants';
 import { DensityPreview } from './ChatPreferencePreviewWidgets';
-import { ChatPreferenceSegmentedSettingsRow } from './ChatPreferenceSettingsRows';
 import { ChatPreferencePreview } from './ChatPreferencesPreview';
 
-interface ChatPreferenceLayoutSectionProps {
-  animate: boolean;
-  densityIndex: number;
-  fontScaleIndex: number;
-  handleDensityChange: (index: number) => void;
-  handleFontScaleChange: (index: number) => void;
-  onAlternatingRowsToggle: (value: boolean) => void;
-  onAnimateChange: (value: boolean) => void;
-  previewAlternatingRows: boolean;
-  previewDensity: 'comfortable' | 'compact';
-  previewFontScale: ChatFontScale;
-}
+export function ChatPreferenceLayoutSection() {
+  const chatDensity = usePreference('chatDensity');
+  const chatFontScale = usePreference('chatFontScale');
+  const showAlternatingChatRows = usePreference('showAlternatingChatRows');
+  const animate = usePreference('animate');
 
-export function ChatPreferenceLayoutSection({
-  animate,
-  densityIndex,
-  fontScaleIndex,
-  handleDensityChange,
-  handleFontScaleChange,
-  onAnimateChange,
-  previewAlternatingRows,
-  previewFontScale,
-  previewDensity,
-  onAlternatingRowsToggle,
-}: ChatPreferenceLayoutSectionProps) {
+  const densitySubtitle =
+    DENSITY_OPTIONS[getOptionIndex(DENSITY_OPTIONS, chatDensity)]?.subtitle;
+
   return (
-    <SettingsSection title='Layout'>
-      <ChatPreferenceSegmentedSettingsRow
-        icon={{
-          icon: 'list.bullet',
-          androidIcon: 'format_list_bulleted',
-        }}
-        onSelectIndex={handleDensityChange}
-        selectedIndex={densityIndex}
-        subtitle={
-          previewDensity === 'compact'
-            ? 'Tighter rows for faster scanning'
-            : 'More space between rows'
-        }
-        title='Message Density'
-        values={DENSITY_OPTIONS.map(option => option.label)}
+    <SettingsSection title={CHAT_PREFERENCE_SECTION_TITLES.layout}>
+      <SettingsSegmentedRow
+        title={ROWS.density.title}
+        subtitle={densitySubtitle}
+        icon={ROWS.density}
+        options={DENSITY_OPTIONS}
+        value={chatDensity}
+        onValueChange={value => updatePreferences({ chatDensity: value })}
       />
       <View style={styles.settingsPreviewItem}>
-        <DensityPreview density={previewDensity} />
+        <DensityPreview density={chatDensity} />
       </View>
-      <ChatPreferenceSegmentedSettingsRow
-        icon={{
-          icon: 'textformat.size',
-          androidIcon: 'format_size',
-        }}
-        onSelectIndex={handleFontScaleChange}
-        selectedIndex={fontScaleIndex}
-        subtitle='Scales message text, usernames, and mentions'
-        title='Font Size'
-        values={FONT_SCALE_OPTIONS.map(option => option.label)}
+      <SettingsSegmentedRow
+        title={ROWS.fontScale.title}
+        subtitle={ROWS.fontScale.subtitle}
+        icon={ROWS.fontScale}
+        options={FONT_SCALE_OPTIONS}
+        value={chatFontScale}
+        onValueChange={value => updatePreferences({ chatFontScale: value })}
       />
       <View style={styles.settingsPreviewItem}>
-        <ChatPreferencePreview variant='fontScale' value={previewFontScale} />
+        <ChatPreferencePreview variant='fontScale' value={chatFontScale} />
       </View>
       <SettingsToggleRow
-        title='Alternating Rows'
-        subtitle='Stripe alternate chat lines'
-        icon={{
-          icon: 'line.3.horizontal',
-          androidIcon: 'menu',
-        }}
-        value={previewAlternatingRows}
-        onValueChange={onAlternatingRowsToggle}
+        title={ROWS.alternatingRows.title}
+        subtitle={ROWS.alternatingRows.subtitle}
+        icon={ROWS.alternatingRows}
+        value={showAlternatingChatRows}
+        onValueChange={value =>
+          updatePreferences({ showAlternatingChatRows: value })
+        }
       />
       <View style={styles.settingsPreviewItem}>
         <ChatPreferencePreview
           variant='alternatingRows'
-          value={previewAlternatingRows}
+          value={showAlternatingChatRows}
         />
       </View>
       <SettingsToggleRow
-        title='New Message Animation'
-        subtitle='Slide in new messages'
-        icon={{
-          icon: 'arrow.up.message',
-          androidIcon: 'animation',
-        }}
+        title={ROWS.animate.title}
+        subtitle={ROWS.animate.subtitle}
+        icon={ROWS.animate}
         value={animate}
-        onValueChange={onAnimateChange}
+        onValueChange={value => updatePreferences({ animate: value })}
       />
     </SettingsSection>
   );

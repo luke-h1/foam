@@ -1,24 +1,27 @@
 import { Picker, Section, Text as NativeText, Toggle } from '@expo/ui/swift-ui';
 import { tag } from '@expo/ui/swift-ui/modifiers';
 
-import type { Preferences } from '@app/store/preference-store';
+import { updatePreferences, usePreference } from '@app/store/preference-store';
 
-import { DELETED_STYLE_OPTIONS } from '../util/chatPreferenceTypes';
+import {
+  CHAT_PREFERENCE_ROWS as ROWS,
+  CHAT_PREFERENCE_SECTION_TITLES,
+  DELETED_STYLE_OPTIONS,
+} from '../constants';
 
-export function ChatPreferenceFormModerationSection({
-  preferences,
-  update,
-}: {
-  preferences: Preferences;
-  update: (payload: Partial<Preferences>) => void;
-}) {
+export function ChatPreferenceFormModerationSection() {
+  const deletedMessageStyle = usePreference('deletedMessageStyle');
+  const ignoreClearChat = usePreference('ignoreClearChat');
+
   return (
-    <Section title='Moderation'>
+    <Section title={CHAT_PREFERENCE_SECTION_TITLES.moderation}>
       <Picker
-        label='Deleted Messages'
-        systemImage='trash.slash'
-        selection={preferences.deletedMessageStyle}
-        onSelectionChange={value => update({ deletedMessageStyle: value })}
+        label={ROWS.deletedMessages.title}
+        systemImage={ROWS.deletedMessages.icon}
+        selection={deletedMessageStyle}
+        onSelectionChange={value =>
+          updatePreferences({ deletedMessageStyle: value })
+        }
       >
         {DELETED_STYLE_OPTIONS.map(option => (
           <NativeText key={option.value} modifiers={[tag(option.value)]}>
@@ -27,10 +30,10 @@ export function ChatPreferenceFormModerationSection({
         ))}
       </Picker>
       <Toggle
-        label='Keep History on Clear'
-        systemImage='clock.arrow.circlepath'
-        isOn={preferences.ignoreClearChat}
-        onIsOnChange={value => update({ ignoreClearChat: value })}
+        label={ROWS.keepHistoryOnClear.title}
+        systemImage={ROWS.keepHistoryOnClear.icon}
+        isOn={ignoreClearChat}
+        onIsOnChange={value => updatePreferences({ ignoreClearChat: value })}
       />
     </Section>
   );

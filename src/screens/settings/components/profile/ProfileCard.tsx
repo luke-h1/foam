@@ -1,146 +1,31 @@
 import { useRef } from 'react';
 import {
-  Alert,
   ScrollView,
   type ScrollViewInstance,
   StyleSheet,
   View,
 } from 'react-native';
-import type { ReactNode } from 'react';
 
 import { router } from 'expo-router';
 
 import { Image } from '@app/components/image/Image';
 import { PressableArea } from '@app/components/pressable-area/PressableArea';
-import { SymbolView, type SymbolViewProps } from '@app/components/ui/icon/Icon';
+import {
+  SettingsLinkRow,
+  SettingsRow,
+  SettingsSection,
+} from '@app/components/settings-section/SettingsSection';
+import { SymbolView } from '@app/components/ui/icon/Icon';
 import { Text } from '@app/components/ui/text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useScrollToTop } from '@app/hooks/use-scroll-to-top';
 import { theme } from '@app/styles/themes';
-import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 
-/**
- * Foam has no backend accounts (sign-in is Twitch OAuth), so deletion goes through Twitch's Security & Privacy page with "Disable or Delete My Account".
- */
-const TWITCH_ACCOUNT_SETTINGS_URL = 'https://www.twitch.tv/settings/security';
-
-interface ProfileSectionProps {
-  title?: string;
-  footer?: ReactNode;
-  children: ReactNode;
-}
-
-interface InfoRowProps {
-  label: string;
-  value: string;
-  valueColor?: string;
-}
-
-interface ActionRowProps {
-  title: string;
-  icon: SymbolViewProps['name'];
-  onPress: () => void;
-  color?: string;
-  destructive?: boolean;
-  showChevron?: boolean;
-}
-
-function ProfileSection({ title, footer, children }: ProfileSectionProps) {
-  return (
-    <View style={styles.section}>
-      {title ? (
-        <Text type='caption' weight='semibold' style={styles.sectionTitle}>
-          {title}
-        </Text>
-      ) : null}
-      <View style={styles.sectionBody}>{children}</View>
-      {footer ? <View style={styles.sectionFooter}>{footer}</View> : null}
-    </View>
-  );
-}
-
-function InfoRow({ label, value, valueColor }: InfoRowProps) {
-  return (
-    <View style={styles.row}>
-      <Text type='body' weight='medium' style={styles.rowLabel}>
-        {label}
-      </Text>
-      <Text
-        type='subhead'
-        color='gray.textLow'
-        numberOfLines={1}
-        style={[styles.rowValue, valueColor ? { color: valueColor } : null]}
-      >
-        {value}
-      </Text>
-    </View>
-  );
-}
-
-function ActionRow({
-  title,
-  icon,
-  onPress,
-  color = theme.colorWhite,
-  destructive = false,
-  showChevron = true,
-}: ActionRowProps) {
-  const iconColor = destructive ? theme.colorRed : color;
-
-  return (
-    <PressableArea style={styles.pressableFill} onPress={onPress}>
-      <View style={styles.actionRow}>
-        <SymbolView name={icon} size={20} tintColor={iconColor} />
-        <Text
-          type='body'
-          weight='medium'
-          style={[styles.actionLabel, { color: iconColor }]}
-        >
-          {title}
-        </Text>
-        {showChevron ? (
-          <SymbolView
-            name='chevron.right'
-            size={18}
-            tintColor={theme.colorGreyAlpha}
-          />
-        ) : null}
-      </View>
-    </PressableArea>
-  );
-}
-
-function formatMemberSince(createdAt?: string) {
-  if (!createdAt) {
-    return 'Unknown';
-  }
-
-  const date = new Date(createdAt);
-
-  if (Number.isNaN(date.getTime())) {
-    return 'Unknown';
-  }
-
-  return date.toLocaleDateString(undefined, {
-    month: 'long',
-    year: 'numeric',
-  });
-}
-
-function confirmDeleteAccount() {
-  Alert.alert(
-    'Delete Account',
-    "Foam has no accounts of its own. You sign in with Twitch. To delete your account for good, continue to Twitch's account settings. To only remove your login from this device, use Log out above.",
-    [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Continue to Twitch',
-        style: 'destructive',
-        onPress: () => openLinkInBrowser(TWITCH_ACCOUNT_SETTINGS_URL),
-      },
-    ],
-  );
-}
+import {
+  confirmDeleteAccount,
+  confirmLogout,
+  formatMemberSince,
+} from './util/profileActions';
 
 export function ProfileCard() {
   const { user, logout } = useAuthContext();
@@ -150,24 +35,6 @@ export function ProfileCard() {
 
   const memberSince = formatMemberSince(user?.created_at);
 
-  const confirmLogout = () => {
-    Alert.alert('Sign Out', 'Sign out of your account?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign Out',
-        style: 'destructive',
-        onPress: () => {
-          void (async () => {
-            await logout();
-            setTimeout(() => {
-              router.replace('/tabs/top');
-            }, 300);
-          })();
-        },
-      },
-    ]);
-  };
-
   if (!user) {
     return (
       <ScrollView
@@ -176,7 +43,7 @@ export function ProfileCard() {
         contentContainerStyle={styles.scrollContent}
         contentInsetAdjustmentBehavior='automatic'
       >
-        <ProfileSection>
+        <SettingsSection>
           <View style={styles.signInPrompt}>
             <View style={styles.signInIcon}>
               <SymbolView
@@ -213,7 +80,7 @@ export function ProfileCard() {
               </View>
             </PressableArea>
           </View>
-        </ProfileSection>
+        </SettingsSection>
       </ScrollView>
     );
   }
@@ -226,7 +93,7 @@ export function ProfileCard() {
       contentInsetAdjustmentBehavior='automatic'
       showsVerticalScrollIndicator={false}
     >
-      <ProfileSection
+      <SettingsSection
         title='Account'
         footer={
           <Text type='caption' color='gray.textLow' style={styles.footerText}>
@@ -270,26 +137,27 @@ export function ProfileCard() {
           </View>
         </PressableArea>
 
-        <InfoRow label='Channel' value={user.broadcaster_type || 'Viewer'} />
-        <InfoRow label='Member Since' value={memberSince} />
-      </ProfileSection>
+        <SettingsLinkRow
+          title='Channel'
+          value={user.broadcaster_type || 'Viewer'}
+        />
+        <SettingsLinkRow title='Member Since' value={memberSince} />
+      </SettingsSection>
 
-      <ProfileSection title='Twitch'>
-        <ActionRow
+      <SettingsSection title='Twitch'>
+        <SettingsLinkRow
           title='My Channel'
-          icon='tv'
-          color={theme.colorWhite}
+          icon={{ icon: 'tv' }}
           onPress={() => router.push(`/streams/streamer-profile/${user.login}`)}
         />
-        <ActionRow
+        <SettingsLinkRow
           title='Blocked Users'
-          icon='person.crop.circle.badge.xmark'
-          color={theme.colorWhite}
+          icon={{ icon: 'person.crop.circle.badge.xmark' }}
           onPress={() => router.push('/preferences/blocked-users')}
         />
-      </ProfileSection>
+      </SettingsSection>
 
-      <ProfileSection
+      <SettingsSection
         title='Session'
         footer={
           <Text type='caption' color='gray.textLow' style={styles.footerText}>
@@ -297,16 +165,16 @@ export function ProfileCard() {
           </Text>
         }
       >
-        <ActionRow
+        <SettingsRow
           title='Log out'
-          icon='arrow.left.square'
-          destructive
-          showChevron={false}
-          onPress={confirmLogout}
+          icon={{ icon: 'arrow.left.square' }}
+          danger
+          chevron={false}
+          onPress={() => confirmLogout(logout)}
         />
-      </ProfileSection>
+      </SettingsSection>
 
-      <ProfileSection
+      <SettingsSection
         footer={
           <Text type='caption' color='gray.textLow' style={styles.footerText}>
             {
@@ -315,31 +183,19 @@ export function ProfileCard() {
           </Text>
         }
       >
-        <ActionRow
+        <SettingsRow
           title='Delete Account'
-          icon='trash.fill'
-          destructive
-          showChevron={false}
+          icon={{ icon: 'trash.fill' }}
+          danger
+          chevron={false}
           onPress={confirmDeleteAccount}
         />
-      </ProfileSection>
+      </SettingsSection>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  actionLabel: {
-    flex: 1,
-  },
-  actionRow: {
-    alignItems: 'center',
-    borderBottomColor: theme.colorBorderSecondary,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    gap: theme.space12,
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space16,
-  },
   avatar: {
     borderCurve: 'continuous',
     borderRadius: theme.radius.lg,
@@ -360,8 +216,6 @@ const styles = StyleSheet.create({
   },
   identityRow: {
     alignItems: 'center',
-    borderBottomColor: theme.colorBorderSecondary,
-    borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: theme.space12,
     padding: theme.space16,
@@ -389,45 +243,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space24,
     paddingVertical: theme.space12,
   },
-  row: {
-    alignItems: 'center',
-    borderBottomColor: theme.colorBorderSecondary,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    gap: theme.space16,
-    paddingHorizontal: theme.space16,
-    paddingVertical: 14,
-  },
-  rowLabel: {
-    color: theme.colorWhite,
-    flex: 1,
-  },
-  rowValue: {
-    maxWidth: '58%',
-    textAlign: 'right',
-  },
   scrollContent: {
-    gap: theme.space24,
     paddingBottom: theme.space56,
+    paddingHorizontal: theme.space16,
     paddingTop: theme.space16,
-  },
-  section: {
-    gap: theme.space8,
-  },
-  sectionBody: {
-    backgroundColor: theme.color.backgroundSecondary.dark,
-    borderCurve: 'continuous',
-    borderRadius: theme.radius.md,
-    marginHorizontal: theme.space16,
-    overflow: 'hidden',
-  },
-  sectionFooter: {
-    paddingHorizontal: theme.space16,
-    paddingTop: theme.space8,
-  },
-  sectionTitle: {
-    color: theme.color.textSecondary.dark,
-    paddingHorizontal: theme.space16,
   },
   signInDescription: {
     lineHeight: 20,

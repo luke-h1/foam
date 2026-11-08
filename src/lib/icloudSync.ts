@@ -1,7 +1,9 @@
 import {
   getPreferencesSchema,
-  initialPreferences,
+  migratePreferencesPayload,
   type Preferences,
+  type StoredPreferences,
+  toSyncedPreferences,
 } from '@app/store/preference-store';
 import { logger } from '@app/utils/logger';
 import type { ICloudSyncNativeModule } from '@modules/icloud-sync/src/ICloudSync.types';
@@ -18,7 +20,6 @@ function getICloudSyncModule(): ICloudSyncNativeModule | null {
   if (cachedModule === undefined) {
     try {
       cachedModule =
-        // eslint-disable-next-line @typescript-eslint/no-require-imports, global-require
         require('@modules/icloud-sync/src/ICloudSyncModule').default ?? null;
     } catch {
       cachedModule = null;
@@ -49,12 +50,15 @@ export function parsePreferencesPayload(
     return null;
   }
 
-  const merged =
-    parsed instanceof Object && !Array.isArray(parsed)
-      ? { ...initialPreferences, ...parsed }
-      : parsed;
+  if (!(parsed instanceof Object) || Array.isArray(parsed)) {
+    logger.main.warn('Discarded non-object iCloud preferences');
+    return null;
+  }
 
-  const result = getPreferencesSchema().safeParse(merged);
+  const result = getPreferencesSchema().safeParse(
+    // SAFETY: zod validates the migrated blob on this line, so a field with the wrong type still fails.
+    migratePreferencesPayload(parsed as StoredPreferences),
+  );
 
   if (!result.success) {
     logger.main.warn('Discarded malformed iCloud preferences', result.error);
@@ -87,7 +91,7 @@ export async function savePreferencesToICloud(
 
   await iCloudSyncModule.setString(
     ICLOUD_PREFERENCES_KEY,
-    JSON.stringify(preferences),
+    JSON.stringify(toSyncedPreferences(preferences)),
   );
 }
 

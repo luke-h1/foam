@@ -11,11 +11,6 @@ export interface GridFit {
   cellSize: number;
 }
 
-/**
- * Fits as many cells of about `targetCell` as the width allows, then grows
- * each cell so the row fills the width exactly, with no dead space at the
- * end of a row.
- */
 export function fitGrid({ width, targetCell, gap }: FitGridOptions): GridFit {
   const columns = Math.max(
     MIN_COLUMNS,

@@ -1,6 +1,7 @@
-import { Alert, Platform } from 'react-native';
+import { Alert } from 'react-native';
 
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { toast } from 'sonner-native';
 
 import {
   getPreferences,
@@ -10,15 +11,11 @@ import {
 
 import { SavedPhrasesScreen } from '../SavedPhrasesScreen';
 
-const originalOS = Platform.OS;
-
-beforeAll(() => {
-  Platform.OS = 'android';
-});
-
-afterAll(() => {
-  Platform.OS = originalOS;
-});
+// Jest resolves the editor to its iOS variant. These tests cover the Android
+// and web editor, so the mock loads that file by its full name.
+jest.mock('../components/PreferenceListEditor', () =>
+  jest.requireActual('../components/PreferenceListEditor.tsx'),
+);
 
 function seedSavedPhrases(savedPhrases: SavedPhrase[]) {
   replacePreferences({ ...getPreferences(), savedPhrases });
@@ -27,6 +24,7 @@ function seedSavedPhrases(savedPhrases: SavedPhrase[]) {
 describe('SavedPhrasesScreen', () => {
   beforeEach(() => {
     seedSavedPhrases([]);
+    jest.mocked(toast.error).mockClear();
   });
 
   test('shows the empty state when there are no saved phrases', () => {
@@ -128,27 +126,12 @@ describe('SavedPhrasesScreen', () => {
     fireEvent.press(screen.getByText('same phrase'));
     fireEvent(screen.getByDisplayValue('same phrase'), 'submitEditing');
 
+    expect(toast.error).not.toHaveBeenCalled();
+
+    expect(screen.queryByDisplayValue('same phrase')).not.toBeOnTheScreen();
+
     expect(getPreferences().savedPhrases).toEqual<SavedPhrase[]>([
       { id: 'a', text: 'same phrase' },
     ]);
-  });
-
-  describe('iOS native branch', () => {
-    beforeAll(() => {
-      Platform.OS = 'ios';
-    });
-
-    afterAll(() => {
-      Platform.OS = 'android';
-    });
-
-    // @expo/ui/swift-ui primitives render as opaque native host views; their text is not queryable in tests.
-    test('mounts the native list branch without crashing', () => {
-      seedSavedPhrases([{ id: 'a', text: 'be right back' }]);
-
-      render(<SavedPhrasesScreen />);
-
-      expect(screen.toJSON()).not.toBeNull();
-    });
   });
 });

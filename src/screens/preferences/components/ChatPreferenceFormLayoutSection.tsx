@@ -1,32 +1,35 @@
 import { Picker, Section, Text as NativeText, Toggle } from '@expo/ui/swift-ui';
 import { tag } from '@expo/ui/swift-ui/modifiers';
 
-import type { Preferences } from '@app/store/preference-store';
+import { DENSITY_OPTIONS } from '@app/constants/chat-preferences';
+import { updatePreferences, usePreference } from '@app/store/preference-store';
 
 import {
-  DENSITY_OPTIONS,
+  CHAT_PREFERENCE_ROWS as ROWS,
+  CHAT_PREFERENCE_SECTION_TITLES,
   FONT_SCALE_OPTIONS,
-} from '../util/chatPreferenceTypes';
+} from '../constants';
 import { hostPreview } from './ChatPreferenceFormHostPreview';
 import { DensityPreview } from './ChatPreferencePreviewWidgets';
 import { ChatPreferencePreview } from './ChatPreferencesPreview';
 
 export function ChatPreferenceFormLayoutSection({
-  preferences,
   previewWidth,
-  update,
 }: {
-  preferences: Preferences;
   previewWidth: number;
-  update: (payload: Partial<Preferences>) => void;
 }) {
+  const chatDensity = usePreference('chatDensity');
+  const chatFontScale = usePreference('chatFontScale');
+  const showAlternatingChatRows = usePreference('showAlternatingChatRows');
+  const animate = usePreference('animate');
+
   return (
-    <Section title='Layout'>
+    <Section title={CHAT_PREFERENCE_SECTION_TITLES.layout}>
       <Picker
-        label='Message Density'
-        systemImage='list.bullet'
-        selection={preferences.chatDensity}
-        onSelectionChange={value => update({ chatDensity: value })}
+        label={ROWS.density.title}
+        systemImage={ROWS.density.icon}
+        selection={chatDensity}
+        onSelectionChange={value => updatePreferences({ chatDensity: value })}
       >
         {DENSITY_OPTIONS.map(option => (
           <NativeText key={option.value} modifiers={[tag(option.value)]}>
@@ -34,15 +37,12 @@ export function ChatPreferenceFormLayoutSection({
           </NativeText>
         ))}
       </Picker>
-      {hostPreview(
-        <DensityPreview density={preferences.chatDensity} />,
-        previewWidth,
-      )}
+      {hostPreview(<DensityPreview density={chatDensity} />, previewWidth)}
       <Picker
-        label='Font Size'
-        systemImage='textformat.size'
-        selection={preferences.chatFontScale}
-        onSelectionChange={value => update({ chatFontScale: value })}
+        label={ROWS.fontScale.title}
+        systemImage={ROWS.fontScale.icon}
+        selection={chatFontScale}
+        onSelectionChange={value => updatePreferences({ chatFontScale: value })}
       >
         {FONT_SCALE_OPTIONS.map(option => (
           <NativeText key={option.value} modifiers={[tag(option.value)]}>
@@ -51,30 +51,29 @@ export function ChatPreferenceFormLayoutSection({
         ))}
       </Picker>
       {hostPreview(
-        <ChatPreferencePreview
-          variant='fontScale'
-          value={preferences.chatFontScale}
-        />,
+        <ChatPreferencePreview variant='fontScale' value={chatFontScale} />,
         previewWidth,
       )}
       <Toggle
-        label='Alternating Rows'
-        systemImage='line.3.horizontal'
-        isOn={preferences.showAlternatingChatRows}
-        onIsOnChange={value => update({ showAlternatingChatRows: value })}
+        label={ROWS.alternatingRows.title}
+        systemImage={ROWS.alternatingRows.icon}
+        isOn={showAlternatingChatRows}
+        onIsOnChange={value =>
+          updatePreferences({ showAlternatingChatRows: value })
+        }
       />
       {hostPreview(
         <ChatPreferencePreview
           variant='alternatingRows'
-          value={preferences.showAlternatingChatRows}
+          value={showAlternatingChatRows}
         />,
         previewWidth,
       )}
       <Toggle
-        label='New Message Animation'
-        systemImage='arrow.up.message'
-        isOn={preferences.animate}
-        onIsOnChange={value => update({ animate: value })}
+        label={ROWS.animate.title}
+        systemImage={ROWS.animate.icon}
+        isOn={animate}
+        onIsOnChange={value => updatePreferences({ animate: value })}
       />
     </Section>
   );

@@ -8,15 +8,11 @@ import {
 import { selection } from '@app/lib/haptics';
 import { theme } from '@app/styles/themes';
 
-type SegmentedControlItem = {
-  label: string;
-};
-
-type SegmentedControlProps = {
-  items: SegmentedControlItem[];
+interface SegmentedControlProps {
+  items: readonly { label: string }[];
   currentIndex: number;
   onChange: (index: number) => void;
-};
+}
 
 export function SegmentedControl({
   items,

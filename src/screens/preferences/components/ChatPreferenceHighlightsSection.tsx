@@ -6,42 +6,40 @@ import {
   SettingsToggleRow,
 } from '@app/components/settings-section/SettingsSection';
 import { Text } from '@app/components/ui/text/Text';
+import { updatePreferences, usePreference } from '@app/store/preference-store';
 
-export function ChatPreferenceHighlightsSection({
-  chatMentionHaptics,
-  onChatMentionHapticsChange,
-}: {
-  chatMentionHaptics: boolean | undefined;
-  onChatMentionHapticsChange: (value: boolean) => void;
-}) {
+import {
+  CHAT_PREFERENCE_FOOTERS,
+  CHAT_PREFERENCE_ROWS as ROWS,
+  CHAT_PREFERENCE_SECTION_TITLES,
+} from '../constants';
+
+export function ChatPreferenceHighlightsSection() {
+  const chatMentionHaptics = usePreference('chatMentionHaptics');
+
   return (
     <SettingsSection
-      title='Highlights'
+      title={CHAT_PREFERENCE_SECTION_TITLES.highlights}
       footer={
         <Text color='gray.textLow' type='subhead'>
-          Highlighted phrases tint matching messages. Mention feedback also
-          buzzes on a match.
+          {CHAT_PREFERENCE_FOOTERS.highlights}
         </Text>
       }
     >
       <SettingsLinkRow
-        title='Highlighted Phrases'
-        subtitle='Tint messages containing custom phrases'
-        icon={{
-          icon: 'highlighter',
-          androidIcon: 'edit',
-        }}
+        title={ROWS.highlightedPhrases.title}
+        subtitle={ROWS.highlightedPhrases.subtitle}
+        icon={ROWS.highlightedPhrases}
         onPress={() => router.push('/tabs/settings/chat-highlights')}
       />
       <SettingsToggleRow
-        title='Mention Feedback'
-        subtitle='Buzz on mentions and highlight matches'
-        icon={{
-          icon: 'hand.tap',
-          androidIcon: 'touch_app',
-        }}
-        value={chatMentionHaptics !== false}
-        onValueChange={onChatMentionHapticsChange}
+        title={ROWS.mentionFeedback.title}
+        subtitle={ROWS.mentionFeedback.subtitle}
+        icon={ROWS.mentionFeedback}
+        value={chatMentionHaptics}
+        onValueChange={value =>
+          updatePreferences({ chatMentionHaptics: value })
+        }
       />
     </SettingsSection>
   );

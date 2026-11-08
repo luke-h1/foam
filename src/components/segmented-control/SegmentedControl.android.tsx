@@ -12,7 +12,7 @@ import { selection } from '@app/lib/haptics';
 import { theme } from '@app/styles/themes';
 
 interface SegmentedControlProps {
-  items: { label: string }[];
+  items: readonly { label: string }[];
   currentIndex: number;
   onChange: (index: number) => void;
 }
@@ -26,43 +26,53 @@ const segmentColors = {
   inactiveContentColor: theme.color.textSecondary.dark,
 };
 
-export function SegmentedControl({
+/**
+ * The Compose content of the control without its host, for a Compose tree
+ * that already has one, such as a settings row.
+ */
+export function SegmentedButtons({
   items,
   currentIndex,
   onChange,
 }: SegmentedControlProps) {
   return (
+    <SingleChoiceSegmentedButtonRow modifiers={[fillMaxWidth()]}>
+      {items.map((item, index) => (
+        <SegmentedButton
+          key={item.label}
+          colors={segmentColors}
+          enabled
+          onClick={() => {
+            onChange(index);
+            selection();
+          }}
+          selected={index === currentIndex}
+        >
+          <SegmentedButton.Label>
+            <Text
+              color={
+                index === currentIndex
+                  ? theme.color.text.dark
+                  : theme.color.textSecondary.dark
+              }
+              style={{ typography: 'labelLarge' }}
+            >
+              {item.label}
+            </Text>
+          </SegmentedButton.Label>
+        </SegmentedButton>
+      ))}
+    </SingleChoiceSegmentedButtonRow>
+  );
+}
+
+export function SegmentedControl(props: SegmentedControlProps) {
+  return (
     <FoamComposeHost
       matchContents={{ vertical: true }}
       style={styles.container}
     >
-      <SingleChoiceSegmentedButtonRow modifiers={[fillMaxWidth()]}>
-        {items.map((item, index) => (
-          <SegmentedButton
-            key={`${item.label}-${index}`}
-            colors={segmentColors}
-            enabled
-            onClick={() => {
-              onChange(index);
-              selection();
-            }}
-            selected={index === currentIndex}
-          >
-            <SegmentedButton.Label>
-              <Text
-                color={
-                  index === currentIndex
-                    ? theme.color.text.dark
-                    : theme.color.textSecondary.dark
-                }
-                style={{ typography: 'labelLarge' }}
-              >
-                {item.label}
-              </Text>
-            </SegmentedButton.Label>
-          </SegmentedButton>
-        ))}
-      </SingleChoiceSegmentedButtonRow>
+      <SegmentedButtons {...props} />
     </FoamComposeHost>
   );
 }

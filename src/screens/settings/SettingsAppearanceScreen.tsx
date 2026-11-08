@@ -1,6 +1,5 @@
 import { useRef } from 'react';
 import {
-  Platform,
   ScrollView,
   type ScrollViewInstance,
   StyleSheet,
@@ -8,23 +7,14 @@ import {
 } from 'react-native';
 
 import {
-  Form as NativeForm,
-  Host,
-  Section,
-  Text as NativeText,
-  Toggle,
-} from '@expo/ui/swift-ui';
-
-import {
   SettingsSection,
   SettingsToggleRow,
 } from '@app/components/settings-section/SettingsSection';
 import { useScrollToTop } from '@app/hooks/use-scroll-to-top';
-import {
-  usePreference,
-  useUpdatePreferences,
-} from '@app/store/preference-store';
+import { updatePreferences, usePreference } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
+
+import { SHAKE_TO_REPORT_ICON } from './constants';
 
 /**
  * Haptics and shake to report. The route keeps its `appearance` name so
@@ -33,47 +23,9 @@ import { theme } from '@app/styles/themes';
 export function SettingsAppearanceScreen() {
   const hapticFeedback = usePreference('hapticFeedback');
   const shakeToReport = usePreference('shakeToReport');
-  const update = useUpdatePreferences();
   const scrollRef = useRef<ScrollViewInstance>(null);
 
   useScrollToTop(scrollRef);
-
-  if (Platform.OS === 'ios') {
-    return (
-      <Host style={styles.iosHost}>
-        <NativeForm>
-          <Section
-            footer={
-              <NativeText>
-                Vibrate when you send a message, refresh, or change a setting.
-              </NativeText>
-            }
-          >
-            <Toggle
-              label='Haptics'
-              systemImage='hand.tap'
-              isOn={hapticFeedback}
-              onIsOnChange={value => update({ hapticFeedback: value })}
-            />
-          </Section>
-          <Section
-            footer={
-              <NativeText>
-                Shake your phone to open the feedback form.
-              </NativeText>
-            }
-          >
-            <Toggle
-              label='Shake to report a problem'
-              systemImage='iphone.gen3.radiowaves.left.and.right'
-              isOn={shakeToReport}
-              onIsOnChange={value => update({ shakeToReport: value })}
-            />
-          </Section>
-        </NativeForm>
-      </Host>
-    );
-  }
 
   return (
     <View style={styles.container}>
@@ -89,14 +41,16 @@ export function SettingsAppearanceScreen() {
             subtitle='Vibrate on send, refresh and setting changes'
             icon={{ icon: 'hand.tap' }}
             value={hapticFeedback}
-            onValueChange={value => update({ hapticFeedback: value })}
+            onValueChange={value =>
+              updatePreferences({ hapticFeedback: value })
+            }
           />
           <SettingsToggleRow
             title='Shake to report a problem'
             subtitle='Shake your phone to open the feedback form'
-            icon={{ icon: 'waveform.path' }}
+            icon={{ icon: SHAKE_TO_REPORT_ICON }}
             value={shakeToReport}
-            onValueChange={value => update({ shakeToReport: value })}
+            onValueChange={value => updatePreferences({ shakeToReport: value })}
           />
         </SettingsSection>
       </ScrollView>
@@ -113,8 +67,5 @@ const styles = StyleSheet.create({
     paddingBottom: theme.space56,
     paddingHorizontal: theme.space16,
     paddingTop: theme.space16,
-  },
-  iosHost: {
-    flex: 1,
   },
 });

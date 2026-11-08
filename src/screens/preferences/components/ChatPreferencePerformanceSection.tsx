@@ -1,36 +1,36 @@
-import { SettingsSection } from '@app/components/settings-section/SettingsSection';
+import {
+  SettingsSection,
+  SettingsSegmentedRow,
+} from '@app/components/settings-section/SettingsSection';
 import { Text } from '@app/components/ui/text/Text';
+import { updatePreferences, usePreference } from '@app/store/preference-store';
 
-import { SCROLLBACK_LABELS } from '../util/chatPreferenceTypes';
-import { ChatPreferenceSegmentedSettingsRow } from './ChatPreferenceSettingsRows';
+import {
+  CHAT_PREFERENCE_FOOTERS,
+  CHAT_PREFERENCE_ROWS as ROWS,
+  CHAT_PREFERENCE_SECTION_TITLES,
+  SCROLLBACK_OPTIONS,
+} from '../constants';
 
-export function ChatPreferencePerformanceSection({
-  handleScrollbackChange,
-  scrollbackIndex,
-}: {
-  handleScrollbackChange: (index: number) => void;
-  scrollbackIndex: number;
-}) {
+export function ChatPreferencePerformanceSection() {
+  const chatScrollback = usePreference('chatScrollback');
+
   return (
     <SettingsSection
-      title='Performance'
+      title={CHAT_PREFERENCE_SECTION_TITLES.performance}
       footer={
         <Text color='gray.textLow' type='subhead'>
-          Longer scrollback keeps more messages in memory. 200 is easier on
-          older devices.
+          {CHAT_PREFERENCE_FOOTERS.performance}
         </Text>
       }
     >
-      <ChatPreferenceSegmentedSettingsRow
-        icon={{
-          icon: 'text.line.last.and.arrowtriangle.forward',
-          androidIcon: 'sort',
-        }}
-        onSelectIndex={handleScrollbackChange}
-        selectedIndex={scrollbackIndex}
-        subtitle='Messages kept in chat history'
-        title='Scrollback'
-        values={SCROLLBACK_LABELS}
+      <SettingsSegmentedRow
+        title={ROWS.scrollback.title}
+        subtitle={ROWS.scrollback.subtitle}
+        icon={ROWS.scrollback}
+        options={SCROLLBACK_OPTIONS}
+        value={chatScrollback}
+        onValueChange={value => updatePreferences({ chatScrollback: value })}
       />
     </SettingsSection>
   );

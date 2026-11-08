@@ -6,34 +6,38 @@ import { ChatRow } from '@app/components/chat/components/chat-message/ChatRow';
 import { EmoteToken } from '@app/components/chat/components/chat-message/renderers/EmoteToken';
 import { SymbolView } from '@app/components/ui/icon/Icon';
 import { Text } from '@app/components/ui/text/Text';
-import { type ChatMessageType } from '@app/store/chat/types/constants';
-import { type ChatFontScale } from '@app/store/preference-store';
+import {
+  initialPreferences,
+  type Preferences,
+} from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
+import type { ChatMessageType } from '@app/types/chat/chatMessage';
 import { type UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import { type MessageToken } from '@app/types/chat/messageToken';
 import { type SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { processEmotes } from '@app/utils/chat/emoteProcessor';
-import { type MessageToken } from '@app/utils/chat/messageToken';
 import { getMessageTokenText } from '@app/utils/chat/messageTokenContent';
 
 import { chatPreferencePreviewFixtures } from '../util/chatPreferencePreviewFixtures';
+import type { PreviewProvider } from '../util/chatPreferenceTypes';
 
 const PREVIEW_CHANNEL = 'preview';
 const PREVIEW_VIEWER_LOGIN = 'foamviewer';
 
-type PreviewProvider = '7tv' | 'bttv' | 'ffz' | 'twitch';
 type PreviewMessage = ChatMessageType<'usernotice'>;
 
-type PreviewState = {
-  chatDensity: 'comfortable' | 'compact';
-  chatFontScale: ChatFontScale;
-  chatTimestamps: boolean;
-  disableEmoteAnimations: boolean;
-  highlightOwnMentions: boolean;
-  showAlternatingChatRows: boolean;
-  showInlineReplyContext: boolean;
-  showUnreadJumpPill: boolean;
-};
+type PreviewState = Pick<
+  Preferences,
+  | 'chatDensity'
+  | 'chatFontScale'
+  | 'chatTimestamps'
+  | 'disableEmoteAnimations'
+  | 'highlightOwnMentions'
+  | 'showAlternatingChatRows'
+  | 'showInlineReplyContext'
+  | 'showUnreadJumpPill'
+>;
 
 type ProviderPreviewSample = {
   badges: SanitisedBadgeSet[];
@@ -64,14 +68,14 @@ export type ChatPreferencePreviewProps =
     };
 
 const PREVIEW_DEFAULTS: PreviewState = {
-  chatDensity: 'comfortable',
-  chatFontScale: 'default',
-  chatTimestamps: true,
-  disableEmoteAnimations: false,
-  highlightOwnMentions: true,
-  showAlternatingChatRows: false,
-  showInlineReplyContext: true,
-  showUnreadJumpPill: false,
+  chatDensity: initialPreferences.chatDensity,
+  chatFontScale: initialPreferences.chatFontScale,
+  chatTimestamps: initialPreferences.chatTimestamps,
+  disableEmoteAnimations: initialPreferences.disableEmoteAnimations,
+  highlightOwnMentions: initialPreferences.highlightOwnMentions,
+  showAlternatingChatRows: initialPreferences.showAlternatingChatRows,
+  showInlineReplyContext: initialPreferences.showInlineReplyContext,
+  showUnreadJumpPill: initialPreferences.showUnreadJumpPill,
 };
 
 const previewMessages = {

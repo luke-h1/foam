@@ -6,14 +6,17 @@ import {
 } from '@testing-library/react-native';
 
 import { ChatInlineImage } from '@app/components/chat/components/chat-message/renderers/ChatInlineImage';
-import { CHAT_SURFACE_COLORS } from '@app/components/chat/components/chat-message/util/chatScale';
 import {
   getPreferences,
   initialPreferences,
   replacePreferences,
 } from '@app/store/preference-store';
 
-import { ChatPreferenceScrollContent } from '../ChatPreferenceScreen';
+// Jest resolves '../ChatPreferenceScreen' to the iOS variant. These tests
+// cover the Android and web screen, so they load that file by its full name.
+const { ChatPreferenceScreen } = jest.requireActual<
+  typeof import('../ChatPreferenceScreen')
+>('../ChatPreferenceScreen.tsx');
 
 function isSwitchOn(label: string, index = 0): boolean {
   return screen.getAllByLabelText(label)[index]!.props['accessibilityState']
@@ -39,7 +42,7 @@ describe('ChatPreferenceScreen', () => {
   });
 
   test('hides the jump pill in the context preview when the toggle is turned off', () => {
-    render(<ChatPreferenceScrollContent />);
+    render(<ChatPreferenceScreen />);
 
     const preview = screen.getByTestId('chat-preference-preview-context');
 
@@ -57,7 +60,7 @@ describe('ChatPreferenceScreen', () => {
   });
 
   test('stripes the second preview row when alternating rows is turned on', () => {
-    render(<ChatPreferenceScrollContent />);
+    render(<ChatPreferenceScreen />);
 
     const getSecondRow = () =>
       within(
@@ -67,7 +70,7 @@ describe('ChatPreferenceScreen', () => {
     expect(isSwitchOn('Alternating Rows')).toBe(false);
 
     expect(getSecondRow()).not.toHaveStyle({
-      backgroundColor: CHAT_SURFACE_COLORS.alternatingRow,
+      backgroundColor: 'rgba(255, 255, 255, 0.03)',
     });
 
     fireEvent(screen.getByLabelText('Alternating Rows'), 'valueChange', true);
@@ -75,14 +78,14 @@ describe('ChatPreferenceScreen', () => {
     expect(isSwitchOn('Alternating Rows')).toBe(true);
 
     expect(getSecondRow()).toHaveStyle({
-      backgroundColor: CHAT_SURFACE_COLORS.alternatingRow,
+      backgroundColor: 'rgba(255, 255, 255, 0.03)',
     });
 
     expect(getPreferences().showAlternatingChatRows).toBe(true);
   });
 
   test('shows emote names as plain text in the 7TV preview when 7TV emotes are turned off', () => {
-    render(<ChatPreferenceScrollContent />);
+    render(<ChatPreferenceScreen />);
 
     const previewTestID = 'chat-preference-preview-7tv-emotes';
     expect(isSwitchOn('Emotes')).toBe(true);
@@ -108,7 +111,7 @@ describe('ChatPreferenceScreen', () => {
   });
 
   test('loads the static emote image in the preview when emote animations are disabled', () => {
-    render(<ChatPreferenceScrollContent />);
+    render(<ChatPreferenceScreen />);
 
     const previewTestID = 'chat-preference-preview-emote-animations';
 
