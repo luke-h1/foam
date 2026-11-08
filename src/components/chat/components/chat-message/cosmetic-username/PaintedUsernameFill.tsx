@@ -2,10 +2,9 @@ import { type StyleProp, StyleSheet, type TextStyle, View } from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
-import { isVisibleSevenTvColor } from '@app/utils/color/isVisibleSevenTvColor';
-import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 
 import { PaintLayerBackground } from './PaintLayerBackground';
+import { getPaintBaseColor } from './util/paint-layer/getPaintBaseColor';
 import { getPaintLayers } from './util/paint-layer/getPaintLayers';
 import { isRenderablePaintLayer } from './util/paint-layer/isRenderablePaintLayer';
 import { withPaintLayerKeys } from './util/paint-layer/paintLayerKey';
@@ -30,9 +29,7 @@ export function PaintedUsernameFill({
   const layers = getPaintLayers(paint).filter(isRenderablePaintLayer);
   const keyedLayers = withPaintLayerKeys([...layers].reverse());
 
-  const baseColor = isVisibleSevenTvColor(paint.color)
-    ? sevenTvColorToCss(paint.color)
-    : fallbackColor;
+  const baseColor = getPaintBaseColor(paint, fallbackColor);
 
   return (
     <View style={styles.stack}>

@@ -21,9 +21,7 @@ const meta = {
   title: 'components/Chat/notices',
   component: ChatRow,
   decorators: [chatStoryDecorator],
-  argTypes: {
-    onReply: { action: 'onReply' },
-  },
+  argTypes: {},
 } satisfies Meta<typeof ChatRow>;
 
 export default meta;
@@ -54,7 +52,6 @@ export const SubscriptionNotice: Story = {
       'msg-param-should-share-streak': '0',
       'msg-param-streak-months': '0',
     } satisfies SubscriptionTags,
-    onReply: () => {},
   },
 };
 
@@ -84,7 +81,6 @@ export const ResubscriptionNotice: Story = {
       'msg-param-should-share-streak': '1',
       'msg-param-streak-months': '6',
     } satisfies SubscriptionTags,
-    onReply: () => {},
   },
 };
 
@@ -107,7 +103,6 @@ export const AnonymousGiftPaidUpgrade: Story = {
       'msg-param-promo-name': 'Valorant',
       'msg-param-promo-gift-total': '5',
     },
-    onReply: () => {},
   },
 };
 
@@ -139,7 +134,6 @@ export const AnonymousGift: Story = {
       'msg-param-gift-months': '3',
       'msg-param-months': '3',
     },
-    onReply: () => {},
   },
 };
 
@@ -165,7 +159,6 @@ export const CommunityGiftNotice: Story = {
       'msg-param-mass-gift-count': '5',
       'msg-param-sender-count': '42',
     },
-    onReply: () => {},
   },
 };
 
@@ -192,7 +185,6 @@ export const GiftPaidUpgrade: Story = {
       'msg-param-promo-name': 'Subtember',
       'msg-param-promo-gift-total': '12',
     },
-    onReply: () => {},
   },
 };
 
@@ -215,7 +207,6 @@ export const RaidNotice: Story = {
       'msg-param-displayName': 'RaidLeader',
       'system-msg': '500 raiders from RaidLeader have joined!',
     },
-    onReply: () => {},
   },
 };
 
@@ -255,7 +246,6 @@ export const Announcement: Story = {
       isAnnouncement: true,
       showTimestamp: true,
     },
-    onReply: () => {},
   },
 };
 
@@ -292,7 +282,6 @@ export const AnnouncementPurple: Story = {
       isAnnouncement: true,
       showTimestamp: true,
     },
-    onReply: () => {},
   },
 };
 
@@ -318,7 +307,6 @@ export const ViewerMilestone: Story = {
       'msg-param-value': '20',
       'display-name': 'LimeTitanTV',
     },
-    onReply: () => {},
   },
 };
 
@@ -340,7 +328,6 @@ export const ModAnniversary: Story = {
       'display-name': 'Jimmotep',
       login: 'jimmotep',
     },
-    onReply: () => {},
   },
 };
 
@@ -355,7 +342,6 @@ export const StvEmoteAdded: Story = {
         },
       },
     ]),
-    onReply: () => {},
   },
 };
 
@@ -370,7 +356,6 @@ export const StvEmoteRemoved: Story = {
         },
       },
     ]),
-    onReply: () => {},
   },
 };
 
@@ -389,7 +374,6 @@ export const HighlightMyMessage: Story = {
     ),
     isChannelPointRedemption: true,
     isHighlightedMessage: true,
-    onReply: () => {},
   },
 };
 
@@ -408,7 +392,6 @@ export const ChannelPointRedemption: Story = {
       mockBadges,
     ),
     isChannelPointRedemption: true,
-    onReply: () => {},
   },
 };
 
@@ -423,7 +406,6 @@ export const ChannelPointRedemptionSystemNotice: Story = {
       [],
     ),
     isTwitchSystemNotice: true,
-    onReply: () => {},
   },
 };
 
@@ -440,7 +422,6 @@ export const CharityDonation: Story = {
         message: 'Great cause!',
       },
     ]),
-    onReply: () => {},
   },
 };
 
@@ -455,6 +436,5 @@ export const NewChatterRitual: Story = {
         message: '',
       },
     ]),
-    onReply: () => {},
   },
 };

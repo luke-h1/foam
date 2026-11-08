@@ -1,10 +1,9 @@
+import { swapSevenTvPaintLayerExt } from '@app/utils/emote/cdn/sevenTv';
+
 /**
  * Skia decodes WebP but not AVIF, so swap 7TV CDN AVIF layer urls to their
- * WebP sibling (same path, always served).
+ * WebP sibling.
  */
 export function skiaDecodableLayerUrl(url: string): string {
-  return url.replace(
-    /^(https:\/\/cdn\.7tv\.app\/paint\/[^?\s]+)\.avif(\?\S*)?$/,
-    '$1.webp$2',
-  );
+  return swapSevenTvPaintLayerExt(url, 'avif', 'webp');
 }

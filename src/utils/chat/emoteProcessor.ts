@@ -1,11 +1,14 @@
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import type { SanitisedEmote } from '@app/types/emote';
+import {
+  matchMentionLogin,
+  type MentionLoginMatch,
+} from '@app/utils/chat/chat-usernames/twitchLogin';
 import { getEmoteArrayContentKey } from '@app/utils/chat/emoteArrayContentKey';
-import { parseWordLinkParts } from '@app/utils/chat/parse-word-link-tokens/parseWordLinkTokens';
+import { parseWordLinkTokens } from '@app/utils/chat/parse-word-link-tokens/parseWordLinkTokens';
 import { evictOldestWhenFull } from '@app/utils/collection/evictOldestWhenFull';
 
-import { queueMentionLoginsFromParts } from './mention-login-resolver/queueMentionLoginsFromTokens';
-import type { MessageToken } from './messageToken';
 import { applyMentionLoginCasing } from './resolve-mention-login/applyMentionLoginCasing';
 import { stripInvisibleChars } from './stripInvisibleChars';
 
@@ -38,11 +41,11 @@ const scopedLookupCache = new Map<
 
 const MAX_SCOPED_LOOKUP_CACHE_SIZE = 256;
 
-type EmoteCollection = {
+interface EmoteCollection {
   cacheKey: string;
   emojiMap: ReadonlyMap<string, SanitisedEmote>;
   emoteMap: ReadonlyMap<string, SanitisedEmote>;
-};
+}
 
 let lastBaseKeyInputs: SanitisedEmote[][] | null = null;
 let lastBaseKey = '';
@@ -193,9 +196,6 @@ function getBaseCollection({
   return collection;
 }
 
-/**
- * Drops the oldest base collection plus every scoped lookup derived from it.
- */
 function evictOldestBaseCollection(): void {
   const firstKey = baseCollectionCache.keys().next().value;
 
@@ -311,9 +311,6 @@ function hasNonAsciiChar(word: string): boolean {
   return false;
 }
 
-/**
- * Index of the first non-whitespace token at or after `from`.
- */
 function skipWhitespaceForward(tokens: MessageToken[], from: number): number {
   let index = from;
 
@@ -324,9 +321,6 @@ function skipWhitespaceForward(tokens: MessageToken[], from: number): number {
   return index;
 }
 
-/**
- * Index of the last non-whitespace token at or before `from`, or -1.
- */
 function skipWhitespaceBackward(tokens: MessageToken[], from: number): number {
   let index = from;
 
@@ -369,10 +363,6 @@ function isWhitespacePart(token: MessageToken | undefined): boolean {
   return token?.type === 'text' && /^\s+$/.test(token.content);
 }
 
-/**
- * Folds a zero-width emote onto the emote in front of it. Returns true when
- * the token was absorbed, so the caller drops it instead of pushing it.
- */
 function stackZeroWidthEmote(
   out: MessageToken[],
   token: MessageToken<'emote'>,
@@ -411,7 +401,6 @@ function applyEmoteCompositionPass(tokens: MessageToken[]): MessageToken[] {
     const token = tokens[index];
 
     if (!token) {
-      // eslint-disable-next-line no-continue
       continue;
     }
 
@@ -420,7 +409,6 @@ function applyEmoteCompositionPass(tokens: MessageToken[]): MessageToken[] {
       token.zero_width &&
       stackZeroWidthEmote(out, token)
     ) {
-      // eslint-disable-next-line no-continue
       continue;
     }
 
@@ -436,7 +424,6 @@ function applyEmoteCompositionPass(tokens: MessageToken[]): MessageToken[] {
 
     if (tokens[modifierTarget]?.type === 'emote') {
       index = modifierTarget - 1;
-      // eslint-disable-next-line no-continue
       continue;
     }
 
@@ -447,7 +434,6 @@ function applyEmoteCompositionPass(tokens: MessageToken[]): MessageToken[] {
 
     if (ffzAnchor >= 0 && out[ffzAnchor]?.type === 'emote') {
       out.length = ffzAnchor + 1;
-      // eslint-disable-next-line no-continue
       continue;
     }
 
@@ -455,6 +441,11 @@ function applyEmoteCompositionPass(tokens: MessageToken[]): MessageToken[] {
   }
 
   return out;
+}
+
+function toMentionParts({ login, rest }: MentionLoginMatch): MessageToken[] {
+  const mention: MessageToken = { type: 'mention', content: `@${login}` };
+  return rest ? [mention, { type: 'text', content: rest }] : [mention];
 }
 
 export const processEmotes = (params: EmoteProcessorParams): MessageToken[] => {
@@ -523,7 +514,6 @@ export const processEmotes = (params: EmoteProcessorParams): MessageToken[] => {
 
     if (!word) {
       i += 1;
-      // eslint-disable-next-line no-continue
       continue;
     }
 
@@ -531,29 +521,24 @@ export const processEmotes = (params: EmoteProcessorParams): MessageToken[] => {
       result.push({ type: 'text', content: word });
       i += 1;
 
-      // eslint-disable-next-line no-continue
       continue;
     }
 
-    if (word.startsWith('@')) {
-      result.push({
-        type: 'mention',
-        content: word,
-      });
+    const mention = matchMentionLogin(word);
 
+    if (mention) {
+      result.push(...toMentionParts(mention));
       i += 1;
 
-      // eslint-disable-next-line no-continue
       continue;
     }
 
-    const linkParts = parseWordLinkParts(word);
+    const linkParts = parseWordLinkTokens(word);
 
     if (linkParts) {
       result.push(...linkParts);
       i += 1;
 
-      // eslint-disable-next-line no-continue
       continue;
     }
 
@@ -593,13 +578,8 @@ export const processEmotes = (params: EmoteProcessorParams): MessageToken[] => {
 
   evictOldestWhenFull(cache, MAX_CACHE_SIZE);
 
-  const resolvedResult = applyMentionLoginCasing(
-    applyEmoteCompositionPass(result),
-  );
+  const composedResult = applyEmoteCompositionPass(result);
+  cache.set(cacheKey, composedResult);
 
-  queueMentionLoginsFromParts(resolvedResult);
-
-  cache.set(cacheKey, resolvedResult);
-
-  return resolvedResult;
+  return applyMentionLoginCasing(composedResult);
 };

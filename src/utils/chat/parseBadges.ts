@@ -1,7 +1,7 @@
-type ParsedBadges = {
+interface ParsedBadges {
   'badges-raw': string;
   badges: Record<string, string>;
-};
+}
 
 /**
  * The IRC `badges` tag is a comma-separated string:

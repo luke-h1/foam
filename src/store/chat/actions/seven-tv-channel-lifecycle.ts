@@ -101,10 +101,6 @@ export const getSevenTvEmoteSetId = (channelId?: string): string | null => {
 // fetch's assign would win, leaving the cache on a stale set.
 const latestRequestedEmoteSetByChannel = new Map<string, string>();
 
-/**
- * Swap the channel's active 7TV set after a live `user.update` - replaces
- * the cached set wholesale instead of waiting for a channel re-entry.
- */
 export const switchSevenTvEmoteSet = async (
   channelId: string,
   newSetId: string,
@@ -131,7 +127,7 @@ export const switchSevenTvEmoteSet = async (
   invalidateSevenTvUser(channelId);
 
   try {
-    // eslint-disable-next-line react-doctor/async-defer-await -- guard checks state that goes stale during this await
+    // oxlint-disable-next-line react-doctor/async-defer-await -- guard checks state that goes stale during this await
     const newEmotes = await sevenTvService.getSanitisedEmoteSet(newSetId);
 
     if (latestRequestedEmoteSetByChannel.get(channelId) !== newSetId) {
@@ -147,7 +143,7 @@ export const switchSevenTvEmoteSet = async (
     channelCache.assign({
       sevenTvEmoteSetId: newSetId,
       sevenTvChannelEmotes: newEmotes,
-      lastUpdated: Date.now(),
+      sevenTvUpdatedAt: Date.now(),
     });
 
     logger.chat.info('Switched 7TV channel emote set', {
@@ -224,7 +220,7 @@ export const updateSevenTvEmotes = (
     const channelCache = chatStore$.persisted.channelCaches[channelId];
     if (channelCache) {
       channelCache.sevenTvChannelEmotes.set(updatedEmotes);
-      channelCache.lastUpdated.set(Date.now());
+      channelCache.sevenTvUpdatedAt.set(Date.now());
     }
   });
 };

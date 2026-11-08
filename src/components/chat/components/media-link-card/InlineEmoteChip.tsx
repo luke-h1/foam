@@ -1,4 +1,4 @@
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { BrandIcon } from '@app/components/brand-icon/BrandIcon';
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
@@ -9,17 +9,12 @@ import { styles } from './MediaLinkCard.styles';
 
 interface InlineEmoteChipProps {
   isPending: boolean;
-  onPress: () => void;
   thumbnail: string | undefined;
   title: string;
 }
 
-/**
- * The compact form a 7TV emote link takes inside a chat line.
- */
 export function InlineEmoteChip({
   isPending,
-  onPress,
   thumbnail,
   title,
 }: InlineEmoteChipProps) {
@@ -33,11 +28,7 @@ export function InlineEmoteChip({
   }
 
   return (
-    <Pressable
-      accessibilityRole='button'
-      onPress={onPress}
-      style={({ pressed }) => [styles.inlineChip, pressed && { opacity: 0.7 }]}
-    >
+    <View style={styles.inlineChip}>
       {thumbnail ? (
         <Image
           trackLoadContext='chat.media-link-inline'
@@ -55,6 +46,6 @@ export function InlineEmoteChip({
         {title}
       </ChatText>
       <BrandIcon name='stv' size='xs' />
-    </Pressable>
+    </View>
   );
 }

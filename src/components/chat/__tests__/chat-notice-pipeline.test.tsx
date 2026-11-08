@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 import { render } from '@testing-library/react-native';
 
 import {
@@ -19,11 +18,11 @@ import {
 import { ChatRow } from '@app/components/chat/components/chat-message/ChatRow';
 import { getChatRowItemType } from '@app/components/chat/util/chatRowItemType';
 import { twitchService } from '@app/services/twitch-service';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import type { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
 import type { TwitchClip } from '@app/types/twitch/clip';
 import { parseIrcMessage } from '@app/utils/chat/irc-protocol/parseIrcMessage';
-import { coerceUserNoticeTags } from '@app/utils/chat/message-handlers/coerceUserNoticeTags';
+import { routeIrcMessage } from '@app/utils/chat/irc-protocol/routeIrcMessage';
 import { createUserNoticeMessage } from '@app/utils/chat/message-handlers/createUserNoticeMessage';
 import * as dateModule from '@app/utils/date-time/date';
 
@@ -37,17 +36,26 @@ jest.spyOn(twitchService, 'getClip').mockResolvedValue({} as TwitchClip);
 
 function buildNoticeFromIrc(line: string): AnyChatMessageType {
   const parsed = parseIrcMessage(line);
+  let notice: AnyChatMessageType | undefined;
 
-  if (!parsed?.tags) {
-    throw new Error(`Test line did not parse as an IRC message: ${line}`);
+  if (parsed) {
+    routeIrcMessage(parsed, {
+      usernotice: (_channel, tags, text) => {
+        notice = createUserNoticeMessage({
+          timestampFormat: '24h',
+          tags,
+          channelName: 'foam',
+          text,
+        });
+      },
+    });
   }
 
-  return createUserNoticeMessage({
-    tags: coerceUserNoticeTags(parsed.tags),
-    channelName: 'foam',
-    text: parsed.params[1] ?? '',
-    broadcasterId: 'broadcaster-1',
-  });
+  if (!notice) {
+    throw new Error(`Test line did not parse as a USERNOTICE: ${line}`);
+  }
+
+  return notice;
 }
 
 function renderNoticeFromIrc(line: string) {
@@ -91,6 +99,19 @@ describe('chat notice pipeline', () => {
     expect(getByText('27 months')).toBeOnTheScreen();
 
     expect(getByText('still here')).toBeOnTheScreen();
+  });
+
+  test.each([
+    ['1000', 'Subscribed with Tier 1.'],
+    ['2000', 'Subscribed with Tier 2.'],
+    ['3000', 'Subscribed with Tier 3.'],
+    ['Prime', 'Subscribed with Prime.'],
+  ])('a sub on plan %s renders "%s"', (plan, sentence) => {
+    const { getByText } = renderNoticeFromIrc(
+      SUB.replace('msg-param-sub-plan=Prime', `msg-param-sub-plan=${plan}`),
+    );
+
+    expect(getByText(sentence)).toBeOnTheScreen();
   });
 
   test('a first-time sub renders without month copy', () => {
@@ -203,29 +224,11 @@ describe('chat notice pipeline', () => {
     ).toBeOnTheScreen();
   });
 
-  describe('row identity', () => {
-    test('each notice variant gets its own recycling identity', () => {
-      const itemTypes = ALL_NOTICES.map(([, line]) =>
-        getChatRowItemType(buildNoticeFromIrc(line)),
-      );
+  test('every notice variant gets a valid row identity', () => {
+    const itemTypes = ALL_NOTICES.map(([, line]) =>
+      getChatRowItemType(buildNoticeFromIrc(line)),
+    );
 
-      expect(itemTypes.every(itemType => itemType !== 'invalid')).toBe(true);
-    });
-
-    test('two notices of one variant split by how tall they render', () => {
-      const bare = buildNoticeFromIrc(SUB);
-
-      const wordy = buildNoticeFromIrc(
-        `${RESUB} been here since the beginning and I am not going anywhere, thank you for every stream this year and the last`,
-      );
-
-      expect(getChatRowItemType(bare)).not.toBe(getChatRowItemType(wordy));
-    });
-
-    test('a row identity stays put across repeated reads', () => {
-      const message = buildNoticeFromIrc(WATCH_STREAK);
-
-      expect(getChatRowItemType(message)).toBe(getChatRowItemType(message));
-    });
+    expect(itemTypes).not.toContain('invalid');
   });
 });

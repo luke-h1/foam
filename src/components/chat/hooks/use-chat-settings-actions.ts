@@ -5,43 +5,40 @@ import {
   clearCache,
   invalidateChatResourceCaches,
 } from '@app/store/chat/actions/channel-load';
-import { clearUserCosmeticsCache } from '@app/store/chat/actions/cosmetics';
+import { resetChannelSession } from '@app/store/chat/actions/channel-session';
 import { addMessage } from '@app/store/chat/actions/messages';
+import { getPreferences } from '@app/store/preference-store';
 import { createSystemMessage } from '@app/utils/chat/message-handlers/createSystemMessage';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
 import { logger } from '@app/utils/logger';
 
-interface UseChatSettingsActionsOptions<TRefetchedEmotes> {
+interface UseChatSettingsActionsOptions {
   channelId: string;
   channelName: string;
   forceFlush: () => void;
-  joinChannel: (channel: string) => void;
-  partChannel: (channel: string) => void;
-  refetchEmotes: () => Promise<TRefetchedEmotes>;
+  reconnect: () => void;
+  refetchEmotes: () => Promise<void>;
   reprocessAllMessages: () => void;
   scrollToBottom: () => void;
 }
 
 function handleClearSevenTvCosmeticsCache() {
-  clearUserCosmeticsCache();
+  resetChannelSession('clear-cosmetics');
   logger.chat.info('7TV cosmetic cache cleared successfully');
 }
 
-export function useChatSettingsActions<TRefetchedEmotes>({
+export function useChatSettingsActions({
   channelId,
   channelName,
   forceFlush,
-  joinChannel,
-  partChannel,
+  reconnect,
   refetchEmotes,
   reprocessAllMessages,
   scrollToBottom,
-}: UseChatSettingsActionsOptions<TRefetchedEmotes>) {
+}: UseChatSettingsActionsOptions) {
   const channelNameRef = useSyncRef(channelName);
   const refetchEmotesRef = useSyncRef(refetchEmotes);
   const reprocessAllMessagesRef = useSyncRef(reprocessAllMessages);
-  const partChannelRef = useSyncRef(partChannel);
-  const joinChannelRef = useSyncRef(joinChannel);
 
   const handleClearChatCache = useCallback(() => {
     clearCache(channelId);
@@ -69,6 +66,7 @@ export function useChatSettingsActions<TRefetchedEmotes>({
       createSystemMessage(
         channelNameRef.current,
         'Refreshed emotes and badges',
+        getPreferences().chatTimestampFormat,
       ),
     );
   }, [channelNameRef]);
@@ -77,7 +75,7 @@ export function useChatSettingsActions<TRefetchedEmotes>({
     void (async () => {
       try {
         invalidateChatResourceCaches(channelId);
-        clearUserCosmeticsCache();
+        resetChannelSession('clear-cosmetics');
         await clearImageCache();
         await refetchEmotesRef.current();
         reprocessAllMessagesRef.current();
@@ -88,19 +86,12 @@ export function useChatSettingsActions<TRefetchedEmotes>({
     })();
   }, [announceRefresh, channelId, refetchEmotesRef, reprocessAllMessagesRef]);
 
-  const handleSettingsReconnect = useCallback(() => {
-    partChannelRef.current(channelNameRef.current);
-    setTimeout(() => {
-      joinChannelRef.current(channelNameRef.current);
-    }, 1000);
-  }, [channelNameRef, joinChannelRef, partChannelRef]);
-
   return {
     handleClearChatCache,
     handleClearImageCache,
     handleClearSevenTvCosmeticsCache,
     handleRefreshEmotesAndBadges,
     handleResumeScrollToBottom,
-    handleSettingsReconnect,
+    handleSettingsReconnect: reconnect,
   };
 }

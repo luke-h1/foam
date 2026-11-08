@@ -3,7 +3,6 @@ import { type MutableRefObject, useEffect, useRef } from 'react';
 import { useSyncRef } from '@app/hooks/use-sync-ref';
 import { useUnmountCallback } from '@app/hooks/use-unmount-callback';
 import { resetChannelSession } from '@app/store/chat/actions/channel-session';
-import { clearMentionSessionCaches } from '@app/store/chat/actions/chat-color-caches';
 
 type PartChannel = (channelName: string) => void;
 
@@ -42,8 +41,6 @@ export function useChatLifecycle({
     channelName,
     partChannel,
     clearLocalMessages,
-    cleanupScroll,
-    cleanupMessages,
     cancelEmoteLoad,
     processedMessageIdsRef,
   });
@@ -53,10 +50,10 @@ export function useChatLifecycle({
       const lifecycle = lifecycleRef.current;
       lifecycle.cancelEmoteLoad();
       isMountedRef.current = false;
-      resetChannelSession('leave');
 
       if (!hasPartedRef.current) {
         hasPartedRef.current = true;
+        resetChannelSession('leave');
         lifecycle.partChannel(lifecycle.channelName);
       }
 
@@ -70,17 +67,13 @@ export function useChatLifecycle({
     };
   }, [navigation, lifecycleRef, isMountedRef]);
 
+  // The channel effect cleanup below also runs on unmount and resets the scroll, the buffers and the flags.
   useUnmountCallback(() => {
     const lifecycle = lifecycleRef.current;
-    isMountedRef.current = false;
-    hasPartedRef.current = false;
     lifecycle.cancelEmoteLoad();
     resetChannelSession('unmount');
     lifecycle.processedMessageIdsRef.current.clear();
     lifecycle.clearLocalMessages();
-    lifecycle.cleanupScroll();
-    lifecycle.cleanupMessages();
-    currentEmoteSetIdRef.current = null;
   });
 
   useEffect(() => {
@@ -105,7 +98,6 @@ export function useChatLifecycle({
     initializedChannelRef.current = channelId;
 
     return () => {
-      clearMentionSessionCaches();
       isMountedRef.current = false;
       hasPartedRef.current = false;
       currentEmoteSetIdRef.current = null;
@@ -121,10 +113,5 @@ export function useChatLifecycle({
     isMountedRef,
   ]);
 
-  return {
-    hasPartedRef,
-    initializedChannelRef,
-    isMountedRef,
-    currentEmoteSetIdRef,
-  };
+  return { currentEmoteSetIdRef };
 }

@@ -1,6 +1,3 @@
-/**
- * Chat modes parsed from an IRC ROOMSTATE message.
- */
 export interface ParsedRoomState {
   emoteOnly: boolean;
   followersOnlyMinutes: number;

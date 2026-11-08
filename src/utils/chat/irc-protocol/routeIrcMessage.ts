@@ -1,3 +1,4 @@
+import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import type { IrcMessage } from '@app/utils/chat/irc-protocol/parseIrcMessage';
 
 const EMPTY_TAGS: Record<string, string> = Object.freeze({});
@@ -8,11 +9,7 @@ export interface IrcRouteHandlers {
     tags: Record<string, string>,
     text: string,
   ) => void;
-  usernotice?: (
-    channel: string,
-    tags: Record<string, string>,
-    text: string,
-  ) => void;
+  usernotice?: (channel: string, tags: UserNoticeTags, text: string) => void;
   clearchat?: (
     channel: string,
     tags: Record<string, string>,
@@ -34,7 +31,7 @@ export interface IrcRouteHandlers {
   userstate?: (channel: string, tags: Record<string, string>) => void;
   globaluserstate?: (tags: Record<string, string>) => void;
   join?: (channel: string, nick: string) => void;
-  token?: (channel: string, nick: string) => void;
+  part?: (channel: string, nick: string) => void;
   ping?: (server: string) => void;
   reconnect?: () => void;
   welcome?: () => void;
@@ -118,7 +115,10 @@ export function routeIrcMessage(
 
     case 'USERNOTICE': {
       if (taggedChannel) {
-        handlers.usernotice?.(taggedChannel, tagsRecord, params[1] ?? '');
+        // SAFETY: Twitch sends msg-id on every USERNOTICE, and UserNoticeTags discriminates on it.
+        const noticeTags = tagsRecord as UserNoticeTags;
+
+        handlers.usernotice?.(taggedChannel, noticeTags, params[1] ?? '');
       }
 
       break;
@@ -183,7 +183,7 @@ export function routeIrcMessage(
       const nick = prefix?.split('!')[0];
 
       if (channel && nick) {
-        handlers.token?.(channel, nick);
+        handlers.part?.(channel, nick);
       }
 
       break;

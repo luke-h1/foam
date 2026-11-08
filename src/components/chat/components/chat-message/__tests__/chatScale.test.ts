@@ -1,11 +1,7 @@
+import type { ChatDensity, ChatFontScale } from '@app/store/preference-store';
+
 import { getChatTextStyles } from '../ChatText.styles';
-import {
-  CHAT_SURFACE_COLORS,
-  type ChatDensity,
-  type ChatFontScale,
-  densityFromCompact,
-  getChatScale,
-} from '../util/chatScale';
+import { getChatScale } from '../util/chatScale';
 
 const FONT_SCALES: ChatFontScale[] = ['small', 'default', 'large'];
 const DENSITIES: ChatDensity[] = ['comfortable', 'compact'];
@@ -13,7 +9,7 @@ const DENSITIES: ChatDensity[] = ['comfortable', 'compact'];
 describe('getChatScale', () => {
   test('resolves the default preference pair', () => {
     expect(getChatScale('default', 'comfortable')).toEqual({
-      badgeGap: 4,
+      accentInset: 6,
       badgeSize: 18,
       bodyFontSize: 14,
       bodyLineHeight: 21,
@@ -22,6 +18,7 @@ describe('getChatScale', () => {
       gap: 4,
       gifSize: 112,
       metaIconSize: 12,
+      pillPaddingVertical: 3,
       replyEmoteLineHeight: 24,
       replyEmoteSize: 20,
       rowPaddingHorizontal: 8,
@@ -113,39 +110,88 @@ describe('getChatScale', () => {
   });
 });
 
-describe('densityFromCompact', () => {
-  test('maps the compact flag onto a density', () => {
-    expect(densityFromCompact(true)).toBe('compact');
+describe('density fallback', () => {
+  test('reads a missing density as comfortable', () => {
+    expect(getChatScale('default', undefined)).toBe(
+      getChatScale('default', 'comfortable'),
+    );
 
-    expect(densityFromCompact(false)).toBe('comfortable');
-
-    expect(densityFromCompact(undefined)).toBe('comfortable');
+    expect(getChatTextStyles('default', undefined)).toBe(
+      getChatTextStyles('default', 'comfortable'),
+    );
   });
 });
 
 describe('getChatTextStyles', () => {
-  test('gives secondary text one muted colour everywhere', () => {
-    const textStyles = getChatTextStyles('default', false);
+  test('keeps the default row and notice chrome at its fixed pre-scale values', () => {
+    const textStyles = getChatTextStyles('default', 'comfortable');
 
-    expect(textStyles.timestamp.color).toBe(CHAT_SURFACE_COLORS.muted);
-
-    expect(textStyles.meta.color).toBe(CHAT_SURFACE_COLORS.muted);
-
-    expect(textStyles.replyContext.color).toBe(CHAT_SURFACE_COLORS.muted);
+    expect({
+      accentInset: textStyles.accentInset,
+      highlightInset: textStyles.highlightInset,
+      iconSpacing: textStyles.iconSpacing,
+      replyToYouPill: textStyles.replyToYouPill,
+      spaceBelow: textStyles.spaceBelow,
+      stackGap: textStyles.stackGap,
+      surface: textStyles.surface,
+    }).toEqual({
+      accentInset: { paddingLeft: 6 },
+      highlightInset: { paddingLeft: 4 },
+      iconSpacing: { marginRight: 4 },
+      replyToYouPill: { paddingHorizontal: 6, paddingVertical: 3 },
+      spaceBelow: { marginBottom: 4 },
+      stackGap: { gap: 4 },
+      surface: {
+        borderLeftWidth: 2,
+        marginVertical: 2,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+      },
+    });
   });
 
-  test('renders timestamps smaller than the body but on the same leading', () => {
-    const scale = getChatScale('default', 'comfortable');
-    const textStyles = getChatTextStyles('default', false);
+  test('scales the notice surface padding with the font scale', () => {
+    expect({
+      small: getChatTextStyles('small', 'comfortable').surface,
+      large: getChatTextStyles('large', 'comfortable').surface,
+    }).toEqual({
+      small: {
+        borderLeftWidth: 2,
+        marginVertical: 2,
+        paddingHorizontal: 7,
+        paddingVertical: 3,
+      },
+      large: {
+        borderLeftWidth: 2,
+        marginVertical: 2,
+        paddingHorizontal: 9,
+        paddingVertical: 5,
+      },
+    });
+  });
 
-    expect(textStyles.timestamp.fontSize).toBe(scale.secondaryFontSize);
+  test('gives secondary text one muted colour everywhere', () => {
+    const textStyles = getChatTextStyles('default', 'comfortable');
 
-    expect(textStyles.timestamp.fontSize).toBeLessThan(scale.bodyFontSize);
+    expect(textStyles.timestamp.color).toBe('#ADADB8');
+
+    expect(textStyles.meta.color).toBe('#ADADB8');
+
+    expect(textStyles.replyContext.color).toBe('#ADADB8');
+  });
+
+  test('renders timestamps smaller than the body, on the secondary leading', () => {
+    const { timestamp } = getChatTextStyles('default', 'comfortable');
+
+    expect({
+      fontSize: timestamp.fontSize,
+      lineHeight: timestamp.lineHeight,
+    }).toEqual({ fontSize: 12, lineHeight: 18 });
   });
 
   test('bolds usernames at the body size', () => {
     const scale = getChatScale('default', 'compact');
-    const textStyles = getChatTextStyles('default', true);
+    const textStyles = getChatTextStyles('default', 'compact');
 
     expect(textStyles.username.fontWeight).toBe('700');
 
@@ -155,14 +201,16 @@ describe('getChatTextStyles', () => {
   });
 
   test('drives row padding from the density', () => {
-    expect(getChatTextStyles('default', false).row.paddingVertical).toBe(5);
+    expect(
+      getChatTextStyles('default', 'comfortable').row.paddingVertical,
+    ).toBe(5);
 
-    expect(getChatTextStyles('default', true).row.paddingVertical).toBe(2);
+    expect(getChatTextStyles('default', 'compact').row.paddingVertical).toBe(2);
   });
 
   test('returns the identical style object for repeated lookups', () => {
-    expect(getChatTextStyles('small', true)).toBe(
-      getChatTextStyles('small', true),
+    expect(getChatTextStyles('small', 'compact')).toBe(
+      getChatTextStyles('small', 'compact'),
     );
   });
 });

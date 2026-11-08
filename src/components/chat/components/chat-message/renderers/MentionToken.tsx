@@ -6,19 +6,19 @@ import { useSelector } from '@legendapp/state/react';
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 import { getChatColorStyle } from '@app/components/chat/util/chatColorStyles';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
+import type { ChatDensity, ChatFontScale } from '@app/store/preference-store';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
-import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { formatMentionContent } from '@app/utils/chat/resolve-mention-login/formatMentionContent';
+import { resolveMentionColor } from '@app/utils/chat/resolveMentionColor';
 
 import { styles } from '../ChatRow.styles';
 import { getChatTextStyles } from '../ChatText.styles';
-import type { ChatFontScale } from '../util/chatScale';
 
 interface MentionTokenProps {
   content: string;
   baseTextStyle?: StyleProp<TextStyle>;
   emoteLineStyle?: StyleProp<TextStyle>;
-  compact?: boolean;
+  density?: ChatDensity;
   fontScale?: ChatFontScale;
   isModerated?: boolean;
   getMentionColor?: (username: string) => string;
@@ -35,7 +35,7 @@ function MentionTokenComponent({
   content,
   baseTextStyle,
   emoteLineStyle,
-  compact,
+  density,
   fontScale,
   isModerated,
   getMentionColor,
@@ -69,7 +69,7 @@ function MentionTokenComponent({
 
   const mentionColor = getMentionColor
     ? getMentionColor(mentionedUsername)
-    : generateRandomTwitchColor(mentionedUsername);
+    : resolveMentionColor(mentionedUsername);
 
   const isHighlightedMention =
     effectiveHighlightedUserSet?.has(normalisedMentionedUsername) ||
@@ -78,7 +78,7 @@ function MentionTokenComponent({
   return (
     <ChatText
       style={[
-        getChatTextStyles(fontScale, compact).mention,
+        getChatTextStyles(fontScale, density).mention,
         emoteLineStyle,
         isHighlightedMention && styles.mentionHighlighted,
         getChatColorStyle(mentionColor),

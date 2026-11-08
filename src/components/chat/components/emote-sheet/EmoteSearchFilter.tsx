@@ -9,7 +9,6 @@ import { emoteSheetStyles as styles } from './EmoteSheet.styles';
 
 interface EmoteSearchFilterProps {
   onChange?: (value: string) => void;
-  onSubmitEditing?: () => void;
   placeholder?: string;
   rightOnPress?: () => void;
   value?: string;
@@ -17,7 +16,6 @@ interface EmoteSearchFilterProps {
 
 export function EmoteSearchFilter({
   onChange,
-  onSubmitEditing,
   placeholder,
   rightOnPress,
   value,
@@ -43,7 +41,6 @@ export function EmoteSearchFilter({
         variant='soft'
         {...{
           onChangeText: onChange,
-          onSubmitEditing,
           placeholder,
           style: styles.searchInput,
           value,

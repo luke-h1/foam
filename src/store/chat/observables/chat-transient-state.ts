@@ -1,8 +1,5 @@
 import { observable } from '@legendapp/state';
 
-/**
- * Per-channel view-local chat state. Session-scoped and never persisted.
- */
 export interface ChatTransientChannelState {
   hiddenPhrases: string[];
   hiddenUsers: string[];

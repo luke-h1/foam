@@ -1,6 +1,6 @@
 import { measureFunction } from 'reassure';
 
-import { clearMentionLoginIndex } from '@app/utils/chat/resolve-mention-login/clearMentionLoginIndex';
+import { resetMentionLogins } from '@app/store/chat/actions/mention-login-lookup';
 import { registerMentionChatter } from '@app/utils/chat/resolve-mention-login/registerMentionChatter';
 import { registerMentionLogin } from '@app/utils/chat/resolve-mention-login/registerMentionLogin';
 import { searchMentionChatters } from '@app/utils/chat/resolve-mention-login/searchMentionChatters';
@@ -15,7 +15,7 @@ const MEASURE_OPTIONS = {
  * synthesise a colour per match.
  */
 function seedIndexes(): void {
-  clearMentionLoginIndex();
+  resetMentionLogins();
 
   for (let i = 0; i < 4000; i += 1) {
     registerMentionChatter({

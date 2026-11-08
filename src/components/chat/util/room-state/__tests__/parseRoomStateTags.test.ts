@@ -7,7 +7,7 @@ describe('parseRoomStateTags', () => {
   test('parses inactive room state tags', () => {
     expect(
       parseRoomStateTags({
-        emote_only: '0',
+        'emote-only': '0',
         'followers-only': '-1',
         r9k: '0',
         slow: '0',
@@ -19,7 +19,7 @@ describe('parseRoomStateTags', () => {
   test('parses active room state tags', () => {
     expect(
       parseRoomStateTags({
-        emote_only: '1',
+        'emote-only': '1',
         'followers-only': '10',
         r9k: '1',
         slow: '15',
@@ -34,8 +34,14 @@ describe('parseRoomStateTags', () => {
     });
   });
 
-  test('defaults missing tags to inactive values', () => {
-    expect(parseRoomStateTags({})).toEqual(emptyRoomState);
+  test('returns only the modes present in a partial ROOMSTATE', () => {
+    expect(parseRoomStateTags({ 'room-id': '12345', slow: '30' })).toEqual<
+      Partial<ParsedRoomState>
+    >({ slowSeconds: 30 });
+  });
+
+  test('returns no modes when no mode tags are present', () => {
+    expect(parseRoomStateTags({})).toEqual<Partial<ParsedRoomState>>({});
   });
 
   test('treats invalid numeric tags as safe defaults', () => {
@@ -44,6 +50,9 @@ describe('parseRoomStateTags', () => {
         'followers-only': 'not-a-number',
         slow: 'not-a-number',
       }),
-    ).toEqual(emptyRoomState);
+    ).toEqual<Partial<ParsedRoomState>>({
+      followersOnlyMinutes: -1,
+      slowSeconds: 0,
+    });
   });
 });

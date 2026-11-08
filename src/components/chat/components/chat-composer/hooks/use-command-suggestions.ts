@@ -1,15 +1,15 @@
 import { SLASH_COMMAND_DEFINITIONS } from '@app/components/chat/util/slash-command-definitions/slashCommandDefinitions';
 import { normaliseChatText } from '@app/utils/chat/normaliseChatText';
 
-interface UseCommandSuggestionsProps {
+interface UseCommandSuggestionsOptions {
   searchTerm: string;
   maxSuggestions?: number;
 }
 
 export function useCommandSuggestions({
   searchTerm,
-  maxSuggestions = 20,
-}: UseCommandSuggestionsProps) {
+  maxSuggestions = 50,
+}: UseCommandSuggestionsOptions) {
   const lowerSearch = normaliseChatText(searchTerm);
 
   const filteredCommands = SLASH_COMMAND_DEFINITIONS.filter(command => {
@@ -18,9 +18,9 @@ export function useCommandSuggestions({
     }
 
     return (
-      command.name.toLowerCase().startsWith(lowerSearch) ||
+      normaliseChatText(command.name).startsWith(lowerSearch) ||
       command.aliases?.some(alias =>
-        alias.toLowerCase().startsWith(lowerSearch),
+        normaliseChatText(alias).startsWith(lowerSearch),
       )
     );
   }).slice(0, maxSuggestions);

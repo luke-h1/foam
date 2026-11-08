@@ -1,11 +1,11 @@
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
-import { parseWordLinkParts } from '../parseWordLinkTokens';
+import { parseWordLinkTokens } from '../parseWordLinkTokens';
 
-describe('parseWordLinkParts', () => {
+describe('parseWordLinkTokens', () => {
   test('parses generic https URLs as link tokens', () => {
     expect(
-      parseWordLinkParts('https://www.youtube.com/watch?v=dQw4w9WgXcQ'),
+      parseWordLinkTokens('https://www.youtube.com/watch?v=dQw4w9WgXcQ'),
     ).toEqual<MessageToken[]>([
       {
         type: 'link',
@@ -16,7 +16,7 @@ describe('parseWordLinkParts', () => {
   });
 
   test('parses http URLs as link tokens', () => {
-    expect(parseWordLinkParts('http://example.com/path')).toEqual<
+    expect(parseWordLinkTokens('http://example.com/path')).toEqual<
       MessageToken[]
     >([
       {
@@ -28,7 +28,7 @@ describe('parseWordLinkParts', () => {
   });
 
   test('splits trailing punctuation from URLs', () => {
-    expect(parseWordLinkParts('https://youtu.be/abc123,')).toEqual<
+    expect(parseWordLinkTokens('https://youtu.be/abc123,')).toEqual<
       MessageToken[]
     >([
       {
@@ -42,7 +42,7 @@ describe('parseWordLinkParts', () => {
 
   test('parses 7TV emote links with a v4 ULID as stvEmote tokens', () => {
     expect(
-      parseWordLinkParts('https://7tv.app/emotes/01F6MZGCNG000255K4X1V15WQE'),
+      parseWordLinkTokens('https://7tv.app/emotes/01F6MZGCNG000255K4X1V15WQE'),
     ).toEqual<MessageToken[]>([
       {
         type: 'stvEmoteLink',
@@ -57,13 +57,13 @@ describe('parseWordLinkParts', () => {
     'https://7tv.app/emotes/64f8a1b0c4b8c8f8f8f8f8f8',
     'https://7tv.app/emotes/81F6MZGCNG000255K4X1V15WQE',
   ])('parses a 7TV link without a valid ULID as a plain link: %s', url => {
-    expect(parseWordLinkParts(url)).toEqual<MessageToken[]>([
+    expect(parseWordLinkTokens(url)).toEqual<MessageToken[]>([
       { type: 'link', content: url, url },
     ]);
   });
 
   test('still parses Twitch clip links as twitchClip tokens', () => {
-    expect(parseWordLinkParts('https://clips.twitch.tv/CoolClipSlug')).toEqual<
+    expect(parseWordLinkTokens('https://clips.twitch.tv/CoolClipSlug')).toEqual<
       MessageToken[]
     >([
       {
@@ -75,8 +75,8 @@ describe('parseWordLinkParts', () => {
   });
 
   test('returns null for non-url words', () => {
-    expect(parseWordLinkParts('hello')).toBeNull();
+    expect(parseWordLinkTokens('hello')).toBeNull();
 
-    expect(parseWordLinkParts('www.youtube.com')).toBeNull();
+    expect(parseWordLinkTokens('www.youtube.com')).toBeNull();
   });
 });

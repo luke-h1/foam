@@ -4,6 +4,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { render } from '@testing-library/react-native';
 
+import { TEST_SAFE_AREA_METRICS } from '@app/test/safe-area';
+
 import type { ChatComposerProps } from '../chat-composer/ChatComposer';
 import * as chatComposerModule from '../chat-composer/ChatComposer';
 import { ChatInputSection } from '../ChatInputSection';
@@ -51,12 +53,7 @@ describe('ChatInputSection', () => {
     isAuthenticated: boolean;
   }) {
     render(
-      <SafeAreaProvider
-        initialMetrics={{
-          frame: { x: 0, y: 0, width: 390, height: 844 },
-          insets: { bottom: 0, left: 0, right: 0, top: 0 },
-        }}
-      >
+      <SafeAreaProvider initialMetrics={TEST_SAFE_AREA_METRICS}>
         <ChatInputSection
           messageInput={props.messageInput}
           onChangeText={jest.fn()}
@@ -65,11 +62,7 @@ describe('ChatInputSection', () => {
           onOpenSettingsSheet={jest.fn()}
           replyTo={null}
           onClearReply={jest.fn()}
-          connection={{
-            isConnected: true,
-            isAuthenticated: props.isAuthenticated,
-            isSending: false,
-          }}
+          isAuthenticated={props.isAuthenticated}
         />
       </SafeAreaProvider>,
     );
@@ -83,22 +76,7 @@ describe('ChatInputSection', () => {
       isAuthenticated: true,
     });
 
-    expect({ canSend: props.canSend, editable: props.editable }).toEqual({
-      canSend: true,
-      editable: true,
-    });
-  });
-
-  test('keeps the composer editable and allows /refresh when signed out', () => {
-    const props = renderWithConnection({
-      messageInput: '/refresh',
-      isAuthenticated: false,
-    });
-
-    expect({ canSend: props.canSend, editable: props.editable }).toEqual({
-      canSend: true,
-      editable: true,
-    });
+    expect(props.canSend).toBe(true);
   });
 
   test('blocks sending a normal message when signed out', () => {
@@ -107,9 +85,6 @@ describe('ChatInputSection', () => {
       isAuthenticated: false,
     });
 
-    expect({ canSend: props.canSend, editable: props.editable }).toEqual({
-      canSend: false,
-      editable: true,
-    });
+    expect(props.canSend).toBe(false);
   });
 });

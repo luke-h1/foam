@@ -4,8 +4,8 @@ import { toast } from 'sonner-native';
 
 import { useChatImageUpload } from '@app/components/chat/hooks/use-chat-image-upload';
 import { kappaService } from '@app/services/kappa-service';
+import { silenceLogger } from '@app/test/silence-logger';
 import type { KappaUploadAsset } from '@app/types/kappa/upload';
-import { logger } from '@app/utils/logger';
 
 const mockLaunchImageLibrary = jest.spyOn(
   ImagePicker,
@@ -21,7 +21,7 @@ const mockUpload = jest.spyOn(kappaService, 'upload');
 const mockToastError = jest.spyOn(toast, 'error');
 const mockToastSuccess = jest.spyOn(toast, 'success');
 
-jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
+silenceLogger();
 
 const pickedAsset: ImagePicker.ImagePickerAsset = {
   uri: 'file:///tmp/photo.jpg',

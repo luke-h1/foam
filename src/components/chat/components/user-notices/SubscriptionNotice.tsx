@@ -1,58 +1,25 @@
 import { memo } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
-import { getSubscriptionTierDisplay } from '@app/components/chat/components/user-notices/util/subscriptionNoticeTier';
-import { Image } from '@app/components/image/Image';
-import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import { CHAT_NOTICE_ACCENTS } from '@app/components/chat/util/chatNoticeAccents';
+import type { ChatDensity, ChatFontScale } from '@app/store/preference-store';
+import { theme } from '@app/styles/themes';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import type { SubscriptionNoticeTokenType } from '@app/utils/chat/subscription-notice-token-types';
 
 import { styles as chatStyles } from '../chat-message/ChatRow.styles';
+import { getChatTextStyles } from '../chat-message/ChatText.styles';
 import { ChatNoticeMetaRow } from '../chat-message/renderers/ChatNoticeMetaRow';
-import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';
-import { subscriptionNoticeStyles as styles } from './SubscriptionNotice.styles';
+import { NoticeUserMessage } from './NoticeUserMessage';
 import { buildSubscriptionNoticeDescription } from './util/buildSubscriptionNoticeDescription';
 
-function getMessagePartKey(token: MessageToken, occurrence: number): string {
-  switch (token.type) {
-    case 'emote':
-      return `emote:${token.url ?? token.content}:${occurrence}`;
-    case 'text':
-      return `text:${token.content}:${occurrence}`;
-    default:
-      return `${token.type}:${occurrence}`;
-  }
-}
-
-function renderMessagePart(messagePart: MessageToken, occurrence: number) {
-  const key = getMessagePartKey(messagePart, occurrence);
-
-  switch (messagePart.type) {
-    case 'text':
-      return (
-        <ChatText key={key} style={styles.messageText}>
-          {messagePart.content}
-        </ChatText>
-      );
-    case 'emote':
-      return (
-        <Image
-          trackLoadContext='chat.subscription-notice-emote'
-          cacheVariant='emote'
-          transition={0}
-          {...{ key, source: messagePart.url, style: styles.emote }}
-        />
-      );
-    default:
-      return null;
-  }
-}
-
 interface SubscriptionNoticeProps {
+  density?: ChatDensity;
+  disableEmoteAnimations?: boolean;
+  fontScale?: ChatFontScale;
+  messageTokens: MessageToken[];
   token: MessageToken<SubscriptionNoticeTokenType>;
-  notice_tags?: UserNoticeTags;
-  parsedMessage?: MessageToken[];
 }
 
 /**
@@ -105,91 +72,93 @@ function pickSubscriptionDescriptionFields(
 }
 
 /**
- * Renders the chatter's own message under the notice. Token keys repeat within
- * one message, so each is suffixed by how many times it has been seen.
+ * `createSubscriptionToken` maps `msg-param-sub-plan` to `planName`. A notice
+ * with no plan (an upgrade, an unknown code) reads as Tier 1.
  */
-function renderParsedMessageParts(
-  parsedMessage: SubscriptionNoticeProps['parsedMessage'],
-) {
-  if (!parsedMessage || parsedMessage.length === 0) {
-    return null;
-  }
-
-  const partKeyCounts = new Map<string, number>();
-
-  return parsedMessage.map(partItem => {
-    const baseKey = getMessagePartKey(partItem, 0).replace(/:\d+$/, '');
-    const occurrence = partKeyCounts.get(baseKey) ?? 0;
-    partKeyCounts.set(baseKey, occurrence + 1);
-    return renderMessagePart(partItem, occurrence);
-  });
-}
-
-interface SubscriptionNoticeMessageProps {
-  message: string | undefined;
-  renderedParsedMessageParts: ReturnType<typeof renderParsedMessageParts>;
-}
-
-function SubscriptionNoticeMessage({
-  message,
-  renderedParsedMessageParts,
-}: SubscriptionNoticeMessageProps) {
-  if (renderedParsedMessageParts) {
-    return renderedParsedMessageParts;
-  }
-
-  if (message) {
-    return <ChatText style={styles.messageText}>{message.trim()}</ChatText>;
-  }
-
-  return null;
+function getTierDisplay(
+  subscriptionEvent: SubscriptionNoticeProps['token']['subscriptionEvent'],
+): string {
+  return (
+    ('planName' in subscriptionEvent
+      ? subscriptionEvent.planName
+      : undefined) ?? 'Tier 1'
+  );
 }
 
 function SubscriptionNoticeComponent({
+  density,
+  disableEmoteAnimations,
+  fontScale,
+  messageTokens,
   token,
-  parsedMessage,
 }: SubscriptionNoticeProps) {
   const { subscriptionEvent } = token;
-  const { msgId, displayName, message } = subscriptionEvent;
-
-  const tierDisplay = getSubscriptionTierDisplay({
-    plan: 'plan' in subscriptionEvent ? subscriptionEvent.plan : undefined,
-    planName:
-      'planName' in subscriptionEvent ? subscriptionEvent.planName : undefined,
-  });
-
-  const isPrime = tierDisplay === 'Prime';
+  const textStyles = getChatTextStyles(fontScale, density);
+  const tierDisplay = getTierDisplay(subscriptionEvent);
 
   const description = buildSubscriptionNoticeDescription({
     ...pickSubscriptionDescriptionFields(subscriptionEvent),
-    isPrime,
-    msgId,
+    isPrime: tierDisplay === 'Prime',
+    msgId: subscriptionEvent.msgId,
+    styles: {
+      descriptionText: textStyles.meta,
+      emphasis: [textStyles.meta, textStyles.metaStrong, styles.emphasis],
+      name: [textStyles.body, styles.name],
+    },
     tierDisplay,
   });
 
-  const renderedParsedMessageParts = renderParsedMessageParts(parsedMessage);
-
   return (
-    <View style={chatStyles.subscriptionNoticeColumn}>
+    <View style={[chatStyles.subscriptionNoticeColumn, textStyles.stackGap]}>
       <ChatNoticeMetaRow
         icon='star.fill'
-        labelColor={CHAT_NOTICE_ACCENTS.subscription}
+        {...{
+          density,
+          fontScale,
+          labelColor: CHAT_NOTICE_ACCENTS.subscription,
+        }}
       >
         <View style={styles.descriptionContainer}>
-          <ChatText style={styles.username}>{displayName}</ChatText>
+          <ChatText
+            style={[
+              textStyles.meta,
+              textStyles.metaStrong,
+              textStyles.iconSpacing,
+              styles.emphasis,
+            ]}
+          >
+            {subscriptionEvent.displayName}
+          </ChatText>
           {description}
         </View>
       </ChatNoticeMetaRow>
-      {(parsedMessage && parsedMessage.length > 0) || message ? (
-        <View style={styles.messageContainer}>
-          <SubscriptionNoticeMessage
-            message={message}
-            renderedParsedMessageParts={renderedParsedMessageParts}
-          />
-        </View>
-      ) : null}
+      <NoticeUserMessage
+        {...{
+          density,
+          disableEmoteAnimations,
+          fontScale,
+          tokens: messageTokens,
+        }}
+      />
     </View>
   );
 }
 
 export const SubscriptionNotice = memo(SubscriptionNoticeComponent);
+
+const styles = StyleSheet.create({
+  descriptionContainer: {
+    alignItems: 'center',
+    flex: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    minWidth: 0,
+  },
+  emphasis: {
+    color: theme.color.text.dark,
+  },
+  name: {
+    color: theme.colorViolet,
+    fontWeight: '600',
+  },
+});

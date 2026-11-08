@@ -1,18 +1,17 @@
 import { renderHook } from '@testing-library/react-native';
 
+import type { EmoteLoadingStatus } from '@app/components/chat/hooks/use-chat-emote-loader';
 import { useSevenTvChatRuntime } from '@app/components/chat/hooks/use-seven-tv-chat-runtime';
 import * as useSevenTvWsModule from '@app/components/chat/hooks/use-seven-tv-ws';
 import { ReadyState } from '@app/hooks/ws/constants';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import { makeEmptyEmoteData } from '@app/store/chat/types/constants';
-import { logger } from '@app/utils/logger';
+import { flushChatStoreTimers } from '@app/test/chat-store-teardown';
+import { silenceLogger } from '@app/test/silence-logger';
 
-jest.spyOn(logger.stvWs, 'debug').mockImplementation(() => {});
-jest.spyOn(logger.stvWs, 'info').mockImplementation(() => {});
+silenceLogger();
 
 const mockUseSevenTvWs = jest.spyOn(useSevenTvWsModule, 'useSevenTvWs');
-
-const createWebSocketStub = (): WebSocket => Object.create(WebSocket.prototype);
 
 interface MakeWsReturnOptions {
   readyState: ReadyState;
@@ -28,18 +27,16 @@ function makeWsReturn({
   unsubscribeFromChannel,
 }: MakeWsReturnOptions): ReturnType<typeof useSevenTvWsModule.useSevenTvWs> {
   return {
-    getConnectionState: jest.fn(() => 'CONNECTED'),
     isConnected: jest.fn(() => wsConnected),
     readyState,
     subscribeToChannel,
     unsubscribeFromChannel,
-    ws: createWebSocketStub(),
   };
 }
 
 interface RenderRuntimeOptions {
   currentEmoteSetIdRef?: { current: string | null };
-  emoteLoadStatus?: string;
+  emoteLoadStatus?: EmoteLoadingStatus;
   readyState?: ReadyState;
   wsConnected?: boolean;
 }
@@ -141,7 +138,7 @@ describe('useSevenTvChatRuntime', () => {
       }),
     );
 
-    const props = {
+    const props: Parameters<typeof useSevenTvChatRuntime>[0] = {
       channelId: 'channel-1',
       channelName: 'foam',
       currentEmoteSetIdRef,
@@ -207,19 +204,6 @@ describe('useSevenTvChatRuntime', () => {
 
     expect(currentEmoteSetIdRef.current).toBeNull();
   });
-
-  test('passes chat callback wiring into the websocket hook', () => {
-    renderRuntime();
-    const wsOptions = mockUseSevenTvWs.mock.calls[0]?.[0];
-
-    expect({
-      hasCosmeticCreateHandler: wsOptions?.onCosmeticCreate instanceof Function,
-      hasEmoteUpdateHandler: wsOptions?.onEmoteUpdate instanceof Function,
-      hasEventLogger: wsOptions?.onEvent instanceof Function,
-    }).toEqual({
-      hasCosmeticCreateHandler: true,
-      hasEmoteUpdateHandler: true,
-      hasEventLogger: true,
-    });
-  });
 });
+
+afterEach(flushChatStoreTimers);

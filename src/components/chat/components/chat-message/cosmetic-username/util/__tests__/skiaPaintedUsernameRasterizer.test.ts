@@ -1,28 +1,13 @@
-// "shape" is the 7TV paint API field (types/seven-tv/cosmetics.ts), not a naming choice.
-// oxlint-disable anti-slop/no-shape-in-symbol-names
 import type { PaintLayerData } from '@app/types/seven-tv/cosmetics';
 
+import { makeLayer } from '../paint-css/__fixtures__/paintCss.fixture';
 import {
   buildPaintImageLayers,
   type PaintImageLayer,
-  planPaintLayerSlotKinds,
 } from '../skiaPaintedUsernameRasterizer';
 
-const createLayer = (
-  overrides: Partial<PaintLayerData> = {},
-): PaintLayerData => ({
-  function: 'URL',
-  stops: { length: 0 },
-  angle: 0,
-  shape: 'circle',
-  repeat: false,
-  image_url: '',
-  canvas_repeat: 'unset',
-  at: null,
-  size: null,
-  opacity: 1,
-  ...overrides,
-});
+const createLayer = (overrides: Partial<PaintLayerData> = {}) =>
+  makeLayer({ function: 'URL', canvas_repeat: 'unset', ...overrides });
 
 const layoutBox = {
   glyphWidthPx: 100,
@@ -161,105 +146,5 @@ describe('buildPaintImageLayers', () => {
     });
 
     expect(layers).toEqual<PaintImageLayer[]>([]);
-  });
-});
-
-describe('planPaintLayerSlotKinds', () => {
-  test('puts a gradient listed above a URL after the URL slot', () => {
-    // CSS order: first = top. Gradient on top of URL - draw URL then gradient.
-    expect(
-      planPaintLayerSlotKinds([
-        createLayer({
-          function: 'LINEAR_GRADIENT',
-          stops: {
-            0: { at: 0, color: 0xff_00_00_ff },
-            1: { at: 1, color: 0x00_00_ff_ff },
-            length: 2,
-          },
-        }),
-        createLayer({ image_url: 'https://cdn.7tv.app/paint/under/1x.webp' }),
-      ]),
-    ).toEqual(['url', 'baked']);
-  });
-
-  test('puts a URL listed above a gradient after the baked gradient slot', () => {
-    expect(
-      planPaintLayerSlotKinds([
-        createLayer({ image_url: 'https://cdn.7tv.app/paint/over/1x.webp' }),
-        createLayer({
-          function: 'LINEAR_GRADIENT',
-          stops: {
-            0: { at: 0, color: 0xff_00_00_ff },
-            1: { at: 1, color: 0x00_00_ff_ff },
-            length: 2,
-          },
-        }),
-      ]),
-    ).toEqual(['baked', 'url']);
-  });
-
-  test('batches contiguous gradients between URL layers', () => {
-    expect(
-      planPaintLayerSlotKinds([
-        createLayer({ image_url: 'https://cdn.7tv.app/paint/top/1x.webp' }),
-        createLayer({
-          function: 'LINEAR_GRADIENT',
-          stops: {
-            0: { at: 0, color: 0xff_00_00_ff },
-            1: { at: 1, color: 0x00_00_ff_ff },
-            length: 2,
-          },
-        }),
-        createLayer({
-          function: 'RADIAL_GRADIENT',
-          stops: {
-            0: { at: 0, color: 0xff_00_00_ff },
-            1: { at: 1, color: 0x00_00_ff_ff },
-            length: 2,
-          },
-        }),
-        createLayer({ image_url: 'https://cdn.7tv.app/paint/bottom/1x.webp' }),
-      ]),
-    ).toEqual(['url', 'baked', 'url']);
-  });
-
-  test('renders no span for zero-stop gradients or fully transparent layers', () => {
-    expect(
-      planPaintLayerSlotKinds([
-        createLayer({ function: 'LINEAR_GRADIENT' }),
-        createLayer({
-          image_url: 'https://cdn.7tv.app/paint/hidden/1x.webp',
-          opacity: 0,
-        }),
-        createLayer({ image_url: 'https://cdn.7tv.app/paint/shown/1x.webp' }),
-      ]),
-    ).toEqual(['url']);
-  });
-
-  test('a dead URL layer does not split a gradient batch', () => {
-    expect(
-      planPaintLayerSlotKinds([
-        createLayer({
-          function: 'LINEAR_GRADIENT',
-          stops: {
-            0: { at: 0, color: 0xff_00_00_ff },
-            1: { at: 1, color: 0x00_00_ff_ff },
-            length: 2,
-          },
-        }),
-        createLayer({
-          image_url: 'https://cdn.7tv.app/paint/hidden/1x.webp',
-          opacity: 0,
-        }),
-        createLayer({
-          function: 'RADIAL_GRADIENT',
-          stops: {
-            0: { at: 0, color: 0xff_00_00_ff },
-            1: { at: 1, color: 0x00_00_ff_ff },
-            length: 2,
-          },
-        }),
-      ]),
-    ).toEqual(['baked']);
   });
 });

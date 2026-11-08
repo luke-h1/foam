@@ -9,17 +9,14 @@ import {
 } from '@app/components/chat/components/chat-message/util/rowVisibility';
 
 import { EmoteCell } from '../EmoteCell';
-import {
-  emoteSheetAnimationBudget,
-  MAX_CONCURRENT_ANIMATED,
-} from '../util/emoteSheetAnimationBudget';
+import { emoteSheetAnimationBudget } from '../util/emoteSheetAnimationBudget';
 import { emoteSheetScrollActivity } from '../util/emoteSheetScrollActivity';
 import { createMenuEmote } from './__fixtures__/emoteMenuData.fixture';
 
-type MockImageHandle = {
+interface MockImageHandle {
   startAnimating: () => void;
   stopAnimating: () => void;
-};
+}
 
 const mockStartAnimating = jest.fn();
 const mockStopAnimating = jest.fn();
@@ -29,12 +26,12 @@ let lastOnDisplay: (() => void) | undefined;
  * The mocked Image is a forwardRef object, so its `render` function is the
  * spyable seam; the class type has no static `render`, hence the `never` bridge.
  */
-type MockableExpoImage = {
+interface MockableExpoImage {
   render: (
     props: { onDisplay?: () => void },
     ref: Ref<MockImageHandle>,
   ) => null;
-};
+}
 
 // SAFETY: `never` is the only bridge TS accepts from the class component to MockableExpoImage.
 const mockableExpoImage: MockableExpoImage = ExpoImage as never;
@@ -102,7 +99,7 @@ describe('EmoteCell animation pause', () => {
   test('leaves cells past the animation cap on their first frame', () => {
     const held: (() => void)[] = [];
 
-    for (let i = 0; i < MAX_CONCURRENT_ANIMATED; i += 1) {
+    for (let i = 0; i < 96; i += 1) {
       held.push(emoteSheetAnimationBudget.acquire(() => undefined));
     }
 
@@ -159,7 +156,7 @@ describe('EmoteCell animation pause', () => {
   });
 
   test('frees its slot for another cell when the row scrolls off screen', () => {
-    const rows = Array.from({ length: MAX_CONCURRENT_ANIMATED }, () =>
+    const rows = Array.from({ length: 96 }, () =>
       createRowVisibilityStore(true),
     );
 

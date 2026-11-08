@@ -1,36 +1,36 @@
-import { EmoteSetKind } from '@app/graphql/generated/gql';
-import { bttvEmoteService } from '@app/services/bttv-emote-service';
-import { chatterinoService } from '@app/services/chatterino-service';
-import { ffzService } from '@app/services/ffz-service';
+import {
+  createBadge,
+  createSevenTvEmote,
+  createTwitchEmote,
+} from '@app/components/chat/__tests__/__fixtures__/chatFactories.fixture';
+import { userInfoFixture } from '@app/services/__fixtures__/twitch/user-info.fixture';
 import { sevenTvService } from '@app/services/seven-tv-service';
-import { twitchBadgeService } from '@app/services/twitch-badge-service';
-import { twitchEmoteService } from '@app/services/twitch-emote-service';
-import { twitchService } from '@app/services/twitch-service';
+import * as GetBttvBadgesModule from '@app/store/chat/actions/bttv-badges/getBttvBadges';
+import { flushChatStoreTimers } from '@app/test/chat-store-teardown';
+import { stubEmoteProviderServices } from '@app/test/emote-provider-services';
+import { silenceLogger } from '@app/test/silence-logger';
 import type {
   BttvSanitisedEmote,
   FfzSanitisedEmote,
   SanitisedEmote,
-  SevenTvEmoteSetMetadata,
   SevenTvSanitisedEmote,
-  TwitchSanitisedEmote,
 } from '@app/types/emote';
-import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import type { UserInfoResponse } from '@app/types/twitch/user';
-import * as GetBttvBadgesModule from '@app/utils/chat/bttv-badges/getBttvBadges';
 import { cheermoteFetchGuard } from '@app/utils/chat/cheermote-store/cheermoteFetchGuard';
-import { logger } from '@app/utils/logger';
 
 import {
   clearCache,
-  clearPersonalEmotesCache,
   clearSubscriberProfilesCache,
-  getUserPersonalEmotes,
   invalidateChatResourceCaches,
   loadChannelResources,
   resolveSubscriberChannelProfiles,
 } from '../actions/channel-load';
 import { clearGlobalResourceCache } from '../actions/channel-resources';
 import { clearMessages } from '../actions/messages';
+import {
+  clearPersonalEmotesCache,
+  getUserPersonalEmotes,
+} from '../actions/personal-emotes';
 import {
   switchSevenTvEmoteSet,
   updateSevenTvEmotes,
@@ -42,17 +42,7 @@ import {
   makeEmptyGlobalCacheData,
 } from '../types/constants';
 
-jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
-jest.spyOn(logger.chat, 'info').mockImplementation(() => {});
-jest.spyOn(logger.chat, 'warn').mockImplementation(() => {});
-jest.spyOn(logger.main, 'info').mockImplementation(() => {});
-jest.spyOn(logger.stv, 'error').mockImplementation(() => {});
-jest.spyOn(logger.stv, 'info').mockImplementation(() => {});
-jest.spyOn(logger.stv, 'warn').mockImplementation(() => {});
-jest.spyOn(logger.stvWs, 'debug').mockImplementation(() => {});
-jest.spyOn(logger.stvWs, 'error').mockImplementation(() => {});
-jest.spyOn(logger.stvWs, 'info').mockImplementation(() => {});
-jest.spyOn(logger.stvWs, 'warn').mockImplementation(() => {});
+silenceLogger();
 
 // Isolates the resource loader from the BTTV global-badge micro-cache's own
 // fetch/retry cascade, which is exercised by getBttvBadges' own spec.
@@ -62,109 +52,38 @@ const mockClearBttvBadgesCache = jest
 
 jest.spyOn(GetBttvBadgesModule, 'getBttvBadges').mockReturnValue([]);
 
-const mockGetEmoteSetId = jest.spyOn(sevenTvService, 'getEmoteSetId');
-
-const mockGetSanitisedEmoteSet = jest.spyOn(
-  sevenTvService,
-  'getSanitisedEmoteSet',
-);
-
-const mockGet7tvUserId = jest.spyOn(sevenTvService, 'get7tvUserId');
-const mockSendPresence = jest.spyOn(sevenTvService, 'sendPresence');
-const mockGetChannelEmotes = jest.spyOn(twitchEmoteService, 'getChannelEmotes');
-const mockGetGlobalEmotes = jest.spyOn(twitchEmoteService, 'getGlobalEmotes');
-
-const mockGetSubscriberEmotes = jest.spyOn(
-  twitchEmoteService,
-  'getSubscriberEmotes',
-);
-
-const mockGetBttvGlobalEmotes = jest.spyOn(
-  bttvEmoteService,
-  'getSanitisedGlobalEmotes',
-);
-
-const mockGetBttvChannelEmotes = jest.spyOn(
-  bttvEmoteService,
-  'getSanitisedChannelEmotes',
-);
-
-const mockGetFfzChannelEmotes = jest.spyOn(
-  ffzService,
-  'getSanitisedChannelEmotes',
-);
-
-const mockGetFfzGlobalEmotes = jest.spyOn(
-  ffzService,
-  'getSanitisedGlobalEmotes',
-);
-
-const mockListTwitchChannelBadges = jest.spyOn(
-  twitchBadgeService,
-  'listSanitisedChannelBadges',
-);
-
-const mockListTwitchGlobalBadges = jest.spyOn(
-  twitchBadgeService,
-  'listSanitisedGlobalBadges',
-);
-
-const mockGetFfzChannelBadges = jest.spyOn(
-  ffzService,
-  'getSanitisedChannelBadges',
-);
-
-const mockGetFfzGlobalBadges = jest.spyOn(
-  ffzService,
-  'getSanitisedGlobalBadges',
-);
-
-const mockListChatterinoBadges = jest.spyOn(
-  chatterinoService,
-  'listSanitisedBadges',
-);
-
-const mockGetPersonalEmoteSet = jest.spyOn(
-  sevenTvService,
-  'getPersonalEmoteSet',
-);
-
-const mockGetUsersById = jest.spyOn(twitchService, 'getUsersById');
-jest.spyOn(twitchService, 'getCheermotes').mockResolvedValue([]);
+const {
+  getEmoteSetId: mockGetEmoteSetId,
+  getSanitisedEmoteSet: mockGetSanitisedEmoteSet,
+  get7tvUserId: mockGet7tvUserId,
+  sendPresence: mockSendPresence,
+  getChannelEmotes: mockGetChannelEmotes,
+  getGlobalEmotes: mockGetGlobalEmotes,
+  getSubscriberEmotes: mockGetSubscriberEmotes,
+  getBttvGlobalEmotes: mockGetBttvGlobalEmotes,
+  getBttvChannelEmotes: mockGetBttvChannelEmotes,
+  getFfzChannelEmotes: mockGetFfzChannelEmotes,
+  getFfzGlobalEmotes: mockGetFfzGlobalEmotes,
+  listTwitchChannelBadges: mockListTwitchChannelBadges,
+  listTwitchGlobalBadges: mockListTwitchGlobalBadges,
+  getFfzChannelBadges: mockGetFfzChannelBadges,
+  getFfzGlobalBadges: mockGetFfzGlobalBadges,
+  listChatterinoBadges: mockListChatterinoBadges,
+  getPersonalEmoteSet: mockGetPersonalEmoteSet,
+  getUsersById: mockGetUsersById,
+} = stubEmoteProviderServices();
 
 const channelId = 'channel-1';
 const twitchUserId = 'user-1';
 
-const sevenTvSetMetadata = {
-  setId: 'test-set',
-  setName: 'test',
-  capacity: 100,
-  ownerId: 'owner',
-  kind: EmoteSetKind.Normal,
-  updatedAt: '2025-01-01T00:00:00.000+00:00',
-  totalCount: 1,
-} satisfies SevenTvEmoteSetMetadata;
-
-function sevenTvEmote(id: string): SevenTvSanitisedEmote {
-  return {
-    aspect_ratio: 1,
-    creator: null,
-    emote_link: `https://example.com/${id}`,
-    flags: 0,
-    format: 'webp',
-    frame_count: 1,
-    height: 32,
+function sevenTvEmote(id: string) {
+  return createSevenTvEmote({
     id,
     name: id,
     original_name: id,
-    set_metadata: sevenTvSetMetadata,
-    site: '7TV Channel',
-    provider: '7tv',
     static_url: `https://example.com/${id}.png`,
     url: `https://example.com/${id}.webp`,
-    width: 32,
-    zero_width: false,
-  };
+  });
 }
 
 function bttvEmote(
@@ -207,29 +126,26 @@ function twitchEmote(
     | 'Twitch Channel'
     | 'Twitch Global'
     | 'Twitch Subscriber' = 'Twitch Channel',
-): TwitchSanitisedEmote {
-  return {
-    creator: null,
-    emote_link: `https://example.com/${id}`,
+) {
+  return createTwitchEmote({
     id,
     name: id,
     original_name: id,
-    provider: 'twitch',
     site,
     static_url: `https://example.com/${id}.png`,
     url: `https://example.com/${id}.webp`,
-  };
+  });
 }
 
-function badge(id: string): SanitisedBadgeSet {
-  return {
+function badge(id: string) {
+  return createBadge({
     id,
     set: id,
     title: id,
-    type: 'FFZ Badge',
+    type: 'FFZ Global Badge',
     provider: 'ffz',
     url: `https://example.com/${id}.png`,
-  };
+  });
 }
 
 function ids(items: readonly { id: string }[]): string[] {
@@ -380,6 +296,7 @@ describe('loadChannelResources cache fallback', () => {
       ...makeEmptyGlobalCacheData(),
       lastUpdated: 3_650_000,
       sevenTvGlobalEmotes: [sevenTvEmote('seven-global-cached')],
+      ffzGlobalBadges: [badge('ffz-global-badge-cached')],
     });
 
     mockGetFfzChannelBadges.mockRejectedValue(new Error('TimeoutError'));
@@ -397,6 +314,38 @@ describe('loadChannelResources cache fallback', () => {
     expect(cache!.lastUpdated).toBe(3_650_000);
 
     expect(mockGetFfzGlobalBadges).not.toHaveBeenCalled();
+  });
+
+  test('keeps the cached subscriber slice when the cached-path refresh rejects', async () => {
+    chatStore$.persisted.channelCaches.set({
+      [channelId]: {
+        ...makeEmptyEmoteData(),
+        badgesLastUpdated: 9000,
+        lastUpdated: 9000,
+        sevenTvEmoteSetId: 'cached-seven-set',
+        twitchChannelEmotes: [twitchEmote('existing-emote')],
+        twitchSubscriberEmotes: [twitchEmote('sub-emote-cached')],
+      },
+    });
+
+    chatStore$.persisted.globalCaches.set({
+      ...makeEmptyGlobalCacheData(),
+      lastUpdated: 9000,
+      sevenTvGlobalEmotes: [sevenTvEmote('seven-global-cached')],
+    });
+
+    mockGetSubscriberEmotes.mockRejectedValue(new Error('TimeoutError'));
+
+    await expect(
+      loadChannelResources({ channelId, twitchUserId }),
+    ).resolves.toBe(true);
+
+    const cache = chatStore$.persisted.channelCaches.peek()[channelId];
+
+    expect({
+      ids: ids(cache!.twitchSubscriberEmotes),
+      userId: cache!.twitchSubscriberEmotesUserId,
+    }).toEqual({ ids: ['sub-emote-cached'], userId: undefined });
   });
 
   test('refreshes a stale global slot from the cached path without refetching channel slices', async () => {
@@ -440,6 +389,57 @@ describe('loadChannelResources cache fallback', () => {
 
     const cache = chatStore$.persisted.channelCaches.peek()[channelId];
     expect(cache!.lastUpdated).toBe(3_650_000);
+  });
+
+  test('a cache clear during the cached-path global refresh fences the write-back', async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(3_700_000);
+
+    chatStore$.persisted.channelCaches.set({
+      [channelId]: {
+        ...makeEmptyEmoteData(),
+        badgesLastUpdated: 3_650_000,
+        lastUpdated: 3_650_000,
+        sevenTvEmoteSetId: 'cached-seven-set',
+        twitchChannelEmotes: [twitchEmote('existing-emote')],
+      },
+    });
+
+    chatStore$.persisted.globalCaches.set({
+      ...makeEmptyGlobalCacheData(),
+      lastUpdated: 9000,
+      sevenTvGlobalEmotes: [sevenTvEmote('seven-global-cached')],
+      twitchGlobalBadges: [badge('twitch-global-badge-cached')],
+    });
+
+    let releaseFetch: (emotes: BttvSanitisedEmote[]) => void = () => {};
+
+    mockGetBttvGlobalEmotes.mockReturnValue(
+      new Promise<BttvSanitisedEmote[]>(resolve => {
+        releaseFetch = resolve;
+      }),
+    );
+
+    const load = loadChannelResources({ channelId });
+
+    for (
+      let tick = 0;
+      tick < 50 && !mockGetBttvGlobalEmotes.mock.calls.length;
+      tick += 1
+    ) {
+      await Promise.resolve();
+    }
+
+    expect(mockGetBttvGlobalEmotes).toHaveBeenCalledTimes(1);
+
+    chatStore$.persisted.globalCaches.set(makeEmptyGlobalCacheData());
+    clearGlobalResourceCache();
+
+    releaseFetch([bttvEmote('bttv-global-new', 'Global BTTV')]);
+    await load;
+
+    expect(chatStore$.persisted.globalCaches.peek()).toEqual(
+      makeEmptyGlobalCacheData(),
+    );
   });
 
   test('a full load writes the global slices to the shared slot only', async () => {
@@ -709,16 +709,11 @@ describe('loadChannelResources cache fallback', () => {
 
 describe('resolveSubscriberChannelProfiles', () => {
   const profileUser = (id: string, displayName: string): UserInfoResponse => ({
-    broadcaster_type: '',
-    created_at: '',
-    description: '',
+    ...userInfoFixture,
     display_name: displayName,
     id,
     login: displayName.toLowerCase(),
-    offline_image_url: '',
     profile_image_url: `https://cdn.example.com/${id}.png`,
-    type: '',
-    view_count: 0,
   });
 
   beforeEach(() => {
@@ -1024,6 +1019,8 @@ describe('switchSevenTvEmoteSet', () => {
     const cache = chatStore$.persisted.channelCaches.peek()[channelId];
     expect(cache!.sevenTvEmoteSetId).toBe('set-b');
 
+    expect(cache!.lastUpdated).toBe(1000);
+
     expect(ids(cache!.sevenTvChannelEmotes)).toEqual(['emote-b']);
   });
 
@@ -1101,6 +1098,21 @@ describe('updateSevenTvEmotes', () => {
     ]);
   });
 
+  test('stamps only the 7TV freshness field, not the all-provider stamp', () => {
+    jest.spyOn(Date, 'now').mockReturnValue(5000);
+    seed([sevenTvEmote('emote-a')]);
+
+    updateSevenTvEmotes(channelId, [sevenTvEmote('emote-b')], []);
+    jest.spyOn(Date, 'now').mockRestore();
+
+    const cache = chatStore$.persisted.channelCaches.peek()[channelId];
+
+    expect({
+      lastUpdated: cache!.lastUpdated,
+      sevenTvUpdatedAt: cache!.sevenTvUpdatedAt,
+    }).toEqual({ lastUpdated: 1000, sevenTvUpdatedAt: 5000 });
+  });
+
   test('removes pulled emotes while preserving the order of the rest', () => {
     seed([
       sevenTvEmote('emote-a'),
@@ -1141,3 +1153,5 @@ describe('updateSevenTvEmotes', () => {
     ).toBe('emote-b-renamed');
   });
 });
+
+afterEach(flushChatStoreTimers);

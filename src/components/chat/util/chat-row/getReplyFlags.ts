@@ -10,9 +10,6 @@ interface GetReplyFlagsOptions {
   userstate: UserStateTags;
 }
 
-/**
- * The reply and first-time flags a row reads off its userstate tags.
- */
 export function getReplyFlags({
   normalisedCurrentUsername,
   onReplyContextPress,

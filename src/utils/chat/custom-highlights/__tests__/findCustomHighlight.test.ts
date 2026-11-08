@@ -1,4 +1,4 @@
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
 import { findCustomHighlight } from '../findCustomHighlight';
 
@@ -24,11 +24,13 @@ describe('findCustomHighlight', () => {
     ).toEqual(rules[0]);
   });
 
-  test('matches text across emote boundaries', () => {
+  test('matches a phrase that spans an emote part', () => {
     const message: MessageToken[] = [
       { type: 'text', content: 'drop a ' },
-      { type: 'text', content: 'follow please' },
+      { type: 'emote', content: 'follow' },
+      { type: 'text', content: ' please' },
     ];
+
     expect(findCustomHighlight(message, rules)).toEqual(rules[1]);
   });
 

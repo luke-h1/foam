@@ -57,5 +57,3 @@ export const createChatDelayRamp = (
     },
   };
 };
-
-export type ChatDelayRamp = ReturnType<typeof createChatDelayRamp>;

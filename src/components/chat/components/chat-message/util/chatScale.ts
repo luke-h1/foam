@@ -1,9 +1,5 @@
+import type { ChatDensity, ChatFontScale } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
-
-export type ChatDensity = 'comfortable' | 'compact';
-import type { ChatFontScale } from '@app/store/preference-store';
-
-export type { ChatFontScale };
 
 /**
  * Body font size follows the font-scale preference alone; density never
@@ -41,11 +37,17 @@ const REPLY_EMOTE_RATIO = 1.43;
 const GIF_RATIO = 8;
 const BADGE_RATIO = 1.28;
 const GAP_RATIO = 0.29;
+const ACCENT_INSET_RATIO = 0.43;
+const PILL_PADDING_VERTICAL_RATIO = 0.21;
 const SURFACE_PADDING_HORIZONTAL_RATIO = 0.57;
 const SURFACE_PADDING_VERTICAL_RATIO = 0.29;
 
-export interface ChatScale {
-  badgeGap: number;
+interface ChatScale {
+  /**
+   * Left inset of a mention highlight and side padding of the reply-to-you
+   * pill: a little wider than `gap`.
+   */
+  accentInset: number;
   badgeSize: number;
   bodyFontSize: number;
   bodyLineHeight: number;
@@ -54,6 +56,7 @@ export interface ChatScale {
   gap: number;
   gifSize: number;
   metaIconSize: number;
+  pillPaddingVertical: number;
   replyEmoteLineHeight: number;
   replyEmoteSize: number;
   rowPaddingHorizontal: number;
@@ -93,7 +96,7 @@ function buildChatScale(
   const emoteHeadroom = Math.round(bodyFontSize * EMOTE_HEADROOM_RATIO);
 
   return {
-    badgeGap: Math.round(bodyFontSize * GAP_RATIO),
+    accentInset: Math.round(bodyFontSize * ACCENT_INSET_RATIO),
     badgeSize: Math.round(bodyFontSize * BADGE_RATIO),
     bodyFontSize,
     bodyLineHeight: Math.round(bodyFontSize * ratio),
@@ -102,6 +105,7 @@ function buildChatScale(
     gap: Math.round(bodyFontSize * GAP_RATIO),
     gifSize: Math.round(bodyFontSize * GIF_RATIO),
     metaIconSize: secondaryFontSize,
+    pillPaddingVertical: Math.round(bodyFontSize * PILL_PADDING_VERTICAL_RATIO),
     replyEmoteLineHeight: replyEmoteSize + emoteHeadroom,
     replyEmoteSize,
     rowPaddingHorizontal: ROW_PADDING_HORIZONTAL[density],
@@ -138,12 +142,12 @@ const CHAT_SCALES = {
  */
 export function getChatScale(
   fontScale: ChatFontScale | undefined,
-  density: ChatDensity,
+  density: ChatDensity | undefined,
 ): ChatScale {
-  return CHAT_SCALES[fontScale ?? 'default'][density];
+  return CHAT_SCALES[fontScale ?? 'default'][density ?? 'comfortable'];
 }
 
-export interface ChatLineMetrics {
+interface ChatLineMetrics {
   fontSize: number;
   lineHeight: number;
 }
@@ -162,7 +166,3 @@ export const chatLineMetrics = {
     lineHeight: getChatScale('default', 'compact').bodyLineHeight,
   },
 } as const satisfies Record<ChatDensity, ChatLineMetrics>;
-
-export function densityFromCompact(compact: boolean | undefined): ChatDensity {
-  return compact ? 'compact' : 'comfortable';
-}

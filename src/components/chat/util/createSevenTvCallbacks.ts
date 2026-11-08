@@ -1,12 +1,3 @@
-import type {
-  CosmeticCreateCallbackData,
-  CosmeticDeleteCallbackData,
-  CosmeticUpdateCallbackData,
-  EntitlementCreateCallbackData,
-  EntitlementDeleteCallbackData,
-  EntitlementResetCallbackData,
-  EntitlementUpdateCallbackData,
-} from '@app/components/chat/hooks/use-seven-tv-ws';
 import { countMetric } from '@app/lib/sentry';
 import {
   addBadge,
@@ -30,6 +21,13 @@ import type {
   BadgeData,
   ChangeMap,
   CosmeticCreate,
+  CosmeticCreateCallbackData,
+  CosmeticDeleteCallbackData,
+  CosmeticUpdateCallbackData,
+  EntitlementCreateCallbackData,
+  EntitlementDeleteCallbackData,
+  EntitlementResetCallbackData,
+  EntitlementUpdateCallbackData,
   PaintData,
 } from '@app/types/seven-tv/cosmetics';
 import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
@@ -47,8 +45,13 @@ function getDataFromChangeValue(
   return entry.value?.object?.data;
 }
 
+// Added in #547 with no recorded reason: emotes whose name holds this text get no add/remove notice.
+const SILENT_EMOTE_NAME_FRAGMENT = 'nnys';
+
 function shouldSuppressEmoteNotice(emote: SanitisedEmote): boolean {
-  return emote.name?.toLowerCase().includes('nnys') ?? false;
+  return (
+    emote.name?.toLowerCase().includes(SILENT_EMOTE_NAME_FRAGMENT) ?? false
+  );
 }
 
 function isBadgeData(
@@ -97,10 +100,6 @@ function onEntitlementDelete(data: EntitlementDeleteCallbackData) {
 
 type AppliedCosmeticCounts = { added: number; updated: number };
 
-/**
- * Writes every paint the update carries into the cache and reports how many
- * were new against how many replaced an existing entry.
- */
 function applyPaintCosmeticUpdate(
   changes: CosmeticUpdateCallbackData['changes'],
 ): AppliedCosmeticCounts {
@@ -127,9 +126,6 @@ function applyPaintCosmeticUpdate(
   return { added, updated };
 }
 
-/**
- * The badge counterpart of `applyPaintCosmeticUpdate`.
- */
 function applyBadgeCosmeticUpdate(
   changes: CosmeticUpdateCallbackData['changes'],
 ): AppliedCosmeticCounts {
@@ -285,7 +281,5 @@ export function createSevenTvCallbacks({
     onCosmeticDelete,
     onEntitlementUpdate,
     onEntitlementDelete,
-    twitchChannelId: channelId,
-    sevenTvEmoteSetId,
   };
 }

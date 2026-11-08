@@ -1,20 +1,17 @@
-import { View } from 'react-native';
+import { type StyleProp, View, type ViewStyle } from 'react-native';
 import type { ReactNode } from 'react';
 
-import type { ChatRowSurfaceState } from '@app/components/chat/components/chat-message/ChatRow.types';
+import type { ChatRowState } from '@app/components/chat/components/chat-message/ChatRow.types';
+import { noticeSurfaceTint } from '@app/components/chat/util/chatNoticeAccents';
 
-import { noticeSurfaceTint } from '../util/chatNoticeAccents';
 import { styles } from './ChatRow.styles';
+import { getChatTextStyles } from './ChatText.styles';
 
-/**
- * A chat row's background is the sum of what the message is: whose turn in the
- * alternating stripe, which notice kind, and whether it mentions you, matches
- * a custom highlight, or is your own highlighted message.
- */
-function getChatRowSurfaceStyle(state: ChatRowSurfaceState) {
+function getChatRowSurfaceStyle(state: ChatRowState) {
   const {
     announcementAccentColor,
     bodyVariant,
+    density,
     customHighlightColor,
     isAlternatingRow,
     isAppSystemSender,
@@ -27,7 +24,15 @@ function getChatRowSurfaceStyle(state: ChatRowSurfaceState) {
     isUserChat,
     mentionsCurrentUser,
     style,
+    tokenRenderProps,
   } = state;
+
+  const textStyles = getChatTextStyles(tokenRenderProps.fontScale, density);
+
+  const surface = (colour: StyleProp<ViewStyle>) => [
+    textStyles.surface,
+    colour,
+  ];
 
   return [
     styles.chatContainer,
@@ -35,52 +40,64 @@ function getChatRowSurfaceStyle(state: ChatRowSurfaceState) {
     isAlternatingRow && styles.alternatingRowContainer,
     isAppSystemSender && styles.systemMessageContainer,
     isUserChat &&
-      isHighlightedMessageTarget &&
-      styles.highlightedReplyTargetContainer,
-    isUserChat && isHighlightedSender && styles.highlightedSenderContainer,
-    isUserChat && mentionsCurrentUser && styles.ownMentionContainer,
-    bodyVariant === 'viewer_milestone' && styles.viewerMilestoneContainer,
-    bodyVariant === 'mod_anniversary' && styles.modAnniversarySurface,
-    bodyVariant === 'subscription' && styles.subscriptionNoticeSurface,
-    bodyVariant === 'charity_donation' && styles.charityDonationSurface,
-    bodyVariant === 'ritual' && styles.ritualNoticeSurface,
-    bodyVariant === 'raid' && styles.raidNoticeSurface,
-    bodyVariant === 'announcement' && [
-      styles.announcementContainer,
-      announcementAccentColor
-        ? {
-            backgroundColor: noticeSurfaceTint(announcementAccentColor),
-            borderLeftColor: announcementAccentColor,
-          }
-        : null,
-    ],
-    isUserChat && isFirstMessage && styles.firstMessageNoticeSurface,
-    isUserChat && isReturningChatter && styles.returningChatterNoticeSurface,
+      isHighlightedMessageTarget && [
+        styles.highlightedReplyTargetContainer,
+        textStyles.highlightInset,
+      ],
+    isUserChat &&
+      isHighlightedSender && [
+        styles.highlightedSenderContainer,
+        textStyles.highlightInset,
+      ],
+    isUserChat &&
+      mentionsCurrentUser && [
+        styles.ownMentionContainer,
+        textStyles.accentInset,
+      ],
+    bodyVariant === 'viewer_milestone' &&
+      surface(styles.viewerMilestoneContainer),
+    bodyVariant === 'mod_anniversary' && surface(styles.modAnniversarySurface),
+    bodyVariant === 'subscription' && surface(styles.subscriptionNoticeSurface),
+    bodyVariant === 'charity_donation' &&
+      surface(styles.charityDonationSurface),
+    bodyVariant === 'ritual' && surface(styles.ritualNoticeSurface),
+    bodyVariant === 'raid' && surface(styles.raidNoticeSurface),
+    bodyVariant === 'announcement' &&
+      surface([
+        styles.announcementContainer,
+        announcementAccentColor
+          ? {
+              backgroundColor: noticeSurfaceTint(announcementAccentColor),
+              borderLeftColor: announcementAccentColor,
+            }
+          : null,
+      ]),
+    isUserChat && isFirstMessage && surface(styles.firstMessageNoticeSurface),
+    isUserChat &&
+      isReturningChatter &&
+      surface(styles.returningChatterNoticeSurface),
     isUserChat &&
       !mentionsCurrentUser &&
-      customHighlightColor && [
-        styles.customHighlightContainer,
-        {
-          backgroundColor: noticeSurfaceTint(customHighlightColor, 0.1),
-          borderLeftColor: customHighlightColor,
-        },
-      ],
-    isUserChat && isHighlightedMessage && styles.highlightMyMessageContainer,
+      customHighlightColor &&
+      surface({
+        backgroundColor: noticeSurfaceTint(customHighlightColor, 0.1),
+        borderLeftColor: customHighlightColor,
+      }),
+    isUserChat &&
+      isHighlightedMessage &&
+      surface(styles.highlightMyMessageContainer),
     isChannelPointRedemption &&
       isUserChat &&
       !isHighlightedMessage &&
-      styles.rewardMessageContainer,
+      surface(styles.rewardMessageContainer),
   ];
 }
 
-/**
- * The row's background and its long-press touch target.
- */
 export function ChatRowSurface({
   state,
   children,
 }: {
-  state: ChatRowSurfaceState;
+  state: ChatRowState;
   children: ReactNode;
 }) {
   const { clearRowLongPressTimer, handleRowTouchMove, startRowLongPressTimer } =

@@ -11,14 +11,23 @@ const SPACE = 32;
 const AT_SIGN = 64;
 const COLON = 58;
 
-/**
- * Index of the next non-space character, so a run of separators is skipped in
- * one step.
- */
-function skipSpaces(line: string, from: number, end: number): number {
+export function skipSpaces(line: string, from: number, end: number): number {
   let cursor = from;
 
   while (cursor < end && line.charCodeAt(cursor) === SPACE) {
+    cursor += 1;
+  }
+
+  return cursor;
+}
+
+/**
+ * Index of the first character after leading whitespace and control bytes.
+ */
+export function skipLeadingWhitespace(line: string): number {
+  let cursor = 0;
+
+  while (cursor < line.length && line.charCodeAt(cursor) <= SPACE) {
     cursor += 1;
   }
 
@@ -31,12 +40,8 @@ function skipSpaces(line: string, from: number, end: number): number {
  * copies cost time on every message in a busy channel.
  */
 export function parseIrcMessage(line: string): IrcMessage | null {
-  let cursor = 0;
+  let cursor = skipLeadingWhitespace(line);
   let end = line.length;
-
-  while (cursor < end && line.charCodeAt(cursor) <= SPACE) {
-    cursor += 1;
-  }
 
   while (end > cursor && line.charCodeAt(end - 1) <= SPACE) {
     end -= 1;

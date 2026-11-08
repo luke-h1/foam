@@ -1,25 +1,21 @@
 import { StyleSheet, type ViewStyle } from 'react-native';
 
-import { theme } from '@app/styles/themes';
-
 import {
   CHAT_NOTICE_ACCENTS,
   noticeSurfaceTint,
-} from '../util/chatNoticeAccents';
+} from '@app/components/chat/util/chatNoticeAccents';
+import { theme } from '@app/styles/themes';
+
 import { CHAT_SURFACE_COLORS } from './util/chatScale';
 
 /**
- * Colour half of a notice surface. The padding, margin and accent-bar width are
- * shared and live in `noticeSurface` so a new notice type cannot drift.
+ * Colour half of a notice surface. The padding, margin and accent-bar width
+ * follow the chat scale and come from `getChatTextStyles().surface`.
  */
 function noticeSurface(accent: string, alpha?: number): ViewStyle {
   return {
     backgroundColor: noticeSurfaceTint(accent, alpha),
     borderLeftColor: accent,
-    borderLeftWidth: CHAT_SURFACE_COLORS.accentBarWidth,
-    marginVertical: 2,
-    paddingHorizontal: theme.space8,
-    paddingVertical: theme.space4,
   };
 }
 
@@ -28,7 +24,6 @@ export const styles = StyleSheet.create({
     backgroundColor: CHAT_SURFACE_COLORS.alternatingRow,
   },
   announcementColumn: {
-    gap: 4,
     width: '100%',
   },
   announcementContainer: noticeSurface(CHAT_NOTICE_ACCENTS.announcement),
@@ -44,12 +39,6 @@ export const styles = StyleSheet.create({
   ritualNoticeMetaText: {
     color: CHAT_NOTICE_ACCENTS.ritual,
   },
-  customHighlightContainer: {
-    borderLeftWidth: CHAT_SURFACE_COLORS.accentBarWidth,
-    marginVertical: 2,
-    paddingHorizontal: theme.space8,
-    paddingVertical: theme.space4,
-  },
   returningChatterMetaText: {
     color: CHAT_NOTICE_ACCENTS.returningChatter,
   },
@@ -61,12 +50,6 @@ export const styles = StyleSheet.create({
     color: CHAT_NOTICE_ACCENTS.firstMessage,
   },
   subscriptionNoticeSurface: noticeSurface(CHAT_NOTICE_ACCENTS.subscription),
-  stvEmoteNoticeSurface: {
-    borderLeftWidth: CHAT_SURFACE_COLORS.accentBarWidth,
-    marginVertical: 2,
-    paddingHorizontal: theme.space8,
-    paddingVertical: theme.space4,
-  },
   stvEmoteAddedSurface: {
     backgroundColor: noticeSurfaceTint(CHAT_NOTICE_ACCENTS.stvAdded),
     borderLeftColor: CHAT_NOTICE_ACCENTS.stvAdded,
@@ -78,8 +61,6 @@ export const styles = StyleSheet.create({
   sharedChatLabelRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: 4,
-    marginBottom: 4,
   },
   sharedChatLabelText: {
     color: CHAT_SURFACE_COLORS.muted,
@@ -113,13 +94,11 @@ export const styles = StyleSheet.create({
     backgroundColor: noticeSurfaceTint(theme.color.brand.twitch, 0.08),
     borderLeftColor: theme.color.brand.twitch,
     borderLeftWidth: CHAT_SURFACE_COLORS.accentBarWidth,
-    paddingLeft: 4,
   },
   highlightedReplyTargetContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.04)',
     borderLeftColor: 'rgba(255, 255, 255, 0.18)',
     borderLeftWidth: CHAT_SURFACE_COLORS.accentBarWidth,
-    paddingLeft: 4,
   },
   mentionHighlighted: {
     fontWeight: '700',
@@ -157,12 +136,10 @@ export const styles = StyleSheet.create({
     backgroundColor: noticeSurfaceTint(theme.colorViolet, 0.16),
     borderLeftColor: theme.colorViolet,
     borderLeftWidth: CHAT_SURFACE_COLORS.accentBarWidth,
-    paddingLeft: 6,
   },
   messageMetaRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    marginBottom: 4,
     minWidth: 0,
     width: '100%',
   },
@@ -175,7 +152,6 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     minWidth: 0,
-    marginBottom: 4,
     width: '100%',
   },
   replyContextContent: {
@@ -205,9 +181,6 @@ export const styles = StyleSheet.create({
     backgroundColor: noticeSurfaceTint(CHAT_NOTICE_ACCENTS.replyToYou, 0.14),
     borderRadius: CHAT_SURFACE_COLORS.radius,
     borderCurve: 'continuous',
-    marginBottom: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 3,
   },
   replyContextRowInteractive: {
     alignSelf: 'stretch',
@@ -215,9 +188,6 @@ export const styles = StyleSheet.create({
   replyContextPrefixFlex: {
     flexShrink: 1,
     minWidth: 0,
-  },
-  replyContextIcon: {
-    marginRight: 4,
   },
   replyContextTextReplyToYou: {
     color: CHAT_NOTICE_ACCENTS.replyToYou,
@@ -249,7 +219,6 @@ export const styles = StyleSheet.create({
     textAlign: 'left',
   },
   subscriptionNoticeColumn: {
-    gap: 4,
     width: '100%',
   },
   subscriptionNoticeMetaText: {

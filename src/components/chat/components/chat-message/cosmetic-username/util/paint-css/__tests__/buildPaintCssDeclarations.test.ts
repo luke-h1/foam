@@ -109,7 +109,7 @@ describe('buildPaintCssDeclarations', () => {
     expect(buildPaintCssDeclarations(paint)).toEqual<PaintCssDeclarations>({
       color: 'inherit',
       backgroundImage:
-        'url(https://cdn.7tv.app/paint/01ABC/layer/01DEF/4x.avif)',
+        'url("https://cdn.7tv.app/paint/01ABC/layer/01DEF/4x.avif")',
       backgroundPosition: '0% 0%',
       backgroundSize: '100% 100%',
       backgroundRepeat: 'no-repeat',
@@ -194,6 +194,21 @@ describe('buildPaintCssDeclarations', () => {
 
     expect(declarations.backgroundImage).toBe(
       'linear-gradient(0deg, currentColor 0%, currentColor 100%)',
+    );
+  });
+
+  test('quotes an image url that holds parentheses or a quote', () => {
+    const paint = makePaint({
+      layers: toIndexed([
+        makeLayer({
+          function: 'URL',
+          image_url: 'https://example.com/paint (1)"x".webp',
+        }),
+      ]),
+    });
+
+    expect(buildPaintCssDeclarations(paint).backgroundImage).toBe(
+      'url("https://example.com/paint (1)%22x%22.webp")',
     );
   });
 });

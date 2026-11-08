@@ -1,34 +1,34 @@
 import { memo } from 'react';
 import { View } from 'react-native';
 
-import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
+import { CHAT_NOTICE_ACCENTS } from '@app/components/chat/util/chatNoticeAccents';
+import type { ChatDensity, ChatFontScale } from '@app/store/preference-store';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import { reportUnrenderableNotice } from '@app/utils/chat/chat-health/reportUnrenderableNotice';
-import type { MessageToken } from '@app/utils/chat/messageToken';
 
 import { styles } from '../chat-message/ChatRow.styles';
 import { getChatTextStyles } from '../chat-message/ChatText.styles';
 import { ChatNoticeMetaRow } from '../chat-message/renderers/ChatNoticeMetaRow';
-import type { ChatFontScale } from '../chat-message/util/chatScale';
-import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';
+import { MilestoneSystemMessage } from './MilestoneSystemMessage';
 import { NoticeUserMessage } from './NoticeUserMessage';
 import { splitNoticeSubject } from './util/noticeSentence';
 
 interface ModAnniversaryNoticeProps {
-  compact?: boolean;
-  disableAnimations?: boolean;
+  density?: ChatDensity;
+  disableEmoteAnimations?: boolean;
   fontScale?: ChatFontScale;
-  parsedMessage?: MessageToken[];
+  messageTokens: MessageToken[];
   token: MessageToken<'modiversary'>;
 }
 
 function ModAnniversaryNoticeComponent({
-  compact,
-  disableAnimations,
+  density,
+  disableEmoteAnimations,
   fontScale,
-  parsedMessage,
+  messageTokens,
   token,
 }: ModAnniversaryNoticeProps) {
-  const textStyles = getChatTextStyles(fontScale, compact);
+  const textStyles = getChatTextStyles(fontScale, density);
   const displayName = token.displayName?.trim() || '';
   const systemMsg = token.systemMsg?.trim() || '';
   const content = token.content?.trim() || '';
@@ -50,33 +50,25 @@ function ModAnniversaryNoticeComponent({
         icon='shield.fill'
         label='Mod anniversary'
         {...{
-          compact,
+          density,
           fontScale,
           labelColor: CHAT_NOTICE_ACCENTS.modAnniversary,
           labelStyle: styles.modAnniversaryMetaText,
         }}
       />
       {systemMsg ? (
-        <ChatText style={textStyles.meta}>
-          {lead ? (
-            <ChatText style={[textStyles.meta, styles.channelPointsMetaName]}>
-              {lead}
-            </ChatText>
-          ) : null}
-          {rest ? (
-            <ChatText style={[textStyles.meta, styles.channelPointsMetaMuted]}>
-              {lead ? ` ${rest}` : rest}
-            </ChatText>
-          ) : null}
-        </ChatText>
+        <MilestoneSystemMessage
+          lead={lead}
+          rest={rest}
+          style={textStyles.meta}
+        />
       ) : null}
       <NoticeUserMessage
         {...{
-          compact,
-          disableAnimations,
+          density,
+          disableEmoteAnimations,
           fontScale,
-          message: content,
-          parsedMessage,
+          tokens: messageTokens,
         }}
       />
     </View>

@@ -4,16 +4,13 @@ import {
   type ChannelPointsRewardTags,
   type ChannelPointsRewardTagSource,
 } from '@app/utils/chat/channel-points-reward-title/types';
+import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
 import { setBoundedMapEntry } from '@app/utils/collection/setBoundedMapEntry';
 
 const MAX_REWARD_TITLE_ENTRIES = 100;
 
 const channelPointRewardTitleCache = new Map<string, string>();
 const rewardIdOnlyCache = new Map<string, string>();
-
-function tagText(value: string | boolean | undefined): string | undefined {
-  return value === true || value === false ? undefined : value;
-}
 
 function channelPointRewardCacheKey(
   broadcasterId: string,
@@ -39,7 +36,7 @@ const pendingStandaloneByKey = new Map<
 const STANDALONE_REDEMPTION_DELAY_MS = 500;
 
 function pendingKey(login: string, rewardId: string): string {
-  return `${login.toLowerCase()}:${rewardId}`;
+  return `${normaliseChatUsername(login)}:${rewardId}`;
 }
 
 export function cacheChannelPointRewardTitle(
@@ -79,15 +76,13 @@ export function resolveChannelPointRewardTitle(options: {
     return fromTags;
   }
 
-  const rewardId = tagText(options.tags['custom-reward-id']);
+  const rewardId = options.tags['custom-reward-id'];
 
   if (rewardId === undefined) {
     return undefined;
   }
 
-  const broadcasterId = tagText(
-    options.tags['room-id'] ?? options.broadcasterId,
-  );
+  const broadcasterId = options.tags['room-id'] ?? options.broadcasterId;
 
   const cached =
     broadcasterId === undefined
@@ -101,8 +96,8 @@ export function ingestChannelPointRewardTags(
   tags: ChannelPointsRewardTags,
   broadcasterId?: string,
 ): void {
-  const rewardId = tagText(tags['custom-reward-id']);
-  const roomId = tagText(tags['room-id'] ?? broadcasterId);
+  const rewardId = tags['custom-reward-id'];
+  const roomId = tags['room-id'] ?? broadcasterId;
   const title = channelPointsRewardTitleFromTags(tags);
 
   if (rewardId !== undefined && roomId !== undefined && title) {
@@ -173,4 +168,19 @@ export function enrichChannelPointPrivmsgTags(
   }
 
   return { ...tags, 'msg-param-custom-reward-title': resolved };
+}
+
+/**
+ * Drops the cached titles and cancels every deferred redemption notice, so a
+ * notice armed in one channel cannot publish into the next one.
+ */
+export function clearChannelPointRewardTitles(): void {
+  channelPointRewardTitleCache.clear();
+  rewardIdOnlyCache.clear();
+
+  pendingStandaloneByKey.forEach(pending => {
+    clearTimeout(pending.timeout);
+  });
+
+  pendingStandaloneByKey.clear();
 }

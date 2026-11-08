@@ -1,10 +1,10 @@
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import { getTagValue } from '@app/utils/chat/format-subscription-notice/getTagValue';
 import { withNoticeSubject } from '@app/utils/chat/format-subscription-notice/withNoticeSubject';
 import { formatCharityAmount } from '@app/utils/chat/formatCharityAmount';
-import type { MessageToken } from '@app/utils/chat/messageToken';
 
-export function createCharityDonationPart(
+export function createCharityDonationToken(
   tags: UserNoticeTags,
   messageText?: string,
 ): MessageToken<'charitydonation'> {

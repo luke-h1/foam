@@ -1,3 +1,5 @@
+import { stripMentionPrefix } from '@app/utils/chat/chat-usernames/stripMentionPrefix';
+
 export function normaliseChatUsername(value?: string | null): string {
-  return value?.trim().replace(/^@/, '').toLowerCase() ?? '';
+  return stripMentionPrefix(value).toLowerCase();
 }

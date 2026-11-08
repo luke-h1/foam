@@ -1,4 +1,4 @@
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import { normaliseMessageField } from '@app/utils/chat/message-identity/normaliseMessageField';
 
 export function isRenderableChatMessage(

@@ -1,19 +1,16 @@
 import { View } from 'react-native';
 import type { ReactNode } from 'react';
 
-import { useSelector } from '@legendapp/state/react';
-
-import { chatStore$ } from '@app/store/chat/observables/chat-store';
+import { useUserPaint } from '@app/store/chat/react/user-cosmetics';
+import type { BadgePressData } from '@app/store/chat/types/chat-press-data';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
 import { flowsInline } from '@app/utils/chat/derive-chat-body/flowsInline';
 import { getMessageStructure } from '@app/utils/chat/derive-chat-body/getMessageStructure';
-import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import { cachedLighten } from '@app/utils/chat/resolve-cached-sender-color/cachedLighten';
+import { resolveCachedSenderColor } from '@app/utils/chat/resolve-cached-sender-color/resolveCachedSenderColor';
 
 import { styles } from '../ChatRow.styles';
-import type { BadgePressData } from '../ChatRow.types';
 import { getChatTextStyles } from '../ChatText.styles';
 import { ChannelPointsRewardMetaRow } from './ChannelPointsRewardMetaRow';
 import { ChatRowMetaHeader } from './ChatRowMetaHeader';
@@ -74,14 +71,13 @@ export function UserChatBody({
   } = replyFlags;
 
   const {
-    compact,
+    density,
     disableEmoteAnimations,
     effectiveHighlightedUserSet,
     fontScale,
     getMentionColor,
-    getTokenKey,
+    isModerated,
     message,
-    moderationNotice,
     normalisedCurrentUsername,
     noticeTags,
     onEmoteTouchStart,
@@ -90,18 +86,15 @@ export function UserChatBody({
 
   /**
    * A literal, not object rest, so the React Compiler can cache it. It leaves
-   * out `message` (every line names its own) and `moderationNotice`
+   * out `message`: every line names its own.
    */
-  const rendererArgs: Omit<
-    ChatTokenRenderProps,
-    'message' | 'moderationNotice'
-  > = {
-    compact,
+  const rendererArgs: Omit<ChatTokenRenderProps, 'message'> = {
+    density,
     disableEmoteAnimations,
     effectiveHighlightedUserSet,
     fontScale,
     getMentionColor,
-    getTokenKey,
+    isModerated,
     normalisedCurrentUsername,
     noticeTags,
     onEmoteTouchStart,
@@ -112,16 +105,7 @@ export function UserChatBody({
     ? normaliseChatUsername(parentDisplayName)
     : undefined;
 
-  const hasPaint = useSelector(() => {
-    if (!userId) {
-      return false;
-    }
-
-    const paintId = chatStore$.userPaintIds[userId]?.get();
-    return Boolean(paintId && chatStore$.paints[paintId]?.get());
-  });
-
-  const isModerated = Boolean(moderationNotice);
+  const hasPaint = useUserPaint(userId) !== null;
 
   /**
    * A paint renders through a mask, so a painted row cannot put the username
@@ -129,13 +113,14 @@ export function UserChatBody({
    */
   const rowFlowsInline = flowsInline(message, { hasPaint, isModerated });
 
-  const inlineUsernameColor =
-    cachedSenderColor ??
-    (userstateColor ? cachedLighten(userstateColor) : undefined) ??
-    (username ? cachedLighten(generateRandomTwitchColor(username)) : undefined);
+  const inlineUsernameColor = resolveCachedSenderColor({
+    cachedSenderColor,
+    sender: username ?? '',
+    userstate: { color: userstateColor },
+  });
 
   const actionColor = isAction ? inlineUsernameColor : undefined;
-  const textStyles = getChatTextStyles(fontScale, compact);
+  const textStyles = getChatTextStyles(fontScale, density);
 
   /**
    * A painted row's body still flows inline, so it needs the taller emote
@@ -161,10 +146,10 @@ export function UserChatBody({
       {showChannelPointsRewardChrome && userstate ? (
         <ChannelPointsRewardMetaRow
           {...{
-            compact,
+            density,
             fontScale,
             isHighlightedMessage,
-            moderationNotice,
+            isModerated,
             noticeTags: rendererArgs.noticeTags,
             roomId,
             username,
@@ -195,9 +180,7 @@ export function UserChatBody({
             badgeList,
             bodyEmoteLineStyle,
             cachedSenderColor,
-            isModerated,
             message,
-            moderationNotice,
             onBadgePress,
             onUsernamePress,
             rendererArgs,

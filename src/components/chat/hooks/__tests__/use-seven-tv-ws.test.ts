@@ -5,12 +5,13 @@ import { useSevenTvWs } from '@app/components/chat/hooks/use-seven-tv-ws';
 import { ReadyState } from '@app/hooks/ws/constants';
 import type { Options } from '@app/hooks/ws/types';
 import * as useWebsocketModule from '@app/hooks/ws/use-websocket';
-import { logger } from '@app/utils/logger';
+import { silenceLogger } from '@app/test/silence-logger';
 import * as sevenTvSessionIdModule from '@app/utils/seven-tv/sevenTvSessionId';
 import {
   buildCosmeticCreateSubscribeMessage,
   buildCosmeticCreateUnsubscribeMessage,
   buildEmoteSetUpdateSubscribeMessage,
+  buildEmoteSetUpdateUnsubscribeMessage,
   buildEntitlementCreateSubscribeMessage,
   buildEntitlementCreateUnsubscribeMessage,
   buildResumeMessage,
@@ -18,11 +19,7 @@ import {
   buildUserUpdateUnsubscribeMessage,
 } from '@app/utils/seven-tv/sevenTvWsInterpreter';
 
-jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
-jest.spyOn(logger.stvWs, 'debug').mockImplementation(() => {});
-jest.spyOn(logger.stvWs, 'error').mockImplementation(() => {});
-jest.spyOn(logger.stvWs, 'info').mockImplementation(() => {});
-jest.spyOn(logger.stvWs, 'warn').mockImplementation(() => {});
+silenceLogger();
 
 const mockUsePathname = jest.spyOn(ExpoRouter, 'usePathname');
 const mockUseWebsocket = jest.spyOn(useWebsocketModule, 'useWebsocket');
@@ -92,7 +89,7 @@ describe('useSevenTvWs', () => {
     expect(capturedUrl).toBe('wss://events.7tv.io/v3');
 
     act(() => {
-      void capturedOptions?.onOpen?.();
+      capturedOptions?.onOpen?.();
     });
 
     expect(sendJsonMessage.mock.calls).toEqual([
@@ -103,11 +100,35 @@ describe('useSevenTvWs', () => {
     ]);
   });
 
+  test('subscribeToChannel does not resend what the initial subscriptions sent', () => {
+    const { result } = renderHook(() => useSevenTvWs(hookOptions));
+
+    act(() => {
+      capturedOptions?.onOpen?.();
+    });
+
+    sendJsonMessage.mockClear();
+
+    act(() => {
+      result.current.subscribeToChannel('set-1');
+    });
+
+    expect(sendJsonMessage).not.toHaveBeenCalled();
+  });
+
+  test('stays disconnected until both the channel id and the emote set id are known', () => {
+    renderHook(() =>
+      useSevenTvWs({ ...hookOptions, sevenTvEmoteSetId: undefined }),
+    );
+
+    expect(capturedUrl).toBeNull();
+  });
+
   test('unmount unsubscribes the channel-scoped streams and clears the shared session id', () => {
     const { unmount } = renderHook(() => useSevenTvWs(hookOptions));
 
     act(() => {
-      void capturedOptions?.onOpen?.();
+      capturedOptions?.onOpen?.();
     });
 
     sendJsonMessage.mockClear();
@@ -115,6 +136,7 @@ describe('useSevenTvWs', () => {
     unmount();
 
     expect(sendJsonMessage.mock.calls).toEqual([
+      [buildEmoteSetUpdateUnsubscribeMessage('set-1')],
       [buildEntitlementCreateUnsubscribeMessage('channel-1')],
       [buildCosmeticCreateUnsubscribeMessage('channel-1')],
       [buildUserUpdateUnsubscribeMessage('owner-1')],
@@ -127,7 +149,7 @@ describe('useSevenTvWs', () => {
     renderHook(() => useSevenTvWs(hookOptions));
 
     act(() => {
-      void capturedOptions?.onOpen?.();
+      capturedOptions?.onOpen?.();
     });
 
     sendJsonMessage.mockClear();
@@ -141,7 +163,7 @@ describe('useSevenTvWs', () => {
     expect(sendJsonMessage).not.toHaveBeenCalled();
 
     act(() => {
-      void capturedOptions?.onOpen?.();
+      capturedOptions?.onOpen?.();
     });
 
     expect(sendJsonMessage.mock.calls).toEqual([
@@ -156,7 +178,7 @@ describe('useSevenTvWs', () => {
     renderHook(() => useSevenTvWs(hookOptions));
 
     act(() => {
-      void capturedOptions?.onOpen?.();
+      capturedOptions?.onOpen?.();
     });
 
     act(() => {
@@ -179,7 +201,7 @@ describe('useSevenTvWs', () => {
     sendJsonMessage.mockClear();
 
     act(() => {
-      void capturedOptions?.onOpen?.();
+      capturedOptions?.onOpen?.();
     });
 
     expect(sendJsonMessage).not.toHaveBeenCalled();

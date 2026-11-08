@@ -43,6 +43,14 @@ export function openChatEmotePreview(channelId: string, emote: EmotePressData) {
   replaceOverlay(channelId, { selectedEmote: emote });
 }
 
+export function openChatEmoteActions(channelId: string, emote: EmotePressData) {
+  replaceOverlay(channelId, { selectedEmoteAction: emote });
+}
+
+export function closeChatEmoteActions(channelId: string) {
+  patchOverlay(channelId, { selectedEmoteAction: null });
+}
+
 export function openChatEmoteSheet(channelId: string) {
   replaceOverlay(channelId, { isEmoteSheetMounted: true });
 }

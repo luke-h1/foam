@@ -1,7 +1,7 @@
+import type { MessageToken } from '@app/types/chat/messageToken';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
 import { emoteBreaksInline } from '@app/utils/chat/derive-chat-body/emoteBreaksInline';
 import type { ChatBodyScan } from '@app/utils/chat/derive-chat-body/types';
-import type { MessageToken } from '@app/utils/chat/messageToken';
 import { isSubscriptionNoticeToken } from '@app/utils/chat/subscription-notice-token-types';
 
 const CHARITY_DONATION_TYPES = new Set<MessageToken['type']>([
@@ -97,4 +97,18 @@ export function scanChatBody(message: MessageToken[]): ChatBodyScan {
 
   scanCache.set(message, scan);
   return scan;
+}
+
+/**
+ * The one "does this message mention the user" check. `normalisedLogin` must
+ * come from `normaliseChatUsername`.
+ */
+export function messageMentionsLogin(
+  message: MessageToken[],
+  normalisedLogin: string,
+): boolean {
+  return (
+    normalisedLogin.length > 0 &&
+    scanChatBody(message).mentionLogins.includes(normalisedLogin)
+  );
 }

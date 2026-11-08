@@ -1,3 +1,9 @@
+import {
+  createBadge,
+  createEmoteData,
+  createTwitchEmote,
+} from '@app/components/chat/__tests__/__fixtures__/chatFactories.fixture';
+import { createChatMessageFixture } from '@app/components/chat/util/__tests__/__fixtures__/chatMessage.fixture';
 import { userInfoFixture } from '@app/services/__fixtures__/twitch/user-info.fixture';
 import { bttvEmoteService } from '@app/services/bttv-emote-service';
 import { twitchBadgeService } from '@app/services/twitch-badge-service';
@@ -9,19 +15,20 @@ import {
   shouldEnrichMessage,
 } from '@app/store/chat/actions/message-enrichment';
 import { addMessages, clearMessages } from '@app/store/chat/actions/messages';
+import { getSharedChatBadgeContext } from '@app/store/chat/actions/shared-chat-badges/getSharedChatBadgeContext';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import {
-  type AnyChatMessageType,
   makeEmptyEmoteData,
   makeEmptyGlobalCacheData,
 } from '@app/store/chat/types/constants';
+import { flushChatStoreTimers } from '@app/test/chat-store-teardown';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { createTextToken } from '@app/utils/chat/__tests__/__fixtures__/messageToken.fixture';
 
 import {
-  createMockMessage,
   createNoticeMessage,
   createSystemMessage,
 } from './__fixtures__/message-enrichment.fixture';
@@ -32,29 +39,18 @@ import {
   type TokenSummary,
 } from './__fixtures__/messages.fixture';
 
-type ChatEmoteData = Parameters<typeof enrichMessageSet>[0]['emoteData'];
-
 const channelId = 'channel-1';
 
-const kappa: SanitisedEmote = {
+const kappa = createTwitchEmote({
   id: 'kappa-id',
-  name: 'Kappa',
-  original_name: 'Kappa',
   url: 'https://cdn.example.test/kappa.webp',
-  creator: null,
-  emote_link: '',
-  site: 'Twitch Channel',
-  provider: 'twitch',
-};
+});
 
-const subscriberBadge: SanitisedBadgeSet = {
+const subscriberBadge = createBadge({
   id: '12',
-  set: 'subscriber',
-  type: 'Twitch Channel Badge',
   title: '1-Year Subscriber',
   url: 'https://cdn.example.test/sub-12.png',
-  provider: 'twitch',
-};
+});
 
 const resolvedKappa: TokenSummary = {
   type: 'emote',
@@ -62,34 +58,11 @@ const resolvedKappa: TokenSummary = {
   url: 'https://cdn.example.test/kappa.webp',
 };
 
-function createEmoteData(
-  overrides: Partial<ChatEmoteData> = {},
-): ChatEmoteData {
-  return {
-    twitchChannelEmotes: [],
-    twitchGlobalEmotes: [],
-    twitchSubscriberEmotes: [],
-    sevenTvChannelEmotes: [],
-    sevenTvGlobalEmotes: [],
-    ffzChannelEmotes: [],
-    ffzGlobalEmotes: [],
-    bttvGlobalEmotes: [],
-    bttvChannelEmotes: [],
-    twitchChannelBadges: [],
-    twitchGlobalBadges: [],
-    ffzChannelBadges: [],
-    ffzGlobalBadges: [],
-    chatterinoBadges: [],
-    bttvBadges: [],
-    ...overrides,
-  };
-}
-
 function createSubscriberMessage(
   messageId: string,
   text: string,
 ): AnyChatMessageType {
-  return createMockMessage({
+  return createChatMessageFixture({
     id: messageId,
     message_id: messageId,
     message_nonce: `nonce-${messageId}`,
@@ -111,7 +84,7 @@ beforeEach(() => {
 
 describe('shouldEnrichMessage', () => {
   test('returns true for regular user messages', () => {
-    expect(shouldEnrichMessage(createMockMessage())).toBe(true);
+    expect(shouldEnrichMessage(createChatMessageFixture())).toBe(true);
   });
 
   test('returns false for system messages', () => {
@@ -228,6 +201,54 @@ describe('enrichMessageSet', () => {
     });
   });
 
+  test('keeps the shared-chat source badges like the other enrichment paths', async () => {
+    const sourceSubscriberBadge: SanitisedBadgeSet = {
+      ...subscriberBadge,
+      title: 'Source channel subscriber',
+    };
+
+    jest.spyOn(twitchService, 'getUser').mockResolvedValue({
+      ...userInfoFixture,
+      login: 'sourcechannel',
+      display_name: 'SourceChannel',
+      profile_image_url: 'https://cdn.example.test/source.png',
+    });
+
+    jest
+      .spyOn(twitchBadgeService, 'listSanitisedChannelBadges')
+      .mockResolvedValue([sourceSubscriberBadge]);
+
+    const userstate = createUserStateTags({
+      'badges-raw': 'subscriber/12',
+      'source-room-id': 'enrich-source-room',
+    });
+
+    await getSharedChatBadgeContext(userstate);
+
+    addMessages([
+      createChatMessageFixture({
+        id: 'shared',
+        message_id: 'shared',
+        message_nonce: 'nonce-shared',
+        message: [createTextToken('Kappa')],
+        userstate,
+      }),
+    ]);
+
+    enrichMessageSet({
+      channelId,
+      emoteData,
+      messages: chatStore$.messages.peek(),
+      show7TvEmotes: true,
+      userLogin: 'me',
+    });
+
+    expect(storedMessage('shared').badges?.map(badge => badge.set)).toEqual([
+      'shared-chat-source',
+      'subscriber',
+    ]);
+  });
+
   test('skips messages already in the processed-id set', () => {
     const processedMessageIds = new Set(['a']);
 
@@ -250,6 +271,49 @@ describe('enrichMessageSet', () => {
     expect(processedMessageIds).toEqual(new Set(['a', 'b']));
   });
 
+  test('commits the first batch at once and the later batches together', () => {
+    jest.useFakeTimers();
+
+    try {
+      const messages = Array.from({ length: 30 }, (_, index) =>
+        createSubscriberMessage(`msg-${index}`, 'Kappa'),
+      );
+
+      addMessages(messages);
+
+      enrichMessageSet({
+        channelId,
+        emoteData,
+        messages: chatStore$.messages.peek(),
+        show7TvEmotes: true,
+        userLogin: 'me',
+      });
+
+      const firstBatchIds = [
+        'msg-0',
+        'msg-1',
+        'msg-2',
+        'msg-3',
+        'msg-4',
+        'msg-5',
+      ];
+
+      expect(enrichedMessageIds()).toEqual(firstBatchIds);
+
+      jest.runOnlyPendingTimers();
+
+      expect(enrichedMessageIds()).toEqual(firstBatchIds);
+
+      jest.runAllTimers();
+
+      expect(enrichedMessageIds()).toEqual(
+        messages.map(message => message.message_id),
+      );
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   test('cancelling stops the remaining batches', () => {
     jest.useFakeTimers();
 
@@ -268,9 +332,14 @@ describe('enrichMessageSet', () => {
         userLogin: 'me',
       });
 
-      const firstBatchIds = messages
-        .slice(0, 6)
-        .map(message => message.message_id);
+      const firstBatchIds = [
+        'msg-0',
+        'msg-1',
+        'msg-2',
+        'msg-3',
+        'msg-4',
+        'msg-5',
+      ];
 
       expect(enrichedMessageIds()).toEqual(firstBatchIds);
 
@@ -315,7 +384,7 @@ describe('resolveVisibleMessageUpdate', () => {
       .spyOn(twitchBadgeService, 'listSanitisedChannelBadges')
       .mockResolvedValue([sourceSubscriberBadge]);
 
-    const message = createMockMessage({
+    const message = createChatMessageFixture({
       message_id: 'visible-1',
       message_nonce: 'nv',
       message: [createTextToken('hello Kappa')],
@@ -365,7 +434,7 @@ describe('resolveVisibleMessageUpdate', () => {
   });
 
   test('keeps a stored gif when rebuilt text is shorter than the tag offsets', async () => {
-    const message = createMockMessage({
+    const message = createChatMessageFixture({
       message_id: 'gif-1',
       message_nonce: 'gif-nonce',
       message: [
@@ -400,7 +469,7 @@ describe('resolveVisibleMessageUpdate', () => {
   });
 
   test('keeps a tagged Twitch emote beside a stored gif', async () => {
-    const message = createMockMessage({
+    const message = createChatMessageFixture({
       message_id: 'tagged-gif-1',
       message_nonce: 'tagged-gif-nonce',
       message: [
@@ -440,7 +509,7 @@ describe('resolveVisibleMessageUpdate', () => {
   });
 
   test('reprocesses a link beside an overlaid emote', async () => {
-    const message = createMockMessage({
+    const message = createChatMessageFixture({
       message_id: 'overlay-1',
       message_nonce: 'overlay-nonce',
       message: [
@@ -498,3 +567,5 @@ describe('resolveVisibleMessageUpdate', () => {
     expect(update).toBeNull();
   });
 });
+
+afterEach(flushChatStoreTimers);

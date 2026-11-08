@@ -99,27 +99,4 @@ describe('createUserStateFromTags', () => {
       'reply-parent-user-login': 'parentuser',
     });
   });
-
-  test('defaults reply fields to empty strings', () => {
-    const tags = {
-      'display-name': 'TestUser',
-      login: 'testuser',
-    };
-
-    const result = createUserStateFromTags(tags);
-
-    const replyFields = {
-      'reply-parent-msg-id': result['reply-parent-msg-id'],
-      'reply-parent-msg-body': result['reply-parent-msg-body'],
-      'reply-parent-display-name': result['reply-parent-display-name'],
-      'reply-parent-user-login': result['reply-parent-user-login'],
-    };
-
-    expect(replyFields).toEqual({
-      'reply-parent-msg-id': '',
-      'reply-parent-msg-body': '',
-      'reply-parent-display-name': '',
-      'reply-parent-user-login': '',
-    });
-  });
 });

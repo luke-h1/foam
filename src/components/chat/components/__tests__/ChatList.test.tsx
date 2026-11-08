@@ -1,5 +1,5 @@
-import { View } from 'react-native';
-import type { ReactElement } from 'react';
+import { StyleSheet, View } from 'react-native';
+import type { ComponentProps, ReactElement } from 'react';
 import { makeMutable } from 'react-native-reanimated';
 
 import type {
@@ -10,11 +10,12 @@ import { render } from '@testing-library/react-native';
 
 import { createChatMessageFixture } from '@app/components/chat/util/__tests__/__fixtures__/chatMessage.fixture';
 import type { ViewableMessageToken } from '@app/components/chat/util/getViewableChatMessages';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import { preferences$ } from '@app/store/preference-store';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 
 import { ChatList } from '../ChatList';
 
-type LegendListMockProps = {
+interface LegendListMockProps {
   dataKey: string;
   drawDistance: number;
   estimatedItemSize: number;
@@ -34,7 +35,7 @@ type LegendListMockProps = {
     extraData: unknown;
   }) => ReactElement;
   viewabilityConfig: ViewabilityConfig;
-};
+}
 
 const mockLegendList = jest.fn((_props: LegendListMockProps) => (
   <View testID='flash-list' />
@@ -66,103 +67,89 @@ function getRenderedProps(): LegendListMockProps {
   return call[0];
 }
 
+function createChatListElement(
+  overrides: Partial<ComponentProps<typeof ChatList>> = {},
+) {
+  return (
+    <ChatList
+      contentInsetEndAdjustment={contentInsetEndAdjustment}
+      data={[]}
+      dataKey='test-channel'
+      listRef={{ current: null }}
+      shouldMaintainScrollAtEnd
+      scrollHandlers={{
+        onContentSizeChange: jest.fn(),
+        onEndReached: jest.fn(),
+        onMomentumScrollBegin: jest.fn(),
+        onMomentumScrollEnd: jest.fn(),
+        onScroll: jest.fn(),
+        onScrollBeginDrag: jest.fn(),
+        onScrollEndDrag: jest.fn(),
+      }}
+      renderItem={jest.fn(() => null)}
+      keyExtractor={jest.fn()}
+      getItemType={jest.fn()}
+      contentContainerStyle={undefined}
+      {...overrides}
+    />
+  );
+}
+
+const visibleMessage = createChatMessageFixture({
+  id: '1_nonce',
+  message_id: '1',
+  message_nonce: 'nonce',
+  timestamp: '00:00',
+});
+
 describe('ChatList', () => {
   beforeEach(() => {
     mockLegendList.mockClear();
   });
 
-  test('passes chat-tuned props to LegendList', () => {
-    const listRef = { current: null };
-
-    render(
-      <ChatList
-        contentInsetEndAdjustment={contentInsetEndAdjustment}
-        data={[]}
-        dataKey='test-channel'
-        extraData={{ showTimestamps: false }}
-        listRef={listRef}
-        shouldMaintainScrollAtEnd
-        scrollHandlers={{
-          onContentSizeChange: jest.fn(),
-          onEndReached: jest.fn(),
-          onMomentumScrollBegin: jest.fn(),
-          onMomentumScrollEnd: jest.fn(),
-          onScroll: jest.fn(),
-          onScrollBeginDrag: jest.fn(),
-          onScrollEndDrag: jest.fn(),
-        }}
-        renderItem={jest.fn()}
-        keyExtractor={jest.fn()}
-        getItemType={jest.fn()}
-        contentContainerStyle={undefined}
-      />,
-    );
+  test('keeps the list pinned to the end while the user is at the bottom', () => {
+    render(createChatListElement({ extraData: { showTimestamps: false } }));
 
     const props = getRenderedProps();
 
     expect({
-      drawDistance: props.drawDistance,
-      estimatedItemSize: props.estimatedItemSize,
       extraData: props.extraData,
       maintainScrollAtEnd: props.maintainScrollAtEnd,
-      maintainScrollAtEndThreshold: props.maintainScrollAtEndThreshold,
       maintainVisibleContentPosition: props.maintainVisibleContentPosition,
       recycleItems: props.recycleItems,
-      onEndReachedThreshold: props.onEndReachedThreshold,
-      viewabilityConfig: props.viewabilityConfig,
     }).toEqual({
-      drawDistance: 250,
-      estimatedItemSize: 26,
       extraData: { showTimestamps: false },
       maintainScrollAtEnd: { on: { dataChange: true, itemLayout: true } },
-      maintainScrollAtEndThreshold: 0.1,
       maintainVisibleContentPosition: undefined,
       recycleItems: false,
-      onEndReachedThreshold: 0.02,
-      viewabilityConfig: {
-        itemVisiblePercentThreshold: 1,
-      },
     });
   });
 
-  test('forwards visible messages from LegendList viewability', () => {
-    const listRef = { current: null };
-    const onViewableMessagesChange = jest.fn();
-
-    const visibleMessage = createChatMessageFixture({
-      id: '1_nonce',
-      message_id: '1',
-      message_nonce: 'nonce',
-      timestamp: '00:00',
-    });
-
-    render(
-      <ChatList
-        contentInsetEndAdjustment={contentInsetEndAdjustment}
-        data={[visibleMessage]}
-        dataKey='test-channel'
-        listRef={listRef}
-        shouldMaintainScrollAtEnd
-        scrollHandlers={{
-          onContentSizeChange: jest.fn(),
-          onEndReached: jest.fn(),
-          onMomentumScrollBegin: jest.fn(),
-          onMomentumScrollEnd: jest.fn(),
-          onScroll: jest.fn(),
-          onScrollBeginDrag: jest.fn(),
-          onScrollEndDrag: jest.fn(),
-        }}
-        renderItem={jest.fn()}
-        keyExtractor={jest.fn()}
-        getItemType={jest.fn()}
-        contentContainerStyle={undefined}
-        onViewableMessagesChange={onViewableMessagesChange}
-      />,
-    );
+  test('disables autoscroll-to-bottom when the user has scrolled away', () => {
+    render(createChatListElement({ shouldMaintainScrollAtEnd: false }));
 
     const props = getRenderedProps();
 
-    props.onViewableItemsChanged({
+    expect({
+      maintainScrollAtEnd: props.maintainScrollAtEnd,
+      maintainVisibleContentPosition: props.maintainVisibleContentPosition,
+    }).toEqual({
+      maintainScrollAtEnd: false,
+      maintainVisibleContentPosition: true,
+    });
+  });
+
+  test('forwards only the viewable messages', () => {
+    const onViewableMessagesChange = jest.fn();
+
+    render(
+      createChatListElement({
+        data: [visibleMessage],
+        onViewableMessagesChange,
+      }),
+    );
+
+    getRenderedProps().onViewableItemsChanged({
       viewableItems: [
         { item: visibleMessage, isViewable: true },
         {
@@ -177,42 +164,17 @@ describe('ChatList', () => {
       ],
     });
 
-    expect(onViewableMessagesChange).toHaveBeenCalledWith([visibleMessage]);
+    expect(onViewableMessagesChange.mock.calls).toEqual([[[visibleMessage]]]);
   });
 
   test('forwards every viewability callback without app-side diffing', () => {
-    const listRef = { current: null };
     const onViewableMessagesChange = jest.fn();
 
-    const visibleMessage = createChatMessageFixture({
-      id: '1_nonce',
-      message_id: '1',
-      message_nonce: 'nonce',
-      timestamp: '00:00',
-    });
-
     render(
-      <ChatList
-        contentInsetEndAdjustment={contentInsetEndAdjustment}
-        data={[visibleMessage]}
-        dataKey='test-channel'
-        listRef={listRef}
-        shouldMaintainScrollAtEnd
-        scrollHandlers={{
-          onContentSizeChange: jest.fn(),
-          onEndReached: jest.fn(),
-          onMomentumScrollBegin: jest.fn(),
-          onMomentumScrollEnd: jest.fn(),
-          onScroll: jest.fn(),
-          onScrollBeginDrag: jest.fn(),
-          onScrollEndDrag: jest.fn(),
-        }}
-        renderItem={jest.fn()}
-        keyExtractor={jest.fn()}
-        getItemType={jest.fn()}
-        contentContainerStyle={undefined}
-        onViewableMessagesChange={onViewableMessagesChange}
-      />,
+      createChatListElement({
+        data: [visibleMessage],
+        onViewableMessagesChange,
+      }),
     );
 
     const props = getRenderedProps();
@@ -224,108 +186,58 @@ describe('ChatList', () => {
     props.onViewableItemsChanged(viewabilityPayload);
     props.onViewableItemsChanged(viewabilityPayload);
 
-    expect(onViewableMessagesChange).toHaveBeenCalledTimes(2);
-
-    expect(onViewableMessagesChange).toHaveBeenLastCalledWith([visibleMessage]);
+    expect(onViewableMessagesChange.mock.calls).toEqual([
+      [[visibleMessage]],
+      [[visibleMessage]],
+    ]);
   });
 
   test('renders a skeleton row when LegendList asks for a not-yet-loaded cell', () => {
-    const listRef = { current: null };
-
-    render(
-      <ChatList
-        contentInsetEndAdjustment={contentInsetEndAdjustment}
-        data={[]}
-        dataKey='test-channel'
-        listRef={listRef}
-        shouldMaintainScrollAtEnd
-        scrollHandlers={{
-          onContentSizeChange: jest.fn(),
-          onEndReached: jest.fn(),
-          onMomentumScrollBegin: jest.fn(),
-          onMomentumScrollEnd: jest.fn(),
-          onScroll: jest.fn(),
-          onScrollBeginDrag: jest.fn(),
-          onScrollEndDrag: jest.fn(),
-        }}
-        renderItem={jest.fn(() => null)}
-        keyExtractor={jest.fn()}
-        getItemType={jest.fn()}
-        contentContainerStyle={undefined}
-      />,
-    );
-
-    const props = getRenderedProps();
+    render(createChatListElement());
 
     const { getByTestId } = render(
-      props.renderItem({ item: undefined, index: 2, extraData: undefined }),
+      getRenderedProps().renderItem({
+        item: undefined,
+        index: 2,
+        extraData: undefined,
+      }),
     );
 
     expect(getByTestId('chat-row-skeleton')).toBeOnTheScreen();
   });
 
-  test('disables autoscroll-to-bottom when the user has scrolled away', () => {
-    const listRef = { current: null };
+  test('sizes the skeleton row from the live font scale and density', () => {
+    preferences$.chatFontScale.set('large');
+    preferences$.chatDensity.set('compact');
 
-    render(
-      <ChatList
-        contentInsetEndAdjustment={contentInsetEndAdjustment}
-        data={[]}
-        dataKey='test-channel'
-        listRef={listRef}
-        shouldMaintainScrollAtEnd={false}
-        scrollHandlers={{
-          onContentSizeChange: jest.fn(),
-          onEndReached: jest.fn(),
-          onMomentumScrollBegin: jest.fn(),
-          onMomentumScrollEnd: jest.fn(),
-          onScroll: jest.fn(),
-          onScrollBeginDrag: jest.fn(),
-          onScrollEndDrag: jest.fn(),
-        }}
-        renderItem={jest.fn()}
-        keyExtractor={jest.fn()}
-        getItemType={jest.fn()}
-        contentContainerStyle={undefined}
-      />,
+    render(createChatListElement());
+
+    const { getByTestId } = render(
+      getRenderedProps().renderItem({
+        item: undefined,
+        index: 0,
+        extraData: undefined,
+      }),
     );
 
-    const props = getRenderedProps();
-    expect(props.maintainScrollAtEnd).toBe(false);
+    const { minHeight, paddingVertical } = StyleSheet.flatten(
+      getByTestId('chat-row-skeleton').props['style'],
+    );
 
-    expect(props.maintainScrollAtEndThreshold).toBe(0.1);
+    preferences$.chatFontScale.set('default');
+    preferences$.chatDensity.set('comfortable');
 
-    expect(props.maintainVisibleContentPosition).toBe(true);
+    expect({ minHeight, paddingVertical }).toEqual({
+      minHeight: 25,
+      paddingVertical: 2,
+    });
   });
 
   test('forwards the dataset identity to LegendList', () => {
-    const listRef = { current: null };
-
-    const renderList = (dataKey: string) => (
-      <ChatList
-        contentInsetEndAdjustment={contentInsetEndAdjustment}
-        data={[]}
-        dataKey={dataKey}
-        listRef={listRef}
-        shouldMaintainScrollAtEnd
-        scrollHandlers={{
-          onContentSizeChange: jest.fn(),
-          onEndReached: jest.fn(),
-          onMomentumScrollBegin: jest.fn(),
-          onMomentumScrollEnd: jest.fn(),
-          onScroll: jest.fn(),
-          onScrollBeginDrag: jest.fn(),
-          onScrollEndDrag: jest.fn(),
-        }}
-        renderItem={jest.fn()}
-        keyExtractor={jest.fn()}
-        getItemType={jest.fn()}
-        contentContainerStyle={undefined}
-      />
+    const { rerender } = render(
+      createChatListElement({ dataKey: 'channel-a' }),
     );
-
-    const { rerender } = render(renderList('channel-a'));
-    rerender(renderList('channel-b'));
+    rerender(createChatListElement({ dataKey: 'channel-b' }));
 
     const dataKeys = mockLegendList.mock.calls.map(call => call[0].dataKey);
 

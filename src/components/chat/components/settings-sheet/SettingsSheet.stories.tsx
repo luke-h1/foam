@@ -29,7 +29,6 @@ const meta = {
     onReconnect: { action: 'onReconnect' },
   },
   args: {
-    isPresented: false,
     onDismiss: () => {},
   },
 } satisfies Meta<typeof SettingsSheet>;
@@ -38,14 +37,18 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-type SheetWrapperProps = Omit<SettingsSheetProps, 'isPresented' | 'onDismiss'>;
+type SheetWrapperProps = Omit<SettingsSheetProps, 'onDismiss'>;
 
+/**
+ * The chat mounts the sheet only while it is open, so the story does the
+ * same after a short delay.
+ */
 function SheetWrapper(props: SheetWrapperProps) {
-  const [isPresented, setIsPresented] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setIsPresented(true);
+      setIsMounted(true);
     }, 100);
 
     return () => clearTimeout(timer);
@@ -53,22 +56,17 @@ function SheetWrapper(props: SheetWrapperProps) {
 
   return (
     <View style={{ flex: 1 }}>
-      <SettingsSheet
-        {...props}
-        isPresented={isPresented}
-        onDismiss={() => setIsPresented(false)}
-      />
+      {isMounted ? (
+        <SettingsSheet {...props} onDismiss={() => setIsMounted(false)} />
+      ) : null}
     </View>
   );
 }
 
-function renderSheetStory(args: SettingsSheetProps) {
-  const {
-    isPresented: _isPresented,
-    onDismiss: _onDismiss,
-    ...sheetArgs
-  } = args;
-
+function renderSheetStory({
+  onDismiss: _onDismiss,
+  ...sheetArgs
+}: SettingsSheetProps) {
   return <SheetWrapper {...sheetArgs} />;
 }
 

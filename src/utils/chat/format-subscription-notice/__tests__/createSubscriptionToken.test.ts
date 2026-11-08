@@ -2,14 +2,14 @@ import {
   createResubTags,
   createSubGiftTags,
   createSubscriptionTags,
-} from '@app/types/chat/irc-tags/__fixtures__/user-notice-tags.fixture';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+} from '@app/types/chat/irc-tags/__tests__/__fixtures__/user-notice-tags.fixture';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
-import { createSubscriptionPart } from '../createSubscriptionToken';
+import { createSubscriptionToken } from '../createSubscriptionToken';
 
-describe('createSubscriptionPart', () => {
-  test('createSubscriptionPart maps sub notices', () => {
-    const token = createSubscriptionPart(
+describe('createSubscriptionToken', () => {
+  test('createSubscriptionToken maps sub notices', () => {
+    const token = createSubscriptionToken(
       createSubscriptionTags({
         'display-name': 'Viewer',
         'msg-param-sub-plan': '1000',
@@ -34,8 +34,8 @@ describe('createSubscriptionPart', () => {
     });
   });
 
-  test('createSubscriptionPart maps resub notices with message text', () => {
-    const token = createSubscriptionPart(
+  test('createSubscriptionToken maps resub notices with message text', () => {
+    const token = createSubscriptionToken(
       createResubTags({
         login: 'viewer',
         'msg-param-sub-plan': '3000',
@@ -62,8 +62,8 @@ describe('createSubscriptionPart', () => {
     });
   });
 
-  test('createSubscriptionPart maps subgift notices', () => {
-    const token = createSubscriptionPart(
+  test('createSubscriptionToken maps subgift notices', () => {
+    const token = createSubscriptionToken(
       createSubGiftTags({
         'display-name': 'Gifter',
         'msg-param-recipient-display-name': 'Recipient',
@@ -89,8 +89,8 @@ describe('createSubscriptionPart', () => {
     });
   });
 
-  test('createSubscriptionPart maps prime paid upgrade notices', () => {
-    const token = createSubscriptionPart({
+  test('createSubscriptionToken maps prime paid upgrade notices', () => {
+    const token = createSubscriptionToken({
       'msg-id': 'primepaidupgrade',
       'display-name': 'Viewer',
       'msg-param-sub-plan': 'Prime',
@@ -110,7 +110,7 @@ describe('createSubscriptionPart', () => {
   });
 
   test('falls back instead of rendering malformed numeric tags as NaN', () => {
-    const token = createSubscriptionPart(
+    const token = createSubscriptionToken(
       createResubTags({
         'msg-param-cumulative-months': 'not-a-number',
         'msg-param-streak-months': 'also-not-a-number',

@@ -35,6 +35,7 @@ import {
 } from '@app/utils/image/paintBitmapCacheLifecycle';
 
 import { cssClampedStops } from './paint-layer/cssClampedStops';
+import { getPaintBaseColor } from './paint-layer/getPaintBaseColor';
 import { getPaintDropShadows } from './paint-layer/getPaintDropShadows';
 import { getPaintLayers } from './paint-layer/getPaintLayers';
 import { isRenderablePaintLayer } from './paint-layer/isRenderablePaintLayer';
@@ -46,7 +47,7 @@ import {
 import { skiaDecodableLayerUrl } from './paint-layer/skiaDecodableLayerUrl';
 import { getPaintTextShadows } from './paint-text-style/getPaintTextShadows';
 import { getPaintTextStroke } from './paint-text-style/getPaintTextStroke';
-import { cssDropShadowBlur } from './skia-paint-geometry/cssDropShadowBlur';
+import { paintCssFontWeight } from './paint-text-style/paintFont';
 import { cssLinearGradientLine } from './skia-paint-geometry/cssLinearGradientLine';
 import { cssTextShadowBlur } from './skia-paint-geometry/cssTextShadowBlur';
 import { farthestCornerCircleRadius } from './skia-paint-geometry/farthestCornerCircleRadius';
@@ -254,12 +255,11 @@ function buildPaintLayout(
   const { paint, displayUsername, fontSize, pixelRatio } = opts;
   const scale = pixelRatio;
 
-  // Chat usernames use the bold Montserrat face. A paint can set its own weight.
   let fontWeight: FontWeight = FontWeight.Bold;
 
   if (paint.textStyle?.weight) {
-    // SAFETY: 7TV encodes textStyle.weight as CSS hundreds (1-9), so x100 lands on a FontWeight member.
-    fontWeight = (paint.textStyle.weight * 100) as FontWeight;
+    // SAFETY: paintCssFontWeight maps the 7TV weight (1-9) onto 100-900, which are FontWeight members.
+    fontWeight = paintCssFontWeight(paint.textStyle.weight) as FontWeight;
   }
 
   const partial = {
@@ -276,7 +276,7 @@ function buildPaintLayout(
     return null;
   }
 
-  const dropShadows = getPaintDropShadows(paint, 2);
+  const dropShadows = getPaintDropShadows(paint);
   const textShadows = getPaintTextShadows(paint);
   const stroke = getPaintTextStroke(paint);
 
@@ -343,12 +343,14 @@ function drawPaintedUsername(
   let dropShadowChain: SkImageFilter | null = null;
 
   if (options.includeDropShadows) {
+    // Skia takes the CSS radius unhalved. 7TV paints target Chrome, and a
+    // halved radius made every shadow half as wide as on the web.
     for (const shadow of layout.dropShadows) {
       dropShadowChain = Skia.ImageFilter.MakeDropShadow(
         shadow.x_offset * scale,
         shadow.y_offset * scale,
-        cssDropShadowBlur(shadow.radius) * scale,
-        cssDropShadowBlur(shadow.radius) * scale,
+        shadow.radius * scale,
+        shadow.radius * scale,
         skColor(shadow.color),
         dropShadowChain,
       );
@@ -386,11 +388,7 @@ function drawPaintedUsername(
 
   const basePaint = Skia.Paint();
 
-  basePaint.setColor(
-    isVisibleSevenTvColor(paint.color)
-      ? skColor(paint.color)
-      : Skia.Color(fallbackColor),
-  );
+  basePaint.setColor(Skia.Color(getPaintBaseColor(paint, fallbackColor)));
 
   const gradientsToDraw = (
     options.gradientLayers ?? [...layout.layers].reverse()
@@ -514,16 +512,8 @@ export type PaintLayerSlot =
 export interface PaintBitmaps {
   staticImage: SkImage;
   maskImage: SkImage | null;
-  /**
-   * Base-colour glyphs under each URL texture (the reference's per-span
-   * `background-color: currentColor`). Null when the foundation fill covers it.
-   */
-  backingImage: SkImage | null;
   layerSlots: PaintLayerSlot[];
   strokeImage: SkImage | null;
-  /**
-   * URL layers back-to-front, for callers that only need the texture list.
-   */
   imageLayers: PaintImageLayer[];
   width: number;
   height: number;
@@ -594,42 +584,6 @@ export function buildPaintImageLayers(
   }
 
   return imageLayers;
-}
-
-/**
- * Contiguous gradient runs bake into one slot; each URL gets a live overlay
- * slot so a gradient above a URL still composites on top of it.
- */
-export function planPaintLayerSlotKinds(
-  layers: PaintLayerData[],
-): ('url' | 'baked')[] {
-  const kinds: ('url' | 'baked')[] = [];
-  let pendingGradients = false;
-
-  const flushGradients = () => {
-    if (!pendingGradients) {
-      return;
-    }
-
-    pendingGradients = false;
-    kinds.push('baked');
-  };
-
-  for (const layer of [...layers].reverse()) {
-    if (isLiveUrlLayer(layer)) {
-      flushGradients();
-      kinds.push('url');
-      continue;
-    }
-
-    if (isDrawableGradientLayer(layer)) {
-      pendingGradients = true;
-    }
-  }
-
-  flushGradients();
-
-  return kinds;
 }
 
 function buildPaintLayerSlots(
@@ -725,13 +679,8 @@ type PaintSurfaces = {
   layerSlots: PaintLayerSlot[];
   imageLayers: PaintImageLayer[];
   strokeImage: SkImage | null;
-  backingImage: SkImage | null;
 };
 
-/**
- * A paint with no live URL layer draws in one pass, so there is nothing to
- * composite over and no slots to track.
- */
 function renderFlatSurface(
   opts: RasterizePaintedUsernameOptions,
   layout: PaintUsernameLayout,
@@ -749,7 +698,6 @@ function renderFlatSurface(
     layerSlots: [],
     imageLayers: [],
     strokeImage: null,
-    backingImage: null,
   };
 }
 
@@ -795,13 +743,9 @@ function renderUrlLayeredSurfaces(
     layerSlots,
     imageLayers,
     strokeImage,
-    backingImage: null,
   };
 }
 
-/**
- * White text on a clear surface, used to clip image layers to the glyphs.
- */
 function renderUsernameMask(
   opts: RasterizePaintedUsernameOptions,
   layout: PaintUsernameLayout,
@@ -862,8 +806,7 @@ export function getPaintBitmaps(
     return null;
   }
 
-  const { staticImage, layerSlots, imageLayers, strokeImage, backingImage } =
-    surfaces;
+  const { staticImage, layerSlots, imageLayers, strokeImage } = surfaces;
 
   const { scale } = layout;
 
@@ -873,7 +816,6 @@ export function getPaintBitmaps(
   const bitmaps: PaintBitmaps = {
     staticImage,
     maskImage,
-    backingImage,
     layerSlots,
     strokeImage,
     imageLayers,
@@ -898,10 +840,6 @@ function estimatePaintBitmapBytes(
   let imageCount = 1;
 
   if (bitmaps.maskImage) {
-    imageCount += 1;
-  }
-
-  if (bitmaps.backingImage) {
     imageCount += 1;
   }
 

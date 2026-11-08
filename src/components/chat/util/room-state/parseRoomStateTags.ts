@@ -1,18 +1,43 @@
 import type { ParsedRoomState } from '@app/store/chat/types/room-state';
 
+function parseIntTag(value: string, fallback: number): number {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isNaN(parsed) ? fallback : parsed;
+}
+
+/**
+ * Twitch sends every mode on JOIN, but a later ROOMSTATE carries only the
+ * tags that changed. The result holds only the modes present in `tags`.
+ */
 export function parseRoomStateTags(
   tags: Record<string, string>,
-): ParsedRoomState {
-  const followersOnlyRaw = Number.parseInt(tags['followers-only'] ?? '-1', 10);
-  const slowRaw = Number.parseInt(tags['slow'] ?? '0', 10);
+): Partial<ParsedRoomState> {
+  const state: Partial<ParsedRoomState> = {};
+  const emoteOnly = tags['emote-only'];
+  const followersOnly = tags['followers-only'];
+  const r9k = tags['r9k'];
+  const slow = tags['slow'];
+  const subsOnly = tags['subs-only'];
 
-  return {
-    emoteOnly: tags['emote_only'] === '1',
-    followersOnlyMinutes: Number.isNaN(followersOnlyRaw)
-      ? -1
-      : followersOnlyRaw,
-    r9k: tags['r9k'] === '1',
-    slowSeconds: Number.isNaN(slowRaw) ? 0 : slowRaw,
-    subsOnly: tags['subs-only'] === '1',
-  };
+  if (emoteOnly !== undefined) {
+    state.emoteOnly = emoteOnly === '1';
+  }
+
+  if (followersOnly !== undefined) {
+    state.followersOnlyMinutes = parseIntTag(followersOnly, -1);
+  }
+
+  if (r9k !== undefined) {
+    state.r9k = r9k === '1';
+  }
+
+  if (slow !== undefined) {
+    state.slowSeconds = parseIntTag(slow, 0);
+  }
+
+  if (subsOnly !== undefined) {
+    state.subsOnly = subsOnly === '1';
+  }
+
+  return state;
 }

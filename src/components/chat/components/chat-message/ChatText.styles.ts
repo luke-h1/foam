@@ -5,17 +5,16 @@ import {
   type ViewStyle,
 } from 'react-native';
 
+import type { ChatDensity, ChatFontScale } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
 
-import {
-  CHAT_SURFACE_COLORS,
-  type ChatDensity,
-  type ChatFontScale,
-  densityFromCompact,
-  getChatScale,
-} from './util/chatScale';
+import { CHAT_SURFACE_COLORS, getChatScale } from './util/chatScale';
 
 export interface ChatTextStyles {
+  /**
+   * Left inset of a row that is tinted because it mentions you.
+   */
+  accentInset: ViewStyle;
   badgeArtwork: ImageStyle;
   badgeSlot: ViewStyle;
   badgeTintSlot: ViewStyle;
@@ -25,14 +24,34 @@ export interface ChatTextStyles {
    * the outer Text clips the attachment.
    */
   bodyEmoteLine: TextStyle;
+  /**
+   * Left inset of a highlighted sender or reply-target row.
+   */
+  highlightInset: ViewStyle;
+  /**
+   * Space between a meta icon and the text after it.
+   */
+  iconSpacing: ViewStyle;
   link: TextStyle;
   mention: TextStyle;
   meta: TextStyle;
   metaStrong: TextStyle;
-  placeholder: ViewStyle;
   replyContext: TextStyle;
   replyContextEmoteLine: TextStyle;
+  replyToYouPill: ViewStyle;
   row: ViewStyle;
+  /**
+   * Space under a header line (meta row, reply context, shared-chat label).
+   */
+  spaceBelow: ViewStyle;
+  /**
+   * Gap between the stacked lines of a notice column.
+   */
+  stackGap: ViewStyle;
+  /**
+   * Geometry of every tinted notice surface. The colour half comes from the
+   * notice's own style in `ChatRow.styles`.
+   */
   surface: ViewStyle;
   timestamp: TextStyle;
   username: TextStyle;
@@ -58,13 +77,16 @@ function buildChatTextStyles(
   // SAFETY: keys and values match ChatTextStyles; StyleSheet.create no longer
   // accepts that shape as a generic under the Strict TypeScript API.
   return StyleSheet.create({
+    accentInset: {
+      paddingLeft: scale.accentInset,
+    },
     badgeArtwork: {
       height: scale.badgeSize,
       width: scale.badgeSize,
     },
     badgeSlot: {
       height: scale.badgeSize,
-      width: scale.badgeSize + scale.badgeGap,
+      width: scale.badgeSize + scale.gap,
     },
     badgeTintSlot: {
       borderRadius: CHAT_SURFACE_COLORS.radius,
@@ -77,6 +99,12 @@ function buildChatTextStyles(
     bodyEmoteLine: {
       lineHeight: scale.emoteLineHeight,
     },
+    highlightInset: {
+      paddingLeft: scale.gap,
+    },
+    iconSpacing: {
+      marginRight: scale.gap,
+    },
     link: {
       ...body,
       color: theme.color.brand.twitch,
@@ -87,16 +115,13 @@ function buildChatTextStyles(
     metaStrong: {
       fontWeight: '600',
     },
-    placeholder: {
-      borderRadius: CHAT_SURFACE_COLORS.radius,
-      borderCurve: 'continuous',
-      height: Math.round(scale.bodyFontSize * 0.86),
-      marginHorizontal: 2,
-      width: Math.round(scale.bodyFontSize * 6.9),
-    },
     replyContext: secondary,
     replyContextEmoteLine: {
       lineHeight: scale.replyEmoteLineHeight,
+    },
+    replyToYouPill: {
+      paddingHorizontal: scale.accentInset,
+      paddingVertical: scale.pillPaddingVertical,
     },
     row: {
       flexDirection: 'row',
@@ -105,6 +130,12 @@ function buildChatTextStyles(
       paddingHorizontal: scale.rowPaddingHorizontal,
       paddingVertical: scale.rowPaddingVertical,
       width: '100%',
+    },
+    spaceBelow: {
+      marginBottom: scale.gap,
+    },
+    stackGap: {
+      gap: scale.gap,
     },
     surface: {
       borderLeftWidth: CHAT_SURFACE_COLORS.accentBarWidth,
@@ -145,7 +176,7 @@ const CHAT_TEXT_STYLES = {
  */
 export function getChatTextStyles(
   fontScale: ChatFontScale | undefined,
-  compact: boolean | undefined,
+  density: ChatDensity | undefined,
 ): ChatTextStyles {
-  return CHAT_TEXT_STYLES[fontScale ?? 'default'][densityFromCompact(compact)];
+  return CHAT_TEXT_STYLES[fontScale ?? 'default'][density ?? 'comfortable'];
 }

@@ -7,7 +7,27 @@ test('returns all commands when the search term is empty', () => {
     useCommandSuggestions({ searchTerm: '' }),
   );
 
-  expect(result.current.filteredCommands.length).toBeGreaterThan(0);
+  expect(result.current.filteredCommands.map(command => command.name)).toEqual([
+    'timeout',
+    'ban',
+    'unban',
+    'warn',
+    'announce',
+    'shoutout',
+    'slow',
+    'slowoff',
+    'followers',
+    'followersoff',
+    'subscribers',
+    'subscribersoff',
+    'emoteonly',
+    'emoteonlyoff',
+    'uniquechat',
+    'uniquechatoff',
+    'shield',
+    'shieldoff',
+    'refresh',
+  ]);
 });
 
 test('filters commands by name prefix', () => {
@@ -35,5 +55,8 @@ test('respects the maxSuggestions cap', () => {
     useCommandSuggestions({ searchTerm: '', maxSuggestions: 2 }),
   );
 
-  expect(result.current.filteredCommands.length).toBe(2);
+  expect(result.current.filteredCommands.map(command => command.name)).toEqual([
+    'timeout',
+    'ban',
+  ]);
 });

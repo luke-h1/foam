@@ -5,24 +5,21 @@ import type { ChatRowDisplayFlags } from '@app/components/chat/types/chat-ui-fla
 import { shouldAnimateMessageEntrance } from '@app/components/chat/util/chat-messages/shouldAnimateMessageEntrance';
 import { isUserNoticeTags } from '@app/components/chat/util/chat-row/isUserNoticeTags';
 import { chatEntranceSpring } from '@app/components/chat/util/chatEntranceSpring';
-import { getUserMessageColor } from '@app/store/chat/actions/messages';
+import { getUserMessageColor } from '@app/store/chat/actions/message-color-index';
 import { useIsHighlightedReplyTargetMessage } from '@app/store/chat/react/transient-selectors';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import type {
-  ChatFontScale,
-  CustomHighlight,
-} from '@app/store/preference-store';
+  BadgePressData,
+  MessageActionData,
+  UsernamePressData,
+} from '@app/store/chat/types/chat-press-data';
+import type { ChatDensity, ChatFontScale } from '@app/store/preference-store';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
+import type { CustomHighlight } from '@app/types/chat/customHighlight';
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolve-cached-sender-color/resolveCachedSenderColor';
 
-import {
-  type BadgePressData,
-  ChatRow,
-  type EmotePressData,
-  type MessageActionData,
-  type UsernamePressData,
-} from './ChatRow';
+import { ChatRow } from './ChatRow';
 import { getChatTextStyles } from './ChatText.styles';
 import { RowVisibilityContext, useRowVisibility } from './util/rowVisibility';
 
@@ -41,10 +38,10 @@ function getRowNoticeTags(
 
 export interface ChatRowPreferences {
   animate: boolean;
-  chatDensity: 'comfortable' | 'compact';
+  chatDensity: ChatDensity;
   chatFontScale?: ChatFontScale;
   chatTimestamps: boolean;
-  customHighlights?: CustomHighlight[];
+  customHighlights: CustomHighlight[];
   disableEmoteAnimations: boolean;
   highlightOwnMentions?: boolean;
   showAlternatingChatRows: boolean;
@@ -52,7 +49,7 @@ export interface ChatRowPreferences {
 }
 
 interface ChatMessageRowProps {
-  chatDensity: 'comfortable' | 'compact';
+  chatDensity: ChatDensity;
   channelId: string;
   currentUsername?: string;
   currentUsernameNormalized: string;
@@ -63,7 +60,6 @@ interface ChatMessageRowProps {
   index: number;
   message: AnyChatMessageType;
   onBadgePress: (badge: BadgePressData) => void;
-  onEmotePress: (emote: EmotePressData) => void;
   onMessageLongPress: (data: MessageActionData<'usernotice'>) => void;
   onReplyContextPress: (replyParentMessageId: string) => void;
   onUsernamePress: (data: UsernamePressData) => void;
@@ -82,7 +78,6 @@ export const ChatRowItem = function ChatRowItem({
   index,
   message: msg,
   onBadgePress,
-  onEmotePress,
   onMessageLongPress,
   onReplyContextPress,
   onUsernamePress,
@@ -112,7 +107,7 @@ export const ChatRowItem = function ChatRowItem({
   const isAlternatingRow =
     showAlternatingChatRows && (msg.seq ?? index) % 2 === 1;
 
-  const rowStyle = getChatTextStyles(fontScale, chatDensity === 'compact').row;
+  const rowStyle = getChatTextStyles(fontScale, chatDensity).row;
 
   const messageDisplay = useMemo(
     () => ({
@@ -143,40 +138,26 @@ export const ChatRowItem = function ChatRowItem({
 
   const row = (
     <ChatRow
-      id={msg.id}
+      {...msg}
       broadcasterId={channelId}
-      channel={msg.channel}
-      message={msg.message}
-      userstate={msg.userstate}
-      badges={msg.badges}
       cachedSenderColor={
         msg.cachedSenderColor ??
         resolveCachedSenderColor(msg, getUserMessageColor)
       }
-      message_id={msg.message_id}
-      message_nonce={msg.message_nonce}
-      timestamp={msg.timestamp}
-      sender={msg.sender}
-      isAction={msg.isAction}
-      style={rowStyle}
-      parentDisplayName={msg.parentDisplayName}
-      parentColor={msg.parentColor}
-      replyDisplayName={msg.replyDisplayName}
-      replyBody={msg.replyBody}
-      onBadgePress={onBadgePress}
-      onMessageLongPress={onMessageLongPress}
-      onEmotePress={onEmotePress}
-      onUsernamePress={onUsernamePress}
-      getMentionColor={getMentionColor}
-      parseTextForEmotes={parseTextForEmotes}
       currentUsername={currentUsername}
       currentUsernameNormalized={currentUsernameNormalized}
+      customHighlights={customHighlights}
       density={chatDensity}
       fontScale={fontScale}
-      customHighlights={customHighlights}
+      getMentionColor={getMentionColor}
       highlightedUserSet={highlightedUserSet}
       messageDisplay={messageDisplay}
+      onBadgePress={onBadgePress}
+      onMessageLongPress={onMessageLongPress}
       onReplyContextPress={onReplyContextPress}
+      onUsernamePress={onUsernamePress}
+      parseTextForEmotes={parseTextForEmotes}
+      style={rowStyle}
       // @ts-expect-error - ChatRow is generic over one notice variant, so the row's union types this prop as `undefined`. getRowNoticeTags guards the value.
       notice_tags={getRowNoticeTags(msg)}
     />

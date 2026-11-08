@@ -1,22 +1,26 @@
 import { memo } from 'react';
 
+import { useChatOverlayActions } from '@app/components/chat/hooks/use-chat-interaction-handlers';
+import { useChatOverlayHandlers } from '@app/components/chat/hooks/use-chat-overlay-handlers';
+import { resolveModTarget } from '@app/components/chat/util/mod-commands/resolveModTarget';
 import {
-  resolveModTarget,
-  useChatOverlayHandlers,
-} from '@app/components/chat/hooks/use-chat-overlay-handlers';
-import { openChatUserActions } from '@app/store/chat/actions/chat-overlays';
+  closeChatEmoteActions,
+  openChatUserActions,
+} from '@app/store/chat/actions/chat-overlays';
+import { getUserMessageColor } from '@app/store/chat/actions/message-color-index';
 import { useChatOverlayState } from '@app/store/chat/react/overlay-selectors';
-import type { ChatMessageType } from '@app/store/chat/types/constants';
+import type { MessageActionData } from '@app/store/chat/types/chat-press-data';
 import { usePreference } from '@app/store/preference-store';
+import type { ChatMessageType } from '@app/types/chat/chatMessage';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
+import { resolveCachedSenderColor } from '@app/utils/chat/resolve-cached-sender-color/resolveCachedSenderColor';
 import { isDevToolsEnabled } from '@app/utils/dev-tools/isDevToolsEnabled';
 
 import { ActionSheet } from './action-sheet/ActionSheet';
-import { BadgePreviewSheet } from './badge-preview-sheet/BadgePreviewSheet';
-import type { MessageActionData } from './chat-message/ChatRow.types';
+import { AssetPreviewSheet } from './asset-preview-sheet/AssetPreviewSheet';
 import { ChatDebugLogRecorder } from './ChatDebugLogRecorder';
 import { ChattersSheet } from './chatters-sheet/ChattersSheet';
-import { EmotePreviewSheet } from './emote-preview-sheet/EmotePreviewSheet';
+import { EmoteActionSheet } from './emote-action-sheet/EmoteActionSheet';
 import { EmoteSheet } from './emote-sheet/EmoteSheet';
 import type { EmotePickerItem } from './emote-sheet/util/emoteSheetTypes';
 import { SavedPhrasesSheet } from './saved-phrases-sheet/SavedPhrasesSheet';
@@ -24,11 +28,11 @@ import { SettingsSheet } from './settings-sheet/SettingsSheet';
 import { UserActionSheet } from './UserActionSheet';
 
 /**
- * Twitch only blocks by numeric user id, and a user cannot block themselves.
+ * Twitch only blocks by user id, and a user cannot block themselves.
  */
 function canBlockUserId(userId: string | undefined, currentUserId?: string) {
   const target = userId?.trim();
-  return Boolean(target && /^\d+$/.test(target) && target !== currentUserId);
+  return Boolean(target && target !== currentUserId);
 }
 
 export interface ChatOverlayLayerProps {
@@ -57,10 +61,6 @@ export interface ChatOverlayLayerProps {
   toggleHighlightedUser: (username?: string) => void;
 }
 
-/**
- * Subscribes to the overlay observable itself, so opening or dismissing a
- * sheet re-renders this subtree and nothing above it.
- */
 export const ChatOverlayLayer = memo(function ChatOverlayLayer({
   canModerateChat,
   channelId,
@@ -93,11 +93,14 @@ export const ChatOverlayLayer = memo(function ChatOverlayLayer({
     isSettingsSheetMounted,
     selectedBadge,
     selectedEmote,
+    selectedEmoteAction,
     selectedMessage,
     selectedUser,
   } = useChatOverlayState(channelId);
 
   const chatDebugTools = usePreference('chatDebugTools');
+  const disableEmoteAnimations = usePreference('disableEmoteAnimations');
+  const { handleEmotePress } = useChatOverlayActions(channelId);
 
   const {
     handleActionSheetBanUser,
@@ -166,7 +169,6 @@ export const ChatOverlayLayer = memo(function ChatOverlayLayer({
 
       {isEmoteSheetMounted ? (
         <EmoteSheet
-          isPresented
           onDismiss={handleEmoteSheetDidDismiss}
           onEmoteSelect={onInsertEmote}
         />
@@ -174,7 +176,6 @@ export const ChatOverlayLayer = memo(function ChatOverlayLayer({
 
       {isSettingsSheetMounted ? (
         <SettingsSheet
-          isPresented
           onClearChatCache={onClearChatCache}
           onClearImageCache={onClearImageCache}
           onClearSevenTvCosmeticsCache={onClearSevenTvCosmeticsCache}
@@ -189,7 +190,6 @@ export const ChatOverlayLayer = memo(function ChatOverlayLayer({
 
       {isChattersSheetMounted ? (
         <ChattersSheet
-          isPresented
           onDismiss={handleChattersSheetDidDismiss}
           onSelectChatter={chatter => openChatUserActions(channelId, chatter)}
         />
@@ -197,34 +197,45 @@ export const ChatOverlayLayer = memo(function ChatOverlayLayer({
 
       {isSavedPhrasesSheetMounted ? (
         <SavedPhrasesSheet
-          isPresented
           onDismiss={handleSavedPhrasesSheetDidDismiss}
           onSelectPhrase={onInsertPhrase}
         />
       ) : null}
 
       {selectedBadge ? (
-        <BadgePreviewSheet
-          visible
-          onClose={handleCloseSelectedBadge}
-          selectedBadge={selectedBadge}
+        <AssetPreviewSheet
+          kind='badge'
+          asset={selectedBadge}
+          onDismiss={handleCloseSelectedBadge}
         />
       ) : null}
 
       {selectedEmote ? (
-        <EmotePreviewSheet
-          visible
-          onClose={handleCloseSelectedEmote}
-          selectedEmote={selectedEmote}
+        <AssetPreviewSheet
+          kind='emote'
+          asset={selectedEmote}
+          onDismiss={handleCloseSelectedEmote}
+        />
+      ) : null}
+
+      {selectedEmoteAction ? (
+        <EmoteActionSheet
+          disableAnimations={disableEmoteAnimations}
+          onDismiss={() => closeChatEmoteActions(channelId)}
+          onPress={handleEmotePress}
+          token={selectedEmoteAction}
         />
       ) : null}
 
       {selectedMessage ? (
         <ActionSheet
-          visible
           {...{
-            onClose: handleCloseSelectedMessage,
+            onDismiss: handleCloseSelectedMessage,
             username: selectedMessage.username,
+            usernameColor: resolveCachedSenderColor(
+              selectedMessage.messageData,
+              getUserMessageColor,
+            ),
             messagePreview: selectedMessage.message,
             onReply: handleActionSheetReply,
             onCopy: handleActionSheetCopy,
@@ -243,7 +254,7 @@ export const ChatOverlayLayer = memo(function ChatOverlayLayer({
               ? handleActionSheetBlockUser
               : undefined,
             canDeleteMessage: Boolean(selectedMessageId),
-            canPinMessage: Boolean(!pinnedMessageBusy && selectedMessageId),
+            canPinMessage: Boolean(selectedMessageId),
             canModerateUser: Boolean(resolveModTarget(selectedMessage)),
             isPinnedMessage:
               pinnedMessageId === selectedMessage.messageData.message_id,
@@ -258,7 +269,6 @@ export const ChatOverlayLayer = memo(function ChatOverlayLayer({
       {selectedUser ? (
         <UserActionSheet
           visibility={{
-            visible: true,
             isHidden: hiddenUsers.includes(
               normaliseChatUsername(selectedUser.username),
             ),
@@ -271,7 +281,7 @@ export const ChatOverlayLayer = memo(function ChatOverlayLayer({
             canModerateUser: Boolean(resolveModTarget(selectedUser)),
           }}
           {...{
-            onClose: handleCloseSelectedUser,
+            onDismiss: handleCloseSelectedUser,
             username: selectedUser.username,
             login: selectedUser.login,
             userId: selectedUser.userId,

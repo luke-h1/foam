@@ -6,6 +6,7 @@ import { Image as ExpoImage } from 'expo-image';
 import { Text } from '@app/components/ui/text/Text';
 import { resolveUseAppleWebpCodec } from '@app/lib/expo-image/resolveUseAppleWebpCodec';
 import { runAnimationCommand } from '@app/lib/expo-image/runAnimationCommand';
+import { usePreference } from '@app/store/preference-store';
 import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
 
 import { RowVisibilityContext } from '../chat-message/util/rowVisibility';
@@ -25,7 +26,11 @@ function EmoteCellComponent({
   const innerSize = Math.round(cellSize * 0.78);
   const dimensions = { height: innerSize, width: innerSize };
   const imageRef = useRef<ExpoImage>(null);
-  const displayUrl = isEmoteEntry(item) ? getEmotePickerDisplayUrl(item) : null;
+  const disableAnimations = usePreference('disableEmoteAnimations');
+
+  const displayUrl = isEmoteEntry(item)
+    ? getEmotePickerDisplayUrl(item, disableAnimations)
+    : null;
 
   const urlKind = useMemo(
     () => (displayUrl ? describeEmoteUrl(displayUrl).kind : null),

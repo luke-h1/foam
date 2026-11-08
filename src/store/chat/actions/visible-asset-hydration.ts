@@ -1,4 +1,4 @@
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import { logger } from '@app/utils/logger';
 
 const VISIBLE_ASSET_HYDRATION_DELAY_MS = 150;
@@ -13,10 +13,6 @@ type VisibleAssetHydrationState = {
   activePass: Promise<void> | null;
 };
 
-/**
- * Scratch state for the visible-asset hydration pass; plain module state
- * because everything reads and writes it imperatively, never via React.
- */
 export const visibleAssetHydration: VisibleAssetHydrationState = {
   hydratedMessageKeys: new Set(),
   personalEmoteUsers: new Set(),
@@ -34,19 +30,11 @@ function clearVisibleAssetHydrationTimer(): void {
   }
 }
 
-/**
- * Invalidates any scheduled or in-flight pass without dropping the dedup
- * keys. Called when the pass's inputs (channel, preference gates) change.
- */
 export function invalidateVisibleAssetHydrationPass(): void {
   visibleAssetHydration.epoch += 1;
   clearVisibleAssetHydrationTimer();
 }
 
-/**
- * Called on channel switch and unmount: a new channel must not inherit the
- * old channel's hydration keys or an armed pass.
- */
 export function clearVisibleAssetHydration(): void {
   visibleAssetHydration.hydratedMessageKeys.clear();
   visibleAssetHydration.personalEmoteUsers.clear();
@@ -55,10 +43,6 @@ export function clearVisibleAssetHydration(): void {
   invalidateVisibleAssetHydrationPass();
 }
 
-/**
- * Debounces `runPass` behind one shared timer; `runPass` gets the epoch it was
- * armed under and is skipped or stopped if the epoch moves.
- */
 export function scheduleVisibleAssetHydrationPass(
   runPass: (epoch: number) => Promise<void> | undefined,
 ): void {

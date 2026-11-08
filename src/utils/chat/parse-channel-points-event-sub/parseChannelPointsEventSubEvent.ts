@@ -1,10 +1,10 @@
 import { z } from 'zod';
 
-export type ParsedChannelPointsRedemption = {
+export interface ParsedChannelPointsRedemption {
   rewardId: string;
   channelId: string;
   title: string;
-};
+}
 
 export interface ChannelPointsEventSubEvent {
   broadcaster_user_id?: unknown;

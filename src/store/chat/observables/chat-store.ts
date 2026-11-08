@@ -9,27 +9,33 @@ import {
   ensureObservablePersistenceConfig,
 } from '@app/lib/observablePersistence';
 import { getPreferences } from '@app/store/preference-store';
+import type { AnyChatMessageType, Bit } from '@app/types/chat/chatMessage';
 import type { EmoteProvider, EmoteSite } from '@app/types/emote';
+import type { SanitisedEmote } from '@app/types/emote';
+import type { PaintData } from '@app/types/seven-tv/cosmetics';
 import type { BadgeProvider } from '@app/types/twitch/badge';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
 import { EMOTE_PROVIDER_BY_SITE } from '@app/utils/emote/emoteProviderBySite';
 import { logger } from '@app/utils/logger';
 import { runWhenIdle } from '@app/utils/runWhenIdle';
 
+import { MAX_CACHED_CHANNELS } from '../types/cache-limits';
+import {
+  CHANNEL_BADGE_SLICE_KEYS,
+  CHANNEL_EMOTE_SLICE_KEYS,
+  type ChatResourceSliceKey,
+  GLOBAL_BADGE_SLICE_KEYS,
+  GLOBAL_EMOTE_SLICE_KEYS,
+  GLOBAL_SLICE_KEYS,
+  mapSlices,
+} from '../types/chat-resource-slices';
 import type {
-  AnyChatMessageType,
-  Bit,
   ChannelCacheType,
   ChatLoadingState,
   GlobalCacheType,
-  PaintData,
-  SanitisedBadgeSet,
-  SanitisedEmote,
 } from '../types/constants';
-import {
-  makeEmptyGlobalCacheData,
-  MAX_CACHED_CHANNELS,
-} from '../types/constants';
+import { makeEmptyGlobalCacheData } from '../types/constants';
 import {
   CHANNEL_CACHE_PERSISTENCE_ENABLED,
   isHydratingChannelCache,
@@ -251,23 +257,18 @@ const backfillBadgeProviders = (
  */
 const backfillPersistedProviders = () => {
   const globalCaches = chatStore$.persisted.globalCaches.peek();
-  backfillEmoteProviders(globalCaches.twitchGlobalEmotes);
-  backfillEmoteProviders(globalCaches.sevenTvGlobalEmotes);
-  backfillEmoteProviders(globalCaches.ffzGlobalEmotes);
-  backfillEmoteProviders(globalCaches.bttvGlobalEmotes);
-  backfillBadgeProviders(globalCaches.twitchGlobalBadges);
-  backfillBadgeProviders(globalCaches.ffzGlobalBadges);
-
   const channelCaches = chatStore$.persisted.channelCaches.peek() ?? {};
 
+  GLOBAL_EMOTE_SLICE_KEYS.forEach(key =>
+    backfillEmoteProviders(globalCaches[key]),
+  );
+  GLOBAL_BADGE_SLICE_KEYS.forEach(key =>
+    backfillBadgeProviders(globalCaches[key]),
+  );
+
   for (const cache of Object.values(channelCaches)) {
-    backfillEmoteProviders(cache.twitchChannelEmotes);
-    backfillEmoteProviders(cache.twitchSubscriberEmotes);
-    backfillEmoteProviders(cache.sevenTvChannelEmotes);
-    backfillEmoteProviders(cache.ffzChannelEmotes);
-    backfillEmoteProviders(cache.bttvChannelEmotes);
-    backfillBadgeProviders(cache.twitchChannelBadges);
-    backfillBadgeProviders(cache.ffzChannelBadges);
+    CHANNEL_EMOTE_SLICE_KEYS.forEach(key => backfillEmoteProviders(cache[key]));
+    CHANNEL_BADGE_SLICE_KEYS.forEach(key => backfillBadgeProviders(cache[key]));
   }
 };
 
@@ -322,15 +323,6 @@ const hydrateDeferredChatState = () => {
 
 runWhenIdle(hydrateDeferredChatState);
 
-const GLOBAL_CACHE_SLICE_KEYS = [
-  'twitchGlobalEmotes',
-  'sevenTvGlobalEmotes',
-  'ffzGlobalEmotes',
-  'bttvGlobalEmotes',
-  'twitchGlobalBadges',
-  'ffzGlobalBadges',
-] as const;
-
 // Fields older builds persisted per channel; stripping them on hydrate stops
 // every future channelCaches write from re-serializing them.
 const STALE_CHANNEL_CACHE_KEYS = [
@@ -339,11 +331,11 @@ const STALE_CHANNEL_CACHE_KEYS = [
   'badges',
   'sevenTvPersonalEmotes',
   'sevenTvPersonalBadges',
-  ...GLOBAL_CACHE_SLICE_KEYS,
+  ...GLOBAL_SLICE_KEYS,
 ];
 
 type LegacyChannelCache = ChannelCacheType &
-  Partial<Pick<GlobalCacheType, (typeof GLOBAL_CACHE_SLICE_KEYS)[number]>>;
+  Partial<Pick<GlobalCacheType, ChatResourceSliceKey<'global'>>>;
 
 /**
  * Old installs duplicated the global provider slices into every channel cache;
@@ -356,7 +348,7 @@ const seedGlobalCachesFromChannelCopies = (
 
   const hasGlobalData =
     globalCache.lastUpdated > 0 ||
-    GLOBAL_CACHE_SLICE_KEYS.some(key => globalCache[key].length > 0);
+    GLOBAL_SLICE_KEYS.some(key => globalCache[key].length > 0);
 
   if (hasGlobalData) {
     return;
@@ -365,7 +357,7 @@ const seedGlobalCachesFromChannelCopies = (
   let donor: LegacyChannelCache | undefined;
 
   for (const cache of Object.values(caches)) {
-    const holdsGlobalCopies = GLOBAL_CACHE_SLICE_KEYS.some(
+    const holdsGlobalCopies = GLOBAL_SLICE_KEYS.some(
       key => (cache[key]?.length ?? 0) > 0,
     );
 
@@ -381,14 +373,11 @@ const seedGlobalCachesFromChannelCopies = (
     return;
   }
 
+  const globalDonor = donor;
+
   chatStore$.persisted.globalCaches.set({
-    lastUpdated: donor.lastUpdated || 0,
-    twitchGlobalEmotes: donor.twitchGlobalEmotes ?? [],
-    sevenTvGlobalEmotes: donor.sevenTvGlobalEmotes ?? [],
-    ffzGlobalEmotes: donor.ffzGlobalEmotes ?? [],
-    bttvGlobalEmotes: donor.bttvGlobalEmotes ?? [],
-    twitchGlobalBadges: donor.twitchGlobalBadges ?? [],
-    ffzGlobalBadges: donor.ffzGlobalBadges ?? [],
+    lastUpdated: globalDonor.lastUpdated || 0,
+    ...mapSlices(GLOBAL_SLICE_KEYS, key => globalDonor[key] ?? []),
   });
 };
 
@@ -401,19 +390,11 @@ interface LegacyPersistedChatStore {
   recentMessagesByChannel?: Record<string, AnyChatMessageType[]>;
 }
 
-/**
- * The observable children behind `LegacyPersistedChatStore`; the migration
- * only needs each node's `delete`.
- */
 interface LegacyPersistedNodes {
   lastGlobalUpdate: { delete: () => void };
   recentMessagesByChannel: { delete: () => void };
 }
 
-/**
- * The observable children behind `STALE_CHANNEL_CACHE_KEYS`, most of which
- * predate the current channel cache type.
- */
 interface StaleChannelCacheNodes {
   [key: string]: { delete: () => void } | undefined;
 }

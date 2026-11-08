@@ -88,6 +88,7 @@ describe('createOptimisticMessage', () => {
 
   test('keys the echo off the send time so it cannot collide with the real message', () => {
     const message = createOptimisticMessage({
+      timestampFormat: '24h',
       badges: [],
       channelName: 'somechannel',
       isAction: false,
@@ -112,6 +113,7 @@ describe('createOptimisticMessage', () => {
 
   test('omits isAction for a plain message and sets it for a /me', () => {
     const plain = createOptimisticMessage({
+      timestampFormat: '24h',
       badges: [],
       channelName: 'somechannel',
       isAction: false,
@@ -122,6 +124,7 @@ describe('createOptimisticMessage', () => {
     });
 
     const action = createOptimisticMessage({
+      timestampFormat: '24h',
       badges: [],
       channelName: 'somechannel',
       isAction: true,
@@ -138,6 +141,7 @@ describe('createOptimisticMessage', () => {
 
   test('mirrors the reply target onto the row', () => {
     const message = createOptimisticMessage({
+      timestampFormat: '24h',
       badges: [],
       channelName: 'somechannel',
       isAction: false,

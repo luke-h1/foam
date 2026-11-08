@@ -1,15 +1,15 @@
 import { chatPerfMarks } from '@app/lib/chatPerfMarks';
-import { getMaxChatMessages } from '@app/store/chat/actions/messages';
+import {
+  getMaxChatMessages,
+  getMessageSenderLogin,
+} from '@app/store/chat/actions/messages';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
 import { chatMessageMatchesId } from '@app/utils/chat/message-identity/chatMessageMatchesId';
 import { getChatMessageStoreId } from '@app/utils/chat/message-identity/getChatMessageStoreId';
 import { normaliseMessageField } from '@app/utils/chat/message-identity/normaliseMessageField';
 
 import { createModeratedBufferMessage } from './buffered-message-ops/createModeratedBufferMessage';
-import { getBufferedMessageLogin } from './buffered-message-ops/getBufferedMessageLogin';
 import type { BufferedMessage } from './buffered-message-ops/types';
-
-export type { BufferedMessage } from './buffered-message-ops/types';
 
 export type AddResult = {
   /**
@@ -17,9 +17,6 @@ export type AddResult = {
    * skip unread/flush bookkeeping then.
    */
   added: boolean;
-  /**
-   * How many of the oldest entries were dropped to keep the buffer under cap.
-   */
   dropped: number;
 };
 
@@ -137,7 +134,7 @@ export const createMessageBuffer = (
       }
 
       const next = messages.filter(
-        message => getBufferedMessageLogin(message) !== target,
+        message => getMessageSenderLogin(message) !== target,
       );
 
       if (next.length === messages.length) {
@@ -186,7 +183,7 @@ export const createMessageBuffer = (
       let nextBuffer: BufferedMessage[] | null = null;
 
       messages.forEach((message, position) => {
-        if (getBufferedMessageLogin(message) !== target) {
+        if (getMessageSenderLogin(message) !== target) {
           return;
         }
 

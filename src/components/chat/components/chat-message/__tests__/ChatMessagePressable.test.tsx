@@ -26,9 +26,9 @@ describe('ChatMessagePressable', () => {
       </ChatMessagePressable>,
     );
 
-    expect(
-      screen.getByTestId('target').props['onStartShouldSetResponder'],
-    ).toBe(undefined);
+    expect(screen.getByText('badge')).toBeOnTheScreen();
+
+    expect(screen.queryByRole('button')).not.toBeOnTheScreen();
   });
 
   test('a tap fires onPress once', async () => {
@@ -160,22 +160,20 @@ describe('ChatMessagePressable', () => {
     expect(onPress).not.toHaveBeenCalled();
   });
 
-  test('a disabled target does not take the touch', () => {
+  test('a disabled target does not take the touch', async () => {
+    const onPress = jest.fn();
+
     render(
-      <ChatMessagePressable disabled onPress={jest.fn()} testID='target'>
+      <ChatMessagePressable disabled onPress={onPress} testID='target'>
         <Text>badge</Text>
       </ChatMessagePressable>,
     );
 
-    const target = screen.getByTestId('target');
+    await userEvent.press(screen.getByTestId('target'));
 
-    expect({
-      accessibilityState: target.props['accessibilityState'],
-      responds: target.props['onStartShouldSetResponder'](),
-    }).toEqual({
-      accessibilityState: { disabled: true },
-      responds: false,
-    });
+    expect(onPress).not.toHaveBeenCalled();
+
+    expect(screen.getByRole('button')).toBeDisabled();
   });
 
   test('screen readers activate and long-press through accessibility actions', () => {

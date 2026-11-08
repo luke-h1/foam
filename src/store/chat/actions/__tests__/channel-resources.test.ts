@@ -11,9 +11,8 @@ import type { SanitisedEmote } from '@app/types/emote';
 import { logger } from '@app/utils/logger';
 
 import {
-  buildBadgeResourceSpecs,
-  buildEmoteResourceSpecs,
   collectFailedProviderReasons,
+  defineResourceSpec,
   describeProviderFailureReason,
   type EmoteCacheKey,
   type EmoteResourceSpec,
@@ -42,52 +41,14 @@ function emote(id: string): SanitisedEmote {
 }
 
 function spec(key: EmoteResourceSpec['key']): EmoteResourceSpec {
-  return {
+  return defineResourceSpec({
     key,
     name: key,
     label: key,
-    provider: 'bttv',
-    resourceType: 'emotes',
-    scope: 'channel',
     warningName: 'bttv_emotes_warning',
     fetch: () => Promise.resolve([]),
-  };
+  });
 }
-
-describe('buildEmoteResourceSpecs', () => {
-  test('produces one ordered spec per provider slice with matching cache keys', () => {
-    const specs = buildEmoteResourceSpecs({
-      channelId,
-      sevenTvSetId: 'set-1',
-      twitchUserId: 'user-1',
-    });
-
-    expect(specs.map(s => s.key)).toEqual([
-      'sevenTvChannelEmotes',
-      'sevenTvGlobalEmotes',
-      'twitchChannelEmotes',
-      'twitchGlobalEmotes',
-      'twitchSubscriberEmotes',
-      'bttvGlobalEmotes',
-      'bttvChannelEmotes',
-      'ffzChannelEmotes',
-      'ffzGlobalEmotes',
-    ]);
-  });
-});
-
-describe('buildBadgeResourceSpecs', () => {
-  test('produces one ordered spec per badge slice', () => {
-    const specs = buildBadgeResourceSpecs({ channelId });
-
-    expect(specs.map(s => s.key)).toEqual([
-      'twitchChannelBadges',
-      'twitchGlobalBadges',
-      'ffzGlobalBadges',
-      'ffzChannelBadges',
-    ]);
-  });
-});
 
 describe('settleSpecs', () => {
   test('zips each spec with its settled result in order', async () => {
@@ -108,7 +69,10 @@ describe('settleSpecs', () => {
       value: [emote('a')],
     });
 
-    expect(settled[1]!.result.status).toBe('rejected');
+    expect(settled[1]!.result).toEqual({
+      status: 'rejected',
+      reason: new Error('boom'),
+    });
   });
 
   describe('per-provider timeout', () => {
@@ -137,7 +101,7 @@ describe('settleSpecs', () => {
 
       expect(settled[1]!.result).toEqual({
         status: 'rejected',
-        reason: expect.any(ResourceFetchTimeoutError),
+        reason: new ResourceFetchTimeoutError('twitchGlobalEmotes', 1000),
       });
     });
 
@@ -215,10 +179,7 @@ describe('reconcileSettledSpecs', () => {
   });
 
   test('falls back to the global slot for a rejected global-scope spec', () => {
-    const globalSpec: EmoteResourceSpec = {
-      ...spec('bttvGlobalEmotes'),
-      scope: 'global',
-    };
+    const globalSpec = spec('bttvGlobalEmotes');
 
     const settled: SettledSpec<EmoteCacheKey, SanitisedEmote>[] = [
       {
@@ -291,10 +252,10 @@ describe('reportResourceResults', () => {
           error: new Error('boom'),
           action: 'provider_resource_failed',
           channel_id: channelId,
-          provider: 'bttv',
+          provider: 'twitch',
           resource_name: 'twitchGlobalEmotes',
           resource_type: 'emotes',
-          scope: 'channel',
+          scope: 'global',
           screen: 'chat',
           trigger: 'unit_test',
         },
@@ -312,10 +273,46 @@ describe('reportResourceResults', () => {
           screen: 'chat',
           total_resources: 2,
           trigger: 'unit_test',
-          bttv_channel_emotes_count: 0,
+          twitchChannelEmotes_count: 1,
+          twitchGlobalEmotes_count: 0,
         },
       ],
     ]);
+  });
+});
+
+describe('reportResourceResults with client errors', () => {
+  const warn = jest.spyOn(logger.chat, 'warn').mockImplementation(() => {});
+
+  beforeEach(() => {
+    warn.mockClear();
+  });
+
+  test('does not warn again for an API error the client already logged', () => {
+    reportResourceResults({
+      channelId,
+      settled: [
+        {
+          spec: spec('bttvChannelEmotes'),
+          result: { status: 'rejected', reason: new ApiError('nope', 500) },
+        },
+      ],
+      trigger: 'unit_test',
+    });
+
+    expect(warn.mock.calls).toEqual([]);
+  });
+});
+
+describe('defineResourceSpec', () => {
+  test('reads the provider, scope and kind from the slice table', () => {
+    const { provider, scope, kind } = spec('twitchSubscriberEmotes');
+
+    expect({ provider, scope, kind }).toEqual({
+      provider: 'twitch',
+      scope: 'channel',
+      kind: 'emote',
+    });
   });
 });
 
@@ -344,7 +341,7 @@ describe('hadCachedResourcesForFailedSpecs', () => {
   test('returns true when a rejected global spec still has items in the global slot', () => {
     const settled: SettledSpec<EmoteCacheKey, SanitisedEmote>[] = [
       {
-        spec: { ...spec('bttvGlobalEmotes'), scope: 'global' },
+        spec: spec('bttvGlobalEmotes'),
         result: { status: 'rejected', reason: new Error('boom') },
       },
     ];
@@ -407,36 +404,36 @@ describe('collectFailedProviderReasons', () => {
   test('annotates each failed provider with its reason in stable order', () => {
     const settled: SettledSpec<EmoteCacheKey, SanitisedEmote>[] = [
       {
-        spec: { ...spec('bttvGlobalEmotes'), provider: 'bttv' },
+        spec: spec('bttvGlobalEmotes'),
         result: { status: 'rejected', reason: new ApiError('nope', 500) },
       },
       {
-        spec: { ...spec('sevenTvChannelEmotes'), provider: 'seven_tv' },
+        spec: spec('sevenTvChannelEmotes'),
         result: {
           status: 'rejected',
           reason: new ResourceFetchTimeoutError('7tv', 1000),
         },
       },
       {
-        spec: { ...spec('twitchChannelEmotes'), provider: 'twitch' },
+        spec: spec('twitchChannelEmotes'),
         result: { status: 'fulfilled', value: [emote('ok')] },
       },
     ];
 
     expect(collectFailedProviderReasons(settled)).toEqual([
-      'BTTV (HTTP 500)',
       '7TV (timed out)',
+      'BTTV (HTTP 500)',
     ]);
   });
 
   test('uses the first rejected spec per provider for the reason', () => {
     const settled: SettledSpec<EmoteCacheKey, SanitisedEmote>[] = [
       {
-        spec: { ...spec('bttvChannelEmotes'), provider: 'bttv' },
+        spec: spec('bttvChannelEmotes'),
         result: { status: 'rejected', reason: new ApiError('first', 500) },
       },
       {
-        spec: { ...spec('bttvGlobalEmotes'), provider: 'bttv' },
+        spec: spec('bttvGlobalEmotes'),
         result: { status: 'rejected', reason: new ApiError('second', 404) },
       },
     ];

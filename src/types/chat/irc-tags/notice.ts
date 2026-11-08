@@ -1,4 +1,4 @@
-type NoticeMsgId =
+export type NoticeMsgId =
   | 'emote_only_off'
   | 'emote_only_on'
   | 'followers_off'
@@ -23,6 +23,8 @@ type NoticeMsgId =
   | 'msg_suspended'
   | 'msg_timedout'
   | 'msg_verified_email'
+  | 'r9k_off'
+  | 'r9k_on'
   | 'slow_off'
   | 'slow_on'
   | 'subs_off'

@@ -10,11 +10,9 @@ import { useUnmountCallback } from '@app/hooks/use-unmount-callback';
 import { ReadyState } from '@app/hooks/ws/constants';
 import { useWebsocket } from '@app/hooks/ws/use-websocket';
 import type {
-  CosmeticCreate,
   CosmeticCreateCallbackData,
   CosmeticDeleteCallbackData,
   CosmeticUpdateCallbackData,
-  EntitlementCreate,
   EntitlementCreateCallbackData,
   EntitlementDeleteCallbackData,
   EntitlementResetCallbackData,
@@ -23,9 +21,8 @@ import type {
   SevenTvEventType,
   SevenTvWsMessage,
 } from '@app/types/seven-tv/cosmetics';
+import { SEVEN_TV_RECONNECT_POLICY } from '@app/utils/async/reconnectPolicy';
 import { logger } from '@app/utils/logger';
-import { setupInitialSubscriptions } from '@app/utils/seven-tv/sevenTvInitialSubscriptions';
-import { setSevenTvSessionId } from '@app/utils/seven-tv/sevenTvSessionId';
 import { createSevenTvSessionState } from '@app/utils/seven-tv/sevenTvSessionState';
 import {
   buildCosmeticCreateSubscribeMessage,
@@ -44,27 +41,11 @@ import {
   type SevenTvWsDecision,
 } from '@app/utils/seven-tv/sevenTvWsInterpreter';
 
-const SEVEN_TV_CHAT_SCREENS = ['Chat', 'LiveStream'];
-
 type SendSevenTvWsMessage = (
   message: SevenTvWsMessage<never, SevenTvEventType>,
 ) => void;
 
-export type {
-  CosmeticCreate,
-  CosmeticCreateCallbackData,
-  CosmeticDeleteCallbackData,
-  CosmeticUpdateCallbackData,
-  EntitlementCreate,
-  EntitlementCreateCallbackData,
-  EntitlementDeleteCallbackData,
-  EntitlementResetCallbackData,
-  EntitlementUpdateCallbackData,
-  SevenTvEventData,
-  SevenTvEventType,
-};
-
-export interface EmoteSetSwitchCallbackData {
+interface EmoteSetSwitchCallbackData {
   oldSetId: string | null;
   newSetId: string;
   newSetName: string | null;
@@ -94,20 +75,12 @@ interface UseSevenTvWsOptions {
   sevenTvChannelUserId?: string;
 }
 
-type UseSevenTvWsReturn = {
-  ws: WebSocket;
-  subscribeToChannel: (channelId: string) => void;
+interface UseSevenTvWsReturn {
+  subscribeToChannel: (emoteSetId: string) => void;
   unsubscribeFromChannel: () => void;
   isConnected: () => boolean;
   readyState: ReadyState;
-  getConnectionState: () =>
-    | 'DISCONNECTED'
-    | 'CONNECTING'
-    | 'CONNECTED'
-    | 'CLOSING'
-    | 'CLOSED'
-    | 'UNKNOWN';
-};
+}
 
 const DEFAULT_URL = 'wss://events.7tv.io/v3';
 
@@ -121,18 +94,22 @@ const DEFAULT_HEARTBEAT_INTERVAL_MS = 30_000;
 const HEARTBEAT_WATCHDOG_TICK_MS = 10_000;
 const MISSED_HEARTBEATS_BEFORE_RECONNECT = 3;
 
-// Per-outage retry budget; the counter resets on every successful open and
-// a foreground transition force-revives an exhausted socket anyway.
-const RECONNECT_ATTEMPTS = 60;
-
 function logEventHandlerError(
   eventType: HandledSevenTvEventType,
   error: unknown,
 ) {
-  if (eventType === 'emote_set.update') {
-    logger.stvWs.error('Error handling emote set update:', error);
-  } else {
-    logger.chat.error(`Error handling ${eventType}:`, error);
+  logger.stvWs.error(`Error handling ${eventType}:`, error);
+}
+
+/**
+ * Runs one consumer callback. A throwing consumer must not stop the socket
+ * from handling the rest of the frame.
+ */
+function guardCallback(eventType: HandledSevenTvEventType, run: () => void) {
+  try {
+    run();
+  } catch (error) {
+    logEventHandlerError(eventType, error);
   }
 }
 
@@ -164,11 +141,6 @@ type SevenTvWsDecisionDeps = {
   twitchChannelIdRef: RefObject<string | undefined>;
 };
 
-/**
- * Applies one interpreted 7TV socket decision. The interpreter decides what a
- * dispatch means; this only carries it out, so the two can be read and tested
- * apart.
- */
 function runSevenTvWsDecision(
   decision: SevenTvWsDecision,
   {
@@ -191,15 +163,13 @@ function runSevenTvWsDecision(
         `💚 Processing emote set update: +${decision.added.length} -${decision.removed.length} emotes`,
       );
 
-      try {
+      guardCallback('emote_set.update', () => {
         optionsRef.current?.onEmoteUpdate?.({
           added: decision.added,
           removed: decision.removed,
           channelId: decision.channelId,
         });
-      } catch (error) {
-        logEventHandlerError('emote_set.update', error);
-      }
+      });
 
       break;
     }
@@ -218,11 +188,9 @@ function runSevenTvWsDecision(
     }
 
     case 'emoteSetUpdateForOtherSet': {
-      try {
+      guardCallback('emote_set.update', () => {
         optionsRef.current?.onEmoteSetUpdateForOtherSet?.(decision.emoteSetId);
-      } catch (error) {
-        logEventHandlerError('emote_set.update', error);
-      }
+      });
 
       break;
     }
@@ -232,15 +200,13 @@ function runSevenTvWsDecision(
         `💚 Channel switched 7TV emote set: ${decision.oldSetId ?? 'none'} -> ${decision.newSetId}`,
       );
 
-      try {
+      guardCallback('user.update', () => {
         optionsRef.current?.onEmoteSetSwitch?.({
           oldSetId: decision.oldSetId,
           newSetId: decision.newSetId,
           newSetName: decision.newSetName,
         });
-      } catch (error) {
-        logEventHandlerError('emote_set.update', error);
-      }
+      });
 
       break;
     }
@@ -250,14 +216,12 @@ function runSevenTvWsDecision(
     }
 
     case 'applyCosmeticCreate': {
-      try {
+      guardCallback('cosmetic.create', () => {
         optionsRef.current?.onCosmeticCreate?.({
           cosmetic: decision.cosmetic,
           kind: decision.kind,
         });
-      } catch (error) {
-        logEventHandlerError('cosmetic.create', error);
-      }
+      });
 
       break;
     }
@@ -275,7 +239,7 @@ function runSevenTvWsDecision(
         );
       }
 
-      try {
+      guardCallback('entitlement.create', () => {
         optionsRef.current?.onEntitlementCreate?.({
           entitlement: decision.entitlement,
           kind: decision.kind,
@@ -283,9 +247,7 @@ function runSevenTvWsDecision(
           paintId: decision.paintId,
           badgeId: decision.badgeId,
         });
-      } catch (error) {
-        logEventHandlerError('entitlement.create', error);
-      }
+      });
 
       break;
     }
@@ -293,14 +255,12 @@ function runSevenTvWsDecision(
     case 'applyCosmeticUpdate': {
       logger.stvWs.info(`💚 Received WS 'cosmetic.update' event`);
 
-      try {
+      guardCallback('cosmetic.update', () => {
         optionsRef.current?.onCosmeticUpdate?.({
           changes: decision.changes,
           kind: decision.kind,
         });
-      } catch (error) {
-        logEventHandlerError('cosmetic.update', error);
-      }
+      });
 
       break;
     }
@@ -308,13 +268,11 @@ function runSevenTvWsDecision(
     case 'applyCosmeticDelete': {
       logger.stvWs.info(`💚 Received WS 'cosmetic.delete' event`);
 
-      try {
+      guardCallback('cosmetic.delete', () => {
         optionsRef.current?.onCosmeticDelete?.({
           cosmeticId: decision.cosmeticId,
         });
-      } catch (error) {
-        logEventHandlerError('cosmetic.delete', error);
-      }
+      });
 
       break;
     }
@@ -322,16 +280,14 @@ function runSevenTvWsDecision(
     case 'applyEntitlementUpdate': {
       logger.stvWs.info(`💚 Received WS 'entitlement.update' event`);
 
-      try {
+      guardCallback('entitlement.update', () => {
         optionsRef.current?.onEntitlementUpdate?.({
           changes: decision.changes,
           ttvUserId: decision.ttvUserId,
           paintId: decision.paintId,
           badgeId: decision.badgeId,
         });
-      } catch (error) {
-        logEventHandlerError('entitlement.update', error);
-      }
+      });
 
       break;
     }
@@ -339,14 +295,12 @@ function runSevenTvWsDecision(
     case 'applyEntitlementDelete': {
       logger.stvWs.info(`💚 Received WS 'entitlement.delete' event`);
 
-      try {
+      guardCallback('entitlement.delete', () => {
         optionsRef.current?.onEntitlementDelete?.({
           entitlementId: decision.entitlementId,
           ttvUserId: decision.ttvUserId,
         });
-      } catch (error) {
-        logEventHandlerError('entitlement.delete', error);
-      }
+      });
 
       break;
     }
@@ -354,13 +308,11 @@ function runSevenTvWsDecision(
     case 'applyEntitlementReset': {
       logger.stvWs.info(`💚 Received WS 'entitlement.reset' event`);
 
-      try {
+      guardCallback('entitlement.reset', () => {
         optionsRef.current?.onEntitlementReset?.({
           sevenTvUserId: decision.sevenTvUserId,
         });
-      } catch (error) {
-        logEventHandlerError('entitlement.reset', error);
-      }
+      });
 
       break;
     }
@@ -412,7 +364,6 @@ function runSevenTvWsDecision(
       logger.stvWs.info(`💚 Received WS hello/ACK event`);
       const previousSessionId = session.sessionId;
       session.sessionId = decision.sessionId;
-      setSevenTvSessionId(decision.sessionId);
 
       session.heartbeatIntervalMs =
         decision.heartbeatIntervalMs ?? DEFAULT_HEARTBEAT_INTERVAL_MS;
@@ -459,7 +410,7 @@ function runSevenTvWsDecision(
         );
       } else {
         logger.stvWs.info('💚 Session resume failed; resubscribing');
-        void runInitialSubscriptions();
+        runInitialSubscriptions();
       }
 
       break;
@@ -512,11 +463,9 @@ export function useSevenTvWs(
     }),
   );
 
-  const lastScreenRef = useRef<string | null>(null);
   const optionsRef = useSyncRef(options);
   const pathname = usePathname();
 
-  // eslint-disable-next-line react-doctor/no-event-handler -- ref mirror for socket callbacks, not a handler
   const twitchChannelIdRef = useSyncRef(options?.twitchChannelId);
 
   const sevenTvEmoteSetIdRef = useSyncRef(options?.sevenTvEmoteSetId);
@@ -526,9 +475,8 @@ export function useSevenTvWs(
     sendJson: SendSevenTvWsMessage,
   ) => {
     const session = sessionRef.current;
-    const ws = getWebSocket();
 
-    if (ws?.readyState !== WebSocket.OPEN) {
+    if (getWebSocket().readyState !== WebSocket.OPEN) {
       session.subscribedChannelId = null;
       session.subscribedOwnerId = null;
       return;
@@ -554,18 +502,10 @@ export function useSevenTvWs(
 
   const currentScreen = getSevenTvChatScreenFromPathname(pathname);
 
-  const shouldConnect = (() => {
-    if (!currentScreen) {
-      return false;
-    }
-
-    const isOnChatScreen = SEVEN_TV_CHAT_SCREENS.includes(currentScreen);
-
-    const hasRequiredIds =
-      options?.twitchChannelId && options?.sevenTvEmoteSetId;
-
-    return isOnChatScreen && hasRequiredIds;
-  })();
+  // The socket opens only once both ids are known, so the first subscribe never waits for them.
+  const shouldConnect = Boolean(
+    currentScreen && options?.twitchChannelId && options?.sevenTvEmoteSetId,
+  );
 
   const sendSubscription = (
     emoteSetId: string,
@@ -576,7 +516,6 @@ export function useSevenTvWs(
     const session = sessionRef.current;
     const channelId = twitchChannelIdRef.current;
 
-    // Live socket channel hop: unsubscribe previous channel-scoped streams first.
     const isChannelHop =
       Boolean(channelId) &&
       Boolean(session.subscribedChannelId) &&
@@ -599,19 +538,45 @@ export function useSevenTvWs(
     );
   };
 
-  const runInitialSubscriptions = () =>
-    setupInitialSubscriptions({
-      getSevenTvChannelUserId: () => sevenTvChannelUserIdRef.current,
-      getSevenTvEmoteSetId: () => sevenTvEmoteSetIdRef.current,
-      getTwitchChannelId: () => twitchChannelIdRef.current,
-      sendJsonMessage,
-      session: sessionRef.current,
-    });
-
   /**
-   * The server never acknowledged the resume, so drop the pending state and
-   * subscribe from scratch.
+   * Subscribes a fresh session to the channel, the owner and the emote set,
+   * and records each one, so `subscribeToChannel` does not send them again.
    */
+  const runInitialSubscriptions = () => {
+    const session = sessionRef.current;
+    const twitchChannelId = twitchChannelIdRef.current;
+    const ownerId = sevenTvChannelUserIdRef.current;
+    const emoteSetId = sevenTvEmoteSetIdRef.current;
+
+    if (twitchChannelId) {
+      sendJsonMessage(
+        buildEntitlementCreateSubscribeMessage(twitchChannelId, Date.now()),
+      );
+
+      sendJsonMessage(
+        buildCosmeticCreateSubscribeMessage(twitchChannelId, Date.now()),
+      );
+
+      session.subscribedChannelId = twitchChannelId;
+    }
+
+    if (ownerId) {
+      sendJsonMessage(buildUserUpdateSubscribeMessage(ownerId));
+      session.subscribedOwnerId = ownerId;
+    }
+
+    if (emoteSetId) {
+      sendJsonMessage(
+        buildEmoteSetUpdateSubscribeMessage(emoteSetId, Date.now()),
+      );
+      session.currentEmoteSetId = emoteSetId;
+      session.activeSubscriptions.add(emoteSetId);
+    }
+
+    session.hasInitialSubscriptions = true;
+    logger.stvWs.info('💚 Sent initial 7TV subscriptions');
+  };
+
   const handleResumeAckTimeout = () => {
     const session = sessionRef.current;
 
@@ -628,7 +593,7 @@ export function useSevenTvWs(
       provider: 'seven_tv',
     });
 
-    void runInitialSubscriptions();
+    runInitialSubscriptions();
   };
 
   const executeDecision = (decision: SevenTvWsDecision) => {
@@ -688,6 +653,15 @@ export function useSevenTvWs(
     });
   };
 
+  // Entitlement bursts arrive hundreds at a time, so they commit together on the next frame.
+  const queueEntitlementDecisions = (decisions: SevenTvWsDecision[]) => {
+    pendingEntitlementsRef.current.push(...decisions);
+
+    if (entitlementFlushRef.current === null) {
+      entitlementFlushRef.current = setTimeout(flushPendingEntitlements, 16);
+    }
+  };
+
   const handleMessage = (event: MessageEvent<string>) => {
     sessionRef.current.lastMessageAt = Date.now();
 
@@ -720,15 +694,7 @@ export function useSevenTvWs(
         );
 
       if (shouldCoalesceEntitlements) {
-        pendingEntitlementsRef.current.push(...decisions);
-
-        if (entitlementFlushRef.current === null) {
-          entitlementFlushRef.current = setTimeout(
-            flushPendingEntitlements,
-            16,
-          );
-        }
-
+        queueEntitlementDecisions(decisions);
         return;
       }
 
@@ -752,8 +718,7 @@ export function useSevenTvWs(
   const { getWebSocket, sendJsonMessage, readyState, reconnect } = useWebsocket<
     SevenTvWsMessage<never, SevenTvEventType>
   >(shouldConnect ? DEFAULT_URL : null, {
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    onOpen: async () => {
+    onOpen: () => {
       logger.stvWs.info('💚 SevenTV WebSocket connected');
       const session = sessionRef.current;
       session.connectionTimestamp = Date.now();
@@ -763,7 +728,7 @@ export function useSevenTvWs(
       session.heartbeatWatchdog = setInterval(() => {
         const ws = getWebSocket();
 
-        if (ws?.readyState !== WebSocket.OPEN) {
+        if (ws.readyState !== WebSocket.OPEN) {
           return;
         }
 
@@ -790,7 +755,7 @@ export function useSevenTvWs(
         session.shouldResume && session.sessionId !== null;
 
       if (!session.hasInitialSubscriptions && !willAttemptResume) {
-        await runInitialSubscriptions();
+        runInitialSubscriptions();
       }
 
       logger.stvWs.info('💚 SevenTV WebSocket setup complete', {
@@ -844,23 +809,14 @@ export function useSevenTvWs(
         },
       );
     },
-    shouldReconnect: (event: CloseEvent) => {
-      return !!(shouldConnect && event.code !== 1000);
-    },
-    reconnectAttempts: RECONNECT_ATTEMPTS,
-    reconnectInterval: 1000,
+    shouldReconnect: (event: CloseEvent) =>
+      shouldConnect && event.code !== 1000,
+    reconnectPolicy: SEVEN_TV_RECONNECT_POLICY,
   });
 
   const subscribeToChannel = (emoteSetId: string) => {
     const session = sessionRef.current;
     const ws = getWebSocket();
-
-    if (!ws) {
-      logger.stvWs.warn(
-        `💚 Cannot subscribe to emote set ${emoteSetId}: WebSocket not available`,
-      );
-      return;
-    }
 
     if (session.activeSubscriptions.has(emoteSetId)) {
       logger.stvWs.info(`💚 Already subscribed to emote set: ${emoteSetId}`);
@@ -892,7 +848,7 @@ export function useSevenTvWs(
     const session = sessionRef.current;
     const ws = getWebSocket();
 
-    if (ws && session.currentEmoteSetId && ws.readyState === WebSocket.OPEN) {
+    if (session.currentEmoteSetId && ws.readyState === WebSocket.OPEN) {
       sendJsonMessage(
         buildEmoteSetUpdateUnsubscribeMessage(session.currentEmoteSetId),
       );
@@ -903,40 +859,17 @@ export function useSevenTvWs(
 
     session.currentEmoteSetId = undefined;
     logger.stvWs.info('💚 Cleared current emote set');
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- unsubscribeChannelScopedSubscriptions is a stable closure over refs
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- unsubscribeChannelScopedSubscriptions is a stable closure over refs
   }, [getWebSocket, sendJsonMessage, sessionRef]);
 
   const unsubscribeFromChannelRef = useSyncRef(unsubscribeFromChannel);
 
-  const isConnected = useCallback(() => {
-    const ws = getWebSocket();
-    return ws !== null && ws.readyState === WebSocket.OPEN;
-  }, [getWebSocket]);
+  const isConnected = useCallback(
+    () => getWebSocket().readyState === WebSocket.OPEN,
+    [getWebSocket],
+  );
 
-  const getConnectionState = useCallback((): ReturnType<
-    UseSevenTvWsReturn['getConnectionState']
-  > => {
-    const ws = getWebSocket();
-
-    if (!ws) {
-      return 'DISCONNECTED';
-    }
-
-    switch (ws.readyState) {
-      case WebSocket.CONNECTING:
-        return 'CONNECTING';
-      case WebSocket.OPEN:
-        return 'CONNECTED';
-      case WebSocket.CLOSING:
-        return 'CLOSING';
-      case WebSocket.CLOSED:
-        return 'CLOSED';
-      default:
-        return 'UNKNOWN';
-    }
-  }, [getWebSocket]);
-
-  const shouldConnectRef = useSyncRef(!!shouldConnect);
+  const shouldConnectRef = useSyncRef(shouldConnect);
 
   // A long background stretch can exhaust the retry budget; foregrounding
   // with a dead socket forces a fresh connect (then RESUME).
@@ -961,7 +894,7 @@ export function useSevenTvWs(
 
   // The owner's 7TV id resolves async and can land after initial
   // subscriptions; (re)subscribe user.update when it arrives or changes.
-  // eslint-disable-next-line react-doctor/no-event-handler -- syncs a WS subscription to an async id, not a UI event
+  // oxlint-disable-next-line react-doctor/no-event-handler -- syncs a WS subscription to an async id, not a UI event
   const sevenTvChannelUserId = options?.sevenTvChannelUserId;
 
   const syncChannelOwnerSubscription = (ownerId: string) => {
@@ -997,78 +930,6 @@ export function useSevenTvWs(
     }
   }, [sevenTvChannelUserId, readyState, syncChannelOwnerSubscriptionRef]);
 
-  // A hop between two known channels fences out any initial-subscription
-  // poll still waiting on the previous channel's ids.
-  const twitchChannelId = options?.twitchChannelId;
-
-  useEffect(() => {
-    sessionRef.current.noteChannelId(twitchChannelId);
-  }, [sessionRef, twitchChannelId]);
-
-  useEffect(() => {
-    if (!currentScreen) {
-      return;
-    }
-
-    const isOnChatScreen = SEVEN_TV_CHAT_SCREENS.includes(currentScreen);
-
-    const wasOnChatScreen = lastScreenRef.current
-      ? SEVEN_TV_CHAT_SCREENS.includes(lastScreenRef.current)
-      : false;
-
-    logger.stvWs.info('[useSevenTvWs] Screen changed:', {
-      from: lastScreenRef.current,
-      to: currentScreen,
-      isOnChatScreen,
-      wasOnChatScreen,
-    });
-
-    if (wasOnChatScreen && !isOnChatScreen) {
-      logger.stvWs.info(
-        '[useSevenTvWs] Left chat/livestream screen, unsubscribing and disconnecting SevenTV WS',
-      );
-
-      unsubscribeFromChannelRef.current();
-
-      // Leaving deliberately: drop the session instead of resuming it later.
-      sessionRef.current.reset('leave');
-    }
-
-    lastScreenRef.current = currentScreen;
-  }, [currentScreen, sessionRef, unsubscribeFromChannelRef]);
-
-  useEffect(() => {
-    if (!currentScreen) {
-      return;
-    }
-
-    const isOnChatScreen = SEVEN_TV_CHAT_SCREENS.includes(currentScreen);
-
-    const hasRequiredIds =
-      twitchChannelIdRef.current && sevenTvEmoteSetIdRef.current;
-
-    logger.stvWs.info('[useSevenTvWs] Checking connection requirements:', {
-      isOnChatScreen,
-      hasTwitchChannelId: !!twitchChannelIdRef.current,
-      hasSevenTvEmoteSetId: !!sevenTvEmoteSetIdRef.current,
-      hasRequiredIds,
-      shouldConnect: isOnChatScreen && hasRequiredIds,
-    });
-
-    if (
-      isOnChatScreen &&
-      hasRequiredIds &&
-      !sessionRef.current.hasInitialized
-    ) {
-      logger.stvWs.info(
-        '[useSevenTvWs] All requirements met, SevenTV WS will connect',
-      );
-
-      sessionRef.current.connectionTimestamp = Date.now();
-      sessionRef.current.hasInitialized = true;
-    }
-  }, [currentScreen, sessionRef, sevenTvEmoteSetIdRef, twitchChannelIdRef]);
-
   useUnmountCallback(() => {
     logger.stvWs.info('[useSevenTvWs] Cleaning up SevenTV WS client');
     unsubscribeFromChannelRef.current();
@@ -1076,11 +937,9 @@ export function useSevenTvWs(
   });
 
   return {
-    ws: getWebSocket(),
     subscribeToChannel,
     unsubscribeFromChannel,
     isConnected,
     readyState,
-    getConnectionState,
   };
 }

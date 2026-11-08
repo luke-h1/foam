@@ -7,11 +7,11 @@ import type { SharedValue } from 'react-native-reanimated';
 
 import { Text } from '@app/components/ui/text/Text';
 import { useMessages } from '@app/store/chat/react/selectors';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import { logger } from '@app/utils/logger';
 
-import type { PinnedChatMessageViewModel } from '../hooks/use-pinned-chat-message';
 import type { ChatPaneFlags } from '../types/chat-ui-flags';
+import type { PinnedChatMessageViewModel } from '../util/pinnedChatMessageViewModel';
 import { getVisibleMessages } from '../util/visibleMessages';
 import {
   ChatList,
@@ -23,7 +23,7 @@ import { styles } from './ChatMessagePane.styles';
 import { ChatViewControls } from './ChatViewControls';
 import { PinnedMessageBanner } from './PinnedMessageBanner';
 
-export interface ChatMessagePaneProps {
+interface ChatMessagePaneProps {
   channelId: string;
   channelName: string;
   contentInsetEndAdjustment: SharedValue<number>;

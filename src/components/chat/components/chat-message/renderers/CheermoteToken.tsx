@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
 import type { ChatTextStyles } from '../ChatText.styles';
 import { ChatInlineImage } from './ChatInlineImage';
@@ -12,7 +12,7 @@ interface CheermoteTokenProps {
   isModerated?: boolean;
   textStyles: ChatTextStyles;
   token: MessageToken<'cheermote'>;
-  targetSize?: number;
+  targetSize: number;
 }
 
 export const CheermoteToken = memo(
@@ -21,7 +21,7 @@ export const CheermoteToken = memo(
     disableAnimations = false,
     isModerated = false,
     textStyles,
-    targetSize = 30,
+    targetSize,
   }: CheermoteTokenProps) => {
     const sourceUrl = disableAnimations
       ? token.cheermote.static_url || token.cheermote.url

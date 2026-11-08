@@ -1,5 +1,7 @@
 import * as messageColorIndex from '@app/store/chat/actions/message-color-index';
 
+import { getFallbackSenderColor } from '../getFallbackSenderColor';
+import { cachedLighten } from '../resolve-cached-sender-color/cachedLighten';
 import { resolveMentionColor } from '../resolveMentionColor';
 
 describe('resolveMentionColor', () => {
@@ -20,17 +22,23 @@ describe('resolveMentionColor', () => {
   test('uses chat history color for the mentioned user', () => {
     mockGetUserMessageColor.mockReturnValue('#9147FF');
 
-    expect(resolveMentionColor('VelvetFathom93')).toBe('rgb(158, 93, 255)');
+    expect(resolveMentionColor('VelvetFathom93')).toBe(
+      cachedLighten('#9147FF'),
+    );
 
-    expect(mockGetUserMessageColor).toHaveBeenCalledWith('VelvetFathom93');
+    expect(mockGetUserMessageColor).toHaveBeenCalledWith('velvetfathom93');
   });
 
-  test('falls back to deterministic palette when user has not chatted', () => {
-    const color = resolveMentionColor('@SomeUser');
+  test('falls back to one palette colour for every spelling of a login', () => {
+    expect([
+      resolveMentionColor('@SomeUser'),
+      resolveMentionColor('someuser'),
+    ]).toEqual([
+      cachedLighten(getFallbackSenderColor('someuser')),
+      cachedLighten(getFallbackSenderColor('someuser')),
+    ]);
 
-    expect(color).toBe('rgb(255, 105, 180)');
-
-    expect(mockGetUserMessageColor).toHaveBeenCalledWith('SomeUser');
+    expect(mockGetUserMessageColor).toHaveBeenCalledWith('someuser');
   });
 
   test('returns a colour without consulting chat history for empty input', () => {

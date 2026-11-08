@@ -1,4 +1,4 @@
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 
 export type ViewableMessageToken = {
   item?: AnyChatMessageType;

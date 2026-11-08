@@ -1,8 +1,5 @@
 import type { CheermoteTier } from '@app/utils/chat/cheermote-store/types';
 
-/**
- * Highest tier whose min_bits threshold the cheered amount reaches.
- */
 export function resolveCheermoteTier(
   tiers: CheermoteTier[],
   bits: number,

@@ -1,6 +1,6 @@
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
+import { stripMentionPrefix } from '@app/utils/chat/chat-usernames/stripMentionPrefix';
 import { getMentionLogin } from '@app/utils/chat/resolve-mention-login/getMentionLogin';
-import { registerMentionLogin } from '@app/utils/chat/resolve-mention-login/registerMentionLogin';
 
 export function applyMentionLoginCasing(
   tokens: MessageToken[],
@@ -14,9 +14,7 @@ export function applyMentionLoginCasing(
       continue;
     }
 
-    const login = token.content.replace(/^@/, '').trim();
-    registerMentionLogin(login);
-
+    const login = stripMentionPrefix(token.content);
     const canonicalLogin = getMentionLogin(login);
     const content = `@${canonicalLogin}`;
 

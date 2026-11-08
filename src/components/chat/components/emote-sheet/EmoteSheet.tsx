@@ -6,14 +6,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { LegendListRef } from '@legendapp/list/react-native';
 import { LegendList } from '@legendapp/list/react-native';
 
-import {
-  BottomSheet,
-  type BottomSheetHandle,
-} from '@app/components/bottom-sheet/BottomSheet';
-import { useEmoteSheet } from '@app/components/chat/hooks/UseEmoteSheet';
+import { useEmoteSheet } from '@app/components/chat/components/emote-sheet/hooks/use-emote-sheet';
 import { Text } from '@app/components/ui/text/Text';
 import { theme } from '@app/styles/themes';
 
+import { ChatSheet } from '../sheet/ChatSheet';
+import { useChatSheet } from '../sheet/hooks/use-chat-sheet';
+import type { ChatSheetLayout } from '../sheet/util/chatSheetLayout';
 import { EmoteSearchFilter } from './EmoteSearchFilter';
 import { emoteSheetStyles as styles } from './EmoteSheet.styles';
 import { renderSetRailItem } from './EmoteSheetSetRailItem';
@@ -27,35 +26,38 @@ import {
 import { emoteSheetScrollActivity } from './util/emoteSheetScrollActivity';
 import type { EmotePickerItem } from './util/emoteSheetTypes';
 
+const SHEET_LAYOUT: ChatSheetLayout = {
+  fraction: EMOTE_SHEET_DETENT,
+  kind: 'fraction',
+};
+
 const keyExtractor = (item: EmoteMenuListItem) => item.key;
 const getItemType = (item: EmoteMenuListItem) => item.type;
 
 interface EmoteSheetProps {
-  isPresented: boolean;
   onDismiss: () => void;
   onEmoteSelect?: (item: EmotePickerItem) => void;
 }
 
-export function EmoteSheet({
-  isPresented,
-  onDismiss,
-  onEmoteSelect,
-}: EmoteSheetProps) {
+/**
+ * `ChatOverlayLayer` mounts the sheet only while it is open, so it is always
+ * presented.
+ */
+export function EmoteSheet({ onDismiss, onEmoteSelect }: EmoteSheetProps) {
   const {
     bottom: bottomInset,
     left: leftInset,
     right: rightInset,
   } = useSafeAreaInsets();
   const emoteListRef = useRef<LegendListRef>(null);
-  const sheetRef = useRef<BottomSheetHandle>(null);
+  const { requestClose, sheetRef } = useChatSheet();
   const [layoutWidth, setLayoutWidth] = useState(0);
 
   const sheet = useEmoteSheet({
-    isPresented,
     onDismiss,
     onEmoteSelect: item => {
       onEmoteSelect?.(item);
-      sheetRef.current?.requestClose();
+      requestClose();
     },
     emoteListRef,
     layoutWidth,
@@ -100,13 +102,10 @@ export function EmoteSheet({
   );
 
   return (
-    <BottomSheet
+    <ChatSheet
       ref={sheetRef}
-      enableFixedSnapPoints
-      isPresented={isPresented}
       onDismiss={sheet.handleDismiss}
-      showDragIndicator
-      snapPoints={[{ fraction: EMOTE_SHEET_DETENT }]}
+      layout={SHEET_LAYOUT}
       testID='chat-emote-sheet'
     >
       <View onLayout={handleContainerLayout} style={styles.container}>
@@ -118,7 +117,7 @@ export function EmoteSheet({
             contentContainerStyle={styles.providerBarContent}
             style={styles.providerBar}
           >
-            {/* eslint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- bounded set of provider tabs */}
+            {/* oxlint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- bounded set of provider tabs */}
             {sheet.providers.map(provider => (
               <ProviderChip
                 key={provider.id}
@@ -134,9 +133,6 @@ export function EmoteSheet({
               <EmoteSearchFilter
                 placeholder='Search emotes'
                 onChange={sheet.handleSearchChange}
-                onSubmitEditing={() =>
-                  sheet.handleSearchChange(sheet.searchQuery)
-                }
                 rightOnPress={sheet.handleClearSearch}
                 value={sheet.searchQuery}
               />
@@ -215,6 +211,6 @@ export function EmoteSheet({
           </>
         )}
       </View>
-    </BottomSheet>
+    </ChatSheet>
   );
 }

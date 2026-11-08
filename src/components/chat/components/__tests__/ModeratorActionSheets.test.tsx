@@ -1,33 +1,25 @@
-import { Platform } from 'react-native';
-
 import { fireEvent } from '@testing-library/react-native';
 
+import { twitchService } from '@app/services/twitch-service';
 import render from '@app/test/render';
 
 import { ActionSheet } from '../action-sheet/ActionSheet';
 import { UserActionSheet } from '../UserActionSheet';
 
-const originalOS = Platform.OS;
-
-beforeAll(() => {
-  Platform.OS = 'android';
-});
-
-afterAll(() => {
-  Platform.OS = originalOS;
-});
+// The user card header looks the user up; a real request waits for an auth
+// token that this suite never sets.
+jest.spyOn(twitchService, 'getUser').mockReturnValue(new Promise(() => {}));
 
 describe('Moderator action sheets', () => {
   test('shows moderator message actions only when the viewer can moderate chat', () => {
-    const onClose = jest.fn();
+    const onDismiss = jest.fn();
     const onDeleteMessage = jest.fn();
     const onTimeoutUser = jest.fn();
     const onBanUser = jest.fn();
 
     const { rerender, queryByText, getByText } = render(
       <ActionSheet
-        visible
-        onClose={onClose}
+        onDismiss={onDismiss}
         username='viewer'
         onReply={jest.fn()}
         onCopy={jest.fn()}
@@ -48,8 +40,7 @@ describe('Moderator action sheets', () => {
 
     rerender(
       <ActionSheet
-        visible
-        onClose={onClose}
+        onDismiss={onDismiss}
         username='viewer'
         onReply={jest.fn()}
         onCopy={jest.fn()}
@@ -75,8 +66,7 @@ describe('Moderator action sheets', () => {
   test('hides message delete when there is no message id', () => {
     const { queryByText } = render(
       <ActionSheet
-        visible
-        onClose={jest.fn()}
+        onDismiss={jest.fn()}
         username='viewer'
         onReply={jest.fn()}
         onCopy={jest.fn()}
@@ -103,8 +93,7 @@ describe('Moderator action sheets', () => {
 
     const { rerender, queryByText, getByText } = render(
       <ActionSheet
-        visible
-        onClose={jest.fn()}
+        onDismiss={jest.fn()}
         username='viewer'
         onReply={jest.fn()}
         onCopy={jest.fn()}
@@ -125,8 +114,7 @@ describe('Moderator action sheets', () => {
 
     rerender(
       <ActionSheet
-        visible
-        onClose={jest.fn()}
+        onDismiss={jest.fn()}
         username='viewer'
         onReply={jest.fn()}
         onCopy={jest.fn()}
@@ -153,12 +141,11 @@ describe('Moderator action sheets', () => {
     const { rerender, queryByText, getByText } = render(
       <UserActionSheet
         visibility={{
-          visible: true,
           isHidden: false,
           isHighlighted: false,
         }}
         moderation={{ canModerateChat: false, canModerateUser: true }}
-        onClose={jest.fn()}
+        onDismiss={jest.fn()}
         username='viewer'
         login='viewer'
         onMentionUser={jest.fn()}
@@ -177,12 +164,11 @@ describe('Moderator action sheets', () => {
     rerender(
       <UserActionSheet
         visibility={{
-          visible: true,
           isHidden: false,
           isHighlighted: false,
         }}
         moderation={{ canModerateChat: true, canModerateUser: true }}
-        onClose={jest.fn()}
+        onDismiss={jest.fn()}
         username='viewer'
         login='viewer'
         onMentionUser={jest.fn()}
@@ -205,12 +191,11 @@ describe('Moderator action sheets', () => {
     const { queryByText } = render(
       <UserActionSheet
         visibility={{
-          visible: true,
           isHidden: false,
           isHighlighted: false,
         }}
         moderation={{ canModerateChat: true, canModerateUser: false }}
-        onClose={jest.fn()}
+        onDismiss={jest.fn()}
         username='viewer'
         login='viewer'
         onMentionUser={jest.fn()}
@@ -234,12 +219,11 @@ describe('Moderator action sheets', () => {
     const { rerender, queryByText, getByText } = render(
       <UserActionSheet
         visibility={{
-          visible: true,
           isHidden: false,
           isHighlighted: false,
         }}
         moderation={{ canModerateChat: false, canModerateUser: false }}
-        onClose={jest.fn()}
+        onDismiss={jest.fn()}
         username='viewer'
         login='viewer'
         onMentionUser={jest.fn()}
@@ -256,12 +240,11 @@ describe('Moderator action sheets', () => {
     rerender(
       <UserActionSheet
         visibility={{
-          visible: true,
           isHidden: false,
           isHighlighted: false,
         }}
         moderation={{ canModerateChat: false, canModerateUser: false }}
-        onClose={jest.fn()}
+        onDismiss={jest.fn()}
         username='viewer'
         login='viewer'
         onMentionUser={jest.fn()}
@@ -278,62 +261,5 @@ describe('Moderator action sheets', () => {
 
     fireEvent.press(getByText('Report user'));
     expect(onReportUser).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe('iOS action sheets', () => {
-  beforeAll(() => {
-    Platform.OS = 'ios';
-  });
-
-  afterAll(() => {
-    Platform.OS = 'android';
-  });
-
-  test('renders the custom message action sheet rather than a system sheet', () => {
-    const onDeleteMessage = jest.fn();
-
-    const { getByText } = render(
-      <ActionSheet
-        visible
-        onClose={jest.fn()}
-        username='viewer'
-        onReply={jest.fn()}
-        onCopy={jest.fn()}
-        canModerateChat
-        canDeleteMessage
-        canModerateUser
-        onDeleteMessage={onDeleteMessage}
-      />,
-    );
-
-    fireEvent.press(getByText('Delete message'));
-    expect(onDeleteMessage).toHaveBeenCalledTimes(1);
-  });
-
-  test('renders the custom user action sheet rather than a system sheet', () => {
-    const onBanUser = jest.fn();
-
-    const { getByText } = render(
-      <UserActionSheet
-        visibility={{
-          visible: true,
-          isHidden: false,
-          isHighlighted: false,
-        }}
-        moderation={{ canModerateChat: true, canModerateUser: true }}
-        onClose={jest.fn()}
-        username='viewer'
-        login='viewer'
-        onMentionUser={jest.fn()}
-        onCopyUsername={jest.fn()}
-        onHideUser={jest.fn()}
-        onHighlightUser={jest.fn()}
-        onBanUser={onBanUser}
-      />,
-    );
-
-    fireEvent.press(getByText('Ban user'));
-    expect(onBanUser).toHaveBeenCalledTimes(1);
   });
 });

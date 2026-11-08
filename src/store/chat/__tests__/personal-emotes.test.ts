@@ -1,7 +1,8 @@
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import { sevenTvService } from '@app/services/seven-tv-service';
+import { flushChatStoreTimers } from '@app/test/chat-store-teardown';
+import { silenceLogger } from '@app/test/silence-logger';
 import type { SevenTvSanitisedEmote } from '@app/types/emote';
-import { logger } from '@app/utils/logger';
 
 import {
   clearChannelPersonalEmotes,
@@ -14,7 +15,7 @@ import { chatStore$ } from '../observables/chat-store';
 import type { ChannelCacheType } from '../types/constants';
 import { makeEmptyEmoteData } from '../types/constants';
 
-jest.spyOn(logger.stv, 'warn').mockImplementation(() => {});
+silenceLogger();
 
 const mockGetPersonalEmoteSet = jest.spyOn(
   sevenTvService,
@@ -74,17 +75,29 @@ describe('fetchUserPersonalEmotes', () => {
     expect(mockGetPersonalEmoteSet).toHaveBeenCalledTimes(1);
   });
 
-  test('stamps a failed fetch so it is not retried on the next pass', async () => {
-    mockGetPersonalEmoteSet.mockRejectedValue(new Error('no 7tv account'));
+  test('does not stamp a transport error, so the next pass retries', async () => {
+    mockGetPersonalEmoteSet
+      .mockRejectedValueOnce(new Error('Network request failed'))
+      .mockResolvedValueOnce([personalEmote]);
 
     const first = await fetchUserPersonalEmotes(twitchUserId, channelId);
     const second = await fetchUserPersonalEmotes(twitchUserId, channelId);
 
-    expect(first).toBeNull();
+    expect({ first, second }).toEqual({ first: null, second: [personalEmote] });
 
-    expect(second).toEqual<SevenTvSanitisedEmote[]>([]);
+    expect(mockGetPersonalEmoteSet).toHaveBeenCalledTimes(2);
+  });
 
-    expect(mockGetPersonalEmoteSet).toHaveBeenCalledTimes(1);
+  test('fetches a user again in a second channel', async () => {
+    mockGetPersonalEmoteSet.mockResolvedValue([personalEmote]);
+
+    await fetchUserPersonalEmotes(twitchUserId, channelId);
+    const inOtherChannel = await fetchUserPersonalEmotes(twitchUserId, '456');
+
+    expect({
+      inOtherChannel,
+      cached: getUserPersonalEmotes(twitchUserId, '456'),
+    }).toEqual({ inOtherChannel: [personalEmote], cached: [personalEmote] });
   });
 
   test('caches per session without touching the persisted channel cache', async () => {
@@ -170,3 +183,5 @@ describe('personalEmotesVersion', () => {
     expect(chatStore$.personalEmotesVersion.peek()).toBe(versionBefore);
   });
 });
+
+afterEach(flushChatStoreTimers);

@@ -1,11 +1,12 @@
-import { memo, useCallback } from 'react';
+import { memo } from 'react';
 
 import { useQueries } from '@tanstack/react-query';
 import { router } from 'expo-router';
 
+import { emoteKeys, twitchKeys } from '@app/lib/react-query/queryKeys';
 import { sevenTvService } from '@app/services/seven-tv-service';
 import { twitchService } from '@app/services/twitch-service';
-import { type MediaLinkTokenKind } from '@app/utils/chat/messageToken';
+import { type MediaLinkTokenKind } from '@app/types/chat/messageToken';
 import { getTwitchClipIdFromUrl } from '@app/utils/chat/parse-word-link-tokens/getTwitchClipIdFromUrl';
 import { SEVEN_TV_EMOTE_LINK_REGEX } from '@app/utils/chat/parse-word-link-tokens/sevenTvEmoteLinkRegex';
 
@@ -26,24 +27,32 @@ function MediaLinkCardComponent({
   type,
   url,
 }: MediaLinkCardProps) {
-  const twitchClipId = getTwitchClipIdFromUrl(url);
+  const twitchClipId =
+    type === 'twitchClip' ? getTwitchClipIdFromUrl(url) : undefined;
+
+  const sevenTvEmoteId =
+    type === 'stvEmoteLink'
+      ? SEVEN_TV_EMOTE_LINK_REGEX.exec(url)?.[1]
+      : undefined;
 
   const [sevenTvEmote, twitchClip] = useQueries({
     queries: [
       {
-        queryKey: ['sevenTvEmote', url],
+        queryKey: emoteKeys.sevenTvEmote(sevenTvEmoteId ?? ''),
         queryFn: () => {
-          const sevenTvMatch = url.match(SEVEN_TV_EMOTE_LINK_REGEX);
-          const emoteId = sevenTvMatch?.[1] ?? '';
-          return sevenTvService.getEmote(emoteId);
+          if (!sevenTvEmoteId) {
+            throw new Error('Missing 7TV emote ID');
+          }
+
+          return sevenTvService.getEmote(sevenTvEmoteId);
         },
-        enabled: type === 'stvEmoteLink',
+        enabled: Boolean(sevenTvEmoteId),
         // Emote and clip metadata is effectively immutable, so recycled chat
         // rows must not refetch it on every remount past the default 30s.
         staleTime: Infinity,
       },
       {
-        queryKey: ['twitchClip', url],
+        queryKey: twitchKeys.clip(twitchClipId ?? ''),
         queryFn: () => {
           if (!twitchClipId) {
             throw new Error('Missing Twitch clip ID');
@@ -51,21 +60,19 @@ function MediaLinkCardComponent({
 
           return twitchService.getClip(twitchClipId);
         },
-        enabled: type === 'twitchClip' && Boolean(twitchClipId),
+        enabled: Boolean(twitchClipId),
         staleTime: Infinity,
       },
     ],
   });
 
-  const handlePress = useCallback(() => {
-    if (type === 'twitchClip' && twitchClipId) {
-      router.push(`/streams/clip/${encodeURIComponent(twitchClipId)}`);
-    }
-  }, [twitchClipId, type]);
+  const openClip = twitchClipId
+    ? () => router.push(`/streams/clip/${encodeURIComponent(twitchClipId)}`)
+    : undefined;
 
   const isPending =
-    (type === 'stvEmoteLink' && sevenTvEmote.isPending) ||
-    (type === 'twitchClip' && twitchClip.isPending);
+    (Boolean(sevenTvEmoteId) && sevenTvEmote.isPending) ||
+    (Boolean(twitchClipId) && twitchClip.isPending);
 
   const isTwitchClip = type === 'twitchClip';
 
@@ -83,7 +90,6 @@ function MediaLinkCardComponent({
     return (
       <InlineEmoteChip
         isPending={isPending}
-        onPress={handlePress}
         thumbnail={thumbnail}
         title={title}
       />
@@ -97,7 +103,7 @@ function MediaLinkCardComponent({
       mediaImageFit={mediaImageFit}
       mediaLabel={mediaLabel}
       mediaMeta={mediaMeta}
-      onPress={handlePress}
+      onPress={openClip}
       thumbnail={thumbnail}
       title={title}
     />

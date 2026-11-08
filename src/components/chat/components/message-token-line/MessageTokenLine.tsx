@@ -10,9 +10,10 @@ import type { ReactNode } from 'react';
 
 import { Image } from '@app/components/image/Image';
 import { Text } from '@app/components/ui/text/Text';
+import { usePreference } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
-import type { MessageToken } from '@app/utils/chat/messageToken';
-import { resolveEmoteDisplayUrl } from '@app/utils/emote/resolveEmoteDisplayUrl';
+import type { MessageToken } from '@app/types/chat/messageToken';
+import { getChatEmoteDisplayUrl } from '@app/utils/emote/getChatEmoteDisplayUrl';
 
 function getMessagePartKey(token: MessageToken): string {
   if (token.type === 'emote' && token.url) {
@@ -22,14 +23,19 @@ function getMessagePartKey(token: MessageToken): string {
   return `${token.type}:${'content' in token ? token.content : ''}`;
 }
 
+interface MessagePartStyle {
+  disableAnimations: boolean;
+  emoteStyle: ImageStyle;
+  textStyle: StyleProp<TextStyle>;
+}
+
 function renderMessagePart(
   token: MessageToken,
   key: string,
-  emoteStyle: ImageStyle,
-  textStyle: StyleProp<TextStyle>,
+  { disableAnimations, emoteStyle, textStyle }: MessagePartStyle,
 ) {
   if (token.type === 'emote') {
-    const displayUrl = resolveEmoteDisplayUrl(token);
+    const displayUrl = getChatEmoteDisplayUrl(token, { disableAnimations });
 
     return displayUrl ? (
       <Image
@@ -57,21 +63,12 @@ function renderMessagePart(
 
 interface MessageTokenLineProps {
   tokens: MessageToken[];
-  /**
-   * Content placed before the tokens on the same line, such as a username
-   * or a timestamp.
-   */
   children?: ReactNode;
   emoteSize?: number;
   textStyle?: StyleProp<TextStyle>;
   style?: StyleProp<ViewStyle>;
 }
 
-/**
- * A chat message outside the list: text, mentions and emote images wrapped
- * on one flowing line. Used by the message action preview and the user
- * sheet's recent messages.
- */
 export function MessageTokenLine({
   tokens,
   children,
@@ -79,6 +76,7 @@ export function MessageTokenLine({
   textStyle,
   style,
 }: MessageTokenLineProps) {
+  const disableAnimations = usePreference('disableEmoteAnimations');
   const partKeyCounts = new Map<string, number>();
   const emoteStyle = {
     height: emoteSize,
@@ -95,12 +93,11 @@ export function MessageTokenLine({
         const occurrence = partKeyCounts.get(baseKey) ?? 0;
         partKeyCounts.set(baseKey, occurrence + 1);
 
-        return renderMessagePart(
-          token,
-          `${baseKey}:${occurrence}`,
+        return renderMessagePart(token, `${baseKey}:${occurrence}`, {
+          disableAnimations,
           emoteStyle,
-          resolvedTextStyle,
-        );
+          textStyle: resolvedTextStyle,
+        });
       })}
     </View>
   );

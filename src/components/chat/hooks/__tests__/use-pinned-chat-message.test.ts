@@ -4,15 +4,14 @@ import { toast } from 'sonner-native';
 import {
   createChatMessage,
   createMessageActionData,
-} from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
-import type { PinnedChatMessageViewModel } from '@app/components/chat/hooks/use-pinned-chat-message';
+} from '@app/components/chat/__tests__/__fixtures__/chatFactories.fixture';
 import { usePinnedChatMessage } from '@app/components/chat/hooks/use-pinned-chat-message';
+import type { PinnedChatMessageViewModel } from '@app/components/chat/util/pinnedChatMessageViewModel';
 import { twitchService } from '@app/services/twitch-service';
+import { silenceLogger } from '@app/test/silence-logger';
 import type { TwitchPinnedChatMessage } from '@app/types/twitch/chat';
-import { logger } from '@app/utils/logger';
 
-jest.spyOn(logger.chat, 'debug').mockImplementation(() => {});
-jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
+silenceLogger();
 
 const mockGetPinnedChatMessage = jest.spyOn(
   twitchService,
@@ -95,9 +94,11 @@ describe('usePinnedChatMessage', () => {
   test('does not load pinned state without moderation access', async () => {
     const { result } = renderPinnedMessage({ canModerateChat: false });
 
-    await waitFor(() => {
-      expect(result.current.pinnedMessage).toBe(null);
+    await act(async () => {
+      await Promise.resolve();
     });
+
+    expect(result.current.pinnedMessage).toBe(null);
 
     expect(mockGetPinnedChatMessage).not.toHaveBeenCalled();
   });

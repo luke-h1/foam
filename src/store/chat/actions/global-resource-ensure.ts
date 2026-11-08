@@ -1,95 +1,111 @@
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
-import { CACHE_DURATION } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 import {
+  GLOBAL_BADGE_SLICE_KEYS,
+  GLOBAL_EMOTE_SLICE_KEYS,
+  mapSlices,
+} from '../types/chat-resource-slices';
+import { isGlobalCacheStale } from './channel-refresh-plan';
+import {
+  type BadgeCacheKey,
   buildGlobalBadgeResourceSpecs,
   buildGlobalEmoteResourceSpecs,
+  type EmoteCacheKey,
   globalChatResourceGuard,
+  reconcileSettledSpecs,
+  reportResourceResults,
+  type SettledSpec,
+  settleSpecs,
 } from './channel-resources';
 
 const GUARD_KEY = 'globalChatResources';
 
+export type GlobalSettledSpec =
+  | SettledSpec<EmoteCacheKey, SanitisedEmote>
+  | SettledSpec<BadgeCacheKey, SanitisedBadgeSet>;
+
 /**
- * Fills `chatStore$.persisted.globalCaches` without joining a channel; the
- * guard only provides single-flight plus the post-purge write-back fence.
+ * The freshness stamp only advances when every global fetch succeeded, so a
+ * failed slice keeps its retry pressure.
  */
-export function ensureGlobalChatResources(): Promise<void> {
-  const cache = chatStore$.persisted.globalCaches.peek();
+function writeGlobalResults(
+  emoteSettled: SettledSpec<EmoteCacheKey, SanitisedEmote>[],
+  badgeSettled: SettledSpec<BadgeCacheKey, SanitisedBadgeSet>[],
+): void {
+  const existing = chatStore$.persisted.globalCaches.peek();
 
-  const hasEmotes =
-    cache.twitchGlobalEmotes.length > 0 ||
-    cache.sevenTvGlobalEmotes.length > 0 ||
-    cache.bttvGlobalEmotes.length > 0 ||
-    cache.ffzGlobalEmotes.length > 0;
+  const context = {
+    channelId: '',
+    existingCache: undefined,
+    existingGlobalCache: existing,
+  };
 
-  // Checked separately: a channel-copy seed can stamp `lastUpdated` with
-  // badges still empty, serving an empty Badges tab until the TTL expired.
-  const hasBadges =
-    cache.twitchGlobalBadges.length > 0 || cache.ffzGlobalBadges.length > 0;
+  const emoteByKey = reconcileSettledSpecs(emoteSettled, context);
+  const badgeByKey = reconcileSettledSpecs(badgeSettled, context);
 
+  const anyFailure = [...emoteSettled, ...badgeSettled].some(
+    entry => entry.result.status === 'rejected',
+  );
+
+  chatStore$.persisted.globalCaches.set({
+    lastUpdated: anyFailure ? existing.lastUpdated : Date.now(),
+    ...mapSlices(
+      GLOBAL_EMOTE_SLICE_KEYS,
+      key => emoteByKey.get(key) ?? existing[key],
+    ),
+    ...mapSlices(
+      GLOBAL_BADGE_SLICE_KEYS,
+      key => badgeByKey.get(key) ?? existing[key],
+    ),
+  });
+}
+
+interface RefreshGlobalChatResourcesOptions {
+  channelId: string;
+  trigger: string;
+}
+
+/**
+ * The one path that fetches the global slot. Concurrent callers share one
+ * run, and a cache clear that lands mid-fetch fences the write-back.
+ */
+export function refreshGlobalChatResources({
+  channelId,
+  trigger,
+}: RefreshGlobalChatResourcesOptions): Promise<GlobalSettledSpec[]> {
+  return globalChatResourceGuard.run(GUARD_KEY, async ctx => {
+    const [emoteSettled, badgeSettled] = await Promise.all([
+      settleSpecs(buildGlobalEmoteResourceSpecs()),
+      settleSpecs(buildGlobalBadgeResourceSpecs()),
+    ]);
+
+    const settled = [...emoteSettled, ...badgeSettled];
+
+    reportResourceResults({ channelId, settled, trigger });
+
+    // Without the fence, the pre-clear payload is written back stamped fresh.
+    if (ctx.stillCurrent()) {
+      writeGlobalResults(emoteSettled, badgeSettled);
+    }
+
+    return settled;
+  });
+}
+
+/**
+ * Fills `chatStore$.persisted.globalCaches` without joining a channel.
+ */
+export async function ensureGlobalChatResources(): Promise<void> {
   if (
-    hasEmotes &&
-    hasBadges &&
-    Date.now() - cache.lastUpdated < CACHE_DURATION
+    !isGlobalCacheStale(chatStore$.persisted.globalCaches.peek(), Date.now())
   ) {
-    return Promise.resolve();
+    return;
   }
 
-  return globalChatResourceGuard.run(GUARD_KEY, ctx => {
-    const emoteSpecs = buildGlobalEmoteResourceSpecs();
-    const badgeSpecs = buildGlobalBadgeResourceSpecs();
-
-    return Promise.all([
-      Promise.allSettled(emoteSpecs.map(spec => spec.fetch())),
-      Promise.allSettled(badgeSpecs.map(spec => spec.fetch())),
-    ]).then(([emoteResults, badgeResults]) => {
-      // A cache clear that lands mid-fetch fences this run, so the pre-clear
-      // payload is dropped instead of being written back stamped fresh.
-      if (!ctx.stillCurrent()) {
-        return;
-      }
-
-      const existing = chatStore$.persisted.globalCaches.peek();
-      const emoteByKey = new Map<string, SanitisedEmote[]>();
-      let anyFailure = false;
-
-      emoteSpecs.forEach((spec, index) => {
-        const result = emoteResults[index];
-        if (result?.status === 'fulfilled') {
-          emoteByKey.set(spec.key, result.value);
-        } else {
-          anyFailure = true;
-        }
-      });
-
-      const badgeByKey = new Map<string, SanitisedBadgeSet[]>();
-
-      badgeSpecs.forEach((spec, index) => {
-        const result = badgeResults[index];
-        if (result?.status === 'fulfilled') {
-          badgeByKey.set(spec.key, result.value);
-        } else {
-          anyFailure = true;
-        }
-      });
-
-      chatStore$.persisted.globalCaches.set({
-        lastUpdated: anyFailure ? existing.lastUpdated : Date.now(),
-        twitchGlobalEmotes:
-          emoteByKey.get('twitchGlobalEmotes') ?? existing.twitchGlobalEmotes,
-        sevenTvGlobalEmotes:
-          emoteByKey.get('sevenTvGlobalEmotes') ?? existing.sevenTvGlobalEmotes,
-        ffzGlobalEmotes:
-          emoteByKey.get('ffzGlobalEmotes') ?? existing.ffzGlobalEmotes,
-        bttvGlobalEmotes:
-          emoteByKey.get('bttvGlobalEmotes') ?? existing.bttvGlobalEmotes,
-        twitchGlobalBadges:
-          badgeByKey.get('twitchGlobalBadges') ?? existing.twitchGlobalBadges,
-        ffzGlobalBadges:
-          badgeByKey.get('ffzGlobalBadges') ?? existing.ffzGlobalBadges,
-      });
-    });
+  await refreshGlobalChatResources({
+    channelId: '',
+    trigger: 'global_resource_ensure',
   });
 }

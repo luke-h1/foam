@@ -1,47 +1,36 @@
-// "shape" is the 7TV paint API field (types/seven-tv/cosmetics.ts), not a naming choice.
-// oxlint-disable anti-slop/no-shape-in-symbol-names
-import type { PaintLayerData } from '@app/types/seven-tv/cosmetics';
+import { makeLayer } from '@app/components/chat/components/chat-message/cosmetic-username/util/paint-css/__fixtures__/paintCss.fixture';
 
 import { withPaintLayerKeys } from '../paintLayerKey';
 
-function layer(overrides: Partial<PaintLayerData> = {}): PaintLayerData {
-  return {
-    function: 'LINEAR_GRADIENT',
-    stops: { length: 0 },
-    angle: 90,
-    shape: 'circle',
-    repeat: false,
-    image_url: '',
-    canvas_repeat: 'unset',
-    at: null,
-    size: null,
-    opacity: 1,
-    ...overrides,
-  };
-}
+const keysOf = (angles: number[]) =>
+  withPaintLayerKeys(angles.map(angle => makeLayer({ angle }))).map(
+    entry => entry.key,
+  );
 
 describe('withPaintLayerKeys', () => {
-  test('assigns content keys and suffixes duplicate layers', () => {
-    const layers = [
-      layer({ angle: 45 }),
-      layer({ angle: 90 }),
-      layer({ angle: 45 }),
-    ];
+  test('gives every layer a unique key, even when two layers are identical', () => {
+    expect(new Set(keysOf([45, 90, 45])).size).toBe(3);
+  });
 
-    const keyed = withPaintLayerKeys(layers);
-    const keys = keyed.map(entry => entry.key);
+  test('gives the same layers the same keys on a new paint object', () => {
+    expect(keysOf([45, 90, 45])).toEqual(keysOf([45, 90, 45]));
+  });
 
-    expect(keys).toHaveLength(3);
-    const first = keys[0]!;
-    const second = keys[1]!;
-    const third = keys[2]!;
+  test('keeps the earlier keys when a duplicate layer is appended', () => {
+    expect(keysOf([45, 90, 45]).slice(0, 2)).toEqual(keysOf([45, 90]));
+  });
 
-    expect(keys).toEqual([first, second, `${first}#1`]);
+  test('keeps each layer and its original index beside its key', () => {
+    const layers = [makeLayer({ angle: 45 }), makeLayer({ angle: 90 })];
 
-    expect(first).not.toEqual(second);
-
-    expect(first.includes('45')).toBe(true);
-
-    expect(third.endsWith('#1')).toBe(true);
+    expect(
+      withPaintLayerKeys(layers).map(({ layer, layerIndex }) => ({
+        layer,
+        layerIndex,
+      })),
+    ).toEqual([
+      { layer: layers[0], layerIndex: 0 },
+      { layer: layers[1], layerIndex: 1 },
+    ]);
   });
 });

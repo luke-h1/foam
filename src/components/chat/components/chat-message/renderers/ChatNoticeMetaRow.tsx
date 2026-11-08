@@ -3,13 +3,14 @@ import type { ReactNode } from 'react';
 
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 import { SymbolView } from '@app/components/ui/icon/Icon';
+import type { ChatDensity, ChatFontScale } from '@app/store/preference-store';
 
 import { styles } from '../ChatRow.styles';
 import { getChatTextStyles } from '../ChatText.styles';
-import { CHAT_SURFACE_COLORS, type ChatFontScale } from '../util/chatScale';
+import { CHAT_SURFACE_COLORS, getChatScale } from '../util/chatScale';
 
 interface ChatNoticeMetaRowProps {
-  compact?: boolean;
+  density?: ChatDensity;
   fontScale?: ChatFontScale;
   icon: React.ComponentProps<typeof SymbolView>['name'];
   label?: string;
@@ -20,22 +21,22 @@ interface ChatNoticeMetaRowProps {
 
 export function ChatNoticeMetaRow({
   children,
-  compact,
+  density,
   fontScale,
   icon,
   label,
   labelColor,
   labelStyle,
 }: ChatNoticeMetaRowProps) {
-  const textStyles = getChatTextStyles(fontScale, compact);
+  const textStyles = getChatTextStyles(fontScale, density);
 
   return (
-    <View style={styles.messageMetaRow}>
+    <View style={[styles.messageMetaRow, textStyles.spaceBelow]}>
       <SymbolView
         name={icon}
-        size={12}
+        size={getChatScale(fontScale, density).metaIconSize}
         tintColor={labelColor ?? CHAT_SURFACE_COLORS.muted}
-        style={styles.replyContextIcon}
+        style={textStyles.iconSpacing}
       />
       {children ?? (
         <ChatText

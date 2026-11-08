@@ -1,8 +1,11 @@
 export type ChatterRole = 'broadcaster' | 'moderator' | 'vip';
 
-export type MentionChatter = {
+export interface MentionChatter {
   login: string;
-  userId: string;
+  /**
+   * The numeric Twitch id. Unset for a chatter known only from a mention.
+   */
+  userId?: string;
   color: string;
   role?: ChatterRole;
-};
+}

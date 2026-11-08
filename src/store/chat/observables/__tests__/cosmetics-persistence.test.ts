@@ -1,6 +1,6 @@
-// oxlint-disable anti-slop/no-shape-in-symbol-names -- mirrors the 7TV paint API shape field (types/seven-tv/cosmetics.ts)
+import { makePaint } from '@app/components/chat/components/chat-message/cosmetic-username/util/paint-css/__fixtures__/paintCss.fixture';
 import { storageService } from '@app/lib/storage';
-import type { PaintData } from '@app/store/chat/types/constants';
+import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
 import {
   type CosmeticsSnapshot,
@@ -20,20 +20,7 @@ const setLegacySnapshot = (snapshot: CosmeticsSnapshot): void => {
   );
 };
 
-const makePaint = (id: string): PaintData => ({
-  id,
-  name: id,
-  color: null,
-  layers: { length: 0 },
-  shadows: { length: 0 },
-  textStyle: null,
-  function: 'LINEAR_GRADIENT',
-  repeat: false,
-  angle: 0,
-  shape: 'circle',
-  image_url: '',
-  stops: { length: 0 },
-});
+const makePaintWithId = (id: string): PaintData => makePaint({ id, name: id });
 
 describe('cosmeticsPersistence', () => {
   beforeEach(() => {
@@ -46,7 +33,7 @@ describe('cosmeticsPersistence', () => {
 
   test('round-trips paints and entitlements across the split keys', () => {
     writePersistedCosmeticDefinitions({
-      paints: { 'paint-1': makePaint('paint-1') },
+      paints: { 'paint-1': makePaintWithId('paint-1') },
       badges: {},
     });
 
@@ -57,7 +44,7 @@ describe('cosmeticsPersistence', () => {
 
     const loaded = loadPersistedCosmetics();
 
-    expect(loaded?.paints['paint-1']).toEqual(makePaint('paint-1'));
+    expect(loaded?.paints['paint-1']).toEqual(makePaintWithId('paint-1'));
 
     expect(loaded?.userPaintIds).toEqual({ 'user-1': 'paint-1' });
 
@@ -80,14 +67,14 @@ describe('cosmeticsPersistence', () => {
 
   test('falls back to the legacy combined snapshot key', () => {
     setLegacySnapshot({
-      paints: { 'paint-1': makePaint('paint-1') },
+      paints: { 'paint-1': makePaintWithId('paint-1') },
       badges: {},
       userPaintIds: { 'user-1': 'paint-1' },
       userBadgeIds: {},
     });
 
     expect(loadPersistedCosmetics()).toEqual<CosmeticsSnapshot>({
-      paints: { 'paint-1': makePaint('paint-1') },
+      paints: { 'paint-1': makePaintWithId('paint-1') },
       badges: {},
       userPaintIds: { 'user-1': 'paint-1' },
       userBadgeIds: {},
@@ -96,19 +83,19 @@ describe('cosmeticsPersistence', () => {
 
   test('fills missing bindings from the legacy snapshot when only definitions were split-written', () => {
     setLegacySnapshot({
-      paints: { 'paint-legacy': makePaint('paint-legacy') },
+      paints: { 'paint-legacy': makePaintWithId('paint-legacy') },
       badges: {},
       userPaintIds: { 'user-1': 'paint-legacy' },
       userBadgeIds: { 'user-1': 'badge-1' },
     });
 
     writePersistedCosmeticDefinitions({
-      paints: { 'paint-1': makePaint('paint-1') },
+      paints: { 'paint-1': makePaintWithId('paint-1') },
       badges: {},
     });
 
     expect(loadPersistedCosmetics()).toEqual<CosmeticsSnapshot>({
-      paints: { 'paint-1': makePaint('paint-1') },
+      paints: { 'paint-1': makePaintWithId('paint-1') },
       badges: {},
       userPaintIds: { 'user-1': 'paint-legacy' },
       userBadgeIds: { 'user-1': 'badge-1' },
@@ -117,7 +104,7 @@ describe('cosmeticsPersistence', () => {
 
   test('fills missing definitions from the legacy snapshot when only bindings were split-written', () => {
     setLegacySnapshot({
-      paints: { 'paint-legacy': makePaint('paint-legacy') },
+      paints: { 'paint-legacy': makePaintWithId('paint-legacy') },
       badges: {},
       userPaintIds: { 'user-1': 'paint-legacy' },
       userBadgeIds: {},
@@ -129,7 +116,7 @@ describe('cosmeticsPersistence', () => {
     });
 
     expect(loadPersistedCosmetics()).toEqual<CosmeticsSnapshot>({
-      paints: { 'paint-legacy': makePaint('paint-legacy') },
+      paints: { 'paint-legacy': makePaintWithId('paint-legacy') },
       badges: {},
       userPaintIds: { 'user-2': 'paint-legacy' },
       userBadgeIds: {},
@@ -140,7 +127,7 @@ describe('cosmeticsPersistence', () => {
     const paints: Record<string, PaintData> = {};
 
     for (let i = 0; i < 800; i += 1) {
-      paints[`paint-${i}`] = makePaint(`paint-${i}`);
+      paints[`paint-${i}`] = makePaintWithId(`paint-${i}`);
     }
 
     writePersistedCosmeticDefinitions({ paints, badges: {} });
@@ -153,6 +140,6 @@ describe('cosmeticsPersistence', () => {
     // Oldest dropped, newest kept (insertion order).
     expect(loaded?.paints['paint-0']).toBeUndefined();
 
-    expect(loaded?.paints['paint-799']).toEqual(makePaint('paint-799'));
+    expect(loaded?.paints['paint-799']).toEqual(makePaintWithId('paint-799'));
   });
 });

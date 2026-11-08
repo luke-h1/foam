@@ -1,5 +1,4 @@
 import {
-  CHAT_SESSION_CACHE_TTL_MS,
   clearMentionSessionCaches,
   clearSessionCache,
   getSessionCacheString,
@@ -11,34 +10,40 @@ describe('chatColorCaches', () => {
     clearSessionCache();
   });
 
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   test('stores and reads values before expiry', () => {
     setSessionCacheString('mentionColors', 'luke', '#ffffff');
 
     expect(getSessionCacheString('mentionColors', 'luke')).toBe('#ffffff');
   });
 
-  test('expires mention colours after the TTL', () => {
+  test('expires mention colours after 30 seconds', () => {
     jest.useFakeTimers();
     setSessionCacheString('mentionColors', 'luke', '#ffffff');
 
-    jest.advanceTimersByTime(CHAT_SESSION_CACHE_TTL_MS + 1);
+    jest.advanceTimersByTime(29_000);
+    const beforeExpiry = getSessionCacheString('mentionColors', 'luke');
 
-    expect(getSessionCacheString('mentionColors', 'luke')).toBeUndefined();
+    jest.advanceTimersByTime(2000);
 
-    jest.useRealTimers();
+    expect([
+      beforeExpiry,
+      getSessionCacheString('mentionColors', 'luke'),
+    ]).toEqual(['#ffffff', undefined]);
   });
 
   test('lightened colours never expire - they memoize a pure function', () => {
     jest.useFakeTimers();
     setSessionCacheString('lightenedColors', '#ff0000', 'rgb(255, 0, 0)');
 
-    jest.advanceTimersByTime(CHAT_SESSION_CACHE_TTL_MS * 10);
+    jest.advanceTimersByTime(300_000);
 
     expect(getSessionCacheString('lightenedColors', '#ff0000')).toBe(
       'rgb(255, 0, 0)',
     );
-
-    jest.useRealTimers();
   });
 
   test('drops oldest entries once a bucket exceeds its cap', () => {

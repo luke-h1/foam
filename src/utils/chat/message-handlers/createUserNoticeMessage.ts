@@ -1,37 +1,27 @@
-import { ingestChannelPointRewardTags } from '@app/store/chat/actions/channelPointRewardTitleStore';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
+import type { ChatTimestampFormat } from '@app/types/chat/chatTimestampFormat';
 import type {
   UserNoticeTags,
   UserNoticeTagsByVariant,
   ViewerMilestoneTags,
 } from '@app/types/chat/irc-tags/usernotice';
-import { createCharityDonationPart } from '@app/utils/chat/format-subscription-notice/createCharityDonationToken';
-import { createModiversaryPart } from '@app/utils/chat/format-subscription-notice/createModiversaryToken';
-import { createRitualPart } from '@app/utils/chat/format-subscription-notice/createRitualToken';
-import { createSubscriptionPart } from '@app/utils/chat/format-subscription-notice/createSubscriptionToken';
-import { createViewerMilestonePart } from '@app/utils/chat/format-subscription-notice/createViewerMilestoneToken';
-import { getTagValue } from '@app/utils/chat/format-subscription-notice/getTagValue';
+import { createCharityDonationToken } from '@app/utils/chat/format-subscription-notice/createCharityDonationToken';
+import { createModiversaryToken } from '@app/utils/chat/format-subscription-notice/createModiversaryToken';
+import { createRitualToken } from '@app/utils/chat/format-subscription-notice/createRitualToken';
+import { createSubscriptionToken } from '@app/utils/chat/format-subscription-notice/createSubscriptionToken';
+import { createViewerMilestoneToken } from '@app/utils/chat/format-subscription-notice/createViewerMilestoneToken';
 import { hasRenderableNoticeBody } from '@app/utils/chat/format-subscription-notice/hasRenderableNoticeBody';
+import { createMessageIdentity } from '@app/utils/chat/message-identity/createMessageIdentity';
 import { isSharedChatDuplicatedNotice } from '@app/utils/chat/user-notice-msg-ids/isSharedChatDuplicatedNotice';
-import { isSubscriptionUserNotice } from '@app/utils/chat/user-notice-msg-ids/isSubscriptionUserNotice';
+import {
+  isSubscriptionUserNotice,
+  type SubscriptionUserNoticeTags,
+} from '@app/utils/chat/user-notice-msg-ids/isSubscriptionUserNotice';
 import { generateNonce } from '@app/utils/string/generateNonce';
 
 import { createChatTimestampFromTags } from './createChatTimestampFromTags';
 import { createUserStateFromTags } from './createUserStateFromTags';
-
-function toStringTagRecord(tags: UserNoticeTags) {
-  const result: Record<string, string> = {};
-
-  for (const [key, value] of Object.entries(tags)) {
-    if (value === true || value === false || value === undefined) {
-      continue;
-    }
-
-    result[key] = value;
-  }
-
-  return result;
-}
+import { getReplyFields } from './getReplyFields';
 
 const createSystemNoticeText = (tags: UserNoticeTags, text: string): string => {
   const systemLine = tags['system-msg'] ?? '';
@@ -46,47 +36,45 @@ interface CreateUserNoticeParams {
   tags: UserNoticeTags;
   channelName: string;
   text: string;
-  broadcasterId?: string;
+  timestampFormat: ChatTimestampFormat;
 }
 
 export const createUserNoticeMessage = ({
   tags,
   channelName,
   text,
-  broadcasterId,
+  timestampFormat,
 }: CreateUserNoticeParams): AnyChatMessageType => {
-  const messageNonce = generateNonce();
-  const userstate = createUserStateFromTags(toStringTagRecord(tags));
+  // Twitch replays a USERNOTICE through recent-messages with the same id, so
+  // the nonce reuses the id and the store dedup index sees one message.
   const messageId = tags.id || generateNonce();
+  const messageNonce = messageId;
+  const userstate = createUserStateFromTags(tags);
+  const sharedChatFields: Pick<AnyChatMessageType, 'isSharedChatDuplicated'> =
+    {};
+
+  if (isSharedChatDuplicatedNotice(tags)) {
+    sharedChatFields.isSharedChatDuplicated = true;
+  }
 
   const baseMessage = {
-    id: `${messageId}_${messageNonce}`,
-    message: [{ type: 'text' as const, content: text.trimEnd() }],
-    badges: {},
+    ...createMessageIdentity(messageId, messageNonce),
+    badges: [],
     channel: channelName,
-    message_id: messageId,
-    message_nonce: messageNonce,
-    timestamp: createChatTimestampFromTags(tags),
+    timestamp: createChatTimestampFromTags(tags, timestampFormat),
     sender: userstate.username || '',
-    parentDisplayName: getTagValue(tags, 'reply-parent-display-name'),
-    replyDisplayName: getTagValue(tags, 'reply-parent-user-login'),
-    replyBody: getTagValue(tags, 'reply-parent-msg-body'),
+    userstate,
+    ...getReplyFields(tags),
+    ...sharedChatFields,
   };
 
-  const sharedChatDuplicated = isSharedChatDuplicatedNotice(tags);
-
-  const sharedChatFields = sharedChatDuplicated
-    ? { isSharedChatDuplicated: true as const }
-    : {};
-
-  const createSubscriptionNoticeMessage = (): AnyChatMessageType => ({
+  const createSubscriptionNoticeMessage = (
+    subscriptionTags: SubscriptionUserNoticeTags,
+  ): AnyChatMessageType => ({
     ...baseMessage,
-    badges: [],
-    message: [createSubscriptionPart(tags, text)],
-    userstate,
+    message: [createSubscriptionToken(subscriptionTags, text)],
     notice_tags: tags,
     isSpecialNotice: true,
-    ...sharedChatFields,
   });
 
   const createMetadataUserNoticeMessage = (options: {
@@ -94,21 +82,16 @@ export const createUserNoticeMessage = ({
     isChannelPointRedemption?: boolean;
     isHighlightedMessage?: boolean;
   }): AnyChatMessageType => {
-    const metadataUserstate = createUserStateFromTags(toStringTagRecord(tags));
     const trimmedText = text.trimEnd();
 
     return {
       ...baseMessage,
-      userstate: metadataUserstate,
-      sender: metadataUserstate.username || metadataUserstate.login || '',
-      badges: [],
       message: trimmedText
         ? [{ type: 'text' as const, content: trimmedText }]
         : [],
       notice_tags: tags,
       isSpecialNotice: true,
       ...options,
-      ...sharedChatFields,
       replyDisplayName: '',
       replyBody: '',
       parentDisplayName: '',
@@ -120,13 +103,10 @@ export const createUserNoticeMessage = ({
 
     return {
       ...baseMessage,
-      userstate,
-      badges: [],
       message: combined ? [{ type: 'text' as const, content: combined }] : [],
       notice_tags: tags,
       isSpecialNotice: true,
       isTwitchSystemNotice: true,
-      ...sharedChatFields,
     };
   };
 
@@ -151,17 +131,13 @@ export const createUserNoticeMessage = ({
         mod: tags.mod ?? '',
       } satisfies ViewerMilestoneTags;
 
-      const milestonePart = createViewerMilestonePart(
+      const milestonePart = createViewerMilestoneToken(
         viewerMilestoneTags,
         text,
       );
 
       return {
         ...baseMessage,
-        replyDisplayName: getTagValue(tags, 'reply-parent-display-name'),
-        replyBody: '',
-        badges: [],
-        userstate,
         message: [milestonePart].filter(hasRenderableNoticeBody),
         notice_tags: {
           'msg-id': tags['msg-id'],
@@ -180,24 +156,18 @@ export const createUserNoticeMessage = ({
     case 'charitydonation': {
       return {
         ...baseMessage,
-        badges: [],
-        message: [createCharityDonationPart(tags, text)],
-        userstate,
+        message: [createCharityDonationToken(tags, text)],
         notice_tags: tags,
         isSpecialNotice: true,
-        ...sharedChatFields,
       };
     }
 
     case 'ritual': {
       return {
         ...baseMessage,
-        badges: [],
-        message: [createRitualPart(tags, text)],
-        userstate,
+        message: [createRitualToken(tags, text)],
         notice_tags: tags,
         isSpecialNotice: true,
-        ...sharedChatFields,
       };
     }
 
@@ -209,7 +179,6 @@ export const createUserNoticeMessage = ({
     }
 
     case 'rewardgift': {
-      ingestChannelPointRewardTags(tags, broadcasterId);
       const trimmedText = text.trimEnd();
 
       if (!trimmedText) {
@@ -218,9 +187,7 @@ export const createUserNoticeMessage = ({
 
       return {
         ...baseMessage,
-        badges: [],
         message: [{ type: 'text' as const, content: trimmedText }],
-        userstate,
         notice_tags: tags,
         isChannelPointRedemption: true,
       };
@@ -231,16 +198,13 @@ export const createUserNoticeMessage = ({
     }
 
     case 'modiversary': {
-      const modiversaryPart = createModiversaryPart(tags, text);
+      const modiversaryPart = createModiversaryToken(tags, text);
 
       return {
         ...baseMessage,
-        userstate,
-        badges: [],
         message: [modiversaryPart].filter(hasRenderableNoticeBody),
         notice_tags: tags,
         isSpecialNotice: true,
-        ...sharedChatFields,
       };
     }
 
@@ -258,7 +222,7 @@ export const createUserNoticeMessage = ({
 
     default: {
       if (isSubscriptionUserNotice(tags['msg-id'])) {
-        return createSubscriptionNoticeMessage();
+        return createSubscriptionNoticeMessage(tags);
       }
 
       const combined = createSystemNoticeText(tags, text);
@@ -266,8 +230,6 @@ export const createUserNoticeMessage = ({
       if (!combined) {
         return {
           ...baseMessage,
-          userstate,
-          badges: [],
           message: [],
           isSpecialNotice: true,
         };
@@ -275,12 +237,9 @@ export const createUserNoticeMessage = ({
 
       return {
         ...baseMessage,
-        userstate,
-        badges: [],
         message: [{ type: 'text' as const, content: combined }],
         isSpecialNotice: true,
         isTwitchSystemNotice: true,
-        ...sharedChatFields,
       };
     }
   }

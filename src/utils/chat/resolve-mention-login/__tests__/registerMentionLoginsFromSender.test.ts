@@ -1,11 +1,11 @@
-import { clearMentionLoginIndex } from '../clearMentionLoginIndex';
+import { clearMentionIndexes } from '../clearMentionIndexes';
 import { formatMentionContent } from '../formatMentionContent';
 import { getMentionLogin } from '../getMentionLogin';
 import { registerMentionLoginsFromSender } from '../registerMentionLoginsFromSender';
 
 describe('registerMentionLoginsFromSender', () => {
   beforeEach(() => {
-    clearMentionLoginIndex();
+    clearMentionIndexes();
   });
 
   test('registers display names that match login casing', () => {

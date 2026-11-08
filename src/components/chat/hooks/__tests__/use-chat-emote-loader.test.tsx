@@ -5,34 +5,29 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import {
   createSevenTvEmote,
   createTwitchEmote,
-} from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
+} from '@app/components/chat/__tests__/__fixtures__/chatFactories.fixture';
 import { useChatEmoteLoader } from '@app/components/chat/hooks/use-chat-emote-loader';
 import {
   createLoggedInAuthContextValue,
   createTestUser,
 } from '@app/context/__tests__/__fixtures__/auth-context.fixture';
 import { AuthContextTestProvider } from '@app/context/AuthContext';
-import { bttvEmoteService } from '@app/services/bttv-emote-service';
-import { chatterinoService } from '@app/services/chatterino-service';
-import { ffzService } from '@app/services/ffz-service';
 import { sevenTvService } from '@app/services/seven-tv-service';
-import { twitchBadgeService } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
-import { twitchService } from '@app/services/twitch-service';
-import {
-  abortCurrentLoad,
-  clearPersonalEmotesCache,
-} from '@app/store/chat/actions/channel-load';
+import { abortCurrentLoad } from '@app/store/chat/actions/channel-load';
 import { clearGlobalResourceCache } from '@app/store/chat/actions/channel-resources';
 import { clearMessages } from '@app/store/chat/actions/messages';
+import { clearPersonalEmotesCache } from '@app/store/chat/actions/personal-emotes';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import {
   makeEmptyEmoteData,
   makeEmptyGlobalCacheData,
 } from '@app/store/chat/types/constants';
+import { flushChatStoreTimers } from '@app/test/chat-store-teardown';
+import { stubEmoteProviderServices } from '@app/test/emote-provider-services';
 import { DefaultWrapper } from '@app/test/render';
+import { silenceLogger } from '@app/test/silence-logger';
 import * as preloadEmotesModule from '@app/utils/image/preloadEmotes';
-import { logger } from '@app/utils/logger';
 
 const channelEmote = createSevenTvEmote({ id: 'channel-7tv', name: 'Wave' });
 const loadedEmote = createSevenTvEmote({ id: 'loaded-7tv', name: 'Fresh' });
@@ -45,12 +40,7 @@ const mockPreloadGlobalEmotes = jest
   .spyOn(preloadEmotesModule, 'preloadGlobalEmotes')
   .mockResolvedValue(undefined);
 
-jest.spyOn(logger.chat, 'debug').mockImplementation(() => {});
-jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
-jest.spyOn(logger.chat, 'info').mockImplementation(() => {});
-jest.spyOn(logger.chat, 'warn').mockImplementation(() => {});
-jest.spyOn(logger.stv, 'info').mockImplementation(() => {});
-jest.spyOn(logger.stv, 'warn').mockImplementation(() => {});
+silenceLogger();
 
 let mockGetChannelEmotes: jest.SpiedFunction<
   typeof twitchEmoteService.getChannelEmotes
@@ -92,48 +82,11 @@ function seedFreshChannelCache() {
 }
 
 function fakeProviderServices() {
-  mockGetEmoteSetId = jest
-    .spyOn(sevenTvService, 'getEmoteSetId')
-    .mockResolvedValue('set-2');
+  const providers = stubEmoteProviderServices();
 
-  jest
-    .spyOn(sevenTvService, 'getSanitisedEmoteSet')
-    .mockResolvedValue([loadedEmote]);
-
-  jest.spyOn(sevenTvService, 'get7tvUserId').mockResolvedValue('');
-  jest.spyOn(sevenTvService, 'getPersonalEmoteSet').mockResolvedValue([]);
-
-  mockGetChannelEmotes = jest
-    .spyOn(twitchEmoteService, 'getChannelEmotes')
-    .mockResolvedValue([]);
-
-  jest.spyOn(twitchEmoteService, 'getGlobalEmotes').mockResolvedValue([]);
-  jest.spyOn(twitchEmoteService, 'getSubscriberEmotes').mockResolvedValue([]);
-  jest
-    .spyOn(bttvEmoteService, 'getSanitisedGlobalEmotes')
-    .mockResolvedValue([]);
-  jest
-    .spyOn(bttvEmoteService, 'getSanitisedChannelEmotes')
-    .mockResolvedValue([]);
-  jest
-    .spyOn(bttvEmoteService, 'getSanitisedGlobalBadges')
-    .mockResolvedValue([]);
-  jest.spyOn(ffzService, 'getSanitisedChannelEmotes').mockResolvedValue([]);
-  jest.spyOn(ffzService, 'getSanitisedGlobalEmotes').mockResolvedValue([]);
-  jest.spyOn(ffzService, 'getSanitisedChannelBadges').mockResolvedValue([]);
-  jest.spyOn(ffzService, 'getSanitisedGlobalBadges').mockResolvedValue([]);
-
-  jest
-    .spyOn(twitchBadgeService, 'listSanitisedChannelBadges')
-    .mockResolvedValue([]);
-
-  jest
-    .spyOn(twitchBadgeService, 'listSanitisedGlobalBadges')
-    .mockResolvedValue([]);
-
-  jest.spyOn(chatterinoService, 'listSanitisedBadges').mockReturnValue([]);
-  jest.spyOn(twitchService, 'getUsersById').mockResolvedValue([]);
-  jest.spyOn(twitchService, 'getCheermotes').mockResolvedValue([]);
+  mockGetEmoteSetId = providers.getEmoteSetId.mockResolvedValue('set-2');
+  providers.getSanitisedEmoteSet.mockResolvedValue([loadedEmote]);
+  mockGetChannelEmotes = providers.getChannelEmotes;
 }
 
 const channelCache = () => chatStore$.persisted.channelCaches['channel-1'];
@@ -178,11 +131,10 @@ describe('useChatEmoteLoader', () => {
     expect(preloadedChannelEmoteIds()).toEqual([['channel-7tv']]);
   });
 
-  test('does not load while disabled', () => {
-    const { result } = renderHook(
-      () => useChatEmoteLoader({ channelId: 'channel-1', enabled: false }),
-      { wrapper: SignedInWrapper },
-    );
+  test('does not load without a channel id', () => {
+    const { result } = renderHook(() => useChatEmoteLoader({ channelId: '' }), {
+      wrapper: SignedInWrapper,
+    });
 
     expect(result.current.status).toBe('idle');
 
@@ -191,9 +143,13 @@ describe('useChatEmoteLoader', () => {
 
   test('refetch downloads the channel again for the signed-in viewer', async () => {
     const { result } = renderHook(
-      () => useChatEmoteLoader({ channelId: 'channel-1', enabled: false }),
+      () => useChatEmoteLoader({ channelId: 'channel-1' }),
       { wrapper: SignedInWrapper },
     );
+
+    await waitFor(() => {
+      expect(result.current.status).toBe('success');
+    });
 
     await act(async () => {
       await result.current.refetch();
@@ -219,9 +175,13 @@ describe('useChatEmoteLoader', () => {
 
   test('loads without a subscriber user id for an anonymous viewer', async () => {
     const { result } = renderHook(
-      () => useChatEmoteLoader({ channelId: 'channel-1', enabled: false }),
+      () => useChatEmoteLoader({ channelId: 'channel-1' }),
       { wrapper: DefaultWrapper },
     );
+
+    await waitFor(() => {
+      expect(result.current.status).toBe('success');
+    });
 
     await act(async () => {
       await result.current.refetch();
@@ -259,9 +219,9 @@ describe('useChatEmoteLoader', () => {
 
   test('force-refetches when the active channel cache disappears without a version bump', async () => {
     const { result, rerender } = renderHook(
-      ({ enabled }: { enabled: boolean }) =>
-        useChatEmoteLoader({ channelId: 'channel-1', enabled }),
-      { initialProps: { enabled: true }, wrapper: SignedInWrapper },
+      ({ channelId }: { channelId: string }) =>
+        useChatEmoteLoader({ channelId }),
+      { initialProps: { channelId: 'channel-1' }, wrapper: SignedInWrapper },
     );
 
     await waitFor(() => {
@@ -272,8 +232,8 @@ describe('useChatEmoteLoader', () => {
 
     chatStore$.persisted.channelCaches.set({});
 
-    rerender({ enabled: false });
-    rerender({ enabled: true });
+    rerender({ channelId: '' });
+    rerender({ channelId: 'channel-1' });
 
     await waitFor(() => {
       expect(mockGetChannelEmotes.mock.calls).toEqual([['channel-1']]);
@@ -355,9 +315,16 @@ describe('useChatEmoteLoader', () => {
     });
 
     const { result } = renderHook(
-      () => useChatEmoteLoader({ channelId: 'channel-1', enabled: false }),
+      () => useChatEmoteLoader({ channelId: 'channel-1' }),
       { wrapper: SignedInWrapper },
     );
+
+    await waitFor(() => {
+      expect(result.current.status).toBe('success');
+    });
+
+    mockPreloadGlobalEmotes.mockClear();
+    mockPreloadChannelEmotes.mockClear();
 
     await act(async () => {
       await result.current.refetch();
@@ -370,3 +337,5 @@ describe('useChatEmoteLoader', () => {
     expect(mockPreloadChannelEmotes).not.toHaveBeenCalled();
   });
 });
+
+afterEach(flushChatStoreTimers);

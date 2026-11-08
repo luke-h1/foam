@@ -1,6 +1,5 @@
 import type { PaintShadow } from '@app/types/seven-tv/cosmetics';
 
-import { cssDropShadowBlur } from './cssDropShadowBlur';
 import { cssTextShadowBlur } from './cssTextShadowBlur';
 
 export interface ShadowExtents {
@@ -44,10 +43,6 @@ function* dropShadowSubsets(
   }
 }
 
-/**
- * How far outside the glyph box a paint's shadows can reach, in CSS px, so the
- * bitmap is padded enough to hold them.
- */
 export function paintShadowExtents(
   dropShadows: PaintShadow[],
   textShadows: PaintShadow[],
@@ -74,7 +69,7 @@ export function paintShadowExtents(
     let offsetY = 0;
 
     for (const shadow of subset) {
-      const blur = cssDropShadowBlur(shadow.radius);
+      const blur = shadow.radius;
       squaredBlur += blur * blur;
       offsetX += shadow.x_offset;
       offsetY += shadow.y_offset;

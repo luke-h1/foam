@@ -18,6 +18,7 @@ import { AuthContextTestProvider } from '@app/context/AuthContext';
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import * as selectorsModule from '@app/store/chat/react/selectors';
 import type { SubscriberChannelProfile } from '@app/store/chat/types/constants';
+import { TEST_SAFE_AREA_METRICS } from '@app/test/safe-area';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 
@@ -38,7 +39,7 @@ import {
 
 type MockLegendListItem = EmoteMenuListItem | EmoteMenuSet;
 
-type MockLegendListProps = {
+interface MockLegendListProps {
   data: MockLegendListItem[];
   drawDistance?: number;
   estimatedItemSize: number;
@@ -55,7 +56,7 @@ type MockLegendListProps = {
     item: MockLegendListItem;
     target: 'Cell';
   }) => ReactNode;
-};
+}
 
 const MOCK_VIEWPORT_HEIGHT = 680;
 
@@ -63,9 +64,9 @@ const MOCK_VIEWPORT_HEIGHT = 680;
  * LegendList is a forwardRef exotic component; the bridge narrows through
  * `never` to reach a spyable plain-function shape.
  */
-type MockableLegendListModule = {
+interface MockableLegendListModule {
   LegendList: (props: MockLegendListProps) => ReactNode;
-};
+}
 
 // SAFETY: `never` is the only bridge TS accepts from the exotic component to the plain function shape.
 const mockableLegendList: MockableLegendListModule =
@@ -193,7 +194,14 @@ const menuInput: EmoteMenuDataInput = {
   bttvGlobalEmotes: createEmotes(100, 'Global BTTV', 'bttvg'),
   ffzChannelEmotes: createEmotes(100, 'FFZ', 'ffzc'),
   ffzGlobalEmotes: createEmotes(100, 'Global FFZ', 'ffzg'),
-  emojis: ['😀', '😂', '😍', '👍', '👏', '❤️', '💜', '🔥'],
+  emojiSets: [
+    {
+      data: ['😀', '😂', '😍', '👍', '👏', '❤️', '💜', '🔥'],
+      icon: 'emoji:😀',
+      id: 'emoji-smileys',
+      title: 'Smileys',
+    },
+  ],
 };
 
 const mockEmoteData = {
@@ -216,6 +224,7 @@ const mockEmoteData = {
   ffzChannelBadges: [],
   ffzGlobalBadges: [],
   chatterinoBadges: [],
+  bttvBadges: [],
 };
 
 jest
@@ -239,12 +248,7 @@ const TEST_TOKEN_EXPIRES_AT = 4_102_444_800_000;
 
 function EmoteSheetPerfFixture() {
   return (
-    <SafeAreaProvider
-      initialMetrics={{
-        frame: { x: 0, y: 0, width: 390, height: 844 },
-        insets: { top: 0, bottom: 0, left: 0, right: 0 },
-      }}
-    >
+    <SafeAreaProvider initialMetrics={TEST_SAFE_AREA_METRICS}>
       <AuthContextTestProvider
         ready
         authState={{
@@ -260,10 +264,8 @@ function EmoteSheetPerfFixture() {
         user={mockUser}
         loginWithTwitch={jest.fn()}
         logout={jest.fn()}
-        populateAuthState={jest.fn()}
-        fetchAnonToken={jest.fn()}
       >
-        <EmoteSheet isPresented onDismiss={jest.fn()} />
+        <EmoteSheet onDismiss={jest.fn()} />
       </AuthContextTestProvider>
     </SafeAreaProvider>
   );

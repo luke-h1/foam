@@ -1,12 +1,9 @@
 import { useCallback, useEffect, useRef } from 'react';
 
 import type { ChatScrollAnchor } from '@app/components/chat/hooks/use-chat-scroll';
+import type { ChatMessagesSource } from '@app/components/chat/types/chat-messages-source';
 import { hydrateVisibleSevenTvAssets } from '@app/components/chat/util/hydrate-visible-seven-tv-assets/hydrateVisibleSevenTvAssets';
-import {
-  fetchUserPersonalEmotes,
-  getCurrentEmoteData,
-  getUserPersonalEmotes,
-} from '@app/store/chat/actions/channel-load';
+import { getCurrentEmoteData } from '@app/store/chat/actions/channel-load';
 import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import {
   enrichMessageSet,
@@ -15,6 +12,13 @@ import {
   resolveVisibleMessageUpdate,
 } from '@app/store/chat/actions/message-enrichment';
 import { updateMessages } from '@app/store/chat/actions/messages';
+import {
+  fetchUserPersonalEmotes,
+  getUserPersonalEmotes,
+} from '@app/store/chat/actions/personal-emotes';
+import { resolveMessageEmoteTokens } from '@app/store/chat/actions/resolveMessageEmoteTokens';
+import { getCachedSharedChatBadgeContext } from '@app/store/chat/actions/shared-chat-badges/getCachedSharedChatBadgeContext';
+import { getMessageBadges } from '@app/store/chat/actions/shared-chat-badges/getMessageBadges';
 import { fetchUserCosmetics } from '@app/store/chat/actions/user-cosmetics-fetch';
 import {
   invalidateVisibleAssetHydrationPass,
@@ -22,12 +26,9 @@ import {
   visibleAssetHydration,
 } from '@app/store/chat/actions/visible-asset-hydration';
 import { usePersonalEmotesVersion } from '@app/store/chat/react/selectors';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import { createUserStateFromTags } from '@app/utils/chat/message-handlers/createUserStateFromTags';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
-import { resolveMessageEmoteParts } from '@app/utils/chat/resolveMessageEmoteTokens';
-import { getCachedSharedChatBadgeContext } from '@app/utils/chat/shared-chat-badges/getCachedSharedChatBadgeContext';
-import { getMessageBadges } from '@app/utils/chat/shared-chat-badges/getMessageBadges';
 import { logger } from '@app/utils/logger';
 
 interface UseChatMessageProcessingOptions {
@@ -36,7 +37,7 @@ interface UseChatMessageProcessingOptions {
     message: AnyChatMessageType,
     options?: { countUnread?: boolean },
   ) => void;
-  messages$: { peek: () => AnyChatMessageType[] };
+  messages$: ChatMessagesSource;
   scrollAnchor: ChatScrollAnchor;
   show7TvEmotes: boolean;
   showChatGifs: boolean;
@@ -67,7 +68,7 @@ export function useChatMessageProcessing({
       }
 
       try {
-        const replacedMessage = resolveMessageEmoteParts({
+        const replacedMessage = resolveMessageEmoteTokens({
           channelId,
           emoteData,
           show7TvEmotes,

@@ -3,16 +3,16 @@ import { View } from 'react-native';
 
 import { Image as ExpoImage } from 'expo-image';
 
+import type { ChatDensity, ChatFontScale } from '@app/store/preference-store';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 import { ChatMessagePressable } from '../ChatMessagePressable';
 import { styles } from '../ChatRow.styles';
 import { getChatTextStyles } from '../ChatText.styles';
-import type { ChatFontScale } from '../util/chatScale';
 
 interface ChatBadgeProps {
   badge: SanitisedBadgeSet;
-  compact: boolean;
+  density: ChatDensity;
   fontScale?: ChatFontScale;
   isModerated?: boolean;
   onPress?: (badge: SanitisedBadgeSet) => void;
@@ -24,7 +24,7 @@ interface ChatBadgeProps {
  */
 function ChatBadgeComponent({
   badge,
-  compact,
+  density,
   fontScale,
   isModerated,
   onPress,
@@ -35,7 +35,7 @@ function ChatBadgeComponent({
     return null;
   }
 
-  const textStyles = getChatTextStyles(fontScale, compact);
+  const textStyles = getChatTextStyles(fontScale, density);
   const tint = badge.color;
 
   const artwork = (

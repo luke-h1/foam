@@ -1,6 +1,6 @@
+import type { MessageToken } from '@app/types/chat/messageToken';
 import { scanChatBody } from '@app/utils/chat/derive-chat-body/scanChatBody';
 import type { MessageStructure } from '@app/utils/chat/derive-chat-body/types';
-import type { MessageToken } from '@app/utils/chat/messageToken';
 
 /**
  * Narrowed view of the cached body scan, cached in turn so a hot render path

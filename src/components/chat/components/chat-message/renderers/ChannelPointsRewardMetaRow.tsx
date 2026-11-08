@@ -1,7 +1,8 @@
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
-import { CHAT_NOTICE_ACCENTS } from '@app/components/chat/components/util/chatNoticeAccents';
+import { CHAT_NOTICE_ACCENTS } from '@app/components/chat/util/chatNoticeAccents';
 import { resolveChannelPointRewardTitle } from '@app/store/chat/actions/channelPointRewardTitleStore';
 import { useChannelPointRewardTitleRevision } from '@app/store/chat/react/use-channel-point-reward-title-revision';
+import type { ChatDensity, ChatFontScale } from '@app/store/preference-store';
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { channelPointsRewardTitleFieldsFromUserstate } from '@app/utils/chat/channel-points-reward-title/channelPointsRewardTitleFieldsFromUserstate';
@@ -10,14 +11,13 @@ import { channelPointsRewardTitleFromUserstate } from '@app/utils/chat/channel-p
 
 import { styles } from '../ChatRow.styles';
 import { getChatTextStyles } from '../ChatText.styles';
-import type { ChatFontScale } from '../util/chatScale';
 import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
 
 interface ChannelPointsRewardMetaRowProps {
-  compact: boolean;
+  density: ChatDensity;
   fontScale?: ChatFontScale;
   isHighlightedMessage?: boolean;
-  moderationNotice?: unknown;
+  isModerated: boolean;
   noticeTags?: UserNoticeTags;
   roomId?: string;
   username?: string;
@@ -25,10 +25,10 @@ interface ChannelPointsRewardMetaRowProps {
 }
 
 export function ChannelPointsRewardMetaRow({
-  compact,
+  density,
   fontScale,
   isHighlightedMessage,
-  moderationNotice,
+  isModerated,
   noticeTags,
   roomId,
   username,
@@ -36,7 +36,7 @@ export function ChannelPointsRewardMetaRow({
 }: ChannelPointsRewardMetaRowProps) {
   useChannelPointRewardTitleRevision();
 
-  const textStyles = getChatTextStyles(fontScale, compact);
+  const textStyles = getChatTextStyles(fontScale, density);
 
   const rewardSummaryTitle =
     channelPointsRewardTitleFromUserstate(userstate) ??
@@ -52,7 +52,7 @@ export function ChannelPointsRewardMetaRow({
       <ChatNoticeMetaRow
         icon='sparkles'
         {...{
-          compact,
+          density,
           fontScale,
           label: rewardSummaryTitle,
           labelColor: CHAT_NOTICE_ACCENTS.highlight,
@@ -65,7 +65,7 @@ export function ChannelPointsRewardMetaRow({
   return (
     <ChatNoticeMetaRow
       icon='gift.fill'
-      {...{ compact, fontScale, labelColor: CHAT_NOTICE_ACCENTS.channelPoints }}
+      {...{ density, fontScale, labelColor: CHAT_NOTICE_ACCENTS.channelPoints }}
     >
       <ChatText
         style={[
@@ -79,7 +79,7 @@ export function ChannelPointsRewardMetaRow({
           style={[
             textStyles.meta,
             styles.channelPointsMetaName,
-            Boolean(moderationNotice) && styles.moderatedMessageText,
+            isModerated && styles.moderatedMessageText,
           ]}
         >
           {username}
@@ -88,7 +88,7 @@ export function ChannelPointsRewardMetaRow({
           style={[
             textStyles.meta,
             styles.channelPointsMetaMuted,
-            Boolean(moderationNotice) && styles.moderatedMessageText,
+            isModerated && styles.moderatedMessageText,
           ]}
         >
           {' '}
@@ -98,7 +98,7 @@ export function ChannelPointsRewardMetaRow({
           style={[
             textStyles.meta,
             styles.channelPointsMetaReward,
-            Boolean(moderationNotice) && styles.moderatedMessageText,
+            isModerated && styles.moderatedMessageText,
           ]}
         >
           {rewardSummaryTitle}

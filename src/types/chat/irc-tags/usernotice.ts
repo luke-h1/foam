@@ -1,7 +1,4 @@
-export interface BaseUserNoticeTags extends Record<
-  string,
-  string | boolean | undefined
-> {
+export interface BaseUserNoticeTags extends Record<string, string | undefined> {
   'msg-id': string;
   id?: string;
   'display-name'?: string;
@@ -143,7 +140,7 @@ export interface PrimePaidUpgradeTags extends BaseUserNoticeTags {
   'msg-param-cumulative-months'?: string;
 }
 
-export interface ExtendSubTags extends BaseUserNoticeTags {
+interface ExtendSubTags extends BaseUserNoticeTags {
   'msg-id': 'extendsub';
   'msg-param-sub-plan'?: MsgParamSubPlan;
   'msg-param-sub-plan-name'?: string;
@@ -152,7 +149,7 @@ export interface ExtendSubTags extends BaseUserNoticeTags {
   'msg-param-should-share-streak'?: '1' | '0';
 }
 
-export interface PayForwardTags extends BaseUserNoticeTags {
+interface PayForwardTags extends BaseUserNoticeTags {
   'msg-id': 'standardpayforward' | 'communitypayforward';
   'msg-param-sub-plan'?: MsgParamSubPlan;
   'msg-param-sub-plan-name'?: string;
@@ -161,7 +158,7 @@ export interface PayForwardTags extends BaseUserNoticeTags {
   'msg-param-months'?: string;
 }
 
-export interface PrimeCommunityGiftReceivedTags extends BaseUserNoticeTags {
+interface PrimeCommunityGiftReceivedTags extends BaseUserNoticeTags {
   'msg-id': 'primecommunitygiftreceived';
   'msg-param-sub-plan'?: MsgParamSubPlan;
   'msg-param-sub-plan-name'?: string;
@@ -169,7 +166,7 @@ export interface PrimeCommunityGiftReceivedTags extends BaseUserNoticeTags {
   'msg-param-months'?: string;
 }
 
-export interface AnonSubGiftTags extends BaseUserNoticeTags {
+interface AnonSubGiftTags extends BaseUserNoticeTags {
   'msg-id': 'anonsubgift';
   'msg-param-sub-plan'?: MsgParamSubPlan;
   'msg-param-recipient-display-name'?: string;
@@ -177,22 +174,22 @@ export interface AnonSubGiftTags extends BaseUserNoticeTags {
   'msg-param-months'?: string;
 }
 
-export interface AnonSubMysteryGiftTags extends BaseUserNoticeTags {
+interface AnonSubMysteryGiftTags extends BaseUserNoticeTags {
   'msg-id': 'anonsubmysterygift';
   'msg-param-mass-gift-count'?: string;
   'msg-param-sub-plan'?: MsgParamSubPlan;
   'msg-param-sub-plan-name'?: string;
 }
 
-export interface SkipSubsModeMessageTags extends BaseUserNoticeTags {
+interface SkipSubsModeMessageTags extends BaseUserNoticeTags {
   'msg-id': 'skip-subs-mode-message';
 }
 
-export interface MidnightSquidTags extends BaseUserNoticeTags {
+interface MidnightSquidTags extends BaseUserNoticeTags {
   'msg-id': 'midnightsquid';
 }
 
-export type UserNoticeVariantMap = {
+export interface UserNoticeVariantMap {
   viewermilestone: ViewerMilestoneTags;
   sub: SubscriptionTags;
   resub: SubscriptionTags;
@@ -219,33 +216,11 @@ export type UserNoticeVariantMap = {
   anonsubmysterygift: AnonSubMysteryGiftTags;
   'skip-subs-mode-message': SkipSubsModeMessageTags;
   midnightsquid: MidnightSquidTags;
-};
+}
 
-export type UserNoticeTagsByVariant<T extends keyof UserNoticeVariantMap> =
+export type UserNoticeMsgId = keyof UserNoticeVariantMap;
+
+export type UserNoticeTagsByVariant<T extends UserNoticeMsgId> =
   UserNoticeVariantMap[T];
 
-export type UserNoticeTags =
-  | ViewerMilestoneTags
-  | SubscriptionTags
-  | SubGiftTags
-  | SubMysteryGiftTags
-  | GiftPaidUpgradeTags
-  | AnonGiftPaidUpgradeTags
-  | RewardGiftTags
-  | RaidTags
-  | UnraidTags
-  | BitsBadgeTierTags
-  | SharedChatNoticeTags
-  | ModiversaryTags
-  | AnnouncementTags
-  | HighlightedMessageTags
-  | CharityDonationTags
-  | RitualTags
-  | PrimePaidUpgradeTags
-  | ExtendSubTags
-  | PayForwardTags
-  | PrimeCommunityGiftReceivedTags
-  | AnonSubGiftTags
-  | AnonSubMysteryGiftTags
-  | SkipSubsModeMessageTags
-  | MidnightSquidTags;
+export type UserNoticeTags = UserNoticeVariantMap[UserNoticeMsgId];

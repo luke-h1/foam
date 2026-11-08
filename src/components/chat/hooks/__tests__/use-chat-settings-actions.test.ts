@@ -1,22 +1,24 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { useChatSettingsActions } from '@app/components/chat/hooks/use-chat-settings-actions';
-import { clearMessages } from '@app/store/chat/actions/messages';
+import { addMessage, clearMessages } from '@app/store/chat/actions/messages';
+import * as userCosmeticsFetch from '@app/store/chat/actions/user-cosmetics-fetch';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import { makeEmptyEmoteData } from '@app/store/chat/types/constants';
 import {
   getPreferences,
   replacePreferences,
 } from '@app/store/preference-store';
+import { flushChatStoreTimers } from '@app/test/chat-store-teardown';
+import { silenceLogger } from '@app/test/silence-logger';
+import { createSystemMessage } from '@app/utils/chat/message-handlers/createSystemMessage';
 import * as clearImageCacheModule from '@app/utils/image/clearImageCache';
-import { logger } from '@app/utils/logger';
 
 const mockClearImageCache = jest
   .spyOn(clearImageCacheModule, 'clearImageCache')
   .mockResolvedValue(undefined);
 
-jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
-jest.spyOn(logger.chat, 'info').mockImplementation(() => {});
+silenceLogger();
 
 interface ChannelCacheStamps {
   badgesLastUpdated: number | undefined;
@@ -87,8 +89,7 @@ function systemMessageContents(): (string | undefined)[] {
 
 function renderSettingsActions() {
   const forceFlush = jest.fn();
-  const joinChannel = jest.fn();
-  const partChannel = jest.fn();
+  const reconnect = jest.fn();
   const refetchEmotes = jest.fn(() => Promise.resolve());
   const reprocessAllMessages = jest.fn();
   const scrollToBottom = jest.fn();
@@ -98,8 +99,7 @@ function renderSettingsActions() {
       channelId: 'channel-1',
       channelName: 'foam',
       forceFlush,
-      joinChannel,
-      partChannel,
+      reconnect,
       refetchEmotes,
       reprocessAllMessages,
       scrollToBottom,
@@ -109,8 +109,7 @@ function renderSettingsActions() {
   return {
     forceFlush,
     hook,
-    joinChannel,
-    partChannel,
+    reconnect,
     refetchEmotes,
     reprocessAllMessages,
     scrollToBottom,
@@ -135,6 +134,7 @@ describe('useChatSettingsActions', () => {
 
   afterEach(() => {
     jest.useRealTimers();
+    clearMessages();
   });
 
   test('clearing the chat cache drops only the active channel cache', () => {
@@ -172,6 +172,23 @@ describe('useChatSettingsActions', () => {
       userBadgeIds: {},
       userPaintIds: {},
     });
+  });
+
+  test('clearing the 7TV cosmetics cache lets every user fetch cosmetics again', () => {
+    const clearFetchedUsers = jest.spyOn(
+      userCosmeticsFetch,
+      'clearFetchedCosmeticsUsers',
+    );
+
+    const { hook } = renderSettingsActions();
+
+    act(() => {
+      hook.result.current.handleClearSevenTvCosmeticsCache();
+    });
+
+    expect(clearFetchedUsers).toHaveBeenCalledTimes(1);
+
+    clearFetchedUsers.mockRestore();
   });
 
   test('clearing the image cache clears the image cache once', async () => {
@@ -234,22 +251,19 @@ describe('useChatSettingsActions', () => {
     expect(systemMessageContents()).toEqual(['Refreshed emotes and badges']);
   });
 
-  test('settings reconnect tokens immediately and rejoins after the reconnect delay', () => {
-    jest.useFakeTimers();
-    const { hook, joinChannel, partChannel } = renderSettingsActions();
+  test('settings reconnect restarts the socket and keeps the chat history', () => {
+    const { hook, reconnect } = renderSettingsActions();
+
+    addMessage(createSystemMessage('foam', 'before reconnect', '24h'));
 
     act(() => {
       hook.result.current.handleSettingsReconnect();
     });
 
-    expect(partChannel).toHaveBeenCalledWith('foam');
+    expect(reconnect).toHaveBeenCalledTimes(1);
 
-    expect(joinChannel).not.toHaveBeenCalled();
-
-    act(() => {
-      jest.advanceTimersByTime(1000);
-    });
-
-    expect(joinChannel).toHaveBeenCalledWith('foam');
+    expect(systemMessageContents()).toEqual(['before reconnect']);
   });
 });
+
+afterEach(flushChatStoreTimers);

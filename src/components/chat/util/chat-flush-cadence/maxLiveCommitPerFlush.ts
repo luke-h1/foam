@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { isLowFlushBudgetPlatform } from './isLowFlushBudgetPlatform';
 
 /**
  * Soft floor keeps the visible chat from lagging when traffic is light. Hard
@@ -17,7 +17,7 @@ export const maxLiveCommitPerFlush = (
     return undefined;
   }
 
-  if (Platform.OS === 'android') {
+  if (isLowFlushBudgetPlatform()) {
     const soft = raidMode ? 8 : 4;
     const hard = raidMode ? 16 : 10;
     return Math.min(hard, Math.max(soft, arrivalsSinceFlush));
@@ -34,4 +34,4 @@ export const maxLiveCommitPerFlush = (
  * the whole backlog (150–400 rows) in one Fabric tree.
  */
 export const maxBackpressureCommitPerFlush = (): number =>
-  Platform.OS === 'android' ? 32 : 48;
+  isLowFlushBudgetPlatform() ? 32 : 48;

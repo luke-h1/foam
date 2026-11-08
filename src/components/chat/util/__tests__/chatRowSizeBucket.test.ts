@@ -1,40 +1,18 @@
+import { createChatMessageFixture } from '@app/components/chat/util/__tests__/__fixtures__/chatMessage.fixture';
 import { getChatRowSizeBucket } from '@app/components/chat/util/chatRowSizeBucket';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
-import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
 import {
   createEmoteToken,
   createTextToken,
 } from '@app/utils/chat/__tests__/__fixtures__/messageToken.fixture';
 
-function createMessage(
-  overrides: Partial<AnyChatMessageType> = {},
-): AnyChatMessageType {
-  return {
-    id: 'msg-1',
-    message_id: 'msg-1',
-    message_nonce: 'nonce-1',
-    channel: 'channel',
-    sender: 'viewer',
-    message: [createTextToken('hello')],
-    userstate: createUserStateTags({
-      username: 'viewer',
-      'display-name': 'Viewer',
-      'user-id': '123',
-    }),
-    badges: [],
-    replyBody: '',
-    replyDisplayName: '',
-    parentDisplayName: '',
-    ...overrides,
-  };
-}
-
 describe('getChatRowSizeBucket', () => {
   test('keeps every one-line row in the first bucket', () => {
-    expect(getChatRowSizeBucket(createMessage())).toBe('w0');
+    expect(getChatRowSizeBucket(createChatMessageFixture())).toBe('w0');
 
     expect(
-      getChatRowSizeBucket(createMessage({ message: [createTextToken('gg')] })),
+      getChatRowSizeBucket(
+        createChatMessageFixture({ message: [createTextToken('gg')] }),
+      ),
     ).toBe('w0');
   });
 
@@ -44,7 +22,9 @@ describe('getChatRowSizeBucket', () => {
     const buckets = [30, 60, 100, 150, 220, 320, 460, 640].flatMap(bound =>
       [bound - usernameWeight, bound - usernameWeight + 1].map(length =>
         getChatRowSizeBucket(
-          createMessage({ message: [createTextToken('a'.repeat(length))] }),
+          createChatMessageFixture({
+            message: [createTextToken('a'.repeat(length))],
+          }),
         ),
       ),
     );
@@ -70,8 +50,12 @@ describe('getChatRowSizeBucket', () => {
   });
 
   test('separates emote rows from text rows of the same width', () => {
-    const text = createMessage({ message: [createTextToken('hello')] });
-    const emote = createMessage({ message: [createEmoteToken('Kappa')] });
+    const text = createChatMessageFixture({
+      message: [createTextToken('hello')],
+    });
+    const emote = createChatMessageFixture({
+      message: [createEmoteToken('Kappa')],
+    });
 
     expect(getChatRowSizeBucket(text)).toBe('w0');
 
@@ -79,11 +63,11 @@ describe('getChatRowSizeBucket', () => {
   });
 
   test('climbs a bucket as an emote wall grows', () => {
-    const few = createMessage({
+    const few = createChatMessageFixture({
       message: Array.from({ length: 4 }, () => createEmoteToken('Kappa')),
     });
 
-    const wall = createMessage({
+    const wall = createChatMessageFixture({
       message: Array.from({ length: 12 }, () => createEmoteToken('Kappa')),
     });
 
@@ -95,11 +79,11 @@ describe('getChatRowSizeBucket', () => {
   test('weighs the media cards a link renders instead of its url', () => {
     const url = 'https://7tv.app/emotes/01F6MZGCNG000255K4X1V15WQE';
 
-    const stvEmote = createMessage({
+    const stvEmote = createChatMessageFixture({
       message: [{ type: 'stvEmoteLink', content: url, url }],
     });
 
-    const clip = createMessage({
+    const clip = createChatMessageFixture({
       message: [{ type: 'twitchClip', content: url, url }],
     });
 
@@ -109,7 +93,7 @@ describe('getChatRowSizeBucket', () => {
   });
 
   test('reads the username but never the badges', () => {
-    const withBadges = createMessage({
+    const withBadges = createChatMessageFixture({
       badges: [
         {
           id: 'moderator',
@@ -123,7 +107,7 @@ describe('getChatRowSizeBucket', () => {
     });
 
     expect(getChatRowSizeBucket(withBadges)).toBe(
-      getChatRowSizeBucket(createMessage()),
+      getChatRowSizeBucket(createChatMessageFixture()),
     );
   });
 });

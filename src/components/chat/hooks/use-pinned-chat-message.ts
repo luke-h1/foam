@@ -2,26 +2,19 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { toast } from 'sonner-native';
 
-import type { MessageActionData } from '@app/components/chat/components/chat-message/ChatRow';
 import { useSyncRef } from '@app/hooks/use-sync-ref';
 import {
   getPinnedChatMessageText,
   twitchService,
 } from '@app/services/twitch-service';
+import type { MessageActionData } from '@app/store/chat/types/chat-press-data';
 import type { TwitchPinnedChatMessage } from '@app/types/twitch/chat';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { logger } from '@app/utils/logger';
 
-const PINNED_MESSAGE_REFRESH_INTERVAL_MS = 60_000;
+import type { PinnedChatMessageViewModel } from '../util/pinnedChatMessageViewModel';
 
-export type PinnedChatMessageViewModel = {
-  expiresAt?: string | null;
-  messageId: string;
-  pinnedByName?: string;
-  senderName?: string;
-  text: string;
-  updatedAt?: string;
-};
+const PINNED_MESSAGE_REFRESH_INTERVAL_MS = 60_000;
 
 function createPinnedMessageViewModelFromApi(
   pinnedMessage: TwitchPinnedChatMessage,
@@ -73,7 +66,7 @@ export function usePinnedChatMessage({
     pinnedMessageFetchIdRef.current = fetchId;
 
     try {
-      // eslint-disable-next-line react-doctor/async-defer-await -- stale-fetch guard runs after network call
+      // oxlint-disable-next-line react-doctor/async-defer-await -- stale-fetch guard runs after network call
       const nextPinnedMessage = await twitchService.getPinnedChatMessage({
         broadcasterId: channelId,
         moderatorId,

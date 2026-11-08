@@ -1,9 +1,8 @@
 import { useMemo } from 'react';
 import type { RefObject } from 'react';
 
+import type { ChatMessagesSource } from '@app/components/chat/types/chat-messages-source';
 import { ReadyState } from '@app/hooks/ws/constants';
-import { useChatUserState } from '@app/services/twitch-chat-service';
-import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import type { ChatRenderPreferences } from '@app/store/preference-store';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
@@ -16,11 +15,13 @@ import {
   useChatComposerActions,
   useChatOverlayActions,
 } from './use-chat-interaction-handlers';
+import { useChatRowRenderer } from './use-chat-row-renderer';
 import { useChatSettingsActions } from './use-chat-settings-actions';
+import { useChatUserState } from './use-chat-user-state';
 import { usePinnedChatMessage } from './use-pinned-chat-message';
-import { useChatRowRenderer } from './UseChatRowRenderer';
 
 interface UseChatSurfaceOptions {
+  messages$: ChatMessagesSource;
   channelId: string;
   channelName: string;
   forceFlush: () => void;
@@ -32,11 +33,10 @@ interface UseChatSurfaceOptions {
   > | null>;
   highlightedUsers: string[];
   inputShellRef: RefObject<ChatInputShellHandle | null>;
-  joinChannel: (channel: string) => void;
   listRef: RefObject<ChatListRef | null>;
   noteScrollAwayIntent: () => void;
-  partChannel: (channel: string) => void;
   preferences: ChatRenderPreferences;
+  reconnect: () => void;
   refetchEmotes: () => Promise<void>;
   reprocessAllMessages: () => void;
   scrollToBottom: () => void;
@@ -51,6 +51,7 @@ interface UseChatSurfaceOptions {
 }
 
 export function useChatSurface({
+  messages$,
   channelId,
   channelName,
   forceFlush,
@@ -60,11 +61,10 @@ export function useChatSurface({
   highlightedReplyTargetTimeoutRef,
   highlightedUsers,
   inputShellRef,
-  joinChannel,
   listRef,
   noteScrollAwayIntent,
-  partChannel,
   preferences,
+  reconnect,
   refetchEmotes,
   reprocessAllMessages,
   scrollToBottom,
@@ -75,8 +75,6 @@ export function useChatSurface({
   twitchConnectionState,
   user,
 }: UseChatSurfaceOptions) {
-  const messages$ = chatStore$.messages;
-
   const chatAssetPreferenceKey = useMemo(
     () =>
       [
@@ -90,7 +88,6 @@ export function useChatSurface({
         preferences.showBttvBadges,
         preferences.showFFzBadges,
         preferences.showTwitchBadges,
-        preferences.showChatterinoEmotes,
       ].join('|'),
     [
       preferences.emojiStyle,
@@ -103,7 +100,6 @@ export function useChatSurface({
       preferences.showBttvBadges,
       preferences.showFFzBadges,
       preferences.showTwitchBadges,
-      preferences.showChatterinoEmotes,
     ],
   );
 
@@ -151,8 +147,7 @@ export function useChatSurface({
     channelId,
     channelName,
     forceFlush,
-    joinChannel,
-    partChannel,
+    reconnect,
     refetchEmotes,
     reprocessAllMessages,
     scrollToBottom,
@@ -160,7 +155,6 @@ export function useChatSurface({
 
   const {
     handleBadgeLongPress,
-    handleEmotePress,
     handleMessageLongPress,
     handleOpenEmoteSheet,
     handleOpenSettingsSheet,
@@ -191,7 +185,6 @@ export function useChatSurface({
       messages$,
       noteScrollAwayIntent,
       onBadgePress: handleBadgeLongPress,
-      onEmotePress: handleEmotePress,
       onMessageLongPress: handleMessageLongPress,
       onUsernamePress: handleUsernamePress,
       preferences,

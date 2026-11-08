@@ -3,39 +3,48 @@ import {
   filterProviderSets,
   flattenProviderSets,
 } from '@app/components/chat/components/emote-sheet/util/emoteMenuData';
+import { isEmoteEntry } from '@app/components/chat/components/emote-sheet/util/emoteSheetTypes';
 import { EmoteSetKind } from '@app/graphql/generated/gql';
+import type { SevenTvSanitisedEmote } from '@app/types/emote';
 
 import { createMenuEmote } from './__fixtures__/emoteMenuData.fixture';
+
+function createSetMetadata(
+  setId: string,
+  setName: string,
+  totalCount: number,
+): SevenTvSanitisedEmote['set_metadata'] {
+  return {
+    setId,
+    setName,
+    capacity: null,
+    ownerId: null,
+    kind: EmoteSetKind.Normal,
+    updatedAt: '',
+    totalCount,
+  };
+}
 
 describe('emoteMenuData', () => {
   test('builds providers and groups 7TV emotes by set metadata', () => {
     const providers = buildEmoteMenuProviders({
       sevenTvChannelEmotes: [
         createMenuEmote('1', 'Smile', '7TV Channel', {
-          set_metadata: {
-            setId: 'set-a',
-            setName: 'Channel Prime',
-            capacity: null,
-            ownerId: null,
-            kind: EmoteSetKind.Normal,
-            updatedAt: '',
-            totalCount: 1,
-          },
+          set_metadata: createSetMetadata('set-a', 'Channel Prime', 1),
         }),
         createMenuEmote('2', 'Wave', '7TV Channel', {
-          set_metadata: {
-            setId: 'set-b',
-            setName: 'Mods',
-            capacity: null,
-            ownerId: null,
-            kind: EmoteSetKind.Normal,
-            updatedAt: '',
-            totalCount: 1,
-          },
+          set_metadata: createSetMetadata('set-b', 'Mods', 1),
         }),
       ],
       twitchGlobalEmotes: [createMenuEmote('3', 'Kappa', 'Twitch Global')],
-      emojis: ['😀', '😂', '😍'],
+      emojiSets: [
+        {
+          data: ['😀', '😂', '😍'],
+          icon: 'emoji:😀',
+          id: 'emoji-smileys',
+          title: 'Smileys',
+        },
+      ],
     });
 
     expect(providers.map(provider => provider.id)).toEqual([
@@ -54,40 +63,21 @@ describe('emoteMenuData', () => {
     const provider = buildEmoteMenuProviders({
       sevenTvChannelEmotes: [
         createMenuEmote('1', 'Smile', '7TV Channel', {
-          set_metadata: {
-            setId: 'set-a',
-            setName: 'Channel',
-            capacity: null,
-            ownerId: null,
-            kind: EmoteSetKind.Normal,
-            updatedAt: '',
-            totalCount: 2,
-          },
+          set_metadata: createSetMetadata('set-a', 'Channel', 2),
         }),
         createMenuEmote('2', 'Wave', '7TV Channel', {
-          set_metadata: {
-            setId: 'set-a',
-            setName: 'Channel',
-            capacity: null,
-            ownerId: null,
-            kind: EmoteSetKind.Normal,
-            updatedAt: '',
-            totalCount: 2,
-          },
+          set_metadata: createSetMetadata('set-a', 'Channel', 2),
         }),
       ],
     })[0];
 
     const filteredSets = filterProviderSets(provider, 'smi');
-    const matchedEmote = filteredSets[0]?.emotes[0];
 
-    expect(filteredSets).toHaveLength(1);
-
-    expect(filteredSets[0]?.emotes).toHaveLength(1);
-
-    expect(matchedEmote instanceof Object ? matchedEmote.name : null).toBe(
-      'Smile',
-    );
+    expect(
+      filteredSets.map(set =>
+        set.emotes.filter(isEmoteEntry).map(emote => emote.name),
+      ),
+    ).toEqual([['Smile']]);
   });
 
   test('splits subscriber emotes into per-channel sets with streamer avatars', () => {

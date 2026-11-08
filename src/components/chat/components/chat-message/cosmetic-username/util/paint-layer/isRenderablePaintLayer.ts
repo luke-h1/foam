@@ -1,9 +1,5 @@
 import type { PaintLayerData } from '@app/types/seven-tv/cosmetics';
 
-/**
- * Whether a paint layer produces a span at all; drops layers with nothing to
- * draw and fully transparent layers.
- */
 export function isRenderablePaintLayer(layer: PaintLayerData): boolean {
   if (layer.opacity <= 0) {
     return false;

@@ -11,12 +11,12 @@ import { KeyboardController } from 'react-native-keyboard-controller';
 
 import { toast } from 'sonner-native';
 
-import { getChatUserState } from '@app/services/twitch-chat-service';
+import { getChatUserState } from '@app/components/chat/util/chat-user-state';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channel-load';
-import { getUserBadge } from '@app/store/chat/actions/cosmetics';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import { getMessageBadges } from '@app/store/chat/actions/shared-chat-badges/getMessageBadges';
+import { getPreferences } from '@app/store/preference-store';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import type { UserInfoResponse } from '@app/types/twitch/user';
-import { findBadges } from '@app/utils/chat/findBadges';
 import { createOptimisticMessage } from '@app/utils/chat/message-handlers/createOptimisticMessage';
 import { createOptimisticUserState } from '@app/utils/chat/message-handlers/createOptimisticUserState';
 import { createUserStateFromTags } from '@app/utils/chat/message-handlers/createUserStateFromTags';
@@ -28,8 +28,11 @@ import { parseModCommand } from '../util/mod-commands/parseModCommand';
 import { runModCommand } from '../util/mod-commands/runModCommand';
 import { findSlashCommandDefinition } from '../util/slash-command-definitions/findSlashCommandDefinition';
 import { isRefreshCommand } from '../util/slash-command-definitions/isRefreshCommand';
-import type { ChatComposerHandle } from './chat-composer/ChatComposer';
-import { ChatInputSection, type ReplyToData } from './ChatInputSection';
+import type { ChatComposerHandle } from './chat-composer/hooks/use-chat-composer-controller';
+import { appendWithSpace } from './chat-composer/util/appendWithSpace';
+import { formatReplyPrefix } from './chat-composer/util/formatReplyPrefix';
+import { ChatInputSection } from './ChatInputSection';
+import type { ReplyToData } from './ChatInputSection.types';
 
 export interface ChatInputShellHandle {
   appendEmote: (emoteName: string) => void;
@@ -42,7 +45,6 @@ export interface ChatInputShellHandle {
 interface ChatInputShellProps {
   channelId: string;
   channelName: string;
-  connected: boolean;
   isChatConnected: () => boolean;
   onOpenEmoteSheet: () => void;
   onOpenSettingsSheet: () => void;
@@ -58,8 +60,6 @@ interface ChatInputShellProps {
     channel: string,
     message: string,
     replyParentMsgId?: string,
-    replyParentDisplayName?: string,
-    replyParentMsgBody?: string,
   ) => void;
   user?: UserInfoResponse;
   includeHorizontalSafeArea?: boolean;
@@ -79,7 +79,6 @@ const createEmptyDraft = (): ChatDraftState => ({
 export const ChatInputShell = memo(function ChatInputShell({
   channelId,
   channelName,
-  connected,
   isChatConnected,
   onOpenEmoteSheet,
   onOpenSettingsSheet,
@@ -116,9 +115,7 @@ export const ChatInputShell = memo(function ChatInputShell({
 
   const handleImageUploaded = useCallback(
     (url: string) => {
-      const current = messageInputRef.current;
-      const needsSpace = current.length > 0 && !current.endsWith(' ');
-      writeComposerText(`${current}${needsSpace ? ' ' : ''}${url} `);
+      writeComposerText(appendWithSpace(messageInputRef.current, url));
     },
     [writeComposerText],
   );
@@ -127,12 +124,8 @@ export const ChatInputShell = memo(function ChatInputShell({
     useChatImageUpload(handleImageUploaded);
 
   const handleAttachImage = useCallback(() => {
-    if (!isAuthenticated) {
-      return;
-    }
-
     void pickAndUpload();
-  }, [isAuthenticated, pickAndUpload]);
+  }, [pickAndUpload]);
 
   const handleClearReply = useCallback(() => {
     setDraft(prev => ({ ...prev, replyTo: null }));
@@ -199,12 +192,10 @@ export const ChatInputShell = memo(function ChatInputShell({
     }
 
     const sentText = replyTo
-      ? `@${replyTo.username} ${currentInput}`
+      ? `${formatReplyPrefix(replyTo.username)}${currentInput}`
       : currentInput;
 
-    const messageText = replyTo
-      ? `@${replyTo.username} ${currentInput}`
-      : actionBody;
+    const messageText = replyTo ? sentText : actionBody;
 
     const optimisticUserstate = createOptimisticUserState({
       currentUserState: getChatUserState(),
@@ -214,15 +205,9 @@ export const ChatInputShell = memo(function ChatInputShell({
 
     const emoteData = getCurrentEmoteData(channelId);
 
-    const userBadges = findBadges({
+    const userBadges = getMessageBadges({
+      emoteData,
       userstate: optimisticUserstate,
-      bttvBadges: emoteData.bttvBadges,
-      chatterinoBadges: emoteData.chatterinoBadges,
-      ffzChannelBadges: emoteData.ffzChannelBadges,
-      ffzGlobalBadges: emoteData.ffzGlobalBadges,
-      twitchChannelBadges: emoteData.twitchChannelBadges,
-      twitchGlobalBadges: emoteData.twitchGlobalBadges,
-      getEntitledBadge: getUserBadge,
     });
 
     const optimisticMessage = createOptimisticMessage({
@@ -232,6 +217,7 @@ export const ChatInputShell = memo(function ChatInputShell({
       messageText,
       replyTo,
       sentAt: Date.now(),
+      timestampFormat: getPreferences().chatTimestampFormat,
       user,
       userstate: optimisticUserstate,
     });
@@ -246,13 +232,7 @@ export const ChatInputShell = memo(function ChatInputShell({
 
     if (replyTo) {
       try {
-        sendMessage(
-          channelName,
-          sentText,
-          replyTo.messageId,
-          replyTo.username,
-          replyTo.message,
-        );
+        sendMessage(channelName, sentText, replyTo.messageId);
       } catch (error) {
         logger.chat.error('issue sending reply', error);
       }
@@ -283,24 +263,17 @@ export const ChatInputShell = memo(function ChatInputShell({
           return;
         }
 
-        const current = messageInputRef.current;
-
-        writeComposerText(
-          `${current}${current.length > 0 ? ' ' : ''}${emoteName} `,
-        );
+        writeComposerText(appendWithSpace(messageInputRef.current, emoteName));
       },
       appendMention: (username: string) => {
         if (!isAuthenticated) {
           return;
         }
 
-        const current = messageInputRef.current;
+        writeComposerText(
+          appendWithSpace(messageInputRef.current, `@${username}`),
+        );
 
-        const next = !current.trim()
-          ? `@${username} `
-          : `${current}${current.endsWith(' ') ? '' : ' '}@${username} `;
-
-        writeComposerText(next);
         chatInputRef.current?.focus();
       },
       insertPhrase: (text: string) => {
@@ -308,14 +281,10 @@ export const ChatInputShell = memo(function ChatInputShell({
           return;
         }
 
-        const current = messageInputRef.current;
-        const needsSpace = current.length > 0 && !current.endsWith(' ');
-        writeComposerText(`${current}${needsSpace ? ' ' : ''}${text} `);
+        writeComposerText(appendWithSpace(messageInputRef.current, text));
         chatInputRef.current?.focus();
       },
-      clearReply: () => {
-        setDraft(prev => ({ ...prev, replyTo: null }));
-      },
+      clearReply: handleClearReply,
       setReplyTo: nextReplyTo => {
         if (!isAuthenticated) {
           return;
@@ -324,23 +293,20 @@ export const ChatInputShell = memo(function ChatInputShell({
         setDraft(prev => ({ ...prev, replyTo: nextReplyTo }));
       },
     }),
-    [isAuthenticated, writeComposerText],
+    [handleClearReply, isAuthenticated, writeComposerText],
   );
 
   return (
     <ChatInputSection
-      connection={{
-        isAuthenticated,
-        isConnected: connected,
-        isSending: false,
-      }}
       {...{
+        isAuthenticated,
         messageInput,
         onChangeText: handleComposerTextChange,
         onSubmit: handleSendMessage,
         onOpenEmoteSheet,
         onOpenSettingsSheet,
-        onAttachImage: isLandscape ? undefined : handleAttachImage,
+        onAttachImage:
+          isAuthenticated && !isLandscape ? handleAttachImage : undefined,
         isUploadingImage,
         replyTo,
         onClearReply: handleClearReply,

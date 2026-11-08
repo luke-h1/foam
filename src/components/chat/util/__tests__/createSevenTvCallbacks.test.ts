@@ -1,4 +1,8 @@
-import { createSevenTvEmote } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
+// oxlint-disable anti-slop/no-shape-in-symbol-names -- mirrors the 7TV paint API shape field (types/seven-tv/cosmetics.ts)
+import {
+  createSevenTvBadge,
+  createSevenTvEmote,
+} from '@app/components/chat/__tests__/__fixtures__/chatFactories.fixture';
 import {
   createBadgeChangeEntry,
   createBadgeCosmeticCreateData,
@@ -19,14 +23,12 @@ import * as sentryModule from '@app/lib/sentry';
 import { sevenTvService } from '@app/services/seven-tv-service';
 import { clearUserCosmeticsCache } from '@app/store/chat/actions/cosmetics';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
+import { silenceLogger } from '@app/test/silence-logger';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import type { BadgeData, PaintData } from '@app/types/seven-tv/cosmetics';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import type { MessageToken } from '@app/utils/chat/messageToken';
-import { logger } from '@app/utils/logger';
-import { normalizeSevenTvPaint } from '@app/utils/seven-tv/cosmetics/normalizeSevenTvPaint';
 
-jest.spyOn(logger.stvWs, 'info').mockImplementation(() => {});
-jest.spyOn(logger.stvWs, 'debug').mockImplementation(() => {});
+silenceLogger();
 
 const mockCountMetric = jest
   .spyOn(sentryModule, 'countMetric')
@@ -40,15 +42,6 @@ interface EmoteNoticeSummary {
   isSpecialNotice: boolean | undefined;
   message: MessageToken[];
 }
-
-const sevenTvBadge = (id: string, title: string): SanitisedBadgeSet => ({
-  id,
-  provider: '7tv',
-  set: id,
-  title,
-  type: '7TV Badge',
-  url: `https://cdn.7tv.app/badge/${id}/4x.webp`,
-});
 
 function emoteNotices(): EmoteNoticeSummary[] {
   return mockOnEmoteNotice.mock.calls.map(([notice]) => ({
@@ -82,6 +75,45 @@ function createBadgeEntitlement(ttvUserId: string, badgeId: string) {
     ttvUserId,
     paintId: null,
     badgeId,
+  };
+}
+
+/**
+ * The stored form of a legacy flat linear paint: the store lifts the top-level
+ * gradient into one layer.
+ */
+function storedLinearPaint(
+  id: string,
+  name: string,
+  color: number | null = null,
+): PaintData {
+  return {
+    id,
+    name,
+    color,
+    layers: {
+      0: {
+        function: 'LINEAR_GRADIENT',
+        stops: { length: 0 },
+        angle: 0,
+        shape: 'circle',
+        repeat: false,
+        image_url: '',
+        canvas_repeat: 'unset',
+        at: null,
+        size: [1, 1],
+        opacity: 1,
+      },
+      length: 1,
+    },
+    shadows: { length: 0 },
+    textStyle: null,
+    function: 'LINEAR_GRADIENT',
+    repeat: false,
+    angle: 0,
+    shape: 'circle',
+    image_url: '',
+    stops: { length: 0 },
   };
 }
 
@@ -234,7 +266,7 @@ describe('createSevenTvCallbacks', () => {
       expect(chatStore$.badges.peek()).toEqual<
         Record<string, SanitisedBadgeSet>
       >({
-        'badge-id': sevenTvBadge('badge-id', 'Tip'),
+        'badge-id': createSevenTvBadge('badge-id', { title: 'Tip' }),
       });
     });
 
@@ -252,13 +284,7 @@ describe('createSevenTvCallbacks', () => {
       result.onCosmeticCreate(data);
 
       expect(chatStore$.paints.peek()).toEqual<Record<string, PaintData>>({
-        'paint-id': normalizeSevenTvPaint(
-          createPaintInput({
-            id: 'paint-id',
-            name: 'Paint',
-            color: 0xff_00_00_ff,
-          }),
-        ),
+        'paint-id': storedLinearPaint('paint-id', 'Paint', 0xff_00_00_ff),
       });
     });
   });
@@ -301,12 +327,8 @@ describe('createSevenTvCallbacks', () => {
       );
 
       expect(chatStore$.paints.peek()).toEqual<Record<string, PaintData>>({
-        'paint-1': normalizeSevenTvPaint(
-          createPaintInput({ id: 'paint-1', name: 'Updated Paint' }),
-        ),
-        'paint-2': normalizeSevenTvPaint(
-          createPaintInput({ id: 'paint-2', name: 'Added Paint' }),
-        ),
+        'paint-1': storedLinearPaint('paint-1', 'Updated Paint'),
+        'paint-2': storedLinearPaint('paint-2', 'Added Paint'),
       });
 
       expect(mockCountMetric.mock.calls[0]).toEqual([
@@ -354,8 +376,8 @@ describe('createSevenTvCallbacks', () => {
       expect(chatStore$.badges.peek()).toEqual<
         Record<string, SanitisedBadgeSet>
       >({
-        'badge-1': sevenTvBadge('badge-1', 'Updated Badge'),
-        'badge-2': sevenTvBadge('badge-2', 'Added Badge'),
+        'badge-1': createSevenTvBadge('badge-1', { title: 'Updated Badge' }),
+        'badge-2': createSevenTvBadge('badge-2', { title: 'Added Badge' }),
       });
 
       expect(mockCountMetric.mock.calls[0]).toEqual([
@@ -423,7 +445,9 @@ describe('createSevenTvCallbacks', () => {
         userBadgeIds: chatStore$.userBadgeIds.peek(),
         userPaintIds: chatStore$.userPaintIds.peek(),
       }).toEqual({
-        badges: { 'kept-badge': sevenTvBadge('kept-badge', 'Kept') },
+        badges: {
+          'kept-badge': createSevenTvBadge('kept-badge', { title: 'Kept' }),
+        },
         paints: {},
         userBadgeIds: { 'ttv-2': 'kept-badge' },
         userPaintIds: {},

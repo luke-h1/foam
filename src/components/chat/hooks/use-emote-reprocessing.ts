@@ -1,20 +1,21 @@
 import { useEffect, useRef } from 'react';
 import type { RefObject } from 'react';
 
+import type { EmoteLoadingStatus } from '@app/components/chat/hooks/use-chat-emote-loader';
+import type { ChatMessagesSource } from '@app/components/chat/types/chat-messages-source';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channel-load';
 import {
   enrichMessageSet,
   hasEnrichmentEmoteSources,
 } from '@app/store/chat/actions/message-enrichment';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 
 const MAX_PROCESSED_MESSAGE_IDS = 5000;
 
 interface UseEmoteReprocessingOptions {
   channelId: string;
   channelEmoteData: unknown;
-  messages$: { peek: () => AnyChatMessageType[] };
-  emoteLoadStatus: string;
+  messages$: ChatMessagesSource;
+  emoteLoadStatus: EmoteLoadingStatus;
   processedMessageIdsRef: RefObject<Set<string>>;
   reprocessKey?: string;
   show7TvEmotes: boolean;

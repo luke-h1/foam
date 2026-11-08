@@ -42,7 +42,7 @@ export function SheetActionGroup({ title, actions }: SheetActionGroupProps) {
   );
 }
 
-export interface SheetDetail {
+interface SheetDetail {
   label: string;
   value?: string | null;
 }

@@ -3,44 +3,36 @@ import { StyleSheet, View } from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 import { getTokenIdentity } from '@app/components/chat/util/chat-row/getTokenIdentity';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { ChatDensity, ChatFontScale } from '@app/store/preference-store';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
 import { getChatTextStyles } from '../chat-message/ChatText.styles';
 import { EmoteToken } from '../chat-message/renderers/EmoteToken';
-import {
-  type ChatFontScale,
-  densityFromCompact,
-  getChatScale,
-} from '../chat-message/util/chatScale';
+import { getChatScale } from '../chat-message/util/chatScale';
 
 interface NoticeUserMessageProps {
-  compact?: boolean;
-  disableAnimations?: boolean;
+  density?: ChatDensity;
+  disableEmoteAnimations?: boolean;
   fontScale?: ChatFontScale;
-  message: string;
-  parsedMessage?: MessageToken[];
+  tokens: MessageToken[];
 }
 
+/**
+ * The chatter's own message under a usernotice. It stays inside the chat row,
+ * so emotes go through `EmoteToken` for their aspect ratio and the chat scale.
+ */
 function NoticeUserMessageComponent({
-  compact,
-  disableAnimations = false,
+  density,
+  disableEmoteAnimations = false,
   fontScale,
-  message,
-  parsedMessage,
+  tokens,
 }: NoticeUserMessageProps) {
-  const trimmed = message.trim();
-
-  if (!trimmed) {
+  if (tokens.length === 0) {
     return null;
   }
 
-  const textStyles = getChatTextStyles(fontScale, compact);
-  const scale = getChatScale(fontScale, densityFromCompact(compact));
-
-  const tokens: MessageToken[] =
-    parsedMessage && parsedMessage.length > 0
-      ? parsedMessage
-      : [{ type: 'text', content: trimmed }];
+  const textStyles = getChatTextStyles(fontScale, density);
+  const scale = getChatScale(fontScale, density);
 
   return (
     <View style={styles.row}>
@@ -52,7 +44,7 @@ function NoticeUserMessageComponent({
             return (
               <EmoteToken
                 key={key}
-                disableAnimations={disableAnimations}
+                disableAnimations={disableEmoteAnimations}
                 token={token}
                 targetSize={scale.emoteSize}
               />

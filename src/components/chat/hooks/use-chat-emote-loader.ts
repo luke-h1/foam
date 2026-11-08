@@ -19,6 +19,7 @@ import {
 } from '@app/store/chat/actions/channel-load';
 import { getSevenTvEmoteSetId } from '@app/store/chat/actions/seven-tv-channel-lifecycle';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
+import { getPreferences } from '@app/store/preference-store';
 import {
   preloadChannelEmotes,
   preloadGlobalEmotes,
@@ -33,11 +34,6 @@ export type EmoteLoadingStatus =
   | 'error'
   | 'cancelled';
 
-interface UseChatEmoteLoaderOptions {
-  channelId: string;
-  enabled?: boolean;
-}
-
 interface UseChatEmoteLoaderResult {
   status: EmoteLoadingStatus;
   sevenTvEmoteSetId: string | undefined;
@@ -47,8 +43,9 @@ interface UseChatEmoteLoaderResult {
 
 export const useChatEmoteLoader = ({
   channelId,
-  enabled = true,
-}: UseChatEmoteLoaderOptions): UseChatEmoteLoaderResult => {
+}: {
+  channelId: string;
+}): UseChatEmoteLoaderResult => {
   const { user } = useAuthContext();
   const [status, setStatus] = useState<EmoteLoadingStatus>('idle');
   const isMountedRef = useRef(true);
@@ -134,9 +131,13 @@ export const useChatEmoteLoader = ({
             return;
           }
 
+          const preloadOptions = {
+            disableAnimations: getPreferences().disableEmoteAnimations,
+          };
+
           void Promise.all([
-            preloadGlobalEmotes(emoteData),
-            preloadChannelEmotes(emoteData),
+            preloadGlobalEmotes(emoteData, preloadOptions),
+            preloadChannelEmotes(emoteData, preloadOptions),
           ]).then(() => {
             logger.chat.debug('🖼️ Emote preload completed');
           });
@@ -183,7 +184,7 @@ export const useChatEmoteLoader = ({
 
     lastCosmeticsCacheVersionRef.current = cosmeticsCacheVersion;
 
-    const isActive = Boolean(enabled && channelId);
+    const isActive = Boolean(channelId);
 
     if (isActive) {
       ensureChannelCacheHydrated(channelId);
@@ -215,7 +216,7 @@ export const useChatEmoteLoader = ({
       isMountedRef.current = false;
       abortCurrentLoad();
     };
-  }, [channelId, enabled, cosmeticsCacheVersion, loadEmotesRef]);
+  }, [channelId, cosmeticsCacheVersion, loadEmotesRef]);
 
   const sevenTvEmoteSetId = getSevenTvEmoteSetId(channelId) ?? undefined;
 

@@ -3,9 +3,10 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import {
   createBadge,
   createChatMessage,
+  createSevenTvBadge,
   createSevenTvEmote,
   createTwitchEmote,
-} from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
+} from '@app/components/chat/__tests__/__fixtures__/chatFactories.fixture';
 import { createScrollAnchor } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat-scroll.fixture';
 import { useChatMessageProcessing } from '@app/components/chat/hooks/use-chat-message-processing';
 import { userInfoFixture } from '@app/services/__fixtures__/twitch/user-info.fixture';
@@ -34,13 +35,9 @@ import {
   fetchUserPersonalEmotes,
 } from '@app/store/chat/actions/personal-emotes';
 import { clearFetchedCosmeticsUsers } from '@app/store/chat/actions/user-cosmetics-fetch';
-import {
-  clearVisibleAssetHydration,
-  visibleAssetHydration,
-} from '@app/store/chat/actions/visible-asset-hydration';
+import { clearVisibleAssetHydration } from '@app/store/chat/actions/visible-asset-hydration';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import {
-  type AnyChatMessageType,
   makeEmptyEmoteData,
   makeEmptyGlobalCacheData,
 } from '@app/store/chat/types/constants';
@@ -48,6 +45,8 @@ import {
   getPreferences,
   replacePreferences,
 } from '@app/store/preference-store';
+import { flushChatStoreTimers } from '@app/test/chat-store-teardown';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { logger } from '@app/utils/logger';
 
@@ -79,14 +78,9 @@ const subscriberBadge = createBadge({
   url: 'https://cdn.example.test/sub-12.png',
 });
 
-const sevenTvBadge: SanitisedBadgeSet = {
-  id: '7tv-badge-1',
-  set: '7tv-badge-1',
-  type: '7TV Badge',
+const sevenTvBadge = createSevenTvBadge('7tv-badge-1', {
   title: '7TV Subscriber',
-  url: 'https://cdn.7tv.app/badge/7tv-badge-1/4x.webp',
-  provider: '7tv',
-};
+});
 
 const sharedChatSourceBadge: SanitisedBadgeSet = {
   id: 'source-room',
@@ -163,7 +157,6 @@ function renderMessageProcessing() {
 
 async function runHydrationPass() {
   for (let step = 0; step < 10; step += 1) {
-    // eslint-disable-next-line react-doctor/async-await-in-loop -- each step must settle before the next timer advance
     await act(async () => {
       jest.advanceTimersByTime(150);
       await Promise.resolve();
@@ -352,11 +345,9 @@ describe('useChatMessageProcessing', () => {
     expect({
       visible: storedTokens('visible-1'),
       other: storedTokens('visible-2'),
-      pendingMessages: visibleAssetHydration.pendingMessages,
     }).toEqual({
       visible: [{ type: 'text', content: 'visible' }, space, resolvedPersonal],
       other: [{ type: 'text', content: 'other Personal' }],
-      pendingMessages: [],
     });
   });
 
@@ -389,8 +380,6 @@ describe('useChatMessageProcessing', () => {
       await seedPersonalEmotes('late-user');
     });
 
-    expect(visibleAssetHydration.hydratedMessageKeys).toEqual(new Set());
-
     await runHydrationPass();
 
     expect(storedTokens('visible-1')).toEqual<TokenSummary[]>([
@@ -400,11 +389,13 @@ describe('useChatMessageProcessing', () => {
     ]);
   });
 
-  test('does not schedule a hydration pass for the mount-time personal emotes version', () => {
+  test('does not fetch personal emotes for the mount-time personal emotes version', async () => {
     jest.useFakeTimers();
     renderMessageProcessing();
 
-    expect(visibleAssetHydration.timer).toBeNull();
+    await runHydrationPass();
+
+    expect(getPersonalEmoteSet).not.toHaveBeenCalled();
   });
 
   test('reprocessAllMessages rewrites the stored messages with the current emotes', () => {
@@ -460,9 +451,14 @@ describe('useChatMessageProcessing', () => {
       hook.result.current.reprocessAllMessages();
     });
 
-    const firstBatchIds = messages
-      .slice(0, 6)
-      .map(message => message.message_id);
+    const firstBatchIds = [
+      'stored-0',
+      'stored-1',
+      'stored-2',
+      'stored-3',
+      'stored-4',
+      'stored-5',
+    ];
 
     expect(enrichedMessageIds()).toEqual(firstBatchIds);
 
@@ -516,3 +512,5 @@ describe('useChatMessageProcessing', () => {
     });
   });
 });
+
+afterEach(flushChatStoreTimers);

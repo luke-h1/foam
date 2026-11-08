@@ -2,16 +2,14 @@
 // field (see types/seven-tv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import type {
-  CosmeticCreateCallbackData,
-  CosmeticUpdateCallbackData,
-  EntitlementDeleteCallbackData,
-  EntitlementUpdateCallbackData,
-} from '@app/components/chat/hooks/use-seven-tv-ws';
-import type {
   BadgeCosmetic,
   BadgeData,
   ChangeMap,
   CosmeticCreate,
+  CosmeticCreateCallbackData,
+  CosmeticUpdateCallbackData,
+  EntitlementDeleteCallbackData,
+  EntitlementUpdateCallbackData,
   PaintCosmetic,
   PaintData,
 } from '@app/types/seven-tv/cosmetics';

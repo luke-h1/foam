@@ -41,7 +41,7 @@ export function ChatRowBody({ state }: { state: ChatRowBodyState }) {
 
   const sharedChatLabel = isSharedChatDuplicated ? (
     <SharedChatSourceLabel
-      compact={tokenRenderProps.compact}
+      density={tokenRenderProps.density}
       fontScale={tokenRenderProps.fontScale}
     />
   ) : null;

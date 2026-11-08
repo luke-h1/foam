@@ -1,12 +1,6 @@
 import { useCallback } from 'react';
 import type { RefObject } from 'react';
 
-import type {
-  BadgePressData,
-  EmotePressData,
-  MessageActionData,
-  UsernamePressData,
-} from '@app/components/chat/components/chat-message/ChatRow.types';
 import type { ChatInputShellHandle } from '@app/components/chat/components/ChatInputShell';
 import type { EmotePickerItem } from '@app/components/chat/components/emote-sheet/util/emoteSheetTypes';
 import { impact, selection } from '@app/lib/haptics';
@@ -18,9 +12,14 @@ import {
   openChatSettingsSheet,
   openChatUserActions,
 } from '@app/store/chat/actions/chat-overlays';
-import { getMessageById } from '@app/store/chat/actions/messages';
 import { fetchUserCosmetics } from '@app/store/chat/actions/user-cosmetics-fetch';
-import type { ChatMessageType } from '@app/store/chat/types/constants';
+import type {
+  BadgePressData,
+  EmotePressData,
+  MessageActionData,
+  UsernamePressData,
+} from '@app/store/chat/types/chat-press-data';
+import type { ChatMessageType } from '@app/types/chat/chatMessage';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 
 export function useChatComposerActions({
@@ -31,7 +30,6 @@ export function useChatComposerActions({
   const handleReply = useCallback(
     (message: ChatMessageType<'usernotice'>) => {
       const messageText = replaceEmotesWithText(message.message);
-      const parentMessage = getMessageById(message.message_id);
 
       const twitchUserId = message.userstate['user-id'];
 
@@ -45,9 +43,6 @@ export function useChatComposerActions({
         message: messageText,
         messageParts: message.message,
         replyParentUserLogin: message.userstate.username || '',
-        parentMessage: parentMessage
-          ? replaceEmotesWithText(parentMessage.message)
-          : '',
         color: message.userstate.color,
         userId: twitchUserId || undefined,
       });

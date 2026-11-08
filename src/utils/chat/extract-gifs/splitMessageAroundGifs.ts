@@ -24,10 +24,6 @@ function sliceBody(
   return message.slice(start, end);
 }
 
-/**
- * Cuts the message body into alternating text and GIF segments using
- * code-point indices from the `gifs` tag.
- */
 export function splitMessageAroundGifs(
   message: string,
   spans: TwitchGifSpan[],

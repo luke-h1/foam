@@ -1,20 +1,22 @@
 import { batch } from '@legendapp/state';
 
-import { storageService } from '@app/lib/storage';
+import { SEVEN_TV_CACHE_NAMESPACE, storageService } from '@app/lib/storage';
 import {
   clearSevenTvUserCache,
   sevenTvService,
 } from '@app/services/seven-tv-service';
+import { setOnBttvBadgesLoaded } from '@app/store/chat/actions/bttv-badges/setOnBttvBadgesLoaded';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
-import { setOnBttvBadgesLoaded } from '@app/utils/chat/bttv-badges/setOnBttvBadgesLoaded';
-import { convertV4PaintToPaintData } from '@app/utils/color/seven-tv-paint-data/convertV4PaintToPaintData';
-import { type V4Badge } from '@app/utils/color/seven-tv-paint-data/types';
+import { setBoundedMapEntry } from '@app/utils/collection/setBoundedMapEntry';
+import { buildSanitisedBadge } from '@app/utils/emote/sanitised/buildSanitisedBadge';
 import { logger } from '@app/utils/logger';
 import { deepEqualJson } from '@app/utils/object/deepEqualJson';
 import { buildSevenTvBadgeImageUrl } from '@app/utils/seven-tv/cosmetics/buildSevenTvBadgeImageUrl';
 import { normalizeSevenTvBadge } from '@app/utils/seven-tv/cosmetics/normalizeSevenTvBadge';
+import { convertV4PaintToPaintData } from '@app/utils/seven-tv/gql/convertV4PaintToPaintData';
+import { sanitiseV4Badge } from '@app/utils/seven-tv/gql/sanitiseV4Badge';
 import { getSevenTvSessionId } from '@app/utils/seven-tv/sevenTvSessionId';
 
 import { chatStore$ } from '../observables/chat-store';
@@ -22,7 +24,11 @@ import {
   writePersistedCosmeticBindings,
   writePersistedCosmeticDefinitions,
 } from '../observables/cosmetics-persistence';
-import { MAX_COSMETIC_ENTRIES } from '../types/constants';
+import {
+  COSMETICS_CACHE_TTL_MS,
+  MAX_COSMETIC_ENTRIES,
+  MAX_PERSISTED_COSMETIC_DEFINITIONS,
+} from '../types/cache-limits';
 import {
   clearEntitlementUserLinkState,
   getSevenTvUserIdForTwitchId,
@@ -58,6 +64,24 @@ let cosmeticsPersistTimer: ReturnType<typeof setTimeout> | null = null;
 let cosmeticDefinitionsDirty = false;
 let cosmeticBindingsDirty = false;
 
+const writeDirtyCosmetics = (): void => {
+  if (cosmeticDefinitionsDirty) {
+    cosmeticDefinitionsDirty = false;
+    writePersistedCosmeticDefinitions({
+      paints: chatStore$.paints.peek(),
+      badges: chatStore$.badges.peek(),
+    });
+  }
+
+  if (cosmeticBindingsDirty) {
+    cosmeticBindingsDirty = false;
+    writePersistedCosmeticBindings({
+      userPaintIds: chatStore$.userPaintIds.peek(),
+      userBadgeIds: chatStore$.userBadgeIds.peek(),
+    });
+  }
+};
+
 /**
  * Debounced MMKV snapshot; definitions and bindings persist under separate
  * keys so only the dirty group(s) flush.
@@ -79,30 +103,26 @@ const scheduleCosmeticsPersist = (
 
   cosmeticsPersistTimer = setTimeout(() => {
     cosmeticsPersistTimer = null;
-
-    if (cosmeticDefinitionsDirty) {
-      cosmeticDefinitionsDirty = false;
-      writePersistedCosmeticDefinitions({
-        paints: chatStore$.paints.peek(),
-        badges: chatStore$.badges.peek(),
-      });
-    }
-
-    if (cosmeticBindingsDirty) {
-      cosmeticBindingsDirty = false;
-      writePersistedCosmeticBindings({
-        userPaintIds: chatStore$.userPaintIds.peek(),
-        userBadgeIds: chatStore$.userBadgeIds.peek(),
-      });
-    }
+    writeDirtyCosmetics();
   }, COSMETICS_PERSIST_DEBOUNCE_MS);
+};
+
+/**
+ * Writes a debounced cosmetics snapshot now, so no persist timer outlives the
+ * session that armed it.
+ */
+export const flushCosmeticsPersist = (): void => {
+  if (cosmeticsPersistTimer) {
+    clearTimeout(cosmeticsPersistTimer);
+    cosmeticsPersistTimer = null;
+  }
+
+  writeDirtyCosmetics();
 };
 
 const USER_COSMETICS_CACHE_PREFIX = 'user-cosmetics:';
 
-const USER_COSMETICS_CACHE_TTL_MS = 2 * 60 * 60 * 1000;
 const USER_COSMETICS_NEGATIVE_CACHE_TTL_MS = 30 * 60 * 1000;
-const SEVEN_TV_CACHE_NAMESPACE = 'seven_tv_cache';
 
 /**
  * Binding ids only. A definition copy per wearer would duplicate every
@@ -117,6 +137,18 @@ export type CachedUserCosmetics = {
 
 const sessionCosmeticsCache = new Map<string, CachedUserCosmetics>();
 
+/**
+ * A full cosmetics cache drops its oldest fifth at once, so a burst of new
+ * wearers does not evict one entry per write.
+ */
+const TRIM_COUNT = Math.floor(MAX_COSMETIC_ENTRIES * 0.2);
+
+function dropOldestBindings(
+  bindings: Record<string, string>,
+): Record<string, string> {
+  return Object.fromEntries(Object.entries(bindings).slice(TRIM_COUNT));
+}
+
 // Cap: entitlement.create bursts on channel entry stormed the network with
 // hundreds of parallel getUserCosmeticsGql requests.
 const userCosmeticsFetchGuard = createFetchOnceGuard({ maxConcurrent: 4 });
@@ -129,43 +161,17 @@ const cacheSessionCosmetics = (
   sevenTvUserId: string,
   cosmetics: CachedUserCosmetics,
 ): void => {
-  sessionCosmeticsCache.set(sevenTvUserId, cosmetics);
-
-  if (sessionCosmeticsCache.size <= MAX_COSMETIC_ENTRIES) {
-    return;
-  }
-
-  const trimCount = Math.floor(MAX_COSMETIC_ENTRIES * 0.2);
-  let removed = 0;
-
-  for (const key of sessionCosmeticsCache.keys()) {
-    if (removed >= trimCount) {
-      break;
-    }
-
-    sessionCosmeticsCache.delete(key);
-    removed += 1;
-  }
+  setBoundedMapEntry(
+    sessionCosmeticsCache,
+    sevenTvUserId,
+    cosmetics,
+    MAX_COSMETIC_ENTRIES,
+    { trimFraction: 0.2 },
+  );
 };
 
 const getUserCosmeticsStorageKey = (sevenTvUserId: string) =>
   `sevenTvUserCosmetics_${USER_COSMETICS_CACHE_PREFIX}${sevenTvUserId}` as const;
-
-const convertV4BadgeToSanitised = (badge: V4Badge): SanitisedBadgeSet => {
-  const bestImage =
-    badge.images.find(img => img.scale === 4) ??
-    badge.images.find(img => img.scale === 3) ??
-    badge.images[0];
-
-  return normalizeSevenTvBadge({
-    id: badge.id,
-    url: bestImage?.url ?? buildSevenTvBadgeImageUrl(badge.id),
-    type: '7TV Badge',
-    title: badge.description || badge.name,
-    set: badge.id,
-    provider: '7tv',
-  });
-};
 
 /**
  * Suppresses snapshot re-sync during a synchronous apply, so a cache hit
@@ -276,7 +282,7 @@ function buildCachedUserCosmeticsFromStore(
     expiresAt:
       Date.now() +
       (paintId || badgeId
-        ? USER_COSMETICS_CACHE_TTL_MS
+        ? COSMETICS_CACHE_TTL_MS
         : USER_COSMETICS_NEGATIVE_CACHE_TTL_MS),
     paintId,
     ttvUserId,
@@ -398,7 +404,7 @@ export const fetchAndCacheUserCosmetics = async (
         : undefined;
 
       const badge = cosmetics.badge
-        ? convertV4BadgeToSanitised(cosmetics.badge)
+        ? sanitiseV4Badge(cosmetics.badge)
         : undefined;
 
       const cachedCosmetics: CachedUserCosmetics = {
@@ -406,7 +412,7 @@ export const fetchAndCacheUserCosmetics = async (
         expiresAt:
           Date.now() +
           (paint || badge
-            ? USER_COSMETICS_CACHE_TTL_MS
+            ? COSMETICS_CACHE_TTL_MS
             : USER_COSMETICS_NEGATIVE_CACHE_TTL_MS),
         paintId: cosmetics.paintId,
         ttvUserId: cosmetics.ttvUserId,
@@ -453,10 +459,6 @@ export const fetchUserCosmeticsByTwitchId = async (
   }
 };
 
-/**
- * Request a chatter's cosmetics via a passive 7TV presence write. Falls back to
- * v4 GQL when there is no live EventAPI session.
- */
 export const requestUserCosmeticsViaPresence = async (
   twitchUserId: string,
 ): Promise<void> => {
@@ -507,6 +509,7 @@ export const clearUserCosmeticsCache = () => {
   );
 
   clearPaintsAndBadges();
+  flushCosmeticsPersist();
   invalidateCosmeticsCache();
   invalidateBakedBadges();
 };
@@ -523,13 +526,10 @@ export const setUserPaint = (ttvUserId: string, paintId: string): void => {
     !(ttvUserId in current) &&
     Object.keys(current).length >= MAX_COSMETIC_ENTRIES
   ) {
-    const trimCount = Math.floor(MAX_COSMETIC_ENTRIES * 0.2);
-
-    const trimmed = Object.fromEntries(
-      Object.entries(current).slice(trimCount),
-    );
-
-    chatStore$.userPaintIds.set({ ...trimmed, [ttvUserId]: paintId });
+    chatStore$.userPaintIds.set({
+      ...dropOldestBindings(current),
+      [ttvUserId]: paintId,
+    });
   } else {
     chatStore$.userPaintIds[ttvUserId]?.set(paintId);
   }
@@ -550,13 +550,11 @@ const isSamePaintDefinition = (
   next: PaintData,
 ): boolean => previous != null && deepEqualJson(previous, next);
 
-const MAX_PAINT_DEFINITIONS = 750;
-
 const sweepUnreferencedPaints = () => {
   const paints = chatStore$.paints.peek();
   const paintEntries = Object.entries(paints);
 
-  if (paintEntries.length < MAX_PAINT_DEFINITIONS) {
+  if (paintEntries.length < MAX_PERSISTED_COSMETIC_DEFINITIONS) {
     return;
   }
 
@@ -671,13 +669,11 @@ export const hasUserPaint = (ttvUserId?: string): boolean => {
   return result;
 };
 
-const MAX_BADGE_DEFINITIONS = 750;
-
 const sweepUnreferencedBadges = () => {
   const badges = chatStore$.badges.peek();
   const badgeEntries = Object.entries(badges);
 
-  if (badgeEntries.length < MAX_BADGE_DEFINITIONS) {
+  if (badgeEntries.length < MAX_PERSISTED_COSMETIC_DEFINITIONS) {
     return;
   }
 
@@ -769,13 +765,10 @@ export const setUserBadge = (ttvUserId: string, badgeId: string): void => {
     !(ttvUserId in current) &&
     Object.keys(current).length >= MAX_COSMETIC_ENTRIES
   ) {
-    const trimCount = Math.floor(MAX_COSMETIC_ENTRIES * 0.2);
-
-    const trimmed = Object.fromEntries(
-      Object.entries(current).slice(trimCount),
-    );
-
-    chatStore$.userBadgeIds.set({ ...trimmed, [ttvUserId]: badgeId });
+    chatStore$.userBadgeIds.set({
+      ...dropOldestBindings(current),
+      [ttvUserId]: badgeId,
+    });
   } else {
     chatStore$.userBadgeIds[ttvUserId]?.set(badgeId);
   }
@@ -797,14 +790,15 @@ export const setUserBadge = (ttvUserId: string, badgeId: string): void => {
  * A badge's artwork url derives from its id alone, so an entitlement without
  * its `cosmetic.create` still renders; the id is still reported missing.
  */
-const synthesiseSevenTvBadge = (badgeId: string): SanitisedBadgeSet => ({
-  id: badgeId,
-  url: buildSevenTvBadgeImageUrl(badgeId),
-  type: '7TV Badge',
-  title: '7TV Badge',
-  set: badgeId,
-  provider: '7tv',
-});
+const synthesiseSevenTvBadge = (badgeId: string): SanitisedBadgeSet =>
+  buildSanitisedBadge({
+    id: badgeId,
+    url: buildSevenTvBadgeImageUrl(badgeId),
+    type: '7TV Badge',
+    title: '7TV Badge',
+    set: badgeId,
+    provider: '7tv',
+  });
 
 export const getUserBadge = (
   ttvUserId: string,

@@ -1,5 +1,5 @@
 export interface RoomStateTags {
-  emote_only: '1' | '0';
+  'emote-only': '1' | '0';
   /**
    * -1 = not restricted.
    */

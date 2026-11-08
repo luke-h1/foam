@@ -1,12 +1,21 @@
 import { memo, type RefObject, useEffect } from 'react';
 
-import { chatStore$ } from '@app/store/chat/observables/chat-store';
+import type { ChatMessagesSource } from '@app/components/chat/types/chat-messages-source';
+import { setEmojiEmotes } from '@app/store/chat/actions/emoji-emotes';
 import { useChannelEmoteDataForReprocess } from '@app/store/chat/react/selectors';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { usePreference } from '@app/store/preference-store';
-import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
 
+import type { EmoteLoadingStatus } from '../hooks/use-chat-emote-loader';
 import { useEmoteReprocessing } from '../hooks/use-emote-reprocessing';
+
+interface ChatEmoteReprocessorProps {
+  channelId: string;
+  emoteLoadStatus: EmoteLoadingStatus;
+  messages$: ChatMessagesSource;
+  processedMessageIdsRef: RefObject<Set<string>>;
+  reprocessKey: string;
+  userLogin?: string | null;
+}
 
 export const ChatEmoteReprocessor = memo(
   ({
@@ -16,21 +25,14 @@ export const ChatEmoteReprocessor = memo(
     processedMessageIdsRef,
     reprocessKey,
     userLogin,
-  }: {
-    channelId: string;
-    emoteLoadStatus: string;
-    messages$: { peek: () => AnyChatMessageType[] };
-    processedMessageIdsRef: RefObject<Set<string>>;
-    reprocessKey: string;
-    userLogin?: string | null;
-  }) => {
+  }: ChatEmoteReprocessorProps) => {
     const channelEmoteData = useChannelEmoteDataForReprocess(channelId);
     const emojiStyle = usePreference('emojiStyle');
     const show7TvEmotes = usePreference('show7TvEmotes');
     const showChatGifs = usePreference('showChatGifs');
 
     useEffect(() => {
-      chatStore$.emojis.set(getEmojiEmotes(emojiStyle));
+      setEmojiEmotes(emojiStyle);
     }, [emojiStyle]);
 
     useEmoteReprocessing({

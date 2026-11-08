@@ -35,6 +35,7 @@ import {
   paintDependsOnTexture,
 } from './util/paint-layer/paintDependsOnTexture';
 import { skiaDecodableLayerUrl } from './util/paint-layer/skiaDecodableLayerUrl';
+import { PAINT_FONT_FAMILY } from './util/paint-text-style/paintFont';
 import {
   useSharedPaintAnimationReady,
   useSharedPaintFrames,
@@ -51,10 +52,6 @@ interface PaintedUsernameSkiaProps {
   username: string;
   paint: PaintData;
   fallbackColor?: string;
-  /**
-   * Glyph size in points; defaults to the chat row metric. Passed through so
-   * painted names render at the right size outside chat (composer, user card).
-   */
   fontSize?: number;
   /**
    * Chat line box. The bitmap is the glyph height, so the frame centers it
@@ -104,10 +101,6 @@ function paintMaskNode(bitmaps: PaintBitmaps): ReactNode {
 
 type PaintFrames = ReadonlyMap<string, SkImage>;
 
-/**
- * Overlay frame from the shared per-URL animation clock. Every row with the
- * same texture shows this frame.
- */
 function TiledPaintLayerOverlay({
   frame,
   tile,
@@ -204,7 +197,7 @@ function renderLayerSlot(
   if (slot.kind === 'baked') {
     return (
       <Image
-        // eslint-disable-next-line react-doctor/no-array-index-as-key -- static list that never reorders
+        // oxlint-disable-next-line react-doctor/no-array-index-as-key -- static list that never reorders
         key={`baked-${index}`}
         image={slot.image}
         x={0}
@@ -224,7 +217,7 @@ function renderLayerSlot(
 
   return (
     <UrlLayerSpan
-      // eslint-disable-next-line react-doctor/no-array-index-as-key -- static list that never reorders
+      // oxlint-disable-next-line react-doctor/no-array-index-as-key -- static list that never reorders
       key={`url-${index}|${paintImageLayerKey(slot.layer)}`}
       opacity={slot.layer.opacity}
     >
@@ -376,10 +369,6 @@ function PaintBitmapCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
   );
 }
 
-/**
- * Renders a painted username with Skia: foundation baked once, URL textures
- * advance on the JS thread, stroke composites last.
- */
 export function PaintedUsernameSkia({
   username,
   paint,
@@ -411,7 +400,7 @@ export function PaintedUsernameSkia({
           fontSize,
           pixelRatio,
           fontProvider,
-          fontFamily: 'Montserrat',
+          fontFamily: PAINT_FONT_FAMILY,
         })
       : null;
   }, [

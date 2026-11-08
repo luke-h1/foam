@@ -1,6 +1,7 @@
 import type { ParsedRoomState } from '@app/store/chat/types/room-state';
+import type { NoticeMsgId } from '@app/types/chat/irc-tags/notice';
 
-export interface RoomStateModeStatus {
+interface RoomStateModeStatus {
   active: boolean;
   /**
    * Slow-mode seconds or followers-only minutes; undefined for plain on/off
@@ -14,4 +15,9 @@ export interface RoomStateModeDefinition {
   activeSummary: (value: number | undefined) => string;
   enabledNotice: (value: number | undefined) => string;
   disabledNotice: string;
+  /**
+   * Twitch NOTICE msg-ids that repeat this mode change. The ROOMSTATE notice
+   * already covers them, so chat suppresses them.
+   */
+  noticeIds: readonly NoticeMsgId[];
 }

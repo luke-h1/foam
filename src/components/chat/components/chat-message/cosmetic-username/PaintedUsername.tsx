@@ -1,29 +1,28 @@
 import { memo } from 'react';
 import { type StyleProp, StyleSheet, type TextStyle } from 'react-native';
 
-import { useSelector } from '@legendapp/state/react';
-
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
-import { chatStore$ } from '@app/store/chat/observables/chat-store';
+import { useUserPaint } from '@app/store/chat/react/user-cosmetics';
 import { usePaintRenderer } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
-import { isVisibleSevenTvColor } from '@app/utils/color/isVisibleSevenTvColor';
-import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 
 import { chatLineMetrics } from '../util/chatScale';
 import { PaintedUsernameHostedLayers } from './PaintedUsernameHostedLayers';
 import { PaintedUsernameSkia } from './PaintedUsernameSkia';
-import { DEFAULT_PAINT_DROP_SHADOW_MODE } from './util/paint-layer/defaultPaintDropShadowMode';
-import type { PaintDropShadowMode } from './util/paint-layer/getPaintDropShadows';
+import { getPaintBaseColor } from './util/paint-layer/getPaintBaseColor';
 
 interface PaintedUsernameProps {
   username: string;
   paint?: PaintData;
   userId?: string;
   fallbackColor?: string;
+  /**
+   * A deleted or timed-out message. The name keeps the hosted fill so the
+   * strikethrough in `usernameTextStyle` still draws.
+   */
+  isModerated: boolean;
   showColon?: boolean;
-  sevenTvPaintDropShadows?: PaintDropShadowMode;
   usernameTextStyle?: StyleProp<TextStyle>;
 }
 
@@ -35,7 +34,6 @@ interface PaintedUsernameWithPaintProps {
   isModerated: boolean;
   paint: PaintData;
   plainColor: string;
-  sevenTvPaintDropShadows: PaintDropShadowMode;
   usernameTextStyle?: StyleProp<TextStyle>;
 }
 
@@ -47,7 +45,6 @@ function PaintedUsernameWithPaint({
   isModerated,
   paint,
   plainColor,
-  sevenTvPaintDropShadows,
   usernameTextStyle,
 }: PaintedUsernameWithPaintProps) {
   const paintRenderer = usePaintRenderer();
@@ -87,7 +84,6 @@ function PaintedUsernameWithPaint({
         lineHeight,
         paint,
         plainColor,
-        sevenTvPaintDropShadows,
         usernameTextStyle,
         useWebView: paintRenderer === 'webview' && !isModerated,
       }}
@@ -100,25 +96,15 @@ function PaintedUsernameComponent({
   paint: paintProp,
   userId,
   fallbackColor = theme.color.text.dark,
+  isModerated,
   showColon = true,
-  sevenTvPaintDropShadows: sevenTvPaintDropShadowsProp,
   usernameTextStyle,
 }: PaintedUsernameProps) {
-  const sevenTvPaintDropShadows =
-    sevenTvPaintDropShadowsProp ?? DEFAULT_PAINT_DROP_SHADOW_MODE;
-
   const displayUsername = showColon ? `${username}: ` : username;
 
-  const storePaint = useSelector(() => {
-    if (!userId) {
-      return null;
-    }
+  const storePaint = useUserPaint(userId);
 
-    const paintId = chatStore$.userPaintIds[userId]?.get();
-    return paintId ? chatStore$.paints[paintId]?.get() : null;
-  });
-
-  const paint = paintProp ?? storePaint ?? null;
+  const paint = paintProp ?? storePaint;
 
   if (!paint) {
     return (
@@ -134,24 +120,18 @@ function PaintedUsernameComponent({
     );
   }
 
-  const solidFallback = isVisibleSevenTvColor(paint.color)
-    ? sevenTvColorToCss(paint.color)
-    : fallbackColor;
-
   const flatUsernameStyle = StyleSheet.flatten(usernameTextStyle);
-  const isModerated = flatUsernameStyle?.textDecorationLine === 'line-through';
 
   return (
     <PaintedUsernameWithPaint
       {...{
         displayUsername,
-        fallbackColor: solidFallback,
+        fallbackColor: getPaintBaseColor(paint, fallbackColor),
         fontSize: flatUsernameStyle?.fontSize,
         lineHeight: flatUsernameStyle?.lineHeight,
         isModerated,
         paint,
         plainColor: fallbackColor,
-        sevenTvPaintDropShadows,
         usernameTextStyle,
       }}
     />

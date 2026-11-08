@@ -1,5 +1,5 @@
-import type { CustomHighlight } from '@app/store/preference-store';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { CustomHighlight } from '@app/types/chat/customHighlight';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 
 // Match results are cached per message-token array. Each entry stores the rules

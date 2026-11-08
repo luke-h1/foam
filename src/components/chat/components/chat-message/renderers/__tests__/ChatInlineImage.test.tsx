@@ -15,16 +15,16 @@ import {
   RowVisibilityContext,
 } from '@app/components/chat/components/chat-message/util/rowVisibility';
 import { chatScrollActivity } from '@app/components/chat/util/chatScrollActivity';
-import * as cacheService from '@app/providers/cached-emotes-provider/cache-service';
+import * as cacheService from '@app/lib/emote-cache/cacheService';
 import * as useCachedEmoteModule from '@app/providers/cached-emotes-provider/use-cached-emote';
 import { logger } from '@app/utils/logger';
 
 import { ChatInlineImage } from '../ChatInlineImage';
 
-type MockImageHandle = {
+interface MockImageHandle {
   startAnimating: () => void;
   stopAnimating: () => void;
-};
+}
 
 const mockStartAnimating = jest.fn();
 const mockStopAnimating = jest.fn();
@@ -41,6 +41,31 @@ type CapturedImageProps = Omit<ImageProps, 'onError' | 'onLoad'> & {
 let mockImageProps: CapturedImageProps | null = null;
 
 /**
+ * Each new recyclingKey makes expo-image start a fresh load, so this records
+ * the url of every load the native view starts, in order.
+ */
+let mockLoads: string[] = [];
+let mockLastRecyclingKey: string | undefined;
+
+function recordLoad(props: ImageProps) {
+  if (props.recyclingKey === mockLastRecyclingKey) {
+    return;
+  }
+
+  mockLastRecyclingKey = props.recyclingKey ?? undefined;
+
+  // SAFETY: ChatInlineImage passes either a { uri } object or the shared ref, which has no uri.
+  const { uri } = props.source as { uri?: string };
+
+  mockLoads.push(uri ?? 'shared-ref');
+}
+
+beforeEach(() => {
+  mockLoads = [];
+  mockLastRecyclingKey = undefined;
+});
+
+/**
  * expo-image's `Image` is a forwardRef object, so jest.spyOn cannot wrap it -
  * swap the export directly.
  */
@@ -51,6 +76,7 @@ function MockImage({
   // SAFETY: CapturedImageProps only widens onError/onLoad to accept the
   // no-argument calls below; the real props always satisfy it.
   mockImageProps = props as CapturedImageProps;
+  recordLoad(props);
 
   useImperativeHandle(ref, () => ({
     startAnimating: mockStartAnimating,
@@ -375,24 +401,26 @@ describe('ChatInlineImage fallback chain', () => {
     const base = 'https://cdn.7tv.app/badge/01H85';
     render(<ChatInlineImage sourceUrl={`${base}/4x.webp`} style={{}} />);
 
-    expect(mockImageProps?.recyclingKey).toEqual(`${base}/4x.webp#0`);
+    expect(mockLoads).toEqual([`${base}/4x.webp`]);
 
     // 4x.webp 404s -> swap format, same size, immediately.
     act(() => mockImageProps?.onError?.({ error: 'HTTP 404' }));
 
     expect(evictMock).toHaveBeenCalledWith(`${base}/4x.webp`);
 
-    expect(mockImageProps?.recyclingKey).toEqual(`${base}/4x.avif#0`);
+    expect(mockLoads).toEqual([`${base}/4x.webp`, `${base}/4x.avif`]);
 
     // 4x.avif 404s -> drop to the next size down.
     act(() => mockImageProps?.onError?.({ error: 'HTTP 404' }));
 
-    expect(mockImageProps?.recyclingKey).toEqual(`${base}/3x.webp#0`);
-
     // The fallback walk is immediate - nothing is waiting on a timer.
     act(() => jest.advanceTimersByTime(8000));
 
-    expect(mockImageProps?.recyclingKey).toEqual(`${base}/3x.webp#0`);
+    expect(mockLoads).toEqual([
+      `${base}/4x.webp`,
+      `${base}/4x.avif`,
+      `${base}/3x.webp`,
+    ]);
   });
 
   test('a successful load on a fallback variant stops the walk and renders it', () => {
@@ -401,12 +429,17 @@ describe('ChatInlineImage fallback chain', () => {
 
     act(() => mockImageProps?.onError?.({ error: 'HTTP 404' }));
     act(() => mockImageProps?.onError?.({ error: 'HTTP 404' }));
-    expect(mockImageProps?.recyclingKey).toEqual(`${base}/3x.webp#0`);
-
     act(() => mockImageProps?.onLoad?.());
+    act(() => jest.advanceTimersByTime(60_000));
 
     // No further fallback once a variant loads.
-    expect(mockImageProps?.recyclingKey).toEqual(`${base}/3x.webp#0`);
+    expect(mockLoads).toEqual([
+      `${base}/4x.webp`,
+      `${base}/4x.avif`,
+      `${base}/3x.webp`,
+    ]);
+
+    expect(screen.queryByTestId('chat-image-shimmer')).not.toBeOnTheScreen();
   });
 
   test('backoff-retries the smallest candidate once every format and size is exhausted', () => {
@@ -418,14 +451,25 @@ describe('ChatInlineImage fallback chain', () => {
       act(() => mockImageProps?.onError?.({ error: 'HTTP 404' }));
     }
 
-    expect(mockImageProps?.recyclingKey).toEqual(`${base}/2x.avif#0`);
+    const candidates = [
+      `${base}/4x.webp`,
+      `${base}/4x.avif`,
+      `${base}/3x.webp`,
+      `${base}/3x.avif`,
+      `${base}/2x.webp`,
+      `${base}/2x.avif`,
+    ];
+
+    expect(mockLoads).toEqual(candidates);
 
     // Now on the smallest candidate, errors become backoff retries of it.
     act(() => mockImageProps?.onError?.({ error: 'HTTP 404' }));
 
-    expect(mockImageProps?.recyclingKey).toEqual(`${base}/2x.avif#0`);
+    expect(mockLoads).toEqual(candidates);
+
     act(() => jest.advanceTimersByTime(400));
-    expect(mockImageProps?.recyclingKey).toEqual(`${base}/2x.avif#1`);
+
+    expect(mockLoads).toEqual([...candidates, `${base}/2x.avif`]);
   });
 
   test('logs a forwarded warning only after the whole chain and the backoff budget are exhausted', () => {
@@ -483,10 +527,10 @@ describe('ChatInlineImage fallback chain', () => {
     expect(evictMock).toHaveBeenCalledWith(sourceUrl);
 
     // No fallback variant, so it stays on the same url and waits for the timer.
-    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
+    expect(mockLoads).toEqual([sourceUrl]);
 
     act(() => jest.advanceTimersByTime(400));
-    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#1`);
+    expect(mockLoads).toEqual([sourceUrl, sourceUrl]);
   });
 });
 
@@ -557,11 +601,9 @@ describe('ChatInlineImage load watchdog', () => {
     const base = 'https://cdn.7tv.app/emote/watchdog';
     render(<ChatInlineImage sourceUrl={`${base}/4x.webp`} style={{}} />);
 
-    expect(mockImageProps?.recyclingKey).toEqual(`${base}/4x.webp#0`);
-
     act(() => jest.advanceTimersByTime(12_000));
 
-    expect(mockImageProps?.recyclingKey).toEqual(`${base}/4x.avif#0`);
+    expect(mockLoads).toEqual([`${base}/4x.webp`, `${base}/4x.avif`]);
 
     // Other rows may be drawing this url's shared ref.
     expect(evictMock).not.toHaveBeenCalled();
@@ -577,7 +619,7 @@ describe('ChatInlineImage load watchdog', () => {
     act(() => mockImageProps?.onLoad?.());
     act(() => jest.advanceTimersByTime(5000));
 
-    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
+    expect(mockLoads).toEqual([sourceUrl]);
   });
 
   test('a shared ref arriving mid-backoff cancels the pending uri reload', () => {
@@ -596,7 +638,7 @@ describe('ChatInlineImage load watchdog', () => {
 
     expect(mockImageProps?.source).toEqual(mockSharedRef);
 
-    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
+    expect(mockLoads).toEqual([sourceUrl]);
   });
 
   test('a recycle onto the previous url fallback candidate re-arms the watchdog', () => {
@@ -607,12 +649,15 @@ describe('ChatInlineImage load watchdog', () => {
     );
 
     act(() => jest.advanceTimersByTime(12_000));
-    expect(mockImageProps?.recyclingKey).toEqual(`${base}/4x.avif#0`);
 
     rerender(<ChatInlineImage sourceUrl={`${base}/4x.avif`} style={{}} />);
     act(() => jest.advanceTimersByTime(12_000));
 
-    expect(mockImageProps?.recyclingKey).toEqual(`${base}/4x.webp#0`);
+    expect(mockLoads).toEqual([
+      `${base}/4x.webp`,
+      `${base}/4x.avif`,
+      `${base}/4x.webp`,
+    ]);
   });
 
   test('a recycle back to an earlier url starts its load state fresh', () => {
@@ -642,9 +687,12 @@ describe('ChatInlineImage load watchdog', () => {
 
     act(() => jest.advanceTimersByTime(12_000));
 
-    expect(mockImageProps?.recyclingKey).toEqual(
-      'https://cdn.7tv.app/emote/again/2x.webp#0',
-    );
+    expect(mockLoads).toEqual([
+      first,
+      'shared-ref',
+      first,
+      'https://cdn.7tv.app/emote/again/2x.webp',
+    ]);
   });
 
   test('repeated silent timeouts spend the retry budget and then log once', () => {
@@ -654,9 +702,10 @@ describe('ChatInlineImage load watchdog', () => {
     // The first stall walks to the other format; the rest retry it.
     act(() => jest.advanceTimersByTime(12_000));
 
-    expect(mockImageProps?.recyclingKey).toEqual(
-      'https://cdn.7tv.app/emote/stuck/2x.webp#0',
-    );
+    expect(mockLoads).toEqual([
+      sourceUrl,
+      'https://cdn.7tv.app/emote/stuck/2x.webp',
+    ]);
 
     for (let i = 0; i < 8; i += 1) {
       act(() => jest.advanceTimersByTime(12_000));
@@ -694,9 +743,13 @@ describe('ChatInlineImage load watchdog', () => {
     // The budget is spent: no further reload and no second warning.
     act(() => jest.advanceTimersByTime(60_000));
 
-    expect(mockImageProps?.recyclingKey).toEqual(
-      'https://cdn.7tv.app/emote/stuck/2x.webp#8',
-    );
+    expect(mockLoads).toEqual([
+      sourceUrl,
+      ...Array.from(
+        { length: 9 },
+        () => 'https://cdn.7tv.app/emote/stuck/2x.webp',
+      ),
+    ]);
 
     expect(warnMock).toHaveBeenCalledTimes(1);
   });
@@ -708,7 +761,7 @@ describe('ChatInlineImage load watchdog', () => {
     act(() => mockImageProps?.onLoad?.());
     act(() => jest.advanceTimersByTime(12_000));
 
-    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
+    expect(mockLoads).toEqual([sourceUrl]);
   });
 });
 
@@ -735,7 +788,7 @@ describe('ChatInlineImage shared-ref recovery', () => {
     // A transient error walks the row off the original url onto a fallback variant.
     act(() => mockImageProps?.onError?.({ error: 'HTTP 404' }));
 
-    expect(mockImageProps?.recyclingKey).toEqual(`${base}/2x.avif#0`);
+    expect(mockLoads).toEqual([sourceUrl, `${base}/2x.avif`]);
 
     // The shared ref finishes decoding - proof the original url is good - so the
     // row must abandon the walk and render the ref at index 0 again.
@@ -743,7 +796,9 @@ describe('ChatInlineImage shared-ref recovery', () => {
 
     rerender(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
-    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
+    expect(mockImageProps?.source).toEqual(mockSharedRef);
+
+    expect(mockLoads).toEqual([sourceUrl, `${base}/2x.avif`, 'shared-ref']);
   });
 
   test('one row erroring does not evict a healthy shared ref shown by other rows', () => {

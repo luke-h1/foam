@@ -1,7 +1,7 @@
-import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
+import { getFallbackSenderColor } from '@app/utils/chat/getFallbackSenderColor';
 import { cachedLighten } from '@app/utils/chat/resolve-cached-sender-color/cachedLighten';
 
-type SenderColorMessage = {
+interface SenderColorMessage {
   cachedSenderColor?: string;
   sender: string;
   userstate?: {
@@ -9,7 +9,7 @@ type SenderColorMessage = {
     login?: string;
     username?: string;
   };
-};
+}
 
 type SenderColorLookup = (username: string) => string | undefined;
 
@@ -34,11 +34,5 @@ export function resolveCachedSenderColor(
     return cachedLighten(indexedColor);
   }
 
-  const username = message.userstate?.username ?? message.sender;
-
-  if (username) {
-    return cachedLighten(generateRandomTwitchColor(username));
-  }
-
-  return undefined;
+  return login ? cachedLighten(getFallbackSenderColor(login)) : undefined;
 }

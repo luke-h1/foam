@@ -1,4 +1,4 @@
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
 import { createTextToken } from '@app/utils/chat/__tests__/__fixtures__/messageToken.fixture';
 

@@ -1,46 +1,7 @@
-import { EmoteSetKind } from '@app/graphql/generated/gql';
-import type { SevenTvSanitisedEmote } from '@app/types/emote';
+import { createSevenTvEmote } from '@app/components/chat/__tests__/__fixtures__/chatFactories.fixture';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
 import { processEmotes } from '../emoteProcessor';
-import type { MessageToken } from '../messageToken';
-
-const baseEmote: SevenTvSanitisedEmote = {
-  id: 'base-id',
-  name: 'base',
-  original_name: 'base',
-  creator: null,
-  emote_link: 'https://example.com/base',
-  site: '7TV Channel',
-  provider: '7tv',
-  url: 'https://example.com/base.avif',
-  frame_count: 1,
-  format: 'avif',
-  flags: 0,
-  aspect_ratio: 1,
-  zero_width: false,
-  width: 32,
-  height: 32,
-  set_metadata: {
-    setId: 'set-id',
-    setName: 'Channel',
-    capacity: null,
-    ownerId: null,
-    kind: EmoteSetKind.Normal,
-    updatedAt: '2026-05-11T00:00:00.000Z',
-    totalCount: 1,
-  },
-};
-
-const createEmote = (
-  overrides: Partial<SevenTvSanitisedEmote> &
-    Pick<SevenTvSanitisedEmote, 'id' | 'name'>,
-): SevenTvSanitisedEmote => ({
-  ...baseEmote,
-  emote_link: `https://example.com/${overrides.id}`,
-  original_name: overrides.name,
-  url: `https://example.com/${overrides.id}.avif`,
-  ...overrides,
-});
 
 const emotePart = (token: MessageToken | undefined): MessageToken<'emote'> => {
   if (token?.type !== 'emote') {
@@ -69,12 +30,17 @@ const emptyParams = {
 
 describe('processEmotes zero-width overlays', () => {
   test('does not stack the same zero-width emote twice in a row', () => {
-    const peepoHappy = createEmote({ id: 'base-emote', name: 'peepoHappy' });
+    const peepoHappy = createSevenTvEmote({
+      id: 'base-emote',
+      name: 'peepoHappy',
+      original_name: 'peepoHappy',
+    });
 
-    const soSnowy = createEmote({
+    const soSnowy = createSevenTvEmote({
       id: 'zw-snow',
       name: 'SoSnowy',
       zero_width: true,
+      original_name: 'SoSnowy',
     });
 
     const result = processEmotes({
@@ -94,12 +60,17 @@ describe('processEmotes zero-width overlays', () => {
   });
 
   test('consumes every duplicate in a three-in-a-row zero-width run', () => {
-    const peepoHappy = createEmote({ id: 'base-emote', name: 'peepoHappy' });
+    const peepoHappy = createSevenTvEmote({
+      id: 'base-emote',
+      name: 'peepoHappy',
+      original_name: 'peepoHappy',
+    });
 
-    const soSnowy = createEmote({
+    const soSnowy = createSevenTvEmote({
       id: 'zw-snow',
       name: 'SoSnowy',
       zero_width: true,
+      original_name: 'SoSnowy',
     });
 
     const result = processEmotes({
@@ -117,53 +88,29 @@ describe('processEmotes zero-width overlays', () => {
   });
 
   test('consumes a duplicate zero-width emote separated by another overlay', () => {
-    const peepoHappy = createEmote({ id: 'base-emote', name: 'peepoHappy' });
+    const peepoHappy = createSevenTvEmote({
+      id: 'base-emote',
+      name: 'peepoHappy',
+      original_name: 'peepoHappy',
+    });
 
-    const soSnowy = createEmote({
+    const soSnowy = createSevenTvEmote({
       id: 'zw-snow',
       name: 'SoSnowy',
       zero_width: true,
+      original_name: 'SoSnowy',
     });
 
-    const iceCold = createEmote({
+    const iceCold = createSevenTvEmote({
       id: 'zw-cold',
       name: 'IceCold',
       zero_width: true,
+      original_name: 'IceCold',
     });
 
     const result = processEmotes({
       ...emptyParams,
       inputString: 'peepoHappy SoSnowy IceCold SoSnowy',
-      sevenTvChannelEmotes: [peepoHappy, soSnowy, iceCold],
-    });
-
-    expect(result).toHaveLength(1);
-    const base = emotePart(result[0]);
-
-    expect((base.overlaid ?? []).map(overlay => overlay.id)).toEqual([
-      'zw-snow',
-      'zw-cold',
-    ]);
-  });
-
-  test('stacks distinct zero-width emotes onto the preceding base emote', () => {
-    const peepoHappy = createEmote({ id: 'base-emote', name: 'peepoHappy' });
-
-    const soSnowy = createEmote({
-      id: 'zw-snow',
-      name: 'SoSnowy',
-      zero_width: true,
-    });
-
-    const iceCold = createEmote({
-      id: 'zw-cold',
-      name: 'IceCold',
-      zero_width: true,
-    });
-
-    const result = processEmotes({
-      ...emptyParams,
-      inputString: 'peepoHappy SoSnowy IceCold',
       sevenTvChannelEmotes: [peepoHappy, soSnowy, iceCold],
     });
 

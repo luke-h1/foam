@@ -1,5 +1,6 @@
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
 import { normalizeSevenTvBadge } from '@app/utils/seven-tv/cosmetics/normalizeSevenTvBadge';
 
 interface FindBadgesParams {
@@ -132,17 +133,13 @@ const getBadgeUserIdIndex = memoisedBadgeIndex(badges => {
   return map;
 });
 
-/**
- * Keyed by owner username, holding every badge that owner has.
- */
 const getBadgeOwnerIndex = memoisedBadgeIndex(badges => {
   const map = new Map<string, SanitisedBadgeSet[]>();
 
   for (const badge of badges) {
-    const owner = badge.owner_username;
+    const owner = normaliseChatUsername(badge.owner_username);
 
     if (!owner) {
-      // eslint-disable-next-line no-continue
       continue;
     }
 
@@ -196,12 +193,12 @@ export function findBadges({
     }
 
     if (set === 'moderator' && version === '1' && ffzModBadge?.url?.trim()) {
-      addBadge(badges, ffzModBadge, 'FFZ channel badge');
+      addBadge(badges, ffzModBadge, 'FFZ Channel Badge');
       return;
     }
 
     if (set === 'vip' && version === '1' && ffzVipBadge?.url?.trim()) {
-      addBadge(badges, ffzVipBadge, 'FFZ channel badge');
+      addBadge(badges, ffzVipBadge, 'FFZ Channel Badge');
       return;
     }
 
@@ -223,8 +220,10 @@ export function findBadges({
     }
   });
 
-  const globalFfzBadges = userstate.username
-    ? (getBadgeOwnerIndex(ffzGlobalBadges).get(userstate.username) ?? [])
+  const senderLogin = normaliseChatUsername(userstate.login);
+
+  const globalFfzBadges = senderLogin
+    ? (getBadgeOwnerIndex(ffzGlobalBadges).get(senderLogin) ?? [])
     : [];
 
   globalFfzBadges.forEach(b => {

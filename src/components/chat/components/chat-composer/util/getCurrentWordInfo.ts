@@ -5,12 +5,10 @@ export const getCurrentWordInfo = (text: string, cursorPosition: number) => {
   let wordEnd = safeCursorPosition;
 
   while (wordStart > 0 && text[wordStart - 1] !== ' ') {
-    // eslint-disable-next-line no-plusplus
     wordStart--;
   }
 
   while (wordEnd < text.length && text[wordEnd] !== ' ') {
-    // eslint-disable-next-line no-plusplus
     wordEnd++;
   }
 

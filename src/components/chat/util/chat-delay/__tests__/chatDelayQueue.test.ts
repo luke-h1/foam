@@ -1,4 +1,4 @@
-import { createChatMessage } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
+import { createChatMessage } from '@app/components/chat/__tests__/__fixtures__/chatFactories.fixture';
 import type { BufferedMessage } from '@app/components/chat/util/buffered-message-ops/types';
 
 import { createChatDelayQueue } from '../chatDelayQueue';

@@ -1,4 +1,4 @@
-export type TimedCacheEntry<T> = {
+export interface TimedCacheEntry<T> {
   value: T;
   expiresAt: number;
-};
+}

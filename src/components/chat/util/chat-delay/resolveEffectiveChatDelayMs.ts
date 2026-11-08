@@ -1,12 +1,8 @@
 import type { ChatDelaySetting } from '@app/store/preference-store';
 
 // Cap on the auto-sync hold so a stalled measurement can't park chat for minutes.
-export const MAX_AUTO_CHAT_DELAY_MS = 30_000;
+const MAX_AUTO_CHAT_DELAY_MS = 30_000;
 
-/**
- * Effective chat-delay (ms) for a delay setting. 'auto' follows the measured
- * video latency and is 0 until the first measurement lands. 0 = no delay.
- */
 export function resolveEffectiveChatDelayMs(
   setting: ChatDelaySetting,
   measuredVideoLatencySeconds: number | null,
@@ -22,9 +18,6 @@ export function resolveEffectiveChatDelayMs(
   return Math.max(0, setting) * 1000;
 }
 
-/**
- * Auto-sync holds chat for as long as the player is behind live.
- */
 function resolveAutoChatDelayMs(
   measuredVideoLatencySeconds: number | null,
 ): number {

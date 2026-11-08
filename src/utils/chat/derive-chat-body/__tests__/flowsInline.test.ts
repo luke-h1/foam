@@ -1,37 +1,18 @@
+import type { MessageToken } from '@app/types/chat/messageToken';
 import { flowsInline } from '@app/utils/chat/derive-chat-body/flowsInline';
-import type { MessageToken } from '@app/utils/chat/messageToken';
 
-const text = (content: string) =>
-  ({ type: 'text', content }) satisfies MessageToken<'text'>;
-
-const emote = (overrides: Partial<MessageToken<'emote'>> = {}) =>
-  ({
-    type: 'emote',
-    name: 'Kappa',
-    content: 'Kappa',
-    id: 'kappa-1',
-    url: 'https://example.com/kappa.webp',
-    width: 28,
-    height: 28,
-    ...overrides,
-  }) satisfies MessageToken<'emote'>;
+import {
+  emote,
+  link,
+  mention,
+  text,
+} from './__fixtures__/deriveChatBody.fixture';
 
 describe('flowsInline', () => {
   test('accepts a body of text, mentions, links and plain emotes', () => {
     expect(
       flowsInline(
-        [
-          text('hey '),
-          {
-            type: 'mention',
-            content: '@luke',
-          } satisfies MessageToken<'mention'>,
-          {
-            type: 'link',
-            content: 'https://x.dev',
-          } satisfies MessageToken<'link'>,
-          emote(),
-        ],
+        [text('hey '), mention('@luke'), link('https://x.dev'), emote('Kappa')],
         { hasPaint: false, isModerated: false },
       ),
     ).toBe(true);
@@ -39,17 +20,20 @@ describe('flowsInline', () => {
 
   test('rejects zero-width and overlaid emotes', () => {
     expect(
-      flowsInline([emote({ zero_width: true })], {
+      flowsInline([emote('RainTime', true)], {
         hasPaint: false,
         isModerated: false,
       }),
     ).toBe(false);
 
     expect(
-      flowsInline([emote({ overlaid: [emote()] })], {
-        hasPaint: false,
-        isModerated: false,
-      }),
+      flowsInline(
+        [{ ...emote('Kappa'), overlaid: [emote('RainTime', true)] }],
+        {
+          hasPaint: false,
+          isModerated: false,
+        },
+      ),
     ).toBe(false);
   });
 
@@ -90,6 +74,7 @@ describe('flowsInline', () => {
       ),
     ).toBe(false);
   });
+
   test('rejects a chat GIF token', () => {
     expect(
       flowsInline(

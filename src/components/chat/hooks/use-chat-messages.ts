@@ -2,12 +2,12 @@ import { useState } from 'react';
 
 import { useSyncRef } from '@app/hooks/use-sync-ref';
 
+import type { BufferedMessage } from '../util/buffered-message-ops/types';
 import {
   type ChatIngestController,
   createChatIngestController,
 } from '../util/chatIngestController';
 import { isRowTouchHeld } from '../util/chatRowTouchHold';
-import { type BufferedMessage } from '../util/messageBuffer';
 import type { ChatScrollAnchor } from './use-chat-scroll';
 
 interface UseChatMessagesOptions {
@@ -16,18 +16,10 @@ interface UseChatMessagesOptions {
    * live path can defer emote/badge parsing to commit time.
    */
   finalizeMessageForCommit?: (message: BufferedMessage) => BufferedMessage;
-  /**
-   * Hold live messages this many ms before the render buffer (default 0 = no
-   * delay).
-   */
   getChatDelayMs?: () => number;
   scrollAnchor: ChatScrollAnchor;
 }
 
-/**
- * React adapter over the ingest controller: pins its lifetime to the
- * component and keeps dependency reads pointed at the latest render's options.
- */
 export const useChatMessages = (
   options: UseChatMessagesOptions,
 ): ChatIngestController => {

@@ -1,14 +1,17 @@
 import { StyleSheet, View } from 'react-native';
 
-import { useSelector } from '@legendapp/state/react';
 import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 
 import { SymbolView } from '@app/components/ui/icon/Icon';
 import { Text } from '@app/components/ui/text/Text';
 import { userQueryOptions } from '@app/lib/react-query/queries/twitch';
-import { chatStore$ } from '@app/store/chat/observables/chat-store';
+import {
+  useUserPaint,
+  useUserSevenTvBadge,
+} from '@app/store/chat/react/user-cosmetics';
 import { theme } from '@app/styles/themes';
+import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
 import { formatDate } from '@app/utils/date-time/date';
 
 import { useEnsureSevenTvCosmetics } from '../hooks/use-ensure-seven-tv-cosmetics';
@@ -31,7 +34,8 @@ export function UserCardHeader({
   userId,
   username,
 }: UserCardHeaderProps) {
-  const queryLogin = login ?? username.toLowerCase();
+  const normalisedUsername = normaliseChatUsername(username);
+  const queryLogin = login ?? normalisedUsername;
 
   const { data: user } = useQuery({
     ...userQueryOptions(queryLogin),
@@ -40,29 +44,14 @@ export function UserCardHeader({
 
   useEnsureSevenTvCosmetics(userId);
 
-  const paint = useSelector(() => {
-    if (!userId) {
-      return null;
-    }
-
-    const paintId = chatStore$.userPaintIds[userId]?.get();
-    return paintId ? (chatStore$.paints[paintId]?.get() ?? null) : null;
-  });
-
-  const sevenTvBadge = useSelector(() => {
-    if (!userId) {
-      return null;
-    }
-
-    const badgeId = chatStore$.userBadgeIds[userId]?.get();
-    return badgeId ? (chatStore$.badges[badgeId]?.get() ?? null) : null;
-  });
+  const paint = useUserPaint(userId);
+  const sevenTvBadge = useUserSevenTvBadge(userId);
 
   const joinedDate = user?.created_at
     ? formatDate(user.created_at, 'MMMM d yyyy')
     : null;
 
-  const showLogin = Boolean(login) && login !== username.toLowerCase();
+  const showLogin = Boolean(login) && login !== normalisedUsername;
 
   return (
     <View style={styles.container}>
@@ -86,6 +75,7 @@ export function UserCardHeader({
         </View>
         <View style={styles.identityText}>
           <PaintedUsername
+            isModerated={false}
             showColon={false}
             {...{
               username,

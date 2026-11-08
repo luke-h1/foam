@@ -1,19 +1,11 @@
-import { getUserMessageColor } from '@app/store/chat/actions/messages';
-import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
+import { getUserMessageColor } from '@app/store/chat/actions/message-color-index';
+import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
+import { getFallbackSenderColor } from '@app/utils/chat/getFallbackSenderColor';
 import { cachedLighten } from '@app/utils/chat/resolve-cached-sender-color/cachedLighten';
 
 export function resolveMentionColor(mentionUsername: string): string {
-  const stripped = mentionUsername.replace(/^@/, '').trim();
+  const login = normaliseChatUsername(mentionUsername);
+  const fromChatHistory = login ? getUserMessageColor(login) : undefined;
 
-  if (!stripped) {
-    return cachedLighten(generateRandomTwitchColor());
-  }
-
-  const fromChatHistory = getUserMessageColor(stripped);
-
-  if (fromChatHistory) {
-    return cachedLighten(fromChatHistory);
-  }
-
-  return cachedLighten(generateRandomTwitchColor(stripped));
+  return cachedLighten(fromChatHistory || getFallbackSenderColor(login));
 }

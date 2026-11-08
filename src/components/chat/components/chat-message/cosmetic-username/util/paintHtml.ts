@@ -2,6 +2,7 @@ import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
 import { buildPaintCssDeclarations } from './paint-css/buildPaintCssDeclarations';
 import { paintCssDeclarationsToBlock } from './paint-css/paintCssDeclarationsToBlock';
+import { PAINT_FONT_FAMILY } from './paint-text-style/paintFont';
 
 export interface PaintedUsernameHtmlOptions {
   displayUsername: string;
@@ -49,7 +50,7 @@ html, body {
 .painted {
   display: inline-block;
   white-space: nowrap;
-  font-family: Montserrat, -apple-system, sans-serif;
+  font-family: ${PAINT_FONT_FAMILY}, -apple-system, sans-serif;
   font-size: ${fontSize}px;
   line-height: ${lineHeight}px;
   font-weight: 700;

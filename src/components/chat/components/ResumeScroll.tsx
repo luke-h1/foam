@@ -13,7 +13,7 @@ import { chatEntranceSpring } from '../util/chatEntranceSpring';
 const resumeEntering = chatEntranceSpring(FadeInDown);
 const resumeExiting = FadeOutDown.duration(150);
 
-export interface ResumeScrollProps {
+interface ResumeScrollProps {
   onScrollToBottom: () => void;
 }
 

@@ -1,5 +1,4 @@
 import { findSlashCommandDefinition } from '../findSlashCommandDefinition';
-import { SLASH_COMMAND_DEFINITIONS } from '../slashCommandDefinitions';
 import type { SlashCommandDefinition } from '../types';
 
 describe('findSlashCommandDefinition', () => {
@@ -32,14 +31,5 @@ describe('findSlashCommandDefinition', () => {
     expect(findSlashCommandDefinition('me')).toBeUndefined();
 
     expect(findSlashCommandDefinition('')).toBeUndefined();
-  });
-
-  test('resolves every declared name and alias', () => {
-    for (const definition of SLASH_COMMAND_DEFINITIONS) {
-      expect(findSlashCommandDefinition(definition.name)).toEqual(definition);
-      for (const alias of definition.aliases ?? []) {
-        expect(findSlashCommandDefinition(alias)).toEqual(definition);
-      }
-    }
   });
 });

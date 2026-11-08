@@ -1,12 +1,12 @@
-import { Platform } from 'react-native';
-
 import { shouldEnrichMessage } from '@app/store/chat/actions/message-enrichment';
 import type { MessageUpdateInput } from '@app/store/chat/actions/messages';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { getChatMessageKey } from '@app/utils/chat/message-identity/getChatMessageKey';
 import { boundedSetAdd } from '@app/utils/object/boundedSetAdd';
+
+import { isLowFlushBudgetPlatform } from '../chat-flush-cadence/isLowFlushBudgetPlatform';
 
 type FetchUserCosmeticsOptions = {
   retryMissingBadge?: boolean;
@@ -35,24 +35,15 @@ type HydrateVisibleSevenTvAssetsParams = {
   ) => Promise<void>;
   hydratePersonalEmotes?: boolean;
   hydrateCosmetics?: boolean;
-  /**
-   * Resolves the store update for one row without publishing it.
-   */
   reprocessMessage: (
     message: AnyChatMessageType,
   ) => VisibleMessageUpdate | Promise<VisibleMessageUpdate>;
-  /**
-   * Commits a batch of resolved updates in one store write.
-   */
   publishMessageUpdates: (updates: MessageUpdateInput[]) => void;
-  /**
-   * Return false to abort a pass after unmount / channel hop.
-   */
   shouldContinue?: () => boolean;
 };
 
 const MAX_PERSONAL_EMOTE_FETCHES_PER_PASS = 3;
-const MAX_COSMETIC_FETCHES_PER_PASS = Platform.OS === 'android' ? 8 : 16;
+const MAX_COSMETIC_FETCHES_PER_PASS = isLowFlushBudgetPlatform() ? 8 : 16;
 const REPROCESS_BATCH_SIZE = 6;
 const REPROCESS_BATCH_DELAY_MS = 32;
 const MAX_HYDRATED_MESSAGE_KEYS = 2000;
@@ -153,10 +144,6 @@ export async function hydrateVisibleSevenTvAssets({
     return reprocessMessage(message);
   };
 
-  /**
-   * Republishes a row only when the fetch it waited on actually produced the
-   * asset the row was missing.
-   */
   const republishWhen = async (
     didResolve: boolean,
     message: AnyChatMessageType,
@@ -233,7 +220,7 @@ export async function hydrateVisibleSevenTvAssets({
   ) {
     if (start > 0) {
       // Yield between batches so a full screenful does not parse in one tick.
-      // eslint-disable-next-line react-doctor/async-await-in-loop
+      // oxlint-disable-next-line react-doctor/async-await-in-loop
       await waitBetweenReprocessBatches();
     }
 
@@ -246,7 +233,6 @@ export async function hydrateVisibleSevenTvAssets({
       start + REPROCESS_BATCH_SIZE,
     );
 
-    // eslint-disable-next-line react-doctor/async-await-in-loop -- one commit per batch
     const resolved = await Promise.all(
       batch.map(message => reprocessIfChanged(message)),
     );

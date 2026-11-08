@@ -1,3 +1,5 @@
+import { setBoundedMapEntry } from '@app/utils/collection/setBoundedMapEntry';
+
 import type { TimedCacheEntry } from './types';
 
 export function getTimedCacheValue<T>(
@@ -33,24 +35,5 @@ export function setTimedCacheValue<T>(
     }
   });
 
-  cache.set(key, {
-    value,
-    expiresAt: now + ttlMs,
-  });
-
-  if (cache.size <= maxEntries) {
-    return;
-  }
-
-  const dropCount = cache.size - maxEntries;
-  let dropped = 0;
-
-  for (const oldestKey of cache.keys()) {
-    if (dropped >= dropCount) {
-      break;
-    }
-
-    cache.delete(oldestKey);
-    dropped += 1;
-  }
+  setBoundedMapEntry(cache, key, { value, expiresAt: now + ttlMs }, maxEntries);
 }

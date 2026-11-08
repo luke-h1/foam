@@ -1,13 +1,5 @@
-// eslint-disable-next-line no-restricted-imports
 import { Text as RNText, type TextStyle } from 'react-native';
 
-import type {
-  TextFamily,
-  TextProps,
-  TextType,
-  TextVariant,
-  TextWeight,
-} from '@app/components/ui/text/Text';
 import {
   findStyleValue,
   getFontFamily,
@@ -16,6 +8,13 @@ import {
   typeDefaults,
   weightMap,
 } from '@app/components/ui/text/Text.styles';
+import type {
+  TextFamily,
+  TextProps,
+  TextType,
+  TextVariant,
+  TextWeight,
+} from '@app/components/ui/text/Text.types';
 import { getMargin } from '@app/styles/spacing';
 import { resolveThemeColor, theme } from '@app/styles/themes';
 /**

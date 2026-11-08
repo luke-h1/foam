@@ -8,21 +8,11 @@ import { theme } from '@app/styles/themes';
 
 interface SheetHeaderProps {
   title?: string;
-  /**
-   * Custom leading content, such as a user identity block, in place of the
-   * title.
-   */
   children?: ReactNode;
-  /**
-   * An optional text action before the close button, such as "Edit".
-   */
   action?: { label: string; onPress: () => void };
   onClose: () => void;
 }
 
-/**
- * The top of a chat sheet: a title or custom block, and one close button.
- */
 export function SheetHeader({
   title,
   children,

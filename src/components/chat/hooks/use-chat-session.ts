@@ -9,39 +9,40 @@ import {
 import { useNavigation } from 'expo-router';
 
 import { useTwitchChannelPointsEventSub } from '@app/components/chat/hooks/use-twitch-channel-points-event-sub';
-import { useSyntheticChatFlood } from '@app/dev/image-benchmark/use-synthetic-chat-flood.gate';
+import type { ChatMessagesSource } from '@app/components/chat/types/chat-messages-source';
+import { useSyntheticChatFlood } from '@app/dev/image-benchmark/hooks/use-synthetic-chat-flood.gate';
 import { useLazyRef } from '@app/hooks/use-lazy-ref';
-import { ReadyState } from '@app/hooks/ws/constants';
-import { useTwitchChat } from '@app/services/twitch-chat-service';
 import { notify7TVActivePresence } from '@app/store/chat/actions/seven-tv-channel-lifecycle';
-import { chatStore$ } from '@app/store/chat/observables/chat-store';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import {
   type ChatRenderPreferences,
   usePreference,
 } from '@app/store/preference-store';
 import { videoLatencyDisplay$ } from '@app/store/stream/video-latency';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
 import { textMentionsUser } from '@app/utils/chat/chat-usernames/textMentionsUser';
 import { findCustomHighlight } from '@app/utils/chat/custom-highlights/findCustomHighlight';
+import { messageMentionsLogin } from '@app/utils/chat/derive-chat-body/scanChatBody';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { registerMentionChatter } from '@app/utils/chat/resolve-mention-login/registerMentionChatter';
 
 import type { ChatListRef } from '../components/ChatList';
 import { resolveEffectiveChatDelayMs } from '../util/chat-delay/resolveEffectiveChatDelayMs';
 import { triggerMentionHaptic } from '../util/mentionHaptics';
-import { useChatCosmetics } from './use-chat-cosmetics';
 import { useChatEmoteLoader } from './use-chat-emote-loader';
 import { useChatIrcHandlers } from './use-chat-irc-handlers';
 import { useChatLifecycle } from './use-chat-lifecycle';
 import { useChatMessageProcessing } from './use-chat-message-processing';
 import { useChatMessages } from './use-chat-messages';
 import type { ChatScrollAnchor } from './use-chat-scroll';
+import { useEnsureSevenTvCosmetics } from './use-ensure-seven-tv-cosmetics';
 import { useRecentChatMessages } from './use-recent-chat-messages';
 import { useSevenTvChatRuntime } from './use-seven-tv-chat-runtime';
+import { useTwitchChat } from './use-twitch-chat';
 
 interface UseChatSessionOptions {
+  messages$: ChatMessagesSource;
   channelId: string;
   channelName: string;
   cleanupScroll: () => void;
@@ -54,6 +55,7 @@ interface UseChatSessionOptions {
 }
 
 export function useChatSession({
+  messages$,
   channelId,
   channelName,
   cleanupScroll,
@@ -67,7 +69,6 @@ export function useChatSession({
   const navigation = useNavigation();
   const chatDelay = usePreference('chatDelay');
   const showRecentMessages = preferences.showRecentMessages;
-  const messages$ = chatStore$.messages;
 
   const processedMessageIdsRef = useLazyRef(() => new Set<string>());
   const isLoadingRecentMessagesRef = useRef(false);
@@ -81,9 +82,7 @@ export function useChatSession({
     });
   }, [channelName, user?.id, user?.login]);
 
-  useChatCosmetics({
-    userId: user?.id,
-  });
+  useEnsureSevenTvCosmetics(user?.id);
 
   const {
     status: emoteLoadStatus,
@@ -144,7 +143,6 @@ export function useChatSession({
 
   const handleNewMessage: typeof enqueueChatMessage = useCallback(
     (message, options) => {
-      const customHighlightRules = customHighlights ?? [];
       let shouldTriggerHaptic = false;
 
       if (chatMentionHaptics && options?.countUnread !== false) {
@@ -157,17 +155,12 @@ export function useChatSession({
                 replaceEmotesWithText(message.message),
                 normalisedSelfForFeedback,
               )
-            : message.message.some(
-                token =>
-                  token.type === 'mention' &&
-                  normaliseChatUsername(token.content.replace(/^@/, '')) ===
-                    normalisedSelfForFeedback,
-              ));
+            : messageMentionsLogin(message.message, normalisedSelfForFeedback));
 
         const matchesCustomHighlight =
           !mentionsSelf &&
-          customHighlightRules.length > 0 &&
-          Boolean(findCustomHighlight(message.message, customHighlightRules));
+          customHighlights.length > 0 &&
+          Boolean(findCustomHighlight(message.message, customHighlights));
 
         shouldTriggerHaptic = mentionsSelf || matchesCustomHighlight;
       }
@@ -240,7 +233,7 @@ export function useChatSession({
     connectionState: twitchConnectionState,
     isConnected: isChatConnected,
     partChannel,
-    joinChannel,
+    reconnect,
     sendMessage,
   } = useTwitchChat({
     // Perf mode: no channel means the socket never connects and the synthetic
@@ -313,19 +306,14 @@ export function useChatSession({
 
   useTwitchChannelPointsEventSub(syntheticTransport ? undefined : channelId);
 
-  const connected =
-    twitchConnectionState === ReadyState.OPEN && isChatConnected();
-
   return {
-    connected,
     emoteLoadStatus,
     forceFlush,
     handleViewableMessagesChange,
     isChatConnected,
-    joinChannel,
-    partChannel,
     processedMessageIdsRef,
     processMessageEmotes,
+    reconnect,
     refetchEmotes,
     reprocessAllMessages,
     sendMessage: sendMessageWithPresence,

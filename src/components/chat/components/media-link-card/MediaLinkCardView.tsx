@@ -16,15 +16,15 @@ interface MediaLinkCardViewProps {
   mediaImageFit: 'contain' | 'cover';
   mediaLabel: string;
   mediaMeta: string;
-  onPress: () => void;
+  /**
+   * Unset for a card with no destination: the card then renders as plain
+   * content, not as a button.
+   */
+  onPress?: () => void;
   thumbnail: string | undefined;
   title: string;
 }
 
-/**
- * The full card a Twitch clip link, or a 7TV emote link on its own line,
- * renders as.
- */
 export function MediaLinkCardView({
   isPending,
   isTwitchClip,
@@ -47,6 +47,75 @@ export function MediaLinkCardView({
     );
   }
 
+  const card = (
+    <View style={styles.mediaCard}>
+      <View style={styles.mediaThumbnailFrame}>
+        {thumbnail ? (
+          <Image
+            trackLoadContext='chat.media-link-card'
+            source={thumbnail}
+            cacheVariant='thumbnail'
+            style={styles.mediaThumbnail}
+            contentFit={mediaImageFit}
+          />
+        ) : (
+          <View style={[styles.mediaThumbnail, styles.mediaThumbnailEmpty]}>
+            {isTwitchClip ? (
+              <SymbolView
+                name='play.tv.fill'
+                size={16}
+                tintColor={theme.colorPlum}
+              />
+            ) : (
+              <BrandIcon name='stv' size='sm' />
+            )}
+          </View>
+        )}
+        {isTwitchClip ? (
+          <View style={styles.playBadge}>
+            <SymbolView
+              name='play.fill'
+              size={10}
+              tintColor={theme.colorWhite}
+            />
+          </View>
+        ) : null}
+      </View>
+      <View style={styles.mediaInfo}>
+        <View style={styles.mediaEyebrowRow}>
+          {isTwitchClip ? (
+            <SymbolView
+              name='play.tv.fill'
+              size={12}
+              tintColor={theme.colorPlum}
+            />
+          ) : (
+            <BrandIcon name='stv' size='xs' />
+          )}
+          <ChatText style={styles.mediaEyebrow}>{mediaLabel}</ChatText>
+        </View>
+        <ChatText
+          ellipsizeMode='tail'
+          numberOfLines={1}
+          style={styles.mediaTitle}
+        >
+          {title}
+        </ChatText>
+        <ChatText
+          ellipsizeMode='tail'
+          numberOfLines={1}
+          style={styles.mediaMeta}
+        >
+          {mediaMeta}
+        </ChatText>
+      </View>
+    </View>
+  );
+
+  if (!onPress) {
+    return <View style={styles.mediaContainer}>{card}</View>;
+  }
+
   return (
     <Button
       accessibilityRole='button'
@@ -54,68 +123,7 @@ export function MediaLinkCardView({
       style={styles.mediaContainer}
       onPress={onPress}
     >
-      <View style={styles.mediaCard}>
-        <View style={styles.mediaThumbnailFrame}>
-          {thumbnail ? (
-            <Image
-              trackLoadContext='chat.media-link-card'
-              source={thumbnail}
-              cacheVariant='thumbnail'
-              style={styles.mediaThumbnail}
-              contentFit={mediaImageFit}
-            />
-          ) : (
-            <View style={[styles.mediaThumbnail, styles.mediaThumbnailEmpty]}>
-              {isTwitchClip ? (
-                <SymbolView
-                  name='play.tv.fill'
-                  size={16}
-                  tintColor={theme.colorPlum}
-                />
-              ) : (
-                <BrandIcon name='stv' size='sm' />
-              )}
-            </View>
-          )}
-          {isTwitchClip ? (
-            <View style={styles.playBadge}>
-              <SymbolView
-                name='play.fill'
-                size={10}
-                tintColor={theme.colorWhite}
-              />
-            </View>
-          ) : null}
-        </View>
-        <View style={styles.mediaInfo}>
-          <View style={styles.mediaEyebrowRow}>
-            {isTwitchClip ? (
-              <SymbolView
-                name='play.tv.fill'
-                size={12}
-                tintColor={theme.colorPlum}
-              />
-            ) : (
-              <BrandIcon name='stv' size='xs' />
-            )}
-            <ChatText style={styles.mediaEyebrow}>{mediaLabel}</ChatText>
-          </View>
-          <ChatText
-            ellipsizeMode='tail'
-            numberOfLines={1}
-            style={styles.mediaTitle}
-          >
-            {title}
-          </ChatText>
-          <ChatText
-            ellipsizeMode='tail'
-            numberOfLines={1}
-            style={styles.mediaMeta}
-          >
-            {mediaMeta}
-          </ChatText>
-        </View>
-      </View>
+      {card}
     </Button>
   );
 }

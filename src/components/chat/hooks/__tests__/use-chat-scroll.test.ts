@@ -4,6 +4,7 @@ import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { act, renderHook } from '@testing-library/react-native';
 
 import type { ChatListRef } from '@app/components/chat/components/ChatList';
+import { createChatListRef } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat-scroll.fixture';
 import { useChatScroll } from '@app/components/chat/hooks/use-chat-scroll';
 import { chatScrollActivity } from '@app/components/chat/util/chatScrollActivity';
 import {
@@ -32,23 +33,7 @@ describe('useChatScroll', () => {
       scrollToOffset: jest.fn(),
     };
 
-    const list: ChatListRef = {
-      ...mocks,
-      clearCaches: jest.fn(),
-      flashScrollIndicators: jest.fn(),
-      getAnimatableRef: jest.fn(),
-      getNativeScrollRef: jest.fn(),
-      getScrollableNode: jest.fn(),
-      getScrollResponder: jest.fn(),
-      getState: jest.fn(),
-      reportContentInset: jest.fn(),
-      scrollIndexIntoView: jest.fn(),
-      scrollItemIntoView: jest.fn(),
-      scrollToItem: jest.fn(),
-      setItemSize: jest.fn(),
-      setScrollProcessingEnabled: jest.fn(),
-      setVisibleContentAnchorOffset: jest.fn(),
-    };
+    const list = createChatListRef(mocks);
 
     return { ref: createRef<ChatListRef | null>(list), mocks };
   };
@@ -153,35 +138,6 @@ describe('useChatScroll', () => {
       expect(result.current.shouldMaintainScrollAtEnd).toBe(true);
 
       expect(getChatUnreadCount()).toBe(0);
-    });
-
-    test('returns all required functions', () => {
-      const { ref: listRef } = createMockListRef();
-
-      const { result } = renderHook(() =>
-        useChatScroll({
-          listRef,
-          getMessagesLength: getMessagesLength(10),
-        }),
-      );
-
-      expect(result.current.scrollHandlers.onScroll).toBeInstanceOf(Function);
-
-      expect(result.current.scrollToBottom).toBeInstanceOf(Function);
-
-      expect(
-        result.current.scrollAnchor.maintainBottomAfterContentChange,
-      ).toBeInstanceOf(Function);
-
-      expect(result.current.scrollHandlers.onContentSizeChange).toBeInstanceOf(
-        Function,
-      );
-
-      expect(result.current.cleanup).toBeInstanceOf(Function);
-
-      expect(
-        result.current.scrollAnchor.isUserActivelyScrolling,
-      ).toBeInstanceOf(Function);
     });
   });
 
@@ -450,49 +406,6 @@ describe('useChatScroll', () => {
   });
 
   describe('Unread Count', () => {
-    test('unread is only updated via the chatUnread action (ingest responsibility)', () => {
-      const { ref: listRef } = createMockListRef();
-
-      const { result } = renderHook(() =>
-        useChatScroll({
-          listRef,
-          getMessagesLength: getMessagesLength(10),
-        }),
-      );
-
-      act(() => {
-        result.current.scrollHandlers.onScrollBeginDrag(
-          createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
-        );
-        result.current.scrollHandlers.onScroll(
-          createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
-        );
-      });
-
-      act(() => {
-        jest.advanceTimersByTime(200);
-      });
-
-      act(() => {
-        incrementChatUnread(5);
-      });
-
-      expect(getChatUnreadCount()).toBe(5);
-    });
-
-    test('does not increment unread when at bottom', () => {
-      const { ref: listRef } = createMockListRef();
-
-      renderHook(() =>
-        useChatScroll({
-          listRef,
-          getMessagesLength: getMessagesLength(15),
-        }),
-      );
-
-      expect(getChatUnreadCount()).toBe(0);
-    });
-
     test('clears unread count when scrolling to bottom', () => {
       const { ref: listRef } = createMockListRef();
 
@@ -575,29 +488,6 @@ describe('useChatScroll', () => {
       expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(true);
 
       expect(getChatUnreadCount()).toBe(0);
-    });
-
-    test('increments unread manually', () => {
-      const { ref: listRef } = createMockListRef();
-
-      renderHook(() =>
-        useChatScroll({
-          listRef,
-          getMessagesLength: getMessagesLength(10),
-        }),
-      );
-
-      act(() => {
-        incrementChatUnread(3);
-      });
-
-      expect(getChatUnreadCount()).toBe(3);
-
-      act(() => {
-        incrementChatUnread(2);
-      });
-
-      expect(getChatUnreadCount()).toBe(5);
     });
   });
 
@@ -699,39 +589,6 @@ describe('useChatScroll', () => {
       expect(mocks.scrollToEnd).toHaveBeenCalledTimes(1);
 
       expect(result.current.isScrollingToBottom).toBe(false);
-    });
-
-    test('clears unread when jumping to the bottom', () => {
-      const { ref: listRef } = createMockListRef();
-
-      const { result } = renderHook(() =>
-        useChatScroll({
-          listRef,
-          getMessagesLength: getMessagesLength(10),
-        }),
-      );
-
-      act(() => {
-        result.current.scrollHandlers.onScroll(
-          createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
-        );
-      });
-
-      act(() => {
-        jest.advanceTimersByTime(200);
-      });
-
-      act(() => {
-        incrementChatUnread(5);
-      });
-
-      expect(getChatUnreadCount()).toBe(5);
-
-      act(() => {
-        result.current.scrollToBottom();
-      });
-
-      expect(getChatUnreadCount()).toBe(0);
     });
 
     test('does not scroll when messages length is 0', () => {

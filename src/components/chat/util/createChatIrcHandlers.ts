@@ -1,8 +1,10 @@
 import type { RefObject } from 'react';
 
 import type { ChatListRef } from '@app/components/chat/components/ChatList';
+import type { ChatMessagesSource } from '@app/components/chat/types/chat-messages-source';
 import { formatModerationSystemMessage } from '@app/components/chat/util/format-moderation-system-message/formatModerationSystemMessage';
 import { formatNoticeMessage } from '@app/components/chat/util/formatNoticeMessage';
+import { isSameIrcChannel } from '@app/components/chat/util/irc-client/formatIrcCommand';
 import type {
   RoomStateTracker,
   RoomStateUpdate,
@@ -10,25 +12,25 @@ import type {
 import { SUPPRESSED_NOTICE_IDS } from '@app/components/chat/util/room-state/suppressedNoticeIds';
 import { resetChannelSession } from '@app/store/chat/actions/channel-session';
 import {
+  enrichChannelPointPrivmsgTags,
   ingestChannelPointRewardTags,
   registerDeferredRewardgiftStandalone,
 } from '@app/store/chat/actions/channelPointRewardTitleStore';
+import { getMessageColor } from '@app/store/chat/actions/message-color-index';
 import {
   addMessage,
   clearMessagesWithNotice,
-  getMessageColor,
 } from '@app/store/chat/actions/messages';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { getPreferences } from '@app/store/preference-store';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { reportUnrenderableNotice } from '@app/utils/chat/chat-health/reportUnrenderableNotice';
-import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
+import { getFallbackSenderColor } from '@app/utils/chat/getFallbackSenderColor';
 import { parseIrcMessage } from '@app/utils/chat/irc-protocol/parseIrcMessage';
 import {
   type IrcRouteHandlers,
   routeIrcMessage,
 } from '@app/utils/chat/irc-protocol/routeIrcMessage';
-import { coerceUserNoticeTags } from '@app/utils/chat/message-handlers/coerceUserNoticeTags';
 import { createBaseMessage } from '@app/utils/chat/message-handlers/createBaseMessage';
 import { createSystemMessage } from '@app/utils/chat/message-handlers/createSystemMessage';
 import { createUserNoticeMessage } from '@app/utils/chat/message-handlers/createUserNoticeMessage';
@@ -53,7 +55,7 @@ export interface ChatIrcHandlerDeps {
   isMountedRef?: RefObject<boolean>;
   listRef: RefObject<ChatListRef | null>;
   isLoadingRecentMessagesRef?: RefObject<boolean>;
-  messages$: { peek: () => AnyChatMessageType[] };
+  messages$: ChatMessagesSource;
   moderateChatMessageById: (messageId: string, notice: string) => void;
   moderateChatMessagesByLogin: (login: string, notice: string) => void;
   removeChatMessagesByLogin: (login: string) => void;
@@ -90,7 +92,13 @@ export function createChatIrcHandlers({
   roomStateTracker,
 }: ChatIrcHandlerDeps) {
   const appendSystemMessage = (content: string) => {
-    addMessage(createSystemMessage(channelName, content));
+    addMessage(
+      createSystemMessage(
+        channelName,
+        content,
+        getPreferences().chatTimestampFormat,
+      ),
+    );
   };
 
   const applyRoomStateUpdate = (update: RoomStateUpdate) => {
@@ -112,15 +120,15 @@ export function createChatIrcHandlers({
     // otherwise fall back to the same hash Twitch uses for an unset colour.
     const parentColor = replyParentDisplayName?.trim()
       ? getMessageColor(replyParentMessageId ?? '') ||
-        generateRandomTwitchColor(replyParentDisplayName)
+        getFallbackSenderColor(replyParentDisplayName)
       : undefined;
 
     const baseMessage = createBaseMessage({
-      tags,
+      tags: enrichChannelPointPrivmsgTags(tags, channelId),
       channelName,
       text,
-      broadcasterId: channelId,
       isAction,
+      timestampFormat: getPreferences().chatTimestampFormat,
     });
 
     const messageWithParentColor = {
@@ -145,10 +153,10 @@ export function createChatIrcHandlers({
     text: string,
     countUnread = true,
   ) => {
-    const isBodylessRewardgift =
-      tags['msg-id'] === 'rewardgift' && !text.trimEnd();
+    const isRewardgift = tags['msg-id'] === 'rewardgift';
+    const isBodylessRewardgift = isRewardgift && !text.trimEnd();
 
-    if (isBodylessRewardgift) {
+    if (isRewardgift) {
       ingestChannelPointRewardTags(tags, channelId);
     }
 
@@ -167,7 +175,7 @@ export function createChatIrcHandlers({
               tags,
               channelName,
               text,
-              broadcasterId: channelId,
+              timestampFormat: getPreferences().chatTimestampFormat,
             }),
             ...historicalFlag(countUnread),
           };
@@ -184,7 +192,7 @@ export function createChatIrcHandlers({
         tags,
         channelName,
         text,
-        broadcasterId: channelId,
+        timestampFormat: getPreferences().chatTimestampFormat,
       }),
       ...historicalFlag(countUnread),
     };
@@ -278,12 +286,17 @@ export function createChatIrcHandlers({
     clearLocalMessages();
 
     clearMessagesWithNotice(
-      createSystemMessage(channelName, 'A moderator cleared chat'),
+      createSystemMessage(
+        channelName,
+        'A moderator cleared chat',
+        getPreferences().chatTimestampFormat,
+      ),
     );
 
-    setTimeout(() => {
+    // The list renders the cleared store on the next frame; a scroll before that targets the removed rows.
+    requestAnimationFrame(() => {
       listRef.current?.scrollToEnd({ animated: false });
-    }, 0);
+    });
   };
 
   const onClearMessage = (
@@ -322,9 +335,7 @@ export function createChatIrcHandlers({
      * The shared socket can echo a stale PART for the previous room; only a
      * PART for this handler's own room may reset roomstate or clear messages.
      */
-    const partedChannel = channel.replace(/^#/, '').toLowerCase();
-
-    if (partedChannel !== channelName.toLowerCase()) {
+    if (!isSameIrcChannel(channel, channelName)) {
       logger.chat.info(
         `Ignoring stale PART for ${channel} while in ${channelName}`,
       );
@@ -338,7 +349,7 @@ export function createChatIrcHandlers({
       return;
     }
 
-    resetChannelSession('token');
+    resetChannelSession('part');
     clearLocalMessages();
   };
 
@@ -392,7 +403,7 @@ export function createChatIrcHandlers({
       handlePrivmsgMessage(tags, text, false);
     },
     usernotice: (_channel, tags, text) => {
-      handleUserNoticeMessage(coerceUserNoticeTags(tags), text, false);
+      handleUserNoticeMessage(tags, text, false);
     },
     clearchat: onClearChat,
     clearmsg: onClearMessage,

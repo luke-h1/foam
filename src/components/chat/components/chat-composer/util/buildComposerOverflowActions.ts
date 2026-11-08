@@ -1,4 +1,4 @@
-import type { ComposerOverflowAction } from '@app/components/chat/util/composerOverflowActions';
+import type { ComposerOverflowAction } from './composerOverflowActions';
 
 interface BuildComposerOverflowActionsOptions {
   canRecallLastMessage: boolean;

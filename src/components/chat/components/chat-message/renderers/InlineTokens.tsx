@@ -2,24 +2,25 @@ import { memo, type ReactNode } from 'react';
 import type { StyleProp, TextStyle } from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
+import { getTokenIdentity } from '@app/components/chat/util/chat-row/getTokenIdentity';
 import { getChatColorStyle } from '@app/components/chat/util/chatColorStyles';
 import type { InlineFlowToken } from '@app/utils/chat/derive-chat-body/types';
 import { getMessageTokenText } from '@app/utils/chat/messageTokenContent';
 
 import { getChatTextStyles } from '../ChatText.styles';
-import { densityFromCompact, getChatScale } from '../util/chatScale';
+import { getChatScale } from '../util/chatScale';
+import { groupTextRuns } from '../util/groupTextRuns';
 import { EmoteToken } from './EmoteToken';
 import { MentionToken } from './MentionToken';
 import type { ChatTokenRenderProps } from './types/chat-token-render-props';
 
 type InlineTokensProps = Pick<
   ChatTokenRenderProps,
-  | 'compact'
+  | 'density'
   | 'disableEmoteAnimations'
   | 'effectiveHighlightedUserSet'
   | 'fontScale'
   | 'getMentionColor'
-  | 'getTokenKey'
   | 'onEmoteTouchStart'
   | 'normalisedCurrentUsername'
   | 'replyPlainMentionTarget'
@@ -27,10 +28,6 @@ type InlineTokensProps = Pick<
 > & {
   message: InlineFlowToken[];
   textStyle?: StyleProp<TextStyle>;
-  /**
-   * Line height override for every span on lines with emotes; each nested
-   * span needs the taller line height or the emote attachment clips.
-   */
   emoteLineStyle?: StyleProp<TextStyle>;
   textColor?: string;
 };
@@ -41,10 +38,6 @@ type InlineTokenDerived = {
   emoteSize: number;
 };
 
-/**
- * Renders one non-text token. Returns null for a token that has nothing to show,
- * so the caller can skip it without another branch.
- */
 function renderInlineToken(
   token: InlineFlowToken,
   index: number,
@@ -52,13 +45,12 @@ function renderInlineToken(
   { baseTextStyle, chatTextStyles, emoteSize }: InlineTokenDerived,
 ): ReactNode {
   const {
-    compact,
+    density,
     disableEmoteAnimations,
     effectiveHighlightedUserSet,
     emoteLineStyle,
     fontScale,
     getMentionColor,
-    getTokenKey,
     normalisedCurrentUsername,
     onEmoteTouchStart,
     replyPlainMentionTarget,
@@ -69,7 +61,7 @@ function renderInlineToken(
       <EmoteToken
         {...{
           disableAnimations: disableEmoteAnimations,
-          key: getTokenKey(token, index),
+          key: getTokenIdentity(token, index),
           token,
           onEmoteTouchStart,
           targetSize: emoteSize,
@@ -87,7 +79,7 @@ function renderInlineToken(
   if (token.type === 'link') {
     return (
       <ChatText
-        key={getTokenKey(token, index)}
+        key={getTokenIdentity(token, index)}
         style={[chatTextStyles.link, emoteLineStyle]}
       >
         {content}
@@ -100,11 +92,11 @@ function renderInlineToken(
   return (
     <MentionToken
       {...{
-        key: getTokenKey(token, index),
+        key: getTokenIdentity(token, index),
         content,
         baseTextStyle,
         emoteLineStyle,
-        compact,
+        density,
         fontScale,
         getMentionColor,
         effectiveHighlightedUserSet,
@@ -117,9 +109,8 @@ function renderInlineToken(
 
 function InlineTokensComponent(props: InlineTokensProps) {
   const {
-    compact,
+    density,
     fontScale,
-    getTokenKey,
     message,
     emoteTargetSize,
     textStyle,
@@ -127,80 +118,44 @@ function InlineTokensComponent(props: InlineTokensProps) {
     textColor,
   } = props;
 
-  const chatTextStyles = getChatTextStyles(fontScale, compact);
+  const chatTextStyles = getChatTextStyles(fontScale, density);
 
   const emoteSize =
-    emoteTargetSize ??
-    getChatScale(fontScale, densityFromCompact(compact)).emoteSize;
+    emoteTargetSize ?? getChatScale(fontScale, density).emoteSize;
 
   const baseTextStyle = textStyle ?? [chatTextStyles.body, emoteLineStyle];
   const textColorStyle = textColor ? getChatColorStyle(textColor) : null;
-  const spans: ReactNode[] = [];
-  let pendingText: string | null = null;
-  let pendingTextKey: ReturnType<typeof getTokenKey> | null = null;
 
-  const flushPendingText = () => {
-    if (pendingText === null || pendingTextKey === null) {
-      return;
-    }
+  return (
+    <>
+      {groupTextRuns(message).map(run => {
+        if (run.kind === 'token') {
+          return renderInlineToken(run.token, run.index, props, {
+            baseTextStyle,
+            chatTextStyles,
+            emoteSize,
+          });
+        }
 
-    // A whitespace-only run, such as the gap between two emotes, needs no Text
-    // of its own. As a bare string it takes the font and size of the parent.
-    if (pendingText.trim() === '') {
-      spans.push(pendingText);
-      pendingText = null;
-      pendingTextKey = null;
-      return;
-    }
+        // A whitespace-only run, such as the gap between two emotes, needs no
+        // Text of its own. As a bare string it takes the font and size of the
+        // parent.
+        if (run.content.trim() === '') {
+          return run.content;
+        }
 
-    spans.push(
-      <ChatText
-        key={pendingTextKey}
-        color='gray.text'
-        style={[baseTextStyle, textColorStyle]}
-      >
-        {pendingText}
-      </ChatText>,
-    );
-
-    pendingText = null;
-    pendingTextKey = null;
-  };
-
-  for (let index = 0; index < message.length; index += 1) {
-    const token = message[index];
-
-    if (!token) {
-      continue;
-    }
-
-    if (token.type === 'text') {
-      const content = getMessageTokenText(token);
-
-      pendingTextKey =
-        pendingText === null ? getTokenKey(token, index) : pendingTextKey;
-
-      pendingText = (pendingText ?? '') + content;
-
-      continue;
-    }
-
-    flushPendingText();
-
-    const span = renderInlineToken(token, index, props, {
-      baseTextStyle,
-      chatTextStyles,
-      emoteSize,
-    });
-
-    if (span) {
-      spans.push(span);
-    }
-  }
-
-  flushPendingText();
-
-  return <>{spans}</>;
+        return (
+          <ChatText
+            key={`text-${run.index}`}
+            color='gray.text'
+            style={[baseTextStyle, textColorStyle]}
+          >
+            {run.content}
+          </ChatText>
+        );
+      })}
+    </>
+  );
 }
 
 export const InlineTokens = memo(InlineTokensComponent);

@@ -1,8 +1,8 @@
 import { AppState } from 'react-native';
 import { createMMKV } from 'react-native-mmkv';
 
+import { MAX_CACHED_CHANNELS } from '../types/cache-limits';
 import type { ChannelCacheType } from '../types/constants';
-import { MAX_CACHED_CHANNELS } from '../types/constants';
 
 // One MMKV key per channel: the shared `chat-store-v2` blob reached 20 MB and
 // was parsed whole on first chat open. Native only - the `.web.ts` sibling
@@ -43,7 +43,10 @@ export const readPersistedChannelCache = (
   }
 };
 
-const flush = (): void => {
+/**
+ * Writes the coalesced channel-cache writes now.
+ */
+export const flushPersistedChannelCacheWrites = (): void => {
   if (flushTimer) {
     clearTimeout(flushTimer);
     flushTimer = null;
@@ -69,18 +72,15 @@ export const queuePersistedChannelCacheWrite = (
 ): void => {
   pendingWrites.set(channelId, cache);
   if (!flushTimer) {
-    flushTimer = setTimeout(flush, 250);
+    flushTimer = setTimeout(flushPersistedChannelCacheWrites, 250);
   }
 };
 
-/**
- * Returns the dropped ids so the caller drops them from memory too.
- */
 export const prunePersistedChannelCaches = (
   currentChannelId: string,
 ): string[] => {
   // Index and blob land together in flush, so count after flushing.
-  flush();
+  flushPersistedChannelCacheWrites();
 
   const ids = index.getAllKeys();
 
@@ -146,6 +146,6 @@ export const removeLegacyChatStoreBlob = (key: string): void => {
 
 AppState.addEventListener('change', status => {
   if (status !== 'active') {
-    flush();
+    flushPersistedChannelCacheWrites();
   }
 });

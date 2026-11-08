@@ -1,6 +1,6 @@
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 import { getChatColorStyle } from '@app/components/chat/util/chatColorStyles';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
 import { styles } from '../ChatRow.styles';
 import type { getChatTextStyles } from '../ChatText.styles';

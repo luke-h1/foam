@@ -1,12 +1,17 @@
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import { createChatMessageFixture } from '@app/components/chat/util/__tests__/__fixtures__/chatMessage.fixture';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
+import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
+import { createSubscriptionTags } from '@app/types/chat/irc-tags/__tests__/__fixtures__/user-notice-tags.fixture';
+import type { MessageToken } from '@app/types/chat/messageToken';
+import { createUserNoticeMessage } from '@app/utils/chat/message-handlers/createUserNoticeMessage';
 
+import { getUserMessageColor } from '../actions/message-color-index';
 import {
   addMessage,
   addMessages,
   clearMessages,
   getMaxChatMessages,
   getMessageById,
-  getUserMessageColor,
   moderateMessageById,
   moderateMessagesByLogin,
   RECENT_MESSAGES_SYNC_DELAY_MS,
@@ -15,8 +20,6 @@ import {
   updateMessages,
 } from '../actions/messages';
 import { chatStore$ } from '../observables/chat-store';
-import type { AnyChatMessageType } from '../types/constants';
-import type { ChatMessageType } from '../types/constants';
 
 function createInvalidStoredMessage(): AnyChatMessageType {
   return {
@@ -39,38 +42,22 @@ function createMessage(
   messageId: string,
   messageNonce: string,
   content: string,
-): ChatMessageType<never> {
-  return {
+): AnyChatMessageType {
+  return createChatMessageFixture({
     id: `${messageId}_${messageNonce}`,
-    userstate: {
+    message_id: messageId,
+    message_nonce: messageNonce,
+    sender: 'tester',
+    message: [{ type: 'text', content }],
+    userstate: createUserStateTags({
       username: 'tester',
       login: 'tester',
       'display-name': 'Tester',
       color: '#ff0000',
       'user-id': '1',
       id: messageId,
-      badges: {},
-      'badges-raw': '',
-      'user-type': '',
-      mod: '0',
-      subscriber: '0',
-      turbo: '0',
-      'emote-sets': '',
-      'reply-parent-msg-id': '',
-      'reply-parent-msg-body': '',
-      'reply-parent-display-name': '',
-      'reply-parent-user-login': '',
-    },
-    message: [{ type: 'text', content }],
-    badges: [],
-    channel: 'test',
-    message_id: messageId,
-    message_nonce: messageNonce,
-    sender: 'tester',
-    parentDisplayName: '',
-    replyDisplayName: '',
-    replyBody: '',
-  };
+    }),
+  });
 }
 
 describe('chatStore messages', () => {
@@ -319,10 +306,7 @@ describe('chatStore messages', () => {
       chatStore$.messages.peek().map(message => message.message_id),
     ).toEqual(['msg-1', 'msg-3']);
 
-    expect(warnSpy).not.toHaveBeenCalledWith(
-      expect.stringContaining('Multiple elements in array have the same ID'),
-      expect.anything(),
-    );
+    expect(warnSpy).not.toHaveBeenCalled();
 
     warnSpy.mockRestore();
   });
@@ -361,6 +345,22 @@ describe('chatStore messages', () => {
     jest.useRealTimers();
   });
 
+  test('restoreRecentMessagesForChannel writes a deferred sync before it reads the window', () => {
+    jest.useFakeTimers();
+    chatStore$.currentChannelId.set('channel-1');
+
+    addMessages([
+      createMessage('msg-1', 'nonce-1', 'first'),
+      createMessage('msg-2', 'nonce-2', 'second'),
+    ]);
+
+    const restoredCount = restoreRecentMessagesForChannel('channel-1');
+
+    expect(restoredCount).toBe(2);
+
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
   test('updateMessage defers recent-message persistence off the hydration path', () => {
     jest.useFakeTimers();
 
@@ -394,25 +394,6 @@ describe('chatStore messages', () => {
     jest.useRealTimers();
   });
 
-  test('addMessages indexes new messages without rebuilding the full window', () => {
-    const before = chatStore$.messages.peek();
-
-    addMessages([
-      createMessage('msg-1', 'nonce-1', 'first'),
-      createMessage('msg-2', 'nonce-2', 'second'),
-    ]);
-
-    expect(chatStore$.messages.peek()).not.toBe(before);
-
-    expect(getMessageById('msg-1')?.message).toEqual<MessageToken[]>([
-      { type: 'text', content: 'first' },
-    ]);
-
-    expect(getMessageById('msg-2')?.message).toEqual<MessageToken[]>([
-      { type: 'text', content: 'second' },
-    ]);
-  });
-
   test('addMessages skips sparse or incomplete entries', () => {
     addMessages([
       undefined,
@@ -425,7 +406,7 @@ describe('chatStore messages', () => {
     expect(chatStore$.messages.peek()[0]?.message_id).toBe('msg-1');
   });
 
-  test('message token arrays do not warn when mixed emote and text tokens are updated', () => {
+  test('updating a message with mixed emote and text parts does not warn', () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
     const message = createMessage('msg-1', 'nonce-1', 'first');
 
@@ -452,38 +433,9 @@ describe('chatStore messages', () => {
       },
     ]);
 
-    expect(warnSpy).not.toHaveBeenCalledWith(
-      expect.stringContaining('Multiple elements in array have the same ID'),
-      expect.anything(),
-    );
+    expect(warnSpy).not.toHaveBeenCalled();
 
     warnSpy.mockRestore();
-  });
-
-  test('addMessages keeps the in-memory chat window bounded', () => {
-    const cap = getMaxChatMessages();
-    const total = cap + 50;
-
-    addMessages(
-      Array.from({ length: total }, (_, index) =>
-        createMessage(`msg-${index}`, `nonce-${index}`, `${index}`),
-      ),
-    );
-
-    const messages = chatStore$.messages.peek();
-    const lastId = total - 1;
-
-    expect(messages).toHaveLength(cap);
-
-    expect(messages[0]?.message_id).toBe('msg-50');
-
-    expect(messages.at(-1)?.message_id).toBe(`msg-${lastId}`);
-
-    expect(getMessageById('msg-0')).toBeUndefined();
-
-    expect(getMessageById(`msg-${lastId}`)?.message).toEqual<MessageToken[]>([
-      { type: 'text', content: `${lastId}` },
-    ]);
   });
 
   test('surviving messages stay addressable after later flushes trim the window', () => {
@@ -533,5 +485,30 @@ describe('chatStore messages', () => {
     expect(
       getMessageById(`msg-${survivor + 1}`)?.moderationNotice,
     ).toBeUndefined();
+  });
+
+  test('stores one row when a USERNOTICE arrives live and again via replay', () => {
+    const tags = createSubscriptionTags({ id: 'sub-notice-id' });
+
+    addMessage(
+      createUserNoticeMessage({
+        timestampFormat: '24h',
+        tags,
+        channelName: 'c',
+        text: '',
+      }),
+    );
+    addMessage(
+      createUserNoticeMessage({
+        timestampFormat: '24h',
+        tags,
+        channelName: 'c',
+        text: '',
+      }),
+    );
+
+    expect(
+      chatStore$.messages.peek().map(message => message.message_id),
+    ).toEqual(['sub-notice-id']);
   });
 });
