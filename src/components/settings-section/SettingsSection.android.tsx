@@ -24,28 +24,28 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 
 import { FoamComposeHost } from '@app/components/compose-host/FoamComposeHost';
+import { SegmentedButtons } from '@app/components/segmented-control/SegmentedControl.android';
 import {
+  getOptionIndex,
   resolveIconName,
   type RowIcon,
+  type SettingsLinkRowProps,
+  type SettingsRowProps,
+  type SettingsSectionProps,
+  type SettingsSegmentedRowProps,
+  type SettingsToggleRowProps,
 } from '@app/components/settings-section/SettingsSection.types';
 import { SymbolView } from '@app/components/ui/icon/Icon';
 import { iosMatchedSwitchColors } from '@app/styles/compose-switch-colors';
 import { theme } from '@app/styles/themes';
 
 function isComposeRow(element: ReactNode): boolean {
-  if (!isValidElement(element)) {
-    return false;
-  }
-
-  const { type } = element;
-
   return (
-    type === SettingsRow ||
-    type === SettingsLinkRow ||
-    type === SettingsToggleRow ||
-    (type instanceof Object &&
-      'isComposeRow' in type &&
-      type.isComposeRow === true)
+    isValidElement(element) &&
+    (element.type === SettingsRow ||
+      element.type === SettingsLinkRow ||
+      element.type === SettingsToggleRow ||
+      element.type === SettingsSegmentedRow)
   );
 }
 
@@ -119,13 +119,6 @@ function RowText({
   );
 }
 
-interface SettingsSectionProps {
-  title?: string;
-  footer?: ReactNode;
-  children: ReactNode;
-  cardColor?: string;
-}
-
 export function SettingsSection({
   title,
   footer,
@@ -186,21 +179,6 @@ export function SettingsSection({
   );
 }
 
-interface SettingsRowProps {
-  title: string;
-  subtitle?: string;
-  icon?: RowIcon;
-  trailing?: ReactNode;
-  onPress?: () => void;
-  danger?: boolean;
-  disabled?: boolean;
-  /**
-   * A pressable row shows a chevron unless this is false. Action rows that
-   * run in place, rather than open a screen, turn it off.
-   */
-  chevron?: boolean;
-}
-
 function getRowModifiers(
   onPress: (() => void) | undefined,
   disabled: boolean | undefined,
@@ -248,14 +226,6 @@ export function SettingsRow({
   );
 }
 
-interface SettingsToggleRowProps {
-  title: string;
-  subtitle?: string;
-  icon?: RowIcon;
-  value: boolean;
-  onValueChange: (value: boolean) => void;
-}
-
 export function SettingsToggleRow({
   title,
   subtitle,
@@ -276,15 +246,6 @@ export function SettingsToggleRow({
       </ListItem.TrailingContent>
     </ListItem>
   );
-}
-
-interface SettingsLinkRowProps {
-  title: string;
-  subtitle?: string;
-  icon?: RowIcon;
-  value?: string;
-  onPress?: () => void;
-  danger?: boolean;
 }
 
 export function SettingsLinkRow({
@@ -329,6 +290,36 @@ export function SettingsLinkRow({
         </ListItem.TrailingContent>
       ) : null}
     </ListItem>
+  );
+}
+
+export function SettingsSegmentedRow<Value>({
+  title,
+  subtitle,
+  icon,
+  options,
+  value,
+  onValueChange,
+}: SettingsSegmentedRowProps<Value>) {
+  const handleChange = (index: number) => {
+    const option = options[index];
+
+    if (option) {
+      onValueChange(option.value);
+    }
+  };
+
+  return (
+    <Column modifiers={[fillMaxWidth()]}>
+      <SettingsRow {...{ title, subtitle, icon }} />
+      <Row modifiers={[fillMaxWidth(), padding(16, 0, 16, 12)]}>
+        <SegmentedButtons
+          items={options}
+          currentIndex={getOptionIndex(options, value)}
+          onChange={handleChange}
+        />
+      </Row>
+    </Column>
   );
 }
 

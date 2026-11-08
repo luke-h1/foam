@@ -1,5 +1,5 @@
 import { memo, useState } from 'react';
-import { Platform, StyleSheet, TextInput, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@app/components/button/Button';
 import { SymbolView } from '@app/components/ui/icon/Icon';
@@ -36,44 +36,26 @@ export const ChatSearchField = memo(
           size={14}
           tintColor={theme.colorGreyHoverAlpha}
         />
-        {Platform.OS === 'ios' ? (
-          <Input
-            accessibilityLabel='Search messages'
-            autoCapitalize='none'
-            autoComplete='off'
-            autoCorrect={false}
-            color='white'
-            onChangeText={handleQueryChange}
-            placeholder='Search messages'
-            placeholderTextColor={theme.color.textSecondary.dark}
-            radius='none'
-            returnKeyType='search'
-            size='sm'
-            style={{
-              backgroundColor: 'transparent',
-              flex: 1,
-              fontSize: theme.fontSize14,
-            }}
-            value={draftQuery}
-            variant='soft'
-          />
-        ) : (
-          <TextInput
-            accessibilityLabel='Search messages'
-            autoCapitalize='none'
-            autoCorrect={false}
-            cursorColor={theme.color.text.dark}
-            onChangeText={handleQueryChange}
-            placeholder='Search messages'
-            placeholderTextColor={theme.color.textSecondary.dark}
-            returnKeyType='search'
-            selectionColor={theme.colorTextSelection}
-            selectionHandleColor={theme.colorPrimary}
-            style={styles.searchInput}
-            underlineColorAndroid='transparent'
-            value={draftQuery}
-          />
-        )}
+        <Input
+          accessibilityLabel='Search messages'
+          autoCapitalize='none'
+          autoComplete='off'
+          autoCorrect={false}
+          color='white'
+          cursorColor={theme.color.text.dark}
+          onChangeText={handleQueryChange}
+          placeholder='Search messages'
+          placeholderTextColor={theme.color.textSecondary.dark}
+          radius='none'
+          returnKeyType='search'
+          selectionColor={theme.colorTextSelection}
+          selectionHandleColor={theme.colorPrimary}
+          size='sm'
+          style={styles.searchInput}
+          underlineColorAndroid='transparent'
+          value={draftQuery}
+          variant='soft'
+        />
         <Button
           accessibilityLabel='Close search'
           accessibilityRole='button'
@@ -103,10 +85,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space12,
   },
   searchInput: {
+    backgroundColor: 'transparent',
     color: theme.color.text.dark,
     flex: 1,
     fontSize: theme.fontSize14,
-    height: 36,
     paddingVertical: 0,
   },
 });

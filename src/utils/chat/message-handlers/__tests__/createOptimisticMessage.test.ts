@@ -61,7 +61,7 @@ describe('createOptimisticUserState', () => {
       messageId: 'parent-1',
       message: 'parent body',
       username: 'Parent',
-      replyParentUserLogin: 'parent',
+      login: 'parent',
     };
 
     const userstate = createOptimisticUserState({
@@ -88,6 +88,7 @@ describe('createOptimisticMessage', () => {
 
   test('keys the echo off the send time so it cannot collide with the real message', () => {
     const message = createOptimisticMessage({
+      timestampFormat: '24h',
       badges: [],
       channelName: 'somechannel',
       isAction: false,
@@ -112,6 +113,7 @@ describe('createOptimisticMessage', () => {
 
   test('omits isAction for a plain message and sets it for a /me', () => {
     const plain = createOptimisticMessage({
+      timestampFormat: '24h',
       badges: [],
       channelName: 'somechannel',
       isAction: false,
@@ -122,6 +124,7 @@ describe('createOptimisticMessage', () => {
     });
 
     const action = createOptimisticMessage({
+      timestampFormat: '24h',
       badges: [],
       channelName: 'somechannel',
       isAction: true,
@@ -138,6 +141,7 @@ describe('createOptimisticMessage', () => {
 
   test('mirrors the reply target onto the row', () => {
     const message = createOptimisticMessage({
+      timestampFormat: '24h',
       badges: [],
       channelName: 'somechannel',
       isAction: false,
@@ -147,7 +151,7 @@ describe('createOptimisticMessage', () => {
         messageId: 'parent-1',
         message: 'parent body',
         username: 'Parent',
-        replyParentUserLogin: 'parent',
+        login: 'parent',
       },
       sentAt: SENT_AT,
       user,
@@ -156,7 +160,7 @@ describe('createOptimisticMessage', () => {
 
     expect(message.parentDisplayName).toBe('Parent');
 
-    expect(message.replyDisplayName).toBe('parent');
+    expect(message.replyParentLogin).toBe('parent');
 
     expect(message.replyBody).toBe('parent body');
 

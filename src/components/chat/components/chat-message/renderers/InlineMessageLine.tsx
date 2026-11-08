@@ -3,12 +3,12 @@ import type { ReactNode } from 'react';
 
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 import { getChatColorStyle } from '@app/components/chat/util/chatColorStyles';
+import type { BadgePressData } from '@app/store/chat/types/chat-press-data';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { getMessageStructure } from '@app/utils/chat/derive-chat-body/getMessageStructure';
 import type { InlineFlowToken } from '@app/utils/chat/derive-chat-body/types';
 
 import { styles } from '../ChatRow.styles';
-import type { BadgePressData } from '../ChatRow.types';
 import { getChatTextStyles } from '../ChatText.styles';
 import { ChatMessageBadges } from './ChatMessageBadges';
 import { InlineTokens } from './InlineTokens';
@@ -36,12 +36,11 @@ export function InlineMessageLine({
   timestamp,
   username,
   usernameColor,
-  compact,
+  density,
   disableEmoteAnimations,
   effectiveHighlightedUserSet,
   fontScale,
   getMentionColor,
-  getTokenKey,
   onEmoteTouchStart,
   normalisedCurrentUsername,
   replyPlainMentionTarget,
@@ -49,7 +48,7 @@ export function InlineMessageLine({
   textColor,
 }: InlineMessageLineProps): ReactNode {
   const containsEmotes = getMessageStructure(message).containsEmotes;
-  const textStyles = getChatTextStyles(fontScale, compact);
+  const textStyles = getChatTextStyles(fontScale, density);
 
   // TextKit sizes a wrapped line from its character ranges, so the taller
   // emote line height must apply to each nested span or emotes clip.
@@ -64,7 +63,13 @@ export function InlineMessageLine({
           </ChatText>
         ) : null}
         <ChatMessageBadges
-          {...{ badges: badgeList, compact, fontScale, onBadgePress }}
+          {...{
+            badges: badgeList,
+            density,
+            fontScale,
+            isModerated: false,
+            onBadgePress,
+          }}
         />
         {username ? (
           <ChatText
@@ -83,12 +88,11 @@ export function InlineMessageLine({
         <InlineTokens
           {...{
             emoteLineStyle,
-            compact,
+            density,
             disableEmoteAnimations,
             effectiveHighlightedUserSet,
             fontScale,
             getMentionColor,
-            getTokenKey,
             onEmoteTouchStart,
             message,
             normalisedCurrentUsername,

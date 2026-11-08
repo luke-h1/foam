@@ -11,8 +11,10 @@ export interface RoomStateUpdate {
 
 export interface RoomStateTracker {
   /**
-   * Applies a ROOMSTATE tag set. The first ingest after creation or a reset
-   * summarises every active mode; later ingests describe only what changed.
+   * Applies a ROOMSTATE tag set over the previous state, because a later
+   * ROOMSTATE carries only the changed tags. The first ingest after creation
+   * or a reset summarises every active mode; later ingests describe only what
+   * changed.
    */
   ingest: (tags: Record<string, string>) => RoomStateUpdate;
   /**
@@ -22,13 +24,24 @@ export interface RoomStateTracker {
   reset: () => RoomStateUpdate;
 }
 
+const INACTIVE_ROOM_STATE: ParsedRoomState = {
+  emoteOnly: false,
+  followersOnlyMinutes: -1,
+  r9k: false,
+  slowSeconds: 0,
+  subsOnly: false,
+};
+
 export function createRoomStateTracker(): RoomStateTracker {
   let current: ParsedRoomState | null = null;
 
   return {
     ingest(tags) {
-      const next = parseRoomStateTags(tags);
       const previous = current;
+      const next = {
+        ...(previous ?? INACTIVE_ROOM_STATE),
+        ...parseRoomStateTags(tags),
+      };
       current = next;
 
       if (!previous) {

@@ -1,4 +1,4 @@
-import { StyleSheet, type TextStyle } from 'react-native';
+import { Platform, StyleSheet, type TextStyle } from 'react-native';
 
 import { theme } from '@app/styles/themes';
 
@@ -8,7 +8,7 @@ import type {
   TextType,
   TextVariant,
   TextWeight,
-} from './Text';
+} from './Text.types';
 
 const fontScale = theme.fontScale;
 
@@ -94,7 +94,7 @@ export function getFontFamily(
   italic?: boolean,
 ): string | undefined {
   if (variant === 'mono') {
-    return 'monospace';
+    return Platform.OS === 'ios' ? 'Menlo' : 'monospace';
   }
 
   return italic ? italicFontMap[weight] : uprightFontMap[weight];

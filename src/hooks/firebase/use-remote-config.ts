@@ -12,6 +12,7 @@ import {
 } from '@react-native-firebase/remote-config';
 import { useQuery } from '@tanstack/react-query';
 
+import { remoteConfigKeys } from '@app/lib/react-query/queryKeys';
 import { logger } from '@app/utils/logger';
 
 import {
@@ -133,7 +134,7 @@ export function useRemoteConfig(): UseRemoteConfigResult {
     isFetching,
     isFetched,
   } = useQuery({
-    queryKey: ['remoteConfig'],
+    queryKey: remoteConfigKeys.all,
     queryFn: async () => {
       await fetchRemoteConfig();
       return readRemoteConfig();

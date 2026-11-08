@@ -1,59 +1,39 @@
 import { useDeferredValue } from 'react';
-import { StyleSheet } from 'react-native';
-import Animated from 'react-native-reanimated';
 
 import type { SlashCommandDefinition } from '@app/components/chat/util/slash-command-definitions/types';
 
-import { CommandSuggestions } from './components/CommandSuggestions';
+import { CommandSuggestionItem } from './components/CommandSuggestionItem';
+import { SuggestionRail } from './components/SuggestionRail';
+import { SUGGESTION_ITEM_WIDTH } from './constants';
 import { useCommandSuggestions } from './hooks/use-command-suggestions';
-import {
-  suggestionRailEntering,
-  suggestionRailExiting,
-} from './util/suggestionRailAnimations';
 
 interface CommandSuggestionRailProps {
-  handleCommandSelect: (command: SlashCommandDefinition) => void;
-  maxSuggestions: number;
+  onSelect: (command: SlashCommandDefinition) => void;
   searchTerm: string;
 }
 
+function getCommandKey(command: SlashCommandDefinition): string {
+  return command.name;
+}
+
 export function CommandSuggestionRail({
-  handleCommandSelect,
-  maxSuggestions,
+  onSelect,
   searchTerm,
 }: CommandSuggestionRailProps) {
   const deferredSearchTerm = useDeferredValue(searchTerm);
 
   const { filteredCommands } = useCommandSuggestions({
     searchTerm: deferredSearchTerm,
-    maxSuggestions,
   });
 
-  if (filteredCommands.length === 0) {
-    return null;
-  }
-
   return (
-    <Animated.View
-      style={styles.suggestionRail}
-      entering={suggestionRailEntering}
-      exiting={suggestionRailExiting}
-    >
-      <CommandSuggestions
-        commands={filteredCommands}
-        handleCommandSelect={handleCommandSelect}
-      />
-    </Animated.View>
+    <SuggestionRail
+      estimatedItemSize={SUGGESTION_ITEM_WIDTH.command}
+      Item={CommandSuggestionItem}
+      items={filteredCommands}
+      keyExtractor={getCommandKey}
+      onSelect={onSelect}
+      title='Commands'
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  suggestionRail: {
-    bottom: '100%',
-    left: 0,
-    paddingBottom: 6,
-    position: 'absolute',
-    right: 0,
-    zIndex: 2,
-  },
-});

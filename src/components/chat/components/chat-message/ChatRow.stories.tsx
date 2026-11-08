@@ -2,7 +2,7 @@ import { View } from 'react-native';
 
 import type { Meta, StoryObj } from '@storybook/react';
 
-import type { ChatMessageType } from '@app/store/chat/types/constants';
+import type { ChatMessageType } from '@app/types/chat/chatMessage';
 
 import { ChatRow } from './ChatRow';
 import {
@@ -22,9 +22,7 @@ const meta = {
   title: 'components/Chat/messages',
   component: ChatRow,
   decorators: [chatStoryDecorator],
-  argTypes: {
-    onReply: { action: 'onReply' },
-  },
+  argTypes: {},
 } satisfies Meta<typeof ChatRow>;
 
 export default meta;
@@ -39,7 +37,6 @@ export const BasicText: Story = {
         content: 'Hello, this is a basic chat message!',
       },
     ]),
-    onReply: () => {},
   },
 };
 
@@ -77,7 +74,6 @@ export const WithEmotes: Story = {
         content: '!',
       },
     ]),
-    onReply: () => {},
   },
 };
 
@@ -135,7 +131,6 @@ export const ZeroWidthSevenTv: Story = {
         content: ' on one line',
       },
     ]),
-    onReply: () => {},
   },
 };
 
@@ -166,7 +161,6 @@ export const WithMentions: Story = {
       ],
       { color: '#1AC9A2' },
     ),
-    onReply: () => {},
   },
 };
 
@@ -182,7 +176,6 @@ export const WithBadges: Story = {
       { color: '#FF6B6B' },
       mockBadges,
     ),
-    onReply: () => {},
   },
 };
 
@@ -198,7 +191,6 @@ export const ModeratorMessage: Story = {
       { color: '#00D9FF', mod: '1' },
       mockModBadges,
     ),
-    onReply: () => {},
   },
 };
 
@@ -214,7 +206,6 @@ export const FfzVipBadge: Story = {
       { color: '#FF6B6B' },
       [ffzVipBadge],
     ),
-    onReply: () => {},
   },
 };
 
@@ -230,7 +221,6 @@ export const FfzModBadge: Story = {
       { color: '#00D9FF' },
       [ffzModBadge],
     ),
-    onReply: () => {},
   },
 };
 
@@ -246,7 +236,6 @@ export const ChatterinoBadge: Story = {
       { color: '#9B59B6' },
       [chatterinoBadge],
     ),
-    onReply: () => {},
   },
 };
 
@@ -261,7 +250,6 @@ export const FirstMessage: Story = {
       ],
       { 'first-msg': '1', color: '#FFD700' },
     ),
-    onReply: () => {},
   },
 };
 
@@ -279,8 +267,7 @@ export const ReplyMessage: Story = {
     parentDisplayName: 'OriginalUser',
     parentColor: '#3498DB',
     replyBody: 'The original message that was replied to',
-    replyDisplayName: 'OriginalUser',
-    onReply: () => {},
+    replyParentLogin: 'OriginalUser',
   },
 };
 
@@ -297,7 +284,6 @@ export const StvEmoteLink: Story = {
         url: stvGlobalEmote2.url,
       },
     ]),
-    onReply: () => {},
   },
 };
 
@@ -315,7 +301,6 @@ export const TwitchClip: Story = {
         thumbnail: 'https://clips-media-assets2.twitch.tv/CoolClip-preview.jpg',
       },
     ]),
-    onReply: () => {},
   },
 };
 
@@ -352,14 +337,12 @@ export const ComplexMessage: Story = {
       { color: '#FF1493', 'first-msg': '1' },
       mockBadges,
     ),
-    onReply: () => {},
   },
 };
 
 export const DifferentColors: Story = {
   args: {
     ...createBaseMessage([{ type: 'text', content: 'Placeholder' }]),
-    onReply: () => {},
   },
   render: () => (
     <View style={{ gap: 16 }}>
@@ -368,28 +351,24 @@ export const DifferentColors: Story = {
           username: 'RedUser',
           color: '#FF0000',
         })}
-        onReply={() => {}}
       />
       <ChatRow
         {...createBaseMessage(
           [{ type: 'text', content: 'Blue user message' }],
           { username: 'BlueUser', color: '#0000FF' },
         )}
-        onReply={() => {}}
       />
       <ChatRow
         {...createBaseMessage(
           [{ type: 'text', content: 'Teal user message' }],
           { username: 'TealUser', color: '#1AC9A2' },
         )}
-        onReply={() => {}}
       />
       <ChatRow
         {...createBaseMessage(
           [{ type: 'text', content: 'Purple user message' }],
           { username: 'PurpleUser', color: '#9B59B6' },
         )}
-        onReply={() => {}}
       />
     </View>
   ),
@@ -404,7 +383,6 @@ export const LongMessage: Story = {
           'This is a very long message that should wrap properly in the chat interface. It contains multiple sentences and should demonstrate how the component handles longer text content. The message should flow naturally and maintain readability even when it spans multiple lines.',
       },
     ]),
-    onReply: () => {},
   },
 };
 
@@ -419,14 +397,12 @@ export const NoUsername: Story = {
       ],
       { username: undefined, 'display-name': undefined },
     ),
-    onReply: () => {},
   },
 };
 
 export const ChatterinoSplit: Story = {
   args: {
     ...createBaseMessage([{ type: 'text', content: 'placeholder' }]),
-    onReply: () => {},
   },
   render: () => {
     const splitMessages: ChatMessageType<'userstate'>[] = [
@@ -479,7 +455,7 @@ export const ChatterinoSplit: Story = {
         ),
         parentDisplayName: 'OriginalUser',
         replyBody: 'the original line being replied to',
-        replyDisplayName: 'OriginalUser',
+        replyParentLogin: 'OriginalUser',
         timestamp: '13:39',
       },
       {
@@ -530,7 +506,6 @@ export const ChatterinoSplit: Story = {
             currentUsernameNormalized='testuser'
             density='compact'
             messageDisplay={{ showTimestamp: true }}
-            onReply={() => {}}
           />
         ))}
       </View>

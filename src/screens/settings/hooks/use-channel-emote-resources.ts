@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { userQueryOptions } from '@app/lib/react-query/queries/twitch';
+import { emoteKeys } from '@app/lib/react-query/queryKeys';
 import { sevenTvService } from '@app/services/seven-tv-service';
 import {
   buildBadgeResourceSpecs,
@@ -55,10 +56,6 @@ async function fetchChannelEmoteResources(
   };
 }
 
-/**
- * Loads one channel's own emotes and badges for the viewer, without touching
- * the live chat store. `login` is null when no channel is chosen.
- */
 export function useChannelEmoteResources(login: string | null) {
   const userQuery = useQuery({
     ...userQueryOptions(login ?? ''),
@@ -68,7 +65,7 @@ export function useChannelEmoteResources(login: string | null) {
   const channelId = userQuery.data?.id;
 
   const resourcesQuery = useQuery({
-    queryKey: ['emote-badge-viewer', 'channel', channelId],
+    queryKey: emoteKeys.channelResources(channelId),
     // SAFETY: the query is only enabled once channelId is set.
     queryFn: () => fetchChannelEmoteResources(channelId as string),
     enabled: Boolean(channelId),

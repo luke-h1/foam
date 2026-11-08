@@ -3,10 +3,6 @@ import { boundedSetAdd } from '@app/utils/object/boundedSetAdd';
 
 const MAX_MISSING_BADGE_IDS = 500;
 
-/**
- * Tracks badge ids referenced by an entitlement before - or without - the
- * cosmetic.create that defines them; logs each once.
- */
 const missingBadgeIds = new Set<string>();
 
 const loggedMissingBadgeIds = new Set<string>();
@@ -52,5 +48,3 @@ export const clearAllMissingBadges = (): void => {
 };
 
 export const getMissingBadgeIds = (): string[] => Array.from(missingBadgeIds);
-
-export const hasMissingBadges = (): boolean => missingBadgeIds.size > 0;

@@ -1,9 +1,12 @@
 import { act, renderHook } from '@testing-library/react-native';
 
-import type { EmotePressData } from '@app/components/chat/components/chat-message/ChatRow.types';
-import type { ReplyToData } from '@app/components/chat/components/ChatInputSection';
+import {
+  createChatMessage,
+  createMessageActionData,
+  createSevenTvEmote,
+} from '@app/components/chat/__tests__/__fixtures__/chatFactories.fixture';
+import type { ReplyToData } from '@app/components/chat/components/ChatInputSection.types';
 import type { ChatInputShellHandle } from '@app/components/chat/components/ChatInputShell';
-import { createChatMessage } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
 import {
   useChatComposerActions,
   useChatOverlayActions,
@@ -14,12 +17,11 @@ import { clearUserCosmeticsCache } from '@app/store/chat/actions/cosmetics';
 import * as messagesActions from '@app/store/chat/actions/messages';
 import { clearFetchedCosmeticsUsers } from '@app/store/chat/actions/user-cosmetics-fetch';
 import { chatOverlays$ } from '@app/store/chat/observables/chat-overlays';
+import type { EmotePressData } from '@app/store/chat/types/chat-press-data';
 import { createRef } from '@app/test/create-ref';
 import { createEmoteToken } from '@app/utils/chat/__tests__/__fixtures__/messageToken.fixture';
 
-const mockGet7tvUserId = jest
-  .spyOn(sevenTvService, 'get7tvUserId')
-  .mockResolvedValue('');
+jest.spyOn(sevenTvService, 'get7tvUserId').mockResolvedValue('');
 
 function renderComposerActions() {
   const inputShell = {
@@ -56,19 +58,7 @@ describe('useChatComposerActions', () => {
     clearFetchedCosmeticsUsers();
   });
 
-  test('sets composer reply context from the selected chat message and parent message', () => {
-    const storedReplyMessage = createChatMessage({
-      text: 'parent text OMEGALUL',
-      tags: {
-        id: 'reply-1',
-        login: 'parent',
-        'display-name': 'Parent',
-        'user-id': 'parent-user',
-      },
-    });
-
-    messagesActions.addMessage(storedReplyMessage);
-
+  test('sets composer reply context from the selected chat message', () => {
     const replyMessage = createChatMessage({
       text: 'replying with Kappa',
       tags: {
@@ -86,15 +76,12 @@ describe('useChatComposerActions', () => {
       hook.result.current.handleReply(replyMessage);
     });
 
-    expect(mockGet7tvUserId.mock.calls).toEqual([['viewer-user']]);
-
     expect(inputShell.setReplyTo.mock.calls[0]?.[0]).toEqual<ReplyToData>({
       color: '#00ff00',
       message: 'replying with Kappa',
       messageParts: replyMessage.message,
       messageId: 'reply-1',
-      parentMessage: 'parent text OMEGALUL',
-      replyParentUserLogin: 'Viewer',
+      login: 'viewer',
       userId: 'viewer-user',
       username: 'Viewer',
     });
@@ -106,16 +93,9 @@ describe('useChatComposerActions', () => {
     act(() => {
       hook.result.current.handleEmoteSelect('Kappa');
 
-      hook.result.current.handleEmoteSelect({
-        id: 'emote-1',
-        name: 'OMEGALUL',
-        original_name: 'OMEGALUL',
-        url: 'https://cdn.example.test/omegalul.webp',
-        creator: null,
-        emote_link: 'https://7tv.app/emotes/emote-1',
-        site: 'BTTV',
-        provider: 'bttv',
-      });
+      hook.result.current.handleEmoteSelect(
+        createSevenTvEmote({ name: 'OMEGALUL' }),
+      );
 
       hook.result.current.appendMentionToComposer('targetUser');
       hook.result.current.insertPhraseToComposer('be right back');
@@ -181,12 +161,12 @@ describe('useChatOverlayActions', () => {
 
     act(() => {
       hook.result.current.handleMessageLongPress(
-        createMessageActionPayload(message),
+        createMessageActionData(message),
       );
     });
 
     expect(chatOverlays$.peek().selectedMessage).toEqual(
-      createMessageActionPayload(message),
+      createMessageActionData(message),
     );
 
     act(() => {
@@ -196,16 +176,3 @@ describe('useChatOverlayActions', () => {
     expect(chatOverlays$.peek().selectedUser).toEqual(usernameData);
   });
 });
-
-function createMessageActionPayload(
-  message: ReturnType<typeof createChatMessage>,
-) {
-  return {
-    badges: message.badges,
-    color: message.userstate.color,
-    message: message.message,
-    messageData: message,
-    username: message.sender,
-    userstate: message.userstate,
-  };
-}

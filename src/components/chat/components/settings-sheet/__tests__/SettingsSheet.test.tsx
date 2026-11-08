@@ -28,14 +28,16 @@ const mockRequestClose = jest.fn();
  * BottomSheet is a memo-wrapped exotic component; the bridge narrows through
  * `never` to reach a spyable function property.
  */
-type MockableBottomSheet = {
-  BottomSheet: (props: {
-    children?: ReactNode;
-    isPresented: boolean;
-    onDismiss?: () => void;
-    ref?: Ref<{ requestClose: () => void }>;
-  }) => ReactNode;
-};
+interface MockBottomSheetProps {
+  children?: ReactNode;
+  isPresented: boolean;
+  onDismiss?: () => void;
+  ref?: Ref<{ requestClose: () => void }>;
+}
+
+interface MockableBottomSheet {
+  BottomSheet: (props: MockBottomSheetProps) => ReactNode;
+}
 
 // SAFETY: `never` is the only bridge TS accepts from the exotic component to MockableBottomSheet.
 const mockableBottomSheet: MockableBottomSheet = BottomSheetModule as never;
@@ -68,14 +70,12 @@ describe('SettingsSheet', () => {
   });
 
   test('appearance toggles write straight to the preference store', () => {
-    const { getByLabelText } = render(
-      <SettingsSheet isPresented onDismiss={jest.fn()} />,
-    );
+    const { getByLabelText } = render(<SettingsSheet onDismiss={jest.fn()} />);
 
-    fireEvent(getByLabelText('Show timestamps'), 'valueChange', false);
-    fireEvent(getByLabelText('Highlight own mentions'), 'valueChange', false);
-    fireEvent(getByLabelText('Inline reply context'), 'valueChange', false);
-    fireEvent(getByLabelText('Show jump pill'), 'valueChange', false);
+    fireEvent(getByLabelText('Show Timestamps'), 'valueChange', false);
+    fireEvent(getByLabelText('Highlight Own Mentions'), 'valueChange', false);
+    fireEvent(getByLabelText('Inline Reply Context'), 'valueChange', false);
+    fireEvent(getByLabelText('Show Jump Pill'), 'valueChange', false);
 
     const preferences = getPreferences();
 
@@ -95,9 +95,7 @@ describe('SettingsSheet', () => {
   test('density row flips the density preference and dismisses the sheet', () => {
     const onDismiss = jest.fn();
 
-    const { getByText } = render(
-      <SettingsSheet isPresented onDismiss={onDismiss} />,
-    );
+    const { getByText } = render(<SettingsSheet onDismiss={onDismiss} />);
 
     fireEvent.press(getByText('Density'));
 
@@ -118,9 +116,7 @@ describe('SettingsSheet', () => {
     });
 
     test('renders the same JS rows as Android', () => {
-      const { getByText } = render(
-        <SettingsSheet isPresented onDismiss={jest.fn()} />,
-      );
+      const { getByText } = render(<SettingsSheet onDismiss={jest.fn()} />);
 
       fireEvent.press(getByText('Density'));
 

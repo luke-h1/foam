@@ -1,10 +1,9 @@
 import { type ComponentType, createElement, type Ref } from 'react';
-// eslint-disable-next-line no-restricted-imports
 import { Pressable as RNPressable, type PressableProps } from 'react-native';
 
 export const BasePressable: ComponentType<PressableProps> = RNPressable;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any -- the mock forwards any Pressable prop set to react-native
 export const PressableScale = (props: any & { ref?: Ref<never> }) => {
   const { ref, ...rest } = props;
   return createElement(RNPressable, { ref, ...rest });

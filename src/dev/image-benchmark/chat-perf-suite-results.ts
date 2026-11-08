@@ -2,16 +2,13 @@
 import { File, Paths } from 'expo-file-system';
 
 import type { PhaseResult } from './chat-perf-suite';
-import {
-  type ProcessMetricsSample,
-  sampleProcessMetricsNow,
-} from './process-metrics';
+import { type ProcessMetricsSample } from './process-metrics';
 
 export type { ProcessMetricsSample } from './process-metrics';
 
 const RESULTS_FILENAME = 'chat-perf-suite.json';
 
-export interface ChatPerfSuiteFile {
+interface ChatPerfSuiteFile {
   startedAt: number;
   finishedAt: number | null;
   cancelled: boolean;
@@ -77,8 +74,4 @@ export function finishChatPerfSuiteResults(cancelled: boolean): void {
   data.finishedAt = Date.now();
   data.cancelled = cancelled;
   writeResults(data);
-}
-
-export async function sampleProcessMetrics(): Promise<ProcessMetricsSample> {
-  return sampleProcessMetricsNow();
 }

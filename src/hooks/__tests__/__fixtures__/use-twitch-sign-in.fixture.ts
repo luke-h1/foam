@@ -1,13 +1,13 @@
 import { AuthRequest, ResponseType, TokenResponse } from 'expo-auth-session';
 import type { WebBrowserRedirectResult } from 'expo-web-browser';
 
-export type SuccessfulAuthSessionResult = {
+export interface SuccessfulAuthSessionResult {
   type: 'success';
   params: Record<string, string>;
   url: string;
   authentication: TokenResponse;
   errorCode: null;
-};
+}
 
 export function createTwitchSignInAuthResult(
   accessToken: string,

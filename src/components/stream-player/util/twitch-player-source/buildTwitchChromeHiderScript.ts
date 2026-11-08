@@ -1,7 +1,3 @@
-/**
- * Hides Twitch's own player chrome so foam's custom ControlsOverlay renders
- * over a bare video.
- */
 export function buildTwitchChromeHiderScript(): string {
   return `
 (function() {

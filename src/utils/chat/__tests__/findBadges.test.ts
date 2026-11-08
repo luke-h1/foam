@@ -35,76 +35,62 @@ describe('findBadges', () => {
       set: 'subscriber',
     };
 
-    test.each(twitchSanitisedGlobalBadges)(
-      'Should find global badge %s',
-      badge => {
-        const userstate = createUserStateTags({
-          'badges-raw': `${badge.set}/${badge.id.split('_').pop()}`,
-          badges: {
-            [badge.set]: badge.id.split('_').pop(),
-          },
-          'user-id': '123456789',
-        });
-
-        const result = findBadges({
-          ...emptyBadgeSources,
-          twitchGlobalBadges: twitchSanitisedGlobalBadges,
-          twitchChannelBadges: [],
-          userstate,
-        });
-
-        expect(result).toEqual<SanitisedBadgeSet[]>([badge]);
-      },
-    );
-
-    test.each(twitchSanitisedChannelBadges)(
-      'should find channel badge %s',
-      badge => {
-        const userstate = createUserStateTags({
-          'badges-raw': `${badge.set}/${badge.id.split('_').pop()}`,
-          badges: {
-            [badge.set]: badge.id.split('_').pop(),
-          },
-          'user-id': '123456789',
-        });
-
-        const result = findBadges({
-          ...emptyBadgeSources,
-          twitchGlobalBadges: [],
-          twitchChannelBadges: twitchSanitisedChannelBadges,
-          userstate,
-        });
-
-        expect(result).toEqual<SanitisedBadgeSet[]>([badge]);
-      },
-    );
-
-    test('uses source badges for shared chat messages', () => {
+    test('finds a global badge by its set and version', () => {
       const userstate = createUserStateTags({
-        'badges-raw': 'subscriber/1',
-        'room-id': 'target-room',
-        'source-room-id': 'source-room',
-        'source-badges': 'subscriber/3',
-        badges: {
-          subscriber: '1',
+        'badges-raw': '60-seconds_2/1',
+        badges: { '60-seconds_2': '1' },
+        'user-id': '123456789',
+      });
+
+      const result = findBadges({
+        ...emptyBadgeSources,
+        twitchGlobalBadges: twitchSanitisedGlobalBadges,
+        twitchChannelBadges: [],
+        userstate,
+      });
+
+      expect(result).toEqual<SanitisedBadgeSet[]>([
+        {
+          id: '60-seconds_2_1',
+          url: 'https://static-cdn.jtvnw.net/badges/v1/64513f7d-21dd-4a05-a699-d73761945cf9/3',
+          title: '60 Seconds!',
+          type: 'Twitch Global Badge',
+          provider: 'twitch',
+          set: '60-seconds_2',
         },
+      ]);
+    });
+
+    test('finds a channel badge by its set and version', () => {
+      const userstate = createUserStateTags({
+        'badges-raw': 'subscriber/12',
+        badges: { subscriber: '12' },
         'user-id': '123456789',
       });
 
       const result = findBadges({
         ...emptyBadgeSources,
         twitchGlobalBadges: [],
-        twitchChannelBadges: [targetSubscriberBadge, sourceSubscriberBadge],
+        twitchChannelBadges: twitchSanitisedChannelBadges,
         userstate,
       });
 
-      expect(result).toEqual<SanitisedBadgeSet[]>([sourceSubscriberBadge]);
+      expect(result).toEqual<SanitisedBadgeSet[]>([
+        {
+          id: '12',
+          url: 'https://static-cdn.jtvnw.net/badges/v1/04d8e164-a4ff-49a2-889a-d53ff7a00c90/3',
+          type: 'Twitch Subscriber Badge',
+          provider: 'twitch',
+          title: '1-Year Subscriber',
+          set: 'subscriber',
+        },
+      ]);
     });
 
-    test('uses source badges when the source room is the current room', () => {
+    test('uses source badges for shared chat messages', () => {
       const userstate = createUserStateTags({
         'badges-raw': 'subscriber/1',
-        'room-id': 'source-room',
+        'room-id': 'target-room',
         'source-room-id': 'source-room',
         'source-badges': 'subscriber/3',
         badges: {
@@ -225,7 +211,7 @@ describe('findBadges', () => {
       color: '#1ac9a2',
       owner_username: 'channel-id',
       set: 'mod',
-      type: 'FFZ channel badge',
+      type: 'FFZ Channel Badge',
       provider: 'ffz',
     };
 
@@ -236,7 +222,7 @@ describe('findBadges', () => {
       color: '#ff0000',
       owner_username: 'channel-id',
       set: 'vip',
-      type: 'FFZ channel badge',
+      type: 'FFZ Channel Badge',
       provider: 'ffz',
     };
 
@@ -346,5 +332,31 @@ describe('findBadges', () => {
 
       expect(result).toEqual<SanitisedBadgeSet[]>([]);
     });
+  });
+
+  test('finds an FFZ global badge by the sender login, not the display name', () => {
+    const ffzBadge: SanitisedBadgeSet = {
+      id: 'ffz-supporter',
+      url: 'https://example.com/ffz.png',
+      type: 'FFZ Global Badge',
+      provider: 'ffz',
+      title: 'Supporter',
+      set: 'ffz-supporter',
+      owner_username: 'luke_h',
+    };
+
+    const result = findBadges({
+      ...emptyBadgeSources,
+      ffzGlobalBadges: [ffzBadge],
+      twitchGlobalBadges: [],
+      twitchChannelBadges: [],
+      userstate: createUserStateTags({
+        login: 'luke_h',
+        username: 'ルーク',
+        'display-name': 'ルーク',
+      }),
+    });
+
+    expect(result).toEqual<SanitisedBadgeSet[]>([ffzBadge]);
   });
 });

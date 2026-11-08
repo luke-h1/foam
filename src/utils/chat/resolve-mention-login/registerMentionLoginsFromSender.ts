@@ -12,7 +12,7 @@ export function registerMentionLoginsFromSender(
     return;
   }
 
-  if (display.toLowerCase() === normalisedLogin) {
+  if (normaliseChatUsername(display) === normalisedLogin) {
     registerMentionLogin(display);
   }
 }

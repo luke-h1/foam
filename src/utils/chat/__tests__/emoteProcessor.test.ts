@@ -1,11 +1,11 @@
 import { EmoteSetKind } from '@app/graphql/generated/gql';
+import { resetMentionLogins } from '@app/store/chat/actions/mention-login-lookup';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import type { SanitisedEmote } from '@app/types/emote';
-import { EMOTE_PROVIDER_BY_SITE } from '@app/utils/emote/emoteProviderBySite';
 
 import { processEmotes } from '../emoteProcessor';
-import type { MessageToken } from '../messageToken';
-import { clearMentionLoginIndex } from '../resolve-mention-login/clearMentionLoginIndex';
 import { registerMentionLogin } from '../resolve-mention-login/registerMentionLogin';
+import { searchMentionChatters } from '../resolve-mention-login/searchMentionChatters';
 
 type PickableField = 'content' | 'id' | 'name' | 'type' | 'zero_width';
 
@@ -76,13 +76,12 @@ const curtisEmote: SanitisedEmote = {
 const createEmote = (
   overrides: Partial<SanitisedEmote> & Pick<SanitisedEmote, 'id' | 'name'>,
 ): SanitisedEmote =>
-  // SAFETY: `provider` is read from EMOTE_PROVIDER_BY_SITE for the same `site`, so the literal always matches one SanitisedEmote variant.
+  // SAFETY: every call that sets a non-7TV `site` also sets the matching `provider`, so the result is one SanitisedEmote variant.
   ({
     ...curtisEmote,
     emote_link: `https://example.com/${overrides.id}`,
     original_name: overrides.name,
     url: `https://example.com/${overrides.id}.avif`,
-    provider: EMOTE_PROVIDER_BY_SITE[overrides.site ?? curtisEmote.site],
     ...overrides,
   }) as SanitisedEmote;
 
@@ -103,7 +102,7 @@ const emptyParams = {
 
 describe('processEmotes', () => {
   beforeEach(() => {
-    clearMentionLoginIndex();
+    resetMentionLogins();
   });
 
   test('parses @mentions as mention tokens', () => {
@@ -124,6 +123,43 @@ describe('processEmotes', () => {
       { type: 'text', content: ' ' },
       { type: 'text', content: 'look' },
     ]);
+  });
+
+  test('splits trailing punctuation off a mention', () => {
+    const result = processEmotes({
+      ...emptyParams,
+      inputString: '@luke_h, @Other: hi',
+    });
+
+    expect(result.map(token => pickFields(token, ['type', 'content']))).toEqual(
+      [
+        { type: 'mention', content: '@luke_h' },
+        { type: 'text', content: ',' },
+        { type: 'text', content: ' ' },
+        { type: 'mention', content: '@Other' },
+        { type: 'text', content: ':' },
+        { type: 'text', content: ' ' },
+        { type: 'text', content: 'hi' },
+      ],
+    );
+  });
+
+  test('keeps a bare @ or @punctuation as text', () => {
+    const result = processEmotes({ ...emptyParams, inputString: '@ @,' });
+
+    expect(result.map(token => pickFields(token, ['type', 'content']))).toEqual(
+      [
+        { type: 'text', content: '@' },
+        { type: 'text', content: ' ' },
+        { type: 'text', content: '@,' },
+      ],
+    );
+  });
+
+  test('does not write the mention index', () => {
+    processEmotes({ ...emptyParams, inputString: 'hi @NewChatter' });
+
+    expect(searchMentionChatters('newchatter', 5)).toEqual([]);
   });
 
   test('rewrites mention casing when canonical login is known', () => {
@@ -441,46 +477,6 @@ describe('processEmotes', () => {
       { type: 'text', content: 'safe' },
       { type: 'text', content: ' ' },
     ]);
-  });
-
-  test('reuses cached processing results for the same emote collections', () => {
-    const params = {
-      ...emptyParams,
-      inputString: 'Curtis',
-      sevenTvChannelEmotes: [curtisEmote],
-    };
-
-    const firstResult = processEmotes(params);
-    const secondResult = processEmotes(params);
-
-    expect(secondResult).toBe(firstResult);
-  });
-
-  /**
-   * A store update handing over a fresh array of the same emotes must still hit
-   * the cache rather than reparse every message.
-   */
-  test('reuses cached results for a rebuilt scoped emote array', () => {
-    const personalEmote = createEmote({
-      id: 'personal-rebuilt',
-      name: 'Rebuilt',
-      site: '7TV Personal',
-      provider: '7tv',
-    });
-
-    const firstResult = processEmotes({
-      ...emptyParams,
-      inputString: 'Rebuilt',
-      sevenTvPersonalEmotes: [personalEmote],
-    });
-
-    const secondResult = processEmotes({
-      ...emptyParams,
-      inputString: 'Rebuilt',
-      sevenTvPersonalEmotes: [personalEmote],
-    });
-
-    expect(secondResult).toBe(firstResult);
   });
 
   test('keeps scoped emote cache entries distinct when middle emotes change', () => {

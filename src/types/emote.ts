@@ -1,17 +1,28 @@
-import type { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { StvUser } from '@app/types/seven-tv/users';
+
+type SevenTvEmoteSetKind = 'GLOBAL' | 'NORMAL' | 'PERSONAL' | 'SPECIAL';
 
 export interface SevenTvEmoteSetMetadata {
   setId: string;
   setName: string;
   capacity: number | null;
   ownerId: string | null;
-  kind: EmoteSetKind;
+  kind: SevenTvEmoteSetKind;
   updatedAt: string;
   totalCount: number;
 }
 
-export type EmoteProvider = 'twitch' | '7tv' | 'bttv' | 'ffz' | 'emoji';
+export type ProviderId =
+  | 'twitch'
+  | '7tv'
+  | 'bttv'
+  | 'ffz'
+  | 'chatterino'
+  | 'streamelements';
+
+export type EmoteProvider =
+  | Exclude<ProviderId, 'chatterino' | 'streamelements'>
+  | 'emoji';
 
 export type EmoteImageScale = '1x' | '2x' | '3x' | '4x';
 export type EmoteImageVariantKind = 'animated' | 'static';
@@ -32,7 +43,7 @@ interface SanitisedEmoteBase {
   emote_link: string;
 }
 
-export type SevenTvSite = '7TV Channel' | '7TV Global' | '7TV Personal';
+type SevenTvSite = '7TV Channel' | '7TV Global' | '7TV Personal';
 
 export interface SevenTvSanitisedEmote extends SanitisedEmoteBase {
   provider: '7tv';

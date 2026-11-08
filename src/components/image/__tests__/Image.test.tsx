@@ -32,12 +32,12 @@ const cacheImageFromUrlMock = jest.fn<
   Parameters<typeof imageFileStore.cacheImageFromUrl>
 >();
 
-type RenderedExpoImageProps = {
+interface RenderedExpoImageProps {
   source: ExpoImageProps['source'];
   recyclingKey: ExpoImageProps['recyclingKey'];
   cachePolicy: ExpoImageProps['cachePolicy'];
   onLoad: (event: ImageLoadEventData) => void;
-};
+}
 
 const expoImageProp = <K extends keyof RenderedExpoImageProps>(
   key: K,

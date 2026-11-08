@@ -1,9 +1,9 @@
-// "shape" is the 7TV paint API field (types/seven-tv/cosmetics.ts), not a naming choice.
-// oxlint-disable anti-slop/no-shape-in-symbol-names
-import type { PaintData, PaintShadow } from '@app/types/seven-tv/cosmetics';
-import type { IndexedCollection } from '@app/utils/collection/indexedCollection';
+import {
+  makePaint,
+  toIndexed,
+} from '@app/components/chat/components/chat-message/cosmetic-username/util/paint-css/__fixtures__/paintCss.fixture';
+import type { PaintShadow } from '@app/types/seven-tv/cosmetics';
 
-import { DEFAULT_PAINT_DROP_SHADOW_MODE } from '../defaultPaintDropShadowMode';
 import { getPaintDropShadows } from '../getPaintDropShadows';
 
 const firstShadow: PaintShadow = {
@@ -20,63 +20,22 @@ const secondShadow: PaintShadow = {
   color: 65_535,
 };
 
-function toIndexed<T>(items: T[]): IndexedCollection<T> {
-  const collection: IndexedCollection<T> = { length: items.length };
-
-  items.forEach((item, index) => {
-    collection[index] = item;
-  });
-
-  return collection;
-}
-
-function makePaint(shadows: PaintShadow[]): PaintData {
-  return {
-    id: 'paint-1',
-    name: 'Test Paint',
-    color: null,
-    layers: { length: 0 },
-    shadows: toIndexed(shadows),
-    textStyle: null,
-    function: 'LINEAR_GRADIENT',
-    repeat: false,
-    angle: 0,
-    shape: 'circle',
-    image_url: '',
-    stops: { length: 0 },
-  };
-}
+const makeShadowPaint = (shadows: PaintShadow[]) =>
+  makePaint({ shadows: toIndexed(shadows) });
 
 describe('getPaintDropShadows', () => {
-  test('mode 0 renders no shadows', () => {
-    const paint = makePaint([firstShadow, secondShadow]);
-
-    expect(getPaintDropShadows(paint, 0)).toEqual<PaintShadow[]>([]);
-  });
-
-  test('mode 1 renders only the first shadow, matching the extension', () => {
-    const paint = makePaint([firstShadow, secondShadow]);
-
-    expect(getPaintDropShadows(paint, 1)).toEqual<PaintShadow[]>([firstShadow]);
-  });
-
-  test('mode 2 renders all shadows, matching the extension', () => {
-    const paint = makePaint([firstShadow, secondShadow]);
-
-    expect(getPaintDropShadows(paint, 2)).toEqual<PaintShadow[]>([
-      firstShadow,
-      secondShadow,
-    ]);
-  });
-
-  test('defaults to rendering all shadows', () => {
-    const paint = makePaint([firstShadow, secondShadow]);
-
-    expect(DEFAULT_PAINT_DROP_SHADOW_MODE).toBe(2);
+  test('renders all shadows, matching the extension default', () => {
+    const paint = makeShadowPaint([firstShadow, secondShadow]);
 
     expect(getPaintDropShadows(paint)).toEqual<PaintShadow[]>([
       firstShadow,
       secondShadow,
     ]);
+  });
+
+  test('returns the cached list for the same paint', () => {
+    const paint = makeShadowPaint([firstShadow]);
+
+    expect(getPaintDropShadows(paint)).toBe(getPaintDropShadows(paint));
   });
 });

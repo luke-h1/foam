@@ -1,12 +1,12 @@
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
 import { applyMentionLoginCasing } from '../applyMentionLoginCasing';
-import { clearMentionLoginIndex } from '../clearMentionLoginIndex';
+import { clearMentionIndexes } from '../clearMentionIndexes';
 import { registerMentionLogin } from '../registerMentionLogin';
 
 describe('applyMentionLoginCasing', () => {
   beforeEach(() => {
-    clearMentionLoginIndex();
+    clearMentionIndexes();
   });
 
   test('applyMentionLoginCasing rewrites mention tokens when canonical login is known', () => {

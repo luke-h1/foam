@@ -1,33 +1,33 @@
-import { memo, useCallback, useMemo, useRef, useState } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { memo, useCallback, useMemo, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { ListRenderItem } from '@shopify/flash-list';
 
-import {
-  BottomSheet,
-  type BottomSheetHandle,
-} from '@app/components/bottom-sheet/BottomSheet';
+import { ChatSheet } from '@app/components/chat/components/sheet/ChatSheet';
+import { chatSheetStyles } from '@app/components/chat/components/sheet/ChatSheet.styles';
+import { useChatSheet } from '@app/components/chat/components/sheet/hooks/use-chat-sheet';
+import { useChatSheetHeight } from '@app/components/chat/components/sheet/hooks/use-chat-sheet-height';
 import { SheetHeader } from '@app/components/chat/components/sheet/SheetHeader';
-import { CHAT_SETTINGS_SHEET_DETENT } from '@app/components/chat/util/chatSheetLayout';
-import { chatSheetSurface } from '@app/components/chat/util/chatSheetSurface';
+import {
+  CHAT_SETTINGS_SHEET_DETENT,
+  type ChatSheetLayout,
+} from '@app/components/chat/components/sheet/util/chatSheetLayout';
 import { FlashList } from '@app/components/flash-list/FlashList';
 import { PressableArea } from '@app/components/pressable-area/PressableArea';
 import { SymbolView } from '@app/components/ui/icon/Icon';
 import { Input } from '@app/components/ui/input/Input';
 import { Text } from '@app/components/ui/text/Text';
+import type { UsernamePressData } from '@app/store/chat/types/chat-press-data';
 import { theme } from '@app/styles/themes';
-import { normaliseChatText } from '@app/utils/chat/normaliseChatText';
+import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
 import { getAllMentionChatters } from '@app/utils/chat/resolve-mention-login/getAllMentionChatters';
 import {
   type ChatterRole,
   type MentionChatter,
 } from '@app/utils/chat/resolve-mention-login/types';
 
-import type { UsernamePressData } from '../chat-message/ChatRow.types';
-
 export interface ChattersSheetProps {
-  isPresented: boolean;
   onDismiss: () => void;
   onSelectChatter: (chatter: UsernamePressData) => void;
 }
@@ -59,11 +59,11 @@ function buildChattersListItems(
   chatters: MentionChatter[],
   query: string,
 ): ChattersListItem[] {
-  const normalisedQuery = normaliseChatText(query);
+  const normalisedQuery = normaliseChatUsername(query);
 
   const filtered = normalisedQuery
     ? chatters.filter(chatter =>
-        chatter.login.toLowerCase().includes(normalisedQuery),
+        normaliseChatUsername(chatter.login).includes(normalisedQuery),
       )
     : chatters;
 
@@ -88,7 +88,7 @@ function buildChattersListItems(
     sectionChatters.forEach(chatter => {
       items.push({
         type: 'chatter',
-        key: `chatter_${chatter.login.toLowerCase()}`,
+        key: `chatter_${normaliseChatUsername(chatter.login)}`,
         chatter,
       });
     });
@@ -104,28 +104,29 @@ const getChattersListItemType = (item: ChattersListItem) => item.type;
 function toUsernamePressData(chatter: MentionChatter): UsernamePressData {
   return {
     color: chatter.color,
-    login: chatter.login.toLowerCase(),
-    // The index falls back to the login as a pseudo id for mention-only
-    // entries; only real numeric Twitch ids are useful downstream.
-    userId: /^\d+$/.test(chatter.userId) ? chatter.userId : undefined,
+    login: normaliseChatUsername(chatter.login),
+    userId: chatter.userId,
     username: chatter.login,
   };
 }
 
+const SHEET_LAYOUT: ChatSheetLayout = {
+  fraction: CHAT_SETTINGS_SHEET_DETENT,
+  kind: 'fraction',
+};
+
 const ChattersSheetComponent = ({
-  isPresented,
   onDismiss,
   onSelectChatter,
 }: ChattersSheetProps) => {
   const [query, setQuery] = useState('');
-  const sheetRef = useRef<BottomSheetHandle>(null);
+  const { requestClose, sheetRef } = useChatSheet();
   const {
     bottom: bottomInset,
     left: leftInset,
     right: rightInset,
   } = useSafeAreaInsets();
-  const { height: windowHeight } = useWindowDimensions();
-  const sheetHeight = Math.round(windowHeight * CHAT_SETTINGS_SHEET_DETENT);
+  const sheetHeight = useChatSheetHeight(SHEET_LAYOUT);
 
   // Snapshot on mount: the sheet is remounted per open, and live-updating a
   // list of every chatter on each message would churn for no benefit.
@@ -185,21 +186,15 @@ const ChattersSheetComponent = ({
   );
 
   return (
-    <BottomSheet
+    <ChatSheet
       ref={sheetRef}
-      enableFixedSnapPoints
-      isPresented={isPresented}
       onDismiss={onDismiss}
-      showDragIndicator
-      snapPoints={[{ fraction: CHAT_SETTINGS_SHEET_DETENT }]}
+      layout={SHEET_LAYOUT}
       testID='chat-chatters-sheet'
     >
-      <View style={[styles.container, { height: sheetHeight }]}>
+      <View style={[chatSheetStyles.listContainer, { height: sheetHeight }]}>
         <View style={styles.header}>
-          <SheetHeader
-            title='Chatters'
-            onClose={() => sheetRef.current?.requestClose()}
-          />
+          <SheetHeader title='Chatters' onClose={requestClose} />
         </View>
 
         <View style={styles.searchWrap}>
@@ -251,7 +246,7 @@ const ChattersSheetComponent = ({
           />
         )}
       </View>
-    </BottomSheet>
+    </ChatSheet>
   );
 };
 
@@ -268,14 +263,6 @@ const styles = StyleSheet.create({
     minHeight: 44,
     paddingHorizontal: theme.space16,
     paddingVertical: theme.space8,
-  },
-  container: {
-    ...chatSheetSurface,
-    alignSelf: 'stretch',
-    backgroundColor: 'transparent',
-    flexDirection: 'column',
-    minHeight: 0,
-    width: '100%',
   },
   emptyState: {
     alignItems: 'center',

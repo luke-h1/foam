@@ -33,7 +33,8 @@ import {
   type ViewableMessageToken,
 } from '@app/components/chat/util/getViewableChatMessages';
 import { Skeleton } from '@app/components/ui/skeleton/Skeleton';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import { usePreference } from '@app/store/preference-store';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 
 /**
  * Roughly seven rows of lookahead; at 96 fast flings outran the renderer and
@@ -68,28 +69,41 @@ const CHAT_MAINTAIN_SCROLL_AT_END_THRESHOLD = 0.1;
  */
 const CHAT_RECYCLE_ITEMS = false;
 
-const SKELETON_CHAT_SCALE = getChatScale('default', 'comfortable');
-
-function getSkeletonBodyStyle(index: number) {
-  const variant = index % 3;
-
-  if (variant === 0) {
-    return styles.skeletonBodyShort;
-  }
-
-  if (variant === 1) {
-    return styles.skeletonBodyMedium;
-  }
-
-  return styles.skeletonBodyLong;
-}
+const SKELETON_BODY_WIDTHS = ['28%', '42%', '54%'] as const;
 
 function ChatListRowSkeleton({ index }: { index: number }) {
+  const scale = getChatScale(
+    usePreference('chatFontScale'),
+    usePreference('chatDensity'),
+  );
+
+  const lineHeight = { height: scale.secondaryFontSize };
+
   return (
-    <View style={styles.skeletonRow} testID='chat-row-skeleton'>
-      <Skeleton shimmer={false} style={styles.skeletonBadge} />
-      <Skeleton shimmer={false} style={styles.skeletonUsername} />
-      <Skeleton shimmer={false} style={getSkeletonBodyStyle(index)} />
+    <View
+      style={[
+        styles.skeletonRow,
+        {
+          gap: scale.gap,
+          minHeight: scale.bodyLineHeight + scale.rowPaddingVertical * 2,
+          paddingHorizontal: scale.rowPaddingHorizontal,
+          paddingVertical: scale.rowPaddingVertical,
+        },
+      ]}
+      testID='chat-row-skeleton'
+    >
+      <Skeleton
+        shimmer={false}
+        style={[
+          styles.skeletonBadge,
+          { height: scale.badgeSize, width: scale.badgeSize },
+        ]}
+      />
+      <Skeleton shimmer={false} style={[lineHeight, styles.skeletonUsername]} />
+      <Skeleton
+        shimmer={false}
+        style={[lineHeight, { width: SKELETON_BODY_WIDTHS[index % 3] }]}
+      />
     </View>
   );
 }
@@ -246,34 +260,13 @@ const styles = StyleSheet.create({
   skeletonBadge: {
     borderCurve: 'continuous',
     borderRadius: CHAT_SURFACE_COLORS.radius,
-    height: SKELETON_CHAT_SCALE.badgeSize,
-    width: SKELETON_CHAT_SCALE.badgeSize,
-  },
-  skeletonBodyLong: {
-    height: 12,
-    width: '54%',
-  },
-  skeletonBodyMedium: {
-    height: 12,
-    width: '42%',
-  },
-  skeletonBodyShort: {
-    height: 12,
-    width: '28%',
   },
   skeletonRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: SKELETON_CHAT_SCALE.gap,
-    minHeight:
-      SKELETON_CHAT_SCALE.bodyLineHeight +
-      SKELETON_CHAT_SCALE.rowPaddingVertical * 2,
-    paddingHorizontal: SKELETON_CHAT_SCALE.rowPaddingHorizontal,
-    paddingVertical: SKELETON_CHAT_SCALE.rowPaddingVertical,
     width: '100%',
   },
   skeletonUsername: {
-    height: 12,
     width: 64,
   },
 });

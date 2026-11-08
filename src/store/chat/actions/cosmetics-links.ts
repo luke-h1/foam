@@ -1,6 +1,6 @@
 import { evictOldestWhenFull } from '@app/utils/collection/evictOldestWhenFull';
 
-export const MAX_SEVEN_TV_USER_LINK_ENTRIES = 2000;
+const MAX_SEVEN_TV_USER_LINK_ENTRIES = 2000;
 
 type EntitlementLink = {
   kind: 'BADGE' | 'PAINT' | 'EMOTE_SET';
@@ -39,10 +39,6 @@ export function rememberEntitlementTwitchLink(
   entitlementLinks.set(entitlementId, { kind, twitchUserId });
 }
 
-/**
- * Drops the least recently added 7TV user link, plus everything that only
- * reached the caches through it.
- */
 function evictOldestSevenTvUserLink(): void {
   const oldest = twitchIdsBySevenTvUserId.keys().next().value;
 
@@ -60,10 +56,31 @@ function evictOldestSevenTvUserLink(): void {
   twitchIdsBySevenTvUserId.delete(oldest);
 }
 
+function detachFromPreviousSevenTvUser(
+  twitchUserId: string,
+  sevenTvUserId: string,
+): void {
+  const previousSevenTvUserId = sevenTvUserIdByTwitchId.get(twitchUserId);
+
+  if (!previousSevenTvUserId || previousSevenTvUserId === sevenTvUserId) {
+    return;
+  }
+
+  const previousTwitchIds = twitchIdsBySevenTvUserId.get(previousSevenTvUserId);
+
+  if (previousTwitchIds) {
+    twitchIdsBySevenTvUserId.set(
+      previousSevenTvUserId,
+      previousTwitchIds.filter(id => id !== twitchUserId),
+    );
+  }
+}
+
 export function rememberSevenTvUserTwitchLink(
   sevenTvUserId: string,
   twitchUserId: string,
 ): void {
+  detachFromPreviousSevenTvUser(twitchUserId, sevenTvUserId);
   sevenTvUserIdByTwitchId.set(twitchUserId, sevenTvUserId);
 
   const cached = twitchIdsBySevenTvUserId.get(sevenTvUserId);

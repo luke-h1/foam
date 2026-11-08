@@ -2,11 +2,11 @@ import { type MutableRefObject, useEffect, useRef } from 'react';
 
 import { useSyncRef } from '@app/hooks/use-sync-ref';
 import { recentMessagesService } from '@app/services/recent-messages-service';
+import { setCurrentChannelId } from '@app/store/chat/actions/current-channel';
 import {
   getMaxChatMessages,
   restoreRecentMessagesForChannel,
 } from '@app/store/chat/actions/messages';
-import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import { logger } from '@app/utils/logger';
 
 /**
@@ -46,7 +46,7 @@ export function useRecentChatMessages({
   const showRecentMessagesRef = useSyncRef(showRecentMessages);
 
   useEffect(() => {
-    chatStore$.currentChannelId.set(channelId);
+    setCurrentChannelId(channelId);
     const restoredCount = restoreRecentMessagesForChannel(channelId);
     restoredRecentCountRef.current = restoredCount;
 
@@ -82,7 +82,7 @@ export function useRecentChatMessages({
           processRecentIrcLineRef.current(recentMessages[index]!);
 
           if ((index + 1) % REPLAY_CHUNK_SIZE === 0) {
-            // eslint-disable-next-line react-doctor/async-await-in-loop -- IRC replay order is required
+            // oxlint-disable-next-line react-doctor/async-await-in-loop -- IRC replay order is required
             await yieldToEventLoop();
           }
         }

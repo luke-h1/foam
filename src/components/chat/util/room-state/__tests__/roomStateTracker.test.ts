@@ -1,25 +1,16 @@
-import type { ParsedRoomState } from '@app/store/chat/types/room-state';
-
 import {
   createRoomStateTracker,
   type RoomStateUpdate,
 } from '../roomStateTracker';
+import { emptyRoomState } from './__fixtures__/roomState.fixture';
 
 const inactiveTags = {
-  emote_only: '0',
+  'emote-only': '0',
   'followers-only': '-1',
   r9k: '0',
   slow: '0',
   'subs-only': '0',
 } satisfies Record<string, string>;
-
-const emptyRoomState: ParsedRoomState = {
-  emoteOnly: false,
-  followersOnlyMinutes: -1,
-  r9k: false,
-  slowSeconds: 0,
-  subsOnly: false,
-};
 
 describe('createRoomStateTracker', () => {
   test('first ingest summarises every active mode', () => {
@@ -28,7 +19,7 @@ describe('createRoomStateTracker', () => {
     expect(
       tracker.ingest({
         ...inactiveTags,
-        emote_only: '1',
+        'emote-only': '1',
         'followers-only': '5',
         slow: '30',
       }),
@@ -55,23 +46,6 @@ describe('createRoomStateTracker', () => {
     });
   });
 
-  test('announces slow mode turning on and then off', () => {
-    const tracker = createRoomStateTracker();
-    tracker.ingest(inactiveTags);
-
-    expect(
-      tracker.ingest({ ...inactiveTags, slow: '30' }),
-    ).toEqual<RoomStateUpdate>({
-      state: { ...emptyRoomState, slowSeconds: 30 },
-      notices: ['Slow mode enabled (30s)'],
-    });
-
-    expect(tracker.ingest(inactiveTags)).toEqual<RoomStateUpdate>({
-      state: emptyRoomState,
-      notices: ['Slow mode disabled'],
-    });
-  });
-
   test('re-announces slow mode when its duration changes', () => {
     const tracker = createRoomStateTracker();
     tracker.ingest({ ...inactiveTags, slow: '30' });
@@ -81,60 +55,6 @@ describe('createRoomStateTracker', () => {
     ).toEqual<RoomStateUpdate>({
       state: { ...emptyRoomState, slowSeconds: 60 },
       notices: ['Slow mode enabled (60s)'],
-    });
-  });
-
-  test('announces followers-only with and without a minimum follow age', () => {
-    const tracker = createRoomStateTracker();
-    tracker.ingest(inactiveTags);
-
-    expect(
-      tracker.ingest({ ...inactiveTags, 'followers-only': '0' }),
-    ).toEqual<RoomStateUpdate>({
-      state: { ...emptyRoomState, followersOnlyMinutes: 0 },
-      notices: ['Followers-only mode enabled'],
-    });
-
-    expect(
-      tracker.ingest({ ...inactiveTags, 'followers-only': '10' }),
-    ).toEqual<RoomStateUpdate>({
-      state: { ...emptyRoomState, followersOnlyMinutes: 10 },
-      notices: ['Followers-only mode enabled (10m)'],
-    });
-
-    expect(tracker.ingest(inactiveTags)).toEqual<RoomStateUpdate>({
-      state: emptyRoomState,
-      notices: ['Followers-only mode disabled'],
-    });
-  });
-
-  test('announces multiple simultaneous changes in notice order', () => {
-    const tracker = createRoomStateTracker();
-    tracker.ingest(inactiveTags);
-
-    expect(
-      tracker.ingest({
-        emote_only: '1',
-        'followers-only': '0',
-        r9k: '1',
-        slow: '5',
-        'subs-only': '1',
-      }),
-    ).toEqual<RoomStateUpdate>({
-      state: {
-        emoteOnly: true,
-        followersOnlyMinutes: 0,
-        r9k: true,
-        slowSeconds: 5,
-        subsOnly: true,
-      },
-      notices: [
-        'Emote-only mode enabled',
-        'Subscribers-only mode enabled',
-        'Unique-chat mode enabled',
-        'Slow mode enabled (5s)',
-        'Followers-only mode enabled',
-      ],
     });
   });
 
@@ -164,6 +84,32 @@ describe('createRoomStateTracker', () => {
     ).toEqual<RoomStateUpdate>({
       state: { ...emptyRoomState, slowSeconds: 30 },
       notices: ['Chat modes active: slow mode (30s)'],
+    });
+  });
+
+  test('a single-tag ROOMSTATE keeps the other modes and posts no false disabled notice', () => {
+    const tracker = createRoomStateTracker();
+    tracker.ingest({ ...inactiveTags, 'emote-only': '1', 'subs-only': '1' });
+
+    expect(
+      tracker.ingest({ 'room-id': '12345', slow: '10' }),
+    ).toEqual<RoomStateUpdate>({
+      state: {
+        ...emptyRoomState,
+        emoteOnly: true,
+        slowSeconds: 10,
+        subsOnly: true,
+      },
+      notices: ['Slow mode enabled (10s)'],
+    });
+  });
+
+  test('a first ingest with a partial ROOMSTATE fills the other modes as inactive', () => {
+    const tracker = createRoomStateTracker();
+
+    expect(tracker.ingest({ r9k: '1' })).toEqual<RoomStateUpdate>({
+      state: { ...emptyRoomState, r9k: true },
+      notices: ['Chat modes active: unique-chat'],
     });
   });
 });

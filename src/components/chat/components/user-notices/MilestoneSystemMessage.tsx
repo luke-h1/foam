@@ -4,10 +4,6 @@ import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 
 import { styles } from '../chat-message/ChatRow.styles';
 
-/**
- * Twitch's own wording for the milestone, with the chatter's name picked out
- * of it so only the name is emphasised.
- */
 export function MilestoneSystemMessage({
   lead,
   rest,

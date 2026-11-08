@@ -14,10 +14,7 @@ import { theme } from '@app/styles/themes';
 function handleAuthSuccess() {
   if (router.canDismiss()) {
     router.dismiss();
-    return;
   }
-
-  router.replace('/tabs/following');
 }
 
 function handleDismiss() {
@@ -53,7 +50,6 @@ export function AuthSheetScreen() {
       <View style={styles.content}>
         <View style={styles.header}>
           <Image
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
             source={require('../../../assets/app-icon/app-icon-production.png')}
             style={styles.appIcon}
             contentFit='cover'

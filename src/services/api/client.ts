@@ -1,39 +1,23 @@
 import { fetch } from 'expo/fetch';
 
+import { PROVIDER_DESCRIPTORS } from '@app/constants/emote-providers';
 import { deriveFromResponseOnWorklet } from '@app/lib/off-thread-json/deriveFromResponseOnWorklet';
 import { parseJsonOnWorklet } from '@app/lib/off-thread-json/parseJsonOnWorklet';
-import { type MonitoringErrorName, startSpanAsync } from '@app/lib/sentry';
-import { type AllowedPrefix, logger } from '@app/utils/logger';
+import { startSpanAsync } from '@app/lib/sentry';
+import type { ProviderId } from '@app/types/emote';
+import { logger } from '@app/utils/logger';
 
 import {
   type ApiMonitoringContext,
   getApiMonitoringContext,
 } from './monitoring';
 
-type ServiceErrorInfo = {
-  exceptionName: string;
-  errorName: MonitoringErrorName;
-};
+const loggedNetworkErrors = new WeakSet<Error>();
 
-const SERVICE_ERROR_MAP = new Map<AllowedPrefix, ServiceErrorInfo>([
-  [
-    'twitch',
-    { exceptionName: 'TwitchApiError', errorName: 'twitch_api_error' },
-  ],
-  ['bttv', { exceptionName: 'BTTVApiError', errorName: 'bttv_api_error' }],
-  [
-    'stv',
-    { exceptionName: 'SevenTVApiError', errorName: 'seven_tv_api_error' },
-  ],
-  ['ffz', { exceptionName: 'FFZApiError', errorName: 'ffz_api_error' }],
-]);
-
-function getServiceErrorInfo(logPrefix?: AllowedPrefix): ServiceErrorInfo {
+export function isApiClientError(error: unknown): boolean {
   return (
-    (logPrefix && SERVICE_ERROR_MAP.get(logPrefix)) ?? {
-      exceptionName: 'ApiError',
-      errorName: 'api_error',
-    }
+    error instanceof ApiError ||
+    (error instanceof Error && loggedNetworkErrors.has(error))
   );
 }
 
@@ -58,12 +42,14 @@ type QueryParamValue =
 interface RequestOptions {
   params?: Record<string, QueryParamValue>;
   headers?: Record<string, string>;
+  signal?: AbortSignal;
 }
 
 interface ClientOptions {
   baseURL: string;
   headers?: Record<string, string>;
-  logPrefix?: AllowedPrefix;
+  provider?: ProviderId;
+  isExpectedFailure?: (status: number, body: string) => boolean;
   /**
    * Per-request timeout in ms. Without one, a hung request never rejects and
    * the query stays pending forever.
@@ -81,19 +67,29 @@ interface ClientOptions {
   onUnauthorized?: (body: string) => Promise<boolean>;
 }
 
+interface ResolveFailedResponseOptions {
+  context: ApiMonitoringContext;
+  isRetry: boolean;
+  method: string;
+  path: string;
+  response: Response;
+}
+
 const DEFAULT_TIMEOUT_MS = 10_000;
 const AUTH_READY_TIMEOUT_MS = 8000;
 
 export function createApiClient({
   baseURL,
   headers: defaultHeaders = {},
-  logPrefix,
+  provider,
+  isExpectedFailure,
   timeout = DEFAULT_TIMEOUT_MS,
   requiresAuth = false,
   onUnauthorized,
 }: ClientOptions) {
   let authToken: string | undefined;
   let resolveTokenReady: (() => void) | undefined;
+  let tokenReadyTimer: ReturnType<typeof setTimeout> | undefined;
 
   function armTokenReady() {
     if (!requiresAuth) {
@@ -108,53 +104,39 @@ export function createApiClient({
   let tokenReady = armTokenReady();
 
   function settleTokenReady() {
+    clearTimeout(tokenReadyTimer);
+    tokenReadyTimer = undefined;
     resolveTokenReady?.();
     resolveTokenReady = undefined;
     tokenReady = undefined;
   }
 
-  async function waitForAuthToken(): Promise<void> {
-    const pending = tokenReady;
-
-    if (!pending) {
-      return;
+  function waitForAuthToken(): Promise<void> {
+    if (!tokenReady) {
+      return Promise.resolve();
     }
 
-    await new Promise<void>(resolve => {
-      const timer = setTimeout(() => {
-        settleTokenReady();
-        resolve();
-      }, AUTH_READY_TIMEOUT_MS);
+    tokenReadyTimer ??= setTimeout(settleTokenReady, AUTH_READY_TIMEOUT_MS);
 
-      void pending.then(() => {
-        clearTimeout(timer);
-        resolve();
-      });
-    });
+    return tokenReady;
   }
 
-  const { exceptionName, errorName } = getServiceErrorInfo(logPrefix);
-  const service = logPrefix ?? 'unknown';
-  const log = logger[logPrefix ?? 'api'];
+  const descriptor = provider ? PROVIDER_DESCRIPTORS[provider] : undefined;
+  const exceptionName = descriptor?.exceptionName ?? 'ApiError';
+  const errorName = descriptor?.errorName ?? 'api_error';
+  const service = descriptor?.logPrefix ?? 'unknown';
+  const monitoringProvider = descriptor?.monitoringName ?? 'unknown';
+  const log = logger[descriptor?.logPrefix ?? 'api'];
 
-  /**
-   * Turns a >=400 response into either a retry signal (the auth hook recovered
-   * the session) or the ApiError the caller should throw. Logs the failure
-   * unless it is a known-benign one.
-   */
   async function resolveFailedResponse({
     context,
     isRetry,
     method,
     path,
     response,
-  }: {
-    context: ApiMonitoringContext;
-    isRetry: boolean;
-    method: string;
-    path: string;
-    response: Response;
-  }): Promise<{ retry: true } | { retry: false; error: ApiError }> {
+  }: ResolveFailedResponseOptions): Promise<
+    { retry: true } | { retry: false; error: ApiError }
+  > {
     const body = await response.text().catch(() => '');
 
     const recovered =
@@ -166,15 +148,9 @@ export function createApiClient({
       return { retry: true };
     }
 
-    // FFZ 404s "No such room" for channels that never configured FFZ - benign, don't log.
-    const isExpectedFfzNoRoom =
-      service === 'ffz' &&
-      response.status === 404 &&
-      body.includes('No such room');
-
     const logFailure = response.status >= 500 ? log.error : log.warn;
 
-    if (!isExpectedFfzNoRoom) {
+    if (!isExpectedFailure?.(response.status, body)) {
       logFailure(`${method} ${path} ${response.status}`, {
         name: errorName,
         exceptionName,
@@ -211,7 +187,13 @@ export function createApiClient({
     } = {},
     isRetry = false,
   ): Promise<T> {
-    const { params, headers: extraHeaders = {}, data, derive } = options;
+    const {
+      params,
+      headers: extraHeaders = {},
+      data,
+      derive,
+      signal,
+    } = options;
 
     const url = new URL(`${baseURL}${path}`);
 
@@ -226,13 +208,14 @@ export function createApiClient({
       );
     }
 
-    if (logPrefix) {
-      logger[logPrefix].info(url.toString());
+    if (descriptor) {
+      log.info(url.toString());
     }
 
-    const hasExplicitAuth = Object.keys(extraHeaders).some(
-      key => key.toLowerCase() === 'authorization',
-    );
+    const hasExplicitAuth = [
+      ...Object.keys(defaultHeaders),
+      ...Object.keys(extraHeaders),
+    ].some(key => key.toLowerCase() === 'authorization');
 
     if (requiresAuth && !authToken && !hasExplicitAuth) {
       await waitForAuthToken();
@@ -259,7 +242,7 @@ export function createApiClient({
       headerKeyMap.set(name.toLowerCase(), name);
     }
 
-    if (authToken && !headers['Authorization']) {
+    if (authToken && !hasExplicitAuth) {
       headers['Authorization'] = `Bearer ${authToken}`;
     }
 
@@ -270,6 +253,7 @@ export function createApiClient({
     const requestContext = getApiMonitoringContext({
       baseURL,
       method,
+      provider: monitoringProvider,
       url: path,
     });
 
@@ -281,11 +265,18 @@ export function createApiClient({
       controller.abort();
     }, timeout);
 
+    const abortFromCaller = () => controller.abort();
+    signal?.addEventListener('abort', abortFromCaller);
+
+    if (signal?.aborted) {
+      controller.abort();
+    }
+
     let response: Response;
 
     try {
       response = await startSpanAsync(
-        `${method} ${String(requestContext.provider ?? 'unknown')}`,
+        `${method} ${monitoringProvider}`,
         'http.client',
         () =>
           fetch(url.toString(), {
@@ -295,13 +286,17 @@ export function createApiClient({
             signal: controller.signal,
           }),
         {
-          provider: String(requestContext.provider ?? 'unknown'),
+          provider: monitoringProvider,
           'server.address': String(requestContext.host ?? url.host),
           'http.request.method': method,
           'url.full': url.toString(),
         },
       );
     } catch (error) {
+      if (signal?.aborted && !didTimeout) {
+        throw error;
+      }
+
       if (didTimeout) {
         log.warn(`${method} ${path} timed out after ${timeout}ms`, {
           name: 'network_error',
@@ -337,14 +332,20 @@ export function createApiClient({
         endpoint: path,
       });
 
+      if (error instanceof Error) {
+        loggedNetworkErrors.add(error);
+      }
+
       throw error;
     } finally {
       clearTimeout(timeoutId);
+      signal?.removeEventListener('abort', abortFromCaller);
     }
 
     const context = getApiMonitoringContext({
       baseURL,
       method,
+      provider: monitoringProvider,
       status: response.status,
       url: path,
     });

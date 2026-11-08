@@ -1,6 +1,9 @@
-import { setSevenTvSessionId } from '@app/utils/seven-tv/sevenTvSessionId';
+import {
+  getSevenTvSessionId,
+  setSevenTvSessionId,
+} from '@app/utils/seven-tv/sevenTvSessionId';
 
-export type SevenTvSessionResetReason = 'leave' | 'unmount' | 'close';
+type SevenTvSessionResetReason = 'leave' | 'unmount' | 'close';
 
 export interface CreateSevenTvSessionStateOptions {
   /**
@@ -14,7 +17,6 @@ export interface CreateSevenTvSessionStateOptions {
  * the one place that encodes what each teardown path drops.
  */
 export interface SevenTvSessionState {
-  hasInitialized: boolean;
   hasInitialSubscriptions: boolean;
   connectionTimestamp: number | null;
   currentEmoteSetId: string | undefined;
@@ -31,16 +33,6 @@ export interface SevenTvSessionState {
   clearResumeFallbackTimer(): void;
   stopHeartbeatWatchdog(): void;
   /**
-   * Returns a `stillCurrent` check; a generation bump (reset or channel hop)
-   * turns it false so a stale poll loop stops before subscribing the old channel.
-   */
-  beginSubscriptionRun(): () => boolean;
-  /**
-   * A hop between two known channels bumps the subscription generation; the
-   * initial undefined -> defined transition does not, since the poll loop waits for it.
-   */
-  noteChannelId(channelId: string | undefined): void;
-  /**
    * One owner for all teardown paths: `'close'` keeps the session id so the
    * next connect can RESUME; `'leave'`/`'unmount'` drop the whole session.
    */
@@ -50,16 +42,17 @@ export interface SevenTvSessionState {
 export const createSevenTvSessionState = (
   options: CreateSevenTvSessionStateOptions,
 ): SevenTvSessionState => {
-  let subscriptionGeneration = 0;
-  let lastNotedChannelId: string | undefined;
-
   const state: SevenTvSessionState = {
-    hasInitialized: false,
     hasInitialSubscriptions: false,
     connectionTimestamp: null,
     currentEmoteSetId: undefined,
     activeSubscriptions: new Set<string>(),
-    sessionId: null,
+    get sessionId() {
+      return getSevenTvSessionId();
+    },
+    set sessionId(sessionId) {
+      setSevenTvSessionId(sessionId);
+    },
     shouldResume: false,
     resumePending: false,
     resumeFallbackTimer: null,
@@ -80,21 +73,7 @@ export const createSevenTvSessionState = (
         state.heartbeatWatchdog = null;
       }
     },
-    beginSubscriptionRun() {
-      const runGeneration = subscriptionGeneration;
-      return () => subscriptionGeneration === runGeneration;
-    },
-    noteChannelId(channelId) {
-      if (channelId && lastNotedChannelId && channelId !== lastNotedChannelId) {
-        subscriptionGeneration += 1;
-      }
-
-      if (channelId) {
-        lastNotedChannelId = channelId;
-      }
-    },
     reset(reason) {
-      subscriptionGeneration += 1;
       state.clearResumeFallbackTimer();
       state.stopHeartbeatWatchdog();
       state.resumePending = false;
@@ -106,17 +85,11 @@ export const createSevenTvSessionState = (
         return;
       }
 
-      if (reason === 'leave') {
-        state.hasInitialized = false;
-      }
-
-      lastNotedChannelId = undefined;
       state.connectionTimestamp = null;
       state.activeSubscriptions.clear();
       state.currentEmoteSetId = undefined;
       state.sessionId = null;
       state.shouldResume = false;
-      setSevenTvSessionId(null);
     },
   };
 

@@ -1,12 +1,11 @@
 import { createChatMessageFixture } from '@app/components/chat/util/__tests__/__fixtures__/chatMessage.fixture';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import { createTextToken } from '@app/utils/chat/__tests__/__fixtures__/messageToken.fixture';
 
 import {
   clearPersistedRecentMessages,
   deletePersistedRecentMessagesForChannels,
   loadPersistedRecentMessages,
-  RECENT_MESSAGES_PERSISTENCE_ENABLED,
   writePersistedRecentMessagesForChannel,
 } from '../recent-messages-persistence';
 
@@ -25,10 +24,6 @@ beforeEach(() => {
 });
 
 describe('recentMessagesPersistence', () => {
-  test('is enabled on native', () => {
-    expect(RECENT_MESSAGES_PERSISTENCE_ENABLED).toEqual(true);
-  });
-
   test('round-trips recent messages per channel', () => {
     const channelA = [makeMessage('a1'), makeMessage('a2')];
     const channelB = [makeMessage('b1')];
@@ -84,14 +79,6 @@ describe('recentMessagesPersistence', () => {
     storage.set('channel-a', JSON.stringify([makeMessage('a1')]));
 
     expect(loadPersistedRecentMessages()).toEqual({});
-  });
-
-  test('keeps channels once the schema version is stamped', () => {
-    writePersistedRecentMessagesForChannel('channel-a', [makeMessage('a1')]);
-
-    expect(loadPersistedRecentMessages()).toEqual({
-      'channel-a': [makeMessage('a1')],
-    });
   });
 
   test('drops a channel whose stored value is corrupt', () => {

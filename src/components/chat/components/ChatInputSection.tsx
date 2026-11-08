@@ -1,63 +1,24 @@
 import { memo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
-import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated from 'react-native-reanimated';
 
-import { Button } from '@app/components/button/Button';
-import { PaintedUsername } from '@app/components/chat/components/chat-message/cosmetic-username/PaintedUsername';
-import { SymbolView } from '@app/components/ui/icon/Icon';
-import { Text } from '@app/components/ui/text/Text';
+import { COMPOSER_ROW_GAP } from '@app/components/chat/components/chat-composer/util/composerSizing';
 import { theme } from '@app/styles/themes';
-import { lightenColor } from '@app/utils/color/lightenColor';
-import { createHitslop } from '@app/utils/string/createHitSlop';
-import { truncate } from '@app/utils/string/truncate';
 
-import { useComposerDismissGesture } from '../hooks/use-composer-dismiss-gesture';
-import { chatEntranceSpring } from '../util/chatEntranceSpring';
-import type {
-  ChatInputSectionProps,
-  ReplyToData,
-} from '../util/chatInputSectionTypes';
-import { COMPOSER_ROW_GAP } from '../util/composerSizing';
-import { isRefreshCommand } from '../util/slash-command-definitions/isRefreshCommand';
 import { ChatComposer } from './chat-composer/ChatComposer';
-import { ReplyPreviewBody } from './ReplyPreviewBody';
+import { ReplyPreview } from './chat-composer/components/ReplyPreview';
+import { useChatInputSectionState } from './chat-composer/hooks/use-chat-input-section-state';
+import type { ChatInputSectionProps } from './ChatInputSection.types';
 
-export type { ReplyToData };
-
-const replyPreviewEntering = chatEntranceSpring(FadeInUp);
-const replyPreviewExiting = FadeOutDown.duration(140);
-
-function ReplyPreviewMessage({ replyTo }: { replyTo: ReplyToData }) {
-  if (replyTo.messageParts?.length) {
-    return (
-      <ReplyPreviewBody
-        tokens={replyTo.messageParts}
-        textStyle={styles.replyMessagePreview}
-      />
-    );
-  }
-
-  if (replyTo.message) {
-    return (
-      <Text
-        type='callout'
-        family='brand'
-        style={styles.replyMessagePreview}
-        numberOfLines={1}
-      >
-        {truncate(replyTo.message.trim() || replyTo.message, 60)}
-      </Text>
-    );
-  }
-
-  return null;
-}
+const COMPOSER_PADDING = Platform.select({
+  ios: { bottom: 0, horizontal: theme.space12 },
+  default: { bottom: theme.space8, horizontal: theme.space16 },
+});
 
 export const ChatInputSection = memo(
   ({
-    connection,
+    isAuthenticated,
     messageInput,
     onChangeText,
     onSubmit,
@@ -70,106 +31,52 @@ export const ChatInputSection = memo(
     inputRef,
     includeHorizontalSafeArea = true,
   }: ChatInputSectionProps) => {
-    const { isAuthenticated, isSending } = connection;
-    const insets = useSafeAreaInsets();
-
-    const { composerAnimatedStyle, composerGesture } =
-      useComposerDismissGesture();
-
-    const trimmedInput = messageInput.trim();
-
-    // /refresh is purely client-side, so it works signed out
-    const isRefresh = isRefreshCommand(messageInput);
-
-    const canSend = Boolean(
-      trimmedInput && (isAuthenticated || isRefresh) && !isSending,
-    );
-
-    let inputPlaceholder = 'Send a message...';
-
-    if (!isAuthenticated) {
-      inputPlaceholder = 'Sign in to send messages';
-    } else if (replyTo !== null) {
-      inputPlaceholder = `Reply to ${replyTo.username}...`;
-    }
+    const {
+      canSend,
+      composerAnimatedStyle,
+      composerGesture,
+      inputPlaceholder,
+      insets,
+      reservedCharacters,
+    } = useChatInputSectionState({ isAuthenticated, messageInput, replyTo });
 
     return (
       <View style={styles.wrapper} testID='chat-input-bar'>
-        {replyTo && (
-          <Animated.View
-            entering={replyPreviewEntering}
-            exiting={replyPreviewExiting}
-            style={styles.replyPreview}
-          >
-            <View style={styles.replyIndicator} />
-            <View style={styles.replyContent}>
-              <View style={styles.replyLabelRow}>
-                <Text type='callout' family='brand' style={styles.replyLabel}>
-                  Replying to{' '}
-                </Text>
-                <PaintedUsername
-                  showColon={false}
-                  {...{
-                    username: replyTo.username,
-                    userId: replyTo.userId,
-                    usernameTextStyle: styles.replyPaintedUsername,
-                    fallbackColor: replyTo.color
-                      ? lightenColor(replyTo.color)
-                      : undefined,
-                  }}
-                />
-              </View>
-              <ReplyPreviewMessage replyTo={replyTo} />
-            </View>
-            <Button
-              style={styles.replyDismissButton}
-              onPress={onClearReply}
-              hitSlop={createHitslop(20)}
-            >
-              <SymbolView
-                name='xmark'
-                size={18}
-                tintColor={theme.colorGreyHoverAlpha}
-              />
-            </Button>
-          </Animated.View>
-        )}
+        {replyTo ? (
+          <ReplyPreview onClearReply={onClearReply} replyTo={replyTo} />
+        ) : null}
 
         <GestureDetector gesture={composerGesture}>
           <Animated.View
             style={[
               styles.composerShell,
               {
-                paddingBottom: insets.bottom + theme.space8,
+                paddingBottom: insets.bottom + COMPOSER_PADDING.bottom,
                 ...(includeHorizontalSafeArea
                   ? {
-                      paddingLeft: theme.space16 + insets.left,
-                      paddingRight: theme.space16 + insets.right,
+                      paddingLeft: COMPOSER_PADDING.horizontal + insets.left,
+                      paddingRight: COMPOSER_PADDING.horizontal + insets.right,
                     }
                   : null),
               },
               composerAnimatedStyle,
             ]}
           >
-            <View style={styles.swipeHandle} />
+            {Platform.OS === 'ios' ? null : <View style={styles.swipeHandle} />}
             <View style={styles.inputRow}>
               <View style={styles.inputContainer}>
                 <ChatComposer
-                  editable
-                  prioritizeChannelEmotes
                   {...{
                     ref: inputRef,
                     onChangeText,
                     onSubmit,
                     onPressAdd: onOpenEmoteSheet,
-                    onAttachImage: isAuthenticated ? onAttachImage : undefined,
+                    onAttachImage,
                     onOpenSettings: onOpenSettingsSheet,
                     isUploadingImage,
                     placeholder: inputPlaceholder,
                     canSend,
-                    reservedCharacters: replyTo
-                      ? replyTo.username.length + 2
-                      : 0,
+                    reservedCharacters,
                   }}
                 />
               </View>
@@ -184,8 +91,9 @@ export const ChatInputSection = memo(
 const styles = StyleSheet.create({
   composerShell: {
     backgroundColor: theme.colorBlack,
-    paddingBottom: theme.space8,
-    paddingHorizontal: theme.space16,
+    overflow: 'visible',
+    paddingHorizontal: COMPOSER_PADDING.horizontal,
+    paddingTop: Platform.select({ ios: theme.space4, default: 0 }),
   },
   inputContainer: {
     flex: 1,
@@ -195,56 +103,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     flexDirection: 'row',
     gap: COMPOSER_ROW_GAP,
-    paddingTop: 4,
-  },
-  replyContent: {
-    flex: 1,
-  },
-  replyDismissButton: {
-    alignItems: 'center',
-    backgroundColor: theme.darkActiveContent,
-    borderColor: theme.colorBorderSecondary,
-    borderRadius: 18,
-    borderWidth: 1,
-    height: 36,
-    justifyContent: 'center',
-    marginLeft: 'auto',
-    width: 36,
-  },
-  replyIndicator: {
-    backgroundColor: theme.colorViolet,
-    borderRadius: 2,
-    height: '100%',
-    marginRight: theme.space12,
-    minHeight: 32,
-    width: 3,
-  },
-  replyLabel: {
-    fontSize: theme.fontSize12,
-    opacity: 0.7,
-  },
-  replyLabelRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  replyMessagePreview: {
-    fontSize: theme.fontSize14,
-    marginTop: 2,
-    opacity: 0.6,
-  },
-  replyPaintedUsername: {
-    fontSize: theme.fontSize12,
-    fontWeight: '600',
-  },
-  replyPreview: {
-    alignItems: 'center',
-    backgroundColor: theme.color.background.darkAltAlpha,
-    borderBottomColor: theme.color.border.dark,
-    borderBottomWidth: 1,
-    flexDirection: 'row',
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space12,
+    paddingTop: Platform.select({ ios: 0, default: 4 }),
   },
   swipeHandle: {
     alignSelf: 'center',

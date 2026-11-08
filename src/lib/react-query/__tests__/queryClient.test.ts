@@ -1,5 +1,6 @@
 import { toast } from 'sonner-native';
 
+import { ApiError } from '@app/services/api/client';
 import { logger } from '@app/utils/logger';
 
 import { handleMutationError, handleQueryError } from '../queryClient';
@@ -29,6 +30,15 @@ describe('handleQueryError', () => {
         },
       ],
     ]);
+  });
+
+  test('does not log again an error the API client already logged', () => {
+    handleQueryError(new ApiError('Not Found', 404, 'FFZApiError'), [
+      'twitch',
+      'stream',
+    ]);
+
+    expect(errorMock).not.toHaveBeenCalled();
   });
 
   test('does not show a toast for query errors', () => {

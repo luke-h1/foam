@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react';
-import { Platform } from 'react-native';
 
 import {
   type AuthSessionResult,
@@ -7,12 +6,15 @@ import {
   ResponseType,
   useAuthRequest,
 } from 'expo-auth-session';
-import Constants from 'expo-constants';
-import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { toast } from 'sonner-native';
 
 import { useAuthContext } from '@app/context/AuthContext';
+import {
+  AUTH_APP_RETURN_URL,
+  AUTH_REDIRECT_URI,
+} from '@app/context/authLinking';
+import { envTwitchClientId } from '@app/services/api/env';
 import { logger } from '@app/utils/logger';
 
 const USER_SCOPES = [
@@ -53,43 +55,11 @@ const MODERATION_SCOPES = [
 
 const WHISPER_SCOPES = ['whispers:read', 'whispers:edit'] as const;
 
-// SAFETY: app.config.ts copies EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL into
-// `extra` from the env, so the value is a string when it is set at all.
-const authProxyBaseUrl =
-  (Constants.expoConfig?.extra?.['EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL'] as
-    | string
-    | undefined) ?? process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
-
-const proxyUrl = new URL(
-  Platform.select({
-    native: `${authProxyBaseUrl}/proxy`,
-    default: `${authProxyBaseUrl}/pending`,
-  }),
-).toString();
-
-function getWebAuthRedirectUrl() {
-  // Undefined off the web, where the app falls back to the hosted callback.
-  const origin = globalThis.location?.origin;
-
-  if (origin) {
-    return `${origin}/auth`;
-  }
-
-  return 'https://foam-app.com/auth';
-}
-
-const redirectUri = Platform.OS === 'web' ? getWebAuthRedirectUrl() : proxyUrl;
-
-const appReturnUrl =
-  Platform.OS === 'web' ? getWebAuthRedirectUrl() : 'foam://auth';
-
 const discovery = {
   authorizationEndpoint: 'https://id.twitch.tv/oauth2/authorize',
   revocationEndpoint: 'https://id.twitch.tv/oauth2/revoke',
   tokenEndpoint: 'https://id.twitch.tv/oauth2/token',
 } satisfies DiscoveryDocument;
-
-WebBrowser.maybeCompleteAuthSession();
 
 interface UseTwitchSignInOptions {
   onSuccess?: () => Promise<void> | void;
@@ -99,17 +69,11 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
   const { loginWithTwitch } = useAuthContext();
   const { onSuccess } = options;
   const authSessionActiveRef = useRef(false);
-  const handledAuthResponseKeyRef = useRef<string | null>(null);
   const [isPromptingAuth, setIsPromptingAuth] = useState(false);
 
   const [request] = useAuthRequest(
     {
-      // SAFETY: app.config.ts copies EXPO_PUBLIC_TWITCH_CLIENT_ID into `extra`
-      // from the env, so the value is a string when it is set at all.
-      clientId:
-        (Constants.expoConfig?.extra?.['EXPO_PUBLIC_TWITCH_CLIENT_ID'] as
-          | string
-          | undefined) ?? process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
+      clientId: envTwitchClientId,
       scopes: [
         ...USER_SCOPES,
         ...CHAT_SCOPES,
@@ -120,7 +84,7 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
         ...CLIP_SCOPES,
       ],
       responseType: ResponseType.Token,
-      redirectUri,
+      redirectUri: AUTH_REDIRECT_URI,
       usePKCE: false,
       extraParams: {
         force_verify: 'true',
@@ -129,50 +93,30 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
     discovery,
   );
 
-  const completeAuth = async (nextResponse: AuthSessionResult | null) => {
-    if (nextResponse?.type !== 'success') {
-      await loginWithTwitch(nextResponse);
+  const completeAuth = async (nextResponse: AuthSessionResult) => {
+    const result = await loginWithTwitch(nextResponse);
 
-      const hasAuthentication = nextResponse
-        ? 'authentication' in nextResponse && !!nextResponse.authentication
-        : false;
-
-      logger.auth.warn(
-        `Twitch sign in event: ${nextResponse?.type || 'unknownAuthEvent'}`,
-        {
-          name: 'auth_warning',
-          error: nextResponse,
-          category: 'Auth',
-          action: 'login_event_non_success',
-          responseType: nextResponse?.type ?? 'unknownAuthEvent',
-          hasAuthentication,
-        },
-      );
+    if (!result.ok) {
+      logger.auth.warn(`Twitch sign in event: ${nextResponse.type}`, {
+        name: 'auth_warning',
+        category: 'Auth',
+        action: 'login_event_non_success',
+        responseType: nextResponse.type,
+        reason: result.reason,
+      });
 
       return;
     }
-
-    await loginWithTwitch(nextResponse);
-
-    const hasAuthentication =
-      'authentication' in nextResponse && !!nextResponse.authentication;
 
     logger.auth.info('Twitch sign in succeeded', {
       name: 'auth_info',
       category: 'Auth',
       action: 'login_success',
       responseType: nextResponse.type,
-      hasAuthentication,
     });
 
     toast.success('Logged in');
-
-    if (onSuccess) {
-      await onSuccess();
-      return;
-    }
-
-    router.replace('/tabs/following');
+    await onSuccess?.();
   };
 
   const startSignIn = async () => {
@@ -199,7 +143,7 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
 
       const promptResult = await WebBrowser.openAuthSessionAsync(
         authUrl,
-        appReturnUrl,
+        AUTH_APP_RETURN_URL,
         {
           preferEphemeralSession: false,
         },
@@ -223,26 +167,7 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
         }
       }
 
-      // The same success response can arrive twice (deep link plus the prompt
-      // resolving), so each one is only completed once.
-      const successAuthResponseKey =
-        parsedResult.type === 'success'
-          ? parsedResult.url ||
-            parsedResult.authentication?.accessToken ||
-            parsedResult.params['access_token'] ||
-            null
-          : null;
-
-      const isNewAuthResponse =
-        Boolean(successAuthResponseKey) &&
-        handledAuthResponseKeyRef.current !== successAuthResponseKey;
-
-      if (isNewAuthResponse) {
-        handledAuthResponseKeyRef.current = successAuthResponseKey;
-        await completeAuth(parsedResult);
-        endPrompt();
-        return;
-      }
+      await completeAuth(parsedResult);
     } catch (error) {
       logger.auth.warn('Twitch sign-in prompt failed', {
         name: 'twitch_sign_in_warning',

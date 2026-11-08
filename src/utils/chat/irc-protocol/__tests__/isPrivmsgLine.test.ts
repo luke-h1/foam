@@ -1,4 +1,5 @@
 import { isPrivmsgLine } from '../isPrivmsgLine';
+import { parseIrcMessage } from '../parseIrcMessage';
 
 describe('isPrivmsgLine', () => {
   test('detects a tagged, prefixed PRIVMSG', () => {
@@ -29,5 +30,16 @@ describe('isPrivmsgLine', () => {
 
   test('rejects malformed tag-only lines', () => {
     expect(isPrivmsgLine('@only-tags')).toBe(false);
+  });
+
+  test('agrees with parseIrcMessage on leading and doubled spaces', () => {
+    const lines = [
+      '  PRIVMSG #chan :hi',
+      '@id=1  :user!user@user.tmi.twitch.tv  PRIVMSG #chan :hi',
+    ];
+
+    expect(lines.map(isPrivmsgLine)).toEqual(
+      lines.map(line => parseIrcMessage(line)?.command === 'PRIVMSG'),
+    );
   });
 });

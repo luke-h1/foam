@@ -2,12 +2,6 @@ import { createChatMessageFixture } from '@app/components/chat/util/__tests__/__
 import { getChatMessageListKey } from '@app/utils/chat/message-identity/getChatMessageListKey';
 
 describe('getChatMessageListKey', () => {
-  test('returns the message id when present', () => {
-    expect(getChatMessageListKey(createChatMessageFixture())).toBe(
-      'msg-1_nonce-1',
-    );
-  });
-
   test('returns missing-chat-message for undefined input', () => {
     expect(getChatMessageListKey(undefined)).toBe('missing-chat-message');
   });

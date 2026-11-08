@@ -43,7 +43,6 @@ function createVideoTapGesture(options: {
 
       const tapTime = Date.now();
 
-      // Toggle visually on the UI thread, then hand bookkeeping to JS.
       const nextShown = controlsTarget.get() > 0.5 ? 0 : 1;
 
       controlsTarget.set(nextShown);
@@ -116,7 +115,6 @@ export function useStreamPlayerControls({
     setControlsVisible(false);
   }, [clearAutoHide, controlsOpacity, controlsTarget]);
 
-  // Reveal the controls from JS and reset the auto-hide timer.
   const revealControls = useCallback(() => {
     controlsTarget.set(1);
     controlsOpacity.set(withTiming(1, CONTROLS_FADE));
@@ -131,7 +129,6 @@ export function useStreamPlayerControls({
     onVideoAreaSwipeDown,
   });
 
-  // Post-gesture bookkeeping: promote a second tap to the double-tap action, else sync timer + React state.
   const handleTapSettled = useCallback(
     (nowShown: boolean, tapTime: number) => {
       const handlers = gestureHandlersRef.current;

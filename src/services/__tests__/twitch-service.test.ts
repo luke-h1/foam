@@ -7,7 +7,7 @@ import type { TwitchClip, TwitchCreatedClip } from '@app/types/twitch/clip';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 
 import { twitchApi } from '../api/clients';
-import { MAX_FOLLOWED_CHANNELS, twitchService } from '../twitch-service';
+import { twitchService } from '../twitch-service';
 
 const api = {
   get: jest.spyOn(twitchApi, 'get'),
@@ -67,19 +67,21 @@ describe('twitchService.getUsersById', () => {
 
     expect(api.get).toHaveBeenCalledTimes(2);
 
-    const firstBatch = `/users?${ids
-      .slice(0, 100)
-      .map(id => `id=${id}`)
-      .join('&')}`;
+    const requestedIdBatches = api.get.mock.calls.map(([url]) => {
+      const [path, query] = url.split('?');
+      return { path, ids: new URLSearchParams(query).getAll('id') };
+    });
 
-    const secondBatch = `/users?${ids
-      .slice(100)
-      .map(id => `id=${id}`)
-      .join('&')}`;
-
-    expect(api.get).toHaveBeenNthCalledWith(1, firstBatch);
-
-    expect(api.get).toHaveBeenNthCalledWith(2, secondBatch);
+    expect(requestedIdBatches).toEqual([
+      {
+        path: '/users',
+        ids: Array.from({ length: 100 }, (_, index) => String(index + 1)),
+      },
+      {
+        path: '/users',
+        ids: Array.from({ length: 50 }, (_, index) => String(index + 101)),
+      },
+    ]);
   });
 });
 
@@ -167,19 +169,21 @@ describe('twitchService.getClipsByIds', () => {
 
     expect(api.get).toHaveBeenCalledTimes(2);
 
-    const firstBatch = `/clips?${ids
-      .slice(0, 100)
-      .map(id => `id=${id}`)
-      .join('&')}`;
+    const requestedIdBatches = api.get.mock.calls.map(([url]) => {
+      const [path, query] = url.split('?');
+      return { path, ids: new URLSearchParams(query).getAll('id') };
+    });
 
-    const secondBatch = `/clips?${ids
-      .slice(100)
-      .map(id => `id=${id}`)
-      .join('&')}`;
-
-    expect(api.get).toHaveBeenNthCalledWith(1, firstBatch);
-
-    expect(api.get).toHaveBeenNthCalledWith(2, secondBatch);
+    expect(requestedIdBatches).toEqual([
+      {
+        path: '/clips',
+        ids: Array.from({ length: 100 }, (_, index) => `clip${index + 1}`),
+      },
+      {
+        path: '/clips',
+        ids: Array.from({ length: 50 }, (_, index) => `clip${index + 101}`),
+      },
+    ]);
 
     expect(result).toEqual<TwitchClip[]>([
       makeClip('clip1'),
@@ -298,9 +302,7 @@ describe('twitchService.getFollowedChannels', () => {
   });
 
   test('stops paginating once the channel cap is reached', async () => {
-    const pageSize = 100;
-
-    const page = Array.from({ length: pageSize }, (_, index) =>
+    const page = Array.from({ length: 100 }, (_, index) =>
       makeFollowedChannel(String(index)),
     );
 
@@ -308,9 +310,9 @@ describe('twitchService.getFollowedChannels', () => {
 
     const result = await twitchService.getFollowedChannels('42');
 
-    expect(result).toHaveLength(MAX_FOLLOWED_CHANNELS);
+    expect(result).toHaveLength(400);
 
-    expect(api.get).toHaveBeenCalledTimes(MAX_FOLLOWED_CHANNELS / pageSize);
+    expect(api.get).toHaveBeenCalledTimes(4);
   });
 
   test('stops paginating when a cursor page returns no further cursor', async () => {
@@ -508,6 +510,24 @@ describe('twitchService.getDefaultToken', () => {
 
     await expect(twitchService.getDefaultToken()).rejects.toThrow(
       'Auth proxy token request failed: HTTP 403 (text/html)',
+    );
+  });
+});
+
+describe('twitchService.getRefreshToken', () => {
+  test('rejects with the HTTP status when the auth proxy is blocked at the edge', async () => {
+    const blockedResponse = {
+      ok: false,
+      status: 403,
+      headers: new Headers({ 'content-type': 'text/html' }),
+      text: () => Promise.resolve('<html>Forbidden</html>'),
+    };
+
+    // SAFETY: getRefreshToken only reads .ok/.status/.headers/.text() off the response.
+    jest.mocked(fetch).mockResolvedValueOnce(blockedResponse as FetchResponse);
+
+    await expect(twitchService.getRefreshToken('refresh')).rejects.toThrow(
+      'Auth proxy refresh request failed: HTTP 403 (text/html)',
     );
   });
 });

@@ -1,9 +1,9 @@
-export interface TwitchCheermoteImageSet {
+interface TwitchCheermoteImageSet {
   animated: Record<string, string>;
   static: Record<string, string>;
 }
 
-export interface TwitchCheermoteTier {
+interface TwitchCheermoteTier {
   min_bits: number;
   id: string;
   color: string;

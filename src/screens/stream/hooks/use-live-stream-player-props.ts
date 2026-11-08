@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { MEDIA_THUMBNAIL_SIZE } from '@app/components/live-stream-card/util/thumbnailSizes';
 import type { TwitchStream } from '@app/types/twitch/stream';
 import type { UserInfoResponse } from '@app/types/twitch/user';
+import { getTwitchThumbnailUrl } from '@app/utils/twitch/getTwitchThumbnailUrl';
 
 interface UseLiveStreamPlayerPropsOptions {
   isStreamEnabled: boolean;
@@ -26,9 +27,7 @@ export function useLiveStreamPlayerProps({
   const posterUrl = useMemo(
     () =>
       thumbnailUrl
-        ? thumbnailUrl
-            .replace('{width}', MEDIA_THUMBNAIL_SIZE.width)
-            .replace('{height}', MEDIA_THUMBNAIL_SIZE.height)
+        ? getTwitchThumbnailUrl(thumbnailUrl, MEDIA_THUMBNAIL_SIZE)
         : undefined,
     [thumbnailUrl],
   );

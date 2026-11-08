@@ -1,6 +1,4 @@
-import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-
-import { clearMentionLoginIndex } from '../clearMentionLoginIndex';
+import { clearMentionIndexes } from '../clearMentionIndexes';
 import { registerMentionChatter } from '../registerMentionChatter';
 import { registerMentionLogin } from '../registerMentionLogin';
 import { searchMentionChatters } from '../searchMentionChatters';
@@ -8,7 +6,7 @@ import type { MentionChatter } from '../types';
 
 describe('searchMentionChatters', () => {
   beforeEach(() => {
-    clearMentionLoginIndex();
+    clearMentionIndexes();
   });
 
   test('searchMentionChatters returns canonical logins for composer autocomplete', () => {
@@ -31,8 +29,7 @@ describe('searchMentionChatters', () => {
     expect(searchMentionChatters('some', 5)).toEqual<MentionChatter[]>([
       {
         login: 'SomeOtherUser',
-        userId: 'someotheruser',
-        color: generateRandomTwitchColor('SomeOtherUser'),
+        color: '#5F9EA0',
       },
     ]);
   });
@@ -78,5 +75,13 @@ describe('searchMentionChatters', () => {
     expect(searchMentionChatters('dupe', 5)).toEqual<MentionChatter[]>([
       { login: 'Dupe', userId: '42', color: '#9147ff' },
     ]);
+  });
+
+  test('keeps a leading @ out of the login search', () => {
+    registerMentionLogin('luke_h');
+
+    expect(
+      searchMentionChatters('@Luke', 5).map(chatter => chatter.login),
+    ).toEqual(['luke_h']);
   });
 });

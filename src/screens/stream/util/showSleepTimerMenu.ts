@@ -24,6 +24,5 @@ export function showSleepTimerMenu(sleepTimer: SleepTimer): void {
   showActionMenu({
     title,
     actions,
-    cancelLabel: 'Cancel',
   });
 }

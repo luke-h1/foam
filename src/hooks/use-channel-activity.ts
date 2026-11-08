@@ -65,7 +65,7 @@ export function useChannelActivity<THelix, TState>(
     };
   }, [channelId, channelScopeKey, descriptor, isOwnChannel]);
 
-  // eslint-disable-next-line react-doctor/no-cascading-set-state -- EventSub handlers update on independent Twitch events
+  // oxlint-disable-next-line react-doctor/no-cascading-set-state -- EventSub handlers update on independent Twitch events
   useEffect(() => {
     if (!canSubscribe || !channelId) {
       return;

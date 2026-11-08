@@ -9,11 +9,11 @@ export const showFeedbackWidget = jest.fn();
 export const setMeasurement = jest.fn();
 export const startInactiveSpan = jest.fn();
 
-type SpanOptions = {
+interface SpanOptions {
   name: string;
   op?: string;
   attributes?: Record<string, string | number | boolean>;
-};
+}
 
 export const startSpan = jest.fn(<T>(_options: SpanOptions, fn: () => T): T =>
   fn(),

@@ -10,10 +10,6 @@ import {
 
 const MAX_FETCHED_COSMETICS_USERS = 500;
 
-/**
- * Chatters whose cosmetics this session already requested; a plain bounded
- * module Set because it is only read imperatively, never rendered.
- */
 const fetchedCosmeticsUsers = new Set<string>();
 
 function getRenderableBadgeUrl(twitchUserId: string): string | undefined {

@@ -47,7 +47,7 @@ function summarise(
   fail: number,
   totalMs: number,
 ): PassResult {
-  // eslint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks toSorted
+  // oxlint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks toSorted
   const sorted = [...durations].sort((a, b) => a - b);
 
   const sum = durations.reduce((acc, d) => acc + d, 0);
@@ -88,7 +88,7 @@ export async function runSequential(
     const t0 = performance.now();
 
     try {
-      // eslint-disable-next-line react-doctor/async-await-in-loop -- sequential is the measurement
+      // oxlint-disable-next-line react-doctor/async-await-in-loop -- sequential is the measurement
       await decodeOne(url);
       durations.push(performance.now() - t0);
     } catch {
@@ -128,7 +128,7 @@ export async function runConcurrent(
       const t0 = performance.now();
 
       try {
-        // eslint-disable-next-line react-doctor/async-await-in-loop -- workers drain the queue serially; concurrency = N workers
+        // oxlint-disable-next-line react-doctor/async-await-in-loop -- workers drain the queue serially; concurrency = N workers
         await decodeOne(url);
         durations.push(performance.now() - t0);
       } catch {

@@ -3,6 +3,8 @@ import { createMMKV } from 'react-native-mmkv';
 import { Directory, File, Paths } from 'expo-file-system';
 import * as FileSystemLegacy from 'expo-file-system/legacy';
 
+import { isCacheableWebUri } from '@app/utils/image/isCacheableWebUri';
+
 const CACHE_DIR_NAME = 'chat-img-cache';
 const RECORD_PREFIX = 'image-cache-record:';
 const MAX_CACHE_BYTES = 100 * 1024 * 1024;
@@ -17,10 +19,10 @@ const EVICTION_TARGET_RATIO = 0.9;
 
 const DOWNLOAD_CONCURRENCY = 4;
 
-export type CacheImageOptions = {
+export interface CacheImageOptions {
   signal?: AbortSignal;
   variant?: string;
-};
+}
 
 export interface CachedImageInfo {
   uri: string;
@@ -32,7 +34,7 @@ export interface CachedImageInfo {
   variant?: string;
 }
 
-type CacheRecord = {
+interface CacheRecord {
   key: string;
   lastAccessed: number;
   name: string;
@@ -40,9 +42,9 @@ type CacheRecord = {
   uri: string;
   sourceUrl: string;
   variant?: string;
-};
+}
 
-type DownloadTask = {
+interface DownloadTask {
   generation: number;
   key: string;
   options: CacheImageOptions;
@@ -50,7 +52,7 @@ type DownloadTask = {
   resolve: (uri: string) => void;
   run: () => Promise<string>;
   url: string;
-};
+}
 
 const manifestStorage = createMMKV({
   id: 'image-cache-manifest',
@@ -84,20 +86,19 @@ function hashString(str: string): string {
   let hash = 2_166_136_261;
 
   for (let i = 0; i < str.length; i += 1) {
-    // eslint-disable-next-line no-bitwise
     hash ^= str.charCodeAt(i);
-    // eslint-disable-next-line no-bitwise
     hash +=
       (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
   }
 
-  // eslint-disable-next-line no-bitwise
   return (hash >>> 0).toString(16);
 }
 
 function getFileExtensionFromUrl(url: string): string {
   try {
-    const match = new URL(url).pathname.match(/\.(png|jpg|jpeg|gif|webp|svg)/i);
+    const match = new URL(url).pathname.match(
+      /\.(png|jpg|jpeg|gif|webp|avif|svg)/i,
+    );
 
     if (!match?.[1]) {
       return 'img';
@@ -107,10 +108,6 @@ function getFileExtensionFromUrl(url: string): string {
   } catch {
     return 'img';
   }
-}
-
-function isCacheableUri(uri: string): boolean {
-  return /^https?:\/\//i.test(uri);
 }
 
 function getCacheKey(url: string, variant = 'original'): string {
@@ -406,6 +403,8 @@ async function validateManifest(): Promise<void> {
   });
 }
 
+let validationTimer: ReturnType<typeof setTimeout> | undefined;
+
 function validateManifestSoon(): void {
   if (validationStarted) {
     return;
@@ -413,7 +412,8 @@ function validateManifestSoon(): void {
 
   validationStarted = true;
 
-  setTimeout(() => {
+  validationTimer = setTimeout(() => {
+    validationTimer = undefined;
     void validateManifest();
   }, 1000);
 }
@@ -437,7 +437,7 @@ export async function cacheImageFromUrl(
 ): Promise<string> {
   hydrateManifest();
 
-  if (!isCacheableUri(url) || options.signal?.aborted) {
+  if (!isCacheableWebUri(url) || options.signal?.aborted) {
     return url;
   }
 
@@ -480,7 +480,6 @@ export async function cacheImageFromUrl(
     try {
       const downloadedFile = await File.downloadFileAsync(url, cacheDir);
 
-      // A parallel download already produced the file, so drop the duplicate.
       const isDuplicate =
         downloadedFile.uri !== cachedFile.uri && cachedFile.exists;
 
@@ -536,6 +535,8 @@ export function getCachedImageUri(
 
 export function clearSessionCache(): void {
   hydrateManifest();
+  clearTimeout(validationTimer);
+  validationTimer = undefined;
   cacheGeneration += 1;
   taskQueue.splice(0).forEach(task => task.resolve(task.url));
   inFlight.clear();

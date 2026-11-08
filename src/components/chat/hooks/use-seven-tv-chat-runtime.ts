@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { MutableRefObject } from 'react';
 
+import type { EmoteLoadingStatus } from '@app/components/chat/hooks/use-chat-emote-loader';
 import { useSevenTvWs } from '@app/components/chat/hooks/use-seven-tv-ws';
 import { createSevenTvCallbacks } from '@app/components/chat/util/createSevenTvCallbacks';
 import { useSyncRef } from '@app/hooks/use-sync-ref';
@@ -11,14 +12,14 @@ import {
   switchSevenTvEmoteSet,
   updateSevenTvEmotes,
 } from '@app/store/chat/actions/seven-tv-channel-lifecycle';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import { logger } from '@app/utils/logger';
 
 interface UseSevenTvChatRuntimeOptions {
   channelId: string;
   channelName: string;
   currentEmoteSetIdRef: MutableRefObject<string | null>;
-  emoteLoadStatus: string;
+  emoteLoadStatus: EmoteLoadingStatus;
   handleNewMessage: (
     message: AnyChatMessageType,
     options?: { countUnread?: boolean },
@@ -106,6 +107,8 @@ export function useSevenTvChatRuntime({
     readyState,
   } = useSevenTvWs({
     ...sevenTvCallbacks,
+    twitchChannelId: channelId,
+    sevenTvEmoteSetId,
     sevenTvChannelUserId,
     onEmoteSetSwitch,
     onEvent: eventType => logger.stvWs.debug(`SevenTV event: ${eventType}`),

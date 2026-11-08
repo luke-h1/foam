@@ -2,9 +2,9 @@ import { createContext, useCallback, useState } from 'react';
 
 import { useViewability } from '@legendapp/list/react-native';
 
-export type RowVisibilityListener = (isVisible: boolean) => void;
+type RowVisibilityListener = (isVisible: boolean) => void;
 
-export interface RowVisibility {
+interface RowVisibility {
   isVisible: () => boolean;
   subscribe: (listener: RowVisibilityListener) => () => void;
 }

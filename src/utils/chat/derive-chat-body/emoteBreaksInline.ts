@@ -1,4 +1,4 @@
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
 /**
  * Standalone zero-width emotes and attached overlays both need the

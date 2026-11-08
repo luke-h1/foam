@@ -1,9 +1,10 @@
 import { View } from 'react-native';
 
+import type { BadgePressData } from '@app/store/chat/types/chat-press-data';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 import { styles } from '../ChatRow.styles';
-import type { BadgePressData } from '../ChatRow.types';
+import { getChatTextStyles } from '../ChatText.styles';
 import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
 import type { ChatTokenRenderProps } from './types/chat-token-render-props';
 import { UserChatBody } from './UserChatBody';
@@ -38,9 +39,15 @@ export function AnnouncementChatBody({
   const resolvedAccentColor = accentColor ?? styles.announcementMetaText.color;
 
   return (
-    <View style={styles.announcementColumn}>
+    <View
+      style={[
+        styles.announcementColumn,
+        getChatTextStyles(rendererArgs.fontScale, rendererArgs.density)
+          .stackGap,
+      ]}
+    >
       <ChatNoticeMetaRow
-        compact={rendererArgs.compact}
+        density={rendererArgs.density}
         fontScale={rendererArgs.fontScale}
         icon='megaphone.fill'
         label='Announcement'

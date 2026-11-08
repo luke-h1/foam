@@ -1,15 +1,15 @@
+import type { TimedCacheEntry } from '@app/utils/chat/shared-chat-badges/types';
+import { setBoundedMapEntry } from '@app/utils/collection/setBoundedMapEntry';
+
 /**
  * Render caches for chat colours, read imperatively at up to ~100 msg/s and
  * never subscribed - plain Maps per the chat-state rule.
  */
-export const CHAT_SESSION_CACHE_TTL_MS = 30_000;
+const CHAT_SESSION_CACHE_TTL_MS = 30_000;
 
 export type SessionCacheBucket = 'mentionColors' | 'lightenedColors';
 
-type TimedStringEntry = {
-  value: string;
-  expiresAt: number;
-};
+type TimedStringEntry = TimedCacheEntry<string>;
 
 const MAX_SESSION_CACHE_SIZES = {
   mentionColors: 500,
@@ -47,33 +47,18 @@ export function setSessionCacheString(
   key: string,
   value: string,
 ): void {
-  const entries = buckets[bucket];
-
-  entries.set(key, {
-    value,
-    expiresAt:
-      bucket === 'lightenedColors'
-        ? NEVER_EXPIRES
-        : Date.now() + CHAT_SESSION_CACHE_TTL_MS,
-  });
-
-  const maxSize = MAX_SESSION_CACHE_SIZES[bucket];
-
-  if (entries.size <= maxSize) {
-    return;
-  }
-
-  const dropCount = entries.size - maxSize;
-  let dropped = 0;
-
-  for (const oldestKey of entries.keys()) {
-    if (dropped >= dropCount) {
-      break;
-    }
-
-    entries.delete(oldestKey);
-    dropped += 1;
-  }
+  setBoundedMapEntry(
+    buckets[bucket],
+    key,
+    {
+      value,
+      expiresAt:
+        bucket === 'lightenedColors'
+          ? NEVER_EXPIRES
+          : Date.now() + CHAT_SESSION_CACHE_TTL_MS,
+    },
+    MAX_SESSION_CACHE_SIZES[bucket],
+  );
 }
 
 export function clearSessionCache(bucket?: SessionCacheBucket): void {

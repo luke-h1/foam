@@ -23,7 +23,7 @@ const EXAMPLE_GIF_URL =
 const EXAMPLE_GIF_CONTENT = '[Y A Y Yes GIF by Djemilah Birnie]';
 
 const scale = getChatScale('default', 'comfortable');
-const textStyles = getChatTextStyles('default', false);
+const textStyles = getChatTextStyles('default', 'comfortable');
 const storyVisibility = createRowVisibilityStore(true);
 
 const gifTokenDecorator = (Story: () => ReactNode) => (
@@ -109,7 +109,6 @@ export const InMessage: Story = {
         { color: '#FF6B6B' },
         mockBadges,
       )}
-      onReply={() => {}}
     />
   ),
 };
@@ -137,7 +136,6 @@ export const MidMessage: Story = {
         },
         mockBadges,
       )}
-      onReply={() => {}}
     />
   ),
 };
@@ -156,7 +154,6 @@ export const InChat: Story = {
             color: '#9B59B6',
           },
         )}
-        onReply={() => {}}
       />
       <ChatRow
         {...createBaseMessage(
@@ -176,7 +173,6 @@ export const InChat: Story = {
           },
           mockBadges,
         )}
-        onReply={() => {}}
       />
       <ChatRow
         {...createBaseMessage([{ type: 'text', content: 'lmao perfect' }], {
@@ -184,7 +180,6 @@ export const InChat: Story = {
           'display-name': 'Chatter',
           color: '#9B59B6',
         })}
-        onReply={() => {}}
       />
     </View>
   ),

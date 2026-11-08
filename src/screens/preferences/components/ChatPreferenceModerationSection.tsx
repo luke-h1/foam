@@ -1,46 +1,38 @@
 import {
   SettingsSection,
+  SettingsSegmentedRow,
   SettingsToggleRow,
 } from '@app/components/settings-section/SettingsSection';
+import { updatePreferences, usePreference } from '@app/store/preference-store';
 
-import { DELETED_STYLE_OPTIONS } from '../util/chatPreferenceTypes';
-import { ChatPreferenceSegmentedSettingsRow } from './ChatPreferenceSettingsRows';
+import {
+  CHAT_PREFERENCE_ROWS as ROWS,
+  CHAT_PREFERENCE_SECTION_TITLES,
+  DELETED_STYLE_OPTIONS,
+} from '../constants';
 
-interface ChatPreferenceModerationSectionProps {
-  deletedStyleIndex: number;
-  handleDeletedStyleChange: (index: number) => void;
-  ignoreClearChat: boolean | undefined;
-  onIgnoreClearChatChange: (value: boolean) => void;
-}
+export function ChatPreferenceModerationSection() {
+  const deletedMessageStyle = usePreference('deletedMessageStyle');
+  const ignoreClearChat = usePreference('ignoreClearChat');
 
-export function ChatPreferenceModerationSection({
-  deletedStyleIndex,
-  handleDeletedStyleChange,
-  ignoreClearChat,
-  onIgnoreClearChatChange,
-}: ChatPreferenceModerationSectionProps) {
   return (
-    <SettingsSection title='Moderation'>
-      <ChatPreferenceSegmentedSettingsRow
-        icon={{
-          icon: 'trash.slash',
-          androidIcon: 'delete',
-        }}
-        onSelectIndex={handleDeletedStyleChange}
-        selectedIndex={deletedStyleIndex}
-        subtitle='How removed messages appear in chat'
-        title='Deleted Messages'
-        values={DELETED_STYLE_OPTIONS.map(option => option.label)}
+    <SettingsSection title={CHAT_PREFERENCE_SECTION_TITLES.moderation}>
+      <SettingsSegmentedRow
+        title={ROWS.deletedMessages.title}
+        subtitle={ROWS.deletedMessages.subtitle}
+        icon={ROWS.deletedMessages}
+        options={DELETED_STYLE_OPTIONS}
+        value={deletedMessageStyle}
+        onValueChange={value =>
+          updatePreferences({ deletedMessageStyle: value })
+        }
       />
       <SettingsToggleRow
-        title='Keep History on Clear'
-        subtitle='Keep scrollback when a moderator clears chat'
-        icon={{
-          icon: 'clock.arrow.circlepath',
-          androidIcon: 'history',
-        }}
-        value={ignoreClearChat === true}
-        onValueChange={onIgnoreClearChatChange}
+        title={ROWS.keepHistoryOnClear.title}
+        subtitle={ROWS.keepHistoryOnClear.subtitle}
+        icon={ROWS.keepHistoryOnClear}
+        value={ignoreClearChat}
+        onValueChange={value => updatePreferences({ ignoreClearChat: value })}
       />
     </SettingsSection>
   );

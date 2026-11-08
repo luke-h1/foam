@@ -1,7 +1,9 @@
-import { act } from '@testing-library/react-native';
+import { act, fireEvent, screen } from '@testing-library/react-native';
 
-import { createMessageActionData } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
+import { createMessageActionData } from '@app/components/chat/__tests__/__fixtures__/chatFactories.fixture';
 import * as runModCommandModule from '@app/components/chat/util/mod-commands/runModCommand';
+import { userInfoFixture } from '@app/services/__fixtures__/twitch/user-info.fixture';
+import { twitchService } from '@app/services/twitch-service';
 import {
   openChatMessageActions,
   openChatUserActions,
@@ -10,41 +12,9 @@ import {
 import * as showActionMenuModule from '@app/store/overlays/show-action-menu';
 import render from '@app/test/render';
 
-import * as actionSheetModule from '../action-sheet/ActionSheet';
 import { ChatOverlayLayer } from '../ChatOverlayLayer';
-import * as userActionSheetModule from '../UserActionSheet';
 
-interface CapturedUserSheetProps {
-  onBanUser: () => void;
-  onTimeoutUser: () => void;
-}
-
-interface CapturedMessageSheetProps {
-  onTimeoutUser: () => void;
-}
-
-let userSheetProps: CapturedUserSheetProps | undefined;
-let messageSheetProps: CapturedMessageSheetProps | undefined;
-
-/**
- * Both sheets are memo()-wrapped, so spyOn refuses to patch them; redefine
- * the exports and capture callbacks rather than driving the UI.
- */
-Object.defineProperty(userActionSheetModule, 'UserActionSheet', {
-  configurable: true,
-  value: (props: CapturedUserSheetProps) => {
-    userSheetProps = props;
-    return null;
-  },
-});
-
-Object.defineProperty(actionSheetModule, 'ActionSheet', {
-  configurable: true,
-  value: (props: CapturedMessageSheetProps) => {
-    messageSheetProps = props;
-    return null;
-  },
-});
+jest.spyOn(twitchService, 'getUser').mockResolvedValue(userInfoFixture);
 
 const showActionMenuMock = jest
   .spyOn(showActionMenuModule, 'showActionMenu')
@@ -108,8 +78,6 @@ function pickDurationOption(index: number) {
 describe('ChatOverlayLayer moderation targets', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    userSheetProps = undefined;
-    messageSheetProps = undefined;
     resetChatOverlays(CHANNEL_ID);
   });
 
@@ -120,13 +88,7 @@ describe('ChatOverlayLayer moderation targets', () => {
       openChatUserActions(CHANNEL_ID, { login: 'viewer', username: 'Viewer' });
     });
 
-    if (!userSheetProps) {
-      throw new Error('UserActionSheet was not rendered');
-    }
-
-    act(() => {
-      userSheetProps?.onTimeoutUser();
-    });
+    fireEvent.press(screen.getByText('Time out…'));
 
     expect(runModCommandMock).not.toHaveBeenCalled();
 
@@ -160,13 +122,7 @@ describe('ChatOverlayLayer moderation targets', () => {
       openChatMessageActions(CHANNEL_ID, createMessageActionData());
     });
 
-    if (!messageSheetProps) {
-      throw new Error('ActionSheet was not rendered');
-    }
-
-    act(() => {
-      messageSheetProps?.onTimeoutUser();
-    });
+    fireEvent.press(screen.getByText('Time out…'));
 
     pickDurationOption(1);
 
@@ -186,9 +142,7 @@ describe('ChatOverlayLayer moderation targets', () => {
       openChatUserActions(CHANNEL_ID, { login: 'viewer', username: 'Viewer' });
     });
 
-    act(() => {
-      userSheetProps?.onBanUser();
-    });
+    fireEvent.press(screen.getByText('Ban user'));
 
     expect(showActionMenuMock).not.toHaveBeenCalled();
 
@@ -211,6 +165,6 @@ describe('ChatOverlayLayer moderation targets', () => {
       });
     });
 
-    expect(userSheetProps).toBeUndefined();
+    expect(screen.queryByText('Ban user')).not.toBeOnTheScreen();
   });
 });

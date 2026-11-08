@@ -8,10 +8,11 @@ import type {
   PaintStop,
 } from '@app/types/seven-tv/cosmetics';
 import { indexedCollectionToArray } from '@app/utils/collection/indexedCollection';
-import { isVisibleSevenTvColor } from '@app/utils/color/isVisibleSevenTvColor';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 import { sevenTvColorToRgba } from '@app/utils/color/sevenTvColorToRgba';
 
+import { getPaintBaseColor } from '../paint-layer/getPaintBaseColor';
+import { paintCssFontWeight } from '../paint-text-style/paintFont';
 import type { PaintCssDeclarations } from './types';
 import { webKitSafeLayerImageUrl } from './webKitSafeLayerImageUrl';
 
@@ -63,8 +64,9 @@ function cssLayer(layer: PaintLayerData): CssLayer {
       break;
     case 'URL':
       // Empty urls never reach here; unrenderable layers are filtered out
-      // before the css layer list is built.
-      image = `url(${webKitSafeLayerImageUrl(layer.image_url)})`;
+      // before the css layer list is built. Quoted so a url with
+      // parentheses or whitespace stays valid CSS.
+      image = `url("${webKitSafeLayerImageUrl(layer.image_url).replaceAll('"', '%22')}")`;
       break;
     default:
       image = 'none';
@@ -103,9 +105,7 @@ export function buildPaintCssDeclarations(
     : [];
 
   return {
-    color: isVisibleSevenTvColor(paint.color)
-      ? sevenTvColorToCss(paint.color)
-      : 'inherit',
+    color: getPaintBaseColor(paint, 'inherit'),
     backgroundImage: layers.map(layer => layer.image).join(', ') || 'none',
     backgroundPosition:
       layers.map(layer => layer.position).join(', ') || '0% 0%',
@@ -118,7 +118,9 @@ export function buildPaintCssDeclarations(
             `drop-shadow(${shadow.x_offset}px ${shadow.y_offset}px ${shadow.radius}px ${sevenTvColorToCss(shadow.color)})`,
         )
         .join(' ') || 'inherit',
-    fontWeight: textStyle?.weight ? String(textStyle.weight * 100) : 'inherit',
+    fontWeight: textStyle?.weight
+      ? String(paintCssFontWeight(textStyle.weight))
+      : 'inherit',
     webkitTextStrokeWidth: textStyle?.stroke
       ? `${textStyle.stroke.width}px`
       : 'inherit',

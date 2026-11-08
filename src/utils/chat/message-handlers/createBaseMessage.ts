@@ -1,47 +1,44 @@
-import { enrichChannelPointPrivmsgTags } from '@app/store/chat/actions/channelPointRewardTitleStore';
-import type { ChatMessageType } from '@app/store/chat/types/constants';
+import type { ChatMessageType } from '@app/types/chat/chatMessage';
+import type { ChatTimestampFormat } from '@app/types/chat/chatTimestampFormat';
 import { isHighlightMyMessageTags } from '@app/utils/chat/channel-points-reward-title/isHighlightMyMessageTags';
+import { createMessageIdentity } from '@app/utils/chat/message-identity/createMessageIdentity';
 import { generateNonce } from '@app/utils/string/generateNonce';
 
 import { createChatTimestampFromTags } from './createChatTimestampFromTags';
 import { createUserStateFromTags } from './createUserStateFromTags';
+import { getReplyFields } from './getReplyFields';
 
 interface CreateBaseMessageParams {
   tags: Record<string, string>;
   channelName: string;
   text: string;
-  broadcasterId?: string;
   isAction?: boolean;
+  timestampFormat: ChatTimestampFormat;
 }
 
 export const createBaseMessage = ({
   tags,
   channelName,
   text,
-  broadcasterId,
   isAction,
+  timestampFormat,
 }: CreateBaseMessageParams): ChatMessageType<'usernotice'> => {
-  const enrichedTags = enrichChannelPointPrivmsgTags(tags, broadcasterId);
-  const userstate = createUserStateFromTags(enrichedTags);
+  const userstate = createUserStateFromTags(tags);
   const messageId = userstate.id || '0';
   const messageNonce = messageId !== '0' ? messageId : generateNonce();
-  const isHighlightedMessage = isHighlightMyMessageTags(enrichedTags);
+  const isHighlightedMessage = isHighlightMyMessageTags(tags);
 
   const message: ChatMessageType<'usernotice'> = {
-    id: `${messageId}_${messageNonce}`,
+    ...createMessageIdentity(messageId, messageNonce),
     userstate,
     message: [{ type: 'text', content: text.trimEnd() }],
     badges: [],
     channel: channelName,
-    message_id: messageId,
-    message_nonce: messageNonce,
-    timestamp: createChatTimestampFromTags(tags),
+    timestamp: createChatTimestampFromTags(tags, timestampFormat),
     sender: userstate.username || '',
-    parentDisplayName: tags['reply-parent-display-name'] || '',
-    replyDisplayName: tags['reply-parent-user-login'] || '',
-    replyBody: tags['reply-parent-msg-body'] || '',
+    ...getReplyFields(tags),
     isChannelPointRedemption:
-      Boolean(enrichedTags['custom-reward-id']) || isHighlightedMessage,
+      Boolean(tags['custom-reward-id']) || isHighlightedMessage,
   };
 
   if (isHighlightedMessage) {

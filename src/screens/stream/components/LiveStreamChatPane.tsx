@@ -16,9 +16,6 @@ import { theme } from '@app/styles/themes';
 import type { FullscreenChatMode } from '../types';
 import { ChatLatencyPill } from './ChatLatencyPill';
 
-/**
- * Shown in chat's place until the player reports the stream is running.
- */
 function ChatPendingNotice() {
   return (
     <View style={styles.chatConnectionNotice}>
@@ -34,7 +31,6 @@ function ChatPendingNotice() {
 }
 
 interface ChatPaneContentProps {
-  customPlayerEnabled: boolean;
   isLandscape: boolean;
   isOverlayChat: boolean;
   isStreamEnabled: boolean;
@@ -47,12 +43,7 @@ interface ChatPaneContentProps {
   shouldMountChat: boolean;
 }
 
-/**
- * Everything that sits inside the chat pane: the latency pill, any live
- * poll or prediction, and chat itself.
- */
 function ChatPaneContent({
-  customPlayerEnabled,
   isLandscape,
   isOverlayChat,
   isStreamEnabled,
@@ -69,7 +60,7 @@ function ChatPaneContent({
         isOverlayChat ? styles.overlayChatContent : null,
       ]}
     >
-      {isStreamEnabled && customPlayerEnabled ? <ChatLatencyPill /> : null}
+      {isStreamEnabled ? <ChatLatencyPill /> : null}
       {isStreamEnabled && prediction ? (
         <ChannelPredictionCard
           channelLogin={resolvedChannelLogin}
@@ -99,7 +90,6 @@ interface LiveStreamChatPaneProps {
   animatedResizeHandleStyle: AnimatedStyle<ViewStyle>;
   animatedStyle: AnimatedStyle<ViewStyle>;
   containerStyle: StyleProp<ViewStyle>;
-  customPlayerEnabled: boolean;
   fullscreenChatMode: FullscreenChatMode;
   isLandscape: boolean;
   isStreamEnabled: boolean;
@@ -114,15 +104,10 @@ interface LiveStreamChatPaneProps {
   shouldShowChatConnectionNotice: boolean;
 }
 
-/**
- * The chat half of the screen: the chat itself once the channel resolves, the
- * notice shown while it waits for the stream, and the landscape resize handle.
- */
 export function LiveStreamChatPane({
   animatedResizeHandleStyle,
   animatedStyle,
   containerStyle,
-  customPlayerEnabled,
   fullscreenChatMode,
   isLandscape,
   isStreamEnabled,
@@ -145,7 +130,6 @@ export function LiveStreamChatPane({
     >
       {hasChatContent ? (
         <ChatPaneContent
-          customPlayerEnabled={customPlayerEnabled}
           isLandscape={isLandscape}
           isOverlayChat={isOverlayChat}
           isStreamEnabled={isStreamEnabled}

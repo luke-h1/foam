@@ -2,59 +2,61 @@ import { memo } from 'react';
 import { View } from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
+import { CHAT_NOTICE_ACCENTS } from '@app/components/chat/util/chatNoticeAccents';
 import { SymbolView } from '@app/components/ui/icon/Icon';
+import type { ChatDensity, ChatFontScale } from '@app/store/preference-store';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import { reportUnrenderableNotice } from '@app/utils/chat/chat-health/reportUnrenderableNotice';
-import type { MessageToken } from '@app/utils/chat/messageToken';
 
 import { styles } from '../chat-message/ChatRow.styles';
 import { getChatTextStyles } from '../chat-message/ChatText.styles';
 import { ChatNoticeMetaRow } from '../chat-message/renderers/ChatNoticeMetaRow';
-import type { ChatFontScale } from '../chat-message/util/chatScale';
-import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';
 import { NoticeUserMessage } from './NoticeUserMessage';
 
 interface RitualNoticeProps {
-  compact?: boolean;
-  disableAnimations?: boolean;
+  density?: ChatDensity;
+  disableEmoteAnimations?: boolean;
   fontScale?: ChatFontScale;
-  parsedMessage?: MessageToken[];
+  messageTokens: MessageToken[];
   token: MessageToken<'ritual'>;
 }
 
+function isNewChatterRitual(ritualName: string): boolean {
+  return ritualName === 'new_chatter';
+}
+
 function getRitualMetaLabel(ritualName: string): string {
-  switch (ritualName) {
-    case 'new_chatter':
-      return 'New chatter';
-    default:
-      return ritualName ? ritualName.replaceAll('_', ' ') : 'Chat ritual';
+  if (isNewChatterRitual(ritualName)) {
+    return 'New chatter';
   }
+
+  return ritualName ? ritualName.replaceAll('_', ' ') : 'Chat ritual';
 }
 
 function getRitualIcon(
   ritualName: string,
 ): React.ComponentProps<typeof SymbolView>['name'] {
-  return ritualName === 'new_chatter' ? 'hand.wave.fill' : 'sparkles';
+  return isNewChatterRitual(ritualName) ? 'hand.wave.fill' : 'sparkles';
 }
 
 function getRitualDescription(ritualName: string, displayName: string): string {
-  switch (ritualName) {
-    case 'new_chatter':
-      return `${displayName} is new to the chat.`;
-    default:
-      return ritualName
-        ? `${displayName} performed the ${ritualName.replaceAll('_', ' ')} ritual.`
-        : `${displayName} performed a chat ritual.`;
+  if (isNewChatterRitual(ritualName)) {
+    return `${displayName} is new to the chat.`;
   }
+
+  return ritualName
+    ? `${displayName} performed the ${ritualName.replaceAll('_', ' ')} ritual.`
+    : `${displayName} performed a chat ritual.`;
 }
 
 function RitualNoticeComponent({
-  compact,
-  disableAnimations,
+  density,
+  disableEmoteAnimations,
   fontScale,
-  parsedMessage,
+  messageTokens,
   token,
 }: RitualNoticeProps) {
-  const textStyles = getChatTextStyles(fontScale, compact);
+  const textStyles = getChatTextStyles(fontScale, density);
   const displayName = token.displayName?.trim();
   const systemMsg = token.systemMsg;
   const message = token.message?.trim() ?? '';
@@ -76,7 +78,7 @@ function RitualNoticeComponent({
     <View style={styles.messageColumn}>
       <ChatNoticeMetaRow
         {...{
-          compact,
+          density,
           fontScale,
           icon: getRitualIcon(token.ritualName),
           label: getRitualMetaLabel(token.ritualName),
@@ -90,7 +92,12 @@ function RitualNoticeComponent({
         </ChatText>
       ) : null}
       <NoticeUserMessage
-        {...{ compact, disableAnimations, fontScale, message, parsedMessage }}
+        {...{
+          density,
+          disableEmoteAnimations,
+          fontScale,
+          tokens: messageTokens,
+        }}
       />
     </View>
   );

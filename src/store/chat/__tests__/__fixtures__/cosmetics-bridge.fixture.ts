@@ -35,3 +35,21 @@ export function createBadgeEntitlement(
     },
   };
 }
+
+export function createPaintEntitlement(
+  paintId: string,
+  ttvUserId: string,
+): EntitlementCreate {
+  const entitlementId = `entitlement-${paintId}`;
+
+  return {
+    id: entitlementId,
+    kind: 0,
+    object: {
+      id: entitlementId,
+      kind: 'PAINT',
+      ref_id: paintId,
+      user: createBadgeEntitlement('badge-1', ttvUserId).object.user,
+    },
+  };
+}

@@ -9,10 +9,6 @@ interface ResolveMessageDisplayFlagsOptions {
   messageDisplay?: ChatMessageDisplayFlags;
 }
 
-/**
- * Flags a message carries in its own data default from the message; the
- * renderer's messageDisplay wins wherever it sets one.
- */
 export function resolveMessageDisplayFlags({
   isAnnouncement: messageIsAnnouncement = false,
   isChannelPointRedemption: messageIsChannelPointRedemption = false,

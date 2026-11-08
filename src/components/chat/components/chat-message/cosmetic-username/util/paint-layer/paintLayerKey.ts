@@ -22,10 +22,6 @@ function paintLayerFingerprint(layer: PaintLayerData): string {
   ].join('|');
 }
 
-/**
- * Stable React keys for paint layers. Duplicate identical layers get an
- * occurrence suffix so keys stay unique without using the map index.
- */
 export function withPaintLayerKeys(
   layers: PaintLayerData[],
 ): { layer: PaintLayerData; key: string; layerIndex: number }[] {

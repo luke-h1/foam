@@ -1,6 +1,6 @@
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
 export interface TokenSummary {
   type: string;

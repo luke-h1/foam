@@ -1,5 +1,5 @@
 import { createRef, useImperativeHandle } from 'react';
-import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import type { ReactTestInstance } from 'react-test-renderer';
 
 import type {
@@ -14,17 +14,17 @@ import { BottomSheet, type BottomSheetHandle } from '../BottomSheet.native';
 
 jest.unmock('@app/components/bottom-sheet/BottomSheet');
 
-type SheetProps = {
+interface SheetProps {
   handleComponent?: unknown;
   index?: number;
   snapPoints?: (string | number)[];
-};
+}
 
-type MockSheet = {
+interface MockSheet {
   close: jest.Mock;
   props: SheetProps;
   emitDismiss: () => void;
-};
+}
 
 const mockSheet: MockSheet = {
   close: jest.fn(),
@@ -69,8 +69,6 @@ jest
       return <View>{children}</View>;
     },
   );
-
-const windowHeight = Dimensions.get('window').height;
 
 function renderSheet(props: Partial<Parameters<typeof BottomSheet>[0]> = {}) {
   return render(
@@ -190,7 +188,7 @@ describe('BottomSheet', () => {
 
       expect(mockSheet.props.snapPoints).toBeUndefined();
 
-      expect(style.height).toBe(Math.round(windowHeight * 0.9));
+      expect(style.height).toBe(1201);
 
       expect(style.flex).toBeUndefined();
     });
@@ -207,12 +205,10 @@ describe('BottomSheet', () => {
     test('clamps a fixed height that exceeds the window', () => {
       const { getByTestId } = renderSheet({
         enableFixedSnapPoints: true,
-        snapPoints: [{ height: windowHeight + 400 }],
+        snapPoints: [{ height: 5000 }],
       });
 
-      expect(getContentStyle(getByTestId('sheet')).height).toBe(
-        Math.round(windowHeight),
-      );
+      expect(getContentStyle(getByTestId('sheet')).height).toBe(1334);
     });
   });
 

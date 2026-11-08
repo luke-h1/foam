@@ -33,7 +33,7 @@ export function useStreamProfilePictures(
       }
     }
 
-    // eslint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks toSorted
+    // oxlint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks toSorted
     return [...missing].sort();
   }, [streams, enabled, profileImageById]);
 

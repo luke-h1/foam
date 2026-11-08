@@ -1,27 +1,22 @@
+import { createChatMessageFixture } from '@app/components/chat/util/__tests__/__fixtures__/chatMessage.fixture';
 import { getVisibleMessages } from '@app/components/chat/util/visibleMessages';
-import type { ChatMessageType } from '@app/store/chat/types/constants';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
-import type { MessageToken } from '@app/utils/chat/messageToken';
-
-type TestMessage = ChatMessageType<'usernotice'>;
+import type { MessageToken } from '@app/types/chat/messageToken';
 
 function createMessage(
   id: string,
   sender: string,
   message: MessageToken[],
   userstateOverrides: Partial<UserStateTags> = {},
-): TestMessage {
-  return {
+): AnyChatMessageType {
+  return createChatMessageFixture({
     id,
     message_id: id,
     message_nonce: `${id}-nonce`,
     sender,
-    channel: 'test',
-    badges: [],
     message,
-    replyBody: '',
-    replyDisplayName: '',
     userstate: createUserStateTags({
       username: sender,
       login: sender.toLowerCase(),
@@ -30,7 +25,7 @@ function createMessage(
       'user-id': `${id}-user`,
       ...userstateOverrides,
     }),
-  };
+  });
 }
 
 describe('getVisibleMessages', () => {

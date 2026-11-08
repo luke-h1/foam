@@ -48,7 +48,6 @@ const MyClipRow = memo(function MyClipRow({
           onPress: () => removeCreatedClip(record.id),
         },
       ],
-      cancelLabel: 'Cancel',
     });
   }, [clip?.title, record.broadcasterName, record.id]);
 

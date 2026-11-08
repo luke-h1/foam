@@ -74,10 +74,6 @@ const layerGradientConfigCache = new WeakMap<
   { config: LayerGradientConfig | null }
 >();
 
-/**
- * Gradient config for a layer span, or null when the layer draws no gradient
- * (URL layers, and gradients with fewer than two stops).
- */
 export function buildLayerGradientConfig(
   layer: PaintLayerData,
 ): LayerGradientConfig | null {

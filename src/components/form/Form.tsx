@@ -1,13 +1,5 @@
 /* eslint-disable */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable no-restricted-imports */
 import * as AppleColors from '@bacons/apple-colors';
-import {
-  SymbolView,
-  type SymbolViewProps,
-  type SymbolWeight,
-} from '@app/components/ui/icon/Icon';
 import {
   Children,
   type ComponentProps,
@@ -19,7 +11,6 @@ import {
   isValidElement,
 } from 'react';
 import {
-  type OpaqueColorValue,
   Text as RNText,
   type StyleProp,
   StyleSheet,
@@ -110,37 +101,16 @@ function FormItem({
   );
 }
 
-type SystemImageCustomProps = {
-  name: SymbolViewProps['name'];
-  color?: OpaqueColorValue;
-  size?: number;
-  weight?: SymbolWeight;
-  style?: StyleProp<ViewStyle>;
-};
-
-type SystemImageProps = SymbolViewProps['name'] | SystemImageCustomProps;
-
-export function Text({
-  bold,
-  ...props
-}: TextProps & {
-  hint?: ReactNode;
-  hintBoolean?: ReactNode;
-  systemImage?: SystemImageProps;
-
-  bold?: boolean;
-}) {
-  const font: TextStyle = {
-    ...FormFont.default,
-    flexShrink: 0,
-    fontWeight: bold ? '600' : 'normal',
-  };
-
+export function Text(
+  props: TextProps & {
+    hint?: ReactNode;
+  },
+) {
   return (
     <RNText
       dynamicTypeRamp='body'
       {...props}
-      style={mergedStyleProp(font, props.style)}
+      style={mergedStyleProp(FORM_TEXT_FONT, props.style)}
     />
   );
 }
@@ -162,6 +132,12 @@ const FormFont = {
     fontSize: 17,
   },
 } satisfies Record<string, TextStyle>;
+
+const FORM_TEXT_FONT: TextStyle = {
+  ...FormFont.default,
+  flexShrink: 0,
+  fontWeight: 'normal',
+};
 
 /**
  * A Section's children may arrive wrapped in an unkeyed Fragment, so unwrap one
@@ -192,10 +168,6 @@ function flattenSectionChildren(children: ReactNode): ReactNode[] {
   return flattened;
 }
 
-/**
- * Renders a row's trailing hint, turning plain strings into right-aligned text
- * and passing any element through untouched.
- */
 function renderSectionHint(hint: ReactNode): ReactNode {
   if (!hint) {
     return null;
@@ -226,17 +198,12 @@ function renderSectionHint(hint: ReactNode): ReactNode {
   });
 }
 
-/**
- * Styles a bare text child as a settings row: form typography, and a leading
- * system image or trailing hint beside it when the row asks for one.
- */
 function asSectionTextRow(
   child: ReactElement<Record<string, unknown>>,
   // The row props come off a cloned element, so they are untyped here. The
   // `@ts-expect-error`s in `Section` cover the same gap.
   resolvedProps: {
     hint?: ReactNode;
-    systemImage?: SystemImageProps | ReactNode;
     style?: StyleProp<TextStyle>;
     [key: string]: unknown;
   },
@@ -253,18 +220,14 @@ function asSectionTextRow(
 
   const hintView = renderSectionHint(resolvedProps.hint);
 
-  if (!hintView && !resolvedProps.systemImage) {
+  if (!hintView) {
     return text;
   }
 
   return (
     <HStack>
-      <SystemImageView
-        systemImage={resolvedProps.systemImage}
-        style={resolvedProps.style}
-      />
       {text}
-      {hintView && <View style={{ flex: 1 }} />}
+      <View style={{ flex: 1 }} />
       {hintView}
     </HStack>
   );
@@ -294,17 +257,6 @@ export function Section({
       // @ts-expect-error react 19 types not caught up
       ...child.props,
     };
-
-    if (resolvedProps.hintBoolean != null) {
-      resolvedProps.hint ??= resolvedProps.hintBoolean ? (
-        <SymbolView
-          name='checkmark.circle.fill'
-          tintColor={AppleColors.systemGreen}
-        />
-      ) : (
-        <SymbolView name='slash.circle' tintColor={AppleColors.systemGray} />
-      );
-    }
 
     const originalOnPress = resolvedProps.onPress;
     const originalOnLongPress = resolvedProps.onLongPress;
@@ -456,43 +408,6 @@ function isStringishNode(node: ReactNode): boolean {
   return containsStringChildren;
 }
 
-function SystemImageView({
-  systemImage,
-  style,
-}: {
-  systemImage?: SystemImageProps | ReactNode;
-  style?: StyleProp<TextStyle>;
-}) {
-  if (!systemImage) {
-    return null;
-  }
-
-  if (typeof systemImage !== 'string' && isValidElement(systemImage)) {
-    return systemImage;
-  }
-
-  const symbolProps: SystemImageCustomProps =
-    typeof systemImage === 'object' &&
-    systemImage !== null &&
-    'name' in systemImage
-      ? (systemImage as SystemImageCustomProps)
-      : { name: systemImage as SymbolViewProps['name'] };
-
-  return (
-    <SymbolView
-      name={symbolProps.name}
-      size={symbolProps.size ?? 20}
-      style={[{ marginRight: 8 }, symbolProps.style]}
-      {...(symbolProps.weight !== undefined
-        ? { weight: symbolProps.weight }
-        : {})}
-      tintColor={
-        symbolProps.color ?? extractStyle(style, 'color') ?? AppleColors.label
-      }
-    />
-  );
-}
-
 function Separator() {
   return (
     <View
@@ -519,31 +434,4 @@ function mergedStyleProp<TStyle extends ViewStyle | TextStyle>(
   }
 
   return [style, styleProps];
-}
-
-function extractStyle<K extends keyof TextStyle>(
-  styleProp: StyleProp<TextStyle> | undefined,
-  key: K,
-): TextStyle[K] | undefined {
-  if (styleProp == null) {
-    return undefined;
-  }
-
-  if (!Array.isArray(styleProp)) {
-    if (typeof styleProp !== 'object') {
-      return undefined;
-    }
-
-    return (styleProp as TextStyle)[key];
-  }
-
-  const match = styleProp.find((entry): entry is TextStyle => {
-    if (entry == null || typeof entry !== 'object' || Array.isArray(entry)) {
-      return false;
-    }
-
-    return (entry as TextStyle)[key] != null;
-  });
-
-  return match?.[key];
 }

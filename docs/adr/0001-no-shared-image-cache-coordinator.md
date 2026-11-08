@@ -1,6 +1,6 @@
 # Keep the decoded-emote cache and the file image cache separate
 
-Foam has two image caches — `providers/cached-emotes-provider/cache-service.ts`
+Foam has two image caches — `lib/emote-cache/cacheService.ts`
 (decode-once `ImageRef` cache for inline chat emotes) and
 `utils/image/imageCache.ts` (on-disk file cache for avatars/thumbnails/badges).
 They superficially share four concerns (LRU eviction, byte-budget accounting, a
@@ -35,7 +35,7 @@ constraints, and each is changed for different reasons.
 ## Amendment (2026-08): four caches, separation unchanged
 
 The full cache inventory is four, not two: the decoded `ImageRef` cache
-(`providers/cached-emotes-provider/cache-service.ts`), the MMKV-manifested file cache (`utils/image/imageCache.ts`), the
+(`lib/emote-cache/cacheService.ts`), the MMKV-manifested file cache (`utils/image/imageCache.ts`), the
 Skia paint bitmap cache (`utils/image/paintBitmapCacheLifecycle.ts`), and expo-image's own
 memory/disk caches. The separation decision above is unchanged - none of them
 share a coordinator. What did change:

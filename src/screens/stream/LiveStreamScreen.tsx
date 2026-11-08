@@ -9,7 +9,7 @@ import {
 import { StyleSheet, View } from 'react-native';
 
 import { useQuery } from '@tanstack/react-query';
-import { router, Stack, useIsFocused } from 'expo-router';
+import { Stack, useIsFocused } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
 import type { StreamPlayerRef } from '@app/components/stream-player/types';
@@ -21,10 +21,7 @@ import {
   streamQueryOptions,
   userQueryOptions,
 } from '@app/lib/react-query/queries/twitch';
-import {
-  usePreference,
-  useUpdatePreferences,
-} from '@app/store/preference-store';
+import { updatePreferences, usePreference } from '@app/store/preference-store';
 import { subscribeLiveSync } from '@app/store/stream/live-sync-bus';
 import { setMeasuredVideoLatencySeconds } from '@app/store/stream/video-latency';
 import { theme } from '@app/styles/themes';
@@ -39,9 +36,10 @@ import { useLiveStreamAnimatedLayout } from './hooks/use-live-stream-animated-la
 import { useLiveStreamChatControls } from './hooks/use-live-stream-chat-controls';
 import { useLiveStreamDimensions } from './hooks/use-live-stream-dimensions';
 import { useLiveStreamOrientation } from './hooks/use-live-stream-orientation';
-import { useLiveStreamPlayerLifecycle } from './hooks/use-live-stream-player-lifecycle';
 import { useLiveStreamPlayerProps } from './hooks/use-live-stream-player-props';
+import { useReleaseAndGoBack } from './hooks/use-release-and-go-back';
 import { useSleepTimer } from './hooks/use-sleep-timer';
+import { useStreamPlayerScreenLifecycle } from './hooks/use-stream-player-screen-lifecycle';
 import { getLiveStreamVisibility } from './util/getLiveStreamVisibility';
 import {
   initialLiveStreamScreenState,
@@ -70,7 +68,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   >('default');
 
   const { authState } = useAuthContext();
-  const customPlayerEnabled = usePreference('customPlayerEnabled');
   const streamPlayerRef = useRef<StreamPlayerRef>(null);
 
   useEffect(
@@ -78,15 +75,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     [],
   );
 
-  // Release the WebView video before popping so an active AVPlayer can't wedge the transition.
-  const handleBack = useCallback(() => {
-    streamPlayerRef.current?.releaseMedia();
-    setTimeout(() => {
-      if (router.canGoBack()) {
-        router.back();
-      }
-    }, 120);
-  }, []);
+  const handleBack = useReleaseAndGoBack(streamPlayerRef);
 
   const sleepTimer = useSleepTimer({ onExpire: handleBack });
 
@@ -98,7 +87,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const disableChat = usePreference('disableChat');
   const disableStream = usePreference('disableStream');
   const persistedLandscapeChatWidth = usePreference('landscapeChatWidth');
-  const updatePreferences = useUpdatePreferences();
 
   const {
     contentWidth,
@@ -147,8 +135,14 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     }
   }, [dispatchUi, isStreamEnabledRef]);
 
-  useLiveStreamPlayerLifecycle({
-    onChatConnectionLost: handleChatConnectionLost,
+  const handlePlayerBlur = useCallback(() => {
+    setMeasuredVideoLatencySeconds(null);
+    handleChatConnectionLost();
+  }, [handleChatConnectionLost]);
+
+  useStreamPlayerScreenLifecycle({
+    keepAwakeTag: 'live-stream',
+    onBlur: handlePlayerBlur,
     streamPlayerRef,
   });
 
@@ -316,7 +310,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
         {...{
           animatedStyle: animatedVideoStyle,
           canCreateClip,
-          customPlayerEnabled,
           displayName,
           isChannelOffline,
           isLandscape,
@@ -342,7 +335,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       {shouldRenderChatPanel ? (
         <LiveStreamChatPane
           animatedResizeHandleStyle={animatedResizeHandleStyle}
-          customPlayerEnabled={customPlayerEnabled}
           poll={poll}
           prediction={prediction}
           animatedStyle={animatedChatStyle}

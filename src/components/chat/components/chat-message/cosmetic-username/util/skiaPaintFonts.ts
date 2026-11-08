@@ -1,12 +1,14 @@
 import { useSyncExternalStore } from 'react';
 // Only used for `Image.resolveAssetSource` (how RN Skia resolves font assets
 // itself); nothing is rendered, so expo-image does not apply.
-// eslint-disable-next-line react-doctor/rn-prefer-expo-image
+// oxlint-disable-next-line react-doctor/rn-prefer-expo-image
 import { Image } from 'react-native';
 
 import { Skia, type SkTypefaceFontProvider } from '@shopify/react-native-skia';
 
 import { logger } from '@app/utils/logger';
+
+import { PAINT_FONT_FAMILY } from './paint-text-style/paintFont';
 
 const montserratFaces = [
   require('@expo-google-fonts/montserrat/400Regular/Montserrat_400Regular.ttf'),
@@ -37,7 +39,7 @@ function loadFontProvider(): void {
       const typeface = Skia.Typeface.MakeFreeTypeFaceFromData(data);
 
       if (typeface) {
-        provider.registerFont(typeface, 'Montserrat');
+        provider.registerFont(typeface, PAINT_FONT_FAMILY);
       }
     }),
   )

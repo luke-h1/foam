@@ -1,9 +1,16 @@
 import type { ReactNode } from 'react';
+import type { StyleProp, TextStyle } from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
-import { subscriptionNoticeStyles as styles } from '@app/components/chat/components/user-notices/SubscriptionNotice.styles';
+
+export interface SubscriptionDescriptionStyles {
+  descriptionText: StyleProp<TextStyle>;
+  emphasis: StyleProp<TextStyle>;
+  name: StyleProp<TextStyle>;
+}
 
 export interface SubscriptionDescriptionInput {
+  styles: SubscriptionDescriptionStyles;
   msgId: string;
   isPrime: boolean;
   tierDisplay: string;
@@ -19,19 +26,19 @@ export interface SubscriptionDescriptionInput {
   senderName?: string;
 }
 
-/**
- * Adds ", N months in a row" after the cumulative months, but only when the
- * subscriber chose to share their streak.
- */
-function pushStreakPart({
-  tokens,
-  shouldShareStreak,
-  streakMonths,
-}: {
-  tokens: ReactNode[];
+interface PushStreakPartOptions {
   shouldShareStreak: boolean | undefined;
   streakMonths: number | undefined;
-}): void {
+  styles: SubscriptionDescriptionStyles;
+  tokens: ReactNode[];
+}
+
+function pushStreakPart({
+  shouldShareStreak,
+  streakMonths,
+  styles,
+  tokens,
+}: PushStreakPartOptions): void {
   if (streakMonths === undefined || streakMonths <= 0 || !shouldShareStreak) {
     return;
   }
@@ -60,6 +67,7 @@ export function buildSubscriptionNoticeDescription(
     massGiftCount,
     senderCount,
     senderName,
+    styles,
   } = input;
 
   const tokens: ReactNode[] = [];
@@ -92,15 +100,16 @@ export function buildSubscriptionNoticeDescription(
           <ChatText key='months' style={styles.descriptionText}>
             {" They've subscribed for "}
           </ChatText>,
-          <ChatText key='monthsCount' style={styles.monthsHighlight}>
+          <ChatText key='monthsCount' style={styles.emphasis}>
             {`${cumulativeMonths} ${cumulativeMonths === 1 ? 'month' : 'months'}`}
           </ChatText>,
         );
 
         pushStreakPart({
-          tokens,
           shouldShareStreak,
           streakMonths,
+          styles,
+          tokens,
         });
 
         tokens.push(
@@ -118,7 +127,7 @@ export function buildSubscriptionNoticeDescription(
           <ChatText key='action' style={styles.descriptionText}>
             {`Gifted a ${tierDisplay} subscription to `}
           </ChatText>,
-          <ChatText key='recipient' style={styles.recipientName}>
+          <ChatText key='recipient' style={styles.name}>
             {recipientDisplayName}
           </ChatText>,
         );
@@ -176,7 +185,7 @@ export function buildSubscriptionNoticeDescription(
         <ChatText key='action' style={styles.descriptionText}>
           {'Gifted '}
         </ChatText>,
-        <ChatText key='count' style={styles.monthsHighlight}>
+        <ChatText key='count' style={styles.emphasis}>
           {massGiftCount ?? 0}
         </ChatText>,
       );
@@ -217,7 +226,7 @@ export function buildSubscriptionNoticeDescription(
           <ChatText key='from' style={styles.descriptionText}>
             {' from '}
           </ChatText>,
-          <ChatText key='sender' style={styles.recipientName}>
+          <ChatText key='sender' style={styles.name}>
             {senderName}
           </ChatText>,
         );
@@ -277,7 +286,7 @@ export function buildSubscriptionNoticeDescription(
           <ChatText key='action' style={styles.descriptionText}>
             {'Paid their subscription forward to '}
           </ChatText>,
-          <ChatText key='recipient' style={styles.recipientName}>
+          <ChatText key='recipient' style={styles.name}>
             {recipientDisplayName}
           </ChatText>,
         );
@@ -311,7 +320,7 @@ export function buildSubscriptionNoticeDescription(
           <ChatText key='action' style={styles.descriptionText}>
             {`An anonymous gifter gifted a ${tierDisplay} subscription to `}
           </ChatText>,
-          <ChatText key='recipient' style={styles.recipientName}>
+          <ChatText key='recipient' style={styles.name}>
             {recipientDisplayName}
           </ChatText>,
         );
@@ -336,7 +345,7 @@ export function buildSubscriptionNoticeDescription(
         <ChatText key='action' style={styles.descriptionText}>
           {'An anonymous gifter gifted '}
         </ChatText>,
-        <ChatText key='count' style={styles.monthsHighlight}>
+        <ChatText key='count' style={styles.emphasis}>
           {massGiftCount ?? 0}
         </ChatText>,
       );

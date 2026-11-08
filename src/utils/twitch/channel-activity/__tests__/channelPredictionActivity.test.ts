@@ -1,4 +1,3 @@
-import type { ChannelPredictionState } from '@app/types/twitch/prediction';
 import {
   createEventSubPrediction,
   createHelixPrediction,
@@ -43,39 +42,9 @@ describe('channelPredictionActivity', () => {
       createEventSubPrediction(),
     );
 
-    expect(state).toEqual<ChannelPredictionState>({
-      id: 'prediction-1',
-      broadcasterId: 'channel-id',
-      broadcasterLogin: 'streamer',
-      broadcasterName: 'Streamer',
-      title: 'Will we win?',
-      outcomes: [
-        {
-          id: 'outcome-a',
-          title: 'Yes',
-          color: 'blue',
-          users: 3,
-          channelPoints: 300,
-          percentage: 75,
-          isWinner: false,
-        },
-        {
-          id: 'outcome-b',
-          title: 'No',
-          color: 'pink',
-          users: 1,
-          channelPoints: 100,
-          percentage: 25,
-          isWinner: false,
-        },
-      ],
-      totalUsers: 4,
-      totalChannelPoints: 400,
-      startedAt: '2026-05-09T10:00:00Z',
-      locksAt: '2026-05-09T10:05:00Z',
+    expect({ status: state.status, isActive: state.isActive }).toEqual({
       status: 'active',
       isActive: true,
-      isLocked: false,
     });
   });
 

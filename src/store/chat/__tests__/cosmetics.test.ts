@@ -1,7 +1,9 @@
+import { createSevenTvBadge } from '@app/components/chat/__tests__/__fixtures__/chatFactories.fixture';
 import { storageService } from '@app/lib/storage';
 import { sevenTvService } from '@app/services/seven-tv-service';
 import {
   type CachedUserCosmetics,
+  clearPaints,
   clearUserCosmeticsCache,
   getUserBadge,
   requestUserCosmeticsViaPresence,
@@ -12,15 +14,11 @@ import {
   getMissingBadgeIds,
 } from '@app/store/chat/actions/missing-badges';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
+import { silenceLogger } from '@app/test/silence-logger';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import { logger } from '@app/utils/logger';
 import { setSevenTvSessionId } from '@app/utils/seven-tv/sevenTvSessionId';
 
-jest.spyOn(logger.stv, 'warn').mockImplementation(() => {});
-jest.spyOn(logger.stvWs, 'info').mockImplementation(() => {});
-jest.spyOn(logger.stvWs, 'debug').mockImplementation(() => {});
-jest.spyOn(logger.stvWs, 'warn').mockImplementation(() => {});
-jest.spyOn(logger.stvWs, 'error').mockImplementation(() => {});
+silenceLogger();
 
 const mockGet7tvUserId = jest.spyOn(sevenTvService, 'get7tvUserId');
 
@@ -48,6 +46,26 @@ beforeEach(() => {
   setSevenTvSessionId(null);
 });
 
+describe('cosmetics persist timer', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  test('clearUserCosmeticsCache leaves no persist timer pending', () => {
+    clearPaints();
+
+    expect(jest.getTimerCount()).toBe(1);
+
+    clearUserCosmeticsCache();
+
+    expect(jest.getTimerCount()).toBe(0);
+  });
+});
+
 describe('getUserBadge', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -60,14 +78,9 @@ describe('getUserBadge', () => {
   });
 
   test('returns the stored badge definition when present', () => {
-    const badge: SanitisedBadgeSet = {
-      id: 'badge-1',
-      url: 'https://cdn.7tv.app/badge/badge-1/4x.webp',
-      type: '7TV Badge',
+    const badge: SanitisedBadgeSet = createSevenTvBadge('badge-1', {
       title: 'Supporter',
-      set: 'badge-1',
-      provider: '7tv',
-    };
+    });
 
     chatStore$.userBadgeIds.set({ 'ttv-1': 'badge-1' });
     chatStore$.badges.set({ 'badge-1': badge });
@@ -98,14 +111,7 @@ describe('getUserBadge', () => {
     chatStore$.userBadgeIds.set({ 'ttv-1': 'badge-1' });
 
     chatStore$.badges.set({
-      'badge-1': {
-        id: 'badge-1',
-        url: '',
-        type: '7TV Badge',
-        title: 'Supporter',
-        set: 'badge-1',
-        provider: '7tv',
-      },
+      'badge-1': createSevenTvBadge('badge-1', { title: 'Supporter', url: '' }),
     });
 
     expect(getUserBadge('ttv-1')).toEqual<SanitisedBadgeSet>({
@@ -142,14 +148,7 @@ describe('syncCachedUserCosmeticsFromStore', () => {
     chatStore$.userBadgeIds.set({ 'ttv-1': 'badge-1' });
 
     chatStore$.badges.set({
-      'badge-1': {
-        id: 'badge-1',
-        url: 'https://cdn.7tv.app/badge/badge-1/4x.webp',
-        type: '7TV Badge',
-        title: 'Supporter',
-        set: 'badge-1',
-        provider: '7tv',
-      },
+      'badge-1': createSevenTvBadge('badge-1', { title: 'Supporter' }),
     });
 
     syncCachedUserCosmeticsFromStore('stv-user-1', 'ttv-1');
@@ -178,14 +177,7 @@ describe('syncCachedUserCosmeticsFromStore', () => {
     chatStore$.userBadgeIds.set({ 'ttv-1': 'badge-1' });
 
     chatStore$.badges.set({
-      'badge-1': {
-        id: 'badge-1',
-        url: 'https://cdn.7tv.app/badge/badge-1/4x.webp',
-        type: '7TV Badge',
-        title: 'Supporter',
-        set: 'badge-1',
-        provider: '7tv',
-      },
+      'badge-1': createSevenTvBadge('badge-1', { title: 'Supporter' }),
     });
 
     const expectedCosmetics: CachedUserCosmetics = {

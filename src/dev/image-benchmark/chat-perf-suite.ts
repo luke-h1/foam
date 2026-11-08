@@ -33,13 +33,11 @@ export const WARMUP_MS = 5000;
  */
 export const COOLDOWN_MS = 10_000;
 
-/** medium then heavy; each measure window is 50s. */
 export const SUITE_PHASES: SuitePhase[] = [
   { preset: 'medium', measureMs: 50_000 },
   { preset: 'heavy', measureMs: 50_000 },
 ];
 
-/** Warmup + measure × 2 + cooldown between = 2 minutes. */
 export const SUITE_TOTAL_MS =
   WARMUP_MS +
   SUITE_PHASES[0]!.measureMs +

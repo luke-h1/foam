@@ -38,6 +38,9 @@ const RELEASED_ENTRY_LINGER_MS = 5000;
 
 const DEFAULT_FRAME_DURATION_MS = 60;
 
+const loggedLoadFailureUrls = new Set<string>();
+const MAX_LOGGED_LOAD_FAILURE_URLS = 256;
+
 // SkAnimatedImage::decodeNextFrame returns this once the file has played out.
 const FINISHED_FRAME = -1;
 
@@ -207,7 +210,16 @@ function beginLoad(url: string, entry: SharedPaintAnimationEntry): void {
       storeStillFrame(url, entry, Skia.Image.MakeImageFromEncoded(data));
     })
     .catch((error: LogMetadataValue) => {
-      logger.chat.warn('Failed to load animated paint texture:', {
+      if (loggedLoadFailureUrls.has(url)) {
+        return;
+      }
+
+      if (loggedLoadFailureUrls.size >= MAX_LOGGED_LOAD_FAILURE_URLS) {
+        loggedLoadFailureUrls.clear();
+      }
+
+      loggedLoadFailureUrls.add(url);
+      logger.chat.debug('Failed to load animated paint texture:', {
         error,
         url,
       });

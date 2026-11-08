@@ -124,7 +124,7 @@ export const chatPreferencePreviewFixtures = {
         id: 'vip_badge',
         set: 'vip',
         title: 'VIP',
-        type: 'FFZ channel badge',
+        type: 'FFZ Channel Badge',
         provider: 'ffz',
         url: 'https://cdn.frankerfacez.com/room-badge/vip/id/12943173/v/384f5396/4',
       },

@@ -1,3 +1,4 @@
+import type { MessageToken } from '@app/types/chat/messageToken';
 import { scanChatBody } from '@app/utils/chat/derive-chat-body/scanChatBody';
 import type {
   ChatBodyScan,
@@ -5,7 +6,6 @@ import type {
   MessageStructure,
 } from '@app/utils/chat/derive-chat-body/types';
 import { isSystemSender } from '@app/utils/chat/isSystemSender';
-import type { MessageToken } from '@app/utils/chat/messageToken';
 
 export interface ChatBodyDerived extends MessageStructure {
   hasSubscriptionNotice: boolean;

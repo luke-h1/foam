@@ -1,40 +1,35 @@
 import { StyleSheet, View } from 'react-native';
 
-import { SettingsSection } from '@app/components/settings-section/SettingsSection';
+import {
+  SettingsSection,
+  SettingsSegmentedRow,
+} from '@app/components/settings-section/SettingsSection';
+import { updatePreferences, usePreference } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
-import type { SanitisedEmote } from '@app/types/emote';
+import { EMOJI_STYLE_OPTIONS } from '@app/utils/emoji/emojiEmotes';
 
+import {
+  CHAT_PREFERENCE_ROWS as ROWS,
+  CHAT_PREFERENCE_SECTION_TITLES,
+} from '../constants';
+import { getEmojiPreviewEmotes } from '../util/chatPreferenceOptions';
 import { EmojiStylePreview } from './ChatPreferencePreviewWidgets';
-import { ChatPreferenceSegmentedSettingsRow } from './ChatPreferenceSettingsRows';
 
-interface ChatPreferenceEmojiSectionProps {
-  emojiIndex: number;
-  emojiLabels: string[];
-  emojiPreviewEmotes: SanitisedEmote[];
-  handleEmojiStyleChange: (index: number) => void;
-}
+export function ChatPreferenceEmojiSection() {
+  const emojiStyle = usePreference('emojiStyle');
 
-export function ChatPreferenceEmojiSection({
-  emojiIndex,
-  emojiLabels,
-  emojiPreviewEmotes,
-  handleEmojiStyleChange,
-}: ChatPreferenceEmojiSectionProps) {
   return (
-    <SettingsSection title='Emoji Style'>
-      <ChatPreferenceSegmentedSettingsRow
-        icon={{
-          icon: 'face.smiling',
-          androidIcon: 'sentiment_satisfied',
-        }}
-        onSelectIndex={handleEmojiStyleChange}
-        selectedIndex={emojiIndex}
-        subtitle='Changes emoji images in existing chat messages'
-        title='Emoji Set'
-        values={emojiLabels}
+    <SettingsSection title={CHAT_PREFERENCE_SECTION_TITLES.emoji}>
+      <SettingsSegmentedRow
+        title={ROWS.emojiSet.title}
+        subtitle={ROWS.emojiSet.subtitle}
+        icon={ROWS.emojiSet}
+        options={EMOJI_STYLE_OPTIONS}
+        value={emojiStyle}
+        onValueChange={value => updatePreferences({ emojiStyle: value })}
       />
       <View style={styles.settingsPreviewItem}>
-        <EmojiStylePreview emotes={emojiPreviewEmotes} />
+        <EmojiStylePreview emotes={getEmojiPreviewEmotes(emojiStyle)} />
       </View>
     </SettingsSection>
   );

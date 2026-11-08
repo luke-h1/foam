@@ -1,7 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 
 import render from '@app/test/render';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
 import { EmoteToken } from '../EmoteToken';
 
@@ -30,19 +30,15 @@ describe('EmoteToken', () => {
 
     render(
       <EmoteToken
+        targetSize={30}
         token={{ ...baseEmote, overlaid: [overlay] }}
         onEmoteTouchStart={onEmoteTouchStart}
       />,
     );
 
-    const touchTargets = screen.UNSAFE_root.findAll(
-      node =>
-        String(node.type) === 'View' && Boolean(node.props['onTouchStart']),
-    );
+    const [, overlayImage] = screen.getAllByTestId('chat-image-shimmer');
 
-    expect(touchTargets).toHaveLength(1);
-
-    fireEvent(touchTargets[0]!, 'touchStart');
+    fireEvent(overlayImage!, 'touchStart');
 
     expect(onEmoteTouchStart.mock.calls).toEqual([
       [{ ...baseEmote, overlaid: [overlay] }],

@@ -1,29 +1,36 @@
 import type { FetchResponse } from 'expo/build/winter/fetch/FetchResponse';
 import { fetch } from 'expo/fetch';
 
-import { ApiError, createApiClient } from '@app/services/api/client';
+import {
+  ApiError,
+  createApiClient,
+  isApiClientError,
+} from '@app/services/api/client';
 import { logger } from '@app/utils/logger';
 
-type MockRequestInit = {
+interface MockRequestInit {
   method: string;
   headers: Record<string, string>;
   body: string | undefined;
   signal: AbortSignal;
-};
+}
 
-type MockResponseBody = {
+interface MockResponseBody {
   data?: string[];
   error?: string;
   message?: string;
   ok?: boolean;
   status?: number;
-};
+}
 
 /**
  * `expo/fetch` already carries a jest.fn() mock at __mocks__/expo/fetch.ts,
  * so this file only needs a typed handle onto it.
  */
 const mockFetch = jest.mocked(fetch);
+
+const isNoSuchRoom = (status: number, body: string) =>
+  status === 404 && body.includes('No such room');
 
 const apiWarnSpy = jest.spyOn(logger.api, 'warn').mockImplementation(() => {});
 
@@ -259,11 +266,93 @@ describe('createApiClient', () => {
     expect(firstRequestInit().headers['Authorization']).toBe('Bearer explicit');
   });
 
+  test('a lowercase explicit authorization header replaces the client token', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ data: [] }));
+    const client = createApiClient({ baseURL: 'https://api.test/helix' });
+    client.setAuthToken('user-token');
+
+    await client.get('/users', {
+      headers: { authorization: 'Bearer explicit' },
+    });
+
+    expect(firstRequestInit().headers).toEqual({
+      Accept: 'application/json',
+      authorization: 'Bearer explicit',
+    });
+  });
+
+  test('requiresAuth shares one wait timer across requests and clears it when the token lands', async () => {
+    jest.useFakeTimers();
+    mockFetch.mockResolvedValue(jsonResponse({ data: [] }));
+
+    const client = createApiClient({
+      baseURL: 'https://api.test/helix',
+      requiresAuth: true,
+    });
+
+    expect(jest.getTimerCount()).toBe(0);
+
+    const first = client.get('/streams');
+    const second = client.get('/users');
+    await Promise.resolve();
+
+    expect(jest.getTimerCount()).toBe(1);
+
+    client.setAuthToken('anon-token');
+
+    expect(jest.getTimerCount()).toBe(0);
+
+    await jest.advanceTimersByTimeAsync(0);
+    await Promise.all([first, second]);
+  });
+
+  test('requiresAuth sends token-less once the wait times out', async () => {
+    jest.useFakeTimers();
+    mockFetch.mockResolvedValueOnce(jsonResponse({ data: [] }));
+
+    const client = createApiClient({
+      baseURL: 'https://api.test/helix',
+      requiresAuth: true,
+    });
+
+    const pending = client.get('/streams');
+
+    await jest.advanceTimersByTimeAsync(8000);
+
+    await expect(pending).resolves.toEqual({ data: [] });
+
+    expect(firstRequestInit().headers['Authorization']).toBeUndefined();
+  });
+
+  test('a caller abort rejects without a log line', async () => {
+    const controller = new AbortController();
+
+    mockFetch.mockImplementationOnce((_url, init) => {
+      // SAFETY: createApiClient always passes an init with a signal.
+      const { signal } = init as MockRequestInit;
+
+      return new Promise((_resolve, reject) => {
+        signal.addEventListener('abort', () => reject(new Error('Aborted')));
+      });
+    });
+
+    const client = createApiClient({ baseURL: 'https://api.test' });
+    const pending = client.get('/lines', { signal: controller.signal });
+
+    controller.abort();
+
+    await expect(pending).rejects.toEqual(new Error('Aborted'));
+
+    expect(apiWarnSpy).not.toHaveBeenCalled();
+  });
+
   test('logs 4xx failures at warn level, not error', async () => {
     mockFetch.mockResolvedValueOnce(jsonResponse({ message: 'nope' }, 404));
     const client = createApiClient({ baseURL: 'https://api.test/helix' });
 
-    await expect(client.get('/users')).rejects.toBeInstanceOf(ApiError);
+    await expect(client.get('/users')).rejects.toEqual(
+      new ApiError('{"message":"nope"}', 404),
+    );
 
     expect(apiWarnSpy).toHaveBeenCalledTimes(1);
 
@@ -280,10 +369,17 @@ describe('createApiClient', () => {
 
     const client = createApiClient({
       baseURL: 'https://api.frankerfacez.com/v1',
-      logPrefix: 'ffz',
+      provider: 'ffz',
+      isExpectedFailure: isNoSuchRoom,
     });
 
-    await expect(client.get('/room/id/999')).rejects.toBeInstanceOf(ApiError);
+    await expect(client.get('/room/id/999')).rejects.toEqual(
+      new ApiError(
+        '{"status":404,"error":"Not Found","message":"No such room"}',
+        404,
+        'FFZApiError',
+      ),
+    );
 
     expect(ffzWarnSpy).not.toHaveBeenCalled();
 
@@ -297,10 +393,13 @@ describe('createApiClient', () => {
 
     const client = createApiClient({
       baseURL: 'https://api.frankerfacez.com/v1',
-      logPrefix: 'ffz',
+      provider: 'ffz',
+      isExpectedFailure: isNoSuchRoom,
     });
 
-    await expect(client.get('/set/global')).rejects.toBeInstanceOf(ApiError);
+    await expect(client.get('/set/global')).rejects.toEqual(
+      new ApiError('{"message":"Not Found"}', 404, 'FFZApiError'),
+    );
 
     expect(ffzWarnSpy).toHaveBeenCalledTimes(1);
   });
@@ -309,7 +408,9 @@ describe('createApiClient', () => {
     mockFetch.mockResolvedValueOnce(jsonResponse({ message: 'boom' }, 500));
     const client = createApiClient({ baseURL: 'https://api.test/helix' });
 
-    await expect(client.get('/users')).rejects.toBeInstanceOf(ApiError);
+    await expect(client.get('/users')).rejects.toEqual(
+      new ApiError('{"message":"boom"}', 500),
+    );
 
     expect(apiErrorSpy).toHaveBeenCalledTimes(1);
 
@@ -352,7 +453,9 @@ describe('createApiClient', () => {
       onUnauthorized,
     });
 
-    await expect(client.get('/users')).rejects.toBeInstanceOf(ApiError);
+    await expect(client.get('/users')).rejects.toEqual(
+      new ApiError('{"message":"nope"}', 401),
+    );
 
     expect(mockFetch).toHaveBeenCalledTimes(1);
 
@@ -371,10 +474,34 @@ describe('createApiClient', () => {
       onUnauthorized,
     });
 
-    await expect(client.get('/users')).rejects.toBeInstanceOf(ApiError);
+    await expect(client.get('/users')).rejects.toEqual(
+      new ApiError('{"message":"mismatch"}', 401),
+    );
 
     expect(mockFetch).toHaveBeenCalledTimes(2);
 
     expect(onUnauthorized).toHaveBeenCalledTimes(1);
+  });
+
+  test('marks the errors it logged so a query handler does not log them again', async () => {
+    const networkError = new TypeError('Network request failed');
+
+    mockFetch.mockRejectedValueOnce(networkError);
+    mockFetch.mockResolvedValueOnce(jsonResponse({ message: 'nope' }, 404));
+
+    const client = createApiClient({ baseURL: 'https://api.test/helix' });
+
+    const failures = await Promise.allSettled([
+      client.get('/streams'),
+      client.get('/users'),
+    ]);
+
+    expect(
+      failures.map(result =>
+        result.status === 'rejected' ? isApiClientError(result.reason) : null,
+      ),
+    ).toEqual([true, true]);
+
+    expect(isApiClientError(new Error('derive failed'))).toEqual(false);
   });
 });

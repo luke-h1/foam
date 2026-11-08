@@ -1,11 +1,11 @@
-import { createViewerMilestoneTags } from '@app/types/chat/irc-tags/__fixtures__/user-notice-tags.fixture';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import { createViewerMilestoneTags } from '@app/types/chat/irc-tags/__tests__/__fixtures__/user-notice-tags.fixture';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
-import { createViewerMilestonePart } from '../createViewerMilestoneToken';
+import { createViewerMilestoneToken } from '../createViewerMilestoneToken';
 
-describe('createViewerMilestonePart', () => {
+describe('createViewerMilestoneToken', () => {
   test('keeps the wording Twitch sent', () => {
-    const token = createViewerMilestonePart(
+    const token = createViewerMilestoneToken(
       createViewerMilestoneTags({
         'display-name': 'Krankel',
         login: 'krankel',
@@ -27,7 +27,7 @@ describe('createViewerMilestonePart', () => {
   });
 
   test('builds watch streak copy when the tag is missing', () => {
-    const token = createViewerMilestonePart(
+    const token = createViewerMilestoneToken(
       createViewerMilestoneTags({
         'display-name': 'Viewer',
         login: 'viewer',
@@ -43,7 +43,7 @@ describe('createViewerMilestonePart', () => {
   });
 
   test('keeps the message the viewer typed separate from the streak line', () => {
-    const token = createViewerMilestonePart(
+    const token = createViewerMilestoneToken(
       createViewerMilestoneTags({
         'display-name': 'Krankel',
         'system-msg': 'Krankel is currently on a 25-stream streak!',
@@ -57,7 +57,7 @@ describe('createViewerMilestonePart', () => {
   });
 
   test('names the viewer when Twitch omits them from the streak line', () => {
-    const token = createViewerMilestonePart(
+    const token = createViewerMilestoneToken(
       createViewerMilestoneTags({
         'display-name': 'Krankel',
         'system-msg': 'is currently on a 25-stream streak!',
@@ -68,7 +68,7 @@ describe('createViewerMilestonePart', () => {
   });
 
   test('singularises a one-stream streak in the constructed copy', () => {
-    const token = createViewerMilestonePart(
+    const token = createViewerMilestoneToken(
       createViewerMilestoneTags({
         'display-name': 'Viewer',
         'msg-param-value': '1',

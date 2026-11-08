@@ -1,15 +1,12 @@
 import { useCallback } from 'react';
 import { Alert } from 'react-native';
 
-import * as Clipboard from 'expo-clipboard';
 import { toast } from 'sonner-native';
 
-import type {
-  MessageActionData,
-  UsernamePressData,
-} from '@app/components/chat/components/chat-message/ChatRow.types';
 import type { ModCommand } from '@app/components/chat/util/mod-commands/parseModCommand';
+import { resolveModTarget } from '@app/components/chat/util/mod-commands/resolveModTarget';
 import { runModCommand } from '@app/components/chat/util/mod-commands/runModCommand';
+import { copyWithToast } from '@app/lib/clipboard';
 import { queryClient } from '@app/lib/react-query/queryClient';
 import { twitchKeys } from '@app/lib/react-query/queryKeys';
 import { twitchService } from '@app/services/twitch-service';
@@ -19,9 +16,14 @@ import {
   openChattersSheet,
   openSavedPhrasesSheet,
 } from '@app/store/chat/actions/chat-overlays';
-import type { ChatMessageType } from '@app/store/chat/types/constants';
+import type {
+  MessageActionData,
+  UsernamePressData,
+} from '@app/store/chat/types/chat-press-data';
 import { showActionMenu } from '@app/store/overlays/show-action-menu';
+import type { ChatMessageType } from '@app/types/chat/chatMessage';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
+import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import type { LogMetadataValue } from '@app/utils/log/sanitiseLogValue';
 import { logger } from '@app/utils/logger';
@@ -34,18 +36,6 @@ const TIMEOUT_DURATION_OPTIONS = [
   { label: '1 hour', seconds: 3600 },
   { label: '24 hours', seconds: 86_400 },
 ] as const satisfies readonly { label: string; seconds: number }[];
-
-export function resolveModTarget(
-  selection:
-    | {
-        login?: string;
-        username?: string;
-      }
-    | null
-    | undefined,
-): string | undefined {
-  return selection?.login?.trim() || selection?.username?.trim() || undefined;
-}
 
 interface UseChatOverlayHandlersOptions {
   channelId: string;
@@ -61,9 +51,6 @@ interface UseChatOverlayHandlersOptions {
   toggleHighlightedUser: (username?: string) => void;
 }
 
-/**
- * The user that a report or block action targets.
- */
 type ChatUserSelection =
   | {
       login?: string;
@@ -143,7 +130,6 @@ export function useChatOverlayHandlers({
             });
           },
         })),
-        cancelLabel: 'Cancel',
       });
     },
     [runModAction],
@@ -160,9 +146,10 @@ export function useChatOverlayHandlers({
       return;
     }
 
-    void Clipboard.setStringAsync(
+    copyWithToast(
       replaceEmotesWithText(selectedMessage.message),
-    ).then(() => toast.success('Copied to clipboard'));
+      'Copied to clipboard',
+    );
   }, [selectedMessage]);
 
   const handleActionSheetHideUser = useCallback(() => {
@@ -231,9 +218,7 @@ export function useChatOverlayHandlers({
       return;
     }
 
-    void Clipboard.setStringAsync(selectedUser.username).then(() =>
-      toast.success('Copied username'),
-    );
+    copyWithToast(selectedUser.username, 'Copied username');
   }, [selectedUser]);
 
   const handleHideSelectedUser = useCallback(() => {
@@ -279,13 +264,12 @@ export function useChatOverlayHandlers({
           onPress: () => warnWithReason('Breaking channel rules'),
         },
       ],
-      cancelLabel: 'Cancel',
     });
   }, [runModAction, selectedUser]);
 
   // Twitch has no public report API; the report form is web-only.
   const reportTarget = useCallback((selection?: ChatUserSelection) => {
-    const target = resolveModTarget(selection)?.toLowerCase();
+    const target = normaliseChatUsername(resolveModTarget(selection));
 
     if (target) {
       openLinkInBrowser(`https://www.twitch.tv/${target}/report`);

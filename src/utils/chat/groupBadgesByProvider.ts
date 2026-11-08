@@ -1,4 +1,6 @@
+import { PROVIDER_DESCRIPTORS } from '@app/constants/emote-providers';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import { chunk } from '@app/utils/collection/chunk';
 
 export type BadgeRow = SanitisedBadgeSet[];
 
@@ -11,13 +13,6 @@ export interface BadgeProviderSection {
 type BadgeProviderKey = 'twitch' | '7tv' | 'bttv' | 'ffz';
 
 const PROVIDER_ORDER: BadgeProviderKey[] = ['twitch', '7tv', 'bttv', 'ffz'];
-
-const PROVIDER_TITLES = {
-  twitch: 'Twitch',
-  '7tv': '7TV',
-  bttv: 'BetterTTV',
-  ffz: 'FrankerFaceZ',
-} satisfies Record<BadgeProviderKey, string>;
 
 function providerOf(badge: SanitisedBadgeSet): BadgeProviderKey {
   return badge.provider === 'chatterino' ? 'twitch' : badge.provider;
@@ -50,13 +45,13 @@ export function groupBadgesByProvider(
       continue;
     }
 
-    const rows: BadgeRow[] = [];
+    const rows: BadgeRow[] = chunk(items, columnsPerRow);
 
-    for (let index = 0; index < items.length; index += columnsPerRow) {
-      rows.push(items.slice(index, index + columnsPerRow));
-    }
-
-    sections.push({ key, title: PROVIDER_TITLES[key], data: rows });
+    sections.push({
+      key,
+      title: PROVIDER_DESCRIPTORS[key].fullName,
+      data: rows,
+    });
   }
 
   return sections;

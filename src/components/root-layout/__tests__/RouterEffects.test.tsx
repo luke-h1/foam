@@ -6,17 +6,21 @@ import { router } from 'expo-router';
 import {
   type AuthContextState,
   AuthContextTestProvider,
+  type LoginWithTwitchResult,
 } from '@app/context/AuthContext';
-import {
-  endDeepLinkAuth,
-  isDeepLinkAuthInProgress,
-} from '@app/navigators/deep-link-auth-state';
-import { logger } from '@app/utils/logger';
+import { useIsRouterReady } from '@app/hooks/use-is-router-ready';
+import { silenceLogger } from '@app/test/silence-logger';
 import * as RunWhenIdle from '@app/utils/runWhenIdle';
 
 import { RouterEffects } from '../RouterEffects';
 
 const mockedRouter = jest.mocked(router);
+
+jest.mock('@app/hooks/use-is-router-ready', () => ({
+  useIsRouterReady: jest.fn(() => true),
+}));
+
+const mockedUseIsRouterReady = jest.mocked(useIsRouterReady);
 
 jest.spyOn(RunWhenIdle, 'runWhenIdle').mockImplementation(task => {
   const timer = setTimeout(() => {
@@ -28,8 +32,7 @@ jest.spyOn(RunWhenIdle, 'runWhenIdle').mockImplementation(task => {
   };
 });
 
-jest.spyOn(logger.main, 'warn').mockImplementation(() => {});
-jest.spyOn(logger.auth, 'info').mockImplementation(() => {});
+silenceLogger();
 
 const linkingMock: { addEventListener: jest.Mock; getInitialURL: jest.Mock } =
   Object.assign(Linking, {
@@ -40,7 +43,9 @@ const linkingMock: { addEventListener: jest.Mock; getInitialURL: jest.Mock } =
 const magicUrl =
   'foam://auth?access_token=magic-access-token&refresh_token=magic-refresh-token&token_type=bearer&expires_in=14400';
 
-const loginWithTwitch = jest.fn(async () => null);
+const loginWithTwitch = jest.fn(async (): Promise<LoginWithTwitchResult> => ({
+  ok: true,
+}));
 
 const makeAuthContext = (
   overrides?: Partial<AuthContextState>,
@@ -57,10 +62,9 @@ const makeAuthContext = (
   },
   user: undefined,
   loginWithTwitch,
-  populateAuthState: jest.fn(),
   logout: jest.fn(),
-  fetchAnonToken: jest.fn(),
   ready: true,
+  signInId: 0,
   ...overrides,
 });
 
@@ -77,10 +81,6 @@ const removeSubscription = jest.fn();
 
 describe('RouterEffects deep-link auth handling', () => {
   beforeEach(() => {
-    while (isDeepLinkAuthInProgress()) {
-      endDeepLinkAuth();
-    }
-
     urlHandler = undefined;
     removeSubscription.mockClear();
     loginWithTwitch.mockClear();
@@ -100,18 +100,14 @@ describe('RouterEffects deep-link auth handling', () => {
     linkingMock.getInitialURL.mockResolvedValue(null);
   });
 
-  test('completes login once and routes to following from a cold-start magic link', async () => {
+  test('completes login once from a cold-start magic link and leaves navigation to usePopulateAuth', async () => {
     linkingMock.getInitialURL.mockResolvedValue(magicUrl);
 
     render(withAuth(makeAuthContext()));
 
-    await waitFor(() =>
-      expect(mockedRouter.replace).toHaveBeenCalledWith('/tabs/following'),
-    );
+    await waitFor(() => expect(loginWithTwitch).toHaveBeenCalledTimes(1));
 
-    expect(loginWithTwitch).toHaveBeenCalledTimes(1);
-
-    expect(mockedRouter.replace).toHaveBeenCalledTimes(1);
+    expect(mockedRouter.replace).not.toHaveBeenCalled();
   });
 
   test('does not re-read the initial URL or re-subscribe, and uses the latest loginWithTwitch, when its identity changes', async () => {
@@ -119,9 +115,11 @@ describe('RouterEffects deep-link auth handling', () => {
 
     const { rerender } = render(withAuth(makeAuthContext()));
 
-    await waitFor(() => expect(mockedRouter.replace).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(loginWithTwitch).toHaveBeenCalledTimes(1));
 
-    const nextLoginWithTwitch = jest.fn(async () => null);
+    const nextLoginWithTwitch = jest.fn(
+      async (): Promise<LoginWithTwitchResult> => ({ ok: true }),
+    );
 
     const nextMagicUrl =
       'foam://auth?access_token=magic-access-token-2&refresh_token=magic-refresh-token-2&token_type=bearer&expires_in=14400';
@@ -156,34 +154,8 @@ describe('RouterEffects deep-link auth handling', () => {
     expect(loginWithTwitch).toHaveBeenCalledTimes(1);
   });
 
-  test('deduplicates a magic link delivered twice to the warm url listener', async () => {
-    render(withAuth(makeAuthContext()));
-
-    await waitFor(() => expect(urlHandler).toBeDefined());
-
-    act(() => urlHandler?.({ url: magicUrl }));
-    await waitFor(() => expect(loginWithTwitch).toHaveBeenCalledTimes(1));
-
-    act(() => urlHandler?.({ url: magicUrl }));
-
-    await act(async () => {
-      await Promise.resolve();
-    });
-
-    expect(loginWithTwitch).toHaveBeenCalledTimes(1);
-
-    expect(mockedRouter.replace).toHaveBeenCalledTimes(1);
-  });
-
-  test('deduplicates a magic link delivered twice while the first login is still in flight', async () => {
-    let resolveLogin: (() => void) | undefined;
-
-    loginWithTwitch.mockImplementationOnce(
-      () =>
-        new Promise<null>(resolve => {
-          resolveLogin = () => resolve(null);
-        }),
-    );
+  test('does not navigate when the magic-link login fails', async () => {
+    loginWithTwitch.mockResolvedValueOnce({ ok: false, reason: 'error' });
 
     render(withAuth(makeAuthContext()));
 
@@ -191,57 +163,26 @@ describe('RouterEffects deep-link auth handling', () => {
 
     act(() => urlHandler?.({ url: magicUrl }));
     await waitFor(() => expect(loginWithTwitch).toHaveBeenCalledTimes(1));
-
-    act(() => urlHandler?.({ url: magicUrl }));
-
-    await act(async () => {
-      await Promise.resolve();
-    });
-
-    expect(loginWithTwitch).toHaveBeenCalledTimes(1);
 
     expect(mockedRouter.replace).not.toHaveBeenCalled();
-
-    await act(async () => {
-      resolveLogin?.();
-      await Promise.resolve();
-    });
-
-    await waitFor(() =>
-      expect(mockedRouter.replace).toHaveBeenCalledWith('/tabs/following'),
-    );
-
-    expect(loginWithTwitch).toHaveBeenCalledTimes(1);
-
-    expect(mockedRouter.replace).toHaveBeenCalledTimes(1);
   });
 
-  test('flags a deep-link auth as in progress while handling, then clears it', async () => {
-    let resolveLogin: (() => void) | undefined;
+  test('reads the initial URL only after the router has mounted', async () => {
+    linkingMock.getInitialURL.mockResolvedValue(magicUrl);
+    mockedUseIsRouterReady.mockReturnValue(false);
 
-    loginWithTwitch.mockImplementationOnce(
-      () =>
-        new Promise<null>(resolve => {
-          resolveLogin = () => resolve(null);
-        }),
-    );
-
-    render(withAuth(makeAuthContext()));
-
-    await waitFor(() => expect(urlHandler).toBeDefined());
-    expect(isDeepLinkAuthInProgress()).toBe(false);
-
-    act(() => urlHandler?.({ url: magicUrl }));
-    await waitFor(() => expect(loginWithTwitch).toHaveBeenCalledTimes(1));
-
-    expect(isDeepLinkAuthInProgress()).toBe(true);
+    const { rerender } = render(withAuth(makeAuthContext()));
 
     await act(async () => {
-      resolveLogin?.();
       await Promise.resolve();
     });
 
-    await waitFor(() => expect(isDeepLinkAuthInProgress()).toBe(false));
+    expect(linkingMock.getInitialURL).not.toHaveBeenCalled();
+
+    mockedUseIsRouterReady.mockReturnValue(true);
+    rerender(withAuth(makeAuthContext()));
+
+    await waitFor(() => expect(loginWithTwitch).toHaveBeenCalledTimes(1));
   });
 
   test('ignores non-auth deep links', async () => {
@@ -258,7 +199,5 @@ describe('RouterEffects deep-link auth handling', () => {
     expect(loginWithTwitch).not.toHaveBeenCalled();
 
     expect(mockedRouter.replace).not.toHaveBeenCalled();
-
-    expect(isDeepLinkAuthInProgress()).toBe(false);
   });
 });

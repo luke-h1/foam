@@ -11,15 +11,16 @@ export interface FetchOnceGuardOptions {
   maxConcurrent?: number;
 }
 
-export interface FetchOnceRunContext {
+interface FetchOnceRunContext {
   /**
-   * False once `clear` has run after this fetch started. Fetchers use this to
+   * False once `clear`, or `clearKey` for this run's key, has run after this
+   * fetch started. Fetchers use this to
    * skip cache write-backs that would resurrect just-cleared state.
    */
   stillCurrent(): boolean;
   /**
-   * Stamps a key as fetched (default: the run key). No-ops after `clear`, so
-   * a completing fetch cannot re-poison a freshly cleared guard.
+   * Stamps a key as fetched (default: the run key). No-ops after `clear` or
+   * `clearKey`, so a completing fetch cannot re-poison a freshly cleared guard.
    */
   markFetched(key?: string): void;
 }
@@ -35,9 +36,6 @@ export interface FetchOnceGuard {
   ): Promise<V>;
   isInFlight(key: string): boolean;
   hasFetched(key: string): boolean;
-  /**
-   * True when the key is neither in flight nor carrying a fresh stamp.
-   */
   shouldFetch(key: string): boolean;
   markFetched(key: string): void;
   clearKey(key: string): void;
@@ -62,6 +60,7 @@ export const createFetchOnceGuard = (
   const inFlight = new Map<string, Promise<unknown>>();
   const fetchedAt = new Map<string, number>();
   let generation = 0;
+  const keyGenerations = new Map<string, number>();
 
   let activeFetches = 0;
   const fetchQueue: (() => void)[] = [];
@@ -108,11 +107,16 @@ export const createFetchOnceGuard = (
     }
 
     const runGeneration = generation;
+    const runKeyGeneration = keyGenerations.get(key) ?? 0;
+
+    const stillCurrent = () =>
+      generation === runGeneration &&
+      (keyGenerations.get(key) ?? 0) === runKeyGeneration;
 
     const ctx: FetchOnceRunContext = {
-      stillCurrent: () => generation === runGeneration,
+      stillCurrent,
       markFetched: (stampKey = key) => {
-        if (generation === runGeneration) {
+        if (stillCurrent()) {
           fetchedAt.set(stampKey, Date.now());
         }
       },
@@ -151,6 +155,7 @@ export const createFetchOnceGuard = (
       fetchedAt.set(key, Date.now());
     },
     clearKey: key => {
+      keyGenerations.set(key, (keyGenerations.get(key) ?? 0) + 1);
       fetchedAt.delete(key);
       inFlight.delete(key);
     },

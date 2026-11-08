@@ -28,27 +28,18 @@ export interface StreamPlayerRef {
   setChannel: (channel: string) => void;
   setMuted: (muted: boolean) => void;
   setQuality: (quality: string) => void;
-  /**
-   * Play a VOD, optionally from an offset in seconds.
-   */
   setVideo: (videoId: string, timestamp?: number) => void;
   /**
    * Volume is 0-1.
    */
   setVolume: (volume: number) => void;
   isPictureInPicture: () => boolean;
-  /**
-   * Toggle iOS system picture-in-picture on the embedded video.
-   */
   togglePictureInPicture: () => void;
   /**
    * Pause and drop the <video> source so the WebView can be torn down without
    * an active AVPlayer wedging the transition.
    */
   releaseMedia: () => void;
-  /**
-   * Seek a live stream back to the live edge to trim accumulated client latency
-   */
   syncToLive: () => void;
   unmute: () => void;
 }
@@ -81,23 +72,16 @@ export interface StreamPlayerProps {
 
   deferOverlayUntilUserUnmute?: boolean;
   /**
-   * Initial muted state.
    * @default false
    */
   muted?: boolean;
   onBackPress?: () => void;
-  /**
-   * Fires when a content gate (e.g. login required) appears or clears.
-   */
   onContentGateChange?: (hasGate: boolean) => void;
   onEnded?: () => void;
   onError?: (error: string) => void;
   onOffline?: () => void;
   onOnline?: () => void;
   onPause?: () => void;
-  /**
-   * Callback with Twitch's reported latency from broadcaster to viewer.
-   */
   onPlaybackLatencyChange?: (latencySeconds: number) => void;
   onPlay?: () => void;
   onReady?: () => void;
@@ -105,9 +89,6 @@ export interface StreamPlayerProps {
   onSharePress?: () => void;
   onCreateClipPress?: () => void;
   onSleepTimerPress?: () => void;
-  /**
-   * Whether a sleep timer is currently counting down; tints the overlay button.
-   */
   sleepTimerActive?: boolean;
   onVideoAreaPress?: () => void;
   onVideoAreaSwipeDown?: () => void;
@@ -127,14 +108,10 @@ export interface StreamPlayerProps {
    */
   posterUrl?: string;
   /**
-   * Show custom overlay controls.
    * @default false
    */
   showOverlayControls?: boolean;
   streamInfo?: StreamInfo;
-  /**
-   * VOD ID to play
-   */
   video?: string;
   width?: DimensionValue;
   ref?: Ref<StreamPlayerRef>;
@@ -179,52 +156,13 @@ export type PlayerMessage =
   | { payload: { duration: number }; type: 'duration' }
   | { payload: PlayerStateUpdatePayload; type: 'stateUpdate' }
   | { payload: PlaybackStatsPayload; type: 'playbackStats' }
-  | {
-      payload: {
-        currentTime: number;
-        networkState: number;
-        paused: boolean;
-        readyState: number;
-      };
-      type: 'healthCheck';
-    }
   | { payload: { hasContentGate: boolean }; type: 'contentGateDetected' }
-  | {
-      payload: {
-        hasGate: boolean;
-        gateText: string;
-        hasAuthToken: boolean;
-        hasAuthHyphen: boolean;
-        cookieCount: number;
-        href: string;
-      };
-      type: 'debugLog';
-    }
   | { type: 'ended' }
   | { type: 'offline' }
   | { type: 'online' }
   | { type: 'pause' }
   | { type: 'play' }
   | { payload: { errName: string | null }; type: 'playbackBlocked' }
-  | { payload: { stalledMs: number }; type: 'playbackRecovered' }
-  | {
-      payload: {
-        currentTime: number;
-        networkState: number;
-        readyState: number;
-        stalledMs: number;
-      };
-      type: 'playbackStalled';
-    }
-  | {
-      payload: {
-        code: number | null;
-        message: string;
-        networkState: number;
-        readyState: number;
-      };
-      type: 'videoElementError';
-    }
   | { type: 'pipChanged'; payload: { active: boolean } }
   | { type: 'pipUnavailable' }
   | { type: 'playing' }
@@ -235,4 +173,5 @@ export type PlayerMessage =
       type: 'embedMisconfigured';
       payload: { message: string; parent: string | null };
     }
-  | { type: 'muteState'; payload: { muted: boolean; volume: number } };
+  | { type: 'muteState'; payload: { muted: boolean; volume: number } }
+  | { type: 'vodProgress'; payload: { currentTime: number } };

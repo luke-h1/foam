@@ -1,20 +1,18 @@
-import { memo, useMemo, useRef } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { memo, useMemo } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
-import {
-  BottomSheet,
-  type BottomSheetHandle,
-  type SnapPoint,
-} from '@app/components/bottom-sheet/BottomSheet';
 import { Button } from '@app/components/button/Button';
 import { ChatDebugSection } from '@app/components/chat/components/ChatDebugSection';
 import { MessageTokenLine } from '@app/components/chat/components/message-token-line/MessageTokenLine';
+import { ChatSheet } from '@app/components/chat/components/sheet/ChatSheet';
+import { chatSheetStyles } from '@app/components/chat/components/sheet/ChatSheet.styles';
+import { useChatSheet } from '@app/components/chat/components/sheet/hooks/use-chat-sheet';
+import { useChatSheetHeight } from '@app/components/chat/components/sheet/hooks/use-chat-sheet-height';
 import { SheetHeader } from '@app/components/chat/components/sheet/SheetHeader';
+import {
+  type ChatSheetLayout,
+  SHEET_CHROME,
+} from '@app/components/chat/components/sheet/util/chatSheetLayout';
 import {
   type SheetAction,
   SheetActionGroup,
@@ -35,11 +33,12 @@ import {
   getChatDebugIrcLinesForLogin,
   getChatDebugUserSnapshot,
 } from '@app/store/chat/actions/chat-debug-log';
+import { getMessageSenderLogin } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import { theme } from '@app/styles/themes';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
 import { getChatMessageStoreId } from '@app/utils/chat/message-identity/getChatMessageStoreId';
-import type { MessageToken } from '@app/utils/chat/messageToken';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 
 import { UserCardHeader } from './UserCardHeader';
@@ -49,8 +48,8 @@ interface UserActionSheetProps {
   login?: string;
   userId?: string;
   moderation: ChatModerationAccessFlags;
-  visibility: UserActionVisibilityFlags;
-  onClose: () => void;
+  visibility: Pick<UserActionVisibilityFlags, 'isHidden' | 'isHighlighted'>;
+  onDismiss: () => void;
   onCopyUsername: () => void;
   onHideUser: () => void;
   onHighlightUser: () => void;
@@ -65,9 +64,12 @@ interface UserActionSheetProps {
 
 const MAX_RECENT_USER_MESSAGES = 5;
 
+const RECENT_MESSAGE_LINE_HEIGHT = 24;
+
+const RECENT_MESSAGE_MAX_LINES = 2;
+
 function getRecentUserMessages(login?: string, username?: string) {
-  const target =
-    normaliseChatUsername(login) || normaliseChatUsername(username);
+  const target = normaliseChatUsername(login || username);
 
   if (!target) {
     return [];
@@ -88,11 +90,7 @@ function getRecentUserMessages(login?: string, username?: string) {
       continue;
     }
 
-    const messageLogin = normaliseChatUsername(
-      message.userstate?.login || message.userstate?.username || message.sender,
-    );
-
-    if (messageLogin !== target) {
+    if (getMessageSenderLogin(message) !== target) {
       continue;
     }
 
@@ -116,9 +114,6 @@ function getRecentUserMessages(login?: string, username?: string) {
   return recentMessages.reverse();
 }
 
-/**
- * Report and block, shown only when the caller supplied a handler.
- */
 function buildSafetyActions({
   onBlockUser,
   onReportUser,
@@ -175,10 +170,6 @@ interface QuickAction {
   active?: boolean;
 }
 
-/**
- * The row of round shortcuts below the header, for the actions people reach
- * for most.
- */
 function QuickActions({ actions }: { actions: QuickAction[] }) {
   return (
     <View style={styles.quickActions}>
@@ -226,7 +217,7 @@ function UserActionSheetComponent({
   userId,
   moderation,
   visibility,
-  onClose,
+  onDismiss,
   onCopyUsername,
   onHideUser,
   onHighlightUser,
@@ -239,23 +230,14 @@ function UserActionSheetComponent({
   username,
 }: UserActionSheetProps) {
   const { canModerateChat, canModerateUser } = moderation;
-  const { isHidden, isHighlighted, visible } = visibility;
-  const sheetRef = useRef<BottomSheetHandle>(null);
-
-  const requestClose = () => {
-    sheetRef.current?.requestClose();
-  };
-
-  const runAndClose = (action?: () => void) => {
-    action?.();
-    requestClose();
-  };
+  const { isHidden, isHighlighted } = visibility;
+  const { requestClose, runAndClose, sheetRef } = useChatSheet();
 
   // peek() on open: the scrollback updates constantly and re-rendering the
   // sheet per message would defeat the chat flush batching.
   const recentMessages = useMemo(
-    () => (visible ? getRecentUserMessages(login, username) : []),
-    [login, username, visible],
+    () => getRecentUserMessages(login, username),
+    [login, username],
   );
 
   const withClose = (action: SheetAction): SheetAction => ({
@@ -309,38 +291,36 @@ function UserActionSheetComponent({
     },
   ];
 
-  const { height: windowHeight } = useWindowDimensions();
-
-  const rowCount = actionSections.reduce(
-    (count, section) => count + section.actions.length,
-    0,
-  );
-
-  const sectionCount = actionSections.length;
-
   const recentMessagesHeight =
-    recentMessages.length > 0 ? 64 + recentMessages.length * 30 : 0;
+    recentMessages.length > 0
+      ? SHEET_CHROME.recentMessagesSection +
+        recentMessages.length * SHEET_CHROME.recentMessageLine
+      : 0;
 
-  // Header, quick actions and padding, then each row and section on top.
-  const sheetHeight = Math.min(
-    Math.round(windowHeight * 0.72),
-    232 + recentMessagesHeight + rowCount * 57 + sectionCount * 50,
-  );
+  const layout: ChatSheetLayout = {
+    chromeHeight: SHEET_CHROME.userCard + recentMessagesHeight,
+    expandable: true,
+    kind: 'content',
+    sections: actionSections.map(section => ({
+      rowCount: section.actions.length,
+      titled: Boolean(section.title),
+    })),
+  };
 
-  const snapPoints: SnapPoint[] = [{ height: sheetHeight }, 'full'];
+  const sheetHeight = useChatSheetHeight(layout);
 
   return (
-    <BottomSheet
+    <ChatSheet
       ref={sheetRef}
-      enableFixedSnapPoints
-      isPresented={visible}
-      onDismiss={onClose}
-      showDragIndicator
-      snapPoints={snapPoints}
+      onDismiss={onDismiss}
+      layout={layout}
       testID='user-action-sheet'
     >
       <View
-        style={[styles.wrapper, { maxHeight: sheetHeight - theme.space16 }]}
+        style={[
+          chatSheetStyles.wrapper,
+          { maxHeight: sheetHeight - theme.space16 },
+        ]}
       >
         <SheetHeader onClose={requestClose}>
           <UserCardHeader
@@ -355,8 +335,8 @@ function UserActionSheetComponent({
 
         <ScrollView
           nestedScrollEnabled
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
+          style={chatSheetStyles.scroll}
+          contentContainerStyle={chatSheetStyles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           {recentMessages.length > 0 ? (
@@ -387,7 +367,7 @@ function UserActionSheetComponent({
             </SettingsSection>
           ) : null}
 
-          {/* eslint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- at most two fixed groups of rows, not a data list */}
+          {/* oxlint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- at most two fixed groups of rows, not a data list */}
           {actionSections.map(section => (
             <SheetActionGroup
               key={section.key}
@@ -404,7 +384,7 @@ function UserActionSheetComponent({
           />
         </ScrollView>
       </View>
-    </BottomSheet>
+    </ChatSheet>
   );
 }
 
@@ -436,36 +416,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space16,
     paddingVertical: theme.space12,
   },
-  /**
-   * Two lines at most, so one long message cannot push the actions away.
-   */
   recentMessage: {
-    maxHeight: 48,
+    maxHeight: RECENT_MESSAGE_MAX_LINES * RECENT_MESSAGE_LINE_HEIGHT,
     overflow: 'hidden',
   },
   recentMessageText: {
     color: theme.color.text.dark,
     fontSize: theme.fontSize14,
-    lineHeight: 24,
+    lineHeight: RECENT_MESSAGE_LINE_HEIGHT,
   },
   recentMessageTimestamp: {
     color: theme.color.textSecondary.dark,
     fontSize: theme.fontSize12,
-  },
-  scroll: {
-    flexGrow: 0,
-  },
-  /**
-   * No gap: each `SettingsSection` carries its own bottom margin.
-   */
-  scrollContent: {
-    paddingBottom: theme.space16,
-  },
-  wrapper: {
-    alignSelf: 'stretch',
-    gap: theme.space20,
-    paddingHorizontal: theme.space16,
-    paddingTop: theme.space12,
-    width: '100%',
   },
 });

@@ -1,4 +1,4 @@
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import { deriveChatBody } from '@app/utils/chat/derive-chat-body/deriveChatBody';
 import type { ChatBodyVariant } from '@app/utils/chat/derive-chat-body/types';
 import { isSystemSender } from '@app/utils/chat/isSystemSender';

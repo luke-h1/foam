@@ -1,6 +1,11 @@
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { Color } from '@app/styles/palette';
-import { SYSTEM_SENDER_LOGIN } from '@app/utils/chat/isSystemSender';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
+import type { ChatTimestampFormat } from '@app/types/chat/chatTimestampFormat';
+import {
+  SYSTEM_SENDER,
+  SYSTEM_SENDER_LOGIN,
+} from '@app/utils/chat/isSystemSender';
+import { createMessageIdentity } from '@app/utils/chat/message-identity/createMessageIdentity';
 import { generateNonce } from '@app/utils/string/generateNonce';
 
 import { createChatTimestamp } from './createChatTimestamp';
@@ -8,16 +13,17 @@ import { createChatTimestamp } from './createChatTimestamp';
 export const createSystemMessage = (
   channelName: string,
   content: string,
+  timestampFormat: ChatTimestampFormat,
 ): AnyChatMessageType => {
   const messageId = `system-${Date.now()}`;
   const messageNonce = generateNonce();
 
   return {
-    id: `${messageId}_${messageNonce}`,
+    ...createMessageIdentity(messageId, messageNonce),
     userstate: {
-      'display-name': 'System',
+      'display-name': SYSTEM_SENDER,
       login: SYSTEM_SENDER_LOGIN,
-      username: 'System',
+      username: SYSTEM_SENDER,
       'user-id': '',
       id: '',
       color: Color.grayscale[500],
@@ -36,12 +42,10 @@ export const createSystemMessage = (
     message: [{ type: 'text', content }],
     badges: [],
     channel: channelName,
-    message_id: messageId,
-    message_nonce: messageNonce,
-    timestamp: createChatTimestamp(),
-    sender: 'System',
+    timestamp: createChatTimestamp(timestampFormat),
+    sender: SYSTEM_SENDER,
     parentDisplayName: '',
-    replyDisplayName: '',
+    replyParentLogin: '',
     replyBody: '',
     isSpecialNotice: true,
   };

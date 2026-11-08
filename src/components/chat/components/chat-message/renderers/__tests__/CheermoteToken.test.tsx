@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react-native';
 
 import { getChatTextStyles } from '@app/components/chat/components/chat-message/ChatText.styles';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
 import * as ChatInlineImageModule from '../ChatInlineImage';
 import { CheermoteToken } from '../CheermoteToken';
@@ -47,7 +47,13 @@ describe('CheermoteToken', () => {
   });
 
   test('falls back to the raw cheer token when no url resolves', () => {
-    render(<CheermoteToken textStyles={textStyles} token={makePart()} />);
+    render(
+      <CheermoteToken
+        targetSize={30}
+        textStyles={textStyles}
+        token={makePart()}
+      />,
+    );
 
     expect(screen.getByText('Cheer100')).toBeOnTheScreen();
 
@@ -57,6 +63,7 @@ describe('CheermoteToken', () => {
   test('renders the cheermote image with the bits amount', () => {
     render(
       <CheermoteToken
+        targetSize={30}
         textStyles={textStyles}
         token={makePart({ url: 'https://cdn.example.com/cheer/100.gif' })}
       />,
@@ -74,6 +81,7 @@ describe('CheermoteToken', () => {
   test('prefers the animated url when animations are enabled', () => {
     render(
       <CheermoteToken
+        targetSize={30}
         textStyles={textStyles}
         disableAnimations={false}
         token={makePart({
@@ -91,6 +99,7 @@ describe('CheermoteToken', () => {
   test('prefers the static url when animations are disabled', () => {
     render(
       <CheermoteToken
+        targetSize={30}
         textStyles={textStyles}
         disableAnimations
         token={makePart({
@@ -108,6 +117,7 @@ describe('CheermoteToken', () => {
   test('falls back to the static url when no animated url exists', () => {
     render(
       <CheermoteToken
+        targetSize={30}
         textStyles={textStyles}
         token={makePart({
           static_url: 'https://cdn.example.com/cheer/100.png',
@@ -123,6 +133,7 @@ describe('CheermoteToken', () => {
   test('dims the container when the message is moderated', () => {
     render(
       <CheermoteToken
+        targetSize={30}
         textStyles={textStyles}
         isModerated
         token={makePart({ url: 'https://cdn.example.com/cheer/100.gif' })}

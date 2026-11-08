@@ -1,16 +1,14 @@
 import { memo, type Ref, useCallback, useMemo, useRef } from 'react';
 import { View } from 'react-native';
 
-import { COMPOSER_GLYPH_SIZE } from '@app/components/chat/util/composerSizing';
-import { Input, type InputRef } from '@app/components/ui/input/Input.ios';
+import { Input, type InputRef } from '@app/components/ui/input/Input';
 import { Text } from '@app/components/ui/text/Text';
-import { useAccentColor } from '@app/context/AccentColorContext';
 import { theme } from '@app/styles/themes';
 
-import { ComposerIconButton } from '../ComposerIconButton';
-import { ComposerOverflowButton } from '../ComposerOverflowButton';
 import { chatComposerStyles } from './ChatComposer.styles';
 import { CommandSuggestionRail } from './CommandSuggestionRail';
+import { ComposerIconButton } from './components/ComposerIconButton.ios';
+import { ComposerOverflowButton } from './components/ComposerOverflowButton';
 import { EmoteSuggestionRail } from './EmoteSuggestionRail';
 import {
   type ChatComposerHandle,
@@ -18,8 +16,7 @@ import {
 } from './hooks/use-chat-composer-controller';
 import { UserSuggestionRail } from './UserSuggestionRail';
 import { buildComposerOverflowActions } from './util/buildComposerOverflowActions';
-
-export type { ChatComposerHandle };
+import { COMPOSER_GLYPH_SIZE } from './util/composerSizing';
 
 export interface ChatComposerProps {
   onChangeText?: (text: string) => void;
@@ -28,11 +25,8 @@ export interface ChatComposerProps {
   onAttachImage?: () => void;
   onOpenSettings?: () => void;
   isUploadingImage?: boolean;
-  maxSuggestions?: number;
-  prioritizeChannelEmotes?: boolean;
   placeholder?: string;
-  editable?: boolean;
-  canSend?: boolean;
+  canSend: boolean;
   reservedCharacters?: number;
   ref?: Ref<ChatComposerHandle>;
 }
@@ -44,16 +38,12 @@ function ChatComposerComponent({
   onAttachImage,
   onOpenSettings,
   isUploadingImage,
-  maxSuggestions = 50,
-  prioritizeChannelEmotes = true,
   placeholder,
-  editable = true,
   canSend,
   reservedCharacters,
   ref,
 }: ChatComposerProps) {
   const inputRef = useRef<InputRef>(null);
-  const { accentHex } = useAccentColor();
 
   const focusInput = useCallback(() => {
     void inputRef.current?.focus();
@@ -117,23 +107,19 @@ function ChatComposerComponent({
     <View style={chatComposerStyles.mainContainer}>
       {showEmoteRail ? (
         <EmoteSuggestionRail
-          handleEmotePress={handleEmotePress}
-          maxSuggestions={maxSuggestions}
-          prioritizeChannelEmotes={prioritizeChannelEmotes}
+          onSelect={handleEmotePress}
           searchTerm={wordInfo.searchTerm}
         />
       ) : null}
       {showUserRail ? (
         <UserSuggestionRail
-          handleUserSelect={handleUserSelect}
-          maxSuggestions={maxSuggestions}
-          searchTerm={wordInfo.word}
+          onSelect={handleUserSelect}
+          searchTerm={wordInfo.searchTerm}
         />
       ) : null}
       {showCommandRail ? (
         <CommandSuggestionRail
-          handleCommandSelect={handleCommandSelect}
-          maxSuggestions={maxSuggestions}
+          onSelect={handleCommandSelect}
           searchTerm={wordInfo.searchTerm}
         />
       ) : null}
@@ -172,7 +158,6 @@ function ChatComposerComponent({
               autoComplete='off'
               autoCorrect={false}
               blurOnSubmit
-              editable={editable}
               value={text}
               multiline
               numberOfLines={4}
@@ -192,7 +177,7 @@ function ChatComposerComponent({
                * Drives the SwiftUI `.tint` so caret and selection follow the
                * accent; without it the caret falls back near-white.
                */
-              selectionColor={accentHex}
+              selectionColor={theme.colorPrimary}
               style={chatComposerStyles.input}
               submitBehavior='blurAndSubmit'
               variant='soft'
@@ -221,7 +206,7 @@ function ChatComposerComponent({
             label='Send message'
             onPress={handleSubmit}
             prominent
-            prominentColor={accentHex ?? theme.colorViolet}
+            prominentColor={theme.colorPrimary}
           />
         ) : null}
       </View>
@@ -230,4 +215,3 @@ function ChatComposerComponent({
 }
 
 export const ChatComposer = memo(ChatComposerComponent);
-export type { ChatComposerHandle as InputRef };

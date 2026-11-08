@@ -5,8 +5,12 @@ import { PREFERENCES_PERSISTENCE_KEY } from '@app/lib/observablePersistence';
 import {
   getPreferences,
   initialPreferences,
+  migratePreferencesPayload,
   type Preferences,
   replacePreferences,
+  toSyncedPreferences,
+  updatePreferences,
+  usePreference,
   usePreferences,
 } from '../preference-store';
 
@@ -74,10 +78,10 @@ describe('preference store', () => {
   });
 
   test('update writes the new value and the update time to the store and MMKV', async () => {
-    const { result } = renderHook(() => usePreferences());
+    const { result } = renderHook(() => usePreference('chatTimestamps'));
 
     act(() => {
-      result.current.update({ chatTimestamps: true });
+      updatePreferences({ chatTimestamps: true });
     });
 
     const expected: Preferences = {
@@ -88,7 +92,7 @@ describe('preference store', () => {
 
     expect(getPreferences()).toEqual<Preferences>(expected);
 
-    expect(result.current.chatTimestamps).toBe(true);
+    expect(result.current).toBe(true);
 
     await act(flushPersistWrites);
 
@@ -138,5 +142,93 @@ describe('preference store', () => {
     );
 
     expect(store.getPreferences()).toEqual<Preferences>(persisted);
+  });
+
+  test('a write to device-local keys alone keeps the update time', () => {
+    updatePreferences({ landscapeChatWidth: 320, disableChat: true });
+
+    expect(getPreferences()).toEqual<Preferences>({
+      ...basePreferences,
+      landscapeChatWidth: 320,
+      disableChat: true,
+    });
+  });
+
+  test('drops removed preferences from a persisted blob', () => {
+    const persisted = {
+      ...basePreferences,
+      theme: 'foam-dark',
+      useUIKitForWebView: true,
+    };
+
+    const { store } = startAppWithPersistedPreferences(
+      JSON.stringify(persisted),
+    );
+
+    expect(store.getPreferences()).toEqual<Preferences>(basePreferences);
+  });
+
+  test('a fresh install starts with no local edits', () => {
+    expect(initialPreferences.updatedAt).toBe(0);
+  });
+});
+
+describe('usePreferences', () => {
+  const KEYS = ['disableChat', 'chatTimestamps'] as const;
+
+  beforeEach(() => {
+    replacePreferences({
+      ...basePreferences,
+      disableChat: false,
+      chatTimestamps: false,
+    });
+  });
+
+  test('returns only the asked keys and follows their updates', () => {
+    const { result } = renderHook(() => usePreferences(KEYS));
+
+    expect(result.current).toEqual<Pick<Preferences, (typeof KEYS)[number]>>({
+      disableChat: false,
+      chatTimestamps: false,
+    });
+
+    act(() => {
+      updatePreferences({ chatTimestamps: true });
+    });
+
+    expect(result.current).toEqual<Pick<Preferences, (typeof KEYS)[number]>>({
+      disableChat: false,
+      chatTimestamps: true,
+    });
+  });
+});
+
+describe('migratePreferencesPayload', () => {
+  test('fills keys the blob is missing from the defaults', () => {
+    const { showChatGifs: _omitted, ...legacy } = basePreferences;
+
+    expect(migratePreferencesPayload(legacy)).toEqual<Preferences>(
+      basePreferences,
+    );
+  });
+});
+
+describe('toSyncedPreferences', () => {
+  test('leaves out every device-local key', () => {
+    const syncedKeys: string[] = Object.keys(
+      toSyncedPreferences(initialPreferences),
+    );
+
+    expect(
+      Object.keys(initialPreferences)
+        .filter(key => !syncedKeys.includes(key))
+        .sort(),
+    ).toEqual([
+      'chatDebugTools',
+      'disableChat',
+      'disableStream',
+      'landscapeChatWidth',
+      'sevenTvPaintRenderer',
+    ]);
   });
 });

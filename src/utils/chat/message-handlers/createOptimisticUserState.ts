@@ -1,4 +1,4 @@
-import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
+import { getFallbackSenderColor } from '@app/utils/chat/getFallbackSenderColor';
 import { parseBadges } from '@app/utils/chat/parseBadges';
 
 export interface OptimisticSender {
@@ -12,7 +12,7 @@ export interface OptimisticReplyTarget {
   messageId: string;
   username: string;
   message: string;
-  replyParentUserLogin?: string;
+  login: string;
 }
 
 export function createOptimisticUserState({
@@ -41,10 +41,10 @@ export function createOptimisticUserState({
     badges: badgeData.badges,
     color:
       currentUserState['color'] ||
-      (user?.login ? generateRandomTwitchColor(user.login) : undefined),
+      (user?.login ? getFallbackSenderColor(user.login) : undefined),
     'reply-parent-msg-id': replyTo?.messageId || '',
     'reply-parent-msg-body': replyTo?.message || '',
     'reply-parent-display-name': replyTo?.username || '',
-    'reply-parent-user-login': replyTo?.replyParentUserLogin || '',
+    'reply-parent-user-login': replyTo?.login || '',
   };
 }

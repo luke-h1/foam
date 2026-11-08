@@ -1,12 +1,10 @@
-import type { Key } from 'react';
-
-import type { EmotePressData } from '@app/components/chat/components/chat-message/ChatRow.types';
-import type { ChatFontScale } from '@app/components/chat/components/chat-message/util/chatScale';
+import type { EmotePressData } from '@app/store/chat/types/chat-press-data';
+import type { ChatDensity, ChatFontScale } from '@app/store/preference-store';
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
 export interface ChatTokenRenderProps {
-  compact: boolean;
+  density: ChatDensity;
   disableEmoteAnimations: boolean;
   /**
    * Always set at the chat-row boundary (`fontScale ?? 'default'`).
@@ -14,10 +12,9 @@ export interface ChatTokenRenderProps {
   fontScale: ChatFontScale;
   effectiveHighlightedUserSet: ReadonlySet<string>;
   getMentionColor?: (username: string) => string;
-  getTokenKey: (token: MessageToken, index: number) => Key;
   onEmoteTouchStart?: (token: EmotePressData) => void;
   message: MessageToken[];
-  moderationNotice?: unknown;
+  isModerated: boolean;
   normalisedCurrentUsername?: string;
   noticeTags?: UserNoticeTags;
   parseTextForEmotes?: (text: string) => MessageToken[];

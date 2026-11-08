@@ -3,18 +3,13 @@ import { Platform } from 'react-native';
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner-native';
 
+import { isApiClientError } from '@app/services/api/client';
 import { logger } from '@app/utils/logger';
 
 declare module '@tanstack/react-query' {
   interface Register {
     mutationMeta: {
-      /**
-       * Skip the default error toast for this mutation.
-       */
       suppressErrorToast?: boolean;
-      /**
-       * User-facing message shown in the default error toast.
-       */
       errorMessage?: string;
     };
   }
@@ -26,6 +21,10 @@ export function handleQueryError(
   error: Error,
   queryKey: readonly unknown[],
 ): void {
+  if (isApiClientError(error)) {
+    return;
+  }
+
   logger.api.error(error.message, {
     name: 'api_error',
     exceptionName: error.name,

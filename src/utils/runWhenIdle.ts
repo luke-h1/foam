@@ -2,7 +2,6 @@ interface IdleTask {
   cancel: () => void;
 }
 
-/** Schedule work for an idle moment (`requestIdleCallback`, or `setTimeout` fallback). */
 export function runWhenIdle(callback: () => void): IdleTask {
   const scheduleIdle = globalThis.requestIdleCallback;
   const cancelIdle = globalThis.cancelIdleCallback;

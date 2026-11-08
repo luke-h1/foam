@@ -1,3 +1,4 @@
+import { SEVEN_TV_GLOBAL_EMOTE_SET_ID } from '@app/constants/emote-providers';
 import {
   BadgesQueryDocument,
   type BadgesQueryQuery,
@@ -11,13 +12,13 @@ import {
   GlobalEmoteSetDocument,
   type GlobalEmoteSetQuery,
   type Image,
-  PaintsQueryDocument,
-  type PaintsQueryQuery,
   Platform,
   UserByConnectionDocument,
   type UserByConnectionQuery,
+  type UserByConnectionQueryVariables,
   UserCosmeticsDocument,
   type UserCosmeticsQuery,
+  type UserCosmeticsQueryVariables,
   UserPersonalEmotesQueryDocument,
   type UserPersonalEmotesQueryQuery,
   type UserPersonalEmotesQueryQueryVariables,
@@ -28,20 +29,18 @@ import type {
   SevenTvEmoteSetMetadata,
   SevenTvSanitisedEmote,
 } from '@app/types/emote';
-import type {
-  PaintData,
-  SevenTvEventData,
-  SevenTvEventType,
-  UserCosmeticsInfo,
-} from '@app/types/seven-tv/cosmetics';
 import type { SevenTvEmotePreview } from '@app/types/seven-tv/emotes';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import { convertV4PaintToPaintData } from '@app/utils/color/seven-tv-paint-data/convertV4PaintToPaintData';
-import { pickAnimatedFormat } from '@app/utils/color/seven-tv-paint-data/pickAnimatedFormat';
-import { pickBestFormat } from '@app/utils/color/seven-tv-paint-data/pickBestFormat';
-import { pickBestImage } from '@app/utils/color/seven-tv-paint-data/pickBestImage';
 import { createEmoteImageVariants } from '@app/utils/emote/emote-image-variants/createEmoteImageVariants';
+import { buildSevenTvSanitisedEmote } from '@app/utils/emote/sanitised/buildSevenTvSanitisedEmote';
+import { sanitiseAll } from '@app/utils/emote/sanitised/sanitiseAll';
 import { logger } from '@app/utils/logger';
+import { SEVEN_TV_ZERO_WIDTH_FLAG } from '@app/utils/seven-tv/constants';
+import { pickAnimatedFormat } from '@app/utils/seven-tv/gql/pickAnimatedFormat';
+import { pickBestFormat } from '@app/utils/seven-tv/gql/pickBestFormat';
+import { pickBestImage } from '@app/utils/seven-tv/gql/pickBestImage';
+import { sanitiseV4Badge } from '@app/utils/seven-tv/gql/sanitiseV4Badge';
+import type { UserCosmeticsInfo } from '@app/utils/seven-tv/gql/types';
 import {
   SEVEN_TV_EMOTE_SET_MAX_AGE_MS,
   type SevenTvUser,
@@ -49,17 +48,7 @@ import {
 } from '@app/utils/seven-tv/sevenTvUserCache';
 
 import { sevenTvApi } from './api/clients';
-import {
-  buildSanitisedEmote,
-  buildSevenTvSanitisedEmote,
-} from './emote-provider';
 import { sevenTvV4Client } from './gql/client';
-import { runCosmeticsQuery } from './gql/seven-tv-worklet-client';
-
-type SevenTvGqlResponse<TData> = {
-  data?: TData;
-  errors?: { message?: string }[];
-};
 
 export const clearSevenTvUserCache = () => {
   sevenTvUserCache.clear();
@@ -73,33 +62,29 @@ export const invalidateSevenTvUser = (twitchUserId: string) => {
   sevenTvUserCache.invalidate(twitchUserId);
 };
 
+function toSevenTvUser(data: UserByConnectionQuery): SevenTvUser {
+  'worklet';
+
+  const user = data.users?.userByConnection;
+
+  return {
+    userId: user?.id ?? '',
+    emoteSetId: user?.style?.activeEmoteSetId ?? '',
+  };
+}
+
 async function fetchSevenTvUser(
   twitchUserId: string,
 ): Promise<SevenTvUser | null> {
-  const { result, error } = await runCosmeticsQuery(
-    UserByConnectionDocument,
-    { platformId: twitchUserId },
-    responseText => {
-      'worklet';
-
-      const parsed: SevenTvGqlResponse<UserByConnectionQuery> =
-        JSON.parse(responseText);
-
-      if (parsed.errors?.length) {
-        throw new Error(
-          parsed.errors.flatMap(e => e.message ?? []).join('; ') ||
-            '7TV GQL error',
-        );
-      }
-
-      const user = parsed.data?.users?.userByConnection;
-
-      return {
-        userId: user?.id ?? '',
-        emoteSetId: user?.style?.activeEmoteSetId ?? '',
-      };
-    },
-  );
+  const { data, error } = await sevenTvV4Client.queryDerived<
+    UserByConnectionQuery,
+    SevenTvUser,
+    UserByConnectionQueryVariables
+  >({
+    query: UserByConnectionDocument,
+    variables: { platformId: twitchUserId },
+    derive: toSevenTvUser,
+  });
 
   if (error) {
     logger.stv.warn(
@@ -117,7 +102,7 @@ async function fetchSevenTvUser(
     return null;
   }
 
-  return result ?? null;
+  return data ?? { userId: '', emoteSetId: '' };
 }
 
 // The emote set helpers below are worklets so the channel set can be sanitised
@@ -158,65 +143,54 @@ function buildV4ImageVariants(images: readonly Image[]): EmoteImageVariants {
   return createEmoteImageVariants({ animated, static: staticSet });
 }
 
-function pickBestStaticImage(images: readonly Image[]): Image | undefined {
-  'worklet';
-
-  const scales = [4, 3, 2, 1];
-
-  return scales.reduce<Image | undefined>((found, targetScale) => {
-    if (found) {
-      return found;
-    }
-
-    const atScale = images.filter(img => img.scale === targetScale);
-
-    if (atScale.length === 0) {
-      return undefined;
-    }
-
-    const staticImages = atScale.filter(img => img.frameCount <= 1);
-    return staticImages.length > 0 ? pickBestFormat(staticImages) : undefined;
-  }, undefined);
-}
-
 type V4EmoteSet = NonNullable<EmoteSetCustomQuery['emoteSets']['emoteSet']>;
 
-function sanitiseV4EmoteSet(
-  emoteSet: V4EmoteSet,
-  site: '7TV Channel' | '7TV Global',
+type V4PersonalEmoteSet = NonNullable<
+  NonNullable<
+    UserPersonalEmotesQueryQuery['users']['userByConnection']
+  >['personalEmoteSet']
+>;
+
+interface V4EmoteSetEntry {
+  alias: string;
+  flags?: { zeroWidth: boolean };
+  emote: {
+    id: string;
+    defaultName: string;
+    images: readonly Image[];
+    flags: { defaultZeroWidth: boolean };
+    owner?: {
+      mainConnection?: { platformDisplayName: string } | null;
+    } | null;
+  };
+}
+
+function sanitiseV4EmoteSetItems(
+  items: readonly V4EmoteSetEntry[],
+  site: SevenTvSanitisedEmote['site'],
+  setMetadata: SevenTvEmoteSetMetadata,
 ): SevenTvSanitisedEmote[] {
   'worklet';
 
-  const setMetadata: SevenTvEmoteSetMetadata = {
-    setId: emoteSet.id,
-    setName: emoteSet.name,
-    capacity: emoteSet.capacity ?? null,
-    ownerId: emoteSet.ownerId ?? null,
-    kind: emoteSet.kind,
-    updatedAt: emoteSet.updatedAt,
-    totalCount: emoteSet.emotes.totalCount,
-  };
-
-  const sanitisedEmotes: SevenTvSanitisedEmote[] = [];
-
-  for (const item of emoteSet.emotes.items) {
+  return sanitiseAll(items, item => {
     const { emote } = item;
     const bestImage = pickBestImage(emote.images);
-    const bestStaticImage = pickBestStaticImage(emote.images);
+    const bestStaticImage = pickBestImage(emote.images, { staticOnly: true });
     const width = bestImage?.width ?? 0;
     const height = bestImage?.height ?? 0;
-    const zeroWidth = item.flags.zeroWidth || emote.flags.defaultZeroWidth;
+    const zeroWidth =
+      item.flags?.zeroWidth === true || emote.flags.defaultZeroWidth;
 
-    const sanitised = buildSevenTvSanitisedEmote({
+    return buildSevenTvSanitisedEmote({
       site,
       id: emote.id,
-      name: item.alias,
+      name: item.alias || emote.defaultName,
       originalName: emote.defaultName,
       creator: emote.owner?.mainConnection?.platformDisplayName ?? null,
       url: bestImage?.url ?? '',
       staticUrl: bestStaticImage?.url,
       imageVariants: buildV4ImageVariants(emote.images),
-      flags: zeroWidth ? 256 : 0,
+      flags: zeroWidth ? SEVEN_TV_ZERO_WIDTH_FLAG : 0,
       frameCount: bestImage?.frameCount ?? 1,
       format: bestImage?.mime?.replace('image/', '') ?? 'webp',
       aspectRatio: height > 0 ? width / height : 1,
@@ -226,13 +200,38 @@ function sanitiseV4EmoteSet(
       setMetadata,
       actor: undefined,
     });
+  });
+}
 
-    if (sanitised) {
-      sanitisedEmotes.push(sanitised);
-    }
-  }
+function sanitiseV4EmoteSet(
+  emoteSet: V4EmoteSet,
+  site: '7TV Channel' | '7TV Global',
+): SevenTvSanitisedEmote[] {
+  'worklet';
 
-  return sanitisedEmotes;
+  return sanitiseV4EmoteSetItems(emoteSet.emotes.items, site, {
+    setId: emoteSet.id,
+    setName: emoteSet.name,
+    capacity: emoteSet.capacity ?? null,
+    ownerId: emoteSet.ownerId ?? null,
+    kind: emoteSet.kind,
+    updatedAt: emoteSet.updatedAt,
+    totalCount: emoteSet.emotes.totalCount,
+  });
+}
+
+function sanitisePersonalEmoteSet(
+  emoteSet: V4PersonalEmoteSet,
+): SevenTvSanitisedEmote[] {
+  return sanitiseV4EmoteSetItems(emoteSet.emotes.items, '7TV Personal', {
+    setId: emoteSet.id,
+    setName: emoteSet.name,
+    capacity: null,
+    ownerId: null,
+    kind: EmoteSetKind.Personal,
+    updatedAt: '',
+    totalCount: emoteSet.emotes.items.length,
+  });
 }
 
 function sanitiseGlobalEmoteSetResponse(
@@ -252,9 +251,35 @@ function sanitiseChannelEmoteSetResponse(
   return emoteSet ? sanitiseV4EmoteSet(emoteSet, '7TV Channel') : [];
 }
 
-/**
- * The global set lives behind its own query rather than the id-keyed one.
- */
+const TWITCH_PLATFORM = Platform.Twitch;
+
+function toUserCosmeticsInfo(
+  data: UserCosmeticsQuery,
+): UserCosmeticsInfo | null {
+  'worklet';
+
+  const user = data.users?.user;
+
+  if (!user) {
+    return null;
+  }
+
+  const twitchConnection = user.connections.find(
+    conn => conn.platform === TWITCH_PLATFORM,
+  );
+
+  const { style } = user;
+
+  return {
+    userId: user.id,
+    ttvUserId: twitchConnection?.platformId ?? null,
+    paintId: style.activePaintId ?? null,
+    badgeId: style.activeBadgeId ?? null,
+    paint: style.activePaint ?? null,
+    badge: style.activeBadge ?? null,
+  };
+}
+
 async function fetchGlobalSevenTvEmoteSet(): Promise<SevenTvSanitisedEmote[]> {
   const { data, error } = await sevenTvV4Client.queryDerived({
     query: GlobalEmoteSetDocument,
@@ -306,7 +331,7 @@ export const sevenTvService = {
   getSanitisedEmoteSet: async (
     emoteSetId: string,
   ): Promise<SevenTvSanitisedEmote[]> => {
-    if (emoteSetId === 'global') {
+    if (emoteSetId === SEVEN_TV_GLOBAL_EMOTE_SET_ID) {
       return fetchGlobalSevenTvEmoteSet();
     }
 
@@ -363,25 +388,6 @@ export const sevenTvService = {
   },
 
   /**
-   * Bulk EventAPI bridge lookup; identifiers must be `username:<login>` (the
-   * API rejects `id:`). Only synthesises AVATAR dispatches.
-   */
-  fetchBridgedCosmetics: async (
-    twitchLogins: string[],
-  ): Promise<SevenTvEventData<SevenTvEventType>[]> => {
-    if (twitchLogins.length === 0) {
-      return [];
-    }
-
-    const events = await sevenTvApi.post<SevenTvEventData<SevenTvEventType>[]>(
-      '/bridge/event-api',
-      { identifiers: twitchLogins.map(login => `username:${login}`) },
-    );
-
-    return Array.isArray(events) ? events : [];
-  },
-
-  /**
    * Passive presence pushes entitlements to just this session; active
    * (passive: false) broadcasts them so other viewers see the cosmetics.
    */
@@ -402,10 +408,6 @@ export const sevenTvService = {
     });
   },
 
-  /**
-   * A user's personal emote set via v4 GQL - emotes the user can use in any
-   * channel.
-   */
   getPersonalEmoteSet: async (
     twitchUserId: string,
   ): Promise<SevenTvSanitisedEmote[]> => {
@@ -440,54 +442,7 @@ export const sevenTvService = {
       return [];
     }
 
-    const setMetadata: SevenTvEmoteSetMetadata = {
-      setId: personalEmoteSet.id,
-      setName: personalEmoteSet.name,
-      capacity: null,
-      ownerId: null,
-      kind: EmoteSetKind.Personal,
-      updatedAt: '',
-      totalCount: personalEmoteSet.emotes.items.length,
-    };
-
-    const sanitisedEmotes: SevenTvSanitisedEmote[] = [];
-
-    for (const item of personalEmoteSet.emotes.items) {
-      const { emote } = item;
-
-      const bestImage = pickBestImage(emote.images);
-      const bestStaticImage = pickBestStaticImage(emote.images);
-
-      const imgScale = bestImage?.scale ?? 1;
-      const imgWidth = bestImage ? Math.round(bestImage.width / imgScale) : 0;
-      const imgHeight = bestImage ? Math.round(bestImage.height / imgScale) : 0;
-
-      const sanitised = buildSanitisedEmote({
-        site: '7TV Personal' as const,
-        id: emote.id,
-        name: item.alias || emote.defaultName,
-        originalName: emote.defaultName,
-        creator: emote.owner?.mainConnection?.platformDisplayName ?? null,
-        url: bestImage?.url ?? '',
-        staticUrl: bestStaticImage?.url,
-        imageVariants: buildV4ImageVariants(emote.images),
-        flags: emote.flags.animated ? 1 : 0,
-        frameCount: bestImage?.frameCount ?? 1,
-        format: bestImage?.mime?.replace('image/', '') ?? 'webp',
-        aspectRatio: imgHeight > 0 ? imgWidth / imgHeight : 1,
-        zeroWidth: emote.flags.defaultZeroWidth,
-        width: imgWidth,
-        height: imgHeight,
-        setMetadata,
-        actor: undefined,
-      });
-
-      if (sanitised) {
-        sanitisedEmotes.push(sanitised);
-      }
-    }
-
-    return sanitisedEmotes;
+    return sanitisePersonalEmoteSet(personalEmoteSet);
   },
 
   /**
@@ -497,67 +452,21 @@ export const sevenTvService = {
   getUserCosmeticsGql: async (
     sevenTvUserId: string,
   ): Promise<UserCosmeticsInfo | null> => {
-    const twitchPlatform = Platform.Twitch;
+    const { data, error } = await sevenTvV4Client.queryDerived<
+      UserCosmeticsQuery,
+      UserCosmeticsInfo | null,
+      UserCosmeticsQueryVariables
+    >({
+      query: UserCosmeticsDocument,
+      variables: { id: sevenTvUserId },
+      derive: toUserCosmeticsInfo,
+    });
 
-    try {
-      const { result, error } = await runCosmeticsQuery(
-        UserCosmeticsDocument,
-        { id: sevenTvUserId },
-        responseText => {
-          'worklet';
-
-          const parsed: SevenTvGqlResponse<UserCosmeticsQuery> =
-            JSON.parse(responseText);
-
-          if (parsed.errors?.length) {
-            throw new Error(
-              parsed.errors.flatMap(e => e.message ?? []).join('; ') ||
-                '7TV GQL error',
-            );
-          }
-
-          const user = parsed.data?.users?.user;
-
-          if (!user) {
-            return null;
-          }
-
-          const twitchConnection = user.connections.find(
-            conn => conn.platform === twitchPlatform,
-          );
-
-          const { style } = user;
-
-          return {
-            userId: user.id,
-            ttvUserId: twitchConnection?.platformId ?? null,
-            paintId: style.activePaintId ?? null,
-            badgeId: style.activeBadgeId ?? null,
-            paint: style.activePaint ?? null,
-            badge: style.activeBadge ?? null,
-          } satisfies UserCosmeticsInfo;
-        },
-      );
-
-      if (error) {
-        logger.stv.warn('Failed to fetch 7TV cosmetics', {
-          name: 'seven_tv_cosmetics_warning',
-          error,
-          action: 'cosmetics_gql_failed',
-          provider: 'seven_tv',
-          resource_type: 'cosmetics',
-          seven_tv_user_id: sevenTvUserId,
-        });
-
-        return null;
-      }
-
-      return result ?? null;
-    } catch (error) {
-      logger.stv.warn('Failed to fetch user cosmetics via GQL', {
+    if (error) {
+      logger.stv.warn('Failed to fetch 7TV cosmetics', {
         name: 'seven_tv_cosmetics_warning',
         error,
-        action: 'cosmetics_fetch_failed',
+        action: 'cosmetics_gql_failed',
         provider: 'seven_tv',
         resource_type: 'cosmetics',
         seven_tv_user_id: sevenTvUserId,
@@ -565,22 +474,8 @@ export const sevenTvService = {
 
       return null;
     }
-  },
 
-  fetchAllPaints: async (): Promise<PaintData[]> => {
-    const { data, error } = await sevenTvV4Client.query<PaintsQueryQuery>({
-      query: PaintsQueryDocument,
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    const paints = data?.paints?.paints ?? [];
-
-    return paints
-      .map(convertV4PaintToPaintData)
-      .sort((a, b) => a.name.localeCompare(b.name, 'en'));
+    return data ?? null;
   },
 
   fetchAllBadges: async (): Promise<SanitisedBadgeSet[]> => {
@@ -593,22 +488,8 @@ export const sevenTvService = {
     }
 
     return (data?.badges?.badges ?? [])
-      .flatMap<SanitisedBadgeSet>(badge => {
-        const url = pickBestImage(badge.images)?.url;
-
-        return url
-          ? [
-              {
-                id: badge.id,
-                url,
-                title: badge.name,
-                type: '7TV Badge',
-                set: badge.id,
-                provider: '7tv',
-              },
-            ]
-          : [];
-      })
+      .filter(badge => pickBestImage(badge.images) !== undefined)
+      .map<SanitisedBadgeSet>(sanitiseV4Badge)
       .sort((a, b) => a.title.localeCompare(b.title, 'en'));
   },
 } as const;

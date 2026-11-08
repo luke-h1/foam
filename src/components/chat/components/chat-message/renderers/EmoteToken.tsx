@@ -3,9 +3,9 @@ import { View } from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 import { useCachedEmoteAspectRatio } from '@app/providers/cached-emotes-provider/use-cached-emote';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import { calculateAspectRatio } from '@app/utils/chat/calculateAspectRatio';
-import type { MessageToken } from '@app/utils/chat/messageToken';
-import { resolveEmoteDisplayUrl } from '@app/utils/emote/resolveEmoteDisplayUrl';
+import { getChatEmoteDisplayUrl } from '@app/utils/emote/getChatEmoteDisplayUrl';
 import { logger } from '@app/utils/logger';
 
 import { ChatInlineImage } from './ChatInlineImage';
@@ -16,7 +16,7 @@ interface EmoteTokenProps {
   token: MessageToken<'emote'>;
   onEmoteTouchStart?: (token: MessageToken<'emote'>) => void;
   shouldOverlayPrevious?: boolean;
-  targetSize?: number;
+  targetSize: number;
 }
 
 export const EmoteToken = memo(
@@ -26,9 +26,9 @@ export const EmoteToken = memo(
     disableAnimations = false,
     isModerated = false,
     shouldOverlayPrevious = false,
-    targetSize = 30,
+    targetSize,
   }: EmoteTokenProps) => {
-    const displayUrl = resolveEmoteDisplayUrl(token, { disableAnimations });
+    const displayUrl = getChatEmoteDisplayUrl(token, { disableAnimations });
 
     // Twitch, BTTV and some 7TV emotes arrive without size metadata, so the
     // box would default to 1:1 and letterbox non-square emotes. When metadata
@@ -151,7 +151,7 @@ function OverlaidEmoteImage({
     targetSize,
   );
 
-  const displayUrl = resolveEmoteDisplayUrl(overlay, { disableAnimations });
+  const displayUrl = getChatEmoteDisplayUrl(overlay, { disableAnimations });
 
   if (!displayUrl) {
     return null;

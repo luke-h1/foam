@@ -48,7 +48,7 @@ export function ActionMenuHost() {
             onPress={dismissActionMenu}
           >
             <Text weight='semibold' color='gray.textLow'>
-              {options.cancelLabel}
+              Cancel
             </Text>
           </Pressable>
         </Pressable>

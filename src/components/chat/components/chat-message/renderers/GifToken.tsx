@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
 import type { ChatTextStyles } from '../ChatText.styles';
 import { ChatInlineImage } from './ChatInlineImage';

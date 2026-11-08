@@ -26,15 +26,15 @@ import {
 
 import { chatScrollActivity } from '@app/components/chat/util/chatScrollActivity';
 import { useSyncRef } from '@app/hooks/use-sync-ref';
-import { resolveUseAppleWebpCodec } from '@app/lib/expo-image/resolveUseAppleWebpCodec';
-import { runAnimationCommand } from '@app/lib/expo-image/runAnimationCommand';
 import {
   evictCachedEmoteRef,
   getCachedEmoteByteEstimate,
   getCachedEmoteStats,
   getEmoteDecodeTimeoutCount,
   getEmoteRefReleaseRaceCount,
-} from '@app/providers/cached-emotes-provider/cache-service';
+} from '@app/lib/emote-cache/cacheService';
+import { resolveUseAppleWebpCodec } from '@app/lib/expo-image/resolveUseAppleWebpCodec';
+import { runAnimationCommand } from '@app/lib/expo-image/runAnimationCommand';
 import { useCachedEmote } from '@app/providers/cached-emotes-provider/use-cached-emote';
 import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
 import { logger } from '@app/utils/logger';
@@ -130,10 +130,6 @@ function useEmoteAnimationSync(
   return { autoplay, syncAfterImageChange };
 }
 
-/**
- * Owns one row's load state: the shared-ref path, the uri fallback chain, the
- * backoff retries and the watchdog that covers silent loads.
- */
 function useEmoteLoadRecovery(
   sourceUrl: string,
   sharedRef: ImageRef | null,
@@ -170,7 +166,6 @@ function useEmoteLoadRecovery(
 
   // A ban belongs to the mount that issued it; without this reset a recycled
   // slot keeps an old ban.
-  // eslint-disable-next-line react-doctor/rerender-state-only-in-handlers, react-doctor/no-derived-useState -- reset-state-on-prop-change pattern; the render-phase setState is the point
   const [banOwnerUrl, setBanOwnerUrl] = useState(sourceUrl);
 
   if (banOwnerUrl !== sourceUrl) {
@@ -416,7 +411,6 @@ interface ChatInlineImageProps {
   transitionMs?: number;
 }
 
-// eslint-disable-next-line react-doctor/no-giant-component -- a split adds a mount boundary on the hottest chat path
 function ChatInlineImageComponent({
   accessibilityLabel,
   onTouchStart,

@@ -32,9 +32,6 @@ function cacheByUrl<TValue>(
   };
 }
 
-/**
- * Whether a url names an animated or a static emote.
- */
 export const getEmoteUrlKind = cacheByUrl<EmoteUrlDescriptor['kind']>(
   url => describeEmoteUrl(url).kind,
   2048,

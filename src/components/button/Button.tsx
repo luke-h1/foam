@@ -3,6 +3,7 @@ import { memo } from 'react';
 import { type CustomPressableProps, PressableScale } from 'pressto';
 
 import { impact, selection } from '@app/lib/haptics';
+import { theme } from '@app/styles/themes';
 import { createHitslop } from '@app/utils/string/createHitSlop';
 
 type ButtonHaptic = 'selection' | 'light' | 'medium' | 'heavy';
@@ -43,7 +44,7 @@ function ButtonComponent({
   };
 
   const androidRipple =
-    process.env.EXPO_OS === 'android' ? 'rgba(255, 255, 255, 0.12)' : undefined;
+    process.env.EXPO_OS === 'android' ? theme.colorRipple : undefined;
 
   const resolvedRipple = rippleColor ?? androidRipple;
 

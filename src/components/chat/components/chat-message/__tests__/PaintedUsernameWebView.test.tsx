@@ -1,14 +1,12 @@
-// "shape" is the 7TV paint API field (types/seven-tv/cosmetics.ts), not a naming choice.
-// oxlint-disable anti-slop/no-shape-in-symbol-names
 import { StyleSheet } from 'react-native';
 import * as RNWebView from 'react-native-webview';
 
 import { act, render, screen } from '@testing-library/react-native';
 
 import { theme } from '@app/styles/themes';
-import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
 import { PaintedUsernameWebView } from '../cosmetic-username/PaintedUsernameWebView';
+import { makePaint } from '../cosmetic-username/util/paint-css/__fixtures__/paintCss.fixture';
 import { chatLineMetrics } from '../util/chatScale';
 
 /**
@@ -25,20 +23,7 @@ jest.spyOn(RNWebView, 'WebView').mockImplementation(props => {
   });
 });
 
-const paint: PaintData = {
-  id: 'paint-1',
-  name: 'Test Paint',
-  color: null,
-  layers: { length: 0 },
-  shadows: { length: 0 },
-  textStyle: null,
-  function: 'LINEAR_GRADIENT',
-  repeat: false,
-  angle: 90,
-  shape: 'circle',
-  image_url: '',
-  stops: { length: 0 },
-};
+const paint = makePaint({ angle: 90 });
 
 const sendSizeMessage = (width: number, height: number) => {
   const webView = screen.getByTestId('painted-webview');

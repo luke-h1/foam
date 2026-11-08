@@ -1,6 +1,5 @@
 import { useRef } from 'react';
 import {
-  Platform,
   ScrollView,
   type ScrollViewInstance,
   StyleSheet,
@@ -8,57 +7,21 @@ import {
 } from 'react-native';
 
 import {
-  Form,
-  Host,
-  Section,
-  Text as NativeText,
-  Toggle,
-} from '@expo/ui/swift-ui';
-
-import {
   SettingsSection,
   SettingsToggleRow,
 } from '@app/components/settings-section/SettingsSection';
 import { Text } from '@app/components/ui/text/Text';
 import { useScrollToTop } from '@app/hooks/use-scroll-to-top';
-import {
-  usePreference,
-  useUpdatePreferences,
-} from '@app/store/preference-store';
+import { updatePreferences, usePreference } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
+
+import { ANALYTICS_FOOTER } from './constants';
 
 export function SettingsOtherScreen() {
   const scrollRef = useRef<ScrollViewInstance>(null);
   const analyticsEnabled = usePreference('analyticsEnabled');
-  const update = useUpdatePreferences();
 
   useScrollToTop(scrollRef);
-
-  if (Platform.OS === 'ios') {
-    return (
-      <Host style={styles.iosHost}>
-        <Form>
-          <Section
-            footer={
-              <NativeText>
-                Foam sends anonymous usage data, such as which screens you open,
-                to improve the app. Screen names can include channel names. The
-                data never links to your Twitch account and never includes chat
-                messages.
-              </NativeText>
-            }
-          >
-            <Toggle
-              label='Share analytics'
-              systemImage='chart.bar'
-              isOn={analyticsEnabled}
-              onIsOnChange={value => update({ analyticsEnabled: value })}
-            />
-          </Section>
-        </Form>
-      </Host>
-    );
-  }
 
   return (
     <View style={styles.container}>
@@ -70,10 +33,7 @@ export function SettingsOtherScreen() {
         <SettingsSection
           footer={
             <Text type='subhead' color='gray.textLow'>
-              Foam sends anonymous usage data, such as which screens you open,
-              to improve the app. Screen names can include channel names. The
-              data never links to your Twitch account and never includes chat
-              messages.
+              {ANALYTICS_FOOTER}
             </Text>
           }
         >
@@ -82,7 +42,9 @@ export function SettingsOtherScreen() {
             subtitle='Help improve Foam with anonymous usage data'
             icon={{ icon: 'chart.bar' }}
             value={analyticsEnabled}
-            onValueChange={value => update({ analyticsEnabled: value })}
+            onValueChange={value =>
+              updatePreferences({ analyticsEnabled: value })
+            }
           />
         </SettingsSection>
       </ScrollView>
@@ -99,8 +61,5 @@ const styles = StyleSheet.create({
     paddingBottom: theme.space56,
     paddingHorizontal: theme.space16,
     paddingTop: theme.space16,
-  },
-  iosHost: {
-    flex: 1,
   },
 });

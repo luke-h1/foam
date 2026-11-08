@@ -7,29 +7,29 @@ import type { MaintainScrollAtEndOptions } from '@legendapp/list/react-native';
 import { render } from '@testing-library/react-native';
 import { measureFunction, measureRenders } from 'reassure';
 
-import type { ChatDensity } from '@app/components/chat/components/chat-message/util/chatScale';
-import type { ChatMessageType } from '@app/store/chat/types/constants';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import type { ChatDensity } from '@app/store/preference-store';
+import type { ChatMessageType } from '@app/types/chat/chatMessage';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
 import { ChatRow } from '../components/chat-message/ChatRow';
 import { ChatList } from '../components/ChatList';
 import { getVisibleMessages } from '../util/visibleMessages';
 
-type MockExtraData = {
+interface MockExtraData {
   density: ChatDensity;
   showTimestamps: boolean;
-};
+}
 
-type MockRenderItemInfo = {
+interface MockRenderItemInfo {
   extraData: MockExtraData | undefined;
   index: number;
   item: AnyChatMessageType;
   target: 'Cell';
-};
+}
 
-type MockLegendListProps = {
+interface MockLegendListProps {
   data?: readonly AnyChatMessageType[];
   drawDistance?: number;
   estimatedItemSize?: number;
@@ -38,7 +38,7 @@ type MockLegendListProps = {
   keyExtractor?: (item: AnyChatMessageType, index: number) => string;
   maintainScrollAtEnd?: MaintainScrollAtEndOptions | false;
   renderItem?: (info: MockRenderItemInfo) => ReactElement | null;
-};
+}
 
 const MOCK_VIEWPORT_HEIGHT = 680;
 const MOCK_FALLBACK_ROW_HEIGHT = 34;
@@ -175,7 +175,7 @@ function createChatMessage(index: number): PerfChatMessage {
     cachedSenderColor: 'rgb(145, 70, 255)',
     message: createMessageParts(index),
     replyBody: '',
-    replyDisplayName: '',
+    replyParentLogin: '',
     parentDisplayName: '',
     timestamp: '12:00',
     userstate: createUserStateTags({

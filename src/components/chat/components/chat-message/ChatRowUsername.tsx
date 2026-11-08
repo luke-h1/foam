@@ -1,15 +1,15 @@
-import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import { cachedLighten } from '@app/utils/chat/resolve-cached-sender-color/cachedLighten';
+import type { ChatDensity, ChatFontScale } from '@app/store/preference-store';
+import { resolveCachedSenderColor } from '@app/utils/chat/resolve-cached-sender-color/resolveCachedSenderColor';
 
 import { ChatMessagePressable } from './ChatMessagePressable';
 import { styles } from './ChatRow.styles';
 import { getChatTextStyles } from './ChatText.styles';
 import { PaintedUsername } from './cosmetic-username/PaintedUsername';
-import type { ChatFontScale } from './util/chatScale';
+import { CHAT_SURFACE_COLORS } from './util/chatScale';
 
 interface ChatRowUsernameProps {
   cachedSenderColor?: string;
-  compact: boolean;
+  density: ChatDensity;
   fontScale?: ChatFontScale;
   isModerated?: boolean;
   onUsernamePress?: () => void;
@@ -20,7 +20,7 @@ interface ChatRowUsernameProps {
 
 export function ChatRowUsername({
   cachedSenderColor,
-  compact,
+  density,
   fontScale,
   isModerated = false,
   onUsernamePress,
@@ -33,18 +33,20 @@ export function ChatRowUsername({
   }
 
   const usernameTextStyle = [
-    getChatTextStyles(fontScale, compact).username,
+    getChatTextStyles(fontScale, density).username,
     isModerated && styles.moderatedUsernameText,
   ];
 
   const fallbackColor =
-    cachedSenderColor ??
-    (userstateColor ? cachedLighten(userstateColor) : undefined) ??
-    cachedLighten(generateRandomTwitchColor(username));
+    resolveCachedSenderColor({
+      cachedSenderColor,
+      sender: username,
+      userstate: { color: userstateColor },
+    }) ?? CHAT_SURFACE_COLORS.muted;
 
   const paintedUsername = (
     <PaintedUsername
-      {...{ username, userId, fallbackColor, usernameTextStyle }}
+      {...{ fallbackColor, isModerated, userId, username, usernameTextStyle }}
     />
   );
 

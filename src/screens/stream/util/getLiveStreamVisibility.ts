@@ -11,11 +11,6 @@ interface GetLiveStreamVisibilityOptions {
   stream: unknown;
 }
 
-/**
- * What the live-stream screen should have on screen right now. Every flag here
- * is derived from the same handful of inputs, so they are worked out together
- * rather than re-combined at each use site.
- */
 export function getLiveStreamVisibility({
   isChatConnectionReady,
   isChatEnabled,
@@ -38,8 +33,6 @@ export function getLiveStreamVisibility({
     hasResolvedChannelLogin &&
     (!hasResolvedChannelId || !isChatConnectionReady);
 
-  // A channel that resolved to no stream is offline; a failed request is an
-  // error. Both replace the player with the unavailable panel.
   const isChannelOffline =
     isStreamEnabled && isStreamRequestSuccess && stream == null;
 

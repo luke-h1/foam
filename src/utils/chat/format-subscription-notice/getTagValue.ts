@@ -1,7 +1,6 @@
 export function getTagValue(
-  tags: Record<string, string | boolean | undefined>,
+  tags: Record<string, string | undefined>,
   key: string,
 ): string {
-  const value = tags[key];
-  return value === undefined || value === true || value === false ? '' : value;
+  return tags[key] ?? '';
 }

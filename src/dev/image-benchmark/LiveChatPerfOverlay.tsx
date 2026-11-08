@@ -1,9 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import type { LiveStats } from './use-chat-perf-suite';
-import { useCpuUsage } from './use-cpu-usage';
-import { useUiThreadFrameHealth } from './use-ui-thread-frame-health';
-import { useUsedMemoryMb } from './use-used-memory';
+import type { LiveStats } from './hooks/use-chat-perf-suite';
+import { useCpuUsage } from './hooks/use-cpu-usage';
+import { useUiThreadFrameHealth } from './hooks/use-ui-thread-frame-health';
+import { useUsedMemoryMb } from './hooks/use-used-memory';
 
 function fpsColor(fps: number) {
   if (fps >= 55) {

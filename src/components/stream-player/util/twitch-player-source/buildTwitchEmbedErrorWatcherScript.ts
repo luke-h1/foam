@@ -30,7 +30,6 @@ export function buildTwitchEmbedErrorWatcherScript(): string {
   function check() {
     if (stopped) { return; }
     checks += 1;
-    // A real player <video> means the embed loaded; nothing to watch for.
     if (document.querySelector('video')) {
       stop();
       return;

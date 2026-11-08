@@ -1,5 +1,6 @@
 import type { ChatRowProps } from '@app/components/chat/components/chat-message/ChatRow.types';
-import type { ChatMessageType } from '@app/store/chat/types/constants';
+import { CHAT_ROW_RENDER_PROP_KEYS } from '@app/components/chat/components/chat-message/util/chatRowRenderPropKeys';
+import type { ChatMessageType } from '@app/types/chat/chatMessage';
 import type { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import type { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
 
@@ -11,25 +12,13 @@ export function toChatMessageData<
 >(
   props: ChatRowProps<TNoticeType, TVariant>,
 ): ChatMessageType<TNoticeType, TVariant> {
-  const {
-    onReply: _onReply,
-    onBadgePress: _onBadgePress,
-    onMessageLongPress: _onMessageLongPress,
-    onEmotePress: _onEmotePress,
-    getMentionColor: _getMentionColor,
-    parseTextForEmotes: _parseTextForEmotes,
-    onUsernamePress: _onUsernamePress,
-    currentUsername: _currentUsername,
-    currentUsernameNormalized: _currentUsernameNormalized,
-    density: _density,
-    messageDisplay: _messageDisplay,
-    highlightedUserSet: _highlightedUserSet,
-    highlightedUsers: _highlightedUsers,
-    onReplyContextPress: _onReplyContextPress,
-    broadcasterId: _broadcasterId,
-    style: _style,
-    ...messageData
-  } = props;
+  const messageData = Object.fromEntries(
+    Object.entries(props).filter(
+      ([key]) => !Object.hasOwn(CHAT_ROW_RENDER_PROP_KEYS, key),
+    ),
+  );
 
-  return messageData;
+  // SAFETY: ChatRowProps is ChatMessageType & ChatRowRenderProps, and
+  // CHAT_ROW_RENDER_PROP_KEYS names every render prop.
+  return messageData as ChatMessageType<TNoticeType, TVariant>;
 }

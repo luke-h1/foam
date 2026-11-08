@@ -1,10 +1,10 @@
-import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import { getTagValue } from '@app/utils/chat/format-subscription-notice/getTagValue';
-import type { MessageToken } from '@app/utils/chat/messageToken';
 import type { SubscriptionNoticeTokenType } from '@app/utils/chat/subscription-notice-token-types';
+import type { SubscriptionUserNoticeTags } from '@app/utils/chat/user-notice-msg-ids/isSubscriptionUserNotice';
 
 function getTagNumber(
-  tags: Record<string, string | boolean | undefined>,
+  tags: Record<string, string | undefined>,
   key: string,
   fallback?: number,
 ): number | undefined {
@@ -19,7 +19,7 @@ function getTagNumber(
 }
 
 function getSharedStreakValue(
-  tags: Record<string, string | boolean | undefined>,
+  tags: Record<string, string | undefined>,
 ): boolean | undefined {
   const value = getTagValue(tags, 'msg-param-should-share-streak');
   return value ? value === '1' : undefined;
@@ -40,18 +40,16 @@ function getPlanName(planCode: string): string | undefined {
   }
 }
 
-export function createSubscriptionPart(
-  tags: UserNoticeTags,
+export function createSubscriptionToken(
+  tags: SubscriptionUserNoticeTags,
   messageText?: string,
 ): MessageToken<SubscriptionNoticeTokenType> {
-  const msgId = getTagValue(tags, 'msg-id');
-
   const displayName =
     getTagValue(tags, 'display-name') ||
     getTagValue(tags, 'login') ||
     'Anonymous';
 
-  switch (msgId) {
+  switch (tags['msg-id']) {
     case 'sub': {
       const plan = getTagValue(tags, 'msg-param-sub-plan');
       const months = getTagNumber(tags, 'msg-param-cumulative-months');
@@ -318,22 +316,6 @@ export function createSubscriptionPart(
           recipientDisplayName,
           recipientId,
           giftMonths,
-          months,
-        },
-      };
-    }
-    default: {
-      const plan = getTagValue(tags, 'msg-param-sub-plan');
-      const months = getTagNumber(tags, 'msg-param-cumulative-months');
-
-      return {
-        type: 'sub' as const,
-        subscriptionEvent: {
-          msgId: 'sub' as const,
-          displayName,
-          message: messageText || undefined,
-          plan,
-          planName: getPlanName(plan),
           months,
         },
       };

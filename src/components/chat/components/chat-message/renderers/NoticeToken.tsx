@@ -5,20 +5,18 @@ import { ModAnniversaryNotice } from '@app/components/chat/components/user-notic
 import { RitualNotice } from '@app/components/chat/components/user-notices/RitualNotice';
 import { SubscriptionNotice } from '@app/components/chat/components/user-notices/SubscriptionNotice';
 import { ViewerMilestoneNotice } from '@app/components/chat/components/user-notices/ViewerMilestoneNotice';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
+import { isSubscriptionNoticeToken } from '@app/utils/chat/subscription-notice-token-types';
 
+import { parseMessageText } from '../util/parseMessageText';
 import type { ChatTokenRenderProps } from './types/chat-token-render-props';
 
 function getNoticeUserMessage(token: MessageToken): string | undefined {
+  if (isSubscriptionNoticeToken(token)) {
+    return token.subscriptionEvent.message;
+  }
+
   switch (token.type) {
-    case 'sub':
-    case 'resub':
-    case 'anongift':
-    case 'anongiftpaidupgrade':
-    case 'submysterygift':
-    case 'giftpaidupgrade':
-    case 'primepaidupgrade':
-      return token.subscriptionEvent.message;
     case 'charitydonation':
     case 'ritual':
       return token.message;
@@ -31,63 +29,50 @@ function getNoticeUserMessage(token: MessageToken): string | undefined {
 }
 
 interface NoticeTokenProps {
-  compact: ChatTokenRenderProps['compact'];
+  density: ChatTokenRenderProps['density'];
   disableEmoteAnimations: ChatTokenRenderProps['disableEmoteAnimations'];
   fontScale: ChatTokenRenderProps['fontScale'];
-  noticeTags: ChatTokenRenderProps['noticeTags'];
   parseTextForEmotes: ChatTokenRenderProps['parseTextForEmotes'];
   token: MessageToken;
 }
 
-/**
- * Every usernotice token type. They all read the same four props, so the parent
- * dispatches anything it does not render itself to here.
- */
 export function NoticeToken({
-  compact,
+  density,
   disableEmoteAnimations,
   fontScale,
-  noticeTags,
   parseTextForEmotes,
   token,
 }: NoticeTokenProps) {
   const noticeMessage = getNoticeUserMessage(token);
 
-  const parsedMessage = useMemo(
-    () =>
-      noticeMessage && parseTextForEmotes
-        ? parseTextForEmotes(noticeMessage)
-        : undefined,
+  const messageTokens = useMemo(
+    () => parseMessageText(noticeMessage, parseTextForEmotes),
     [noticeMessage, parseTextForEmotes],
   );
 
+  if (isSubscriptionNoticeToken(token)) {
+    return (
+      <SubscriptionNotice
+        {...{
+          density,
+          disableEmoteAnimations,
+          fontScale,
+          messageTokens,
+          token,
+        }}
+      />
+    );
+  }
+
   switch (token.type) {
-    case 'sub':
-    case 'resub':
-    case 'submysterygift':
-    case 'giftpaidupgrade':
-    case 'anongiftpaidupgrade':
-    case 'anongift':
-    case 'primepaidupgrade': {
-      if (noticeTags) {
-        return (
-          <SubscriptionNotice
-            {...{ token, notice_tags: noticeTags, parsedMessage }}
-          />
-        );
-      }
-
-      return <SubscriptionNotice {...{ token, parsedMessage }} />;
-    }
-
     case 'viewermilestone':
       return (
         <ViewerMilestoneNotice
           {...{
-            compact,
-            disableAnimations: disableEmoteAnimations,
+            density,
+            disableEmoteAnimations,
             fontScale,
-            parsedMessage,
+            messageTokens,
             token,
           }}
         />
@@ -97,10 +82,10 @@ export function NoticeToken({
       return (
         <ModAnniversaryNotice
           {...{
-            compact,
-            disableAnimations: disableEmoteAnimations,
+            density,
+            disableEmoteAnimations,
             fontScale,
-            parsedMessage,
+            messageTokens,
             token,
           }}
         />
@@ -110,10 +95,10 @@ export function NoticeToken({
       return (
         <CharityDonationNotice
           {...{
-            compact,
-            disableAnimations: disableEmoteAnimations,
+            density,
+            disableEmoteAnimations,
             fontScale,
-            parsedMessage,
+            messageTokens,
             token,
           }}
         />
@@ -123,10 +108,10 @@ export function NoticeToken({
       return (
         <RitualNotice
           {...{
-            compact,
-            disableAnimations: disableEmoteAnimations,
+            density,
+            disableEmoteAnimations,
             fontScale,
-            parsedMessage,
+            messageTokens,
             token,
           }}
         />

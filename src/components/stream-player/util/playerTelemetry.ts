@@ -7,8 +7,8 @@ import {
 import { logger } from '@app/utils/logger';
 
 /**
- * Load failure if playback never starts; kept in sync with
- * {@link StreamPlayer} poster safety dismissal.
+ * Playback that has not started after this long is a load failure. The poster
+ * safety dismissal in `useStreamPlayerLifecycle` uses the same timeout.
  */
 export const PLAYER_LOAD_TIMEOUT_MS = 9000;
 
@@ -284,19 +284,6 @@ export function createPlayerTelemetry() {
         loadFailureLogMessage(reason, error),
         loadFailureLogMetadata(reason, error, telemetryAttrs),
       );
-    },
-
-    noteFreeze(payload: Record<string, string | number | boolean>) {
-      const context = session?.attributes ??
-        lastAttributes ?? {
-          autoplay: true,
-          contentKind: 'live' as const,
-        };
-
-      countMetric('stream.player.freeze', {
-        ...metricAttributes(context),
-        ...payload,
-      });
     },
 
     dispose() {

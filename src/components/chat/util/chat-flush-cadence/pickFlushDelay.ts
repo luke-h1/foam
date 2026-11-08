@@ -1,9 +1,9 @@
-import { Platform } from 'react-native';
+import { isLowFlushBudgetPlatform } from './isLowFlushBudgetPlatform';
 
 /**
- * Each flush commits a new Fabric shadow tree (issue #594). Android pays more
- * per commit under animated-emote floods, so it uses 150ms; iOS stays at 100ms
- * which still reads as live and cut app CPU by ~40% on an 18k-viewer chat.
+ * Each flush commits a new Fabric shadow tree (issue #594). The low-budget
+ * platform uses 150ms; iOS stays at 100ms, which still reads as live and cut
+ * app CPU by ~40% on an 18k-viewer chat.
  */
 const IOS_LIVE_BUFFER_FLUSH_INTERVAL_MS = 100;
 const ANDROID_LIVE_BUFFER_FLUSH_INTERVAL_MS = 150;
@@ -28,7 +28,7 @@ export const pickFlushDelay = ({
     return RAID_BUFFER_FLUSH_INTERVAL_MS;
   }
 
-  if (Platform.OS === 'android') {
+  if (isLowFlushBudgetPlatform()) {
     return ANDROID_LIVE_BUFFER_FLUSH_INTERVAL_MS;
   }
 

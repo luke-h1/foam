@@ -29,11 +29,11 @@ platform where the domain is native, and never by per-view timers:
   prebuilt AAR ships and the patch silently does nothing.
 - **Skia paint animation (JS)** - `components/chat/components/chat-message/cosmetic-username/util/sharedPaintAnimationFrames.tsx`
   (`components/chat/components/chat-message/cosmetic-username/util/`): one clock and one decode
-  per paint URL, held in a module-level map of SharedValues. Subscribing rows
-  each register a Reanimated `useFrameCallback`, and the first to observe a
-  frame advances the shared clock - the invariant is one clock+decode per
-  URL, not one frame callback total. It pauses during scroll flings via
-  `chatScrollActiveShared` and resumes after settle.
+  per paint URL, held in a module-level map. `SharedPaintAnimationDrivers`
+  runs one `requestAnimationFrame` loop while any URL has a subscriber, and
+  each tick advances every subscribed URL - the invariant is one clock+decode
+  per URL. The loop skips ticks while `chatScrollActivity.isActive()` (a
+  scroll fling) or the app is in the background, and resumes after settle.
 
 The invariant: **one tick source, N subscribers, deregistration on recycle,
 pause when the surface is scrolling or unfocused**. Android meets it through

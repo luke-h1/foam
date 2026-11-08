@@ -1,8 +1,8 @@
-import type { ChatMessageType } from '@app/store/chat/types/constants';
+import type { ChatMessageType } from '@app/types/chat/chatMessage';
 import type { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import type { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import type { MessageToken } from '@app/utils/chat/messageToken';
 
 export type EmotePressData = MessageToken<'emote'>;
 export type BadgePressData = SanitisedBadgeSet;

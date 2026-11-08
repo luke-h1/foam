@@ -1,14 +1,10 @@
 import { Stack } from 'expo-router';
 
 import { StreamListLayoutToggle } from '@app/components/stream-list-layout-toggle/StreamListLayoutToggle';
-import {
-  usePreference,
-  useUpdatePreferences,
-} from '@app/store/preference-store';
+import { updatePreferences, usePreference } from '@app/store/preference-store';
 
 function HeaderLayoutToggle() {
   const streamListLayout = usePreference('streamListLayout');
-  const updatePreferences = useUpdatePreferences();
 
   return (
     <StreamListLayoutToggle

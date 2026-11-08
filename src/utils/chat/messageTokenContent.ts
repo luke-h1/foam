@@ -1,4 +1,4 @@
-import type { MessageToken } from './messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
 export function getMessageTokenText(token: MessageToken): string {
   if (!('content' in token)) {

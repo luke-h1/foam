@@ -5,12 +5,11 @@ import { PressableScale } from 'pressto';
 
 import { SymbolView } from '@app/components/ui/icon/Icon';
 import { Text } from '@app/components/ui/text/Text';
-import { useAccentColor } from '@app/context/AccentColorContext';
 import { theme } from '@app/styles/themes';
 
-import { ComposerOverflowButton } from '../ComposerOverflowButton';
 import { chatComposerStyles as styles } from './ChatComposer.styles';
 import { CommandSuggestionRail } from './CommandSuggestionRail';
+import { ComposerOverflowButton } from './components/ComposerOverflowButton';
 import { EmoteSuggestionRail } from './EmoteSuggestionRail';
 import {
   type ChatComposerHandle,
@@ -18,9 +17,6 @@ import {
 } from './hooks/use-chat-composer-controller';
 import { UserSuggestionRail } from './UserSuggestionRail';
 import { buildComposerOverflowActions } from './util/buildComposerOverflowActions';
-
-export type { ChatComposerHandle };
-export type { SuggestionType } from './util/chatComposerTypes';
 
 /**
  * 40% alpha: the highlight stays translucent under the glyphs while the caret
@@ -35,11 +31,8 @@ export interface ChatComposerProps {
   onAttachImage?: () => void;
   onOpenSettings?: () => void;
   isUploadingImage?: boolean;
-  maxSuggestions?: number;
-  prioritizeChannelEmotes?: boolean;
   placeholder?: string;
-  editable?: boolean;
-  canSend?: boolean;
+  canSend: boolean;
   reservedCharacters?: number;
   ref?: Ref<ChatComposerHandle>;
 }
@@ -51,16 +44,12 @@ function ChatComposerComponent({
   onAttachImage,
   onOpenSettings,
   isUploadingImage,
-  maxSuggestions = 50,
-  prioritizeChannelEmotes = true,
   placeholder,
-  editable = true,
   canSend,
   reservedCharacters,
   ref,
 }: ChatComposerProps) {
   const inputRef = useRef<TextInputInstance>(null);
-  const { accentHex } = useAccentColor();
 
   const focusInput = useCallback(() => {
     inputRef.current?.focus();
@@ -129,23 +118,19 @@ function ChatComposerComponent({
     <View style={styles.mainContainer}>
       {showEmoteRail ? (
         <EmoteSuggestionRail
-          handleEmotePress={handleEmotePress}
-          maxSuggestions={maxSuggestions}
-          prioritizeChannelEmotes={prioritizeChannelEmotes}
+          onSelect={handleEmotePress}
           searchTerm={wordInfo.searchTerm}
         />
       ) : null}
       {showUserRail ? (
         <UserSuggestionRail
-          handleUserSelect={handleUserSelect}
-          maxSuggestions={maxSuggestions}
-          searchTerm={wordInfo.word}
+          onSelect={handleUserSelect}
+          searchTerm={wordInfo.searchTerm}
         />
       ) : null}
       {showCommandRail ? (
         <CommandSuggestionRail
-          handleCommandSelect={handleCommandSelect}
-          maxSuggestions={maxSuggestions}
+          onSelect={handleCommandSelect}
           searchTerm={wordInfo.searchTerm}
         />
       ) : null}
@@ -178,7 +163,6 @@ function ChatComposerComponent({
             autoComplete='off'
             autoCorrect={false}
             blurOnSubmit
-            editable={editable}
             multiline
             onChangeText={handleChangeText}
             onFocus={() => setIsFocused(true)}
@@ -193,9 +177,9 @@ function ChatComposerComponent({
             placeholder={placeholder ?? 'Send a message...'}
             placeholderTextColor={theme.color.textSecondary.dark}
             returnKeyType='send'
-            cursorColor={accentHex}
-            selectionColor={`${accentHex}${SELECTION_HIGHLIGHT_ALPHA}`}
-            selectionHandleColor={accentHex}
+            cursorColor={theme.colorPrimary}
+            selectionColor={`${theme.colorPrimary}${SELECTION_HIGHLIGHT_ALPHA}`}
+            selectionHandleColor={theme.colorPrimary}
             style={[styles.input, styles.inputWrapper]}
             submitBehavior='blurAndSubmit'
             /**
@@ -228,7 +212,7 @@ function ChatComposerComponent({
               styles.submitButton,
               {
                 backgroundColor: submitEnabled
-                  ? accentHex
+                  ? theme.colorPrimary
                   : theme.darkActiveContent,
               },
             ]}

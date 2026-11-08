@@ -17,7 +17,11 @@ function badge(overrides: Partial<SanitisedBadgeSet>): SanitisedBadgeSet {
 
 describe('groupBadgesByProvider', () => {
   test('groups badges into provider sections in a fixed order', () => {
-    const ffzBadge = badge({ id: 'ffz-1', type: 'FFZ Badge', provider: 'ffz' });
+    const ffzBadge = badge({
+      id: 'ffz-1',
+      type: 'FFZ Global Badge',
+      provider: 'ffz',
+    });
     const twitchBadge = badge({ id: 'twitch-1', type: 'Twitch Global Badge' });
     const stvBadge = badge({ id: 'stv-1', type: '7TV Badge', provider: '7tv' });
 

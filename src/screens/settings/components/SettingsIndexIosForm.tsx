@@ -21,7 +21,6 @@ import {
   foregroundStyle,
   shapes,
 } from '@expo/ui/swift-ui/modifiers';
-import { router } from 'expo-router';
 
 import { Avatar } from '@app/components/avatar/Avatar';
 import { theme } from '@app/styles/themes';
@@ -29,10 +28,12 @@ import type { UserInfoResponse } from '@app/types/twitch/user';
 import { getBuildInfoLabel } from '@app/utils/version/buildInfoLabel';
 
 import {
-  APP_MENU_ROWS,
-  CHAT_MENU_ROWS,
-  HELP_MENU_ROWS,
+  PROFILE_ROW,
   type SettingsMenuRow,
+  type SettingsMenuSection,
+  SIGN_IN_FOOTER,
+  SIGN_IN_ROW,
+  SIGNED_IN_MENU_ROWS,
 } from '../util/settingsMenu';
 import { FormNavigationRow } from './FormNavigationRow';
 
@@ -57,25 +58,18 @@ function MenuRows({ rows }: { rows: SettingsMenuRow[] }) {
 }
 
 interface SettingsIndexIOSFormProps {
-  bundleButtonEnabled: boolean;
-  canSeeUpdateAppButton: boolean;
   user: UserInfoResponse | undefined;
-  openStore: () => void;
-  shouldShowDevTools: boolean;
-  updateBundle: () => void;
+  sections: SettingsMenuSection[];
 }
 
 /**
- * The first row of the form. It shows the signed-in user, or a sign-in row
- * when signed out. Only the avatar is a hosted React Native view. The press
- * and the text stay native, so the row behaves like the other rows.
+ * The first row of the form for a signed-in user. Only the avatar is a hosted
+ * React Native view. The press and the text stay native, so the row behaves
+ * like the other rows.
  */
 function AccountRow({ user }: { user: UserInfoResponse }) {
   return (
-    <Button
-      onPress={() => router.push('/tabs/settings/profile')}
-      modifiers={[buttonStyle('plain')]}
-    >
+    <Button onPress={PROFILE_ROW.onPress} modifiers={[buttonStyle('plain')]}>
       <HStack spacing={14} modifiers={[contentShape(shapes.rectangle())]}>
         <RNHostView matchContents>
           <View pointerEvents='none' style={styles.avatarHost}>
@@ -101,7 +95,7 @@ function AccountRow({ user }: { user: UserInfoResponse }) {
               foregroundStyle(theme.color.textSecondary.dark),
             ]}
           >
-            Profile and Twitch account
+            {PROFILE_ROW.subtitle}
           </NativeText>
         </VStack>
         <Spacer />
@@ -116,12 +110,8 @@ function AccountRow({ user }: { user: UserInfoResponse }) {
 }
 
 export function SettingsIndexIOSForm({
-  bundleButtonEnabled,
-  canSeeUpdateAppButton,
   user,
-  openStore,
-  shouldShowDevTools,
-  updateBundle,
+  sections,
 }: SettingsIndexIOSFormProps) {
   return (
     <Host style={styles.iosHost}>
@@ -129,72 +119,28 @@ export function SettingsIndexIOSForm({
         {user ? (
           <Section>
             <AccountRow user={user} />
-            <FormNavigationRow
-              label='My clips'
-              systemImage='scissors'
-              onPress={() => router.push('/tabs/settings/my-clips')}
-            />
+            <MenuRows rows={SIGNED_IN_MENU_ROWS} />
           </Section>
         ) : (
-          <Section
-            footer={
-              <NativeText>
-                See the channels you follow and chat as yourself.
-              </NativeText>
-            }
-          >
+          <Section footer={<NativeText>{SIGN_IN_FOOTER}</NativeText>}>
             <Button
-              label='Sign in with Twitch'
-              systemImage='person.crop.circle'
-              onPress={() => router.push('/auth-sheet')}
+              label={SIGN_IN_ROW.label}
+              systemImage={SIGN_IN_ROW.icon}
+              onPress={SIGN_IN_ROW.onPress}
               modifiers={[foregroundStyle(theme.color.accent.dark)]}
             />
           </Section>
         )}
 
-        <Section title='Chat'>
-          <MenuRows rows={CHAT_MENU_ROWS} />
-        </Section>
-
-        <Section title='App'>
-          <MenuRows rows={APP_MENU_ROWS} />
-        </Section>
-
-        {canSeeUpdateAppButton || bundleButtonEnabled ? (
-          <Section title='Updates'>
-            {canSeeUpdateAppButton ? (
-              <Button
-                label='Update app'
-                systemImage='arrow.down.app'
-                onPress={openStore}
-              />
-            ) : null}
-            {bundleButtonEnabled ? (
-              <Button
-                label='Update bundle'
-                systemImage='arrow.triangle.2.circlepath'
-                onPress={updateBundle}
-              />
-            ) : null}
+        {sections.map((section, index) => (
+          <Section
+            key={section.title}
+            title={section.title}
+            footer={index === sections.length - 1 ? <BuildFooter /> : null}
+          >
+            <MenuRows rows={section.rows} />
           </Section>
-        ) : null}
-
-        <Section
-          title='Help'
-          footer={shouldShowDevTools ? null : <BuildFooter />}
-        >
-          <MenuRows rows={HELP_MENU_ROWS} />
-        </Section>
-
-        {shouldShowDevTools ? (
-          <Section title='Developer' footer={<BuildFooter />}>
-            <FormNavigationRow
-              label='Dev tools'
-              systemImage='hammer'
-              onPress={() => router.push('/tabs/settings/dev-tools')}
-            />
-          </Section>
-        ) : null}
+        ))}
       </Form>
     </Host>
   );

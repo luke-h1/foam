@@ -1,7 +1,10 @@
 import { createElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 
-type MockSection<TItem> = { key: string; data: TItem[] };
+interface MockSection<TItem> {
+  key: string;
+  data: TItem[];
+}
 
 /**
  * SectionList virtualizes natively; render every section header and item so

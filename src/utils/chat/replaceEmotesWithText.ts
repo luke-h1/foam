@@ -1,8 +1,8 @@
-import type { MessageToken } from './messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
+
 import { getMessageTokenText } from './messageTokenContent';
 
 export function replaceEmotesWithText(tokens: MessageToken[]): string {
-  // eslint-disable-next-line @typescript-eslint/no-base-to-string
   return tokens
     .map(token => {
       switch (token.type) {

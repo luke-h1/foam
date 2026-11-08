@@ -8,7 +8,6 @@ import {
   useRef,
   useState,
 } from 'react';
-// eslint-disable-next-line no-restricted-imports
 import { Pressable, View, type ViewProps } from 'react-native';
 
 import type {

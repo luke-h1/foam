@@ -2,16 +2,15 @@ import { useDeferredValue, useEffect, useMemo } from 'react';
 
 import { useSelector } from '@legendapp/state/react';
 
+import { queueMentionLoginSearch } from '@app/store/chat/actions/mention-login-lookup';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
-import type { ChatUser } from '@app/store/chat/types/constants';
-import { queueMentionLoginSearch } from '@app/utils/chat/mention-login-resolver/queueMentionLoginSearch';
-import { normaliseChatText } from '@app/utils/chat/normaliseChatText';
+import type { ChatUser } from '@app/types/chat/chatMessage';
+import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
 import { searchMentionChatters } from '@app/utils/chat/resolve-mention-login/searchMentionChatters';
 import { type MentionChatter } from '@app/utils/chat/resolve-mention-login/types';
 
-interface UseUserSuggestionsProps {
+interface UseUserSuggestionsOptions {
   searchTerm: string;
-  enabled: boolean;
   maxSuggestions?: number;
 }
 
@@ -26,11 +25,10 @@ function toChatUser(chatter: MentionChatter): ChatUser {
 
 export function useUserSuggestions({
   searchTerm,
-  enabled,
-  maxSuggestions = 20,
-}: UseUserSuggestionsProps) {
+  maxSuggestions = 50,
+}: UseUserSuggestionsOptions) {
   const mentionLoginRevision = useSelector(chatStore$.mentionLoginRevision);
-  const cleanSearch = normaliseChatText(searchTerm.slice(1));
+  const cleanSearch = normaliseChatUsername(searchTerm);
 
   /**
    * The search scans both mention indexes, so it trails the keystroke rather
@@ -45,30 +43,23 @@ export function useUserSuggestions({
   const hasSearch = cleanSearch.length > 0;
 
   useEffect(() => {
-    if (!enabled || cleanSearch.length < 2) {
+    if (cleanSearch.length < 2) {
       return;
     }
 
     queueMentionLoginSearch(cleanSearch);
-  }, [cleanSearch, enabled]);
+  }, [cleanSearch]);
 
   const filteredUsers = useMemo(() => {
-    if (!enabled || !hasSearch || deferredSearch.length < 1) {
+    if (!hasSearch || deferredSearch.length < 1) {
       return [];
     }
 
-    return searchMentionChatters(
-      deferredSearch,
-      maxSuggestions,
-      mentionLoginRevision,
-    ).map(toChatUser);
-  }, [
-    deferredSearch,
-    enabled,
-    hasSearch,
-    maxSuggestions,
-    mentionLoginRevision,
-  ]);
+    return searchMentionChatters(deferredSearch, maxSuggestions).map(
+      toChatUser,
+    );
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- the mention indexes are plain Maps, so the revision is the only signal that they changed
+  }, [deferredSearch, hasSearch, maxSuggestions, mentionLoginRevision]);
 
   return {
     filteredUsers,

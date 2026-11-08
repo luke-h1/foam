@@ -153,7 +153,7 @@ describe('sevenTvService emote set sanitisation', () => {
     );
   });
 
-  test('getPersonalEmoteSet pins the personal mapper output', async () => {
+  test('getPersonalEmoteSet uses the channel set mapper: zero-width flag bit and full image size', async () => {
     clientQuerySpy.mockResolvedValue({ data: personalEmoteSetResponse });
 
     const result = await sevenTvService.getPersonalEmoteSet('123');
@@ -172,7 +172,7 @@ describe('sevenTvService emote set sanitisation', () => {
             '4x': 'https://cdn.7tv.app/emote/emote-p/4x_static.avif',
           },
         },
-        flags: 1,
+        flags: 256,
         original_name: 'peepoShy',
         creator: 'CreatorP',
         emote_link: 'https://7tv.app/emotes/emote-p',
@@ -182,8 +182,8 @@ describe('sevenTvService emote set sanitisation', () => {
         format: 'webp',
         aspect_ratio: 2,
         zero_width: true,
-        width: 64,
-        height: 32,
+        width: 256,
+        height: 128,
         set_metadata: {
           setId: 'pset-1',
           setName: 'Personal',

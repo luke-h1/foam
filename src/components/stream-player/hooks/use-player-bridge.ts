@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import type { Ref } from 'react';
+import type { Ref, RefObject } from 'react';
 import type { WebViewMessageEvent } from 'react-native-webview';
 
 import { toast } from 'sonner-native';
@@ -18,14 +18,16 @@ import { countMetric } from '@app/lib/sentry';
 import { logger } from '@app/utils/logger';
 
 import type {
-  PlayerMessage,
   PlayerState,
   PlayerStatusState,
   StreamPlayerProps,
   StreamPlayerRef,
 } from '../types';
 import type { PlayerBridgeAction } from '../util/playerBridgeInterpreter';
-import { interpretPlayerMessage } from '../util/playerBridgeInterpreter';
+import {
+  interpretPlayerMessage,
+  parsePlayerMessage,
+} from '../util/playerBridgeInterpreter';
 import {
   createPlayerTelemetry,
   type PlayerContentKind,
@@ -65,6 +67,8 @@ interface UsePlayerBridgeOptions extends Pick<
   forceRefresh: () => void;
   initialMuted: boolean;
   ref?: Ref<StreamPlayerRef>;
+
+  resumeTimeRef: RefObject<number>;
   runJavaScript: (script: string) => void;
   scheduleAuthCompletionReload: () => void;
   sourceKey: string;
@@ -95,6 +99,7 @@ export function usePlayerBridge({
   onPlay,
   onReady,
   ref,
+  resumeTimeRef,
   runJavaScript,
   scheduleAuthCompletionReload,
   sourceKey,
@@ -211,12 +216,6 @@ export function usePlayerBridge({
   }, []);
 
   useUnmountCallback(clearTransientPauseResume);
-
-  const disposeStability = useCallback(() => {
-    stability.dispose();
-  }, [stability]);
-
-  useUnmountCallback(disposeStability);
 
   // Dispose on unmount only; beginLoad() already retires the prior session on each
   // load, so keying this on loadKey would kill the freshly-started one.
@@ -469,6 +468,9 @@ export function usePlayerBridge({
         }
 
         break;
+      case 'recordResumeTime':
+        resumeTimeRef.current = action.seconds;
+        break;
       case 'markFirstPlayingReported':
         reportedFirstPlayingRef.current = true;
         break;
@@ -477,9 +479,6 @@ export function usePlayerBridge({
         break;
       case 'recordLoadFailed':
         telemetry.noteLoadFailed(action.reason, action.error);
-        break;
-      case 'recordPlaybackFreeze':
-        telemetry.noteFreeze({ stalled_ms: action.stalledMs });
         break;
       case 'recordPlaybackStarted':
         telemetry.notePlaybackStarted(action.startSource);
@@ -505,17 +504,8 @@ export function usePlayerBridge({
       case 'notifyReady':
         onReady?.();
         break;
-      case 'notifyStability':
-        if (action.event === 'playing') {
-          stability.notePlaying();
-        } else if (action.event === 'recovered') {
-          stability.noteRecovered();
-        } else if (action.event === 'stalled') {
-          stability.noteStalled();
-        } else {
-          stability.noteVideoError();
-        }
-
+      case 'notifyStabilityPlaying':
+        stability.notePlaying();
         break;
       case 'notifyStabilityLatency':
         stability.noteLatency(action.latencySeconds);
@@ -589,10 +579,16 @@ export function usePlayerBridge({
   };
 
   const handleMessage = (event: WebViewMessageEvent) => {
-    try {
-      const message: PlayerMessage = JSON.parse(event.nativeEvent.data);
+    const message = parsePlayerMessage(event.nativeEvent.data);
 
-      const actions = interpretPlayerMessage(message, {
+    if (!message) {
+      return;
+    }
+
+    let actions: PlayerBridgeAction[];
+
+    try {
+      actions = interpretPlayerMessage(message, {
         autoplay,
         channel,
         deferOverlayUntilUserUnmute,
@@ -604,12 +600,24 @@ export function usePlayerBridge({
         reportedPlaybackBlocked: reportedPlaybackBlockedRef.current,
         userPaused: userPausedRef.current,
       });
+    } catch (error) {
+      logger.main.error('Failed to interpret player message', {
+        error,
+        type: message.type,
+      });
 
+      return;
+    }
+
+    try {
       for (const action of actions) {
         executeBridgeAction(action);
       }
-    } catch {
-      // Ignore malformed WebView messages.
+    } catch (error) {
+      logger.main.error('Failed to run player bridge action', {
+        error,
+        type: message.type,
+      });
     }
   };
 

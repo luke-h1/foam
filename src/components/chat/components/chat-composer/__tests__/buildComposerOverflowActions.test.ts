@@ -1,4 +1,4 @@
-import type { ComposerOverflowAction } from '@app/components/chat/util/composerOverflowActions';
+import type { ComposerOverflowAction } from '@app/components/chat/components/chat-composer/util/composerOverflowActions';
 
 import { buildComposerOverflowActions } from '../util/buildComposerOverflowActions';
 

@@ -13,9 +13,9 @@ import {
   AuthContextTestProvider,
 } from '@app/context/AuthContext';
 import TwitchWsService from '@app/services/twitch-ws-service';
-import { logger } from '@app/utils/logger';
+import { silenceLogger } from '@app/test/silence-logger';
 
-jest.spyOn(logger.chat, 'debug').mockImplementation(() => {});
+silenceLogger();
 
 const mockGetInstance = jest
   .spyOn(TwitchWsService, 'getInstance')

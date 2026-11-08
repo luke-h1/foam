@@ -1,10 +1,9 @@
-import { maxBackpressureCommitPerFlush } from '@app/components/chat/util/chat-flush-cadence/maxLiveCommitPerFlush';
+import type { BufferedMessage } from '@app/components/chat/util/buffered-message-ops/types';
 import {
   type ChatIngestController,
   createChatIngestController,
 } from '@app/components/chat/util/chatIngestController';
 import { createChatIrcHandlers } from '@app/components/chat/util/createChatIrcHandlers';
-import type { BufferedMessage } from '@app/components/chat/util/messageBuffer';
 import { createRoomStateTracker } from '@app/components/chat/util/room-state/roomStateTracker';
 import {
   getChatUnreadCount,
@@ -12,7 +11,7 @@ import {
 } from '@app/store/chat/actions/chat-unread';
 import { clearMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import { parseIrcMessage } from '@app/utils/chat/irc-protocol/parseIrcMessage';
 import { routeIrcMessage } from '@app/utils/chat/irc-protocol/routeIrcMessage';
 
@@ -25,16 +24,14 @@ function stripPendingParse(message: BufferedMessage): BufferedMessage {
   return rest;
 }
 
-/**
- * The full headless ingest path: raw IRC line through to the real chatStore$
- * - no socket, no React, fake timers.
- */
-function createHeadlessIngest(options?: {
+interface CreateHeadlessIngestOptions {
   isAtBottom?: () => boolean;
   getChatDelayMs?: () => number;
   isRowTouchHeld?: () => boolean;
   isUserActivelyScrolling?: () => boolean;
-}) {
+}
+
+function createHeadlessIngest(options?: CreateHeadlessIngestOptions) {
   const controller: ChatIngestController = createChatIngestController({
     getFinalizeMessageForCommit: () => stripPendingParse,
     getChatDelayMs: options?.getChatDelayMs ?? (() => 0),
@@ -127,11 +124,7 @@ describe('chatIngestController (headless line → commit)', () => {
 
     expect(message.pendingEmoteParse).toBeUndefined();
 
-    expect(
-      message.message.some(
-        token => token.type === 'text' && token.content.includes('hello world'),
-      ),
-    ).toBe(true);
+    expect(message.message).toEqual([{ type: 'text', content: 'hello world' }]);
   });
 
   test('counts unread instead of committing silently while scrolled up', () => {
@@ -231,18 +224,10 @@ describe('chatIngestController (headless line → commit)', () => {
       routeLine(privmsgLine(`msg-${index}`));
     }
 
-    const backpressureChunk = maxBackpressureCommitPerFlush();
-    const committed = committedMessages();
+    expect(controller.getBufferSize()).toBe(103);
 
-    expect(committed).toHaveLength(backpressureChunk);
-
-    expect(controller.getBufferSize()).toBe(151 - backpressureChunk);
-
-    expect(committed.map(message => message.message_id)).toEqual(
-      Array.from(
-        { length: backpressureChunk },
-        (_, index) => `msg-${index + 1}`,
-      ),
+    expect(committedMessages().map(message => message.message_id)).toEqual(
+      Array.from({ length: 48 }, (_, index) => `msg-${index + 1}`),
     );
   });
 
@@ -264,10 +249,9 @@ describe('chatIngestController (headless line → commit)', () => {
       routeLine(privmsgLine(`msg-${index}`));
     }
 
-    const backpressureChunk = maxBackpressureCommitPerFlush();
-    expect(committedMessages()).toHaveLength(backpressureChunk);
+    expect(committedMessages()).toHaveLength(48);
 
-    expect(controller.getBufferSize()).toBe(160 - backpressureChunk);
+    expect(controller.getBufferSize()).toBe(112);
 
     controller.forceFlush();
 
@@ -342,13 +326,11 @@ describe('chatIngestController (headless line → commit)', () => {
     expect(moderated?.moderationNotice).toBe('Permanently banned');
 
     expect(
-      committedMessages().some(message =>
-        message.message.some(
-          token =>
-            token.type === 'text' &&
-            token.content.includes('chatter has been permanently banned'),
-        ),
-      ),
-    ).toBe(true);
+      committedMessages()
+        .filter(message => message.sender === 'System')
+        .map(message => message.message),
+    ).toEqual([
+      [{ type: 'text', content: 'chatter has been permanently banned' }],
+    ]);
   });
 });

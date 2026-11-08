@@ -25,48 +25,12 @@ METHOD="${1:-uri-scheme}"
 PLATFORM="${2:-ios}"
 URL="${3:-}"
 
-declare -a TEST_URLS=(
-  "foam://tabs/following"
-  "foam://tabs/top"
-  "foam://tabs/top/categories"
-  "foam://tabs/top/streams"
-  "foam://tabs/search"
-  "foam://tabs/settings"
-  "foam://tabs/settings/profile"
-  "foam://tabs/settings/appearance"
-  "foam://tabs/settings/chat-preferences"
-  "foam://tabs/settings/dev-tools"
-  "foam://tabs/settings/other"
-  "foam://tabs/settings/about"
-  "foam://tabs/settings/cached-images"
-  "foam://tabs/settings/diagnostics"
-  "foam://tabs/settings/remote-config"
-  "foam://tabs/settings/licenses"
-  "foam://tabs/settings/faq"
-  "foam://tabs/settings/changelog"
-  "foam://tabs/settings/debug"
-  "foam://tabs/settings/storybook"
-  "foam://streams/live-stream/123"
-  "foam://streams/streamer-profile/456"
-  "foam://top"
-  "foam://top/categories"
-  "foam://top/streams"
-  "foam://category/789"
-  "foam://chat?channelName=test&channelId=123"
-  "foam://login"
-  "foam://storybook"
-  "foam://preferences/chat"
-  "foam://preferences/video"
-  "foam://preferences/theming"
-  "foam://preferences/blocked-users"
-  "foam://dev-tools/diagnostics"
-  "foam://dev-tools/sentry-demo"
-  "foam://dev-tools/debug"
-  "foam://other/about"
-  "foam://other/changelog"
-  "foam://other/faq"
-  "foam://other/licenses"
-)
+source "$(dirname "$0")/list-routes.sh"
+
+declare -a TEST_URLS=()
+while IFS= read -r route; do
+  TEST_URLS+=("foam://${route}")
+done < <(list_routes)
 
 test_uri_scheme() {
   local url=$1

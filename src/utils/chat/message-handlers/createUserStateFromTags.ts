@@ -1,8 +1,9 @@
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
 import { parseBadges } from '@app/utils/chat/parseBadges';
 
 export const createUserStateFromTags = (
-  tags: Record<string, string>,
+  tags: Record<string, string | undefined>,
 ): UserStateTags => {
   const badgeData = parseBadges(tags['badges']);
 
@@ -10,7 +11,7 @@ export const createUserStateFromTags = (
   return {
     ...tags,
     username: tags['display-name'] || tags['login'] || '',
-    login: tags['login'] || tags['display-name']?.toLowerCase() || '',
+    login: tags['login'] || normaliseChatUsername(tags['display-name']),
     'badges-raw': badgeData['badges-raw'],
     badges: badgeData.badges,
     'reply-parent-msg-id': tags['reply-parent-msg-id'] || '',

@@ -1962,20 +1962,6 @@ export type _Service = {
 
 export type ImageFragmentFragment = { __typename?: 'Image', url: string, mime: string, size: number, scale: number, width: number, height: number, frameCount: number };
 
-export type PaintDataFragmentFragment = { __typename?: 'PaintData', layers: Array<{ __typename?: 'PaintLayer', id: string, opacity: number, ty:
-      | { __typename?: 'PaintLayerTypeImage', images: Array<{ __typename?: 'Image', url: string, mime: string, size: number, scale: number, width: number, height: number, frameCount: number }> }
-      | { __typename?: 'PaintLayerTypeLinearGradient', angle: number, repeating: boolean, stops: Array<{ __typename?: 'PaintGradientStop', at: number, color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }> }
-      | { __typename?: 'PaintLayerTypeRadialGradient', repeating: boolean, shape: PaintRadialGradientShape, stops: Array<{ __typename?: 'PaintGradientStop', at: number, color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }> }
-      | { __typename?: 'PaintLayerTypeSingleColor', color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }
-     }>, shadows: Array<{ __typename?: 'PaintShadow', offsetX: number, offsetY: number, blur: number, color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }> };
-
-export type BadgeQueryQueryVariables = Exact<{
-  id: Scalars['Id']['input'];
-}>;
-
-
-export type BadgeQueryQuery = { __typename?: 'Query', badges: { __typename?: 'BadgeQuery', badge?: { __typename?: 'Badge', id: string, name: string, description?: string | null, tags: Array<string>, createdById: string, updatedAt: string, searchUpdatedAt?: string | null, images: Array<{ __typename?: 'Image', url: string, mime: string, size: number, scale: number, width: number, height: number, frameCount: number }> } | null } };
-
 export type BadgesQueryQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -1999,28 +1985,6 @@ export type GlobalEmoteSetQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type GlobalEmoteSetQuery = { __typename?: 'Query', emoteSets: { __typename?: 'EmoteSetQuery', global: { __typename?: 'EmoteSet', id: string, name: string, capacity?: number | null, ownerId?: string | null, kind: EmoteSetKind, updatedAt: string, emotes: { __typename?: 'EmoteSetEmoteSearchResult', totalCount: number, items: Array<{ __typename?: 'EmoteSetEmote', id: string, alias: string, addedById?: string | null, emote: { __typename?: 'Emote', id: string, defaultName: string, tags: Array<string>, aspectRatio: number, flags: { __typename?: 'EmoteFlags', animated: boolean, defaultZeroWidth: boolean }, images: Array<{ __typename?: 'Image', url: string, mime: string, size: number, scale: number, width: number, height: number, frameCount: number }>, owner?: { __typename?: 'User', id: string, mainConnection?: { __typename?: 'UserConnection', platformDisplayName: string } | null } | null }, flags: { __typename?: 'EmoteSetEmoteFlags', zeroWidth: boolean } }> } } } };
-
-export type PaintQueryQueryVariables = Exact<{
-  id: Scalars['Id']['input'];
-}>;
-
-
-export type PaintQueryQuery = { __typename?: 'Query', paints: { __typename?: 'PaintQuery', paint?: { __typename?: 'Paint', id: string, name: string, description?: string | null, tags: Array<string>, createdById: string, updatedAt: string, data: { __typename?: 'PaintData', layers: Array<{ __typename?: 'PaintLayer', id: string, opacity: number, ty:
-            | { __typename?: 'PaintLayerTypeImage', images: Array<{ __typename?: 'Image', url: string, mime: string, size: number, scale: number, width: number, height: number, frameCount: number }> }
-            | { __typename?: 'PaintLayerTypeLinearGradient', angle: number, repeating: boolean, stops: Array<{ __typename?: 'PaintGradientStop', at: number, color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }> }
-            | { __typename?: 'PaintLayerTypeRadialGradient', repeating: boolean, shape: PaintRadialGradientShape, stops: Array<{ __typename?: 'PaintGradientStop', at: number, color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }> }
-            | { __typename?: 'PaintLayerTypeSingleColor', color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }
-           }>, shadows: Array<{ __typename?: 'PaintShadow', offsetX: number, offsetY: number, blur: number, color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }> } } | null } };
-
-export type PaintsQueryQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type PaintsQueryQuery = { __typename?: 'Query', paints: { __typename?: 'PaintQuery', paints: Array<{ __typename?: 'Paint', id: string, name: string, description?: string | null, tags: Array<string>, createdById: string, updatedAt: string, data: { __typename?: 'PaintData', layers: Array<{ __typename?: 'PaintLayer', id: string, opacity: number, ty:
-            | { __typename?: 'PaintLayerTypeImage', images: Array<{ __typename?: 'Image', url: string, mime: string, size: number, scale: number, width: number, height: number, frameCount: number }> }
-            | { __typename?: 'PaintLayerTypeLinearGradient', angle: number, repeating: boolean, stops: Array<{ __typename?: 'PaintGradientStop', at: number, color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }> }
-            | { __typename?: 'PaintLayerTypeRadialGradient', repeating: boolean, shape: PaintRadialGradientShape, stops: Array<{ __typename?: 'PaintGradientStop', at: number, color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }> }
-            | { __typename?: 'PaintLayerTypeSingleColor', color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }
-           }>, shadows: Array<{ __typename?: 'PaintShadow', offsetX: number, offsetY: number, blur: number, color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }> } }> } };
 
 export type UserByConnectionQueryVariables = Exact<{
   platformId: Scalars['String']['input'];
@@ -2059,84 +2023,6 @@ export const ImageFragmentFragmentDoc = gql`
   frameCount
 }
     `;
-export const PaintDataFragmentFragmentDoc = gql`
-    fragment PaintDataFragment on PaintData {
-  layers {
-    id
-    opacity
-    ty {
-      ... on PaintLayerTypeLinearGradient {
-        angle
-        repeating
-        stops {
-          at
-          color {
-            r
-            g
-            b
-            a
-          }
-        }
-      }
-      ... on PaintLayerTypeRadialGradient {
-        repeating
-        shape
-        stops {
-          at
-          color {
-            r
-            g
-            b
-            a
-          }
-        }
-      }
-      ... on PaintLayerTypeSingleColor {
-        color {
-          r
-          g
-          b
-          a
-        }
-      }
-      ... on PaintLayerTypeImage {
-        images {
-          ...ImageFragment
-        }
-      }
-    }
-  }
-  shadows {
-    offsetX
-    offsetY
-    blur
-    color {
-      r
-      g
-      b
-      a
-    }
-  }
-}
-    ${ImageFragmentFragmentDoc}`;
-export const BadgeQueryDocument = gql`
-    query BadgeQuery($id: Id!) {
-  badges {
-    badge(id: $id) {
-      id
-      name
-      description
-      tags
-      images {
-        ...ImageFragment
-      }
-      createdById
-      updatedAt
-      searchUpdatedAt
-    }
-  }
-}
-    ${ImageFragmentFragmentDoc}`;
 export const BadgesQueryDocument = gql`
     query BadgesQuery {
   badges {
@@ -2268,40 +2154,6 @@ export const GlobalEmoteSetDocument = gql`
   }
 }
     ${ImageFragmentFragmentDoc}`;
-export const PaintQueryDocument = gql`
-    query PaintQuery($id: Id!) {
-  paints {
-    paint(id: $id) {
-      id
-      name
-      description
-      tags
-      data {
-        ...PaintDataFragment
-      }
-      createdById
-      updatedAt
-    }
-  }
-}
-    ${PaintDataFragmentFragmentDoc}`;
-export const PaintsQueryDocument = gql`
-    query PaintsQuery {
-  paints {
-    paints {
-      id
-      name
-      description
-      tags
-      data {
-        ...PaintDataFragment
-      }
-      createdById
-      updatedAt
-    }
-  }
-}
-    ${PaintDataFragmentFragmentDoc}`;
 export const UserByConnectionDocument = gql`
     query UserByConnection($platformId: String!) {
   users {

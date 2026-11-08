@@ -1,12 +1,10 @@
 import { createElement } from 'react';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { fireEvent } from '@testing-library/react-native';
 
 import * as InputModule from '@app/components/ui/input/Input';
+import { resetMentionLogins } from '@app/store/chat/actions/mention-login-lookup';
 import render from '@app/test/render';
-import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import { clearMentionLoginIndex } from '@app/utils/chat/resolve-mention-login/clearMentionLoginIndex';
 import { registerMentionChatter } from '@app/utils/chat/resolve-mention-login/registerMentionChatter';
 
 import {
@@ -23,21 +21,12 @@ jest
   .mockImplementation(props => createElement('TextInput', props));
 
 function renderChattersSheet(props: ChattersSheetProps) {
-  return render(
-    <SafeAreaProvider
-      initialMetrics={{
-        frame: { x: 0, y: 0, width: 390, height: 844 },
-        insets: { bottom: 0, left: 0, right: 0, top: 0 },
-      }}
-    >
-      <ChattersSheet {...props} />
-    </SafeAreaProvider>,
-  );
+  return render(<ChattersSheet {...props} />);
 }
 
 describe('ChattersSheet', () => {
   beforeEach(() => {
-    clearMentionLoginIndex();
+    resetMentionLogins();
   });
 
   test('groups chatters by role and selects a chatter on press', () => {
@@ -64,7 +53,6 @@ describe('ChattersSheet', () => {
     const onSelectChatter = jest.fn();
 
     const { getByText } = renderChattersSheet({
-      isPresented: true,
       onDismiss: jest.fn(),
       onSelectChatter,
     });
@@ -76,14 +64,17 @@ describe('ChattersSheet', () => {
     expect(getByText('Viewers · 1')).toBeOnTheScreen();
 
     fireEvent.press(getByText('SomeViewer'));
-    expect(onSelectChatter).toHaveBeenCalledTimes(1);
 
-    expect(onSelectChatter).toHaveBeenCalledWith({
-      color: '#0000ff',
-      login: 'someviewer',
-      userId: '3',
-      username: 'SomeViewer',
-    });
+    expect(onSelectChatter.mock.calls).toEqual([
+      [
+        {
+          color: '#0000ff',
+          login: 'someviewer',
+          userId: '3',
+          username: 'SomeViewer',
+        },
+      ],
+    ]);
   });
 
   test('filters chatters by the search query', () => {
@@ -101,7 +92,6 @@ describe('ChattersSheet', () => {
     });
 
     const { getByPlaceholderText, queryByText } = renderChattersSheet({
-      isPresented: true,
       onDismiss: jest.fn(),
       onSelectChatter: jest.fn(),
     });
@@ -115,9 +105,25 @@ describe('ChattersSheet', () => {
     expect(queryByText(/^Broadcaster/)).toBeNull();
   });
 
+  test('matches a filter that starts with @ against the login', () => {
+    registerMentionChatter({
+      login: 'SomeViewer',
+      userId: '3',
+      color: '#0000ff',
+    });
+
+    const { getByPlaceholderText, queryByText } = renderChattersSheet({
+      onDismiss: jest.fn(),
+      onSelectChatter: jest.fn(),
+    });
+
+    fireEvent.changeText(getByPlaceholderText('Filter chatters'), '@some');
+
+    expect(queryByText('SomeViewer')).toBeOnTheScreen();
+  });
+
   test('shows an empty state when no chatters have been seen', () => {
     const { getByText } = renderChattersSheet({
-      isPresented: true,
       onDismiss: jest.fn(),
       onSelectChatter: jest.fn(),
     });
@@ -129,13 +135,12 @@ describe('ChattersSheet', () => {
     ).toBeOnTheScreen();
   });
 
-  test('omits pseudo user ids from mention-only chatters', () => {
+  test('gives a mention-only chatter no user id', () => {
     registerMentionChatter({ login: 'MentionOnly' });
 
     const onSelectChatter = jest.fn();
 
     const { getByText } = renderChattersSheet({
-      isPresented: true,
       onDismiss: jest.fn(),
       onSelectChatter,
     });
@@ -143,7 +148,7 @@ describe('ChattersSheet', () => {
     fireEvent.press(getByText('MentionOnly'));
 
     expect(onSelectChatter).toHaveBeenCalledWith({
-      color: generateRandomTwitchColor('MentionOnly'),
+      color: '#DAA520',
       login: 'mentiononly',
       userId: undefined,
       username: 'MentionOnly',

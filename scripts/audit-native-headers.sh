@@ -8,43 +8,17 @@ OUTPUT_DIR="${OUTPUT_DIR:-/tmp/foam-header-audit}"
 METRO_RELOAD_URL="${METRO_RELOAD_URL:-http://127.0.0.1:8081/reload}"
 SCHEME="${SCHEME:-foam}"
 
-ROUTES=(
-  "tabs/top"
-  "tabs/search"
-  "tabs/following"
-  "tabs/settings"
-  "tabs/settings/about"
-  "tabs/settings/appearance"
-  "tabs/settings/cache"
-  "tabs/settings/cached-images"
-  "tabs/settings/changelog"
-  "tabs/settings/channel-surfing"
-  "tabs/settings/chat-preferences"
-  "tabs/settings/debug"
-  "tabs/settings/dev-tools"
-  "tabs/settings/diagnostics"
-  "tabs/settings/faq"
-  "tabs/settings/licenses"
-  "tabs/settings/other"
-  "tabs/settings/profile"
-  "tabs/settings/remote-config"
-  "tabs/settings/storybook"
-  "tabs/top/categories"
-  "tabs/top/streams"
-  "preferences/blocked-users"
-  "preferences/chat"
-  "preferences/theming"
-  "preferences/video"
-  "other/about"
-  "other/faq"
-  "other/changelog"
-  "other/licenses"
-  "dev-tools/changelog"
-  "dev-tools/debug"
-  "dev-tools/diagnostics"
-  "auth-sheet"
-  "category/21779"
-)
+source "$(dirname "$0")/list-routes.sh"
+
+# Streams, chat and the full-screen flows draw their own chrome, so they have
+# no native header to audit.
+ROUTES=()
+while IFS= read -r route; do
+  case "$route" in
+    streams/* | chat* | feedback | onboarding) ;;
+    *) ROUTES+=("$route") ;;
+  esac
+done < <(list_routes)
 
 mkdir -p "$OUTPUT_DIR"
 

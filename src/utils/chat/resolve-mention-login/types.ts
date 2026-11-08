@@ -1,8 +1,8 @@
 export type ChatterRole = 'broadcaster' | 'moderator' | 'vip';
 
-export type MentionChatter = {
+export interface MentionChatter {
   login: string;
-  userId: string;
+  userId?: string;
   color: string;
   role?: ChatterRole;
-};
+}

@@ -18,11 +18,16 @@
       },
       {
         "files": [
-          "src/screens/preferences/BlockedTermsScreen.tsx",
-          "src/screens/preferences/ChatHighlightsScreen.tsx",
-          "src/screens/preferences/SavedPhrasesScreen.tsx"
+          "src/screens/preferences/components/PreferenceListEditor.ios.tsx"
         ],
         "rules": ["react-hooks-js/immutability"]
+      },
+      {
+        "files": [
+          "src/components/chat/components/chatters-sheet/ChattersSheet.tsx",
+          "src/components/chat/util/visibleMessages.ts"
+        ],
+        "rules": ["react-doctor/js-set-map-lookups"]
       },
       {
         "files": ["src/components/chat/hooks/use-seven-tv-ws.ts"],
@@ -45,16 +50,11 @@
         "rules": ["react-doctor/effect-needs-cleanup"]
       },
       {
-        "files": ["src/services/twitch-chat-service.ts"],
-        "rules": ["react-hooks-js/purity"]
-      },
-      {
         "files": [
           "src/components/chat/hooks/use-chat-messages.ts",
           "src/components/stream-player/hooks/use-player-bridge.ts",
           "src/components/stream-player/hooks/use-stream-player-source.ts",
-          "src/components/chat/components/chat-message/renderers/EmoteActionSheet.tsx",
-          "src/services/twitch-chat-service.ts"
+          "src/components/chat/components/emote-action-sheet/EmoteActionSheet.tsx"
         ],
         "rules": ["react-hooks-js/refs"]
       },

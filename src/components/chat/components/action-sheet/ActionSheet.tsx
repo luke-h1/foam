@@ -1,16 +1,15 @@
-import { memo, useRef } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { memo } from 'react';
+import { ScrollView, View } from 'react-native';
 
-import {
-  BottomSheet,
-  type BottomSheetHandle,
-} from '@app/components/bottom-sheet/BottomSheet';
+import { ChatSheet } from '@app/components/chat/components/sheet/ChatSheet';
+import { chatSheetStyles } from '@app/components/chat/components/sheet/ChatSheet.styles';
+import { useChatSheet } from '@app/components/chat/components/sheet/hooks/use-chat-sheet';
+import { useChatSheetHeight } from '@app/components/chat/components/sheet/hooks/use-chat-sheet-height';
 import { SheetHeader } from '@app/components/chat/components/sheet/SheetHeader';
+import {
+  type ChatSheetLayout,
+  SHEET_CHROME,
+} from '@app/components/chat/components/sheet/util/chatSheetLayout';
 import {
   type SheetAction,
   SheetActionGroup,
@@ -21,14 +20,14 @@ import {
   timeoutUserAction,
 } from '@app/components/chat/util/userSheetActions';
 import { theme } from '@app/styles/themes';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
 import { MessageActionPreview } from './MessageActionPreview';
 
-interface Props {
-  visible: boolean;
-  onClose: () => void;
+interface ActionSheetProps {
+  onDismiss: () => void;
   username?: string;
+  usernameColor?: string;
   messagePreview?: MessageToken[];
   onReply: () => void;
   onCopy: () => void;
@@ -58,11 +57,9 @@ type MessageActionSection = {
   rows: SheetAction[];
 };
 
-/**
- * Groups the message actions by purpose: respond, filter, pin, report, then
- * moderation. Empty groups are dropped.
- */
-function buildMessageActionSections(props: Props): MessageActionSection[] {
+function buildMessageActionSections(
+  props: ActionSheetProps,
+): MessageActionSection[] {
   const {
     username,
     onReply,
@@ -184,48 +181,35 @@ function buildMessageActionSections(props: Props): MessageActionSection[] {
   return sections.filter(section => section.rows.length > 0);
 }
 
-function ActionSheetComponent(props: Props) {
-  const { visible, onClose, username, messagePreview } = props;
-  const sheetRef = useRef<BottomSheetHandle>(null);
-
-  const requestClose = () => {
-    sheetRef.current?.requestClose();
-  };
-
+function ActionSheetComponent(props: ActionSheetProps) {
+  const { onDismiss, username, usernameColor, messagePreview } = props;
+  const { requestClose, runAndClose, sheetRef } = useChatSheet();
   const sections = buildMessageActionSections(props);
 
-  const rowCount = sections.reduce(
-    (count, section) => count + section.rows.length,
-    0,
-  );
+  const layout: ChatSheetLayout = {
+    chromeHeight: SHEET_CHROME.messageActions,
+    kind: 'content',
+    minHeight: SHEET_CHROME.messageActionsMinHeight,
+    sections: sections.map(section => ({
+      rowCount: section.rows.length,
+      titled: Boolean(section.title),
+    })),
+  };
 
-  const titledSectionCount = sections.filter(section => section.title).length;
-
-  const { height: windowHeight } = useWindowDimensions();
-
-  // Header, preview and padding, then each row and group gap on top.
-  const sheetHeight = Math.min(
-    Math.round(windowHeight * 0.82),
-    Math.max(
-      360,
-      196 + rowCount * 57 + sections.length * 24 + titledSectionCount * 26,
-    ),
-  );
-
-  const snapPoints = [{ height: sheetHeight }];
+  const sheetHeight = useChatSheetHeight(layout);
 
   return (
-    <BottomSheet
+    <ChatSheet
       ref={sheetRef}
-      enableFixedSnapPoints
-      isPresented={visible}
-      onDismiss={onClose}
-      showDragIndicator
-      snapPoints={snapPoints}
+      onDismiss={onDismiss}
+      layout={layout}
       testID='message-action-sheet'
     >
       <View
-        style={[styles.wrapper, { maxHeight: sheetHeight - theme.space16 }]}
+        style={[
+          chatSheetStyles.wrapper,
+          { maxHeight: sheetHeight - theme.space16 },
+        ]}
       >
         <SheetHeader
           title={username ? `Message from ${username}` : 'Message'}
@@ -234,54 +218,33 @@ function ActionSheetComponent(props: Props) {
 
         <ScrollView
           nestedScrollEnabled
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
+          style={chatSheetStyles.scroll}
+          contentContainerStyle={chatSheetStyles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           {messagePreview ? (
             <MessageActionPreview
               message={messagePreview}
               username={username}
+              usernameColor={usernameColor}
             />
           ) : null}
 
-          {/* eslint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- at most five fixed groups of rows, not a data list */}
+          {/* oxlint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- at most five fixed groups of rows, not a data list */}
           {sections.map(section => (
             <SheetActionGroup
               key={section.key}
               title={section.title}
               actions={section.rows.map(row => ({
                 ...row,
-                onPress: () => {
-                  row.onPress();
-                  requestClose();
-                },
+                onPress: () => runAndClose(row.onPress),
               }))}
             />
           ))}
         </ScrollView>
       </View>
-    </BottomSheet>
+    </ChatSheet>
   );
 }
 
 export const ActionSheet = memo(ActionSheetComponent);
-
-const styles = StyleSheet.create({
-  scroll: {
-    flexGrow: 0,
-  },
-  /**
-   * No gap: each `SettingsSection` carries its own bottom margin.
-   */
-  scrollContent: {
-    paddingBottom: theme.space16,
-  },
-  wrapper: {
-    alignSelf: 'stretch',
-    gap: theme.space16,
-    paddingHorizontal: theme.space16,
-    paddingTop: theme.space12,
-    width: '100%',
-  },
-});

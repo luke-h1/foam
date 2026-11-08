@@ -4,10 +4,6 @@ import { styles } from '../ChatRow.styles';
 import type { getChatTextStyles } from '../ChatText.styles';
 import type { ChatTokenRenderProps } from './types/chat-token-render-props';
 
-/**
- * A system line. Raid and unraid notices use the smaller meta style; every
- * other system line uses the body style.
- */
 export function SystemTextToken({
   content,
   noticeTags,

@@ -1,31 +1,30 @@
 import type { ReactNode } from 'react';
 
+import type { ChatDensity, ChatFontScale } from '@app/store/preference-store';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { normalizeSevenTvBadge } from '@app/utils/seven-tv/cosmetics/normalizeSevenTvBadge';
 
-import type { ChatFontScale } from '../util/chatScale';
 import { ChatBadge } from './ChatBadge';
 
 interface ChatMessageBadgesProps {
   badges?: SanitisedBadgeSet[];
-  compact: boolean;
+  density: ChatDensity;
   fontScale?: ChatFontScale;
-  moderationNotice?: unknown;
+  isModerated: boolean;
   onBadgePress?: (badge: SanitisedBadgeSet) => void;
 }
 
 export function ChatMessageBadges({
   badges,
-  compact,
+  density,
   fontScale,
-  moderationNotice,
+  isModerated,
   onBadgePress,
 }: ChatMessageBadgesProps): ReactNode {
   if (!badges?.length) {
     return null;
   }
 
-  const isModerated = Boolean(moderationNotice);
   const renderedBadges: ReactNode[] = [];
 
   for (const badge of badges) {
@@ -40,7 +39,7 @@ export function ChatMessageBadges({
         key={`${renderedBadges.length}\u001f${normalizedBadge.provider}\u001f${normalizedBadge.set}\u001f${normalizedBadge.id}\u001f${normalizedBadge.url}`}
         {...{
           badge: normalizedBadge,
-          compact,
+          density,
           fontScale,
           isModerated,
           onPress: onBadgePress,

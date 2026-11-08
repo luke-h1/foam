@@ -2,6 +2,7 @@ import type { BrandIconName } from '@app/components/brand-icon/util/brandIconReg
 import type { SubscriberChannelProfile } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 import { normaliseChatText } from '@app/utils/chat/normaliseChatText';
+import { chunk } from '@app/utils/collection/chunk';
 
 import type { EmotePickerItem } from './emoteSheetTypes';
 
@@ -34,7 +35,6 @@ export interface EmoteMenuProvider {
 export interface EmoteMenuDataInput {
   bttvChannelEmotes?: SanitisedEmote[];
   bttvGlobalEmotes?: SanitisedEmote[];
-  emojis?: string[];
   emojiSets?:
     | {
         data: string[];
@@ -52,16 +52,6 @@ export interface EmoteMenuDataInput {
   twitchGlobalEmotes?: SanitisedEmote[];
   twitchSubscriberEmotes?: SanitisedEmote[];
   twitchSubscriberChannelProfiles?: Record<string, SubscriberChannelProfile>;
-}
-
-function chunk<TItem>(items: TItem[], size: number): TItem[][] {
-  const rows: TItem[][] = [];
-
-  for (let i = 0; i < items.length; i += size) {
-    rows.push(items.slice(i, i + size));
-  }
-
-  return rows;
 }
 
 function makeShortLabel(title: string): string {
@@ -213,36 +203,6 @@ function groupSubscriberSets(
   return sets;
 }
 
-function createEmojiSets(emojis: string[]): EmoteMenuSet[] {
-  const categories: {
-    icon: `emoji:${string}`;
-    id: string;
-    title: string;
-  }[] = [
-    { id: 'emoji-smileys', title: 'Smileys', icon: 'emoji:😀' },
-    { id: 'emoji-gestures', title: 'Gestures', icon: 'emoji:👍' },
-    { id: 'emoji-hearts', title: 'Hearts', icon: 'emoji:❤️' },
-  ];
-
-  if (emojis.length === 0) {
-    return categories.map(category =>
-      makeSet(category.id, 'Emoji', category.title, category.icon, []),
-    );
-  }
-
-  const uniqueEmojis = [...new Set(emojis)];
-
-  return categories.map((category, index) =>
-    makeSet(
-      category.id,
-      'Emoji',
-      category.title,
-      category.icon,
-      uniqueEmojis.slice(index * 24, (index + 1) * 24),
-    ),
-  );
-}
-
 function createEmojiSetsFromInput(
   emojiSets:
     | {
@@ -374,10 +334,7 @@ export function buildEmoteMenuProviders(
     ),
   ]).filter(set => set.emotes.length > 0);
 
-  const emojiSets =
-    input.emojiSets && input.emojiSets.length > 0
-      ? createEmojiSetsFromInput(input.emojiSets)
-      : createEmojiSets(input.emojis ?? []);
+  const emojiSets = createEmojiSetsFromInput(input.emojiSets);
 
   const providers: EmoteMenuProvider[] = [
     {
@@ -450,7 +407,6 @@ export function filterProviderSets(
 
 export interface EmoteMenuListItem {
   key: string;
-  rowIndex?: number;
   setId: string;
   type: 'header' | 'row';
   items?: EmotePickerItem[];
@@ -485,7 +441,6 @@ export function flattenProviderSets(
         key: `${set.id}-row-${rowIndex}`,
         setId: set.id,
         type: 'row',
-        rowIndex,
         items: row,
       });
     });

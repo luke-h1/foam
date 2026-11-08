@@ -1,4 +1,4 @@
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
 const SHARED_CHANNEL_POINTS_PART_TYPES = new Set([
   'emote',

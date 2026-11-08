@@ -1,6 +1,6 @@
 import { createAwaitableOverlayStore } from '@app/store/overlays/create-overlay-store';
 
-export type MediaPermissionPrompt = {
+type MediaPermissionPrompt = {
   title: string;
   message: string;
   cancelLabel: string;

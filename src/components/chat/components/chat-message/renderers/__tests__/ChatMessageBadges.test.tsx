@@ -27,7 +27,11 @@ Object.defineProperty(ExpoImage, 'Image', {
 function renderBadges(badges: SanitisedBadgeSet[]) {
   return render(
     <View>
-      <ChatMessageBadges badges={badges} compact={false} />
+      <ChatMessageBadges
+        badges={badges}
+        density='comfortable'
+        isModerated={false}
+      />
     </View>,
   );
 }
@@ -39,7 +43,7 @@ const ffzModBadge: SanitisedBadgeSet = {
   color: '#1ac9a2',
   owner_username: '96858382',
   set: 'mod',
-  type: 'FFZ channel badge',
+  type: 'FFZ Channel Badge',
   provider: 'ffz',
 };
 

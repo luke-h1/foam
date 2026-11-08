@@ -8,9 +8,6 @@ interface PlayerIconButtonProps {
   icon: SymbolViewProps['name'];
   label: string;
   onPress: () => void;
-  /**
-   * A toggle that is on, such as a running sleep timer.
-   */
   active?: boolean;
 }
 

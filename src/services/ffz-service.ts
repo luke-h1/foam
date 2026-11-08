@@ -1,4 +1,4 @@
-import type { EmoteImageVariantSet, FfzSanitisedEmote } from '@app/types/emote';
+import type { FfzSanitisedEmote } from '@app/types/emote';
 import type { FfzBadgesResponse } from '@app/types/ffz/badge';
 import type {
   FfzChannelEmotesResponse,
@@ -6,48 +6,70 @@ import type {
   FfzGlobalEmotesResponse,
 } from '@app/types/ffz/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import { logger } from '@app/utils/logger';
+import { ffzEmoteCdn } from '@app/utils/emote/cdn/ffz';
+import { buildSanitisedBadge } from '@app/utils/emote/sanitised/buildSanitisedBadge';
+import { buildSanitisedEmote } from '@app/utils/emote/sanitised/buildSanitisedEmote';
+import { sanitiseAll } from '@app/utils/emote/sanitised/sanitiseAll';
 
 import { ApiError } from './api/client';
-import { ffzApi } from './api/clients';
-import { buildSanitisedEmote } from './emote-provider';
-
-interface FFzErrorResponse {
-  status: number;
-  error: string;
-  message: string;
-}
+import { ffzApi, isFfzNoSuchRoom } from './api/clients';
 
 /**
- * FFZ returns a 404 "No such room" for channels that have never configured FFZ;
- * that is a benign empty result, not a failure worth logging.
+ * Channel badges and channel emotes both read `/room/id/{id}`. A channel load
+ * asks for both, so a settled room payload is kept for this long and shared.
  */
-function isNoSuchRoomError(error: unknown): boolean {
-  return (
-    error instanceof ApiError &&
-    error.status === 404 &&
-    error.message.includes('No such room')
-  );
+const ROOM_SHARE_MS = 30_000;
+
+const MAX_SHARED_ROOMS = 8;
+
+interface SharedRoom {
+  room: Promise<FfzChannelEmotesResponse | null>;
+  requestedAt: number;
 }
 
-function ffzScaleSlug(scale: '1x' | '2x' | '4x'): '1' | '2' | '4' {
-  if (scale === '2x') {
-    return '2';
+const sharedRooms = new Map<string, SharedRoom>();
+
+async function requestRoom(
+  channelId: string,
+): Promise<FfzChannelEmotesResponse | null> {
+  try {
+    return await ffzApi.get<FfzChannelEmotesResponse>(`/room/id/${channelId}`);
+  } catch (error) {
+    if (
+      error instanceof ApiError &&
+      isFfzNoSuchRoom(error.status, error.message)
+    ) {
+      return null;
+    }
+
+    throw error;
+  }
+}
+
+function fetchRoom(
+  channelId: string,
+): Promise<FfzChannelEmotesResponse | null> {
+  const now = Date.now();
+  const shared = sharedRooms.get(channelId);
+
+  if (shared && now - shared.requestedAt < ROOM_SHARE_MS) {
+    return shared.room;
   }
 
-  if (scale === '4x') {
-    return '4';
+  if (sharedRooms.size >= MAX_SHARED_ROOMS) {
+    sharedRooms.clear();
   }
 
-  return '1';
-}
+  const room = requestRoom(channelId);
+  sharedRooms.set(channelId, { room, requestedAt: now });
 
-function toFfzStaticUrl(emoteId: number, scale: '1x' | '2x' | '4x'): string {
-  return `https://cdn.frankerfacez.com/emote/${emoteId}/${ffzScaleSlug(scale)}`;
-}
+  room.catch(() => {
+    if (sharedRooms.get(channelId)?.room === room) {
+      sharedRooms.delete(channelId);
+    }
+  });
 
-function toFfzAnimatedUrl(emoteId: number, scale: '1x' | '2x' | '4x'): string {
-  return `https://cdn.frankerfacez.com/emote/${emoteId}/animated/${ffzScaleSlug(scale)}`;
+  return room;
 }
 
 function sanitiseFfzEmote(
@@ -55,48 +77,22 @@ function sanitiseFfzEmote(
   site: FfzSanitisedEmote['site'],
   creator: string | null,
 ): FfzSanitisedEmote | null {
-  const staticVariants = {
-    '1x': emote.urls['1'] || toFfzStaticUrl(emote.id, '1x'),
-    '2x': emote.urls['2'] || toFfzStaticUrl(emote.id, '2x'),
-    '4x': emote.urls['4'] || toFfzStaticUrl(emote.id, '4x'),
-  } satisfies EmoteImageVariantSet;
-
-  const animatedVariants: EmoteImageVariantSet = emote.animated
-    ? {
-        '1x': toFfzAnimatedUrl(emote.id, '1x'),
-        '2x': toFfzAnimatedUrl(emote.id, '2x'),
-        '4x': toFfzAnimatedUrl(emote.id, '4x'),
-      }
-    : staticVariants;
+  const variants = ffzEmoteCdn.buildVariants({
+    id: emote.id.toString(),
+    animated: emote.animated,
+  });
 
   return buildSanitisedEmote({
     id: emote.id.toString(),
     name: emote.name,
     site,
     creator,
-    emoteLink: `https://www.frankerfacez.com/emoticon/${emote.id}`,
-    animated: animatedVariants,
-    static: staticVariants,
+    emoteLink: ffzEmoteCdn.pageUrl(String(emote.id)),
+    animated: variants.animated ?? {},
+    static: variants.static ?? {},
     width: emote.width,
     height: emote.height,
   });
-}
-
-function sanitiseFfzEmotes(
-  emotes: FfzEmoticon[],
-  site: FfzSanitisedEmote['site'],
-  creatorOf: (emote: FfzEmoticon) => string | null,
-): FfzSanitisedEmote[] {
-  const sanitised: FfzSanitisedEmote[] = [];
-
-  for (const emote of emotes) {
-    const result = sanitiseFfzEmote(emote, site, creatorOf(emote));
-    if (result) {
-      sanitised.push(result);
-    }
-  }
-
-  return sanitised;
 }
 
 /**
@@ -114,200 +110,133 @@ function largestBadgeUrl(
   return urlsByScale?.[Math.max(...scales.map(Number)).toString()];
 }
 
+function sanitiseRoomBadges(
+  room: FfzChannelEmotesResponse['room'],
+  channelId: string,
+): SanitisedBadgeSet[] {
+  const vipBadgeUrl = largestBadgeUrl(room.vip_badge);
+  const modBadgeUrl = largestBadgeUrl(room.mod_urls);
+  const sanitisedBadges: SanitisedBadgeSet[] = [];
+
+  if (vipBadgeUrl) {
+    sanitisedBadges.push(
+      buildSanitisedBadge({
+        id: 'vip_badge',
+        url: vipBadgeUrl,
+        title: 'VIP',
+        color: '#ff0000',
+        ownerUsername: channelId,
+        set: 'vip',
+        type: 'FFZ Channel Badge',
+        provider: 'ffz',
+      }),
+    );
+  }
+
+  if (modBadgeUrl) {
+    sanitisedBadges.push(
+      buildSanitisedBadge({
+        id: 'mod_badge',
+        url: modBadgeUrl,
+        title: 'Moderator',
+        color: '#1ac9a2',
+        ownerUsername: channelId,
+        set: 'mod',
+        type: 'FFZ Channel Badge',
+        provider: 'ffz',
+      }),
+    );
+  }
+
+  for (const [badge, users] of Object.entries(room.user_badges ?? {})) {
+    for (const user of users) {
+      sanitisedBadges.push(
+        buildSanitisedBadge({
+          id: badge,
+          url: '',
+          title: badge,
+          color: '#ffffff',
+          ownerUsername: user,
+          set: badge,
+          type: 'FFZ User Badge',
+          provider: 'ffz',
+        }),
+      );
+    }
+  }
+
+  return sanitisedBadges;
+}
+
 export const ffzService = {
   getSanitisedGlobalEmotes: async (): Promise<FfzSanitisedEmote[]> => {
-    try {
-      const result = await ffzApi.get<FfzGlobalEmotesResponse>('/set/global');
+    const result = await ffzApi.get<FfzGlobalEmotesResponse>('/set/global');
+    const defaultSet = result.sets[String(result.default_sets[0])];
 
-      const defaultSetId = String(result.default_sets[0]);
-      const defaultSet = result.sets[defaultSetId];
-
-      if (!defaultSet) {
-        return [];
-      }
-
-      return sanitiseFfzEmotes(
-        defaultSet.emoticons,
-        'Global FFZ',
-        () => 'UNKNOWN',
-      );
-    } catch (error) {
-      logger.ffz.warn('Failed to fetch global FFZ emotes', {
-        name: 'ffz_emotes_warning',
-        error,
-        action: 'global_emotes_failed',
-        provider: 'ffz',
-        resource_type: 'emotes',
-        scope: 'global',
-      });
-
-      throw error;
+    if (!defaultSet) {
+      return [];
     }
+
+    return sanitiseAll(defaultSet.emoticons, emote =>
+      sanitiseFfzEmote(emote, 'Global FFZ', 'UNKNOWN'),
+    );
   },
 
   getSanitisedChannelBadges: async (
     channelId: string,
   ): Promise<SanitisedBadgeSet[]> => {
-    try {
-      const result = await ffzApi.get<
-        FfzChannelEmotesResponse | FFzErrorResponse
-      >(`/room/id/${channelId}`);
+    const result = await fetchRoom(channelId);
 
-      if ('message' in result && result.message === 'No such room') {
-        return [];
-      }
-
-      const sanitisedBadges: SanitisedBadgeSet[] = [];
-
-      const room = 'room' in result ? result.room : undefined;
-      const vipBadgeUrl = largestBadgeUrl(room?.vip_badge);
-      const modBadgeUrl = largestBadgeUrl(room?.mod_urls);
-
-      if (vipBadgeUrl) {
-        sanitisedBadges.push({
-          id: 'vip_badge',
-          url: vipBadgeUrl,
-          title: 'VIP',
-          color: '#ff0000',
-          owner_username: channelId,
-          set: 'vip',
-          type: 'FFZ channel badge',
-          provider: 'ffz',
-        });
-      }
-
-      if (modBadgeUrl) {
-        sanitisedBadges.push({
-          id: 'mod_badge',
-          url: modBadgeUrl,
-          title: 'Moderator',
-          color: '#1ac9a2',
-          owner_username: channelId,
-          set: 'mod',
-          type: 'FFZ channel badge',
-          provider: 'ffz',
-        });
-      }
-
-      Object.entries(room?.user_badges ?? {}).forEach(([badge, users]) => {
-        users.forEach(user => {
-          sanitisedBadges.push({
-            id: badge,
-            url: '',
-            title: badge,
-            color: '#ffffff',
-            owner_username: user,
-            set: badge,
-            type: 'FFZ user badge',
-            provider: 'ffz',
-          });
-        });
-      });
-
-      return sanitisedBadges;
-    } catch (error) {
-      if (isNoSuchRoomError(error)) {
-        return [];
-      }
-
-      logger.ffz.warn('Failed to fetch channel FFZ badges', {
-        name: 'ffz_badges_warning',
-        error,
-        action: 'channel_badges_failed',
-        channel_id: channelId,
-        provider: 'ffz',
-        resource_type: 'badges',
-        scope: 'channel',
-      });
-
-      throw error;
-    }
+    return result ? sanitiseRoomBadges(result.room, channelId) : [];
   },
 
   getSanitisedChannelEmotes: async (
     channelId: string,
   ): Promise<FfzSanitisedEmote[]> => {
-    try {
-      const result = await ffzApi.get<
-        FfzChannelEmotesResponse | FFzErrorResponse
-      >(`/room/id/${channelId}`);
+    const result = await fetchRoom(channelId);
+    const emoticons = result?.sets[result.room.set]?.emoticons;
 
-      if ('message' in result && result.message === 'No such room') {
-        return [];
-      }
-
-      if ('sets' in result) {
-        const emoteSet = result.sets[result.room.set];
-
-        return emoteSet?.emoticons
-          ? sanitiseFfzEmotes(
-              emoteSet.emoticons,
-              'FFZ',
-              emote => emote.owner.name ?? 'unknown',
-            )
-          : [];
-      }
-
+    if (!emoticons) {
       return [];
-    } catch (error) {
-      if (isNoSuchRoomError(error)) {
-        return [];
-      }
-
-      logger.ffz.warn(`Failed to fetch channel FFZ emotes for ${channelId}`, {
-        name: 'ffz_emotes_warning',
-        error,
-        action: 'channel_emotes_failed',
-        channel_id: channelId,
-        provider: 'ffz',
-        resource_type: 'emotes',
-        scope: 'channel',
-      });
-
-      throw error;
     }
+
+    return sanitiseAll(emoticons, emote =>
+      sanitiseFfzEmote(emote, 'FFZ', emote.owner.name ?? 'unknown'),
+    );
   },
 
   getSanitisedGlobalBadges: async (): Promise<SanitisedBadgeSet[]> => {
-    try {
-      const result = await ffzApi.get<FfzBadgesResponse>('/badges');
+    const result = await ffzApi.get<FfzBadgesResponse>('/badges');
+    const sanitisedSet: SanitisedBadgeSet[] = [];
+    const seen = new Set<string>();
 
-      const sanitisedSet: SanitisedBadgeSet[] = [];
-      const seen = new Set<string>();
+    for (const badge of result.badges) {
+      const badgeId = badge.title.replace(' ', '_').toLowerCase();
 
-      result.badges.forEach(badge => {
-        result.users[badge.id]?.forEach(username => {
-          const key = `${badge.title.replace(' ', '_').toLowerCase()}|${username}`;
+      for (const username of result.users[badge.id] ?? []) {
+        const key = `${badgeId}|${username}`;
 
-          if (!seen.has(key)) {
-            seen.add(key);
+        if (seen.has(key)) {
+          continue;
+        }
 
-            sanitisedSet.push({
-              id: badge.title.replace(' ', '_').toLowerCase(),
-              url: badge.urls['4'],
-              title: badge.title,
-              color: badge.color,
-              owner_username: username,
-              set: badge.id.toString(),
-              type: 'FFZ global badge',
-              provider: 'ffz',
-            });
-          }
-        });
-      });
+        seen.add(key);
 
-      return sanitisedSet;
-    } catch (error) {
-      logger.ffz.warn('Failed to fetch global FFZ badges', {
-        name: 'ffz_badges_warning',
-        error,
-        action: 'global_badges_failed',
-        provider: 'ffz',
-        resource_type: 'badges',
-        scope: 'global',
-      });
-
-      throw error;
+        sanitisedSet.push(
+          buildSanitisedBadge({
+            id: badgeId,
+            url: badge.urls['4'],
+            title: badge.title,
+            color: badge.color,
+            ownerUsername: username,
+            set: badge.id.toString(),
+            type: 'FFZ Global Badge',
+            provider: 'ffz',
+          }),
+        );
+      }
     }
+
+    return sanitisedSet;
   },
 } as const;

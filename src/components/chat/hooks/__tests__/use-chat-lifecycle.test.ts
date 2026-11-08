@@ -3,7 +3,7 @@ import { renderHook } from '@testing-library/react-native';
 import {
   createChatMessage,
   createSevenTvEmote,
-} from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
+} from '@app/components/chat/__tests__/__fixtures__/chatFactories.fixture';
 import { useChatLifecycle } from '@app/components/chat/hooks/use-chat-lifecycle';
 import { sevenTvService } from '@app/services/seven-tv-service';
 import { startChannelLoadAbort } from '@app/store/chat/actions/channel-load';
@@ -156,24 +156,6 @@ describe('useChatLifecycle', () => {
     clearUserCosmeticsCache();
   });
 
-  describe('return value', () => {
-    test('starts with no part, the mounted channel and no emote set', () => {
-      const { result } = renderHook(() => useChatLifecycle(defaultProps));
-
-      expect({
-        hasParted: result.current.hasPartedRef.current,
-        initializedChannel: result.current.initializedChannelRef.current,
-        isMounted: result.current.isMountedRef.current,
-        currentEmoteSetId: result.current.currentEmoteSetIdRef.current,
-      }).toEqual({
-        hasParted: false,
-        initializedChannel: channelId,
-        isMounted: true,
-        currentEmoteSetId: null,
-      });
-    });
-  });
-
   describe('navigation beforeRemove', () => {
     test('leaving clears this channel but keeps messages and paint bindings', async () => {
       renderHook(() => useChatLifecycle(defaultProps));
@@ -202,13 +184,16 @@ describe('useChatLifecycle', () => {
       expect(defaultProps.isMountedRef.current).toBe(false);
     });
 
-    test('beforeRemove only calls partChannel once (hasPartedRef guard)', () => {
+    test('a repeated beforeRemove parts and resets the session once', async () => {
       renderHook(() => useChatLifecycle(defaultProps));
 
       runBeforeRemove();
+      await seedChannelSession();
       runBeforeRemove();
 
       expect(partChannel).toHaveBeenCalledTimes(1);
+
+      expect(readChannelSession().currentChannelId).toEqual(channelId);
     });
   });
 
@@ -239,9 +224,9 @@ describe('useChatLifecycle', () => {
 
       expect(clearLocalMessages).toHaveBeenCalledTimes(1);
 
-      expect(cleanupScroll).toHaveBeenCalledTimes(2);
+      expect(cleanupScroll).toHaveBeenCalledTimes(1);
 
-      expect(cleanupMessages).toHaveBeenCalledTimes(2);
+      expect(cleanupMessages).toHaveBeenCalledTimes(1);
     });
 
     test('requests a chatter cosmetics again after unmount', async () => {

@@ -1,127 +1,13 @@
-import type { ClearChatTags } from '@app/types/chat/irc-tags/clearchat';
-import type { ClearMsgTags } from '@app/types/chat/irc-tags/clearmsg';
-import type { GlobalUserStateTags } from '@app/types/chat/irc-tags/globaluserstate';
-import type { NoticeTags } from '@app/types/chat/irc-tags/notice';
-import type { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
-import type { RoomStateTags } from '@app/types/chat/irc-tags/roomstate';
-import type {
-  UserNoticeTags,
-  UserNoticeTagsByVariant,
-  UserNoticeVariantMap,
-} from '@app/types/chat/irc-tags/usernotice';
-import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
-import type { PaintData } from '@app/types/seven-tv/cosmetics';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import type { MessageToken } from '@app/utils/chat/messageToken';
 
-export type { PaintData, SanitisedBadgeSet, SanitisedEmote };
-
-export interface UserCosmetics {
-  paint_id: string | null;
-  badge_id: string | null;
-  paints: PaintData[];
-  badges: SanitisedBadgeSet[];
-  personal_emotes?: SanitisedBadgeSet[];
-  user_info: {
-    lastUpdate: number;
-    user_id: string;
-    ttv_user_id: string | null;
-    avatar_url: string | null;
-    personal_set_id: string[];
-    color?: string;
-  };
-}
-
-export interface ChatUser {
-  name: string;
-  color: string;
-  cosmetics?: UserCosmetics;
-  avatar: string | null;
-  userId: string;
-}
-
-export interface Bit {
-  name: string;
-  tiers: { min_bits: string }[];
-}
-
-export interface ChatMessageType<
-  TNoticeType extends NoticeVariants,
-  TVariant extends (TNoticeType extends 'usernotice'
-    ? keyof UserNoticeVariantMap
-    : never) = never,
-> {
-  id: string;
-  /**
-   * Monotonic per-session arrival number. Unlike a list index it never shifts
-   * on front-trims, so derivations like alternating-row parity stay stable.
-   */
-  seq?: number;
-  /**
-   * Wall-clock ms when the message was committed to the store. Preserved on
-   * cache restore so replayed rows never read as freshly arrived.
-   */
-  committedAt?: number;
-  /**
-   * Set on replayed or cache-restored messages so they skip live-arrival
-   * treatment such as the slide-in entrance.
-   */
-  isHistorical?: boolean;
-  /**
-   * Set when the message committed as part of a raid-sized flush, so a burst
-   * of rows does not start one entrance animation per row in the same frame.
-   */
-  arrivedInBurst?: boolean;
-  userstate: UserStateTags;
-  message: MessageToken[];
-  badges: SanitisedBadgeSet[];
-  channel: string;
-  message_id: string;
-  message_nonce: string;
-  timestamp?: string;
-  sender: string;
-  parentDisplayName?: string;
-  isSpecialNotice?: boolean;
-  moderationNotice?: string;
-  cachedSenderColor?: string;
-  /**
-   * Set at ingest while the emote/badge parse is deferred to commit time;
-   * stripped when the message is finalized, so the store never sees it.
-   */
-  pendingEmoteParse?: boolean;
-  replyDisplayName: string;
-  replyBody: string;
-  parentColor?: string;
-  isChannelPointRedemption?: boolean;
-  isAnnouncement?: boolean;
-  isAction?: boolean;
-  isHighlightedMessage?: boolean;
-  isSharedChatDuplicated?: boolean;
-  isTwitchSystemNotice?: boolean;
-  notice_tags?: TNoticeType extends 'userstate'
-    ? UserStateTags
-    : TNoticeType extends 'usernotice'
-      ? TVariant extends keyof UserNoticeVariantMap
-        ? UserNoticeTagsByVariant<TVariant>
-        : UserNoticeTags
-      : TNoticeType extends 'clearchat'
-        ? ClearChatTags
-        : TNoticeType extends 'clearmsg'
-          ? ClearMsgTags
-          : TNoticeType extends 'globalusernotice'
-            ? GlobalUserStateTags
-            : TNoticeType extends 'roomstate'
-              ? RoomStateTags
-              : TNoticeType extends 'notice'
-                ? NoticeTags
-                : never;
-}
-
-export type AnyChatMessageType = ChatMessageType<
-  'usernotice',
-  keyof UserNoticeVariantMap
->;
+import {
+  CHANNEL_SLICE_KEYS,
+  type ChatResourceSliceKey,
+  type ChatResourceSliceRecord,
+  GLOBAL_SLICE_KEYS,
+  mapSlices,
+} from './chat-resource-slices';
 
 export type ChatLoadingState =
   | 'IDLE'
@@ -136,7 +22,9 @@ export interface SubscriberChannelProfile {
   profileImageUrl: string;
 }
 
-export interface ChannelCacheType {
+export interface ChannelCacheType extends ChatResourceSliceRecord<
+  ChatResourceSliceKey<'channel'>
+> {
   lastUpdated: number;
   twitchChannelEmotes: SanitisedEmote[];
   twitchSubscriberEmotes: SanitisedEmote[];
@@ -153,9 +41,12 @@ export interface ChannelCacheType {
   ffzChannelBadges: SanitisedBadgeSet[];
   sevenTvEmoteSetId?: string;
   badgesLastUpdated?: number;
+  sevenTvUpdatedAt?: number;
 }
 
-export interface GlobalCacheType {
+export interface GlobalCacheType extends ChatResourceSliceRecord<
+  ChatResourceSliceKey<'global'>
+> {
   lastUpdated: number;
   twitchGlobalEmotes: SanitisedEmote[];
   sevenTvGlobalEmotes: SanitisedEmote[];
@@ -165,50 +56,18 @@ export interface GlobalCacheType {
   ffzGlobalBadges: SanitisedBadgeSet[];
 }
 
-export const MAX_CACHED_CHANNELS = 20;
-export const MAX_COSMETIC_ENTRIES = 500;
-export const CACHE_DURATION = 60 * 60 * 1000;
-export const BADGE_CACHE_DURATION = 60 * 60 * 1000;
-
 /**
  * Factories, not shared constants: legend-state's hydration merge writes
  * through a shared object, so "clear cache" would return hydrated data.
  */
-export const makeEmptyEmoteData = () =>
-  ({
-    twitchChannelEmotes: [],
-    twitchSubscriberEmotes: [],
-    twitchSubscriberChannelProfiles: {},
-    sevenTvChannelEmotes: [],
-    ffzChannelEmotes: [],
-    bttvChannelEmotes: [],
-    twitchChannelBadges: [],
-    ffzChannelBadges: [],
-    lastUpdated: 0,
-    badgesLastUpdated: 0,
-  }) satisfies ChannelCacheType;
+export const makeEmptyEmoteData = (): ChannelCacheType => ({
+  ...mapSlices(CHANNEL_SLICE_KEYS, () => []),
+  twitchSubscriberChannelProfiles: {},
+  lastUpdated: 0,
+  badgesLastUpdated: 0,
+});
 
-export const makeEmptyGlobalCacheData = () =>
-  ({
-    lastUpdated: 0,
-    twitchGlobalEmotes: [],
-    sevenTvGlobalEmotes: [],
-    ffzGlobalEmotes: [],
-    bttvGlobalEmotes: [],
-    twitchGlobalBadges: [],
-    ffzGlobalBadges: [],
-  }) satisfies GlobalCacheType;
-
-export interface ResolvedEmoteData extends ChannelCacheType, GlobalCacheType {
-  sevenTvPersonalEmotes: Record<string, SanitisedEmote[]>;
-  chatterinoBadges: SanitisedBadgeSet[];
-  bttvBadges: SanitisedBadgeSet[];
-}
-
-export const emptyResolvedEmoteData: ResolvedEmoteData = {
-  ...makeEmptyEmoteData(),
-  ...makeEmptyGlobalCacheData(),
-  sevenTvPersonalEmotes: {},
-  chatterinoBadges: [],
-  bttvBadges: [],
-};
+export const makeEmptyGlobalCacheData = (): GlobalCacheType => ({
+  ...mapSlices(GLOBAL_SLICE_KEYS, () => []),
+  lastUpdated: 0,
+});

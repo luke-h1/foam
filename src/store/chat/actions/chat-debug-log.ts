@@ -1,11 +1,25 @@
 import { getBadge, getPaint } from '@app/store/chat/actions/cosmetics';
+import { getMessageSenderLogin } from '@app/store/chat/actions/messages';
 import { getMissingBadgeIds } from '@app/store/chat/actions/missing-badges';
 import { getChannelPersonalEmotes } from '@app/store/chat/actions/personal-emotes';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import {
+  BADGE_SLICE_KEYS,
+  type ChatResourceSliceKey,
+  type ChatResourceSliceRecord,
+  EMOTE_SLICE_KEYS,
+  SLICE_BY_KEY,
+  type SliceScope,
+} from '@app/store/chat/types/chat-resource-slices';
+import type { ChannelCacheType } from '@app/store/chat/types/constants';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
+import {
+  type IrcMessage,
+  parseIrcMessage,
+} from '@app/utils/chat/irc-protocol/parseIrcMessage';
 
 export interface ChatDebugIrcLine {
   line: string;
@@ -14,6 +28,8 @@ export interface ChatDebugIrcLine {
 }
 
 const MAX_DEBUG_IRC_LINES = 250;
+
+const EMOTE_LOOKUP_PROVIDER_ORDER = ['7tv', 'bttv', 'ffz', 'twitch'] as const;
 
 /**
  * Buffers key off the app channel id but inbound lines only carry the IRC
@@ -56,16 +72,16 @@ export function isChatDebugLogEnabled(): boolean {
   return recorderCounts.size > 0;
 }
 
-function getLineChannelLogin(line: string): string | null {
-  const { rest } = splitIrcLine(line);
-  const hashIndex = rest.indexOf('#');
-
-  if (hashIndex === -1) {
+function getLineChannelLogin(message: IrcMessage | null): string | null {
+  if (!message) {
     return null;
   }
 
-  const end = rest.indexOf(' ', hashIndex);
-  return rest.slice(hashIndex + 1, end === -1 ? undefined : end).toLowerCase();
+  const { params } = message;
+  const candidates = params.length > 1 ? params.slice(0, -1) : params;
+  const channel = candidates.find(param => param.startsWith('#'));
+
+  return channel ? normaliseChatUsername(channel.slice(1)) : null;
 }
 
 function appendToBuffer(channelId: string, entry: ChatDebugIrcLine): void {
@@ -89,7 +105,7 @@ export function recordChatDebugIrcLine(line: string, dropped = false): void {
   }
 
   const entry: ChatDebugIrcLine = { line, receivedAt: Date.now(), dropped };
-  const login = getLineChannelLogin(line);
+  const login = getLineChannelLogin(parseIrcMessage(line));
 
   const channelId = login === null ? undefined : channelIdsByLogin.get(login);
 
@@ -113,58 +129,25 @@ export function getChatDebugIrcLines(channelId: string): ChatDebugIrcLine[] {
 }
 
 /**
- * Splitting lets the login matchers anchor to real tag keys and the sender
- * prefix instead of user-typed lookalikes in the trailing text.
+ * Matches the sender prefix, the login tags and a CLEARCHAT target, never the
+ * trailing text, so a user who types a login does not match.
  */
-interface IrcLineParts {
-  tags: string | null;
-  prefix: string | null;
-  rest: string;
-  trailing: string | null;
-}
+function isLineForLogin(line: string, target: string): boolean {
+  const message = parseIrcMessage(line);
 
-function splitIrcLine(line: string): IrcLineParts {
-  let cursor = 0;
-  let tags: string | null = null;
-
-  const tagEnd = line.startsWith('@') ? line.indexOf(' ') : null;
-
-  // A token with no space after it is the whole line; nothing follows it.
-  if (tagEnd === -1) {
-    return { tags: line, prefix: null, rest: '', trailing: null };
+  if (!message) {
+    return false;
   }
 
-  if (tagEnd !== null) {
-    tags = line.slice(0, tagEnd);
-    cursor = tagEnd + 1;
-  }
+  const prefixLogin = message.prefix?.split('!')[0];
+  const isClearChat = message.command === 'CLEARCHAT';
 
-  let prefix: string | null = null;
-  const prefixEnd = line.startsWith(':', cursor)
-    ? line.indexOf(' ', cursor)
-    : null;
-
-  if (prefixEnd === -1) {
-    return { tags, prefix: line.slice(cursor), rest: '', trailing: null };
-  }
-
-  if (prefixEnd !== null) {
-    prefix = line.slice(cursor, prefixEnd);
-    cursor = prefixEnd + 1;
-  }
-
-  const trailingStart = line.indexOf(' :', cursor);
-
-  if (trailingStart === -1) {
-    return { tags, prefix, rest: line.slice(cursor), trailing: null };
-  }
-
-  return {
-    tags,
-    prefix,
-    rest: line.slice(cursor, trailingStart),
-    trailing: line.slice(trailingStart + 2),
-  };
+  return (
+    normaliseChatUsername(prefixLogin) === target ||
+    normaliseChatUsername(message.tags?.['login']) === target ||
+    normaliseChatUsername(message.tags?.['display-name']) === target ||
+    (isClearChat && normaliseChatUsername(message.params[1]) === target)
+  );
 }
 
 export function getChatDebugIrcLinesForLogin(
@@ -177,14 +160,6 @@ export function getChatDebugIrcLinesForLogin(
     return [];
   }
 
-  const escaped = target
-    .replaceAll(/[$()*+.?[\\\]^{|}]/g, String.raw`\$&`)
-    .replaceAll(' ', String.raw`\\s`);
-
-  const tagPattern = new RegExp(
-    `(?:^@|;)(?:login|display-name)=${escaped}(?:;|$)`,
-  );
-
   const channelId = chatStore$.currentChannelId.peek();
   const lines = channelId ? (buffers.get(channelId) ?? []) : [];
   const matches: ChatDebugIrcLine[] = [];
@@ -196,14 +171,7 @@ export function getChatDebugIrcLinesForLogin(
       continue;
     }
 
-    const { tags, prefix, rest, trailing } = splitIrcLine(
-      entry.line.toLowerCase(),
-    );
-
-    const isTargetLine =
-      prefix?.startsWith(`:${target}!`) ||
-      (tags !== null && tagPattern.test(tags)) ||
-      (rest.startsWith('clearchat ') && trailing === target);
+    const isTargetLine = isLineForLogin(entry.line, target);
 
     if (isTargetLine) {
       matches.push(entry);
@@ -217,22 +185,13 @@ export function getChatDebugIrcLinesForLogin(
   return matches;
 }
 
-/**
- * Walks the store back to front for the newest message that login sent.
- */
 function findLatestMessageFromLogin(target: string) {
   const messages = chatStore$.messages.peek();
 
   for (let index = messages.length - 1; index >= 0; index -= 1) {
     const message = messages[index];
 
-    const messageLogin = normaliseChatUsername(
-      message?.userstate?.login ||
-        message?.userstate?.username ||
-        message?.sender,
-    );
-
-    if (message && messageLogin === target) {
+    if (message && getMessageSenderLogin(message) === target) {
       return message;
     }
   }
@@ -262,21 +221,30 @@ interface ChatDebugCacheMiss {
   cacheLoaded: false;
 }
 
-interface ChatDebugEmoteSources {
+type EmoteSliceKey = ChatResourceSliceKey<SliceScope, 'emote'>;
+type BadgeSliceKey = ChatResourceSliceKey<SliceScope, 'badge'>;
+
+interface ChatDebugEmoteSources extends Record<EmoteSliceKey, number> {
   channelId: string | null;
   lastUpdated: string;
+  sevenTvUpdatedAt: string;
   globalsLastUpdated: string;
   sevenTvEmoteSetId: string | null;
-  twitchChannel: number;
-  twitchGlobal: number;
-  twitchSubscriber: number;
-  sevenTvChannel: number;
-  sevenTvGlobal: number;
   sevenTvPersonalUsers: number;
-  bttvChannel: number;
-  bttvGlobal: number;
-  ffzChannel: number;
-  ffzGlobal: number;
+}
+
+function readSlices(cache: ChannelCacheType) {
+  return { ...cache, ...chatStore$.persisted.globalCaches.peek() };
+}
+
+function countSlices<TKey extends ChatResourceSliceKey>(
+  keys: readonly TKey[],
+  slices: ChatResourceSliceRecord<TKey>,
+): Record<TKey, number> {
+  // SAFETY: the entries hold one count for each key in `keys`.
+  return Object.fromEntries(
+    keys.map(key => [key, slices[key].length]),
+  ) as Record<TKey, number>;
 }
 
 export function getChatDebugEmoteSources():
@@ -293,19 +261,12 @@ export function getChatDebugEmoteSources():
   return {
     channelId,
     lastUpdated: formatCacheAge(cache.lastUpdated),
+    sevenTvUpdatedAt: formatCacheAge(cache.sevenTvUpdatedAt),
     globalsLastUpdated: formatCacheAge(globalCaches.lastUpdated),
     sevenTvEmoteSetId: cache.sevenTvEmoteSetId ?? null,
-    twitchChannel: cache.twitchChannelEmotes.length,
-    twitchGlobal: globalCaches.twitchGlobalEmotes.length,
-    twitchSubscriber: cache.twitchSubscriberEmotes.length,
-    sevenTvChannel: cache.sevenTvChannelEmotes.length,
-    sevenTvGlobal: globalCaches.sevenTvGlobalEmotes.length,
     sevenTvPersonalUsers: Object.keys(getChannelPersonalEmotes(channelId))
       .length,
-    bttvChannel: cache.bttvChannelEmotes.length,
-    bttvGlobal: globalCaches.bttvGlobalEmotes.length,
-    ffzChannel: cache.ffzChannelEmotes.length,
-    ffzGlobal: globalCaches.ffzGlobalEmotes.length,
+    ...countSlices(EMOTE_SLICE_KEYS, readSlices(cache)),
   };
 }
 
@@ -330,25 +291,21 @@ export function getChatDebugEmoteDetails(emote: {
     return { foundInCache: false, cacheLoaded: false };
   }
 
-  const globalCaches = chatStore$.persisted.globalCaches.peek();
+  const slices = readSlices(cache);
 
-  const lists: [string, SanitisedEmote[]][] = [
-    ['sevenTvChannel', cache.sevenTvChannelEmotes],
-    ['sevenTvGlobal', globalCaches.sevenTvGlobalEmotes],
-    ...Object.entries(getChannelPersonalEmotes(channelId)).map(
-      ([ownerId, emotes]): [string, SanitisedEmote[]] => [
-        `sevenTvPersonal:${ownerId}`,
-        emotes,
-      ],
+  const personalLists = Object.entries(getChannelPersonalEmotes(channelId)).map(
+    ([ownerId, emotes]): [string, SanitisedEmote[]] => [
+      `sevenTvPersonal:${ownerId}`,
+      emotes,
+    ],
+  );
+
+  const lists = EMOTE_LOOKUP_PROVIDER_ORDER.flatMap(provider => [
+    ...EMOTE_SLICE_KEYS.flatMap((key): [string, SanitisedEmote[]][] =>
+      SLICE_BY_KEY[key].provider === provider ? [[key, slices[key]]] : [],
     ),
-    ['bttvChannel', cache.bttvChannelEmotes],
-    ['bttvGlobal', globalCaches.bttvGlobalEmotes],
-    ['ffzChannel', cache.ffzChannelEmotes],
-    ['ffzGlobal', globalCaches.ffzGlobalEmotes],
-    ['twitchChannel', cache.twitchChannelEmotes],
-    ['twitchGlobal', globalCaches.twitchGlobalEmotes],
-    ['twitchSubscriber', cache.twitchSubscriberEmotes],
-  ];
+    ...(provider === '7tv' ? personalLists : []),
+  ]);
 
   let nameMatch: ChatDebugEmoteMatch | undefined;
 
@@ -401,14 +358,10 @@ export function getChatDebugBadgeDetails(
   };
 }
 
-interface ChatDebugBadgeSources {
+interface ChatDebugBadgeSources extends Record<BadgeSliceKey, number> {
   channelId: string | null;
   badgesLastUpdated: string;
   globalsLastUpdated: string;
-  twitchChannel: number;
-  twitchGlobal: number;
-  ffzChannel: number;
-  ffzGlobal: number;
   sevenTvBadgeDefinitions: number;
   sevenTvBadgeWearers: number;
   missingSevenTvBadgeIds: string[];
@@ -423,16 +376,13 @@ export function getChatDebugBadgeSources():
     return { channelId, cacheLoaded: false };
   }
 
-  const globalCaches = chatStore$.persisted.globalCaches.peek();
-
   return {
     channelId,
     badgesLastUpdated: formatCacheAge(cache.badgesLastUpdated),
-    globalsLastUpdated: formatCacheAge(globalCaches.lastUpdated),
-    twitchChannel: cache.twitchChannelBadges.length,
-    twitchGlobal: globalCaches.twitchGlobalBadges.length,
-    ffzChannel: cache.ffzChannelBadges.length,
-    ffzGlobal: globalCaches.ffzGlobalBadges.length,
+    globalsLastUpdated: formatCacheAge(
+      chatStore$.persisted.globalCaches.lastUpdated.peek(),
+    ),
+    ...countSlices(BADGE_SLICE_KEYS, readSlices(cache)),
     sevenTvBadgeDefinitions: Object.keys(chatStore$.badges.peek()).length,
     sevenTvBadgeWearers: Object.keys(chatStore$.userBadgeIds.peek()).length,
     missingSevenTvBadgeIds: getMissingBadgeIds(),

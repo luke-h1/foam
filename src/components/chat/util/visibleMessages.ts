@@ -1,6 +1,7 @@
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import { messageMentionsLogin } from '@app/utils/chat/derive-chat-body/scanChatBody';
 import { normaliseChatText } from '@app/utils/chat/normaliseChatText';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 
@@ -61,29 +62,6 @@ function getNormalisedMessageFields(message: FilterableMessage) {
   return fields;
 }
 
-function messageMentionsUsername(
-  message: FilterableMessage,
-  username: string | undefined,
-): boolean {
-  const target = normaliseChatUsername(username);
-
-  if (!target) {
-    return false;
-  }
-
-  for (const token of message.message) {
-    if (token.type !== 'mention') {
-      continue;
-    }
-
-    if (normaliseChatUsername(token.content.replace(/^@/, '')) === target) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 function messageMatchesSearch(
   message: FilterableMessage,
   searchQuery: string,
@@ -112,7 +90,6 @@ function messageHiddenByPhrase(
 
   const { body } = getNormalisedMessageFields(message);
 
-  // eslint-disable-next-line react-doctor/js-set-map-lookups -- String.includes substring check, not membership
   return hiddenPhrases.some(phrase => body.includes(phrase));
 }
 
@@ -170,6 +147,8 @@ export function getVisibleMessages<TMessage extends FilterableMessage>(
     return messages;
   }
 
+  const currentLogin = normaliseChatUsername(options.currentUsername);
+
   const hiddenUsers = new Set(
     normaliseList(options.hiddenUsers, normaliseChatUsername),
   );
@@ -179,7 +158,7 @@ export function getVisibleMessages<TMessage extends FilterableMessage>(
   return messages.filter(message => {
     if (
       showOnlyMentions &&
-      !messageMentionsUsername(message, options.currentUsername)
+      !messageMentionsLogin(message.message, currentLogin)
     ) {
       return false;
     }

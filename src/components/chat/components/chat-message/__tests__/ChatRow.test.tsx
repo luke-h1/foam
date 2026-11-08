@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 import { StyleSheet, Text, View } from 'react-native';
 import type { ComponentProps } from 'react';
 import type { ReactTestInstance } from 'react-test-renderer';
@@ -10,19 +9,17 @@ import {
   userEvent,
 } from '@testing-library/react-native';
 
-import { getChatTextStyles } from '@app/components/chat/components/chat-message/ChatText.styles';
-import { MESSAGE_LONG_PRESS_DELAY_MS } from '@app/components/chat/hooks/use-chat-row-long-press';
+import { MESSAGE_LONG_PRESS_DELAY_MS } from '@app/components/chat/components/chat-message/hooks/use-chat-row-long-press';
 import { isRowTouchHeld } from '@app/components/chat/util/chatRowTouchHold';
-import { EmoteSetKind } from '@app/graphql/generated/gql';
+import { resetChatOverlays } from '@app/store/chat/actions/chat-overlays';
+import { chatOverlays$ } from '@app/store/chat/observables/chat-overlays';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
-import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { preferences$ } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
+import type { ChatMessageType } from '@app/types/chat/chatMessage';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
-import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import type { MessageToken } from '@app/utils/chat/messageToken';
-import { lightenColor } from '@app/utils/color/lightenColor';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
 import { ChatRow } from '../ChatRow';
 import * as EmoteTokenModule from '../renderers/EmoteToken';
@@ -38,9 +35,13 @@ Object.defineProperty(EmoteTokenModule, 'EmoteToken', {
   value: ({
     token,
     disableAnimations,
+    onEmoteTouchStart,
     shouldOverlayPrevious,
   }: EmoteTokenProps) => (
-    <View testID={disableAnimations ? 'emote-token-static' : 'emote-token'}>
+    <View
+      onTouchStart={() => onEmoteTouchStart?.(token)}
+      testID={disableAnimations ? 'emote-token-static' : 'emote-token'}
+    >
       <Text>
         {token?.name ?? 'emote'}
         {shouldOverlayPrevious ? ':overlay' : ''}
@@ -73,7 +74,7 @@ const createMockMessage = (
     message_id,
     message_nonce,
     sender: 'testuser',
-    replyDisplayName: '',
+    replyParentLogin: '',
     replyBody: '',
     ...overrides,
   };
@@ -124,9 +125,7 @@ function fireMessageLongPress(
 }
 
 describe('ChatRow', () => {
-  const mockOnReply = jest.fn();
   const mockOnMessageLongPress = jest.fn();
-  const mockOnEmotePress = jest.fn();
   const mockOnReplyContextPress = jest.fn();
 
   beforeEach(() => {
@@ -160,7 +159,7 @@ describe('ChatRow', () => {
     const { getByText } = render(<ChatRow {...message} />);
 
     expect(getByText('waves at chat')).toHaveStyle({
-      color: lightenColor('#FF0000'),
+      color: 'rgb(255, 0, 0)',
     });
   });
 
@@ -173,7 +172,7 @@ describe('ChatRow', () => {
     const { getByText } = render(<ChatRow {...message} />);
 
     expect(getByText('waves at chat')).not.toHaveStyle({
-      color: lightenColor('#FF0000'),
+      color: 'rgb(255, 0, 0)',
     });
   });
 
@@ -181,7 +180,6 @@ describe('ChatRow', () => {
     const malformedMessage: MessageToken[] = [
       {
         type: 'text',
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- deliberately malformed payload
         // @ts-expect-error malformed IRC payload should not render as visible text
         content: { text: 'bad payload' },
       },
@@ -205,7 +203,7 @@ describe('ChatRow', () => {
             owner_username: 'testuser',
             set: 'cold',
             title: 'Cold Badge',
-            type: 'badge',
+            type: 'Twitch Global Badge',
             provider: 'twitch',
             url: '',
           },
@@ -215,31 +213,29 @@ describe('ChatRow', () => {
 
     const { queryByTestId } = render(<ChatRow {...message} />);
 
-    expect(queryByTestId('chat-badge-placeholder')).toBeNull();
-
-    expect(queryByTestId('chat-text-placeholder')).toBeNull();
+    expect(queryByTestId('chat-badge')).toBeNull();
   });
 
-  describe('Long Press Reply', () => {
+  describe('Long Press', () => {
     test('survives the touch jitter android reports while a finger rests', () => {
       const message = createMockMessage([
         { type: 'text', content: 'Hello world!' },
       ]);
 
       const { getByTestId } = render(
-        <ChatRow {...message} onReply={mockOnReply} />,
+        <ChatRow {...message} onMessageLongPress={mockOnMessageLongPress} />,
       );
 
       fireMessageLongPress(getByTestId('chat-message'), { driftDp: 4 });
 
-      expect(mockOnReply).toHaveBeenCalledTimes(1);
+      expect(mockOnMessageLongPress).toHaveBeenCalledTimes(1);
     });
 
     test('holds live flushes while a finger rests on the row, through jitter', () => {
       const message = createMockMessage([{ type: 'text', content: 'Hello' }]);
 
       const { getByTestId } = render(
-        <ChatRow {...message} onReply={mockOnReply} />,
+        <ChatRow {...message} onMessageLongPress={mockOnMessageLongPress} />,
       );
 
       const row = getByTestId('chat-message');
@@ -257,7 +253,7 @@ describe('ChatRow', () => {
       const message = createMockMessage([{ type: 'text', content: 'Hello' }]);
 
       const { getByTestId } = render(
-        <ChatRow {...message} onReply={mockOnReply} />,
+        <ChatRow {...message} onMessageLongPress={mockOnMessageLongPress} />,
       );
 
       const row = getByTestId('chat-message');
@@ -272,7 +268,7 @@ describe('ChatRow', () => {
       const message = createMockMessage([{ type: 'text', content: 'Hello' }]);
 
       const { getByTestId } = render(
-        <ChatRow {...message} onReply={mockOnReply} />,
+        <ChatRow {...message} onMessageLongPress={mockOnMessageLongPress} />,
       );
 
       const row = getByTestId('chat-message');
@@ -289,7 +285,7 @@ describe('ChatRow', () => {
       const message = createMockMessage([{ type: 'text', content: 'Hello' }]);
 
       const { getByTestId } = render(
-        <ChatRow {...message} onReply={mockOnReply} />,
+        <ChatRow {...message} onMessageLongPress={mockOnMessageLongPress} />,
       );
 
       const row = getByTestId('chat-message');
@@ -302,10 +298,10 @@ describe('ChatRow', () => {
       fireEvent(row, 'touchEnd', touchAt(100, 100));
       jest.useRealTimers();
 
-      expect([mockOnReply.mock.calls.length, heldAfterLongPress]).toEqual([
-        1,
-        false,
-      ]);
+      expect([
+        mockOnMessageLongPress.mock.calls.length,
+        heldAfterLongPress,
+      ]).toEqual([1, false]);
     });
 
     test('does not hold flushes for a row that has no long press', () => {
@@ -321,7 +317,7 @@ describe('ChatRow', () => {
       const message = createMockMessage([{ type: 'text', content: 'Hello' }]);
 
       const { getByTestId, unmount } = render(
-        <ChatRow {...message} onReply={mockOnReply} />,
+        <ChatRow {...message} onMessageLongPress={mockOnMessageLongPress} />,
       );
 
       fireEvent(getByTestId('chat-message'), 'touchStart', touchAt(100, 100));
@@ -338,225 +334,12 @@ describe('ChatRow', () => {
       ]);
 
       const { getByTestId } = render(
-        <ChatRow {...message} onReply={mockOnReply} />,
+        <ChatRow {...message} onMessageLongPress={mockOnMessageLongPress} />,
       );
 
       fireMessageLongPress(getByTestId('chat-message'), { driftDp: 40 });
 
-      expect(mockOnReply).not.toHaveBeenCalled();
-    });
-
-    test('calls onReply when message is long pressed (regular messages)', () => {
-      const message = createMockMessage([
-        { type: 'text', content: 'Hello world!' },
-      ]);
-
-      const { getByTestId } = render(
-        <ChatRow {...message} onReply={mockOnReply} />,
-      );
-
-      fireMessageLongPress(getByTestId('chat-message'));
-
-      expect(mockOnReply).toHaveBeenCalledTimes(1);
-
-      const replyMessage = mockOnReply.mock.calls[0]?.[0];
-
-      expect({
-        color: replyMessage?.userstate.color,
-        message_id: replyMessage?.message_id,
-        sender: replyMessage?.sender,
-        username: replyMessage?.userstate.username,
-      }).toEqual({
-        color: '#FF0000',
-        message_id: 'msg-123',
-        sender: 'testuser',
-        username: 'testuser',
-      });
-    });
-
-    test('does not call onReply when system messages (STV emote added) are long pressed', () => {
-      const message = createMockMessage([
-        {
-          type: 'stvEmoteAdded',
-          stvEvents: {
-            type: 'added',
-            data: {
-              id: '123',
-              name: 'TestEmote',
-              url: 'https://example.com/emote.png',
-              original_name: 'TestEmote',
-              site: '7TV Channel',
-              provider: '7tv',
-              creator: null,
-              emote_link: '',
-              frame_count: 1,
-              format: 'avif',
-              flags: 0,
-              aspect_ratio: 1,
-              zero_width: false,
-              width: 128,
-              height: 128,
-              set_metadata: {
-                setId: '',
-                setName: '',
-                capacity: null,
-                ownerId: null,
-                kind: EmoteSetKind.Normal,
-                updatedAt: '',
-                totalCount: 0,
-              },
-            },
-          },
-        },
-      ]);
-
-      const { getByTestId } = render(
-        <ChatRow {...message} onReply={mockOnReply} />,
-      );
-
-      fireMessageLongPress(getByTestId('chat-message'));
-
-      expect(mockOnReply).not.toHaveBeenCalled();
-    });
-
-    test('does not call onReply when system messages (STV emote removed) are long pressed', () => {
-      const message = createMockMessage([
-        {
-          type: 'stvEmoteRemoved',
-          stvEvents: {
-            type: 'removed',
-            data: {
-              id: '123',
-              name: 'TestEmote',
-              url: 'https://example.com/emote.png',
-              original_name: 'TestEmote',
-              site: '7TV Channel',
-              provider: '7tv',
-              creator: null,
-              emote_link: '',
-              frame_count: 1,
-              format: 'avif',
-              flags: 0,
-              aspect_ratio: 1,
-              zero_width: false,
-              width: 128,
-              height: 128,
-              set_metadata: {
-                setId: '',
-                setName: '',
-                capacity: null,
-                ownerId: null,
-                kind: EmoteSetKind.Normal,
-                updatedAt: '',
-                totalCount: 0,
-              },
-            },
-          },
-        },
-      ]);
-
-      const { getByTestId } = render(
-        <ChatRow {...message} onReply={mockOnReply} />,
-      );
-
-      fireMessageLongPress(getByTestId('chat-message'));
-
-      expect(mockOnReply).not.toHaveBeenCalled();
-    });
-
-    test('does not call onReply when subscription notices are long pressed', () => {
-      const message = createMockMessage([
-        {
-          type: 'sub',
-          subscriptionEvent: {
-            msgId: 'sub',
-            displayName: 'NewSubscriber',
-            message: 'Thanks for subscribing!',
-            plan: '1000',
-            planName: 'Tier 1',
-            months: 1,
-          },
-        },
-      ]);
-
-      const { getByTestId } = render(
-        <ChatRow {...message} onReply={mockOnReply} />,
-      );
-
-      fireMessageLongPress(getByTestId('chat-message'));
-
-      expect(mockOnReply).not.toHaveBeenCalled();
-    });
-
-    test('does not call onReply when resub notices are long pressed', () => {
-      const message = createMockMessage([
-        {
-          type: 'resub',
-          subscriptionEvent: {
-            msgId: 'resub',
-            displayName: 'LoyalSubscriber',
-            message: 'Keep up the great content!',
-            plan: '2000',
-            planName: 'Tier 2',
-            months: 12,
-          },
-        },
-      ]);
-
-      const { getByTestId } = render(
-        <ChatRow {...message} onReply={mockOnReply} />,
-      );
-
-      fireMessageLongPress(getByTestId('chat-message'));
-
-      expect(mockOnReply).not.toHaveBeenCalled();
-    });
-
-    test('does not call onReply when messages without username are long pressed', () => {
-      const message = createMockMessage(
-        [{ type: 'text', content: 'Anonymous message' }],
-        { username: undefined },
-      );
-
-      const { getByTestId } = render(
-        <ChatRow {...message} onReply={mockOnReply} />,
-      );
-
-      fireMessageLongPress(getByTestId('chat-message'));
-
-      expect(mockOnReply).not.toHaveBeenCalled();
-    });
-
-    test('does not call onReply when System sender messages are long pressed', () => {
-      const message = createMockMessage(
-        [{ type: 'text', content: 'Connected to channel' }],
-        { username: 'System' },
-        { sender: 'System' },
-      );
-
-      const { getByTestId } = render(
-        <ChatRow {...message} onReply={mockOnReply} />,
-      );
-
-      fireMessageLongPress(getByTestId('chat-message'));
-
-      expect(mockOnReply).not.toHaveBeenCalled();
-    });
-
-    test('does not call onReply when system (lowercase) sender messages are long pressed', () => {
-      const message = createMockMessage(
-        [{ type: 'text', content: 'Connection established' }],
-        { username: 'system' },
-        { sender: 'system' },
-      );
-
-      const { getByTestId } = render(
-        <ChatRow {...message} onReply={mockOnReply} />,
-      );
-
-      fireMessageLongPress(getByTestId('chat-message'));
-
-      expect(mockOnReply).not.toHaveBeenCalled();
+      expect(mockOnMessageLongPress).not.toHaveBeenCalled();
     });
   });
 
@@ -625,7 +408,7 @@ describe('ChatRow', () => {
         {
           parentDisplayName: 'OriginalUser',
           replyBody: 'The original message',
-          replyDisplayName: 'OriginalUser',
+          replyParentLogin: 'OriginalUser',
         },
       );
 
@@ -652,7 +435,7 @@ describe('ChatRow', () => {
         {
           parentDisplayName: 'OriginalUser',
           replyBody: 'The original message',
-          replyDisplayName: 'OriginalUser',
+          replyParentLogin: 'OriginalUser',
         },
       );
 
@@ -679,7 +462,7 @@ describe('ChatRow', () => {
       expect(otherMention).toBeOnTheScreen();
 
       expect(otherMention).toHaveStyle({
-        color: generateRandomTwitchColor('OtherUser'),
+        color: 'rgb(210, 105, 30)',
       });
 
       expect(otherMention).not.toHaveStyle({
@@ -695,11 +478,7 @@ describe('ChatRow', () => {
       ]);
 
       const { getByTestId } = render(
-        <ChatRow
-          {...message}
-          onReply={mockOnReply}
-          onMessageLongPress={mockOnMessageLongPress}
-        />,
+        <ChatRow {...message} onMessageLongPress={mockOnMessageLongPress} />,
       );
 
       fireMessageLongPress(getByTestId('chat-message'));
@@ -721,7 +500,9 @@ describe('ChatRow', () => {
       });
     });
 
-    test('renders emotes in messages', () => {
+    test('a long press on an emote opens the channel emote action sheet', () => {
+      resetChatOverlays('chan-1');
+
       const emoteData: MessageToken<'emote'> = {
         type: 'emote',
         content: 'Kappa',
@@ -737,10 +518,45 @@ describe('ChatRow', () => {
       const { getByTestId } = render(
         <ChatRow
           {...message}
-          onReply={mockOnReply}
-          onEmotePress={mockOnEmotePress}
+          broadcasterId='chan-1'
+          onMessageLongPress={mockOnMessageLongPress}
         />,
       );
+
+      jest.useFakeTimers();
+      fireEvent(getByTestId('emote-token'), 'touchStart', touchAt(100, 100));
+      fireEvent(getByTestId('chat-message'), 'touchStart', touchAt(100, 100));
+      act(() => jest.advanceTimersByTime(MESSAGE_LONG_PRESS_DELAY_MS));
+      fireEvent(getByTestId('chat-message'), 'touchEnd', touchAt(100, 100));
+      jest.useRealTimers();
+
+      expect({
+        channelId: chatOverlays$.channelId.peek(),
+        longPressCalls: mockOnMessageLongPress.mock.calls.length,
+        selectedEmoteAction: chatOverlays$.selectedEmoteAction.peek(),
+      }).toEqual({
+        channelId: 'chan-1',
+        longPressCalls: 0,
+        selectedEmoteAction: emoteData,
+      });
+
+      resetChatOverlays('');
+    });
+
+    test('renders emotes in messages', () => {
+      const emoteData: MessageToken<'emote'> = {
+        type: 'emote',
+        content: 'Kappa',
+        original_name: 'Kappa',
+        name: 'Kappa',
+        id: '25',
+        url: 'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/1.0',
+        site: 'Twitch Channel',
+      };
+
+      const message = createMockMessage([emoteData]);
+
+      const { getByTestId } = render(<ChatRow {...message} />);
 
       expect(getByTestId('emote-token')).toBeOnTheScreen();
     });
@@ -763,13 +579,7 @@ describe('ChatRow', () => {
         emoteData,
       ]);
 
-      const { getByTestId } = render(
-        <ChatRow
-          {...message}
-          onReply={mockOnReply}
-          onEmotePress={mockOnEmotePress}
-        />,
-      );
+      const { getByTestId } = render(<ChatRow {...message} />);
 
       expect(hasTextAncestor(getByTestId('emote-token'))).toBe(true);
     });
@@ -793,13 +603,7 @@ describe('ChatRow', () => {
         emoteData,
       ]);
 
-      const { getByTestId } = render(
-        <ChatRow
-          {...message}
-          onReply={mockOnReply}
-          onEmotePress={mockOnEmotePress}
-        />,
-      );
+      const { getByTestId } = render(<ChatRow {...message} />);
 
       expect(hasTextAncestor(getByTestId('emote-token'))).toBe(false);
     });
@@ -824,19 +628,11 @@ describe('ChatRow', () => {
         emoteData,
       ]);
 
-      const { getByTestId } = render(
-        <ChatRow
-          {...message}
-          onReply={mockOnReply}
-          onEmotePress={mockOnEmotePress}
-        />,
-      );
+      const { getByTestId } = render(<ChatRow {...message} />);
 
       const bodyText = findTextAncestor(getByTestId('emote-token'));
 
-      expect(StyleSheet.flatten(bodyText?.props['style']).lineHeight).toBe(
-        getChatTextStyles('default', false).bodyEmoteLine.lineHeight,
-      );
+      expect(StyleSheet.flatten(bodyText?.props['style']).lineHeight).toBe(34);
     });
   });
 
@@ -848,7 +644,7 @@ describe('ChatRow', () => {
       );
 
       const { getByText } = render(
-        <ChatRow {...message} onReply={mockOnReply} />,
+        <ChatRow {...message} onMessageLongPress={mockOnMessageLongPress} />,
       );
 
       expect(getByText('First message')).toBeOnTheScreen();
@@ -860,7 +656,7 @@ describe('ChatRow', () => {
       ]);
 
       const { queryByText } = render(
-        <ChatRow {...message} onReply={mockOnReply} />,
+        <ChatRow {...message} onMessageLongPress={mockOnMessageLongPress} />,
       );
 
       expect(queryByText('First message')).toBeNull();
@@ -875,7 +671,7 @@ describe('ChatRow', () => {
       });
 
       const { getAllByText } = render(
-        <ChatRow {...message} onReply={mockOnReply} />,
+        <ChatRow {...message} onMessageLongPress={mockOnMessageLongPress} />,
       );
 
       expect(getAllByText('ColoredUser:')).toHaveLength(1);
@@ -888,7 +684,7 @@ describe('ChatRow', () => {
       );
 
       const { queryByText } = render(
-        <ChatRow {...message} onReply={mockOnReply} />,
+        <ChatRow {...message} onMessageLongPress={mockOnMessageLongPress} />,
       );
 
       expect(queryByText('testuser:')).toBeNull();
@@ -898,7 +694,28 @@ describe('ChatRow', () => {
   });
 
   describe('Reply Data', () => {
-    test('passes correct data to onReply callback when long pressed', () => {
+    test('hands back the message fields and no render props', () => {
+      const message = createMockMessage([{ type: 'text', content: 'hi' }]);
+
+      const { getByTestId } = render(
+        <ChatRow
+          {...message}
+          customHighlights={[{ id: 'h', phrase: 'hi', color: '#FF0000' }]}
+          fontScale='large'
+          onMessageLongPress={mockOnMessageLongPress}
+        />,
+      );
+
+      fireMessageLongPress(getByTestId('chat-message'));
+
+      expect(
+        Object.keys(
+          mockOnMessageLongPress.mock.calls[0]?.[0]?.messageData ?? {},
+        ).sort(),
+      ).toEqual(Object.keys(message).sort());
+    });
+
+    test('passes correct data to onMessageLongPress when long pressed', () => {
       const message = createMockMessage(
         [{ type: 'text', content: 'Test message' }],
         { username: 'TestUser', color: '#1AC9A2' },
@@ -910,12 +727,13 @@ describe('ChatRow', () => {
       );
 
       const { getByTestId } = render(
-        <ChatRow {...message} onReply={mockOnReply} />,
+        <ChatRow {...message} onMessageLongPress={mockOnMessageLongPress} />,
       );
 
       fireMessageLongPress(getByTestId('chat-message'));
 
-      const replyMessage = mockOnReply.mock.calls[0]?.[0];
+      const replyMessage =
+        mockOnMessageLongPress.mock.calls[0]?.[0]?.messageData;
 
       expect({
         channel: replyMessage?.channel,
@@ -928,7 +746,7 @@ describe('ChatRow', () => {
       }).toEqual({
         channel: 'test-channel',
         color: '#1AC9A2',
-        id: expect.any(String),
+        id: 'msg-123_nonce-123',
         message: [{ type: 'text', content: 'Test message' }],
         message_id: 'unique-msg-id',
         sender: 'TestUser',
@@ -963,16 +781,26 @@ describe('ChatRow', () => {
     });
   });
 
-  test('can hide timestamps when disabled', () => {
-    const message = createMockMessage([
-      { type: 'text', content: 'hello world' },
-    ]);
+  test('shows the timestamp only while timestamps are enabled', () => {
+    const message = createMockMessage(
+      [{ type: 'text', content: 'hello world' }],
+      {},
+      { timestamp: '12:00' },
+    );
 
-    const { queryByText } = render(
+    const shown = render(
+      <ChatRow {...message} messageDisplay={{ showTimestamp: true }} />,
+    );
+
+    expect(shown.getByText('12:00')).toBeOnTheScreen();
+
+    shown.unmount();
+
+    const hidden = render(
       <ChatRow {...message} messageDisplay={{ showTimestamp: false }} />,
     );
 
-    expect(queryByText('12:00')).toBeNull();
+    expect(hidden.queryByText('12:00')).toBeNull();
   });
 
   test('highlights rows that mention the current user', () => {
@@ -997,7 +825,7 @@ describe('ChatRow', () => {
     ]);
 
     const { getByTestId } = render(
-      <ChatRow {...message} highlightedUsers={['testuser']} />,
+      <ChatRow {...message} highlightedUserSet={new Set(['testuser'])} />,
     );
 
     expect(getByTestId('chat-message')).toHaveStyle({

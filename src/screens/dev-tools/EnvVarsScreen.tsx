@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import * as AC from '@bacons/apple-colors';
 import * as Clipboard from 'expo-clipboard';
@@ -187,6 +187,7 @@ export function EnvVarsScreen() {
                 </View>
                 <View style={[styles.valueBox, !isSet && styles.valueBoxEmpty]}>
                   <Text
+                    variant='mono'
                     style={[styles.valueText, !isSet && styles.valueTextEmpty]}
                   >
                     {display}
@@ -264,7 +265,6 @@ const styles = StyleSheet.create({
   },
   valueText: {
     color: theme.colorPrimary,
-    fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
     fontSize: 12,
     lineHeight: 18,
   },

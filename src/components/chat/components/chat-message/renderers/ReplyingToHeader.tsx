@@ -2,21 +2,17 @@ import { useMemo } from 'react';
 import { View } from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
-import { CHAT_NOTICE_ACCENTS } from '@app/components/chat/components/util/chatNoticeAccents';
+import { CHAT_NOTICE_ACCENTS } from '@app/components/chat/util/chatNoticeAccents';
 import { SymbolView } from '@app/components/ui/icon/Icon';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
 import { flowsInline } from '@app/utils/chat/derive-chat-body/flowsInline';
 import { getMessageStructure } from '@app/utils/chat/derive-chat-body/getMessageStructure';
-import type { MessageToken } from '@app/utils/chat/messageToken';
 
 import { ChatMessagePressable } from '../ChatMessagePressable';
 import { styles } from '../ChatRow.styles';
 import { getChatTextStyles } from '../ChatText.styles';
-import {
-  CHAT_SURFACE_COLORS,
-  densityFromCompact,
-  getChatScale,
-} from '../util/chatScale';
+import { CHAT_SURFACE_COLORS, getChatScale } from '../util/chatScale';
+import { parseMessageText } from '../util/parseMessageText';
 import { InlineTokens } from './InlineTokens';
 import type { ChatTokenRenderProps } from './types/chat-token-render-props';
 import { WrappedTokens } from './WrappedTokens';
@@ -41,22 +37,13 @@ export function ReplyingToHeader({
   rendererArgs,
 }: ReplyingToHeaderProps) {
   const { parseTextForEmotes, ...tokenRenderProps } = rendererArgs;
-  const { compact, fontScale } = rendererArgs;
+  const { density, fontScale } = rendererArgs;
   const replyPlainMentionTarget = normaliseChatUsername(parentDisplayName);
 
-  const parsedReplyBody = useMemo((): MessageToken[] => {
-    const trimmed = replyBody?.trim();
-
-    if (!trimmed) {
-      return [];
-    }
-
-    if (!parseTextForEmotes) {
-      return [{ type: 'text', content: trimmed }];
-    }
-
-    return parseTextForEmotes(trimmed);
-  }, [parseTextForEmotes, replyBody]);
+  const parsedReplyBody = useMemo(
+    () => parseMessageText(replyBody, parseTextForEmotes),
+    [parseTextForEmotes, replyBody],
+  );
 
   const prefix = isReplyingToCurrentUser
     ? 'Replying to you'
@@ -74,12 +61,14 @@ export function ReplyingToHeader({
     ? CHAT_NOTICE_ACCENTS.replyToYou
     : CHAT_SURFACE_COLORS.muted;
 
-  const textStyles = getChatTextStyles(fontScale, compact);
+  const textStyles = getChatTextStyles(fontScale, density);
 
-  const { metaIconSize, replyEmoteSize } = getChatScale(
-    fontScale,
-    densityFromCompact(compact),
-  );
+  const { metaIconSize, replyEmoteSize } = getChatScale(fontScale, density);
+
+  const replyToYouStyle = [
+    styles.replyContextRowReplyToYou,
+    textStyles.replyToYouPill,
+  ];
 
   const replyContextPrefixTextStyle = [
     textStyles.replyContext,
@@ -98,7 +87,7 @@ export function ReplyingToHeader({
         name='text.bubble'
         size={metaIconSize}
         tintColor={replyContextIconColor}
-        style={styles.replyContextIcon}
+        style={textStyles.iconSpacing}
       />
       <View style={styles.replyContextContent}>
         {quoteFlowsInline ? (
@@ -153,8 +142,9 @@ export function ReplyingToHeader({
         onPress={() => onReplyContextPress?.(replyParentMessageId)}
         style={[
           styles.replyContextRow,
+          textStyles.spaceBelow,
           styles.replyContextRowInteractive,
-          isReplyingToCurrentUser && styles.replyContextRowReplyToYou,
+          isReplyingToCurrentUser && replyToYouStyle,
         ]}
         testID='chat-reply-context-button'
       >
@@ -167,7 +157,8 @@ export function ReplyingToHeader({
     <View
       style={[
         styles.replyContextRow,
-        isReplyingToCurrentUser && styles.replyContextRowReplyToYou,
+        textStyles.spaceBelow,
+        isReplyingToCurrentUser && replyToYouStyle,
       ]}
     >
       {content}

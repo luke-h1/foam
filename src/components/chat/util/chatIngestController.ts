@@ -1,11 +1,11 @@
 import { startTransition } from 'react';
 
 import { incrementChatUnread } from '@app/store/chat/actions/chat-unread';
+import { getUserMessageColor } from '@app/store/chat/actions/message-color-index';
 import {
   addMessages,
   getEffectiveMaxChatMessages,
   getMessageById,
-  getUserMessageColor,
   moderateMessageById,
   moderateMessagesByLogin,
   removeMessageById,
@@ -17,6 +17,7 @@ import {
 } from '@app/utils/chat/chat-health/reportDroppedChatMessages';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolve-cached-sender-color/resolveCachedSenderColor';
 
+import type { BufferedMessage } from './buffered-message-ops/types';
 import { createChatDelayQueue } from './chat-delay/chatDelayQueue';
 import { createChatDelayRamp } from './chat-delay/chatDelayRamp';
 import { SCROLL_DEFERRED_FLUSH_RETRY_MS } from './chat-flush-cadence/constants';
@@ -26,7 +27,7 @@ import {
 } from './chat-flush-cadence/maxLiveCommitPerFlush';
 import { pickFlushDelay } from './chat-flush-cadence/pickFlushDelay';
 import { shouldEnterRaidFlushMode } from './chat-flush-cadence/shouldEnterRaidFlushMode';
-import { type BufferedMessage, createMessageBuffer } from './messageBuffer';
+import { createMessageBuffer } from './messageBuffer';
 
 // Floor on delay-queue checks so a burst of releases coalesces into one drain.
 const DELAY_RELEASE_MIN_INTERVAL_MS = 80;
@@ -52,9 +53,6 @@ export interface ChatIngestControllerDeps {
   getFinalizeMessageForCommit: () =>
     | ((message: BufferedMessage) => BufferedMessage)
     | undefined;
-  /**
-   * Hold live messages this many ms before the render buffer (0 = no delay).
-   */
   getChatDelayMs: () => number;
   isAtBottom: () => boolean;
   /**
@@ -97,7 +95,6 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
   let isFlushing = false;
   let pendingUnreadCount = 0;
 
-  // Set when a flush sees a raid-sized batch; slows the next live flush cadence.
   let raidFlushMode = false;
 
   /**
@@ -331,7 +328,6 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
     enqueueDelayed(messageWithCachedColor, Date.now() + delayMs);
   };
 
-  // Call when the chat delay setting changes.
   const reconcileChatDelay = () => {
     if (sanitiseDelayMs(deps.getChatDelayMs()) <= 0) {
       clearDelayTick();

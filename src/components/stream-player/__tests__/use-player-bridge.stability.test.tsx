@@ -3,7 +3,7 @@ import type { WebViewMessageEvent } from 'react-native-webview';
 import { act, renderHook } from '@testing-library/react-native';
 
 import * as sentry from '@app/lib/sentry';
-import { logger } from '@app/utils/logger';
+import { silenceLogger } from '@app/test/silence-logger';
 
 import { usePlayerBridge } from '../hooks/use-player-bridge';
 import type { PlayerMessage } from '../types';
@@ -15,10 +15,7 @@ const mockCountMetric = jest
 jest.spyOn(sentry, 'endSpan').mockImplementation(() => {});
 jest.spyOn(sentry, 'startInactiveSpan').mockImplementation(() => undefined);
 
-jest.spyOn(logger.main, 'debug').mockImplementation(() => {});
-jest.spyOn(logger.main, 'info').mockImplementation(() => {});
-jest.spyOn(logger.main, 'warn').mockImplementation(() => {});
-jest.spyOn(logger.main, 'error').mockImplementation(() => {});
+silenceLogger();
 
 function messageEvent(message: PlayerMessage): WebViewMessageEvent {
   // SAFETY: the bridge reads only nativeEvent.data off the message event.
@@ -27,34 +24,47 @@ function messageEvent(message: PlayerMessage): WebViewMessageEvent {
   } as WebViewMessageEvent;
 }
 
-const STALLED = messageEvent({
-  type: 'playbackStalled',
-  payload: { currentTime: 10, networkState: 2, readyState: 2, stalledMs: 6000 },
+const HIGH_LATENCY = messageEvent({
+  type: 'playbackStats',
+  payload: { hlsLatencyBroadcaster: 25 },
 });
 
-const VIDEO_ERROR = messageEvent({
-  type: 'videoElementError',
-  payload: { code: 3, message: 'decode', networkState: 2, readyState: 1 },
-});
-
-function renderBridge(
-  enhancedStabilityEnabled: boolean,
-  forceRefresh: () => void,
+function reportHighLatency(
+  handleMessage: (event: WebViewMessageEvent) => void,
 ) {
-  return renderHook(() =>
-    usePlayerBridge({
-      autoplay: true,
-      channel: 'foo',
-      contentKind: 'live',
-      deferOverlayUntilUserUnmute: false,
-      enhancedStabilityEnabled,
-      forceRefresh,
-      initialMuted: true,
-      runJavaScript: jest.fn(),
-      scheduleAuthCompletionReload: jest.fn(),
-      sourceKey: 'foo',
-      webViewKey: 0,
-    }),
+  act(() => {
+    handleMessage(HIGH_LATENCY);
+    handleMessage(HIGH_LATENCY);
+    handleMessage(HIGH_LATENCY);
+  });
+}
+
+interface RenderBridgeOptions {
+  enhancedStabilityEnabled?: boolean;
+  forceRefresh?: () => void;
+}
+
+function renderBridge({
+  enhancedStabilityEnabled = true,
+  forceRefresh = jest.fn(),
+}: RenderBridgeOptions = {}) {
+  return renderHook(
+    (props: { sourceKey: string }) =>
+      usePlayerBridge({
+        autoplay: true,
+        channel: 'foo',
+        contentKind: 'live',
+        deferOverlayUntilUserUnmute: false,
+        enhancedStabilityEnabled,
+        forceRefresh,
+        initialMuted: true,
+        resumeTimeRef: { current: 0 },
+        runJavaScript: jest.fn(),
+        scheduleAuthCompletionReload: jest.fn(),
+        sourceKey: props.sourceKey,
+        webViewKey: 0,
+      }),
+    { initialProps: { sourceKey: 'foo' } },
   );
 }
 
@@ -68,18 +78,19 @@ describe('usePlayerBridge enhanced stability', () => {
     jest.useRealTimers();
   });
 
-  test('hard-refreshes after a stall persists past the grace window', () => {
+  test('hard-refreshes after 3 high-latency readings', () => {
     const forceRefresh = jest.fn();
-    const { result } = renderBridge(true, forceRefresh);
+    const { result } = renderBridge({ forceRefresh });
 
     act(() => {
-      result.current.handleMessage(STALLED);
+      result.current.handleMessage(HIGH_LATENCY);
+      result.current.handleMessage(HIGH_LATENCY);
     });
 
     expect(forceRefresh).not.toHaveBeenCalled();
 
     act(() => {
-      jest.advanceTimersByTime(4000);
+      result.current.handleMessage(HIGH_LATENCY);
     });
 
     expect(forceRefresh).toHaveBeenCalledTimes(1);
@@ -87,38 +98,18 @@ describe('usePlayerBridge enhanced stability', () => {
 
   test('does nothing when enhanced stability is disabled', () => {
     const forceRefresh = jest.fn();
-    const { result } = renderBridge(false, forceRefresh);
-
-    act(() => {
-      result.current.handleMessage(STALLED);
-      result.current.handleMessage(VIDEO_ERROR);
+    const { result } = renderBridge({
+      enhancedStabilityEnabled: false,
+      forceRefresh,
     });
 
-    act(() => {
-      jest.advanceTimersByTime(4000);
-    });
+    reportHighLatency(result.current.handleMessage);
 
     expect(forceRefresh).not.toHaveBeenCalled();
   });
 
   test('keeps recording load metrics after the player source changes', () => {
-    const { result, rerender } = renderHook(
-      (props: { sourceKey: string }) =>
-        usePlayerBridge({
-          autoplay: true,
-          channel: 'foo',
-          contentKind: 'live',
-          deferOverlayUntilUserUnmute: false,
-          enhancedStabilityEnabled: true,
-          forceRefresh: jest.fn(),
-          initialMuted: true,
-          runJavaScript: jest.fn(),
-          scheduleAuthCompletionReload: jest.fn(),
-          sourceKey: props.sourceKey,
-          webViewKey: 0,
-        }),
-      { initialProps: { sourceKey: 'foo' } },
-    );
+    const { result, rerender } = renderBridge();
 
     act(() => {
       rerender({ sourceKey: 'bar' });
@@ -149,29 +140,10 @@ describe('usePlayerBridge enhanced stability', () => {
 
   test('resets the auto-refresh window when the player source changes', () => {
     const forceRefresh = jest.fn();
-
-    const { result, rerender } = renderHook(
-      (props: { sourceKey: string }) =>
-        usePlayerBridge({
-          autoplay: true,
-          channel: 'foo',
-          contentKind: 'live',
-          deferOverlayUntilUserUnmute: false,
-          enhancedStabilityEnabled: true,
-          forceRefresh,
-          initialMuted: true,
-          runJavaScript: jest.fn(),
-          scheduleAuthCompletionReload: jest.fn(),
-          sourceKey: props.sourceKey,
-          webViewKey: 0,
-        }),
-      { initialProps: { sourceKey: 'foo' } },
-    );
+    const { result, rerender } = renderBridge({ forceRefresh });
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
-      act(() => {
-        result.current.handleMessage(VIDEO_ERROR);
-      });
+      reportHighLatency(result.current.handleMessage);
     }
 
     expect(forceRefresh).toHaveBeenCalledTimes(3);
@@ -180,9 +152,7 @@ describe('usePlayerBridge enhanced stability', () => {
       rerender({ sourceKey: 'bar' });
     });
 
-    act(() => {
-      result.current.handleMessage(VIDEO_ERROR);
-    });
+    reportHighLatency(result.current.handleMessage);
 
     expect(forceRefresh).toHaveBeenCalledTimes(4);
   });

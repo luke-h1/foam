@@ -3,9 +3,6 @@ import { logger } from '@app/utils/logger';
 export interface RemoteConfigSchema {
   splash: { '7tvUnavailable': boolean; app: boolean };
 
-  /**
-   * Minimum version of the app required per platform and track
-   */
   minimumVersion: {
     android: {
       development: string;

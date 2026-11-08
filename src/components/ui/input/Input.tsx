@@ -10,8 +10,7 @@ import {
 } from 'react-native';
 import type { Ref } from 'react';
 
-import { useAccentColor } from '@app/context/AccentColorContext';
-import { colors } from '@app/styles/colors';
+import { theme } from '@app/styles/themes';
 import {
   getColorValue,
   type InputColorConfig,
@@ -223,12 +222,11 @@ export function Input({
   ...rest
 }: ThemedInputProps) {
   const colorScheme = useColorScheme();
-  const { accentHex } = useAccentColor();
   const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   const variants = color
     ? generateVariantConfig(color, scheme)
-    : generateVariantConfigFromBase(accentHex || colors[scheme].tint, scheme);
+    : generateVariantConfigFromBase(theme.colorPrimary, scheme);
 
   const variantConfig = variants[variant];
 

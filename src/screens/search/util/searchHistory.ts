@@ -8,7 +8,7 @@ export type SearchHistoryItem = {
 export const SEARCH_HISTORY_STORAGE_KEY = 'previous_searches';
 
 export function sortSearchHistory(history: SearchHistoryItem[]) {
-  // eslint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks toSorted
+  // oxlint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks toSorted
   return [...history].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
@@ -63,4 +63,15 @@ export function writeSearchHistoryQuery(query: string) {
     SEARCH_HISTORY_STORAGE_KEY,
     sortSearchHistory(nextSearches),
   );
+}
+
+export function removeSearchHistoryQuery(query: string) {
+  storageService.set(
+    SEARCH_HISTORY_STORAGE_KEY,
+    getStoredSearchHistory().filter(item => item.query !== query),
+  );
+}
+
+export function clearSearchHistory() {
+  storageService.remove(SEARCH_HISTORY_STORAGE_KEY);
 }

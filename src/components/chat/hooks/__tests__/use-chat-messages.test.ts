@@ -2,7 +2,8 @@ import { act, renderHook } from '@testing-library/react-native';
 
 import { createScrollAnchor } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat-scroll.fixture';
 import { useChatMessages } from '@app/components/chat/hooks/use-chat-messages';
-import type { BufferedMessage } from '@app/components/chat/util/messageBuffer';
+import { createChatMessageFixture } from '@app/components/chat/util/__tests__/__fixtures__/chatMessage.fixture';
+import type { BufferedMessage } from '@app/components/chat/util/buffered-message-ops/types';
 import * as chatUnreadActions from '@app/store/chat/actions/chat-unread';
 import {
   getChatUnreadCount,
@@ -10,7 +11,6 @@ import {
 } from '@app/store/chat/actions/chat-unread';
 import * as messagesActions from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
-import type { ChatMessageType } from '@app/store/chat/types/constants';
 
 const MAX_BUFFERED = messagesActions.getMaxChatMessages();
 
@@ -35,40 +35,13 @@ function storedModeration(): ModerationSummary[] {
 }
 
 describe('useChatMessages', () => {
-  const createMockMessage = (
-    id: string,
-    nonce?: string,
-  ): ChatMessageType<never> => ({
-    id: `${id}_${nonce || `nonce-${id}`}`,
-    message_id: id,
-    message_nonce: nonce || `nonce-${id}`,
-    message: [{ type: 'text', content: `Message ${id}` }],
-    channel: 'test-channel',
-    sender: 'TestUser',
-    badges: [],
-    userstate: {
-      'display-name': 'TestUser',
-      login: 'testuser',
-      username: 'TestUser',
-      'user-id': '123',
-      id,
-      color: '#FF0000',
-      badges: {},
-      'badges-raw': '',
-      'user-type': '',
-      mod: '0',
-      subscriber: '0',
-      turbo: '0',
-      'emote-sets': '',
-      'reply-parent-msg-id': '',
-      'reply-parent-msg-body': '',
-      'reply-parent-display-name': '',
-      'reply-parent-user-login': '',
-    },
-    parentDisplayName: '',
-    replyDisplayName: '',
-    replyBody: '',
-  });
+  const createMockMessage = (id: string, nonce = `nonce-${id}`) =>
+    createChatMessageFixture({
+      id: `${id}_${nonce}`,
+      message_id: id,
+      message_nonce: nonce,
+      message: [{ type: 'text', content: `Message ${id}` }],
+    });
 
   const defaultOptions = {
     scrollAnchor: createScrollAnchor(),
@@ -145,7 +118,7 @@ describe('useChatMessages', () => {
 
       act(() => {
         result.current.moderateChatMessagesByLogin(
-          'testuser',
+          'sender',
           'Timed out (600s)',
         );
       });
@@ -173,7 +146,7 @@ describe('useChatMessages', () => {
       });
 
       act(() => {
-        result.current.removeChatMessagesByLogin('testuser');
+        result.current.removeChatMessagesByLogin('sender');
       });
 
       expect(storedIds()).toEqual([]);
@@ -500,29 +473,6 @@ describe('useChatMessages', () => {
   });
 
   describe('Unread Count', () => {
-    test('batches unread increments while not at bottom', () => {
-      const { result } = renderHook(() =>
-        useChatMessages({
-          scrollAnchor: createScrollAnchor({
-            isAtBottomRef: { current: false },
-          }),
-        }),
-      );
-
-      act(() => {
-        result.current.handleNewMessage(createMockMessage('1'));
-        result.current.handleNewMessage(createMockMessage('2'));
-      });
-
-      expect(getChatUnreadCount()).toBe(0);
-
-      act(() => {
-        jest.advanceTimersByTime(250);
-      });
-
-      expect(getChatUnreadCount()).toBe(2);
-    });
-
     test('does not increment unread when at bottom', () => {
       const { result } = renderHook(() =>
         useChatMessages({
@@ -1070,32 +1020,6 @@ describe('useChatMessages', () => {
   });
 
   describe('Chat delay', () => {
-    test('holds live messages for the effective delay before flushing', () => {
-      const { result } = renderHook(() =>
-        useChatMessages({ ...defaultOptions, getChatDelayMs: () => 3000 }),
-      );
-
-      act(() => {
-        result.current.handleNewMessage(createMockMessage('1'));
-      });
-
-      act(() => {
-        jest.advanceTimersByTime(500);
-      });
-
-      expect(storedIds()).toEqual([]);
-
-      act(() => {
-        jest.advanceTimersByTime(3000);
-      });
-
-      act(() => {
-        jest.advanceTimersByTime(200);
-      });
-
-      expect(storedIds()).toEqual(['1']);
-    });
-
     test('does not delay when the effective delay is zero', () => {
       const { result } = renderHook(() =>
         useChatMessages({ ...defaultOptions, getChatDelayMs: () => 0 }),

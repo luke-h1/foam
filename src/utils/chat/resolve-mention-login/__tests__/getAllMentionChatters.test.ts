@@ -1,11 +1,11 @@
-import { clearMentionLoginIndex } from '../clearMentionLoginIndex';
+import { clearMentionIndexes } from '../clearMentionIndexes';
 import { getAllMentionChatters } from '../getAllMentionChatters';
 import { registerMentionChatter } from '../registerMentionChatter';
 import type { MentionChatter } from '../types';
 
 describe('getAllMentionChatters', () => {
   beforeEach(() => {
-    clearMentionLoginIndex();
+    clearMentionIndexes();
   });
 
   test('getAllMentionChatters returns every registered chatter with roles', () => {

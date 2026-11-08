@@ -1,3 +1,4 @@
+import { createSevenTvBadge } from '@app/components/chat/__tests__/__fixtures__/chatFactories.fixture';
 import type {
   BttvSanitisedEmote,
   TwitchSanitisedEmote,
@@ -45,12 +46,5 @@ export const twitchGlobalBadgesFixture: SanitisedBadgeSet[] = [
 ];
 
 export const sevenTvGlobalBadgesFixture: SanitisedBadgeSet[] = [
-  {
-    id: '7tv_badge_1',
-    url: 'https://cdn.7tv.app/badge/7tv_badge_1/4x.webp',
-    title: 'Subscriber',
-    type: '7TV Badge',
-    set: '7tv_badge_1',
-    provider: '7tv',
-  },
+  createSevenTvBadge('7tv_badge_1', { title: 'Subscriber' }),
 ];

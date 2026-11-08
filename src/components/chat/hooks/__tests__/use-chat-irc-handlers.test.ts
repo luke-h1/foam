@@ -1,14 +1,13 @@
 import { act, renderHook } from '@testing-library/react-native';
 
-import { createChatMessage } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
+import { createChatMessage } from '@app/components/chat/__tests__/__fixtures__/chatFactories.fixture';
 import { useChatIrcHandlers } from '@app/components/chat/hooks/use-chat-irc-handlers';
 import { addMessages, clearMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import { preferences$ } from '@app/store/preference-store';
-import { logger } from '@app/utils/logger';
+import { silenceLogger } from '@app/test/silence-logger';
 
-jest.spyOn(logger.chat, 'info').mockImplementation(() => {});
-jest.spyOn(logger.chat, 'warn').mockImplementation(() => {});
+silenceLogger();
 
 interface StoredMessageSummary {
   sender: string;
@@ -169,7 +168,7 @@ describe('useChatIrcHandlers', () => {
     expect(baseMessage.isAction).toBeUndefined();
   });
 
-  test('live messages defer the emote parse; replay parses eagerly', () => {
+  test('live messages defer the emote parse to the ingest queue', () => {
     const enqueueLiveChatMessage = jest.fn();
     const processMessageEmotes = jest.fn();
 
@@ -319,7 +318,7 @@ describe('useChatIrcHandlers', () => {
     ]);
   });
 
-  test('does not clear rendered messages when token fires after chat unmounts', () => {
+  test('does not clear rendered messages when PART fires after chat unmounts', () => {
     seedChatHistory(1);
     const clearLocalMessages = jest.fn();
 
@@ -339,7 +338,7 @@ describe('useChatIrcHandlers', () => {
     expect(clearLocalMessages).not.toHaveBeenCalled();
   });
 
-  test('clears rendered messages when token fires while chat is still mounted', () => {
+  test('clears rendered messages when PART fires while chat is still mounted', () => {
     seedChatHistory(1);
     const clearLocalMessages = jest.fn();
     const { result } = renderIrcHandlers({ clearLocalMessages });
@@ -353,7 +352,7 @@ describe('useChatIrcHandlers', () => {
     expect(clearLocalMessages).toHaveBeenCalledTimes(1);
   });
 
-  test('ignores a stale token for a previously watched channel', () => {
+  test('ignores a stale PART for a previously watched channel', () => {
     seedChatHistory(1);
     const clearLocalMessages = jest.fn();
     const { result } = renderIrcHandlers({ clearLocalMessages });
@@ -369,7 +368,7 @@ describe('useChatIrcHandlers', () => {
     expect(clearLocalMessages).not.toHaveBeenCalled();
   });
 
-  test('stale token does not reset the room state diff baseline', () => {
+  test('stale PART does not reset the room state diff baseline', () => {
     const { result } = renderIrcHandlers();
 
     act(() => {
@@ -428,7 +427,7 @@ describe('useChatIrcHandlers', () => {
     clearMessages();
 
     act(() => {
-      result.current.onRoomState('#foam', { emote_only: '1', slow: '0' });
+      result.current.onRoomState('#foam', { 'emote-only': '1', slow: '0' });
     });
 
     expect(addedSystemMessageContents()).toEqual([
@@ -437,7 +436,7 @@ describe('useChatIrcHandlers', () => {
     ]);
   });
 
-  test('token resets the room state diff baseline', () => {
+  test('part resets the room state diff baseline', () => {
     const { result } = renderIrcHandlers();
 
     act(() => {
@@ -459,7 +458,7 @@ describe('useChatIrcHandlers', () => {
     ]);
   });
 
-  test('announces a chatter joining when join/token messages are enabled', () => {
+  test('announces a chatter joining when join/part messages are enabled', () => {
     preferences$.showJoinPartMessages.set(true);
     const { result } = renderIrcHandlers();
 
@@ -470,7 +469,7 @@ describe('useChatIrcHandlers', () => {
     expect(addedSystemMessageContents()).toEqual(['bob joined']);
   });
 
-  test('announces a chatter parting when join/token messages are enabled', () => {
+  test('announces a chatter parting when join/part messages are enabled', () => {
     preferences$.showJoinPartMessages.set(true);
     const { result } = renderIrcHandlers();
 
@@ -481,7 +480,7 @@ describe('useChatIrcHandlers', () => {
     expect(addedSystemMessageContents()).toEqual(['bob parted']);
   });
 
-  test('suppresses join/token notices while the preference is off', () => {
+  test('suppresses join/part notices while the preference is off', () => {
     const { result } = renderIrcHandlers();
 
     act(() => {
@@ -523,6 +522,16 @@ describe('useChatIrcHandlers', () => {
 
     expect(addedSystemMessageContents()).toEqual([
       'Reconnecting to Twitch chat…',
+    ]);
+
+    clearMessages();
+
+    act(() => {
+      result.current.onRoomState('#foam', { slow: '30' });
+    });
+
+    expect(addedSystemMessageContents()).toEqual([
+      'Chat modes active: slow mode (30s)',
     ]);
   });
 });

@@ -1,60 +1,35 @@
 import TwitchWsService from '@app/services/twitch-ws-service';
-import type {
-  EventSubMessage,
-  TwitchEventSubCallback,
-} from '@app/types/twitch/eventsub';
 
-type EventCallback = TwitchEventSubCallback;
+interface TestSocket {
+  close: (code?: number, reason?: string) => void;
+}
 
 /**
- * Only the surface the service touches on its socket, so tests can install a
- * fake without standing up a whole `WebSocket`.
+ * The private static fields a test resets between cases. The service is a
+ * singleton with no public reset, so state from one test reaches the next
+ * without this.
  */
-type TestSocket = {
-  close: (code?: number, reason?: string) => void;
-  onclose:
-    | ((event: { code: number; reason: string; timeStamp: number }) => void)
-    | null;
-  readyState: number;
-};
-
-type TestEventSubEntry = {
-  eventType: string;
-  version: string;
-  condition: Record<string, string>;
-  callbacks: EventCallback[];
-  subscriptionId: string | null;
-};
-
-export type TwitchWsTestState = {
-  /**
-   * Private on the service; reached for so a test can arm the backoff reconnect
-   * without faking a keepalive lapse over the wire.
-   */
-  attemptReconnect: () => void;
-  /**
-   * Private on the service; reached for so routing tests can deliver a
-   * notification without a socket.
-   */
-  handleNotification: (message: EventSubMessage) => void;
-  entries: Map<string, TestEventSubEntry>;
+interface TwitchWsTestState {
+  entries: Map<string, unknown>;
+  awaitingReconnectWelcome: boolean;
+  retiringInstance: TestSocket | null;
   appStateSubscription: { remove: () => void } | null;
   instance: TestSocket | null;
   isReconnecting: boolean;
   keepaliveTimer: ReturnType<typeof setTimeout> | null;
   reconnectAttempts: number;
   reconnectTimer: ReturnType<typeof setTimeout> | null;
-  resetKeepaliveTimer: () => void;
   sessionId: string;
-  setupEventListeners: () => void;
-};
+}
 
-export function getTwitchWsTestState(): TwitchWsTestState {
+function getTwitchWsTestState(): TwitchWsTestState {
   // @ts-expect-error test access to TwitchWsService private static state
   return TwitchWsService;
 }
 
-export function resetTwitchWsTestState(state: TwitchWsTestState) {
+export function resetTwitchWsTestState() {
+  const state = getTwitchWsTestState();
+
   state.appStateSubscription?.remove();
   state.appStateSubscription = null;
 
@@ -67,7 +42,9 @@ export function resetTwitchWsTestState(state: TwitchWsTestState) {
   }
 
   state.entries = new Map();
+  state.awaitingReconnectWelcome = false;
   state.instance = null;
+  state.retiringInstance = null;
   state.isReconnecting = false;
   state.keepaliveTimer = null;
   state.reconnectAttempts = 0;
@@ -79,10 +56,14 @@ export function resetTwitchWsTestState(state: TwitchWsTestState) {
  * Stands in for the WebSocket the service opens, so tests can assert whether a
  * teardown actually closed the socket.
  */
-export function createFakeSocket() {
-  return {
+export function createFakeSocket(): WebSocket {
+  // SAFETY: built from WebSocket.prototype; the service reads only the members set here.
+  const base = Object.create(WebSocket.prototype) as WebSocket;
+
+  return Object.assign(base, {
     close: jest.fn(),
     onclose: null,
+    onmessage: null,
     readyState: 1,
-  } satisfies TestSocket;
+  });
 }

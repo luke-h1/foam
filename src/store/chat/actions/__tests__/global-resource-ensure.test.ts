@@ -1,9 +1,9 @@
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import { makeEmptyGlobalCacheData } from '@app/store/chat/types/constants';
-import type { SanitisedEmote, TwitchSanitisedEmote } from '@app/types/emote';
+import { stubEmoteProviderServices } from '@app/test/emote-provider-services';
+import type { TwitchSanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
-import * as channelResources from '../channel-resources';
 import { clearGlobalResourceCache } from '../channel-resources';
 import { ensureGlobalChatResources } from '../global-resource-ensure';
 
@@ -19,26 +19,13 @@ const twitchEmote: TwitchSanitisedEmote = {
 };
 
 describe('ensureGlobalChatResources', () => {
-  let emoteSpecsSpy: jest.SpiedFunction<
-    typeof channelResources.buildGlobalEmoteResourceSpecs
-  >;
-
-  let badgeSpecsSpy: jest.SpiedFunction<
-    typeof channelResources.buildGlobalBadgeResourceSpecs
-  >;
+  let providers: ReturnType<typeof stubEmoteProviderServices>;
 
   beforeEach(() => {
     clearGlobalResourceCache();
     chatStore$.persisted.globalCaches.set(makeEmptyGlobalCacheData());
 
-    emoteSpecsSpy = jest.spyOn(
-      channelResources,
-      'buildGlobalEmoteResourceSpecs',
-    );
-
-    badgeSpecsSpy = jest
-      .spyOn(channelResources, 'buildGlobalBadgeResourceSpecs')
-      .mockReturnValue([]);
+    providers = stubEmoteProviderServices();
   });
 
   afterEach(() => {
@@ -46,18 +33,7 @@ describe('ensureGlobalChatResources', () => {
   });
 
   test('writes fetched global emotes into the store', async () => {
-    emoteSpecsSpy.mockReturnValue([
-      {
-        key: 'twitchGlobalEmotes',
-        name: 'twitch_global_emotes',
-        label: 'Twitch global emotes',
-        provider: 'twitch',
-        resourceType: 'emotes',
-        scope: 'global',
-        warningName: 'twitch_emotes_warning',
-        fetch: () => Promise.resolve([twitchEmote]),
-      },
-    ]);
+    providers.getGlobalEmotes.mockResolvedValue([twitchEmote]);
 
     await ensureGlobalChatResources();
 
@@ -82,20 +58,7 @@ describe('ensureGlobalChatResources', () => {
       provider: 'twitch',
     };
 
-    emoteSpecsSpy.mockReturnValue([]);
-
-    badgeSpecsSpy.mockReturnValue([
-      {
-        key: 'twitchGlobalBadges',
-        name: 'twitch_global_badges',
-        label: 'Twitch global badges',
-        provider: 'twitch',
-        resourceType: 'badges',
-        scope: 'global',
-        warningName: 'twitch_badges_warning',
-        fetch: () => Promise.resolve([badge]),
-      },
-    ]);
+    providers.listTwitchGlobalBadges.mockResolvedValue([badge]);
 
     await ensureGlobalChatResources();
 
@@ -105,24 +68,13 @@ describe('ensureGlobalChatResources', () => {
   });
 
   test('a cache clear mid-fetch fences the write-back instead of resurrecting the purged data', async () => {
-    let releaseFetch: (emotes: SanitisedEmote[]) => void = () => {};
+    let releaseFetch: (emotes: TwitchSanitisedEmote[]) => void = () => {};
 
-    const pending = new Promise<SanitisedEmote[]>(resolve => {
+    const pending = new Promise<TwitchSanitisedEmote[]>(resolve => {
       releaseFetch = resolve;
     });
 
-    emoteSpecsSpy.mockReturnValue([
-      {
-        key: 'twitchGlobalEmotes',
-        name: 'twitch_global_emotes',
-        label: 'Twitch global emotes',
-        provider: 'twitch',
-        resourceType: 'emotes',
-        scope: 'global',
-        warningName: 'twitch_emotes_warning',
-        fetch: () => pending,
-      },
-    ]);
+    providers.getGlobalEmotes.mockReturnValue(pending);
 
     const ensure = ensureGlobalChatResources();
 

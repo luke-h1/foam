@@ -4,34 +4,20 @@ import type { ChatTokenRenderProps } from '@app/components/chat/components/chat-
 import type { ChatMessageDisplayFlags } from '@app/components/chat/types/chat-ui-flags';
 import type {
   BadgePressData,
-  EmotePressData,
   MessageActionData,
   UsernamePressData,
 } from '@app/store/chat/types/chat-press-data';
-import type { ChatMessageType } from '@app/store/chat/types/constants';
-import type {
-  ChatFontScale,
-  CustomHighlight,
-} from '@app/store/preference-store';
+import type { ChatDensity, ChatFontScale } from '@app/store/preference-store';
+import type { ChatMessageType } from '@app/types/chat/chatMessage';
+import type { CustomHighlight } from '@app/types/chat/customHighlight';
 import type { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import type { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import type { ChatBodyVariant } from '@app/utils/chat/derive-chat-body/types';
-import type { MessageToken } from '@app/utils/chat/messageToken';
 
-export type {
-  BadgePressData,
-  EmotePressData,
-  MessageActionData,
-  UsernamePressData,
-};
-
-/**
- * What the row container needs to decide its surface: which tint, border and
- * background a row gets, plus the touch handlers that drive its long press.
- */
-export interface ChatRowSurfaceState {
+interface ChatRowSurfaceState {
   announcementAccentColor?: string;
   bodyVariant: ChatBodyVariant;
   clearRowLongPressTimer: () => void;
@@ -51,10 +37,6 @@ export interface ChatRowSurfaceState {
   style?: StyleProp<ViewStyle>;
 }
 
-/**
- * What the body renderers need: the tokens, the sender chrome, and the reply
- * context around them.
- */
 export interface ChatRowBodyState {
   announcementAccentColor?: string;
   badges: SanitisedBadgeSet[];
@@ -83,17 +65,32 @@ export interface ChatRowBodyState {
   userstate: UserStateTags;
 }
 
-/**
- * The row's whole derived state; named rather than inferred so the renderers
- * declare a contract instead of inheriting whatever the hook returns today.
- */
 export interface ChatRowState extends ChatRowSurfaceState, ChatRowBodyState {
-  closeEmoteActionSheet: () => void;
-  compact: boolean;
-  disableEmoteAnimations: boolean;
-  handleEmotePress: (token: EmotePressData) => void;
+  density: ChatDensity;
   isAnnouncement: boolean;
-  selectedEmoteAction: EmotePressData | null;
+}
+
+export interface ChatRowRenderProps<
+  TNoticeType extends NoticeVariants,
+  TVariant extends (TNoticeType extends 'usernotice'
+    ? keyof UserNoticeVariantMap
+    : never) = never,
+> {
+  broadcasterId?: string;
+  currentUsername?: string;
+  currentUsernameNormalized?: string;
+  customHighlights?: CustomHighlight[];
+  density?: ChatDensity;
+  fontScale?: ChatFontScale;
+  getMentionColor?: (username: string) => string;
+  highlightedUserSet?: ReadonlySet<string>;
+  messageDisplay?: ChatMessageDisplayFlags;
+  onBadgePress?: (data: BadgePressData) => void;
+  onMessageLongPress?: (data: MessageActionData<TNoticeType, TVariant>) => void;
+  onReplyContextPress?: (replyParentMessageId: string) => void;
+  onUsernamePress?: (data: UsernamePressData) => void;
+  parseTextForEmotes?: (text: string) => MessageToken[];
+  style?: StyleProp<ViewStyle>;
 }
 
 export type ChatRowProps<
@@ -101,23 +98,5 @@ export type ChatRowProps<
   TVariant extends (TNoticeType extends 'usernotice'
     ? keyof UserNoticeVariantMap
     : never) = never,
-> = ChatMessageType<TNoticeType, TVariant> & {
-  broadcasterId?: string;
-  style?: StyleProp<ViewStyle>;
-  onReply?: (args: ChatMessageType<TNoticeType, TVariant>) => void;
-  onBadgePress?: (data: BadgePressData) => void;
-  onMessageLongPress?: (data: MessageActionData<TNoticeType, TVariant>) => void;
-  onEmotePress?: (data: EmotePressData) => void;
-  getMentionColor?: (username: string) => string;
-  parseTextForEmotes?: (text: string) => MessageToken[];
-  onUsernamePress?: (data: UsernamePressData) => void;
-  currentUsername?: string;
-  currentUsernameNormalized?: string;
-  density?: 'comfortable' | 'compact';
-  messageDisplay?: ChatMessageDisplayFlags;
-  highlightedUserSet?: ReadonlySet<string>;
-  highlightedUsers?: string[];
-  customHighlights?: CustomHighlight[];
-  fontScale?: ChatFontScale;
-  onReplyContextPress?: (replyParentMessageId: string) => void;
-};
+> = ChatMessageType<TNoticeType, TVariant> &
+  ChatRowRenderProps<TNoticeType, TVariant>;

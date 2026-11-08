@@ -1,61 +1,33 @@
-import { useDeferredValue } from 'react';
-import { StyleSheet } from 'react-native';
-import Animated from 'react-native-reanimated';
+import type { ChatUser } from '@app/types/chat/chatMessage';
 
-import type { ChatUser } from '@app/store/chat/types/constants';
-
-import { UserSuggestions } from './components/UserSuggestions';
+import { SuggestionRail } from './components/SuggestionRail';
+import { UserSuggestionItem } from './components/UserSuggestionItem';
+import { SUGGESTION_ITEM_WIDTH } from './constants';
 import { useUserSuggestions } from './hooks/use-user-suggestions';
-import {
-  suggestionRailEntering,
-  suggestionRailExiting,
-} from './util/suggestionRailAnimations';
 
 interface UserSuggestionRailProps {
-  handleUserSelect: (user: ChatUser) => void;
-  maxSuggestions: number;
+  onSelect: (user: ChatUser) => void;
   searchTerm: string;
 }
 
-export function UserSuggestionRail({
-  handleUserSelect,
-  maxSuggestions,
-  searchTerm,
-}: UserSuggestionRailProps) {
-  const deferredMentionWord = useDeferredValue(searchTerm);
-
-  const { filteredUsers } = useUserSuggestions({
-    searchTerm: deferredMentionWord,
-    enabled: true,
-    maxSuggestions,
-  });
-
-  if (filteredUsers.length === 0) {
-    return null;
-  }
-
-  return (
-    <Animated.View
-      style={styles.suggestionRail}
-      entering={suggestionRailEntering}
-      exiting={suggestionRailExiting}
-    >
-      <UserSuggestions
-        users={filteredUsers}
-        showUserSuggestions
-        handleUserSelect={handleUserSelect}
-      />
-    </Animated.View>
-  );
+function getUserKey(user: ChatUser): string {
+  return user.name;
 }
 
-const styles = StyleSheet.create({
-  suggestionRail: {
-    bottom: '100%',
-    left: 0,
-    paddingBottom: 6,
-    position: 'absolute',
-    right: 0,
-    zIndex: 2,
-  },
-});
+export function UserSuggestionRail({
+  onSelect,
+  searchTerm,
+}: UserSuggestionRailProps) {
+  const { filteredUsers } = useUserSuggestions({ searchTerm });
+
+  return (
+    <SuggestionRail
+      estimatedItemSize={SUGGESTION_ITEM_WIDTH.user}
+      Item={UserSuggestionItem}
+      items={filteredUsers}
+      keyExtractor={getUserKey}
+      onSelect={onSelect}
+      title='Mention'
+    />
+  );
+}

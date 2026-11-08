@@ -1,5 +1,5 @@
-import { CHAT_NOTICE_ACCENTS } from '@app/components/chat/components/util/chatNoticeAccents';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import { CHAT_NOTICE_ACCENTS } from '@app/components/chat/util/chatNoticeAccents';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
 import { styles } from '../ChatRow.styles';
 import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
@@ -17,10 +17,6 @@ interface ChatRowMetaHeaderProps {
   replyParentMessageId: string | undefined;
 }
 
-/**
- * The single meta row above a message. A reply header wins over the two
- * first-time badges, and only one of those two ever shows.
- */
 export function ChatRowMetaHeader({
   message,
   onReplyContextPress,
@@ -30,7 +26,7 @@ export function ChatRowMetaHeader({
   replyFlags,
   replyParentMessageId,
 }: ChatRowMetaHeaderProps) {
-  const { compact } = rendererArgs;
+  const { density } = rendererArgs;
 
   const {
     canJumpToReplyTarget,
@@ -59,7 +55,7 @@ export function ChatRowMetaHeader({
   if (isFirstMessage) {
     return (
       <ChatNoticeMetaRow
-        compact={compact}
+        density={density}
         icon='sparkles'
         label='First message'
         labelColor={CHAT_NOTICE_ACCENTS.firstMessage}
@@ -71,7 +67,7 @@ export function ChatRowMetaHeader({
   if (isReturningChatter) {
     return (
       <ChatNoticeMetaRow
-        compact={compact}
+        density={density}
         icon='arrow.uturn.left'
         label='Returning chatter'
         labelColor={CHAT_NOTICE_ACCENTS.returningChatter}

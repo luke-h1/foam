@@ -1,7 +1,6 @@
-// eslint-disable-next-line no-restricted-imports
 import { Image } from 'expo-image';
 
-import { clearCachedEmoteRefs } from '@app/providers/cached-emotes-provider/cache-service';
+import { clearCachedEmoteRefs } from '@app/lib/emote-cache/cacheService';
 import { clearSessionCache } from '@app/utils/image/imageCache';
 import { clearPaintBitmapCache } from '@app/utils/image/paintBitmapCacheLifecycle';
 

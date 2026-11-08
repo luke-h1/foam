@@ -10,6 +10,7 @@ import {
   makeEmptyGlobalCacheData,
 } from '@app/store/chat/types/constants';
 import type { SevenTvSanitisedEmote } from '@app/types/emote';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 const NOW = Date.parse('2026-01-01T12:00:00.000Z');
 const HOUR_MS = 60 * 60 * 1000;
@@ -42,6 +43,15 @@ const emote = {
   zero_width: false,
 } as const satisfies SevenTvSanitisedEmote;
 
+const globalBadge: SanitisedBadgeSet = {
+  id: 'staff_1',
+  set: 'staff',
+  type: 'Twitch Global Badge',
+  title: 'Staff',
+  url: 'https://example.com/staff.png',
+  provider: 'twitch',
+};
+
 const freshCache = (
   overrides?: Partial<ChannelCacheType>,
 ): ChannelCacheType => ({
@@ -58,7 +68,21 @@ const freshGlobalCache = (
 ): GlobalCacheType => ({
   ...makeEmptyGlobalCacheData(),
   sevenTvGlobalEmotes: [emote],
+  twitchGlobalBadges: [globalBadge],
   lastUpdated: NOW - 30 * 60 * 1000,
+  ...overrides,
+});
+
+type CachedPlan = Extract<ChannelRefreshPlan, { kind: 'cached' }>;
+
+const cachedPlan = (overrides?: Partial<CachedPlan>): CachedPlan => ({
+  kind: 'cached',
+  cacheAgeMs: 30 * 60 * 1000,
+  badgeCacheAgeMs: 15 * 60 * 1000,
+  fetchEmoteSetId: false,
+  fetchSubscriberEmotes: false,
+  refreshBadges: false,
+  refreshGlobalResources: false,
   ...overrides,
 });
 
@@ -102,7 +126,7 @@ describe('planChannelRefresh', () => {
       now: NOW,
     });
 
-    expect(plan.kind).toBe('cached');
+    expect(plan).toEqual<ChannelRefreshPlan>(cachedPlan());
   });
 
   test('plans a full load once the cache outlives the cache duration', () => {
@@ -143,7 +167,9 @@ describe('planChannelRefresh', () => {
       now: NOW,
     });
 
-    expect(plan.kind === 'cached' && plan.fetchEmoteSetId).toEqual(true);
+    expect(plan).toEqual<ChannelRefreshPlan>(
+      cachedPlan({ fetchEmoteSetId: true }),
+    );
   });
 
   test('requests subscriber emotes only for a different logged-in user', () => {
@@ -173,17 +199,11 @@ describe('planChannelRefresh', () => {
       now: NOW,
     });
 
-    expect(
-      samePlan.kind === 'cached' && samePlan.fetchSubscriberEmotes,
-    ).toEqual(false);
-
-    expect(
-      otherPlan.kind === 'cached' && otherPlan.fetchSubscriberEmotes,
-    ).toEqual(true);
-
-    expect(
-      anonPlan.kind === 'cached' && anonPlan.fetchSubscriberEmotes,
-    ).toEqual(false);
+    expect([samePlan, otherPlan, anonPlan]).toEqual<ChannelRefreshPlan[]>([
+      cachedPlan(),
+      cachedPlan({ fetchSubscriberEmotes: true }),
+      cachedPlan(),
+    ]);
   });
 
   test('refreshes badges once their cache outlives the badge duration', () => {
@@ -194,7 +214,9 @@ describe('planChannelRefresh', () => {
       now: NOW,
     });
 
-    expect(plan.kind === 'cached' && plan.refreshBadges).toEqual(true);
+    expect(plan).toEqual<ChannelRefreshPlan>(
+      cachedPlan({ badgeCacheAgeMs: HOUR_MS, refreshBadges: true }),
+    );
   });
 
   test('refreshes globals once the shared slot outlives the cache duration', () => {
@@ -205,7 +227,9 @@ describe('planChannelRefresh', () => {
       now: NOW,
     });
 
-    expect(plan.kind === 'cached' && plan.refreshGlobalResources).toEqual(true);
+    expect(plan).toEqual<ChannelRefreshPlan>(
+      cachedPlan({ refreshGlobalResources: true }),
+    );
   });
 
   test('refreshes globals when the shared slot is empty regardless of its stamp', () => {
@@ -216,7 +240,22 @@ describe('planChannelRefresh', () => {
       now: NOW,
     });
 
-    expect(plan.kind === 'cached' && plan.refreshGlobalResources).toEqual(true);
+    expect(plan).toEqual<ChannelRefreshPlan>(
+      cachedPlan({ refreshGlobalResources: true }),
+    );
+  });
+
+  test('refreshes globals when the badge group is empty but emotes are held', () => {
+    const plan = planChannelRefresh({
+      cache: freshCache(),
+      forceRefresh: false,
+      globalCache: freshGlobalCache({ twitchGlobalBadges: [] }),
+      now: NOW,
+    });
+
+    expect(plan).toEqual<ChannelRefreshPlan>(
+      cachedPlan({ refreshGlobalResources: true }),
+    );
   });
 
   test('does not refresh a fresh global slot on a stale channel badge pass', () => {
@@ -227,8 +266,8 @@ describe('planChannelRefresh', () => {
       now: NOW,
     });
 
-    expect(plan.kind === 'cached' && plan.refreshGlobalResources).toEqual(
-      false,
+    expect(plan).toEqual<ChannelRefreshPlan>(
+      cachedPlan({ badgeCacheAgeMs: HOUR_MS, refreshBadges: true }),
     );
   });
 

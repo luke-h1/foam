@@ -1,4 +1,4 @@
-import type { ChatMessageType } from '@app/store/chat/types/constants';
+import type { ChatMessageType } from '@app/types/chat/chatMessage';
 import type { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import type { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
 
@@ -13,7 +13,5 @@ export function getAnnouncementColorParam(
     return undefined;
   }
 
-  const color = noticeTags['msg-param-color'];
-
-  return color === true || color === false ? undefined : color;
+  return noticeTags['msg-param-color'];
 }

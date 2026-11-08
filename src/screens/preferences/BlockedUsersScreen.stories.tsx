@@ -50,7 +50,7 @@ const defaultAuthState = {
       tokenType: 'bearer',
     },
   },
-  loginWithTwitch: () => Promise.resolve(null),
+  loginWithTwitch: () => Promise.resolve({ ok: true as const }),
   populateAuthState: () => Promise.resolve(),
   logout: () => Promise.resolve(),
   fetchAnonToken: () => Promise.resolve(),

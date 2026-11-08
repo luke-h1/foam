@@ -19,6 +19,8 @@ export const prunePersistedChannelCaches = (
 
 export const clearPersistedChannelCaches = (): void => {};
 
+export const flushPersistedChannelCacheWrites = (): void => {};
+
 export const runChannelCacheHydration = (write: () => void): void => {
   write();
 };

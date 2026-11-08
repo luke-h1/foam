@@ -1,10 +1,10 @@
 import type { JsonValue } from '@app/utils/object/deepEqualJson';
 
-export type EventSubEvent = {
+export interface EventSubEvent {
   [field: string]: JsonValue;
-};
+}
 
-export interface EventSubMetadata {
+interface EventSubMetadata {
   message_id: string;
   message_type:
     | 'session_welcome'

@@ -1,75 +1,79 @@
+import {
+  PROVIDER_DESCRIPTORS,
+  SEVEN_TV_GLOBAL_EMOTE_SET_ID,
+} from '@app/constants/emote-providers';
 import type { MonitoringWarningName } from '@app/lib/sentry';
-import { ApiError } from '@app/services/api/client';
+import { ApiError, isApiClientError } from '@app/services/api/client';
 import { bttvEmoteService } from '@app/services/bttv-emote-service';
 import { ffzService } from '@app/services/ffz-service';
 import { sevenTvService } from '@app/services/seven-tv-service';
 import { twitchBadgeService } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
-import type { SanitisedEmote } from '@app/types/emote';
+import type { ProviderId, SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
+import { withTimeout } from '@app/utils/async/withTimeout';
 import { logger } from '@app/utils/logger';
 
+import { CACHE_DURATION } from '../types/cache-limits';
+import {
+  type ChatResourceSliceKey,
+  SLICE_BY_KEY,
+  type SliceKind,
+  type SliceScope,
+} from '../types/chat-resource-slices';
 import type { ChannelCacheType, GlobalCacheType } from '../types/constants';
 
-export type ProviderName = 'bttv' | 'ffz' | 'seven_tv' | 'twitch';
-export type ProviderResourceScope = 'channel' | 'global' | 'local' | 'personal';
-export type ProviderResourceType = 'badges' | 'emotes';
+type SliceProvider = (typeof SLICE_BY_KEY)[ChatResourceSliceKey]['provider'];
 
-export type Identifiable = { id: string };
+interface Identifiable {
+  id: string;
+}
 
-export type ProviderFailureReason = Error | string;
+type ProviderFailureReason = Error | string;
 
-export type ChannelEmoteCacheKey =
-  | 'bttvChannelEmotes'
-  | 'ffzChannelEmotes'
-  | 'sevenTvChannelEmotes'
-  | 'twitchChannelEmotes'
-  | 'twitchSubscriberEmotes';
+export type EmoteCacheKey = ChatResourceSliceKey<'channel' | 'global', 'emote'>;
 
-export type GlobalEmoteCacheKey =
-  | 'bttvGlobalEmotes'
-  | 'ffzGlobalEmotes'
-  | 'sevenTvGlobalEmotes'
-  | 'twitchGlobalEmotes';
+export type BadgeCacheKey = ChatResourceSliceKey<'channel' | 'global', 'badge'>;
 
-export type EmoteCacheKey = ChannelEmoteCacheKey | GlobalEmoteCacheKey;
+type ResourceCacheKey = EmoteCacheKey | BadgeCacheKey;
 
-export type ChannelBadgeCacheKey = 'ffzChannelBadges' | 'twitchChannelBadges';
-
-export type GlobalBadgeCacheKey = 'ffzGlobalBadges' | 'twitchGlobalBadges';
-
-export type BadgeCacheKey = ChannelBadgeCacheKey | GlobalBadgeCacheKey;
-
-export type ResourceCacheKey = EmoteCacheKey | BadgeCacheKey;
-
-/**
- * One (provider, scope) resource. To add a provider, add one spec. Fan-out,
- * reporting, reconcile and merge all read the spec list.
- */
-export interface ResourceSpec<
+interface ResourceSpecDefinition<
   TKey extends ResourceCacheKey,
   TItem extends Identifiable,
 > {
   key: TKey;
   name: string;
   label: string;
-  provider: ProviderName;
-  resourceType: ProviderResourceType;
-  scope: ProviderResourceScope;
   warningName: MonitoringWarningName;
   fetch: () => Promise<TItem[]>;
 }
 
-export type ChannelEmoteResourceSets = Pick<
-  ChannelCacheType,
-  ChannelEmoteCacheKey
->;
+export interface ResourceSpec<
+  TKey extends ResourceCacheKey,
+  TItem extends Identifiable,
+> extends ResourceSpecDefinition<TKey, TItem> {
+  provider: SliceProvider;
+  scope: SliceScope;
+  kind: SliceKind;
+}
 
-export type ChannelBadgeResourceSets = Pick<
-  ChannelCacheType,
-  ChannelBadgeCacheKey
->;
+export function defineResourceSpec<
+  TKey extends ResourceCacheKey,
+  TItem extends Identifiable,
+>(definition: ResourceSpecDefinition<TKey, TItem>): ResourceSpec<TKey, TItem> {
+  const { provider, scope, kind } = SLICE_BY_KEY[definition.key];
+
+  return { ...definition, provider, scope, kind };
+}
+
+const getMonitoringFields = (
+  spec: ResourceSpec<ResourceCacheKey, Identifiable>,
+) => ({
+  provider: PROVIDER_DESCRIPTORS[spec.provider].monitoringName,
+  resource_type: `${spec.kind}s`,
+  scope: spec.scope,
+});
 
 export type EmoteResourceSpec = ResourceSpec<EmoteCacheKey, SanitisedEmote>;
 export type BadgeResourceSpec = ResourceSpec<BadgeCacheKey, SanitisedBadgeSet>;
@@ -91,8 +95,6 @@ const deduplicateById = <T extends Identifiable>(items: readonly T[]): T[] =>
  * Global provider data is identical for every channel; cache successful
  * fetches per session. Failures are never cached, so the next join retries.
  */
-const GLOBAL_RESOURCE_TTL_MS = 60 * 60 * 1000;
-
 const globalResourceCache = new Map<
   string,
   { fetchedAt: number; promise: Promise<Identifiable[]> }
@@ -116,7 +118,7 @@ const fetchGlobalResourceOnce = <T extends Identifiable>(
   const now = Date.now();
   const cached = globalResourceCache.get(key);
 
-  if (cached && now - cached.fetchedAt < GLOBAL_RESOURCE_TTL_MS) {
+  if (cached && now - cached.fetchedAt < CACHE_DURATION) {
     // SAFETY: a cache key is only ever populated by one fetcher, so its stored promise resolves that key's item type
     return cached.promise as Promise<T[]>;
   }
@@ -139,19 +141,17 @@ export const buildSubscriberEmoteSpec = ({
 }: {
   channelId: string;
   twitchUserId?: string;
-}): EmoteResourceSpec => ({
-  key: 'twitchSubscriberEmotes',
-  name: 'twitch_subscriber_emotes',
-  label: 'Twitch subscriber emotes',
-  provider: 'twitch',
-  resourceType: 'emotes',
-  scope: 'personal',
-  warningName: 'twitch_emotes_warning',
-  fetch: () =>
-    twitchUserId
-      ? twitchEmoteService.getSubscriberEmotes(twitchUserId, channelId)
-      : Promise.resolve([]),
-});
+}): EmoteResourceSpec =>
+  defineResourceSpec({
+    key: 'twitchSubscriberEmotes',
+    name: 'twitch_subscriber_emotes',
+    label: 'Twitch subscriber emotes',
+    warningName: 'twitch_emotes_warning',
+    fetch: () =>
+      twitchUserId
+        ? twitchEmoteService.getSubscriberEmotes(twitchUserId, channelId)
+        : Promise.resolve([]),
+  });
 
 /**
  * Caps a pending 7TV set-id lookup so it cannot eat the whole
@@ -159,89 +159,71 @@ export const buildSubscriberEmoteSpec = ({
  */
 const SEVEN_TV_SET_ID_LOOKUP_BUDGET_MS = 3000;
 
-const SEVEN_TV_GLOBAL_EMOTE_SPEC: EmoteResourceSpec = {
+const SEVEN_TV_GLOBAL_EMOTE_SPEC = defineResourceSpec({
   key: 'sevenTvGlobalEmotes',
   name: 'seven_tv_global_emotes',
   label: '7TV global emotes',
-  provider: 'seven_tv',
-  resourceType: 'emotes',
-  scope: 'global',
   warningName: 'seven_tv_emotes_warning',
   fetch: () =>
     fetchGlobalResourceOnce('seven_tv_global_emotes', () =>
-      sevenTvService.getSanitisedEmoteSet('global'),
+      sevenTvService.getSanitisedEmoteSet(SEVEN_TV_GLOBAL_EMOTE_SET_ID),
     ),
-};
+});
 
-const TWITCH_GLOBAL_EMOTE_SPEC: EmoteResourceSpec = {
+const TWITCH_GLOBAL_EMOTE_SPEC = defineResourceSpec({
   key: 'twitchGlobalEmotes',
   name: 'twitch_global_emotes',
   label: 'Twitch global emotes',
-  provider: 'twitch',
-  resourceType: 'emotes',
-  scope: 'global',
   warningName: 'twitch_emotes_warning',
   fetch: () =>
     fetchGlobalResourceOnce('twitch_global_emotes', () =>
       twitchEmoteService.getGlobalEmotes(),
     ),
-};
+});
 
-const BTTV_GLOBAL_EMOTE_SPEC: EmoteResourceSpec = {
+const BTTV_GLOBAL_EMOTE_SPEC = defineResourceSpec({
   key: 'bttvGlobalEmotes',
   name: 'bttv_global_emotes',
   label: 'BTTV global emotes',
-  provider: 'bttv',
-  resourceType: 'emotes',
-  scope: 'global',
   warningName: 'bttv_emotes_warning',
   fetch: () =>
     fetchGlobalResourceOnce('bttv_global_emotes', () =>
       bttvEmoteService.getSanitisedGlobalEmotes(),
     ),
-};
+});
 
-const FFZ_GLOBAL_EMOTE_SPEC: EmoteResourceSpec = {
+const FFZ_GLOBAL_EMOTE_SPEC = defineResourceSpec({
   key: 'ffzGlobalEmotes',
   name: 'ffz_global_emotes',
   label: 'FFZ global emotes',
-  provider: 'ffz',
-  resourceType: 'emotes',
-  scope: 'global',
   warningName: 'ffz_emotes_warning',
   fetch: () =>
     fetchGlobalResourceOnce('ffz_global_emotes', () =>
       ffzService.getSanitisedGlobalEmotes(),
     ),
-};
+});
 
-const TWITCH_GLOBAL_BADGE_SPEC: BadgeResourceSpec = {
+const TWITCH_GLOBAL_BADGE_SPEC = defineResourceSpec({
   key: 'twitchGlobalBadges',
   name: 'twitch_global_badges',
   label: 'Twitch global badges',
-  provider: 'twitch',
-  resourceType: 'badges',
-  scope: 'global',
   warningName: 'twitch_badges_warning',
   fetch: () =>
     fetchGlobalResourceOnce('twitch_global_badges', () =>
       twitchBadgeService.listSanitisedGlobalBadges(),
     ),
-};
+});
 
-const FFZ_GLOBAL_BADGE_SPEC: BadgeResourceSpec = {
+const FFZ_GLOBAL_BADGE_SPEC = defineResourceSpec({
   key: 'ffzGlobalBadges',
   name: 'ffz_global_badges',
   label: 'FFZ global badges',
-  provider: 'ffz',
-  resourceType: 'badges',
-  scope: 'global',
   warningName: 'ffz_badges_warning',
   fetch: () =>
     fetchGlobalResourceOnce('ffz_global_badges', () =>
       ffzService.getSanitisedGlobalBadges(),
     ),
-};
+});
 
 export const buildGlobalEmoteResourceSpecs = (): EmoteResourceSpec[] => [
   SEVEN_TV_GLOBAL_EMOTE_SPEC,
@@ -273,65 +255,49 @@ interface BuildEmoteResourceSpecsOptions {
 export const buildEmoteResourceSpecs = ({
   channelId,
   sevenTvSetId,
-  sevenTvSetIdFallback = 'global',
+  sevenTvSetIdFallback = SEVEN_TV_GLOBAL_EMOTE_SET_ID,
   twitchUserId,
 }: BuildEmoteResourceSpecsOptions): EmoteResourceSpec[] => [
-  {
+  defineResourceSpec({
     key: 'sevenTvChannelEmotes',
     name: 'seven_tv_channel_emotes',
     label: '7TV channel emotes',
-    provider: 'seven_tv',
-    resourceType: 'emotes',
-    scope: 'channel',
     warningName: 'seven_tv_emotes_warning',
     fetch: async () => {
-      const resolvedSetId = await Promise.race([
+      const resolvedSetId = await withTimeout(
         Promise.resolve(sevenTvSetId),
-        new Promise<string>(resolve => {
-          setTimeout(
-            () => resolve(sevenTvSetIdFallback),
-            SEVEN_TV_SET_ID_LOOKUP_BUDGET_MS,
-          );
-        }),
-      ]);
+        SEVEN_TV_SET_ID_LOOKUP_BUDGET_MS,
+        () => sevenTvSetIdFallback,
+      );
 
       return sevenTvService.getSanitisedEmoteSet(resolvedSetId);
     },
-  },
+  }),
   SEVEN_TV_GLOBAL_EMOTE_SPEC,
-  {
+  defineResourceSpec({
     key: 'twitchChannelEmotes',
     name: 'twitch_channel_emotes',
     label: 'Twitch channel emotes',
-    provider: 'twitch',
-    resourceType: 'emotes',
-    scope: 'channel',
     warningName: 'twitch_emotes_warning',
     fetch: () => twitchEmoteService.getChannelEmotes(channelId),
-  },
+  }),
   TWITCH_GLOBAL_EMOTE_SPEC,
   buildSubscriberEmoteSpec({ channelId, twitchUserId }),
   BTTV_GLOBAL_EMOTE_SPEC,
-  {
+  defineResourceSpec({
     key: 'bttvChannelEmotes',
     name: 'bttv_channel_emotes',
     label: 'BTTV channel emotes',
-    provider: 'bttv',
-    resourceType: 'emotes',
-    scope: 'channel',
     warningName: 'bttv_emotes_warning',
     fetch: () => bttvEmoteService.getSanitisedChannelEmotes(channelId),
-  },
-  {
+  }),
+  defineResourceSpec({
     key: 'ffzChannelEmotes',
     name: 'ffz_channel_emotes',
     label: 'FFZ channel emotes',
-    provider: 'ffz',
-    resourceType: 'emotes',
-    scope: 'channel',
     warningName: 'ffz_emotes_warning',
     fetch: () => ffzService.getSanitisedChannelEmotes(channelId),
-  },
+  }),
   FFZ_GLOBAL_EMOTE_SPEC,
 ];
 
@@ -340,28 +306,22 @@ export const buildBadgeResourceSpecs = ({
 }: {
   channelId: string;
 }): BadgeResourceSpec[] => [
-  {
+  defineResourceSpec({
     key: 'twitchChannelBadges',
     name: 'twitch_channel_badges',
     label: 'Twitch channel badges',
-    provider: 'twitch',
-    resourceType: 'badges',
-    scope: 'channel',
     warningName: 'twitch_badges_warning',
     fetch: () => twitchBadgeService.listSanitisedChannelBadges(channelId),
-  },
+  }),
   TWITCH_GLOBAL_BADGE_SPEC,
   FFZ_GLOBAL_BADGE_SPEC,
-  {
+  defineResourceSpec({
     key: 'ffzChannelBadges',
     name: 'ffz_channel_badges',
     label: 'FFZ channel badges',
-    provider: 'ffz',
-    resourceType: 'badges',
-    scope: 'channel',
     warningName: 'ffz_badges_warning',
     fetch: () => ffzService.getSanitisedChannelBadges(channelId),
-  },
+  }),
 ];
 
 const RESOURCE_FETCH_TIMEOUT_MS = 8000;
@@ -373,28 +333,6 @@ export class ResourceFetchTimeoutError extends Error {
   }
 }
 
-const withTimeout = <T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-  resourceName: string,
-): Promise<T> =>
-  new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      reject(new ResourceFetchTimeoutError(resourceName, timeoutMs));
-    }, timeoutMs);
-
-    promise.then(
-      value => {
-        clearTimeout(timer);
-        resolve(value);
-      },
-      (error: ProviderFailureReason) => {
-        clearTimeout(timer);
-        reject(error);
-      },
-    );
-  });
-
 export const settleSpecs = async <
   TKey extends ResourceCacheKey,
   TItem extends Identifiable,
@@ -403,12 +341,16 @@ export const settleSpecs = async <
   timeoutMs: number = RESOURCE_FETCH_TIMEOUT_MS,
 ): Promise<SettledSpec<TKey, TItem>[]> => {
   const results = await Promise.allSettled(
-    specs.map(spec => withTimeout(spec.fetch(), timeoutMs, spec.name)),
+    specs.map(spec =>
+      withTimeout(spec.fetch(), timeoutMs, () => {
+        throw new ResourceFetchTimeoutError(spec.name, timeoutMs);
+      }),
+    ),
   );
   return specs.map((spec, index) => ({ spec, result: results[index]! }));
 };
 
-export interface ResourceCacheContext {
+interface ResourceCacheContext {
   channelId: string;
   existingCache: ChannelCacheType | undefined;
   existingGlobalCache: GlobalCacheType | undefined;
@@ -449,11 +391,9 @@ const reconcileSettledSpec = <
       action: 'provider_resource_cache_fallback_used',
       cached_count: cachedItems.length,
       channel_id: context.channelId,
-      provider: spec.provider,
       resource_name: spec.label,
-      resource_type: spec.resourceType,
-      scope: spec.scope,
       screen: 'chat',
+      ...getMonitoringFields(spec),
     });
   }
 
@@ -489,7 +429,7 @@ export const reportResourceResults = ({
   let failedResources = 0;
 
   settled.forEach(({ result, spec }) => {
-    counts[`${spec.provider}_${spec.scope}_${spec.resourceType}_count`] =
+    counts[`${spec.name}_count`] =
       result.status === 'fulfilled' ? result.value.length : 0;
 
     if (result.status !== 'rejected') {
@@ -498,17 +438,19 @@ export const reportResourceResults = ({
 
     failedResources += 1;
 
+    if (isApiClientError(result.reason)) {
+      return;
+    }
+
     logger.chat.warn(`Failed to load ${spec.name}`, {
       name: spec.warningName,
       error: result.reason,
       action: 'provider_resource_failed',
       channel_id: channelId,
-      provider: spec.provider,
       resource_name: spec.name,
-      resource_type: spec.resourceType,
-      scope: spec.scope,
       screen: 'chat',
       trigger,
+      ...getMonitoringFields(spec),
     });
   });
 
@@ -523,13 +465,6 @@ export const reportResourceResults = ({
     ...counts,
   });
 };
-
-const PROVIDER_DISPLAY_NAMES = new Map<ProviderName, string>([
-  ['bttv', 'BTTV'],
-  ['ffz', 'FFZ'],
-  ['seven_tv', '7TV'],
-  ['twitch', 'Twitch'],
-]);
 
 export const describeProviderFailureReason = (
   reason: ProviderFailureReason,
@@ -552,7 +487,7 @@ export const describeProviderFailureReason = (
 export const collectFailedProviderReasons = (
   settled: readonly AnySettledSpec[],
 ): string[] => {
-  const reasonByProvider = new Map<ProviderName, string>();
+  const reasonByProvider = new Map<ProviderId, string>();
 
   settled.forEach(({ result, spec }) => {
     if (result.status === 'rejected' && !reasonByProvider.has(spec.provider)) {
@@ -563,22 +498,12 @@ export const collectFailedProviderReasons = (
     }
   });
 
-  const labels: string[] = [];
-
-  for (const [provider, displayName] of PROVIDER_DISPLAY_NAMES) {
-    const reason = reasonByProvider.get(provider);
-    if (reason) {
-      labels.push(`${displayName} (${reason})`);
-    }
-  }
-
-  return labels;
+  return Object.values(PROVIDER_DESCRIPTORS).flatMap(descriptor => {
+    const reason = reasonByProvider.get(descriptor.id);
+    return reason ? [`${descriptor.shortName} (${reason})`] : [];
+  });
 };
 
-/**
- * True when at least one rejected resource spec still has a non-empty cached
- * slice to fall back to.
- */
 export const hadCachedResourcesForFailedSpecs = (
   context: Omit<ResourceCacheContext, 'channelId'>,
   settled: readonly AnySettledSpec[],

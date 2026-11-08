@@ -11,9 +11,6 @@ interface PaintedUsernameWebViewProps {
   lineHeight?: number;
 }
 
-/**
- * WebView paints are native-only; web falls back to solid colour.
- */
 export function PaintedUsernameWebView({
   username,
   fallbackColor = theme.color.text.dark,

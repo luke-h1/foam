@@ -15,9 +15,6 @@ interface LoadingStateProps {
   style?: StyleProp<ViewStyle>;
 }
 
-/**
- * Numeric sizes at or above this map to the SwiftUI `large` control size.
- */
 const LARGE_SPINNER_MIN_SIZE = 30;
 
 export function LoadingState({

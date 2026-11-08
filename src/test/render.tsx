@@ -1,5 +1,5 @@
-import type { ReactElement, ReactNode } from 'react';
-import { type Metrics, SafeAreaProvider } from 'react-native-safe-area-context';
+import { type ReactElement, type ReactNode, useEffect, useState } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
@@ -9,22 +9,23 @@ import {
 } from '@testing-library/react-native';
 
 import { AuthContextTestProvider } from '@app/context/AuthContext';
+import { TEST_SAFE_AREA_METRICS } from '@app/test/safe-area';
 
 const TEST_TOKEN_EXPIRES_AT = 4_102_444_800_000;
 
-const TEST_SAFE_AREA_METRICS = {
-  frame: { x: 0, y: 0, width: 390, height: 844 },
-  insets: { top: 0, bottom: 0, left: 0, right: 0 },
-} satisfies Metrics;
-
-export const DefaultWrapper = ({ children }: { children: ReactNode }) => {
-  const queryClient = new QueryClient({
+export function createTestQueryClient() {
+  return new QueryClient({
     defaultOptions: {
-      queries: {
-        retry: false,
-      },
+      queries: { retry: false, gcTime: Infinity },
+      mutations: { retry: false, gcTime: Infinity },
     },
   });
+}
+
+export const DefaultWrapper = ({ children }: { children: ReactNode }) => {
+  const [queryClient] = useState(createTestQueryClient);
+
+  useEffect(() => () => queryClient.clear(), [queryClient]);
 
   return (
     <SafeAreaProvider initialMetrics={TEST_SAFE_AREA_METRICS}>
@@ -44,8 +45,6 @@ export const DefaultWrapper = ({ children }: { children: ReactNode }) => {
           }}
           loginWithTwitch={jest.fn()}
           logout={jest.fn()}
-          populateAuthState={jest.fn()}
-          fetchAnonToken={jest.fn()}
         >
           {children}
         </AuthContextTestProvider>

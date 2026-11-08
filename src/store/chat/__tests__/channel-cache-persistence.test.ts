@@ -8,7 +8,7 @@ import {
 } from '../observables/channel-cache-persistence';
 import { chatStore$ } from '../observables/chat-store';
 import type { ChannelCacheType } from '../types/constants';
-import { makeEmptyEmoteData, MAX_CACHED_CHANNELS } from '../types/constants';
+import { makeEmptyEmoteData } from '../types/constants';
 
 const caches = createMMKV({ id: 'chat-channel-caches' });
 const index = createMMKV({ id: 'chat-channel-cache-index' });
@@ -144,20 +144,20 @@ describe('channel cache persistence', () => {
   });
 
   test('prunes the oldest channels beyond the cap and keeps the current one', () => {
-    for (let i = 0; i < MAX_CACHED_CHANNELS; i += 1) {
+    for (let i = 0; i < 20; i += 1) {
       caches.set(`channel-${i}`, JSON.stringify(makeCache(i)));
       index.set(`channel-${i}`, i);
     }
 
     chatStore$.persisted.channelCaches.set({
-      'channel-new': makeCache(MAX_CACHED_CHANNELS),
+      'channel-new': makeCache(20),
     });
 
     expect(prunePersistedChannelCaches('channel-0')).toEqual(['channel-1']);
 
     expect(caches.contains('channel-new')).toEqual(true);
 
-    expect(index.getAllKeys()).toHaveLength(MAX_CACHED_CHANNELS);
+    expect(index.getAllKeys()).toHaveLength(20);
 
     expect(caches.contains('channel-0')).toEqual(true);
 

@@ -1,6 +1,7 @@
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import { getMessageStructure } from '@app/utils/chat/derive-chat-body/getMessageStructure';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import { isSubscriptionNoticeToken } from '@app/utils/chat/subscription-notice-token-types';
 
 /**
  * Weights are "one average character wide", never points; the list learns each
@@ -40,6 +41,15 @@ function textLength(value: string | undefined): number {
 }
 
 function getPartWeight(token: MessageToken): number {
+  if (isSubscriptionNoticeToken(token)) {
+    return (
+      NOTICE_META_ROW_WEIGHT +
+      SUBSCRIPTION_DESCRIPTION_WEIGHT +
+      textLength(token.subscriptionEvent.displayName) +
+      textLength(token.subscriptionEvent.message)
+    );
+  }
+
   switch (token.type) {
     case 'text':
     case 'link':
@@ -52,19 +62,6 @@ function getPartWeight(token: MessageToken): number {
       return TWITCH_CLIP_WEIGHT;
     case 'stvEmoteLink':
       return STV_EMOTE_LINK_WEIGHT;
-    case 'sub':
-    case 'resub':
-    case 'anongift':
-    case 'anongiftpaidupgrade':
-    case 'submysterygift':
-    case 'giftpaidupgrade':
-    case 'primepaidupgrade':
-      return (
-        NOTICE_META_ROW_WEIGHT +
-        SUBSCRIPTION_DESCRIPTION_WEIGHT +
-        textLength(token.subscriptionEvent.displayName) +
-        textLength(token.subscriptionEvent.message)
-      );
     case 'viewermilestone':
     case 'modiversary':
       return (

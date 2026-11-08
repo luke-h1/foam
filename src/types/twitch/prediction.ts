@@ -4,7 +4,7 @@ export type ChannelPredictionStatus =
   | 'resolved'
   | 'canceled';
 
-export type TwitchPredictionTopPredictor = {
+type TwitchPredictionTopPredictor = {
   user_id: string;
   user_login: string;
   user_name: string;

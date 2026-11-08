@@ -1,5 +1,8 @@
-// oxlint-disable anti-slop/no-shape-in-symbol-names -- mirrors the 7TV paint API shape field (types/seven-tv/cosmetics.ts)
-import { createSevenTvEmote } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
+import {
+  createSevenTvBadge,
+  createSevenTvEmote,
+} from '@app/components/chat/__tests__/__fixtures__/chatFactories.fixture';
+import { makePaint } from '@app/components/chat/components/chat-message/cosmetic-username/util/paint-css/__fixtures__/paintCss.fixture';
 import { sevenTvService } from '@app/services/seven-tv-service';
 import {
   addBadge,
@@ -18,7 +21,6 @@ import {
 import {
   clearEntitlementUserLinkState,
   getSevenTvUserIdForTwitchId,
-  MAX_SEVEN_TV_USER_LINK_ENTRIES,
 } from '@app/store/chat/actions/cosmetics-links';
 import {
   clearPersonalEmotesCache,
@@ -26,38 +28,22 @@ import {
   getUserPersonalEmotes,
 } from '@app/store/chat/actions/personal-emotes';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
-import type {
-  EntitlementCreate,
-  PaintData,
-} from '@app/types/seven-tv/cosmetics';
-import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import { logger } from '@app/utils/logger';
+import { flushChatStoreTimers } from '@app/test/chat-store-teardown';
+import { silenceLogger } from '@app/test/silence-logger';
+import type { EntitlementCreate } from '@app/types/seven-tv/cosmetics';
 
-import { createBadgeEntitlement } from './__fixtures__/cosmetics-bridge.fixture';
+import {
+  createBadgeEntitlement,
+  createPaintEntitlement,
+} from './__fixtures__/cosmetics-bridge.fixture';
 
-const cachedPaint = {
-  id: 'paint-1',
-  name: 'Cached Paint',
-  color: null,
-  layers: { length: 0 },
-  shadows: { length: 0 },
-  textStyle: null,
-  function: 'LINEAR_GRADIENT',
-  repeat: false,
-  angle: 90,
-  shape: 'circle',
-  image_url: '',
-  stops: { length: 0 },
-} satisfies PaintData;
+const cachedPaint = makePaint({ name: 'Cached Paint', angle: 90 });
 
-const cachedBadge = {
-  id: 'badge-1',
+const cachedBadge = createSevenTvBadge('badge-1', {
   url: 'https://cdn.7tv.app/badge/badge-1/3x',
-  type: '7TV Badge',
   title: 'Cached Badge',
   set: 'seventv-badges',
-  provider: '7tv',
-} satisfies SanitisedBadgeSet;
+});
 
 interface UserBindings {
   paintId: string | undefined;
@@ -100,7 +86,7 @@ let mockGetPersonalEmoteSet: jest.SpiedFunction<
 
 async function settleBackgroundFetches() {
   for (let step = 0; step < 5; step += 1) {
-    // eslint-disable-next-line react-doctor/async-await-in-loop -- each fetch step must settle before the next one starts
+    // oxlint-disable-next-line react-doctor/async-await-in-loop -- each fetch step must settle before the next one starts
     await new Promise(resolve => {
       setImmediate(resolve);
     });
@@ -124,22 +110,12 @@ beforeEach(() => {
     .spyOn(sevenTvService, 'getPersonalEmoteSet')
     .mockResolvedValue([]);
 
-  jest.spyOn(logger.stv, 'warn').mockImplementation(() => {});
-  jest.spyOn(logger.stvWs, 'info').mockImplementation(() => {});
+  silenceLogger();
 });
 
 describe('applyEntitlementCreateEvent', () => {
   test('binds paints and hydrates the definition when it is missing', async () => {
-    const entitlement: EntitlementCreate = {
-      id: 'entitlement-paint-1',
-      kind: 0,
-      object: {
-        id: 'entitlement-paint-1',
-        kind: 'PAINT',
-        ref_id: 'paint-1',
-        user: createBadgeEntitlement('badge-1', 'ttv-1').object.user,
-      },
-    };
+    const entitlement = createPaintEntitlement('paint-1', 'ttv-1');
 
     applyEntitlementCreateEvent({
       entitlement,
@@ -162,16 +138,7 @@ describe('applyEntitlementCreateEvent', () => {
     addPaint(cachedPaint);
 
     applyEntitlementCreateEvent({
-      entitlement: {
-        id: 'entitlement-paint-1',
-        kind: 0,
-        object: {
-          id: 'entitlement-paint-1',
-          kind: 'PAINT',
-          ref_id: 'paint-1',
-          user: createBadgeEntitlement('badge-1', 'ttv-1').object.user,
-        },
-      },
+      entitlement: createPaintEntitlement('paint-1', 'ttv-1'),
       kind: 'PAINT',
       ttvUserId: 'ttv-1',
       paintId: 'paint-1',
@@ -395,16 +362,7 @@ describe('applyEntitlementUpdateEvent', () => {
     });
 
     applyEntitlementCreateEvent({
-      entitlement: {
-        id: 'entitlement-paint-1',
-        kind: 0,
-        object: {
-          id: 'entitlement-paint-1',
-          kind: 'PAINT',
-          ref_id: 'paint-1',
-          user: createBadgeEntitlement('badge-1', 'ttv-1').object.user,
-        },
-      },
+      entitlement: createPaintEntitlement('paint-1', 'ttv-1'),
       kind: 'PAINT',
       ttvUserId: 'ttv-1',
       paintId: 'paint-1',
@@ -474,16 +432,7 @@ describe('applyEntitlementDeleteEvent', () => {
   });
 
   test('clears only the paint binding for a remembered paint entitlement delete', () => {
-    const entitlement: EntitlementCreate = {
-      id: 'entitlement-paint-1',
-      kind: 0,
-      object: {
-        id: 'entitlement-paint-1',
-        kind: 'PAINT',
-        ref_id: 'paint-1',
-        user: createBadgeEntitlement('badge-1', 'ttv-1').object.user,
-      },
-    };
+    const entitlement = createPaintEntitlement('paint-1', 'ttv-1');
 
     applyEntitlementCreateEvent({
       entitlement,
@@ -508,9 +457,7 @@ describe('applyEntitlementDeleteEvent', () => {
     expect(readBindings()).toEqual({ paintId: undefined, badgeId: 'badge-1' });
   });
 
-  // One entitlement past the cap evicts exactly entitlement-0; deriving the
-  // bound from the cap keeps the boundary indices in step with the constant.
-  const OVER_CAP_INDEX = MAX_SEVEN_TV_USER_LINK_ENTRIES;
+  const OVER_CAP_INDEX = 2000;
 
   const EVICTED_ENTITLEMENT_INDEX = 0;
   const BOUNDARY_SURVIVOR_INDEX = 1;
@@ -584,3 +531,5 @@ describe('applyEntitlementDeleteEvent', () => {
     });
   });
 });
+
+afterEach(flushChatStoreTimers);

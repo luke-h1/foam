@@ -2,35 +2,35 @@ import { memo } from 'react';
 import { View } from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import { CHAT_NOTICE_ACCENTS } from '@app/components/chat/util/chatNoticeAccents';
+import type { ChatDensity, ChatFontScale } from '@app/store/preference-store';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
 import { styles } from '../chat-message/ChatRow.styles';
 import { getChatTextStyles } from '../chat-message/ChatText.styles';
 import { ChatNoticeMetaRow } from '../chat-message/renderers/ChatNoticeMetaRow';
-import type { ChatFontScale } from '../chat-message/util/chatScale';
-import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';
 import { NoticeUserMessage } from './NoticeUserMessage';
 
 interface CharityDonationNoticeProps {
-  compact?: boolean;
-  disableAnimations?: boolean;
+  density?: ChatDensity;
+  disableEmoteAnimations?: boolean;
   fontScale?: ChatFontScale;
-  parsedMessage?: MessageToken[];
+  messageTokens: MessageToken[];
   token: MessageToken<'charitydonation'>;
 }
 
 function CharityDonationNoticeComponent({
-  compact,
-  disableAnimations,
+  density,
+  disableEmoteAnimations,
   fontScale,
-  parsedMessage,
+  messageTokens,
   token,
 }: CharityDonationNoticeProps) {
   const displayName = token.displayName?.trim();
   const systemMsg = token.systemMsg;
   const message = token.message?.trim() ?? '';
   const donationSummary = `donated ${token.amount} to ${token.charityName}`;
-  const textStyles = getChatTextStyles(fontScale, compact);
+  const textStyles = getChatTextStyles(fontScale, density);
   const mutedStyle = [textStyles.meta, styles.channelPointsMetaMuted];
 
   return (
@@ -38,7 +38,7 @@ function CharityDonationNoticeComponent({
       <ChatNoticeMetaRow
         icon='heart.fill'
         label='Charity donation'
-        {...{ compact, fontScale, labelColor: CHAT_NOTICE_ACCENTS.charity }}
+        {...{ density, fontScale, labelColor: CHAT_NOTICE_ACCENTS.charity }}
       />
       <ChatText style={textStyles.meta}>
         {displayName ? (
@@ -55,7 +55,12 @@ function CharityDonationNoticeComponent({
         )}
       </ChatText>
       <NoticeUserMessage
-        {...{ compact, disableAnimations, fontScale, message, parsedMessage }}
+        {...{
+          density,
+          disableEmoteAnimations,
+          fontScale,
+          tokens: messageTokens,
+        }}
       />
     </View>
   );

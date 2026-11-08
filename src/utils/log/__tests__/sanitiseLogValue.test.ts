@@ -51,7 +51,10 @@ describe('sanitiseLogValue', () => {
   });
 
   test('breaks circular references', () => {
-    type CircularNode = { id: string; self?: CircularNode };
+    interface CircularNode {
+      id: string;
+      self?: CircularNode;
+    }
     const node: CircularNode = { id: 'root' };
     node.self = node;
     expect(sanitiseLogValue(node)).toEqual({ id: 'root', self: '[Circular]' });

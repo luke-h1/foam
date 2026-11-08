@@ -1,12 +1,7 @@
 // "shape" is the 7TV paint API field (types/seven-tv/cosmetics.ts), not a naming choice.
 // oxlint-disable anti-slop/no-shape-in-symbol-names
 import { type ReactNode, useState } from 'react';
-import {
-  type LayoutChangeEvent,
-  Platform,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { type LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import Svg, {
   Defs,
   LinearGradient as SvgLinearGradient,
@@ -158,10 +153,7 @@ function PaintLayerContent({
   useSvgLinear,
 }: PaintLayerContentProps): ReactNode {
   if (isAssetPaint) {
-    const imageUrl =
-      Platform.OS === 'web'
-        ? layer.image_url
-        : skiaDecodableLayerUrl(layer.image_url);
+    const imageUrl = skiaDecodableLayerUrl(layer.image_url);
 
     return isTilingCanvasRepeat(layer.canvas_repeat, layer.repeat) ? (
       <PaintLayerTiledImage

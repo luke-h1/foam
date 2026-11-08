@@ -13,7 +13,6 @@ import { theme } from '@app/styles/themes';
 export type { FlashListRef, ListRenderItem };
 
 export type FlashListProps<TItem = unknown> = ShopifyFlashListProps<TItem> & {
-  inverted?: boolean;
   onRefresh?: () => void;
 };
 

@@ -1,6 +1,6 @@
+import type { MessageToken } from '@app/types/chat/messageToken';
 import { scanChatBody } from '@app/utils/chat/derive-chat-body/scanChatBody';
 import type { InlineFlowToken } from '@app/utils/chat/derive-chat-body/types';
-import type { MessageToken } from '@app/utils/chat/messageToken';
 
 /**
  * Decides whether a body can render inside a single Text element. Add new

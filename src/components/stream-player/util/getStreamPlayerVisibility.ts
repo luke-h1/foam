@@ -29,8 +29,6 @@ export function getStreamPlayerVisibility({
   return {
     allowsTwitchInteraction,
 
-    // Live rows wait for the bridge's own playback signal before they count
-    // the WebView as started.
     awaitBridgePlaybackStart: showOverlayControls && !clip,
 
     /**

@@ -1,6 +1,6 @@
 import { createOverlayStore } from '@app/store/overlays/create-overlay-store';
 
-export interface ActionMenuAction {
+interface ActionMenuAction {
   label: string;
   onPress: () => void;
 }
@@ -8,7 +8,6 @@ export interface ActionMenuAction {
 export interface ShowActionMenuOptions {
   title: string;
   actions: ActionMenuAction[];
-  cancelLabel: string;
 }
 
 const store = createOverlayStore<ShowActionMenuOptions>();

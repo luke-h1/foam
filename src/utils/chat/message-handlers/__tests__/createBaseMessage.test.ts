@@ -1,4 +1,4 @@
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import * as generateNonceModule from '@app/utils/string/generateNonce';
 
 import { createBaseMessage } from '../createBaseMessage';
@@ -26,7 +26,7 @@ describe('createBaseMessage', () => {
       text: 'Hello world!',
     };
 
-    const result = createBaseMessage(params);
+    const result = createBaseMessage({ ...params, timestampFormat: '24h' });
 
     expect(result.channel).toBe('testchannel');
 
@@ -50,7 +50,7 @@ describe('createBaseMessage', () => {
       text: 'Hello world!   \n\n',
     };
 
-    const result = createBaseMessage(params);
+    const result = createBaseMessage({ ...params, timestampFormat: '24h' });
 
     expect(result.message[0]).toEqual<MessageToken>({
       type: 'text',
@@ -71,7 +71,7 @@ describe('createBaseMessage', () => {
       text: 'Kappa',
     };
 
-    const result = createBaseMessage(params);
+    const result = createBaseMessage({ ...params, timestampFormat: '24h' });
 
     expect(result.isHighlightedMessage).toBe(true);
 
@@ -91,7 +91,7 @@ describe('createBaseMessage', () => {
       text: 'Hello',
     };
 
-    const result = createBaseMessage(params);
+    const result = createBaseMessage({ ...params, timestampFormat: '24h' });
 
     expect(result.message_nonce).toBe('msg-123');
   });
@@ -106,7 +106,7 @@ describe('createBaseMessage', () => {
       text: 'Hello',
     };
 
-    const result = createBaseMessage(params);
+    const result = createBaseMessage({ ...params, timestampFormat: '24h' });
 
     expect(result.message_id).toBe('0');
 

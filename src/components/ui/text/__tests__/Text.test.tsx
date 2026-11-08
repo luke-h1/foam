@@ -2,8 +2,9 @@ import { StyleSheet, type TextStyle } from 'react-native';
 
 import { render, screen } from '@testing-library/react-native';
 
-import { Text, type TextWeight } from '@app/components/ui/text/Text';
+import { Text } from '@app/components/ui/text/Text';
 import { resolveWeightFromFontWeight } from '@app/components/ui/text/Text.styles';
+import type { TextWeight } from '@app/components/ui/text/Text.types';
 import { theme } from '@app/styles/themes';
 
 type FontResolution = Pick<TextStyle, 'fontFamily' | 'fontWeight'>;
@@ -101,6 +102,19 @@ describe('Text', () => {
 
     expect(getFontResolution('custom family')).toEqual<FontResolution>({
       fontFamily: 'monospace',
+      fontWeight: '600',
+    });
+  });
+
+  test('uses a monospace family that iOS resolves for the mono variant', () => {
+    render(
+      <Text variant='mono' weight='semibold'>
+        mono
+      </Text>,
+    );
+
+    expect(getFontResolution('mono')).toEqual<FontResolution>({
+      fontFamily: 'Menlo',
       fontWeight: '600',
     });
   });

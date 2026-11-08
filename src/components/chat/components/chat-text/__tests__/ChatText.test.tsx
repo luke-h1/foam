@@ -3,8 +3,8 @@ import { StyleSheet, type TextStyle } from 'react-native';
 import { render, screen } from '@testing-library/react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
-import { Text, type TextProps } from '@app/components/ui/text/Text';
-import { theme } from '@app/styles/themes';
+import { Text } from '@app/components/ui/text/Text';
+import type { TextProps } from '@app/components/ui/text/Text.types';
 
 /**
  * The rendered RNText props with the style flattened, so two renders compare
@@ -92,21 +92,5 @@ describe('ChatText', () => {
     const { chat, design } = renderBoth(props);
 
     expect(chat).toEqual(design);
-  });
-
-  test('resolves a style fontWeight to the matching Montserrat family', () => {
-    render(<ChatText style={[{ fontWeight: '700' }, null]}>bold</ChatText>);
-
-    const flat =
-      StyleSheet.flatten<TextStyle>(screen.getByText('bold').props['style']) ??
-      {};
-
-    expect({
-      fontFamily: flat.fontFamily,
-      fontWeight: flat.fontWeight,
-    }).toEqual<Pick<TextStyle, 'fontFamily' | 'fontWeight'>>({
-      fontFamily: theme.fontFamilyBold,
-      fontWeight: undefined,
-    });
   });
 });

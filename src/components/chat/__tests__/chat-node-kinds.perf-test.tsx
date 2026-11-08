@@ -15,12 +15,12 @@ import { ChatRowItem } from '@app/components/chat/components/chat-message/ChatRo
 import { sevenTvService } from '@app/services/seven-tv-service';
 import { twitchService } from '@app/services/twitch-service';
 import { addPaint, setUserPaint } from '@app/store/chat/actions/cosmetics';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { paintRendererFlag$, preferences$ } from '@app/store/preference-store';
 import { DefaultWrapper } from '@app/test/render';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import type { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
 import type { TwitchClip } from '@app/types/twitch/clip';
-import { convertV4PaintToPaintData } from '@app/utils/color/seven-tv-paint-data/convertV4PaintToPaintData';
+import { convertV4PaintToPaintData } from '@app/utils/seven-tv/gql/convertV4PaintToPaintData';
 
 /**
  * `ChatRowItem` registers with the list's viewability tracker, which only
@@ -85,7 +85,6 @@ function NodeKindRows({ messages, row }: NodeKindRowsProps) {
           highlightedUserSet={row.highlightedUserSet}
           messageDisplay={row.messageDisplay}
           onBadgePress={noop}
-          onEmotePress={noop}
           onMessageLongPress={noop}
           onReplyContextPress={noop}
           onUsernamePress={noop}
@@ -124,7 +123,6 @@ function ProductionRows() {
           index={index}
           message={message}
           onBadgePress={noop}
-          onEmotePress={noop}
           onMessageLongPress={noop}
           onReplyContextPress={noop}
           onUsernamePress={noop}

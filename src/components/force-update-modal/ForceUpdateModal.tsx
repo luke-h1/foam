@@ -1,145 +1,27 @@
-import { useEffect, useRef, useState } from 'react';
-import {
-  Alert,
-  AppState,
-  Modal as RNModal,
-  Platform,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Modal as RNModal, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-import * as Application from 'expo-application';
 
 import { SymbolView } from '@app/components/ui/icon/Icon';
 import { Text } from '@app/components/ui/text/Text';
-import { useRemoteConfig } from '@app/hooks/firebase/use-remote-config';
-import { getStoreUrlAsync } from '@app/screens/dev-tools/util/getStoreUrlAsync';
 import { theme } from '@app/styles/themes';
-import { openLinkInBrowserAsync } from '@app/utils/browser/openLinkInBrowser';
-import { logger } from '@app/utils/logger';
-import { runWhenIdle } from '@app/utils/runWhenIdle';
-import { isUpdateRequired } from '@app/utils/version/compareVersions';
-import { getMinimumVersion } from '@app/utils/version/getMinimumVersion';
+import { openStore } from '@app/utils/app-update/openStore';
 
 import { ActionButton } from '../action-button/ActionButton';
+import { UPDATE_REQUIRED_BODY, UPDATE_REQUIRED_TITLE } from './constants';
+import { useArmedWhenIdle } from './hooks/use-armed-when-idle';
+import { useUpdateRequirement } from './hooks/use-update-requirement';
 
-async function handleUpdatePress() {
-  try {
-    const storeUrl = await getStoreUrlAsync();
-    if (storeUrl) {
-      await openLinkInBrowserAsync(storeUrl);
-    }
-  } catch (error) {
-    logger.main.error('[ForceUpdateModal] failed to open store link', error);
-  }
-}
-
-const UPDATE_REQUIRED_TITLE = 'Update Required';
-
-const UPDATE_REQUIRED_BODY =
-  'A new version of Foam is available. Update to keep using the app.';
-
-const ALERT_REPRESENT_DELAY_MS = 300;
-
-/**
- * Mounted after first interactions to keep the Remote Config fetch off the
- * first frame.
- */
 export function ForceUpdateModal() {
-  const [armed, setArmed] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    void runWhenIdle(() => {
-      if (!cancelled) {
-        setArmed(true);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const armed = useArmedWhenIdle();
 
   return armed ? <ForceUpdateModalContent /> : null;
 }
 
 function ForceUpdateModalContent() {
-  const { config: remoteConfig } = useRemoteConfig();
+  const { updateRequired, currentVersion, minimumVersion } =
+    useUpdateRequirement();
+
   const insets = useSafeAreaInsets();
-  const alertVisibleRef = useRef(false);
-
-  const variant = process.env.EXPO_PUBLIC_APP_VARIANT ?? 'development';
-  const minimumVersion = getMinimumVersion(variant, remoteConfig);
-  const currentVersion = Application.nativeApplicationVersion ?? 'Unknown';
-
-  const updateRequired =
-    minimumVersion && currentVersion && currentVersion !== 'Unknown'
-      ? (isUpdateRequired(currentVersion, minimumVersion) ?? false)
-      : false;
-
-  useEffect(() => {
-    if (Platform.OS !== 'ios' || !updateRequired) {
-      return;
-    }
-
-    let alertTimer: ReturnType<typeof setTimeout> | undefined;
-
-    const scheduleAlert = () => {
-      if (alertTimer) {
-        clearTimeout(alertTimer);
-      }
-
-      alertTimer = setTimeout(presentAlert, ALERT_REPRESENT_DELAY_MS);
-    };
-
-    const presentAlert = () => {
-      if (alertVisibleRef.current) {
-        return;
-      }
-
-      alertVisibleRef.current = true;
-
-      Alert.alert(
-        UPDATE_REQUIRED_TITLE,
-        `${UPDATE_REQUIRED_BODY}\n\nCurrent version: ${currentVersion}\nMinimum required: ${minimumVersion}`,
-        [
-          {
-            text: 'Update',
-            onPress: () => {
-              alertVisibleRef.current = false;
-              void handleUpdatePress().finally(scheduleAlert);
-            },
-          },
-        ],
-      );
-    };
-
-    const appStateSubscription = AppState.addEventListener('change', state => {
-      if (state === 'active') {
-        scheduleAlert();
-      }
-    });
-
-    if (AppState.currentState === 'active') {
-      presentAlert();
-    }
-
-    return () => {
-      appStateSubscription.remove();
-      alertVisibleRef.current = false;
-
-      if (alertTimer) {
-        clearTimeout(alertTimer);
-      }
-    };
-  }, [updateRequired, currentVersion, minimumVersion]);
-
-  if (Platform.OS === 'ios') {
-    return null;
-  }
 
   return (
     <RNModal
@@ -190,8 +72,7 @@ function ForceUpdateModalContent() {
 
           <ActionButton
             title='Update now'
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            onPress={handleUpdatePress}
+            onPress={openStore}
             style={styles.updateButton}
           />
         </View>

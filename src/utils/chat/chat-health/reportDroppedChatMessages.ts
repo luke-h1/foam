@@ -2,7 +2,7 @@ import { logger } from '@app/utils/logger';
 
 const REPORT_WINDOW_MS = 30_000;
 
-export type DroppedChatMessagesReason =
+type DroppedChatMessagesReason =
   | 'ingest-buffer-overflow'
   | 'ingest-rate-limit'
   | 'delay-queue-overflow';
@@ -100,10 +100,6 @@ export function reportDroppedChatMessages(
   const sinceLastReport = Date.now() - state.lastReportAt;
 
   if (sinceLastReport < REPORT_WINDOW_MS) {
-    /**
-     * Waits out the rest of the window and reports whatever built up, so a
-     * burst that never repeats still reaches Sentry.
-     */
     state.trailingReportTimer ??= setTimeout(
       () => flushTrailingDrops(state),
       REPORT_WINDOW_MS - sinceLastReport,

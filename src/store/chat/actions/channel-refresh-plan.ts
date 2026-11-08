@@ -1,5 +1,11 @@
+import { CACHE_DURATION } from '../types/cache-limits';
+import {
+  CHANNEL_EMOTE_SLICE_KEYS,
+  type ChatResourceSliceKey,
+  GLOBAL_BADGE_SLICE_KEYS,
+  GLOBAL_EMOTE_SLICE_KEYS,
+} from '../types/chat-resource-slices';
 import type { ChannelCacheType, GlobalCacheType } from '../types/constants';
-import { BADGE_CACHE_DURATION, CACHE_DURATION } from '../types/constants';
 
 export interface ChannelRefreshPlanInput {
   cache?: ChannelCacheType;
@@ -21,21 +27,27 @@ export interface CachedChannelRefreshPlan {
 
 export type ChannelRefreshPlan = { kind: 'full' } | CachedChannelRefreshPlan;
 
-const CHANNEL_EMOTE_SLICES = [
-  'twitchChannelEmotes',
-  'sevenTvChannelEmotes',
-  'ffzChannelEmotes',
-  'bttvChannelEmotes',
-] as const;
+const CHANNEL_EMOTE_SLICES = CHANNEL_EMOTE_SLICE_KEYS.filter(
+  key => key !== 'twitchSubscriberEmotes',
+);
 
-const GLOBAL_EMOTE_SLICES = [
-  'twitchGlobalEmotes',
-  'sevenTvGlobalEmotes',
-  'ffzGlobalEmotes',
-  'bttvGlobalEmotes',
-] as const;
+const isEmptyGroup = (
+  globalCache: GlobalCacheType | undefined,
+  keys: readonly ChatResourceSliceKey<'global'>[],
+): boolean => keys.every(key => (globalCache?.[key]?.length ?? 0) === 0);
 
-const GLOBAL_BADGE_SLICES = ['twitchGlobalBadges', 'ffzGlobalBadges'] as const;
+const hasEmptyGlobalGroup = (
+  globalCache: GlobalCacheType | undefined,
+): boolean =>
+  isEmptyGroup(globalCache, GLOBAL_EMOTE_SLICE_KEYS) ||
+  isEmptyGroup(globalCache, GLOBAL_BADGE_SLICE_KEYS);
+
+export const isGlobalCacheStale = (
+  globalCache: GlobalCacheType | undefined,
+  now: number,
+): boolean =>
+  hasEmptyGlobalGroup(globalCache) ||
+  now - (globalCache?.lastUpdated ?? 0) >= CACHE_DURATION;
 
 export const planChannelRefresh = ({
   cache,
@@ -50,13 +62,9 @@ export const planChannelRefresh = ({
 
   const cacheAgeMs = now - cache.lastUpdated;
 
-  const hasEmptyGlobalEmotes = GLOBAL_EMOTE_SLICES.every(
-    slice => (globalCache?.[slice]?.length || 0) === 0,
-  );
-
   const hasEmptyEmotes =
     CHANNEL_EMOTE_SLICES.every(slice => (cache[slice]?.length || 0) === 0) &&
-    hasEmptyGlobalEmotes;
+    isEmptyGroup(globalCache, GLOBAL_EMOTE_SLICE_KEYS);
 
   if (hasEmptyEmotes || cacheAgeMs >= CACHE_DURATION) {
     return { kind: 'full' };
@@ -64,14 +72,6 @@ export const planChannelRefresh = ({
 
   const badgeCacheAgeMs =
     now - (cache.badgesLastUpdated ?? cache.lastUpdated ?? 0);
-
-  const globalCacheAgeMs = now - (globalCache?.lastUpdated ?? 0);
-
-  const hasEmptyGlobalSlices =
-    hasEmptyGlobalEmotes &&
-    GLOBAL_BADGE_SLICES.every(
-      slice => (globalCache?.[slice]?.length || 0) === 0,
-    );
 
   return {
     kind: 'cached',
@@ -81,8 +81,7 @@ export const planChannelRefresh = ({
     fetchSubscriberEmotes: Boolean(
       twitchUserId && cache.twitchSubscriberEmotesUserId !== twitchUserId,
     ),
-    refreshBadges: badgeCacheAgeMs >= BADGE_CACHE_DURATION,
-    refreshGlobalResources:
-      hasEmptyGlobalSlices || globalCacheAgeMs >= CACHE_DURATION,
+    refreshBadges: badgeCacheAgeMs >= CACHE_DURATION,
+    refreshGlobalResources: isGlobalCacheStale(globalCache, now),
   };
 };

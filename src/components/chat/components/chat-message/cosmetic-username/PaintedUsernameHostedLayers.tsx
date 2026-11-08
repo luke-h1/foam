@@ -6,18 +6,15 @@ import {
   View,
 } from 'react-native';
 
+import { useChatScrollActive } from '@app/components/chat/components/chat-message/cosmetic-username/hooks/use-chat-scroll-active';
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
-import { useChatScrollActive } from '@app/components/chat/hooks/use-chat-scroll-active';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
 import { chatLineMetrics } from '../util/chatScale';
 import { PaintedUsernameDropShadowLayer } from './PaintedUsernameDropShadowLayer';
 import { PaintedUsernameMaskedFill } from './PaintedUsernameMaskedFill';
 import { PaintedUsernameWebView } from './PaintedUsernameWebView';
-import {
-  getPaintDropShadows,
-  type PaintDropShadowMode,
-} from './util/paint-layer/getPaintDropShadows';
+import { getPaintDropShadows } from './util/paint-layer/getPaintDropShadows';
 import { getPaintSolidColor } from './util/paint-layer/getPaintSolidColor';
 import {
   getPaintTextureUrl,
@@ -38,7 +35,6 @@ interface PaintedUsernameHostedLayersProps {
   lineHeight?: number;
   paint: PaintData;
   plainColor: string;
-  sevenTvPaintDropShadows: PaintDropShadowMode;
   usernameTextStyle?: StyleProp<TextStyle>;
   useWebView: boolean;
 }
@@ -55,7 +51,6 @@ export function PaintedUsernameHostedLayers({
   lineHeight,
   paint,
   plainColor,
-  sevenTvPaintDropShadows,
   usernameTextStyle,
   useWebView,
 }: PaintedUsernameHostedLayersProps) {
@@ -114,7 +109,7 @@ export function PaintedUsernameHostedLayers({
     );
   }
 
-  const dropShadows = getPaintDropShadows(paint, sevenTvPaintDropShadows);
+  const dropShadows = getPaintDropShadows(paint);
   const textShadows = getPaintTextShadows(paint);
   const stroke = getPaintTextStroke(paint);
 
@@ -136,7 +131,7 @@ export function PaintedUsernameHostedLayers({
     <View style={styles.paintedWrapper}>
       {underlayShadows.map(({ shadow, source }, index) => (
         <PaintedUsernameDropShadowLayer
-          // eslint-disable-next-line react-doctor/no-array-index-as-key -- static list that never reorders
+          // oxlint-disable-next-line react-doctor/no-array-index-as-key -- static list that never reorders
           key={`${source}-${index}-${paintShadowKey(shadow)}`}
           displayUsername={displayUsername}
           maskTextStyle={maskTextStyle}

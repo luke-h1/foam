@@ -1,5 +1,6 @@
-import type { SuggestionType } from './chatComposerTypes';
 import { getCurrentWordInfo } from './getCurrentWordInfo';
+
+type SuggestionType = 'emote' | 'user' | 'command';
 
 export const getCurrentWordAndType = (text: string, cursorPosition: number) => {
   const wordInfo = getCurrentWordInfo(text, cursorPosition);

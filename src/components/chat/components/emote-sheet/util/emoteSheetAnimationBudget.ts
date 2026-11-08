@@ -4,7 +4,7 @@ type AnimationBudgetListener = (granted: boolean) => void;
  * Caps concurrently animating picker cells; full autoplay caused a 3.8-4.6s
  * main-thread hang (Sentry FOAM-TV-MOBILE-W). Cells over the cap hold frame 1.
  */
-export const MAX_CONCURRENT_ANIMATED = 96;
+const MAX_CONCURRENT_ANIMATED = 96;
 
 interface AnimationSlot {
   granted: boolean;

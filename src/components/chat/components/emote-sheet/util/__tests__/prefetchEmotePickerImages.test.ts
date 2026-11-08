@@ -2,7 +2,6 @@ import { Image as ExpoImage } from 'expo-image';
 
 import { createMenuEmote } from '@app/components/chat/components/emote-sheet/__tests__/__fixtures__/emoteMenuData.fixture';
 
-import { getEmotePickerDisplayUrl } from '../emotePickerDisplayUrl';
 import { prefetchEmotePickerImages } from '../prefetchEmotePickerImages';
 
 const prefetchMock = jest.spyOn(ExpoImage, 'prefetch').mockResolvedValue(true);
@@ -22,12 +21,9 @@ describe('prefetchEmotePickerImages', () => {
 
     await prefetchEmotePickerImages([emote]);
 
-    expect(warmedUrls()).toEqual([getEmotePickerDisplayUrl(emote)]);
-
-    expect(prefetchMock).toHaveBeenCalledWith(
-      [getEmotePickerDisplayUrl(emote)],
-      'disk',
-    );
+    expect(prefetchMock.mock.calls).toEqual([
+      [['https://cdn.example.com/warm-1.webp'], 'disk'],
+    ]);
   });
 
   test('deduplicates emotes that resolve to the same URL', async () => {
@@ -35,7 +31,7 @@ describe('prefetchEmotePickerImages', () => {
 
     await prefetchEmotePickerImages([emote, emote]);
 
-    expect(warmedUrls()).toEqual([getEmotePickerDisplayUrl(emote)]);
+    expect(warmedUrls()).toEqual(['https://cdn.example.com/warm-2.webp']);
   });
 
   test('does nothing when the signal is already aborted', async () => {

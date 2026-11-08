@@ -244,7 +244,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: '100%',
     justifyContent: 'center',
-    // Fixed slot keeps the icon + label from drifting as the fill expands.
     width: ACTION_WIDTH,
   },
   deleteActionContent: {

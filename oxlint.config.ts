@@ -351,7 +351,7 @@ const local = {
         'src/lib/__tests__/forwardLogToSentry.test.ts',
         'src/lib/haptics.ts',
         'src/hooks/firebase/analytics.ts',
-        'src/hooks/firebase/analytics.test.ts',
+        'src/hooks/firebase/__tests__/analytics.test.ts',
         '__mocks__/@react-native-firebase/analytics.ts',
         'src/components/chat/util/__tests__/createSevenTvCallbacks.test.ts',
         'src/components/stream-player/__tests__/StreamPlayer.test.tsx',

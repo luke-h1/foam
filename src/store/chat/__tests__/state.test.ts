@@ -1,3 +1,4 @@
+import { flushChatStoreTimers } from '@app/test/chat-store-teardown';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
@@ -80,21 +81,6 @@ describe('makeEmptyGlobalCacheData', () => {
     url: `https://example.com/${id}.webp`,
   });
 
-  test('the store boots with its own instance, unshared with any other call', () => {
-    const fresh = makeEmptyGlobalCacheData();
-    const storeSlot = chatStore$.persisted.globalCaches.peek();
-
-    expect(storeSlot).not.toBe(fresh);
-
-    expect(storeSlot.twitchGlobalEmotes).not.toBe(fresh.twitchGlobalEmotes);
-
-    expect(makeEmptyGlobalCacheData()).not.toBe(fresh);
-
-    expect(makeEmptyGlobalCacheData().twitchGlobalEmotes).not.toBe(
-      fresh.twitchGlobalEmotes,
-    );
-  });
-
   test('a hydration-style mutation of one instance does not leak into a clear', () => {
     const hydrated: GlobalCacheType = makeEmptyGlobalCacheData();
     hydrated.lastUpdated = 1_700_000_000_000;
@@ -104,7 +90,7 @@ describe('makeEmptyGlobalCacheData', () => {
       id: 'hydrated-badge',
       set: 'hydrated-badge',
       title: 'hydrated-badge',
-      type: 'FFZ Badge',
+      type: 'FFZ Global Badge',
       provider: 'ffz',
       url: 'https://example.com/hydrated-badge.png',
     });
@@ -150,7 +136,7 @@ describe('migratePersistedChatStore', () => {
     id,
     set: id,
     title: id,
-    type: 'FFZ Badge',
+    type: 'FFZ Global Badge',
     provider: 'ffz',
     url: `https://example.com/${id}.png`,
   });
@@ -284,3 +270,5 @@ describe('migratePersistedChatStore', () => {
     ).toEqual<ChannelCacheType>(currentCache);
   });
 });
+
+afterEach(flushChatStoreTimers);

@@ -1,17 +1,20 @@
 import { act, render } from '@testing-library/react-native';
-import { router } from 'expo-router';
+import { router, useSegments } from 'expo-router';
 
 import { createAuthContextValue } from '@app/context/__tests__/__fixtures__/auth-context.fixture';
 import {
   type AuthContextState,
   AuthContextTestProvider,
 } from '@app/context/AuthContext';
-import {
-  beginDeepLinkAuth,
-  endDeepLinkAuth,
-} from '@app/navigators/deep-link-auth-state';
 
+import { useIsRouterReady } from '../use-is-router-ready';
 import { usePopulateAuth } from '../use-populate-auth';
+
+jest.mock('@app/hooks/use-is-router-ready', () => ({
+  useIsRouterReady: jest.fn(() => true),
+}));
+
+const mockedUseIsRouterReady = jest.mocked(useIsRouterReady);
 
 const loggedIn: AuthContextState['authState'] = {
   isAnonAuth: false,
@@ -24,25 +27,14 @@ const loggedIn: AuthContextState['authState'] = {
   },
 };
 
-const anon: AuthContextState['authState'] = {
-  isAnonAuth: true,
-  isLoggedIn: false,
-  token: {
-    accessToken: 'anon',
-    expiresIn: 3600,
-    tokenType: 'bearer',
-    expiresAt: Date.now() + 3_600_000,
-  },
-};
-
 function PopulateAuthProbe() {
   usePopulateAuth();
   return null;
 }
 
-function withAuthState(authState: AuthContextState['authState']) {
+function withAuth(overrides: Partial<AuthContextState>) {
   return (
-    <AuthContextTestProvider {...createAuthContextValue({ authState })}>
+    <AuthContextTestProvider {...createAuthContextValue(overrides)}>
       <PopulateAuthProbe />
     </AuthContextTestProvider>
   );
@@ -62,22 +54,23 @@ describe('usePopulateAuth', () => {
   afterEach(() => {
     jest.runOnlyPendingTimers();
     jest.useRealTimers();
+    mockedUseIsRouterReady.mockReturnValue(true);
+    jest.mocked(useSegments).mockReturnValue(['tabs']);
   });
 
-  test('does not navigate when hydrating straight into a logged-in state (app open)', () => {
-    const { rerender } = render(withAuthState(undefined));
+  test('does not navigate when a stored session is restored at startup', () => {
+    const { rerender } = render(withAuth({ authState: undefined }));
 
-    rerender(withAuthState(loggedIn));
+    rerender(withAuth({ authState: loggedIn }));
     runTimers();
 
     expect(router.replace).not.toHaveBeenCalled();
   });
 
-  test('navigates to following on a logged-out -> logged-in transition (sheet login)', () => {
-    const { rerender } = render(withAuthState(undefined));
+  test('navigates to following once when a sign-in completes', () => {
+    const { rerender } = render(withAuth({ signInId: 0 }));
 
-    rerender(withAuthState(anon));
-    rerender(withAuthState(loggedIn));
+    rerender(withAuth({ authState: loggedIn, signInId: 1 }));
     runTimers();
 
     expect(jest.mocked(router.replace).mock.calls).toEqual([
@@ -85,31 +78,50 @@ describe('usePopulateAuth', () => {
     ]);
   });
 
-  test('does not navigate on a magic-link login (RouterEffects handles it)', () => {
-    beginDeepLinkAuth();
+  test('does not navigate again while the sign-in stays the same (e.g. token refresh)', () => {
+    const { rerender } = render(withAuth({ signInId: 0 }));
 
-    try {
-      const { rerender } = render(withAuthState(undefined));
+    rerender(withAuth({ authState: loggedIn, signInId: 1 }));
+    runTimers();
 
-      rerender(withAuthState(anon));
-      rerender(withAuthState(loggedIn));
-      runTimers();
-    } finally {
-      endDeepLinkAuth();
-    }
+    rerender(withAuth({ authState: { ...loggedIn }, signInId: 1 }));
+    runTimers();
 
-    expect(router.replace).not.toHaveBeenCalled();
+    expect(jest.mocked(router.replace).mock.calls).toEqual([
+      ['/tabs/following'],
+    ]);
   });
 
-  test('does not navigate again while staying logged in (e.g. token refresh)', () => {
-    const { rerender } = render(withAuthState(anon));
+  test('waits for the router to mount before it navigates', () => {
+    mockedUseIsRouterReady.mockReturnValue(false);
 
-    rerender(withAuthState(loggedIn));
+    const { rerender } = render(withAuth({ signInId: 0 }));
+
+    rerender(withAuth({ authState: loggedIn, signInId: 1 }));
     runTimers();
 
-    // New authState object with the same isLoggedIn, as produced by a refresh
-    rerender(withAuthState({ ...loggedIn }));
+    expect(router.replace).not.toHaveBeenCalled();
+
+    mockedUseIsRouterReady.mockReturnValue(true);
+    rerender(withAuth({ authState: loggedIn, signInId: 1 }));
+
+    expect(jest.mocked(router.replace).mock.calls).toEqual([
+      ['/tabs/following'],
+    ]);
+  });
+
+  test('waits for the auth sheet to close before it navigates', () => {
+    jest.mocked(useSegments).mockReturnValue(['auth-sheet']);
+
+    const { rerender } = render(withAuth({ signInId: 0 }));
+
+    rerender(withAuth({ authState: loggedIn, signInId: 1 }));
     runTimers();
+
+    expect(router.replace).not.toHaveBeenCalled();
+
+    jest.mocked(useSegments).mockReturnValue(['tabs']);
+    rerender(withAuth({ authState: loggedIn, signInId: 1 }));
 
     expect(jest.mocked(router.replace).mock.calls).toEqual([
       ['/tabs/following'],

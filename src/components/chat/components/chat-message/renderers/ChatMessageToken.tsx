@@ -1,12 +1,13 @@
 import { useMemo } from 'react';
 
 import { StvEmoteEvent } from '@app/components/chat/components/StvEmoteEvent';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import { getTokenIdentity } from '@app/components/chat/util/chat-row/getTokenIdentity';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import { getMessageTokenText } from '@app/utils/chat/messageTokenContent';
 
 import { styles } from '../ChatRow.styles';
 import { getChatTextStyles } from '../ChatText.styles';
-import { densityFromCompact, getChatScale } from '../util/chatScale';
+import { getChatScale } from '../util/chatScale';
 import { CheermoteToken } from './CheermoteToken';
 import { EmoteToken } from './EmoteToken';
 import { GifToken } from './GifToken';
@@ -25,17 +26,16 @@ type ChatMessageTokenProps = Omit<ChatTokenRenderProps, 'message'> & {
 };
 
 export function ChatMessageToken({
-  compact,
+  density,
   disableEmoteAnimations,
   effectiveHighlightedUserSet,
   fontScale,
   getMentionColor,
-  getTokenKey,
   onEmoteTouchStart,
   index,
   message,
   mode,
-  moderationNotice,
+  isModerated,
   normalisedCurrentUsername,
   noticeTags,
   parseTextForEmotes,
@@ -44,9 +44,8 @@ export function ChatMessageToken({
   textColor,
   token,
 }: ChatMessageTokenProps) {
-  const isModerated = Boolean(moderationNotice);
-  const textStyles = getChatTextStyles(fontScale, compact);
-  const scale = getChatScale(fontScale, densityFromCompact(compact));
+  const textStyles = getChatTextStyles(fontScale, density);
+  const scale = getChatScale(fontScale, density);
   const resolvedEmoteSize = emoteTargetSize ?? scale.emoteSize;
 
   const mentionBaseTextStyle = useMemo(
@@ -74,7 +73,7 @@ export function ChatMessageToken({
     case 'link':
       return (
         <TextToken
-          key={getTokenKey(token, index)}
+          key={getTokenIdentity(token, index)}
           isModerated={isModerated}
           textColor={textColor}
           textStyles={textStyles}
@@ -84,7 +83,9 @@ export function ChatMessageToken({
 
     case 'stvEmoteLink':
     case 'twitchClip':
-      return <MediaLinkToken key={getTokenKey(token, index)} token={token} />;
+      return (
+        <MediaLinkToken key={getTokenIdentity(token, index)} token={token} />
+      );
 
     case 'emote': {
       const previousToken = message[index - 1];
@@ -97,7 +98,7 @@ export function ChatMessageToken({
           {...{
             disableAnimations: disableEmoteAnimations,
             isModerated,
-            key: getTokenKey(token, index),
+            key: getTokenIdentity(token, index),
             token,
             onEmoteTouchStart,
             shouldOverlayPrevious,
@@ -112,7 +113,7 @@ export function ChatMessageToken({
         <CheermoteToken
           disableAnimations={disableEmoteAnimations}
           isModerated={isModerated}
-          key={getTokenKey(token, index)}
+          key={getTokenIdentity(token, index)}
           textStyles={textStyles}
           token={token}
           targetSize={resolvedEmoteSize}
@@ -123,10 +124,10 @@ export function ChatMessageToken({
       return (
         <MentionToken
           {...{
-            key: getTokenKey(token, index),
+            key: getTokenIdentity(token, index),
             content: getMessageTokenText(token),
             baseTextStyle: mentionBaseTextStyle,
-            compact,
+            density,
             fontScale,
             isModerated,
             getMentionColor,
@@ -142,9 +143,9 @@ export function ChatMessageToken({
     case 'stvEmoteRemoved':
       return (
         <StvEmoteEvent
-          key={getTokenKey(token, index)}
-          compact={compact}
-          disableAnimations={disableEmoteAnimations}
+          key={getTokenIdentity(token, index)}
+          density={density}
+          disableEmoteAnimations={disableEmoteAnimations}
           fontScale={fontScale}
           token={token}
         />
@@ -155,7 +156,7 @@ export function ChatMessageToken({
         <GifToken
           disableAnimations={disableEmoteAnimations}
           isModerated={isModerated}
-          key={getTokenKey(token, index)}
+          key={getTokenIdentity(token, index)}
           textStyles={textStyles}
           token={token}
           targetSize={scale.gifSize}
@@ -165,11 +166,10 @@ export function ChatMessageToken({
     default:
       return (
         <NoticeToken
-          key={getTokenKey(token, index)}
-          compact={compact}
+          key={getTokenIdentity(token, index)}
+          density={density}
           disableEmoteAnimations={disableEmoteAnimations}
           fontScale={fontScale}
-          noticeTags={noticeTags}
           parseTextForEmotes={parseTextForEmotes}
           token={token}
         />

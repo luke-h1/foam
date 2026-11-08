@@ -1,23 +1,19 @@
-/* eslint-disable camelcase */
-import type { ChatDensity } from '@app/components/chat/components/chat-message/util/chatScale';
 import type { ChatMessageDisplayFlags } from '@app/components/chat/types/chat-ui-flags';
+import type { ChatDensity, ChatFontScale } from '@app/store/preference-store';
 import type {
   AnyChatMessageType,
   ChatMessageType,
-} from '@app/store/chat/types/constants';
-import type {
-  ChatFontScale,
-  CustomHighlight,
-} from '@app/store/preference-store';
+} from '@app/types/chat/chatMessage';
+import type { CustomHighlight } from '@app/types/chat/customHighlight';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { createModeratedMessageText } from '@app/utils/chat/createModeratedMessageText';
 import { parseIrcMessage } from '@app/utils/chat/irc-protocol/parseIrcMessage';
-import { coerceUserNoticeTags } from '@app/utils/chat/message-handlers/coerceUserNoticeTags';
+import { routeIrcMessage } from '@app/utils/chat/irc-protocol/routeIrcMessage';
 import { createSystemMessage } from '@app/utils/chat/message-handlers/createSystemMessage';
 import { createUserNoticeMessage } from '@app/utils/chat/message-handlers/createUserNoticeMessage';
-import type { MessageToken } from '@app/utils/chat/messageToken';
 
 import {
   ANNOUNCEMENT,
@@ -171,7 +167,7 @@ interface MessageOverrides {
   moderationNotice?: string;
   parentDisplayName?: string;
   replyBody?: string;
-  replyDisplayName?: string;
+  replyParentLogin?: string;
   userstate?: Partial<UserStateTags>;
   userId?: string;
   flags?: Partial<
@@ -202,7 +198,7 @@ function userMessage(
     cachedSenderColor: color,
     message: overrides.message ?? [text(`regular chat message ${index}`)],
     replyBody: overrides.replyBody ?? '',
-    replyDisplayName: overrides.replyDisplayName ?? '',
+    replyParentLogin: overrides.replyParentLogin ?? '',
     parentDisplayName: overrides.parentDisplayName ?? '',
     timestamp: '12:00',
     isAction: overrides.isAction,
@@ -236,20 +232,24 @@ function rows(
 
 function noticeFromIrc(line: string, index: number): AnyChatMessageType {
   const parsed = parseIrcMessage(line);
+  let notice: AnyChatMessageType | undefined;
 
-  if (!parsed?.tags) {
-    throw new Error(`Fixture line did not parse as IRC: ${line}`);
+  if (parsed) {
+    routeIrcMessage(parsed, {
+      usernotice: (_channel, tags, text) => {
+        notice = createUserNoticeMessage({
+          timestampFormat: '24h',
+          tags: { ...tags, id: `${tags.id}-${index}` },
+          channelName: 'foam',
+          text,
+        });
+      },
+    });
   }
 
-  const notice = createUserNoticeMessage({
-    tags: coerceUserNoticeTags({
-      ...parsed.tags,
-      id: `${parsed.tags['id']}-${index}`,
-    }),
-    channelName: 'foam',
-    text: parsed.params[1] ?? '',
-    broadcasterId: 'broadcaster-1',
-  });
+  if (!notice) {
+    throw new Error(`Fixture line did not parse as a USERNOTICE: ${line}`);
+  }
 
   return { ...notice, timestamp: '12:00' };
 }
@@ -271,7 +271,10 @@ const SEVEN_TV_BADGES = [
 ];
 
 const FFZ_BADGES = [
-  badge('ffz', 'ffz', '3', { type: 'FFZ Badge', owner_username: 'user1' }),
+  badge('ffz', 'ffz', '3', {
+    type: 'FFZ Global Badge',
+    owner_username: 'user1',
+  }),
 ];
 
 const BTTV_BADGES = [
@@ -279,7 +282,7 @@ const BTTV_BADGES = [
 ];
 
 const TINTED_BADGES = [
-  badge('ffz', 'ffz', '2', { type: 'FFZ Badge', color: '#5f9ea0' }),
+  badge('ffz', 'ffz', '2', { type: 'FFZ Global Badge', color: '#5f9ea0' }),
   badge('7tv', '7tv', '01F2SAQ6J80006G3R48W6T4V0E', {
     type: '7TV Badge',
     color: '#ff8800',
@@ -505,7 +508,7 @@ export const chatNodeKinds: ChatNodeKindFixture[] = [
       userMessage('reply-context', index, {
         parentDisplayName: `user${(index + 3) % 24}`,
         replyBody: `the original message ${index}`,
-        replyDisplayName: `user${(index + 3) % 24}`,
+        replyParentLogin: `user${(index + 3) % 24}`,
         message: [
           { type: 'mention', content: `@user${(index + 3) % 24}` },
           text(` agreed ${index}`),
@@ -633,7 +636,11 @@ export const chatNodeKinds: ChatNodeKindFixture[] = [
   {
     id: 'system-row',
     messages: rows(index => ({
-      ...createSystemMessage('foam', `user${index} was timed out for 600s`),
+      ...createSystemMessage(
+        'foam',
+        `user${index} was timed out for 600s`,
+        '24h',
+      ),
       id: `system-${index}_nonce-${index}`,
       message_id: `system-${index}`,
       message_nonce: `nonce-${index}`,

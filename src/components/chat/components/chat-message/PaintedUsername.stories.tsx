@@ -8,8 +8,8 @@ import {
   type ListRenderItem,
 } from '@app/components/flash-list/FlashList';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
-import { convertV4PaintToPaintData } from '@app/utils/color/seven-tv-paint-data/convertV4PaintToPaintData';
-import { type SevenTvPaintSource } from '@app/utils/color/seven-tv-paint-data/types';
+import { convertV4PaintToPaintData } from '@app/utils/seven-tv/gql/convertV4PaintToPaintData';
+import { type SevenTvPaintSource } from '@app/utils/seven-tv/gql/types';
 
 import { sevenTvPaintsFixture } from './__fixtures__/seven-tv-paints.fixture';
 import { PaintedUsername } from './cosmetic-username/PaintedUsername';
@@ -68,6 +68,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     username: 'TestUser',
+    isModerated: false,
     fallbackColor: '#FFFFFF',
   },
 };
@@ -132,6 +133,7 @@ const renderGalleryRow: ListRenderItem<GalleryRow> = ({ item }) => {
         <SkiaPaintName paint={item.paint} username='Preview' />
       ) : (
         <PaintedUsername
+          isModerated={false}
           paint={item.paint}
           showColon={false}
           username='Preview'
@@ -164,6 +166,7 @@ function AllPaintsGallery() {
 export const AllPaints: Story = {
   args: {
     username: 'Preview',
+    isModerated: false,
     showColon: false,
   },
   render: () => <AllPaintsGallery />,
@@ -216,6 +219,7 @@ function AnimatedPaintGallery() {
 export const Animated: Story = {
   args: {
     username: 'FoamPreview',
+    isModerated: false,
     showColon: false,
   },
   render: () => <AnimatedPaintGallery />,

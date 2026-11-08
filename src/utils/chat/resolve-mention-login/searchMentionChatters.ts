@@ -1,5 +1,5 @@
-import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import { normaliseChatText } from '@app/utils/chat/normaliseChatText';
+import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
+import { getFallbackSenderColor } from '@app/utils/chat/getFallbackSenderColor';
 import { mentionChatterIndex } from '@app/utils/chat/resolve-mention-login/mentionChatterIndex';
 import { mentionLoginIndex } from '@app/utils/chat/resolve-mention-login/mentionLoginIndex';
 import type { MentionChatter } from '@app/utils/chat/resolve-mention-login/types';
@@ -8,11 +8,11 @@ import type { MentionChatter } from '@app/utils/chat/resolve-mention-login/types
  * `chatter` is null for login-only entries, whose colour is synthesised after
  * the result set has been cut to `limit`.
  */
-type MentionCandidate = {
+interface MentionCandidate {
   chatter: MentionChatter | null;
   key: string;
   login: string;
-};
+}
 
 /**
  * `String.prototype.localeCompare` with an options object builds a collator per
@@ -28,8 +28,7 @@ function toMentionChatter(candidate: MentionCandidate): MentionChatter {
   return (
     candidate.chatter ?? {
       login: candidate.login,
-      userId: candidate.key,
-      color: generateRandomTwitchColor(candidate.login),
+      color: getFallbackSenderColor(candidate.login),
     }
   );
 }
@@ -41,10 +40,8 @@ function toMentionChatter(candidate: MentionCandidate): MentionChatter {
 export function searchMentionChatters(
   query: string,
   limit = 20,
-  _mentionLoginRevision = 0,
 ): MentionChatter[] {
-  void _mentionLoginRevision;
-  const normalisedQuery = normaliseChatText(query);
+  const normalisedQuery = normaliseChatUsername(query);
 
   if (!normalisedQuery) {
     return [];

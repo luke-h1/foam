@@ -14,7 +14,6 @@ interface DisposableTexture {
 export interface DisposablePaintBitmaps {
   staticImage: DisposableTexture;
   maskImage: DisposableTexture | null;
-  backingImage: DisposableTexture | null;
   strokeImage: DisposableTexture | null;
   layerSlots: ({ kind: 'baked'; image: DisposableTexture } | { kind: 'url' })[];
 }
@@ -23,9 +22,9 @@ export interface DisposablePaintBitmaps {
  * Caps entries, not textures - one entry owns a foundation bitmap plus an
  * optional mask, stroke, and a baked bitmap per gradient run above a URL layer.
  */
-export const MAX_CACHED_PAINT_BITMAPS = 256;
+const MAX_CACHED_PAINT_BITMAPS = 256;
 
-export const MAX_PAINT_BITMAP_BYTES = 32 * 1024 * 1024;
+const MAX_PAINT_BITMAP_BYTES = 32 * 1024 * 1024;
 
 const cache = new Map<string, DisposablePaintBitmaps>();
 
@@ -57,7 +56,6 @@ function disposeTextures(entry: DisposablePaintBitmaps): void {
   disposedEntries.add(entry);
   entry.staticImage.dispose();
   entry.maskImage?.dispose();
-  entry.backingImage?.dispose();
   entry.strokeImage?.dispose();
 
   for (const slot of entry.layerSlots) {

@@ -10,12 +10,20 @@ describe('buildTwitchPlayerAudioDefaultScript', () => {
   });
 
   test.each([
-    { muted: true, storedMuted: '{"default":true}' },
-    { muted: false, storedMuted: '{"default":false}' },
+    {
+      muted: true,
+      previousMuted: '{"default":false}',
+      storedMuted: '{"default":true}',
+    },
+    {
+      muted: false,
+      previousMuted: '{"default":true}',
+      storedMuted: '{"default":false}',
+    },
   ])(
-    'stores video-muted as $storedMuted and full volume when muted is $muted',
-    ({ muted, storedMuted }) => {
-      localStorage.setItem('video-muted', '{"default":true}');
+    'replaces video-muted $previousMuted with $storedMuted and sets full volume when muted is $muted',
+    ({ muted, previousMuted, storedMuted }) => {
+      localStorage.setItem('video-muted', previousMuted);
       localStorage.setItem('volume', '0.2');
 
       runPlayerScript(buildTwitchPlayerAudioDefaultScript({ muted }));

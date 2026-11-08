@@ -3,17 +3,14 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@app/components/button/Button';
 import { ChatInlineImage } from '@app/components/chat/components/chat-message/renderers/ChatInlineImage';
-import {
-  densityFromCompact,
-  getChatScale,
-} from '@app/components/chat/components/chat-message/util/chatScale';
+import { getChatScale } from '@app/components/chat/components/chat-message/util/chatScale';
 import {
   createRowVisibilityStore,
   RowVisibilityContext,
 } from '@app/components/chat/components/chat-message/util/rowVisibility';
 import { Text } from '@app/components/ui/text/Text';
 import { setSharedAnimationEnabled } from '@app/lib/expo-image/setSharedAnimationEnabled';
-import { usePreferences } from '@app/store/preference-store';
+import { usePreference } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
 
 const emoteUrls = [
@@ -29,12 +26,10 @@ let sharedClockEnabled = true;
 export function SyncedEmotesScreen() {
   const [remount, setRemount] = useState({ generation: 0, staggered: false });
   const [sharedClock, setSharedClock] = useState(sharedClockEnabled);
-  const { chatDensity, chatFontScale } = usePreferences();
+  const chatDensity = usePreference('chatDensity');
+  const chatFontScale = usePreference('chatFontScale');
 
-  const { emoteSize } = getChatScale(
-    chatFontScale,
-    densityFromCompact(chatDensity === 'compact'),
-  );
+  const { emoteSize } = getChatScale(chatFontScale, chatDensity);
 
   const remountCells = (staggered: boolean) => {
     setRemount(prev => ({ generation: prev.generation + 1, staggered }));

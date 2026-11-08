@@ -691,7 +691,7 @@ controls, `[G]` has an iOS-26 glass surface with no Compose analog.
 - `src/screens/DevTools/components/PaintRendererSection.tsx` `[I]` (Picker)
 - `src/components/ui/Input/Input.ios.tsx` `[I][G]` (add `.android.tsx`)
 - `src/components/ui/SearchHistory/SearchHistoryV2.ios.tsx` `[I]` (add `.android.tsx`)
-- `src/components/Chat/components/ComposerIconButton.tsx` `[G]` (glass button → `IconButton`)
+- `src/components/chat/components/chat-composer/components/ComposerIconButton.ios.tsx` `[G]` (glass button → `IconButton`)
 
 **Glass surfaces (decide, don't port):** `ComposerIconButton`, `Input.ios.tsx`
 use `GlassEffectContainer` (iOS-26 liquid glass). Android has no equivalent -

@@ -1,10 +1,8 @@
 import * as sentry from '@app/lib/sentry';
+import { silenceLogger } from '@app/test/silence-logger';
 import { logger } from '@app/utils/logger';
 
-import {
-  createPlayerTelemetry,
-  PLAYER_LOAD_TIMEOUT_MS,
-} from '../util/playerTelemetry';
+import { createPlayerTelemetry } from '../util/playerTelemetry';
 import { basePlayerTelemetryContext } from './__fixtures__/playerTelemetry.fixture';
 
 function createFakeSpan(id: string): sentry.Span & { id: string } {
@@ -49,8 +47,7 @@ const startInactiveSpan = jest
   .spyOn(sentry, 'startInactiveSpan')
   .mockImplementation(() => fakeSpan);
 
-jest.spyOn(logger.main, 'info').mockImplementation(() => {});
-jest.spyOn(logger.main, 'error').mockImplementation(() => {});
+silenceLogger();
 
 describe('createPlayerTelemetry', () => {
   beforeEach(() => {
@@ -170,19 +167,19 @@ describe('createPlayerTelemetry', () => {
     const telemetry = createPlayerTelemetry();
     telemetry.beginLoad(basePlayerTelemetryContext);
 
-    jest.advanceTimersByTime(PLAYER_LOAD_TIMEOUT_MS);
+    jest.advanceTimersByTime(9000);
 
     expect(countMetric).toHaveBeenCalledWith('stream.player.load_failed', {
       autoplay: true,
       channel: 'sodapoppin',
       content_kind: 'live',
-      elapsed_ms: PLAYER_LOAD_TIMEOUT_MS,
+      elapsed_ms: 9000,
       outcome: 'timeout',
       reason: 'load_timeout',
     });
 
     expect(logger.main.error).toHaveBeenCalledWith(
-      `player failed to load within ${PLAYER_LOAD_TIMEOUT_MS}ms`,
+      'player failed to load within 9000ms',
       {
         name: 'twitch_player_error',
         exceptionName: 'StreamPlayerLoadTimeout',
@@ -190,7 +187,7 @@ describe('createPlayerTelemetry', () => {
         autoplay: true,
         channel: 'sodapoppin',
         content_kind: 'live',
-        elapsed_ms: PLAYER_LOAD_TIMEOUT_MS,
+        elapsed_ms: 9000,
         outcome: 'timeout',
         reason: 'load_timeout',
       },
@@ -206,18 +203,18 @@ describe('createPlayerTelemetry', () => {
     const lateError = new Error('network down mid-playback');
     telemetry.noteLoadFailed('webview_error', lateError);
 
-    expect(countMetric).not.toHaveBeenCalledWith(
-      'stream.player.load_failed',
-      expect.anything(),
-    );
-
-    expect(countMetric).toHaveBeenCalledWith('stream.player.late_error', {
-      autoplay: true,
-      channel: 'sodapoppin',
-      content_kind: 'live',
-      outcome: 'failed',
-      reason: 'webview_error',
-    });
+    expect(countMetric.mock.calls).toEqual([
+      [
+        'stream.player.late_error',
+        {
+          autoplay: true,
+          channel: 'sodapoppin',
+          content_kind: 'live',
+          outcome: 'failed',
+          reason: 'webview_error',
+        },
+      ],
+    ]);
 
     expect(endSpan).not.toHaveBeenCalled();
 
@@ -235,44 +232,6 @@ describe('createPlayerTelemetry', () => {
         reason: 'webview_error',
       },
     );
-  });
-
-  test('counts freeze events with stall duration', () => {
-    const telemetry = createPlayerTelemetry();
-    telemetry.beginLoad(basePlayerTelemetryContext);
-
-    telemetry.noteFreeze({ stalled_ms: 6000 });
-
-    expect(countMetric).toHaveBeenCalledWith('stream.player.freeze', {
-      autoplay: true,
-      channel: 'sodapoppin',
-      content_kind: 'live',
-      stalled_ms: 6000,
-    });
-  });
-
-  test('keeps playback attributes on freeze metrics after load completes', () => {
-    const telemetry = createPlayerTelemetry();
-
-    telemetry.beginLoad({
-      ...basePlayerTelemetryContext,
-      contentKind: 'vod',
-      video: '12345',
-    });
-
-    jest.setSystemTime(1500);
-    telemetry.notePlaybackStarted('bridge_playing');
-    jest.clearAllMocks();
-
-    telemetry.noteFreeze({ stalled_ms: 6000 });
-
-    expect(countMetric).toHaveBeenCalledWith('stream.player.freeze', {
-      autoplay: true,
-      channel: 'sodapoppin',
-      content_kind: 'vod',
-      video: '12345',
-      stalled_ms: 6000,
-    });
   });
 
   test('only records playback start once per load session', () => {

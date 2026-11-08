@@ -16,7 +16,6 @@ export function buildTwitchAutoplayEnsureScript(options: {
   var TARGET_MUTED = ${options.muted ? 'true' : 'false'};
   var START_DELAY_MS = ${startDelayMs};
   var unmuteBlocked = false;
-  // One-shot autoplay guard: set on first play and by native pause.
   var stopped = false;
 
   function prepare(video) {
@@ -103,7 +102,6 @@ export function buildTwitchAutoplayEnsureScript(options: {
     ensurePlaying(document.querySelector('video'));
   }
 
-  // Retry play until the video starts or a deadline; stops on first play. Re-callable from native.
   window.__foamEnsurePlaying = function() {
     stopped = false;
     var deadline = Date.now() + 12000;
@@ -122,7 +120,6 @@ export function buildTwitchAutoplayEnsureScript(options: {
     stopped = true;
   };
 
-  // User mute toggle: stop the loop, pin unmuteBlocked, re-kick play if an unmute re-pauses.
   window.__foamSetMuted = function(nextMuted) {
     try {
       stopped = true;
@@ -152,7 +149,6 @@ export function buildTwitchAutoplayEnsureScript(options: {
     video.__foamAutoplayEnsure = true;
     video.addEventListener('loadeddata', tick);
     video.addEventListener('canplay', tick);
-    // Reconcile audio as soon as playback is confirmed.
     video.addEventListener('playing', tick);
     video.addEventListener('volumechange', function() { postMuteState(video); });
     postMuteState(video);

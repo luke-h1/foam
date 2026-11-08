@@ -68,11 +68,3 @@ export function retainProcessMetricsPolling(
 export function peekProcessMetrics(): ProcessMetricsSample {
   return latest;
 }
-
-export function sampleProcessMetricsNow(): ProcessMetricsSample {
-  if (!timer) {
-    tick();
-  }
-
-  return latest;
-}

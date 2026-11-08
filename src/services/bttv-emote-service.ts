@@ -1,13 +1,13 @@
 import type { BttvBadge } from '@app/types/bttv/badge';
 import type { BttvEmote } from '@app/types/bttv/emote';
-import type {
-  BttvSanitisedEmote,
-  EmoteImageVariantSet,
-} from '@app/types/emote';
+import type { BttvSanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import { bttvEmoteCdn } from '@app/utils/emote/cdn/bttv';
+import { buildSanitisedBadge } from '@app/utils/emote/sanitised/buildSanitisedBadge';
+import { buildSanitisedEmote } from '@app/utils/emote/sanitised/buildSanitisedEmote';
+import { sanitiseAll } from '@app/utils/emote/sanitised/sanitiseAll';
 
 import { bttvCachedApi } from './api/clients';
-import { buildSanitisedEmote } from './emote-provider';
 
 interface BttvChannelEmoteSet {
   id: string;
@@ -36,45 +36,25 @@ const bttvZeroWidthEmotes = [
   'cvHazmat',
 ];
 
-function toBttvEmoteUrl(emoteId: string, scale: '1x' | '2x' | '3x'): string {
-  return `https://cdn.betterttv.net/emote/${emoteId}/${scale}`;
-}
-
-function toBttvStaticEmoteUrl(
-  emoteId: string,
-  scale: '1x' | '2x' | '3x',
-): string {
-  return `https://cdn.betterttv.net/emote/${emoteId}/${scale}.png`;
-}
-
 function sanitiseBttvEmote(
   emote: BttvEmote,
   site: BttvSanitisedEmote['site'],
   creator: string | null,
 ): BttvSanitisedEmote | null {
-  const animatedVariants = {
-    '1x': toBttvEmoteUrl(emote.id, '1x'),
-    '2x': toBttvEmoteUrl(emote.id, '2x'),
-    '3x': toBttvEmoteUrl(emote.id, '3x'),
-  } satisfies EmoteImageVariantSet;
-
-  const staticVariants: EmoteImageVariantSet = emote.animated
-    ? {
-        '1x': toBttvStaticEmoteUrl(emote.id, '1x'),
-        '2x': toBttvStaticEmoteUrl(emote.id, '2x'),
-        '3x': toBttvStaticEmoteUrl(emote.id, '3x'),
-      }
-    : animatedVariants;
+  const variants = bttvEmoteCdn.buildVariants({
+    id: emote.id,
+    animated: emote.animated,
+  });
 
   return buildSanitisedEmote({
     id: emote.id,
     name: emote.code,
     site,
     creator,
-    emoteLink: `https://betterttv.com/emotes/${emote.id}`,
+    emoteLink: bttvEmoteCdn.pageUrl(emote.id),
     originalName: emote.codeOriginal,
-    animated: animatedVariants,
-    static: staticVariants,
+    animated: variants.animated ?? {},
+    static: variants.static ?? {},
     zeroWidth: bttvZeroWidthEmotes.includes(emote.code),
   });
 }
@@ -84,16 +64,9 @@ function sanitiseBttvEmotes(
   site: BttvSanitisedEmote['site'],
   creatorOf: (emote: BttvEmote) => string | null,
 ): BttvSanitisedEmote[] {
-  const sanitised: BttvSanitisedEmote[] = [];
-
-  for (const emote of emotes) {
-    const result = sanitiseBttvEmote(emote, site, creatorOf(emote));
-    if (result) {
-      sanitised.push(result);
-    }
-  }
-
-  return sanitised;
+  return sanitiseAll(emotes, emote =>
+    sanitiseBttvEmote(emote, site, creatorOf(emote)),
+  );
 }
 
 export const bttvEmoteService = {
@@ -127,14 +100,16 @@ export const bttvEmoteService = {
 
     return result.reduce<SanitisedBadgeSet[]>((badges, entry) => {
       if (entry.providerId && entry.badge?.svg) {
-        badges.push({
-          id: entry.providerId,
-          set: 'bttv',
-          type: 'BTTV Badge',
-          title: entry.badge.description || entry.displayName || entry.name,
-          url: entry.badge.svg,
-          provider: 'bttv',
-        });
+        badges.push(
+          buildSanitisedBadge({
+            id: entry.providerId,
+            set: 'bttv',
+            type: 'BTTV Badge',
+            title: entry.badge.description || entry.displayName || entry.name,
+            url: entry.badge.svg,
+            provider: 'bttv',
+          }),
+        );
       }
 
       return badges;

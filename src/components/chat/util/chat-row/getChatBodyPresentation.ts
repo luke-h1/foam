@@ -1,38 +1,34 @@
 import { hasSharedChannelPointsMessage } from '@app/components/chat/util/channelPointsSharedMessage';
-import type { CustomHighlight } from '@app/store/preference-store';
+import type { CustomHighlight } from '@app/types/chat/customHighlight';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import { findCustomHighlight } from '@app/utils/chat/custom-highlights/findCustomHighlight';
 import type { ChatBodyVariant } from '@app/utils/chat/derive-chat-body/types';
-import type { MessageToken } from '@app/utils/chat/messageToken';
 
 interface GetChatBodyPresentationOptions {
   customHighlights: CustomHighlight[] | undefined;
   detectedBodyVariant: ChatBodyVariant;
   isChannelPointRedemption: boolean;
   isHighlightedMessage: boolean;
+  isModerated: boolean;
   message: MessageToken[];
-  moderationNotice: unknown;
   noticeMsgId: string | undefined;
   userstate: UserStateTags;
 }
 
-/**
- * Turns the detected body variant into what the row actually draws: the raid
- * variant, the matched custom highlight, and the channel-points chrome flag.
- */
 export function getChatBodyPresentation({
   customHighlights,
   detectedBodyVariant,
   isChannelPointRedemption,
   isHighlightedMessage,
+  isModerated,
   message,
-  moderationNotice,
   noticeMsgId,
   userstate,
 }: GetChatBodyPresentationOptions) {
   const customHighlight =
     detectedBodyVariant === 'user_chat' &&
-    !moderationNotice &&
+    !isModerated &&
     customHighlights &&
     customHighlights.length > 0
       ? findCustomHighlight(message, customHighlights)

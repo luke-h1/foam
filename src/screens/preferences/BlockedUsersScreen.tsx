@@ -1,28 +1,12 @@
-import { type RefObject, useCallback, useRef } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCallback, useRef } from 'react';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 
-import {
-  Host,
-  List,
-  Section,
-  Text as NativeText,
-  VStack,
-} from '@expo/ui/swift-ui';
-import {
-  font,
-  foregroundStyle,
-  listStyle,
-  refreshable,
-} from '@expo/ui/swift-ui/modifiers';
 import type { ListRenderItem } from '@shopify/flash-list';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner-native';
 
-import type { FlashListRef } from '@app/components/flash-list/FlashList';
 import { FlashList } from '@app/components/flash-list/FlashList';
 import { SymbolView, type SymbolViewProps } from '@app/components/ui/icon/Icon';
-import { Skeleton } from '@app/components/ui/skeleton/Skeleton';
 import { Text } from '@app/components/ui/text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useScrollToTop } from '@app/hooks/use-scroll-to-top';
@@ -32,7 +16,10 @@ import { twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import type { UserBlockList } from '@app/types/twitch/user';
 
+import { BlockedUserItemSkeleton } from './components/BlockedUserRow';
 import { BlockedUsersActionButton } from './components/BlockedUsersActionButton';
+import { BlockedUsersDataList } from './components/BlockedUsersDataList';
+import { BlockedUsersSectionHeader } from './components/BlockedUsersSectionHeader';
 
 const SKELETON_COUNT = 5;
 
@@ -40,79 +27,6 @@ const SKELETON_DATA = Array.from(
   { length: SKELETON_COUNT },
   (_, index) => index,
 );
-
-interface BlockedUserItemProps {
-  user: UserBlockList;
-  index: number;
-  count: number;
-  onUnblock: (userId: string, userName: string) => void;
-}
-
-function BlockedUserItem({
-  user,
-  index,
-  count,
-  onUnblock,
-}: BlockedUserItemProps) {
-  const handlePress = useCallback(() => {
-    onUnblock(user.user_id, user.display_name);
-  }, [onUnblock, user.display_name, user.user_id]);
-
-  return (
-    <View
-      style={[
-        styles.itemContainer,
-        index === 0 ? styles.firstItem : null,
-        index === count - 1 ? styles.lastItem : null,
-      ]}
-    >
-      <View style={styles.userInfo}>
-        <Text type='headline' weight='bold' numberOfLines={1}>
-          {user.display_name}
-        </Text>
-        <Text type='body' color='gray.textLow' numberOfLines={1}>
-          @{user.user_login}
-        </Text>
-      </View>
-      <BlockedUsersActionButton
-        label='Unblock'
-        onPress={handlePress}
-        style={styles.unblockButton}
-        variant='destructive'
-      />
-    </View>
-  );
-}
-
-interface BlockedUserItemSkeletonProps {
-  index: number;
-  count: number;
-}
-
-function BlockedUserItemSkeleton({
-  index,
-  count,
-}: BlockedUserItemSkeletonProps) {
-  return (
-    <View
-      style={[
-        styles.itemContainer,
-        index === 0 ? styles.firstItem : null,
-        index === count - 1 ? styles.lastItem : null,
-      ]}
-    >
-      <View style={styles.userInfo}>
-        <View style={styles.nameSkeletonLine}>
-          <Skeleton style={styles.nameSkeleton} />
-        </View>
-        <View style={styles.loginSkeletonLine}>
-          <Skeleton style={styles.loginSkeleton} />
-        </View>
-      </View>
-      <Skeleton style={styles.iconSkeleton} />
-    </View>
-  );
-}
 
 interface ListStatePanelProps {
   icon: SymbolViewProps['name'];
@@ -172,29 +86,6 @@ function ListStatePanel({
   );
 }
 
-interface BlockedUsersSectionHeaderProps {
-  count?: number;
-}
-
-function BlockedUsersSectionHeader({ count }: BlockedUsersSectionHeaderProps) {
-  return (
-    <View style={styles.sectionHeader}>
-      <Text type='caption' weight='semibold' style={styles.sectionTitle}>
-        Blocked Accounts
-      </Text>
-      {count !== undefined ? (
-        <Text
-          type='caption'
-          color='gray.textLow'
-          style={styles.sectionCountText}
-        >
-          {count}
-        </Text>
-      ) : null}
-    </View>
-  );
-}
-
 interface BlockedUsersListProps {
   data?: UserBlockList[];
   isLoading: boolean;
@@ -215,15 +106,6 @@ function BlockedUsersList({
   const listRef = useRef(null);
 
   useScrollToTop(listRef);
-
-  const renderItem: ListRenderItem<UserBlockList> = ({ item, index }) => (
-    <BlockedUserItem
-      user={item}
-      index={index}
-      count={data?.length ?? 0}
-      onUnblock={onUnblock}
-    />
-  );
 
   if (isLoading && !data) {
     return (
@@ -265,132 +147,14 @@ function BlockedUsersList({
     );
   }
 
-  if (Platform.OS === 'ios') {
-    return (
-      <NativeBlockedUsersList
-        data={data}
-        onRefresh={onRefresh}
-        onUnblockDirect={onUnblockDirect}
-      />
-    );
-  }
-
   return (
     <BlockedUsersDataList
       data={data}
       listRef={listRef}
       onRefresh={onRefresh}
-      renderItem={renderItem}
+      onUnblock={onUnblock}
+      onUnblockDirect={onUnblockDirect}
     />
-  );
-}
-
-function NativeBlockedUsersList({
-  data,
-  onRefresh,
-  onUnblockDirect,
-}: {
-  data: UserBlockList[];
-  onRefresh: () => Promise<void>;
-  onUnblockDirect: (userId: string) => void;
-}) {
-  const insets = useSafeAreaInsets();
-
-  const handleDelete = (indices: number[]) => {
-    for (const index of indices) {
-      const user = data[index];
-      if (user) {
-        onUnblockDirect(user.user_id);
-      }
-    }
-  };
-
-  return (
-    <Host
-      style={[styles.content, { paddingBottom: insets.bottom }]}
-      colorScheme='dark'
-    >
-      <List
-        modifiers={[
-          listStyle('insetGrouped'),
-          refreshable(async () => {
-            await onRefresh();
-          }),
-        ]}
-      >
-        <Section
-          title='Blocked Accounts'
-          footer={
-            <NativeText>
-              Unblocking restores normal Twitch interactions for that account.
-            </NativeText>
-          }
-        >
-          <List.ForEach onDelete={handleDelete}>
-            {data.map(user => (
-              <VStack key={user.user_id} alignment='leading' spacing={2}>
-                <NativeText
-                  modifiers={[
-                    foregroundStyle(theme.color.text.dark),
-                    font({ textStyle: 'body', weight: 'semibold' }),
-                  ]}
-                >
-                  {user.display_name}
-                </NativeText>
-                <NativeText
-                  modifiers={[
-                    foregroundStyle(theme.color.textSecondary.dark),
-                    font({ textStyle: 'footnote' }),
-                  ]}
-                >
-                  @{user.user_login}
-                </NativeText>
-              </VStack>
-            ))}
-          </List.ForEach>
-        </Section>
-      </List>
-    </Host>
-  );
-}
-
-interface BlockedUsersDataListProps {
-  data: UserBlockList[];
-  listRef: RefObject<FlashListRef<UserBlockList> | null>;
-  onRefresh: () => Promise<void>;
-  renderItem: ListRenderItem<UserBlockList>;
-}
-
-function BlockedUsersDataList({
-  data,
-  listRef,
-  onRefresh,
-  renderItem,
-}: BlockedUsersDataListProps) {
-  return (
-    <View style={styles.content}>
-      <FlashList
-        ref={listRef}
-        data={data}
-        renderItem={renderItem}
-        keyExtractor={item => item.user_id}
-        contentInsetAdjustmentBehavior='automatic'
-        onRefresh={onRefresh}
-        contentContainerStyle={styles.listContent}
-        style={styles.list}
-        ListHeaderComponent={<BlockedUsersSectionHeader count={data.length} />}
-        maintainVisibleContentPosition={{ disabled: true }}
-        ListFooterComponent={
-          <Text
-            type='caption'
-            color='gray.textLow'
-            style={styles.sectionFooter}
-          >
-            Unblocking restores normal Twitch interactions for that account.
-          </Text>
-        }
-      />
-    </View>
   );
 }
 
@@ -486,78 +250,18 @@ export function BlockedUsersScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: {
-    flex: 1,
-  },
   container: {
     backgroundColor: theme.color.background.dark,
     flex: 1,
   },
-  firstItem: {
-    borderTopLeftRadius: theme.radius.md,
-    borderTopRightRadius: theme.radius.md,
-  },
-  iconSkeleton: {
-    borderRadius: theme.radius.lg,
-    height: 36,
-    width: 104,
-  },
-  itemContainer: {
-    alignItems: 'center',
-    borderBottomColor: theme.colorBorderSecondary,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    gap: theme.space12,
-    marginHorizontal: theme.space16,
-    minHeight: 64,
-    paddingVertical: theme.space12,
-  },
-  lastItem: {
-    borderBottomLeftRadius: theme.radius.md,
-    borderBottomRightRadius: theme.radius.md,
-    borderBottomWidth: 0,
+  content: {
+    flex: 1,
   },
   list: {
     flex: 1,
   },
-  listContent: {
-    paddingBottom: theme.space24,
-  },
-  loginSkeleton: {
-    height: 14,
-    width: 80,
-  },
-  loginSkeletonLine: {
-    height: 24,
-    justifyContent: 'center',
-  },
-  nameSkeleton: {
-    height: 16,
-    width: 120,
-  },
-  nameSkeletonLine: {
-    height: 28,
-    justifyContent: 'center',
-  },
   retryButton: {
     marginTop: theme.space8,
-  },
-  sectionCountText: {
-    paddingHorizontal: theme.space16,
-  },
-  stateSection: {
-    gap: theme.space8,
-  },
-  sectionFooter: {
-    lineHeight: 18,
-    paddingHorizontal: theme.space16,
-    paddingTop: theme.space8,
-  },
-  sectionHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingBottom: theme.space8,
   },
   sectionTitle: {
     color: theme.color.textSecondary.dark,
@@ -566,9 +270,6 @@ const styles = StyleSheet.create({
   stateContent: {
     flexGrow: 1,
     paddingBottom: theme.space24,
-  },
-  stateScroll: {
-    flex: 1,
   },
   stateDescription: {
     lineHeight: 20,
@@ -596,13 +297,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space20,
     paddingVertical: theme.space36,
   },
-  unblockButton: {
-    flexShrink: 0,
-  },
-  userInfo: {
+  stateScroll: {
     flex: 1,
-    gap: theme.space4,
-    minWidth: 0,
+  },
+  stateSection: {
+    gap: theme.space8,
   },
 });
 

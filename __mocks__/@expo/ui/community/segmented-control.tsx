@@ -1,4 +1,3 @@
-// eslint-disable-next-line no-restricted-imports
 import { Text, TouchableOpacity, View } from 'react-native';
 
 import type { SegmentedControlProps } from '@expo/ui/community/segmented-control';

@@ -1,27 +1,28 @@
-import { memo, useCallback, useRef } from 'react';
+import { memo, useCallback } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {
-  BottomSheet,
-  type BottomSheetHandle,
-} from '@app/components/bottom-sheet/BottomSheet';
+import { ChatSheet } from '@app/components/chat/components/sheet/ChatSheet';
+import { useChatSheet } from '@app/components/chat/components/sheet/hooks/use-chat-sheet';
 import { SheetHeader } from '@app/components/chat/components/sheet/SheetHeader';
-import { CHAT_SETTINGS_SHEET_DETENT } from '@app/components/chat/util/chatSheetLayout';
+import {
+  CHAT_SETTINGS_SHEET_DETENT,
+  type ChatSheetLayout,
+} from '@app/components/chat/components/sheet/util/chatSheetLayout';
 import {
   SettingsLinkRow,
   SettingsSection,
   SettingsToggleRow,
 } from '@app/components/settings-section/SettingsSection';
 import {
-  usePreference,
-  useUpdatePreferences,
-} from '@app/store/preference-store';
+  CONTEXT_TOGGLE_ROWS,
+  DENSITY_OPTIONS,
+} from '@app/constants/chat-preferences';
+import { updatePreferences, usePreference } from '@app/store/preference-store';
 import { requestLiveSync } from '@app/store/stream/live-sync-bus';
 import { theme } from '@app/styles/themes';
 
 export interface SettingsSheetProps {
-  isPresented: boolean;
   onClearChatCache?: () => void;
   onClearImageCache?: () => void;
   onClearSevenTvCosmeticsCache?: () => void;
@@ -33,8 +34,29 @@ export interface SettingsSheetProps {
   onReconnect?: () => void;
 }
 
+function ContextToggleRow({
+  row,
+}: {
+  row: (typeof CONTEXT_TOGGLE_ROWS)[number];
+}) {
+  const value = usePreference(row.key);
+
+  return (
+    <SettingsToggleRow
+      title={row.label}
+      icon={row}
+      value={value}
+      onValueChange={next => updatePreferences({ [row.key]: next })}
+    />
+  );
+}
+
+const SHEET_LAYOUT: ChatSheetLayout = {
+  fraction: CHAT_SETTINGS_SHEET_DETENT,
+  kind: 'fraction',
+};
+
 const SettingsSheetComponent = ({
-  isPresented,
   onDismiss,
   onOpenChatters,
   onOpenMessageSearch,
@@ -46,61 +68,32 @@ const SettingsSheetComponent = ({
   onReconnect,
 }: SettingsSheetProps) => {
   const chatDensity = usePreference('chatDensity');
-  const highlightOwnMentions = usePreference('highlightOwnMentions');
-  const showInlineReplyContext = usePreference('showInlineReplyContext');
-  const showTimestamps = usePreference('chatTimestamps');
-  const showUnreadJumpPill = usePreference('showUnreadJumpPill');
   const showJoinPartMessages = usePreference('showJoinPartMessages');
-  const updatePreferences = useUpdatePreferences();
   const {
     bottom: bottomInset,
     left: leftInset,
     right: rightInset,
   } = useSafeAreaInsets();
-  const sheetRef = useRef<BottomSheetHandle>(null);
+  const { requestClose, runAndClose, sheetRef } = useChatSheet();
 
-  const dismissSheet = useCallback(() => {
-    sheetRef.current?.requestClose();
-  }, []);
-
-  const handleToggleDensity = useCallback(() => {
-    updatePreferences({
-      chatDensity: chatDensity === 'compact' ? 'comfortable' : 'compact',
-    });
-    dismissSheet();
-  }, [chatDensity, dismissSheet, updatePreferences]);
-
-  const handleRefetchEmotes = useCallback(() => {
-    onRefetchEmotes?.();
-    dismissSheet();
-  }, [onRefetchEmotes, dismissSheet]);
+  const handleToggleDensity = () =>
+    runAndClose(() =>
+      updatePreferences({
+        chatDensity: chatDensity === 'compact' ? 'comfortable' : 'compact',
+      }),
+    );
 
   const handleOpenSavedPhrases = useCallback(() => {
-    dismissSheet();
+    requestClose();
     onOpenSavedPhrases?.();
-  }, [dismissSheet, onOpenSavedPhrases]);
+  }, [requestClose, onOpenSavedPhrases]);
 
-  const handleClearCache = useCallback(() => {
-    onClearChatCache?.();
-    onClearImageCache?.();
-    onClearSevenTvCosmeticsCache?.();
-    dismissSheet();
-  }, [
-    onClearChatCache,
-    onClearImageCache,
-    onClearSevenTvCosmeticsCache,
-    dismissSheet,
-  ]);
-
-  const handleReconnect = useCallback(() => {
-    onReconnect?.();
-    dismissSheet();
-  }, [onReconnect, dismissSheet]);
-
-  const handleSyncToLive = useCallback(() => {
-    requestLiveSync();
-    dismissSheet();
-  }, [dismissSheet]);
+  const handleClearCache = () =>
+    runAndClose(() => {
+      onClearChatCache?.();
+      onClearImageCache?.();
+      onClearSevenTvCosmeticsCache?.();
+    });
 
   const hasActions = Boolean(
     onOpenChatters ||
@@ -114,18 +107,15 @@ const SettingsSheetComponent = ({
   );
 
   return (
-    <BottomSheet
+    <ChatSheet
       ref={sheetRef}
-      isPresented={isPresented}
       onDismiss={onDismiss}
-      showDragIndicator
-      enableFixedSnapPoints
-      snapPoints={[{ fraction: CHAT_SETTINGS_SHEET_DETENT }]}
+      layout={SHEET_LAYOUT}
       testID='chat-settings-sheet-modal'
     >
       <View style={styles.container} testID='chat-settings-sheet'>
         <View style={styles.header}>
-          <SheetHeader title='Chat' onClose={dismissSheet} />
+          <SheetHeader title='Chat' onClose={requestClose} />
         </View>
 
         <ScrollView
@@ -153,41 +143,29 @@ const SettingsSheetComponent = ({
               {onOpenMessageSearch ? (
                 <SettingsLinkRow
                   title='Search messages'
-                  icon={{
-                    icon: 'magnifyingglass',
-                    androidIcon: 'search',
-                  }}
+                  icon={{ icon: 'magnifyingglass' }}
                   onPress={onOpenMessageSearch}
                 />
               ) : null}
               {onOpenChatters ? (
                 <SettingsLinkRow
                   title='View chatters'
-                  icon={{
-                    icon: 'person.2',
-                    androidIcon: 'group',
-                  }}
+                  icon={{ icon: 'person.2' }}
                   onPress={onOpenChatters}
                 />
               ) : null}
               {onOpenSavedPhrases ? (
                 <SettingsLinkRow
                   title='Saved phrases'
-                  icon={{
-                    icon: 'text.bubble',
-                    androidIcon: 'chat_bubble',
-                  }}
+                  icon={{ icon: 'text.bubble' }}
                   onPress={handleOpenSavedPhrases}
                 />
               ) : null}
               {onRefetchEmotes ? (
                 <SettingsLinkRow
                   title='Reload emotes and badges'
-                  icon={{
-                    icon: 'arrow.clockwise',
-                    androidIcon: 'refresh',
-                  }}
-                  onPress={handleRefetchEmotes}
+                  icon={{ icon: 'arrow.clockwise' }}
+                  onPress={() => runAndClose(onRefetchEmotes)}
                 />
               ) : null}
             </SettingsSection>
@@ -199,63 +177,19 @@ const SettingsSheetComponent = ({
           >
             <SettingsLinkRow
               title='Density'
-              icon={{
-                icon: 'text.alignleft',
-                androidIcon: 'format_align_left',
-              }}
-              value={chatDensity === 'compact' ? 'Compact' : 'Comfortable'}
+              icon={{ icon: 'text.alignleft' }}
+              value={
+                DENSITY_OPTIONS.find(option => option.value === chatDensity)
+                  ?.label
+              }
               onPress={handleToggleDensity}
             />
-            <SettingsToggleRow
-              title='Show timestamps'
-              icon={{
-                icon: 'clock',
-                androidIcon: 'schedule',
-              }}
-              value={showTimestamps}
-              onValueChange={value =>
-                updatePreferences({ chatTimestamps: value })
-              }
-            />
-            <SettingsToggleRow
-              title='Highlight own mentions'
-              icon={{
-                icon: 'at',
-                androidIcon: 'alternate_email',
-              }}
-              value={highlightOwnMentions}
-              onValueChange={value =>
-                updatePreferences({ highlightOwnMentions: value })
-              }
-            />
-            <SettingsToggleRow
-              title='Inline reply context'
-              icon={{
-                icon: 'arrowshape.turn.up.left',
-                androidIcon: 'reply',
-              }}
-              value={showInlineReplyContext}
-              onValueChange={value =>
-                updatePreferences({ showInlineReplyContext: value })
-              }
-            />
-            <SettingsToggleRow
-              title='Show jump pill'
-              icon={{
-                icon: 'arrow.down.circle',
-                androidIcon: 'arrow_circle_down',
-              }}
-              value={showUnreadJumpPill}
-              onValueChange={value =>
-                updatePreferences({ showUnreadJumpPill: value })
-              }
-            />
+            {CONTEXT_TOGGLE_ROWS.map(row => (
+              <ContextToggleRow key={row.key} row={row} />
+            ))}
             <SettingsToggleRow
               title='Show joins and parts'
-              icon={{
-                icon: 'person.badge.plus',
-                androidIcon: 'group_add',
-              }}
+              icon={{ icon: 'person.badge.plus' }}
               value={showJoinPartMessages}
               onValueChange={value =>
                 updatePreferences({ showJoinPartMessages: value })
@@ -270,20 +204,14 @@ const SettingsSheetComponent = ({
             <SettingsLinkRow
               title='Sync to live'
               subtitle='Jump to the live edge'
-              icon={{
-                icon: 'forward.end.fill',
-                androidIcon: 'skip_next',
-              }}
-              onPress={handleSyncToLive}
+              icon={{ icon: 'forward.end.fill' }}
+              onPress={() => runAndClose(requestLiveSync)}
             />
             {onReconnect ? (
               <SettingsLinkRow
                 title='Reconnect'
-                icon={{
-                  icon: 'wifi',
-                  androidIcon: 'wifi',
-                }}
-                onPress={handleReconnect}
+                icon={{ icon: 'wifi' }}
+                onPress={() => runAndClose(onReconnect)}
               />
             ) : null}
           </SettingsSection>
@@ -295,10 +223,7 @@ const SettingsSheetComponent = ({
             >
               <SettingsLinkRow
                 title='Clear cache'
-                icon={{
-                  icon: 'trash',
-                  androidIcon: 'delete',
-                }}
+                icon={{ icon: 'trash' }}
                 onPress={handleClearCache}
                 danger
               />
@@ -306,7 +231,7 @@ const SettingsSheetComponent = ({
           ) : null}
         </ScrollView>
       </View>
-    </BottomSheet>
+    </ChatSheet>
   );
 };
 

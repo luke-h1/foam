@@ -54,10 +54,6 @@ type PreviousScrollFrame = {
   viewHeight: number;
 };
 
-/**
- * Turns one scroll event, plus what the last one measured, into the facts the
- * anchoring logic needs.
- */
 function readScrollGeometry(
   e: NativeSyntheticEvent<NativeScrollEvent>,
   previous: PreviousScrollFrame,
@@ -84,9 +80,7 @@ function readScrollGeometry(
     canScroll: contentHeight > viewHeight,
     contentHeight,
     distanceFromEnd,
-    // A first event has no previous offset, so it counts as movement either way.
     movedTowardsTop: !hasPreviousOffset || scrolledUp,
-    // The list grew and the user stayed put at what was then the end.
     reachedPreviousEndDuringGrowth:
       contentHeight > previous.contentHeight &&
       !scrolledUp &&

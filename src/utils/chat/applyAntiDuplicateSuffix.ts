@@ -1,7 +1,7 @@
 import { MAX_MESSAGE_LENGTH, messageLength } from './maxMessageLength';
+import { INVISIBLE_TAG_CHAR } from './stripInvisibleChars';
 
-// A tag character - no width, no glyph.
-const INVISIBLE_SUFFIX = ' \u{E0000}';
+const INVISIBLE_SUFFIX = ` ${INVISIBLE_TAG_CHAR}`;
 
 /**
  * Twitch silently drops a message identical to the sender's previous one

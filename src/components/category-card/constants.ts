@@ -4,7 +4,6 @@
  */
 export const IMAGE_ASPECT_RATIO = 3 / 4;
 
-export const IMAGE_SOURCE_WIDTH = 288;
-export const IMAGE_SOURCE_HEIGHT = 384;
+export const BOX_ART_SOURCE_SIZE = { width: 288, height: 384 } as const;
 
 export const TITLE_MAX_LINES = 2;

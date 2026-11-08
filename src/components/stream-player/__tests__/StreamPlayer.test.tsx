@@ -29,7 +29,6 @@ function installModuleSpies() {
   // Swap the native WebView for a View that captures props/ref; untyped
   // requireActual dodges WebView's class-instance render signature.
   jest.spyOn(RNWebView, 'WebView').mockImplementation(rawProps => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- untyped requireActual dodges WebView's class-instance render signature.
     const ReactActual = jest.requireActual('react');
 
     const { View: RNView } = jest.requireActual('react-native');
@@ -183,7 +182,7 @@ describe('StreamPlayer component messaging', () => {
     const onPlaybackLatencyChange = jest.fn();
     const onPlay = jest.fn();
     const onReady = jest.fn();
-    const warnSpy = jest.spyOn(logger.main, 'error').mockImplementation();
+    const errorSpy = jest.spyOn(logger.main, 'error').mockImplementation();
 
     render(
       <StreamPlayer
@@ -205,6 +204,10 @@ describe('StreamPlayer component messaging', () => {
       />,
     );
 
+    act(() => {
+      jest.advanceTimersByTime(1500);
+    });
+
     sendPlayerMessage({ type: 'ready' });
     sendPlayerMessage({ type: 'error', payload: { message: 'embed failed' } });
     sendPlayerMessage({ type: 'play' });
@@ -222,11 +225,6 @@ describe('StreamPlayer component messaging', () => {
     sendPlayerMessage({
       type: 'playbackStats',
       payload: { hlsLatencyBroadcaster: 3.4 },
-    });
-
-    sendPlayerMessage({
-      type: 'muteState',
-      payload: { muted: false, volume: 1 },
     });
 
     expect(onReady).toHaveBeenCalledTimes(1);
@@ -247,32 +245,24 @@ describe('StreamPlayer component messaging', () => {
 
     expect(onError).toHaveBeenCalledWith('embed failed');
 
-    expect(warnSpy).toHaveBeenCalledTimes(1);
-
-    // SAFETY: StreamPlayer logs embed errors through the LogMetadata overload of logger.main.error; jest.spyOn erases that overload to unknown[].
-    const embedErrorMetadata = warnSpy.mock.calls[0]?.[1] as
-      | LogMetadata
-      | undefined;
-
-    expect(warnSpy.mock.calls[0]?.[0]).toBe(
-      '[StreamPlayer:embed ERROR] embed failed',
-    );
-
-    expect(embedErrorMetadata).toEqual<LogMetadata>({
-      name: 'twitch_player_error',
-      exceptionName: 'StreamPlayerEmbedError',
-      fingerprint: ['stream-player-embed-error'],
-      channel: 'cohhcarnage',
-      message: 'embed failed',
-      elapsedMs: embedErrorMetadata?.['elapsedMs'],
-      autoplay: false,
-      content_kind: 'live',
-      elapsed_ms: embedErrorMetadata?.['elapsed_ms'],
-      outcome: 'failed',
-      reason: 'embed_error',
-    });
-
-    expect(embedErrorMetadata?.['elapsedMs']).toEqual(expect.any(Number));
+    expect(errorSpy.mock.calls).toEqual<[string, LogMetadata][]>([
+      [
+        '[StreamPlayer:embed ERROR] embed failed',
+        {
+          name: 'twitch_player_error',
+          exceptionName: 'StreamPlayerEmbedError',
+          fingerprint: ['stream-player-embed-error'],
+          channel: 'cohhcarnage',
+          message: 'embed failed',
+          elapsedMs: 1500,
+          autoplay: false,
+          content_kind: 'live',
+          elapsed_ms: 1500,
+          outcome: 'failed',
+          reason: 'embed_error',
+        },
+      ],
+    ]);
   });
 
   test('resumes autoplay after a transient player pause', () => {
@@ -412,18 +402,14 @@ describe('StreamPlayer component messaging', () => {
       throw new Error('Expected injectedJavaScript to be a string');
     }
 
-    expect(injectedJavaScript.includes('twitchAuthComplete')).toEqual(true);
+    expect(injectedJavaScript).toContain('twitchAuthComplete');
 
-    expect(injectedJavaScript.includes('window.playerControls')).toEqual(false);
+    expect(injectedJavaScript).not.toContain('window.playerControls');
 
-    expect(
-      injectedJavaScript.includes('foam-twitch-control-hide-style'),
-    ).toEqual(false);
+    expect(injectedJavaScript).not.toContain('foam-twitch-control-hide-style');
 
     // Autoplaying live: nudge the stock player into unmuted playback.
-    expect(
-      injectedJavaScript.includes('__foamAutoplayEnsureInstalled'),
-    ).toEqual(true);
+    expect(injectedJavaScript).toContain('__foamAutoplayEnsureInstalled');
 
     emitWebViewLoadEnd(
       'https://player.twitch.tv/?channel=cohhcarnage&muted=false&parent=www.twitch.tv',
@@ -434,13 +420,11 @@ describe('StreamPlayer component messaging', () => {
     const beforeContentScript =
       latestWebViewProps().injectedJavaScriptBeforeContentLoaded ?? '';
 
-    expect(
-      beforeContentScript.includes(
-        "window.localStorage.getItem('video-quality')",
-      ),
-    ).toEqual(true);
+    expect(beforeContentScript).toContain(
+      "window.localStorage.getItem('video-quality')",
+    );
 
-    expect(beforeContentScript.includes('"720p60"')).toEqual(true);
+    expect(beforeContentScript).toContain('"720p60"');
 
     // On WebView-ready it kicks autoplay (not the control bootstrap).
     expect(mockInjectJavaScript).toHaveBeenCalledWith(
@@ -469,9 +453,9 @@ describe('StreamPlayer component messaging', () => {
     const clipInjectedJavaScript =
       latestWebViewProps().injectedJavaScript ?? '';
 
-    expect(
-      clipInjectedJavaScript.includes('__foamAutoplayEnsureInstalled'),
-    ).toEqual(false);
+    expect(clipInjectedJavaScript).not.toContain(
+      '__foamAutoplayEnsureInstalled',
+    );
 
     emitWebViewLoadEnd(
       'https://clips.twitch.tv/embed?clip=AnimatedOptimisticWasabiVoteNay&parent=www.twitch.tv&autoplay=true&muted=false&preload=metadata',

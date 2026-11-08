@@ -33,6 +33,28 @@ describe('parsePreferencesPayload', () => {
     expect(warnSpy).not.toHaveBeenCalled();
   });
 
+  test('restores a legacy blob through the same migrations as the local load', () => {
+    const legacyBlob = {
+      ...initialPreferences,
+      updatedAt: 789,
+      theme: 'foam-dark',
+      useUIKitForWebView: false,
+      streamListLayout: 'text',
+      sevenTvPaintRenderer: 'auto',
+      chatDelay: 0,
+    };
+
+    const result = parsePreferencesPayload(JSON.stringify(legacyBlob));
+
+    expect(result).toEqual<Preferences>({
+      ...initialPreferences,
+      updatedAt: 789,
+      streamListLayout: 'compact',
+      sevenTvPaintRenderer: 'native',
+      chatDelay: 'auto',
+    });
+  });
+
   test('returns a complete valid blob unchanged', () => {
     const blob: Preferences = {
       ...initialPreferences,

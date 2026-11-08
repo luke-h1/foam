@@ -43,7 +43,6 @@ export function buildTwitchLatencyTrackerScript(): string {
     );
   }
 
-  // Keep the stats overlay hidden for the session.
   ensureStyle(
     STATS_OVERLAY_HIDE_ID,
     '[data-a-target="player-overlay-video-stats"]{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;}'
@@ -145,13 +144,11 @@ export function buildTwitchLatencyTrackerScript(): string {
 
   function tick() {
     if (isAdActive()) {
-      // Refresh the enable budget so stats re-enable after the ad.
       enableAttempts = 0;
       hadLatencyNode = false;
       return;
     }
     if (!document.querySelector(LATENCY_NODE)) {
-      // Lost a node we had (ad/reset): refresh the budget.
       if (hadLatencyNode) {
         hadLatencyNode = false;
         enableAttempts = 0;

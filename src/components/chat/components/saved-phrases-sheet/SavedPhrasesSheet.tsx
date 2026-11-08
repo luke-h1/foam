@@ -1,17 +1,19 @@
 import { memo, useCallback, useMemo, useRef } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { ListRenderItem } from '@shopify/flash-list';
 import { router } from 'expo-router';
 
-import {
-  BottomSheet,
-  type BottomSheetHandle,
-} from '@app/components/bottom-sheet/BottomSheet';
+import { ChatSheet } from '@app/components/chat/components/sheet/ChatSheet';
+import { chatSheetStyles } from '@app/components/chat/components/sheet/ChatSheet.styles';
+import { useChatSheet } from '@app/components/chat/components/sheet/hooks/use-chat-sheet';
+import { useChatSheetHeight } from '@app/components/chat/components/sheet/hooks/use-chat-sheet-height';
 import { SheetHeader } from '@app/components/chat/components/sheet/SheetHeader';
-import { CHAT_SETTINGS_SHEET_DETENT } from '@app/components/chat/util/chatSheetLayout';
-import { chatSheetSurface } from '@app/components/chat/util/chatSheetSurface';
+import {
+  CHAT_SETTINGS_SHEET_DETENT,
+  type ChatSheetLayout,
+} from '@app/components/chat/components/sheet/util/chatSheetLayout';
 import { FlashList } from '@app/components/flash-list/FlashList';
 import { PressableArea } from '@app/components/pressable-area/PressableArea';
 import { EmptyState } from '@app/components/ui/empty-state/EmptyState';
@@ -20,8 +22,7 @@ import { Text } from '@app/components/ui/text/Text';
 import { type SavedPhrase, usePreference } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
 
-export interface SavedPhrasesSheetProps {
-  isPresented: boolean;
+interface SavedPhrasesSheetProps {
   onDismiss: () => void;
   onSelectPhrase: (text: string) => void;
 }
@@ -58,8 +59,12 @@ function SavedPhraseRow({
   );
 }
 
+const SHEET_LAYOUT: ChatSheetLayout = {
+  fraction: CHAT_SETTINGS_SHEET_DETENT,
+  kind: 'fraction',
+};
+
 const SavedPhrasesSheetComponent = ({
-  isPresented,
   onDismiss,
   onSelectPhrase,
 }: SavedPhrasesSheetProps) => {
@@ -68,11 +73,9 @@ const SavedPhrasesSheetComponent = ({
     left: leftInset,
     right: rightInset,
   } = useSafeAreaInsets();
-  const { height: windowHeight } = useWindowDimensions();
-  const sheetHeight = Math.round(windowHeight * CHAT_SETTINGS_SHEET_DETENT);
-  const savedPhrases = usePreference('savedPhrases');
-  const phrases = savedPhrases ?? [];
-  const sheetRef = useRef<BottomSheetHandle>(null);
+  const sheetHeight = useChatSheetHeight(SHEET_LAYOUT);
+  const phrases = usePreference('savedPhrases');
+  const { requestClose, runAndClose, sheetRef } = useChatSheet();
 
   const listContentStyle = useMemo(
     () => [
@@ -88,10 +91,6 @@ const SavedPhrasesSheetComponent = ({
 
   const pendingManageRef = useRef(false);
 
-  const requestClose = useCallback(() => {
-    sheetRef.current?.requestClose();
-  }, []);
-
   const handleDismiss = useCallback(() => {
     onDismiss();
     if (pendingManageRef.current) {
@@ -106,11 +105,8 @@ const SavedPhrasesSheetComponent = ({
   }, [requestClose]);
 
   const handleSelectPhrase = useCallback(
-    (text: string) => {
-      onSelectPhrase(text);
-      requestClose();
-    },
-    [onSelectPhrase, requestClose],
+    (text: string) => runAndClose(() => onSelectPhrase(text)),
+    [onSelectPhrase, runAndClose],
   );
 
   const renderItem: ListRenderItem<SavedPhrase> = useCallback(
@@ -121,16 +117,13 @@ const SavedPhrasesSheetComponent = ({
   );
 
   return (
-    <BottomSheet
+    <ChatSheet
       ref={sheetRef}
-      enableFixedSnapPoints
-      isPresented={isPresented}
       onDismiss={handleDismiss}
-      showDragIndicator
-      snapPoints={[{ fraction: CHAT_SETTINGS_SHEET_DETENT }]}
+      layout={SHEET_LAYOUT}
       testID='chat-saved-phrases-sheet'
     >
-      <View style={[styles.container, { height: sheetHeight }]}>
+      <View style={[chatSheetStyles.listContainer, { height: sheetHeight }]}>
         <View style={styles.header}>
           <SheetHeader
             title='Saved phrases'
@@ -164,21 +157,13 @@ const SavedPhrasesSheetComponent = ({
           />
         )}
       </View>
-    </BottomSheet>
+    </ChatSheet>
   );
 };
 
 export const SavedPhrasesSheet = memo(SavedPhrasesSheetComponent);
 
 const styles = StyleSheet.create({
-  container: {
-    ...chatSheetSurface,
-    alignSelf: 'stretch',
-    backgroundColor: 'transparent',
-    flexDirection: 'column',
-    minHeight: 0,
-    width: '100%',
-  },
   header: {
     paddingBottom: theme.space8,
     paddingHorizontal: theme.space16,

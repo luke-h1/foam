@@ -8,6 +8,9 @@ import { invalidatePersonalEmotes } from './invalidation';
 
 const personalEmotesGuard = createFetchOnceGuard();
 
+const guardKey = (channelId: string, twitchUserId: string): string =>
+  `${channelId}:${twitchUserId}`;
+
 const MAX_PERSONAL_EMOTE_CHANNELS = 20;
 
 /**
@@ -40,7 +43,7 @@ export const clearChannelPersonalEmotes = (channelId: string): void => {
   }
 
   for (const twitchUserId of Object.keys(channelEmotes)) {
-    personalEmotesGuard.clearKey(twitchUserId);
+    personalEmotesGuard.clearKey(guardKey(channelId, twitchUserId));
   }
 
   personalEmotesByChannel.delete(channelId);
@@ -51,18 +54,20 @@ export const fetchUserPersonalEmotes = async (
   twitchUserId: string,
   channelId: string,
 ): Promise<SanitisedEmote[] | null> => {
-  if (personalEmotesGuard.hasFetched(twitchUserId)) {
+  const key = guardKey(channelId, twitchUserId);
+
+  if (personalEmotesGuard.hasFetched(key)) {
     return getChannelPersonalEmotes(channelId)[twitchUserId] || [];
   }
 
   const cached = getChannelPersonalEmotes(channelId)[twitchUserId];
 
   if (cached?.length) {
-    personalEmotesGuard.markFetched(twitchUserId);
+    personalEmotesGuard.markFetched(key);
     return cached;
   }
 
-  return personalEmotesGuard.run(twitchUserId, async ctx => {
+  return personalEmotesGuard.run(key, async ctx => {
     try {
       const personalEmotes =
         await sevenTvService.getPersonalEmoteSet(twitchUserId);
@@ -75,8 +80,6 @@ export const fetchUserPersonalEmotes = async (
 
       return personalEmotes;
     } catch (error) {
-      ctx.markFetched();
-
       logger.stv.warn(
         `Failed to fetch personal emotes for user ${twitchUserId}:`,
         {
@@ -154,9 +157,10 @@ export const refreshUserPersonalEmotes = async (
     return;
   }
 
-  personalEmotesGuard.clearKey(twitchUserId);
+  const key = guardKey(channelId, twitchUserId);
+  personalEmotesGuard.clearKey(key);
 
-  await personalEmotesGuard.run(twitchUserId, async ctx => {
+  await personalEmotesGuard.run(key, async ctx => {
     try {
       const personalEmotes =
         await sevenTvService.getPersonalEmoteSet(twitchUserId);
@@ -167,8 +171,6 @@ export const refreshUserPersonalEmotes = async (
         writePersonalEmotes(channelId, twitchUserId, personalEmotes);
       }
     } catch (error) {
-      ctx.markFetched();
-
       logger.stv.warn(
         `Failed to refresh personal emotes for user ${twitchUserId}:`,
         {
@@ -227,7 +229,7 @@ export const handlePersonalEmoteSetEntitlement = (
     return;
   }
 
-  if (!personalEmotesGuard.hasFetched(twitchUserId)) {
+  if (!personalEmotesGuard.hasFetched(guardKey(channelId, twitchUserId))) {
     return;
   }
 

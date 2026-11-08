@@ -1,48 +1,21 @@
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import { createChatMessageFixture } from '@app/components/chat/util/__tests__/__fixtures__/chatMessage.fixture';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
 import { createTextToken } from '@app/utils/chat/__tests__/__fixtures__/messageToken.fixture';
 
-const createMockUserstate = (
-  displayName = 'TestUser',
-): AnyChatMessageType['userstate'] =>
-  createUserStateTags({
-    'display-name': displayName,
-    login: displayName.toLowerCase(),
-    username: displayName,
-    'user-id': '123456',
-    id: 'msg-123',
-    color: '#FF0000',
-  });
-
-export const createMockMessage = (
-  overrides: Partial<AnyChatMessageType> = {},
-): AnyChatMessageType => ({
-  id: 'msg-123_nonce-123',
-  message_id: 'msg-123',
-  message_nonce: 'nonce-123',
-  message: [createTextToken('Hello world')],
-  channel: 'testchannel',
-  sender: 'TestUser',
-  badges: [],
-  userstate: createMockUserstate(),
-  parentDisplayName: '',
-  replyDisplayName: '',
-  replyBody: '',
-  ...overrides,
-});
-
 export const createSystemMessage = (): AnyChatMessageType =>
-  createMockMessage({
+  createChatMessageFixture({
     sender: 'System',
     message: [createTextToken('System message')],
-    userstate: {
-      ...createMockUserstate('System'),
+    userstate: createUserStateTags({
+      'display-name': 'System',
       login: 'system',
-    },
+      username: 'System',
+    }),
   });
 
 export const createNoticeMessage = (): AnyChatMessageType => ({
-  ...createMockMessage(),
+  ...createChatMessageFixture(),
   notice_tags: {
     'msg-id': 'sub',
     'msg-param-sub-plan': '1000',

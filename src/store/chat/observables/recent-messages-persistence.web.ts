@@ -1,4 +1,4 @@
-import type { AnyChatMessageType } from '../types/constants';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 
 // Web keeps the Legend State IndexedDB persistence for recentMessagesByChannel
 // (see chat-store.ts), so these are no-ops. The flag is statically false here, so

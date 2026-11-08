@@ -1,9 +1,9 @@
 import type { SevenTvUserCacheStorage } from '@app/utils/seven-tv/sevenTvUserCache';
 
-type StoredEntry = {
+interface StoredEntry {
   expiry?: string;
   value: unknown;
-};
+}
 
 export type FakeSevenTvCacheStorage = SevenTvUserCacheStorage & {
   backing: Map<string, StoredEntry>;

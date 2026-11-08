@@ -9,8 +9,8 @@ import {
 } from '@app/components/flash-list/FlashList';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 import { indexedCollectionToArray } from '@app/utils/collection/indexedCollection';
-import { convertV4PaintToPaintData } from '@app/utils/color/seven-tv-paint-data/convertV4PaintToPaintData';
-import { type SevenTvPaintSource } from '@app/utils/color/seven-tv-paint-data/types';
+import { convertV4PaintToPaintData } from '@app/utils/seven-tv/gql/convertV4PaintToPaintData';
+import { type SevenTvPaintSource } from '@app/utils/seven-tv/gql/types';
 
 import { sevenTvPaintsFixture } from './__fixtures__/seven-tv-paints.fixture';
 import { PaintedUsername } from './cosmetic-username/PaintedUsername';
@@ -54,7 +54,12 @@ function ComparisonRow({ paint }: { paint: PaintData }) {
       </ChatText>
       <View style={{ flexDirection: 'row', gap: 12 }}>
         <View style={{ flex: 1 }}>
-          <PaintedUsername paint={paint} showColon={false} username='Preview' />
+          <PaintedUsername
+            isModerated={false}
+            paint={paint}
+            showColon={false}
+            username='Preview'
+          />
         </View>
         <View style={{ flex: 1 }}>
           <PaintedUsernameSkia paint={paint} username='Preview' />

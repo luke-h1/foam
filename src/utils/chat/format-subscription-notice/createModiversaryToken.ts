@@ -1,9 +1,9 @@
 import type { ModiversaryTags } from '@app/types/chat/irc-tags/usernotice';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import { getTagValue } from '@app/utils/chat/format-subscription-notice/getTagValue';
 import { withNoticeSubject } from '@app/utils/chat/format-subscription-notice/withNoticeSubject';
-import type { MessageToken } from '@app/utils/chat/messageToken';
 
-export function createModiversaryPart(
+export function createModiversaryToken(
   tags: ModiversaryTags,
   messageText?: string,
 ): MessageToken<'modiversary'> {

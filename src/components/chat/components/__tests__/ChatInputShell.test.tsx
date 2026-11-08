@@ -1,4 +1,4 @@
-import { useImperativeHandle } from 'react';
+import { createRef, type RefObject, useImperativeHandle } from 'react';
 import { TextInput as MockTextInput } from 'react-native';
 import * as keyboardControllerModule from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -6,15 +6,22 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { act, render } from '@testing-library/react-native';
 
 import * as useChatImageUploadModule from '@app/components/chat/hooks/use-chat-image-upload';
+import * as chatUserStateModule from '@app/components/chat/util/chat-user-state';
 import { createTestUser } from '@app/context/__tests__/__fixtures__/auth-context.fixture';
-import * as twitchChatServiceModule from '@app/services/twitch-chat-service';
+import {
+  clearUserCosmeticsCache,
+  setUserBadge,
+} from '@app/store/chat/actions/cosmetics';
+import { getPreferences, preferences$ } from '@app/store/preference-store';
+import { TEST_SAFE_AREA_METRICS } from '@app/test/safe-area';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 
 import type { ChatComposerProps } from '../chat-composer/ChatComposer';
 import * as chatComposerModule from '../chat-composer/ChatComposer';
-import { ChatInputShell } from '../ChatInputShell';
+import { ChatInputShell, type ChatInputShellHandle } from '../ChatInputShell';
 
 const mockChatComposer = jest.fn((_props: ChatComposerProps) => {});
+const mockSetText = jest.fn((_text: string) => {});
 
 /**
  * `ChatComposer` is memo()-wrapped, so spyOn refuses to patch it; redefine
@@ -26,7 +33,7 @@ function MockChatComposer(props: ChatComposerProps) {
   useImperativeHandle(props.ref, () => ({
     focus: jest.fn(),
     blur: jest.fn(),
-    setText: jest.fn(),
+    setText: mockSetText,
   }));
 
   return <MockTextInput testID='chat-composer' />;
@@ -45,17 +52,17 @@ jest
   .spyOn(keyboardControllerModule.KeyboardController, 'dismiss')
   .mockResolvedValue(undefined);
 
-jest.spyOn(twitchChatServiceModule, 'getChatUserState').mockReturnValue({});
+jest.spyOn(chatUserStateModule, 'getChatUserState').mockReturnValue({});
 
 jest.spyOn(useChatImageUploadModule, 'useChatImageUpload').mockReturnValue({
   isUploading: false,
   pickAndUpload: jest.fn(),
 });
 
-type RenderedComposerProps = ChatComposerProps & {
+interface RenderedComposerProps extends ChatComposerProps {
   onChangeText: (text: string) => void;
   onSubmit: () => void;
-};
+}
 
 function latestComposerProps(): RenderedComposerProps {
   const props = mockChatComposer.mock.calls.at(-1)?.[0];
@@ -71,27 +78,26 @@ function latestComposerProps(): RenderedComposerProps {
   };
 }
 
-function renderShell(props: {
+interface RenderShellOptions {
   onRefreshCommand?: jest.Mock;
+  processMessageEmotes?: jest.Mock;
+  shellRef?: RefObject<ChatInputShellHandle | null>;
   user?: UserInfoResponse;
-}) {
+}
+
+function renderShell(props: RenderShellOptions) {
   render(
-    <SafeAreaProvider
-      initialMetrics={{
-        frame: { x: 0, y: 0, width: 390, height: 844 },
-        insets: { bottom: 0, left: 0, right: 0, top: 0 },
-      }}
-    >
+    <SafeAreaProvider initialMetrics={TEST_SAFE_AREA_METRICS}>
       <ChatInputShell
         channelId='123'
         channelName='testchannel'
-        connected
         isChatConnected={() => true}
+        ref={props.shellRef}
         {...{
           onOpenEmoteSheet: jest.fn(),
           onOpenSettingsSheet: jest.fn(),
           onRefreshCommand: props.onRefreshCommand ?? jest.fn(),
-          processMessageEmotes: jest.fn(),
+          processMessageEmotes: props.processMessageEmotes ?? jest.fn(),
           sendMessage: jest.fn(),
           user: props.user,
         }}
@@ -103,6 +109,30 @@ function renderShell(props: {
 describe('ChatInputShell', () => {
   beforeEach(() => {
     mockChatComposer.mockClear();
+    mockSetText.mockClear();
+  });
+
+  test('appending an emote after a trailing space adds no second space', () => {
+    const shellRef = createRef<ChatInputShellHandle>();
+
+    renderShell({
+      shellRef,
+      user: createTestUser({
+        id: '1',
+        login: 'someone',
+        display_name: 'Someone',
+      }),
+    });
+
+    act(() => {
+      latestComposerProps().onChangeText('hello ');
+    });
+
+    act(() => {
+      shellRef.current?.appendEmote('KEKW');
+    });
+
+    expect(mockSetText.mock.calls.at(-1)?.[0]).toEqual('hello KEKW ');
   });
 
   test('typed /refresh while signed out reaches canSend and runs the refresh', () => {
@@ -155,5 +185,35 @@ describe('ChatInputShell', () => {
     });
 
     expect(latestComposerProps().canSend).toBe(false);
+  });
+
+  test('the optimistic own message leaves out the 7TV badge when 7TV badges are off', () => {
+    const show7tvBadges = getPreferences().show7tvBadges;
+    const processMessageEmotes = jest.fn();
+
+    preferences$.show7tvBadges.set(false);
+    setUserBadge('1', 'badge-paint');
+
+    renderShell({
+      processMessageEmotes,
+      user: createTestUser({
+        id: '1',
+        login: 'someone',
+        display_name: 'Someone',
+      }),
+    });
+
+    act(() => {
+      latestComposerProps().onChangeText('hello');
+    });
+
+    act(() => {
+      latestComposerProps().onSubmit();
+    });
+
+    preferences$.show7tvBadges.set(show7tvBadges);
+    clearUserCosmeticsCache();
+
+    expect(processMessageEmotes.mock.calls[0]?.[2]?.badges).toEqual([]);
   });
 });

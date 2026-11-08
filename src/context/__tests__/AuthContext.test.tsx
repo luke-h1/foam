@@ -17,10 +17,10 @@ import { toast } from 'sonner-native';
 import { Text } from '@app/components/ui/text/Text';
 import { queryClient } from '@app/lib/react-query/queryClient';
 import { setTwitchClientId, twitchApi } from '@app/services/api/clients';
+import type { TwitchToken } from '@app/services/api/tokenLifecycle';
 import type { UserInfoResponse } from '@app/types/twitch/user';
-import type { TwitchToken } from '@app/utils/authentication/tokenLifecycle';
 
-import type { AuthState } from '../auth-context-value';
+import type { AuthState, LoginWithTwitchResult } from '../auth-context-value';
 import { AuthContextProvider, useAuthContext } from '../AuthContext';
 import { createTestUser } from './__fixtures__/auth-context.fixture';
 
@@ -432,6 +432,60 @@ describe('AuthContext', () => {
     expect(result.current.user).toEqual<UserInfoResponse>(user);
   });
 
+  test('returns a cancelled result with no toast and no auth change when the user cancels', async () => {
+    const { result } = renderHook(() => useAuthContext(), { wrapper });
+
+    await waitFor(() => expect(result.current.ready).toBe(true));
+
+    const authStateBefore = result.current.authState;
+    let loginResult: LoginWithTwitchResult | undefined;
+
+    await act(async () => {
+      loginResult = await result.current.loginWithTwitch({ type: 'cancel' });
+    });
+
+    expect(loginResult).toEqual<LoginWithTwitchResult>({
+      ok: false,
+      reason: 'cancelled',
+    });
+
+    expect(toast.error).not.toHaveBeenCalled();
+
+    expect(result.current.authState).toBe(authStateBefore);
+
+    expect(result.current.signInId).toBe(0);
+  });
+
+  test('counts one sign-in and exchanges the token once when the same response arrives twice at once', async () => {
+    const { result } = renderHook(() => useAuthContext(), { wrapper });
+
+    await waitFor(() => expect(result.current.ready).toBe(true));
+
+    let results: LoginWithTwitchResult[] = [];
+
+    await act(async () => {
+      results = await Promise.all([
+        result.current.loginWithTwitch(magicLinkResponse()),
+        result.current.loginWithTwitch(magicLinkResponse()),
+      ]);
+    });
+
+    expect(results).toEqual<LoginWithTwitchResult[]>([
+      { ok: true },
+      { ok: true },
+    ]);
+
+    expect(
+      twitch.requests.filter(
+        request =>
+          request.url === VALIDATE_URL &&
+          request.authorization === 'Bearer magic-user-token',
+      ),
+    ).toHaveLength(1);
+
+    expect(result.current.signInId).toBe(1);
+  });
+
   test('falls back to anon when getUserInfo fails after login, despite the live-session guard', async () => {
     twitch.anonToken = () => anonTokenResponse('anon-after-failed-login');
 
@@ -442,7 +496,8 @@ describe('AuthContext', () => {
 
     await waitFor(() => expect(result.current.ready).toBe(true));
 
-    let loginPromise: Promise<null | undefined> | undefined;
+    let loginPromise: Promise<LoginWithTwitchResult> | undefined;
+    let loginResult: LoginWithTwitchResult | undefined;
 
     await act(async () => {
       loginPromise = result.current.loginWithTwitch(magicLinkResponse());
@@ -453,8 +508,19 @@ describe('AuthContext', () => {
 
     await act(async () => {
       usersResponse.resolve(json({ message: 'unavailable' }, 503));
-      await loginPromise;
+      loginResult = await loginPromise;
     });
+
+    expect(loginResult).toEqual<LoginWithTwitchResult>({
+      ok: false,
+      reason: 'error',
+    });
+
+    expect(jest.mocked(toast.error).mock.calls).toEqual([
+      ["Couldn't authenticate with twitch"],
+    ]);
+
+    expect(result.current.signInId).toBe(0);
 
     const anonToken: TwitchToken = {
       accessToken: 'anon-after-failed-login',

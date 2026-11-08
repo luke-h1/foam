@@ -1,4 +1,6 @@
+import { getPreferences } from '@app/store/preference-store';
 import type { SanitisedEmote } from '@app/types/emote';
+import { chunk } from '@app/utils/collection/chunk';
 import { prefetchToDisk } from '@app/utils/image/prefetchToDisk';
 
 import { getEmotePickerDisplayUrl } from './emotePickerDisplayUrl';
@@ -17,9 +19,10 @@ export async function prefetchEmotePickerImages(
 
   const urls: string[] = [];
   const seen = new Set<string>();
+  const { disableEmoteAnimations } = getPreferences();
 
   for (const emote of emotes) {
-    const url = getEmotePickerDisplayUrl(emote);
+    const url = getEmotePickerDisplayUrl(emote, disableEmoteAnimations);
 
     if (
       !url ||
@@ -35,15 +38,13 @@ export async function prefetchEmotePickerImages(
     urls.push(url);
   }
 
-  for (let i = 0; i < urls.length; i += BATCH_SIZE) {
+  for (const batch of chunk(urls, BATCH_SIZE)) {
     if (signal?.aborted) {
       return;
     }
 
-    const batch = urls.slice(i, i + BATCH_SIZE);
-
     try {
-      // eslint-disable-next-line react-doctor/async-await-in-loop -- batches are intentionally sequential to avoid a network flood
+      // oxlint-disable-next-line react-doctor/async-await-in-loop -- batches are intentionally sequential to avoid a network flood
       const warmed = await prefetchToDisk(batch);
       if (warmed) {
         batch.forEach(url => prefetched.add(url));

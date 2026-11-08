@@ -1,5 +1,4 @@
 import { sevenTvService } from '@app/services/seven-tv-service';
-import * as cosmetics from '@app/store/chat/actions/cosmetics';
 import {
   clearUserCosmeticsCache,
   setUserBadge,
@@ -66,23 +65,6 @@ describe('fetchUserCosmetics', () => {
     await fetchUserCosmetics('paint-only-user', { retryMissingBadge: true });
 
     expect(mockGet7tvUserId).not.toHaveBeenCalled();
-  });
-
-  test('retries a previously fetched user when retryMissingBadge is requested and a badge binding lacks a renderable definition', async () => {
-    setUserBadge('retry-user', 'badge-1');
-
-    // getUserBadge always synthesises a renderable url once a badge id is
-    // bound, so this forces the one state that path can't produce on its own.
-    jest.spyOn(cosmetics, 'getUserBadge').mockReturnValue(undefined);
-
-    await fetchUserCosmetics('retry-user');
-    await fetchUserCosmetics('retry-user');
-    await fetchUserCosmetics('retry-user', { retryMissingBadge: true });
-
-    expect(mockGet7tvUserId.mock.calls).toEqual([
-      ['retry-user'],
-      ['retry-user'],
-    ]);
   });
 
   test('does not retry users whose cosmetics fetch failed', async () => {

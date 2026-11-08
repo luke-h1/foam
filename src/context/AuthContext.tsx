@@ -11,6 +11,7 @@ import {
 import { type AuthSessionResult, TokenResponse } from 'expo-auth-session';
 import { toast } from 'sonner-native';
 
+import { useLazyRef } from '@app/hooks/use-lazy-ref';
 import { useSyncRef } from '@app/hooks/use-sync-ref';
 import {
   followedStreamsQueryOptions,
@@ -19,11 +20,6 @@ import {
 } from '@app/lib/react-query/queries/twitch';
 import { queryClient } from '@app/lib/react-query/queryClient';
 import { twitchApi } from '@app/services/api/clients';
-import { twitchService } from '@app/services/twitch-service';
-import type { DefaultTokenResponse } from '@app/types/twitch/auth';
-import type { UserInfoResponse } from '@app/types/twitch/user';
-import { subscribeToAppStateTransitions } from '@app/utils/app-state/appStateTransitions';
-import * as SecureStore from '@app/utils/authentication/secureStore';
 import {
   addExpirationTimestamp,
   getFallbackAnonToken,
@@ -32,7 +28,11 @@ import {
   refreshStoredUserToken,
   shouldProactivelyRefreshUserToken,
   type TwitchToken,
-} from '@app/utils/authentication/tokenLifecycle';
+} from '@app/services/api/tokenLifecycle';
+import { twitchService } from '@app/services/twitch-service';
+import type { UserInfoResponse } from '@app/types/twitch/user';
+import { subscribeToAppStateTransitions } from '@app/utils/app-state/appStateTransitions';
+import * as SecureStore from '@app/utils/authentication/secureStore';
 import { parseTwitchAuthTokenFromResponse } from '@app/utils/authentication/twitchAuth';
 import {
   categorizeError,
@@ -46,6 +46,7 @@ import {
   AuthContext,
   type AuthContextState,
   type AuthState,
+  type LoginWithTwitchResult,
 } from './auth-context-value';
 
 const prefetchInitialData = (userId?: string) => {
@@ -64,12 +65,20 @@ const queueInitialDataPrefetch = (userId?: string) => {
 };
 
 const storageKeys = {
-  anon: 'V1_foam-anon', // anon token
-  user: 'V1_foam-user', // logged in token
+  anon: 'V1_foam-anon',
+  user: 'V1_foam-user',
 } as const;
 
 const AUTH_STARTUP_TIMEOUT_MS = 12_000;
 const USER_TOKEN_REFRESH_POLL_INTERVAL_MS = 60_000;
+
+const LOGIN_CANCELLED: LoginWithTwitchResult = {
+  ok: false,
+  reason: 'cancelled',
+};
+
+const LOGIN_FAILED: LoginWithTwitchResult = { ok: false, reason: 'error' };
+const LOGIN_SUCCEEDED: LoginWithTwitchResult = { ok: true };
 
 interface State {
   authState?: AuthState;
@@ -90,9 +99,6 @@ function logIfUnrefreshed(refreshedToken: TwitchToken | null): void {
   );
 }
 
-/**
- * True when the anon token that was validated is still the one in play.
- */
 function isStillLiveAnonToken(
   authState: AuthState | undefined,
   accessToken: string,
@@ -197,23 +203,31 @@ async function refreshCurrentUserTokenForState(
   }
 }
 
-export type AuthContextProviderProps = {
-  children: ReactNode;
-  enableTestResult?: boolean;
-  testResult?: DefaultTokenResponse;
-};
+function isCancelledAuthResponse(response: AuthSessionResult | null): boolean {
+  return Boolean(
+    response && response.type !== 'success' && response.type !== 'error',
+  );
+}
 
-function useAuthContextValue({
-  enableTestResult,
-  testResult,
-}: Omit<AuthContextProviderProps, 'children'>): AuthContextState {
+interface AuthContextProviderProps {
+  children: ReactNode;
+}
+
+function useAuthContextValue(): AuthContextState {
   const [state, setState] = useState<State>({
     ready: false,
   });
 
+  const [signInId, setSignInId] = useState(0);
+
   const [user, setUser] = useState<UserInfoResponse | undefined>(undefined);
   const hasTimedOut = useRef(false);
   const userTokenRefreshInFlightRef = useRef(false);
+
+  const loginAttemptsRef = useLazyRef(
+    () => new Map<string, Promise<LoginWithTwitchResult>>(),
+  );
+
   const authStateRef = useSyncRef(state.authState);
 
   const markAuthStateReadyFallback = (reason: string, error?: Error) => {
@@ -242,22 +256,10 @@ function useAuthContextValue({
     logAuthStartupFallback(reason, error);
   };
 
-  const fetchAnonToken = async (
-    overrideTestResult?: DefaultTokenResponse,
-    options?: { force?: boolean },
-  ) => {
+  const fetchAnonToken = async (options?: { force?: boolean }) => {
     try {
-      let result = await twitchService.getDefaultToken();
-
-      // hack to get around tests getting hung up on micro queue
-      if (process.env.NODE_ENV === 'test' && enableTestResult) {
-        result = overrideTestResult ??
-          testResult ?? {
-            access_token: '123',
-            expires_in: 3600,
-            token_type: 'bearer',
-          };
-      }
+      // oxlint-disable-next-line react-doctor/async-defer-await -- a sign-in can land during the request, so the guard must read the state after it
+      const result = await twitchService.getDefaultToken();
 
       if (!options?.force && authStateRef.current?.isLoggedIn) {
         return;
@@ -405,34 +407,9 @@ function useAuthContextValue({
     }
   };
 
-  const loginWithTwitch = async (response: AuthSessionResult | null) => {
-    if (!response || response.type !== 'success') {
-      toast.error("Couldn't authenticate with twitch");
-      await doAnonAuth();
-      return null;
-    }
-
-    const parsedToken = parseTwitchAuthTokenFromResponse(response);
-
-    if (!parsedToken) {
-      logger.auth.warn('Auth response succeeded but did not contain a token', {
-        responseType: response.type,
-        hasAuthentication: !!response.authentication,
-        responseUrl: response.url,
-      });
-
-      toast.error("Couldn't authenticate with twitch");
-      await doAnonAuth();
-      return null;
-    }
-
-    const token = addExpirationTimestamp({
-      accessToken: parsedToken.accessToken,
-      expiresIn: parsedToken.expiresIn,
-      tokenType: parsedToken.tokenType,
-      refreshToken: parsedToken.refreshToken,
-    });
-
+  const exchangeUserToken = async (
+    token: TwitchToken,
+  ): Promise<LoginWithTwitchResult> => {
     setState({
       ready: true,
       authState: {
@@ -464,10 +441,66 @@ function useAuthContextValue({
       await SecureStore.setItemAsync(storageKeys.user, JSON.stringify(token));
     } catch (error) {
       logger.auth.error('Failed to get user info after login', error);
+      toast.error("Couldn't authenticate with twitch");
       await doAnonAuth(undefined, { force: true });
+      return LOGIN_FAILED;
     }
 
-    return null;
+    setSignInId(current => current + 1);
+
+    return LOGIN_SUCCEEDED;
+  };
+
+  const loginWithTwitch = async (
+    response: AuthSessionResult | null,
+  ): Promise<LoginWithTwitchResult> => {
+    if (isCancelledAuthResponse(response)) {
+      return LOGIN_CANCELLED;
+    }
+
+    if (!response || response.type !== 'success') {
+      toast.error("Couldn't authenticate with twitch");
+      await doAnonAuth();
+      return LOGIN_FAILED;
+    }
+
+    const parsedToken = parseTwitchAuthTokenFromResponse(response);
+
+    if (!parsedToken) {
+      logger.auth.warn('Auth response succeeded but did not contain a token', {
+        responseType: response.type,
+        hasAuthentication: !!response.authentication,
+        responseUrl: response.url,
+      });
+
+      toast.error("Couldn't authenticate with twitch");
+      await doAnonAuth();
+      return LOGIN_FAILED;
+    }
+
+    const loginAttempts = loginAttemptsRef.current;
+    const existingAttempt = loginAttempts.get(parsedToken.accessToken);
+
+    if (existingAttempt) {
+      return existingAttempt;
+    }
+
+    const attempt = exchangeUserToken(
+      addExpirationTimestamp({
+        accessToken: parsedToken.accessToken,
+        expiresIn: parsedToken.expiresIn,
+        tokenType: parsedToken.tokenType,
+        refreshToken: parsedToken.refreshToken,
+      }),
+    );
+
+    loginAttempts.set(parsedToken.accessToken, attempt);
+
+    const result = await attempt;
+
+    loginAttempts.delete(parsedToken.accessToken);
+
+    return result;
   };
 
   const doAnonAuth = async (
@@ -475,14 +508,14 @@ function useAuthContextValue({
     options?: { force?: boolean },
   ) => {
     if (!token?.accessToken) {
-      await fetchAnonToken(undefined, options);
+      await fetchAnonToken(options);
       return;
     }
 
     if (isTokenExpired(token)) {
       logger.auth.info('Anonymous token is expired, fetching new token');
       twitchApi.removeAuthToken();
-      await fetchAnonToken(undefined, options);
+      await fetchAnonToken(options);
       return;
     }
 
@@ -598,7 +631,6 @@ function useAuthContextValue({
   const populateAuthStateRef = useSyncRef(populateAuthState);
   const refreshCurrentUserTokenRef = useSyncRef(refreshCurrentUserToken);
   const loginWithTwitchRef = useSyncRef(loginWithTwitch);
-  const fetchAnonTokenRef = useSyncRef(fetchAnonToken);
   const doAnonAuthRef = useSyncRef(doAnonAuth);
 
   useEffect(() => {
@@ -668,17 +700,6 @@ function useAuthContextValue({
     [loginWithTwitchRef],
   );
 
-  const populateAuthStateCallback = useCallback(
-    () => populateAuthStateRef.current(),
-    [populateAuthStateRef],
-  );
-
-  const fetchAnonTokenCallback = useCallback(
-    (testResult?: DefaultTokenResponse) =>
-      fetchAnonTokenRef.current(testResult),
-    [fetchAnonTokenRef],
-  );
-
   const logout = useCallback(async () => {
     await Promise.all([
       SecureStore.deleteItemAsync(storageKeys.user),
@@ -697,39 +718,36 @@ function useAuthContextValue({
     () => ({
       authState: state.authState,
       loginWithTwitch: loginWithTwitchCallback,
-      populateAuthState: populateAuthStateCallback,
       logout,
-      fetchAnonToken: fetchAnonTokenCallback,
+      signInId,
       user,
       ready: state.ready,
     }),
     [
       state.authState,
       state.ready,
+      signInId,
       user,
       loginWithTwitchCallback,
-      populateAuthStateCallback,
       logout,
-      fetchAnonTokenCallback,
     ],
   );
 
   return contextState;
 }
 
-export const AuthContextProvider = ({
-  children,
-  enableTestResult,
-  testResult,
-}: AuthContextProviderProps) => {
-  const contextState = useAuthContextValue({ enableTestResult, testResult });
+export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
+  const contextState = useAuthContextValue();
 
   return (
     <AuthContext.Provider value={contextState}>{children}</AuthContext.Provider>
   );
 };
 
-export type { AuthContextState } from './auth-context-value';
+export type {
+  AuthContextState,
+  LoginWithTwitchResult,
+} from './auth-context-value';
 export { AuthContext } from './auth-context-value';
 
 export function useAuthContext() {
@@ -744,40 +762,33 @@ export function useAuthContext() {
   return context;
 }
 
-interface AuthContextTestProviderProps extends AuthContextState {
-  fetchAnonToken: (testResult?: DefaultTokenResponse) => Promise<void>;
+interface AuthContextTestProviderProps extends Omit<
+  AuthContextState,
+  'signInId'
+> {
+  signInId?: number;
   children: ReactNode;
 }
 
 export function AuthContextTestProvider({
   children,
   authState,
-  fetchAnonToken,
   loginWithTwitch,
   logout,
-  populateAuthState,
   ready,
+  signInId = 0,
   user,
 }: AuthContextTestProviderProps) {
   const value = useMemo<AuthContextState>(
     () => ({
       authState,
-      fetchAnonToken,
       loginWithTwitch,
       logout,
-      populateAuthState,
       ready,
+      signInId,
       user,
     }),
-    [
-      authState,
-      fetchAnonToken,
-      loginWithTwitch,
-      logout,
-      populateAuthState,
-      ready,
-      user,
-    ],
+    [authState, loginWithTwitch, logout, ready, signInId, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -7,8 +7,8 @@ import { SymbolView } from '@app/components/ui/icon/Icon';
 import { Text } from '@app/components/ui/text/Text';
 import { theme } from '@app/styles/themes';
 
-import type { PinnedChatMessageViewModel } from '../hooks/use-pinned-chat-message';
 import { chatEntranceSpring } from '../util/chatEntranceSpring';
+import type { PinnedChatMessageViewModel } from '../util/pinnedChatMessageViewModel';
 import { styles } from './PinnedMessageBanner.styles';
 
 const pinnedBannerEntering = chatEntranceSpring(FadeInUp);

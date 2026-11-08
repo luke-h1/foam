@@ -11,9 +11,9 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { theme } from '@app/styles/themes';
 
-import type { ChatInputSectionProps } from '../util/chatInputSectionTypes';
-import type { ChatComposerHandle } from './chat-composer/ChatComposer';
+import type { ChatComposerHandle } from './chat-composer/hooks/use-chat-composer-controller';
 import { ChatInputSection } from './ChatInputSection';
+import type { ChatInputSectionProps } from './ChatInputSection.types';
 
 type HarnessProps = Omit<ChatInputSectionProps, 'inputRef'> & {
   seedText?: string;
@@ -72,7 +72,7 @@ const meta = {
     ),
   ],
   args: {
-    connection: { isAuthenticated: true, isConnected: true, isSending: false },
+    isAuthenticated: true,
     messageInput: '',
     onAttachImage: () => {},
     onChangeText: () => {},
@@ -114,8 +114,7 @@ export const Replying: Story = {
       color: '#8A4FFF',
       message: 'no way he hit that shot from across the map',
       messageId: 'story-reply',
-      parentMessage: 'no way he hit that shot from across the map',
-      replyParentUserLogin: 'somelongchattername',
+      login: 'somelongchattername',
       userId: '12345',
       username: 'somelongchattername',
     },
@@ -125,11 +124,7 @@ export const Replying: Story = {
 
 export const SignedOut: Story = {
   args: {
-    connection: {
-      isAuthenticated: false,
-      isConnected: true,
-      isSending: false,
-    },
+    isAuthenticated: false,
   },
 };
 
@@ -137,12 +132,5 @@ export const UploadingImage: Story = {
   args: {
     isUploadingImage: true,
     seedText: 'one sec',
-  },
-};
-
-export const Sending: Story = {
-  args: {
-    connection: { isAuthenticated: true, isConnected: true, isSending: true },
-    seedText: 'sending this one',
   },
 };

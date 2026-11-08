@@ -27,6 +27,7 @@ export const twitchKeys = {
   clips: () => [...twitchKeys.all, 'clips'] as const,
   clipsByIds: (ids: string[]) =>
     [...twitchKeys.clips(), 'byIds', ids.join(',')] as const,
+  clip: (clipId: string) => [...twitchKeys.clips(), 'byId', clipId] as const,
   clipsInfinite: (params: Omit<TwitchClipsRequestParams, 'after'>) =>
     [
       ...twitchKeys.clips(),
@@ -55,7 +56,13 @@ export const streamElementsKeys = {
 
 export const emoteKeys = {
   all: ['emotes'] as const,
-  globalEmotes: () => [...emoteKeys.all, 'global'] as const,
-  globalBadges: () => [...emoteKeys.all, 'globalBadges'] as const,
   sevenTvBadges: () => [...emoteKeys.all, 'sevenTvBadges'] as const,
+  sevenTvEmote: (emoteId: string) =>
+    [...emoteKeys.all, 'sevenTvEmote', emoteId] as const,
+  channelResources: (channelId: string | undefined) =>
+    [...emoteKeys.all, 'channelResources', channelId ?? ''] as const,
+};
+
+export const remoteConfigKeys = {
+  all: ['remoteConfig'] as const,
 };

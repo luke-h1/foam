@@ -19,6 +19,7 @@ export interface ChatOverlayState {
   isSettingsSheetMounted: boolean;
   selectedBadge: BadgePressData | null;
   selectedEmote: EmotePressData | null;
+  selectedEmoteAction: EmotePressData | null;
   selectedMessage: MessageActionData<'usernotice'> | null;
   selectedUser: UsernamePressData | null;
 }
@@ -34,6 +35,7 @@ export function createEmptyChatOverlayState(
     isSettingsSheetMounted: false,
     selectedBadge: null,
     selectedEmote: null,
+    selectedEmoteAction: null,
     selectedMessage: null,
     selectedUser: null,
   };

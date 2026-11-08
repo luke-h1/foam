@@ -1,9 +1,3 @@
-export type ChatConnectionFlags = {
-  isAuthenticated: boolean;
-  isConnected: boolean;
-  isSending: boolean;
-};
-
 export type ChatPaneFlags = {
   canModerateChat: boolean;
   connected: boolean;
@@ -32,7 +26,6 @@ export type ChatModerationAccessFlags = {
 export type UserActionVisibilityFlags = {
   isHidden: boolean;
   isHighlighted: boolean;
-  visible: boolean;
 };
 
 export type ChatRowDisplayFlags = {

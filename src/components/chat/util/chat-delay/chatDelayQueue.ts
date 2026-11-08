@@ -1,21 +1,17 @@
 import { createModeratedBufferMessage } from '@app/components/chat/util/buffered-message-ops/createModeratedBufferMessage';
-import { getBufferedMessageLogin } from '@app/components/chat/util/buffered-message-ops/getBufferedMessageLogin';
 import type { BufferedMessage } from '@app/components/chat/util/buffered-message-ops/types';
+import { getMessageSenderLogin } from '@app/store/chat/actions/messages';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
 import { chatMessageMatchesId } from '@app/utils/chat/message-identity/chatMessageMatchesId';
 import { normaliseMessageField } from '@app/utils/chat/message-identity/normaliseMessageField';
 
-export interface DelayedChatMessage {
+interface DelayedChatMessage {
   countUnread: boolean;
   message: BufferedMessage;
   releaseAt: number;
 }
 
 export interface ChatDelayQueue {
-  /**
-   * Returns how many of the oldest held messages were dropped to stay under
-   * the ceiling.
-   */
   enqueue(
     message: BufferedMessage,
     releaseAt: number,
@@ -116,7 +112,7 @@ export const createChatDelayQueue = (
       }
 
       queue = queue.filter(
-        entry => getBufferedMessageLogin(entry.message) !== target,
+        entry => getMessageSenderLogin(entry.message) !== target,
       );
     },
 
@@ -148,7 +144,7 @@ export const createChatDelayQueue = (
       }
 
       queue = queue.map(entry =>
-        getBufferedMessageLogin(entry.message) === target
+        getMessageSenderLogin(entry.message) === target
           ? {
               ...entry,
               message: createModeratedBufferMessage(

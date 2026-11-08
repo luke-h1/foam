@@ -1,6 +1,8 @@
 import { StyleSheet, View } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 
+import { theme } from '@app/styles/themes';
+
 import type { PressableAreaProps } from './PressableArea.types';
 
 export function PressableArea({
@@ -13,7 +15,7 @@ export function PressableArea({
   return (
     <Pressable
       accessibilityRole='button'
-      android_ripple={android_ripple ?? { color: 'rgba(255, 255, 255, 0.12)' }}
+      android_ripple={android_ripple ?? { color: theme.colorRipple }}
       {...rest}
       {...(ref !== undefined ? { ref } : {})}
     >

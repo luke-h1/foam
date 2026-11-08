@@ -1,9 +1,8 @@
 import { type Dispatch, useCallback, useRef } from 'react';
 import { StyleSheet } from 'react-native';
 
-import * as ScreenOrientation from 'expo-screen-orientation';
-
-import type { useUpdatePreferences } from '@app/store/preference-store';
+import type { updatePreferences } from '@app/store/preference-store';
+import { lockPortrait } from '@app/utils/device/lockPortrait';
 
 import type { FullscreenChatMode } from '../types';
 import { clampLandscapeChatWidth } from '../util/clampLandscapeChatWidth';
@@ -16,10 +15,6 @@ import type { LiveStreamScreenAction } from '../util/liveStreamScreenReducer';
 // A double-tap on the toggle would otherwise land two state changes in one frame.
 const CHAT_TOGGLE_DEBOUNCE_MS = 450;
 
-/**
- * Each cycle step names the next one, so tapping the control walks
- * sidebar -> overlay -> hidden and back.
- */
 const CHAT_CYCLE_STEPS = {
   hide: { isChatVisible: false, landscapeChatCycleAction: 'show' },
   show: {
@@ -48,13 +43,9 @@ interface UseLiveStreamChatControlsOptions {
   isChatVisible: boolean;
   isLandscape: boolean;
   landscapeChatCycleAction: LandscapeChatCycleAction;
-  updatePreferences: ReturnType<typeof useUpdatePreferences>;
+  updatePreferences: typeof updatePreferences;
 }
 
-/**
- * Owns how chat is shown beside the player: visibility, the landscape cycle
- * between sidebar, overlay and hidden, and the persisted sidebar width.
- */
 export function useLiveStreamChatControls({
   contentWidth,
   dispatchUi,
@@ -142,9 +133,7 @@ export function useLiveStreamChatControls({
 
     dispatchUi({ type: 'setChatVisible', isChatVisible: true });
 
-    void ScreenOrientation.lockAsync(
-      ScreenOrientation.OrientationLock.PORTRAIT_UP,
-    );
+    lockPortrait();
   }, [dispatchUi, isLandscape]);
 
   const toggleFullscreenChatMode = useCallback(() => {

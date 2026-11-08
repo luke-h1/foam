@@ -17,7 +17,7 @@ export interface PassResult {
   maxMs: number;
 }
 
-export interface PhaseMarker {
+interface PhaseMarker {
   phase: string;
   t: number;
 }

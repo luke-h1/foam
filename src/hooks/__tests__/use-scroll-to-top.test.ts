@@ -2,6 +2,7 @@ import type { RefObject } from 'react';
 
 import { act, renderHook } from '@testing-library/react-native';
 import * as ExpoRouter from 'expo-router';
+import { runInNewContext } from 'node:vm';
 
 import { useScrollToTop } from '../use-scroll-to-top';
 
@@ -155,9 +156,14 @@ describe('useScrollToTop', () => {
       getRegisteredRef().current?.scrollToTop();
     });
 
-    expect(injectJavaScript).toHaveBeenCalledWith(
-      ";window.scrollTo({ top: 36, behavior: 'smooth' }); true;",
-    );
+    const [[script]] = injectJavaScript.mock.calls;
+    const windowScrollTo = jest.fn();
+
+    runInNewContext(script, { window: { scrollTo: windowScrollTo } });
+
+    expect(windowScrollTo.mock.calls).toEqual([
+      [{ top: 36, behavior: 'smooth' }],
+    ]);
   });
 
   test('ignores callback refs and empty refs', () => {

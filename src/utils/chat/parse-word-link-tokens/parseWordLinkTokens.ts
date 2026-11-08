@@ -1,14 +1,14 @@
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import { getTwitchClipIdFromUrl } from '@app/utils/chat/parse-word-link-tokens/getTwitchClipIdFromUrl';
 import { SEVEN_TV_EMOTE_LINK_REGEX } from '@app/utils/chat/parse-word-link-tokens/sevenTvEmoteLinkRegex';
+import { isCacheableWebUri } from '@app/utils/image/isCacheableWebUri';
 
-const GENERIC_HTTP_URL_REGEX = /^https?:\/\//i;
 const TRAILING_URL_PUNCTUATION = new Set(String.raw`.,!?;:'"\)]}>`.split(''));
 
-type SplitUrlWord = {
+interface SplitUrlWord {
   urlCandidate: string;
   trailing: string;
-};
+}
 
 function splitTrailingUrlPunctuation(word: string): SplitUrlWord {
   let end = word.length;
@@ -23,16 +23,16 @@ function splitTrailingUrlPunctuation(word: string): SplitUrlWord {
   };
 }
 
-export function parseWordLinkParts(word: string): MessageToken[] | null {
+export function parseWordLinkTokens(word: string): MessageToken[] | null {
   // Runs for every word of every parsed message; ~99.9% of words aren't
   // links, so reject before allocating the punctuation split.
-  if (!word || !GENERIC_HTTP_URL_REGEX.test(word)) {
+  if (!word || !isCacheableWebUri(word)) {
     return null;
   }
 
   const { urlCandidate, trailing } = splitTrailingUrlPunctuation(word);
 
-  if (!GENERIC_HTTP_URL_REGEX.test(urlCandidate)) {
+  if (!isCacheableWebUri(urlCandidate)) {
     return null;
   }
 

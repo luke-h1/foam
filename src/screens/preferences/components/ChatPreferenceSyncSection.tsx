@@ -1,35 +1,36 @@
-import { SettingsSection } from '@app/components/settings-section/SettingsSection';
+import {
+  SettingsSection,
+  SettingsSegmentedRow,
+} from '@app/components/settings-section/SettingsSection';
 import { Text } from '@app/components/ui/text/Text';
+import { updatePreferences, usePreference } from '@app/store/preference-store';
 
-import { CHAT_DELAY_OPTIONS } from '../util/chatPreferenceTypes';
-import { ChatPreferenceSegmentedSettingsRow } from './ChatPreferenceSettingsRows';
+import {
+  CHAT_DELAY_OPTIONS,
+  CHAT_PREFERENCE_FOOTERS,
+  CHAT_PREFERENCE_ROWS as ROWS,
+  CHAT_PREFERENCE_SECTION_TITLES,
+} from '../constants';
 
-export function ChatPreferenceSyncSection({
-  chatDelayIndex,
-  handleChatDelayChange,
-}: {
-  chatDelayIndex: number;
-  handleChatDelayChange: (index: number) => void;
-}) {
+export function ChatPreferenceSyncSection() {
+  const chatDelay = usePreference('chatDelay');
+
   return (
     <SettingsSection
-      title='Sync'
+      title={CHAT_PREFERENCE_SECTION_TITLES.sync}
       footer={
         <Text color='gray.textLow' type='subhead'>
-          Delay chat to match the video. Auto uses the measured stream latency.
+          {CHAT_PREFERENCE_FOOTERS.sync}
         </Text>
       }
     >
-      <ChatPreferenceSegmentedSettingsRow
-        icon={{
-          icon: 'timer',
-          androidIcon: 'timer',
-        }}
-        onSelectIndex={handleChatDelayChange}
-        selectedIndex={chatDelayIndex}
-        subtitle='Hold new messages before showing them'
-        title='Chat Delay'
-        values={CHAT_DELAY_OPTIONS.map(option => option.label)}
+      <SettingsSegmentedRow
+        title={ROWS.chatDelay.title}
+        subtitle={ROWS.chatDelay.subtitle}
+        icon={ROWS.chatDelay}
+        options={CHAT_DELAY_OPTIONS}
+        value={chatDelay}
+        onValueChange={value => updatePreferences({ chatDelay: value })}
       />
     </SettingsSection>
   );

@@ -1,4 +1,5 @@
-// oxlint-disable anti-slop/no-shape-in-symbol-names -- mirrors the 7TV paint API shape field (types/seven-tv/cosmetics.ts)
+import { createSevenTvBadge } from '@app/components/chat/__tests__/__fixtures__/chatFactories.fixture';
+import { makePaint } from '@app/components/chat/components/chat-message/cosmetic-username/util/paint-css/__fixtures__/paintCss.fixture';
 import { storageService } from '@app/lib/storage';
 import { sevenTvService } from '@app/services/seven-tv-service';
 import {
@@ -23,48 +24,33 @@ import {
   rememberSevenTvUserTwitchLink,
 } from '@app/store/chat/actions/cosmetics-links';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
-import type {
-  PaintData,
-  UserCosmeticsInfo,
-} from '@app/types/seven-tv/cosmetics';
+import type { PaintData } from '@app/types/seven-tv/cosmetics';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import type { UserCosmeticsInfo } from '@app/utils/seven-tv/gql/types';
 
 const PAINT_ID = 'paint-popular';
 const BADGE_ID = 'badge-popular';
 
 function buildPaint(): PaintData {
-  return {
+  return makePaint({
     id: PAINT_ID,
     name: 'Popular Paint',
     color: 0x00_ff_00_ff,
-    layers: { length: 0 },
     shadows: {
       0: { color: 0x00_00_00_ff, radius: 2, x_offset: 0, y_offset: 1 },
       length: 1,
     },
-    textStyle: null,
-    function: 'LINEAR_GRADIENT',
-    repeat: false,
     angle: 90,
-    shape: 'circle',
-    image_url: '',
     stops: {
       0: { at: 0, color: 0x00_ff_00_ff },
       1: { at: 1, color: 0x00_00_ff_ff },
       length: 2,
     },
-  };
+  });
 }
 
 function buildBadge(): SanitisedBadgeSet {
-  return {
-    id: BADGE_ID,
-    url: 'https://cdn.7tv.app/badge/badge-popular/4x.webp',
-    type: '7TV Badge',
-    title: 'Popular Badge',
-    set: BADGE_ID,
-    provider: '7tv',
-  };
+  return createSevenTvBadge(BADGE_ID, { title: 'Popular Badge' });
 }
 
 const snapshotKey = (sevenTvUserId: string) =>
@@ -164,14 +150,9 @@ describe('cosmetics entitlement-burst churn', () => {
       ttvUserId: 'ttv-user-0',
     };
 
-    expect(mockSet.mock.calls).toEqual([
-      [
-        'sevenTvUserCosmetics_user-cosmetics:stv-user-0',
-        expectedCosmetics,
-        'seven_tv_cache',
-        { expiry: new Date(expectedCosmetics.expiresAt) },
-      ],
-    ]);
+    expect(mockSet).toHaveBeenCalledTimes(1);
+
+    expect(readSnapshot('stv-user-0')).toEqual(expectedCosmetics);
   });
 
   test('a removal inside the set debounce window flushes the wearer exactly once, with the cosmetic gone', () => {
@@ -188,14 +169,9 @@ describe('cosmetics entitlement-burst churn', () => {
       ttvUserId: 'ttv-user-0',
     };
 
-    expect(mockSet.mock.calls).toEqual([
-      [
-        'sevenTvUserCosmetics_user-cosmetics:stv-user-0',
-        expectedCosmetics,
-        'seven_tv_cache',
-        { expiry: new Date(expectedCosmetics.expiresAt) },
-      ],
-    ]);
+    expect(mockSet).toHaveBeenCalledTimes(1);
+
+    expect(readSnapshot('stv-user-0')).toEqual(expectedCosmetics);
 
     jest.advanceTimersByTime(1000);
 
@@ -311,14 +287,9 @@ describe('cosmetics entitlement-burst churn', () => {
       ttvUserId: 'ttv-user-0',
     };
 
-    expect(mockSet.mock.calls).toEqual([
-      [
-        'sevenTvUserCosmetics_user-cosmetics:stv-user-0',
-        expectedCosmetics,
-        'seven_tv_cache',
-        { expiry: new Date(expectedCosmetics.expiresAt) },
-      ],
-    ]);
+    expect(mockSet).toHaveBeenCalledTimes(1);
+
+    expect(readSnapshot('stv-user-0')).toEqual(expectedCosmetics);
 
     jest.advanceTimersByTime(1000);
 
@@ -348,14 +319,9 @@ describe('cosmetics entitlement-burst churn', () => {
       ttvUserId: 'ttv-user-0',
     };
 
-    expect(mockSet.mock.calls).toEqual([
-      [
-        'sevenTvUserCosmetics_user-cosmetics:stv-user-0',
-        expectedCosmetics,
-        'seven_tv_cache',
-        { expiry: new Date(expectedCosmetics.expiresAt) },
-      ],
-    ]);
+    expect(mockSet).toHaveBeenCalledTimes(1);
+
+    expect(readSnapshot('stv-user-0')).toEqual(expectedCosmetics);
 
     jest.advanceTimersByTime(1000);
 

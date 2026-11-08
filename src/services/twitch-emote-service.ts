@@ -1,9 +1,11 @@
 import type { TwitchSanitisedEmote } from '@app/types/emote';
 import type { PaginatedList } from '@app/types/twitch/api';
 import type { TwitchEmote } from '@app/types/twitch/emote';
+import { twitchEmoteCdn } from '@app/utils/emote/cdn/twitch';
+import { buildSanitisedEmote } from '@app/utils/emote/sanitised/buildSanitisedEmote';
+import { sanitiseAll } from '@app/utils/emote/sanitised/sanitiseAll';
 
 import { twitchApi } from './api/clients';
-import { buildSanitisedEmote } from './emote-provider';
 import { twitchService } from './twitch-service';
 
 interface TwitchEmotePage {
@@ -26,53 +28,41 @@ interface TwitchGlobalEmote {
   theme_mode: ['light', 'dark'];
 }
 
-function toTwitchImageUrl(
-  emoteId: string,
-  format: 'default' | 'static' = 'default',
-  scale: '1.0' | '2.0' | '3.0' = '3.0',
-): string {
-  return `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/${format}/dark/${scale}`;
+interface SanitisableTwitchEmote extends Pick<TwitchEmote, 'id' | 'name'> {
+  owner_id?: string;
 }
 
 function sanitiseTwitchEmote(
-  emote: Pick<TwitchEmote, 'id' | 'name'> & { owner_id?: string },
+  emote: SanitisableTwitchEmote,
   site: TwitchSanitisedEmote['site'],
   creator: string | null,
 ): TwitchSanitisedEmote | null {
+  const variants = twitchEmoteCdn.buildVariants({
+    id: emote.id,
+    animated: null,
+  });
+
   return buildSanitisedEmote({
     id: emote.id,
     name: emote.name,
     site,
     creator,
-    emoteLink: toTwitchImageUrl(emote.id),
+    emoteLink: twitchEmoteCdn.pageUrl(emote.id),
     originalName: emote.name,
-    animated: {
-      '2x': toTwitchImageUrl(emote.id, 'default', '2.0'),
-      '4x': toTwitchImageUrl(emote.id, 'default', '3.0'),
-    },
-    static: {
-      '2x': toTwitchImageUrl(emote.id, 'static', '2.0'),
-      '4x': toTwitchImageUrl(emote.id, 'static', '3.0'),
-    },
+    animated: variants.animated ?? {},
+    static: variants.static ?? {},
     ownerId: emote.owner_id,
   });
 }
 
 function sanitiseTwitchEmotes(
-  emotes: (Pick<TwitchEmote, 'id' | 'name'> & { owner_id?: string })[],
+  emotes: SanitisableTwitchEmote[],
   site: TwitchSanitisedEmote['site'],
   creator: string | null,
 ): TwitchSanitisedEmote[] {
-  const sanitised: TwitchSanitisedEmote[] = [];
-
-  for (const emote of emotes) {
-    const result = sanitiseTwitchEmote(emote, site, creator);
-    if (result) {
-      sanitised.push(result);
-    }
-  }
-
-  return sanitised;
+  return sanitiseAll(emotes, emote =>
+    sanitiseTwitchEmote(emote, site, creator),
+  );
 }
 
 export const twitchEmoteService = {
@@ -114,7 +104,6 @@ export const twitchEmoteService = {
     let cursor: string | undefined;
 
     do {
-      // eslint-disable-next-line no-await-in-loop
       const result = await twitchApi.get<TwitchEmotePage>('/chat/emotes/user', {
         params: {
           user_id: userId,

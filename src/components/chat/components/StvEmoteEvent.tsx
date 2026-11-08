@@ -3,31 +3,33 @@ import { StyleSheet, View } from 'react-native';
 
 import { BrandIcon } from '@app/components/brand-icon/BrandIcon';
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
+import { CHAT_NOTICE_ACCENTS } from '@app/components/chat/util/chatNoticeAccents';
 import { Image } from '@app/components/image/Image';
+import type { ChatDensity, ChatFontScale } from '@app/store/preference-store';
 import { resolveThemeColor } from '@app/styles/themes';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 
 import { styles as chatStyles } from './chat-message/ChatRow.styles';
 import { getChatTextStyles } from './chat-message/ChatText.styles';
 import { ChatNoticeMetaRow } from './chat-message/renderers/ChatNoticeMetaRow';
-import type { ChatFontScale } from './chat-message/util/chatScale';
-import { CHAT_NOTICE_ACCENTS } from './util/chatNoticeAccents';
+import { getChatScale } from './chat-message/util/chatScale';
 
 interface StvEmoteEventProps {
-  compact?: boolean;
-  disableAnimations?: boolean;
+  density?: ChatDensity;
+  disableEmoteAnimations?: boolean;
   fontScale?: ChatFontScale;
   token: MessageToken<'stvEmoteAdded' | 'stvEmoteRemoved'>;
 }
 
 function StvEmoteEventComponent({
-  compact,
+  density,
   fontScale,
   token,
-  disableAnimations = false,
+  disableEmoteAnimations = false,
 }: StvEmoteEventProps) {
-  const textStyles = getChatTextStyles(fontScale, compact);
+  const textStyles = getChatTextStyles(fontScale, density);
+  const { emoteSize, gap } = getChatScale(fontScale, density);
   const added = token.type === 'stvEmoteAdded';
   const removed = token.type === 'stvEmoteRemoved';
 
@@ -40,7 +42,7 @@ function StvEmoteEventComponent({
   const displayUrl = getDisplayEmoteUrl({
     url: content.url,
     static_url: content.static_url,
-    disableAnimations,
+    disableAnimations: disableEmoteAnimations,
   });
 
   const status = removed ? 'Removed' : 'Added';
@@ -55,16 +57,16 @@ function StvEmoteEventComponent({
     <View
       style={[
         chatStyles.messageColumn,
-        chatStyles.stvEmoteNoticeSurface,
+        textStyles.surface,
         added && chatStyles.stvEmoteAddedSurface,
         removed && chatStyles.stvEmoteRemovedSurface,
       ]}
     >
       <ChatNoticeMetaRow
         icon='sparkles'
-        {...{ compact, fontScale, labelColor: accentColor }}
+        {...{ density, fontScale, labelColor: accentColor }}
       >
-        <View style={styles.metaContent}>
+        <View style={[styles.metaContent, textStyles.stackGap]}>
           <BrandIcon name='stv' size='sm' />
           <ChatText
             style={[
@@ -80,12 +82,12 @@ function StvEmoteEventComponent({
           ) : null}
         </View>
       </ChatNoticeMetaRow>
-      <View style={styles.content}>
+      <View style={[styles.content, { gap: gap * 2 }]}>
         <Image
           trackLoadContext='chat.stv-emote-event'
           source={displayUrl}
           cacheVariant='emote'
-          style={styles.emoteImage}
+          style={{ height: emoteSize, width: emoteSize * 2 }}
           transition={0}
           contentFit='contain'
         />
@@ -108,21 +110,15 @@ const styles = StyleSheet.create({
   content: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: 8,
   },
   creator: {
     color: resolveThemeColor('gray.accentHover'),
-  },
-  emoteImage: {
-    height: 28,
-    width: 56,
   },
   metaContent: {
     alignItems: 'center',
     flexDirection: 'row',
     flex: 1,
     flexWrap: 'wrap',
-    gap: 4,
     minWidth: 0,
   },
   textContainer: {

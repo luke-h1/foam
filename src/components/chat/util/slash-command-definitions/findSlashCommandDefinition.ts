@@ -1,10 +1,6 @@
 import { SLASH_COMMAND_DEFINITIONS } from '@app/components/chat/util/slash-command-definitions/slashCommandDefinitions';
 import type { SlashCommandDefinition } from '@app/components/chat/util/slash-command-definitions/types';
 
-/**
- * Looks up a definition by command name or alias (without the leading slash),
- * case-insensitively. Returns undefined for unknown commands.
- */
 export function findSlashCommandDefinition(
   command: string,
 ): SlashCommandDefinition | undefined {

@@ -200,7 +200,7 @@ export function ImageBenchmarkScreen() {
     void runAutoStart();
 
     return undefined;
-    // eslint-disable-next-line react-hooks/exhaustive-deps, react-doctor/exhaustive-deps
+    // oxlint-disable-next-line react-hooks/exhaustive-deps, react-doctor/exhaustive-deps -- runAll is rebuilt each render and must not restart the suite
   }, [auto]);
 
   const setFloodPreset = (key: string) => {

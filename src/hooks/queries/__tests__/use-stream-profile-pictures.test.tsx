@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react-native';
 
+import { createTwitchStream } from '@app/services/__fixtures__/twitch/stream.fixture';
 import { twitchApi } from '@app/services/api/clients';
+import { createTestQueryClient } from '@app/test/render';
 import type { TwitchStream } from '@app/types/twitch/stream';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 
@@ -16,24 +18,19 @@ async function answerUsersLookup(url: string) {
   return { data: ids.map(user) };
 }
 
-function stream(userId: string): TwitchStream {
-  return {
+function stream(userId: string) {
+  return createTwitchStream({
     id: `stream-${userId}`,
     user_id: userId,
     user_login: userId,
     user_name: userId,
     game_id: '1',
     game_name: 'game',
-    type: 'live',
     title: 'title',
     viewer_count: 1,
     started_at: '',
-    language: 'en',
     thumbnail_url: '',
-    tag_ids: [],
-    tags: [],
-    is_mature: false,
-  };
+  });
 }
 
 function user(id: string): UserInfoResponse {
@@ -52,9 +49,7 @@ function user(id: string): UserInfoResponse {
 }
 
 function createWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
+  const queryClient = createTestQueryClient();
 
   return function Wrapper({ children }: { children: ReactNode }) {
     return (

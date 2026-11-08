@@ -2,8 +2,8 @@ import type { TextStyle } from 'react-native';
 
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
-// Memoised on the paint object so every user wearing a shared paint reuses
-// one result; WeakMap-keyed so entries drop with the paint.
+import { paintCssFontWeight } from './paintFont';
+
 const textStyleCache = new WeakMap<PaintData, TextStyle>();
 
 /**
@@ -32,8 +32,10 @@ function computePaintUsernameTextStyle(paint: PaintData): TextStyle {
   return {
     ...(textStyle.weight
       ? {
-          // SAFETY: 7TV paint weights are CSS weights divided by 100, so weight * 100 is one of '100'-'900'.
-          fontWeight: String(textStyle.weight * 100) as TextStyle['fontWeight'],
+          // SAFETY: paintCssFontWeight maps the 7TV weight (1-9) onto '100'-'900'.
+          fontWeight: String(
+            paintCssFontWeight(textStyle.weight),
+          ) as TextStyle['fontWeight'],
         }
       : null),
     ...(textStyle.transform ? { textTransform: textStyle.transform } : null),

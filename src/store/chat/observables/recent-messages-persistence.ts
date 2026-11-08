@@ -1,8 +1,7 @@
 import { createMMKV } from 'react-native-mmkv';
 
 import { CHAT_RECENT_MESSAGES_PERSISTENCE_KEY } from '@app/lib/observablePersistence';
-
-import type { AnyChatMessageType } from '../types/constants';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 
 // One MMKV key per channel: the whole-map approach re-stringified every cached
 // channel per sync (~690KB, #594). Native only - the `.web.ts` sibling no-ops.
@@ -30,7 +29,6 @@ const migrateLegacyBlob = () => {
   }
 };
 
-// Drops every cached channel when the persisted shape predates SCHEMA_VERSION.
 const dropCacheOnSchemaChange = () => {
   if (storage.getString(SCHEMA_VERSION_KEY) === SCHEMA_VERSION) {
     return false;

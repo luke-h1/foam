@@ -1,15 +1,16 @@
-import { storageService } from '@app/lib/storage';
+import { SEVEN_TV_CACHE_NAMESPACE, storageService } from '@app/lib/storage';
+import type { PaintData } from '@app/types/seven-tv/cosmetics';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
-import type { PaintData, SanitisedBadgeSet } from '../types/constants';
+import {
+  COSMETICS_CACHE_TTL_MS,
+  MAX_COSMETIC_ENTRIES,
+  MAX_PERSISTED_COSMETIC_DEFINITIONS,
+} from '../types/cache-limits';
 
 const COSMETICS_DEFINITIONS_KEY = 'sevenTvCosmeticDefinitions_v1';
 const COSMETICS_BINDINGS_KEY = 'sevenTvCosmeticBindings_v1';
 const LEGACY_COSMETICS_SNAPSHOT_KEY = 'sevenTvCosmeticsSnapshot_v1';
-const COSMETICS_NAMESPACE = 'seven_tv_cache';
-const SNAPSHOT_TTL_MS = 2 * 60 * 60 * 1000;
-const MAX_PERSISTED_PAINTS = 750;
-const MAX_PERSISTED_BADGES = 750;
-const MAX_PERSISTED_ENTITLEMENTS = 500;
 
 export interface CosmeticDefinitionsSnapshot {
   paints: Record<string, PaintData>;
@@ -41,12 +42,12 @@ export function loadPersistedCosmetics(): CosmeticsSnapshot | null {
   try {
     const definitions = storageService.getString<CosmeticDefinitionsSnapshot>(
       COSMETICS_DEFINITIONS_KEY,
-      COSMETICS_NAMESPACE,
+      SEVEN_TV_CACHE_NAMESPACE,
     );
 
     const bindings = storageService.getString<CosmeticBindingsSnapshot>(
       COSMETICS_BINDINGS_KEY,
-      COSMETICS_NAMESPACE,
+      SEVEN_TV_CACHE_NAMESPACE,
     );
 
     const legacy =
@@ -54,7 +55,7 @@ export function loadPersistedCosmetics(): CosmeticsSnapshot | null {
         ? null
         : storageService.getString<CosmeticsSnapshot>(
             LEGACY_COSMETICS_SNAPSHOT_KEY,
-            COSMETICS_NAMESPACE,
+            SEVEN_TV_CACHE_NAMESPACE,
           );
 
     if (!definitions && !bindings && !legacy) {
@@ -77,12 +78,17 @@ export function writePersistedCosmeticDefinitions(
 ): void {
   try {
     const capped: CosmeticDefinitionsSnapshot = {
-      paints: capRecord(snapshot.paints, MAX_PERSISTED_PAINTS),
-      badges: capRecord(snapshot.badges, MAX_PERSISTED_BADGES),
+      paints: capRecord(snapshot.paints, MAX_PERSISTED_COSMETIC_DEFINITIONS),
+      badges: capRecord(snapshot.badges, MAX_PERSISTED_COSMETIC_DEFINITIONS),
     };
-    storageService.set(COSMETICS_DEFINITIONS_KEY, capped, COSMETICS_NAMESPACE, {
-      expiry: new Date(Date.now() + SNAPSHOT_TTL_MS),
-    });
+    storageService.set(
+      COSMETICS_DEFINITIONS_KEY,
+      capped,
+      SEVEN_TV_CACHE_NAMESPACE,
+      {
+        expiry: new Date(Date.now() + COSMETICS_CACHE_TTL_MS),
+      },
+    );
   } catch {
     // Ignore
   }
@@ -93,19 +99,18 @@ export function writePersistedCosmeticBindings(
 ): void {
   try {
     const capped: CosmeticBindingsSnapshot = {
-      userPaintIds: capRecord(
-        snapshot.userPaintIds,
-        MAX_PERSISTED_ENTITLEMENTS,
-      ),
-      userBadgeIds: capRecord(
-        snapshot.userBadgeIds,
-        MAX_PERSISTED_ENTITLEMENTS,
-      ),
+      userPaintIds: capRecord(snapshot.userPaintIds, MAX_COSMETIC_ENTRIES),
+      userBadgeIds: capRecord(snapshot.userBadgeIds, MAX_COSMETIC_ENTRIES),
     };
 
-    storageService.set(COSMETICS_BINDINGS_KEY, capped, COSMETICS_NAMESPACE, {
-      expiry: new Date(Date.now() + SNAPSHOT_TTL_MS),
-    });
+    storageService.set(
+      COSMETICS_BINDINGS_KEY,
+      capped,
+      SEVEN_TV_CACHE_NAMESPACE,
+      {
+        expiry: new Date(Date.now() + COSMETICS_CACHE_TTL_MS),
+      },
+    );
   } catch {
     // Ignore
   }

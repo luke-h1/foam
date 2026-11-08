@@ -6,7 +6,6 @@ import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 import { getPaintLayers } from './getPaintLayers';
 import { isRenderablePaintLayer } from './isRenderablePaintLayer';
 
-// Memoised on the paint object; WeakMap-keyed so entries drop with the paint.
 const solidColorCache = new WeakMap<PaintData, string | null>();
 
 /**

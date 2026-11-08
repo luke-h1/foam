@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
-import { CHAT_NOTICE_ACCENTS } from '@app/components/chat/components/util/chatNoticeAccents';
+import { CHAT_NOTICE_ACCENTS } from '@app/components/chat/util/chatNoticeAccents';
 import { reportUnrenderableNotice } from '@app/utils/chat/chat-health/reportUnrenderableNotice';
 import type { ChatBodyVariant } from '@app/utils/chat/derive-chat-body/types';
 
@@ -57,10 +57,6 @@ export function ChatNoticeBody({
     />
   );
 
-  /**
-   * A subscription body is a SubscriptionNotice, which draws its own column
-   * and carries no timestamp.
-   */
   if (bodyVariant === 'subscription') {
     return body;
   }
@@ -71,7 +67,7 @@ export function ChatNoticeBody({
         <ChatText
           tabular
           style={
-            getChatTextStyles(rendererArgs.fontScale, rendererArgs.compact)
+            getChatTextStyles(rendererArgs.fontScale, rendererArgs.density)
               .timestamp
           }
         >
@@ -91,7 +87,7 @@ export function ChatNoticeBody({
   return (
     <View style={styles.messageColumn}>
       <ChatNoticeMetaRow
-        compact={rendererArgs.compact}
+        density={rendererArgs.density}
         fontScale={rendererArgs.fontScale}
         icon={isUnraid ? 'xmark.circle.fill' : 'person.3.fill'}
         label={isUnraid ? 'Raid cancelled' : 'Raid'}

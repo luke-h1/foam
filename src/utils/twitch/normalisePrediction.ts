@@ -6,6 +6,7 @@ import type {
   TwitchHelixPrediction,
   TwitchPredictionOutcome,
 } from '@app/types/twitch/prediction';
+import { addSecondsToIso } from '@app/utils/date-time/addSecondsToIso';
 import { percentageOf } from '@app/utils/number/percentageOf';
 
 function normaliseStatus(status: string | undefined): ChannelPredictionStatus {
@@ -79,7 +80,10 @@ export function normaliseHelixPrediction(
     totalChannelPoints,
     predictionWindowSeconds: prediction.prediction_window,
     startedAt: prediction.created_at,
-    locksAt: prediction.locked_at ?? undefined,
+    locksAt: addSecondsToIso(
+      prediction.created_at,
+      prediction.prediction_window,
+    ),
     lockedAt: prediction.locked_at ?? undefined,
     endedAt: prediction.ended_at ?? undefined,
     winningOutcomeId: prediction.winning_outcome_id ?? undefined,

@@ -1,7 +1,10 @@
 import type { PlayerMessage } from '@app/components/stream-player/types';
 
 import type { PlayerBridgeAction } from '../playerBridgeInterpreter';
-import { interpretPlayerMessage } from '../playerBridgeInterpreter';
+import {
+  interpretPlayerMessage,
+  parsePlayerMessage,
+} from '../playerBridgeInterpreter';
 import { createBridgeContext } from './__fixtures__/playerBridgeInterpreter.fixture';
 
 describe('interpretPlayerMessage', () => {
@@ -63,7 +66,7 @@ describe('interpretPlayerMessage', () => {
 
       expect(actions).toEqual<PlayerBridgeAction[]>([
         { type: 'cancelTransientResume' },
-        { type: 'notifyStability', event: 'playing' },
+        { type: 'notifyStabilityPlaying' },
         { type: 'markFirstPlayingReported' },
         { type: 'recordPlaybackStarted', startSource: 'bridge_playing' },
         {
@@ -100,7 +103,7 @@ describe('interpretPlayerMessage', () => {
 
       expect(actions).toEqual<PlayerBridgeAction[]>([
         { type: 'cancelTransientResume' },
-        { type: 'notifyStability', event: 'playing' },
+        { type: 'notifyStabilityPlaying' },
         { type: 'setPaused', isPaused: false },
         { type: 'notifyPlay' },
       ]);
@@ -114,7 +117,7 @@ describe('interpretPlayerMessage', () => {
         ),
       ).toEqual<PlayerBridgeAction[]>([
         { type: 'cancelTransientResume' },
-        { type: 'notifyStability', event: 'playing' },
+        { type: 'notifyStabilityPlaying' },
         { type: 'markFirstPlayingReported' },
         { type: 'recordPlaybackStarted', startSource: 'bridge_playing' },
         {
@@ -665,220 +668,6 @@ describe('interpretPlayerMessage', () => {
     });
   });
 
-  describe('playbackStalled', () => {
-    const stalled: PlayerMessage = {
-      type: 'playbackStalled',
-      payload: {
-        currentTime: 10,
-        networkState: 2,
-        readyState: 2,
-        stalledMs: 6000,
-      },
-    };
-
-    test('logs and notifies stability when enhanced stability is on', () => {
-      expect(interpretPlayerMessage(stalled, createBridgeContext())).toEqual<
-        PlayerBridgeAction[]
-      >([
-        {
-          type: 'recordPlaybackFreeze',
-          stalledMs: 6000,
-        },
-        {
-          type: 'log',
-          level: 'error',
-          message: 'playback stalled for 6000ms',
-          args: [
-            {
-              name: 'twitch_player_error',
-              exceptionName: 'StreamPlaybackStalled',
-              fingerprint: ['stream-playback-stalled'],
-              channel: 'sodapoppin',
-              currentTime: 10,
-              networkState: 2,
-              readyState: 2,
-              stalledMs: 6000,
-              elapsedMs: 2500,
-            },
-          ],
-        },
-        { type: 'notifyStability', event: 'stalled' },
-      ]);
-    });
-
-    test('only logs when enhanced stability is off', () => {
-      const actions = interpretPlayerMessage(
-        stalled,
-        createBridgeContext({ enhancedStabilityEnabled: false }),
-      );
-
-      expect(actions).toEqual<PlayerBridgeAction[]>([
-        {
-          type: 'recordPlaybackFreeze',
-          stalledMs: 6000,
-        },
-        {
-          type: 'log',
-          level: 'error',
-          message: 'playback stalled for 6000ms',
-          args: [
-            {
-              name: 'twitch_player_error',
-              exceptionName: 'StreamPlaybackStalled',
-              fingerprint: ['stream-playback-stalled'],
-              channel: 'sodapoppin',
-              currentTime: 10,
-              networkState: 2,
-              readyState: 2,
-              stalledMs: 6000,
-              elapsedMs: 2500,
-            },
-          ],
-        },
-      ]);
-    });
-
-    test('ignores playbackStalled when payload is missing', () => {
-      expect(
-        interpretPlayerMessage(
-          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
-          JSON.parse('{"type":"playbackStalled"}') as PlayerMessage,
-          createBridgeContext(),
-        ),
-      ).toEqual<PlayerBridgeAction[]>([]);
-    });
-  });
-
-  describe('playbackRecovered', () => {
-    test('notes recovery, counts the metric and logs', () => {
-      expect(
-        interpretPlayerMessage(
-          { type: 'playbackRecovered', payload: { stalledMs: 6000 } },
-          createBridgeContext(),
-        ),
-      ).toEqual<PlayerBridgeAction[]>([
-        { type: 'notifyStability', event: 'recovered' },
-        {
-          type: 'countMetric',
-          name: 'stream.playback_recovered',
-          attributes: {
-            channel: 'sodapoppin',
-          },
-        },
-        {
-          type: 'log',
-          level: 'info',
-          message: 'playback recovered after stall',
-          args: [
-            {
-              name: 'twitch_player_info',
-              channel: 'sodapoppin',
-              stalledMs: 6000,
-            },
-          ],
-        },
-      ]);
-    });
-
-    test('ignores playbackRecovered when payload is missing', () => {
-      expect(
-        interpretPlayerMessage(
-          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
-          JSON.parse('{"type":"playbackRecovered"}') as PlayerMessage,
-          createBridgeContext(),
-        ),
-      ).toEqual<PlayerBridgeAction[]>([]);
-    });
-  });
-
-  describe('videoElementError', () => {
-    const videoError: PlayerMessage = {
-      type: 'videoElementError',
-      payload: { code: 3, message: 'decode', networkState: 2, readyState: 1 },
-    };
-
-    test('logs and notifies stability when enhanced stability is on', () => {
-      expect(interpretPlayerMessage(videoError, createBridgeContext())).toEqual<
-        PlayerBridgeAction[]
-      >([
-        {
-          type: 'log',
-          level: 'error',
-          message: 'video element error code 3',
-          args: [
-            {
-              name: 'twitch_player_error',
-              exceptionName: 'StreamVideoElementError',
-              fingerprint: ['stream-video-element-error'],
-              channel: 'sodapoppin',
-              code: 3,
-              message: 'decode',
-              networkState: 2,
-              readyState: 1,
-              elapsedMs: 2500,
-            },
-          ],
-        },
-        { type: 'notifyStability', event: 'videoError' },
-      ]);
-    });
-
-    test('only logs when enhanced stability is off', () => {
-      const actions = interpretPlayerMessage(
-        videoError,
-        createBridgeContext({ enhancedStabilityEnabled: false }),
-      );
-
-      expect(actions.map(action => action.type)).toEqual(['log']);
-    });
-
-    test('labels a missing error code as unknown', () => {
-      const actions = interpretPlayerMessage(
-        {
-          type: 'videoElementError',
-          payload: {
-            code: null,
-            message: 'decode',
-            networkState: 2,
-            readyState: 1,
-          },
-        },
-        createBridgeContext({ enhancedStabilityEnabled: false }),
-      );
-
-      expect(actions).toEqual<PlayerBridgeAction[]>([
-        {
-          type: 'log',
-          level: 'error',
-          message: 'video element error code unknown',
-          args: [
-            {
-              name: 'twitch_player_error',
-              exceptionName: 'StreamVideoElementError',
-              fingerprint: ['stream-video-element-error'],
-              channel: 'sodapoppin',
-              code: null,
-              message: 'decode',
-              networkState: 2,
-              readyState: 1,
-              elapsedMs: 2500,
-            },
-          ],
-        },
-      ]);
-    });
-
-    test('ignores videoElementError when payload is missing', () => {
-      expect(
-        interpretPlayerMessage(
-          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
-          JSON.parse('{"type":"videoElementError"}') as PlayerMessage,
-          createBridgeContext(),
-        ),
-      ).toEqual<PlayerBridgeAction[]>([]);
-    });
-  });
-
   describe('twitchAuthComplete', () => {
     test('schedules the auth completion reload', () => {
       expect(
@@ -1116,22 +905,45 @@ describe('interpretPlayerMessage', () => {
         ),
       ).toEqual<PlayerBridgeAction[]>([]);
     });
+  });
 
-    test('ignores healthCheck messages', () => {
-      expect(
-        interpretPlayerMessage(
-          {
-            type: 'healthCheck',
-            payload: {
-              currentTime: 1,
-              networkState: 1,
-              paused: false,
-              readyState: 4,
-            },
-          },
-          createBridgeContext(),
-        ),
-      ).toEqual<PlayerBridgeAction[]>([]);
+  describe('vodProgress', () => {
+    test('records the VOD position for the next reload', () => {
+      const actions = interpretPlayerMessage(
+        { type: 'vodProgress', payload: { currentTime: 93.5 } },
+        createBridgeContext(),
+      );
+
+      expect(actions).toEqual<PlayerBridgeAction[]>([
+        { type: 'recordResumeTime', seconds: 93.5 },
+      ]);
     });
+
+    test('ignores a position that is not a finite number', () => {
+      const actions = interpretPlayerMessage(
+        parsePlayerMessage('{"type":"vodProgress","payload":{}}') ?? {
+          type: 'ready',
+        },
+        createBridgeContext(),
+      );
+
+      expect(actions).toEqual<PlayerBridgeAction[]>([]);
+    });
+  });
+});
+
+describe('parsePlayerMessage', () => {
+  test('parses a JSON object', () => {
+    expect(parsePlayerMessage('{"type":"ended"}')).toEqual<PlayerMessage>({
+      type: 'ended',
+    });
+  });
+
+  test('returns null for text that is not JSON', () => {
+    expect(parsePlayerMessage('not json')).toBeNull();
+  });
+
+  test('returns null for JSON that is not an object', () => {
+    expect(parsePlayerMessage('42')).toBeNull();
   });
 });

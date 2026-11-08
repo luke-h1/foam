@@ -1,17 +1,13 @@
 import type { PaintData, PaintShadow } from '@app/types/seven-tv/cosmetics';
 import { indexedCollectionToArray } from '@app/utils/collection/indexedCollection';
 
-import { DEFAULT_PAINT_DROP_SHADOW_MODE } from './defaultPaintDropShadowMode';
-
-/**
- * Mirrors the extension's `dropShadowRender` setting: 0 = no shadows,
- * 1 = first shadow only, 2 = all shadows.
- */
-export type PaintDropShadowMode = 0 | 1 | 2;
-
 const paintDropShadowsCache = new WeakMap<PaintData, PaintShadow[]>();
 
-function getAllPaintDropShadows(paint: PaintData): PaintShadow[] {
+/**
+ * Every drop shadow on the paint. This matches the extension's default
+ * `dropShadowRender` setting, which draws all shadows.
+ */
+export function getPaintDropShadows(paint: PaintData): PaintShadow[] {
   const cached = paintDropShadowsCache.get(paint);
 
   if (cached) {
@@ -20,22 +16,5 @@ function getAllPaintDropShadows(paint: PaintData): PaintShadow[] {
 
   const shadows = indexedCollectionToArray(paint.shadows);
   paintDropShadowsCache.set(paint, shadows);
-  return shadows;
-}
-
-export function getPaintDropShadows(
-  paint: PaintData,
-  mode: PaintDropShadowMode = DEFAULT_PAINT_DROP_SHADOW_MODE,
-): PaintShadow[] {
-  if (mode === 0) {
-    return [];
-  }
-
-  const shadows = getAllPaintDropShadows(paint);
-
-  if (mode === 1) {
-    return shadows.slice(0, 1);
-  }
-
   return shadows;
 }

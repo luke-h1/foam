@@ -1,13 +1,13 @@
 import { renderHook, waitFor } from '@testing-library/react-native';
 
-import { createChatMessage } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
+import { createChatMessage } from '@app/components/chat/__tests__/__fixtures__/chatFactories.fixture';
 import { useRecentChatMessages } from '@app/components/chat/hooks/use-recent-chat-messages';
 import { recentMessagesService } from '@app/services/recent-messages-service';
 import { clearMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
-import { logger } from '@app/utils/logger';
+import { silenceLogger } from '@app/test/silence-logger';
 
-jest.spyOn(logger.chat, 'debug').mockImplementation(() => {});
+silenceLogger();
 
 const mockGetRecentMessages = jest
   .spyOn(recentMessagesService, 'getRecentMessages')

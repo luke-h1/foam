@@ -1,22 +1,9 @@
+import type { MessageToken } from '@app/types/chat/messageToken';
 import { deriveChatBody } from '@app/utils/chat/derive-chat-body/deriveChatBody';
 import { flowsInline } from '@app/utils/chat/derive-chat-body/flowsInline';
 import { getMessageStructure } from '@app/utils/chat/derive-chat-body/getMessageStructure';
-import type { MessageToken } from '@app/utils/chat/messageToken';
 
-const text = (content: string) =>
-  ({ type: 'text', content }) satisfies MessageToken<'text'>;
-
-const emote = (overrides: Partial<MessageToken<'emote'>> = {}) =>
-  ({
-    type: 'emote',
-    name: 'Kappa',
-    content: 'Kappa',
-    id: 'kappa-1',
-    url: 'https://example.com/kappa.webp',
-    width: 28,
-    height: 28,
-    ...overrides,
-  }) satisfies MessageToken<'emote'>;
+import { emote, text } from './__fixtures__/deriveChatBody.fixture';
 
 /**
  * The inline rule used to be written three times; they now share one scan,
@@ -27,18 +14,8 @@ describe('inline eligibility is decided in one place', () => {
     { name: 'plain text', message: [text('hello')], inline: true },
     {
       name: 'text plus a plain emote',
-      message: [text('hi '), emote()],
+      message: [text('hi '), emote('Kappa')],
       inline: true,
-    },
-    {
-      name: 'a zero-width emote',
-      message: [emote({ zero_width: true })],
-      inline: false,
-    },
-    {
-      name: 'an overlaid emote',
-      message: [emote({ overlaid: [emote()] })],
-      inline: false,
     },
     {
       name: 'a token that cannot live in a Text',

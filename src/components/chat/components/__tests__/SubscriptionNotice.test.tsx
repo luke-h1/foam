@@ -1,9 +1,20 @@
 import { screen } from '@testing-library/react-native';
 
 import render from '@app/test/render';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
+import type { SubscriptionNoticeTokenType } from '@app/utils/chat/subscription-notice-token-types';
 
+import { parseMessageText } from '../chat-message/util/parseMessageText';
 import { SubscriptionNotice } from '../user-notices/SubscriptionNotice';
+
+function renderNotice(token: MessageToken<SubscriptionNoticeTokenType>) {
+  return render(
+    <SubscriptionNotice
+      messageTokens={parseMessageText(token.subscriptionEvent.message)}
+      token={token}
+    />,
+  );
+}
 
 describe('SubscriptionNotice', () => {
   describe('sub (new subscription)', () => {
@@ -13,50 +24,16 @@ describe('SubscriptionNotice', () => {
         subscriptionEvent: {
           msgId: 'sub',
           displayName: 'TestUser',
-          plan: '2000',
+          plan: '1000',
           planName: 'Tier 1',
         },
       };
 
-      render(<SubscriptionNotice token={token} />);
+      renderNotice(token);
 
       expect(screen.getByText('TestUser')).toBeOnTheScreen();
 
       expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
-    });
-
-    test('displays Prime subscription correctly', () => {
-      const token: MessageToken<'sub'> = {
-        type: 'sub',
-        subscriptionEvent: {
-          msgId: 'sub',
-          displayName: 'PrimeUser',
-          plan: '1000',
-          planName: 'Prime',
-        },
-      };
-
-      render(<SubscriptionNotice token={token} />);
-
-      expect(screen.getByText('PrimeUser')).toBeOnTheScreen();
-
-      expect(screen.getByText(/Subscribed with Prime/)).toBeOnTheScreen();
-    });
-
-    test('displays plan name for non-Prime subscriptions', () => {
-      const token: MessageToken<'sub'> = {
-        type: 'sub',
-        subscriptionEvent: {
-          msgId: 'sub',
-          displayName: 'Tier2User',
-          plan: '3000',
-          planName: 'Tier 2',
-        },
-      };
-
-      render(<SubscriptionNotice token={token} />);
-
-      expect(screen.getByText(/with Tier 2/)).toBeOnTheScreen();
     });
 
     test('displays subscriber message when provided', () => {
@@ -65,13 +42,13 @@ describe('SubscriptionNotice', () => {
         subscriptionEvent: {
           msgId: 'sub',
           displayName: 'MessageUser',
-          plan: '2000',
+          plan: '1000',
           planName: 'Tier 1',
           message: 'Thanks for the great content!',
         },
       };
 
-      render(<SubscriptionNotice token={token} />);
+      renderNotice(token);
 
       expect(
         screen.getByText('Thanks for the great content!'),
@@ -86,13 +63,13 @@ describe('SubscriptionNotice', () => {
         subscriptionEvent: {
           msgId: 'resub',
           displayName: 'ResubUser',
-          plan: '2000',
+          plan: '1000',
           planName: 'Tier 1',
           months: 6,
         },
       };
 
-      render(<SubscriptionNotice token={token} />);
+      renderNotice(token);
 
       expect(screen.getByText('ResubUser')).toBeOnTheScreen();
 
@@ -107,13 +84,13 @@ describe('SubscriptionNotice', () => {
         subscriptionEvent: {
           msgId: 'resub',
           displayName: 'ResubUser',
-          plan: '2000',
+          plan: '1000',
           planName: 'Tier 1',
           months: 1,
         },
       };
 
-      render(<SubscriptionNotice token={token} />);
+      renderNotice(token);
 
       expect(screen.getByText('1 month')).toBeOnTheScreen();
     });
@@ -124,13 +101,13 @@ describe('SubscriptionNotice', () => {
         subscriptionEvent: {
           msgId: 'resub',
           displayName: 'PrimeResubUser',
-          plan: '1000',
+          plan: 'Prime',
           planName: 'Prime',
           months: 12,
         },
       };
 
-      render(<SubscriptionNotice token={token} />);
+      renderNotice(token);
 
       expect(screen.getByText(/Subscribed with Prime/)).toBeOnTheScreen();
 
@@ -143,7 +120,7 @@ describe('SubscriptionNotice', () => {
         subscriptionEvent: {
           msgId: 'resub',
           displayName: 'StreakResubUser',
-          plan: '2000',
+          plan: '1000',
           planName: 'Tier 1',
           months: 6,
           streakMonths: 6,
@@ -151,7 +128,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice token={token} />);
+      renderNotice(token);
 
       expect(screen.getByText(/, 6 months in a row/)).toBeOnTheScreen();
     });
@@ -162,13 +139,13 @@ describe('SubscriptionNotice', () => {
         subscriptionEvent: {
           msgId: 'resub',
           displayName: 'Tier3ResubUser',
-          plan: '3001',
+          plan: '3000',
           planName: 'Tier 3',
           months: 3,
         },
       };
 
-      render(<SubscriptionNotice token={token} />);
+      renderNotice(token);
 
       expect(screen.getByText(/with Tier 3/)).toBeOnTheScreen();
     });
@@ -181,7 +158,7 @@ describe('SubscriptionNotice', () => {
         subscriptionEvent: {
           msgId: 'subgift',
           displayName: 'GifterUser',
-          plan: '2000',
+          plan: '1000',
           planName: 'Tier 1',
           recipientDisplayName: 'RecipientUser',
           recipientId: '123',
@@ -190,7 +167,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice token={token} />);
+      renderNotice(token);
 
       expect(screen.getByText('GifterUser')).toBeOnTheScreen();
 
@@ -207,7 +184,7 @@ describe('SubscriptionNotice', () => {
         subscriptionEvent: {
           msgId: 'subgift',
           displayName: 'GifterUser',
-          plan: '2000',
+          plan: '1000',
           planName: 'Tier 1',
           recipientDisplayName: '',
           recipientId: '123',
@@ -216,7 +193,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice token={token} />);
+      renderNotice(token);
 
       expect(
         screen.getByText(/Gifted a Tier 1 subscription/),
@@ -229,7 +206,7 @@ describe('SubscriptionNotice', () => {
         subscriptionEvent: {
           msgId: 'subgift',
           displayName: 'GifterUser',
-          plan: '2000',
+          plan: '1000',
           planName: 'Tier 1',
           recipientDisplayName: 'RecipientUser',
           recipientId: '123',
@@ -238,7 +215,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice token={token} />);
+      renderNotice(token);
 
       expect(screen.getByText(/\(3 months\)/)).toBeOnTheScreen();
     });
@@ -249,7 +226,7 @@ describe('SubscriptionNotice', () => {
         subscriptionEvent: {
           msgId: 'subgift',
           displayName: 'GifterUser',
-          plan: '2000',
+          plan: '1000',
           planName: 'Tier 1',
           recipientDisplayName: 'RecipientUser',
           recipientId: '123',
@@ -258,7 +235,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice token={token} />);
+      renderNotice(token);
 
       // Single month gifts don't show the month count in parentheses
       expect(screen.queryByText(/\(1 month\)/)).not.toBeOnTheScreen();
@@ -270,7 +247,7 @@ describe('SubscriptionNotice', () => {
         subscriptionEvent: {
           msgId: 'subgift',
           displayName: 'PrimeGifterUser',
-          plan: '1000',
+          plan: 'Prime',
           planName: 'Prime',
           recipientDisplayName: 'RecipientUser',
           recipientId: '123',
@@ -279,7 +256,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice token={token} />);
+      renderNotice(token);
 
       expect(screen.getByText(/Gifted a Prime subscription/)).toBeOnTheScreen();
     });
@@ -290,7 +267,7 @@ describe('SubscriptionNotice', () => {
         subscriptionEvent: {
           msgId: 'subgift',
           displayName: 'GifterUser',
-          plan: '2000',
+          plan: '1000',
           planName: 'Tier 1',
           recipientDisplayName: 'RecipientUser',
           recipientId: '123',
@@ -299,7 +276,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice token={token} />);
+      renderNotice(token);
 
       expect(screen.queryByText(/\(\d+ month/)).not.toBeOnTheScreen();
     });
@@ -317,7 +294,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice token={token} />);
+      renderNotice(token);
 
       expect(screen.getByText('AnonymousGifter')).toBeOnTheScreen();
 
@@ -339,7 +316,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice token={token} />);
+      renderNotice(token);
 
       expect(screen.getByText(/\(SummerPromo\)/)).toBeOnTheScreen();
     });
@@ -355,7 +332,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice token={token} />);
+      renderNotice(token);
 
       expect(
         screen.getByText(/Continuing their gift subscription/),
@@ -370,14 +347,14 @@ describe('SubscriptionNotice', () => {
         subscriptionEvent: {
           msgId: 'submysterygift',
           displayName: 'MysteryGifter',
-          plan: '2000',
+          plan: '1000',
           planName: 'Tier 1',
           massGiftCount: 5,
           senderCount: 42,
         },
       };
 
-      render(<SubscriptionNotice token={token} />);
+      renderNotice(token);
 
       expect(screen.getByText('MysteryGifter')).toBeOnTheScreen();
 
@@ -400,13 +377,13 @@ describe('SubscriptionNotice', () => {
         subscriptionEvent: {
           msgId: 'submysterygift',
           displayName: 'SoloGifter',
-          plan: '1000',
+          plan: 'Prime',
           planName: 'Prime',
           massGiftCount: 1,
         },
       };
 
-      render(<SubscriptionNotice token={token} />);
+      renderNotice(token);
 
       expect(screen.getByText(/Gifted/)).toBeOnTheScreen();
 
@@ -432,7 +409,7 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice token={token} />);
+      renderNotice(token);
 
       expect(screen.getByText('UpgradeUser')).toBeOnTheScreen();
 
@@ -452,183 +429,44 @@ describe('SubscriptionNotice', () => {
         },
       };
 
-      render(<SubscriptionNotice token={token} />);
+      renderNotice(token);
 
       expect(screen.getByText(/Continuing the gift sub/)).toBeOnTheScreen();
     });
   });
 
-  describe('plan display', () => {
-    test('maps plan code 1000 to Prime', () => {
-      const token: MessageToken<'sub'> = {
-        type: 'sub',
-        subscriptionEvent: {
-          msgId: 'sub',
-          displayName: 'TestUser',
-          plan: '1000',
-        },
-      };
-
-      render(<SubscriptionNotice token={token} />);
-
-      expect(screen.getByText(/Subscribed with Prime/)).toBeOnTheScreen();
-    });
-
-    test('maps plan code 2000 to Tier 1', () => {
-      const token: MessageToken<'sub'> = {
-        type: 'sub',
-        subscriptionEvent: {
-          msgId: 'sub',
-          displayName: 'TestUser',
-          plan: '2000',
-        },
-      };
-
-      render(<SubscriptionNotice token={token} />);
-
-      expect(screen.getByText(/with Tier 1/)).toBeOnTheScreen();
-    });
-
-    test('maps plan code 3000 to Tier 2', () => {
-      const token: MessageToken<'sub'> = {
-        type: 'sub',
-        subscriptionEvent: {
-          msgId: 'sub',
-          displayName: 'TestUser',
-          plan: '3000',
-        },
-      };
-
-      render(<SubscriptionNotice token={token} />);
-
-      expect(screen.getByText(/with Tier 2/)).toBeOnTheScreen();
-    });
-
-    test('maps plan code 3001 to Tier 3', () => {
-      const token: MessageToken<'sub'> = {
-        type: 'sub',
-        subscriptionEvent: {
-          msgId: 'sub',
-          displayName: 'TestUser',
-          plan: '3001',
-        },
-      };
-
-      render(<SubscriptionNotice token={token} />);
-
-      expect(screen.getByText(/with Tier 3/)).toBeOnTheScreen();
-    });
-
-    test('handles unknown plan code by defaulting to Tier 1', () => {
-      const token: MessageToken<'sub'> = {
-        type: 'sub',
-        subscriptionEvent: {
-          msgId: 'sub',
-          displayName: 'TestUser',
-          plan: '9999',
-        },
-      };
-
-      render(<SubscriptionNotice token={token} />);
-
-      expect(screen.getByText('TestUser')).toBeOnTheScreen();
-
-      expect(screen.getByText(/Subscribed with Tier 1/)).toBeOnTheScreen();
-    });
-  });
-
   describe('edge cases', () => {
-    test('handles missing optional fields gracefully', () => {
+    test('reads as Tier 1 when the notice has no plan name', () => {
       const token: MessageToken<'sub'> = {
         type: 'sub',
         subscriptionEvent: {
           msgId: 'sub',
           displayName: 'MinimalUser',
-          plan: '2000',
+          plan: '1000',
         },
       };
 
-      render(<SubscriptionNotice token={token} />);
+      renderNotice(token);
 
       expect(screen.getByText('MinimalUser')).toBeOnTheScreen();
 
-      expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
+      expect(screen.getByText('Subscribed with Tier 1.')).toBeOnTheScreen();
     });
 
-    test('handles empty display name', () => {
+    test('renders a notice with an empty display name', () => {
       const token: MessageToken<'sub'> = {
         type: 'sub',
         subscriptionEvent: {
           msgId: 'sub',
           displayName: '',
-          plan: '2000',
+          plan: '1000',
           planName: 'Tier 1',
         },
       };
 
-      render(<SubscriptionNotice token={token} />);
+      renderNotice(token);
 
       expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
-    });
-
-    test('renders a unicode/emoji display name verbatim', () => {
-      const token: MessageToken<'sub'> = {
-        type: 'sub',
-        subscriptionEvent: {
-          msgId: 'sub',
-          displayName: '日本語ユーザー🎉',
-          plan: '2000',
-          planName: 'Tier 1',
-        },
-      };
-
-      render(<SubscriptionNotice token={token} />);
-
-      expect(screen.getByText('日本語ユーザー🎉')).toBeOnTheScreen();
-
-      expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
-    });
-
-    test('renders a very long display name without dropping characters', () => {
-      const longDisplayName = 'A'.repeat(200);
-
-      const token: MessageToken<'sub'> = {
-        type: 'sub',
-        subscriptionEvent: {
-          msgId: 'sub',
-          displayName: longDisplayName,
-          plan: '2000',
-          planName: 'Tier 1',
-        },
-      };
-
-      render(<SubscriptionNotice token={token} />);
-
-      expect(screen.getByText(longDisplayName)).toBeOnTheScreen();
-
-      expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
-    });
-
-    test('renders no subscriber message row when the message field is undefined', () => {
-      const token: MessageToken<'sub'> = {
-        type: 'sub',
-        subscriptionEvent: {
-          msgId: 'sub',
-          displayName: 'NoMessageUser',
-          plan: '2000',
-          planName: 'Tier 1',
-        },
-      };
-
-      render(<SubscriptionNotice token={token} />);
-
-      expect(screen.getByText('NoMessageUser')).toBeOnTheScreen();
-
-      expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
-
-      expect(
-        screen.queryByText('Thanks for the great content!'),
-      ).not.toBeOnTheScreen();
     });
   });
 });

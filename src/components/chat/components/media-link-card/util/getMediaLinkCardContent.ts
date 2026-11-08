@@ -1,6 +1,7 @@
+import type { MediaLinkTokenKind } from '@app/types/chat/messageToken';
 import type { SevenTvEmotePreview } from '@app/types/seven-tv/emotes';
 import type { TwitchClip } from '@app/types/twitch/clip';
-import type { MediaLinkTokenKind } from '@app/utils/chat/messageToken';
+import { sevenTvEmoteCdn } from '@app/utils/emote/cdn/sevenTv';
 
 const COMPACT_NUMBER_FORMATTER = new Intl.NumberFormat('en', {
   maximumFractionDigits: 1,
@@ -19,7 +20,12 @@ function getStvEmoteThumbnail(
   fallbackThumbnail: string | undefined,
 ) {
   if (sevenTvEmote?.id) {
-    return `https://cdn.7tv.app/emote/${sevenTvEmote.id}/4x`;
+    return sevenTvEmoteCdn.build({
+      id: sevenTvEmote.id,
+      scale: '4x',
+      kind: 'animated',
+      ext: 'webp',
+    });
   }
 
   return fallbackThumbnail;
@@ -49,10 +55,6 @@ function getSevenTvEmoteMeta(createdBy: string | null | undefined) {
   return '7TV emote';
 }
 
-/**
- * Everything the card shows, picked from whichever of the two payloads the
- * link type points at, with the fallbacks a pending or failed fetch needs.
- */
 export function getMediaLinkCardContent({
   fallbackThumbnail,
   sevenTvEmote,

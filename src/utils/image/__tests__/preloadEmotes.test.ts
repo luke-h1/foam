@@ -14,6 +14,8 @@ const prefetchMock = jest.mocked(Image.prefetch);
 const warnMock = jest.spyOn(logger.chat, 'warn').mockImplementation(() => {});
 const errorMock = jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
 
+const ANIMATED = { disableAnimations: false };
+
 const warmedUrls = () =>
   prefetchMock.mock.calls.flatMap(([urls, cachePolicy]) => {
     expect(cachePolicy).toBe('disk');
@@ -46,43 +48,63 @@ describe('preloadEmotes', () => {
     const first = emote('first', 'https://example.com/shared.webp');
     const duplicate = emote('duplicate', 'https://example.com/shared.webp');
 
-    await preloadEmotes([first, duplicate]);
-    await preloadEmotes([first]);
+    await preloadEmotes([first, duplicate], ANIMATED);
+    await preloadEmotes([first], ANIMATED);
 
     expect(warmedUrls()).toEqual(['https://example.com/shared.webp']);
   });
 
-  test('respects the requested preload limit', async () => {
-    await preloadEmotes([emote('one'), emote('two')], 1);
+  test('stops at the shared warm limit of 64 emotes', async () => {
+    await preloadEmotes(
+      Array.from({ length: 70 }, (_unused, index) => emote(`limit-${index}`)),
+      ANIMATED,
+    );
 
-    expect(warmedUrls()).toEqual(['https://example.com/one.webp']);
+    expect(warmedUrls()).toHaveLength(64);
   });
 
-  test('keeps global and channel preload ordering stable', async () => {
-    await preloadGlobalEmotes({
-      twitchGlobalEmotes: [emote('twitch-global')],
-      sevenTvGlobalEmotes: [emote('seven-tv-global')],
-      bttvGlobalEmotes: [emote('bttv-global')],
-      ffzGlobalEmotes: [emote('ffz-global')],
-    });
+  test('warms the still url a row renders when animations are disabled', async () => {
+    await preloadEmotes([emote('still')], { disableAnimations: true });
+
+    expect(warmedUrls()).toEqual(['https://example.com/still.webp.png']);
+  });
+
+  test('puts 7TV first for both global and channel preloads', async () => {
+    await preloadGlobalEmotes(
+      {
+        twitchGlobalEmotes: [emote('twitch-global')],
+        sevenTvGlobalEmotes: [emote('seven-tv-global')],
+        bttvGlobalEmotes: [emote('bttv-global')],
+        ffzGlobalEmotes: [emote('ffz-global')],
+      },
+      ANIMATED,
+    );
+
+    const globalFirst = warmedUrls()[0];
 
     prefetchMock.mockClear();
 
-    await preloadChannelEmotes({
-      twitchChannelEmotes: [emote('twitch-channel')],
-      sevenTvChannelEmotes: [emote('seven-tv-channel')],
-      bttvChannelEmotes: [emote('bttv-channel')],
-      ffzChannelEmotes: [emote('ffz-channel')],
-    });
+    await preloadChannelEmotes(
+      {
+        twitchChannelEmotes: [emote('twitch-channel')],
+        sevenTvChannelEmotes: [emote('seven-tv-channel')],
+        bttvChannelEmotes: [emote('bttv-channel')],
+        ffzChannelEmotes: [emote('ffz-channel')],
+      },
+      ANIMATED,
+    );
 
-    expect(warmedUrls()[0]).toBe('https://example.com/seven-tv-channel.webp');
+    expect([globalFirst, warmedUrls()[0]]).toEqual([
+      'https://example.com/seven-tv-global.webp',
+      'https://example.com/seven-tv-channel.webp',
+    ]);
   });
 
   test('reports a rejected preload to Sentry and leaves the urls retryable', async () => {
     const failure = new Error('network down');
     prefetchMock.mockRejectedValue(failure);
 
-    await preloadEmotes([emote('boom')]);
+    await preloadEmotes([emote('boom')], ANIMATED);
 
     expect(errorMock).toHaveBeenCalledTimes(1);
 
@@ -98,7 +120,7 @@ describe('preloadEmotes', () => {
     });
 
     prefetchMock.mockResolvedValue(true);
-    await preloadEmotes([emote('boom')]);
+    await preloadEmotes([emote('boom')], ANIMATED);
 
     expect(warmedUrls()).toEqual([
       'https://example.com/boom.webp',
@@ -109,7 +131,7 @@ describe('preloadEmotes', () => {
   test('warns when a batch resolves as skipped', async () => {
     prefetchMock.mockResolvedValue(false);
 
-    await preloadEmotes([emote('skipped')]);
+    await preloadEmotes([emote('skipped')], ANIMATED);
 
     expect(warnMock).toHaveBeenCalledTimes(1);
 

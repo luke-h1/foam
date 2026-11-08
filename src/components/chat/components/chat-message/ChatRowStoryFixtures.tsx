@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 import { ScrollView, View } from 'react-native';
 import type { ReactNode } from 'react';
 
@@ -7,11 +6,11 @@ import { twitchSanitisedGlobalBadges } from '@app/services/__fixtures__/badges/t
 import { sevenTvSanitisedChannelEmoteSetFixture } from '@app/services/__fixtures__/emotes/stv/seven-tv-sanitised-channel-emote-set.fixture';
 import { sevenTvSanitisedGlobalEmoteSetFixture } from '@app/services/__fixtures__/emotes/stv/seven-tv-sanitised-global-emote-set.fixture';
 import { chatterinoService } from '@app/services/chatterino-service';
-import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { theme } from '@app/styles/themes';
+import type { ChatMessageType } from '@app/types/chat/chatMessage';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import type { MessageToken } from '@app/utils/chat/messageToken';
 
 function requireFixture<T>(value: T | undefined, label: string): T {
   if (!value) {
@@ -56,7 +55,6 @@ export const createBaseMessage = (
       username: 'testuser',
       'display-name': 'TestUser',
       login: 'testuser',
-      // eslint-disable-next-line local/no-hardcoded-hex-color -- a Twitch IRC colour tag in fixture data, not a UI colour
       color: '#FF0000',
       'user-id': '123456',
       ...userstate,
@@ -67,7 +65,7 @@ export const createBaseMessage = (
     message_id,
     message_nonce,
     sender: 'testuser',
-    replyDisplayName: '',
+    replyParentLogin: '',
     replyBody: '',
   };
 };

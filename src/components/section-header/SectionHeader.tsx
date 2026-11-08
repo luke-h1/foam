@@ -6,9 +6,6 @@ import { theme } from '@app/styles/themes';
 
 interface SectionHeaderProps {
   title: string;
-  /**
-   * A short count or note shown after the title, such as the number of rows.
-   */
   detail?: string;
   actionLabel?: string;
   onActionPress?: () => void;

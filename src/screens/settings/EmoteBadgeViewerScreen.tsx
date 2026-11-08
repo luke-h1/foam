@@ -17,8 +17,7 @@ import { useQuery } from '@tanstack/react-query';
 import { HeaderHeightContext } from 'expo-router/react-navigation';
 
 import { Button } from '@app/components/button/Button';
-import { BadgePreviewSheet } from '@app/components/chat/components/badge-preview-sheet/BadgePreviewSheet';
-import { EmotePreviewSheet } from '@app/components/chat/components/emote-preview-sheet/EmotePreviewSheet';
+import { AssetPreviewSheet } from '@app/components/chat/components/asset-preview-sheet/AssetPreviewSheet';
 import { EmoteRow } from '@app/components/chat/components/emote-sheet/EmoteRow';
 import { ProviderChip } from '@app/components/chat/components/emote-sheet/ProviderChip';
 import { SetHeader } from '@app/components/chat/components/emote-sheet/SetHeader';
@@ -46,6 +45,7 @@ import { fitGrid } from '@app/screens/settings/util/fitGrid';
 import { ensureGlobalChatResources } from '@app/store/chat/actions/global-resource-ensure';
 import { useGlobalEmoteBadgeCaches } from '@app/store/chat/react/selectors';
 import { theme } from '@app/styles/themes';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import {
@@ -53,7 +53,6 @@ import {
   type BadgeRow,
   groupBadgesByProvider,
 } from '@app/utils/chat/groupBadgesByProvider';
-import type { MessageToken } from '@app/utils/chat/messageToken';
 
 const BADGE_CELL_SIZE = 64;
 const BADGE_IMAGE_SIZE = 40;
@@ -190,7 +189,7 @@ function EmotesTab({ channelResources, onSelectEmote }: EmotesTabProps) {
         style={styles.providerChipRow}
         contentContainerStyle={styles.providerChipRowContent}
       >
-        {/* eslint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- bounded set of provider tabs */}
+        {/* oxlint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- bounded set of provider tabs */}
         {providers.map(provider => (
           <ProviderChip
             key={provider.id}
@@ -303,7 +302,6 @@ function BadgesTab({ channelBadges, onSelectBadge }: BadgesTabProps) {
     sevenTvBadgesQueryOptions(),
   );
 
-  // Channel badges first, so a chosen channel's own badges lead the list.
   const badges = useMemo(
     () => [
       ...(channelBadges ?? []),
@@ -433,18 +431,18 @@ export function EmoteBadgeViewerScreen() {
       )}
 
       {selectedEmote ? (
-        <EmotePreviewSheet
-          visible
-          onClose={() => setSelectedEmote(null)}
-          selectedEmote={selectedEmote}
+        <AssetPreviewSheet
+          kind='emote'
+          asset={selectedEmote}
+          onDismiss={() => setSelectedEmote(null)}
         />
       ) : null}
 
       {selectedBadge ? (
-        <BadgePreviewSheet
-          visible
-          onClose={() => setSelectedBadge(null)}
-          selectedBadge={selectedBadge}
+        <AssetPreviewSheet
+          kind='badge'
+          asset={selectedBadge}
+          onDismiss={() => setSelectedBadge(null)}
         />
       ) : null}
     </View>

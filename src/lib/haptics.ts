@@ -4,7 +4,6 @@ import { Presets } from 'react-native-pulsar';
 import { getPreferences } from '@app/store/preference-store';
 
 function hapticsEnabled(): boolean {
-  // There is no haptics engine on web, so every preset is a no-op there.
   return Platform.OS !== 'web' && getPreferences().hapticFeedback;
 }
 

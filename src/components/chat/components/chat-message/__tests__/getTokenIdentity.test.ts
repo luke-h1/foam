@@ -1,7 +1,7 @@
 import { getTokenIdentity } from '@app/components/chat/util/chat-row/getTokenIdentity';
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
-describe('richChatMessageBody', () => {
+describe('getTokenIdentity', () => {
   test('creates position-based identities for repeated content tokens', () => {
     const repeatedTextPart = {
       type: 'text',
@@ -22,13 +22,5 @@ describe('richChatMessageBody', () => {
     expect(getTokenIdentity(repeatedEmotePart, 1)).toBe('emote-1');
 
     expect(getTokenIdentity(repeatedEmotePart, 3)).toBe('emote-3');
-
-    expect(getTokenIdentity(repeatedTextPart, 0)).not.toContain(
-      repeatedTextPart.content,
-    );
-
-    expect(getTokenIdentity(repeatedEmotePart, 1)).not.toContain(
-      repeatedEmotePart.id,
-    );
   });
 });

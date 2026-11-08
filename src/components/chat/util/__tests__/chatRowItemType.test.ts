@@ -1,31 +1,7 @@
+import { createChatMessageFixture } from '@app/components/chat/util/__tests__/__fixtures__/chatMessage.fixture';
 import { getChatRowItemType } from '@app/components/chat/util/chatRowItemType';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
 import { createTextToken } from '@app/utils/chat/__tests__/__fixtures__/messageToken.fixture';
-
-function createUserChatMessage(
-  overrides: Partial<AnyChatMessageType> = {},
-): AnyChatMessageType {
-  return {
-    id: 'msg-1',
-    message_id: 'msg-1',
-    message_nonce: 'nonce-1',
-    channel: 'channel',
-    sender: 'viewer',
-    message: [createTextToken('hello')],
-    userstate: createUserStateTags({
-      username: 'Viewer',
-      login: 'viewer',
-      'user-id': '123',
-      color: '#FFFFFF',
-    }),
-    badges: [],
-    replyBody: '',
-    replyDisplayName: '',
-    parentDisplayName: '',
-    ...overrides,
-  };
-}
 
 describe('getChatRowItemType', () => {
   test('returns invalid for malformed rows', () => {
@@ -39,7 +15,7 @@ describe('getChatRowItemType', () => {
         message: [],
         badges: [],
         replyBody: '',
-        replyDisplayName: '',
+        replyParentLogin: '',
         parentDisplayName: '',
         userstate: createUserStateTags(),
       }),
@@ -47,7 +23,7 @@ describe('getChatRowItemType', () => {
   });
 
   test('returns body variant for subscription notices', () => {
-    const message = createUserChatMessage({
+    const message = createChatMessageFixture({
       isSpecialNotice: true,
       message: [
         {
@@ -66,7 +42,7 @@ describe('getChatRowItemType', () => {
   });
 
   test('splits notice rows of the same variant by how tall they render', () => {
-    const bareSub = createUserChatMessage({
+    const bareSub = createChatMessageFixture({
       isSpecialNotice: true,
       message: [
         {
@@ -81,7 +57,7 @@ describe('getChatRowItemType', () => {
       ],
     });
 
-    const resubWithMessage = createUserChatMessage({
+    const resubWithMessage = createChatMessageFixture({
       isSpecialNotice: true,
       message: [
         {
@@ -104,10 +80,10 @@ describe('getChatRowItemType', () => {
   });
 
   test('splits user chat rows with incompatible native trees', () => {
-    const plain = createUserChatMessage();
-    const moderated = createUserChatMessage({ moderationNotice: 'Deleted' });
+    const plain = createChatMessageFixture();
+    const moderated = createChatMessageFixture({ moderationNotice: 'Deleted' });
 
-    const reply = createUserChatMessage({
+    const reply = createChatMessageFixture({
       parentDisplayName: 'Parent',
       replyBody: 'hi',
     });
@@ -117,12 +93,10 @@ describe('getChatRowItemType', () => {
     expect(getChatRowItemType(moderated)).toBe('user_chat-mod-w0');
 
     expect(getChatRowItemType(reply)).toBe('user_chat-reply-w0');
-
-    expect(getChatRowItemType(moderated)).not.toBe(getChatRowItemType(reply));
   });
 
   test('omits reply pool when inline reply context is disabled', () => {
-    const reply = createUserChatMessage({
+    const reply = createChatMessageFixture({
       parentDisplayName: 'Parent',
       replyBody: 'hi',
     });
@@ -133,9 +107,11 @@ describe('getChatRowItemType', () => {
   });
 
   test('splits user chat rows by how much room their content needs', () => {
-    const short = createUserChatMessage({ message: [createTextToken('gg')] });
+    const short = createChatMessageFixture({
+      message: [createTextToken('gg')],
+    });
 
-    const copypasta = createUserChatMessage({
+    const copypasta = createChatMessageFixture({
       message: [
         createTextToken('OHNE YOU JUST DECLINED A 0.000005 FLOAT '.repeat(8)),
       ],

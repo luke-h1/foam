@@ -3,7 +3,7 @@ import {
   createdClips$,
 } from '../observables/created-clips';
 
-export const MAX_CREATED_CLIPS = 100;
+const MAX_CREATED_CLIPS = 100;
 
 export function addCreatedClip(record: CreatedClipRecord): void {
   const clips = createdClips$.clips.peek() ?? [];

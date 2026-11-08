@@ -1,9 +1,9 @@
-import { clearMentionLoginIndex } from '../clearMentionLoginIndex';
+import { clearMentionIndexes } from '../clearMentionIndexes';
 import { pickCanonicalLogin } from '../pickCanonicalLogin';
 
 describe('pickCanonicalLogin', () => {
   beforeEach(() => {
-    clearMentionLoginIndex();
+    clearMentionIndexes();
   });
 
   test('prefers login strings that preserve Twitch casing', () => {

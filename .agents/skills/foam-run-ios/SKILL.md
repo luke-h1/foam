@@ -42,12 +42,12 @@ If the dev client shows its launcher, tap the dev server entry. If the bundle ne
 ## 3. Open a screen or a story
 
 - A route: `argent run open-url --udid $D --url 'foam://<route>'`.
-- Storybook: `foam://storybook` (route `src/app/storybook.tsx`, config `.rnstorybook/`).
+- Storybook: `foam://tabs/settings/storybook` (route `src/app/tabs/settings/storybook.tsx`, config `.rnstorybook/`).
 
 To show one story, set `initialSelection`. Tapping through the sidebar and calling `view._setStory` from the debugger both proved unreliable.
 
 1. Add `initialSelection: '<story-id>'` to the `getStorybookUI({...})` call in `.rnstorybook/index.ts`.
-2. Reload: `argent run debugger-reload-metro --device_id $D`, then open `foam://storybook`.
+2. Reload: `argent run debugger-reload-metro --device_id $D`, then open `foam://tabs/settings/storybook`.
 3. Revert `.rnstorybook/index.ts` before you commit.
 
 A story id is the story `title` lowercased with `/` turned into `-`, then `--` and the kebab-cased export name. For `title: 'components/Chat/ChatInputSection'` and `export const Empty`, the id is `components-chat-chatinputsection--empty`.

@@ -5,6 +5,7 @@ import {
   useEmojis,
 } from '@app/store/chat/react/selectors';
 import type { SanitisedEmote } from '@app/types/emote';
+import { normaliseChatText } from '@app/utils/chat/normaliseChatText';
 
 interface SearchableEmote {
   emote: SanitisedEmote;
@@ -13,26 +14,22 @@ interface SearchableEmote {
   lowerOriginalName?: string;
 }
 
-interface UseEmoteSuggestionsProps {
+interface UseEmoteSuggestionsOptions {
   searchTerm: string;
   maxSuggestions?: number;
-  prioritizeChannelEmotes?: boolean;
 }
 
-function buildSearchableEmotes(
-  emoteSources: {
-    sevenTvChannelEmotes: (SanitisedEmote | undefined)[];
-    sevenTvGlobalEmotes: (SanitisedEmote | undefined)[];
-    twitchChannelEmotes: (SanitisedEmote | undefined)[];
-    twitchGlobalEmotes: (SanitisedEmote | undefined)[];
-    bttvChannelEmotes: (SanitisedEmote | undefined)[];
-    bttvGlobalEmotes: (SanitisedEmote | undefined)[];
-    ffzChannelEmotes: (SanitisedEmote | undefined)[];
-    ffzGlobalEmotes: (SanitisedEmote | undefined)[];
-    emojis: (SanitisedEmote | undefined)[];
-  },
-  prioritizeChannelEmotes: boolean,
-): SearchableEmote[] {
+function buildSearchableEmotes(emoteSources: {
+  sevenTvChannelEmotes: (SanitisedEmote | undefined)[];
+  sevenTvGlobalEmotes: (SanitisedEmote | undefined)[];
+  twitchChannelEmotes: (SanitisedEmote | undefined)[];
+  twitchGlobalEmotes: (SanitisedEmote | undefined)[];
+  bttvChannelEmotes: (SanitisedEmote | undefined)[];
+  bttvGlobalEmotes: (SanitisedEmote | undefined)[];
+  ffzChannelEmotes: (SanitisedEmote | undefined)[];
+  ffzGlobalEmotes: (SanitisedEmote | undefined)[];
+  emojis: (SanitisedEmote | undefined)[];
+}): SearchableEmote[] {
   const emoteMap = new Map<string, SearchableEmote>();
 
   const addEmotes = (
@@ -78,7 +75,7 @@ function buildSearchableEmotes(
   const uniqueEmotes = Array.from(emoteMap.values());
 
   uniqueEmotes.sort((a, b) => {
-    if (prioritizeChannelEmotes && a.isChannel !== b.isChannel) {
+    if (a.isChannel !== b.isChannel) {
       return a.isChannel ? -1 : 1;
     }
 
@@ -98,8 +95,7 @@ function matchesSearch(entry: SearchableEmote, lowerSearch: string): boolean {
 export function useEmoteSuggestions({
   searchTerm,
   maxSuggestions = 50,
-  prioritizeChannelEmotes = true,
-}: UseEmoteSuggestionsProps) {
+}: UseEmoteSuggestionsOptions) {
   const {
     bttvChannelEmotes,
     bttvGlobalEmotes,
@@ -115,20 +111,17 @@ export function useEmoteSuggestions({
 
   const searchableEmotes = useMemo(
     () =>
-      buildSearchableEmotes(
-        {
-          sevenTvChannelEmotes,
-          sevenTvGlobalEmotes,
-          twitchChannelEmotes,
-          twitchGlobalEmotes,
-          bttvChannelEmotes,
-          bttvGlobalEmotes,
-          ffzChannelEmotes,
-          ffzGlobalEmotes,
-          emojis,
-        },
-        prioritizeChannelEmotes,
-      ),
+      buildSearchableEmotes({
+        sevenTvChannelEmotes,
+        sevenTvGlobalEmotes,
+        twitchChannelEmotes,
+        twitchGlobalEmotes,
+        bttvChannelEmotes,
+        bttvGlobalEmotes,
+        ffzChannelEmotes,
+        ffzGlobalEmotes,
+        emojis,
+      }),
     [
       sevenTvChannelEmotes,
       sevenTvGlobalEmotes,
@@ -139,17 +132,10 @@ export function useEmoteSuggestions({
       ffzChannelEmotes,
       ffzGlobalEmotes,
       emojis,
-      prioritizeChannelEmotes,
     ],
   );
 
-  const allEmotes = useMemo(
-    () => searchableEmotes.map(entry => entry.emote),
-    [searchableEmotes],
-  );
-
-  const trimmedSearch = searchTerm.trim();
-  const lowerSearch = trimmedSearch.toLowerCase();
+  const lowerSearch = normaliseChatText(searchTerm);
 
   const filteredEmotes = useMemo(() => {
     if (lowerSearch.length < 1) {
@@ -173,6 +159,5 @@ export function useEmoteSuggestions({
 
   return {
     filteredEmotes,
-    allEmotes,
   };
 }

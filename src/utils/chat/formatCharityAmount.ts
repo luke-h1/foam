@@ -1,7 +1,7 @@
-type CharityCurrencyFormat = {
+interface CharityCurrencyFormat {
   position: 'prefix' | 'suffix';
   symbol: string;
-};
+}
 
 const CHARITY_CURRENCY_FORMATS = new Map<string, CharityCurrencyFormat>([
   ['AUD', { position: 'prefix', symbol: 'A$' }],

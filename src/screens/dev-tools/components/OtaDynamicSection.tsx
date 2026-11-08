@@ -1,16 +1,16 @@
-/* eslint-disable no-undef */
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import * as AC from '@bacons/apple-colors';
-import type { ReloadScreenOptions } from 'expo-updates';
 import * as Updates from 'expo-updates';
 
 import * as Form from '@app/components/form/Form';
 import { SymbolView } from '@app/components/ui/icon/Icon';
-import { theme } from '@app/styles/themes';
+import { OTA_UPDATES_ACTIVE } from '@app/utils/app-update/constants';
+import {
+  checkAndFetchOtaUpdate,
+  reloadIntoOtaUpdate,
+} from '@app/utils/app-update/otaUpdateFlow';
 import { logger } from '@app/utils/logger';
-
-import { ENV_SUPPORTS_OTA } from '../util/envSupportsOta';
 
 const otaLoadingTitleHint = <ActivityIndicator animating />;
 
@@ -18,24 +18,6 @@ const otaReloadHint = (
   <SymbolView name='arrow.clockwise' tintColor={AC.secondaryLabel} />
 );
 
-const OTA_RELOAD_SCREEN_OPTIONS = {
-  backgroundColor: theme.color.background.dark,
-  fade: true,
-  spinner: {
-    color: theme.colorPrimary,
-    size: 'large' as const,
-  },
-} satisfies ReloadScreenOptions;
-
-async function reloadOtaWithScreen() {
-  await Updates.reloadAsync({
-    reloadScreenOptions: OTA_RELOAD_SCREEN_OPTIONS,
-  });
-}
-
-/**
- * Records which of the three OTA states the dev-tools button acted on.
- */
 const OTA_DEV_TOOLS_ACTIONS = {
   pending: {
     action: 'dev_tools_reload',
@@ -132,9 +114,8 @@ export function OTADynamicSection() {
       <Form.Text
         style={{ color: textColor }}
         onPress={() => {
-          if (__DEV__ && !ENV_SUPPORTS_OTA) {
-            // eslint-disable-next-line no-alert
-            alert('OTA updates are not available in the Expo Go app.');
+          if (!OTA_UPDATES_ACTIVE) {
+            alert('OTA updates are not available in this build.');
             return;
           }
 
@@ -142,18 +123,13 @@ export function OTADynamicSection() {
             logOtaDevToolsAction(updates);
 
             if (updates.isUpdatePending) {
-              await reloadOtaWithScreen();
+              await reloadIntoOtaUpdate();
               return;
             }
 
-            const result = await Updates.checkForUpdateAsync();
-
-            if (!result.isAvailable) {
-              return;
+            if (await checkAndFetchOtaUpdate()) {
+              await reloadIntoOtaUpdate();
             }
-
-            await Updates.fetchUpdateAsync();
-            await reloadOtaWithScreen();
           })();
         }}
         hint={isLoading ? otaLoadingTitleHint : otaReloadHint}

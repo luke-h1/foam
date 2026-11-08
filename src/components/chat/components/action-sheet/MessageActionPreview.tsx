@@ -3,33 +3,38 @@ import { StyleSheet, View } from 'react-native';
 
 import { MessageTokenLine } from '@app/components/chat/components/message-token-line/MessageTokenLine';
 import { theme } from '@app/styles/themes';
-import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import type { MessageToken } from '@app/utils/chat/messageToken';
-import { lightenColor } from '@app/utils/color/lightenColor';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
 import { PaintedUsername } from '../chat-message/cosmetic-username/PaintedUsername';
+
+const PREVIEW_LINE_HEIGHT = 22;
+
+const PREVIEW_MAX_LINES = 3;
 
 interface MessageActionPreviewProps {
   message: MessageToken[];
   username?: string;
+  usernameColor?: string;
 }
 
 export const MessageActionPreview = memo(function MessageActionPreview({
   message,
   username,
+  usernameColor,
 }: MessageActionPreviewProps) {
-  const previewUsernameColor = username
-    ? lightenColor(generateRandomTwitchColor(username))
-    : null;
-
   return (
     <View style={styles.previewCard}>
-      <MessageTokenLine tokens={message} style={styles.previewLines}>
+      <MessageTokenLine
+        tokens={message}
+        style={styles.previewLines}
+        textStyle={styles.previewText}
+      >
         {username ? (
           <PaintedUsername
+            isModerated={false}
             {...{
               username,
-              fallbackColor: previewUsernameColor ?? undefined,
+              fallbackColor: usernameColor,
               usernameTextStyle: styles.previewUsername,
             }}
           />
@@ -40,12 +45,8 @@ export const MessageActionPreview = memo(function MessageActionPreview({
 });
 
 const styles = StyleSheet.create({
-  /**
-   * Three lines at most, so a long message cannot push the actions below the
-   * fold when the sheet opens.
-   */
   previewLines: {
-    maxHeight: 66,
+    maxHeight: PREVIEW_MAX_LINES * PREVIEW_LINE_HEIGHT,
     overflow: 'hidden',
   },
   previewCard: {
@@ -57,8 +58,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space16,
     paddingVertical: theme.space12,
   },
+  previewText: {
+    lineHeight: PREVIEW_LINE_HEIGHT,
+  },
   previewUsername: {
     fontSize: theme.fontSize16,
-    lineHeight: 22,
+    lineHeight: PREVIEW_LINE_HEIGHT,
   },
 });

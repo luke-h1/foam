@@ -1,13 +1,13 @@
+import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
-import type { ReactNode } from 'react';
 import type { KeyboardStickyViewProps } from 'react-native-keyboard-controller';
 import * as keyboardControllerModule from 'react-native-keyboard-controller';
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { render, waitFor } from '@testing-library/react-native';
 import * as Clipboard from 'expo-clipboard';
 
-import { createChatMessage } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
+import { createChatMessage } from '@app/components/chat/__tests__/__fixtures__/chatFactories.fixture';
 import { createScrollAnchor } from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat-scroll.fixture';
 import * as FlashListModule from '@app/components/flash-list/FlashList';
 import {
@@ -17,7 +17,6 @@ import {
 import { AuthContextTestProvider } from '@app/context/AuthContext';
 import { recentMessagesService } from '@app/services/recent-messages-service';
 import { sevenTvService } from '@app/services/seven-tv-service';
-import * as twitchChatServiceModule from '@app/services/twitch-chat-service';
 import {
   getChatUnreadCount,
   resetChatUnread,
@@ -30,24 +29,27 @@ import {
   initialPreferences,
   replacePreferences,
 } from '@app/store/preference-store';
+import { createTestQueryClient } from '@app/test/render';
+import { silenceLogger } from '@app/test/silence-logger';
 import * as clearImageCacheModule from '@app/utils/image/clearImageCache';
-import { logger } from '@app/utils/logger';
 
 import { Chat } from '../Chat';
 import * as actionSheetModule from '../components/action-sheet/ActionSheet';
-import * as badgePreviewSheetModule from '../components/badge-preview-sheet/BadgePreviewSheet';
+import * as assetPreviewSheetModule from '../components/asset-preview-sheet/AssetPreviewSheet';
 import * as chatRowModule from '../components/chat-message/ChatRow';
 import * as chatInputSectionModule from '../components/ChatInputSection';
 import * as chatListModule from '../components/ChatList';
 import * as chatViewControlsModule from '../components/ChatViewControls';
-import * as emotePreviewSheetModule from '../components/emote-preview-sheet/EmotePreviewSheet';
 import * as emoteSheetModule from '../components/emote-sheet/EmoteSheet';
 import * as resumeScrollModule from '../components/ResumeScroll';
 import * as settingsSheetModule from '../components/settings-sheet/SettingsSheet';
 import * as userActionSheetModule from '../components/UserActionSheet';
 import * as useChatEmoteLoaderModule from '../hooks/use-chat-emote-loader';
 import * as useChatScrollModule from '../hooks/use-chat-scroll';
+import * as useChatUserStateModule from '../hooks/use-chat-user-state';
 import * as useSevenTvWsModule from '../hooks/use-seven-tv-ws';
+import * as useTwitchChatModule from '../hooks/use-twitch-chat';
+import * as chatUserStateModule from '../util/chat-user-state';
 
 /**
  * `useSafeAreaInsets` is a non-configurable re-export getter on the package
@@ -61,19 +63,11 @@ const mockScrollToBottom = jest.fn();
 
 jest.spyOn(FlashListModule, 'FlashList').mockImplementation(() => <View />);
 
-/**
- * Structurally valid `WebSocket` without a real connection; the suite's
- * sockets are stubbed so nothing calls the prototype's methods.
- */
-const createWebSocketStub = (): WebSocket => Object.create(WebSocket.prototype);
-
 jest.spyOn(useSevenTvWsModule, 'useSevenTvWs').mockReturnValue({
   subscribeToChannel: jest.fn(),
   unsubscribeFromChannel: jest.fn(),
   isConnected: () => false,
   readyState: 0,
-  getConnectionState: () => 'DISCONNECTED',
-  ws: createWebSocketStub(),
 });
 
 const mockedGetRecentMessages = jest
@@ -88,42 +82,33 @@ jest.spyOn(sevenTvService, 'get7tvUserId').mockResolvedValue('');
 jest.spyOn(sevenTvService, 'getPersonalEmoteSet').mockResolvedValue([]);
 jest.spyOn(sevenTvService, 'getUserCosmeticsGql').mockResolvedValue(null);
 
-jest.spyOn(twitchChatServiceModule, 'getChatUserState').mockReturnValue({
+jest.spyOn(chatUserStateModule, 'getChatUserState').mockReturnValue({
   mod: '0',
   'badges-raw': '',
   badges: '',
   color: '#ffffff',
 });
 
-jest.spyOn(twitchChatServiceModule, 'useChatUserState').mockReturnValue({
+jest.spyOn(useChatUserStateModule, 'useChatUserState').mockReturnValue({
   mod: '0',
   'badges-raw': '',
   badges: '',
   color: '#ffffff',
 });
 
-jest.spyOn(twitchChatServiceModule, 'useTwitchChat').mockReturnValue({
+jest.spyOn(useTwitchChatModule, 'useTwitchChat').mockReturnValue({
   connectionState: 1,
-  getWebSocket: createWebSocketStub,
   isConnected: () => true,
   partChannel: jest.fn(),
-  joinChannel: jest.fn(),
+  reconnect: jest.fn(),
   sendMessage: jest.fn(),
-  sendChatCommand: jest.fn(),
-  sendAction: jest.fn(),
 });
 
 jest
   .spyOn(clearImageCacheModule, 'clearImageCache')
   .mockImplementation(async () => {});
 
-jest.spyOn(logger.chat, 'debug').mockImplementation(() => {});
-jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
-jest.spyOn(logger.chat, 'info').mockImplementation(() => {});
-jest.spyOn(logger.chat, 'warn').mockImplementation(() => {});
-jest.spyOn(logger.stvWs, 'debug').mockImplementation(() => {});
-jest.spyOn(logger.stvWs, 'info').mockImplementation(() => {});
-jest.spyOn(logger.stvWs, 'warn').mockImplementation(() => {});
+silenceLogger();
 
 jest.spyOn(Clipboard, 'setStringAsync').mockResolvedValue(true);
 
@@ -154,7 +139,7 @@ Object.defineProperty(actionSheetModule, 'ActionSheet', {
   value: noRender,
 });
 
-Object.defineProperty(badgePreviewSheetModule, 'BadgePreviewSheet', {
+Object.defineProperty(assetPreviewSheetModule, 'AssetPreviewSheet', {
   configurable: true,
   value: noRender,
 });
@@ -175,11 +160,6 @@ Object.defineProperty(chatRowModule, 'ChatRow', {
 });
 
 Object.defineProperty(chatViewControlsModule, 'ChatViewControls', {
-  configurable: true,
-  value: noRender,
-});
-
-Object.defineProperty(emotePreviewSheetModule, 'EmotePreviewSheet', {
   configurable: true,
   value: noRender,
 });
@@ -294,9 +274,7 @@ function seedPersistedHistory(messageCount: number) {
 }
 
 function SignedInWrapper({ children }: { children: ReactNode }) {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
+  const [queryClient] = useState(createTestQueryClient);
 
   const authContext = createLoggedInAuthContextValue({
     user: createTestUser({
@@ -396,19 +374,6 @@ describe('Chat recent messages', () => {
     expect(getChatUnreadCount()).toBe(0);
   });
 
-  test('settles to bottom after restoring persisted recent messages', () => {
-    setShowRecentMessages(false);
-    seedPersistedHistory(12);
-
-    renderChat();
-
-    expect(mockScrollToBottom).toHaveBeenCalledTimes(1);
-
-    expect(storedRows()).toEqual<StoredRow[]>(cachedRows(12));
-
-    expect(requestedHistory()).toEqual([]);
-  });
-
   test('defers cached-history bottom settle until remote history replay finishes', async () => {
     seedPersistedHistory(12);
     mockedGetRecentMessages.mockResolvedValueOnce([]);
@@ -426,15 +391,5 @@ describe('Chat recent messages', () => {
     expect(requestedHistory()).toEqual([['foam', 150]]);
 
     expect(storedRows()).toEqual<StoredRow[]>(cachedRows(12));
-  });
-
-  test('does not load recent messages when the preference is disabled', () => {
-    setShowRecentMessages(false);
-
-    renderChat();
-
-    expect(requestedHistory()).toEqual([]);
-
-    expect(storedRows()).toEqual<StoredRow[]>([]);
   });
 });

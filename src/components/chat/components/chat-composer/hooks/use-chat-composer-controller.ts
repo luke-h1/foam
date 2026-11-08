@@ -8,7 +8,7 @@ import {
 
 import type { SlashCommandDefinition } from '@app/components/chat/util/slash-command-definitions/types';
 import { impact } from '@app/lib/haptics';
-import type { ChatUser } from '@app/store/chat/types/constants';
+import type { ChatUser } from '@app/types/chat/chatMessage';
 import type { SanitisedEmote } from '@app/types/emote';
 import {
   MAX_MESSAGE_LENGTH,
@@ -17,8 +17,6 @@ import {
 
 import { getEditCursorPosition } from '../util/getEditCursorPosition';
 import { useWordInfo } from './use-word-info';
-
-export { MAX_MESSAGE_LENGTH };
 
 export interface ChatComposerHandle {
   focus: () => void;
@@ -37,7 +35,7 @@ interface UseChatComposerControllerOptions {
   reservedCharacters?: number;
   onChangeText?: (text: string) => void;
   onSubmit?: () => void;
-  canSend?: boolean;
+  canSend: boolean;
   ref?: Ref<ChatComposerHandle>;
   focusInput: () => void;
   blurInput: () => void;
@@ -68,11 +66,10 @@ export function useChatComposerController({
   const hasText = text.length > 0;
   const wireLength = messageLength(text) + reservedCharacters;
   const isOverLimit = wireLength > MAX_MESSAGE_LENGTH;
-  const submitEnabled = (canSend ?? hasText) && !isOverLimit;
+  const submitEnabled = canSend && !isOverLimit;
   const remainingCharacters = MAX_MESSAGE_LENGTH - wireLength;
   const showCharacterCount = wireLength >= CHARACTER_COUNT_VISIBLE_FROM;
-  const hasLastMessage = lastSentMessage.length > 0;
-  const canRecallLastMessage = !hasText && hasLastMessage;
+  const canRecallLastMessage = !hasText && lastSentMessage.length > 0;
 
   const { wordInfo, isUserMention, isEmoteSearch, isCommandSearch } =
     useWordInfo({
@@ -80,8 +77,8 @@ export function useChatComposerController({
       cursorPosition,
     });
 
-  const showUserRail = isFocused && isUserMention && wordInfo.word.length > 1;
-  const showEmoteRail = isFocused && isEmoteSearch && wordInfo.word.length > 0;
+  const showUserRail = isFocused && isUserMention;
+  const showEmoteRail = isFocused && isEmoteSearch;
   const showCommandRail = isFocused && isCommandSearch;
 
   const writeText = useCallback(
@@ -202,7 +199,6 @@ export function useChatComposerController({
     remainingCharacters,
     showCharacterCount,
     canRecallLastMessage,
-    hasLastMessage,
     recallLastMessage,
     handleChangeText,
     handleSelectionChange,

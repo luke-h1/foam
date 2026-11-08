@@ -23,16 +23,6 @@ export function formatNoticeMessage(
   }
 
   switch (noticeId) {
-    case 'emote_only_off':
-      return 'Emote-only mode disabled.';
-    case 'emote_only_on':
-      return 'Emote-only mode enabled.';
-    case 'followers_off':
-      return 'Followers-only mode disabled.';
-    case 'followers_on':
-      return trimmed || 'Followers-only mode enabled.';
-    case 'followers_on_zero':
-      return 'Followers-only mode enabled.';
     case 'msg_banned':
       return 'You are permanently banned from this channel.';
     case 'msg_bad_characters':
@@ -78,18 +68,6 @@ export function formatNoticeMessage(
     }
     case 'msg_verified_email':
       return 'Verify your account to chat in this channel.';
-    case 'slow_off':
-      return 'Slow mode disabled.';
-    case 'slow_on': {
-      const seconds = extractFirstNumber(trimmed);
-      return seconds !== null
-        ? `Slow mode enabled (${seconds}s).`
-        : 'Slow mode enabled.';
-    }
-    case 'subs_off':
-      return 'Subscribers-only mode disabled.';
-    case 'subs_on':
-      return 'Subscribers-only mode enabled.';
     case 'tos_ban':
       return (
         trimmed || 'This channel is closed for Terms of Service violations.'

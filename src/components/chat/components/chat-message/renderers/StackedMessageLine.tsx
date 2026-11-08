@@ -2,12 +2,12 @@ import { View } from 'react-native';
 import type { StyleProp, TextStyle } from 'react-native';
 
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
+import type { BadgePressData } from '@app/store/chat/types/chat-press-data';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { flowsInline } from '@app/utils/chat/derive-chat-body/flowsInline';
-import type { MessageToken } from '@app/utils/chat/messageToken';
 
 import { styles } from '../ChatRow.styles';
-import type { BadgePressData } from '../ChatRow.types';
 import { ChatRowUsername } from '../ChatRowUsername';
 import type { getChatTextStyles } from '../ChatText.styles';
 import { ChatMessageBadges } from './ChatMessageBadges';
@@ -19,9 +19,7 @@ interface StackedMessageLineProps {
   badgeList: SanitisedBadgeSet[];
   bodyEmoteLineStyle: StyleProp<TextStyle>;
   cachedSenderColor?: string;
-  isModerated: boolean;
   message: MessageToken[];
-  moderationNotice: ChatTokenRenderProps['moderationNotice'];
   onBadgePress?: (badge: BadgePressData) => void;
   onUsernamePress?: () => void;
   rendererArgs: Omit<ChatTokenRenderProps, 'message'>;
@@ -35,17 +33,11 @@ interface StackedMessageLineProps {
   userstateColor?: string;
 }
 
-/**
- * The stacked message line: timestamp, badges and username sit beside the
- * body rather than flowing inside it.
- */
 export function StackedMessageLine({
   badgeList,
   bodyEmoteLineStyle,
   cachedSenderColor,
   message,
-  isModerated,
-  moderationNotice,
   onBadgePress,
   onUsernamePress,
   rendererArgs,
@@ -58,7 +50,7 @@ export function StackedMessageLine({
   username,
   userstateColor,
 }: StackedMessageLineProps) {
-  const { compact, fontScale } = rendererArgs;
+  const { density, fontScale, isModerated } = rendererArgs;
 
   /**
    * Re-derived here rather than passed in: the predicate also narrows the
@@ -73,10 +65,10 @@ export function StackedMessageLine({
     <View
       style={[
         styles.messageLine,
-        moderationNotice ? styles.messageLineModerated : null,
+        isModerated ? styles.messageLineModerated : null,
       ]}
     >
-      {moderationNotice ? <View style={styles.moderatedStrikeOverlay} /> : null}
+      {isModerated ? <View style={styles.moderatedStrikeOverlay} /> : null}
       {showTimestamp && timestamp ? (
         <ChatText tabular style={textStyles.timestamp}>
           {timestamp}
@@ -85,22 +77,20 @@ export function StackedMessageLine({
       <ChatMessageBadges
         {...{
           badges: badgeList,
-          compact,
+          density,
           fontScale,
-          moderationNotice,
+          isModerated,
           onBadgePress,
         }}
       />
       {username ? (
-        <View
-          style={moderationNotice ? styles.moderatedUsernameContainer : null}
-        >
+        <View style={isModerated ? styles.moderatedUsernameContainer : null}>
           <ChatRowUsername
             {...{
               cachedSenderColor,
-              compact,
+              density,
               fontScale,
-              isModerated: Boolean(moderationNotice),
+              isModerated,
               onUsernamePress,
               userId,
               userstateColor,

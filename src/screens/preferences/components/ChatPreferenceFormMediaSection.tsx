@@ -1,47 +1,48 @@
 import { Section, Text as NativeText, Toggle } from '@expo/ui/swift-ui';
 
-import type { Preferences } from '@app/store/preference-store';
+import { updatePreferences, usePreference } from '@app/store/preference-store';
 
+import {
+  CHAT_PREFERENCE_FOOTERS,
+  CHAT_PREFERENCE_ROWS as ROWS,
+  CHAT_PREFERENCE_SECTION_TITLES,
+} from '../constants';
 import { hostPreview } from './ChatPreferenceFormHostPreview';
 import { ChatPreferencePreview } from './ChatPreferencesPreview';
 
 export function ChatPreferenceFormMediaSection({
-  preferences,
   previewWidth,
-  update,
 }: {
-  preferences: Preferences;
   previewWidth: number;
-  update: (payload: Partial<Preferences>) => void;
 }) {
+  const disableEmoteAnimations = usePreference('disableEmoteAnimations');
+  const showChatGifs = usePreference('showChatGifs');
+
   return (
     <Section
-      title='Media'
-      footer={
-        <NativeText>
-          When on, animated Twitch, BTTV, FFZ, and 7TV emotes show as still
-          images.
-        </NativeText>
-      }
+      title={CHAT_PREFERENCE_SECTION_TITLES.media}
+      footer={<NativeText>{CHAT_PREFERENCE_FOOTERS.media}</NativeText>}
     >
       <Toggle
-        label='Disable Emote Animations'
-        systemImage='slash.circle'
-        isOn={preferences.disableEmoteAnimations}
-        onIsOnChange={value => update({ disableEmoteAnimations: value })}
+        label={ROWS.disableEmoteAnimations.title}
+        systemImage={ROWS.disableEmoteAnimations.icon}
+        isOn={disableEmoteAnimations}
+        onIsOnChange={value =>
+          updatePreferences({ disableEmoteAnimations: value })
+        }
       />
       {hostPreview(
         <ChatPreferencePreview
           variant='emoteAnimations'
-          value={preferences.disableEmoteAnimations}
+          value={disableEmoteAnimations}
         />,
         previewWidth,
       )}
       <Toggle
-        label='Show Chat GIFs'
-        systemImage='photo'
-        isOn={Boolean(preferences.showChatGifs)}
-        onIsOnChange={value => update({ showChatGifs: value })}
+        label={ROWS.showChatGifs.title}
+        systemImage={ROWS.showChatGifs.icon}
+        isOn={showChatGifs}
+        onIsOnChange={value => updatePreferences({ showChatGifs: value })}
       />
     </Section>
   );

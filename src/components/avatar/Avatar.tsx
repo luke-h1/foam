@@ -10,10 +10,6 @@ interface AvatarProps {
   size: number;
 }
 
-/**
- * A round profile image. Without an image it shows the first letter of the
- * name on a plain fill.
- */
 export function Avatar({ uri, name, size }: AvatarProps) {
   const sizeStyle = { height: size, width: size };
 

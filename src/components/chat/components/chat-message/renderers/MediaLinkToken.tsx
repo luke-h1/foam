@@ -2,16 +2,12 @@ import { MediaLinkCard } from '@app/components/chat/components/media-link-card/M
 import type {
   MediaLinkTokenKind,
   MessageToken,
-} from '@app/utils/chat/messageToken';
+} from '@app/types/chat/messageToken';
 
 interface MediaLinkTokenProps {
   token: MessageToken<MediaLinkTokenKind>;
 }
 
-/**
- * A pasted link that chat draws as a preview card: a 7TV emote link or a
- * Twitch clip. The 7TV card sits inline with the surrounding text.
- */
 export function MediaLinkToken({ token }: MediaLinkTokenProps) {
   if (!token.content.trim()) {
     return null;

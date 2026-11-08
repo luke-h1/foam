@@ -1,4 +1,4 @@
-import { Alert, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import {
   Button,
@@ -17,67 +17,16 @@ import { Text } from '@app/components/ui/text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { SWIFTUI_ROW_CONTENT_INSET } from '@app/styles/native-form';
 import { theme } from '@app/styles/themes';
-import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 
 import { FormNavigationRow } from '../FormNavigationRow';
-
-/**
- * Foam has no backend accounts (sign-in is Twitch OAuth), so deletion goes through Twitch's Security & Privacy page with "Disable or Delete My Account".
- */
-const TWITCH_ACCOUNT_SETTINGS_URL = 'https://www.twitch.tv/settings/security';
-
-function formatMemberSince(createdAt?: string) {
-  if (!createdAt) {
-    return 'Unknown';
-  }
-
-  const date = new Date(createdAt);
-
-  if (Number.isNaN(date.getTime())) {
-    return 'Unknown';
-  }
-
-  return date.toLocaleDateString(undefined, {
-    month: 'long',
-    year: 'numeric',
-  });
-}
-
-function confirmDeleteAccount() {
-  Alert.alert(
-    'Delete Account',
-    "Foam has no accounts of its own. You sign in with Twitch. To delete your account for good, continue to Twitch's account settings. To only remove your login from this device, use Log out above.",
-    [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Continue to Twitch',
-        style: 'destructive',
-        onPress: () => openLinkInBrowser(TWITCH_ACCOUNT_SETTINGS_URL),
-      },
-    ],
-  );
-}
+import {
+  confirmDeleteAccount,
+  confirmLogout,
+  formatMemberSince,
+} from './util/profileActions';
 
 export function ProfileCard() {
   const { user, logout } = useAuthContext();
-
-  const confirmLogout = () => {
-    Alert.alert('Sign Out', 'Sign out of your account?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign Out',
-        style: 'destructive',
-        onPress: () => {
-          void (async () => {
-            await logout();
-            setTimeout(() => {
-              router.replace('/tabs/top');
-            }, 300);
-          })();
-        },
-      },
-    ]);
-  };
 
   if (!user) {
     return (
@@ -172,9 +121,9 @@ export function ProfileCard() {
           <Button
             label='Log out'
             systemImage='arrow.left.square'
-            // eslint-disable-next-line jsx-a11y/aria-role, react-doctor/aria-role -- SwiftUI Button role, not ARIA
+            // oxlint-disable-next-line react-doctor/aria-role -- SwiftUI Button role, not ARIA
             role='destructive'
-            onPress={confirmLogout}
+            onPress={() => confirmLogout(logout)}
           />
         </Section>
 
@@ -190,7 +139,7 @@ export function ProfileCard() {
           <Button
             label='Delete Account'
             systemImage='trash.fill'
-            // eslint-disable-next-line jsx-a11y/aria-role, react-doctor/aria-role -- SwiftUI Button role, not ARIA
+            // oxlint-disable-next-line react-doctor/aria-role -- SwiftUI Button role, not ARIA
             role='destructive'
             onPress={confirmDeleteAccount}
           />

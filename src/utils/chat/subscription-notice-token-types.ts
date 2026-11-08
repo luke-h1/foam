@@ -1,4 +1,4 @@
-import type { MessageToken } from '@app/utils/chat/messageToken';
+import type { MessageToken } from '@app/types/chat/messageToken';
 
 const SUBSCRIPTION_NOTICE_TOKEN_TYPES = [
   'sub',

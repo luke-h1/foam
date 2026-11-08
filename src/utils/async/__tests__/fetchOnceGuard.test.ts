@@ -1,10 +1,10 @@
 import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
 
-type Deferred<V> = {
+interface Deferred<V> {
   promise: Promise<V>;
   resolve: (value: V) => void;
   reject: (error: Error) => void;
-};
+}
 
 const deferred = <V>(): Deferred<V> => {
   let resolve!: (value: V) => void;
@@ -137,6 +137,39 @@ describe('fetchOnceGuard generation fence', () => {
     expect(guard.hasFetched('key')).toEqual(false);
 
     expect(guard.hasFetched('other-key')).toEqual(false);
+  });
+
+  test('clearKey during a run fences that run out', async () => {
+    const guard = createFetchOnceGuard();
+    const gate = deferred<void>();
+    let sawCurrent: boolean | null = null;
+
+    const running = guard.run('key', async ctx => {
+      await gate.promise;
+      ctx.markFetched();
+      sawCurrent = ctx.stillCurrent();
+    });
+
+    guard.clearKey('key');
+    gate.resolve();
+    await running;
+
+    expect(sawCurrent).toEqual(false);
+
+    expect(guard.hasFetched('key')).toEqual(false);
+
+    expect(guard.shouldFetch('key')).toEqual(true);
+  });
+
+  test('clearKey for one key does not fence a run for another key', async () => {
+    const guard = createFetchOnceGuard();
+
+    guard.clearKey('other');
+    await guard.run('key', async ctx => {
+      ctx.markFetched();
+    });
+
+    expect(guard.hasFetched('key')).toEqual(true);
   });
 
   test('without a clear the run context stamps normally', async () => {

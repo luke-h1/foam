@@ -1,4 +1,4 @@
-import * as sevenTvWorkletClient from '@app/services/gql/seven-tv-worklet-client';
+import { sevenTvGqlApi } from '@app/services/api/clients';
 import {
   clearSevenTvUserCache,
   sevenTvService,
@@ -10,25 +10,16 @@ import {
   sevenTvUserResponse,
 } from './__fixtures__/seven-tv-user-lookup.fixture';
 
-const mockRunCosmeticsQuery = jest.spyOn(
-  sevenTvWorkletClient,
-  'runCosmeticsQuery',
-);
+const postDerivedSpy = jest.spyOn(sevenTvGqlApi, 'postDerived');
 
 /**
- * Runs the query's real `parse` worklet so the tests cover parsing, not a
- * stubbed return. Reports a throwing parse as an error, like the real client.
+ * Runs the client's real `derive` worklet so the tests cover parsing, not a
+ * stubbed return.
  */
 const respondWith = (responseText: string) => {
-  mockRunCosmeticsQuery.mockImplementation((_query, _variables, parse) => {
-    try {
-      return Promise.resolve({ result: parse(responseText) });
-    } catch (error) {
-      return Promise.resolve({
-        error: error instanceof Error ? error : new Error(String(error)),
-      });
-    }
-  });
+  postDerivedSpy.mockImplementation((_path, _data, derive) =>
+    Promise.resolve(derive(responseText)),
+  );
 };
 
 describe('sevenTvService user lookup', () => {
@@ -51,7 +42,7 @@ describe('sevenTvService user lookup', () => {
 
     expect([userId, emoteSetId]).toEqual(['stv-1', 'set-1']);
 
-    expect(mockRunCosmeticsQuery).toHaveBeenCalledTimes(1);
+    expect(postDerivedSpy).toHaveBeenCalledTimes(1);
   });
 
   test('returns an empty emote set id when the user has no active set', async () => {

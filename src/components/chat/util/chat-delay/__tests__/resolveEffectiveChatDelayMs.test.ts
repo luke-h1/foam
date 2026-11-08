@@ -1,7 +1,4 @@
-import {
-  MAX_AUTO_CHAT_DELAY_MS,
-  resolveEffectiveChatDelayMs,
-} from '../resolveEffectiveChatDelayMs';
+import { resolveEffectiveChatDelayMs } from '../resolveEffectiveChatDelayMs';
 
 describe('resolveEffectiveChatDelayMs', () => {
   test('returns zero when the delay is off', () => {
@@ -34,9 +31,7 @@ describe('resolveEffectiveChatDelayMs', () => {
     expect(resolveEffectiveChatDelayMs('auto', Number.NaN)).toBe(0);
   });
 
-  test('auto caps the hold at the maximum', () => {
-    expect(resolveEffectiveChatDelayMs('auto', 120)).toBe(
-      MAX_AUTO_CHAT_DELAY_MS,
-    );
+  test('auto caps the hold at 30 seconds', () => {
+    expect(resolveEffectiveChatDelayMs('auto', 120)).toBe(30_000);
   });
 });

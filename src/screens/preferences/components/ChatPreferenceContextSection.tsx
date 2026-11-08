@@ -2,74 +2,62 @@ import { StyleSheet, View } from 'react-native';
 
 import {
   SettingsSection,
+  SettingsSegmentedRow,
   SettingsToggleRow,
 } from '@app/components/settings-section/SettingsSection';
+import { CONTEXT_TOGGLE_ROWS } from '@app/constants/chat-preferences';
+import { updatePreferences, usePreference } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
 
 import {
-  CONTEXT_TOGGLE_ROWS,
-  type ContextPreviewKey,
-  type ContextPreviewValue,
+  CHAT_PREFERENCE_ROWS as ROWS,
+  CHAT_PREFERENCE_SECTION_TITLES,
   TIMESTAMP_FORMAT_OPTIONS,
-} from '../util/chatPreferenceTypes';
+} from '../constants';
+import { useContextPreview } from '../hooks/use-context-preview';
 import { PreviewLabel } from './ChatPreferencePreviewWidgets';
-import { ChatPreferenceSegmentedSettingsRow } from './ChatPreferenceSettingsRows';
 import { ChatPreferencePreview } from './ChatPreferencesPreview';
 
-interface ChatPreferenceContextSectionProps {
-  handleContextToggle: (key: ContextPreviewKey, value: boolean) => void;
-  handleTimestampFormatChange: (index: number) => void;
-  onShowRecentMessagesChange: (value: boolean) => void;
-  previewContext: ContextPreviewValue;
-  showRecentMessages: boolean | undefined;
-  timestampFormatIndex: number;
-}
+export function ChatPreferenceContextSection() {
+  const showRecentMessages = usePreference('showRecentMessages');
+  const chatTimestampFormat = usePreference('chatTimestampFormat');
+  const contextPreview = useContextPreview();
 
-export function ChatPreferenceContextSection({
-  handleContextToggle,
-  handleTimestampFormatChange,
-  previewContext,
-  onShowRecentMessagesChange,
-  showRecentMessages,
-  timestampFormatIndex,
-}: ChatPreferenceContextSectionProps) {
   return (
-    <SettingsSection title='Context'>
+    <SettingsSection title={CHAT_PREFERENCE_SECTION_TITLES.context}>
       <SettingsToggleRow
-        title='Historical Recent Messages'
-        subtitle='Load past messages from third-party recent-messages.robotty.de'
-        icon={{
-          icon: 'clock.arrow.circlepath',
-          androidIcon: 'history',
-        }}
-        value={showRecentMessages !== false}
-        onValueChange={onShowRecentMessagesChange}
+        title={ROWS.recentMessages.title}
+        subtitle={ROWS.recentMessages.subtitle}
+        icon={ROWS.recentMessages}
+        value={showRecentMessages}
+        onValueChange={value =>
+          updatePreferences({ showRecentMessages: value })
+        }
       />
       {CONTEXT_TOGGLE_ROWS.map(row => (
         <SettingsToggleRow
           key={row.key}
           title={row.label}
           subtitle={row.subtitle}
-          icon={row.icon}
-          value={previewContext[row.key]}
-          onValueChange={value => handleContextToggle(row.key, value)}
+          icon={row}
+          value={contextPreview[row.key]}
+          onValueChange={value => updatePreferences({ [row.key]: value })}
         />
       ))}
-      <ChatPreferenceSegmentedSettingsRow
-        icon={{
-          icon: 'clock.badge',
-          androidIcon: 'schedule',
-        }}
-        onSelectIndex={handleTimestampFormatChange}
-        selectedIndex={timestampFormatIndex}
-        subtitle='Applies to new messages'
-        title='Timestamp Format'
-        values={TIMESTAMP_FORMAT_OPTIONS.map(option => option.label)}
+      <SettingsSegmentedRow
+        title={ROWS.timestampFormat.title}
+        subtitle={ROWS.timestampFormat.subtitle}
+        icon={ROWS.timestampFormat}
+        options={TIMESTAMP_FORMAT_OPTIONS}
+        value={chatTimestampFormat}
+        onValueChange={value =>
+          updatePreferences({ chatTimestampFormat: value })
+        }
       />
       <View style={styles.settingsPreviewItem}>
         <PreviewLabel />
         <View style={styles.previewSpacer}>
-          <ChatPreferencePreview variant='context' value={previewContext} />
+          <ChatPreferencePreview variant='context' value={contextPreview} />
         </View>
       </View>
     </SettingsSection>

@@ -83,19 +83,4 @@ describe('storageService namespaces', () => {
 
     expect(storageService.getString('previous_searches')).toEqual(['kappa']);
   });
-
-  test('clearImageCache only removes image_cache keys', () => {
-    storageService.set('appStoreLink_x', 'cached', 'image_cache');
-    storageService.set('sevenTvUserId_1', 'a', 'seven_tv_cache');
-
-    storageService.clearImageCache();
-
-    expect(
-      storageService.getString('appStoreLink_x', 'image_cache'),
-    ).toBeNull();
-
-    expect(storageService.getString('sevenTvUserId_1', 'seven_tv_cache')).toBe(
-      'a',
-    );
-  });
 });

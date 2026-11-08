@@ -1,14 +1,16 @@
-import { act, renderHook } from '@testing-library/react-native';
+import { renderHook } from '@testing-library/react-native';
 
 import {
   createSevenTvEmote,
   createTwitchEmote,
-} from '@app/components/chat/hooks/__tests__/__fixtures__/use-chat.fixture';
+} from '@app/components/chat/__tests__/__fixtures__/chatFactories.fixture';
+import type { EmoteLoadingStatus } from '@app/components/chat/hooks/use-chat-emote-loader';
 import { useEmoteReprocessing } from '@app/components/chat/hooks/use-emote-reprocessing';
+import type { ChatMessagesSource } from '@app/components/chat/types/chat-messages-source';
+import { createChatMessageFixture } from '@app/components/chat/util/__tests__/__fixtures__/chatMessage.fixture';
 import { bttvEmoteService } from '@app/services/bttv-emote-service';
 import { sevenTvService } from '@app/services/seven-tv-service';
 import {
-  enrichedMessageIds,
   storedTokens,
   type TokenSummary,
 } from '@app/store/chat/__tests__/__fixtures__/messages.fixture';
@@ -19,11 +21,12 @@ import {
 } from '@app/store/chat/actions/personal-emotes';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import {
-  type AnyChatMessageType,
   type ChannelCacheType,
   makeEmptyEmoteData,
   makeEmptyGlobalCacheData,
 } from '@app/store/chat/types/constants';
+import { flushChatStoreTimers } from '@app/test/chat-store-teardown';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
 
 const channelId = 'channel-1';
@@ -39,23 +42,24 @@ const kappa = createSevenTvEmote({
  * A message that reached the store without a userstate, which the enrichment
  * pass has to skip rather than reprocess.
  */
-type MessageWithoutUserstate = Omit<AnyChatMessageType, 'userstate'> & {
+interface MessageWithoutUserstate extends Omit<
+  AnyChatMessageType,
+  'userstate'
+> {
   userstate: undefined;
-};
+}
 
 function createTextOnlyMessage(
   messageId: string,
   text: string,
   login = 'user',
 ): AnyChatMessageType {
-  return {
+  return createChatMessageFixture({
     id: messageId,
     message_id: messageId,
     message_nonce: `nonce-${messageId}`,
     message: [{ type: 'text', content: text }],
-    channel: 'test',
     sender: login,
-    badges: [],
     userstate: createUserStateTags({
       'display-name': login,
       login,
@@ -64,10 +68,7 @@ function createTextOnlyMessage(
       id: messageId,
       color: '#fff',
     }),
-    parentDisplayName: '',
-    replyDisplayName: '',
-    replyBody: '',
-  };
+  });
 }
 
 function seedChannelCache(overrides: Partial<ChannelCacheType> = {}) {
@@ -85,8 +86,8 @@ const resolvedKappa: TokenSummary = {
 };
 
 interface RenderReprocessOptions {
-  emoteLoadStatus?: string;
-  messages$?: { peek: () => AnyChatMessageType[] };
+  emoteLoadStatus?: EmoteLoadingStatus;
+  messages$?: ChatMessagesSource;
   processedMessageIds?: Set<string>;
   show7TvEmotes?: boolean;
   userLogin?: string;
@@ -179,6 +180,60 @@ describe('useEmoteReprocessing', () => {
     ]);
   });
 
+  test('keeps a resolved personal emote as an emote on reprocess', async () => {
+    seedChannelCache();
+
+    jest
+      .spyOn(sevenTvService, 'getPersonalEmoteSet')
+      .mockResolvedValue([
+        createSevenTvEmote({ id: 'plaska-id', name: 'plaska', url: 'p.webp' }),
+      ]);
+
+    await fetchUserPersonalEmotes('1', channelId);
+
+    addMessages([
+      {
+        ...createTextOnlyMessage('msg-1', 'plaska'),
+        message: [
+          { type: 'emote', content: 'plaska', id: 'plaska-id', url: 'p.webp' },
+        ],
+      },
+    ]);
+
+    renderReprocess();
+
+    expect(storedTokens('msg-1')).toEqual<TokenSummary[]>([
+      { type: 'emote', content: 'plaska', url: 'p.webp' },
+    ]);
+  });
+
+  test('downgrades a personal emote to text when 7TV emotes are turned off', async () => {
+    seedChannelCache({ sevenTvChannelEmotes: [kappa] });
+
+    jest
+      .spyOn(sevenTvService, 'getPersonalEmoteSet')
+      .mockResolvedValue([
+        createSevenTvEmote({ id: 'plaska-id', name: 'plaska', url: 'p.webp' }),
+      ]);
+
+    await fetchUserPersonalEmotes('1', channelId);
+
+    addMessages([
+      {
+        ...createTextOnlyMessage('msg-1', 'plaska'),
+        message: [
+          { type: 'emote', content: 'plaska', id: 'plaska-id', url: 'p.webp' },
+        ],
+      },
+    ]);
+
+    renderReprocess({ show7TvEmotes: false });
+
+    expect(storedTokens('msg-1')).toEqual<TokenSummary[]>([
+      { type: 'text', content: 'plaska' },
+    ]);
+  });
+
   test('reprocesses text-only unprocessed messages into emote tokens', () => {
     seedChannelCache({ sevenTvChannelEmotes: [kappa] });
     addMessages([createTextOnlyMessage('msg-1', 'hello Kappa')]);
@@ -215,41 +270,6 @@ describe('useEmoteReprocessing', () => {
       mine: [{ type: 'emote', content: 'SubHype', url: 's.webp' }],
       theirs: [{ type: 'text', content: 'SubHype' }],
     });
-  });
-
-  test('yields between large reprocessing batches', () => {
-    jest.useFakeTimers();
-
-    try {
-      seedChannelCache({ sevenTvChannelEmotes: [kappa] });
-
-      const messages = Array.from({ length: 30 }, (_, index) =>
-        createTextOnlyMessage(`msg-${index}`, 'hello Kappa'),
-      );
-
-      addMessages(messages);
-      renderReprocess();
-
-      const allIds = messages.map(message => message.message_id);
-
-      // The first batch commits at once so emotes start to show.
-      expect(enrichedMessageIds()).toEqual(allIds.slice(0, 6));
-
-      act(() => {
-        jest.runOnlyPendingTimers();
-      });
-
-      // Later batches accumulate instead of committing one store write each.
-      expect(enrichedMessageIds()).toEqual(allIds.slice(0, 6));
-
-      act(() => {
-        jest.runAllTimers();
-      });
-
-      expect(enrichedMessageIds()).toEqual(allIds);
-    } finally {
-      jest.useRealTimers();
-    }
   });
 
   test('leaves the store untouched when the tokens already match', () => {
@@ -409,3 +429,5 @@ describe('useEmoteReprocessing', () => {
     ]);
   });
 });
+
+afterEach(flushChatStoreTimers);

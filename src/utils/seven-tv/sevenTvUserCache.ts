@@ -1,4 +1,5 @@
-import { storageService } from '@app/lib/storage';
+import { SEVEN_TV_CACHE_NAMESPACE, storageService } from '@app/lib/storage';
+import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
 import { evictOldestWhenFull } from '@app/utils/collection/evictOldestWhenFull';
 
 // Bumped from `user-id:`: older entries have no emoteSetId and would read back
@@ -9,41 +10,48 @@ const SEVEN_TV_USER_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
 const SEVEN_TV_USER_NEGATIVE_CACHE_TTL_MS = 30 * 60 * 1000;
 
 /**
- * Matches the channel cache's CACHE_DURATION, so an emote set switch made while
- * the user was away surfaces on the same schedule the rest of the channel does.
+ * Matches the one-hour channel cache window, so an emote set switch made
+ * while the user was away shows on the same schedule as the rest of the
+ * channel.
  */
 export const SEVEN_TV_EMOTE_SET_MAX_AGE_MS = 60 * 60 * 1000;
 
-const SEVEN_TV_CACHE_NAMESPACE = 'seven_tv_cache';
+const SEVEN_TV_USER_STORAGE_KEY_PREFIX = 'sevenTvUserId_';
+
 const MAX_RESOLVED_USER_ENTRIES = 2000;
 
 /**
  * Empty `userId` means no 7TV account; empty `emoteSetId` means no active set.
  */
-export type SevenTvUser = {
+export interface SevenTvUser {
   userId: string;
   emoteSetId: string;
-};
+}
 
-export type CachedSevenTvUser = SevenTvUser & {
+export interface CachedSevenTvUser extends SevenTvUser {
   fetchedAt: number;
   expiresAt: number;
-};
+}
 
-export type SevenTvUserCacheStorage = {
-  getString: <T>(key: string, namespacePrefix?: 'seven_tv_cache') => T | null;
+type SevenTvCacheNamespace = typeof SEVEN_TV_CACHE_NAMESPACE;
+
+export interface SevenTvUserCacheStorage {
+  getString: <T>(
+    key: string,
+    namespacePrefix?: SevenTvCacheNamespace,
+  ) => T | null;
   set: (
     key: string,
     value: CachedSevenTvUser,
-    namespacePrefix?: 'seven_tv_cache',
+    namespacePrefix?: SevenTvCacheNamespace,
     options?: { expiry?: Date },
   ) => void;
-  delete: (key: string, namespacePrefix?: 'seven_tv_cache') => void;
+  delete: (key: string, namespacePrefix?: SevenTvCacheNamespace) => void;
   clearNamespace: (
-    namespacePrefix: 'seven_tv_cache',
+    namespacePrefix: SevenTvCacheNamespace,
     keyPrefix?: string,
   ) => void;
-};
+}
 
 /**
  * `null` means the lookup failed and must not be cached, as distinct from a
@@ -60,10 +68,7 @@ export function createSevenTvUserCache(
   const maxResolvedEntries =
     options.maxResolvedEntries ?? MAX_RESOLVED_USER_ENTRIES;
 
-  const sevenTvUserRequests = new Map<string, Promise<SevenTvUser | null>>();
-
-  // Bumped by clear() so in-flight requests cannot write back stale results.
-  let cacheGeneration = 0;
+  const requestGuard = createFetchOnceGuard();
 
   // Positive resolutions only, so the negative TTL still lets a new account
   // resolve. Expiry tracked here too: user ids never change, emote sets do.
@@ -77,7 +82,6 @@ export function createSevenTvUserCache(
       return;
     }
 
-    // delete-before-set moves a re-resolved user back to the newest position.
     if (resolvedSevenTvUsers.has(twitchUserId)) {
       resolvedSevenTvUsers.delete(twitchUserId);
     } else {
@@ -88,7 +92,7 @@ export function createSevenTvUserCache(
   }
 
   const getSevenTvUserStorageKey = (twitchUserId: string) =>
-    `sevenTvUserId_${SEVEN_TV_USER_CACHE_PREFIX}${twitchUserId}` as const;
+    `${SEVEN_TV_USER_STORAGE_KEY_PREFIX}${SEVEN_TV_USER_CACHE_PREFIX}${twitchUserId}` as const;
 
   function getCachedSevenTvUser(
     twitchUserId: string,
@@ -165,22 +169,14 @@ export function createSevenTvUserCache(
         return toSevenTvUser(cached);
       }
 
-      const pending = sevenTvUserRequests.get(twitchUserId);
-
-      if (pending) {
-        return pending;
-      }
-
-      const requestGeneration = cacheGeneration;
-
-      const request = (async () => {
+      return requestGuard.run(twitchUserId, async ctx => {
         const fetched = await fetchSevenTvUser(twitchUserId);
 
         if (fetched === null) {
           return null;
         }
 
-        if (cacheGeneration === requestGeneration) {
+        if (ctx.stillCurrent()) {
           rememberResolvedSevenTvUser(
             twitchUserId,
             cacheSevenTvUser(twitchUserId, fetched),
@@ -188,17 +184,7 @@ export function createSevenTvUserCache(
         }
 
         return fetched;
-      })();
-
-      sevenTvUserRequests.set(twitchUserId, request);
-
-      try {
-        return await request;
-      } finally {
-        if (sevenTvUserRequests.get(twitchUserId) === request) {
-          sevenTvUserRequests.delete(twitchUserId);
-        }
-      }
+      });
     },
 
     /**
@@ -214,10 +200,12 @@ export function createSevenTvUserCache(
     },
 
     clear(): void {
-      cacheGeneration += 1;
-      sevenTvUserRequests.clear();
+      requestGuard.clear();
       resolvedSevenTvUsers.clear();
-      storage.clearNamespace(SEVEN_TV_CACHE_NAMESPACE, 'sevenTvUserId_');
+      storage.clearNamespace(
+        SEVEN_TV_CACHE_NAMESPACE,
+        SEVEN_TV_USER_STORAGE_KEY_PREFIX,
+      );
     },
   };
 }

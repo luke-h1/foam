@@ -48,7 +48,7 @@ const neverRespond = () => false;
  *
  * This keeps only what chat uses: the pressed highlight, hit slop, the button
  * role and label, press and long press. Web uses
- * `chat-message-pressable.web.tsx`, which keeps `Pressable` for the keyboard.
+ * `ChatMessagePressable.web.tsx`, which keeps `Pressable` for the keyboard.
  */
 function ChatMessagePressableComponent({
   accessibilityLabel,

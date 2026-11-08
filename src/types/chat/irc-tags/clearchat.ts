@@ -5,5 +5,5 @@ export interface ClearChatTags {
   'ban-duration'?: string;
   'room-id': string;
   'target-user-id'?: string;
-  'tmi-send-ts': string;
+  'tmi-sent-ts': string;
 }

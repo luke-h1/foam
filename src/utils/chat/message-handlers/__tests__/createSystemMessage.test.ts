@@ -1,5 +1,5 @@
+import type { MessageToken } from '@app/types/chat/messageToken';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import type { MessageToken } from '@app/utils/chat/messageToken';
 import * as generateNonceModule from '@app/utils/string/generateNonce';
 
 import { createSystemMessage } from '../createSystemMessage';
@@ -16,7 +16,11 @@ describe('createSystemMessage', () => {
   });
 
   test('creates a system message', () => {
-    const result = createSystemMessage('testchannel', 'Connection established');
+    const result = createSystemMessage(
+      'testchannel',
+      'Connection established',
+      '24h',
+    );
 
     expect(result.channel).toBe('testchannel');
 
@@ -28,7 +32,7 @@ describe('createSystemMessage', () => {
   });
 
   test('has system userstate', () => {
-    const result = createSystemMessage('testchannel', 'Test message');
+    const result = createSystemMessage('testchannel', 'Test message', '24h');
 
     expect(result.userstate['display-name']).toBe('System');
 
@@ -37,17 +41,19 @@ describe('createSystemMessage', () => {
     expect(result.userstate.color).toBe('#808080');
   });
 
-  test('generates unique message IDs', () => {
-    const result1 = createSystemMessage('channel', 'Message 1');
-    const result2 = createSystemMessage('channel', 'Message 2');
+  test('builds the message id from the clock and the nonce', () => {
+    jest.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000);
 
-    expect(result1.message_id).toMatch(/^system-/);
+    const result = createSystemMessage('channel', 'Message 1', '24h');
 
-    expect(result2.message_id).toMatch(/^system-/);
+    expect({ id: result.id, messageId: result.message_id }).toEqual({
+      id: 'system-1700000000000_test-nonce-123',
+      messageId: 'system-1700000000000',
+    });
   });
 
   test('has empty badges', () => {
-    const result = createSystemMessage('testchannel', 'Test');
+    const result = createSystemMessage('testchannel', 'Test', '24h');
 
     expect(result.badges).toEqual<SanitisedBadgeSet[]>([]);
   });

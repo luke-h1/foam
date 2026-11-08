@@ -181,7 +181,7 @@ class CpuUsageModule : Module() {
 
 iOS returns bytes-remaining before the process is jettisoned. Android has no direct per-process "bytes until OOM" API. The closest system signal is `ActivityManager.MemoryInfo`: `availMem - threshold` is the headroom above the low-memory kill line.
 
-**Caveat that makes this optional:** `cache-service.ts` reads this value with **iOS-tuned thresholds** and treats non-zero as "monitoring enabled". Returning a real number here activates that monitor against Android numbers that don't mean the same thing, and expo-image on Android decodes into the native/Glide cache (bounded already), not the Java heap. So either keep the stub, **or** ship this native **and** re-tune the JS thresholds in `cache-service.ts`. **Outcome: the branch took the second path** - the native poll+trim event shipped and `cache-service.ts` gained an Android-specific 100MB headroom bound, satisfying the re-tune condition. Note the return contract: 0 means "module unavailable / monitoring disabled"; at-or-under-threshold reports a minimal positive value so it reads as critical, not disabled.
+**Caveat that makes this optional:** `cacheService.ts` reads this value with **iOS-tuned thresholds** and treats non-zero as "monitoring enabled". Returning a real number here activates that monitor against Android numbers that don't mean the same thing, and expo-image on Android decodes into the native/Glide cache (bounded already), not the Java heap. So either keep the stub, **or** ship this native **and** re-tune the JS thresholds in `cacheService.ts`. **Outcome: the branch took the second path** - the native poll+trim event shipped and `cacheService.ts` gained an Android-specific 100MB headroom bound, satisfying the re-tune condition. Note the return contract: 0 means "module unavailable / monitoring disabled"; at-or-under-threshold reports a minimal positive value so it reads as critical, not disabled.
 
 If you do want it live:
 
@@ -225,7 +225,7 @@ class ImageMemoryPressureModule : Module() {
 }
 ```
 
-Wire-up mirrors §2 (config `android` block, delete `ImageMemoryPressureModule.android.ts`, rebuild). **Do not ship without adjusting the JS thresholds in `src/Providers/CachedEmotesProvider/cache-service.ts`.**
+Wire-up mirrors §2 (config `android` block, delete `ImageMemoryPressureModule.android.ts`, rebuild). **Do not ship without adjusting the JS thresholds in `src/lib/emote-cache/cacheService.ts`.**
 
 ### Better Android-native alternative (no JS poll)
 
@@ -273,7 +273,7 @@ class ImageMemoryPressureModule : Module() {
 }
 ```
 
-This adds an `onMemoryPressure` event you'd subscribe to in JS to call `Image.clearMemoryCache()` (the same call already used in `clearImageCache.ts` and `cache-service.ts`). It's a JS-contract change, so treat it as a follow-up, not a release blocker.
+This adds an `onMemoryPressure` event you'd subscribe to in JS to call `Image.clearMemoryCache()` (the same call already used in `clearImageCache.ts` and `cacheService.ts`). It's a JS-contract change, so treat it as a follow-up, not a release blocker.
 
 ---
 

@@ -1,4 +1,3 @@
-import { getCachedChannelPointRewardTitle } from '@app/store/chat/actions/channelPointRewardTitleStore';
 import {
   createAnnouncementTags,
   createAnonGiftPaidUpgradeTags,
@@ -18,10 +17,10 @@ import {
   createSubscriptionTags,
   createUnraidTags,
   createViewerMilestoneTags,
-} from '@app/types/chat/irc-tags/__fixtures__/user-notice-tags.fixture';
+} from '@app/types/chat/irc-tags/__tests__/__fixtures__/user-notice-tags.fixture';
 import type { BaseUserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import type { MessageToken } from '@app/utils/chat/messageToken';
 import * as generateNonceModule from '@app/utils/string/generateNonce';
 
 import { createUserNoticeMessage } from '../createUserNoticeMessage';
@@ -47,14 +46,24 @@ describe('createUserNoticeMessage', () => {
     });
 
     const result = createUserNoticeMessage({
+      timestampFormat: '24h',
       tags,
       channelName: 'testchannel',
       text: '',
     });
 
-    expect(result.notice_tags?.['msg-id']).toBe('viewermilestone');
-
-    expect(result.message[0]?.type).toBe('viewermilestone');
+    expect(result.message).toEqual<MessageToken[]>([
+      {
+        type: 'viewermilestone',
+        category: 'watch-streak',
+        reward: '450',
+        value: '5',
+        content: '',
+        systemMsg: 'MilestoneUser watched 5 consecutive streams',
+        login: 'milestoneuser',
+        displayName: 'MilestoneUser',
+      },
+    ]);
   });
 
   test('creates sub notice', () => {
@@ -67,14 +76,27 @@ describe('createUserNoticeMessage', () => {
     });
 
     const result = createUserNoticeMessage({
+      timestampFormat: '24h',
       tags,
       channelName: 'testchannel',
       text: 'Thanks for the stream!',
     });
 
-    expect(result.notice_tags?.['msg-id']).toBe('sub');
-
-    expect(result.message[0]?.type).toBe('sub');
+    expect(result.message).toEqual<MessageToken[]>([
+      {
+        type: 'sub',
+        subscriptionEvent: {
+          msgId: 'sub',
+          displayName: 'SubUser',
+          message: 'Thanks for the stream!',
+          plan: '1000',
+          planName: 'Tier 1',
+          months: 1,
+          streakMonths: 0,
+          shouldShareStreak: false,
+        },
+      },
+    ]);
 
     expect({
       channel: result.channel,
@@ -84,9 +106,9 @@ describe('createUserNoticeMessage', () => {
       sender: result.sender,
     }).toEqual({
       channel: 'testchannel',
-      id: 'sub-id_test-nonce-123',
+      id: 'sub-id_sub-id',
       messageId: 'sub-id',
-      messageNonce: 'test-nonce-123',
+      messageNonce: 'sub-id',
       sender: 'SubUser',
     });
   });
@@ -101,14 +123,27 @@ describe('createUserNoticeMessage', () => {
     });
 
     const result = createUserNoticeMessage({
+      timestampFormat: '24h',
       tags,
       channelName: 'testchannel',
       text: 'Love this channel!',
     });
 
-    expect(result.notice_tags?.['msg-id']).toBe('resub');
-
-    expect(result.message[0]?.type).toBe('resub');
+    expect(result.message).toEqual<MessageToken[]>([
+      {
+        type: 'resub',
+        subscriptionEvent: {
+          msgId: 'resub',
+          displayName: 'ResubUser',
+          message: 'Love this channel!',
+          plan: '1000',
+          planName: 'Tier 1',
+          months: 12,
+          streakMonths: 0,
+          shouldShareStreak: false,
+        },
+      },
+    ]);
   });
 
   test('creates subgift notice', () => {
@@ -122,12 +157,27 @@ describe('createUserNoticeMessage', () => {
     });
 
     const result = createUserNoticeMessage({
+      timestampFormat: '24h',
       tags,
       channelName: 'testchannel',
       text: '',
     });
 
-    expect(result.notice_tags?.['msg-id']).toBe('subgift');
+    expect(result.message).toEqual<MessageToken[]>([
+      {
+        type: 'anongift',
+        subscriptionEvent: {
+          msgId: 'subgift',
+          displayName: 'GiftGiver',
+          plan: '1000',
+          planName: 'Tier 1',
+          recipientDisplayName: 'GiftRecipient',
+          recipientId: '67890',
+          giftMonths: 1,
+          months: 1,
+        },
+      },
+    ]);
   });
 
   test('creates raid notice', () => {
@@ -141,6 +191,7 @@ describe('createUserNoticeMessage', () => {
     });
 
     const result = createUserNoticeMessage({
+      timestampFormat: '24h',
       tags,
       channelName: 'testchannel',
       text: '',
@@ -166,12 +217,23 @@ describe('createUserNoticeMessage', () => {
     });
 
     const result = createUserNoticeMessage({
+      timestampFormat: '24h',
       tags,
       channelName: 'testchannel',
       text: '',
     });
 
-    expect(result.notice_tags?.['msg-id']).toBe('anongiftpaidupgrade');
+    expect(result.message).toEqual<MessageToken[]>([
+      {
+        type: 'anongiftpaidupgrade',
+        subscriptionEvent: {
+          msgId: 'anongiftpaidupgrade',
+          displayName: 'UpgradeUser',
+          promoName: 'SummerPromo',
+          promoGiftTotal: '10',
+        },
+      },
+    ]);
   });
 
   test('creates submysterygift notice', () => {
@@ -185,14 +247,25 @@ describe('createUserNoticeMessage', () => {
     });
 
     const result = createUserNoticeMessage({
+      timestampFormat: '24h',
       tags,
       channelName: 'testchannel',
       text: '',
     });
 
-    expect(result.notice_tags?.['msg-id']).toBe('submysterygift');
-
-    expect(result.message[0]?.type).toBe('submysterygift');
+    expect(result.message).toEqual<MessageToken[]>([
+      {
+        type: 'submysterygift',
+        subscriptionEvent: {
+          msgId: 'submysterygift',
+          displayName: 'MysteryGifter',
+          plan: '2000',
+          planName: 'Tier 2',
+          massGiftCount: 5,
+          senderCount: 42,
+        },
+      },
+    ]);
   });
 
   test('creates giftpaidupgrade notice', () => {
@@ -209,14 +282,25 @@ describe('createUserNoticeMessage', () => {
     });
 
     const result = createUserNoticeMessage({
+      timestampFormat: '24h',
       tags,
       channelName: 'testchannel',
       text: '',
     });
 
-    expect(result.notice_tags?.['msg-id']).toBe('giftpaidupgrade');
-
-    expect(result.message[0]?.type).toBe('giftpaidupgrade');
+    expect(result.message).toEqual<MessageToken[]>([
+      {
+        type: 'giftpaidupgrade',
+        subscriptionEvent: {
+          msgId: 'giftpaidupgrade',
+          displayName: 'UpgradeUser',
+          senderLogin: 'gifterlogin',
+          senderName: 'GiftSender',
+          promoName: 'Subtember',
+          promoGiftTotal: '12',
+        },
+      },
+    ]);
   });
 
   test('creates a channel point redemption notice without chat text', () => {
@@ -230,6 +314,7 @@ describe('createUserNoticeMessage', () => {
     });
 
     const result = createUserNoticeMessage({
+      timestampFormat: '24h',
       tags,
       channelName: 'testchannel',
       text: '',
@@ -237,7 +322,7 @@ describe('createUserNoticeMessage', () => {
 
     expect(result.notice_tags?.['msg-id']).toBe('rewardgift');
 
-    expect(result.isChannelPointRedemption).not.toBe(true);
+    expect(result.isChannelPointRedemption).toBeUndefined();
 
     expect(result.isTwitchSystemNotice).toBe(true);
 
@@ -245,10 +330,6 @@ describe('createUserNoticeMessage', () => {
       type: 'text',
       content: 'RewardUser redeemed Hydrate',
     });
-
-    expect(getCachedChannelPointRewardTitle('67890', 'reward-123')).toBe(
-      'Hydrate',
-    );
   });
 
   test('creates bitsbadgetier as a twitch system notice', () => {
@@ -260,6 +341,7 @@ describe('createUserNoticeMessage', () => {
     });
 
     const result = createUserNoticeMessage({
+      timestampFormat: '24h',
       tags,
       channelName: 'testchannel',
       text: '',
@@ -282,6 +364,7 @@ describe('createUserNoticeMessage', () => {
     });
 
     const result = createUserNoticeMessage({
+      timestampFormat: '24h',
       tags,
       channelName: 'testchannel',
       text: '',
@@ -304,6 +387,7 @@ describe('createUserNoticeMessage', () => {
     });
 
     const result = createUserNoticeMessage({
+      timestampFormat: '24h',
       tags,
       channelName: 'testchannel',
       text: '',
@@ -331,6 +415,7 @@ describe('createUserNoticeMessage', () => {
     });
 
     const result = createUserNoticeMessage({
+      timestampFormat: '24h',
       tags,
       channelName: 'testchannel',
       text: '',
@@ -359,6 +444,7 @@ describe('createUserNoticeMessage', () => {
     });
 
     const result = createUserNoticeMessage({
+      timestampFormat: '24h',
       tags,
       channelName: 'testchannel',
       text: "I'm celebrating my 1 year, 6 month Mod Anniversary!",
@@ -385,6 +471,7 @@ describe('createUserNoticeMessage', () => {
     });
 
     const result = createUserNoticeMessage({
+      timestampFormat: '24h',
       tags,
       channelName: 'testchannel',
       text: '',
@@ -408,6 +495,7 @@ describe('createUserNoticeMessage', () => {
     const tags = createAnnouncementTags();
 
     const result = createUserNoticeMessage({
+      timestampFormat: '24h',
       tags,
       channelName: 'testchannel',
       text: 'this is an announcement to bait him',
@@ -437,6 +525,7 @@ describe('createUserNoticeMessage', () => {
     const tags = createHighlightedMessageTags();
 
     const result = createUserNoticeMessage({
+      timestampFormat: '24h',
       tags,
       channelName: 'testchannel',
       text: 'this message is highlighted',
@@ -467,6 +556,7 @@ describe('createUserNoticeMessage', () => {
     });
 
     const result = createUserNoticeMessage({
+      timestampFormat: '24h',
       tags,
       channelName: 'testchannel',
       text: 'for the kids',
@@ -497,6 +587,7 @@ describe('createUserNoticeMessage', () => {
     });
 
     const result = createUserNoticeMessage({
+      timestampFormat: '24h',
       tags,
       channelName: 'testchannel',
       text: '',
@@ -523,6 +614,7 @@ describe('createUserNoticeMessage', () => {
     });
 
     const result = createUserNoticeMessage({
+      timestampFormat: '24h',
       tags,
       channelName: 'testchannel',
       text: '',
@@ -547,6 +639,7 @@ describe('createUserNoticeMessage', () => {
     });
 
     const result = createUserNoticeMessage({
+      timestampFormat: '24h',
       tags,
       channelName: 'testchannel',
       text: 'hi everyone',
@@ -572,12 +665,24 @@ describe('createUserNoticeMessage', () => {
     });
 
     const result = createUserNoticeMessage({
+      timestampFormat: '24h',
       tags,
       channelName: 'testchannel',
       text: '',
     });
 
-    expect(result.message[0]?.type).toBe('primepaidupgrade');
+    expect(result.message).toEqual<MessageToken[]>([
+      {
+        type: 'primepaidupgrade',
+        subscriptionEvent: {
+          msgId: 'primepaidupgrade',
+          displayName: 'PrimeUser',
+          plan: '1000',
+          planName: 'Tier 1',
+          months: 3,
+        },
+      },
+    ]);
   });
 
   test('flags shared chat duplicated notices', () => {
@@ -591,6 +696,7 @@ describe('createUserNoticeMessage', () => {
     });
 
     const result = createUserNoticeMessage({
+      timestampFormat: '24h',
       tags,
       channelName: 'testchannel',
       text: '',
@@ -629,5 +735,85 @@ describe('createUserNoticeMessage', () => {
     expect(result.isTwitchSystemNotice).toBe(true);
 
     expect(result.badges).toEqual<SanitisedBadgeSet[]>([]);
+  });
+
+  test('gives a USERNOTICE delivered live and via replay the same identity', () => {
+    const tags = createSubscriptionTags({ id: 'replayed-sub-id' });
+    const live = createUserNoticeMessage({
+      timestampFormat: '24h',
+      tags,
+      channelName: 'c',
+      text: '',
+    });
+    const replay = createUserNoticeMessage({
+      timestampFormat: '24h',
+      tags,
+      channelName: 'c',
+      text: '',
+    });
+
+    expect([replay.id, replay.message_nonce]).toEqual([
+      live.id,
+      live.message_nonce,
+    ]);
+  });
+
+  test('maps reply fields the same way for every variant', () => {
+    const replyTags = {
+      'reply-parent-display-name': 'ParentUser',
+      'reply-parent-user-login': 'parentuser',
+      'reply-parent-msg-body': 'parent body',
+    };
+
+    const milestone = createUserNoticeMessage({
+      timestampFormat: '24h',
+      tags: createViewerMilestoneTags(replyTags),
+      channelName: 'c',
+      text: '',
+    });
+
+    const sub = createUserNoticeMessage({
+      timestampFormat: '24h',
+      tags: createSubscriptionTags(replyTags),
+      channelName: 'c',
+      text: '',
+    });
+
+    const expected = {
+      parentDisplayName: 'ParentUser',
+      replyParentLogin: 'parentuser',
+      replyBody: 'parent body',
+    };
+
+    expect(
+      [milestone, sub].map(message => ({
+        parentDisplayName: message.parentDisplayName,
+        replyParentLogin: message.replyParentLogin,
+        replyBody: message.replyBody,
+      })),
+    ).toEqual([expected, expected]);
+  });
+
+  test('flags shared chat duplicates for viewer milestones and reward gifts', () => {
+    const sharedChatTags = { 'room-id': '123', 'source-room-id': '456' };
+
+    const milestone = createUserNoticeMessage({
+      timestampFormat: '24h',
+      tags: createViewerMilestoneTags(sharedChatTags),
+      channelName: 'c',
+      text: '',
+    });
+
+    const rewardGift = createUserNoticeMessage({
+      timestampFormat: '24h',
+      tags: createRewardGiftTags(sharedChatTags),
+      channelName: 'c',
+      text: 'thanks',
+    });
+
+    expect([
+      milestone.isSharedChatDuplicated,
+      rewardGift.isSharedChatDuplicated,
+    ]).toEqual([true, true]);
   });
 });

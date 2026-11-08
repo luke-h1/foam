@@ -113,7 +113,7 @@ export function SearchDiscover() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.rail}
             >
-              {/* eslint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- capped at RAIL_LENGTH items */}
+              {/* oxlint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- capped at RAIL_LENGTH items */}
               {streamsWithAvatars.map(stream => (
                 <ChannelItem key={stream.id} stream={stream} />
               ))}
@@ -133,7 +133,7 @@ export function SearchDiscover() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.rail}
             >
-              {/* eslint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- capped at RAIL_LENGTH items */}
+              {/* oxlint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- capped at RAIL_LENGTH items */}
               {categories.map(category => (
                 <View key={category.id} style={styles.tile}>
                   <CategoryCard category={category} />

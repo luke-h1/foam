@@ -85,12 +85,7 @@ export const Image = function Image({
         variant: cacheVariant,
       })
       .then(objectUrl => {
-        if (!objectUrl || objectUrl === cacheableSourceUri) {
-          return;
-        }
-
-        if (!isMounted) {
-          globalThis.URL.revokeObjectURL(objectUrl);
+        if (!objectUrl || objectUrl === cacheableSourceUri || !isMounted) {
           return;
         }
 

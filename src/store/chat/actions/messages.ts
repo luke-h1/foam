@@ -1,7 +1,12 @@
 import { batch } from '@legendapp/state';
 
 import { chatPerfMarks } from '@app/lib/chatPerfMarks';
-import { getPreferences } from '@app/store/preference-store';
+import { registerMentionLoginsFromTokens } from '@app/store/chat/actions/mention-login-lookup';
+import {
+  getPreferences,
+  initialPreferences,
+} from '@app/store/preference-store';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
 import { createModeratedMessageText } from '@app/utils/chat/createModeratedMessageText';
 import { getChatMessageKey } from '@app/utils/chat/message-identity/getChatMessageKey';
@@ -9,11 +14,9 @@ import { getChatMessageStoreId } from '@app/utils/chat/message-identity/getChatM
 import { isRenderableChatMessage } from '@app/utils/chat/message-identity/isRenderableChatMessage';
 import { normaliseMessageField } from '@app/utils/chat/message-identity/normaliseMessageField';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolve-cached-sender-color/resolveCachedSenderColor';
-import { clearMentionLoginIndex } from '@app/utils/chat/resolve-mention-login/clearMentionLoginIndex';
 import { registerMentionChatter } from '@app/utils/chat/resolve-mention-login/registerMentionChatter';
 import { registerMentionLogin } from '@app/utils/chat/resolve-mention-login/registerMentionLogin';
 import { registerMentionLoginsFromSender } from '@app/utils/chat/resolve-mention-login/registerMentionLoginsFromSender';
-import { registerMentionLoginsFromParts } from '@app/utils/chat/resolve-mention-login/registerMentionLoginsFromTokens';
 import { type ChatterRole } from '@app/utils/chat/resolve-mention-login/types';
 
 import { chatStore$ } from '../observables/chat-store';
@@ -22,7 +25,6 @@ import {
   RECENT_MESSAGES_PERSISTENCE_ENABLED,
   writePersistedRecentMessagesForChannel,
 } from '../observables/recent-messages-persistence';
-import type { AnyChatMessageType } from '../types/constants';
 import {
   clearMessageColorIndexes,
   getUserMessageColor,
@@ -41,11 +43,10 @@ let windowBaseOffset = 0;
 const messageKeyOrder: string[] = [];
 const messageIdToIndex = new Map<string, number>();
 const messageKeyToIndex = new Map<string, number>();
-const DEFAULT_MAX_CHAT_MESSAGES = 150;
 const MAX_RECENT_MESSAGES = 80;
 
 export const getMaxChatMessages = (): number =>
-  getPreferences().chatScrollback ?? DEFAULT_MAX_CHAT_MESSAGES;
+  getPreferences().chatScrollback ?? initialPreferences.chatScrollback;
 
 // While scrolled up a front-trim re-anchors index 0 and yanks the list to the
 // top, so pause trimming and let the window grow to a bounded ceiling.
@@ -163,6 +164,13 @@ const prepareMessageForStore = (
   return storedMessage;
 };
 
+export const getMessageSenderLogin = (
+  message: Pick<AnyChatMessageType, 'sender' | 'userstate'>,
+): string =>
+  normaliseChatUsername(
+    message.userstate?.login || message.userstate?.username || message.sender,
+  );
+
 const getSenderChatterRole = (
   message: AnyChatMessageType,
 ): ChatterRole | undefined => {
@@ -199,7 +207,7 @@ const indexMessage = (message: AnyChatMessageType, index: number) => {
   indexMessageColor(message);
 
   registerMentionChatter({
-    login: message.userstate?.login ?? message.sender,
+    login: getMessageSenderLogin(message),
     userId: message.userstate?.['user-id'],
     color: message.userstate?.color,
     role: getSenderChatterRole(message),
@@ -210,8 +218,8 @@ const indexMessage = (message: AnyChatMessageType, index: number) => {
     message.userstate?.username ?? message.sender,
   );
 
-  registerMentionLogin(message.replyDisplayName);
-  registerMentionLoginsFromParts(message.message);
+  registerMentionLogin(message.replyParentLogin);
+  registerMentionLoginsFromTokens(message.message);
 };
 
 const rebuildMessageIndexes = (
@@ -312,7 +320,7 @@ const persistRecentMessagesForChannel = (
   trimRecentMessageChannels();
 };
 
-const flushPendingRecentMessagesSync = () => {
+export const flushPendingRecentMessagesSync = () => {
   if (recentMessagesSyncTimer) {
     clearTimeout(recentMessagesSyncTimer);
     recentMessagesSyncTimer = null;
@@ -598,41 +606,7 @@ export const updateMessages = (
 };
 
 export const addMessage = (message?: AnyChatMessageType) => {
-  if (!isRenderableChatMessage(message)) {
-    return;
-  }
-
-  const key = getChatMessageKey(message.message_id, message.message_nonce);
-
-  if (messageKeySet.has(key)) {
-    return;
-  }
-
-  const storedMessage = prepareMessageForStore(message, key);
-  messageKeySet.add(key);
-  messageKeyOrder.push(key);
-  const currentMessages = chatStore$.messages.peek();
-  const nextMessageIndex = currentMessages.length;
-
-  const { droppedMessages, nextMessages } = appendToMessageWindow(
-    currentMessages,
-    [storedMessage],
-  );
-
-  const trimmedKeyCount = trimMessageIndexes(nextMessages.length);
-
-  if (trimmedKeyCount === droppedMessages.length) {
-    indexAppendedMessages([storedMessage], nextMessageIndex, droppedMessages);
-  } else {
-    // Key order diverged from the window (shouldn't happen) - resync fully.
-    rebuildMessageIndexes(nextMessages);
-  }
-
-  chatStore$.messages.set(nextMessages);
-
-  // Defer the MMKV persist so a single message never triggers a synchronous
-  // full-store write on the hot path; the cache is only a warm-start aid.
-  syncRecentMessagesForCurrentChannel(nextMessages, 'defer');
+  addMessages([message]);
 };
 
 export const addMessages = (messages: (AnyChatMessageType | undefined)[]) => {
@@ -754,11 +728,7 @@ export const moderateMessagesByLogin = (
       continue;
     }
 
-    const messageLogin = normaliseChatUsername(
-      message.userstate?.login || message.userstate?.username || message.sender,
-    );
-
-    if (messageLogin !== target) {
+    if (getMessageSenderLogin(message) !== target) {
       continue;
     }
 
@@ -816,11 +786,7 @@ export const removeMessagesByLogin = (login: string) => {
       return true;
     }
 
-    const messageLogin = normaliseChatUsername(
-      message.userstate?.login || message.userstate?.username || message.sender,
-    );
-
-    if (messageLogin !== target) {
+    if (getMessageSenderLogin(message) !== target) {
       return true;
     }
 
@@ -893,7 +859,6 @@ export const clearMessages = () => {
   messageIdToIndex.clear();
   messageKeyToIndex.clear();
   clearMessageColorIndexes();
-  clearMentionLoginIndex();
   chatStore$.messages.set([]);
 };
 
@@ -906,36 +871,32 @@ export const clearMessagesWithNotice = (notice: AnyChatMessageType) => {
 };
 
 export const restoreRecentMessagesForChannel = (channelId: string): number => {
+  flushPendingRecentMessagesSync();
+
   const recentMessages = dedupeMessagesForStore(
     chatStore$.recentMessagesByChannel[channelId]?.peek() ?? [],
   );
 
-  if (recentMessages.length === 0) {
+  batch(() => {
     clearMessages();
-    return 0;
-  }
 
-  messageKeySet.clear();
-  messageKeyOrder.length = 0;
-  messageIdToIndex.clear();
-  messageKeyToIndex.clear();
-  clearMessageColorIndexes();
-  clearMentionLoginIndex();
+    if (recentMessages.length === 0) {
+      return;
+    }
 
-  recentMessages.forEach(message => {
-    const key = getChatMessageKey(message.message_id, message.message_nonce);
-    messageKeySet.add(key);
-    messageKeyOrder.push(key);
+    recentMessages.forEach(message => {
+      const key = getChatMessageKey(message.message_id, message.message_nonce);
+      messageKeySet.add(key);
+      messageKeyOrder.push(key);
+    });
+
+    const storedMessages = recentMessages.map(message =>
+      prepareMessageForStore({ ...message, isHistorical: true }),
+    );
+
+    rebuildMessageIndexes(storedMessages);
+    chatStore$.messages.set(storedMessages);
   });
-
-  const storedMessages = recentMessages.map(message =>
-    prepareMessageForStore({ ...message, isHistorical: true }),
-  );
-
-  rebuildMessageIndexes(storedMessages);
-  chatStore$.messages.set(storedMessages);
 
   return recentMessages.length;
 };
-
-export { getMessageColor, getUserMessageColor } from './message-color-index';

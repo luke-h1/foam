@@ -5,7 +5,7 @@ import type {
 } from '@app/types/seven-tv/cosmetics';
 import type { IndexedCollection } from '@app/utils/collection/indexedCollection';
 
-export type PaintGradientLayer = {
+export interface PaintGradientLayer {
   function: PaintFunction;
   canvas_repeat?: string;
   size?: [number, number] | null;
@@ -17,7 +17,7 @@ export type PaintGradientLayer = {
   angle?: number;
   repeat?: boolean;
   opacity?: number;
-};
+}
 
 export type RawSevenTvPaintInput = Partial<PaintData> & {
   id: string;

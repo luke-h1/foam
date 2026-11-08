@@ -1,13 +1,17 @@
+import { resolveMessageEmoteTokens } from '@app/store/chat/actions/resolveMessageEmoteTokens';
+import { getCachedSharedChatBadgeContext } from '@app/store/chat/actions/shared-chat-badges/getCachedSharedChatBadgeContext';
+import { getMessageBadges } from '@app/store/chat/actions/shared-chat-badges/getMessageBadges';
+import { getSharedChatBadgeContext } from '@app/store/chat/actions/shared-chat-badges/getSharedChatBadgeContext';
+import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import type { MessageToken } from '@app/types/chat/messageToken';
+import { textHasMention } from '@app/utils/chat/chat-usernames/twitchLogin';
 import { extractEmotesFromTag } from '@app/utils/chat/extract-emotes/extractEmotesFromTag';
-import type { MessageToken } from '@app/utils/chat/messageToken';
-import { resolveMessageEmoteParts } from '@app/utils/chat/resolveMessageEmoteTokens';
-import { getMessageBadges } from '@app/utils/chat/shared-chat-badges/getMessageBadges';
-import { getSharedChatBadgeContext } from '@app/utils/chat/shared-chat-badges/getSharedChatBadgeContext';
+import { isSystemSender } from '@app/utils/chat/isSystemSender';
 import { logger } from '@app/utils/logger';
 
 import { chatStore$ } from '../observables/chat-store';
-import type { AnyChatMessageType } from '../types/constants';
+import { EMOTE_SLICE_KEYS } from '../types/chat-resource-slices';
 import { getCurrentEmoteData } from './channel-load';
 import { type MessageUpdateInput, updateMessages } from './messages';
 
@@ -28,7 +32,7 @@ const ENRICH_PUBLISH_EVERY_BATCHES = 4;
  * user notices never have their tokens or badges recomputed.
  */
 export function shouldEnrichMessage(message: AnyChatMessageType): boolean {
-  if (message.sender === 'System') {
+  if (isSystemSender(message.sender)) {
     return false;
   }
 
@@ -58,15 +62,7 @@ export function hasEnrichmentEmoteSources(
 
   return (
     chatStore$.emojis.peek().length > 0 ||
-    emoteData.twitchGlobalEmotes.length > 0 ||
-    emoteData.twitchChannelEmotes.length > 0 ||
-    emoteData.twitchSubscriberEmotes.length > 0 ||
-    emoteData.sevenTvGlobalEmotes.length > 0 ||
-    emoteData.sevenTvChannelEmotes.length > 0 ||
-    emoteData.bttvGlobalEmotes.length > 0 ||
-    emoteData.bttvChannelEmotes.length > 0 ||
-    emoteData.ffzGlobalEmotes.length > 0 ||
-    emoteData.ffzChannelEmotes.length > 0
+    EMOTE_SLICE_KEYS.some(key => emoteData[key].length > 0)
   );
 }
 
@@ -80,10 +76,6 @@ interface EnrichMessageSetOptions {
   userLogin?: string | null;
 }
 
-/**
- * Recomputes tokens and badges for committed messages in timed batches so a
- * full window never parses in one tick. Returns a cancel function.
- */
 export function enrichMessageSet({
   channelId,
   emoteData,
@@ -109,12 +101,10 @@ export function enrichMessageSet({
       return;
     }
 
-    // An already-processed message is only re-checked when a text token still
-    // holds a raw @mention.
     const needsMentionRecheck =
       !processedMessageIds?.has(msg.message_id) ||
       msg.message.some(
-        token => token.type === 'text' && /(?:^|\s)@[\w-]+/.test(token.content),
+        token => token.type === 'text' && textHasMention(token.content),
       );
 
     if (!needsMentionRecheck) {
@@ -142,10 +132,23 @@ export function enrichMessageSet({
       return;
     }
 
+    const sharedChatContext = getCachedSharedChatBadgeContext(msg.userstate);
+
     const replacedBadges = getMessageBadges({
       userstate: msg.userstate,
       emoteData,
+      sourceBadge: sharedChatContext?.sourceBadge,
+      sourceChannelBadges: sharedChatContext?.sourceChannelBadges,
     });
+
+    if (sharedChatContext?.isComplete === false) {
+      refreshSharedChatBadges({
+        emoteData,
+        messageId: msg.message_id,
+        messageNonce: msg.message_nonce,
+        userstate: msg.userstate,
+      });
+    }
 
     if (
       areMessageTokensEqual(msg.message, replacedMessage) &&
@@ -281,10 +284,6 @@ interface RefreshSharedChatBadgesOptions {
   userstate: UserStateTags;
 }
 
-/**
- * Rewrites a committed message's badges once the shared-chat source context
- * resolves; called when the message was composed from an incomplete cache.
- */
 export function refreshSharedChatBadges({
   emoteData,
   messageId,
@@ -468,14 +467,14 @@ function resolveStoredMessageTokens({
   const keepExistingGifs =
     showChatGifs && tokens.some(token => token.type === 'gif');
 
-  if (!keepExistingGifs) {
-    const textContent = getEnrichableText(tokens);
+  const textContent = keepExistingGifs ? null : getEnrichableText(tokens);
 
-    if (textContent == null || !textContent.trim()) {
-      return textContent == null ? null : [];
-    }
+  if (!keepExistingGifs && (textContent == null || !textContent.trim())) {
+    return textContent == null ? null : [];
+  }
 
-    return resolveMessageEmoteParts({
+  if (!keepExistingGifs && textContent) {
+    return resolveMessageEmoteTokens({
       channelId,
       emoteData,
       show7TvEmotes,
@@ -511,7 +510,7 @@ function resolveStoredMessageTokens({
     }
 
     resolved.push(
-      ...resolveMessageEmoteParts({
+      ...resolveMessageEmoteTokens({
         channelId,
         emoteData,
         show7TvEmotes,

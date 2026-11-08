@@ -1,6 +1,6 @@
 import { logger } from '@app/utils/logger';
 
-export type UnrenderableNoticeStage = 'ingest' | 'render';
+type UnrenderableNoticeStage = 'ingest' | 'render';
 
 interface ReportUnrenderableNoticeInput {
   msgId?: string;
