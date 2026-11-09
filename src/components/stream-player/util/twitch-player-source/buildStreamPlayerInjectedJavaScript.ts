@@ -11,6 +11,7 @@ import { buildTwitchLatencyTrackerScript } from './buildTwitchLatencyTrackerScri
 import { buildTwitchLiveSyncScript } from './buildTwitchLiveSyncScript';
 import { buildTwitchPipBridgeScript } from './buildTwitchPipBridgeScript';
 import { buildTwitchPlayerStateScript } from './buildTwitchPlayerStateScript';
+import { buildTwitchStallRecoveryScript } from './buildTwitchStallRecoveryScript';
 
 /**
  * Rewrites `window.open` so the Twitch login popup lands in the same WebView,
@@ -132,6 +133,9 @@ export function buildStreamPlayerInjectedJavaScript({
         buildTwitchLiveSyncScript({})
       : '') +
     (video ? '\n' + VOD_PROGRESS_TRACKER_SCRIPT : '') +
+    // Recover a silent mid-stream freeze. Clips are short and seek differently,
+    // so leave them out.
+    (!clip ? '\n' + buildTwitchStallRecoveryScript({ live: !video }) : '') +
     // iOS-only: WKWebView is the only WebView with a presentation-mode API.
     (PIP_ENABLED && Platform.OS === 'ios' && !clip
       ? '\n' + buildTwitchPipBridgeScript()

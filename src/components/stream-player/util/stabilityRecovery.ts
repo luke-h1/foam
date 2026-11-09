@@ -3,7 +3,7 @@ const MAX_AUTO_REFRESHES_PER_WINDOW = 3;
 const HIGH_LATENCY_RECOVERY_S = 20;
 const HIGH_LATENCY_READINGS_BEFORE_RECOVERY = 3;
 
-export type StabilityRefreshReason = 'highLatency';
+export type StabilityRefreshReason = 'highLatency' | 'stall';
 
 interface StabilityRecoveryOptions {
   now?: () => number;
@@ -58,8 +58,21 @@ export function createStabilityRecovery({
         requestRefresh('highLatency');
       }
     },
-    reset() {
-      refreshTimes = [];
+    // The webview already waited out the stall before it reported one, so
+    // refresh at once. The shared budget still caps reloads per window.
+    noteStall() {
+      requestRefresh('stall');
+    },
+    // A stability-triggered remount lands back here through the same effect
+    // that resets a genuine source change. Pass `preserveBudget` for it so the
+    // reload the budget was counting does not wipe the budget: a stream that
+    // advances for a moment and freezes again each time must still give up
+    // after the window cap, not reload forever.
+    reset(options?: { preserveBudget?: boolean }) {
+      if (!options?.preserveBudget) {
+        refreshTimes = [];
+      }
+
       highLatencyReadings = 0;
       gaveUp = false;
     },

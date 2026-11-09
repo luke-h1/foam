@@ -167,6 +167,7 @@ export type PlayerMessage =
   | { type: 'pipUnavailable' }
   | { type: 'playing' }
   | { type: 'ready' }
+  | { type: 'stalled'; payload?: { frozenMs?: number } }
   | { type: 'trace'; payload: { step: string; detail?: string } }
   | { type: 'twitchAuthComplete' }
   | {

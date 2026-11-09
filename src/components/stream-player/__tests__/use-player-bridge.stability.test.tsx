@@ -29,6 +29,11 @@ const HIGH_LATENCY = messageEvent({
   payload: { hlsLatencyBroadcaster: 25 },
 });
 
+const STALLED = messageEvent({
+  type: 'stalled',
+  payload: { frozenMs: 14_000 },
+});
+
 function reportHighLatency(
   handleMessage: (event: WebViewMessageEvent) => void,
 ) {
@@ -136,6 +141,46 @@ describe('usePlayerBridge enhanced stability', () => {
         start_source: 'webview_loaded',
       },
     ]);
+  });
+
+  test('a stall remount preserves the budget, so a wedged stream still gives up', () => {
+    // A real stall refresh remounts the webview (webViewKey bumps). Wire
+    // forceRefresh to that remount so the reset effect runs just like on
+    // device. The budget must survive the remount or the stream reloads
+    // forever.
+    let webViewKey = 0;
+
+    const forceRefresh = jest.fn(() => {
+      webViewKey += 1;
+      rerender({ webViewKey });
+    });
+
+    const { result, rerender } = renderHook(
+      (props: { webViewKey: number }) =>
+        usePlayerBridge({
+          autoplay: true,
+          channel: 'foo',
+          contentKind: 'live',
+          deferOverlayUntilUserUnmute: false,
+          enhancedStabilityEnabled: true,
+          forceRefresh,
+          initialMuted: true,
+          resumeTimeRef: { current: 0 },
+          runJavaScript: jest.fn(),
+          scheduleAuthCompletionReload: jest.fn(),
+          sourceKey: 'foo',
+          webViewKey: props.webViewKey,
+        }),
+      { initialProps: { webViewKey } },
+    );
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      act(() => {
+        result.current.handleMessage(STALLED);
+      });
+    }
+
+    expect(forceRefresh).toHaveBeenCalledTimes(3);
   });
 
   test('resets the auto-refresh window when the player source changes', () => {

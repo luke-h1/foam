@@ -203,6 +203,52 @@ describe('interpretPlayerMessage', () => {
     });
   });
 
+  describe('stalled', () => {
+    test('counts a metric and asks stability to recover when playback is expected', () => {
+      expect(
+        interpretPlayerMessage(
+          { type: 'stalled', payload: { frozenMs: 14_000 } },
+          createBridgeContext(),
+        ),
+      ).toEqual<PlayerBridgeAction[]>([
+        {
+          type: 'countMetric',
+          name: 'stream.stall_recovery',
+          attributes: { channel: 'sodapoppin' },
+        },
+        { type: 'notifyStabilityStall' },
+      ]);
+    });
+
+    test('does nothing while the user has paused', () => {
+      expect(
+        interpretPlayerMessage(
+          { type: 'stalled', payload: { frozenMs: 14_000 } },
+          createBridgeContext({ userPaused: true }),
+        ),
+      ).toEqual<PlayerBridgeAction[]>([]);
+    });
+
+    test('recovers regardless of the enhanced stability preference', () => {
+      expect(
+        interpretPlayerMessage(
+          { type: 'stalled' },
+          createBridgeContext({
+            channel: undefined,
+            enhancedStabilityEnabled: false,
+          }),
+        ),
+      ).toEqual<PlayerBridgeAction[]>([
+        {
+          type: 'countMetric',
+          name: 'stream.stall_recovery',
+          attributes: { channel: 'unknown' },
+        },
+        { type: 'notifyStabilityStall' },
+      ]);
+    });
+  });
+
   describe('stateUpdate', () => {
     test('applies status and state as reported when playing', () => {
       const actions = interpretPlayerMessage(
