@@ -50,6 +50,8 @@ export interface PlayerScriptWindow {
   self?: PlayerScriptWindow;
   top?: unknown;
   __foamSetMuted?: (muted: boolean) => void;
+  __foamSyncToLive?: () => void;
+  __foamEnsurePlaying?: () => void;
 }
 
 interface RunPlayerScriptOptions {

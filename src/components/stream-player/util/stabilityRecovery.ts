@@ -3,7 +3,7 @@ const MAX_AUTO_REFRESHES_PER_WINDOW = 3;
 const HIGH_LATENCY_RECOVERY_S = 20;
 const HIGH_LATENCY_READINGS_BEFORE_RECOVERY = 3;
 
-export type StabilityRefreshReason = 'highLatency';
+export type StabilityRefreshReason = 'highLatency' | 'stall';
 
 interface StabilityRecoveryOptions {
   now?: () => number;
@@ -57,6 +57,11 @@ export function createStabilityRecovery({
       if (highLatencyReadings >= HIGH_LATENCY_READINGS_BEFORE_RECOVERY) {
         requestRefresh('highLatency');
       }
+    },
+    // The webview already waited out the stall before it reported one, so
+    // refresh at once. The shared budget still caps reloads per window.
+    noteStall() {
+      requestRefresh('stall');
     },
     reset() {
       refreshTimes = [];

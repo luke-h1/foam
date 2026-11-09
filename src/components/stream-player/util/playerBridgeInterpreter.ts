@@ -53,6 +53,7 @@ export type PlayerBridgeAction =
   | { type: 'notifyReady' }
   | { type: 'notifyStabilityPlaying' }
   | { type: 'notifyStabilityLatency'; latencySeconds: number }
+  | { type: 'notifyStabilityStall' }
   | { type: 'publishLatency'; latencySeconds: number }
   | { type: 'recordResumeTime'; seconds: number }
   | { type: 'resolveCurrentTime'; seconds: number }
@@ -301,6 +302,22 @@ export function interpretPlayerMessage(
       return [{ type: 'setPaused', isPaused: true }, { type: 'notifyPause' }];
     case 'ended':
       return [{ type: 'notifyEnded' }];
+    case 'stalled': {
+      // The webview reports a frozen playhead. Recover only when playback is
+      // expected; a user pause must stay paused.
+      if (context.userPaused) {
+        return [];
+      }
+
+      return [
+        {
+          type: 'countMetric',
+          name: 'stream.stall_recovery',
+          attributes: { channel: context.channel ?? 'unknown' },
+        },
+        { type: 'notifyStabilityStall' },
+      ];
+    }
     case 'online':
       return [{ type: 'notifyOnline' }];
     case 'offline':

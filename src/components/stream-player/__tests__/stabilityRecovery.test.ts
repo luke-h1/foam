@@ -99,6 +99,36 @@ describe('createStabilityRecovery', () => {
     ]);
   });
 
+  test('a reported stall refreshes at once', () => {
+    const now = { current: 10_000 };
+    const { refreshes, stability } = create(now);
+
+    stability.noteStall();
+
+    expect(refreshes).toEqual([{ attempt: 1, reason: 'stall' }]);
+  });
+
+  test('stall and latency refreshes share one budget and give up together', () => {
+    const now = { current: 10_000 };
+    const { giveUps, refreshes, reportHighLatency, stability } = create(now);
+
+    reportHighLatency();
+    now.current += 1000;
+    stability.noteStall();
+    now.current += 1000;
+    stability.noteStall();
+    now.current += 1000;
+    stability.noteStall();
+
+    expect(refreshes).toEqual([
+      { attempt: 1, reason: 'highLatency' },
+      { attempt: 2, reason: 'stall' },
+      { attempt: 3, reason: 'stall' },
+    ]);
+
+    expect(giveUps).toEqual([{ reason: 'stall', refreshCount: 3 }]);
+  });
+
   test('reset clears the refresh window, latency readings, and the gave-up latch', () => {
     const now = { current: 10_000 };
     const { giveUps, refreshes, reportHighLatency, stability } = create(now);
