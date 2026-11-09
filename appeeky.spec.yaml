@@ -1,0 +1,42 @@
+# Appeeky Spec: your app's store presence as a spec.
+# Docs: https://github.com/appeeky/appeeky-spec
+
+version: 1
+app:
+  name: Foam
+  primaryLocale: en-US
+stores:
+  appStore:
+    appId: "6742071860"
+    platform: IOS
+    via: auto
+targets:
+  us:
+    - twitch
+    - twitch chat
+    - 7tv
+    - seventv
+    - bttv
+    - betterttv
+    - frankerfacez
+    - twitch emotes
+    - live stream
+    - streamer
+  gb:
+    - twitch
+    - twitch chat
+    - 7tv
+    - seventv
+    - bttv
+    - twitch emotes
+    - live stream
+ads: {}
+competitors:
+  - name: "vChat! - Chat for Twitch"
+    appStore: "6797350761"
+  - name: Frosty for Twitch
+    appStore: "1603987585"
+  - name: "Twick: Watch Twitch & Kick"
+    appStore: "6755964690"
+data:
+  commit: false

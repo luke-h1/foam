@@ -1,0 +1,36 @@
+name: Listing check
+# Appeeky Spec: check the store listing against store limits and ASO rules on every pull request.
+on:
+  pull_request:
+    paths:
+      - 'appeeky/**'
+      - 'appeeky.spec.yaml'
+      - '.github/workflows/listing-check.yml'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: 🏗 Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: 🟢 Setup Node
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+        with:
+          node-version-file: .nvmrc
+
+      - name: 🔍 Check the listing
+        run: npx --yes @appeeky/spec check --strict
+
+      - name: 🎯 Keyword coverage
+        run: npx --yes @appeeky/spec coverage
+        env:
+          APPEEKY_API_KEY: ${{ secrets.APPEEKY_API_KEY }}

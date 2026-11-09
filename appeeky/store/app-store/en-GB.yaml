@@ -1,0 +1,32 @@
+name: "Foam: Streams, Chat & Emotes"
+subtitle: Live viewer with 7TV & BTTV
+keywords: seventv,betterttv,frankerfacez,ffz,streamer,gaming,watch,vod,clips,badges,esports,livestream,gamer
+promotionalText: Watch your favorite streamers and chat seamlessly with built-in 7TV, BetterTTV, and FrankerFaceZ emote support.
+description: |-
+  Foam is a fast, beautiful way to watch Twitch on your phone — built for people who live in chat.
+
+  SEE EVERY EMOTE
+  Foam renders 7TV, BetterTTV, and FrankerFaceZ emotes and badges right in chat, including animated and zero-width emotes. No more walls of text where emotes should be — chat looks the way it does on desktop.
+
+  CHAT THAT KEEPS UP
+  A chat engine tuned for high-volume channels. Smooth scrolling, instant emote rendering, reply threads, and user cards — even when chat is flying.
+
+  MADE FOR VIEWERS
+  • Browse followed channels, top streams, and categories
+  • Theater-friendly fullscreen player
+  • Search streamers and categories instantly
+  • Block users and filter chat with custom blocked terms
+  • Pinned messages
+  • Quick actions to jump straight into Following, Live, or Search
+
+  YOUR CHAT, YOUR WAY
+  Fine-grained chat preferences: timestamps, message spacing, emote sizes, and more. Dark by default, easy on the eyes for long watch sessions.
+
+  Download Foam free and start watching in seconds - no account needed. See chat the way it was meant to look: every emote, every reply, no lag.
+
+  Foam is a free, open-source companion app for Twitch. It is not affiliated with Twitch Interactive, Inc.
+whatsNew: |-
+  Add Iphone DUO support 
+  Add support for 7tv paints
+marketingUrl: https://foam-app.com
+supportUrl: https://github.com/luke-h1/foam/issues

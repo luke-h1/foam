@@ -154,3 +154,9 @@ bench-results/
 workspace.json
 workspace.json.orig
 .zed-jar-cache/
+
+# Appeeky Spec: your analytics, cache and history stay local
+.appeeky/
+
+# Per-machine Claude Code settings (hooks that read local secrets)
+.claude/settings.local.json

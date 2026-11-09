@@ -1,0 +1,58 @@
+name: "Twick: Watch Twitch & Kick"
+pulledAt: 2026-11-09
+country: us
+stores:
+  app-store:
+    id: "6755964690"
+    title: "Twick: Watch Twitch & Kick"
+    developer: SHUBHAM SHAH
+    rating: 4.65
+    ratings: 54
+    version: 2.2.3
+    updated: 2026-11-09
+    releaseNotes: |-
+      Twick v2.2.3 is here. Siri and Shortcuts know a lot more about Twick, streams on iPhone Duo get the whole screen, and Pro now works the moment the app opens. Here's what changed:
+
+      # SIRI & SHORTCUTS
+      - Ask "Who's live in Twick?" to hear which of your saved channels are streaming right now.
+      - Your sav…
+    description: |-
+      Watch Twitch and Kick streams with the chat you actually want: 7TV, BetterTTV and FrankerFaceZ emotes, both platforms side by side, and a player built for iPhone and iPad.
+
+      Twick is an official featured partner of 7TV.
+
+      WHY TWICK
+      • Every emote, everywhere – 7TV, BetterTTV (BTTV) and FrankerFaceZ (FFZ) emotes and badges, right in chat. Press and hold any emote to see its name and where it's from.
+      • Twitch and Kick in one app – Sign in to both, follow your channels, and see who's live on Discover.
+      • Combined channels – Pair a streamer's Twitch and Kick streams and read both chats together.
+      • Cha…
+    ranks:
+      - keyword: foam streams chat emotes
+        rank: 6
+        popularity: 20
+        trend: stable
+      - keyword: kick
+        rank: 6
+        popularity: 20
+        trend: stable
+      - keyword: foam streams
+        rank: 7
+        popularity: 20
+        trend: stable
+      - keyword: foam streams chat
+        rank: 9
+        popularity: 20
+        trend: stable
+      - keyword: streams chat emotes
+        rank: 15
+        popularity: 20
+        trend: stable
+    yourTargets: []
+    recentReviews:
+      count: 14
+      average: 4
+      low:
+        - rating: 2
+          text: No chat. Ever since the recent update you can’t see kick chat
+        - rating: 2
+          text: Why?. Can’t do anything without paying, even just to chat. Just Make it a paid app entirely at this point. Uninstalled.

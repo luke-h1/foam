@@ -10,6 +10,13 @@
       "headers": {
         "Authorization": "Bearer ${RUNWAY_API_KEY:-}"
       }
+    },
+    "appeeky": {
+      "type": "http",
+      "url": "https://mcp.appeeky.com/mcp",
+      "headers": {
+        "X-API-Key": "${APPEEKY_API_KEY:-}"
+      }
     }
   }
 }

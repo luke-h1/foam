@@ -1,0 +1,88 @@
+name: Frosty for Twitch
+pulledAt: 2026-11-09
+country: us
+stores:
+  app-store:
+    id: "1603987585"
+    title: Frosty for Twitch
+    developer: Tommy Chow
+    rating: 4.64
+    ratings: 2551
+    version: 5.2.0
+    updated: 2026-08-17
+    releaseNotes: See full release notes at https://github.com/tommyxchow/frosty/releases
+    description: |-
+      The better mobile Twitch chat experience.
+
+      Frosty brings quality-of-life features and, most importantly, third-party emotes from 7TV, BetterTTV (BTTV), and FrankerFaceZ (FFZ) — popular extensions for Twitch used by millions.
+
+      Features:
+      • Support for 7TV, BetterTTV (BTTV), and FrankerFaceZ (FFZ) emotes and badges
+      • Browse followed streams, top streams, and top categories
+      • Autocomplete for emotes and user mentions
+      • Light, dark, and black (OLED) themes
+      • Search for channels and categories
+      • See and filter chatters in a channel
+      • Local chat user message history
+      • Theater and fullscreen mode
+      • Wa…
+    ranks:
+      - keyword: twitch app
+        rank: 2
+        popularity: 20
+        trend: stable
+      - keyword: streams chat emotes
+        rank: 2
+        popularity: 20
+        trend: stable
+      - keyword: foam streams chat
+        rank: 2
+        popularity: 20
+        trend: stable
+      - keyword: foam streams chat emotes
+        rank: 2
+        popularity: 20
+        trend: stable
+      - keyword: foam streams
+        rank: 2
+        popularity: 20
+        trend: stable
+      - keyword: twitch emotes
+        rank: 3
+        popularity: 20
+        trend: stable
+      - keyword: twitch chat
+        rank: 4
+        popularity: 20
+        trend: stable
+      - keyword: chat emotes
+        rank: 4
+        popularity: 20
+        trend: stable
+      - keyword: twitch chat app
+        rank: 4
+        popularity: 20
+        trend: stable
+      - keyword: twitch stream
+        rank: 9
+        popularity: 20
+        trend: stable
+    yourTargets:
+      - keyword: twitch emotes
+        rank: 3
+      - keyword: twitch chat
+        rank: 4
+    recentReviews:
+      count: 50
+      average: 3.48
+      low:
+        - rating: 2
+          text: Good for emotes, bad for watching streams. Low latency mode is still about 15+ seconds behind
+        - rating: 2
+          text: latency. the chat features are great, but for video, there's a whole base 15-20 second latency at all times for any stream so it's almost unusable from a viewer…
+        - rating: 1
+          text: Not blocking ads. Though that would be blocking ads as promised but didn’t work
+        - rating: 2
+          text: Recent Connection Issues. App has been working well for a while, but it refuses to connect to chat for the last week on iPhone, still works on iPad. Would love…
+        - rating: 1
+          text: Doesn’t connect to chat. Doesn’t connect to chat
