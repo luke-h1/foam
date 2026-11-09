@@ -44,10 +44,14 @@ export function buildTwitchStallRecoveryScript(options: {
   var seekNudged = false;
 
   function softRecover() {
-    if (LIVE && typeof window.__foamSyncToLive === 'function') {
-      window.__foamSyncToLive();
-      // The seek to live moves currentTime even while the picture stays frozen.
-      // Flag it so the next tick does not read the seek as real playback.
+    // __foamSyncToLive returns true only when it actually seeks. Flag the seek
+    // only then: that one currentTime jump must not read as playback, but a
+    // nudge that did not seek must leave a genuine resume to count as progress.
+    if (
+      LIVE &&
+      typeof window.__foamSyncToLive === 'function' &&
+      window.__foamSyncToLive() === true
+    ) {
       seekNudged = true;
     }
     if (typeof window.__foamEnsurePlaying === 'function') {

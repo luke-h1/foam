@@ -181,6 +181,8 @@ describe('buildTwitchStallRecoveryScript', () => {
     page.window.__foamSyncToLive = jest.fn(() => {
       liveEdge += 30;
       video.setCurrentTime(liveEdge);
+
+      return true;
     });
 
     startPlayback(video);
@@ -189,6 +191,31 @@ describe('buildTwitchStallRecoveryScript', () => {
 
     expect(page.messages.some(message => message.type === 'stalled')).toBe(
       true,
+    );
+  });
+
+  test('a nudge that does not seek leaves a genuine resume to clear the freeze', () => {
+    const video = installVideo({ currentTime: 1 });
+    const page = run(true);
+
+    // The sync finds nothing to seek (drift under target) and returns false, so
+    // the real advance that follows must count as progress, not a seek.
+    page.window.__foamSyncToLive = jest.fn(() => false);
+
+    startPlayback(video);
+
+    // Freeze long enough for a soft nudge to fire and return false.
+    jest.advanceTimersByTime(10_000);
+
+    // The stream resumes on its own with a real advance.
+    video.setCurrentTime(3);
+    jest.advanceTimersByTime(2000);
+
+    // A short freeze that could not stall from a reset baseline.
+    jest.advanceTimersByTime(6000);
+
+    expect(page.messages.some(message => message.type === 'stalled')).toBe(
+      false,
     );
   });
 
