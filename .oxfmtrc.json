@@ -38,6 +38,8 @@
     "docs/profiles",
     ".cache",
     "tools/oxlint/anti-slop",
-    ".rnstorybook/storybook.requires.ts"
+    ".rnstorybook/storybook.requires.ts",
+    "appeeky",
+    "appeeky.spec.yaml"
   ]
 }

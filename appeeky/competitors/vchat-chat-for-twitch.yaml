@@ -1,0 +1,77 @@
+name: vChat! - Chat for Twitch
+pulledAt: 2026-11-09
+country: us
+stores:
+  app-store:
+    id: "6797350761"
+    title: vChat! - Chat for Twitch
+    developer: Sabastian Hassler
+    rating: 5
+    ratings: 2
+    version: 1.1.3
+    updated: 2026-10-29
+    releaseNotes: |-
+      • Get ready for your Chat Recap in December. vChat! now keeps a tally of your year: the channels you watch most, the messages you send and the emotes you use. It is counted on your phone and never sent anywhere. Turn it off, and erase it, in Settings > Data > Recap stats.
+
+      • Had vChat! before 1.1.2?…
+    description: |-
+      Twitch chat that keeps up, on your iPhone.
+
+      7TV, BTTV and FFZ emotes render inline, animated, in every channel — the same
+      chat your friends see on desktop, not a stripped-down version of it. Open the
+      app and you are in, anonymously, with no account and no sign-in wall.
+
+      WATCH
+      Live streams, past broadcasts, highlights and clips, in one player. Past
+      broadcasts replay the chat that ran alongside them, in step with the video, with
+      the same emotes and colours as live chat. Picture in Picture and background
+      audio keep a stream going while you do something else.
+
+      CHAT
+      Third-party emotes, badges, repl…
+    ranks:
+      - keyword: streams chat emotes
+        rank: 3
+        popularity: 20
+        trend: stable
+      - keyword: foam streams chat emotes
+        rank: 3
+        popularity: 20
+        trend: stable
+      - keyword: foam streams chat
+        rank: 4
+        popularity: 20
+        trend: stable
+      - keyword: twitch app
+        rank: 5
+        popularity: 20
+        trend: stable
+      - keyword: foam streams
+        rank: 5
+        popularity: 20
+        trend: stable
+      - keyword: twitch chat
+        rank: 6
+        popularity: 20
+        trend: stable
+      - keyword: chat emotes
+        rank: 6
+        popularity: 20
+        trend: stable
+      - keyword: twitch emotes
+        rank: 6
+        popularity: 20
+        trend: stable
+      - keyword: twitch chat app
+        rank: 6
+        popularity: 20
+        trend: stable
+      - keyword: twitch stream
+        rank: 14
+        popularity: 20
+        trend: stable
+    yourTargets:
+      - keyword: twitch chat
+        rank: 6
+      - keyword: twitch emotes
+        rank: 6

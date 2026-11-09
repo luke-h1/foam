@@ -1,0 +1,50 @@
+name: Listing push
+# Appeeky Spec: push the store listing to App Store Connect when a change lands on main,
+# then commit the release record in appeeky/releases/.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'appeeky/store/**'
+      - 'appeeky.spec.yaml'
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: stores
+    permissions:
+      contents: write
+    steps:
+      - name: 🏗 Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: 🟢 Setup Node
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+        with:
+          node-version-file: .nvmrc
+
+      - name: 🚀 Push the listing
+        run: npx --yes @appeeky/spec push --yes --note "$HEAD_COMMIT_MESSAGE"
+        env:
+          APPEEKY_API_KEY: ${{ secrets.APPEEKY_API_KEY }}
+          HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+
+      - name: 📝 Commit the release record
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add appeeky
+          if git diff --cached --quiet; then
+            echo "Nothing to commit"
+            exit 0
+          fi
+          git commit -m "chore(release): record listing release"
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main
+        env:
+          GH_TOKEN: ${{ secrets.LUKE_H1_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}

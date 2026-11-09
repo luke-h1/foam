@@ -1,0 +1,75 @@
+pulledAt: 2026-11-09
+country: us
+store: app-store
+appId: "6742071860"
+summary:
+  missing: 2
+  weak: 5
+  winning: 0
+  noData: 0
+intents:
+  - label: Search and browse Twitch channels easily
+    status: missing
+    you: 0
+    byModel:
+      chatgpt: 0
+    namedInstead:
+      - Twitch (100%)
+      - Pocket Plays for Twitch (67%)
+      - Streamlabs (67%)
+  - label: Filter and block unwanted chat content
+    status: missing
+    you: 0
+    byModel:
+      chatgpt: 0
+    namedInstead:
+      - Nightbot (50%)
+      - BetterTTV (33%)
+      - Moobot (33%)
+  - label: Watch Twitch streams smoothly on mobile
+    status: weak
+    you: 11
+    byModel:
+      chatgpt: 11
+    namedInstead:
+      - Pocket Plays for Twitch (100%)
+      - Twitch (100%)
+      - "Streamlabs: Live Streaming (50%)"
+  - label: Compare Twitch chat apps for mobile
+    status: weak
+    you: 17
+    byModel:
+      chatgpt: 17
+    namedInstead:
+      - Chatty for Twitch (100%)
+      - Twitch (100%)
+      - Streamlabs (67%)
+  - label: Keep up with high-volume Twitch chat
+    status: weak
+    you: 17
+    byModel:
+      chatgpt: 17
+    namedInstead:
+      - Twitch (100%)
+      - Chatterino (67%)
+      - Streamlabs (67%)
+  - label: See Twitch emotes clearly in chat
+    status: weak
+    you: 17
+    byModel:
+      chatgpt: 17
+    namedInstead:
+      - Chatty for Twitch (100%)
+      - Twitch (100%)
+      - Chatterino (83%)
+  - label: Use Twitch chat with reply threads and user info
+    status: weak
+    you: 17
+    byModel:
+      chatgpt: 17
+    namedInstead:
+      - Twitch (100%)
+      - Chatterino (83%)
+      - Chatty (50%)
+sources: []
+fixes: []

@@ -1,7 +1,9 @@
 name: OTA Surf
 
 on:
-  issue_comment:
+  # The job only runs for a comment from an owner, member or collaborator on a
+  # pull request from this repo. See the `if:` on the surf job.
+  issue_comment: # zizmor: ignore[dangerous-triggers]
     types: [created]
 
 env:

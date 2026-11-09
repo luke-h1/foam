@@ -1,0 +1,108 @@
+# Appeeky Spec: your app's store presence as a spec.
+# Docs: https://github.com/appeeky/appeeky-spec
+
+version: 1
+app:
+  name: Foam
+  primaryLocale: en-US
+stores:
+  appStore:
+    appId: "6742071860"
+    platform: IOS
+    via: auto
+targets:
+  us:
+    - twitch
+    - twitch chat
+    - 7tv
+    - seventv
+    - bttv
+    - betterttv
+    - frankerfacez
+    - twitch emotes
+    - live stream
+    - streamer
+  gb:
+    - twitch
+    - twitch chat
+    - 7tv
+    - seventv
+    - bttv
+    - twitch emotes
+    - live stream
+ads: {}
+competitors:
+  - name: vChat! - Chat for Twitch
+    appStore: "6797350761"
+  - name: Frosty for Twitch
+    appStore: "1603987585"
+  - name: "Twick: Watch Twitch & Kick"
+    appStore: "6755964690"
+data:
+  commit: false
+aiVisibility:
+  intents:
+    us:
+      - label: Compare Twitch chat apps for mobile
+        description: Users want to know which mobile apps provide the best Twitch chat features, emote support, and performance for watching streams.
+        prompts:
+          - what's the best app for twitch chat on mobile with good emotes and smooth streaming?
+          - how does foam compare to other twitch chat apps for mobile?
+          - i want a twitch chat app that doesn't lag and has all the emotes, any recommendations?
+          - best twitch chat apps for watching streams and chatting on my phone?
+          - looking for an app like foam to use twitch chat and emotes easily while watching streams
+          - an app for twitch chat that works great on mobile, especially for live stream fans
+      - label: Use Twitch chat with reply threads and user info
+        description: Users want an enhanced Twitch chat experience with reply threads and user cards to engage better in conversations.
+        prompts:
+          - is there a twitch chat app that shows reply threads and detailed user info?
+          - i want a twitch chat app like foam but with reply threads and user cards
+          - i struggle to follow conversations on twitch chat without reply threads, any apps fix that?
+          - looking for an app to watch streams and chat with threaded replies and user profiles
+          - foam vs other twitch chat apps for reply threads and user info, which is better?
+          - need a twitch chat app with reply threads so i can keep track of conversations better
+      - label: Filter and block unwanted chat content
+        description: Users look for tools to block specific users and filter chat messages to avoid spam or offensive content during Twitch streams.
+        prompts:
+          - how can i filter chat messages and block annoying users on foam streams app?
+          - best apps to block spam and offensive chats during live streams
+          - i struggle with toxic chat messages while watching twitch streams, need a filter app
+          - looking for an app to block specific users and filter chat in live entertainment streams
+          - foam streams chat filter vs other twitch chat blockers which is better?
+          - what's a good way to block unwanted chat content on twitch streams besides foam?
+      - label: Search and browse Twitch channels easily
+        description: Users need to quickly find and explore their favorite Twitch streamers, top streams, or categories on a mobile app.
+        prompts:
+          - best app to find and watch twitch streamers on my phone
+          - how can i quickly browse top twitch streams and categories on mobile?
+          - looking for an app like foam to chat and watch twitch streams easily
+          - an app to explore twitch channels and chat with other viewers on my phone
+          - foam app for twitch streams and emotes, is it good for browsing channels?
+          - need a fast way to search twitch streamers and see what's live now on mobile
+      - label: Keep up with high-volume Twitch chat
+        description: Users want to follow fast-moving chat in popular Twitch streams without missing messages or experiencing lag.
+        prompts:
+          - how can i keep up with super fast twitch chat on big streams without missing anything?
+          - best app for following high volume twitch chat without lag
+          - is foam good for keeping up with busy twitch chat?
+          - need an app to watch twitch streams and keep up with chat on popular channels
+          - foam vs other twitch chat apps for fast chat streams, which is better?
+          - how to follow twitch chat in real time on big streams with foam app?
+      - label: See Twitch emotes clearly in chat
+        description: Users seek an app that displays Twitch chat emotes, including animated and zero-width ones, making chat more engaging and visually appealing.
+        prompts:
+          - best app to see twitch emotes clearly in chat, even the animated and zero-width ones?
+          - i struggle to see twitch emotes in chat on my phone, any app that makes them pop?
+          - looking for an app like foam that shows twitch chat emotes super clear and animated
+          - an app for watching twitch streams with chat emotes fully visible and easy to see
+          - foam vs other twitch chat apps for showing emotes, which one is better?
+          - need an app that displays twitch chat with all emotes including hidden and animated ones
+      - label: Watch Twitch streams smoothly on mobile
+        description: Users want to find an app that offers a fast and reliable way to watch Twitch streams with a great viewing experience on their phone.
+        prompts:
+          - best app to watch twitch streams smoothly on my phone?
+          - i keep missing parts of twitch streams on mobile because of lag, any app that works better?
+          - looking for an app like foam to watch twitch with great chat and emotes support
+          - an app for watching twitch streams easily while on the go
+          - foam vs twitch app for mobile streaming experience which is better?
+          - fast and reliable twitch stream app for mobile with minimal buffering
