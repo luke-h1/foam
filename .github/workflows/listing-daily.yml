@@ -23,14 +23,21 @@ jobs:
         with:
           node-version-file: .nvmrc
 
+      - name: 🔐 Load secrets
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
+        with:
+          export-env: true
+          version: 2.34.0
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          APPEEKY_API_KEY: op://ci-cd/foam-mobile-production/APPEEKY_API_KEY
+
       - name: 📈 Refresh ranks, reviews and competitors
         run: |
           npx --yes @appeeky/spec category pull || true
           npx --yes @appeeky/spec verify --playbook
           npx --yes @appeeky/spec reviews pull || true
           npx --yes @appeeky/spec competitors pull || true
-        env:
-          APPEEKY_API_KEY: ${{ secrets.APPEEKY_API_KEY }}
 
       - name: 📝 Commit what changed
         run: |
