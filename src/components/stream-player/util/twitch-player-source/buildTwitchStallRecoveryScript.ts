@@ -90,26 +90,31 @@ export function buildTwitchStallRecoveryScript(options: {
     }
 
     var time = video.currentTime;
-    if (lastTime === null || time !== lastTime) {
-      var moved = lastTime !== null && time !== lastTime;
+    var moved = lastTime !== null && time !== lastTime;
 
-      // Swallow the one jump a soft nudge seek causes: record the new position
-      // but keep the freeze baseline, so a still-wedged stream escalates to a
-      // remount instead of the 6s nudge resetting the timer forever. A genuine
-      // resume keeps advancing on later ticks and resets the baseline then.
-      if (moved && seekNudged) {
-        seekNudged = false;
-        lastTime = time;
-      } else {
-        lastTime = time;
-        lastAdvanceAt = now;
-        if (moved) {
-          everAdvanced = true;
-          softTriedAt = 0;
-          hardRequestedAt = 0;
-        }
-        return;
+    // Swallow the one jump a soft nudge seek causes: record the new position
+    // but keep the freeze baseline, so a still-wedged stream escalates to a
+    // remount instead of the 6s nudge resetting the timer forever. Return
+    // without judging the freeze: this one jump cannot tell a seek that
+    // recovered from a seek that did not, so let the next tick decide. A
+    // still-frozen stream escalates 2s later; a genuine resume keeps advancing
+    // and resets the baseline then.
+    if (moved && seekNudged) {
+      seekNudged = false;
+      lastTime = time;
+
+      return;
+    }
+
+    if (lastTime === null || time !== lastTime) {
+      lastTime = time;
+      lastAdvanceAt = now;
+      if (moved) {
+        everAdvanced = true;
+        softTriedAt = 0;
+        hardRequestedAt = 0;
       }
+      return;
     }
 
     // The playhead is frozen while the element still thinks it is playing.

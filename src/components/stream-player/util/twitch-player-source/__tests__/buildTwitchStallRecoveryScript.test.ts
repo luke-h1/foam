@@ -194,6 +194,37 @@ describe('buildTwitchStallRecoveryScript', () => {
     );
   });
 
+  test('a seek that recovers after a long freeze does not post a spurious stall', () => {
+    const video = installVideo({ currentTime: 1 });
+    const page = run(true);
+
+    // Each nudge seeks the playhead forward, as it does on device.
+    let liveEdge = 2;
+    const sync = jest.fn(() => {
+      liveEdge += 30;
+      video.setCurrentTime(liveEdge);
+
+      return true;
+    });
+    page.window.__foamSyncToLive = jest.fn(sync);
+
+    startPlayback(video);
+
+    // Hold the freeze to just before the hard threshold, through two nudges.
+    jest.advanceTimersByTime(12_000);
+
+    // The last seek takes and playback keeps advancing on its own: a recovery.
+    // The swallowed seek jump must not fall through to a remount.
+    for (let offset = 1; offset <= 6; offset += 1) {
+      video.setCurrentTime(liveEdge + offset);
+      jest.advanceTimersByTime(2000);
+    }
+
+    expect(page.messages.some(message => message.type === 'stalled')).toBe(
+      false,
+    );
+  });
+
   test('a nudge that does not seek leaves a genuine resume to clear the freeze', () => {
     const video = installVideo({ currentTime: 1 });
     const page = run(true);
