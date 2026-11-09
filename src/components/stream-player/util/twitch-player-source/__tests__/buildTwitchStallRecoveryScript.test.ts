@@ -170,6 +170,28 @@ describe('buildTwitchStallRecoveryScript', () => {
     expect(page.messages).toEqual<PlayerBridgeMessage[]>([]);
   });
 
+  test('a soft nudge seek is not read as progress, so a wedged stream still remounts', () => {
+    const video = installVideo({ currentTime: 1 });
+    const page = run(true);
+
+    // The live sync seeks the playhead forward on each nudge, as it does on
+    // device, while the picture stays frozen. If that seek passed as real
+    // progress it would reset the timer and the hard remount would never fire.
+    let liveEdge = 2;
+    page.window.__foamSyncToLive = jest.fn(() => {
+      liveEdge += 30;
+      video.setCurrentTime(liveEdge);
+    });
+
+    startPlayback(video);
+
+    jest.advanceTimersByTime(20_000);
+
+    expect(page.messages.some(message => message.type === 'stalled')).toBe(
+      true,
+    );
+  });
+
   test('a suspended timer gap does not read as a stall', () => {
     const video = installVideo({ currentTime: 1 });
     const page = run(true);

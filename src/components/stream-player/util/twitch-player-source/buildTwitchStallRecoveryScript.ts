@@ -41,10 +41,14 @@ export function buildTwitchStallRecoveryScript(options: {
   var everAdvanced = false;
   var softTriedAt = 0;
   var hardRequestedAt = 0;
+  var seekNudged = false;
 
   function softRecover() {
     if (LIVE && typeof window.__foamSyncToLive === 'function') {
       window.__foamSyncToLive();
+      // The seek to live moves currentTime even while the picture stays frozen.
+      // Flag it so the next tick does not read the seek as real playback.
+      seekNudged = true;
     }
     if (typeof window.__foamEnsurePlaying === 'function') {
       window.__foamEnsurePlaying();
@@ -84,14 +88,24 @@ export function buildTwitchStallRecoveryScript(options: {
     var time = video.currentTime;
     if (lastTime === null || time !== lastTime) {
       var moved = lastTime !== null && time !== lastTime;
-      lastTime = time;
-      lastAdvanceAt = now;
-      if (moved) {
-        everAdvanced = true;
-        softTriedAt = 0;
-        hardRequestedAt = 0;
+
+      // Swallow the one jump a soft nudge seek causes: record the new position
+      // but keep the freeze baseline, so a still-wedged stream escalates to a
+      // remount instead of the 6s nudge resetting the timer forever. A genuine
+      // resume keeps advancing on later ticks and resets the baseline then.
+      if (moved && seekNudged) {
+        seekNudged = false;
+        lastTime = time;
+      } else {
+        lastTime = time;
+        lastAdvanceAt = now;
+        if (moved) {
+          everAdvanced = true;
+          softTriedAt = 0;
+          hardRequestedAt = 0;
+        }
+        return;
       }
-      return;
     }
 
     // The playhead is frozen while the element still thinks it is playing.
