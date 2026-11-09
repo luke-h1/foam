@@ -37,6 +37,7 @@ export function buildTwitchStallRecoveryScript(options: {
 
   var lastTime = null;
   var lastAdvanceAt = Date.now();
+  var lastTickAt = Date.now();
   var everAdvanced = false;
   var softTriedAt = 0;
   var hardRequestedAt = 0;
@@ -60,6 +61,18 @@ export function buildTwitchStallRecoveryScript(options: {
   function tick() {
     var video = document.querySelector('video');
     var now = Date.now();
+    var gapMs = now - lastTickAt;
+    lastTickAt = now;
+
+    // The timer was suspended (app backgrounded, WebView throttled), so this
+    // one tick spans a long wall-clock gap. The playhead did not freeze for
+    // that whole gap; treat it as a fresh baseline so a resume does not read as
+    // an instant stall and burn a refresh.
+    if (gapMs > POLL_MS * 3) {
+      lastTime = video ? video.currentTime : null;
+      lastAdvanceAt = now;
+      return;
+    }
 
     // No element, user/native pause, ended, or an ad break: not a stall.
     if (!video || video.paused || video.ended || isAdActive()) {

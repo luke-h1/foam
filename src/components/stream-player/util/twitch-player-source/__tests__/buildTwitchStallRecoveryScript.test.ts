@@ -138,6 +138,55 @@ describe('buildTwitchStallRecoveryScript', () => {
     expect(page.messages).toEqual<PlayerBridgeMessage[]>([]);
   });
 
+  test('does nothing once the video has ended', () => {
+    const video = installVideo({ currentTime: 1 });
+    const page = run(true);
+
+    startPlayback(video);
+    video.setEnded(true);
+
+    // Freeze the playhead well past the hard threshold: an ended video is not
+    // a stall.
+    jest.advanceTimersByTime(30_000);
+
+    expect(page.messages).toEqual<PlayerBridgeMessage[]>([]);
+  });
+
+  test('does nothing during an ad break', () => {
+    const video = installVideo({ currentTime: 1 });
+    const page = run(true);
+
+    startPlayback(video);
+
+    // The ad plays on its own element and advances the real playhead later.
+    // A frozen main playhead during the ad must not remount the player.
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<div data-a-target="video-ad-label"></div>',
+    );
+
+    jest.advanceTimersByTime(30_000);
+
+    expect(page.messages).toEqual<PlayerBridgeMessage[]>([]);
+  });
+
+  test('a suspended timer gap does not read as a stall', () => {
+    const video = installVideo({ currentTime: 1 });
+    const page = run(true);
+
+    startPlayback(video);
+
+    // The timer stops firing while the app is backgrounded, then one tick lands
+    // after a long wall-clock jump. That single gap is not a freeze, so the
+    // watchdog resets its baseline instead of posting stalled.
+    jest.setSystemTime(Date.now() + 60_000);
+    jest.advanceTimersByTime(2000);
+
+    expect(page.messages.some(message => message.type === 'stalled')).toBe(
+      false,
+    );
+  });
+
   test('does not recover a playhead that never advanced', () => {
     installVideo({ currentTime: 0 });
     const page = run(true);

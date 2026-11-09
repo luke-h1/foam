@@ -142,6 +142,10 @@ export function usePlayerBridge({
   const channelRef = useSyncRef(channel);
   const forceRefreshRef = useSyncRef(forceRefresh);
 
+  // Set when a stall/latency refresh drives the next remount, so the reset
+  // effect below keeps the refresh budget instead of clearing it.
+  const stabilityRefreshPendingRef = useRef(false);
+
   const [stability] = useState(() =>
     createStabilityRecovery({
       onRefresh: (reason, attempt) => {
@@ -157,6 +161,7 @@ export function usePlayerBridge({
           attempt,
         });
 
+        stabilityRefreshPendingRef.current = true;
         forceRefreshRef.current();
       },
       onGiveUp: (reason, refreshCount) => {
@@ -197,13 +202,21 @@ export function usePlayerBridge({
       return;
     }
 
+    const sourceChanged = previousPlayerSource.sourceKey !== sourceKey;
+
     previousPlayerSourceRef.current = { autoplay, sourceKey, webViewKey };
     lastPlaybackLatencySecondsRef.current = null;
     pipActiveRef.current = false;
     playerMountedAtRef.current = Date.now();
     reportedFirstPlayingRef.current = false;
     reportedPlaybackBlockedRef.current = false;
-    stability.reset();
+
+    // A stability refresh remounts the same source, so it must not wipe the
+    // budget it just spent. A new source starts fresh, so it always does.
+    const preserveBudget = stabilityRefreshPendingRef.current && !sourceChanged;
+    stabilityRefreshPendingRef.current = false;
+    stability.reset({ preserveBudget });
+
     userPausedRef.current = !autoplay;
     setPlaybackUi(INITIAL_BRIDGE_PLAYBACK_UI);
   }, [autoplay, playerMountedAtRef, sourceKey, stability, webViewKey]);

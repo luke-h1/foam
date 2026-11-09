@@ -129,6 +129,33 @@ describe('createStabilityRecovery', () => {
     expect(giveUps).toEqual([{ reason: 'stall', refreshCount: 3 }]);
   });
 
+  test('a stall-triggered remount keeps the budget, so repeated stalls still give up', () => {
+    const now = { current: 10_000 };
+    const { giveUps, refreshes, stability } = create(now);
+
+    // Each stall refresh remounts the webview, which runs reset again. The
+    // remount must preserve the budget or a stream that freezes after every
+    // reload would refresh forever.
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      stability.noteStall();
+      now.current += 1000;
+      stability.reset({ preserveBudget: true });
+      now.current += 1000;
+    }
+
+    // The fourth stall is over the preserved budget, so it gives up instead of
+    // refreshing. A give-up triggers no remount, so no further reset runs.
+    stability.noteStall();
+
+    expect(refreshes).toEqual([
+      { attempt: 1, reason: 'stall' },
+      { attempt: 2, reason: 'stall' },
+      { attempt: 3, reason: 'stall' },
+    ]);
+
+    expect(giveUps).toEqual([{ reason: 'stall', refreshCount: 3 }]);
+  });
+
   test('reset clears the refresh window, latency readings, and the gave-up latch', () => {
     const now = { current: 10_000 };
     const { giveUps, refreshes, reportHighLatency, stability } = create(now);

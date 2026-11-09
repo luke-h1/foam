@@ -63,8 +63,16 @@ export function createStabilityRecovery({
     noteStall() {
       requestRefresh('stall');
     },
-    reset() {
-      refreshTimes = [];
+    // A stability-triggered remount lands back here through the same effect
+    // that resets a genuine source change. Pass `preserveBudget` for it so the
+    // reload the budget was counting does not wipe the budget: a stream that
+    // advances for a moment and freezes again each time must still give up
+    // after the window cap, not reload forever.
+    reset(options?: { preserveBudget?: boolean }) {
+      if (!options?.preserveBudget) {
+        refreshTimes = [];
+      }
+
       highLatencyReadings = 0;
       gaveUp = false;
     },
