@@ -1,10 +1,13 @@
 # Changelog
 
-## 1.0.14 (Production)
+## 1.0.15 (Production)
 
 ### ♻️ Refactor
 
 - **app:** Name component files PascalCase ([#976](https://github.com/lhowsam/foam/issues/976))
+- Move modules to the layer that owns them ([#983](https://github.com/lhowsam/foam/issues/983))
+- **chat:** Dedupe shared helpers and break sentry type cycle ([#984](https://github.com/lhowsam/foam/issues/984))
+- Untangle the codebase end to end ([#985](https://github.com/lhowsam/foam/issues/985))
 
 ### ✨ Features
 
@@ -16,10 +19,20 @@
 - **chat:** Leave a gap between badges and names ([#975](https://github.com/lhowsam/foam/issues/975))
 - **native:** Keep SDK 58 playback and Android chrome on the foam palette ([#977](https://github.com/lhowsam/foam/issues/977))
 - **native:** Regenerate the expo-image patch so bun drops the broken cache ([#978](https://github.com/lhowsam/foam/issues/978))
+- **tooling:** Source the appeeky key from 1Password, not a GitHub secret ([#987](https://github.com/lhowsam/foam/issues/987))
+- **player:** Recover a silent mid-stream video freeze ([#988](https://github.com/lhowsam/foam/issues/988))
+- **chat:** Stop doubling the @mention on a reply ([#989](https://github.com/lhowsam/foam/issues/989))
 
 ### 🔧 Miscellaneous Tasks
 
 - **app:** Release 1.0.14
+- **tooling:** Set up Zed completions for native modules ([#979](https://github.com/lhowsam/foam/issues/979))
+- **infrastructure:** Bump expo/expo-github-action/preview from 9.0.0 to 9.0.1 ([#980](https://github.com/lhowsam/foam/issues/980))
+- **infrastructure:** Bump zizmorcore/zizmor-action from 0.7.1 to 0.8.0 ([#982](https://github.com/lhowsam/foam/issues/982))
+- **infrastructure:** Bump expo/expo-github-action from 9.0.0 to 9.0.1 ([#981](https://github.com/lhowsam/foam/issues/981))
+- **tooling:** Set up Appeeky Spec for the App Store listing ([#986](https://github.com/lhowsam/foam/issues/986))
+- **tooling:** Add the whats-new release-notes skill
+- **app:** Release 1.0.15
 
 ## 1.0.13 (Production)
 
