@@ -12,7 +12,7 @@ permissions:
 jobs:
   lint-format:
     name: Lint and format
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'foam' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - name: 🏗 Checkout repository

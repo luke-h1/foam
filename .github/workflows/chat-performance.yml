@@ -25,7 +25,7 @@ concurrency:
 jobs:
   chat-performance:
     name: Chat performance
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'foam' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
