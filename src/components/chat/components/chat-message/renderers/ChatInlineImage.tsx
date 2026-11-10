@@ -412,9 +412,9 @@ function ChatInlineImageComponent({
   const imageRef = useRef<ExpoImage>(null);
 
   // Recycle blank-emote: same url, cache swaps the ImageRef under it, key stays
-  // equal, ref path (no shimmer) keeps the stale ref and draws blank. Bump on a
-  // live->live swap to force the native clear + re-assert; null->ref and
-  // ref->null re-key through candidateUrl and source already.
+  // equal, ref path (no shimmer) keeps the stale ref and draws blank. Remount on
+  // a live->live swap: iOS can apply the new recyclingKey after the new source
+  // and clear it. null->ref and ref->null re-key through candidateUrl.
   const [refTracker, setRefTracker] = useState({
     ref: sharedRef,
     generation: 0,
@@ -461,6 +461,7 @@ function ChatInlineImageComponent({
 
   const imageElement: ReactElement = (
     <ExpoImage
+      key={refGeneration}
       ref={imageRef}
       source={source}
       contentFit='contain'

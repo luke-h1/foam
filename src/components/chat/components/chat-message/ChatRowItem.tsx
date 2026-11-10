@@ -104,16 +104,15 @@ export const ChatRowItem = function ChatRowItem({
 
   // Per message, not once at mount: a recycled row must still play a live
   // message's entrance. Recency guard skips scrollback; key re-fires entering.
-  const [entrance, setEntrance] = useState(() => ({
+  const decideEntrance = () => ({
     key: messageKey,
     play: animate && shouldAnimateMessageEntrance(msg, Date.now()),
-  }));
+  });
+
+  const [entrance, setEntrance] = useState(decideEntrance);
 
   if (entrance.key !== messageKey) {
-    setEntrance({
-      key: messageKey,
-      play: animate && shouldAnimateMessageEntrance(msg, Date.now()),
-    });
+    setEntrance(decideEntrance);
   }
 
   const isAlternatingRow =
