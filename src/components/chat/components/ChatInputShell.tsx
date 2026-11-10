@@ -191,11 +191,15 @@ export const ChatInputShell = memo(function ChatInputShell({
       return;
     }
 
-    const sentText = replyTo
-      ? `${formatReplyPrefix(replyTo.username)}${currentInput}`
-      : currentInput;
+    // Twitch itself prepends `@<parent>` to a reply body for legacy client
+    // compatibility, so the text we transmit must stay raw - prefixing it here
+    // too broadcasts `@user @user ...`. The optimistic row keeps the prefix so
+    // it matches the body Twitch echoes back.
+    const transmittedText = currentInput;
 
-    const messageText = replyTo ? sentText : actionBody;
+    const messageText = replyTo
+      ? `${formatReplyPrefix(replyTo.username)}${currentInput}`
+      : actionBody;
 
     const optimisticUserstate = createOptimisticUserState({
       currentUserState: getChatUserState(),
@@ -232,12 +236,12 @@ export const ChatInputShell = memo(function ChatInputShell({
 
     if (replyTo) {
       try {
-        sendMessage(channelName, sentText, replyTo.messageId);
+        sendMessage(channelName, transmittedText, replyTo.messageId);
       } catch (error) {
         logger.chat.error('issue sending reply', error);
       }
     } else {
-      sendMessage(channelName, sentText);
+      sendMessage(channelName, transmittedText);
     }
 
     clearDraft();

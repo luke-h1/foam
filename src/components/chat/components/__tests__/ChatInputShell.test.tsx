@@ -81,6 +81,7 @@ function latestComposerProps(): RenderedComposerProps {
 interface RenderShellOptions {
   onRefreshCommand?: jest.Mock;
   processMessageEmotes?: jest.Mock;
+  sendMessage?: jest.Mock;
   shellRef?: RefObject<ChatInputShellHandle | null>;
   user?: UserInfoResponse;
 }
@@ -98,7 +99,7 @@ function renderShell(props: RenderShellOptions) {
           onOpenSettingsSheet: jest.fn(),
           onRefreshCommand: props.onRefreshCommand ?? jest.fn(),
           processMessageEmotes: props.processMessageEmotes ?? jest.fn(),
-          sendMessage: jest.fn(),
+          sendMessage: props.sendMessage ?? jest.fn(),
           user: props.user,
         }}
       />
@@ -185,6 +186,50 @@ describe('ChatInputShell', () => {
     });
 
     expect(latestComposerProps().canSend).toBe(false);
+  });
+
+  test('a reply transmits the raw body so Twitch does not double the @mention', () => {
+    const sendMessage = jest.fn();
+    const processMessageEmotes = jest.fn();
+    const shellRef = createRef<ChatInputShellHandle>();
+
+    renderShell({
+      processMessageEmotes,
+      sendMessage,
+      shellRef,
+      user: createTestUser({
+        id: '1',
+        login: 'someone',
+        display_name: 'Someone',
+      }),
+    });
+
+    act(() => {
+      shellRef.current?.setReplyTo({
+        messageId: 'parent-1',
+        username: 'Streamer',
+        message: 'hi',
+        login: 'streamer',
+      });
+    });
+
+    act(() => {
+      latestComposerProps().onChangeText('hello');
+    });
+
+    act(() => {
+      latestComposerProps().onSubmit();
+    });
+
+    // Twitch itself prepends `@Streamer `; the body we send stays raw.
+    expect(sendMessage).toHaveBeenCalledWith(
+      'testchannel',
+      'hello',
+      'parent-1',
+    );
+
+    // The optimistic row still shows the mention so it matches the echo.
+    expect(processMessageEmotes.mock.calls[0]?.[0]).toEqual('@Streamer hello');
   });
 
   test('the optimistic own message leaves out the 7TV badge when 7TV badges are off', () => {
