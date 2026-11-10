@@ -67,7 +67,7 @@ const CHAT_MAINTAIN_SCROLL_AT_END_THRESHOLD = 0.1;
  * Off until on-device fling QA passes. The iOS recycle crash came from the
  * removed `@react-native-masked-view`; see ADR-0007.
  */
-const CHAT_RECYCLE_ITEMS = false;
+const CHAT_RECYCLE_ITEMS = true;
 
 const SKELETON_BODY_WIDTHS = ['28%', '42%', '54%'] as const;
 

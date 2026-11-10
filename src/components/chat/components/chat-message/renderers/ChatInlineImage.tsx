@@ -6,6 +6,7 @@ import {
   use,
   useCallback,
   useEffect,
+  useId,
   useLayoutEffect,
   useRef,
   useState,
@@ -24,7 +25,6 @@ import {
   type ImageRef,
 } from 'expo-image';
 
-import { chatScrollActivity } from '@app/components/chat/util/chatScrollActivity';
 import { useSyncRef } from '@app/hooks/use-sync-ref';
 import {
   evictCachedEmoteRef,
@@ -43,20 +43,14 @@ import { getEmoteUrlKind, getImageFallbackChain } from '../util/emoteUrlCache';
 import { RowVisibilityContext } from '../util/rowVisibility';
 import { ChatImageShimmer } from './ChatImageShimmer';
 
-/**
- * Failed loads walk the format/size fallback chain, then backoff-retry the
- * smallest candidate; after this many attempts a static placeholder stays.
- */
+// After this many retries, give up and keep the placeholder.
 const MAX_RELOAD_ATTEMPTS = 8;
 
 const RELOAD_BASE_DELAY_MS = 400;
 const RELOAD_MAX_DELAY_MS = 8000;
 
-/**
- * Retry a load that has reported nothing (no onLoad or onError) for this long.
- * The ref path hands off to the uri. The uri path moves along its candidates
- * like a real error would, but never evicts the shared ref.
- */
+// Load silent (no onLoad/onError) this long: ref path hands off to uri, uri
+// path walks candidates like an error but never evicts the shared ref.
 const LOAD_WATCHDOG_MS = 12_000;
 
 function shouldEmoteAnimate(
@@ -67,18 +61,13 @@ function shouldEmoteAnimate(
     return true;
   }
 
-  return rowVisibility.isVisible() && !chatScrollActivity.isActive();
+  return rowVisibility.isVisible();
 }
 
-/**
- * Pauses an animated emote while its row is off-screen or the list is flung,
- * and resumes it after; static images never subscribe.
- *
- * Each command finds its view with a synchronous call to the main thread, so
- * the JS thread waits while the main thread mounts views. Send a command only
- * when the view state differs from what the row needs. A newly set image
- * already uses the committed `autoplay` prop.
- */
+// Pause animated emote off-screen, resume when visible; static skips it. Keeps
+// animating through a scroll - a freeze on every fling looks worse than the
+// cost. Each command is a sync main-thread hop, so send one only on a state
+// change. A new image already has the committed autoplay.
 function useEmoteAnimationSync(
   imageRef: RefObject<ExpoImage | null>,
   rowVisibility: ContextType<typeof RowVisibilityContext>,
@@ -118,13 +107,7 @@ function useEmoteAnimationSync(
     }
 
     syncAnimation();
-    const unsubscribeVisibility = rowVisibility.subscribe(syncAnimation);
-    const unsubscribeScroll = chatScrollActivity.subscribe(syncAnimation);
-
-    return () => {
-      unsubscribeVisibility();
-      unsubscribeScroll();
-    };
+    return rowVisibility.subscribe(syncAnimation);
   }, [rowVisibility, animated, syncAnimation]);
 
   return { autoplay, syncAfterImageChange };
@@ -139,8 +122,8 @@ function useEmoteLoadRecovery(
 
   const [reloadNonce, setReloadNonce] = useState(0);
 
-  // Load progress tagged with url and render path (`viaRef`): a recycled or
-  // cache-dropped row's tag stops matching, so it derives a fresh state.
+  // Tagged with url + viaRef: a recycled or cache-dropped row stops matching
+  // and derives fresh state.
   const [load, setLoad] = useState<{
     index: number;
     status: 'loading' | 'loaded' | 'failed';
@@ -152,8 +135,8 @@ function useEmoteLoadRecovery(
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [failedRefUrl, setFailedRefUrl] = useState<string | null>(null);
 
-  // The exact ref instance that has drawn (onDisplay); held in a ref so the
-  // healthy path never re-renders. The url-change effect clears it.
+  // Ref instance that drew (onDisplay); a ref so the healthy path never
+  // re-renders. Cleared on url change.
   const displayedSharedRef = useRef<ImageRef | null>(null);
 
   const showRef = sharedRef != null && failedRefUrl !== sourceUrl;
@@ -164,22 +147,18 @@ function useEmoteLoadRecovery(
   const candidateUrl =
     fallbackChain[candidateIndex] ?? fallbackChain[0] ?? sourceUrl;
 
-  // A ban belongs to the mount that issued it; without this reset a recycled
-  // slot keeps an old ban.
+  // A ban belongs to its mount; reset it or a recycled slot keeps the old ban.
   const [banOwnerUrl, setBanOwnerUrl] = useState(sourceUrl);
 
   if (banOwnerUrl !== sourceUrl) {
     setBanOwnerUrl(sourceUrl);
     setFailedRefUrl(null);
 
-    // An A -> B -> A recycle would otherwise revive A's old 'failed' or
-    // 'loaded' tag with nothing armed behind it.
+    // Else an A -> B -> A recycle revives A's stale tag with nothing behind it.
     setLoad({ index: 0, status: 'loading', url: sourceUrl, viaRef: false });
   }
 
-  // retryCountRef isn't rendered, so reset it here rather than during render.
-  // A recycled slot's ref has not drawn yet even when still cached. Layout
-  // phase: the new url's onDisplay can reach JS before a passive effect runs.
+  // Layout phase, not render: the new url's onDisplay can beat a passive effect.
   useLayoutEffect(() => {
     retryCountRef.current = 0;
     displayedSharedRef.current = null;
@@ -192,11 +171,10 @@ function useEmoteLoadRecovery(
     }
   }, []);
 
-  // Drop the previous url's retry timer, or it reloads the wrong emote.
+  // Drop the old url's retry timer, or it reloads the wrong emote.
   useEffect(() => clearRetryTimer, [sourceUrl, clearRetryTimer]);
 
-  // A ref that arrives mid-backoff makes the pending reload moot; reloading
-  // anyway would recycle the drawn ref.
+  // A ref arriving mid-backoff makes the pending reload moot.
   const showRefRef = useSyncRef(showRef);
 
   const handleLoad = useCallback(() => {
@@ -215,8 +193,8 @@ function useEmoteLoadRecovery(
 
   const handleError = useCallback(
     (event?: ImageErrorEventData) => {
-      // A ref never fires onError, so this is the watchdog or a stale uri
-      // operation; acting on a drawn ref would ban a healthy ref mid-display.
+      // A ref never fires onError, so this is the watchdog or a stale uri;
+      // acting on a drawn ref would ban a healthy ref mid-display.
       const isDrawnRef =
         showRef &&
         sharedRef != null &&
@@ -226,8 +204,8 @@ function useEmoteLoadRecovery(
         return;
       }
 
-      // The ref never drew, which says nothing about the url - hand off to
-      // the fallback chain with a full budget.
+      // Ref never drew, which says nothing about the url - hand off to the
+      // fallback chain with a full budget.
       if (showRef) {
         clearRetryTimer();
 
@@ -238,14 +216,13 @@ function useEmoteLoadRecovery(
         return;
       }
 
-      // The watchdog fires with no event. A slow load says nothing about the
-      // shared ref other rows are drawing, so only a real error evicts it.
+      // Watchdog fires with no event; a slow load says nothing about the shared
+      // ref other rows draw, so only a real error evicts it.
       if (event !== undefined && candidateIndex === 0) {
         evictCachedEmoteRef(candidateUrl);
       }
 
-      // The variant is unavailable (typically a 404 on a variant 7TV
-      // advertises but never serves) or stalled - move to the next candidate.
+      // Variant 404'd (7TV advertises it but never serves) or stalled - next.
       if (candidateIndex < fallbackChain.length - 1) {
         logger.chat.debug('chat.emote.fallback', {
           from: candidateUrl,
@@ -264,8 +241,8 @@ function useEmoteLoadRecovery(
         return;
       }
 
-      // Every variant 404'd or stalled - backoff-retry the smallest candidate
-      // to ride out a transient blip.
+      // All variants 404'd or stalled - backoff-retry the smallest to ride out
+      // a transient blip.
       if (retryCountRef.current >= MAX_RELOAD_ATTEMPTS) {
         logEmoteLoadFailure({
           attempts: retryCountRef.current,
@@ -318,8 +295,8 @@ function useEmoteLoadRecovery(
     ],
   );
 
-  // A SharedRef source fires only onDisplay, never onLoad or onError, so this
-  // marker is the ref path's sole liveness signal.
+  // A SharedRef fires only onDisplay, so it is the ref path's sole liveness
+  // signal.
   const handleDisplay = useCallback(() => {
     if (showRef) {
       displayedSharedRef.current = sharedRef;
@@ -328,10 +305,10 @@ function useEmoteLoadRecovery(
     syncAfterImageChange();
   }, [sharedRef, showRef, syncAfterImageChange]);
 
-  // A displayed ref pins status at 'loading' (no onLoad), so the timer always
-  // fires on the ref path; handleError's displayed-ref guard no-ops it. A
-  // synced ref, not useEffectEvent: the test renderer never updates the event
-  // function, so a recycled row would fire its first url's handler.
+  // A displayed ref pins status at 'loading', so the timer always fires on the
+  // ref path and handleError's drawn-ref guard no-ops it. Synced ref, not
+  // useEffectEvent: the test renderer never updates it, so a recycled row would
+  // fire its first url's handler.
   const handleErrorRef = useSyncRef(handleError);
 
   useEffect(() => {
@@ -341,7 +318,7 @@ function useEmoteLoadRecovery(
 
     const timer = setTimeout(() => handleErrorRef.current(), LOAD_WATCHDOG_MS);
     return () => clearTimeout(timer);
-    // sourceUrl: a recycle can land on the previous url's fallback candidate.
+    // sourceUrl: a recycle can land on the old url's fallback candidate.
   }, [handleErrorRef, showRef, status, candidateUrl, reloadNonce, sourceUrl]);
 
   return {
@@ -398,10 +375,8 @@ function logEmoteLoadFailure({
 
 interface ChatInlineImageProps {
   accessibilityLabel?: string;
-  /**
-   * Records which emote a touch started on for the row's long-press timer.
-   * Taken here so the common emote needs no wrapper view of its own.
-   */
+  // Tags which emote a touch started on for the row's long-press timer, here so
+  // the common emote needs no wrapper view.
   onTouchStart?: () => void;
   playAnimation?: boolean;
   priority?: 'low' | 'normal' | 'high';
@@ -425,8 +400,8 @@ function ChatInlineImageComponent({
 
   const rowVisibility = use(RowVisibilityContext);
 
-  // The native isAnimated getter is a JSI hop per render; the url already
-  // encodes the kind for everything but BTTV's bare url form.
+  // isAnimated is a JSI hop per render; the url encodes the kind for all but
+  // BTTV's bare url form.
   const urlKind = getEmoteUrlKind(sourceUrl);
 
   const animated =
@@ -435,6 +410,32 @@ function ChatInlineImageComponent({
   const shouldAnimate = animated && playAnimation;
 
   const imageRef = useRef<ExpoImage>(null);
+
+  // Recycle blank-emote: same url, cache swaps the ImageRef under it, key stays
+  // equal, ref path (no shimmer) keeps the stale ref and draws blank. Bump on a
+  // live->live swap to force the native clear + re-assert; null->ref and
+  // ref->null re-key through candidateUrl and source already.
+  const [refTracker, setRefTracker] = useState({
+    ref: sharedRef,
+    generation: 0,
+  });
+
+  if (refTracker.ref !== sharedRef) {
+    setRefTracker(previous => ({
+      ref: sharedRef,
+      generation:
+        previous.ref != null && sharedRef != null
+          ? previous.generation + 1
+          : previous.generation,
+    }));
+  }
+
+  const refGeneration = refTracker.generation;
+
+  // Two of the same emote in one message share a ref and so the same
+  // candidateUrl; a stable per-instance id keeps their recyclingKeys distinct,
+  // or the recycle pool collides them and one draws blank.
+  const instanceId = useId();
 
   const { autoplay, syncAfterImageChange } = useEmoteAnimationSync(
     imageRef,
@@ -452,8 +453,8 @@ function ChatInlineImageComponent({
     status,
   } = useEmoteLoadRecovery(sourceUrl, sharedRef, syncAfterImageChange);
 
-  // Shimmer only while nothing real is on screen; cached emotes stay on the
-  // bare-image fast path with no extra Fabric node.
+  // Shimmer only while nothing real shows; cached emotes stay on the bare-image
+  // fast path, no extra Fabric node.
   const overlayVisible = !showRef && status !== 'loaded';
 
   const source = showRef ? sharedRef : { uri: candidateUrl };
@@ -463,10 +464,10 @@ function ChatInlineImageComponent({
       ref={imageRef}
       source={source}
       contentFit='contain'
-      recyclingKey={`${candidateUrl}#${reloadNonce}`}
+      recyclingKey={`${candidateUrl}#${reloadNonce}#${refGeneration}#${instanceId}`}
       autoplay={playAnimation && autoplay}
-      // Keep the transient uri branch out of expo-image's memory cache to
-      // avoid a second decoded-bitmap pool beside our ImageRef cache.
+      // Transient uri branch off the memory cache: no second bitmap pool beside
+      // our ImageRef cache.
       cachePolicy={showRef ? 'memory-disk' : 'disk'}
       useAppleWebpCodec={resolveUseAppleWebpCodec(urlKind)}
       priority={priority}
@@ -488,7 +489,7 @@ function ChatInlineImageComponent({
     return (
       <View
         onTouchStart={onTouchStart}
-        // SAFETY: overlay host only needs ViewStyle layout; ImageStyle extras are unused here.
+        // SAFETY: overlay host uses ViewStyle only; ImageStyle extras unused.
         style={style as StyleProp<ViewStyle>}
       >
         <ChatImageShimmer animate={status === 'loading'} />

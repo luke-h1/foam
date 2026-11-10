@@ -332,7 +332,7 @@ describe('ChatInlineImage off-screen pause', () => {
   });
 });
 
-describe('ChatInlineImage scroll pause', () => {
+describe('ChatInlineImage scroll does not pause', () => {
   function renderVisibleEmote(store = createRowVisibilityStore(true)) {
     render(
       <RowVisibilityContext.Provider value={store}>
@@ -358,26 +358,22 @@ describe('ChatInlineImage scroll pause', () => {
     jest.clearAllMocks();
   });
 
-  test('stops a visible emote for a fling and starts it once the fling settles', () => {
+  test('keeps a visible emote animating through a fling', () => {
     renderVisibleEmote();
 
     act(() => chatScrollActivity.poke());
-    expect(mockStopAnimating).toHaveBeenCalledTimes(1);
-
     act(() => jest.advanceTimersByTime(200));
-    expect(mockStartAnimating).toHaveBeenCalledTimes(1);
-  });
-
-  test('a mount mid-fling starts paused through the autoplay prop and sends no command', () => {
-    act(() => chatScrollActivity.poke());
-    renderVisibleEmote();
-
-    expect(mockImageProps?.autoplay).toBe(false);
 
     expect(mockStopAnimating).not.toHaveBeenCalled();
+  });
 
-    act(() => jest.advanceTimersByTime(200));
-    expect(mockStartAnimating).toHaveBeenCalledTimes(1);
+  test('a mount mid-fling autoplays', () => {
+    act(() => chatScrollActivity.poke());
+    renderVisibleEmote();
+
+    expect(mockImageProps?.autoplay).toBe(true);
+
+    expect(mockStopAnimating).not.toHaveBeenCalled();
   });
 });
 
