@@ -15,7 +15,7 @@ permissions:
 jobs:
   anti-slop:
     name: Anti-Slop
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'foam' || 'ubuntu-latest' }}
     steps:
       - name: Scan diff for AI slop
         uses: peakoss/anti-slop@57858eead489d08b255fab2af45a506c2ca6eab2

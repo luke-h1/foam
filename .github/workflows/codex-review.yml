@@ -44,7 +44,7 @@ jobs:
           )
         )
       )
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'foam' || 'ubuntu-latest' }}
     timeout-minutes: 30
     outputs:
       pr_number: ${{ steps.context.outputs.pr_number }}
@@ -121,7 +121,7 @@ jobs:
 
   post_feedback:
     name: Post Codex feedback
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'foam' || 'ubuntu-latest' }}
     timeout-minutes: 10
     needs: codex
     if: needs.codex.result == 'success'
