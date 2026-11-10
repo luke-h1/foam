@@ -19,7 +19,7 @@ permissions:
 jobs:
   swiftlint:
     name: SwiftLint
-    runs-on: macos-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'foam' || 'macos-latest' }}
     timeout-minutes: 20
     steps:
       - name: 🏗 Checkout repository
@@ -35,7 +35,7 @@ jobs:
 
   ktlint:
     name: ktlint
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'foam' || 'ubuntu-latest' }}
     timeout-minutes: 15
     steps:
       - name: 🏗 Checkout repository
@@ -43,7 +43,12 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: 📦 Install ktlint
+      - name: 📦 Install ktlint (macOS)
+        if: runner.os == 'macOS'
+        run: brew install ktlint
+
+      - name: 📦 Install ktlint (Linux)
+        if: runner.os == 'Linux'
         env:
           KTLINT_VERSION: '1.8.0'
           KTLINT_SHA256: 'a3fd620207d5c40da6ca789b95e7f823c54e854b7fade7f613e91096a3706d75'
