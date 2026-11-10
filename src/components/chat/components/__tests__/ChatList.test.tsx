@@ -121,7 +121,7 @@ describe('ChatList', () => {
       extraData: { showTimestamps: false },
       maintainScrollAtEnd: { on: { dataChange: true, itemLayout: true } },
       maintainVisibleContentPosition: undefined,
-      recycleItems: false,
+      recycleItems: true,
     });
   });
 
