@@ -24,7 +24,7 @@ on:
 jobs:
   app_deploy:
     name: EAS build & submit
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'foam' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     concurrency: eas-deploy-fingerprint-main
     permissions:
