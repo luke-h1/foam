@@ -1,5 +1,5 @@
 name: vChat! - Chat for Twitch
-pulledAt: 2026-11-09
+pulledAt: 2026-11-10
 country: us
 stores:
   app-store:
@@ -30,48 +30,54 @@ stores:
       CHAT
       Third-party emotes, badges, repl…
     ranks:
-      - keyword: streams chat emotes
+      - keyword: twitch app
         rank: 3
         popularity: 20
-        trend: stable
+        trend: improving
       - keyword: foam streams chat emotes
-        rank: 3
-        popularity: 20
-        trend: stable
-      - keyword: foam streams chat
         rank: 4
         popularity: 20
-        trend: stable
-      - keyword: twitch app
-        rank: 5
-        popularity: 20
-        trend: stable
-      - keyword: foam streams
-        rank: 5
-        popularity: 20
-        trend: stable
-      - keyword: twitch chat
+        trend: declining
+      - keyword: streams chat emotes
         rank: 6
         popularity: 20
-        trend: stable
-      - keyword: chat emotes
-        rank: 6
-        popularity: 20
-        trend: stable
+        trend: declining
       - keyword: twitch emotes
         rank: 6
         popularity: 20
         trend: stable
-      - keyword: twitch chat app
-        rank: 6
+      - keyword: twitch chat
+        rank: 7
         popularity: 20
-        trend: stable
-      - keyword: twitch stream
+        trend: declining
+      - keyword: chat emotes
+        rank: 8
+        popularity: 20
+        trend: declining
+      - keyword: foam streams
+        rank: 9
+        popularity: 20
+        trend: declining
+      - keyword: foam streams chat
+        rank: 9
+        popularity: 20
+        trend: declining
+      - keyword: twitch chat app
         rank: 14
+        popularity: 20
+        trend: declining
+      - keyword: twitch stream
+        rank: 17
+        popularity: 20
+        trend: declining
+      - keyword: twitch
+        rank: 20
         popularity: 20
         trend: stable
     yourTargets:
-      - keyword: twitch chat
-        rank: 6
       - keyword: twitch emotes
         rank: 6
+      - keyword: twitch chat
+        rank: 7
+      - keyword: twitch
+        rank: 20

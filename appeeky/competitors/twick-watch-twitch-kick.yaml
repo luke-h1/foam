@@ -1,5 +1,5 @@
 name: "Twick: Watch Twitch & Kick"
-pulledAt: 2026-11-09
+pulledAt: 2026-11-10
 country: us
 stores:
   app-store:
@@ -7,15 +7,14 @@ stores:
     title: "Twick: Watch Twitch & Kick"
     developer: SHUBHAM SHAH
     rating: 4.65
-    ratings: 54
-    version: 2.2.3
+    ratings: 55
+    version: 2.2.4
     updated: 2026-11-09
     releaseNotes: |-
-      Twick v2.2.3 is here. Siri and Shortcuts know a lot more about Twick, streams on iPhone Duo get the whole screen, and Pro now works the moment the app opens. Here's what changed:
+      Twick v2.2.4 is here. Streams now show a loading spinner when your connection slows down, the player controls fade more smoothly, and typing in chat on iPhone Duo is fixed. Here's what changed:
 
-      # SIRI & SHORTCUTS
-      - Ask "Who's live in Twick?" to hear which of your saved channels are streaming right now.
-      - Your sav…
+      # NEW
+      - A loading spinner now appears when a stream is buffering on a slow connection, like other streami…
     description: |-
       Watch Twitch and Kick streams with the chat you actually want: 7TV, BetterTTV and FrankerFaceZ emotes, both platforms side by side, and a player built for iPhone and iPad.
 
@@ -27,6 +26,10 @@ stores:
       • Combined channels – Pair a streamer's Twitch and Kick streams and read both chats together.
       • Cha…
     ranks:
+      - keyword: twitch chat app
+        rank: 5
+        popularity: 20
+        trend: improving
       - keyword: foam streams chat emotes
         rank: 6
         popularity: 20
@@ -40,13 +43,13 @@ stores:
         popularity: 20
         trend: stable
       - keyword: foam streams chat
-        rank: 9
+        rank: 10
         popularity: 20
-        trend: stable
+        trend: declining
       - keyword: streams chat emotes
-        rank: 15
+        rank: 14
         popularity: 20
-        trend: stable
+        trend: improving
     yourTargets: []
     recentReviews:
       count: 14

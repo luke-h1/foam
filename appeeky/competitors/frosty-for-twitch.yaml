@@ -1,5 +1,5 @@
 name: Frosty for Twitch
-pulledAt: 2026-11-09
+pulledAt: 2026-11-10
 country: us
 stores:
   app-store:
@@ -7,7 +7,7 @@ stores:
     title: Frosty for Twitch
     developer: Tommy Chow
     rating: 4.64
-    ratings: 2551
+    ratings: 2554
     version: 5.2.0
     updated: 2026-08-17
     releaseNotes: See full release notes at https://github.com/tommyxchow/frosty/releases
@@ -27,18 +27,10 @@ stores:
       • Theater and fullscreen mode
       • Wa…
     ranks:
-      - keyword: twitch app
-        rank: 2
+      - keyword: twitch chat app
+        rank: 1
         popularity: 20
-        trend: stable
-      - keyword: streams chat emotes
-        rank: 2
-        popularity: 20
-        trend: stable
-      - keyword: foam streams chat
-        rank: 2
-        popularity: 20
-        trend: stable
+        trend: improving
       - keyword: foam streams chat emotes
         rank: 2
         popularity: 20
@@ -47,19 +39,27 @@ stores:
         rank: 2
         popularity: 20
         trend: stable
-      - keyword: twitch emotes
-        rank: 3
+      - keyword: foam streams chat
+        rank: 2
         popularity: 20
         trend: stable
-      - keyword: twitch chat
-        rank: 4
+      - keyword: streams chat emotes
+        rank: 2
+        popularity: 20
+        trend: stable
+      - keyword: twitch app
+        rank: 2
+        popularity: 20
+        trend: stable
+      - keyword: twitch emotes
+        rank: 3
         popularity: 20
         trend: stable
       - keyword: chat emotes
         rank: 4
         popularity: 20
         trend: stable
-      - keyword: twitch chat app
+      - keyword: twitch chat
         rank: 4
         popularity: 20
         trend: stable
@@ -67,14 +67,20 @@ stores:
         rank: 9
         popularity: 20
         trend: stable
+      - keyword: twitch
+        rank: 11
+        popularity: 20
+        trend: stable
     yourTargets:
       - keyword: twitch emotes
         rank: 3
       - keyword: twitch chat
         rank: 4
+      - keyword: twitch
+        rank: 11
     recentReviews:
       count: 50
-      average: 3.48
+      average: 3.56
       low:
         - rating: 2
           text: Good for emotes, bad for watching streams. Low latency mode is still about 15+ seconds behind
