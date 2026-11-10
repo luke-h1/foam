@@ -17,6 +17,7 @@ import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import type { CustomHighlight } from '@app/types/chat/customHighlight';
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import type { MessageToken } from '@app/types/chat/messageToken';
+import { getChatMessageStoreId } from '@app/utils/chat/message-identity/getChatMessageStoreId';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolve-cached-sender-color/resolveCachedSenderColor';
 
 import { ChatRow } from './ChatRow';
@@ -99,10 +100,21 @@ export const ChatRowItem = function ChatRowItem({
 
   const rowVisibility = useRowVisibility();
 
-  // Decided once at mount; a row must not replay its entrance on re-render.
-  const [animateEntrance] = useState(
-    () => animate && shouldAnimateMessageEntrance(msg, Date.now()),
-  );
+  const messageKey = getChatMessageStoreId(msg);
+
+  // Per message, not once at mount: a recycled row must still play a live
+  // message's entrance. Recency guard skips scrollback; key re-fires entering.
+  const [entrance, setEntrance] = useState(() => ({
+    key: messageKey,
+    play: animate && shouldAnimateMessageEntrance(msg, Date.now()),
+  }));
+
+  if (entrance.key !== messageKey) {
+    setEntrance({
+      key: messageKey,
+      play: animate && shouldAnimateMessageEntrance(msg, Date.now()),
+    });
+  }
 
   const isAlternatingRow =
     showAlternatingChatRows && (msg.seq ?? index) % 2 === 1;
@@ -165,8 +177,10 @@ export const ChatRowItem = function ChatRowItem({
 
   return (
     <RowVisibilityContext.Provider value={rowVisibility}>
-      {animateEntrance ? (
-        <Animated.View entering={messageRowEntering}>{row}</Animated.View>
+      {entrance.play ? (
+        <Animated.View key={messageKey} entering={messageRowEntering}>
+          {row}
+        </Animated.View>
       ) : (
         row
       )}
