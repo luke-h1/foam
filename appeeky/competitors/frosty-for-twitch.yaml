@@ -1,5 +1,5 @@
 name: Frosty for Twitch
-pulledAt: 2026-11-10
+pulledAt: 2026-11-11
 country: us
 stores:
   app-store:
@@ -78,17 +78,3 @@ stores:
         rank: 4
       - keyword: twitch
         rank: 11
-    recentReviews:
-      count: 50
-      average: 3.56
-      low:
-        - rating: 2
-          text: Good for emotes, bad for watching streams. Low latency mode is still about 15+ seconds behind
-        - rating: 2
-          text: latency. the chat features are great, but for video, there's a whole base 15-20 second latency at all times for any stream so it's almost unusable from a viewer…
-        - rating: 1
-          text: Not blocking ads. Though that would be blocking ads as promised but didn’t work
-        - rating: 2
-          text: Recent Connection Issues. App has been working well for a while, but it refuses to connect to chat for the last week on iPhone, still works on iPad. Would love…
-        - rating: 1
-          text: Doesn’t connect to chat. Doesn’t connect to chat

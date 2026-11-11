@@ -1,5 +1,5 @@
 name: "Twick: Watch Twitch & Kick"
-pulledAt: 2026-11-10
+pulledAt: 2026-11-11
 country: us
 stores:
   app-store:
@@ -51,11 +51,3 @@ stores:
         popularity: 20
         trend: improving
     yourTargets: []
-    recentReviews:
-      count: 14
-      average: 4
-      low:
-        - rating: 2
-          text: No chat. Ever since the recent update you can’t see kick chat
-        - rating: 2
-          text: Why?. Can’t do anything without paying, even just to chat. Just Make it a paid app entirely at this point. Uninstalled.
