@@ -1,6 +1,6 @@
 # Reviews
 
-Pulled 2026-11-11. Written by `appeeky-spec reviews pull`; do not edit by hand.
+Pulled 2026-11-12. Written by `appeeky-spec reviews pull`; do not edit by hand.
 
 ## App Store
 

@@ -1,5 +1,5 @@
 name: Frosty for Twitch
-pulledAt: 2026-11-11
+pulledAt: 2026-11-12
 country: us
 stores:
   app-store:
@@ -7,7 +7,7 @@ stores:
     title: Frosty for Twitch
     developer: Tommy Chow
     rating: 4.64
-    ratings: 2554
+    ratings: 2558
     version: 5.2.0
     updated: 2026-08-17
     releaseNotes: See full release notes at https://github.com/tommyxchow/frosty/releases

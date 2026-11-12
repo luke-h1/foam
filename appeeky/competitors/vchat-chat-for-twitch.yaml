@@ -1,5 +1,5 @@
 name: vChat! - Chat for Twitch
-pulledAt: 2026-11-11
+pulledAt: 2026-11-12
 country: us
 stores:
   app-store:
@@ -38,12 +38,12 @@ stores:
         rank: 4
         popularity: 20
         trend: declining
-      - keyword: streams chat emotes
+      - keyword: twitch emotes
         rank: 6
         popularity: 20
-        trend: declining
-      - keyword: twitch emotes
-        rank: 7
+        trend: stable
+      - keyword: streams chat emotes
+        rank: 6
         popularity: 20
         trend: declining
       - keyword: twitch chat
@@ -76,7 +76,7 @@ stores:
         trend: stable
     yourTargets:
       - keyword: twitch emotes
-        rank: 7
+        rank: 6
       - keyword: twitch chat
         rank: 7
       - keyword: twitch
