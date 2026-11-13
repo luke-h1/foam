@@ -6,18 +6,25 @@ export interface PaintCanvasRedrawTarget {
   current: RedrawableCanvas | null;
 }
 
-const pending = new Set<PaintCanvasRedrawTarget>();
+let pending = new Set<PaintCanvasRedrawTarget>();
+let flushing = new Set<PaintCanvasRedrawTarget>();
 let frame = 0;
 
 function flushRedraws(): void {
   frame = 0;
 
-  const targets = [...pending];
-  pending.clear();
+  // Animated paints flush on every texture frame. Swap two sets, so a
+  // flush does not allocate, and a redraw asked for now waits for the next frame.
+  const targets = pending;
+
+  pending = flushing;
+  flushing = targets;
 
   for (const target of targets) {
     target.current?.redraw();
   }
+
+  targets.clear();
 }
 
 /**

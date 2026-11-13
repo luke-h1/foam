@@ -79,7 +79,25 @@ describe('schedulePaintCanvasRedraw', () => {
     expect(cancelFrame).toHaveBeenCalledTimes(1);
 
     schedulePaintCanvasRedraw(target);
+    cancelPaintCanvasRedraw(target);
 
     expect(requestFrame).toHaveBeenCalledTimes(2);
+  });
+
+  test('runs a redraw asked for during a flush on the next frame', () => {
+    const target = makeTarget();
+
+    target.redraw.mockImplementationOnce(() => {
+      schedulePaintCanvasRedraw(target);
+    });
+
+    schedulePaintCanvasRedraw(target);
+    runFrame();
+
+    const afterFirstFrame = target.redraw.mock.calls.length;
+
+    runFrame();
+
+    expect([afterFirstFrame, target.redraw.mock.calls.length]).toEqual([1, 2]);
   });
 });
