@@ -28,8 +28,16 @@ interface EmoteProcessorParams {
   bttvGlobalEmotes: SanitisedEmote[];
 }
 
-const cache = new Map<string, MessageToken[]>();
-const MAX_CACHE_SIZE = 1000;
+/**
+ * Two generations of 500 entries instead of one 1000-entry map that deletes
+ * its oldest key on every write. A flood of distinct lines paid about 200ns
+ * per message for that delete. Dropping a whole generation costs almost
+ * nothing.
+ */
+const CACHE_GENERATION_SIZE = 500;
+
+let cache = new Map<string, MessageToken[]>();
+let previousCache = new Map<string, MessageToken[]>();
 const baseCollectionCache = new Map<string, EmoteCollection>();
 
 const MAX_BASE_COLLECTION_CACHE_SIZE = 4;
@@ -45,6 +53,7 @@ interface EmoteCollection {
   cacheKey: string;
   emojiMap: ReadonlyMap<string, SanitisedEmote>;
   emoteMap: ReadonlyMap<string, SanitisedEmote>;
+  getEmote: (name: string) => SanitisedEmote | undefined;
 }
 
 let lastBaseKeyInputs: SanitisedEmote[][] | null = null;
@@ -186,7 +195,12 @@ function getBaseCollection({
     }
   });
 
-  const collection = { cacheKey, emojiMap, emoteMap };
+  const collection = {
+    cacheKey,
+    emojiMap,
+    emoteMap,
+    getEmote: (name: string) => emoteMap.get(name),
+  };
 
   if (baseCollectionCache.size >= MAX_BASE_COLLECTION_CACHE_SIZE) {
     evictOldestBaseCollection();
@@ -272,7 +286,7 @@ function createScopedEmoteLookup(
     sevenTvPersonalEmotes.length === 0 &&
     twitchSubscriberEmotes.length === 0
   ) {
-    return name => baseCollection.emoteMap.get(name);
+    return baseCollection.getEmote;
   }
 
   const cacheKey = `${baseCollection.cacheKey}:${scopedEmoteKey}`;
@@ -443,21 +457,143 @@ function applyEmoteCompositionPass(tokens: MessageToken[]): MessageToken[] {
   return out;
 }
 
-function toMentionParts({ login, rest }: MentionLoginMatch): MessageToken[] {
-  const mention: MessageToken = { type: 'mention', content: `@${login}` };
-  return rest ? [mention, { type: 'text', content: rest }] : [mention];
+function pushMentionParts(
+  result: MessageToken[],
+  { login, rest }: MentionLoginMatch,
+): void {
+  result.push({ type: 'mention', content: `@${login}` });
+
+  if (rest) {
+    result.push({ type: 'text', content: rest });
+  }
 }
+
+/**
+ * Same set as the `\s` regex class. A test checks every UTF-16 code unit
+ * against `\s`.
+ */
+function isWhitespaceCode(code: number): boolean {
+  if (code <= 0x20) {
+    return code === 0x20 || (code >= 0x09 && code <= 0x0d);
+  }
+
+  if (code < 0xa0) {
+    return false;
+  }
+
+  return (
+    code === 0xa0 ||
+    code === 0x16_80 ||
+    (code >= 0x20_00 && code <= 0x20_0a) ||
+    code === 0x20_28 ||
+    code === 0x20_29 ||
+    code === 0x20_2f ||
+    code === 0x20_5f ||
+    code === 0x30_00 ||
+    code === 0xfe_ff
+  );
+}
+
+function getCachedTokens(cacheKey: string): MessageToken[] | undefined {
+  const current = cache.get(cacheKey);
+
+  if (current) {
+    return current;
+  }
+
+  const previous = previousCache.get(cacheKey);
+
+  if (previous) {
+    setCachedTokens(cacheKey, previous);
+  }
+
+  return previous;
+}
+
+function setCachedTokens(cacheKey: string, tokens: MessageToken[]): void {
+  if (cache.size >= CACHE_GENERATION_SIZE) {
+    previousCache = cache;
+    cache = new Map();
+  }
+
+  cache.set(cacheKey, tokens);
+}
+
+/**
+ * The first-character checks skip the mention and link regexes for most
+ * words: a mention starts with `@` and a link starts with `http`.
+ */
+function pushWordTokens(
+  result: MessageToken[],
+  word: string,
+  getEmote: (name: string) => SanitisedEmote | undefined,
+  emojiMap: ReadonlyMap<string, SanitisedEmote>,
+): void {
+  const firstCode = word.charCodeAt(0);
+  const mention = firstCode === 0x40 ? matchMentionLogin(word) : null;
+
+  if (mention) {
+    pushMentionParts(result, mention);
+    return;
+  }
+
+  const linkParts =
+    firstCode === 0x68 || firstCode === 0x48 ? parseWordLinkTokens(word) : null;
+
+  if (linkParts) {
+    result.push(...linkParts);
+    return;
+  }
+
+  let emote = getEmote(word);
+
+  if (!emote && word.length <= 8 && hasNonAsciiChar(word)) {
+    emote = findEmojiForWord(emojiMap, word);
+  }
+
+  if (!emote) {
+    result.push({ type: 'text', content: word });
+    return;
+  }
+
+  result.push({
+    id: emote.id,
+    name: emote.name,
+    type: 'emote' as const,
+    content: word,
+    creator: emote.creator || '',
+    emote_link: emote.emote_link || '',
+    original_name:
+      emote.provider === 'emoji' && !word.startsWith(':')
+        ? word
+        : emote.original_name || '',
+    site: emote.site || '',
+    static_url: emote.static_url,
+    thumbnail: emote.url,
+    url: emote.url,
+    width: emote.width,
+    height: emote.height,
+    aspect_ratio: emote.aspect_ratio,
+    zero_width: emote.zero_width,
+  });
+}
+
+/**
+ * One shared default. A new `[]` per call failed the identity check in
+ * `getBaseCollectionKey`, so every message rebuilt the collection key.
+ */
+const NO_EMOTES: SanitisedEmote[] = [];
 
 export const processEmotes = (params: EmoteProcessorParams): MessageToken[] => {
   const {
     inputString,
-    emojiEmotes = [],
+    emojiEmotes = NO_EMOTES,
     sevenTvGlobalEmotes,
     sevenTvChannelEmotes,
-    sevenTvPersonalEmotes = [],
+    sevenTvPersonalEmotes = NO_EMOTES,
     twitchGlobalEmotes,
     twitchChannelEmotes,
-    twitchSubscriberEmotes = [],
+    twitchSubscriberEmotes = NO_EMOTES,
     ffzChannelEmotes,
     ffzGlobalEmotes,
     bttvChannelEmotes,
@@ -489,7 +625,7 @@ export const processEmotes = (params: EmoteProcessorParams): MessageToken[] => {
 
   const cacheKey = `${baseCollection.cacheKey}:${scopedEmoteKey}:${cleanInput}`;
 
-  const cached = cache.get(cacheKey);
+  const cached = getCachedTokens(cacheKey);
 
   if (cached) {
     return applyMentionLoginCasing(cached);
@@ -503,83 +639,34 @@ export const processEmotes = (params: EmoteProcessorParams): MessageToken[] => {
   );
 
   const emojiMap = baseCollection.emojiMap;
-
-  const words = cleanInput.split(/(\s+)/);
   const result: MessageToken[] = [];
+  let start = 0;
 
-  let i = 0;
+  // Gives the same runs as `split(/(\s+)/)` without the regex and the array.
+  while (start < cleanInput.length) {
+    const isSpace = isWhitespaceCode(cleanInput.charCodeAt(start));
+    let end = start + 1;
 
-  while (i < words.length) {
-    const word = words[i];
-
-    if (!word) {
-      i += 1;
-      continue;
+    while (
+      end < cleanInput.length &&
+      isWhitespaceCode(cleanInput.charCodeAt(end)) === isSpace
+    ) {
+      end += 1;
     }
 
-    if (/^\s+$/.test(word)) {
+    const word = cleanInput.slice(start, end);
+
+    if (isSpace) {
       result.push({ type: 'text', content: word });
-      i += 1;
-
-      continue;
-    }
-
-    const mention = matchMentionLogin(word);
-
-    if (mention) {
-      result.push(...toMentionParts(mention));
-      i += 1;
-
-      continue;
-    }
-
-    const linkParts = parseWordLinkTokens(word);
-
-    if (linkParts) {
-      result.push(...linkParts);
-      i += 1;
-
-      continue;
-    }
-
-    let emote = getEmote(word);
-
-    if (!emote && word.length <= 8 && hasNonAsciiChar(word)) {
-      emote = findEmojiForWord(emojiMap, word);
-    }
-
-    if (emote) {
-      result.push({
-        id: emote.id,
-        name: emote.name,
-        type: 'emote' as const,
-        content: word,
-        creator: emote.creator || '',
-        emote_link: emote.emote_link || '',
-        original_name:
-          emote.provider === 'emoji' && !word.startsWith(':')
-            ? word
-            : emote.original_name || '',
-        site: emote.site || '',
-        static_url: emote.static_url,
-        thumbnail: emote.url,
-        url: emote.url,
-        width: emote.width,
-        height: emote.height,
-        aspect_ratio: emote.aspect_ratio,
-        zero_width: emote.zero_width,
-      });
     } else {
-      result.push({ type: 'text', content: word });
+      pushWordTokens(result, word, getEmote, emojiMap);
     }
 
-    i += 1;
+    start = end;
   }
 
-  evictOldestWhenFull(cache, MAX_CACHE_SIZE);
-
   const composedResult = applyEmoteCompositionPass(result);
-  cache.set(cacheKey, composedResult);
+  setCachedTokens(cacheKey, composedResult);
 
   return applyMentionLoginCasing(composedResult);
 };
