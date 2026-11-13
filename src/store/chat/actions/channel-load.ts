@@ -13,7 +13,8 @@ import {
   getBttvBadges,
 } from '@app/store/chat/actions/bttv-badges/getBttvBadges';
 import { getChatterinoBadges } from '@app/store/chat/actions/chatterinoBadges';
-import { getPreferences } from '@app/store/preference-store';
+import { getPreferences, type Preferences } from '@app/store/preference-store';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
 import { cheermoteFetchGuard } from '@app/utils/chat/cheermote-store/cheermoteFetchGuard';
 import { fetchChannelCheermotes } from '@app/utils/chat/cheermote-store/fetchChannelCheermotes';
@@ -34,10 +35,13 @@ import {
 import {
   CHANNEL_BADGE_SLICE_KEYS,
   CHANNEL_EMOTE_SLICE_KEYS,
+  CHANNEL_SLICE_KEYS,
   EMPTY_GATED_EMOTE_DATA,
   type GatedEmoteData,
   gateEmoteData,
+  GLOBAL_SLICE_KEYS,
   mapSlices,
+  SLICE_BY_KEY,
 } from '../types/chat-resource-slices';
 import type {
   ChannelCacheType,
@@ -879,19 +883,73 @@ export const clearPersistedChatResources = (): void => {
   void clearChatStorePersistence();
 };
 
+const GATE_PREFERENCE_KEYS = [
+  ...new Set<keyof Preferences>([
+    ...CHANNEL_SLICE_KEYS.map(key => SLICE_BY_KEY[key].preference),
+    ...GLOBAL_SLICE_KEYS.map(key => SLICE_BY_KEY[key].preference),
+    'showBttvBadges',
+  ]),
+];
+
+const EMOTE_DATA_INPUT_COUNT =
+  CHANNEL_SLICE_KEYS.length +
+  GLOBAL_SLICE_KEYS.length +
+  GATE_PREFERENCE_KEYS.length +
+  2;
+
+const scratchEmoteDataInputs: unknown[] = Array.from<unknown>({
+  length: EMOTE_DATA_INPUT_COUNT,
+});
+
 /**
- * Reference-keyed memo: getCurrentEmoteData runs once per ingested message
- * but its inputs only change a handful of times per session.
+ * Keyed on every value `gateEmoteData` reads, not on the parent objects.
+ * Legend State writes a nested `.set()` into the parent object in place, so
+ * the channel cache and preferences objects keep their identity when one
+ * slice or flag changes.
  */
 let resolvedEmoteDataCache: {
   channelId: string;
-  cache: unknown;
-  globalCache: unknown;
-  preferences: unknown;
-  chatterinoBadges: unknown;
-  bttvBadges: unknown;
+  inputs: unknown[];
   value: GatedEmoteData;
 } | null = null;
+
+function fillEmoteDataInputs(
+  cache: ChannelCacheType,
+  globalCache: GlobalCacheType,
+  preferences: Preferences,
+  chatterinoBadges: SanitisedBadgeSet[],
+  bttvBadges: SanitisedBadgeSet[],
+): void {
+  let index = 0;
+
+  for (const key of CHANNEL_SLICE_KEYS) {
+    scratchEmoteDataInputs[index] = cache[key];
+    index += 1;
+  }
+
+  for (const key of GLOBAL_SLICE_KEYS) {
+    scratchEmoteDataInputs[index] = globalCache[key];
+    index += 1;
+  }
+
+  for (const key of GATE_PREFERENCE_KEYS) {
+    scratchEmoteDataInputs[index] = preferences[key];
+    index += 1;
+  }
+
+  scratchEmoteDataInputs[index] = chatterinoBadges;
+  scratchEmoteDataInputs[index + 1] = bttvBadges;
+}
+
+function emoteDataInputsMatch(inputs: unknown[]): boolean {
+  for (let index = 0; index < EMOTE_DATA_INPUT_COUNT; index += 1) {
+    if (inputs[index] !== scratchEmoteDataInputs[index]) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 export const getCurrentEmoteData = (channelId?: string): GatedEmoteData => {
   const targetChannelId = channelId ?? chatStore$.currentChannelId.peek();
@@ -912,16 +970,20 @@ export const getCurrentEmoteData = (channelId?: string): GatedEmoteData => {
   const chatterinoBadges = getChatterinoBadges();
   const bttvBadges = getBttvBadges();
 
+  fillEmoteDataInputs(
+    cache,
+    globalCache,
+    preferences,
+    chatterinoBadges,
+    bttvBadges,
+  );
+
   const memo = resolvedEmoteDataCache;
 
   if (
     memo &&
     memo.channelId === targetChannelId &&
-    memo.cache === cache &&
-    memo.globalCache === globalCache &&
-    memo.preferences === preferences &&
-    memo.chatterinoBadges === chatterinoBadges &&
-    memo.bttvBadges === bttvBadges
+    emoteDataInputsMatch(memo.inputs)
   ) {
     return memo.value;
   }
@@ -935,11 +997,7 @@ export const getCurrentEmoteData = (channelId?: string): GatedEmoteData => {
 
   resolvedEmoteDataCache = {
     channelId: targetChannelId,
-    cache,
-    globalCache,
-    preferences,
-    chatterinoBadges,
-    bttvBadges,
+    inputs: scratchEmoteDataInputs.slice(),
     value,
   };
 
