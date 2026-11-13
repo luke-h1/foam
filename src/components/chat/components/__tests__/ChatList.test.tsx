@@ -25,10 +25,12 @@ interface LegendListMockProps {
   maintainVisibleContentPosition: boolean | undefined;
   onContentSizeChange: () => void;
   onEndReachedThreshold: number;
+  onScroll: () => void;
   onViewableItemsChanged: (info: {
     viewableItems: ViewableMessageToken[];
   }) => void;
   recycleItems: boolean;
+  scrollEventThrottle: number | undefined;
   renderItem: (info: {
     item: AnyChatMessageType | undefined;
     index: number;
@@ -231,6 +233,31 @@ describe('ChatList', () => {
       minHeight: 25,
       paddingVertical: 2,
     });
+  });
+
+  test('passes the scroll handler to LegendList without its JS throttle', () => {
+    const onScroll = jest.fn();
+
+    render(
+      createChatListElement({
+        scrollHandlers: {
+          onContentSizeChange: jest.fn(),
+          onEndReached: jest.fn(),
+          onMomentumScrollBegin: jest.fn(),
+          onMomentumScrollEnd: jest.fn(),
+          onScroll,
+          onScrollBeginDrag: jest.fn(),
+          onScrollEndDrag: jest.fn(),
+        },
+      }),
+    );
+
+    const props = getRenderedProps();
+
+    expect({
+      onScroll: props.onScroll,
+      scrollEventThrottle: props.scrollEventThrottle,
+    }).toEqual({ onScroll, scrollEventThrottle: undefined });
   });
 
   test('forwards the dataset identity to LegendList', () => {

@@ -243,7 +243,7 @@ export const ChatList = memo(
         // The composer is in a sibling KeyboardStickyView, so RN's tap-dismiss never fires; drag to dismiss.
         keyboardDismissMode='on-drag'
         keyboardShouldPersistTaps='handled'
-        scrollEventThrottle={16}
+        // No scrollEventThrottle: LegendList applies it as a JS throttle that arms a setTimeout per early event (every other event at 120Hz). The native event rate stays the same.
         viewabilityConfig={CHAT_VIEWABILITY_CONFIG}
         onViewableItemsChanged={onViewableItemsChanged}
       />
