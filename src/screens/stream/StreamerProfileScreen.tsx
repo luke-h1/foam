@@ -422,7 +422,6 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
     enabled: Boolean(user?.login),
   });
 
-  // Two columns on any wide window: web, and the iPhone Duo inner display.
   const isWideWindow = windowWidth >= 820;
 
   const cardWidth = isWideWindow

@@ -9,9 +9,6 @@ import { getBottomTabOverflow } from '@app/utils/navigation/getBottomTabOverflow
 
 export function useBottomTabOverflow() {
   const tabHeight = use(BottomTabBarHeightContext);
-
-  // The window size changes on a fold or unfold, and the tab bar placement
-  // changes with it.
   const { width, height } = useWindowDimensions();
 
   return getBottomTabOverflow({

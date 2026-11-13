@@ -7,18 +7,9 @@ import { HeaderHeightContext } from 'expo-router/react-navigation';
 const COMPACT_HEADER_HEIGHT = 44;
 
 interface HeaderInsetBaseStyle extends ViewStyle {
-  /**
-   * Narrowed to a number so the hook can add the safe-area insets to it.
-   */
   paddingHorizontal?: number;
 }
 
-/**
- * Content style for a list under a transparent header: pads the top by the
- * header height, and pads the sides by the safe-area insets so rows clear
- * the iPhone Duo side rail. The side padding is added to the base style's
- * `paddingHorizontal`, which it would otherwise override.
- */
 export function useHeaderInsetContentStyle(
   baseStyle: HeaderInsetBaseStyle,
 ): StyleProp<ViewStyle> {

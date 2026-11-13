@@ -101,8 +101,6 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
   const flashListRef = useRef<FlashListRef<TwitchStream>>(null);
   const insets = useSafeAreaInsets();
 
-  // The side padding keeps rows clear of the iPhone Duo side rail. It is
-  // zero on a phone in portrait.
   const listContentStyle = useMemo(
     () => ({
       paddingBottom: theme.space20,

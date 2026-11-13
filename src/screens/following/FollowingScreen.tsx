@@ -210,8 +210,6 @@ export default function FollowingScreen() {
 
   const insets = useSafeAreaInsets();
 
-  // The side padding keeps rows clear of the iPhone Duo side rail. It is
-  // zero on a phone in portrait.
   const listContentStyle = useMemo(
     () => ({
       paddingBottom: tabBarOverflow + theme.space20,
