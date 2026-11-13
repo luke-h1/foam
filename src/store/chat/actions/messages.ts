@@ -107,6 +107,7 @@ let nextMessageSeq = 0;
 const prepareMessageForStore = (
   message: AnyChatMessageType,
   precomputedKey?: string,
+  arrivedInBurst = false,
 ): AnyChatMessageType => {
   const messageKey =
     precomputedKey ??
@@ -128,6 +129,10 @@ const prepareMessageForStore = (
 
   if (cachedSenderColor) {
     storedMessage.cachedSenderColor = cachedSenderColor;
+  }
+
+  if (arrivedInBurst) {
+    storedMessage.arrivedInBurst = true;
   }
 
   return storedMessage;
@@ -574,7 +579,17 @@ export const addMessage = (message?: AnyChatMessageType) => {
   addMessages([message]);
 };
 
-export const addMessages = (messages: (AnyChatMessageType | undefined)[]) => {
+interface AddMessagesOptions {
+  /**
+   * Raid-mode flushes mark their rows so the list skips the entrance animation.
+   */
+  arrivedInBurst?: boolean;
+}
+
+export const addMessages = (
+  messages: (AnyChatMessageType | undefined)[],
+  { arrivedInBurst = false }: AddMessagesOptions = {},
+) => {
   if (messages.length === 0) {
     return;
   }
@@ -594,7 +609,7 @@ export const addMessages = (messages: (AnyChatMessageType | undefined)[]) => {
 
     messageKeySet.add(key);
     messageKeyOrder.push(key);
-    storedMessages.push(prepareMessageForStore(msg, key));
+    storedMessages.push(prepareMessageForStore(msg, key, arrivedInBurst));
   }
 
   if (storedMessages.length === 0) {

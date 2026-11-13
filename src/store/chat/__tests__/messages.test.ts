@@ -440,6 +440,18 @@ describe('chatStore messages', () => {
     warnSpy.mockRestore();
   });
 
+  test('addMessages marks rows from a burst flush and leaves others unmarked', () => {
+    addMessages([createMessage('calm', 'calm-nonce', 'calm')]);
+
+    addMessages([createMessage('raid', 'raid-nonce', 'raid')], {
+      arrivedInBurst: true,
+    });
+
+    expect(
+      chatStore$.messages.peek().map(message => message.arrivedInBurst),
+    ).toEqual([undefined, true]);
+  });
+
   test('stores the parsed part array as given, so a cached parse stays shared', () => {
     const parts: MessageToken[] = [
       { type: 'emote', content: 'WW', id: '01F71VQYHR000D3ZZ6Q11NR7TV' },
