@@ -40,6 +40,17 @@ let cache = new Map<string, MessageToken[]>();
 let previousCache = new Map<string, MessageToken[]>();
 const baseCollectionCache = new Map<string, EmoteCollection>();
 
+/**
+ * One token per emote object, shared by every message and cache entry that
+ * matches it. Keyed weakly, so an emote set change releases the old tokens.
+ * A token also depends on the matched word (`content`, and `original_name`
+ * for emoji), so a word that differs from the stored token's gets its own.
+ */
+const internedEmoteTokens = new WeakMap<
+  SanitisedEmote,
+  MessageToken<'emote'>
+>();
+
 const MAX_BASE_COLLECTION_CACHE_SIZE = 4;
 
 const scopedLookupCache = new Map<
@@ -396,13 +407,20 @@ function stackZeroWidthEmote(
   out.length = anchor + 1;
 
   // Skip duplicate overlay ids (double decode + darkened alpha).
-  const overlaid = base.overlaid ?? [];
-
   const alreadyStacked =
-    base.id === token.id || overlaid.some(overlay => overlay.id === token.id);
+    base.id === token.id ||
+    (base.overlaid?.some(overlay => overlay.id === token.id) ?? false);
 
-  if (!alreadyStacked) {
-    base.overlaid = [...overlaid, token];
+  if (alreadyStacked) {
+    return true;
+  }
+
+  // An interned base is shared by every message that uses the emote, so the
+  // first overlay copies it. Only that per-message copy carries `overlaid`.
+  if (base.overlaid) {
+    base.overlaid.push(token);
+  } else {
+    out[anchor] = { ...base, overlaid: [token] };
   }
 
   return true;
@@ -556,7 +574,27 @@ function pushWordTokens(
     return;
   }
 
-  result.push({
+  const interned = internedEmoteTokens.get(emote);
+
+  if (interned?.content === word) {
+    result.push(interned);
+    return;
+  }
+
+  const token = createEmoteToken(emote, word);
+
+  if (!interned) {
+    internedEmoteTokens.set(emote, token);
+  }
+
+  result.push(token);
+}
+
+function createEmoteToken(
+  emote: SanitisedEmote,
+  word: string,
+): MessageToken<'emote'> {
+  return {
     id: emote.id,
     name: emote.name,
     type: 'emote' as const,
@@ -575,7 +613,7 @@ function pushWordTokens(
     height: emote.height,
     aspect_ratio: emote.aspect_ratio,
     zero_width: emote.zero_width,
-  });
+  };
 }
 
 /**
