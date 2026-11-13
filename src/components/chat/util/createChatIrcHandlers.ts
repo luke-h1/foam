@@ -59,10 +59,6 @@ export interface ChatIrcHandlerDeps {
   moderateChatMessageById: (messageId: string, notice: string) => void;
   moderateChatMessagesByLogin: (login: string, notice: string) => void;
   removeChatMessagesByLogin: (login: string) => void;
-  enqueueLiveChatMessage: (
-    baseMessage: AnyChatMessageType,
-    countUnread?: boolean,
-  ) => void;
   processMessageEmotes: (
     text: string,
     userstate: ReturnType<typeof createUserStateFromTags>,
@@ -78,7 +74,6 @@ export function createChatIrcHandlers({
   channelId,
   channelName,
   clearLocalMessages,
-  enqueueLiveChatMessage,
   handleNewMessage,
   isMountedRef,
   isLoadingRecentMessagesRef,
@@ -123,21 +118,18 @@ export function createChatIrcHandlers({
         getFallbackSenderColor(replyParentDisplayName)
       : undefined;
 
-    const baseMessage = createBaseMessage({
+    const message = createBaseMessage({
       tags: enrichChannelPointPrivmsgTags(tags, channelId),
       channelName,
       text,
       isAction,
+      isHistorical: !countUnread,
+      parentColor,
+      pendingEmoteParse: true,
       timestampFormat: getPreferences().chatTimestampFormat,
     });
 
-    const messageWithParentColor = {
-      ...baseMessage,
-      parentColor,
-      ...historicalFlag(countUnread),
-    };
-
-    enqueueLiveChatMessage(messageWithParentColor, countUnread);
+    handleNewMessage(message, { countUnread });
   };
 
   const onMessage = (

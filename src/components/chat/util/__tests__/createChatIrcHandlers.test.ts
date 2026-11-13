@@ -12,18 +12,15 @@ import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 
 function createHandlers() {
-  const enqueueLiveChatMessage = jest.fn<
+  const handleNewMessage = jest.fn<
     void,
-    [AnyChatMessageType, boolean | undefined]
+    [AnyChatMessageType, { countUnread?: boolean } | undefined]
   >();
-
-  const handleNewMessage = jest.fn();
 
   const handlers = createChatIrcHandlers({
     channelId: 'room-1',
     channelName: 'somechannel',
     clearLocalMessages: jest.fn(),
-    enqueueLiveChatMessage,
     handleNewMessage,
     listRef: { current: null },
     messages$: { peek: () => [] },
@@ -35,7 +32,7 @@ function createHandlers() {
     roomStateTracker: createRoomStateTracker(),
   });
 
-  return { enqueueLiveChatMessage, handleNewMessage, handlers };
+  return { handleNewMessage, handlers };
 }
 
 describe('createChatIrcHandlers channel point ingest', () => {
@@ -65,7 +62,7 @@ describe('createChatIrcHandlers channel point ingest', () => {
   test('a PRIVMSG for a cached reward gets the reward title', () => {
     cacheChannelPointRewardTitle('room-1', 'reward-2', 'Chinese TTS');
 
-    const { handlers, enqueueLiveChatMessage } = createHandlers();
+    const { handlers, handleNewMessage } = createHandlers();
 
     handlers.onMessage(
       '#somechannel',
@@ -73,7 +70,7 @@ describe('createChatIrcHandlers channel point ingest', () => {
       'ni hao',
     );
 
-    const message = enqueueLiveChatMessage.mock.calls[0]?.[0];
+    const message = handleNewMessage.mock.calls[0]?.[0];
 
     expect(message?.userstate['msg-param-custom-reward-title'] ?? null).toEqual(
       'Chinese TTS',

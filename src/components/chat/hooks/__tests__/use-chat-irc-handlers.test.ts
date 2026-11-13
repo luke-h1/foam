@@ -45,7 +45,7 @@ interface RenderIrcHandlersOptions {
   isLoadingRecentMessages?: boolean;
   isMounted?: boolean;
   clearLocalMessages?: jest.Mock;
-  enqueueLiveChatMessage?: jest.Mock;
+  handleNewMessage?: jest.Mock;
   processMessageEmotes?: jest.Mock;
   moderateChatMessageById?: jest.Mock;
   moderateChatMessagesByLogin?: jest.Mock;
@@ -57,7 +57,7 @@ function renderIrcHandlers({
   isLoadingRecentMessages = false,
   isMounted = true,
   clearLocalMessages = jest.fn(),
-  enqueueLiveChatMessage = jest.fn(),
+  handleNewMessage = jest.fn(),
   processMessageEmotes = jest.fn(),
   moderateChatMessageById = jest.fn(),
   moderateChatMessagesByLogin = jest.fn(),
@@ -69,8 +69,7 @@ function renderIrcHandlers({
       channelId: 'channel-1',
       channelName: 'foam',
       clearLocalMessages,
-      enqueueLiveChatMessage,
-      handleNewMessage: jest.fn(),
+      handleNewMessage,
       isMountedRef: { current: isMounted },
       isLoadingRecentMessagesRef: { current: isLoadingRecentMessages },
       removeChatMessagesByLogin,
@@ -132,8 +131,8 @@ describe('useChatIrcHandlers', () => {
   });
 
   test('strips the CTCP ACTION wrapper and flags /me messages', () => {
-    const enqueueLiveChatMessage = jest.fn();
-    const { result } = renderIrcHandlers({ enqueueLiveChatMessage });
+    const handleNewMessage = jest.fn();
+    const { result } = renderIrcHandlers({ handleNewMessage });
 
     act(() => {
       result.current.onMessage(
@@ -143,16 +142,16 @@ describe('useChatIrcHandlers', () => {
       );
     });
 
-    expect(enqueueLiveChatMessage).toHaveBeenCalledTimes(1);
-    const [baseMessage] = enqueueLiveChatMessage.mock.calls[0] ?? [];
+    expect(handleNewMessage).toHaveBeenCalledTimes(1);
+    const [baseMessage] = handleNewMessage.mock.calls[0] ?? [];
     expect(baseMessage.isAction).toEqual(true);
 
     expect(baseMessage.message[0].content).toEqual('waves at chat');
   });
 
   test('does not flag a normal message as an action', () => {
-    const enqueueLiveChatMessage = jest.fn();
-    const { result } = renderIrcHandlers({ enqueueLiveChatMessage });
+    const handleNewMessage = jest.fn();
+    const { result } = renderIrcHandlers({ handleNewMessage });
 
     act(() => {
       result.current.onMessage(
@@ -162,18 +161,18 @@ describe('useChatIrcHandlers', () => {
       );
     });
 
-    const [baseMessage] = enqueueLiveChatMessage.mock.calls[0] ?? [];
+    const [baseMessage] = handleNewMessage.mock.calls[0] ?? [];
     expect(baseMessage.message[0].content).toEqual('hello world');
 
     expect(baseMessage.isAction).toBeUndefined();
   });
 
   test('live messages defer the emote parse to the ingest queue', () => {
-    const enqueueLiveChatMessage = jest.fn();
+    const handleNewMessage = jest.fn();
     const processMessageEmotes = jest.fn();
 
     const { result } = renderIrcHandlers({
-      enqueueLiveChatMessage,
+      handleNewMessage,
       processMessageEmotes,
     });
 
@@ -185,9 +184,14 @@ describe('useChatIrcHandlers', () => {
       );
     });
 
-    expect(enqueueLiveChatMessage).toHaveBeenCalledTimes(1);
+    expect(handleNewMessage).toHaveBeenCalledTimes(1);
 
-    expect(enqueueLiveChatMessage.mock.calls[0]?.[1]).toEqual(true);
+    const [liveMessage, options] = handleNewMessage.mock.calls[0] ?? [];
+
+    expect({
+      options,
+      pendingEmoteParse: liveMessage?.pendingEmoteParse,
+    }).toEqual({ options: { countUnread: true }, pendingEmoteParse: true });
 
     expect(processMessageEmotes).not.toHaveBeenCalled();
   });

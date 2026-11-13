@@ -76,7 +76,6 @@ function createPipeline() {
     channelId: PIPELINE_CHANNEL_ID,
     channelName: 'perfchannel',
     clearLocalMessages: controller.clearLocalMessages,
-    enqueueLiveChatMessage: result.current.enqueueLiveChatMessage,
     handleNewMessage: controller.handleNewMessage,
     listRef: { current: null },
     messages$: chatStore$.messages,

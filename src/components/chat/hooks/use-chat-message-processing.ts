@@ -31,6 +31,11 @@ import { createUserStateFromTags } from '@app/utils/chat/message-handlers/create
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { logger } from '@app/utils/logger';
 
+interface ResolvedMessageParts {
+  badges: AnyChatMessageType['badges'];
+  message: AnyChatMessageType['message'];
+}
+
 interface UseChatMessageProcessingOptions {
   channelId: string;
   handleNewMessage: (
@@ -53,22 +58,22 @@ export function useChatMessageProcessing({
   showChatGifs,
   userLogin,
 }: UseChatMessageProcessingOptions) {
-  const composeMessageWithEmotes = useCallback(
+  const resolveMessageParts = useCallback(
     (
       text: string,
       userstate: ReturnType<typeof createUserStateFromTags>,
       baseMessage: AnyChatMessageType,
       userId?: string,
-    ): AnyChatMessageType => {
+    ): ResolvedMessageParts | null => {
       const emoteData = getCurrentEmoteData(channelId);
       const hasGifs = showChatGifs && Boolean(userstate.gifs?.trim());
 
       if (!hasEnrichmentEmoteSources(emoteData) && !hasGifs) {
-        return baseMessage;
+        return null;
       }
 
       try {
-        const replacedMessage = resolveMessageEmoteTokens({
+        const message = resolveMessageEmoteTokens({
           channelId,
           emoteData,
           show7TvEmotes,
@@ -98,14 +103,10 @@ export function useChatMessageProcessing({
           });
         }
 
-        return {
-          ...baseMessage,
-          message: replacedMessage,
-          badges,
-        };
+        return { message, badges };
       } catch (error) {
         logger.chat.error('Error processing emotes:', error);
-        return baseMessage;
+        return null;
       }
     },
     [channelId, show7TvEmotes, userLogin, showChatGifs],
@@ -119,41 +120,47 @@ export function useChatMessageProcessing({
       userId?: string,
       countUnread = true,
     ) => {
+      const parts = resolveMessageParts(text, userstate, baseMessage, userId);
+
       handleNewMessage(
-        composeMessageWithEmotes(text, userstate, baseMessage, userId),
+        parts
+          ? { ...baseMessage, message: parts.message, badges: parts.badges }
+          : baseMessage,
         { countUnread },
       );
     },
-    [composeMessageWithEmotes, handleNewMessage],
+    [resolveMessageParts, handleNewMessage],
   );
 
-  const enqueueLiveChatMessage = useCallback(
-    (baseMessage: AnyChatMessageType, countUnread = true) => {
-      handleNewMessage(
-        { ...baseMessage, pendingEmoteParse: true },
-        { countUnread },
-      );
-    },
-    [handleNewMessage],
-  );
-
+  /**
+   * One copy per message. The flag is set to undefined, not deleted, because
+   * a delete moves a Hermes object to dictionary mode.
+   */
   const finalizeBufferedMessage = useCallback(
     (message: AnyChatMessageType): AnyChatMessageType => {
       if (!message.pendingEmoteParse) {
         return message;
       }
 
-      const { pendingEmoteParse: _pending, ...base } = message;
-      const text = replaceEmotesWithText(base.message).trimEnd();
-
-      return composeMessageWithEmotes(
-        text,
-        base.userstate,
-        base,
-        base.userstate['user-id'],
+      const parts = resolveMessageParts(
+        replaceEmotesWithText(message.message).trimEnd(),
+        message.userstate,
+        message,
+        message.userstate['user-id'],
       );
+
+      if (!parts) {
+        return { ...message, pendingEmoteParse: undefined };
+      }
+
+      return {
+        ...message,
+        message: parts.message,
+        badges: parts.badges,
+        pendingEmoteParse: undefined,
+      };
     },
-    [composeMessageWithEmotes],
+    [resolveMessageParts],
   );
 
   const reprocessVisibleMessageFromCache = useCallback(
@@ -252,7 +259,6 @@ export function useChatMessageProcessing({
   }, [channelId, messages$, show7TvEmotes, showChatGifs, userLogin]);
 
   return {
-    enqueueLiveChatMessage,
     finalizeBufferedMessage,
     processMessageEmotes,
     reprocessAllMessages,
