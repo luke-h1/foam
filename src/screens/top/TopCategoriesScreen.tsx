@@ -1,5 +1,12 @@
 import { type RefObject, useCallback, useRef } from 'react';
-import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
+import {
+  type StyleProp,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+  type ViewStyle,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useObservable, useSelector } from '@legendapp/state/react';
 import type { ListRenderItem } from '@shopify/flash-list';
@@ -21,9 +28,10 @@ import { topCategoriesInfiniteQueryOptions } from '@app/lib/react-query/queries/
 import { theme } from '@app/styles/themes';
 import type { Category } from '@app/types/twitch/category';
 
+import { getCategoryGridColumns } from './util/getCategoryGridColumns';
+
 const SKELETON_COUNT = 9;
 const SKELETON_DATA = Array.from({ length: SKELETON_COUNT });
-const SKELETON_COLUMNS = 3;
 const TOP_CATEGORY_SKELETON_KEY_PREFIX = 'skeleton-';
 
 const renderTopCategoryItem: ListRenderItem<Category> = ({ item }) => (
@@ -38,6 +46,13 @@ export function TopCategoriesScreen() {
   const refreshing$ = useObservable(false);
   const refreshing = useSelector(refreshing$);
   const listRef = useRef<FlashListRef<Category>>(null);
+  const { width: windowWidth } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+
+  const numColumns = getCategoryGridColumns({
+    horizontalInsets: insets.left + insets.right,
+    windowWidth,
+  });
 
   useScrollToTop(listRef);
 
@@ -83,7 +98,7 @@ export function TopCategoriesScreen() {
           contentInsetAdjustmentBehavior='automatic'
           data={SKELETON_DATA}
           keyExtractor={(_, idx) => `${TOP_CATEGORY_SKELETON_KEY_PREFIX}${idx}`}
-          numColumns={SKELETON_COLUMNS}
+          numColumns={numColumns}
           renderItem={renderTopCategorySkeletonItem}
           contentContainerStyle={contentContainerStyle}
         />
@@ -123,6 +138,7 @@ export function TopCategoriesScreen() {
     <TopCategoriesList
       allCategories={allCategories}
       listRef={listRef}
+      numColumns={numColumns}
       onEndReached={handleLoadMore}
       onRefresh={onRefresh}
       refreshing={refreshing}
@@ -135,6 +151,7 @@ export function TopCategoriesScreen() {
 interface TopCategoriesListProps {
   allCategories: Category[];
   listRef: RefObject<FlashListRef<Category> | null>;
+  numColumns: number;
   onEndReached: () => void;
   onRefresh: () => void;
   refreshing: boolean;
@@ -145,6 +162,7 @@ interface TopCategoriesListProps {
 function TopCategoriesList({
   allCategories,
   listRef,
+  numColumns,
   onEndReached,
   onRefresh,
   refreshing,
@@ -160,7 +178,7 @@ function TopCategoriesList({
       <FlashList<Category>
         ref={listRef}
         data={allCategories}
-        numColumns={3}
+        numColumns={numColumns}
         contentInsetAdjustmentBehavior='automatic'
         getItemType={() => 'category-card'}
         contentContainerStyle={contentContainerStyle}

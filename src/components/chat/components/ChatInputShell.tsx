@@ -91,7 +91,7 @@ export const ChatInputShell = memo(function ChatInputShell({
 }: ChatInputShellProps) {
   const chatInputRef = useRef<ChatComposerHandle>(null);
   const { width, height } = useWindowDimensions();
-  const isLandscape = width > height;
+  const isShortLandscapeWindow = width > height && height < 500;
   const [draft, setDraft] = useState<ChatDraftState>(createEmptyDraft);
   const { messageInput, replyTo } = draft;
   const messageInputRef = useRef(messageInput);
@@ -310,7 +310,9 @@ export const ChatInputShell = memo(function ChatInputShell({
         onOpenEmoteSheet,
         onOpenSettingsSheet,
         onAttachImage:
-          isAuthenticated && !isLandscape ? handleAttachImage : undefined,
+          isAuthenticated && !isShortLandscapeWindow
+            ? handleAttachImage
+            : undefined,
         isUploadingImage,
         replyTo,
         onClearReply: handleClearReply,

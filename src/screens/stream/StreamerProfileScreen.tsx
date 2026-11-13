@@ -1,6 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Platform,
   ScrollView,
   StyleSheet,
   useWindowDimensions,
@@ -423,12 +422,13 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
     enabled: Boolean(user?.login),
   });
 
-  const cardWidth =
-    Platform.OS === 'web' && windowWidth >= 820
-      ? Math.min(420, (windowWidth - theme.space20 * 3) / 2)
-      : windowWidth - theme.space16 * 2;
+  const isWideWindow = windowWidth >= 820;
 
-  const columns = Platform.OS === 'web' && windowWidth >= 820 ? 2 : 1;
+  const cardWidth = isWideWindow
+    ? Math.min(420, (windowWidth - theme.space20 * 3) / 2)
+    : windowWidth - theme.space16 * 2;
+
+  const columns = isWideWindow ? 2 : 1;
 
   const vodFallbackImage =
     user?.offline_image_url ?? user?.profile_image_url ?? '';

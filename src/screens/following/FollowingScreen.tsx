@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
@@ -207,9 +208,15 @@ export default function FollowingScreen() {
     [streamListLayout],
   );
 
+  const insets = useSafeAreaInsets();
+
   const listContentStyle = useMemo(
-    () => ({ paddingBottom: tabBarOverflow + theme.space20 }),
-    [tabBarOverflow],
+    () => ({
+      paddingBottom: tabBarOverflow + theme.space20,
+      paddingLeft: insets.left,
+      paddingRight: insets.right,
+    }),
+    [insets.left, insets.right, tabBarOverflow],
   );
 
   if (!authState?.isLoggedIn) {
