@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react-native';
+import { act, renderHook } from '@testing-library/react-native';
 
 import {
   createSevenTvEmote,
@@ -8,6 +8,7 @@ import type { EmoteLoadingStatus } from '@app/components/chat/hooks/use-chat-emo
 import { useEmoteReprocessing } from '@app/components/chat/hooks/use-emote-reprocessing';
 import type { ChatMessagesSource } from '@app/components/chat/types/chat-messages-source';
 import { createChatMessageFixture } from '@app/components/chat/util/__tests__/__fixtures__/chatMessage.fixture';
+import { MAX_FILTERED_EMOTE_NAMES } from '@app/components/chat/util/pickEmoteReprocessScope';
 import { bttvEmoteService } from '@app/services/bttv-emote-service';
 import { sevenTvService } from '@app/services/seven-tv-service';
 import {
@@ -15,11 +16,15 @@ import {
   type TokenSummary,
 } from '@app/store/chat/__tests__/__fixtures__/messages.fixture';
 import { addMessages, clearMessages } from '@app/store/chat/actions/messages';
+import * as personalEmotes from '@app/store/chat/actions/personal-emotes';
 import {
   clearPersonalEmotesCache,
   fetchUserPersonalEmotes,
 } from '@app/store/chat/actions/personal-emotes';
+import * as resolveTokensModule from '@app/store/chat/actions/resolveMessageEmoteTokens';
+import { updateSevenTvEmotes } from '@app/store/chat/actions/seven-tv-channel-lifecycle';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
+import { useChannelEmoteDataForReprocess } from '@app/store/chat/react/selectors';
 import {
   type ChannelCacheType,
   makeEmptyEmoteData,
@@ -427,6 +432,237 @@ describe('useEmoteReprocessing', () => {
     expect(storedTokens('msg-1')).toEqual<TokenSummary[]>([
       { type: 'twitchClip', content: 'Kappa' },
     ]);
+  });
+});
+
+describe('useEmoteReprocessing after a live 7TV emote_set.update', () => {
+  const newHype = createSevenTvEmote({
+    id: 'new-hype-id',
+    name: 'NewHype',
+    original_name: 'NewHype',
+    url: 'https://cdn.example.test/new-hype.webp',
+  });
+
+  const resolvedNewHype: TokenSummary = {
+    type: 'emote',
+    content: 'NewHype',
+    url: 'https://cdn.example.test/new-hype.webp',
+  };
+
+  function createKappaMessage(messageId: string): AnyChatMessageType {
+    return {
+      ...createTextOnlyMessage(messageId, 'Kappa'),
+      message: [
+        {
+          type: 'emote',
+          content: 'Kappa',
+          id: kappa.id,
+          name: kappa.name,
+          url: kappa.url,
+        },
+      ],
+    };
+  }
+
+  function useLiveReprocess(processedMessageIds: Set<string>) {
+    const channelEmoteData = useChannelEmoteDataForReprocess(channelId);
+
+    useEmoteReprocessing({
+      channelId,
+      channelEmoteData,
+      messages$: chatStore$.messages,
+      emoteLoadStatus: 'success',
+      processedMessageIdsRef: { current: processedMessageIds },
+      reprocessKey: 'key',
+      show7TvEmotes: true,
+      showChatGifs: false,
+    });
+  }
+
+  function renderLiveReprocess(processedMessageIds = new Set<string>()) {
+    renderHook(() => useLiveReprocess(processedMessageIds));
+  }
+
+  function storedById(): Map<string, AnyChatMessageType> {
+    return new Map(
+      chatStore$.messages.peek().map(message => [message.message_id, message]),
+    );
+  }
+
+  beforeEach(() => {
+    clearMessages();
+    chatStore$.emojis.set([]);
+    jest.spyOn(personalEmotes, 'getUserPersonalEmotes').mockReturnValue([]);
+
+    jest
+      .spyOn(bttvEmoteService, 'getSanitisedGlobalBadges')
+      .mockResolvedValue([]);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  test('resolves an added emote only in the rows that hold its name', () => {
+    seedChannelCache({ sevenTvChannelEmotes: [kappa] });
+    renderLiveReprocess();
+
+    addMessages([
+      createTextOnlyMessage('hype', 'lets go NewHype'),
+      createTextOnlyMessage('plain', 'hello there'),
+      createKappaMessage('kappa'),
+    ]);
+
+    const before = storedById();
+    const resolveSpy = jest.spyOn(
+      resolveTokensModule,
+      'resolveMessageEmoteTokens',
+    );
+
+    act(() => {
+      updateSevenTvEmotes(channelId, [newHype], []);
+    });
+
+    const after = storedById();
+
+    expect({
+      resolveCalls: resolveSpy.mock.calls.length,
+      hype: storedTokens('hype'),
+    }).toEqual<{ resolveCalls: number; hype: TokenSummary[] }>({
+      resolveCalls: 1,
+      hype: [
+        { type: 'text', content: 'lets' },
+        { type: 'text', content: ' ' },
+        { type: 'text', content: 'go' },
+        { type: 'text', content: ' ' },
+        resolvedNewHype,
+      ],
+    });
+
+    expect(after.get('plain')).toBe(before.get('plain'));
+
+    expect(after.get('plain')?.message).toBe(before.get('plain')?.message);
+
+    expect(after.get('kappa')).toBe(before.get('kappa'));
+
+    expect(after.get('kappa')?.message).toBe(before.get('kappa')?.message);
+  });
+
+  test('reverts a removed emote to text only in the rows that hold it', () => {
+    seedChannelCache({ sevenTvChannelEmotes: [kappa, newHype] });
+    renderLiveReprocess();
+
+    addMessages([
+      createKappaMessage('kappa'),
+      createTextOnlyMessage('plain', 'hello there'),
+    ]);
+
+    const before = storedById();
+
+    act(() => {
+      updateSevenTvEmotes(channelId, [], [kappa]);
+    });
+
+    const after = storedById();
+
+    expect(storedTokens('kappa')).toEqual<TokenSummary[]>([
+      { type: 'text', content: 'Kappa' },
+    ]);
+
+    expect(after.get('plain')).toBe(before.get('plain'));
+
+    expect(after.get('plain')?.message).toBe(before.get('plain')?.message);
+  });
+
+  test('re-resolves the rows that hold the old or the new name of a rename', () => {
+    seedChannelCache({ sevenTvChannelEmotes: [kappa] });
+    renderLiveReprocess();
+
+    addMessages([
+      createKappaMessage('old-name'),
+      createTextOnlyMessage('new-name', 'KappaPride'),
+      createTextOnlyMessage('plain', 'hello there'),
+    ]);
+
+    const before = storedById();
+
+    const renamedKappa = createSevenTvEmote({
+      ...kappa,
+      name: 'KappaPride',
+      original_name: 'Kappa',
+    });
+
+    act(() => {
+      updateSevenTvEmotes(channelId, [renamedKappa], [kappa]);
+    });
+
+    const after = storedById();
+
+    expect({
+      oldName: storedTokens('old-name'),
+      newName: storedTokens('new-name'),
+    }).toEqual<Record<string, TokenSummary[]>>({
+      oldName: [{ type: 'text', content: 'Kappa' }],
+      newName: [
+        {
+          type: 'emote',
+          content: 'KappaPride',
+          url: 'https://cdn.example.test/kappa.webp',
+        },
+      ],
+    });
+
+    expect(after.get('plain')).toBe(before.get('plain'));
+  });
+
+  test('re-resolves every row, processed or not, for a bulk update past the name limit', () => {
+    jest.useFakeTimers();
+    seedChannelCache({ sevenTvChannelEmotes: [kappa] });
+
+    const processedMessageIds = new Set<string>();
+    renderLiveReprocess(processedMessageIds);
+
+    addMessages(
+      Array.from({ length: 12 }, (_, index) =>
+        createTextOnlyMessage(`row-${index}`, `NewHype row${index}`),
+      ),
+    );
+
+    processedMessageIds.add('row-11');
+
+    const bulk = [
+      newHype,
+      ...Array.from({ length: MAX_FILTERED_EMOTE_NAMES }, (_, index) =>
+        createSevenTvEmote({ id: `bulk-${index}`, name: `Bulk${index}` }),
+      ),
+    ];
+
+    const resolveSpy = jest.spyOn(
+      resolveTokensModule,
+      'resolveMessageEmoteTokens',
+    );
+
+    act(() => {
+      updateSevenTvEmotes(channelId, bulk, []);
+    });
+
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    expect({
+      resolveCalls: resolveSpy.mock.calls.length,
+      first: storedTokens('row-0')[0],
+      processed: storedTokens('row-11')[0],
+    }).toEqual<{
+      resolveCalls: number;
+      first: TokenSummary | undefined;
+      processed: TokenSummary | undefined;
+    }>({
+      resolveCalls: 12,
+      first: resolvedNewHype,
+      processed: resolvedNewHype,
+    });
   });
 });
 

@@ -3,17 +3,24 @@ import type { RefObject } from 'react';
 
 import type { EmoteLoadingStatus } from '@app/components/chat/hooks/use-chat-emote-loader';
 import type { ChatMessagesSource } from '@app/components/chat/types/chat-messages-source';
+import {
+  type ChannelEmoteDataSnapshot,
+  type EmoteReprocessInputs,
+  pickEmoteReprocessScope,
+} from '@app/components/chat/util/pickEmoteReprocessScope';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channel-load';
 import {
   enrichMessageSet,
+  type EnrichScope,
   hasEnrichmentEmoteSources,
 } from '@app/store/chat/actions/message-enrichment';
+import { takeSevenTvEmoteDelta } from '@app/store/chat/actions/seven-tv-emote-delta';
 
 const MAX_PROCESSED_MESSAGE_IDS = 5000;
 
 interface UseEmoteReprocessingOptions {
   channelId: string;
-  channelEmoteData: unknown;
+  channelEmoteData: ChannelEmoteDataSnapshot | null;
   messages$: ChatMessagesSource;
   emoteLoadStatus: EmoteLoadingStatus;
   processedMessageIdsRef: RefObject<Set<string>>;
@@ -36,8 +43,23 @@ export function useEmoteReprocessing({
 }: UseEmoteReprocessingOptions) {
   const previousReprocessKeyRef = useRef(reprocessKey);
   const previousShowChatGifsRef = useRef(showChatGifs);
+  const previousInputsRef = useRef<EmoteReprocessInputs | null>(null);
+  const runningPassRef = useRef<EnrichScope['kind'] | null>(null);
 
   useEffect(() => {
+    const delta = takeSevenTvEmoteDelta(channelId);
+    const previousInputs = previousInputsRef.current;
+
+    const inputs: EmoteReprocessInputs = {
+      channelId,
+      channelEmoteData,
+      emoteLoadStatus,
+      show7TvEmotes,
+      userLogin,
+    };
+
+    previousInputsRef.current = inputs;
+
     const reprocessKeyChanged =
       previousReprocessKeyRef.current !== reprocessKey;
     const showChatGifsChanged =
@@ -73,11 +95,25 @@ export function useEmoteReprocessing({
       return;
     }
 
+    const scope = pickEmoteReprocessScope({
+      delta,
+      previous: previousInputs,
+      next: inputs,
+      interruptedPass: runningPassRef.current,
+      processedSetCleared: reprocessKeyChanged || showChatGifsChanged,
+    });
+
+    runningPassRef.current = scope.kind;
+
     return enrichMessageSet({
       channelId,
       emoteData,
       messages: currentMessages,
+      onComplete: () => {
+        runningPassRef.current = null;
+      },
       processedMessageIds: processedMessageIdsRef.current,
+      scope,
       show7TvEmotes,
       showChatGifs,
       userLogin,
