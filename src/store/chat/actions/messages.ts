@@ -102,36 +102,6 @@ const dedupeMessagesForStore = (
   return uniqueMessages;
 };
 
-/**
- * Legend State keys nested array diffs on element `id`s, so tokens need
- * distinct ids or child nodes mis-key; non-enumerable so persistence never sees them.
- */
-const partIdsAssigned = new WeakSet<AnyChatMessageType['message']>();
-
-const ensurePartIdsForStore = (
-  messageParts: AnyChatMessageType['message'],
-): AnyChatMessageType['message'] => {
-  if (messageParts.length < 2 || partIdsAssigned.has(messageParts)) {
-    return messageParts;
-  }
-
-  for (let index = 0; index < messageParts.length; index += 1) {
-    const token = messageParts[index];
-
-    if (token) {
-      Object.defineProperty(token, 'id', {
-        configurable: true,
-        enumerable: false,
-        value: String(index),
-        writable: true,
-      });
-    }
-  }
-
-  partIdsAssigned.add(messageParts);
-  return messageParts;
-};
-
 let nextMessageSeq = 0;
 
 const prepareMessageForStore = (
@@ -154,7 +124,6 @@ const prepareMessageForStore = (
     id: messageKey,
     seq: nextMessageSeq,
     committedAt: message.committedAt ?? Date.now(),
-    message: ensurePartIdsForStore(message.message),
   };
 
   if (cachedSenderColor) {
@@ -565,10 +534,6 @@ const getMessageUpdatesFromInputs = (
 
     if (!currentMessage) {
       continue;
-    }
-
-    if (messageUpdates.message) {
-      ensurePartIdsForStore(messageUpdates.message);
     }
 
     if (nextMessages === currentMessages) {
