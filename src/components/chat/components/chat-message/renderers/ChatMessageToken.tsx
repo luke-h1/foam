@@ -123,8 +123,8 @@ export function ChatMessageToken({
     case 'mention': {
       return (
         <MentionToken
+          key={getTokenIdentity(token, index)}
           {...{
-            key: getTokenIdentity(token, index),
             content: getMessageTokenText(token),
             baseTextStyle: mentionBaseTextStyle,
             density,

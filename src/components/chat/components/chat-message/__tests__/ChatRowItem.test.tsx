@@ -146,4 +146,55 @@ describe('ChatRowItem', () => {
       true,
     ]);
   });
+
+  test('renders mention and emote tokens without spreading a key prop', () => {
+    const consoleError = jest.spyOn(console, 'error').mockImplementation();
+
+    const message = createChatMessageFixture({
+      message: [
+        { type: 'mention', content: '@luke' },
+        { type: 'text', content: ' hi ' },
+        {
+          type: 'emote',
+          content: 'Kappa',
+          id: 'kappa',
+          name: 'Kappa',
+          url: 'https://cdn.example/kappa.webp',
+        },
+      ],
+    });
+
+    render(
+      <ChatRowItem
+        chatDensity='comfortable'
+        channelId='1'
+        currentUsernameNormalized=''
+        displayFlags={{
+          animate: false,
+          disableEmoteAnimations: false,
+          fontScale: 'default',
+          showAlternatingChatRows: false,
+          showInlineReplyContext: true,
+          showTimestamps: false,
+        }}
+        getMentionColor={() => '#FFFFFF'}
+        highlightedUserSet={new Set()}
+        index={0}
+        message={message}
+        onBadgePress={jest.fn()}
+        onMessageLongPress={jest.fn()}
+        onReplyContextPress={jest.fn()}
+        onUsernamePress={jest.fn()}
+        parseTextForEmotes={text => [{ type: 'text', content: text }]}
+      />,
+    );
+
+    const keySpreadErrors = consoleError.mock.calls.filter(call =>
+      String(call[0]).includes('"key" prop is being spread'),
+    );
+
+    consoleError.mockRestore();
+
+    expect(keySpreadErrors).toEqual([]);
+  });
 });

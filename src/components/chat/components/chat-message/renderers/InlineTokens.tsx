@@ -59,9 +59,9 @@ function renderInlineToken(
   if (token.type === 'emote') {
     return (
       <EmoteToken
+        key={getTokenIdentity(token, index)}
         {...{
           disableAnimations: disableEmoteAnimations,
-          key: getTokenIdentity(token, index),
           token,
           onEmoteTouchStart,
           targetSize: emoteSize,
@@ -91,8 +91,8 @@ function renderInlineToken(
   // the row - see MentionToken.
   return (
     <MentionToken
+      key={getTokenIdentity(token, index)}
       {...{
-        key: getTokenIdentity(token, index),
         content,
         baseTextStyle,
         emoteLineStyle,
