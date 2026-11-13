@@ -1,6 +1,8 @@
 import React from 'react';
 import { Text, TextInput, type TextInputInstance, View } from 'react-native';
 
+import { mockExpoRouterSegments } from '../test/expoRouterSegments';
+
 export const router = {
   back: jest.fn(),
   navigate: jest.fn(),
@@ -102,7 +104,11 @@ export const useNavigation = jest.fn(() => ({
 
 export const useScrollToTop = jest.fn();
 export const usePathname = jest.fn(() => '/');
-export const useSegments = jest.fn((): string[] => []);
+
+export const useSegments = jest.fn(
+  (): string[] => mockExpoRouterSegments.current,
+);
+
 export const useRootNavigationState = jest.fn(() => ({ key: 'root' }));
 
 export const useRouter = jest.fn(() => ({
