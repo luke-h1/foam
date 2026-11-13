@@ -13,7 +13,7 @@ interface FindBadgesParams {
   chatterinoBadges: SanitisedBadgeSet[];
   /**
    * The 7TV entitlement lookup reads live store state that entitlement events
-   * invalidate, so a result-level findBadges cache is not safe (PERF_REPORT.md).
+   * invalidate, so only the part from the badge tag is cached.
    */
   getEntitledBadge: (userId: string) => SanitisedBadgeSet | null | undefined;
 }
@@ -165,16 +165,46 @@ const findTwitchGlobalBadge = (
 ): SanitisedBadgeSet | undefined =>
   getBadgeSetIndex(twitchGlobalBadges).get(`${set}/${set}_${version}`);
 
-export function findBadges({
-  userstate,
-  twitchChannelBadges,
-  twitchGlobalBadges,
-  ffzChannelBadges,
-  ffzGlobalBadges,
-  bttvBadges,
-  chatterinoBadges,
-  getEntitledBadge,
-}: FindBadgesParams): SanitisedBadgeSet[] {
+/**
+ * The Twitch badges depend only on the badge tag and three collections, and a
+ * chatter sends the same tag on every message. Two generations, the same as
+ * the emote parse cache in `emoteProcessor.ts`.
+ */
+const TAG_BADGE_CACHE_GENERATION_SIZE = 256;
+
+let tagBadgeCache = new Map<string, SanitisedBadgeSet[]>();
+let previousTagBadgeCache = new Map<string, SanitisedBadgeSet[]>();
+let tagBadgeCollections: SanitisedBadgeSet[][] = [];
+
+function syncTagBadgeCollections(
+  twitchChannelBadges: SanitisedBadgeSet[],
+  twitchGlobalBadges: SanitisedBadgeSet[],
+  ffzChannelBadges: SanitisedBadgeSet[],
+): void {
+  if (
+    tagBadgeCollections[0] === twitchChannelBadges &&
+    tagBadgeCollections[1] === twitchGlobalBadges &&
+    tagBadgeCollections[2] === ffzChannelBadges
+  ) {
+    return;
+  }
+
+  tagBadgeCollections = [
+    twitchChannelBadges,
+    twitchGlobalBadges,
+    ffzChannelBadges,
+  ];
+
+  tagBadgeCache = new Map();
+  previousTagBadgeCache = new Map();
+}
+
+function buildTagBadges(
+  rawTwitchBadges: string,
+  twitchChannelBadges: SanitisedBadgeSet[],
+  twitchGlobalBadges: SanitisedBadgeSet[],
+  ffzChannelBadges: SanitisedBadgeSet[],
+): SanitisedBadgeSet[] {
   const badges: SanitisedBadgeSet[] = [];
 
   // Custom FFZ channel art overrides the default Twitch mod/VIP badge.
@@ -182,8 +212,6 @@ export function findBadges({
 
   const ffzModBadge = ffzChannelBadgeIndex.get('mod/mod_badge');
   const ffzVipBadge = ffzChannelBadgeIndex.get('vip/vip_badge');
-
-  const rawTwitchBadges = getRawTwitchBadges(userstate);
 
   rawTwitchBadges.split(',').forEach(rawBadge => {
     const [set, version] = rawBadge.split('/');
@@ -220,14 +248,70 @@ export function findBadges({
     }
   });
 
+  return badges;
+}
+
+function getTagBadges(
+  rawTwitchBadges: string,
+  twitchChannelBadges: SanitisedBadgeSet[],
+  twitchGlobalBadges: SanitisedBadgeSet[],
+  ffzChannelBadges: SanitisedBadgeSet[],
+): SanitisedBadgeSet[] {
+  syncTagBadgeCollections(
+    twitchChannelBadges,
+    twitchGlobalBadges,
+    ffzChannelBadges,
+  );
+
+  const current = tagBadgeCache.get(rawTwitchBadges);
+
+  if (current) {
+    return current;
+  }
+
+  const badges =
+    previousTagBadgeCache.get(rawTwitchBadges) ??
+    buildTagBadges(
+      rawTwitchBadges,
+      twitchChannelBadges,
+      twitchGlobalBadges,
+      ffzChannelBadges,
+    );
+
+  if (tagBadgeCache.size >= TAG_BADGE_CACHE_GENERATION_SIZE) {
+    previousTagBadgeCache = tagBadgeCache;
+    tagBadgeCache = new Map();
+  }
+
+  tagBadgeCache.set(rawTwitchBadges, badges);
+  return badges;
+}
+
+const NO_USER_BADGES: SanitisedBadgeSet[] = [];
+
+/**
+ * Badges keyed to the sender rather than the badge tag, in the order they
+ * join the result.
+ */
+function findUserBadges({
+  userstate,
+  ffzGlobalBadges,
+  bttvBadges,
+  chatterinoBadges,
+  getEntitledBadge,
+}: FindBadgesParams): SanitisedBadgeSet[] {
+  let userBadges: SanitisedBadgeSet[] | undefined;
+
   const senderLogin = normaliseChatUsername(userstate.login);
 
   const globalFfzBadges = senderLogin
-    ? (getBadgeOwnerIndex(ffzGlobalBadges).get(senderLogin) ?? [])
-    : [];
+    ? getBadgeOwnerIndex(ffzGlobalBadges).get(senderLogin)
+    : undefined;
 
-  globalFfzBadges.forEach(b => {
-    addBadgeIfMissing(badges, {
+  globalFfzBadges?.forEach(b => {
+    userBadges ??= [];
+
+    userBadges.push({
       title: b.title,
       id: b.id,
       set: b.id,
@@ -239,29 +323,59 @@ export function findBadges({
     });
   });
 
-  const entitledBadge = userstate['user-id']
-    ? getEntitledBadge(userstate['user-id'])
-    : undefined;
+  const userId = userstate['user-id'];
+
+  if (!userId) {
+    return userBadges ?? NO_USER_BADGES;
+  }
+
+  const entitledBadge = getEntitledBadge(userId);
 
   if (entitledBadge) {
-    addBadgeIfMissing(badges, entitledBadge);
+    userBadges ??= [];
+    userBadges.push(entitledBadge);
   }
 
-  const bttvBadge = userstate['user-id']
-    ? getBadgeUserIdIndex(bttvBadges).get(userstate['user-id'])
-    : undefined;
+  const bttvBadge = getBadgeUserIdIndex(bttvBadges).get(userId);
 
   if (bttvBadge) {
-    addBadgeIfMissing(badges, bttvBadge);
+    userBadges ??= [];
+    userBadges.push(bttvBadge);
   }
 
-  const chatterinoBadge = userstate['user-id']
-    ? getBadgeUserIdIndex(chatterinoBadges).get(userstate['user-id'])
-    : undefined;
+  const chatterinoBadge = getBadgeUserIdIndex(chatterinoBadges).get(userId);
 
   if (chatterinoBadge) {
-    addBadgeIfMissing(badges, chatterinoBadge);
+    userBadges ??= [];
+    userBadges.push(chatterinoBadge);
   }
+
+  return userBadges ?? NO_USER_BADGES;
+}
+
+/**
+ * The result shares one array between every message with the same badge tag
+ * and no per-user badge, so callers must not mutate it.
+ */
+export function findBadges(params: FindBadgesParams): SanitisedBadgeSet[] {
+  const tagBadges = getTagBadges(
+    getRawTwitchBadges(params.userstate),
+    params.twitchChannelBadges,
+    params.twitchGlobalBadges,
+    params.ffzChannelBadges,
+  );
+
+  const userBadges = findUserBadges(params);
+
+  if (userBadges.length === 0) {
+    return tagBadges;
+  }
+
+  const badges = tagBadges.slice();
+
+  userBadges.forEach(badge => {
+    addBadgeIfMissing(badges, badge);
+  });
 
   return badges;
 }

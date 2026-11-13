@@ -359,4 +359,88 @@ describe('findBadges', () => {
 
     expect(result).toEqual<SanitisedBadgeSet[]>([ffzBadge]);
   });
+
+  describe('badge tag cache', () => {
+    const subscriberUserstate = createUserStateTags({
+      'badges-raw': 'subscriber/12',
+      badges: { subscriber: '12' },
+      'user-id': 'cache-user',
+    });
+
+    const channelBadge: SanitisedBadgeSet = {
+      id: '12',
+      url: 'https://example.com/sub-12.png',
+      type: 'Twitch Subscriber Badge',
+      provider: 'twitch',
+      title: 'Subscriber',
+      set: 'subscriber',
+    };
+
+    const entitledBadge: SanitisedBadgeSet = {
+      id: '7tv-1',
+      url: 'https://cdn.7tv.app/badge/7tv-1/3x.webp',
+      type: '7TV Badge',
+      provider: '7tv',
+      title: '7TV',
+      set: '7tv',
+    };
+
+    test('repeat messages with one badge tag share one result', () => {
+      const channelBadges = [channelBadge];
+
+      const lookup = () =>
+        findBadges({
+          ...emptyBadgeSources,
+          twitchGlobalBadges: noBadges,
+          twitchChannelBadges: channelBadges,
+          userstate: subscriberUserstate,
+        });
+
+      expect(lookup()).toBe(lookup());
+    });
+
+    test('a new badge collection rebuilds the result for the same tag', () => {
+      const first = findBadges({
+        ...emptyBadgeSources,
+        twitchGlobalBadges: noBadges,
+        twitchChannelBadges: [channelBadge],
+        userstate: subscriberUserstate,
+      });
+
+      const second = findBadges({
+        ...emptyBadgeSources,
+        twitchGlobalBadges: noBadges,
+        twitchChannelBadges: [{ ...channelBadge, title: 'Renamed' }],
+        userstate: subscriberUserstate,
+      });
+
+      expect([first, second].map(badges => badges[0]?.title)).toEqual([
+        'Subscriber',
+        'Renamed',
+      ]);
+    });
+
+    test('an entitlement change shows on the next message with the same tag', () => {
+      const channelBadges = [channelBadge];
+      let entitled: SanitisedBadgeSet | null = null;
+
+      const lookup = () =>
+        findBadges({
+          ...emptyBadgeSources,
+          getEntitledBadge: () => entitled,
+          twitchGlobalBadges: noBadges,
+          twitchChannelBadges: channelBadges,
+          userstate: subscriberUserstate,
+        }).map(badge => badge.id);
+
+      const before = lookup();
+      entitled = entitledBadge;
+      const after = lookup();
+
+      expect({ before, after }).toEqual({
+        before: ['12'],
+        after: ['12', '7tv-1'],
+      });
+    });
+  });
 });
