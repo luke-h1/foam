@@ -37,6 +37,10 @@ import {
 import { skiaDecodableLayerUrl } from './util/paint-layer/skiaDecodableLayerUrl';
 import { PAINT_FONT_FAMILY } from './util/paint-text-style/paintFont';
 import {
+  cancelPaintCanvasRedraw,
+  schedulePaintCanvasRedraw,
+} from './util/paintCanvasRedraw';
+import {
   useSharedPaintAnimationReady,
   useSharedPaintFrames,
 } from './util/sharedPaintAnimationFrames';
@@ -65,23 +69,27 @@ interface PaintedUsernameSkiaProps {
   opacity?: number;
 }
 
-function useCanvasRedrawOnVisible() {
+/**
+ * Redraws after mount, after a reused row gets new bitmaps, and when the row
+ * scrolls back into view.
+ */
+function useCanvasRedrawOnVisible(bitmaps: PaintBitmaps) {
   const canvasRef = useCanvasRef();
   const rowVisibility = use(RowVisibilityContext);
 
   useEffect(() => {
-    const frame = requestAnimationFrame(() => canvasRef.current?.redraw());
+    schedulePaintCanvasRedraw(canvasRef);
+    return () => cancelPaintCanvasRedraw(canvasRef);
+  }, [canvasRef, bitmaps]);
 
+  useEffect(() => {
     const unsubscribe = rowVisibility?.subscribe(() => {
       if (rowVisibility.isVisible()) {
         canvasRef.current?.redraw();
       }
     });
 
-    return () => {
-      cancelAnimationFrame(frame);
-      unsubscribe?.();
-    };
+    return () => unsubscribe?.();
   }, [canvasRef, rowVisibility]);
 
   return canvasRef;
@@ -290,7 +298,7 @@ function ImageLayerPaintCanvas({
     bitmaps;
 
   const maskNode = paintMaskNode(bitmaps);
-  const canvasRef = useCanvasRedrawOnVisible();
+  const canvasRef = useCanvasRedrawOnVisible(bitmaps);
   const urls = useMemo(
     () => paintLayerUrls(bitmaps.imageLayers),
     [bitmaps.imageLayers],
@@ -361,7 +369,7 @@ function PaintBitmapCanvas({
   opacity?: number;
 }) {
   const { width, height, insets, staticImage } = bitmaps;
-  const canvasRef = useCanvasRedrawOnVisible();
+  const canvasRef = useCanvasRedrawOnVisible(bitmaps);
 
   return (
     <Canvas
