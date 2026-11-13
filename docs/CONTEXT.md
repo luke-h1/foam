@@ -41,7 +41,12 @@ version, so a bump never changes the fingerprint.
 move chrome into the edge rail. Set `sidebarAdaptable` on tabs. Keep horizontal
 safe-area insets on sheets and scroll roots. On video screens set
 `StatusBar verticalBarBehaviorIOS="disabled"`. Use `expo-hinge` for effects,
-not layout.
+not layout. Verified on the simulator: the tab bar is a side rail in every
+posture except the inner display in portrait, which keeps a bottom bar
+(`getBottomTabOverflow` encodes this); the open inner display reports
+asymmetric insets (right 84 for the rail, left 0). Do not set `role="search"`
+on the search trigger: the system search tab replaces the stack's stacked
+search bar with a bottom field it never wires up.
 
 **Critical OTA index** — a monotonic counter bumped when an OTA is marked critical
 (`[critical-ota]` commit tag or the `critical_update` input); the app uses it to

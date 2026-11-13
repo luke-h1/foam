@@ -1,5 +1,6 @@
 import { type FC, memo, useCallback, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
@@ -98,6 +99,18 @@ interface CategoryScreenProps {
 
 export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
   const flashListRef = useRef<FlashListRef<TwitchStream>>(null);
+  const insets = useSafeAreaInsets();
+
+  // The side padding keeps rows clear of the iPhone Duo side rail. It is
+  // zero on a phone in portrait.
+  const listContentStyle = useMemo(
+    () => ({
+      paddingBottom: theme.space20,
+      paddingLeft: insets.left,
+      paddingRight: insets.right,
+    }),
+    [insets.left, insets.right],
+  );
   const streamListLayout = usePreference('streamListLayout');
 
   useScrollToTop(flashListRef);
@@ -233,7 +246,7 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
         drawDistance={500}
         getItemType={() => 'category-stream'}
         contentInsetAdjustmentBehavior='automatic'
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={listContentStyle}
         ListHeaderComponent={
           <CategoryStreamsHeader
             category={category}
@@ -253,9 +266,6 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.color.background.dark,
     flex: 1,
-  },
-  listContent: {
-    paddingBottom: theme.space20,
   },
   hero: {
     alignItems: 'flex-end',

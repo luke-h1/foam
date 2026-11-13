@@ -47,6 +47,9 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Label>Top</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf='chart.bar.xaxis' md='leaderboard' />
       </NativeTabs.Trigger>
+      {/* No role='search': the system search tab (iOS 26.1+) replaces the
+          stack's stacked search bar with a bottom search field it never
+          wires up, on the Duo and on phones. Verified on the simulator. */}
       <NativeTabs.Trigger name='search' disableScrollToTop>
         <NativeTabs.Trigger.Label>Search</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf='magnifyingglass' md='search' />

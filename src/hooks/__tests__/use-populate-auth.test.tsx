@@ -55,7 +55,7 @@ describe('usePopulateAuth', () => {
     jest.runOnlyPendingTimers();
     jest.useRealTimers();
     mockedUseIsRouterReady.mockReturnValue(true);
-    jest.mocked(useSegments).mockReturnValue(['tabs']);
+    jest.mocked(useSegments).mockReturnValue(['tabs', 'following']);
   });
 
   test('does not navigate when a stored session is restored at startup', () => {
@@ -120,7 +120,7 @@ describe('usePopulateAuth', () => {
 
     expect(router.replace).not.toHaveBeenCalled();
 
-    jest.mocked(useSegments).mockReturnValue(['tabs']);
+    jest.mocked(useSegments).mockReturnValue(['tabs', 'following']);
     rerender(withAuth({ authState: loggedIn, signInId: 1 }));
 
     expect(jest.mocked(router.replace).mock.calls).toEqual([

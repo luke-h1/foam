@@ -91,7 +91,12 @@ export const ChatInputShell = memo(function ChatInputShell({
 }: ChatInputShellProps) {
   const chatInputRef = useRef<ChatComposerHandle>(null);
   const { width, height } = useWindowDimensions();
-  const isLandscape = width > height;
+
+  // A landscape phone leaves the composer too little room for the attach
+  // button. The iPhone Duo inner display is also landscape (951x669) but has
+  // room, so the test is a short window, not orientation. Landscape phones
+  // top out near 440pt tall.
+  const isShortLandscapeWindow = width > height && height < 500;
   const [draft, setDraft] = useState<ChatDraftState>(createEmptyDraft);
   const { messageInput, replyTo } = draft;
   const messageInputRef = useRef(messageInput);
@@ -310,7 +315,9 @@ export const ChatInputShell = memo(function ChatInputShell({
         onOpenEmoteSheet,
         onOpenSettingsSheet,
         onAttachImage:
-          isAuthenticated && !isLandscape ? handleAttachImage : undefined,
+          isAuthenticated && !isShortLandscapeWindow
+            ? handleAttachImage
+            : undefined,
         isUploadingImage,
         replyTo,
         onClearReply: handleClearReply,
