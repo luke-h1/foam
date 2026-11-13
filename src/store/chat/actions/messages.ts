@@ -465,8 +465,8 @@ const indexAppendedMessages = (
   droppedMessages: AnyChatMessageType[],
 ) => {
   droppedMessages.forEach((message, droppedIndex) => {
-    const key = getChatMessageKey(message.message_id, message.message_nonce);
-    messageKeyToIndex.delete(key);
+    // indexMessage writes this entry under the store id, so delete it the same way.
+    messageKeyToIndex.delete(getChatMessageStoreId(message));
 
     const normalisedMessageId = normaliseMessageField(message.message_id);
 
