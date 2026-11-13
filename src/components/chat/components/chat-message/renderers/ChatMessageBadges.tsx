@@ -6,24 +6,6 @@ import { normalizeSevenTvBadge } from '@app/utils/seven-tv/cosmetics/normalizeSe
 
 import { ChatBadge } from './ChatBadge';
 
-/**
- * `normalizeSevenTvBadge` returns one object per badge, so its identity part
- * of the React key is built once, not on every render.
- */
-const badgeKeys = new WeakMap<SanitisedBadgeSet, string>();
-
-function getBadgeKey(badge: SanitisedBadgeSet): string {
-  const cached = badgeKeys.get(badge);
-
-  if (cached !== undefined) {
-    return cached;
-  }
-
-  const key = `${badge.provider}\u001f${badge.set}\u001f${badge.id}\u001f${badge.url}`;
-  badgeKeys.set(badge, key);
-  return key;
-}
-
 interface ChatMessageBadgesProps {
   badges?: SanitisedBadgeSet[];
   density: ChatDensity;
@@ -54,7 +36,7 @@ export function ChatMessageBadges({
 
     renderedBadges.push(
       <ChatBadge
-        key={`${renderedBadges.length}\u001f${getBadgeKey(normalizedBadge)}`}
+        key={`${renderedBadges.length}\u001f${normalizedBadge.provider}\u001f${normalizedBadge.set}\u001f${normalizedBadge.id}\u001f${normalizedBadge.url}`}
         {...{
           badge: normalizedBadge,
           density,
