@@ -17,7 +17,7 @@ import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import type { CustomHighlight } from '@app/types/chat/customHighlight';
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import type { MessageToken } from '@app/types/chat/messageToken';
-import { getChatMessageStoreId } from '@app/utils/chat/message-identity/getChatMessageStoreId';
+import { getChatMessageListKey } from '@app/utils/chat/message-identity/getChatMessageListKey';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolve-cached-sender-color/resolveCachedSenderColor';
 
 import { ChatRow } from './ChatRow';
@@ -25,6 +25,22 @@ import { getChatTextStyles } from './ChatText.styles';
 import { RowVisibilityContext, useRowVisibility } from './util/rowVisibility';
 
 const messageRowEntering = chatEntranceSpring(FadeInUp);
+
+interface RowEntrance {
+  animate: boolean;
+  messageKey: string;
+}
+
+function decideRowEntrance(
+  message: AnyChatMessageType,
+  messageKey: string,
+  animate: boolean,
+): RowEntrance {
+  return {
+    animate: animate && shouldAnimateMessageEntrance(message, Date.now()),
+    messageKey,
+  };
+}
 
 /**
  * A row renders the whole message union, so notice tags go through a runtime
@@ -100,19 +116,16 @@ export const ChatRowItem = function ChatRowItem({
 
   const rowVisibility = useRowVisibility();
 
-  const messageKey = getChatMessageStoreId(msg);
+  const messageKey = getChatMessageListKey(msg);
 
-  // Per message, not once at mount: a recycled row must still play a live
-  // message's entrance. Recency guard skips scrollback; key re-fires entering.
-  const decideEntrance = () => ({
-    key: messageKey,
-    play: animate && shouldAnimateMessageEntrance(msg, Date.now()),
-  });
+  // Decided once per message, so a re-render does not replay the entrance. A
+  // recycled row keeps its state and gets a new message, so decide again then.
+  const [entrance, setEntrance] = useState(() =>
+    decideRowEntrance(msg, messageKey, animate),
+  );
 
-  const [entrance, setEntrance] = useState(decideEntrance);
-
-  if (entrance.key !== messageKey) {
-    setEntrance(decideEntrance);
+  if (entrance.messageKey !== messageKey) {
+    setEntrance(decideRowEntrance(msg, messageKey, animate));
   }
 
   const isAlternatingRow =
@@ -176,7 +189,8 @@ export const ChatRowItem = function ChatRowItem({
 
   return (
     <RowVisibilityContext.Provider value={rowVisibility}>
-      {entrance.play ? (
+      {entrance.animate ? (
+        // The key remounts the view, because `entering` only runs on mount.
         <Animated.View key={messageKey} entering={messageRowEntering}>
           {row}
         </Animated.View>

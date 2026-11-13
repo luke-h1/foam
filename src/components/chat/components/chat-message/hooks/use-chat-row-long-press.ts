@@ -9,15 +9,23 @@ export const MESSAGE_LONG_PRESS_DELAY_MS = 650;
 
 const LONG_PRESS_MOVE_TOLERANCE_DP = 10;
 
+interface UseChatRowLongPressOptions {
+  canLongPress: boolean;
+  channelId?: string;
+  /**
+   * Identity of the message the row shows. A recycled row keeps this hook's
+   * refs, so a change drops the old message's pending long press.
+   */
+  messageKey: string;
+  onLongPress: () => void;
+}
+
 export function useChatRowLongPress({
   canLongPress,
   channelId,
+  messageKey,
   onLongPress,
-}: {
-  canLongPress: boolean;
-  channelId?: string;
-  onLongPress: () => void;
-}) {
+}: UseChatRowLongPressOptions) {
   const rowLongPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -67,14 +75,17 @@ export function useChatRowLongPress({
 
   useEffect(
     () => () => {
+      pressedEmotePartRef.current = null;
+      rowTouchOriginRef.current = null;
       releaseTouchHoldRef.current?.();
+      releaseTouchHoldRef.current = null;
 
       if (rowLongPressTimerRef.current) {
         clearTimeout(rowLongPressTimerRef.current);
         rowLongPressTimerRef.current = null;
       }
     },
-    [],
+    [messageKey],
   );
 
   const handleEmoteTouchStart = useCallback((token: EmotePressData) => {

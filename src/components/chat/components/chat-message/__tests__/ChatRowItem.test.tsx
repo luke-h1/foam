@@ -2,6 +2,7 @@ import { StyleSheet } from 'react-native';
 
 import { screen } from '@testing-library/react-native';
 
+import type { ChatRowDisplayFlags } from '@app/components/chat/types/chat-ui-flags';
 import { createChatMessageFixture } from '@app/components/chat/util/__tests__/__fixtures__/chatMessage.fixture';
 import render from '@app/test/render';
 import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
@@ -93,5 +94,56 @@ describe('ChatRowItem', () => {
     );
 
     expect(style.textDecorationLine).toBe('line-through');
+  });
+
+  test('decides the entrance again when a recycled row gets a new message', () => {
+    const displayFlags: ChatRowDisplayFlags = {
+      animate: true,
+      disableEmoteAnimations: false,
+      fontScale: 'default',
+      showAlternatingChatRows: false,
+      showInlineReplyContext: true,
+      showTimestamps: false,
+    };
+
+    const renderRow = (message: AnyChatMessageType) => (
+      <ChatRowItem
+        chatDensity='comfortable'
+        channelId='1'
+        currentUsernameNormalized=''
+        displayFlags={displayFlags}
+        getMentionColor={() => '#FFFFFF'}
+        highlightedUserSet={new Set()}
+        index={0}
+        message={message}
+        onBadgePress={jest.fn()}
+        onMessageLongPress={jest.fn()}
+        onReplyContextPress={jest.fn()}
+        onUsernamePress={jest.fn()}
+        parseTextForEmotes={text => [{ type: 'text', content: text }]}
+      />
+    );
+
+    const scrollback = createChatMessageFixture({ isHistorical: true });
+
+    const live = createChatMessageFixture({
+      committedAt: Date.now(),
+      id: 'msg-2_nonce-2',
+      message_id: 'msg-2',
+      message_nonce: 'nonce-2',
+    });
+
+    const { rerender } = render(renderRow(scrollback));
+    const countAnimatedViews = () =>
+      screen.UNSAFE_root.findAll(node => node.props['entering'] != null).length;
+
+    const animatedForScrollback = countAnimatedViews();
+
+    rerender(renderRow(live));
+
+    expect([animatedForScrollback, countAnimatedViews() > 0]).toEqual([
+      0,
+      true,
+    ]);
   });
 });

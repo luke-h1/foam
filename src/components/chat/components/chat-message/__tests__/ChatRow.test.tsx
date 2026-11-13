@@ -328,6 +328,37 @@ describe('ChatRow', () => {
       expect([heldBeforeUnmount, isRowTouchHeld()]).toEqual([true, false]);
     });
 
+    test('drops the pending long press when a recycled row gets a new message', () => {
+      const first = createMockMessage([{ type: 'text', content: 'Hello' }]);
+
+      const second = createMockMessage(
+        [{ type: 'text', content: 'Other' }],
+        {},
+        { id: 'msg-456_nonce-456', message_id: 'msg-456' },
+      );
+
+      const { getByTestId, rerender } = render(
+        <ChatRow {...first} onMessageLongPress={mockOnMessageLongPress} />,
+      );
+
+      jest.useFakeTimers();
+      fireEvent(getByTestId('chat-message'), 'touchStart', touchAt(100, 100));
+
+      rerender(
+        <ChatRow {...second} onMessageLongPress={mockOnMessageLongPress} />,
+      );
+
+      const heldAfterRecycle = isRowTouchHeld();
+
+      act(() => jest.advanceTimersByTime(MESSAGE_LONG_PRESS_DELAY_MS));
+      jest.useRealTimers();
+
+      expect([
+        mockOnMessageLongPress.mock.calls.length,
+        heldAfterRecycle,
+      ]).toEqual([0, false]);
+    });
+
     test('cancels once the finger drifts past the tolerance', () => {
       const message = createMockMessage([
         { type: 'text', content: 'Hello world!' },

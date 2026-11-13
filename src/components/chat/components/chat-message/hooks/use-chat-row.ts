@@ -17,6 +17,7 @@ import type { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import type { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
 import { deriveChatBody } from '@app/utils/chat/derive-chat-body/deriveChatBody';
+import { getChatMessageKey } from '@app/utils/chat/message-identity/getChatMessageKey';
 
 import { useChatRowLongPress } from './use-chat-row-long-press';
 
@@ -174,6 +175,7 @@ export function useChatRow<
   } = useChatRowLongPress({
     canLongPress: Boolean(onMessageLongPress),
     channelId: broadcasterId,
+    messageKey: getChatMessageKey(props.message_id, props.message_nonce),
     onLongPress: handleLongPress,
   });
 
