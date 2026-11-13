@@ -1,8 +1,9 @@
 import { type StyleProp, StyleSheet, type TextStyle, View } from 'react-native';
 
-import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
+import { ChatRowText } from '../ChatRowText';
+import { getChatRowTextStyleForProp } from '../util/chatRowTextStyle';
 import { PaintLayerBackground } from './PaintLayerBackground';
 import { getPaintBaseColor } from './util/paint-layer/getPaintBaseColor';
 import { getPaintLayers } from './util/paint-layer/getPaintLayers';
@@ -40,9 +41,14 @@ export function PaintedUsernameFill({
       {keyedLayers.map(({ layer, key, layerIndex }) => (
         <PaintLayerBackground key={key} layer={layer} layerIndex={layerIndex} />
       ))}
-      <ChatText style={[textStyle, styles.hiddenText]}>
+      <ChatRowText
+        style={getChatRowTextStyleForProp('muted', [
+          textStyle,
+          styles.hiddenText,
+        ])}
+      >
         {displayUsername}
-      </ChatText>
+      </ChatRowText>
     </View>
   );
 }

@@ -93,7 +93,7 @@ function getChildNode(
 
 function buildRowTextStyle(
   tone: ChatRowTextTone,
-  parts: readonly ChatRowTextPart[],
+  parts: readonly StyleProp<TextStyle>[],
 ): TextStyle {
   const styleWeight =
     findStyleValue(parts, 'fontFamily') == null
@@ -144,4 +144,49 @@ export function getChatRowTextStyle(
   const style = buildRowTextStyle(tone, [a, b, c, d, e]);
   node.style = style;
   return style;
+}
+
+const MAX_CACHED_PARTS = 5;
+
+function isStyleArray(
+  style: StyleProp<TextStyle>,
+): style is readonly StyleProp<TextStyle>[] {
+  return Array.isArray(style);
+}
+
+/**
+ * Collects the members of a nested style array in order.
+ */
+function collectStyleParts(
+  style: StyleProp<TextStyle>,
+  parts: ChatRowTextPart[],
+): void {
+  if (isStyleArray(style)) {
+    style.forEach(member => collectStyleParts(member, parts));
+    return;
+  }
+
+  // SAFETY: StyleSheet.create returns plain objects on this React Native, so no member is a registered style number.
+  parts.push((style as ChatRowTextPart) || undefined);
+}
+
+/**
+ * `getChatRowTextStyle` for a span whose style arrives as a style prop. A
+ * nested array of up to five identity-stable members takes the cached path.
+ * Anything else resolves without the cache to the same style.
+ */
+export function getChatRowTextStyleForProp(
+  tone: ChatRowTextTone,
+  style: StyleProp<TextStyle>,
+): TextStyle {
+  const parts: ChatRowTextPart[] = [];
+
+  collectStyleParts(style, parts);
+
+  if (parts.length > MAX_CACHED_PARTS) {
+    return buildRowTextStyle(tone, parts);
+  }
+
+  const [a, b, c, d, e] = parts;
+  return getChatRowTextStyle(tone, a, b, c, d, e);
 }

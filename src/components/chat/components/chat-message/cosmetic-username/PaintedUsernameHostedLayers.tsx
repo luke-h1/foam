@@ -6,9 +6,11 @@ import {
   View,
 } from 'react-native';
 
-import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
+import { getChatColorStyle } from '@app/components/chat/util/chatColorStyles';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
+import { ChatRowText } from '../ChatRowText';
+import { getChatRowTextStyleForProp } from '../util/chatRowTextStyle';
 import { chatLineMetrics } from '../util/chatScale';
 import { PaintedUsernameDropShadowLayer } from './PaintedUsernameDropShadowLayer';
 import { PaintedUsernameMaskedFill } from './PaintedUsernameMaskedFill';
@@ -73,16 +75,16 @@ export function PaintedUsernameHostedLayers({
 
   if (waitingForTexture) {
     return (
-      <ChatText
-        style={[
+      <ChatRowText
+        style={getChatRowTextStyleForProp('muted', [
           styles.plainUsername,
           usernameTextStyle,
           paintTextStyle,
-          { color: plainFillColor },
-        ]}
+          getChatColorStyle(plainFillColor),
+        ])}
       >
         {displayUsername}
-      </ChatText>
+      </ChatRowText>
     );
   }
 

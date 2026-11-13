@@ -1,12 +1,14 @@
 import { memo } from 'react';
 import { type StyleProp, StyleSheet, type TextStyle } from 'react-native';
 
-import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
+import { getChatColorStyle } from '@app/components/chat/util/chatColorStyles';
 import { useUserPaint } from '@app/store/chat/react/user-cosmetics';
 import { usePaintRenderer } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
+import { ChatRowText } from '../ChatRowText';
+import { getChatRowTextStyleForProp } from '../util/chatRowTextStyle';
 import { chatLineMetrics } from '../util/chatScale';
 import { PaintedUsernameHostedLayers } from './PaintedUsernameHostedLayers';
 import { PaintedUsernameSkia } from './PaintedUsernameSkia';
@@ -49,11 +51,15 @@ function PaintedUsernameWithPaint({
 
   if (paintRenderer === 'off') {
     return (
-      <ChatText
-        style={[styles.plainUsername, { color: plainColor }, usernameTextStyle]}
+      <ChatRowText
+        style={getChatRowTextStyleForProp('muted', [
+          styles.plainUsername,
+          getChatColorStyle(plainColor),
+          usernameTextStyle,
+        ])}
       >
         {displayUsername}
-      </ChatText>
+      </ChatRowText>
     );
   }
 
@@ -106,15 +112,15 @@ function PaintedUsernameComponent({
 
   if (!paint) {
     return (
-      <ChatText
-        style={[
+      <ChatRowText
+        style={getChatRowTextStyleForProp('muted', [
           styles.plainUsername,
-          { color: fallbackColor },
+          getChatColorStyle(fallbackColor),
           usernameTextStyle,
-        ]}
+        ])}
       >
         {displayUsername}
-      </ChatText>
+      </ChatRowText>
     );
   }
 

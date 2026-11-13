@@ -21,7 +21,6 @@ import {
 } from '@shopify/react-native-skia';
 
 import { chatLineMetrics } from '@app/components/chat/components/chat-message/util/chatScale';
-import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 import {
@@ -29,6 +28,8 @@ import {
   retainPaintBitmaps,
 } from '@app/utils/image/paintBitmapCacheLifecycle';
 
+import { ChatRowText } from '../ChatRowText';
+import { getChatRowTextStyleForProp } from '../util/chatRowTextStyle';
 import { RowVisibilityContext } from '../util/rowVisibility';
 import {
   getPaintTextureUrl,
@@ -467,8 +468,8 @@ export function PaintedUsernameSkia({
     (paintDependsOnTexture(paint) && (!textureUrl || !textureReady))
   ) {
     return (
-      <ChatText
-        style={{
+      <ChatRowText
+        style={getChatRowTextStyleForProp('muted', {
           ...chatLineMetrics.comfortable,
           fontSize,
           lineHeight: lineHeight ?? chatLineMetrics.comfortable.lineHeight,
@@ -476,10 +477,10 @@ export function PaintedUsernameSkia({
           color: fallbackColor,
           opacity,
           textDecorationLine: strikethrough ? 'line-through' : 'none',
-        }}
+        })}
       >
         {username}
-      </ChatText>
+      </ChatRowText>
     );
   }
 
