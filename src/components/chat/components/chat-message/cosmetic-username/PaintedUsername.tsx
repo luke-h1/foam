@@ -28,6 +28,7 @@ interface PaintedUsernameWithPaintProps {
   fontSize?: number;
   lineHeight?: number;
   isModerated: boolean;
+  opacity?: number;
   paint: PaintData;
   plainColor: string;
   usernameTextStyle?: StyleProp<TextStyle>;
@@ -39,6 +40,7 @@ function PaintedUsernameWithPaint({
   fontSize,
   lineHeight,
   isModerated,
+  opacity,
   paint,
   plainColor,
   usernameTextStyle,
@@ -55,9 +57,7 @@ function PaintedUsernameWithPaint({
     );
   }
 
-  // Skia keeps the paint during a fling. Deleted names stay on the hosted
-  // fill so the strikethrough still draws. That fill sheds on native only.
-  if (paintRenderer === 'skia' && !isModerated) {
+  if (paintRenderer === 'skia') {
     return (
       <PaintedUsernameSkia
         {...{
@@ -66,6 +66,8 @@ function PaintedUsernameWithPaint({
           fallbackColor,
           fontSize,
           lineHeight,
+          opacity,
+          strikethrough: isModerated,
         }}
       />
     );
@@ -126,6 +128,7 @@ function PaintedUsernameComponent({
         fontSize: flatUsernameStyle?.fontSize,
         lineHeight: flatUsernameStyle?.lineHeight,
         isModerated,
+        opacity: flatUsernameStyle?.opacity,
         paint,
         plainColor: fallbackColor,
         usernameTextStyle,

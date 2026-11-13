@@ -626,7 +626,7 @@ describe('PaintedUsername before the texture decodes', () => {
     expect(screen.getByText('luke')).toHaveStyle({ color: TWITCH_COLOR });
   });
 
-  test('keeps a moderated name off Skia so the strikethrough draws', () => {
+  test('draws a moderated name with Skia, struck through and faded', () => {
     paintRendererFlag$.set('skia');
 
     render(
@@ -636,11 +636,19 @@ describe('PaintedUsername before the texture decodes', () => {
         paint={GRADIENT_PAINT}
         fallbackColor={TWITCH_COLOR}
         showColon={false}
-        usernameTextStyle={{ textDecorationLine: 'line-through' }}
+        usernameTextStyle={{
+          textDecorationLine: 'line-through',
+          opacity: 0.72,
+        }}
       />,
     );
 
-    expect(screen.getByTestId('masked-view')).toBeOnTheScreen();
+    expect(screen.queryByTestId('masked-view')).toBeNull();
+
+    expect(screen.getByText('luke')).toHaveStyle({
+      opacity: 0.72,
+      textDecorationLine: 'line-through',
+    });
   });
 
   test('draws a name that is not moderated with Skia', () => {

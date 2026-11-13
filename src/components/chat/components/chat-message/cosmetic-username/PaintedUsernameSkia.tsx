@@ -58,6 +58,11 @@ interface PaintedUsernameSkiaProps {
    * on the same line as the message text.
    */
   lineHeight?: number;
+  /**
+   * Draws a line-through in the paint, for a moderated row.
+   */
+  strikethrough?: boolean;
+  opacity?: number;
 }
 
 function useCanvasRedrawOnVisible() {
@@ -272,7 +277,13 @@ function paintLayerUrls(layers: readonly PaintImageLayer[]): string[] {
  * -webkit-text-stroke hold. The compiler is off so a cached render cannot
  * keep the first texture frame.
  */
-function ImageLayerPaintCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
+function ImageLayerPaintCanvas({
+  bitmaps,
+  opacity,
+}: {
+  bitmaps: PaintBitmaps;
+  opacity?: number;
+}) {
   'use no memo';
 
   const { width, height, insets, staticImage, layerSlots, strokeImage } =
@@ -296,6 +307,7 @@ function ImageLayerPaintCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
         marginTop: -insets.top,
         marginRight: -insets.right,
         marginBottom: -insets.bottom,
+        opacity,
       }}
     >
       <Image
@@ -341,7 +353,13 @@ function PaintCanvasFrame({
   );
 }
 
-function PaintBitmapCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
+function PaintBitmapCanvas({
+  bitmaps,
+  opacity,
+}: {
+  bitmaps: PaintBitmaps;
+  opacity?: number;
+}) {
   const { width, height, insets, staticImage } = bitmaps;
   const canvasRef = useCanvasRedrawOnVisible();
 
@@ -355,6 +373,7 @@ function PaintBitmapCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
         marginTop: -insets.top,
         marginRight: -insets.right,
         marginBottom: -insets.bottom,
+        opacity,
       }}
     >
       <Image
@@ -375,6 +394,8 @@ export function PaintedUsernameSkia({
   fallbackColor = theme.color.text.dark,
   fontSize = chatLineMetrics.comfortable.fontSize,
   lineHeight,
+  strikethrough = false,
+  opacity,
 }: PaintedUsernameSkiaProps) {
   const fontProvider = useSkiaPaintFontProvider();
   const pixelRatio = PixelRatio.get();
@@ -401,6 +422,7 @@ export function PaintedUsernameSkia({
           pixelRatio,
           fontProvider,
           fontFamily: PAINT_FONT_FAMILY,
+          strikethrough,
         })
       : null;
   }, [
@@ -410,6 +432,7 @@ export function PaintedUsernameSkia({
     fallbackColor,
     fontSize,
     pixelRatio,
+    strikethrough,
     rebuildToken,
   ]);
 
@@ -443,6 +466,8 @@ export function PaintedUsernameSkia({
           lineHeight: lineHeight ?? chatLineMetrics.comfortable.lineHeight,
           fontWeight: 'bold',
           color: fallbackColor,
+          opacity,
+          textDecorationLine: strikethrough ? 'line-through' : 'none',
         }}
       >
         {username}
@@ -452,9 +477,9 @@ export function PaintedUsernameSkia({
 
   const canvas =
     bitmaps.imageLayers.length > 0 ? (
-      <ImageLayerPaintCanvas bitmaps={bitmaps} />
+      <ImageLayerPaintCanvas bitmaps={bitmaps} opacity={opacity} />
     ) : (
-      <PaintBitmapCanvas bitmaps={bitmaps} />
+      <PaintBitmapCanvas bitmaps={bitmaps} opacity={opacity} />
     );
 
   return <PaintCanvasFrame lineHeight={lineHeight}>{canvas}</PaintCanvasFrame>;
