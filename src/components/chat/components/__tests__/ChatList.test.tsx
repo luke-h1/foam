@@ -6,7 +6,7 @@ import type {
   MaintainScrollAtEndOptions,
   ViewabilityConfig,
 } from '@legendapp/list/react-native';
-import { render } from '@testing-library/react-native';
+import { act, render } from '@testing-library/react-native';
 
 import { createChatMessageFixture } from '@app/components/chat/util/__tests__/__fixtures__/chatMessage.fixture';
 import type { ViewableMessageToken } from '@app/components/chat/util/getViewableChatMessages';
@@ -109,7 +109,7 @@ describe('ChatList', () => {
     mockLegendList.mockClear();
   });
 
-  test('keeps the list pinned to the end while the user is at the bottom', () => {
+  test('keeps the list pinned to the end and recycles rows while the user is at the bottom', () => {
     render(createChatListElement({ extraData: { showTimestamps: false } }));
 
     const props = getRenderedProps();
@@ -226,8 +226,10 @@ describe('ChatList', () => {
       getByTestId('chat-row-skeleton').props['style'],
     );
 
-    preferences$.chatFontScale.set('default');
-    preferences$.chatDensity.set('comfortable');
+    act(() => {
+      preferences$.chatFontScale.set('default');
+      preferences$.chatDensity.set('comfortable');
+    });
 
     expect({ minHeight, paddingVertical }).toEqual({
       minHeight: 25,

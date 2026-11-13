@@ -64,8 +64,9 @@ const CHAT_MAINTAIN_SCROLL_AT_END = {
 const CHAT_MAINTAIN_SCROLL_AT_END_THRESHOLD = 0.1;
 
 /**
- * Off until on-device fling QA passes. The iOS recycle crash came from the
- * removed `@react-native-masked-view`; see ADR-0007.
+ * Row state that belongs to one message must reset when the message changes,
+ * because a reused row keeps its React state. The old iOS recycle crash came
+ * from the removed `@react-native-masked-view`; see ADR-0007.
  */
 const CHAT_RECYCLE_ITEMS = true;
 

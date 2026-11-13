@@ -33,7 +33,7 @@ Two rules from the parent method still govern:
 
 - **Toolchain:** bun. Scripts: `bun run ts:check`, `bun run test`, `bun run test:perf` (reassure), `bun run lint:ast-grep`, `bun run e2e:test:smoke`.
 - **Framework:** React Compiler ON (`app.config.ts` `experiments.reactCompiler`), New Architecture, Hermes. Manual memo findings are noise unless you show a compiler bailout - compile the file through `babel-plugin-react-compiler` for ground truth; it names bailouts (e.g. `??=` is unsupported) and emits per-instance `_c(n)` cache sizes you can rank by.
-- **Surface stack:** LegendList (check installed version in `node_modules/@legendapp/list/package.json` - config comments have described other versions' semantics; the installed source is the truth). `recycleItems` OFF as a crash workaround (`ChatList.tsx`, `CHAT_RECYCLE_ITEMS`). Legend State with leaf subscriptions; hot imperative caches are plain module Maps by design (see AGENTS.md). Ingress is raw IRC over WebSocket. Reanimated 4 + worklets available; scroll/touch on the chat path are still JS-thread refs and timers.
+- **Surface stack:** LegendList (check installed version in `node_modules/@legendapp/list/package.json` - config comments have described other versions' semantics; the installed source is the truth). `recycleItems` ON (`ChatList.tsx`, `CHAT_RECYCLE_ITEMS`); ADR-0007 lists the row state that resets per message. Legend State with leaf subscriptions; hot imperative caches are plain module Maps by design (see AGENTS.md). Ingress is raw IRC over WebSocket. Reanimated 4 + worklets available; scroll/touch on the chat path are still JS-thread refs and timers.
 - **Patched deps:** `patches/` carries expo-image (15fps animated cap, shared CADisplayLink), @expo/ui. A finding inside a patched package must state whether the patch is implicated.
 
 ## Budgets
@@ -101,7 +101,7 @@ Reporting these fails the audit. If one is genuinely wrong in a specific place, 
 | FlashList / `estimatedItemSize` | LegendList is deliberate; estimate set; FlashList's `useMappingHelper` was removed from chat as dead weight |
 | Extract inline styles to StyleSheet | Already are - the cost is array length (see frontier) |
 | Lower the flush interval | Not before tree-cost work lands; re-measure GC after (issue #594) |
-| Flip `recycleItems` on | It is a crash workaround - the frontier item is the crash |
+| Flip `recycleItems` on | Done (ADR-0007). Device fling QA is still open |
 | Window trim copies | `appendToMessageWindow` slices before concatenating |
 | `__tests__`, `.stories`, `src/dev/**` | Not in the production graph |
 
@@ -111,7 +111,7 @@ Ranked by ceiling. Verify each still exists before working it; the tree moves.
 
 **High ceiling**
 
-- **F1 - Recycling is off.** Unchanged, still the largest structural gap. The work is the crash (row state outliving recycle; `ChatInlineImage` recyclingKey races), not the flag.
+- **F1 - Recycling.** On since 2026-11-13 after simulator fling QA (ADR-0007). Open: on-device fling QA at 60Hz and 120Hz. Any new row state keyed to one message must reset when the message changes.
 - **F2 - Paint `native` renderer.** Production default mounts ~25 native views per painted username (MaskedView offscreen pass, 4 glyph copies, SVG gradients, nested Skia canvases), and the scroll-shed unmounts/remounts that whole subtree on every fling. Moderated rows are excluded from the cheaper Skia path for no structural reason. Fix shape: make `skia` the prod flag, stop shedding-by-unmount, bound or share per-row frame callbacks. (`webview` is provably unreachable in prod: type-narrowed flag + Remote Config clamp + dev-tools gate.)
 - **F3 - `Text` per-span cost.** The design-system `Text` compiles to `_c(79)` per instance and recursively walks incoming style arrays; chat renders 4+ instances per row with fresh style-array identities per span. Fix shape: a chat-local span primitive over `RNText` with pre-resolved font/colour, or interned style tuples so the memo hits.
 - **F4 - Ingest object churn.** `prepareMessagePartsForStore` clones every part and `Object.defineProperty`s each (dictionary-mode pressure), destroying the parse-cache's shared-identity benefit downstream; 7 whole-message spreads between IRC line and store; add-then-`delete` of `pendingEmoteParse` forces dictionary mode. Fix shape: derive part ids positionally, collapse spreads to parse-time + commit-time.
