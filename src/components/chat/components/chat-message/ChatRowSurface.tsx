@@ -1,4 +1,4 @@
-import { type StyleProp, View, type ViewStyle } from 'react-native';
+import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 import type { ReactNode } from 'react';
 
 import type { ChatRowState } from '@app/components/chat/components/chat-message/ChatRow.types';
@@ -7,12 +7,24 @@ import { noticeSurfaceTint } from '@app/components/chat/util/chatNoticeAccents';
 import { styles } from './ChatRow.styles';
 import { getChatTextStyles } from './ChatText.styles';
 
-function getChatRowSurfaceStyle(state: ChatRowState) {
+/**
+ * Pre-flattened variant overrides, keyed by the fields that pick them. The
+ * per-row result is a 3-entry array with stable member identities instead of
+ * an 18-entry nested array rebuilt and re-flattened on every render.
+ */
+const variantStyleCache = new Map<string, ViewStyle | undefined>();
+
+const MAX_VARIANT_STYLE_CACHE = 256;
+
+function buildVariantStyle(
+  state: ChatRowState,
+  ownMention: boolean,
+  customColor: string,
+): ViewStyle | undefined {
   const {
     announcementAccentColor,
     bodyVariant,
     density,
-    customHighlightColor,
     isAlternatingRow,
     isAppSystemSender,
     isChannelPointRedemption,
@@ -22,8 +34,6 @@ function getChatRowSurfaceStyle(state: ChatRowState) {
     isHighlightedSender,
     isReturningChatter,
     isUserChat,
-    mentionsCurrentUser,
-    style,
     tokenRenderProps,
   } = state;
 
@@ -34,9 +44,7 @@ function getChatRowSurfaceStyle(state: ChatRowState) {
     colour,
   ];
 
-  return [
-    styles.chatContainer,
-    style,
+  const active = [
     isAlternatingRow && styles.alternatingRowContainer,
     isAppSystemSender && styles.systemMessageContainer,
     isUserChat &&
@@ -49,11 +57,7 @@ function getChatRowSurfaceStyle(state: ChatRowState) {
         styles.highlightedSenderContainer,
         textStyles.highlightInset,
       ],
-    isUserChat &&
-      mentionsCurrentUser && [
-        styles.ownMentionContainer,
-        textStyles.accentInset,
-      ],
+    ownMention && [styles.ownMentionContainer, textStyles.accentInset],
     bodyVariant === 'viewer_milestone' &&
       surface(styles.viewerMilestoneContainer),
     bodyVariant === 'mod_anniversary' && surface(styles.modAnniversarySurface),
@@ -76,12 +80,10 @@ function getChatRowSurfaceStyle(state: ChatRowState) {
     isUserChat &&
       isReturningChatter &&
       surface(styles.returningChatterNoticeSurface),
-    isUserChat &&
-      !mentionsCurrentUser &&
-      customHighlightColor &&
+    customColor !== '' &&
       surface({
-        backgroundColor: noticeSurfaceTint(customHighlightColor, 0.1),
-        borderLeftColor: customHighlightColor,
+        backgroundColor: noticeSurfaceTint(customColor, 0.1),
+        borderLeftColor: customColor,
       }),
     isUserChat &&
       isHighlightedMessage &&
@@ -91,6 +93,53 @@ function getChatRowSurfaceStyle(state: ChatRowState) {
       !isHighlightedMessage &&
       surface(styles.rewardMessageContainer),
   ];
+
+  const hasOverride = active.some(Boolean);
+  return hasOverride ? (StyleSheet.flatten(active) ?? undefined) : undefined;
+}
+
+function getChatRowSurfaceStyle(state: ChatRowState) {
+  const {
+    announcementAccentColor,
+    bodyVariant,
+    customHighlightColor,
+    density,
+    isAlternatingRow,
+    isAppSystemSender,
+    isChannelPointRedemption,
+    isFirstMessage,
+    isHighlightedMessage,
+    isHighlightedMessageTarget,
+    isHighlightedSender,
+    isReturningChatter,
+    isUserChat,
+    mentionsCurrentUser,
+    style,
+    tokenRenderProps,
+  } = state;
+
+  const ownMention = isUserChat && mentionsCurrentUser;
+
+  const customColor =
+    (isUserChat && !mentionsCurrentUser && customHighlightColor) || '';
+
+  const accent =
+    bodyVariant === 'announcement' ? (announcementAccentColor ?? '') : '';
+
+  const key = `${tokenRenderProps.fontScale ?? 'default'}|${density}|${bodyVariant ?? ''}|${accent}|${customColor}|${+isAlternatingRow}${+isAppSystemSender}${+isUserChat}${+(isUserChat && isHighlightedMessageTarget)}${+(isUserChat && isHighlightedSender)}${+ownMention}${+(isUserChat && isFirstMessage)}${+(isUserChat && isReturningChatter)}${+(isUserChat && isHighlightedMessage)}${+isChannelPointRedemption}`;
+
+  let variantStyle = variantStyleCache.get(key);
+
+  if (variantStyle === undefined && !variantStyleCache.has(key)) {
+    if (variantStyleCache.size >= MAX_VARIANT_STYLE_CACHE) {
+      variantStyleCache.clear();
+    }
+
+    variantStyle = buildVariantStyle(state, ownMention, customColor);
+    variantStyleCache.set(key, variantStyle);
+  }
+
+  return [styles.chatContainer, style, variantStyle];
 }
 
 export function ChatRowSurface({
