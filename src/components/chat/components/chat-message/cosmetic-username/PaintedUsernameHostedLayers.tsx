@@ -6,7 +6,6 @@ import {
   View,
 } from 'react-native';
 
-import { useChatScrollActive } from '@app/components/chat/components/chat-message/cosmetic-username/hooks/use-chat-scroll-active';
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
@@ -40,9 +39,8 @@ interface PaintedUsernameHostedLayersProps {
 }
 
 /**
- * Native sheds this fill to a solid colour while the list is flinging
- * (FOAM-TV-MOBILE-BJ) and restores it ~150ms after the fling settles.
- * Web keeps the CSS paint up the whole time.
+ * The fill stays mounted through a fling. The shared paint clock stops
+ * texture frames while the list scrolls, so a fling costs no remount.
  */
 export function PaintedUsernameHostedLayers({
   displayUsername,
@@ -54,7 +52,6 @@ export function PaintedUsernameHostedLayers({
   usernameTextStyle,
   useWebView,
 }: PaintedUsernameHostedLayersProps) {
-  const isScrolling = useChatScrollActive();
   const paintTextStyle = buildPaintUsernameTextStyle(paint);
   const rawTextureUrl = getPaintTextureUrl(paint);
 
@@ -67,24 +64,18 @@ export function PaintedUsernameHostedLayers({
 
   const textureReady = useSharedPaintAnimationReady(textureUrl);
 
-  // Web draws the paint with CSS, which stays cheap while the list moves.
-  // Native sheds the hosted fill during a fling (FOAM-TV-MOBILE-BJ).
-  const shedWhileScrolling = Platform.OS !== 'web' && isScrolling;
-
   const waitingForTexture =
     Platform.OS !== 'web' &&
     paintDependsOnTexture(paint) &&
     (!textureUrl || !textureReady);
 
-  const showPlainColor = shedWhileScrolling || waitingForTexture;
-
   const plainFillColor = getPaintSolidColor(paint) ?? plainColor;
 
-  if (showPlainColor) {
+  if (waitingForTexture) {
     return (
       <ChatText
         style={[
-          styles.scrollUsername,
+          styles.plainUsername,
           usernameTextStyle,
           paintTextStyle,
           { color: plainFillColor },
@@ -158,7 +149,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     position: 'relative',
   },
-  scrollUsername: {
+  plainUsername: {
     ...chatLineMetrics.comfortable,
     fontWeight: 'bold',
   },

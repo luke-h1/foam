@@ -503,7 +503,7 @@ describe('PaintedUsername with a decoded texture', () => {
     });
   });
 
-  describe('Scroll-gated flatten', () => {
+  describe('Fling', () => {
     afterEach(() => {
       act(() => {
         chatScrollActivity.reset();
@@ -519,10 +519,8 @@ describe('PaintedUsername with a decoded texture', () => {
         },
       });
 
-    test('skips the MaskedView offscreen pass while actively scrolling', () => {
-      chatScrollActivity.poke();
-
-      const { queryByTestId, getByText } = render(
+    test('keeps the masked fill mounted through a fling', () => {
+      render(
         <PaintedUsername
           isModerated={false}
           username='Scrolling'
@@ -530,9 +528,19 @@ describe('PaintedUsername with a decoded texture', () => {
         />,
       );
 
-      expect(queryByTestId('masked-view')).not.toBeOnTheScreen();
+      const maskedView = screen.getByTestId('masked-view');
 
-      expect(getByText('Scrolling:')).toBeOnTheScreen();
+      act(() => {
+        chatScrollActivity.poke();
+      });
+
+      expect(screen.getByTestId('masked-view')).toBe(maskedView);
+
+      act(() => {
+        chatScrollActivity.reset();
+      });
+
+      expect(screen.getByTestId('masked-view')).toBe(maskedView);
     });
   });
 });
@@ -562,7 +570,7 @@ describe('PaintedUsername before the texture decodes', () => {
     expect(screen.getByTestId('masked-view')).toBeOnTheScreen();
   });
 
-  test('holds a paint colour while the list is flinging', () => {
+  test('keeps the masked fill while the list is flinging', () => {
     render(
       <PaintedUsername
         isModerated={false}
@@ -577,11 +585,7 @@ describe('PaintedUsername before the texture decodes', () => {
       chatScrollActivity.poke();
     });
 
-    expect(screen.queryByTestId('masked-view')).toBeNull();
-
-    expect(screen.getByText('luke')).toHaveStyle({
-      color: 'rgba(0, 255, 0, 1.000)',
-    });
+    expect(screen.getByTestId('masked-view')).toBeOnTheScreen();
   });
 
   test('falls back to the chat colour for a paint with no colour of its own', () => {
