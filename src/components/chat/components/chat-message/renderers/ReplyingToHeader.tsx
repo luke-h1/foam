@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { View } from 'react-native';
 
-import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 import { CHAT_NOTICE_ACCENTS } from '@app/components/chat/util/chatNoticeAccents';
 import { SymbolView } from '@app/components/ui/icon/Icon';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
@@ -10,7 +9,9 @@ import { getMessageStructure } from '@app/utils/chat/derive-chat-body/getMessage
 
 import { ChatMessagePressable } from '../ChatMessagePressable';
 import { styles } from '../ChatRow.styles';
+import { ChatRowText } from '../ChatRowText';
 import { getChatTextStyles } from '../ChatText.styles';
+import { getChatRowTextStyle } from '../util/chatRowTextStyle';
 import { CHAT_SURFACE_COLORS, getChatScale } from '../util/chatScale';
 import { parseMessageText } from '../util/parseMessageText';
 import { InlineTokens } from './InlineTokens';
@@ -70,16 +71,15 @@ export function ReplyingToHeader({
     textStyles.replyToYouPill,
   ];
 
-  const replyContextPrefixTextStyle = [
+  const replyToYouTextStyle =
+    isReplyingToCurrentUser && styles.replyContextTextReplyToYou;
+
+  const replyContextPrefixTextStyle = getChatRowTextStyle(
+    'muted',
     textStyles.replyContext,
     styles.replyContextPrefixFlex,
-    isReplyingToCurrentUser && styles.replyContextTextReplyToYou,
-  ];
-
-  const replyContextBodyTextStyle = [
-    textStyles.replyContext,
-    isReplyingToCurrentUser && styles.replyContextTextReplyToYou,
-  ];
+    replyToYouTextStyle,
+  );
 
   const content = (
     <>
@@ -91,34 +91,45 @@ export function ReplyingToHeader({
       />
       <View style={styles.replyContextContent}>
         {quoteFlowsInline ? (
-          <ChatText
+          <ChatRowText
             numberOfLines={1}
-            style={[
-              replyContextPrefixTextStyle,
+            style={getChatRowTextStyle(
+              'muted',
+              textStyles.replyContext,
+              styles.replyContextPrefixFlex,
+              replyToYouTextStyle,
               quoteContainsEmotes && textStyles.replyContextEmoteLine,
-            ]}
+            )}
           >
-            <ChatText style={replyContextPrefixTextStyle}>
+            <ChatRowText style={replyContextPrefixTextStyle}>
               {parsedReplyBody.length > 0 ? `${prefix}: ` : prefix}
-            </ChatText>
+            </ChatRowText>
             <InlineTokens
               {...tokenRenderProps}
               emoteTargetSize={replyEmoteSize}
               message={parsedReplyBody}
               replyPlainMentionTarget={replyPlainMentionTarget}
-              textStyle={replyContextBodyTextStyle}
+              textStyle={textStyles.replyContext}
+              textAccentStyle={replyToYouTextStyle}
             />
-          </ChatText>
+          </ChatRowText>
         ) : (
           <>
-            <ChatText numberOfLines={1} style={replyContextPrefixTextStyle}>
+            <ChatRowText numberOfLines={1} style={replyContextPrefixTextStyle}>
               {prefix}
-            </ChatText>
+            </ChatRowText>
             {parsedReplyBody.length > 0 ? (
               <View style={styles.replyContextBody}>
-                <ChatText numberOfLines={1} style={replyContextBodyTextStyle}>
+                <ChatRowText
+                  numberOfLines={1}
+                  style={getChatRowTextStyle(
+                    'muted',
+                    textStyles.replyContext,
+                    replyToYouTextStyle,
+                  )}
+                >
                   :{' '}
-                </ChatText>
+                </ChatRowText>
                 <View style={styles.replyContextBodyParts}>
                   <WrappedTokens
                     {...tokenRenderProps}

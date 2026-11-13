@@ -1,5 +1,3 @@
-import { useMemo } from 'react';
-
 import { StvEmoteEvent } from '@app/components/chat/components/StvEmoteEvent';
 import { getTokenIdentity } from '@app/components/chat/util/chat-row/getTokenIdentity';
 import type { MessageToken } from '@app/types/chat/messageToken';
@@ -7,6 +5,7 @@ import { getMessageTokenText } from '@app/utils/chat/messageTokenContent';
 
 import { styles } from '../ChatRow.styles';
 import { getChatTextStyles } from '../ChatText.styles';
+import { getChatRowTextStyle } from '../util/chatRowTextStyle';
 import { getChatScale } from '../util/chatScale';
 import { CheermoteToken } from './CheermoteToken';
 import { EmoteToken } from './EmoteToken';
@@ -47,11 +46,6 @@ export function ChatMessageToken({
   const textStyles = getChatTextStyles(fontScale, density);
   const scale = getChatScale(fontScale, density);
   const resolvedEmoteSize = emoteTargetSize ?? scale.emoteSize;
-
-  const mentionBaseTextStyle = useMemo(
-    () => [textStyles.body, isModerated && styles.moderatedMessageText],
-    [textStyles, isModerated],
-  );
 
   const systemContent =
     mode === 'system' && token.type === 'text'
@@ -126,7 +120,11 @@ export function ChatMessageToken({
           key={getTokenIdentity(token, index)}
           {...{
             content: getMessageTokenText(token),
-            baseTextStyle: mentionBaseTextStyle,
+            baseRowTextStyle: getChatRowTextStyle(
+              'text',
+              textStyles.body,
+              isModerated && styles.moderatedMessageText,
+            ),
             density,
             fontScale,
             isModerated,

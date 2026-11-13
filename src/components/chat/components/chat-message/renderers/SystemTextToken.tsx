@@ -1,7 +1,7 @@
-import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
-
 import { styles } from '../ChatRow.styles';
+import { ChatRowText } from '../ChatRowText';
 import type { getChatTextStyles } from '../ChatText.styles';
+import { getChatRowTextStyle } from '../util/chatRowTextStyle';
 import type { ChatTokenRenderProps } from './types/chat-token-render-props';
 
 export function SystemTextToken({
@@ -21,14 +21,18 @@ export function SystemTextToken({
     noticeTags?.['msg-id'] === 'raid' || noticeTags?.['msg-id'] === 'unraid';
 
   return (
-    <ChatText
+    <ChatRowText
       style={
         isRaidNotice
-          ? [textStyles.meta, styles.raidNoticeText]
-          : [textStyles.body, styles.systemMessageText]
+          ? getChatRowTextStyle('muted', textStyles.meta, styles.raidNoticeText)
+          : getChatRowTextStyle(
+              'muted',
+              textStyles.body,
+              styles.systemMessageText,
+            )
       }
     >
       {content}
-    </ChatText>
+    </ChatRowText>
   );
 }

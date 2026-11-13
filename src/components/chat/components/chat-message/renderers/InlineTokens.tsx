@@ -1,13 +1,14 @@
 import { memo, type ReactNode } from 'react';
-import type { StyleProp, TextStyle } from 'react-native';
+import type { TextStyle } from 'react-native';
 
-import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 import { getTokenIdentity } from '@app/components/chat/util/chat-row/getTokenIdentity';
 import { getChatColorStyle } from '@app/components/chat/util/chatColorStyles';
 import type { InlineFlowToken } from '@app/utils/chat/derive-chat-body/types';
 import { getMessageTokenText } from '@app/utils/chat/messageTokenContent';
 
+import { ChatRowText } from '../ChatRowText';
 import { getChatTextStyles } from '../ChatText.styles';
+import { getChatRowTextStyle } from '../util/chatRowTextStyle';
 import { getChatScale } from '../util/chatScale';
 import { groupTextRuns } from '../util/groupTextRuns';
 import { EmoteToken } from './EmoteToken';
@@ -27,22 +28,27 @@ type InlineTokensProps = Pick<
   | 'emoteTargetSize'
 > & {
   message: InlineFlowToken[];
-  textStyle?: StyleProp<TextStyle>;
-  emoteLineStyle?: StyleProp<TextStyle>;
+  /**
+   * Replaces the body style for plain text and reply-target mentions.
+   * `textAccentStyle` goes after it, in place of `emoteLineStyle`.
+   */
+  textStyle?: TextStyle;
+  textAccentStyle?: TextStyle | false;
+  emoteLineStyle?: TextStyle;
   textColor?: string;
 };
 
-type InlineTokenDerived = {
-  baseTextStyle: InlineTokensProps['textStyle'];
+interface InlineTokenDerived {
+  baseRowTextStyle: TextStyle;
   chatTextStyles: ReturnType<typeof getChatTextStyles>;
   emoteSize: number;
-};
+}
 
 function renderInlineToken(
   token: InlineFlowToken,
   index: number,
   props: InlineTokensProps,
-  { baseTextStyle, chatTextStyles, emoteSize }: InlineTokenDerived,
+  { baseRowTextStyle, chatTextStyles, emoteSize }: InlineTokenDerived,
 ): ReactNode {
   const {
     density,
@@ -78,12 +84,16 @@ function renderInlineToken(
 
   if (token.type === 'link') {
     return (
-      <ChatText
+      <ChatRowText
         key={getTokenIdentity(token, index)}
-        style={[chatTextStyles.link, emoteLineStyle]}
+        style={getChatRowTextStyle(
+          'muted',
+          chatTextStyles.link,
+          emoteLineStyle,
+        )}
       >
         {content}
-      </ChatText>
+      </ChatRowText>
     );
   }
 
@@ -94,7 +104,7 @@ function renderInlineToken(
       key={getTokenIdentity(token, index)}
       {...{
         content,
-        baseTextStyle,
+        baseRowTextStyle,
         emoteLineStyle,
         density,
         fontScale,
@@ -114,6 +124,7 @@ function InlineTokensComponent(props: InlineTokensProps) {
     message,
     emoteTargetSize,
     textStyle,
+    textAccentStyle,
     emoteLineStyle,
     textColor,
   } = props;
@@ -123,7 +134,13 @@ function InlineTokensComponent(props: InlineTokensProps) {
   const emoteSize =
     emoteTargetSize ?? getChatScale(fontScale, density).emoteSize;
 
-  const baseTextStyle = textStyle ?? [chatTextStyles.body, emoteLineStyle];
+  const bodyStyle = textStyle ?? chatTextStyles.body;
+  const bodyAccentStyle = textStyle ? textAccentStyle : emoteLineStyle;
+  const baseRowTextStyle = getChatRowTextStyle(
+    'text',
+    bodyStyle,
+    bodyAccentStyle,
+  );
   const textColorStyle = textColor ? getChatColorStyle(textColor) : null;
 
   return (
@@ -131,7 +148,7 @@ function InlineTokensComponent(props: InlineTokensProps) {
       {groupTextRuns(message).map(run => {
         if (run.kind === 'token') {
           return renderInlineToken(run.token, run.index, props, {
-            baseTextStyle,
+            baseRowTextStyle,
             chatTextStyles,
             emoteSize,
           });
@@ -142,13 +159,17 @@ function InlineTokensComponent(props: InlineTokensProps) {
         }
 
         return (
-          <ChatText
+          <ChatRowText
             key={`text-${run.index}`}
-            color='gray.text'
-            style={[baseTextStyle, textColorStyle]}
+            style={getChatRowTextStyle(
+              'text',
+              bodyStyle,
+              bodyAccentStyle,
+              textColorStyle,
+            )}
           >
             {run.content}
-          </ChatText>
+          </ChatRowText>
         );
       })}
     </>
