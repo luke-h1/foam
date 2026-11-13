@@ -33,11 +33,50 @@ interface EmoteProcessorParams {
  * its oldest key on every write. A flood of distinct lines paid about 200ns
  * per message for that delete. Dropping a whole generation costs almost
  * nothing.
+ *
+ * One generation pair per (collection, scoped key) epoch, so the parse cache
+ * keys on `cleanInput` alone. The old single key concatenated the collection
+ * key onto every message, which allocated a message-sized string per line.
+ * Epochs hang off the collection in a WeakMap, so an evicted collection
+ * releases its cache with it, and shared chat's two channels keep separate
+ * epochs instead of thrashing one.
  */
 const CACHE_GENERATION_SIZE = 500;
 
-let cache = new Map<string, MessageToken[]>();
-let previousCache = new Map<string, MessageToken[]>();
+interface TokenCacheEpoch {
+  current: Map<string, MessageToken[]>;
+  previous: Map<string, MessageToken[]>;
+}
+
+const MAX_EPOCHS_PER_COLLECTION = 8;
+
+const epochsByCollection = new WeakMap<
+  EmoteCollection,
+  Map<string, TokenCacheEpoch>
+>();
+
+function getTokenCacheEpoch(
+  collection: EmoteCollection,
+  scopedEmoteKey: string,
+): TokenCacheEpoch {
+  let epochs = epochsByCollection.get(collection);
+
+  if (!epochs) {
+    epochs = new Map();
+    epochsByCollection.set(collection, epochs);
+  }
+
+  let epoch = epochs.get(scopedEmoteKey);
+
+  if (!epoch) {
+    epoch = { current: new Map(), previous: new Map() };
+    evictOldestWhenFull(epochs, MAX_EPOCHS_PER_COLLECTION);
+    epochs.set(scopedEmoteKey, epoch);
+  }
+
+  return epoch;
+}
+
 const baseCollectionCache = new Map<string, EmoteCollection>();
 
 /**
@@ -512,29 +551,36 @@ function isWhitespaceCode(code: number): boolean {
   );
 }
 
-function getCachedTokens(cacheKey: string): MessageToken[] | undefined {
-  const current = cache.get(cacheKey);
+function getCachedTokens(
+  epoch: TokenCacheEpoch,
+  cleanInput: string,
+): MessageToken[] | undefined {
+  const current = epoch.current.get(cleanInput);
 
   if (current) {
     return current;
   }
 
-  const previous = previousCache.get(cacheKey);
+  const previous = epoch.previous.get(cleanInput);
 
   if (previous) {
-    setCachedTokens(cacheKey, previous);
+    setCachedTokens(epoch, cleanInput, previous);
   }
 
   return previous;
 }
 
-function setCachedTokens(cacheKey: string, tokens: MessageToken[]): void {
-  if (cache.size >= CACHE_GENERATION_SIZE) {
-    previousCache = cache;
-    cache = new Map();
+function setCachedTokens(
+  epoch: TokenCacheEpoch,
+  cleanInput: string,
+  tokens: MessageToken[],
+): void {
+  if (epoch.current.size >= CACHE_GENERATION_SIZE) {
+    epoch.previous = epoch.current;
+    epoch.current = new Map();
   }
 
-  cache.set(cacheKey, tokens);
+  epoch.current.set(cleanInput, tokens);
 }
 
 /**
@@ -622,6 +668,8 @@ function createEmoteToken(
  */
 const NO_EMOTES: SanitisedEmote[] = [];
 
+const SPACE_TOKEN: MessageToken = { type: 'text', content: ' ' };
+
 export const processEmotes = (params: EmoteProcessorParams): MessageToken[] => {
   const {
     inputString,
@@ -661,9 +709,9 @@ export const processEmotes = (params: EmoteProcessorParams): MessageToken[] => {
     twitchSubscriberEmotes,
   );
 
-  const cacheKey = `${baseCollection.cacheKey}:${scopedEmoteKey}:${cleanInput}`;
+  const epoch = getTokenCacheEpoch(baseCollection, scopedEmoteKey);
 
-  const cached = getCachedTokens(cacheKey);
+  const cached = getCachedTokens(epoch, cleanInput);
 
   if (cached) {
     return applyMentionLoginCasing(cached);
@@ -692,19 +740,23 @@ export const processEmotes = (params: EmoteProcessorParams): MessageToken[] => {
       end += 1;
     }
 
-    const word = cleanInput.slice(start, end);
-
     if (isSpace) {
-      result.push({ type: 'text', content: word });
+      // A single plain space is the most common token in chat; tokens are
+      // never mutated (overlays copy on write), so one shared object is safe.
+      result.push(
+        end - start === 1 && cleanInput.charCodeAt(start) === 0x20
+          ? SPACE_TOKEN
+          : { type: 'text', content: cleanInput.slice(start, end) },
+      );
     } else {
-      pushWordTokens(result, word, getEmote, emojiMap);
+      pushWordTokens(result, cleanInput.slice(start, end), getEmote, emojiMap);
     }
 
     start = end;
   }
 
   const composedResult = applyEmoteCompositionPass(result);
-  setCachedTokens(cacheKey, composedResult);
+  setCachedTokens(epoch, cleanInput, composedResult);
 
   return applyMentionLoginCasing(composedResult);
 };
