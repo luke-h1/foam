@@ -17,7 +17,7 @@ import { getChatRowTextStyle } from '../util/chatRowTextStyle';
 
 interface MentionTokenProps {
   content: string;
-  baseRowTextStyle?: TextStyle;
+  baseRowTextStyle: TextStyle;
   emoteLineStyle?: TextStyle;
   density?: ChatDensity;
   fontScale?: ChatFontScale;
@@ -61,11 +61,7 @@ function MentionTokenComponent({
   );
 
   if (isReplyTargetMention) {
-    return (
-      <ChatRowText style={baseRowTextStyle ?? getChatRowTextStyle('text')}>
-        {mentionContent}
-      </ChatRowText>
-    );
+    return <ChatRowText style={baseRowTextStyle}>{mentionContent}</ChatRowText>;
   }
 
   const mentionColor = getMentionColor

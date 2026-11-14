@@ -95,9 +95,7 @@ export function ReplyingToHeader({
             numberOfLines={1}
             style={getChatRowTextStyle(
               'muted',
-              textStyles.replyContext,
-              styles.replyContextPrefixFlex,
-              replyToYouTextStyle,
+              replyContextPrefixTextStyle,
               quoteContainsEmotes && textStyles.replyContextEmoteLine,
             )}
           >

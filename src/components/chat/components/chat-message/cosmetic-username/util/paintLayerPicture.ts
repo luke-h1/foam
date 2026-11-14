@@ -13,6 +13,8 @@ import {
 } from '@shopify/react-native-skia';
 
 import type { PaintLayerTileMode } from './paint-layer/paintLayerTileModes';
+import type { PaintCanvasRedrawTarget } from './paintCanvasRedraw';
+import { getSharedPaintFrame } from './sharedPaintAnimationStore';
 import type {
   PaintBitmaps,
   PaintImageLayer,
@@ -144,10 +146,7 @@ function drawUrlLayer({
   }
 }
 
-export function recordPaintLayerPicture(
-  bitmaps: PaintBitmaps,
-  getFrame: (url: string) => SkImage | null,
-): SkPicture {
+function recordPaintLayerPicture(bitmaps: PaintBitmaps): SkPicture {
   const { width, height, staticImage, layerSlots, maskImage, strokeImage } =
     bitmaps;
 
@@ -164,7 +163,7 @@ export function recordPaintLayerPicture(
       continue;
     }
 
-    const frame = getFrame(slot.layer.url);
+    const frame = getSharedPaintFrame(slot.layer.url);
 
     if (frame && maskImage) {
       drawUrlLayer({
@@ -191,15 +190,13 @@ interface PaintPictureView {
   readonly nativeId: number;
 }
 
-export interface PaintLayerPictureTarget {
-  current: { redraw: () => void };
+interface PaintLayerPictureTarget extends PaintCanvasRedrawTarget {
   setBitmaps: (bitmaps: PaintBitmaps) => void;
 }
 
-export function createPaintLayerPictureTarget(
-  view: { current: PaintPictureView | null },
-  getFrame: (url: string) => SkImage | null,
-): PaintLayerPictureTarget {
+export function createPaintLayerPictureTarget(view: {
+  current: PaintPictureView | null;
+}): PaintLayerPictureTarget {
   let bitmaps: PaintBitmaps | null = null;
 
   const redraw = () => {
@@ -211,7 +208,7 @@ export function createPaintLayerPictureTarget(
       return;
     }
 
-    const picture = recordPaintLayerPicture(bitmaps, getFrame);
+    const picture = recordPaintLayerPicture(bitmaps);
 
     viewApi.setJsiProperty(nativeId, 'picture', picture);
     picture.dispose();

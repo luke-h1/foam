@@ -41,10 +41,7 @@ import {
 } from './util/paintCanvasRedraw';
 import { createPaintLayerPictureTarget } from './util/paintLayerPicture';
 import { useSharedPaintAnimationReady } from './util/sharedPaintAnimationFrames';
-import {
-  getSharedPaintFrame,
-  subscribeSharedPaintFrames,
-} from './util/sharedPaintAnimationStore';
+import { subscribeSharedPaintFrames } from './util/sharedPaintAnimationStore';
 import {
   getPaintBitmaps,
   type PaintBitmaps,
@@ -108,9 +105,7 @@ function usePaintLayerPicture(
   viewRef: RefObject<SkiaPictureView | null>,
   bitmaps: PaintBitmaps,
 ) {
-  const [target] = useState(() =>
-    createPaintLayerPictureTarget(viewRef, getSharedPaintFrame),
-  );
+  const [target] = useState(() => createPaintLayerPictureTarget(viewRef));
 
   const urlKey = paintLayerUrls(bitmaps.imageLayers).join('\n');
 

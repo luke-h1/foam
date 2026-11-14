@@ -1,15 +1,15 @@
 import { Text as RNText, type TextStyle } from 'react-native';
 
-import {
-  findStyleValue,
-  resolveWeightFromFontWeight,
-  typeDefaults,
-} from '@app/components/ui/text/Text.styles';
+import { typeDefaults } from '@app/components/ui/text/Text.styles';
 import type { TextProps } from '@app/components/ui/text/Text.types';
 import { getMargin } from '@app/styles/spacing';
 import { theme } from '@app/styles/themes';
 
-import { getChatTextStyle, getStyleWeightOverride } from './util/chatTextStyle';
+import {
+  CHAT_TEXT_SPAN_DEFAULTS,
+  getChatTextStyle,
+  resolveBrandWeightOverride,
+} from './util/chatTextStyle';
 
 /**
  * Chat keeps the brand font while the rest of the app uses the system font.
@@ -47,7 +47,7 @@ export function ChatText({
   mt,
   mx,
   my,
-  maxFontSizeMultiplier = 2,
+  maxFontSizeMultiplier = CHAT_TEXT_SPAN_DEFAULTS.maxFontSizeMultiplier,
   ...props
 }: TextProps) {
   const resolvedStyle = getChatTextStyle({
@@ -78,19 +78,14 @@ export function ChatText({
 
   const isBrandFamily = family === 'brand' && variant === 'default';
 
-  const styleWeight =
-    isBrandFamily && findStyleValue(style, 'fontFamily') == null
-      ? resolveWeightFromFontWeight(findStyleValue(style, 'fontWeight'))
-      : undefined;
-
-  const styleWeightOverride = styleWeight
-    ? getStyleWeightOverride(styleWeight, italic)
+  const styleWeightOverride = isBrandFamily
+    ? resolveBrandWeightOverride(style, italic)
     : null;
 
   return (
     <RNText
       ref={ref}
-      textBreakStrategy='simple'
+      textBreakStrategy={CHAT_TEXT_SPAN_DEFAULTS.textBreakStrategy}
       maxFontSizeMultiplier={maxFontSizeMultiplier}
       {...props}
       style={[textStyle, style, styleWeightOverride]}

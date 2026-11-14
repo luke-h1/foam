@@ -123,7 +123,7 @@ export function createChatIrcHandlers({
       channelName,
       text,
       isAction,
-      isHistorical: !countUnread,
+      ...historicalFlag(countUnread),
       parentColor,
       pendingEmoteParse: true,
       timestampFormat: getPreferences().chatTimestampFormat,

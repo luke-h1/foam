@@ -238,7 +238,7 @@ afterEach(() => {
   jest.restoreAllMocks();
   skiaModule.SkiaPictureView = originalPictureView;
   skiaModule.Canvas = originalCanvas;
-  // SAFETY: removes the stand-in view API that beforeEach installed.
+  // SAFETY: beforeEach installed this test double, so only the test owns the global.
   delete (globalThis as { SkiaViewApi?: unknown }).SkiaViewApi;
 });
 

@@ -90,7 +90,7 @@ describe('getChatRowItemType', () => {
 
     expect(getChatRowItemType(plain)).toBe('user_chat-inline-w0');
 
-    expect(getChatRowItemType(moderated)).toBe('user_chat-mod-inline-w0');
+    expect(getChatRowItemType(moderated)).toBe('user_chat-mod-w0');
 
     expect(getChatRowItemType(reply)).toBe('user_chat-reply-inline-w0');
   });
@@ -120,5 +120,26 @@ describe('getChatRowItemType', () => {
     expect(getChatRowItemType(short)).toBe('user_chat-inline-w0');
 
     expect(getChatRowItemType(copypasta)).toBe('user_chat-inline-w6');
+  });
+
+  test('splits rows whose body cannot flow inline from inline rows', () => {
+    const cheer = createChatMessageFixture({
+      message: [
+        createTextToken('gg '),
+        {
+          type: 'cheermote',
+          content: 'Cheer100',
+          cheermote: {
+            bits: 100,
+            color: '#9c3ee8',
+            prefix: 'Cheer',
+            static_url: 'https://cdn.example.test/cheer.png',
+            url: 'https://cdn.example.test/cheer.gif',
+          },
+        },
+      ],
+    });
+
+    expect(getChatRowItemType(cheer)).toBe('user_chat-w0');
   });
 });

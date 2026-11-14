@@ -179,7 +179,12 @@ export function mapSlices<TKey extends ChatResourceSliceKey>(
   return record;
 }
 
-type GatePreferences = Pick<Preferences, SlicePreference | 'showBttvBadges'>;
+export const GATE_EXTRA_PREFERENCE_KEYS = ['showBttvBadges'] as const;
+
+type GatePreferences = Pick<
+  Preferences,
+  SlicePreference | (typeof GATE_EXTRA_PREFERENCE_KEYS)[number]
+>;
 
 export type GatedEmoteData = ChatResourceSliceRecord<ChatResourceSliceKey> & {
   chatterinoBadges: SanitisedBadgeSet[];

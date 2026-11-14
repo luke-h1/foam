@@ -109,7 +109,7 @@ describe('ChatList', () => {
     mockLegendList.mockClear();
   });
 
-  test('keeps the list pinned to the end and recycles rows while the user is at the bottom', () => {
+  test('keeps the list pinned to the end and keeps row recycling on', () => {
     render(createChatListElement({ extraData: { showTimestamps: false } }));
 
     const props = getRenderedProps();

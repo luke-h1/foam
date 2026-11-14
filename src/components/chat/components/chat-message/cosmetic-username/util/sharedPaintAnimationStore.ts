@@ -11,7 +11,7 @@ import { chatScrollActivity } from '@app/components/chat/util/chatScrollActivity
 import type { LogMetadataValue } from '@app/utils/log/sanitiseLogValue';
 import { logger } from '@app/utils/logger';
 
-export interface SharedPaintAnimationEntry {
+interface SharedPaintAnimationEntry {
   animation: SkAnimatedImage | null;
   encoded: SkData | null;
   frameImage: SkImage | null;
@@ -315,7 +315,7 @@ function claimExistingEntry(
   return existing;
 }
 
-export function getOrCreateEntry(url: string): SharedPaintAnimationEntry {
+function getOrCreateEntry(url: string): SharedPaintAnimationEntry {
   subscribeToMemoryWarnings();
 
   const existing = entries.get(url);
@@ -345,7 +345,7 @@ export function getOrCreateEntry(url: string): SharedPaintAnimationEntry {
   return entry;
 }
 
-export function retainEntry(url: string): void {
+function retainEntry(url: string): void {
   const entry = getOrCreateEntry(url);
 
   clearEntryTimers(entry);
@@ -355,7 +355,7 @@ export function retainEntry(url: string): void {
   evictLingeringEntries();
 }
 
-export function releaseEntry(url: string): void {
+function releaseEntry(url: string): void {
   const entry = entries.get(url);
 
   if (!entry) {
@@ -416,12 +416,12 @@ function syncDriverUrls(): void {
   syncFrameLoop();
 }
 
-export function addFrameConsumer(url: string): void {
+function addFrameConsumer(url: string): void {
   frameConsumerCounts.set(url, (frameConsumerCounts.get(url) ?? 0) + 1);
   syncDriverUrls();
 }
 
-export function removeFrameConsumer(url: string): void {
+function removeFrameConsumer(url: string): void {
   const remaining = (frameConsumerCounts.get(url) ?? 0) - 1;
 
   if (remaining <= 0) {
@@ -468,4 +468,21 @@ export function subscribeSharedPaintFrames(
 
     release();
   };
+}
+
+export function subscribeSharedPaintReady(
+  url: string,
+  onReady: () => void,
+): () => void {
+  retainEntry(url);
+  entries.get(url)?.readyListeners.add(onReady);
+
+  return () => {
+    entries.get(url)?.readyListeners.delete(onReady);
+    releaseEntry(url);
+  };
+}
+
+export function isSharedPaintReady(url: string): boolean {
+  return entries.get(url)?.ready ?? false;
 }

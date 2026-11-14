@@ -2,12 +2,8 @@ import { type StyleProp, StyleSheet, type TextStyle } from 'react-native';
 
 import {
   getChatTextStyle,
-  getStyleWeightOverride,
+  resolveBrandWeightOverride,
 } from '@app/components/chat/components/chat-text/util/chatTextStyle';
-import {
-  findStyleValue,
-  resolveWeightFromFontWeight,
-} from '@app/components/ui/text/Text.styles';
 
 export type ChatRowTextTone = 'muted' | 'text' | 'tabular';
 
@@ -88,15 +84,10 @@ function buildRowTextStyle(
   tone: ChatRowTextTone,
   parts: readonly StyleProp<TextStyle>[],
 ): TextStyle {
-  const styleWeight =
-    findStyleValue(parts, 'fontFamily') == null
-      ? resolveWeightFromFontWeight(findStyleValue(parts, 'fontWeight'))
-      : undefined;
-
   const spanStyles: StyleProp<TextStyle> = [
     toneStyles[tone],
     ...parts,
-    styleWeight ? getStyleWeightOverride(styleWeight, undefined) : null,
+    resolveBrandWeightOverride(parts, undefined),
   ];
 
   return StyleSheet.flatten(spanStyles) ?? {};

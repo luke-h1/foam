@@ -71,15 +71,7 @@ export function useChatRowLongPress({
 
   useEffect(
     () => () => {
-      pressedEmotePartRef.current = null;
-      rowTouchOriginRef.current = null;
-      releaseTouchHoldRef.current?.();
-      releaseTouchHoldRef.current = null;
-
-      if (rowLongPressTimerRef.current) {
-        clearTimeout(rowLongPressTimerRef.current);
-        rowLongPressTimerRef.current = null;
-      }
+      clearRowLongPressTimer();
     },
     [messageKey],
   );

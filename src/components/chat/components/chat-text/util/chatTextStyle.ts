@@ -1,7 +1,9 @@
-import type { TextStyle } from 'react-native';
+import type { StyleProp, TextStyle } from 'react-native';
 
 import {
+  findStyleValue,
   getFontFamily,
+  resolveWeightFromFontWeight,
   sizeStyles,
   weightMap,
 } from '@app/components/ui/text/Text.styles';
@@ -16,7 +18,7 @@ import { resolveThemeColor } from '@app/styles/themes';
 
 const TABULAR_FONT_VARIANT: TextStyle['fontVariant'] = ['tabular-nums'];
 
-export interface ResolveChatTextStyleOptions {
+interface ResolveChatTextStyleOptions {
   align: NonNullable<TextProps['align']>;
   color: NonNullable<TextProps['color']>;
   contrast: boolean | undefined;
@@ -103,3 +105,23 @@ export function getStyleWeightOverride(
   styleWeightOverrides.set(key, override);
   return override;
 }
+
+export function resolveBrandWeightOverride(
+  style: StyleProp<TextStyle>,
+  italic: boolean | undefined,
+): TextStyle | null {
+  if (findStyleValue(style, 'fontFamily') != null) {
+    return null;
+  }
+
+  const styleWeight = resolveWeightFromFontWeight(
+    findStyleValue(style, 'fontWeight'),
+  );
+
+  return styleWeight ? getStyleWeightOverride(styleWeight, italic) : null;
+}
+
+export const CHAT_TEXT_SPAN_DEFAULTS = {
+  maxFontSizeMultiplier: 2,
+  textBreakStrategy: 'simple',
+} as const;

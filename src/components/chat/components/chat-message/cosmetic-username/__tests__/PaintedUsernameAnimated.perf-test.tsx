@@ -69,7 +69,7 @@ let clockMs = 1_000_000;
 let rafQueue: FrameRequestCallback[] = [];
 
 function makeFrame(): SkImage {
-  // SAFETY: the canvas only forwards the frame to Skia image props, and the frame clock only calls dispose on it.
+  // SAFETY: this test mocks paintCanvasRedraw, so nothing draws the frame; the frame clock only calls dispose on it.
   return { dispose: () => {} } as never;
 }
 

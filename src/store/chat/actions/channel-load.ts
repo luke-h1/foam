@@ -37,6 +37,7 @@ import {
   CHANNEL_EMOTE_SLICE_KEYS,
   CHANNEL_SLICE_KEYS,
   EMPTY_GATED_EMOTE_DATA,
+  GATE_EXTRA_PREFERENCE_KEYS,
   type GatedEmoteData,
   gateEmoteData,
   GLOBAL_SLICE_KEYS,
@@ -887,7 +888,7 @@ const GATE_PREFERENCE_KEYS = [
   ...new Set<keyof Preferences>([
     ...CHANNEL_SLICE_KEYS.map(key => SLICE_BY_KEY[key].preference),
     ...GLOBAL_SLICE_KEYS.map(key => SLICE_BY_KEY[key].preference),
-    'showBttvBadges',
+    ...GATE_EXTRA_PREFERENCE_KEYS,
   ]),
 ];
 

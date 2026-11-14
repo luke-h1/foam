@@ -452,6 +452,8 @@ describe('resolveVisibleMessageUpdate', () => {
       userLogin: 'me',
     });
 
+    expect(first).not.toBeNull();
+
     const hydrated = {
       ...message,
       message: first?.updates.message ?? message.message,
