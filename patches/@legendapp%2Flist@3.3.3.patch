@@ -1,5 +1,5 @@
 diff --git a/react-native.js b/react-native.js
-index 229f09a8230ab24079d471f65d28d36908f0f2ea..86dd170a964f453db7554349061418320b3fbe9d 100644
+index 229f09a8230ab24079d471f65d28d36908f0f2ea..e12b1bd985dc6c5215248890b6de5367931077ff 100644
 --- a/react-native.js
 +++ b/react-native.js
 @@ -3932,12 +3932,17 @@ function setDidLayout(ctx) {
@@ -33,8 +33,43 @@ index 229f09a8230ab24079d471f65d28d36908f0f2ea..86dd170a964f453db755434906141832
    }, RENDER_RANGE_PROJECTION_SETTLE_DELAY);
    state.timeoutRenderRangeProjectionSettle = timeout;
    state.timeouts.add(timeout);
+@@ -5671,14 +5679,21 @@ var ContainerSlot = typedMemo(function ContainerSlot2(props) {
+ var ContainersLayer = typedMemo(function ContainersLayer2({ children, horizontal }) {
+   const ctx = useStateContext();
+   const columnWrapperStyle = ctx.columnWrapperStyle;
+-  const animSize = useValue$("totalSize");
+-  const [readyToRender, numColumns, otherAxisSize = 0] = useArr$(["readyToRender", "numColumns", "otherAxisSize"]);
++  // PATCH(foam): on the new architecture the list height is React state, as in
++  // PositionViewState. Through a JS Animated.Value each height change calls
++  // setNativeProps, which on Fabric is one more commit and layout on the JS thread.
++  // As state, the height goes into the same commit as the container positions.
++  const animSize = IsNewArchitecture ? void 0 : useValue$("totalSize");
++  const [readyToRender, numColumns, otherAxisSize = 0, stateSize = 0] = useArr$(
++    IsNewArchitecture ? ["readyToRender", "numColumns", "otherAxisSize", "totalSize"] : ["readyToRender", "numColumns", "otherAxisSize"]
++  );
++  const size = IsNewArchitecture ? stateSize : animSize;
+   const style = horizontal ? {
+     height: otherAxisSize || "100%",
+     minHeight: otherAxisSize,
+     opacity: readyToRender ? 1 : 0,
+-    width: animSize
+-  } : { height: animSize, minWidth: otherAxisSize, opacity: readyToRender ? 1 : 0 };
++    width: size
++  } : { height: size, minWidth: otherAxisSize, opacity: readyToRender ? 1 : 0 };
+   if (columnWrapperStyle) {
+     const { columnGap, rowGap, gap } = columnWrapperStyle;
+     const gapX = columnGap || gap || 0;
+@@ -5699,7 +5714,7 @@ var ContainersLayer = typedMemo(function ContainersLayer2({ children, horizontal
+       }
+     }
+   }
+-  return /* @__PURE__ */ React2__namespace.createElement(ReactNative.Animated.View, { style }, /* @__PURE__ */ React2__namespace.createElement(ContainerLayoutCoordinator, null, children));
++  return /* @__PURE__ */ React2__namespace.createElement(IsNewArchitecture ? View : ReactNative.Animated.View, { style }, /* @__PURE__ */ React2__namespace.createElement(ContainerLayoutCoordinator, null, children));
+ });
+ var Containers = typedMemo(function Containers2({
+   horizontal,
 diff --git a/react-native.mjs b/react-native.mjs
-index c2e0f3823f524e31e2105a5fbda76be78c926226..653bd3269cd63cbdb4a412f29d2f244638304554 100644
+index c2e0f3823f524e31e2105a5fbda76be78c926226..392304f5f5992f07c3cc7dee1a964daf620bb810 100644
 --- a/react-native.mjs
 +++ b/react-native.mjs
 @@ -3911,12 +3911,17 @@ function setDidLayout(ctx) {
@@ -68,6 +103,41 @@ index c2e0f3823f524e31e2105a5fbda76be78c926226..653bd3269cd63cbdb4a412f29d2f2446
    }, RENDER_RANGE_PROJECTION_SETTLE_DELAY);
    state.timeoutRenderRangeProjectionSettle = timeout;
    state.timeouts.add(timeout);
+@@ -5650,14 +5658,21 @@ var ContainerSlot = typedMemo(function ContainerSlot2(props) {
+ var ContainersLayer = typedMemo(function ContainersLayer2({ children, horizontal }) {
+   const ctx = useStateContext();
+   const columnWrapperStyle = ctx.columnWrapperStyle;
+-  const animSize = useValue$("totalSize");
+-  const [readyToRender, numColumns, otherAxisSize = 0] = useArr$(["readyToRender", "numColumns", "otherAxisSize"]);
++  // PATCH(foam): on the new architecture the list height is React state, as in
++  // PositionViewState. Through a JS Animated.Value each height change calls
++  // setNativeProps, which on Fabric is one more commit and layout on the JS thread.
++  // As state, the height goes into the same commit as the container positions.
++  const animSize = IsNewArchitecture ? void 0 : useValue$("totalSize");
++  const [readyToRender, numColumns, otherAxisSize = 0, stateSize = 0] = useArr$(
++    IsNewArchitecture ? ["readyToRender", "numColumns", "otherAxisSize", "totalSize"] : ["readyToRender", "numColumns", "otherAxisSize"]
++  );
++  const size = IsNewArchitecture ? stateSize : animSize;
+   const style = horizontal ? {
+     height: otherAxisSize || "100%",
+     minHeight: otherAxisSize,
+     opacity: readyToRender ? 1 : 0,
+-    width: animSize
+-  } : { height: animSize, minWidth: otherAxisSize, opacity: readyToRender ? 1 : 0 };
++    width: size
++  } : { height: size, minWidth: otherAxisSize, opacity: readyToRender ? 1 : 0 };
+   if (columnWrapperStyle) {
+     const { columnGap, rowGap, gap } = columnWrapperStyle;
+     const gapX = columnGap || gap || 0;
+@@ -5678,7 +5693,7 @@ var ContainersLayer = typedMemo(function ContainersLayer2({ children, horizontal
+       }
+     }
+   }
+-  return /* @__PURE__ */ React2.createElement(Animated.View, { style }, /* @__PURE__ */ React2.createElement(ContainerLayoutCoordinator, null, children));
++  return /* @__PURE__ */ React2.createElement(IsNewArchitecture ? View : Animated.View, { style }, /* @__PURE__ */ React2.createElement(ContainerLayoutCoordinator, null, children));
+ });
+ var Containers = typedMemo(function Containers2({
+   horizontal,
 diff --git a/react-native.web.js b/react-native.web.js
 index 544cca82136ab14cbeec0a01499f554bd4eca75f..0097427b262f11fa3de27dff39d99adc8a789fbf 100644
 --- a/react-native.web.js
