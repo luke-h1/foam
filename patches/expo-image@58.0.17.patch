@@ -1,5 +1,5 @@
 diff --git a/android/src/main/java/expo/modules/image/ExpoImageModule.kt b/android/src/main/java/expo/modules/image/ExpoImageModule.kt
-index e097d5b74157be5b9995bb9c545e553c62157804..23f97eb8f0f60947993651e46f53d796bd0c6803 100644
+index e097d5b7..23f97eb8 100644
 --- a/android/src/main/java/expo/modules/image/ExpoImageModule.kt
 +++ b/android/src/main/java/expo/modules/image/ExpoImageModule.kt
 @@ -93,6 +93,7 @@ class ExpoImageModule : Module() {
@@ -22,7 +22,7 @@ index e097d5b74157be5b9995bb9c545e553c62157804..23f97eb8f0f60947993651e46f53d796
        val activity = appContext.currentActivity ?: return@AsyncFunction false
        activity.let {
 diff --git a/android/src/main/java/expo/modules/image/ExpoImageViewWrapper.kt b/android/src/main/java/expo/modules/image/ExpoImageViewWrapper.kt
-index e0689c97e05316b83fdf2f1b1b190dd07f899daa..0e766d058b6802a2fa1044b57d21819dbe3c85c6 100644
+index e0689c97..0e766d05 100644
 --- a/android/src/main/java/expo/modules/image/ExpoImageViewWrapper.kt
 +++ b/android/src/main/java/expo/modules/image/ExpoImageViewWrapper.kt
 @@ -9,6 +9,9 @@ import android.graphics.drawable.Animatable
@@ -288,7 +288,7 @@ index e0689c97e05316b83fdf2f1b1b190dd07f899daa..0e766d058b6802a2fa1044b57d21819d
 +  }
 +}
 diff --git a/android/src/main/java/expo/modules/image/GlideExtensions.kt b/android/src/main/java/expo/modules/image/GlideExtensions.kt
-index eb678bca922d5e476e97b1bc559130b939d1dfae..97fff7f26cd087df8c61999d6f23f288e017e2f9 100644
+index eb678bca..97fff7f2 100644
 --- a/android/src/main/java/expo/modules/image/GlideExtensions.kt
 +++ b/android/src/main/java/expo/modules/image/GlideExtensions.kt
 @@ -1,7 +1,26 @@
@@ -426,7 +426,7 @@ index eb678bca922d5e476e97b1bc559130b939d1dfae..97fff7f26cd087df8c61999d6f23f288
 +  return false
 +}
 diff --git a/android/src/main/java/expo/modules/image/ImageLoadTask.kt b/android/src/main/java/expo/modules/image/ImageLoadTask.kt
-index 8274fb6c6223e304448ef5ea610d4426682ba69f..deec620819827829bddf13020ea1516426f1c302 100644
+index 8274fb6c..deec6208 100644
 --- a/android/src/main/java/expo/modules/image/ImageLoadTask.kt
 +++ b/android/src/main/java/expo/modules/image/ImageLoadTask.kt
 @@ -30,6 +30,7 @@ open class ImageLoadTask(
@@ -438,10 +438,10 @@ index 8274fb6c6223e304448ef5ea610d4426682ba69f..deec620819827829bddf13020ea15164
            .customize(`when` = options.maxWidth <= 0 && options.maxHeight <= 0) {
              downsample(SafeDownsampleStrategy(DecodeFormat.ARGB_8888))
 diff --git a/ios/AnimatedImage.swift b/ios/AnimatedImage.swift
-index 350c9e4d90680baf8370e49b3529f6e45781244e..a05135020be44a3ccbae94e88bfab5f21c827c40 100644
+index 350c9e4d..6706903e 100644
 --- a/ios/AnimatedImage.swift
 +++ b/ios/AnimatedImage.swift
-@@ -8,16 +8,39 @@ internal import SDWebImage
+@@ -8,16 +8,68 @@ internal import SDWebImage
  final class AnimatedImage: SDAnimatedImage {
    var frames: [SDImageFrame]?
  
@@ -480,13 +480,42 @@ index 350c9e4d90680baf8370e49b3529f6e45781244e..a05135020be44a3ccbae94e88bfab5f2
 +   it is what turns `seekToFrameAtIndex:` into an array lookup instead of a fresh
 +   WebP/AVIF decode on whatever thread asked for the frame.
 +   */
-+  func preloadFramesForSharedPlayback() {
-+    super.preloadAllFrames()
++  private(set) var sharedFrames: [UInt: UIImage] = [:]
++
++  var isSharedPlaybackActive = false
++
++  private var lastServedSharedFrame: UIImage?
++
++  override func animatedImageFrame(at index: UInt) -> UIImage? {
++    guard isSharedPlaybackActive else {
++      return super.animatedImageFrame(at: index)
++    }
++
++    if let frame = sharedFrames[index] {
++      lastServedSharedFrame = frame
++      return frame
++    }
++
++    return lastServedSharedFrame
++  }
++
++  func storeSharedFrame(_ frame: UIImage, at index: UInt) {
++    sharedFrames[index] = frame
++  }
++
++  func decodeSharedFrameDirect(at index: UInt) -> UIImage? {
++    return super.animatedImageFrame(at: index)
++  }
++
++  func unloadSharedFrames() {
++    sharedFrames.removeAll()
++    lastServedSharedFrame = nil
++    isSharedPlaybackActive = false
    }
  
    // MARK: - SDAnimatedImage
 diff --git a/ios/Coders/WebPCoder.swift b/ios/Coders/WebPCoder.swift
-index 785effb851802a339f159fb1189b092b84a949b7..804672e98c2bf367a7dd1ebfeedc0b1085d1681f 100644
+index 785effb8..804672e9 100644
 --- a/ios/Coders/WebPCoder.swift
 +++ b/ios/Coders/WebPCoder.swift
 @@ -40,6 +40,16 @@ internal final class WebPCoder: NSObject, SDAnimatedImageCoder {
@@ -507,7 +536,7 @@ index 785effb851802a339f159fb1189b092b84a949b7..804672e98c2bf367a7dd1ebfeedc0b10
    }
  
 diff --git a/ios/Image.swift b/ios/Image.swift
-index 5c92efa2ec1ca32fc4c49b0e30f3f809259508f3..2c2dd898a9b5721ac16738640a06d80ebf259190 100644
+index 5c92efa2..2c2dd898 100644
 --- a/ios/Image.swift
 +++ b/ios/Image.swift
 @@ -8,6 +8,9 @@ internal final class Image: SharedRef<UIImage> {
@@ -521,7 +550,7 @@ index 5c92efa2ec1ca32fc4c49b0e30f3f809259508f3..2c2dd898a9b5721ac16738640a06d80e
    }
  
 diff --git a/ios/ImageLoader.swift b/ios/ImageLoader.swift
-index a89f1b572837b2d39875cedf106a01fca01c6b33..1af4f1d86c9993e86f9824939c4080693158372e 100644
+index a89f1b57..1af4f1d8 100644
 --- a/ios/ImageLoader.swift
 +++ b/ios/ImageLoader.swift
 @@ -26,7 +26,10 @@ internal final class ImageLoader {
@@ -537,7 +566,7 @@ index a89f1b572837b2d39875cedf106a01fca01c6b33..1af4f1d86c9993e86f9824939c408069
      if let maxSize = options.getMaxSize() {
        // Note that setting the thumbnail size rasterizes vector images into a bitmap.
 diff --git a/ios/ImageModule.swift b/ios/ImageModule.swift
-index c480af35f737fcfbea1b77cd40a9ff348db15821..cfe91f72c25aef42ba5d00e0669082df62da27a1 100644
+index c480af35..cfe91f72 100644
 --- a/ios/ImageModule.swift
 +++ b/ios/ImageModule.swift
 @@ -37,6 +37,11 @@ public final class ImageModule: Module {
@@ -594,7 +623,7 @@ index c480af35f737fcfbea1b77cd40a9ff348db15821..cfe91f72c25aef42ba5d00e0669082df
        var context = SDWebImageContext()
        let sdCacheType = cachePolicy.toSdCacheType().rawValue
 diff --git a/ios/ImageView.swift b/ios/ImageView.swift
-index a1f94fe8c039d2649c7144a8db5229efc310c65b..9b84c68716257a742696fe4523ef8c8ca93ae7b3 100644
+index a1f94fe8..9b84c687 100644
 --- a/ios/ImageView.swift
 +++ b/ios/ImageView.swift
 @@ -82,13 +82,29 @@ public final class ImageView: ExpoView {
@@ -789,12 +818,12 @@ index a1f94fe8c039d2649c7144a8db5229efc310c65b..9b84c68716257a742696fe4523ef8c8c
    // MARK: - Symbol Effects
  
    @available(iOS 17.0, tvOS 17.0, *)
-diff --git a/ios/SharedAnimationDriver.swift b/ios/SharedAnimationDriver.swift
+diff --git a/node_modules/expo-image/ios/SharedAnimationDriver.swift b/ios/SharedAnimationDriver.swift
 new file mode 100644
-index 0000000000000000000000000000000000000000..463cc35c6127163dfcc24446ff817239c04a6eba
+index 00000000..b8c49b04
 --- /dev/null
 +++ b/ios/SharedAnimationDriver.swift
-@@ -0,0 +1,495 @@
+@@ -0,0 +1,520 @@
 +// Copyright 2022-present 650 Industries. All rights reserved.
 +
 +internal import SDWebImage
@@ -956,17 +985,18 @@ index 0000000000000000000000000000000000000000..463cc35c6127163dfcc24446ff817239
 +     unload them - and under a memory warning, decoding them at all is the
 +     opposite of what was asked.
 +     */
-+    let decode: BlockOperation
++    var decodeInFlight = false
 +    var lastUsed: CFTimeInterval
 +
-+    init(image: SDAnimatedImage, bytes: Int, token: UInt64, decode: BlockOperation, lastUsed: CFTimeInterval) {
++    init(image: SDAnimatedImage, bytes: Int, token: UInt64, lastUsed: CFTimeInterval) {
 +      self.image = image
 +      self.bytes = bytes
 +      self.token = token
-+      self.decode = decode
 +      self.lastUsed = lastUsed
 +    }
 +  }
++
++  private static let lazyFillBatchFrames = 8
 +
 +  /**
 +   Turns the shared clock off for images displayed from here on. Existing synced
@@ -1028,8 +1058,7 @@ index 0000000000000000000000000000000000000000..463cc35c6127163dfcc24446ff817239
 +  private func releaseUnusedPreloads() {
 +    let inUse = Set(views.allObjects.compactMap { $0.sharedAnimationImage.map(ObjectIdentifier.init) })
 +    for (key, preload) in preloads where !inUse.contains(key) {
-+      preload.decode.cancel()
-+      preload.image?.unloadAllFrames()
++      (preload.image as? AnimatedImage)?.unloadSharedFrames()
 +      preloads.removeValue(forKey: key)
 +      preloadedBytes -= preload.bytes
 +    }
@@ -1096,6 +1125,9 @@ index 0000000000000000000000000000000000000000..463cc35c6127163dfcc24446ff817239
 +   main thread would both decode and block on the lock the preload is holding.
 +   */
 +  func isReady(_ image: SDAnimatedImage) -> Bool {
++    if let animatedImage = image as? AnimatedImage {
++      return animatedImage.sharedFrames.count >= Int(image.animatedImageFrameCount)
++    }
 +    return image.isAllFramesLoaded
 +  }
 +
@@ -1134,6 +1166,15 @@ index 0000000000000000000000000000000000000000..463cc35c6127163dfcc24446ff817239
 +      return
 +    }
 +
++    var scheduled = Set<ObjectIdentifier>()
++
++    for view in registered {
++      if let image = view.sharedAnimationImage as? AnimatedImage,
++        scheduled.insert(ObjectIdentifier(image)).inserted {
++        scheduleAhead(image)
++      }
++    }
++
 +    for view in registered {
 +      view.renderSharedAnimationFrame(elapsed: elapsed)
 +    }
@@ -1152,9 +1193,12 @@ index 0000000000000000000000000000000000000000..463cc35c6127163dfcc24446ff817239
 +        existing.lastUsed = now
 +        return true
 +      }
-+      existing.decode.cancel()
 +      preloads.removeValue(forKey: key)
 +      preloadedBytes -= existing.bytes
++    }
++
++    guard let animatedImage = image as? AnimatedImage else {
++      return false
 +    }
 +
 +    let bytes = decodedByteEstimate(of: image)
@@ -1164,58 +1208,70 @@ index 0000000000000000000000000000000000000000..463cc35c6127163dfcc24446ff817239
 +
 +    nextPreloadToken += 1
 +    let token = nextPreloadToken
-+    let decode = BlockOperation()
-+    preloads[key] = Preload(image: image, bytes: bytes, token: token, decode: decode, lastUsed: now)
++    preloads[key] = Preload(image: image, bytes: bytes, token: token, lastUsed: now)
 +    preloadedBytes += bytes
-+
-+    // Decoding every frame is the expensive part, and it is the same work the
-+    // per-view players would each do lazily. Do it once, off the main thread;
-+    // registered views hold off seeking until `isAllFramesLoaded` flips.
-+    let box = ImageBox(image)
-+    Task { @MainActor in
-+      await Self.decodeAllFrames(box, as: decode)
-+      // Only speak for the entry this decode was started for. If the image was
-+      // evicted and taken again while this ran, a newer decode owns it, and the
-+      // `isAllFramesLoaded` read below would be reporting on the eviction rather
-+      // than on this decode - releasing then would drop the new entry and hand
-+      // every view of the image back to its own player for good.
-+      //
-+      // The eviction's own `unloadAllFrames()` ran while this decode was still
-+      // in flight, so it freed nothing and these frames landed after the budget
-+      // stopped counting them. Drop them here or they stay resident with no
-+      // entry left to reclaim them.
-+      guard self.preloads[key]?.token == token else {
-+        box.image.unloadAllFrames()
-+        return
-+      }
-+      // A coder that won't hand back frames would otherwise leave every view of
-+      // this image parked on frame 0 for good, with nothing to retry it.
-+      if !box.image.isAllFramesLoaded {
-+        self.releaseViews(showing: box.image)
-+      }
-+    }
++    animatedImage.isSharedPlaybackActive = true
++    scheduleAhead(animatedImage)
 +    return true
 +  }
 +
-+  private nonisolated static func decodeAllFrames(_ box: ImageBox, as operation: BlockOperation) async {
-+    await withCheckedContinuation { continuation in
-+      operation.addExecutionBlock { [weak operation] in
-+        // Cancelled means the entry was evicted before the queue reached this,
-+        // so nothing is waiting on the frames and the budget has already
-+        // stopped counting them.
-+        guard operation?.isCancelled == false else {
-+          return
-+        }
-+        if let animatedImage = box.image as? AnimatedImage {
-+          animatedImage.preloadFramesForSharedPlayback()
-+        } else {
-+          box.image.preloadAllFrames()
++  private func scheduleAhead(_ image: AnimatedImage) {
++    let key = ObjectIdentifier(image)
++
++    guard let preload = preloads[key], preload.image === image, !preload.decodeInFlight else {
++      return
++    }
++
++    let count = UInt(image.animatedImageFrameCount)
++
++    guard count > 0, image.sharedFrames.count < Int(count) else {
++      return
++    }
++
++    var missing: [UInt] = []
++    var frameIndex: UInt = 0
++
++    while missing.count < Self.lazyFillBatchFrames, frameIndex < count {
++      if image.sharedFrames[frameIndex] == nil {
++        missing.append(frameIndex)
++      }
++      frameIndex += 1
++    }
++
++    guard !missing.isEmpty else {
++      return
++    }
++
++    preload.decodeInFlight = true
++
++    let token = preload.token
++    let box = ImageBox(image)
++
++    sharedAnimationDecodeQueue.addOperation {
++      var decoded: [(UInt, UIImage)] = []
++
++      for frameIndex in missing {
++        if let animated = box.image as? AnimatedImage,
++          let frame = animated.decodeSharedFrameDirect(at: frameIndex) {
++          decoded.append((frameIndex, frame))
 +        }
 +      }
-+      // Runs whether the operation executed or was cancelled, so the caller
-+      // always gets to run its own cleanup.
-+      operation.completionBlock = { continuation.resume() }
-+      sharedAnimationDecodeQueue.addOperation(operation)
++
++      Task { @MainActor in
++        guard let current = self.preloads[key], current.token == token else {
++          return
++        }
++
++        current.decodeInFlight = false
++
++        guard let animated = current.image as? AnimatedImage, animated === box.image else {
++          return
++        }
++
++        for (frameIndex, frame) in decoded {
++          animated.storeSharedFrame(frame, at: frameIndex)
++        }
++      }
 +    }
 +  }
 +
@@ -1225,8 +1281,8 @@ index 0000000000000000000000000000000000000000..463cc35c6127163dfcc24446ff817239
 +   */
 +  private func releaseViews(showing image: SDAnimatedImage) {
 +    if let preload = preloads.removeValue(forKey: ObjectIdentifier(image)) {
-+      preload.decode.cancel()
 +      preloadedBytes -= preload.bytes
++      (preload.image as? AnimatedImage)?.unloadSharedFrames()
 +    }
 +    for view in views.allObjects where view.sharedAnimationImage === image {
 +      view.leaveSharedAnimation()
@@ -1256,8 +1312,7 @@ index 0000000000000000000000000000000000000000..463cc35c6127163dfcc24446ff817239
 +      if preloadedBytes + bytes <= Self.maxPreloadBytesTotal {
 +        break
 +      }
-+      preload.decode.cancel()
-+      preload.image?.unloadAllFrames()
++      (preload.image as? AnimatedImage)?.unloadSharedFrames()
 +      preloads.removeValue(forKey: key)
 +      preloadedBytes -= preload.bytes
 +    }
@@ -1271,8 +1326,7 @@ index 0000000000000000000000000000000000000000..463cc35c6127163dfcc24446ff817239
 +    }
 +    views.removeAllObjects()
 +    for preload in preloads.values {
-+      preload.decode.cancel()
-+      preload.image?.unloadAllFrames()
++      (preload.image as? AnimatedImage)?.unloadSharedFrames()
 +    }
 +    preloads.removeAll()
 +    preloadedBytes = 0
