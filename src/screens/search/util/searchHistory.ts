@@ -1,4 +1,4 @@
-import { storageService } from '@app/lib/storage';
+import { type StorageChangeEvent, storageService } from '@app/lib/storage';
 
 export type SearchHistoryItem = {
   query: string;
@@ -26,8 +26,11 @@ export function getSearchHistorySnapshot() {
 }
 
 export function subscribeToSearchHistory(onStoreChange: () => void) {
-  const handleStorageChange = (key: string) => {
-    if (key === SEARCH_HISTORY_STORAGE_KEY || key === 'all') {
+  const handleStorageChange = (event: StorageChangeEvent) => {
+    if (
+      event.kind === 'clearAll' ||
+      ('key' in event && event.key === SEARCH_HISTORY_STORAGE_KEY)
+    ) {
       onStoreChange();
     }
   };

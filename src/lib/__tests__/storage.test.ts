@@ -1,4 +1,8 @@
-import { storageService } from '@app/lib/storage';
+import {
+  storage,
+  type StorageChangeEvent,
+  storageService,
+} from '@app/lib/storage';
 
 beforeEach(() => {
   storageService.clear();
@@ -81,5 +85,54 @@ describe('storageService namespaces', () => {
     ).toBeNull();
 
     expect(storageService.getString('previous_searches')).toEqual(['kappa']);
+  });
+});
+
+describe('storageService corrupt values', () => {
+  test.each([
+    ['invalid JSON', '{not json'],
+    ['null', 'null'],
+    ['an array', '[1,2]'],
+    ['a primitive', '42'],
+    ['an object with no value', '{"expiry":"2026-01-01T00:00:00.000Z"}'],
+  ])('returns null when the stored value is %s', (_label, raw) => {
+    storage.set('FOAM_V1_previous_searches', raw);
+
+    expect(storageService.getString('previous_searches')).toBeNull();
+  });
+
+  test('clearExpired skips a corrupt value and keeps it', () => {
+    storage.set('FOAM_V1_previous_searches', '{not json');
+
+    storageService.clearExpired();
+
+    expect(storageService.getAllKeys()).toEqual(['FOAM_V1_previous_searches']);
+  });
+});
+
+describe('storageService change events', () => {
+  test('emits a typed event for each kind of change', () => {
+    const events: StorageChangeEvent[] = [];
+    const listener = (event: StorageChangeEvent) => events.push(event);
+
+    storageService.events.on('storageChange', listener);
+
+    storageService.set('previous_searches', ['kappa']);
+    storageService.set('sevenTvUserId_1', 'a', 'seven_tv_cache');
+    storageService.remove('previous_searches');
+    storageService.delete('sevenTvUserId_1', 'seven_tv_cache');
+    storageService.clearNamespace('seven_tv_cache');
+    storageService.clear();
+
+    storageService.events.off('storageChange', listener);
+
+    expect(events).toEqual<StorageChangeEvent[]>([
+      { kind: 'set', key: 'previous_searches', namespace: undefined },
+      { kind: 'set', key: 'sevenTvUserId_1', namespace: 'seven_tv_cache' },
+      { kind: 'remove', key: 'previous_searches', namespace: undefined },
+      { kind: 'remove', key: 'sevenTvUserId_1', namespace: 'seven_tv_cache' },
+      { kind: 'clearNamespace', namespace: 'seven_tv_cache' },
+      { kind: 'clearAll' },
+    ]);
   });
 });
