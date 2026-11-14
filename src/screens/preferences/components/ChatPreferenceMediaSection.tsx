@@ -1,9 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
-import {
-  SettingsSection,
-  SettingsToggleRow,
-} from '@app/components/settings-section/SettingsSection';
+import { SettingsSection } from '@app/components/settings-section/SettingsSection';
+import { SettingsToggleRow } from '@app/components/settings-section/SettingsToggleRow';
 import { Text } from '@app/components/ui/text/Text';
 import { updatePreferences, usePreference } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';

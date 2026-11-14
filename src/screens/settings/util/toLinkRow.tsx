@@ -1,4 +1,4 @@
-import { SettingsLinkRow } from '@app/components/settings-section/SettingsSection';
+import { SettingsLinkRow } from '@app/components/settings-section/SettingsLinkRow';
 
 import type { SettingsMenuRow } from './settingsMenu';
 

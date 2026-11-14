@@ -1,8 +1,6 @@
-import {
-  SettingsSection,
-  SettingsSegmentedRow,
-  SettingsToggleRow,
-} from '@app/components/settings-section/SettingsSection';
+import { SettingsSection } from '@app/components/settings-section/SettingsSection';
+import { SettingsSegmentedRow } from '@app/components/settings-section/SettingsSegmentedRow';
+import { SettingsToggleRow } from '@app/components/settings-section/SettingsToggleRow';
 import { updatePreferences, usePreference } from '@app/store/preference-store';
 
 import {

@@ -1,10 +1,8 @@
 import type { SFSymbol } from 'sf-symbols-typescript';
 
-import {
-  SettingsLinkRow,
-  SettingsRow,
-  SettingsSection,
-} from '@app/components/settings-section/SettingsSection';
+import { SettingsLinkRow } from '@app/components/settings-section/SettingsLinkRow';
+import { SettingsRow } from '@app/components/settings-section/SettingsRow';
+import { SettingsSection } from '@app/components/settings-section/SettingsSection';
 import { theme } from '@app/styles/themes';
 
 export interface SheetAction {

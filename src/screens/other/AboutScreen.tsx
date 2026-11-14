@@ -6,10 +6,8 @@ import {
   View,
 } from 'react-native';
 
-import {
-  SettingsLinkRow,
-  SettingsSection,
-} from '@app/components/settings-section/SettingsSection';
+import { SettingsLinkRow } from '@app/components/settings-section/SettingsLinkRow';
+import { SettingsSection } from '@app/components/settings-section/SettingsSection';
 import { useScrollToTop } from '@app/hooks/use-scroll-to-top';
 import { openLicenseList } from '@app/lib/legal';
 import { theme } from '@app/styles/themes';

@@ -7,10 +7,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {
-  SettingsLinkRow,
-  SettingsSection,
-} from '@app/components/settings-section/SettingsSection';
+import { SettingsLinkRow } from '@app/components/settings-section/SettingsLinkRow';
+import { SettingsSection } from '@app/components/settings-section/SettingsSection';
 import { Text } from '@app/components/ui/text/Text';
 import { useScrollToTop } from '@app/hooks/use-scroll-to-top';
 import { theme } from '@app/styles/themes';

@@ -8,11 +8,9 @@ import {
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 import { Button } from '@app/components/button/Button';
-import {
-  SettingsLinkRow,
-  SettingsSection,
-  SettingsToggleRow,
-} from '@app/components/settings-section/SettingsSection';
+import { SettingsLinkRow } from '@app/components/settings-section/SettingsLinkRow';
+import { SettingsSection } from '@app/components/settings-section/SettingsSection';
+import { SettingsToggleRow } from '@app/components/settings-section/SettingsToggleRow';
 import { Input } from '@app/components/ui/input/Input';
 import { Text } from '@app/components/ui/text/Text';
 import { useScrollToTop } from '@app/hooks/use-scroll-to-top';
