@@ -28,11 +28,6 @@ interface MentionTokenProps {
   replyPlainMentionTarget?: string;
 }
 
-/**
- * A single @mention span; the selector reads `mentionLoginRevision` and
- * returns the mention's color, so a Helix resolve re-renders only the spans
- * whose color changed, not every mounted mention.
- */
 function MentionTokenComponent({
   content,
   baseRowTextStyle,
