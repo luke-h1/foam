@@ -126,15 +126,30 @@ function getChatRowSurfaceStyle(state: ChatRowState) {
   let variantStyle = variantStyleCache.get(key);
 
   if (variantStyle === undefined && !variantStyleCache.has(key)) {
-    if (variantStyleCache.size >= MAX_VARIANT_STYLE_CACHE) {
-      variantStyleCache.clear();
-    }
-
-    variantStyle = buildVariantStyle(state, ownMention, customColor);
-    variantStyleCache.set(key, variantStyle);
+    variantStyle = buildAndCacheVariantStyle(
+      key,
+      state,
+      ownMention,
+      customColor,
+    );
   }
 
   return [styles.chatContainer, style, variantStyle];
+}
+
+function buildAndCacheVariantStyle(
+  key: string,
+  state: ChatRowState,
+  ownMention: boolean,
+  customColor: string,
+) {
+  if (variantStyleCache.size >= MAX_VARIANT_STYLE_CACHE) {
+    variantStyleCache.clear();
+  }
+
+  const variantStyle = buildVariantStyle(state, ownMention, customColor);
+  variantStyleCache.set(key, variantStyle);
+  return variantStyle;
 }
 
 export function ChatRowSurface({

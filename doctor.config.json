@@ -42,6 +42,12 @@
         "rules": ["react-doctor/no-fetch-in-effect"]
       },
       {
+        "files": [
+          "src/components/chat/components/chat-message/cosmetic-username/PaintLayerBackground.tsx"
+        ],
+        "rules": ["react-doctor/no-array-index-as-key"]
+      },
+      {
         "files": ["src/hooks/ws/use-websocket.ts"],
         "rules": ["react-doctor/effect-needs-cleanup"]
       },

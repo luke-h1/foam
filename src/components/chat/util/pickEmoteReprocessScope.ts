@@ -69,16 +69,11 @@ export function pickEmoteReprocessScope({
     return { kind: 'unprocessed' };
   }
 
-  if (interruptedPass !== null && interruptedPass !== 'unprocessed') {
+  if (interruptedPass !== null) {
     return { kind: 'everyMessage' };
   }
 
-  if (
-    !delta ||
-    !previous ||
-    interruptedPass !== null ||
-    !isOnlyThisDelta(delta, previous, next)
-  ) {
+  if (!delta || !previous || !isOnlyThisDelta(delta, previous, next)) {
     return { kind: 'unprocessed' };
   }
 

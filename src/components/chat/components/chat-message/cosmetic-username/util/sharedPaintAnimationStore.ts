@@ -457,8 +457,17 @@ export function subscribeSharedPaintFrames(
 ): () => void {
   const release = retainPaintFrames(urls);
 
+  let hasFrame = false;
+
   for (const url of urls) {
-    entries.get(url)?.frameListeners.add(onFrame);
+    const entry = entries.get(url);
+
+    entry?.frameListeners.add(onFrame);
+    hasFrame ||= entry?.frameImage != null;
+  }
+
+  if (hasFrame) {
+    onFrame();
   }
 
   return () => {

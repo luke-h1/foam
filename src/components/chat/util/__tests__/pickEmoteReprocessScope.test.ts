@@ -79,7 +79,7 @@ describe('pickEmoteReprocessScope', () => {
     ).toEqual<EnrichScope>({ kind: 'unprocessed' });
   });
 
-  test('keeps the default pass when the run interrupts a default pass', () => {
+  test('re-resolves every row when a delta interrupts a default pass', () => {
     expect(
       pickEmoteReprocessScope({
         delta: delta(['Hype']),
@@ -88,7 +88,7 @@ describe('pickEmoteReprocessScope', () => {
         interruptedPass: 'unprocessed',
         processedSetCleared: false,
       }),
-    ).toEqual<EnrichScope>({ kind: 'unprocessed' });
+    ).toEqual<EnrichScope>({ kind: 'everyMessage' });
   });
 
   test('re-resolves every row when the run interrupts a narrowed pass', () => {
