@@ -9,15 +9,19 @@ export const MESSAGE_LONG_PRESS_DELAY_MS = 650;
 
 const LONG_PRESS_MOVE_TOLERANCE_DP = 10;
 
+interface UseChatRowLongPressOptions {
+  canLongPress: boolean;
+  channelId?: string;
+  messageKey: string;
+  onLongPress: () => void;
+}
+
 export function useChatRowLongPress({
   canLongPress,
   channelId,
+  messageKey,
   onLongPress,
-}: {
-  canLongPress: boolean;
-  channelId?: string;
-  onLongPress: () => void;
-}) {
+}: UseChatRowLongPressOptions) {
   const rowLongPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -67,14 +71,9 @@ export function useChatRowLongPress({
 
   useEffect(
     () => () => {
-      releaseTouchHoldRef.current?.();
-
-      if (rowLongPressTimerRef.current) {
-        clearTimeout(rowLongPressTimerRef.current);
-        rowLongPressTimerRef.current = null;
-      }
+      clearRowLongPressTimer();
     },
-    [],
+    [messageKey],
   );
 
   const handleEmoteTouchStart = useCallback((token: EmotePressData) => {

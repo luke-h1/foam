@@ -13,7 +13,10 @@ const path = require('path');
 /**
  * @type {import('expo/metro-config').MetroConfig}
  */
-const config = getSentryExpoConfig(__dirname, { includeWebReplay: false });
+const config = getSentryExpoConfig(__dirname, {
+  includeWebReplay: false,
+  includeWebFeedback: false,
+});
 
 const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const excludedRootDirs = ['player-website', 'build-artifacts'].map(

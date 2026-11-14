@@ -6,10 +6,11 @@ import {
   View,
 } from 'react-native';
 
-import { useChatScrollActive } from '@app/components/chat/components/chat-message/cosmetic-username/hooks/use-chat-scroll-active';
-import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
+import { getChatColorStyle } from '@app/components/chat/util/chatColorStyles';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
+import { ChatRowText } from '../ChatRowText';
+import { getChatRowTextStyleForProp } from '../util/chatRowTextStyle';
 import { chatLineMetrics } from '../util/chatScale';
 import { PaintedUsernameDropShadowLayer } from './PaintedUsernameDropShadowLayer';
 import { PaintedUsernameMaskedFill } from './PaintedUsernameMaskedFill';
@@ -39,11 +40,6 @@ interface PaintedUsernameHostedLayersProps {
   useWebView: boolean;
 }
 
-/**
- * Native sheds this fill to a solid colour while the list is flinging
- * (FOAM-TV-MOBILE-BJ) and restores it ~150ms after the fling settles.
- * Web keeps the CSS paint up the whole time.
- */
 export function PaintedUsernameHostedLayers({
   displayUsername,
   fallbackColor,
@@ -54,7 +50,6 @@ export function PaintedUsernameHostedLayers({
   usernameTextStyle,
   useWebView,
 }: PaintedUsernameHostedLayersProps) {
-  const isScrolling = useChatScrollActive();
   const paintTextStyle = buildPaintUsernameTextStyle(paint);
   const rawTextureUrl = getPaintTextureUrl(paint);
 
@@ -67,31 +62,25 @@ export function PaintedUsernameHostedLayers({
 
   const textureReady = useSharedPaintAnimationReady(textureUrl);
 
-  // Web draws the paint with CSS, which stays cheap while the list moves.
-  // Native sheds the hosted fill during a fling (FOAM-TV-MOBILE-BJ).
-  const shedWhileScrolling = Platform.OS !== 'web' && isScrolling;
-
   const waitingForTexture =
     Platform.OS !== 'web' &&
     paintDependsOnTexture(paint) &&
     (!textureUrl || !textureReady);
 
-  const showPlainColor = shedWhileScrolling || waitingForTexture;
-
   const plainFillColor = getPaintSolidColor(paint) ?? plainColor;
 
-  if (showPlainColor) {
+  if (waitingForTexture) {
     return (
-      <ChatText
-        style={[
-          styles.scrollUsername,
+      <ChatRowText
+        style={getChatRowTextStyleForProp('muted', [
+          styles.plainUsername,
           usernameTextStyle,
           paintTextStyle,
-          { color: plainFillColor },
-        ]}
+          getChatColorStyle(plainFillColor),
+        ])}
       >
         {displayUsername}
-      </ChatText>
+      </ChatRowText>
     );
   }
 
@@ -158,7 +147,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     position: 'relative',
   },
-  scrollUsername: {
+  plainUsername: {
     ...chatLineMetrics.comfortable,
     fontWeight: 'bold',
   },

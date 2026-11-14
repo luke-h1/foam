@@ -1,3 +1,5 @@
+import { internal } from '@legendapp/state';
+
 import { createChatMessageFixture } from '@app/components/chat/util/__tests__/__fixtures__/chatMessage.fixture';
 import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
@@ -436,6 +438,69 @@ describe('chatStore messages', () => {
     expect(warnSpy).not.toHaveBeenCalled();
 
     warnSpy.mockRestore();
+  });
+
+  test('addMessages marks rows from a burst flush and leaves others unmarked', () => {
+    addMessages([createMessage('calm', 'calm-nonce', 'calm')]);
+
+    addMessages([createMessage('raid', 'raid-nonce', 'raid')], {
+      arrivedInBurst: true,
+    });
+
+    expect(
+      chatStore$.messages.peek().map(message => message.arrivedInBurst),
+    ).toEqual([undefined, true]);
+  });
+
+  test('stores the parsed part array as given, so a cached parse stays shared', () => {
+    const parts: MessageToken[] = [
+      { type: 'emote', content: 'WW', id: '01F71VQYHR000D3ZZ6Q11NR7TV' },
+      { type: 'text', content: ' ' },
+      { type: 'emote', content: 'WW', id: '01F71VQYHR000D3ZZ6Q11NR7TV' },
+    ];
+
+    addMessage({ ...createMessage('msg-1', 'nonce-1', ''), message: parts });
+    addMessage({ ...createMessage('msg-2', 'nonce-2', ''), message: parts });
+
+    const [first, second] = chatStore$.messages.peek();
+
+    expect(first?.message).toBe(parts);
+
+    expect(second?.message).toBe(parts);
+
+    expect(parts).toEqual<MessageToken[]>([
+      { type: 'emote', content: 'WW', id: '01F71VQYHR000D3ZZ6Q11NR7TV' },
+      { type: 'text', content: ' ' },
+      { type: 'emote', content: 'WW', id: '01F71VQYHR000D3ZZ6Q11NR7TV' },
+    ]);
+  });
+
+  test('store writes create no observable nodes below the message window', () => {
+    const cap = getMaxChatMessages();
+
+    addMessages(
+      Array.from({ length: cap }, (_, index) =>
+        createMessage(`msg-${index}`, `nonce-${index}`, `${index}`),
+      ),
+    );
+
+    addMessages(
+      Array.from({ length: 10 }, (_, index) =>
+        createMessage(`msg-${cap + index}`, `nonce-${cap + index}`, 'late'),
+      ),
+    );
+
+    updateMessages([
+      {
+        messageId: `msg-${cap}`,
+        messageNonce: `nonce-${cap}`,
+        updates: { message: [{ type: 'text', content: 'updated' }] },
+      },
+    ]);
+
+    moderateMessageById(`msg-${cap + 1}`, 'Deleted');
+
+    expect(internal.getNode(chatStore$.messages).children?.size ?? 0).toBe(0);
   });
 
   test('surviving messages stay addressable after later flushes trim the window', () => {

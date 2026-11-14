@@ -46,12 +46,6 @@ function createHeadlessIngest(options?: CreateHeadlessIngestOptions) {
     channelId: '123',
     channelName: 'somechannel',
     clearLocalMessages: controller.clearLocalMessages,
-    enqueueLiveChatMessage: (baseMessage, countUnread) => {
-      controller.handleNewMessage(
-        { ...baseMessage, pendingEmoteParse: true },
-        { countUnread },
-      );
-    },
     handleNewMessage: (message, messageOptions) => {
       controller.handleNewMessage(message, messageOptions);
     },

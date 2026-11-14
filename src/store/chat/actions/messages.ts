@@ -102,41 +102,12 @@ const dedupeMessagesForStore = (
   return uniqueMessages;
 };
 
-/**
- * Legend State keys nested array diffs on element `id`s, so tokens need
- * distinct ids or child nodes mis-key; non-enumerable so persistence never sees them.
- */
-const partIdsAssigned = new WeakSet<AnyChatMessageType['message']>();
-
-const ensurePartIdsForStore = (
-  messageParts: AnyChatMessageType['message'],
-): AnyChatMessageType['message'] => {
-  if (messageParts.length < 2 || partIdsAssigned.has(messageParts)) {
-    return messageParts;
-  }
-
-  for (let index = 0; index < messageParts.length; index += 1) {
-    const token = messageParts[index];
-
-    if (token) {
-      Object.defineProperty(token, 'id', {
-        configurable: true,
-        enumerable: false,
-        value: String(index),
-        writable: true,
-      });
-    }
-  }
-
-  partIdsAssigned.add(messageParts);
-  return messageParts;
-};
-
 let nextMessageSeq = 0;
 
 const prepareMessageForStore = (
   message: AnyChatMessageType,
   precomputedKey?: string,
+  arrivedInBurst = false,
 ): AnyChatMessageType => {
   const messageKey =
     precomputedKey ??
@@ -154,11 +125,14 @@ const prepareMessageForStore = (
     id: messageKey,
     seq: nextMessageSeq,
     committedAt: message.committedAt ?? Date.now(),
-    message: ensurePartIdsForStore(message.message),
   };
 
   if (cachedSenderColor) {
     storedMessage.cachedSenderColor = cachedSenderColor;
+  }
+
+  if (arrivedInBurst) {
+    storedMessage.arrivedInBurst = true;
   }
 
   return storedMessage;
@@ -491,8 +465,7 @@ const indexAppendedMessages = (
   droppedMessages: AnyChatMessageType[],
 ) => {
   droppedMessages.forEach((message, droppedIndex) => {
-    const key = getChatMessageKey(message.message_id, message.message_nonce);
-    messageKeyToIndex.delete(key);
+    messageKeyToIndex.delete(getChatMessageStoreId(message));
 
     const normalisedMessageId = normaliseMessageField(message.message_id);
 
@@ -567,10 +540,6 @@ const getMessageUpdatesFromInputs = (
       continue;
     }
 
-    if (messageUpdates.message) {
-      ensurePartIdsForStore(messageUpdates.message);
-    }
-
     if (nextMessages === currentMessages) {
       nextMessages = currentMessages.slice();
     }
@@ -609,7 +578,14 @@ export const addMessage = (message?: AnyChatMessageType) => {
   addMessages([message]);
 };
 
-export const addMessages = (messages: (AnyChatMessageType | undefined)[]) => {
+interface AddMessagesOptions {
+  arrivedInBurst?: boolean;
+}
+
+export const addMessages = (
+  messages: (AnyChatMessageType | undefined)[],
+  { arrivedInBurst = false }: AddMessagesOptions = {},
+) => {
   if (messages.length === 0) {
     return;
   }
@@ -629,7 +605,7 @@ export const addMessages = (messages: (AnyChatMessageType | undefined)[]) => {
 
     messageKeySet.add(key);
     messageKeyOrder.push(key);
-    storedMessages.push(prepareMessageForStore(msg, key));
+    storedMessages.push(prepareMessageForStore(msg, key, arrivedInBurst));
   }
 
   if (storedMessages.length === 0) {

@@ -6,6 +6,7 @@ import type { SanitisedEmote } from '@app/types/emote';
 import { processEmotes } from '../emoteProcessor';
 import { registerMentionLogin } from '../resolve-mention-login/registerMentionLogin';
 import { searchMentionChatters } from '../resolve-mention-login/searchMentionChatters';
+import { stripInvisibleChars } from '../stripInvisibleChars';
 
 type PickableField = 'content' | 'id' | 'name' | 'type' | 'zero_width';
 
@@ -696,5 +697,42 @@ describe('processEmotes', () => {
         { type: 'text', content: 'done' },
       ],
     );
+  });
+
+  test('splits on the same whitespace code units as the regex class', () => {
+    const mismatches: number[] = [];
+
+    for (let code = 0; code <= 0xff_ff; code += 1) {
+      const input = `a${String.fromCharCode(code)}b`;
+
+      const expected = stripInvisibleChars(input)
+        .split(/(\s+)/)
+        .filter(Boolean);
+
+      const actual = processEmotes({ ...emptyParams, inputString: input }).map(
+        token => ('content' in token ? token.content : ''),
+      );
+
+      if (actual.join('\u0000') !== expected.join('\u0000')) {
+        mismatches.push(code);
+      }
+    }
+
+    expect(mismatches).toEqual([]);
+  });
+
+  test('keeps a repeated line cached while distinct lines flood past it', () => {
+    const spam = { ...emptyParams, inputString: 'spam line KEKW' };
+    const first = processEmotes(spam);
+
+    for (let index = 0; index < 3000; index += 1) {
+      processEmotes({ ...emptyParams, inputString: `distinct line ${index}` });
+
+      if (index % 100 === 0) {
+        expect(processEmotes(spam)).toBe(first);
+      }
+    }
+
+    expect(processEmotes(spam)).toBe(first);
   });
 });

@@ -1,7 +1,6 @@
 import { startTransition } from 'react';
 
 import { incrementChatUnread } from '@app/store/chat/actions/chat-unread';
-import { getUserMessageColor } from '@app/store/chat/actions/message-color-index';
 import {
   addMessages,
   getEffectiveMaxChatMessages,
@@ -15,7 +14,6 @@ import {
   reportDroppedChatMessages,
   resetDroppedChatMessageReports,
 } from '@app/utils/chat/chat-health/reportDroppedChatMessages';
-import { resolveCachedSenderColor } from '@app/utils/chat/resolve-cached-sender-color/resolveCachedSenderColor';
 
 import type { BufferedMessage } from './buffered-message-ops/types';
 import { createChatDelayQueue } from './chat-delay/chatDelayQueue';
@@ -70,12 +68,8 @@ function publishBufferedMessages(messages: BufferedMessage[], burst = false) {
     return;
   }
 
-  const toCommit = burst
-    ? messages.map(message => ({ ...message, arrivedInBurst: true }))
-    : messages;
-
   startTransition(() => {
-    addMessages(toCommit);
+    addMessages(messages, { arrivedInBurst: burst });
   });
 }
 
@@ -294,14 +288,6 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
     newMessage: BufferedMessage,
     messageOptions?: HandleNewMessageOptions,
   ) => {
-    const messageWithCachedColor = {
-      ...newMessage,
-      cachedSenderColor: resolveCachedSenderColor(
-        newMessage,
-        getUserMessageColor,
-      ),
-    };
-
     const countUnread = messageOptions?.countUnread;
 
     // Historical replay (countUnread === false) is already old, so it bypasses the delay.
@@ -316,16 +302,16 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
       countUnread !== false && delayQueue.size() > 0;
 
     if (delayMs <= 0 && mustQueueBehindDelayed) {
-      enqueueDelayed(messageWithCachedColor, Date.now());
+      enqueueDelayed(newMessage, Date.now());
       return;
     }
 
     if (delayMs <= 0) {
-      ingestMessage(messageWithCachedColor, countUnread);
+      ingestMessage(newMessage, countUnread);
       return;
     }
 
-    enqueueDelayed(messageWithCachedColor, Date.now() + delayMs);
+    enqueueDelayed(newMessage, Date.now() + delayMs);
   };
 
   const reconcileChatDelay = () => {

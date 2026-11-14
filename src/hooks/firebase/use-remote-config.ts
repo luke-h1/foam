@@ -7,8 +7,6 @@ import {
   fetchAndActivate,
   getAll,
   getRemoteConfig,
-  setConfigSettings,
-  setDefaults,
 } from '@react-native-firebase/remote-config';
 import { useQuery } from '@tanstack/react-query';
 
@@ -42,9 +40,6 @@ export { defaultRemoteConfig } from './remote-config-model';
 let cachedRemoteConfig: ReturnType<typeof getRemoteConfig> | null = null;
 let remoteConfigFetchPromise: Promise<boolean> | null = null;
 
-/**
- * Created on first use. The handle, setConfigSettings and setDefaults are three Firebase bridge calls, and this module is in the boot graph.
- */
 function getRemoteConfigHandle() {
   if (cachedRemoteConfig) {
     return cachedRemoteConfig;
@@ -53,16 +48,12 @@ function getRemoteConfigHandle() {
   const remoteConfig = getRemoteConfig(getApp());
   cachedRemoteConfig = remoteConfig;
 
-  void setConfigSettings(remoteConfig, {
+  remoteConfig.settings = {
     minimumFetchIntervalMillis: __DEV__ ? 60 * 1000 : 5 * 60 * 1000,
-  });
+    fetchTimeoutMillis: 60 * 1000,
+  };
 
-  setDefaults(remoteConfig, defaultRemoteConfig).catch(error => {
-    logger.remoteConfig.error(
-      'Failed to set default remote config values',
-      error,
-    );
-  });
+  remoteConfig.defaultConfig = defaultRemoteConfig;
 
   return remoteConfig;
 }

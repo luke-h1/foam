@@ -1,27 +1,23 @@
 import {
   type ReactNode,
+  type RefObject,
   use,
   useEffect,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { PixelRatio, View } from 'react-native';
 
 import {
   Canvas,
-  Fill,
-  Group,
   Image,
-  ImageShader,
-  Mask,
-  Skia,
-  type SkImage,
+  SkiaPictureView,
   useCanvasRef,
 } from '@shopify/react-native-skia';
 
 import { chatLineMetrics } from '@app/components/chat/components/chat-message/util/chatScale';
-import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 import {
@@ -29,6 +25,8 @@ import {
   retainPaintBitmaps,
 } from '@app/utils/image/paintBitmapCacheLifecycle';
 
+import { ChatRowText } from '../ChatRowText';
+import { getChatRowTextStyleForProp } from '../util/chatRowTextStyle';
 import { RowVisibilityContext } from '../util/rowVisibility';
 import {
   getPaintTextureUrl,
@@ -37,14 +35,17 @@ import {
 import { skiaDecodableLayerUrl } from './util/paint-layer/skiaDecodableLayerUrl';
 import { PAINT_FONT_FAMILY } from './util/paint-text-style/paintFont';
 import {
-  useSharedPaintAnimationReady,
-  useSharedPaintFrames,
-} from './util/sharedPaintAnimationFrames';
+  cancelPaintCanvasRedraw,
+  type PaintCanvasRedrawTarget,
+  schedulePaintCanvasRedraw,
+} from './util/paintCanvasRedraw';
+import { createPaintLayerPictureTarget } from './util/paintLayerPicture';
+import { useSharedPaintAnimationReady } from './util/sharedPaintAnimationFrames';
+import { subscribeSharedPaintFrames } from './util/sharedPaintAnimationStore';
 import {
   getPaintBitmaps,
   type PaintBitmaps,
   type PaintImageLayer,
-  type PaintLayerSlot,
 } from './util/skiaPaintedUsernameRasterizer';
 import { useSkiaPaintFontProvider } from './util/skiaPaintFonts';
 
@@ -58,196 +59,30 @@ interface PaintedUsernameSkiaProps {
    * on the same line as the message text.
    */
   lineHeight?: number;
+  strikethrough?: boolean;
+  opacity?: number;
 }
 
-function useCanvasRedrawOnVisible() {
-  const canvasRef = useCanvasRef();
+function useCanvasRedrawOnVisible(
+  canvasRef: PaintCanvasRedrawTarget,
+  bitmaps: PaintBitmaps,
+) {
   const rowVisibility = use(RowVisibilityContext);
 
   useEffect(() => {
-    const frame = requestAnimationFrame(() => canvasRef.current?.redraw());
+    schedulePaintCanvasRedraw(canvasRef);
+    return () => cancelPaintCanvasRedraw(canvasRef);
+  }, [canvasRef, bitmaps]);
 
+  useEffect(() => {
     const unsubscribe = rowVisibility?.subscribe(() => {
       if (rowVisibility.isVisible()) {
         canvasRef.current?.redraw();
       }
     });
 
-    return () => {
-      cancelAnimationFrame(frame);
-      unsubscribe?.();
-    };
+    return () => unsubscribe?.();
   }, [canvasRef, rowVisibility]);
-
-  return canvasRef;
-}
-
-function paintMaskNode(bitmaps: PaintBitmaps): ReactNode {
-  if (!bitmaps.maskImage) {
-    return null;
-  }
-
-  return (
-    <Image
-      image={bitmaps.maskImage}
-      x={0}
-      y={0}
-      width={bitmaps.width}
-      height={bitmaps.height}
-      fit='fill'
-    />
-  );
-}
-
-type PaintFrames = ReadonlyMap<string, SkImage>;
-
-function TiledPaintLayerOverlay({
-  frame,
-  tile,
-  maskNode,
-}: {
-  frame: SkImage;
-  tile: NonNullable<PaintImageLayer['tile']>;
-  maskNode: ReactNode;
-}) {
-  return (
-    <Mask mode='alpha' mask={maskNode}>
-      <Fill>
-        <ImageShader image={frame} tx={tile.tx} ty={tile.ty} />
-      </Fill>
-    </Mask>
-  );
-}
-
-function StretchPaintLayerOverlay({
-  frame,
-  rect,
-  maskNode,
-}: {
-  frame: SkImage;
-  rect: NonNullable<PaintImageLayer['rect']>;
-  maskNode: ReactNode;
-}) {
-  return (
-    <Mask mode='alpha' mask={maskNode}>
-      <Image
-        image={frame}
-        x={rect.x}
-        y={rect.y}
-        width={rect.width}
-        height={rect.height}
-        fit='fill'
-      />
-    </Mask>
-  );
-}
-
-function paintImageLayerKey(layer: PaintImageLayer): string {
-  return [
-    layer.url,
-    layer.tile ? `${layer.tile.tx},${layer.tile.ty}` : '',
-    layer.rect
-      ? `${layer.rect.x},${layer.rect.y},${layer.rect.width},${layer.rect.height}`
-      : '',
-    layer.opacity,
-  ].join('|');
-}
-
-function renderUrlLayerOverlay(
-  layer: PaintImageLayer,
-  maskNode: ReactNode,
-  frames: PaintFrames,
-): ReactNode {
-  const frame = frames.get(layer.url);
-
-  if (!maskNode || !frame) {
-    return null;
-  }
-
-  if (layer.tile) {
-    return (
-      <TiledPaintLayerOverlay
-        frame={frame}
-        tile={layer.tile}
-        maskNode={maskNode}
-      />
-    );
-  }
-
-  if (layer.rect) {
-    return (
-      <StretchPaintLayerOverlay
-        frame={frame}
-        rect={layer.rect}
-        maskNode={maskNode}
-      />
-    );
-  }
-
-  return null;
-}
-
-function renderLayerSlot(
-  slot: PaintLayerSlot,
-  index: number,
-  bitmaps: PaintBitmaps,
-  maskNode: ReactNode,
-  frames: PaintFrames,
-): ReactNode {
-  if (slot.kind === 'baked') {
-    return (
-      <Image
-        // oxlint-disable-next-line react-doctor/no-array-index-as-key -- static list that never reorders
-        key={`baked-${index}`}
-        image={slot.image}
-        x={0}
-        y={0}
-        width={bitmaps.width}
-        height={bitmaps.height}
-        fit='fill'
-      />
-    );
-  }
-
-  const overlay = renderUrlLayerOverlay(slot.layer, maskNode, frames);
-
-  if (!overlay) {
-    return null;
-  }
-
-  return (
-    <UrlLayerSpan
-      // oxlint-disable-next-line react-doctor/no-array-index-as-key -- static list that never reorders
-      key={`url-${index}|${paintImageLayerKey(slot.layer)}`}
-      opacity={slot.layer.opacity}
-    >
-      {overlay}
-    </UrlLayerSpan>
-  );
-}
-
-/**
- * One URL layer. `layer` forces a real saveLayer so the fade applies to the
- * flattened texture, the same way a CSS background-image fades.
- */
-function UrlLayerSpan({
-  opacity,
-  children,
-}: {
-  opacity: number;
-  children: ReactNode;
-}) {
-  const layerPaint = useMemo(() => {
-    if (opacity >= 1) {
-      return false;
-    }
-
-    const paint = Skia.Paint();
-    paint.setAlphaf(opacity);
-    return paint;
-  }, [opacity]);
-
-  return <Group layer={layerPaint}>{children}</Group>;
 }
 
 function paintLayerUrls(layers: readonly PaintImageLayer[]): string[] {
@@ -266,29 +101,51 @@ function paintLayerUrls(layers: readonly PaintImageLayer[]): string[] {
   return urls;
 }
 
-/**
- * Draws the foundation, then the layer slots back to front (URL overlays
- * between baked gradients), then the stroke on top, so CSS stacking and
- * -webkit-text-stroke hold. The compiler is off so a cached render cannot
- * keep the first texture frame.
- */
-function ImageLayerPaintCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
-  'use no memo';
+function usePaintLayerPicture(
+  viewRef: RefObject<SkiaPictureView | null>,
+  bitmaps: PaintBitmaps,
+) {
+  const [target] = useState(() => createPaintLayerPictureTarget(viewRef));
 
-  const { width, height, insets, staticImage, layerSlots, strokeImage } =
-    bitmaps;
+  const urlKey = paintLayerUrls(bitmaps.imageLayers).join('\n');
 
-  const maskNode = paintMaskNode(bitmaps);
-  const canvasRef = useCanvasRedrawOnVisible();
-  const urls = useMemo(
-    () => paintLayerUrls(bitmaps.imageLayers),
-    [bitmaps.imageLayers],
-  );
-  const frames = useSharedPaintFrames(urls);
+  useLayoutEffect(() => {
+    target.setBitmaps(bitmaps);
+  }, [target, bitmaps]);
+
+  useEffect(() => {
+    const urls = urlKey === '' ? [] : urlKey.split('\n');
+
+    const unsubscribe = subscribeSharedPaintFrames(urls, () =>
+      schedulePaintCanvasRedraw(target),
+    );
+
+    return () => {
+      cancelPaintCanvasRedraw(target);
+      unsubscribe();
+    };
+  }, [target, urlKey]);
+}
+
+const PICTURE_VIEW_COLOR_PROPS = { colorSpace: 'p3' };
+
+function ImageLayerPaintCanvas({
+  bitmaps,
+  opacity,
+}: {
+  bitmaps: PaintBitmaps;
+  opacity?: number;
+}) {
+  const { width, height, insets } = bitmaps;
+  const viewRef = useRef<SkiaPictureView>(null);
+
+  useCanvasRedrawOnVisible(viewRef, bitmaps);
+  usePaintLayerPicture(viewRef, bitmaps);
 
   return (
-    <Canvas
-      ref={canvasRef}
+    <SkiaPictureView
+      ref={viewRef}
+      {...PICTURE_VIEW_COLOR_PROPS}
       style={{
         width,
         height,
@@ -296,30 +153,9 @@ function ImageLayerPaintCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
         marginTop: -insets.top,
         marginRight: -insets.right,
         marginBottom: -insets.bottom,
+        opacity,
       }}
-    >
-      <Image
-        image={staticImage}
-        x={0}
-        y={0}
-        width={width}
-        height={height}
-        fit='fill'
-      />
-      {layerSlots.map((slot, index) =>
-        renderLayerSlot(slot, index, bitmaps, maskNode, frames),
-      )}
-      {strokeImage ? (
-        <Image
-          image={strokeImage}
-          x={0}
-          y={0}
-          width={width}
-          height={height}
-          fit='fill'
-        />
-      ) : null}
-    </Canvas>
+    />
   );
 }
 
@@ -341,9 +177,17 @@ function PaintCanvasFrame({
   );
 }
 
-function PaintBitmapCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
+function PaintBitmapCanvas({
+  bitmaps,
+  opacity,
+}: {
+  bitmaps: PaintBitmaps;
+  opacity?: number;
+}) {
   const { width, height, insets, staticImage } = bitmaps;
-  const canvasRef = useCanvasRedrawOnVisible();
+  const canvasRef = useCanvasRef();
+
+  useCanvasRedrawOnVisible(canvasRef, bitmaps);
 
   return (
     <Canvas
@@ -355,6 +199,7 @@ function PaintBitmapCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
         marginTop: -insets.top,
         marginRight: -insets.right,
         marginBottom: -insets.bottom,
+        opacity,
       }}
     >
       <Image
@@ -375,6 +220,8 @@ export function PaintedUsernameSkia({
   fallbackColor = theme.color.text.dark,
   fontSize = chatLineMetrics.comfortable.fontSize,
   lineHeight,
+  strikethrough = false,
+  opacity,
 }: PaintedUsernameSkiaProps) {
   const fontProvider = useSkiaPaintFontProvider();
   const pixelRatio = PixelRatio.get();
@@ -401,6 +248,7 @@ export function PaintedUsernameSkia({
           pixelRatio,
           fontProvider,
           fontFamily: PAINT_FONT_FAMILY,
+          strikethrough,
         })
       : null;
   }, [
@@ -410,6 +258,7 @@ export function PaintedUsernameSkia({
     fallbackColor,
     fontSize,
     pixelRatio,
+    strikethrough,
     rebuildToken,
   ]);
 
@@ -436,25 +285,27 @@ export function PaintedUsernameSkia({
     (paintDependsOnTexture(paint) && (!textureUrl || !textureReady))
   ) {
     return (
-      <ChatText
-        style={{
+      <ChatRowText
+        style={getChatRowTextStyleForProp('muted', {
           ...chatLineMetrics.comfortable,
           fontSize,
           lineHeight: lineHeight ?? chatLineMetrics.comfortable.lineHeight,
           fontWeight: 'bold',
           color: fallbackColor,
-        }}
+          opacity,
+          textDecorationLine: strikethrough ? 'line-through' : 'none',
+        })}
       >
         {username}
-      </ChatText>
+      </ChatRowText>
     );
   }
 
   const canvas =
     bitmaps.imageLayers.length > 0 ? (
-      <ImageLayerPaintCanvas bitmaps={bitmaps} />
+      <ImageLayerPaintCanvas bitmaps={bitmaps} opacity={opacity} />
     ) : (
-      <PaintBitmapCanvas bitmaps={bitmaps} />
+      <PaintBitmapCanvas bitmaps={bitmaps} opacity={opacity} />
     );
 
   return <PaintCanvasFrame lineHeight={lineHeight}>{canvas}</PaintCanvasFrame>;

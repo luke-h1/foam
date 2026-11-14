@@ -66,21 +66,89 @@ export function hasEnrichmentEmoteSources(
   );
 }
 
+export type EnrichScope =
+  | { kind: 'unprocessed' }
+  | { kind: 'emoteNames'; names: ReadonlySet<string> }
+  | { kind: 'everyMessage' };
+
+const UNPROCESSED_SCOPE: EnrichScope = { kind: 'unprocessed' };
+
 interface EnrichMessageSetOptions {
   channelId: string;
   emoteData: ChatEmoteData;
   messages: (AnyChatMessageType | undefined)[];
+  onComplete?: () => void;
   processedMessageIds?: Set<string>;
+  scope?: EnrichScope;
   show7TvEmotes: boolean;
   showChatGifs?: boolean;
   userLogin?: string | null;
+}
+
+function emoteTokenHasName(
+  token: Pick<MessageToken<'emote'>, 'content' | 'name'>,
+  names: ReadonlySet<string>,
+): boolean {
+  return (
+    names.has(token.content) ||
+    (token.name !== undefined && names.has(token.name))
+  );
+}
+
+function tokenHasEmoteName(
+  token: MessageToken,
+  names: ReadonlySet<string>,
+): boolean {
+  if (token.type === 'emote') {
+    return (
+      emoteTokenHasName(token, names) ||
+      (token.overlaid ?? []).some(overlay => emoteTokenHasName(overlay, names))
+    );
+  }
+
+  const content = getMessageTokenContent(token);
+
+  if (content === undefined) {
+    return false;
+  }
+
+  for (const name of names) {
+    if (content.includes(name)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function isInEnrichScope(
+  msg: AnyChatMessageType,
+  scope: EnrichScope,
+  processedMessageIds: Set<string> | undefined,
+): boolean {
+  if (scope.kind === 'everyMessage') {
+    return true;
+  }
+
+  if (scope.kind === 'emoteNames') {
+    return msg.message.some(token => tokenHasEmoteName(token, scope.names));
+  }
+
+  return (
+    !processedMessageIds?.has(msg.message_id) ||
+    msg.message.some(
+      token => token.type === 'text' && textHasMention(token.content),
+    )
+  );
 }
 
 export function enrichMessageSet({
   channelId,
   emoteData,
   messages,
+  onComplete,
   processedMessageIds,
+  scope = UNPROCESSED_SCOPE,
   show7TvEmotes,
   showChatGifs = false,
   userLogin,
@@ -92,6 +160,15 @@ export function enrichMessageSet({
   let hasPublished = false;
   let pendingUpdates: Parameters<typeof updateMessages>[0] = [];
 
+  const candidates =
+    scope.kind === 'emoteNames'
+      ? messages.filter(
+          msg =>
+            Array.isArray(msg?.message) &&
+            isInEnrichScope(msg, scope, processedMessageIds),
+        )
+      : messages;
+
   const processMessage = (msg?: AnyChatMessageType) => {
     if (!msg?.message_id || !Array.isArray(msg.message) || !msg.userstate) {
       return;
@@ -101,13 +178,7 @@ export function enrichMessageSet({
       return;
     }
 
-    const needsMentionRecheck =
-      !processedMessageIds?.has(msg.message_id) ||
-      msg.message.some(
-        token => token.type === 'text' && textHasMention(token.content),
-      );
-
-    if (!needsMentionRecheck) {
+    if (!isInEnrichScope(msg, scope, processedMessageIds)) {
       return;
     }
 
@@ -162,7 +233,9 @@ export function enrichMessageSet({
       messageNonce: msg.message_nonce,
       updates: {
         message: replacedMessage,
-        badges: replacedBadges,
+        badges: areBadgesEqual(msg.badges, replacedBadges)
+          ? msg.badges
+          : replacedBadges,
       },
     });
   };
@@ -174,14 +247,14 @@ export function enrichMessageSet({
 
     let processedInBatch = 0;
 
-    while (index < messages.length && processedInBatch < ENRICH_BATCH_SIZE) {
-      processMessage(messages[index]);
+    while (index < candidates.length && processedInBatch < ENRICH_BATCH_SIZE) {
+      processMessage(candidates[index]);
       index += 1;
       processedInBatch += 1;
     }
 
     batchesSincePublish += 1;
-    const isLastBatch = index >= messages.length;
+    const isLastBatch = index >= candidates.length;
 
     if (
       pendingUpdates.length > 0 &&
@@ -195,9 +268,12 @@ export function enrichMessageSet({
       hasPublished = true;
     }
 
-    if (!isLastBatch) {
-      timer = setTimeout(processBatch, ENRICH_BATCH_DELAY_MS);
+    if (isLastBatch) {
+      onComplete?.();
+      return;
     }
+
+    timer = setTimeout(processBatch, ENRICH_BATCH_DELAY_MS);
   };
 
   processBatch();
@@ -263,12 +339,21 @@ export async function resolveVisibleMessageUpdate({
       sourceChannelBadges,
     });
 
+    const badgesEqual = areBadgesEqual(message.badges, badges);
+
+    if (
+      badgesEqual &&
+      areMessageTokensEqual(message.message, replacedMessage)
+    ) {
+      return null;
+    }
+
     return {
       messageId: message.message_id,
       messageNonce: message.message_nonce,
       updates: {
         message: replacedMessage,
-        badges,
+        badges: badgesEqual ? message.badges : badges,
       },
     };
   } catch (error) {

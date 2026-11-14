@@ -10,7 +10,7 @@ export function textMentionsUser(
   text: string,
   normalisedUser: string,
 ): boolean {
-  if (!normalisedUser) {
+  if (!normalisedUser || !text.includes('@')) {
     return false;
   }
 

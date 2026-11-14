@@ -1,12 +1,14 @@
 import { memo } from 'react';
 import { type StyleProp, StyleSheet, type TextStyle } from 'react-native';
 
-import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
+import { getChatColorStyle } from '@app/components/chat/util/chatColorStyles';
 import { useUserPaint } from '@app/store/chat/react/user-cosmetics';
 import { usePaintRenderer } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
+import { ChatRowText } from '../ChatRowText';
+import { getChatRowTextStyleForProp } from '../util/chatRowTextStyle';
 import { chatLineMetrics } from '../util/chatScale';
 import { PaintedUsernameHostedLayers } from './PaintedUsernameHostedLayers';
 import { PaintedUsernameSkia } from './PaintedUsernameSkia';
@@ -28,6 +30,7 @@ interface PaintedUsernameWithPaintProps {
   fontSize?: number;
   lineHeight?: number;
   isModerated: boolean;
+  opacity?: number;
   paint: PaintData;
   plainColor: string;
   usernameTextStyle?: StyleProp<TextStyle>;
@@ -39,6 +42,7 @@ function PaintedUsernameWithPaint({
   fontSize,
   lineHeight,
   isModerated,
+  opacity,
   paint,
   plainColor,
   usernameTextStyle,
@@ -47,17 +51,19 @@ function PaintedUsernameWithPaint({
 
   if (paintRenderer === 'off') {
     return (
-      <ChatText
-        style={[styles.plainUsername, { color: plainColor }, usernameTextStyle]}
+      <ChatRowText
+        style={getChatRowTextStyleForProp('muted', [
+          styles.plainUsername,
+          getChatColorStyle(plainColor),
+          usernameTextStyle,
+        ])}
       >
         {displayUsername}
-      </ChatText>
+      </ChatRowText>
     );
   }
 
-  // Skia keeps the paint during a fling. Deleted names stay on the hosted
-  // fill so the strikethrough still draws. That fill sheds on native only.
-  if (paintRenderer === 'skia' && !isModerated) {
+  if (paintRenderer === 'skia') {
     return (
       <PaintedUsernameSkia
         {...{
@@ -66,6 +72,8 @@ function PaintedUsernameWithPaint({
           fallbackColor,
           fontSize,
           lineHeight,
+          opacity,
+          strikethrough: isModerated,
         }}
       />
     );
@@ -104,15 +112,15 @@ function PaintedUsernameComponent({
 
   if (!paint) {
     return (
-      <ChatText
-        style={[
+      <ChatRowText
+        style={getChatRowTextStyleForProp('muted', [
           styles.plainUsername,
-          { color: fallbackColor },
+          getChatColorStyle(fallbackColor),
           usernameTextStyle,
-        ]}
+        ])}
       >
         {displayUsername}
-      </ChatText>
+      </ChatRowText>
     );
   }
 
@@ -126,6 +134,7 @@ function PaintedUsernameComponent({
         fontSize: flatUsernameStyle?.fontSize,
         lineHeight: flatUsernameStyle?.lineHeight,
         isModerated,
+        opacity: flatUsernameStyle?.opacity,
         paint,
         plainColor: fallbackColor,
         usernameTextStyle,

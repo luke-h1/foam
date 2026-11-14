@@ -10,6 +10,7 @@ import { logger } from '@app/utils/logger';
 import { getSevenTvSessionId } from '@app/utils/seven-tv/sevenTvSessionId';
 
 import { chatStore$ } from '../observables/chat-store';
+import { recordSevenTvEmoteDelta } from './seven-tv-emote-delta';
 
 export const notify7TVPresence = async (
   twitchUserId: string | undefined,
@@ -215,6 +216,11 @@ export const updateSevenTvEmotes = (
       updatedEmotes.push(emote);
     }
   });
+
+  recordSevenTvEmoteDelta(channelId, currentEmotes, updatedEmotes, [
+    ...added,
+    ...removed,
+  ]);
 
   batch(() => {
     const channelCache = chatStore$.persisted.channelCaches[channelId];

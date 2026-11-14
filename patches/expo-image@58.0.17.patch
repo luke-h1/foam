@@ -594,18 +594,24 @@ index c480af35f737fcfbea1b77cd40a9ff348db15821..cfe91f72c25aef42ba5d00e0669082df
        var context = SDWebImageContext()
        let sdCacheType = cachePolicy.toSdCacheType().rawValue
 diff --git a/ios/ImageView.swift b/ios/ImageView.swift
-index a1f94fe8c039d2649c7144a8db5229efc310c65b..a4be63cb8dba5a7d06dadc07bee29dd6e54463af 100644
+index a1f94fe8c039d2649c7144a8db5229efc310c65b..9b84c68716257a742696fe4523ef8c8ca93ae7b3 100644
 --- a/ios/ImageView.swift
 +++ b/ios/ImageView.swift
-@@ -82,6 +82,7 @@ public final class ImageView: ExpoView {
+@@ -82,13 +82,29 @@ public final class ImageView: ExpoView {
    var recyclingKey: String? {
      didSet {
        if oldValue != nil && recyclingKey != oldValue {
 +        leaveSharedAnimation()
          sdImageView.image = nil
          placeholderImage = nil
-         sourceImage = nil
-@@ -89,6 +90,16 @@ public final class ImageView: ExpoView {
+-        sourceImage = nil
++        // Keep an image ref (`sources == nil`). When the source prop ran first in this prop
++        // batch, `sourceImage` is the new ref, and `reload()` draws it again after the batch.
++        // Without it, a reused view that gets a new ref and a new key together stays blank.
++        if sources != nil {
++          sourceImage = nil
++        }
+       }
      }
    }
  
@@ -622,7 +628,7 @@ index a1f94fe8c039d2649c7144a8db5229efc310c65b..a4be63cb8dba5a7d06dadc07bee29dd6
    var autoplay: Bool = true
  
    var sfEffect: [SFSymbolEffect]?
-@@ -166,6 +177,22 @@ public final class ImageView: ExpoView {
+@@ -166,6 +182,22 @@ public final class ImageView: ExpoView {
    // MARK: - Implementation
  
    func reload(force: Bool = false) {
@@ -645,7 +651,7 @@ index a1f94fe8c039d2649c7144a8db5229efc310c65b..a4be63cb8dba5a7d06dadc07bee29dd6
      if lockResource && !force {
        return
      }
-@@ -659,11 +686,17 @@ public final class ImageView: ExpoView {
+@@ -659,11 +691,17 @@ public final class ImageView: ExpoView {
    private func setImage(_ image: UIImage?, contentFit: ContentFit, isPlaceholder: Bool) {
      sdImageView.contentMode = contentFit.toContentMode()
  
@@ -664,7 +670,7 @@ index a1f94fe8c039d2649c7144a8db5229efc310c65b..a4be63cb8dba5a7d06dadc07bee29dd6
  
      // Remove any existing symbol effects before setting new image
      if #available(iOS 17.0, tvOS 17.0, *) {
-@@ -709,6 +742,118 @@ public final class ImageView: ExpoView {
+@@ -709,6 +747,118 @@ public final class ImageView: ExpoView {
  #endif
    }
  
@@ -783,7 +789,7 @@ index a1f94fe8c039d2649c7144a8db5229efc310c65b..a4be63cb8dba5a7d06dadc07bee29dd6
    // MARK: - Symbol Effects
  
    @available(iOS 17.0, tvOS 17.0, *)
-diff --git a/node_modules/expo-image/ios/SharedAnimationDriver.swift b/ios/SharedAnimationDriver.swift
+diff --git a/ios/SharedAnimationDriver.swift b/ios/SharedAnimationDriver.swift
 new file mode 100644
 index 0000000000000000000000000000000000000000..463cc35c6127163dfcc24446ff817239c04a6eba
 --- /dev/null

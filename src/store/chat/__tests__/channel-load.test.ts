@@ -6,6 +6,7 @@ import {
 import { userInfoFixture } from '@app/services/__fixtures__/twitch/user-info.fixture';
 import { sevenTvService } from '@app/services/seven-tv-service';
 import * as GetBttvBadgesModule from '@app/store/chat/actions/bttv-badges/getBttvBadges';
+import { updatePreferences } from '@app/store/preference-store';
 import { flushChatStoreTimers } from '@app/test/chat-store-teardown';
 import { stubEmoteProviderServices } from '@app/test/emote-provider-services';
 import { silenceLogger } from '@app/test/silence-logger';
@@ -21,6 +22,7 @@ import { cheermoteFetchGuard } from '@app/utils/chat/cheermote-store/cheermoteFe
 import {
   clearCache,
   clearSubscriberProfilesCache,
+  getCurrentEmoteData,
   invalidateChatResourceCaches,
   loadChannelResources,
   resolveSubscriberChannelProfiles,
@@ -1151,6 +1153,36 @@ describe('updateSevenTvEmotes', () => {
     expect(
       cache!.sevenTvChannelEmotes.find(emote => emote.id === 'emote-b')?.name,
     ).toBe('emote-b-renamed');
+  });
+
+  test('getCurrentEmoteData returns the updated set after a live update', () => {
+    seed([sevenTvEmote('emote-a')]);
+
+    expect(ids(getCurrentEmoteData(channelId).sevenTvChannelEmotes)).toEqual([
+      'emote-a',
+    ]);
+
+    updateSevenTvEmotes(channelId, [sevenTvEmote('emote-b')], []);
+
+    expect(ids(getCurrentEmoteData(channelId).sevenTvChannelEmotes)).toEqual([
+      'emote-a',
+      'emote-b',
+    ]);
+  });
+
+  test('getCurrentEmoteData gates the set again after a preference change', () => {
+    seed([sevenTvEmote('emote-a')]);
+    updatePreferences({ show7TvEmotes: true });
+
+    expect(ids(getCurrentEmoteData(channelId).sevenTvChannelEmotes)).toEqual([
+      'emote-a',
+    ]);
+
+    updatePreferences({ show7TvEmotes: false });
+    const gated = ids(getCurrentEmoteData(channelId).sevenTvChannelEmotes);
+    updatePreferences({ show7TvEmotes: true });
+
+    expect(gated).toEqual([]);
   });
 });
 

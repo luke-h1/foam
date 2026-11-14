@@ -286,8 +286,8 @@ export const Chat = memo(
                 ref={composerRef}
               >
                 <ChatInputShell
+                  key={user?.id ?? 'signed-out'}
                   {...{
-                    key: user?.id ?? 'signed-out',
                     ref: inputShellRef,
                     channelId,
                     channelName,

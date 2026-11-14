@@ -18,6 +18,7 @@ import {
   enrichedMessageIds,
   storedMessage,
   storedTokens,
+  summariseTokens,
   type TokenSummary,
 } from '@app/store/chat/__tests__/__fixtures__/messages.fixture';
 import {
@@ -510,6 +511,52 @@ describe('useChatMessageProcessing', () => {
       emoteRow: [resolvedPersonal],
       badgeRowBadges: [sevenTvBadge],
     });
+  });
+
+  test('finalising a deferred live message parses it and clears the flag', () => {
+    const liveMessage = createChatMessage({
+      tags: { id: 'live-1', login: 'viewer', 'user-id': 'viewer-id' },
+      text: 'hello OMEGALUL',
+      overrides: { pendingEmoteParse: true },
+    });
+
+    const { hook } = renderMessageProcessing();
+    const finalized = hook.result.current.finalizeBufferedMessage(liveMessage);
+
+    expect({
+      pendingEmoteParse: finalized.pendingEmoteParse,
+      tokens: summariseTokens(finalized.message),
+    }).toEqual({
+      pendingEmoteParse: undefined,
+      tokens: [{ type: 'text', content: 'hello' }, space, resolvedOmegalul],
+    });
+  });
+
+  test('finalising without emote sources keeps the text and clears the flag', () => {
+    chatStore$.persisted.channelCaches.set({});
+
+    const liveMessage = createChatMessage({
+      tags: { id: 'live-2', login: 'viewer' },
+      text: 'hello OMEGALUL',
+      overrides: { pendingEmoteParse: true },
+    });
+
+    const { hook } = renderMessageProcessing();
+    const finalized = hook.result.current.finalizeBufferedMessage(liveMessage);
+
+    expect(finalized).toEqual<AnyChatMessageType>({
+      ...liveMessage,
+      pendingEmoteParse: undefined,
+    });
+
+    expect(liveMessage.pendingEmoteParse).toBe(true);
+  });
+
+  test('finalising a message that was never deferred returns it unchanged', () => {
+    const message = createChatMessage({ tags: { id: 'parsed-1' } });
+    const { hook } = renderMessageProcessing();
+
+    expect(hook.result.current.finalizeBufferedMessage(message)).toBe(message);
   });
 });
 

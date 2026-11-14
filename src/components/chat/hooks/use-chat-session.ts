@@ -180,7 +180,6 @@ export function useChatSession({
   );
 
   const {
-    enqueueLiveChatMessage,
     finalizeBufferedMessage,
     processMessageEmotes,
     reprocessAllMessages,
@@ -216,7 +215,6 @@ export function useChatSession({
     channelId,
     channelName,
     clearLocalMessages,
-    enqueueLiveChatMessage,
     handleNewMessage,
     isMountedRef: isChatMountedRef,
     isLoadingRecentMessagesRef,

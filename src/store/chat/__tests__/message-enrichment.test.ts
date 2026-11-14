@@ -433,6 +433,43 @@ describe('resolveVisibleMessageUpdate', () => {
     });
   });
 
+  test('returns null when re-resolution matches the stored row', async () => {
+    const message = createChatMessageFixture({
+      message_id: 'visible-2',
+      message_nonce: 'nv2',
+      message: [createTextToken('hello Kappa')],
+      userstate: createUserStateTags({
+        'badges-raw': 'subscriber/12',
+      }),
+    });
+
+    addMessages([message]);
+
+    const first = await resolveVisibleMessageUpdate({
+      channelId,
+      message,
+      show7TvEmotes: true,
+      userLogin: 'me',
+    });
+
+    expect(first).not.toBeNull();
+
+    const hydrated = {
+      ...message,
+      message: first?.updates.message ?? message.message,
+      badges: first?.updates.badges ?? message.badges,
+    };
+
+    const second = await resolveVisibleMessageUpdate({
+      channelId,
+      message: hydrated,
+      show7TvEmotes: true,
+      userLogin: 'me',
+    });
+
+    expect(second).toBeNull();
+  });
+
   test('keeps a stored gif when rebuilt text is shorter than the tag offsets', async () => {
     const message = createChatMessageFixture({
       message_id: 'gif-1',

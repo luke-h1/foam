@@ -68,7 +68,7 @@ function RadialGradientFill({
         >
           {gradientConfig.colors.map((color, index) => (
             <Stop
-              key={`${color}-${gradientConfig.locations[index]}`}
+              key={`${index}-${color}`}
               offset={`${(gradientConfig.locations[index] ?? 0) * 100}%`}
               stopColor={color}
             />
@@ -107,7 +107,7 @@ function LinearGradientSvgFill({
         >
           {gradientConfig.colors.map((color, index) => (
             <Stop
-              key={`${color}-${gradientConfig.locations[index]}`}
+              key={`${index}-${color}`}
               offset={`${(gradientConfig.locations[index] ?? 0) * 100}%`}
               stopColor={color}
             />

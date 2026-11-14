@@ -63,10 +63,6 @@ const CHAT_MAINTAIN_SCROLL_AT_END = {
 
 const CHAT_MAINTAIN_SCROLL_AT_END_THRESHOLD = 0.1;
 
-/**
- * Off until on-device fling QA passes. The iOS recycle crash came from the
- * removed `@react-native-masked-view`; see ADR-0007.
- */
 const CHAT_RECYCLE_ITEMS = true;
 
 const SKELETON_BODY_WIDTHS = ['28%', '42%', '54%'] as const;
@@ -243,7 +239,6 @@ export const ChatList = memo(
         // The composer is in a sibling KeyboardStickyView, so RN's tap-dismiss never fires; drag to dismiss.
         keyboardDismissMode='on-drag'
         keyboardShouldPersistTaps='handled'
-        scrollEventThrottle={16}
         viewabilityConfig={CHAT_VIEWABILITY_CONFIG}
         onViewableItemsChanged={onViewableItemsChanged}
       />
