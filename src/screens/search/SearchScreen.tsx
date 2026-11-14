@@ -4,6 +4,7 @@ import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 import type { ListRenderItem } from '@shopify/flash-list';
 import { router } from 'expo-router';
 
+import { BOX_ART_SOURCE_SIZE } from '@app/components/category-card/constants';
 import {
   FlashList,
   type FlashListRef,
@@ -99,10 +100,10 @@ export function SearchScreen() {
 
   const renderCategoryItem: ListRenderItem<Category> = useCallback(
     ({ item }) => {
-      const imageUrl = getTwitchThumbnailUrl(item.box_art_url, {
-        width: 220,
-        height: 294,
-      });
+      const imageUrl = getTwitchThumbnailUrl(
+        item.box_art_url,
+        BOX_ART_SOURCE_SIZE,
+      );
 
       return (
         <ResultRow
