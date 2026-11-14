@@ -9,7 +9,6 @@ import type { TwitchStream } from '@app/types/twitch/stream';
 import type { UserBlockList, UserInfoResponse } from '@app/types/twitch/user';
 import type { TwitchVideosRequestParams } from '@app/types/twitch/video';
 import { getNextPageParam } from '@app/utils/pagination/getNextPageParam';
-import { getPreviousPageParam } from '@app/utils/pagination/getPreviousPageParam';
 
 import { twitchKeys } from '../queryKeys';
 
@@ -86,7 +85,6 @@ export function topStreamsInfiniteQueryOptions() {
     initialPageParam: INITIAL_PAGE_CURSOR,
     maxPages: MAX_INFINITE_PAGES,
     getNextPageParam,
-    getPreviousPageParam,
   });
 }
 
@@ -99,7 +97,6 @@ export function topCategoriesInfiniteQueryOptions() {
     maxPages: MAX_INFINITE_PAGES,
     getNextPageParam: (lastPage: PaginatedList<Category>) =>
       lastPage?.pagination?.cursor,
-    getPreviousPageParam: () => undefined,
   });
 }
 
@@ -112,7 +109,6 @@ export function streamsByCategoryInfiniteQueryOptions(categoryId: string) {
     initialPageParam: INITIAL_PAGE_CURSOR,
     maxPages: MAX_INFINITE_PAGES,
     getNextPageParam,
-    getPreviousPageParam,
   });
 }
 
