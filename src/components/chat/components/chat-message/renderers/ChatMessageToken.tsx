@@ -89,10 +89,10 @@ export function ChatMessageToken({
 
       return (
         <EmoteToken
+          key={getTokenIdentity(token, index)}
           {...{
             disableAnimations: disableEmoteAnimations,
             isModerated,
-            key: getTokenIdentity(token, index),
             token,
             onEmoteTouchStart,
             shouldOverlayPrevious,
