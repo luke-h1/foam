@@ -1,8 +1,31 @@
 diff --git a/react-native.js b/react-native.js
-index 229f09a8230ab24079d471f65d28d36908f0f2ea..e12b1bd985dc6c5215248890b6de5367931077ff 100644
+index 229f09a8230ab24079d471f65d28d36908f0f2ea..46c1da8492caeef2a61a3a7d8f4eef9c2325b603 100644
 --- a/react-native.js
 +++ b/react-native.js
-@@ -3932,12 +3932,17 @@ function setDidLayout(ctx) {
+@@ -3524,6 +3524,22 @@ function updateItemPositions(ctx, dataChanged, {
+   if (!didBreakEarly) {
+     updateTotalSize(ctx);
+   }
++  // PATCH(foam): with a keyExtractor nothing removes the size of a key that left
++  // the data, so a chat window that trims old rows keeps one entry per message
++  // forever (F11). After a full pass indexByKey holds every key in the new data;
++  // drop only the sizes of keys that are not in it, so no row in the data re-measures.
++  if (dataChanged && startIndex === 0 && !didBreakEarly) {
++    for (const key of state.sizes.keys()) {
++      if (!indexByKey.has(key)) {
++        state.sizes.delete(key);
++      }
++    }
++    for (const key of sizesKnown.keys()) {
++      if (!indexByKey.has(key)) {
++        sizesKnown.delete(key);
++      }
++    }
++  }
+   if (snapToIndices) {
+     updateSnapToOffsets(ctx);
+   }
+@@ -3932,12 +3948,17 @@ function setDidLayout(ctx) {
  // src/core/calculateItemsInView.ts
  var RENDER_RANGE_PROJECTION_FULL_VELOCITY = 4;
  var RENDER_RANGE_PROJECTION_SETTLE_DELAY = 100;
@@ -21,7 +44,7 @@ index 229f09a8230ab24079d471f65d28d36908f0f2ea..e12b1bd985dc6c5215248890b6de5367
  }
  function scheduleRenderRangeProjectionSettle(ctx) {
    const state = ctx.state;
-@@ -3951,7 +3956,10 @@ function scheduleRenderRangeProjectionSettle(ctx) {
+@@ -3951,7 +3972,10 @@ function scheduleRenderRangeProjectionSettle(ctx) {
      state.timeoutRenderRangeProjectionSettle = void 0;
      state.timeouts.delete(timeout);
      state.scrollHistory.length = 0;
@@ -33,7 +56,7 @@ index 229f09a8230ab24079d471f65d28d36908f0f2ea..e12b1bd985dc6c5215248890b6de5367
    }, RENDER_RANGE_PROJECTION_SETTLE_DELAY);
    state.timeoutRenderRangeProjectionSettle = timeout;
    state.timeouts.add(timeout);
-@@ -5671,14 +5679,21 @@ var ContainerSlot = typedMemo(function ContainerSlot2(props) {
+@@ -5671,14 +5695,21 @@ var ContainerSlot = typedMemo(function ContainerSlot2(props) {
  var ContainersLayer = typedMemo(function ContainersLayer2({ children, horizontal }) {
    const ctx = useStateContext();
    const columnWrapperStyle = ctx.columnWrapperStyle;
@@ -59,7 +82,7 @@ index 229f09a8230ab24079d471f65d28d36908f0f2ea..e12b1bd985dc6c5215248890b6de5367
    if (columnWrapperStyle) {
      const { columnGap, rowGap, gap } = columnWrapperStyle;
      const gapX = columnGap || gap || 0;
-@@ -5699,7 +5714,7 @@ var ContainersLayer = typedMemo(function ContainersLayer2({ children, horizontal
+@@ -5699,7 +5730,7 @@ var ContainersLayer = typedMemo(function ContainersLayer2({ children, horizontal
        }
      }
    }
@@ -69,10 +92,33 @@ index 229f09a8230ab24079d471f65d28d36908f0f2ea..e12b1bd985dc6c5215248890b6de5367
  var Containers = typedMemo(function Containers2({
    horizontal,
 diff --git a/react-native.mjs b/react-native.mjs
-index c2e0f3823f524e31e2105a5fbda76be78c926226..392304f5f5992f07c3cc7dee1a964daf620bb810 100644
+index c2e0f3823f524e31e2105a5fbda76be78c926226..77766d8df8268345f0b7d2633a1bd9826f25a3f1 100644
 --- a/react-native.mjs
 +++ b/react-native.mjs
-@@ -3911,12 +3911,17 @@ function setDidLayout(ctx) {
+@@ -3503,6 +3503,22 @@ function updateItemPositions(ctx, dataChanged, {
+   if (!didBreakEarly) {
+     updateTotalSize(ctx);
+   }
++  // PATCH(foam): with a keyExtractor nothing removes the size of a key that left
++  // the data, so a chat window that trims old rows keeps one entry per message
++  // forever (F11). After a full pass indexByKey holds every key in the new data;
++  // drop only the sizes of keys that are not in it, so no row in the data re-measures.
++  if (dataChanged && startIndex === 0 && !didBreakEarly) {
++    for (const key of state.sizes.keys()) {
++      if (!indexByKey.has(key)) {
++        state.sizes.delete(key);
++      }
++    }
++    for (const key of sizesKnown.keys()) {
++      if (!indexByKey.has(key)) {
++        sizesKnown.delete(key);
++      }
++    }
++  }
+   if (snapToIndices) {
+     updateSnapToOffsets(ctx);
+   }
+@@ -3911,12 +3927,17 @@ function setDidLayout(ctx) {
  // src/core/calculateItemsInView.ts
  var RENDER_RANGE_PROJECTION_FULL_VELOCITY = 4;
  var RENDER_RANGE_PROJECTION_SETTLE_DELAY = 100;
@@ -91,7 +137,7 @@ index c2e0f3823f524e31e2105a5fbda76be78c926226..392304f5f5992f07c3cc7dee1a964daf
  }
  function scheduleRenderRangeProjectionSettle(ctx) {
    const state = ctx.state;
-@@ -3930,7 +3935,10 @@ function scheduleRenderRangeProjectionSettle(ctx) {
+@@ -3930,7 +3951,10 @@ function scheduleRenderRangeProjectionSettle(ctx) {
      state.timeoutRenderRangeProjectionSettle = void 0;
      state.timeouts.delete(timeout);
      state.scrollHistory.length = 0;
@@ -103,7 +149,7 @@ index c2e0f3823f524e31e2105a5fbda76be78c926226..392304f5f5992f07c3cc7dee1a964daf
    }, RENDER_RANGE_PROJECTION_SETTLE_DELAY);
    state.timeoutRenderRangeProjectionSettle = timeout;
    state.timeouts.add(timeout);
-@@ -5650,14 +5658,21 @@ var ContainerSlot = typedMemo(function ContainerSlot2(props) {
+@@ -5650,14 +5674,21 @@ var ContainerSlot = typedMemo(function ContainerSlot2(props) {
  var ContainersLayer = typedMemo(function ContainersLayer2({ children, horizontal }) {
    const ctx = useStateContext();
    const columnWrapperStyle = ctx.columnWrapperStyle;
@@ -129,7 +175,7 @@ index c2e0f3823f524e31e2105a5fbda76be78c926226..392304f5f5992f07c3cc7dee1a964daf
    if (columnWrapperStyle) {
      const { columnGap, rowGap, gap } = columnWrapperStyle;
      const gapX = columnGap || gap || 0;
-@@ -5678,7 +5693,7 @@ var ContainersLayer = typedMemo(function ContainersLayer2({ children, horizontal
+@@ -5678,7 +5709,7 @@ var ContainersLayer = typedMemo(function ContainersLayer2({ children, horizontal
        }
      }
    }
