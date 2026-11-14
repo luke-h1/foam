@@ -9,10 +9,10 @@
 # Jobs mirror .github/workflows, and like the CI matrices this does not fail
 # fast: every job runs and the summary at the end lists what broke.
 #
-# Two jobs are close rather than exact. React Doctor runs the latest CLI where
-# CI pins v2.2.9, though both scan the same changed-files-against-the-merge-base
-# baseline. zizmor runs with --offline to match the action's
-# `online-audits: false`; online audits flagged findings CI never reports.
+# React Doctor runs the latest CLI, as CI does: the action is pinned at v2.4.0,
+# but its `version` input defaults to the npm `latest` tag. zizmor runs with
+# --offline to match the action's `online-audits: false`; online audits flagged
+# findings CI never reports.
 #
 # The native lint jobs skip themselves when swiftlint/swiftformat/ktlint are not
 # installed, and the Kotlin one has nothing to scan until `bun run prebuild` has
@@ -196,7 +196,9 @@ if wants native; then
 fi
 
 if wants commitlint; then
-  if git rev-parse --verify --quiet HEAD^1 >/dev/null; then
+  if git rev-parse --verify --quiet origin/main >/dev/null; then
+    run 'Commitlint' bun run commitlint --from=origin/main --to=HEAD
+  elif git rev-parse --verify --quiet HEAD^1 >/dev/null; then
     run 'Commitlint' bun run commitlint --from=HEAD^1
   else
     skip 'Commitlint' 'no parent commit to lint against'

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * Expo SDK 58 starts React Native from SceneDelegate, so the
  * `@react-native-firebase/app` config plugin cannot find its old AppDelegate

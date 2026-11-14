@@ -18,7 +18,7 @@ const jestConfig = {
     '^.+\\.(t|j)sx?$': 'babel-jest',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|@sentry/.*|native-base|react-native-svg|newrelic-react-native-agent|@shopify/react-native-skia|standard-navigation)',
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|@react-navigation/.*|@sentry/.*|react-native-svg|@shopify/react-native-skia|standard-navigation)',
     'node_modules/.*storybook.*',
   ],
   moduleNameMapper: {
@@ -41,7 +41,6 @@ const jestConfig = {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   verbose: process.env.CI === 'true' || process.env.JEST_VERBOSE === 'true',
-  // Native env: jsdom's non-configurable `window` breaks @react-native/jest-preset on SDK 58.
   testMatch: [
     '<rootDir>/src/**/__tests__/**/*.(test|spec).(ts|tsx|js|jsx)',
     '<rootDir>/src/**/*.(test|spec).(ts|tsx|js|jsx)',
@@ -51,7 +50,6 @@ const jestConfig = {
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     'scripts/workflows/chat-performance-comment.ts',
-    'scripts/workflows/*-utils.ts',
     'scripts/workflows/github-actions.ts',
     '!src/**/*.d.ts',
     '!src/**/__tests__/**',
