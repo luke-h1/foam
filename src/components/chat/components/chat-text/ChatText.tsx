@@ -11,19 +11,6 @@ import {
   resolveBrandWeightOverride,
 } from './util/chatTextStyle';
 
-/**
- * Chat keeps the brand font while the rest of the app uses the system font.
- * The Skia painted usernames are rasterised in Montserrat, so a system-font
- * message body would put two typefaces on one row.
- *
- * This renders the same output as the design-system `Text`, with less work
- * per span. It caches the resolved style for each prop combination and adds
- * no extra component layer. It shares the type ramp and font maps with `Text`
- * through `text.styles.ts`.
- *
- * `chat-text.test.tsx` checks that both components give the same output.
- */
-
 const margin = getMargin(theme);
 
 export function ChatText({

@@ -12,10 +12,6 @@ import {
 
 const postDerivedSpy = jest.spyOn(sevenTvGqlApi, 'postDerived');
 
-/**
- * Runs the client's real `derive` worklet so the tests cover parsing, not a
- * stubbed return.
- */
 const respondWith = (responseText: string) => {
   postDerivedSpy.mockImplementation((_path, _data, derive) =>
     Promise.resolve(derive(responseText)),
@@ -57,10 +53,6 @@ describe('sevenTvService user lookup', () => {
     await expect(sevenTvService.get7tvUserId('123')).resolves.toEqual('');
   });
 
-  /**
-   * v3 404'd for these, so `channelLoad` already falls back to the global set
-   * on a throw. Resolving to '' instead would query 7TV with an empty set id.
-   */
   test('rejects when the Twitch user has no 7TV account', async () => {
     respondWith(noSevenTvUserResponse);
 
@@ -69,10 +61,6 @@ describe('sevenTvService user lookup', () => {
     );
   });
 
-  /**
-   * `channelLoad` catches this to fall back to the cached set id or the global
-   * set, so a failed lookup must reject rather than resolve to ''.
-   */
   test('rejects when the lookup fails', async () => {
     respondWith(sevenTvGqlErrorResponse);
 

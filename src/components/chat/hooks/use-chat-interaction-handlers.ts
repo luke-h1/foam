@@ -81,10 +81,6 @@ export function useChatComposerActions({
   };
 }
 
-/**
- * Press handlers call the overlay store directly, so the chat root never
- * subscribes to which sheet is open.
- */
 export function useChatOverlayActions(channelId: string) {
   const handleOpenEmoteSheet = useCallback(() => {
     openChatEmoteSheet(channelId);

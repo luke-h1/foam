@@ -1,6 +1,6 @@
 /**
  * Detects Twitch's misconfigured-embed page and posts an `embedMisconfigured`
- * bridge message; without it the failure shows only as a generic load timeout.
+ * bridge message.
  */
 export function buildTwitchEmbedErrorWatcherScript(): string {
   return `
@@ -48,12 +48,9 @@ export function buildTwitchEmbedErrorWatcherScript(): string {
       } catch (e) {}
       return;
     }
-    // The error appears at load; give up after ~15s so this never lingers.
     if (checks >= 15) { stop(); }
   }
 
-  // Poll only if the synchronous check did not already resolve, so a same-tick
-  // hit (error/video/timeout) never leaves an interval running unclearable.
   check();
   if (!stopped) {
     timer = setInterval(check, 1000);

@@ -8,10 +8,6 @@ type FatalErrorListener = (error: Error) => void;
 let fatalErrorListener: FatalErrorListener | null = null;
 let didInstall = false;
 
-/**
- * Registered by GlobalErrorGate so a production fatal renders the
- * ErrorDetails recovery screen instead of killing the app.
- */
 export function setFatalErrorListener(
   listener: FatalErrorListener | null,
 ): void {
@@ -36,7 +32,6 @@ export function installGlobalErrorHandlers(): void {
   ErrorUtils.setGlobalHandler((error, isFatal) => {
     markSessionError();
 
-    // Dev keeps the redbox. With no listener registered yet, fall through to the previous handler.
     if (!__DEV__ && isFatal && fatalErrorListener) {
       const fatalError =
         error instanceof Error ? error : new Error(String(error));
@@ -48,8 +43,6 @@ export function installGlobalErrorHandlers(): void {
         handledBy: 'global_error_handler',
       });
 
-      // The recovery UI keeps the app alive, so force the envelope out now in
-      // case the user force-quits before the transport flushes on its own.
       void flushSentry();
 
       fatalErrorListener(fatalError);

@@ -44,7 +44,6 @@ describe('storageService expiry', () => {
     jest.setSystemTime(new Date('2026-01-01T00:02:00.000Z'));
     expect(storageService.getString('previous_searches')).toBeNull();
 
-    // Reading after expiry removes the key, so a later valid window stays empty.
     jest.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
 
     expect(storageService.getString('previous_searches')).toBeNull();

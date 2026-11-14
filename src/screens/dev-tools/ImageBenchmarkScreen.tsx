@@ -77,7 +77,6 @@ export function ImageBenchmarkScreen() {
   const [flood, setFlood] = useState('off');
   const autoStarted = useRef(false);
 
-  // Runs take 90s+; guards every post-await setState so a run outliving the screen doesn't write to unmounted state.
   const unmountedRef = useRef(false);
 
   useEffect(() => {
@@ -183,7 +182,6 @@ export function ImageBenchmarkScreen() {
   };
 
   useEffect(() => {
-    // Auto-start runs once on mount; runAll closes over benchmark state that must not re-trigger the suite.
     if (!auto || autoStarted.current) {
       return undefined;
     }

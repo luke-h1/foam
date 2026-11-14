@@ -1,10 +1,6 @@
 import type { ChatDensity, ChatFontScale } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
 
-/**
- * Body font size follows the font-scale preference alone; density never
- * touches it - a compact row is the same size, only tighter.
- */
 const BASE_FONT_SIZE = {
   small: theme.fontSize12,
   default: theme.fontSize14,
@@ -12,8 +8,7 @@ const BASE_FONT_SIZE = {
 } satisfies Record<ChatFontScale, number>;
 
 /**
- * Density moves leading and row padding. Comfortable matches the 1.5 ratio
- * the 7TV extension locks its chat list to.
+ * Comfortable matches the 1.5 ratio the 7TV extension locks its chat list to.
  */
 const LINE_HEIGHT_RATIO = {
   comfortable: 1.5,
@@ -63,19 +58,11 @@ interface ChatScale {
   surfacePaddingVertical: number;
 }
 
-/**
- * Neutral chrome shared by every chat surface; `muted` is the one secondary
- * text colour instead of per-surface rgba literals.
- */
 export const CHAT_SURFACE_COLORS = {
   accentBarWidth: 2,
   alternatingRow: 'rgba(255, 255, 255, 0.03)',
   muted: theme.color.notice.muted,
   pressed: 'rgba(153, 153, 153, 0.24)',
-  /**
-   * Chat owns this corner rather than taking `theme.radius.sm`: an 18pt badge
-   * with a 6pt corner starts to read as a pill.
-   */
   radius: 4,
   strike: theme.color.notice.muted,
 } as const;
@@ -132,10 +119,6 @@ const CHAT_SCALES = {
   },
 } satisfies Record<ChatFontScale, Record<ChatDensity, ChatScale>>;
 
-/**
- * Resolved chat metrics for a preference pair. Renderers must use these, never
- * local literals, so density and font scale cannot drift apart.
- */
 export function getChatScale(
   fontScale: ChatFontScale | undefined,
   density: ChatDensity | undefined,

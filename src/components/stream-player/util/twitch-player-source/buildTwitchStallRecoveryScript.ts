@@ -44,9 +44,6 @@ export function buildTwitchStallRecoveryScript(options: {
   var seekNudged = false;
 
   function softRecover() {
-    // __foamSyncToLive returns true only when it actually seeks. Flag the seek
-    // only then: that one currentTime jump must not read as playback, but a
-    // nudge that did not seek must leave a genuine resume to count as progress.
     if (
       LIVE &&
       typeof window.__foamSyncToLive === 'function' &&
@@ -72,17 +69,13 @@ export function buildTwitchStallRecoveryScript(options: {
     var gapMs = now - lastTickAt;
     lastTickAt = now;
 
-    // The timer was suspended (app backgrounded, WebView throttled), so this
-    // one tick spans a long wall-clock gap. The playhead did not freeze for
-    // that whole gap; treat it as a fresh baseline so a resume does not read as
-    // an instant stall and burn a refresh.
+    // The WebView suspends timers while the app is in the background.
     if (gapMs > POLL_MS * 3) {
       lastTime = video ? video.currentTime : null;
       lastAdvanceAt = now;
       return;
     }
 
-    // No element, user/native pause, ended, or an ad break: not a stall.
     if (!video || video.paused || video.ended || isAdActive()) {
       lastTime = video ? video.currentTime : null;
       lastAdvanceAt = now;
@@ -92,13 +85,6 @@ export function buildTwitchStallRecoveryScript(options: {
     var time = video.currentTime;
     var moved = lastTime !== null && time !== lastTime;
 
-    // Swallow the one jump a soft nudge seek causes: record the new position
-    // but keep the freeze baseline, so a still-wedged stream escalates to a
-    // remount instead of the 6s nudge resetting the timer forever. Return
-    // without judging the freeze: this one jump cannot tell a seek that
-    // recovered from a seek that did not, so let the next tick decide. A
-    // still-frozen stream escalates 2s later; a genuine resume keeps advancing
-    // and resets the baseline then.
     if (moved && seekNudged) {
       seekNudged = false;
       lastTime = time;
@@ -117,9 +103,6 @@ export function buildTwitchStallRecoveryScript(options: {
       return;
     }
 
-    // The playhead is frozen while the element still thinks it is playing.
-    // Ignore a freeze before the first frame ever advanced: that is initial
-    // buffering, which the load timeout already covers.
     if (!everAdvanced) { return; }
 
     var frozenMs = now - lastAdvanceAt;

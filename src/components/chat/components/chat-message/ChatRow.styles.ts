@@ -8,10 +8,6 @@ import { theme } from '@app/styles/themes';
 
 import { CHAT_SURFACE_COLORS } from './util/chatScale';
 
-/**
- * Colour half of a notice surface. The padding, margin and accent-bar width
- * follow the chat scale and come from `getChatTextStyles().surface`.
- */
 function noticeSurface(accent: string, alpha?: number): ViewStyle {
   return {
     backgroundColor: noticeSurfaceTint(accent, alpha),
@@ -227,10 +223,6 @@ export const styles = StyleSheet.create({
   systemMessageContainer: {
     justifyContent: 'flex-start',
   },
-  /**
-   * The one row every chat notice body renders into. Kept single so a milestone,
-   * charity or raid notice cannot drift away from a plain system notice.
-   */
   noticeRow: {
     alignItems: 'flex-start',
     flexDirection: 'row',

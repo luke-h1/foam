@@ -133,9 +133,6 @@ describe('createStabilityRecovery', () => {
     const now = { current: 10_000 };
     const { giveUps, refreshes, stability } = create(now);
 
-    // Each stall refresh remounts the webview, which runs reset again. The
-    // remount must preserve the budget or a stream that freezes after every
-    // reload would refresh forever.
     for (let attempt = 0; attempt < 3; attempt += 1) {
       stability.noteStall();
       now.current += 1000;
@@ -143,8 +140,6 @@ describe('createStabilityRecovery', () => {
       now.current += 1000;
     }
 
-    // The fourth stall is over the preserved budget, so it gives up instead of
-    // refreshing. A give-up triggers no remount, so no further reset runs.
     stability.noteStall();
 
     expect(refreshes).toEqual([

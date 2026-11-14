@@ -77,7 +77,6 @@ describe('ChatMessagePressable', () => {
 
     fireEvent(target, 'responderRelease', touchAt(10, 10));
 
-    // A quick tap keeps the highlight for the minimum press duration.
     expect(
       (
         StyleSheet.flatten<ViewStyle>(

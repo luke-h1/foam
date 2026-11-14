@@ -24,7 +24,6 @@ export interface ChatComposerHandle {
   setText: (text: string) => void;
 }
 
-// A permanent counter is noise.
 const CHARACTER_COUNT_VISIBLE_FROM = MAX_MESSAGE_LENGTH - 50;
 
 interface UseChatComposerControllerOptions {
@@ -131,7 +130,6 @@ export function useChatComposerController({
       return;
     }
 
-    // Captured before the parent clears the input, so it can be recalled.
     const sent = text.trim();
 
     if (sent) {

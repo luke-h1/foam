@@ -11,10 +11,6 @@ import type {
   UsernamePressData,
 } from '@app/store/chat/types/chat-press-data';
 
-/**
- * Opening an overlay closes whatever else was open - a stale selection behind
- * a new sheet leaks back when the new one dismisses.
- */
 function replaceOverlay(channelId: string, patch: Partial<ChatOverlayState>) {
   chatOverlays$.set({
     ...createEmptyChatOverlayState(channelId),
@@ -97,10 +93,6 @@ export function closeChatOverlay(
   patchOverlay(channelId, patch);
 }
 
-/**
- * Test-only reset: production code relies on the read-time `channelId` guard
- * in the overlay state shape instead of imperative resets.
- */
 export function resetChatOverlays(channelId: string) {
   chatOverlays$.set(createEmptyChatOverlayState(channelId));
 }

@@ -60,10 +60,6 @@ const TWITCH_AUTH_HELPER_SCRIPT = `
 true;
 `;
 
-/**
- * Polls the VOD <video> position and reports it to native so the last-known
- * offset survives a WebView reload; observe-only, never fights user seeks.
- */
 const VOD_PROGRESS_TRACKER_SCRIPT = `
 (() => {
   if (window.__foamVodProgressInstalled) {
@@ -108,8 +104,6 @@ export function buildStreamPlayerInjectedJavaScript({
   return (
     TWITCH_AUTH_HELPER_SCRIPT +
     '\n' +
-    // Bad-parent "embed is misconfigured" pages report to Sentry instead of
-    // only timing out.
     buildTwitchEmbedErrorWatcherScript() +
     '\n' +
     buildTwitchContentGateAcceptScript() +
@@ -133,8 +127,6 @@ export function buildStreamPlayerInjectedJavaScript({
         buildTwitchLiveSyncScript({})
       : '') +
     (video ? '\n' + VOD_PROGRESS_TRACKER_SCRIPT : '') +
-    // Recover a silent mid-stream freeze. Clips are short and seek differently,
-    // so leave them out.
     (!clip ? '\n' + buildTwitchStallRecoveryScript({ live: !video }) : '') +
     // iOS-only: WKWebView is the only WebView with a presentation-mode API.
     (PIP_ENABLED && Platform.OS === 'ios' && !clip

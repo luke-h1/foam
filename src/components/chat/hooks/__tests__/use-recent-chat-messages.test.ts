@@ -13,10 +13,6 @@ const mockGetRecentMessages = jest
   .spyOn(recentMessagesService, 'getRecentMessages')
   .mockResolvedValue([]);
 
-/**
- * Seeds the real recent-messages cache the hook reads through
- * `restoreRecentMessagesForChannel`, rather than mocking the store action.
- */
 function seedRecentMessages(channelId: string, count: number): void {
   chatStore$.recentMessagesByChannel[channelId]?.set(
     Array.from({ length: count }, (_unused, index) =>

@@ -1,19 +1,19 @@
 const twitchColors = [
-  '#0000FF', // Blue
-  '#8A2BE2', // Blue Violet
-  '#5F9EA0', // Cadet Blue
-  '#D2691E', // Chocolate
-  '#FF7F50', // Coral
-  '#1E90FF', // Dodger Blue
-  '#B22222', // Firebrick
-  '#DAA520', // Golden Rod
-  '#008000', // Green
-  '#FF69B4', // Hot Pink
-  '#FF4500', // Orange Red
-  '#FF0000', // Red
-  '#2E8B57', // Sea Green
-  '#00FF7F', // Spring Green
-  '#9ACD32', // Yellow Green
+  '#0000FF',
+  '#8A2BE2',
+  '#5F9EA0',
+  '#D2691E',
+  '#FF7F50',
+  '#1E90FF',
+  '#B22222',
+  '#DAA520',
+  '#008000',
+  '#FF69B4',
+  '#FF4500',
+  '#FF0000',
+  '#2E8B57',
+  '#00FF7F',
+  '#9ACD32',
 ] as const;
 
 export function generateRandomTwitchColor(username?: string): string {

@@ -24,8 +24,6 @@ function splitTrailingUrlPunctuation(word: string): SplitUrlWord {
 }
 
 export function parseWordLinkTokens(word: string): MessageToken[] | null {
-  // Runs for every word of every parsed message; ~99.9% of words aren't
-  // links, so reject before allocating the punctuation split.
   if (!word || !isCacheableWebUri(word)) {
     return null;
   }

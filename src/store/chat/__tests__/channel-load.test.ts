@@ -46,8 +46,6 @@ import {
 
 silenceLogger();
 
-// Isolates the resource loader from the BTTV global-badge micro-cache's own
-// fetch/retry cascade, which is exercised by getBttvBadges' own spec.
 const mockClearBttvBadgesCache = jest
   .spyOn(GetBttvBadgesModule, 'clearBttvBadgesCache')
   .mockImplementation(() => {});
@@ -543,8 +541,6 @@ describe('loadChannelResources cache fallback', () => {
       twitchEmote('twitch-channel-new'),
     ]);
 
-    // A first load with failed slices must stay stale-stamped so the next
-    // join retries the holes instead of serving them for the cache duration.
     expect(cache!.lastUpdated).toBe(0);
 
     expect(cache!.badgesLastUpdated).toBe(0);
@@ -887,8 +883,6 @@ describe('resolveSubscriberChannelProfiles', () => {
 
     await resolveSubscriberChannelProfiles(channelId);
 
-    // Mirrors clearChatCosmeticsCache: the channel caches are emptied, so the
-    // attempted-owner negative cache must be reset alongside them.
     seedCache();
 
     clearSubscriberProfilesCache();
@@ -935,7 +929,6 @@ describe('resolveSubscriberChannelProfiles', () => {
 
     const inFlight = resolveSubscriberChannelProfiles(channelId);
 
-    // Mirrors clearChatCosmeticsCache while the lookup is still on the wire.
     chatStore$.persisted.channelCaches.set({});
 
     clearSubscriberProfilesCache();

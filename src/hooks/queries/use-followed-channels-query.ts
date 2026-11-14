@@ -11,9 +11,6 @@ type FollowedChannelsQueryOptions = Omit<
   'queryKey' | 'queryFn' | 'staleTime'
 >;
 
-/**
- * Channels render immediately. Profile images merge in from a dependent query, and rows show a text avatar until then.
- */
 export function useFollowedChannelsQuery(
   userId: string,
   options?: FollowedChannelsQueryOptions,

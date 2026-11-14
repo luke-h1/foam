@@ -12,7 +12,6 @@ import {
 } from '../util/getNextChatCycleAction';
 import type { LiveStreamScreenAction } from '../util/liveStreamScreenReducer';
 
-// A double-tap on the toggle would otherwise land two state changes in one frame.
 const CHAT_TOGGLE_DEBOUNCE_MS = 450;
 
 const CHAT_CYCLE_STEPS = {
@@ -124,8 +123,6 @@ export function useLiveStreamChatControls({
     applyLandscapeChatCycleAction('hide');
   }, [applyLandscapeChatCycleAction]);
 
-  // Leaving landscape always brings chat back, so returning to portrait does
-  // not strand the user on a hidden panel.
   const handleExitLandscape = useCallback(() => {
     if (!isLandscape) {
       return;

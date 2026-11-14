@@ -29,8 +29,7 @@ import * as dateModule from '@app/utils/date-time/date';
 jest.spyOn(dateModule, 'formatDate').mockReturnValue('12:00');
 
 /**
- * Stub so a real fetch never fires. SAFETY: the resolved value is never read,
- * it only satisfies the return type.
+ * SAFETY: the resolved value is never read; it only satisfies the return type.
  */
 jest.spyOn(twitchService, 'getClip').mockResolvedValue({} as TwitchClip);
 

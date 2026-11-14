@@ -26,7 +26,6 @@ format() {
   fi
 }
 
-# Run format and lint separately so a failure in one does not hide the other.
 files=("$@")
 status=0
 if [ "${#files[@]}" -eq 0 ]; then

@@ -11,10 +11,6 @@ interface PlayerIconButtonProps {
   active?: boolean;
 }
 
-/**
- * Round button over video. The dark fill keeps the icon readable on bright
- * frames.
- */
 export function PlayerIconButton({
   icon,
   label,

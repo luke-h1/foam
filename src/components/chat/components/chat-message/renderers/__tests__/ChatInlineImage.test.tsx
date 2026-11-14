@@ -29,10 +29,6 @@ interface MockImageHandle {
 const mockStartAnimating = jest.fn();
 const mockStopAnimating = jest.fn();
 
-/**
- * onLoad is called with no event below; onError always gets one, since a bare
- * call would model the watchdog rather than a real error.
- */
 type CapturedImageProps = Omit<ImageProps, 'onError' | 'onLoad'> & {
   onError?: (event?: ImageErrorEventData) => void;
   onLoad?: (event?: ImageLoadEventData) => void;
@@ -395,17 +391,14 @@ describe('ChatInlineImage fallback chain', () => {
 
     expect(mockLoads).toEqual([`${base}/4x.webp`]);
 
-    // 4x.webp 404s -> swap format, same size, immediately.
     act(() => mockImageProps?.onError?.({ error: 'HTTP 404' }));
 
     expect(evictMock).toHaveBeenCalledWith(`${base}/4x.webp`);
 
     expect(mockLoads).toEqual([`${base}/4x.webp`, `${base}/4x.avif`]);
 
-    // 4x.avif 404s -> drop to the next size down.
     act(() => mockImageProps?.onError?.({ error: 'HTTP 404' }));
 
-    // The fallback walk is immediate - nothing is waiting on a timer.
     act(() => jest.advanceTimersByTime(8000));
 
     expect(mockLoads).toEqual([
@@ -424,7 +417,6 @@ describe('ChatInlineImage fallback chain', () => {
     act(() => mockImageProps?.onLoad?.());
     act(() => jest.advanceTimersByTime(60_000));
 
-    // No further fallback once a variant loads.
     expect(mockLoads).toEqual([
       `${base}/4x.webp`,
       `${base}/4x.avif`,
@@ -438,7 +430,6 @@ describe('ChatInlineImage fallback chain', () => {
     const base = 'https://cdn.7tv.app/badge/01H85';
     render(<ChatInlineImage sourceUrl={`${base}/4x.webp`} style={{}} />);
 
-    // 6 candidates: {4,3,2}x x {webp,avif}. 5 errors walk to the last one.
     for (let i = 0; i < 5; i += 1) {
       act(() => mockImageProps?.onError?.({ error: 'HTTP 404' }));
     }
@@ -454,7 +445,6 @@ describe('ChatInlineImage fallback chain', () => {
 
     expect(mockLoads).toEqual(candidates);
 
-    // Now on the smallest candidate, errors become backoff retries of it.
     act(() => mockImageProps?.onError?.({ error: 'HTTP 404' }));
 
     expect(mockLoads).toEqual(candidates);
@@ -469,12 +459,10 @@ describe('ChatInlineImage fallback chain', () => {
     const sourceUrl = `${base}/4x.webp`;
     render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
-    // Walk the 5 fallback candidates.
     for (let i = 0; i < 5; i += 1) {
       act(() => mockImageProps?.onError?.({ error: 'HTTP 404' }));
     }
 
-    // Then 8 backoff retries of the smallest candidate.
     for (let i = 0; i < 8; i += 1) {
       act(() => mockImageProps?.onError?.({ error: 'HTTP 404' }));
       act(() => jest.advanceTimersByTime(8000));
@@ -518,7 +506,6 @@ describe('ChatInlineImage fallback chain', () => {
     act(() => mockImageProps?.onError?.({ error: 'HTTP 404' }));
     expect(evictMock).toHaveBeenCalledWith(sourceUrl);
 
-    // No fallback variant, so it stays on the same url and waits for the timer.
     expect(mockLoads).toEqual([sourceUrl]);
 
     act(() => jest.advanceTimersByTime(400));
@@ -564,7 +551,6 @@ describe('ChatInlineImage loading shimmer', () => {
     act(() => mockImageProps?.onLoad?.());
     expect(screen.queryByTestId('chat-image-shimmer')).not.toBeOnTheScreen();
 
-    // A memory-pressure trim sheds the decoded ref while the row stays mounted.
     mockSharedRef = null;
 
     screen.rerender(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
@@ -597,7 +583,6 @@ describe('ChatInlineImage load watchdog', () => {
 
     expect(mockLoads).toEqual([`${base}/4x.webp`, `${base}/4x.avif`]);
 
-    // Other rows may be drawing this url's shared ref.
     expect(evictMock).not.toHaveBeenCalled();
   });
 
@@ -674,7 +659,6 @@ describe('ChatInlineImage load watchdog', () => {
     mockSharedRef = null;
     rerender(<ChatInlineImage sourceUrl={first} style={{}} />);
 
-    // The recycled native view has nothing drawn for this url yet.
     expect(screen.getByTestId('chat-image-shimmer')).toBeOnTheScreen();
 
     act(() => jest.advanceTimersByTime(12_000));
@@ -691,7 +675,6 @@ describe('ChatInlineImage load watchdog', () => {
     const sourceUrl = 'https://cdn.7tv.app/emote/stuck/2x.avif';
     render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
-    // The first stall walks to the other format; the rest retry it.
     act(() => jest.advanceTimersByTime(12_000));
 
     expect(mockLoads).toEqual([
@@ -732,7 +715,6 @@ describe('ChatInlineImage load watchdog', () => {
       },
     });
 
-    // The budget is spent: no further reload and no second warning.
     act(() => jest.advanceTimersByTime(60_000));
 
     expect(mockLoads).toEqual([
@@ -777,13 +759,10 @@ describe('ChatInlineImage shared-ref recovery', () => {
       <ChatInlineImage sourceUrl={sourceUrl} style={{}} />,
     );
 
-    // A transient error walks the row off the original url onto a fallback variant.
     act(() => mockImageProps?.onError?.({ error: 'HTTP 404' }));
 
     expect(mockLoads).toEqual([sourceUrl, `${base}/2x.avif`]);
 
-    // The shared ref finishes decoding - proof the original url is good - so the
-    // row must abandon the walk and render the ref at index 0 again.
     mockSharedRef = fakeImageRef(true);
 
     rerender(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
@@ -824,8 +803,6 @@ describe('ChatInlineImage shared-ref recovery', () => {
     act(() => jest.advanceTimersByTime(60_000));
     expect(mockImageProps?.source).toEqual(mockSharedRef);
 
-    // A stale error from the uri operation the native view abandoned when the
-    // ref took over says nothing about the drawn ref.
     act(() => mockImageProps?.onError?.({ error: 'HTTP 404' }));
 
     expect(mockImageProps?.source).toEqual(mockSharedRef);
@@ -864,8 +841,6 @@ describe('ChatInlineImage shared-ref recovery', () => {
 
     rerender(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
-    // The still-cached ref instance matches the first mount's marker, but it
-    // has not drawn since the recycle - the watchdog must still cover it.
     act(() => jest.advanceTimersByTime(12_000));
 
     expect(mockImageProps?.source).toEqual({ uri: sourceUrl });

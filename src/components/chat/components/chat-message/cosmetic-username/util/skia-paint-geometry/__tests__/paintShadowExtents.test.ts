@@ -34,7 +34,6 @@ describe('paintShadowExtents', () => {
   test('adds chained drop shadow blurs as squares, not by summing radii', () => {
     const chain = Array.from({ length: 8 }, () => shadow({ radius: 1 }));
 
-    // 3 * sqrt(8 * 1^2) = 8.49px out; summing the radii would have given 24.
     const reach = 3 * Math.sqrt(8);
 
     expect(paintShadowExtents(chain, [], 0)).toEqual<ShadowExtents>({
@@ -46,8 +45,6 @@ describe('paintShadowExtents', () => {
   });
 
   test('carries the running offset through a chain', () => {
-    // Each shadow lands 3px further right than the last, so the second sits at
-    // 6 and its blur reaches past that; nothing reaches back past the glyph.
     const reach = 3 * Math.SQRT2;
 
     expect(

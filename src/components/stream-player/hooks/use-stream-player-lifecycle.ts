@@ -158,8 +158,7 @@ export function useStreamPlayerLifecycle({
   }, [generation]);
 
   /**
-   * Last reported VOD playback offset (seconds). Survives a WebView remount so
-   * the embed can resume instead of restarting at 0:00; reset per source.
+   * VOD playback offset in seconds.
    */
   const resumeTimeRef = useRef(0);
 
@@ -169,10 +168,6 @@ export function useStreamPlayerLifecycle({
     resumeTimeRef.current = 0;
   }, [sourceKey]);
 
-  /**
-   * Arm a safety dismissal per generation so a load that never finishes can't
-   * trap the loading frame over the player.
-   */
   useEffect(() => {
     const timeout = setTimeout(
       () => setLoadedGeneration(generationRef.current),

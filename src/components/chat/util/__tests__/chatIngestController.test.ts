@@ -294,7 +294,6 @@ describe('chatIngestController (headless line → commit)', () => {
       );
     }
 
-    // A hard 0 -> 6s step would open a 6s gap; the ramp keeps rows flowing.
     expect(maxGapMs).toBeLessThan(1000);
 
     expect(commitTimes.length).toBeGreaterThan(200);

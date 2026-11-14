@@ -11,11 +11,6 @@ import {
 
 import type { ProfileListItem, ProfileTab } from '../types';
 
-/**
- * Runs the clips and VODs queries side by side and hands back whichever tab is
- * showing, so the screen reads one list rather than choosing between two at
- * every use.
- */
 export function useStreamerProfileTab({
   activeTab,
   broadcasterId,

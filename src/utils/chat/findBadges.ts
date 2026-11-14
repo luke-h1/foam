@@ -74,11 +74,6 @@ const getRawTwitchBadges = (userstate: UserStateTags): string => {
   return userstate['badges-raw'] || '';
 };
 
-/**
- * Builds an index once per badge array and keeps it on a WeakMap keyed by that
- * array. Each per-message lookup is then one Map hit, not a scan over
- * thousands of entries.
- */
 const memoisedBadgeIndex = <TValue>(
   build: (badges: SanitisedBadgeSet[]) => Map<string, TValue>,
 ) => {

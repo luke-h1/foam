@@ -62,8 +62,6 @@ function getChannelEmoteData(channelId: string | null): ChannelEmoteCache {
     return emptyChannelEmoteCache;
   }
 
-  // Personal emotes live in a plain session Map; `personalEmotesVersion` is
-  // the observable edge that re-runs this selector when they change.
   chatStore$.personalEmotesVersion.get();
 
   return {
@@ -96,8 +94,6 @@ export const useCurrentEmoteData = () => {
 };
 
 export const useChannelEmoteDataForReprocess = (channelId: string | null) => {
-  // Omits sevenTvPersonalEmotes on purpose: that map churns per chatter and
-  // would re-storm the channel reprocess.
   return useSelector(() => (channelId ? readSlices(channelId) : null));
 };
 

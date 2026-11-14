@@ -6,9 +6,6 @@ import type { MessageToken } from '@app/types/chat/messageToken';
 export interface ChatTokenRenderProps {
   density: ChatDensity;
   disableEmoteAnimations: boolean;
-  /**
-   * Always set at the chat-row boundary (`fontScale ?? 'default'`).
-   */
   fontScale: ChatFontScale;
   effectiveHighlightedUserSet: ReadonlySet<string>;
   getMentionColor?: (username: string) => string;

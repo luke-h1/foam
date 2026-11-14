@@ -12,10 +12,6 @@ interface UseLiveStreamPlayerPropsOptions {
   user: UserInfoResponse | undefined;
 }
 
-/**
- * The poster and the overlay's stream info. The poster request size matches
- * the live-stream card's, so it is already a cache hit from the stream list.
- */
 export function useLiveStreamPlayerProps({
   isStreamEnabled,
   resolvedChannelLogin,

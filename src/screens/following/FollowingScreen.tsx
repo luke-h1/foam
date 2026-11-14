@@ -104,7 +104,6 @@ export default function FollowingScreen() {
     retry: 2,
     retryDelay: (attemptIndex: number) =>
       Math.min(1000 * 2 ** attemptIndex, 3000),
-    // useRefetchOnForeground handles focus and foreground refreshes. Adding refetchOnMount or refetchOnWindowFocus sends a request on every tab switch.
   });
 
   useRefetchOnForeground({

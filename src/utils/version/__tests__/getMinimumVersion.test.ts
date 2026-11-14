@@ -108,7 +108,6 @@ describe('getMinimumVersion', () => {
         development: '2.0.0',
         internal: '2.1.0',
         testflight: '2.2.0',
-        // production intentionally omitted to exercise the ?? '' fallback
       },
     });
 

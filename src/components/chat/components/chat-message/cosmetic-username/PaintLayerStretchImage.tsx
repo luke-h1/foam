@@ -10,8 +10,8 @@ interface PaintLayerStretchImageProps {
 }
 
 /**
- * Stretches one paint texture to the glyph box. The shared clock advances
- * an animated WebP. The compiler is off so a cached render cannot keep frame 0.
+ * The React Compiler is off here, so a cached render cannot keep frame 0 of
+ * an animated WebP.
  */
 export function PaintLayerStretchImage({
   imageUrl,

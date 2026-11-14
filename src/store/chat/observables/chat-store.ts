@@ -63,10 +63,6 @@ export interface ChatStoreState {
   messages: AnyChatMessageType[];
   mentionLoginRevision: number;
   cosmeticsCacheVersion: number;
-  /**
-   * Incremented when per-user cosmetic bindings or badge definitions change so
-   * chat messages can re-resolve badges without reloading channel emote data.
-   */
   cosmeticBindingsVersion: number;
   personalEmotesVersion: number;
   paints: Record<string, PaintData>;
@@ -114,8 +110,6 @@ const initialChatStoreState: ChatStoreState = {
   recentMessagesByChannel: {},
   loadingState: 'IDLE',
   currentChannelId: null,
-  // Hydrated after first interactions - the emoji set is thousands of
-  // allocations and this module loads with the root layout.
   emojis: [],
   bits: [],
   messages: [],
@@ -251,10 +245,6 @@ const backfillBadgeProviders = (
   }
 };
 
-/**
- * Stamps the `provider` discriminant onto caches from builds that predate it;
- * idempotent, re-runs each launch until the cache is rewritten.
- */
 const backfillPersistedProviders = () => {
   const globalCaches = chatStore$.persisted.globalCaches.peek();
   const channelCaches = chatStore$.persisted.channelCaches.peek() ?? {};
@@ -272,17 +262,11 @@ const backfillPersistedProviders = () => {
   }
 };
 
-/**
- * Chat-only hydration deferred off the startup critical path; runs after
- * first interactions, well before a user can reach a chat.
- */
 const hydrateDeferredChatState = () => {
   if (chatStore$.emojis.peek().length === 0) {
     chatStore$.emojis.set(getEmojiEmotes(getPreferences().emojiStyle));
   }
 
-  // Seed 7TV cosmetics from the last session's snapshot; the websocket can
-  // outrace this, so in-memory entries win.
   const persistedCosmetics = loadPersistedCosmetics();
 
   if (persistedCosmetics) {
@@ -323,8 +307,6 @@ const hydrateDeferredChatState = () => {
 
 runWhenIdle(hydrateDeferredChatState);
 
-// Fields older builds persisted per channel; stripping them on hydrate stops
-// every future channelCaches write from re-serializing them.
 const STALE_CHANNEL_CACHE_KEYS = [
   'chatterinoBadges',
   'emotes',
@@ -337,10 +319,6 @@ const STALE_CHANNEL_CACHE_KEYS = [
 type LegacyChannelCache = ChannelCacheType &
   Partial<Pick<GlobalCacheType, ChatResourceSliceKey<'global'>>>;
 
-/**
- * Old installs duplicated the global provider slices into every channel cache;
- * the newest copy seeds the shared slot so the first post-upgrade launch is not empty.
- */
 const seedGlobalCachesFromChannelCopies = (
   caches: Record<string, LegacyChannelCache>,
 ): void => {
@@ -381,10 +359,6 @@ const seedGlobalCachesFromChannelCopies = (
   });
 };
 
-/**
- * Values older installs persisted alongside `persisted`, which the current
- * state type no longer declares.
- */
 interface LegacyPersistedChatStore {
   lastGlobalUpdate?: number;
   recentMessagesByChannel?: Record<string, AnyChatMessageType[]>;

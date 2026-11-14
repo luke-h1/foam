@@ -58,11 +58,8 @@ function useWindowDimsAreStuck(deviceLandscape: boolean | null): boolean {
   const [winStuck, setWinStuck] = useState(false);
 
   useEffect(() => {
-    // Deriving this instead of resetting it does not work: the flag has to
-    // clear the moment the two agree again, and a remembered "stuck" value
-    // matches the next rotation's lagging window value and skips the wait.
     if (deviceLandscape === null || deviceLandscape === winLandscape) {
-      // oxlint-disable-next-line react-doctor/no-adjust-state-on-prop-change -- see above
+      // oxlint-disable-next-line react-doctor/no-adjust-state-on-prop-change -- a derived value cannot clear on the render where the two agree again
       setWinStuck(false);
       return undefined;
     }

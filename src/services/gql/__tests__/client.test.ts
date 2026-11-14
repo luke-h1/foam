@@ -70,9 +70,6 @@ describe('sevenTvV4Client.queryDerived', () => {
     return data.value * 2;
   };
 
-  /**
-   * Runs the client's real envelope worklet over the serialised body.
-   */
   const respondWithBody = (body: GraphQLResponse<{ value: number } | null>) => {
     postDerived.mockImplementation((_path, _data, derive) =>
       Promise.resolve(derive(JSON.stringify(body))),

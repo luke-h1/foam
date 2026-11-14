@@ -20,10 +20,6 @@ interface SheetActionGroupProps {
   actions: SheetAction[];
 }
 
-/**
- * A group of action rows in a chat sheet. Each row runs in place, so it has
- * no chevron.
- */
 export function SheetActionGroup({ title, actions }: SheetActionGroupProps) {
   return (
     <SettingsSection title={title} cardColor={theme.color.surfaceElevated.dark}>

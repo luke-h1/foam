@@ -54,10 +54,6 @@ interface PaintedUsernameSkiaProps {
   paint: PaintData;
   fallbackColor?: string;
   fontSize?: number;
-  /**
-   * Chat line box. The bitmap is the glyph height, so the frame centers it
-   * on the same line as the message text.
-   */
   lineHeight?: number;
   strikethrough?: boolean;
   opacity?: number;
@@ -235,8 +231,6 @@ export function PaintedUsernameSkia({
   const textureReady = useSharedPaintAnimationReady(textureUrl ?? '');
 
   const bitmaps = useMemo(() => {
-    // rebuildToken re-reads the cache after a lost retain; referenced so the
-    // dep is legitimate without a lint disable.
     void rebuildToken;
 
     return fontProvider
@@ -262,10 +256,6 @@ export function PaintedUsernameSkia({
     rebuildToken,
   ]);
 
-  /**
-   * Pins the textures while the canvas draws them so eviction cannot dispose
-   * an on-screen bitmap; layout effect so the retain lands in the same commit.
-   */
   useLayoutEffect(() => {
     if (!bitmaps) {
       return;

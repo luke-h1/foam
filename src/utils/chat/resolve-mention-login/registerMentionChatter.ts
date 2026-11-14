@@ -38,8 +38,6 @@ export function registerMentionChatter({
     login: canonicalLogin,
     userId: resolvedUserId,
     color: resolvedColor,
-    // Mention-only registrations carry no role, so keep the last known one
-    // rather than clearing it.
     role: role ?? existing?.role,
   });
 }

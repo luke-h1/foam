@@ -64,11 +64,6 @@ export function followedChannelsQueryOptions(userId: string) {
   });
 }
 
-/**
- * A dependent query so the channel list renders one round trip sooner; rows
- * fall back to text avatars until the lookup lands. A failed lookup rejects,
- * so it is retried and never cached as "no images".
- */
 export function followedChannelProfileImagesQueryOptions(
   broadcasterIds: string[],
 ) {

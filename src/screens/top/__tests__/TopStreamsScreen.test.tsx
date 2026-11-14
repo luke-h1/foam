@@ -6,8 +6,6 @@ import render from '@app/test/render';
 
 import { TopStreamsScreen } from '../TopStreamsScreen';
 
-// expo-symbols is faked by the root __mocks__/expo-symbols.ts manual mock.
-
 const getTopStreamsSpy = jest.spyOn(twitchService, 'getTopStreams');
 
 const mockStream = createTwitchStream();

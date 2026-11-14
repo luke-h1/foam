@@ -132,9 +132,6 @@ export function usePlayerBridge({
 
   const lastPlaybackLatencySecondsRef = useRef<number | null>(null);
 
-  // Telemetry for the current WebView/source generation: time-to-first-play
-  // plus once-per-generation guards so a struggling player doesn't flood
-  // Sentry with repeated blocked/stalled reports.
   const playerMountedAtRef = useLazyRef(() => Date.now());
 
   const reportedFirstPlayingRef = useRef(false);
@@ -142,8 +139,6 @@ export function usePlayerBridge({
   const channelRef = useSyncRef(channel);
   const forceRefreshRef = useSyncRef(forceRefresh);
 
-  // Set when a stall/latency refresh drives the next remount, so the reset
-  // effect below keeps the refresh budget instead of clearing it.
   const stabilityRefreshPendingRef = useRef(false);
 
   const [stability] = useState(() =>
@@ -211,8 +206,6 @@ export function usePlayerBridge({
     reportedFirstPlayingRef.current = false;
     reportedPlaybackBlockedRef.current = false;
 
-    // A stability refresh remounts the same source, so it must not wipe the
-    // budget it just spent. A new source starts fresh, so it always does.
     const preserveBudget = stabilityRefreshPendingRef.current && !sourceChanged;
     stabilityRefreshPendingRef.current = false;
     stability.reset({ preserveBudget });
@@ -230,8 +223,6 @@ export function usePlayerBridge({
 
   useUnmountCallback(clearTransientPauseResume);
 
-  // Dispose on unmount only; beginLoad() already retires the prior session on each
-  // load, so keying this on loadKey would kill the freshly-started one.
   useEffect(() => {
     return () => {
       telemetry.dispose();
@@ -302,8 +293,6 @@ export function usePlayerBridge({
     );
   }, [clearTransientPauseResume, injectJS]);
 
-  // Mute drives the <video> directly via __foamSetMuted; flip state optimistically and let
-  // the page's volumechange confirm it.
   const applyMuted = useCallback(
     (muted: boolean) => {
       setPlayerState(prev =>
@@ -526,9 +515,6 @@ export function usePlayerBridge({
       case 'notifyStabilityStall':
         stability.noteStall();
         break;
-      // Latency goes out through onPlaybackLatencyChange to the
-      // videoLatencyDisplay$ observable. React state here would re-render the
-      // whole player subtree on every ~4s latency tick.
       case 'publishLatency':
         lastPlaybackLatencySecondsRef.current = action.latencySeconds;
         onPlaybackLatencyChange?.(action.latencySeconds);

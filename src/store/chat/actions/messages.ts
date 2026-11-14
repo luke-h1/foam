@@ -34,10 +34,6 @@ import {
 
 const messageKeySet = new Set<string>();
 
-/**
- * Stored positions are absolute and reads subtract this running offset, so a
- * front-trim never rewrites both index Maps per flush.
- */
 let windowBaseOffset = 0;
 
 const messageKeyOrder: string[] = [];
@@ -48,8 +44,6 @@ const MAX_RECENT_MESSAGES = 80;
 export const getMaxChatMessages = (): number =>
   getPreferences().chatScrollback ?? initialPreferences.chatScrollback;
 
-// While scrolled up a front-trim re-anchors index 0 and yanks the list to the
-// top, so pause trimming and let the window grow to a bounded ceiling.
 const SUSPENDED_FRONT_TRIM_HEADROOM = 350;
 
 let frontTrimSuspended = false;
@@ -166,8 +160,6 @@ const getSenderChatterRole = (
 };
 
 const indexMessage = (message: AnyChatMessageType, index: number) => {
-  // Stored messages carry the key as their id (prepareMessageForStore), so
-  // this is a field read; the fallback covers unprepared messages.
   const key = getChatMessageStoreId(message);
 
   messageKeyToIndex.set(key, index + windowBaseOffset);
@@ -228,8 +220,6 @@ const trimRecentMessageChannels = () => {
     ? entries.find(([channelId]) => channelId === currentChannelId)
     : undefined;
 
-  // The channel being watched must survive the prune even when it is the
-  // least recently written one.
   const keepsCurrentChannel = nextEntries.some(
     ([channelId]) => channelId === currentChannelId,
   );
@@ -285,8 +275,6 @@ const persistRecentMessagesForChannel = (
     [channelId]: nextRecentMessages,
   });
 
-  // Native persistence is per-channel, so only the channel that changed is
-  // serialized + written here (web persists the whole node via Legend State).
   if (RECENT_MESSAGES_PERSISTENCE_ENABLED) {
     writePersistedRecentMessagesForChannel(channelId, nextRecentMessages);
   }
@@ -317,11 +305,6 @@ export const flushPendingRecentMessagesSync = () => {
 
 type RecentMessagesSyncMode = 'defer' | 'soon' | 'immediate';
 
-/**
- * 'soon' is for moderation: a ban wave fires several events a second and each
- * immediate sync serialises the window to MMKV on the JS thread, but a deleted
- * row still has to leave the persisted copy well before the 15s defer window.
- */
 const syncRecentMessagesForCurrentChannel = (
   nextMessages: AnyChatMessageType[],
   mode: RecentMessagesSyncMode = 'immediate',
@@ -338,8 +321,6 @@ const syncRecentMessagesForCurrentChannel = (
     return;
   }
 
-  // Hold the reference only - the flush slices to MAX_RECENT_MESSAGES, so
-  // slicing per deferred sync (~10/s under load) would be redundant.
   pendingRecentMessagesChannelId = currentChannelId;
 
   pendingRecentMessages = nextMessages;
@@ -349,7 +330,6 @@ const syncRecentMessagesForCurrentChannel = (
       ? RECENT_MESSAGES_MODERATION_SYNC_DELAY_MS
       : RECENT_MESSAGES_SYNC_DELAY_MS;
 
-  // A pending sync already covers this one unless the new request is sooner.
   if (recentMessagesSyncTimer && delayMs >= recentMessagesSyncTimerDelayMs) {
     return;
   }
@@ -362,11 +342,6 @@ const syncRecentMessagesForCurrentChannel = (
   recentMessagesSyncTimer = setTimeout(flushPendingRecentMessagesSync, delayMs);
 };
 
-/**
- * Returning to the bottom releases the suspended-trim headroom (up to 350
- * rows). Trimming it in one commit is a visible hitch, so each commit trims
- * the rows it appends plus at most this many extra.
- */
 const MAX_HEADROOM_TRIM_PER_COMMIT = 50;
 
 const getWindowTrimCount = (
@@ -389,8 +364,6 @@ const trimMessageIndexes = (targetLength: number): number => {
     return 0;
   }
 
-  // One splice instead of shift-per-key - shift moves the whole remaining
-  // window each call, which a full window pays per flush.
   const removedKeys = messageKeyOrder.splice(0, trimCount);
 
   let trimmedCount = 0;
@@ -426,8 +399,6 @@ const appendToMessageWindow = (
     };
   }
 
-  // Slice before concatenating. Joining first copies the whole window an
-  // extra time per flush, ~10x a second on busy channels.
   if (extraMessageCount >= currentMessages.length) {
     const storedDropCount = extraMessageCount - currentMessages.length;
 
@@ -457,8 +428,6 @@ const shiftMessageIndexes = (offset: number) => {
   windowBaseOffset += offset;
 };
 
-// Dropping evicted entries and shifting survivors is pure Map work. A full
-// rebuild per front-trim would re-index the whole window ~10x/s on busy chats.
 const indexAppendedMessages = (
   storedMessages: AnyChatMessageType[],
   appendStartIndex: number,
@@ -469,8 +438,6 @@ const indexAppendedMessages = (
 
     const normalisedMessageId = normaliseMessageField(message.message_id);
 
-    // Another window entry can share this message_id under a different
-    // nonce; only drop the id entry when it still points at the evicted row.
     if (
       normalisedMessageId &&
       messageIdToIndex.get(normalisedMessageId) ===
@@ -629,7 +596,6 @@ export const addMessages = (
       droppedMessages,
     );
   } else {
-    // Key order diverged from the window (shouldn't happen) - resync fully.
     rebuildMessageIndexes(nextMessages);
   }
 
@@ -839,7 +805,6 @@ export const clearMessages = () => {
 };
 
 export const clearMessagesWithNotice = (notice: AnyChatMessageType) => {
-  // One batch so observers never see the empty intermediate state.
   batch(() => {
     clearMessages();
     addMessage(notice);

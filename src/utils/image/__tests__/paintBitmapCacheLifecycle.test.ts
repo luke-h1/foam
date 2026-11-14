@@ -39,9 +39,6 @@ function disposeCallCounts(entry: FakeEntry) {
 
 let frameCallbacks: FrameRequestCallback[] = [];
 
-/**
- * Disposal is deferred two frames, so drain twice.
- */
 function flushFrames(): void {
   for (let frame = 0; frame < 2; frame += 1) {
     const pending = frameCallbacks;
@@ -217,12 +214,8 @@ describe('paintBitmapCacheLifecycle', () => {
     clearPaintBitmapCache();
     flushFrames();
 
-    // The canvas lost the race: its commit landed after disposal ran, so it
-    // must rebuild rather than draw a dead texture.
     expect(retainPaintBitmaps(disposed)).toBe(false);
 
-    // A refused retain must not resurrect the entry into the retain table, or
-    // a later release would dispose it a second time.
     releasePaintBitmaps(disposed);
 
     expect(disposeCallCounts(disposed)).toEqual({
@@ -250,7 +243,6 @@ describe('paintBitmapCacheLifecycle', () => {
       cachePaintBitmaps(`filler-${index}`, createEntry());
     }
 
-    // The retaining effect lands before the deferred flush runs.
     retainPaintBitmaps(evicted);
 
     flushFrames();

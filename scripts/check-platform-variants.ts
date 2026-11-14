@@ -3,11 +3,6 @@
  * `x.native.ts` and so on) must export every value its base file `x.tsx` exports and
  * accept every prop the base accepts. A variant with no base file is not
  * checked: there is no contract to compare it with.
- *
- * tsc checks every caller against the base file, but Metro renders the
- * variant. A prop added only to the base type-checks, then the variant drops
- * it at runtime on that platform. `reservedCharacters` on the chat composer
- * went missing on iOS this way.
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
@@ -36,10 +31,6 @@ function loadProgram(files: string[]): ts.Program {
   return ts.createProgram(files, { ...parsed.options, noEmit: true });
 }
 
-/**
- * The prop names of every exported value, keyed by export name. An export that
- * takes no object parameter has no props.
- */
 function exportedProps(
   program: ts.Program,
   file: string,

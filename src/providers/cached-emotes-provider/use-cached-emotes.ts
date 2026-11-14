@@ -23,10 +23,6 @@ import {
 
 const WARM_BATCH_SIZE = 24;
 
-/**
- * Skip animated emotes: multi-frame decode is the entry storm; they warm on
- * first paint.
- */
 const isStaticUrl = (url: string) => describeEmoteUrl(url).kind !== 'animated';
 
 const WARM_LIST_BY_PROVIDER = {
@@ -85,7 +81,6 @@ export function useCachedEmotes(channelId: string) {
   const disableAnimations = usePreference('disableEmoteAnimations');
 
   useEffect(() => {
-    // On channel hop the cancel flag stops further batches and the decode fence drops the in-flight one; either would refill a cache nothing reads while holding decode slots.
     let cancelled = false;
 
     const isCancelled = () => cancelled;

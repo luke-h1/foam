@@ -12,10 +12,6 @@ export interface CreateSevenTvSessionStateOptions {
   defaultHeartbeatIntervalMs: number;
 }
 
-/**
- * Hook-private session state for the 7TV EventAPI socket; `reset(reason)` is
- * the one place that encodes what each teardown path drops.
- */
 export interface SevenTvSessionState {
   hasInitialSubscriptions: boolean;
   connectionTimestamp: number | null;

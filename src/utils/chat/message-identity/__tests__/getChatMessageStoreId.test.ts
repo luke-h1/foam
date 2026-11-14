@@ -31,10 +31,6 @@ describe('getChatMessageStoreId', () => {
 });
 
 describe('message identity agreement', () => {
-  /**
-   * ChatMessagePane dropped its render-time dedup on the strength of this
-   * agreement; divergence silently renders duplicate rows.
-   */
   test('the list key and the store id agree for a renderable message', () => {
     const message = createChatMessageFixture();
 

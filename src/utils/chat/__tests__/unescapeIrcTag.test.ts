@@ -28,8 +28,6 @@ describe('unescapeIrcTag', () => {
   });
 
   test('consumes an escaped backslash as one unit (no double-decode)', () => {
-    // Wire `\\s` is an escaped backslash then a literal `s`, i.e. the text
-    // `\s` - never a space.
     expect(unescapeIrcTag(String.raw`path\\sfoo`)).toBe(String.raw`path\sfoo`);
   });
 

@@ -14,7 +14,7 @@ const mockChatComposer = jest.fn((_props: ChatComposerProps) => {});
 
 /**
  * `ChatComposer` is memo()-wrapped, so spyOn refuses to patch it; redefine
- * the export. The suite only checks prop wiring, not composer behavior.
+ * the export.
  */
 function MockChatComposer(props: ChatComposerProps) {
   mockChatComposer(props);

@@ -1,9 +1,5 @@
 import type { SheetAction } from '@app/components/chat/components/SheetActionGroup';
 
-/**
- * The block, time-out and ban rows the message sheet and the user sheet both
- * offer, so the two sheets keep the same icon, label and tone.
- */
 export function blockUserAction(onPress: () => void): SheetAction {
   return {
     icon: 'hand.raised',

@@ -55,10 +55,6 @@ function loadFontProvider(): void {
     });
 }
 
-/**
- * Shared Montserrat provider for Skia paints. `useFonts` would re-decode six
- * faces per painted row (and every scroll-shed remount); load once and share.
- */
 export function useSkiaPaintFontProvider(): SkTypefaceFontProvider | null {
   const provider = useSyncExternalStore(
     listener => {

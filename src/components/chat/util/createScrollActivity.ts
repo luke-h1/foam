@@ -24,11 +24,6 @@ export function createScrollActivity(): ScrollActivity {
     listeners.forEach(listener => listener(next));
   }
 
-  /**
-   * Settles at `lastPokeAt + SETTLE_MS`. A fling pokes on every scroll tick,
-   * so the timer waits out the remainder instead of being cleared and
-   * re-armed sixty times a second.
-   */
   function onSettleTimer(): void {
     const remainingMs = lastPokeAt + SETTLE_MS - Date.now();
 

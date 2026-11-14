@@ -3,9 +3,6 @@
 import type { PaintData, PaintLayerData } from '@app/types/seven-tv/cosmetics';
 import { indexedCollectionToArray } from '@app/utils/collection/indexedCollection';
 
-// A paint is shared across every user wearing it (the extension builds one
-// CSS rule per paint), so memoise pure derivations on the paint object;
-// WeakMap-keyed so entries drop with the paint.
 const paintLayersCache = new WeakMap<PaintData, PaintLayerData[]>();
 
 export function getPaintLayers(paint: PaintData): PaintLayerData[] {

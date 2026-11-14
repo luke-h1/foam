@@ -82,10 +82,6 @@ const writeDirtyCosmetics = (): void => {
   }
 };
 
-/**
- * Debounced MMKV snapshot; definitions and bindings persist under separate
- * keys so only the dirty group(s) flush.
- */
 const scheduleCosmeticsPersist = (
   kind: 'definitions' | 'bindings' | 'both' = 'both',
 ): void => {
@@ -120,10 +116,6 @@ const USER_COSMETICS_CACHE_PREFIX = 'user-cosmetics:';
 
 const USER_COSMETICS_NEGATIVE_CACHE_TTL_MS = 30 * 60 * 1000;
 
-/**
- * Binding ids only. A definition copy per wearer would duplicate every
- * popular paint hundreds of times.
- */
 export type CachedUserCosmetics = {
   badgeId: string | null;
   expiresAt: number;
@@ -141,12 +133,8 @@ function dropOldestBindings(
   return Object.fromEntries(Object.entries(bindings).slice(TRIM_COUNT));
 }
 
-// Cap: entitlement.create bursts on channel entry stormed the network with
-// hundreds of parallel getUserCosmeticsGql requests.
 const userCosmeticsFetchGuard = createFetchOnceGuard({ maxConcurrent: 4 });
 
-// The presence path only reaches userCosmeticsFetchGuard on the no-session
-// fallback, so it needs its own bound.
 const userPresenceRequestGuard = createFetchOnceGuard({ maxConcurrent: 4 });
 
 const cacheSessionCosmetics = (
@@ -165,10 +153,6 @@ const cacheSessionCosmetics = (
 const getUserCosmeticsStorageKey = (sevenTvUserId: string) =>
   `sevenTvUserCosmetics_${USER_COSMETICS_CACHE_PREFIX}${sevenTvUserId}` as const;
 
-/**
- * Suppresses snapshot re-sync during a synchronous apply, so a cache hit
- * cannot stamp a fresh TTL and pin stale cosmetics forever.
- */
 let suppressSnapshotSync = false;
 
 function applyCachedUserCosmetics(cosmetics: CachedUserCosmetics) {
@@ -194,10 +178,6 @@ function applyCachedUserCosmetics(cosmetics: CachedUserCosmetics) {
   }
 }
 
-/**
- * An id without its definition (old blobs, or a cleared definitions store)
- * must fall through to a refetch instead of binding to nothing.
- */
 const hasResolvableCosmeticDefinitions = (
   cosmetics: CachedUserCosmetics,
 ): boolean =>
@@ -223,8 +203,6 @@ function getCachedUserCosmetics(
       SEVEN_TV_CACHE_NAMESPACE,
     ) ?? undefined;
 
-  // An unresolvable snapshot is not servable, so promoting it into the
-  // session map would only churn the map on every sighting of the user.
   if (stored && hasResolvableCosmeticDefinitions(stored)) {
     cacheSessionCosmetics(sevenTvUserId, stored);
   }
@@ -233,8 +211,6 @@ function getCachedUserCosmetics(
 }
 
 const deleteCachedUserCosmetics = (sevenTvUserId: string): void => {
-  // Drop any pending flush too: a debounced sync landing after this delete
-  // would rewrite an entry a definitive null fetch just proved dead.
   for (const [ttvUserId, pendingId] of pendingUserCosmeticsSnapshots) {
     if (pendingId === sevenTvUserId) {
       pendingUserCosmeticsSnapshots.delete(ttvUserId);
@@ -281,9 +257,6 @@ function buildCachedUserCosmeticsFromStore(
   };
 }
 
-/**
- * Exported only for its spec; the binding writers below are the callers.
- */
 export const syncCachedUserCosmeticsFromStore = (
   sevenTvUserId: string,
   ttvUserId: string,
@@ -294,10 +267,6 @@ export const syncCachedUserCosmeticsFromStore = (
   );
 };
 
-/**
- * Dirty wearers coalesce into one flush per quiet window; the 7TV user id
- * resolves at write time because reset events drop the link right after.
- */
 const USER_COSMETICS_SNAPSHOT_DEBOUNCE_MS = 1000;
 
 let userCosmeticsSnapshotTimer: ReturnType<typeof setTimeout> | null = null;
@@ -335,10 +304,6 @@ const scheduleUserCosmeticsSnapshotSync = (ttvUserId: string): void => {
   }, USER_COSMETICS_SNAPSHOT_DEBOUNCE_MS);
 };
 
-/**
- * Removals flush synchronously so an app kill inside the debounce window
- * cannot resurrect a removed cosmetic from the stale snapshot.
- */
 const syncUserCosmeticsSnapshotNow = (ttvUserId: string): void => {
   if (suppressSnapshotSync) {
     return;
@@ -354,10 +319,6 @@ const syncUserCosmeticsSnapshotNow = (ttvUserId: string): void => {
   syncCachedUserCosmeticsFromStore(sevenTvUserId, ttvUserId);
 };
 
-/**
- * Flush before a bindings wipe, or the debounced flush lands after it and
- * persists paint-less snapshots for wearers who still have cosmetics.
- */
 const flushUserCosmeticsSnapshotsBeforeBindingsClear = (): void => {
   if (userCosmeticsSnapshotTimer) {
     clearTimeout(userCosmeticsSnapshotTimer);
@@ -381,8 +342,6 @@ export const fetchAndCacheUserCosmetics = async (
     try {
       const cosmetics = await sevenTvService.getUserCosmeticsGql(sevenTvUserId);
 
-      // Otherwise an unresolvable snapshot stays a guaranteed miss for its
-      // whole TTL and re-fires this fetch on every sighting.
       if (!cosmetics && cached && ctx.stillCurrent()) {
         deleteCachedUserCosmetics(sevenTvUserId);
       }
@@ -431,17 +390,11 @@ export const fetchAndCacheUserCosmetics = async (
         `Error fetching cosmetics for user ${sevenTvUserId}:`,
         error,
       );
-      // A transport error keeps the snapshot; only a definitive null response
-      // above deletes it.
       return null;
     }
   });
 };
 
-/**
- * Fetch a chatter's cosmetics via v4 GQL from their Twitch id. Used when a
- * WebSocket entitlement arrives without its cosmetic definition.
- */
 export const fetchUserCosmeticsByTwitchId = async (
   twitchUserId: string,
 ): Promise<void> => {
@@ -454,7 +407,6 @@ export const fetchUserCosmeticsByTwitchId = async (
 export const requestUserCosmeticsViaPresence = async (
   twitchUserId: string,
 ): Promise<void> => {
-  // The id lookup is cached and single-flight on its own, so it does not need a slot.
   const sevenTvUserId = await sevenTvService.get7tvUserId(twitchUserId);
 
   if (!sevenTvUserId) {
@@ -506,10 +458,6 @@ export const clearUserCosmeticsCache = () => {
   invalidateBakedBadges();
 };
 
-/**
- * Must not bump `cosmeticBindingsVersion`: bumping here reintroduced a
- * reprocess storm on entitlement bursts - see cosmetics-churn.test.ts.
- */
 export const setUserPaint = (ttvUserId: string, paintId: string): void => {
   const current = chatStore$.userPaintIds.peek();
   const previousPaintId = current[ttvUserId];
@@ -533,10 +481,6 @@ export const setUserPaint = (ttvUserId: string, paintId: string): void => {
   scheduleCosmeticsPersist('bindings');
 };
 
-/**
- * Storing an equal-content paint copy rotates the WeakMap-keyed layer caches
- * and re-syncs every cached wearer to MMKV - O(wearers²) during bursts.
- */
 const isSamePaintDefinition = (
   previous: PaintData | undefined,
   next: PaintData,
@@ -550,8 +494,6 @@ const sweepUnreferencedPaints = () => {
     return;
   }
 
-  // Root unexpired session snapshots too: sweeping a paint one still points
-  // at turns it into a guaranteed refetch.
   const now = Date.now();
 
   const referenced = new Set(Object.values(chatStore$.userPaintIds.peek()));
@@ -597,10 +539,6 @@ export const getPaint = (paintId: string): PaintData | undefined =>
 export const getUserPaintId = (ttvUserId: string): string | undefined =>
   chatStore$.userPaintIds[ttvUserId]?.peek();
 
-/**
- * Per-user has-a-paint memo, read imperatively per chat row - a plain bounded
- * Map, since an observable cloned and key-diffed the bucket on every write.
- */
 const userPaintFlags = new Map<string, boolean>();
 
 export const clearUserPaintFlagCache = (): void => {
@@ -609,10 +547,6 @@ export const clearUserPaintFlagCache = (): void => {
 
 let userPaintFlagInvalidatorAttached = false;
 
-/**
- * A binding change invalidates just that user; a paint definition change
- * clears the cache wholesale.
- */
 function ensureUserPaintFlagInvalidator(): void {
   if (userPaintFlagInvalidatorAttached) {
     return;
@@ -689,10 +623,6 @@ const sweepUnreferencedBadges = () => {
   chatStore$.badges.set(next);
 };
 
-/**
- * Same rationale as `isSamePaintDefinition`; badges are flat, so field
- * comparison is enough.
- */
 const isSameBadgeDefinition = (
   previous: SanitisedBadgeSet | undefined,
   next: SanitisedBadgeSet,
@@ -835,7 +765,6 @@ export const removeBadge = (badgeId: string) => {
 
   scheduleCosmeticsPersist();
 
-  // Badge art is baked into message rows - bump so visible rows reprocess.
   scheduleCosmeticBindingsBump();
 };
 
@@ -853,10 +782,6 @@ export const removeUserBadge = (ttvUserId: string) => {
   scheduleCosmeticBindingsBump();
 };
 
-/**
- * Paint definitions are live-bound in `PaintedUsername` - no bindings bump.
- * Cleared wearer ids drop via Legend selectors without a chat reprocess.
- */
 export const removePaint = (paintId: string) => {
   const currentPaints = chatStore$.paints.peek();
 
@@ -878,10 +803,6 @@ export const removePaint = (paintId: string) => {
   scheduleCosmeticsPersist();
 };
 
-/**
- * Live Legend selectors drop the paint without a bindings-version bump -
- * same rationale as `setUserPaint`.
- */
 export const removeUserPaint = (ttvUserId: string) => {
   const current = chatStore$.userPaintIds.peek();
 
@@ -895,10 +816,6 @@ export const removeUserPaint = (ttvUserId: string) => {
   scheduleCosmeticsPersist('bindings');
 };
 
-/**
- * Entitlement resets drop both bindings; one synchronous flush after both
- * removals keeps the crash-safety write but hits MMKV once per wearer.
- */
 export const removeUserCosmetics = (ttvUserId: string): void => {
   const hadBindings =
     ttvUserId in chatStore$.userPaintIds.peek() ||

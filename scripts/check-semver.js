@@ -3,9 +3,6 @@ const semver = require('semver');
 const childProcess = require('child_process');
 
 /**
- * Checks that the current node and bun versions satisfy `engines` in
- * package.json.
- *
  * Run with: node scripts/check-semver.js [verbose]
  * Adapted from https://stackoverflow.com/a/72397817
  */

@@ -1,9 +1,5 @@
 import type { EmoteProvider, EmoteSite } from '@app/types/emote';
 
-/**
- * Exists for the persisted-cache backfill, which hydrates emotes written by
- * builds that predate the `provider` field.
- */
 export const EMOTE_PROVIDER_BY_SITE = {
   '7TV Channel': '7tv',
   '7TV Global': '7tv',

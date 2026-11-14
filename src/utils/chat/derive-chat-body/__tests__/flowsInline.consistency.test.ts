@@ -5,10 +5,6 @@ import { getMessageStructure } from '@app/utils/chat/derive-chat-body/getMessage
 
 import { emote, text } from './__fixtures__/deriveChatBody.fixture';
 
-/**
- * The inline rule used to be written three times; they now share one scan,
- * and this pins that.
- */
 describe('inline eligibility is decided in one place', () => {
   const cases: { name: string; message: MessageToken[]; inline: boolean }[] = [
     { name: 'plain text', message: [text('hello')], inline: true },

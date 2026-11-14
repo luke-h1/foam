@@ -503,8 +503,6 @@ describe('useChatIrcHandlers', () => {
       result.current.onClearChat('#foam', {});
     });
 
-    // Replay runs through this same handler, so clearing would destroy the
-    // history the user is waiting on.
     expect(storedMessages()).toEqual<StoredMessageSummary[]>([
       { sender: 'bob', content: 'history 0' },
       { sender: 'System', content: 'A moderator cleared chat (history kept)' },

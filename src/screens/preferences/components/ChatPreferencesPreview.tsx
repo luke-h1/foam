@@ -230,7 +230,6 @@ const ChatPreviewSurface = function ChatPreviewSurface({
   settings,
   testID,
 }: ChatPreviewSurfaceProps) {
-  // Per-key ?? instead of a spread: `{ chatTimestamps: undefined }` would clobber the default with an explicit undefined.
   const previewState: PreviewState = {
     chatDensity: settings?.chatDensity ?? PREVIEW_DEFAULTS.chatDensity,
     chatFontScale: settings?.chatFontScale ?? PREVIEW_DEFAULTS.chatFontScale,

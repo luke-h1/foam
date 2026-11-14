@@ -30,8 +30,7 @@ export function getTotalDeviceMemoryBytes(): number {
 }
 
 /**
- * Prefer `low` when RAM is unknown so emote decode budgets stay on the low
- * ceiling instead of the high-tier 600MB path.
+ * Returns `low` when the RAM size is unknown.
  */
 export function getDeviceTier(): DeviceTier {
   if (cached !== null) {

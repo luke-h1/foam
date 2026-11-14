@@ -2,20 +2,11 @@
  * Every backticked source path in docs/, AGENTS.md and DESIGN.md must resolve
  * to a real file or folder, and so must every literal path in
  * doctor.config.json.
- *
- * The glossary and the ADRs are the map an agent reads before touching code.
- * A kebab-case rename pass once left 26 of CONTEXT.md's 40 pointers dead, all
- * of them silently, because nothing checked them.
  */
 import { existsSync, readdirSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-/**
- * Only the docs that work as a live map of the code. The dated audit and plan
- * documents describe the codebase as it stood on their date, so a path that no
- * longer resolves is a correct historical record, not a broken pointer.
- */
 const MAPPED_DOCS = [
   '.agents/skills/foam-run-ios/SKILL.md',
   'AGENTS.md',
@@ -26,22 +17,14 @@ const MAPPED_DOCS = [
   'docs/react-doctor.md',
 ];
 
-// Paths named as prose about code that no longer exists, not as pointers.
 const DELETED_ON_PURPOSE = new Set(['emoteResolutionDivergence.test.ts']);
 
 const PATH_PATTERN = /`([A-Za-z0-9_.@%/-]+)`/g;
 
-// docs/ writes a path relative to one of these.
 const ROOTS = ['', 'src/', 'scripts/', 'scripts/workflows/'];
 
-// An import specifier such as `store/chat/actions/messages` leaves off the extension.
 const SUFFIXES = ['', '.ts', '.tsx'];
 
-/**
- * A backticked token whose first segment is a real folder is a path. Lint rule
- * names (`react-hooks-js/purity`), package names and illustrative shapes
- * (`util/room-state/`) start with something else, so they are skipped.
- */
 const PATH_HEADS = new Set(
   ROOTS.flatMap(root =>
     readdirSync(root || '.', { withFileTypes: true })
@@ -97,12 +80,6 @@ interface DoctorConfig {
   };
 }
 
-/**
- * A React Doctor override names files by path, and a path that no longer
- * exists matches nothing. The seven-tv rename left the `use-seven-tv-ws.ts`
- * exemption pointing at the old name, and the rules it silenced came back as
- * PR comments with no error to say why.
- */
 async function deadDoctorConfigPaths(): Promise<string[]> {
   // SAFETY: doctor.config.json is checked in and validated by its $schema.
   const config = JSON.parse(
@@ -134,7 +111,6 @@ async function main(): Promise<void> {
 
       const path = candidate.replace(/^@app\//, 'src/');
 
-      // A bare `foo.ts` in prose is a name, not a pointer.
       if (!isPath(path)) {
         continue;
       }

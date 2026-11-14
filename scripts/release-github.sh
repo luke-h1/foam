@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Local equivalent of .github/actions/create-release + update-changelog:
-# generates release notes with git-cliff, updates and pushes CHANGELOG.md,
-# then creates/updates the native GitHub release.
-#
 #  ./scripts/release-github.sh internal
 #  ./scripts/release-github.sh production --dry-run
 #  ./scripts/release-github.sh internal --no-push

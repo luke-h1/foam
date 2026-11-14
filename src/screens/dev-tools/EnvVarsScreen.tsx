@@ -14,9 +14,6 @@ import { theme } from '@app/styles/themes';
 type EnvVar = {
   key: string;
   value: string | undefined;
-  /**
-   * Masked until the reveal toggle is on, so values are not exposed on a screen-share or screenshot.
-   */
   secret?: boolean;
 };
 

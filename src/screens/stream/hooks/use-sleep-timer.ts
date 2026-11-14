@@ -4,7 +4,7 @@ import { useSyncRef } from '@app/hooks/use-sync-ref';
 
 interface UseSleepTimerOptions {
   /**
-   * Called once on expiry; read via a ref so a stale closure never fires against an unmounted screen.
+   * Called once on expiry.
    */
   onExpire: () => void;
 }
@@ -60,7 +60,6 @@ export function useSleepTimer({ onExpire }: UseSleepTimerOptions): SleepTimer {
     return Math.max(1, Math.ceil((deadline - Date.now()) / 60_000));
   }, [deadline]);
 
-  // Stable identity so consumer callbacks change only with timer state, not every render.
   return useMemo(
     () => ({ cancel, getRemainingMinutes, isActive: deadline !== null, start }),
     [cancel, deadline, getRemainingMinutes, start],

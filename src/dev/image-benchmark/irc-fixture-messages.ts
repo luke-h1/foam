@@ -7,9 +7,6 @@ export interface IrcFixtureMessage {
    * Display name; login is derived as the lowercased form.
    */
   user: string;
-  /**
-   * Message body. Emote names render as images when the set is loaded.
-   */
   text: string;
   /**
    * Badge tier; omitted = plain viewer.
@@ -24,7 +21,6 @@ export interface BuiltFixtureMessage {
   text: string;
 }
 
-// FNV-1a, stable across runs - used to derive a fixed id/colour per display name.
 function hashString(value: string): number {
   let hash = 2_166_136_261;
 
@@ -72,7 +68,6 @@ export function buildIrcFixtureMessage(
     'badge-info': isSubscriber ? 'subscriber/12' : '',
     'user-id': userIdForName(entry.user),
     'room-id': roomId,
-    // id + tmi-sent-ts are overwritten per emit so every replayed copy is unique.
     id: '',
     'tmi-sent-ts': '0',
     emotes: '',
@@ -104,11 +99,7 @@ export function buildIrcFixtureMessage(
   return { tags: { ...baseTags, ...conditionalTags }, text: entry.text };
 }
 
-/**
- * ~120 messages modelled on a busy chatroom: heavy 7tv emote spam, sentences, mentions and replies.
- */
 export const IRC_FIXTURE_MESSAGES: IrcFixtureMessage[] = [
-  // Covers long copypasta, unicode + zero-width emote stacks, cheers, mention storms, reply chains.
   {
     user: 'copypasta_enjoyer',
     text: 'I am not saying chat is washed but I have seen glaciers move faster than this gameplay and honestly at this point I am just here for the soundtrack, the vibes, and the occasional jumpscare, so keep it together everyone we are almost at the boss, trust the process, believe in the heart of the cards, and most importantly protect the streamer at all costs no matter what happens next',

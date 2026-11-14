@@ -1,9 +1,5 @@
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
-/**
- * A screenful of chat: rows carrying a mix of Twitch badges (which short
- * circuit) and 7TV badges on both the already-canonical and the rewrite path.
- */
 export const badgeRows: SanitisedBadgeSet[][] = Array.from(
   { length: 40 },
   (_unused, row) => [

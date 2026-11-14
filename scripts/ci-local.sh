@@ -6,10 +6,6 @@
 #   bun run ci:local lint ts      # only the named jobs
 #   SKIP_DOCTOR=1 bun run ci:local
 #
-# Each job's full output goes to a log in .ci-local/. The summary names the log
-# and prints its failure lines, so a failing test is findable without scrolling
-# the combined output.
-#
 # Jobs mirror .github/workflows, and like the CI matrices this does not fail
 # fast: every job runs and the summary at the end lists what broke.
 #
@@ -60,8 +56,6 @@ run() {
   fi
 }
 
-# The lines that name what broke: Jest suites and tests, tsc errors and
-# oxlint errors. A job with none of those markers shows the end of its log.
 print_failure_lines() {
   local log lines
   log="$(log_path "$1")"
@@ -184,8 +178,6 @@ if wants test; then
 fi
 
 if wants native; then
-  # Both scripts warn and exit 0 when their tool is missing, so they report as
-  # passes rather than skips on a machine without swiftlint or ktlint.
   run 'SwiftLint' env LINT_CHECK=1 ./scripts/lint-swift.sh
 
   # ktlint is handed the tracked files explicitly. Left to pick its own roots it

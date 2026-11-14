@@ -103,9 +103,7 @@ export function getFontFamily(
 type StyleEntry = TextProps['style'] | readonly TextProps['style'][];
 
 /**
- * Last entry wins, the same way React Native merges style arrays. Walks the
- * array from the end without copying it, so a hit on the last element costs
- * one read.
+ * Last entry wins, the same way React Native merges style arrays.
  */
 export function findStyleValue<TKey extends 'fontFamily' | 'fontWeight'>(
   style: StyleEntry,

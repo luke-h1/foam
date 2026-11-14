@@ -18,10 +18,6 @@ export const motion = {
   slow: 300,
 
   easing: {
-    /**
-     * A strong ease-out. The built-in cubic curve starts too slowly, so
-     * entrances look delayed.
-     */
     out: Easing.bezier(0.23, 1, 0.32, 1),
     in: Easing.in(Easing.cubic),
     standard: Easing.inOut(Easing.cubic),

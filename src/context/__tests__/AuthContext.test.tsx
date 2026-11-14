@@ -605,8 +605,6 @@ describe('AuthContext', () => {
 
     expect(screen.getByText('User')).toBeOnTheScreen();
 
-    // Implicit-grant token has no refresh token, so we never attempt a refresh
-    // and never clear it solely because the local expiresAt has passed.
     expect(wasRequested(REFRESH_URL)).toBe(false);
 
     expect(twitchApi.getAuthToken()).toBe('implicit-user-token');

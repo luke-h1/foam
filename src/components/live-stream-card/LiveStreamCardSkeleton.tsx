@@ -49,10 +49,6 @@ export function LiveStreamCardSkeletons({
   );
 }
 
-/**
- * Mirrors the line boxes of `LiveStreamCard` (callout, two subhead lines,
- * footnote) so the list does not shift when data arrives.
- */
 function LiveStreamCardSkeleton({ layout }: { layout: StreamListLayout }) {
   if (layout === 'media') {
     return (

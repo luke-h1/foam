@@ -375,7 +375,6 @@ describe('applyEntitlementUpdateEvent', () => {
       badgeId: null,
     });
 
-    // An empty update must leave the prior bindings in place.
     expect(getUserBadgeId('ttv-1')).toBe('badge-1');
 
     expect(getUserPaintId('ttv-1')).toBe('paint-1');
@@ -479,8 +478,6 @@ describe('applyEntitlementDeleteEvent', () => {
 
     setUserPaint('ttv-1', 'paint-1');
 
-    // The evicted link can no longer resolve its Twitch user, so the delete is
-    // a no-op.
     applyEntitlementDeleteEvent({
       entitlementId: `entitlement-${EVICTED_ENTITLEMENT_INDEX}`,
       ttvUserId: null,
@@ -491,8 +488,6 @@ describe('applyEntitlementDeleteEvent', () => {
       badgeId: `badge-${OVER_CAP_INDEX}`,
     });
 
-    // The very next entitlement (the new oldest) is still remembered and does
-    // clear the badge binding.
     applyEntitlementDeleteEvent({
       entitlementId: `entitlement-${BOUNDARY_SURVIVOR_INDEX}`,
       ttvUserId: null,
@@ -523,8 +518,6 @@ describe('applyEntitlementDeleteEvent', () => {
       ttvUserId: 'ttv-1',
     });
 
-    // Even with an explicit Twitch id, an evicted (unremembered) entitlement
-    // delete leaves the bindings untouched.
     expect(readBindings()).toEqual({
       paintId: 'paint-1',
       badgeId: `badge-${OVER_CAP_INDEX}`,

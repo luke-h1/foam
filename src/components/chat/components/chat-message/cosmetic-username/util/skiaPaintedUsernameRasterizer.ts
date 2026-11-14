@@ -696,7 +696,6 @@ function paintRevision(paint: PaintData): number {
 }
 
 function paintBitmapCacheKey(opts: RasterizePaintedUsernameOptions): string {
-  // A paint with no visible colour draws in the fallback colour, so the key includes it.
   const fallbackPart = isVisibleSevenTvColor(opts.paint.color)
     ? ''
     : `|${opts.fallbackColor}`;
@@ -731,11 +730,6 @@ function renderFlatSurface(
   };
 }
 
-/**
- * A URL layer is composited at draw time. The base and its shadow stay in the
- * foundation. Gradient runs and the stroke are their own passes so a texture
- * can sit between them.
- */
 function renderUrlLayeredSurfaces(
   opts: RasterizePaintedUsernameOptions,
   layout: PaintUsernameLayout,
@@ -800,8 +794,8 @@ function renderUsernameMask(
 }
 
 /**
- * Builds or returns the cached render inputs. Pure and synchronous: URL
- * layers load live in the canvas through `useSharedPaintAnimationFrame`.
+ * Pure and synchronous. URL layers load live in the canvas through
+ * `useSharedPaintAnimationFrame`.
  */
 export function getPaintBitmaps(
   opts: RasterizePaintedUsernameOptions,

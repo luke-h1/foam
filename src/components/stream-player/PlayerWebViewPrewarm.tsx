@@ -5,10 +5,6 @@ import { WebView } from 'react-native-webview';
 import { getDeviceTier } from '@app/utils/device/deviceTier';
 import { runWhenIdle } from '@app/utils/runWhenIdle';
 
-/**
- * Preconnect hints for the hosts the Twitch embed hits first, so DNS and TLS
- * are already done when the real player mounts.
- */
 const PREWARM_HTML = `<!doctype html><html><head>
 <link rel="preconnect" href="https://player.twitch.tv">
 <link rel="preconnect" href="https://static.twitchcdn.net">
@@ -16,8 +12,6 @@ const PREWARM_HTML = `<!doctype html><html><head>
 <link rel="preconnect" href="https://usher.ttvnw.net">
 </head><body></body></html>`;
 
-// Boot is busy; wait out the first transitions before spending memory on the
-// throwaway WebView, then drop it once WebKit's processes are warm.
 const PREWARM_MOUNT_DELAY_MS = 2500;
 
 const PREWARM_LIFETIME_MS = 10_000;

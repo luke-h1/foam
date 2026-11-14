@@ -7,10 +7,6 @@ export function replaceEmotesWithText(tokens: MessageToken[]): string {
     .map(token => {
       switch (token.type) {
         case 'emote': {
-          /**
-           * `content` is the channel-facing alias, so reconstructed text
-           * matches what was shown; restore overlaid zero-width words too.
-           */
           const baseText = getMessageTokenText(token);
 
           const overlaidText = (token.overlaid ?? [])

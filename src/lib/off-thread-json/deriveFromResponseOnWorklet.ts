@@ -2,10 +2,6 @@ import { runOnRuntimeAsync } from 'react-native-worklets';
 
 import { getParseRuntime } from '@app/lib/off-thread-json/getParseRuntime';
 
-/**
- * Below this size the worklet round trip costs more than the parse, so small
- * boot responses skip the runtime + thread spawn.
- */
 const MIN_OFF_THREAD_BODY_BYTES = 64 * 1024;
 
 export async function deriveFromResponseOnWorklet<TResult>(

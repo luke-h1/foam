@@ -33,10 +33,6 @@ import {
   type SearchStatus,
 } from './util/searchState';
 
-/**
- * Keeps row separators aligned with the text column, past the avatar or box
- * art.
- */
 const RESULT_THUMBNAIL_WIDTH = 48;
 
 const RESULT_SEPARATOR_INSET =
@@ -212,7 +208,6 @@ function SearchHeader({
     return <SearchDiscover />;
   }
 
-  // The filter only changes results, so it appears once there is a query.
   return (
     <View style={styles.filterBar}>
       <SegmentedControl

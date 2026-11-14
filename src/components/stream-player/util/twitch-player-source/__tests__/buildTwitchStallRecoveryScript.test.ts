@@ -72,10 +72,6 @@ function run(live: boolean): PlayerScriptPage {
   return page;
 }
 
-/**
- * Advance the playhead on the next poll so the watchdog records one real
- * forward move, which is what arms recovery.
- */
 function startPlayback(video: VideoControls) {
   jest.advanceTimersByTime(2000);
   video.setCurrentTime(2);
@@ -98,7 +94,6 @@ describe('buildTwitchStallRecoveryScript', () => {
 
     startPlayback(video);
 
-    // Freeze the playhead and cross the 6s soft threshold.
     jest.advanceTimersByTime(6000);
 
     expect(page.window.__foamEnsurePlaying).toHaveBeenCalled();
@@ -119,7 +114,6 @@ describe('buildTwitchStallRecoveryScript', () => {
 
     startPlayback(video);
 
-    // Hold the freeze past the 14s hard threshold.
     jest.advanceTimersByTime(14_000);
 
     const stalled = page.messages.filter(message => message.type === 'stalled');
@@ -145,8 +139,6 @@ describe('buildTwitchStallRecoveryScript', () => {
     startPlayback(video);
     video.setEnded(true);
 
-    // Freeze the playhead well past the hard threshold: an ended video is not
-    // a stall.
     jest.advanceTimersByTime(30_000);
 
     expect(page.messages).toEqual<PlayerBridgeMessage[]>([]);
@@ -158,8 +150,6 @@ describe('buildTwitchStallRecoveryScript', () => {
 
     startPlayback(video);
 
-    // The ad plays on its own element and advances the real playhead later.
-    // A frozen main playhead during the ad must not remount the player.
     document.body.insertAdjacentHTML(
       'beforeend',
       '<div data-a-target="video-ad-label"></div>',
@@ -174,9 +164,6 @@ describe('buildTwitchStallRecoveryScript', () => {
     const video = installVideo({ currentTime: 1 });
     const page = run(true);
 
-    // The live sync seeks the playhead forward on each nudge, as it does on
-    // device, while the picture stays frozen. If that seek passed as real
-    // progress it would reset the timer and the hard remount would never fire.
     let liveEdge = 2;
     page.window.__foamSyncToLive = jest.fn(() => {
       liveEdge += 30;
@@ -198,7 +185,6 @@ describe('buildTwitchStallRecoveryScript', () => {
     const video = installVideo({ currentTime: 1 });
     const page = run(true);
 
-    // Each nudge seeks the playhead forward, as it does on device.
     let liveEdge = 2;
     const sync = jest.fn(() => {
       liveEdge += 30;
@@ -210,11 +196,8 @@ describe('buildTwitchStallRecoveryScript', () => {
 
     startPlayback(video);
 
-    // Hold the freeze to just before the hard threshold, through two nudges.
     jest.advanceTimersByTime(12_000);
 
-    // The last seek takes and playback keeps advancing on its own: a recovery.
-    // The swallowed seek jump must not fall through to a remount.
     for (let offset = 1; offset <= 6; offset += 1) {
       video.setCurrentTime(liveEdge + offset);
       jest.advanceTimersByTime(2000);
@@ -229,20 +212,15 @@ describe('buildTwitchStallRecoveryScript', () => {
     const video = installVideo({ currentTime: 1 });
     const page = run(true);
 
-    // The sync finds nothing to seek (drift under target) and returns false, so
-    // the real advance that follows must count as progress, not a seek.
     page.window.__foamSyncToLive = jest.fn(() => false);
 
     startPlayback(video);
 
-    // Freeze long enough for a soft nudge to fire and return false.
     jest.advanceTimersByTime(10_000);
 
-    // The stream resumes on its own with a real advance.
     video.setCurrentTime(3);
     jest.advanceTimersByTime(2000);
 
-    // A short freeze that could not stall from a reset baseline.
     jest.advanceTimersByTime(6000);
 
     expect(page.messages.some(message => message.type === 'stalled')).toBe(
@@ -256,9 +234,6 @@ describe('buildTwitchStallRecoveryScript', () => {
 
     startPlayback(video);
 
-    // The timer stops firing while the app is backgrounded, then one tick lands
-    // after a long wall-clock jump. That single gap is not a freeze, so the
-    // watchdog resets its baseline instead of posting stalled.
     jest.setSystemTime(Date.now() + 60_000);
     jest.advanceTimersByTime(2000);
 
@@ -271,7 +246,6 @@ describe('buildTwitchStallRecoveryScript', () => {
     installVideo({ currentTime: 0 });
     const page = run(true);
 
-    // Playing but stuck before the first frame: initial buffering, not a stall.
     jest.advanceTimersByTime(30_000);
 
     expect(page.messages.some(message => message.type === 'stalled')).toBe(

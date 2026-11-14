@@ -10,10 +10,6 @@ export function getTransientState(
   return chatTransientState$[channelId]!.peek() ?? defaultTransientState;
 }
 
-/**
- * Search is a momentary view; without this, returning to a channel restores a
- * filtered list with no visible cause.
- */
 export function resetTransientSearch(channelId: string): void {
   assignTransientState(channelId, { searchActive: false, searchQuery: '' });
 }

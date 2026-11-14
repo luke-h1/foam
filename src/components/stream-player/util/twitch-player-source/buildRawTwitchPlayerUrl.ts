@@ -27,8 +27,6 @@ export function buildRawTwitchPlayerUrl(options: {
     params.set('channel', options.channel);
   }
 
-  // Resume a VOD at its last known position so a WebView reload (memory
-  // pressure / process termination) doesn't restart it from 0:00.
   const resumeAt = options.video ? (options.timeSeconds ?? 0) : 0;
 
   if (resumeAt > 0) {

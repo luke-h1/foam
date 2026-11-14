@@ -12,10 +12,6 @@ interface SectionHeaderProps {
   style?: StyleProp<ViewStyle>;
 }
 
-/**
- * Heading for a group of rows inside a screen. The space above it separates
- * the groups, so there is no divider.
- */
 export function SectionHeader({
   title,
   detail,

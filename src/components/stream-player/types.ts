@@ -48,7 +48,7 @@ export interface StreamInfo {
   gameName?: string;
   profileImageUrl?: string;
   /**
-   * ISO string; used to calculate stream duration.
+   * ISO 8601 timestamp.
    */
   startedAt?: string;
   title?: string;
@@ -92,20 +92,12 @@ export interface StreamPlayerProps {
   sleepTimerActive?: boolean;
   onVideoAreaPress?: () => void;
   onVideoAreaSwipeDown?: () => void;
-  /**
-   * Fires when the embed WebView finishes loading; used to defer IRC connect
-   * until the player is ready.
-   */
   onWebViewLoaded?: () => void;
   /**
    * Parent domain for the Twitch embed. Used by the web player only; native
    * hardcodes `www.twitch.tv`, the domain Twitch's embed always accepts.
    */
   parent?: string;
-  /**
-   * Thumbnail shown behind the loading spinner while the WebView boots, so the
-   * user sees the preview frame instead of a black box.
-   */
   posterUrl?: string;
   /**
    * @default false

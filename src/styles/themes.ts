@@ -95,10 +95,6 @@ const semanticColorGroups = {
   },
 } as const;
 
-/**
- * One neutral grey family, taken from the iOS dark system backgrounds, so the
- * React Native surfaces match the native forms, sheets and tab bar beside them.
- */
 const CANVAS = { light: '#F2F2F7', dark: '#000000' } as const;
 const SURFACE = { light: '#FFFFFF', dark: '#1C1C1E' } as const;
 const SURFACE_SUNKEN = { light: '#E5E5EA', dark: '#0A0A0B' } as const;

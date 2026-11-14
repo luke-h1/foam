@@ -12,10 +12,6 @@ export interface SettingsMenuRow {
   icon: SFSymbol;
   onPress: () => void;
 
-  /**
-   * True when the row pushes another settings screen. iOS shows a chevron
-   * only on these rows.
-   */
   pushes: boolean;
 
   subtitle?: string;
@@ -41,10 +37,6 @@ function pushRow(
   return row;
 }
 
-/**
- * Rows for the settings index. The iOS form and the Android list both
- * render them, so the two menus show the same items.
- */
 const CHAT_MENU_ROWS: SettingsMenuRow[] = [
   pushRow(
     'Chat',

@@ -12,8 +12,6 @@ const MEASURE_OPTIONS = {
 describe('normalizeSevenTvBadge performance', () => {
   test('re-normalises a screenful of badges the way repeated row renders do', async () => {
     await measureFunction(() => {
-      // Eight passes over the same badge objects: a row re-renders far more
-      // often than its badges change, so this is the steady state.
       for (let pass = 0; pass < 8; pass += 1) {
         for (const badges of badgeRows) {
           for (const badge of badges) {

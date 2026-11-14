@@ -178,7 +178,6 @@ describe('FollowingScreen', () => {
 
     expect(screen.getByText(/^Offline/)).toBeOnTheScreen();
 
-    // The live channel is filtered out of the offline section, so its name appears once (on the live card).
     expect(screen.getAllByText('LiveStreamer')).toHaveLength(1);
   });
 

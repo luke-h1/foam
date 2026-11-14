@@ -24,10 +24,6 @@ interface UserCardHeaderProps {
   username: string;
 }
 
-/**
- * User card identity block: Twitch avatar and account age plus 7TV cosmetics,
- * mirroring the 7TV extension's user card header.
- */
 export function UserCardHeader({
   fallbackColor,
   login,

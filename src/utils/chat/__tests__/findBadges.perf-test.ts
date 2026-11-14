@@ -14,8 +14,6 @@ const MEASURE_OPTIONS = {
 
 describe('findBadges performance', () => {
   test('resolves badges against dense provider maps', async () => {
-    // Build WeakMap indexes once so the measured path is the per-message
-    // steady state (Map hits), not first-call indexing.
     findBadges({
       ...denseBadgeSources,
       userstate: badgeLookupUserstates[0]!,

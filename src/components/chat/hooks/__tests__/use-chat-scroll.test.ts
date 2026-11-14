@@ -152,7 +152,6 @@ describe('useChatScroll', () => {
         }),
       );
 
-      // Scrolled up: y=500, view 500, content 2000 -> distanceFromEnd = 1000.
       act(() => {
         result.current.scrollHandlers.onScrollBeginDrag(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
@@ -199,8 +198,6 @@ describe('useChatScroll', () => {
         result.current.scrollHandlers.onScrollEndDrag();
       });
 
-      // End-drag re-enables after a settle window so a fling's
-      // onMomentumScrollBegin can cancel it first.
       act(() => {
         jest.advanceTimersByTime(50);
       });
@@ -233,7 +230,6 @@ describe('useChatScroll', () => {
 
       expect(result.current.isAtBottom).toBe(false);
 
-      // Scrolled to end: y=1500, view 500, content 2000 -> distanceFromEnd = 0.
       act(() => {
         result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
@@ -257,7 +253,6 @@ describe('useChatScroll', () => {
         }),
       );
 
-      // Near end: y=1440 -> distanceFromEnd = 60.
       act(() => {
         result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 1440 }, { height: 500 }, { height: 2000 }),
@@ -630,8 +625,6 @@ describe('useChatScroll', () => {
         result.current.scrollAnchor.noteScrollAwayIntent();
       });
 
-      // Flips before the scroll event lands, so a commit in between cannot
-      // scroll the list back to the end.
       expect(result.current.scrollAnchor.isAtBottomRef.current).toBe(false);
 
       expect(result.current.isAtBottom).toBe(false);
@@ -763,8 +756,6 @@ describe('useChatScroll', () => {
 
       expect(mocks.scrollToEnd).toHaveBeenCalledTimes(2);
 
-      // Even after the anchor window expires, a content-size change while
-      // pinned must keep the newest row visible, or an under-estimated row stays clipped.
       act(() => {
         jest.advanceTimersByTime(600);
         result.current.scrollHandlers.onContentSizeChange();
@@ -832,8 +823,6 @@ describe('useChatScroll', () => {
         }),
       );
 
-      // No scrollToBottom / maintainBottomAfterContentChange: mirrors live
-      // messages arriving while the user sits at the bottom; the newest row must re-reveal after measurement.
       act(() => {
         result.current.scrollHandlers.onContentSizeChange();
       });

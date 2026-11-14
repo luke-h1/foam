@@ -31,10 +31,6 @@ function makeVideo(video: Partial<FakeVideo>): FakeVideo {
   };
 }
 
-/**
- * Runs the built script against a stub page so the seek target is asserted as
- * behaviour rather than as source text.
- */
 function installLiveSync(video: FakeVideo): () => boolean {
   const window: FakeWindow = {
     ReactNativeWebView: { postMessage: () => undefined },

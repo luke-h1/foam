@@ -128,7 +128,6 @@ export const storageService = {
   ): void {
     const { expiry } = options;
 
-    // Writing an already-expired entry would only be read back as a miss.
     if (expiry && expiry <= new Date()) {
       return;
     }

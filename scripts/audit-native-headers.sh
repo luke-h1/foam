@@ -10,8 +10,6 @@ SCHEME="${SCHEME:-foam}"
 
 source "$(dirname "$0")/list-routes.sh"
 
-# Streams, chat and the full-screen flows draw their own chrome, so they have
-# no native header to audit.
 ROUTES=()
 while IFS= read -r route; do
   case "$route" in

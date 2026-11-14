@@ -4,11 +4,6 @@ interface TestSocket {
   close: (code?: number, reason?: string) => void;
 }
 
-/**
- * The private static fields a test resets between cases. The service is a
- * singleton with no public reset, so state from one test reaches the next
- * without this.
- */
 interface TwitchWsTestState {
   entries: Map<string, unknown>;
   awaitingReconnectWelcome: boolean;
@@ -52,10 +47,6 @@ export function resetTwitchWsTestState() {
   state.sessionId = 'session-id';
 }
 
-/**
- * Stands in for the WebSocket the service opens, so tests can assert whether a
- * teardown actually closed the socket.
- */
 export function createFakeSocket(): WebSocket {
   // SAFETY: built from WebSocket.prototype; the service reads only the members set here.
   const base = Object.create(WebSocket.prototype) as WebSocket;

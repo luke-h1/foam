@@ -20,9 +20,6 @@ import { isTwitchPassportCallbackUrl } from './util/twitch-player-source/isTwitc
 type WebViewSource = NonNullable<WebViewProps['source']>;
 type WebViewHandle = InstanceType<typeof WebView>;
 
-// The player webview does no navigation interception beyond refusing the app's
-// own deep-link scheme. Twitch's login (id.twitch.tv), passport-callback, and
-// any in-player links are all allowed to proceed.
 const handleShouldStartLoadWithRequest: OnShouldStartLoadWithRequest =
   request => !isAppUrl(request.url);
 
@@ -103,9 +100,8 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
     onError?.(`HTTP ${nativeEvent.statusCode}: ${nativeEvent.description}`);
   };
 
-  // WKWebView kills its content process under memory pressure (Android its
-  // render process) and the player goes black until remount; record it so
-  // blank-player field reports correlate with process kills.
+  // Under memory pressure WKWebView kills its content process and Android
+  // kills its render process. The player then stays black until a remount.
   const handleWebViewProcessGone = (
     reason: 'content_process_terminated' | 'render_process_gone',
   ) => {

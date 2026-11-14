@@ -18,10 +18,6 @@ interface ChatBadgeProps {
   onPress?: (badge: SanitisedBadgeSet) => void;
 }
 
-/**
- * Renders straight off the url, not the shared decoded-ImageRef cache: that
- * cache evicts under pressure and a dropped ref reads as a permanent gap.
- */
 function ChatBadgeComponent({
   badge,
   density,

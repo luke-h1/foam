@@ -23,7 +23,6 @@ const withProfileInstallerDependency = config =>
     return configWithGradle;
   });
 
-// android/ is generated, so the profile is copied in on every prebuild.
 const withBaselineProfileFile = config =>
   withDangerousMod(config, [
     'android',

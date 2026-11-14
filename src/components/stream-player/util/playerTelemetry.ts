@@ -7,8 +7,7 @@ import {
 import { logger } from '@app/utils/logger';
 
 /**
- * Playback that has not started after this long is a load failure. The poster
- * safety dismissal in `useStreamPlayerLifecycle` uses the same timeout.
+ * Playback that has not started after this long is a load failure.
  */
 export const PLAYER_LOAD_TIMEOUT_MS = 9000;
 
@@ -269,9 +268,6 @@ export function createPlayerTelemetry() {
         return;
       }
 
-      // Load already succeeded or was retired, so this is a mid-playback
-      // failure: skip the load span/metric but still report it so late
-      // WebView/HTTP failures are not silently dropped.
       const context = session?.attributes ?? lastAttributes;
 
       const telemetryAttrs = context

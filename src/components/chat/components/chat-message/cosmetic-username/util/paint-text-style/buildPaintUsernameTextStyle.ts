@@ -6,10 +6,6 @@ import { paintCssFontWeight } from './paintFont';
 
 const textStyleCache = new WeakMap<PaintData, TextStyle>();
 
-/**
- * Styles that change glyph shape (weight, transform), applied to the mask
- * text, fill sizer and every shadow underlay so all layers share identical metrics.
- */
 export function buildPaintUsernameTextStyle(paint: PaintData): TextStyle {
   const cached = textStyleCache.get(paint);
 

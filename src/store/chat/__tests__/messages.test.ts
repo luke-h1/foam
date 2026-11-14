@@ -95,7 +95,6 @@ describe('chatStore messages', () => {
 
     expect(getMessageById('old')).toBeUndefined();
 
-    // The front of the burst is dropped too, so the window ends on the newest.
     expect(getMessageById('burst-0')).toBeUndefined();
 
     expect(getMessageById(`burst-${max + 4}`)?.message_id).toBe(
@@ -512,8 +511,6 @@ describe('chatStore messages', () => {
       ),
     );
 
-    // A follow-up flush on a full window front-trims the survivors, whose
-    // indexes were recorded before the trim and must shift with it.
     addMessages(
       Array.from({ length: 10 }, (_, index) =>
         createMessage(`msg-${cap + index}`, `nonce-${cap + index}`, 'late'),

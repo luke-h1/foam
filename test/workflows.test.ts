@@ -834,10 +834,6 @@ describe('verifyGoogleServiceFiles', () => {
     ).toEqual([]);
   });
 
-  /**
-   * The failure this check exists for: Gradle's processReleaseGoogleServices
-   * dies on it, but only after the whole native build has run.
-   */
   test('errors when the android file has no client for the variant', () => {
     const [problem] = verifyGoogleServiceFiles({
       variant: 'production',
@@ -863,10 +859,6 @@ describe('verifyGoogleServiceFiles', () => {
     expect(problem?.severity).toEqual('error');
   });
 
-  /**
-   * One plist is shared across variants on purpose, so its BUNDLE_ID belongs
-   * to whichever variant it was exported for and must not be flagged.
-   */
   test('accepts an ios plist whose bundle id is another variant', () => {
     expect(
       verifyGoogleServiceFiles({

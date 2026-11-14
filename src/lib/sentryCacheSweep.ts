@@ -21,7 +21,6 @@ export function sweepOversizedSentryEnvelopesNow(): void {
 }
 
 export function sweepOversizedSentryEnvelopes(): void {
-  // Deferred off boot: the file only needs to be gone before the transport retries, not before first frame.
   setTimeout(sweepOversizedSentryEnvelopesNow, 0);
 }
 

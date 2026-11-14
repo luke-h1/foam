@@ -78,11 +78,6 @@ const mockChatStats: StreamElementsChatStats = {
   sevenTVEmotes: [{ id: '2', emote: 'OMEGALUL', amount: 9999 }],
 };
 
-/**
- * Matches the 20s `testTimeout` in jest.config.js rather than the 1s testing-library
- * default. At `--maxWorkers=100%` the cold transform plus first render of this
- * screen runs past 5s and the VOD list arrives after the profile header.
- */
 const FIND_TIMEOUT = { timeout: 15_000 };
 
 describe('StreamerProfileScreen', () => {
@@ -91,7 +86,6 @@ describe('StreamerProfileScreen', () => {
     getClipsSpy.mockResolvedValue({ data: [mockClip] });
     getVideosSpy.mockResolvedValue({ data: [mockVideo] });
 
-    // Most channels have no StreamElements account; default to "no data".
     getChatStatsSpy.mockRejectedValue(new Error('404'));
   });
 
@@ -106,7 +100,6 @@ describe('StreamerProfileScreen', () => {
 
     expect(screen.getByText('@shroud')).toBeOnTheScreen();
 
-    // VOD duration "1h2m3s" formatted as h:mm:ss
     expect(screen.getByText('1:02:03')).toBeOnTheScreen();
   });
 
@@ -137,7 +130,6 @@ describe('StreamerProfileScreen', () => {
       ),
     ).toBeOnTheScreen();
 
-    // Top emote across all platforms is the highest-count one.
     expect(screen.getByText('OMEGALUL')).toBeOnTheScreen();
   });
 

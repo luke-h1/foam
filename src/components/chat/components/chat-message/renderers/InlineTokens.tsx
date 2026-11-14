@@ -93,8 +93,6 @@ function renderInlineToken(
     );
   }
 
-  // Self-subscribing so mention resolution re-renders only the span, not
-  // the row - see MentionToken.
   return (
     <MentionToken
       key={getTokenIdentity(token, index)}

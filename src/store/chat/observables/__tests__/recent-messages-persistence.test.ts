@@ -75,7 +75,6 @@ describe('recentMessagesPersistence', () => {
     const { createMMKV } = require('react-native-mmkv');
     const storage = createMMKV({ id: 'chat-recent-messages' });
 
-    // What an older build left behind: messages, no schema version key.
     storage.set('channel-a', JSON.stringify([makeMessage('a1')]));
 
     expect(loadPersistedRecentMessages()).toEqual({});

@@ -1,4 +1,3 @@
-// DEV-ONLY: persists suite results to Documents/chat-perf-suite.json so adb / simctl can pull them after a run.
 import { File, Paths } from 'expo-file-system';
 
 import type { PhaseResult } from './chat-perf-suite';

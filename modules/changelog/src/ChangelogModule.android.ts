@@ -7,10 +7,6 @@ import type {
 } from './Changelog.types';
 import { presentChangelogAndroid } from './changelogAndroidPresenter';
 
-/**
- * Module-owned storage keeps `modules/changelog` free of app-layer imports,
- * mirroring how the iOS native module owns its seen-version persistence.
- */
 const storage = createMMKV({ id: 'changelog' });
 
 const SEEN_APP_VERSION_KEY = 'changelog_seen_app_version';

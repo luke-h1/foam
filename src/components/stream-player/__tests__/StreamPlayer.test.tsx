@@ -408,7 +408,6 @@ describe('StreamPlayer component messaging', () => {
 
     expect(injectedJavaScript).not.toContain('foam-twitch-control-hide-style');
 
-    // Autoplaying live: nudge the stock player into unmuted playback.
     expect(injectedJavaScript).toContain('__foamAutoplayEnsureInstalled');
 
     emitWebViewLoadEnd(
@@ -426,7 +425,6 @@ describe('StreamPlayer component messaging', () => {
 
     expect(beforeContentScript).toContain('"720p60"');
 
-    // On WebView-ready it kicks autoplay (not the control bootstrap).
     expect(mockInjectJavaScript).toHaveBeenCalledWith(
       expect.stringContaining('window.__foamEnsurePlaying'),
     );
@@ -479,7 +477,6 @@ describe('StreamPlayer component messaging', () => {
       />,
     );
 
-    // The mount-time nudge fires off WebView load-end and is once-per-generation.
     emitWebViewLoadEnd('https://player.twitch.tv/?channel=cohhcarnage');
 
     act(() => {
@@ -496,7 +493,6 @@ describe('StreamPlayer component messaging', () => {
 
     expect(containerPaddingBottom(toJSON())).toEqual(1);
 
-    // Drains both foreground pulses back to a resting frame.
     act(() => {
       jest.advanceTimersByTime(3000);
     });

@@ -54,7 +54,6 @@ function extractErrorMessage(error: Error): string {
   return stderr === '' || stderr == null ? error.message : stderr;
 }
 
-// anti-slop allows `: unknown` only on a parameter named `error`.
 export function getCommandErrorMessage(error: unknown): string {
   return error instanceof Error
     ? extractErrorMessage(error)

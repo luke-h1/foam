@@ -7,8 +7,6 @@ import {
 
 type VideoTapGesture = LegacySimultaneousGesture | LegacyTapGesture;
 
-// Full-screen tap target above the WebView, below the controls overlay: the single handler
-// for video-area taps (the overlay is box-none, so empty-area taps reach this gesture).
 export function TouchBlockOverlay({ gesture }: { gesture: VideoTapGesture }) {
   return (
     <GestureDetector gesture={gesture}>

@@ -4,10 +4,6 @@ import * as SentryImageSpans from '@app/lib/sentryImageSpans';
 
 import { forwardLogToSentry } from '../sentry';
 
-/**
- * The root Sentry mock has no Scope, and faking one means inventing ~46
- * fields; requireActual reaches past it for the real pure-JS Scope class.
- */
 const { Scope } = jest.requireActual<typeof SentryReactNative>(
   '@sentry/react-native',
 );
@@ -18,10 +14,6 @@ jest
   .spyOn(SentryImageSpans, 'instrumentExpoImageLoads')
   .mockImplementation(() => undefined);
 
-/**
- * Reached through the root manual mock: no-restricted-imports bans
- * @sentry/react-native outside src/lib/sentry.
- */
 const mockCaptureException = jest.mocked(SentryReactNative.captureException);
 
 const mockCaptureMessage = jest.mocked(SentryReactNative.captureMessage);

@@ -36,16 +36,8 @@ import { Skeleton } from '@app/components/ui/skeleton/Skeleton';
 import { usePreference } from '@app/store/preference-store';
 import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 
-/**
- * Roughly seven rows of lookahead; at 96 fast flings outran the renderer and
- * showed skeleton rows.
- */
 const CHAT_DRAW_DISTANCE = 250;
 
-/**
- * Deliberately under the average row height - an over-estimate leaves bare
- * list background under any row whose position recompute gets skipped.
- */
 const CHAT_ESTIMATED_ITEM_SIZE = 26;
 
 const CHAT_END_REACHED_THRESHOLD = 0.02;
@@ -54,9 +46,6 @@ const CHAT_VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 1,
 } satisfies ViewabilityConfig;
 
-/**
- * itemLayout keeps an under-estimated row from staying clipped at the bottom.
- */
 const CHAT_MAINTAIN_SCROLL_AT_END = {
   on: { dataChange: true, itemLayout: true },
 } satisfies MaintainScrollAtEndOptions;

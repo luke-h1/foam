@@ -62,10 +62,6 @@ export function Providers({ children }: PropsWithChildren) {
                     <GlobalErrorGate />
                     <ShakeToReport />
                     <OfflineBanner />
-                    {/* No global press haptic. Feed taps stay silent, so
-                        only deliberate actions (send, block, refresh) give
-                        haptic feedback. Each control opts in through
-                        lib/haptics. */}
                     <PressablesConfig
                       animationType='timing'
                       animationConfig={pressAnimation}

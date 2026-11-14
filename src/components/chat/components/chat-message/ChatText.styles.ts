@@ -151,10 +151,6 @@ const CHAT_TEXT_STYLES = {
   },
 } satisfies Record<ChatFontScale, Record<ChatDensity, ChatTextStyles>>;
 
-/**
- * Every scale-dependent chat render style comes from here, so a row cannot
- * pick up the body size without the matching leading, emote size and padding.
- */
 export function getChatTextStyles(
   fontScale: ChatFontScale | undefined,
   density: ChatDensity | undefined,

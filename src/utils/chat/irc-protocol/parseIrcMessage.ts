@@ -31,11 +31,6 @@ export function skipLeadingWhitespace(line: string): number {
   return cursor;
 }
 
-/**
- * Parse a raw Twitch IRC line into its tokens; null for invalid lines.
- * Walks a cursor instead of copying the tail at each stage, because those
- * copies cost time on every message in a busy channel.
- */
 export function parseIrcMessage(line: string): IrcMessage | null {
   let cursor = skipLeadingWhitespace(line);
   let end = line.length;
@@ -54,7 +49,6 @@ export function parseIrcMessage(line: string): IrcMessage | null {
   const tagEnd =
     line.charCodeAt(cursor) === AT_SIGN ? line.indexOf(' ', cursor) : null;
 
-  // A tag block that never closes means the line is truncated.
   if (tagEnd !== null && (tagEnd === -1 || tagEnd >= end)) {
     return null;
   }

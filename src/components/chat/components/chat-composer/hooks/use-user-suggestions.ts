@@ -30,16 +30,8 @@ export function useUserSuggestions({
   const mentionLoginRevision = useSelector(chatStore$.mentionLoginRevision);
   const cleanSearch = normaliseChatUsername(searchTerm);
 
-  /**
-   * The search scans both mention indexes, so it trails the keystroke rather
-   * than sharing a frame with the character the composer is echoing.
-   */
   const deferredSearch = useDeferredValue(cleanSearch);
 
-  /**
-   * Deferring delays the search, not the clear - the deferred value still holds
-   * the previous mention for a render after the query empties.
-   */
   const hasSearch = cleanSearch.length > 0;
 
   useEffect(() => {

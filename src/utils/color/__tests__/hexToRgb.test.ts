@@ -42,9 +42,9 @@ describe('hexToRgb', () => {
 
     expect(hexToRgb('#GGGGGG')).toBeNull();
 
-    expect(hexToRgb('#12345')).toBeNull(); // Too short
+    expect(hexToRgb('#12345')).toBeNull();
 
-    expect(hexToRgb('#1234567')).toBeNull(); // Too long
+    expect(hexToRgb('#1234567')).toBeNull();
   });
 
   test('handles mixed case hex codes', () => {

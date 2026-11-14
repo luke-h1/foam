@@ -43,14 +43,11 @@ import { getEmoteUrlKind, getImageFallbackChain } from '../util/emoteUrlCache';
 import { RowVisibilityContext } from '../util/rowVisibility';
 import { ChatImageShimmer } from './ChatImageShimmer';
 
-// After this many retries, give up and keep the placeholder.
 const MAX_RELOAD_ATTEMPTS = 8;
 
 const RELOAD_BASE_DELAY_MS = 400;
 const RELOAD_MAX_DELAY_MS = 8000;
 
-// Load silent (no onLoad/onError) this long: ref path hands off to uri, uri
-// path walks candidates like an error but never evicts the shared ref.
 const LOAD_WATCHDOG_MS = 12_000;
 
 function shouldEmoteAnimate(
@@ -64,10 +61,7 @@ function shouldEmoteAnimate(
   return rowVisibility.isVisible();
 }
 
-// Pause animated emote off-screen, resume when visible; static skips it. Keeps
-// animating through a scroll - a freeze on every fling looks worse than the
-// cost. Each command is a sync main-thread hop, so send one only on a state
-// change. A new image already has the committed autoplay.
+// Each command is a sync main-thread hop, so send one only on a state change.
 function useEmoteAnimationSync(
   imageRef: RefObject<ExpoImage | null>,
   rowVisibility: ContextType<typeof RowVisibilityContext>,
@@ -122,8 +116,6 @@ function useEmoteLoadRecovery(
 
   const [reloadNonce, setReloadNonce] = useState(0);
 
-  // Tagged with url + viaRef: a recycled or cache-dropped row stops matching
-  // and derives fresh state.
   const [load, setLoad] = useState<{
     index: number;
     status: 'loading' | 'loaded' | 'failed';
@@ -135,8 +127,6 @@ function useEmoteLoadRecovery(
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [failedRefUrl, setFailedRefUrl] = useState<string | null>(null);
 
-  // Ref instance that drew (onDisplay); a ref so the healthy path never
-  // re-renders. Cleared on url change.
   const displayedSharedRef = useRef<ImageRef | null>(null);
 
   const showRef = sharedRef != null && failedRefUrl !== sourceUrl;
@@ -147,14 +137,12 @@ function useEmoteLoadRecovery(
   const candidateUrl =
     fallbackChain[candidateIndex] ?? fallbackChain[0] ?? sourceUrl;
 
-  // A ban belongs to its mount; reset it or a recycled slot keeps the old ban.
   const [banOwnerUrl, setBanOwnerUrl] = useState(sourceUrl);
 
   if (banOwnerUrl !== sourceUrl) {
     setBanOwnerUrl(sourceUrl);
     setFailedRefUrl(null);
 
-    // Else an A -> B -> A recycle revives A's stale tag with nothing behind it.
     setLoad({ index: 0, status: 'loading', url: sourceUrl, viaRef: false });
   }
 
@@ -171,10 +159,8 @@ function useEmoteLoadRecovery(
     }
   }, []);
 
-  // Drop the old url's retry timer, or it reloads the wrong emote.
   useEffect(() => clearRetryTimer, [sourceUrl, clearRetryTimer]);
 
-  // A ref arriving mid-backoff makes the pending reload moot.
   const showRefRef = useSyncRef(showRef);
 
   const handleLoad = useCallback(() => {
@@ -204,8 +190,6 @@ function useEmoteLoadRecovery(
         return;
       }
 
-      // Ref never drew, which says nothing about the url - hand off to the
-      // fallback chain with a full budget.
       if (showRef) {
         clearRetryTimer();
 
@@ -216,8 +200,6 @@ function useEmoteLoadRecovery(
         return;
       }
 
-      // Watchdog fires with no event; a slow load says nothing about the shared
-      // ref other rows draw, so only a real error evicts it.
       if (event !== undefined && candidateIndex === 0) {
         evictCachedEmoteRef(candidateUrl);
       }
@@ -241,8 +223,6 @@ function useEmoteLoadRecovery(
         return;
       }
 
-      // All variants 404'd or stalled - backoff-retry the smallest to ride out
-      // a transient blip.
       if (retryCountRef.current >= MAX_RELOAD_ATTEMPTS) {
         logEmoteLoadFailure({
           attempts: retryCountRef.current,
@@ -318,7 +298,6 @@ function useEmoteLoadRecovery(
 
     const timer = setTimeout(() => handleErrorRef.current(), LOAD_WATCHDOG_MS);
     return () => clearTimeout(timer);
-    // sourceUrl: a recycle can land on the old url's fallback candidate.
   }, [handleErrorRef, showRef, status, candidateUrl, reloadNonce, sourceUrl]);
 
   return {
@@ -375,8 +354,6 @@ function logEmoteLoadFailure({
 
 interface ChatInlineImageProps {
   accessibilityLabel?: string;
-  // Tags which emote a touch started on for the row's long-press timer, here so
-  // the common emote needs no wrapper view.
   onTouchStart?: () => void;
   playAnimation?: boolean;
   priority?: 'low' | 'normal' | 'high';
@@ -453,8 +430,6 @@ function ChatInlineImageComponent({
     status,
   } = useEmoteLoadRecovery(sourceUrl, sharedRef, syncAfterImageChange);
 
-  // Shimmer only while nothing real shows; cached emotes stay on the bare-image
-  // fast path, no extra Fabric node.
   const overlayVisible = !showRef && status !== 'loaded';
 
   const source = showRef ? sharedRef : { uri: candidateUrl };
@@ -467,8 +442,6 @@ function ChatInlineImageComponent({
       contentFit='contain'
       recyclingKey={`${candidateUrl}#${reloadNonce}#${refGeneration}#${instanceId}`}
       autoplay={playAnimation && autoplay}
-      // Transient uri branch off the memory cache: no second bitmap pool beside
-      // our ImageRef cache.
       cachePolicy={showRef ? 'memory-disk' : 'disk'}
       useAppleWebpCodec={resolveUseAppleWebpCodec(urlKind)}
       priority={priority}

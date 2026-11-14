@@ -219,8 +219,7 @@ export async function hydrateVisibleSevenTvAssets({
     start += REPROCESS_BATCH_SIZE
   ) {
     if (start > 0) {
-      // Yield between batches so a full screenful does not parse in one tick.
-      // oxlint-disable-next-line react-doctor/async-await-in-loop
+      // oxlint-disable-next-line react-doctor/async-await-in-loop -- yield between batches so a full screen of rows does not parse in one tick
       await waitBetweenReprocessBatches();
     }
 

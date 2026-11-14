@@ -67,8 +67,6 @@ function expandRepeatingStops(stops: PaintStop[]): PaintStop[] {
   return expanded;
 }
 
-// Keyed on the stable layer object; stop expansion + colour conversion are
-// the heaviest paint work, so share the result across users wearing the paint.
 const layerGradientConfigCache = new WeakMap<
   PaintLayerData,
   { config: LayerGradientConfig | null }

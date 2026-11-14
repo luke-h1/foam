@@ -9,8 +9,6 @@ import { TopScreen } from '../TopScreen';
 
 jest.mock('@expo/ui/community/pager-view');
 
-// expo-symbols is faked by the root __mocks__/expo-symbols.ts manual mock.
-
 const getTopStreamsSpy = jest.spyOn(twitchService, 'getTopStreams');
 const getTopCategoriesSpy = jest.spyOn(twitchService, 'getTopCategories');
 

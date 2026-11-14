@@ -303,8 +303,6 @@ export function interpretPlayerMessage(
     case 'ended':
       return [{ type: 'notifyEnded' }];
     case 'stalled': {
-      // The webview reports a frozen playhead. Recover only when playback is
-      // expected; a user pause must stay paused.
       if (context.userPaused) {
         return [];
       }
