@@ -66,11 +66,6 @@ export function hasEnrichmentEmoteSources(
   );
 }
 
-/**
- * Which stored messages a pass re-resolves. `unprocessed` is the default pass.
- * `emoteNames` is a live 7TV delta: only messages that hold one of the names.
- * `everyMessage` ignores the processed set, for a delta too large to filter.
- */
 export type EnrichScope =
   | { kind: 'unprocessed' }
   | { kind: 'emoteNames'; names: ReadonlySet<string> }
@@ -100,10 +95,6 @@ function emoteTokenHasName(
   );
 }
 
-/**
- * The text check is a substring test, so it is a superset of the tokenizer's
- * whole-word match: it can re-resolve too many messages, never too few.
- */
 function tokenHasEmoteName(
   token: MessageToken,
   names: ReadonlySet<string>,

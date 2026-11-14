@@ -28,10 +28,6 @@ type InlineTokensProps = Pick<
   | 'emoteTargetSize'
 > & {
   message: InlineFlowToken[];
-  /**
-   * Replaces the body style for plain text and reply-target mentions.
-   * `textAccentStyle` goes after it, in place of `emoteLineStyle`.
-   */
   textStyle?: TextStyle;
   textAccentStyle?: TextStyle | false;
   emoteLineStyle?: TextStyle;

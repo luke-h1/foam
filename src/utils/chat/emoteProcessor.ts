@@ -28,19 +28,6 @@ interface EmoteProcessorParams {
   bttvGlobalEmotes: SanitisedEmote[];
 }
 
-/**
- * Two generations of 500 entries instead of one 1000-entry map that deletes
- * its oldest key on every write. A flood of distinct lines paid about 200ns
- * per message for that delete. Dropping a whole generation costs almost
- * nothing.
- *
- * One generation pair per (collection, scoped key) epoch, so the parse cache
- * keys on `cleanInput` alone. The old single key concatenated the collection
- * key onto every message, which allocated a message-sized string per line.
- * Epochs hang off the collection in a WeakMap, so an evicted collection
- * releases its cache with it, and shared chat's two channels keep separate
- * epochs instead of thrashing one.
- */
 const CACHE_GENERATION_SIZE = 500;
 
 interface TokenCacheEpoch {
@@ -79,12 +66,6 @@ function getTokenCacheEpoch(
 
 const baseCollectionCache = new Map<string, EmoteCollection>();
 
-/**
- * One token per emote object, shared by every message and cache entry that
- * matches it. Keyed weakly, so an emote set change releases the old tokens.
- * A token also depends on the matched word (`content`, and `original_name`
- * for emoji), so a word that differs from the stored token's gets its own.
- */
 const internedEmoteTokens = new WeakMap<
   SanitisedEmote,
   MessageToken<'emote'>
@@ -454,8 +435,6 @@ function stackZeroWidthEmote(
     return true;
   }
 
-  // An interned base is shared by every message that uses the emote, so the
-  // first overlay copies it. Only that per-message copy carries `overlaid`.
   if (base.overlaid) {
     base.overlaid.push(token);
   } else {
@@ -525,10 +504,6 @@ function pushMentionParts(
   }
 }
 
-/**
- * Same set as the `\s` regex class. A test checks every UTF-16 code unit
- * against `\s`.
- */
 function isWhitespaceCode(code: number): boolean {
   if (code <= 0x20) {
     return code === 0x20 || (code >= 0x09 && code <= 0x0d);
@@ -583,10 +558,6 @@ function setCachedTokens(
   epoch.current.set(cleanInput, tokens);
 }
 
-/**
- * The first-character checks skip the mention and link regexes for most
- * words: a mention starts with `@` and a link starts with `http`.
- */
 function pushWordTokens(
   result: MessageToken[],
   word: string,
@@ -662,10 +633,6 @@ function createEmoteToken(
   };
 }
 
-/**
- * One shared default. A new `[]` per call failed the identity check in
- * `getBaseCollectionKey`, so every message rebuilt the collection key.
- */
 const NO_EMOTES: SanitisedEmote[] = [];
 
 const SPACE_TOKEN: MessageToken = { type: 'text', content: ' ' };
@@ -728,7 +695,6 @@ export const processEmotes = (params: EmoteProcessorParams): MessageToken[] => {
   const result: MessageToken[] = [];
   let start = 0;
 
-  // Gives the same runs as `split(/(\s+)/)` without the regex and the array.
   while (start < cleanInput.length) {
     const isSpace = isWhitespaceCode(cleanInput.charCodeAt(start));
     let end = start + 1;
@@ -741,8 +707,6 @@ export const processEmotes = (params: EmoteProcessorParams): MessageToken[] => {
     }
 
     if (isSpace) {
-      // A single plain space is the most common token in chat; tokens are
-      // never mutated (overlays copy on write), so one shared object is safe.
       result.push(
         end - start === 1 && cleanInput.charCodeAt(start) === 0x20
           ? SPACE_TOKEN

@@ -16,10 +16,6 @@ jest.mock('../util/skiaPaintFonts', () => ({
   useSkiaPaintFontProvider: () => ({}),
 }));
 
-/**
- * Each username maps to one texture URL, or to no URL layer for a static
- * paint.
- */
 jest.mock('../util/skiaPaintedUsernameRasterizer', () => ({
   ...jest.requireActual<typeof import('../util/skiaPaintedUsernameRasterizer')>(
     '../util/skiaPaintedUsernameRasterizer',
@@ -111,9 +107,6 @@ class FakePictureView extends Component<{ style?: object }> {
   }
 }
 
-/**
- * The Skia mock's canvas is a View, which has no redraw.
- */
 class FakeCanvas extends Component<{ children?: ReactNode }> {
   readonly redraw = jest.fn();
 
@@ -122,9 +115,6 @@ class FakeCanvas extends Component<{ children?: ReactNode }> {
   }
 }
 
-/**
- * A picture recorder that lists the images each picture draws.
- */
 function makeRecorder() {
   const images: string[] = [];
 
@@ -167,7 +157,6 @@ async function tick() {
     flushAnimationFrames();
   });
 
-  // The redraw a frame asks for runs on the next animation frame.
   await act(async () => {
     flushAnimationFrames();
   });
@@ -179,10 +168,6 @@ function picturesFor(nativeId: number): string[][] {
     .map(picture => picture.images);
 }
 
-/**
- * The module object itself: a namespace import is a copy, so a swap on it
- * would not reach the component.
- */
 const skiaModule: { SkiaPictureView: unknown; Canvas: unknown } =
   jest.requireMock('@shopify/react-native-skia');
 
@@ -243,8 +228,6 @@ afterEach(() => {
     chatScrollActivity.reset();
   });
 
-  // Unmount, then let the released textures linger out, so the next test
-  // loads its own.
   cleanup();
 
   act(() => {

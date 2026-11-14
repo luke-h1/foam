@@ -24,10 +24,6 @@ const chatterBadges = Array.from({ length: CHATTER_COUNT }, (_, index) =>
     .join(','),
 );
 
-/**
- * A spam-heavy mix: a small pool of lines repeats across chatters, the way a
- * hype moment or a raid does, plus a mention and a link in some lines.
- */
 const textPool = Array.from({ length: 24 }, (_, index) => {
   const bttv = denseEmoteData.bttvChannelEmotes[index % 12]?.name ?? 'BTTV0';
 
@@ -72,10 +68,6 @@ const createLineBatch = (start: number, count: number): string =>
     (_, offset) => `${createPrivmsgLine(start + offset)}\r\n`,
   ).join('');
 
-/**
- * Two flushes of 120 lines. The second one fills past the 150-row window,
- * so the store front-trims on commit the way a busy channel does.
- */
 export const pipelineLineBatches = [
   createLineBatch(0, 120),
   createLineBatch(120, 120),

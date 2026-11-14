@@ -16,10 +16,6 @@ import {
   getChatRowTextStyle,
 } from '../util/chatRowTextStyle';
 
-/**
- * The rendered RNText props with the style flattened, so two renders compare
- * by value and not by array shape.
- */
 function getRenderedTextProps(label: string) {
   const {
     children: _children,
@@ -38,10 +34,6 @@ interface SpanCase {
 
 const usernameColor = getChatColorStyle('#1e90ff');
 
-/**
- * Each case is one converted call site: the `ChatText` props it rendered
- * before, and the tone and parts it passes to `getChatRowTextStyle` now.
- */
 function getSiteCases(t: ChatTextStyles): [string, SpanCase][] {
   return [
     [

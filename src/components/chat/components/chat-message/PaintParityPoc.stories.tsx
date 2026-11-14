@@ -80,10 +80,6 @@ const moderatedUsernameTextStyle = [
   chatRowStyles.moderatedUsernameText,
 ];
 
-/**
- * A moderated name on the hosted fill and on Skia, next to the same name not
- * moderated, so the strikethrough and the fade compare side by side.
- */
 function ModeratedComparisonRow({ paint }: { paint: PaintData }) {
   return (
     <View style={{ gap: 4, paddingBottom: 16 }}>

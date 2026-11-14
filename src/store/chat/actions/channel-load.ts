@@ -901,12 +901,6 @@ const scratchEmoteDataInputs: unknown[] = Array.from<unknown>({
   length: EMOTE_DATA_INPUT_COUNT,
 });
 
-/**
- * Keyed on every value `gateEmoteData` reads, not on the parent objects.
- * Legend State writes a nested `.set()` into the parent object in place, so
- * the channel cache and preferences objects keep their identity when one
- * slice or flag changes.
- */
 let resolvedEmoteDataCache: {
   channelId: string;
   inputs: unknown[];

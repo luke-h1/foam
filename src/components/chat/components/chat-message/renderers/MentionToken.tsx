@@ -17,10 +17,6 @@ import { getChatRowTextStyle } from '../util/chatRowTextStyle';
 
 interface MentionTokenProps {
   content: string;
-  /**
-   * From `getChatRowTextStyle('text', ...)`. A mention of the reply target
-   * renders as plain body text in this style.
-   */
   baseRowTextStyle?: TextStyle;
   emoteLineStyle?: TextStyle;
   density?: ChatDensity;

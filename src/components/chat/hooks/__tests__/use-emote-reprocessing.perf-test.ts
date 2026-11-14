@@ -88,10 +88,6 @@ function seedCaches() {
   });
 }
 
-/**
- * Builds a committed window whose rows were already parsed against the
- * current emote data, like rows that arrived after the last reprocess pass.
- */
 function buildCommittedWindow(run: number): AnyChatMessageType[] {
   const emoteData = getCurrentEmoteData(channelId);
 

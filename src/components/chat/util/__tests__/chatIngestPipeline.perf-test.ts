@@ -32,7 +32,6 @@ jest
   .spyOn(getChannelCheermotesModule, 'getChannelCheermotes')
   .mockReturnValue(undefined);
 
-// The token bucket would drop most of a tight synthetic loop.
 jest
   .spyOn(chatIngestRateLimiter, 'shouldProcessLiveMessage')
   .mockReturnValue(true);

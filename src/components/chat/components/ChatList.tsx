@@ -63,11 +63,6 @@ const CHAT_MAINTAIN_SCROLL_AT_END = {
 
 const CHAT_MAINTAIN_SCROLL_AT_END_THRESHOLD = 0.1;
 
-/**
- * Row state that belongs to one message must reset when the message changes,
- * because a reused row keeps its React state. The old iOS recycle crash came
- * from the removed `@react-native-masked-view`; see ADR-0007.
- */
 const CHAT_RECYCLE_ITEMS = true;
 
 const SKELETON_BODY_WIDTHS = ['28%', '42%', '54%'] as const;
@@ -244,7 +239,6 @@ export const ChatList = memo(
         // The composer is in a sibling KeyboardStickyView, so RN's tap-dismiss never fires; drag to dismiss.
         keyboardDismissMode='on-drag'
         keyboardShouldPersistTaps='handled'
-        // No scrollEventThrottle: LegendList applies it as a JS throttle that arms a setTimeout per early event (every other event at 120Hz). The native event rate stays the same.
         viewabilityConfig={CHAT_VIEWABILITY_CONFIG}
         onViewableItemsChanged={onViewableItemsChanged}
       />

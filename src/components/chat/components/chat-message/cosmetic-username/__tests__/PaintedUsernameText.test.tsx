@@ -11,10 +11,6 @@ import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 import { getChatColorStyle } from '@app/components/chat/util/chatColorStyles';
 import type { ChatDensity, ChatFontScale } from '@app/store/preference-store';
 
-/**
- * The rendered RNText props with the style flattened, so two renders compare
- * by value and not by array shape.
- */
 function getRenderedTextProps(label: string) {
   const {
     children: _children,
@@ -49,10 +45,6 @@ interface SpanCase {
   after: StyleProp<TextStyle>;
 }
 
-/**
- * Each case is one converted span: the style `ChatText` got before and the
- * style prop `getChatRowTextStyleForProp` resolves now.
- */
 function getSiteCases(
   usernameTextStyle: StyleProp<TextStyle>,
 ): [string, SpanCase][] {

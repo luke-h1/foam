@@ -62,17 +62,10 @@ interface PaintedUsernameSkiaProps {
    * on the same line as the message text.
    */
   lineHeight?: number;
-  /**
-   * Draws a line-through in the paint, for a moderated row.
-   */
   strikethrough?: boolean;
   opacity?: number;
 }
 
-/**
- * Redraws after mount, after a reused row gets new bitmaps, and when the row
- * scrolls back into view.
- */
 function useCanvasRedrawOnVisible(
   canvasRef: PaintCanvasRedrawTarget,
   bitmaps: PaintBitmaps,
@@ -111,11 +104,6 @@ function paintLayerUrls(layers: readonly PaintImageLayer[]): string[] {
   return urls;
 }
 
-/**
- * Draws a new texture frame without a React render. The picture is recorded
- * on the JS thread when the frame arrives, and reads the newest frame of
- * every URL at that time. Retains the textures for as long as the URLs stay.
- */
 function usePaintLayerPicture(
   viewRef: RefObject<SkiaPictureView | null>,
   bitmaps: PaintBitmaps,
@@ -144,17 +132,8 @@ function usePaintLayerPicture(
   }, [target, urlKey]);
 }
 
-/**
- * react-native-skia's `Canvas` draws in Display P3. The picture view must
- * match, or a painted name changes colour when it starts to animate.
- */
 const PICTURE_VIEW_COLOR_PROPS = { colorSpace: 'p3' };
 
-/**
- * Draws the foundation, then the layer slots back to front (URL overlays
- * between baked gradients), then the stroke on top, so CSS stacking and
- * -webkit-text-stroke hold.
- */
 function ImageLayerPaintCanvas({
   bitmaps,
   opacity,

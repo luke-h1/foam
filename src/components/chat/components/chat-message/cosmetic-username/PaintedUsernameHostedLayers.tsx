@@ -40,10 +40,6 @@ interface PaintedUsernameHostedLayersProps {
   useWebView: boolean;
 }
 
-/**
- * The fill stays mounted through a fling. The shared paint clock stops
- * texture frames while the list scrolls, so a fling costs no remount.
- */
 export function PaintedUsernameHostedLayers({
   displayUsername,
   fallbackColor,

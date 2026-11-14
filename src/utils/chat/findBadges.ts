@@ -11,10 +11,6 @@ interface FindBadgesParams {
   ffzChannelBadges: SanitisedBadgeSet[];
   bttvBadges: SanitisedBadgeSet[];
   chatterinoBadges: SanitisedBadgeSet[];
-  /**
-   * The 7TV entitlement lookup reads live store state that entitlement events
-   * invalidate, so only the part from the badge tag is cached.
-   */
   getEntitledBadge: (userId: string) => SanitisedBadgeSet | null | undefined;
 }
 
@@ -165,11 +161,6 @@ const findTwitchGlobalBadge = (
 ): SanitisedBadgeSet | undefined =>
   getBadgeSetIndex(twitchGlobalBadges).get(`${set}/${set}_${version}`);
 
-/**
- * The Twitch badges depend only on the badge tag and three collections, and a
- * chatter sends the same tag on every message. Two generations, the same as
- * the emote parse cache in `emoteProcessor.ts`.
- */
 const TAG_BADGE_CACHE_GENERATION_SIZE = 256;
 
 let tagBadgeCache = new Map<string, SanitisedBadgeSet[]>();
@@ -289,10 +280,6 @@ function getTagBadges(
 
 const NO_USER_BADGES: SanitisedBadgeSet[] = [];
 
-/**
- * Badges keyed to the sender rather than the badge tag, in the order they
- * join the result.
- */
 function findUserBadges({
   userstate,
   ffzGlobalBadges,
@@ -353,10 +340,6 @@ function findUserBadges({
   return userBadges ?? NO_USER_BADGES;
 }
 
-/**
- * The result shares one array between every message with the same badge tag
- * and no per-user badge, so callers must not mutate it.
- */
 export function findBadges(params: FindBadgesParams): SanitisedBadgeSet[] {
   const tagBadges = getTagBadges(
     getRawTwitchBadges(params.userstate),

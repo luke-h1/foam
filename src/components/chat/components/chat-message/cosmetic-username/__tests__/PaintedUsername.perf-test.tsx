@@ -13,17 +13,10 @@ import { convertV4PaintToPaintData } from '@app/utils/seven-tv/gql/convertV4Pain
 
 import { PaintedUsername } from '../PaintedUsername';
 
-/**
- * The jest Skia mock cannot load fonts or rasterise, so these stubs let the
- * Skia renderer mount its canvas as it does on a device.
- */
 jest.mock('../util/skiaPaintFonts', () => ({
   useSkiaPaintFontProvider: () => ({}),
 }));
 
-/**
- * The Skia canvas mock has no `redraw`.
- */
 jest.mock('../util/paintCanvasRedraw', () => ({
   schedulePaintCanvasRedraw: () => {},
   cancelPaintCanvasRedraw: () => {},
@@ -60,10 +53,6 @@ const MEASURE_OPTIONS = {
 
 const ROW_COUNT = 30;
 
-/**
- * Gradient paints with shadows. Image paints wait on a texture load, which
- * jest never finishes.
- */
 const paints: PaintData[] = [0, 1].map(index =>
   convertV4PaintToPaintData(sevenTvPaintsFixture[index]!),
 );

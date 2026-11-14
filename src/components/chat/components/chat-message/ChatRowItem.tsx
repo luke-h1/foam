@@ -118,8 +118,6 @@ export const ChatRowItem = function ChatRowItem({
 
   const messageKey = getChatMessageListKey(msg);
 
-  // Decided once per message, so a re-render does not replay the entrance. A
-  // recycled row keeps its state and gets a new message, so decide again then.
   const [entrance, setEntrance] = useState(() =>
     decideRowEntrance(msg, messageKey, animate),
   );
@@ -190,7 +188,6 @@ export const ChatRowItem = function ChatRowItem({
   return (
     <RowVisibilityContext.Provider value={rowVisibility}>
       {entrance.animate ? (
-        // The key remounts the view, because `entering` only runs on mount.
         <Animated.View key={messageKey} entering={messageRowEntering}>
           {row}
         </Animated.View>

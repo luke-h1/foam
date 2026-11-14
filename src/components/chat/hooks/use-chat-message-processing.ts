@@ -132,10 +132,6 @@ export function useChatMessageProcessing({
     [resolveMessageParts, handleNewMessage],
   );
 
-  /**
-   * One copy per message. The flag is set to undefined, not deleted, because
-   * a delete moves a Hermes object to dictionary mode.
-   */
   const finalizeBufferedMessage = useCallback(
     (message: AnyChatMessageType): AnyChatMessageType => {
       if (!message.pendingEmoteParse) {

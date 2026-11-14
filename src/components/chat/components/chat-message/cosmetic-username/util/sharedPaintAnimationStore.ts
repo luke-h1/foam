@@ -32,7 +32,6 @@ let driverUrls: readonly string[] = [];
 const driverListeners = new Set<() => void>();
 const MAX_SHARED_PAINT_ANIMATION_ENTRIES = 32;
 
-// Keep a released texture briefly so recycled rows rejoin the running clock in phase.
 const RELEASED_ENTRY_LINGER_MS = 5000;
 
 const DEFAULT_FRAME_DURATION_MS = 60;
@@ -40,7 +39,6 @@ const DEFAULT_FRAME_DURATION_MS = 60;
 const loggedLoadFailureUrls = new Set<string>();
 const MAX_LOGGED_LOAD_FAILURE_URLS = 256;
 
-// SkAnimatedImage::decodeNextFrame returns this once the file has played out.
 const FINISHED_FRAME = -1;
 
 function callListener(listener: () => void): void {
@@ -146,8 +144,6 @@ function publishPaintFrame(
   entry.frameImage = frame;
   entry.lastAdvanceMs = now;
 
-  // The canvas records the previous frame on the next commit. Keep it until
-  // the one after that, then drop the JS wrapper.
   const stale =
     entry.retiredFrames.length > 1 ? entry.retiredFrames.shift() : undefined;
 
@@ -208,8 +204,6 @@ function beginLoad(url: string, entry: SharedPaintAnimationEntry): void {
         return;
       }
 
-      // A still WebP or PNG is not an animated image. Keep the decoded frame
-      // so an image paint still draws.
       storeStillFrame(url, entry, Skia.Image.MakeImageFromEncoded(data));
     })
     .catch((error: LogMetadataValue) => {
@@ -264,8 +258,6 @@ function advancePaintFrame(url: string, now: number): void {
     return;
   }
 
-  // Decode on the JS thread. SkAnimatedImage is not thread-safe, and the
-  // canvas only records images created here. A UI-thread frame never shows.
   const status = animated.decodeNextFrame();
 
   if (status === FINISHED_FRAME) {
@@ -431,19 +423,10 @@ function retainPaintFrames(urls: readonly string[]): () => void {
   };
 }
 
-/**
- * The current frame of a paint texture, or null before it decodes. Read it
- * when the canvas draws, so the draw shows the newest frame.
- */
 export function getSharedPaintFrame(url: string): SkImage | null {
   return entries.get(url)?.frameImage ?? null;
 }
 
-/**
- * Retains several paint textures and calls `onFrame` when one of them gets a
- * new frame. One decode per URL, shared by every row that uses it. Returns
- * the release.
- */
 export function subscribeSharedPaintFrames(
   urls: readonly string[],
   onFrame: () => void,
@@ -463,9 +446,6 @@ export function subscribeSharedPaintFrames(
   };
 }
 
-/**
- * Calls `listener` when the set of URLs the clock must advance changes.
- */
 export function subscribeDriverUrls(listener: () => void): () => void {
   driverListeners.add(listener);
 

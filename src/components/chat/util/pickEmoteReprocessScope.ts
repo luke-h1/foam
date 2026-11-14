@@ -6,11 +6,6 @@ import {
   type ChatResourceSliceRecord,
 } from '@app/store/chat/types/chat-resource-slices';
 
-/**
- * A typical 7TV edit adds, removes or renames one or two emotes. Past this many
- * names the update is a bulk edit that touches most rows anyway, so the
- * name filter saves little and the pass re-resolves every row.
- */
 export const MAX_FILTERED_EMOTE_NAMES = 32;
 
 export type ChannelEmoteDataSnapshot = Partial<
@@ -63,12 +58,6 @@ function isOnlyThisDelta(
   );
 }
 
-/**
- * Narrows a reprocess run to the rows a live 7TV emote_set.update can change.
- * Any other change since the last run keeps the default pass. A narrowed pass
- * that this run interrupts has skipped processed rows, so the run re-resolves
- * every row.
- */
 export function pickEmoteReprocessScope({
   delta,
   previous,

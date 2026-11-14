@@ -12,10 +12,6 @@ const LONG_PRESS_MOVE_TOLERANCE_DP = 10;
 interface UseChatRowLongPressOptions {
   canLongPress: boolean;
   channelId?: string;
-  /**
-   * Identity of the message the row shows. A recycled row keeps this hook's
-   * refs, so a change drops the old message's pending long press.
-   */
   messageKey: string;
   onLongPress: () => void;
 }

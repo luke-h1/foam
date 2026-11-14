@@ -40,9 +40,6 @@ export { defaultRemoteConfig } from './remote-config-model';
 let cachedRemoteConfig: ReturnType<typeof getRemoteConfig> | null = null;
 let remoteConfigFetchPromise: Promise<boolean> | null = null;
 
-/**
- * Created on first use. The handle, settings and defaultConfig are three Firebase bridge calls, and this module is in the boot graph. The two setters queue their native calls; fetchAndActivate waits for them, and a failure surfaces there.
- */
 function getRemoteConfigHandle() {
   if (cachedRemoteConfig) {
     return cachedRemoteConfig;

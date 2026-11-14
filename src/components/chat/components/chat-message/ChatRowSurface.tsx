@@ -7,11 +7,6 @@ import { noticeSurfaceTint } from '@app/components/chat/util/chatNoticeAccents';
 import { styles } from './ChatRow.styles';
 import { getChatTextStyles } from './ChatText.styles';
 
-/**
- * Pre-flattened variant overrides, keyed by the fields that pick them. The
- * per-row result is a 3-entry array with stable member identities instead of
- * an 18-entry nested array rebuilt and re-flattened on every render.
- */
 const variantStyleCache = new Map<string, ViewStyle | undefined>();
 
 const MAX_VARIANT_STYLE_CACHE = 256;

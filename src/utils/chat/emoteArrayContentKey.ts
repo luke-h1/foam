@@ -6,13 +6,6 @@ import type { SanitisedEmote } from '@app/types/emote';
  */
 const contentKeyCache = new WeakMap<SanitisedEmote[], string>();
 
-/**
- * Per-emote hash pair, cached on the emote object. An `emote_set.update`
- * rebuilds the array but keeps the unchanged emote objects, so the array key
- * then combines n cached ints instead of re-hashing every character of every
- * emote. A 5k-emote set cost 26-39ms per rebuild on a Hermes-class engine;
- * combining cached pairs costs well under 1ms.
- */
 const emoteHashCache = new WeakMap<SanitisedEmote, readonly [number, number]>();
 
 /**
@@ -30,12 +23,6 @@ const HAS_ALIAS = 1;
 const HAS_URL = 2;
 const IS_ZERO_WIDTH = 4;
 
-/**
- * Two independent 32-bit hashes (FNV-1a and djb2) per emote keep the array
- * key's 64-bit width, so a changed emote colliding with its old hash stays as
- * unlikely as before. The loops run on two local accumulators; the old
- * per-field helper returned a tuple per call, which alone cost 10x.
- */
 function getEmoteHash(emote: SanitisedEmote): readonly [number, number] {
   const cached = emoteHashCache.get(emote);
 

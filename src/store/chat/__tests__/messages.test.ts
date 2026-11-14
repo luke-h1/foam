@@ -475,9 +475,6 @@ describe('chatStore messages', () => {
     ]);
   });
 
-  // Part ids only matter to Legend State when a node exists below a message:
-  // its array diff keys child nodes by `id`, and a message can hold one emote
-  // twice. Store writes must never create those nodes.
   test('store writes create no observable nodes below the message window', () => {
     const cap = getMaxChatMessages();
 

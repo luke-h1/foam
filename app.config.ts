@@ -407,8 +407,6 @@ const config: ExpoConfig = {
       'expo-build-properties',
       {
         ios: {
-          // Firebase 13+ (react-native-firebase 27) ships via SPM only and
-          // requires dynamic framework linkage; static linkage fails pod install.
           useFrameworks: 'dynamic',
           deploymentTarget: '16.4',
           // Precompiled ExpoModulesCore references SwiftUICore, which fails to

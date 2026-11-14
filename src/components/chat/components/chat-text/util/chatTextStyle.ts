@@ -29,11 +29,6 @@ export interface ResolveChatTextStyleOptions {
   weight: TextWeight;
 }
 
-/**
- * The size ramp entry and the resolved text style in one object: `Text` hands
- * RN both as separate array entries, and flattening them gives the same
- * result as merging them here once.
- */
 function buildChatTextStyle({
   align,
   color,
@@ -69,10 +64,6 @@ function buildChatTextStyle({
   };
 }
 
-/**
- * Every input is a small enum or a boolean, so the resolved style is shared
- * across renders and across spans; a row's four spans usually hit two entries.
- */
 const chatTextStyleCache = new Map<string, TextStyle>();
 
 export function getChatTextStyle(
@@ -93,10 +84,6 @@ export function getChatTextStyle(
 
 const styleWeightOverrides = new Map<string, TextStyle>();
 
-/**
- * Fixed-weight brand font files ignore `fontWeight` on iOS, so a style weight
- * on a brand span becomes the font family that renders it.
- */
 export function getStyleWeightOverride(
   styleWeight: TextWeight,
   italic: boolean | undefined,

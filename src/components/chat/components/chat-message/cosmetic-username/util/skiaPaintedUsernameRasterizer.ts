@@ -323,11 +323,6 @@ function buildPaintLayout(
   };
 }
 
-/**
- * The strikethrough draws with the same paint as the glyphs, so a shader
- * fills it and every shadow, stroke and mask pass includes it, as CSS does
- * for `background-clip: text`.
- */
 function drawUsernameGlyphs(
   canvas: SkCanvas,
   opts: RasterizePaintedUsernameOptions,

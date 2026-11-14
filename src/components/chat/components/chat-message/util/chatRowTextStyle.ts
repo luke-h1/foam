@@ -9,10 +9,6 @@ import {
   resolveWeightFromFontWeight,
 } from '@app/components/ui/text/Text.styles';
 
-/**
- * The `ChatText` props a row span uses: `muted` is the default `gray`,
- * `text` is `color='gray.text'` and `tabular` is `tabular` on `gray`.
- */
 export type ChatRowTextTone = 'muted' | 'text' | 'tabular';
 
 export type ChatRowTextPart = TextStyle | false | null | undefined;
@@ -67,9 +63,6 @@ const toneRoots = {
   tabular: {},
 } satisfies Record<ChatRowTextTone, RowTextStyleNode>;
 
-/**
- * Stands in for a falsy part, because a WeakMap key must be an object.
- */
 const NO_PART = {};
 
 function getChildNode(
@@ -109,18 +102,6 @@ function buildRowTextStyle(
   return StyleSheet.flatten(spanStyles) ?? {};
 }
 
-/**
- * Resolves what `ChatText` builds per render - the tone's base style, the
- * parts in order and the brand weight override - once per distinct tuple of
- * part identities. The parts are the identity-stable objects from
- * `getChatTextStyles`, `ChatRow.styles` and `getChatColorStyle`, so a row
- * span gets the same style object on every render and `ChatRowText` does no
- * style work.
- *
- * The cache keys on object identity through WeakMaps, so it holds no part
- * that the colour cache has dropped. Do not pass a fresh object literal: it
- * misses every time.
- */
 export function getChatRowTextStyle(
   tone: ChatRowTextTone,
   a?: ChatRowTextPart,
@@ -154,9 +135,6 @@ function isStyleArray(
   return Array.isArray(style);
 }
 
-/**
- * Collects the members of a nested style array in order.
- */
 function collectStyleParts(
   style: StyleProp<TextStyle>,
   parts: ChatRowTextPart[],
@@ -170,11 +148,6 @@ function collectStyleParts(
   parts.push((style as ChatRowTextPart) || undefined);
 }
 
-/**
- * `getChatRowTextStyle` for a span whose style arrives as a style prop. A
- * nested array of up to five identity-stable members takes the cached path.
- * Anything else resolves without the cache to the same style.
- */
 export function getChatRowTextStyleForProp(
   tone: ChatRowTextTone,
   style: StyleProp<TextStyle>,

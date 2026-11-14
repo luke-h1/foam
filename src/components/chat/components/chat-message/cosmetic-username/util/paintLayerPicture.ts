@@ -114,11 +114,6 @@ interface DrawUrlLayerOptions {
   bounds: SkRect;
 }
 
-/**
- * The same commands as `<Group layer={fade}><Mask mode='alpha'>` in the
- * declarative canvas: the texture in its own layer, then the glyph mask
- * composited `dstIn` on top, then the layer fade.
- */
 function drawUrlLayer({
   canvas,
   layer,
@@ -149,10 +144,6 @@ function drawUrlLayer({
   }
 }
 
-/**
- * Records a painted username with URL layers. `getFrame` is read at record
- * time, so a new texture frame needs a new picture and no React render.
- */
 export function recordPaintLayerPicture(
   bitmaps: PaintBitmaps,
   getFrame: (url: string) => SkImage | null,
@@ -205,11 +196,6 @@ export interface PaintLayerPictureTarget {
   setBitmaps: (bitmaps: PaintBitmaps) => void;
 }
 
-/**
- * Draws the painted username into a `SkiaPictureView` without React. A
- * texture frame records a new picture on the JS thread and hands it to the
- * view, which is what the declarative canvas does after a render.
- */
 export function createPaintLayerPictureTarget(
   view: { current: PaintPictureView | null },
   getFrame: (url: string) => SkImage | null,
@@ -227,7 +213,6 @@ export function createPaintLayerPictureTarget(
 
     const picture = recordPaintLayerPicture(bitmaps, getFrame);
 
-    // The view keeps its own reference, as with the canvas recorder handoff.
     viewApi.setJsiProperty(nativeId, 'picture', picture);
     picture.dispose();
   };

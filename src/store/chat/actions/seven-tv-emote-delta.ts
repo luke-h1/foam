@@ -1,11 +1,6 @@
 import type { SanitisedEmote } from '@app/types/emote';
 import { setBoundedMapEntry } from '@app/utils/collection/setBoundedMapEntry';
 
-/**
- * The names a live 7TV emote_set.update touched, and the channel emote array
- * before and after it. The reprocess pass uses `from` and `to` to prove that
- * nothing else changed between two runs.
- */
 export interface SevenTvEmoteDelta {
   from: SanitisedEmote[];
   to: SanitisedEmote[];

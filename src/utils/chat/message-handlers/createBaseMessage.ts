@@ -15,9 +15,6 @@ interface CreateBaseMessageParams {
   isAction?: boolean;
   isHistorical?: boolean;
   parentColor?: string;
-  /**
-   * Live messages defer the emote and badge parse to commit time.
-   */
   pendingEmoteParse?: boolean;
   timestampFormat: ChatTimestampFormat;
 }

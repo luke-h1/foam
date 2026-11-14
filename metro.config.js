@@ -8,10 +8,8 @@ const {
 const { getSentryExpoConfig } = require('@sentry/react-native/metro');
 const path = require('path');
 
-// includeWebReplay: false stubs the web replay package (~310KB minified).
-// Mobile replay is native and does not use it.
-// includeWebFeedback: false stubs the web feedback widget (~49KB minified).
-// captureFeedback comes from @sentry/core and does not use it.
+// includeWebReplay: false stubs @sentry-internal/replay (~310KB minified) on
+// every platform. The app never enables Sentry session replay.
 /**
  * @type {import('expo/metro-config').MetroConfig}
  */
