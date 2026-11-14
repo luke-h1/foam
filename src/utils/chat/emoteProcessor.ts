@@ -8,6 +8,7 @@ import {
 import { getEmoteArrayContentKey } from '@app/utils/chat/emoteArrayContentKey';
 import { parseWordLinkTokens } from '@app/utils/chat/parse-word-link-tokens/parseWordLinkTokens';
 import { evictOldestWhenFull } from '@app/utils/collection/evictOldestWhenFull';
+import { CHAT_ROW_EMOTE_SCALE } from '@app/utils/emote/resolveEmoteScale';
 
 import { applyMentionLoginCasing } from './resolve-mention-login/applyMentionLoginCasing';
 import { stripInvisibleChars } from './stripInvisibleChars';
@@ -611,6 +612,13 @@ function createEmoteToken(
   emote: SanitisedEmote,
   word: string,
 ): MessageToken<'emote'> {
+  const url =
+    emote.image_variants?.animated?.[CHAT_ROW_EMOTE_SCALE] ?? emote.url;
+
+  const staticUrl = emote.static_url
+    ? (emote.image_variants?.static?.[CHAT_ROW_EMOTE_SCALE] ?? emote.static_url)
+    : emote.static_url;
+
   return {
     id: emote.id,
     name: emote.name,
@@ -623,9 +631,9 @@ function createEmoteToken(
         ? word
         : emote.original_name || '',
     site: emote.site || '',
-    static_url: emote.static_url,
-    thumbnail: emote.url,
-    url: emote.url,
+    static_url: staticUrl,
+    thumbnail: url,
+    url,
     width: emote.width,
     height: emote.height,
     aspect_ratio: emote.aspect_ratio,
