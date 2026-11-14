@@ -88,11 +88,11 @@ describe('getChatRowItemType', () => {
       replyBody: 'hi',
     });
 
-    expect(getChatRowItemType(plain)).toBe('user_chat-w0');
+    expect(getChatRowItemType(plain)).toBe('user_chat-inline-w0');
 
-    expect(getChatRowItemType(moderated)).toBe('user_chat-mod-w0');
+    expect(getChatRowItemType(moderated)).toBe('user_chat-mod-inline-w0');
 
-    expect(getChatRowItemType(reply)).toBe('user_chat-reply-w0');
+    expect(getChatRowItemType(reply)).toBe('user_chat-reply-inline-w0');
   });
 
   test('omits reply pool when inline reply context is disabled', () => {
@@ -102,7 +102,7 @@ describe('getChatRowItemType', () => {
     });
 
     expect(getChatRowItemType(reply, { showInlineReplyContext: false })).toBe(
-      'user_chat-w0',
+      'user_chat-inline-w0',
     );
   });
 
@@ -117,8 +117,8 @@ describe('getChatRowItemType', () => {
       ],
     });
 
-    expect(getChatRowItemType(short)).toBe('user_chat-w0');
+    expect(getChatRowItemType(short)).toBe('user_chat-inline-w0');
 
-    expect(getChatRowItemType(copypasta)).toBe('user_chat-w6');
+    expect(getChatRowItemType(copypasta)).toBe('user_chat-inline-w6');
   });
 });

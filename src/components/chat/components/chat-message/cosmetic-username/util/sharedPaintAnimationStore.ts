@@ -29,7 +29,6 @@ export interface SharedPaintAnimationEntry {
 const entries = new Map<string, SharedPaintAnimationEntry>();
 const frameConsumerCounts = new Map<string, number>();
 let driverUrls: readonly string[] = [];
-const driverListeners = new Set<() => void>();
 const MAX_SHARED_PAINT_ANIMATION_ENTRIES = 32;
 
 const RELEASED_ENTRY_LINGER_MS = 5000;
@@ -87,6 +86,7 @@ function disposeEntry(url: string, entry: SharedPaintAnimationEntry): void {
   entry.ready = false;
   notifyReady(entry);
   notifyFrames(entry);
+  syncDriverUrls();
 }
 
 function evictLingeringEntries(): void {
@@ -192,6 +192,7 @@ function beginLoad(url: string, entry: SharedPaintAnimationEntry): void {
         entry.ready = true;
         publishPaintFrame(entry, animated.getCurrentFrame(), Date.now());
         notifyReady(entry);
+        syncDriverUrls();
         return;
       }
 
@@ -268,7 +269,7 @@ function advancePaintFrame(url: string, now: number): void {
   publishPaintFrame(entry, animated.getCurrentFrame(), now);
 }
 
-export function advanceSharedPaintFrames(now: number): void {
+function advanceSharedPaintFrames(now: number): void {
   const appState = AppState.currentState;
 
   if (
@@ -373,11 +374,34 @@ export function releaseEntry(url: string): void {
   );
 }
 
+let frameLoopHandle: number | null = null;
+
+function runFrameLoop(): void {
+  advanceSharedPaintFrames(Date.now());
+
+  frameLoopHandle =
+    driverUrls.length > 0 ? requestAnimationFrame(runFrameLoop) : null;
+}
+
+function syncFrameLoop(): void {
+  if (driverUrls.length > 0 && frameLoopHandle === null) {
+    frameLoopHandle = requestAnimationFrame(runFrameLoop);
+    return;
+  }
+
+  if (driverUrls.length === 0 && frameLoopHandle !== null) {
+    cancelAnimationFrame(frameLoopHandle);
+    frameLoopHandle = null;
+  }
+}
+
 function syncDriverUrls(): void {
   const next: string[] = [];
 
   for (const url of frameConsumerCounts.keys()) {
-    next.push(url);
+    if (entries.get(url)?.animation) {
+      next.push(url);
+    }
   }
 
   const unchanged =
@@ -389,7 +413,7 @@ function syncDriverUrls(): void {
   }
 
   driverUrls = next;
-  driverListeners.forEach(listener => listener());
+  syncFrameLoop();
 }
 
 export function addFrameConsumer(url: string): void {
@@ -444,16 +468,4 @@ export function subscribeSharedPaintFrames(
 
     release();
   };
-}
-
-export function subscribeDriverUrls(listener: () => void): () => void {
-  driverListeners.add(listener);
-
-  return () => {
-    driverListeners.delete(listener);
-  };
-}
-
-export function getDriverUrls(): readonly string[] {
-  return driverUrls;
 }

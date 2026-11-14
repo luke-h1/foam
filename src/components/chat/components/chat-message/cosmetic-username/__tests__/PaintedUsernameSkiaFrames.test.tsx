@@ -10,7 +10,6 @@ import { chatScrollActivity } from '@app/components/chat/util/chatScrollActivity
 import { convertV4PaintToPaintData } from '@app/utils/seven-tv/gql/convertV4PaintToPaintData';
 
 import { PaintedUsernameSkia } from '../PaintedUsernameSkia';
-import { SharedPaintAnimationDrivers } from '../util/sharedPaintAnimationFrames';
 
 jest.mock('../util/skiaPaintFonts', () => ({
   useSkiaPaintFontProvider: () => ({}),
@@ -251,7 +250,6 @@ interface RowProps {
 function Row({ username, onRender }: RowProps) {
   return (
     <>
-      <SharedPaintAnimationDrivers />
       <Profiler id='row' onRender={onRender}>
         <PaintedUsernameSkia username={username} paint={paint} />
       </Profiler>

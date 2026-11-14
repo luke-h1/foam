@@ -13,7 +13,6 @@ import { Toaster } from 'sonner-native';
 
 import { ActionMenuHost } from '@app/components/action-menu-host/ActionMenuHost';
 import { ChangelogAndroidHost } from '@app/components/changelog/ChangelogAndroidHost';
-import { SharedPaintAnimationDrivers } from '@app/components/chat/components/chat-message/cosmetic-username/util/sharedPaintAnimationFrames';
 import { ErrorBoundary } from '@app/components/error-boundary/ErrorBoundary';
 import { GlobalErrorGate } from '@app/components/global-error-gate/GlobalErrorGate';
 import { MediaPermissionHost } from '@app/components/media-permission-host/MediaPermissionHost';
@@ -58,7 +57,6 @@ export function Providers({ children }: PropsWithChildren) {
             <KeyboardProvider preload={false}>
               <PortalProvider>
                 {devTools ? <devTools.DevTools /> : null}
-                <SharedPaintAnimationDrivers />
                 <AnalyticsProvider>
                   <QueryProviderWithDevTools>
                     <GlobalErrorGate />

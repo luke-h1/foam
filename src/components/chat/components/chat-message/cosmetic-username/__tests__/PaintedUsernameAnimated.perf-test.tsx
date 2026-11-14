@@ -10,7 +10,6 @@ import { paintRendererFlag$ } from '@app/store/preference-store';
 import { convertV4PaintToPaintData } from '@app/utils/seven-tv/gql/convertV4PaintToPaintData';
 
 import { PaintedUsername } from '../PaintedUsername';
-import { SharedPaintAnimationDrivers } from '../util/sharedPaintAnimationFrames';
 
 jest.mock('../util/skiaPaintFonts', () => ({
   useSkiaPaintFontProvider: () => ({}),
@@ -132,7 +131,6 @@ afterAll(() => {
 function AnimatedPaintRows() {
   return (
     <View>
-      <SharedPaintAnimationDrivers />
       {Array.from({ length: ROW_COUNT }, (_, index) => (
         <PaintedUsername
           key={index}

@@ -1,5 +1,6 @@
 import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import { deriveChatBody } from '@app/utils/chat/derive-chat-body/deriveChatBody';
+import { scanChatBody } from '@app/utils/chat/derive-chat-body/scanChatBody';
 import type { ChatBodyVariant } from '@app/utils/chat/derive-chat-body/types';
 import { isSystemSender } from '@app/utils/chat/isSystemSender';
 import { isRenderableChatMessage } from '@app/utils/chat/message-identity/isRenderableChatMessage';
@@ -66,6 +67,10 @@ function getUserChatRowItemType(
 
   if (item.isSharedChatDuplicated) {
     flags.push('shared');
+  }
+
+  if (scanChatBody(item.message).fitsInOneText) {
+    flags.push('inline');
   }
 
   /**

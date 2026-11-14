@@ -233,7 +233,9 @@ export function enrichMessageSet({
       messageNonce: msg.message_nonce,
       updates: {
         message: replacedMessage,
-        badges: replacedBadges,
+        badges: areBadgesEqual(msg.badges, replacedBadges)
+          ? msg.badges
+          : replacedBadges,
       },
     });
   };
@@ -337,12 +339,21 @@ export async function resolveVisibleMessageUpdate({
       sourceChannelBadges,
     });
 
+    const badgesEqual = areBadgesEqual(message.badges, badges);
+
+    if (
+      badgesEqual &&
+      areMessageTokensEqual(message.message, replacedMessage)
+    ) {
+      return null;
+    }
+
     return {
       messageId: message.message_id,
       messageNonce: message.message_nonce,
       updates: {
         message: replacedMessage,
-        badges,
+        badges: badgesEqual ? message.badges : badges,
       },
     };
   } catch (error) {
