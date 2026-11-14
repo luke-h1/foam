@@ -22,8 +22,6 @@ export function useStreamPlayerLifecycle({
   channel: string | undefined;
   sourceKey: string;
 }) {
-  const needsInitRef = useRef(true);
-
   const authCompletionReloadTimeoutRef = useRef<ReturnType<
     typeof setTimeout
   > | null>(null);
@@ -163,7 +161,6 @@ export function useStreamPlayerLifecycle({
   const resumeTimeRef = useRef(0);
 
   useEffect(() => {
-    needsInitRef.current = true;
     nudgePlayedRef.current = false;
     resumeTimeRef.current = 0;
   }, [sourceKey]);
@@ -182,7 +179,6 @@ export function useStreamPlayerLifecycle({
       channel,
     });
 
-    needsInitRef.current = true;
     nudgePlayedRef.current = false;
 
     if (posterHideTimeoutRef.current) {
@@ -221,7 +217,6 @@ export function useStreamPlayerLifecycle({
     handlePlayerLayout,
     isPlayerLoading: loadedGeneration !== generation,
     layoutNudge,
-    needsInitRef,
     remountEmbedWebView,
     resumeTimeRef,
     scheduleAuthCompletionReload,

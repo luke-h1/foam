@@ -86,10 +86,6 @@ function isPlayerErrorMetadata(error: unknown): error is PlayerErrorMetadata {
 }
 
 function loadFailureLogMessage(reason: string | undefined, error: unknown) {
-  if (reason === 'embed_error' && isPlayerErrorMetadata(error)) {
-    return `[StreamPlayer:embed ERROR] ${String(error.message ?? 'Unknown embed error')}`;
-  }
-
   if (reason === 'embed_misconfigured' && isPlayerErrorMetadata(error)) {
     return `[StreamPlayer:embed MISCONFIGURED] ${String(error.message ?? 'Whoops, this embed is misconfigured')}`;
   }

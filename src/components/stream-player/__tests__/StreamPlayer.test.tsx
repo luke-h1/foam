@@ -127,7 +127,7 @@ function isRenderedElement(
   return node instanceof Object;
 }
 
-function containerPaddingBottom(tree: RenderedTree) {
+function containerStyle(tree: RenderedTree): ViewStyle {
   const container =
     tree && !Array.isArray(tree)
       ? tree.children?.find(isRenderedElement)
@@ -137,8 +137,11 @@ function containerPaddingBottom(tree: RenderedTree) {
     throw new Error('expected a single player container element');
   }
 
-  const style: ViewStyle = StyleSheet.flatten(container.props['style']);
-  return style.paddingBottom;
+  return StyleSheet.flatten(container.props['style']);
+}
+
+function containerPaddingBottom(tree: RenderedTree) {
+  return containerStyle(tree).paddingBottom;
 }
 
 describe('StreamPlayer component messaging', () => {
@@ -173,29 +176,17 @@ describe('StreamPlayer component messaging', () => {
   // pulse lands after the test ends and warns about an unwrapped state update.
   test('maps player bridge messages to callbacks and state updates', () => {
     jest.useFakeTimers();
-    const onContentGateChange = jest.fn();
-    const onEnded = jest.fn();
-    const onError = jest.fn();
-    const onOffline = jest.fn();
-    const onOnline = jest.fn();
-    const onPause = jest.fn();
     const onPlaybackLatencyChange = jest.fn();
     const onPlay = jest.fn();
     const onReady = jest.fn();
     const errorSpy = jest.spyOn(logger.main, 'error').mockImplementation();
 
-    render(
+    const { toJSON } = render(
       <StreamPlayer
         autoplay={false}
         channel='cohhcarnage'
         height={200}
         muted
-        onContentGateChange={onContentGateChange}
-        onEnded={onEnded}
-        onError={onError}
-        onOffline={onOffline}
-        onOnline={onOnline}
-        onPause={onPause}
         onPlaybackLatencyChange={onPlaybackLatencyChange}
         onPlay={onPlay}
         onReady={onReady}
@@ -209,13 +200,14 @@ describe('StreamPlayer component messaging', () => {
     });
 
     sendPlayerMessage({ type: 'ready' });
-    sendPlayerMessage({ type: 'error', payload: { message: 'embed failed' } });
-    sendPlayerMessage({ type: 'play' });
+
+    sendPlayerMessage({
+      type: 'embedMisconfigured',
+      payload: { message: 'embed failed', parent: 'www.twitch.tv' },
+    });
+
     sendPlayerMessage({ type: 'playing' });
     sendPlayerMessage({ type: 'pause' });
-    sendPlayerMessage({ type: 'ended' });
-    sendPlayerMessage({ type: 'online' });
-    sendPlayerMessage({ type: 'offline' });
 
     sendPlayerMessage({
       type: 'contentGateDetected',
@@ -231,35 +223,26 @@ describe('StreamPlayer component messaging', () => {
 
     expect(onPlay).toHaveBeenCalledTimes(1);
 
-    expect(onPause).toHaveBeenCalledTimes(1);
-
-    expect(onEnded).toHaveBeenCalledTimes(1);
-
-    expect(onOnline).toHaveBeenCalledTimes(1);
-
-    expect(onOffline).toHaveBeenCalledTimes(1);
-
-    expect(onContentGateChange).toHaveBeenCalledWith(true);
+    expect(containerStyle(toJSON()).overflow).toEqual('visible');
 
     expect(onPlaybackLatencyChange).toHaveBeenCalledWith(3.4);
 
-    expect(onError).toHaveBeenCalledWith('embed failed');
-
     expect(errorSpy.mock.calls).toEqual<[string, LogMetadata][]>([
       [
-        '[StreamPlayer:embed ERROR] embed failed',
+        '[StreamPlayer:embed MISCONFIGURED] embed failed',
         {
           name: 'twitch_player_error',
-          exceptionName: 'StreamPlayerEmbedError',
-          fingerprint: ['stream-player-embed-error'],
+          exceptionName: 'StreamPlayerEmbedMisconfigured',
+          fingerprint: ['stream-player-embed-misconfigured'],
           channel: 'cohhcarnage',
+          embedParent: 'www.twitch.tv',
           message: 'embed failed',
           elapsedMs: 1500,
           autoplay: false,
           content_kind: 'live',
           elapsed_ms: 1500,
           outcome: 'failed',
-          reason: 'embed_error',
+          reason: 'embed_misconfigured',
         },
       ],
     ]);
@@ -267,22 +250,18 @@ describe('StreamPlayer component messaging', () => {
 
   test('resumes autoplay after a transient player pause', () => {
     jest.useFakeTimers();
-    const onPause = jest.fn();
 
     render(
       <StreamPlayer
         channel='cohhcarnage'
         height={200}
         muted
-        onPause={onPause}
         showOverlayControls={false}
         width={300}
       />,
     );
 
     sendPlayerMessage({ type: 'pause' });
-
-    expect(onPause).not.toHaveBeenCalled();
 
     expect(mockInjectJavaScript).not.toHaveBeenCalled();
 
@@ -291,13 +270,12 @@ describe('StreamPlayer component messaging', () => {
     });
 
     expect(mockInjectJavaScript).toHaveBeenCalledWith(
-      expect.stringContaining('window.playerControls.play()'),
+      expect.stringContaining('window.__foamEnsurePlaying()'),
     );
   });
 
   test('does not resume after an explicit native pause', () => {
     jest.useFakeTimers();
-    const onPause = jest.fn();
     const playerRef = createRef<StreamPlayerRef>();
 
     render(
@@ -306,7 +284,6 @@ describe('StreamPlayer component messaging', () => {
         channel='cohhcarnage'
         height={200}
         muted
-        onPause={onPause}
         showOverlayControls={false}
         width={300}
       />,
@@ -323,8 +300,6 @@ describe('StreamPlayer component messaging', () => {
     act(() => {
       jest.advanceTimersByTime(250);
     });
-
-    expect(onPause).toHaveBeenCalledTimes(1);
 
     expect(mockInjectJavaScript).not.toHaveBeenCalled();
   });

@@ -2,46 +2,16 @@ import type { Ref } from 'react';
 import type { DimensionValue } from 'react-native';
 
 export interface StreamPlayerRef {
-  forceRefresh: () => void;
-  getChannel: () => string | undefined;
-  /**
-   * Playback position in seconds.
-   */
-  getCurrentTime: () => Promise<number>;
-  /**
-   * Total duration in seconds; VODs only.
-   */
-  getDuration: () => Promise<number>;
-  getMuted: () => boolean;
   getPaused: () => boolean;
-  /**
-   * Volume is 0-1.
-   */
-  getVolume: () => number;
-  mute: () => void;
   pause: () => void;
   play: () => void;
-  /**
-   * Timestamp in seconds; VODs only.
-   */
-  seek: (timestamp: number) => void;
-  setChannel: (channel: string) => void;
-  setMuted: (muted: boolean) => void;
-  setQuality: (quality: string) => void;
-  setVideo: (videoId: string, timestamp?: number) => void;
-  /**
-   * Volume is 0-1.
-   */
-  setVolume: (volume: number) => void;
   isPictureInPicture: () => boolean;
-  togglePictureInPicture: () => void;
   /**
    * Pause and drop the <video> source so the WebView can be torn down without
    * an active AVPlayer wedging the transition.
    */
   releaseMedia: () => void;
   syncToLive: () => void;
-  unmute: () => void;
 }
 
 export interface StreamInfo {
@@ -76,12 +46,6 @@ export interface StreamPlayerProps {
    */
   muted?: boolean;
   onBackPress?: () => void;
-  onContentGateChange?: (hasGate: boolean) => void;
-  onEnded?: () => void;
-  onError?: (error: string) => void;
-  onOffline?: () => void;
-  onOnline?: () => void;
-  onPause?: () => void;
   onPlaybackLatencyChange?: (latencySeconds: number) => void;
   onPlay?: () => void;
   onReady?: () => void;
@@ -110,26 +74,13 @@ export interface StreamPlayerProps {
 }
 
 export interface PlayerState {
-  channel?: string;
-  currentTime: number;
-  duration: number;
   isPaused: boolean;
   muted: boolean;
-  quality: string;
-  volume: number;
 }
 
 export interface PlayerStatusState {
   isBuffering: boolean;
   isReady: boolean;
-}
-
-interface PlayerStateUpdatePayload {
-  isBuffering: boolean;
-  isPaused: boolean;
-  isReady: boolean;
-  muted: boolean;
-  volume: number;
 }
 
 interface PlaybackStatsPayload {
@@ -143,18 +94,9 @@ interface PlaybackStatsPayload {
 }
 
 export type PlayerMessage =
-  | { payload: { message: string }; type: 'error' }
-  | { payload: { time: number }; type: 'currentTime' }
-  | { payload: { duration: number }; type: 'duration' }
-  | { payload: PlayerStateUpdatePayload; type: 'stateUpdate' }
   | { payload: PlaybackStatsPayload; type: 'playbackStats' }
   | { payload: { hasContentGate: boolean }; type: 'contentGateDetected' }
-  | { type: 'ended' }
-  | { type: 'offline' }
-  | { type: 'online' }
   | { type: 'pause' }
-  | { type: 'play' }
-  | { payload: { errName: string | null }; type: 'playbackBlocked' }
   | { type: 'pipChanged'; payload: { active: boolean } }
   | { type: 'pipUnavailable' }
   | { type: 'playing' }

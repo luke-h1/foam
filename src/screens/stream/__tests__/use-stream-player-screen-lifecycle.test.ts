@@ -19,27 +19,12 @@ jest.mock('expo-screen-orientation', () => ({
 
 function createPlayer() {
   return {
-    forceRefresh: jest.fn(),
-    getChannel: jest.fn(),
-    getCurrentTime: jest.fn(() => Promise.resolve(0)),
-    getDuration: jest.fn(() => Promise.resolve(0)),
-    getMuted: jest.fn(() => false),
     getPaused: jest.fn(() => false),
-    getVolume: jest.fn(() => 1),
     isPictureInPicture: jest.fn(() => false),
-    mute: jest.fn(),
     pause: jest.fn(),
     play: jest.fn(),
     releaseMedia: jest.fn(),
-    seek: jest.fn(),
-    setChannel: jest.fn(),
-    setMuted: jest.fn(),
-    setQuality: jest.fn(),
-    setVideo: jest.fn(),
-    setVolume: jest.fn(),
     syncToLive: jest.fn(),
-    togglePictureInPicture: jest.fn(),
-    unmute: jest.fn(),
   } satisfies StreamPlayerRef;
 }
 

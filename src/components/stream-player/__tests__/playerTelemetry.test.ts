@@ -139,18 +139,19 @@ describe('createPlayerTelemetry', () => {
 
     const embedError = {
       name: 'twitch_player_error' as const,
-      exceptionName: 'StreamPlayerEmbedError',
-      fingerprint: ['stream-player-embed-error'],
+      exceptionName: 'StreamPlayerEmbedMisconfigured',
+      fingerprint: ['stream-player-embed-misconfigured'],
       channel: 'sodapoppin',
+      embedParent: 'www.twitch.tv',
       elapsedMs: 2500,
-      message: 'embed exploded',
+      message: 'Whoops, this embed is misconfigured',
     };
 
     jest.setSystemTime(1100);
-    telemetry.noteLoadFailed('embed_error', embedError);
+    telemetry.noteLoadFailed('embed_misconfigured', embedError);
 
     expect(logger.main.error).toHaveBeenCalledWith(
-      '[StreamPlayer:embed ERROR] embed exploded',
+      '[StreamPlayer:embed MISCONFIGURED] Whoops, this embed is misconfigured',
       {
         ...embedError,
         autoplay: true,
@@ -158,7 +159,7 @@ describe('createPlayerTelemetry', () => {
         content_kind: 'live',
         elapsed_ms: 100,
         outcome: 'failed',
-        reason: 'embed_error',
+        reason: 'embed_misconfigured',
       },
     );
   });

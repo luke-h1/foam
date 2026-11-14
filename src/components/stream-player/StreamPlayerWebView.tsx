@@ -29,8 +29,6 @@ interface StreamPlayerWebViewProps {
   clip?: string;
   injectedJavaScript?: string;
   injectedJavaScriptBeforeContentLoaded?: string;
-  needsInitRef: RefObject<boolean>;
-  onError?: (error: string) => void;
   onHttpError: (error: { statusCode: number; url: string }) => void;
   onLoadFailed?: (
     reason: string,
@@ -55,8 +53,6 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
   clip,
   injectedJavaScript,
   injectedJavaScriptBeforeContentLoaded,
-  needsInitRef,
-  onError,
   onHttpError,
   onLoadFailed,
   onMessage,
@@ -74,18 +70,12 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
 
     if (isTwitchPassportCallbackUrl(url)) {
       scheduleAuthCompletionReload();
-      return;
-    }
-
-    if (needsInitRef.current) {
-      needsInitRef.current = false;
     }
   };
 
   const handleWebViewError = (event: { nativeEvent: WebViewError }) => {
     const { nativeEvent } = event;
     onLoadFailed?.('webview_error', nativeEvent);
-    onError?.(nativeEvent.description);
   };
 
   const handleWebViewHttpError = (event: { nativeEvent: WebViewHttpError }) => {
@@ -97,7 +87,6 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
     });
 
     onLoadFailed?.(`http_${nativeEvent.statusCode}`, nativeEvent);
-    onError?.(`HTTP ${nativeEvent.statusCode}: ${nativeEvent.description}`);
   };
 
   // Under memory pressure WKWebView kills its content process and Android
