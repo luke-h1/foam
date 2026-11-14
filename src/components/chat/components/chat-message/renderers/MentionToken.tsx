@@ -29,8 +29,9 @@ interface MentionTokenProps {
 }
 
 /**
- * A single @mention span; self-subscribes to `mentionLoginRevision` so a
- * Helix resolve re-renders only visible mention spans, not every chat row.
+ * A single @mention span; the selector reads `mentionLoginRevision` and
+ * returns the mention's color, so a Helix resolve re-renders only the spans
+ * whose color changed, not every mounted mention.
  */
 function MentionTokenComponent({
   content,
@@ -44,15 +45,20 @@ function MentionTokenComponent({
   normalisedCurrentUsername,
   replyPlainMentionTarget,
 }: MentionTokenProps) {
-  useSelector(chatStore$.mentionLoginRevision);
-
   const mentionContent = formatMentionContent(content);
+  const mentionedUsername = mentionContent.replace(/^@/, '').trim();
+
+  const mentionColor = useSelector(() => {
+    chatStore$.mentionLoginRevision.get();
+    return getMentionColor
+      ? getMentionColor(mentionedUsername)
+      : resolveMentionColor(mentionedUsername);
+  });
 
   if (!mentionContent.trim()) {
     return null;
   }
 
-  const mentionedUsername = mentionContent.replace(/^@/, '').trim();
   const normalisedMentionedUsername = normaliseChatUsername(mentionedUsername);
 
   const isReplyTargetMention = Boolean(
@@ -63,10 +69,6 @@ function MentionTokenComponent({
   if (isReplyTargetMention) {
     return <ChatRowText style={baseRowTextStyle}>{mentionContent}</ChatRowText>;
   }
-
-  const mentionColor = getMentionColor
-    ? getMentionColor(mentionedUsername)
-    : resolveMentionColor(mentionedUsername);
 
   const isHighlightedMention =
     effectiveHighlightedUserSet?.has(normalisedMentionedUsername) ||
