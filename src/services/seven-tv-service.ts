@@ -54,10 +54,6 @@ export const clearSevenTvUserCache = () => {
   sevenTvUserCache.clear();
 };
 
-/**
- * Called when the EventAPI reports a channel switching emote set, so the next
- * channel load does not resolve the set it just replaced.
- */
 export const invalidateSevenTvUser = (twitchUserId: string) => {
   sevenTvUserCache.invalidate(twitchUserId);
 };
@@ -335,8 +331,6 @@ export const sevenTvService = {
       return fetchGlobalSevenTvEmoteSet();
     }
 
-    // A full channel set is ~3MB of JSON. Sanitising on the parse runtime
-    // means the JS thread rebuilds only the compact emotes, not the raw tree.
     const { data, error } = await sevenTvV4Client.queryDerived<
       EmoteSetCustomQuery,
       SevenTvSanitisedEmote[],

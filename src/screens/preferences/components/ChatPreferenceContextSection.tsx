@@ -1,10 +1,8 @@
 import { StyleSheet, View } from 'react-native';
 
-import {
-  SettingsSection,
-  SettingsSegmentedRow,
-  SettingsToggleRow,
-} from '@app/components/settings-section/SettingsSection';
+import { SettingsSection } from '@app/components/settings-section/SettingsSection';
+import { SettingsSegmentedRow } from '@app/components/settings-section/SettingsSegmentedRow';
+import { SettingsToggleRow } from '@app/components/settings-section/SettingsToggleRow';
 import { CONTEXT_TOGGLE_ROWS } from '@app/constants/chat-preferences';
 import { updatePreferences, usePreference } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';

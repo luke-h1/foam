@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 import { PressableScale } from 'pressto';
 
 import { SymbolView } from '@app/components/ui/icon/Icon';
-import { presentActionMenu } from '@app/store/overlays/action-menu-store';
+import { showActionMenu } from '@app/store/overlays/show-action-menu';
 import { theme } from '@app/styles/themes';
 
 import type { ComposerOverflowAction } from '../util/composerOverflowActions';
@@ -26,7 +26,7 @@ export function ComposerOverflowButton({
   }
 
   const handlePress = () => {
-    presentActionMenu({
+    showActionMenu({
       actions: actions.flatMap(action =>
         action.disabled
           ? []

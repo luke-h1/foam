@@ -1,5 +1,4 @@
-// Shape names here are @expo/ui SwiftUI/Compose API names, not a naming choice.
-// oxlint-disable anti-slop/no-shape-in-symbol-names
+// oxlint-disable anti-slop/no-shape-in-symbol-names -- shape names here are @expo/ui SwiftUI/Compose API names
 import {
   accessibilityLabel,
   background,

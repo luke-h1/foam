@@ -1,4 +1,3 @@
-// "shape" is the 7TV paint API field (types/seven-tv/cosmetics.ts), not a naming choice.
 import { type ElementType } from 'react';
 import { StyleSheet } from 'react-native';
 

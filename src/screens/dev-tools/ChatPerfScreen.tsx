@@ -110,7 +110,6 @@ export function ChatPerfScreen() {
     if (suiteParam && !autoStarted.current) {
       autoStarted.current = true;
 
-      // Give the chat a moment to mount/connect before the first phase.
       const t = setTimeout(() => void runSuite(), 1500);
 
       return () => clearTimeout(t);
@@ -146,7 +145,6 @@ export function ChatPerfScreen() {
     setHotspotResults([]);
     setHotspotStatus('preparing…');
 
-    // Pause any live flood so ingest/clearMessages measurements stay clean.
     setSyntheticChatControl(SYNTHETIC_PRESETS['off']!);
 
     resetFloodReplay();

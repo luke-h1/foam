@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
-
 if (__DEV__ && !process.env.EXPO_PUBLIC_REACT_PERF_TRACKS) {
   require('react-native/Libraries/Core/setUpPerformance');
   const noopMeasure = function measure() {};

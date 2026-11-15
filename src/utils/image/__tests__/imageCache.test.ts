@@ -57,8 +57,6 @@ describe('image-cache', () => {
 
     fileSystemMock.evict(cachedUri);
 
-    // Successful stats are trusted for a while so the render path does not
-    // re-stat per emote; eviction is detected once the verification expires.
     const realNow = Date.now();
 
     const nowSpy = jest
@@ -104,8 +102,6 @@ describe('image-cache', () => {
   });
 
   test('evicts least-recently-accessed records to stay under the byte budget', async () => {
-    // Two 60MB files overflow the 100MB budget, so caching the second must
-    // evict the first while protecting the record being inserted.
     fileSystemMock.setFileSize(60 * 1024 * 1024);
 
     const firstUrl = 'https://example.com/big-first.png';
@@ -307,10 +303,6 @@ describe('image-cache manifest validation', () => {
     readDirectoryAsync: jest.Mock;
   }
 
-  /**
-   * Loads a fresh module graph with two persisted records, so hydration and
-   * the one-time validation run again. Only `kept.png` exists on disk.
-   */
   const loadWithPersistedRecords = (): FreshCache => {
     jest.resetModules();
 

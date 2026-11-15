@@ -1,9 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
-import {
-  SettingsSection,
-  SettingsSegmentedRow,
-} from '@app/components/settings-section/SettingsSection';
+import { SettingsSection } from '@app/components/settings-section/SettingsSection';
+import { SettingsSegmentedRow } from '@app/components/settings-section/SettingsSegmentedRow';
 import { updatePreferences, usePreference } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
 import { EMOJI_STYLE_OPTIONS } from '@app/utils/emoji/emojiEmotes';

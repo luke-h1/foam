@@ -2,6 +2,8 @@ import { Linking } from 'react-native';
 
 import * as Application from 'expo-application';
 
+import { getAppVariant } from '@app/utils/version/getAppVariant';
+
 import { getAppStoreLink } from './getAppStoreLink';
 
 const PRODUCTION_BUNDLE_ID = 'foam-tv';
@@ -22,8 +24,7 @@ export async function getStoreUrlAsync() {
       releaseType !== Application.ApplicationReleaseType.APP_STORE &&
       releaseType !== Application.ApplicationReleaseType.SIMULATOR;
 
-    const isProductionBuild =
-      Application.applicationId === PRODUCTION_BUNDLE_ID;
+    const isProductionBuild = getAppVariant() === 'production';
 
     return isTestFlight || !isProductionBuild
       ? resolveTestFlightUrl()

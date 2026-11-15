@@ -10,11 +10,9 @@ import { router } from 'expo-router';
 
 import { Image } from '@app/components/image/Image';
 import { PressableArea } from '@app/components/pressable-area/PressableArea';
-import {
-  SettingsLinkRow,
-  SettingsRow,
-  SettingsSection,
-} from '@app/components/settings-section/SettingsSection';
+import { SettingsLinkRow } from '@app/components/settings-section/SettingsLinkRow';
+import { SettingsRow } from '@app/components/settings-section/SettingsRow';
+import { SettingsSection } from '@app/components/settings-section/SettingsSection';
 import { SymbolView } from '@app/components/ui/icon/Icon';
 import { Text } from '@app/components/ui/text/Text';
 import { useAuthContext } from '@app/context/AuthContext';

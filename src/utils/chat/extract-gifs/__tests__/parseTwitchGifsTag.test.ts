@@ -70,7 +70,6 @@ describe('parseTwitchGifsTag', () => {
   });
 
   test('indexes by Unicode code point when surrogate pairs are present', () => {
-    // "👍hi" is three code points; the GIF covers the thumbs-up only.
     expect(
       parseTwitchGifsTag('0-0|emoji|https://e.example/g.gif', '👍hi'),
     ).toEqual<TwitchGifSpan[]>([

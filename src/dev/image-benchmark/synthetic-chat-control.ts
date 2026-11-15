@@ -17,9 +17,6 @@ const OFF: SyntheticChatConfig = {
   emotesPerMessage: 0,
 };
 
-/**
- * Keyed by dev-tools / deep-link preset name, so an unrecognised key resolves to `undefined` rather than failing to compile.
- */
 export interface SyntheticPresets {
   [presetKey: string]: SyntheticChatConfig;
 }

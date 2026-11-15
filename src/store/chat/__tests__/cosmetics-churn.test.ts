@@ -79,8 +79,6 @@ function resetStore() {
   mockSet = jest.spyOn(storageService, 'set');
   jest.spyOn(sevenTvService, 'getUserCosmeticsGql').mockResolvedValue(null);
 
-  // Also drops pending debounced snapshot syncs, so wearer writes cannot
-  // leak into the next test's storage counts.
   clearUserCosmeticsCache();
 
   chatStore$.paints.set({});

@@ -66,12 +66,6 @@ export const chatComposerStyles = StyleSheet.create({
   characterCountOverLimit: {
     color: theme.colorRed,
   },
-  /**
-   * The RN pill paints the surface, so this must be the literal 'transparent':
-   * iOS `Input` treats any other value as a surface and adds its own glass
-   * over it. Its variants also derive every colour from the accent, so without
-   * an explicit `color` the typed message renders in the accent.
-   */
   input: {
     backgroundColor: 'transparent',
     borderWidth: 0,

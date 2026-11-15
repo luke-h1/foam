@@ -27,7 +27,6 @@ import { pickFlushDelay } from './chat-flush-cadence/pickFlushDelay';
 import { shouldEnterRaidFlushMode } from './chat-flush-cadence/shouldEnterRaidFlushMode';
 import { createMessageBuffer } from './messageBuffer';
 
-// Floor on delay-queue checks so a burst of releases coalesces into one drain.
 const DELAY_RELEASE_MIN_INTERVAL_MS = 80;
 
 const BUFFER_BACKPRESSURE_SIZE = 400;
@@ -39,10 +38,6 @@ export type HandleNewMessageOptions = {
   countUnread?: boolean;
 };
 
-/**
- * All readers are getters so the controller always sees current values; the
- * React adapter points them at refs, tests at plain variables.
- */
 export interface ChatIngestControllerDeps {
   /**
    * Applied to each message as it leaves the buffer for the store, so the
@@ -73,12 +68,7 @@ function publishBufferedMessages(messages: BufferedMessage[], burst = false) {
   });
 }
 
-/**
- * Chat ingest state machine; plain factory with no React so the adapter owns
- * its lifecycle and jest can drive it with fake timers.
- */
 export function createChatIngestController(deps: ChatIngestControllerDeps) {
-  // The store trims to this window on commit, so buffering more only adds parse work and lag.
   const buffer = createMessageBuffer(getEffectiveMaxChatMessages);
 
   const delayQueue = createChatDelayQueue();
@@ -91,13 +81,8 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
 
   let raidFlushMode = false;
 
-  /**
-   * Arrival count, not buffer size - the cap leaves a backlog, which would
-   * latch raid mode on.
-   */
   let arrivalsSinceFlush = 0;
 
-  // Never above the buffer bound, or a deferred flush drops rows instead of forcing them through.
   const isBufferUnderBackpressure = () =>
     buffer.size() >=
     Math.min(BUFFER_BACKPRESSURE_SIZE, getEffectiveMaxChatMessages());
@@ -123,11 +108,9 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
 
   const flushBuffer = () => {
     if (isFlushing) {
-      // Re-entered from inside a flush (publishing fed a message back in); the drain under way covers it.
       return;
     }
 
-    // Clear, not just forget - a timer armed for this same flush would stay pending and re-run it.
     if (flushTimer) {
       clearTimeout(flushTimer);
       flushTimer = null;
@@ -185,10 +168,6 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
       isFlushing = false;
     }
 
-    /**
-     * Re-arm for rows the cap held back, or they wait on the next incoming
-     * message and stall the tail of a burst.
-     */
     if (buffer.size() > 0) {
       startFlushTimer(
         pickFlushDelay({
@@ -290,14 +269,11 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
   ) => {
     const countUnread = messageOptions?.countUnread;
 
-    // Historical replay (countUnread === false) is already old, so it bypasses the delay.
     const delayMs =
       countUnread === false
         ? 0
         : delayRamp.resolve(sanitiseDelayMs(deps.getChatDelayMs()), Date.now());
 
-    // An auto-sync delay can collapse to zero mid-stream; a live message
-    // still can't skip past older ones held in the queue.
     const mustQueueBehindDelayed =
       countUnread !== false && delayQueue.size() > 0;
 
@@ -365,10 +341,6 @@ export function createChatIngestController(deps: ChatIngestControllerDeps) {
     raidFlushMode = false;
   };
 
-  /**
-   * One call per moderation event: each handler hits the ingest buffer, the
-   * delay queue and the committed store so the halves cannot drift.
-   */
   const removeChatMessageById = (messageId: string) => {
     buffer.removeById(messageId);
     delayQueue.removeById(messageId);

@@ -30,8 +30,6 @@ export function handleQueryError(
     exceptionName: error.name,
     error,
     queryKey,
-    // Group by query scope, not full key: keys often embed ids and
-    // would otherwise explode into one Sentry issue per channel/user.
     fingerprint: [
       'query_error',
       String(queryKey[0] ?? 'unknown'),
@@ -76,7 +74,6 @@ const createQueryClient = () => {
     networkMode: 'offlineFirst',
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
-    // structuralSharing stays default (true): identical refetch payloads keep referential identity, or list screens memoized on `data` rebuild for nothing.
     retry: 2,
   };
 

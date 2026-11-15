@@ -1,10 +1,8 @@
 import { router } from 'expo-router';
 
-import {
-  SettingsLinkRow,
-  SettingsSection,
-  SettingsToggleRow,
-} from '@app/components/settings-section/SettingsSection';
+import { SettingsLinkRow } from '@app/components/settings-section/SettingsLinkRow';
+import { SettingsSection } from '@app/components/settings-section/SettingsSection';
+import { SettingsToggleRow } from '@app/components/settings-section/SettingsToggleRow';
 import { Text } from '@app/components/ui/text/Text';
 import { updatePreferences, usePreference } from '@app/store/preference-store';
 

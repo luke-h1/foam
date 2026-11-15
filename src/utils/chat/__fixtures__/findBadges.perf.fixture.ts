@@ -16,10 +16,6 @@ function createChatterinoBadge(index: number): SanitisedBadgeSet {
   };
 }
 
-/**
- * Chatterino's flattened list is thousands of entries; almost none match a
- * given chatter. Large enough to punish a per-message linear scan.
- */
 const denseChatterinoBadges = Array.from({ length: 2500 }, (_, index) =>
   createChatterinoBadge(index),
 );

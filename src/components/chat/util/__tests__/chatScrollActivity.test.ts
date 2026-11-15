@@ -36,7 +36,6 @@ describe('chatScrollActivity', () => {
   });
 
   test('a burst of scroll ticks settles 150ms after the last tick', () => {
-    // Nine ticks at 16ms: pokes at 0..128ms, clock at 144ms after the loop.
     for (let tick = 0; tick < 9; tick += 1) {
       chatScrollActivity.poke();
       jest.advanceTimersByTime(16);
@@ -44,7 +43,6 @@ describe('chatScrollActivity', () => {
 
     expect(chatScrollActivity.isActive()).toBe(true);
 
-    // The window ends 150ms after the last poke: at 278ms, 134ms from now.
     jest.advanceTimersByTime(133);
     expect(chatScrollActivity.isActive()).toBe(true);
 

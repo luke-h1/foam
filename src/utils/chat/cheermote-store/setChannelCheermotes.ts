@@ -41,10 +41,6 @@ export function setChannelCheermotes(
     }
   });
 
-  /**
-   * The Map doubles as an LRU: delete-before-set moves the channel to the
-   * newest position, so eviction takes the least recently used key.
-   */
   cheermotesByChannel.delete(channelId);
 
   const evicted =

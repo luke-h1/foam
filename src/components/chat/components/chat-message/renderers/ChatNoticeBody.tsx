@@ -10,10 +10,7 @@ import { getChatTextStyles } from '../ChatText.styles';
 import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
 import type { ChatTokenRenderProps } from './types/chat-token-render-props';
 import { WrappedTokens } from './WrappedTokens';
-/**
- * `announcement` and `user_chat` are dispatched by `ChatRow.Body` before
- * this component, so every variant reaching here has a row in the table below.
- */
+
 type ChatNoticeVariant = Exclude<ChatBodyVariant, 'announcement' | 'user_chat'>;
 
 const NOTICE_BODY_MODES = {

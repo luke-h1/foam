@@ -31,10 +31,6 @@ import { parseColor } from './util/helper';
 let cachedShaderSource: ReturnType<typeof Skia.RuntimeEffect.Make> | null =
   null;
 
-/**
- * Compiled on first orb mount instead of at module scope - the SkSL compile
- * plus Skia host-object init otherwise runs at import time on every launch.
- */
 function getShaderSource() {
   cachedShaderSource ??= Skia.RuntimeEffect.Make(SHADER_SOURCE);
   return cachedShaderSource;

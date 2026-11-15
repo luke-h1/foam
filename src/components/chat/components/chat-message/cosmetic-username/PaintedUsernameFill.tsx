@@ -14,10 +14,6 @@ interface PaintedUsernameFillProps {
   displayUsername: string;
   fallbackColor: string;
   paint: PaintData;
-  /**
-   * Must match the mask text style exactly (metrics, weight, transform) so
-   * the fill sizer reserves the same space the mask glyphs occupy.
-   */
   textStyle?: StyleProp<TextStyle>;
 }
 

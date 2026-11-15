@@ -23,10 +23,6 @@ export function TopSegmentedControl({
   );
 }
 
-/**
- * The segment is the Top tab's navigation bar title, so it keeps a fixed
- * width that leaves room for the bar button beside it.
- */
 const styles = StyleSheet.create({
   segmentFrame: {
     height: 36,

@@ -6,17 +6,11 @@ import { StyleSheet, View } from 'react-native';
 import {
   Column,
   HorizontalDivider,
-  ListItem,
-  type ListItemColors,
   RNHostView,
-  Row,
-  Switch,
   Text,
 } from '@expo/ui/jetpack-compose';
 import {
-  alpha,
   background,
-  clickable,
   clip,
   fillMaxWidth,
   padding,
@@ -24,19 +18,11 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 
 import { FoamComposeHost } from '@app/components/compose-host/FoamComposeHost';
-import { SegmentedButtons } from '@app/components/segmented-control/SegmentedControl.android';
-import {
-  getOptionIndex,
-  resolveIconName,
-  type RowIcon,
-  type SettingsLinkRowProps,
-  type SettingsRowProps,
-  type SettingsSectionProps,
-  type SettingsSegmentedRowProps,
-  type SettingsToggleRowProps,
-} from '@app/components/settings-section/SettingsSection.types';
-import { SymbolView } from '@app/components/ui/icon/Icon';
-import { iosMatchedSwitchColors } from '@app/styles/compose-switch-colors';
+import { SettingsLinkRow } from '@app/components/settings-section/SettingsLinkRow';
+import { SettingsRow } from '@app/components/settings-section/SettingsRow';
+import type { SettingsSectionProps } from '@app/components/settings-section/SettingsSection.types';
+import { SettingsSegmentedRow } from '@app/components/settings-section/SettingsSegmentedRow';
+import { SettingsToggleRow } from '@app/components/settings-section/SettingsToggleRow';
 import { theme } from '@app/styles/themes';
 
 function isComposeRow(element: ReactNode): boolean {
@@ -46,76 +32,6 @@ function isComposeRow(element: ReactNode): boolean {
       element.type === SettingsLinkRow ||
       element.type === SettingsToggleRow ||
       element.type === SettingsSegmentedRow)
-  );
-}
-
-const listItemColors = {
-  containerColor: theme.color.surfaceNeutral.dark,
-  contentColor: theme.color.text.dark,
-} satisfies ListItemColors;
-
-function IconTile({
-  icon,
-  danger,
-}: {
-  icon: NonNullable<RowIcon>;
-  danger?: boolean;
-}) {
-  return (
-    <View style={[styles.iconWrap, danger ? styles.iconWrapDanger : null]}>
-      <SymbolView
-        name={resolveIconName(icon.icon, icon.androidIcon)}
-        size={20}
-        tintColor={danger ? theme.colorRed : theme.color.textSecondary.dark}
-      />
-    </View>
-  );
-}
-
-function RowLeading({ icon, danger }: { icon?: RowIcon; danger?: boolean }) {
-  if (!icon) {
-    return null;
-  }
-
-  return (
-    <ListItem.LeadingContent>
-      <RNHostView matchContents>
-        <IconTile {...{ icon, danger }} />
-      </RNHostView>
-    </ListItem.LeadingContent>
-  );
-}
-
-function RowText({
-  title,
-  subtitle,
-  danger,
-}: {
-  title: string;
-  subtitle?: string;
-  danger?: boolean;
-}) {
-  return (
-    <>
-      <ListItem.HeadlineContent>
-        <Text
-          color={danger ? theme.colorRed : theme.color.text.dark}
-          style={{ typography: 'titleMedium' }}
-        >
-          {title}
-        </Text>
-      </ListItem.HeadlineContent>
-      {subtitle ? (
-        <ListItem.SupportingContent>
-          <Text
-            color={theme.color.textSecondary.dark}
-            style={{ typography: 'bodyMedium' }}
-          >
-            {subtitle}
-          </Text>
-        </ListItem.SupportingContent>
-      ) : null}
-    </>
   );
 }
 
@@ -179,150 +95,6 @@ export function SettingsSection({
   );
 }
 
-function getRowModifiers(
-  onPress: (() => void) | undefined,
-  disabled: boolean | undefined,
-) {
-  if (disabled) {
-    return [alpha(0.4)];
-  }
-
-  return onPress ? [clickable(onPress, { indication: true })] : [];
-}
-
-export function SettingsRow({
-  title,
-  subtitle,
-  icon,
-  trailing,
-  onPress,
-  danger,
-  disabled,
-  chevron = true,
-}: SettingsRowProps) {
-  return (
-    <ListItem
-      colors={listItemColors}
-      modifiers={getRowModifiers(onPress, disabled)}
-    >
-      <RowLeading {...{ icon, danger }} />
-      <RowText {...{ title, subtitle, danger }} />
-      {trailing || (onPress && chevron) ? (
-        <ListItem.TrailingContent>
-          <RNHostView matchContents>
-            {trailing ? (
-              <View>{trailing}</View>
-            ) : (
-              <SymbolView
-                name='chevron.right'
-                size={18}
-                tintColor={theme.colorGreyHoverAlpha}
-              />
-            )}
-          </RNHostView>
-        </ListItem.TrailingContent>
-      ) : null}
-    </ListItem>
-  );
-}
-
-export function SettingsToggleRow({
-  title,
-  subtitle,
-  icon,
-  value,
-  onValueChange,
-}: SettingsToggleRowProps) {
-  return (
-    <ListItem colors={listItemColors}>
-      <RowLeading icon={icon} />
-      <RowText {...{ title, subtitle }} />
-      <ListItem.TrailingContent>
-        <Switch
-          value={value}
-          onCheckedChange={onValueChange}
-          colors={iosMatchedSwitchColors}
-        />
-      </ListItem.TrailingContent>
-    </ListItem>
-  );
-}
-
-export function SettingsLinkRow({
-  title,
-  subtitle,
-  icon,
-  value,
-  onPress,
-  danger,
-}: SettingsLinkRowProps) {
-  return (
-    <ListItem
-      colors={listItemColors}
-      modifiers={onPress ? [clickable(onPress, { indication: true })] : []}
-    >
-      <RowLeading {...{ icon, danger }} />
-      <RowText {...{ title, subtitle, danger }} />
-      {value || onPress ? (
-        <ListItem.TrailingContent>
-          <Row
-            verticalAlignment='center'
-            horizontalArrangement={{ spacedBy: 8 }}
-          >
-            {value ? (
-              <Text
-                color={theme.color.textSecondary.dark}
-                style={{ typography: 'bodyMedium', fontWeight: '600' }}
-              >
-                {value}
-              </Text>
-            ) : null}
-            {onPress ? (
-              <RNHostView matchContents>
-                <SymbolView
-                  name='chevron.right'
-                  size={18}
-                  tintColor={theme.colorGreyHoverAlpha}
-                />
-              </RNHostView>
-            ) : null}
-          </Row>
-        </ListItem.TrailingContent>
-      ) : null}
-    </ListItem>
-  );
-}
-
-export function SettingsSegmentedRow<Value>({
-  title,
-  subtitle,
-  icon,
-  options,
-  value,
-  onValueChange,
-}: SettingsSegmentedRowProps<Value>) {
-  const handleChange = (index: number) => {
-    const option = options[index];
-
-    if (option) {
-      onValueChange(option.value);
-    }
-  };
-
-  return (
-    <Column modifiers={[fillMaxWidth()]}>
-      <SettingsRow {...{ title, subtitle, icon }} />
-      <Row modifiers={[fillMaxWidth(), padding(16, 0, 16, 12)]}>
-        <SegmentedButtons
-          items={options}
-          currentIndex={getOptionIndex(options, value)}
-          onChange={handleChange}
-        />
-      </Row>
-    </Column>
-  );
-}
-
 const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: theme.space16,
@@ -331,16 +103,5 @@ const styles = StyleSheet.create({
   },
   host: {
     marginBottom: theme.space24,
-  },
-  iconWrap: {
-    alignItems: 'center',
-    borderCurve: 'continuous',
-    borderRadius: theme.radius.sm,
-    height: 24,
-    justifyContent: 'center',
-    width: 24,
-  },
-  iconWrapDanger: {
-    opacity: 0.9,
   },
 });

@@ -63,7 +63,6 @@ export function buildTwitchLiveSyncScript(options: {
     }
 
     var drift = liveEdge - video.currentTime;
-    // Report drift: a small one means server-side latency no seek can cut.
     post('trace', {
       step: 'livesync',
       detail: 'edge=' + liveEdge.toFixed(1) + ' cur=' + video.currentTime.toFixed(1) + ' drift=' + (isFinite(drift) ? drift.toFixed(1) : '?') + 's'

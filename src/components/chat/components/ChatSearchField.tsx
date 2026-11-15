@@ -12,10 +12,6 @@ interface ChatSearchFieldProps {
   onQueryChange: (query: string) => void;
 }
 
-/**
- * Own component so closing search unmounts it, discarding the draft and
- * cancelling pending writes that would re-apply the filter after close.
- */
 export const ChatSearchField = memo(
   ({ onClose, onQueryChange }: ChatSearchFieldProps) => {
     const [draftQuery, setDraftQuery] = useState('');

@@ -58,8 +58,6 @@ export function createAnimationBudget(
       };
     },
     reset(): void {
-      // Unmounted cells' release closures still hold these slots; clearing
-      // `granted` first stops late releases dropping `grantedCount` below zero.
       for (const slot of slots) {
         slot.granted = false;
       }

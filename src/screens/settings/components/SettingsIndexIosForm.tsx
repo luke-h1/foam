@@ -62,11 +62,6 @@ interface SettingsIndexIOSFormProps {
   sections: SettingsMenuSection[];
 }
 
-/**
- * The first row of the form for a signed-in user. Only the avatar is a hosted
- * React Native view. The press and the text stay native, so the row behaves
- * like the other rows.
- */
 function AccountRow({ user }: { user: UserInfoResponse }) {
   return (
     <Button onPress={PROFILE_ROW.onPress} modifiers={[buttonStyle('plain')]}>

@@ -10,7 +10,7 @@ export function createScaleSlugs<TScale extends EmoteImageScale>(
   slugs: Record<TScale, string>,
   fallback: NoInfer<TScale>,
 ): ScaleSlugs<TScale> {
-  // SAFETY: Object.keys of a Record<TScale, string> returns exactly its keys.
+  // SAFETY: every caller passes an object literal keyed only by TScale, so Object.keys yields no other key.
   const scales = Object.keys(slugs) as TScale[];
 
   const isServedScale = (scale: EmoteImageScale): scale is TScale =>

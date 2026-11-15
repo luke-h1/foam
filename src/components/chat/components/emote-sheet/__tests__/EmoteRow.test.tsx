@@ -10,7 +10,6 @@ import { createMenuEmote } from './__fixtures__/emoteMenuData.fixture';
 
 jest.spyOn(ImageModule, 'Image').mockImplementation(() => <View />);
 
-// cellSize + EMOTE_CELL_GAP(4) = 44pt stride, so cell N spans [N*44, N*44 + 40].
 const CELL_SIZE = 40;
 
 function renderRow(items: EmotePickerItem[]) {

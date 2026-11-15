@@ -278,8 +278,6 @@ describe('TwitchWsService shared socket teardown', () => {
     await subscribe('channel.poll.begin', onBegin);
     await subscribe('channel.poll.end', onEnd);
 
-    // The unmount path in useChannelPoll / useChannelPrediction: several event
-    // types torn down through one Promise.all rather than sequentially.
     let resolveBegin: () => void = () => {};
 
     mockDeleteEventSubscription.mockImplementation(id =>
@@ -295,8 +293,6 @@ describe('TwitchWsService shared socket teardown', () => {
       TwitchWsService.unsubscribeFromEvent('channel.poll.end', onEnd),
     ]);
 
-    // Let the sibling settle and run teardown while the first delete is still
-    // in flight, then release it.
     await Promise.resolve();
 
     resolveBegin();

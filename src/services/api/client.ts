@@ -51,8 +51,7 @@ interface ClientOptions {
   provider?: ProviderId;
   isExpectedFailure?: (status: number, body: string) => boolean;
   /**
-   * Per-request timeout in ms. Without one, a hung request never rejects and
-   * the query stays pending forever.
+   * Per-request timeout in ms.
    */
   timeout?: number;
   /**
@@ -160,8 +159,6 @@ export function createApiClient({
           status: String(response.status),
           endpoint: String(context.endpoint ?? path),
         },
-        // Group by service + method + path + status so each broken endpoint
-        // creates exactly one Sentry issue regardless of query params.
         fingerprint: [service, method, path, String(response.status)],
         action: 'response_error_status',
         ...context,
@@ -311,8 +308,6 @@ export function createApiClient({
           timeoutMs: timeout,
         });
 
-        // 408 Request Timeout gives downstream code (and react-query retries) a
-        // meaningful status instead of an opaque AbortError.
         throw new ApiError(
           `${method} ${path} timed out after ${timeout}ms`,
           408,

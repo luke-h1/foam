@@ -1,10 +1,6 @@
 import type { TimedCacheEntry } from '@app/utils/chat/shared-chat-badges/types';
 import { setBoundedMapEntry } from '@app/utils/collection/setBoundedMapEntry';
 
-/**
- * Render caches for chat colours, read imperatively at up to ~100 msg/s and
- * never subscribed - plain Maps per the chat-state rule.
- */
 const CHAT_SESSION_CACHE_TTL_MS = 30_000;
 
 export type SessionCacheBucket = 'mentionColors' | 'lightenedColors';

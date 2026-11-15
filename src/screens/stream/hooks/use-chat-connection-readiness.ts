@@ -10,10 +10,6 @@ import { setMeasuredVideoLatencySeconds } from '@app/store/stream/video-latency'
 
 import type { LiveStreamScreenAction } from '../util/liveStreamScreenReducer';
 
-/**
- * Chat waits for the player to report it is running so the two start in sync.
- * This is the backstop for a player that never reports.
- */
 const CHAT_CONNECTION_FALLBACK_MS = 10_000;
 
 export function useChatConnectionReadiness({

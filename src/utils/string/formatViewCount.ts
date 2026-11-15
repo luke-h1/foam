@@ -1,9 +1,5 @@
 let viewCountFormatter: Intl.NumberFormat | null = null;
 
-/**
- * Built on first format - ICU formatter construction at module scope sat on
- * the boot path via LiveStreamCard.
- */
 function getViewCountFormatter() {
   viewCountFormatter ??= new Intl.NumberFormat('en-US');
   return viewCountFormatter;

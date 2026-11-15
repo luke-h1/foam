@@ -4,10 +4,6 @@ import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 
 import { styles } from '../chat-message/ChatRow.styles';
 
-/**
- * The channel-points reward Twitch attaches to some milestones; absent or
- * unparseable means the milestone carried no reward.
- */
 export function MilestoneReward({
   reward,
   style,

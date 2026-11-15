@@ -6,17 +6,13 @@
 #   bun run ci:local lint ts      # only the named jobs
 #   SKIP_DOCTOR=1 bun run ci:local
 #
-# Each job's full output goes to a log in .ci-local/. The summary names the log
-# and prints its failure lines, so a failing test is findable without scrolling
-# the combined output.
-#
 # Jobs mirror .github/workflows, and like the CI matrices this does not fail
 # fast: every job runs and the summary at the end lists what broke.
 #
-# Two jobs are close rather than exact. React Doctor runs the latest CLI where
-# CI pins v2.2.9, though both scan the same changed-files-against-the-merge-base
-# baseline. zizmor runs with --offline to match the action's
-# `online-audits: false`; online audits flagged findings CI never reports.
+# React Doctor runs the latest CLI, as CI does: the action is pinned at v2.4.0,
+# but its `version` input defaults to the npm `latest` tag. zizmor runs with
+# --offline to match the action's `online-audits: false`; online audits flagged
+# findings CI never reports.
 #
 # The native lint jobs skip themselves when swiftlint/swiftformat/ktlint are not
 # installed, and the Kotlin one has nothing to scan until `bun run prebuild` has
@@ -60,8 +56,6 @@ run() {
   fi
 }
 
-# The lines that name what broke: Jest suites and tests, tsc errors and
-# oxlint errors. A job with none of those markers shows the end of its log.
 print_failure_lines() {
   local log lines
   log="$(log_path "$1")"
@@ -184,8 +178,6 @@ if wants test; then
 fi
 
 if wants native; then
-  # Both scripts warn and exit 0 when their tool is missing, so they report as
-  # passes rather than skips on a machine without swiftlint or ktlint.
   run 'SwiftLint' env LINT_CHECK=1 ./scripts/lint-swift.sh
 
   # ktlint is handed the tracked files explicitly. Left to pick its own roots it
@@ -204,7 +196,9 @@ if wants native; then
 fi
 
 if wants commitlint; then
-  if git rev-parse --verify --quiet HEAD^1 >/dev/null; then
+  if git rev-parse --verify --quiet origin/main >/dev/null; then
+    run 'Commitlint' bun run commitlint --from=origin/main --to=HEAD
+  elif git rev-parse --verify --quiet HEAD^1 >/dev/null; then
     run 'Commitlint' bun run commitlint --from=HEAD^1
   else
     skip 'Commitlint' 'no parent commit to lint against'

@@ -50,10 +50,8 @@ interface UseLiveStreamAnimatedLayoutOptions {
 }
 
 /**
- * Owns the animated layer: the shared values the styles read, the layout sync
- * that updates them atomically on rotation, and the landscape resize gesture.
- * Layout inputs are mirrored as shared values because reading JS values from a
- * worklet caused a one-frame flicker on rotation.
+ * Layout inputs are mirrored as shared values. A worklet that reads JS values
+ * flickers for one frame on rotation.
  */
 export function useLiveStreamAnimatedLayout({
   chatDimensions,
@@ -110,7 +108,6 @@ export function useLiveStreamAnimatedLayout({
 
     previousIsLandscapeRef.current = isLandscape;
 
-    // Snap position inputs in the same pass as the dimensions to avoid a rotation flicker.
     landscapeSV.set(isLandscape ? 1 : 0);
 
     insetLeftSV.set(landscapeInsetLeft);
@@ -131,7 +128,6 @@ export function useLiveStreamAnimatedLayout({
       chatWidth.set(effectiveChatWidth);
       chatHeight.set(effectiveChatHeight);
 
-      // Snap chat into place on rotation with no reveal. A fade here makes rapid rotation slow.
       chatOpacity.set(isLandscapeChatHidden ? 0 : 1);
 
       chatTranslateX.set(
@@ -204,8 +200,6 @@ export function useLiveStreamAnimatedLayout({
     width: videoWidth.get(),
   }));
 
-  // Hidden chat keeps its width so the panel can slide off. Controls follow
-  // the hidden flag and sit on the screen edge.
   const animatedFullscreenControlsStyle = useAnimatedStyle(() => ({
     right:
       theme.space16 +

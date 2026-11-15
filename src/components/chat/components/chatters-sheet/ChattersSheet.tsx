@@ -128,8 +128,6 @@ const ChattersSheetComponent = ({
   } = useSafeAreaInsets();
   const sheetHeight = useChatSheetHeight(SHEET_LAYOUT);
 
-  // Snapshot on mount: the sheet is remounted per open, and live-updating a
-  // list of every chatter on each message would churn for no benefit.
   const allChatters = useMemo(() => getAllMentionChatters(), []);
 
   const items = useMemo(

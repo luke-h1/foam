@@ -21,8 +21,6 @@ describe('fetchChannelCheermotes', () => {
         }),
     );
 
-    // A second in-flight call must reuse the first fetch, so its own fetcher
-    // never runs and never lands its distinct result.
     const second = fetchChannelCheermotes('123', () =>
       Promise.resolve([makeCheermote('Bonk')]),
     );

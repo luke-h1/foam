@@ -22,8 +22,6 @@ if ! command -v xcode-build-server >/dev/null; then
   exit 1
 fi
 
-# ios/ is Expo CNG output. Keep an existing one, so the app variant it was
-# generated for does not change.
 if [[ ! -d "$APP/ios" ]]; then
   (cd "$APP" && CI=1 bunx expo prebuild -p ios)
 fi

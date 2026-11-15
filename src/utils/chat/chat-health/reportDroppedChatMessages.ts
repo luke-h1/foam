@@ -48,10 +48,6 @@ function flushDroppedChatMessages(
   state.droppedSinceReport = 0;
   state.lastReportAt = Date.now();
 
-  /**
-   * A buffer overflow means the pipeline lost rows it meant to show. The rate
-   * limit and the delay ceiling drop by design, so they report as warnings.
-   */
   if (reason === 'ingest-buffer-overflow') {
     logger.chat.error('chat.pipeline.messages_dropped', {
       name: 'twitch_chat_error',
@@ -73,10 +69,6 @@ function flushDroppedChatMessages(
   });
 }
 
-/**
- * Reports whatever built up during the rest of a rate-limit window, so a burst
- * that never repeats still reaches Sentry.
- */
 function flushTrailingDrops(state: ReportState): void {
   state.trailingReportTimer = null;
 

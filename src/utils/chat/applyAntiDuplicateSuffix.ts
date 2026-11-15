@@ -15,7 +15,6 @@ export function applyAntiDuplicateSuffix(
     return message;
   }
 
-  // Codepoints, matching the composer's budget: emoji must not read as two.
   if (messageLength(message) + 2 > MAX_MESSAGE_LENGTH) {
     return message;
   }

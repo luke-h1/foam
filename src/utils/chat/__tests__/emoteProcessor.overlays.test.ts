@@ -53,7 +53,6 @@ describe('processEmotes zero-width overlays', () => {
     const base = emotePart(result[0]);
     expect(base.id).toBe('base-emote');
 
-    // The duplicate SoSnowy is consumed, not stacked a second time.
     expect((base.overlaid ?? []).map(overlay => overlay.id)).toEqual([
       'zw-snow',
     ]);

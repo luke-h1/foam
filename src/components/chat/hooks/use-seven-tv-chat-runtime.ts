@@ -43,9 +43,6 @@ export function useSevenTvChatRuntime({
     onEmoteNotice: handleNewMessage,
   });
 
-  // The channel owner's 7TV user id backs the user.update subscription that
-  // detects live emote-set switches; the channel id is the owner's Twitch id.
-  // Keyed by channel so a stale resolution never leaks across a channel hop.
   const [resolvedOwner, setResolvedOwner] = useState<{
     channelId: string;
     sevenTvUserId?: string;
@@ -117,8 +114,6 @@ export function useSevenTvChatRuntime({
   const wsConnected = readyState === ReadyState.OPEN && isConnected();
   const unsubscribeFromChannelRef = useSyncRef(unsubscribeFromChannel);
 
-  // `onEmoteSetSwitch` must exist before useSevenTvWs returns
-  // `subscribeToChannel`, so it reads this ref. Fill it on commit, not during render.
   useLayoutEffect(() => {
     subscribeToChannelRef.current = subscribeToChannel;
   });

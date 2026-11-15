@@ -1,5 +1,4 @@
 /* eslint-disable no-param-reassign */
-/* eslint-disable @typescript-eslint/no-require-imports */
 const {
   createRunOncePlugin,
   withAndroidManifest,

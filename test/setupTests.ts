@@ -150,7 +150,6 @@ beforeEach(() => {
   require('expo-secure-store').__resetSecureStore?.();
 });
 
-// Pending Helix mention-flush timers keep Jest alive after green chat-perf suites.
 afterEach(() => {
   require('@app/store/chat/actions/mention-login-lookup').resetMentionLogins();
 });

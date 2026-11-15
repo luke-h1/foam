@@ -74,8 +74,7 @@ function getVirtualizedWindow(
 }
 
 /**
- * Overrides the render-everything KeyboardAwareLegendList mock with a windowing
- * fake; `require` because spyOn needs the module object, not babel's interop copy.
+ * `require` because spyOn needs the module object, not babel's interop copy.
  */
 // SAFETY: reattaches the module type `require` erases so spyOn type-checks.
 const legendListKeyboard =

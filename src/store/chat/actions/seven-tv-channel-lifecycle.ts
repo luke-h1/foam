@@ -48,8 +48,6 @@ export const notify7TVPresence = async (
   }
 };
 
-// Bounded like the other per-key guards; 100 channels comfortably exceeds a
-// realistic session.
 const MAX_TRACKED_CHANNEL_ENTRIES = 100;
 
 // 7TV rebroadcasts entitlements channel-wide on every active presence, so cap
@@ -98,8 +96,6 @@ export const getSevenTvEmoteSetId = (channelId?: string): string | null => {
   return cache?.sevenTvEmoteSetId ?? null;
 };
 
-// Guards the check-fetch-assign sequence: without this a slower racing
-// fetch's assign would win, leaving the cache on a stale set.
 const latestRequestedEmoteSetByChannel = new Map<string, string>();
 
 export const switchSevenTvEmoteSet = async (
@@ -123,8 +119,6 @@ export const switchSevenTvEmoteSet = async (
     MAX_TRACKED_CHANNEL_ENTRIES,
   );
 
-  // The cached 7TV user still points at the set being replaced, and the next
-  // full load would resolve it back.
   invalidateSevenTvUser(channelId);
 
   try {

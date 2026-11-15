@@ -56,12 +56,8 @@ export function buildTwitchContentGateWatcherScript(): string {
     return isInAuthFlow() || isBlockingGate();
   }
 
-  // Tapping the gate's login link removes the gate from the DOM, which fires the
-  // observer's check() a beat before window.location updates to the auth host -
-  // so both predicates momentarily read false. Handing interaction straight back
-  // then would kill the WebView just as the login form appears. Once we've been
-  // interactive, defer any clear so a pending navigation can settle first; if the
-  // page is still on the embed with no gate after that, it was a genuine clear.
+  // Twitch removes the gate from the DOM before window.location moves to the
+  // auth host, so both checks read false for a moment. Wait before clearing.
   var clearTimer = null;
 
   function check() {

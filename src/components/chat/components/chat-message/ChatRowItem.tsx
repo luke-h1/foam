@@ -42,10 +42,6 @@ function decideRowEntrance(
   };
 }
 
-/**
- * A row renders the whole message union, so notice tags go through a runtime
- * guard rather than the generic.
- */
 function getRowNoticeTags(
   message: AnyChatMessageType,
 ): UserNoticeTags | undefined {

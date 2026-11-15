@@ -7,10 +7,6 @@ import type {
   TwitchSanitisedEmote,
 } from '@app/types/emote';
 
-/**
- * Dropping the two discriminants keeps this assignable to each provider's own
- * partial, so the branches below stay checked instead of asserted.
- */
 export type MenuEmoteOverrides = Partial<
   Omit<SevenTvSanitisedEmote, 'provider' | 'site'> &
     Omit<TwitchSanitisedEmote, 'provider' | 'site'> &

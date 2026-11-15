@@ -1,5 +1,4 @@
 /* eslint-disable no-param-reassign */
-/* eslint-disable @typescript-eslint/no-require-imports */
 const {
   createRunOncePlugin,
   withAppBuildGradle,
@@ -23,7 +22,6 @@ const withProfileInstallerDependency = config =>
     return configWithGradle;
   });
 
-// android/ is generated, so the profile is copied in on every prebuild.
 const withBaselineProfileFile = config =>
   withDangerousMod(config, [
     'android',

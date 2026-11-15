@@ -20,17 +20,8 @@ type ChatEmoteData = ReturnType<typeof getCurrentEmoteData>;
 const ENRICH_BATCH_SIZE = 6;
 const ENRICH_BATCH_DELAY_MS = 32;
 
-/**
- * The first batch commits at once so emotes start to show. Later batches
- * commit every fourth, so a full window is a handful of store writes rather
- * than one per batch while live rows are also committing.
- */
 const ENRICH_PUBLISH_EVERY_BATCHES = 4;
 
-/**
- * The one skip predicate for post-commit enrichment: system rows and most
- * user notices never have their tokens or badges recomputed.
- */
 export function shouldEnrichMessage(message: AnyChatMessageType): boolean {
   if (isSystemSender(message.sender)) {
     return false;

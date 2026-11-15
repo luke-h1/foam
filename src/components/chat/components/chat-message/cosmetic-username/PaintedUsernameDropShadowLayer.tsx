@@ -12,10 +12,6 @@ interface PaintedUsernameDropShadowLayerProps {
   shadow: PaintShadow;
 }
 
-/**
- * A solid glyph copy in the shadow color plus a same-color text shadow for
- * the blur halo reproduces CSS `drop-shadow()` without a MaskedView per shadow.
- */
 export function PaintedUsernameDropShadowLayer({
   displayUsername,
   maskTextStyle,

@@ -8,10 +8,6 @@ interface BuildStreamSourceKeyOptions {
   video: string | undefined;
 }
 
-/**
- * Identifies one embed source. Any change here means the WebView must reload,
- * so every value the embed URL is built from belongs in it.
- */
 export function buildStreamSourceKey({
   autoplay,
   channel,

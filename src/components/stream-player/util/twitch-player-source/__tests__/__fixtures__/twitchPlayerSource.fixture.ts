@@ -1,8 +1,8 @@
 import { JSDOM } from 'jsdom';
 import { createContext, runInContext } from 'node:vm';
 
-// Fixture-owned JSDOM: native Jest env has no document. Use JSDOM's Event —
-// Node's Event is skipped by dispatchEvent.
+// The native Jest environment has no document. Use the JSDOM Event, because
+// dispatchEvent skips a Node Event.
 const playerDom = new JSDOM(
   '<!DOCTYPE html><html><head></head><body></body></html>',
   {

@@ -10,10 +10,6 @@ const MEASURE_OPTIONS = {
   warmupRuns: 1,
 } as const;
 
-/**
- * `capMentionIndex` holds 8000 entries per index; the login-only half has to
- * synthesise a colour per match.
- */
 function seedIndexes(): void {
   resetMentionLogins();
 
@@ -29,10 +25,6 @@ function seedIndexes(): void {
 
 seedIndexes();
 
-/**
- * A single leading character matches nearly the whole index, which is the worst
- * case and also the first keystroke of every mention the user types.
- */
 describe('searchMentionChatters performance', () => {
   test('searches a broad single-character query', async () => {
     await measureFunction(() => {

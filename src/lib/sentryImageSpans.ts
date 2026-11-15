@@ -57,7 +57,6 @@ function trackImageSpan<T>(
     return run();
   }
 
-  // First of deadline/settlement wins: a late setStatus would rewrite deadline_exceeded to ok.
   let settled = false;
 
   const deadline = setTimeout(() => {

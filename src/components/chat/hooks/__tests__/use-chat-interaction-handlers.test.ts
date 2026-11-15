@@ -150,7 +150,6 @@ describe('useChatOverlayActions', () => {
 
     expect(chatOverlays$.peek().isSettingsSheetMounted).toBe(true);
 
-    // Opening a surface closes the previous one; only one sheet is ever up.
     expect(chatOverlays$.peek().isEmoteSheetMounted).toBe(false);
 
     act(() => {

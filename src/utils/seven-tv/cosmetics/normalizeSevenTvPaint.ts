@@ -1,5 +1,4 @@
-// `shape` here mirrors the 7TV paint API field name, not a naming choice.
-// oxlint-disable anti-slop/no-shape-in-symbol-names
+// oxlint-disable anti-slop/no-shape-in-symbol-names -- mirrors the 7TV paint API field name
 import type {
   PaintCanvasRepeat,
   PaintData,
@@ -39,10 +38,6 @@ type NormalizeSevenTvPaintInput = RawSevenTvPaintInput & {
   text?: RawPaintTextStyleInput | null;
 };
 
-/**
- * 7TV sends shadows as a plain array; the paint store keeps them in an
- * index-keyed collection so a sparse entry stays at its own slot.
- */
 function toIndexedShadows(
   shadows: Extract<
     NonNullable<RawPaintTextStyleInput['shadows']>,
@@ -155,10 +150,6 @@ function normalizePaintLayer(layer: PaintGradientLayer): PaintLayerData {
   };
 }
 
-/**
- * Already-shaped layers (an MMKV rehydrate) skip normalizePaintLayer, so they
- * need the same url repair.
- */
 function withAbsoluteLayerImageUrls(
   layers: IndexedCollection<PaintLayerData>,
 ): IndexedCollection<PaintLayerData> {

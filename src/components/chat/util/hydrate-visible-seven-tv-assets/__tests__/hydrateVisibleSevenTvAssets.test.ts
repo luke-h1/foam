@@ -285,8 +285,6 @@ describe('hydrateVisibleSevenTvAssets', () => {
     expect(secondPassDidReprocess).toBe(false);
   });
 
-  // Reprocess calls must spread across event-loop turns: a whole screenful
-  // re-parsing in one tick was the #1 Sentry chat hotspot (p75 157ms).
   test('spreads cached-asset reprocessing across event-loop turns', async () => {
     const messages = Array.from({ length: 24 }, (_, index) =>
       createMessageForUser(`turn-user-${index}`),
@@ -334,10 +332,6 @@ describe('hydrateVisibleSevenTvAssets', () => {
     expect(maxSyncChunk).toBeLessThanOrEqual(6);
   });
 
-  /**
-   * The surface can unmount or hop channels while a pass sleeps between
-   * slices; stale passes must not keep reprocessing.
-   */
   test('stops cached-asset reprocessing once shouldContinue returns false', async () => {
     const messages = Array.from({ length: 24 }, (_, index) =>
       createMessageForUser(`cancel-user-${index}`),

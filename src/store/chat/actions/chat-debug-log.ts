@@ -128,10 +128,6 @@ export function getChatDebugIrcLines(channelId: string): ChatDebugIrcLine[] {
   return (buffers.get(channelId) ?? []).slice().reverse();
 }
 
-/**
- * Matches the sender prefix, the login tags and a CLEARCHAT target, never the
- * trailing text, so a user who types a login does not match.
- */
 function isLineForLogin(line: string, target: string): boolean {
   const message = parseIrcMessage(line);
 

@@ -105,8 +105,6 @@ function getBaseCollectionKey(
   bttvChannelEmotes: SanitisedEmote[],
   bttvGlobalEmotes: SanitisedEmote[],
 ): string {
-  // One-entry identity memo: nine pointer compares per message instead of
-  // nine WeakMap reads plus an array and a join.
   const last = lastBaseKeyInputs;
 
   if (
@@ -124,8 +122,6 @@ function getBaseCollectionKey(
     return lastBaseKey;
   }
 
-  // Content-derived so a rebuilt array with unchanged emotes keys the same -
-  // identity keying re-parsed the whole window (~800ms) after an emote_set.update.
   const key = [
     getEmoteArrayContentKey(emojiEmotes),
     getEmoteArrayContentKey(sevenTvGlobalEmotes),
@@ -267,17 +263,9 @@ const contentIdByIds = new Map<string, number>();
 const MAX_CONTENT_ID_CACHE_SIZE = 32;
 let nextContentId = 0;
 
-/**
- * Small integer standing in for the array's contents - spelling the ids into
- * the key scaled per-message cost with the account's unlocked emotes.
- */
 function mintEmoteContentId(idsKey: string): number {
   nextContentId += 1;
 
-  /**
-   * Eviction mints a fresh id for contents seen again, costing a parse-cache
-   * miss and never a wrong hit.
-   */
   evictOldestWhenFull(contentIdByIds, MAX_CONTENT_ID_CACHE_SIZE);
 
   contentIdByIds.set(idsKey, nextContentId);
@@ -348,8 +336,6 @@ function createScopedEmoteLookup(
   return lookup;
 }
 
-// Pure-ASCII words can never match the emoji map, so skip the per-word
-// code-point expansion for them.
 function hasNonAsciiChar(word: string): boolean {
   for (let i = 0; i < word.length; i += 1) {
     if (word.charCodeAt(i) > 0x7f) {
@@ -430,7 +416,6 @@ function stackZeroWidthEmote(
 
   out.length = anchor + 1;
 
-  // Skip duplicate overlay ids (double decode + darkened alpha).
   const alreadyStacked =
     base.id === token.id ||
     (base.overlaid?.some(overlay => overlay.id === token.id) ?? false);

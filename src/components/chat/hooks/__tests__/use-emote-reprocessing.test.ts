@@ -43,10 +43,6 @@ const kappa = createSevenTvEmote({
   url: 'https://cdn.example.test/kappa.webp',
 });
 
-/**
- * A message that reached the store without a userstate, which the enrichment
- * pass has to skip rather than reprocess.
- */
 interface MessageWithoutUserstate extends Omit<
   AnyChatMessageType,
   'userstate'
@@ -165,8 +161,6 @@ describe('useEmoteReprocessing', () => {
   });
 
   test('still reprocesses a personal-emote-only channel when 7TV emotes are enabled', async () => {
-    // Personal 7TV emotes live outside the channel emote data, so an empty
-    // channel set must not gate the reprocess pass off when 7TV is enabled.
     seedChannelCache();
 
     jest

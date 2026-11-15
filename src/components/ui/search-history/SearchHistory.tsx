@@ -22,7 +22,6 @@ const SWIPE_THRESHOLD = -80;
 const DELETE_THRESHOLD = -150;
 const HISTORY_ROW_HEIGHT = 44;
 
-// Width of the resting (snapped-open) delete affordance.
 const ACTION_WIDTH = 88;
 
 const SNAP_SPRING = { damping: 20, stiffness: 200, mass: 4 };
@@ -95,15 +94,12 @@ function SwipeableHistoryItem({
     overflow: 'hidden',
   }));
 
-  // The red fill grows with the swipe so no bare background peeks through.
   const animatedDeleteStyle = useAnimatedStyle(() => ({
     // Width reveal clips to the fixed-width trash button; scaleX would squash it.
     // ast-grep-ignore: no-animated-layout-props-tsx
     width: Math.max(-translateX.get(), 0),
   }));
 
-  // Pinned right in a fixed-width slot so the icon + label don't drift as the
-  // fill expands; eases in as the action is revealed.
   const animatedDeleteContentStyle = useAnimatedStyle(() => {
     const progress = interpolate(
       translateX.get(),
@@ -171,8 +167,6 @@ interface SearchHistoryProps {
   onClearAll: () => void;
 }
 
-// The history section does not scroll; anything beyond this would render
-// underneath the floating search bar.
 const MAX_VISIBLE_HISTORY = 8;
 
 export function SearchHistory({

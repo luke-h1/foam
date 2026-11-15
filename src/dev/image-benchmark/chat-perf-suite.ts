@@ -1,5 +1,3 @@
-// DEV-ONLY deterministic Chat Perf suite; each phase pins a flood preset and resetFloodReplay restarts the fixture so runs feed a byte-identical stream.
-
 export interface SuitePhase {
   preset: string;
   measureMs: number;
@@ -13,9 +11,6 @@ export interface PhaseResult {
   jankPerSec: number;
   droppedPct: number;
   messages: number;
-  /**
-   * UI-thread frame health (Reanimated useFrameCallback); the JS fps/jank above is inflated by the flood timer + Metro, so uiJankPerSec is the metric that answers "no jank".
-   */
   uiFpsAvg: number;
   uiJankPerSec: number;
   memStartMb: number;
@@ -28,9 +23,6 @@ export interface PhaseResult {
 
 export const WARMUP_MS = 5000;
 
-/**
- * Flood-off gap so decoded-image memory / GC settles; back-to-back heavy phases can OOM the simulator.
- */
 export const COOLDOWN_MS = 10_000;
 
 export const SUITE_PHASES: SuitePhase[] = [

@@ -23,10 +23,6 @@ import { formatViewCount } from '@app/utils/string/formatViewCount';
 interface MyClipListItem {
   record: CreatedClipRecord;
   clip?: TwitchClip;
-  /**
-   * True while clip details are still loading, so the row shows a
-   * placeholder instead of "Processing".
-   */
   loading: boolean;
 }
 

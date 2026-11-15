@@ -47,8 +47,6 @@ import {
 } from './api/env';
 import { validateTwitchToken } from './api/twitch-token-validation';
 
-// Cap follow-list pagination so a pathological follow count (Helix allows
-// thousands) can't fan out into dozens of sequential requests on tab load.
 const MAX_FOLLOWED_CHANNELS = 400;
 
 const tokenExpirySecondsSchema = z.number();

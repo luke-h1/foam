@@ -169,7 +169,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     handleExitLandscape();
   }, [handleExitLandscape]);
 
-  // portrait_up forces the screen back to portrait. Once that has happened, allow rotation again.
   if (screenOrientation === 'portrait_up' && !isLandscape) {
     setScreenOrientation('default');
   }
@@ -193,7 +192,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     enabled: isStreamEnabled && shouldFetchChannelMetadata,
   });
 
-  // `null` means the channel is offline.
   const stream = streamData ?? undefined;
 
   const { data: user } = useQuery({

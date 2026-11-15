@@ -53,8 +53,6 @@ export function PaintedUsernameHostedLayers({
   const paintTextStyle = buildPaintUsernameTextStyle(paint);
   const rawTextureUrl = getPaintTextureUrl(paint);
 
-  // Web paints with CSS and never reads this flag. An empty url skips the
-  // Skia fetch. Native waits on the WebP sibling, which is what Skia can decode.
   const textureUrl =
     Platform.OS === 'web' || !rawTextureUrl
       ? ''

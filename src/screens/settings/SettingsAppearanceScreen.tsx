@@ -6,20 +6,14 @@ import {
   View,
 } from 'react-native';
 
-import {
-  SettingsSection,
-  SettingsToggleRow,
-} from '@app/components/settings-section/SettingsSection';
+import { SettingsSection } from '@app/components/settings-section/SettingsSection';
+import { SettingsToggleRow } from '@app/components/settings-section/SettingsToggleRow';
 import { useScrollToTop } from '@app/hooks/use-scroll-to-top';
 import { updatePreferences, usePreference } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
 
 import { SHAKE_TO_REPORT_ICON } from './constants';
 
-/**
- * Haptics and shake to report. The route keeps its `appearance` name so
- * existing links still resolve.
- */
 export function SettingsAppearanceScreen() {
   const hapticFeedback = usePreference('hapticFeedback');
   const shakeToReport = usePreference('shakeToReport');

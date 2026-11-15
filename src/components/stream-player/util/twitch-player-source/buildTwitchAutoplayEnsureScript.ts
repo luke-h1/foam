@@ -82,7 +82,6 @@ export function buildTwitchAutoplayEnsureScript(options: {
     prepare(video);
 
     if (!video.paused) {
-      // Already playing: go inert so we never force play over a user/native pause.
       stopped = true;
       reconcileAudio(video);
       return;
@@ -115,7 +114,6 @@ export function buildTwitchAutoplayEnsureScript(options: {
     pump();
   };
 
-  // Native calls this on pause so the loop stops fighting teardown.
   window.__foamStopEnsurePlaying = function() {
     stopped = true;
   };

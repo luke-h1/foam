@@ -2,18 +2,11 @@ import { SEVEN_TV_CACHE_NAMESPACE, storageService } from '@app/lib/storage';
 import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
 import { evictOldestWhenFull } from '@app/utils/collection/evictOldestWhenFull';
 
-// Bumped from `user-id:`: older entries have no emoteSetId and would read back
-// as a user with no active set.
 const SEVEN_TV_USER_CACHE_PREFIX = 'user:v2:';
 
 const SEVEN_TV_USER_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
 const SEVEN_TV_USER_NEGATIVE_CACHE_TTL_MS = 30 * 60 * 1000;
 
-/**
- * Matches the one-hour channel cache window, so an emote set switch made
- * while the user was away shows on the same schedule as the rest of the
- * channel.
- */
 export const SEVEN_TV_EMOTE_SET_MAX_AGE_MS = 60 * 60 * 1000;
 
 const SEVEN_TV_USER_STORAGE_KEY_PREFIX = 'sevenTvUserId_';
@@ -70,8 +63,6 @@ export function createSevenTvUserCache(
 
   const requestGuard = createFetchOnceGuard();
 
-  // Positive resolutions only, so the negative TTL still lets a new account
-  // resolve. Expiry tracked here too: user ids never change, emote sets do.
   const resolvedSevenTvUsers = new Map<string, CachedSevenTvUser>();
 
   function rememberResolvedSevenTvUser(
@@ -187,10 +178,6 @@ export function createSevenTvUserCache(
       });
     },
 
-    /**
-     * Drops one user, for when something else already knows the record is
-     * stale - the EventAPI reporting that a channel switched emote set.
-     */
     invalidate(twitchUserId: string): void {
       resolvedSevenTvUsers.delete(twitchUserId);
       storage.delete(

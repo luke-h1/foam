@@ -9,11 +9,9 @@ import {
   CHAT_SETTINGS_SHEET_DETENT,
   type ChatSheetLayout,
 } from '@app/components/chat/components/sheet/util/chatSheetLayout';
-import {
-  SettingsLinkRow,
-  SettingsSection,
-  SettingsToggleRow,
-} from '@app/components/settings-section/SettingsSection';
+import { SettingsLinkRow } from '@app/components/settings-section/SettingsLinkRow';
+import { SettingsSection } from '@app/components/settings-section/SettingsSection';
+import { SettingsToggleRow } from '@app/components/settings-section/SettingsToggleRow';
 import {
   CONTEXT_TOGGLE_ROWS,
   DENSITY_OPTIONS,

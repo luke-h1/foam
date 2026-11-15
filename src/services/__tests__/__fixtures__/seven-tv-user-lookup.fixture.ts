@@ -1,7 +1,3 @@
-/**
- * Real `UserByConnection` response bodies, so the parser is exercised against
- * the payload shape 7TV actually returns.
- */
 export const sevenTvUserResponse = (
   userId: string,
   activeEmoteSetId: string | null,

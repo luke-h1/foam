@@ -17,10 +17,6 @@ import { silenceLogger } from '@app/test/silence-logger';
 
 silenceLogger();
 
-const mockGetInstance = jest
-  .spyOn(TwitchWsService, 'getInstance')
-  .mockReturnValue(Object.create(WebSocket.prototype));
-
 const mockSubscribeToEvent = jest.spyOn(TwitchWsService, 'subscribeToEvent');
 
 const mockUnsubscribeFromEvent = jest.spyOn(
@@ -41,15 +37,12 @@ function renderEventSub(authContext: AuthContextState) {
 describe('useTwitchChannelPointsEventSub', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetInstance.mockReturnValue(Object.create(WebSocket.prototype));
     mockSubscribeToEvent.mockResolvedValue(undefined);
     mockUnsubscribeFromEvent.mockResolvedValue(undefined);
   });
 
   test('skips EventSub subscriptions when logged out', () => {
     renderEventSub(createLoggedOutAuthContextValue());
-
-    expect(mockGetInstance).not.toHaveBeenCalled();
 
     expect(mockSubscribeToEvent).not.toHaveBeenCalled();
   });
@@ -60,8 +53,6 @@ describe('useTwitchChannelPointsEventSub', () => {
         user: createTestUser({ id: 'viewer-id' }),
       }),
     );
-
-    expect(mockGetInstance).not.toHaveBeenCalled();
 
     expect(mockSubscribeToEvent).not.toHaveBeenCalled();
   });

@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react-native';
 
-import { SettingsToggleRow } from '../SettingsSection';
+import { SettingsToggleRow } from '../SettingsToggleRow';
 
 describe('SettingsToggleRow', () => {
   test('reflects the checked state from props', () => {

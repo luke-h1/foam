@@ -8,10 +8,8 @@ import { useSyncRef } from '@app/hooks/use-sync-ref';
 import { useUnmountCallback } from '@app/hooks/use-unmount-callback';
 import { impact } from '@app/lib/haptics';
 
-// A second tap within this window is the double-tap action, not two toggles.
 const DOUBLE_TAP_WINDOW_MS = 260;
 
-// Coalesce a burst of play taps: each fires a play() into the WebView and janks the screen.
 const PLAY_PAUSE_THROTTLE_MS = 500;
 
 const CONTROLS_AUTO_HIDE_MS = 5000;
@@ -50,7 +48,6 @@ function createVideoTapGesture(options: {
       scheduleOnRN(handleTapSettled, nextShown === 1, tapTime);
     });
 
-  // A swipe never competes with a tap, so compose them simultaneously (no added tap latency).
   if (!hasSwipeDown) {
     return tap;
   }
@@ -82,8 +79,6 @@ export function useStreamPlayerControls({
   play,
   playerIsPaused,
 }: UseStreamPlayerControlsOptions) {
-  // Visibility in shared values so the tap toggles controls on the UI thread even when JS is busy.
-  // controlsTarget = discrete 0/1 intent; controlsOpacity = animated value; React state mirrors it.
   const controlsOpacity = useSharedValue(0);
 
   const controlsTarget = useSharedValue(0);

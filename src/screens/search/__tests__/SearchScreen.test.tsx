@@ -257,8 +257,6 @@ describe('SearchScreen', () => {
       SearchHistoryItem[]
     >([{ query: 'xqc', date: SEARCHED_AT }]);
 
-    // setText must not trigger type-to-search. If it does, one tap sends the
-    // same query twice.
     expect(twitchService.searchCategories).toHaveBeenCalledTimes(1);
   });
 });

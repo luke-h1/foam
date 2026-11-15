@@ -16,9 +16,6 @@ import { PaintedUsername } from './cosmetic-username/PaintedUsername';
 import { PaintedUsernameSkia } from './cosmetic-username/PaintedUsernameSkia';
 import { chatLineMetrics } from './util/chatScale';
 
-// A paint is animated when it has an image layer with a multi-frame texture.
-// frameCount only survives on the raw fixture (conversion drops it), so classify
-// before converting. Refresh the offline snapshot with `bun gen:paints`.
 function isAnimatedPaint(paint: SevenTvPaintSource): boolean {
   return paint.data.layers.some(
     layer =>

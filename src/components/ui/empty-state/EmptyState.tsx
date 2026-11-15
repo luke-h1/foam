@@ -26,10 +26,6 @@ interface EmptyStateProps {
   heading: string;
   content?: string;
   iconName?: SFSymbol;
-  /**
-   * The label of the one action that fills or retries this state. Leave it
-   * out when there is nothing useful to do.
-   */
   button?: string;
   buttonOnPress?: () => void;
   style?: StyleProp<ViewStyle>;

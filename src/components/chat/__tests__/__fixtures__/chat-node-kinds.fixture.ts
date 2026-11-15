@@ -27,11 +27,6 @@ import {
   WATCH_STREAK,
 } from './chat-notice-pipeline.fixture';
 
-/**
- * One entry per kind of row the chat renders. The perf test renders a screen
- * of each and compares it with `plain-text`, so a new renderer gets a row
- * here the day it lands.
- */
 export interface ChatNodeKindFixture {
   id: string;
   messages: AnyChatMessageType[];
@@ -48,10 +43,6 @@ export const ROWS_PER_KIND = 24;
 
 export const BUSY_CHAT_ROWS = 40;
 
-/**
- * The user ids that carry a 7TV paint; the perf test binds paints to them in
- * the store before it measures.
- */
 export const PAINTED_USER_ID_PREFIX = 'painted-user-';
 
 const SENDER_COLORS = [
@@ -668,10 +659,6 @@ function messagesOf(id: string): AnyChatMessageType[] {
   return kind.messages;
 }
 
-/**
- * A screen of a busy channel: mostly text and emotes, with the rarer rows in
- * roughly the proportion a big chat shows them.
- */
 const BUSY_CHAT_MIX: string[] = [
   'plain-text',
   'static-emotes',

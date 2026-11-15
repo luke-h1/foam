@@ -46,7 +46,6 @@ const mockLegendList = jest.fn((_props: LegendListMockProps) => (
 const contentInsetEndAdjustment = makeMutable(0);
 
 /**
- * Override the global KeyboardAwareLegendList mock with a fake that records props.
  * `require`, not `import` - spyOn needs the module object, not babel's ES-interop copy.
  */
 // SAFETY: reattaches the module type `require` erases so spyOn type-checks.

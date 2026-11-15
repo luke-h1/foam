@@ -29,7 +29,6 @@ function computePaintSolidColor(paint: PaintData): string | null {
     return sevenTvColorToCss(paint.color);
   }
 
-  // getPaintLayers orders topmost first, which is the layer the eye reads.
   for (const layer of getPaintLayers(paint)) {
     if (!isRenderablePaintLayer(layer)) {
       continue;

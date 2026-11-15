@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 const { withXcodeProject } = require('@expo/config-plugins');
 
 // Workaround for https://github.com/expo/expo/issues/46204

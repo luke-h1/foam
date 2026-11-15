@@ -7,7 +7,6 @@ import {
 
 describe('chat-suite-report metrics', () => {
   test('flags a steep RSS climb', () => {
-    // 20 samples × 500ms = 10s. +19 MB ≈ 114 MB/min.
     const measures = Array.from({ length: 20 }, (_, index) => ({
       cpu: { perName: { 'JS Thread': 40 } },
       fps: 58,
@@ -46,7 +45,6 @@ describe('chat-suite-report metrics', () => {
 
     expect(meanFps(measures)).toEqual(50);
 
-    // Sum of threads per sample, then mean across samples (a+b = 40, 60 → 50).
     expect(meanCpu(measures)).toEqual(50);
   });
 });

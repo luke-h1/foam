@@ -28,7 +28,7 @@ type EmoteTokenProps = ComponentProps<typeof EmoteTokenModule.EmoteToken>;
 
 /**
  * EmoteToken is memo() wrapped, so jest.spyOn cannot wrap it - swap the
- * export directly. The suite asserts orchestration, not its output.
+ * export directly.
  */
 Object.defineProperty(EmoteTokenModule, 'EmoteToken', {
   configurable: true,
@@ -447,7 +447,6 @@ describe('ChatRow', () => {
         <ChatRow {...message} onReplyContextPress={mockOnReplyContextPress} />,
       );
 
-      // The reply header is a responder, not an onPress element.
       await userEvent.press(getByTestId('chat-reply-context-button'));
 
       expect(mockOnReplyContextPress).toHaveBeenCalledTimes(1);
@@ -593,8 +592,6 @@ describe('ChatRow', () => {
     });
 
     test('flows an ordinary emote inline, inside the row Text', () => {
-      // The flex-wrap path leaves the tail blank; an ordinary emote belongs in
-      // the row's Text, where `bodyEmoteLine` raises the leading so it is not clipped.
       const emoteData: MessageToken<'emote'> = {
         type: 'emote',
         content: 'Kappa',
@@ -616,8 +613,6 @@ describe('ChatRow', () => {
     });
 
     test('keeps a zero-width emote out of the row Text', () => {
-      // A zero-width emote composites its overlay with absolute positioning,
-      // which does not survive inside a Text, so it still takes the flex path.
       const emoteData: MessageToken<'emote'> = {
         type: 'emote',
         content: 'SoSnowy',
@@ -640,8 +635,6 @@ describe('ChatRow', () => {
     });
 
     test('keeps the emote leading on a painted row that flows its body inline', () => {
-      // A painted row's body still flows inline and carries the emotes on its
-      // own, so it needs the emote leading or they clip.
       chatStore$.userPaintIds.set({ '123456': 'paint-1' });
 
       const emoteData: MessageToken<'emote'> = {
@@ -921,7 +914,6 @@ describe('ChatRow', () => {
         reward: '450',
         value: '5',
         content: '',
-        // Stored tokens hold already-unescaped system-msg (parseIrcTags decodes).
         systemMsg:
           'TestUser watched 5 consecutive streams and sparked a watch streak!',
         login: 'testuser',

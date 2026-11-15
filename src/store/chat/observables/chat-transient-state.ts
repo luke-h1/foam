@@ -5,10 +5,6 @@ export interface ChatTransientChannelState {
   hiddenUsers: string[];
   highlightedReplyTargetMessageId: string | null;
   highlightedUsers: string[];
-  /**
-   * Whether the search tray is open. Distinct from a non-empty query so the
-   * field stays visible while the user is still typing or has cleared it.
-   */
   searchActive: boolean;
   searchQuery: string;
   showOnlyMentions: boolean;

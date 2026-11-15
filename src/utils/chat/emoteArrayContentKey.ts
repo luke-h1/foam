@@ -1,23 +1,11 @@
 import type { SanitisedEmote } from '@app/types/emote';
 
-/**
- * Content-derived key so a rebuilt array with unchanged emotes keys the same;
- * hashed rather than joined so 5k emotes don't build a huge string per rebuild.
- */
 const contentKeyCache = new WeakMap<SanitisedEmote[], string>();
 
 const emoteHashCache = new WeakMap<SanitisedEmote, readonly [number, number]>();
 
-/**
- * Delimiters stop field-boundary collisions; the presence flags below, not
- * the delimiters alone, make the layout unambiguous.
- */
 const FIELD_SEPARATOR = 0x1f;
 
-/**
- * Presence flags stop a skipped optional field from letting `original_name`
- * occupy a `url`'s slot and key the same.
- */
 const HAS_ALIAS = 1;
 
 const HAS_URL = 2;

@@ -1,6 +1,5 @@
 type RateLimiterModule = typeof import('../chatIngestRateLimiter');
 
-// The limiter keeps its token bucket in module state; load a fresh copy per test.
 const loadLimiter = (): RateLimiterModule => {
   let limiter: RateLimiterModule | undefined;
 

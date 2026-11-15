@@ -53,8 +53,6 @@ export function useTwitchChannelPointsEventSub(channelId: string | undefined) {
 
     const condition = { broadcaster_user_id: channelId };
 
-    TwitchWsService.getInstance();
-
     void TwitchWsService.subscribeToEvent(
       CUSTOM_REWARD_REDEMPTION_EVENT,
       '1',

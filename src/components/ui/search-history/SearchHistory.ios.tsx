@@ -32,8 +32,6 @@ interface SearchHistoryProps {
 
 const SECONDARY = theme.color.textSecondary.dark;
 
-// The list sits below the suggested chips and does not scroll; cap it so the
-// rows never run off-screen behind the floating search bar.
 const MAX_VISIBLE = 8;
 
 export function SearchHistory({

@@ -85,10 +85,6 @@ interface State {
   ready: boolean;
 }
 
-/**
- * A stored token past its expiry that will not refresh still gets validated
- * with Twitch before it is cleared, so record why that path was taken.
- */
 function logIfUnrefreshed(refreshedToken: TwitchToken | null): void {
   if (refreshedToken) {
     return;
@@ -111,11 +107,6 @@ function isStillLiveAnonToken(
   );
 }
 
-/**
- * Records that auth never finished starting up and the anonymous fallback took
- * over. Logged twice on purpose: a warning for the timeline, an error so it
- * reaches Sentry.
- */
 function logAuthStartupFallback(reason: string, error?: Error): void {
   const errorType = error?.name ?? 'undefined';
 
@@ -131,11 +122,6 @@ function logAuthStartupFallback(reason: string, error?: Error): void {
   });
 }
 
-/**
- * A caught value here is only ever logged, so a non-Error throw becomes an
- * Error carrying its text. This is the parse step the fallback helpers rely
- * on, which is why they take `Error` rather than `unknown`.
- */
 // oxlint-disable-next-line anti-slop/no-unknown-parameters -- a catch variable is unknown by language rule; this is the parser for it
 function asError(caught: unknown): Error {
   return caught instanceof Error ? caught : new Error(String(caught));
@@ -235,8 +221,6 @@ function useAuthContextValue(): AuthContextState {
       return;
     }
 
-    // Claim the fallback before the state write, so a second call in the same
-    // tick cannot log it twice. The updater keeps its own guard for the state.
     hasTimedOut.current = true;
 
     setState(prev =>
@@ -429,7 +413,6 @@ function useAuthContextValue(): AuthContextState {
 
       const u = await twitchService.getUserInfo(token.accessToken);
 
-      // Set token before setUser so any enabled queries (e.g. followed streams) use the correct token
       twitchApi.setAuthToken(token.accessToken);
 
       setUser(u);
@@ -561,8 +544,6 @@ function useAuthContextValue(): AuthContextState {
           return;
         }
 
-        // Only refetch when this exact anon token is still the live one; a
-        // sign-in or a newer anon token landing first makes it stale news.
         if (
           !isStillLiveAnonToken(authStateRef.current, validatedAnonAccessToken)
         ) {
@@ -690,10 +671,6 @@ function useAuthContextValue(): AuthContextState {
     };
   }, [refreshTokenIfNeeded]);
 
-  // The ref-backed callbacks are identity-stable, so the context value only
-  // changes when auth state changes. This provider wraps the whole app and
-  // updates itself on a refresh poll and on app foreground. An unmemoized
-  // value would re-render every consumer on each of those ticks.
   const loginWithTwitchCallback = useCallback(
     (...args: Parameters<AuthContextState['loginWithTwitch']>) =>
       loginWithTwitchRef.current(...args),

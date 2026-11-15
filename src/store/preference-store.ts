@@ -18,10 +18,6 @@ import { deepEqualJson } from '@app/utils/object/deepEqualJson';
 let cachedPreferencesSchema: ReturnType<typeof buildPreferencesSchema> | null =
   null;
 
-/**
- * Built on first use instead of at module scope - constructing ~50 zod
- * validators was part of every boot for a schema only validation reads.
- */
 export function getPreferencesSchema() {
   cachedPreferencesSchema ??= buildPreferencesSchema();
   return cachedPreferencesSchema;

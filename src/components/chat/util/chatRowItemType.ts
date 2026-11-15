@@ -87,10 +87,6 @@ function getUserChatRowItemType(
   return `user_chat-${flags.join('-')}`;
 }
 
-/**
- * The list asks for a row's type several times per row; memoise the composed
- * string per message and inline-reply setting.
- */
 const itemTypeWithReplyContext = new WeakMap<AnyChatMessageType, string>();
 
 const itemTypeWithoutReplyContext = new WeakMap<AnyChatMessageType, string>();

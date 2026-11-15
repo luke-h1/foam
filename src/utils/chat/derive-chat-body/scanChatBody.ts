@@ -23,10 +23,6 @@ const MOD_ANNIVERSARY_TYPES = new Set<MessageToken['type']>(['modiversary']);
 
 const scanCache = new WeakMap<MessageToken[], ChatBodyScan>();
 
-/**
- * The single pass over a message's tokens; everything the render path needs is
- * decided here once per message and cached, so no renderer re-walks the tokens.
- */
 export function scanChatBody(message: MessageToken[]): ChatBodyScan {
   const cached = scanCache.get(message);
 

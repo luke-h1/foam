@@ -1,9 +1,5 @@
 import type { SlashCommandDefinition } from '@app/components/chat/util/slash-command-definitions/types';
 
-/**
- * Kept in sync by hand with `parseModCommand`'s switch; `refresh` alone is
- * handled in `ChatInputShell` before the parser runs, so it has no case there.
- */
 export const SLASH_COMMAND_DEFINITIONS: SlashCommandDefinition[] = [
   {
     name: 'timeout',

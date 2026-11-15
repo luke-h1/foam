@@ -14,10 +14,6 @@ import { sanitiseAll } from '@app/utils/emote/sanitised/sanitiseAll';
 import { ApiError } from './api/client';
 import { ffzApi, isFfzNoSuchRoom } from './api/clients';
 
-/**
- * Channel badges and channel emotes both read `/room/id/{id}`. A channel load
- * asks for both, so a settled room payload is kept for this long and shared.
- */
 const ROOM_SHARE_MS = 30_000;
 
 const MAX_SHARED_ROOMS = 8;

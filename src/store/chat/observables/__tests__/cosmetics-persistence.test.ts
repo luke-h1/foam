@@ -137,7 +137,6 @@ describe('cosmeticsPersistence', () => {
 
     expect(ids).toHaveLength(750);
 
-    // Oldest dropped, newest kept (insertion order).
     expect(loaded?.paints['paint-0']).toBeUndefined();
 
     expect(loaded?.paints['paint-799']).toEqual(makePaintWithId('paint-799'));

@@ -1,10 +1,8 @@
 import type { SFSymbol } from 'sf-symbols-typescript';
 
-import {
-  SettingsLinkRow,
-  SettingsRow,
-  SettingsSection,
-} from '@app/components/settings-section/SettingsSection';
+import { SettingsLinkRow } from '@app/components/settings-section/SettingsLinkRow';
+import { SettingsRow } from '@app/components/settings-section/SettingsRow';
+import { SettingsSection } from '@app/components/settings-section/SettingsSection';
 import { theme } from '@app/styles/themes';
 
 export interface SheetAction {
@@ -20,10 +18,6 @@ interface SheetActionGroupProps {
   actions: SheetAction[];
 }
 
-/**
- * A group of action rows in a chat sheet. Each row runs in place, so it has
- * no chevron.
- */
 export function SheetActionGroup({ title, actions }: SheetActionGroupProps) {
   return (
     <SettingsSection title={title} cardColor={theme.color.surfaceElevated.dark}>

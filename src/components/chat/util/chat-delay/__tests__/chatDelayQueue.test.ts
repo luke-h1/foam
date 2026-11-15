@@ -38,12 +38,10 @@ describe('createChatDelayQueue release timing', () => {
   test('stops at the first not-due entry so a shorter later delay cannot jump ahead', () => {
     const queue = createChatDelayQueue();
 
-    // 'a' was enqueued with a long delay, 'b' arrived later with a short one.
     queue.enqueue(message('a'), 5000, true);
 
     queue.enqueue(message('b'), 1000, true);
 
-    // 'b' is due by the clock but stays behind 'a' to preserve arrival order.
     expect(queue.drainDue(2000)).toEqual([]);
 
     expect(queue.drainDue(5000).map(entry => entry.message.message_id)).toEqual(

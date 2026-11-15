@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 const {
   createRunOncePlugin,
   withAndroidManifest,
@@ -10,10 +9,6 @@ const {
  * theme to inherit from Theme.MaterialComponents. The default Expo-generated app
  * theme inherits from Theme.AppCompat/Theme.EdgeToEdge, causing an
  * IllegalArgumentException (surfaced as an InflateException) at runtime.
- *
- * This plugin scopes the fix to just LibsActivity by setting its android:theme
- * attribute to Theme.MaterialComponents.DayNight.NoActionBar, leaving the rest
- * of the app theme untouched.
  */
 
 const LIBS_ACTIVITY = 'com.mikepenz.aboutlibraries.ui.LibsActivity';

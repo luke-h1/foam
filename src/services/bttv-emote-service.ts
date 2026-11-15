@@ -17,9 +17,6 @@ interface BttvChannelEmoteSet {
 
   channelEmotes: BttvEmote[];
 
-  /**
-   * Usually this is an empty array for most users
-   */
   sharedEmotes: BttvEmote[];
 }
 

@@ -14,8 +14,6 @@ import {
   twitchGlobalEmotesFixture,
 } from './__fixtures__/global-emote-badge-data.fixture';
 
-// LegendList/SectionList come from the root __mocks__/@legendapp/list manual mocks (every item renders through renderItem so grid content is assertable). Preview sheets render for real; expo-media-library is faked at the root too.
-
 describe('EmoteBadgeViewerScreen', () => {
   let providers: ReturnType<typeof stubEmoteProviderServices>;
 

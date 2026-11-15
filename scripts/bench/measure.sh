@@ -22,9 +22,6 @@
 # Documents/chat-perf-suite.json, and reports Flashlight FPS/CPU/RAM plus the
 # in-app export. A steep RSS slope is treated as a leak.
 #
-# Each iteration starts from a cold app. Restart, deep link and open-* run in
-# beforeEachCommand; Flashlight only times the scroll, flood, or suite.
-#
 # The first iteration is a warm-up and is dropped: in it the Flashlight
 # sampler reports every thread at 100% in alternate samples.
 #
@@ -41,7 +38,6 @@
 
 set -euo pipefail
 
-# Export so Argent `script:` children (print-native-metrics) see the same package.
 export BUNDLE_ID="${BUNDLE_ID:-com.lhowsam.foam.dev}"
 ITERATIONS="${ITERATIONS:-1}"
 # Set SKIP_WARMUP=1 to skip the Flashlight warm-up iteration (faster, less accurate CPU).
@@ -52,7 +48,6 @@ RESULTS="$ROOT/bench-results"
 
 BENCHES=("$@")
 if [ ${#BENCHES[@]} -eq 0 ]; then
-  # chat-suite is 2 minutes; name it explicitly.
   BENCHES=(top-streams top-categories chat-raid)
 fi
 

@@ -10,8 +10,7 @@ import { isSystemSender } from '@app/utils/chat/isSystemSender';
 export interface ChatBodyDerived extends MessageStructure {
   hasSubscriptionNotice: boolean;
   /**
-   * Normalised logins this message @-mentions; render compares against the
-   * current user instead of re-scanning tokens.
+   * Normalised logins this message @-mentions.
    */
   mentionLogins: string[];
   mentionsCurrentUser: boolean;

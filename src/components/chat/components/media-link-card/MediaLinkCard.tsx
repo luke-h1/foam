@@ -47,8 +47,6 @@ function MediaLinkCardComponent({
           return sevenTvService.getEmote(sevenTvEmoteId);
         },
         enabled: Boolean(sevenTvEmoteId),
-        // Emote and clip metadata is effectively immutable, so recycled chat
-        // rows must not refetch it on every remount past the default 30s.
         staleTime: Infinity,
       },
       {

@@ -1,6 +1,5 @@
 /**
- * Twitch's per-message ceiling, counted in codepoints. Shared so the composer's
- * limit and the anti-duplicate suffix cannot drift apart.
+ * Twitch's per-message ceiling, counted in codepoints.
  */
 export const MAX_MESSAGE_LENGTH = 500;
 

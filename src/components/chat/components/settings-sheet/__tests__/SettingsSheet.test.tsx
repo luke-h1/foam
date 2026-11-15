@@ -24,10 +24,6 @@ afterAll(() => {
 
 const mockRequestClose = jest.fn();
 
-/**
- * BottomSheet is a memo-wrapped exotic component; the bridge narrows through
- * `never` to reach a spyable function property.
- */
 interface MockBottomSheetProps {
   children?: ReactNode;
   isPresented: boolean;
@@ -39,7 +35,7 @@ interface MockableBottomSheet {
   BottomSheet: (props: MockBottomSheetProps) => ReactNode;
 }
 
-// SAFETY: `never` is the only bridge TS accepts from the exotic component to MockableBottomSheet.
+// SAFETY: spyOn only replaces the BottomSheet property; the suite never calls the original through this shape.
 const mockableBottomSheet: MockableBottomSheet = BottomSheetModule as never;
 
 jest

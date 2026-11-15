@@ -7,11 +7,6 @@ import { twitchApi } from '@app/services/api/clients';
 import TwitchWsService from '@app/services/twitch-ws-service';
 import { logger } from '@app/utils/logger';
 
-// SAFETY: getInstance's return value is never read by these hooks, only passed through.
-const mockGetInstance = jest
-  .spyOn(TwitchWsService, 'getInstance')
-  .mockReturnValue({} as WebSocket);
-
 const mockSubscribeToEvent = jest.spyOn(TwitchWsService, 'subscribeToEvent');
 
 jest
@@ -41,8 +36,6 @@ describe('channel poll and prediction EventSub subscriptions', () => {
 
     expect(poll.result.current.isAvailable).toBe(false);
 
-    expect(mockGetInstance.mock.calls).toHaveLength(0);
-
     expect(mockSubscribeToEvent.mock.calls).toHaveLength(0);
 
     expect(mockTwitchGet).not.toHaveBeenCalled();
@@ -65,14 +58,22 @@ describe('channel poll and prediction EventSub subscriptions', () => {
       expect(mockSubscribeToEvent.mock.calls).toHaveLength(7);
     });
 
-    expect(mockSubscribeToEvent.mock.calls.map(call => call[0])).toEqual([
-      'channel.prediction.begin',
-      'channel.prediction.progress',
-      'channel.prediction.lock',
-      'channel.prediction.end',
-      'channel.poll.begin',
-      'channel.poll.progress',
-      'channel.poll.end',
+    const condition = { broadcaster_user_id: 'channel-id' };
+
+    expect(
+      mockSubscribeToEvent.mock.calls.map(([type, version, eventCondition]) => [
+        type,
+        version,
+        eventCondition,
+      ]),
+    ).toEqual([
+      ['channel.prediction.begin', '1', condition],
+      ['channel.prediction.progress', '1', condition],
+      ['channel.prediction.lock', '1', condition],
+      ['channel.prediction.end', '1', condition],
+      ['channel.poll.begin', '1', condition],
+      ['channel.poll.progress', '1', condition],
+      ['channel.poll.end', '1', condition],
     ]);
 
     const helixParams = {

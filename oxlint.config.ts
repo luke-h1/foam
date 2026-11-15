@@ -59,13 +59,9 @@ const local = {
     'ios/**',
     'player-website/.astro/**',
     'player-website/dist/**',
-    'src/foam/**',
-    'src/player-website/**',
     'src/graphql/generated/**',
     'src/components/chat/components/chat-message/__fixtures__/seven-tv-paints.fixture.ts',
     'commitlint.config.js',
-    'modules/**/node_modules/**',
-    '.storybook/storybook.requires.ts',
     'metro.config.js',
   ],
   categories: {
@@ -347,7 +343,6 @@ const local = {
         'src/lib/sentry.ts',
         'src/lib/sentryImageSpans.ts',
         'src/lib/__tests__/sentryImageSpans.test.ts',
-        'src/lib/__tests__/sentry.test.ts',
         'src/lib/__tests__/forwardLogToSentry.test.ts',
         'src/lib/haptics.ts',
         'src/hooks/firebase/analytics.ts',
@@ -365,7 +360,6 @@ const local = {
     {
       files: [
         'src/context/AuthContext.tsx',
-        'src/components/chat/components/ChatOverlayController.tsx',
         'src/components/chat/components/ChatOverlayLayer.tsx',
         'src/components/ui/input/Input.ios.tsx',
         'src/screens/preferences/ChatPreferenceScreen.tsx',
@@ -437,7 +431,6 @@ const local = {
         'src/**/*.stories.{ts,tsx}',
         'src/utils/logger.ts',
         'src/lib/sentry.ts',
-        'src/lib/bugsnag.ts',
       ],
       rules: {
         'no-console': 'off',

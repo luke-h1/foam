@@ -60,10 +60,6 @@ type ChatUserSelection =
   | null
   | undefined;
 
-/**
- * The actions the chat sheets fire; takes the current selection as arguments
- * rather than subscribing, so the overlay state keeps exactly one reader.
- */
 export function useChatOverlayHandlers({
   channelId,
   currentUserId,

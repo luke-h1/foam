@@ -56,7 +56,6 @@ test('releasing a slot after reset does not raise the cap', () => {
   const releaseBeforeReset = budget.acquire(() => undefined);
   budget.reset();
 
-  // The dismissed sheet's cell unmounts after reset and releases its old slot.
   releaseBeforeReset();
 
   budget.acquire(value => afterReset.push(value));

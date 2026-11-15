@@ -136,12 +136,6 @@ type PaintLayerContentProps = {
   useSvgLinear: boolean;
 };
 
-/**
- * Paints one layer's fill. 7TV describes a layer as an image, a radial or
- * linear gradient, or a flat colour, and each needs a different primitive -
- * SVG for the two gradients CSS semantics require, the native gradient
- * otherwise.
- */
 function PaintLayerContent({
   gradientConfig,
   gradientId,

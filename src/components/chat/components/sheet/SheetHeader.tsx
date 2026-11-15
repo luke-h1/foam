@@ -62,10 +62,6 @@ const styles = StyleSheet.create({
     gap: theme.space12,
     minHeight: 36,
   },
-  /**
-   * A custom block (an avatar and a meta line) can be taller than one row,
-   * so the close button stays at its top edge.
-   */
   headerTop: {
     alignItems: 'flex-start',
   },

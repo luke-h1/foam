@@ -235,8 +235,6 @@ describe('useChatSettingsActions', () => {
 
     expect(mockClearImageCache).toHaveBeenCalledTimes(1);
 
-    // Stale-stamped, not deleted: the cached slices must survive as the
-    // fallback if a provider fetch fails during the reload.
     expect(readChatCaches()).toEqual<ChatCacheState>({
       channelStamps: {
         'channel-1': { badgesLastUpdated: 0, lastUpdated: 0 },

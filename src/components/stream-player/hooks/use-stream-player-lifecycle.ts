@@ -22,8 +22,6 @@ export function useStreamPlayerLifecycle({
   channel: string | undefined;
   sourceKey: string;
 }) {
-  const needsInitRef = useRef(true);
-
   const authCompletionReloadTimeoutRef = useRef<ReturnType<
     typeof setTimeout
   > | null>(null);
@@ -158,21 +156,15 @@ export function useStreamPlayerLifecycle({
   }, [generation]);
 
   /**
-   * Last reported VOD playback offset (seconds). Survives a WebView remount so
-   * the embed can resume instead of restarting at 0:00; reset per source.
+   * VOD playback offset in seconds.
    */
   const resumeTimeRef = useRef(0);
 
   useEffect(() => {
-    needsInitRef.current = true;
     nudgePlayedRef.current = false;
     resumeTimeRef.current = 0;
   }, [sourceKey]);
 
-  /**
-   * Arm a safety dismissal per generation so a load that never finishes can't
-   * trap the loading frame over the player.
-   */
   useEffect(() => {
     const timeout = setTimeout(
       () => setLoadedGeneration(generationRef.current),
@@ -187,7 +179,6 @@ export function useStreamPlayerLifecycle({
       channel,
     });
 
-    needsInitRef.current = true;
     nudgePlayedRef.current = false;
 
     if (posterHideTimeoutRef.current) {
@@ -226,7 +217,6 @@ export function useStreamPlayerLifecycle({
     handlePlayerLayout,
     isPlayerLoading: loadedGeneration !== generation,
     layoutNudge,
-    needsInitRef,
     remountEmbedWebView,
     resumeTimeRef,
     scheduleAuthCompletionReload,

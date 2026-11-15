@@ -1,7 +1,5 @@
-import {
-  SettingsSection,
-  SettingsToggleRow,
-} from '@app/components/settings-section/SettingsSection';
+import { SettingsSection } from '@app/components/settings-section/SettingsSection';
+import { SettingsToggleRow } from '@app/components/settings-section/SettingsToggleRow';
 import { updatePreferences, usePreference } from '@app/store/preference-store';
 
 import {

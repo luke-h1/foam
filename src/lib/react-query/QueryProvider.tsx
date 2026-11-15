@@ -24,14 +24,11 @@ async function checkIsOnline(): Promise<boolean> {
       controller.abort();
     }, 15e3);
 
-    // The base URL already ends in `/api`.
     const res = await fetch(`${authProxyBaseUrl}/healthcheck`, {
       headers: { 'Cache-Control': 'no-store' },
       signal: controller.signal,
     }).finally(() => clearTimeout(abortTimer));
 
-    // The proxy answers `{ "status": "OK" }`. Any other body, including a
-    // 404 page, means the backend is unreachable.
     return z.object({ status: z.literal('OK') }).safeParse(await res.json())
       .success;
   } catch {

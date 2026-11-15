@@ -94,8 +94,6 @@ function getRecentUserMessages(login?: string, username?: string) {
       continue;
     }
 
-    // The text check only filters out empty messages; the row renders the
-    // tokens so emotes show as images.
     if (!replaceEmotesWithText(message.message).trim()) {
       continue;
     }
@@ -155,18 +153,10 @@ function buildModerationActions({
 }
 
 interface QuickAction {
-  /**
-   * Stable across renders. The icon and label of a toggle change when it
-   * flips, and a key built from them would remount the button.
-   */
   id: string;
   icon: SymbolViewProps['name'];
   label: string;
   onPress: () => void;
-  /**
-   * Marks a toggle that is on. The label also changes, so the state never
-   * relies on colour alone.
-   */
   active?: boolean;
 }
 
@@ -233,8 +223,6 @@ function UserActionSheetComponent({
   const { isHidden, isHighlighted } = visibility;
   const { requestClose, runAndClose, sheetRef } = useChatSheet();
 
-  // peek() on open: the scrollback updates constantly and re-rendering the
-  // sheet per message would defeat the chat flush batching.
   const recentMessages = useMemo(
     () => getRecentUserMessages(login, username),
     [login, username],

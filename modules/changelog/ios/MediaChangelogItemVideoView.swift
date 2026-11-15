@@ -1,10 +1,3 @@
-//
-//  MediaChangelogItemVideoView.swift
-//  Pods
-//
-//  Created by luke howsam on 14/05/2026.
-//
-
 import AVKit
 import SwiftUI
 import UIKit

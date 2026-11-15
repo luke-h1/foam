@@ -1,5 +1,4 @@
-// `shape` here mirrors the 7TV paint API field name, not a naming choice.
-// oxlint-disable anti-slop/no-shape-in-symbol-names
+// oxlint-disable anti-slop/no-shape-in-symbol-names -- mirrors the 7TV paint API field name
 import type { PaintData, PaintStop } from '@app/types/seven-tv/cosmetics';
 import type { IndexedCollection } from '@app/utils/collection/indexedCollection';
 

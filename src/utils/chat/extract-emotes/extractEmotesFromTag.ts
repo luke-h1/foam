@@ -63,10 +63,6 @@ const extractEmotes = (
 
 const NO_EMOTES: TwitchSanitisedEmote[] = [];
 
-/**
- * Keyed on tag + text because both determine the result (names are sliced
- * out of the message); raid/spam traffic repeats identical pairs.
- */
 const resultCache = new Map<string, TwitchSanitisedEmote[]>();
 
 const MAX_RESULT_CACHE_SIZE = 256;

@@ -9,14 +9,9 @@ export const RECENT_MESSAGES_PERSISTENCE_ENABLED = true;
 
 const storage = createMMKV({ id: 'chat-recent-messages' });
 
-// Cached messages hold parsed tokens, so a token `type` rename makes every older
-// blob render against variants the code no longer knows. Bump this whenever the
-// persisted message shape changes; a mismatch drops the cache instead.
 const SCHEMA_VERSION = '2';
 const SCHEMA_VERSION_KEY = '__schema_version';
 
-// One-time cleanup of the old single-key blob written by Legend State into the
-// shared `obsPersist` instance, so it does not sit orphaned forever.
 const migrateLegacyBlob = () => {
   try {
     const legacy = createMMKV({ id: 'obsPersist' });

@@ -13,18 +13,11 @@ export interface PlayerBridgeContext {
   mountedAtMs: number;
   nowMs: number;
   reportedFirstPlaying: boolean;
-  reportedPlaybackBlocked: boolean;
   userPaused: boolean;
 }
 
 export type PlayerBridgeAction =
-  | { type: 'applyMuteState'; muted: boolean; volume: number }
-  | {
-      type: 'applyStateUpdate';
-      isPaused: boolean;
-      muted: boolean;
-      volume: number;
-    }
+  | { type: 'applyMuteState'; muted: boolean }
   | { type: 'cancelTransientResume' }
   | {
       type: 'countMetric';
@@ -38,17 +31,11 @@ export type PlayerBridgeAction =
       args: unknown[];
     }
   | { type: 'markFirstPlayingReported' }
-  | { type: 'markPlaybackBlockedReported' }
   | { type: 'recordLoadFailed'; reason: string; error?: unknown }
   | {
       type: 'recordPlaybackStarted';
       startSource: 'bridge_playing';
     }
-  | { type: 'notifyEnded' }
-  | { type: 'notifyError'; message: string }
-  | { type: 'notifyOffline' }
-  | { type: 'notifyOnline' }
-  | { type: 'notifyPause' }
   | { type: 'notifyPlay' }
   | { type: 'notifyReady' }
   | { type: 'notifyStabilityPlaying' }
@@ -56,15 +43,12 @@ export type PlayerBridgeAction =
   | { type: 'notifyStabilityStall' }
   | { type: 'publishLatency'; latencySeconds: number }
   | { type: 'recordResumeTime'; seconds: number }
-  | { type: 'resolveCurrentTime'; seconds: number }
-  | { type: 'resolveDuration'; seconds: number }
   | { type: 'scheduleAuthCompletionReload' }
   | { type: 'scheduleTransientResume' }
   | { type: 'setContentGate'; hasContentGate: boolean }
   | { type: 'setPaused'; isPaused: boolean }
   | { type: 'setPipActive'; active: boolean }
   | { type: 'setPlayerReady' }
-  | { type: 'setPlayerStatus'; isBuffering: boolean; isReady: boolean }
   | { type: 'showPipUnavailableToast' }
   | { type: 'unlockOverlay' };
 
@@ -74,36 +58,6 @@ function interpretPlayerFailureMessage(
   elapsedMs: number,
 ): PlayerBridgeAction[] {
   switch (message.type) {
-    case 'error': {
-      const embedMessage = message.payload?.message ?? 'Unknown embed error';
-
-      const embedErrorMetadata = {
-        name: 'twitch_player_error',
-        exceptionName: 'StreamPlayerEmbedError',
-        fingerprint: ['stream-player-embed-error'],
-        channel: context.channel,
-        elapsedMs,
-        message: embedMessage,
-      };
-
-      return [
-        {
-          type: 'recordLoadFailed',
-          reason: 'embed_error',
-          error: embedErrorMetadata,
-        },
-        {
-          type: 'log',
-          level: 'warn',
-          message: `[StreamPlayer:embed ERROR] ${embedMessage}`,
-          args: [embedErrorMetadata],
-        },
-        {
-          type: 'notifyError',
-          message: embedMessage,
-        },
-      ];
-    }
     case 'embedMisconfigured': {
       const embedParent = message.payload?.parent ?? 'unknown';
 
@@ -140,10 +94,6 @@ function interpretPlayerFailureMessage(
           message: `[StreamPlayer:embed MISCONFIGURED] ${embedMessage}`,
           args: [embedErrorMetadata],
         },
-        {
-          type: 'notifyError',
-          message: embedMessage,
-        },
       ];
     }
     case 'contentGateDetected':
@@ -153,43 +103,6 @@ function interpretPlayerFailureMessage(
           hasContentGate: message.payload?.hasContentGate ?? false,
         },
       ];
-    case 'playbackBlocked': {
-      const errName = message.payload?.errName ?? null;
-
-      const actions: PlayerBridgeAction[] = [
-        {
-          type: 'countMetric',
-          name: 'stream.playback_blocked',
-          attributes: {
-            channel: context.channel ?? 'unknown',
-            err_name: errName ?? 'unknown',
-          },
-        },
-      ];
-
-      // AbortError is routine, self-recovered startup source-swap noise;
-      // anything else means playback could not start and is worth alerting on.
-      if (errName !== 'AbortError' && !context.reportedPlaybackBlocked) {
-        actions.push(
-          { type: 'markPlaybackBlockedReported' },
-          {
-            type: 'log',
-            level: 'warn',
-            message: `playback blocked: ${errName ?? 'unknown'}`,
-            args: [
-              {
-                name: 'twitch_player_warning',
-                channel: context.channel,
-                errName,
-                elapsedMs,
-              },
-            ],
-          },
-        );
-      }
-
-      return actions;
-    }
     default:
       return [];
   }
@@ -248,11 +161,6 @@ export function interpretPlayerMessage(
         { type: 'setPlayerReady' },
         { type: 'notifyReady' },
       ];
-    case 'play':
-      return [
-        { type: 'cancelTransientResume' },
-        { type: 'setPaused', isPaused: false },
-      ];
     case 'playing': {
       const actions: PlayerBridgeAction[] = [
         { type: 'cancelTransientResume' },
@@ -299,12 +207,8 @@ export function interpretPlayerMessage(
         return [{ type: 'scheduleTransientResume' }];
       }
 
-      return [{ type: 'setPaused', isPaused: true }, { type: 'notifyPause' }];
-    case 'ended':
-      return [{ type: 'notifyEnded' }];
+      return [{ type: 'setPaused', isPaused: true }];
     case 'stalled': {
-      // The webview reports a frozen playhead. Recover only when playback is
-      // expected; a user pause must stay paused.
       if (context.userPaused) {
         return [];
       }
@@ -318,41 +222,6 @@ export function interpretPlayerMessage(
         { type: 'notifyStabilityStall' },
       ];
     }
-    case 'online':
-      return [{ type: 'notifyOnline' }];
-    case 'offline':
-      return [{ type: 'notifyOffline' }];
-    case 'stateUpdate': {
-      const payload = message.payload;
-
-      if (!payload) {
-        return [];
-      }
-
-      const isTransientAutoplayPause =
-        payload.isPaused && shouldResumeTransientPause;
-
-      const actions: PlayerBridgeAction[] = [
-        {
-          type: 'setPlayerStatus',
-          isReady: payload.isReady,
-          isBuffering: payload.isBuffering,
-        },
-      ];
-
-      if (isTransientAutoplayPause) {
-        actions.push({ type: 'scheduleTransientResume' });
-      }
-
-      actions.push({
-        type: 'applyStateUpdate',
-        isPaused: isTransientAutoplayPause ? false : payload.isPaused,
-        muted: payload.muted,
-        volume: payload.volume,
-      });
-
-      return actions;
-    }
     case 'vodProgress': {
       const seconds = message.payload?.currentTime;
 
@@ -360,18 +229,6 @@ export function interpretPlayerMessage(
         ? [{ type: 'recordResumeTime', seconds }]
         : [];
     }
-    case 'currentTime':
-      if (!message.payload || message.payload.time === undefined) {
-        return [];
-      }
-
-      return [{ type: 'resolveCurrentTime', seconds: message.payload.time }];
-    case 'duration':
-      if (!message.payload || message.payload.duration === undefined) {
-        return [];
-      }
-
-      return [{ type: 'resolveDuration', seconds: message.payload.duration }];
     case 'trace':
       return [
         {
@@ -381,10 +238,8 @@ export function interpretPlayerMessage(
           args: [message.payload?.step ?? '?', message.payload?.detail ?? ''],
         },
       ];
-    case 'error':
     case 'embedMisconfigured':
     case 'contentGateDetected':
-    case 'playbackBlocked':
       return interpretPlayerFailureMessage(message, context, elapsedMs);
     case 'twitchAuthComplete':
       return [{ type: 'scheduleAuthCompletionReload' }];
@@ -450,11 +305,8 @@ export function interpretPlayerMessage(
         return [];
       }
 
-      const { muted, volume } = message.payload;
-
-      const actions: PlayerBridgeAction[] = [
-        { type: 'applyMuteState', muted, volume },
-      ];
+      const { muted } = message.payload;
+      const actions: PlayerBridgeAction[] = [{ type: 'applyMuteState', muted }];
 
       if (context.deferOverlayUntilUserUnmute && !muted) {
         actions.push({ type: 'unlockOverlay' });
