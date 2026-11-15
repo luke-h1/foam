@@ -40,7 +40,11 @@ function MentionTokenComponent({
   normalisedCurrentUsername,
   replyPlainMentionTarget,
 }: MentionTokenProps) {
-  const mentionContent = formatMentionContent(content);
+  const mentionContent = useSelector(() => {
+    chatStore$.mentionLoginRevision.get();
+    return formatMentionContent(content);
+  });
+
   const mentionedUsername = mentionContent.replace(/^@/, '').trim();
 
   const mentionColor = useSelector(() => {
