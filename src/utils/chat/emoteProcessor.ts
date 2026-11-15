@@ -57,15 +57,19 @@ function getTokenCacheEpoch(
     epochsByCollection.set(collection, epochs);
   }
 
-  let epoch = epochs.get(scopedEmoteKey);
+  const epoch = epochs.get(scopedEmoteKey);
 
-  if (!epoch) {
-    epoch = { current: new Map(), previous: new Map() };
-    evictOldestWhenFull(epochs, MAX_EPOCHS_PER_COLLECTION);
+  if (epoch) {
+    epochs.delete(scopedEmoteKey);
     epochs.set(scopedEmoteKey, epoch);
+    return epoch;
   }
 
-  return epoch;
+  const createdEpoch = { current: new Map(), previous: new Map() };
+
+  evictOldestWhenFull(epochs, MAX_EPOCHS_PER_COLLECTION);
+  epochs.set(scopedEmoteKey, createdEpoch);
+  return createdEpoch;
 }
 
 const baseCollectionCache = new Map<string, EmoteCollection>();

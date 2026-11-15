@@ -735,4 +735,32 @@ describe('processEmotes', () => {
 
     expect(processEmotes(spam)).toBe(first);
   });
+
+  test('keeps the unscoped cache epoch while many personal emote sets pass through it', () => {
+    const unscoped = { ...emptyParams, inputString: 'hot unscoped line' };
+    const first = processEmotes(unscoped);
+
+    expect(processEmotes(unscoped)).toBe(first);
+
+    for (let index = 0; index < 12; index += 1) {
+      processEmotes({
+        ...emptyParams,
+        inputString: 'scoped line',
+        sevenTvPersonalEmotes: [
+          createEmote({
+            id: `personal-${index}`,
+            name: `Personal${index}`,
+            site: '7TV Personal',
+            provider: '7tv',
+          }),
+        ],
+      });
+
+      if (index % 3 === 2) {
+        expect(processEmotes(unscoped)).toBe(first);
+      }
+    }
+
+    expect(processEmotes(unscoped)).toBe(first);
+  });
 });
