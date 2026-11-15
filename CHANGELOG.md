@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.15 (Production)
+## 1.0.16 (Production)
 
 ### ♻️ Refactor
 
@@ -8,6 +8,11 @@
 - Move modules to the layer that owns them ([#983](https://github.com/lhowsam/foam/issues/983))
 - **chat:** Dedupe shared helpers and break sentry type cycle ([#984](https://github.com/lhowsam/foam/issues/984))
 - Untangle the codebase end to end ([#985](https://github.com/lhowsam/foam/issues/985))
+
+### ⚡ Performance
+
+- **chat:** Recycle the message list ([#992](https://github.com/lhowsam/foam/issues/992))
+- **chat:** Sustain frame rate through floods and flings ([#998](https://github.com/lhowsam/foam/issues/998))
 
 ### ✨ Features
 
@@ -22,6 +27,7 @@
 - **tooling:** Source the appeeky key from 1Password, not a GitHub secret ([#987](https://github.com/lhowsam/foam/issues/987))
 - **player:** Recover a silent mid-stream video freeze ([#988](https://github.com/lhowsam/foam/issues/988))
 - **chat:** Stop doubling the @mention on a reply ([#989](https://github.com/lhowsam/foam/issues/989))
+- **app:** Improve iPhone Duo layout and tab bar behavior ([#997](https://github.com/lhowsam/foam/issues/997))
 
 ### 🔧 Miscellaneous Tasks
 
@@ -33,6 +39,11 @@
 - **tooling:** Set up Appeeky Spec for the App Store listing ([#986](https://github.com/lhowsam/foam/issues/986))
 - **tooling:** Add the whats-new release-notes skill
 - **app:** Release 1.0.15
+- **ci:** Move workflows to the self-hosted foam runner ([#991](https://github.com/lhowsam/foam/issues/991))
+- **ci:** Move workflows back to github-hosted runners ([#993](https://github.com/lhowsam/foam/issues/993))
+- **infrastructure:** Bump zizmorcore/zizmor-action from 0.8.0 to 0.8.1 ([#996](https://github.com/lhowsam/foam/issues/996))
+- **infrastructure:** Bump actions/setup-java from 6.1.0 to 6.2.0 ([#995](https://github.com/lhowsam/foam/issues/995))
+- **app:** 1.0.16
 
 ## 1.0.13 (Production)
 
