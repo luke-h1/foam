@@ -438,7 +438,7 @@ index 8274fb6c..deec6208 100644
            .customize(`when` = options.maxWidth <= 0 && options.maxHeight <= 0) {
              downsample(SafeDownsampleStrategy(DecodeFormat.ARGB_8888))
 diff --git a/ios/AnimatedImage.swift b/ios/AnimatedImage.swift
-index 350c9e4d..67f8cebf 100644
+index 350c9e4d..2fedf130 100644
 --- a/ios/AnimatedImage.swift
 +++ b/ios/AnimatedImage.swift
 @@ -8,16 +8,68 @@ internal import SDWebImage
@@ -487,7 +487,7 @@ index 350c9e4d..67f8cebf 100644
 +  private var lastServedSharedFrame: UIImage?
 +
 +  override func animatedImageFrame(at index: UInt) -> UIImage? {
-+    guard isSharedPlaybackActive, Thread.isMainThread else {
++    guard Thread.isMainThread, isSharedPlaybackActive else {
 +      return super.animatedImageFrame(at: index)
 +    }
 +
@@ -818,7 +818,7 @@ index a1f94fe8..9b84c687 100644
    // MARK: - Symbol Effects
  
    @available(iOS 17.0, tvOS 17.0, *)
-diff --git a/node_modules/expo-image/ios/SharedAnimationDriver.swift b/ios/SharedAnimationDriver.swift
+diff --git a/ios/SharedAnimationDriver.swift b/ios/SharedAnimationDriver.swift
 new file mode 100644
 index 00000000..18578e78
 --- /dev/null
