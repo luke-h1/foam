@@ -410,7 +410,6 @@ describe('createUserNoticeMessage', () => {
       'display-name': 'ModUser',
       login: 'moduser',
       'msg-param-months': '24',
-      // Tags reach handlers already IRCv3-unescaped (parseIrcTags decodes).
       'system-msg': 'ModUser is celebrating 24 months as a moderator!',
     });
 

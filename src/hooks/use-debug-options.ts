@@ -1,6 +1,10 @@
 import { useSyncExternalStore } from 'react';
 
-import { type AllowedKey, storageService } from '@app/lib/storage';
+import {
+  type AllowedKey,
+  type StorageChangeEvent,
+  storageService,
+} from '@app/lib/storage';
 
 export type DebugOptions = {
   [key in AllowedKey]?: { enabled: boolean };
@@ -21,8 +25,11 @@ function getDebugOptionsSnapshot(): DebugOptions {
 }
 
 function subscribeToDebugOptions(onStoreChange: () => void): () => void {
-  const handleStorageChange = (key: string) => {
-    if (key === 'ReactQueryDebug' || key === 'all') {
+  const handleStorageChange = (event: StorageChangeEvent) => {
+    if (
+      event.kind === 'clearAll' ||
+      ('key' in event && event.key === 'ReactQueryDebug')
+    ) {
       onStoreChange();
     }
   };

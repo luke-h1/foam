@@ -30,7 +30,7 @@ describe('elapsedStreamTime', () => {
   });
 
   test('returns hours and minutes when the elapsed time is more than 24 hours', () => {
-    const start = subMinutes(NOW, 1500).toISOString(); // 25 hours
+    const start = subMinutes(NOW, 1500).toISOString();
     expect(elapsedStreamTime(start)).toBe('25h 00m');
   });
 });

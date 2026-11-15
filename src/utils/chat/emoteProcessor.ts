@@ -8,6 +8,10 @@ import {
 import { getEmoteArrayContentKey } from '@app/utils/chat/emoteArrayContentKey';
 import { parseWordLinkTokens } from '@app/utils/chat/parse-word-link-tokens/parseWordLinkTokens';
 import { evictOldestWhenFull } from '@app/utils/collection/evictOldestWhenFull';
+import {
+  getChatRowAnimatedEmoteUrl,
+  getChatRowStaticEmoteUrl,
+} from '@app/utils/emote/chatRowEmoteUrl';
 
 import { applyMentionLoginCasing } from './resolve-mention-login/applyMentionLoginCasing';
 import { stripInvisibleChars } from './stripInvisibleChars';
@@ -28,9 +32,52 @@ interface EmoteProcessorParams {
   bttvGlobalEmotes: SanitisedEmote[];
 }
 
-const cache = new Map<string, MessageToken[]>();
-const MAX_CACHE_SIZE = 1000;
+const CACHE_GENERATION_SIZE = 500;
+
+interface TokenCacheEpoch {
+  current: Map<string, MessageToken[]>;
+  previous: Map<string, MessageToken[]>;
+}
+
+const MAX_EPOCHS_PER_COLLECTION = 8;
+
+const epochsByCollection = new WeakMap<
+  EmoteCollection,
+  Map<string, TokenCacheEpoch>
+>();
+
+function getTokenCacheEpoch(
+  collection: EmoteCollection,
+  scopedEmoteKey: string,
+): TokenCacheEpoch {
+  let epochs = epochsByCollection.get(collection);
+
+  if (!epochs) {
+    epochs = new Map();
+    epochsByCollection.set(collection, epochs);
+  }
+
+  const epoch = epochs.get(scopedEmoteKey);
+
+  if (epoch) {
+    epochs.delete(scopedEmoteKey);
+    epochs.set(scopedEmoteKey, epoch);
+    return epoch;
+  }
+
+  const createdEpoch = { current: new Map(), previous: new Map() };
+
+  evictOldestWhenFull(epochs, MAX_EPOCHS_PER_COLLECTION);
+  epochs.set(scopedEmoteKey, createdEpoch);
+  return createdEpoch;
+}
+
 const baseCollectionCache = new Map<string, EmoteCollection>();
+
+const internedEmoteTokens = new WeakMap<
+  SanitisedEmote,
+  MessageToken<'emote'>
+>();
 
 const MAX_BASE_COLLECTION_CACHE_SIZE = 4;
 
@@ -45,6 +92,7 @@ interface EmoteCollection {
   cacheKey: string;
   emojiMap: ReadonlyMap<string, SanitisedEmote>;
   emoteMap: ReadonlyMap<string, SanitisedEmote>;
+  getEmote: (name: string) => SanitisedEmote | undefined;
 }
 
 let lastBaseKeyInputs: SanitisedEmote[][] | null = null;
@@ -61,8 +109,6 @@ function getBaseCollectionKey(
   bttvChannelEmotes: SanitisedEmote[],
   bttvGlobalEmotes: SanitisedEmote[],
 ): string {
-  // One-entry identity memo: nine pointer compares per message instead of
-  // nine WeakMap reads plus an array and a join.
   const last = lastBaseKeyInputs;
 
   if (
@@ -80,8 +126,6 @@ function getBaseCollectionKey(
     return lastBaseKey;
   }
 
-  // Content-derived so a rebuilt array with unchanged emotes keys the same -
-  // identity keying re-parsed the whole window (~800ms) after an emote_set.update.
   const key = [
     getEmoteArrayContentKey(emojiEmotes),
     getEmoteArrayContentKey(sevenTvGlobalEmotes),
@@ -186,7 +230,12 @@ function getBaseCollection({
     }
   });
 
-  const collection = { cacheKey, emojiMap, emoteMap };
+  const collection = {
+    cacheKey,
+    emojiMap,
+    emoteMap,
+    getEmote: (name: string) => emoteMap.get(name),
+  };
 
   if (baseCollectionCache.size >= MAX_BASE_COLLECTION_CACHE_SIZE) {
     evictOldestBaseCollection();
@@ -218,17 +267,9 @@ const contentIdByIds = new Map<string, number>();
 const MAX_CONTENT_ID_CACHE_SIZE = 32;
 let nextContentId = 0;
 
-/**
- * Small integer standing in for the array's contents - spelling the ids into
- * the key scaled per-message cost with the account's unlocked emotes.
- */
 function mintEmoteContentId(idsKey: string): number {
   nextContentId += 1;
 
-  /**
-   * Eviction mints a fresh id for contents seen again, costing a parse-cache
-   * miss and never a wrong hit.
-   */
   evictOldestWhenFull(contentIdByIds, MAX_CONTENT_ID_CACHE_SIZE);
 
   contentIdByIds.set(idsKey, nextContentId);
@@ -272,7 +313,7 @@ function createScopedEmoteLookup(
     sevenTvPersonalEmotes.length === 0 &&
     twitchSubscriberEmotes.length === 0
   ) {
-    return name => baseCollection.emoteMap.get(name);
+    return baseCollection.getEmote;
   }
 
   const cacheKey = `${baseCollection.cacheKey}:${scopedEmoteKey}`;
@@ -299,8 +340,6 @@ function createScopedEmoteLookup(
   return lookup;
 }
 
-// Pure-ASCII words can never match the emoji map, so skip the per-word
-// code-point expansion for them.
 function hasNonAsciiChar(word: string): boolean {
   for (let i = 0; i < word.length; i += 1) {
     if (word.charCodeAt(i) > 0x7f) {
@@ -381,14 +420,18 @@ function stackZeroWidthEmote(
 
   out.length = anchor + 1;
 
-  // Skip duplicate overlay ids (double decode + darkened alpha).
-  const overlaid = base.overlaid ?? [];
-
   const alreadyStacked =
-    base.id === token.id || overlaid.some(overlay => overlay.id === token.id);
+    base.id === token.id ||
+    (base.overlaid?.some(overlay => overlay.id === token.id) ?? false);
 
-  if (!alreadyStacked) {
-    base.overlaid = [...overlaid, token];
+  if (alreadyStacked) {
+    return true;
+  }
+
+  if (base.overlaid) {
+    base.overlaid.push(token);
+  } else {
+    out[anchor] = { ...base, overlaid: [token] };
   }
 
   return true;
@@ -443,21 +486,163 @@ function applyEmoteCompositionPass(tokens: MessageToken[]): MessageToken[] {
   return out;
 }
 
-function toMentionParts({ login, rest }: MentionLoginMatch): MessageToken[] {
-  const mention: MessageToken = { type: 'mention', content: `@${login}` };
-  return rest ? [mention, { type: 'text', content: rest }] : [mention];
+function pushMentionParts(
+  result: MessageToken[],
+  { login, rest }: MentionLoginMatch,
+): void {
+  result.push({ type: 'mention', content: `@${login}` });
+
+  if (rest) {
+    result.push({ type: 'text', content: rest });
+  }
 }
+
+function isWhitespaceCode(code: number): boolean {
+  if (code <= 0x20) {
+    return code === 0x20 || (code >= 0x09 && code <= 0x0d);
+  }
+
+  if (code < 0xa0) {
+    return false;
+  }
+
+  return (
+    code === 0xa0 ||
+    code === 0x16_80 ||
+    (code >= 0x20_00 && code <= 0x20_0a) ||
+    code === 0x20_28 ||
+    code === 0x20_29 ||
+    code === 0x20_2f ||
+    code === 0x20_5f ||
+    code === 0x30_00 ||
+    code === 0xfe_ff
+  );
+}
+
+function getCachedTokens(
+  epoch: TokenCacheEpoch,
+  cleanInput: string,
+): MessageToken[] | undefined {
+  const current = epoch.current.get(cleanInput);
+
+  if (current) {
+    return current;
+  }
+
+  const previous = epoch.previous.get(cleanInput);
+
+  if (previous) {
+    setCachedTokens(epoch, cleanInput, previous);
+  }
+
+  return previous;
+}
+
+function setCachedTokens(
+  epoch: TokenCacheEpoch,
+  cleanInput: string,
+  tokens: MessageToken[],
+): void {
+  if (epoch.current.size >= CACHE_GENERATION_SIZE) {
+    epoch.previous = epoch.current;
+    epoch.current = new Map();
+  }
+
+  epoch.current.set(cleanInput, tokens);
+}
+
+function pushWordTokens(
+  result: MessageToken[],
+  word: string,
+  getEmote: (name: string) => SanitisedEmote | undefined,
+  emojiMap: ReadonlyMap<string, SanitisedEmote>,
+): void {
+  const firstCode = word.charCodeAt(0);
+  const mention = firstCode === 0x40 ? matchMentionLogin(word) : null;
+
+  if (mention) {
+    pushMentionParts(result, mention);
+    return;
+  }
+
+  const linkParts =
+    firstCode === 0x68 || firstCode === 0x48 ? parseWordLinkTokens(word) : null;
+
+  if (linkParts) {
+    result.push(...linkParts);
+    return;
+  }
+
+  let emote = getEmote(word);
+
+  if (!emote && word.length <= 8 && hasNonAsciiChar(word)) {
+    emote = findEmojiForWord(emojiMap, word);
+  }
+
+  if (!emote) {
+    result.push({ type: 'text', content: word });
+    return;
+  }
+
+  const interned = internedEmoteTokens.get(emote);
+
+  if (interned?.content === word) {
+    result.push(interned);
+    return;
+  }
+
+  const token = createEmoteToken(emote, word);
+
+  if (!interned) {
+    internedEmoteTokens.set(emote, token);
+  }
+
+  result.push(token);
+}
+
+function createEmoteToken(
+  emote: SanitisedEmote,
+  word: string,
+): MessageToken<'emote'> {
+  const url = getChatRowAnimatedEmoteUrl(emote) || emote.url;
+  const staticUrl = getChatRowStaticEmoteUrl(emote);
+
+  return {
+    id: emote.id,
+    name: emote.name,
+    type: 'emote' as const,
+    content: word,
+    creator: emote.creator || '',
+    emote_link: emote.emote_link || '',
+    original_name:
+      emote.provider === 'emoji' && !word.startsWith(':')
+        ? word
+        : emote.original_name || '',
+    site: emote.site || '',
+    static_url: staticUrl,
+    thumbnail: url,
+    url,
+    width: emote.width,
+    height: emote.height,
+    aspect_ratio: emote.aspect_ratio,
+    zero_width: emote.zero_width,
+  };
+}
+
+const NO_EMOTES: SanitisedEmote[] = [];
+
+const SPACE_TOKEN: MessageToken = { type: 'text', content: ' ' };
 
 export const processEmotes = (params: EmoteProcessorParams): MessageToken[] => {
   const {
     inputString,
-    emojiEmotes = [],
+    emojiEmotes = NO_EMOTES,
     sevenTvGlobalEmotes,
     sevenTvChannelEmotes,
-    sevenTvPersonalEmotes = [],
+    sevenTvPersonalEmotes = NO_EMOTES,
     twitchGlobalEmotes,
     twitchChannelEmotes,
-    twitchSubscriberEmotes = [],
+    twitchSubscriberEmotes = NO_EMOTES,
     ffzChannelEmotes,
     ffzGlobalEmotes,
     bttvChannelEmotes,
@@ -487,9 +672,9 @@ export const processEmotes = (params: EmoteProcessorParams): MessageToken[] => {
     twitchSubscriberEmotes,
   );
 
-  const cacheKey = `${baseCollection.cacheKey}:${scopedEmoteKey}:${cleanInput}`;
+  const epoch = getTokenCacheEpoch(baseCollection, scopedEmoteKey);
 
-  const cached = cache.get(cacheKey);
+  const cached = getCachedTokens(epoch, cleanInput);
 
   if (cached) {
     return applyMentionLoginCasing(cached);
@@ -503,83 +688,35 @@ export const processEmotes = (params: EmoteProcessorParams): MessageToken[] => {
   );
 
   const emojiMap = baseCollection.emojiMap;
-
-  const words = cleanInput.split(/(\s+)/);
   const result: MessageToken[] = [];
+  let start = 0;
 
-  let i = 0;
+  while (start < cleanInput.length) {
+    const isSpace = isWhitespaceCode(cleanInput.charCodeAt(start));
+    let end = start + 1;
 
-  while (i < words.length) {
-    const word = words[i];
-
-    if (!word) {
-      i += 1;
-      continue;
+    while (
+      end < cleanInput.length &&
+      isWhitespaceCode(cleanInput.charCodeAt(end)) === isSpace
+    ) {
+      end += 1;
     }
 
-    if (/^\s+$/.test(word)) {
-      result.push({ type: 'text', content: word });
-      i += 1;
-
-      continue;
-    }
-
-    const mention = matchMentionLogin(word);
-
-    if (mention) {
-      result.push(...toMentionParts(mention));
-      i += 1;
-
-      continue;
-    }
-
-    const linkParts = parseWordLinkTokens(word);
-
-    if (linkParts) {
-      result.push(...linkParts);
-      i += 1;
-
-      continue;
-    }
-
-    let emote = getEmote(word);
-
-    if (!emote && word.length <= 8 && hasNonAsciiChar(word)) {
-      emote = findEmojiForWord(emojiMap, word);
-    }
-
-    if (emote) {
-      result.push({
-        id: emote.id,
-        name: emote.name,
-        type: 'emote' as const,
-        content: word,
-        creator: emote.creator || '',
-        emote_link: emote.emote_link || '',
-        original_name:
-          emote.provider === 'emoji' && !word.startsWith(':')
-            ? word
-            : emote.original_name || '',
-        site: emote.site || '',
-        static_url: emote.static_url,
-        thumbnail: emote.url,
-        url: emote.url,
-        width: emote.width,
-        height: emote.height,
-        aspect_ratio: emote.aspect_ratio,
-        zero_width: emote.zero_width,
-      });
+    if (isSpace) {
+      result.push(
+        end - start === 1 && cleanInput.charCodeAt(start) === 0x20
+          ? SPACE_TOKEN
+          : { type: 'text', content: cleanInput.slice(start, end) },
+      );
     } else {
-      result.push({ type: 'text', content: word });
+      pushWordTokens(result, cleanInput.slice(start, end), getEmote, emojiMap);
     }
 
-    i += 1;
+    start = end;
   }
 
-  evictOldestWhenFull(cache, MAX_CACHE_SIZE);
-
   const composedResult = applyEmoteCompositionPass(result);
-  cache.set(cacheKey, composedResult);
+  setCachedTokens(epoch, cleanInput, composedResult);
 
   return applyMentionLoginCasing(composedResult);
 };

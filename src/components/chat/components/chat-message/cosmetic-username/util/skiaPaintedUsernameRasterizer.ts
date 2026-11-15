@@ -57,6 +57,7 @@ import {
   layerRectInBox,
 } from './skia-paint-geometry/layerRectInBox';
 import { paintShadowExtents } from './skia-paint-geometry/paintShadowExtents';
+import { type StrikeRect, strikeRect } from './skia-paint-geometry/strikeRect';
 
 export interface RasterizePaintedUsernameOptions {
   displayUsername: string;
@@ -66,6 +67,7 @@ export interface RasterizePaintedUsernameOptions {
   pixelRatio: number;
   fontProvider: SkTypefaceFontProvider;
   fontFamily: string;
+  strikethrough: boolean;
 }
 
 const LAYOUT_WIDTH = 8192;
@@ -197,6 +199,7 @@ interface PaintUsernameLayout {
   textShadows: PaintShadow[];
   stroke: PaintTextStroke | null;
   layers: PaintLayerData[];
+  strike: StrikeRect | null;
   originX: number;
   originY: number;
   surfaceWidthPx: number;
@@ -271,6 +274,7 @@ function buildPaintLayout(
   const measured = buildUsernameParagraph(opts, partial, Skia.Paint());
   const glyphWidthPx = Math.ceil(measured.getLongestLine());
   const glyphHeightPx = Math.ceil(measured.getHeight());
+  const baselinePx = measured.getLineMetrics()[0]?.baseline ?? glyphHeightPx;
 
   if (glyphWidthPx === 0 || glyphHeightPx === 0) {
     return null;
@@ -302,12 +306,43 @@ function buildPaintLayout(
     textShadows,
     stroke,
     layers: getPaintLayers(paint),
+    strike: opts.strikethrough
+      ? strikeRect({
+          fontSizePx: partial.fontSizePx,
+          baselinePx,
+          glyphWidthPx,
+          originX: insetsPx.left,
+          originY: insetsPx.top,
+        })
+      : null,
     originX: insetsPx.left,
     originY: insetsPx.top,
     surfaceWidthPx: glyphWidthPx + insetsPx.left + insetsPx.right,
     surfaceHeightPx: glyphHeightPx + insetsPx.top + insetsPx.bottom,
     insetsPx,
   };
+}
+
+function drawUsernameGlyphs(
+  canvas: SkCanvas,
+  opts: RasterizePaintedUsernameOptions,
+  layout: PaintUsernameLayout,
+  fillPaint: SkPaint,
+): void {
+  buildUsernameParagraph(opts, layout, fillPaint).paint(
+    canvas,
+    layout.originX,
+    layout.originY,
+  );
+
+  const { strike } = layout;
+
+  if (strike) {
+    canvas.drawRect(
+      Skia.XYWHRect(strike.x, strike.y, strike.width, strike.height),
+      fillPaint,
+    );
+  }
 }
 
 function drawPaintedUsername(
@@ -333,11 +368,7 @@ function drawPaintedUsername(
   const measurePaint = Skia.Paint();
 
   const drawGlyphs = (fillPaint: SkPaint) => {
-    buildUsernameParagraph(opts, layout, fillPaint).paint(
-      canvas,
-      originX,
-      originY,
-    );
+    drawUsernameGlyphs(canvas, opts, layout, fillPaint);
   };
 
   let dropShadowChain: SkImageFilter | null = null;
@@ -665,11 +696,11 @@ function paintRevision(paint: PaintData): number {
 }
 
 function paintBitmapCacheKey(opts: RasterizePaintedUsernameOptions): string {
-  // A paint with no visible colour draws in the fallback colour, so the key includes it.
   const fallbackPart = isVisibleSevenTvColor(opts.paint.color)
     ? ''
     : `|${opts.fallbackColor}`;
-  return `${opts.paint.id}|${paintRevision(opts.paint)}|${opts.displayUsername}|${opts.fontSize}|${opts.pixelRatio}${fallbackPart}`;
+  const strikePart = opts.strikethrough ? '|s' : '';
+  return `${opts.paint.id}|${paintRevision(opts.paint)}|${opts.displayUsername}|${opts.fontSize}|${opts.pixelRatio}${fallbackPart}${strikePart}`;
 }
 
 type PaintSurfaces = {
@@ -699,11 +730,6 @@ function renderFlatSurface(
   };
 }
 
-/**
- * A URL layer is composited at draw time. The base and its shadow stay in the
- * foundation. Gradient runs and the stroke are their own passes so a texture
- * can sit between them.
- */
 function renderUrlLayeredSurfaces(
   opts: RasterizePaintedUsernameOptions,
   layout: PaintUsernameLayout,
@@ -760,11 +786,7 @@ function renderUsernameMask(
   const whitePaint = Skia.Paint();
   whitePaint.setColor(Skia.Color('white'));
 
-  buildUsernameParagraph(opts, layout, whitePaint).paint(
-    maskSurface.getCanvas(),
-    layout.originX,
-    layout.originY,
-  );
+  drawUsernameGlyphs(maskSurface.getCanvas(), opts, layout, whitePaint);
 
   const maskImage = maskSurface.makeImageSnapshot();
   maskSurface.dispose();
@@ -772,8 +794,8 @@ function renderUsernameMask(
 }
 
 /**
- * Builds or returns the cached render inputs. Pure and synchronous: URL
- * layers load live in the canvas through `useSharedPaintAnimationFrame`.
+ * Pure and synchronous. URL layers load live in the canvas through
+ * `useSharedPaintAnimationFrame`.
  */
 export function getPaintBitmaps(
   opts: RasterizePaintedUsernameOptions,

@@ -22,10 +22,6 @@ const mockStartAnimating = jest.fn();
 const mockStopAnimating = jest.fn();
 let lastOnDisplay: (() => void) | undefined;
 
-/**
- * The mocked Image is a forwardRef object, so its `render` function is the
- * spyable seam; the class type has no static `render`, hence the `never` bridge.
- */
 interface MockableExpoImage {
   render: (
     props: { onDisplay?: () => void },
@@ -33,7 +29,7 @@ interface MockableExpoImage {
   ) => null;
 }
 
-// SAFETY: `never` is the only bridge TS accepts from the class component to MockableExpoImage.
+// SAFETY: the mocked Image is a forwardRef object, so `render` exists at runtime although the class type has no static `render`.
 const mockableExpoImage: MockableExpoImage = ExpoImage as never;
 
 jest.spyOn(mockableExpoImage, 'render').mockImplementation((props, ref) => {
@@ -125,8 +121,6 @@ describe('EmoteCell animation pause', () => {
       />,
     );
 
-    // The command the cell issues on mount lands before the view has an image
-    // to animate, so the one it issues on display is the one that plays it.
     mockStartAnimating.mockClear();
 
     act(() => lastOnDisplay?.());

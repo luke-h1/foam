@@ -1,8 +1,34 @@
+diff --git a/node_modules/@legendapp/list/.bun-tag-167d0503ad997717 b/.bun-tag-167d0503ad997717
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
 diff --git a/react-native.js b/react-native.js
-index 229f09a8230ab24079d471f65d28d36908f0f2ea..86dd170a964f453db7554349061418320b3fbe9d 100644
+index 229f09a8230ab24079d471f65d28d36908f0f2ea..46c1da8492caeef2a61a3a7d8f4eef9c2325b603 100644
 --- a/react-native.js
 +++ b/react-native.js
-@@ -3932,12 +3932,17 @@ function setDidLayout(ctx) {
+@@ -3524,6 +3524,22 @@ function updateItemPositions(ctx, dataChanged, {
+   if (!didBreakEarly) {
+     updateTotalSize(ctx);
+   }
++  // PATCH(foam): with a keyExtractor nothing removes the size of a key that left
++  // the data, so a chat window that trims old rows keeps one entry per message
++  // forever (F11). After a full pass indexByKey holds every key in the new data;
++  // drop only the sizes of keys that are not in it, so no row in the data re-measures.
++  if (dataChanged && startIndex === 0 && !didBreakEarly) {
++    for (const key of state.sizes.keys()) {
++      if (!indexByKey.has(key)) {
++        state.sizes.delete(key);
++      }
++    }
++    for (const key of sizesKnown.keys()) {
++      if (!indexByKey.has(key)) {
++        sizesKnown.delete(key);
++      }
++    }
++  }
+   if (snapToIndices) {
+     updateSnapToOffsets(ctx);
+   }
+@@ -3932,12 +3948,17 @@ function setDidLayout(ctx) {
  // src/core/calculateItemsInView.ts
  var RENDER_RANGE_PROJECTION_FULL_VELOCITY = 4;
  var RENDER_RANGE_PROJECTION_SETTLE_DELAY = 100;
@@ -21,7 +47,7 @@ index 229f09a8230ab24079d471f65d28d36908f0f2ea..86dd170a964f453db755434906141832
  }
  function scheduleRenderRangeProjectionSettle(ctx) {
    const state = ctx.state;
-@@ -3951,7 +3956,10 @@ function scheduleRenderRangeProjectionSettle(ctx) {
+@@ -3951,7 +3972,10 @@ function scheduleRenderRangeProjectionSettle(ctx) {
      state.timeoutRenderRangeProjectionSettle = void 0;
      state.timeouts.delete(timeout);
      state.scrollHistory.length = 0;
@@ -33,11 +59,69 @@ index 229f09a8230ab24079d471f65d28d36908f0f2ea..86dd170a964f453db755434906141832
    }, RENDER_RANGE_PROJECTION_SETTLE_DELAY);
    state.timeoutRenderRangeProjectionSettle = timeout;
    state.timeouts.add(timeout);
+@@ -5671,14 +5695,21 @@ var ContainerSlot = typedMemo(function ContainerSlot2(props) {
+ var ContainersLayer = typedMemo(function ContainersLayer2({ children, horizontal }) {
+   const ctx = useStateContext();
+   const columnWrapperStyle = ctx.columnWrapperStyle;
+-  const animSize = useValue$("totalSize");
+-  const [readyToRender, numColumns, otherAxisSize = 0] = useArr$(["readyToRender", "numColumns", "otherAxisSize"]);
++  // PATCH(foam): on the new architecture the list height is React state, as in
++  // PositionViewState. Through a JS Animated.Value each height change calls
++  // setNativeProps, which on Fabric is one more commit and layout on the JS thread.
++  // As state, the height goes into the same commit as the container positions.
++  const animSize = IsNewArchitecture ? void 0 : useValue$("totalSize");
++  const [readyToRender, numColumns, otherAxisSize = 0, stateSize = 0] = useArr$(
++    IsNewArchitecture ? ["readyToRender", "numColumns", "otherAxisSize", "totalSize"] : ["readyToRender", "numColumns", "otherAxisSize"]
++  );
++  const size = IsNewArchitecture ? stateSize : animSize;
+   const style = horizontal ? {
+     height: otherAxisSize || "100%",
+     minHeight: otherAxisSize,
+     opacity: readyToRender ? 1 : 0,
+-    width: animSize
+-  } : { height: animSize, minWidth: otherAxisSize, opacity: readyToRender ? 1 : 0 };
++    width: size
++  } : { height: size, minWidth: otherAxisSize, opacity: readyToRender ? 1 : 0 };
+   if (columnWrapperStyle) {
+     const { columnGap, rowGap, gap } = columnWrapperStyle;
+     const gapX = columnGap || gap || 0;
+@@ -5699,7 +5730,7 @@ var ContainersLayer = typedMemo(function ContainersLayer2({ children, horizontal
+       }
+     }
+   }
+-  return /* @__PURE__ */ React2__namespace.createElement(ReactNative.Animated.View, { style }, /* @__PURE__ */ React2__namespace.createElement(ContainerLayoutCoordinator, null, children));
++  return /* @__PURE__ */ React2__namespace.createElement(IsNewArchitecture ? View : ReactNative.Animated.View, { style }, /* @__PURE__ */ React2__namespace.createElement(ContainerLayoutCoordinator, null, children));
+ });
+ var Containers = typedMemo(function Containers2({
+   horizontal,
 diff --git a/react-native.mjs b/react-native.mjs
-index c2e0f3823f524e31e2105a5fbda76be78c926226..653bd3269cd63cbdb4a412f29d2f244638304554 100644
+index c2e0f3823f524e31e2105a5fbda76be78c926226..77766d8df8268345f0b7d2633a1bd9826f25a3f1 100644
 --- a/react-native.mjs
 +++ b/react-native.mjs
-@@ -3911,12 +3911,17 @@ function setDidLayout(ctx) {
+@@ -3503,6 +3503,22 @@ function updateItemPositions(ctx, dataChanged, {
+   if (!didBreakEarly) {
+     updateTotalSize(ctx);
+   }
++  // PATCH(foam): with a keyExtractor nothing removes the size of a key that left
++  // the data, so a chat window that trims old rows keeps one entry per message
++  // forever (F11). After a full pass indexByKey holds every key in the new data;
++  // drop only the sizes of keys that are not in it, so no row in the data re-measures.
++  if (dataChanged && startIndex === 0 && !didBreakEarly) {
++    for (const key of state.sizes.keys()) {
++      if (!indexByKey.has(key)) {
++        state.sizes.delete(key);
++      }
++    }
++    for (const key of sizesKnown.keys()) {
++      if (!indexByKey.has(key)) {
++        sizesKnown.delete(key);
++      }
++    }
++  }
+   if (snapToIndices) {
+     updateSnapToOffsets(ctx);
+   }
+@@ -3911,12 +3927,17 @@ function setDidLayout(ctx) {
  // src/core/calculateItemsInView.ts
  var RENDER_RANGE_PROJECTION_FULL_VELOCITY = 4;
  var RENDER_RANGE_PROJECTION_SETTLE_DELAY = 100;
@@ -56,7 +140,7 @@ index c2e0f3823f524e31e2105a5fbda76be78c926226..653bd3269cd63cbdb4a412f29d2f2446
  }
  function scheduleRenderRangeProjectionSettle(ctx) {
    const state = ctx.state;
-@@ -3930,7 +3935,10 @@ function scheduleRenderRangeProjectionSettle(ctx) {
+@@ -3930,7 +3951,10 @@ function scheduleRenderRangeProjectionSettle(ctx) {
      state.timeoutRenderRangeProjectionSettle = void 0;
      state.timeouts.delete(timeout);
      state.scrollHistory.length = 0;
@@ -68,11 +152,69 @@ index c2e0f3823f524e31e2105a5fbda76be78c926226..653bd3269cd63cbdb4a412f29d2f2446
    }, RENDER_RANGE_PROJECTION_SETTLE_DELAY);
    state.timeoutRenderRangeProjectionSettle = timeout;
    state.timeouts.add(timeout);
+@@ -5650,14 +5674,21 @@ var ContainerSlot = typedMemo(function ContainerSlot2(props) {
+ var ContainersLayer = typedMemo(function ContainersLayer2({ children, horizontal }) {
+   const ctx = useStateContext();
+   const columnWrapperStyle = ctx.columnWrapperStyle;
+-  const animSize = useValue$("totalSize");
+-  const [readyToRender, numColumns, otherAxisSize = 0] = useArr$(["readyToRender", "numColumns", "otherAxisSize"]);
++  // PATCH(foam): on the new architecture the list height is React state, as in
++  // PositionViewState. Through a JS Animated.Value each height change calls
++  // setNativeProps, which on Fabric is one more commit and layout on the JS thread.
++  // As state, the height goes into the same commit as the container positions.
++  const animSize = IsNewArchitecture ? void 0 : useValue$("totalSize");
++  const [readyToRender, numColumns, otherAxisSize = 0, stateSize = 0] = useArr$(
++    IsNewArchitecture ? ["readyToRender", "numColumns", "otherAxisSize", "totalSize"] : ["readyToRender", "numColumns", "otherAxisSize"]
++  );
++  const size = IsNewArchitecture ? stateSize : animSize;
+   const style = horizontal ? {
+     height: otherAxisSize || "100%",
+     minHeight: otherAxisSize,
+     opacity: readyToRender ? 1 : 0,
+-    width: animSize
+-  } : { height: animSize, minWidth: otherAxisSize, opacity: readyToRender ? 1 : 0 };
++    width: size
++  } : { height: size, minWidth: otherAxisSize, opacity: readyToRender ? 1 : 0 };
+   if (columnWrapperStyle) {
+     const { columnGap, rowGap, gap } = columnWrapperStyle;
+     const gapX = columnGap || gap || 0;
+@@ -5678,7 +5709,7 @@ var ContainersLayer = typedMemo(function ContainersLayer2({ children, horizontal
+       }
+     }
+   }
+-  return /* @__PURE__ */ React2.createElement(Animated.View, { style }, /* @__PURE__ */ React2.createElement(ContainerLayoutCoordinator, null, children));
++  return /* @__PURE__ */ React2.createElement(IsNewArchitecture ? View : Animated.View, { style }, /* @__PURE__ */ React2.createElement(ContainerLayoutCoordinator, null, children));
+ });
+ var Containers = typedMemo(function Containers2({
+   horizontal,
 diff --git a/react-native.web.js b/react-native.web.js
-index 544cca82136ab14cbeec0a01499f554bd4eca75f..0097427b262f11fa3de27dff39d99adc8a789fbf 100644
+index 544cca82136ab14cbeec0a01499f554bd4eca75f..3c32ca0ffe6af9f124876ede5d2eac611f720e40 100644
 --- a/react-native.web.js
 +++ b/react-native.web.js
-@@ -3954,12 +3954,17 @@ function setDidLayout(ctx) {
+@@ -3546,6 +3546,22 @@ function updateItemPositions(ctx, dataChanged, {
+   if (!didBreakEarly) {
+     updateTotalSize(ctx);
+   }
++  // PATCH(foam): with a keyExtractor nothing removes the size of a key that left
++  // the data, so a chat window that trims old rows keeps one entry per message
++  // forever (F11). After a full pass indexByKey holds every key in the new data;
++  // drop only the sizes of keys that are not in it, so no row in the data re-measures.
++  if (dataChanged && startIndex === 0 && !didBreakEarly) {
++    for (const key of state.sizes.keys()) {
++      if (!indexByKey.has(key)) {
++        state.sizes.delete(key);
++      }
++    }
++    for (const key of sizesKnown.keys()) {
++      if (!indexByKey.has(key)) {
++        sizesKnown.delete(key);
++      }
++    }
++  }
+   if (snapToIndices) {
+     updateSnapToOffsets(ctx);
+   }
+@@ -3954,12 +3970,17 @@ function setDidLayout(ctx) {
  // src/core/calculateItemsInView.ts
  var RENDER_RANGE_PROJECTION_FULL_VELOCITY = 4;
  var RENDER_RANGE_PROJECTION_SETTLE_DELAY = 100;
@@ -91,7 +233,7 @@ index 544cca82136ab14cbeec0a01499f554bd4eca75f..0097427b262f11fa3de27dff39d99adc
  }
  function scheduleRenderRangeProjectionSettle(ctx) {
    const state = ctx.state;
-@@ -3973,7 +3978,10 @@ function scheduleRenderRangeProjectionSettle(ctx) {
+@@ -3973,7 +3994,10 @@ function scheduleRenderRangeProjectionSettle(ctx) {
      state.timeoutRenderRangeProjectionSettle = void 0;
      state.timeouts.delete(timeout);
      state.scrollHistory.length = 0;
@@ -104,10 +246,33 @@ index 544cca82136ab14cbeec0a01499f554bd4eca75f..0097427b262f11fa3de27dff39d99adc
    state.timeoutRenderRangeProjectionSettle = timeout;
    state.timeouts.add(timeout);
 diff --git a/react-native.web.mjs b/react-native.web.mjs
-index 6b2d9011f6c5e85664eca195de538617fe7d9dee..f8036f1cf112457988612a33d640142c759b5acf 100644
+index 6b2d9011f6c5e85664eca195de538617fe7d9dee..85a635774480c9639ff78e21fca9211fba57e593 100644
 --- a/react-native.web.mjs
 +++ b/react-native.web.mjs
-@@ -3933,12 +3933,17 @@ function setDidLayout(ctx) {
+@@ -3525,6 +3525,22 @@ function updateItemPositions(ctx, dataChanged, {
+   if (!didBreakEarly) {
+     updateTotalSize(ctx);
+   }
++  // PATCH(foam): with a keyExtractor nothing removes the size of a key that left
++  // the data, so a chat window that trims old rows keeps one entry per message
++  // forever (F11). After a full pass indexByKey holds every key in the new data;
++  // drop only the sizes of keys that are not in it, so no row in the data re-measures.
++  if (dataChanged && startIndex === 0 && !didBreakEarly) {
++    for (const key of state.sizes.keys()) {
++      if (!indexByKey.has(key)) {
++        state.sizes.delete(key);
++      }
++    }
++    for (const key of sizesKnown.keys()) {
++      if (!indexByKey.has(key)) {
++        sizesKnown.delete(key);
++      }
++    }
++  }
+   if (snapToIndices) {
+     updateSnapToOffsets(ctx);
+   }
+@@ -3933,12 +3949,17 @@ function setDidLayout(ctx) {
  // src/core/calculateItemsInView.ts
  var RENDER_RANGE_PROJECTION_FULL_VELOCITY = 4;
  var RENDER_RANGE_PROJECTION_SETTLE_DELAY = 100;
@@ -126,7 +291,7 @@ index 6b2d9011f6c5e85664eca195de538617fe7d9dee..f8036f1cf112457988612a33d640142c
  }
  function scheduleRenderRangeProjectionSettle(ctx) {
    const state = ctx.state;
-@@ -3952,7 +3957,10 @@ function scheduleRenderRangeProjectionSettle(ctx) {
+@@ -3952,7 +3973,10 @@ function scheduleRenderRangeProjectionSettle(ctx) {
      state.timeoutRenderRangeProjectionSettle = void 0;
      state.timeouts.delete(timeout);
      state.scrollHistory.length = 0;
@@ -139,10 +304,33 @@ index 6b2d9011f6c5e85664eca195de538617fe7d9dee..f8036f1cf112457988612a33d640142c
    state.timeoutRenderRangeProjectionSettle = timeout;
    state.timeouts.add(timeout);
 diff --git a/react.js b/react.js
-index 544cca82136ab14cbeec0a01499f554bd4eca75f..0097427b262f11fa3de27dff39d99adc8a789fbf 100644
+index 544cca82136ab14cbeec0a01499f554bd4eca75f..3c32ca0ffe6af9f124876ede5d2eac611f720e40 100644
 --- a/react.js
 +++ b/react.js
-@@ -3954,12 +3954,17 @@ function setDidLayout(ctx) {
+@@ -3546,6 +3546,22 @@ function updateItemPositions(ctx, dataChanged, {
+   if (!didBreakEarly) {
+     updateTotalSize(ctx);
+   }
++  // PATCH(foam): with a keyExtractor nothing removes the size of a key that left
++  // the data, so a chat window that trims old rows keeps one entry per message
++  // forever (F11). After a full pass indexByKey holds every key in the new data;
++  // drop only the sizes of keys that are not in it, so no row in the data re-measures.
++  if (dataChanged && startIndex === 0 && !didBreakEarly) {
++    for (const key of state.sizes.keys()) {
++      if (!indexByKey.has(key)) {
++        state.sizes.delete(key);
++      }
++    }
++    for (const key of sizesKnown.keys()) {
++      if (!indexByKey.has(key)) {
++        sizesKnown.delete(key);
++      }
++    }
++  }
+   if (snapToIndices) {
+     updateSnapToOffsets(ctx);
+   }
+@@ -3954,12 +3970,17 @@ function setDidLayout(ctx) {
  // src/core/calculateItemsInView.ts
  var RENDER_RANGE_PROJECTION_FULL_VELOCITY = 4;
  var RENDER_RANGE_PROJECTION_SETTLE_DELAY = 100;
@@ -161,7 +349,7 @@ index 544cca82136ab14cbeec0a01499f554bd4eca75f..0097427b262f11fa3de27dff39d99adc
  }
  function scheduleRenderRangeProjectionSettle(ctx) {
    const state = ctx.state;
-@@ -3973,7 +3978,10 @@ function scheduleRenderRangeProjectionSettle(ctx) {
+@@ -3973,7 +3994,10 @@ function scheduleRenderRangeProjectionSettle(ctx) {
      state.timeoutRenderRangeProjectionSettle = void 0;
      state.timeouts.delete(timeout);
      state.scrollHistory.length = 0;
@@ -174,10 +362,33 @@ index 544cca82136ab14cbeec0a01499f554bd4eca75f..0097427b262f11fa3de27dff39d99adc
    state.timeoutRenderRangeProjectionSettle = timeout;
    state.timeouts.add(timeout);
 diff --git a/react.mjs b/react.mjs
-index 6b2d9011f6c5e85664eca195de538617fe7d9dee..f8036f1cf112457988612a33d640142c759b5acf 100644
+index 6b2d9011f6c5e85664eca195de538617fe7d9dee..85a635774480c9639ff78e21fca9211fba57e593 100644
 --- a/react.mjs
 +++ b/react.mjs
-@@ -3933,12 +3933,17 @@ function setDidLayout(ctx) {
+@@ -3525,6 +3525,22 @@ function updateItemPositions(ctx, dataChanged, {
+   if (!didBreakEarly) {
+     updateTotalSize(ctx);
+   }
++  // PATCH(foam): with a keyExtractor nothing removes the size of a key that left
++  // the data, so a chat window that trims old rows keeps one entry per message
++  // forever (F11). After a full pass indexByKey holds every key in the new data;
++  // drop only the sizes of keys that are not in it, so no row in the data re-measures.
++  if (dataChanged && startIndex === 0 && !didBreakEarly) {
++    for (const key of state.sizes.keys()) {
++      if (!indexByKey.has(key)) {
++        state.sizes.delete(key);
++      }
++    }
++    for (const key of sizesKnown.keys()) {
++      if (!indexByKey.has(key)) {
++        sizesKnown.delete(key);
++      }
++    }
++  }
+   if (snapToIndices) {
+     updateSnapToOffsets(ctx);
+   }
+@@ -3933,12 +3949,17 @@ function setDidLayout(ctx) {
  // src/core/calculateItemsInView.ts
  var RENDER_RANGE_PROJECTION_FULL_VELOCITY = 4;
  var RENDER_RANGE_PROJECTION_SETTLE_DELAY = 100;
@@ -196,7 +407,7 @@ index 6b2d9011f6c5e85664eca195de538617fe7d9dee..f8036f1cf112457988612a33d640142c
  }
  function scheduleRenderRangeProjectionSettle(ctx) {
    const state = ctx.state;
-@@ -3952,7 +3957,10 @@ function scheduleRenderRangeProjectionSettle(ctx) {
+@@ -3952,7 +3973,10 @@ function scheduleRenderRangeProjectionSettle(ctx) {
      state.timeoutRenderRangeProjectionSettle = void 0;
      state.timeouts.delete(timeout);
      state.scrollHistory.length = 0;

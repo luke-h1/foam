@@ -1,16 +1,7 @@
-/**
- * Lives here so `clearImageCache` can empty the Skia paint bitmap cache
- * without importing the Skia rasterizer.
- */
-
 interface DisposableTexture {
   dispose(): void;
 }
 
-/**
- * Structural mirror of `PaintBitmaps` so this module never imports Skia; a
- * renamed rasterizer field still fails typecheck at `cachePaintBitmaps`.
- */
 export interface DisposablePaintBitmaps {
   staticImage: DisposableTexture;
   maskImage: DisposableTexture | null;
@@ -32,10 +23,6 @@ const byteSizes = new Map<string, number>();
 
 let totalBytes = 0;
 
-/**
- * Retain counts for entries a mounted canvas is still drawing. Eviction only
- * unlinks an entry from the cache; the last release frees its textures.
- */
 const retainCounts = new Map<DisposablePaintBitmaps, number>();
 
 /**
@@ -46,10 +33,6 @@ const pendingDisposal = new Set<DisposablePaintBitmaps>();
 
 let disposalFlushScheduled = false;
 
-/**
- * Lets a retain that lost the race above find out its textures are gone,
- * rather than handing a dead entry to a canvas.
- */
 const disposedEntries = new WeakSet<DisposablePaintBitmaps>();
 
 function disposeTextures(entry: DisposablePaintBitmaps): void {
@@ -70,8 +53,6 @@ function flushPendingDisposal(): void {
 
   for (const entry of [...pendingDisposal]) {
     if (retainCounts.has(entry)) {
-      // A canvas mounted onto this entry after it was evicted; the matching
-      // release frees it instead.
       continue;
     }
 
@@ -94,10 +75,6 @@ function scheduleDisposal(entry: DisposablePaintBitmaps): void {
   });
 }
 
-/**
- * Map iteration order is insertion order, so re-inserting on a hit keeps
- * eviction least-recently-used rather than first-inserted.
- */
 export function getCachedPaintBitmaps(
   key: string,
 ): DisposablePaintBitmaps | undefined {
@@ -181,8 +158,7 @@ export function releasePaintBitmaps(entry: DisposablePaintBitmaps): void {
 }
 
 /**
- * Drop cached paint bitmaps (session reset / clear image cache / memory
- * warning). Entries still on screen are freed by their last release.
+ * Entries still on screen are freed by their last release.
  */
 export function clearPaintBitmapCache(): void {
   for (const entry of cache.values()) {

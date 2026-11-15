@@ -1,11 +1,6 @@
 /**
  * Generates src/utils/emoji/emoji-dataset.json from emojibase-data.
  *
- * emojibase-data ships ~1.1MB of JSON across data.json and three shortcode
- * maps. The app only needs each hexcode and its deduped aliases. Building that
- * here keeps emojibase-data (a devDependency) out of the app bundle and ships
- * a much smaller dataset.
- *
  * Run with: bun run gen:emoji
  */
 import { createRequire } from 'node:module';

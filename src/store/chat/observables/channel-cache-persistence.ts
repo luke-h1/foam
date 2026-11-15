@@ -4,14 +4,10 @@ import { createMMKV } from 'react-native-mmkv';
 import { MAX_CACHED_CHANNELS } from '../types/cache-limits';
 import type { ChannelCacheType } from '../types/constants';
 
-// One MMKV key per channel: the shared `chat-store-v2` blob reached 20 MB and
-// was parsed whole on first chat open. Native only - the `.web.ts` sibling
-// keeps the Legend State blob.
 export const CHANNEL_CACHE_PERSISTENCE_ENABLED = true;
 
 const caches = createMMKV({ id: 'chat-channel-caches' });
 
-// `lastUpdated` per channel, kept apart so pruning never parses a cache.
 const index = createMMKV({ id: 'chat-channel-cache-index' });
 
 const pendingWrites = new Map<string, ChannelCacheType | undefined>();
@@ -21,8 +17,6 @@ let hydrating = false;
 export const readPersistedChannelCache = (
   channelId: string,
 ): ChannelCacheType | undefined => {
-  // A queued write is the newer truth until it flushes; without this a
-  // channel cleared and reopened inside the coalescing window would come back.
   if (pendingWrites.has(channelId)) {
     return pendingWrites.get(channelId);
   }
@@ -62,7 +56,6 @@ export const flushPersistedChannelCacheWrites = (): void => {
   pendingWrites.clear();
 };
 
-// Coalesced for 250ms and flushed on background, like the Legend State patch.
 export const queuePersistedChannelCacheWrite = (
   channelId: string,
   cache: ChannelCacheType | undefined,
@@ -76,7 +69,6 @@ export const queuePersistedChannelCacheWrite = (
 export const prunePersistedChannelCaches = (
   currentChannelId: string,
 ): string[] => {
-  // Index and blob land together in flush, so count after flushing.
   flushPersistedChannelCacheWrites();
 
   const ids = index.getAllKeys();
@@ -125,10 +117,6 @@ export const runChannelCacheHydration = (write: () => void): void => {
 
 export const isHydratingChannelCache = (): boolean => hydrating;
 
-/**
- * Not migrated: every slice has a one hour TTL, and migrating would parse the
- * 20 MB blob this module exists to avoid.
- */
 export const removeLegacyChatStoreBlob = (key: string): void => {
   try {
     const legacy = createMMKV({ id: 'obsPersist' });

@@ -237,7 +237,6 @@ describe('SubscriptionNotice', () => {
 
       renderNotice(token);
 
-      // Single month gifts don't show the month count in parentheses
       expect(screen.queryByText(/\(1 month\)/)).not.toBeOnTheScreen();
     });
 

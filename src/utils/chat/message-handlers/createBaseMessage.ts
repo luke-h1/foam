@@ -13,6 +13,9 @@ interface CreateBaseMessageParams {
   channelName: string;
   text: string;
   isAction?: boolean;
+  isHistorical?: boolean;
+  parentColor?: string;
+  pendingEmoteParse?: boolean;
   timestampFormat: ChatTimestampFormat;
 }
 
@@ -21,6 +24,9 @@ export const createBaseMessage = ({
   channelName,
   text,
   isAction,
+  isHistorical,
+  parentColor,
+  pendingEmoteParse,
   timestampFormat,
 }: CreateBaseMessageParams): ChatMessageType<'usernotice'> => {
   const userstate = createUserStateFromTags(tags);
@@ -37,6 +43,7 @@ export const createBaseMessage = ({
     timestamp: createChatTimestampFromTags(tags, timestampFormat),
     sender: userstate.username || '',
     ...getReplyFields(tags),
+    parentColor,
     isChannelPointRedemption:
       Boolean(tags['custom-reward-id']) || isHighlightedMessage,
   };
@@ -47,6 +54,14 @@ export const createBaseMessage = ({
 
   if (isAction) {
     message.isAction = true;
+  }
+
+  if (isHistorical) {
+    message.isHistorical = true;
+  }
+
+  if (pendingEmoteParse) {
+    message.pendingEmoteParse = true;
   }
 
   return message;

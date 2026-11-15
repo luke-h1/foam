@@ -37,8 +37,6 @@ export async function preloadEmotes(
   emotes: SanitisedEmote[],
   { disableAnimations }: PreloadEmotesOptions,
 ): Promise<void> {
-  // Warm only the display URL chat rows render; warming every copy-only
-  // static/animated scale would multiply channel-entry network work.
   const toPreload = collectEmoteWarmUrls(emotes, {
     disableAnimations,
     accept: url => !preloadedUrls.has(url),
@@ -50,8 +48,6 @@ export async function preloadEmotes(
 
   const BATCH_SIZE = 10;
   for (const batch of chunk(toPreload, BATCH_SIZE)) {
-    // Sequential batches to avoid overwhelming the network. Failed URLs stay
-    // out of preloadedUrls so a later attempt can retry them.
     try {
       // eslint-disable-next-line react-doctor/async-await-in-loop -- batch preload is intentionally throttled
       const warmed = await prefetchToDisk(batch);

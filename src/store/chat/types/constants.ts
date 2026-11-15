@@ -29,10 +29,6 @@ export interface ChannelCacheType extends ChatResourceSliceRecord<
   twitchChannelEmotes: SanitisedEmote[];
   twitchSubscriberEmotes: SanitisedEmote[];
   twitchSubscriberEmotesUserId?: string;
-  /**
-   * Streamer name + pfp per owner_id in twitchSubscriberEmotes; optional
-   * because older persisted caches lack it.
-   */
   twitchSubscriberChannelProfiles?: Record<string, SubscriberChannelProfile>;
   sevenTvChannelEmotes: SanitisedEmote[];
   ffzChannelEmotes: SanitisedEmote[];

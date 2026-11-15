@@ -32,10 +32,6 @@ import { useChatSession } from './hooks/use-chat-session';
 import { useChatSurface } from './hooks/use-chat-surface';
 import { useChatTransientState } from './hooks/use-chat-transient-state';
 
-/**
- * First-frame guess at the composer height, before `onComposerLayout` reports
- * the measured value. Only affects the bottom inset on the very first render.
- */
 const ESTIMATED_COMPOSER_HEIGHT = 56;
 
 export interface ChatProps {
@@ -286,8 +282,8 @@ export const Chat = memo(
                 ref={composerRef}
               >
                 <ChatInputShell
+                  key={user?.id ?? 'signed-out'}
                   {...{
-                    key: user?.id ?? 'signed-out',
                     ref: inputShellRef,
                     channelId,
                     channelName,

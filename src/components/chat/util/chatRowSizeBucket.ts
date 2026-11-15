@@ -9,29 +9,15 @@ import { isSubscriptionNoticeToken } from '@app/utils/chat/subscription-notice-t
  */
 const EMOTE_WEIGHT = 4;
 
-/**
- * A clip renders a MediaLinkCard on its own line, roughly two lines of body.
- */
 const TWITCH_CLIP_WEIGHT = 70;
 
-/**
- * A 7TV emote link renders the inline MediaLinkCard chip, a 28pt thumbnail and
- * a one-line title that can stretch to the full row.
- */
 const STV_EMOTE_LINK_WEIGHT = 35;
 
 const NOTICE_META_ROW_WEIGHT = 34;
 const SUBSCRIPTION_DESCRIPTION_WEIGHT = 48;
 
-/**
- * A Twitch chat GIF at `gifSize`, about a short card tall.
- */
 const GIF_WEIGHT = 48;
 
-/**
- * About a wrapped line apart at the low end where nearly every row sits,
- * widening down the tail so one copypasta cannot open a bucket of its own.
- */
 const BUCKET_UPPER_BOUNDS = [30, 60, 100, 150, 220, 320, 460, 640];
 
 const bucketCache = new WeakMap<AnyChatMessageType, string>();
@@ -96,10 +82,6 @@ function getPartWeight(token: MessageToken): number {
   }
 }
 
-/**
- * Reads the message only: cosmetics land after the row is placed, and the
- * list treats a row's type as fixed from that point.
- */
 export function getChatRowSizeBucket(item: AnyChatMessageType): string {
   const cached = bucketCache.get(item);
 

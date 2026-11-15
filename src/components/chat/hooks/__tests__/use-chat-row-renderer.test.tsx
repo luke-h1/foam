@@ -185,7 +185,7 @@ describe('useChatRowRenderer', () => {
     expect(hook.result.current.keyExtractor(replyMessage)).toBe('msg-2_msg-2');
 
     expect(hook.result.current.getItemType(replyMessage)).toBe(
-      'user_chat-reply-w0',
+      'user_chat-reply-inline-w0',
     );
   });
 

@@ -79,7 +79,6 @@ export function buildTwitchLatencyTrackerScript(): string {
   async function enableVideoStats() {
     if (enableInFlight) { return; }
     enableInFlight = true;
-    // Hide the settings menu only while we drive it; safety timer always restores it.
     ensureStyle(
       SETTINGS_MENU_HIDE_ID,
       '[data-a-target="player-settings-menu"]{display:none!important;visibility:hidden!important;opacity:0!important;}'
@@ -102,7 +101,6 @@ export function buildTwitchLatencyTrackerScript(): string {
     } catch (e) {
     } finally {
       clearTimeout(safety);
-      // Let the close click unmount the menu before revealing it.
       setTimeout(function() {
         removeStyle(SETTINGS_MENU_HIDE_ID);
         enableInFlight = false;

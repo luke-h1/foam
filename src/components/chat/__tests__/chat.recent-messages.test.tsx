@@ -74,10 +74,6 @@ const mockedGetRecentMessages = jest
   .spyOn(recentMessagesService, 'getRecentMessages')
   .mockResolvedValue([]);
 
-/**
- * The real resolver falls back to `''` (never `undefined`) when a Twitch
- * user has no linked 7TV account.
- */
 jest.spyOn(sevenTvService, 'get7tvUserId').mockResolvedValue('');
 jest.spyOn(sevenTvService, 'getPersonalEmoteSet').mockResolvedValue([]);
 jest.spyOn(sevenTvService, 'getUserCosmeticsGql').mockResolvedValue(null);
@@ -123,7 +119,6 @@ Object.defineProperty(keyboardControllerModule, 'KeyboardStickyView', {
   ),
 });
 
-// spyOn can't patch the root's non-configurable getter; spy the defining submodule - the barrel forwards live.
 jest
   .spyOn(safeAreaContextModule, 'useSafeAreaInsets')
   .mockReturnValue({ top: 0, right: 0, bottom: 0, left: 0 });

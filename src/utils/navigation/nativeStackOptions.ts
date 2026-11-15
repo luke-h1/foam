@@ -17,10 +17,6 @@ export const nativeStackScreenOptions = {
   contentStyle: { backgroundColor: theme.color.background.dark },
 } as const;
 
-/**
- * Tab root screens only: an iOS large title that collapses on scroll, set in
- * Montserrat. Pushed screens keep the system title font.
- */
 export const nativeStackTabRootScreenOptions = {
   headerLargeTitle: isIOS,
   headerTransparent: isIOS,

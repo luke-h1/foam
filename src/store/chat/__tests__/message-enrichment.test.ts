@@ -1,6 +1,7 @@
 import {
   createBadge,
   createEmoteData,
+  createSevenTvEmote,
   createTwitchEmote,
 } from '@app/components/chat/__tests__/__fixtures__/chatFactories.fixture';
 import { createChatMessageFixture } from '@app/components/chat/util/__tests__/__fixtures__/chatMessage.fixture';
@@ -24,6 +25,7 @@ import {
 import { flushChatStoreTimers } from '@app/test/chat-store-teardown';
 import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
+import type { MessageToken } from '@app/types/chat/messageToken';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { createTextToken } from '@app/utils/chat/__tests__/__fixtures__/messageToken.fixture';
@@ -431,6 +433,128 @@ describe('resolveVisibleMessageUpdate', () => {
       ],
       storedTokens: [{ type: 'text', content: 'hello Kappa' }],
     });
+  });
+
+  test('returns null when re-resolution matches the stored row', async () => {
+    const message = createChatMessageFixture({
+      message_id: 'visible-2',
+      message_nonce: 'nv2',
+      message: [createTextToken('hello Kappa')],
+      userstate: createUserStateTags({
+        'badges-raw': 'subscriber/12',
+      }),
+    });
+
+    addMessages([message]);
+
+    const first = await resolveVisibleMessageUpdate({
+      channelId,
+      message,
+      show7TvEmotes: true,
+      userLogin: 'me',
+    });
+
+    expect(first).not.toBeNull();
+
+    const hydrated = {
+      ...message,
+      message: first?.updates.message ?? message.message,
+      badges: first?.updates.badges ?? message.badges,
+    };
+
+    const second = await resolveVisibleMessageUpdate({
+      channelId,
+      message: hydrated,
+      show7TvEmotes: true,
+      userLogin: 'me',
+    });
+
+    expect(second).toBeNull();
+  });
+
+  test('compares overlaid emotes when it decides whether a row changed', async () => {
+    const snow = createSevenTvEmote({
+      id: 'snow-id',
+      name: 'SoSnowy',
+      original_name: 'SoSnowy',
+      url: 'https://cdn.example.test/snow.webp',
+      zero_width: true,
+    });
+
+    chatStore$.persisted.channelCaches.set({
+      [channelId]: {
+        ...makeEmptyEmoteData(),
+        twitchChannelEmotes: [kappa],
+        sevenTvChannelEmotes: [snow],
+      },
+    });
+
+    const message = createChatMessageFixture({
+      message_id: 'overlay-equal',
+      message_nonce: 'overlay-equal-nonce',
+      message: [createTextToken('Kappa SoSnowy')],
+    });
+
+    const first = await resolveVisibleMessageUpdate({
+      channelId,
+      message,
+      show7TvEmotes: true,
+      userLogin: 'me',
+    });
+
+    const resolvedTokens = first?.updates.message ?? [];
+    const [resolvedBase] = resolvedTokens;
+
+    expect(
+      resolvedBase?.type === 'emote'
+        ? summariseTokens(resolvedBase.overlaid ?? [])
+        : [],
+    ).toEqual<TokenSummary[]>([
+      {
+        type: 'emote',
+        content: 'SoSnowy',
+        url: 'https://cdn.example.test/snow.webp',
+      },
+    ]);
+
+    const hydrated = {
+      ...message,
+      message: resolvedTokens,
+      badges: first?.updates.badges ?? message.badges,
+    };
+
+    const unchanged = await resolveVisibleMessageUpdate({
+      channelId,
+      message: hydrated,
+      show7TvEmotes: true,
+      userLogin: 'me',
+    });
+
+    expect(unchanged).toBeNull();
+
+    const staleTokens = resolvedTokens.map((token): MessageToken => {
+      if (token.type !== 'emote' || !token.overlaid) {
+        return token;
+      }
+
+      return {
+        ...token,
+        overlaid: token.overlaid.map(overlay => ({
+          ...overlay,
+          id: 'stale-snow-id',
+          url: 'https://cdn.example.test/stale-snow.webp',
+        })),
+      };
+    });
+
+    const stale = await resolveVisibleMessageUpdate({
+      channelId,
+      message: { ...hydrated, message: staleTokens },
+      show7TvEmotes: true,
+      userLogin: 'me',
+    });
+
+    expect(stale?.updates.message).toEqual<MessageToken[]>(resolvedTokens);
   });
 
   test('keeps a stored gif when rebuilt text is shorter than the tag offsets', async () => {

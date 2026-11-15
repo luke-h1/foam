@@ -91,10 +91,6 @@ export const Image = function Image({
     source,
   });
 
-  /**
-   * When our file cache handles persistence, keep expo-image to memory
-   * caching - otherwise the same bytes land on disk twice.
-   */
   const resolvedCachePolicy =
     cachePolicy ?? (shouldUseFileCache ? 'memory' : undefined);
 

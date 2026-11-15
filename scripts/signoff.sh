@@ -4,14 +4,6 @@
 # commit status on HEAD (basecamp/gh-signoff).
 #
 #   bun run signoff
-#
-# The status is not a required check: merges still gate on the GitHub workflows,
-# so this records that the suite passed on this machine rather than unlocking
-# anything. `gh signoff install` would make it required.
-#
-# Deliberately takes no job filter. Signing off asserts that every check passed,
-# so it always runs the whole suite; use `bun run ci:local <job>` while
-# iterating on one thing.
 
 set -uo pipefail
 

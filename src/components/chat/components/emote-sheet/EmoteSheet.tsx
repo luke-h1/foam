@@ -173,7 +173,6 @@ export function EmoteSheet({ onDismiss, onEmoteSelect }: EmoteSheetProps) {
                   onViewableItemsChanged={sheet.onViewableItemsChanged}
                   viewabilityConfig={sheet.viewabilityConfig}
                   onScroll={emoteSheetScrollActivity.poke}
-                  scrollEventThrottle={16}
                   contentContainerStyle={listContentStyle}
                   drawDistance={emoteRowSize * 3}
                   showsVerticalScrollIndicator

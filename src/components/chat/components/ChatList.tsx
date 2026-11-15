@@ -36,16 +36,8 @@ import { Skeleton } from '@app/components/ui/skeleton/Skeleton';
 import { usePreference } from '@app/store/preference-store';
 import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 
-/**
- * Roughly seven rows of lookahead; at 96 fast flings outran the renderer and
- * showed skeleton rows.
- */
 const CHAT_DRAW_DISTANCE = 250;
 
-/**
- * Deliberately under the average row height - an over-estimate leaves bare
- * list background under any row whose position recompute gets skipped.
- */
 const CHAT_ESTIMATED_ITEM_SIZE = 26;
 
 const CHAT_END_REACHED_THRESHOLD = 0.02;
@@ -54,19 +46,12 @@ const CHAT_VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 1,
 } satisfies ViewabilityConfig;
 
-/**
- * itemLayout keeps an under-estimated row from staying clipped at the bottom.
- */
 const CHAT_MAINTAIN_SCROLL_AT_END = {
   on: { dataChange: true, itemLayout: true },
 } satisfies MaintainScrollAtEndOptions;
 
 const CHAT_MAINTAIN_SCROLL_AT_END_THRESHOLD = 0.1;
 
-/**
- * Off until on-device fling QA passes. The iOS recycle crash came from the
- * removed `@react-native-masked-view`; see ADR-0007.
- */
 const CHAT_RECYCLE_ITEMS = true;
 
 const SKELETON_BODY_WIDTHS = ['28%', '42%', '54%'] as const;
@@ -243,7 +228,6 @@ export const ChatList = memo(
         // The composer is in a sibling KeyboardStickyView, so RN's tap-dismiss never fires; drag to dismiss.
         keyboardDismissMode='on-drag'
         keyboardShouldPersistTaps='handled'
-        scrollEventThrottle={16}
         viewabilityConfig={CHAT_VIEWABILITY_CONFIG}
         onViewableItemsChanged={onViewableItemsChanged}
       />

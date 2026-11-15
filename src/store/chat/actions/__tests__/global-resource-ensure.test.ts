@@ -78,7 +78,6 @@ describe('ensureGlobalChatResources', () => {
 
     const ensure = ensureGlobalChatResources();
 
-    // The user purges the cache while the fetch is still in flight.
     chatStore$.persisted.globalCaches.set(makeEmptyGlobalCacheData());
 
     clearGlobalResourceCache();

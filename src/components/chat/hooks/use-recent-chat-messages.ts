@@ -9,10 +9,6 @@ import {
 } from '@app/store/chat/actions/messages';
 import { logger } from '@app/utils/logger';
 
-/**
- * Lines per chunk before the replay yields, so the flush timer can commit the
- * chunk while the next one parses.
- */
 const REPLAY_CHUNK_SIZE = 8;
 
 const yieldToEventLoop = () =>

@@ -60,15 +60,11 @@ interface MockLegendListProps {
 
 const MOCK_VIEWPORT_HEIGHT = 680;
 
-/**
- * LegendList is a forwardRef exotic component; the bridge narrows through
- * `never` to reach a spyable plain-function shape.
- */
 interface MockableLegendListModule {
   LegendList: (props: MockLegendListProps) => ReactNode;
 }
 
-// SAFETY: `never` is the only bridge TS accepts from the exotic component to the plain function shape.
+// SAFETY: LegendList is a forwardRef object at runtime, so spyOn replaces a plain property.
 const mockableLegendList: MockableLegendListModule =
   LegendListReactNative as never;
 
@@ -108,8 +104,8 @@ jest.spyOn(mockableLegendList, 'LegendList').mockImplementation(props => {
   );
 });
 
-// The iOS Input binds a SwiftUI TextField via native objects absent under
-// jest; the search box isn't measured here, so use a plain TextInput.
+// The iOS Input binds a SwiftUI TextField through native objects that jest
+// does not have, so use a plain TextInput.
 jest
   .spyOn(InputModule, 'Input')
   .mockImplementation(
@@ -161,8 +157,6 @@ for (let owner = 0; owner < 6; owner += 1) {
   };
 }
 
-// A busy channel: ~2,600 emotes across every provider, 7TV over three sets,
-// subscriber emotes over six channels - a real popular stream's population.
 const menuInput: EmoteMenuDataInput = {
   sevenTvChannelEmotes: createEmotes(1200, '7TV Channel', 'stvc', index => {
     const set = SEVEN_TV_CHANNEL_SETS[index % SEVEN_TV_CHANNEL_SETS.length]!;
@@ -275,18 +269,12 @@ describe('emote menu performance', () => {
   test('mounts the emote sheet and builds its content', async () => {
     await measureRenders(<EmoteSheetPerfFixture />, {
       ...MEASURE_OPTIONS,
-      // The build is rAF-deferred behind contentReady, so mount alone renders
-      // the spinner; waiting for the chips pulls the deferred build + first list render into the measurement.
       scenario: async screen => {
         await screen.findByText('7TV');
       },
     });
   });
 
-  /**
-   * A round trip across the two heaviest providers - the sheet's worst
-   * interaction, rebuilding a whole provider's grid each way.
-   */
   test('switches provider tabs', async () => {
     await measureRenders(<EmoteSheetPerfFixture />, {
       ...MEASURE_OPTIONS,

@@ -6,10 +6,6 @@ import {
   createEmptyChatOverlayState,
 } from '@app/store/chat/observables/chat-overlays';
 
-/**
- * Only the overlay layer subscribes, so opening a sheet never re-renders the
- * chat root or the message list.
- */
 export function useChatOverlayState(channelId: string): ChatOverlayState {
   const overlay = useSelector(chatOverlays$);
 

@@ -1,4 +1,3 @@
-// DEV-ONLY: JS-thread frame health while chat is on screen. 1s fps windows held in memory (per-frame IO would bias the metric), flushed to img-bench.json every 10s and on unmount.
 import { useEffect } from 'react';
 
 import { appendFrames } from './bench-results';

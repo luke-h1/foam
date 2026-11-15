@@ -23,10 +23,6 @@ interface MockResponseBody {
   status?: number;
 }
 
-/**
- * `expo/fetch` already carries a jest.fn() mock at __mocks__/expo/fetch.ts,
- * so this file only needs a typed handle onto it.
- */
 const mockFetch = jest.mocked(fetch);
 
 const isNoSuchRoom = (status: number, body: string) =>

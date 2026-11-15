@@ -96,8 +96,6 @@ export function useChatSession({
     [chatDelay],
   );
 
-  // Filled in below once useChatMessageProcessing exists; useChatMessages
-  // mounts first and needs the finalizer via a ref.
   const finalizeBufferedMessageRef = useRef<
     (message: AnyChatMessageType) => AnyChatMessageType
   >(message => message);
@@ -129,8 +127,6 @@ export function useChatSession({
       return;
     }
 
-    // In auto mode the effective delay tracks the measured video latency, so
-    // measurement changes need the same reconcile as a preference change.
     return videoLatencyDisplay$.onChange(() => reconcileChatDelay());
   }, [chatDelay, reconcileChatDelay]);
 
@@ -146,8 +142,6 @@ export function useChatSession({
       let shouldTriggerHaptic = false;
 
       if (chatMentionHaptics && options?.countUnread !== false) {
-        // Deferred-parse live messages carry no mention tokens yet, so fall
-        // back to scanning the raw text for an @self token.
         const mentionsSelf =
           normalisedSelfForFeedback.length > 0 &&
           (message.pendingEmoteParse
@@ -180,7 +174,6 @@ export function useChatSession({
   );
 
   const {
-    enqueueLiveChatMessage,
     finalizeBufferedMessage,
     processMessageEmotes,
     reprocessAllMessages,
@@ -216,7 +209,6 @@ export function useChatSession({
     channelId,
     channelName,
     clearLocalMessages,
-    enqueueLiveChatMessage,
     handleNewMessage,
     isMountedRef: isChatMountedRef,
     isLoadingRecentMessagesRef,
@@ -236,8 +228,6 @@ export function useChatSession({
     reconnect,
     sendMessage,
   } = useTwitchChat({
-    // Perf mode: no channel means the socket never connects and the synthetic
-    // flood is the only thing feeding onMessage.
     channel: syntheticTransport ? undefined : channelName,
     onMessage,
     onNotice,

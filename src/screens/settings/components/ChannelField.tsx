@@ -21,10 +21,6 @@ interface ChannelFieldProps {
   onChangeChannel: (login: string | null) => void;
 }
 
-/**
- * Picks the channel whose own emotes and badges join the global sets. The
- * input is uncontrolled and only commits on submit, so typing never refetches.
- */
 export function ChannelField({
   channelLogin,
   channelName,

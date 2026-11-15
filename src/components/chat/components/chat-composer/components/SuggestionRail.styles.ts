@@ -1,8 +1,5 @@
 import { theme } from '@app/styles/themes';
 
-/**
- * Surfaces for composer suggestion rails - slate chips, not iOS system gray.
- */
 export const suggestionRailColors = {
   chipBackground: theme.darkActiveContent,
   chipBorder: theme.color.border.dark,

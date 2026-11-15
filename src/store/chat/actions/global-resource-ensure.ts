@@ -26,10 +26,6 @@ export type GlobalSettledSpec =
   | SettledSpec<EmoteCacheKey, SanitisedEmote>
   | SettledSpec<BadgeCacheKey, SanitisedBadgeSet>;
 
-/**
- * The freshness stamp only advances when every global fetch succeeded, so a
- * failed slice keeps its retry pressure.
- */
 function writeGlobalResults(
   emoteSettled: SettledSpec<EmoteCacheKey, SanitisedEmote>[],
   badgeSettled: SettledSpec<BadgeCacheKey, SanitisedBadgeSet>[],

@@ -1,15 +1,15 @@
-import { View } from 'react-native';
-import type { StyleProp, TextStyle } from 'react-native';
+import { type TextStyle, View } from 'react-native';
 
-import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 import type { BadgePressData } from '@app/store/chat/types/chat-press-data';
 import type { MessageToken } from '@app/types/chat/messageToken';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { flowsInline } from '@app/utils/chat/derive-chat-body/flowsInline';
 
 import { styles } from '../ChatRow.styles';
+import { ChatRowText } from '../ChatRowText';
 import { ChatRowUsername } from '../ChatRowUsername';
 import type { getChatTextStyles } from '../ChatText.styles';
+import { getChatRowTextStyle } from '../util/chatRowTextStyle';
 import { ChatMessageBadges } from './ChatMessageBadges';
 import { InlineTokens } from './InlineTokens';
 import type { ChatTokenRenderProps } from './types/chat-token-render-props';
@@ -17,7 +17,7 @@ import { WrappedTokens } from './WrappedTokens';
 
 interface StackedMessageLineProps {
   badgeList: SanitisedBadgeSet[];
-  bodyEmoteLineStyle: StyleProp<TextStyle>;
+  bodyEmoteLineStyle: TextStyle | undefined;
   cachedSenderColor?: string;
   message: MessageToken[];
   onBadgePress?: (badge: BadgePressData) => void;
@@ -70,9 +70,11 @@ export function StackedMessageLine({
     >
       {isModerated ? <View style={styles.moderatedStrikeOverlay} /> : null}
       {showTimestamp && timestamp ? (
-        <ChatText tabular style={textStyles.timestamp}>
+        <ChatRowText
+          style={getChatRowTextStyle('tabular', textStyles.timestamp)}
+        >
           {timestamp}
-        </ChatText>
+        </ChatRowText>
       ) : null}
       <ChatMessageBadges
         {...{
@@ -100,7 +102,13 @@ export function StackedMessageLine({
         </View>
       ) : null}
       {bodyFlowsInline ? (
-        <ChatText style={[textStyles.body, bodyEmoteLineStyle]}>
+        <ChatRowText
+          style={getChatRowTextStyle(
+            'muted',
+            textStyles.body,
+            bodyEmoteLineStyle,
+          )}
+        >
           <InlineTokens
             {...rendererArgs}
             {...{
@@ -110,7 +118,7 @@ export function StackedMessageLine({
               textColor,
             }}
           />
-        </ChatText>
+        </ChatRowText>
       ) : (
         <WrappedTokens
           mode='message'

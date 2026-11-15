@@ -12,7 +12,6 @@ export function createBridgeContext(
     mountedAtMs: 1000,
     nowMs: 3500,
     reportedFirstPlaying: false,
-    reportedPlaybackBlocked: false,
     userPaused: false,
     ...overrides,
   };

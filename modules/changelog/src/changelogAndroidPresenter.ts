@@ -2,10 +2,6 @@ import type { ChangelogPresentOptions } from './Changelog.types';
 
 type ChangelogAndroidState = ChangelogPresentOptions | null;
 
-/**
- * If the Compose sheet never mounts or never fires dismiss, settle as not
- * presented so callers do not hang and later presents are not blocked.
- */
 const PRESENT_TIMEOUT_MS = 120_000;
 
 let state: ChangelogAndroidState = null;

@@ -22,9 +22,6 @@ interface PaintedUsernameWebViewProps {
   lineHeight?: number;
 }
 
-/**
- * Remounts when `html` changes so measured size cannot stick to a prior paint.
- */
 export function PaintedUsernameWebView({
   username,
   paint,

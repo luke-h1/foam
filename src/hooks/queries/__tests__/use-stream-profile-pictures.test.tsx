@@ -93,7 +93,6 @@ describe('useStreamProfilePictures', () => {
       ]);
     });
 
-    // The appended page only requests the newly-seen id, not the whole list.
     expect(mockTwitchGet.mock.calls).toEqual([
       ['/users?id=a&id=b'],
       ['/users?id=c'],

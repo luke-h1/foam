@@ -1,7 +1,3 @@
-/**
- * Reports the <video> element's playback state to the bridge; without it the
- * bridge stays dormant and the controls overlay never shows.
- */
 export function buildTwitchPlayerStateScript(): string {
   return `
 (function() {

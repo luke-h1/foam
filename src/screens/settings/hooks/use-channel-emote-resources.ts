@@ -22,8 +22,6 @@ export interface ChannelEmoteResources {
 async function fetchChannelEmoteResources(
   channelId: string,
 ): Promise<ChannelEmoteResources> {
-  // Channel scope only: the global sets already come from the shared caches,
-  // and subscriber emotes need the viewer's own token.
   const emoteSpecs = buildEmoteResourceSpecs({
     channelId,
     sevenTvSetId: sevenTvService.getEmoteSetId(channelId),
@@ -74,7 +72,6 @@ export function useChannelEmoteResources(login: string | null) {
 
   return {
     channel: userQuery.data,
-    // An unknown login resolves with no user; a failed request is an error.
     isChannelMissing:
       Boolean(login) &&
       userQuery.isFetched &&

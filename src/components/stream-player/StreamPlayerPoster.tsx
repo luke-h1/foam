@@ -27,14 +27,10 @@ export const StreamPlayerPoster = memo(function StreamPlayerPoster({
   posterUrl,
   visible,
 }: StreamPlayerPosterProps) {
-  // Stay mounted through the fade-out, then drop so LoadingState's withRepeat
-  // spinner and the poster bitmap are not left idle for the watch session.
   const [rendered, setRendered] = useState(visible);
 
   const opacity = useSharedValue(visible ? 1 : 0);
 
-  // Adjust synchronously during render (rather than in the effect below) so a
-  // remount-to-visible never paints one frame of the stale hidden state first.
   if (visible && !rendered) {
     setRendered(true);
   }

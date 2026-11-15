@@ -32,9 +32,6 @@ function createIngestMessage(index: number): ChatMessageType<'usernotice'> {
   };
 }
 
-/**
- * Near-full window seed + burst that forces front-trim on a capped store.
- */
 const INGEST_SEED_COUNT = 120;
 
 const INGEST_BURST_COUNT = 80;

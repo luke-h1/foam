@@ -1,10 +1,3 @@
-//
-//  SafeAreaView.swift
-//  Pods
-//
-//  Created by luke howsam on 14/05/2026.
-//
-
 import SwiftUI
 
 struct SafeAreaView<SafeAreaContent: View>: ViewModifier {

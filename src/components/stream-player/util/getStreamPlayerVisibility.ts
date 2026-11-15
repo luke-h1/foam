@@ -9,10 +9,6 @@ interface GetStreamPlayerVisibilityOptions {
   video: string | undefined;
 }
 
-/**
- * Which layers the player draws. Twitch's own embed controls and the app's
- * native controls are mutually exclusive, so both flags come from one place.
- */
 export function getStreamPlayerVisibility({
   clip,
   deferOverlayUntilUserUnmute,

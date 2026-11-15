@@ -12,26 +12,47 @@ trimming window, and per-row visibility callbacks (`components/chat/components/c
 drive animation pause and asset hydration. The chat composer suggestion rails
 and the emote sheet ride the same library so chat carries one virtualizer.
 
-Two stronger alternatives were evaluated and rejected:
+An observable-bound list was evaluated and rejected. Rows would subscribe
+straight to store nodes and skip React list diffing. It is not feasible with
+the current list libraries, because the row identity and recycling contracts
+do not survive it.
 
-- **An observable-bound list** (rows subscribing straight to store nodes,
-  skipping React list diffing) - investigated and found not feasible with the
-  current list libraries; the row-identity and recycling contracts don't
-  survive it.
-- **Recycling as shipped** - `CHAT_RECYCLE_ITEMS` exists but is off pending
-  row-state-outliving-recycle fixes (`ChatInlineImage` recyclingKey races) and
-  on-device fling QA; see `PERF_REPORT.md` "F1".
+## Row recycling
 
-  The iOS crash "attempt to recycle an already mounted view" came from
-  `@react-native-masked-view`. It ran through the legacy interop layer and
-  moved its children into a mask view, so Fabric found them still attached
-  when it tried to pool them. Painted usernames stopped using it in #641.
-  With recycling on, a simulator run of more than 240 flings in a busy chat
-  did not reproduce the crash. Settled rows were correct, but some areas
-  stayed blank during a fling before their rows rendered. Recycling cut
-  native view creation by about 3x and added re-render work for reused
-  rows. Before you turn it on, run the fling QA on a device and measure the
-  result there (ADR-0010).
+`CHAT_RECYCLE_ITEMS` is on. A reused row keeps its React state and its native
+views, and only its props change. Recycling cut native view creation by about
+3x and adds re-render work for reused rows.
+
+The old iOS crash "attempt to recycle an already mounted view" came from
+`@react-native-masked-view`. It ran through the legacy interop layer and moved
+its children into a mask view, so Fabric found them still attached when it
+tried to pool them. Painted usernames stopped using it in #641.
+
+Row state that belongs to one message must reset when the message changes:
+
+- `ChatRowItem` decides the entrance animation again for each message key.
+- `useChatRowLongPress` drops a pending long press when the message changes.
+  Under backpressure a flush does not wait for a held row, so the row can get
+  a new message during the hold.
+- `ChatInlineImage` resets its load state, ban and retry timer per url.
+- The expo-image patch keeps an image ref when `recyclingKey` changes in the
+  same prop batch. Without it, a reused emote view that got a new ref and a new
+  key together stayed blank after the list settled.
+
+Simulator QA on 2026-11-13 (iPhone 17 Pro Max simulator, dev build, synthetic
+flood at 60 to 120 msg/s, 7TV paints on about two thirds of chatters):
+
+- More than 450 flings with recycling on. No crash and no recycle error.
+- Before the expo-image fix, settled screens showed blank emote slots in many
+  rows. A run with recycling off showed about one. After the fix, 180 flings
+  showed none.
+- Some areas stay blank during a fast fling before their rows render. They
+  fill when the list settles. This also happens with recycling off.
+- With the flood off, 10 of 10 long presses opened the sheet for the row
+  under the finger.
+
+Before a release build ships, run the fling QA on a device at 60Hz and 120Hz
+and measure the result there (ADR-0010).
 
 The list's row identity contract is owned by `utils/chat/message-identity/`
 (`getChatMessageListKey` is the `keyExtractor`); the list dropped its

@@ -194,8 +194,6 @@ export const useChatEmoteLoader = ({
       isActive &&
       Boolean(chatStore$.persisted.channelCaches[channelId]?.peek());
 
-    // A cleared cosmetics cache, or a channel whose cache vanished under it,
-    // both need the full reload rather than the cached path.
     const shouldForceRefresh =
       isActive &&
       (cacheCleared ||

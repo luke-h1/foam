@@ -154,10 +154,6 @@ const withScales = (formats: readonly string[]) =>
     ['4x', '3x', '2x', '1x'].map(scale => `${scale}.${format}`),
   );
 
-/**
- * Width/height of 0 render a non-square emote as a 1:1 square, so a file name
- * that the host lists always wins over the widest-file fallback.
- */
 const SEVEN_TV_STATIC_PREFERENCE = withScales(SEVEN_TV_STATIC_FORMATS);
 
 const SEVEN_TV_ANIMATED_PREFERENCE = withScales(SEVEN_TV_ANIMATED_FORMATS);
@@ -213,10 +209,6 @@ function buildHostImageVariants(
   return createEmoteImageVariants({ animated, static: staticSet });
 }
 
-/**
- * Reused across an `emote_set.update` burst so `buildSanitisedEmote` costs no
- * source-bag allocation per emote; every field is overwritten before each call.
- */
 const wireEmoteSource: SevenTvEmoteSource = {
   site: '7TV Channel',
   id: '',

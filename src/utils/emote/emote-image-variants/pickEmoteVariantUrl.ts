@@ -4,8 +4,6 @@ import type {
   EmoteImageVariants,
 } from '@app/types/emote';
 
-// Nearest-size fallback so inline renders never pay for a 4x decode; 2x is
-// the floor - only an explicit 1x request resolves to a 1x variant.
 const scaleScanOrders = {
   '1x': ['1x', '2x', '3x', '4x'],
   '2x': ['2x', '3x', '4x'],

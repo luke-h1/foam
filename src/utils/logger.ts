@@ -246,8 +246,6 @@ interface LoggingMethods {
 export type AllowedPrefix = keyof typeof loggingConfig;
 
 const baseLogger = rnlogger.createLogger({
-  // Release builds only emit warnings and errors; debug/info logging is dev-only
-  // so production isn't spending CPU stringifying chat traffic.
   severity: __DEV__ ? 'debug' : 'warn',
   transport: __DEV__
     ? [consoleTransport, genericTransport, monitoringTransport]

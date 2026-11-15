@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import type { FirebaseRemoteConfigTypes } from '@react-native-firebase/remote-config';
+import type { Value } from '@react-native-firebase/remote-config';
 import { getAll } from '@react-native-firebase/remote-config';
 import { QueryClientProvider } from '@tanstack/react-query';
 
@@ -10,7 +10,7 @@ import { createTestQueryClient } from '@app/test/render';
 export function serveRemoteConfig(
   values: Partial<Record<RemoteConfigKey, string>>,
 ) {
-  const configValues: FirebaseRemoteConfigTypes.ConfigValues = {};
+  const configValues: Record<string, Value> = {};
 
   Object.entries(values).forEach(([key, raw]) => {
     configValues[key] = {

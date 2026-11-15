@@ -1,7 +1,3 @@
-/**
- * Shares the in-memory disk of `__mocks__/expo-file-system.ts`, so the legacy
- * async calls and the File/Directory API see the same files.
- */
 // SAFETY: __mocks__/expo-file-system.ts defines __mockFileSystem with exactly this shape.
 const { __mockFileSystem } = require('expo-file-system') as {
   __mockFileSystem: {

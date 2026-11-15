@@ -1,7 +1,6 @@
 import { View } from 'react-native';
 import type { ReactNode } from 'react';
 
-import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 import { getChatColorStyle } from '@app/components/chat/util/chatColorStyles';
 import type { BadgePressData } from '@app/store/chat/types/chat-press-data';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
@@ -9,7 +8,9 @@ import { getMessageStructure } from '@app/utils/chat/derive-chat-body/getMessage
 import type { InlineFlowToken } from '@app/utils/chat/derive-chat-body/types';
 
 import { styles } from '../ChatRow.styles';
+import { ChatRowText } from '../ChatRowText';
 import { getChatTextStyles } from '../ChatText.styles';
+import { getChatRowTextStyle } from '../util/chatRowTextStyle';
 import { ChatMessageBadges } from './ChatMessageBadges';
 import { InlineTokens } from './InlineTokens';
 import type { ChatTokenRenderProps } from './types/chat-token-render-props';
@@ -56,11 +57,19 @@ export function InlineMessageLine({
 
   return (
     <View style={styles.messageLineInline}>
-      <ChatText style={[textStyles.body, emoteLineStyle]}>
+      <ChatRowText
+        style={getChatRowTextStyle('muted', textStyles.body, emoteLineStyle)}
+      >
         {showTimestamp && timestamp ? (
-          <ChatText tabular style={[textStyles.timestamp, emoteLineStyle]}>
+          <ChatRowText
+            style={getChatRowTextStyle(
+              'tabular',
+              textStyles.timestamp,
+              emoteLineStyle,
+            )}
+          >
             {`${timestamp} `}
-          </ChatText>
+          </ChatRowText>
         ) : null}
         <ChatMessageBadges
           {...{
@@ -72,18 +81,19 @@ export function InlineMessageLine({
           }}
         />
         {username ? (
-          <ChatText
+          <ChatRowText
             onPress={onUsernamePress}
             suppressHighlighting
             testID='chat-username-button'
-            style={[
+            style={getChatRowTextStyle(
+              'muted',
               textStyles.username,
               emoteLineStyle,
               usernameColor ? getChatColorStyle(usernameColor) : null,
-            ]}
+            )}
           >
             {isAction ? `${username} ` : `${username}: `}
-          </ChatText>
+          </ChatRowText>
         ) : null}
         <InlineTokens
           {...{
@@ -101,7 +111,7 @@ export function InlineMessageLine({
             textColor,
           }}
         />
-      </ChatText>
+      </ChatRowText>
     </View>
   );
 }

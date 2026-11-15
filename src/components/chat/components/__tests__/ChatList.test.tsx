@@ -6,7 +6,7 @@ import type {
   MaintainScrollAtEndOptions,
   ViewabilityConfig,
 } from '@legendapp/list/react-native';
-import { render } from '@testing-library/react-native';
+import { act, render } from '@testing-library/react-native';
 
 import { createChatMessageFixture } from '@app/components/chat/util/__tests__/__fixtures__/chatMessage.fixture';
 import type { ViewableMessageToken } from '@app/components/chat/util/getViewableChatMessages';
@@ -25,10 +25,12 @@ interface LegendListMockProps {
   maintainVisibleContentPosition: boolean | undefined;
   onContentSizeChange: () => void;
   onEndReachedThreshold: number;
+  onScroll: () => void;
   onViewableItemsChanged: (info: {
     viewableItems: ViewableMessageToken[];
   }) => void;
   recycleItems: boolean;
+  scrollEventThrottle: number | undefined;
   renderItem: (info: {
     item: AnyChatMessageType | undefined;
     index: number;
@@ -44,7 +46,6 @@ const mockLegendList = jest.fn((_props: LegendListMockProps) => (
 const contentInsetEndAdjustment = makeMutable(0);
 
 /**
- * Override the global KeyboardAwareLegendList mock with a fake that records props.
  * `require`, not `import` - spyOn needs the module object, not babel's ES-interop copy.
  */
 // SAFETY: reattaches the module type `require` erases so spyOn type-checks.
@@ -107,7 +108,7 @@ describe('ChatList', () => {
     mockLegendList.mockClear();
   });
 
-  test('keeps the list pinned to the end while the user is at the bottom', () => {
+  test('keeps the list pinned to the end and keeps row recycling on', () => {
     render(createChatListElement({ extraData: { showTimestamps: false } }));
 
     const props = getRenderedProps();
@@ -224,13 +225,40 @@ describe('ChatList', () => {
       getByTestId('chat-row-skeleton').props['style'],
     );
 
-    preferences$.chatFontScale.set('default');
-    preferences$.chatDensity.set('comfortable');
+    act(() => {
+      preferences$.chatFontScale.set('default');
+      preferences$.chatDensity.set('comfortable');
+    });
 
     expect({ minHeight, paddingVertical }).toEqual({
       minHeight: 25,
       paddingVertical: 2,
     });
+  });
+
+  test('passes the scroll handler to LegendList without its JS throttle', () => {
+    const onScroll = jest.fn();
+
+    render(
+      createChatListElement({
+        scrollHandlers: {
+          onContentSizeChange: jest.fn(),
+          onEndReached: jest.fn(),
+          onMomentumScrollBegin: jest.fn(),
+          onMomentumScrollEnd: jest.fn(),
+          onScroll,
+          onScrollBeginDrag: jest.fn(),
+          onScrollEndDrag: jest.fn(),
+        },
+      }),
+    );
+
+    const props = getRenderedProps();
+
+    expect({
+      onScroll: props.onScroll,
+      scrollEventThrottle: props.scrollEventThrottle,
+    }).toEqual({ onScroll, scrollEventThrottle: undefined });
   });
 
   test('forwards the dataset identity to LegendList', () => {

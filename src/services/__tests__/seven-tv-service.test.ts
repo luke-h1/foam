@@ -20,10 +20,6 @@ import {
 const clientQuerySpy = jest.spyOn(sevenTvV4Client, 'query');
 const postDerivedSpy = jest.spyOn(sevenTvGqlApi, 'postDerived');
 
-/**
- * Runs the real derive worklet over the serialised body, so the tests cover
- * the GraphQL envelope and the sanitiser together.
- */
 const respondWithBody = (
   body: GraphQLResponse<EmoteSetCustomQuery | GlobalEmoteSetQuery | null>,
 ) => {

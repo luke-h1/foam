@@ -28,7 +28,7 @@ type EmoteTokenProps = ComponentProps<typeof EmoteTokenModule.EmoteToken>;
 
 /**
  * EmoteToken is memo() wrapped, so jest.spyOn cannot wrap it - swap the
- * export directly. The suite asserts orchestration, not its output.
+ * export directly.
  */
 Object.defineProperty(EmoteTokenModule, 'EmoteToken', {
   configurable: true,
@@ -328,6 +328,37 @@ describe('ChatRow', () => {
       expect([heldBeforeUnmount, isRowTouchHeld()]).toEqual([true, false]);
     });
 
+    test('drops the pending long press when a recycled row gets a new message', () => {
+      const first = createMockMessage([{ type: 'text', content: 'Hello' }]);
+
+      const second = createMockMessage(
+        [{ type: 'text', content: 'Other' }],
+        {},
+        { id: 'msg-456_nonce-456', message_id: 'msg-456' },
+      );
+
+      const { getByTestId, rerender } = render(
+        <ChatRow {...first} onMessageLongPress={mockOnMessageLongPress} />,
+      );
+
+      jest.useFakeTimers();
+      fireEvent(getByTestId('chat-message'), 'touchStart', touchAt(100, 100));
+
+      rerender(
+        <ChatRow {...second} onMessageLongPress={mockOnMessageLongPress} />,
+      );
+
+      const heldAfterRecycle = isRowTouchHeld();
+
+      act(() => jest.advanceTimersByTime(MESSAGE_LONG_PRESS_DELAY_MS));
+      jest.useRealTimers();
+
+      expect([
+        mockOnMessageLongPress.mock.calls.length,
+        heldAfterRecycle,
+      ]).toEqual([0, false]);
+    });
+
     test('cancels once the finger drifts past the tolerance', () => {
       const message = createMockMessage([
         { type: 'text', content: 'Hello world!' },
@@ -416,7 +447,6 @@ describe('ChatRow', () => {
         <ChatRow {...message} onReplyContextPress={mockOnReplyContextPress} />,
       );
 
-      // The reply header is a responder, not an onPress element.
       await userEvent.press(getByTestId('chat-reply-context-button'));
 
       expect(mockOnReplyContextPress).toHaveBeenCalledTimes(1);
@@ -562,8 +592,6 @@ describe('ChatRow', () => {
     });
 
     test('flows an ordinary emote inline, inside the row Text', () => {
-      // The flex-wrap path leaves the tail blank; an ordinary emote belongs in
-      // the row's Text, where `bodyEmoteLine` raises the leading so it is not clipped.
       const emoteData: MessageToken<'emote'> = {
         type: 'emote',
         content: 'Kappa',
@@ -585,8 +613,6 @@ describe('ChatRow', () => {
     });
 
     test('keeps a zero-width emote out of the row Text', () => {
-      // A zero-width emote composites its overlay with absolute positioning,
-      // which does not survive inside a Text, so it still takes the flex path.
       const emoteData: MessageToken<'emote'> = {
         type: 'emote',
         content: 'SoSnowy',
@@ -609,8 +635,6 @@ describe('ChatRow', () => {
     });
 
     test('keeps the emote leading on a painted row that flows its body inline', () => {
-      // A painted row's body still flows inline and carries the emotes on its
-      // own, so it needs the emote leading or they clip.
       chatStore$.userPaintIds.set({ '123456': 'paint-1' });
 
       const emoteData: MessageToken<'emote'> = {
@@ -890,7 +914,6 @@ describe('ChatRow', () => {
         reward: '450',
         value: '5',
         content: '',
-        // Stored tokens hold already-unescaped system-msg (parseIrcTags decodes).
         systemMsg:
           'TestUser watched 5 consecutive streams and sparked a watch streak!',
         login: 'testuser',

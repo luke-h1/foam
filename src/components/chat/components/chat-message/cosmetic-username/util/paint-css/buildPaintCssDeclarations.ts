@@ -63,9 +63,7 @@ function cssLayer(layer: PaintLayerData): CssLayer {
 
       break;
     case 'URL':
-      // Empty urls never reach here; unrenderable layers are filtered out
-      // before the css layer list is built. Quoted so a url with
-      // parentheses or whitespace stays valid CSS.
+      // Quoted so a url with parentheses or whitespace stays valid CSS.
       image = `url("${webKitSafeLayerImageUrl(layer.image_url).replaceAll('"', '%22')}")`;
       break;
     default:

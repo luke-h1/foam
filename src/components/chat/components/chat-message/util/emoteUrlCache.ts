@@ -4,11 +4,6 @@ import {
 } from '@app/utils/emote/describeEmoteUrl';
 import { buildImageFallbackChain } from '@app/utils/emote/imageFallbackChain';
 
-/**
- * Caches a pure function of an emote url. One emote can show in hundreds of
- * rows, so the work runs once per url instead of once per mount. When the map
- * is full it is cleared.
- */
 function cacheByUrl<TValue>(
   build: (url: string) => TValue,
   maxSize: number,

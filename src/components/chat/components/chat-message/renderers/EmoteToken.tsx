@@ -42,9 +42,6 @@ export const EmoteToken = memo(
         ? calculateAspectRatio(token.width, token.height, targetSize)
         : calculateAspectRatio(measuredRatio ?? 1, 1, targetSize);
 
-    // No Pressable: the row's timer detects long-press, this only records
-    // which emote the touch started on. Hundreds of emotes per screen made
-    // per-Pressable gesture machinery add up.
     const handleTouchStart = onEmoteTouchStart
       ? () => onEmoteTouchStart(token)
       : undefined;
@@ -86,8 +83,6 @@ export const EmoteToken = memo(
 
     const needsWrapper = Boolean(containerStyle || token.overlaid?.length);
 
-    // Size and clip live on the image style, so the image needs no container
-    // node of its own.
     const image = (
       <ChatInlineImage
         priority='normal'
@@ -100,14 +95,10 @@ export const EmoteToken = memo(
       />
     );
 
-    // The plain emote is the image alone: the wrapper only exists to carry an
-    // overlay stack or an overlap margin, and most emotes have neither.
     if (!needsWrapper) {
       return image;
     }
 
-    // Overlays sit above the base image, so the wrapper takes the touch and a
-    // long press anywhere on the stack still finds this emote.
     return (
       <View style={containerStyle} onTouchStart={handleTouchStart}>
         {image}

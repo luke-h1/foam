@@ -1,17 +1,19 @@
-import { createMMKV } from 'react-native-mmkv';
-
 import EventEmitter from 'eventemitter3';
 
+import { storage } from '@app/lib/storageAdapter';
+import type { StorageAdapter } from '@app/lib/storageAdapter.types';
 import type { OpenStringUnion } from '@app/utils/typescript/openStringUnion';
 
-export type StorageSetterOptions = {
-  expiry?: Date;
-};
+export { storage };
 
-export type StorageItem<T = unknown> = {
+export interface StorageSetterOptions {
+  expiry?: Date;
+}
+
+export interface StorageItem<T = unknown> {
   expiry?: string;
   value: T;
-};
+}
 
 export type AllowedKey = OpenStringUnion<
   | 'ReactQueryDebug'
@@ -21,9 +23,41 @@ export type AllowedKey = OpenStringUnion<
   | `sevenTvUserId_${string}`
 >;
 
+type NamespacePrefixes = 'seven_tv_cache';
+
 export const NAMESPACE = 'FOAM_V1';
 
-const namespaceKey = (key: AllowedKey, namespacePrefix?: string) => {
+export const SEVEN_TV_CACHE_NAMESPACE: NamespacePrefixes = 'seven_tv_cache';
+
+interface StorageKeyChangeEvent {
+  kind: 'set' | 'remove';
+  key: AllowedKey;
+  namespace?: NamespacePrefixes;
+}
+
+interface StorageNamespaceClearEvent {
+  kind: 'clearNamespace';
+  namespace: NamespacePrefixes;
+}
+
+interface StorageClearAllEvent {
+  kind: 'clearAll';
+}
+
+export type StorageChangeEvent =
+  | StorageKeyChangeEvent
+  | StorageNamespaceClearEvent
+  | StorageClearAllEvent;
+
+interface StorageEvents {
+  storageChange: (event: StorageChangeEvent) => void;
+}
+
+const adapter: StorageAdapter = storage;
+
+const storageEvents = new EventEmitter<StorageEvents>();
+
+const namespaceKey = (key: AllowedKey, namespacePrefix?: NamespacePrefixes) => {
   if (namespacePrefix) {
     return `${NAMESPACE}_${namespacePrefix}_${key}`;
   }
@@ -31,27 +65,47 @@ const namespaceKey = (key: AllowedKey, namespacePrefix?: string) => {
   return `${NAMESPACE}_${key}`;
 };
 
-const storageEvents = new EventEmitter();
-
-export const storage = createMMKV({
-  id: 'storageService',
-  compareBeforeSet: true,
-});
-
 const isStorageItemExpired = (item: StorageItem): boolean =>
   item.expiry !== undefined && new Date() >= new Date(item.expiry);
 
-const removeNamespacedKeys = (prefix: string): void => {
-  for (const key of storage.getAllKeys()) {
+function parseStorageItem<T>(raw: string): StorageItem<T> | null {
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+
+  if (
+    !(parsed instanceof Object) ||
+    Array.isArray(parsed) ||
+    !Object.hasOwn(parsed, 'value')
+  ) {
+    return null;
+  }
+
+  // SAFETY: storageService.set wrote this key as a JSON StorageItem; T is the caller's declared value contract.
+  return parsed as StorageItem<T>;
+}
+
+const removeKeysWithPrefix = (prefix: string): void => {
+  for (const key of adapter.getAllKeys()) {
     if (key.startsWith(prefix)) {
-      storage.remove(key);
+      adapter.remove(key);
     }
   }
 };
 
-type NamespacePrefixes = 'seven_tv_cache';
+const removeKey = (key: AllowedKey, namespacePrefix?: NamespacePrefixes) => {
+  adapter.remove(namespaceKey(key, namespacePrefix));
 
-export const SEVEN_TV_CACHE_NAMESPACE: NamespacePrefixes = 'seven_tv_cache';
+  storageEvents.emit('storageChange', {
+    kind: 'remove',
+    key,
+    namespace: namespacePrefix,
+  });
+};
 
 export const storageService = {
   events: storageEvents,
@@ -60,21 +114,24 @@ export const storageService = {
     key: AllowedKey,
     namespacePrefix?: NamespacePrefixes,
   ): T | null {
-    const item = storage.getString(namespaceKey(key, namespacePrefix));
+    const raw = adapter.getString(namespaceKey(key, namespacePrefix));
+
+    if (!raw) {
+      return null;
+    }
+
+    const item = parseStorageItem<T>(raw);
 
     if (!item) {
       return null;
     }
 
-    // SAFETY: storageService.set wrote this key as a JSON StorageItem; T is the caller's declared value contract.
-    const parsed = JSON.parse(item) as StorageItem<T>;
-
-    if (isStorageItemExpired(parsed)) {
-      storageService.remove(key, namespacePrefix);
+    if (isStorageItemExpired(item)) {
+      removeKey(key, namespacePrefix);
       return null;
     }
 
-    return parsed.value;
+    return item.value;
   },
 
   set<T>(
@@ -85,7 +142,6 @@ export const storageService = {
   ): void {
     const { expiry } = options;
 
-    // Writing an already-expired entry would only be read back as a miss.
     if (expiry && expiry <= new Date()) {
       return;
     }
@@ -94,43 +150,49 @@ export const storageService = {
       ? { value, expiry: expiry.toISOString() }
       : { value };
 
-    const namespacedKey = namespaceKey(key, namespacePrefix);
-    storage.set(namespacedKey, JSON.stringify(item));
-    storageEvents.emit('storageChange', key);
-  },
-  delete(key: AllowedKey, namespacePrefix?: NamespacePrefixes): void {
-    storage.remove(namespaceKey(key, namespacePrefix));
-    storageEvents.emit('storageChange', key);
-  },
-  remove(key: AllowedKey, namespacePrefix?: NamespacePrefixes): void {
-    const namespacedKey = namespaceKey(key, namespacePrefix);
-    storage.remove(namespacedKey);
-    storageEvents.emit('storageChange', key);
+    adapter.set(namespaceKey(key, namespacePrefix), JSON.stringify(item));
+
+    storageEvents.emit('storageChange', {
+      kind: 'set',
+      key,
+      namespace: namespacePrefix,
+    });
   },
 
+  delete: removeKey,
+
+  remove: removeKey,
+
   clear(): void {
-    removeNamespacedKeys(NAMESPACE);
-    storageEvents.emit('storageChange', 'all');
+    removeKeysWithPrefix(NAMESPACE);
+    storageEvents.emit('storageChange', { kind: 'clearAll' });
   },
 
   getAllKeys(namespacePrefix?: NamespacePrefixes): string[] {
     const prefix = namespacePrefix
       ? `${NAMESPACE}_${namespacePrefix}`
       : NAMESPACE;
-    return storage.getAllKeys().filter(key => key.startsWith(prefix));
+
+    return adapter.getAllKeys().filter(key => key.startsWith(prefix));
   },
 
   clearExpired(): void {
-    storageService.getAllKeys().forEach(key => {
-      const item = storage.getString(key);
-      // SAFETY: every namespaced key is written by storageService.set as a JSON StorageItem.
-      if (item && isStorageItemExpired(JSON.parse(item) as StorageItem)) {
-        storage.remove(key);
+    for (const key of storageService.getAllKeys()) {
+      const raw = adapter.getString(key);
+      const item = raw ? parseStorageItem(raw) : null;
+
+      if (item && isStorageItemExpired(item)) {
+        adapter.remove(key);
       }
-    });
+    }
   },
-  clearNamespace(namespacePrefix: NamespacePrefixes, keyPrefix = '') {
-    removeNamespacedKeys(`${NAMESPACE}_${namespacePrefix}_${keyPrefix}`);
-    storageEvents.emit('storageChange', namespacePrefix);
+
+  clearNamespace(namespacePrefix: NamespacePrefixes, keyPrefix = ''): void {
+    removeKeysWithPrefix(`${NAMESPACE}_${namespacePrefix}_${keyPrefix}`);
+
+    storageEvents.emit('storageChange', {
+      kind: 'clearNamespace',
+      namespace: namespacePrefix,
+    });
   },
 } as const;

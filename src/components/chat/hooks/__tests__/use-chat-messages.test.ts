@@ -248,7 +248,7 @@ describe('useChatMessages', () => {
           jest.advanceTimersByTime(250);
         });
       } catch {
-        // ignore
+        // The injected 'flush boom' error can surface here.
       }
 
       expect(storedIds()).toEqual(['1']);
@@ -559,8 +559,6 @@ describe('useChatMessages', () => {
         useChatMessages({
           ...defaultOptions,
           finalizeMessageForCommit: (message: BufferedMessage) => {
-            // Feeds a message back in mid-flush, which arms a timer while the
-            // flush that cleared the handle is still running.
             if (!hasQueued) {
               hasQueued = true;
               result.current.handleNewMessage(createMockMessage('2'));
@@ -655,10 +653,6 @@ describe('useChatMessages', () => {
       }),
     };
 
-    /**
-     * Chat.tsx suspends front-trim while the list is scrolled up, which widens
-     * the store window and with it the ingest buffer bound.
-     */
     const suspendFrontTrimLikeScrolledUp = () => {
       messagesActions.setChatFrontTrimSuspended(true);
     };
@@ -693,8 +687,6 @@ describe('useChatMessages', () => {
       suspendFrontTrimLikeScrolledUp();
       const { result } = renderHook(() => useChatMessages(scrolledUpOptions));
 
-      // Exceeds the fixed backpressure threshold (400) so the burst forces a
-      // synchronous drain before the flush timer fires.
       const pushCount = 500;
 
       act(() => {
@@ -811,10 +803,6 @@ describe('useChatMessages', () => {
       expect(result.current.getBufferSize()).toBe(26);
     });
 
-    /**
-     * Raid mode must widen the batch alongside the interval, or the backlog
-     * drains slower than arrival and latches raid mode on.
-     */
     test('raid mode does not drain slower than the normal live cadence', () => {
       const { result } = renderHook(() =>
         useChatMessages({
@@ -835,7 +823,6 @@ describe('useChatMessages', () => {
       const raidRows = storedMessages().length;
       const raidRate = raidRows / 180;
 
-      // The non-raid pairing is 8 rows per 100ms.
       expect(raidRate).toBeGreaterThanOrEqual(8 / 100);
     });
 
@@ -859,8 +846,6 @@ describe('useChatMessages', () => {
       expect(result.current.getBufferSize()).toBe(0);
       messagesActions.clearMessages();
 
-      // The burst flush left raid mode on, so this single row waits out the
-      // wider 180ms cadence.
       act(() => {
         result.current.handleNewMessage(createMockMessage('after-raid'));
         jest.advanceTimersByTime(100);
@@ -876,7 +861,6 @@ describe('useChatMessages', () => {
 
       messagesActions.clearMessages();
 
-      // That quiet flush cleared raid mode, so the next row commits at 100ms.
       act(() => {
         result.current.handleNewMessage(createMockMessage('quiet'));
         jest.advanceTimersByTime(100);
@@ -901,7 +885,6 @@ describe('useChatMessages', () => {
       });
 
       act(() => {
-        // Raid mode widens the live flush interval to 180ms.
         jest.advanceTimersByTime(180 * 12);
       });
 
@@ -982,8 +965,6 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(100);
       });
 
-      // The cap rises to the 20 arrivals, so the whole burst commits and is
-      // finalized in one flush.
       expect(finalizeMessageForCommit).toHaveBeenCalledTimes(20);
 
       expect(storedIds()).toEqual(

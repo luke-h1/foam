@@ -71,10 +71,6 @@ function pickSubscriptionDescriptionFields(
   };
 }
 
-/**
- * `createSubscriptionToken` maps `msg-param-sub-plan` to `planName`. A notice
- * with no plan (an upgrade, an unknown code) reads as Tier 1.
- */
 function getTierDisplay(
   subscriptionEvent: SubscriptionNoticeProps['token']['subscriptionEvent'],
 ): string {

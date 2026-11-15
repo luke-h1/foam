@@ -22,8 +22,6 @@ for script in export_workspace.py enrich_workspace.py; do
   fi
 done
 
-# android/ is Expo CNG output. Keep an existing one, so the app variant it was
-# generated for does not change.
 if [[ ! -d "$APP/android" ]]; then
   (cd "$APP" && CI=1 bunx expo prebuild -p android)
 fi

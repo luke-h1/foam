@@ -1,9 +1,8 @@
 import { memo } from 'react';
-import type { StyleProp, TextStyle } from 'react-native';
+import type { TextStyle } from 'react-native';
 
 import { useSelector } from '@legendapp/state/react';
 
-import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 import { getChatColorStyle } from '@app/components/chat/util/chatColorStyles';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import type { ChatDensity, ChatFontScale } from '@app/store/preference-store';
@@ -12,12 +11,14 @@ import { formatMentionContent } from '@app/utils/chat/resolve-mention-login/form
 import { resolveMentionColor } from '@app/utils/chat/resolveMentionColor';
 
 import { styles } from '../ChatRow.styles';
+import { ChatRowText } from '../ChatRowText';
 import { getChatTextStyles } from '../ChatText.styles';
+import { getChatRowTextStyle } from '../util/chatRowTextStyle';
 
 interface MentionTokenProps {
   content: string;
-  baseTextStyle?: StyleProp<TextStyle>;
-  emoteLineStyle?: StyleProp<TextStyle>;
+  baseRowTextStyle: TextStyle;
+  emoteLineStyle?: TextStyle;
   density?: ChatDensity;
   fontScale?: ChatFontScale;
   isModerated?: boolean;
@@ -27,13 +28,9 @@ interface MentionTokenProps {
   replyPlainMentionTarget?: string;
 }
 
-/**
- * A single @mention span; self-subscribes to `mentionLoginRevision` so a
- * Helix resolve re-renders only visible mention spans, not every chat row.
- */
 function MentionTokenComponent({
   content,
-  baseTextStyle,
+  baseRowTextStyle,
   emoteLineStyle,
   density,
   fontScale,
@@ -43,15 +40,24 @@ function MentionTokenComponent({
   normalisedCurrentUsername,
   replyPlainMentionTarget,
 }: MentionTokenProps) {
-  useSelector(chatStore$.mentionLoginRevision);
+  const mentionContent = useSelector(() => {
+    chatStore$.mentionLoginRevision.get();
+    return formatMentionContent(content);
+  });
 
-  const mentionContent = formatMentionContent(content);
+  const mentionedUsername = mentionContent.replace(/^@/, '').trim();
+
+  const mentionColor = useSelector(() => {
+    chatStore$.mentionLoginRevision.get();
+    return getMentionColor
+      ? getMentionColor(mentionedUsername)
+      : resolveMentionColor(mentionedUsername);
+  });
 
   if (!mentionContent.trim()) {
     return null;
   }
 
-  const mentionedUsername = mentionContent.replace(/^@/, '').trim();
   const normalisedMentionedUsername = normaliseChatUsername(mentionedUsername);
 
   const isReplyTargetMention = Boolean(
@@ -60,33 +66,26 @@ function MentionTokenComponent({
   );
 
   if (isReplyTargetMention) {
-    return (
-      <ChatText color='gray.text' style={baseTextStyle}>
-        {mentionContent}
-      </ChatText>
-    );
+    return <ChatRowText style={baseRowTextStyle}>{mentionContent}</ChatRowText>;
   }
-
-  const mentionColor = getMentionColor
-    ? getMentionColor(mentionedUsername)
-    : resolveMentionColor(mentionedUsername);
 
   const isHighlightedMention =
     effectiveHighlightedUserSet?.has(normalisedMentionedUsername) ||
     normalisedCurrentUsername === normalisedMentionedUsername;
 
   return (
-    <ChatText
-      style={[
+    <ChatRowText
+      style={getChatRowTextStyle(
+        'muted',
         getChatTextStyles(fontScale, density).mention,
         emoteLineStyle,
         isHighlightedMention && styles.mentionHighlighted,
         getChatColorStyle(mentionColor),
         isModerated && styles.moderatedMessageText,
-      ]}
+      )}
     >
       {mentionContent}
-    </ChatText>
+    </ChatRowText>
   );
 }
 

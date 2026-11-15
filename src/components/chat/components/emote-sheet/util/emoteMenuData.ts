@@ -230,17 +230,10 @@ function sortSets(sets: EmoteMenuSet[]): EmoteMenuSet[] {
     .sort((left, right) => left.title.localeCompare(right.title));
 }
 
-/**
- * Emoji sets carry their entries as bare strings, which have no searchable
- * name; provider emotes always carry an `id`.
- */
 function isNamedEmote(item: EmotePickerItem): item is SanitisedEmote {
   return item instanceof Object && Object.hasOwn(item, 'id');
 }
 
-/**
- * `normalizedQuery` is trimmed and lower-cased once by `filterProviderSets`.
- */
 function filterSet(
   set: EmoteMenuSet,
   normalizedQuery: string,

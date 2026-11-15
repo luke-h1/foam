@@ -34,10 +34,6 @@ describe('searchMentionChatters', () => {
     ]);
   });
 
-  /**
-   * `aaabob` sorts first alphabetically but only matches mid-login, so
-   * alphabetical order alone cannot produce this result.
-   */
   test('ranks prefix matches above substring matches', () => {
     registerMentionLogin('aaabob');
     registerMentionLogin('bobby');
@@ -47,10 +43,6 @@ describe('searchMentionChatters', () => {
     ).toEqual(['bobby', 'aaabob']);
   });
 
-  /**
-   * `Zephyr` sorts before `apple` by character code and after it case
-   * insensitively, so this fails if ordering reads the canonical login.
-   */
   test('orders matches case-insensitively', () => {
     registerMentionLogin('Zephyr');
     registerMentionLogin('apple');

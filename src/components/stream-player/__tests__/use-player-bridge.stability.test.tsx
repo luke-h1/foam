@@ -144,10 +144,6 @@ describe('usePlayerBridge enhanced stability', () => {
   });
 
   test('a stall remount preserves the budget, so a wedged stream still gives up', () => {
-    // A real stall refresh remounts the webview (webViewKey bumps). Wire
-    // forceRefresh to that remount so the reset effect runs just like on
-    // device. The budget must survive the remount or the stream reloads
-    // forever.
     let webViewKey = 0;
 
     const forceRefresh = jest.fn(() => {

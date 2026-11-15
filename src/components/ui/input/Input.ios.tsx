@@ -243,8 +243,7 @@ function useIosInputField({
           style,
         ];
 
-  // SAFETY: inputStyles is StyleProp<TextStyle & ViewStyle>; flatten drops the
-  // array wrapper and returns that intersection (or undefined, coalesced above).
+  // SAFETY: every entry in inputStyles is a TextStyle & ViewStyle.
   const flattenedStyle = (StyleSheet.flatten(inputStyles) ?? {}) as TextStyle &
     ViewStyle;
 
@@ -1138,7 +1137,7 @@ function shouldBlurOnSubmit({
 }
 
 function pickHostStyle(style: TextStyle & ViewStyle): ViewStyle {
-  // SAFETY: only layout keys from the TextStyle & ViewStyle intersection.
+  // SAFETY: every copied key exists on ViewStyle with a compatible value type.
   return {
     alignSelf: style.alignSelf,
     bottom: style.bottom,

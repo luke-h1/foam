@@ -10,11 +10,6 @@ import { useChannelActivity } from '@app/hooks/use-channel-activity';
 import TwitchWsService from '@app/services/twitch-ws-service';
 import { logger } from '@app/utils/logger';
 
-// SAFETY: getInstance's return value is never read by this hook, only passed through.
-const mockGetInstance = jest
-  .spyOn(TwitchWsService, 'getInstance')
-  .mockReturnValue({} as WebSocket);
-
 const mockSubscribeToEvent = jest.spyOn(TwitchWsService, 'subscribeToEvent');
 
 const mockUnsubscribeFromEvent = jest.spyOn(
@@ -43,10 +38,6 @@ function getSubscribedHandler(type: string) {
 describe('useChannelActivity', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-
-    // SAFETY: getInstance's return value is never read by this hook, only passed through.
-    mockGetInstance.mockReturnValue({} as WebSocket);
-
     mockSubscribeToEvent.mockResolvedValue(undefined);
     mockUnsubscribeFromEvent.mockResolvedValue(undefined);
   });
@@ -72,8 +63,6 @@ describe('useChannelActivity', () => {
     expect(result.current.isAvailable).toBe(false);
 
     expect(fetch).not.toHaveBeenCalled();
-
-    expect(mockGetInstance).not.toHaveBeenCalled();
 
     expect(mockSubscribeToEvent).not.toHaveBeenCalled();
   });

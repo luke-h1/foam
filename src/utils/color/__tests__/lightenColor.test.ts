@@ -1,9 +1,5 @@
 import { lightenColor } from '../lightenColor';
 
-/**
- * Expected values are pinned literals: deriving them from the implementation's
- * own luminance maths would pass even if that maths were wrong.
- */
 describe('lightenColor', () => {
   test.each([
     ['twitch blue', '#0000FF', 'rgb(94, 94, 255)'],

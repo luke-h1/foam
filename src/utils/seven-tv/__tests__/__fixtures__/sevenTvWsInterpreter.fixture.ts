@@ -1,5 +1,4 @@
-// `shape` here mirrors the 7TV paint API field name, not a naming choice.
-// oxlint-disable anti-slop/no-shape-in-symbol-names
+// oxlint-disable anti-slop/no-shape-in-symbol-names -- mirrors the 7TV paint API field name
 import type { EmoteImageScale, EmoteImageVariants } from '@app/types/emote';
 import type {
   BadgeCosmetic,
@@ -30,10 +29,6 @@ type RawJsonValue =
   | RawJsonValue[]
   | { [key: string]: RawJsonValue };
 
-/**
- * A 7TV websocket payload exactly as it arrives on the wire, before the
- * interpreter has decided whether it is well formed.
- */
 interface RawSevenTvPayload {
   [key: string]: RawJsonValue;
 }
@@ -388,10 +383,6 @@ export function createDispatchMessage(
   return { op: 0, d: data };
 }
 
-/**
- * Builds an event payload via a JSON round trip, for malformed payload cases
- * the type system would otherwise reject.
- */
 export function coerceEvent<T extends SevenTvEventType>(
   raw: RawSevenTvPayload,
 ): SevenTvEventData<T> {
@@ -399,10 +390,6 @@ export function coerceEvent<T extends SevenTvEventType>(
   return JSON.parse(JSON.stringify(raw)) as SevenTvEventData<T>;
 }
 
-/**
- * Builds a full ws message from raw data via a JSON round trip. Used for
- * malformed message cases the type system would otherwise reject.
- */
 export function coerceMessage(
   raw: RawSevenTvPayload,
 ): SevenTvWsMessage<SevenTvEventData<SevenTvEventType>> {

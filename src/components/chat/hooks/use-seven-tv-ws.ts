@@ -84,7 +84,6 @@ interface UseSevenTvWsReturn {
 
 const DEFAULT_URL = 'wss://events.7tv.io/v3';
 
-// If the RESUME ack never arrives, fall back to fresh subscriptions.
 const RESUME_ACK_TIMEOUT = 5000;
 
 // Mobile sockets go half-open without onclose; prolonged heartbeat silence
@@ -228,7 +227,6 @@ function runSevenTvWsDecision(
 
     case 'applyEntitlementCreate': {
       if (__DEV__) {
-        // Entitlement bursts arrive hundreds at a time; release drops info logs, so skip building the strings.
         logger.stvWs.info(`💚 Received WS 'entitlement.create' event`);
         logger.stvWs.info(
           `Entitlement create: ${decision.kind} for user ${decision.userDisplayName} (ttv: ${decision.ttvUserId}, paint: ${decision.paintId}, badge: ${decision.badgeId})`,
@@ -533,10 +531,6 @@ export function useSevenTvWs(
     );
   };
 
-  /**
-   * Subscribes a fresh session to the channel, the owner and the emote set,
-   * and records each one, so `subscribeToChannel` does not send them again.
-   */
   const runInitialSubscriptions = () => {
     const session = sessionRef.current;
     const twitchChannelId = twitchChannelIdRef.current;
@@ -865,8 +859,6 @@ export function useSevenTvWs(
 
   const shouldConnectRef = useSyncRef(shouldConnect);
 
-  // A long background stretch can exhaust the retry budget; foregrounding
-  // with a dead socket forces a fresh connect (then RESUME).
   useEffect(() => {
     const subscription = AppState.addEventListener('change', state => {
       if (state !== 'active' || !shouldConnectRef.current) {
@@ -886,8 +878,6 @@ export function useSevenTvWs(
     return () => subscription.remove();
   }, [getWebSocket, reconnect, shouldConnectRef]);
 
-  // The owner's 7TV id resolves async and can land after initial
-  // subscriptions; (re)subscribe user.update when it arrives or changes.
   // oxlint-disable-next-line react-doctor/no-event-handler -- syncs a WS subscription to an async id, not a UI event
   const sevenTvChannelUserId = options?.sevenTvChannelUserId;
 

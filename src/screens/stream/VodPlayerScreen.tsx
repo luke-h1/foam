@@ -42,7 +42,6 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
     portraitTopInset,
   } = useLiveStreamOrientation();
 
-  // Portrait pins 16:9 below the status bar, landscape fills the height; sizing the container to the video keeps the WebView video-sized with no letterboxing.
   const videoHeight = isLandscape ? layoutHeight : videoWidth * (9 / 16);
 
   useStreamPlayerScreenLifecycle({

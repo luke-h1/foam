@@ -123,8 +123,6 @@ describe('useSevenTvChatRuntime', () => {
   test('subscribes exactly once when the websocket reconnects from closed to open', () => {
     const currentEmoteSetIdRef = { current: null };
 
-    // One stable pair of ws handlers across both connection states so the call
-    // count accumulates and we can prove no double-subscribe on reconnect.
     const subscribeToChannel = jest.fn();
 
     const unsubscribeFromChannel = jest.fn();

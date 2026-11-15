@@ -47,8 +47,6 @@ function toDetent(snapPoint: SnapPoint): string | number {
     return Math.round(snapPoint.height);
   }
 
-  // Rounded because float multiplication leaves a tail on some fractions, and
-  // '28.999999999999996%' goes straight to the native detent.
   return `${Math.round(Math.min(1, snapPoint.fraction) * 100)}%`;
 }
 
@@ -93,9 +91,6 @@ export function BottomSheet({
     [],
   );
 
-  /**
-   * A re-open inside the dismiss window means the sheet never went away.
-   */
   useEffect(() => {
     if (isPresented && dismissTimerRef.current !== null) {
       clearTimeout(dismissTimerRef.current);

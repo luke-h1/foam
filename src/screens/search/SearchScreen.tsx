@@ -4,6 +4,7 @@ import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 import type { ListRenderItem } from '@shopify/flash-list';
 import { router } from 'expo-router';
 
+import { BOX_ART_SOURCE_SIZE } from '@app/components/category-card/constants';
 import {
   FlashList,
   type FlashListRef,
@@ -33,10 +34,6 @@ import {
   type SearchStatus,
 } from './util/searchState';
 
-/**
- * Keeps row separators aligned with the text column, past the avatar or box
- * art.
- */
 const RESULT_THUMBNAIL_WIDTH = 48;
 
 const RESULT_SEPARATOR_INSET =
@@ -103,10 +100,10 @@ export function SearchScreen() {
 
   const renderCategoryItem: ListRenderItem<Category> = useCallback(
     ({ item }) => {
-      const imageUrl = getTwitchThumbnailUrl(item.box_art_url, {
-        width: 220,
-        height: 294,
-      });
+      const imageUrl = getTwitchThumbnailUrl(
+        item.box_art_url,
+        BOX_ART_SOURCE_SIZE,
+      );
 
       return (
         <ResultRow
@@ -212,7 +209,6 @@ function SearchHeader({
     return <SearchDiscover />;
   }
 
-  // The filter only changes results, so it appears once there is a query.
   return (
     <View style={styles.filterBar}>
       <SegmentedControl

@@ -108,10 +108,10 @@ const simultaneousGestureStub = (pan: GestureMock, fling: GestureMock) => ({
 // SAFETY: these stubs return GestureMock, not the real chainable-builder classes; only the captured callbacks are ever read back.
 jest.spyOn(Gesture, 'Fling').mockImplementation(flingGestureStub as never);
 
-// SAFETY: see above - panGestureStub returns GestureMock, not the real chainable-builder class.
+// SAFETY: only the captured callbacks are ever read back.
 jest.spyOn(Gesture, 'Pan').mockImplementation(panGestureStub as never);
 
-// SAFETY: see above - simultaneousGestureStub returns GestureMock, not the real chainable-builder class.
+// SAFETY: only the captured callbacks are ever read back.
 jest
   .spyOn(Gesture, 'Simultaneous')
   .mockImplementation(simultaneousGestureStub as never);

@@ -1,5 +1,5 @@
 import type { SanitisedEmote } from '@app/types/emote';
-import { getChatEmoteDisplayUrl } from '@app/utils/emote/getChatEmoteDisplayUrl';
+import { getChatRowEmoteUrl } from '@app/utils/emote/chatRowEmoteUrl';
 
 const EMOTE_WARM_LIMIT = 64;
 
@@ -40,7 +40,7 @@ export function collectEmoteWarmUrls(
       break;
     }
 
-    const url = getChatEmoteDisplayUrl(emote, { disableAnimations });
+    const url = getChatRowEmoteUrl(emote, { disableAnimations });
 
     if (url && (!accept || accept(url))) {
       urls.add(url);

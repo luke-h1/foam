@@ -13,11 +13,6 @@ const guardKey = (channelId: string, twitchUserId: string): string =>
 
 const MAX_PERSONAL_EMOTE_CHANNELS = 20;
 
-/**
- * Plain bounded Map: channel id -> Twitch user id -> emotes. A persisted
- * observable would re-stringify the whole table on every write. React
- * subscribes through `personalEmotesVersion`.
- */
 const personalEmotesByChannel = new Map<
   string,
   Record<string, SanitisedEmote[]>
@@ -189,10 +184,6 @@ export const refreshUserPersonalEmotes = async (
   });
 };
 
-/**
- * Only users whose personal emotes we already hold can match, which bounds
- * the work a stray set update can cause.
- */
 export const findPersonalEmoteSetOwner = (
   channelId: string | null | undefined,
   emoteSetId: string,
@@ -216,10 +207,6 @@ function getEmoteSetId(emote: SanitisedEmote): string | undefined {
   return 'set_metadata' in emote ? emote.set_metadata?.setId : undefined;
 }
 
-/**
- * Only refresh hydrated users whose cached set differs - a busy channel fires
- * one entitlement per active 7TV chatter.
- */
 export const handlePersonalEmoteSetEntitlement = (
   twitchUserId: string,
   emoteSetId: string,

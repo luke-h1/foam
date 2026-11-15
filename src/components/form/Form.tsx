@@ -139,10 +139,6 @@ const FORM_TEXT_FONT: TextStyle = {
   fontWeight: 'normal',
 };
 
-/**
- * A Section's children may arrive wrapped in an unkeyed Fragment, so unwrap one
- * level and keep only the real elements.
- */
 function flattenSectionChildren(children: ReactNode): ReactNode[] {
   const flattened: ReactNode[] = [];
 
@@ -200,8 +196,6 @@ function renderSectionHint(hint: ReactNode): ReactNode {
 
 function asSectionTextRow(
   child: ReactElement<Record<string, unknown>>,
-  // The row props come off a cloned element, so they are untyped here. The
-  // `@ts-expect-error`s in `Section` cover the same gap.
   resolvedProps: {
     hint?: ReactNode;
     style?: StyleProp<TextStyle>;
@@ -398,7 +392,6 @@ function isStringishNode(node: ReactNode): boolean {
       child.props !== null &&
       'children' in child.props
     ) {
-      // Recurse on the children prop only - recursing on the element itself loops forever.
       containsStringChildren = isStringishNode(
         child.props.children as ReactNode,
       );

@@ -1,9 +1,3 @@
-/**
- * Fake of the parts of expo-file-system's next (Directory/File) API that
- * src/utils/image/imageCache.ts and src/lib/sentryCacheSweep.ts (and their
- * tests) use. The real module wraps native ExpoFileSystem bindings that Jest
- * does not have, so this in-memory node map stands in for the device disk.
- */
 type MockNode =
   | { kind: 'directory'; children: string[] }
   | { kind: 'file'; size: number | null };
@@ -112,10 +106,6 @@ export const Paths = {
   cache: 'file:///cache/',
 };
 
-/**
- * Test-only controls, mirroring the pattern in __mocks__/react-native-mmkv.js.
- * Not part of the real expo-file-system surface.
- */
 export const __mockFileSystem = {
   addDirectory: (uri: string, children: string[]) => {
     nodes.set(uri, { kind: 'directory', children });

@@ -66,8 +66,6 @@ export function useSearchController() {
     [searchHistory],
   );
 
-  // Lock portrait only while search is focused. A mount lock can finish after
-  // the player unlocks and keep the stream in portrait.
   useFocusEffect(
     useCallback(() => {
       lockPortrait();

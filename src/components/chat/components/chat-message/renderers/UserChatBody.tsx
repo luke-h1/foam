@@ -33,10 +33,6 @@ interface UserChatBodyProps {
   replyParentMessageId?: string;
   roomId?: string;
   timestamp?: string;
-  /**
-   * One object from the row. Do not spread it: object rest copies it on
-   * every row render.
-   */
   tokenRenderProps: ChatTokenRenderProps;
   userId?: string;
   userstate?: UserStateTags;
@@ -107,10 +103,6 @@ export function UserChatBody({
 
   const hasPaint = useUserPaint(userId) !== null;
 
-  /**
-   * A paint renders through a mask, so a painted row cannot put the username
-   * in the same Text as the body - but the body alone still flows.
-   */
   const rowFlowsInline = flowsInline(message, { hasPaint, isModerated });
 
   const inlineUsernameColor = resolveCachedSenderColor({
@@ -122,10 +114,6 @@ export function UserChatBody({
   const actionColor = isAction ? inlineUsernameColor : undefined;
   const textStyles = getChatTextStyles(fontScale, density);
 
-  /**
-   * A painted row's body still flows inline, so it needs the taller emote
-   * leading on every nested span - see InlineMessageLine.
-   */
   const bodyEmoteLineStyle = getMessageStructure(message).containsEmotes
     ? textStyles.bodyEmoteLine
     : undefined;

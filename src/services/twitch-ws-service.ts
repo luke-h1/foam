@@ -16,10 +16,6 @@ import { twitchService } from './twitch-service';
 
 type EventCallback = TwitchEventSubCallback;
 
-/**
- * Identity is eventType + condition: keying by type alone made overlapping
- * screens reuse and orphan each other's server-side subscription.
- */
 type EventSubEntry = {
   eventType: string;
   version: string;
@@ -119,10 +115,6 @@ class TwitchWsService {
     return socket;
   }
 
-  /**
-   * Detach and close so an abandoned socket cannot register duplicate
-   * subscriptions on its welcome. Code 1000 keeps onclose from reconnecting.
-   */
   private static discardInstance(): void {
     const existing = TwitchWsService.instance;
 
@@ -393,7 +385,6 @@ class TwitchWsService {
         `💜 EventSub keepalive timeout received - reconnecting`,
       );
 
-      // Drop the dead socket first. Its close would otherwise start a second reconnect.
       TwitchWsService.discardInstance();
       TwitchWsService.discardRetiringInstance();
       TwitchWsService.attemptReconnect();
@@ -414,10 +405,6 @@ class TwitchWsService {
     }
   }
 
-  /**
-   * All reconnects go through here so teardown can cancel one mid-backoff;
-   * an uncancelled timer would reopen the socket after every consumer left.
-   */
   private static scheduleReconnect(delayMs: number): void {
     TwitchWsService.clearReconnectTimer();
 
@@ -483,10 +470,6 @@ class TwitchWsService {
     return matching;
   }
 
-  /**
-   * Subscriptions are keyed by eventType + condition; the same type may be
-   * held for several broadcasters during screen overlaps.
-   */
   public static async subscribeToEvent(
     eventType: string,
     version: string,
@@ -623,7 +606,6 @@ class TwitchWsService {
         continue;
       }
 
-      // Claim the entry before awaiting: a sibling settling first can reach cleanupSubscriptions mid-flight and delete the same id twice.
       TwitchWsService.entries.delete(key);
 
       const subscriptionId = entry.subscriptionId;
@@ -798,10 +780,6 @@ class TwitchWsService {
     TwitchWsService.appStateSubscription = null;
   }
 
-  /**
-   * The listener registry is the refcount: close only after the last consumer
-   * unsubscribes, or one unmount kills the others' feeds.
-   */
   private static teardownIfIdle(): void {
     if (TwitchWsService.hasActiveListeners()) {
       return;

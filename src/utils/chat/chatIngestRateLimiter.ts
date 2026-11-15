@@ -1,8 +1,6 @@
 /**
- * Flood backstop on live-message ingest. Sits above the highest sustained
- * single-channel rates seen on Twitch (100-200/s at the largest events), so
- * it only samples a flood the commit path could not render anyway. Drops are
- * reported to Sentry.
+ * Sits above the highest sustained single-channel Twitch rates (100-200/s
+ * at the largest events).
  */
 export const MAX_INGESTED_PER_SEC = 300;
 

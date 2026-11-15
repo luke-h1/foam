@@ -125,8 +125,8 @@ interface MessageTokenByKind {
       plan: string;
       planName?: string; // Prime, Tier 1, Tier 2, Tier 3
       months?: number; // cumulative-months
-      streakMonths?: number; // streak-months
-      shouldShareStreak?: boolean; // should-share-streak
+      streakMonths?: number;
+      shouldShareStreak?: boolean;
     };
   };
   resub: {
@@ -150,9 +150,9 @@ interface MessageTokenByKind {
         | 'primecommunitygiftreceived';
       plan: string;
       planName?: string;
-      recipientDisplayName: string; // recipient-display-name
-      recipientId: string; // recipient-id
-      giftMonths: number; // gift-months
+      recipientDisplayName: string;
+      recipientId: string;
+      giftMonths: number;
       months: number;
     };
   };

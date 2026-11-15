@@ -13,7 +13,8 @@ import {
   getBttvBadges,
 } from '@app/store/chat/actions/bttv-badges/getBttvBadges';
 import { getChatterinoBadges } from '@app/store/chat/actions/chatterinoBadges';
-import { getPreferences } from '@app/store/preference-store';
+import { getPreferences, type Preferences } from '@app/store/preference-store';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
 import { cheermoteFetchGuard } from '@app/utils/chat/cheermote-store/cheermoteFetchGuard';
 import { fetchChannelCheermotes } from '@app/utils/chat/cheermote-store/fetchChannelCheermotes';
@@ -34,10 +35,14 @@ import {
 import {
   CHANNEL_BADGE_SLICE_KEYS,
   CHANNEL_EMOTE_SLICE_KEYS,
+  CHANNEL_SLICE_KEYS,
   EMPTY_GATED_EMOTE_DATA,
+  GATE_EXTRA_PREFERENCE_KEYS,
   type GatedEmoteData,
   gateEmoteData,
+  GLOBAL_SLICE_KEYS,
   mapSlices,
+  SLICE_BY_KEY,
 } from '../types/chat-resource-slices';
 import type {
   ChannelCacheType,
@@ -155,8 +160,6 @@ function notifyProviderLoadFailures(
   );
 }
 
-// Runs keyed by channel id; only owner ids Twitch never returns get stamped,
-// or they re-request on every cached-path revisit.
 const subscriberProfilesGuard = createFetchOnceGuard();
 
 export const clearSubscriberProfilesCache = () => {
@@ -490,11 +493,6 @@ const refreshStaleGlobalResources = async ({
   return { aborted: false, settled };
 };
 
-/**
- * Runs the cache-hit path: refresh only the slices the plan marked stale, then
- * mark the channel loaded. The steps run in order because each one writes the
- * cache the next one reads. Returns false when the load was aborted.
- */
 const refreshCachedChannelResources = async (
   args: CachedRefreshArgs,
 ): Promise<boolean> => {
@@ -558,14 +556,10 @@ const loadChannelResourcesInternal = async (
   chatStore$.loadingState.set('LOADING');
 
   if (shouldForceRefresh) {
-    // Forget the fetch-once users too, or fetchUserPersonalEmotes
-    // short-circuits into the emptied cache.
     clearPersonalEmotesCache();
 
     clearGlobalResourceCache();
 
-    // "Refresh emotes" is what a user reaches for when the 7TV set looks
-    // wrong, so re-resolve it.
     invalidateSevenTvUser(channelId);
   }
 
@@ -600,8 +594,6 @@ const loadChannelResourcesInternal = async (
       return false;
     }
 
-    // Resolve the 7TV set id as a promise the spec awaits internally, so the
-    // other 13 resource fetches start immediately instead of stalling behind it.
     const fallbackSevenTvSetId =
       existingCache?.sevenTvEmoteSetId ?? SEVEN_TV_GLOBAL_EMOTE_SET_ID;
 
@@ -655,8 +647,6 @@ const loadChannelResourcesInternal = async (
       return false;
     }
 
-    // Settled (or about to settle behind the same client timeout) by the time
-    // the resource fetches above have finished.
     const sevenTvSetId = await sevenTvSetIdPromise;
 
     reportResourceResults({
@@ -728,7 +718,6 @@ const loadChannelResourcesInternal = async (
       chatStore$.loadingState.set('COMPLETED');
     });
 
-    // After the batch, so the listener has queued the new channel's write.
     for (const droppedId of prunePersistedChannelCaches(channelId)) {
       chatStore$.persisted.channelCaches[droppedId]?.delete();
     }
@@ -784,10 +773,6 @@ const loadChannelResourcesInternal = async (
   }
 };
 
-/**
- * Fire-and-forget cheermote fetch; failures only log because cheer rendering
- * degrades to plain text without them.
- */
 const loadChannelCheermotes = (channelId: string): void => {
   fetchChannelCheermotes(channelId, () =>
     twitchService.getCheermotes(channelId),
@@ -824,10 +809,6 @@ export const loadChannelResources = async ({
   );
 };
 
-/**
- * Stale-stamps the channel's cached slices and drops the process-level caches
- * a reload does not clear itself (BTTV badge list, cheermote stamp).
- */
 export const invalidateChatResourceCaches = (channelId: string): void => {
   const channelCache = chatStore$.persisted.channelCaches[channelId];
 
@@ -879,19 +860,67 @@ export const clearPersistedChatResources = (): void => {
   void clearChatStorePersistence();
 };
 
-/**
- * Reference-keyed memo: getCurrentEmoteData runs once per ingested message
- * but its inputs only change a handful of times per session.
- */
+const GATE_PREFERENCE_KEYS = [
+  ...new Set<keyof Preferences>([
+    ...CHANNEL_SLICE_KEYS.map(key => SLICE_BY_KEY[key].preference),
+    ...GLOBAL_SLICE_KEYS.map(key => SLICE_BY_KEY[key].preference),
+    ...GATE_EXTRA_PREFERENCE_KEYS,
+  ]),
+];
+
+const EMOTE_DATA_INPUT_COUNT =
+  CHANNEL_SLICE_KEYS.length +
+  GLOBAL_SLICE_KEYS.length +
+  GATE_PREFERENCE_KEYS.length +
+  2;
+
+const scratchEmoteDataInputs: unknown[] = Array.from<unknown>({
+  length: EMOTE_DATA_INPUT_COUNT,
+});
+
 let resolvedEmoteDataCache: {
   channelId: string;
-  cache: unknown;
-  globalCache: unknown;
-  preferences: unknown;
-  chatterinoBadges: unknown;
-  bttvBadges: unknown;
+  inputs: unknown[];
   value: GatedEmoteData;
 } | null = null;
+
+function fillEmoteDataInputs(
+  cache: ChannelCacheType,
+  globalCache: GlobalCacheType,
+  preferences: Preferences,
+  chatterinoBadges: SanitisedBadgeSet[],
+  bttvBadges: SanitisedBadgeSet[],
+): void {
+  let index = 0;
+
+  for (const key of CHANNEL_SLICE_KEYS) {
+    scratchEmoteDataInputs[index] = cache[key];
+    index += 1;
+  }
+
+  for (const key of GLOBAL_SLICE_KEYS) {
+    scratchEmoteDataInputs[index] = globalCache[key];
+    index += 1;
+  }
+
+  for (const key of GATE_PREFERENCE_KEYS) {
+    scratchEmoteDataInputs[index] = preferences[key];
+    index += 1;
+  }
+
+  scratchEmoteDataInputs[index] = chatterinoBadges;
+  scratchEmoteDataInputs[index + 1] = bttvBadges;
+}
+
+function emoteDataInputsMatch(inputs: unknown[]): boolean {
+  for (let index = 0; index < EMOTE_DATA_INPUT_COUNT; index += 1) {
+    if (inputs[index] !== scratchEmoteDataInputs[index]) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 export const getCurrentEmoteData = (channelId?: string): GatedEmoteData => {
   const targetChannelId = channelId ?? chatStore$.currentChannelId.peek();
@@ -912,16 +941,20 @@ export const getCurrentEmoteData = (channelId?: string): GatedEmoteData => {
   const chatterinoBadges = getChatterinoBadges();
   const bttvBadges = getBttvBadges();
 
+  fillEmoteDataInputs(
+    cache,
+    globalCache,
+    preferences,
+    chatterinoBadges,
+    bttvBadges,
+  );
+
   const memo = resolvedEmoteDataCache;
 
   if (
     memo &&
     memo.channelId === targetChannelId &&
-    memo.cache === cache &&
-    memo.globalCache === globalCache &&
-    memo.preferences === preferences &&
-    memo.chatterinoBadges === chatterinoBadges &&
-    memo.bttvBadges === bttvBadges
+    emoteDataInputsMatch(memo.inputs)
   ) {
     return memo.value;
   }
@@ -935,11 +968,7 @@ export const getCurrentEmoteData = (channelId?: string): GatedEmoteData => {
 
   resolvedEmoteDataCache = {
     channelId: targetChannelId,
-    cache,
-    globalCache,
-    preferences,
-    chatterinoBadges,
-    bttvBadges,
+    inputs: scratchEmoteDataInputs.slice(),
     value,
   };
 

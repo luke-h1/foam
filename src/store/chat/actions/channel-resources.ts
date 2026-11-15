@@ -91,19 +91,11 @@ type AnySettledSpec = SettledSpec<ResourceCacheKey, Identifiable>;
 const deduplicateById = <T extends Identifiable>(items: readonly T[]): T[] =>
   Array.from(new Map(items.map(item => [item.id, item])).values());
 
-/**
- * Global provider data is identical for every channel; cache successful
- * fetches per session. Failures are never cached, so the next join retries.
- */
 const globalResourceCache = new Map<
   string,
   { fetchedAt: number; promise: Promise<Identifiable[]> }
 >();
 
-/**
- * Fences the channel-independent fetches that write straight into
- * `globalCaches`; held here so `clearGlobalResourceCache` callers fence too.
- */
 export const globalChatResourceGuard = createFetchOnceGuard();
 
 export const clearGlobalResourceCache = (): void => {
@@ -153,10 +145,6 @@ export const buildSubscriberEmoteSpec = ({
         : Promise.resolve([]),
   });
 
-/**
- * Caps a pending 7TV set-id lookup so it cannot eat the whole
- * `RESOURCE_FETCH_TIMEOUT_MS` window and time out the emote-set fetch.
- */
 const SEVEN_TV_SET_ID_LOOKUP_BUDGET_MS = 3000;
 
 const SEVEN_TV_GLOBAL_EMOTE_SPEC = defineResourceSpec({
@@ -239,10 +227,6 @@ export const buildGlobalBadgeResourceSpecs = (): BadgeResourceSpec[] => [
 
 interface BuildEmoteResourceSpecsOptions {
   channelId: string;
-  /**
-   * Only the 7TV channel-emote fetch depends on the set id, so it may be a
-   * pending promise - every other fetch starts without waiting on the lookup.
-   */
   sevenTvSetId: string | Promise<string>;
   /**
    * Used if `sevenTvSetId` is still pending after

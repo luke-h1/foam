@@ -10,11 +10,6 @@ const RECORD_PREFIX = 'image-cache-record:';
 const MAX_CACHE_BYTES = 100 * 1024 * 1024;
 const MAX_CACHE_RECORDS = 5000;
 
-/**
- * Eviction sorts the whole manifest, so it trims to this fraction of each
- * limit. A full cache then sorts once per few hundred downloads, not on every
- * download.
- */
 const EVICTION_TARGET_RATIO = 0.9;
 
 const DOWNLOAD_CONCURRENCY = 4;
@@ -67,17 +62,8 @@ let activeDownloads = 0;
 let hydrated = false;
 let validationStarted = false;
 
-/**
- * `clearSessionCache` increments this. A download that started before the
- * clear must not record its file, because the clear deletes the directory.
- */
 let cacheGeneration = 0;
 
-/**
- * Every render of a cached image reads its record, so the access time goes to
- * storage at most this often per record. Eviction order after a restart only
- * needs to be roughly right.
- */
 const ACCESS_PERSIST_INTERVAL_MS = 60 * 60 * 1000;
 
 const persistedAccessAt = new Map<string, number>();
@@ -376,11 +362,6 @@ function getFileName(uri: string): string {
   return uri.slice(uri.lastIndexOf('/') + 1);
 }
 
-/**
- * Drops records whose file is gone, using one directory listing instead of a
- * synchronous stat per record. Only records that existed before the listing
- * started are checked, because a later download can be missing from it.
- */
 async function validateManifest(): Promise<void> {
   const snapshot = Array.from(manifest.values());
   let fileNames: Set<string>;
@@ -390,7 +371,6 @@ async function validateManifest(): Promise<void> {
       await FileSystemLegacy.readDirectoryAsync(getCacheDirectoryPath()),
     );
   } catch {
-    // A missing or unreadable directory leaves validation to getValidRecord.
     return;
   }
 
@@ -418,11 +398,6 @@ function validateManifestSoon(): void {
   }, 1000);
 }
 
-/**
- * Deletes a file that a download from before `clearSessionCache` wrote after
- * the clear removed the directory. Nothing else would delete it. Keep the file
- * when a newer record or download uses the same path.
- */
 function discardClearedDownload(key: string, uri: string): void {
   if (manifest.has(key) || inFlight.has(key)) {
     return;

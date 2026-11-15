@@ -5,12 +5,6 @@ import { ChatNoticeBody } from './renderers/ChatNoticeBody';
 import { SharedChatSourceLabel } from './renderers/SharedChatSourceLabel';
 import { UserChatBody } from './renderers/UserChatBody';
 
-/**
- * Picks the body renderer for a row from its variant: an announcement, an
- * ordinary user message, or one of the notice kinds.
- *
- * Takes the row state as one prop, so a row render does not copy its fields.
- */
 export function ChatRowBody({ state }: { state: ChatRowBodyState }) {
   const {
     badges,

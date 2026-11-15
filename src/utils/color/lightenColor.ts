@@ -21,7 +21,7 @@ const CHAT_SURFACE_RGB = hexToRgb(theme.color.background.dark) ?? {
   b: 0,
 };
 
-// WCAG AA for normal-size text; higher washes the hues together.
+// WCAG AA minimum contrast for normal-size text.
 const MIN_CONTRAST_RATIO = 4.5;
 
 const CONTRAST_SEARCH_STEPS = 16;

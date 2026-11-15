@@ -6,11 +6,9 @@ import { usersByIdsQueryOptions } from '@app/lib/react-query/queries/twitch';
 import type { TwitchStream } from '@app/types/twitch/stream';
 
 /**
- * Adds `profilePicture` to streams with one batched `/users` lookup. The
- * streams endpoints have no avatars, and a request per card is an N+1 against
- * the Helix rate limit. Resolved ids are cached and left out of the next
- * lookup, so appended infinite-query pages do not re-fetch every seen
- * `user_id`. With `enabled: false` the input is returned untouched.
+ * Adds `profilePicture` to streams. The Helix streams endpoints return no
+ * avatar, so this runs one batched `/users` lookup for the ids not yet seen.
+ * With `enabled: false` the input is returned untouched.
  */
 export function useStreamProfilePictures(
   streams: TwitchStream[],

@@ -29,13 +29,8 @@ export interface ChatDelayQueue {
   moderateByLogin(login: string, moderationNotice: string): void;
 }
 
-// Safety ceiling so a long delay + sustained chat can't grow the queue unbounded; drop oldest.
 const DEFAULT_MAX_DELAYED_MESSAGES = 1000;
 
-/**
- * Delays live chat so it lines up with the latency-delayed video; released
- * FIFO in arrival order so a mid-stream delay change can't reorder messages.
- */
 export const createChatDelayQueue = (
   maxDelayedMessages = DEFAULT_MAX_DELAYED_MESSAGES,
 ): ChatDelayQueue => {

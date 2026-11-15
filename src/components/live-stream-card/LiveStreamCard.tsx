@@ -49,7 +49,6 @@ const LANGUAGE_VALUE_SET = new Set(
   Array.from(LANGUAGE_NAMES.values(), language => language.toLowerCase()),
 );
 
-// Dedupe rapid double-taps that would push the same route twice (two stacked screens).
 const NAV_DEDUPE_MS = 1000;
 
 let lastNavKey = '';

@@ -43,20 +43,6 @@ describe('interpretPlayerMessage', () => {
     });
   });
 
-  describe('play', () => {
-    test('cancels a pending transient resume and unpauses', () => {
-      const actions = interpretPlayerMessage(
-        { type: 'play' },
-        createBridgeContext(),
-      );
-
-      expect(actions).toEqual<PlayerBridgeAction[]>([
-        { type: 'cancelTransientResume' },
-        { type: 'setPaused', isPaused: false },
-      ]);
-    });
-  });
-
   describe('playing', () => {
     test('reports first playing once, unpauses and notifies play', () => {
       const actions = interpretPlayerMessage(
@@ -158,7 +144,7 @@ describe('interpretPlayerMessage', () => {
       ]);
     });
 
-    test('pauses and notifies when the user paused', () => {
+    test('pauses when the user paused', () => {
       const actions = interpretPlayerMessage(
         { type: 'pause' },
         createBridgeContext({ userPaused: true }),
@@ -166,11 +152,10 @@ describe('interpretPlayerMessage', () => {
 
       expect(actions).toEqual<PlayerBridgeAction[]>([
         { type: 'setPaused', isPaused: true },
-        { type: 'notifyPause' },
       ]);
     });
 
-    test('pauses and notifies when autoplay is off', () => {
+    test('pauses when autoplay is off', () => {
       const actions = interpretPlayerMessage(
         { type: 'pause' },
         createBridgeContext({ autoplay: false }),
@@ -178,28 +163,7 @@ describe('interpretPlayerMessage', () => {
 
       expect(actions).toEqual<PlayerBridgeAction[]>([
         { type: 'setPaused', isPaused: true },
-        { type: 'notifyPause' },
       ]);
-    });
-  });
-
-  describe('lifecycle notifications', () => {
-    test('ended notifies the caller', () => {
-      expect(
-        interpretPlayerMessage({ type: 'ended' }, createBridgeContext()),
-      ).toEqual<PlayerBridgeAction[]>([{ type: 'notifyEnded' }]);
-    });
-
-    test('online notifies the caller', () => {
-      expect(
-        interpretPlayerMessage({ type: 'online' }, createBridgeContext()),
-      ).toEqual<PlayerBridgeAction[]>([{ type: 'notifyOnline' }]);
-    });
-
-    test('offline notifies the caller', () => {
-      expect(
-        interpretPlayerMessage({ type: 'offline' }, createBridgeContext()),
-      ).toEqual<PlayerBridgeAction[]>([{ type: 'notifyOffline' }]);
     });
   });
 
@@ -249,161 +213,6 @@ describe('interpretPlayerMessage', () => {
     });
   });
 
-  describe('stateUpdate', () => {
-    test('applies status and state as reported when playing', () => {
-      const actions = interpretPlayerMessage(
-        {
-          type: 'stateUpdate',
-          payload: {
-            isBuffering: false,
-            isPaused: false,
-            isReady: true,
-            muted: true,
-            volume: 0.5,
-          },
-        },
-        createBridgeContext(),
-      );
-
-      expect(actions).toEqual<PlayerBridgeAction[]>([
-        { type: 'setPlayerStatus', isReady: true, isBuffering: false },
-        {
-          type: 'applyStateUpdate',
-          isPaused: false,
-          muted: true,
-          volume: 0.5,
-        },
-      ]);
-    });
-
-    test('treats an autoplay pause as transient and keeps state unpaused', () => {
-      const actions = interpretPlayerMessage(
-        {
-          type: 'stateUpdate',
-          payload: {
-            isBuffering: false,
-            isPaused: true,
-            isReady: true,
-            muted: false,
-            volume: 1,
-          },
-        },
-        createBridgeContext(),
-      );
-
-      expect(actions).toEqual<PlayerBridgeAction[]>([
-        { type: 'setPlayerStatus', isReady: true, isBuffering: false },
-        { type: 'scheduleTransientResume' },
-        {
-          type: 'applyStateUpdate',
-          isPaused: false,
-          muted: false,
-          volume: 1,
-        },
-      ]);
-    });
-
-    test('keeps a user pause paused', () => {
-      const actions = interpretPlayerMessage(
-        {
-          type: 'stateUpdate',
-          payload: {
-            isBuffering: true,
-            isPaused: true,
-            isReady: true,
-            muted: false,
-            volume: 1,
-          },
-        },
-        createBridgeContext({ userPaused: true }),
-      );
-
-      expect(actions).toEqual<PlayerBridgeAction[]>([
-        { type: 'setPlayerStatus', isReady: true, isBuffering: true },
-        {
-          type: 'applyStateUpdate',
-          isPaused: true,
-          muted: false,
-          volume: 1,
-        },
-      ]);
-    });
-
-    test('ignores a stateUpdate message without a payload', () => {
-      expect(
-        interpretPlayerMessage(
-          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
-          JSON.parse('{"type":"stateUpdate"}') as PlayerMessage,
-          createBridgeContext(),
-        ),
-      ).toEqual<PlayerBridgeAction[]>([]);
-    });
-  });
-
-  describe('time queries', () => {
-    test('currentTime resolves the pending current-time request', () => {
-      expect(
-        interpretPlayerMessage(
-          { type: 'currentTime', payload: { time: 42.5 } },
-          createBridgeContext(),
-        ),
-      ).toEqual<PlayerBridgeAction[]>([
-        { type: 'resolveCurrentTime', seconds: 42.5 },
-      ]);
-    });
-
-    test('duration resolves the pending duration request', () => {
-      expect(
-        interpretPlayerMessage(
-          { type: 'duration', payload: { duration: 3600 } },
-          createBridgeContext(),
-        ),
-      ).toEqual<PlayerBridgeAction[]>([
-        { type: 'resolveDuration', seconds: 3600 },
-      ]);
-    });
-
-    test('ignores currentTime when payload is missing', () => {
-      expect(
-        interpretPlayerMessage(
-          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
-          JSON.parse('{"type":"currentTime"}') as PlayerMessage,
-          createBridgeContext(),
-        ),
-      ).toEqual<PlayerBridgeAction[]>([]);
-    });
-
-    test('ignores currentTime when time is missing from the payload', () => {
-      expect(
-        interpretPlayerMessage(
-          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
-          JSON.parse('{"type":"currentTime","payload":{}}') as PlayerMessage,
-          createBridgeContext(),
-        ),
-      ).toEqual<PlayerBridgeAction[]>([]);
-    });
-
-    test('ignores duration when payload is missing', () => {
-      expect(
-        interpretPlayerMessage(
-          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
-          JSON.parse('{"type":"duration"}') as PlayerMessage,
-          createBridgeContext(),
-        ),
-      ).toEqual<PlayerBridgeAction[]>([]);
-    });
-
-    test('ignores duration when duration is missing from the payload', () => {
-      expect(
-        interpretPlayerMessage(
-          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
-          JSON.parse('{"type":"duration","payload":{}}') as PlayerMessage,
-          createBridgeContext(),
-        ),
-      ).toEqual<PlayerBridgeAction[]>([]);
-    });
-  });
-
   describe('trace', () => {
     test('logs the embed step and detail', () => {
       expect(
@@ -439,73 +248,8 @@ describe('interpretPlayerMessage', () => {
     });
   });
 
-  describe('error', () => {
-    test('records load failure, logs and notifies with the embed error message', () => {
-      const embedErrorMetadata = {
-        name: 'twitch_player_error',
-        exceptionName: 'StreamPlayerEmbedError',
-        fingerprint: ['stream-player-embed-error'],
-        channel: 'sodapoppin',
-        elapsedMs: 2500,
-        message: 'embed exploded',
-      };
-
-      expect(
-        interpretPlayerMessage(
-          { type: 'error', payload: { message: 'embed exploded' } },
-          createBridgeContext(),
-        ),
-      ).toEqual<PlayerBridgeAction[]>([
-        {
-          type: 'recordLoadFailed',
-          reason: 'embed_error',
-          error: embedErrorMetadata,
-        },
-        {
-          type: 'log',
-          level: 'warn',
-          message: '[StreamPlayer:embed ERROR] embed exploded',
-          args: [embedErrorMetadata],
-        },
-        { type: 'notifyError', message: 'embed exploded' },
-      ]);
-    });
-
-    test('falls back to a generic message when the payload is missing', () => {
-      const embedErrorMetadata = {
-        name: 'twitch_player_error',
-        exceptionName: 'StreamPlayerEmbedError',
-        fingerprint: ['stream-player-embed-error'],
-        channel: 'sodapoppin',
-        elapsedMs: 2500,
-        message: 'Unknown embed error',
-      };
-
-      expect(
-        interpretPlayerMessage(
-          // SAFETY: intentionally malformed wire message to exercise the runtime payload guard
-          JSON.parse('{"type":"error"}') as PlayerMessage,
-          createBridgeContext(),
-        ),
-      ).toEqual<PlayerBridgeAction[]>([
-        {
-          type: 'recordLoadFailed',
-          reason: 'embed_error',
-          error: embedErrorMetadata,
-        },
-        {
-          type: 'log',
-          level: 'warn',
-          message: '[StreamPlayer:embed ERROR] Unknown embed error',
-          args: [embedErrorMetadata],
-        },
-        { type: 'notifyError', message: 'Unknown embed error' },
-      ]);
-    });
-  });
-
   describe('embedMisconfigured', () => {
-    test('records a dedicated load failure, metric, log and notify with the bad parent', () => {
+    test('records a dedicated load failure, metric and log with the bad parent', () => {
       const embedErrorMetadata = {
         name: 'twitch_player_error',
         exceptionName: 'StreamPlayerEmbedMisconfigured',
@@ -548,10 +292,6 @@ describe('interpretPlayerMessage', () => {
             '[StreamPlayer:embed MISCONFIGURED] Whoops, this embed is misconfigured',
           args: [embedErrorMetadata],
         },
-        {
-          type: 'notifyError',
-          message: 'Whoops, this embed is misconfigured',
-        },
       ]);
     });
 
@@ -593,10 +333,6 @@ describe('interpretPlayerMessage', () => {
             '[StreamPlayer:embed MISCONFIGURED] Whoops, this embed is misconfigured',
           args: [embedErrorMetadata],
         },
-        {
-          type: 'notifyError',
-          message: 'Whoops, this embed is misconfigured',
-        },
       ]);
     });
   });
@@ -622,94 +358,6 @@ describe('interpretPlayerMessage', () => {
         ),
       ).toEqual<PlayerBridgeAction[]>([
         { type: 'setContentGate', hasContentGate: false },
-      ]);
-    });
-  });
-
-  describe('playbackBlocked', () => {
-    test('only counts the metric for a routine AbortError', () => {
-      expect(
-        interpretPlayerMessage(
-          { type: 'playbackBlocked', payload: { errName: 'AbortError' } },
-          createBridgeContext(),
-        ),
-      ).toEqual<PlayerBridgeAction[]>([
-        {
-          type: 'countMetric',
-          name: 'stream.playback_blocked',
-          attributes: {
-            channel: 'sodapoppin',
-            err_name: 'AbortError',
-          },
-        },
-      ]);
-    });
-
-    test('reports a fatal block once', () => {
-      expect(
-        interpretPlayerMessage(
-          { type: 'playbackBlocked', payload: { errName: 'NotAllowedError' } },
-          createBridgeContext(),
-        ),
-      ).toEqual<PlayerBridgeAction[]>([
-        {
-          type: 'countMetric',
-          name: 'stream.playback_blocked',
-          attributes: {
-            channel: 'sodapoppin',
-            err_name: 'NotAllowedError',
-          },
-        },
-        { type: 'markPlaybackBlockedReported' },
-        {
-          type: 'log',
-          level: 'warn',
-          message: 'playback blocked: NotAllowedError',
-          args: [
-            {
-              name: 'twitch_player_warning',
-              channel: 'sodapoppin',
-              errName: 'NotAllowedError',
-              elapsedMs: 2500,
-            },
-          ],
-        },
-      ]);
-    });
-
-    test('skips the warning once a block has been reported this generation', () => {
-      expect(
-        interpretPlayerMessage(
-          { type: 'playbackBlocked', payload: { errName: 'NotAllowedError' } },
-          createBridgeContext({ reportedPlaybackBlocked: true }),
-        ),
-      ).toEqual<PlayerBridgeAction[]>([
-        {
-          type: 'countMetric',
-          name: 'stream.playback_blocked',
-          attributes: {
-            channel: 'sodapoppin',
-            err_name: 'NotAllowedError',
-          },
-        },
-      ]);
-    });
-
-    test('tags a missing error name as unknown', () => {
-      expect(
-        interpretPlayerMessage(
-          { type: 'playbackBlocked', payload: { errName: null } },
-          createBridgeContext({ reportedPlaybackBlocked: true }),
-        ),
-      ).toEqual<PlayerBridgeAction[]>([
-        {
-          type: 'countMetric',
-          name: 'stream.playback_blocked',
-          attributes: {
-            channel: 'sodapoppin',
-            err_name: 'unknown',
-          },
-        },
       ]);
     });
   });
@@ -865,14 +513,14 @@ describe('interpretPlayerMessage', () => {
   });
 
   describe('muteState', () => {
-    test('applies the reported mute and volume', () => {
+    test('applies the reported mute state', () => {
       expect(
         interpretPlayerMessage(
           { type: 'muteState', payload: { muted: true, volume: 0.4 } },
           createBridgeContext(),
         ),
       ).toEqual<PlayerBridgeAction[]>([
-        { type: 'applyMuteState', muted: true, volume: 0.4 },
+        { type: 'applyMuteState', muted: true },
       ]);
     });
 
@@ -883,7 +531,7 @@ describe('interpretPlayerMessage', () => {
           createBridgeContext({ deferOverlayUntilUserUnmute: true }),
         ),
       ).toEqual<PlayerBridgeAction[]>([
-        { type: 'applyMuteState', muted: false, volume: 1 },
+        { type: 'applyMuteState', muted: false },
         { type: 'unlockOverlay' },
       ]);
     });
@@ -895,7 +543,7 @@ describe('interpretPlayerMessage', () => {
           createBridgeContext({ deferOverlayUntilUserUnmute: true }),
         ),
       ).toEqual<PlayerBridgeAction[]>([
-        { type: 'applyMuteState', muted: true, volume: 1 },
+        { type: 'applyMuteState', muted: true },
       ]);
     });
 
@@ -906,7 +554,7 @@ describe('interpretPlayerMessage', () => {
           createBridgeContext(),
         ),
       ).toEqual<PlayerBridgeAction[]>([
-        { type: 'applyMuteState', muted: false, volume: 1 },
+        { type: 'applyMuteState', muted: false },
       ]);
     });
 
@@ -980,8 +628,8 @@ describe('interpretPlayerMessage', () => {
 
 describe('parsePlayerMessage', () => {
   test('parses a JSON object', () => {
-    expect(parsePlayerMessage('{"type":"ended"}')).toEqual<PlayerMessage>({
-      type: 'ended',
+    expect(parsePlayerMessage('{"type":"ready"}')).toEqual<PlayerMessage>({
+      type: 'ready',
     });
   });
 

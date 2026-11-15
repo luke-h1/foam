@@ -4,10 +4,6 @@ interface SpringTunableAnimation {
   mass(value: number): this;
 }
 
-/**
- * Near-critically damped (damping ratio ~0.96): quick settle with no bounce.
- * For motion the user did not drive (rails, banners).
- */
 export function chatEntranceSpring<
   T extends SpringTunableAnimation,
 >(animation: { springify(): T }): T {

@@ -48,15 +48,7 @@ const INITIAL_BRIDGE_PLAYBACK_UI: BridgePlaybackUi = {
 
 interface UsePlayerBridgeOptions extends Pick<
   StreamPlayerProps,
-  | 'onContentGateChange'
-  | 'onEnded'
-  | 'onError'
-  | 'onOffline'
-  | 'onOnline'
-  | 'onPause'
-  | 'onPlaybackLatencyChange'
-  | 'onPlay'
-  | 'onReady'
+  'onPlaybackLatencyChange' | 'onPlay' | 'onReady'
 > {
   autoplay: boolean;
   channel?: string;
@@ -89,12 +81,6 @@ export function usePlayerBridge({
   enhancedStabilityEnabled,
   forceRefresh,
   initialMuted,
-  onContentGateChange,
-  onEnded,
-  onError,
-  onOffline,
-  onOnline,
-  onPause,
   onPlaybackLatencyChange,
   onPlay,
   onReady,
@@ -107,13 +93,8 @@ export function usePlayerBridge({
   webViewKey,
 }: UsePlayerBridgeOptions) {
   const [playerState, setPlayerState] = useState<PlayerState>({
-    channel,
-    currentTime: 0,
-    duration: 0,
     isPaused: !autoplay,
     muted: initialMuted,
-    quality: 'auto',
-    volume: 1,
   });
 
   const [playbackUi, setPlaybackUi] = useState<BridgePlaybackUi>(
@@ -122,8 +103,6 @@ export function usePlayerBridge({
 
   const [hasContentGate, setHasContentGate] = useState(false);
   const pipActiveRef = useRef(false);
-  const currentTimeResolverRef = useRef<((value: number) => void) | null>(null);
-  const durationResolverRef = useRef<((value: number) => void) | null>(null);
   const userPausedRef = useRef(!autoplay);
 
   const transientPauseResumeTimeoutRef = useRef<ReturnType<
@@ -132,18 +111,12 @@ export function usePlayerBridge({
 
   const lastPlaybackLatencySecondsRef = useRef<number | null>(null);
 
-  // Telemetry for the current WebView/source generation: time-to-first-play
-  // plus once-per-generation guards so a struggling player doesn't flood
-  // Sentry with repeated blocked/stalled reports.
   const playerMountedAtRef = useLazyRef(() => Date.now());
 
   const reportedFirstPlayingRef = useRef(false);
-  const reportedPlaybackBlockedRef = useRef(false);
   const channelRef = useSyncRef(channel);
   const forceRefreshRef = useSyncRef(forceRefresh);
 
-  // Set when a stall/latency refresh drives the next remount, so the reset
-  // effect below keeps the refresh budget instead of clearing it.
   const stabilityRefreshPendingRef = useRef(false);
 
   const [stability] = useState(() =>
@@ -209,10 +182,7 @@ export function usePlayerBridge({
     pipActiveRef.current = false;
     playerMountedAtRef.current = Date.now();
     reportedFirstPlayingRef.current = false;
-    reportedPlaybackBlockedRef.current = false;
 
-    // A stability refresh remounts the same source, so it must not wipe the
-    // budget it just spent. A new source starts fresh, so it always does.
     const preserveBudget = stabilityRefreshPendingRef.current && !sourceChanged;
     stabilityRefreshPendingRef.current = false;
     stability.reset({ preserveBudget });
@@ -230,20 +200,11 @@ export function usePlayerBridge({
 
   useUnmountCallback(clearTransientPauseResume);
 
-  // Dispose on unmount only; beginLoad() already retires the prior session on each
-  // load, so keying this on loadKey would kill the freshly-started one.
   useEffect(() => {
     return () => {
       telemetry.dispose();
     };
   }, [telemetry]);
-
-  const onContentGateChangeRef = useSyncRef(onContentGateChange);
-
-  const notifyContentGateChange = (nextHasContentGate: boolean) => {
-    setHasContentGate(nextHasContentGate);
-    onContentGateChangeRef.current?.(nextHasContentGate);
-  };
 
   const resetPlayerStatus = useCallback(() => {
     setPlaybackUi(prev => ({
@@ -267,8 +228,7 @@ export function usePlayerBridge({
     }
 
     injectJS(
-      'if (window.__foamEnsurePlaying) { window.__foamEnsurePlaying(); }' +
-        'if (window.playerControls) { window.playerControls.play(); }',
+      'if (window.__foamEnsurePlaying) { window.__foamEnsurePlaying(); }',
     );
   }, [injectJS, userPausedRef, transientPauseResumeTimeoutRef]);
 
@@ -281,13 +241,10 @@ export function usePlayerBridge({
     }
   }, [resumeUnlessUserPaused, transientPauseResumeTimeoutRef]);
 
-  // The stock player page has no window.playerControls, so play/pause must also drive the
-  // <video> directly and arm/disarm the autoplay loop.
   const play = useCallback(() => {
     userPausedRef.current = false;
     injectJS(
-      'if (window.__foamEnsurePlaying) { window.__foamEnsurePlaying(); }' +
-        'if (window.playerControls) { window.playerControls.play(); }',
+      'if (window.__foamEnsurePlaying) { window.__foamEnsurePlaying(); }',
     );
   }, [injectJS]);
 
@@ -297,13 +254,10 @@ export function usePlayerBridge({
 
     injectJS(
       'if (window.__foamStopEnsurePlaying) { window.__foamStopEnsurePlaying(); }' +
-        'var v = document.querySelector("video"); if (v) { v.pause(); }' +
-        'if (window.playerControls) { window.playerControls.pause(); }',
+        'var v = document.querySelector("video"); if (v) { v.pause(); }',
     );
   }, [clearTransientPauseResume, injectJS]);
 
-  // Mute drives the <video> directly via __foamSetMuted; flip state optimistically and let
-  // the page's volumechange confirm it.
   const applyMuted = useCallback(
     (muted: boolean) => {
       setPlayerState(prev =>
@@ -312,20 +266,11 @@ export function usePlayerBridge({
 
       injectJS(
         `if (window.__foamSetMuted) { window.__foamSetMuted(${muted}); }` +
-          ` else { var v = document.querySelector('video'); if (v) { v.muted = ${muted}; if (!${muted}) { v.volume = 1; } } }` +
-          `if (window.playerControls && window.playerControls.setMuted) { window.playerControls.setMuted(${muted}); }`,
+          ` else { var v = document.querySelector('video'); if (v) { v.muted = ${muted}; if (!${muted}) { v.volume = 1; } } }`,
       );
     },
     [injectJS],
   );
-
-  const mute = useCallback(() => applyMuted(true), [applyMuted]);
-
-  const unmute = useCallback(() => applyMuted(false), [applyMuted]);
-
-  const setVolume = (volume: number) => {
-    injectJS(`window.playerControls.setVolume(${volume})`);
-  };
 
   const togglePictureInPicture = useCallback(() => {
     injectJS(
@@ -333,91 +278,15 @@ export function usePlayerBridge({
     );
   }, [injectJS]);
 
-  const setChannel = (newChannel: string) => {
-    injectJS(`window.playerControls.setChannel('${newChannel}')`);
-  };
-
-  const setVideo = (videoId: string, timestamp?: number) => {
-    injectJS(`window.playerControls.setVideo('${videoId}', ${timestamp ?? 0})`);
-  };
-
-  const setQuality = (quality: string) => {
-    injectJS(`window.playerControls.setQuality('${quality}')`);
-  };
-
-  const seek = (timestamp: number) => {
-    injectJS(`window.playerControls.seek(${timestamp})`);
-  };
-
-  const getCurrentTime = useCallback((): Promise<number> => {
-    return new Promise(resolve => {
-      currentTimeResolverRef.current = resolve;
-      injectJS('window.playerControls.getCurrentTime()');
-
-      setTimeout(() => {
-        if (currentTimeResolverRef.current) {
-          currentTimeResolverRef.current(playerState.currentTime);
-          currentTimeResolverRef.current = null;
-        }
-      }, 1000);
-    });
-  }, [injectJS, playerState.currentTime]);
-
-  const getDuration = useCallback((): Promise<number> => {
-    return new Promise(resolve => {
-      durationResolverRef.current = resolve;
-      injectJS('window.playerControls.getDuration()');
-
-      setTimeout(() => {
-        if (durationResolverRef.current) {
-          durationResolverRef.current(playerState.duration);
-          durationResolverRef.current = null;
-        }
-      }, 1000);
-    });
-  }, [injectJS, playerState.duration]);
-
-  const playerBridgeRef = useSyncRef({
-    forceRefresh,
-    getCurrentTime,
-    getDuration,
-    mute,
-    pause,
-    play,
-    seek,
-    setChannel,
-    setMuted: applyMuted,
-    setQuality,
-    setVideo,
-    setVolume,
-    unmute,
-  });
-
   const playerStateRef = useSyncRef(playerState);
 
   useImperativeHandle(
     ref,
     () => ({
-      forceRefresh: () => playerBridgeRef.current.forceRefresh(),
-      getChannel: () => playerStateRef.current.channel,
-      getCurrentTime: () => playerBridgeRef.current.getCurrentTime(),
-      getDuration: () => playerBridgeRef.current.getDuration(),
-      getMuted: () => playerStateRef.current.muted,
       getPaused: () => playerStateRef.current.isPaused,
-      getVolume: () => playerStateRef.current.volume,
-      mute: () => playerBridgeRef.current.mute(),
-      pause: () => playerBridgeRef.current.pause(),
-      play: () => playerBridgeRef.current.play(),
-      seek: timestamp => playerBridgeRef.current.seek(timestamp),
-      setChannel: channelName =>
-        playerBridgeRef.current.setChannel(channelName),
-      setMuted: muted => playerBridgeRef.current.setMuted(muted),
-      setQuality: quality => playerBridgeRef.current.setQuality(quality),
-      setVideo: (videoId, timestamp) =>
-        playerBridgeRef.current.setVideo(videoId, timestamp),
-      setVolume: volume => playerBridgeRef.current.setVolume(volume),
+      pause,
+      play,
       isPictureInPicture: () => pipActiveRef.current,
-      togglePictureInPicture: () => togglePictureInPicture(),
       releaseMedia: () => {
         userPausedRef.current = true;
         clearTransientPauseResume();
@@ -429,38 +298,15 @@ export function usePlayerBridge({
       },
       syncToLive: () =>
         injectJS('window.__foamSyncToLive && window.__foamSyncToLive();'),
-      unmute: () => playerBridgeRef.current.unmute(),
     }),
-    [
-      clearTransientPauseResume,
-      injectJS,
-      playerBridgeRef,
-      playerStateRef,
-      togglePictureInPicture,
-    ],
+    [clearTransientPauseResume, injectJS, pause, play, playerStateRef],
   );
 
   const executeBridgeAction = (action: PlayerBridgeAction) => {
     switch (action.type) {
       case 'applyMuteState':
         setPlayerState(prev =>
-          prev.muted === action.muted && prev.volume === action.volume
-            ? prev
-            : { ...prev, muted: action.muted, volume: action.volume },
-        );
-        break;
-      case 'applyStateUpdate':
-        setPlayerState(prev =>
-          prev.isPaused === action.isPaused &&
-          prev.muted === action.muted &&
-          prev.volume === action.volume
-            ? prev
-            : {
-                ...prev,
-                isPaused: action.isPaused,
-                muted: action.muted,
-                volume: action.volume,
-              },
+          prev.muted === action.muted ? prev : { ...prev, muted: action.muted },
         );
         break;
       case 'cancelTransientResume':
@@ -487,29 +333,11 @@ export function usePlayerBridge({
       case 'markFirstPlayingReported':
         reportedFirstPlayingRef.current = true;
         break;
-      case 'markPlaybackBlockedReported':
-        reportedPlaybackBlockedRef.current = true;
-        break;
       case 'recordLoadFailed':
         telemetry.noteLoadFailed(action.reason, action.error);
         break;
       case 'recordPlaybackStarted':
         telemetry.notePlaybackStarted(action.startSource);
-        break;
-      case 'notifyEnded':
-        onEnded?.();
-        break;
-      case 'notifyError':
-        onError?.(action.message);
-        break;
-      case 'notifyOffline':
-        onOffline?.();
-        break;
-      case 'notifyOnline':
-        onOnline?.();
-        break;
-      case 'notifyPause':
-        onPause?.();
         break;
       case 'notifyPlay':
         onPlay?.();
@@ -526,26 +354,9 @@ export function usePlayerBridge({
       case 'notifyStabilityStall':
         stability.noteStall();
         break;
-      // Latency goes out through onPlaybackLatencyChange to the
-      // videoLatencyDisplay$ observable. React state here would re-render the
-      // whole player subtree on every ~4s latency tick.
       case 'publishLatency':
         lastPlaybackLatencySecondsRef.current = action.latencySeconds;
         onPlaybackLatencyChange?.(action.latencySeconds);
-        break;
-      case 'resolveCurrentTime':
-        if (currentTimeResolverRef.current) {
-          currentTimeResolverRef.current(action.seconds);
-          currentTimeResolverRef.current = null;
-        }
-
-        break;
-      case 'resolveDuration':
-        if (durationResolverRef.current) {
-          durationResolverRef.current(action.seconds);
-          durationResolverRef.current = null;
-        }
-
         break;
       case 'scheduleAuthCompletionReload':
         scheduleAuthCompletionReload();
@@ -554,7 +365,7 @@ export function usePlayerBridge({
         scheduleTransientResume();
         break;
       case 'setContentGate':
-        notifyContentGateChange(action.hasContentGate);
+        setHasContentGate(action.hasContentGate);
         break;
       case 'setPaused':
         setPlayerState(prev => ({ ...prev, isPaused: action.isPaused }));
@@ -568,20 +379,6 @@ export function usePlayerBridge({
           ...prev,
           status: { isReady: true, isBuffering: false },
         }));
-        break;
-      case 'setPlayerStatus':
-        setPlaybackUi(prev =>
-          prev.status.isReady === action.isReady &&
-          prev.status.isBuffering === action.isBuffering
-            ? prev
-            : {
-                ...prev,
-                status: {
-                  isReady: action.isReady,
-                  isBuffering: action.isBuffering,
-                },
-              },
-        );
         break;
       case 'showPipUnavailableToast':
         toast.error('Picture in Picture is not available for this stream');
@@ -613,7 +410,6 @@ export function usePlayerBridge({
         mountedAtMs: playerMountedAtRef.current,
         nowMs: Date.now(),
         reportedFirstPlaying: reportedFirstPlayingRef.current,
-        reportedPlaybackBlocked: reportedPlaybackBlockedRef.current,
         userPaused: userPausedRef.current,
       });
     } catch (error) {

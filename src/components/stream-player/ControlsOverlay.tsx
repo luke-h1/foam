@@ -155,10 +155,6 @@ function PlayerActionButtons({
   );
 }
 
-/**
- * Live badge, uptime, viewer count and category, shown under the player.
- * Portrait has no room for the title or category, so both are dropped there.
- */
 function StreamMetadataColumn({
   isPortrait,
   isVisible,
@@ -241,8 +237,6 @@ export function ControlsOverlay({
     paddingRight: edgePad,
   };
 
-  // box-none while visible: empty-area taps fall through to the video gesture, only buttons
-  // capture touches; 'none' while hidden so buttons don't swallow the reveal tap.
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.get(),
     pointerEvents: opacity.get() > 0.01 ? 'box-none' : 'none',

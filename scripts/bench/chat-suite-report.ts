@@ -10,7 +10,6 @@ import { basename } from 'node:path';
 
 export const POLLING_INTERVAL_MS = 500;
 
-/** RSS growth above this MB/min is treated as a leak signal. */
 export const LEAK_SLOPE_MB_PER_MIN = 8;
 
 export interface FlashlightMeasure {
@@ -71,10 +70,6 @@ export function meanFps(measures: FlashlightMeasure[]): number {
   );
 }
 
-/**
- * Mean sum of per-thread CPU % across Flashlight samples. Matches
- * `totalCpu` in `scripts/bench/score.ts` so both reports agree.
- */
 export function meanCpu(measures: FlashlightMeasure[]): number {
   const values = measures.flatMap(m => Object.values(m.cpu.perName));
 

@@ -6,10 +6,6 @@ import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 import { Text } from '@app/components/ui/text/Text';
 import type { TextProps } from '@app/components/ui/text/Text.types';
 
-/**
- * The rendered RNText props with the style flattened, so two renders compare
- * by value and not by array shape.
- */
 function getRenderedTextProps(label: string) {
   const {
     children: _children,

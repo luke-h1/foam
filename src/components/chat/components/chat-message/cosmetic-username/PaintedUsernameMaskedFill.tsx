@@ -2,9 +2,11 @@ import { type StyleProp, StyleSheet, type TextStyle, View } from 'react-native';
 
 import { MaskedView } from '@expo/ui/community/masked-view';
 
-import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
+import { getChatColorStyle } from '@app/components/chat/util/chatColorStyles';
 import type { PaintData } from '@app/types/seven-tv/cosmetics';
 
+import { ChatRowText } from '../ChatRowText';
+import { getChatRowTextStyleForProp } from '../util/chatRowTextStyle';
 import { PaintedUsernameFill } from './PaintedUsernameFill';
 
 interface PaintedUsernameMaskedFillProps {
@@ -26,16 +28,26 @@ export function PaintedUsernameMaskedFill({
 }: PaintedUsernameMaskedFillProps) {
   return (
     <View style={styles.root}>
-      <ChatText style={[maskTextStyle, { color: fallbackColor }]}>
+      <ChatRowText
+        style={getChatRowTextStyleForProp('muted', [
+          maskTextStyle,
+          getChatColorStyle(fallbackColor),
+        ])}
+      >
         {displayUsername}
-      </ChatText>
+      </ChatRowText>
       <MaskedView
         style={StyleSheet.absoluteFill}
         maskElement={
           <View style={styles.maskContainer}>
-            <ChatText style={[maskTextStyle, styles.maskGlyph]}>
+            <ChatRowText
+              style={getChatRowTextStyleForProp('muted', [
+                maskTextStyle,
+                styles.maskGlyph,
+              ])}
+            >
               {displayUsername}
-            </ChatText>
+            </ChatRowText>
           </View>
         }
       >

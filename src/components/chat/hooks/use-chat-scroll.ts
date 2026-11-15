@@ -16,7 +16,6 @@ const RETURN_TO_BOTTOM_THRESHOLD = 80;
 const USER_SCROLL_AWAY_THRESHOLD = 40;
 const SCROLL_DELTA_EPSILON = 1;
 
-// A scroll event this recent means a drag or momentum fling is still running.
 const SCROLL_ACTIVITY_WINDOW_MS = 120;
 
 const SCROLL_THROTTLE_MS = 150;
@@ -161,8 +160,6 @@ export const useChatScroll = ({
     isScrollingToBottomRef.current = false;
     setIsScrollingToBottom(false);
 
-    // Leave the bottom now, not on the first scroll event, or a commit in
-    // between scrolls the list straight back to the end.
     isAtBottomRef.current = false;
 
     lastAtBottomRef.current = false;
@@ -261,7 +258,6 @@ export const useChatScroll = ({
 
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      // The list scrolls itself to the end after each commit; only a drag or fling is user activity.
       if (isDraggingRef.current || isMomentumScrollingRef.current) {
         lastScrollEventAtRef.current = Date.now();
         chatScrollActivity.poke();

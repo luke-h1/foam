@@ -28,12 +28,15 @@ platform where the domain is native, and never by per-view timers:
   `expo.autolinking.android.buildFromSource`; without that entry the RNRepo
   prebuilt AAR ships and the patch silently does nothing.
 - **Skia paint animation (JS)** - `components/chat/components/chat-message/cosmetic-username/util/sharedPaintAnimationFrames.tsx`
-  (`components/chat/components/chat-message/cosmetic-username/util/`): one clock and one decode
+  and `sharedPaintAnimationStore.ts` in the same folder: one clock and one decode
   per paint URL, held in a module-level map. `SharedPaintAnimationDrivers`
   runs one `requestAnimationFrame` loop while any URL has a subscriber, and
   each tick advances every subscribed URL - the invariant is one clock+decode
   per URL. The loop skips ticks while `chatScrollActivity.isActive()` (a
   scroll fling) or the app is in the background, and resumes after settle.
+  A painted name with a texture layer draws into a `SkiaPictureView`: a new
+  frame records a new `SkPicture` on the JS thread and hands it to the view,
+  with no React render (`components/chat/components/chat-message/cosmetic-username/util/paintLayerPicture.ts`).
 
 The invariant: **one tick source, N subscribers, deregistration on recycle,
 pause when the surface is scrolling or unfocused**. Android meets it through

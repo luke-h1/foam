@@ -4,14 +4,12 @@ import { prefetchToDisk } from '@app/utils/image/prefetchToDisk';
 
 import type { PassResult } from './bench-results';
 
-// Decoded references retained during a run so host-side memory sampling captures peak decoded-bitmap footprint; cleared between passes.
 let retained: unknown[] = [];
 
 export function clearRetained(): void {
   retained = [];
 }
 
-// Pre-downloads every image to disk cache so timed passes measure decode, not network.
 export async function prewarm(urls: string[]): Promise<void> {
   await prefetchToDisk(urls).catch(() => undefined);
   clearRetained();
@@ -104,7 +102,6 @@ export async function runSequential(
   return summarise(pass, 'sequential', durations, fail, totalMs);
 }
 
-// Bounded-concurrency decodes mimic a busy-chat burst to measure throughput under contention.
 export async function runConcurrent(
   urls: string[],
   concurrency = 16,

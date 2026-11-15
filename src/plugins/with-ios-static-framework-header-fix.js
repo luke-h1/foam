@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 const { createRunOncePlugin, withPodfile } = require('@expo/config-plugins');
 
 const BUILD_SETTING_SNIPPET = `

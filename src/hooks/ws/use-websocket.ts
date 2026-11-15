@@ -11,7 +11,7 @@ import type {
   WebSocketHookReturn,
 } from './types';
 
-// Dummy socket so callers never get null before init. SAFETY: built from WebSocket.prototype; only the two properties defined here are read.
+// SAFETY: built from WebSocket.prototype; only the two properties defined here are read.
 const dummySocket = Object.create(WebSocket.prototype) as WebSocket;
 
 Object.defineProperty(dummySocket, 'readyState', {
@@ -59,7 +59,6 @@ export const useWebsocket = <TJsonMessage = never>(
 
   const readyState = readReadyState(url, readyStateEntry);
 
-  // Non-OPEN sends are dropped; consumers re-issue on open/reconnect.
   const sendMessage: SendMessage = useCallback(message => {
     if (
       websocketRef.current &&
@@ -130,7 +129,6 @@ export const useWebsocket = <TJsonMessage = never>(
     };
   }, [url, optionsCache]);
 
-  // Fresh connection that revives a socket whose retries were exhausted, e.g. on foreground after a long outage.
   const reconnect = useCallback(() => {
     reconnectCount.current = 0;
     startRef.current();

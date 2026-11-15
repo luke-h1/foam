@@ -1,7 +1,5 @@
-import {
-  SettingsSection,
-  SettingsSegmentedRow,
-} from '@app/components/settings-section/SettingsSection';
+import { SettingsSection } from '@app/components/settings-section/SettingsSection';
+import { SettingsSegmentedRow } from '@app/components/settings-section/SettingsSegmentedRow';
 import { Text } from '@app/components/ui/text/Text';
 import { updatePreferences, usePreference } from '@app/store/preference-store';
 

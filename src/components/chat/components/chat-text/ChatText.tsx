@@ -1,133 +1,17 @@
 import { Text as RNText, type TextStyle } from 'react-native';
 
-import {
-  findStyleValue,
-  getFontFamily,
-  resolveWeightFromFontWeight,
-  sizeStyles,
-  typeDefaults,
-  weightMap,
-} from '@app/components/ui/text/Text.styles';
-import type {
-  TextFamily,
-  TextProps,
-  TextType,
-  TextVariant,
-  TextWeight,
-} from '@app/components/ui/text/Text.types';
+import { typeDefaults } from '@app/components/ui/text/Text.styles';
+import type { TextProps } from '@app/components/ui/text/Text.types';
 import { getMargin } from '@app/styles/spacing';
-import { resolveThemeColor, theme } from '@app/styles/themes';
-/**
- * Chat keeps the brand font while the rest of the app uses the system font.
- * The Skia painted usernames are rasterised in Montserrat, so a system-font
- * message body would put two typefaces on one row.
- *
- * This renders the same output as the design-system `Text`, with less work
- * per span. It caches the resolved style for each prop combination and adds
- * no extra component layer. It shares the type ramp and font maps with `Text`
- * through `text.styles.ts`.
- *
- * `chat-text.test.tsx` checks that both components give the same output.
- */
+import { theme } from '@app/styles/themes';
+
+import {
+  CHAT_TEXT_SPAN_DEFAULTS,
+  getChatTextStyle,
+  resolveBrandWeightOverride,
+} from './util/chatTextStyle';
 
 const margin = getMargin(theme);
-
-const TABULAR_FONT_VARIANT: TextStyle['fontVariant'] = ['tabular-nums'];
-
-interface ResolveTextStyleOptions {
-  align: NonNullable<TextProps['align']>;
-  color: NonNullable<TextProps['color']>;
-  contrast: boolean | undefined;
-  family: TextFamily;
-  highContrast: boolean | undefined;
-  italic: boolean | undefined;
-  tabular: boolean | undefined;
-  type: TextType;
-  variant: TextVariant;
-  weight: TextWeight;
-}
-
-/**
- * The size ramp entry and the resolved text style in one object: `Text` hands
- * RN both as separate array entries, and flattening them gives the same
- * result as merging them here once.
- */
-function buildTextStyle({
-  align,
-  color,
-  contrast,
-  family,
-  highContrast,
-  italic,
-  tabular,
-  type,
-  variant,
-  weight,
-}: ResolveTextStyleOptions): TextStyle {
-  const effectiveContrast =
-    contrast === undefined ? color === 'gray' : contrast;
-
-  const isSystemFamily = family === 'system' && variant === 'default';
-
-  return {
-    ...sizeStyles[type],
-    color: resolveThemeColor(color, {
-      contrast: effectiveContrast,
-      highContrast,
-    }),
-    fontFamily: isSystemFamily
-      ? undefined
-      : getFontFamily(variant, weight, italic),
-    fontStyle:
-      (variant === 'mono' || isSystemFamily) && italic ? 'italic' : 'normal',
-    fontVariant: tabular ? TABULAR_FONT_VARIANT : undefined,
-    fontWeight:
-      variant === 'mono' || isSystemFamily ? weightMap[weight] : undefined,
-    textAlign: align,
-  };
-}
-
-/**
- * Every input is a small enum or a boolean, so the resolved style is shared
- * across renders and across spans; a row's four spans usually hit two entries.
- */
-const textStyleCache = new Map<string, TextStyle>();
-
-function getTextStyle(options: ResolveTextStyleOptions): TextStyle {
-  const key = `${options.type}|${options.variant}|${options.family}|${options.weight}|${options.color}|${options.contrast}|${options.highContrast}|${options.italic ? 1 : 0}|${options.tabular ? 1 : 0}|${options.align}`;
-
-  const cached = textStyleCache.get(key);
-
-  if (cached) {
-    return cached;
-  }
-
-  const textStyle = buildTextStyle(options);
-  textStyleCache.set(key, textStyle);
-  return textStyle;
-}
-
-const styleWeightOverrides = new Map<string, TextStyle>();
-
-function getStyleWeightOverride(
-  styleWeight: TextWeight,
-  italic: boolean | undefined,
-): TextStyle {
-  const key = italic ? `${styleWeight}|italic` : styleWeight;
-  const cached = styleWeightOverrides.get(key);
-
-  if (cached) {
-    return cached;
-  }
-
-  const override: TextStyle = {
-    fontFamily: getFontFamily('default', styleWeight, italic),
-    fontWeight: undefined,
-  };
-
-  styleWeightOverrides.set(key, override);
-  return override;
-}
 
 export function ChatText({
   type = 'callout',
@@ -150,10 +34,10 @@ export function ChatText({
   mt,
   mx,
   my,
-  maxFontSizeMultiplier = 2,
+  maxFontSizeMultiplier = CHAT_TEXT_SPAN_DEFAULTS.maxFontSizeMultiplier,
   ...props
 }: TextProps) {
-  const resolvedStyle = getTextStyle({
+  const resolvedStyle = getChatTextStyle({
     align,
     color,
     contrast,
@@ -181,19 +65,14 @@ export function ChatText({
 
   const isBrandFamily = family === 'brand' && variant === 'default';
 
-  const styleWeight =
-    isBrandFamily && findStyleValue(style, 'fontFamily') == null
-      ? resolveWeightFromFontWeight(findStyleValue(style, 'fontWeight'))
-      : undefined;
-
-  const styleWeightOverride = styleWeight
-    ? getStyleWeightOverride(styleWeight, italic)
+  const styleWeightOverride = isBrandFamily
+    ? resolveBrandWeightOverride(style, italic)
     : null;
 
   return (
     <RNText
       ref={ref}
-      textBreakStrategy='simple'
+      textBreakStrategy={CHAT_TEXT_SPAN_DEFAULTS.textBreakStrategy}
       maxFontSizeMultiplier={maxFontSizeMultiplier}
       {...props}
       style={[textStyle, style, styleWeightOverride]}

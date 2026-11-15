@@ -9,6 +9,8 @@ interface PaintedUsernameSkiaProps {
   fallbackColor?: string;
   fontSize?: number;
   lineHeight?: number;
+  strikethrough?: boolean;
+  opacity?: number;
 }
 
 export function PaintedUsernameSkia({
@@ -16,6 +18,8 @@ export function PaintedUsernameSkia({
   fallbackColor = theme.color.text.dark,
   fontSize,
   lineHeight,
+  strikethrough = false,
+  opacity,
 }: PaintedUsernameSkiaProps) {
   return (
     <ChatText
@@ -25,6 +29,8 @@ export function PaintedUsernameSkia({
         lineHeight: lineHeight ?? chatLineMetrics.comfortable.lineHeight,
         fontWeight: 'bold',
         color: fallbackColor,
+        opacity,
+        textDecorationLine: strikethrough ? 'line-through' : 'none',
       }}
     >
       {username}

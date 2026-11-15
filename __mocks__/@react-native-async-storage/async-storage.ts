@@ -1,1 +1,5 @@
-module.exports = require('@react-native-async-storage/async-storage/jest/async-storage-mock');
+export {
+  clearAllMockStorages,
+  createAsyncStorage,
+  default,
+} from '@react-native-async-storage/async-storage/jest';

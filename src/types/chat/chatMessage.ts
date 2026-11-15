@@ -86,7 +86,7 @@ export interface ChatMessageType<
         ? ClearChatTags
         : TNoticeType extends 'clearmsg'
           ? ClearMsgTags
-          : TNoticeType extends 'globalusernotice'
+          : TNoticeType extends 'globaluserstate'
             ? GlobalUserStateTags
             : TNoticeType extends 'roomstate'
               ? RoomStateTags

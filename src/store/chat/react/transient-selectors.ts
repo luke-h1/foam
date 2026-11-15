@@ -29,10 +29,6 @@ function useTransientChannelField<K extends keyof typeof defaultTransientState>(
   });
 }
 
-/**
- * Field-granular subscriptions so a change to one filter only re-renders
- * consumers of that field.
- */
 export function useTransientChannelFilters(channelId: string) {
   const hiddenPhrases = useTransientChannelField(channelId, 'hiddenPhrases');
   const hiddenUsers = useTransientChannelField(channelId, 'hiddenUsers');

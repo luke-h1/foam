@@ -100,7 +100,6 @@ export function init() {
     debug,
   };
 
-  // A release build with no DSN silently captures nothing; be loud in device logs.
   if (!hasDsn && !__DEV__) {
     console.error(
       '[sentry] EXPO_PUBLIC_SENTRY_DSN is missing from this build — error reporting is disabled.',
@@ -148,7 +147,6 @@ export function init() {
       }),
     ],
     beforeSend(event) {
-      // Any error-level event marks the session so the store-review prompt never fires in a bad session.
       if (event.level === 'fatal' || event.level === 'error') {
         markSessionError();
       }
@@ -171,10 +169,6 @@ export function flushSentry(): Promise<boolean> {
   return Sentry.flush();
 }
 
-/**
- * Sends a message event and flushes, so a TestFlight build can confirm the
- * whole pipeline works.
- */
 export async function verifySentryDelivery(): Promise<{
   eventId?: string;
   flushed: boolean;
@@ -202,9 +196,6 @@ export function wrapWithSentry(RootComponent: SentryRootComponent) {
 
 export type FeedbackType = 'bug' | 'idea';
 
-/**
- * Tagged with the feedback type so bugs and ideas triage separately in Sentry.
- */
 interface FeedbackPayload {
   message: string;
   email?: string;
@@ -461,7 +452,6 @@ function applyLogScope(
     safeExtra: Record<string, LogMetadataValue>;
   },
 ): void {
-  // Caller tags go first so the canonical log_category/error_type pair below always wins.
   applyCallerTags(scope, metadata?.tags);
 
   scope.setTag('log_category', category);
@@ -551,7 +541,6 @@ export function forwardLogToSentry(entry: {
     });
 
     if (level === 'warn') {
-      // Warns stay structured logs, not issues: they are degraded-but-handled paths nobody should be paged for.
       Sentry.logger.warn(headline, safeExtra);
       return;
     }

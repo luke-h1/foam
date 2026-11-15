@@ -61,9 +61,6 @@ async function fetchAllPaints() {
   }
 
   const paints = result.data?.paints?.paints ?? [];
-  // Sort by name, as sevenTvService.fetchAllPaints() does, so the fixture diff
-  // stays stable between refreshes. Pin the locale so the order does not
-  // depend on the machine's default locale.
   return [...paints].sort((a, b) => a.name.localeCompare(b.name, 'en'));
 }
 

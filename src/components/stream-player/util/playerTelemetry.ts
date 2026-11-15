@@ -7,8 +7,7 @@ import {
 import { logger } from '@app/utils/logger';
 
 /**
- * Playback that has not started after this long is a load failure. The poster
- * safety dismissal in `useStreamPlayerLifecycle` uses the same timeout.
+ * Playback that has not started after this long is a load failure.
  */
 export const PLAYER_LOAD_TIMEOUT_MS = 9000;
 
@@ -87,10 +86,6 @@ function isPlayerErrorMetadata(error: unknown): error is PlayerErrorMetadata {
 }
 
 function loadFailureLogMessage(reason: string | undefined, error: unknown) {
-  if (reason === 'embed_error' && isPlayerErrorMetadata(error)) {
-    return `[StreamPlayer:embed ERROR] ${String(error.message ?? 'Unknown embed error')}`;
-  }
-
   if (reason === 'embed_misconfigured' && isPlayerErrorMetadata(error)) {
     return `[StreamPlayer:embed MISCONFIGURED] ${String(error.message ?? 'Whoops, this embed is misconfigured')}`;
   }
@@ -269,9 +264,6 @@ export function createPlayerTelemetry() {
         return;
       }
 
-      // Load already succeeded or was retired, so this is a mid-playback
-      // failure: skip the load span/metric but still report it so late
-      // WebView/HTTP failures are not silently dropped.
       const context = session?.attributes ?? lastAttributes;
 
       const telemetryAttrs = context

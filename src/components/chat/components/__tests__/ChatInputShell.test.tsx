@@ -25,7 +25,7 @@ const mockSetText = jest.fn((_text: string) => {});
 
 /**
  * `ChatComposer` is memo()-wrapped, so spyOn refuses to patch it; redefine
- * the export. The suite only checks prop wiring, not composer behavior.
+ * the export.
  */
 function MockChatComposer(props: ChatComposerProps) {
   mockChatComposer(props);
@@ -44,10 +44,6 @@ Object.defineProperty(chatComposerModule, 'ChatComposer', {
   value: MockChatComposer,
 });
 
-/**
- * Give the mocked `KeyboardController.dismiss` a resolved promise so the
- * void-called dismiss leaves no unresolved awaiter.
- */
 jest
   .spyOn(keyboardControllerModule.KeyboardController, 'dismiss')
   .mockResolvedValue(undefined);
@@ -228,7 +224,6 @@ describe('ChatInputShell', () => {
       'parent-1',
     );
 
-    // The optimistic row still shows the mention so it matches the echo.
     expect(processMessageEmotes.mock.calls[0]?.[0]).toEqual('@Streamer hello');
   });
 

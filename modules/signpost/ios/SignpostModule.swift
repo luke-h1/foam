@@ -3,9 +3,6 @@ import Foundation
 import OSLog
 
 /**
- * JS bridge for `OSSignposter` Points of Interest so Instruments can line up
- * Foam events with CPU / frame timelines.
- *
  * Signpost names must be `StaticString`, so the lane is always "Foam" and the
  * JS label goes in the message (visible in the Points of Interest detail).
  */

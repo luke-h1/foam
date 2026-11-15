@@ -17,18 +17,12 @@ interface UseLiveStreamActionsOptions {
   resolvedChannelLogin: string;
 }
 
-/**
- * The two things a viewer can do with the stream itself: share a deep link to
- * it, and clip it. Clipping is guarded by a ref rather than state because a
- * second tap must be dropped without re-rendering the player.
- */
 export function useLiveStreamActions({
   authState,
   broadcasterName,
   resolvedChannelId,
   resolvedChannelLogin,
 }: UseLiveStreamActionsOptions) {
-  // Clipping needs a real Twitch account, not the anonymous session.
   const canCreateClip = Boolean(
     authState?.isLoggedIn && !authState.isAnonAuth && resolvedChannelId,
   );

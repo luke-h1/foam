@@ -12,10 +12,6 @@ import { usePreference } from '@app/store/preference-store';
 import { normaliseChatUsername } from '@app/utils/chat/chat-usernames/normaliseChatUsername';
 import { normaliseChatText } from '@app/utils/chat/normaliseChatText';
 
-/**
- * Session-only "hide from my view" lists. They are not a persisted blocklist,
- * so drop the oldest entry instead of letting the list grow.
- */
 const MAX_FILTER_ENTRIES = 50;
 
 export function useChatTransientState(channelId: string) {
@@ -34,8 +30,6 @@ export function useChatTransientState(channelId: string) {
 
   const blockedTerms = usePreference('blockedTerms');
 
-  // Stable identity: a fresh array here breaks ChatMessagePane's memo on every
-  // render and re-runs the visible-message filter over the whole list.
   const hiddenPhrases = useMemo(
     () => [...transientHiddenPhrases, ...blockedTerms],
     [transientHiddenPhrases, blockedTerms],
@@ -57,8 +51,6 @@ export function useChatTransientState(channelId: string) {
 
   const addToFilterList = useCallback(
     (field: 'hiddenUsers' | 'hiddenPhrases', value?: string) => {
-      // A hidden user is a login; a hidden phrase is free text and must keep
-      // any leading '@'.
       const normalised =
         field === 'hiddenUsers'
           ? normaliseChatUsername(value)
@@ -146,10 +138,6 @@ export function useChatTransientState(channelId: string) {
     });
   };
 
-  /**
-   * Excludes `blockedTerms`: counting that persisted preference would pin the
-   * tray open for good, and Clear only resets transient state.
-   */
   const hasActiveFilters = Boolean(
     transientHiddenPhrases.length ||
     hiddenUsers.length ||

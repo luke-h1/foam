@@ -34,15 +34,10 @@ jest.mock('@legendapp/list/react-native', () => ({
 }));
 
 /**
- * Stub so a media link card never fetches. SAFETY: the resolved value is never
- * read, it only satisfies the return type.
+ * SAFETY: the resolved value is never read; it only satisfies the return type.
  */
 jest.spyOn(twitchService, 'getClip').mockResolvedValue({} as TwitchClip);
 
-/**
- * Same for the 7TV emote card: a request that never settles, so no cast and
- * no error path.
- */
 jest
   .spyOn(sevenTvService, 'getEmote')
   .mockImplementation(() => new Promise<never>(() => {}));
@@ -52,10 +47,6 @@ const MEASURE_OPTIONS = {
   warmupRuns: 2,
 } as const;
 
-/**
- * Paint slots the fixture's painted senders point at: a linear gradient with
- * shadows, a radial gradient with shadows, and an image paint.
- */
 const PAINT_FIXTURE_INDEXES = [0, 1, 4];
 
 const noop = () => {};
@@ -96,9 +87,6 @@ function NodeKindRows({ messages, row }: NodeKindRowsProps) {
 
 const plainTextKind = chatNodeKinds.find(kind => kind.id === 'plain-text')!;
 
-/**
- * The production row: `ChatRowItem` around `ChatRow`, as the list renders it.
- */
 function ProductionRows() {
   return (
     <View>
@@ -154,8 +142,6 @@ describe('chat node kinds', () => {
   test.each(chatNodeKinds.map(kind => [kind.id, kind] as const))(
     'renders a screen of %s rows',
     async (id, kind) => {
-      // A media link card reads react-query, so that kind alone gets the
-      // app's provider wrapper; every other kind renders bare.
       const options =
         id === 'media-links'
           ? { ...MEASURE_OPTIONS, wrapper: DefaultWrapper }

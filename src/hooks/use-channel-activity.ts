@@ -84,8 +84,6 @@ export function useChannelActivity<THelix, TState>(
       },
     }));
 
-    TwitchWsService.getInstance();
-
     for (const { type, handler } of handlers) {
       void TwitchWsService.subscribeToEvent(
         type,

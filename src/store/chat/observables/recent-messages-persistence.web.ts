@@ -1,8 +1,5 @@
 import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 
-// Web keeps the Legend State IndexedDB persistence for recentMessagesByChannel
-// (see chat-store.ts), so these are no-ops. The flag is statically false here, so
-// the native MMKV branch is dead-code-eliminated from the web bundle.
 export const RECENT_MESSAGES_PERSISTENCE_ENABLED = false;
 
 export const loadPersistedRecentMessages = (): Record<

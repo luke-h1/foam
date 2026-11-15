@@ -6,6 +6,7 @@ import {
 import { userInfoFixture } from '@app/services/__fixtures__/twitch/user-info.fixture';
 import { sevenTvService } from '@app/services/seven-tv-service';
 import * as GetBttvBadgesModule from '@app/store/chat/actions/bttv-badges/getBttvBadges';
+import { updatePreferences } from '@app/store/preference-store';
 import { flushChatStoreTimers } from '@app/test/chat-store-teardown';
 import { stubEmoteProviderServices } from '@app/test/emote-provider-services';
 import { silenceLogger } from '@app/test/silence-logger';
@@ -21,6 +22,7 @@ import { cheermoteFetchGuard } from '@app/utils/chat/cheermote-store/cheermoteFe
 import {
   clearCache,
   clearSubscriberProfilesCache,
+  getCurrentEmoteData,
   invalidateChatResourceCaches,
   loadChannelResources,
   resolveSubscriberChannelProfiles,
@@ -44,8 +46,6 @@ import {
 
 silenceLogger();
 
-// Isolates the resource loader from the BTTV global-badge micro-cache's own
-// fetch/retry cascade, which is exercised by getBttvBadges' own spec.
 const mockClearBttvBadgesCache = jest
   .spyOn(GetBttvBadgesModule, 'clearBttvBadgesCache')
   .mockImplementation(() => {});
@@ -541,8 +541,6 @@ describe('loadChannelResources cache fallback', () => {
       twitchEmote('twitch-channel-new'),
     ]);
 
-    // A first load with failed slices must stay stale-stamped so the next
-    // join retries the holes instead of serving them for the cache duration.
     expect(cache!.lastUpdated).toBe(0);
 
     expect(cache!.badgesLastUpdated).toBe(0);
@@ -885,8 +883,6 @@ describe('resolveSubscriberChannelProfiles', () => {
 
     await resolveSubscriberChannelProfiles(channelId);
 
-    // Mirrors clearChatCosmeticsCache: the channel caches are emptied, so the
-    // attempted-owner negative cache must be reset alongside them.
     seedCache();
 
     clearSubscriberProfilesCache();
@@ -933,7 +929,6 @@ describe('resolveSubscriberChannelProfiles', () => {
 
     const inFlight = resolveSubscriberChannelProfiles(channelId);
 
-    // Mirrors clearChatCosmeticsCache while the lookup is still on the wire.
     chatStore$.persisted.channelCaches.set({});
 
     clearSubscriberProfilesCache();
@@ -1151,6 +1146,36 @@ describe('updateSevenTvEmotes', () => {
     expect(
       cache!.sevenTvChannelEmotes.find(emote => emote.id === 'emote-b')?.name,
     ).toBe('emote-b-renamed');
+  });
+
+  test('getCurrentEmoteData returns the updated set after a live update', () => {
+    seed([sevenTvEmote('emote-a')]);
+
+    expect(ids(getCurrentEmoteData(channelId).sevenTvChannelEmotes)).toEqual([
+      'emote-a',
+    ]);
+
+    updateSevenTvEmotes(channelId, [sevenTvEmote('emote-b')], []);
+
+    expect(ids(getCurrentEmoteData(channelId).sevenTvChannelEmotes)).toEqual([
+      'emote-a',
+      'emote-b',
+    ]);
+  });
+
+  test('getCurrentEmoteData gates the set again after a preference change', () => {
+    seed([sevenTvEmote('emote-a')]);
+    updatePreferences({ show7TvEmotes: true });
+
+    expect(ids(getCurrentEmoteData(channelId).sevenTvChannelEmotes)).toEqual([
+      'emote-a',
+    ]);
+
+    updatePreferences({ show7TvEmotes: false });
+    const gated = ids(getCurrentEmoteData(channelId).sevenTvChannelEmotes);
+    updatePreferences({ show7TvEmotes: true });
+
+    expect(gated).toEqual([]);
   });
 });
 

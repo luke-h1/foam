@@ -42,18 +42,11 @@ type LiveStreamVideoPaneProps = {
 const landscapeOnly = (isLandscape: boolean, handler: () => void) =>
   isLandscape ? handler : undefined;
 
-/**
- * A back control for when the player overlay draws none: always on Android,
- * and on iOS when the custom player is off. The edge swipe alone is not a
- * visible way out.
- */
 function FallbackBackButton({ onPress }: { onPress: () => void }) {
   return (
     <Button
       label='Go back'
       onPress={onPress}
-      // videoContainer already sits at landscapeInsetLeft; only the local
-      // offset here, or the button drifts inward on cutouts.
       style={[
         styles.fallbackBackButton,
         { left: theme.space8, top: theme.space8 },

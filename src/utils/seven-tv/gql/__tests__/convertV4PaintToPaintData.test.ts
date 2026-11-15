@@ -1,6 +1,4 @@
-// `shape` here is a GraphQL-codegen name from the 7TV schema, not a naming
-// choice.
-// oxlint-disable anti-slop/no-shape-in-symbol-names
+// oxlint-disable anti-slop/no-shape-in-symbol-names -- GraphQL codegen name from the 7TV schema
 import { PaintRadialGradientShape } from '@app/graphql/generated/gql';
 import type { PaintLayerData } from '@app/types/seven-tv/cosmetics';
 import { indexedCollectionToArray } from '@app/utils/collection/indexedCollection';
