@@ -87,6 +87,31 @@ describe('web storage adapter', () => {
     expect(storage.getAllKeys()).toEqual(['b']);
   });
 
+  test('stores and reads booleans like the native store', () => {
+    storage.set('seen', true);
+
+    expect(storage.getBoolean('seen')).toBe(true);
+
+    storage.set('seen', false);
+
+    expect(storage.getBoolean('seen')).toBe(false);
+
+    expect(storage.getBoolean('missing')).toBeUndefined();
+
+    storage.set('text', 'not a boolean');
+
+    expect(storage.getBoolean('text')).toBeUndefined();
+  });
+
+  test('clearAll empties the store', () => {
+    storage.set('a', '1');
+    storage.set('b', '2');
+
+    storage.clearAll();
+
+    expect(storage.getAllKeys()).toEqual([]);
+  });
+
   test('runs storageService over localStorage', () => {
     storageService.set('previous_searches', ['kappa']);
     storageService.set('sevenTvUserId_1', 'a', 'seven_tv_cache');

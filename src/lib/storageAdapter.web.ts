@@ -34,14 +34,28 @@ export const storage: StorageAdapter = {
       undefined,
     );
   },
+  getBoolean(key) {
+    return withLocalStorage(localStorage => {
+      const item = localStorage.getItem(key);
+
+      if (item === 'true') {
+        return true;
+      }
+
+      return item === 'false' ? false : undefined;
+    }, undefined);
+  },
   set(key, value) {
     withLocalStorage(
-      localStorage => localStorage.setItem(key, value),
+      localStorage => localStorage.setItem(key, String(value)),
       undefined,
     );
   },
   remove(key) {
     withLocalStorage(localStorage => localStorage.removeItem(key), undefined);
+  },
+  clearAll() {
+    withLocalStorage(localStorage => localStorage.clear(), undefined);
   },
   getAllKeys() {
     return withLocalStorage(listKeys, []);
