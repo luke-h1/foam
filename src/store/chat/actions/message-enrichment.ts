@@ -483,8 +483,40 @@ function areMessageTokenEqual(
     previous.zero_width === next.zero_width &&
     previous.creator === next.creator &&
     previous.site === next.site &&
-    areImageVariantsEqual(previous.image_variants, next.image_variants)
+    areImageVariantsEqual(previous.image_variants, next.image_variants) &&
+    areOverlaidTokensEqual(previous.overlaid, next.overlaid)
   );
+}
+
+function areOverlaidTokensEqual(
+  previous?: MessageToken<'emote'>[],
+  next?: MessageToken<'emote'>[],
+): boolean {
+  const previousLength = previous?.length ?? 0;
+  const nextLength = next?.length ?? 0;
+
+  if (previousLength !== nextLength) {
+    return false;
+  }
+
+  if (!previous || !next) {
+    return true;
+  }
+
+  for (let index = 0; index < previous.length; index += 1) {
+    const previousOverlay = previous[index];
+    const nextOverlay = next[index];
+
+    if (!previousOverlay || !nextOverlay) {
+      return false;
+    }
+
+    if (!areMessageTokenEqual(previousOverlay, nextOverlay)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 function areMessageTokensEqual(
