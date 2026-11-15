@@ -47,7 +47,6 @@ export function useEmoteReprocessing({
   const runningPassRef = useRef<EnrichScope['kind'] | null>(null);
 
   useEffect(() => {
-    const delta = takeSevenTvEmoteDelta(channelId);
     const previousInputs = previousInputsRef.current;
 
     const inputs: EmoteReprocessInputs = {
@@ -94,6 +93,8 @@ export function useEmoteReprocessing({
     if (currentMessages.length === 0) {
       return;
     }
+
+    const delta = takeSevenTvEmoteDelta(channelId);
 
     const scope = pickEmoteReprocessScope({
       delta,

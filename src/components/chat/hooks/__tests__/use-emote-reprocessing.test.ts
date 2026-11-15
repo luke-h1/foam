@@ -23,6 +23,12 @@ import {
 } from '@app/store/chat/actions/personal-emotes';
 import * as resolveTokensModule from '@app/store/chat/actions/resolveMessageEmoteTokens';
 import { updateSevenTvEmotes } from '@app/store/chat/actions/seven-tv-channel-lifecycle';
+import {
+  clearSevenTvEmoteDeltas,
+  recordSevenTvEmoteDelta,
+  type SevenTvEmoteDelta,
+  takeSevenTvEmoteDelta,
+} from '@app/store/chat/actions/seven-tv-emote-delta';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import { useChannelEmoteDataForReprocess } from '@app/store/chat/react/selectors';
 import {
@@ -33,6 +39,7 @@ import {
 import { flushChatStoreTimers } from '@app/test/chat-store-teardown';
 import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/user-state-tags.fixture';
+import type { SanitisedEmote } from '@app/types/emote';
 
 const channelId = 'channel-1';
 
@@ -141,6 +148,25 @@ describe('useEmoteReprocessing', () => {
     expect(storedTokens('msg-1')).toEqual<TokenSummary[]>([
       { type: 'text', content: 'Kappa' },
     ]);
+  });
+
+  test('keeps a pending 7TV delta when the pass bails before emotes load', () => {
+    clearSevenTvEmoteDeltas();
+    seedChannelCache({ sevenTvChannelEmotes: [kappa] });
+    addMessages([createTextOnlyMessage('msg-1', 'Kappa')]);
+
+    const from: SanitisedEmote[] = [];
+    const to = [kappa];
+
+    recordSevenTvEmoteDelta(channelId, from, to, [kappa]);
+
+    renderReprocess({ emoteLoadStatus: 'loading' });
+
+    expect(takeSevenTvEmoteDelta(channelId)).toEqual<SevenTvEmoteDelta>({
+      from,
+      to,
+      names: new Set(['Kappa']),
+    });
   });
 
   test('does nothing when there are no emotes and 7TV emotes are disabled', () => {
