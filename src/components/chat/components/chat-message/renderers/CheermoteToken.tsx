@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 import type { MessageToken } from '@app/types/chat/messageToken';
 
+import { styles as chatRowStyles } from '../ChatRow.styles';
 import type { ChatTextStyles } from '../ChatText.styles';
 import { ChatInlineImage } from './ChatInlineImage';
 
@@ -50,6 +51,7 @@ export const CheermoteToken = memo(
         >
           {token.cheermote.bits}
         </ChatText>
+        {isModerated ? <View style={chatRowStyles.moderatedTokenStrike} /> : null}
       </View>
     );
   },
@@ -67,6 +69,6 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   moderated: {
-    opacity: 0.4,
+    opacity: 0.72,
   },
 });

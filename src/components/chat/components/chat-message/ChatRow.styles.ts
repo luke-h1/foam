@@ -71,20 +71,17 @@ export const styles = StyleSheet.create({
   moderatedUsernameContainer: {
     opacity: 0.72,
   },
-  messageLineModerated: {
-    position: 'relative',
-  },
-  moderatedStrikeOverlay: {
+  moderatedTokenStrike: {
     backgroundColor: CHAT_SURFACE_COLORS.strike,
-    height: 1,
+    height: 1.5,
     left: 0,
-    marginTop: -0.5,
-    opacity: 0.72,
+    marginTop: -0.75,
+    opacity: 0.9,
     pointerEvents: 'none',
     position: 'absolute',
     right: 0,
     top: '50%',
-    zIndex: 2,
+    zIndex: 3,
   },
   highlightedSenderContainer: {
     backgroundColor: noticeSurfaceTint(theme.color.brand.twitch, 0.08),

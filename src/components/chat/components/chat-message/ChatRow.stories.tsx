@@ -77,6 +77,31 @@ export const WithEmotes: Story = {
   },
 };
 
+export const TimedOut: Story = {
+  args: {
+    ...createBaseMessage([
+      {
+        type: 'text',
+        content: 'this message was removed ',
+      },
+      {
+        type: 'emote',
+        content: 'Kappa',
+        original_name: 'Kappa',
+        name: 'Kappa',
+        id: '25',
+        url: 'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/1.0',
+        site: 'Twitch Channel',
+      },
+      {
+        type: 'text',
+        content: ' after a timeout',
+      },
+    ]),
+    moderationNotice: 'Timed out',
+  },
+};
+
 export const ZeroWidthSevenTv: Story = {
   args: {
     ...createBaseMessage([
