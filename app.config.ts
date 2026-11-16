@@ -82,6 +82,15 @@ const variant =
 
 const VERSION = '1.0.16';
 
+// EAS Update channel per variant; must match the `channel` values in eas.json.
+const UPDATES_CHANNEL = {
+  development: 'development',
+  internal: 'internal',
+  testflight: 'testflight',
+  e2e: 'e2e',
+  production: 'production',
+} as const satisfies Record<Variant, string>;
+
 const appConfig: AppVariantConfig = VARIANT_CONFIG[variant];
 const twitchClientId = process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID;
 const sentryRelease = process.env.EXPO_PUBLIC_SENTRY_RELEASE ?? VERSION;
@@ -243,7 +252,7 @@ const config: ExpoConfig = {
   updates: {
     url: 'https://u.expo.dev/950a1e2f-6b25-4be7-adb2-3c16287a2b5e',
     requestHeaders: {
-      'expo-channel-name': 'local',
+      'expo-channel-name': UPDATES_CHANNEL[variant],
     },
     /**
      * Manual update checks only; auto-check on launch left a blank screen.
