@@ -15,15 +15,9 @@ class StartupBenchmark {
   @get:Rule
   val rule = MacrobenchmarkRule()
 
-  /**
-   * Nothing compiled ahead of time, like a sideload before background dexopt.
-   */
   @Test
   fun startupNoCompilation() = startup(CompilationMode.None())
 
-  /**
-   * Only the Baseline Profile compiled, like the first launch after a Play install or update.
-   */
   @Test
   fun startupBaselineProfile() = startup(CompilationMode.Partial(BaselineProfileMode.Require))
 

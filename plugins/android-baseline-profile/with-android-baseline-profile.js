@@ -5,7 +5,6 @@ const {
   withSettingsGradle,
 } = require('@expo/config-plugins');
 
-// Paths are relative to android/, which prebuild regenerates.
 const PROFILES_DIR = '../plugins/android-baseline-profile/profiles';
 const BENCHMARK_DIR = '../plugins/android-baseline-profile/benchmark';
 

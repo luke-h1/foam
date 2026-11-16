@@ -20,14 +20,11 @@ private val CHAT_MESSAGE = By.res(Pattern.compile(".*chat-message"))
 
 private val CHAT_LIST = By.scrollable(true).hasDescendant(CHAT_MESSAGE)
 
-// A live stream card's accessibility label reads "<channel>, live, <category>, <viewers>".
 // Only Just Chatting: logged out, the WebView player gates mature categories behind a login.
 private val STREAM_CARD = By.desc(Pattern.compile(".*, live, Just Chatting,.*"))
 
-/**
- * The app calls reportFullyDrawn() when the Top streams list loads, so this
- * wait is what gives StartupTimingMetric a time to full display.
- */
+private const val SLOW_MOUNT_TIMEOUT_MS = 30_000L
+
 fun MacrobenchmarkScope.startAndWaitForTopStreams() {
   val keyguard =
     InstrumentationRegistry.getInstrumentation().context.getSystemService(KeyguardManager::class.java)
@@ -38,7 +35,7 @@ fun MacrobenchmarkScope.startAndWaitForTopStreams() {
   pressHome()
   startActivityAndWait()
 
-  check(device.wait(Until.hasObject(TOP_STREAMS_LIST), 30_000)) {
+  check(device.wait(Until.hasObject(TOP_STREAMS_LIST), SLOW_MOUNT_TIMEOUT_MS)) {
     "The Top streams list did not load in 30s. Finish onboarding on the benchmark build and stay logged out."
   }
   device.waitForIdle()
@@ -70,7 +67,6 @@ fun MacrobenchmarkScope.flingTopStreams() {
 
 private fun MacrobenchmarkScope.findJustChattingCard(): UiObject2 {
   repeat(6) {
-    // Until.findObject retries past the stale tree that a fling leaves behind
     device.wait(Until.findObject(STREAM_CARD), 2_000)?.let { return it }
 
     val list = checkNotNull(device.wait(Until.findObject(TOP_STREAMS_LIST), 5_000)) {
@@ -85,19 +81,13 @@ private fun MacrobenchmarkScope.findJustChattingCard(): UiObject2 {
 fun MacrobenchmarkScope.openTopStream() {
   val card = findJustChattingCard()
 
-  // Click the thumbnail (left of the card), not the centre, which lands on the nested category chip
   val bounds = card.visibleBounds
   device.click(bounds.left + bounds.width() / 5, bounds.centerY())
 
-  // Generous: under CompilationMode.None the whole app is interpreted, so the WebView mounts slowly
-  check(device.wait(Until.hasObject(STREAM_PLAYER), 30_000)) { "The stream player did not appear in 30s" }
-  check(device.wait(Until.hasObject(CHAT_MESSAGE), 30_000)) { "No chat messages appeared in 30s" }
+  check(device.wait(Until.hasObject(STREAM_PLAYER), SLOW_MOUNT_TIMEOUT_MS)) { "The stream player did not appear in 30s" }
+  check(device.wait(Until.hasObject(CHAT_MESSAGE), SLOW_MOUNT_TIMEOUT_MS)) { "No chat messages appeared in 30s" }
 }
 
-/**
- * Lets live chat run, then flings back through its history and returns to the
- * bottom, so the trace holds both a flood at rest and scrolling while it lands.
- */
 fun MacrobenchmarkScope.watchAndFlingChat() {
   Thread.sleep(8_000)
 
@@ -110,7 +100,6 @@ fun MacrobenchmarkScope.watchAndFlingChat() {
 }
 
 fun MacrobenchmarkScope.leaveStream() {
-  // One back can close a chat overlay rather than pop the screen, so press until Top is back
   repeat(4) {
     device.pressBack()
 

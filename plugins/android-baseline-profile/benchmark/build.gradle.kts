@@ -12,7 +12,6 @@ android {
   compileSdk = 36
 
   defaultConfig {
-    // BaselineProfileRule needs API 33 on a device that is not rooted
     minSdk = 28
     targetSdk = 36
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
