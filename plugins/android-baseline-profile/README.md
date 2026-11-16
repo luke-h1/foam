@@ -56,6 +56,17 @@ calls `reportFullyDrawn()`, which the Top streams list does through the
 `fully-drawn` native module once its first page is on screen. Play's startup
 vitals use the same call.
 
+`LiveStreamBenchmark` measures frame timing while a Just Chatting stream opens and
+chat floods, then flings chat. Logged out, use Just Chatting: the WebView player
+gates mature categories behind a login, and Just Chatting has the busiest chat.
+
+Note: on an Android preview build (this profile was recorded on an Android 17
+beta, API 37), `StartupTimingMetric` and `FrameTimingMetric` return no results
+because benchmark-macro 1.5.0 cannot parse the preview trace format. The journeys
+still run. Read time to initial and full display from the per-iteration logcat
+(`ActivityTaskManager: Displayed` and `Fully drawn`), or run the benchmarks on a
+stable Android (14-16) device for the library's own metrics.
+
 To measure what the profiles in `profiles/` are worth on top of the AndroidX
 ones, compare `startupBaselineProfile` against a run with them left out:
 
