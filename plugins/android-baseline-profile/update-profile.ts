@@ -9,8 +9,8 @@ const RECORDED = path.join(
   'benchmark/build/outputs/connected_android_test_additional_output',
 );
 
-// Optional HSP flags, then a class descriptor, then an optional member
-const RULE = /^([HSP]*)(L[^;]+;)(.*)$/;
+// Optional HSP flags (consumed, not kept), then a class descriptor, then an optional member
+const RULE = /^(?:[HSP]*)(L[^;]+;)(.*)$/;
 
 function findRecordedProfiles(dir: string): string[] {
   if (!fs.existsSync(dir)) {
@@ -58,7 +58,7 @@ for (const file of recorded) {
       continue;
     }
 
-    const [, , descriptor = '', member = ''] = match;
+    const [, descriptor = '', member = ''] = match;
 
     // Android 14 and older only compile methods marked hot at install, and ART marks few recorded methods hot
     const rule = member === '' ? descriptor : `HSP${descriptor}${member}`;

@@ -44,26 +44,30 @@ fun MacrobenchmarkScope.startAndWaitForTopStreams() {
   device.waitForIdle()
 }
 
-fun MacrobenchmarkScope.flingTopStreams() {
-  val list = checkNotNull(device.findObject(TOP_STREAMS_LIST)) { "Could not find the Top streams list" }
-  // Keep clear of the screen edges, where gesture navigation takes the swipe
+/**
+ * Flings the list clear of the screen edges, where gesture navigation would
+ * otherwise take the swipe.
+ */
+private fun MacrobenchmarkScope.flingList(
+  list: UiObject2,
+  direction: Direction,
+  times: Int = 1,
+) {
   list.setGestureMargin(device.displayWidth / 5)
 
-  repeat(3) {
-    list.fling(Direction.DOWN)
-    device.waitForIdle()
-  }
-
-  repeat(3) {
-    list.fling(Direction.UP)
+  repeat(times) {
+    list.fling(direction)
     device.waitForIdle()
   }
 }
 
-/**
- * Scrolls Top until a Just Chatting stream is on screen and returns its card.
- * Just Chatting has busy chat and never gates the player behind a login.
- */
+fun MacrobenchmarkScope.flingTopStreams() {
+  val list = checkNotNull(device.findObject(TOP_STREAMS_LIST)) { "Could not find the Top streams list" }
+
+  flingList(list, Direction.DOWN, 3)
+  flingList(list, Direction.UP, 3)
+}
+
 private fun MacrobenchmarkScope.findJustChattingCard(): UiObject2 {
   repeat(6) {
     // Until.findObject retries past the stale tree that a fling leaves behind
@@ -72,18 +76,12 @@ private fun MacrobenchmarkScope.findJustChattingCard(): UiObject2 {
     val list = checkNotNull(device.wait(Until.findObject(TOP_STREAMS_LIST), 5_000)) {
       "Could not find the Top streams list"
     }
-    list.setGestureMargin(device.displayWidth / 5)
-    list.fling(Direction.DOWN)
-    device.waitForIdle()
+    flingList(list, Direction.DOWN)
   }
 
   error("No Just Chatting stream on Top after scrolling")
 }
 
-/**
- * Opens a Just Chatting stream and waits until the player and the first chat
- * rows are on screen.
- */
 fun MacrobenchmarkScope.openTopStream() {
   val card = findJustChattingCard()
 
@@ -104,17 +102,9 @@ fun MacrobenchmarkScope.watchAndFlingChat() {
   Thread.sleep(8_000)
 
   val chat = checkNotNull(device.findObject(CHAT_LIST)) { "Could not find the chat list" }
-  chat.setGestureMargin(device.displayWidth / 5)
 
-  repeat(2) {
-    chat.fling(Direction.UP)
-    device.waitForIdle()
-  }
-
-  repeat(3) {
-    chat.fling(Direction.DOWN)
-    device.waitForIdle()
-  }
+  flingList(chat, Direction.UP, 2)
+  flingList(chat, Direction.DOWN, 3)
 
   Thread.sleep(5_000)
 }
