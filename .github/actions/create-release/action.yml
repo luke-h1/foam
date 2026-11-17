@@ -124,6 +124,11 @@ runs:
             RELEASE_NOTES="$(bun scripts/release-notes.ts pending)"
           fi
         elif [ "$CUT_RELEASE" = true ]; then
+          authed_git fetch origin main
+          if ! git merge-base --is-ancestor "$BUILT_SHA" origin/main; then
+            echo "::error::${BUILT_SHA} is not on main. A production build only cuts CHANGELOG.md when it was built from main."
+            exit 1
+          fi
           RELEASE_NOTES="$(bun scripts/release-notes.ts release --version "$INPUTS_VERSION")"
           bunx oxfmt CHANGELOG.md
           git add -- CHANGELOG.md .changeset
@@ -132,7 +137,6 @@ runs:
             git config user.email "55030296+luke-h1@users.noreply.github.com"
             git commit -m "chore(changelog): release ${INPUTS_VERSION}" -- CHANGELOG.md .changeset
           fi
-          authed_git fetch origin main
           if git diff --quiet origin/main HEAD -- CHANGELOG.md .changeset; then
             echo "main already carries the ${INPUTS_VERSION} changelog"
           else

@@ -114,6 +114,11 @@ if [ "$cut_release" = "true" ] && [ "$tag_exists" = "true" ]; then
   rm -f "$main_changelog"
   cut_release="false"
 elif [ "$cut_release" = "true" ]; then
+  git fetch origin main
+  if ! git merge-base --is-ancestor "$built_sha" origin/main; then
+    echo "$built_sha is not on main. A production build only cuts CHANGELOG.md when it was built from main."
+    exit 1
+  fi
   notes="$(release_notes release --version "$version")"
   bunx oxfmt CHANGELOG.md
 else
@@ -137,7 +142,6 @@ if [ "$cut_release" = "true" ]; then
     echo "Cutting CHANGELOG.md for $version..."
     git commit -m "chore(changelog): release ${version}" -- CHANGELOG.md .changeset
   fi
-  git fetch origin main
   if git diff --quiet origin/main HEAD -- CHANGELOG.md .changeset; then
     echo "main already carries the $version changelog"
   else
