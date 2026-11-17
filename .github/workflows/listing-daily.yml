@@ -31,6 +31,7 @@ jobs:
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           APPEEKY_API_KEY: op://ci-cd/foam-mobile-production/APPEEKY_API_KEY
+          DISCORD_WEBHOOK_URL_APPEEKY: op://ci-cd/foam-mobile-production/DISCORD_WEBHOOK_URL_APPEEKY
 
       - name: 📈 Refresh ranks, reviews and competitors
         run: |
@@ -38,6 +39,11 @@ jobs:
           npx --yes @appeeky/spec verify --playbook
           npx --yes @appeeky/spec reviews pull || true
           npx --yes @appeeky/spec competitors pull || true
+
+      - name: 🔔 Post new alerts to Discord
+        run: npx --yes @appeeky/spec alerts --record --webhook || true
+        env:
+          ALERT_WEBHOOK_URL: ${{ env.DISCORD_WEBHOOK_URL_APPEEKY }}
 
       - name: 📝 Commit what changed
         run: |
