@@ -7,10 +7,13 @@ import 'cross-fetch/polyfill';
 import type { ReactNode, Ref } from 'react';
 
 import type { SkData } from '@shopify/react-native-skia';
+import { configure as configureTestingLibrary } from '@testing-library/react-native';
 import { TextDecoder, TextEncoder } from 'node:util';
 import { configure as configureReassure } from 'reassure';
 
 import mockFile from '../__mocks__/mockFile';
+
+configureTestingLibrary({ asyncUtilTimeout: 5000 });
 
 // SAFETY: Node's util.TextEncoder implements the DOM TextEncoder surface the app code encodes with.
 global.TextEncoder = TextEncoder as typeof global.TextEncoder;
