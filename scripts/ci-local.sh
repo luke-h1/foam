@@ -127,7 +127,7 @@ wants() {
 }
 
 JOBS=("$@")
-KNOWN_JOBS=(oxfmt ast-grep ts docs variants lint test native commitlint doctor zizmor)
+KNOWN_JOBS=(oxfmt ast-grep ts docs variants lint test native commitlint changeset doctor zizmor)
 
 is_known_job() {
   local known
@@ -202,6 +202,15 @@ if wants commitlint; then
     run 'Commitlint' bun run commitlint --from=HEAD^1
   else
     skip 'Commitlint' 'no parent commit to lint against'
+  fi
+fi
+
+if wants changeset; then
+  if git rev-parse --verify --quiet origin/main >/dev/null; then
+    run 'Changeset added' bash -c "git diff --name-only --diff-filter=A origin/main...HEAD -- '.changeset/*.md' | grep -qv '/README.md$'"
+    run 'Changesets' bun run changeset -- status --since=origin/main
+  else
+    skip 'Changesets' 'no origin/main to compare against'
   fi
 fi
 

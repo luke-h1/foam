@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Local equivalent of .github/actions/create-release: renders the release notes
+# from the changesets, cuts CHANGELOG.md for a production build, then
+# creates/updates the native GitHub release.
+#
 #  ./scripts/release-github.sh internal
 #  ./scripts/release-github.sh production --dry-run
 #  ./scripts/release-github.sh internal --no-push
@@ -30,16 +34,6 @@ case "$variant" in
     ;;
 esac
 
-git_cliff_bin="$(command -v git-cliff || true)"
-if [ -z "$git_cliff_bin" ] && [ -x "$HOME/.cargo/bin/git-cliff" ]; then
-  git_cliff_bin="$HOME/.cargo/bin/git-cliff"
-fi
-
-if [ -z "$git_cliff_bin" ]; then
-  echo "git-cliff is required. Install it with: brew install git-cliff"
-  exit 1
-fi
-
 if [ -z "${GITHUB_RELEASE_TOKEN:-}" ] && [ -f .env ]; then
   GITHUB_RELEASE_TOKEN="$(grep -E '^GITHUB_RELEASE_TOKEN=' .env | head -n 1 | cut -d= -f2- | tr -d '"' | tr -d "'")"
   export GITHUB_RELEASE_TOKEN
@@ -64,15 +58,10 @@ else
   esac
 fi
 
-# Variant tags for the same version often point at the same commits as this
-# release. Ignore them so git-cliff applies --tag instead of reusing the
-# existing tag's name (WARN: There is already a tag (...) for <sha>).
-escaped_version="$(printf '%s' "$version" | sed 's/[.]/\\./g')"
-case "$variant" in
-  production) ignore_tags="^${escaped_version}-(internal|testflight)$" ;;
-  testflight) ignore_tags="^${escaped_version}-internal$" ;;
-  internal) ignore_tags="^${escaped_version}-testflight$" ;;
-esac
+cut_release="false"
+if [ "$variant" = "production" ]; then
+  cut_release="true"
+fi
 
 git fetch --tags origin 2>/dev/null || true
 
@@ -82,72 +71,23 @@ if git tag -l "$tag" | grep -qx "$tag"; then
   echo "Tag $tag already exists; will reuse it"
 fi
 
-native_tag_pattern='^v?[0-9]+\.[0-9]+\.[0-9]+$'
-if [ "$variant" != "production" ]; then
-  native_tag_pattern="^v?[0-9]+\\.[0-9]+\\.[0-9]+-${variant}$"
-fi
-
-previous_tag=$(
-  git tag -l 2>/dev/null |
-    grep -E "$native_tag_pattern" |
-    grep -vE '^ota-' |
-    grep -v "^${tag}$" |
-    sort -V --reverse |
-    head -1 || true
-)
-
-if [ -z "$previous_tag" ]; then
-  echo "No previous tag found"
-  release_notes="Initial release"
-else
-  echo "Previous tag: $previous_tag"
-  raw_notes=$("$git_cliff_bin" --config cliff.toml "$previous_tag"..HEAD --tag "$tag" --ignore-tags "$ignore_tags" --unreleased --strip all 2>&1 | grep -v "^[[:space:]]*WARN\|^[[:space:]]*ERROR" || echo "")
-  content_only=$(echo "$raw_notes" | tail -n +2 | sed '/^[[:space:]]*$/d')
-
-  if [ -n "$content_only" ]; then
-    release_notes="$raw_notes"
-  else
-    commit_count=$(git rev-list --count "$previous_tag"..HEAD 2>/dev/null || echo "0")
-    if [ "$commit_count" = "0" ]; then
-      release_notes="No changes since previous release."
-    else
-      echo "No unreleased commits found, using git log for recent commits"
-      git_log=$(git log --pretty=format:"- %s" "$previous_tag"..HEAD | head -20)
-      release_notes="### Changes"$'\n\n'"${git_log}"
-    fi
-  fi
-
-  if echo "$release_notes" | grep -q "panicked"; then
-    echo "git-cliff panicked, falling back to git log"
-    git_log=$(git log --pretty=format:"- %s" "$previous_tag"..HEAD | head -20)
-    release_notes="### Changes"$'\n\n'"${git_log}"
-  fi
-
-  release_notes=$(echo "$release_notes" | awk 'BEGIN{first=1} /^## / { if (!first) exit; first=0 } { print }')
-fi
-
-printf '%s\n' "$release_notes" > .release-notes-body.md
-
-release_body="## ${variant_label} Native Build: ${tag}
-
-**Deployment Type:** Native Build
-**App Version:** \`${version}\`
-**Previous tag:** ${previous_tag:-N/A (initial release)}
-
----
-
-${release_notes}"
+release_notes() {
+  bun scripts/release-notes.ts "$@"
+}
 
 if [ "$dry_run" = "true" ]; then
   echo "========= DRY MODE =========="
   echo "Tag: $tag"
   echo "App Version: $version"
   echo "Variant: $variant"
-  echo "Previous tag: ${previous_tag:-<none>}"
-  echo "Would commit CHANGELOG.md if changed, push tag $tag, and create/update the GitHub release"
+  if [ "$cut_release" = "true" ]; then
+    echo "Would cut CHANGELOG.md for $version, commit it to main, push tag $tag, and create/update the GitHub release"
+  else
+    echo "Would push tag $tag and create/update the GitHub release with the pending notes"
+  fi
   echo ""
-  echo "=== Generated Changelog ==="
-  echo "$release_notes"
+  echo "=== Pending release notes ==="
+  release_notes pending
   echo "============================="
   exit 0
 fi
@@ -159,33 +99,73 @@ if [ "$no_push" = "false" ]; then
   }
 fi
 
-"$git_cliff_bin" --config cliff.toml --tag "$tag" --ignore-tags "" -o CHANGELOG.md
-GIT_CLIFF_BIN="$git_cliff_bin" bunx tsx scripts/workflows/changelog-per-env-cli.ts CHANGELOG.md "$tag"
-bunx tsx scripts/workflows/changelog-headings-cli.ts CHANGELOG.md
+built_sha="$(git rev-parse HEAD)"
 
-bunx oxfmt CHANGELOG.md
+if [ "$cut_release" = "true" ] && [ "$tag_exists" = "true" ]; then
+  git fetch origin main
+  main_changelog="$(mktemp)"
+  git show origin/main:CHANGELOG.md > "$main_changelog"
+  if notes="$(release_notes show --version "$version" --changelog "$main_changelog")"; then
+    echo "Tag $tag exists; reusing the notes recorded for $version in CHANGELOG.md on main"
+  else
+    echo "Tag $tag exists and CHANGELOG.md on main has no section for $version. Bump VERSION in app.config.ts before the next production build. Rendering the pending notes without consuming them."
+    notes="$(release_notes pending)"
+  fi
+  rm -f "$main_changelog"
+  cut_release="false"
+elif [ "$cut_release" = "true" ]; then
+  git fetch origin main
+  if ! git merge-base --is-ancestor "$built_sha" origin/main; then
+    echo "$built_sha is not on main. A production build only cuts CHANGELOG.md when it was built from main."
+    exit 1
+  fi
+  notes="$(release_notes release --version "$version")"
+  bunx oxfmt CHANGELOG.md
+else
+  echo "Pre-production builds do not cut CHANGELOG.md"
+  notes="$(release_notes pending)"
+fi
+
+printf '%s\n' "$notes" > .release-notes-body.md
 
 if [ "$no_push" = "true" ]; then
-  if git diff --quiet CHANGELOG.md 2>/dev/null; then
-    echo "CHANGELOG.md has not changed"
-  else
-    echo "CHANGELOG.md regenerated locally and left uncommitted (--no-push)"
+  if [ "$cut_release" = "true" ]; then
+    echo "CHANGELOG.md cut for $version and left uncommitted (--no-push)"
   fi
   echo "Skipping commit, tag, push, and GitHub release for $tag (--no-push)"
   exit 0
 fi
 
-if git diff --quiet CHANGELOG.md 2>/dev/null; then
-  echo "CHANGELOG.md has not changed"
-else
-  echo "CHANGELOG.md has changed, committing and pushing to main..."
-  git add CHANGELOG.md
-  git commit -m "chore(changelog): update CHANGELOG.md for ${tag}"
-  authed_push HEAD:main
+if [ "$cut_release" = "true" ]; then
+  git add -- CHANGELOG.md .changeset
+  if ! git diff --cached --quiet -- CHANGELOG.md .changeset; then
+    echo "Cutting CHANGELOG.md for $version..."
+    git commit -m "chore(changelog): release ${version}" -- CHANGELOG.md .changeset
+  fi
+  if git diff --quiet origin/main HEAD -- CHANGELOG.md .changeset; then
+    echo "main already carries the $version changelog"
+  else
+    if ! git rebase origin/main; then
+      git rebase --abort 2>/dev/null || true
+      echo "main moved since this build and the changelog commit does not rebase onto it cleanly; rerun the release"
+      exit 1
+    fi
+    echo "Pushing the $version changelog to main..."
+    authed_push HEAD:main
+  fi
 fi
 
+release_body="## ${variant_label} Native Build: ${tag}
+
+**Deployment Type:** Native Build
+**App Version:** \`${version}\`
+
+---
+
+${notes}"
+
 if [ "$tag_exists" = "false" ]; then
-  git tag -a "$tag" -m "${variant_label} Native Build: ${tag}"
+  git tag -a "$tag" -m "${variant_label} Native Build: ${tag}" "$built_sha"
   authed_push "refs/tags/${tag}"
 fi
 

@@ -1,6 +1,8 @@
+import { execFileSync } from 'node:child_process';
 import {
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -8,17 +10,6 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { applyEnvironmentLabelsToChangelogHeadings } from '../scripts/workflows/changelog-headings';
-import { normalizeChangelogFile } from '../scripts/workflows/changelog-headings-cli';
-import {
-  compareVersions,
-  type GitCliffContext,
-  parseReleaseTag,
-  planPerEnvironmentSections,
-  type ReleaseTag,
-  rewritePerEnvironmentSections,
-  type VersionPlan,
-} from '../scripts/workflows/changelog-per-env';
 import {
   buildChatPerformanceComment,
   buildCurrentTable,
@@ -50,7 +41,6 @@ import {
 import {
   appendVariant,
   getVariantMeta,
-  ignoreTagsPattern,
   isVariant,
   sentryDistFor,
   variantLabel,
@@ -309,436 +299,6 @@ Rollout Percentage  25%
   });
 });
 
-describe('changelog headings', () => {
-  test('adds environment labels for generated release headings', () => {
-    const source = [
-      '# Changelog',
-      '',
-      '## 1.2.3',
-      '### Changes',
-      '- changelog item',
-      '## 1.2.3-internal',
-      '### Changes',
-      '- internal changelog item',
-      '## 1.2.3-testflight',
-      '### Changes',
-      '- testflight changelog item',
-      '## 1.2.3-preview',
-      '### Changes',
-      '- preview changelog item',
-      '',
-      '## 1.2.2',
-      '- old changelog item',
-    ].join('\n');
-
-    expect(applyEnvironmentLabelsToChangelogHeadings(source)).toEqual(
-      [
-        '# Changelog',
-        '',
-        '## 1.2.3 (Production)',
-        '### Changes',
-        '- changelog item',
-        '## 1.2.3 (Internal)',
-        '### Changes',
-        '- internal changelog item',
-        '## 1.2.3 (TestFlight)',
-        '### Changes',
-        '- testflight changelog item',
-        '## 1.2.3 (Preview)',
-        '### Changes',
-        '- preview changelog item',
-        '',
-        '## 1.2.2 (Production)',
-        '- old changelog item',
-      ].join('\n'),
-    );
-  });
-
-  test('leaves non-version headings untouched', () => {
-    const source = [
-      '# Changelog',
-      '',
-      '## [unreleased]',
-      '### Changes',
-      '- local item',
-      '### Notes',
-      '- details',
-    ].join('\n');
-
-    expect(applyEnvironmentLabelsToChangelogHeadings(source)).toEqual(source);
-  });
-
-  test('normalizes version headings that include a leading v', () => {
-    expect(applyEnvironmentLabelsToChangelogHeadings('## v1.2.3\n')).toEqual(
-      '## 1.2.3 (Production)',
-    );
-  });
-
-  test('preserves already labeled environment headings', () => {
-    expect(
-      applyEnvironmentLabelsToChangelogHeadings(
-        [
-          '# Changelog',
-          '## 1.2.3 (Internal)',
-          '## 1.2.3-testflight',
-          '## 1.2.2 (Production)',
-          '## 1.2.2',
-        ].join('\n'),
-      ),
-    ).toEqual(
-      [
-        '# Changelog',
-        '## 1.2.3 (Internal)',
-        '## 1.2.3 (TestFlight)',
-        '## 1.2.2 (Production)',
-        '## 1.2.2 (Production)',
-      ].join('\n'),
-    );
-  });
-
-  test('is idempotent on already normalized content', () => {
-    const source = ['## 1.2.3 (Internal)', '## 1.2.2-testflight'].join('\n');
-
-    const normalized = applyEnvironmentLabelsToChangelogHeadings(source);
-
-    expect(applyEnvironmentLabelsToChangelogHeadings(normalized)).toEqual(
-      normalized,
-    );
-  });
-});
-
-describe('changelog generation', () => {
-  test('normalizes generated changelog markdown written to a file', () => {
-    const tempDir = mkdtempSync(join(tmpdir(), 'foam-changelog-generation-'));
-    const changelogPath = join(tempDir, 'CHANGELOG.md');
-
-    const generatedChangelog = [
-      '# Changelog',
-      '',
-      '## 1.0.0-internal',
-      '### Added',
-      '- internal-only item',
-      '## 1.0.0-testflight',
-      '### Fixed',
-      '- testflight item',
-      '## 1.0.0',
-      '### Changed',
-      '- production item',
-      '## 1.0.0-preview',
-      '### Fixed',
-      '- preview item',
-      '## [Unreleased]',
-      '- future change',
-    ].join('\n');
-
-    const expectedChangelog = [
-      '# Changelog',
-      '',
-      '## 1.0.0 (Internal)',
-      '### Added',
-      '- internal-only item',
-      '## 1.0.0 (TestFlight)',
-      '### Fixed',
-      '- testflight item',
-      '## 1.0.0 (Production)',
-      '### Changed',
-      '- production item',
-      '## 1.0.0 (Preview)',
-      '### Fixed',
-      '- preview item',
-      '## [Unreleased]',
-      '- future change',
-    ].join('\n');
-
-    try {
-      writeFileSync(changelogPath, generatedChangelog, 'utf8');
-      const normalized = normalizeChangelogFile(changelogPath);
-
-      expect(normalized).toEqual(expectedChangelog);
-
-      expect(readFileSync(changelogPath, 'utf8')).toEqual(expectedChangelog);
-    } finally {
-      rmSync(tempDir, { recursive: true, force: true });
-    }
-  });
-
-  test('is stable when run over an already generated changelog file', () => {
-    const tempDir = mkdtempSync(join(tmpdir(), 'foam-changelog-generation-'));
-    const changelogPath = join(tempDir, 'CHANGELOG.md');
-
-    const generatedChangelog = [
-      '# Changelog',
-      '',
-      '## 1.0.0 (Internal)',
-      '### Added',
-      '- already normalized',
-    ].join('\n');
-
-    try {
-      writeFileSync(changelogPath, generatedChangelog, 'utf8');
-      const normalized = normalizeChangelogFile(changelogPath);
-
-      expect(normalized).toEqual(generatedChangelog);
-
-      expect(readFileSync(changelogPath, 'utf8')).toEqual(generatedChangelog);
-    } finally {
-      rmSync(tempDir, { recursive: true, force: true });
-    }
-  });
-});
-
-describe('changelog per-environment sections', () => {
-  const RELEASE_TAGS: ReleaseTag[] = [
-    { tag: '0.0.9', version: '0.0.9', environment: 'production', commit: 'c0' },
-    {
-      tag: '1.0.0-testflight',
-      version: '1.0.0',
-      environment: 'testflight',
-      commit: 'c1',
-    },
-    {
-      tag: '1.0.0-internal',
-      version: '1.0.0',
-      environment: 'internal',
-      commit: 'c1',
-    },
-    { tag: '1.0.0', version: '1.0.0', environment: 'production', commit: 'c2' },
-    { tag: '1.0.1', version: '1.0.1', environment: 'production', commit: 'c3' },
-    {
-      tag: '1.0.1-testflight',
-      version: '1.0.1',
-      environment: 'testflight',
-      commit: 'c4',
-    },
-    {
-      tag: '1.0.1-internal',
-      version: '1.0.1',
-      environment: 'internal',
-      commit: 'c4',
-    },
-  ];
-
-  function fakeGitCliffContext(
-    commitOrder: string[],
-    releaseTags: ReleaseTag[],
-  ): GitCliffContext {
-    const indexOf = (commit: string): number => commitOrder.indexOf(commit);
-
-    return {
-      headCommit: () => commitOrder.at(-1) ?? '',
-      listReleaseTags: () => releaseTags,
-      listAllTagCommits: () =>
-        releaseTags.map(tag => ({ tag: tag.tag, commit: tag.commit })),
-      isAncestor: (ancestor, descendant) =>
-        indexOf(ancestor) <= indexOf(descendant),
-      renderRange: (baselineCommit, headCommit, tag) => {
-        if (indexOf(headCommit) <= indexOf(baselineCommit)) {
-          return '';
-        }
-
-        return `## ${tag}\n\n### Test\n\n- ${tag} content`;
-      },
-    };
-  }
-
-  test('parses release tags into version and environment', () => {
-    expect(parseReleaseTag('1.0.1')).toEqual<Omit<ReleaseTag, 'commit'>>({
-      tag: '1.0.1',
-      version: '1.0.1',
-      environment: 'production',
-    });
-
-    expect(parseReleaseTag('1.0.1-internal')).toEqual<
-      Omit<ReleaseTag, 'commit'>
-    >({
-      tag: '1.0.1-internal',
-      version: '1.0.1',
-      environment: 'internal',
-    });
-
-    expect(parseReleaseTag('v0.0.37')).toEqual<Omit<ReleaseTag, 'commit'>>({
-      tag: 'v0.0.37',
-      version: '0.0.37',
-      environment: 'production',
-    });
-
-    expect(parseReleaseTag('ota-deadbeef')).toEqual(null);
-  });
-
-  test('orders versions numerically rather than lexically', () => {
-    expect(compareVersions('0.0.42', '1.0.0')).toBeLessThan(0);
-
-    expect(compareVersions('1.0.10', '1.0.2')).toBeGreaterThan(0);
-
-    expect(compareVersions('1.0.1', '1.0.1')).toEqual(0);
-  });
-
-  test('plans one section per channel, baselined against the channel below', () => {
-    const plans = planPerEnvironmentSections(
-      RELEASE_TAGS,
-      fakeGitCliffContext(['c0', 'c1', 'c2', 'c3', 'c4'], RELEASE_TAGS)
-        .isAncestor,
-    );
-
-    expect(plans).toEqual<VersionPlan[]>([
-      {
-        version: '1.0.0',
-        sections: [
-          {
-            tag: '1.0.0',
-            environment: 'production',
-            headCommit: 'c2',
-            baselineCommit: 'c0',
-            baselineDescription: 'the 0.0.9 release',
-          },
-          {
-            tag: '1.0.0-testflight',
-            environment: 'testflight',
-            headCommit: 'c1',
-            baselineCommit: 'c2',
-            baselineDescription: 'the Production build',
-          },
-          {
-            tag: '1.0.0-internal',
-            environment: 'internal',
-            headCommit: 'c1',
-            baselineCommit: 'c1',
-            baselineDescription: 'the TestFlight build',
-          },
-        ],
-      },
-      {
-        version: '1.0.1',
-        sections: [
-          {
-            tag: '1.0.1',
-            environment: 'production',
-            headCommit: 'c3',
-            baselineCommit: 'c2',
-            baselineDescription: 'the 1.0.0 release',
-          },
-          {
-            tag: '1.0.1-testflight',
-            environment: 'testflight',
-            headCommit: 'c4',
-            baselineCommit: 'c3',
-            baselineDescription: 'the Production build',
-          },
-          {
-            tag: '1.0.1-internal',
-            environment: 'internal',
-            headCommit: 'c4',
-            baselineCommit: 'c4',
-            baselineDescription: 'the TestFlight build',
-          },
-        ],
-      },
-    ]);
-  });
-
-  test('rewrites collapsed sections into full per-channel sections with placeholders', () => {
-    const generated = [
-      '# Changelog',
-      '',
-      '## 1.0.1',
-      '### Collapsed',
-      '- collapsed 1.0.1 body',
-      '## 1.0.0-testflight',
-      '### Collapsed',
-      '- collapsed 1.0.0 body',
-      '## 0.0.9',
-      '### Fixed',
-      '- single channel item',
-      '## ota-deadbeef',
-      '### OTA',
-      '- ota item',
-    ].join('\n');
-
-    const rewritten = rewritePerEnvironmentSections(
-      generated,
-      fakeGitCliffContext(['c0', 'c1', 'c2', 'c3', 'c4'], RELEASE_TAGS),
-    );
-
-    expect(rewritten).toEqual(
-      [
-        '# Changelog',
-        '',
-        '## 1.0.1',
-        '',
-        '### Test',
-        '',
-        '- 1.0.1 content',
-        '',
-        '## 1.0.1-testflight',
-        '',
-        '### Test',
-        '',
-        '- 1.0.1-testflight content',
-        '',
-        '## 1.0.1-internal',
-        '',
-        '_No changes in this build beyond the TestFlight build._',
-        '',
-        '## 1.0.0',
-        '',
-        '### Test',
-        '',
-        '- 1.0.0 content',
-        '',
-        '## 1.0.0-testflight',
-        '',
-        '_No changes in this build beyond the Production build._',
-        '',
-        '## 1.0.0-internal',
-        '',
-        '_No changes in this build beyond the TestFlight build._',
-        '',
-        '## 0.0.9',
-        '### Fixed',
-        '- single channel item',
-        '## ota-deadbeef',
-        '### OTA',
-        '- ota item',
-      ].join('\n'),
-    );
-  });
-
-  test('leaves the changelog untouched when no version reached two channels', () => {
-    const singleChannelTags: ReleaseTag[] = [
-      {
-        tag: '0.0.9',
-        version: '0.0.9',
-        environment: 'production',
-        commit: 'c0',
-      },
-      {
-        tag: '0.0.10',
-        version: '0.0.10',
-        environment: 'production',
-        commit: 'c1',
-      },
-    ];
-
-    const generated = [
-      '# Changelog',
-      '',
-      '## 0.0.10',
-      '### Fixed',
-      '- a fix',
-      '## 0.0.9',
-      '### Fixed',
-      '- older fix',
-    ].join('\n');
-
-    const rewritten = rewritePerEnvironmentSections(
-      generated,
-      fakeGitCliffContext(['c0', 'c1'], singleChannelTags),
-    );
-
-    expect(rewritten).toEqual(generated);
-  });
-});
-
 describe('s3Cache', () => {
   describe('requireBucketName', () => {
     test('accepts a bare bucket name', () => {
@@ -918,23 +478,95 @@ describe('variant', () => {
   test('throws for an unsupported variant', () => {
     expect(() => getVariantMeta('e2e')).toThrow('Unsupported variant: e2e');
   });
+});
 
-  describe('ignoreTagsPattern', () => {
-    test('ignores every other suffixed variant for a production release', () => {
-      expect(ignoreTagsPattern('1.2.3', 'production')).toBe(
-        String.raw`^1\.2\.3-(internal|testflight|preview)$`,
-      );
+describe('release notes', () => {
+  const changelog = [
+    '# Changelog',
+    '',
+    '## 1.2.3 - 2026-11-17',
+    '',
+    '### Fixed',
+    '',
+    '- The player no longer stalls after a network change.',
+    '',
+    '## 1.2.2 - 2026-11-01',
+    '',
+    '### New',
+    '',
+    '- Chat shows replies.',
+    '',
+  ].join('\n');
+
+  function releaseNotes(...args: string[]): string {
+    return execFileSync('bun', ['scripts/release-notes.ts', ...args], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
     });
+  }
 
-    test('excludes the release variant itself', () => {
-      expect(ignoreTagsPattern('1.2.3', 'internal')).toBe(
-        String.raw`^1\.2\.3-(testflight|preview)$`,
+  test('show prints the body of one recorded version', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'foam-release-notes-'));
+    const changelogPath = join(dir, 'CHANGELOG.md');
+    writeFileSync(changelogPath, changelog, 'utf8');
+
+    try {
+      expect(
+        releaseNotes(
+          'show',
+          '--version',
+          '1.2.3',
+          '--changelog',
+          changelogPath,
+        ),
+      ).toBe(
+        '### Fixed\n\n- The player no longer stalls after a network change.\n',
       );
 
-      expect(ignoreTagsPattern('1.2.3', 'testflight')).toBe(
-        String.raw`^1\.2\.3-(internal|preview)$`,
-      );
-    });
+      expect(() =>
+        releaseNotes(
+          'show',
+          '--version',
+          '9.9.9',
+          '--changelog',
+          changelogPath,
+        ),
+      ).toThrow('has no section for 9.9.9');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('a flag with no operand is an error', () => {
+    expect(() => releaseNotes('pending', '--level')).toThrow(
+      '--level needs a value',
+    );
+  });
+
+  test('release refuses an option token as the version and writes nothing', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'foam-release-notes-'));
+    const changelogPath = join(dir, 'CHANGELOG.md');
+    writeFileSync(changelogPath, changelog, 'utf8');
+    const changesetsBefore = readdirSync('.changeset');
+
+    try {
+      expect(() =>
+        releaseNotes(
+          'release',
+          '--version',
+          '--date',
+          '2026-11-17',
+          '--changelog',
+          changelogPath,
+        ),
+      ).toThrow('--version needs a value');
+
+      expect(readFileSync(changelogPath, 'utf8')).toBe(changelog);
+
+      expect(readdirSync('.changeset')).toEqual(changesetsBefore);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 

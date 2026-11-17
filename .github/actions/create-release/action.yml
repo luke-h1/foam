@@ -1,5 +1,5 @@
 name: 'Create GitHub Release'
-description: 'Generate release notes, update CHANGELOG.md, and create native GitHub releases.'
+description: 'Render release notes from the changesets, cut CHANGELOG.md for a production build, and create native GitHub releases. Needs Bun on the PATH.'
 
 inputs:
   github_token:
@@ -19,16 +19,12 @@ inputs:
   tag:
     description: 'The git tag'
     required: true
-  previous_tag:
-    description: 'The previous git tag'
-    required: false
-    default: ''
   deployment_type:
     description: 'The deployment type (native or ota)'
     required: false
     default: 'native'
   commit_changelog:
-    description: 'Whether to commit CHANGELOG.md for native releases'
+    description: 'Whether a production build cuts CHANGELOG.md and commits it'
     required: false
     default: 'true'
 
@@ -36,15 +32,12 @@ outputs:
   tag:
     description: 'The resolved git tag'
     value: ${{ steps.release_tag.outputs.tag }}
-  previous_tag:
-    description: 'The previous git tag'
-    value: ${{ steps.previous_tag.outputs.previous_tag }}
   release_notes:
-    description: 'The generated release notes'
+    description: 'The rendered release notes'
     value: ${{ steps.release_notes.outputs.release_notes }}
   changelog_updated:
-    description: 'Whether the CHANGELOG.md was updated'
-    value: ${{ steps.update_changelog.outputs.changed }}
+    description: 'Whether CHANGELOG.md was updated'
+    value: ${{ steps.release_notes.outputs.changed }}
 
 runs:
   using: 'composite'
@@ -91,97 +84,75 @@ runs:
         echo "tag=$TAG" >> "$GITHUB_OUTPUT"
         echo "tag_already_exists=$TAG_EXISTS" >> "$GITHUB_OUTPUT"
 
-    - name: Get previous tag for variant
-      id: previous_tag
-      shell: bash
-      env:
-        INPUTS_PREVIOUS_TAG: ${{ inputs.previous_tag }}
-        INPUTS_TAG: ${{ steps.release_tag.outputs.tag }}
-        INPUTS_VARIANT: ${{ inputs.variant }}
-      run: |
-        if [ -n "$INPUTS_PREVIOUS_TAG" ]; then
-          FOUND_PREVIOUS_TAG="$INPUTS_PREVIOUS_TAG"
-        else
-          NATIVE_TAG_PATTERN='^v?[0-9]+\.[0-9]+\.[0-9]+$'
-          if [ "$INPUTS_VARIANT" != "production" ]; then
-            NATIVE_TAG_PATTERN="^v?[0-9]+\\.[0-9]+\\.[0-9]+-${INPUTS_VARIANT}$"
-          fi
-
-          FOUND_PREVIOUS_TAG=$(
-            git tag -l 2>/dev/null |
-              grep -E "$NATIVE_TAG_PATTERN" |
-              grep -vE '^ota-' |
-              grep -v "^${INPUTS_TAG}$" |
-              sort -V --reverse |
-              head -1 || true
-          )
-        fi
-
-        if [ -z "$FOUND_PREVIOUS_TAG" ]; then
-          echo "No previous tag found"
-        else
-          echo "Previous tag: $FOUND_PREVIOUS_TAG"
-        fi
-
-        echo "previous_tag=$FOUND_PREVIOUS_TAG" >> "$GITHUB_OUTPUT"
-
-    - name: Install git-cliff
-      shell: bash
-      env:
-        CARGO_BINSTALL_VERSION: 'v1.21.1'
-        GIT_CLIFF_VERSION: '2.13.1'
-      run: |
-        set -euo pipefail
-
-        if [ -x ~/.cargo/bin/git-cliff ] && ~/.cargo/bin/git-cliff --version | grep -qF "$GIT_CLIFF_VERSION"; then
-          echo "git-cliff $GIT_CLIFF_VERSION already installed"
-          exit 0
-        fi
-        curl -L --proto '=https' --tlsv1.2 -sSf \
-          "https://raw.githubusercontent.com/cargo-bins/cargo-binstall/${CARGO_BINSTALL_VERSION}/install-from-binstall-release.sh" | bash
-        ~/.cargo/bin/cargo-binstall "git-cliff@${GIT_CLIFF_VERSION}" --no-confirm --force
-
-    - name: Generate release notes
+    - name: Render release notes
       id: release_notes
       shell: bash
       env:
-        PREVIOUS_TAG: ${{ steps.previous_tag.outputs.previous_tag }}
-        INPUTS_TAG: ${{ steps.release_tag.outputs.tag }}
-        INPUTS_VERSION: ${{ inputs.version }}
+        INPUTS_DRY: ${{ inputs.dry }}
         INPUTS_VARIANT: ${{ inputs.variant }}
+        INPUTS_VERSION: ${{ inputs.version }}
+        INPUTS_TAG: ${{ steps.release_tag.outputs.tag }}
+        TAG_ALREADY_EXISTS: ${{ steps.release_tag.outputs.tag_already_exists }}
+        INPUTS_DEPLOYMENT_TYPE: ${{ inputs.deployment_type }}
+        INPUTS_COMMIT_CHANGELOG: ${{ inputs.commit_changelog }}
+        INPUTS_GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
-        # Variant tags for the same version often point at the same commits as
-        # this release. Ignore them so git-cliff applies --tag instead of
-        # reusing the existing tag's name (WARN: There is already a tag ...).
-        IGNORE_TAGS="$(bunx tsx scripts/workflows/variant-cli.ts ignore-tags --version "$INPUTS_VERSION" --variant "$INPUTS_VARIANT")"
+        set -euo pipefail
 
-        if [ -z "$PREVIOUS_TAG" ]; then
-          RELEASE_NOTES="Initial release"
-        else
-          RAW_NOTES=$(~/.cargo/bin/git-cliff --config cliff.toml "$PREVIOUS_TAG"..HEAD --tag "$INPUTS_TAG" --ignore-tags "$IGNORE_TAGS" --unreleased --strip all 2>&1 | grep -v "^[[:space:]]*WARN\|^[[:space:]]*ERROR" || echo "")
-          CONTENT_ONLY=$(echo "$RAW_NOTES" | tail -n +2 | sed '/^[[:space:]]*$/d')
+        BUILT_SHA="$(git rev-parse HEAD)"
+        echo "built_sha=$BUILT_SHA" >> "$GITHUB_OUTPUT"
 
-          if [ -n "$CONTENT_ONLY" ]; then
-            RELEASE_NOTES="$RAW_NOTES"
-          else
-            COMMIT_COUNT=$(git rev-list --count "$PREVIOUS_TAG"..HEAD 2>/dev/null || echo "0")
-            if [ "$COMMIT_COUNT" = "0" ]; then
-              RELEASE_NOTES="No changes since previous release."
-            else
-              echo "No unreleased commits found, using git log for recent commits"
-              GIT_LOG=$(git log --pretty=format:"- %s" "$PREVIOUS_TAG"..HEAD | head -20)
-              RELEASE_NOTES="### Changes"$'\n\n'"${GIT_LOG}"
-            fi
-          fi
-
-          if echo "$RELEASE_NOTES" | grep -q "panicked"; then
-            echo "git-cliff panicked, falling back to git log"
-            GIT_LOG=$(git log --pretty=format:"- %s" "$PREVIOUS_TAG"..HEAD | head -20)
-            RELEASE_NOTES="### Changes"$'\n\n'"${GIT_LOG}"
-          fi
-
-          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | awk 'BEGIN{first=1} /^## / { if (!first) exit; first=0 } { print }')
+        CUT_RELEASE=false
+        if [ "$INPUTS_DRY" = "false" ] && [ "$INPUTS_DEPLOYMENT_TYPE" = "native" ] \
+          && [ "$INPUTS_VARIANT" = "production" ] && [ "$INPUTS_COMMIT_CHANGELOG" != "false" ]; then
+          CUT_RELEASE=true
         fi
+
+        AUTH_HEADER="$(printf 'luke-h1:%s' "$INPUTS_GITHUB_TOKEN" | base64 | tr -d '\n')"
+        authed_git() {
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${AUTH_HEADER}" "$@"
+        }
+
+        CHANGED=false
+        if [ "$CUT_RELEASE" = true ] && [ "$TAG_ALREADY_EXISTS" = true ]; then
+          authed_git fetch origin main
+          git show origin/main:CHANGELOG.md > "$RUNNER_TEMP/CHANGELOG.md"
+          if RELEASE_NOTES="$(bun scripts/release-notes.ts show --version "$INPUTS_VERSION" --changelog "$RUNNER_TEMP/CHANGELOG.md")"; then
+            echo "Tag ${INPUTS_TAG} exists; reusing the notes recorded for ${INPUTS_VERSION} in CHANGELOG.md on main"
+          else
+            echo "::warning::Tag ${INPUTS_TAG} exists and CHANGELOG.md on main has no section for ${INPUTS_VERSION}. Bump VERSION in app.config.ts before the next production build. Rendering the pending notes without consuming them."
+            RELEASE_NOTES="$(bun scripts/release-notes.ts pending)"
+          fi
+        elif [ "$CUT_RELEASE" = true ]; then
+          authed_git fetch origin main
+          if ! git merge-base --is-ancestor "$BUILT_SHA" origin/main; then
+            echo "::error::${BUILT_SHA} is not on main. A production build only cuts CHANGELOG.md when it was built from main."
+            exit 1
+          fi
+          RELEASE_NOTES="$(bun scripts/release-notes.ts release --version "$INPUTS_VERSION")"
+          bunx oxfmt CHANGELOG.md
+          git add -- CHANGELOG.md .changeset
+          if ! git diff --cached --quiet -- CHANGELOG.md .changeset; then
+            git config user.name "luke-h1"
+            git config user.email "55030296+luke-h1@users.noreply.github.com"
+            git commit -m "chore(changelog): release ${INPUTS_VERSION}" -- CHANGELOG.md .changeset
+          fi
+          if git diff --quiet origin/main HEAD -- CHANGELOG.md .changeset; then
+            echo "main already carries the ${INPUTS_VERSION} changelog"
+          else
+            CHANGED=true
+            if ! git rebase origin/main; then
+              git rebase --abort 2>/dev/null || true
+              echo "::error::main moved since this build and the changelog commit does not rebase onto it cleanly; rerun the release"
+              exit 1
+            fi
+            authed_git push "https://github.com/${GITHUB_REPOSITORY}.git" HEAD:main
+          fi
+        else
+          RELEASE_NOTES="$(bun scripts/release-notes.ts pending)"
+        fi
+
+        echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
 
         delim="EOF_$(openssl rand -hex 8)"
         {
@@ -191,14 +162,6 @@ runs:
         } >> "$GITHUB_OUTPUT"
 
         echo "$RELEASE_NOTES" > .release-notes-body.md
-
-    - name: Update CHANGELOG.md
-      id: update_changelog
-      if: ${{ inputs.dry == 'false' && inputs.deployment_type == 'native' && inputs.commit_changelog != 'false' }}
-      uses: ./.github/actions/update-changelog
-      with:
-        github_token: ${{ inputs.github_token }}
-        tag: ${{ steps.release_tag.outputs.tag }}
 
     - name: Resolve release labels
       id: labels
@@ -223,12 +186,13 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.github_token }}
         INPUTS_TAG: ${{ steps.release_tag.outputs.tag }}
+        BUILT_SHA: ${{ steps.release_notes.outputs.built_sha }}
       run: |
         set -euo pipefail
 
         # github-tag-action runs in a container. The macOS runner cannot start
         # one. Create the same lightweight tag through the Git refs API.
-        SHA="$(git rev-parse HEAD)"
+        SHA="$BUILT_SHA"
 
         gh api --method POST "repos/${GITHUB_REPOSITORY}/git/refs" \
           -f ref="refs/tags/${INPUTS_TAG}" \
@@ -244,22 +208,15 @@ runs:
         DEPLOYMENT_LABEL: ${{ steps.labels.outputs.deployment }}
         INPUTS_TAG: ${{ steps.release_tag.outputs.tag }}
         INPUTS_VERSION: ${{ inputs.version }}
-        PREVIOUS_TAG: ${{ steps.previous_tag.outputs.previous_tag || 'N/A (initial release)' }}
       run: |
         BODY="## ${VARIANT_LABEL} ${DEPLOYMENT_LABEL}: ${INPUTS_TAG}
 
         **Deployment Type:** ${DEPLOYMENT_LABEL}
         **App Version:** \`${INPUTS_VERSION}\`
-        **Previous tag:** ${PREVIOUS_TAG}"
-
-        if [ -f .release-notes-body.md ]; then
-          RELEASE_SECTION=$(awk 'BEGIN{first=1} /^## / { if (!first) exit; first=0 } { print }' .release-notes-body.md)
-          BODY="${BODY}
 
         ---
 
-        ${RELEASE_SECTION}"
-        fi
+        $(cat .release-notes-body.md)"
 
         delim="EOF_$(openssl rand -hex 8)"
         {
@@ -308,7 +265,6 @@ runs:
         INPUTS_VARIANT: ${{ inputs.variant }}
         INPUTS_DEPLOYMENT_TYPE: ${{ inputs.deployment_type }}
         DEPLOYMENT_LABEL: ${{ steps.labels.outputs.deployment }}
-        PREVIOUS_TAG: ${{ steps.previous_tag.outputs.previous_tag }}
         RELEASE_NOTES: ${{ steps.release_notes.outputs.release_notes }}
       run: |
         echo "========= DRY MODE =========="
@@ -316,15 +272,14 @@ runs:
         echo "App Version: ${INPUTS_VERSION}"
         echo "Variant: ${INPUTS_VARIANT}"
         echo "Deployment Type: ${DEPLOYMENT_LABEL}"
-        echo "Previous tag: ${PREVIOUS_TAG}"
 
         if [ "$INPUTS_DEPLOYMENT_TYPE" = "native" ]; then
-          echo "Would create/update native GitHub release and commit CHANGELOG.md if changed"
+          echo "Would create/update the native GitHub release; a production build would also cut CHANGELOG.md"
         else
-          echo "Would generate OTA release notes; no GitHub release, git tag, or CHANGELOG.md commit"
+          echo "Would render OTA release notes; no GitHub release, git tag, or CHANGELOG.md commit"
         fi
 
         echo ""
-        echo "=== Generated Changelog ==="
+        echo "=== Pending release notes ==="
         echo "$RELEASE_NOTES"
         echo "============================="

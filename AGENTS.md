@@ -48,12 +48,30 @@ The anti-pattern to avoid is mannered prose:
 The PR workflows can be run here rather than waiting on a runner.
 
 - `bun run ci:local` - runs everything the PR workflows run. Does not fail fast: every job runs and the summary at the end lists what broke. Run this before handing a branch back.
-- `bun run ci:local <job>...` - only the named jobs, for iterating on one failure. Jobs are `oxfmt`, `ast-grep`, `ts`, `docs`, `variants`, `lint`, `test`, `native`, `commitlint`, `doctor`, `zizmor`.
+- `bun run ci:local <job>...` - only the named jobs, for iterating on one failure. Jobs are `oxfmt`, `ast-grep`, `ts`, `docs`, `variants`, `lint`, `test`, `native`, `commitlint`, `changeset` (the changeset status check against `origin/main`), `doctor`, `zizmor`.
 - `bun run signoff` - runs the full suite and, if it is green, posts a `signoff` commit status via [gh-signoff](https://github.com/basecamp/gh-signoff). Push first: `gh signoff` refuses unless HEAD is contained in `@{push}`.
 
 `signoff` is **not** a required check - merges still gate on the GitHub workflows - so it records that the suite passed locally rather than unlocking anything. `gh signoff install` would make it required. It deliberately takes no job filter, because the status asserts that every check passed. If a job fails for a reason the change did not cause, fix it or say so explicitly; do not sign off around it.
 
 Each job writes its full output to a log in `.ci-local/`. The summary prints the failing lines and the log path, so read the log instead of re-running the job. The `native` job passes ktlint only the tracked Kotlin files. Read the comment above it in `scripts/ci-local.sh` before you change that.
+
+## Changelog
+
+Release notes are changesets. A pull request adds a `.changeset/*.md` file with
+`bun run changeset`: a bump type and one or two sentences for the person who
+uses the app. The `Changesets` check fails a pull request that adds no
+`.changeset/*.md` file (it looks for an added file, so a CI-only change is not
+exempt) or that changes the package with no note; `bun run changeset -- --empty`
+is the answer for a change with nothing to tell a user. `major`, `minor` and `patch` select the heading (Breaking changes, New,
+Fixed). They never change a version: `VERSION` in `app.config.ts` is the EAS
+runtime version, so a bump there cuts installed builds off from OTA updates,
+and only a person bumps it.
+
+`scripts/release-notes.ts` renders the files. `pending` prints what is waiting
+and is what an internal, TestFlight or OTA release gets as its GitHub release
+notes. A production native build runs `release --version <VERSION>`: it writes
+the notes into `CHANGELOG.md` under that version, deletes the files and commits
+to `main` before the tag. git-cliff is gone.
 
 ## Folder structure and file names
 

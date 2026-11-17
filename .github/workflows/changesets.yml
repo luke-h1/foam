@@ -1,0 +1,39 @@
+name: Changesets
+
+on:
+  pull_request:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  changeset-status:
+    name: Changeset present
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 🏗 Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: 🥟 Setup Bun and install dependencies
+        uses: $/.github/actions/setup-bun-install
+        with:
+          ignore-scripts: 'true'
+
+      - name: 🦋 Check the pull request adds a changeset
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          set -euo pipefail
+          git fetch origin "$BASE_REF"
+          if [ -z "$(git diff --name-only --diff-filter=A "origin/${BASE_REF}...HEAD" -- '.changeset/*.md' | grep -v '/README.md$')" ]; then
+            echo "::error::This pull request adds no .changeset/*.md file. Run bun run changeset, or bun run changeset -- --empty when there is nothing to tell a user."
+            exit 1
+          fi
+          bun run changeset -- status --since="origin/${BASE_REF}"

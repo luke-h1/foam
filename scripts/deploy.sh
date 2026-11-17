@@ -7,7 +7,8 @@ set -euo pipefail
 #  bun run deploy -- production all
 #
 #  Add --no-push to build and submit without committing, tagging, pushing, or
-#  creating the GitHub release (CHANGELOG.md is still regenerated locally):
+#  creating the GitHub release (a production build still cuts CHANGELOG.md
+#  locally):
 #  bun run deploy -- internal ios --no-push
 
 source ./scripts/deploy-common.sh
