@@ -1,5 +1,5 @@
 name: Frosty for Twitch
-pulledAt: 2026-11-13
+pulledAt: 2026-11-17
 country: us
 stores:
   app-store:
@@ -7,7 +7,7 @@ stores:
     title: Frosty for Twitch
     developer: Tommy Chow
     rating: 4.64
-    ratings: 2559
+    ratings: 2565
     version: 5.2.0
     updated: 2026-08-17
     releaseNotes: See full release notes at https://github.com/tommyxchow/frosty/releases
@@ -30,6 +30,10 @@ stores:
       - keyword: twitch chat app
         rank: 1
         popularity: 20
+        trend: stable
+      - keyword: twitch emotes
+        rank: 2
+        popularity: 20
         trend: improving
       - keyword: foam streams chat emotes
         rank: 2
@@ -51,10 +55,6 @@ stores:
         rank: 2
         popularity: 20
         trend: stable
-      - keyword: twitch emotes
-        rank: 3
-        popularity: 20
-        trend: stable
       - keyword: chat emotes
         rank: 4
         popularity: 20
@@ -73,7 +73,7 @@ stores:
         trend: stable
     yourTargets:
       - keyword: twitch emotes
-        rank: 3
+        rank: 2
       - keyword: twitch chat
         rank: 4
       - keyword: twitch
