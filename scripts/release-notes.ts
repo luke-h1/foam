@@ -169,7 +169,9 @@ async function release(args: string[]): Promise<void> {
   }
 
   const section = findSection(updated, version);
-  console.log(section ? updated.slice(section.start, section.end).trim() : '');
+  console.log(
+    section ? updated.slice(section.headingEnd, section.end).trim() : '',
+  );
 }
 
 function show(args: string[]): void {
