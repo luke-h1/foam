@@ -1,10 +1,5 @@
 import { getRequiredArg } from './github-actions';
-import {
-  getVariantMeta,
-  ignoreTagsPattern,
-  sentryDistFor,
-  variantLabel,
-} from './variant';
+import { getVariantMeta, sentryDistFor, variantLabel } from './variant';
 
 function main(): void {
   const [field, ...args] = process.argv.slice(2);
@@ -22,11 +17,6 @@ function main(): void {
       return;
     case 'tag-suffix':
       process.stdout.write(getVariantMeta(variant).tagSuffix);
-      return;
-    case 'ignore-tags':
-      process.stdout.write(
-        ignoreTagsPattern(getRequiredArg(args, 'version'), variant),
-      );
       return;
     default:
       throw new Error(`Unknown field: ${field ?? '<missing>'}`);

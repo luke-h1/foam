@@ -32,9 +32,6 @@ declare global {
       TWITCH_CLIENT_SECRET?: string;
       MAGIC_LINK_BLOB?: string;
 
-      GIT_CLIFF_BIN?: string;
-      CLIFF_CONFIG?: string;
-
       FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID?: string;
       FOAM_AWS_FINGERPRINT_SECRET_KEY?: string;
       FOAM_AWS_REGION?: string;

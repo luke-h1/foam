@@ -11,7 +11,7 @@ two names for one concept, or one name for two.
 **Variant** — a build flavour: `production`, `internal`, `testflight`, `preview`.
 A variant determines its EAS channel, Sentry dist, human release label, and git
 tag suffix. The single source of truth is `scripts/workflows/variant.ts`
-(table + `sentryDistFor`/`variantLabel`/`appendVariant`/`ignoreTagsPattern`),
+(table + `sentryDistFor`/`variantLabel`/`appendVariant`),
 exposed to YAML and bash via the thin `variant-cli.ts` entry. Do not re-derive
 variant mappings inline in YAML ternaries or bash `case` blocks.
 
@@ -36,6 +36,12 @@ whether the PR is OTA compatible.
 `app.config.ts` before a native build. `deploy-ota-or-native` reads it for the
 release tag, Sentry release, and changelog. `fingerprint.config.js` skips the
 version, so a bump never changes the fingerprint.
+
+**Changeset** — one release note in `.changeset/`, added by the pull request
+that makes the change (`bun run changeset`). A production native build moves
+the pending notes into `CHANGELOG.md` under the release version and deletes the
+files; every other release renders them as a preview. Rendering lives in
+`scripts/release-notes.ts`.
 
 **iPhone Duo** — SDK 58. Prefer Expo Router `NativeTabs` / `Stack` so iOS can
 move chrome into the edge rail. Set `sidebarAdaptable` on tabs. Keep horizontal

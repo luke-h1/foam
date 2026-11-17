@@ -54,7 +54,7 @@ drive a release.
   script below. It exits early when the `RUNWAY_API_KEY` secret is empty, so
   it is a no-op on the Basic plan.
 - `scripts/runway-sync-release.sh`: finds or creates the Runway release for a
-  tag on both apps and stores the git-cliff notes as the release description.
+  tag on both apps and stores the changeset notes as the release description.
   Usage: `./scripts/runway-sync-release.sh 1.0.9 .release-notes-body.md`.
   `release-github.sh` writes `.release-notes-body.md`, so the script can also
   run locally right after a deploy.

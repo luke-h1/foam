@@ -1,0 +1,32 @@
+name: Changesets
+
+on:
+  pull_request:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  changeset-status:
+    name: Changeset present
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 🏗 Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: 🥟 Setup Bun and install dependencies
+        uses: $/.github/actions/setup-bun-install
+        with:
+          ignore-scripts: 'true'
+
+      - name: 🦋 Check the change has a changeset
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: bun run changeset -- status --since="origin/${BASE_REF}"

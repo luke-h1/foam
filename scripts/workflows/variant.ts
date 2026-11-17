@@ -59,17 +59,3 @@ export function appendVariant(value: string, variant: string): string {
 
   return suffix === '' ? value : `${value}-${suffix}`;
 }
-
-export function ignoreTagsPattern(version: string, variant: string): string {
-  getVariantMeta(variant);
-
-  const escapedVersion = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-  // SAFETY: Object.keys widens to string[]; VARIANTS is a literal Record
-  // with exactly the Variant keys, so every key is a Variant.
-  const siblings = (Object.keys(VARIANTS) as Variant[])
-    .filter(name => VARIANTS[name].tagSuffix !== '' && name !== variant)
-    .map(name => VARIANTS[name].tagSuffix);
-
-  return `^${escapedVersion}-(${siblings.join('|')})$`;
-}
