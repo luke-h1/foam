@@ -37,11 +37,10 @@ whether the PR is OTA compatible.
 release tag, Sentry release, and changelog. `fingerprint.config.js` skips the
 version, so a bump never changes the fingerprint.
 
-**Changeset** — one release note in `.changeset/`, added by the pull request
-that makes the change (`bun run changeset`). A production native build moves
-the pending notes into `CHANGELOG.md` under the release version and deletes the
-files; every other release renders them as a preview. Rendering lives in
-`scripts/release-notes.ts`.
+**Changeset** — one release note, written for the user by the pull request that
+makes the change. A production native build records the pending changesets in
+the changelog under the release version; every other release only previews
+them.
 
 **iPhone Duo** — SDK 58. Prefer Expo Router `NativeTabs` / `Stack` so iOS can
 move chrome into the edge rail. Set `sidebarAdaptable` on tabs. Keep horizontal

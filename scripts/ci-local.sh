@@ -207,6 +207,7 @@ fi
 
 if wants changeset; then
   if git rev-parse --verify --quiet origin/main >/dev/null; then
+    run 'Changeset added' bash -c "git diff --name-only --diff-filter=A origin/main...HEAD -- '.changeset/*.md' | grep -qv '/README.md$'"
     run 'Changesets' bun run changeset -- status --since=origin/main
   else
     skip 'Changesets' 'no origin/main to compare against'

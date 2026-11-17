@@ -91,6 +91,8 @@ runs:
         INPUTS_DRY: ${{ inputs.dry }}
         INPUTS_VARIANT: ${{ inputs.variant }}
         INPUTS_VERSION: ${{ inputs.version }}
+        INPUTS_TAG: ${{ steps.release_tag.outputs.tag }}
+        TAG_ALREADY_EXISTS: ${{ steps.release_tag.outputs.tag_already_exists }}
         INPUTS_DEPLOYMENT_TYPE: ${{ inputs.deployment_type }}
         INPUTS_COMMIT_CHANGELOG: ${{ inputs.commit_changelog }}
         INPUTS_GITHUB_TOKEN: ${{ inputs.github_token }}
@@ -104,23 +106,28 @@ runs:
         fi
 
         CHANGED=false
-        if [ "$CUT_RELEASE" = true ]; then
-          if ! git pull --rebase; then
-            git rebase --abort 2>/dev/null || true
-            echo "::error::git pull --rebase failed (likely a conflicting push to main); aborting the changelog cut"
-            exit 1
-          fi
+        if [ "$CUT_RELEASE" = true ] && [ "$TAG_ALREADY_EXISTS" = true ]; then
+          echo "Tag ${INPUTS_TAG} exists; reusing the notes recorded in CHANGELOG.md at that tag"
+          git show "refs/tags/${INPUTS_TAG}:CHANGELOG.md" > "$RUNNER_TEMP/CHANGELOG.md"
+          RELEASE_NOTES="$(bun scripts/release-notes.ts show --version "$INPUTS_VERSION" --changelog "$RUNNER_TEMP/CHANGELOG.md")"
+        elif [ "$CUT_RELEASE" = true ]; then
           RELEASE_NOTES="$(bun scripts/release-notes.ts release --version "$INPUTS_VERSION")"
           bunx oxfmt CHANGELOG.md
-          git add CHANGELOG.md .changeset
-          if git diff --cached --quiet; then
+          git add -- CHANGELOG.md .changeset
+          if git diff --cached --quiet -- CHANGELOG.md .changeset; then
             echo "CHANGELOG.md already carries ${INPUTS_VERSION}"
           else
             CHANGED=true
             git config user.name "luke-h1"
             git config user.email "55030296+luke-h1@users.noreply.github.com"
-            git commit -m "chore(changelog): release ${INPUTS_VERSION}"
+            git commit -m "chore(changelog): release ${INPUTS_VERSION}" -- CHANGELOG.md .changeset
             AUTH_HEADER="$(printf 'luke-h1:%s' "$INPUTS_GITHUB_TOKEN" | base64 | tr -d '\n')"
+            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${AUTH_HEADER}" fetch origin main
+            if ! git rebase origin/main; then
+              git rebase --abort 2>/dev/null || true
+              echo "::error::main moved since this build and the changelog commit does not rebase onto it cleanly; rerun the release"
+              exit 1
+            fi
             git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${AUTH_HEADER}" push "https://github.com/${GITHUB_REPOSITORY}.git" HEAD:main
           fi
         else

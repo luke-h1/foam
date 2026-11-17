@@ -99,7 +99,14 @@ if [ "$no_push" = "false" ]; then
   }
 fi
 
-if [ "$cut_release" = "true" ]; then
+if [ "$cut_release" = "true" ] && [ "$tag_exists" = "true" ]; then
+  echo "Tag $tag exists; reusing the notes recorded in CHANGELOG.md at that tag"
+  tagged_changelog="$(mktemp)"
+  git show "refs/tags/${tag}:CHANGELOG.md" > "$tagged_changelog"
+  notes="$(release_notes show --version "$version" --changelog "$tagged_changelog")"
+  rm -f "$tagged_changelog"
+  cut_release="false"
+elif [ "$cut_release" = "true" ]; then
   notes="$(release_notes release --version "$version")"
   bunx oxfmt CHANGELOG.md
 else
@@ -118,12 +125,18 @@ if [ "$no_push" = "true" ]; then
 fi
 
 if [ "$cut_release" = "true" ]; then
-  git add CHANGELOG.md .changeset
-  if git diff --cached --quiet; then
+  git add -- CHANGELOG.md .changeset
+  if git diff --cached --quiet -- CHANGELOG.md .changeset; then
     echo "CHANGELOG.md already carries $version"
   else
     echo "Cutting CHANGELOG.md for $version, committing and pushing to main..."
-    git commit -m "chore(changelog): release ${version}"
+    git commit -m "chore(changelog): release ${version}" -- CHANGELOG.md .changeset
+    git fetch origin main
+    if ! git rebase origin/main; then
+      git rebase --abort 2>/dev/null || true
+      echo "main moved since this build and the changelog commit does not rebase onto it cleanly; rerun the release"
+      exit 1
+    fi
     authed_push HEAD:main
   fi
 fi

@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import {
   mkdirSync,
   mkdtempSync,
@@ -475,6 +476,70 @@ describe('variant', () => {
 
   test('throws for an unsupported variant', () => {
     expect(() => getVariantMeta('e2e')).toThrow('Unsupported variant: e2e');
+  });
+});
+
+describe('release notes', () => {
+  const changelog = [
+    '# Changelog',
+    '',
+    '## 1.2.3 - 2026-11-17',
+    '',
+    '### Fixed',
+    '',
+    '- The player no longer stalls after a network change.',
+    '',
+    '## 1.2.2 - 2026-11-01',
+    '',
+    '### New',
+    '',
+    '- Chat shows replies.',
+    '',
+  ].join('\n');
+
+  function releaseNotes(...args: string[]): string {
+    return execFileSync('bun', ['scripts/release-notes.ts', ...args], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+  }
+
+  test('show prints the body of one recorded version', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'foam-release-notes-'));
+    const changelogPath = join(dir, 'CHANGELOG.md');
+    writeFileSync(changelogPath, changelog, 'utf8');
+
+    try {
+      expect(
+        releaseNotes(
+          'show',
+          '--version',
+          '1.2.3',
+          '--changelog',
+          changelogPath,
+        ),
+      ).toBe(
+        '### Fixed\n\n- The player no longer stalls after a network change.\n',
+      );
+
+      expect(() =>
+        releaseNotes(
+          'show',
+          '--version',
+          '9.9.9',
+          '--changelog',
+          changelogPath,
+        ),
+      ).toThrow('has no section for 9.9.9');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('a flag with no operand is an error', () => {
+    expect(() => releaseNotes('pending', '--level')).toThrow(
+      '--level needs a value',
+    );
   });
 });
 

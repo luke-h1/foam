@@ -59,9 +59,10 @@ Each job writes its full output to a log in `.ci-local/`. The summary prints the
 
 Release notes are changesets. A pull request adds a `.changeset/*.md` file with
 `bun run changeset`: a bump type and one or two sentences for the person who
-uses the app. The `Changesets` check fails a pull request that adds no file;
-`bun run changeset -- --empty` is the answer for a change with nothing to tell
-a user. `major`, `minor` and `patch` select the heading (Breaking changes, New,
+uses the app. The `Changesets` check fails a pull request that adds no
+`.changeset/*.md` file (it looks for an added file, so a CI-only change is not
+exempt) or that changes the package with no note; `bun run changeset -- --empty`
+is the answer for a change with nothing to tell a user. `major`, `minor` and `patch` select the heading (Breaking changes, New,
 Fixed). They never change a version: `VERSION` in `app.config.ts` is the EAS
 runtime version, so a bump there cuts installed builds off from OTA updates,
 and only a person bumps it.
