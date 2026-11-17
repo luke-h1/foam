@@ -26,7 +26,7 @@ function flag(args: string[], name: string): string | undefined {
     return undefined;
   }
   const value = args[index + 1];
-  if (value === undefined) {
+  if (value === undefined || value.startsWith('--')) {
     throw new Error(`${name} needs a value`);
   }
   return value;

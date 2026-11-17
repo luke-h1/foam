@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import {
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -540,6 +541,32 @@ describe('release notes', () => {
     expect(() => releaseNotes('pending', '--level')).toThrow(
       '--level needs a value',
     );
+  });
+
+  test('release refuses an option token as the version and writes nothing', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'foam-release-notes-'));
+    const changelogPath = join(dir, 'CHANGELOG.md');
+    writeFileSync(changelogPath, changelog, 'utf8');
+    const changesetsBefore = readdirSync('.changeset');
+
+    try {
+      expect(() =>
+        releaseNotes(
+          'release',
+          '--version',
+          '--date',
+          '2026-11-17',
+          '--changelog',
+          changelogPath,
+        ),
+      ).toThrow('--version needs a value');
+
+      expect(readFileSync(changelogPath, 'utf8')).toBe(changelog);
+
+      expect(readdirSync('.changeset')).toEqual(changesetsBefore);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 

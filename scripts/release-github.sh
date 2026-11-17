@@ -99,12 +99,19 @@ if [ "$no_push" = "false" ]; then
   }
 fi
 
+built_sha="$(git rev-parse HEAD)"
+
 if [ "$cut_release" = "true" ] && [ "$tag_exists" = "true" ]; then
-  echo "Tag $tag exists; reusing the notes recorded in CHANGELOG.md at that tag"
-  tagged_changelog="$(mktemp)"
-  git show "refs/tags/${tag}:CHANGELOG.md" > "$tagged_changelog"
-  notes="$(release_notes show --version "$version" --changelog "$tagged_changelog")"
-  rm -f "$tagged_changelog"
+  git fetch origin main
+  main_changelog="$(mktemp)"
+  git show origin/main:CHANGELOG.md > "$main_changelog"
+  if notes="$(release_notes show --version "$version" --changelog "$main_changelog")"; then
+    echo "Tag $tag exists; reusing the notes recorded for $version in CHANGELOG.md on main"
+  else
+    echo "Tag $tag exists and CHANGELOG.md on main has no section for $version. Bump VERSION in app.config.ts before the next production build. Rendering the pending notes without consuming them."
+    notes="$(release_notes pending)"
+  fi
+  rm -f "$main_changelog"
   cut_release="false"
 elif [ "$cut_release" = "true" ]; then
   notes="$(release_notes release --version "$version")"
@@ -126,17 +133,20 @@ fi
 
 if [ "$cut_release" = "true" ]; then
   git add -- CHANGELOG.md .changeset
-  if git diff --cached --quiet -- CHANGELOG.md .changeset; then
-    echo "CHANGELOG.md already carries $version"
-  else
-    echo "Cutting CHANGELOG.md for $version, committing and pushing to main..."
+  if ! git diff --cached --quiet -- CHANGELOG.md .changeset; then
+    echo "Cutting CHANGELOG.md for $version..."
     git commit -m "chore(changelog): release ${version}" -- CHANGELOG.md .changeset
-    git fetch origin main
+  fi
+  git fetch origin main
+  if git diff --quiet origin/main HEAD -- CHANGELOG.md .changeset; then
+    echo "main already carries the $version changelog"
+  else
     if ! git rebase origin/main; then
       git rebase --abort 2>/dev/null || true
       echo "main moved since this build and the changelog commit does not rebase onto it cleanly; rerun the release"
       exit 1
     fi
+    echo "Pushing the $version changelog to main..."
     authed_push HEAD:main
   fi
 fi
@@ -151,7 +161,7 @@ release_body="## ${variant_label} Native Build: ${tag}
 ${notes}"
 
 if [ "$tag_exists" = "false" ]; then
-  git tag -a "$tag" -m "${variant_label} Native Build: ${tag}"
+  git tag -a "$tag" -m "${variant_label} Native Build: ${tag}" "$built_sha"
   authed_push "refs/tags/${tag}"
 fi
 
