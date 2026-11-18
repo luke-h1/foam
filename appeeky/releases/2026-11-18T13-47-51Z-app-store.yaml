@@ -1,0 +1,64 @@
+id: 2026-11-18T13-47-51Z-app-store
+pushedAt: 2026-11-18T13:47:51.731Z
+store: app-store
+target: version 1.0.16 (prepare for submission)
+via: hosted asc-api.appeeky.com
+note: "1.0.16 what's new: chat frame rate through floods and flings, iPhone Duo layout fixes"
+changes:
+  - locale: en-GB
+    field: whatsNew
+    before: |-
+      7TV paints now stay on while chat scrolls, so names keep their colour instead of flashing back to plain text.
+
+      - Fixed a stream that could freeze mid-watch with no way back
+      - Fixed replies that showed the @name twice
+      - Tidied the spacing between badges and names in chat
+
+      Thanks to everyone who reported the freeze.
+    after: |-
+      Chat stays smooth on the busiest channels now, through emote floods, raids and fast scrolling.
+
+      - Busy chat uses less battery, so long watch sessions last longer
+      - Painted names and animated 7TV paints no longer slow chat down
+      - iPhone Duo: lists, the categories grid and the chat composer now fit the open display
+      - iPhone Duo: the screen no longer sticks in portrait after a search
+  - locale: en-US
+    field: whatsNew
+    before: |-
+      7TV paints now stay on while chat scrolls, so names keep their color instead of flashing back to plain text.
+
+      - Fixed a stream that could freeze mid-watch with no way back
+      - Fixed replies that showed the @name twice
+      - Tidied the spacing between badges and names in chat
+
+      Thanks to everyone who reported the freeze.
+    after: |-
+      Chat stays smooth on the busiest channels now, through emote floods, raids and fast scrolling.
+
+      - Busy chat uses less battery, so long watch sessions last longer
+      - Painted names and animated 7TV paints no longer slow chat down
+      - iPhone Duo: lists, the categories grid and the chat composer now fit the open display
+      - iPhone Duo: the screen no longer sticks in portrait after a search
+baseline:
+  at: 2026-11-18T13:47:14.392Z
+  source: Appeeky API + App Store search
+  ranks:
+    us:
+      twitch: null
+      twitch chat: 10
+      7tv: null
+      seventv: null
+      bttv: null
+      betterttv: 4
+      frankerfacez: 21
+      twitch emotes: 36
+      live stream: null
+      streamer: null
+    gb:
+      twitch: null
+      twitch chat: null
+      7tv: null
+      seventv: null
+      bttv: null
+      twitch emotes: null
+      live stream: null

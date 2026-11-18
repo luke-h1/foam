@@ -26,7 +26,11 @@ description: |-
 
   Foam is a free, open-source companion app for Twitch. It is not affiliated with Twitch Interactive, Inc.
 whatsNew: |-
-  Add Iphone DUO support 
-  Add support for 7tv paints
+  Chat stays smooth on the busiest channels now, through emote floods, raids and fast scrolling.
+
+  - Busy chat uses less battery, so long watch sessions last longer
+  - Painted names and animated 7TV paints no longer slow chat down
+  - iPhone Duo: lists, the categories grid and the chat composer now fit the open display
+  - iPhone Duo: the screen no longer sticks in portrait after a search
 marketingUrl: https://foam-app.com
 supportUrl: https://github.com/luke-h1/foam/issues
