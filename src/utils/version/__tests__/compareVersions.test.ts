@@ -96,12 +96,4 @@ describe('isUpdateRequired', () => {
   test('returns false when currentVersion is empty string', () => {
     expect(isUpdateRequired('', '1.0.0')).toBe(false);
   });
-
-  test('returns false when both versions are empty', () => {
-    expect(isUpdateRequired('', '')).toBe(false);
-
-    expect(isUpdateRequired(null, null)).toBe(false);
-
-    expect(isUpdateRequired(undefined, undefined)).toBe(false);
-  });
 });

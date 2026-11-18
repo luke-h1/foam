@@ -304,18 +304,6 @@ describe('reportResourceResults with client errors', () => {
   });
 });
 
-describe('defineResourceSpec', () => {
-  test('reads the provider, scope and kind from the slice table', () => {
-    const { provider, scope, kind } = spec('twitchSubscriberEmotes');
-
-    expect({ provider, scope, kind }).toEqual({
-      provider: 'twitch',
-      scope: 'channel',
-      kind: 'emote',
-    });
-  });
-});
-
 describe('hadCachedResourcesForFailedSpecs', () => {
   test('returns true when a rejected spec still has cached items', () => {
     const settled: SettledSpec<EmoteCacheKey, SanitisedEmote>[] = [

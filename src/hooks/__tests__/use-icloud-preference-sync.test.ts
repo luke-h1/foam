@@ -10,7 +10,7 @@ import {
   getPreferences,
   initialPreferences,
   type Preferences,
-  replacePreferences,
+  preferences$,
   updatePreferences,
 } from '@app/store/preference-store';
 
@@ -60,7 +60,7 @@ describe('useIcloudPreferenceSync', () => {
   });
 
   test('a fresh install restores the iCloud copy and keeps its device-local values', async () => {
-    replacePreferences({ ...initialPreferences, landscapeChatWidth: 320 });
+    preferences$.set({ ...initialPreferences, landscapeChatWidth: 320 });
 
     mockLoad.mockResolvedValue({
       ...initialPreferences,
@@ -88,7 +88,7 @@ describe('useIcloudPreferenceSync', () => {
       chatTimestamps: true,
     };
 
-    replacePreferences(local);
+    preferences$.set(local);
 
     mockLoad.mockResolvedValue({ ...initialPreferences, updatedAt: 100 });
 
@@ -104,7 +104,7 @@ describe('useIcloudPreferenceSync', () => {
   });
 
   test('sends one write for a run of local edits', async () => {
-    replacePreferences({ ...initialPreferences });
+    preferences$.set({ ...initialPreferences });
     mockLoad.mockResolvedValue(null);
 
     await mountAndLoad();
@@ -129,7 +129,7 @@ describe('useIcloudPreferenceSync', () => {
   });
 
   test('does not write for a device-local edit', async () => {
-    replacePreferences({ ...initialPreferences });
+    preferences$.set({ ...initialPreferences });
     mockLoad.mockResolvedValue(null);
 
     await mountAndLoad();

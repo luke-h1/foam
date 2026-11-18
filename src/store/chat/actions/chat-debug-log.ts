@@ -68,10 +68,6 @@ export function releaseChatDebugLog(
   }
 }
 
-export function isChatDebugLogEnabled(): boolean {
-  return recorderCounts.size > 0;
-}
-
 function getLineChannelLogin(message: IrcMessage | null): string | null {
   if (!message) {
     return null;

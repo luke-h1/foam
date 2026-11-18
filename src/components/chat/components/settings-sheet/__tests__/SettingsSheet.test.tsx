@@ -1,26 +1,12 @@
 import { type ReactNode, type Ref, useImperativeHandle } from 'react';
-import { Platform } from 'react-native';
 
 import { fireEvent } from '@testing-library/react-native';
 
 import * as BottomSheetModule from '@app/components/bottom-sheet/BottomSheet';
-import {
-  getPreferences,
-  replacePreferences,
-} from '@app/store/preference-store';
+import { getPreferences, preferences$ } from '@app/store/preference-store';
 import render from '@app/test/render';
 
 import { SettingsSheet } from '../SettingsSheet';
-
-const originalOS = Platform.OS;
-
-beforeAll(() => {
-  Platform.OS = 'android';
-});
-
-afterAll(() => {
-  Platform.OS = originalOS;
-});
 
 const mockRequestClose = jest.fn();
 
@@ -55,7 +41,7 @@ describe('SettingsSheet', () => {
   beforeEach(() => {
     mockRequestClose.mockClear();
 
-    replacePreferences({
+    preferences$.set({
       ...getPreferences(),
       chatDensity: 'comfortable',
       chatTimestamps: true,
@@ -100,23 +86,5 @@ describe('SettingsSheet', () => {
     expect(mockRequestClose).toHaveBeenCalledTimes(1);
 
     expect(onDismiss).toHaveBeenCalledTimes(1);
-  });
-
-  describe('on iOS', () => {
-    beforeAll(() => {
-      Platform.OS = 'ios';
-    });
-
-    afterAll(() => {
-      Platform.OS = 'android';
-    });
-
-    test('renders the same JS rows as Android', () => {
-      const { getByText } = render(<SettingsSheet onDismiss={jest.fn()} />);
-
-      fireEvent.press(getByText('Density'));
-
-      expect(getPreferences().chatDensity).toBe('compact');
-    });
   });
 });

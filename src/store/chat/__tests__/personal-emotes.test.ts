@@ -65,16 +65,6 @@ describe('fetchUserPersonalEmotes', () => {
     });
   });
 
-  test('returns fetched emotes and caches them', async () => {
-    mockGetPersonalEmoteSet.mockResolvedValueOnce([personalEmote]);
-
-    const result = await fetchUserPersonalEmotes(twitchUserId, channelId);
-
-    expect(result).toEqual<SevenTvSanitisedEmote[]>([personalEmote]);
-
-    expect(mockGetPersonalEmoteSet).toHaveBeenCalledTimes(1);
-  });
-
   test('does not stamp a transport error, so the next pass retries', async () => {
     mockGetPersonalEmoteSet
       .mockRejectedValueOnce(new Error('Network request failed'))

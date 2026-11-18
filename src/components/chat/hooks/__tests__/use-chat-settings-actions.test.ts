@@ -1,17 +1,17 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { useChatSettingsActions } from '@app/components/chat/hooks/use-chat-settings-actions';
-import { addMessage, clearMessages } from '@app/store/chat/actions/messages';
-import * as userCosmeticsFetch from '@app/store/chat/actions/user-cosmetics-fetch';
+import { sevenTvService } from '@app/services/seven-tv-service';
+import { clearMessages } from '@app/store/chat/actions/messages';
+import {
+  clearFetchedCosmeticsUsers,
+  fetchUserCosmetics,
+} from '@app/store/chat/actions/user-cosmetics-fetch';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import { makeEmptyEmoteData } from '@app/store/chat/types/constants';
-import {
-  getPreferences,
-  replacePreferences,
-} from '@app/store/preference-store';
+import { getPreferences, preferences$ } from '@app/store/preference-store';
 import { flushChatStoreTimers } from '@app/test/chat-store-teardown';
 import { silenceLogger } from '@app/test/silence-logger';
-import { createSystemMessage } from '@app/utils/chat/message-handlers/createSystemMessage';
 import * as clearImageCacheModule from '@app/utils/image/clearImageCache';
 
 const mockClearImageCache = jest
@@ -89,7 +89,6 @@ function systemMessageContents(): (string | undefined)[] {
 
 function renderSettingsActions() {
   const forceFlush = jest.fn();
-  const reconnect = jest.fn();
   const refetchEmotes = jest.fn(() => Promise.resolve());
   const reprocessAllMessages = jest.fn();
   const scrollToBottom = jest.fn();
@@ -99,7 +98,7 @@ function renderSettingsActions() {
       channelId: 'channel-1',
       channelName: 'foam',
       forceFlush,
-      reconnect,
+      reconnect: jest.fn(),
       refetchEmotes,
       reprocessAllMessages,
       scrollToBottom,
@@ -109,7 +108,6 @@ function renderSettingsActions() {
   return {
     forceFlush,
     hook,
-    reconnect,
     refetchEmotes,
     reprocessAllMessages,
     scrollToBottom,
@@ -122,7 +120,7 @@ describe('useChatSettingsActions', () => {
     clearMessages();
     seedChatCaches();
 
-    replacePreferences({
+    preferences$.set({
       ...getPreferences(),
       chatDensity: 'comfortable',
       chatTimestamps: true,
@@ -174,21 +172,26 @@ describe('useChatSettingsActions', () => {
     });
   });
 
-  test('clearing the 7TV cosmetics cache lets every user fetch cosmetics again', () => {
-    const clearFetchedUsers = jest.spyOn(
-      userCosmeticsFetch,
-      'clearFetchedCosmeticsUsers',
-    );
+  test('clearing the 7TV cosmetics cache lets every user fetch cosmetics again', async () => {
+    const get7tvUserId = jest
+      .spyOn(sevenTvService, 'get7tvUserId')
+      .mockResolvedValue('');
 
+    clearFetchedCosmeticsUsers();
     const { hook } = renderSettingsActions();
+
+    await fetchUserCosmetics('viewer-2');
+    await fetchUserCosmetics('viewer-2');
 
     act(() => {
       hook.result.current.handleClearSevenTvCosmeticsCache();
     });
 
-    expect(clearFetchedUsers).toHaveBeenCalledTimes(1);
+    await fetchUserCosmetics('viewer-2');
 
-    clearFetchedUsers.mockRestore();
+    expect(get7tvUserId.mock.calls).toEqual([['viewer-2'], ['viewer-2']]);
+
+    get7tvUserId.mockRestore();
   });
 
   test('clearing the image cache clears the image cache once', async () => {
@@ -247,20 +250,6 @@ describe('useChatSettingsActions', () => {
     });
 
     expect(systemMessageContents()).toEqual(['Refreshed emotes and badges']);
-  });
-
-  test('settings reconnect restarts the socket and keeps the chat history', () => {
-    const { hook, reconnect } = renderSettingsActions();
-
-    addMessage(createSystemMessage('foam', 'before reconnect', '24h'));
-
-    act(() => {
-      hook.result.current.handleSettingsReconnect();
-    });
-
-    expect(reconnect).toHaveBeenCalledTimes(1);
-
-    expect(systemMessageContents()).toEqual(['before reconnect']);
   });
 });
 

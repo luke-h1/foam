@@ -1,5 +1,7 @@
 import { renderHook } from '@testing-library/react-native';
 
+import { SLASH_COMMAND_DEFINITIONS } from '@app/components/chat/util/slash-command-definitions/slashCommandDefinitions';
+
 import { useCommandSuggestions } from '../use-command-suggestions';
 
 test('returns all commands when the search term is empty', () => {
@@ -7,27 +9,9 @@ test('returns all commands when the search term is empty', () => {
     useCommandSuggestions({ searchTerm: '' }),
   );
 
-  expect(result.current.filteredCommands.map(command => command.name)).toEqual([
-    'timeout',
-    'ban',
-    'unban',
-    'warn',
-    'announce',
-    'shoutout',
-    'slow',
-    'slowoff',
-    'followers',
-    'followersoff',
-    'subscribers',
-    'subscribersoff',
-    'emoteonly',
-    'emoteonlyoff',
-    'uniquechat',
-    'uniquechatoff',
-    'shield',
-    'shieldoff',
-    'refresh',
-  ]);
+  expect(result.current.filteredCommands.map(command => command.name)).toEqual(
+    SLASH_COMMAND_DEFINITIONS.map(command => command.name),
+  );
 });
 
 test('filters commands by name prefix', () => {

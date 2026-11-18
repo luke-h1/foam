@@ -40,7 +40,3 @@ export function takeSevenTvEmoteDelta(
   pendingDeltas.delete(channelId);
   return delta;
 }
-
-export function clearSevenTvEmoteDeltas(): void {
-  pendingDeltas.clear();
-}

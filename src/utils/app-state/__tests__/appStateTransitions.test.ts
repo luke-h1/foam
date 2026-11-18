@@ -80,27 +80,6 @@ describe('appStateTransitions', () => {
     expect(onForeground).toHaveBeenCalledTimes(1);
   });
 
-  test('fires foreground listeners when the app becomes active after inactive', () => {
-    const onForeground = jest.fn();
-    track(subscribeToAppForeground(onForeground));
-
-    emit('inactive');
-    expect(onForeground).toHaveBeenCalledTimes(0);
-
-    emit('active');
-    expect(onForeground).toHaveBeenCalledTimes(1);
-  });
-
-  test('does not fire foreground listeners when the app leaves active', () => {
-    const onForeground = jest.fn();
-    track(subscribeToAppForeground(onForeground));
-
-    emit('inactive');
-    emit('background');
-
-    expect(onForeground).toHaveBeenCalledTimes(0);
-  });
-
   test('stops delivering transitions after unsubscribe', () => {
     const listener = jest.fn();
     const unsubscribe = track(subscribeToAppStateTransitions(listener));

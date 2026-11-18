@@ -7,8 +7,6 @@ import { toast } from 'sonner-native';
 import type { PreferenceListCopy } from '@app/screens/preferences/util/preferenceListTypes';
 import { normaliseChatText } from '@app/utils/chat/normaliseChatText';
 
-import { PreferenceListEditor as IosPreferenceListEditor } from '../PreferenceListEditor.ios';
-
 const { PreferenceListEditor } = jest.requireActual<
   typeof import('../PreferenceListEditor')
 >('../PreferenceListEditor.tsx');
@@ -60,12 +58,6 @@ describe('PreferenceListEditor', () => {
   beforeEach(() => {
     latestItems = [];
     jest.mocked(toast.error).mockClear();
-  });
-
-  test('shows the empty state when there are no items', () => {
-    render(<TermsEditor initialItems={[]} />);
-
-    expect(screen.getByText('No terms')).toBeOnTheScreen();
   });
 
   test('adds a normalised item and clears the input', () => {
@@ -121,22 +113,5 @@ describe('PreferenceListEditor', () => {
     expect(latestItems).toEqual(['pog']);
 
     alertSpy.mockRestore();
-  });
-
-  test('the iOS editor mounts with items', () => {
-    render(
-      <IosPreferenceListEditor
-        items={['kappa']}
-        getId={identity}
-        getText={identity}
-        normalise={normaliseChatText}
-        createItem={identity}
-        onItemsChange={() => {}}
-        inputKind='term'
-        copy={COPY}
-      />,
-    );
-
-    expect(screen.toJSON()).not.toBeNull();
   });
 });

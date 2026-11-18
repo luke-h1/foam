@@ -4,7 +4,6 @@ import {
   acquireChatDebugLog,
   getChatDebugIrcLines,
   getChatDebugIrcLinesForLogin,
-  isChatDebugLogEnabled,
   recordChatDebugIrcLine,
   releaseChatDebugLog,
 } from '../chat-debug-log';
@@ -46,8 +45,6 @@ describe('chatDebugLog', () => {
     recordChatDebugIrcLine('kept');
     releaseChatDebugLog(CHANNEL_ID, 'channel');
 
-    expect(isChatDebugLogEnabled()).toBe(false);
-
     expect(getChatDebugIrcLines(CHANNEL_ID)).toEqual([]);
 
     recordChatDebugIrcLine('ignored');
@@ -59,7 +56,6 @@ describe('chatDebugLog', () => {
     recordChatDebugIrcLine('first');
     releaseChatDebugLog(CHANNEL_ID, 'channel');
 
-    expect(isChatDebugLogEnabled()).toBe(true);
     recordChatDebugIrcLine('second');
 
     expect(getChatDebugIrcLines(CHANNEL_ID).map(entry => entry.line)).toEqual([

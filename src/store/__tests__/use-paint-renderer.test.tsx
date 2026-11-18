@@ -4,7 +4,7 @@ import { renderHook } from '@testing-library/react-native';
 
 import {
   initialPreferences,
-  replacePreferences,
+  preferences$,
   usePaintRenderer,
 } from '../preference-store';
 
@@ -17,12 +17,12 @@ describe('usePaintRenderer', () => {
 
   afterEach(() => {
     Platform.OS = originalOs;
-    replacePreferences({ ...initialPreferences, updatedAt: 1 });
+    preferences$.set({ ...initialPreferences, updatedAt: 1 });
   });
 
   test('maps a skia dev preference to native on web', () => {
     Platform.OS = 'web';
-    replacePreferences({
+    preferences$.set({
       ...initialPreferences,
       updatedAt: 1,
       sevenTvPaintRenderer: 'skia',
@@ -35,7 +35,7 @@ describe('usePaintRenderer', () => {
 
   test('keeps a skia dev preference on native', () => {
     Platform.OS = 'ios';
-    replacePreferences({
+    preferences$.set({
       ...initialPreferences,
       updatedAt: 1,
       sevenTvPaintRenderer: 'skia',

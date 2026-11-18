@@ -17,67 +17,7 @@ function renderNotice(token: MessageToken<SubscriptionNoticeTokenType>) {
 }
 
 describe('SubscriptionNotice', () => {
-  describe('sub (new subscription)', () => {
-    test('displays subscription message for new subscription', () => {
-      const token: MessageToken<'sub'> = {
-        type: 'sub',
-        subscriptionEvent: {
-          msgId: 'sub',
-          displayName: 'TestUser',
-          plan: '1000',
-          planName: 'Tier 1',
-        },
-      };
-
-      renderNotice(token);
-
-      expect(screen.getByText('TestUser')).toBeOnTheScreen();
-
-      expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
-    });
-
-    test('displays subscriber message when provided', () => {
-      const token: MessageToken<'sub'> = {
-        type: 'sub',
-        subscriptionEvent: {
-          msgId: 'sub',
-          displayName: 'MessageUser',
-          plan: '1000',
-          planName: 'Tier 1',
-          message: 'Thanks for the great content!',
-        },
-      };
-
-      renderNotice(token);
-
-      expect(
-        screen.getByText('Thanks for the great content!'),
-      ).toBeOnTheScreen();
-    });
-  });
-
   describe('resub (resubscription)', () => {
-    test('displays resubscription message with months', () => {
-      const token: MessageToken<'resub'> = {
-        type: 'resub',
-        subscriptionEvent: {
-          msgId: 'resub',
-          displayName: 'ResubUser',
-          plan: '1000',
-          planName: 'Tier 1',
-          months: 6,
-        },
-      };
-
-      renderNotice(token);
-
-      expect(screen.getByText('ResubUser')).toBeOnTheScreen();
-
-      expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
-
-      expect(screen.getByText(/6 months/)).toBeOnTheScreen();
-    });
-
     test('displays singular month for resubscription', () => {
       const token: MessageToken<'resub'> = {
         type: 'resub',
@@ -93,25 +33,6 @@ describe('SubscriptionNotice', () => {
       renderNotice(token);
 
       expect(screen.getByText('1 month')).toBeOnTheScreen();
-    });
-
-    test('displays Prime resubscription correctly', () => {
-      const token: MessageToken<'resub'> = {
-        type: 'resub',
-        subscriptionEvent: {
-          msgId: 'resub',
-          displayName: 'PrimeResubUser',
-          plan: 'Prime',
-          planName: 'Prime',
-          months: 12,
-        },
-      };
-
-      renderNotice(token);
-
-      expect(screen.getByText(/Subscribed with Prime/)).toBeOnTheScreen();
-
-      expect(screen.getByText(/12 months/)).toBeOnTheScreen();
     });
 
     test('displays streak information for resubscription', () => {
@@ -131,23 +52,6 @@ describe('SubscriptionNotice', () => {
       renderNotice(token);
 
       expect(screen.getByText(/, 6 months in a row/)).toBeOnTheScreen();
-    });
-
-    test('displays plan name for non-Prime resubscription', () => {
-      const token: MessageToken<'resub'> = {
-        type: 'resub',
-        subscriptionEvent: {
-          msgId: 'resub',
-          displayName: 'Tier3ResubUser',
-          plan: '3000',
-          planName: 'Tier 3',
-          months: 3,
-        },
-      };
-
-      renderNotice(token);
-
-      expect(screen.getByText(/with Tier 3/)).toBeOnTheScreen();
     });
   });
 

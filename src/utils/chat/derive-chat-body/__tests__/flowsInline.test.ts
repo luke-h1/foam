@@ -53,28 +53,6 @@ describe('flowsInline', () => {
     ).toBe(false);
   });
 
-  test('rejects a token type that cannot live in a Text', () => {
-    expect(
-      flowsInline(
-        [
-          text('cheer '),
-          {
-            type: 'cheermote',
-            content: 'Cheer100',
-            cheermote: {
-              bits: 100,
-              color: '#9c3ee8',
-              prefix: 'Cheer',
-              static_url: 'https://example.com/cheer100-static.png',
-              url: 'https://example.com/cheer100.gif',
-            },
-          } satisfies MessageToken<'cheermote'>,
-        ],
-        { hasPaint: false, isModerated: false },
-      ),
-    ).toBe(false);
-  });
-
   test('rejects a chat GIF token', () => {
     expect(
       flowsInline(

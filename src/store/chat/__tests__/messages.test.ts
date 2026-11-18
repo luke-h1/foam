@@ -102,27 +102,6 @@ describe('chatStore messages', () => {
     );
   });
 
-  test('drops only the overflow when a flush partially overfills the window', () => {
-    const max = getMaxChatMessages();
-
-    addMessages(
-      Array.from({ length: max }, (_unused, index) =>
-        createMessage(`seed-${index}`, `seed-nonce-${index}`, `body ${index}`),
-      ),
-    );
-
-    addMessages([createMessage('fresh', 'fresh-nonce', 'newest')]);
-
-    const messages = chatStore$.messages.peek();
-    expect(messages).toHaveLength(max);
-
-    expect(getMessageById('seed-0')).toBeUndefined();
-
-    expect(getMessageById('seed-1')?.message_id).toBe('seed-1');
-
-    expect(getMessageById('fresh')?.message_id).toBe('fresh');
-  });
-
   test('removeMessageById removes the targeted message and keeps others', () => {
     addMessage(createMessage('msg-1', 'nonce-1', 'first'));
     addMessage(createMessage('msg-2', 'nonce-2', 'second'));

@@ -5,12 +5,10 @@ import {
 } from '@app/components/chat/util/chatIngestController';
 import { createChatIrcHandlers } from '@app/components/chat/util/createChatIrcHandlers';
 import { createRoomStateTracker } from '@app/components/chat/util/room-state/roomStateTracker';
-import {
-  getChatUnreadCount,
-  resetChatUnread,
-} from '@app/store/chat/actions/chat-unread';
+import { resetChatUnread } from '@app/store/chat/actions/chat-unread';
 import { clearMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
+import { chatUnreadCount$ } from '@app/store/chat/observables/chat-unread-count';
 import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import { parseIrcMessage } from '@app/utils/chat/irc-protocol/parseIrcMessage';
 import { routeIrcMessage } from '@app/utils/chat/irc-protocol/routeIrcMessage';
@@ -131,7 +129,7 @@ describe('chatIngestController (headless line → commit)', () => {
 
     expect(committedMessages()).toHaveLength(1);
 
-    expect(getChatUnreadCount()).toBe(1);
+    expect(chatUnreadCount$.peek()).toBe(1);
   });
 
   test('holds a live line in the delay queue for the configured delay', () => {

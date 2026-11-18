@@ -24,7 +24,6 @@ import {
 import * as resolveTokensModule from '@app/store/chat/actions/resolveMessageEmoteTokens';
 import { updateSevenTvEmotes } from '@app/store/chat/actions/seven-tv-channel-lifecycle';
 import {
-  clearSevenTvEmoteDeltas,
   recordSevenTvEmoteDelta,
   type SevenTvEmoteDelta,
   takeSevenTvEmoteDelta,
@@ -151,7 +150,7 @@ describe('useEmoteReprocessing', () => {
   });
 
   test('keeps a pending 7TV delta when the pass bails before emotes load', () => {
-    clearSevenTvEmoteDeltas();
+    takeSevenTvEmoteDelta(channelId);
     seedChannelCache({ sevenTvChannelEmotes: [kappa] });
     addMessages([createTextOnlyMessage('msg-1', 'Kappa')]);
 

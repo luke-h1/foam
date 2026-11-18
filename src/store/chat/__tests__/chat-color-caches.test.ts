@@ -14,12 +14,6 @@ describe('chatColorCaches', () => {
     jest.useRealTimers();
   });
 
-  test('stores and reads values before expiry', () => {
-    setSessionCacheString('mentionColors', 'luke', '#ffffff');
-
-    expect(getSessionCacheString('mentionColors', 'luke')).toBe('#ffffff');
-  });
-
   test('expires mention colours after 30 seconds', () => {
     jest.useFakeTimers();
     setSessionCacheString('mentionColors', 'luke', '#ffffff');

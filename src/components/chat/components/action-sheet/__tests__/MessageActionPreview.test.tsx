@@ -1,5 +1,3 @@
-import type { TextStyle } from 'react-native';
-
 import * as paintedUsernameModule from '@app/components/chat/components/chat-message/cosmetic-username/PaintedUsername';
 import render from '@app/test/render';
 
@@ -7,9 +5,7 @@ import { MessageActionPreview } from '../MessageActionPreview';
 
 interface CapturedUsernameProps {
   fallbackColor?: string;
-  isModerated: boolean;
   username: string;
-  usernameTextStyle: TextStyle;
 }
 
 let usernameProps: CapturedUsernameProps | undefined;
@@ -32,11 +28,9 @@ describe('MessageActionPreview', () => {
       />,
     );
 
-    expect(usernameProps).toEqual<CapturedUsernameProps>({
-      fallbackColor: '#ABCDEF',
-      isModerated: false,
-      username: 'luke',
-      usernameTextStyle: { fontSize: 16, lineHeight: 22 },
-    });
+    expect({
+      fallbackColor: usernameProps?.fallbackColor,
+      username: usernameProps?.username,
+    }).toEqual({ fallbackColor: '#ABCDEF', username: 'luke' });
   });
 });

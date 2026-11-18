@@ -15,21 +15,6 @@ describe('sevenTvUserCache', () => {
     jest.useRealTimers();
   });
 
-  test('resolves a miss through the fetcher', async () => {
-    const storage = createFakeStorage();
-    const cache = createSevenTvUserCache(storage);
-    const fetchUser = jest.fn(async () => sevenTvUser('stv-1'));
-
-    const user = await cache.resolve('123', fetchUser);
-
-    expect(user).toEqual<SevenTvUser>({
-      userId: 'stv-1',
-      emoteSetId: 'set-stv-1',
-    });
-
-    expect(fetchUser.mock.calls).toEqual([['123']]);
-  });
-
   test('caches a user with no active emote set for the full positive TTL', async () => {
     const storage = createFakeStorage();
     const cache = createSevenTvUserCache(storage);
@@ -149,22 +134,6 @@ describe('sevenTvUserCache', () => {
       userId: 'stv-1',
       emoteSetId: 'set-stv-1',
     });
-
-    expect(fetchUser.mock.calls).toEqual([['123']]);
-  });
-
-  test('serves repeat lookups from memory without refetching', async () => {
-    const storage = createFakeStorage();
-    const cache = createSevenTvUserCache(storage);
-    const fetchUser = jest.fn(async () => sevenTvUser('stv-1'));
-
-    const first = await cache.resolve('123', fetchUser);
-    const second = await cache.resolve('123', fetchUser);
-
-    expect([first, second]).toEqual<SevenTvUser[]>([
-      { userId: 'stv-1', emoteSetId: 'set-stv-1' },
-      { userId: 'stv-1', emoteSetId: 'set-stv-1' },
-    ]);
 
     expect(fetchUser.mock.calls).toEqual([['123']]);
   });

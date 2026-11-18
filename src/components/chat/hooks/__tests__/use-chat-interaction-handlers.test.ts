@@ -12,11 +12,13 @@ import {
   useChatOverlayActions,
 } from '@app/components/chat/hooks/use-chat-interaction-handlers';
 import { sevenTvService } from '@app/services/seven-tv-service';
-import { resetChatOverlays } from '@app/store/chat/actions/chat-overlays';
 import { clearUserCosmeticsCache } from '@app/store/chat/actions/cosmetics';
 import * as messagesActions from '@app/store/chat/actions/messages';
 import { clearFetchedCosmeticsUsers } from '@app/store/chat/actions/user-cosmetics-fetch';
-import { chatOverlays$ } from '@app/store/chat/observables/chat-overlays';
+import {
+  chatOverlays$,
+  createEmptyChatOverlayState,
+} from '@app/store/chat/observables/chat-overlays';
 import type { EmotePressData } from '@app/store/chat/types/chat-press-data';
 import { createRef } from '@app/test/create-ref';
 import { createEmoteToken } from '@app/utils/chat/__tests__/__fixtures__/messageToken.fixture';
@@ -115,7 +117,7 @@ describe('useChatComposerActions', () => {
 describe('useChatOverlayActions', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    resetChatOverlays(CHANNEL_ID);
+    chatOverlays$.set(createEmptyChatOverlayState(CHANNEL_ID));
   });
 
   test('each press writes its surface to the overlay store', () => {

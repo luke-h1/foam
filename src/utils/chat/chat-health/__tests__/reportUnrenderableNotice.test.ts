@@ -1,16 +1,12 @@
 import { logger } from '@app/utils/logger';
 
-import {
-  reportUnrenderableNotice,
-  resetUnrenderableNoticeReports,
-} from '../reportUnrenderableNotice';
+import { reportUnrenderableNotice } from '../reportUnrenderableNotice';
 
 describe('reportUnrenderableNotice', () => {
   let mockError: jest.SpiedFunction<typeof logger.chat.error>;
 
   beforeEach(() => {
     mockError = jest.spyOn(logger.chat, 'error').mockImplementation(() => {});
-    resetUnrenderableNoticeReports();
   });
 
   afterEach(() => {
@@ -46,7 +42,7 @@ describe('reportUnrenderableNotice', () => {
   test('reports one notice shape once, however often chat repeats it', () => {
     for (let i = 0; i < 50; i += 1) {
       reportUnrenderableNotice({
-        msgId: 'midnightsquid',
+        msgId: 'repeated',
         reason: 'no-body',
         stage: 'ingest',
       });

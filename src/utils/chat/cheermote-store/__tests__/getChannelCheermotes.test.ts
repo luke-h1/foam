@@ -1,11 +1,13 @@
-import { clearCheermotes } from '../clearCheermotes';
+import { cheermoteFetchGuard } from '../cheermoteFetchGuard';
+import { cheermotesByChannel } from '../cheermotesByChannel';
 import { getChannelCheermotes } from '../getChannelCheermotes';
 import { setChannelCheermotes } from '../setChannelCheermotes';
 import { makeCheermote } from './__fixtures__/cheermoteStore.fixture';
 
 describe('getChannelCheermotes', () => {
   beforeEach(() => {
-    clearCheermotes();
+    cheermotesByChannel.clear();
+    cheermoteFetchGuard.clear();
   });
 
   test('reading a channel refreshes its position so eviction takes the oldest unread channel', () => {

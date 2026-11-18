@@ -1,11 +1,11 @@
 import { act, fireEvent } from '@testing-library/react-native';
 
 import * as ImageModule from '@app/components/image/Image';
+import { openChatEmoteActions } from '@app/store/chat/actions/chat-overlays';
 import {
-  openChatEmoteActions,
-  resetChatOverlays,
-} from '@app/store/chat/actions/chat-overlays';
-import { chatOverlays$ } from '@app/store/chat/observables/chat-overlays';
+  chatOverlays$,
+  createEmptyChatOverlayState,
+} from '@app/store/chat/observables/chat-overlays';
 import type { EmotePressData } from '@app/store/chat/types/chat-press-data';
 import render from '@app/test/render';
 
@@ -71,7 +71,7 @@ function renderOverlayLayer() {
 describe('ChatOverlayLayer emote actions', () => {
   beforeEach(() => {
     assetPreviewProps = undefined;
-    resetChatOverlays(CHANNEL_ID);
+    chatOverlays$.set(createEmptyChatOverlayState(CHANNEL_ID));
   });
 
   test('shows the emote action sheet that a row long press opened', () => {

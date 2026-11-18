@@ -6,7 +6,6 @@ import {
 } from '@app/components/chat/util/pickEmoteReprocessScope';
 import type { EnrichScope } from '@app/store/chat/actions/message-enrichment';
 import {
-  clearSevenTvEmoteDeltas,
   recordSevenTvEmoteDelta,
   type SevenTvEmoteDelta,
   takeSevenTvEmoteDelta,
@@ -146,7 +145,9 @@ describe('pickEmoteReprocessScope', () => {
 });
 
 describe('recordSevenTvEmoteDelta', () => {
-  afterEach(clearSevenTvEmoteDeltas);
+  afterEach(() => {
+    takeSevenTvEmoteDelta('channel-1');
+  });
 
   test('merges back-to-back updates into one delta from the first array', () => {
     const last = [hype];

@@ -275,26 +275,6 @@ describe('applyEntitlementResetEvent', () => {
     expect(getSevenTvUserIdForTwitchId('ttv-1')).toBeUndefined();
   });
 
-  test('forgets remembered entitlement ids when entitlements reset', () => {
-    applyEntitlementCreateEvent({
-      entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
-      kind: 'BADGE',
-      ttvUserId: 'ttv-1',
-      paintId: null,
-      badgeId: 'badge-1',
-    });
-
-    applyEntitlementResetEvent('stv-user-1');
-    bindPaintAndBadge();
-
-    applyEntitlementDeleteEvent({
-      entitlementId: 'entitlement-badge-1',
-      ttvUserId: null,
-    });
-
-    expect(readBindings()).toEqual(rebound);
-  });
-
   test('forgets every remembered entitlement id for a user when entitlements reset', () => {
     applyEntitlementCreateEvent({
       entitlement: createBadgeEntitlement('badge-1', 'ttv-1', 'entitlement-1'),

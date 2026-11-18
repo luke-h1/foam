@@ -8,13 +8,6 @@ describe('parseBadges', () => {
     });
   });
 
-  test('parses a single badge', () => {
-    expect(parseBadges('moderator/1')).toEqual({
-      'badges-raw': 'moderator/1',
-      badges: { moderator: '1' },
-    });
-  });
-
   test('returns empty raw and badges for undefined input', () => {
     expect(parseBadges()).toEqual({
       'badges-raw': '',

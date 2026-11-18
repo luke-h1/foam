@@ -1,4 +1,5 @@
-import { clearCheermotes } from '../clearCheermotes';
+import { cheermoteFetchGuard } from '../cheermoteFetchGuard';
+import { cheermotesByChannel } from '../cheermotesByChannel';
 import { getChannelCheermotes } from '../getChannelCheermotes';
 import { resolveCheermoteTier } from '../resolveCheermoteTier';
 import { setChannelCheermotes } from '../setChannelCheermotes';
@@ -6,7 +7,8 @@ import { makeCheermote } from './__fixtures__/cheermoteStore.fixture';
 
 describe('resolveCheermoteTier', () => {
   beforeEach(() => {
-    clearCheermotes();
+    cheermotesByChannel.clear();
+    cheermoteFetchGuard.clear();
   });
 
   test('resolveCheermoteTier picks the highest tier at or below the amount', () => {

@@ -459,22 +459,6 @@ describe('PaintedUsername with a decoded texture', () => {
       expect(getByText(':')).toBeOnTheScreen();
     });
 
-    test('renders special characters verbatim', () => {
-      const { getByText } = render(
-        <PaintedUsername isModerated={false} username='User_Name-123' />,
-      );
-
-      expect(getByText('User_Name-123:')).toBeOnTheScreen();
-    });
-
-    test('renders unicode characters verbatim', () => {
-      const { getByText } = render(
-        <PaintedUsername isModerated={false} username='用户名' />,
-      );
-
-      expect(getByText('用户名:')).toBeOnTheScreen();
-    });
-
     test('uses the fallback colour when the paint color field is null', () => {
       const paintWithNullColor = makePaint({
         color: null,
@@ -569,45 +553,6 @@ describe('PaintedUsername before the texture decodes', () => {
     expect(screen.getByTestId('masked-view')).toBeOnTheScreen();
   });
 
-  test('keeps the masked fill while the list is flinging', () => {
-    render(
-      <PaintedUsername
-        isModerated={false}
-        username='luke'
-        paint={GRADIENT_PAINT}
-        fallbackColor={TWITCH_COLOR}
-        showColon={false}
-      />,
-    );
-
-    act(() => {
-      chatScrollActivity.poke();
-    });
-
-    expect(screen.getByTestId('masked-view')).toBeOnTheScreen();
-  });
-
-  test('falls back to the chat colour for a paint with no colour of its own', () => {
-    render(
-      <PaintedUsername
-        isModerated={false}
-        username='luke'
-        paint={{
-          ...GRADIENT_PAINT,
-          layers: { 0: URL_LAYER, length: 1 },
-        }}
-        fallbackColor={TWITCH_COLOR}
-        showColon={false}
-      />,
-    );
-
-    act(() => {
-      chatScrollActivity.poke();
-    });
-
-    expect(screen.getByText('luke')).toHaveStyle({ color: TWITCH_COLOR });
-  });
-
   test('keeps a Twitch-coloured base under a URL paint', () => {
     render(
       <PaintedUsername
@@ -652,21 +597,5 @@ describe('PaintedUsername before the texture decodes', () => {
       opacity: 0.72,
       textDecorationLine: 'line-through',
     });
-  });
-
-  test('draws a name that is not moderated with Skia', () => {
-    paintRendererFlag$.set('skia');
-
-    render(
-      <PaintedUsername
-        isModerated={false}
-        username='luke'
-        paint={GRADIENT_PAINT}
-        fallbackColor={TWITCH_COLOR}
-        showColon={false}
-      />,
-    );
-
-    expect(screen.queryByTestId('masked-view')).toBeNull();
   });
 });

@@ -42,10 +42,7 @@ import {
   makeEmptyEmoteData,
   makeEmptyGlobalCacheData,
 } from '@app/store/chat/types/constants';
-import {
-  getPreferences,
-  replacePreferences,
-} from '@app/store/preference-store';
+import { getPreferences, preferences$ } from '@app/store/preference-store';
 import { flushChatStoreTimers } from '@app/test/chat-store-teardown';
 import type { AnyChatMessageType } from '@app/types/chat/chatMessage';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
@@ -178,7 +175,7 @@ describe('useChatMessageProcessing', () => {
     chatStore$.currentChannelId.set(null);
     chatStore$.emojis.set([]);
 
-    replacePreferences({
+    preferences$.set({
       ...getPreferences(),
       disableEmoteAnimations: true,
       show7TvEmotes: true,

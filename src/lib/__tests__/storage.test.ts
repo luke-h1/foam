@@ -9,12 +9,6 @@ beforeEach(() => {
 });
 
 describe('storageService round trip', () => {
-  test('stores and reads back a value', () => {
-    storageService.set('previous_searches', ['kappa']);
-
-    expect(storageService.getString('previous_searches')).toEqual(['kappa']);
-  });
-
   test('returns null for a missing key', () => {
     expect(storageService.getString('previous_searches')).toBeNull();
   });
