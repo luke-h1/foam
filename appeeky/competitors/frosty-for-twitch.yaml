@@ -1,5 +1,5 @@
 name: Frosty for Twitch
-pulledAt: 2026-11-17
+pulledAt: 2026-11-18
 country: us
 stores:
   app-store:
@@ -30,7 +30,6 @@ stores:
       - keyword: twitch chat app
         rank: 1
         popularity: 20
-        trend: stable
       - keyword: twitch emotes
         rank: 2
         popularity: 20
@@ -38,39 +37,30 @@ stores:
       - keyword: foam streams chat emotes
         rank: 2
         popularity: 20
-        trend: stable
       - keyword: foam streams
         rank: 2
         popularity: 20
-        trend: stable
       - keyword: foam streams chat
         rank: 2
         popularity: 20
-        trend: stable
       - keyword: streams chat emotes
         rank: 2
         popularity: 20
-        trend: stable
       - keyword: twitch app
         rank: 2
         popularity: 20
-        trend: stable
       - keyword: chat emotes
         rank: 4
         popularity: 20
-        trend: stable
       - keyword: twitch chat
         rank: 4
         popularity: 20
-        trend: stable
       - keyword: twitch stream
         rank: 9
         popularity: 20
-        trend: stable
       - keyword: twitch
         rank: 11
         popularity: 20
-        trend: stable
     yourTargets:
       - keyword: twitch emotes
         rank: 2

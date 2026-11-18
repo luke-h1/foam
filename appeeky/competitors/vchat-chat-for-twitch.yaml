@@ -1,5 +1,5 @@
 name: vChat! - Chat for Twitch
-pulledAt: 2026-11-17
+pulledAt: 2026-11-18
 country: us
 stores:
   app-store:
@@ -33,51 +33,41 @@ stores:
       - keyword: twitch app
         rank: 3
         popularity: 20
-        trend: stable
       - keyword: foam streams chat emotes
         rank: 4
         popularity: 20
-        trend: stable
       - keyword: streams chat emotes
         rank: 6
         popularity: 20
-        trend: stable
+      - keyword: twitch emotes
+        rank: 7
+        popularity: 20
+        trend: declining
       - keyword: twitch chat
         rank: 7
         popularity: 20
-        trend: stable
       - keyword: chat emotes
         rank: 8
         popularity: 20
-        trend: stable
-      - keyword: twitch emotes
-        rank: 9
-        popularity: 20
-        trend: declining
       - keyword: foam streams
         rank: 9
         popularity: 20
-        trend: stable
       - keyword: foam streams chat
         rank: 9
         popularity: 20
-        trend: stable
       - keyword: twitch chat app
         rank: 14
         popularity: 20
-        trend: stable
       - keyword: twitch stream
         rank: 17
         popularity: 20
-        trend: stable
       - keyword: twitch
         rank: 20
         popularity: 20
-        trend: stable
     yourTargets:
+      - keyword: twitch emotes
+        rank: 7
       - keyword: twitch chat
         rank: 7
-      - keyword: twitch emotes
-        rank: 9
       - keyword: twitch
         rank: 20

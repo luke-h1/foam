@@ -1,5 +1,5 @@
 name: "Twick: Watch Twitch & Kick"
-pulledAt: 2026-11-17
+pulledAt: 2026-11-18
 country: us
 stores:
   app-store:
@@ -29,26 +29,21 @@ stores:
       - keyword: twitch chat app
         rank: 5
         popularity: 20
-        trend: stable
       - keyword: foam streams chat emotes
         rank: 6
         popularity: 20
-        trend: stable
       - keyword: kick
         rank: 6
         popularity: 20
       - keyword: foam streams
         rank: 7
         popularity: 20
-        trend: stable
       - keyword: foam streams chat
         rank: 10
         popularity: 20
-        trend: stable
       - keyword: streams chat emotes
         rank: 14
         popularity: 20
-        trend: stable
       - keyword: twitch emotes
         rank: 15
         popularity: 25
