@@ -7,7 +7,7 @@ import {
   initialPreferences,
   migratePreferencesPayload,
   type Preferences,
-  replacePreferences,
+  preferences$,
   toSyncedPreferences,
   updatePreferences,
   usePreference,
@@ -70,7 +70,7 @@ function startAppWithPersistedPreferences(persisted: string) {
 describe('preference store', () => {
   beforeEach(() => {
     jest.useFakeTimers({ now: NOW });
-    replacePreferences({ ...basePreferences });
+    preferences$.set({ ...basePreferences });
   });
 
   afterEach(() => {
@@ -177,7 +177,7 @@ describe('usePreferences', () => {
   const KEYS = ['disableChat', 'chatTimestamps'] as const;
 
   beforeEach(() => {
-    replacePreferences({
+    preferences$.set({
       ...basePreferences,
       disableChat: false,
       chatTimestamps: false,

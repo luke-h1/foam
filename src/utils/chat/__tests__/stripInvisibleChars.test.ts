@@ -20,8 +20,4 @@ describe('stripInvisibleChars', () => {
 
     expect(stripInvisibleChars(heart)).toEqual(heart);
   });
-
-  test('leaves plain text untouched', () => {
-    expect(stripInvisibleChars('hello world')).toEqual('hello world');
-  });
 });

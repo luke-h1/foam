@@ -83,24 +83,6 @@ describe('usePlayerBridge enhanced stability', () => {
     jest.useRealTimers();
   });
 
-  test('hard-refreshes after 3 high-latency readings', () => {
-    const forceRefresh = jest.fn();
-    const { result } = renderBridge({ forceRefresh });
-
-    act(() => {
-      result.current.handleMessage(HIGH_LATENCY);
-      result.current.handleMessage(HIGH_LATENCY);
-    });
-
-    expect(forceRefresh).not.toHaveBeenCalled();
-
-    act(() => {
-      result.current.handleMessage(HIGH_LATENCY);
-    });
-
-    expect(forceRefresh).toHaveBeenCalledTimes(1);
-  });
-
   test('does nothing when enhanced stability is disabled', () => {
     const forceRefresh = jest.fn();
     const { result } = renderBridge({

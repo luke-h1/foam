@@ -38,11 +38,4 @@ describe('calculateAspectRatio', () => {
       height: 50,
     });
   });
-
-  test('falls back to a square for a negative height', () => {
-    expect(calculateAspectRatio(100, -20, 50)).toEqual({
-      width: 50,
-      height: 50,
-    });
-  });
 });

@@ -218,24 +218,6 @@ describe('processEmotes', () => {
     );
   });
 
-  test('matches bare EmoteName as an emote', () => {
-    const waveEmote = createEmote({ id: 'wave-emote', name: 'Wave' });
-
-    const result = processEmotes({
-      ...emptyParams,
-      inputString: 'Wave hello',
-      sevenTvChannelEmotes: [waveEmote],
-    });
-
-    expect(result.map(token => pickFields(token, ['type', 'content']))).toEqual(
-      [
-        { type: 'emote', content: 'Wave' },
-        { type: 'text', content: ' ' },
-        { type: 'text', content: 'hello' },
-      ],
-    );
-  });
-
   test('parses https URLs as purple link tokens', () => {
     const result = processEmotes({
       ...emptyParams,

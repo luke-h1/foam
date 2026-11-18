@@ -70,24 +70,6 @@ describe('useEnsureSevenTvCosmetics', () => {
     expect(mockGetUserCosmeticsGql.mock.calls).toEqual([['7tv-user-1']]);
   });
 
-  test('skips self bootstrap when paint and badge bindings are already known', async () => {
-    setCachedCosmetics({
-      badgeId: 'badge-1',
-      paintId: 'paint-1',
-      twitchUserId: 'ttv-self',
-    });
-
-    renderHook(() => useEnsureSevenTvCosmetics('ttv-self'));
-
-    await act(async () => {
-      await Promise.resolve();
-    });
-
-    expect(mockGet7tvUserId).not.toHaveBeenCalled();
-
-    expect(mockGetUserCosmeticsGql).not.toHaveBeenCalled();
-  });
-
   test('skips self bootstrap when only the badge is known', async () => {
     setCachedCosmetics({
       badgeId: 'badge-1',

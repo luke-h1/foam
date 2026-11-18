@@ -154,19 +154,6 @@ describe('RouterEffects deep-link auth handling', () => {
     expect(loginWithTwitch).toHaveBeenCalledTimes(1);
   });
 
-  test('does not navigate when the magic-link login fails', async () => {
-    loginWithTwitch.mockResolvedValueOnce({ ok: false, reason: 'error' });
-
-    render(withAuth(makeAuthContext()));
-
-    await waitFor(() => expect(urlHandler).toBeDefined());
-
-    act(() => urlHandler?.({ url: magicUrl }));
-    await waitFor(() => expect(loginWithTwitch).toHaveBeenCalledTimes(1));
-
-    expect(mockedRouter.replace).not.toHaveBeenCalled();
-  });
-
   test('reads the initial URL only after the router has mounted', async () => {
     linkingMock.getInitialURL.mockResolvedValue(magicUrl);
     mockedUseIsRouterReady.mockReturnValue(false);

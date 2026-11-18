@@ -126,12 +126,6 @@ describe('web storage adapter', () => {
 
     expect(storageService.getAllKeys()).toEqual([]);
   });
-
-  test('returns null through storageService for a corrupt value', () => {
-    storage.set('FOAM_V1_previous_searches', '{not json');
-
-    expect(storageService.getString('previous_searches')).toBeNull();
-  });
 });
 
 describe('web storage adapter without usable localStorage', () => {

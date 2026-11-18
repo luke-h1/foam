@@ -17,18 +17,13 @@ import {
 import { AuthContextTestProvider } from '@app/context/AuthContext';
 import { recentMessagesService } from '@app/services/recent-messages-service';
 import { sevenTvService } from '@app/services/seven-tv-service';
-import {
-  getChatUnreadCount,
-  resetChatUnread,
-} from '@app/store/chat/actions/chat-unread';
+import { resetChatUnread } from '@app/store/chat/actions/chat-unread';
 import { clearUserCosmeticsCache } from '@app/store/chat/actions/cosmetics';
 import { clearMessages } from '@app/store/chat/actions/messages';
 import { clearPersonalEmotesCache } from '@app/store/chat/actions/personal-emotes';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
-import {
-  initialPreferences,
-  replacePreferences,
-} from '@app/store/preference-store';
+import { chatUnreadCount$ } from '@app/store/chat/observables/chat-unread-count';
+import { initialPreferences, preferences$ } from '@app/store/preference-store';
 import { createTestQueryClient } from '@app/test/render';
 import { silenceLogger } from '@app/test/silence-logger';
 import * as clearImageCacheModule from '@app/utils/image/clearImageCache';
@@ -295,7 +290,7 @@ function renderChat() {
 }
 
 function setShowRecentMessages(showRecentMessages: boolean) {
-  replacePreferences({
+  preferences$.set({
     ...initialPreferences,
     chatScrollback: 150,
     deletedMessageStyle: 'notice',
@@ -366,7 +361,7 @@ describe('Chat recent messages', () => {
       },
     ]);
 
-    expect(getChatUnreadCount()).toBe(0);
+    expect(chatUnreadCount$.peek()).toBe(0);
   });
 
   test('defers cached-history bottom settle until remote history replay finishes', async () => {

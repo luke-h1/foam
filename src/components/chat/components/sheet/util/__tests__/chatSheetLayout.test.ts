@@ -22,7 +22,7 @@ describe('getChatSheetHeight', () => {
         },
         1000,
       ),
-    ).toEqual(196 + 6 * 57 + 3 * 24 + 26);
+    ).toEqual(636);
   });
 
   test('never goes below the minimum height', () => {

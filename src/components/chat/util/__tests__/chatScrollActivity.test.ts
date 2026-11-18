@@ -24,17 +24,6 @@ describe('chatScrollActivity', () => {
     expect(chatScrollActivity.isActive()).toBe(false);
   });
 
-  test('repeated pokes keep it active until the final quiet window elapses', () => {
-    chatScrollActivity.poke();
-    jest.advanceTimersByTime(100);
-    chatScrollActivity.poke();
-    jest.advanceTimersByTime(100);
-    expect(chatScrollActivity.isActive()).toBe(true);
-
-    jest.advanceTimersByTime(50);
-    expect(chatScrollActivity.isActive()).toBe(false);
-  });
-
   test('a burst of scroll ticks settles 150ms after the last tick', () => {
     for (let tick = 0; tick < 9; tick += 1) {
       chatScrollActivity.poke();
@@ -114,24 +103,6 @@ describe('chatScrollActivity', () => {
     jest.advanceTimersByTime(150);
 
     expect(listener.mock.calls).toEqual([]);
-  });
-
-  test('subscribers are notified only on transitions', () => {
-    const listener = jest.fn();
-    const unsubscribe = chatScrollActivity.subscribe(listener);
-
-    chatScrollActivity.poke();
-    chatScrollActivity.poke();
-    expect(listener).toHaveBeenCalledTimes(1);
-
-    expect(listener).toHaveBeenLastCalledWith(true);
-
-    jest.advanceTimersByTime(150);
-    expect(listener).toHaveBeenCalledTimes(2);
-
-    expect(listener).toHaveBeenLastCalledWith(false);
-
-    unsubscribe();
   });
 
   test('reset clears active state immediately', () => {

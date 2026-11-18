@@ -7,7 +7,3 @@ export function incrementChatUnread(count: number): void {
 export function resetChatUnread(): void {
   chatUnreadCount$.set(0);
 }
-
-export function getChatUnreadCount(): number {
-  return chatUnreadCount$.peek();
-}

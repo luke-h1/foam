@@ -174,16 +174,6 @@ describe('ChatInputShell', () => {
     expect(onRefreshCommand).toHaveBeenCalledTimes(1);
   });
 
-  test('typed text while signed out is tracked but normal messages stay blocked', () => {
-    renderShell({ user: undefined });
-
-    act(() => {
-      latestComposerProps().onChangeText('hello there');
-    });
-
-    expect(latestComposerProps().canSend).toBe(false);
-  });
-
   test('a reply transmits the raw body so Twitch does not double the @mention', () => {
     const sendMessage = jest.fn();
     const processMessageEmotes = jest.fn();

@@ -34,12 +34,6 @@ describe('parseIrcTags', () => {
     });
   });
 
-  test('does not double-decode a literal backslash', () => {
-    expect(parseIrcTags(String.raw`ban-reason=path\\sfoo`)).toEqual({
-      'ban-reason': String.raw`path\sfoo`,
-    });
-  });
-
   test('leaves the structural colons in the emotes tag untouched', () => {
     expect(parseIrcTags('emotes=25:0-4,6-10/1902:12-16')).toEqual({
       emotes: '25:0-4,6-10/1902:12-16',

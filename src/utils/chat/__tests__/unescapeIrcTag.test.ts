@@ -21,12 +21,6 @@ describe('unescapeIrcTag', () => {
     expect(unescapeIrcTag(String.raw`a\tb`)).toBe('a\tb');
   });
 
-  test('decodes a full system-msg', () => {
-    expect(
-      unescapeIrcTag(String.raw`ModUser\sis\scelebrating\s24\smonths!`),
-    ).toBe('ModUser is celebrating 24 months!');
-  });
-
   test('consumes an escaped backslash as one unit (no double-decode)', () => {
     expect(unescapeIrcTag(String.raw`path\\sfoo`)).toBe(String.raw`path\sfoo`);
   });

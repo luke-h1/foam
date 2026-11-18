@@ -42,7 +42,3 @@ export function reportUnrenderableNotice({
     systemMsg,
   });
 }
-
-export function resetUnrenderableNoticeReports(): void {
-  reported.clear();
-}

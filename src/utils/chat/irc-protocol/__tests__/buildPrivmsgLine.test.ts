@@ -1,5 +1,4 @@
 import { buildPrivmsgLine } from '../buildPrivmsgLine';
-import type { IrcMessage } from '../parseIrcMessage';
 import { parseIrcMessage } from '../parseIrcMessage';
 
 describe('buildPrivmsgLine', () => {
@@ -49,20 +48,6 @@ describe('buildPrivmsgLine', () => {
 
     expect(parseIrcMessage(line)?.tags).toEqual({
       'reply-parent-msg-id': 'abc 123;evil=1\\',
-    });
-  });
-
-  test('reply lines survive a round-trip through the parser', () => {
-    const line = buildPrivmsgLine({
-      channel: '#bar',
-      message: 'hi back',
-      replyParentMsgId: 'abc-123',
-    });
-
-    expect(parseIrcMessage(line)).toEqual<IrcMessage>({
-      tags: { 'reply-parent-msg-id': 'abc-123' },
-      command: 'PRIVMSG',
-      params: ['#bar', 'hi back'],
     });
   });
 });

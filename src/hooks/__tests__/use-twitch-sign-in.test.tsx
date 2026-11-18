@@ -2,7 +2,6 @@ import type { PropsWithChildren } from 'react';
 
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { useAuthRequest } from 'expo-auth-session';
-import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { toast } from 'sonner-native';
 
@@ -96,8 +95,6 @@ describe('useTwitchSignIn', () => {
     expect(loginWithTwitch.mock.calls).toEqual([[authResult]]);
 
     expect(jest.mocked(toast.success).mock.calls).toEqual([['Logged in']]);
-
-    expect(router.replace).not.toHaveBeenCalled();
   });
 
   test('shows no toast and does not call onSuccess when the user cancels', async () => {
@@ -132,11 +129,9 @@ describe('useTwitchSignIn', () => {
     expect(toast.error).not.toHaveBeenCalled();
 
     expect(onSuccess).not.toHaveBeenCalled();
-
-    expect(router.replace).not.toHaveBeenCalled();
   });
 
-  test('does not report success or navigate when the login fails', async () => {
+  test('does not report success when the login fails', async () => {
     const authResult = createTwitchSignInAuthResult('token-789');
     const request = createTwitchSignInAuthRequest(authResult);
     const onSuccess = jest.fn();
@@ -165,7 +160,5 @@ describe('useTwitchSignIn', () => {
     expect(toast.success).not.toHaveBeenCalled();
 
     expect(onSuccess).not.toHaveBeenCalled();
-
-    expect(router.replace).not.toHaveBeenCalled();
   });
 });

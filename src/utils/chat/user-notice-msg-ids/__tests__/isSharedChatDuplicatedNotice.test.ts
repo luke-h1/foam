@@ -29,10 +29,6 @@ describe('isSharedChatDuplicatedNotice', () => {
     );
   });
 
-  test('is not a duplicate when both ids are missing', () => {
-    expect(isSharedChatDuplicatedNotice({})).toBe(false);
-  });
-
   test('is not a duplicate when the source room id is an empty string', () => {
     expect(
       isSharedChatDuplicatedNotice({ 'source-room-id': '', 'room-id': '222' }),

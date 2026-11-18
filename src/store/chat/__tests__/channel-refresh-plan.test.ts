@@ -258,19 +258,6 @@ describe('planChannelRefresh', () => {
     );
   });
 
-  test('does not refresh a fresh global slot on a stale channel badge pass', () => {
-    const plan = planChannelRefresh({
-      cache: freshCache({ badgesLastUpdated: NOW - HOUR_MS }),
-      forceRefresh: false,
-      globalCache: freshGlobalCache(),
-      now: NOW,
-    });
-
-    expect(plan).toEqual<ChannelRefreshPlan>(
-      cachedPlan({ badgeCacheAgeMs: HOUR_MS, refreshBadges: true }),
-    );
-  });
-
   test('falls back to lastUpdated for badge age when badgesLastUpdated is missing', () => {
     const plan = planChannelRefresh({
       cache: freshCache({

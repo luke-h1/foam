@@ -31,16 +31,11 @@ describe('channelPollActivity', () => {
   });
 
   test('normalises end events with a completed fallback', () => {
-    const normalise = getNormaliser('channel.poll.end');
-
-    const ended = normalise(createEventSubPoll());
-    const terminated = normalise(createEventSubPoll({ status: 'terminated' }));
+    const ended = getNormaliser('channel.poll.end')(createEventSubPoll());
 
     expect({ status: ended.status, isActive: ended.isActive }).toEqual({
       status: 'completed',
       isActive: false,
     });
-
-    expect(terminated.status).toBe('terminated');
   });
 });

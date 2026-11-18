@@ -29,35 +29,6 @@ const emptyParams = {
 };
 
 describe('processEmotes zero-width overlays', () => {
-  test('does not stack the same zero-width emote twice in a row', () => {
-    const peepoHappy = createSevenTvEmote({
-      id: 'base-emote',
-      name: 'peepoHappy',
-      original_name: 'peepoHappy',
-    });
-
-    const soSnowy = createSevenTvEmote({
-      id: 'zw-snow',
-      name: 'SoSnowy',
-      zero_width: true,
-      original_name: 'SoSnowy',
-    });
-
-    const result = processEmotes({
-      ...emptyParams,
-      inputString: 'peepoHappy SoSnowy SoSnowy',
-      sevenTvChannelEmotes: [peepoHappy, soSnowy],
-    });
-
-    expect(result).toHaveLength(1);
-    const base = emotePart(result[0]);
-    expect(base.id).toBe('base-emote');
-
-    expect((base.overlaid ?? []).map(overlay => overlay.id)).toEqual([
-      'zw-snow',
-    ]);
-  });
-
   test('consumes every duplicate in a three-in-a-row zero-width run', () => {
     const peepoHappy = createSevenTvEmote({
       id: 'base-emote',

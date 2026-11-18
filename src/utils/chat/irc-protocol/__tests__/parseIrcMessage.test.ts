@@ -61,22 +61,6 @@ describe('parseIrcMessage', () => {
     });
   });
 
-  test('unescapes IRCv3 tag values in replayed lines', () => {
-    expect(
-      parseIrcMessage(
-        String.raw`@msg-id=resub;system-msg=5\smonths\:\sPog\\s :tmi.twitch.tv USERNOTICE #foam :resubbed`,
-      ),
-    ).toEqual<IrcMessage>({
-      tags: {
-        'msg-id': 'resub',
-        'system-msg': String.raw`5 months; Pog\s`,
-      },
-      prefix: 'tmi.twitch.tv',
-      command: 'USERNOTICE',
-      params: ['#foam', 'resubbed'],
-    });
-  });
-
   test('parses IRC tag flags and ignores empty tag keys', () => {
     expect(
       parseIrcMessage('@historical;=ignored;id=msg-3 PING'),

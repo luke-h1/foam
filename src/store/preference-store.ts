@@ -332,10 +332,6 @@ export function updatePreferences(payload: Partial<Preferences>): void {
   );
 }
 
-export function replacePreferences(preferences: Preferences): void {
-  preferences$.set(preferences);
-}
-
 export function toSyncedPreferences(
   preferences: Preferences,
 ): SyncedPreferences {

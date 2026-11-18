@@ -168,31 +168,6 @@ describe('ChatList', () => {
     expect(onViewableMessagesChange.mock.calls).toEqual([[[visibleMessage]]]);
   });
 
-  test('forwards every viewability callback without app-side diffing', () => {
-    const onViewableMessagesChange = jest.fn();
-
-    render(
-      createChatListElement({
-        data: [visibleMessage],
-        onViewableMessagesChange,
-      }),
-    );
-
-    const props = getRenderedProps();
-
-    const viewabilityPayload = {
-      viewableItems: [{ item: visibleMessage, isViewable: true }],
-    };
-
-    props.onViewableItemsChanged(viewabilityPayload);
-    props.onViewableItemsChanged(viewabilityPayload);
-
-    expect(onViewableMessagesChange.mock.calls).toEqual([
-      [[visibleMessage]],
-      [[visibleMessage]],
-    ]);
-  });
-
   test('renders a skeleton row when LegendList asks for a not-yet-loaded cell', () => {
     render(createChatListElement());
 

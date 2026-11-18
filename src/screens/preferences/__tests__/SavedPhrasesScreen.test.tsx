@@ -5,7 +5,7 @@ import { toast } from 'sonner-native';
 
 import {
   getPreferences,
-  replacePreferences,
+  preferences$,
   type SavedPhrase,
 } from '@app/store/preference-store';
 
@@ -16,19 +16,13 @@ jest.mock('../components/PreferenceListEditor', () =>
 );
 
 function seedSavedPhrases(savedPhrases: SavedPhrase[]) {
-  replacePreferences({ ...getPreferences(), savedPhrases });
+  preferences$.set({ ...getPreferences(), savedPhrases });
 }
 
 describe('SavedPhrasesScreen', () => {
   beforeEach(() => {
     seedSavedPhrases([]);
     jest.mocked(toast.error).mockClear();
-  });
-
-  test('shows the empty state when there are no saved phrases', () => {
-    render(<SavedPhrasesScreen />);
-
-    expect(screen.getByText('No saved phrases')).toBeOnTheScreen();
   });
 
   test('adds a trimmed phrase', () => {

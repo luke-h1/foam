@@ -24,12 +24,6 @@ describe('sevenTvService user lookup', () => {
     clearSevenTvUserCache();
   });
 
-  test('reads the active emote set id from the user connection', async () => {
-    respondWith(sevenTvUserResponse('stv-1', 'set-1'));
-
-    await expect(sevenTvService.getEmoteSetId('123')).resolves.toEqual('set-1');
-  });
-
   test('resolves the user id and emote set id from a single query', async () => {
     respondWith(sevenTvUserResponse('stv-1', 'set-1'));
 

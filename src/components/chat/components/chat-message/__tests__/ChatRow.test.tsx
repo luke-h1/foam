@@ -11,8 +11,10 @@ import {
 
 import { MESSAGE_LONG_PRESS_DELAY_MS } from '@app/components/chat/components/chat-message/hooks/use-chat-row-long-press';
 import { isRowTouchHeld } from '@app/components/chat/util/chatRowTouchHold';
-import { resetChatOverlays } from '@app/store/chat/actions/chat-overlays';
-import { chatOverlays$ } from '@app/store/chat/observables/chat-overlays';
+import {
+  chatOverlays$,
+  createEmptyChatOverlayState,
+} from '@app/store/chat/observables/chat-overlays';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
 import { preferences$ } from '@app/store/preference-store';
 import { theme } from '@app/styles/themes';
@@ -531,7 +533,7 @@ describe('ChatRow', () => {
     });
 
     test('a long press on an emote opens the channel emote action sheet', () => {
-      resetChatOverlays('chan-1');
+      chatOverlays$.set(createEmptyChatOverlayState('chan-1'));
 
       const emoteData: MessageToken<'emote'> = {
         type: 'emote',
@@ -570,25 +572,7 @@ describe('ChatRow', () => {
         selectedEmoteAction: emoteData,
       });
 
-      resetChatOverlays('');
-    });
-
-    test('renders emotes in messages', () => {
-      const emoteData: MessageToken<'emote'> = {
-        type: 'emote',
-        content: 'Kappa',
-        original_name: 'Kappa',
-        name: 'Kappa',
-        id: '25',
-        url: 'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/1.0',
-        site: 'Twitch Channel',
-      };
-
-      const message = createMockMessage([emoteData]);
-
-      const { getByTestId } = render(<ChatRow {...message} />);
-
-      expect(getByTestId('emote-token')).toBeOnTheScreen();
+      chatOverlays$.set(createEmptyChatOverlayState(''));
     });
 
     test('flows an ordinary emote inline, inside the row Text', () => {

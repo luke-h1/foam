@@ -9,7 +9,7 @@ import { ChatInlineImage } from '@app/components/chat/components/chat-message/re
 import {
   getPreferences,
   initialPreferences,
-  replacePreferences,
+  preferences$,
 } from '@app/store/preference-store';
 
 const { ChatPreferenceScreen } = jest.requireActual<
@@ -29,7 +29,7 @@ function getPreviewEmoteUrls(testID: string): string[] {
 
 describe('ChatPreferenceScreen', () => {
   beforeEach(() => {
-    replacePreferences({
+    preferences$.set({
       ...initialPreferences,
       updatedAt: 1,
       showUnreadJumpPill: true,

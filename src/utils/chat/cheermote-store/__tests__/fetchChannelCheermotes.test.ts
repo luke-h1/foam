@@ -1,13 +1,15 @@
 import type { TwitchCheermote } from '@app/types/twitch/bits';
 
-import { clearCheermotes } from '../clearCheermotes';
+import { cheermoteFetchGuard } from '../cheermoteFetchGuard';
+import { cheermotesByChannel } from '../cheermotesByChannel';
 import { fetchChannelCheermotes } from '../fetchChannelCheermotes';
 import { getChannelCheermotes } from '../getChannelCheermotes';
 import { makeCheermote } from './__fixtures__/cheermoteStore.fixture';
 
 describe('fetchChannelCheermotes', () => {
   beforeEach(() => {
-    clearCheermotes();
+    cheermotesByChannel.clear();
+    cheermoteFetchGuard.clear();
   });
 
   test('fetchChannelCheermotes dedupes in-flight fetches and stores the result', async () => {

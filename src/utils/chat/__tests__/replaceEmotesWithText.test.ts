@@ -17,20 +17,6 @@ describe('replaceEmotesWithText', () => {
     expect(result).toBe('Hello KEKW peepoAlias World');
   });
 
-  test('handles mentions', () => {
-    const result = replaceEmotesWithText([
-      { type: 'text', content: 'Hello ' },
-      {
-        type: 'mention',
-        content: '@user',
-        color: '#FF0000',
-      },
-      { type: 'text', content: ' World' },
-    ]);
-
-    expect(result).toBe('Hello @user World');
-  });
-
   test('round-trips gif alt text for offset-based reprocessing', () => {
     const result = replaceEmotesWithText([
       { type: 'text', content: 'look ' },

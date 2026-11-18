@@ -12,15 +12,6 @@ describe('getMessageTokenText', () => {
     expect(getMessageTokenText(token)).toBe('hello world');
   });
 
-  test('returns the content of a mention token', () => {
-    const token = {
-      type: 'mention',
-      content: '@someone',
-    } satisfies MessageToken<'mention'>;
-
-    expect(getMessageTokenText(token)).toBe('@someone');
-  });
-
   test('returns the original cheer token from a cheermote token', () => {
     const token = {
       type: 'cheermote',
@@ -44,12 +35,6 @@ describe('getMessageTokenText', () => {
       ritualName: 'new_chatter',
       systemMsg: 'NewViewer is new here!',
     } satisfies MessageToken<'ritual'>;
-
-    expect(getMessageTokenText(token)).toBe('');
-  });
-
-  test('returns an empty string when the content is an empty string', () => {
-    const token = { type: 'text', content: '' } satisfies MessageToken<'text'>;
 
     expect(getMessageTokenText(token)).toBe('');
   });

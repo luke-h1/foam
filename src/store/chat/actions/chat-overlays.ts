@@ -92,7 +92,3 @@ export function closeChatOverlay(
 ) {
   patchOverlay(channelId, patch);
 }
-
-export function resetChatOverlays(channelId: string) {
-  chatOverlays$.set(createEmptyChatOverlayState(channelId));
-}

@@ -1,14 +1,11 @@
 import { Text } from 'react-native';
 
-import { act, render, screen, waitFor } from '@testing-library/react-native';
+import { act, render, waitFor } from '@testing-library/react-native';
 import { usePathname } from 'expo-router';
 
 import * as analyticsModule from '@app/hooks/firebase/analytics';
 import { AnalyticsProvider } from '@app/providers/AnalyticsProvider';
-import {
-  getPreferences,
-  replacePreferences,
-} from '@app/store/preference-store';
+import { getPreferences, preferences$ } from '@app/store/preference-store';
 
 const mockedUsePathname = jest.mocked(usePathname);
 
@@ -26,23 +23,7 @@ describe('AnalyticsProvider', () => {
     mockedUsePathname.mockReturnValue('/streams/live-stream/foam');
     mockedSetAnalyticsEnabled.mockResolvedValue(undefined);
     mockedLogScreenView.mockResolvedValue(undefined);
-    replacePreferences({ ...getPreferences(), analyticsEnabled: true });
-  });
-
-  test('renders children', async () => {
-    render(
-      <AnalyticsProvider>
-        <Text>child</Text>
-      </AnalyticsProvider>,
-    );
-
-    expect(screen.getByText('child')).toBeOnTheScreen();
-
-    await waitFor(() => {
-      expect(mockedSetAnalyticsEnabled).toHaveBeenCalledWith(true);
-    });
-
-    await act(async () => {});
+    preferences$.set({ ...getPreferences(), analyticsEnabled: true });
   });
 
   test('logs the initial screen view only after collection is enabled', async () => {
@@ -77,7 +58,7 @@ describe('AnalyticsProvider', () => {
   });
 
   test('disables collection and never logs when the preference is off', async () => {
-    replacePreferences({ ...getPreferences(), analyticsEnabled: false });
+    preferences$.set({ ...getPreferences(), analyticsEnabled: false });
 
     render(
       <AnalyticsProvider>

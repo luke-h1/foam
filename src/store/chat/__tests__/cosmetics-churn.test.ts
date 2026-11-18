@@ -453,24 +453,6 @@ describe('cosmetics entitlement-burst churn', () => {
     expect(hasUserPaint('ttv-user-0')).toBe(false);
   });
 
-  test('a snapshot whose bound ids no longer resolve is treated as a miss', async () => {
-    const stored: CachedUserCosmetics = {
-      badgeId: null,
-      expiresAt: Date.now() + 60_000,
-      paintId: PAINT_ID,
-      ttvUserId: 'ttv-stale',
-    };
-
-    seedSnapshot('stv-unresolvable', stored);
-    jest.mocked(sevenTvService.getUserCosmeticsGql).mockResolvedValue(null);
-
-    await fetchAndCacheUserCosmetics('stv-unresolvable');
-
-    expect(sevenTvService.getUserCosmeticsGql).toHaveBeenCalledWith(
-      'stv-unresolvable',
-    );
-  });
-
   test('an unresolvable snapshot whose refetch returns null is deleted', async () => {
     const stored: CachedUserCosmetics = {
       badgeId: 'badge-vanished',

@@ -7,8 +7,11 @@ import { twitchService } from '@app/services/twitch-service';
 import {
   openChatMessageActions,
   openChatUserActions,
-  resetChatOverlays,
 } from '@app/store/chat/actions/chat-overlays';
+import {
+  chatOverlays$,
+  createEmptyChatOverlayState,
+} from '@app/store/chat/observables/chat-overlays';
 import * as showActionMenuModule from '@app/store/overlays/show-action-menu';
 import render from '@app/test/render';
 
@@ -78,7 +81,7 @@ function pickDurationOption(index: number) {
 describe('ChatOverlayLayer moderation targets', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    resetChatOverlays(CHANNEL_ID);
+    chatOverlays$.set(createEmptyChatOverlayState(CHANNEL_ID));
   });
 
   test('timeout prompts for a duration and runs the chosen one', () => {

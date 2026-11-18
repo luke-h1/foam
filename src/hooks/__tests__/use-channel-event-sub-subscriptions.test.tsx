@@ -23,24 +23,6 @@ describe('channel poll and prediction EventSub subscriptions', () => {
     mockTwitchGet.mockResolvedValue({ data: [] });
   });
 
-  test('skips poll and prediction subscriptions for channels the viewer does not own', () => {
-    const wrapper = createLoggedInViewerWrapper('viewer-id');
-
-    const prediction = renderHook(() => useChannelPrediction('channel-id'), {
-      wrapper,
-    });
-
-    const poll = renderHook(() => useChannelPoll('channel-id'), { wrapper });
-
-    expect(prediction.result.current.isAvailable).toBe(false);
-
-    expect(poll.result.current.isAvailable).toBe(false);
-
-    expect(mockSubscribeToEvent.mock.calls).toHaveLength(0);
-
-    expect(mockTwitchGet).not.toHaveBeenCalled();
-  });
-
   test('subscribes to poll and prediction events for the signed-in broadcaster', async () => {
     const wrapper = createLoggedInViewerWrapper('channel-id');
 

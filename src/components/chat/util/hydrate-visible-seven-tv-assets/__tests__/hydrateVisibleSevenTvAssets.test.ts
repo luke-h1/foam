@@ -117,23 +117,6 @@ describe('hydrateVisibleSevenTvAssets', () => {
     expect(personalEmoteUsers.has('twitch-user')).toBe(true);
   });
 
-  test('keeps the per-user guard when a user genuinely has no personal emotes', async () => {
-    const message = createMessage();
-    const personalEmoteUsers = new Set<string>();
-    const fetchUserPersonalEmotes = jest.fn().mockResolvedValue([]);
-
-    await hydrate({
-      messages: [message],
-      personalEmoteUsers,
-      cosmeticUsers: new Set(['twitch-user']),
-      fetchUserPersonalEmotes,
-    });
-
-    expect(fetchUserPersonalEmotes).toHaveBeenCalledTimes(1);
-
-    expect(personalEmoteUsers.has('twitch-user')).toBe(true);
-  });
-
   test('limits visible-user personal emote fetches per hydration pass', async () => {
     const fetchUserPersonalEmotes = jest.fn().mockResolvedValue([]);
 

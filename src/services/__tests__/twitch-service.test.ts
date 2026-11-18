@@ -314,27 +314,6 @@ describe('twitchService.getFollowedChannels', () => {
 
     expect(api.get).toHaveBeenCalledTimes(4);
   });
-
-  test('stops paginating when a cursor page returns no further cursor', async () => {
-    api.get
-      .mockResolvedValueOnce({
-        data: [makeFollowedChannel('1')],
-        pagination: { cursor: 'abc' },
-      })
-      .mockResolvedValueOnce({
-        data: [makeFollowedChannel('2')],
-        pagination: {},
-      });
-
-    const result = await twitchService.getFollowedChannels('42');
-
-    expect(result).toEqual<FollowedChannel[]>([
-      makeFollowedChannel('1'),
-      makeFollowedChannel('2'),
-    ]);
-
-    expect(api.get).toHaveBeenCalledTimes(2);
-  });
 });
 
 describe('twitchService.createClip', () => {

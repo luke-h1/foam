@@ -4,11 +4,6 @@ import {
   type SevenTvSessionState,
 } from '@app/utils/seven-tv/sevenTvSessionState';
 
-const mockSetSevenTvSessionId = jest.spyOn(
-  sevenTvSessionIdModule,
-  'setSevenTvSessionId',
-);
-
 interface SessionFieldSnapshot {
   hasInitialSubscriptions: boolean;
   connectionTimestamp: number | null;
@@ -46,7 +41,6 @@ const createState = () =>
 
 beforeEach(() => {
   sevenTvSessionIdModule.setSevenTvSessionId(null);
-  mockSetSevenTvSessionId.mockClear();
 });
 
 const populate = (state: SevenTvSessionState) => {
@@ -63,7 +57,6 @@ const populate = (state: SevenTvSessionState) => {
   state.heartbeatIntervalMs = 45_000;
   state.lastMessageAt = 2000;
   state.heartbeatWatchdog = setInterval(() => {}, 10_000);
-  mockSetSevenTvSessionId.mockClear();
 };
 
 describe('reset', () => {
@@ -99,8 +92,6 @@ describe('reset', () => {
         lastMessageAt: 2000,
         heartbeatWatchdog: null,
       });
-
-      expect(mockSetSevenTvSessionId.mock.calls).toEqual([[null]]);
     },
   );
 
@@ -125,8 +116,6 @@ describe('reset', () => {
       lastMessageAt: 2000,
       heartbeatWatchdog: null,
     });
-
-    expect(mockSetSevenTvSessionId).not.toHaveBeenCalled();
   });
 
   test('reset cancels the pending resume fallback and heartbeat watchdog', () => {

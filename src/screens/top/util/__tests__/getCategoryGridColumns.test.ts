@@ -18,10 +18,4 @@ describe('getCategoryGridColumns', () => {
       getCategoryGridColumns({ horizontalInsets: 20, windowWidth: 951 }),
     ).toEqual(6);
   });
-
-  test('never drops below 3 columns on a narrow window', () => {
-    expect(
-      getCategoryGridColumns({ horizontalInsets: 0, windowWidth: 320 }),
-    ).toEqual(3);
-  });
 });

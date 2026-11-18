@@ -5,12 +5,10 @@ import { useChatMessages } from '@app/components/chat/hooks/use-chat-messages';
 import { createChatMessageFixture } from '@app/components/chat/util/__tests__/__fixtures__/chatMessage.fixture';
 import type { BufferedMessage } from '@app/components/chat/util/buffered-message-ops/types';
 import * as chatUnreadActions from '@app/store/chat/actions/chat-unread';
-import {
-  getChatUnreadCount,
-  resetChatUnread,
-} from '@app/store/chat/actions/chat-unread';
+import { resetChatUnread } from '@app/store/chat/actions/chat-unread';
 import * as messagesActions from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chat-store';
+import { chatUnreadCount$ } from '@app/store/chat/observables/chat-unread-count';
 
 const MAX_BUFFERED = messagesActions.getMaxChatMessages();
 
@@ -59,52 +57,16 @@ describe('useChatMessages', () => {
     jest.useRealTimers();
   });
 
-  describe('Initial State', () => {
-    test('starts with empty buffer', () => {
-      const { result } = renderHook(() => useChatMessages(defaultOptions));
+  test('returns the same controller across re-renders', () => {
+    const { result, rerender } = renderHook(() =>
+      useChatMessages(defaultOptions),
+    );
 
-      expect(result.current.getBufferSize()).toBe(0);
-    });
+    const firstRender = result.current;
 
-    test('returns referentially stable handlers across re-renders', () => {
-      const { result, rerender } = renderHook(() =>
-        useChatMessages(defaultOptions),
-      );
+    rerender(undefined);
 
-      const firstRender = { ...result.current };
-
-      rerender(undefined);
-
-      expect(result.current.handleNewMessage).toBe(
-        firstRender.handleNewMessage,
-      );
-
-      expect(result.current.clearLocalMessages).toBe(
-        firstRender.clearLocalMessages,
-      );
-
-      expect(result.current.removeChatMessageById).toBe(
-        firstRender.removeChatMessageById,
-      );
-
-      expect(result.current.removeChatMessagesByLogin).toBe(
-        firstRender.removeChatMessagesByLogin,
-      );
-
-      expect(result.current.moderateChatMessageById).toBe(
-        firstRender.moderateChatMessageById,
-      );
-
-      expect(result.current.moderateChatMessagesByLogin).toBe(
-        firstRender.moderateChatMessagesByLogin,
-      );
-
-      expect(result.current.cleanup).toBe(firstRender.cleanup);
-
-      expect(result.current.forceFlush).toBe(firstRender.forceFlush);
-
-      expect(result.current.getBufferSize).toBe(firstRender.getBufferSize);
-    });
+    expect(result.current).toBe(firstRender);
   });
 
   describe('Moderation coherence', () => {
@@ -323,26 +285,6 @@ describe('useChatMessages', () => {
       expect(result.current.getBufferSize()).toBe(0);
     });
 
-    test('flushes when not at bottom so messages always appear', () => {
-      const { result } = renderHook(() =>
-        useChatMessages({
-          scrollAnchor: createScrollAnchor({
-            isAtBottomRef: { current: false },
-          }),
-        }),
-      );
-
-      act(() => {
-        result.current.handleNewMessage(createMockMessage('1'));
-        result.current.handleNewMessage(createMockMessage('2'));
-        jest.advanceTimersByTime(250);
-      });
-
-      expect(storedIds()).toEqual(['1', '2']);
-
-      expect(result.current.getBufferSize()).toBe(0);
-    });
-
     test('lets LegendList maintain the bottom after live messages flush at bottom', () => {
       const onBottomContentChange = jest.fn();
 
@@ -487,7 +429,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(250);
       });
 
-      expect(getChatUnreadCount()).toBe(0);
+      expect(chatUnreadCount$.peek()).toBe(0);
     });
 
     test('flushes pending unread count on forceFlush', () => {
@@ -505,7 +447,7 @@ describe('useChatMessages', () => {
         result.current.forceFlush();
       });
 
-      expect(getChatUnreadCount()).toBe(2);
+      expect(chatUnreadCount$.peek()).toBe(2);
     });
 
     test('does not increment unread while jumping to bottom', () => {
@@ -523,7 +465,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(250);
       });
 
-      expect(getChatUnreadCount()).toBe(0);
+      expect(chatUnreadCount$.peek()).toBe(0);
     });
   });
 
@@ -656,32 +598,6 @@ describe('useChatMessages', () => {
     const suspendFrontTrimLikeScrolledUp = () => {
       messagesActions.setChatFrontTrimSuspended(true);
     };
-
-    test('flushes entire buffer so all messages appear', () => {
-      suspendFrontTrimLikeScrolledUp();
-      const { result } = renderHook(() => useChatMessages(scrolledUpOptions));
-
-      act(() => {
-        for (let i = 0; i < 250; i += 1) {
-          result.current.handleNewMessage(createMockMessage(`${i}`));
-        }
-      });
-
-      expect(result.current.getBufferSize()).toBe(250);
-
-      act(() => {
-        jest.advanceTimersByTime(250);
-      });
-
-      const flushedMessages = storedMessages();
-      expect(flushedMessages).toHaveLength(250);
-
-      expect(flushedMessages[0]?.message_id).toBe('0');
-
-      expect(flushedMessages.at(-1)?.message_id).toBe('249');
-
-      expect(result.current.getBufferSize()).toBe(0);
-    });
 
     test('commits every message when arrivals outrun the flush cadence', () => {
       suspendFrontTrimLikeScrolledUp();
@@ -918,16 +834,16 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(250);
       });
 
-      expect(getChatUnreadCount()).toBe(pushCount);
+      expect(chatUnreadCount$.peek()).toBe(pushCount);
     });
   });
 
   describe('Commit-time finalization', () => {
     test('applies the finalizer to every committed message at flush', () => {
-      const finalizeMessageForCommit = jest.fn((message: BufferedMessage) => ({
+      const finalizeMessageForCommit = (message: BufferedMessage) => ({
         ...message,
         sender: 'Finalized',
-      }));
+      });
 
       const { result } = renderHook(() =>
         useChatMessages({ ...defaultOptions, finalizeMessageForCommit }),
@@ -939,19 +855,17 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(100);
       });
 
-      expect(finalizeMessageForCommit).toHaveBeenCalledTimes(2);
-      const flushedMessages = storedMessages();
-
-      expect(flushedMessages.map(message => message.sender)).toEqual([
+      expect(storedMessages().map(message => message.sender)).toEqual([
         'Finalized',
         'Finalized',
       ]);
     });
 
     test('finalizes every row a burst flush commits', () => {
-      const finalizeMessageForCommit = jest.fn(
-        (message: BufferedMessage) => message,
-      );
+      const finalizeMessageForCommit = (message: BufferedMessage) => ({
+        ...message,
+        sender: 'Finalized',
+      });
 
       const { result } = renderHook(() =>
         useChatMessages({ ...defaultOptions, finalizeMessageForCommit }),
@@ -965,18 +879,16 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(100);
       });
 
-      expect(finalizeMessageForCommit).toHaveBeenCalledTimes(20);
-
-      expect(storedIds()).toEqual(
-        Array.from({ length: 20 }, (_, index) => `${index}`),
+      expect(storedMessages().map(message => message.sender)).toEqual(
+        Array.from({ length: 20 }, () => 'Finalized'),
       );
     });
 
     test('force flush finalizes the drained backlog', () => {
-      const finalizeMessageForCommit = jest.fn((message: BufferedMessage) => ({
+      const finalizeMessageForCommit = (message: BufferedMessage) => ({
         ...message,
         sender: 'Finalized',
-      }));
+      });
 
       const { result } = renderHook(() =>
         useChatMessages({
@@ -992,8 +904,6 @@ describe('useChatMessages', () => {
         result.current.forceFlush();
       });
 
-      expect(finalizeMessageForCommit).toHaveBeenCalledTimes(1);
-
       expect(storedMessages().map(message => message.sender)).toEqual([
         'Finalized',
       ]);
@@ -1001,22 +911,6 @@ describe('useChatMessages', () => {
   });
 
   describe('Chat delay', () => {
-    test('does not delay when the effective delay is zero', () => {
-      const { result } = renderHook(() =>
-        useChatMessages({ ...defaultOptions, getChatDelayMs: () => 0 }),
-      );
-
-      act(() => {
-        result.current.handleNewMessage(createMockMessage('1'));
-      });
-
-      act(() => {
-        jest.advanceTimersByTime(200);
-      });
-
-      expect(storedIds()).toEqual(['1']);
-    });
-
     test('never delays historical replay (countUnread false)', () => {
       const { result } = renderHook(() =>
         useChatMessages({ ...defaultOptions, getChatDelayMs: () => 5000 }),

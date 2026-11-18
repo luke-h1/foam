@@ -1,6 +1,7 @@
 import type { CheermoteTier } from '@app/utils/chat/cheermote-store/types';
 
-import { clearCheermotes } from '../clearCheermotes';
+import { cheermoteFetchGuard } from '../cheermoteFetchGuard';
+import { cheermotesByChannel } from '../cheermotesByChannel';
 import { fetchChannelCheermotes } from '../fetchChannelCheermotes';
 import { getChannelCheermotes } from '../getChannelCheermotes';
 import { setChannelCheermotes } from '../setChannelCheermotes';
@@ -8,7 +9,8 @@ import { makeCheermote } from './__fixtures__/cheermoteStore.fixture';
 
 describe('setChannelCheermotes', () => {
   beforeEach(() => {
-    clearCheermotes();
+    cheermotesByChannel.clear();
+    cheermoteFetchGuard.clear();
   });
 
   test('stores tiers keyed by lowercased prefix with 2x dark urls', () => {

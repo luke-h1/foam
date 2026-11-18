@@ -1,4 +1,3 @@
-import { generateRandomTwitchColor } from '../generateRandomTwitchColor';
 import { getFallbackSenderColor } from '../getFallbackSenderColor';
 
 describe('getFallbackSenderColor', () => {
@@ -7,10 +6,6 @@ describe('getFallbackSenderColor', () => {
       getFallbackSenderColor('Luke_H'),
       getFallbackSenderColor('@luke_h'),
       getFallbackSenderColor(' LUKE_H '),
-    ]).toEqual([
-      generateRandomTwitchColor('luke_h'),
-      generateRandomTwitchColor('luke_h'),
-      generateRandomTwitchColor('luke_h'),
-    ]);
+    ]).toEqual(['#5F9EA0', '#5F9EA0', '#5F9EA0']);
   });
 });

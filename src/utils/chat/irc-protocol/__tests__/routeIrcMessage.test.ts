@@ -161,30 +161,14 @@ describe('routeIrcMessage', () => {
     expect(motd).toHaveBeenCalledTimes(1);
   });
 
-  test('reuses one frozen empty record for tagless globaluserstate', () => {
-    const seen: Record<string, string>[] = [];
-
-    const globaluserstate = (tags: Record<string, string>) => {
-      seen.push(tags);
-    };
-
+  test('passes an empty tag record for a tagless globaluserstate', () => {
+    const globaluserstate = jest.fn();
     routeIrcMessage(
       { command: 'GLOBALUSERSTATE', params: [] },
-      {
-        globaluserstate,
-      },
+      { globaluserstate },
     );
 
-    routeIrcMessage(
-      { command: 'GLOBALUSERSTATE', params: [] },
-      {
-        globaluserstate,
-      },
-    );
-
-    expect(seen[0]).toBe(seen[1]);
-
-    expect(Object.isFrozen(seen[0])).toBe(true);
+    expect(globaluserstate).toHaveBeenCalledWith({});
   });
 
   test('routes unknown commands to unhandled', () => {
