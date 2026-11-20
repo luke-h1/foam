@@ -160,3 +160,6 @@ workspace.json.orig
 
 # Per-machine Claude Code settings (hooks that read local secrets)
 .claude/settings.local.json
+
+# Android Macrobenchmark module
+plugins/android-baseline-profile/benchmark/build/

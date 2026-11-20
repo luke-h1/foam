@@ -441,7 +441,7 @@ const config: ExpoConfig = {
     './src/plugins/with-android-allow-backup-replace.js',
     './src/plugins/with-android-accent-color.js',
     './src/plugins/with-android-libs-activity-theme.js',
-    './src/plugins/with-android-baseline-profile.js',
+    './plugins/android-baseline-profile/with-android-baseline-profile.js',
     './plugins/with-fix-dev-launcher-cycle.js',
   ],
   experiments: {

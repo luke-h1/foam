@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { ChatText } from '@app/components/chat/components/chat-text/ChatText';
 import type { MessageToken } from '@app/types/chat/messageToken';
 
+import { styles as chatRowStyles } from '../ChatRow.styles';
 import type { ChatTextStyles } from '../ChatText.styles';
 import { ChatInlineImage } from './ChatInlineImage';
 
@@ -48,6 +49,7 @@ export const GifToken = memo(
     return (
       <View testID='chat-gif' style={styles.moderated}>
         {image}
+        <View style={chatRowStyles.moderatedTokenStrike} />
       </View>
     );
   },
@@ -64,7 +66,7 @@ function getGifImageStyle(size: number) {
 
 const styles = StyleSheet.create({
   moderated: {
-    opacity: 0.5,
+    opacity: 0.72,
   },
   fallbackText: {
     opacity: 0.8,
