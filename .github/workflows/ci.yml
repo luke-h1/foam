@@ -1,0 +1,385 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  triage:
+    name: PR triage
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+    outputs:
+      app: ${{ steps.paths.outputs.app }}
+      native: ${{ steps.paths.outputs.native }}
+      workflows: ${{ steps.paths.outputs.workflows }}
+    steps:
+      - name: 🗂 Detect changed paths
+        id: paths
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+
+          files="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" --jq '.[].filename')"
+
+          matches() {
+            printf '%s\n' "$files" | grep -Eq "$1" && echo true || echo false
+          }
+
+          app="$(printf '%s\n' "$files" \
+            | grep -Ev '^(docs/|\.claude/|\.cursor/|appeeky/|\.github/)|\.md$' \
+            | grep -q . && echo true || echo false)"
+
+          if [ "$(matches '^\.github/(workflows/ci\.yml|actions/setup-bun-install/)')" = true ]; then
+            app=true
+          fi
+
+          native="$(matches '^(modules/|\.swiftlint\.yml$|\.swiftformat$|\.editorconfig$|scripts/lint-(swift|kotlin)\.sh$|\.github/workflows/ci\.yml$)')"
+          workflows="$(matches '^\.github/')"
+
+          {
+            echo "app=$app"
+            echo "native=$native"
+            echo "workflows=$workflows"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "| Path group | Changed |"
+            echo "| --- | --- |"
+            echo "| App (Jest) | $app |"
+            echo "| Native modules (SwiftLint, ktlint) | $native |"
+            echo "| Workflows (zizmor) | $workflows |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 🏷️ Label
+        uses: actions/labeler@bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13 # v7
+        with:
+          sync-labels: true
+
+      - name: 🧹 Anti-Slop
+        uses: peakoss/anti-slop@57858eead489d08b255fab2af45a506c2ca6eab2
+        with:
+          max-failures: 5
+          exempt-draft-prs: true
+
+  no-merge-commits:
+    name: No merge commits
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: 🏗 Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: 🚫 Reject merge commits
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          merges=$(git rev-list --min-parents=2 "origin/${BASE_REF}..${HEAD_SHA}")
+
+          if [ -z "$merges" ]; then
+            echo "Branch is linear on top of ${BASE_REF}."
+            echo "✅ No merge commits - branch is linear on top of \`${BASE_REF}\`." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          {
+            echo "### ❌ Merge commits found"
+            echo
+            echo "This branch was updated with \`git merge\` instead of \`git rebase\`. We keep a linear history, so merge commits are not allowed on a PR branch - including merges of \`${BASE_REF}\` into the branch."
+            echo
+            echo "| commit | author | subject |"
+            echo "| --- | --- | --- |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          while read -r sha; do
+            git show -s --format='| `%h` | %an | %s |' "$sha" >> "$GITHUB_STEP_SUMMARY"
+            echo "::error title=No merge commits::Merge commit $(git show -s --format='%h %s' "$sha")"
+          done <<< "$merges"
+
+          {
+            echo
+            echo "Drop them by rebasing:"
+            echo
+            echo '```sh'
+            echo "git fetch origin ${BASE_REF}"
+            echo "git rebase origin/${BASE_REF}"
+            echo "git push --force-with-lease"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          exit 1
+
+  checks:
+    name: Lint, types and repo checks
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: 🏗 Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: 🥟 Setup Bun and install dependencies
+        uses: $/.github/actions/setup-bun-install
+        with:
+          node: 'true'
+
+      - parallel:
+          - name: ✨ oxfmt
+            id: oxfmt
+            run: bun run format:check || { echo "::error title=oxfmt::bun run format:check failed"; exit 1; }
+
+          - name: 🔍 TypeScript
+            id: typescript
+            run: bun run ts:check || { echo "::error title=TypeScript::bun run ts:check failed"; exit 1; }
+
+          - name: 🗺 Doc paths
+            id: doc_paths
+            run: bun run docs:check || { echo "::error title=Doc paths::bun run docs:check failed"; exit 1; }
+
+          - name: 📱 Platform variants
+            id: variants
+            run: bun run variants:check || { echo "::error title=Platform variants::bun run variants:check failed"; exit 1; }
+
+          - name: 🧪 ast-grep rule tests
+            id: ast_grep_test
+            run: bun run test:ast-grep || { echo "::error title=ast-grep rule tests::bun run test:ast-grep failed"; exit 1; }
+
+          - name: 🔍 ast-grep scan
+            id: ast_grep_scan
+            run: bun run lint:ast-grep || { echo "::error title=ast-grep scan::bun run lint:ast-grep failed"; exit 1; }
+
+          - name: 🧹 oxlint
+            id: oxlint
+            run: bun run lint || { echo "::error title=oxlint::bun run lint failed"; exit 1; }
+
+          - name: 🧑‍🔬 Commit messages
+            id: commitlint
+            env:
+              BASE_SHA: ${{ github.event.pull_request.base.sha }}
+              HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+            run: bun run commitlint --from "$BASE_SHA" --to "$HEAD_SHA" || { echo "::error title=Commit messages::commitlint failed"; exit 1; }
+
+          - name: 🦋 Changeset present
+            id: changeset
+            env:
+              BASE_REF: ${{ github.event.pull_request.base.ref }}
+            run: |
+              set -euo pipefail
+              if [ -z "$(git diff --name-only --diff-filter=A "origin/${BASE_REF}...HEAD" -- '.changeset/*.md' | grep -v '/README.md$')" ]; then
+                echo "::error title=Changeset present::This pull request adds no .changeset/*.md file. Run bun run changeset, or bun run changeset -- --empty when there is nothing to tell a user."
+                exit 1
+              fi
+              bun run changeset -- status --since="origin/${BASE_REF}" || { echo "::error title=Changeset present::bun run changeset status failed"; exit 1; }
+
+      - name: 🔒 Keep react-doctor's base fetch from shallowing the repo
+        if: ${{ !cancelled() }}
+        run: git remote set-url origin https://invalid.invalid/unreachable.git
+
+      - name: 🩺 React Doctor
+        id: react_doctor
+        if: ${{ !cancelled() }}
+        uses: millionco/react-doctor@695e46eee203a5d1855020191aa7e9c010a1250e # v2.4.0
+        with:
+          blocking: error
+          commit-status: false
+          silence-missing-baseline-warning: true
+
+      - name: 🚨 Annotate React Doctor failure
+        if: ${{ !cancelled() && steps.react_doctor.outcome == 'failure' }}
+        run: echo "::error title=React Doctor::React Doctor found blocking issues"
+
+      - name: 📊 Summary
+        if: ${{ !cancelled() }}
+        env:
+          OXFMT: ${{ steps.oxfmt.outcome }}
+          TYPESCRIPT: ${{ steps.typescript.outcome }}
+          DOC_PATHS: ${{ steps.doc_paths.outcome }}
+          VARIANTS: ${{ steps.variants.outcome }}
+          AST_GREP_TEST: ${{ steps.ast_grep_test.outcome }}
+          AST_GREP_SCAN: ${{ steps.ast_grep_scan.outcome }}
+          OXLINT: ${{ steps.oxlint.outcome }}
+          COMMITLINT: ${{ steps.commitlint.outcome }}
+          CHANGESET: ${{ steps.changeset.outcome }}
+          REACT_DOCTOR: ${{ steps.react_doctor.outcome }}
+        run: |
+          row() {
+            case "$2" in
+              success) icon='✅' ;;
+              failure) icon='❌' ;;
+              *) icon='⏭️' ;;
+            esac
+            echo "| $1 | $icon $2 |"
+          }
+
+          {
+            echo "| Check | Result |"
+            echo "| --- | --- |"
+            row oxfmt "$OXFMT"
+            row TypeScript "$TYPESCRIPT"
+            row 'Doc paths' "$DOC_PATHS"
+            row 'Platform variants' "$VARIANTS"
+            row 'ast-grep rule tests' "$AST_GREP_TEST"
+            row 'ast-grep scan' "$AST_GREP_SCAN"
+            row oxlint "$OXLINT"
+            row 'Commit messages' "$COMMITLINT"
+            row 'Changeset present' "$CHANGESET"
+            row 'React Doctor' "$REACT_DOCTOR"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  jest:
+    name: Jest ${{ matrix.shard }}/3
+    needs: triage
+    if: ${{ !cancelled() && github.event.pull_request.draft == false && needs.triage.outputs.app == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - name: 🏗 Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: ♻️ Restore Jest transform cache
+        id: jest_cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/jest-cache
+          key: jest-transform-v1-${{ runner.os }}-shard${{ matrix.shard }}-${{ hashFiles('bun.lock', 'patches/**', 'babel.config.js', 'jest.config.js') }}
+          restore-keys: |
+            jest-transform-v1-${{ runner.os }}-shard${{ matrix.shard }}-
+
+      - name: 🥟 Setup Bun and install dependencies
+        uses: $/.github/actions/setup-bun-install
+        with:
+          node: 'true'
+
+      - name: 🎭 Run Jest
+        id: jest
+        env:
+          JEST_CACHE_DIR: ${{ runner.temp }}/jest-cache
+          SHARD: ${{ matrix.shard }}
+        run: |
+          bun run test -- --maxWorkers=100% --shard="${SHARD}/3" --cacheDirectory="$JEST_CACHE_DIR" \
+            || { echo "::error title=Jest ${SHARD}/3::Jest shard ${SHARD}/3 failed"; exit 1; }
+
+      - name: 💾 Save Jest transform cache
+        if: ${{ !cancelled() && steps.jest_cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/jest-cache
+          key: ${{ steps.jest_cache.outputs.cache-primary-key }}
+
+      - name: 📊 Summary
+        if: ${{ !cancelled() }}
+        env:
+          JEST: ${{ steps.jest.outcome }}
+          CACHE: ${{ steps.jest_cache.outputs.cache-matched-key || 'none' }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          {
+            echo "| Check | Result |"
+            echo "| --- | --- |"
+            echo "| Jest ${SHARD}/3 | $JEST |"
+            echo "| Transform cache restored from | \`$CACHE\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  swiftlint:
+    name: SwiftLint
+    needs: triage
+    if: ${{ !cancelled() && github.event.pull_request.draft == false && needs.triage.outputs.native == 'true' }}
+    runs-on: macos-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: 🏗 Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: 📦 Install SwiftLint and SwiftFormat
+        run: brew install swiftlint swiftformat
+
+      - name: 🦅 Run Swift lint
+        run: LINT_CHECK=1 ./scripts/lint-swift.sh || { echo "::error title=SwiftLint::Swift lint failed"; exit 1; }
+
+  ktlint:
+    name: ktlint
+    needs: triage
+    if: ${{ !cancelled() && github.event.pull_request.draft == false && needs.triage.outputs.native == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: 🏗 Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: 📦 Install ktlint
+        env:
+          KTLINT_VERSION: '1.8.0'
+          KTLINT_SHA256: 'a3fd620207d5c40da6ca789b95e7f823c54e854b7fade7f613e91096a3706d75'
+        run: |
+          set -euo pipefail
+
+          curl --fail -sSLO "https://github.com/pinterest/ktlint/releases/download/${KTLINT_VERSION}/ktlint"
+          echo "${KTLINT_SHA256}  ktlint" | sha256sum -c -
+          chmod a+x ktlint
+          sudo mv ktlint /usr/local/bin/
+
+      - name: 🤖 Run Kotlin lint
+        run: LINT_CHECK=1 ./scripts/lint-kotlin.sh || { echo "::error title=ktlint::Kotlin lint failed"; exit 1; }
+
+  zizmor:
+    name: zizmor
+    needs: triage
+    if: ${{ !cancelled() && github.event.pull_request.base.ref == 'main' && needs.triage.outputs.workflows == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+    steps:
+      - name: 🏗 Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: 🛡 Run zizmor
+        uses: zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd
+        with:
+          online-audits: false

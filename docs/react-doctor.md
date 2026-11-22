@@ -1,6 +1,6 @@
 # React Doctor overrides
 
-Config: `doctor.config.json`. CI: `.github/workflows/react-doctor.yml`. Local: `bun run ci:local doctor`.
+Config: `doctor.config.json`. CI: the React Doctor step in `.github/workflows/ci.yml`. Local: `bun run ci:local doctor`.
 
 Each override below was checked against the code before it was added. None turns a rule off for the whole project unless its section says so. Read the entry before you add, remove or widen an override, and check the code again before you extend one to another file.
 
