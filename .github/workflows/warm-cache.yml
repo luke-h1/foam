@@ -1,4 +1,4 @@
-name: Warm bun install cache
+name: Warm caches
 
 on:
   push:
@@ -8,7 +8,10 @@ on:
       - 'package.json'
       - 'patches/**'
       - '.bun-version'
+      - 'babel.config.js'
+      - 'jest.config.js'
       - '.github/actions/setup-bun-install/action.yml'
+      - '.github/workflows/warm-cache.yml'
   workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}
@@ -18,15 +21,44 @@ permissions:
   contents: read
 
 jobs:
-  warm:
-    name: Warm cache
+  jest:
+    name: Warm Jest transform cache ${{ matrix.shard }}/3
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     steps:
       - name: 🏗 Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
+      - name: ♻️ Look up Jest transform cache
+        id: jest_cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/jest-cache
+          key: jest-transform-v1-${{ runner.os }}-shard${{ matrix.shard }}-${{ hashFiles('bun.lock', 'patches/**', 'babel.config.js', 'jest.config.js') }}
+          lookup-only: true
+
       - name: 🥟 Setup Bun and install dependencies
+        if: steps.jest_cache.outputs.cache-hit != 'true'
         uses: $/.github/actions/setup-bun-install
+        with:
+          node: 'true'
+
+      - name: 🎭 Run Jest
+        if: steps.jest_cache.outputs.cache-hit != 'true'
+        env:
+          JEST_CACHE_DIR: ${{ runner.temp }}/jest-cache
+          SHARD: ${{ matrix.shard }}
+        run: bun run test -- --maxWorkers=100% --shard="${SHARD}/3" --cacheDirectory="$JEST_CACHE_DIR"
+
+      - name: 💾 Save Jest transform cache
+        if: ${{ !cancelled() && steps.jest_cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/jest-cache
+          key: ${{ steps.jest_cache.outputs.cache-primary-key }}
