@@ -9,7 +9,6 @@ import type { ReactNode, Ref } from 'react';
 import type { SkData } from '@shopify/react-native-skia';
 import { configure as configureTestingLibrary } from '@testing-library/react-native';
 import { TextDecoder, TextEncoder } from 'node:util';
-import { configure as configureReassure } from 'reassure';
 
 import mockFile from '../__mocks__/mockFile';
 
@@ -36,7 +35,11 @@ if (globalThis.CloseEvent === undefined) {
   };
 }
 
-configureReassure({ testingLibrary: 'react-native' });
+if (/\.perf-test\.tsx?$/.test(expect.getState().testPath ?? '')) {
+  jest
+    .requireActual<typeof import('reassure')>('reassure')
+    .configure({ testingLibrary: 'react-native' });
+}
 
 /**
  * The Skia jest mock renders components as plain Views but routes imperative
